@@ -94,6 +94,8 @@ nsresult nsMsgThread::InitCachedValues()
 //    NS_ASSERTION(m_numChildren <= rowCount, "num children wrong - fixing");
     if (m_numChildren > rowCount)
       ChangeChildCount((PRInt32) rowCount - (PRInt32) m_numChildren);
+    if ((PRInt32) m_numUnreadChildren < 0)
+      ChangeUnreadChildCount(- (PRInt32) m_numUnreadChildren);
 		if (NS_SUCCEEDED(err))
 			m_cachedValuesInitialized = PR_TRUE;
 	}
@@ -959,14 +961,20 @@ nsresult nsMsgThread::ChangeChildCount(PRInt32 delta)
 
 nsresult nsMsgThread::ChangeUnreadChildCount(PRInt32 delta)
 {
-	nsresult ret = NS_OK;
-	PRUint32 childCount = 0;
-	m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, childCount);
-	childCount += delta;
-
-	ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, childCount);
-	m_numUnreadChildren = childCount;
-	return ret;
+  nsresult ret = NS_OK;
+  PRUint32 childCount = 0;
+  m_mdbDB->RowCellColumnToUInt32(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, childCount);
+  childCount += delta;
+  if ((PRInt32) childCount < 0)
+  {
+#ifdef DEBUG_bienvenu
+    NS_ASSERTION(PR_FALSE, "negative unread child count");
+#endif
+    childCount = 0;
+  }
+  ret = m_mdbDB->UInt32ToRowCellColumn(m_metaRow, m_mdbDB->m_threadUnreadChildrenColumnToken, childCount);
+  m_numUnreadChildren = childCount;
+  return ret;
 }
 
 nsresult nsMsgThread::SetThreadRootKey(nsMsgKey threadRootKey)
