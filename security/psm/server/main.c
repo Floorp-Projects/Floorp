@@ -424,20 +424,24 @@ int PASCAL WinMain(HINSTANCE hInst, HINSTANCE hPrevInst,
 	thread, because Mac NSPR doesn't own the original thread used to
 	run the app.
 */
+
+static void* glue_component = NULL;
+
 void RunMacPSM(void *arg)
 #else
 int main(int argc, char ** argv)
 #endif
 {
-#ifdef XP_MAC
-#pragma unused(arg)
-#endif
 #if (defined(XP_PC) && !defined(DEBUG)) || (defined(XP_MAC))
     /* substitute argc and argv for NSPR */
     int argc = 0;
     char *argv[] = {"", NULL};
 #endif
     PRIntn result = 0;
+
+#ifdef XP_MAC
+    glue_component = arg;
+#endif
 
 #ifdef DEBUG
     PR_STDIO_INIT();
@@ -589,6 +593,13 @@ PRIntn mainLoop(PRIntn argc, char ** argv)
         SSM_DEBUG("Couldn't open control port. Exiting.\n");
         goto loser;
     }
+
+#ifdef XP_MAC
+    if (PR_CEnterMonitor(glue_component) != NULL) {
+        PR_CNotify(glue_component);
+        PR_CExitMonitor(glue_component);
+    }
+#endif
     
     while (alive) 
     {
