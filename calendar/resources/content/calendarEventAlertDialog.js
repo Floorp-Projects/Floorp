@@ -55,9 +55,8 @@ function onLoad()
         for( var i in window.pendingEvents )
         {
            gAllEvents[ gAllEvents.length ] = window.pendingEvents[i]; 
-
-           //createAlarmBox( window.pendingEvents[ i ] );
         }
+                
         buildEventBoxes();
    }
    
@@ -288,6 +287,10 @@ function snoozeAlarm( Event )
    gICalLib = calendarEventService.getICalLib();
 
    gICalLib.modifyEvent( Event );
+
+   var Id = getArrayId( Event )
+
+   gAllEvents.splice( Id, 1 );
 
    buildEventBoxes();
 }
