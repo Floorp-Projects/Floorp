@@ -122,7 +122,7 @@ PyObject *PyObject_FromXPTConstant( const XPTConstDescriptor *c)
 			v = PyString_FromStringAndSize(&c->value.ch, 1);
 			break;
 		case TD_WCHAR:
-			v = PyUnicode_FromUnicode(&c->value.wch, 1);
+			v = PyUnicode_FromUnicode((PRUnichar *)&c->value.wch, 1);
 			break;
 	//    TD_VOID              = 13,  
 		case TD_PNSIID:
@@ -133,7 +133,7 @@ PyObject *PyObject_FromXPTConstant( const XPTConstDescriptor *c)
 			v = PyString_FromString(c->value.str);
 			break;
 		case TD_PWSTRING:
-			v = PyUnicode_FromUnicode(c->value.wstr, nsCRT::strlen(c->value.wstr));
+			v = PyUnicode_FromUnicode((PRUnichar *)c->value.wstr, nsCRT::strlen((PRUnichar *)c->value.wstr));
 			break;
 	//    TD_INTERFACE_TYPE    = 18,
 	//    TD_INTERFACE_IS_TYPE = 19,
