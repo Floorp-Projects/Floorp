@@ -38,14 +38,6 @@ LLIBS=\
 
 MISCDEP=$(LLIBS)
 
-# XXX Note dependencies on implementation dirs for factory methods.
-
-LINCS=  -I$(PUBLIC)\rdf                 \
-        -I$(PUBLIC)\xpcom               \
-        -I$(PUBLIC)\raptor              \
-        -I$(PUBLIC)\brprof              \
-        $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)

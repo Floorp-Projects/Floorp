@@ -47,13 +47,7 @@ MISCDEP=$(LLIBS)
 
 # XXX Note dependencies on implementation dirs for factory methods.
 
-LINCS=  -I$(PUBLIC)\rdf                 \
-        -I$(PUBLIC)\xpcom               \
-        -I$(PUBLIC)\netlib              \
-        -I$(PUBLIC)\raptor              \
-        -I$(PUBLIC)\js                  \
-        -I$(PUBLIC)\dom                 \
-        -I$(DEPTH)\rdf\base\src         \
+LINCS=  -I$(DEPTH)\rdf\base\src         \
         -I$(DEPTH)\rdf\content\src      \
         -I$(DEPTH)\rdf\datasource\src   \
         $(NULL)

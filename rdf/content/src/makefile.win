@@ -55,15 +55,7 @@ CPP_OBJS=\
 # constructed directly from Raptor. The hope is that this'll
 # eventually be replaced by a DOM-based mechanism.
 
-LINCS=  -I$(PUBLIC)\rdf          \
-        -I$(PUBLIC)\xpcom        \
-        -I$(PUBLIC)\netlib       \
-        -I$(PUBLIC)\raptor       \
-        -I$(PUBLIC)\lwbrk        \
-        -I$(PUBLIC)\js           \
-        -I$(PUBLIC)\dom          \
-        -I$(PUBLIC)\locale       \
-        -I$(DEPTH)\rdf\base\src  \
+LINCS=  -I$(DEPTH)\rdf\base\src  \
         -I$(DEPTH)\layout\html\base\src \
         $(NULL)
 

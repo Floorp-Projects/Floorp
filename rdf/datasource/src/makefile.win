@@ -35,15 +35,7 @@ CPP_OBJS=\
 # in this library: this'll go away once we formalize utilities into an
 # "real live" XPCOM interface.
 
-LINCS=  -I$(PUBLIC)\rdf         \
-        -I$(PUBLIC)\rdfutil     \
-        -I$(PUBLIC)\xpcom       \
-        -I$(PUBLIC)\netlib      \
-        -I$(PUBLIC)\raptor      \
-        -I$(PUBLIC)\js          \
-        -I$(PUBLIC)\dom         \
-        -I$(PUBLIC)\brprof      \
-        -I$(DEPTH)\rdf\base\src \
+LINCS=  -I$(DEPTH)\rdf\base\src \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
