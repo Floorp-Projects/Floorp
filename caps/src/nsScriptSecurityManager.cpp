@@ -1386,6 +1386,8 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
                                            nsIPrincipal *aPrincipal,
                                            PRBool *result)
 {
+    *result = PR_FALSE; 
+
     if (aPrincipal == mSystemPrincipal)
     {
         // Even if JavaScript is disabled, we must still execute system scripts
@@ -1415,29 +1417,68 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     }
 
     //-- See if the current window allows JS execution
+    nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(cx);
+    if (!scriptContext) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIScriptGlobalObject> globalObject;
+    scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
+    if (!globalObject) return NS_ERROR_FAILURE;
+    
     nsCOMPtr<nsIDocShell> docshell;
-    rv = GetRootDocShell(cx, getter_AddRefs(docshell));
-    if (NS_SUCCEEDED(rv))
+    globalObject->GetDocShell(getter_AddRefs(docshell));
+    nsCOMPtr<nsIDocShellTreeItem> treeItem;
+    if (docshell) 
     {
-        rv = docshell->GetAllowJavascript(result);
-        if (NS_FAILED(rv)) return rv;
-        if (!*result)
-            return NS_OK;
+        treeItem = do_QueryInterface(docshell);
+        nsCOMPtr<nsIDocShellTreeItem> parentItem;
+        // Walk up the docshell tree to see if any containing docshell disallows scripts
+        do 
+        {
+            rv = docshell->GetAllowJavascript(result);
+            if (NS_FAILED(rv)) return rv;
+            if (!*result)
+                return NS_OK; // Do not run scripts
+            if (treeItem) 
+            {
+                treeItem->GetParent(getter_AddRefs(parentItem));
+                if (parentItem)
+                {
+                    treeItem = parentItem;
+                    docshell = do_QueryInterface(treeItem, &rv);
+                    NS_ASSERTION(docshell, "cannot get a docshell from a treeItem!");
+                    if (NS_FAILED(rv)) break;
+                }
+            }
+        } while (parentItem);
     }
 
     //-- See if JS is disabled globally (via prefs)
     *result = mIsJavaScriptEnabled;
-    if ((mIsJavaScriptEnabled != mIsMailJavaScriptEnabled) && docshell)
+    if (mIsJavaScriptEnabled != mIsMailJavaScriptEnabled) 
     {
-        // Is this script running from mail?
-        PRUint32 appType;
-        rv = docshell->GetAppType(&appType);
-        if (NS_FAILED(rv)) return rv;
-        if (appType == nsIDocShell::APP_TYPE_MAIL)
-            *result = mIsMailJavaScriptEnabled;
+        // Get docshell from the global window again.
+        globalObject->GetDocShell(getter_AddRefs(docshell));
+        treeItem = do_QueryInterface(docshell);
+        if (treeItem) 
+        {
+            nsCOMPtr<nsIDocShellTreeItem> rootItem;
+            treeItem->GetRootTreeItem(getter_AddRefs(rootItem));
+            docshell = do_QueryInterface(rootItem);
+            if (docshell) 
+            {
+                // Is this script running from mail?
+                PRUint32 appType;
+                rv = docshell->GetAppType(&appType);
+                if (NS_FAILED(rv)) return rv;
+                if (appType == nsIDocShell::APP_TYPE_MAIL) 
+                {
+                    *result = mIsMailJavaScriptEnabled;
+                }
+            }
+        }
     }
+    
     if (!*result)
-        return NS_OK;
+        return NS_OK; // Do not run scripts
 
     //-- Check for a per-site policy
     static const char jsPrefGroupName[] = "javascript";
