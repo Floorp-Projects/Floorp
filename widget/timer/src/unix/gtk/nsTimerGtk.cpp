@@ -248,7 +248,7 @@ void process_timers(nsVoidArray *array)
   struct timeval tv;
   gettimeofday(&tv, NULL);
   
-  for( i = count; i >= 0; i--) {
+  for( i = count-1; i >= 0; i--) {
     timer = (nsTimerGtk*)array->ElementAt(i);
 
     if (timer) {
