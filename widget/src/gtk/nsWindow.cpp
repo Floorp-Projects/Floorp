@@ -1530,12 +1530,6 @@ void nsWindow::HandleMozAreaFocusOut(void)
 /* virtual */ void
 nsWindow::OnMotionNotifySignal(GdkEventMotion *aGdkMotionEvent)
 {
-  // If there's a rollup widget and this window is not a popup window,
-  // drop the event.
-  if (gRollupWidget && GetOwningWindowType() != eWindowType_popup) {
-    return;
-  }
-
   XEvent xevent;
   GdkEvent gdk_event;
   PRBool synthEvent = PR_FALSE;
