@@ -172,6 +172,47 @@ public:
   NS_IMETHOD GetMarginHeight(PRInt32& aWidth)  = 0;
   NS_IMETHOD SetMarginHeight(PRInt32  aHeight) = 0;
 
+  // Selection Related Methods
+  /**
+    * Returns the whether there is a selection or not
+   */
+  NS_IMETHOD IsSelection(PRBool & aIsSelection) = 0;
+
+  /**
+    * Returns the whether the selection can be cut (editor or a form control)
+   */
+  NS_IMETHOD IsSelectionCutable(PRBool & aIsSelection) = 0;
+
+  /**
+    * Returns whether the data can be pasted (editor or a form control)
+   */
+  NS_IMETHOD IsSelectionPastable(PRBool & aIsSelection) = 0;
+
+  /**
+    * Copies the Selection from the content or a form control
+   */
+  NS_IMETHOD GetSelection(PRUnichar *& aSelection) = 0;
+
+  /**
+    * Cuts the Selection from the content or a form control
+   */
+  NS_IMETHOD CutSelection(PRUnichar *& aSelection) = 0;
+
+  /**
+    * Pastes the Selection into the content or a form control
+   */
+  NS_IMETHOD PasteSelection(const PRUnichar * aSelection) = 0;
+
+  /**
+    * Selects all the Content
+   */
+  NS_IMETHOD SelectAll() = 0;
+
+  /**
+    * Finds text in content
+   */
+  NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound) = 0;
+
 };
 
 extern "C" NS_WEB nsresult

@@ -218,6 +218,16 @@ public:
   NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg);
   NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg);
 
+  // Selection methods
+  NS_IMETHOD IsSelection(PRBool & aIsSelection);
+  NS_IMETHOD IsSelectionCutable(PRBool & aIsSelection);
+  NS_IMETHOD IsSelectionPastable(PRBool & aIsSelection);
+  NS_IMETHOD GetSelection(PRUnichar *& aSelection);
+  NS_IMETHOD CutSelection(PRUnichar *& aSelection);
+  NS_IMETHOD PasteSelection(const PRUnichar * aSelection);
+  NS_IMETHOD SelectAll();
+  NS_IMETHOD FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound);
+
   // nsWebShell
   void HandleLinkClickEvent(const PRUnichar* aURLSpec,
                             const PRUnichar* aTargetSpec,
@@ -1880,6 +1890,68 @@ nsWebShell::OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg)
   }
   return rv;
 }
+
+//----------------------------------------------------
+NS_IMETHODIMP
+nsWebShell::IsSelection(PRBool & aIsSelection)
+{
+  aIsSelection = PR_FALSE;
+  return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------
+NS_IMETHODIMP
+nsWebShell::IsSelectionCutable(PRBool & aIsSelection)
+{
+  aIsSelection = PR_FALSE;
+  return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------
+NS_IMETHODIMP
+nsWebShell::IsSelectionPastable(PRBool & aIsSelection)
+{
+  aIsSelection = PR_FALSE;
+  return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------
+NS_IMETHODIMP
+nsWebShell::GetSelection(PRUnichar *& aSelection)
+{
+  aSelection = nsnull;
+  return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------
+NS_IMETHODIMP
+nsWebShell::CutSelection(PRUnichar *& aSelection)
+{
+  aSelection = nsnull;
+  return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------
+NS_IMETHODIMP
+nsWebShell::PasteSelection(const PRUnichar * aSelection)
+{
+  return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------
+NS_IMETHODIMP
+nsWebShell::SelectAll()
+{
+  return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------
+NS_IMETHODIMP
+nsWebShell::FindNext(const PRUnichar * aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
+{
+  return NS_ERROR_FAILURE;
+}
+
 
 //----------------------------------------------------------------------
 
