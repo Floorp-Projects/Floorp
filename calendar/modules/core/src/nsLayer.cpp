@@ -383,7 +383,7 @@ nsresult nsLayer::FetchEventsByRange(
    * todo: need to delete calendars in pParsedCalList without 
    * deleting events in it 
    */
-  capiStatus = pCapi->CAPI_DestroyStreams(mpShell->mCAPISession, &RcvStream, 1, 0);
+  capiStatus = pCapi->CAPI_DestroyStreams(pSession->m_Session, &RcvStream, 1, 0);
   if (CAPI_ERR_OK != capiStatus)
     return 1;   /* XXX: really need to fix this up */
 

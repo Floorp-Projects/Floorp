@@ -411,7 +411,7 @@ CAPIStatus CAPI_DestroyStreams(
 {
     PCAPIStream** paS = (PCAPIStream **) pS;
     for (int i = 0; i < iCount; i++)
-      delete paS[i];
+      CAPI_free(paS[i]);
     return CAPI_ERR_OK;
 }
 
