@@ -70,6 +70,7 @@
 
 #define RD_BUF_SIZE (60 * 1024)
 
+int verbose;
 
 char *password = NULL;
 
@@ -163,6 +164,18 @@ printCertProblems(FILE *outfile, CERTCertDBHandle *handle,
 		fprintf(outfile,"CERT %d. %s %s:\n", depth,
 				 bestCertName(node->cert), 
 			  	 depth ? "[Certificate Authority]": "");
+	    	if (verbose) {
+		    const char * emailAddr;
+		    emailAddr = CERT_GetFirstEmailAddress(node->cert);
+		    if (emailAddr) {
+		    	fprintf(outfile,"Email Address(es): ");
+			do {
+			    fprintf(outfile, "%s\n", emailAddr);
+			    emailAddr = CERT_GetNextEmailAddress(node->cert,
+			                                         emailAddr);
+			} while (emailAddr);
+		    }
+		}
 	    }
 	    fprintf(outfile,"  ERROR %d: %s\n", node->error,
 						SECU_Strerror(node->error));
@@ -343,7 +356,7 @@ main(int argc, char *argv[], char *envp[])
 
     progName = PL_strdup(argv[0]);
 
-    optstate = PL_CreateOptState(argc, argv, "ad:ru:w:");
+    optstate = PL_CreateOptState(argc, argv, "ad:ru:w:v");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
 	case  0  : /* positional parameter */  goto breakout;
@@ -352,6 +365,7 @@ main(int argc, char *argv[], char *envp[])
 	case 'r' : isAscii  = PR_FALSE;                       break;
 	case 'u' : certUsage = (SECCertUsage)PORT_Atoi(optstate->value); break;
 	case 'w' : password = PL_strdup(optstate->value);     break;
+	case 'v' : verbose++;                                 break;
 	default  : Usage(progName);                           break;
 	}
     }
