@@ -146,7 +146,7 @@ function nsTreeController_copy(tree)
 function nsTreeController_cut(tree)
 {
     if (this.copy()) {
-        this.doDelete();
+        this.doDelete(tree);
         return true;            // copy succeeded, don't care if delete failed
     } else
         return false;           // copy failed, so did cut
@@ -411,8 +411,8 @@ nsTreeController.prototype =
         
         // if we get here, then we have a command that requires selection
         var tree = this.getTree();
-        var haveSelection = (tree.selectedItems.length > 0)
-        return haveCommand && haveSelection;
+        var haveSelection = (tree.selectedItems.length > 0);
+        return (haveCommand && haveSelection);
     },
     doCommand: function(command)
     {
