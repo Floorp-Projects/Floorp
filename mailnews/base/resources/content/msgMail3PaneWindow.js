@@ -927,11 +927,12 @@ function UpgradeThreadPaneUI()
     if (threadPaneUIVersion < 4) {
       var threadTree = document.getElementById("threadTree");
       var junkCol = document.getElementById("junkStatusCol");
+      var beforeCol;
 
       if (threadPaneUIVersion < 3) {
         var subjectCol = document.getElementById("subjectCol");
       
-        var beforeCol = subjectCol.boxObject.nextSibling.boxObject.nextSibling;
+        beforeCol = subjectCol.boxObject.nextSibling.boxObject.nextSibling;
         if (beforeCol)
           threadTree._reorderColumn(junkCol, beforeCol, true);
         else // subjectCol was the last column, put it after
@@ -946,7 +947,7 @@ function UpgradeThreadPaneUI()
       var senderCol = document.getElementById("senderCol");
       var recipientCol = document.getElementById("recipientCol");
     
-      var beforeCol = junkCol.boxObject.nextSibling.boxObject.nextSibling;
+      beforeCol = junkCol.boxObject.nextSibling.boxObject.nextSibling;
       if (beforeCol)
         threadTree._reorderColumn(recipientCol, beforeCol, true);
       else // junkCol was the last column, put it after
