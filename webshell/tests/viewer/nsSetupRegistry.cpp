@@ -278,7 +278,7 @@ NS_SetupRegistry()
   // Create exeDir/"components"
   nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
   sysdir += "components";
-  const char *componentsDir = sysdir.GetAsString(); // native path
+  const char *componentsDir = sysdir.GetCString(); // native path
   if (componentsDir != NULL)
   {
 #ifdef XP_PC
