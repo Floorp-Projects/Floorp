@@ -1,5 +1,9 @@
 <?xml version="1.0"?> 
 
+<!-- FIX ME   this should change to German's new taskbar.css when it gets checked in  -->
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+
+
 <!DOCTYPE window
 [
 <!ENTITY tasksMenu.label				"Tasks">
@@ -63,49 +67,52 @@
 	
 	</menu>
 
-	 <toolbar id="taskbar" chromeclass="status">
+	 <toolbox id="taskbox">
+		 <toolbar id="taskbar" chromeclass="status">
 
-		  <popup id="mozillaPopup">
-		    <menu>
-		    	<menuitem name="&bonsai.label;" onclick="OpenTaskURL('http://cvs-mirror.mozilla.org/webtools/bonsai/toplevel.cgi?treeid=SeaMonkey');"/>
-		    	<menuitem name="&bugzillaButton.label;" onclick="OpenTaskURL('http://bugzilla.mozilla.org');"/>
-		    </menu>
-		  </popup>
-		  
-		  <popup id="shoppingPopup">
-		    <menu>
-		    	<menuitem name="&booksButton.label;" onclick="OpenTaskURL('http://www.fatbrain.com' );"/>
-		    	<menuitem name="&cdButton.label;" onclick="OpenTaskURL('http://www.cdnow.com');" />
-		    	<menuitem name="&lifeButton.label;" onclick="OpenTaskURL('http://www.match.com');"/>
-		    </menu>
-		  </popup>
-		  
-		   <popup id="windowPopup" >
-		    <menu onclick="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot" >
-		    </menu>
-		  </popup>
-		
-		  
-	  	 <box align="horizontal">
-  			
-  	 		<titledbutton align="left" id="mini-nav" value="" onclick="toNavigator();"/>
-  	 		<titledbutton align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
-  	 		<titledbutton align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
-  	 		<titledbutton align="left" id="mini-comp" value="" onclick="toEditor();" />
-	      </box>
-		  <spring flex="100%"/>
-	 	  <box align="horizontal">
-  	 		<titledbutton align="left"  class="popup" popup="mozillaPopup" tooltip="aTooltip" tooltiptext="Mozilla development info"
-			   popupanchor="topleft" popupalign="bottomleft" value="&mozillaButton.label;" />
-  	 		
-  	 		<titledbutton align="left"  class="popup" popup="shoppingPopup"
-			   popupanchor="topleft" popupalign="bottomleft" value="&shoppingButton.label;" />
-  	 
-			   
-			<titledbutton align="left" class="popup" value="&openWinButton.label;" popup="windowPopup"
-			 popupanchor="topleft" popupalign="bottomleft"  />
-          </box>
-		  <spring flex="100%"/>
-	   	 
-	  </toolbar>
+			  <popup id="mozillaPopup">
+			    <menu>
+			    	<menuitem name="&bonsai.label;" onclick="OpenTaskURL('http://cvs-mirror.mozilla.org/webtools/bonsai/toplevel.cgi?treeid=SeaMonkey');"/>
+			    	<menuitem name="&bugzillaButton.label;" onclick="OpenTaskURL('http://bugzilla.mozilla.org');"/>
+			    </menu>
+			  </popup>
+			  
+			  <popup id="shoppingPopup">
+			    <menu>
+			    	<menuitem name="&booksButton.label;" onclick="OpenTaskURL('http://www.fatbrain.com' );"/>
+			    	<menuitem name="&cdButton.label;" onclick="OpenTaskURL('http://www.cdnow.com');" />
+			    	<menuitem name="&lifeButton.label;" onclick="OpenTaskURL('http://www.match.com');"/>
+			    </menu>
+			  </popup>
+			  
+			   <popup id="windowPopup" >
+			    <menu onclick="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot" >
+			    </menu>
+			  </popup>
+			
+			  
+		  	 <box align="horizontal">
+	  			
+	  	 		<titledbutton align="left" id="mini-nav" value="" onclick="toNavigator();"/>
+	  	 		<titledbutton align="left" id="mini-mail" value="" onclick="toMessengerWindow()"/>
+	  	 		<titledbutton align="left" id="mini-addr" value="" onclick="toAddressBook()"/>
+	  	 		<titledbutton align="left" id="mini-comp" value="" onclick="toEditor();" />
+		      </box>
+			  <spring flex="100%"/>
+		 	  <box align="horizontal">
+	  	 		<titledbutton align="left"  class="popup" popup="mozillaPopup" tooltip="aTooltip" tooltiptext="Mozilla development info"
+				   popupanchor="topleft" popupalign="bottomleft" value="&mozillaButton.label;" />
+	  	 		
+	  	 		<titledbutton align="left"  class="popup" popup="shoppingPopup"
+				   popupanchor="topleft" popupalign="bottomleft" value="&shoppingButton.label;" />
+	  	 
+				   
+				<titledbutton align="left" class="popup" value="&openWinButton.label;" popup="windowPopup"
+				 popupanchor="topleft" popupalign="bottomleft"  />
+	          </box>
+			  <spring flex="100%"/>
+		   	 
+		  </toolbar>
+	</toolbox>
+	
 </overlay>		

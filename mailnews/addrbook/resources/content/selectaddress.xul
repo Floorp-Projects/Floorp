@@ -1,7 +1,7 @@
 <?xml version="1.0"?> 
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!--
 The contents of this file are subject to the Netscape Public

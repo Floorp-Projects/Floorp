@@ -12,82 +12,74 @@
 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		align="vertical"
-		style="width:100%; height:100%; background-color: #dddddd">
+		style="background-color: #dddddd"
+		flex="100%">
 
-<box id="CardViewBox" align="vertical" style="width:100%; height:100%">
-	<box align="horizontal" style="width:100%">
-		<spring style="width:5px"/>
-		<box style="border-width:0; border-bottom-width:2; border-style:solid">
-			<html:div style="font-size:150%; font-weight: bold; padding-top:2px"
-					  hide="true" id="CardTitle">*</html:div>
+	<box id="CardViewBox" align="vertical" flex="100%" style="padding-left:5px; padding-right:5px">
+		<html:div style="font-size:150%; font-weight:bold; border-bottom:2px solid black" id="CardTitle">*</html:div>
+
+		<box align="horizontal" flex="100%">
+			
+			<box align="vertical" flex="100%" style="width:100px">
+				<box id="cvbName" align="vertical" class="CardView">
+					<html:div class="CardViewHeading" hide="true" id="cvhName">*</html:div>
+					<spring class="CardViewHeadingSpace"/>
+					<html:div class="CardViewText" hide="true" id="cvNickname">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvEmail1">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvEmail2">*</html:div>
+					<spring class="CardViewBottomSpace"/>
+				</box>
+				
+				<box id="cvbHome" align="vertical" class="CardView">
+					<html:div class="CardViewHeading" hide="true" id="cvhHome">&home.heading;</html:div>
+					<spring class="CardViewHeadingSpace"/>
+					<html:div class="CardViewText" hide="true" id="cvHomeAddress">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvHomeAddress2">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvHomeCityStZip">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvHomeCountry">*</html:div>
+				</box>
+
+				<box id="cvbOther" align="vertical" class="CardView">
+					<html:div class="CardViewHeading" hide="true" id="cvhOther">&other.heading;</html:div>
+					<html:div class="CardViewText" hide="true" id="cvCustom1">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvCustom2">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvCustom3">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvCustom4">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvNotes">*</html:div>
+				</box>
+			</box>
+			
+			<spring style="width:20px"/>
+
+			<box align="vertical" flex="100%" style="width:100px">
+				<box id="cvbPhone" align="vertical" class="CardView">
+					<html:div class="CardViewHeading" hide="true" id="cvhPhone">&phone.heading;</html:div>
+					<spring class="CardViewHeadingSpace"/>
+					<html:div class="CardViewText" hide="true" id="cvPhWork">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvPhHome">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvPhFax">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvPhCellular">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvPhPager">*</html:div>
+					<spring class="CardViewBottomSpace"/>
+				</box>
+				
+				<box id="cvbWork" align="vertical" class="CardView">
+					<html:div class="CardViewHeading" hide="true" id="cvhWork">&work.heading;</html:div>
+					<spring class="CardViewHeadingSpace"/>
+					<html:div class="CardViewText" hide="true" id="cvJobTitle">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvDepartment">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvCompany">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvWorkAddress">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvWorkAddress2">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvWorkCityStZip">*</html:div>
+					<html:div class="CardViewText" hide="true" id="cvWorkCountry">*</html:div>
+				</box>
+			</box>
+
 		</box>
+
 	</box>
-
-	<box align="horizontal" flex="100%">
-		<spring style="width:5px"/>
-		
-		<box align="vertical" flex="50%">
-			<box id="cvbName" align="vertical" class="CardView">
-				<html:div class="CardViewHeading" hide="true" id="cvhName">*</html:div>
-				<spring class="CardViewHeadingSpace"/>
-				<html:div class="CardViewText" hide="true" id="cvNickname">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvEmail1">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvEmail2">*</html:div>
-				<spring class="CardViewBottomSpace"/>
-			</box>
-			
-			<box id="cvbHome" align="vertical" class="CardView">
-				<html:div class="CardViewHeading" hide="true" id="cvhHome">&home.heading;</html:div>
-				<spring class="CardViewHeadingSpace"/>
-				<html:div class="CardViewText" hide="true" id="cvHomeAddress">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvHomeAddress2">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvHomeCityStZip">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvHomeCountry">*</html:div>
-			</box>
-			
-			<box id="cvbOther" align="vertical" class="CardView">
-				<html:div class="CardViewHeading" hide="true" id="cvhOther">&other.heading;</html:div>
-				<html:div class="CardViewText" hide="true" id="cvCustom1">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvCustom2">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvCustom3">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvCustom4">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvNotes">*</html:div>
-			</box>
-		</box>
-		
-		<spring style="width:20px"/>
-		
-		<box align="vertical" flex="50%">
-			<box id="cvbPhone" align="vertical" class="CardView">
-				<html:div class="CardViewHeading" hide="true" id="cvhPhone">&phone.heading;</html:div>
-				<spring class="CardViewHeadingSpace"/>
-				<html:div class="CardViewText" hide="true" id="cvPhWork">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvPhHome">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvPhFax">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvPhCellular">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvPhPager">*</html:div>
-				<spring class="CardViewBottomSpace"/>
-			</box>
-			
-			<box id="cvbWork" align="vertical" class="CardView">
-				<html:div class="CardViewHeading" hide="true" id="cvhWork">&work.heading;</html:div>
-				<spring class="CardViewHeadingSpace"/>
-				<html:div class="CardViewText" hide="true" id="cvJobTitle">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvDepartment">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvCompany">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvWorkAddress">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvWorkAddress2">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvWorkCityStZip">*</html:div>
-				<html:div class="CardViewText" hide="true" id="cvWorkCountry">*</html:div>
-			</box>
-		</box>
-		
-		<spring style="width:5px"/>
-	</box>
-</box>
-
 
 </window>

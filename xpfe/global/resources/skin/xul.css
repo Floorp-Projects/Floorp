@@ -51,6 +51,31 @@ div.textline {
 }
 
 
+/*these are for separator lines in dialog windows or toolbars*/ 
+
+div.separator[align="horizontal"] { 
+	 width: 100%; 
+	 max-height: 2px; 
+	 vertical-align: middle; 
+	 border-bottom: 2px groove white; 
+	 margin-top: 0.5em; 
+	 margin-bottom: 0.5em; 
+	 margin-left: 0.25em; 
+	 margin-right: 0.25em; 
+} 
+
+div.separator[align="vertical"] { 
+	 height: 100%; 
+	 max-width: 2px; 
+	 border-right: 2px groove white; 
+	 background-color: yellow; 
+	 margin-left: 0.5em; 
+	 margin-right: 0.5em; 
+	 margin-top: 0.25em; 
+	 margin-bottom: 0.25em; 
+}
+
+
 spring {
    display: block;
 }

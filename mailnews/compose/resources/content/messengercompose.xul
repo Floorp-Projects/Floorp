@@ -4,6 +4,8 @@
 <?xml-stylesheet href="chrome://messengercompose/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/tasksOverlay.xul"?>
+<!-- FIX ME   this should not be here when overlays support css files  -->
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
 
 <!--
 The contents of this file are subject to the Netscape Public
@@ -353,5 +355,6 @@ Rights Reserved.
     </box>
 
 <!-- /box -->
+	<toolbox id="taskbox"/>
 </window>
 

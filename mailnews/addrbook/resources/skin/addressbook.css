@@ -1,21 +1,3 @@
-/* Address Book specific style */
-
-iframe {
-	min-width: 10px;
-	min-height: 10px;
-	width: 100px;
-	height: 100px;
-}
-
-div [hide] {
-	display: none;
-}
-
-box [hide] {
-	display: none;
-}
-
-	
 /* CardEdit styles - used in the Card Edit Dialog */
 
 box[class="CardEdit"] {
@@ -51,10 +33,12 @@ div[class="CardViewHeading"] {
 div[class="CardViewText"] {
 	padding-left: 20px;
 	padding-right: 2px;
+	color:inherit;
 }
 
 box[class="CardView"] {
-	padding: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
 	padding-top: 12px;
 	padding-bottom: 4px;
 	border: none;
@@ -64,30 +48,47 @@ spring[class="CardViewHeadingSpace"] {
 	height: 3px;
 }
 
+spring[class="CardViewBottomSpace"] {
+	height: 10px;
+}
+
 
 /* Custom Trees */
 
 tree[class="abDirectory"] treeitem > treerow > treecell > titledbutton {
- vertical-align: bottom;
- min-height: 1px;
- min-width: 1px;
- height: 1em;
- width: 1em;
- margin:0px;
- padding:0px;
- border:none;
- list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
+	 vertical-align: bottom;
+	 min-height: 1px;
+	 min-width: 1px;
+	 height: 1em;
+	 width: 1em;
+	 margin:0px;
+	 padding:0px;
+	 border:none;
+	 list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
+	 color:inherit;
 }
 
 tree[class="abResults"] treeitem > treerow  > treecell > titledbutton {
- vertical-align: middle;
- min-height: 1px;
- min-width: 1px;
- height: 1em;
- width: 2em;
- margin:0px;
- padding:0px;
- border:none;
- list-style-image: url("chrome://addressbook/skin/person.gif");
+	 vertical-align: middle;
+	 min-height: 1px;
+	 min-width: 1px;
+	 height: 1em;
+	 width: 2em;
+	 margin:0px;
+	 padding:0px;
+	 border:none;
+	 list-style-image: url("chrome://addressbook/skin/person.gif");
+	 color:inherit;
+}
+
+
+/* Address Book specific style */
+
+div[hide] {
+	display: none;
+}
+
+box[hide] {
+	display: none;
 }
 

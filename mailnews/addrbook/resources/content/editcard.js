@@ -47,7 +47,7 @@ function OnLoadEditCard()
 		editCard.generateDisplayName = false;
 	}
 	
-	GetCardValues(editCard.card, frames["editcard"].document);
+	GetCardValues(editCard.card, document);
 		
 	//top.window.setAttribute('title', editCardTitlePrefix + editCard.card.DisplayName);
 }
@@ -85,7 +85,7 @@ function NewCardOKButton()
 
 	if ( cardproperty )
 	{
-		SetCardValues(cardproperty, frames["editcard"].document);
+		SetCardValues(cardproperty, document);
 	
 		cardproperty.AddCardToDatabase(editCard.abURI);
 	}
@@ -96,7 +96,7 @@ function NewCardOKButton()
 
 function EditCardOKButton()
 {
-	SetCardValues(editCard.card, frames["editcard"].document);
+	SetCardValues(editCard.card, document);
 	
 	editCard.card.EditCardToDatabase(editCard.abURI);
 	
@@ -218,12 +218,11 @@ function GenerateDisplayName()
 {
 	if ( editCard.generateDisplayName )
 	{
-		var doc = frames["editcard"].document;
 		var displayName;
 		
-		var firstNameField = doc.getElementById('FirstName');
-		var lastNameField = doc.getElementById('LastName');
-		var displayNameField = doc.getElementById('DisplayName');
+		var firstNameField = getElementById('FirstName');
+		var lastNameField = getElementById('LastName');
+		var displayNameField = getElementById('DisplayName');
 
 		/* todo: i18N work todo here */
 		/* this used to be XP_GetString(MK_ADDR_FIRST_LAST_SEP) */

@@ -2,6 +2,7 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+<?xul-overlay href="chrome://addressbook/content/editcard.xul"?>
 
 <!DOCTYPE window
 [
@@ -17,7 +18,7 @@
 		onload="OnLoadNewCard()"
 		class="dialog"
 		width="400" height="600"
-		style="width:100%; height:100%; padding:0px"
+		style="padding:0px"
 		align="vertical">
 
 	<html:script language="JavaScript" src="chrome://addressbook/content/editcard.js"/>
@@ -30,13 +31,10 @@
 		</html:select>
 		<spring flex="100%"/>
 	</box>
-	<spring style="height:1em"/>
 	
-	<!-- editcard -->
-	<html:iframe flex="100%"
-				 style="border:none"
-				 name="editcard"
-				 src="chrome://addressbook/content/editcard.xul"/>
+	<spring style="height:1em"/>
+		
+	<box id="editcard"/>
 	
 	<box id="okCancelButtons"/>
 
