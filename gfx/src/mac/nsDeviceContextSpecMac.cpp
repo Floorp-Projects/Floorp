@@ -189,30 +189,30 @@ Handle  itemH;
         ::GetDialogItem(aDialog, firstItem+ePrintSelectionCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
-          gPrintSettings->SetPrintRange(nsIPrintOptions::kRangeSelection);
+          gPrintSettings->SetPrintRange(nsIPrintSettings::kRangeSelection);
         } else {
-          gPrintSettings->SetPrintRange(nsIPrintOptions::kRangeAllPages);
+          gPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
         }
         
         // print frames as is
         ::GetDialogItem(aDialog, firstItem+ePrintFrameAsIsCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
-          gPrintSettings->SetPrintFrameType(nsIPrintOptions::kFramesAsIs);
+          gPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
         }
         
         // selected frame
         ::GetDialogItem(aDialog, firstItem+ePrintSelectedFrameCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
-          gPrintSettings->SetPrintFrameType(nsIPrintOptions::kSelectedFrame);
+          gPrintSettings->SetPrintFrameType(nsIPrintSettings::kSelectedFrame);
         }
         
         // print all frames
         ::GetDialogItem(aDialog, firstItem+ePrintAllFramesCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
-          gPrintSettings->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
+          gPrintSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
         }        
       }
     }
@@ -261,7 +261,7 @@ static pascal TPPrDlg MyJobDlgInit(THPrint aHPrint)
   Handle  itemH;
   Rect    itemBox;
   PRBool  isOn;
-  PRInt16 howToEnableFrameUI = nsIPrintOptions::kFrameEnableNone;
+  PRInt16 howToEnableFrameUI = nsIPrintSettings::kFrameEnableNone;
 
   prFirstItem = AppendToDialog(gPrtJobDialog, DITL_ADDITIONS);
 
@@ -282,14 +282,14 @@ static pascal TPPrDlg MyJobDlgInit(THPrint aHPrint)
   gPrintSelection = PR_FALSE;
   ::SetControlValue((ControlHandle) itemH, gPrintSelection);
 
-  if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAll) {
+  if (howToEnableFrameUI == nsIPrintSettings::kFrameEnableAll) {
     for (i = ePrintFrameAsIsCheckboxID; i <= ePrintAllFramesCheckboxID; i++){
       ::GetDialogItem((DialogPtr) gPrtJobDialog, prFirstItem+i-1, &itemType, &itemH, &itemBox);
       ::SetControlValue((ControlHandle) itemH, (i==4));
       ::HiliteControl((ControlHandle)itemH, 0);
     }
   }
-  else if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAsIsAndEach) {
+  else if (howToEnableFrameUI == nsIPrintSettings::kFrameEnableAsIsAndEach) {
     for (i = ePrintFrameAsIsCheckboxID; i <= ePrintAllFramesCheckboxID; i++){
       ::GetDialogItem((DialogPtr) gPrtJobDialog, prFirstItem+i-1, &itemType, &itemH, &itemBox);
       ::SetControlValue((ControlHandle) itemH, (i==4));
@@ -364,7 +364,7 @@ NS_IMETHODIMP nsDeviceContextSpecMac::Init(nsIPrintSettings* aPS, PRBool aQuiet)
   
   // see if we have a print record
   void* printRecordData = nsnull;
-  rv = printOptionsService->GetNativeData(nsIPrintOptions::kNativeDataPrintRecord, &printRecordData);
+  rv = printOptionsService->GetNativeData(nsIPrintSettings::kNativeDataPrintRecord, &printRecordData);
   if (NS_SUCCEEDED(rv) && printRecordData)
   {
     ::BlockMoveData(printRecordData, *hPrintRec, sizeof(TPrint));
