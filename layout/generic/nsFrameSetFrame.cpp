@@ -693,7 +693,9 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString&       aSpec,
   static const PRUnichar PERCENT('%');
   static const PRUnichar COMMA(',');
 
-  aSpec.Trim(" \n\r\t"); // remove leading and trailing whitespace  
+  // remove leading and trailing whitespace
+  // also remove leading/trialing commas (bug 31482)
+  aSpec.Trim(" \n\r\t,");
   
   // Count the commas 
   PRInt32 commaX = aSpec.FindChar(COMMA);
