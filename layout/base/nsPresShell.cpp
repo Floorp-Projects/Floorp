@@ -70,6 +70,7 @@
 #include "nsIScrollPositionListener.h"
 #include "nsICompositeListener.h"
 #include "stopwatch.h"
+#include "nsWeakPtr.h"
 #ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
@@ -84,6 +85,10 @@
 #include "nsIFormatConverter.h"
 #include "nsIWebShell.h"
 #include "nsIBrowserWindow.h"
+#include "nsIURI.h"
+#include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
+
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
@@ -100,6 +105,7 @@ static NS_DEFINE_IID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 // Class IID's
 static NS_DEFINE_IID(kFrameSelectionCID, NS_FRAMESELECTION_CID);
 static NS_DEFINE_IID(kCRangeCID, NS_RANGE_CID);
+static NS_DEFINE_IID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
 
 // IID's
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -203,7 +209,8 @@ public:
   NS_IMETHOD GetFrameSelection(nsIFrameSelection** aSelection);
 
   NS_IMETHOD EnterReflowLock();
-  NS_IMETHOD ExitReflowLock();
+  NS_IMETHOD ExitReflowLock(PRBool aTryToReflow, PRBool aDoSynchronousReflow);
+
   NS_IMETHOD BeginObservingDocument();
   NS_IMETHOD EndObservingDocument();
   NS_IMETHOD InitialReflow(nscoord aWidth, nscoord aHeight);
@@ -220,7 +227,7 @@ public:
   NS_IMETHOD GetPlaceholderFrameFor(nsIFrame*  aFrame,
                                     nsIFrame** aPlaceholderFrame) const;
   NS_IMETHOD AppendReflowCommand(nsIReflowCommand* aReflowCommand);
-  NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame);
+  NS_IMETHOD CancelReflowCommand(nsIFrame* aTargetFrame);  
   NS_IMETHOD ProcessReflowCommands();
   NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame,
@@ -241,6 +248,9 @@ public:
 
   NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState);
   NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState);
+
+  NS_IMETHOD GetReflowEventStatus(PRBool* aPending);
+  NS_IMETHOD SetReflowEventStatus(PRBool aPending);
 
   //nsIViewObserver interface
 
@@ -325,7 +335,7 @@ public:
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
-
+  
 protected:
   virtual ~PresShell();
 
@@ -366,6 +376,18 @@ protected:
   PRBool                        mScrollingEnabled; //used to disable programmable scrolling from outside
   nsIFrameManager*              mFrameManager;  // we hold a reference
   PresShellViewEventListener    *mViewEventListener;
+  PRBool                        mPendingReflowEvent;
+  nsCOMPtr<nsIEventQueue>       mEventQueue;
+
+#ifdef MOZ_PERF_METRICS
+  Stopwatch mReflowWatch;  // Used for measuring time spent in reflow
+  Stopwatch mFrameCreationWatch;  // Used for measuring time spent in frame creation
+#endif
+
+#ifdef DEBUG_nisheeth
+  PRInt32 mReflows;
+  PRInt32 mDiscardedReflowCommands;
+#endif
 
 private:
   //helper funcs for disabing autoscrolling
@@ -378,10 +400,9 @@ private:
   void PushCurrentEventFrame();
   void PopCurrentEventFrame();
 
-#ifdef MOZ_PERF_METRICS
-  Stopwatch mReflowWatch;  // Used for measuring time spent in reflow
-  Stopwatch mFrameCreationWatch;  // Used for measuring time spent in frame creation
-#endif
+  // helper function for posting reflow events
+  void PostReflowEvent();
+  PRBool AlreadyInQueue(nsIReflowCommand* aReflowCommand);
 };
 
 #ifdef NS_DEBUG
@@ -485,6 +506,12 @@ PresShell::PresShell()
   mCurrentEventContent = nsnull;
   mCurrentEventFrame = nsnull;
   EnableScrolling();
+  mPendingReflowEvent = PR_FALSE;  
+
+#ifdef DEBUG_nisheeth
+  mReflows = 0;
+  mDiscardedReflowCommands = 0;
+#endif
 }
 
 NS_IMPL_ADDREF(PresShell)
@@ -655,10 +682,15 @@ PresShell::Init(nsIDocument* aDocument,
         if (nsWebShellContent == webShellType){
           mDocument->SetDisplaySelection(PR_TRUE);
         }
-      }
+      }      
     }
   }
 
+  // Cache the event queue of the current UI thread
+  NS_WITH_SERVICE(nsIEventQueueService, eventService, kEventQueueServiceCID, &result);
+  if (NS_SUCCEEDED(result))
+    result = eventService->GetThreadEventQueue(PR_GetCurrentThread(), getter_AddRefs(mEventQueue));
+  
   return NS_OK;
 }
 
@@ -670,11 +702,14 @@ PresShell::EnterReflowLock()
 }
 
 NS_IMETHODIMP
-PresShell::ExitReflowLock()
+PresShell::ExitReflowLock(PRBool aTryToReflow, PRBool aDoSynchronousReflow)
 {
   PRUint32 newReflowLockCount = mReflowLockCount - 1;
-  if (newReflowLockCount == 0) {
-    ProcessReflowCommands();
+  if (newReflowLockCount == 0 && aTryToReflow) {
+    if (aDoSynchronousReflow)
+      ProcessReflowCommands();
+    else
+      PostReflowEvent();
   }
   mReflowLockCount = newReflowLockCount;
   return NS_OK;
@@ -978,7 +1013,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     NS_STOP_STOPWATCH(mReflowWatch)
   }
 
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
 
   if (mViewManager && mCaret && !mViewEventListener) {
     nsIScrollableView* scrollingView = nsnull;
@@ -1064,7 +1099,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     printf("PresShell::ResizeReflow: null root frame\n");
 #endif
   }
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
   
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -1244,7 +1279,7 @@ PresShell::StyleChangeReflow()
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::StyleChangeReflow"));
   }
 
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
 
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -1325,6 +1360,20 @@ PresShell::BeginLoad(nsIDocument *aDocument)
 NS_IMETHODIMP
 PresShell::EndLoad(nsIDocument *aDocument)
 {
+#ifdef DEBUG_nisheeth  
+  if (aDocument) {
+    nsIURI* uri = nsnull;
+    if ((uri = aDocument->GetDocumentURL())) {
+      char* spec = nsnull;
+      if (NS_SUCCEEDED(uri->GetSpec(&spec))) {
+        printf("**** Url: '%s', Reflows: %d, Discarded Reflows: %d\n", spec, mReflows, mDiscardedReflowCommands);
+        Recycle(spec);
+      }
+    }
+    NS_RELEASE(uri);
+  }
+#endif
+
 #ifdef MOZ_PERF_METRICS
   // Dump reflow, style resolution and frame construction times here.
   RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Reflow: PresShell::EndLoad(), this=%p\n", this));
@@ -1365,6 +1414,44 @@ PresShell::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
   return NS_OK;
 }
 
+
+// aReflowCommand is considered to be already in the queue if the
+// frame it targets is targeted by a pre-existing reflow command in
+// the queue.
+PRBool
+PresShell::AlreadyInQueue(nsIReflowCommand* aReflowCommand)
+{
+  PRInt32 i, n = mReflowCommands.Count();
+  nsIFrame* targetFrame;
+  PRBool inQueue = PR_FALSE;
+
+  if (NS_SUCCEEDED(aReflowCommand->GetTarget(targetFrame))) {
+    // Iterate over the reflow commands and compare the targeted frames.
+    for (i = 0; i < n; i++) {
+      nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(i);
+      if (rc) {
+        nsIFrame* targetOfQueuedRC;
+        if (NS_SUCCEEDED(rc->GetTarget(targetOfQueuedRC))) {
+          nsIReflowCommand::ReflowType RCType;
+          nsIReflowCommand::ReflowType queuedRCType;
+          aReflowCommand->GetType(RCType);
+          rc->GetType(queuedRCType);
+          if (targetFrame == targetOfQueuedRC &&
+            RCType == queuedRCType) {
+#ifdef DEBUG_nisheeth
+            mDiscardedReflowCommands++;
+#endif
+            inQueue = PR_TRUE;
+            break;
+          } 
+        }
+      }
+    }
+  }
+
+  return inQueue;
+}
+
 NS_IMETHODIMP
 PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 {
@@ -1387,8 +1474,14 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
     }
   }
 #endif
-  NS_ADDREF(aReflowCommand);
-  return (mReflowCommands.AppendElement(aReflowCommand) ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+  PRInt32 index = nsnull;
+  nsresult rv = NS_OK;
+  if (!AlreadyInQueue(aReflowCommand)) {
+    NS_ADDREF(aReflowCommand);
+    rv = (mReflowCommands.AppendElement(aReflowCommand) ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1418,6 +1511,66 @@ PresShell::CancelReflowCommand(nsIFrame* aTargetFrame)
   return NS_OK;
 }
 
+
+//-------------- Begin Reflow Event Definition ------------------------
+
+struct ReflowEvent : public PLEvent {
+  ReflowEvent(nsIPresShell* aPresShell, nsIEventQueue* aQueue);
+  ~ReflowEvent() { }
+
+  void HandleEvent() {
+    nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShell);
+    if (presShell) {
+      presShell->EnterReflowLock();
+      presShell->ProcessReflowCommands();
+      presShell->ExitReflowLock(PR_FALSE, PR_TRUE);
+      presShell->SetReflowEventStatus(PR_FALSE);
+    }
+    else
+      mPresShell = 0;    
+  }
+
+  nsWeakPtr mPresShell;
+};
+
+static void PR_CALLBACK HandlePLEvent(ReflowEvent* aEvent)
+{
+  aEvent->HandleEvent();
+}
+
+static void PR_CALLBACK DestroyPLEvent(ReflowEvent* aEvent)
+{
+  delete aEvent;
+}
+
+
+ReflowEvent::ReflowEvent(nsIPresShell* aPresShell, nsIEventQueue* aQueue)
+{
+  NS_ASSERTION(aPresShell && aQueue, "Null parameters!");
+    
+  mPresShell = getter_AddRefs(NS_GetWeakReference(aPresShell));
+
+  PL_InitEvent(this, nsnull,
+               (PLHandleEventProc) ::HandlePLEvent,
+               (PLDestroyEventProc) ::DestroyPLEvent);
+  
+  aQueue->PostEvent(this);  
+}
+
+//-------------- End Reflow Event Definition ---------------------------
+
+
+void
+PresShell::PostReflowEvent()
+{
+  if (!mPendingReflowEvent) {
+    ReflowEvent* ev;    
+
+    ev = new ReflowEvent((nsIPresShell*) this, mEventQueue);    
+    mPendingReflowEvent = PR_TRUE;
+  }
+}
+
 NS_IMETHODIMP
 PresShell::ProcessReflowCommands()
 {
@@ -1427,6 +1580,10 @@ PresShell::ProcessReflowCommands()
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsIRenderingContext*  rcx;
     nsIFrame*             rootFrame;
+
+#ifdef DEBUG_nisheeth
+    mReflows++;
+#endif
 
     mFrameManager->GetRootFrame(&rootFrame);
     CreateRenderingContext(rootFrame, &rcx);
@@ -1828,6 +1985,21 @@ PresShell::SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState)
 }
 
 NS_IMETHODIMP
+PresShell::GetReflowEventStatus(PRBool* aPending)
+{
+  if (aPending)
+    *aPending = mPendingReflowEvent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::SetReflowEventStatus(PRBool aPending)
+{
+  mPendingReflowEvent = aPending;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 PresShell::ContentChanged(nsIDocument *aDocument,
                           nsIContent*  aContent,
                           nsISupports* aSubContent)
@@ -1835,7 +2007,7 @@ PresShell::ContentChanged(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentChanged(mPresContext, aContent, aSubContent);
   VERIFY_STYLE_TREE;
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
 
   return rv;
 }
@@ -1848,7 +2020,7 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentStatesChanged(mPresContext, aContent1, aContent2);
   VERIFY_STYLE_TREE;
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
 
   return rv;
 }
@@ -1864,7 +2036,7 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aHint);
   VERIFY_STYLE_TREE;
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
   return rv;
 }
 
@@ -1891,7 +2063,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
 
   RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   NS_STOP_STOPWATCH(mFrameCreationWatch)
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_FALSE);
   return rv;
 }
 
@@ -1904,7 +2076,7 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   EnterReflowLock();
   nsresult  rv = mStyleSet->ContentInserted(mPresContext, aContainer, aChild, aIndexInContainer);
   VERIFY_STYLE_TREE;
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_FALSE);
   return rv;
 }
 
@@ -1919,7 +2091,7 @@ PresShell::ContentReplaced(nsIDocument* aDocument,
   nsresult  rv = mStyleSet->ContentReplaced(mPresContext, aContainer, aOldChild,
                                             aNewChild, aIndexInContainer);
   VERIFY_STYLE_TREE;
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
   return rv;
 }
 
@@ -1933,7 +2105,7 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   nsresult  rv = mStyleSet->ContentRemoved(mPresContext, aContainer,
                                            aChild, aIndexInContainer);
   VERIFY_STYLE_TREE;
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
   return rv;
 }
 
@@ -1945,7 +2117,7 @@ PresShell::ReconstructFrames(void)
   EnterReflowLock();
   rv = mStyleSet->ReconstructDocElementHierarchy(mPresContext);
   VERIFY_STYLE_TREE;
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
 
   return rv;
 }
@@ -1982,7 +2154,7 @@ PresShell::StyleRuleChanged(nsIDocument *aDocument,
   nsresult  rv = mStyleSet->StyleRuleChanged(mPresContext, aStyleSheet,
                                              aStyleRule, aHint);
   VERIFY_STYLE_TREE;
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
   return rv;
 }
 
@@ -1995,7 +2167,7 @@ PresShell::StyleRuleAdded(nsIDocument *aDocument,
   nsresult rv = mStyleSet->StyleRuleAdded(mPresContext, aStyleSheet,
                                           aStyleRule);
   VERIFY_STYLE_TREE;
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2012,7 +2184,7 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
   nsresult  rv = mStyleSet->StyleRuleRemoved(mPresContext, aStyleSheet,
                                              aStyleRule);
   VERIFY_STYLE_TREE;
-  ExitReflowLock();
+  ExitReflowLock(PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) {
     return rv;
   }

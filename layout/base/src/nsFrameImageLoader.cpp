@@ -506,7 +506,7 @@ nsFrameImageLoader::NotifyFrames(PRBool aIsSizeUpdate)
   }
 
   if (shell) {
-    shell->ExitReflowLock();
+    shell->ExitReflowLock(PR_TRUE, PR_TRUE);
     NS_RELEASE(shell);
   }
 }

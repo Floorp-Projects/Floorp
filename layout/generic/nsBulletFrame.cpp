@@ -767,7 +767,7 @@ nsBulletFrame::UpdateBulletCB(nsIPresContext* aPresContext,
         shell->EnterReflowLock();
         shell->AppendReflowCommand(cmd);
         NS_RELEASE(cmd);
-        shell->ExitReflowLock();
+        shell->ExitReflowLock(PR_TRUE, PR_TRUE);
       }
     }
   }
