@@ -161,6 +161,12 @@
         <parameter name="aStartsBlank"/>
         <body>
         <![CDATA[
+
+          //XXXjrgm do we need this? Is the check of 'aStatus' below ever true?
+          const NS_ERROR_MODULE_NETWORK = 0x804b0000;
+          const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
+          const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
+
           return ({
             mTabBrowser: this,
             mTab: aTab,
@@ -186,6 +192,7 @@
               if (!aRequest)
                 return;
       
+              //XXXjrgm do we need this? Is the check of 'aStatus' below ever true?
               //ignore local/resource:/chrome: files
               if (aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
                 return;
@@ -247,6 +254,7 @@
             },
 
             onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage) {
+              //XXXjrgm do we need this? Is the check of 'aStatus' below ever true?
               //ignore local/resource:/chrome: files
               if (this.mBlank || aStatus == NS_NET_STATUS_READ_FROM || aStatus == NS_NET_STATUS_WROTE_TO)
                 return;
