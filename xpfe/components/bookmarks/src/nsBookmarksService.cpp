@@ -2175,7 +2175,7 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 				}
 				else
 				{
-					char	*url = nsnull;
+					const char	*url = nsnull;
 					if (NS_SUCCEEDED(rv = child->GetValueConst(&url)) && (url))
 					{
 						nsAutoString	uri(url);
