@@ -3015,9 +3015,9 @@ static void ListNameSpace(FILE* out, nsINameSpaceManager*& aManager, PRInt32 aNa
       aManager->GetNameSpaceURI(aNameSpaceID, buffer);
     }
     else {
-      buffer = "{namespace ID: ";
-      buffer.Append(aNameSpaceID, 10);
-      buffer.Append("}");
+      buffer.AssignWithConversion("{namespace ID: ");
+      buffer.AppendInt(aNameSpaceID, 10);
+      buffer.AppendWithConversion("}");
     }
     fputs(buffer, out);
     fputs("|", out);
@@ -3032,7 +3032,7 @@ static void ListSelector(FILE* out, const nsCSSSelector* aSelector)
   if (0 != aSelector->mOperator) {
     buffer.Truncate();
     buffer.Append(aSelector->mOperator);
-    buffer.Append(" ");
+    buffer.AppendWithConversion(" ");
     fputs(buffer, out);
   }
   ListNameSpace(out, nameSpaceMgr, aSelector->mNameSpace);
@@ -3097,9 +3097,9 @@ CSSStyleRuleImpl::List(FILE* out, PRInt32 aIndent) const
 
   nsAutoString buffer;
 
-  buffer.Append("weight: ");
-  buffer.Append(mWeight, 10);
-  buffer.Append(" ");
+  buffer.AppendWithConversion("weight: ");
+  buffer.AppendInt(mWeight, 10);
+  buffer.AppendWithConversion(" ");
   fputs(buffer, out);
   if (nsnull != mDeclaration) {
     mDeclaration->List(out);

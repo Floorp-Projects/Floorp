@@ -284,8 +284,8 @@ void nsCSSRect::List(FILE* out, nsCSSProperty aPropID, PRInt32 aIndent) const
   nsAutoString buffer;
 
   if (eCSSProperty_UNKNOWN < aPropID) {
-    buffer.Append(nsCSSProps::GetStringValue(aPropID));
-    buffer.Append(": ");
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aPropID));
+    buffer.AppendWithConversion(": ");
   }
 
   mTop.AppendToString(buffer);
@@ -302,23 +302,23 @@ void nsCSSRect::List(FILE* out, PRInt32 aIndent, const nsCSSProperty aTRBL[]) co
   nsAutoString buffer;
 
   if (eCSSUnit_Null != mTop.GetUnit()) {
-    buffer.Append(nsCSSProps::GetStringValue(aTRBL[0]));
-    buffer.Append(": ");
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[0]));
+    buffer.AppendWithConversion(": ");
     mTop.AppendToString(buffer);
   }
   if (eCSSUnit_Null != mRight.GetUnit()) {
-    buffer.Append(nsCSSProps::GetStringValue(aTRBL[1]));
-    buffer.Append(": ");
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[1]));
+    buffer.AppendWithConversion(": ");
     mRight.AppendToString(buffer);
   }
   if (eCSSUnit_Null != mBottom.GetUnit()) {
-    buffer.Append(nsCSSProps::GetStringValue(aTRBL[2]));
-    buffer.Append(": ");
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[2]));
+    buffer.AppendWithConversion(": ");
     mBottom.AppendToString(buffer); 
   }
   if (eCSSUnit_Null != mLeft.GetUnit()) {
-    buffer.Append(nsCSSProps::GetStringValue(aTRBL[3]));
-    buffer.Append(": ");
+    buffer.AppendWithConversion(nsCSSProps::GetStringValue(aTRBL[3]));
+    buffer.AppendWithConversion(": ");
     mLeft.AppendToString(buffer);
   }
 
@@ -3179,10 +3179,10 @@ PRBool CSSDeclarationImpl::AppendValueToString(nsCSSProperty aProperty, const ns
 
   if ((eCSSUnit_String <= unit) && (unit <= eCSSUnit_Counters)) {
     switch (unit) {
-      case eCSSUnit_URL:      aResult.Append("url(");       break;
-      case eCSSUnit_Attr:     aResult.Append("attr(");      break;
-      case eCSSUnit_Counter:  aResult.Append("counter(");   break;
-      case eCSSUnit_Counters: aResult.Append("counters(");  break;
+      case eCSSUnit_URL:      aResult.AppendWithConversion("url(");       break;
+      case eCSSUnit_Attr:     aResult.AppendWithConversion("attr(");      break;
+      case eCSSUnit_Counter:  aResult.AppendWithConversion("counter(");   break;
+      case eCSSUnit_Counters: aResult.AppendWithConversion("counters(");  break;
       default:  break;
     }
     nsAutoString  buffer;
@@ -3197,15 +3197,15 @@ PRBool CSSDeclarationImpl::AppendValueToString(nsCSSProperty aProperty, const ns
         // get a string mapping the name
         nsCString str;
         if (nsCSSProps::GetColorName(aValue.GetIntValue(), str)){
-          aResult.Append(str);
+          aResult.AppendWithConversion(str);
         } else {
-          aResult.Append(aValue.GetIntValue(), 10);
+          aResult.AppendInt(aValue.GetIntValue(), 10);
         }
       }
       break;
 
       default:
-        aResult.Append(aValue.GetIntValue(), 10);
+        aResult.AppendInt(aValue.GetIntValue(), 10);
     }
   }
   else if (eCSSUnit_Enumerated == unit) {
@@ -3217,119 +3217,119 @@ PRBool CSSDeclarationImpl::AppendValueToString(nsCSSProperty aProperty, const ns
              mask <= NS_STYLE_TEXT_DECORATION_BLINK; 
              mask <<= 1) {
           if ((mask & intValue) == mask) {
-            aResult.Append(nsCSSProps::LookupPropertyValue(aProperty, mask));
+            aResult.AppendWithConversion(nsCSSProps::LookupPropertyValue(aProperty, mask));
             intValue &= ~mask;
             if (0 != intValue) { // more left
-              aResult.Append(' ');
+              aResult.AppendWithConversion(' ');
             }
           }
         }
       }
       else {
-        aResult.Append(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_TEXT_DECORATION_NONE));
+        aResult.AppendWithConversion(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_TEXT_DECORATION_NONE));
       }
     }
     else if (eCSSProperty_azimuth == aProperty) {
       PRInt32 intValue = aValue.GetIntValue();
-      aResult.Append(nsCSSProps::LookupPropertyValue(aProperty, (intValue & ~NS_STYLE_AZIMUTH_BEHIND)));
+      aResult.AppendWithConversion(nsCSSProps::LookupPropertyValue(aProperty, (intValue & ~NS_STYLE_AZIMUTH_BEHIND)));
       if ((NS_STYLE_AZIMUTH_BEHIND & intValue) != 0) {
-        aResult.Append(' ');
-        aResult.Append(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_AZIMUTH_BEHIND));
+        aResult.AppendWithConversion(' ');
+        aResult.AppendWithConversion(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_AZIMUTH_BEHIND));
       }
     }
     else if (eCSSProperty_play_during_flags == aProperty) {
       PRInt32 intValue = aValue.GetIntValue();
       if ((NS_STYLE_PLAY_DURING_MIX & intValue) != 0) {
-        aResult.Append(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PLAY_DURING_MIX));
+        aResult.AppendWithConversion(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PLAY_DURING_MIX));
       }
       if ((NS_STYLE_PLAY_DURING_REPEAT & intValue) != 0) {
         if (NS_STYLE_PLAY_DURING_REPEAT != intValue) {
-          aResult.Append(' ');
+          aResult.AppendWithConversion(' ');
         }
-        aResult.Append(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PLAY_DURING_REPEAT));
+        aResult.AppendWithConversion(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PLAY_DURING_REPEAT));
       }
     }
     else if (eCSSProperty_marks == aProperty) {
       PRInt32 intValue = aValue.GetIntValue();
       if ((NS_STYLE_PAGE_MARKS_CROP & intValue) != 0) {
-        aResult.Append(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PAGE_MARKS_CROP));
+        aResult.AppendWithConversion(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PAGE_MARKS_CROP));
       }
       if ((NS_STYLE_PAGE_MARKS_REGISTER & intValue) != 0) {
         if ((NS_STYLE_PAGE_MARKS_CROP & intValue) != 0) {
-          aResult.Append(' ');
+          aResult.AppendWithConversion(' ');
         }
-        aResult.Append(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PAGE_MARKS_REGISTER));
+        aResult.AppendWithConversion(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_PAGE_MARKS_REGISTER));
       }
     }
     else {
-      const nsString& name = nsCSSProps::LookupPropertyValue(aProperty, aValue.GetIntValue());
-      aResult.Append(name);
+      const nsCString& name = nsCSSProps::LookupPropertyValue(aProperty, aValue.GetIntValue());
+      aResult.AppendWithConversion(name);
     }
   }
   else if (eCSSUnit_Color == unit){
     nscolor color = aValue.GetColorValue();
-    aResult.Append("rgb(");
-    aResult.Append(NS_GET_R(color), 10);
-    aResult.Append(",");
-    aResult.Append(NS_GET_G(color), 10);
-    aResult.Append(",");
-    aResult.Append(NS_GET_B(color), 10);
-    aResult.Append(')');
+    aResult.AppendWithConversion("rgb(");
+    aResult.AppendInt(NS_GET_R(color), 10);
+    aResult.AppendWithConversion(",");
+    aResult.AppendInt(NS_GET_G(color), 10);
+    aResult.AppendWithConversion(",");
+    aResult.AppendInt(NS_GET_B(color), 10);
+    aResult.AppendWithConversion(')');
   }
   else if (eCSSUnit_Percent == unit) {
-    aResult.Append(aValue.GetPercentValue() * 100.0f);
+    aResult.AppendFloat(aValue.GetPercentValue() * 100.0f);
   }
   else if (eCSSUnit_Percent < unit) {  // length unit
-    aResult.Append(aValue.GetFloatValue());
+    aResult.AppendFloat(aValue.GetFloatValue());
   }
 
   switch (unit) {
     case eCSSUnit_Null:         break;
-    case eCSSUnit_Auto:         aResult.Append("auto");     break;
-    case eCSSUnit_Inherit:      aResult.Append("inherit");  break;
-    case eCSSUnit_None:         aResult.Append("none");     break;
-    case eCSSUnit_Normal:       aResult.Append("normal");   break;
+    case eCSSUnit_Auto:         aResult.AppendWithConversion("auto");     break;
+    case eCSSUnit_Inherit:      aResult.AppendWithConversion("inherit");  break;
+    case eCSSUnit_None:         aResult.AppendWithConversion("none");     break;
+    case eCSSUnit_Normal:       aResult.AppendWithConversion("normal");   break;
 
     case eCSSUnit_String:       break;
     case eCSSUnit_URL:
     case eCSSUnit_Attr:
     case eCSSUnit_Counter:
-    case eCSSUnit_Counters:     aResult.Append(')');    break;
+    case eCSSUnit_Counters:     aResult.AppendWithConversion(')');    break;
     case eCSSUnit_Integer:      break;
     case eCSSUnit_Enumerated:   break;
     case eCSSUnit_Color:        break;
-    case eCSSUnit_Percent:      aResult.Append("%");    break;
+    case eCSSUnit_Percent:      aResult.AppendWithConversion("%");    break;
     case eCSSUnit_Number:       break;
 
-    case eCSSUnit_Inch:         aResult.Append("in");   break;
-    case eCSSUnit_Foot:         aResult.Append("ft");   break;
-    case eCSSUnit_Mile:         aResult.Append("mi");   break;
-    case eCSSUnit_Millimeter:   aResult.Append("mm");   break;
-    case eCSSUnit_Centimeter:   aResult.Append("cm");   break;
-    case eCSSUnit_Meter:        aResult.Append("m");    break;
-    case eCSSUnit_Kilometer:    aResult.Append("km");   break;
-    case eCSSUnit_Point:        aResult.Append("pt");   break;
-    case eCSSUnit_Pica:         aResult.Append("pc");   break;
-    case eCSSUnit_Didot:        aResult.Append("dt");   break;
-    case eCSSUnit_Cicero:       aResult.Append("cc");   break;
+    case eCSSUnit_Inch:         aResult.AppendWithConversion("in");   break;
+    case eCSSUnit_Foot:         aResult.AppendWithConversion("ft");   break;
+    case eCSSUnit_Mile:         aResult.AppendWithConversion("mi");   break;
+    case eCSSUnit_Millimeter:   aResult.AppendWithConversion("mm");   break;
+    case eCSSUnit_Centimeter:   aResult.AppendWithConversion("cm");   break;
+    case eCSSUnit_Meter:        aResult.AppendWithConversion("m");    break;
+    case eCSSUnit_Kilometer:    aResult.AppendWithConversion("km");   break;
+    case eCSSUnit_Point:        aResult.AppendWithConversion("pt");   break;
+    case eCSSUnit_Pica:         aResult.AppendWithConversion("pc");   break;
+    case eCSSUnit_Didot:        aResult.AppendWithConversion("dt");   break;
+    case eCSSUnit_Cicero:       aResult.AppendWithConversion("cc");   break;
 
-    case eCSSUnit_EM:           aResult.Append("em");   break;
-    case eCSSUnit_EN:           aResult.Append("en");   break;
-    case eCSSUnit_XHeight:      aResult.Append("ex");   break;
-    case eCSSUnit_CapHeight:    aResult.Append("cap");  break;
-    case eCSSUnit_Char:         aResult.Append("ch");   break;
+    case eCSSUnit_EM:           aResult.AppendWithConversion("em");   break;
+    case eCSSUnit_EN:           aResult.AppendWithConversion("en");   break;
+    case eCSSUnit_XHeight:      aResult.AppendWithConversion("ex");   break;
+    case eCSSUnit_CapHeight:    aResult.AppendWithConversion("cap");  break;
+    case eCSSUnit_Char:         aResult.AppendWithConversion("ch");   break;
 
-    case eCSSUnit_Pixel:        aResult.Append("px");   break;
+    case eCSSUnit_Pixel:        aResult.AppendWithConversion("px");   break;
 
-    case eCSSUnit_Degree:       aResult.Append("deg");  break;
-    case eCSSUnit_Grad:         aResult.Append("grad"); break;
-    case eCSSUnit_Radian:       aResult.Append("rad");  break;
+    case eCSSUnit_Degree:       aResult.AppendWithConversion("deg");  break;
+    case eCSSUnit_Grad:         aResult.AppendWithConversion("grad"); break;
+    case eCSSUnit_Radian:       aResult.AppendWithConversion("rad");  break;
 
-    case eCSSUnit_Hertz:        aResult.Append("Hz");   break;
-    case eCSSUnit_Kilohertz:    aResult.Append("kHz");  break;
+    case eCSSUnit_Hertz:        aResult.AppendWithConversion("Hz");   break;
+    case eCSSUnit_Kilohertz:    aResult.AppendWithConversion("kHz");  break;
 
-    case eCSSUnit_Seconds:      aResult.Append("s");    break;
-    case eCSSUnit_Milliseconds: aResult.Append("ms");   break;
+    case eCSSUnit_Seconds:      aResult.AppendWithConversion("s");    break;
+    case eCSSUnit_Milliseconds: aResult.AppendWithConversion("ms");   break;
   }
 
   return PR_TRUE;
@@ -3358,41 +3358,41 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
   // shorthands
   switch (aProperty) {
     case eCSSProperty_background:
-      if (AppendValueToString(eCSSProperty_background_color, aValue)) aValue.Append(' ');
-      if (AppendValueToString(eCSSProperty_background_image, aValue)) aValue.Append(' ');
-      if (AppendValueToString(eCSSProperty_background_repeat, aValue)) aValue.Append(' ');
-      if (AppendValueToString(eCSSProperty_background_attachment, aValue)) aValue.Append(' ');
+      if (AppendValueToString(eCSSProperty_background_color, aValue)) aValue.AppendWithConversion(' ');
+      if (AppendValueToString(eCSSProperty_background_image, aValue)) aValue.AppendWithConversion(' ');
+      if (AppendValueToString(eCSSProperty_background_repeat, aValue)) aValue.AppendWithConversion(' ');
+      if (AppendValueToString(eCSSProperty_background_attachment, aValue)) aValue.AppendWithConversion(' ');
       if (HAS_VALUE(mColor,mBackPositionX) && HAS_VALUE(mColor,mBackPositionY)) {
         AppendValueToString(eCSSProperty_background_x_position, aValue);
-        aValue.Append(' ');
+        aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_background_y_position, aValue);
       }
       break;
     case eCSSProperty_border:
-      if (AppendValueToString(eCSSProperty_border_top_width, aValue)) aValue.Append(' ');
-      if (AppendValueToString(eCSSProperty_border_top_style, aValue)) aValue.Append(' ');
+      if (AppendValueToString(eCSSProperty_border_top_width, aValue)) aValue.AppendWithConversion(' ');
+      if (AppendValueToString(eCSSProperty_border_top_style, aValue)) aValue.AppendWithConversion(' ');
       AppendValueToString(eCSSProperty_border_top_color, aValue);
       break;
     case eCSSProperty_border_spacing:
       if (AppendValueToString(eCSSProperty_border_x_spacing, aValue)) {
-        aValue.Append(' ');
+        aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_border_y_spacing, aValue);
       }
       break;
     case eCSSProperty_clip:
       if (HAS_RECT(mDisplay,mClip)) {
-        aValue.Append("rect(");
-        AppendValueToString(eCSSProperty_clip_top, aValue);     aValue.Append(' ');
-        AppendValueToString(eCSSProperty_clip_right, aValue);   aValue.Append(' ');
-        AppendValueToString(eCSSProperty_clip_bottom, aValue);  aValue.Append(' ');
+        aValue.AppendWithConversion("rect(");
+        AppendValueToString(eCSSProperty_clip_top, aValue);     aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_clip_right, aValue);   aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_clip_bottom, aValue);  aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_clip_left, aValue);
-        aValue.Append(")");
+        aValue.AppendWithConversion(")");
       }
       break;
     case eCSSProperty_cue:
       if (HAS_VALUE(mAural,mCueAfter) && HAS_VALUE(mAural,mCueBefore)) {
         AppendValueToString(eCSSProperty_cue_after, aValue);
-        aValue.Append(' ');
+        aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_cue_before, aValue);
       }
       break;
@@ -3403,55 +3403,55 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
           AppendValueToString(eCSSProperty_cursor, cursor->mValue, aValue);
           cursor = cursor->mNext;
           if (nsnull != cursor) {
-            aValue.Append(' ');
+            aValue.AppendWithConversion(' ');
           }
         } while (nsnull != cursor);
       }
       break;
     case eCSSProperty_font:
       if (HAS_VALUE(mFont,mSize)) {
-        if (AppendValueToString(eCSSProperty_font_style, aValue)) aValue.Append(' ');
-        if (AppendValueToString(eCSSProperty_font_variant, aValue)) aValue.Append(' ');
-        if (AppendValueToString(eCSSProperty_font_weight, aValue)) aValue.Append(' ');
+        if (AppendValueToString(eCSSProperty_font_style, aValue)) aValue.AppendWithConversion(' ');
+        if (AppendValueToString(eCSSProperty_font_variant, aValue)) aValue.AppendWithConversion(' ');
+        if (AppendValueToString(eCSSProperty_font_weight, aValue)) aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_font_size, aValue);
         if (HAS_VALUE(mText,mLineHeight)) {
-          aValue.Append('/');
+          aValue.AppendWithConversion('/');
           AppendValueToString(eCSSProperty_line_height, aValue);
         }
-        aValue.Append(' ');
+        aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_font_family, aValue);
       }
       break;
     case eCSSProperty_list_style:
-      if (AppendValueToString(eCSSProperty_list_style_type, aValue)) aValue.Append(' ');
-      if (AppendValueToString(eCSSProperty_list_style_position, aValue)) aValue.Append(' ');
+      if (AppendValueToString(eCSSProperty_list_style_type, aValue)) aValue.AppendWithConversion(' ');
+      if (AppendValueToString(eCSSProperty_list_style_position, aValue)) aValue.AppendWithConversion(' ');
       AppendValueToString(eCSSProperty_list_style_image, aValue);
       break;
     case eCSSProperty_margin:
       if (HAS_RECT(mMargin,mMargin)) {
-        AppendValueToString(eCSSProperty_margin_top, aValue);     aValue.Append(' ');
-        AppendValueToString(eCSSProperty_margin_right, aValue);   aValue.Append(' ');
-        AppendValueToString(eCSSProperty_margin_bottom, aValue);  aValue.Append(' ');
+        AppendValueToString(eCSSProperty_margin_top, aValue);     aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_margin_right, aValue);   aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_margin_bottom, aValue);  aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_margin_left, aValue);
       }
       break;
     case eCSSProperty_outline:
-      if (AppendValueToString(eCSSProperty_outline_color, aValue)) aValue.Append(' ');
-      if (AppendValueToString(eCSSProperty_outline_style, aValue)) aValue.Append(' ');
+      if (AppendValueToString(eCSSProperty_outline_color, aValue)) aValue.AppendWithConversion(' ');
+      if (AppendValueToString(eCSSProperty_outline_style, aValue)) aValue.AppendWithConversion(' ');
       AppendValueToString(eCSSProperty_outline_width, aValue);
       break;
     case eCSSProperty_padding:
       if (HAS_RECT(mMargin,mPadding)) {
-        AppendValueToString(eCSSProperty_padding_top, aValue);    aValue.Append(' ');
-        AppendValueToString(eCSSProperty_padding_right, aValue);  aValue.Append(' ');
-        AppendValueToString(eCSSProperty_padding_bottom, aValue); aValue.Append(' ');
+        AppendValueToString(eCSSProperty_padding_top, aValue);    aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_padding_right, aValue);  aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_padding_bottom, aValue); aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_padding_left, aValue);
       }
       break;
     case eCSSProperty_pause:
       if (HAS_VALUE(mAural,mPauseAfter) && HAS_VALUE(mAural,mPauseBefore)) {
         AppendValueToString(eCSSProperty_pause_after, aValue);
-        aValue.Append(' ');
+        aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_pause_before, aValue);
       }
       break;
@@ -3467,13 +3467,13 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
         if (mText->mTextShadow->mXOffset.IsLengthUnit()) {
           nsCSSShadow*  shadow = mText->mTextShadow;
           while (nsnull != shadow) {
-            if (AppendValueToString(eCSSProperty_text_shadow_color, shadow->mColor, aValue)) aValue.Append(' ');
+            if (AppendValueToString(eCSSProperty_text_shadow_color, shadow->mColor, aValue)) aValue.AppendWithConversion(' ');
             if (AppendValueToString(eCSSProperty_text_shadow_x, shadow->mXOffset, aValue)) {
-              aValue.Append(' ');
+              aValue.AppendWithConversion(' ');
               AppendValueToString(eCSSProperty_text_shadow_y, shadow->mYOffset, aValue);
-              aValue.Append(' ');
+              aValue.AppendWithConversion(' ');
             }
-            if (AppendValueToString(eCSSProperty_text_shadow_radius, shadow->mRadius, aValue)) aValue.Append(' ');
+            if (AppendValueToString(eCSSProperty_text_shadow_radius, shadow->mRadius, aValue)) aValue.AppendWithConversion(' ');
             shadow = shadow->mNext;
           }
         }
@@ -3485,67 +3485,67 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
     case eCSSProperty_background_position:
       if (HAS_VALUE(mColor,mBackPositionX) && HAS_VALUE(mColor,mBackPositionY)) {
         AppendValueToString(eCSSProperty_background_x_position, aValue);
-        aValue.Append(' ');
+        aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_background_y_position, aValue);
       }
       break;
     case eCSSProperty_border_top:
-      if (AppendValueToString(eCSSProperty_border_top_width, aValue)) aValue.Append(' ');
-      if (AppendValueToString(eCSSProperty_border_top_style, aValue)) aValue.Append(' ');
+      if (AppendValueToString(eCSSProperty_border_top_width, aValue)) aValue.AppendWithConversion(' ');
+      if (AppendValueToString(eCSSProperty_border_top_style, aValue)) aValue.AppendWithConversion(' ');
       AppendValueToString(eCSSProperty_border_top_color, aValue);
       break;
     case eCSSProperty_border_right:
-      if (AppendValueToString(eCSSProperty_border_right_width, aValue)) aValue.Append(' ');
-      if (AppendValueToString(eCSSProperty_border_right_style, aValue)) aValue.Append(' ');
+      if (AppendValueToString(eCSSProperty_border_right_width, aValue)) aValue.AppendWithConversion(' ');
+      if (AppendValueToString(eCSSProperty_border_right_style, aValue)) aValue.AppendWithConversion(' ');
       AppendValueToString(eCSSProperty_border_right_color, aValue);
       break;
     case eCSSProperty_border_bottom:
-      if (AppendValueToString(eCSSProperty_border_bottom_width, aValue)) aValue.Append(' ');
-      if (AppendValueToString(eCSSProperty_border_bottom_style, aValue)) aValue.Append(' ');
+      if (AppendValueToString(eCSSProperty_border_bottom_width, aValue)) aValue.AppendWithConversion(' ');
+      if (AppendValueToString(eCSSProperty_border_bottom_style, aValue)) aValue.AppendWithConversion(' ');
       AppendValueToString(eCSSProperty_border_bottom_color, aValue);
       break;
     case eCSSProperty_border_left:
-      if (AppendValueToString(eCSSProperty_border_left_width, aValue)) aValue.Append(' ');
-      if (AppendValueToString(eCSSProperty_border_left_style, aValue)) aValue.Append(' ');
+      if (AppendValueToString(eCSSProperty_border_left_width, aValue)) aValue.AppendWithConversion(' ');
+      if (AppendValueToString(eCSSProperty_border_left_style, aValue)) aValue.AppendWithConversion(' ');
       AppendValueToString(eCSSProperty_border_left_color, aValue);
       break;
     case eCSSProperty_border_color:
       if (HAS_RECT(mMargin,mBorderColor)) {
-        AppendValueToString(eCSSProperty_border_top_color, aValue);     aValue.Append(' ');
-        AppendValueToString(eCSSProperty_border_right_color, aValue);   aValue.Append(' ');
-        AppendValueToString(eCSSProperty_border_bottom_color, aValue);  aValue.Append(' ');
+        AppendValueToString(eCSSProperty_border_top_color, aValue);     aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_border_right_color, aValue);   aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_border_bottom_color, aValue);  aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_border_left_color, aValue);
       }
       break;
     case eCSSProperty_border_style:
       if (HAS_RECT(mMargin,mBorderStyle)) {
-        AppendValueToString(eCSSProperty_border_top_style, aValue);     aValue.Append(' ');
-        AppendValueToString(eCSSProperty_border_right_style, aValue);   aValue.Append(' ');
-        AppendValueToString(eCSSProperty_border_bottom_style, aValue);  aValue.Append(' ');
+        AppendValueToString(eCSSProperty_border_top_style, aValue);     aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_border_right_style, aValue);   aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_border_bottom_style, aValue);  aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_border_left_style, aValue);
       }
       break;
     case eCSSProperty__moz_border_radius:
       if (HAS_RECT(mMargin,mBorderRadius)) {
-        AppendValueToString(eCSSProperty__moz_border_radius_topLeft, aValue);     aValue.Append(' ');
-        AppendValueToString(eCSSProperty__moz_border_radius_topRight, aValue);   aValue.Append(' ');
-        AppendValueToString(eCSSProperty__moz_border_radius_bottomRight, aValue);  aValue.Append(' ');
+        AppendValueToString(eCSSProperty__moz_border_radius_topLeft, aValue);     aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty__moz_border_radius_topRight, aValue);   aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty__moz_border_radius_bottomRight, aValue);  aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty__moz_border_radius_bottomLeft, aValue);
       }
     	break;
     case eCSSProperty__moz_outline_radius:
       if (HAS_RECT(mMargin,mOutlineRadius)) {
-        AppendValueToString(eCSSProperty__moz_outline_radius_topLeft, aValue);     aValue.Append(' ');
-        AppendValueToString(eCSSProperty__moz_outline_radius_topRight, aValue);   aValue.Append(' ');
-        AppendValueToString(eCSSProperty__moz_outline_radius_bottomRight, aValue);  aValue.Append(' ');
+        AppendValueToString(eCSSProperty__moz_outline_radius_topLeft, aValue);     aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty__moz_outline_radius_topRight, aValue);   aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty__moz_outline_radius_bottomRight, aValue);  aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty__moz_outline_radius_bottomLeft, aValue);
       }
     	break;
     case eCSSProperty_border_width:
       if (HAS_RECT(mMargin,mBorderWidth)) {
-        AppendValueToString(eCSSProperty_border_top_width, aValue);     aValue.Append(' ');
-        AppendValueToString(eCSSProperty_border_right_width, aValue);   aValue.Append(' ');
-        AppendValueToString(eCSSProperty_border_bottom_width, aValue);  aValue.Append(' ');
+        AppendValueToString(eCSSProperty_border_top_width, aValue);     aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_border_right_width, aValue);   aValue.AppendWithConversion(' ');
+        AppendValueToString(eCSSProperty_border_bottom_width, aValue);  aValue.AppendWithConversion(' ');
         AppendValueToString(eCSSProperty_border_left_width, aValue);
       }
       break;
@@ -3556,7 +3556,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
           AppendValueToString(eCSSProperty_content, content->mValue, aValue);
           content = content->mNext;
           if (nsnull != content) {
-            aValue.Append(' ');
+            aValue.AppendWithConversion(' ');
           }
         } while (nsnull != content);
       }
@@ -3567,13 +3567,13 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
         do {
           if (AppendValueToString(eCSSProperty_counter_increment, data->mCounter, aValue)) {
             if (HAS_VALUE(data, mValue)) {
-              aValue.Append(' ');
+              aValue.AppendWithConversion(' ');
               AppendValueToString(eCSSProperty_counter_increment, data->mValue, aValue);
             }
           }
           data = data->mNext;
           if (nsnull != data) {
-            aValue.Append(' ');
+            aValue.AppendWithConversion(' ');
           }
         } while (nsnull != data);
       }
@@ -3584,13 +3584,13 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
         do {
           if (AppendValueToString(eCSSProperty_counter_reset, data->mCounter, aValue)) {
             if (HAS_VALUE(data, mValue)) {
-              aValue.Append(' ');
+              aValue.AppendWithConversion(' ');
               AppendValueToString(eCSSProperty_counter_reset, data->mValue, aValue);
             }
           }
           data = data->mNext;
           if (nsnull != data) {
-            aValue.Append(' ');
+            aValue.AppendWithConversion(' ');
           }
         } while (nsnull != data);
       }
@@ -3599,7 +3599,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
       if (HAS_VALUE(mAural, mPlayDuring)) {
         AppendValueToString(eCSSProperty_play_during, aValue);
         if (HAS_VALUE(mAural, mPlayDuringFlags)) {
-          aValue.Append(' ');
+          aValue.AppendWithConversion(' ');
           AppendValueToString(eCSSProperty_play_during_flags, aValue);
         }
       }
@@ -3609,11 +3609,11 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
         nsCSSQuotes* quotes = mContent->mQuotes;
         do {
           AppendValueToString(eCSSProperty_quotes_open, quotes->mOpen, aValue);
-          aValue.Append(' ');
+          aValue.AppendWithConversion(' ');
           AppendValueToString(eCSSProperty_quotes_close, quotes->mClose, aValue);
           quotes = quotes->mNext;
           if (nsnull != quotes) {
-            aValue.Append(' ');
+            aValue.AppendWithConversion(' ');
           }
         } while (nsnull != quotes);
       }
@@ -3625,7 +3625,7 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsString& aValue)
           AppendValueToString(eCSSProperty_key_equivalent, keyEquiv->mValue, aValue);
           keyEquiv = keyEquiv->mNext;
           if (nsnull != keyEquiv) {
-            aValue.Append(' ');
+            aValue.AppendWithConversion(' ');
           }
         } while (nsnull != keyEquiv);
       }
@@ -3689,21 +3689,21 @@ CSSDeclarationImpl::ToString(nsString& aString)
     for (index = 0; index < count; index++) {
       nsCSSProperty property = (nsCSSProperty)(PRInt32)mOrder->ElementAt(index);
       if (0 <= property) {
-        aString.Append(nsCSSProps::GetStringValue(property));
-        aString.Append(": ");
+        aString.AppendWithConversion(nsCSSProps::GetStringValue(property));
+        aString.AppendWithConversion(": ");
 
         nsAutoString value;
         GetValue(property, value);
         aString.Append(value);
         if (index < count) {
-          aString.Append("; ");
+          aString.AppendWithConversion("; ");
         }
       }
       else {  // is comment
-        aString.Append("/* ");
+        aString.AppendWithConversion("/* ");
         nsString* comment = mComments->StringAt((-1) - property);
         aString.Append(*comment);
-        aString.Append(" */ ");
+        aString.AppendWithConversion(" */ ");
       }
     }
   }
@@ -3858,7 +3858,7 @@ CSSDeclarationImpl::GetNthProperty(PRUint32 aIndex, nsString& aReturn)
   if (nsnull != mOrder) {
     nsCSSProperty property = (nsCSSProperty)(PRInt32)mOrder->ElementAt(aIndex);
     if (0 <= property) {
-      aReturn.Append(nsCSSProps::GetStringValue(property));
+      aReturn.AppendWithConversion(nsCSSProps::GetStringValue(property));
     }
   }
   

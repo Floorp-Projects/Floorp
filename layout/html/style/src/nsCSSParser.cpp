@@ -770,7 +770,7 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia,
     else if (eCSSToken_Ident == mToken.mType) {
       if (expectIdent) {
         if (! first) {
-          aMedia.Append(',');
+          aMedia.AppendWithConversion(',');
         }
         mToken.mIdent.ToLowerCase();  // case insensitive from CSS - must be lower cased
         if (aMediaAtoms) {
@@ -1570,7 +1570,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       }
       mToken.AppendToString(aSource);
       buffer.Truncate();
-      buffer.Append(':');
+      buffer.AppendWithConversion(':');
       buffer.Append(mToken.mIdent);
       buffer.ToLowerCase();
       nsIAtom* pseudo = NS_NewAtom(buffer);
@@ -1887,7 +1887,7 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
 			case eCSSToken_Number:
 				if (tk->mIntegerValid) {
 					sprintf(buffer, "%06d", tk->mInteger);
-					str.Assign(buffer);
+					str.AssignWithConversion(buffer);
 				}
 				break;
 
@@ -1895,7 +1895,7 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
 				if (tk->mIdent.Length() <= 6) {
 					sprintf(buffer, "%06.0f", tk->mNumber);
 					nsAutoString temp;
-					temp.Assign(buffer);
+					temp.AssignWithConversion(buffer);
 					temp.Right(str, 6 - tk->mIdent.Length());
 					str.Append(tk->mIdent);
 				}
@@ -2390,7 +2390,7 @@ PRBool CSSParserImpl::ParseCounter(PRInt32& aErrorCode, nsCSSValue& aValue)
             return PR_FALSE;
           }
           if (GetToken(aErrorCode, PR_TRUE) && (eCSSToken_String == mToken.mType)) {
-            counter.Append(',');
+            counter.AppendWithConversion(',');
             counter.Append(mToken.mSymbol); // quote too
             counter.Append(mToken.mIdent);
             counter.Append(mToken.mSymbol); // quote too
@@ -2406,7 +2406,7 @@ PRBool CSSParserImpl::ParseCounter(PRInt32& aErrorCode, nsCSSValue& aValue)
             nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(mToken.mIdent);
             if ((eCSSKeyword_UNKNOWN < keyword) && 
                 (0 < SearchKeywordTable(keyword, nsCSSProps::kListStyleKTable))) {
-              counter.Append(',');
+              counter.AppendWithConversion(',');
               counter.Append(mToken.mIdent);
             }
             else {
@@ -2456,8 +2456,8 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
           if (kNameSpaceID_Unknown == nameSpaceID) {  // unknown prefix, dump it
             return PR_FALSE;
           }
-          attr.Append(nameSpaceID, 10);
-          attr.Append('|');
+          attr.AppendInt(nameSpaceID, 10);
+          attr.AppendWithConversion('|');
           if (! GetToken(aErrorCode, PR_FALSE)) {
             return PR_FALSE;
           }
@@ -2475,8 +2475,8 @@ PRBool CSSParserImpl::ParseAttr(PRInt32& aErrorCode, nsCSSValue& aValue)
       }
       else if (mToken.IsSymbol('*')) {  // namespace wildcard
         if (ExpectSymbol(aErrorCode, '|', PR_FALSE)) {
-          attr.Append(kNameSpaceID_Unknown, 10);
-          attr.Append('|');
+          attr.AppendInt(kNameSpaceID_Unknown, 10);
+          attr.AppendWithConversion('|');
           if (! GetToken(aErrorCode, PR_FALSE)) {
             return PR_FALSE;
           }

@@ -183,15 +183,15 @@ void nsStyleCoord::SetUnionValue(const nsStyleUnion& aValue, nsStyleUnit aUnit)
 void nsStyleCoord::AppendToString(nsString& aBuffer) const
 {
   if ((eStyleUnit_Percent <= mUnit) && (mUnit < eStyleUnit_Coord)) {
-    aBuffer.Append(mValue.mFloat);
+    aBuffer.AppendFloat(mValue.mFloat);
   }
   else if ((eStyleUnit_Coord == mUnit) || 
            (eStyleUnit_Proportional == mUnit) ||
            (eStyleUnit_Enumerated == mUnit) ||
            (eStyleUnit_Integer == mUnit)) {
-    aBuffer.AppendWithConversion(mValue.mInt, 10);
+    aBuffer.AppendInt(mValue.mInt, 10);
     aBuffer.AppendWithConversion("[0x");
-    aBuffer.AppendWithConversion(mValue.mInt, 16);
+    aBuffer.AppendInt(mValue.mInt, 16);
     aBuffer.AppendWithConversion(']');
   }
 
@@ -208,7 +208,7 @@ void nsStyleCoord::AppendToString(nsString& aBuffer) const
     case eStyleUnit_Integer:      aBuffer.AppendWithConversion("int");      break;
     case eStyleUnit_Chars:        aBuffer.AppendWithConversion("chars");    break;
   }
-  aBuffer.Append(' ');
+  aBuffer.AppendWithConversion(' ');
 }
 
 void nsStyleCoord::ToString(nsString& aBuffer) const

@@ -173,15 +173,15 @@ nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
       (aAttribute == nsHTMLAtoms::fontWeight)) {
     aResult.Truncate();
     if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
-      aResult.Append(aValue.GetIntValue(), 10);
+      aResult.AppendInt(aValue.GetIntValue(), 10);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
     else if (aValue.GetUnit() == eHTMLUnit_Integer) {
       PRInt32 value = aValue.GetIntValue(); 
       if (value >= 0) {
-        aResult.Append('+');
+        aResult.AppendWithConversion('+');
       }
-      aResult.Append(value, 10);
+      aResult.AppendInt(value, 10);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
     return NS_CONTENT_ATTR_NOT_THERE;

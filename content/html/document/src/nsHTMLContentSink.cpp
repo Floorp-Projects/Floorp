@@ -589,7 +589,7 @@ HTMLContentSink::ReduceEntities(nsString& aString)
             }
             *cp = '\0';
             PRInt32 ch;
-            nsAutoString str(cbuf);
+            nsAutoString str; str.AssignWithConversion(cbuf);
             dtd->ConvertEntityToUnicode(str, &ch);
 
             if (ch < 0) {
@@ -983,7 +983,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
     // XXX why is textarea not a container?
     nsAutoString content;
     if (eHTMLTag_textarea == aNodeType) {
-      content = aNode.GetSkippedContent();
+      content.Assign(aNode.GetSkippedContent());
     }
     rv = MakeContentObject(aNodeType, atom, aForm, aWebShell,
                            aResult, &content);
@@ -1679,7 +1679,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       else {
         // Map carriage returns to newlines
         if (tmp.CharAt(0) == '\r') {
-          tmp = "\n";
+          tmp.AssignWithConversion("\n");
         }
         rv = AddText(tmp);
       }
@@ -2295,7 +2295,7 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   }
 
   if (nsnull == mTitle) {
-    mHTMLDocument->SetTitle("");
+    mHTMLDocument->SetTitle(nsAutoString());
   }
 
   // XXX this is silly; who cares? RickG cares. It's part of the regression test. So don't bug me. 
@@ -2765,7 +2765,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
       mCurrentContext->IsCurrentContainer(eHTMLTag_tr) ||
       mCurrentContext->IsCurrentContainer(eHTMLTag_col) ||
       mCurrentContext->IsCurrentContainer(eHTMLTag_colgroup)) {
-    nsAutoString tmp("form");
+    nsAutoString tmp; tmp.AssignWithConversion("form");
     nsIAtom* atom = NS_NewAtom(tmp);
     result = NS_NewHTMLFormElement(&content, atom);
     if (NS_SUCCEEDED(result) && content) {
@@ -3053,7 +3053,7 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
      */
     docTypeStr.Mid(name, 0, publicStart);
 
-    if (name.Equals("DOCTYPE", PR_TRUE, 7))
+    if (name.EqualsWithConversion("DOCTYPE", PR_TRUE, 7))
       name.Cut(0, 7);
 
     name.CompressWhitespace();
@@ -3099,9 +3099,9 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
     /*
      * No 'PUBLIC' found, we assume we got a '<!DOCTYPE HTML "...">'
      */
-    name = docTypeStr;
+    name.Assign(docTypeStr);
 
-    if (name.Equals("DOCTYPE", PR_TRUE, 7))
+    if (name.EqualsWithConversion("DOCTYPE", PR_TRUE, 7))
       name.Cut(0, 7);
 
     name.CompressWhitespace();
@@ -3142,10 +3142,10 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
     }
 
     if (!name.Length()) {
-      name.SetString("HTML");
+      name.AssignWithConversion("HTML");
     }
 
-    rv = domImpl->CreateDocumentType(name, publicId, nsAutoString(""),
+    rv = domImpl->CreateDocumentType(name, publicId, nsAutoString(),
                                      getter_AddRefs(docType));
 
     if (NS_FAILED(rv) || !docType) {
@@ -3242,7 +3242,8 @@ HTMLContentSink::StartLayout()
     NS_RELEASE(url);
   }
   if (rv == NS_OK) {
-    mRef = new nsString(ref);
+    mRef = new nsString;
+    mRef->AssignWithConversion(ref);
     nsCRT::free(ref);
   }
 
@@ -3438,7 +3439,7 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
  
   if(parent!=nsnull) {
     // Create content object
-    nsAutoString tag("BASE");
+    nsAutoString tag; tag.AssignWithConversion("BASE");
     nsCOMPtr<nsIHTMLContent> element;
     result = NS_CreateHTMLElement(getter_AddRefs(element), tag);
     if (NS_SUCCEEDED(result)) {
@@ -3693,9 +3694,9 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
   ParseLinkTypes(aRel, linkTypes);
   PRBool isAlternate = PR_FALSE;
 
-  if (-1 != linkTypes.IndexOf("stylesheet")) {  // is it a stylesheet link?
+  if (-1 != linkTypes.IndexOf(NS_ConvertASCIItoUCS2("stylesheet"))) {  // is it a stylesheet link?
 
-    if (-1 != linkTypes.IndexOf("alternate")) { // if alternate, does it have title?
+    if (-1 != linkTypes.IndexOf(NS_ConvertASCIItoUCS2("alternate"))) { // if alternate, does it have title?
       if (0 == aTitle.Length()) { // alternates must have title
         return NS_OK; //return without error, for now
       } else {
@@ -3719,7 +3720,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 				if (0 == mimeType.Length()) {
 					nsString extension;
 					aHref.Right(extension, 4);
-					if (extension.Equals(".css")) {
+					if (extension.EqualsWithConversion(".css")) {
 						isStyleSheet = PR_TRUE;			// strict mode + no mime type + '.css' extension
 					}
 				}
@@ -3740,7 +3741,7 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
         return NS_OK; // The URL is bad, move along, don't propogate the error (for now)
       }
 
-      if (-1 == linkTypes.IndexOf("alternate")) {
+      if (-1 == linkTypes.IndexOf(NS_ConvertASCIItoUCS2("alternate"))) {
         if (0 < aTitle.Length()) {  // possibly preferred sheet
           if (0 == mPreferredStyle.Length()) {
             mPreferredStyle = aTitle;
@@ -3790,7 +3791,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   
   if(parent!=nsnull) {
     // Create content object
-    nsAutoString tag("LINK");
+    nsAutoString tag; tag.AssignWithConversion("LINK");
     nsIHTMLContent* element = nsnull;
     result = NS_CreateHTMLElement(&element, tag);
     if (NS_SUCCEEDED(result)) {
@@ -3905,7 +3906,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
   if (nsnull != parent) {
     // Create content object
-    nsAutoString tmp("meta");
+    nsAutoString tmp; tmp.AssignWithConversion("meta");
     nsIAtom* atom = NS_NewAtom(tmp);
     if (nsnull == atom) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -3942,7 +3943,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
             if (NS_FAILED(rv)) return rv;
 
                 // see if we have a refresh "header".
-            if (!header.Compare("refresh", PR_TRUE)) {
+            if (!header.CompareWithConversion("refresh", PR_TRUE)) {
                 // Refresh headers are parsed with the following format in mind
                 // <META HTTP-EQUIV=REFRESH CONTENT="5; URL=http://uri">
                 // By the time we are here, the following is true:
@@ -4062,7 +4063,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                     }
                 }
             } // END refresh
-            else if (!header.Compare("set-cookie", PR_TRUE)) {
+            else if (!header.CompareWithConversion("set-cookie", PR_TRUE)) {
                 nsCOMPtr<nsICookieService> cookieServ = do_GetService(NS_COOKIESERVICE_PROGID, &rv);
                 if (NS_FAILED(rv)) return rv;
 
@@ -4363,7 +4364,7 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
 
     if (NS_SUCCEEDED(rv)) {
 
-        nsAutoString contentType(contenttypeheader);
+        nsAutoString contentType; contentType.AssignWithConversion( NS_STATIC_CAST(const char*, contenttypeheader) );
         PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
 
         if(kNotFound != start)
@@ -4388,7 +4389,7 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
       
     if (NS_FAILED(rv) || (characterSet.Length() == 0)) {
       //charset from script charset tag
-      characterSet = mScriptCharset;
+      characterSet.Assign(mScriptCharset);
     }
 
     if (NS_FAILED(rv) || (characterSet.Length() == 0) ) {
@@ -4533,7 +4534,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     return NS_ERROR_FAILURE;
   }
   nsIHTMLContent* parent = mCurrentContext->mStack[mCurrentContext->mStackPos-1].mContent;
-  nsAutoString tag("SCRIPT");
+  nsAutoString tag; tag.AssignWithConversion("SCRIPT");
   nsIHTMLContent* element = nsnull;
   rv = NS_CreateHTMLElement(&element, tag);
   if (NS_SUCCEEDED(rv)) {
@@ -4565,7 +4566,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   // Create a text node holding the content
   // First, get the text content of the script tag
   nsAutoString script;
-  script = aNode.GetSkippedContent();
+  script.Assign(aNode.GetSkippedContent());
 
   if (script.Length() > 0) {
     nsIContent* text;
@@ -4662,7 +4663,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
   if(parent!=nsnull) {
     // Create content object
-    nsAutoString tag("STYLE");
+    nsAutoString tag; tag.AssignWithConversion("STYLE");
     nsIHTMLContent* element = nsnull;
     rv = NS_CreateHTMLElement(&element, tag);
     if (NS_SUCCEEDED(rv)) {

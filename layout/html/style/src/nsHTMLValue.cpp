@@ -266,37 +266,37 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
   }
   else if ((eHTMLUnit_String == mUnit) || (eHTMLUnit_ColorName == mUnit)) {
     if (nsnull != mValue.mString) {
-      aBuffer.Append('"');
+      aBuffer.AppendWithConversion('"');
       aBuffer.Append(*(mValue.mString));
-      aBuffer.Append('"');
+      aBuffer.AppendWithConversion('"');
     }
     else {
-      aBuffer.Append("null str");
+      aBuffer.AppendWithConversion("null str");
     }
   }
   else if (eHTMLUnit_ISupports == mUnit) {
-    aBuffer.Append("0x");
-    aBuffer.Append((PRInt32)mValue.mISupports, 16);
+    aBuffer.AppendWithConversion("0x");
+    aBuffer.AppendInt((PRInt32)mValue.mISupports, 16);
   }
   else if (eHTMLUnit_Color == mUnit){
-    aBuffer.Append("(0x");
-    aBuffer.Append(NS_GET_R(mValue.mColor), 16);
-    aBuffer.Append(" 0x");
-    aBuffer.Append(NS_GET_G(mValue.mColor), 16);
-    aBuffer.Append(" 0x");
-    aBuffer.Append(NS_GET_B(mValue.mColor), 16);
-    aBuffer.Append(" 0x");
-    aBuffer.Append(NS_GET_A(mValue.mColor), 16);
-    aBuffer.Append(')');
+    aBuffer.AppendWithConversion("(0x");
+    aBuffer.AppendInt(NS_GET_R(mValue.mColor), 16);
+    aBuffer.AppendWithConversion(" 0x");
+    aBuffer.AppendInt(NS_GET_G(mValue.mColor), 16);
+    aBuffer.AppendWithConversion(" 0x");
+    aBuffer.AppendInt(NS_GET_B(mValue.mColor), 16);
+    aBuffer.AppendWithConversion(" 0x");
+    aBuffer.AppendInt(NS_GET_A(mValue.mColor), 16);
+    aBuffer.AppendWithConversion(')');
   }
   else if (eHTMLUnit_Percent == mUnit) {
-    aBuffer.Append(mValue.mFloat * 100.0f);
+    aBuffer.AppendFloat(mValue.mFloat * 100.0f);
   }
   else {
-    aBuffer.Append(mValue.mInt, 10);
-    aBuffer.Append("[0x");
-    aBuffer.Append(mValue.mInt, 16);
-    aBuffer.Append(']');
+    aBuffer.AppendInt(mValue.mInt, 10);
+    aBuffer.AppendWithConversion("[0x");
+    aBuffer.AppendInt(mValue.mInt, 16);
+    aBuffer.AppendWithConversion(']');
   }
 
   switch (mUnit) {
@@ -304,15 +304,15 @@ void nsHTMLValue::AppendToString(nsString& aBuffer) const
     case eHTMLUnit_Empty:      break;
     case eHTMLUnit_String:     break;
     case eHTMLUnit_ColorName:  break;
-    case eHTMLUnit_ISupports:  aBuffer.Append("ptr");  break;
+    case eHTMLUnit_ISupports:  aBuffer.AppendWithConversion("ptr");  break;
     case eHTMLUnit_Integer:    break;
-    case eHTMLUnit_Enumerated: aBuffer.Append("enum"); break;
-    case eHTMLUnit_Proportional:  aBuffer.Append("*"); break;
-    case eHTMLUnit_Color:      aBuffer.Append("rbga"); break;
-    case eHTMLUnit_Percent:    aBuffer.Append("%");    break;
-    case eHTMLUnit_Pixel:      aBuffer.Append("px");   break;
+    case eHTMLUnit_Enumerated: aBuffer.AppendWithConversion("enum"); break;
+    case eHTMLUnit_Proportional:  aBuffer.AppendWithConversion("*"); break;
+    case eHTMLUnit_Color:      aBuffer.AppendWithConversion("rbga"); break;
+    case eHTMLUnit_Percent:    aBuffer.AppendWithConversion("%");    break;
+    case eHTMLUnit_Pixel:      aBuffer.AppendWithConversion("px");   break;
   }
-  aBuffer.Append(' ');
+  aBuffer.AppendWithConversion(' ');
 }
 
 void nsHTMLValue::ToString(nsString& aBuffer) const

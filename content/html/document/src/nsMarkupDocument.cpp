@@ -124,7 +124,7 @@ void nsMarkupDocument::CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDec
     decl.Truncate();
     list.Mid(decl, start, semiColon - start);
 
-    if (0 == decl.Compare("/*", PR_FALSE, 2)) {
+    if (0 == decl.CompareWithConversion("/*", PR_FALSE, 2)) {
       // XXX need to append comment
     }
     else {

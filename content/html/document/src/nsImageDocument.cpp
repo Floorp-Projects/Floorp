@@ -276,7 +276,7 @@ nsImageDocument::CreateSyntheticDocument()
 
   char* src;
   mDocumentURL->GetSpec(&src);
-  nsHTMLValue val(src);
+  nsHTMLValue val( NS_ConvertASCIItoUCS2(src) );
   delete[] src;
   image->SetHTMLAttribute(nsHTMLAtoms::src, val, PR_FALSE);
   image->SetHTMLAttribute(nsHTMLAtoms::alt, val, PR_FALSE);
@@ -352,7 +352,7 @@ nsresult nsImageDocument::UpdateTitle( void )
     char *pExtension=nsnull;
     pURL->GetFileExtension(&pExtension);
     if(pExtension){
-      nsString strExt(pExtension);
+      nsString strExt; strExt.AssignWithConversion(pExtension);
       strExt.ToUpperCase();
       titleStr.Append(strExt);
       nsCRT::free(pExtension);
@@ -361,17 +361,17 @@ nsresult nsImageDocument::UpdateTitle( void )
     NS_IF_RELEASE(pURL);
   }
   // append the image information...
-  titleStr.Append( " Image" );
+  titleStr.AppendWithConversion( " Image" );
   if (mImageRequest) {
     PRUint32 width, height;
     mImageRequest->GetNaturalDimensions(&width, &height);
     // if we got a valid size (sometimes we do not) then display it
     if (width != 0 && height != 0){
-      titleStr.Append( " " );
-      titleStr.Append((PRInt32)width);
-      titleStr.Append("x");
-      titleStr.Append((PRInt32)height);
-      titleStr.Append(" pixels");
+      titleStr.AppendWithConversion( " " );
+      titleStr.AppendInt((PRInt32)width);
+      titleStr.AppendWithConversion("x");
+      titleStr.AppendInt((PRInt32)height);
+      titleStr.AppendWithConversion(" pixels");
     }
   } 
   // set it on the document

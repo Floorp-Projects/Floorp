@@ -146,13 +146,12 @@ struct HTMLAttribute {
     if (nsnull != mAttribute) {
       mAttribute->ToString(aBuffer);
       if (eHTMLUnit_Null != mValue.GetUnit()) {
-        aBuffer.Append(" = ");
+        aBuffer.AppendWithConversion(" = ");
         mValue.AppendToString(aBuffer);
       }
     }
     else {
-      aBuffer.Truncate();
-      aBuffer.Append("null");
+      aBuffer.AssignWithConversion("null");
     }
   }
 
