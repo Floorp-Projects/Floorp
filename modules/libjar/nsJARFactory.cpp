@@ -56,6 +56,7 @@
 #include "nsRecyclingAllocator.h"
 #include "nsXPTZipLoader.h"
 #include "nsJARProtocolHandler.h"
+#include "nsJARURI.h"
 
 extern nsRecyclingAllocator *gZlibAllocator;
 
@@ -63,6 +64,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPTZipLoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJAR)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsZipReaderCache)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsJARProtocolHandler, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJARURI)
 
 // The list of components we register
 static const nsModuleComponentInfo components[] = 
@@ -86,6 +88,11 @@ static const nsModuleComponentInfo components[] =
       NS_JARPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar", 
       nsJARProtocolHandlerConstructor
+    },
+    { NS_JARURI_CLASSNAME, // needed only for fastload
+      NS_JARURI_CID,
+      nsnull,
+      nsJARURIConstructor
     }
 };
 
