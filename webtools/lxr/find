@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: find,v 1.7 2001/03/26 22:10:36 terry%mozilla.org Exp $
+# $Id: find,v 1.8 2004/03/08 07:54:16 timeless%mozdev.org Exp $
 
 # find   --	Find files
 #
@@ -42,6 +42,8 @@ sub find {
 	}
     }			       
     
+    $searchtext =~ s/\+/ /g;
+    $searchtext =~ s/%2b/+/ig;
     print("<B>Find file: </B><input type=text name=\"string\" ",
 	  "value=\"",$searchtext,"\" size=50>\n",
 	  "<input type=submit value=\"search\">\n",
