@@ -1914,6 +1914,7 @@ PRBool BasicTableLayoutStrategy::ColIsSpecifiedAsMinimumWidth(PRInt32 aColIndex)
 void BasicTableLayoutStrategy::Dump(PRInt32 aIndent)
 {
   char* indent = new char[aIndent + 1];
+  if (!indent) return;
   for (PRInt32 i = 0; i < aIndent + 1; i++) {
     indent[i] = ' ';
   }

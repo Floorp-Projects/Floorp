@@ -1333,6 +1333,7 @@ GetCollapseOffsetProperty(nsIPresContext* aPresContext,
         // The property isn't set yet, so allocate a new point, set the property,
         // and return the newly allocated point
         nsPoint*  offset = new nsPoint(0, 0);
+        if (!offset) return nsnull;
 
         frameManager->SetFrameProperty(aFrame, nsLayoutAtoms::collapseOffsetProperty,
                                        offset, DestroyPointFunc);

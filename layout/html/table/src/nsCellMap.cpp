@@ -711,6 +711,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
 
   // Setup CellData for this cell
   CellData* origData = new CellData(&aCellFrame);
+  if (!origData) return startColIndex;
   SetMapCellAt(aMap, *origData, aRowIndex, startColIndex, PR_TRUE);
 
   // initialize the cell frame
@@ -757,6 +758,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
         }
         else { 
           cellData = new CellData(nsnull);
+          if (!cellData) return startColIndex;
           if (rowX > aRowIndex) {
             cellData->SetRowSpanOffset(rowX - aRowIndex);
           }
