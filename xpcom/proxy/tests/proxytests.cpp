@@ -118,7 +118,7 @@ class nsTestXPCFoo : public nsITestXPCFoo
     NS_IMETHOD Test(int p1, int p2, int* retval);
     NS_IMETHOD Test2();
     nsTestXPCFoo();
-    ~nsTestXPCFoo();
+    virtual ~nsTestXPCFoo();
 
 };
 
@@ -161,7 +161,7 @@ class nsTestXPCFoo2 : public nsITestXPCFoo
     NS_IMETHOD Test(int p1, int p2, int* retval);
     NS_IMETHOD Test2();
     nsTestXPCFoo2();
-    ~nsTestXPCFoo2();
+    virtual ~nsTestXPCFoo2();
 
 };
 
@@ -389,7 +389,7 @@ main(int argc, char **argv)
                                      0 );
 
     
-    PR_Sleep(PR_MillisecondsToInterval(1000));
+    PR_Sleep(PR_MillisecondsToInterval(5000));
 
     PR_ASSERT(gEventQueue); // BAD BAD BAD.  EVENT THREAD DID NOT CREATE QUEUE.  This may be a timing issue, set the 
                             // sleep about longer, and try again.
