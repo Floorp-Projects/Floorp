@@ -473,9 +473,9 @@ RDFXMLDataSourceImpl::~RDFXMLDataSourceImpl(void)
         rdf->UnregisterDataSource(this);
     }
 
-    if (mURLSpec) PL_strfree(mURLSpec);
-
     Flush();
+
+    if (mURLSpec) PL_strfree(mURLSpec);
 
     while (mNameSpaces) {
         NameSpaceMap* doomed = mNameSpaces;
