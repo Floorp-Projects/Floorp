@@ -29,7 +29,7 @@ class NS_BASE nsVoidArray {
 public:
   nsVoidArray();
   nsVoidArray(PRInt32 aCount);  // initial count of aCount elements set to nsnull
-  ~nsVoidArray();
+  virtual ~nsVoidArray();
 
   nsVoidArray& operator=(const nsVoidArray& other);
 
@@ -80,7 +80,7 @@ class NS_BASE nsStringArray: protected nsVoidArray
 {
 public:
   nsStringArray(void);
-  ~nsStringArray(void);
+  virtual ~nsStringArray(void);
 
   nsStringArray& operator=(const nsStringArray& other);
 
