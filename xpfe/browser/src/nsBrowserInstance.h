@@ -59,7 +59,7 @@ class nsIFindComponent;
 
 
 #define SHISTORY_POPUP_LIST 10
-//#define SH_IN_FRAMES
+#define SH_IN_FRAMES
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsBrowserInstance:
