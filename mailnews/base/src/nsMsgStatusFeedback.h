@@ -20,6 +20,7 @@
 #define _nsMsgStatusFeedback_h
 
 #include "nsIDocumentLoaderObserver.h"
+#include "nsIDOMWindow.h"
 #include "nsIWebShell.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgStatusFeedback.h"
