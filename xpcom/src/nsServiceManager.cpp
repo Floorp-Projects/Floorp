@@ -162,7 +162,7 @@ protected:
 nsServiceManagerImpl::nsServiceManagerImpl(void)
 {
     NS_INIT_REFCNT();
-    mServices = new nsHashtable();
+    mServices = new nsHashtable(256, PR_TRUE);	// Get a threadSafe hashtable
     NS_ASSERTION(mServices, "out of memory already?");
 }
 
