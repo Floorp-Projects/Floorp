@@ -48,16 +48,51 @@ nsIOService::nsIOService()
 nsresult
 nsIOService::Init()
 {
+
+    // XXX this is a hack. These strings need to come from somewhere else
+
+    // initialize the version and app components
+    // XXX we're forcing these to be single byte strings for now.
+    mAppName = new nsString2("Netscape", eOneByte);
+    if (!mAppName) return NS_ERROR_OUT_OF_MEMORY;
+    mAppCodeName = new nsString2("Mozilla", eOneByte);
+    if (!mAppCodeName) return NS_ERROR_OUT_OF_MEMORY;
+    mAppVersion = new nsString2(eOneByte);
+    if (!mAppVersion) return NS_ERROR_OUT_OF_MEMORY;
+    mAppLanguage = new nsString2("en", eOneByte);
+    if (!mAppLanguage) return NS_ERROR_OUT_OF_MEMORY;
+#ifdef XP_MAC
+    mAppPlatform = new nsString2("Mac", eOneByte);
+#elif WIN32
+    mAppPlatform = new nsString2("Win32", eOneByte);
+#else
+    mAppPlatform = new nsString2("Unix", eOneByte);
+#endif
+    if (!mAppPlatform) return NS_ERROR_OUT_OF_MEMORY;
+
+    // build up the app version
+    mAppVersion->Append("5.0 [");
+    mAppVersion->Append(*mAppLanguage);
+    mAppVersion->Append("] (");
+    mAppVersion->Append(*mAppPlatform);
+    mAppVersion->Append("; I)");
+
     return NS_OK;
 }
 
 nsIOService::~nsIOService()
 {
+    delete mAppName;
+    delete mAppCodeName;
+    delete mAppVersion;
+    delete mAppLanguage;
+    delete mAppPlatform;
 }
 
 NS_METHOD
 nsIOService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
+    nsresult rv;
     if (aOuter)
         return NS_ERROR_NO_AGGREGATION;
 
@@ -65,7 +100,12 @@ nsIOService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     if (_ios == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(_ios);
-    nsresult rv = _ios->QueryInterface(aIID, aResult);
+    rv = _ios->Init();
+    if (NS_FAILED(rv)) {
+        delete _ios;
+        return rv;
+    }
+    rv = _ios->QueryInterface(aIID, aResult);
     NS_RELEASE(_ios);
     return rv;
 }
@@ -238,44 +278,43 @@ nsIOService::MakeAbsolute(const char *aSpec,
 NS_IMETHODIMP
 nsIOService::GetAppCodeName(PRUnichar* *aAppCodeName)
 {
-    *aAppCodeName = mAppCodeName.ToNewUnicode();
+    *aAppCodeName = mAppCodeName->ToNewUnicode();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIOService::GetAppVersion(PRUnichar* *aAppVersion)
 {
-    *aAppVersion = mAppVersion.ToNewUnicode();
+    *aAppVersion = mAppVersion->ToNewUnicode();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIOService::GetAppName(PRUnichar* *aAppName)
 {
-    *aAppName = mAppName.ToNewUnicode();
+    *aAppName = mAppName->ToNewUnicode();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIOService::GetLanguage(PRUnichar* *aLanguage)
 {
-    *aLanguage = mAppLanguage.ToNewUnicode();
+    *aLanguage = mAppLanguage->ToNewUnicode();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIOService::GetPlatform(PRUnichar* *aPlatform)
 {
-    *aPlatform = mAppPlatform.ToNewUnicode();
+    *aPlatform = mAppPlatform->ToNewUnicode();
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIOService::GetUserAgent(PRUnichar* *aUserAgent)
 {
-    // XXX this should load the http module and ask for the user agent string from it.
     char buf[200];
-    PR_snprintf(buf, 200, "%.100s/%.90s", mAppCodeName.GetBuffer(), mAppVersion.GetBuffer());
+    PR_snprintf(buf, 200, "%.100s/%.90s", mAppCodeName->GetBuffer(), mAppVersion->GetBuffer());
     nsAutoString2 aUA(buf);
     *aUserAgent = aUA.ToNewUnicode();
     return NS_OK;
