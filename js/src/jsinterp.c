@@ -1881,7 +1881,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
         !JS_CHECK_STACK_SIZE(cx, stackDummy)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OVER_RECURSED);
         ok = JS_FALSE;
-        goto out;
+        goto out2;
     }
 
     /*
@@ -1891,7 +1891,7 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     newsp = js_AllocRawStack(cx, (uintN)(2 * depth), &mark);
     if (!newsp) {
         ok = JS_FALSE;
-        goto out;
+        goto out2;
     }
     sp = newsp + depth;
     fp->spbase = sp;
@@ -5326,8 +5326,8 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
     }
 out:
 
-    if (!ok) {
 #if JS_HAS_EXCEPTIONS
+    if (!ok) {
         /*
          * Has an exception been raised?
          */
@@ -5367,21 +5367,22 @@ out:
             }
         }
 no_catch:;
-#endif
-
-#if JS_HAS_XML_SUPPORT
-        foreach = JS_FALSE;
-#endif
     }
+#endif
 
     /*
      * Check whether control fell off the end of a lightweight function, or an
      * exception thrown under such a function was not caught by it.  If so, go
      * to the inline code under JSOP_RETURN.
      */
-    if (inlineCallCount)
+    if (inlineCallCount) {
+#if JS_HAS_XML_SUPPORT
+        foreach = JS_FALSE;
+#endif
         goto inline_return;
+    }
 
+out2:
     /*
      * Reset sp before freeing stack slots, because our caller may GC soon.
      * Clear spbase to indicate that we've popped the 2 * depth operand slots.
