@@ -929,9 +929,16 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
 
 
 #ifdef RAPTOR_PERF_METRICS
-          printf("Total Time: ");
-          mTotalTime.Print();
-          printf("\n");
+          // XXX Don't print out Gecko layout time till I make the save/restore
+          // implementation use a stack.  We'll calculate page load + layout time
+          // in the webshell and print that out for now because that is more easy to
+          // measure.  There are cases where one can't simply use the parser as the
+          // place to calculate Gecko layout time because the parser can go away
+          // before the higher level layout processes finish.  I'll re-enable gecko layout
+          // time once we've identified the "best" way to isolate and measure it.
+          // printf("Total Time: ");
+          // mTotalTime.Print();
+          // printf("\n");
 
           printf("Parse Time: ");
           mParseTime.Print();
