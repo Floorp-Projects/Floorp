@@ -223,10 +223,13 @@ private:
 	static JNINativeInterface_ theFuncs;
 	static nsHashtable* theIDTable;
 	nsISecureJNI2* mSecureEnv;
+	nsISecurityContext* mContext;
 	jobject mJavaThread;
 	
 	static nsJNIEnv& nsJNIEnvRef(JNIEnv* env) { return *(nsJNIEnv*)env; }
+
 	nsISecureJNI2* operator->() { return mSecureEnv; }
+	nsISecurityContext* getContext() { return mContext; }
 	
 	static jint JNICALL GetVersion(JNIEnv* env)
 	{
@@ -362,7 +365,7 @@ private:
 		JNIMethod* method = (JNIMethod*)methodID;
 		MarshalledArgs jargs(method, args);
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, jargs, &outObject);
+		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, jargs, &outObject, secureEnv.getContext());
 		
 		return outObject;
 	}
@@ -372,7 +375,7 @@ private:
 		jobject outObject = NULL;
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
 		JNIMethod* method = (JNIMethod*)methodID;
-		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, args, &outObject);
+		nsresult result = secureEnv->NewObject(clazz, method->mMethodID, args, &outObject, secureEnv.getContext());
 		return outObject;
 	}
 
@@ -419,7 +422,7 @@ private:
 	{
 		jvalue outValue = { NULL };
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallMethod(method->mReturnType, obj, method->mMethodID, args, &outValue);
+		nsresult result = secureEnv->CallMethod(method->mReturnType, obj, method->mMethodID, args, &outValue, secureEnv.getContext());
 		return outValue;
 	}
 	
@@ -434,7 +437,7 @@ private:
 	{
 		jvalue unusedValue;
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallMethod(jvoid_type, obj, method->mMethodID, args, &unusedValue);
+		nsresult result = secureEnv->CallMethod(jvoid_type, obj, method->mMethodID, args, &unusedValue, secureEnv.getContext());
 	}
 
 	static void InvokeVoidMethod(JNIEnv *env, jobject obj, JNIMethod* method, va_list args)
@@ -519,7 +522,7 @@ private:
 	{
 		jvalue outValue = { NULL };
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallNonvirtualMethod(method->mReturnType, obj, clazz, method->mMethodID, args, &outValue);
+		nsresult result = secureEnv->CallNonvirtualMethod(method->mReturnType, obj, clazz, method->mMethodID, args, &outValue, secureEnv.getContext());
 		return outValue;
 	}
 	
@@ -534,7 +537,7 @@ private:
 	{
 		jvalue unusedValue;
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallNonvirtualMethod(jvoid_type, obj, clazz, method->mMethodID, args, &unusedValue);
+		nsresult result = secureEnv->CallNonvirtualMethod(jvoid_type, obj, clazz, method->mMethodID, args, &unusedValue, secureEnv.getContext());
 	}
 
 	static void InvokeNonVirtualVoidMethod(JNIEnv *env, jobject obj, jclass clazz, JNIMethod* method, va_list args)
@@ -615,7 +618,7 @@ private:
 	{
 		jvalue outValue = { NULL };
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->GetField(field->mFieldType, obj, field->mFieldID, &outValue);
+		nsresult result = secureEnv->GetField(field->mFieldType, obj, field->mFieldID, &outValue, secureEnv.getContext());
 		return outValue;
 	}
 
@@ -640,7 +643,7 @@ private:
 	static void SetField(JNIEnv* env, jobject obj, JNIField* field, jvalue value)
 	{
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->SetField(field->mFieldType, obj, field->mFieldID, value);
+		nsresult result = secureEnv->SetField(field->mFieldType, obj, field->mFieldID, value, secureEnv.getContext());
 	}
 
 #define IMPLEMENT_SET_FIELD(methodName, fieldType, jvalueField)										\
@@ -690,7 +693,7 @@ private:
 	{
 		jvalue outValue = { NULL };
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallStaticMethod(method->mReturnType, clazz, method->mMethodID, args, &outValue);
+		nsresult result = secureEnv->CallStaticMethod(method->mReturnType, clazz, method->mMethodID, args, &outValue, secureEnv.getContext());
 		return outValue;
 	}
 	
@@ -705,7 +708,7 @@ private:
 	{
 		jvalue unusedValue;
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->CallStaticMethod(jvoid_type, clazz, method->mMethodID, args, &unusedValue);
+		nsresult result = secureEnv->CallStaticMethod(jvoid_type, clazz, method->mMethodID, args, &unusedValue, secureEnv.getContext());
 	}
 
 	static void InvokeStaticVoidMethod(JNIEnv *env, jclass clazz, JNIMethod* method, va_list args)
@@ -786,7 +789,7 @@ private:
 	{
 		jvalue outValue = { NULL };
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->GetStaticField(field->mFieldType, clazz, field->mFieldID, &outValue);
+		nsresult result = secureEnv->GetStaticField(field->mFieldType, clazz, field->mFieldID, &outValue, secureEnv.getContext());
 		return outValue;
 	}
 
@@ -811,7 +814,7 @@ private:
 	static void SetStaticField(JNIEnv* env, jclass clazz, JNIField* field, jvalue value)
 	{
 		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
-		nsresult result = secureEnv->SetStaticField(field->mFieldType, clazz, field->mFieldID, value);
+		nsresult result = secureEnv->SetStaticField(field->mFieldType, clazz, field->mFieldID, value, secureEnv.getContext());
 	}
 
 #define IMPLEMENT_SET_FIELD(methodName, fieldType, jvalueField)										\
@@ -864,14 +867,203 @@ private:
 		nsresult result = secureEnv->ReleaseStringChars(str, chars);
 	}
 
-	// jstring (JNICALL *NewStringUTF) (JNIEnv *env, const char *utf);
-	// jsize (JNICALL *GetStringUTFLength) (JNIEnv *env, jstring str);
-	// const char* (JNICALL *GetStringUTFChars) (JNIEnv *env, jstring str, jboolean *isCopy);
-	// void (JNICALL *ReleaseStringUTFChars) (JNIEnv *env, jstring str, const char* chars);
+	static jstring JNICALL NewStringUTF(JNIEnv *env, const char *utf)
+	{
+		jstring outString;
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->NewStringUTF(utf, &outString);
+		return outString;
+	}
+	
+	static jsize JNICALL GetStringUTFLength(JNIEnv *env, jstring str)
+	{
+		jsize outLength;
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->GetStringUTFLength(str, &outLength);
+		return outLength;
+	}
+	
+	static const char* JNICALL GetStringUTFChars(JNIEnv *env, jstring str, jboolean *isCopy)
+	{
+		const char* outChars = NULL;
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->GetStringUTFChars(str, isCopy, &outChars);
+		return outChars;
+	}
+	
+	static void JNICALL ReleaseStringUTFChars(JNIEnv *env, jstring str, const char* chars)
+	{
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->ReleaseStringUTFChars(str, chars);
+	}
+
+	static jsize JNICALL GetArrayLength(JNIEnv *env, jarray array)
+	{
+		jsize outLength;
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->GetArrayLength(array, &outLength);
+		return outLength;
+	}
+
+	static jobjectArray JNICALL NewObjectArray(JNIEnv *env, jsize len, jclass clazz, jobject initVal)
+	{
+		jobjectArray outArray = NULL;
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->NewObjectArray(len, clazz, initVal, &outArray);
+		return outArray;
+	}
+
+	static jobject JNICALL GetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index)
+	{
+		jobject outObject = NULL;
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->GetObjectArrayElement(array, index, &outObject);
+		return outObject;
+	}
+
+	static void JNICALL SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index, jobject val)
+	{
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->SetObjectArrayElement(array, index, val);
+	}
+
+#define IMPLEMENT_NEW_ARRAY(methodName, type)														\
+	static type##Array JNICALL methodName(JNIEnv *env, jsize len)									\
+	{																								\
+		type##Array outArray = NULL;																\
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);														\
+		nsresult result = secureEnv->NewArray(type##_type, len, (jarray*)&outArray);				\
+		return outArray;																			\
+	}																								\
+
+	IMPLEMENT_NEW_ARRAY(NewBooleanArray, jboolean)
+	IMPLEMENT_NEW_ARRAY(NewByteArray, jbyte)
+	IMPLEMENT_NEW_ARRAY(NewCharArray, jchar)
+	IMPLEMENT_NEW_ARRAY(NewShortArray, jshort)
+	IMPLEMENT_NEW_ARRAY(NewIntArray, jint)
+	IMPLEMENT_NEW_ARRAY(NewLongArray, jlong)
+	IMPLEMENT_NEW_ARRAY(NewFloatArray, jfloat)
+	IMPLEMENT_NEW_ARRAY(NewDoubleArray, jdouble)
+
+#undef IMPLEMENT_NEW_ARRAY
+
+#define IMPLEMENT_GET_ARRAY_ELEMENTS(methodName, type)														\
+	static type* JNICALL methodName(JNIEnv *env, type##Array array, jboolean *isCopy)						\
+	{																										\
+		type* outElements = NULL;																			\
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);																\
+		nsresult result = secureEnv->GetArrayElements(type##_type, array, isCopy, &outElements);			\
+		return outElements;																					\
+	}																										\
+
+	IMPLEMENT_GET_ARRAY_ELEMENTS(GetBooleanArrayElements, jboolean)
+	IMPLEMENT_GET_ARRAY_ELEMENTS(GetByteArrayElements, jbyte)
+	IMPLEMENT_GET_ARRAY_ELEMENTS(GetCharArrayElements, jchar)
+	IMPLEMENT_GET_ARRAY_ELEMENTS(GetShortArrayElements, jshort)
+	IMPLEMENT_GET_ARRAY_ELEMENTS(GetIntArrayElements, jint)
+	IMPLEMENT_GET_ARRAY_ELEMENTS(GetLongArrayElements, jlong)
+	IMPLEMENT_GET_ARRAY_ELEMENTS(GetFloatArrayElements, jfloat)
+	IMPLEMENT_GET_ARRAY_ELEMENTS(GetDoubleArrayElements, jdouble)
+
+#undef IMPLEMENT_GET_ARRAY_ELEMENTS
+
+#define IMPLEMENT_RELEASE_ARRAY_ELEMENTS(methodName, type)													\
+	static void JNICALL methodName(JNIEnv *env, type##Array array, type* elems, jint mode)					\
+	{																										\
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);																\
+		nsresult result = secureEnv->ReleaseArrayElements(type##_type, array, elems, mode);					\
+	}																										\
+
+	IMPLEMENT_RELEASE_ARRAY_ELEMENTS(ReleaseBooleanArrayElements, jboolean)
+	IMPLEMENT_RELEASE_ARRAY_ELEMENTS(ReleaseByteArrayElements, jbyte)
+	IMPLEMENT_RELEASE_ARRAY_ELEMENTS(ReleaseCharArrayElements, jchar)
+	IMPLEMENT_RELEASE_ARRAY_ELEMENTS(ReleaseShortArrayElements, jshort)
+	IMPLEMENT_RELEASE_ARRAY_ELEMENTS(ReleaseIntArrayElements, jint)
+	IMPLEMENT_RELEASE_ARRAY_ELEMENTS(ReleaseLongArrayElements, jlong)
+	IMPLEMENT_RELEASE_ARRAY_ELEMENTS(ReleaseFloatArrayElements, jfloat)
+	IMPLEMENT_RELEASE_ARRAY_ELEMENTS(ReleaseDoubleArrayElements, jdouble)
+
+#undef IMPLEMENT_RELEASE_ARRAY_ELEMENTS
+
+#define IMPLEMENT_GET_ARRAY_REGION(methodName, type)														\
+	static void JNICALL methodName(JNIEnv *env, type##Array array, jsize start, jsize len, type* buf)		\
+	{																										\
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);																\
+		nsresult result = secureEnv->GetArrayRegion(type##_type, array, start, len, buf);					\
+	}																										\
+
+	IMPLEMENT_GET_ARRAY_REGION(GetBooleanArrayRegion, jboolean)
+	IMPLEMENT_GET_ARRAY_REGION(GetByteArrayRegion, jbyte)
+	IMPLEMENT_GET_ARRAY_REGION(GetCharArrayRegion, jchar)
+	IMPLEMENT_GET_ARRAY_REGION(GetShortArrayRegion, jshort)
+	IMPLEMENT_GET_ARRAY_REGION(GetIntArrayRegion, jint)
+	IMPLEMENT_GET_ARRAY_REGION(GetLongArrayRegion, jlong)
+	IMPLEMENT_GET_ARRAY_REGION(GetFloatArrayRegion, jfloat)
+	IMPLEMENT_GET_ARRAY_REGION(GetDoubleArrayRegion, jdouble)
+
+#undef IMPLEMENT_GET_ARRAY_REGION
+
+#define IMPLEMENT_SET_ARRAY_REGION(methodName, type)														\
+	static void JNICALL methodName(JNIEnv *env, type##Array array, jsize start, jsize len, type* buf)		\
+	{																										\
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);																\
+		nsresult result = secureEnv->SetArrayRegion(type##_type, array, start, len, buf);					\
+	}																										\
+
+	IMPLEMENT_SET_ARRAY_REGION(SetBooleanArrayRegion, jboolean)
+	IMPLEMENT_SET_ARRAY_REGION(SetByteArrayRegion, jbyte)
+	IMPLEMENT_SET_ARRAY_REGION(SetCharArrayRegion, jchar)
+	IMPLEMENT_SET_ARRAY_REGION(SetShortArrayRegion, jshort)
+	IMPLEMENT_SET_ARRAY_REGION(SetIntArrayRegion, jint)
+	IMPLEMENT_SET_ARRAY_REGION(SetLongArrayRegion, jlong)
+	IMPLEMENT_SET_ARRAY_REGION(SetFloatArrayRegion, jfloat)
+	IMPLEMENT_SET_ARRAY_REGION(SetDoubleArrayRegion, jdouble)
+
+#undef IMPLEMENT_SET_ARRAY_REGION
+
+	static jint JNICALL RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMethod *methods, jint nMethods)
+	{
+		jint outStatus = 0;
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->RegisterNatives(clazz, methods, nMethods, &outStatus);
+		return outStatus;
+	}
+	
+	static jint JNICALL UnregisterNatives(JNIEnv *env, jclass clazz)
+	{
+		jint outStatus = 0;
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->UnregisterNatives(clazz, &outStatus);
+		return outStatus;
+	}
+
+	static jint JNICALL MonitorEnter(JNIEnv *env, jobject obj)
+	{
+		jint outStatus = 0;
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->MonitorEnter(obj, &outStatus);
+		return outStatus;
+	}
+	
+	static jint JNICALL JNICALL MonitorExit(JNIEnv *env, jobject obj)
+	{
+		jint outStatus = 0;
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->MonitorExit(obj, &outStatus);
+		return outStatus;
+	}
+
+	static jint JNICALL GetJavaVM(JNIEnv *env, JavaVM **vm)
+	{
+		jint outStatus = 0;
+		nsJNIEnv& secureEnv = nsJNIEnvRef(env);
+		nsresult result = secureEnv->GetJavaVM(vm, &outStatus);
+		return outStatus;
+	}
 
 public:
 	nsJNIEnv(nsISecureJNI2* secureEnv);
-	virtual ~nsJNIEnv();
+	~nsJNIEnv();
 };
 
 JNINativeInterface_ nsJNIEnv::theFuncs = {
@@ -1092,120 +1284,75 @@ JNINativeInterface_ nsJNIEnv::theFuncs = {
 	// jobject (JNICALL *CallStaticObjectMethodA) (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
 	REFERENCE_METHOD_FAMILY(CallStaticObjectMethod)
 
-	// jboolean (JNICALL *CallStaticBooleanMethod)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
-	// jboolean (JNICALL *CallStaticBooleanMethodV)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
-	// jboolean (JNICALL *CallStaticBooleanMethodA)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
+	// jboolean (JNICALL *CallStaticBooleanMethod) (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
+	// jboolean (JNICALL *CallStaticBooleanMethodV) (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
+	// jboolean (JNICALL *CallStaticBooleanMethodA) (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
 	REFERENCE_METHOD_FAMILY(CallStaticBooleanMethod)
 
-	// jbyte (JNICALL *CallStaticByteMethod)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
-	// jbyte (JNICALL *CallStaticByteMethodV)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
-	// jbyte (JNICALL *CallStaticByteMethodA)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
+	// jbyte (JNICALL *CallStaticByteMethod) (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
+	// jbyte (JNICALL *CallStaticByteMethodV) (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
+	// jbyte (JNICALL *CallStaticByteMethodA) (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
 	REFERENCE_METHOD_FAMILY(CallStaticByteMethod)
 
-	// jchar (JNICALL *CallStaticCharMethod)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
-	// jchar (JNICALL *CallStaticCharMethodV)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
-	// jchar (JNICALL *CallStaticCharMethodA)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
+	// jchar (JNICALL *CallStaticCharMethod) (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
+	// jchar (JNICALL *CallStaticCharMethodV) (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
+	// jchar (JNICALL *CallStaticCharMethodA) (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
 	REFERENCE_METHOD_FAMILY(CallStaticCharMethod)
 
-	// jshort (JNICALL *CallStaticShortMethod)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
-	// jshort (JNICALL *CallStaticShortMethodV)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
-	// jshort (JNICALL *CallStaticShortMethodA)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
+	// jshort (JNICALL *CallStaticShortMethod) (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
+	// jshort (JNICALL *CallStaticShortMethodV) (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
+	// jshort (JNICALL *CallStaticShortMethodA) (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
 	REFERENCE_METHOD_FAMILY(CallStaticShortMethod)
 
-	// jint (JNICALL *CallStaticIntMethod)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
-	// jint (JNICALL *CallStaticIntMethodV)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
-	// jint (JNICALL *CallStaticIntMethodA)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
+	// jint (JNICALL *CallStaticIntMethod) (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
+	// jint (JNICALL *CallStaticIntMethodV) (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
+	// jint (JNICALL *CallStaticIntMethodA) (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
 	REFERENCE_METHOD_FAMILY(CallStaticIntMethod)
 
-	// jlong (JNICALL *CallStaticLongMethod)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
-	// jlong (JNICALL *CallStaticLongMethodV)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
-	// jlong (JNICALL *CallStaticLongMethodA)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
+	// jlong (JNICALL *CallStaticLongMethod) (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
+	// jlong (JNICALL *CallStaticLongMethodV) (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
+	// jlong (JNICALL *CallStaticLongMethodA) (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
 	REFERENCE_METHOD_FAMILY(CallStaticLongMethod)
 
-	// jfloat (JNICALL *CallStaticFloatMethod)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
-	// jfloat (JNICALL *CallStaticFloatMethodV)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
-	// jfloat (JNICALL *CallStaticFloatMethodA)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
+	// jfloat (JNICALL *CallStaticFloatMethod) (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
+	// jfloat (JNICALL *CallStaticFloatMethodV) (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
+	// jfloat (JNICALL *CallStaticFloatMethodA) (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
 	REFERENCE_METHOD_FAMILY(CallStaticFloatMethod)
 
-	// jdouble (JNICALL *CallStaticDoubleMethod)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
-	// jdouble (JNICALL *CallStaticDoubleMethodV)
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
-	// jdouble (JNICALL *CallStaticDoubleMethodA)       
-	// (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
+	// jdouble (JNICALL *CallStaticDoubleMethod) (JNIEnv *env, jclass clazz, jmethodID methodID, ...);
+	// jdouble (JNICALL *CallStaticDoubleMethodV) (JNIEnv *env, jclass clazz, jmethodID methodID, va_list args);
+	// jdouble (JNICALL *CallStaticDoubleMethodA) (JNIEnv *env, jclass clazz, jmethodID methodID, jvalue *args);
 	REFERENCE_METHOD_FAMILY(CallStaticDoubleMethod)
 
-	// void (JNICALL *CallStaticVoidMethod)
-	// (JNIEnv *env, jclass cls, jmethodID methodID, ...);
-	// void (JNICALL *CallStaticVoidMethodV)
-	// (JNIEnv *env, jclass cls, jmethodID methodID, va_list args);
-	// void (JNICALL *CallStaticVoidMethodA)
-	// (JNIEnv *env, jclass cls, jmethodID methodID, jvalue * args);
+	// void (JNICALL *CallStaticVoidMethod) (JNIEnv *env, jclass cls, jmethodID methodID, ...);
+	// void (JNICALL *CallStaticVoidMethodV) (JNIEnv *env, jclass cls, jmethodID methodID, va_list args);
+	// void (JNICALL *CallStaticVoidMethodA) (JNIEnv *env, jclass cls, jmethodID methodID, jvalue * args);
 	REFERENCE_METHOD_FAMILY(CallStaticVoidMethod)
 
 	// jfieldID (JNICALL *GetStaticFieldID) (JNIEnv *env, jclass clazz, const char *name, const char *sig);
 	&GetStaticFieldID,
 	
-	// jobject (JNICALL *GetStaticObjectField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID);
-	// jboolean (JNICALL *GetStaticBooleanField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID);
-	// jbyte (JNICALL *GetStaticByteField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID);
-	// jchar (JNICALL *GetStaticCharField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID);
-	// jshort (JNICALL *GetStaticShortField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID);
-	// jint (JNICALL *GetStaticIntField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID);
-	// jlong (JNICALL *GetStaticLongField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID);
-	// jfloat (JNICALL *GetStaticFloatField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID);
-	// jdouble (JNICALL *GetStaticDoubleField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID);
+	// jobject (JNICALL *GetStaticObjectField) (JNIEnv *env, jclass clazz, jfieldID fieldID);
+	// jboolean (JNICALL *GetStaticBooleanField) (JNIEnv *env, jclass clazz, jfieldID fieldID);
+	// jbyte (JNICALL *GetStaticByteField) (JNIEnv *env, jclass clazz, jfieldID fieldID);
+	// jchar (JNICALL *GetStaticCharField) (JNIEnv *env, jclass clazz, jfieldID fieldID);
+	// jshort (JNICALL *GetStaticShortField) (JNIEnv *env, jclass clazz, jfieldID fieldID);
+	// jint (JNICALL *GetStaticIntField) (JNIEnv *env, jclass clazz, jfieldID fieldID);
+	// jlong (JNICALL *GetStaticLongField) (JNIEnv *env, jclass clazz, jfieldID fieldID);
+	// jfloat (JNICALL *GetStaticFloatField) (JNIEnv *env, jclass clazz, jfieldID fieldID);
+	// jdouble (JNICALL *GetStaticDoubleField) (JNIEnv *env, jclass clazz, jfieldID fieldID);
 	&GetStaticObjectField, &GetStaticBooleanField, &GetStaticByteField, &GetStaticCharField, &GetStaticShortField,
 	&GetStaticIntField, &GetStaticLongField, &GetStaticFloatField, &GetStaticDoubleField,
 
-	// void (JNICALL *SetStaticObjectField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID, jobject value);
-	// void (JNICALL *SetStaticBooleanField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID, jboolean value);
-	// void (JNICALL *SetStaticByteField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID, jbyte value);
-	// void (JNICALL *SetStaticCharField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID, jchar value);
-	// void (JNICALL *SetStaticShortField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID, jshort value);
-	// void (JNICALL *SetStaticIntField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID, jint value);
-	// void (JNICALL *SetStaticLongField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID, jlong value);
-	// void (JNICALL *SetStaticFloatField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID, jfloat value);
-	// void (JNICALL *SetStaticDoubleField)
-	// (JNIEnv *env, jclass clazz, jfieldID fieldID, jdouble value);
+	// void (JNICALL *SetStaticObjectField) (JNIEnv *env, jclass clazz, jfieldID fieldID, jobject value);
+	// void (JNICALL *SetStaticBooleanField) (JNIEnv *env, jclass clazz, jfieldID fieldID, jboolean value);
+	// void (JNICALL *SetStaticByteField) (JNIEnv *env, jclass clazz, jfieldID fieldID, jbyte value);
+	// void (JNICALL *SetStaticCharField) (JNIEnv *env, jclass clazz, jfieldID fieldID, jchar value);
+	// void (JNICALL *SetStaticShortField) (JNIEnv *env, jclass clazz, jfieldID fieldID, jshort value);
+	// void (JNICALL *SetStaticIntField) (JNIEnv *env, jclass clazz, jfieldID fieldID, jint value);
+	// void (JNICALL *SetStaticLongField) (JNIEnv *env, jclass clazz, jfieldID fieldID, jlong value);
+	// void (JNICALL *SetStaticFloatField) (JNIEnv *env, jclass clazz, jfieldID fieldID, jfloat value);
+	// void (JNICALL *SetStaticDoubleField) (JNIEnv *env, jclass clazz, jfieldID fieldID, jdouble value);
 	&SetStaticObjectField, &SetStaticBooleanField, &SetStaticByteField, &SetStaticCharField, &SetStaticShortField,
 	&SetStaticIntField, &SetStaticLongField, &SetStaticFloatField, &SetStaticDoubleField,
 
@@ -1219,121 +1366,87 @@ JNINativeInterface_ nsJNIEnv::theFuncs = {
 	// jsize (JNICALL *GetStringUTFLength) (JNIEnv *env, jstring str);
 	// const char* (JNICALL *GetStringUTFChars) (JNIEnv *env, jstring str, jboolean *isCopy);
 	// void (JNICALL *ReleaseStringUTFChars) (JNIEnv *env, jstring str, const char* chars);
-
+	&NewStringUTF, &GetStringUTFLength, &GetStringUTFChars, &ReleaseStringUTFChars,
 
 	// jsize (JNICALL *GetArrayLength) (JNIEnv *env, jarray array);
+	&GetArrayLength,
 
-	// jobjectArray (JNICALL *NewObjectArray)
-	// (JNIEnv *env, jsize len, jclass clazz, jobject init);
-	// jobject (JNICALL *GetObjectArrayElement)
-	// (JNIEnv *env, jobjectArray array, jsize index);
-	// void (JNICALL *SetObjectArrayElement)
-	// (JNIEnv *env, jobjectArray array, jsize index, jobject val);
+	// jobjectArray (JNICALL *NewObjectArray) (JNIEnv *env, jsize len, jclass clazz, jobject init);
+	// jobject (JNICALL *GetObjectArrayElement) (JNIEnv *env, jobjectArray array, jsize index);
+	// void (JNICALL *SetObjectArrayElement) (JNIEnv *env, jobjectArray array, jsize index, jobject val);
+	&NewObjectArray, &GetObjectArrayElement, &SetObjectArrayElement,
 
-	// jbooleanArray (JNICALL *NewBooleanArray)
-	// (JNIEnv *env, jsize len);
-	// jbyteArray (JNICALL *NewByteArray)
-	// (JNIEnv *env, jsize len);
-	// jcharArray (JNICALL *NewCharArray)
-	// (JNIEnv *env, jsize len);
-	// jshortArray (JNICALL *NewShortArray)
-	// (JNIEnv *env, jsize len);
-	// jintArray (JNICALL *NewIntArray)
-	// (JNIEnv *env, jsize len);
-	// jlongArray (JNICALL *NewLongArray)
-	// (JNIEnv *env, jsize len);
-	// jfloatArray (JNICALL *NewFloatArray)
-	// (JNIEnv *env, jsize len);
-	// jdoubleArray (JNICALL *NewDoubleArray)
-	// (JNIEnv *env, jsize len);
+	// jbooleanArray (JNICALL *NewBooleanArray) (JNIEnv *env, jsize len);
+	// jbyteArray (JNICALL *NewByteArray) (JNIEnv *env, jsize len);
+	// jcharArray (JNICALL *NewCharArray) (JNIEnv *env, jsize len);
+	// jshortArray (JNICALL *NewShortArray) (JNIEnv *env, jsize len);
+	// jintArray (JNICALL *NewIntArray) (JNIEnv *env, jsize len);
+	// jlongArray (JNICALL *NewLongArray) (JNIEnv *env, jsize len);
+	// jfloatArray (JNICALL *NewFloatArray) (JNIEnv *env, jsize len);
+	// jdoubleArray (JNICALL *NewDoubleArray) (JNIEnv *env, jsize len);
+	&NewBooleanArray, &NewByteArray, &NewCharArray, &NewShortArray, 
+	&NewIntArray, &NewLongArray, &NewFloatArray, &NewDoubleArray,
 
-	// jboolean * (JNICALL *GetBooleanArrayElements)
-	// (JNIEnv *env, jbooleanArray array, jboolean *isCopy);
-	// jbyte * (JNICALL *GetByteArrayElements)
-	// (JNIEnv *env, jbyteArray array, jboolean *isCopy);
-	// jchar * (JNICALL *GetCharArrayElements)
-	// (JNIEnv *env, jcharArray array, jboolean *isCopy);
-	// jshort * (JNICALL *GetShortArrayElements)
-	// (JNIEnv *env, jshortArray array, jboolean *isCopy);
-	// jint * (JNICALL *GetIntArrayElements)
-	// (JNIEnv *env, jintArray array, jboolean *isCopy);
-	// jlong * (JNICALL *GetLongArrayElements)
-	// (JNIEnv *env, jlongArray array, jboolean *isCopy);
-	// jfloat * (JNICALL *GetFloatArrayElements)
-	// (JNIEnv *env, jfloatArray array, jboolean *isCopy);
-	// jdouble * (JNICALL *GetDoubleArrayElements)
-	// (JNIEnv *env, jdoubleArray array, jboolean *isCopy);
+	// jboolean * (JNICALL *GetBooleanArrayElements) (JNIEnv *env, jbooleanArray array, jboolean *isCopy);
+	// jbyte * (JNICALL *GetByteArrayElements) (JNIEnv *env, jbyteArray array, jboolean *isCopy);
+	// jchar * (JNICALL *GetCharArrayElements) (JNIEnv *env, jcharArray array, jboolean *isCopy);
+	// jshort * (JNICALL *GetShortArrayElements) (JNIEnv *env, jshortArray array, jboolean *isCopy);
+	// jint * (JNICALL *GetIntArrayElements) (JNIEnv *env, jintArray array, jboolean *isCopy);
+	// jlong * (JNICALL *GetLongArrayElements) (JNIEnv *env, jlongArray array, jboolean *isCopy);
+	// jfloat * (JNICALL *GetFloatArrayElements) (JNIEnv *env, jfloatArray array, jboolean *isCopy);
+	// jdouble * (JNICALL *GetDoubleArrayElements) (JNIEnv *env, jdoubleArray array, jboolean *isCopy);
+	&GetBooleanArrayElements, &GetByteArrayElements, &GetCharArrayElements, &GetShortArrayElements, 
+	&GetIntArrayElements, &GetLongArrayElements, &GetFloatArrayElements, &GetDoubleArrayElements, 
 
-	// void (JNICALL *ReleaseBooleanArrayElements)
-	// (JNIEnv *env, jbooleanArray array, jboolean *elems, jint mode);
-	// void (JNICALL *ReleaseByteArrayElements)
-	// (JNIEnv *env, jbyteArray array, jbyte *elems, jint mode);
-	// void (JNICALL *ReleaseCharArrayElements)
-	// (JNIEnv *env, jcharArray array, jchar *elems, jint mode);
-	// void (JNICALL *ReleaseShortArrayElements)
-	// (JNIEnv *env, jshortArray array, jshort *elems, jint mode);
-	// void (JNICALL *ReleaseIntArrayElements)
-	// (JNIEnv *env, jintArray array, jint *elems, jint mode);
-	// void (JNICALL *ReleaseLongArrayElements)
-	// (JNIEnv *env, jlongArray array, jlong *elems, jint mode);
-	// void (JNICALL *ReleaseFloatArrayElements)
-	// (JNIEnv *env, jfloatArray array, jfloat *elems, jint mode);
-	// void (JNICALL *ReleaseDoubleArrayElements)
-	// (JNIEnv *env, jdoubleArray array, jdouble *elems, jint mode);
+	// void (JNICALL *ReleaseBooleanArrayElements)(JNIEnv *env, jbooleanArray array, jboolean *elems, jint mode);
+	// void (JNICALL *ReleaseByteArrayElements) (JNIEnv *env, jbyteArray array, jbyte *elems, jint mode);
+	// void (JNICALL *ReleaseCharArrayElements) (JNIEnv *env, jcharArray array, jchar *elems, jint mode);
+	// void (JNICALL *ReleaseShortArrayElements) (JNIEnv *env, jshortArray array, jshort *elems, jint mode);
+	// void (JNICALL *ReleaseIntArrayElements) (JNIEnv *env, jintArray array, jint *elems, jint mode);
+	// void (JNICALL *ReleaseLongArrayElements) (JNIEnv *env, jlongArray array, jlong *elems, jint mode);
+	// void (JNICALL *ReleaseFloatArrayElements) (JNIEnv *env, jfloatArray array, jfloat *elems, jint mode);
+	// void (JNICALL *ReleaseDoubleArrayElements) (JNIEnv *env, jdoubleArray array, jdouble *elems, jint mode);
+	&ReleaseBooleanArrayElements, &ReleaseByteArrayElements, &ReleaseCharArrayElements, &ReleaseShortArrayElements, 
+	&ReleaseIntArrayElements, &ReleaseLongArrayElements, &ReleaseFloatArrayElements, &ReleaseDoubleArrayElements, 
 
-	// void (JNICALL *GetBooleanArrayRegion)
-	// (JNIEnv *env, jbooleanArray array, jsize start, jsize l, jboolean *buf);
-	// void (JNICALL *GetByteArrayRegion)
-	// (JNIEnv *env, jbyteArray array, jsize start, jsize len, jbyte *buf);
-	// void (JNICALL *GetCharArrayRegion)
-	// (JNIEnv *env, jcharArray array, jsize start, jsize len, jchar *buf);
-	// void (JNICALL *GetShortArrayRegion)
-	// (JNIEnv *env, jshortArray array, jsize start, jsize len, jshort *buf);
-	// void (JNICALL *GetIntArrayRegion)
-	// (JNIEnv *env, jintArray array, jsize start, jsize len, jint *buf);
-	// void (JNICALL *GetLongArrayRegion)
-	// (JNIEnv *env, jlongArray array, jsize start, jsize len, jlong *buf);
-	// void (JNICALL *GetFloatArrayRegion)
-	// (JNIEnv *env, jfloatArray array, jsize start, jsize len, jfloat *buf);
-	// void (JNICALL *GetDoubleArrayRegion)
-	// (JNIEnv *env, jdoubleArray array, jsize start, jsize len, jdouble *buf);
+	// void (JNICALL *GetBooleanArrayRegion) (JNIEnv *env, jbooleanArray array, jsize start, jsize l, jboolean *buf);
+	// void (JNICALL *GetByteArrayRegion) (JNIEnv *env, jbyteArray array, jsize start, jsize len, jbyte *buf);
+	// void (JNICALL *GetCharArrayRegion) (JNIEnv *env, jcharArray array, jsize start, jsize len, jchar *buf);
+	// void (JNICALL *GetShortArrayRegion) (JNIEnv *env, jshortArray array, jsize start, jsize len, jshort *buf);
+	// void (JNICALL *GetIntArrayRegion) (JNIEnv *env, jintArray array, jsize start, jsize len, jint *buf);
+	// void (JNICALL *GetLongArrayRegion) (JNIEnv *env, jlongArray array, jsize start, jsize len, jlong *buf);
+	// void (JNICALL *GetFloatArrayRegion) (JNIEnv *env, jfloatArray array, jsize start, jsize len, jfloat *buf);
+	// void (JNICALL *GetDoubleArrayRegion) (JNIEnv *env, jdoubleArray array, jsize start, jsize len, jdouble *buf);
+	&GetBooleanArrayRegion, &GetByteArrayRegion, &GetCharArrayRegion, &GetShortArrayRegion, 
+	&GetIntArrayRegion, &GetLongArrayRegion, &GetFloatArrayRegion, &GetDoubleArrayRegion, 
 
-	// void (JNICALL *SetBooleanArrayRegion)
-	// (JNIEnv *env, jbooleanArray array, jsize start, jsize l, jboolean *buf);
-	// void (JNICALL *SetByteArrayRegion)
-	// (JNIEnv *env, jbyteArray array, jsize start, jsize len, jbyte *buf);
-	// void (JNICALL *SetCharArrayRegion)
-	// (JNIEnv *env, jcharArray array, jsize start, jsize len, jchar *buf);
-	// void (JNICALL *SetShortArrayRegion)
-	// (JNIEnv *env, jshortArray array, jsize start, jsize len, jshort *buf);
-	// void (JNICALL *SetIntArrayRegion)
-	// (JNIEnv *env, jintArray array, jsize start, jsize len, jint *buf);
-	// void (JNICALL *SetLongArrayRegion)
-	// (JNIEnv *env, jlongArray array, jsize start, jsize len, jlong *buf);
-	// void (JNICALL *SetFloatArrayRegion)
-	// (JNIEnv *env, jfloatArray array, jsize start, jsize len, jfloat *buf);
-	// void (JNICALL *SetDoubleArrayRegion)
-	// (JNIEnv *env, jdoubleArray array, jsize start, jsize len, jdouble *buf);
+	// void (JNICALL *SetBooleanArrayRegion) (JNIEnv *env, jbooleanArray array, jsize start, jsize l, jboolean *buf);
+	// void (JNICALL *SetByteArrayRegion) (JNIEnv *env, jbyteArray array, jsize start, jsize len, jbyte *buf);
+	// void (JNICALL *SetCharArrayRegion) (JNIEnv *env, jcharArray array, jsize start, jsize len, jchar *buf);
+	// void (JNICALL *SetShortArrayRegion) (JNIEnv *env, jshortArray array, jsize start, jsize len, jshort *buf);
+	// void (JNICALL *SetIntArrayRegion) (JNIEnv *env, jintArray array, jsize start, jsize len, jint *buf);
+	// void (JNICALL *SetLongArrayRegion) (JNIEnv *env, jlongArray array, jsize start, jsize len, jlong *buf);
+	// void (JNICALL *SetFloatArrayRegion) (JNIEnv *env, jfloatArray array, jsize start, jsize len, jfloat *buf);
+	// void (JNICALL *SetDoubleArrayRegion) (JNIEnv *env, jdoubleArray array, jsize start, jsize len, jdouble *buf);
+	&SetBooleanArrayRegion, &SetByteArrayRegion, &SetCharArrayRegion, &SetShortArrayRegion, 
+	&SetIntArrayRegion, &SetLongArrayRegion, &SetFloatArrayRegion, &SetDoubleArrayRegion, 
 
-	// jint (JNICALL *RegisterNatives)
-	// (JNIEnv *env, jclass clazz, const JNINativeMethod *methods, 
-	// jint nMethods);
-	// jint (JNICALL *UnregisterNatives)
-	// (JNIEnv *env, jclass clazz);
+	// jint (JNICALL *RegisterNatives) (JNIEnv *env, jclass clazz, const JNINativeMethod *methods, jint nMethods);
+	// jint (JNICALL *UnregisterNatives) (JNIEnv *env, jclass clazz);
+	&RegisterNatives, &UnregisterNatives,
 
-	// jint (JNICALL *MonitorEnter)
-	// (JNIEnv *env, jobject obj);
-	// jint (JNICALL *MonitorExit)
-	// (JNIEnv *env, jobject obj);
+	// jint (JNICALL *MonitorEnter) (JNIEnv *env, jobject obj);
+	// jint (JNICALL *MonitorExit) (JNIEnv *env, jobject obj);
+	&MonitorEnter, &MonitorExit,
 
-	// jint (JNICALL *GetJavaVM)
-	// (JNIEnv *env, JavaVM **vm);
+	// jint (JNICALL *GetJavaVM) (JNIEnv *env, JavaVM **vm);
+	&GetJavaVM
 };
 
 nsHashtable* nsJNIEnv::theIDTable = NULL;
 
 nsJNIEnv::nsJNIEnv(nsISecureJNI2* secureEnv)
-	:	mSecureEnv(secureEnv), mJavaThread(NULL)
+	:	mSecureEnv(secureEnv), mContext(NULL), mJavaThread(NULL)
 {
 	this->functions = &theFuncs;
 	if (theIDTable == NULL)
