@@ -16,20 +16,25 @@
 # Reserved.
 
 DEPTH=..\..\..
-IGNORE_MANIFEST=1
-
-NO_GEN_XPT=1
 XPIDLSRCS =                                       \
-			.\nsIMsgHost.idl						\
-			.\nsIMsgFolder.idl					\
-			.\nsIFolder.idl						\
-			.\nsIFolderListener.idl				\
-			.\nsIMsgGroupRecord.idl				\
-			.\nsIMsgIncomingServer.idl			\
-			.\nsIMsgThread.idl					\
-			.\nsIMsgMessageService.idl			\
-#			.\nsIDOMMsgAppcore.idl				\
-			.\nsIUrlListener.idl				\
+		.\nsICopyMessageListener.idl	\
+		.\nsIFolder.idl		\
+		.\nsIFolderListener.idl	\
+		.\nsIMessage.idl			\
+		.\nsIMessageView.idl		\
+		.\nsIMsgAccount.idl			\
+		.\nsIMsgAccountManager.idl	\
+		.\nsIMsgFolder.idl	  \
+		.\nsIMsgGroupRecord.idl   \
+		.\nsIMsgHost.idl		  \
+		.\nsIMsgIdentity.idl			\
+		.\nsIMsgIncomingServer.idl	\
+		.\nsIMsgMailSession.idl	\
+		.\nsIMsgMessageService.idl \
+		.\nsIMsgSignature.idl		\
+		.\nsIMsgThread.idl	\
+		.\nsIMsgVCard.idl			\
+		.\nsIUrlListener.idl	\
 			$(NULL)
 
 EXPORTS =                           \
@@ -65,4 +70,5 @@ EXPORTS =                           \
 MODULE=mailnews
 
 include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\config\config.mak>
 
