@@ -28,6 +28,8 @@ class nsTextRun;
 class nsILineBreaker;
 class nsIWordBreaker;
 
+#define NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE 100
+
 /**
  * This object manages the transformation of text:
  *
@@ -46,11 +48,10 @@ class nsIWordBreaker;
  */
 class nsTextTransformer {
 public:
-
-  // The text transformer does not hold a reference to the line breaker
-  // and work breaker objects
-  nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen, 
-                    nsILineBreaker* aLineBreaker, nsIWordBreaker *aWordBreaker);
+  // Note: The text transformer does not hold a reference to the line
+  // breaker and work breaker objects
+  nsTextTransformer(nsILineBreaker* aLineBreaker,
+                    nsIWordBreaker *aWordBreaker);
 
   ~nsTextTransformer();
 
@@ -82,12 +83,17 @@ public:
     return mHasMultibyte;
   }
 
-  PRUnichar* GetTextAt(PRInt32 aOffset);
+  PRUnichar* GetWordBuffer() {
+    return mBuffer;
+  }
+
+  PRInt32 GetWordBufferLength() const {
+    return mBufferLength;
+  }
 
 protected:
-  PRBool GrowBuffer(PRBool aForNextWord=PR_TRUE);
+  PRBool GrowBuffer(PRBool aForNextWord = PR_TRUE);
 
-  PRUnichar* mAutoBuffer;
   PRUnichar* mBuffer;
   PRInt32 mBufferLength;
   PRBool mHasMultibyte;
@@ -106,6 +112,8 @@ protected:
 
   nsILineBreaker* mLineBreaker;  // does NOT hold reference
   nsIWordBreaker* mWordBreaker;  // does NOT hold reference
+
+  PRUnichar mAutoWordBuffer[NS_TEXT_TRANSFORMER_AUTO_WORD_BUF_SIZE];
 };
 
 #endif /* nsTextTransformer_h___ */
