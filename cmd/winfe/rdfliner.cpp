@@ -1052,13 +1052,18 @@ void CRDFOutliner::ToggleModes()
 		show = stricmp(answer, "No");
 	}
 
-	((CRDFOutlinerParent*)GetParent())->EnableHeaders(show);
+	CRDFOutlinerParent* pParent = (CRDFOutlinerParent*)GetParent();
+	pParent->EnableHeaders(show);
 
-	// Need to invalidate the title strip.
+	// Need to invalidate the title strip and figure out exactly how tall it is.
 	CRDFContentView* pView = (CRDFContentView*)(GetParent()->GetParent());
-	pView->GetTitleBar()->Invalidate();
-
-	Invalidate();
+	
+	CRect parentRect;
+	pParent->GetClientRect(&parentRect);
+	
+	int titleHeight = pView->GetTitleBar()->GetHeightBasedOnProperties();
+	pView->GetTitleBar()->MoveWindow(CRect(0, 0, parentRect.Width(), titleHeight));
+	pParent->MoveWindow(CRect(0, titleHeight, parentRect.Width(), parentRect.Height() - titleHeight)); 
 }
 
 void CRDFOutliner::OnSelDblClk(int iLine)
@@ -1845,8 +1850,7 @@ void CRDFOutliner::OnPaint()
 	m_bDrawDividers = TRUE;
 	m_bUseSingleClick = FALSE;
 	m_bUseInlineEditing = TRUE;
-	m_bUseSelection = TRUE;
-
+	
 	// Foreground color
 	HT_GetTemplateData(top, gNavCenter->viewFGColor, HT_COLUMN_STRING, &data);
 	if (data)
@@ -1910,14 +1914,6 @@ void CRDFOutliner::OnPaint()
 		CString answer((char*)data);
 		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'n' || answer.GetAt(0) == 'N'))
 			m_bDrawDividers = FALSE;
-	}
-	
-	HT_GetTemplateData(top, gNavCenter->useSelection, HT_COLUMN_STRING, &data);
-	if (data)
-	{
-		CString answer((char*)data);
-		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'n' || answer.GetAt(0) == 'N'))
-			m_bUseSelection = FALSE;
 	}
 	
 	HT_GetTemplateData(top, gNavCenter->useInlineEditing, HT_COLUMN_STRING, &data);
@@ -3862,15 +3858,37 @@ void CRDFOutlinerParent::CreateColumns ( void )
 	uint32 tokenType;
 	UINT index = 0;
 
+	int visibleCount = 0;
 	while (HT_GetNextColumn(columnCursor, &columnName, &columnWidth, &token, &tokenType))
 	{
 		// We have retrieved a new column.  Contruct a front end column object
 		CRDFColumn* newColumn = new CRDFColumn(columnName, columnWidth, token, tokenType);
 		index = (UINT)columnMap.AddCommand(newColumn);
 		m_pOutliner->AddColumn(columnName, index, 50, 10000, ColumnVariable, 100);
+		PRBool visible = HT_GetColumnVisibility(theView, token, tokenType);
+		if (visible)
+			visibleCount++;
 	}
+	if (visibleCount == 0)
+		visibleCount++;
+
 	HT_DeleteColumnCursor(columnCursor);
-	m_pOutliner->SetVisibleColumns(1); // For now... TODO: Get visible/invisible info!
+
+	// If column headers aren't shown, assume only one visible column.
+	// Whether or not to show column headers
+	void* data;
+	HT_GetTemplateData(HT_TopNode(theView), gNavCenter->showColumnHeaders, HT_COLUMN_STRING, &data);
+	BOOL show = TRUE;
+	if (data)
+	{
+		char* answer = (char*)data;
+		show = stricmp(answer, "No");
+	}
+
+	if (!show)
+		visibleCount = 1;
+
+	m_pOutliner->SetVisibleColumns(visibleCount);
 	m_pOutliner->SetImageColumn(m_pOutliner->m_pColumn[0]->iCommand);
 
 	// Make it so
@@ -4084,8 +4102,9 @@ void CRDFContentView::OnSize ( UINT nType, int cx, int cy )
 	CView::OnSize ( nType, cx, cy );
 	if (IsWindow(m_pOutlinerParent->m_hWnd)) 
 	{
-		m_pNavBar->MoveWindow(0,0, cx, NAVBAR_TOTAL_HEIGHT);
-		m_pOutlinerParent->MoveWindow ( 0, NAVBAR_TOTAL_HEIGHT, cx, cy-NAVBAR_TOTAL_HEIGHT);
+		int titleHeight = m_pNavBar->GetHeightBasedOnProperties();
+		m_pNavBar->MoveWindow(0,0, cx, titleHeight);
+		m_pOutlinerParent->MoveWindow ( 0, titleHeight, cx, cy-titleHeight);
 	}
 }
 
@@ -4163,7 +4182,9 @@ CRDFContentView* CRDFContentView::DisplayRDFTreeFromResource(CWnd* pParent,
 	return DisplayRDFTreeFromPane(pParent, xPos, yPos, width, height, thePane, pContext);
 }
 
-CRDFContentView* CRDFContentView::DisplayRDFTreeFromSHACK(MWContext *pContext, CWnd* pParent, int xPos, int yPos, int width, int height, char* url, int32 param_count, char** param_names, char** param_values)
+CRDFContentView* CRDFContentView::DisplayRDFTreeFromSHACK(MWContext *pContext, CWnd* pParent, 
+	int xPos, int yPos, int width, int height, char* url, char* templateType,
+	int32 param_count, char** param_names, char** param_values)
 {
 	HT_Notification ns = new HT_NotificationStruct;
 	XP_BZERO(ns, sizeof(HT_NotificationStruct));
@@ -4172,7 +4193,7 @@ CRDFContentView* CRDFContentView::DisplayRDFTreeFromSHACK(MWContext *pContext, C
 	theApp.m_pRDFCX->TrackRDFWindow(pParent);
 	
 	// Construct the pane and give it our notification struct
-	HT_Pane thePane = HT_PaneFromURL(pContext, url, ns, 0, param_count, param_names, param_values);  
+	HT_Pane thePane = HT_PaneFromURL(pContext, url, templateType, ns, 0, param_count, param_names, param_values);  
 	
 	// Now call our helper function
 	return DisplayRDFTreeFromPane(pParent, xPos, yPos, width, height, thePane);

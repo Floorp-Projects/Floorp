@@ -131,8 +131,36 @@ void CNavTitleBar::OnPaint( )
 
 	CRect controlStripRect(rect);
 	CRect titleBarRect(rect);
-	controlStripRect.top = NAVBAR_TOTAL_HEIGHT - NAVBAR_CONTROLSTRIP_HEIGHT;
-	controlStripRect.bottom = NAVBAR_TOTAL_HEIGHT;
+
+	int navBarTotalHeight = 0;
+	int navBarControlStripHeight = 0;
+	int navBarTitleBarHeight = 0;
+
+	HT_GetTemplateData(topNode, gNavCenter->showTitleBar, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString answer((char*)data);
+		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'Y' || answer.GetAt(0) == 'y'))
+		{
+			navBarTotalHeight += NAVBAR_TITLEBAR_HEIGHT;
+			navBarTitleBarHeight += NAVBAR_TITLEBAR_HEIGHT;
+		}
+	}
+
+	// Whether or not to show the control strip.
+	HT_GetTemplateData(topNode, gNavCenter->showControlStrip, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString answer((char*)data);
+		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'Y' || answer.GetAt(0) == 'y'))
+		{
+			navBarTotalHeight += NAVBAR_CONTROLSTRIP_HEIGHT;
+			navBarControlStripHeight = NAVBAR_CONTROLSTRIP_HEIGHT;
+		}
+	}
+
+	controlStripRect.top = navBarTitleBarHeight;
+	controlStripRect.bottom = navBarTotalHeight;
 	titleBarRect.top = 0;
 	titleBarRect.bottom = controlStripRect.top;
 
@@ -172,167 +200,193 @@ void CNavTitleBar::OnPaint( )
 		dc.FillRect(&controlStripRect, &controlStripFaceBrush);
 	}
 
-	
-	// Draw the title strip text.
-	CString titleText(HT_GetNodeName(HT_TopNode(m_View)));
-
-	CFont arialFont;
-	LOGFONT lf;
-	XP_MEMSET(&lf,0,sizeof(LOGFONT));
-	lf.lfHeight = 120;
-	lf.lfWeight = 700;
-	strcpy(lf.lfFaceName, "Arial");
-	arialFont.CreatePointFontIndirect(&lf, &dc);
-	HFONT font = (HFONT)arialFont.GetSafeHandle();
-
-	HFONT hOldFont = (HFONT)::SelectObject(dc.m_hDC, font);
-	CRect sizeRect(titleBarRect);
-	int height = CIntlWin::DrawText(CS_UTF8, dc.m_hDC, titleText.GetBuffer(0), titleText.GetLength(), &sizeRect, DT_CALCRECT | DT_WORDBREAK);
-	
-	if (sizeRect.Width() > rect.Width() - 9)
+	if (navBarTitleBarHeight > 0)
 	{
-		// Don't write into the close box area!
-		sizeRect.right = sizeRect.left + (rect.Width() - 9);
-	}
-	sizeRect.left += 4;	// indent slightly horizontally
-	sizeRect.right += 4;
+		// Draw the title strip text.
+		CString titleText(HT_GetNodeName(HT_TopNode(m_View)));
 
-	// Center the text vertically.
-	sizeRect.top = (titleBarRect.Height() - height) / 2;
-	sizeRect.bottom = sizeRect.top + height;
+		CFont arialFont;
+		LOGFONT lf;
+		XP_MEMSET(&lf,0,sizeof(LOGFONT));
+		lf.lfHeight = 120;
+		lf.lfWeight = 700;
+		strcpy(lf.lfFaceName, "Arial");
+		arialFont.CreatePointFontIndirect(&lf, &dc);
+		HFONT font = (HFONT)arialFont.GetSafeHandle();
 
-	// Draw the text
-	int nOldBkMode = dc.SetBkMode(TRANSPARENT);
+		HFONT hOldFont = (HFONT)::SelectObject(dc.m_hDC, font);
+		CRect sizeRect(titleBarRect);
+		int height = CIntlWin::DrawText(CS_UTF8, dc.m_hDC, titleText.GetBuffer(0), titleText.GetLength(), &sizeRect, DT_CALCRECT | DT_WORDBREAK);
+		
+		if (sizeRect.Width() > rect.Width() - 9)
+		{
+			// Don't write into the close box area!
+			sizeRect.right = sizeRect.left + (rect.Width() - 9);
+		}
+		sizeRect.left += 4;	// indent slightly horizontally
+		sizeRect.right += 4;
 
-	UINT nFormat = DT_SINGLELINE | DT_VCENTER | DT_EXTERNALLEADING;
-	COLORREF oldColor;
+		// Center the text vertically.
+		sizeRect.top = (titleBarRect.Height() - height) / 2;
+		sizeRect.bottom = sizeRect.top + height;
 
-	oldColor = dc.SetTextColor(m_ForegroundColor);
-	CIntlWin::DrawText(CS_UTF8, dc.m_hDC, titleText.GetBuffer(0), -1, &sizeRect, nFormat);
+		// Draw the text
+		int nOldBkMode = dc.SetBkMode(TRANSPARENT);
 
-	// Draw the control strip text.
-	CFont smallArialFont;
-	LOGFONT lf2;
-	XP_MEMSET(&lf2,0,sizeof(LOGFONT));
-	lf2.lfHeight = 90;
-	lf2.lfWeight = 400;
-	strcpy(lf2.lfFaceName, "Arial");
-	smallArialFont.CreatePointFontIndirect(&lf2, &dc);
-	HFONT smallFont = (HFONT)smallArialFont.GetSafeHandle();
-	::SelectObject(dc.m_hDC, smallFont);
+		UINT nFormat = DT_SINGLELINE | DT_VCENTER | DT_EXTERNALLEADING;
+		COLORREF oldColor;
 
-	// The ADD button
-	CString addText("Add Page"); // Will use an extensible HT mechanism eventually.  Hardcode for now.
-	//HT_GetTemplateData(topNode, gNavCenter->controlStripModeText, HT_COLUMN_STRING, &data);
-	//if (data)
-	//	modeText = (char*)data;
-	
-	CRect addRect(controlStripRect);
-	int smallHeight = CIntlWin::DrawText(CS_UTF8, dc.m_hDC, addText.GetBuffer(0), addText.GetLength(), &addRect, DT_CALCRECT | DT_WORDBREAK);
-	
-	if (addRect.Width() > rect.Width() - 9)
-	{
-		// Don't write into the close box area!
-		addRect.right = addRect.left + (rect.Width() - 9);
-	}
-	addRect.left += 4;	// indent slightly horizontally
-	addRect.right += 4;
+		oldColor = dc.SetTextColor(m_ForegroundColor);
+		CIntlWin::DrawText(CS_UTF8, dc.m_hDC, titleText.GetBuffer(0), -1, &sizeRect, nFormat);
 
-	// Center the text vertically.
-	addRect.top = controlStripRect.top + (controlStripRect.Height() - smallHeight) / 2;
-	addRect.bottom = addRect.top + smallHeight;
-
-	// Cache the rect
-	cachedAddRect.top = controlStripRect.top;
-	cachedAddRect.left = 0;
-	cachedAddRect.bottom = controlStripRect.bottom;
-	cachedAddRect.right = addRect.right + 3;
-
-	// The MANAGE button
-	CString modeText("Edit Bookmarks"); // Will use an extensible HT mechanism eventually.  Hardcode for now.
-	//HT_GetTemplateData(topNode, gNavCenter->controlStripModeText, HT_COLUMN_STRING, &data);
-	//if (data)
-	//	modeText = (char*)data;
-
-	CRect modeRect(controlStripRect);
-	smallHeight = CIntlWin::DrawText(CS_UTF8,dc.m_hDC, modeText.GetBuffer(0), modeText.GetLength(), &modeRect, DT_CALCRECT | DT_WORDBREAK);
-	
-	if (modeRect.Width() > rect.Width() - 9)
-	{
-		// Don't write into the close box area!
-		modeRect.right = modeRect.left + (rect.Width() - 9);
-	}
-	modeRect.left += cachedAddRect.right + 10;	// account for add rect and indent slightly horizontally
-	modeRect.right += cachedAddRect.right + 10;
-
-	// Center the text vertically.
-	modeRect.top = addRect.top;
-	modeRect.bottom = addRect.bottom;
-	modeRect.right += 4;
-
-	// Cache the rect
-	cachedModeRect.top = controlStripRect.top;
-	cachedModeRect.left = cachedAddRect.right + 6;
-	cachedModeRect.bottom = controlStripRect.bottom;
-	cachedModeRect.right = cachedModeRect.left + modeRect.Width() + 3;
-
-	// Now compute the close box rect.
-	CString closeText("Close");  
-	HT_GetTemplateData(topNode, gNavCenter->controlStripCloseText, HT_COLUMN_STRING, &data);
-	if (data)
-	  closeText = (char*)data;
-
-	CRect closeRect(controlStripRect);
-	CIntlWin::DrawText(CS_UTF8, dc.m_hDC, closeText.GetBuffer(0), closeText.GetLength(), &closeRect, DT_CALCRECT | DT_WORDBREAK);
-	
-	int closeWidth = closeRect.Width();
-
-	closeRect.right = rect.right - 4;
-	closeRect.left = closeRect.right - closeWidth;
-
-	// Center the text vertically.
-	closeRect.top = modeRect.top;
-	closeRect.bottom = modeRect.bottom;
-
-	CRect arrowRect;
-	arrowRect.top = controlStripRect.top;
-	arrowRect.left = closeRect.left - 12;
-	arrowRect.right = arrowRect.left + 12;
-	arrowRect.bottom = controlStripRect.bottom;
-
-	DrawArrow(dc.m_hDC, m_ControlStripForegroundColor, LEFT_ARROW, arrowRect, TRUE);
-
-	// Cache the rect
-	cachedCloseRect.top = controlStripRect.top;
-	cachedCloseRect.left = arrowRect.left;
-	cachedCloseRect.bottom = controlStripRect.bottom;
-	cachedCloseRect.right = closeRect.right + 3;
-
-	// Draw the text
-	dc.SetTextColor(m_ControlStripForegroundColor);
-	CIntlWin::DrawText(CS_UTF8, dc.m_hDC, closeText.GetBuffer(0), -1, &closeRect, nFormat);
-	CIntlWin::DrawText(CS_UTF8, dc.m_hDC, modeText.GetBuffer(0), -1, &modeRect, nFormat);
-	CIntlWin::DrawText(CS_UTF8, dc.m_hDC, addText.GetBuffer(0), -1, &addRect, nFormat);
-
-	// See if we're supposed to draw a framing rect.
-	
-	CBrush controlBrush(m_ControlStripForegroundColor);
-	if (m_bDrawCloseFrame)
-	{
-		dc.FrameRect(cachedCloseRect, &controlBrush);
-	}
-	if (m_bDrawModeFrame)
-	{
-		dc.FrameRect(cachedModeRect, &controlBrush);
-	}
-	if (m_bDrawAddFrame)
-	{
-		dc.FrameRect(cachedAddRect, &controlBrush);
+		dc.SetTextColor(oldColor);
+		dc.SetBkMode(nOldBkMode);
+		::SelectObject(dc.m_hDC, hOldFont);	
 	}
 
-	dc.SetTextColor(oldColor);
-	dc.SetBkMode(nOldBkMode);
-	::SelectObject(dc.m_hDC, hOldFont);	
+	if (navBarControlStripHeight > 0)
+	{
+		// Draw the control strip text.
+		CFont smallArialFont;
+		LOGFONT lf2;
+		XP_MEMSET(&lf2,0,sizeof(LOGFONT));
+		lf2.lfHeight = 90;
+		lf2.lfWeight = 400;
+		strcpy(lf2.lfFaceName, "Arial");
+		smallArialFont.CreatePointFontIndirect(&lf2, &dc);
+		HFONT smallFont = (HFONT)smallArialFont.GetSafeHandle();
+		HFONT hOldFont = (HFONT)::SelectObject(dc.m_hDC, smallFont);
+
+		// The ADD button
+		CString addText("Add Page"); // Will use an extensible HT mechanism eventually.  Hardcode for now.
+		//HT_GetTemplateData(topNode, gNavCenter->controlStripModeText, HT_COLUMN_STRING, &data);
+		//if (data)
+		//	modeText = (char*)data;
+		
+		CRect addRect(controlStripRect);
+		int smallHeight = CIntlWin::DrawText(CS_UTF8, dc.m_hDC, addText.GetBuffer(0), addText.GetLength(), &addRect, DT_CALCRECT | DT_WORDBREAK);
+		
+		if (addRect.Width() > rect.Width() - 9)
+		{
+			// Don't write into the close box area!
+			addRect.right = addRect.left + (rect.Width() - 9);
+		}
+		addRect.left += 4;	// indent slightly horizontally
+		addRect.right += 4;
+
+		// Center the text vertically.
+		addRect.top = controlStripRect.top + (controlStripRect.Height() - smallHeight) / 2;
+		addRect.bottom = addRect.top + smallHeight;
+
+		// Cache the rect
+		cachedAddRect.top = controlStripRect.top;
+		cachedAddRect.left = 0;
+		cachedAddRect.bottom = controlStripRect.bottom;
+		cachedAddRect.right = addRect.right + 3;
+
+		// The MANAGE button
+		CString modeText("Edit Bookmarks"); // Will use an extensible HT mechanism eventually.  Hardcode for now.
+		//HT_GetTemplateData(topNode, gNavCenter->controlStripModeText, HT_COLUMN_STRING, &data);
+		//if (data)
+		//	modeText = (char*)data;
+
+		CRect modeRect(controlStripRect);
+		smallHeight = CIntlWin::DrawText(CS_UTF8,dc.m_hDC, modeText.GetBuffer(0), modeText.GetLength(), &modeRect, DT_CALCRECT | DT_WORDBREAK);
+		
+		if (modeRect.Width() > rect.Width() - 9)
+		{
+			// Don't write into the close box area!
+			modeRect.right = modeRect.left + (rect.Width() - 9);
+		}
+		modeRect.left += cachedAddRect.right + 10;	// account for add rect and indent slightly horizontally
+		modeRect.right += cachedAddRect.right + 10;
+
+		// Center the text vertically.
+		modeRect.top = addRect.top;
+		modeRect.bottom = addRect.bottom;
+		modeRect.right += 4;
+
+		// Cache the rect
+		cachedModeRect.top = controlStripRect.top;
+		cachedModeRect.left = cachedAddRect.right + 6;
+		cachedModeRect.bottom = controlStripRect.bottom;
+		cachedModeRect.right = cachedModeRect.left + modeRect.Width() + 3;
+
+		CString closeText("Close");  
+		HT_GetTemplateData(topNode, gNavCenter->controlStripCloseText, HT_COLUMN_STRING, &data);
+		if (data)
+		  closeText = (char*)data;
+
+		CRect closeRect(controlStripRect);
+		CIntlWin::DrawText(CS_UTF8, dc.m_hDC, closeText.GetBuffer(0), closeText.GetLength(), &closeRect, DT_CALCRECT | DT_WORDBREAK);
+		
+		int closeWidth = closeRect.Width();
+
+		closeRect.right = rect.right - 4;
+		closeRect.left = closeRect.right - closeWidth;
+
+		// Center the text vertically.
+		closeRect.top = modeRect.top;
+		closeRect.bottom = modeRect.bottom;
+
+		CRect arrowRect;
+		arrowRect.top = controlStripRect.top;
+		arrowRect.left = closeRect.left - 12;
+		arrowRect.right = arrowRect.left + 12;
+		arrowRect.bottom = controlStripRect.bottom;
+		
+		// Cache the rect
+		cachedCloseRect.top = controlStripRect.top;
+		cachedCloseRect.left = arrowRect.left;
+		cachedCloseRect.bottom = controlStripRect.bottom;
+		cachedCloseRect.right = closeRect.right + 3;
+
+		// Now compute the close box rect.
+		HT_Pane pane = HT_GetPane(HT_GetView(topNode));
+		if (HT_GetWindowType(pane) == HT_STANDALONE_WINDOW ||
+			HT_GetWindowType(pane) == HT_EMBEDDED_WINDOW)
+		{
+			// Don't allow the close box to exist.
+			cachedCloseRect.SetRect(0,0,0,0);
+			closeRect.SetRect(0,0,0,0);
+			arrowRect.SetRect(0,0,0,0);
+		}
+
+		if (HT_GetWindowType(pane) != HT_STANDALONE_WINDOW &&
+			HT_GetWindowType(pane) != HT_EMBEDDED_WINDOW)
+			DrawArrow(dc.m_hDC, m_ControlStripForegroundColor, LEFT_ARROW, arrowRect, TRUE);
+
+		// Draw the text
+		int nOldBkMode = dc.SetBkMode(TRANSPARENT);
+		int oldColor = dc.SetTextColor(m_ControlStripForegroundColor);
+		UINT nFormat = DT_SINGLELINE | DT_VCENTER | DT_EXTERNALLEADING;
+
+		if (HT_GetWindowType(pane) != HT_STANDALONE_WINDOW &&
+			HT_GetWindowType(pane) != HT_EMBEDDED_WINDOW)
+			CIntlWin::DrawText(CS_UTF8, dc.m_hDC, closeText.GetBuffer(0), -1, &closeRect, nFormat);
+		CIntlWin::DrawText(CS_UTF8, dc.m_hDC, modeText.GetBuffer(0), -1, &modeRect, nFormat);
+		CIntlWin::DrawText(CS_UTF8, dc.m_hDC, addText.GetBuffer(0), -1, &addRect, nFormat);
+
+		// See if we're supposed to draw a framing rect.
+		
+		CBrush controlBrush(m_ControlStripForegroundColor);
+		if (m_bDrawCloseFrame)
+		{
+			dc.FrameRect(cachedCloseRect, &controlBrush);
+		}
+		if (m_bDrawModeFrame)
+		{
+			dc.FrameRect(cachedModeRect, &controlBrush);
+		}
+		if (m_bDrawAddFrame)
+		{
+			dc.FrameRect(cachedAddRect, &controlBrush);
+		}
+
+		dc.SetTextColor(oldColor);
+		dc.SetBkMode(nOldBkMode);
+		::SelectObject(dc.m_hDC, hOldFont);	
+	}
 }
 
 int CNavTitleBar::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -490,4 +544,35 @@ void CNavTitleBar::OnTimer(UINT nIDEvent)
 	}
 
 	CWnd::OnTimer(nIDEvent);
+}
+
+int CNavTitleBar::GetHeightBasedOnProperties()
+{
+	if (!m_View)
+		return 0;
+
+	HT_Resource topNode = HT_TopNode(m_View);
+	void* data;
+	PRBool foundData = FALSE;
+	
+	// Whether or not to show the title bar.
+	int height = 0;
+	HT_GetTemplateData(topNode, gNavCenter->showTitleBar, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString answer((char*)data);
+		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'Y' || answer.GetAt(0) == 'y'))
+			height += NAVBAR_TITLEBAR_HEIGHT;
+	}
+
+	// Whether or not to show the control strip.
+	HT_GetTemplateData(topNode, gNavCenter->showControlStrip, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString answer((char*)data);
+		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'Y' || answer.GetAt(0) == 'y'))
+			height += NAVBAR_CONTROLSTRIP_HEIGHT;
+	}
+
+	return height;
 }

@@ -455,7 +455,7 @@ public:
 	CNavTitleBar* GetTitleBar() { return m_pNavBar; }
 
 	static CRDFContentView* DisplayRDFTreeFromSHACK(MWContext *pContext, CWnd* pParent, int xPos, int yPos, int width, 
-		int height, char* url,  int32 param_count, char** param_names, char** param_values);
+		int height, char* url, char* templateType, int32 param_count, char** param_names, char** param_values);
 		// This function can be called to create an embedded RDF tree view using an
 		// external URL and specified targeting.
 	

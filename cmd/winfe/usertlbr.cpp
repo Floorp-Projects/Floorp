@@ -1516,9 +1516,10 @@ CRDFToolbar* CRDFToolbar::CreateUserToolbar(HT_View theView, CWnd* pParent)
 	char *data;
 	HT_GetTemplateData(HT_TopNode(theView), gNavCenter->toolbarDisplayMode, HT_COLUMN_STRING,
 				(void **)&data);
-	int style = StyleFromHTDescriptor(data);
-	if (style < 0)
-		style = theApp.m_pToolbarStyle;
+	int style = theApp.m_pToolbarStyle;
+	
+	if (data)
+		style = StyleFromHTDescriptor(data);
 
 	CRDFToolbar* pToolbar = new CRDFToolbar(theView, MAX_TOOLBAR_BUTTONS, style, 43, 27, 27);
 

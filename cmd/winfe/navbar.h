@@ -64,6 +64,7 @@ public:
 	void NotifyFocus(BOOL hasFocus) { m_bHasFocus = hasFocus; Invalidate(); }
 
 	void LoadComplete(HT_Resource r) { Invalidate(); }
+	int GetHeightBasedOnProperties();
 
 	//{{AFX_MSG(CNavTitleBar)
 	

@@ -1572,10 +1572,12 @@ void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruc
 		char* url = LO_GetBuiltInAttribute(pBuiltin_struct, "data");
 		char* target = LO_GetBuiltInAttribute(pBuiltin_struct, "target");
 		if (pBuiltin_struct->FE_Data == NULL ){
+			char* templateType = LO_GetBuiltInAttribute(pBuiltin_struct, "template");
+			
 #ifdef OJI
-			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(pContext, cWnd, xPos, yPos, width, height, url == NULL ? "" :url , pBuiltin_struct->attributes.n, pBuiltin_struct->attributes.names, pBuiltin_struct->attributes.values);
+			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(pContext, cWnd, xPos, yPos, width, height, url == NULL ? "" :url , templateType, pBuiltin_struct->attributes.n, pBuiltin_struct->attributes.names, pBuiltin_struct->attributes.values);
 #else
-			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(pContext, cWnd, xPos, yPos, width, height, url == NULL ? "" :url , pBuiltin_struct->attribute_cnt, pBuiltin_struct->attribute_list, pBuiltin_struct->value_list);
+			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(pContext, cWnd, xPos, yPos, width, height, url == NULL ? "" :url , templateType, pBuiltin_struct->attribute_cnt, pBuiltin_struct->attribute_list, pBuiltin_struct->value_list);
 #endif
 			((CRDFOutliner*)pWnd->GetOutlinerParent()->GetOutliner())->SetWindowTarget(target);
 			pBuiltin_struct->FE_Data = pWnd;
