@@ -38,19 +38,9 @@
 /* #include "ComponentConfig.h" */
 
 /* Read build-wide defines (e.g. MOZILLA_CLIENT) */
-/* #include "DefinesMozilla.h" */
+#include "DefinesMozilla.h"
 
-/* #define MOCHA
-#ifndef NETSCAPE
-#define NETSCAPE	1
-#endif
-#define LAYERS	1
-
-*/
 
 #define STANDALONE_IMAGE_LIB /* libimg */
 #define MODULAR_NETLIB /* network */
-#define MOZILLA_CLIENT
-#define NETSCAPE /* Needed by zlib */
-#define MOCHA /* Required by mkautocnf.c in modular netlib */
 #define MOZ_NGLAYOUT
