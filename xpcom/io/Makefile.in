@@ -49,7 +49,6 @@ CPPSRCS		= \
 		nsInputStreamTee.cpp \
 		nsLinebreakConverter.cpp \
 		nsLocalFileCommon.cpp \
-		nsLocalFileUnicode.cpp \
 		nsMultiplexInputStream.cpp \
 		nsPipe2.cpp \
 		nsScriptableInputStream.cpp \
@@ -58,6 +57,10 @@ CPPSRCS		= \
 		nsStorageStream.cpp \
 		nsUnicharInputStream.cpp \
 		$(NULL)
+
+ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS		+= nsLocalFileUnicode.cpp
+endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 CPPSRCS		+= nsLocalFileOS2.cpp

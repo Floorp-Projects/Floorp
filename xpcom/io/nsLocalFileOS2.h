@@ -143,4 +143,8 @@ private:
 
 };
 
+
+extern nsresult NS_CreateUnicodeConverters();
+extern void     NS_DestroyUnicodeConverters();
+
 #endif
