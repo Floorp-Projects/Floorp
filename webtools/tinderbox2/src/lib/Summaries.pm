@@ -8,8 +8,8 @@
 # The only external interface to this library is summary_pages() and
 # create_global_index() these functions are only called by tinder.cgi.
 
-# $Revision: 1.3 $ 
-# $Date: 2000/08/30 02:23:08 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/09/01 18:37:52 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Summaries.pm,v $ 
 # $Name:  $ 
@@ -173,6 +173,8 @@ sub treegroup_func_page    {
   my ($summary_ref, $func, $group_name) = @_;
 
   my ($body);
+  my ($link);
+
   my (@tree_group) = sort keys %{ $TreeData::VC_TREE_GROUPS{$group_name} };
 
   foreach $tree (@tree_group) {
@@ -196,7 +198,7 @@ sub treegroup_func_page    {
     
     main::overwrite_file ($file_name, $group_func_summary_page);
     
-    my ($link) = ("\t\t<LI><a href=\"$base_name\">".
+    $link .= ("\t\t<LI><a href=\"$base_name\">".
                   "$func</a>\n");
   }
 
