@@ -660,7 +660,7 @@ nsFormFillController::Select(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 nsFormFillController::Input(nsIDOMEvent* aEvent)
 {
-  if (mSuppressOnInput || !mController)
+  if (mSuppressOnInput || !mController || !mFocusedInput)
     return NS_OK;
 
   return mController->HandleText(PR_FALSE);
