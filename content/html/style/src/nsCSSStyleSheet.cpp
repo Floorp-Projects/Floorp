@@ -3480,7 +3480,6 @@ const nsString* RuleProcessorData::GetLang(void)
     mLanguage = new nsAutoString();
     if (!mLanguage)
       return nsnull;
-    mLanguage->SetLength(0);
     nsCOMPtr<nsIContent> content = mContent;
     while (content) {
       PRInt32 attrCount = 0;
