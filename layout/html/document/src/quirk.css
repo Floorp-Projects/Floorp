@@ -143,25 +143,7 @@ body > ol:-moz-first-node, td > ol:-moz-first-node, th > ol:-moz-first-node {
   margin-top: 0;
 }
 
-td > form:-moz-last-node, th > form:-moz-last-node,
-td > p:-moz-last-node, th > p:-moz-last-node,
-td > dl:-moz-last-node, th > dl:-moz-last-node,
-td > multicol:-moz-last-node, th > multicol:-moz-last-node,
-td > blockquote:-moz-last-node, th > blockquote:-moz-last-node,
-td > h1:-moz-last-node, th > h1:-moz-last-node,
-td > h2:-moz-last-node, th > h2:-moz-last-node,
-td > h3:-moz-last-node, th > h3:-moz-last-node,
-td > h4:-moz-last-node, th > h4:-moz-last-node,
-td > h5:-moz-last-node, th > h5:-moz-last-node,
-td > h6:-moz-last-node, th > h6:-moz-last-node,
-td > listing:-moz-last-node, th > listing:-moz-last-node,
-td > plaintext:-moz-last-node, th > plaintext:-moz-last-node,
-td > xmp:-moz-last-node, th > xmp:-moz-last-node,
-td > pre:-moz-last-node, th > pre:-moz-last-node,
-td > ul:-moz-last-node, th > ul:-moz-last-node,
-td > menu:-moz-last-node, th > menu:-moz-last-node,
-td > dir:-moz-last-node, th > dir:-moz-last-node,
-td > ol:-moz-last-node, th > ol:-moz-last-node {
+td > p:-moz-last-node, th > p:-moz-last-node {
   margin-bottom: 0;
 }
 
