@@ -80,7 +80,7 @@ sub expand {
 
 package PLIF::Service::TemplateToolkit::Context;
 use strict;
-use vars qw(@ISA);
+use vars qw(@ISA $URI_ESCAPES);
 @ISA = qw(Template::Context);
 1;
 
@@ -97,6 +97,8 @@ sub new {
             'htmljs' => \&html_js_filter, # for use in strings in JS in HTML <script> blocks
             'js' => \&js_filter, # for use in strings in JS
             'css' => \&css_filter, # for use in strings in CSS
+            'uri' => \&uri_light_filter, # ensuring a theoretically valid URI
+            'uri_parameter' => \&uri_heavy_filter, # for use in embedding strings into a URI
         }
     });
     if (defined($self)) {
@@ -266,4 +268,29 @@ sub css_filter {
     my $text = shift;
     $text =~ s/([\\'"])/\\$1/go; # escape backslashes and quotes
     return $text;
+}
+
+# This was based on the equivalent function in Template::Filters,
+# which was copied from URI::Escape. The changes are that I no longer
+# escape the "#" character, but do escape "'", "(" and ")".
+sub uri_light_filter {
+    my $text = shift;    
+    # construct and cache a lookup table for escapes (faster than
+    # doing a sprintf() for every character in every string each time)
+    $URI_ESCAPES ||= { map { (chr($_), sprintf("%%%02X", $_)) } (0..255) };
+    $text =~ s/([^;\/?:@&=+\$,A-Za-z0-9\-_.!~*#])/$URI_ESCAPES->{$1}/g;
+    $text;
+}
+
+# This was based on the equivalent function in Template::Filters,
+# which was copied from URI::Escape. The changes are that this escapes
+# almost _everything_, making it suitable for escaping text which is
+# to be put into URIs, e.g. into parameters.
+sub uri_heavy_filter {
+    my $text = shift;    
+    # construct and cache a lookup table for escapes (faster than
+    # doing a sprintf() for every character in every string each time)
+    $URI_ESCAPES ||= { map { (chr($_), sprintf("%%%02X", $_)) } (0..255) };
+    $text =~ s/([^A-Za-z0-9_.])/$URI_ESCAPES->{$1}/g;
+    $text;
 }
