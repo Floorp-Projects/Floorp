@@ -19,6 +19,7 @@
 # 
 # Contributor(s): Zach Lipton <zach@zachlipton.com>
 #                 Jacob Steenhagen <jake@acutex.net>
+#                 David D. Kilzer <ddkilzer@theracingworld.com>
 # 
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU General Public License Version 2 or later (the
@@ -47,37 +48,44 @@ use strict;
 my @testitems = @Support::Files::testitems; # get the files to test.
 
 foreach my $file (@testitems) {
-        $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
-        next if (!$file); # skip null entries
-        open (FILE, $file);
-        my @file = <FILE>;
-        close (FILE);
-        if ($file[0] !~ /\/usr\/bonsaitools\/bin\/perl/) {
-                ok(1,"$file does not have a shebang");	
-                next;
+    $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
+    next if (!$file); # skip null entries
+    if (! open (FILE, $file)) {
+        ok(0,"could not open $file --WARNING");
+    }
+    my $file_line1 = <FILE>;
+    close (FILE);
+    if ($file_line1 !~ /\/usr\/bonsaitools\/bin\/perl/) {
+        ok(1,"$file does not have a shebang");	
+    } else {
+        if ($file_line1 =~ m#/usr/bonsaitools/bin/perl -w#) {
+            ok(1,"$file uses -w");
         } else {
-                if ($file[0] =~ m#/usr/bonsaitools/bin/perl -w#) {
-                        ok(1,"$file uses -w");
-                        next;
-                } else {
-                        ok(0,"$file is MISSING -w --WARNING");
-                        next;
-                }
+            ok(0,"$file is MISSING -w --WARNING");
         }
+    }
 }
+
 foreach my $file (@testitems) {
-        $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
-        next if (!$file); # skip null entries
-        open (FILE, $file);
-        my @file = <FILE>;
-        close (FILE);
-        if (grep /^\s*use strict/, @file) {
-                ok(1,"$file uses strict");
-        } else {
-                ok(0,"$file DOES NOT use strict --WARNING");
+    my $found_use_strict = 0;
+    $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
+    next if (!$file); # skip null entries
+    if (! open (FILE, $file)) {
+        ok(0,"could not open $file --WARNING");
+        next;
+    }
+    while (my $file_line = <FILE>) {
+        if ($file_line =~ m/^\s*use strict/) {
+            $found_use_strict = 1;
+            last;
         }
+    }
+    close (FILE);
+    if ($found_use_strict) {
+        ok(1,"$file uses strict");
+    } else {
+        ok(0,"$file DOES NOT use strict --WARNING");
+    }
 }
 
-
-
-
+exit 0;
