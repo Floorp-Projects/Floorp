@@ -1,16 +1,22 @@
 <?xml version="1.0"?>
+<!-- Our script expects the book.css stylesheet first -->
 <?xml-stylesheet href="book.css" type="text/css"?>
 <?xml-stylesheet href="toc.css" type="text/css"?>
-
+<!DOCTYPE book [
+<!ATTLIST book    id ID #IMPLIED>
+<!ATTLIST chapter id ID #IMPLIED>
+<!ATTLIST section id ID #IMPLIED>
+]>
 <book id="book" xmlns:html="http://www.w3.org/TR/REC-html40"
                 xmlns:xlink="http://www.w3.org/1999/xlink">
+ <html:a name="book"/>                
  <html:script src="toc.js"/>
  <html:img src="irslogo.gif"/>
  <navbar>
    <title>Table of contents</title>
    <content>
    To toggle the Table of Contents, click on this button
-   <html:input type="button" value="Contents" onclick="initiateCreateToc();"/>
+   <html:input type="button" value="Contents" onclick="createToc();"/>
    </content>
  </navbar>
 
@@ -18,9 +24,11 @@
   <subtitle>(Rev. December 1999)</subtitle>
 
   <chapter id="chap1">
+    <html:a name="chap1"/>
     <title>Tax Changes for Individuals</title>
     <contents>
       <section id="chap1sec1">
+         <html:a name="chap1sec1"/>
          <title>Child Tax Credit Increased</title>
          <contents>
             <para>
@@ -29,6 +37,7 @@ The maximum child tax credit for each qualifying child will increase from $400 t
          </contents>
       </section>
       <section id="chap1sec2">
+         <html:a name="chap1sec2"/>      
          <title>Standard Mileage Rate</title>
          <contents>
             <para>
@@ -37,6 +46,7 @@ Beginning April 1, 1999, the optional standard mileage rate for operating your c
          </contents>
       </section>
       <section id="chap1sec3">
+         <html:a name="chap1sec3"/>      
          <title>Estimated Tax Safe Harbor for Higher Income Individuals</title>
          <contents>
             <para>
@@ -49,6 +59,7 @@ For more information on estimated tax, see
          </contents>
       </section>
       <section id="chap1sec4">
+         <html:a name="chap1sec4"/>      
          <title>Self-Employed Health Insurance Deduction</title>
          <contents>
             <para>
@@ -58,6 +69,7 @@ For 1999, the health insurance deduction for the self-employed is increased from
          </contents>
       </section>
       <section id="chap1sec5">
+         <html:a name="chap1sec5"/>      
          <title>Social Security and Medicare Taxes</title>
          <contents>
             <para>
@@ -79,6 +91,7 @@ For social security tax, the maximum amount of 1999 wages subject to the tax has
          </contents>
       </section>
       <section id="chap1sec6">
+         <html:a name="chap1sec6"/>      
          <title>Self-Employment Tax</title>
          <contents>
             <para>
@@ -93,9 +106,11 @@ The maximum amount subject to the social security part for tax years beginning i
   </chapter>
 
   <chapter id="chap2">
+    <html:a name="chap2"/>        
     <title>Tax Changes for Businesses</title>
     <contents>
       <section id="chap2sec1">
+        <html:a name="chap2sec1"/>      
         <title>Social Security and Medicare Taxes</title>
         <contents>
           <para>
@@ -116,6 +131,7 @@ For 1999, the employer and employee will continue to pay:
         </contents>
       </section>
       <section  id="chap2sec2">
+        <html:a name="chap2sec2"/>      
         <title>Employment Tax Deposits</title>
         <contents>
           <para>
@@ -124,6 +140,7 @@ Under certain circumstances, the IRS can waive the penalty for a first-time depo
         </contents>
       </section>
       <section id="chap2sec3">
+        <html:a name="chap2sec3"/>      
         <title>Electronic Deposit of Taxes</title>
         <contents>
           <para>
@@ -132,6 +149,7 @@ If you were first required to deposit taxes by electronic funds transfer after J
         </contents>
       </section>
       <section id="chap2sec4">
+        <html:a name="chap2sec4"/>      
         <title>941 TeleFile</title>
         <contents>
           <para>
@@ -140,6 +158,7 @@ Beginning with the first quarter of 1998, many employers were able to file Form9
         </contents>
       </section>
       <section id="chap2sec5">
+        <html:a name="chap2sec5"/>            
         <title>941 On-Line</title>
         <contents>
           <para>
@@ -148,6 +167,7 @@ In 1998, a limited number of employers were allowed to file Form 941 using comme
         </contents>
       </section>
       <section id="chap2sec6">
+        <html:a name="chap2sec6"/>      
         <title>Self-Employment Tax </title>
         <contents>
           <para>
@@ -162,9 +182,11 @@ The maximum amount subject to the social security part for tax years beginning i
   </chapter>
 
   <chapter id="chap3">
+    <html:a name="chap3"/>      
     <title>IRA and other Retirement Plans</title>
     <contents>
       <section id="chap3sec1">
+        <html:a name="chap3sec1"/>      
         <title>Hardship Distributions</title>
         <contents>
           <para>
@@ -176,9 +198,11 @@ Beginning in 1999, hardship distributions from 401(k) plans and 403(b) plans are
   </chapter>
 
   <chapter id="chap4">
+    <html:a name="chap4"/>      
     <title>Gift and Estate Taxes</title>
     <contents>
       <section id="chap4sec1">
+        <html:a name="chap4sec1"/>      
         <title>New Deduction From Gross Estate</title>
         <contents>
           <para>
@@ -187,6 +211,7 @@ For estates of decedents dying after 1997, the executor can elect to deduct the 
         </contents>
       </section>
       <section id="chap4sec2">
+        <html:a name="chap4sec2"/>      
         <title>Suit for Refund</title>
         <contents>
           <para>
@@ -237,9 +262,11 @@ Discontinue making timely installment payments while the court considers the sui
   </chapter>
 
   <chapter id="chap5">
+    <html:a name="chap5"/>      
     <title>Excise Tax</title>
     <contents>
       <section id="chap5sec1">
+        <html:a name="chap5sec1"/>      
         <title>Air Transportation Taxes</title>
         <contents>
           <para>
@@ -248,6 +275,7 @@ For 1999, the tax on the use of international air travel facilities will be $12.
         </contents>
       </section>
       <section id="chap5sec2">
+        <html:a name="chap5sec2"/>      
         <title>Luxury Tax</title>
         <contents>
           <para>
