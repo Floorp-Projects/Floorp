@@ -406,6 +406,20 @@ cookie_IsInDomain(char* domain, char* host, int hostLength) {
   int domainLength = PL_strlen(domain);
 
   /*
+   * test for domain name being an IP address (e.g., 105.217) and reject if so
+   */
+  PRBool hasNonDigitChar = PR_FALSE;
+  for (int i = 0; i<domainLength; i++) {
+    if (!nsCRT::IsAsciiDigit(domain[i]) && domain[i] != '.') {
+      hasNonDigitChar = PR_TRUE;
+      break;
+    }
+  }
+  if (!hasNonDigitChar) {
+    return PR_FALSE;
+  }
+
+  /*
    * special case for domainName = .hostName
    *    e.g., hostName = netscape.com
    *          domainName = .netscape.com
