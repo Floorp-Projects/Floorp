@@ -19,9 +19,10 @@
 #define nsPlaceholderFrame_h___
 
 #include "nsFrame.h"
+#include "nsIInlineReflow.h"
 
 // Implementation of a frame that's used as a placeholder for an anchored item
-class nsPlaceholderFrame : public nsFrame {
+class nsPlaceholderFrame : public nsFrame, public nsIInlineReflow {
 public:
   /**
    * Create a new placeholder frame
@@ -33,11 +34,15 @@ public:
   // Returns the associated anchored item
   nsIFrame*   GetAnchoredItem() const {return mAnchoredItem;}
 
+  // nsISupports
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
   // nsIFrame overrides
-  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
-                     nsReflowMetrics&     aDesiredSize,
-                     const nsReflowState& aReflowState,
-                     nsReflowStatus&      aStatus);
+  NS_IMETHOD FindTextRuns(nsCSSLineLayout&  aLineLayout,
+                          nsIReflowCommand* aReflowCommand);
+  NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
+                          nsReflowMetrics&     aDesiredSize,
+                          const nsReflowState& aReflowState);
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
