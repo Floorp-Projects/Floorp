@@ -669,11 +669,13 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    const nsRect &aTileRect)
 {
-  nsIDeviceContext *theDeviceContext;
   float            scale;
 
-  aContext.GetDeviceContext(theDeviceContext);
-  theDeviceContext->GetCanonicalPixelScale(scale);
+  {
+    nsCOMPtr<nsIDeviceContext> theDeviceContext;
+    aContext.GetDeviceContext(*getter_AddRefs(theDeviceContext));
+    theDeviceContext->GetCanonicalPixelScale(scale);
+  }
   
 
   PRInt32
