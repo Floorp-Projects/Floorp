@@ -170,17 +170,12 @@ nsHTMLTitleElement::SetText(const nsAString& aTitle)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIDOMNode> child;
-  nsCOMPtr<nsIDocument> document;
 
-  result = GetDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(mDocument));
 
-  if (NS_OK == result) {
-    nsCOMPtr<nsIDOMHTMLDocument> htmlDoc(do_QueryInterface(document));
-
-    if (htmlDoc) {
-      htmlDoc->SetTitle(aTitle);
-    }   
-  }
+  if (htmlDoc) {
+    htmlDoc->SetTitle(aTitle);
+  }   
 
   result = GetFirstChild(getter_AddRefs(child));
 

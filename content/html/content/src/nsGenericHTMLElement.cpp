@@ -954,18 +954,15 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
   *aP2T = 0.0f;
   *aT2P = 0.0f;
 
-  // Get the the document
-  nsCOMPtr<nsIDocument> doc;
-  GetDocument(getter_AddRefs(doc));
-  if (!doc) {
+  if (!mDocument) {
     return NS_OK;
   }
 
-  doc->FlushPendingNotifications(PR_TRUE, PR_FALSE);
+  mDocument->FlushPendingNotifications(PR_TRUE, PR_FALSE);
 
   // Get the presentation shell
   nsCOMPtr<nsIPresShell> presShell;
-  doc->GetShellAt(0, getter_AddRefs(presShell));
+  mDocument->GetShellAt(0, getter_AddRefs(presShell));
   if (!presShell) {
     return NS_OK;
   }
@@ -1005,7 +1002,7 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
       }
     }
 
-    PRBool quirksMode = InNavQuirksMode(doc);
+    PRBool quirksMode = InNavQuirksMode(mDocument);
     if ((quirksMode && mNodeInfo->Equals(nsHTMLAtoms::body)) ||
         (!quirksMode && mNodeInfo->Equals(nsHTMLAtoms::html))) {
       // In quirks mode, the scroll info for the body element should map to the
@@ -1260,16 +1257,13 @@ nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
 nsresult
 nsGenericHTMLElement::ScrollIntoView(PRBool aTop)
 {
-  // Get the the document
-  nsCOMPtr<nsIDocument> doc;
-  GetDocument(getter_AddRefs(doc));
-  if (!doc) {
+  if (!mDocument) {
     return NS_OK;
   }
 
   // Get the presentation shell
   nsCOMPtr<nsIPresShell> presShell;
-  doc->GetShellAt(0, getter_AddRefs(presShell));
+  mDocument->GetShellAt(0, getter_AddRefs(presShell));
   if (!presShell) {
     return NS_OK;
   }
@@ -1355,7 +1349,7 @@ nsGenericHTMLElement::FindForm(nsIDOMHTMLFormElement **aForm)
 {
   // XXX: Namespaces!!!
 
-  nsCOMPtr<nsIContent> content(this);
+  nsIContent* content(this);
   nsCOMPtr<nsIAtom> tag;
 
   *aForm = nsnull;
@@ -1371,7 +1365,7 @@ nsGenericHTMLElement::FindForm(nsIDOMHTMLFormElement **aForm)
     }
 
     nsIContent *tmp = content;
-    tmp->GetParent(getter_AddRefs(content));
+    content = tmp->GetParent();
 
     if (content) {
       PRInt32 i;
@@ -2687,15 +2681,15 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsIHTMLContent* aContent,
   //
   // Get the pres shell
   //
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = aContent->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = aContent->GetDocument();
   if (!doc) {
-    return rv;
+    return NS_OK;
   }
 
   //
   // Get the history (don't bother with the key if the history is not there)
   //
+  nsresult rv;
   nsCOMPtr<nsISupports> container;
   doc->GetContainer(getter_AddRefs(container));
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
@@ -2754,10 +2748,8 @@ nsresult
 nsGenericHTMLElement::GetPresContext(nsIHTMLContent* aContent,
                                      nsIPresContext** aPresContext)
 {
-  nsCOMPtr<nsIDocument> doc;
-
   // Get the document
-  aContent->GetDocument(getter_AddRefs(doc));
+  nsIDocument* doc = aContent->GetDocument();
   if (doc) {
     // Get presentation shell 0
     nsCOMPtr<nsIPresShell> presShell;
@@ -4075,13 +4067,8 @@ nsGenericHTMLContainerFormElement::SetDocument(nsIDocument* aDocument,
     // ourselves from the form.  This keeps ghosts from appearing in
     // the form's |elements| array
     nsCOMPtr<nsIContent> formContent(do_QueryInterface(mForm, &rv));
-    if (formContent) {
-      nsCOMPtr<nsIDocument> doc;
-      rv = formContent->GetDocument(getter_AddRefs(doc));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (doc) {
-        SetForm(nsnull);
-      }
+    if (formContent && formContent->GetDocument()) {
+      SetForm(nsnull);
     }
   }
 
@@ -4325,13 +4312,8 @@ nsGenericHTMLLeafFormElement::SetDocument(nsIDocument* aDocument,
     // ourselves from the form.  This keeps ghosts from appearing in
     // the form's |elements| array
     nsCOMPtr<nsIContent> formContent(do_QueryInterface(mForm, &rv));
-    if (formContent) {
-      nsCOMPtr<nsIDocument> doc;
-      rv = formContent->GetDocument(getter_AddRefs(doc));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (doc) {
-        SetForm(nsnull);
-      }
+    if (formContent && formContent->GetDocument()) {
+      SetForm(nsnull);
     }
   }
 

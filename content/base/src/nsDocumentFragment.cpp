@@ -269,7 +269,7 @@ nsDocumentFragment::ReconnectChildren()
     ChildAt(i, getter_AddRefs(child));
     NS_ASSERTION(child, "Bad content container");
 
-    child->GetParent(getter_AddRefs(parent));
+    parent = child->GetParent();
 
     if (parent) {
       PRInt32 indx = -1;

@@ -207,20 +207,17 @@ nsHTMLTableCellElement::GetTable(nsIContent** aTable)
 {
   *aTable = nsnull;
 
-  nsCOMPtr<nsIContent> row;
-  GetParent(getter_AddRefs(row));
-  if (row) {
-    nsCOMPtr<nsIContent> section;
-    row->GetParent(getter_AddRefs(section));
+  if (mParent) {  // mParent should be a row
+    nsIContent* section = mParent->GetParent();
     if (section) {
       nsCOMPtr<nsIAtom> tag;
       section->GetTag(getter_AddRefs(tag));
       if (tag == nsHTMLAtoms::table) {
         // XHTML, without a row group
-        section.swap(*aTable);
+        NS_ADDREF(*aTable = section);
       } else {
         // we have a row group.
-        section->GetParent(aTable);
+        NS_IF_ADDREF(*aTable = section->GetParent());
       }
     }
   }

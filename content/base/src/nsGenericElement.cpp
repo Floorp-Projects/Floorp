@@ -227,8 +227,7 @@ nsNode3Tearoff::GetTextContent(nsAString &aTextContent)
     return node->GetNodeValue(aTextContent);
   }
 
-  nsCOMPtr<nsIDocument> doc;
-  mContent->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
   if (!doc) {
     NS_ERROR("Need a document to do text serialization");
 
@@ -446,8 +445,7 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
   // Trace up the content parent chain looking for the namespace
   // declaration that defines the aNamespaceURI namespace. Once found,
   // return the prefix (i.e. the attribute localName).
-  nsCOMPtr<nsIContent> content(mContent);
-  while (content) {
+  for (nsIContent* content = mContent; content; content = content->GetParent()) {
     PRInt32 attrCount, i;
 
     nsCOMPtr<nsIAtom> name, prefix;
@@ -470,9 +468,6 @@ nsNode3Tearoff::LookupPrefix(const nsAString& aNamespaceURI,
         }
       }
     }
-
-    nsCOMPtr<nsIContent> tmp(content);
-    tmp->GetParent(getter_AddRefs(content));
   }
 
   return NS_OK;
@@ -493,17 +488,12 @@ nsNode3Tearoff::LookupNamespaceURI(const nsAString& aNamespacePrefix,
 
   // Trace up the content parent chain looking for the namespace
   // declaration that declares aNamespacePrefix.
-  nsCOMPtr<nsIContent> content(mContent);
-
-  while (content) {
+  for (nsIContent* content = mContent; content; content = content->GetParent()) {
     nsresult rv = content->GetAttr(kNameSpaceID_XMLNS, name, aNamespaceURI);
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
       return NS_OK;
     }
-
-    nsCOMPtr<nsIContent> tmp(content);
-    tmp->GetParent(getter_AddRefs(content));
   }
 
   SetDOMStringToNull(aNamespaceURI);
@@ -1702,12 +1692,10 @@ nsGenericElement::Normalize()
 }
 
 
-nsresult
-nsGenericElement::GetDocument(nsIDocument** aResult) const
+nsIDocument*
+nsGenericElement::GetDocument() const
 {
-  NS_IF_ADDREF(*aResult = mDocument);
-
-  return NS_OK;
+  return mDocument;
 }
 
 
@@ -1790,12 +1778,10 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 }
 
 
-nsresult
-nsGenericElement::GetParent(nsIContent** aResult) const
+nsIContent*
+nsGenericElement::GetParent() const
 {
-  NS_IF_ADDREF(*aResult = mParent);
-
-  return NS_OK;
+  return mParent;
 }
 
 nsresult
@@ -1803,8 +1789,7 @@ nsGenericElement::SetParent(nsIContent* aParent)
 {
   mParent = aParent;
   if (aParent) {
-    nsCOMPtr<nsIContent> bindingPar;
-    aParent->GetBindingParent(getter_AddRefs(bindingPar));
+    nsIContent* bindingPar = aParent->GetBindingParent();
     if (bindingPar)
       SetBindingParent(bindingPar);
   }
@@ -1879,23 +1864,21 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
 
   // Find out if we're anonymous.
-  nsCOMPtr<nsIContent> bindingParent;
+  nsIContent* bindingParent;
   if (*aDOMEvent) {
     (*aDOMEvent)->GetTarget(getter_AddRefs(oldTarget));
     nsCOMPtr<nsIContent> content(do_QueryInterface(oldTarget));
     if (content)
-      content->GetBindingParent(getter_AddRefs(bindingParent));
+      bindingParent = content->GetBindingParent();
   } else {
-    GetBindingParent(getter_AddRefs(bindingParent));
+    bindingParent = GetBindingParent();
   }
 
   if (bindingParent) {
     // We're anonymous.  We may potentially need to retarget
     // our event if our parent is in a different scope.
     if (mParent) {
-      nsCOMPtr<nsIContent> parentScope;
-      mParent->GetBindingParent(getter_AddRefs(parentScope));
-      if (parentScope != bindingParent)
+      if (mParent->GetBindingParent() != bindingParent)
         retarget = PR_TRUE;
     }
   }
@@ -2427,20 +2410,15 @@ nsGenericElement::RemoveFocus(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-nsresult
-nsGenericElement::GetBindingParent(nsIContent** aContent) const
+nsIContent*
+nsGenericElement::GetBindingParent() const
 {
   nsDOMSlots *slots = GetExistingDOMSlots();
 
   if (slots) {
-    *aContent = slots->mBindingParent;
-
-    NS_IF_ADDREF(*aContent);
-  } else {
-    *aContent = nsnull;
+    return slots->mBindingParent;
   }
-
-  return NS_OK;
+  return nsnull;
 }
 
 nsresult
@@ -2536,34 +2514,29 @@ nsGenericElement::DoneCreatingElement()
 static PRBool
 isSelfOrAncestor(nsIContent *aNode, nsIContent *aChild)
 {
+  NS_PRECONDITION(aNode, "Must have a node");
+  
   if (aNode == aChild)
     return PR_TRUE;
-
-  nsCOMPtr<nsIContent> parent, tmpNode;
-  PRInt32 childCount = 0;
 
   /*
    * If aChild doesn't have children it can't be our ancestor
    */
+  PRInt32 childCount = 0;
   aChild->ChildCount(childCount);
-
   if (childCount <= 0) {
     return PR_FALSE;
   }
 
-  aNode->GetParent(getter_AddRefs(parent));
-
-  while (parent) {
-    if (parent.get() == aChild) {
+  for (nsIContent* ancestor = aNode->GetParent();
+       ancestor;
+       ancestor = ancestor->GetParent()) {
+    if (ancestor == aChild) {
       /*
        * We found aChild as one of our ancestors
        */
       return PR_TRUE;
     }
-
-    parent->GetParent(getter_AddRefs(tmpNode));
-
-    parent.swap(tmpNode);
   }
 
   return PR_FALSE;
@@ -2640,8 +2613,7 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  nsCOMPtr<nsIDocument> old_doc;
-  newContent->GetDocument(getter_AddRefs(old_doc));
+  nsCOMPtr<nsIDocument> old_doc = newContent->GetDocument();
   if (old_doc && old_doc != mDocument &&
       !nsContentUtils::CanCallerAccess(aNewChild)) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -2862,8 +2834,7 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  nsCOMPtr<nsIDocument> old_doc;
-  newContent->GetDocument(getter_AddRefs(old_doc));
+  nsCOMPtr<nsIDocument> old_doc = newContent->GetDocument();
   if (old_doc && old_doc != mDocument &&
       !nsContentUtils::CanCallerAccess(aNewChild)) {
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -3404,8 +3375,7 @@ nsGenericContainerElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 PRBool nsGenericElement::HasMutationListeners(nsIContent* aContent,
                                               PRUint32 aType)
 {
-  nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(getter_AddRefs(doc));
+  nsIDocument* doc = aContent->GetDocument();
   if (!doc)
     return PR_FALSE;
 
@@ -3425,10 +3395,9 @@ PRBool nsGenericElement::HasMutationListeners(nsIContent* aContent,
 
   // We know a mutation listener is registered, but it might not
   // be in our chain.  Check quickly to see.
-  nsCOMPtr<nsIContent> curr = aContent;
   nsCOMPtr<nsIEventListenerManager> manager;
 
-  while (curr) {
+  for (nsIContent* curr = aContent; curr; curr = curr->GetParent()) {
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(curr));
     if (rec) {
       rec->GetListenerManager(getter_AddRefs(manager));
@@ -3439,9 +3408,6 @@ PRBool nsGenericElement::HasMutationListeners(nsIContent* aContent,
           return PR_TRUE;
       }
     }
-
-    nsCOMPtr<nsIContent> prev = curr;
-    prev->GetParent(getter_AddRefs(curr));
   }
 
   nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(doc));

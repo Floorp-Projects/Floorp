@@ -363,10 +363,10 @@ public:
   static void Shutdown();
 
   // nsIContent interface methods
-  NS_IMETHOD GetDocument(nsIDocument** aResult) const;
+  NS_IMETHOD_(nsIDocument*) GetDocument() const;
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
-  NS_IMETHOD GetParent(nsIContent** aResult) const;
+  NS_IMETHOD_(nsIContent*) GetParent() const;
   NS_IMETHOD SetParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsNativeAnonymous() const;
   NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
@@ -419,7 +419,7 @@ public:
   NS_IMETHOD SetContentID(PRUint32 aID);
   NS_IMETHOD SetFocus(nsIPresContext* aContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aContext);
-  NS_IMETHOD GetBindingParent(nsIContent** aContent) const;
+  NS_IMETHOD_(nsIContent*) GetBindingParent() const;
   NS_IMETHOD SetBindingParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);

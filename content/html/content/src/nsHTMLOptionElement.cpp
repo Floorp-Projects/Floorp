@@ -589,15 +589,6 @@ nsHTMLOptionElement::SetText(const nsAString& aText)
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = AppendChildTo(text, PR_TRUE, PR_FALSE);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIDocument> doc;
-
-    GetDocument(getter_AddRefs(doc));
-
-    if (doc) {
-      rv = text->SetDocument(doc, PR_FALSE, PR_TRUE);
-    }
   }
 
   return rv;
@@ -696,17 +687,11 @@ nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement **aSelectElement) const
 {
   *aSelectElement = nsnull;
 
-  // Get the containing element (Either a select or an optGroup)
-  nsCOMPtr<nsIContent> parent;
-  nsCOMPtr<nsIContent> prevParent;
-  GetParent(getter_AddRefs(parent));
-  while (parent) {
+  for (nsIContent* parent = mParent; parent; parent = parent->GetParent()) {
     CallQueryInterface(parent, aSelectElement);
     if (*aSelectElement) {
       break;
     }
-    prevParent = parent;
-    prevParent->GetParent(getter_AddRefs(parent));
   }
 }
 

@@ -1105,16 +1105,12 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
   aPresContext->GetEventStateManager(getter_AddRefs(esm));
 
   if (esm) {
-    nsCOMPtr<nsIDocument> doc;
-
-    GetDocument(getter_AddRefs(doc));
-
-    if (!doc)
+    if (!mDocument)
       return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsIContent> rootContent;
 
-    doc->GetRootContent(getter_AddRefs(rootContent));
+    mDocument->GetRootContent(getter_AddRefs(rootContent));
 
     rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
   }
@@ -1241,9 +1237,7 @@ nsHTMLInputElement::Click()
       mType == NS_FORM_INPUT_RADIO || mType == NS_FORM_INPUT_RESET ||
       mType == NS_FORM_INPUT_SUBMIT) {
 
-    nsCOMPtr<nsIDocument> doc; // Strong
-    rv = GetDocument(getter_AddRefs(doc));
-
+    nsCOMPtr<nsIDocument> doc = mDocument; // Strong in case the event kills it
     if (doc) {
       PRInt32 numShells = doc->GetNumberOfShells();
       nsCOMPtr<nsIPresContext> context;

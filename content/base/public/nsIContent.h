@@ -72,9 +72,9 @@ public:
 
   /**
    * Get the document for this content.
-   * @param aResult the document [OUT]
+   * @return the document
    */
-  NS_IMETHOD GetDocument(nsIDocument** aResult) const = 0;
+  NS_IMETHOD_(nsIDocument*) GetDocument() const = 0;
 
   /**
    * Set the document for this content.
@@ -88,9 +88,9 @@ public:
 
   /**
    * Get the parent content for this content.
-   * @param aResult the parent, or null if no parent [OUT]
+   * @return the parent, or null if no parent
    */
-  NS_IMETHOD GetParent(nsIContent** aResult) const = 0;
+  NS_IMETHOD_(nsIContent*) GetParent() const = 0;
 
   /**
    * Set the parent content for this content.  (This does not add the child to
@@ -447,9 +447,9 @@ public:
    * existence).  Used by anonymous content (XBL-generated). null for all
    * explicit content.
    *
-   * @param aContent the binding parent [OUT]
+   * @return the binding parent
    */
-  NS_IMETHOD GetBindingParent(nsIContent** aContent) const = 0;
+  NS_IMETHOD_(nsIContent*) GetBindingParent() const = 0;
 
   /**
    * Bit-flags to pass (or'ed together) to IsContentOfType()
