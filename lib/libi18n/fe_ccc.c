@@ -438,6 +438,8 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		{CS_8859_5,		CS_8859_5,		0, NULL,			0},	
 		{CS_8859_5,		CS_KOI8_R,		0, (CCCFunc)One2OneCCC, 0},	
 		{CS_KOI8_R,		CS_8859_5,		0, (CCCFunc)One2OneCCC, 0},	
+		{CS_CP_1251,	CS_8859_5,		0, (CCCFunc)One2OneCCC, 0},	
+		{CS_8859_5,		CS_CP_1251,		0, (CCCFunc)One2OneCCC, 0},	
 
 		/* GREEK */
 		{CS_8859_7,		CS_8859_7,		0, NULL,			0},	
