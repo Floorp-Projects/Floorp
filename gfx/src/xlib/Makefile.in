@@ -109,6 +109,7 @@ EXTRA_DSO_LDOPTS += \
 		$(NSPR_LIBS)	\
 		-lxpcom		\
 		-lgkgfx		\
+		-lgfxshared_s   \
 		$(GFX_XIE_LIBS) \
 		$(NULL)
 
@@ -130,6 +131,7 @@ endif
 LOCAL_INCLUDES	+= \
 		-I$(srcdir)/. \
 		-I$(srcdir)/.. \
+		-I$(srcdir)/../shared \
 		-I$(srcdir)/../x11shared \
 		$(NULL)
 
