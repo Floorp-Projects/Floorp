@@ -3565,7 +3565,8 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder
                                                        PRBool performingBiff)
 {
   nsresult retval = NS_OK;
-
+  static PRBool gGotStatusPref = PR_FALSE;
+  static PRBool gUseStatus = PR_FALSE;
   if (!aRootFolder)
     return retval;
 
@@ -3584,12 +3585,23 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aRootFolder
       if (imapFolder)
         imapFolder->SetPerformingBiff(PR_TRUE);
     }
-    aRootFolder->UpdateFolder(aWindow);
-#if 0 // we need to control this with a pref until we're sure it works.
-    nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aRootFolder);
-    if (imapFolder)
-      imapFolder->UpdateStatus(nsnull, aWindow);
-#endif
+    if (!gGotStatusPref)
+    {
+      nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+      if(prefBranch)  
+        prefBranch->GetBoolPref("mail.imap.use_status_for_biff", &gUseStatus);
+      gGotStatusPref = PR_TRUE;
+    }
+    if (gUseStatus)
+    {
+      nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aRootFolder);
+      if (imapFolder)
+        imapFolder->UpdateStatus(nsnull, aWindow);
+    }
+    else
+    {
+      aRootFolder->UpdateFolder(aWindow);
+    }
   }
 
   // Loop through all subfolders to get new messages for them.

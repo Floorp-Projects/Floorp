@@ -434,6 +434,8 @@ pref("mailnews.html_domains","");
 pref("mailnews.plaintext_domains","");
 pref("mailnews.global_html_domains.version",1);
 
+pref("mail.imap.use_status_for_biff", true);
+
 // Pref controlling the updates on the pre-configured accounts.
 // In order to add new pre-configured accounts (after a version),
 // increase the following version number besides updating the
