@@ -63,19 +63,8 @@ if (!defined $::despot) {
     $::despot = 0;
 }
 
-print header();
-
-my $bg = "white";
-my $extra = "";
-if ($::despot) {
-    $bg = "lightgreen";
-    $extra = " (Wonder-twin powers -- activate!)";
-}
-
-print start_html(-Title=>"Despot -- configure mozilla users$extra",
-                 -BGCOLOR=>$bg);
-
 if (!param()) {
+    PrintHeader();
     print h1("Despot -- access control for mozilla.org.");
     if (!exists $ENV{"HTTPS"} || $ENV{"HTTPS"} ne "ON") {
         my $fixedurl = "https://$ENV{'SERVER_NAME'}$ENV{'SCRIPT_NAME'}";
@@ -87,21 +76,7 @@ if (!param()) {
     print img({-align=>"right",-width=>72,-height=>84,-src=>"handcuff.gif"});
     print p("To manage mozilla users, or to change your mozilla.org " .
             "password, you must first log in.");
-    print start_form(-method=>$::POSTTYPE);
-    print table(Tr(th({-align=>"right"}, "Email address:"),
-                   td(textfield(-name=>"loginname",
-                                -size=>20))),
-                Tr(th({-align=>"right"}, "Password:"),
-                   td(password_field(-name=>"loginpassword",
-                                     -size=>20))));
-    print submit(-name=>"Log in");
-    print hr();
-    print p("If you think you should be able to use this system, but you haven't been issued a login, please send mail to " .
-            a({href=>$despotOwnerMailTo}, $despotOwner) . ".");
-#     print p("If you do not yet have a mozilla.org account, or you have one " .
-#             "but have forgotten your password, please fill in your e-mail " .
-#             "address above, and click <nobr>here: " .
-#             submit({name=>"mailMePassword"}, "Email me a password") . "</nobr>");
+    PrintLoginForm();
     exit;
 }
 
@@ -115,49 +90,20 @@ $::db = Mysql->Connect("localhost", "mozusers", $F::loginname, "")
     || die "Can't connect to database server";
 
 
-my $query = Query("select passwd,despot,neednewpassword,id,disabled from users where email = '$F::loginname'");
-my @row = $query->fetchrow();
-if (!@row || !checkpassword($F::loginpassword, $row[0])) {
-    if ($F::loginname !~ /@/) {
-        Punt("You must type in your full e-mail address, including the '\@'.");
-    } else {
-        Punt("Invalid login (bad email address, or bad password).");
-    }
-}
-
-my $passwd;
-my $disabled;
-($passwd,$::candespot,$::neednewpassword,$::loginid,$disabled) = @row;
-
-if ($disabled eq "Yes") {
-    Punt("Your account has been disabled.");
-}
-
-
-
-if ($::candespot eq "Yes") {
-    $::candespot = 1;
-} else {
-    $::candespot = 0;
-    $::despot = 0;
-}
-
-if ($::neednewpassword eq "Yes") {
-    $::neednewpassword = 1;
-} else {
-    $::neednewpassword = 0;
-}
-
 $::skiptrailer = 0;
 
 if (defined $F::command) {
     my $cmd = $F::command;
+    Authenticate() unless grep($cmd eq $_, qw(FindPartition));
     param("command", "");
+    PrintHeader() if $cmd eq "MainMenu";
     eval "$cmd()";
     if ($@ ne "") {
         die "Error executing $cmd -- $@";
     }
 } else {
+    Authenticate();
+    PrintHeader();
     MainMenu();
 }
 
@@ -168,8 +114,8 @@ if (!$::skiptrailer) {
 }
 
 
-$query = Query("select needed from syncneeded where needed=1");
-@row = $query->fetchrow();
+my $query = Query("select needed from syncneeded where needed=1");
+my @row = $query->fetchrow();
 if ($row[0]) {
     print hr();
     print p("Updating external machines...");
@@ -194,6 +140,89 @@ if ($row[0]) {
 
 
 
+sub Authenticate {
+    my $query = Query("select passwd,despot,neednewpassword,id,disabled from users where email = '$F::loginname'");
+    my @row = $query->fetchrow();
+    if (!@row || !checkpassword($F::loginpassword, $row[0])) {
+        PrintHeader();
+        print h1("Authentication Failed");
+        print p("I can't figure out who you are.  Either your email address/password " . 
+                "were entered incorrectly, or you didn't enter them.  In any case, I " . 
+                "need to know who you are before I let you do what you wanted to do, " . 
+                "so please enter your email address and password now.");
+        if ($F::loginname && $F::loginname !~ /@/) {
+            print p("Note! You must type in your full e-mail address, including the '\@'.");
+        }
+        PrintLoginForm();
+        exit;
+    }
+
+    my $passwd;
+    my $disabled;
+    ($passwd,$::candespot,$::neednewpassword,$::loginid,$disabled) = @row;
+
+    if ($disabled eq "Yes") {
+        Punt("Your account has been disabled.");
+    }
+
+    if ($::candespot eq "Yes") {
+        $::candespot = 1;
+    } else {
+        $::candespot = 0;
+        $::despot = 0;
+    }
+
+    if ($::neednewpassword eq "Yes") {
+        $::neednewpassword = 1;
+    } else {
+        $::neednewpassword = 0;
+    }
+    
+}
+
+sub PrintHeader {
+    print header();
+
+    my $bg = "white";
+    my $extra = "";
+    if ($::despot) {
+        $bg = "lightgreen";
+        $extra = " (Wonder-twin powers -- activate!)";
+    }
+
+    print start_html(-Title=>"Despot -- configure mozilla users$extra",
+                     -BGCOLOR=>$bg);
+}
+
+
+sub PrintLoginForm {
+    print start_form(-method=>$::POSTTYPE);
+    print table(Tr(th({-align=>"right"}, "Email address:"),
+                   td(textfield(-name=>"loginname",
+                                -size=>20))),
+                Tr(th({-align=>"right"}, "Password:"),
+                   td(password_field(-name=>"loginpassword",
+                                     -size=>20))));
+    print submit(-name=>"Log in");
+
+    # Add all submitted values to the form (except email address and password,
+    # which we want them to retype) as hidden fields so the user can immediately 
+    # do whatever they wanted to do upon logging in.
+    foreach my $field (param()) {
+        next if grep($field eq $_, qw(loginname loginpassword));
+        print hidden(-name=>$field, -default=>param($field));
+    }
+
+    print hr();
+    print p("If you think you should be able to use this system, but you haven't been issued a login, please send mail to " .
+            a({href=>$despotOwnerMailTo}, $despotOwner) . ".");
+#     print p("If you do not yet have a mozilla.org account, or you have one " .
+#             "but have forgotten your password, please fill in your e-mail " .
+#             "address above, and click <nobr>here: " .
+#             submit({name=>"mailMePassword"}, "Email me a password") . "</nobr>");
+
+    print end_form();
+}
 
 sub MainMenu() {
     print h1("Despot -- main menu");
@@ -325,6 +354,7 @@ sub AddUser() {
 
 sub EditUser() {
     EnsureDespot();
+    PrintHeader();
     print h1("Edit a user");
     my $q = SqlQuote($F::email);
     my $query = Query("select * from users where email='$q'");
@@ -388,6 +418,7 @@ sub EditUser() {
 #    my $q = SqlQuote($F::email);
 #    Query("delete from users where email = '$q'");
 #    Query("insert into syncneeded (needed) values (1)");
+#    PrintHeader();
 #    print h1("OK, $F::email is gone.");
 #    print hr();
 #    MainMenu();
@@ -430,6 +461,7 @@ sub ChangeUser() {
     my $qstr = "update users set " . join(",", @list) . " where email='" .
         SqlQuote($F::orig_email) . "'";
     Query($qstr);
+    PrintHeader();
     print h1("OK, record for $F::email has been updated.");
     print hr();
     MainMenu();
@@ -442,6 +474,7 @@ sub GeneratePassword {
     my $p = cryptit($plain);
     Query("update users set passwd = " . $::db->quote($p) . ", neednewpassword='Yes' where email=" .
           $::db->quote($email));
+    PrintHeader();
     print h1("OK, new password generated.");
     print "$email now has a new password of '" . tt($plain) . "'.  ";
     print "Please " .
@@ -471,6 +504,7 @@ sub ListPartitions () {
 sub ListUsers() {
     EnsureDespot();
 
+    PrintHeader();
     # ListSomething("users", "email", "ListUsers", "EditUser", "email", "email,realname,gila_group,cvs_group", "users as u2", {"voucher"=>"u2.email,u2.id=users.voucher"});
     my $wherepart = "";
     if ($F::match ne "") {
@@ -673,20 +707,36 @@ sub ViewAccount {
 sub FindPartition {
     my $repid = $F::repid;
     my $file = $F::file;
-    print h1("Searching for partitions matching $file ...");
     my $query = Query("select files.pattern,partitions.name,partitions.id from files,partitions where partitions.id=files.partitionid and partitions.repositoryid=$repid");
-    my $found = 0;
+    my @matches = ();
     while (@row = $query->fetchrow()) {
         my ($pattern,$name,$id) = (@row);
         if (FileMatches($file, $pattern) || FileMatches($pattern, $file)) {
-            print MyForm("EditPartition") . submit($name) .
-                hidden("partitionid", $id) . "(matches pattern $pattern)" .
-                    end_form();
-            $found = 1;
+            push(@matches, { 'name' => $name, 'id' => $id, 'pattern' => $pattern });
         }
     }
 
-    if (!$found) {
+    if (scalar(@matches) > 0) {
+        # The "view" parameter means the request came from the "look up owners of file"
+        # form on the owners page, so we should redirect the user to the anchor on that
+        # page for the first matching module.
+        if (param("view")) {
+            print "Location: http://www.mozilla.org/owners.html#$matches[0]->{name}\n\n";
+            exit;
+        }
+        PrintHeader();
+        print h1("Searching for partitions matching $file ...");
+        foreach my $match (@matches) {
+            print MyForm("EditPartition") . 
+                  hidden("partitionid", $match->{id}) . 
+                  submit($match->{name}) . 
+                  "(matches pattern $match->{pattern})" .
+                  end_form();
+        }
+    }
+    else {
+        PrintHeader();
+        print h1("Searching for partitions matching $file ...");
         print "No partitions found.";
         if ($file !~ /^mozilla/) {
             print p("Generally, your filename should start with mozilla/ or mozilla-org/.");
@@ -733,6 +783,7 @@ sub EditPartition() {
 
     my ($partname,$partdesc,$state,$repname,$repid,$branchname,$newsgroups,
         $doclinks) = (@row);
+    PrintHeader();
     print h1(($canchange ? "Edit" : "View") . " partition -- $partname");
     if (!$canchange) {
         print p(b("You can't change anything here!") .
@@ -908,6 +959,7 @@ sub ChangePartition {
         }
     }
 
+    PrintHeader();
     print h1("OK, the partition has been updated.");
     print hr();
     Query("unlock tables");
@@ -924,6 +976,7 @@ sub DeletePartition() {
     Query("delete from files where partitionid = '$F::partitionid'");
     Query("delete from members where partitionid = '$F::partitionid'");
     Query("insert into syncneeded (needed) values (1)");
+    PrintHeader();
     print h1("OK, the partition is gone.");
     print hr();
     MainMenu();
@@ -965,6 +1018,7 @@ sub CreateListRow {
 
 
 sub ChangePassword {
+    PrintHeader();
     print h1("Change your mozilla.org password.");
     $F::loginpassword = "";
     print start_form($::POSTTYPE);
@@ -997,6 +1051,7 @@ sub SetNewPassword {
 
     my $qpass = $::db->quote($pass);
     Query("update users set passwd = $qpass, neednewpassword = 'No' where email='$F::loginname'");
+    PrintHeader();
     print h1("Password has been updated.");
     Query("insert into syncneeded (needed) values (1)");
     if ($::despot) {
@@ -1021,6 +1076,7 @@ sub MyForm {
 
 sub Punt {
     my ($header) = @_;
+    PrintHeader();
     print h1($header);
     print p("Please hit " . b("back") . " and try again.");
     exit;
