@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ldvector.c,v 1.3 2002/11/02 01:51:42 nelsonb%netscape.com Exp $
+ * $Id: ldvector.c,v 1.4 2003/01/16 00:15:21 nelsonb%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -159,6 +159,13 @@ static const struct FREEBLVectorStr vector = {
     SHA384_Resurrect,
 
     /* End of Version 3.003. */
+
+    AESKeyWrap_CreateContext,
+    AESKeyWrap_DestroyContext,
+    AESKeyWrap_Encrypt,
+    AESKeyWrap_Decrypt,
+
+    /* End of Version 3.004. */
 
 };
 
