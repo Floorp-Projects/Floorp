@@ -638,17 +638,14 @@ function OnLoadMessenger()
   // argument[0] --> folder uri
   // argument[1] --> optional message key
   // argument[2] --> optional email address; //will come from aim; needs to show msgs from buddy's email address  
-  if ("arguments" in window && window.arguments[0])
+  if ("arguments" in window)
   {
-    gStartFolderUri = window.arguments[0];
-    gStartMsgKey = window.arguments[1];
-    gSearchEmailAddress = window.arguments[2];
-  }
-  else
-  {
-    gStartFolderUri = null;
-    gStartMsgKey = nsMsgKey_None;
-    gSearchEmailAddress = null;
+    gStartFolderUri = (window.arguments.length > 0) ? window.arguments[0]
+                                                    : null;
+    gStartMsgKey = (window.arguments.length > 1) ? window.arguments[1]
+                                                 : nsMsgKey_None;
+    gSearchEmailAddress = (window.arguments.length > 2) ? window.arguments[2]
+                                                        : null;
   }
 
   setTimeout("loadStartFolder(gStartFolderUri);", 0);
