@@ -1153,7 +1153,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
                           &rv);
           if (NS_SUCCEEDED(rv))
               return copyService->CopyMessages(this, messages, trashFolder,
-                                        PR_TRUE, nsnull, nsnull, txnMgr);
+                                        PR_TRUE, nsnull, txnMgr);
       }
       return rv;
   }
@@ -1192,7 +1192,8 @@ nsMsgLocalMailFolder::SetTransactionManager(nsITransactionManager* txnMgr)
 nsresult
 nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport, 
                                     nsISupportsArray* messages,
-                                    PRBool isMove)
+                                    PRBool isMove,
+                                    nsIMsgCopyServiceListener* listener)
 {
   nsresult rv = NS_OK;
 	nsFileSpec path;
@@ -1239,6 +1240,8 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
   mCopyState->curCopyIndex = 0;
   mCopyState->isMove = isMove;
   rv = messages->Count(&mCopyState->totalMsgCount);
+  if (listener)
+    mCopyState->listener = do_QueryInterface(listener, &rv);
 
 done:
 
@@ -1266,7 +1269,8 @@ nsMsgLocalMailFolder::ClearCopyState()
 NS_IMETHODIMP
 nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
                                    messages, PRBool isMove,
-                                   nsITransactionManager* txnMgr)
+                                   nsITransactionManager* txnMgr,
+                                   nsIMsgCopyServiceListener* listener)
 {
   if (!srcFolder || !messages)
     return NS_ERROR_NULL_POINTER;
@@ -1276,7 +1280,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   nsCOMPtr<nsISupports> aSupport(do_QueryInterface(srcFolder, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  rv = InitCopyState(aSupport, messages, isMove);
+  rv = InitCopyState(aSupport, messages, isMove, listener);
   if (NS_FAILED(rv)) return rv;
 
   // undo stuff
@@ -1312,9 +1316,9 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
 
 NS_IMETHODIMP
 nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
-                                      msgToReplace, PRBool isDraft,
-                                      nsISupports* clientSupport,
-                                      nsITransactionManager* txnMgr)
+                                      msgToReplace, PRBool isDraftOrTemplate,
+                                      nsITransactionManager* txnMgr,
+                                      nsIMsgCopyServiceListener* listener)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
   if (!fileSpec) return rv;
@@ -1336,10 +1340,9 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage*
       messages->AppendElement(msgSupport);
   }
 
-  rv = InitCopyState(fileSupport, messages, msgToReplace ? PR_TRUE:PR_FALSE);
+  rv = InitCopyState(fileSupport, messages, msgToReplace ? PR_TRUE:PR_FALSE,
+                     listener);
   if (NS_FAILED(rv)) goto done;
-  if (clientSupport)
-    mCopyState->clientSupport = do_QueryInterface(clientSupport, &rv);
 
   parseMsgState = new nsParseMailMessageState();
   if (parseMsgState)
@@ -1629,6 +1632,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         if (NS_SUCCEEDED(result) && msgDb)
           msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
       }
+      if (mCopyState->listener)
+        mCopyState->listener->SetMessageKey((PRUint32) mCopyState->curDstKey);
     }
 
     if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->undoMsgTxn)

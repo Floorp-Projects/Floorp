@@ -47,7 +47,7 @@ struct nsLocalMailCopyState
   nsCOMPtr<nsMsgTxn> undoMsgTxn;
   nsCOMPtr<nsIMessage> message; // current copy message
   nsCOMPtr<nsIMsgParseMailMsgState> parseMsgState;
-  nsCOMPtr<nsISupports> clientSupport; // save Draft/Template listener support
+  nsCOMPtr<nsIMsgCopyServiceListener> listener;
   
   nsIMsgMessageService* messageService;
   PRBool isMove;
@@ -119,10 +119,12 @@ public:
                             nsITransactionManager *txnMgr, PRBool
                             deleteStorage);
   NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray* messages,
-                          PRBool isMove, nsITransactionManager* txnMgr);
+                          PRBool isMove, nsITransactionManager* txnMgr,
+                          nsIMsgCopyServiceListener* listener);
   NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage* msgToReplace,
-                             PRBool isDraft, nsISupports* clientSupport,
-                             nsITransactionManager* txnMgr);
+                             PRBool isDraftOrTemplate, 
+                             nsITransactionManager* txnMgr,
+                             nsIMsgCopyServiceListener* listener);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
 	NS_IMETHOD GetNewMessages();
 
@@ -162,7 +164,7 @@ protected:
 	virtual const char* GetIncomingServerType() {return "pop3";}
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
-                         PRBool isMove);
+                         PRBool isMove, nsIMsgCopyServiceListener* listener);
   void ClearCopyState();
 
 protected:
