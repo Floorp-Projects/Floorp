@@ -163,7 +163,7 @@ void beos_signal_handler(int signum) {
 	}
 
 	// Exit the appshell so that the app can shutdown normally
-	appShellService->Quit();
+	appShellService->Quit(nsIAppShellService::eAttemptQuit);
 }
 #endif 
 
