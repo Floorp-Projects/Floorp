@@ -27,6 +27,7 @@
 #include "template.h"
 #include "mainfrm.h"
 #include "woohoo.h"
+#include "prefs.h"
 
 #if defined(OJI)
 #include "jvmmgr.h"
@@ -92,6 +93,9 @@ BOOL CNetscapeApp::ParseComponentArguments(char * pszCommandLine,BOOL bRemove)
 
    	}else	if (IsRuntimeSwitch("-EXPORT", pszCommandLine,  bRemove)){
 				m_bCreateLDIF_EXPORT = TRUE;
+
+   	}else	if (IsRuntimeSwitch("-PREFS", pszCommandLine,  bRemove)){
+				m_bShowPrefsOnStartup = TRUE;
 
 	}else	return FALSE; //nothing to do here!!
 
@@ -214,6 +218,9 @@ BOOL CNetscapeApp::ExistComponentArguments(char * pszCommandLine)
       
   } else if (strcasestr(pszCommandLine,"-PROFILE_MANAGER" )){
     m_bProfileManager = TRUE;
+
+  } else if (strcasestr(pszCommandLine,"-PREFS" )){
+    m_bShowPrefsOnStartup = TRUE;
 
 #if defined(OJI) || defined(JAVA)
   } else if (strcasestr(pszCommandLine,"-javadebug" )){
@@ -524,6 +531,11 @@ void CNetscapeApp::LaunchComponentWindow(int iStartupMode, char *pszCmdLine)
 			break;
 #endif
 
+        case STARTUP_PREFS:                
+            // Open preferences (non-modal).
+            wfe_DisplayPreferences( NULL );
+            break;
+
         case 0:
 			{
 			AfxMessageBox(IDS_CMDLINE_ERROR4);
@@ -538,7 +550,7 @@ void CNetscapeApp::LaunchComponentWindow(int iStartupMode, char *pszCmdLine)
 
   // rhp - added STARTUP_CLIENT_MAPI for starting MAPI
     if ((iStartupMode & STARTUP_BROWSER || iStartupMode & STARTUP_EDITOR || // if startup browser or editor
-        !(iStartupMode & (STARTUP_JAVA_DEBUG_AGENT|STARTUP_BROWSER|STARTUP_NEWS|STARTUP_MAIL|STARTUP_ADDRESS
+        !(iStartupMode & (STARTUP_JAVA_DEBUG_AGENT|STARTUP_BROWSER|STARTUP_NEWS|STARTUP_MAIL|STARTUP_ADDRESS|STARTUP_PREFS
 #ifdef MOZ_MAIL_NEWS
 		|STARTUP_INBOX|STARTUP_COMPOSE|STARTUP_FOLDER|STARTUP_FOLDERS|STARTUP_NETCASTER|STARTUP_CALENDAR 
 		|STARTUP_CLIENT_MAPI|STARTUP_CLIENT_ABAPI)) ||    // or invalid data
@@ -899,6 +911,10 @@ void CNetscapeApp::SetStartupMode(int32 *iStartupMode)
 				*iStartupMode=	STARTUP_BROWSER;
 				m_bCreateBrowser= 0;
 	
+	}else	if (m_bShowPrefsOnStartup)		{ 
+                *iStartupMode=	STARTUP_PREFS;
+				m_bShowPrefsOnStartup= 0;
+
 	//we don't want to handle preferences in the first instance 
 	//if requested to do so by a second instance
 	}else	if (m_bCreateNewProfile)		{ 
