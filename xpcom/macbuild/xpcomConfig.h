@@ -23,3 +23,7 @@
 /* Nothing to do here. Add xpcom-specific defines here if necessary */
 
 #define _IMPL_NS_COM 1
+
+#ifdef MOZ_STATIC_COMPONENT_LIBS
+#define ENABLE_STATIC_COMPONENT_LOADER 1
+#endif
