@@ -86,7 +86,13 @@ PRIVATE intl_CharLenFunc intl_char_len_func[]=
  	intl_CharLen_SingleByte,
 };
 
-int haveBig5 = 0;
+#ifdef XP_UNIX
+PRIVATE XP_Bool haveBig5 = FALSE;
+PRIVATE XP_Bool have88595 = FALSE;
+PRIVATE XP_Bool have1251 = FALSE;
+PRIVATE XP_Bool haveKOI8R = FALSE;
+#endif
+
 PRIVATE int16 *availableFontCharSets = NULL;
 
 
@@ -436,15 +442,21 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
 		/* CYRILLIC */
 		{CS_KOI8_R,		CS_KOI8_R,		0, NULL,			0},	
 		{CS_8859_5,		CS_8859_5,		0, NULL,			0},	
+		{CS_CP_1251,		CS_CP_1251,		0, NULL,			0},	
+
 		{CS_8859_5,		CS_KOI8_R,		0, (CCCFunc)One2OneCCC, 0},	
 		{CS_KOI8_R,		CS_8859_5,		0, (CCCFunc)One2OneCCC, 0},	
-		{CS_CP_1251,	CS_8859_5,		0, (CCCFunc)One2OneCCC, 0},	
+
+		{CS_CP_1251,		CS_8859_5,		0, (CCCFunc)One2OneCCC, 0},	
 		{CS_8859_5,		CS_CP_1251,		0, (CCCFunc)One2OneCCC, 0},	
+
+		{CS_CP_1251,		CS_KOI8_R,		0, (CCCFunc)One2OneCCC, 0},	
+		{CS_KOI8_R,		CS_CP_1251,		0, (CCCFunc)One2OneCCC, 0},	
 
 		/* GREEK */
 		{CS_8859_7,		CS_8859_7,		0, NULL,			0},	
 		{CS_8859_7,		CS_CP_1253,		0, (CCCFunc)One2OneCCC,	0},
-		{CS_CP_1253,	CS_8859_7,		0, (CCCFunc)One2OneCCC,	0},
+		{CS_CP_1253,		CS_8859_7,		0, (CCCFunc)One2OneCCC,	0},
 
 		/* TURKISH */
 		{CS_8859_9,		CS_8859_9,		0, NULL,			0},	
@@ -868,7 +880,11 @@ PUBLIC int16 INTL_DocToWinCharSetID(int16 csid)
  * disgusting hack...
  */
 #ifdef XP_UNIX
-			if ((cscvtp->to_csid == CS_CNS_8BIT) && haveBig5) {
+			if (((cscvtp->to_csid == CS_CNS_8BIT) && (TRUE == haveBig5)) ||
+			    ((cscvtp->to_csid == CS_8859_5)   && (FALSE == have88595)) || 
+			    ((cscvtp->to_csid == CS_KOI8_R)   && (FALSE == haveKOI8R)) || 
+			    ((cscvtp->to_csid == CS_CP_1251)  && (FALSE == have1251)) )   
+			{
 				cscvtp++;
 				continue;
 			}
@@ -930,10 +946,23 @@ INTL_ReportFontCharSets(int16 *charsets)
 
 	while (*charsets)
 	{
-		if (*charsets == CS_X_BIG5)
+#ifdef XP_UNIX
+		switch(*charsets)
 		{
-			haveBig5 = 1;
+			case CS_X_BIG5:
+				haveBig5 = TRUE;
+				break;
+			case CS_8859_5:
+				have88595 = TRUE;
+				break;
+			case CS_CP_1251:
+				have1251 = TRUE;
+				break;
+			case CS_KOI8_R:
+				haveKOI8R = TRUE;
+				break;
 		}
+#endif
 		charsets++;
 	}
 	len = (charsets - availableFontCharSets);

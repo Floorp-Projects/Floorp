@@ -23,7 +23,6 @@
 
 
 extern cscvt_t cscvt_tbl[];
-extern int haveBig5;
 
 struct RealCCCDataObject {
 	struct INTL_CCCFuncs *funcs_pointer;

@@ -132,6 +132,12 @@ PRIVATE uint16 koi8rFromTbl[] = {
 PRIVATE uint16 koi8rToTbl[] = {
 #include "koi8r.ut"
 };
+PRIVATE uint16 cp1251FromTbl[] = {
+#include "cp1251.uf"
+};
+PRIVATE uint16 cp1251ToTbl[] = {
+#include "cp1251.ut"
+};
 /*--------------------------------------------------------------------------*/
 /*	Japanese stuff */
 PRIVATE uint16 JIS0208FromTbl[] = {
@@ -197,17 +203,6 @@ PRIVATE uint16 GB2312ToTbl[] = {
 };
 /*--------------------------------------------------------------------------*/
 /*	Korean Stuff */
-#ifdef UNICODE_1_1_BASE_KOREAN	
-
-PRIVATE uint16 KSC5601FromTbl[] = {
-#include "ksc5601.uf"
-};
-PRIVATE uint16 KSC5601ToTbl[] = {
-#include "ksc5601.ut"
-};
-
-#else /* UNICODE_1_1_BASE_KOREAN	*/
-
 /*	
 	For UNIX the Korean UNICODE 2.0 table is u20kscgl.u[tf]
 	They are GL base table that contains minimun set of Korean table that
@@ -219,8 +214,6 @@ PRIVATE uint16 KSC5601FromTbl[] = {
 PRIVATE uint16 KSC5601ToTbl[] = {
 #include "u20kscgl.ut"
 };
-
-#endif /* UNICODE_1_1_BASE_KOREAN	*/
 
 
 /*--------------------------------------------------------------------------*/
@@ -262,6 +255,9 @@ PRIVATE uTable* LoadToUCS2Table(uint16 csid)
 		
 	case CS_KOI8_R:
 		return (uTable*) koi8rToTbl;
+
+	case CS_CP_1251:
+		return (uTable*) cp1251ToTbl;
 		
 	/*	Japanese */
 	case CS_JISX0208:
@@ -338,6 +334,9 @@ PRIVATE uTable* LoadFromUCS2Table(uint16 csid)
 		
 	case CS_KOI8_R:
 		return (uTable*) koi8rFromTbl;
+
+	case CS_CP_1251:
+		return (uTable*) cp1251FromTbl;
 		
 	/*	Japanese */
 	case CS_JISX0208:
