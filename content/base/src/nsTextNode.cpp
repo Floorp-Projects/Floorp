@@ -100,6 +100,11 @@ public:
       NS_ASSERTION(mContent, "Must have text content");
     }
     
+    virtual PRBool IsNativeAnonymous() const { return PR_TRUE; }
+    virtual void SetNativeAnonymous(PRBool aAnonymous) {
+      NS_ASSERTION(aAnonymous,
+                   "Attempt to set nsAttributeTextNode not anonymous!");
+    }
   protected:
     friend class nsAttributeTextNode;
     PRInt32 mNameSpaceID;
