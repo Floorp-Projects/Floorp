@@ -338,15 +338,23 @@ function setUnifinderToDoTreeItem( treeItem, calendarToDo )
       var startDate     = new Date( calendarToDo.start.getTime() );
       var dueDate = new Date( calendarToDo.due.getTime() );
 
-      var tonightMidnight = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59 );
+      var tonightMidnight = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 00 );
+
+      var yesterdayMidnight = new Date( now.getFullYear(), now.getMonth(), ( now.getDate() - 1 ), 23, 59, 00 );
 
       if( tonightMidnight.getTime() > dueDate.getTime() )
       {
          /* for setting some css */
-         textProperties = textProperties + " overdue";
-      } else
+         textProperties += " overdue";
+      } else if ( dueDate.getFullYear() == now.getFullYear() &&
+                  dueDate.getMonth() == now.getMonth() &&
+                  dueDate.getDate() == now.getDate() )
       {
-         textProperties = textProperties + " inprogress";
+         textProperties += " duetoday";
+      }
+      else
+      {
+         textProperties += " inprogress";
       }
       if(calendarToDo.priority > 0 && calendarToDo.priority < 5)
          textProperties = textProperties + " highpriority";

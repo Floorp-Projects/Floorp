@@ -1090,6 +1090,11 @@ treechildren:-moz-tree-cell-text(overdue)
    color                  : red;
 }
 
+treechildren:-moz-tree-cell-text(duetoday)
+{
+   color                  : blue;
+}
+
 treechildren:-moz-tree-cell-text(completed)
 {
    text-decoration        : line-through;
@@ -1115,7 +1120,15 @@ treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue) {
    list-style-image      : url("chrome://global/skin/checkbox/cbox.gif");
 }
 
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, duetoday) {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox.gif");
+}
+
 treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, overdue, current) {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, duetoday, current) {
    list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
 }
 
