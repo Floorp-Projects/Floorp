@@ -1302,34 +1302,86 @@ fi
 
 fi
 
+dnl ========================================================
+dnl =
+dnl = pthread support
+dnl = 
+dnl ========================================================
+
+dnl 
+dnl Start by checking whether the system support pthreads
+dnl 
+
+USE_PTHREADS=
+PTHREAD_LDFLAGS=""
+
+dnl 
+dnl Try lib pthread
+dnl 
+AC_CHECK_LIB(pthread, pthread_attr_init, 
+             USE_PTHREADS=1 PTHREAD_LDFLAGS="-lpthread")
+
+dnl 
+dnl If the above test failed, try lib c_r
+dnl 
+if test "x$ac_cv_lib_pthread_pthread_attr_init" = "xno" -a \
+"x$ac_cv_lib_c_r_gethostbyname_r" = "xno"
+then
+  AC_CHECK_LIB(c_r, pthread_attr_init,
+                PTHREAD_LDFLAGS="-lc_r")
+fi
+
+
+dnl
+dnl Check the command line for --with-pthreads 
+dnl
+AC_ARG_WITH(pthreads,
+[  --with-pthreads         use system pthread library ],
+        [if test "$withval" = "yes"
+         then
+           if test "$USE_PTHREADS"x = x
+           then
+             AC_MSG_ERROR([ --with-pthreads specified for a system with pthread support ]);
+           fi
+         else
+           USE_PTHREADS=
+           PTHREAD_LDFLAGS=""
+         fi] )
+
+dnl
+dnl Do the platform specific pthread hackery
+dnl
+if test "$USE_PTHREADS"x = x
+then
+	case "$target" in
+	    *-*-solaris*) 
+    		AC_DEFINE(_REENTRANT) 
+			;;
+
+		*-*-linux*) 
+			AC_DEFINE(_REENTRANT) 
+			;;
+
+		alpha*-*-osf*)
+			AC_DEFINE(_REENTRANT)
+
+			if test ! "$GNU_CC"; then
+				CFLAGS="$CFLAGS -pthread" 
+				CXXFLAGS="$CXXFLAGS -pthread" 
+			fi
+			;;
+	esac
+fi
+
+dnl
+dnl Add the pthread flags to the nspr libs
+dnl
+NSPR_LIBS="$NSPR_LIBS $PTHREAD_LDFLAGS"
+
 dnl system NSPR support
 dnl we always use the system NSPR from now on...this option
 dnl tells where to find nspr rather than whether to use it
 dnl ========================================================
-AC_ARG_WITH(pthreads,
-[  --with-pthreads         use system pthread library ],
-        [if test "$withval" = "yes"; then
-	    AC_CHECK_LIB(pthread, pthread_attr_init, 
-		NSPR_LIBS="-lpthread $NSPR_LIBS" USE_PTHREADS=1)
-            if test "x$ac_cv_lib_pthread_pthread_attr_init" = "xno" -a \
-                    "x$ac_cv_lib_c_r_gethostbyname_r" = "xno"; then
-	      AC_CHECK_LIB(c_r, pthread_attr_init, 
-		  NSPR_LIBS="-lc_r $NSPR_LIBS" USE_PTHREADS=1)
-            fi
-            case "$target" in
-            *-*-solaris*) 
-                AC_DEFINE(_REENTRANT) ;;
-            *-*-linux*) 
-                AC_DEFINE(_REENTRANT) ;;
-            alpha*-*-osf*)
-                AC_DEFINE(_REENTRANT)
-                if test ! "$GNU_CC"; then
-                    CFLAGS="$CFLAGS -pthread" 
-                    CXXFLAGS="$CXXFLAGS -pthread" 
-                fi ;;
-            esac
-        fi] )
-
 AC_ARG_WITH(nspr,
 [  --with-nspr=\$dir        location of nspr headers and libraries],
 	NSPR_DIR=$withval)
