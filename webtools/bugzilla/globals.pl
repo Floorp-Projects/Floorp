@@ -1506,6 +1506,54 @@ sub trim {
     return $str;
 }
 
+# Make an ordered list out of a HTTP Accept-Language header see RFC 2616, 14.4
+# We ignore '*' and <language-range>;q=0
+# For languages with the same priority q the order remains unchanged.
+sub sortAcceptLanguage {
+    sub sortQvalue { $b->{'qvalue'} <=> $a->{'qvalue'} }
+    my $accept_language = $_[0];
+
+    # clean up string.
+    $accept_language =~ s/[^A-Za-z;q=0-9\.\-,]//g;
+    my @qlanguages;
+    my @languages;
+    foreach(split /,/, $accept_language) {
+        my ($lang, $qvalue) = split /;q=/;
+        next if not defined $lang;
+        $qvalue = 1 if not defined $qvalue;
+        next if $qvalue == 0;
+        $qvalue = 1 if $qvalue > 1;
+        push(@qlanguages, {'qvalue' => $qvalue, 'language' => $lang});
+    }
+
+    return map($_->{'language'}, (sort sortQvalue @qlanguages));
+}
+
+# Returns the path to the templates based on the Accept-Language
+# settings of the user and of the available languages
+# If no Accept-Language is present it uses the defined default
+sub getTemplateIncludePath () {
+    my @languages       = sortAcceptLanguage(Param('languages'));
+    my @accept_language = sortAcceptLanguage($ENV{'HTTP_ACCEPT_LANGUAGE'} || "");
+    my @usedlanguages;
+    foreach my $lang (@accept_language) {
+        # match exactly (case insensitive)
+        if(my @found = grep /^$lang$/i, @languages) {
+            push (@usedlanguages, $found[0]);
+        }
+        # Per RFC 1766 and RFC 2616 any language tag matches also its 
+        # primary tag. That is en-gb matches also en but not en-uk
+        $lang =~ s/(-.*)//;
+        if($1) {
+            if(my @found = grep /^$lang$/i, @languages) {
+                push (@usedlanguages, $found[0]);
+            }
+        }
+    }
+    push(@usedlanguages, Param('defaultlanguage'));
+    return join(':', map("template/$_/custom:template/$_/default",@usedlanguages)); 
+}
+
 ###############################################################################
 # Global Templatization Code
 
@@ -1523,7 +1571,7 @@ use Template;
 $::template ||= Template->new(
   {
     # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/en/custom:template/en/default" ,
+    INCLUDE_PATH => getTemplateIncludePath() ,
 
     # Remove white-space before template directives (PRE_CHOMP) and at the
     # beginning and end of templates and template blocks (TRIM) for better 
