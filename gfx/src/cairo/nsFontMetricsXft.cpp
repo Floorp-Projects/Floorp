@@ -404,10 +404,14 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
         return NS_ERROR_FAILURE;
         
     nsXPIDLCString value;
+    const char* langGroup;
+    mLangGroup->GetUTF8String(&langGroup);
 
     // Set up the default font name if it's not set
     if (!mGenericFont) {
-        prefService->CopyCharPref("font.default", getter_Copies(value));
+        nsCAutoString name("font.default.");
+        name.Append(langGroup);
+        prefService->CopyCharPref(name.get(), getter_Copies(value));
 
         if (value.get())
             mDefaultFont = value.get();
@@ -427,10 +431,6 @@ nsFontMetricsXft::Init(const nsFont& aFont, nsIAtom* aLangGroup,
             name.Append("variable");
 
         name.Append(char('.'));
-
-        const char* langGroup;
-        mLangGroup->GetUTF8String(&langGroup);
-
         name.Append(langGroup);
 
         PRInt32 minimum = 0;

@@ -301,11 +301,11 @@ TranslatePropFont(unsigned char *aRegValue, DWORD aRegValueLength,
   if (isSerif) {
     prefs->SetCharPref("font.name.serif.x-western",
                        NS_REINTERPRET_CAST(char *, aRegValue));
-    prefs->SetCharPref("font.default", "serif");
+    prefs->SetCharPref("font.default.x-western", "serif");
   } else {
     prefs->SetCharPref("font.name.sans-serif.x-western",
                        NS_REINTERPRET_CAST(char *, aRegValue));
-    prefs->SetCharPref("font.default", "sans-serif");
+    prefs->SetCharPref("font.default.x-western", "sans-serif");
   }
 }
 

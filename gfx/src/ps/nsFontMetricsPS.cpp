@@ -875,9 +875,14 @@ nsFontPSXft::FindFont(PRUnichar aChar, const nsFont& aFont,
     nsXPIDLCString value;
     nsCAutoString  defaultFont;
 
+    nsAutoString langGroupStr;
+    langGroup->ToString(langGroupStr);
+
     // Set up the default font name if it's not set
     if (!fpi.mGenericFont) {
-      prefService->CopyCharPref("font.default", getter_Copies(value));
+      nsCAutoString name("font.default.");
+      LossyAppendUTF16toASCII(langGroupStr, name);
+      prefService->CopyCharPref(name.get(), getter_Copies(value));
 
       if (value.get())
         defaultFont = value.get();
@@ -1483,11 +1488,13 @@ nsFontPSFreeType::AddUserPref(nsIAtom *aLang, const nsFont& aFont,
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 
   nsXPIDLCString value;
-  pref->CopyCharPref("font.default", getter_Copies(value));
+  nsCAutoString name("font.default.");
+  name.Append(fpi->lang);
+  pref->CopyCharPref(name.get(), getter_Copies(value));
   if (!value.get())
     return PR_FALSE;
 
-  nsCAutoString name("font.name.");
+  name.Assign("font.name.");
   name.Append(value);
   name.Append(char('.'));
   name.Append(fpi->lang);

@@ -90,8 +90,7 @@
                    accesskey="&proportional.accesskey;" 
                    control="proportionalFont"/>
           </hbox>
-          <menulist id="proportionalFont"
-                    preftype="string" prefstring="font.default">
+          <menulist id="proportionalFont">
             <menupopup>
               <menuitem value="serif" 
                         label="&useDefaultFontSerif.label;"/>

@@ -49,7 +49,7 @@ catch(e)
 var fontEnumerator = null;
 var globalFonts = null;
 var fontTypes   = ["serif", "sans-serif", "monospace"];
-var variableSize, fixedSize, minSize, languageList;
+var defaultFont, variableSize, fixedSize, minSize, languageList;
 var languageData = [];
 var currentLanguage;
 var gPrefutilitiesBundle;
@@ -59,33 +59,28 @@ var gPrefWindow = window.opener.parent.hPrefWindow;
 function GetFields()
   {
     var dataObject = { };
-    
+
     // store data for language independent widgets
-    var lists = ["selectLangs", "proportionalFont"];
-    for( var i = 0; i < lists.length; i++ )
-      {
-        if( !( "dataEls" in dataObject ) )
-          dataObject.dataEls = new Object;
-        dataObject.dataEls[ lists[i] ] = new Object;
-        dataObject.dataEls[ lists[i] ].value = document.getElementById( lists[i] ).value;
-      }
+    if( !( "dataEls" in dataObject ) )
+      dataObject.dataEls = new Object;
+    dataObject.dataEls[ "selectLangs" ] = new Object;
+    dataObject.dataEls[ "selectLangs" ].value = document.getElementById( "selectLangs" ).value;
 
-   dataObject.defaultFont = document.getElementById( "proportionalFont" ).value;
-   dataObject.fontDPI = document.getElementById( "screenResolution" ).value;
-   dataObject.useMyFonts = document.getElementById( "useMyFonts" ).checked ? 1 : 0;
-   
-   var items = ["foregroundText", "background", "unvisitedLinks", "visitedLinks", "browserUseSystemColors", "browserUnderlineAnchors", "useMyColors", "useMyFonts"];
-   for (i = 0; i < items.length; ++i)
-     dataObject.dataEls[items[i]] = new Object;
-   dataObject.dataEls["foregroundText"].value = document.getElementById("foregroundtextmenu").color;
-   dataObject.dataEls["background"].value = document.getElementById("backgroundmenu").color;
-   dataObject.dataEls["unvisitedLinks"].value = document.getElementById("unvisitedlinkmenu").color;
-   dataObject.dataEls["visitedLinks"].value = document.getElementById("visitedlinkmenu").color;
+    dataObject.fontDPI = document.getElementById( "screenResolution" ).value;
+    dataObject.useMyFonts = document.getElementById( "useMyFonts" ).checked ? 1 : 0;
 
-   dataObject.dataEls["browserUseSystemColors"].checked = document.getElementById("browserUseSystemColors").checked;
-   dataObject.dataEls["browserUnderlineAnchors"].checked = document.getElementById("browserUnderlineAnchors").checked;
-   dataObject.dataEls["useMyColors"].checked = document.getElementById("useMyColors").checked;
-   dataObject.dataEls["useMyFonts"].checked = document.getElementById("useMyFonts").checked;
+    var items = ["foregroundText", "background", "unvisitedLinks", "visitedLinks", "browserUseSystemColors", "browserUnderlineAnchors", "useMyColors", "useMyFonts"];
+    for (i = 0; i < items.length; ++i)
+      dataObject.dataEls[items[i]] = new Object;
+    dataObject.dataEls["foregroundText"].value = document.getElementById("foregroundtextmenu").color;
+    dataObject.dataEls["background"].value = document.getElementById("backgroundmenu").color;
+    dataObject.dataEls["unvisitedLinks"].value = document.getElementById("unvisitedlinkmenu").color;
+    dataObject.dataEls["visitedLinks"].value = document.getElementById("visitedlinkmenu").color;
+
+    dataObject.dataEls["browserUseSystemColors"].checked = document.getElementById("browserUseSystemColors").checked;
+    dataObject.dataEls["browserUnderlineAnchors"].checked = document.getElementById("browserUnderlineAnchors").checked;
+    dataObject.dataEls["useMyColors"].checked = document.getElementById("useMyColors").checked;
+    dataObject.dataEls["useMyFonts"].checked = document.getElementById("useMyFonts").checked;
 
     // save current state for language dependent fields and store
     saveState();
@@ -100,25 +95,19 @@ function SetFields(aDataObject)
     languageData = "languageData" in aDataObject ? aDataObject.languageData : languageData ;
     currentLanguage = "currentLanguage" in aDataObject ? aDataObject.currentLanguage : null ;
 
-    var lists = ["selectLangs", "proportionalFont"];
-    var prefvalue;
-    
-    for( var i = 0; i < lists.length; i++ )
+    var element = document.getElementById( "selectLangs" );
+    if( "dataEls" in aDataObject )
       {
-        var element = document.getElementById( lists[i] );
-        if( "dataEls" in aDataObject )
+        element.selectedItem = element.getElementsByAttribute( "value", aDataObject.dataEls[ "selectLangs" ].value )[0];
+      }
+    else
+      {
+        var prefstring = element.getAttribute( "prefstring" );
+        var preftype = element.getAttribute( "preftype" );
+        if( prefstring && preftype )
           {
-            element.selectedItem = element.getElementsByAttribute( "value", aDataObject.dataEls[ lists[i] ].value )[0];
-          }
-        else
-          {
-            var prefstring = element.getAttribute( "prefstring" );
-            var preftype = element.getAttribute( "preftype" );
-            if( prefstring && preftype )
-              {
-                prefvalue = gPrefWindow.getPref( preftype, prefstring );
-                element.selectedItem = element.getElementsByAttribute( "value", prefvalue )[0];
-              }
+            var prefvalue = gPrefWindow.getPref( preftype, prefstring );
+            element.selectedItem = element.getElementsByAttribute( "value", prefvalue )[0];
           }
       }
 
@@ -188,6 +177,7 @@ function SetFields(aDataObject)
 function Startup()
   {
     // Initialize the sub-dialog  
+    defaultFont  = document.getElementById( "proportionalFont" );
     variableSize = document.getElementById( "sizeVar" );
     fixedSize    = document.getElementById( "sizeMono" );
     minSize      = document.getElementById( "minSize" );
@@ -466,6 +456,7 @@ function saveState()
     if( currentLanguage && currentLanguage in languageData &&
         "types" in languageData[currentLanguage] )
       {
+        languageData[currentLanguage].defaultFont = defaultFont.value;
         languageData[currentLanguage].variableSize = parseInt( variableSize.value );
         languageData[currentLanguage].fixedSize = parseInt( fixedSize.value );
         languageData[currentLanguage].minSize = parseInt( minSize.value );
@@ -511,23 +502,26 @@ function selectLanguage()
         listElement.setAttribute( "disabled", "true" );
       }
 
-    // and set the font sizes
+    // and set the default font type and the font sizes
     var dataObject = gPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"].userData;
     var langData = null;
     try
       {
-        var sizeVarVal, sizeFixedVal;
+        var defaultFontVal, sizeVarVal, sizeFixedVal;
         if ('languageData' in dataObject) {
           langData = dataObject.languageData[currentLanguage];
+          defaultFontVal = langData.defaultFont;
           sizeVarVal = langData.variableSize;
           sizeFixedVal = langData.fixedSize;
         }
-        else {          
+        else {
+          defaultFontVal = gPrefWindow.getPref("string", "font.default." + languageList.value);
           var variableSizePref = "font.size.variable." + languageList.value;
           sizeVarVal = gPrefWindow.pref.GetIntPref( variableSizePref );
           var fixedSizePref = "font.size.fixed." + languageList.value;
           sizeFixedVal = gPrefWindow.pref.GetIntPref( fixedSizePref );
         }
+        defaultFont.value = defaultFontVal;
         variableSize.selectedItem = variableSize.getElementsByAttribute( "value", sizeVarVal )[0];
         fixedSize.selectedItem = fixedSize.getElementsByAttribute( "value", sizeFixedVal )[0];
       }
