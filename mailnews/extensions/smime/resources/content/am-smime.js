@@ -29,6 +29,8 @@ var gSignCertName  = null;
 var gSignMessages  = null;
 var gEncryptAlways = null;
 var gNeverEncrypt = null;
+var gBundle = null;
+var gBrandBundle;
 
 function onInit() 
 {
@@ -40,6 +42,8 @@ function onInit()
   gSignMessages       = document.getElementById("identity.sign_mail");
   gEncryptAlways      = document.getElementById("encrypt_mail_always");
   gNeverEncrypt       = document.getElementById("encrypt_mail_never");
+  gBundle             = document.getElementById("bundle_smime");
+  gBrandBundle        = document.getElementById("bundle_brand");
 
   gEncryptionCertName.value = gIdentity.getUnicharAttribute("encryption_cert_name");
 
@@ -126,10 +130,13 @@ function smimeSelectCert(smime_cert)
   var canceled = new Object;
   var x509cert = 0;
   var certUsage;
+  var selectEncryptionCert;
 
   if (smime_cert == "identity.encryption_cert_name") {
+    selectEncryptionCert = true;
     certUsage = 5;
   } else if (smime_cert == "identity.signing_cert_name") {
+    selectEncryptionCert = false;
     certUsage = 4;
   }
 
@@ -139,18 +146,41 @@ function smimeSelectCert(smime_cert)
       certUsage, // this is from enum SECCertUsage
       false, false, canceled);
   } catch(e) {
-    // XXX display error message in the future
+    canceled.value = false;
+    x509cert = null;
   }
 
-  if (!canceled.value && x509cert) {
-    certInfo.setAttribute("disabled", "false");
-    certInfo.value = x509cert.nickname;
+  if (!canceled.value) {
+    if (!x509cert) {
+      var errorString;
+      if (selectEncryptionCert) {
+        errorString = "NoEncryptionCert";
+      }
+      else {
+        errorString = "NoSigningCert";
+      }
+      var ifps = Components.interfaces.nsIPromptService;
+      var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+      if (promptService) {
+        promptService = promptService.QueryInterface(ifps);
+      }
+      if (promptService) {
+        promptService.alert(
+          window, 
+          gBrandBundle.getString("brandShortName"), 
+          gBundle.getString(errorString));
+      }
+    }
+    else {
+      certInfo.removeAttribute("disabled");
+      certInfo.value = x509cert.nickname;
 
-    if (smime_cert == "identity.encryption_cert_name") {
-      gEncryptAlways.removeAttribute("disabled");
-      gNeverEncrypt.removeAttribute("disabled");
-    } else {
-      gSignMessages.removeAttribute("disabled");
+      if (selectEncryptionCert) {
+        gEncryptAlways.removeAttribute("disabled");
+        gNeverEncrypt.removeAttribute("disabled");
+      } else {
+        gSignMessages.removeAttribute("disabled");
+      }
     }
   }
 }
