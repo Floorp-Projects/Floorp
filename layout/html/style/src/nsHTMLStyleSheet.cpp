@@ -267,30 +267,6 @@ nsAbsoluteItems::nsAbsoluteItems(nsIFrame* aContainingBlock)
 {
 }
 
-void
-nsAbsoluteItems::AddAbsolutelyPositionedChild(nsIFrame* aChildFrame)
-{
-#ifdef NS_DEBUG
-  nsIFrame* parent;
-  aChildFrame->GetParent(parent);
-  NS_PRECONDITION(parent == containingBlock, "bad geometric parent");
-#endif
-
-  if (nsnull == childList) {
-    childList = aChildFrame;
-  } else {
-    // Get the last frane in the list
-    nsIFrame* lastChild = nsnull;
-
-    for (nsIFrame* f = childList; nsnull != f; f->GetNextSibling(f)) {
-      lastChild = f;
-    }
-
-    lastChild->SetNextSibling(aChildFrame);
-  }
-=======
->>>>>>> 3.141
-}
 
 // -----------------------------------------------------------
 
@@ -516,7 +492,6 @@ protected:
                                   nsAbsoluteItems& aAbsoluteItems,
                                   nsIFrame*&       aNewFrame,
                                   nsAbsoluteItems& aFixedItems);
->>>>>>> 3.141
 #endif
 
   nsresult ConstructFrameByDisplayType(nsIPresContext*       aPresContext,
@@ -1858,7 +1833,7 @@ HTMLStyleSheetImpl::ConstructSelectFrame(nsIPresContext*  aPresContext,
 
         // Add the absolutely positioned frame to its containing block's list
         // of child frames
-        aAbsoluteItems.AddAbsolutelyPositionedChild(aNewFrame);
+        aAbsoluteItems.AddChild(aNewFrame);
 
         listFrame = aNewFrame;
 
