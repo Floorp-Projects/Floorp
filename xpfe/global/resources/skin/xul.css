@@ -275,6 +275,11 @@ xpmenu {
 	font: inherit;
 }
 
+xpmenuitem {
+	display: block;
+	font: inherit;
+}
+
 xpmenuchildren {
   display: block;
   font: inherit;
@@ -289,7 +294,13 @@ xpmenuchildren[menuactive="true"] {
 }
 
 xpmenuchildren xpmenu {
-  width: 150px;
+  max-width: 400px;
+  min-width: 125px;
+}
+
+xpmenuchildren xpmenuitem {
+  max-width: 400px;
+  min-width: 125px;
 }
 
 progressmeter {
@@ -582,6 +593,16 @@ xpmenubar xpmenu {
   padding: 4px;
 }
 
+xpmenubar xpmenu {
+  border: 1px solid transparent;
+  padding: 4px;
+}
+
+xpmenubar xpmenuitem {
+  border: 1px solid transparent;
+  padding: 4px;
+}
+
 xpmenubar > xpmenu[menuactive="true"] {
   border: 1px outset white;
   color:#333366;
@@ -592,6 +613,11 @@ xpmenubar > xpmenu[menuactive="true"][open="true"] {
 }
 
 xpmenuchildren > xpmenu[menuactive="true"] {
+  background-color: #666699;
+  color: white;
+}
+
+xpmenuchildren > xpmenuitem[menuactive="true"] {
   background-color: #666699;
   color: white;
 }
@@ -1031,6 +1057,5 @@ treeitem [open="true"]> treerow > treecell > titledbutton.twisty {
  list-style-image: url("chrome:/global/skin/opentwisty.gif");
  visibility: visible;
 }
-
 
 
