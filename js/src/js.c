@@ -399,7 +399,7 @@ usage(void)
 static int
 ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 {
-    int i;
+    int i, j;
     char *filename = NULL;
     jsint length;
     jsval *vector;
@@ -466,11 +466,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         if (vector == NULL)
             return 1;
 
-        while (i < argc) {
-            JSString *str = JS_NewStringCopyZ(cx, argv[i]);
+        for (j = 0; j < length; j++) {
+            JSString *str = JS_NewStringCopyZ(cx, argv[i++]);
             if (str == NULL)
                 return 1;
-            vector[i++] = STRING_TO_JSVAL(str);
+            vector[j] = STRING_TO_JSVAL(str);
         }
     }
 
@@ -1646,6 +1646,16 @@ my_LoadErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     my_ErrorReporter(cx, message, report);
 }
 
+static uint32 branch_count;
+
+static JSBool
+my_BranchCallback(JSContext *cx, JSScript *script)
+{
+    if ((++branch_count & 0x3fffff) == 0)
+        return JS_FALSE;
+    return JS_TRUE;
+}
+
 static void
 my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {
@@ -1901,6 +1911,7 @@ main(int argc, char **argv)
     cx = JS_NewContext(rt, gStackChunkSize);
     if (!cx)
 	return 1;
+    JS_SetBranchCallback(cx, my_BranchCallback);
     JS_SetErrorReporter(cx, my_ErrorReporter);
 
     glob = JS_NewObject(cx, &global_class, NULL, NULL);
