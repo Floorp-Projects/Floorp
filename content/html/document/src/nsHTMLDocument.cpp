@@ -82,6 +82,7 @@ static NS_DEFINE_IID(kIDOMStyleSheetCollectionIID, NS_IDOMSTYLESHEETCOLLECTION_I
 static NS_DEFINE_IID(kIDOMStyleSheetIID, NS_IDOMSTYLESHEET_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
+static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 
 class nsDOMStyleSheetCollection : public nsIDOMStyleSheetCollection,
                                   public nsIScriptObjectOwner,
@@ -407,6 +408,11 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
   if (aIID.Equals(kIDOMNSHTMLDocumentIID)) {
     NS_ADDREF_THIS();
     *aInstancePtr = (void**) (nsIDOMNSHTMLDocument *)this;
+    return NS_OK;
+  }
+  if (aIID.Equals(kIHTMLContentContainerIID)) {
+    NS_ADDREF_THIS();
+    *aInstancePtr = (void**) (nsIHTMLContentContainer *)this;
     return NS_OK;
   }
   return nsDocument::QueryInterface(aIID, aInstancePtr);

@@ -46,8 +46,6 @@ public:
 
   NS_IMETHOD GetImageMap(const nsString& aMapName, nsIImageMap** aResult) = 0;
  
-  NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet) = 0;
-
   NS_IMETHOD AddForm(nsIDOMHTMLFormElement* aForm) = 0;
 
   NS_IMETHOD GetForms(nsIDOMHTMLCollection** aForms) = 0;

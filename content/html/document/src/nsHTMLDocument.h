@@ -24,6 +24,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMNode.h"
+#include "nsIHTMLContentContainer.h"
 #include "plhash.h"
 
 class nsIHTMLStyleSheet;
@@ -34,7 +35,7 @@ class nsIParser;
 class BlockText;
 class nsDOMStyleSheetCollection;
 
-class nsHTMLDocument : public nsMarkupDocument, public nsIHTMLDocument, public nsIDOMHTMLDocument, public nsIDOMNSHTMLDocument {
+class nsHTMLDocument : public nsMarkupDocument, public nsIHTMLDocument, public nsIDOMHTMLDocument, public nsIDOMNSHTMLDocument, public nsIHTMLContentContainer {
 public:
   nsHTMLDocument();
   virtual ~nsHTMLDocument();

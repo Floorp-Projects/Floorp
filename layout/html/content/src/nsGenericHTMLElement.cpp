@@ -48,8 +48,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 
-#include "nsIXMLDocument.h"
-
+#include "nsIHTMLContentContainer.h"
 #include "nsHTMLParts.h"
 #include "nsString.h"
 #include "nsHTMLAtoms.h"
@@ -77,7 +76,7 @@ static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
 
 //----------------------------------------------------------------------
 
@@ -336,20 +335,12 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 static nsIHTMLStyleSheet* GetAttrStyleSheet(nsIDocument* aDocument)
 {
   nsIHTMLStyleSheet*  sheet = nsnull;
-  nsIHTMLDocument*  htmlDoc;
-  nsIXMLDocument* xmlDoc;
+  nsIHTMLContentContainer*  htmlContainer;
   
   if (nsnull != aDocument) {
-    if (NS_OK == aDocument->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc)) {
-      htmlDoc->GetAttributeStyleSheet(&sheet);
-      NS_RELEASE(htmlDoc);
-    }
-    // XXX The method GetAttributeStyleSheet should be factored into
-    // another interface for any document capable of containing HTML
-    // content.
-    else if (NS_OK == aDocument->QueryInterface(kIXMLDocumentIID, (void **)&xmlDoc)) {
-      xmlDoc->GetAttributeStyleSheet(&sheet);
-      NS_RELEASE(xmlDoc);
+    if (NS_OK == aDocument->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer)) {
+      htmlContainer->GetAttributeStyleSheet(&sheet);
+      NS_RELEASE(htmlContainer);
     }
   }
   NS_ASSERTION(nsnull != sheet, "can't get attribute style sheet");

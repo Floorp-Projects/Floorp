@@ -43,7 +43,8 @@ CPPSRCS =				\
 	$(NULL)
 
 EXPORTS = \
-	nsIHTMLDocument.h	\
+	nsIHTMLDocument.h			\
+	nsIHTMLContentContainer.h		\
 	$(NULL)
 
 INCLUDES += \
