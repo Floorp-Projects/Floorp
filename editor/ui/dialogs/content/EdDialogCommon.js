@@ -912,21 +912,21 @@ function InsertElementAroundSelection(element)
 
 function nodeIsBlank(node)
 {
-  return node && node.NODE_TYPE == Node.TEXT_NODE && !/\S/.test(node.data);
+  return node && node.nodeType == Node.TEXT_NODE && !/\S/.test(node.data);
 }
 
-function nodeBeginsBlock(node)
+function nodeBeginsBlock(editor, node)
 {
   while (nodeIsBlank(node))
     node = node.nextSibling;
-  return nodeIsBlock(node);
+  return nodeIsBreak(editor, node);
 }
 
-function nodeEndsBlock(node)
+function nodeEndsBlock(editor, node)
 {
   while (nodeIsBlank(node))
     node = node.previousSibling;
-  return nodeIsBlock(node);
+  return nodeIsBreak(editor, node);
 }
 
 // C++ function isn't exposed to JS :-(
