@@ -187,7 +187,7 @@
  **/  
   .button-toolbar-3 
     {
-      margin                : 0px;
+      margin                : 0px 0px 0px 3px;
       font-weight           : bold;
       background-color      : #99CCCC;
     }  

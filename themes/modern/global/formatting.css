@@ -124,3 +124,8 @@
     {
       margin-left         : 20px;
     }
+
+  .icon-dropmarker
+    {
+      list-style-image    : url("chrome://global/skin/scroll-down.gif");
+    }
