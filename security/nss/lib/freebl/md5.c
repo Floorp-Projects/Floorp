@@ -461,6 +461,7 @@ void
 MD5_End(MD5Context *cx, unsigned char *digest,
         unsigned int *digestLen, unsigned int maxDigestLen)
 {
+	PRUint32 tmp;
 	PRUint32 lowInput, highInput;
 	PRUint32 inBufIndex = cx->lsbInput & 63;
 
