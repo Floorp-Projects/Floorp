@@ -1882,12 +1882,12 @@ NS_IMETHODIMP nsViewManager :: MoveViewTo(nsIView *aView, nscoord aX, nscoord aY
   nscoord oldY;
 
   aView->GetPosition(&oldX, &oldY);
+  aView->SetPosition(aX, aY);
 
   // only do damage control if the view is visible
 
   if ((aX != oldX) || (aY != oldY))
   {
-    aView->SetPosition(aX, aY);
     nsViewVisibility  visibility;
     aView->GetVisibility(visibility);
     if (visibility != nsViewVisibility_kHide)
