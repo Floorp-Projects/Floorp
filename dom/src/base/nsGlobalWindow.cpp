@@ -1945,8 +1945,7 @@ GlobalWindowImpl::GetScrollMaxXY(PRInt32* aScrollMaxX, PRInt32* aScrollMaxY)
   rv = CallQueryInterface(view, &portView);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsRect portRect;
-  portView->GetBounds(portRect);
+  nsRect portRect = portView->GetBounds();
 
   if (aScrollMaxX)
     *aScrollMaxX = PR_MAX(0,
@@ -2476,8 +2475,7 @@ GlobalWindowImpl::Focus()
 
   nsresult result = NS_OK;
   if (presShell) {
-    nsCOMPtr<nsIViewManager> vm;
-    presShell->GetViewManager(getter_AddRefs(vm));
+    nsIViewManager* vm = presShell->GetViewManager();
     if (vm) {
       nsCOMPtr<nsIWidget> widget;
       vm->GetWidget(getter_AddRefs(widget));
@@ -4276,16 +4274,14 @@ GlobalWindowImpl::Activate()
    mDocShell->GetPresShell(getter_AddRefs(presShell));
    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIViewManager> vm;
-   presShell->GetViewManager(getter_AddRefs(vm));
+   nsIViewManager* vm = presShell->GetViewManager();
    NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
    nsIView* rootView;
    vm->GetRootView(rootView);
    NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
 
-   nsCOMPtr<nsIWidget> widget;
-   rootView->GetWidget(*getter_AddRefs(widget));
+   nsIWidget* widget = rootView->GetWidget();
    NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
    return widget->SetFocus();
@@ -4310,16 +4306,16 @@ GlobalWindowImpl::Activate()
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIViewManager> vm;
-  presShell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = presShell->GetViewManager();
   NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
   nsIView *rootView;
   vm->GetRootView(rootView);
   NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIWidget> widget;
-  rootView->GetWidget(*getter_AddRefs(widget));
+  // We're holding a STRONG REF to the widget to ensure it doesn't go away
+  // during event processing
+  nsCOMPtr<nsIWidget> widget = rootView->GetWidget();
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
   nsEventStatus status;
@@ -4345,16 +4341,15 @@ GlobalWindowImpl::Deactivate()
   mDocShell->GetPresShell(getter_AddRefs(presShell));
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIViewManager> vm;
-  presShell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = presShell->GetViewManager();
   NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
   nsIView *rootView;
   vm->GetRootView(rootView);
   NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIWidget> widget;
-  rootView->GetWidget(*getter_AddRefs(widget));
+  // Hold a STRONG REF to keep the widget around during event processing
+  nsCOMPtr<nsIWidget> widget = rootView->GetWidget();
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
   nsEventStatus status;
@@ -5444,14 +5439,9 @@ GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
     presContext->GetPixelsToTwips(aP2T);
     presContext->GetTwipsToPixels(aT2P);
 
-    nsCOMPtr<nsIPresShell> presShell;
-    presContext->GetShell(getter_AddRefs(presShell));
-    if (presShell) {
-      nsCOMPtr<nsIViewManager> vm;
-      presShell->GetViewManager(getter_AddRefs(vm));
-      if (vm)
-        return vm->GetRootScrollableView(aScrollableView);
-    }
+    nsIViewManager* vm = presContext->GetViewManager();
+    if (vm)
+      return vm->GetRootScrollableView(aScrollableView);
   }
   return NS_OK;
 }
@@ -5722,16 +5712,14 @@ nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
       mDocShell->GetPresShell(getter_AddRefs(presShell));
       NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIViewManager> vm;
-      presShell->GetViewManager(getter_AddRefs(vm));
+      nsIViewManager* vm = presShell->GetViewManager();
       NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
       nsIView *rootView;
       vm->GetRootView(rootView);
       NS_ENSURE_TRUE(rootView, NS_ERROR_FAILURE);
 
-      nsCOMPtr<nsIWidget> widget;
-      rootView->GetWidget(*getter_AddRefs(widget));
+      nsIWidget* widget = rootView->GetWidget();
       NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
       // Call esm and set cursor.

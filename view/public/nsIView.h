@@ -317,21 +317,6 @@ public:
    */
   virtual PRBool IsRoot() const = 0;
 
-  // DEPRECATED METHODS to be removed by roc
-  NS_IMETHOD HasWidget(PRBool *aHasWidget) const = 0;
-  NS_IMETHOD GetWidget(nsIWidget *&aWidget) const = 0;
-  NS_IMETHOD  GetFloating(PRBool &aFloatingView) const = 0;
-  NS_IMETHOD  GetParent(nsIView *&aParent) const = 0;
-  NS_IMETHOD  GetFirstChild(nsIView* &aChild) const = 0;
-  NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const = 0;
-  NS_IMETHOD  GetOpacity(float &aOpacity) const = 0;
-  NS_IMETHOD  GetClientData(void *&aData) const = 0;
-  NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const = 0;
-  NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr) const = 0;
-  NS_IMETHOD  GetZIndex(PRBool &aAuto, PRInt32 &aZIndex, PRBool &aTopMost) const = 0;
-  NS_IMETHOD  GetPosition(nscoord *aX, nscoord *aY) const = 0;
-  NS_IMETHOD  GetBounds(nsRect &aBounds) const = 0;
-
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;

@@ -752,12 +752,8 @@ nsNativeThemeMac::ThemeSupportsWidget(nsIPresContext* aPresContext, nsIFrame* aF
 {
 #ifndef MOZ_WIDGET_COCOA
   // Only support HTML widgets for Cocoa
-  if (aFrame) {
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
-    if (content->IsContentOfType(nsIContent::eHTML))
-      return PR_FALSE;
-  }
+  if (aFrame && aFrame->GetContent()->IsContentOfType(nsIContent::eHTML))
+    return PR_FALSE;
 #endif
 
   if (aPresContext) {

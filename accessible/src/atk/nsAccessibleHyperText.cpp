@@ -101,13 +101,9 @@ PRBool nsAccessibleHyperText::GetAllTextChildren(nsIPresContext *aPresContext, n
   }
   else {
     if (frameType == nsAccessibilityAtoms::textFrame) {
-      nsRect frameRect;
-      aCurFrame->GetRect(frameRect);
       // Skip the empty text frames that usually only consist of "\n"
-      if (! frameRect.IsEmpty()) {
-        nsCOMPtr<nsIContent> content;
-        aCurFrame->GetContent(getter_AddRefs(content));
-        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+      if (! aCurFrame->GetRect().IsEmpty()) {
+        nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aCurFrame->GetContent()));
         if (bSave || node == aNode) {
 #ifdef DEBUG
           nsAutoString text;
@@ -133,8 +129,7 @@ PRBool nsAccessibleHyperText::GetAllTextChildren(nsIPresContext *aPresContext, n
       return PR_TRUE;
   }
 
-  nsIFrame* siblingFrame = nsnull;
-  aCurFrame->GetNextSibling(&siblingFrame);
+  nsIFrame* siblingFrame = aCurFrame->GetNextSibling();
   return GetAllTextChildren(aPresContext, siblingFrame, aNode, bSave);
 }
 

@@ -260,13 +260,6 @@ NS_IMETHODIMP nsView::Destroy()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::GetViewManager(nsIViewManager *&aViewMgr) const
-{
-  NS_IF_ADDREF(mViewManager);
-  aViewMgr = mViewManager;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsView::Paint(nsIRenderingContext& rc, const nsRect& rect,
                               PRUint32 aPaintFlags, PRBool &aResult)
 {
@@ -452,22 +445,6 @@ NS_IMETHODIMP nsView::SynchWidgetSizePosition()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::GetPosition(nscoord *x, nscoord *y) const
-{
-
-  nsView *rootView = mViewManager->GetRootView();
-
-  if (this == rootView)
-    *x = *y = 0;
-  else
-  {
-    *x = mPosX;
-    *y = mPosY;
-  }
-
-  return NS_OK;
-}
-
 void nsView::SetDimensions(const nsRect& aRect, PRBool aPaint)
 {
   nsRect dims = aRect;
@@ -517,23 +494,6 @@ void nsView::SetDimensions(const nsRect& aRect, PRBool aPaint)
   }
 }
 
-NS_IMETHODIMP nsView::GetBounds(nsRect &aBounds) const
-{
-  NS_ASSERTION(mViewManager, "mViewManager is null!");
-  if (!mViewManager) {
-    aBounds.x = aBounds.y = 0;
-    return NS_ERROR_FAILURE;
-  }
-
-  nsView *rootView = mViewManager->GetRootView();
-  aBounds = mDimBounds;
-
-  if (this == rootView)
-    aBounds.x = aBounds.y = 0;
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsView::SetVisibility(nsViewVisibility aVisibility)
 {
 
@@ -557,20 +517,6 @@ NS_IMETHODIMP nsView::SetVisibility(nsViewVisibility aVisibility)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::GetVisibility(nsViewVisibility &aVisibility) const
-{
-  aVisibility = mVis;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetZIndex(PRBool &aAuto, PRInt32 &aZIndex, PRBool &aTopMost) const
-{
-  aAuto = (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0;
-  aZIndex = mZIndex;
-  aTopMost = (mVFlags & NS_VIEW_FLAG_TOPMOST) != 0;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsView::SetFloating(PRBool aFloatingView)
 {
 	if (aFloatingView)
@@ -586,30 +532,6 @@ NS_IMETHODIMP nsView::SetFloating(PRBool aFloatingView)
 #endif
 
 	return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetFloating(PRBool &aFloatingView) const
-{
-	aFloatingView = ((mVFlags & NS_VIEW_FLAG_FLOATING) != 0);
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetParent(nsIView *&aParent) const
-{
-  aParent = mParent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetFirstChild(nsIView *&aChild) const
-{
-  aChild = mFirstChild;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetNextSibling(nsIView *&aNextSibling) const
-{
-  aNextSibling = mNextSibling;
-  return NS_OK;
 }
 
 void nsView::InsertChild(nsView *aChild, nsView *aSibling)
@@ -664,26 +586,9 @@ void nsView::RemoveChild(nsView *child)
   }
 }
 
-nsView* nsView::GetChild(PRInt32 aIndex) const
-{ 
-  for (nsView* child = GetFirstChild(); child; child = child->GetNextSibling()) {
-    if (aIndex == 0) {
-      return child;
-    }
-    --aIndex;
-  }
-  return nsnull;
-}
-
 NS_IMETHODIMP nsView::SetOpacity(float opacity)
 {
   mOpacity = opacity;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetOpacity(float &aOpacity) const
-{
-  aOpacity = mOpacity;
   return NS_OK;
 }
 
@@ -706,12 +611,6 @@ NS_IMETHODIMP nsView::SetContentTransparency(PRBool aTransparent)
 NS_IMETHODIMP nsView::SetClientData(void *aData)
 {
   mClientData = aData;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetClientData(void *&aData) const
-{
-  aData = mClientData;
   return NS_OK;
 }
 
@@ -808,19 +707,6 @@ NS_IMETHODIMP nsView::SetWidget(nsIWidget *aWidget)
     mWindow->SetClientData((void *)this);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::GetWidget(nsIWidget *&aWidget) const
-{
-  NS_IF_ADDREF(mWindow);
-  aWidget = mWindow;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::HasWidget(PRBool *aHasWidget) const
-{
-  *aHasWidget = (mWindow != nsnull);
   return NS_OK;
 }
 

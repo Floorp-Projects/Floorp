@@ -1218,67 +1218,6 @@ public:
    */
   virtual PRBool SupportsVisibilityHidden() { return PR_TRUE; }
 
-  // DEPRECATED COMPATIBILITY METHODS
-  nsresult GetContent(nsIContent** aContent) const {  *aContent = mContent; NS_IF_ADDREF(*aContent); return NS_OK; }
-  nsresult GetParent(nsIFrame** aParent) const { *aParent = mParent; return NS_OK; }
-  nsresult GetRect(nsRect& aRect) const {
-    aRect = mRect;
-    return NS_OK;
-  }
-  nsresult GetOrigin(nsPoint& aPoint) const {
-    aPoint.x = mRect.x;
-    aPoint.y = mRect.y;
-    return NS_OK;
-  }
-  nsresult GetSize(nsSize& aSize) const {
-    aSize.width = mRect.width;
-    aSize.height = mRect.height;
-    return NS_OK;
-  }
-  nsresult SetRect(nsIPresContext* aPresContext,
-               const nsRect&   aRect) {
-    MoveTo(aPresContext, aRect.x, aRect.y);
-    SizeTo(aPresContext, aRect.width, aRect.height);
-    return NS_OK;
-  }
-  nsresult MoveTo(nsIPresContext* aPresContext,
-                  nscoord         aX,
-                  nscoord         aY) {
-    mRect.x = aX;
-    mRect.y = aY;
-    return NS_OK;
-  }
-  nsresult SizeTo(nsIPresContext* aPresContext,
-                  nscoord         aWidth,
-                  nscoord         aHeight) {
-    mRect.width = aWidth;
-    mRect.height = aHeight;
-    return NS_OK;
-  }
-  nsresult GetNextSibling(nsIFrame** aNextSibling) const {
-    *aNextSibling = mNextSibling;
-    return NS_OK;
-  }
-  nsresult GetFrameState(nsFrameState* aResult) {
-    *aResult = mState;
-    return NS_OK;
-  }
-  nsresult SetFrameState(nsFrameState aState) {
-    mState = aState;
-    return NS_OK;
-  }
-  nsIView* GetView(nsIPresContext* aPresContext) const { return GetView(); }
-  nsIView* GetViewExternal(nsIPresContext* aPresContext) const { return GetViewExternal(); }
-  nsresult SetView(nsIPresContext* aPresContext, nsIView* aView) { return SetView(aView); }
-  nsIView* GetClosestView(nsIPresContext* aPresContext) const { return GetClosestView(); }
-  nsresult GetParentWithView(nsIPresContext* aPresContext, nsIFrame** aParent) const {
-    *aParent = GetAncestorWithViewExternal();
-    return NS_OK;
-  }
-  PRBool AreAncestorViewsVisible(nsIPresContext* aPresContext) const {
-    return AreAncestorViewsVisible();
-  }
-
 protected:
   // Members
   nsRect           mRect;

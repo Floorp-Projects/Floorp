@@ -342,9 +342,7 @@ nsHTMLFramesetFrame::Init(nsIPresContext*  aPresContext,
   nsresult result = CallCreateInstance(kViewCID, &view);
   nsIViewManager* viewMan = aPresContext->GetViewManager();
 
-  nsIFrame* parWithView;
-  GetParentWithView(aPresContext, &parWithView);
-  nsIView *parView = parWithView->GetView();
+  nsIView *parView = GetAncestorWithView()->GetView();
   nsRect boundBox(0, 0, 0, 0); 
   result = view->Init(viewMan, boundBox, parView);
   // XXX Put it last in document order until we can do better

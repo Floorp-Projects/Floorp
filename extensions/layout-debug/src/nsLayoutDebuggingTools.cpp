@@ -109,9 +109,7 @@ view_manager(nsIDocShell *aDocShell)
     nsCOMPtr<nsIPresShell> shell(pres_shell(aDocShell));
     if (!shell)
         return nsnull;
-    nsIViewManager *result = nsnull;
-    shell->GetViewManager(&result);
-    return result;
+    return shell->GetViewManager();
 }
 
 static already_AddRefed<nsIDocument>

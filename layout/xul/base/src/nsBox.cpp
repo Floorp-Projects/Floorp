@@ -445,10 +445,8 @@ nsBox::RelayoutStyleChange(nsBoxLayoutState& aState, nsIBox* aChild)
 NS_IMETHODIMP
 nsBox::RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild)
 {
-    nsFrameState state;
     nsIFrame* frame;
     GetFrame(&frame);
-    frame->GetFrameState(&state);
 
     if (aChild != nsnull) {
         nsCOMPtr<nsIBoxLayout> layout;

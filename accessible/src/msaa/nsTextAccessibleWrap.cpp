@@ -239,8 +239,7 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
   presShell->GetPrimaryFrameFor(content, &frame);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIViewManager> viewManager;
-  presShell->GetViewManager(getter_AddRefs(viewManager));
+  nsIViewManager* viewManager = presShell->GetViewManager();
   NS_ASSERTION(viewManager, "No view manager for pres shell");
 
   nsCOMPtr<nsIWidget> widget;
@@ -258,9 +257,8 @@ nsresult nsTextAccessibleWrap::GetCharacterExtents(PRInt32 aStartOffset, PRInt32
     return E_FAIL;
   }
 
-  nsRect startRect, endRect;
-  startFrame->GetRect(startRect);
-  endFrame->GetRect(endRect);
+  nsRect startRect = startFrame->GetRect();
+  nsRect endRect = endFrame->GetRect();
 
   *aX      = NSTwipsToIntPixels(startPoint.x + startRect.x, t2p);
   *aY      = NSTwipsToIntPixels(startPoint.y, t2p);

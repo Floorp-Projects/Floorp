@@ -812,8 +812,7 @@ int nsWindow::EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 			nsCOMPtr<nsIPresShell> presShell;
 			docShell->GetPresShell( getter_AddRefs(presShell) );
 
-			nsCOMPtr<nsIViewManager> viewManager;
-			presShell->GetViewManager(getter_AddRefs(viewManager));
+            nsIViewManager* viewManager = presShell->GetViewManager();
 			NS_ENSURE_TRUE(viewManager, NS_ERROR_FAILURE);
 
 			windowEnumerator->HasMoreElements(&more);

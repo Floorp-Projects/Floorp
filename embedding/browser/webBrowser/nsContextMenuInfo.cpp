@@ -269,7 +269,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
     // look for a background image on the element
     do {
       bg = frame->GetStyleBackground();
-      frame->GetParent(&frame);
+      frame = frame->GetParent();
     } while (bg && bg->mBackgroundImage.IsEmpty() && frame);
      
     if (bg && !bg->mBackgroundImage.IsEmpty())
@@ -297,7 +297,7 @@ nsContextMenuInfo::GetBackgroundImageRequest(nsIDOMNode * aDOMNode, imgIRequest 
   presShell->GetPrimaryFrameFor(rootContent, &frame);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  frame->GetParent(&frame);
+  frame = frame->GetParent();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
   
   nsICanvasFrame* canvasFrame;
@@ -347,8 +347,7 @@ nsresult nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresCon
   if (aFrame && aBGFrame) {
     *aBGFrame = aFrame; // default to the frame passed in
 
-    nsCOMPtr<nsIContent> pContent;
-    aFrame->GetContent(getter_AddRefs(pContent));
+    nsIContent* pContent = aFrame->GetContent();
     if (pContent) {
        // make sure that this is the HTML or BODY element
       nsCOMPtr<nsIAtom> tag;
@@ -359,8 +358,7 @@ nsresult nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresCon
           tag.get() == mTag_html ||
           tag.get() == mTag_body) {
         // the frame is the body frame, so we provide the canvas frame
-        nsIFrame *pCanvasFrame = nsnull;
-        aFrame->GetParent(&pCanvasFrame);
+        nsIFrame *pCanvasFrame = aFrame->GetParent();
         while (pCanvasFrame) {
           nsCOMPtr<nsIAtom>  parentType;
           pCanvasFrame->GetFrameType(getter_AddRefs(parentType));
@@ -369,7 +367,7 @@ nsresult nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresCon
             *aBGFrame = pCanvasFrame;
             break;
           }
-          pCanvasFrame->GetParent(&pCanvasFrame);
+          pCanvasFrame = pCanvasFrame->GetParent();
         }
       }// if tag == html or body
     }

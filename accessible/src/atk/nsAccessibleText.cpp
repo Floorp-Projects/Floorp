@@ -659,10 +659,7 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
   shell->GetPrimaryFrameFor(content, &frame);
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
 
-  nsRect frameRect;
-  if (NS_FAILED(frame->GetRect(frameRect))) {
-    return NS_ERROR_FAILURE;
-  }
+  nsRect frameRect = frame->GetRect();
 
   nsCOMPtr<nsIRenderingContext> rc;
   shell->CreateRenderingContext(frame, getter_AddRefs(rc));
@@ -720,16 +717,14 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
   }
 
   //find the topest frame, add the offset recursively
-  nsRect tmpRect;
-  nsIFrame *parentFrame = nsnull, *tmpFrame = frame;
-  nsresult rv = tmpFrame->GetParent(&parentFrame);
-  while (NS_SUCCEEDED(rv) && parentFrame) {
-    if (NS_SUCCEEDED(parentFrame->GetRect(tmpRect))) {
-      tmpX += tmpRect.x;
-      tmpY += tmpRect.y;
-    }
+  nsIFrame* tmpFrame = frame;
+  nsIFrame* parentFrame = tmpFrame->GetParent();
+  while (parentFrame) {
+    nsPoint origin = parentFrame->GetPosition();
+    tmpX += origin.x;
+    tmpY += origin.y;
     tmpFrame = parentFrame;
-    rv = tmpFrame->GetParent(&parentFrame);
+    parentFrame = tmpFrame->GetParent();
   }
 
   tmpX = NSTwipsToIntPixels(tmpX, t2p);

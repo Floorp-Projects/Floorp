@@ -275,8 +275,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
   // is no way to do that right now.  So we leave it null here and set
   // up a nav html dtd in nsHTMLEditor::Init
 
-  ps->GetViewManager(&mViewManager);
+  mViewManager = ps->GetViewManager();
   if (!mViewManager) {return NS_ERROR_NULL_POINTER;}
+  NS_ADDREF(mViewManager);
 
   mUpdateCount=0;
   InsertTextTxn::ClassInit();
@@ -1979,29 +1980,17 @@ GetEditorContentWindow(nsIPresShell *aPresShell, nsIDOMElement *aRoot, nsIWidget
   if (!frame)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresContext> presContext;
-
-  result = aPresShell->GetPresContext(getter_AddRefs(presContext));
-
-  if (NS_FAILED(result))
-    return result;
-
-  if (!presContext)
-    return NS_ERROR_FAILURE;
-
   // Check first to see if this frame contains a view with a native widget.
-
-  nsIView *view = frame->GetViewExternal(presContext);
+  nsIView *view = frame->GetViewExternal();
 
   if (view)
   {
-    result = view->GetWidget(*aResult);
+    *aResult = view->GetWidget();
 
-    if (NS_FAILED(result))
-      return result;
-
-    if (*aResult)
+    if (*aResult) {
+      NS_ADDREF(*aResult);
       return NS_OK;
+    }
   }
 
   // frame doesn't have a view with a widget, so call GetWindow()
@@ -3663,9 +3652,7 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
     nsCOMPtr<nsITextContent> text(do_QueryInterface(content));
     if (!text)
       return PR_TRUE;  // not a text node; has a frame
-    nsFrameState fs;
-    resultFrame->GetFrameState(&fs);
-    if ((fs & NS_FRAME_IS_DIRTY)) // we can only trust width data for undirty frames
+    if (resultFrame->GetStateBits() & NS_FRAME_IS_DIRTY) // we can only trust width data for undirty frames
     {
       // In the past a comment said:
       //   "assume all text nodes with dirty frames are editable"
@@ -3674,9 +3661,7 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
       // and uses enhanced logic to find out in the HTML world.
       return IsTextInDirtyFrameVisible(aNode);
     }
-    nsRect rect;
-    resultFrame->GetRect(rect);
-    if (rect.width > 0) 
+    if (resultFrame->GetSize().width > 0) 
       return PR_TRUE;  // text node has width
   }
   return PR_FALSE;  // didn't pass any editability test
