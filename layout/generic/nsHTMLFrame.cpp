@@ -67,7 +67,7 @@ public:
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const {
-    aBase = PR_TRUE;
+    aBase = PR_FALSE;
     return NS_OK;
   }
 
@@ -114,13 +114,19 @@ RootFrame::SetRect(const nsRect& aRect)
   nsresult  rv = nsHTMLContainerFrame::SetRect(aRect);
 
   // Make sure our child's frame is adjusted as well
+  // Note: only do this if it's 'height' is 'auto'
   nsIFrame* kidFrame = mFrames.FirstChild();
   if (nsnull != kidFrame) {
-    nscoord   yDelta = aRect.height - mNaturalHeight;
-    nsSize    kidSize;
+    nsStylePosition*  kidPosition;
+    kidFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)kidPosition);
 
-    kidFrame->GetSize(kidSize);
-    kidFrame->SizeTo(kidSize.width, kidSize.height + yDelta);
+    if (eStyleUnit_Auto == kidPosition->mHeight.GetUnit()) {
+      nscoord   yDelta = aRect.height - mNaturalHeight;
+      nsSize    kidSize;
+
+      kidFrame->GetSize(kidSize);
+      kidFrame->SizeTo(kidSize.width, kidSize.height + yDelta);
+    }
   }
 
   return rv;
