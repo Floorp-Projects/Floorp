@@ -868,11 +868,8 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     uri.Append(hostName);
     PR_FREEIF(hostName);
 
-    if (!m_transactionManager || m_transactionManager != txnMgr)
-    {
-        m_transactionManager = null_nsCOMPtr();
+    if (!m_transactionManager)
         m_transactionManager = do_QueryInterface(txnMgr, &rv);
-    }
 
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     if(NS_FAILED(rv)) return rv;
