@@ -1075,7 +1075,7 @@ nsresult nsRange::SelectNode(nsIDOMNode* aN)
 {
   nsCOMPtr<nsIDOMNode> parent;
   nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(aN) );
-  
+  if (!aN) return NS_ERROR_NULL_POINTER;
   nsresult res = aN->GetParentNode(getter_AddRefs(parent));
   if (NS_FAILED(res)) return res;
   PRInt32 indx = IndexOf(theNode);
