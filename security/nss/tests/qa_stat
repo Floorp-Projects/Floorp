@@ -448,6 +448,7 @@ qa_errorlist()
         grep -vi "peer cannot verify" |
         grep -vi "error" |
         grep -vi "fatal" |
+        grep -vi "TCP Connection aborted" |
         grep -vi "TCP connection reset" |
         grep  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP  -i failed  
     grep -i $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP "segmentation violation" \
@@ -780,6 +781,7 @@ set -x
         grep -i  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP error
       grep  -vi "write to SSL socket" $BCT_LOG |
         grep -vi "peer cannot verify" |
+        grep -vi "TCP Connection aborted" |
         grep -vi "error" |
         grep -vi "fatal" |
         grep -vi "TCP connection reset" |
