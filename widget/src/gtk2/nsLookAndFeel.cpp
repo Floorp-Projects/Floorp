@@ -371,9 +371,28 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 0;
         break;
     case eMetric_SelectTextfieldsOnKeyFocus:
-        // Select textfield content when focused by kbd
-        // used by nsEventStateManager::sTextfieldSelectModel
-        aMetric = 1;
+        {
+            GtkWidget *entry;
+            GtkSettings *settings;
+            gboolean select_on_focus;
+
+            entry = gtk_entry_new();
+            gtk_widget_ref(entry);
+            gtk_object_sink(GTK_OBJECT(entry));
+            settings = gtk_widget_get_settings(entry);
+            g_object_get(settings, 
+                         "gtk-entry-select-on-focus",
+                         &select_on_focus,
+                         NULL);
+            
+            if(select_on_focus)
+                aMetric = 1;
+            else
+                aMetric = 0;
+
+            gtk_widget_destroy(entry);
+            gtk_widget_unref(entry);
+        }
         break;
     case eMetric_SubmenuDelay:
         aMetric = 200;
