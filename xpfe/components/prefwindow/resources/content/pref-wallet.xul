@@ -36,7 +36,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["walletServer", "walletCaptureForms"];
+    _elementIDs = ["walletCaptureForms"];
   ]]>
   </script>
           
