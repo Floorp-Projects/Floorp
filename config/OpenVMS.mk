@@ -50,6 +50,13 @@ ifdef INTERNAL_TOOLS
 OS_LDFLAGS	=
 endif
 
+# Although IS_COMPONENT is set in the Makefile, for xpconnect it is not set
+# until AFTER config.mk (and therefore this file) included, hence it appears
+# as unset. So for this module only, set IS_COMPONENT here.
+ifeq ($(MODULE),xpconnect)
+IS_COMPONENT	= 1
+endif
+
 # This is where our Sharable Image trickery goes.
 AS		= vmsas $(OS_CFLAGS)
 ifdef IS_COMPONENT
