@@ -26,16 +26,19 @@
 #include "nsAppShell.h"
 #include "nsButton.h"
 #include "nsScrollbar.h"
+#include "nsCheckButton.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
 static NS_DEFINE_IID(kCHorzScrollbarCID, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
+static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
 
 
 static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIButton,        NS_IBUTTON_IID);
+static NS_DEFINE_IID(kICheckButton,   NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kIScrollbar,     NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -117,6 +120,9 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     nsIWidget *inst = nsnull;
     if (aIID.Equals(kCWindow)) {
         inst = (nsIWidget*)new nsWindow(aOuter);
+    }
+    else if (aIID.Equals(kICheckButton)) {
+        inst = (nsIWidget*)new nsCheckButton(aOuter);
     }
     else if (aIID.Equals(kIButton)) {
         inst = (nsIWidget*)new nsButton(aOuter);
