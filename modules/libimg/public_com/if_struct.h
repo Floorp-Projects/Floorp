@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if_struct.h,v 1.2 1999/04/19 22:22:47 pnunn%netscape.com Exp $
+ * $Id: if_struct.h,v 1.3 1999/04/20 19:30:33 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -89,10 +89,10 @@ PR_END_EXTERN_C
 #define _USD 1              /* scanlines upside-down */ 
 #endif
 
-//extern PRLogModuleInfo *il_log_module;
+/* extern PRLogModuleInfo *il_log_module; */
 
 #ifdef DEBUG
-//#define ILTRACE(l,t) { if(il_debug>l) {PR_LOG(il_log_module, 1, t);} }
+/* #define ILTRACE(l,t) { if(il_debug>l) {PR_LOG(il_log_module, 1, t);} } */
 #else
 #define ILTRACE(l,t) {}
 #endif

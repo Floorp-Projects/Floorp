@@ -28,7 +28,7 @@
 { 0x80, 0x2c, 0x00, 0x60, 0x08, 0x8f, 0x91, 0xa3 } }
 
 
-/////////////////////////////////////////////////
+/***************************************************/
 
 #define NS_IMGDECODER_CID \
 { 0xc9089cc0, 0xbaf4, 0x11d2, \
@@ -42,11 +42,13 @@
 NS_DEFINE_IID(kImgDecoderIID, NS_IMGDECODER_IID);
 NS_DEFINE_IID(kImgDecoderCID, NS_IMGDECODER_CID);
 
-////////////////////////////////////////////////
+/***************************************************/
 
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-/////////////////////////////////////////////////
+
+/***************************************************/
+
 /* e41ac650-cd9f-11d2-802c-0060088f91a3 */
 #define NS_IMGDCALLBK_CID \
 { 0xe41ac650, 0xcd9f, 0x11d2, \
