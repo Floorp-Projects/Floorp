@@ -25,6 +25,7 @@ XPIDL_MODULE=mozfind
 
 XPIDLSRCS=\
     .\nsIFindComponent.idl \
+    .\nsISearchContext.idl \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
