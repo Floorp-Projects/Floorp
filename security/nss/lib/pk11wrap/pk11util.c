@@ -1138,7 +1138,7 @@ SECMOD_CancelWait(SECMODModule *mod)
 	crv = PK11_GETTAB(mod)->C_Finalize(NULL);
 	/* ok, we slammed the module down, now we need to reinit it in case
 	 * we intend to use it again */
-	if (crv = CKR_OK) {
+	if (CKR_OK == crv) {
 	    secmod_ModuleInit(mod);
 	} else {
 	    /* Finalized failed for some reason,  notify the application
