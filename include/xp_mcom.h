@@ -99,6 +99,10 @@ XP_END_PROTOS
 
 #ifndef __QNX__
 #include <memory.h>
+#else
+XP_BEGIN_PROTOS
+extern long random(void);	/* QNX doesn't provide a prototype, so do this until they fix it. */
+XP_END_PROTOS
 #endif
 
 #define XP_STRDUP(s)              strdup((s))
