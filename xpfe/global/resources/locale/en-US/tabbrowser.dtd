@@ -1,4 +1,4 @@
-
+<!ENTITY  untitledTab            "(Untitled)">
 <!ENTITY  newTab.label           "New Tab">
 <!ENTITY  newTab.accesskey       "n">
 <!ENTITY  closeTab.label         "Close Tab">
