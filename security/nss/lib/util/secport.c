@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.8 2001/04/06 17:47:15 nelsonb%netscape.com Exp $
+ * $Id: secport.c,v 1.9 2002/01/29 19:00:47 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -281,9 +281,11 @@ PORT_FreeArena(PLArenaPool *arena, PRBool zero)
 	    doFreeArenaPool = PR_TRUE;
 	}
     }
-    if (doFreeArenaPool)
+    if (doFreeArenaPool) {
 	PL_FreeArenaPool(arena);
-    PL_FinishArenaPool(arena);
+    } else {
+	PL_FinishArenaPool(arena);
+    }
     PORT_ZFree(arena, len);
     if (lock) {
 	PZ_Unlock(lock);
