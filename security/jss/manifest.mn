@@ -41,8 +41,9 @@ MODULE = jss
 # org/mozilla/jss/CryptoManager.java.
 #
 # To change the JSS version, update the version macros in
-# org/mozilla/jss/util/jssver.h and the JAR_JSS_VERSION value in
-# org/mozilla/jss/CryptoManager.java.
+# org/mozilla/jss/util/jssver.h, the JAR_JSS_VERSION value in
+# org/mozilla/jss/CryptoManager.java, and the PRODUCT_VERSION
+# and PRODUCT_NAME values in pkg/solaris/Makefile.com.
 #
 IMPORTS =	nss/NSS_3_9_RTM \
 			nspr20/v4.4.1 \
