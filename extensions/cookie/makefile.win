@@ -42,7 +42,6 @@ EXPORTS = nsCookieHTTPNotify.h
 XPIDLSRCS=      .\nsICookieManager.idl           \
                 .\nsIImgManager.idl            \
                 .\nsIPermissionManager.idl       \
-                .\nsICookieService.idl           \
                 .\nsICookie.idl                  \
                 .\nsIPermission.idl              \
                 $(NULL)
