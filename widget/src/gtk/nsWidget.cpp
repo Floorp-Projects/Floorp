@@ -1975,9 +1975,17 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   sButtonMotionWidgetX = (gint) aGdkButtonEvent->x;
   sButtonMotionWidgetY = (gint) aGdkButtonEvent->y;
   
-  AddRef();
+  AddRef(); // kung-fu deathgrip
 
   DispatchMouseEvent(event);
+
+  // if we're a right-button-down on linux, we're trying to
+  // popup a context menu. send that event to gecko also.
+  if (eventType == NS_MOUSE_RIGHT_BUTTON_DOWN) {
+    eventType = NS_CONTEXTMENU;
+    InitMouseEvent(aGdkButtonEvent, event, eventType);
+    DispatchMouseEvent(event);
+  }
 
   Release();
 
