@@ -320,7 +320,7 @@ _PR_DecrActiveThreadCount(PRThread *thread)
 static void
 _PR_DestroyThread(PRThread *thread)
 {
-    _MD_FREE_LOCK(&thread->threadLock);
+    _PR_MD_FREE_LOCK(&thread->threadLock);
     PR_DELETE(thread);
 }
 
@@ -352,7 +352,7 @@ _PR_UserDestroyThread(PRThread *thread)
         PR_DELETE(thread->privateData);
         thread->tpdLength = 0;
     }
-    _MD_FREE_LOCK(&thread->threadLock);
+    _PR_MD_FREE_LOCK(&thread->threadLock);
     if (thread->threadAllocatedOnStack == 1) {
         _PR_MD_CLEAN_THREAD(thread);
         /*
@@ -1005,7 +1005,7 @@ _PR_AttachThread(PRThreadType type, PRThreadPriority priority,
         thread->stack = stack;
         thread->state = _PR_RUNNING;
         PR_INIT_CLIST(&thread->lockList);
-        if (_MD_NEW_LOCK(&thread->threadLock) == PR_FAILURE) {
+        if (_PR_MD_NEW_LOCK(&thread->threadLock) == PR_FAILURE) {
         PR_DELETE(thread);
         return 0;
     }
@@ -1306,7 +1306,7 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
                 return NULL;
             }
 
-            if (_MD_NEW_LOCK(&thread->threadLock) == PR_FAILURE) {
+            if (_PR_MD_NEW_LOCK(&thread->threadLock) == PR_FAILURE) {
                 if (thread->threadAllocatedOnStack == 1)
                     _PR_FreeStack(thread->stack);
                 else {
@@ -1320,7 +1320,7 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             _PR_MD_INIT_CONTEXT(thread, top, _PR_UserRunThread, &status);
 
             if (status == PR_FALSE) {
-                _MD_FREE_LOCK(&thread->threadLock);
+                _PR_MD_FREE_LOCK(&thread->threadLock);
                 if (thread->threadAllocatedOnStack == 1)
                     _PR_FreeStack(thread->stack);
                 else {
@@ -1337,7 +1337,7 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             if (state == PR_JOINABLE_THREAD) {
                 thread->term = PR_NewCondVar(_pr_terminationCVLock);
                 if (thread->term == NULL) {
-                    _MD_FREE_LOCK(&thread->threadLock);
+                    _PR_MD_FREE_LOCK(&thread->threadLock);
                     if (thread->threadAllocatedOnStack == 1)
                         _PR_FreeStack(thread->stack);
                     else {
@@ -1512,7 +1512,7 @@ void _PRI_DetachThread(void)
     _PR_MD_SET_CURRENT_THREAD(NULL);
     if (!me->threadAllocatedOnStack) 
         PR_DELETE(me->stack);
-    _MD_FREE_LOCK(&me->threadLock);
+    _PR_MD_FREE_LOCK(&me->threadLock);
     PR_DELETE(me);
 }
 
