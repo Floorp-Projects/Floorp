@@ -717,6 +717,7 @@ class NS_COM nsDirectoryIterator
             PRBool                  mResoveSymLinks;
 	      
 #if defined(XP_UNIX) || defined(XP_BEOS)
+	nsFileSpec		mStarting;
         DIR*                    mDir;
 #elif defined(XP_PC)
         PRDir*                  mDir; // XXX why not use PRDir for Unix too?

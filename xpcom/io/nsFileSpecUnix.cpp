@@ -225,7 +225,13 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
             resolvedPath[charCount] = '\0';
         
         wasAliased = PR_TRUE;
-        mPath = (char*)&resolvedPath;
+	/* if it's not an absolute path, replace the leaf with what got resolved */
+	if (resolvedPath[0] != '/') {
+		SetLeafName(resolvedPath);
+	}
+	else {
+        	mPath = (char*)&resolvedPath;
+	}
     }
     
     return NS_OK;
@@ -523,10 +529,12 @@ PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
 nsDirectoryIterator::nsDirectoryIterator(const nsFileSpec& inDirectory, PRBool resolveSymLinks)
 //----------------------------------------------------------------------------------------
     : mCurrent(inDirectory)
+    , mStarting(inDirectory)
     , mExists(PR_FALSE)
     , mDir(nsnull)
     , mResoveSymLinks(resolveSymLinks)
 {
+    mStarting += "sysygy"; // save off the starting directory 
     mCurrent += "sysygy"; // prepare the path for SetLeafName
     mDir = opendir((const char*)nsFilePath(inDirectory));
     ++(*this);
@@ -557,6 +565,7 @@ nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
     if (entry)
     {
         mExists = PR_TRUE;
+	mCurrent = mStarting;	// restore mCurrent to be the starting directory.  ResolveSymlink() may have taken us to another directory
         mCurrent.SetLeafName(entry->d_name);
         if (mResoveSymLinks)
         {   
