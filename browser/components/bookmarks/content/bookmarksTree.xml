@@ -830,7 +830,7 @@ dump("ONSELECTION CHANGED\n")
       <!-- context menu -->
       <menupopup onpopupshowing="this.parentNode.createTreeContextMenu(event);"
                  onpopuphidden ="if (content) content.focus()"/>
-      <tree anonid="bookmarks-tree" flex="1" hidecolumnpicker="true" class="plain"
+      <tree anonid="bookmarks-tree" flex="1" class="plain" hidecolumnpicker="true"
                 datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" ref="NC:BookmarksRoot" flags="dont-build-content"
                 onkeypress="if (event.keyCode == 13) this.parentNode.loadBookmarkBrowser(event); if (content) content.focus()"
                 ondraggesture="if (event.originalTarget.localName == 'treechildren') nsDragAndDrop.startDrag(event, this.parentNode.DNDObserver);"
@@ -849,12 +849,6 @@ dump("ONSELECTION CHANGED\n")
               <treeitem uri="rdf:*">
                 <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
                   <treecell properties="group hidetwisty" label="rdf:http://home.netscape.com/NC-rdf#Name" />
-                  <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
-                  <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
-                  <treecell label="rdf:http://home.netscape.com/NC-rdf#Description" />
-                  <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-                  <treecell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
-                  <treecell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
                 </treerow>
               </treeitem>
             </treechildren>
@@ -864,12 +858,6 @@ dump("ONSELECTION CHANGED\n")
               <treeitem uri="rdf:*">
                 <treerow properties="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type rdf:http://home.netscape.com/NC-rdf#loading rdf:http://home.netscape.com/WEB-rdf#status">
                   <treecell label="rdf:http://home.netscape.com/NC-rdf#Name" />
-                  <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
-                  <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
-                  <treecell label="rdf:http://home.netscape.com/NC-rdf#Description" />
-                  <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-                  <treecell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
-                  <treecell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
                 </treerow>
               </treeitem>
             </treechildren>
@@ -877,35 +865,10 @@ dump("ONSELECTION CHANGED\n")
         </template>
         <treecols anonid="treecols">
           <treecol id="Name" label="&treecol.name.label;" flex="1" primary="true" 
-                        class="sortDirectionIndicator" 
+                        class="sortDirectionIndicator"
                         persist="width hidden ordinal" 
                         sort="rdf:http://home.netscape.com/NC-rdf#Name"
                         sortActive="true" sortDirection="none"/>
-          <splitter class="tree-splitter" />
-          <treecol id="URL" label="&treecol.url.label;" 
-                        flex="1" class="sortDirectionIndicator" 
-                        sort="rdf:http://home.netscape.com/NC-rdf#URL" 
-                        hidden="true"/>
-          <splitter class="tree-splitter" />
-          <treecol id="ShortcutURL" label="&treecol.shortcut.label;" 
-                        hidden="true" flex="1" class="sortDirectionIndicator" 
-                        sort="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
-          <splitter class="tree-splitter" />
-          <treecol id="Description" label="&treecol.description.label;" 
-                        hidden="true" flex="1" class="sortDirectionIndicator" 
-                        sort="rdf:http://home.netscape.com/NC-rdf#Description"/>
-          <splitter class="tree-splitter" />
-          <treecol id="AddDate" label="&treecol.addedon.label;" 
-                        hidden="true" flex="1" class="sortDirectionIndicator" 
-                        sort="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
-          <splitter class="tree-splitter" />
-          <treecol id="LastModDate" label="&treecol.lastmod.label;" 
-                        hidden="true" flex="1" class="sortDirectionIndicator" 
-                        sort="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate"  />
-          <splitter class="tree-splitter" />
-          <treecol id="LastVisitDate" label="&treecol.lastvisit.label;" 
-                        hidden="true" flex="1" class="sortDirectionIndicator" 
-                        sort="rdf:http://home.netscape.com/NC-rdf#LastVisitDate" />
         </treecols>
       </tree>
     </xbl:content>
