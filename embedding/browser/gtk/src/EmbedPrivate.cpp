@@ -1010,6 +1010,10 @@ EmbedPrivate::RegisterAppComponents(void)
   nsresult rv = NS_GetComponentRegistrar(getter_AddRefs(cr));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIComponentManager> cm;
+  rv = NS_GetComponentManager (getter_AddRefs (cm));
+  NS_ENSURE_SUCCESS (rv, rv);
+
   for (int i = 0; i < sNumAppComps; ++i) {
     nsCOMPtr<nsIGenericFactory> componentFactory;
     rv = NS_NewGenericFactory(getter_AddRefs(componentFactory),
@@ -1022,6 +1026,13 @@ EmbedPrivate::RegisterAppComponents(void)
     rv = cr->RegisterFactory(sAppComps[i].mCID, sAppComps[i].mDescription,
                              sAppComps[i].mContractID, componentFactory);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to register factory for component");
+
+    // Call the registration hook of the component, if any
+    if (sAppComps[i].mRegisterSelfProc) {
+      rv = sAppComps[i].mRegisterSelfProc(cm, nsnull, nsnull, nsnull,
+                                          &(sAppComps[i]));
+      NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to self-register component");
+    }
   }
 
   return rv;
