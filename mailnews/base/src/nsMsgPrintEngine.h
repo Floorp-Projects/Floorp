@@ -76,5 +76,6 @@ protected:
   nsCOMPtr<nsIStringBundle>   mStringBundle;    // String bundles...
   nsCOMPtr<nsIMsgStatusFeedback> mFeedback;     // Tell the user something why don't ya'
   nsCOMPtr<nsIWebBrowserPrint> mWebBrowserPrint;
-  nsCOMPtr<nsIPrintSettings>     mPrintSettings;
+  nsCOMPtr<nsIPrintSettings>   mPrintSettings;
+  nsCOMPtr<nsIDOMWindow>       mMsgDOMWin;
 };
