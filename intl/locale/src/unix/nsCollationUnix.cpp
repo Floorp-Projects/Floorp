@@ -30,6 +30,7 @@
 #include "nsIPosixLocale.h"
 #include "nsCOMPtr.h"
 
+#define DEBUG_UNIX_COLLATION
 
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
 static NS_DEFINE_CID(kPosixLocaleFactoryCID, NS_POSIXLOCALEFACTORY_CID);
@@ -128,6 +129,14 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       }
     }
   }
+
+#if defined(DEBUG_UNIX_COLLATION)
+  char* tmp = mLocale.ToNewCString();
+  if (NULL != tmp) {
+    printf("nsCollationUnix::Initialize mLocale = %s\n", tmp);
+    delete[] tmp;
+  }
+#endif
 
   return NS_OK;
 };
