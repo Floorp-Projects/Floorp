@@ -334,7 +334,7 @@ PluginViewerImpl::StartLoad(nsIRequest* request, nsIStreamListener*& aResult)
         mDocument->SetScriptGlobalObject(global);
         nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
         if (domdoc)
-          global->SetNewDocument(domdoc, PR_TRUE);
+          global->SetNewDocument(domdoc, PR_TRUE, PR_TRUE);
       }
 
     }
