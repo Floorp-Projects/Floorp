@@ -255,8 +255,8 @@ function doSearch()
 	var summaryNode = parent.frames[1].document.getElementById("internetresultssummary");
 	if (summaryNode)
 	{
-		var summaryText = "Results: term contains '";
-		summaryText += text + "'";
+		var summaryText = "Results of searching for '";
+		summaryText += text + "':  ";
 		summaryNode.setAttribute("value", summaryText);
 	}
 
@@ -264,6 +264,8 @@ function doSearch()
 	var resultsTree = parent.frames[1].document.getElementById("internetresultstree");
 	if (!resultsTree)	return(false);
 	resultsTree.setAttribute("ref", searchURL);
+	// start off showing all engine results
+	resultsTree.removeAttribute("style");
 
 	// enable "Save Search" button
 	var searchButton = document.getElementById("SaveSearch");
