@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Makefile.PL,v 1.6 1998/07/31 21:18:29 clayton Exp $
+# $Id: Makefile.PL,v 1.7 1998/08/03 00:27:50 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -30,9 +30,9 @@ use Config;
 $perlpath = $Config{'perlpath'};
 $osname   = $Config{'osname'};
 
-$include_ldap = $ENV{"LDAPINCLUDE"};
-$lib_ldap = $ENV{"LDAPLIB"};
-$sslopt = $ENV{"USESSL"};
+$ldapsdk_loc = $ENV{"LDAPSDKDIR"}; # Full Path to C SDK Top-Level
+$ldapsdk_ver = $ENV{"LDAPSDKVER"}; # 11 or 30
+$ldapsdk_ssl = $ENV{"LDAPSDKSSL"}; # Y to include SSL
 
 print "\n\nPerlDAP - Perl 5 Module for LDAP\n";
 print     "================================\n";
@@ -40,26 +40,46 @@ print "\nPut all sorts of legal bits and pieces here...\n\n";
 
 if (!$include_ldap)
 {
-   print "Location of LDAP SDK 3.0 Include Files (default: /usr/include):  ";
-   chomp ($include_ldap = <>);
-   $include_ldap = "/usr/include" unless $include_ldap =~ /\S/;
+   print "Directory containing 'include' and 'lib' directory of the Netscape\n";
+   print "LDAP Software Developer Kit (default: /usr): ";
+   chomp ($ldapsdk_loc = <>);
+   $ldapsdk_loc = "/usr" unless $ldapsdk_loc =~ /\S/;
 }
 
-if (!$lib_ldap)
+if ($osname =~ /mswin/i)
 {
-   $def_lib = ($include_ldap =~ m%^(\S+)([/\\])include% ? "$1$2lib" : "/usr/lib");
-   print "Location of LDAP SDK 3.0 Library Files (default: $def_lib):  ";
-   chomp ($lib_ldap = <>);
-   $lib_ldap = $def_lib unless $lib_ldap =~ /\S/;
+   $dir_sep = "\\";
+} else {
+   $dir_sep = "/";
 }
 
-if (!$sslopt)
+$include_ldap = $ldapsdk_loc . $dir_sep . "include";
+$lib_ldap = $ldapsdk_loc . $dir_sep . "lib";
+
+if (!$ldapsdk_ver)
 {
-   print "Include SSL Routines (default: yes)?  ";
+   print "Using LDAPv3 Developer Kit (default: yes)?  ";
+   chomp ($ver = <>);
+   if ($ver =~ /^n/i)
+   {
+      $ldapsdk_ver = "11";
+   } else {
+      $ldapsdk_ver = "30";
+   }
+}
+
+if ($ldapsdk_ver == "30")
+{
+   $v3def = "-DLDAPV3";
+}
+   
+if (!$ldapsdk_ssl)
+{
+   print "Include SSL Support (default: yes)?  ";
    chomp ($sslopt = <>);
 }
 
-if ($sslopt =~ /^n/i)
+if ($ldapsdk_ssl =~ /^n/i)
 {
    $ssl_def = "";
 } else {
@@ -70,20 +90,28 @@ if ($osname =~ /mswin/i)
 {
    if ($ssl_def)
    {
-      $ldap_lib = "nsldapssl32v30";
+      if ($ldapsdk_ver == "30")
+      {
+         $ldap_lib = "nsldapssl32v30";
+      } else {
+         $ldap_lib = "nsldap32v11";
+      }
    } else {
-      $ldap_lib = "nsldap32v30";
+      $ldap_lib = "nsldap32v" . $ldapsdk_ver;
    }
 } else {
    if ($ssl_def)
    {
-      $ldap_lib = "ldapssl30";
+      if ($ldapsdk_ver == "30")
+      {
+         $ldap_lib = "ldapssl30";
+      } else {
+         $ldap_lib = "ldap30";
+      }
    } else {
-      $ldap_lib = "ldap30";
+      $ldap_lib = "ldap" . $ldapsdk_ver;
    }
 }
-
-$v3_def = "-DLDAPV3";
 
 if ($osname =~ /mswin/i)
 {

@@ -1,1 +1,54 @@
-Blah.
+#############################################################################
+#                                                                           #
+#            PerlDAP v1.0 - A Perl Developers' Kit for LDAP                 #
+#                                                                           #
+#############################################################################
+
+[ This doc needs LOTS of work... --CED ]
+
+INTRODUCTION
+============
+
+PerlDAP (also known as Mozilla::LDAP) allows Perl programmers to develop
+software that leverages directories supporting the Lightweight Directory
+Access Protocol (LDAP).
+
+Version 1.0 provides both object oriented and direct methods of access
+for all LDAP version 2 operations.  Experimental direct access is also
+included for version 3 operations.
+
+Numerous examples and test applications are provided to help developers
+quickly understand and utilize this module.
+
+LICENSE/COPYRIGHT
+=================
+
+...stuff goes here...
+
+REQUIREMENTS
+============
+
+Netscape LDAP C Developers' Kit (Version 1.1 or 3.0)
+  - http://developer.netscape.com/ldap/
+  - http://www.mozilla.org/ldap/
+Perl 5.004 or higher (5.005 recommended)
+  - http://www.perl.com/
+C Language Compiler
+
+SUPPORTED SYSTEMS
+=================
+
+...Core systems that we test...
+
+KNOWN BUGS
+==========
+
+LDAPv3 API calls are included as a baseline for further development only.  Use
+at your own risk.
+
+WHERE TO GET - change section name
+============
+- Binaries
+- Sources
+
+
