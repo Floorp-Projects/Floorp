@@ -1006,10 +1006,33 @@ treechildren::-moz-tree-cell-text(lc-black, selected) {
   list-style-image: url("chrome://messenger/skin/icons/Search-bar.png");
 }
 
+.quick-search-clearbutton[clearButtonHidden="true"] {
+  visibility: hidden;
+}
+
 .quick-search-button-dropmarker {
   margin-left: 12px;
   margin-top: 8px;
   list-style-image: url("chrome://messenger/skin/icons/search-arrow.gif");
+}
+
+.quick-search-clearbutton {
+  list-style-image: url("chrome://messenger/skin/icons/quick-search-clear.png");
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  -moz-appearance: none;
+  padding: 0px !important;
+  border: none !important;
+  margin-right: -1px;
+}
+
+.quick-search-clearbutton:hover {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+  padding: 0px !important;
+}
+
+.quick-search-clearbutton:hover:active {
+  -moz-image-region: rect(0px, 48px, 16px, 32px);
+  padding: 0px !important;
 }
 
 /* ..... message pane adjustments ..... */

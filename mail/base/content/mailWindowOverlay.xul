@@ -1872,9 +1872,6 @@
       </menupopup>
     </button>
   </textbox>
-
-  <button id="clearButton" label="&clearButton.label;" disabled="true" tooltiptext="&clearButton.tooltip;" oncommand="onClearSearch();" 
-          accesskey="&clearButton.accesskey;" hidden="true"/>
 </hbox>
 
 <hbox id="junkBar" collapsed="true" align="center">

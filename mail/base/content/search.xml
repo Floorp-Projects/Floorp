@@ -51,6 +51,7 @@
         <html:input class="textbox-input" flex="1" anonid="input" allowevents="true"
                     xbl:inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,tabindex,accesskey"/>
       </xul:hbox>
+      <xul:toolbarbutton id="quick-search-clearbutton" xbl:inherits="" disabled="true" class="quick-search-clearbutton" onclick="onClearSearch(); return false;"/>
     </content>
 
     <implementation>
@@ -65,6 +66,9 @@
       <property name="showingSearchCriteria" onget="return this.getAttribute('searchCriteria') == 'true';"
                 onset="this.setAttribute('searchCriteria', val); return val;"/>
 
+      <property name="clearButtonHidden" onget="return document.getElementById('quick-search-clearbutton').getAttribute('searchCriteria') == 'true';"
+                onset="document.getElementById('quick-search-clearbutton').setAttribute('clearButtonHidden', val); return val;"/>
+
       <field name="mQuickSearchMode">0</field>
 
       <property name="searchMode" onget="return this.mQuickSearchMode;"
@@ -76,9 +80,20 @@
          // extract the label value from the menu item
          var menuItems = document.getElementById('quick-search-menupopup').getElementsByAttribute('value', this.searchMode);
          this.inputField.value = menuItems[0].getAttribute('label');
+         this.clearButtonHidden = true;
         ]]></body>
       </method>
     </implementation>
+
+    <handlers>
+      <handler event="input">
+        <![CDATA[ 
+          if (!this.value) 
+            this.clearButtonHidden = true;
+          else 
+            this.clearButtonHidden = false;
+        ]]></handler>
+    </handlers>
   </binding>
   
   <binding id="searchBarDropMarker">
