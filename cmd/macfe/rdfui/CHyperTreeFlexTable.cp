@@ -1305,15 +1305,27 @@ CHyperTreeFlexTable :: FindTooltipForMouseLocation ( const EventRecord& inMacEve
 		if ( HT_GetNodeData(node, info.token, info.tokenType, &data) && data ) {
 			switch (info.tokenType) {
 				case HT_COLUMN_STRING:
-					const char* str = static_cast<char*>(data);
-					outTip[0] = strlen(str);
- 					strcpy ( (char*) &outTip[1], str );
+					if ( ! HT_IsSeparator(node) ) {
+						const char* str = static_cast<char*>(data);
+						if ( str ) {
+							outTip[0] = strlen(str);
+	 						strcpy ( (char*) &outTip[1], str );
+	 					}
+	 					else
+	 						outTip[0] = 0;
+	 				}
+	 				else
+	 					outTip[0] = 0;
  					break;
- 					
+					
  				default:
  					outTip[0] = 0;		// don't display tooltip for other data types
- 			} // case of column data type
- 		} // if data is valid
+
+			} // case of column data type
+		} // if data is valid
+ 		else
+ 			outTip[0] = 0;
+
 	} // if valid cell
 	else
 		::GetIndString ( outTip, 10506, 16);		// supply a helpful message...
