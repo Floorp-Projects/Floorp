@@ -129,7 +129,7 @@ TestSyncWrite(char* filename, PRUint32 startPosition, PRInt32 length)
     if (NS_FAILED(rv)) return rv ;
   
     nsCOMPtr<nsILocalFile> fs;
-    rv = NS_NewLocalFile(filename, PR_FALSE, getter_AddRefs(fs));
+    rv = NS_NewNativeLocalFile(nsDependentCString(filename), PR_FALSE, getter_AddRefs(fs));
     if (NS_FAILED(rv)) return rv ;
 
     nsCOMPtr<nsITransport> transport;
