@@ -85,6 +85,11 @@ interface nsIExtensionManager : nsISupports
                         in unsigned long aItemCount,
                         in unsigned short aUpdateType);
 
+  void getItemList(in string aItemID, 
+                   in unsigned short aType, 
+                   out unsigned long aItemCount,
+                   [retval, array, size_is(aItemCount)] out nsIExtensionItem aItems);
+
   readonly attribute nsIRDFDataSource datasource;
 };
 
@@ -92,5 +97,7 @@ interface nsIExtensionManager : nsISupports
 interface nsIExtensionItemUpdater : nsISupports
 {
   void checkForUpdates();
+
+  readonly attribute unsigned short updateType;
 };
 

@@ -52,6 +52,7 @@
         title="&updateWizard.title;"
         onload="gUpdateWizard.init()"
         onunload="gUpdateWizard.uninit()"
+        onwizardfinish="gUpdateWizard.onWizardFinish();"
         style="width: 40em;"
         buttons="accept,cancel">
 
@@ -64,7 +65,7 @@
 
   <wizardpage id="mismatch" pageid="mismatch" next="checking"
               label="&mismatch.title;"
-              onpageadvanced="gMismatchPage.onPageAdvanced();">
+              onpageshow="gMismatchPage.onPageShow();">
 
     <label>&mismatch.intro1.label;</label>
     
@@ -101,8 +102,7 @@
 
   <wizardpage id="found" pageid="found" next="installing"
               label="&found.title;"
-              onpageshow="gFoundPage.onPageShow();"
-              onpageadvanced="gFoundPage.onPageAdvanced();">
+              onpageshow="gFoundPage.onPageShow();">
 
     <label>&found.intro.label;</label>
     
@@ -114,16 +114,34 @@
 
   <wizardpage id="installing" pageid="installing" next="finished"
               label="&installing.title;"
-              onpageshow="UpdateWizard.onFinishedPageShow();"
-              onpageadvanced="UpdateWizard.onFinishedPageAdvanced();">
+              onpageshow="gInstallingPage.onPageShow();">
+    <label>&installing.intro.label;</label>
+    <label>&installing.disclaimer.label;</label>
+    
+    <separator/>
+    
   </wizardpage>
   
   <wizardpage id="finished" pageid="finished"
               label="&finished.title;"
-              onpageshow="UpdateWizard.onFinishedPageShow();"
-              onpageadvanced="UpdateWizard.onFinishedPageAdvanced();">
+              onpageshow="gFinishedPage.onPageShow();">
+
+    <label id="updated">&finished.updated.label;</label>
+    <separator/>
+    <hbox align="top">
+      <image id="alert"/>
+      <description id="incompatibleRemaining" flex="1">&finished.remaining.label;</description>
+      <description id="incompatibleRemaining2" flex="1">&finished.remaining2.label;</description>
+    </hbox>
+    <vbox align="left">
+      <checkbox class="indent" label="&finished.enableChecking.label;" id="finishedEnableChecking"
+                oncommand="gUpdateWizard.shouldAutoCheck = this.checked;"/>
+    </vbox>
+    <separator flex="1"/>
+    <label id="finishedMismatch" hidden="true">&finished.mismatch.label;</label>
+
+    
   </wizardpage>
   
 </wizard>
 
-  

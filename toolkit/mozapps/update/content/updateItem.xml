@@ -13,9 +13,14 @@
     </resources>
     <content>
       <xul:hbox flex="1">
-        <xul:vbox align="center" pack="center">
-          <xul:image class="installItemIcon" xbl:inherits="src=icon"/>
-        </xul:vbox>
+        <xul:stack>
+          <xul:vbox align="center" pack="center">
+            <xul:image class="updateItemIcon" xbl:inherits="src=icon"/>
+          </xul:vbox>
+          <xul:vbox align="right" pack="end">
+            <xul:checkbox class="updateItemChecked" xbl:inherits="checked"/>
+          </xul:vbox>
+        </xul:stack>
         <xul:vbox flex="1">
           <xul:hbox class="updateItemNameRow" align="center">
             <xul:label class="updateItemName" xbl:inherits="value=name" flex="1" crop="right"/>
@@ -28,12 +33,14 @@
       </xul:hbox>
     </content>
     <implementation>
-      <property name="name"   onset="this.setAttribute('name', val); return val;"
-                              onget="return this.getAttribute('name');"/>
-      <property name="url"    onset="this.setAttribute('url', val); return val;"
-                              onget="return this.getAttribute('url');"/>
-      <property name="icon"   onset="this.setAttribute('icon', val); return val;"
-                              onget="return this.getAttribute('icon');"/>
+      <property name="name"     onset="this.setAttribute('name', val); return val;"
+                                onget="return this.getAttribute('name');"/>
+      <property name="url"      onset="this.setAttribute('url', val); return val;"
+                                onget="return this.getAttribute('url');"/>
+      <property name="icon"     onset="this.setAttribute('icon', val); return val;"
+                                onget="return this.getAttribute('icon');"/>
+      <property name="checked"  onset="this.setAttribute('checked', val); return val;"
+                                onget="return this.getAttribute('checked');"/>
     </implementation>
   </binding>
          
