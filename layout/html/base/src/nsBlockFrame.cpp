@@ -783,7 +783,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   nsresult rv = NS_OK;
-  PRBool isStyleChange = PR_FALSE;
 
   nsIFrame* target;
   switch (aReflowState.reason) {
@@ -813,7 +812,6 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       switch (type) {
       case eReflowType_StyleChanged:
         rv = PrepareStyleChangedReflow(state);
-        isStyleChange = PR_TRUE;
         break;
       case eReflowType_ReflowDirty:
         // Do nothing; the dirty lines will already have been marked.
@@ -908,87 +906,8 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif
 
-  // If this is an incremental reflow and we changed size, then make sure our
-  // border is repainted if necessary
-  if ((eReflowReason_Incremental == aReflowState.reason ||
-       eReflowReason_Dirty == aReflowState.reason)) {
-    if (isStyleChange) {
-      // This is only true if it's a style change reflow targeted at this
-      // frame (rather than an ancestor) (I think).  That seems to be
-      // what's wanted here.
-      // Lots of things could have changed so damage our entire
-      // bounds
-#ifdef NOISY_BLOCK_INVALIDATE
-      printf("%p invalidate 1 (%d, %d, %d, %d)\n",
-             this, 0, 0, mRect.width, mRect.height);
-#endif
-      nsRect damageRect(0, 0, mRect.width, mRect.height);
-      if (!damageRect.IsEmpty()) {
-        Invalidate(aPresContext,damageRect);
-      }
-    } else {
-      nsMargin  border = aReflowState.mComputedBorderPadding -
-                         aReflowState.mComputedPadding;
-  
-      // See if our width changed
-      if ((aMetrics.width != mRect.width) && (border.right > 0)) {
-        nsRect  damageRect;
-  
-        if (aMetrics.width < mRect.width) {
-          // Our new width is smaller, so we need to make sure that
-          // we paint our border in its new position
-          damageRect.x = aMetrics.width - border.right;
-          damageRect.width = border.right;
-          damageRect.y = 0;
-          damageRect.height = aMetrics.height;
-  
-        } else {
-          // Our new width is larger, so we need to erase our border in its
-          // old position
-          damageRect.x = mRect.width - border.right;
-          damageRect.width = border.right;
-          damageRect.y = 0;
-          damageRect.height = mRect.height;
-        }
-#ifdef NOISY_BLOCK_INVALIDATE
-        printf("%p invalidate 2 (%d, %d, %d, %d)\n",
-               this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
-#endif
-        if (!damageRect.IsEmpty()) {
-          Invalidate(aPresContext, damageRect);
-        }
-      }
-  
-      // See if our height changed
-      if ((aMetrics.height != mRect.height) && (border.bottom > 0)) {
-        nsRect  damageRect;
-        
-        if (aMetrics.height < mRect.height) {
-          // Our new height is smaller, so we need to make sure that
-          // we paint our border in its new position
-          damageRect.x = 0;
-          damageRect.width = aMetrics.width;
-          damageRect.y = aMetrics.height - border.bottom;
-          damageRect.height = border.bottom;
-  
-        } else {
-          // Our new height is larger, so we need to erase our border in its
-          // old position
-          damageRect.x = 0;
-          damageRect.width = mRect.width;
-          damageRect.y = mRect.height - border.bottom;
-          damageRect.height = border.bottom;
-        }
-#ifdef NOISY_BLOCK_INVALIDATE
-        printf("%p invalidate 3 (%d, %d, %d, %d)\n",
-               this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
-#endif
-        if (!damageRect.IsEmpty()) {
-          Invalidate(aPresContext, damageRect);
-        }
-      }
-    }
-  }
+  // Determine if we need to repaint our border
+  CheckInvalidateBorder(aPresContext, aMetrics, aReflowState);
 
   // Let the absolutely positioned container reflow any absolutely positioned
   // child frames that need to be reflowed, e.g., elements with a percentage
