@@ -892,9 +892,12 @@ nsFtpConnectionThread::S_pass() {
             message.AppendWithConversion(" on ");
             message.AppendWithConversion(host);
 
+            nsXPIDLCString prePath;
+            rv = mURL->GetPrePath(getter_Copies(prePath));
+            if (NS_FAILED(rv)) return rv;
             rv = proxyprompter->PromptPassword(title.GetUnicode(),
                                                message.GetUnicode(),
-                                               NS_ConvertASCIItoUCS2(host).GetUnicode(), 
+                                               NS_ConvertASCIItoUCS2(prePath).GetUnicode(), 
                                                PR_FALSE, &passwd, &retval);
 
             // we want to fail if the user canceled or didn't enter a password.

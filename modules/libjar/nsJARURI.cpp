@@ -138,6 +138,20 @@ nsJARURI::SetSpec(const char * aSpec)
 }
 
 NS_IMETHODIMP
+nsJARURI::GetPrePath(char* *prePath)
+{
+    *prePath = nsCRT::strdup("jar:");
+    return *prePath ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsJARURI::SetPrePath(const char* prePath)
+{
+    NS_NOTREACHED("nsJARURI::SetPrePath");
+    return NS_ERROR_NOT_IMPLEMENTED; 
+}
+
+NS_IMETHODIMP
 nsJARURI::GetScheme(char * *aScheme)
 {
     *aScheme = nsCRT::strdup("jar");

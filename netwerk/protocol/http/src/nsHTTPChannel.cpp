@@ -1832,12 +1832,12 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         
         // Get url
         nsXPIDLCString urlCString; 
-        mURI->GetHost(getter_Copies(urlCString));
+        mURI->GetPrePath(getter_Copies(urlCString));
         
-        nsAutoString hostname = NS_ConvertToString(urlCString); // XXX i18n
+        nsAutoString prePath = NS_ConvertToString(urlCString); // XXX i18n
         rv = mPrompter->PromptUsernameAndPassword(nsnull,
                                                   message.GetUnicode(),
-                                                  hostname.GetUnicode(),
+                                                  prePath.GetUnicode(),
                                                   PR_FALSE,
                                                   &user,
                                                   &passwd,
