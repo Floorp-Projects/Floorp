@@ -304,7 +304,7 @@ Rights Reserved.
       <menuitem name="&printPreviewCmd.label;" onclick="PrintPreview();"/>
       <menuitem name="&printCmd.label;" onclick="Print();"/>
       <separator/>
-      <menuitem name="&closeCmd.label;" onclick="Close();"/>
+      <menuitem name="&closeCmd.label;" onclick="CloseMessenger();"/>
       <menuitem name="&exitCmd.label;" onclick="Exit();"/>
     </menu>
     <menu name="&editMenu.label;">
