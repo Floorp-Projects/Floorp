@@ -23,18 +23,21 @@
 * "The RegExp MarkupSPE in demo crashes Mozilla"
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=103087
-* SpiderMonkey crashed while executing any of these RegExps -
+* The SpiderMonkey shell crashed on some of these regexps.
+*
+* The reported crash was on i=24 below ('MarkupSPE' regexp)
+* I crashed on that, and also on i=43 ('XML_SPE' regexp)
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 103087;
-var summary = "Testing that we don't crash on any of these RegExps -";
+var summary = "Testing that we don't crash on any of these regexps -";
 var re = '';
 var lc = '';
 var rc = '';
 
 
-// here's a string to test the regexp on -
+// here's a string to test the regexps on -
 var str = ''; 
 str += '<html xmlns="http://www.w3.org/1999/xhtml"' + '\n';
 str += '      xmlns:xlink="http://www.w3.org/XML/XLink/0.9">' + '\n';
@@ -122,7 +125,6 @@ function test()
 
   /*
    * Testing that we don't crash on any of these.
-   * The reported crash was i=24 (the 'MarkupSPE' RegExp)
    */
   for (var i=0; i<REstrings.length; i++)
   {
