@@ -10114,43 +10114,25 @@ GetAlternateTextFor(nsIContent* aContent,
 
   // The "alt" attribute specifies alternate text that is rendered
   // when the image can not be displayed
-  rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::alt, aAltText);
-  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-    // If there's no "alt" attribute, then use the value of the "title"
-    // attribute. Note that this is not the same as a value of ""
-    rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::title, aAltText);
-  }
-  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-    // If there's no "title" attribute, then what we do depends on the type
-    // of element
-    if (nsHTMLAtoms::img == aTag) {
-      // Use the filename minus the extension
-      aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, aAltText);
-      if (aAltText.Length() > 0) {
-        // The path is a hierarchical structure of segments. Get the last substring
-        // in the path
-        PRInt32 offset = aAltText.RFindChar('/');
-        if (offset >= 0) {
-          aAltText.Cut(0, offset + 1);
-        }
+  rv = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::alt, aAltText);
 
-        // Ignore fragment identifiers ('#' delimiter), query strings ('?'
-        // delimiter), and anything beginning with ';'
-        offset = aAltText.FindCharInSet("#?;");
-        if (offset >= 0) {
-          aAltText.Truncate(offset);
-        }
+  // If there's no "alt" attribute, then use the value of the "title"
+  // attribute. Note that this is not the same as a value of ""
+  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+    rv = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::title, 
+                                aAltText);
 
-        // Trim off any extension (including the '.')
-        offset = aAltText.RFindChar('.');
-        if (offset >= 0) {
-          aAltText.Truncate(offset);
-        }
+    // If there's no "alt" or "title" attribute, and aContent is an input    
+    // element, then use the value of the "value" attribute
+    if ((NS_CONTENT_ATTR_NOT_THERE == rv) && (nsHTMLAtoms::input == aTag)) {
+      rv = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value,
+                                  aAltText);
+
+      // If there's no "value" attribute either, then use the localized string 
+      // for "Submit" as the alternate text.
+      if (NS_CONTENT_ATTR_NOT_THERE == rv) {
+        nsFormControlHelper::GetLocalizedString("Submit", aAltText);      
       }
-
-    } else if (nsHTMLAtoms::input == aTag) {
-      // Use the valuf of the "name" attribute
-      aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aAltText);
     }
   }
 }
