@@ -104,6 +104,7 @@ EXTRA_DSO_LDOPTS += \
                 $(TK_LIBS) \
                 $(MOZ_COMPONENT_LIBS) \
                 -lgkgfx \
+                -ltimer_mac \
                 $(NULL)
 
 LOCAL_INCLUDES	= \
