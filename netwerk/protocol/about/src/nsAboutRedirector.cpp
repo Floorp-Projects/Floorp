@@ -71,7 +71,7 @@ static RedirEntry kRedirMap[] = {
     { "plugins", "chrome://communicator/content/plugins.html", PR_TRUE },
     { "config", "chrome://global/content/config.xul", PR_FALSE }
 };
-static const int kRedirTotal = 4; // sizeof(kRedirMap)/sizeof(*kRedirMap)
+static const int kRedirTotal = sizeof(kRedirMap)/sizeof(*kRedirMap);
 
 NS_IMETHODIMP
 nsAboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
