@@ -402,6 +402,7 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 	err = GetIconRefFromFile(&fsTarget, &icon, &label);
 	if (err==noErr)
 	{
+		EraseRect(&viewRect);
 		PlotIconRef(&viewRect, kAlignNone, kTransformNone, kIconServicesNormalUsageFlag, icon);
 	}
 	ReleaseIconRef(icon);	
