@@ -632,6 +632,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
 							{
 								buf.Truncate(bytesUsed);
 								returnString.Append(buf);
+                buf.Truncate();
 								bytesUsed = 0;
 							}
 
@@ -668,6 +669,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
 					{
 						buf.Truncate(bytesUsed);
 						returnString.Append(buf);
+            buf.Truncate();
 						bytesUsed = 0;
 					}
 
@@ -725,6 +727,7 @@ char *nsIMAPGenericParser::CreateParenGroup()
 		{
 			buf.Truncate(bytesUsed);
 			returnString.Append(buf);
+      buf.Truncate();
 		}
 		fNextToken = GetNextToken();
 	}
