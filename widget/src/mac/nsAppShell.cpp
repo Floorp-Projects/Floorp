@@ -55,12 +55,11 @@ void nsAppShell::Create(int* argc, char ** argv)
 //-------------------------------------------------------------------------
 nsresult nsAppShell::Run()
 {
-nsMacMessagePump	*macpump;
+	mMacPump = new nsMacMessagePump(mToolKit);
+		mMacPump->DoMessagePump();
+	delete mMacPump;
+	mMacPump = nsnull;
 
-	
-	macpump = new nsMacMessagePump(mToolKit);
-	
-	macpump->DoMessagePump();
 
     //if (mDispatchListener)
       //mDispatchListener->AfterDispatch();
@@ -75,6 +74,8 @@ nsMacMessagePump	*macpump;
 //-------------------------------------------------------------------------
 void nsAppShell::Exit()
 {
+	if (mMacPump)
+		mMacPump->StopRunning();
 }
 
 //-------------------------------------------------------------------------
@@ -86,6 +87,7 @@ nsAppShell::nsAppShell()
 { 
   mRefCnt = 0;
   mDispatchListener = 0;
+  mMacPump = nsnull;
 }
 
 //-------------------------------------------------------------------------
