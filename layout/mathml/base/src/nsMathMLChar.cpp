@@ -312,12 +312,6 @@ public:
   nsGlyphTableList(void)
   {
     mFirstTable = nsnull;
-    mIsInitialized = PR_FALSE;
-  }
-
-  PRBool IsInitialized(void)
-  {
-    return mIsInitialized;
   }
 
   nsGlyphTable*
@@ -341,16 +335,12 @@ public:
 
 private:
   nsGlyphTable* mFirstTable;
-  PRBool        mIsInitialized;
 };
 
 void
 nsGlyphTableList::Init(nsIPresContext* aPresContext,
                        nsGlyphTable**  aGlyphTables)
 {
-  NS_ASSERTION(!mIsInitialized, "glyph table list is already initialized");
-  mIsInitialized = PR_TRUE;
-
   nsCOMPtr<nsIDeviceContext> deviceContext;
   aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
 
@@ -388,7 +378,6 @@ nsGlyphTableList::Init(nsIPresContext* aPresContext,
 nsGlyphTable*
 nsGlyphTableList::FindTableFor(nsMathMLCharEnum aCharEnum)
 {
-  NS_ASSERTION(mIsInitialized, "glyph table list must be initialized first");
   nsGlyphTable* glyphTable = mFirstTable;
   while (glyphTable) {
     if (glyphTable->Has(aCharEnum)) {
@@ -402,7 +391,6 @@ nsGlyphTableList::FindTableFor(nsMathMLCharEnum aCharEnum)
 PRBool
 nsGlyphTableList::Has(nsGlyphTable* aGlyphTable)
 {
-  NS_ASSERTION(mIsInitialized, "glyph table list must be initialized first");
   nsGlyphTable* glyphTable = mFirstTable;
   while (glyphTable) {
     if (glyphTable == aGlyphTable) {
@@ -558,6 +546,34 @@ nsGlyphTable* gAllGlyphTables[] = {
   nsnull
 };
 
+static PRBool gInitialized = PR_FALSE;
+
+void InitGlobals(nsIPresContext* aPresContext)
+{
+  gInitialized = PR_TRUE;
+  gGlyphTableList.Init(aPresContext, gAllGlyphTables);
+  for (PRInt32 i = 0; i < eMathMLChar_COUNT; i++) {
+    gCharInfo[i].mGlyphTable = &gGlyphTableUNDEFINED;
+  }
+  // let some particular chars have their preferred extension tables
+  if (gGlyphTableList.Has(&gGlyphTableMTExtra)) {
+    gCharInfo[eMathMLChar_OverCurlyBracket].mGlyphTable = &gGlyphTableMTExtra;
+    gCharInfo[eMathMLChar_UnderCurlyBracket].mGlyphTable = &gGlyphTableMTExtra;
+  }
+#ifdef NS_DEBUG
+  // sanity check
+  for (PRInt32 j = 0; j < eMathMLChar_COUNT; j++) {
+    PRUnichar cj = gCharInfo[j].mUnicode;
+    for (PRInt32 k = 0; k < eMathMLChar_COUNT; k++) {
+      // hitting this assertion? 
+      // check nsMathMLCharList to ensure that the same Unicode point
+      // is not associated to different enums
+      PRUnichar ck = gCharInfo[k].mUnicode;
+      NS_ASSERTION(!(cj == ck && j != k), "Duplicate Unicode point found");
+    }
+  }
+#endif
+}
 
 // -----------------------------------------------------------------------------------
 // And now the implementation of nsMathMLChar
@@ -592,29 +608,8 @@ void
 nsMathMLChar::SetData(nsIPresContext* aPresContext,
                       nsString&       aData)
 {
-  if (!gGlyphTableList.IsInitialized()) {
-    gGlyphTableList.Init(aPresContext, gAllGlyphTables);
-    for (PRInt32 i = 0; i < eMathMLChar_COUNT; i++) {
-      gCharInfo[i].mGlyphTable = &gGlyphTableUNDEFINED;
-    }
-    // let some particular chars have their preferred extension tables
-    if (gGlyphTableList.Has(&gGlyphTableMTExtra)) {
-      gCharInfo[eMathMLChar_OverCurlyBracket].mGlyphTable = &gGlyphTableMTExtra;
-      gCharInfo[eMathMLChar_UnderCurlyBracket].mGlyphTable = &gGlyphTableMTExtra;
-    }
-#ifdef NS_DEBUG
-    // sanity check
-    for (PRInt32 j = 0; j < eMathMLChar_COUNT; j++) {
-      PRUnichar ci = gCharInfo[i].mUnicode;
-      for (PRInt32 k = 0; k < eMathMLChar_COUNT; k++) {
-        // hitting this assertion? 
-        // check nsMathMLCharList to ensure that the same Unicode point
-        // is not associated to different enums
-        PRUnichar ck = gCharInfo[k].mUnicode;
-        NS_ASSERTION(!(ci == ck && i != k), "Duplicate Unicode point found");
-      }
-    }
-#endif
+  if (!gInitialized) {
+    InitGlobals(aPresContext);
   }
   mData = aData;
   // some assumptions until proven otherwise!
@@ -659,29 +654,8 @@ nsMathMLChar::SetEnum(nsIPresContext*  aPresContext,
                       nsMathMLCharEnum aEnum)
 {
   NS_ASSERTION(aEnum < eMathMLChar_COUNT, "Something is wrong somewhere");
-  if (!gGlyphTableList.IsInitialized()) {
-    gGlyphTableList.Init(aPresContext, gAllGlyphTables);
-    for (PRInt32 i = 0; i < eMathMLChar_COUNT; i++) {
-      gCharInfo[i].mGlyphTable = &gGlyphTableUNDEFINED;
-    }
-    // let some particular chars have their preferred extension tables
-    if (gGlyphTableList.Has(&gGlyphTableMTExtra)) {
-      gCharInfo[eMathMLChar_OverCurlyBracket].mGlyphTable = &gGlyphTableMTExtra;
-      gCharInfo[eMathMLChar_UnderCurlyBracket].mGlyphTable = &gGlyphTableMTExtra;
-    }
-#ifdef NS_DEBUG
-    // sanity check
-    for (PRInt32 j = 0; j < eMathMLChar_COUNT; j++) {
-      PRUnichar ci = gCharInfo[i].mUnicode;
-      for (PRInt32 k = 0; k < eMathMLChar_COUNT; k++) {
-        // hitting this assertion? 
-        // check nsMathMLCharList to ensure that the same Unicode point
-        // is not associated to different enums
-        PRUnichar ck = gCharInfo[k].mUnicode;
-        NS_ASSERTION(!(ci == ck && i != k), "Duplicate Unicode point found");
-      }
-    }
-#endif
+  if (!gInitialized) {
+    InitGlobals(aPresContext);
   }
   mEnum = aEnum;
   // some assumptions until proven otherwise!
@@ -843,6 +817,8 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
                                             mBoundingMetrics);
   if (NS_FAILED(rv)) {
     printf ("GetBoundingMetrics failed\n");
+    // ensure that the char later behaves like a normal char
+    mEnum = eMathMLChar_DONT_STRETCH; // XXX need to reset in dynamic updates
     return rv;
   }
 
@@ -1074,13 +1050,15 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
       rv = glyphTable->GetBoundingMetrics(aRenderingContext, ch, bm);
       if (NS_FAILED(rv)) {
         printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF);
+        // ensure that the char later behaves like a normal char
+        mEnum = eMathMLChar_DONT_STRETCH; // XXX need to reset in dynamic updates
         return rv;
       }
       chdata[i] = ch;
       bmdata[i] = bm;
     }
 
-    // refine the flexibility depending on whether some parts are no there
+    // refine the flexibility depending on whether some parts are not there
     if ((chdata[1] == chdata[0]) || // mid == top (or mid == left) 
         (chdata[1] == chdata[2]) || // mid == bot (or mid == right)
         (chdata[1] == chdata[3]))   // mid == glue

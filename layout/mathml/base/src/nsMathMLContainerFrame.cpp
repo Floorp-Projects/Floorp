@@ -1303,11 +1303,11 @@ nsMathMLContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
   nsIFrame* next = mFrames.FirstChild();
   while (next) {
     nsIFrame* child = next;
-    rv = next->GetNextSibling(&next);
+    next->GetNextSibling(&next);
     if (!IsOnlyWhitespace(child)) {
       nsInlineFrame* inlineFrame = nsnull;
-      rv = child->QueryInterface(nsInlineFrame::kInlineFrameCID, (void**)&inlineFrame);  
-      if (NS_SUCCEEDED(rv) && inlineFrame) {
+      nsresult res = child->QueryInterface(nsInlineFrame::kInlineFrameCID, (void**)&inlineFrame);  
+      if (NS_SUCCEEDED(res) && inlineFrame) {
         // create a new anonymous block frame to wrap this child...
         nsCOMPtr<nsIPresShell> shell;
         aPresContext->GetShell(getter_AddRefs(shell));
