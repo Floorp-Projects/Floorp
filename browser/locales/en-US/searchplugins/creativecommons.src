@@ -14,6 +14,7 @@
 	description="Find photos, movies, music, and text to rip, sample, mash, and share"
 	action="http://search.creativecommons.org/"
 	searchForm="http://search.creativecommons.org/"
+	queryCharset="utf-8"
 	method="GET"
 >
 
@@ -22,6 +23,7 @@
 
 <interpret
 	browserResultType="result"
+	charset="utf-8"
 	resultListStart="<!-- start results -->"
 	resultListEnd="<!-- end results -->"
 	resultItemStart='<p class="resultitem">'
