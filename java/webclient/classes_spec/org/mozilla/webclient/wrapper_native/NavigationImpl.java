@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s):  Ed Burns <edburns@acm.org>
+ *               Brian Satterfield <bsatterf@atl.lmco.com>
+ *               Anthony Sizer <sizera@yahoo.com>
  */
 
 package org.mozilla.webclient.wrapper_native;
@@ -29,6 +31,7 @@ import org.mozilla.util.RangeException;
 
 import org.mozilla.webclient.BrowserControl;
 import org.mozilla.webclient.Navigation;
+import org.mozilla.webclient.Navigation2;
 import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.WrapperFactory;
 import org.mozilla.webclient.Prompt;
@@ -36,7 +39,7 @@ import org.mozilla.webclient.Prompt;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class NavigationImpl extends ImplObjectNative implements Navigation
+public class NavigationImpl extends ImplObjectNative implements Navigation2
 {
 //
 // Protected Constants
@@ -109,7 +112,6 @@ public void loadFromStream(InputStream stream, String uri,
     }
 }
 
-
 public void refresh(long loadFlags)
 {
     ParameterCheck.noLessThan(loadFlags, 0);
@@ -143,6 +145,46 @@ public void setPrompt(Prompt yourPrompt)
 
 }
 
+//
+// Methods from Navigation2
+//
+
+public void post(String  absoluteUrl,
+                 String  target, 
+                 String  postData,
+                 String  postHeaders) 
+{
+    ParameterCheck.nonNull(absoluteUrl);
+    myFactory.throwExceptionIfNotInitialized();
+    Assert.assert_it(-1 != nativeWebShell);
+
+    int postDataLength = 0;
+    int postHeadersLength = 0;
+
+    // PENDING(edburns): make it so the url doesn't have to be absolute.
+
+    // PENDING(edburns): check postData and postHeaders for correct
+    // "\r\n" as specified in Navigation.java
+
+    if (postData != null){
+      postDataLength = postData.length();
+    }
+
+    if (postHeaders != null){
+      postHeadersLength = postHeaders.length();
+    }
+
+    synchronized(myBrowserControl) {
+        nativePost(nativeWebShell, 
+                   absoluteUrl, 
+                   target,
+                   postDataLength, 
+                   postData, 
+                   postHeadersLength, 
+                   postHeaders);
+    }
+}
+
 // 
 // Native methods
 //
@@ -154,6 +196,15 @@ public native void nativeLoadFromStream(int webShellPtr, InputStream stream,
                                         String contentType, 
                                         int contentLength,
                                         Properties loadInfo);
+
+public native void nativePost(int     webShellPtr, 
+                              String  absoluteUrl,
+                              String  target, 
+                              int     postDataLength, 
+                              String  postData, 
+                              int     PostHeadersLength, 
+                              String  postHeaders);
+
 
 public native void nativeRefresh(int webShellPtr, long loadFlags);
 
@@ -173,7 +224,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("NavigationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.5 2001/05/29 18:36:10 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: NavigationImpl.java,v 1.6 2001/07/12 23:18:50 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

@@ -23,6 +23,8 @@
  *               Mark Lin <mark.lin@eng.sun.com>
  *               Mark Goddard
  *               Ed Burns <edburns@acm.org>
+ *               Brian Satterfield <bsatterf@atl.lmco.com>
+ *               Anthony Sizer <sizera@yahoo.com>
  */
 
 /*
@@ -73,6 +75,35 @@ protected:
     char *mContentType;       // MUST be delete'd in destructor
     void * mProperties;       // MUST be util_deleteGlobalRef'd in destructor.
     InputStreamShim *mShim;   // DO NOT delete this in the destructor
+};
+
+
+class wsPostEvent : public nsActionEvent {
+public:
+    wsPostEvent(WebShellInitContext *yourInitContext, 
+                const PRUnichar      *absoluteUrlToCopy,
+                PRInt32              absoluteUrlLength,
+                const PRUnichar      *targetToCopy,
+                PRInt32              targetLength,
+                PRInt32              postDataLength,
+                const char          *postData,  
+                PRInt32              postHeadersLength,
+                const char          *postHeaders);
+
+    virtual ~wsPostEvent();
+    void * handleEvent(void);
+
+private:
+
+protected:
+
+    WebShellInitContext *mInitContext;
+    nsString            *mAbsoluteURL;          
+    nsString            *mTarget;          
+    const char          *mPostData;      
+    const char          *mPostHeaders;   
+    PRInt32              mPostDataLength;
+    PRInt32              mPostHeaderLength;
 };
 
 

@@ -24,6 +24,8 @@
  *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Louis-Philippe Gagnon <louis-philippe@macadamian.com>
  *               Jason Mawdsley <jason@macadamian.com>
+ *               Brian Satterfield <bsatterf@atl.lmco.com>
+ *               Anthony Sizer <sizera@yahoo.com>
  */
 
 package org.mozilla.webclient.test;
@@ -57,7 +59,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.32 2001/05/29 18:34:21 ashuk%eng.sun.com Exp $
+ * @version $Id: EMWindow.java,v 1.33 2001/07/12 23:18:49 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -73,7 +75,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 	private BrowserControl	browserControl;
     private BrowserControlCanvas browserCanvas;
 
-    private Navigation navigation = null;
+    private Navigation2 navigation = null;
 	private CurrentPage	    currentPage;
 	private History	        history;
     private static Preferences     prefs;
@@ -229,6 +231,7 @@ private UniversalDialog           uniDialog = null;
 		refreshButton = makeItem(buttonsPanel, "Refresh", 3, 0, 1, 1, 0.0, 0.0);
         refreshButton.setEnabled(false);
         makeItem(buttonsPanel, "DOMViewer",    4, 0, 1, 1, 0.0, 0.0);
+        makeItem(buttonsPanel, "POST",            5, 0, 1, 1, 0.0, 0.0);
 
 		// Create the control panel
 		controlPanel = new Panel();
@@ -310,7 +313,7 @@ private UniversalDialog           uniDialog = null;
 		toFront();
 
 		try {
-            navigation = (Navigation)
+            navigation = (Navigation2)
                 browserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
             navigation.setPrompt(this);
             currentPage = (CurrentPage)
@@ -564,6 +567,13 @@ public void actionPerformed (ActionEvent evt)
                 domViewer.setDocument(currentDocument);
                 domViewer.setVisible(true);
             }
+        }
+        else if (command.equals("POST")) {
+            System.out.println("debug: edburns: post");
+            navigation.post(urlField.getText(),
+                            null,
+                            "TESTDATA\r\n",
+                            "Content-Length: 8\r\nX-Header:hello\r\n\r\n");
         }
         else if (command.equals("Back")) {
             if (history.canBack()) {

@@ -25,6 +25,8 @@
  *               Ed Burns <edburns@acm.org>
  *      Jason Mawdsley <jason@macadamian.com>
  *      Louis-Philippe Gagnon <louisphilippe@macadamian.com>
+ *               Brian Satterfield <bsatterf@atl.lmco.com>
+ *               Anthony Sizer <sizera@yahoo.com>
  */
 
 /*
@@ -36,6 +38,14 @@
 #include "ns_util.h"
 #include "InputStreamShim.h"
 #include "nsNetUtil.h"
+
+#include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsILinkHandler.h"
+#include "nsIContent.h"
+#include "nsNetUtil.h" // for NS_NewPostInputStream
+#include "nsIDocument.h"
+#include "nsIFrame.h"
 
 /*
  * wsLoadURLEvent
@@ -187,6 +197,143 @@ wsLoadFromStreamEvent::~wsLoadFromStreamEvent ()
 {
     nsCRT::free(mContentType);
     mContentType = nsnull;
+}
+
+
+/*
+ * wsPostEvent
+ */
+wsPostEvent::wsPostEvent(WebShellInitContext *yourInitContext, 
+                         const PRUnichar     *absoluteUrlToCopy,
+                         PRInt32              absoluteUrlLength,
+                         const PRUnichar     *targetToCopy,
+                         PRInt32              targetLength,
+                         PRInt32              postDataLength,
+                         const char          *postDataToCopy,  
+                         PRInt32              postHeadersLength,
+                         const char          *postHeadersToCopy) :
+    nsActionEvent(), 
+    mInitContext(yourInitContext)
+{
+  mAbsoluteURL = new nsString(absoluteUrlToCopy, absoluteUrlLength);
+
+  if (targetToCopy != nsnull){
+    mTarget = new nsString(targetToCopy, targetLength);
+  }
+  else {
+    mTarget = nsnull;
+  }
+
+  if (postDataToCopy != nsnull){
+    mPostDataLength = postDataLength;
+    mPostData = PL_strdup(postDataToCopy);
+  }
+  else {
+    mPostDataLength = 0;
+    mPostData = nsnull;
+  }
+
+  if (postHeadersToCopy != nsnull){
+    mPostHeaderLength = postHeadersLength;
+    mPostHeaders = PL_strdup(postHeadersToCopy);
+  }
+  else {
+    mPostHeaderLength = 0;
+    mPostHeaders = nsnull;
+  }
+}
+
+void *
+wsPostEvent::handleEvent ()
+{
+  nsresult rv = NS_ERROR_FAILURE;
+    
+  // we must have mInitContext to do anything
+  if (!mInitContext) {
+      return (void *) rv;
+  }
+  nsCOMPtr<nsIPresContext> presContext;
+  nsCOMPtr<nsIPresShell> presShell;
+  nsCOMPtr<nsISupports> container;
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIContent> content;
+  nsCOMPtr<nsILinkHandler> lh;
+  nsCOMPtr<nsISupports> result;
+  
+  rv = mInitContext->docShell->GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(rv) || !presShell) {
+      return (void *) rv;
+  }
+
+  rv = presShell->GetDocument(getter_AddRefs(doc));
+  if (NS_FAILED(rv) || !doc) {
+      return (void *) rv;
+  }
+
+  content = doc->GetRootContent();
+  if (!content) {
+      return (void *) rv;
+  }
+
+  rv = mInitContext->docShell->GetPresContext(getter_AddRefs(presContext));
+  if (NS_FAILED(rv) || !presContext) {
+      return (void *) rv;
+  }
+
+  /* Alternate way to get link handler
+  rv = presContext->GetContainer(getter_AddRefs(container));
+  if (NS_FAILED(rv) || !container) {
+      return (void *) rv;
+  }
+
+  lh = do_QueryInterface(container, &rv);
+  if (!lh) {
+      return (void *) rv;
+  }
+  */
+
+  rv = presContext->GetLinkHandler(getter_AddRefs(lh));
+  if (NS_FAILED(rv) || (!lh)) {
+    return (void *) rv;
+  }
+
+  // create the streams
+  nsCOMPtr<nsIInputStream> postDataStream = nsnull;
+  nsCOMPtr<nsIInputStream> headersDataStream = nsnull;
+
+  if (mPostData) {
+      NS_NewPostDataStream(getter_AddRefs(postDataStream),
+                           PR_FALSE,
+                           (const char *) mPostData, 0);
+  }
+
+  if (mPostHeaders) {
+      NS_NewByteInputStream(getter_AddRefs(result),
+                            (const char *) mPostHeaders, mPostHeaderLength);
+      if (result) {
+          headersDataStream = do_QueryInterface(result, &rv);
+      }
+  }
+
+  rv = lh->OnLinkClick(content, 
+                       eLinkVerb_Replace, 
+                       mAbsoluteURL->GetUnicode(), 
+                       ((mTarget != nsnull) ? mTarget->GetUnicode() : nsnull),
+                       postDataStream,
+                       headersDataStream);  
+  
+  return (void *) rv;
+
+} // handleEvent()
+
+wsPostEvent::~wsPostEvent ()
+{
+  if (mAbsoluteURL != nsnull)
+    delete mAbsoluteURL;
+  if (mTarget != nsnull)
+    delete mTarget;
+  mPostData = nsnull;
+  mPostHeaders = nsnull;
 }
 
 

@@ -24,6 +24,8 @@
  *               Ed Burns <edburns@acm.org>
  *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Ann Sunhachawee
+ *               Brian Satterfield <bsatterf@atl.lmco.com>
+ *               Anthony Sizer <sizera@yahoo.com>
  */
 
 #include "NavigationImpl.h"
@@ -144,6 +146,109 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     // wsLoadFromStreamEvent destructor.
 }
 
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativePost
+(JNIEnv *env, jobject obj, jint webShellPtr, jstring absoluteURL, jstring target, jint postDataLength,
+ jstring postData, jint postHeadersLength, jstring postHeaders)
+{
+    WebShellInitContext *initContext      = (WebShellInitContext *) webShellPtr;
+    const PRUnichar     *urlChars         = nsnull;
+    PRInt32             urlLen;
+    const PRUnichar     *targetChars      = nsnull;
+    PRInt32             targetLen;
+    const char          *postDataChars    = nsnull;
+    const char          *postHeadersChars = nsnull;
+    char                *headersAndData   = nsnull;
+    wsPostEvent         *actionEvent      = nsnull;
+
+    if (initContext == nsnull || !initContext->initComplete) {
+        ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to nativePost");
+        return;
+    }
+
+    urlChars         = (PRUnichar *) ::util_GetStringChars(env, absoluteURL);
+    urlLen           = (PRInt32) ::util_GetStringLength(env, absoluteURL);
+
+    if (::util_ExceptionOccurred(env)) {
+        ::util_ThrowExceptionToJava(env, "nativePost Exception: unable to extract Java string");
+      goto NPFS_CLEANUP;
+    }
+
+    if (target){
+      targetChars         = (PRUnichar *) ::util_GetStringChars(env, target);
+      targetLen           = (PRInt32) ::util_GetStringLength(env, target);
+    }
+
+    if (::util_ExceptionOccurred(env)) {
+        ::util_ThrowExceptionToJava(env, "nativePost Exception: unable to extract Java string");
+      goto NPFS_CLEANUP;
+    }
+
+
+    if (postDataLength > 0){
+      postDataChars    = (char *) ::util_GetStringUTFChars(env, postData);
+    }
+    if (::util_ExceptionOccurred(env)) {
+        ::util_ThrowExceptionToJava(env, "nativePost Exception: unable to extract Java string");
+      goto NPFS_CLEANUP;
+    }
+
+    if (postHeadersLength > 0){
+      postHeadersChars = (char *) ::util_GetStringUTFChars(env, postHeaders);
+    }
+    if (::util_ExceptionOccurred(env)) {
+        ::util_ThrowExceptionToJava(env, "nativePost Exception: unable to extract Java string");
+      goto NPFS_CLEANUP;
+    }
+
+    // if we have postHeaders, work around mozilla bug and prepend the
+    // headers to the data.
+    if (postHeadersChars && postDataChars) {
+        headersAndData = new char[postHeadersLength + postDataLength + 1];
+        if (headersAndData) {
+            nsCRT::memcpy(headersAndData, postHeadersChars, postHeadersLength);
+            nsCRT::memcpy((headersAndData + postHeadersLength),
+                          postDataChars, postDataLength);
+            headersAndData[postHeadersLength + postDataLength] = '\0';
+            // free the existing postHeadersChars and postDataChars
+            ::util_ReleaseStringUTFChars(env, postHeaders, postHeadersChars);
+            postHeadersChars = nsnull;
+            postHeadersLength = 0;
+            ::util_ReleaseStringUTFChars(env, postData, postDataChars);
+            postDataChars = nsnull;
+            postDataLength = postHeadersLength + postDataLength;
+        }
+    }
+
+
+    if (!(actionEvent = new wsPostEvent(initContext,
+                                        urlChars,
+                                        urlLen,
+                                        targetChars,
+                                        targetLen, 
+                                        (PRInt32) postDataLength,
+                               headersAndData ? headersAndData : postDataChars,
+                                        (PRInt32) postHeadersLength,
+                                        postHeadersChars))) {
+
+        ::util_ThrowExceptionToJava(env, "Exception: nativePost: can't create wsPostEvent");
+        goto NPFS_CLEANUP;
+    }
+
+    ::util_PostSynchronousEvent(initContext, (PLEvent *) *actionEvent);
+
+ NPFS_CLEANUP:
+    if (urlChars != nsnull)
+        ::util_ReleaseStringChars(env, absoluteURL, (const jchar *) urlChars);
+    if (targetChars != nsnull)
+        ::util_ReleaseStringChars(env, target, (const jchar *) targetChars);
+    if (postDataChars != nsnull)
+        ::util_ReleaseStringUTFChars(env, postData, postDataChars);
+    if (postHeadersChars != nsnull)
+        ::util_ReleaseStringUTFChars(env, postHeaders, postHeadersChars);
+    if (headersAndData != nsnull)
+        delete [] headersAndData;
+    return;
+}
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeRefresh
 (JNIEnv *env, jobject obj, jint webShellPtr, jlong loadFlags)
