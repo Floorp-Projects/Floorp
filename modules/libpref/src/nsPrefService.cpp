@@ -180,9 +180,8 @@ NS_IMETHODIMP nsPrefService::ReadUserPrefs(nsIFile *aFile)
   nsresult rv;
 
   if (nsnull == aFile) {
-    rv = UseDefaultPrefFile();  // really should return a value...
-    if (NS_SUCCEEDED(rv))
-      UseUserPrefFile(); 
+    rv = UseDefaultPrefFile();
+    UseUserPrefFile();
 
     NotifyServiceObservers(NS_PREFSERVICE_READ_TOPIC_ID);
     
