@@ -85,12 +85,64 @@
     list-style-image: url("chrome://venkman/skin/images/step-into-act.gif");
 }
 
+outlinerbody:-moz-outliner-cell(breakpoint-col) {
+    background: #CCCCCC;
+}
+
+outlinerbody:-moz-outliner-cell(breakpoint-col, func-line) {
+    background: #EEEEEE;
+}
+
+outlinerbody:-moz-outliner-cell(breakpoint-col, func-start) {
+    border-top: 1px grey solid;
+}
+
+outlinerbody:-moz-outliner-cell(breakpoint-col, func-end) {
+    border-bottom: 1px grey solid;
+}
+
+outlinerbody:-moz-outliner-cell(source-line-number) {
+    border-left: 1px grey solid;
+    border-right: 3px #CCCCCC solid;
+    text-align: right;
+    background: #EEEEEE;
+}
+
+outlinerbody:-moz-outliner-cell(source-line-number, func-line) {
+    border-right: 3px #EEEEEE solid;
+    background: white;
+}
+
+outlinerbody:-moz-outliner-cell(source-line-number, func-start) {
+    border-top: 1px grey solid;
+}
+
+outlinerbody:-moz-outliner-cell(source-line-number, func-after) {
+    border-top: 1px grey solid;
+}
+
+outlinerbody:-moz-outliner-cell(source-line-number,current-line) {
+    background: yellow;
+}
+
+outlinerbody:-moz-outliner-cell(source-line-number,current-line,current) {
+    background: green;
+}
+
+outlinerbody:-moz-outliner-cell(source-line-number,current) {
+    background: inherit !important;
+}
+
+outlinerbody:-moz-outliner-row {
+    border: 0px;
+}
+
 outlinerbody:-moz-outliner-row(current-line) {
     background: yellow;
 }
 
-outlinerbody:-moz-outliner-row(current, current-line) {
-    background: brown;
+outlinerbody:-moz-outliner-row(current-line,current) {
+    background: green;
 }
 
 outlinerbody:-moz-outliner-image(breakpoint) {
