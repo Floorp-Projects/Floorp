@@ -84,8 +84,9 @@ struct nsTreeRange
     mNext = aNext;
   };
 
-  void RemoveRange(PRInt32 aStart, PRInt32 aEnd) {
+  nsresult RemoveRange(PRInt32 aStart, PRInt32 aEnd) {
     // Do the start and end encompass us?
+    nsresult rv = NS_OK;
     if (mMin >= aStart && mMax <= aEnd) {
       // They do.  We should simply be excised from the list.
       if (mPrev)
@@ -99,8 +100,8 @@ struct nsTreeRange
       mPrev = mNext = nsnull;
       delete this;
       if (next)
-        next->RemoveRange(aStart, aEnd);
-      return;
+        rv = next->RemoveRange(aStart, aEnd);
+      return rv;
     }
     // See if this range overlaps.
     else if (aStart >= mMin && aStart <= mMax) {
@@ -111,33 +112,38 @@ struct nsTreeRange
         // two new ranges.
         PRInt32 aNewStart = aEnd+1;
         PRInt32 aNewEnd = mMax;
-        mMax = aStart-1;
         nsTreeRange* range = new nsTreeRange(mSelection, aNewStart, aNewEnd);
+        if (!range)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+        mMax = aStart-1;
         range->Connect(this, mNext);
-        return; // We're done, since we were entirely contained within this range.
+        return NS_OK; // We're done, since we were entirely contained within this range.
       }
       else {
         // The end goes outside our range.  We should
         // move our max down to before the start.
-        mMax = aStart-1;
         if (mNext)
-          mNext->RemoveRange(aStart, aEnd);
+          return mNext->RemoveRange(aStart, aEnd);
+
+        mMax = aStart-1;
       }
     }
     else if (aEnd >= mMin && aEnd <= mMax) {
       // The start precedes our range, but the end is contained
       // within us.  Pull the range up past the end.
       mMin = aEnd+1;
-      return; // We're done, since we contained the end.
+      return NS_OK; // We're done, since we contained the end.
     }
     else {
       // Neither the start nor the end was contained inside us, move on.
       if (mNext)
-        mNext->RemoveRange(aStart, aEnd);
+        rv = mNext->RemoveRange(aStart, aEnd);
     }
+    return rv;
   };
 
-  void Remove(PRInt32 aIndex) {
+  nsresult Remove(PRInt32 aIndex) {
     if (aIndex >= mMin && aIndex <= mMax) {
       // We have found the range that contains us.
       if (mMin == mMax) {
@@ -159,15 +165,20 @@ struct nsTreeRange
       else {
         // We have to break this range.
         nsTreeRange* newRange = new nsTreeRange(mSelection, aIndex + 1, mMax);
+        if (!newRange)
+          return NS_ERROR_OUT_OF_MEMORY;
+
         newRange->Connect(this, mNext);
         mMax = aIndex - 1;
       }
     }
     else if (mNext)
-      mNext->Remove(aIndex);
+      return mNext->Remove(aIndex);
+
+    return NS_OK;
   };
 
-  void Add(PRInt32 aIndex) {
+  nsresult Add(PRInt32 aIndex) {
     if (aIndex < mMin) {
       // We have found a spot to insert.
       if (aIndex + 1 == mMin)
@@ -177,6 +188,9 @@ struct nsTreeRange
       else {
         // We have to create a new range.
         nsTreeRange* newRange = new nsTreeRange(mSelection, aIndex);
+        if (!newRange)
+          return NS_ERROR_OUT_OF_MEMORY;
+
         newRange->Connect(mPrev, this);
       }
     }
@@ -189,9 +203,13 @@ struct nsTreeRange
       else {
         // We have to create a new range.
         nsTreeRange* newRange = new nsTreeRange(mSelection, aIndex);
+        if (!newRange)
+          return NS_ERROR_OUT_OF_MEMORY;
+
         newRange->Connect(this, nsnull);
       }
     }
+    return NS_OK;
   };
 
   PRBool Contains(PRInt32 aIndex) {
@@ -370,14 +388,17 @@ NS_IMETHODIMP nsTreeSelection::Select(PRInt32 aIndex)
       return NS_OK;
     }
     else {
-       // Clear out our selection.
-       mFirstRange->Invalidate();
-       delete mFirstRange;
+      // Clear out our selection.
+      mFirstRange->Invalidate();
+      delete mFirstRange;
     }
   }
 
   // Create our new selection.
   mFirstRange = new nsTreeRange(this, aIndex);
+  if (!mFirstRange)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   mFirstRange->Invalidate();
 
   // Fire the select event
@@ -398,6 +419,7 @@ NS_IMETHODIMP nsTreeSelection::ToggleSelect(PRInt32 aIndex)
   mShiftSelectPivot = -1;
   SetCurrentIndex(aIndex);
 
+  nsresult rv = NS_OK;
   if (!mFirstRange)
     Select(aIndex);
   else {
@@ -405,17 +427,18 @@ NS_IMETHODIMP nsTreeSelection::ToggleSelect(PRInt32 aIndex)
       PRBool single;
       GetSingle(&single);
       if (!single)
-        mFirstRange->Add(aIndex);
+        rv = mFirstRange->Add(aIndex);
     }
     else
-      mFirstRange->Remove(aIndex);
-    
-    mTree->InvalidateRow(aIndex);
+      rv = mFirstRange->Remove(aIndex);
+    if (NS_SUCCEEDED(rv)) {
+      mTree->InvalidateRow(aIndex);
 
-    FireOnSelectHandler();
+      FireOnSelectHandler();
+    }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsTreeSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndIndex, PRBool aAugment)
@@ -448,10 +471,15 @@ NS_IMETHODIMP nsTreeSelection::RangedSelect(PRInt32 aStartIndex, PRInt32 aEndInd
   if (aAugment && mFirstRange) {
     // We need to remove all the items within our selected range from the selection,
     // and then we insert our new range into the list.
-    mFirstRange->RemoveRange(start, end);
+    nsresult rv = mFirstRange->RemoveRange(start, end);
+    if (NS_FAILED(rv))
+      return rv;
   }
 
   nsTreeRange* range = new nsTreeRange(this, start, end);
+  if (!range)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   range->Invalidate();
 
   if (aAugment && mFirstRange)
