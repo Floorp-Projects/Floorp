@@ -50,7 +50,7 @@
 
   <RDF:Description about='urn:clienturl:composer:spellcheckers'>
     <NC:title>Spellcheckers</NC:title>
-    <NC:content>about:blank</NC:content>
+    <NC:content>http://dictionaries.mozdev.org/installation.html</NC:content>
   </RDF:Description>
 
 </RDF:RDF>
