@@ -3423,28 +3423,37 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
       // this is the frame where the right-hand side of the frame extends
       // the furthest
       if (mPrt->mShrinkToFit) {
-        // find pageContent frame
+        // First find the seq frame
         nsIFrame* rootFrame;
         aPO->mPresShell->GetRootFrame(&rootFrame);
         NS_ASSERTION(rootFrame, "There has to be a root frame!");
         if (rootFrame) {
-          nsIFrame* child;
-          rootFrame->FirstChild(aPO->mPresContext, nsnull, &child);
-          while (child) {
+          nsIFrame* seqFrame;
+          rootFrame->FirstChild(aPO->mPresContext, nsnull, &seqFrame);
+          while (seqFrame) {
             nsCOMPtr<nsIAtom> frameType;
-            child->GetFrameType(getter_AddRefs(frameType));
-            if (nsLayoutAtoms::pageContentFrame == frameType.get()) { // placeholder
+            seqFrame->GetFrameType(getter_AddRefs(frameType));
+            if (nsLayoutAtoms::sequenceFrame == frameType.get()) {
               break;
             }
-            child->FirstChild(aPO->mPresContext, nsnull, &child);
+            seqFrame->FirstChild(aPO->mPresContext, nsnull, &seqFrame);
           }
-          NS_ASSERTION(child, "There has to be a page content frame!");
-          // Now get it's first child (area frame)
-          // then gets it size which would be the size it is suppose to be to fit
-          if (child) {
-            child->FirstChild(aPO->mPresContext, nsnull, &child);
-            NS_ASSERTION(child, "There has to be a child frame!");
-            if (child) {
+          NS_ASSERTION(seqFrame, "There has to be a Sequence frame!");
+          if (seqFrame) {
+            // Get the first page of all the pages
+            nsIFrame* pageFrame;
+            seqFrame->FirstChild(aPO->mPresContext, nsnull, &pageFrame);
+            NS_ASSERTION(pageFrame, "There has to be a Page Frame!");
+            // loop thru all the Page Frames
+            nscoord overallMaxWidth  = 0;
+            nscoord overMaxRectWidth = 0;
+            while (pageFrame) {
+              nsIFrame* child;
+              // Now get it's first child (for HTML docs it is an area frame)
+              // then gets it size which would be the size it is suppose to be to fit
+              pageFrame->FirstChild(aPO->mPresContext, nsnull, &child);
+              NS_ASSERTION(child, "There has to be a child frame!");
+
               nsRect rect;
               child->GetRect(rect);
               // Create a RenderingContext and set the PresContext 
@@ -3458,11 +3467,21 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
               // then calc the ratio for shrinkage
               nscoord maxWidth = 0;
               FindXMostFrameSize(aPO->mPresContext, rc, child, 0, 0, maxWidth);
-              float ratio = float(rect.width) / float(maxWidth);
-              aPO->mXMost = maxWidth;
+              if (maxWidth > overallMaxWidth) {
+                overallMaxWidth  = maxWidth;
+                overMaxRectWidth = rect.width;
+              }
+              pageFrame->GetNextSibling(&pageFrame);
+            }  // while
+            // Now calc the ratio from the widest frames from all the pages
+            float ratio = 1.0f;
+            NS_ASSERTION(overallMaxWidth, "Overall Max Width must be bigger than zero");
+            if (overallMaxWidth > 0) {
+              ratio = float(overMaxRectWidth) / float(overallMaxWidth);
+              aPO->mXMost = overallMaxWidth;
               aPO->mShrinkRatio = PR_MIN(ratio, 1.0f);
 #ifdef DEBUG_PRINTING
-              printf("PO %p ****** RW: %d MW: %d  xMost %d  width: %d  %10.4f\n", aPO, rect.width, maxWidth, aPO->mXMost, rect.width, ratio*100.0);
+              printf("PO %p ****** RW: %d MW: %d  xMost %d  width: %d  %10.4f\n", aPO, overMaxRectWidth, overallMaxWidth, aPO->mXMost, overMaxRectWidth, ratio*100.0);
 #endif
             }
           }

@@ -119,6 +119,13 @@ public:
 
   static nsIRegion* CreateRegion();
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::sequenceFrame
+   */
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  
 #ifdef NS_DEBUG
   // Debugging
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;
