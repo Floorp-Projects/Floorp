@@ -18,7 +18,7 @@
 
 #include "nsDeviceContextMotif.h"
 #include "nsRenderingContextMotif.h"
-#include "../nsGfxCIID.h"
+#include "nsGfxCIID.h"
 
 #include "math.h"
 #include "nspr.h"

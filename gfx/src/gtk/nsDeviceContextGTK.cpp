@@ -22,7 +22,7 @@
 #include "il_util.h"
 
 #include "nsDeviceContextGTK.h"
-#include "../nsGfxCIID.h"
+#include "nsGfxCIID.h"
 
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
