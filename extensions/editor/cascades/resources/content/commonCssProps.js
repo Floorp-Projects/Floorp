@@ -560,20 +560,22 @@ function InitAuralTabPanel()
 
   // observe the scrollbar and call onScrollbarAttrModified when an attribute is modified
   gDialog.volumeScrollbar.removeEventListener("DOMAttrModified", onVolumeScrollbarAttrModified, false);
-  gDialog.volumeScrollbar.addEventListener("DOMAttrModified", onVolumeScrollbarAttrModified, false);
   var volume = getSpecifiedStyle("volume");
   if (volume == "silent") {
     gDialog.muteVolumeCheckbox.checked = true;
-    gDialog.volumeScrollbar.setAttribute("disable", "true");
+    gDialog.volumeScrollbar.setAttribute("disabled", "true");
   }
   else {
     gDialog.muteVolumeCheckbox.checked = false;
-    gDialog.volumeScrollbar.removeAttribute("disable");
+    gDialog.volumeScrollbar.removeAttribute("disabled");
   }
   // if no volume specified, display medium value
-  if (!volume || volume == "") volume = "50";
+  if (!volume)
+    volume = "50";
   gDialog.volumeMenulist.value = volume;
   UpdateScrollbar(gDialog.volumeMenulist, 'volumeScrollbar');
+
+  gDialog.volumeScrollbar.addEventListener("DOMAttrModified", onVolumeScrollbarAttrModified, false);
 
   SelectsOneChoice("speak", "speakMenulist", "SpeakMenu", null);
   SelectsOneChoice("speech-rate", "speechRateMenulist", "SpeechRateMenu", null);
@@ -597,7 +599,10 @@ function onOpacityScrollbarAttrModified(aEvent)
 {
   if (aEvent.attrName == "curpos") {
     var v = aEvent.newValue / 1000;
-    doDump("opacity", v);
+    if (v == 1)
+      gDialog.opacityLabel.setAttribute("value", "transparent");
+    else
+      gDialog.opacityLabel.setAttribute("value", v);    
     AddStyleToElement(gDialog.selectedObject, "-moz-opacity", v);
     SetModifiedFlagOnStylesheet();
   }
@@ -699,17 +704,17 @@ function InitBorderTabPanel()
   var style = [ getSpecifiedStyle("border-top-style"),
                 getSpecifiedStyle("border-left-style"),
                 getSpecifiedStyle("border-right-style"),
-                getSpecifiedStyle("border-top-style")
+                getSpecifiedStyle("border-bottom-style")
               ];
   var width = [ getSpecifiedStyle("border-top-width"),
                 getSpecifiedStyle("border-left-width"),
-                getSpecifiedStyle("border-left-width"),
-                getSpecifiedStyle("border-top-width")
+                getSpecifiedStyle("border-right-width"),
+                getSpecifiedStyle("border-bottom-width")
               ];
   var color = [ ConvertRGBColorIntoHEXColor(getSpecifiedStyle("border-top-color")),
                 ConvertRGBColorIntoHEXColor(getSpecifiedStyle("border-left-color")),
                 ConvertRGBColorIntoHEXColor(getSpecifiedStyle("border-right-color")),
-                ConvertRGBColorIntoHEXColor(getSpecifiedStyle("border-top-color"))
+                ConvertRGBColorIntoHEXColor(getSpecifiedStyle("border-bottom-color"))
               ];
 
   var sameFourSides = false;
@@ -726,29 +731,45 @@ function InitBorderTabPanel()
   var sideArray = [ "top", "left", "right", "bottom" ];
 
   for (var i=0; i<sideArray.length; i++) {
-
-    var menuItemPrefix = style[i];
-    if (!menuItemPrefix || menuItemPrefix == "")
-      menuItemPrefix = "unspecified";
-    var styleMenuitem = document.getElementById( menuItemPrefix+sideArray[i]+"BorderStyle" );
-    var styleMenulist = document.getElementById( sideArray[i]+"BorderStyleMenulist" );
-    styleMenulist.selectedItem = styleMenuitem;
-
+    var styleMenu = document.getElementById( sideArray[i]+"BorderStyleMenulist" );
     var colorInput = document.getElementById( sideArray[i]+"BorderColorInput" );
-    colorInput.value = color[i];
-    setColorWell("border"+sideArray[i]+"CW", color[i]);
-    
     var widthInput = document.getElementById( sideArray[i]+"BorderWidthInput" );
-    widthInput.value = width[i];
-    AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-color", color[i]);
-    AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-style", style[i]);
-    AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-width", width[i]);
+    if (!i || !sameFourSides) {
+      EnableUI(styleMenu, true);
+      EnableUI(colorInput, true);
+      EnableUI(widthInput, true);
+
+      SelectsOneChoice("border-"+sideArray[i]+"-style",
+                       sideArray[i]+"BorderStyleMenulist",
+                       sideArray[i]+"BorderStyle", gDialog.borderPreview)
+
+      colorInput.value =  color[i];
+      setColorWell("border"+sideArray[i]+"CW", color[i]);
+
+      AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-color", color[i]);
+
+      widthInput.value =  width[i];
+
+      AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-width", width[i]);
+    }
+    else {
+      EnableUI(styleMenu, false);
+      EnableUI(colorInput, false);
+      EnableUI(widthInput, false);
+      colorInput.value = "";
+      setColorWell("border"+sideArray[i]+"CW", "");
+      widthInput.value = "";
+      styleMenu.selectedItem = document.getElementById("unspecified" + sideArray[i] + "BorderStyle");
+      AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-color", color[0]);
+      AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-style", style[0]);
+      AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-width", width[0]);
+
+    }
   }
   if (sameFourSides)
     gDialog.allFourBordersSame.setAttribute("checked", "true");
   else
     gDialog.allFourBordersSame.removeAttribute("checked");
-  ToggleFourBorderSidesSameStyle(gDialog.allFourBordersSame);
 }
  
 // * Inits the values shown in the Background tab panel
@@ -948,14 +969,20 @@ function SerializeEmbeddedSheet(sheet)
 //   param String href
 function SerializeExternalSheet(sheet, href)
 {
-  var nsuri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
+  const classes             = Components.classes;
+  const interfaces          = Components.interfaces;
+  const nsILocalFile        = interfaces.nsILocalFile;
+  const nsIFileOutputStream = interfaces.nsIFileOutputStream;
+  const FILEOUT_CTRID       = '@mozilla.org/network/file-output-stream;1';
+  
+  var fileHandler = GetFileProtocolHandler();
+  var localFile;
   if (href)
-    nsuri.spec = href;
+    localFile = fileHandler.getFileFromURLSpec(href).QueryInterface(nsILocalFile);
   else
-    nsuri.spec = sheet.href;
-  var fileURL = nsuri.QueryInterface(Components.interfaces.nsIFileURL);
-  var localFile = fileURL.file;
-  var fileOuputStream = Components.classes['@mozilla.org/network/file-output-stream;1'].createInstance(Components.interfaces.nsIFileOutputStream);
+    localFile = fileHandler.getFileFromURLSpec(sheet.href).QueryInterface(nsILocalFile);
+
+  var fileOuputStream = classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
   try {
     fileOuputStream.init(localFile, -1, -1, 0);
 
@@ -1025,8 +1052,8 @@ function ToggleFourBorderSidesSameStyle(elt)
   var sideArray = [ "left", "right", "bottom" ];
 
   var style = getSpecifiedStyle("border-top-style");
-  /*if (!style || style == "")
-    style = "unspecified";*/
+  if (!sameStyle && !style)
+    style = "unspecified";
   var color = gDialog.topBorderColorInput.value;
   var width = getSpecifiedStyle("border-top-width");
 
@@ -1036,17 +1063,21 @@ function ToggleFourBorderSidesSameStyle(elt)
     var colorInput    = document.getElementById( sideArray[i] + "BorderColorInput" );
     var colorButton   = document.getElementById( sideArray[i] + "BorderColorButton" );
     if (sameStyle) {
-      styleMenulist.setAttribute("disabled", "true");
-      widthInput.setAttribute("disabled", "true");
+      styleMenulist.selectedItem = document.getElementById("unspecified" + sideArray[i] + "BorderStyle");
+
+      widthInput.value = "";
+
+      colorInput.value = "";
       colorInput.setAttribute("disabled", "true");
+      setColorWell("border"+sideArray[i]+"CW", "");
+
+      widthInput.setAttribute("disabled", "true");
+      styleMenulist.setAttribute("disabled", "true");
       colorButton.setAttribute("disabled", "true");
 
-      IfFourSidesSameStyle("border", "style", style,
-                           'allFourBordersSame', 'borderPreview', null);
-      IfFourSidesSameStyle("border", "color", color,
-                           'allFourBordersSame', 'borderPreview', null);
-      IfFourSidesSameStyle("border", "width", width,
-                           'allFourBordersSame', 'borderPreview', null);
+      AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-color", color);
+      AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-style", style);
+      AddStyleToElement(gDialog.borderPreview, "border-"+sideArray[i]+"-width", width);
     }
     else {
       styleMenulist.removeAttribute("disabled");
@@ -1057,8 +1088,6 @@ function ToggleFourBorderSidesSameStyle(elt)
       colorInput.value = color;
       setColorWell("border"+sideArray[i]+"CW", color);
       widthInput.value = width;
-      if (!style || style == "")
-        style = "none";
       var styleMenuitem = document.getElementById( style+sideArray[i]+"BorderStyle" );
       styleMenulist.selectedItem = styleMenuitem;
     }

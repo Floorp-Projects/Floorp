@@ -68,119 +68,117 @@
   <spacer id="dummy" style="display:none"/>
   <broadcaster id="args" value=""/>
   <hbox>
-      <grid flex="1">
-        <rows><row flex="1"/><row/></rows>
-        <columns>
-          <column>
-            <tree flex="1"
-                  seltype="single"
-                  hidecolumnpicker="true"
-                  id="sheetsTree"
-                  onselect="onSelectCSSTreeItem(null);">
-              <treecols>
-                <treecol primary="true"
-                         id="sheetsTreeCol"
-                         flex="1"
-                         label="&sheetsTreeColumn.label;"/>
-              </treecols>
-              <treechildren flex="1" id="stylesheetsTree"/>
-            </tree>
-            <grid>
-              <columns><column flex="1"/><column flex="1"/><column flex="1"/></columns>
-              <rows>
-                <row>
-                  <button label="&importRuleButton.label;"
-                          id="atimportButton"
-                          disabled="true"
-                          oncommand="CreateNewAtimportRule();"/>
-                  <spacer/>
-                  <button label="&mediaRuleButton.label;"  id="atmediaButton" disabled="true"/>
-                </row>
-                <row>
-                  <button label="&linkedSheetButton.label;"
-                          id="linkButton"
-                          oncommand="CreateNewLinkedSheet();"/>
-                  <button label="&styleSheetButton.label;"
-                          id="styleButton"
-                          oncommand="CreateNewStyleElement();"/>
-                  <button label="&ruleButton.label;"
-                          id="ruleButton" disabled="true"
-                          oncommand="CreateNewStyleRule();"/>
-                </row>
-              </rows>
-            </grid>
-            <checkbox label="&expertModeChecbox.label;"
-                      id="expertModeCheckbox"
-                      checked="true"
-                      oncommand="toggleExpertMode();"/>
-          </column>
-          <column>
-            <vbox>
-              <button id="upButton"
-                      class="up"
-                      label="&upButton.label;"
-                      oncommand="MoveObjectUp()"/>
-              <button id="downButton"
-                      class="down"
-                      label="&downButton.label;"
-                      oncommand="MoveObjectDown()"/>
-              <spacer flex="1"/>
-              <button label="&refreshButton.label;"
-                      oncommand="Refresh();"/>
-              <spacer flex="1"/>
-              <button label="&removeButton.label;"
-                      id="removeButton"
-                      disabled="true"
-                      oncommand="RemoveObject();"/>
-            </vbox>
-          </column>
-        </columns>
-      </grid>
-    <tabbox id="sheetTabbox">
-      <tabs>
-        <tab id="sheetInfoTab"
-             selected="true"
-             label="&sheetInfoTab.label;"
-             oncommand="onSelectCSSTreeItem('general');"/>
-        <tab id="textTab"
-             label="&textTab.label;"
-             oncommand="onSelectCSSTreeItem('text');"/>
-        <tab id="backgroundTab"
-             label="&backgroundTab.label;"
-             oncommand="onSelectCSSTreeItem('background');"/>
-        <tab id="borderTab"
-             label="&borderTab.label;"
-             oncommand="onSelectCSSTreeItem('border');"/>
-        <tab id="boxTab"
-             label="&boxTab.label;"
-             oncommand="onSelectCSSTreeItem('box');"/>
-        <tab id="auralTab"
-             label="&auralTab.label;"
-             oncommand="onSelectCSSTreeItem('aural');"/>
-      </tabs>
-      <!-- defined in tabsOverlay -->
-      <tabpanels id="TabPanels">
-        <!-- STYLESHEET INFORMATION PANEL -->
-        <vbox id="sheetInfoTabPanel"
-              flex="1">
-          <label id="sheetInfoTabPanelTitle"
-                 value=""/>
-          <vbox flex="1">
-            <grid id="sheetInfoTabGrid">
-              <columns><column/><column flex="1"/></columns>
-            </grid>
+    <grid flex="1">
+      <rows><row flex="1"/><row/></rows>
+      <columns>
+        <column>
+          <tree flex="1"
+                seltype="single"
+                hidecolumnpicker="true"
+                id="sheetsTree"
+                onselect="onSelectCSSTreeItem(null);">
+            <treecols>
+              <treecol primary="true"
+                       id="sheetsTreeCol"
+                       flex="1"
+                       label="&sheetsTreeColumn.label;"/>
+            </treecols>
+            <treechildren flex="1" id="stylesheetsTree"/>
+          </tree>
+          <grid>
+            <columns><column flex="1"/><column flex="1"/><column flex="1"/></columns>
+            <rows>
+              <row>
+                <button label="&importRuleButton.label;"
+                        id="atimportButton"
+                        disabled="true"
+                        oncommand="CreateNewAtimportRule();"/>
+                <spacer/>
+                <button label="&mediaRuleButton.label;"  id="atmediaButton" disabled="true"/>
+              </row>
+              <row>
+                <button label="&linkedSheetButton.label;"
+                        id="linkButton"
+                        oncommand="CreateNewLinkedSheet();"/>
+                <button label="&styleSheetButton.label;"
+                        id="styleButton"
+                        oncommand="CreateNewStyleElement();"/>
+                <button label="&ruleButton.label;"
+                        id="ruleButton" disabled="true"
+                        oncommand="CreateNewStyleRule();"/>
+              </row>
+            </rows>
+          </grid>
+          <checkbox label="&expertModeChecbox.label;"
+                    id="expertModeCheckbox"
+                    checked="true"
+                    oncommand="toggleExpertMode();"/>
+        </column>
+        <column>
+          <vbox>
+            <button id="upButton"
+                    class="up"
+                    label="&upButton.label;"
+                    oncommand="MoveObjectUp()"/>
+            <button id="downButton"
+                    class="down"
+                    label="&downButton.label;"
+                    oncommand="MoveObjectDown()"/>
+            <spacer flex="1"/>
+            <button label="&refreshButton.label;"
+                    oncommand="Refresh();"/>
+            <spacer flex="1"/>
+            <button label="&removeButton.label;"
+                    id="removeButton"
+                    disabled="true"
+                    oncommand="RemoveObject();"/>
           </vbox>
-        </vbox>
-        <!-- other tabs defined in tabsOverlay.xul -->
-      </tabpanels>
-    </tabbox>
-  </hbox>
-  <hbox>
-    <spacer flex="1"/>
-    <hbox>
-      <button class="align-right"
-              label="&closeButton.label;"
-              oncommand="FlushChanges(); window.close();"/>
-    </hbox>
+        </column>
+      </columns>
+    </grid>
+    <vbox>
+      <tabbox id="sheetTabbox">
+        <tabs>
+          <tab id="sheetInfoTab"
+               label="&sheetInfoTab.label;"
+               oncommand="onSelectCSSTreeItem('general');"/>
+          <tab id="textTab"
+               label="&textTab.label;"
+               oncommand="onSelectCSSTreeItem('text');"/>
+          <tab id="backgroundTab"
+               label="&backgroundTab.label;"
+               oncommand="onSelectCSSTreeItem('background');"/>
+          <tab id="borderTab"
+               label="&borderTab.label;"
+               oncommand="onSelectCSSTreeItem('border');"/>
+          <tab id="boxTab"
+               label="&boxTab.label;"
+               oncommand="onSelectCSSTreeItem('box');"/>
+          <tab id="auralTab"
+               label="&auralTab.label;"
+               oncommand="onSelectCSSTreeItem('aural');"/>
+        </tabs>
+        <!-- defined in tabsOverlay -->
+        <tabpanels id="TabPanels">
+          <!-- STYLESHEET INFORMATION PANEL -->
+          <vbox id="sheetInfoTabPanel"
+                flex="1">
+            <label id="sheetInfoTabPanelTitle"
+                   value=""/>
+            <vbox flex="1">
+              <grid id="sheetInfoTabGrid">
+                <columns><column/><column flex="1"/></columns>
+              </grid>
+            </vbox>
+          </vbox>
+          <!-- other tabs defined in tabsOverlay.xul -->
+        </tabpanels>
+      </tabbox>
+      <hbox align="center">
+        <spacer flex="1"/>
+        <button label="&closeButton.label;"
+                oncommand="FlushChanges(); window.close();"/>
+      </hbox>
+    </vbox>
   </hbox>
 </window>

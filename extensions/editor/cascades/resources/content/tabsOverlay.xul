@@ -323,16 +323,14 @@
           </row>
           <row align="center">
             <label value="&opacity.label;"/>
-            <hbox align="center">
-              <scrollbar flex="1"
-                  id="opacityScrollbar"
-                  align="horizontal"
-                  curpos="0"
-                  maxpos="1000"
-                  increment="10"
-                  pageincrement="100"/>
-              <label id="opacityLabel" value="transparent"/>
-            </hbox>
+            <scrollbar flex="1"
+                id="opacityScrollbar"
+                align="horizontal"
+                curpos="0"
+                maxpos="1000"
+                increment="10"
+                pageincrement="100"/>
+            <label id="opacityLabel" value="transparent"/>
           </row>
           <row align="center">
             <label value="&backgroundImage.label;"/>

@@ -125,11 +125,7 @@ function getLocalFileURL(openOnly)
   }
   // SaveFilePickerDirectory(fp, fileType);
   
-  var ioService = GetIOService();
-  if (ioService && ioService.getURLSpecFromFile)
-    return fp.file ? ioService.getURLSpecFromFile(fp.file) : null;
-  else
-    return fp.file ? getURLSpecFromFile(fp.file) : null;
+  return fp.file ? getURLSpecFromFile(fp.file) : null;
 }
 
 // blatantly stolen from Venkman
@@ -164,3 +160,7 @@ function doDump(text, value) {
   dump("===> " + text + " : " + value + "\n");
 }
 
+function ClearTreeSelection(tree) {
+  if (tree)
+    tree.treeBoxObject.selection.clearSelection();
+}

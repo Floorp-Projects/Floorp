@@ -43,12 +43,13 @@ const CHARSET_RULE = 5;
 const PAGE_RULE    = 6;
 const OWNER_NODE   = 7;
 
-const GENERAL_TAB    = 1;
-const TEXT_TAB       = 2;
-const BACKGROUND_TAB = 3;
-const BORDER_TAB     = 4;
-const BOX_TAB        = 5;
-const AURAL_TAB      = 6;
+const COMPATIBILITY_TAB = 1;
+const GENERAL_TAB       = 2;
+const TEXT_TAB          = 3;
+const BACKGROUND_TAB    = 4;
+const BORDER_TAB        = 5;
+const BOX_TAB           = 6;
+const AURAL_TAB         = 7;
 
 const GENERIC_SELECTOR      = 0;
 const TYPE_ELEMENT_SELECTOR = 1;
@@ -94,7 +95,7 @@ function Startup()
   gDialog.upButton                      = document.getElementById("upButton");
   gDialog.downButton                    = document.getElementById("downButton");
 
-  gDialog.selectedTab = GENERAL_TAB;
+  gDialog.selectedTab = COMPATIBILITY_TAB;
   gDialog.sheetInfoTabPanelTitle        = document.getElementById("sheetInfoTabPanelTitle");
   gDialog.textTab                       = document.getElementById("textTab");
   gDialog.brownFoxLabel                 = document.getElementById("brownFoxLabel");
@@ -142,6 +143,7 @@ function Startup()
   gDialog.muteVolumeCheckbox            = document.getElementById("muteVolumeCheckbox");
 
   gDialog.opacityScrollbar              = document.getElementById("opacityScrollbar");
+  gDialog.opacityLabel                  = document.getElementById("opacityLabel");
 
   gDialog.sheetInfoTabGridRows          = document.getElementById("sheetInfoTabGridRows");
   gDialog.sheetInfoTabGrid              = document.getElementById("sheetInfoTabGrid");
@@ -226,7 +228,7 @@ function CleanSheetsTree(sheetsTreeChildren)
 {
   // we need to clear the selection in the tree otherwise the onselect
   // action on the tree will be fired when we removed the selected entry
-  gDialog.sheetsTree.treeBoxObject.selection.clearSelection();
+  ClearTreeSelection(gDialog.sheetsTree);
 
   var elt = sheetsTreeChildren.firstChild;
   while (elt) {
@@ -241,9 +243,9 @@ function AddSheetEntryToTree(sheetsTree, ownerNode)
   if (ownerNode.nodeType == Node.ELEMENT_NODE) {
     var ownerTag  = ownerNode.nodeName.toLowerCase()
     var relType   = ownerNode.getAttribute("rel");
+    if (relType) relType = relType.toLowerCase();
     if (ownerTag == "style" ||
-        (ownerTag == "link" && 
-         (relType == "stylesheet" || relType == "alternate stylesheet"))) {
+        (ownerTag == "link" && relType.indexOf("stylesheet") != -1)) {
 
       var treeitem  = document.createElementNS(XUL_NS, "treeitem");
       var treerow   = document.createElementNS(XUL_NS, "treerow");
@@ -362,6 +364,24 @@ function AddStyleRuleToTreeChildren(rule, external, depth)
   return subtreeitem;
 }
 
+function AddPageRuleToTreeChildren(rule, external, depth)
+{
+  var subtreeitem  = document.createElementNS(XUL_NS, "treeitem");
+  var subtreerow   = document.createElementNS(XUL_NS, "treerow");
+  var subtreecell  = document.createElementNS(XUL_NS, "treecell");
+  // show the selector attached to the rule
+  subtreecell.setAttribute("label", "@page " + rule.selectorText);
+  var o = newObject( subtreeitem, external, PAGE_RULE, rule, false, depth );
+  PushInObjectsArray(o);
+  if (external) {
+    subtreecell.setAttribute("properties", "external");
+  }
+  subtreerow.appendChild(subtreecell);
+  subtreeitem.appendChild(subtreerow);
+
+  return subtreeitem;
+}
+
 function AddImportRuleToTreeChildren(rule, external, depth)
 {
   var subtreeitem  = document.createElementNS(XUL_NS, "treeitem");
@@ -409,6 +429,11 @@ function AddRulesToTreechildren(treeItem, rules, external, depth)
           subtreeitem  = AddStyleRuleToTreeChildren(rules[j], external, depth);
           subtreechildren.appendChild(subtreeitem);
           break;
+        case CSSRule.PAGE_RULE:
+          // this is a CSSStyleRule
+          subtreeitem  = AddPageRuleToTreeChildren(rules[j], external, depth);
+          subtreechildren.appendChild(subtreeitem);
+          break;
         case CSSRule.IMPORT_RULE:
           // this is CSSImportRule for @import
           subtreeitem  = AddImportRuleToTreeChildren(rules[j], external, depth);
@@ -422,7 +447,7 @@ function AddRulesToTreechildren(treeItem, rules, external, depth)
           // show "@media" and media list
           subtreecell.setAttribute("label", "@media "+rules[j].media.mediaText, external);
           o = newObject( subtreeitem, external, MEDIA_RULE, rules[j], false, depth );
-          PushInObjectsArray(o, insertIndex);
+          PushInObjectsArray(o);
           if (external) {
             subtreecell.setAttribute("properties", "external");
           }
@@ -431,8 +456,7 @@ function AddRulesToTreechildren(treeItem, rules, external, depth)
           subtreeitem.setAttribute("container", "true");
           // let's browse the rules attached to this CSSMediaRule, keeping the
           // current external and increasing depth
-          AddRulesToTreechildren(subtreeitem, rules[j].cssRules, external, depth+1,
-                                 (insertIndex == -1) ? insertIndex : insertIndex+1 );
+          AddRulesToTreechildren(subtreeitem, rules[j].cssRules, external, depth+1);
           subtreechildren.appendChild(subtreeitem);
           break;
         case CSSRule.CHARSET_RULE:
@@ -443,7 +467,7 @@ function AddRulesToTreechildren(treeItem, rules, external, depth)
           // show "@charset" and the encoding
           subtreecell.setAttribute("label", "@charset "+rules[j].encoding, external);
           o = newObject( subtreeitem, external, CHARSET_RULE, rules[j], false, depth );
-          PushInObjectsArray(o, insertIndex);
+          PushInObjectsArray(o);
           if (external) {
             subtreecell.setAttribute("properties", "external");
           }
@@ -490,19 +514,21 @@ function GetSelectedItemData()
 function onSelectCSSTreeItem(tab)
 {
   // convert the tab string into a tab id
-  if      (tab == "general")     tab = GENERAL_TAB;
-  else if (tab == "text")        tab = TEXT_TAB;
-  else if (tab == "background")  tab = BACKGROUND_TAB;
-  else if (tab == "border")      tab = BORDER_TAB;
-  else if (tab == "box")         tab = BOX_TAB;
-  else if (tab == "aural")       tab = AURAL_TAB;
+  if      (tab == "general")       tab = GENERAL_TAB;
+  else if (tab == "compatibility") tab = COMPATIBILITY_TAB;
+  else if (tab == "text")          tab = TEXT_TAB;
+  else if (tab == "background")    tab = BACKGROUND_TAB;
+  else if (tab == "border")        tab = BORDER_TAB;
+  else if (tab == "box")           tab = BOX_TAB;
+  else if (tab == "aural")         tab = AURAL_TAB;
 
   GetSelectedItemData();
 
   if (gDialog.selectedIndex == -1) {
     // there is no tree item selected, let's fallback to the Info tab
     // but there is nothing we can display in that tab...
-    gDialog.sheetTabbox.selectedTab = gDialog.sheetInfoTab;
+    if (tab != COMPATIBILITY_TAB)
+      gDialog.sheetTabbox.selectedTab = gDialog.sheetInfoTab;
     return;
   }
 
@@ -524,6 +550,9 @@ function onSelectCSSTreeItem(tab)
     tab = gDialog.selectedTab ? gDialog.selectedTab : GENERAL_TAB;
   }
   switch (tab) {
+    case COMPATIBILITY_TAB:
+      return;
+      break;
     case TEXT_TAB:
       // we have to update the text preview, let's remove its style attribute
       gDialog.brownFoxLabel.removeAttribute("style");      
@@ -578,65 +607,70 @@ function onSelectCSSTreeItem(tab)
       }
       break;
     case SHEET:
-      var alternate = "";
-      if (external &&
-          cssObject.ownerNode.getAttribute("rel").toLowerCase() == "alternate stylesheet") {
-        alternate = " (alternate)";
+      if (cssObject) {
+        var alternate = "";
+        if (external &&
+            cssObject.ownerNode.getAttribute("rel").toLowerCase().indexOf("alternate") != -1) {
+          alternate = " (alternate)";
+        }
+        gDialog.sheetInfoTabPanelTitle.setAttribute("value", "Stylesheet"+alternate);
+        AddLabelToInfobox(gridrows, "Type:", cssObject.type, null, false);
+        AddCheckboxToInfobox(gridrows, "Disabled:", "check to disable stylesheet (cannot be saved)",
+                             cssObject.disabled, "onStylesheetDisabledChange");
+        var href;
+        if (cssObject.ownerNode.nodeName.toLowerCase() == "link") {
+          href = cssObject.href;
+        }
+        else {
+          href = "none (embedded into the document)";
+        }
+        AddLabelToInfobox(gridrows, "URL:", href, null, false);
+        var mediaList = cssObject.media.mediaText;
+        if (!mediaList || mediaList == "") {
+          mediaList = "all";
+        }
+        AddEditableZoneToInfobox(gridrows, "Media list:", mediaList, "onStylesheetMediaChange", false);
+        if (cssObject.title) {
+          AddEditableZoneToInfobox(gridrows, "Title:", cssObject.title, "onStylesheetTitleChange", false);
+        }
+
+        if (cssObject.cssRules) {
+          AddLabelToInfobox(gridrows, "Number of rules:", cssObject.cssRules.length, null, false);
+        }
+        if (!external && cssObject.ownerNode.nodeName.toLowerCase() == "style")
+          // we can export only embedded stylesheets
+          AddSingleButtonToInfobox(gridrows, "Export stylesheet and switch to exported version", "onExportStylesheet")
       }
-      gDialog.sheetInfoTabPanelTitle.setAttribute("value", "Stylesheet"+alternate);
-      AddLabelToInfobox(gridrows, "Type:", cssObject.type, false);
-      AddCheckboxToInfobox(gridrows, "Disabled:", "check to disable stylesheet (cannot be saved)",
-                           cssObject.disabled, "onStylesheetDisabledChange");
-      var href;
-      if (cssObject.ownerNode.nodeName.toLowerCase() == "link") {
-        href = cssObject.href;
-      }
-      else {
-        href = "none (embedded into the document)";
-      }
-      AddLabelToInfobox(gridrows, "URL:", href, false);
-      var mediaList = cssObject.media.mediaText;
-      if (!mediaList || mediaList == "") {
-        mediaList = "all";
-      }
-      AddEditableZoneToInfobox(gridrows, "Media list:", mediaList, "onStylesheetMediaChange", false);
-      if (cssObject.title) {
-        AddEditableZoneToInfobox(gridrows, "Title:", cssObject.title, "onStylesheetTitleChange", false);
-      }
-      if (cssObject.cssRules) {
-        AddLabelToInfobox(gridrows, "Number of rules:", cssObject.cssRules.length, false);
-      }
-      if (!external && cssObject.ownerNode.nodeName.toLowerCase() == "style")
-        // we can export only embedded stylesheets
-        AddSingleButtonToInfobox(gridrows, "Export stylesheet and switch to exported version", "onExportStylesheet")
+      else
+        AddLabelToInfobox(gridrows, "Unable to retrieve stylesheet", null, null, false);
       break;
     case STYLE_RULE:
+    case PAGE_RULE:
       var h = document.defaultView.getComputedStyle(grid.parentNode, "").getPropertyValue("height");
       // let's prepare the grid for the case the rule has a laaaaarge number
       // of property declarations
       grid.setAttribute("style", "overflow: auto; height: "+h);
-      gDialog.sheetInfoTabPanelTitle.setAttribute("value", "Style rule");
+      gDialog.sheetInfoTabPanelTitle.setAttribute("value",
+                  (type == STYLE_RULE) ? "Style rule" : "Page rule" );
 
-      AddLabelToInfobox(gridrows, "Selector:", cssObject.selectorText, false);
+      AddLabelToInfobox(gridrows, "Selector:", cssObject.selectorText, null, false);
       if (cssObject.style.length) {
-        AddDeclarationToInfobox(gridrows, "Declarations:", GetDeclarationText(cssObject, 0),
-                                GetDeclarationImportance(cssObject, 0), false);
-        for (var i=1; i<cssObject.style.length; i++) {
-          AddDeclarationToInfobox(gridrows, "", GetDeclarationText(cssObject, i),
-                                  GetDeclarationImportance(cssObject, i), false);
+        AddLabelToInfobox(gridrows, "Declarations:", " ", "Importance", false);
+        for (var i=0; i<cssObject.style.length; i++) {
+          AddDeclarationToInfobox(gridrows, cssObject, i, false);
         }
       }
-      // TO BE DONE : we need a way of changing the importance of a given declaration
+      // TO BE DONE : need a way of changing the importance of a given declaration
       break;
     case MEDIA_RULE:
       gDialog.sheetInfoTabPanelTitle.setAttribute("value", "Media rule");
-      AddLabelToInfobox(gridrows, "Media list:", cssObject.media.mediaText, false);
-      AddLabelToInfobox(gridrows, "Number of declarations:", cssObject.cssRules.length, false);
+      AddLabelToInfobox(gridrows, "Media list:", cssObject.media.mediaText, null, false);
+      AddLabelToInfobox(gridrows, "Number of rules:", cssObject.cssRules.length, null, false);
       break;
     case IMPORT_RULE:
       gDialog.sheetInfoTabPanelTitle.setAttribute("value", "Import rule");
-      AddLabelToInfobox(gridrows, "URL:", cssObject.href, false);
-      AddLabelToInfobox(gridrows, "Media list:", cssObject.media.mediaText, false);
+      AddLabelToInfobox(gridrows, "URL:", cssObject.href, null, false);
+      AddLabelToInfobox(gridrows, "Media list:", cssObject.media.mediaText, null, false);
       break;
     // TO BE DONE : @charset and other exotic rules
   }
@@ -657,6 +691,12 @@ function UpdateButtons(importState, mediaState, linkState, styleState, ruleState
     linkState = false;
     styleState = false;
     ruleState = true;
+  }
+  if (!gDialog.selectedObject) {
+    importState = false;
+    mediaState = false;
+    if (gDialog.selectedIndex != -1)
+      ruleState = false;
   }
   EnableUI(gDialog.atimportButton, importState);
   EnableUI(gDialog.atmediaButton, mediaState);
@@ -778,25 +818,35 @@ function AddCheckboxToInfobox(rows, label, checkboxLabel, value, callback)
 //   param String label
 //   param String value
 //   param boolean strong
-function AddLabelToInfobox(rows, label, value, strong)
+function AddLabelToInfobox(rows, firstLabel, flexibleLabel, lastLabel, strong)
 {
   var labelLabel = document.createElementNS(XUL_NS, "label");
   var row = document.createElementNS(XUL_NS, "row");
   row.setAttribute("align", "center");
-  labelLabel.setAttribute("value", label);
+  labelLabel.setAttribute("value", firstLabel);
   if (strong) {
     labelLabel.setAttribute("class", "titleLabel");
   }
   row.appendChild(labelLabel);
 
-  if (value) {
+  if (flexibleLabel) {
     var valueLabel = document.createElementNS(XUL_NS, "label");
-    valueLabel.setAttribute("value", value);
+    valueLabel.setAttribute("value", flexibleLabel);
     if (strong) {
       valueLabel.setAttribute("class", "titleLabel");
     }
     row.appendChild(valueLabel);
   }
+
+  if (lastLabel) {
+    valueLabel = document.createElementNS(XUL_NS, "label");
+    valueLabel.setAttribute("value", lastLabel);
+    if (strong) {
+      valueLabel.setAttribute("class", "titleLabel");
+    }
+    row.appendChild(valueLabel);
+  }
+
   rows.appendChild(row);
 }
 
@@ -805,26 +855,35 @@ function AddLabelToInfobox(rows, label, value, strong)
 //   param String label
 //   param String value
 //   param String importance
-function AddDeclarationToInfobox(rows, label, value, importance)
+function AddDeclarationToInfobox(rows, cssObject, i, importance)
 {
   var labelLabel = document.createElementNS(XUL_NS, "label");
   var row = document.createElementNS(XUL_NS, "row");
   row.setAttribute("align", "center");
-  labelLabel.setAttribute("value", label);
+  labelLabel.setAttribute("value", "");
   row.appendChild(labelLabel);
 
   var valueLabel = document.createElementNS(XUL_NS, "label");
-  valueLabel.setAttribute("value", value);
+  valueLabel.setAttribute("value", GetDeclarationText(cssObject, i));
   row.appendChild(valueLabel);
 
-  var importanceLabel = document.createElementNS(XUL_NS, "label");
-  importanceLabel.setAttribute("value", importance);
-  if (importance == "!important") {
-    importanceLabel.setAttribute("class", "bangImportant");
+  var importanceLabel = document.createElementNS(XUL_NS, "checkbox");
+  if (GetDeclarationImportance(cssObject, i) == "important") {
+    importanceLabel.setAttribute("checked", true);
   }
+  importanceLabel.setAttribute("oncommand", "TogglePropertyImportance(\"" + cssObject.style.item(i) + "\")" );
   row.appendChild(importanceLabel);
 
   rows.appendChild(row);
+}
+
+function TogglePropertyImportance(property)
+{
+  var cssObject = gDialog.selectedObject;
+  dump("IMPORTANCE = " + cssObject.style.getPropertyPriority(property) + "\n");
+  var newImportance =  (cssObject.style.getPropertyPriority(property) == "important") ? "" : "important" ;
+  dump("NEW IMPORTANCE = " + newImportance + "\n");
+  cssObject.style.setProperty(property, cssObject.style.getPropertyValue(property), newImportance);
 }
 
 // * retrieves the index-nth style declaration in a rule
@@ -939,7 +998,7 @@ function CreateNewStyleElement()
   gDialog.newMediaList = "";
   gDialog.newTitle     = "";
   gDialog.sheetInfoTabPanelTitle.setAttribute("value", "New Stylesheet");
-  AddLabelToInfobox(gridrows, "Type:", "text/css", false);
+  AddLabelToInfobox(gridrows, "Type:", "text/css", null, false);
   AddEditableZoneToInfobox(gridrows, "Media list:", gDialog.newMediaList, "onNewMediaListChange", true);
   AddEditableZoneToInfobox(gridrows, "Title:",      gDialog.newTitle,  "onNewTitleChange", false);
 
@@ -958,7 +1017,7 @@ function CreateNewLinkedSheet()
   gDialog.newMediaList = "";
   gDialog.newTitle     = "";
   gDialog.sheetInfoTabPanelTitle.setAttribute("value", "New Linked Stylesheet");
-  AddLabelToInfobox(gridrows, "Type:", "text/css", false);
+  AddLabelToInfobox(gridrows, "Type:", "text/css", null, false);
   // alternate stylesheet ?
   AddCheckboxToInfobox(gridrows, "Alternate:", "check to create alternate stylesheet", gDialog.newAlternate,
                        "onNewAlternateChange");
@@ -971,8 +1030,8 @@ function CreateNewLinkedSheet()
   AddSingleButtonToInfobox(gridrows, "Create Stylesheet", "onConfirmCreateNewObject")
 
   // the two following labels are unfortunately useful...
-  AddLabelToInfobox(gridrows, "", "(Warning : save document *before* attaching local stylesheet)", false);
-  AddLabelToInfobox(gridrows, "", "(use Refresh button if stylesheet is not immediately downloaded)", false);
+  AddLabelToInfobox(gridrows, "", "(Warning : save document *before* attaching local stylesheet)", null, false);
+  AddLabelToInfobox(gridrows, "", "(use Refresh button if stylesheet is not immediately downloaded)", null, false);
 }
 
 // * forget about everything, and let's redo it
@@ -1184,7 +1243,7 @@ function onConfirmCreateNewObject()
 
         containerIndex     = GetSheetContainer();
         // **must** clear the selection before changing the tree
-        gDialog.sheetsTree.treeBoxObject.selection.clearSelection();
+        ClearTreeSelection(gDialog.sheetsTree);
 
         var containerCssObject = objectsArray[containerIndex].cssElt;
         var containerDepth     = objectsArray[containerIndex].depth;
@@ -1242,7 +1301,7 @@ function onConfirmCreateNewObject()
     case SHEET:
       gInsertIndex = -1;
 
-      gDialog.sheetsTree.treeBoxObject.selection.clearSelection();
+      ClearTreeSelection(gDialog.sheetsTree);
 
       if (gDialog.newExternal && gDialog.newURL != "") {
         subtreeitem  = document.createElementNS(XUL_NS, "treeitem");
@@ -1289,7 +1348,7 @@ function onConfirmCreateNewObject()
             clearTimeout(gAsyncLoadingTimerID);
           sheetIndex = objectsArray.length - 1;
           
-          //gAsyncLoadingTimerID = setTimeout("sheetLoadedTimeoutCallback(" + sheetIndex + ")", kAsyncTimeout);
+          gAsyncLoadingTimerID = setTimeout("sheetLoadedTimeoutCallback(" + sheetIndex + ")", kAsyncTimeout);
         }
         else {
           o = newObject( subtreeitem, external, SHEET, newSheetOwnerNode.sheet, false, 0 );
@@ -1323,7 +1382,7 @@ function sheetLoadedTimeoutCallback(index)
 {
   var subtreeitem = objectsArray[index].xulElt;
   gInsertIndex = index+1;
-  gDialog.sheetsTree.treeBoxObject.selection.clearSelection();
+  ClearTreeSelection(gDialog.sheetsTree);
   if (objectsArray[index].type == OWNER_NODE && objectsArray[index].cssElt.sheet != null) {
     var sheet = objectsArray[index].cssElt.sheet;
     AddRulesToTreechildren(subtreeitem , sheet.cssRules, objectsArray[index].external,
@@ -1421,9 +1480,168 @@ function RemoveObject()
 // * moves a sheet/rule up in the tree
 function MoveObjectUp()
 {
-  /* NOT YET IMPLEMENTED */
-  var objectIndex = FindObjectIndexInObjectsArray(gDialog.selectedObject);
-  if (objectIndex == -1) return;
+  GetSelectedItemData();
+  var index = gDialog.selectedIndex;
+  if (index <= 0) return;
+  var sheetIndex = GetSheetContainer();
+  
+  switch (gDialog.selectedType) {
+  case SHEET:
+    var ownerNode = gDialog.selectedObject.ownerNode;
+    ClearTreeSelection(gDialog.sheetsTree)
+    index--;
+    while (index && objectsArray[index].type != SHEET)
+      index--;
+    if (index == -1) return;
+    ownerNode.parentNode.insertBefore(ownerNode, objectsArray[index].cssElt.ownerNode);
+    Restart();
+    selectTreeItem(objectsArray[index].xulElt);
+    gDialog.modified = true;
+    break;
+
+  case OWNER_NODE:
+    ownerNode = gDialog.selectedObject;
+    ClearTreeSelection(gDialog.sheetsTree)
+    index--;
+    while (index && objectsArray[index].type != SHEET)
+      index--;
+    if (index == -1) return;
+    ownerNode.parentNode.insertBefore(ownerNode, objectsArray[index].cssElt.ownerNode);
+    Restart();
+    selectTreeItem(objectsArray[index].xulElt);
+    gDialog.modified = true;
+    break;
+
+  case STYLE_RULE:
+  case PAGE_RULE:
+    var rule = gDialog.selectedObject;
+    objectsArray[sheetIndex].modified = true;
+
+    ClearTreeSelection(gDialog.sheetsTree)
+    var ruleText = rule.cssText;
+    var subtreeitem;
+    var newRule;
+    if (rule.parentRule) {
+      var ruleIndex = getRuleIndexInRulesList(rule.parentRule.cssRules, rule);
+      var parentRule = rule.parentRule;
+      
+      if (ruleIndex == -1) return;
+
+      if (!ruleIndex) {
+        // we have to move the rule just before its parent rule
+        parentRule.deleteRule(0);
+        var parentRuleIndex;
+
+        parentRuleIndex = getRuleIndexInRulesList(parentRule.parentStyleSheet.cssRules, parentRule);
+        parentRule.parentStyleSheet.insertRule(ruleText, parentRuleIndex);
+        newRule = parentRule.parentStyleSheet.cssRules[parentRuleIndex];
+      }
+      else {
+        // we just move the rule in its parentRule
+        parentRule.deleteRule(ruleIndex);
+        parentRule.insertRule(ruleText, ruleIndex - 1);
+        newRule = parentRule.cssRules.item(ruleIndex - 1);
+      }
+      // remove the tree entry
+      objectsArray[index].xulElt.parentNode.removeChild(objectsArray[index].xulElt);
+      // delete the object
+      objectsArray.splice(index, 1);
+      // position the insertion index
+      gInsertIndex = index - 1;
+      subtreeitem =  AddStyleRuleToTreeChildren(newRule,
+                                                objectsArray[index-1].external,
+                                                objectsArray[index-1].depth);
+      // make the new tree entry
+      objectsArray[index].xulElt.parentNode.insertBefore(subtreeitem,
+                                                           objectsArray[index].xulElt);
+      selectTreeItem(subtreeitem);
+        
+    }
+    else {
+      // standard case, the parent of the rule is the stylesheet itself
+      ruleIndex = getRuleIndexInRulesList(rule.parentStyleSheet.cssRules, rule);
+      var refStyleSheet = rule.parentStyleSheet;
+      if (ruleIndex == -1) return;
+      if (ruleIndex) {
+        // we just move the rule in the sheet
+        refStyleSheet.deleteRule(ruleIndex);
+        var targetRule = refStyleSheet.cssRules.item(ruleIndex - 1);
+
+        if (targetRule.type == CSSRule.MEDIA_RULE) {
+          targetRule.insertRule(ruleText, targetRule.cssRules.length);
+          var targetRuleIndex = FindObjectIndexInObjectsArray(targetRule);
+          newRule = targetRule.cssRules.item(targetRule.cssRules.length - 1);
+          var subtreechildren = GetSubtreeChildren(objectsArray[targetRuleIndex].xulElt);
+
+          // in this case, the target treeitem is at same location but one level deeper
+          // remove the tree entry
+          objectsArray[index].xulElt.parentNode.removeChild(objectsArray[index].xulElt);
+          // delete the object
+          objectsArray.splice(index, 1);
+          // position the insertion index
+          gInsertIndex = index;
+          subtreeitem = AddStyleRuleToTreeChildren(newRule,
+                                                   objectsArray[targetRuleIndex].external,
+                                                   objectsArray[targetRuleIndex].depth + 1);
+          // make the new tree entry
+          subtreechildren.appendChild(subtreeitem);
+          selectTreeItem(subtreeitem);
+          return;
+        }
+        else if (targetRule.type != CSSRule.IMPORT_RULE &&
+                 targetRule.type != CSSRule.CHARSET_RULE) {
+          // we can move the rule before its predecessor only if that one is
+          // not an @import rule nor an @charset rule
+          refStyleSheet.insertRule(ruleText, ruleIndex - 1);
+          newRule = refStyleSheet.cssRules[ruleIndex - 1];
+          // remove the tree entry
+          objectsArray[index].xulElt.parentNode.removeChild(objectsArray[index].xulElt);
+          // delete the object
+          objectsArray.splice(index, 1);
+          // position the insertion index
+          gInsertIndex = index - 1;
+          subtreeitem =  AddStyleRuleToTreeChildren(newRule,
+                                                    objectsArray[index-1].external,
+                                                    objectsArray[index-1].depth);
+          // make the new tree entry
+          objectsArray[index].xulElt.parentNode.insertBefore(subtreeitem,
+                                                             objectsArray[index].xulElt);
+          selectTreeItem(subtreeitem);
+          return;
+        }
+      }
+      // At this point, we need to move the rule from one sheet to another one, if it
+      // exists...
+      // First, let's if there is another candidate stylesheet before the current one
+      // for the style rule's ownership
+      var refSheetIndex = FindObjectIndexInObjectsArray(refStyleSheet);
+      sheetIndex = refSheetIndex;
+
+      if (!sheetIndex) return; // early way out
+      sheetIndex--;
+      while (sheetIndex && (objectsArray[sheetIndex].type != SHEET ||
+                            objectsArray[sheetIndex])) {
+        sheetIndex--;
+      }
+      if (sheetIndex == -1) return; // no embedded or local stylesheet available
+      var newStyleSheet = objectsArray[sheetIndex].cssElt;
+      // we need to check the type of the last rule in the sheet, if it exists
+      if (newStyleSheet.cssRules.length &&
+          newStyleSheet.cssRules[newStyleSheet.cssRules.length - 1].type == CSSRule.MEDIA_RULE) {
+        // this media rule is our target
+        var refMediaRule      = newStyleSheet.cssRules[newStyleSheet.cssRules.length - 1];
+        var refMediaRuleIndex = FindObjectIndexInObjectsArray(refMediaRule );
+        var refRuleIndex      = refMediaRuleIndex++;
+        while (refRuleIndex < objectsArray.length && objectsArray[refRuleIndex].depth > 1)
+          refRuleIndex++;
+        // refRuleIndex represents where we should insert the new object
+      }
+      else {
+        // we just append the rule to the list of rules of the sheet
+      }
+    }
+    break;
+  }
 }
 
 // * moves a sheet/rule down in the tree
@@ -1473,4 +1691,23 @@ function getCurrentEditor() {
     return editorShell.editor;
   else
     return GetCurrentEditor();
+}
+
+function AddCSSLevelChoice(rows)
+{
+  var labelLabel = document.createElementNS(XUL_NS, "label");
+  var row = document.createElementNS(XUL_NS, "row");
+  row.setAttribute("align", "center");
+  labelLabel.setAttribute("value", "CSS Level");
+  
+  row.appendChild(labelLabel);
+
+  var level;
+  for (level = 1; level < 4; level++) {
+    var levelCheckbox = document.createElementNS(XUL_NS, "checkbox");
+    levelCheckbox.setAttribute("label", level);
+    row.appendChild(levelCheckbox);
+  }
+
+  rows.appendChild(row);
 }

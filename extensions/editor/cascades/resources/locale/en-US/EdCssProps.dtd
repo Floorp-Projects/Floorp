@@ -234,3 +234,5 @@
 <!ENTITY xfastSpeechRate.label              "x-fast">
 
 <!ENTITY opacity.label                      "Opacity:">
+
+<!ENTITY compatibilityTab.label             "Compatibility">
