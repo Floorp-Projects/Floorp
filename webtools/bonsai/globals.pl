@@ -41,9 +41,6 @@ $ENV{'MAILADDRESS'} = Param('maintainer');
 # Contains the version string for the current running Bonsai
 $::param{'version'} = '1.3';
 
-$::dontchange = "--do_not_change--";
-$::chooseone = "--Choose_one:--";
-
 
 
 ##
@@ -117,6 +114,13 @@ sub ConnectToDatabase {
 	$::db = DBI->connect($dsn, Param('mysqluser'), Param('mysqlpassword'),
                              "mysql")
             || die "Can't connect to database server.";
+    }
+}
+
+sub DisconnectFromDatabase {
+    if (defined $::db) {
+        $::db->disconnect();
+        undef $::db;
     }
 }
 
