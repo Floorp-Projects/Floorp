@@ -77,8 +77,6 @@ class nsLDAPConnection : public nsILDAPConnection, nsIRunnable
     nsCOMPtr<nsIThread> mThread;       	// thread which marshals results
 
     nsSupportsHashtable *mPendingOperations; // keep these around for callbacks
-
-    static struct timeval sNullTimeval;
 };
 
 #endif /* _nsLDAPConnection_h_ */

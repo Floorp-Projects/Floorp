@@ -37,10 +37,6 @@
 #include "nsLDAPMessage.h"
 #include "nsIEventQueueService.h"
 
-// XXX deal with timeouts better
-//
-struct timeval nsLDAPConnection::sNullTimeval = {0, 0};
-
 static NS_DEFINE_CID(kLDAPMessageCID, NS_LDAPMESSAGE_CID);
 
 extern "C" int nsLDAPThreadDataInit(void);
