@@ -34,7 +34,7 @@
 /*
  * certhtml.c --- convert a cert to html
  *
- * $Id: certhtml.c,v 1.1 2000/03/31 19:42:54 relyea%netscape.com Exp $
+ * $Id: certhtml.c,v 1.2 2001/09/20 21:41:34 relyea%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -114,24 +114,6 @@ gatherStrings(char **strings)
     }
 
     return( ret );
-}
-
-static PRBool
-CERT_IsAVAInUnicode(CERTAVA *ava, SECOidTag type)
-{
-    switch(type) {
-	case SEC_OID_AVA_COUNTRY_NAME:
-	case SEC_OID_PKCS9_EMAIL_ADDRESS:
-	case SEC_OID_RFC1274_MAIL:
-	    return PR_FALSE;
-	default:
-	    if(ava->value.data[0] == SEC_ASN1_UNIVERSAL_STRING) {
-		return PR_TRUE;
-	    }
-	    break;
-    }
-
-    return PR_FALSE;
 }
 
 #define BREAK "<br>"
