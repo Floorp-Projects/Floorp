@@ -30,6 +30,7 @@ MODULE		= necko
 XPIDL_MODULE	= necko_file
 
 XPIDLSRCS	= \
+		nsIFileProtocolHandler.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

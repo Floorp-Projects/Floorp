@@ -38,7 +38,7 @@
 #ifndef nsFileProtocolHandler_h___
 #define nsFileProtocolHandler_h___
 
-#include "nsIProtocolHandler.h"
+#include "nsIFileProtocolHandler.h"
 #include "nsWeakReference.h"
 
 class nsISupportsArray;
@@ -57,11 +57,12 @@ class nsIThreadPool;
     {0x93, 0x44, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-class nsFileProtocolHandler : public nsIProtocolHandler, public nsSupportsWeakReference
+class nsFileProtocolHandler : public nsIFileProtocolHandler, public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
+    NS_DECL_NSIFILEPROTOCOLHANDLER
 
     nsFileProtocolHandler();
     virtual ~nsFileProtocolHandler();

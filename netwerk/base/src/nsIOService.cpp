@@ -37,6 +37,7 @@
 
 #include "nsIOService.h"
 #include "nsIProtocolHandler.h"
+#include "nsIFileProtocolHandler.h"
 #include "nscore.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
@@ -748,16 +749,20 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI, nsIURI* *result)
 
 
 NS_IMETHODIMP 
-nsIOService::NewFileURI(nsIFile *aSpec, nsIURI **_retval)
+nsIOService::NewFileURI(nsIFile *file, nsIURI **result)
 {
     nsresult rv;
-    NS_ENSURE_ARG_POINTER(aSpec);
-    
-    nsXPIDLCString urlString;
-    rv = GetURLSpecFromFile(aSpec, getter_Copies(urlString));
+    NS_ENSURE_ARG_POINTER(file);
+
+    nsCOMPtr<nsIProtocolHandler> handler;
+
+    rv = GetProtocolHandler("file", getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
-    return NewURI(urlString, nsnull, _retval);
+    nsCOMPtr<nsIFileProtocolHandler> fileHandler( do_QueryInterface(handler, &rv) );
+    if (NS_FAILED(rv)) return rv;
+    
+    return fileHandler->NewFileURI(file, result);
 }
 
 NS_IMETHODIMP

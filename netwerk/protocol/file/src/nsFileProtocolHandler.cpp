@@ -72,7 +72,10 @@ nsFileProtocolHandler::~nsFileProtocolHandler()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsFileProtocolHandler, nsIProtocolHandler, nsISupportsWeakReference);
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsFileProtocolHandler,
+                              nsIFileProtocolHandler,
+                              nsIProtocolHandler,
+                              nsISupportsWeakReference);
 
 NS_METHOD
 nsFileProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -167,4 +170,24 @@ nsFileProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retv
     *_retval = PR_FALSE;
     return NS_OK;
 }
+
 ////////////////////////////////////////////////////////////////////////////////
+// nsIFileProtocolHandler methods:
+
+NS_IMETHODIMP
+nsFileProtocolHandler::NewFileURI(nsIFile *file, nsIURI **result)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIFileURL> url;
+
+    rv = nsComponentManager::CreateInstance(kStandardURLCID, 
+                                            nsnull, NS_GET_IID(nsIFileURL),
+                                            getter_AddRefs(url));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = url->SetFile(file);
+    if (NS_FAILED(rv)) return rv;
+
+    return CallQueryInterface(url, result);
+}
