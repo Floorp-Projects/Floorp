@@ -1875,7 +1875,10 @@ function compareAccountSortOrder(account1, account2)
     sortValue1 = sAccountManagerDataSource.GetTarget(res1, sNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   }
   catch (ex) {
-    dump("XXX ex " + account1.incomingServer.serverURI + "," + ex + "\n");
+    dump("XXX ex ");
+    if (account1 && account1.incomingServer && account1.incomingServer.serverURI)
+      dump(account1.incomingServer.serverURI + ",");
+    dump(ex + "\n");
     sortValue1 = "";
   }
 
@@ -1884,7 +1887,10 @@ function compareAccountSortOrder(account1, account2)
     sortValue2 = sAccountManagerDataSource.GetTarget(res2, sNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   }
   catch (ex) {
-    dump("XXX ex " + account1.incomingServer.serverURI + "," + ex + "\n");
+    dump("XXX ex ");
+    if (account2 && account2.incomingServer && account2.incomingServer.serverURI)
+      dump(account2.incomingServer.serverURI + ",");
+    dump(ex + "\n");
     sortValue2 = "";
   }
 

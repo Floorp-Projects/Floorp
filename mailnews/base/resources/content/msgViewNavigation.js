@@ -44,7 +44,10 @@ function compareServerSortOrder(server1, server2)
     sortValue1 = gAccountManagerDataSource.GetTarget(res1, gNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   }
   catch (ex) {
-    dump("XXX ex " + server1.URI + "," + ex + "\n");
+    dump("XXX ex ");
+    if (server1 && server1.URI)
+      dump(server1.URI + ",");
+    dump(ex + "\n");
     sortValue1 = "";
   }
 
@@ -53,7 +56,10 @@ function compareServerSortOrder(server1, server2)
     sortValue2 = gAccountManagerDataSource.GetTarget(res2, gNameProperty, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   }
   catch (ex) {
-    dump("XXX ex " + server2.URI + "," + ex + "\n");
+    dump("XXX ex ");
+    if (server2 && server2.URI)
+      dump(server2.URI + ",");
+    dump(ex + "\n");
     sortValue2 = "";
   }
 
