@@ -4327,6 +4327,15 @@ NavigatorImpl::Preference()
 }
 
 
+nsresult
+NavigatorImpl::RefreshMIMEArray()
+{
+  nsresult rv = NS_OK;
+  if (mMimeTypes)
+    rv = mMimeTypes->Refresh();
+  return rv;
+}
+
 #ifdef XP_MAC
 #pragma mark -
 #endif

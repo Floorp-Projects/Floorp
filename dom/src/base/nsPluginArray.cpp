@@ -23,6 +23,7 @@
 
 #include "nsPluginArray.h"
 #include "nsMimeTypeArray.h"
+#include "nsGlobalWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMMimeType.h"
@@ -34,7 +35,7 @@
 
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 
-PluginArrayImpl::PluginArrayImpl(nsIDOMNavigator* navigator,
+PluginArrayImpl::PluginArrayImpl(NavigatorImpl* navigator,
                                  nsIDocShell *aDocShell)
 {
   nsresult rv;
@@ -183,6 +184,9 @@ PluginArrayImpl::Refresh(PRBool aReloadDocuments)
   if(pm)
     pm->ReloadPlugins(aReloadDocuments);
 
+  if (mNavigator)
+    mNavigator->RefreshMIMEArray();
+  
   if (aReloadDocuments && mDocShell) {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
 
