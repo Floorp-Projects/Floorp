@@ -85,8 +85,6 @@ class nsIStyleRule : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLE_RULE_IID)
 
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const = 0;
-
   /**
    * |nsIStyleRule::MapRuleInfoInto| is a request to copy all stylistic
    * data represented by the rule that:

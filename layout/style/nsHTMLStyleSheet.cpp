@@ -65,24 +65,7 @@
 #include "nsRuleWalker.h"
 #include "nsRuleData.h"
 
-nsHTMLStyleSheet::HTMLColorRule::HTMLColorRule(nsHTMLStyleSheet* aSheet)
-  : mSheet(aSheet)
-{
-}
-
-nsHTMLStyleSheet::HTMLColorRule::~HTMLColorRule()
-{
-}
-
 NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::HTMLColorRule, nsIStyleRule)
-
-NS_IMETHODIMP
-nsHTMLStyleSheet::HTMLColorRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
-{
-  NS_IF_ADDREF(mSheet);
-  aSheet = mSheet;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLStyleSheet::HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
@@ -102,23 +85,7 @@ nsHTMLStyleSheet::HTMLColorRule::List(FILE* out, PRInt32 aIndent) const
 }
 #endif
 
-nsHTMLStyleSheet::GenericTableRule::GenericTableRule(nsHTMLStyleSheet* aSheet)
-{
-  mSheet = aSheet;
-}
-
-nsHTMLStyleSheet::GenericTableRule::~GenericTableRule()
-{
-}
-
 NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::GenericTableRule, nsIStyleRule)
-
-NS_IMETHODIMP
-nsHTMLStyleSheet::GenericTableRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
-{
-  aSheet = mSheet;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsHTMLStyleSheet::GenericTableRule::MapRuleInfoInto(nsRuleData* aRuleData)
@@ -134,15 +101,6 @@ nsHTMLStyleSheet::GenericTableRule::List(FILE* out, PRInt32 aIndent) const
   return NS_OK;
 }
 #endif
-
-nsHTMLStyleSheet::TableTHRule::TableTHRule(nsHTMLStyleSheet* aSheet)
-: GenericTableRule(aSheet)
-{
-}
-
-nsHTMLStyleSheet::TableTHRule::~TableTHRule()
-{
-}
 
 static void PostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
 {
@@ -253,15 +211,6 @@ ProcessTableRulesAttribute(nsStyleStruct* aStyleStruct,
   }
 }
 
-nsHTMLStyleSheet::TableTbodyRule::TableTbodyRule(nsHTMLStyleSheet* aSheet)
-: GenericTableRule(aSheet)
-{
-}
-
-nsHTMLStyleSheet::TableTbodyRule::~TableTbodyRule()
-{
-}
-
 static void TbodyPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
 {
   ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_TOP, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
@@ -281,15 +230,6 @@ nsHTMLStyleSheet::TableTbodyRule::MapRuleInfoInto(nsRuleData* aRuleData)
 }
 // -----------------------------------------------------------
 
-nsHTMLStyleSheet::TableRowRule::TableRowRule(nsHTMLStyleSheet* aSheet)
-: GenericTableRule(aSheet)
-{
-}
-
-nsHTMLStyleSheet::TableRowRule::~TableRowRule()
-{
-}
-
 static void RowPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
 {
   ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_TOP, PR_FALSE, NS_STYLE_TABLE_RULES_ALL,
@@ -308,15 +248,6 @@ nsHTMLStyleSheet::TableRowRule::MapRuleInfoInto(nsRuleData* aRuleData)
   return NS_OK;
 }
 
-nsHTMLStyleSheet::TableColgroupRule::TableColgroupRule(nsHTMLStyleSheet* aSheet)
-: GenericTableRule(aSheet)
-{
-}
-
-nsHTMLStyleSheet::TableColgroupRule::~TableColgroupRule()
-{
-}
-
 static void ColgroupPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
 {
   ::ProcessTableRulesAttribute(aStyleStruct, aRuleData, NS_SIDE_LEFT, PR_TRUE, NS_STYLE_TABLE_RULES_ALL,
@@ -333,15 +264,6 @@ nsHTMLStyleSheet::TableColgroupRule::MapRuleInfoInto(nsRuleData* aRuleData)
     aRuleData->mPostResolveCallback = &ColgroupPostResolveCallback;
   }
   return NS_OK;
-}
-
-nsHTMLStyleSheet::TableColRule::TableColRule(nsHTMLStyleSheet* aSheet)
-: GenericTableRule(aSheet)
-{
-}
-
-nsHTMLStyleSheet::TableColRule::~TableColRule()
-{
 }
 
 static void ColPostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
@@ -425,27 +347,27 @@ nsHTMLStyleSheet::nsHTMLStyleSheet(void)
 nsresult
 nsHTMLStyleSheet::Init()
 {
-  mTableTbodyRule = new TableTbodyRule(this);
+  mTableTbodyRule = new TableTbodyRule();
   if (!mTableTbodyRule)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mTableTbodyRule);
 
-  mTableRowRule = new TableRowRule(this);
+  mTableRowRule = new TableRowRule();
   if (!mTableRowRule)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mTableRowRule);
 
-  mTableColgroupRule = new TableColgroupRule(this);
+  mTableColgroupRule = new TableColgroupRule();
   if (!mTableColgroupRule)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mTableColgroupRule);
 
-  mTableColRule = new TableColRule(this);
+  mTableColRule = new TableColRule();
   if (!mTableColRule)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mTableColRule);
 
-  mTableTHRule = new TableTHRule(this);
+  mTableTHRule = new TableTHRule();
   if (!mTableTHRule)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mTableTHRule);
@@ -456,42 +378,17 @@ nsHTMLStyleSheet::Init()
 nsHTMLStyleSheet::~nsHTMLStyleSheet()
 {
   NS_IF_RELEASE(mURL);
-  if (nsnull != mLinkRule) {
-    mLinkRule->mSheet = nsnull;
-    NS_RELEASE(mLinkRule);
-  }
-  if (nsnull != mVisitedRule) {
-    mVisitedRule->mSheet = nsnull;
-    NS_RELEASE(mVisitedRule);
-  }
-  if (nsnull != mActiveRule) {
-    mActiveRule->mSheet = nsnull;
-    NS_RELEASE(mActiveRule);
-  }
-  if (nsnull != mDocumentColorRule) {
-    mDocumentColorRule->mSheet = nsnull;
-    NS_RELEASE(mDocumentColorRule);
-  }
-  if (nsnull != mTableTbodyRule) {
-    mTableTbodyRule->mSheet = nsnull;
-    NS_RELEASE(mTableTbodyRule);
-  }
-  if (nsnull != mTableRowRule) {
-    mTableRowRule->mSheet = nsnull;
-    NS_RELEASE(mTableRowRule);
-  }
-  if (nsnull != mTableColgroupRule) {
-    mTableColgroupRule->mSheet = nsnull;
-    NS_RELEASE(mTableColgroupRule);
-  }
-  if (nsnull != mTableColRule) {
-    mTableColRule->mSheet = nsnull;
-    NS_RELEASE(mTableColRule);
-  }
-  if (nsnull != mTableTHRule) {
-    mTableTHRule->mSheet = nsnull;
-    NS_RELEASE(mTableTHRule);
-  }
+
+  NS_IF_RELEASE(mLinkRule);
+  NS_IF_RELEASE(mVisitedRule);
+  NS_IF_RELEASE(mActiveRule);
+  NS_IF_RELEASE(mDocumentColorRule);
+  NS_IF_RELEASE(mTableTbodyRule);
+  NS_IF_RELEASE(mTableRowRule);
+  NS_IF_RELEASE(mTableColgroupRule);
+  NS_IF_RELEASE(mTableColRule);
+  NS_IF_RELEASE(mTableTHRule);
+
   if (mMappedAttrTable.ops)
     PL_DHashTableFinish(&mMappedAttrTable);
 }
@@ -572,11 +469,8 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
                          &bodyColor);
           if (NS_SUCCEEDED(rv) &&
               (!mDocumentColorRule || bodyColor != mDocumentColorRule->mColor)) {
-            if (mDocumentColorRule) {
-              mDocumentColorRule->mSheet = nsnull;
-              NS_RELEASE(mDocumentColorRule);
-            }
-            mDocumentColorRule = new HTMLColorRule(this);
+            NS_IF_RELEASE(mDocumentColorRule);
+            mDocumentColorRule = new HTMLColorRule();
             if (mDocumentColorRule) {
               NS_ADDREF(mDocumentColorRule);
               mDocumentColorRule->mColor = bodyColor;
@@ -784,22 +678,10 @@ nsHTMLStyleSheet::Reset(nsIURI* aURL)
   mURL = aURL;
   NS_ADDREF(mURL);
 
-  if (mLinkRule) {
-    mLinkRule->mSheet = nsnull;
-    NS_RELEASE(mLinkRule);
-  }
-  if (mVisitedRule) {
-    mVisitedRule->mSheet = nsnull;
-    NS_RELEASE(mVisitedRule);
-  }
-  if (mActiveRule) {
-    mActiveRule->mSheet = nsnull;
-    NS_RELEASE(mActiveRule);
-  }
-  if (mDocumentColorRule) {
-    mDocumentColorRule->mSheet = nsnull;
-    NS_RELEASE(mDocumentColorRule);
-  }
+  NS_IF_RELEASE(mLinkRule);
+  NS_IF_RELEASE(mVisitedRule);
+  NS_IF_RELEASE(mActiveRule);
+  NS_IF_RELEASE(mDocumentColorRule);
 
   if (mMappedAttrTable.ops) {
     PL_DHashTableFinish(&mMappedAttrTable);
@@ -851,11 +733,10 @@ nsHTMLStyleSheet::SetLinkColor(nscolor aColor)
   if (mLinkRule) {
     if (mLinkRule->mColor == aColor)
       return NS_OK;
-    mLinkRule->mSheet = nsnull;
     NS_RELEASE(mLinkRule);
   }
 
-  mLinkRule = new HTMLColorRule(this);
+  mLinkRule = new HTMLColorRule();
   if (!mLinkRule)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mLinkRule);
@@ -871,11 +752,10 @@ nsHTMLStyleSheet::SetActiveLinkColor(nscolor aColor)
   if (mActiveRule) {
     if (mActiveRule->mColor == aColor)
       return NS_OK;
-    mActiveRule->mSheet = nsnull;
     NS_RELEASE(mActiveRule);
   }
 
-  mActiveRule = new HTMLColorRule(this);
+  mActiveRule = new HTMLColorRule();
   if (!mActiveRule)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mActiveRule);
@@ -890,11 +770,10 @@ nsHTMLStyleSheet::SetVisitedLinkColor(nscolor aColor)
   if (mVisitedRule) {
     if (mVisitedRule->mColor == aColor)
       return NS_OK;
-    mVisitedRule->mSheet = nsnull;
     NS_RELEASE(mVisitedRule);
   }
 
-  mVisitedRule = new HTMLColorRule(this);
+  mVisitedRule = new HTMLColorRule();
   if (!mVisitedRule)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mVisitedRule);

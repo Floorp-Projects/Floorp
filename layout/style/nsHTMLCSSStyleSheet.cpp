@@ -64,13 +64,11 @@
 
 class CSSDisablePropsRule : public nsIStyleRule {
 public:
-  CSSDisablePropsRule(nsIHTMLCSSStyleSheet* aSheet);
+  CSSDisablePropsRule();
   virtual ~CSSDisablePropsRule();
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-  
   // Call this something else so that this class still has pure virtual
   // functions.
   void CommonMapRuleInfoInto(nsRuleData* aRuleData);
@@ -78,27 +76,22 @@ public:
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
-
-  nsIHTMLCSSStyleSheet*  mSheet;
 };
 
-CSSDisablePropsRule::CSSDisablePropsRule(nsIHTMLCSSStyleSheet* aSheet)
-  : mSheet(aSheet)
+CSSDisablePropsRule::CSSDisablePropsRule()
 {
 }
 
 class CSSFirstLineRule : public CSSDisablePropsRule {
 public:
-  CSSFirstLineRule(nsIHTMLCSSStyleSheet* aSheet)
-    : CSSDisablePropsRule(aSheet) {}
+  CSSFirstLineRule() {}
 
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 };
 
 class CSSFirstLetterRule : public CSSDisablePropsRule {
 public:
-  CSSFirstLetterRule(nsIHTMLCSSStyleSheet* aSheet)
-    : CSSDisablePropsRule(aSheet) {}
+  CSSFirstLetterRule() {}
 
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 };
@@ -108,14 +101,6 @@ CSSDisablePropsRule::~CSSDisablePropsRule()
 }
 
 NS_IMPL_ISUPPORTS1(CSSDisablePropsRule, nsIStyleRule)
-
-NS_IMETHODIMP
-CSSDisablePropsRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
-{
-  NS_IF_ADDREF(mSheet);
-  aSheet = mSheet;
-  return NS_OK;
-}
 
 #ifdef DEBUG
 NS_IMETHODIMP
@@ -412,14 +397,9 @@ HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
 HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()
 {
   NS_RELEASE(mURL);
-  if (nsnull != mFirstLineRule) {
-    mFirstLineRule->mSheet = nsnull;
-    NS_RELEASE(mFirstLineRule);
-  }
-  if (nsnull != mFirstLetterRule) {
-    mFirstLetterRule->mSheet = nsnull;
-    NS_RELEASE(mFirstLetterRule);
-  }
+
+  NS_IF_RELEASE(mFirstLineRule);
+  NS_IF_RELEASE(mFirstLetterRule);
 }
 
 NS_IMPL_ISUPPORTS3(HTMLCSSStyleSheetImpl,
@@ -455,7 +435,7 @@ HTMLCSSStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData)
   nsIAtom* pseudoTag = aData->mPseudoTag;
   if (pseudoTag == nsCSSPseudoElements::firstLine) {
     if (!mFirstLineRule) {
-      mFirstLineRule = new CSSFirstLineRule(this);
+      mFirstLineRule = new CSSFirstLineRule();
       if (!mFirstLineRule)
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(mFirstLineRule);
@@ -464,7 +444,7 @@ HTMLCSSStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData)
   }
   else if (pseudoTag == nsCSSPseudoElements::firstLetter) {
     if (!mFirstLetterRule) {
-      mFirstLetterRule = new CSSFirstLetterRule(this);
+      mFirstLetterRule = new CSSFirstLetterRule();
       if (!mFirstLetterRule)
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(mFirstLetterRule);
@@ -516,14 +496,9 @@ HTMLCSSStyleSheetImpl::Reset(nsIURI* aURL)
   NS_IF_RELEASE(mURL);
   mURL = aURL;
   NS_ADDREF(mURL);
-  if (nsnull != mFirstLineRule) {
-    mFirstLineRule->mSheet = nsnull;
-    NS_RELEASE(mFirstLineRule);
-  }
-  if (nsnull != mFirstLetterRule) {
-    mFirstLetterRule->mSheet = nsnull;
-    NS_RELEASE(mFirstLetterRule);
-  }
+
+  NS_IF_RELEASE(mFirstLineRule);
+  NS_IF_RELEASE(mFirstLetterRule);
   return NS_OK;
 }
 

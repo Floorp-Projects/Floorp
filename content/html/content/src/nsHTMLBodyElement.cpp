@@ -69,22 +69,18 @@ class nsHTMLBodyElement;
 
 class BodyRule: public nsIStyleRule {
 public:
-  BodyRule(nsHTMLBodyElement* aPart, nsHTMLStyleSheet* aSheet);
+  BodyRule(nsHTMLBodyElement* aPart);
   virtual ~BodyRule();
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-
-  // The new mapping function.
+  // nsIStyleRule interface
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-
 #ifdef DEBUG
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
   nsHTMLBodyElement*  mPart;  // not ref-counted, cleared by content 
-  nsHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
 };
 
 //----------------------------------------------------------------------
@@ -126,10 +122,9 @@ protected:
 
 //----------------------------------------------------------------------
 
-BodyRule::BodyRule(nsHTMLBodyElement* aPart, nsHTMLStyleSheet* aSheet)
+BodyRule::BodyRule(nsHTMLBodyElement* aPart)
 {
   mPart = aPart;
-  mSheet = aSheet;
 }
 
 BodyRule::~BodyRule()
@@ -137,14 +132,6 @@ BodyRule::~BodyRule()
 }
 
 NS_IMPL_ISUPPORTS1(BodyRule, nsIStyleRule)
-
-NS_IMETHODIMP
-BodyRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
-{
-  NS_IF_ADDREF(mSheet);
-  aSheet = mSheet;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 BodyRule::MapRuleInfoInto(nsRuleData* aData)
@@ -303,7 +290,6 @@ nsHTMLBodyElement::~nsHTMLBodyElement()
 {
   if (mContentStyleRule) {
     mContentStyleRule->mPart = nsnull;
-    mContentStyleRule->mSheet = nsnull;
     NS_RELEASE(mContentStyleRule);
   }
 }
@@ -435,7 +421,6 @@ nsHTMLBodyElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   nsIDocument *document = GetCurrentDoc();
   if (aDocument != document && mContentStyleRule) {
     mContentStyleRule->mPart = nsnull;
-    mContentStyleRule->mSheet = nsnull;
 
     // destroy old style rule since the sheet will probably change
     NS_RELEASE(mContentStyleRule);
@@ -504,8 +489,7 @@ nsHTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   if (!mContentStyleRule && IsInDoc()) {
     // XXXbz should this use GetOwnerDoc() or GetCurrentDoc()?
     // sXBL/XBL2 issue!
-    mContentStyleRule = new BodyRule(this,
-                                     GetOwnerDoc()->GetAttributeStyleSheet());
+    mContentStyleRule = new BodyRule(this);
     NS_IF_ADDREF(mContentStyleRule);
   }
   if (aRuleWalker && mContentStyleRule) {

@@ -107,43 +107,32 @@ private:
   friend class HTMLColorRule;
   class HTMLColorRule : public nsIStyleRule {
   public:
-    HTMLColorRule(nsHTMLStyleSheet* aSheet);
-    virtual ~HTMLColorRule();
+    HTMLColorRule() {}
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-
-    // The new mapping function.
+    // nsIStyleRule interface
     NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-
   #ifdef DEBUG
     NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   #endif
 
     nscolor             mColor;
-    nsHTMLStyleSheet*  mSheet;
   };
 
   class GenericTableRule;
   friend class GenericTableRule;
   class GenericTableRule: public nsIStyleRule {
   public:
-    GenericTableRule(nsHTMLStyleSheet* aSheet);
-    virtual ~GenericTableRule();
+    GenericTableRule() {}
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-
-    // The new mapping function.
+    // nsIStyleRule interface
     NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
-
   #ifdef DEBUG
     NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   #endif
-
-    nsHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
   };
 
   // this rule handles <th> inheritance
@@ -151,8 +140,7 @@ private:
   friend class TableTHRule;
   class TableTHRule: public GenericTableRule {
   public:
-    TableTHRule(nsHTMLStyleSheet* aSheet);
-    virtual ~TableTHRule();
+    TableTHRule() {}
 
     NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
   };
@@ -163,8 +151,7 @@ private:
   friend class TableTbodyRule;
   class TableTbodyRule: public GenericTableRule {
   public:
-    TableTbodyRule(nsHTMLStyleSheet* aSheet);
-    virtual ~TableTbodyRule();
+    TableTbodyRule() {}
 
     NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
   };
@@ -174,8 +161,7 @@ private:
   friend class TableRowRule;
   class TableRowRule: public GenericTableRule {
   public:
-    TableRowRule(nsHTMLStyleSheet* aSheet);
-    virtual ~TableRowRule();
+    TableRowRule() {}
 
     NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
   };
@@ -185,8 +171,7 @@ private:
   friend class TableColgroupRule;
   class TableColgroupRule: public GenericTableRule {
   public:
-    TableColgroupRule(nsHTMLStyleSheet* aSheet);
-    virtual ~TableColgroupRule();
+    TableColgroupRule() {}
 
     NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
   };
@@ -196,8 +181,7 @@ private:
   friend class TableColRule;
   class TableColRule: public GenericTableRule {
   public:
-    TableColRule(nsHTMLStyleSheet* aSheet);
-    virtual ~TableColRule();
+    TableColRule() {}
 
     NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
   };
