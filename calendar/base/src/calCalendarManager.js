@@ -74,14 +74,20 @@ calCalendarManager.prototype = {
     },
 
     initDB: function() {
-        var calendarTable = "id INTEGER PRIMARY KEY, name STRING, type STRING, uri STRING";
+        var sqlTables = { cal_calendars: "id INTEGER PRIMARY KEY, name STRING, type STRING, uri STRING",
+                          cal_calendars_prefs: "id INTEGER PRIMARY KEY, calendar INTERGER, name STRING, value STRING"
+        };
+
         var dbService = Components.classes[kStorageServiceContractID].getService(kStorageServiceIID);
 
         this.mDB = dbService.getProfileStorage("profile");
-        try {
-            this.mDB.createTable("cal_calendars", calendarTable);
-        } catch (e) {
-            dump("error creating table cal_calendars -- probably already exists\n");
+
+        for (table in sqlTables) {
+            try {
+                this.mDB.createTable(table, sqlTables[table]);
+            } catch (ex) {
+                dump("error creating table " + table + " -- probably already exists\n");
+            }
         }
 
         this.mSelectCalendars = createStatement (
@@ -102,6 +108,19 @@ calCalendarManager.prototype = {
             this.mDB,
             "DELETE FROM cal_calendars WHERE id = :id"
             );
+
+        this.mGetPref = createStatement (
+            this.mDB,
+            "SELECT value FROM cal_calendars_prefs WHERE calendar = :calendar AND name = :name");
+
+        this.mDeletePref = createStatement (
+            this.mDB,
+            "DELETE FROM cal_calendars_prefs WHERE calendar = :calendar AND name = :name");
+
+        this.mInsertPref = createStatement (
+            this.mDB,
+            "INSERT INTO cal_calendars_prefs (calendar, name, value) " +
+            "VALUES (:calendar, :name, :value)"
 
 
     },
@@ -183,4 +202,47 @@ calCalendarManager.prototype = {
         return calendars;
     },
 
+    getCalendarPref: function(calendar, name) {
+        var stmt = this.mGetPref;
+        stmt.reset();
+        var pp = stmt.params;
+        pp.calendar = this.findCalendarID(calendar);
+        pp.name = name;
+
+        var value = null;
+        if (stmt.step()) {
+            value = stmt.row.value;
+        }
+        stmt.reset();
+        return value;
+    },
+
+    setCalendarPref: function(calendar, name, value) {
+        var calendarID = this.findCalendarID(calendar);
+
+        this.mDB.beginTransaction();
+
+        var pp = this.mDeletePref.params;
+        pp.calendar = calendarID;
+        this.mDeletePref.step();
+        this.mDeletePref.reset();
+
+        pp = this.mInsertPref.params;
+        pp.calendar = calendarID;
+        pp.name = name;
+        pp.value = value;
+        this.mInsertPref.step();
+        this.mInsertPref.reset();
+
+        this.mDB.commitTransaction();
+    }
+
+    deleteCalendarPref: function(calendar, name) {
+        var calendarID = this.findCalendarID(calendar);
+
+        var pp = this.mDeletePref.params;
+        pp.calendar = calendarID;
+        this.mDeletePref.step();
+        this.mDeletePref.reset();
+    }
 };

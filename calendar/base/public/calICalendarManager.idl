@@ -62,4 +62,9 @@ interface calICalendarManager : nsISupports
   /* return a list of all calendars currently registered */
   void getCalendars(out PRUint32 count,
                     [array, size_is(count), retval] out calICalendar aCalendars);
+
+
+  AUTF8String getCalendarPref(in calICalendar aCalendar, in AUTF8String aName);
+  void setCalendarPref(in calICalendar aCalendar, in AUTF8String aName, in AUTF8String aValue);
+  void deleteCalendarPref(in calICalendar aCalendar, in AUTF8String aName);
 };
