@@ -555,8 +555,8 @@ input[type="radio"][disabled]:active {
 
 :-moz-radio {
   background-color:black;
-  width:6px;
-  height:6px;
+  width:4px;
+  height:4px;
   left:6px;
   top:6px;
   -moz-border-radius:3px;
