@@ -17,10 +17,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Author: Eric D Vaughan (evaughan@netscape.com)
+ * Author: Eric D Vaughan <evaughan@netscape.com>
  *
- * Contributor(s): 
+ * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsCOMPtr.h"
@@ -73,7 +74,8 @@ NS_NewScrollBoxFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 }
 
 nsScrollBoxFrame::nsScrollBoxFrame(nsIPresShell* aShell):nsBoxFrame(aShell), mVerticalOverflow(PR_FALSE), mHorizontalOverflow(PR_FALSE),
-     mRestoreRect(-1,-1,-1,-1)
+     mRestoreRect(-1, -1, -1, -1),
+     mLastPos(-1, -1)
 {
 }
 
@@ -472,38 +474,72 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
        PostScrollPortEvent(shell, mHorizontalOverflow, nsScrollPortEvent::horizontal);
   }
 
+  /**
+   * this code is resposible for restoring the scroll position back to some
+   * saved positon. if the user has not moved the scroll position manually
+   * we keep scrolling down until we get to our orignally position. keep in
+   * mind that content could incrementally be coming in. we only want to stop
+   * when we reach our new position.
+   */
 
-  
-  if (mRestoreRect.y != -1) {
-        // if we are supposed to restore
-        nsIPresContext* presContext = aState.GetPresContext();
-        nsIScrollableView* scrollingView;
-        nsIView*           view;
-        GetView(presContext, &view);
-        if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
+  if ((mRestoreRect.y != -1) &&
+      (mLastPos.x != -1) &&
+      (mLastPos.y != -1)) {
 
-          nsIView* child = nsnull;
-          nsRect childRect(0,0,0,0);
-          if (NS_SUCCEEDED(scrollingView->GetScrolledView(child)) && child) {
-            child->GetBounds(childRect);
-          }
+    // make sure our scroll position did not change for where we last put
+    // it. if it does then the user must have moved it, and we no longer
+    // need to restore.
+    nsIPresContext* presContext(aState.GetPresContext());
+    nsIView* view;
+    GetView(presContext, &view);
+    if (!view)
+      return NS_OK; // don't freak out if we have no view
 
-          PRInt32 cx,cy,x,y;
-          scrollingView->GetScrollPosition(cx,cy);
+    nsCOMPtr<nsIScrollableView> scrollingView(do_QueryInterface(view));
+    if (scrollingView) {
+      nscoord x = 0;
+      nscoord y = 0;
+      scrollingView->GetScrollPosition(x, y);
 
-          x = (int)(((float)childRect.width / mRestoreRect.width) * mRestoreRect.x);
-          y = (int)(((float)childRect.height / mRestoreRect.height) * mRestoreRect.y);
+      // if we didn't move, we still need to restore
+      if ((x == mLastPos.x) && (y == mLastPos.y)) {
+        nsRect childRect(0, 0, 0, 0);
+        nsIView* child = nsnull;
+        nsresult rv = scrollingView->GetScrolledView(child);
+        if (NS_SUCCEEDED(rv) && child)
+          child->GetBounds(childRect);
 
-          // if our position is greater than the scroll position scroll.
-          // remember we could be incrementally loading so we may enter and
-          // scroll many times.
-          if (y > cy || x > cx)
-            scrollingView->ScrollTo(x,y,0);
-          else // if we reached the position then stop
-            mRestoreRect.y = -1;
+        PRInt32 cx, cy, x, y;
+        scrollingView->GetScrollPosition(cx,cy);
+
+        x = (int)
+          (((float)childRect.width / mRestoreRect.width) * mRestoreRect.x);
+        y = (int)
+          (((float)childRect.height / mRestoreRect.height) * mRestoreRect.y);
+
+        // if our position is greater than the scroll position, scroll.
+        // remember that we could be incrementally loading so we may enter
+        // and scroll many times.
+        if ((y > cy) || (x > cx)) {
+          scrollingView->ScrollTo(x, y, 0);
+          // scrollpostion goes from twips to pixels. this fixes any roundoff
+          // problems.
+          scrollingView->GetScrollPosition(mLastPos.x, mLastPos.y);
+        }
+        else {
+          // if we reached the position then stop
+          mRestoreRect.y = -1; 
+          mLastPos.x = -1;
+          mLastPos.y = -1;
         }
       }
-  
+      else {
+        // user moved the position, so we won't need to restore
+        mLastPos.x = -1;
+        mLastPos.y = -1;
+      }
+    }
+  }
 
   return NS_OK;
 }
@@ -771,11 +807,21 @@ nsScrollBoxFrame::RestoreState(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(res))
       res = height->GetData(&h);
 
-    // don't do it now store it later and do it in layout.
+    mLastPos.x = -1;
+    mLastPos.y = -1;
+    mRestoreRect.SetRect(-1, -1, -1, -1);
+
+    // don't do it now, store it later and do it in layout.
     if (NS_SUCCEEDED(res)) {
-      mRestoreRect.SetRect(x,y,w,h);
-    } else {
-      mRestoreRect.SetRect(-1,-1,-1,-1);
+      mRestoreRect.SetRect(x, y, w, h);
+      nsIView* view;
+      GetView(aPresContext, &view);
+      if (!view)
+        return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsIScrollableView> scrollingView(do_QueryInterface(view));
+      if (scrollingView);
+        scrollingView->GetScrollPosition(mLastPos.x, mLastPos.y);
     }
   }
 
