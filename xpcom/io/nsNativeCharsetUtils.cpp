@@ -947,81 +947,61 @@ NS_ShutdownNativeCharsetUtils()
 #define INCL_DOS
 #include <os2.h>
 #include <uconv.h>
-#include "nsPromiseFlatString.h"
-
-#ifdef XP_OS2_EMX
-#include <ulserr.h>
-#endif
+#include "nsAString.h"
+#include <ulserrno.h>
 
 static UconvObject UnicodeConverter = NULL;
 
 NS_COM nsresult
 NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output)
 {
-    nsresult rv;
+    PRUint32 inputLen = input.Length();
 
-    // XXX not the most efficient algorithm here.
-    // 
-    // it might be possible to avoid conversion to flat (i.e., null terminated)
-    // storage if UniUconvToUcs can handle a substring as the input argument.
-    // looks like it probably can, in which case we can just initialize
-    // |inputStr| from the result of BeginReading.
- 
-    const nsPromiseFlatCString &flat = PromiseFlatCString(input);
-    char *inputStr = NS_CONST_CAST(char*, flat.get());
-    size_t inputLen = flat.Length() + 1; // include null char
+    nsACString::const_iterator iter;
+    input.BeginReading(iter);
+    const char *inputStr = iter.get();
 
-    // resultLen must be >= inputLen or the unicode conversion will fail
-    size_t resultLen = inputLen;
-
-    output.Truncate();
+    // determine length of result
+    PRUint32 resultLen = inputLen;
     output.SetLength(resultLen);
+
     nsAString::iterator out_iter;
     output.BeginWriting(out_iter);
     UniChar *result = (UniChar*)out_iter.get();
 
     size_t cSubs = 0;
     size_t resultLeft = resultLen;
-  
+
     int unirc = ::UniUconvToUcs(UnicodeConverter, (void**)&inputStr, &inputLen,
                                 &result, &resultLeft, &cSubs);
 
     NS_ASSERTION(unirc != UCONV_E2BIG, "Path too big");
-  
+
     if (unirc != ULS_SUCCESS) {
         output.Truncate();
         return NS_ERROR_FAILURE;
     }
 
-    // need to update string length to reflect how many bytes were actually
-    // written.  note: conversion wrote null byte.
-    output.SetLength(resultLen - (resultLeft + 1));
+    // Need to update string length to reflect how many bytes were actually
+    // written.
+    output.Truncate(resultLen - resultLeft);
     return NS_OK;
 }
 
 NS_COM nsresult
 NS_CopyUnicodeToNative(const nsAString &input, nsACString &output)
 {
-    nsresult rv;
+    size_t inputLen = input.Length();
 
-    // XXX not the most efficient algorithm here
-    // 
-    // it might be possible to avoid conversion to flat (i.e., null terminated)
-    // storage if UniUconvToUcs can handle a substring as the input argument.
-    // looks like it probably can, in which case we can just initialize
-    // |inputStr| from the result of BeginReading.
+    nsAString::const_iterator iter;
+    input.BeginReading(iter);
+    UniChar* inputStr = (UniChar*) NS_CONST_CAST(PRUnichar*, iter.get());
 
-    const nsPromiseFlatString &flat = PromiseFlatString(input);
-    UniChar *inputStr = (UniChar*) NS_CONST_CAST(PRUnichar*, flat.get());
     // maximum length of unicode string of length x converted to native
     // codepage is x*2
-    size_t inputLen = (flat.Length()*2) + 1; // include null char
-
-    // resultLen must be >= inputLen or the unicode conversion will fail
-    size_t resultLen = inputLen;
-
-    output.Truncate();
+    size_t resultLen = inputLen * 2;
     output.SetLength(resultLen);
+
     nsACString::iterator out_iter;
     output.BeginWriting(out_iter);
     char *result = out_iter.get();
@@ -1039,9 +1019,9 @@ NS_CopyUnicodeToNative(const nsAString &input, nsACString &output)
         return NS_ERROR_FAILURE;
     }
 
-    // need to update string length to reflect how many bytes were actually
-    // written.  note: conversion wrote null byte.
-    output.SetLength(resultLen - (resultLeft + 1));
+    // Need to update string length to reflect how many bytes were actually
+    // written.
+    output.Truncate(resultLen - resultLeft);
     return NS_OK;
 }
 
