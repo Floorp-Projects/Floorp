@@ -3365,6 +3365,9 @@ NS_IMETHODIMP nsDocument::FindNext(const nsAReadableString& aSearchStr, PRBool a
   return NS_ERROR_FAILURE;
 }
 
+/**
+  * nsIDiskDocument methods
+ */
 
 NS_IMETHODIMP
 nsDocument::InitDiskDocument(nsFileSpec* aFileSpec)
@@ -3390,7 +3393,8 @@ nsDocument::SaveFile(nsFileSpec*     aFileSpec,
                      PRBool          aSaveCopy,
                      const nsString& aFormatType,
                      const nsString& aSaveCharset,
-                     PRUint32        aFlags)
+                     PRUint32        aFlags,
+                     PRUint32        aWrapColumn)
 {
   if (!aFileSpec)
     return NS_ERROR_NULL_POINTER;
@@ -3428,6 +3432,9 @@ nsDocument::SaveFile(nsFileSpec*     aFileSpec,
   rv = encoder->Init(this, aFormatType, aFlags);
   if (NS_FAILED(rv))
     return rv;
+
+  if (aFlags & nsIDocumentEncoder::OutputWrap)
+    encoder->SetWrapColumn(aWrapColumn);
 
   nsAutoString charsetStr(aSaveCharset);
   if (charsetStr.Length() == 0)

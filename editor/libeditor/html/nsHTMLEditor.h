@@ -45,6 +45,7 @@ class nsIDOMKeyEvent;
 class nsITransferable;
 class nsIDOMEventReceiver;
 class nsIDOMNSRange;
+class nsIDocumentEncoder;
 
 /**
  * The HTML editor implementation.<br>
@@ -270,8 +271,8 @@ public:
                             PRUint32 aFlags);
                             
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
-                            const nsString& aFormatType,
-                            const nsString* aCharsetOverride,
+                            const nsAReadableString& aFormatType,
+                            const nsAReadableString* aCharsetOverride,
                             PRUint32 aFlags);
 
   NS_IMETHOD GetHeadContentsAsHTML(nsString& aOutputString);
@@ -490,6 +491,11 @@ protected:
                                   PRInt32     aEndOffset,
                                   nsISelection *aSelection);
 
+  // Helpers for output routines
+  NS_IMETHOD GetAndInitDocEncoder(const nsAReadableString& aFormatType,
+                                  PRUint32 aFlags,
+                                  const nsAReadableString* aCharset,
+                                  nsIDocumentEncoder** encoder);
 
   // Methods for handling plaintext quotations
   NS_IMETHOD PasteAsPlaintextQuotation(PRInt32 aSelectionType);

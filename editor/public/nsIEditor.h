@@ -428,8 +428,8 @@ public:
                             const nsAReadableString& aFormatType,
                             PRUint32 aFlags) = 0;
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
-                            const nsString& aFormatType,
-                            const nsString* aCharsetOverride,
+                            const nsAReadableString& aFormatType,
+                            const nsAReadableString* aCharsetOverride,
                             PRUint32 aFlags) = 0;
 
 

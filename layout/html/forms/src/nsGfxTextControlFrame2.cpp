@@ -1880,7 +1880,7 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
         col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
         col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
       }
-      textEditor->SetBodyWrapWidth(col);
+      textEditor->SetWrapWidth(col);
       delete spec;
     }
 

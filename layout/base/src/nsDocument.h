@@ -417,7 +417,8 @@ public:
                        PRBool          aSaveCopy,
                        const nsString& aSaveFileType,
                        const nsString& aSaveCharset,
-                       PRUint32        aFlags);
+                       PRUint32        aFlags,
+                       PRUint32        aWrapColumn);
 
   NS_IMETHOD  GetFileSpec(nsFileSpec& aFileSpec);
   NS_IMETHOD  GetModCount(PRInt32 *outModCount);

@@ -302,8 +302,8 @@ public:
                             PRUint32 aFlags);
                             
   NS_IMETHOD OutputToStream(nsIOutputStream* aOutputStream,
-                            const nsString& aFormatType,
-                            const nsString* aCharsetOverride,
+                            const nsAReadableString& aFormatType,
+                            const nsAReadableString* aCharsetOverride,
                             PRUint32 aFlags);
 
   /* Listeners */
@@ -489,7 +489,10 @@ protected:
   
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
-  
+
+  /* Helper for output routines -- we expect subclasses to override this */
+  NS_IMETHOD GetWrapWidth(PRInt32* aWrapCol);
+
 protected:
 // XXXX: Horrible hack! We are doing this because
 // of an error in Gecko which is not rendering the

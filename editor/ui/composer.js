@@ -43,6 +43,8 @@ pref("editor.table.delete_key", 0);
 
 pref("editor.prettyprint", true);
 
+pref("editor.htmlWrapColumn", 72);
+
 pref("editor.throbber.url","chrome://editor/locale/editor.properties");
 
 pref("editor.auto_save",                    false);

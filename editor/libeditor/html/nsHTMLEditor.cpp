@@ -4933,10 +4933,10 @@ nsHTMLEditor::GetBodyStyleContext(nsIStyleContext** aStyleContext)
 }
 
 //
-// Get the wrap width for the first PRE tag in the document.
-// If no PRE tag, throw an error.
+// Get an appropriate wrap width for saving this document.
 //
-NS_IMETHODIMP nsHTMLEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
+NS_IMETHODIMP
+nsHTMLEditor::GetWrapWidth(PRInt32 *aWrapColumn)
 {
   nsresult res;
 
@@ -4945,33 +4945,46 @@ NS_IMETHODIMP nsHTMLEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
 
   *aWrapColumn = -1;        // default: no wrap
 
-  nsCOMPtr<nsIStyleContext> styleContext;
-  res = GetBodyStyleContext(getter_AddRefs(styleContext));
-  if (NS_FAILED(res)) return res;
+  // Don't wrap output of text fields
+  if (mFlags & eEditorSingleLineMask)
+    return NS_OK;
 
-  const nsStyleText* styleText =
-    (const nsStyleText*)styleContext->GetStyleData(eStyleStruct_Text);
-
-  if (NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace)
-    *aWrapColumn = 0;   // wrap to window width
-  else if (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace)
+  if (mFlags & eEditorPlaintextMask)
   {
-    const nsStylePosition* stylePosition =
-      (const nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position); 
-    if (stylePosition->mWidth.GetUnit() == eStyleUnit_Chars)
-      *aWrapColumn = stylePosition->mWidth.GetIntValue(); 
-    else {
+    nsCOMPtr<nsIStyleContext> styleContext;
+    res = GetBodyStyleContext(getter_AddRefs(styleContext));
+    if (NS_SUCCEEDED(res) && styleContext)
+    {
+      const nsStyleText* styleText =
+        (const nsStyleText*)styleContext->GetStyleData(eStyleStruct_Text);
+
+      if (NS_STYLE_WHITESPACE_PRE == styleText->mWhiteSpace)
+      {
+        *aWrapColumn = 0;   // wrap to window width
+        return NS_OK;
+      }
+      else if (NS_STYLE_WHITESPACE_MOZ_PRE_WRAP == styleText->mWhiteSpace)
+      {
+        const nsStylePosition* stylePosition =
+          (const nsStylePosition*)styleContext->GetStyleData(eStyleStruct_Position); 
+        if (stylePosition->mWidth.GetUnit() == eStyleUnit_Chars)
+        {
+          *aWrapColumn = stylePosition->mWidth.GetIntValue();
+          return NS_OK;
+        }
 #ifdef DEBUG_akkana
-      printf("Can't get wrap column: style unit is %d\n",
-             stylePosition->mWidth.GetUnit());
+        else
+          printf("Can't get wrap column: style unit is %d\n",
+                 stylePosition->mWidth.GetUnit());
 #endif
-      *aWrapColumn = -1;
-      return NS_ERROR_UNEXPECTED;
+      }
     }
   }
-  else
-    *aWrapColumn = -1;
-  return NS_OK;
+
+  // If we get here, we weren't able to get the wrap column from style,
+  // or we aren't plaintext so we don't expect to.
+  // So fall back on nsEditor (which uses a pref).
+  return nsEditor::GetWrapWidth(aWrapColumn);
 }
 
 //
@@ -4998,7 +5011,7 @@ static void CutStyle(const char* stylename, nsString& styleValue)
 // interspersed quoted text blocks.)
 // Alternately: Change the wrap width on the editor style sheet.
 // 
-NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
+NS_IMETHODIMP nsHTMLEditor::SetWrapWidth(PRInt32 aWrapColumn)
 {
   nsresult res;
 
@@ -6163,10 +6176,100 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
   return res;
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
-                                           const nsAReadableString& aFormatType,
-                                           PRUint32 aFlags)
+// Shared between OutputToString and OutputToStream
+NS_IMETHODIMP
+nsHTMLEditor::GetAndInitDocEncoder(const nsAReadableString& aFormatType,
+                                   PRUint32 aFlags,
+                                   const nsAReadableString* aCharset,
+                                   nsIDocumentEncoder** encoder)
 {
+  nsCOMPtr<nsIPresShell> presShell;
+  nsresult rv = GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(rv)) return rv;
+  if (!presShell) return NS_ERROR_FAILURE;
+
+  nsCAutoString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
+  formatType.AppendWithConversion(aFormatType);
+  nsCOMPtr<nsIDocumentEncoder> docEncoder (do_CreateInstance(formatType, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDocument> doc;
+  rv = presShell->GetDocument(getter_AddRefs(doc));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = docEncoder->Init(doc, aFormatType, aFlags);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aCharset && aCharset->Length() != 0
+      && !(aCharset->Equals(NS_LITERAL_STRING("null"))))
+    docEncoder->SetCharset(*aCharset);
+
+  PRInt32 wc;
+  (void) GetWrapWidth(&wc);
+  if (wc >= 0)
+    (void) docEncoder->SetWrapColumn(wc);
+
+  // Set the selection, if appropriate.
+  // We do this either if the OutputSelectionOnly flag is set,
+  // in which case we use our existing selection ...
+  if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
+  {
+    nsCOMPtr<nsISelection> selection;
+    rv = GetSelection(getter_AddRefs(selection));
+    if (NS_SUCCEEDED(rv) && selection)
+      rv = docEncoder->SetSelection(selection);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  // ... or if the root element is not a body,
+  // in which case we set the selection to encompass the root.
+  else
+  {
+    nsCOMPtr<nsIDOMElement> rootElement;
+    GetRootElement(getter_AddRefs(rootElement));
+    NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
+    if (!nsHTMLEditUtils::IsBody(rootElement))
+    {
+      // XXX Why does this use range rather than selection collapse/extend?
+      nsCOMPtr<nsIDOMRange> range (do_CreateInstance(kCRangeCID, &rv));
+      if (NS_FAILED(rv)) return rv;
+      if (!range) return NS_ERROR_FAILURE;
+      nsCOMPtr<nsISelection> selection (do_CreateInstance(kCDOMSelectionCID,
+                                                          &rv));
+      if (NS_FAILED(rv)) return rv;
+      if (!selection) return NS_ERROR_FAILURE;
+
+      // get the independent selection interface
+      nsCOMPtr<nsIIndependentSelection> indSel = do_QueryInterface(selection);
+      if (indSel)
+        indSel->SetPresShell(presShell);
+
+      nsCOMPtr<nsIContent> content(do_QueryInterface(rootElement));
+      if (content)
+      {
+        range->SetStart(rootElement,0);
+        PRInt32 children;
+        if (NS_SUCCEEDED(content->ChildCount(children)))
+          range->SetEnd(rootElement,children);
+        // XXX else, should we return the error code?
+
+        if (NS_FAILED(selection->AddRange(range)))
+          return NS_ERROR_FAILURE;
+      }
+      rv = docEncoder->SetSelection(selection);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
+
+  NS_ADDREF(*encoder = docEncoder);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
+                             const nsAReadableString& aFormatType,
+                             PRUint32 aFlags)
+{
+  // XXX Why isn't this rules stuff also in OutputToStream?
   PRBool cancel, handled;
   nsString resultString;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
@@ -6179,226 +6282,29 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsAWritableString& aOutputString,
   if (handled)
   { // this case will get triggered by password fields
     aOutputString.Assign(*(ruleInfo.outString));
-  }
-  else
-  {
-    nsCOMPtr<nsISelection> selection;
-
-    // Set the wrap column.  If our wrap column is 0,
-    // i.e. wrap to body width, then don't set it, let the
-    // document encoder use its own default.
-    PRInt32 wrapColumn;
-    PRUint32 wc =0;
-    if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
-    {
-      if (wrapColumn != 0)
-      {
-        if (wrapColumn < 0)
-          wc = 0;
-        else
-          wc = (PRUint32)wrapColumn;
-      }
-    }
-
-    nsCOMPtr<nsIDOMElement> rootElement;
-    GetRootElement(getter_AddRefs(rootElement));
-    NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
-    //is this a body?? do we want to output the whole doc?
-    // Set the selection, if appropriate:
-    nsCOMPtr<nsISelectionPrivate> selPriv;
-    if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
-    {
-      rv = GetSelection(getter_AddRefs(selection));
-      if (NS_FAILED(rv))
-        return rv;
-      selPriv = do_QueryInterface(selection);
-    }
-    else if (nsHTMLEditUtils::IsBody(rootElement))
-    {
-      nsCOMPtr<nsIDocumentEncoder> encoder;
-      nsCAutoString formatType(NS_DOC_ENCODER_CONTRACTID_BASE);
-      formatType.AppendWithConversion(aFormatType);
-      rv = nsComponentManager::CreateInstance((char*)formatType,
-                                              nsnull,
-                                              NS_GET_IID(nsIDocumentEncoder),
-                                              getter_AddRefs(encoder));
-      NS_ENSURE_SUCCESS(rv, rv);
-      if (!mPresShellWeak) 
-        return NS_ERROR_NOT_INITIALIZED;
-      nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-
-      if (!ps)
-        return NS_ERROR_FAILURE;
-
-      nsCOMPtr<nsIDocument> doc;
-      rv = ps->GetDocument(getter_AddRefs(doc));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      rv = encoder->Init(doc, aFormatType, aFlags);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      if (wc != 0)
-        encoder->SetWrapColumn(wc);
-
-      return encoder->EncodeToString(aOutputString);
-
-    }
-    if (!selection)
-    {
-      nsCOMPtr<nsIDOMRange> range;
-      rv = nsComponentManager::CreateInstance(kCRangeCID,
-                                 nsnull,
-                                 NS_GET_IID(nsIDOMRange),
-                                 getter_AddRefs(range));
-      if (!range)
-        return NS_ERROR_FAILURE;
-      rv = nsComponentManager::CreateInstance(kCDOMSelectionCID,
-                                 nsnull,
-                                 NS_GET_IID(nsISelection),
-                                 getter_AddRefs(selection));
-      if (selection)
-      {
-        selPriv = do_QueryInterface(selection);
-  //get the independent selection interface
-        nsCOMPtr<nsIIndependentSelection> indSel = do_QueryInterface(selection);
-        if (indSel)
-        {
-          nsCOMPtr<nsIPresShell> presShell;
-          if (NS_SUCCEEDED(GetPresShell(getter_AddRefs(presShell))) && presShell)
-            indSel->SetPresShell(presShell);
-        }
-        nsCOMPtr<nsIContent> content(do_QueryInterface(rootElement));
-        if (content)
-        {
-          range->SetStart(rootElement,0);
-          PRInt32 children;
-          if (NS_SUCCEEDED(content->ChildCount(children)))
-          {
-            range->SetEnd(rootElement,children);
-          }
-          if (NS_FAILED(selection->AddRange(range)))
-            return NS_ERROR_FAILURE;
-        }
-      }
-    }
-    PRUnichar *tmp;
-    char *tmpformattype= ToNewCString(aFormatType);//crap copied string
-    if (!tmpformattype)
-      return NS_ERROR_NULL_POINTER;
-    rv = selPriv->ToStringWithFormat(tmpformattype, aFlags, wc, &tmp);
-    if (NS_SUCCEEDED(rv) && tmp)
-    {
-      nsMemory::Free(tmpformattype);
-      aOutputString.Assign(tmp);
-      nsMemory::Free(tmp);
-    }
     return rv;
   }
-#if 0
 
-  PRBool cancel, handled;
-  nsString resultString;
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
-  ruleInfo.outString = &resultString;
-  ruleInfo.outputFormat = &aFormatType;
-  nsresult rv = mRules->WillDoAction(nsnull, &ruleInfo, &cancel, &handled);
-  if (cancel || NS_FAILED(rv)) { return rv; }
-  if (handled)
-  { // this case will get triggered by password fields
-    aOutputString = *(ruleInfo.outString);
-  }
-  else
-  { // default processing
-    rv = NS_OK;
-    
-    // special-case for empty document when requesting plain text,
-    // to account for the bogus text node
-    if (aFormatType.EqualsWithConversion("text/plain"))
-    {
-      PRBool docEmpty;
-      rv = GetDocumentIsEmpty(&docEmpty);
-      if (NS_FAILED(rv)) return rv;
-      
-      if (docEmpty) {
-        aOutputString.SetLength(0);
-        return NS_OK;
-      }
-      else if (mFlags & eEditorPlaintextMask)
-        aFlags |= nsIDocumentEncoder::OutputPreformatted;
-    }
-
-
-    nsCOMPtr<nsIDocumentEncoder> encoder;
-    char* contractid = (char *)nsMemory::Alloc(strlen(NS_DOC_ENCODER_CONTRACTID_BASE) + aFormatType.Length() + 1);
-    if (! contractid)
-      return NS_ERROR_OUT_OF_MEMORY;
-    strcpy(contractid, NS_DOC_ENCODER_CONTRACTID_BASE);
-    char* type = aFormatType.ToNewCString();
-    strcat(contractid, type);
-    nsCRT::free(type);
-    rv = nsComponentManager::CreateInstance(contractid,
-                                            nsnull,
-                                            NS_GET_IID(nsIDocumentEncoder),
-                                            getter_AddRefs(encoder));
-
-    nsCRT::free(contractid);
-    if (NS_FAILED(rv))
-      return rv;
-
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    rv = GetDocument(getter_AddRefs(domdoc));
-    if (NS_FAILED(rv))
-      return rv;
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-
-    rv = encoder->Init(doc, aFormatType, aFlags);
-    if (NS_FAILED(rv))
-      return rv;
-
-    // Set the selection, if appropriate:
-    if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
-    {
-      nsCOMPtr<nsISelection> selection;
-      rv = GetSelection(getter_AddRefs(selection));
-      if (NS_SUCCEEDED(rv) && selection)
-        encoder->SetSelection(selection);
-    }
-    
-    // Set the wrap column.  If our wrap column is 0,
-    // i.e. wrap to body width, then don't set it, let the
-    // document encoder use its own default.
-    PRInt32 wrapColumn;
-    if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
-    {
-      if (wrapColumn != 0)
-      {
-        PRUint32 wc;
-        if (wrapColumn < 0)
-          wc = 0;
-        else
-          wc = (PRUint32)wrapColumn;
-        if (wrapColumn > 0)
-          (void)encoder->SetWrapColumn(wc);
-      }
-    }
-
-    rv = encoder->EncodeToString(aOutputString);
-  }
-#endif
+  nsCOMPtr<nsIDocumentEncoder> encoder;
+  rv = GetAndInitDocEncoder(aFormatType, aFlags, 0, getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
+  rv = encoder->EncodeToString(aOutputString);
   return rv;
 }
 
-NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
-                                           const nsString& aFormatType,
-                                           const nsString* aCharset,
-                                           PRUint32 aFlags)
+NS_IMETHODIMP
+nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
+                             const nsAReadableString& aFormatType,
+                             const nsAReadableString* aCharset,
+                             PRUint32 aFlags)
 {
-
   nsresult rv;
 
   // special-case for empty document when requesting plain text,
-  // to account for the bogus text node
-  if (aFormatType.EqualsWithConversion("text/plain"))
+  // to account for the bogus text node.
+  // XXX Should there be a similar test in OutputToString?
+  if (aFormatType == NS_LITERAL_STRING("text/plain"))
   {
     PRBool docEmpty;
     rv = GetDocumentIsEmpty(&docEmpty);
@@ -6409,65 +6315,11 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
   }
 
   nsCOMPtr<nsIDocumentEncoder> encoder;
-  char* contractid = (char *)nsMemory::Alloc(strlen(NS_DOC_ENCODER_CONTRACTID_BASE) + aFormatType.Length() + 1);
-  if (! contractid)
-      return NS_ERROR_OUT_OF_MEMORY;
+  rv = GetAndInitDocEncoder(aFormatType, aFlags, aCharset,
+                            getter_AddRefs(encoder));
 
-  strcpy(contractid, NS_DOC_ENCODER_CONTRACTID_BASE);
-  char* type = aFormatType.ToNewCString();
-  strcat(contractid, type);
-  nsCRT::free(type);
-  rv = nsComponentManager::CreateInstance(contractid,
-                                          nsnull,
-                                          NS_GET_IID(nsIDocumentEncoder),
-                                          getter_AddRefs(encoder));
-
-  nsCRT::free(contractid);
-  if (NS_FAILED(rv))
-  {
-    printf("Couldn't get contractid %s\n", contractid);
-    return rv;
-  }
-
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  rv = GetDocument(getter_AddRefs(domdoc));
   if (NS_FAILED(rv))
     return rv;
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
-
-  if (aCharset && aCharset->Length() != 0 && aCharset->EqualsWithConversion("null")==PR_FALSE)
-    encoder->SetCharset(*aCharset);
-
-    rv = encoder->Init(doc, aFormatType, aFlags);
-    if (NS_FAILED(rv))
-      return rv;
-
-  // Set the selection, if appropriate:
-  if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
-  {
-    nsCOMPtr<nsISelection> selection;
-    rv = GetSelection(getter_AddRefs(selection));
-    if (NS_SUCCEEDED(rv) && selection)
-      encoder->SetSelection(selection);
-  }
-    
-  // Set the wrap column.  If our wrap column is 0,
-  // i.e. wrap to body width, then don't set it, let the
-  // document encoder use its own default.
-  PRInt32 wrapColumn;
-  if (NS_SUCCEEDED(GetBodyWrapWidth(&wrapColumn)))
-  {
-    if (wrapColumn != 0)
-    {
-      PRUint32 wc;
-      if (wrapColumn < 0)
-        wc = 0;
-      else
-        wc = (PRUint32)wrapColumn;
-      if (wrapColumn > 0)
-        (void)encoder->SetWrapColumn(wc);
-    }
-  }
 
   return encoder->EncodeToStream(aOutputStream);
 }

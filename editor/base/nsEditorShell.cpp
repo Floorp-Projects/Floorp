@@ -3276,7 +3276,7 @@ nsEditorShell::GetWrapColumn(PRInt32* aWrapColumn)
         if (textEditor)
         {
           PRInt32 wc;
-          err = textEditor->GetBodyWrapWidth(&wc);
+          err = textEditor->GetWrapWidth(&wc);
           if (NS_SUCCEEDED(err))
             *aWrapColumn = (PRInt32)wc;
         }
@@ -3304,7 +3304,7 @@ nsEditorShell::SetWrapColumn(PRInt32 aWrapColumn)
         {
           nsCOMPtr<nsIPlaintextEditor> textEditor = do_QueryInterface(mEditor);
           if (textEditor)
-            err = textEditor->SetBodyWrapWidth(mWrapColumn);
+            err = textEditor->SetWrapWidth(mWrapColumn);
         }
         break;
         default:
