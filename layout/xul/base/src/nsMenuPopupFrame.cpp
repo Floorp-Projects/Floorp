@@ -593,11 +593,20 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
   }
   NS_WARN_IF_FALSE(popupDocumentWidget, "ACK, BAD WIDGET");
   
-  // Find the widget associated with the target's document. Recall that we cached the
-  // target popup node in the document of the popup in the nsXULPopupListener.
+  // Find the widget associated with the target's document.
+  // For tooltips, we check the document's tooltipNode (which is set by
+  // nsXULTooltipListener).  For regular popups, use popupNode (set by
+  // nsXULPopupListener).
+
+  nsCOMPtr<nsIAtom> tag;
+  mContent->GetTag(*getter_AddRefs(tag));
   nsCOMPtr<nsIDOMNode> targetNode;
-  inPopupDoc->GetPopupNode(getter_AddRefs(targetNode));
-  NS_WARN_IF_FALSE(targetNode, "ACK, BAD TARGET NODE");
+  if (tag == nsXULAtoms::tooltip)
+    inPopupDoc->GetTooltipNode(getter_AddRefs(targetNode));
+  else
+    inPopupDoc->GetPopupNode(getter_AddRefs(targetNode));
+
+  NS_WARN_IF_FALSE(targetNode, "no popup/tooltip node on document!");
   nsCOMPtr<nsIContent> targetAsContent ( do_QueryInterface(targetNode) );
   nsCOMPtr<nsIWidget> targetDocumentWidget;
   if ( targetAsContent ) {

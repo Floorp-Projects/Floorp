@@ -365,7 +365,6 @@ nsXULTooltipListener::ShowTooltip()
 
       nsCOMPtr<nsIDOMNode> targetNode(do_QueryInterface(mTargetNode));
       xulDoc->SetTooltipNode(targetNode);
-      xulDoc->SetPopupNode(targetNode);
       LaunchTooltip(mSourceNode, mMouseClientX, mMouseClientY);
       mTargetNode = nsnull;
 
@@ -601,10 +600,8 @@ nsXULTooltipListener::DestroyTooltip()
     mCurrentTooltip->GetDocument(*getter_AddRefs(doc));
     if (doc) {
       nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(doc));
-      if (xulDoc) {
+      if (xulDoc)
         xulDoc->SetTooltipNode(nsnull);
-        xulDoc->SetPopupNode(nsnull);
-      }
 
       // remove the mousedown and keydown listener from document
       nsCOMPtr<nsIDOMEventTarget> evtTarget(do_QueryInterface(doc));
