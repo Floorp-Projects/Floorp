@@ -74,7 +74,6 @@ function nsTreeController_SetTransferData(transferable, flavor, text)
 
 function nsTreeController_copy(tree)
 {
-    var tree = this.getTree();
     var select_list = tree.selectedItems;
     if (!select_list) return false;
     if (select_list.length < 1) return false;
@@ -145,7 +144,7 @@ function nsTreeController_copy(tree)
 
 function nsTreeController_cut(tree)
 {
-    if (this.copy()) {
+    if (this.copy(tree)) {
         this.doDelete(tree);
         return true;            // copy succeeded, don't care if delete failed
     } else
