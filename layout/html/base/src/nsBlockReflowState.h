@@ -56,10 +56,14 @@
 
 #ifdef DEBUG
 
+static PRBool gLamePaintMetrics;
+static PRBool gLameReflowMetrics;
 static PRBool gNoisy;
-static PRBool gNoisyReflow;
+static PRBool gNoisyDamageRepair;
 static PRBool gNoisyMaxElementSize;
+static PRBool gNoisyReflow;
 static PRBool gNoisySpaceManager;
+static PRBool gVerifyLines;
 
 struct BlockDebugFlags {
   const char* name;
@@ -70,6 +74,10 @@ static BlockDebugFlags gFlags[] = {
   { "reflow", &gNoisyReflow },
   { "max-element-size", &gNoisyMaxElementSize },
   { "space-manager", &gNoisySpaceManager },
+  { "verify-lines", &gVerifyLines },
+  { "damage-repair", &gNoisyDamageRepair },
+  { "lame-paint-metrics", &gLamePaintMetrics },
+  { "lame-reflow-metrics", &gLameReflowMetrics },
 };
 #define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
 
@@ -132,7 +140,6 @@ InitDebugFlags()
 #undef NOISY_FLOATER_CLEARING
 #undef NOISY_FINAL_SIZE
 #undef NOISY_REMOVE_FRAME
-#undef NOISY_DAMAGE_REPAIR
 #undef NOISY_COMBINED_AREA
 #undef NOISY_VERTICAL_MARGINS
 #undef NOISY_REFLOW_REASON
@@ -387,6 +394,10 @@ public:
     return mBand.GetFloaterCount();
   }
 
+  nsLineBox* NewLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
+
+  void FreeLineBox(nsLineBox* aLine);
+
   //----------------------------------------
 
   // This state is the "global" state computed once for the reflow of
@@ -485,6 +496,9 @@ public:
   // The current band data for the current Y coordinate
   nsBlockBandData mBand;
 
+  // List of free nsLineBox's
+  nsLineBox* mFreeLineList;
+
   //----------------------------------------
 
   // Temporary line-reflow state. This state is used during the reflow
@@ -536,6 +550,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mApplyTopMargin(PR_FALSE),
     mNextRCFrame(nsnull),
     mPrevBottomMargin(0),
+    mFreeLineList(nsnull),
     mLineNumber(0)
 {
   mSpaceManager = aReflowState.mSpaceManager;
@@ -631,6 +646,40 @@ nsBlockReflowState::~nsBlockReflowState()
   // Restore the coordinate system
   const nsMargin& borderPadding = BorderPadding();
   mSpaceManager->Translate(-borderPadding.left, -borderPadding.top);
+
+  // Release any line box's that are laying around
+  nsLineBox* line = mFreeLineList;
+  while (line) {
+    nsLineBox* next = line->mNext;
+    delete line;
+    line = next;
+  }
+}
+
+nsLineBox*
+nsBlockReflowState::NewLineBox(nsIFrame* aFrame,
+                               PRInt32 aCount,
+                               PRBool aIsBlock)
+{
+  nsLineBox* newLine;
+  if (mFreeLineList) {
+    newLine = mFreeLineList;
+    mFreeLineList = newLine->mNext;
+    newLine->Reset(aFrame, aCount, aIsBlock);
+  }
+  else {
+    newLine = new nsLineBox(aFrame, aCount, aIsBlock);
+  }
+  return newLine;
+}
+
+void
+nsBlockReflowState::FreeLineBox(nsLineBox* aLine)
+{
+  if (aLine) {
+    aLine->mNext = mFreeLineList;
+    mFreeLineList = aLine;
+  }
 }
 
 // Compute the amount of available space for reflowing a block frame
@@ -1293,13 +1342,21 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
                      nsReflowStatus&          aStatus)
 {
 #ifdef DEBUG
-  if (gNoisy) {
+  if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
     printf(": begin reflow availSize=%d,%d computedSize=%d,%d\n",
            aReflowState.availableWidth, aReflowState.availableHeight,
            aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+  }
+  if (gNoisy) {
     gNoiseIndent++;
+  }
+  PRTime start;
+  PRInt32 ctc;
+  if (gLameReflowMetrics) {
+    start = PR_Now();
+    ctc = nsLineBox::GetCtorCount();
   }
 #endif
 
@@ -1530,6 +1587,8 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 #ifdef DEBUG
   if (gNoisy) {
     gNoiseIndent--;
+  }
+  if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
     printf(": status=%x (%scomplete) metrics=%d,%d carriedMargin=%d",
@@ -1549,6 +1608,25 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
              aMetrics.maxElementSize->height);
     }
     printf("\n");
+  }
+
+  if (gLameReflowMetrics) {
+    PRTime end = PR_Now();
+
+    PRInt32 ectc = nsLineBox::GetCtorCount();
+    PRInt32 numLines = nsLineBox::ListLength(mLines);
+    if (!numLines) numLines = 1;
+    PRTime delta, perLineDelta, lines;
+    LL_I2L(lines, numLines);
+    LL_SUB(delta, end, start);
+    LL_DIV(perLineDelta, delta, lines);
+
+    ListTag(stdout);
+    char buf[400];
+    PR_snprintf(buf, sizeof(buf),
+                ": %lld elapsed (%lld per line) (%d lines; %d new lines)",
+                delta, perLineDelta, numLines, ectc - ctc);
+    printf("%s\n", buf);
   }
 #endif
   return rv;
@@ -1962,7 +2040,7 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
 }
 
 nsresult
-nsBlockFrame::UpdateBulletPosition()
+nsBlockFrame::UpdateBulletPosition(nsBlockReflowState& aState)
 {
   if (nsnull == mBullet) {
     // Don't bother if there is no bullet
@@ -1974,7 +2052,7 @@ nsBlockFrame::UpdateBulletPosition()
     if (HaveOutsideBullet()) {
       // We now have an inside bullet, but used to have an outside
       // bullet.  Adjust the frame line list
-      nsLineBox* line = new nsLineBox(mBullet, 1, PR_FALSE);
+      nsLineBox* line = aState.NewLineBox(mBullet, 1, PR_FALSE);
       if (!line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1997,7 +2075,7 @@ nsBlockFrame::UpdateBulletPosition()
         mLines->SetChildCount(count);
         if (0 == count) {
           nsLineBox* nextLine = mLines->mNext;
-          delete mLines;
+          aState.FreeLineBox(mLines);
           mLines = nextLine;
           if (nsnull != nextLine) {
             nextLine->MarkDirty();
@@ -2020,7 +2098,7 @@ nsBlockFrame::UpdateBulletPosition()
 nsresult
 nsBlockFrame::PrepareStyleChangedReflow(nsBlockReflowState& aState)
 {
-  nsresult rv = UpdateBulletPosition();
+  nsresult rv = UpdateBulletPosition(aState);
 
   // Mark everything dirty
   nsLineBox* line = mLines;
@@ -2387,7 +2465,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     if (0 == line->GetChildCount()) {
       // The line is empty. Try the next one.
       NS_ASSERTION(nsnull == line->mFirstChild, "bad empty line");
-      delete line;
+      aState.FreeLineBox(line);
       continue;
     }
 
@@ -2478,7 +2556,7 @@ nsBlockFrame::DeleteLine(nsBlockReflowState& aState,
       NS_ASSERTION(aState.mPrevLine->mNext == aLine, "bad prev-line");
       aState.mPrevLine->mNext = aLine->mNext;
     }
-    delete aLine;
+    aState.FreeLineBox(aLine);
   }
 }
 
@@ -2663,7 +2741,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
     else {
       // Free up the fromLine now that it's empty
       *aFromList = fromLine->mNext;
-      delete fromLine;
+      aState.FreeLineBox(fromLine);
     }
 
     // Change geometric parents
@@ -3181,7 +3259,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // made one.
         if (madeContinuation) {
           frame->GetNextSibling(&frame);
-          nsLineBox* line = new nsLineBox(frame, 1, PR_TRUE);
+          nsLineBox* line = aState.NewLineBox(frame, 1, PR_TRUE);
           if (nsnull == line) {
             return NS_ERROR_OUT_OF_MEMORY;
           }
@@ -3465,7 +3543,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
         // uses DoRemoveFrame?
         aLine->mNext = nextLine->mNext;
         NS_ASSERTION(nsnull == nextLine->mFirstChild, "bad empty line");
-        delete nextLine;
+        aState.FreeLineBox(nextLine);
         nextLine = aLine->mNext;
       }
       break;
@@ -3736,7 +3814,7 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
     NS_ABORT_IF_FALSE(nsnull != aFrame, "whoops");
 
     // Put frames being split out into their own line
-    nsLineBox* newLine = new nsLineBox(aFrame, pushCount, PR_FALSE);
+    nsLineBox* newLine = aState.NewLineBox(aFrame, pushCount, PR_FALSE);
     if (!newLine) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -5436,7 +5514,7 @@ nsBlockFrame::GetSkipSides() const
   return skip;
 }
 
-#ifdef NOISY_DAMAGE_REPAIR
+#ifdef DEBUG
 static void ComputeCombinedArea(nsLineBox* aLine,
                                 nscoord aWidth, nscoord aHeight,
                                 nsRect& aResult)
@@ -5445,10 +5523,12 @@ static void ComputeCombinedArea(nsLineBox* aLine,
   while (nsnull != aLine) {
     // Compute min and max x/y values for the reflowed frame's
     // combined areas
-    nscoord x = aLine->mCombinedArea.x;
-    nscoord y = aLine->mCombinedArea.y;
-    nscoord xmost = x + aLine->mCombinedArea.width;
-    nscoord ymost = y + aLine->mCombinedArea.height;
+    nsRect lineCombinedArea;
+    aLine->GetCombinedArea(&lineCombinedArea);
+    nscoord x = lineCombinedArea.x;
+    nscoord y = lineCombinedArea.y;
+    nscoord xmost = x + lineCombinedArea.width;
+    nscoord ymost = y + lineCombinedArea.height;
     if (x < xa) {
       xa = x;
     }
@@ -5481,17 +5561,19 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
     return NS_OK;
   }
 
-#ifdef NOISY_DAMAGE_REPAIR
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    PRInt32 depth = GetDepth();
-    nsRect ca;
-    ComputeCombinedArea(mLines, mRect.width, mRect.height, ca);
-    nsFrame::IndentBy(stdout, depth);
-    ListTag(stdout);
-    printf(": bounds=%d,%d,%d,%d dirty=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
-           mRect.x, mRect.y, mRect.width, mRect.height,
-           aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height,
-           ca.x, ca.y, ca.width, ca.height);
+#ifdef DEBUG
+  if (gNoisyDamageRepair) {
+    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+      PRInt32 depth = GetDepth();
+      nsRect ca;
+      ComputeCombinedArea(mLines, mRect.width, mRect.height, ca);
+      nsFrame::IndentBy(stdout, depth);
+      ListTag(stdout);
+      printf(": bounds=%d,%d,%d,%d dirty=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
+             mRect.x, mRect.y, mRect.width, mRect.height,
+             aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height,
+             ca.x, ca.y, ca.width, ca.height);
+    }
   }
 #endif  
 
@@ -5514,16 +5596,15 @@ nsBlockFrame::Paint(nsIPresContext&      aPresContext,
     const nsStyleSpacing* spacing = (const nsStyleSpacing*)
       mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
-    // Paint background and border
+    // Paint background, border and outline
     nsRect rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *color, *spacing, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                 aDirtyRect, rect, *spacing, mStyleContext,
                                 skipSides);
-
-      nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *spacing, mStyleContext, 0);
+    nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                                 aDirtyRect, rect, *spacing, mStyleContext, 0);
   }
 
   // Child elements have the opportunity to override the visibility
@@ -5614,28 +5695,40 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
 {
-#ifdef NOISY_DAMAGE_REPAIR
+#ifdef DEBUG
   PRInt32 depth = 0;
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    depth = GetDepth();
+  if (gNoisyDamageRepair) {
+    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+      depth = GetDepth();
+    }
+  }
+  PRTime start;
+  PRInt32 drawnLines;
+  if (gLamePaintMetrics) {
+    start = PR_Now();
+    drawnLines = 0;
   }
 #endif
+
   for (nsLineBox* line = mLines; nsnull != line; line = line->mNext) {
-    // If the line has outside children or if the line intersects the
-    // dirty rect then paint the children in the line.
-    nsRect lineCombinedArea;
-    line->GetCombinedArea(&lineCombinedArea);
-    if ((NS_FRAME_OUTSIDE_CHILDREN & mState) ||
-        !((lineCombinedArea.YMost() <= aDirtyRect.y) ||
-          (lineCombinedArea.y >= aDirtyRect.YMost()))) {
-#ifdef NOISY_DAMAGE_REPAIR
-      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    // If the line's combined area (which includes child frames that
+    // stick outside of the line's bounding box or our bounding box)
+    // intersects the dirty rect then paint the line.
+    if (line->CombinedAreaIntersects(aDirtyRect)) {
+#ifdef DEBUG
+      if (gNoisyDamageRepair &&
+          (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)) {
+        nsRect lineCombinedArea;
+        line->GetCombinedArea(&lineCombinedArea);
         nsFrame::IndentBy(stdout, depth+1);
         printf("draw line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
                line, line->mBounds.x, line->mBounds.y,
                line->mBounds.width, line->mBounds.height,
                lineCombinedArea.x, lineCombinedArea.y,
                lineCombinedArea.width, lineCombinedArea.height);
+      }
+      if (gLamePaintMetrics) {
+        drawnLines++;
       }
 #endif
       nsIFrame* kid = line->mFirstChild;
@@ -5646,9 +5739,12 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
         kid->GetNextSibling(&kid);
       }
     }
-#ifdef NOISY_DAMAGE_REPAIR
+#ifdef DEBUG
     else {
-      if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+      if (gNoisyDamageRepair &&
+          (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer)) {
+        nsRect lineCombinedArea;
+        line->GetCombinedArea(&lineCombinedArea);
         nsFrame::IndentBy(stdout, depth+1);
         printf("skip line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
                line, line->mBounds.x, line->mBounds.y,
@@ -5667,6 +5763,27 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
                  aWhichLayer);
     }
   }
+
+#ifdef DEBUG
+  if (gLamePaintMetrics) {
+    PRTime end = PR_Now();
+
+    PRInt32 numLines = nsLineBox::ListLength(mLines);
+    if (!numLines) numLines = 1;
+    PRTime lines, deltaPerLine, delta;
+    LL_I2L(lines, numLines);
+    LL_SUB(delta, end, start);
+    LL_DIV(deltaPerLine, delta, lines);
+
+    ListTag(stdout);
+    char buf[400];
+    PR_snprintf(buf, sizeof(buf),
+                ": %lld elapsed (%lld per line) lines=%d drawn=%d skip=%d",
+                delta, deltaPerLine,
+                numLines, drawnLines, numLines - drawnLines);
+    printf("%s\n", buf);
+  }
+#endif
 }
 
 
@@ -6521,6 +6638,9 @@ nsAnonymousBlockFrame::RemoveFramesFrom(nsIFrame* aFrame)
 void
 nsBlockFrame::VerifyLines(PRBool aFinalCheckOK)
 {
+  if (!gVerifyLines) {
+    return;
+  }
   nsLineBox* line = mLines;
   if (!line) {
     return;
