@@ -381,6 +381,14 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
             mManualFindWindows->RemoveElementAt(index);
           }
         }
+
+        // Don't hold references to things that will keep objects alive
+        // longer than they would otherwise be.
+        if (domWin == mFocusedWindow) {
+          RemoveWindowListeners(domWin);
+          RemoveDocListeners();
+          CancelFind();
+        }
       }
     }
   }
@@ -1893,6 +1901,7 @@ nsTypeAheadFind::RemoveDocListeners()
   }
 
   mFocusedDocSelection = nsnull;
+  mFocusedDocSelCon = nsnull; // Selection controller owns pres shell!
 }
 
 
