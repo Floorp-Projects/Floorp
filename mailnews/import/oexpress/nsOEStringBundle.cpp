@@ -96,9 +96,10 @@ PRUnichar *nsOEStringBundle::GetStringByID(PRInt32 stringID, nsIStringBundle *pB
 			return( ptrv);
 	}
 
-	nsString resultString( "[StringID ");
-	resultString.Append(stringID, 10);
-	resultString += "?]";
+	nsString resultString;
+	resultString.AppendWithConversion("[StringID ");
+	resultString.AppendInt(stringID, 10);
+	resultString.AppendWithConversion("?]");
 
 	return( resultString.ToNewUnicode());
 }
