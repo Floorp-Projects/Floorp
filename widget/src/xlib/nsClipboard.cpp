@@ -140,7 +140,7 @@ nsEventStatus PR_CALLBACK nsClipboard::Callback(nsGUIEvent *event) {
 
     // Get the data from the Transferable
 
-    char *dataFlavor = kUnicodeMime;
+    const char *dataFlavor = kUnicodeMime;
     nsCOMPtr<nsISupports> genDataWrapper;
     nsresult rv;
     PRUint32 dataLength;
@@ -328,7 +328,7 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
   // internally, otherwise get the data from the X server
 
   if (XGetSelectionOwner(sDisplay, XA_PRIMARY) == sWindow) {
-    char *dataFlavor = kUnicodeMime;
+    const char *dataFlavor = kUnicodeMime;
     nsCOMPtr<nsISupports> genDataWrapper;
     nsresult rv;
     PRUint32 dataLength;
