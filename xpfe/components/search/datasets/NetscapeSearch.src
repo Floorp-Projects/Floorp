@@ -6,9 +6,11 @@
 	description = "Netscape Search"
 	method="GET"
 	action="http://info.netscape.com/fwd/sidb_ns/http://search.netscape.com/cgi-bin/search"
+	queryCharset="UTF-8"
 >
 
 <INPUT NAME="search" user>
+<INPUT NAME="charset" VALUE="UTF-8">
 
 <INTERPRET
 	browserResultType = "result"
