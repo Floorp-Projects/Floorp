@@ -370,7 +370,7 @@ CSS2PropertiesTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsIDOMCSS2Properties
 // nsIDOMNSCSS2Properties
 
-#define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) \
+#define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_) \
   NS_IMETHODIMP                                                              \
   CSS2PropertiesTearoff::Get##method_(nsAString& aValue)                     \
   {                                                                          \
@@ -399,11 +399,11 @@ CSS2PropertiesTearoff::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
 #define CSS_PROP_SHORTHAND(name_, id_, method_) \
-  CSS_PROP(name_, id_, method_, , , , ,)
+  CSS_PROP(name_, id_, method_, , , ,)
 #include "nsCSSPropList.h"
 
 // Aliases
-CSS_PROP(X, opacity, MozOpacity, X, X, X, X, X)
+CSS_PROP(X, opacity, MozOpacity, X, X, X, X)
 
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP_NOTIMPLEMENTED

@@ -51,7 +51,7 @@ extern const char* const kCSSRawProperties[];
 
 // define an array of all CSS properties
 const char* const kCSSRawProperties[] = {
-#define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) #name_,
+#define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_) #name_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
 #define CSS_PROP_SHORTHAND(name_, id_, method_) #name_,
@@ -1049,7 +1049,7 @@ nsCSSProps::ValueToKeyword(PRInt32 aValue, const PRInt32 aTable[])
 
 /* static */ const PRInt32* const
 nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
-  #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) kwtable_,
+  #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_) kwtable_,
   #include "nsCSSPropList.h"
   #undef CSS_PROP
 };
@@ -1089,39 +1089,39 @@ PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
 
 // define array of all CSS property types
 const nsCSSType nsCSSProps::kTypeTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) type_,
+    #define CSS_PROP(name_, id_, method_, datastruct_, member_, type_, kwtable_) type_,
     #include "nsCSSPropList.h"
     #undef CSS_PROP
 };
 
 const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = {
-    #define CSS_PROP_FONT(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Font,
-    #define CSS_PROP_COLOR(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Color,
-    #define CSS_PROP_BACKGROUND(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Background,
-    #define CSS_PROP_LIST(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_List,
-    #define CSS_PROP_POSITION(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Position,
-    #define CSS_PROP_TEXT(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Text,
-    #define CSS_PROP_TEXTRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_TextReset,
-    #define CSS_PROP_DISPLAY(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Display,
-    #define CSS_PROP_VISIBILITY(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Visibility,
-    #define CSS_PROP_CONTENT(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Content,
-    #define CSS_PROP_QUOTES(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Quotes,
-    #define CSS_PROP_USERINTERFACE(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_UserInterface,
-    #define CSS_PROP_UIRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_UIReset,
-    #define CSS_PROP_TABLE(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Table,
-    #define CSS_PROP_TABLEBORDER(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_TableBorder,
-    #define CSS_PROP_MARGIN(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Margin,
-    #define CSS_PROP_PADDING(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Padding,
-    #define CSS_PROP_BORDER(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Border,
-    #define CSS_PROP_OUTLINE(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Outline,
-    #define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_XUL,
+    #define CSS_PROP_FONT(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Font,
+    #define CSS_PROP_COLOR(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Color,
+    #define CSS_PROP_BACKGROUND(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Background,
+    #define CSS_PROP_LIST(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_List,
+    #define CSS_PROP_POSITION(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Position,
+    #define CSS_PROP_TEXT(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Text,
+    #define CSS_PROP_TEXTRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_TextReset,
+    #define CSS_PROP_DISPLAY(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Display,
+    #define CSS_PROP_VISIBILITY(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Visibility,
+    #define CSS_PROP_CONTENT(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Content,
+    #define CSS_PROP_QUOTES(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Quotes,
+    #define CSS_PROP_USERINTERFACE(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_UserInterface,
+    #define CSS_PROP_UIRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_UIReset,
+    #define CSS_PROP_TABLE(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Table,
+    #define CSS_PROP_TABLEBORDER(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_TableBorder,
+    #define CSS_PROP_MARGIN(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Margin,
+    #define CSS_PROP_PADDING(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Padding,
+    #define CSS_PROP_BORDER(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Border,
+    #define CSS_PROP_OUTLINE(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Outline,
+    #define CSS_PROP_XUL(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_XUL,
     #ifdef MOZ_SVG
-    #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_SVG,
-    #define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_SVGReset,
+    #define CSS_PROP_SVG(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_SVG,
+    #define CSS_PROP_SVGRESET(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_SVGReset,
     #endif /* defined(MOZ_SVG) */
-    #define CSS_PROP_COLUMN(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) eStyleStruct_Column,
+    #define CSS_PROP_COLUMN(name_, id_, method_, datastruct_, member_, type_, kwtable_) eStyleStruct_Column,
     // This shouldn't matter, but we need something to go here.
-    #define CSS_PROP_BACKENDONLY(name_, id_, method_, datastruct_, member_, type_, iscoord_, kwtable_) nsStyleStructID(-1),
+    #define CSS_PROP_BACKENDONLY(name_, id_, method_, datastruct_, member_, type_, kwtable_) nsStyleStructID(-1),
 
     #include "nsCSSPropList.h"
 
