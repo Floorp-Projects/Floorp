@@ -2673,9 +2673,6 @@ public:
     nsresult
     RemoveGeneratedContent(nsIContent* aElement);
 
-    nsresult
-    NoteGeneratedSubtreeRemoved(nsIContent* aElement);
-
     PRBool
     IsLazyWidgetItem(nsIContent* aElement);
 
@@ -6339,6 +6336,20 @@ nsXULTemplateBuilder::IsElementInWidget(nsIContent* aElement)
 nsresult
 nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
 {
+    // Remove and re-insert the element into the document. This'll
+    // minimize the number of notifications that the layout engine has
+    // to deal with.
+    nsCOMPtr<nsIContent> parent;
+    aElement->GetParent(*getter_AddRefs(parent));
+
+    NS_ASSERTION(parent != nsnull, "huh? no parent!");
+    if (! parent)
+        return NS_ERROR_UNEXPECTED;
+
+    PRInt32 pos;
+    parent->IndexOf(aElement, pos);
+    parent->RemoveChildAt(pos, PR_TRUE);
+
 #define FAST_REMOVE_GENERATED_CONTENT
 #ifdef FAST_REMOVE_GENERATED_CONTENT
     // Keep a queue of "ungenerated" elements that we have to probe
@@ -6390,11 +6401,6 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
             element->RemoveChildAt(i, PR_FALSE);
             child->SetDocument(nsnull, PR_TRUE, PR_TRUE);
 
-            // Do any book-keeping that we need to do on the subtree,
-            // since we're "quietly" removing the element from the
-            // content model.
-            NoteGeneratedSubtreeRemoved(child);
-
             // Remove element from the conflict set.
             // XXXwaterson should this be moved into NoteGeneratedSubtreeRemoved?
             MatchSet firings, retractions;
@@ -6420,61 +6426,15 @@ nsXULTemplateBuilder::RemoveGeneratedContent(nsIContent* aElement)
     }
 #endif
 
-    // Remove and re-insert the element into the document. This'll
-    // minimize the number of notifications that the layout engine has
-    // to deal with.
-    nsCOMPtr<nsIContent> parent;
-    aElement->GetParent(*getter_AddRefs(parent));
-
-    NS_ASSERTION(parent != nsnull, "huh? no parent!");
-    if (! parent)
-        return NS_ERROR_UNEXPECTED;
-
-    PRInt32 pos;
-    parent->IndexOf(aElement, pos);
-    parent->RemoveChildAt(pos, PR_TRUE);
-
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(mDocument);
     if (! doc)
         return NS_ERROR_UNEXPECTED;
 
     aElement->SetDocument(doc, PR_TRUE, PR_TRUE);
+
     parent->InsertChildAt(aElement, pos, PR_TRUE);
     return NS_OK;
 }
-
-
-nsresult
-nsXULTemplateBuilder::NoteGeneratedSubtreeRemoved(nsIContent* aElement)
-{
-    // When we remove a generated subtree from the document, we need
-    // to update the document's element map. (Normally, this will
-    // happen when content is "noisily" removed from the tree.)
-    if (! aElement)
-        return NS_ERROR_NULL_POINTER;
-
-    PRInt32 i = 0;
-    nsCOMPtr<nsIXULContent> xulcontent = do_QueryInterface(aElement);
-    if (xulcontent)
-        xulcontent->PeekChildCount(i);
-    else
-        aElement->ChildCount(i);
-
-    while (--i >= 0) {
-        nsCOMPtr<nsIContent> child;
-        aElement->ChildAt(i, *getter_AddRefs(child));
-        NoteGeneratedSubtreeRemoved(child);
-    }
-
-    nsresult rv;
-    nsAutoString id;
-    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, id);
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE)
-        mDocument->RemoveElementForID(id, aElement);
-
-    return NS_OK;
-}
-
 
 PRBool
 nsXULTemplateBuilder::IsLazyWidgetItem(nsIContent* aElement)
