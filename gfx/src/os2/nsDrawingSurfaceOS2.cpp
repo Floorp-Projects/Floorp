@@ -271,7 +271,7 @@ nsresult nsOffscreenSurface::Lock( PRInt32 aX, PRInt32 aY,
    mYPels = mInfoHeader->cy - aY - aHeight;
    mScans = aHeight;
 
-   rc = GpiQueryBitmapBits( mPS, mYPels, mScans, (char*) mBits,
+   rc = GpiQueryBitmapBits( mPS, mYPels, mScans, (PBYTE) mBits,
                             (PBITMAPINFO2) mInfoHeader);
    if( rc != mInfoHeader->cy) PMERROR( "GpiQueryBitmapBits");
 
@@ -290,7 +290,7 @@ nsresult nsOffscreenSurface::Lock( PRInt32 aX, PRInt32 aY,
 
 nsresult nsOffscreenSurface::Unlock()
 {
-   long rc = GpiSetBitmapBits( mPS, mYPels, mScans, (char*) mBits,
+   long rc = GpiSetBitmapBits( mPS, mYPels, mScans, (PBYTE) mBits,
                                (PBITMAPINFO2) mInfoHeader);
    if( rc == GPI_ALTERROR) PMERROR( "GpiSetBitmapBits");
 
