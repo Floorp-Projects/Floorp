@@ -194,16 +194,27 @@ PRBool nsCSSDeclaration::AppendValueToString(nsCSSProperty aProperty, nsAString&
       } break;
       case eCSSType_Rect: {
         const nsCSSRect *rect = NS_STATIC_CAST(const nsCSSRect*, storage);
-        aResult.Append(NS_LITERAL_STRING("rect("));
-        AppendCSSValueToString(aProperty, rect->mTop, aResult);
-        NS_NAMED_LITERAL_STRING(comma, ", ");
-        aResult.Append(comma);
-        AppendCSSValueToString(aProperty, rect->mRight, aResult);
-        aResult.Append(comma);
-        AppendCSSValueToString(aProperty, rect->mBottom, aResult);
-        aResult.Append(comma);
-        AppendCSSValueToString(aProperty, rect->mLeft, aResult);
-        aResult.Append(PRUnichar(')'));
+        if (rect->mTop.GetUnit() == eCSSUnit_Inherit ||
+            rect->mTop.GetUnit() == eCSSUnit_Initial) {
+          NS_ASSERTION(rect->mRight.GetUnit() == rect->mTop.GetUnit(),
+                       "Top inherit or initial, right isn't.  Fix the parser!");
+          NS_ASSERTION(rect->mBottom.GetUnit() == rect->mTop.GetUnit(),
+                       "Top inherit or initial, bottom isn't.  Fix the parser!");
+          NS_ASSERTION(rect->mLeft.GetUnit() == rect->mTop.GetUnit(),
+                       "Top inherit or initial, left isn't.  Fix the parser!");
+          AppendCSSValueToString(aProperty, rect->mTop, aResult);
+        } else {
+          aResult.Append(NS_LITERAL_STRING("rect("));
+          AppendCSSValueToString(aProperty, rect->mTop, aResult);
+          NS_NAMED_LITERAL_STRING(comma, ", ");
+          aResult.Append(comma);
+          AppendCSSValueToString(aProperty, rect->mRight, aResult);
+          aResult.Append(comma);
+          AppendCSSValueToString(aProperty, rect->mBottom, aResult);
+          aResult.Append(comma);
+          AppendCSSValueToString(aProperty, rect->mLeft, aResult);
+          aResult.Append(PRUnichar(')'));
+        }
       } break;
       case eCSSType_ValueList: {
         const nsCSSValueList* val =
