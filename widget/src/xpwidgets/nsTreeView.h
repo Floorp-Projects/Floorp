@@ -29,10 +29,6 @@
 class nsIImageGroup;
 class nsIImage;
 
-// Constants
-const int cIndentAmount = 19;
-const int cIconMargin = 2;
-const int cMinColumnWidth = 30;
 
 //------------------------------------------------------------
 // A tree view consists of several components: a title bar, a control strip,
@@ -46,7 +42,6 @@ const int cMinColumnWidth = 30;
 
 class nsTreeView : public nsITreeView,
 				   public nsDataModelWidget
-                  
 {
 public:
     nsTreeView();
@@ -67,6 +62,9 @@ public:
                                 nsWidgetInitData *aInitData);
 
 protected:
+
+	enum { cIndentAmount = 19, cIconMargin = 2, cMinColumnWidth = 30 };
+
 	// These functions are all used in painting.
 	void PaintTitleBar(nsIRenderingContext* drawCtx, 
 					   nsRect& rect);
@@ -83,10 +81,9 @@ protected:
 	void PaintPusherArrow(nsIRenderingContext* drawCtx,
 								  PRBool isLeftArrow, int left, int width);
 
-	// These functions are used to paint the lines in the tree.
-	void PaintTreeLines(nsIRenderingContext* drawCtx, 
-					    nsRect& rect);
-	void PaintTreeLine(nsIRenderingContext* drawCtx, nsTreeItem* pItem, int& yPosition);
+	// These functions are used to paint the rows in the tree.
+	void PaintTreeRows(nsIRenderingContext* drawCtx, nsRect& rect);
+	void PaintTreeRow(nsIRenderingContext* drawCtx, nsTreeItem* pItem, int& yPosition);
 
 	// General function for painting a background image.
 	void PaintBackgroundImage(nsIRenderingContext* drawCtx, 
@@ -138,7 +135,12 @@ protected:
 	PRBool mDraggingColumnEdge; // Whether or not we're dragging a column edge.
 
 	PRBool mDraggingColumnHeader;	// Whether or not we're dragging a column header
-	
+
+private:
+	// tree views are widgets which exist in one-to-one correspondance with objects on
+	// the screen. Copying them does not make sense, so we outlaw it explicitly.
+	nsTreeView ( const nsTreeView & ) ;					// DON'T IMPLEMENT
+	nsTreeView & operator= ( const nsTreeView & );		// DON'T IMPLEMENT
 };
 
-#endif /* nsToolbar_h___ */
+#endif /* nsTreeView_h___ */
