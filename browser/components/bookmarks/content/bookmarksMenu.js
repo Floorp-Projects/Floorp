@@ -56,6 +56,29 @@ var BookmarksMenu = {
     aTarget.appendChild(element);
   },
 
+#ifdef XP_MACOSX
+  // FIXME: Work around a Mac menu bug with onpopuphidden.  onpopuphiding/hidden on mac fire
+  // before oncommand executes on a menuitem.  For now we're applying a XUL workaround
+  // since it's too late to fix this in the Mac widget code for 1.5.
+  gOpenInTabsParent : null,
+  delayedHideOpenInTabsMenuItem: function ()
+  {
+    if (!gOpenInTabsParent.hasChildNodes())
+      return;
+    if (gOpenInTabsParent.lastChild.id == "openintabs-menuitem") {
+      gOpenInTabsParent.removeChild(gOpenInTabsParent.lastChild);
+      gOpenInTabsParent.removeChild(gOpenInTabsParent.lastChild);
+    }
+  },
+
+  hideOpenInTabsMenuItem: function (aTarget)
+  {
+    gOpenInTabsParent = aTarget;
+    setTimeout("BookmarksMenu.delayedHideOpenInTabsMenuItem()", 0);
+  },
+
+#else
+
   /////////////////////////////////////////////////////////////////////////////
   // hides the 'Open in Tabs' on popuphidden so that we won't duplicate it -->
   hideOpenInTabsMenuItem: function (aTarget)
@@ -67,6 +90,7 @@ var BookmarksMenu = {
       aTarget.removeChild(aTarget.lastChild);
     }
   },
+#endif
 
   /////////////////////////////////////////////////////////////////////////////
   // returns false if...
