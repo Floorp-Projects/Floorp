@@ -47,16 +47,15 @@ public class ContextFactory
      * thread.
      * This is a callback method used by Rhino to create {@link Context}
      * instance when it is necessary to associate one with the current
-     * execution thread. <tt>newContext()</tt> is allowed to call
+     * execution thread. <tt>makeContext()</tt> is allowed to call
      * {@link Context#seal(Object)} on the result to prevent
      * {@link Context} changes by hostile scripts or applets.
      * <p>
      * The method must call {@link Context#Context(ContextFactory)}
      * constructor using <tt>this</tt> as ContextFactory argument
      * when creating Context instances or its subclasses.
-     *
      */
-    protected Context newContext()
+    protected Context makeContext()
     {
         return new Context(this);
     }
@@ -64,7 +63,7 @@ public class ContextFactory
     /**
      * Perform cleanup action for {@link Context} instance.
      * Rhino runtime calls the method to notify that {@link Context}
-     * instance created with {@link #newContext()}
+     * instance created with {@link #makeContext()}
      * is no longer associated with the current thread.
      */
     protected void onContextExit(Context cx)
@@ -75,7 +74,7 @@ public class ContextFactory
      * Call {@link ContextAction#run(Context cx)}
      * using the {@link Context} instance associated with the current thread.
      * If no Context is associated with the thread, then
-     * {@link #newContext()} will be called to construct
+     * {@link #makeContext()} will be called to construct
      * new Context instance. The instance will be temporary associated
      * with the thread during call to {@link ContextAction#run(Context)}.
      *

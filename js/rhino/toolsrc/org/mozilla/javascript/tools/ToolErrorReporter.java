@@ -106,25 +106,16 @@ public class ToolErrorReporter implements ErrorReporter {
     {
         if (!reportWarnings)
             return;
-        Object[] errArgs = { formatMessage(message, sourceName, line) };
-        message = getMessage("msg.warning", errArgs);
-        err.println(messagePrefix + message);
-        if (null != lineSource) {
-            err.println(messagePrefix + lineSource);
-            err.println(messagePrefix + buildIndicator(lineOffset));
-        }
+        reportErrorMessage(message, sourceName, line, lineSource, lineOffset,
+                           true);
     }
 
     public void error(String message, String sourceName, int line,
                       String lineSource, int lineOffset)
     {
         hasReportedErrorFlag = true;
-        message = formatMessage(message, sourceName, line);
-        err.println(messagePrefix + message);
-        if (null != lineSource) {
-            err.println(messagePrefix + lineSource);
-            err.println(messagePrefix + buildIndicator(lineOffset));
-        }
+        reportErrorMessage(message, sourceName, line, lineSource, lineOffset,
+                           false);
     }
 
     public EvaluatorException runtimeError(String message, String sourceName,
@@ -148,18 +139,44 @@ public class ToolErrorReporter implements ErrorReporter {
         this.reportWarnings = reportWarnings;
     }
 
-    private String formatMessage(String message, String sourceName, int line) {
+    public void reportException(RhinoException ex)
+    {
+        String msg;
+        if (ex instanceof JavaScriptException) {
+            msg = getMessage("msg.uncaughtJSException", ex.details());
+        } else if (ex instanceof EcmaError) {
+            msg = getMessage("msg.uncaughtEcmaError", ex.details());
+        } else {
+            msg = ex.toString();
+        }
+        reportErrorMessage(msg, ex.sourceName(), ex.lineNumber(),
+                           ex.lineSource(), ex.columnNumber(), false);
+    }
+
+    private void reportErrorMessage(String message, String sourceName, int line,
+                                    String lineSource, int lineOffset,
+                                    boolean justWarning)
+    {
         if (line > 0) {
+            String lineStr = String.valueOf(line);
             if (sourceName != null) {
-                Object[] errArgs = { sourceName, new Integer(line), message };
-                return getMessage("msg.format3", errArgs);
+                Object[] args = { sourceName, lineStr, message };
+                message = getMessage("msg.format3", args);
             } else {
-                Object[] errArgs = { new Integer(line), message };
-                return getMessage("msg.format2", errArgs);
+                Object[] args = { lineStr, message };
+                message = getMessage("msg.format2", args);
             }
         } else {
-            Object[] errArgs = { message };
-            return getMessage("msg.format1", errArgs);
+            Object[] args = { message };
+            message = getMessage("msg.format1", args);
+        }
+        if (justWarning) {
+            message = getMessage("msg.warning", message);
+        }
+        err.println(messagePrefix + message);
+        if (null != lineSource) {
+            err.println(messagePrefix + lineSource);
+            err.println(messagePrefix + buildIndicator(lineOffset));
         }
     }
 

@@ -63,7 +63,8 @@ import org.mozilla.javascript.debug.*;
  * and associated with the thread that will be executing the script.
  * The Context will be used to store information about the executing
  * of the script such as the call stack. Contexts are associated with
- * the current thread  using the <a href="#enter()">enter()</a> method.<p>
+ * the current thread  using the {@link #call(ContextAction)} 
+ * or {@link #enter()} methods.<p>
  *
  * The behavior of the execution engine may be altered through methods
  * such as <a href="#setLanguageVersion>setLanguageVersion</a> and
@@ -418,24 +419,12 @@ public class Context
      * <tt>new Context()</tt> will be called to construct
      * new Context instance. The instance will be temporary associated
      * with the thread during call to {@link ContextAction#run(Context)}.
+	 *
+	 * @return The result of {@link ContextAction#run(Context)}.
      */
     public static Object call(ContextAction action)
     {
         return call(null, action);
-    }
-
-    /**
-     * @deprecated Use
-     * {@link #call(ContextFactory factory, Callable callable,
-     *              Scriptable scope, Scriptable thisObj, Object[] args)}
-     * instead to provide explicit factory to create Context if no Context
-     * is associated with the current thread.
-     */
-    public static Object call(Callable callable, Scriptable scope,
-                              Scriptable thisObj, Object[] args)
-        throws JavaScriptException
-    {
-        return call(null, callable, scope, thisObj, args);
     }
 
     /**
@@ -444,7 +433,7 @@ public class Context
      *               Object[] args)}
      * using the Context instance associated with the current thread.
      * If no Context is associated with the thread, then
-     * {@link ContextFactory#newContext()} will be called to construct
+     * {@link ContextFactory#makeContext()} will be called to construct
      * new Context instance. The instance will be temporary associated
      * with the thread during call to {@link ContextAction#run(Context)}.
      * <p>
@@ -535,9 +524,9 @@ public class Context
             }
             cx.runListeners(CONTEXT_ENTER_EVENT);
         } else {
-            cx = factory.newContext();
+            cx = factory.makeContext();
             if (cx.factory != factory) {
-                throw new IllegalStateException("factory.newContext() did not use proper Context constructor");
+                throw new IllegalStateException("factory.makeContext() did not use proper Context constructor");
             }
             if (cx.enterCount != 0) { throw new IllegalStateException(); }
         }
@@ -734,9 +723,9 @@ public class Context
      * including calling {@link #enter()} and {@link #exit()} methods will
      * throw an exception.
      * <p>
-     * If <tt>sealKey<tt> is not null, calling
+     * If <tt>sealKey</tt> is not null, calling
      * {@link #unseal(Object sealKey)} with the same key unseals
-     * the object. If <tt>sealKey<tt> is null, unsealing is no longer possible.
+     * the object. If <tt>sealKey</tt> is null, unsealing is no longer possible.
      *
      * @see #isSealed()
      * @see #unseal(Object)
@@ -750,8 +739,8 @@ public class Context
 
     /**
      * Unseal previously sealed Context object.
-     * The <tt>sealKey<tt> argument should not be null and should match
-     * <tt>sealKey<tt> suplied with the last call to
+     * The <tt>sealKey</tt> argument should not be null and should match
+     * <tt>sealKey</tt> suplied with the last call to
      * {@link #seal(Object)} or an exception will be thrown.
      *
      * @see #isSealed()
@@ -1360,9 +1349,9 @@ public class Context
     }
 
     /**
-     * @deprecated The method implementation simply calls
-     * {@link #compileReader(Reader in, String sourceName, int lineno, Object securityDomain)}
-     * ignoring scope argument.
+     * @deprecated Use
+     * {@link #compileReader(Reader in, String sourceName, int lineno, 
+	 *                       Object securityDomain)}.
      */
     public final Script compileReader(Scriptable scope, Reader in,
                                       String sourceName, int lineno,
@@ -1745,7 +1734,7 @@ public class Context
     }
 
     /**
-     * @deprecated Use {@link #toObject(Object, Scriptable)} instead.
+     * @deprecated Use {@link #toObject(Object, Scriptable)}.
      */
     public static Scriptable toObject(Object value, Scriptable scope,
                                       Class staticType)
@@ -2096,10 +2085,8 @@ controller)
     }
 
     /**
-     * @deprecated To enable/disable caching for a particular top scope,
-     * use {@link ClassCache#get(Scriptable)} and
+     * @deprecated Use {@link ClassCache#get(Scriptable)} and
      * {@link ClassCache#setCachingEnabled(boolean)}.
-     * The function is kept only for compatibility and does nothing.
      */
     public static void setCachingEnabled(boolean cachingEnabled)
     {
@@ -2142,8 +2129,7 @@ controller)
     }
 
     /**
-     * @deprecated  As of Rhino 1.5 Release 4, use
-     * {@link WrapFactory} and {@link #setWrapFactory(WrapFactory)}
+     * @deprecated  Use {@link WrapFactory} and {@link #setWrapFactory(WrapFactory)}.
      */
     public final void setWrapHandler(WrapHandler wrapHandler)
     {
@@ -2156,8 +2142,7 @@ controller)
     }
 
     /**
-     * @deprecated  As of Rhino 1.5 Release 4, use
-     * {@link WrapFactory} and {@link #getWrapFactory()}
+     * @deprecated  Use {@link WrapFactory} and {@link #getWrapFactory()}.
      */
     public final WrapHandler getWrapHandler()
     {

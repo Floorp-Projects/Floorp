@@ -293,18 +293,8 @@ public class Main {
                 if (result != cx.getUndefinedValue()) {
                     try {
                         global.getErr().println(cx.toString(result));
-                    } catch (EcmaError ee) {
-                        String msg = ToolErrorReporter.getMessage(
-                            "msg.uncaughtJSException", ee.toString());
-                        exitCode = EXITCODE_RUNTIME_ERROR;
-                        if (ee.getSourceName() != null) {
-                            Context.reportError(msg, ee.getSourceName(),
-                                                ee.getLineNumber(),
-                                                ee.getLineSource(),
-                                                ee.getColumnNumber());
-                        } else {
-                            Context.reportError(msg);
-                        }
+                    } catch (RhinoException rex) {
+                        errorReporter.reportException(rex);
                     }
                 }
                 NativeArray h = global.history;
@@ -411,18 +401,12 @@ public class Main {
         } catch (WrappedException we) {
             global.getErr().println(we.getWrappedException().toString());
             we.printStackTrace();
-        } catch (EcmaError ee) {
-            String msg = ToolErrorReporter.getMessage(
-                "msg.uncaughtJSException", ee.toString());
+        } catch (EvaluatorException ee) {
+            // Already printed message.
             exitCode = EXITCODE_RUNTIME_ERROR;
-            if (ee.getSourceName() != null) {
-                Context.reportError(msg, ee.getSourceName(),
-                                    ee.getLineNumber(),
-                                    ee.getLineSource(),
-                                    ee.getColumnNumber());
-            } else {
-                Context.reportError(msg);
-            }
+        } catch (RhinoException rex) {
+            errorReporter.reportException(rex);
+            exitCode = EXITCODE_RUNTIME_ERROR;
         } catch (VirtualMachineError ex) {
             // Treat StackOverflow and OutOfMemory as runtime errors
             ex.printStackTrace();
@@ -430,14 +414,6 @@ public class Main {
                 "msg.uncaughtJSException", ex.toString());
             exitCode = EXITCODE_RUNTIME_ERROR;
             Context.reportError(msg);
-        } catch (EvaluatorException ee) {
-            // Already printed message.
-            exitCode = EXITCODE_RUNTIME_ERROR;
-        } catch (JavaScriptException jse) {
-            exitCode = EXITCODE_RUNTIME_ERROR;
-            Context.reportError(ToolErrorReporter.getMessage(
-                "msg.uncaughtJSException",
-                jse.getMessage()));
         }
         return result;
     }

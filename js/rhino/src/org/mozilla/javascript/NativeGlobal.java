@@ -371,10 +371,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
             if (d != d || ((mask = (int) d) != d) ||
                 0 != (mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH)))
             {
-                String message = Context.getMessage0("msg.bad.esc.mask");
-                cx.reportError(message);
-                // do the ecma thing, in case reportError returns.
-                mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
+                throw Context.reportRuntimeError0("msg.bad.esc.mask");
             }
         }
 

@@ -846,7 +846,7 @@ public class ScriptRuntime {
             EcmaError ee = (EcmaError)t;
             String errorName = ee.getName();
             return makeErrorObject(cx, scope, errorName, ee.getErrorMessage(),
-                                   ee.getSourceName(), ee.getLineNumber());
+                                   ee.sourceName(), ee.lineNumber());
         } else if (evaluator == null) {
             // Script can catch only instances of JavaScriptException,
             // EcmaError and EvaluatorException
@@ -874,8 +874,8 @@ public class ScriptRuntime {
 
         Scriptable errorObject = makeErrorObject(cx, scope, errorName,
                                                  message,
-                                                 evaluator.getSourceName(),
-                                                 evaluator.getLineNumber());
+                                                 evaluator.sourceName(),
+                                                 evaluator.lineNumber());
         if (t != evaluator) {
             Object twrap = cx.getWrapFactory().wrap(cx, scope, t, null);
             ScriptableObject.putProperty(errorObject, "javaException", twrap);

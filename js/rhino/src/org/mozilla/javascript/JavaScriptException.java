@@ -44,11 +44,11 @@ package org.mozilla.javascript;
  *
  * @author Mike McCabe
  */
-public class JavaScriptException extends RuntimeException
+public class JavaScriptException extends RhinoException
 {
     /**
      * @deprecated
-     * Use {@link EvaluatorException#EvaluatorException(String)} to report
+     * Use {@link WrappedException#WrappedException(Throwable)} to report
      * exceptions in Java code.
      */
     public JavaScriptException(Object value)
@@ -63,11 +63,17 @@ public class JavaScriptException extends RuntimeException
      */
     public JavaScriptException(Object value, String sourceName, int lineNumber)
     {
-        super(EvaluatorException.generateErrorMessage(
-                toMessage(value), sourceName, lineNumber));
-        this.lineNumber = lineNumber;
-        this.sourceName = sourceName;
+        recordErrorOrigin(sourceName, lineNumber, null, 0);
         this.value = value;
+    }
+
+    public String details()
+    {
+        if (value instanceof Scriptable) {
+            // to prevent potential of evaluation and throwing more exceptions
+            return ScriptRuntime.defaultObjectToString((Scriptable)value);
+        }
+        return ScriptRuntime.toString(value);
     }
 
     /**
@@ -79,33 +85,20 @@ public class JavaScriptException extends RuntimeException
     }
 
     /**
-     * Get the name of the source containing the error, or null
-     * if that information is not available.
+     * @deprecated Use {@link RhinoException#sourceName()} from the super class.
      */
     public String getSourceName()
     {
-        return sourceName;
+        return sourceName();
     }
 
     /**
-     * Returns the line number of the statement causing the error,
-     * or zero if not available.
+     * @deprecated Use {@link RhinoException#lineNumber()} from the super class.
      */
     public int getLineNumber()
     {
-        return lineNumber;
-    }
-
-    private static String toMessage(Object object)
-    {
-        if (object instanceof Scriptable) {
-            // to prevent potential of evaluation and throwing more exceptions
-            return ScriptRuntime.defaultObjectToString((Scriptable)object);
-        }
-        return ScriptRuntime.toString(object);
+        return lineNumber();
     }
 
     private Object value;
-    private String sourceName;
-    private int lineNumber;
 }

@@ -120,7 +120,7 @@ public class ClassCompiler
      * Compile JavaScript source into one or more Java class files.
      * The first compiled class will have name mainClassName.
      * If the results of {@link #getTargetExtends()} or
-     * {@link getTargetImplements()} are not null, then the first compiled
+     * {@link #getTargetImplements()} are not null, then the first compiled
      * class will extend the specified super class and implement
      * specified interfaces.
      *

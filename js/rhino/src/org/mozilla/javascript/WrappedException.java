@@ -55,6 +55,19 @@ public class WrappedException extends EvaluatorException
         super("Wrapped "+exception.toString());
         this.exception = exception;
         Kit.initCauseOrIgnore(this, exception);
+
+        Context cx = Context.getCurrentContext();
+        if (cx!= null) {
+            int[] linep = { 0 };
+            String sourceName = cx.getSourcePositionFromStack(linep);
+            int lineNumber = linep[0];
+            if (sourceName != null) {
+                initSourceName(sourceName);
+            }
+            if (lineNumber != 0) {
+                initLineNumber(lineNumber);
+            }
+        }
     }
 
     /**

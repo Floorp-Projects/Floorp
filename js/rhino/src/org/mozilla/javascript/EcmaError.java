@@ -41,7 +41,7 @@ package org.mozilla.javascript;
  * The class of exceptions raised by the engine as described in
  * ECMA edition 3. See section 15.11.6 in particular.
  */
-public class EcmaError extends RuntimeException
+public class EcmaError extends RhinoException
 {
     /**
      * Create an exception with the specified detail message.
@@ -60,14 +60,9 @@ public class EcmaError extends RuntimeException
               String sourceName, int lineNumber,
               String lineSource, int columnNumber)
     {
-        super(EvaluatorException.generateErrorMessage(
-                  errorName+": "+errorMessage, sourceName, lineNumber));
+        recordErrorOrigin(sourceName, lineNumber, lineSource, columnNumber);
         this.errorName = errorName;
         this.errorMessage = errorMessage;
-        this.sourceName = sourceName;
-        this.lineNumber = lineNumber;
-        this.lineSource = lineSource;
-        this.columnNumber = columnNumber;
     }
 
     /**
@@ -79,6 +74,11 @@ public class EcmaError extends RuntimeException
     {
         this("InternalError", ScriptRuntime.toString(nativeError),
              sourceName, lineNumber, lineSource, columnNumber);
+    }
+
+    public String details()
+    {
+        return errorName+": "+errorMessage;
     }
 
     /**
@@ -109,33 +109,31 @@ public class EcmaError extends RuntimeException
     }
 
     /**
-     * Get the name of the source containing the error, or null
-     * if that information is not available.
+     * @deprecated Use {@link RhinoException#sourceName()} from the super class.
      */
     public String getSourceName() {
-        return sourceName;
+        return sourceName();
     }
 
     /**
-     * Returns the line number of the statement causing the error,
-     * or zero if not available.
+     * @deprecated Use {@link RhinoException#lineNumber()} from the super class.
      */
     public int getLineNumber() {
-        return lineNumber;
+        return lineNumber();
     }
 
     /**
-     * The column number of the location of the error, or zero if unknown.
+     * @deprecated Use {@link RhinoException#columnNumber()} from the super class.
      */
     public int getColumnNumber() {
-        return columnNumber;
+        return columnNumber();
     }
 
     /**
-     * The source of the line causing the error, or zero if unknown.
+     * @deprecated Use {@link RhinoException#lineSource()} from the super class.
      */
     public String getLineSource() {
-        return lineSource;
+        return lineSource();
     }
 
     /**
@@ -149,8 +147,4 @@ public class EcmaError extends RuntimeException
 
     private String errorName;
     private String errorMessage;
-    private String sourceName;
-    private int lineNumber;
-    private int columnNumber;
-    private String lineSource;
 }
