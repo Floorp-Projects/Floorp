@@ -33,7 +33,7 @@
 class nsSliderFrame;
 
 class nsScrollbarButtonFrame : public nsTitledButtonFrame, 
-                                      nsITimerCallback
+                               public nsITimerCallback
 {
 public:
 
