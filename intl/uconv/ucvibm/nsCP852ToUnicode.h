@@ -52,11 +52,6 @@ public:
    * Class constructor.
    */
   nsCP852ToUnicode();
-
-  /**
-   * Static class constructor.
-   */
-  static nsresult CreateInstance(nsISupports **aResult);
 };
 
 #endif /* nsCP852ToUnicode_h___ */

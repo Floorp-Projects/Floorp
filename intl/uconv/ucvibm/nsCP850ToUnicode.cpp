@@ -55,9 +55,3 @@ nsCP850ToUnicode::nsCP850ToUnicode()
                           (uMappingTable*) &g_utMappingTable)
 {
 }
-
-nsresult nsCP850ToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsCP850ToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}

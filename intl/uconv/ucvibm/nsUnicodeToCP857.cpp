@@ -56,12 +56,6 @@ nsUnicodeToCP857::nsUnicodeToCP857()
 {
 }
 
-nsresult nsUnicodeToCP857::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = (nsIUnicodeEncoder*) new nsUnicodeToCP857();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTableEncoderSupport class [implementation]
 
