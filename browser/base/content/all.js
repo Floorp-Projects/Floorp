@@ -633,3 +633,6 @@ pref("network.autodial-helper.enabled", true);
 // and we're not already running).
 pref("advanced.system.supportDDEExec", true);
 pref("browser.xul.error_pages.enabled", true);
+
+pref("signon.rememberSignons",              true);
+pref("signon.expireMasterPassword",         false);
