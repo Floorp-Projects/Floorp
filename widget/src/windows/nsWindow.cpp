@@ -2231,7 +2231,11 @@ BOOL TranslateToAscii(BYTE *aKeyState,
 //-------------------------------------------------------------------------
 #define WM_CHAR_LATER(vk) ( ((vk)<= VK_SPACE) || \
                                  (('0'<=(vk))&&((vk)<='9')) || \
-                                 (('A'<=(vk))&&((vk)<='Z')))
+                                 (('A'<=(vk))&&((vk)<='Z')) || \
+                                 ((VK_NUMPAD0 <=(vk))&&((vk)<=VK_DIVIDE)) || \
+								 ((0xBA <=(vk))&&((vk)<=NS_VK_BACK_QUOTE)) || \
+								 ((NS_VK_OPEN_BRACKET <=(vk))&&((vk)<=NS_VK_QUOTE)) \
+                            )
 #define NO_WM_CHAR_LATER(vk) (! WM_CHAR_LATER(vk))
 
 BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
@@ -2454,7 +2458,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 	case WM_CHAR: 
         {
 #ifdef KE_DEBUG
-            printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , ch, wParam, lParam);
+            printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , wParam, wParam, lParam);
 #endif
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             if(WM_SYSCHAR==msg)
