@@ -1553,6 +1553,24 @@ NS_IMETHODIMP GlobalWindowImpl::Dump(const nsAReadableString& aStr)
   return NS_OK;
 }
 
+static void EnsureReflowFlushAndPaint(nsIDocShell* aDocShell)
+{
+  if (!aDocShell)
+    return;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  aDocShell->GetPresShell(getter_AddRefs(presShell));
+
+  if (!presShell)
+    return;
+
+  // Flush pending reflows.
+  presShell->FlushPendingNotifications();
+
+  // Unsuppress painting.
+  presShell->UnsuppressPainting(PR_TRUE);
+}
+
 NS_IMETHODIMP GlobalWindowImpl::Alert(JSContext* cx, jsval* argv, PRUint32 argc)
 {
   NS_ENSURE_STATE(mDocShell);
@@ -1564,6 +1582,9 @@ NS_IMETHODIMP GlobalWindowImpl::Alert(JSContext* cx, jsval* argv, PRUint32 argc)
 
   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
+
+  // Before bringing up the window, unsuppress painting and flush pending reflows.
+  EnsureReflowFlushAndPaint(mDocShell);
 
   return prompter->Alert(nsnull, str.GetUnicode());
 }
@@ -1581,6 +1602,9 @@ NS_IMETHODIMP GlobalWindowImpl::Confirm(JSContext* cx, jsval* argv,
 
   nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
+
+  // Before bringing up the window, unsuppress painting and flush pending reflows.
+  EnsureReflowFlushAndPaint(mDocShell);
 
   return prompter->Confirm(nsnull, str.GetUnicode(), aReturn);
 }
@@ -1613,6 +1637,9 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
   nsCOMPtr<nsIAuthPrompt> prompter(do_GetInterface(mDocShell));
 
   NS_ENSURE_TRUE(prompter, NS_ERROR_FAILURE);
+
+  // Before bringing up the window, unsuppress painting and flush pending reflows.
+  EnsureReflowFlushAndPaint(mDocShell);
 
   PRBool b;
   PRUnichar *uniResult = nsnull;

@@ -668,9 +668,6 @@ NS_IMETHODIMP nsImageBoxFrame::OnStartFrame(imgIRequest *request, nsIPresContext
 
 NS_IMETHODIMP nsImageBoxFrame::OnDataAvailable(imgIRequest *request, nsIPresContext *aPresContext, gfxIImageFrame *frame, const nsRect * rect)
 {
-  nsBoxLayoutState state(aPresContext);
-  this->Redraw(state);
-
   return NS_OK;
 }
 
@@ -681,6 +678,8 @@ NS_IMETHODIMP nsImageBoxFrame::OnStopFrame(imgIRequest *request, nsIPresContext 
 
 NS_IMETHODIMP nsImageBoxFrame::OnStopContainer(imgIRequest *request, nsIPresContext *aPresContext, imgIContainer *image)
 {
+  nsBoxLayoutState state(aPresContext);
+  this->Redraw(state);
 
   return NS_OK;
 }

@@ -1048,6 +1048,16 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
   PRBool isVisible;
   if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && 
       isVisible && mRect.width && mRect.height) {
+    // If painting is suppressed, we need to stop image painting.  We
+    // have to cover <img> here because of input image controls.
+    PRBool paintingSuppressed = PR_FALSE;
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    shell->IsPaintingSuppressed(&paintingSuppressed);
+    if (paintingSuppressed)
+      return NS_OK;
+
+
     // First paint background and borders
     nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);

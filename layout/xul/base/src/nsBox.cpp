@@ -1082,6 +1082,13 @@ nsBox::Redraw(nsBoxLayoutState& aState,
       return NS_OK;
   }
 
+  nsCOMPtr<nsIPresShell> shell;
+  presContext->GetShell(getter_AddRefs(shell));
+  PRBool suppressed = PR_FALSE;
+  shell->IsPaintingSuppressed(&suppressed);
+  if (suppressed)
+    return NS_OK; // Don't redraw. Painting is still suppressed.
+
   nsIFrame* frame = nsnull;
   GetFrame(&frame);
 

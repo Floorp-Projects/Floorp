@@ -6451,6 +6451,13 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
                                  aDirtyRect, rect, *border, *outline, mStyleContext, 0);
   }
 
+  PRBool paintingSuppressed = PR_FALSE;  
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  shell->IsPaintingSuppressed(&paintingSuppressed);
+  if (paintingSuppressed)
+    return NS_OK;
+
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
 

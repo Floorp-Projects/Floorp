@@ -84,12 +84,16 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
   mContext = cx;
 
   if (aLoadGroup) {
-    aLoadGroup->AddRequest(this, cx);
-    mLoadGroup = aLoadGroup;
+    PRUint32 imageStatus;
+    nsresult rv = GetImageStatus(&imageStatus);
+    if (NS_FAILED(rv)) return rv;
+    if (!(imageStatus & STATUS_LOAD_COMPLETE)) {
+      aLoadGroup->AddRequest(this, cx);
+      mLoadGroup = aLoadGroup;
+    }
   }
 
-  request->AddProxy(this);
-
+  request->AddProxy(this);  
   return NS_OK;
 }
 

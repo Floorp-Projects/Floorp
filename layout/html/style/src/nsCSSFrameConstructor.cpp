@@ -3275,6 +3275,15 @@ IsCanvasFrame(nsIFrame* aFrame)
   return parentType.get() == nsLayoutAtoms::canvasFrame;
 }
 
+static PRBool
+IsRootFrame(nsIFrame* aFrame)
+{
+  nsCOMPtr<nsIAtom>  parentType;
+
+  aFrame->GetFrameType(getter_AddRefs(parentType));
+  return parentType.get() == nsLayoutAtoms::rootFrame;
+}
+
 static void
 PropagateBackgroundToParent(nsIStyleContext*    aStyleContext,
                             const nsStyleColor* aColor,
@@ -3593,7 +3602,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
     // Section 14.2 of the CSS2 spec says that the background of the root element
     // covers the entire canvas. See if a background was specified for the root
     // element
-    if (!color->BackgroundIsTransparent() && IsCanvasFrame(aParentFrame)) {
+    if (!color->BackgroundIsTransparent() && (IsCanvasFrame(aParentFrame) || IsRootFrame(aParentFrame))) {
       nsIStyleContext*  parentContext;
       
       // Propagate the document element's background to the canvas so that it
@@ -9402,6 +9411,13 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
                            nsIFrame* aFrame,
                            nsIViewManager* aViewManager)
 {
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  PRBool isPaintingSuppressed = PR_FALSE;
+  shell->IsPaintingSuppressed(&isPaintingSuppressed);
+  if (isPaintingSuppressed)
+    return; // Don't allow synchronous rendering changes when painting is turned off.
+
   nsIViewManager* viewManager = aViewManager;
 
   // Trigger rendering updates by damaging this frame and any

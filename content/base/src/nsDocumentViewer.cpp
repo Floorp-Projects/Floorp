@@ -527,6 +527,7 @@ protected:
   nsCOMPtr<nsIDOMFocusListener> mFocusListener;
   
   PRBool  mEnableRendering;
+  PRBool  mStopped;
   PRInt16 mNumURLStarts;
   nsIPageSequenceFrame* mPageSeqFrame;
 
@@ -793,6 +794,7 @@ DocumentViewerImpl::DocumentViewerImpl()
 {
   NS_INIT_ISUPPORTS();
   mEnableRendering  = PR_TRUE;
+  mStopped          = PR_FALSE;
   mPrt              = nsnull;
   mIsPrinting       = PR_FALSE;
   
@@ -1060,6 +1062,11 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   } else {
     // XXX: Should fire error event to the document...
   }
+  
+  // Now that the document has loaded, we can tell the presshell
+  // to unsuppress painting.
+  if (mPresShell)
+    mPresShell->UnsuppressPainting(!mStopped);
 
   return rv;
 }
@@ -1123,6 +1130,8 @@ DocumentViewerImpl::Stop(void)
     // stop everything but the chrome.
     mPresContext->Stop(PR_FALSE);
   }
+
+  mStopped = PR_TRUE;
   return NS_OK;
 }
 

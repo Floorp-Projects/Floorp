@@ -503,6 +503,18 @@ public:
    */
   NS_IMETHOD ReleaseAnonymousContent() = 0;
 
+  /**
+   * Called to find out if painting is suppressed for this presshell.  If it is suppressd,
+   * we don't allow the painting of any layer but the background, and we don't
+   * recur into our children.
+   */
+  NS_IMETHOD IsPaintingSuppressed(PRBool* aResult)=0;
+
+  /**
+   * Unsuppress painting.
+   */
+  NS_IMETHOD UnsuppressPainting(PRBool aCancelTimer) = 0;
+
   enum InterruptType {Timeout};
   /**
    * Notify aFrame via a reflow command when an aInterruptType event occurs 

@@ -1283,6 +1283,10 @@ nsBoxFrame::Paint(nsIPresContext* aPresContext,
   if (NS_FRAME_IS_UNFLOWABLE & mState) {
     return NS_OK;
   }
+
+  nsCOMPtr<nsIAtom> frameType;
+  GetFrameType(getter_AddRefs(frameType));
+
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     if (disp->IsVisible() && mRect.width && mRect.height) {
       // Paint our background and border
@@ -1322,6 +1326,20 @@ nsBoxFrame::Paint(nsIPresContext* aPresContext,
                        aRenderingContext, aDirtyRect, aWhichLayer);
       }
     }
+  }
+
+  if (frameType.get() == nsLayoutAtoms::rootFrame) {
+    // We are wrapping the root frame of a XUL document. We
+    // need to check the pres shell to find out if painting is locked
+    // down (because we're still in the early stages of document
+    // and frame construction.  If painting is locked down, then we
+    // do not paint our children.  
+    PRBool paintingSuppressed = PR_FALSE;
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    shell->IsPaintingSuppressed(&paintingSuppressed);
+    if (paintingSuppressed)
+      return NS_OK;
   }
 
   // Now paint the kids. Note that child elements have the opportunity to

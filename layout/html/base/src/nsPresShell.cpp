@@ -918,6 +918,9 @@ public:
   NS_IMETHOD GetAnonymousContentFor(nsIContent* aContent, nsISupportsArray** aAnonymousElements);
   NS_IMETHOD ReleaseAnonymousContent();
 
+  NS_IMETHOD IsPaintingSuppressed(PRBool* aResult);
+  NS_IMETHOD UnsuppressPainting(PRBool aCancelTimer);
+
   NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, nsIFrame* aFrame, nsIContent* aContent, PRUint32 aFlags, nsEventStatus* aStatus);
   NS_IMETHOD GetEventTargetFrame(nsIFrame** aFrame);
 
@@ -1049,6 +1052,8 @@ protected:
   void HandlePostedAttributeChanges();
   void HandlePostedReflowCallbacks();
 
+  void UnsuppressAndInvalidate();
+
   /** notify all external reflow observers that reflow of type "aData" is about
     * to begin.
     */
@@ -1166,6 +1171,19 @@ protected:
   nsAttributeChangeRequest* mLastAttributeRequest;
   nsCallbackEventRequest* mFirstCallbackEventRequest;
   nsCallbackEventRequest* mLastCallbackEventRequest;
+
+  PRBool mPaintingSuppressed; // For all documents we initially lock down painting.
+                              // We will refuse to paint the document until either
+                              // (a) our timer fires or (b) all frames are constructed.
+  PRBool mShouldUnsuppressPainting; // Indicates that it is safe to unlock painting once all pending
+                                    // reflows have been processed.
+  nsCOMPtr<nsITimer> mPaintSuppressionTimer; // This timer controls painting suppression.  Until it fires
+                                             // or all frames are constructed, we won't paint anything but
+                                             // our <body> background and scrollbars.
+#define PAINTLOCK_EVENT_DELAY 1200 // 1200 ms.  This is actually pref-controlled, but we use this
+                                   // value if we fail to get the pref for any reason.
+
+  static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell); // A callback for the timer.
 
   // subshell map
   nsDST*            mSubShellMap;  // map of content/subshell pairs
@@ -1312,7 +1330,9 @@ PresShell::PresShell():mAnonymousContentTable(nsnull),
                        mFirstAttributeRequest(nsnull),
                        mLastAttributeRequest(nsnull),
                        mFirstCallbackEventRequest(nsnull),
-                       mLastCallbackEventRequest(nsnull)
+                       mLastCallbackEventRequest(nsnull),
+                       mPaintingSuppressed(PR_FALSE),
+                       mShouldUnsuppressPainting(PR_FALSE)
 {
   NS_INIT_REFCNT();
   mIsDestroying = PR_FALSE;
@@ -1399,6 +1419,12 @@ PresShell::~PresShell()
     mReflowCountMgr = nsnull;
   }
 #endif
+
+  // If our paint suppression timer is still active, kill it.
+  if (mPaintSuppressionTimer) {
+    mPaintSuppressionTimer->Cancel();
+    mPaintSuppressionTimer = nsnull;
+  }
 
   // release our pref style sheet, if we have one still
   ClearPreferenceStyleRules();
@@ -2594,7 +2620,32 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     }
   }
 
+  mPaintingSuppressed = PR_TRUE;
+  // Kick off a one-shot timer based off our pref value.  When this timer
+  // fires, if painting is still locked down, then we will go ahead and
+  // trigger a full invalidate and allow painting to proceed normally.
+  mPaintSuppressionTimer = do_CreateInstance("@mozilla.org/timer;1");
+  if (!mPaintSuppressionTimer)
+    // Uh-oh.  We must be out of memory.  No point in keeping painting locked down.
+    mPaintingSuppressed = PR_FALSE;
+  else {
+    // Initialize the timer.
+    PRInt32 delay = PAINTLOCK_EVENT_DELAY; // Use this value if we fail to get the pref value.
+    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+    if (prefs)
+      prefs->GetIntPref("nglayout.initialpaint.delay", &delay);
+    mPaintSuppressionTimer->Init(sPaintSuppressionCallback, this, delay, NS_PRIORITY_HIGH);
+  }
+
   return NS_OK; //XXX this needs to be real. MMP
+}
+
+void
+PresShell::sPaintSuppressionCallback(nsITimer *aTimer, void* aPresShell)
+{
+  PresShell* self = NS_STATIC_CAST(PresShell*, aPresShell);
+  if (self)
+    self->UnsuppressPainting(PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -4402,6 +4453,47 @@ PresShell::ReleaseAnonymousContent()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+PresShell::IsPaintingSuppressed(PRBool* aResult)
+{
+  *aResult = mPaintingSuppressed;
+  return NS_OK;
+}
+
+void
+PresShell::UnsuppressAndInvalidate()
+{
+  mPaintingSuppressed = PR_FALSE;
+  nsIFrame* rootFrame;
+  mFrameManager->GetRootFrame(&rootFrame);
+  if (rootFrame) {
+    nsRect rect;
+    rootFrame->GetRect(rect);
+    ((nsFrame*)rootFrame)->Invalidate(mPresContext, rect, PR_FALSE);
+  }
+}
+
+NS_IMETHODIMP
+PresShell::UnsuppressPainting(PRBool aCancelTimer)
+{
+  if (mPaintSuppressionTimer && aCancelTimer) {
+    mPaintSuppressionTimer->Cancel();
+    mPaintSuppressionTimer = nsnull;
+  }
+
+  if (!mPaintingSuppressed || !aCancelTimer)
+    return NS_OK;
+
+  // If we have reflows pending, just wait until we process
+  // the reflows and get all the frames where we want them
+  // before actually unlocking the painting.  Otherwise
+  // go ahead and unlock now.
+  if (mReflowCommands.Count() > 0)
+    mShouldUnsuppressPainting = PR_TRUE;
+  else
+    UnsuppressAndInvalidate();
+  return NS_OK;
+}
 
 // Post a request to handle an arbitrary callback after reflow has finished.
 NS_IMETHODIMP
@@ -5119,7 +5211,7 @@ PresShell::Paint(nsIView              *aView,
 
   aView->GetClientData(clientData);
   frame = (nsIFrame *)clientData;
-      
+     
   if (nsnull != frame)
   {
     mCaret->EraseCaret();
@@ -5728,6 +5820,16 @@ PresShell::ProcessReflowCommands(PRBool aInterruptible)
   HandlePostedDOMEvents();
   HandlePostedAttributeChanges();
   HandlePostedReflowCallbacks();
+
+  if (mShouldUnsuppressPainting && mReflowCommands.Count() == 0) {
+    // We only unlock if we're out of reflows.  It's pointless
+    // to unlock if reflows are still pending, since reflows
+    // are just going to thrash the frames around some more.  By
+    // waiting we avoid an overeager "jitter" effect.
+    mShouldUnsuppressPainting = PR_FALSE;
+    UnsuppressAndInvalidate();
+  }
+
   return NS_OK;
 }
 

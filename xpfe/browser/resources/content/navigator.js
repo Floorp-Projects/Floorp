@@ -166,8 +166,19 @@ function UpdateBackForwardButtons()
   var forwardBroadcaster = document.getElementById("canGoForward");
   var webNavigation = getWebNavigation();
 
-  backBroadcaster.setAttribute("disabled", !webNavigation.canGoBack);
-  forwardBroadcaster.setAttribute("disabled", !webNavigation.canGoForward);
+  // Avoid setting attributes on broadcasters if the value hasn't changed!
+  // Remember, guys, setting attributes on elements is expensive!  They
+  // get inherited into anonymous content, broadcast to other widgets, etc.!
+  // Don't do it if the value hasn't changed! - dwh
+
+  var backDisabled = (backBroadcaster.getAttribute("disabled") == "true");
+  var forwardDisabled = (forwardBroadcaster.getAttribute("disabled") == "true");
+
+  if (backDisabled == webNavigation.canGoBack)
+    backBroadcaster.setAttribute("disabled", !backDisabled);
+  
+  if (forwardDisabled == webNavigation.canGoForward)
+    forwardBroadcaster.setAttribute("disabled", !forwardDisabled);
 }
 
 

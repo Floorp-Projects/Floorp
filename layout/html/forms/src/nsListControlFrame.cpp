@@ -301,6 +301,14 @@ nsListControlFrame::Paint(nsIPresContext* aPresContext,
     return PR_FALSE;
   }
 
+  // Don't allow painting of list controls when painting is suppressed.
+  PRBool paintingSuppressed = PR_FALSE;
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  shell->IsPaintingSuppressed(&paintingSuppressed);
+  if (paintingSuppressed)
+    return NS_OK;
+
   // Start by assuming we are visible and need to be painted
   PRBool isVisible = PR_TRUE;
 
