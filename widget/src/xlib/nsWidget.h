@@ -109,17 +109,16 @@ public:
   virtual PRBool          OnResize(nsSizeEvent &event);
   virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
   virtual PRBool          DispatchKeyEvent(nsKeyEvent &aKeyEvent);
-  virtual PRBool          DispatchFocusEvent(nsGUIEvent &aEvent);
-
 
   static nsWidget        * GetWidgetForWindow(Window aWindow);
   void                     SetVisibility(int aState); // using the X constants here
   void                     SetMapStatus(PRBool aState);
 
+  PRBool DispatchWindowEvent(nsGUIEvent & aEvent);
+
 protected:
 
   // private event functions
-  PRBool DispatchWindowEvent(nsGUIEvent & aEvent);
   PRBool ConvertStatus(nsEventStatus aStatus);
 
   // create the native window for this class

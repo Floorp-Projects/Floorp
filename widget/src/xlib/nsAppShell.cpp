@@ -352,12 +352,23 @@ nsAppShell::DispatchXEvent(XEvent *event)
   case KeyRelease:
     HandleKeyReleaseEvent(event, widget);
     break;
+
   case FocusIn:
     HandleFocusInEvent(event, widget);
     break;
+
   case FocusOut:
     HandleFocusOutEvent(event, widget);
     break;
+
+  case EnterNotify:
+    HandleEnterEvent(event, widget);
+    break;
+
+  case LeaveNotify:
+    HandleLeaveEvent(event, widget);
+    break;
+
   case NoExpose:
     // these annoy me.
     break;
@@ -592,7 +603,7 @@ nsAppShell::HandleFocusInEvent(XEvent *event, nsWidget *aWidget)
   focusEvent.point.y = 0;
   
   NS_ADDREF(aWidget);
-  aWidget->DispatchFocusEvent(focusEvent);
+  aWidget->DispatchWindowEvent(focusEvent);
   NS_RELEASE(aWidget);
 }
 
@@ -613,7 +624,54 @@ nsAppShell::HandleFocusOutEvent(XEvent *event, nsWidget *aWidget)
   focusEvent.point.y = 0;
   
   NS_ADDREF(aWidget);
-  aWidget->DispatchFocusEvent(focusEvent);
+  aWidget->DispatchWindowEvent(focusEvent);
+  NS_RELEASE(aWidget);
+}
+
+void
+nsAppShell::HandleEnterEvent(XEvent *event, nsWidget *aWidget)
+{
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Enter event for window 0x%lx\n",
+                                       event->xcrossing.window));
+  nsMouseEvent enterEvent;
+
+  enterEvent.message = NS_MOUSE_ENTER;
+  enterEvent.widget  = aWidget;
+  
+  enterEvent.eventStructType = NS_MOUSE_EVENT;
+  
+  enterEvent.time = event->xcrossing.time;
+  enterEvent.point.x = nscoord(event->xcrossing.x);
+  enterEvent.point.y = nscoord(event->xcrossing.y);
+  
+  NS_ADDREF(aWidget);
+
+  aWidget->DispatchWindowEvent(enterEvent);
+
+  NS_RELEASE(aWidget);
+}
+
+void
+nsAppShell::HandleLeaveEvent(XEvent *event, nsWidget *aWidget)
+{
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Leave event for window 0x%lx\n",
+                                       event->xcrossing.window));
+
+  nsMouseEvent leaveEvent;
+  
+  leaveEvent.message = NS_MOUSE_EXIT;
+  leaveEvent.widget  = aWidget;
+  
+  leaveEvent.eventStructType = NS_MOUSE_EVENT;
+  
+  leaveEvent.time = event->xcrossing.time;
+  leaveEvent.point.x = nscoord(event->xcrossing.x);
+  leaveEvent.point.y = nscoord(event->xcrossing.y);
+  
+  NS_ADDREF(aWidget);
+
+  aWidget->DispatchWindowEvent(leaveEvent);
+
   NS_RELEASE(aWidget);
 }
 

@@ -82,10 +82,12 @@ nsWindow::GetEventMask()
     ButtonMotionMask |
     ButtonPressMask | 
     ButtonReleaseMask | 
+    EnterWindowMask |
     ExposureMask | 
     FocusChangeMask |
     KeyPressMask | 
     KeyReleaseMask | 
+    LeaveWindowMask |
     PointerMotionMask |
     StructureNotifyMask | 
     VisibilityChangeMask;
