@@ -83,8 +83,8 @@ typedef enum JSDToStrMode {
 
 
 /* Maximum number of characters (including trailing null) that a DTOSTR_STANDARD or DTOSTR_STANDARD_EXPONENTIAL
- * conversion can produce.  This maximum is reached for a number like -1.2345678901234567e+123. */
-#define DTOSTR_STANDARD_BUFFER_SIZE 25
+ * conversion can produce.  This maximum is reached for a number like -0.0000012345678901234567. */
+#define DTOSTR_STANDARD_BUFFER_SIZE 26
 
 /* Maximum number of characters (including trailing null) that one of the other conversions
  * can produce.  This maximum is reached for TO_FIXED, which can generate up to 21 digits before the decimal point. */
