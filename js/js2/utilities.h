@@ -184,9 +184,9 @@ namespace JavaScript {
 		    NonIdGroup,			// 0  May not be part of an identifier
 		    FormatGroup,		// 1  Format control
 		    IdGroup,			// 2  May start or continue a JS identifier (includes $ and _)
-		    IdContinueGroup,	// 3  May continue a JS identifier  [IdContinueGroup & -2 == IdGroup]
+		    IdContinueGroup,	// 3  May continue a JS identifier  [(IdContinueGroup & -2) == IdGroup]
 		    WhiteGroup,			// 4  White space character (but not line break)
-		    LineBreakGroup		// 5  Line break character  [LineBreakGroup & -2 == WhiteGroup]
+		    LineBreakGroup		// 5  Line break character  [(LineBreakGroup & -2) == WhiteGroup]
 		};
 
 		CharInfo() {}
@@ -198,26 +198,26 @@ namespace JavaScript {
 
 		friend bool isAlpha(const CharInfo &ci)
 		{
-			return ((((1 << UppercaseLetter) | (1 << LowercaseLetter) | (1 << TitlecaseLetter) | (1 << ModifierLetter) | (1 << OtherLetter))
-					 >> cType(ci)) & 1) != 0;
+			return ((1<<UppercaseLetter | 1<<LowercaseLetter | 1<<TitlecaseLetter | 1<<ModifierLetter | 1<<OtherLetter)
+					 >> cType(ci) & 1) != 0;
 		}
 
 		friend bool isAlphanumeric(const CharInfo &ci)
 		{
-			return ((((1 << UppercaseLetter) | (1 << LowercaseLetter) | (1 << TitlecaseLetter) | (1 << ModifierLetter) | (1 << OtherLetter) |
-					  (1 << DecimalDigitNumber) | (1 << LetterNumber))
-					 >> cType(ci)) & 1) != 0;
+			return ((1<<UppercaseLetter | 1<<LowercaseLetter | 1<<TitlecaseLetter | 1<<ModifierLetter | 1<<OtherLetter |
+					 1<<DecimalDigitNumber | 1<<LetterNumber)
+					>> cType(ci) & 1) != 0;
 		}
 
 		// Return true if this character can start a JavaScript identifier
 		friend bool isIdLeading(const CharInfo &ci) {return cGroup(ci) == IdGroup;}
 		// Return true if this character can continue a JavaScript identifier
-		friend bool isIdContinuing(const CharInfo &ci) {return cGroup(ci) & -2 == IdGroup;}
+		friend bool isIdContinuing(const CharInfo &ci) {return (cGroup(ci) & -2) == IdGroup;}
 
 		// Return true if this character is a Unicode decimal digit (Nd) character
 		friend bool isDecimalDigit(const CharInfo &ci) {return cType(ci) == DecimalDigitNumber;}
 		// Return true if this character is a Unicode white space or line break character
-		friend bool isSpace(const CharInfo &ci) {return cGroup(ci) & -2 == WhiteGroup;}
+		friend bool isSpace(const CharInfo &ci) {return (cGroup(ci) & -2) == WhiteGroup;}
 		// Return true if this character is a Unicode line break character (LF, CR, LS, or PS)
 		friend bool isLineBreak(const CharInfo &ci) {return cGroup(ci) == LineBreakGroup;}
 		// Return true if this character is a Unicode format control character (Cf)
