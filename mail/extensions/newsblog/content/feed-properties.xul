@@ -37,6 +37,7 @@
 
 <dialog id="feedPropertyDialog"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&window.title;"
   style="width: 27em;"
@@ -73,22 +74,39 @@
               datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
               ref="...">
             <template>
+               
+              <!-- cheat and use the CanRename property to make sure we don't list the Trash folder as a possible feed folder -->
+              <rule nc:CanFileMessages="true" iscontainer="true" isempty="false" nc:CanRename="true">
                 <menupopup>
-                   <menuitem uri="..." value="..."  
-                    class="folderMenuItem menuitem-iconic"
-                    oncommand="PickedMsgFolder(event.target,'selectFolder')"
-                    SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                    BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                    IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
-                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
-                    label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                  <menu uri="..."
+                        class="folderMenuItem menu-iconic"
+                        oncommand="PickedMsgFolder(event.target,'selectFolder')"
+                        SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                        BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                        IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                        IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                        ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                        label="rdf:http://home.netscape.com/NC-rdf#Name">
+			              <menupopup class="menulist-menupopup"/>
+                  </menu>
                 </menupopup>
+              </rule>
+              <rule nc:CanFileMessages="true" nc:CanRename="true">
+                <menupopup>
+                     <menuitem uri="..." value="..."  
+                      class="folderMenuItem menuitem-iconic"
+                      oncommand="PickedMsgFolder(event.target,'selectFolder')"
+                      SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                      BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                      IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                      IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+                      ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                      label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                 </menupopup>
+              </rule>
             </template>
         </menulist>
       </row>
-
-      <!-- Eventually we'll add a folder picker here to pick the folder associated with the feed -->
     </rows>
   </grid>
 </dialog>

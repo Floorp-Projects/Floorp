@@ -85,6 +85,45 @@ var nsNewsBlogFeedDownloader =
     feed.download(true, progressNotifier);
   },
 
+  updateSubscriptionsDS: function(aFolder, aUnsubscribe)
+  {
+    if (!gExternalScriptsLoaded)
+      loadScripts();
+
+    // an rss folder was just renamed...we need to update our feed data source
+    var msgdb = aFolder.QueryInterface(Components.interfaces.nsIMsgFolder).getMsgDatabase(null);
+    var folderInfo = msgdb.dBFolderInfo;
+    var feedurls = folderInfo.getCharPtrProperty("feedUrl");
+    var feedUrlArray = feedurls.split("|");
+
+    var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+    var ds = getSubscriptionsDS(aFolder.server);
+
+    for (url in feedUrlArray)
+    {
+      if (feedUrlArray[url])
+      {        
+        id = rdf.GetResource(feedUrlArray[url]);
+        // get the node for the current folder URI
+        var node = ds.GetTarget(id, FZ_DESTFOLDER, true);
+
+        // we need to check and see if the folder is a child of the trash...if it is, then we can
+        // treat this as an unsubscribe action
+        if (aUnsubscribe)
+        {
+          var feeds = getSubscriptionsList(aFolder.server);
+          var index = feeds.IndexOf(id);
+          if (index != -1)
+            feeds.RemoveElementAt(index, false);
+          removeAssertions(ds, id);
+        }
+          ds.Change(id, FZ_DESTFOLDER, node, rdf.GetResource(aFolder.URI));
+      }
+    } // for each feed url in the folder property
+
+    ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
+  },
+
   QueryInterface: function(aIID)
   {
     if (aIID.equals(Components.interfaces.nsINewsBlogFeedDownloader) ||

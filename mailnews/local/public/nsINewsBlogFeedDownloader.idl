@@ -50,5 +50,10 @@ interface nsINewsBlogFeedDownloader : nsISupports
   /* A convient method to subscribe to feeds without going through the subscribe UI
      used by drag and drop */
   void subscribeToFeed(in string aUrl, in nsIMsgFolder aFolder, in nsIMsgWindow aMsgWindow);
+  
+  /* called when the RSS Incoming Server detects a change to an RSS folder. For instance, the user just
+     deleted an RSS folder and we need to update the subscriptions data source. Or the user renamed an RSS folder...
+  */
+  void updateSubscriptionsDS(in nsIMsgFolder aFolder, in boolean aUnsubscribe);
 };
 

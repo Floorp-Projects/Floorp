@@ -481,6 +481,10 @@ function storeNextItem()
   {    
     item.feed.removeInvalidItems();
 
+    // let's be sure to flush any feed item changes back to disk
+    var ds = getItemsDS(item.feed.server);
+    ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource).Flush(); // flush any changes
+
     if (item.feed.downloadCallback)
       item.feed.downloadCallback.downloaded(item.feed, kNewsBlogSuccess);
 

@@ -106,6 +106,9 @@ function updateFolderFeedUrl(aFolder, aFeedUrl, aRemoveUrl)
   }  
   else 
     folderInfo.setCharPtrProperty("feedUrl", oldFeedUrl + kFeedUrlDelimiter + aFeedUrl);  
+
+  // commit the db to preserve our changes
+  msgdb.Close(true);
 }
 
 function getNodeValue(node) {

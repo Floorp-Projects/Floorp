@@ -39,22 +39,44 @@
 #include "nsRssIncomingServer.h"
 #include "nsMsgFolderFlags.h"
 #include "nsINewsBlogFeedDownloader.h"
+#include "nsIMsgMailSession.h"
+#include "nsMsgBaseCID.h"
 
 #include "nsIMsgLocalMailFolder.h"
 #include "nsIDBFolderInfo.h"
 
-NS_IMPL_ISUPPORTS_INHERITED2(nsRssIncomingServer,
+nsrefcnt nsRssIncomingServer::gInstanceCount    = 0;
+
+NS_IMPL_ISUPPORTS_INHERITED3(nsRssIncomingServer,
                              nsMsgIncomingServer,
                              nsIRssIncomingServer,
+                             nsIFolderListener, 
                              nsILocalMailIncomingServer)
 
 nsRssIncomingServer::nsRssIncomingServer() 
 {
   m_canHaveFilters = PR_TRUE;
+
+  if (gInstanceCount == 0) 
+  {
+    nsresult rv;
+    nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
+
+    if (NS_SUCCEEDED(rv))
+      mailSession->AddFolderListener(this, nsIFolderListener::added);
+  }
+
+  gInstanceCount++;
 }
 
 nsRssIncomingServer::~nsRssIncomingServer()
 {
+  gInstanceCount--;
+  
+  // I used to have code here which unregistered the global rss folder listener with the
+  // mail session. But the rss incoming server is held until shutdown when we shut down the 
+  // account datasource. And at shutdown the mail session explicitly releases all of its folder listeners
+  // anyway so this was effectively a no-op...
 }
 
 nsresult nsRssIncomingServer::FillInDataSourcePath(const nsAString& aDataSourceName, nsILocalFile ** aLocation)
@@ -135,25 +157,28 @@ NS_IMETHODIMP nsRssIncomingServer::PerformBiff(nsIMsgWindow *aMsgWindow)
   GetRootMsgFolder(getter_AddRefs(rootRSSFolder));
 
   // enumerate over the RSS folders and ping each one
-  nsCOMPtr<nsIEnumerator> folderEnumerator;
-  rv = rootRSSFolder->GetSubFolders(getter_AddRefs(folderEnumerator));
+  nsCOMPtr<nsISupportsArray> allDescendents;
+  NS_NewISupportsArray(getter_AddRefs(allDescendents));
+  rv = rootRSSFolder->ListDescendents(allDescendents);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsresult more = folderEnumerator->First();
+  PRUint32 cnt =0;  
+  allDescendents->Count(&cnt);
+
   nsCOMPtr<nsISupports> supports;
   nsCOMPtr<nsIUrlListener> urlListener;
+  nsCOMPtr<nsIMsgFolder> rssFolder;
 
-  while (NS_SUCCEEDED(more))
+  for (PRUint32 index = 0; index < cnt; index++)
   {
-    rv = folderEnumerator->CurrentItem(getter_AddRefs(supports));
-    nsCOMPtr<nsIMsgFolder> rssFolder = do_QueryInterface(supports);
+    supports = getter_AddRefs(allDescendents->ElementAt(index));
+    rssFolder = do_QueryInterface(supports, &rv);
     if (rssFolder)
     {
       urlListener = do_QueryInterface(rssFolder);
       // WARNING: Never call GetNewMail with the root folder or you will trigger an infinite loop...
       GetNewMail(aMsgWindow, urlListener, rssFolder, nsnull);
     }
-    more = folderEnumerator->Next();
   }
 
   return NS_OK;
@@ -225,4 +250,100 @@ NS_IMETHODIMP nsRssIncomingServer::GetSupportsDiskSpace(PRBool *aSupportsDiskSpa
   NS_ENSURE_ARG_POINTER(aSupportsDiskSpace);
   *aSupportsDiskSpace = PR_FALSE;
   return NS_OK;
+}
+
+NS_IMETHODIMP nsRssIncomingServer::OnItemAdded(nsIRDFResource *parentItem, nsISupports *item)
+{
+  nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item);
+  NS_ENSURE_TRUE(folder, NS_OK); // just kick out with a success code if the item in question is not a folder
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = folder->GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXPIDLCString type; 
+  rv = server->GetType(getter_Copies(type));
+  NS_ENSURE_SUCCESS(rv, rv);
+ 
+  if (type.Equals("rss"))
+  {
+    nsCOMPtr <nsINewsBlogFeedDownloader> rssDownloader = do_GetService("@mozilla.org/newsblog-feed-downloader;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // did the user just delete this folder (adding it to trash?) 
+    nsCOMPtr<nsIMsgFolder> rootMsgFolder;
+    nsCOMPtr<nsIMsgFolder> trashFolder;
+    rv = GetRootFolder(getter_AddRefs(rootMsgFolder));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 numFolders;
+    rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 1, &numFolders, getter_AddRefs(trashFolder));
+    
+    PRBool unsubscribe = PR_FALSE;
+    if (trashFolder)
+      trashFolder->IsAncestorOf(folder, &unsubscribe);
+
+    rssDownloader->UpdateSubscriptionsDS(folder, unsubscribe);
+
+    // if the user was moving or deleting a set of nested folders, we only seem to get a single OnItemAdded
+    // notification. So we need to iterate over all of the descedent folders of the folder whose location has
+    // changed.
+
+    nsCOMPtr<nsISupportsArray> allDescendents;
+    NS_NewISupportsArray(getter_AddRefs(allDescendents));
+    rv = folder->ListDescendents(allDescendents);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PRUint32 cnt =0;  
+    allDescendents->Count(&cnt);
+
+    nsCOMPtr<nsISupports> supports;
+    nsCOMPtr<nsIMsgFolder> rssFolder;
+
+    for (PRUint32 index = 0; index < cnt; index++)
+    {
+      supports = getter_AddRefs(allDescendents->ElementAt(index));
+      rssFolder = do_QueryInterface(supports, &rv);
+      if (rssFolder)
+        rssDownloader->UpdateSubscriptionsDS(rssFolder, unsubscribe);
+    }
+  }
+         
+  return rv;
+}
+
+NS_IMETHODIMP nsRssIncomingServer::OnItemRemoved(nsIRDFResource *parentItem, nsISupports *item)
+{
+ return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsRssIncomingServer::OnItemPropertyChanged(nsIRDFResource *item, nsIAtom *property, const char *oldValue, const char *newValue)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsRssIncomingServer::OnItemIntPropertyChanged(nsIRDFResource *item, nsIAtom *property, PRInt32 oldValue, PRInt32 newValue)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsRssIncomingServer::OnItemBoolPropertyChanged(nsIRDFResource *item, nsIAtom *property, PRBool oldValue, PRBool newValue)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsRssIncomingServer::OnItemUnicharPropertyChanged(nsIRDFResource *item, nsIAtom *property, const PRUnichar *oldValue, const PRUnichar *newValue)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP nsRssIncomingServer::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsRssIncomingServer::OnItemEvent(nsIMsgFolder *aFolder, nsIAtom *aEvent)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
 }

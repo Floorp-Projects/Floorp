@@ -40,17 +40,19 @@
 #include "nsIRssIncomingServer.h"
 #include "nsILocalMailIncomingServer.h"
 #include "nsMsgIncomingServer.h"
-
+#include "nsIFolderListener.h"
 
 class nsRssIncomingServer : public nsMsgIncomingServer,
                                  public nsIRssIncomingServer,
-                                 public nsILocalMailIncomingServer
+                                 public nsILocalMailIncomingServer,
+                                 public nsIFolderListener
 
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIRSSINCOMINGSERVER
     NS_DECL_NSILOCALMAILINCOMINGSERVER
+    NS_DECL_NSIFOLDERLISTENER
 
     NS_IMETHOD GetLocalStoreType(char **);
     NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
@@ -62,6 +64,7 @@ public:
     virtual ~nsRssIncomingServer();
 protected:
     nsresult FillInDataSourcePath(const nsAString& aDataSourceName, nsILocalFile ** aLocation);
+    static nsrefcnt gInstanceCount;
 };
 
 #endif /* __nsRssIncomingServer_h */
