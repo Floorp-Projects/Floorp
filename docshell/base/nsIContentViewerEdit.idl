@@ -47,4 +47,7 @@ interface nsIContentViewerEdit : nsISupports
 
 	void paste();
 	readonly attribute boolean pasteable;
+
+	AString getContents(in string aMimeType, in boolean aSelectionOnly);
+	readonly attribute boolean canGetContents;
 };
