@@ -56,7 +56,6 @@ error Unknown NEXTSTEP architecture
 
 #define HAVE_DLL
 #define USE_MACH_DYLD
-#define _PR_HAVE_SOCKADDR_LEN
 #define _PR_STAT_HAS_ONLY_ST_ATIME
 #define _PR_NO_LARGE_FILES
 
