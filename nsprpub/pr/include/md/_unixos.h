@@ -385,7 +385,7 @@ extern PRInt32 _MD_sendto(PRFileDesc *fd, const void *buf, PRInt32 amount,
 							PRIntn flags, const PRNetAddr *addr, PRUint32 addrlen,
 												PRIntervalTime timeout);
 #define _MD_SENDTO	_MD_sendto
-extern PRInt32		_MD_writev(PRFileDesc *fd, struct PRIOVec *iov,
+extern PRInt32		_MD_writev(PRFileDesc *fd, const struct PRIOVec *iov,
 								PRInt32 iov_size, PRIntervalTime timeout);
 #define _MD_WRITEV	_MD_writev
 

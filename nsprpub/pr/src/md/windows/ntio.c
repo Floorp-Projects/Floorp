@@ -83,7 +83,7 @@ static int _nt_use_async = 1;
 PRInt32 _nt_nonblock_accept(PRFileDesc *fd, struct sockaddr_in *addr, int *len, PRIntervalTime);
 PRInt32 _nt_nonblock_recv(PRFileDesc *fd, char *buf, int len, PRIntervalTime);
 PRInt32 _nt_nonblock_send(PRFileDesc *fd, char *buf, int len, PRIntervalTime);
-PRInt32 _nt_nonblock_writev(PRFileDesc *fd, PRIOVec *iov, int size, PRIntervalTime);
+PRInt32 _nt_nonblock_writev(PRFileDesc *fd, const PRIOVec *iov, int size, PRIntervalTime);
 PRInt32 _nt_nonblock_sendto(PRFileDesc *, const char *, int, const struct sockaddr *, int, PRIntervalTime);
 PRInt32 _nt_nonblock_recvfrom(PRFileDesc *, char *, int, struct sockaddr *, int *, PRIntervalTime);
 
@@ -1615,7 +1615,7 @@ _PR_MD_RECVFROM(PRFileDesc *fd, void *buf, PRInt32 amount, PRIntn flags,
 
 /* XXXMB - for now this is a sockets call only */
 PRInt32
-_PR_MD_WRITEV(PRFileDesc *fd, PRIOVec *iov, PRInt32 iov_size, PRIntervalTime timeout)
+_PR_MD_WRITEV(PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_size, PRIntervalTime timeout)
 {
     PRInt32 osfd = fd->secret->md.osfd;
     int index;
@@ -3260,7 +3260,7 @@ PRInt32 _nt_nonblock_send(PRFileDesc *fd, char *buf, int len, PRIntervalTime tim
     return bytesSent;
 }
 
-PRInt32 _nt_nonblock_writev(PRFileDesc *fd, PRIOVec *iov, int size, PRIntervalTime timeout)
+PRInt32 _nt_nonblock_writev(PRFileDesc *fd, const PRIOVec *iov, int size, PRIntervalTime timeout)
 {
     int index;
     int sent = 0;

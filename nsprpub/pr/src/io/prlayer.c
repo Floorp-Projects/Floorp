@@ -131,8 +131,8 @@ static PRStatus PR_CALLBACK pl_DefFileInfo64 (PRFileDesc *fd, PRFileInfo64 *info
     return (fd->lower->methods->fileInfo64)(fd->lower, info);
 }
 
-static PRInt32 PR_CALLBACK pl_DefWritev (PRFileDesc *fd, PRIOVec *iov, PRInt32 size,
-                                    PRIntervalTime timeout)
+static PRInt32 PR_CALLBACK pl_DefWritev (PRFileDesc *fd, const PRIOVec *iov,
+    PRInt32 size, PRIntervalTime timeout)
 {
     PR_ASSERT(fd != NULL);
     PR_ASSERT(fd->lower != NULL);

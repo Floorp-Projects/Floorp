@@ -983,7 +983,7 @@ extern PRInt32 _PR_MD_WRITE(PRFileDesc *fd, const void *buf, PRInt32 amount);
 #define    _PR_MD_WRITE _MD_WRITE
 
 extern PRInt32 _PR_MD_WRITEV(
-    PRFileDesc *fd, struct PRIOVec *iov,
+    PRFileDesc *fd, const struct PRIOVec *iov,
     PRInt32 iov_size, PRIntervalTime timeout);
 #define    _PR_MD_WRITEV _MD_WRITEV
 

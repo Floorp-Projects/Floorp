@@ -83,7 +83,7 @@ public:
                             const RCInterval& timeout);
     virtual PRInt32     Write(const void *buf, PRSize amount);
     virtual PRInt32     Writev(
-                            PRIOVec *iov, PRSize size,
+                            const PRIOVec *iov, PRSize size,
                             const RCInterval& timeout);
 
 private:

@@ -193,8 +193,8 @@ PRIntn flags, PRIntervalTime timeout)
 	return((fd->methods->send)(fd,buf,amount,flags,timeout));
 }
 
-PR_IMPLEMENT(PRInt32) PR_Writev(PRFileDesc *fd, PRIOVec *iov,PRInt32 iov_size,
-PRIntervalTime timeout)
+PR_IMPLEMENT(PRInt32) PR_Writev(PRFileDesc *fd, const PRIOVec *iov,
+PRInt32 iov_size, PRIntervalTime timeout)
 {
     if (iov_size > PR_MAX_IOVECTOR_SIZE)
     {
