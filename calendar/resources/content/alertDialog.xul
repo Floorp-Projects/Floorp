@@ -119,7 +119,11 @@
                         </menulist>
                      </box>       
 						</vbox>
-                  <vbox>
+		 <!--
+		   Note: this number is arbitrary. it should be moved out
+		   into a dtd or some other place than here, like a css.
+		   -->
+                  <vbox style="max-width: 45em;">
                      <description name="Title"/>
                      <description name="Description"/>
                   </vbox>
