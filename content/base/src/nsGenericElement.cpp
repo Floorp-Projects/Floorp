@@ -570,16 +570,20 @@ nsGenericElement::~nsGenericElement()
     if (mDOMSlots->mChildNodes) {
       mDOMSlots->mChildNodes->DropReference();
       NS_RELEASE(mDOMSlots->mChildNodes);
-      delete mDOMSlots->mRangeList;
     }
+
+    delete mDOMSlots->mRangeList;
+
     if (mDOMSlots->mStyle) {
       mDOMSlots->mStyle->DropReference();
       NS_RELEASE(mDOMSlots->mStyle);
     }
+
     if (mDOMSlots->mAttributeMap) {
       mDOMSlots->mAttributeMap->DropReference();
       NS_RELEASE(mDOMSlots->mAttributeMap);
     }
+
     if (mDOMSlots->mListenerManager) {
       mDOMSlots->mListenerManager->SetListenerTarget(nsnull);
       NS_RELEASE(mDOMSlots->mListenerManager);
@@ -2560,13 +2564,6 @@ nsGenericElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     inst = NS_STATIC_CAST(nsIDOMEventReceiver *,
                           nsDOMEventRTTearoff::Create(this));
     NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
-  } else if (mDocument) {
-    nsCOMPtr<nsIBindingManager> manager;
-    mDocument->GetBindingManager(getter_AddRefs(manager));
-    if (manager)
-      return manager->GetBindingImplementation(this, aIID, aInstancePtr);
-
-    return NS_NOINTERFACE;
   } else {
     return NS_NOINTERFACE;
   }
@@ -2580,6 +2577,19 @@ nsGenericElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 NS_IMPL_ADDREF(nsGenericElement)
 NS_IMPL_RELEASE(nsGenericElement)
+
+nsresult
+nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (mDocument) {
+    nsCOMPtr<nsIBindingManager> manager;
+    mDocument->GetBindingManager(getter_AddRefs(manager));
+    if (manager)
+      return manager->GetBindingImplementation(this, aIID, aInstancePtr);
+  }
+
+  return NS_NOINTERFACE;
+}
 
 //----------------------------------------------------------------------
 

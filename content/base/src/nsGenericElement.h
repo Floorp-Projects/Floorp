@@ -185,6 +185,10 @@ public:
 
   nsresult Init(nsINodeInfo *aNodeInfo);
 
+  // If QI fails on an element, call this method to let the binding
+  // manager have a chance...
+  nsresult PostQueryInterface(REFNSIID aIID, void** aInstancePtr);
+
   // Free globals, to be called from module destructor
   static void Shutdown();
 

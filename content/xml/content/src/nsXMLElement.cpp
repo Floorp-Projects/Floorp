@@ -154,7 +154,7 @@ nsXMLElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     inst = nsContentUtils::GetClassInfoInstance(eDOMClassInfo_Element_id);
     NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
   } else {
-    return NS_NOINTERFACE;
+    return PostQueryInterface(aIID, aInstancePtr);
   }
 
   NS_ADDREF(inst);
