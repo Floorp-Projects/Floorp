@@ -125,7 +125,7 @@ public:
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
   void CacheChildren(PRBool aWalkAnonContent);  // Include bullet accessible
 protected:
-  nsRefPtr<nsAccessible> mBulletAccessible;
+  nsRefPtr<nsHTMLListBulletAccessible> mBulletAccessible;
 };
 
 #endif  
