@@ -198,11 +198,11 @@ nsresult nsMsgProtocol::SetupTransportState()
 nsresult nsMsgProtocol::CloseSocket()
 {
 	nsresult rv = NS_OK;
-
 	// release all of our socket state
 	m_socketIsOpen = PR_FALSE;
 	m_outputStream = null_nsCOMPtr();
-
+    if (m_transport)
+      m_transport->SetNotificationCallbacks(nsnull, PR_FALSE);
 	// we need to call Cancel so that we remove the socket transport from the mActiveTransportList.  see bug #30648
 	if (m_request) {
 		rv = m_request->Cancel(NS_BINDING_ABORTED);
@@ -280,7 +280,7 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIRequest *request, nsISupports *ctx
   // happens to be using
   if (!mSuppressListenerNotifications && m_channelListener)
     rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus);
-	
+
   nsCOMPtr <nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(ctxt, &rv);
   if (NS_SUCCEEDED(rv) && msgUrl)
   {
