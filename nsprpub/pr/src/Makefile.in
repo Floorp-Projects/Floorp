@@ -137,9 +137,9 @@ endif
 
 ifeq ($(OS_ARCH),Linux)
 ifeq ($(USE_PTHREADS), 1)
-OS_LIBS		= -lpthread -ldl -lc
+OS_LIBS		= -lpthread -ldl
 else
-OS_LIBS		= -ldl -lc
+OS_LIBS		= -ldl
 endif
 endif
 
