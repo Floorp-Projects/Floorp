@@ -25,6 +25,7 @@
  *     Stuart Parmenter       <pavlov@netscape.com>
  *     Brendan Eich           <brendan@mozilla.org>
  *     Pete Collins           <petejc@mozdev.org>
+ *     Paul Ashford           <arougthopher@lizardland.net>
  */
 
 /**
@@ -46,6 +47,7 @@
 #ifdef XP_BEOS
     #include <Path.h>
     #include <Entry.h>
+    #include <Roster.h>
 #endif
 #if defined(VMS)
     #include <fabdef.h>
@@ -1510,6 +1512,36 @@ nsLocalFile::SetPersistentDescriptor(const char *aPersistentDescriptor)
     return InitWithPath(aPersistentDescriptor);
 }
 
+#ifdef XP_BEOS
+NS_IMETHODIMP
+nsLocalFile::Reveal()
+{
+  nsXPIDLCString path;
+  GetPath(getter_Copies(path));
+  BPath bPath(path);
+  bPath.GetParent(&bPath);
+  entry_ref ref;
+  get_ref_for_path(bPath.Path(),&ref);
+  BMessage message(B_REFS_RECEIVED);
+  message.AddRef("refs",&ref);
+  BMessenger messenger("application/x-vnd.Be-TRAK");
+  messenger.SendMessage(&message);
+ return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLocalFile::Launch()
+{
+  nsXPIDLCString path;
+  GetPath(getter_Copies(path));
+
+  entry_ref ref;
+  get_ref_for_path (path, &ref);
+  be_roster->Launch (&ref);
+
+  return NS_OK;
+}
+#else
 NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
@@ -1521,6 +1553,7 @@ nsLocalFile::Launch()
 {
     return NS_ERROR_FAILURE;
 }
+#endif
 
 nsresult
 NS_NewLocalFile(const char *path, PRBool followSymlinks, nsILocalFile **result)
