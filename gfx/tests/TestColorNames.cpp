@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+// No output means test passed.
+
 #include <stdio.h>
 #include <string.h>
 #include "nsColorNames.h"
