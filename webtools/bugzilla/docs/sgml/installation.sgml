@@ -143,8 +143,8 @@
 
     <listitem>
       <para>
-        GD::Chart
-        (&min-gd-chart-ver;) for bug charting
+        GD::Graph
+        (&min-gd-graph-ver;) for bug charting
       </para>
     </listitem>
 

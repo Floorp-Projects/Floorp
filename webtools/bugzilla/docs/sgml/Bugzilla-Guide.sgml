@@ -45,7 +45,7 @@
 <!ENTITY min-cgi-ver "2.88">
 <!-- Optional modules -->
 <!ENTITY min-gd-ver "1.20">
-<!ENTITY min-gd-chart-ver "any">
+<!ENTITY min-gd-graph-ver "any">
 <!ENTITY min-gd-text-align-ver "any">
 <!ENTITY min-chart-base-ver "0.99c">
 <!ENTITY min-xml-parser-ver "any">
