@@ -24,6 +24,7 @@
  *   Chris Waterson           <waterson@netscape.com>
  *   David Hyatt              <hyatt@netscape.com>
  *   Ben Goodger              <ben@netscape.com>
+ *   Andreas Otte             <andreas.otte@debitel.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -3276,7 +3277,12 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
 
       nsCAutoString baseName;
       fileURL->GetFileBaseName(baseName);
-      NS_ConvertUTF8toUCS2 bookmarkName(baseName);
+
+      // convert baseName to UCS-2 w/ ASCII chars unescaped; 
+      // non-ASCII escaped chars remain escaped.
+      nsCAutoString buf;
+      NS_ConvertUTF8toUCS2 bookmarkName(
+                           NS_UnescapeURL(baseName, esc_OnlyASCII, buf));
 
       nsCOMPtr<nsIRDFResource> bookmark;
       rv = CreateBookmark(bookmarkName.get(), url.get(), aParentResource, getter_AddRefs(bookmark));
