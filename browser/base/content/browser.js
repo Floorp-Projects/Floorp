@@ -71,15 +71,7 @@ var gIsLoadingBlank = false;
 var gLastValidURLStr = "";
 var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
-#ifdef XP_UNIX
-#ifdef XP_MACOSX
-var gClickSelectsAll = true;
-#else
 var gClickSelectsAll = false;
-#endif
-#else
-var gClickSelectsAll = true;
-#endif
 var gIgnoreFocus = false;
 var gIgnoreClick = false;
 var gToolbarMode = "icons";
@@ -515,6 +507,8 @@ function delayedStartup()
     else if (gPrefService.prefHasUserValue(kPluginOverrideTypesNotHandled))
       gPrefService.clearUserPref(kPluginOverrideTypesNotHandled);
   }
+
+  gClickSelectsAll = gPrefService.getBoolPref("browser.urlbar.clickSelectsAll");
 
   clearObsoletePrefs();
 
