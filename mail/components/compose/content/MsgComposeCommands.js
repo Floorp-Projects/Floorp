@@ -1338,7 +1338,7 @@ function ComposeStartup(recycled, aParams)
         }
 
         // reset the priorty field for recycled windows
-        updatePriorityToolbarButton('normal');
+        updatePriorityToolbarButton('Normal');
       } 
       else 
       {
