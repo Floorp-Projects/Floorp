@@ -67,6 +67,8 @@ public:
 class nsIDocumentLoader : public nsISupports 
 {
 public:
+    static const nsIID& GetIID() { static nsIID iid = NS_IDOCUMENTLOADER_IID; return iid; }
+
     NS_IMETHOD LoadDocument(const nsString& aURLSpec, 
                             const char* aCommand,
                             nsIContentViewerContainer* aContainer,
