@@ -341,7 +341,7 @@ Rights Reserved.
 <!ENTITY markByDateCmd.accesskey "d">  
 <!ENTITY markAllReadCmd.label "All Read">  
 <!ENTITY markAllReadCmd.accesskey "a">  
-<!ENTITY markAllReadCmd.key "a">  
+<!ENTITY markAllReadCmd.key "c">  
 <!ENTITY markFlaggedCmd.label "Flag">  
 <!ENTITY markFlaggedCmd.accesskey "f">  
 <!ENTITY openMessageWindowCmd.label "Open Message">

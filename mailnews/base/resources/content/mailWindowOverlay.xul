@@ -142,7 +142,7 @@ Rights Reserved.
 	<key id="key_selectAll"/>
 	
 	<key id="key_toggleRead" key="&markAsReadCmd.key;"     observes="cmd_markAsRead"/>
-	<key id="key_markAllRead" key="&markAllReadCmd.key;"     observes="cmd_markAllRead"/>
+	<key id="key_markAllRead" key="&markAllReadCmd.key;"     observes="cmd_markAllRead" modifiers="accel, shift"/>
 	<key id="key_nextMsg" key="&nextMsgCmd.key;"     observes="cmd_nextMsg"/>
 	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;"     observes="cmd_nextUnreadMsg"/>
 	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;"     observes="cmd_nextUnreadThread"/>
