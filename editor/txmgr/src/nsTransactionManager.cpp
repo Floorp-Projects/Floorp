@@ -653,7 +653,7 @@ nsTransactionManager::AddListener(nsITransactionListener *aListener)
   LOCK_TX_MANAGER(this);
 
   if (!mListeners) {
-    mListeners = new nsVoidArray();
+    mListeners = new nsAutoVoidArray();
 
     if (!mListeners) {
       UNLOCK_TX_MANAGER(this);

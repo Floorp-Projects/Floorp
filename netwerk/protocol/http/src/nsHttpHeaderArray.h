@@ -65,7 +65,7 @@ private:
     PRBool  CanAppendToHeader(nsHttpAtom header);
 
 private:
-    nsVoidArray mHeaders;
+    nsAutoVoidArray mHeaders;
 };
 
 #endif

@@ -327,7 +327,7 @@ private:
   PRInt32           mUpdateCnt;
   PRInt32           mUpdateBatchCnt;
   PRInt32           mDisplayListCount;
-  nsVoidArray       mDisplayList;
+  nsAutoVoidArray   mDisplayList;
   PRInt32			mTranslucentViewCount;
   nsRect            mTranslucentArea;       // bounding box of all translucent views.
   nsIScrollableView *mRootScrollable;

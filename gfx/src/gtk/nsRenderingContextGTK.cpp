@@ -60,7 +60,6 @@ nsRenderingContextGTK::nsRenderingContextGTK()
   mCurrentFont = nsnull;
   mTranMatrix = nsnull;
   mP2T = 1.0f;
-  mStateCache = new nsVoidArray();
   mClipRegion = nsnull;
   mDrawStringBuf = nsnull;
   mGC = nsnull;
@@ -73,18 +72,12 @@ nsRenderingContextGTK::nsRenderingContextGTK()
 nsRenderingContextGTK::~nsRenderingContextGTK()
 {
   // Destroy the State Machine
-  if (mStateCache)
+  PRInt32 cnt = mStateCache.Count();
+
+  while (--cnt >= 0)
   {
-    PRInt32 cnt = mStateCache->Count();
-
-    while (--cnt >= 0)
-    {
-      PRBool  clipstate;
-      PopState(clipstate);
-    }
-
-    delete mStateCache;
-    mStateCache = nsnull;
+    PRBool  clipstate;
+    PopState(clipstate);
   }
 
   if (mTranMatrix)
@@ -289,7 +282,7 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(PRInt32 aFlags)
     state->mLineStyle = mCurrentLineStyle;
   }
 
-  mStateCache->AppendElement(state);
+  mStateCache.AppendElement(state);
   
   return NS_OK;
 }
@@ -322,19 +315,19 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
   state->mColor = mCurrentColor;
   state->mLineStyle = mCurrentLineStyle;
 
-  mStateCache->AppendElement(state);
+  mStateCache.AppendElement(state);
   
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
 {
-  PRUint32 cnt = mStateCache->Count();
+  PRUint32 cnt = mStateCache.Count();
   nsGraphicsState * state;
 
   if (cnt > 0) {
-    state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
-    mStateCache->RemoveElementAt(cnt - 1);
+    state = (nsGraphicsState *)mStateCache.ElementAt(cnt - 1);
+    mStateCache.RemoveElementAt(cnt - 1);
 
     // Assign all local attributes from the state object just popped
     if (state->mMatrix) {
@@ -443,11 +436,11 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
 
 
 
-  PRUint32 cnt = mStateCache->Count();
+  PRUint32 cnt = mStateCache.Count();
   nsGraphicsState *state = nsnull;
 
   if (cnt > 0) {
-    state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
+    state = (nsGraphicsState *)mStateCache.ElementAt(cnt - 1);
   }
 
   if (state) {
@@ -547,11 +540,11 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
                                                    PRBool &aClipEmpty)
 {
 
-  PRUint32 cnt = mStateCache->Count();
+  PRUint32 cnt = mStateCache.Count();
   nsGraphicsState *state = nsnull;
 
   if (cnt > 0) {
-    state = (nsGraphicsState *)mStateCache->ElementAt(cnt - 1);
+    state = (nsGraphicsState *)mStateCache.ElementAt(cnt - 1);
   }
 
   if (state) {

@@ -495,7 +495,7 @@ static const char kRDFDescriptionClose[]     = "  </RDF:Description>\n";
 
     // Any value that's a literal we can write out as an inline
     // attribute on the RDF:Description
-    nsVoidArray visited;
+    nsAutoVoidArray visited;
     PRInt32 skipped = 0;
 
     nsCOMPtr<nsISimpleEnumerator> arcs;

@@ -535,7 +535,7 @@ private:
     InMemoryDataSource* mDataSource;
     nsIRDFResource*     mSource;
     nsIRDFNode*         mTarget;
-    nsVoidArray         mAlreadyReturned;
+    nsAutoVoidArray     mAlreadyReturned;
     nsIRDFResource*     mCurrent;
     Assertion*          mAssertion;
 

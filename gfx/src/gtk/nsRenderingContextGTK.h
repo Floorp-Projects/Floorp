@@ -237,7 +237,7 @@ private:
   PRUint32               mDrawStringSize;
 
  // graphic state stack (GraphicsState)
-  nsVoidArray           *mStateCache;
+  nsAutoVoidArray        mStateCache;
 
   GdkGC                 *mGC;
   GdkFunction            mFunction;
