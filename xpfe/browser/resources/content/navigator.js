@@ -135,11 +135,6 @@ function nsXULBrowserWindow()
   this.defaultStatus = gNavigatorBundle.getString("defaultStatus");
 }
 
-function updateOverLink() {
-  window.XULBrowserWindow.updateStatusField();
-  window.XULBrowserWindow.statusTimeoutInEffect = false;
-}
-
 nsXULBrowserWindow.prototype =
 {
   useRealProgressFlag : false,
@@ -147,6 +142,7 @@ nsXULBrowserWindow.prototype =
   finishedRequests : 0,
 
   // Stored Status, Link and Loading values
+  status : "",
   defaultStatus : "",
   jsStatus : "",
   jsDefaultStatus : "",
@@ -167,10 +163,8 @@ nsXULBrowserWindow.prototype =
   setJSStatus : function(status)
   {
     this.jsStatus = status;
-	this.updateStatusField();
-    // Status is now on status bar; don't use it next time.
-    // This will cause us to revert to defaultStatus/jsDefaultStatus when the
-    // user leaves the link (e.g., if the script set window.status in onmouseover).
+    this.updateStatusField();
+    // set empty so defaults show up next change
     this.jsStatus = "";
   },
 
@@ -190,18 +184,22 @@ nsXULBrowserWindow.prototype =
   {
     this.overLink = link;
     this.updateStatusField();
+    // set empty so defaults show up next change
+    this.overLink = "";
   },
 
   updateStatusField : function()
   {
-    var text = this.jsStatus || this.overLink || this.jsDefaultStatus || this.defaultStatus;
+    var text = this.overLink || this.status || this.jsStatus || this.jsDefaultStatus || this.defaultStatus;
 
     if (!statusTextFld)
       statusTextFld = document.getElementById("statusbar-display");
 
+    // check the current value so we don't trigger an attribute change
+    // and cause needless (slow!) UI updates
     if (statusTextFld.getAttribute("value") != text) {
-	  statusTextFld.setAttribute("value", text);
-	}
+      statusTextFld.setAttribute("value", text);
+    }
   },
 
   onProgress : function (request, current, max)
@@ -216,10 +214,10 @@ nsXULBrowserWindow.prototype =
       statusMeter.mode = "normal";
 
       // This is highly optimized.  Don't touch this code unless
-	  // you are intimately familiar with the cost of setting
-	  // attrs on XUL elements. -- hyatt
+      // you are intimately familiar with the cost of setting
+      // attrs on XUL elements. -- hyatt
       var percentage = (current * 100) / max ;
-	  statusMeter.value = percentage;
+      statusMeter.value = percentage;
     } else {
       statusMeter.mode = "undetermined";
     }
@@ -272,7 +270,7 @@ nsXULBrowserWindow.prototype =
       }
       if (state & nsIWebProgressListener.STATE_IS_NETWORK) {
         var channel = request.QueryInterface(Components.interfaces.nsIChannel);
-		var location = channel.URI.spec;
+        var location = channel.URI.spec;
         var msg = "";
         if (location != "about:blank") {
           // Record page loading time.
@@ -280,6 +278,7 @@ nsXULBrowserWindow.prototype =
           msg = gNavigatorBundle.getString("nv_done");
           msg = msg.replace(/%elapsed%/, elapsed);
         }
+        this.status = "";
         this.setDefaultStatus(msg);
 
         // Turn progress meter off.
@@ -297,12 +296,12 @@ nsXULBrowserWindow.prototype =
     else if (state & nsIWebProgressListener.STATE_TRANSFERRING) {
       if (state & nsIWebProgressListener.STATE_IS_DOCUMENT) {
         var channel = request.QueryInterface(Components.interfaces.nsIChannel);
-		var ctype=channel.contentType;
+        var ctype=channel.contentType;
 
         if (ctype != "text/html")
           this.useRealProgressFlag = true;
 
-		statusMeter.mode = "normal";
+        statusMeter.mode = "normal";
       }
 
       if (state & nsIWebProgressListener.STATE_IS_REQUEST) {
@@ -329,12 +328,18 @@ nsXULBrowserWindow.prototype =
 
   onStatus : function(request, status, msg)
   {
-    this.overLink = msg;
-	if (!this.statusTimeoutInEffect) {
-	  this.statusTimeoutInEffect = true;
-      setTimeout(updateOverLink, 400);
-	}
+    if (!this.statusTimeoutInEffect) {
+      this.statusTimeoutInEffect = true;
+      this.status = msg;
+      this.updateStatusField();
+      setTimeout(updateStatus, 400);
+    }
   }
+}
+
+function updateStatus()
+{
+  window.XULBrowserWindow.statusTimeoutInEffect = false;
 }
 
 function getBrowser()
@@ -764,14 +769,14 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
         searchDS.RememberLastSearchText(escapedSearchStr);
         try {
           var searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
-		  if (searchEngineURI) {
+          if (searchEngineURI) {
             var searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
           if (searchURL)
               defaultSearchURL = searchURL;
           }
         } catch (ex) {
         }
-		loadURI(defaultSearchURL);
+        loadURI(defaultSearchURL);
       }
      } 
     }
