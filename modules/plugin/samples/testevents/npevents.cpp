@@ -10,8 +10,7 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code was developed by ActiveState, and
- *   implemented by .
+ * The Original Code was developed by ActiveState.
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
@@ -170,16 +169,17 @@ public:
 
 	void PlatformNew(void);
 	nsresult PlatformDestroy(void);
-	nsresult PlatformSetWindow(nsPluginWindow* window);
 	void PlatformResetWindow();
 	PRInt16 PlatformHandleEvent(nsPluginEvent* event);
+	void PlatformResizeWindow(nsPluginWindow* window);
+	nsresult PlatformCreateWindow(nsPluginWindow* window);
 
 	void SetMode(nsPluginMode mode) { fMode = mode; }
 
 protected:
 	////////////////////////////////////////////////////////////////////////////
 	// Implementation methods
-	void Resize();
+	nsresult DoSetWindow(nsPluginWindow* window);
 
 	// Data
 	nsCOMPtr<nsIPluginInstancePeer> fPeer;
@@ -416,14 +416,18 @@ NS_METHOD EventsPluginInstance::Destroy(void) {
  * graphics operations on the window and should free any resources associated
  * with the window. 
  +++++++++++++++++++++++++++++++++++++++++++++++++*/
-
 NS_METHOD EventsPluginInstance::SetWindow(nsPluginWindow* window) {
 #ifdef EVENTSPLUGIN_DEBUG
 	printf("EventsPluginInstance::SetWindow\n");
 #endif 
 
 	nsresult result;
+	result = DoSetWindow(window);
+	fWindow = window;
+	return result;
+}
 
+nsresult EventsPluginInstance::DoSetWindow(nsPluginWindow* window) {
 	/*
 	 * PLUGIN DEVELOPERS:
 	 *	Before setting window to point to the
@@ -431,8 +435,29 @@ NS_METHOD EventsPluginInstance::SetWindow(nsPluginWindow* window) {
 	 *	info to the previous window (if any) to note window
 	 *	size changes, etc.
 	 */
-	result = PlatformSetWindow(window);
-	fWindow = window;
+	 nsresult result = NS_OK;
+	if ( fWindow != NULL ) {
+		// If we already have a window, clean it up 
+		// before working with the new window
+		if ( window && window->window && wMain == (WinID)window->window ) {
+			/* The new window is the same as the old one. Exit now. */
+			PlatformResizeWindow(window);
+			return NS_OK;
+		}
+		// Otherwise, just reset the window ready for the new one.
+		PlatformResetWindow();
+	}
+	else if ( (window == NULL) || ( window->window == NULL ) ) {
+		/* We can just get out of here if there is no current
+		 * window and there is no new window to use. */ 
+		return NS_OK;
+	}
+	if (window && window->window) {
+		// Remember our main parent window.
+		wMain = (WinID)window->window;
+		// And create the child window.
+		result = PlatformCreateWindow(window);
+	}
 	return result;
 }
 
@@ -621,16 +646,6 @@ NS_METHOD EventsPluginStreamListener::GetStreamType(nsPluginStreamType *result) 
 ///////////////////////////////////////////////////////////////////////////////
 // Platform-Specific Implemenations
 
-void EventsPluginInstance::Resize() {
-#ifdef XP_WIN
-	RECT rc;
-	NS_PRECONDITION(wMain != nsnull, "Must have a valid wMain to resize");
-	::GetClientRect(wMain, &rc);
-	::SetWindowPos(wChild, 0, rc.left, rc.top,
-	               rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE);
-#endif
-}
-
 // UNIX Implementations
 
 #ifdef XP_UNIX
@@ -642,45 +657,42 @@ void EventsPluginInstance::PlatformNew(void) {
 nsresult EventsPluginInstance::PlatformDestroy(void) {
 	// the mozbox will be destroyed by the native destruction of the
 	// widget's parent.
-	fPlatform.moz_box = 0;
 	return NS_OK;
 }
 
-nsresult EventsPluginInstance::PlatformSetWindow(nsPluginWindow* window) {
+void EventsPluginInstance::PlatformResetWindow() {
 #ifdef EVENTSPLUGIN_DEBUG
-	printf("EventsPluginInstance::PlatformSetWindow %p\n", window);
+	printf("EventsPluginInstance::PlatformResetWindow\n");
+#endif
+	fPlatform.moz_box = 0;
+}
+
+nsresult EventsPluginInstance::PlatformCreateWindow(nsPluginWindow* window) {
+#ifdef EVENTSPLUGIN_DEBUG
+	printf("EventsPluginInstance::PlatformCreateWindow %lx\n", (long)window);
 #endif 
-	if (window == NULL || window->window == NULL)
-		return NS_ERROR_NULL_POINTER;
 
-	if (!wChild) {
-
-		Window x_window = (Window)window->window;
-		printf("EventsPluginInstance::PlatformSetWindow x %lx\n", x_window);
-		GdkWindow *gdk_window = (GdkWindow *)gdk_xid_table_lookup(x_window);
-		printf("EventsPluginInstance::PlatformSetWindow g %p\n", gdk_window);
-		if (!gdk_window) {
-			fprintf(stderr, "NO WINDOW!!!\n");
-			return NS_OK;
-		}
-		fPlatform.moz_box = gtk_mozbox_new(gdk_window);
-
-		wChild = gtk_entry_new();
-		gtk_container_add(GTK_CONTAINER(fPlatform.moz_box), wChild);
-		gtk_widget_show_all(fPlatform.moz_box);
-	} else {
-		// Possible resize
-		//int width = window->width;
-		//int height = window->height;
-		//printf("Possible resize %d %d\n", width, height);
+	Window x_window = (Window)window->window;
+	GdkWindow *gdk_window = (GdkWindow *)gdk_xid_table_lookup(x_window);
+	if (!gdk_window) {
+		fprintf(stderr, "NO WINDOW!!!\n");
+		return NS_ERROR_FAILURE;
 	}
+	fPlatform.moz_box = gtk_mozbox_new(gdk_window);
 
-	//int width = window->width;
-	//int height = window->height;
-	//printf("Possible resize %d %d\n", width, height);
-	//gdk_widget_set_usize(fPlatform.moz_box, width, height);
-	//gdk_window_resize ((GdkWindow *)fPlatform.moz_box, width, height);
+	wChild = gtk_entry_new();
+	gtk_container_add(GTK_CONTAINER(fPlatform.moz_box), wChild);
+	gtk_widget_show_all(fPlatform.moz_box);
 	return NS_OK;
+}
+
+void EventsPluginInstance::PlatformResizeWindow(nsPluginWindow* window) {
+	NS_PRECONDITION(wChild, "Have no wChild!");
+#ifdef EVENTSPLUGIN_DEBUG
+	printf("EventsPluginInstance::PlatformResizeWindow to size (%d,%d)\n", window->width, window->height);
+#endif
+	// Mozilla has already sized the mozbox - we just need to handle the child.
+	gtk_widget_set_usize(wChild, window->width, window->height);
 }
 
 int16 EventsPluginInstance::PlatformHandleEvent(nsPluginEvent * /*event*/) {
@@ -720,58 +732,32 @@ nsresult EventsPluginInstance::PlatformDestroy(void) {
 	return NS_OK;
 }
 
-nsresult EventsPluginInstance::PlatformSetWindow(nsPluginWindow* window) {
-#ifdef EVENTSPLUGIN_DEBUG
-	printf("EventsPluginInstance::PlatformSetWindow %p\n", window);
-#endif 
-	if ( fWindow != NULL ) { /* If we already have a window, clean
-	                        * it up before trying to subclass
-	                        * the new window. */
-		if ( window && window->window && wMain == (HWND)window->window ) {
-			/* The new window is the same as the old one. Exit now. */
-			return NS_OK;
-		}
-		// Otherwise, just reset the window ready for the new one.
-		PlatformResetWindow();
-	}
-	else if ( (window == NULL) || ( window->window == NULL ) ) {
-		/* We can just get out of here if there is no current
-		 * window and there is no new window to use. */ 
-		return NS_OK;
-	}
-	if (window && window->window) {
-		// Remember our main parent HWND and wndproc.
-		wMain = (HWND)window->window;
-		fPlatform.fParentWindowProc = (WNDPROC)::GetWindowLong(wMain, GWL_WNDPROC);
-		NS_ABORT_IF_FALSE(fPlatform.fParentWindowProc!=NULL, "Couldn't get the parent WNDPROC");
+nsresult EventsPluginInstance::PlatformCreateWindow(nsPluginWindow* window) {
+	// Remember parent wndproc.
+	fPlatform.fParentWindowProc = (WNDPROC)::GetWindowLong(wMain, GWL_WNDPROC);
+	NS_ABORT_IF_FALSE(fPlatform.fParentWindowProc!=NULL, "Couldn't get the parent WNDPROC");
 
-		// Create the child window that fills our nsWindow 
-		RECT rc;
-		::GetWindowRect(wMain, &rc);
+	// Create the child window that fills our nsWindow 
+	RECT rc;
+	::GetWindowRect(wMain, &rc);
 
-		wChild = ::CreateWindow("Edit", // class - standard Windows edit control.
-		                        "", // title
-		                        WS_CHILD | WS_VISIBLE, // style
-		                        0, 0, rc.right-rc.left, rc.bottom-rc.top,
-		                        wMain, // parent
-		                        (HMENU)1111, // window ID
-		                        0, // instance
-		                        NULL); //creation data.
-		NS_ABORT_IF_FALSE(wChild != NULL, "Failed to create the child window!");
-		if (!wChild)
-			return NS_ERROR_FAILURE;
-		// Stash away our "this" pointer so our WNDPROC can talk to us.
-		::SetProp(wChild, gInstanceLookupString, (HANDLE)this);
-		fPlatform.fOldChildWindowProc =
-			(WNDPROC)::SetWindowLong( wChild,
-			                        GWL_WNDPROC, 
-			                       (LONG)EventsPluginInstance::WndProcChild);
-
-		/* Finally resize and clear the new window, and we are done. */
-		Resize();
-		::InvalidateRect(wMain, NULL, TRUE);
-		::UpdateWindow(wMain);
-	}
+	wChild = ::CreateWindow("Edit", // class - standard Windows edit control.
+							"", // title
+							WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL, // style
+							0, 0, rc.right-rc.left, rc.bottom-rc.top,
+							wMain, // parent
+							(HMENU)1111, // window ID
+							0, // instance
+							NULL); //creation data.
+	NS_ABORT_IF_FALSE(wChild != NULL, "Failed to create the child window!");
+	if (!wChild)
+		return NS_ERROR_FAILURE;
+	// Stash away our "this" pointer so our WNDPROC can talk to us.
+	::SetProp(wChild, gInstanceLookupString, (HANDLE)this);
+	fPlatform.fOldChildWindowProc =
+		(WNDPROC)::SetWindowLong( wChild,
+								GWL_WNDPROC, 
+								(LONG)EventsPluginInstance::WndProcChild);
 	return NS_OK;
 }
 
@@ -780,12 +766,27 @@ int16 EventsPluginInstance::PlatformHandleEvent(nsPluginEvent * /*event*/) {
 }
 
 void EventsPluginInstance::PlatformResetWindow() {
+#ifdef EVENTSPLUGIN_DEBUG
+	printf("EventsPluginInstance::PlatformResetWindow\n");
+#endif
 	fPlatform.fParentWindowProc = NULL;
 	::SetWindowLong(wChild, GWL_WNDPROC, (LONG)fPlatform.fOldChildWindowProc);
 	fPlatform.fOldChildWindowProc = NULL;
 	wChild = NULL;
 	wMain = NULL;
 }
+
+void EventsPluginInstance::PlatformResizeWindow(nsPluginWindow* window) {
+#ifdef EVENTSPLUGIN_DEBUG
+	printf("EventsPluginInstance::PlatformResizeWindow with new size (%d,%d)\n", window->width, window->height);
+#endif
+	RECT rc;
+	NS_PRECONDITION(wMain != nsnull, "Must have a valid wMain to resize");
+	::GetClientRect(wMain, &rc);
+	::SetWindowPos(wChild, 0, rc.left, rc.top,
+	               rc.right - rc.left, rc.bottom - rc.top, SWP_NOZORDER | SWP_NOACTIVATE);
+}
+
 /* attribute string text; */
 NS_IMETHODIMP EventsPluginInstance::GetVal(char * *aText) {
 #ifdef EVENTSPLUGIN_DEBUG
