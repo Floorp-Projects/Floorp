@@ -498,25 +498,40 @@ set_host()
 
 	if [ $DS_WAS_SET = FALSE ] #give chance to overwrite, espec. for NT
 	then
+		Debug "Domainname was not set..."
 		DOMSUF=`domainname 2>/dev/null`
 		if [ -z "$DOMSUF" ]
 		then
+			Debug "domainname command did not work ..."
 			DOMSUF=`echo $HOST | grep '\.' | sed -e "s/[^\.]*\.//"`
 	
 			if [ -z "$DOMSUF" ]
 			then
+				Debug "Domainname not part of the hostname"
 				DOMSUF=`cat /etc/defaultdomain 2>/dev/null`
 				if [ -z "$DOMSUF" ]
 				then
+					Debug "Domainname needs to be hardcoded to red.iplanet.com"
 					DOMSUF="red.iplanet.com"
 				fi
 			fi
 		fi
 	fi
-	HOST=`echo $HOST | sed -e "s/\..*//"`
+	case $HOST in
+		*\.*)
+			Debug "HOSTNAME $HOST contains Dot"
+			HOST=`echo $HOST | sed -e "s/\..*//"`
+			;;
+	esac
 	if [ -z "$HOST" ]
 	then
-		HOST=`uname -n  | sed -e "s/\..*//"`
+		HOST=`uname -n`
+		case $HOST in
+			*\.*)
+				Debug "HOSTNAME $HOST contains Dot"
+				HOST=`echo $HOST | sed -e "s/\..*//"`
+				;;
+		esac
 	fi
 	if [ $O_DEBUG = "ON" ]
 	then
