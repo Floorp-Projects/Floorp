@@ -102,6 +102,12 @@ outlinerchildren:-moz-outliner-image(folderNameCol, specialFolder-Trash) {
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.gif");
 }
 
+outlinerchildren:-moz-outliner-image(folderNameCol, imapShared-true) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/folder-share.gif");
+}
+
+
 /* ..... Server Folders ..... */
 
 outlinerchildren:-moz-outliner-image(folderNameCol, isServer-true) {

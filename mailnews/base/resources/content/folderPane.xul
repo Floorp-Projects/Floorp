@@ -82,6 +82,9 @@
                    predicate="http://home.netscape.com/NC-rdf#NoSelect"
                    object="?noSelect" />
           <binding subject="?member"
+                   predicate="http://home.netscape.com/NC-rdf#ImapShared"
+                   object="?imapShared" />
+          <binding subject="?member"
                    predicate="http://home.netscape.com/NC-rdf#TotalUnreadMessages"
                    object="?unreadCount" />
           <binding subject="?member"
@@ -95,7 +98,7 @@
               <outlinerrow>
                 <outlinercell id="folderNameCell"
                               label="?folderTreeName"
-                              properties="specialFolder-?specialFolder biffState-?biffState isServer-?isServer newMessages-?newMessages hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages isSecure-?isSecure serverType-?serverType noSelect-?noSelect"/>
+                              properties="specialFolder-?specialFolder biffState-?biffState isServer-?isServer newMessages-?newMessages hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages isSecure-?isSecure serverType-?serverType noSelect-?noSelect imapShared-?imapShared"/>
                 <outlinercell label="?unreadCount"
                               properties="hasUnreadMessages-?hasUnreadMessages subfoldersHaveUnreadMessages-?subfoldersHaveUnreadMessages"/>
                 <outlinercell label="?totalCount"
