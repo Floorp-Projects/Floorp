@@ -179,6 +179,7 @@ public:
   void DumpWebShells(FILE *out = stdout);
   void DumpStyleSheets(FILE *out = stdout);
   void DumpStyleContexts(FILE *out = stdout);
+  void DumpReflowStats(FILE *out = stdout);
   void ToggleFrameBorders();
   void ToggleVisualEventDebugging();
   void ToggleBoolPrefAndRefresh(const char * aPrefName);

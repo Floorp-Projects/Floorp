@@ -3118,6 +3118,24 @@ nsBrowserWindow::DumpStyleContexts(FILE* out)
 }
 
 void
+nsBrowserWindow::DumpReflowStats(FILE* out)
+{
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+#ifdef MOZ_REFLOW_PERF
+    shell->DumpReflows();
+#else
+    fprintf(out,"***********************************\n");
+    fprintf(out, "Sorry, you have built with MOZ_REFLOW_PERF=1\n");
+    fprintf(out,"***********************************\n");
+#endif
+    NS_RELEASE(shell);
+  } else {
+    fputs("null pres shell\n", out);
+  }
+}
+
+void
 nsBrowserWindow::ToggleFrameBorders()
 {
   nsILayoutDebugger* ld;
@@ -3444,6 +3462,11 @@ nsBrowserWindow::DispatchDebugMenu(PRInt32 aID)
 
     case VIEWER_DUMP_STYLE_CONTEXTS:
       DumpStyleContexts();
+      result = nsEventStatus_eConsumeNoDefault;
+      break;
+
+    case VIEWER_DEBUG_DUMP_REFLOW_TOTS:
+      DumpReflowStats();
       result = nsEventStatus_eConsumeNoDefault;
       break;
 
