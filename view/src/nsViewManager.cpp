@@ -2536,7 +2536,8 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
   BuildDisplayList(aView, r, PR_FALSE, PR_FALSE);
   ReapplyClipInstructions(PR_FALSE, fakeClipRect, index);
 
-  for (PRInt32 i = 0; i < mDisplayListCount; i++) {
+  PRInt32 i;
+  for (i = 0; i < mDisplayListCount; i++) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList.ElementAt(i));
     if ((element->mFlags & VIEW_RENDERED) != 0) {
       if (IsAncestorOf(aView, element->mView)) {
@@ -2565,7 +2566,7 @@ PRBool nsViewManager::CanScrollWithBitBlt(nsView* aView)
   PRBool anyUnscrolledViews = PR_FALSE;
   PRBool anyUnblittableViews = PR_FALSE;
 
-  for (PRInt32 i = 0; i < mDisplayListCount; i++) {
+  for (i = 0; i < mDisplayListCount; i++) {
     DisplayListElement2* element = NS_STATIC_CAST(DisplayListElement2*, mDisplayList.ElementAt(i));
     if ((element->mFlags & VIEW_RENDERED) != 0) {
       if ((element->mFlags & VIEW_ISSCROLLED) == 0 && element->mView != aView) {
