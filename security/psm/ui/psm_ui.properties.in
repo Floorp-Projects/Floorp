@@ -905,13 +905,13 @@ left2-1tabs:
 :left2-1tabs
 left2-2tabs:
 {link_left_tab {text_navigator},2,1}
-{select_left_tab {text_messenger}}
-{link_left_tab {text_javajs},2,3}
+{_smime_tab}
+{_java_js_tab}
 :left2-2tabs
 left2-3tabs:
 {link_left_tab {text_navigator},2,1}
-{link_left_tab {text_messenger},2,2}
-{select_left_tab {text_javajs}}
+{_smime_tab}
+{_java_js_tab}
 :left2-3tabs
 
 ; Top level pages
