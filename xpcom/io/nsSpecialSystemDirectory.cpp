@@ -690,8 +690,9 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             *this = kFontsFolderType;
             break;
 
-        case Mac_PreferencesDirectory:
+        case Mac_ClassicPreferencesDirectory:
         {
+        	// whether Mac OS X or pre-Mac OS X, return Classic's Prefs folder
             short domain;
             long response;
             err = ::Gestalt(gestaltSystemVersion, &response);
@@ -703,6 +704,18 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             mError = NS_FILE_RESULT(err);
             break;
         }
+
+        case Mac_PreferencesDirectory:
+		{
+			// if Mac OS X, return Mac OS X's Prefs folder
+			// if pre-Mac OS X, return Mac OS's Prefs folder
+            err = ::FindFolder(kOnSystemDisk, kPreferencesFolderType, true, &vRefNum, &dirID);
+            if (!err) {
+                err = ::FSMakeFSSpec(vRefNum, dirID, "\p", &mSpec);
+            }
+            mError = NS_FILE_RESULT(err);
+            break;
+		}
 
         case Mac_DocumentsDirectory:
             *this = kDocumentsFolderType;

@@ -1905,7 +1905,7 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
     PL_strcpy(oldRegFile, systemDir.GetNativePathCString());
     PL_strcat(oldRegFile, OLD_REGISTRY_FILE_NAME);
 #else /* XP_MAC */
-    nsSpecialSystemDirectory regLocation(nsSpecialSystemDirectory::Mac_PreferencesDirectory);
+    nsSpecialSystemDirectory regLocation(nsSpecialSystemDirectory::Mac_ClassicPreferencesDirectory);
     
     // Append the name of the old registry to the path obtained.
     regLocation += OLD_REGISTRY_FILE_NAME;

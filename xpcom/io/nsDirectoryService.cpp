@@ -352,6 +352,7 @@ nsIAtom*  nsDirectoryService::sAppleMenuDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sControlPanelDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sExtensionDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sFontsDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sClassicPreferencesDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sPreferencesDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sDocumentsDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sInternetSearchDirectory = nsnull;
@@ -451,6 +452,7 @@ nsDirectoryService::Init()
     nsDirectoryService::sControlPanelDirectory      = NS_NewAtom(NS_MAC_CONTROL_PANELS_DIR);
     nsDirectoryService::sExtensionDirectory         = NS_NewAtom(NS_MAC_EXTENSIONS_DIR);
     nsDirectoryService::sFontsDirectory             = NS_NewAtom(NS_MAC_FONTS_DIR);
+    nsDirectoryService::sClassicPreferencesDirectory= NS_NewAtom(NS_MAC_CLASSICPREFS_DIR);
     nsDirectoryService::sPreferencesDirectory       = NS_NewAtom(NS_MAC_PREFS_DIR);
     nsDirectoryService::sDocumentsDirectory         = NS_NewAtom(NS_MAC_DOCUMENTS_DIR);
     nsDirectoryService::sInternetSearchDirectory    = NS_NewAtom(NS_MAC_INTERNET_SEARCH_DIR);
@@ -532,6 +534,7 @@ nsDirectoryService::~nsDirectoryService()
      NS_IF_RELEASE(nsDirectoryService::sControlPanelDirectory);
      NS_IF_RELEASE(nsDirectoryService::sExtensionDirectory);
      NS_IF_RELEASE(nsDirectoryService::sFontsDirectory);
+     NS_IF_RELEASE(nsDirectoryService::sClassicPreferencesDirectory);
      NS_IF_RELEASE(nsDirectoryService::sPreferencesDirectory);
      NS_IF_RELEASE(nsDirectoryService::sDocumentsDirectory);
      NS_IF_RELEASE(nsDirectoryService::sInternetSearchDirectory);
@@ -868,6 +871,11 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     else if (inAtom == nsDirectoryService::sFontsDirectory)
     {
         nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_FontsDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+    }
+    else if (inAtom == nsDirectoryService::sClassicPreferencesDirectory)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_ClassicPreferencesDirectory); 
         rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
     }
     else if (inAtom == nsDirectoryService::sPreferencesDirectory)
