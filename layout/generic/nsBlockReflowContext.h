@@ -30,6 +30,7 @@ class nsIPresContext;
 class nsLineLayout;
 struct nsStylePosition;
 struct nsStyleSpacing;
+struct nsBlockHorizontalAlign;
 
 /**
  * An encapsulation of the state and algorithm for reflowing block frames.
@@ -63,6 +64,8 @@ public:
                     nscoord* aBottomMarginResult,
                     nsRect& aInFlowBounds,
                     nsRect& aCombinedRect);
+
+  void AlignBlockHorizontally(nscoord aWidth, nsBlockHorizontalAlign&);
 
   nscoord GetCarriedOutBottomMargin() const {
     return mMetrics.mCarriedOutBottomMargin;
