@@ -51,9 +51,6 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 NS_IMPL_ADDREF(nsWindow)
 NS_IMPL_RELEASE(nsWindow)
 
-extern XtAppContext gAppContext;
-
-
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -85,6 +82,7 @@ nsWindow::nsWindow():
   mPreferredWidth  = 0;
   mPreferredHeight = 0;
   mFont = nsnull;
+  mAppContext = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -381,6 +379,8 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+  mAppContext = ((nsAppShell *) aAppShell)->GetAppContext();
+
       // keep a reference to the device context
     if (aContext) {
         mContext = aContext;
@@ -1566,7 +1566,7 @@ void nsWindow_Refresh_Callback(XtPointer call_data)
     pevent.rect = (nsRect *)&bounds;
     widgetWindow->OnPaint(pevent);
 
-    XtAppAddTimeOut(gAppContext, 50, (XtTimerCallbackProc)nsWindow_ResetResize_Callback, widgetWindow);
+    XtAppAddTimeOut(widgetWindow->mAppContext, 50, (XtTimerCallbackProc)nsWindow_ResetResize_Callback, widgetWindow);
 }
 
 //
@@ -1602,7 +1602,7 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
        // resizing. This is only needed for main (shell) 
        // windows. This should be replaced with code that actually
        // Compresses the event queue.
-      XtAppAddTimeOut(gAppContext, 250, (XtTimerCallbackProc)nsWindow_Refresh_Callback, win);
+      XtAppAddTimeOut(win->mAppContext, 250, (XtTimerCallbackProc)nsWindow_Refresh_Callback, win);
     }
   }
 

@@ -31,13 +31,9 @@
 #include <X11/Xmu/Editres.h>
 #endif
 
-#ifdef MOZ_USING_XLIBRGB
 #include "xlibrgb.h"
-#endif
 
 #include "nsIPref.h"
-
-XtAppContext gAppContext;
 
 //-------------------------------------------------------------------------
 //
@@ -101,16 +97,13 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
                               NULL,           // args
                               0);             // num_args
 
-  // XXX This is BAD -- needs to be fixed
-  gAppContext = mAppContext;
+  xlib_set_xt_app_context(mAppContext);
 
-#ifdef MOZ_USING_XLIBRGB
   xlib_rgb_init(XtDisplay(mTopLevel), XtScreen(mTopLevel));
 
   printf("xlib_rgb_init(display=%p,screen=%p)\n",
          XtDisplay(mTopLevel),
          XtScreen(mTopLevel));
-#endif
 
   return NS_OK;
 }
@@ -171,7 +164,7 @@ done:
 
   printf("Calling XtAppAddInput() with event queue\n");
 
-  XtAppAddInput(gAppContext, 
+  XtAppAddInput(mAppContext,
                 EQueue->GetEventQueueSelectFD(),
                 (XtPointer) XtInputReadMask, 
                 event_processor_callback, 

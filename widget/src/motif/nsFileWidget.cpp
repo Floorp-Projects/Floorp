@@ -20,8 +20,7 @@
 #include <Xm/FileSB.h>
 #include "nsXtEventHandler.h"
 #include "nsStringUtil.h"
-
-extern XtAppContext gAppContext;
+#include "nsAppShell.h"
 
 NS_IMPL_ADDREF(nsFileWidget)
 NS_IMPL_RELEASE(nsFileWidget)
@@ -35,6 +34,7 @@ nsFileWidget::nsFileWidget() : nsWindow(), nsIFileWidget()
 {
   NS_INIT_REFCNT();
   mNumberOfFilters = 0;
+  mAppContext = NULL;
 }
 
 NS_METHOD nsFileWidget::Create(nsIWidget        *aParent,
@@ -63,6 +63,8 @@ NS_METHOD   nsFileWidget:: Create(nsIWidget  *aParent,
   mTitle.SetLength(0);
   mTitle.Append(aTitle);
   mMode = aMode;
+
+  mAppContext = ((nsAppShell *) aAppShell)->GetAppContext();
 
   Widget parentWidget = nsnull;
 
@@ -157,11 +159,10 @@ PRBool nsFileWidget::Show()
 {
   XtManageChild(mWidget);
 
-  // XXX Kludge: gAppContext is a global set in nsAppShell
   XEvent event;
   mIOwnEventLoop = PR_TRUE;
   while (mIOwnEventLoop) {
-    XtAppNextEvent(gAppContext, &event);
+    XtAppNextEvent(mAppContext, &event);
     XtDispatchEvent(&event);
   }
 

@@ -53,8 +53,8 @@ class nsAppShell : public nsIAppShell
     NS_IMETHOD        EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
                                             PRBool *aForWindow);
 
-    // Public global
-    //static XtAppContext gAppContext;
+
+  XtAppContext GetAppContext() { return mAppContext; }
 };
 
 #endif // nsAppShell_h__

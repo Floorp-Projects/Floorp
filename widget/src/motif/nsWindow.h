@@ -191,6 +191,8 @@ protected:
 
 public:
   Widget mWidget;
+  XtAppContext mAppContext;
+
 protected:
   EVENT_CALLBACK mEventCallback;
   nsIDeviceContext *mContext;
