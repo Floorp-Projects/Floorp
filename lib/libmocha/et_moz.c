@@ -35,6 +35,7 @@
 #include "np.h"
 #include "prefapi.h"
 #include "pa_parse.h"
+#include "libi18n.h"
 #include "netcache.h"
 #include "secnav.h"
 
@@ -2675,6 +2676,9 @@ typedef struct {
     char            * string;
 } MozillaEvent_HandlePref; 
 
+#define PREF_CHARSET 	   (INTL_DefaultWinCharSetID(0))
+
+
 PR_STATIC_CALLBACK(JSBool)
 et_HandleEvent_HandlePref(MozillaEvent_HandlePref* e)
 {
@@ -2733,9 +2737,12 @@ et_HandleEvent_HandlePref(MozillaEvent_HandlePref* e)
 	    if (JSVAL_IS_STRING(e->argv[1]))	{
 		JSString * valueJSStr = JS_ValueToString(e->cx, e->argv[1]);
 		if (valueJSStr)	{
-		    char * valueStr = JS_GetStringBytes(valueJSStr);
-		    if (valueStr)
-			PREF_SetCharPref(cstr, valueStr);
+		    char * valueStr = lm_StrToEncoding(e->cx, PREF_CHARSET, valueJSStr);
+
+		    if (valueStr) {
+				PREF_SetCharPref(cstr, valueStr);
+				XP_FREE(valueStr);
+			}
 		}
 	    }
 	    else if (JSVAL_IS_INT(e->argv[1]))	{
@@ -2781,8 +2788,7 @@ ET_HandlePref(JSContext * cx, uint argc, jsval * argv, jsval * rval)
     /* if it was a string we need to convert the string to a JSString */
     /* do we need to free event->string or does JS own it now ? */
     if (ret == JS_TRUE && JSVAL_IS_STRING(*event->rval))
-	*rval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, event->string)); 
-
+		*rval = STRING_TO_JSVAL(lm_EncodingToStr(cx, PREF_CHARSET, event->string)); 
     XP_FREE(event);
     return ret;
 

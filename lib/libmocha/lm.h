@@ -780,6 +780,13 @@ lm_StrToLocalEncoding(MWContext * context, JSString * str);
 extern JSString *
 lm_LocalEncodingToStr(MWContext * context, char * bytes);
 
+
+extern char *
+lm_StrToEncoding(JSContext *cx, uint16 charset, JSString * str);
+
+extern JSString *
+lm_EncodingToStr(JSContext *cx, uint16 charset, char * bytes);
+
 /* end INTL support */
 
 #endif /* lm_h___ */

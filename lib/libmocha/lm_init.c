@@ -1968,61 +1968,41 @@ lm_SetVersion(MochaDecoder *decoder, JSVersion version) {
  * Convert a locally encoded string into a 16-bit unicode string to pass
  *   to the JS runtime.  Allow cx to be NULL
  */
+
 char *
-lm_StrToLocalEncoding(MWContext * context, JSString * str)
+lm_StrToEncoding(JSContext * cx, uint16 charset, JSString * str)
 {
-    INTL_Encoding_ID charset;
     INTL_Unicode * src = JS_GetStringChars(str);
     uint32 srclen = JS_GetStringLength(str);
     uint32 destlen;
     char * dest;
 
-#ifdef UNICODE
     if (!str)
 	return NULL;
-    
-    /*
-     * If charset has not be initialized in context (because the HTTP Charset:
-     * header hasn't been parsed, or lacking that, the META HTTP-EQUIV Charset
-     * tag hasn't been parsed), we must be called from JS initialization code.
-     * JS defines all initial identifiers (class constructor names, etc.) as
-     * ASCII.  XXX could the charset be reset later by mistake, but before the
-     * document unloads?
-     */
-    charset = INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(context));
-    XP_ASSERT(charset != CS_UNKNOWN);
-    if (charset == CS_DEFAULT)
-	charset = CS_ASCII;
 
     destlen = INTL_UnicodeToStrLen(charset, src, srclen);
     dest = XP_ALLOC(destlen);
     if (!dest) {
-	JS_ReportOutOfMemory(context->mocha_context);
+	JS_ReportOutOfMemory(cx);
 	return NULL;
     }
 
     INTL_UnicodeToStr(charset, src, srclen, (unsigned char *) dest, destlen);
     return dest;
-#else
-    return strdup(JS_GetStringBytes(str);
-#endif
 
 }
 
 JSString *
-lm_LocalEncodingToStr(MWContext * context, char * bytes)
+lm_EncodingToStr(JSContext * cx, uint16 charset, char * bytes)
 {
     uint32 srclen, destlen;
-    uint16 charset;
     INTL_Unicode * unicode = NULL;
 
-#ifdef UNICODE
     /* return NULL or empty string? */
     if (!bytes)
-	return JS_NewStringCopyZ(context->mocha_context, NULL); 
+	return JS_NewStringCopyZ(cx, NULL); 
 
     srclen = XP_STRLEN(bytes);
-    charset = INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(context));
 
     /* find out how many unicode characters we'll end up with */
     destlen = INTL_StrToUnicodeLen(charset, (unsigned char *) bytes);
@@ -2033,7 +2013,45 @@ lm_LocalEncodingToStr(MWContext * context, char * bytes)
     /* do the conversion */
     destlen = INTL_StrToUnicode(charset, (unsigned char *) bytes, 
 			        unicode, destlen);
-    return JS_NewUCString(context->mocha_context, (jschar *) unicode, destlen);
+    return JS_NewUCString(cx, (jschar *) unicode, destlen);
+
+}
+
+
+/*
+ * Convert a locally encoded string into a 16-bit unicode string to pass
+ *   to the JS runtime.  Allow cx to be NULL
+ */
+char *
+lm_StrToLocalEncoding(MWContext * context, JSString * str)
+{
+#ifdef UNICODE
+    uint16 charset;
+    charset = INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(context));
+    XP_ASSERT(charset != CS_UNKNOWN);
+    if (charset == CS_DEFAULT || charset == CS_UNKNOWN)
+	charset = CS_LATIN1;
+	return	lm_StrToEncoding(context->mocha_context, charset, str);
+
+#else
+    return strdup(JS_GetStringBytes(str));
+#endif
+
+}
+
+JSString *
+lm_LocalEncodingToStr(MWContext * context, char * bytes)
+{
+    uint16 charset;
+
+#ifdef UNICODE
+    charset = INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(context));
+    XP_ASSERT(charset != CS_UNKNOWN);
+    if (charset == CS_DEFAULT || charset == CS_UNKNOWN)
+	charset = CS_LATIN1;
+
+	return	lm_EncodingToStr(context->mocha_context, charset, bytes);
+
 #else
     return JS_NewStringCopyZ(context->mocha_context, bytes);
 #endif
