@@ -96,6 +96,8 @@ INCLUDES	+= -I$(srcdir)/../base/src \
 
 GARBAGE+=$(BUILD_DATE)
 
+export:: $(BUILD_DATE)
+
 $(BUILD_DATE): gbdate.pl
 	$(RM) $@
 	$(PERL) $(srcdir)/gbdate.pl > $@
