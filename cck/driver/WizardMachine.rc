@@ -130,21 +130,19 @@ BEGIN
     PUSHBUTTON      "Help",IDC_BUTTON1,209,250,50,14
 END
 
-IDD_NEWCONFIG_DIALOG DIALOG DISCARDABLE  0, 0, 265, 150
+IDD_NEWCONFIG_DIALOG DIALOG DISCARDABLE  0, 0, 266, 119
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Create New Configuration"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "Create",IDOK,153,130,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,208,130,50,14
+    DEFPUSHBUTTON   "Create New Configuration",IDOK,109,98,94,14
+    PUSHBUTTON      "Cancel",IDCANCEL,209,98,50,14
     LTEXT           "Name of new configuration:",IDC_STATIC,7,7,173,13
     EDITTEXT        IDC_EDIT1,7,20,218,13,ES_AUTOHSCROLL
     LTEXT           "The CCK tool creates a new configuration directory in C:\\CCK\\Configs. Within your new configuration directory, the CCK tool creates a \\Workspace directory, for example, C:\\CCK\\Configs\\CustomBuild01\\Workspace.",
                     IDC_STATIC,7,39,253,26
     LTEXT           "You can use the Workspace directory as a convenient place in which to store your custom files.",
                     IDC_STATIC,7,69,248,17
-    LTEXT           "If you haven't already done so, you should now create your custom files. For information on creating custom files, see the CCK online help or the CCK online documentation.",
-                    IDC_STATIC,7,92,251,27
 END
 
 IDD_DIALOG112 DIALOG DISCARDABLE  0, 0, 187, 95
@@ -327,9 +325,9 @@ BEGIN
     IDD_NEWCONFIG_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 258
+        RIGHTMARGIN, 259
         TOPMARGIN, 7
-        BOTTOMMARGIN, 143
+        BOTTOMMARGIN, 112
     END
 
     IDD_DIALOG112, DIALOG
