@@ -60,8 +60,8 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
-
 #include "nsIChromeRegistry.h" // chromeReg
+#include "nsIStringBundle.h"
 
 // Interfaces Needed
 #include "nsIDocShell.h"
@@ -158,6 +158,7 @@ static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 
 /*
@@ -1355,6 +1356,18 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
       printf("profileName passed in: %s", NS_STATIC_CAST(const char*, temp));
     }
 #endif
+
+    // flush the stringbundle cache first
+#if defined(DEBUG_tao)
+    printf("\n--> nsProfile::StartApprunner: FlushBundles() \n");
+#endif
+    nsCOMPtr<nsIStringBundleService> bundleService =
+        do_GetService(kStringBundleServiceCID, &rv);
+
+    if (NS_SUCCEEDED(rv)) {
+        rv = bundleService->FlushBundles();
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to flush bundle cache");
+    }
 
     gProfileDataAccess->SetCurrentProfile(profileName);
     mCurrentProfileAvailable = PR_TRUE;
