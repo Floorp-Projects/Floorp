@@ -45,7 +45,7 @@
 const int netCharType[256] =
 /*	Bit 0		xalpha		-- the alphas
 **	Bit 1		xpalpha		-- as xalpha but 
-**                             converts spaces to plus and plus to %20
+**                             converts spaces to plus and plus to %2B
 **	Bit 3 ...	path		-- as xalphas but doesn't escape '/'
 */
     /*   0 1 2 3 4 5 6 7 8 9 A B C D E F */
