@@ -32,11 +32,11 @@
   -----
 
   1) Right now, the only kind of stream data sources that are _really_
-     writable are "file:" URIs. (In fact, <em>all</em> "file:" URIs
-     are writable, modulo flie system permissions; this may lead to
-     some surprising behavior.) Eventually, it'd be great if we could
-     open an arbitrary nsIOutputStream on *any* URL, and Netlib could
-     just do the magic.
+     writable are "file:" URIs. (In fact, _all_ "file:" URIs are
+     writable, modulo flie system permissions; this may lead to some
+     surprising behavior.) Eventually, it'd be great if we could open
+     an arbitrary nsIOutputStream on *any* URL, and Netlib could just
+     do the magic.
 
   2) Implement a more terse output for "typed" nodes; that is, instead
      of "RDF:Description type='ns:foo'", just output "ns:foo".
@@ -47,8 +47,16 @@
      and then `about="#foo"' for each subsequent instance, we just
      _always_ write `about="#foo"'.
 
-  4) When re-serializing containers. We _really_ cheat, and use an
-     illegal "about=" construct. Sucks, but...
+     We do this so that we can handle the case where an RDF container
+     has been assigned arbitrary properties: the spec says we can't
+     dangle the attributes directly off the container, so we need to
+     refer to it. Of course, with a little cleverness, we could fix
+     this. But who cares?
+
+  4) When re-serializing containers. We have to cheat on some
+     containers, and use an illegal "about=" construct. We do this to
+     handle containers that have been assigned URIs outside of the
+     local document.
 
  */
 
@@ -1302,12 +1310,27 @@ static const char kRDFAlt[] = "RDF:Alt";
 
     nsXPIDLCString s;
     if (NS_SUCCEEDED(aContainer->GetValue( getter_Copies(s) ))) {
-        static const char kIDEquals[] = " about=\"";
-
         nsAutoString uri(s);
         rdf_MakeRelativeRef((const char*) docURI, uri);
+
         rdf_EscapeAmpersands(uri);
-        rdf_BlockingWrite(aStream, kIDEquals, sizeof(kIDEquals) - 1);
+
+        if (uri.First() == PRUnichar('#')) {
+            // Okay, it's actually identified as an element in the
+            // current document, not trying to decorate some absolute
+            // URI. We can use the 'ID=' attribute...
+            static const char kIDEquals[] = " ID=\"";
+
+            uri.Cut(0, 1); // chop the '#'
+            rdf_BlockingWrite(aStream, kIDEquals, sizeof(kIDEquals) - 1);
+        }
+        else {
+            // We need to cheat and spit out an illegal 'about=' on
+            // the sequence. 
+            static const char kAboutEquals[] = " about=\"";
+            rdf_BlockingWrite(aStream, kAboutEquals, sizeof(kAboutEquals) - 1);
+        }
+
         rdf_BlockingWrite(aStream, uri);
         rdf_BlockingWrite(aStream, "\"", 1);
     }
