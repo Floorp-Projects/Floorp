@@ -236,7 +236,7 @@ if (defined $::FORM{'sql'}) {
   my @legal_fields = ("bug_id", "product", "version", "rep_platform", "op_sys",
                       "bug_status", "resolution", "priority", "bug_severity",
                       "assigned_to", "reporter", "component",
-                      "target_milestone");
+                      "target_milestone", "groupset");
 
   foreach my $field (keys %::FORM) {
       my $or = "";
