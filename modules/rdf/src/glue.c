@@ -76,9 +76,15 @@ rdf_complete(NET_StreamClass *stream)
       parseNextRDFXMLBlob(stream, gDefaultNavcntr, strlen(gDefaultNavcntr));
     } else {
       RDF_Resource browser = RDF_GetResource(NULL, "netscape:browser", 1);
+
+      RDF_Resource updateID = RDF_GetResource(NULL, "updateID", 1);
+      char* id = RDF_GetSlotValue(gNCDB, browser, updateID,
+                                  RDF_STRING_TYPE, false, true);
+
       RDF_Resource updateFrom = RDF_GetResource(NULL, "updateURL", 1);
       char* uf = RDF_GetSlotValue(gNCDB, browser, updateFrom,
                                   RDF_STRING_TYPE, false, true);
+
       RDF_Resource fileSize = RDF_GetResource(NULL, "fileSize", 1);
       char* fs = RDF_GetSlotValue(gNCDB, browser, fileSize,
                                   RDF_STRING_TYPE, false, true);
@@ -89,18 +95,28 @@ rdf_complete(NET_StreamClass *stream)
         sscanf("%lu", fs, &fSize);
         freeMem(fs);
       }
-      if (uf != NULL)  {
+      if ((uf != NULL) && (id != NULL)) {
 #ifdef MOZ_SMARTUPDATE
-        checkForAutoUpdate((void *)FE_GetRDFContext(), uf, fSize);
+        AutoUpdateConnnection autoupdt;
+        autoupdt = AutoUpdate_Setup(FE_GetRDFContext(), 
+                                    id, uf, fSize, 
+                                    "http://warp/u/raman/docs/js/download.html");
+        autoupdate_Resume(autoupdt);
 #endif /* MOZ_SMARTUPDATE */
         freeMem(uf);
+        freeMem(id);
       } 
 
       /* A temporary hack to demo AutoUpdate on windows */
 #ifndef MOZ_SMARTUPDATE
-#ifdef XP_WIN
-        checkForAutoUpdate((void *)FE_GetRDFContext(), "http://warp/u/raman/gromit/softupdt.exe", 45328);
-#endif /* XP_WIN */
+#ifndef XP_MAC
+      /*
+      {
+        AutoUpdate_LoadMainScript(FE_GetRDFContext(),
+                                  "http://warp/u/raman/docs/js/download.html");
+      }
+      */
+#endif /* !XP_MAC */
 #endif /* MOZ_SMARTUPDATE */
 
     } 
