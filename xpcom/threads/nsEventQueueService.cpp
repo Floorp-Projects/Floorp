@@ -251,7 +251,6 @@ done:
 
 static nsEventQueueServiceImpl* gServiceInstance = NULL;
 
-#if defined(TEMPLATES_IN_nsXPComFactory_EXORCISM)
 NS_DEF_FACTORY(EventQueueServiceGen,nsEventQueueServiceImpl)
 
 class nsEventQueueServiceFactory : public nsEventQueueServiceGenFactory
@@ -261,16 +260,6 @@ public:
                             const nsIID &aIID,
                             void **aResult);
 };
-
-#else
-class nsEventQueueServiceFactory : public nsFactory<nsEventQueueServiceImpl>
-{
-public:
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
-                            void **aResult);
-};
-#endif
 
 NS_IMETHODIMP
 nsEventQueueServiceFactory::CreateInstance(nsISupports *aOuter,
