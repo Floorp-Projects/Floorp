@@ -60,6 +60,14 @@ ifdef USE_64
 	DEFINES += -DNSS_USE_64
 endif
 
+# des.c wants _X86_ defined for intel CPUs.  
+# coreconf does this for windows, but not for Linux, FreeBSD, etc.
+ifeq ($(CPU_ARCH),x86)
+ifneq ($(OS_ARCH),WINNT)
+	OS_REL_CFLAGS += -D_X86_
+endif
+endif
+
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################
