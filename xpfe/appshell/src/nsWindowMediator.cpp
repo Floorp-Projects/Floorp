@@ -281,8 +281,9 @@ private:
 nsWindowEnumerator::nsWindowEnumerator ( const PRUnichar* inTypeString,
                                          nsWindowMediator& inMediator,
                                          PRBool enumXULWindow )
-  : mWindowMediator( &inMediator ), mType( inTypeString ),
-    mCurrentPosition( 0 ), mEnumXULWindow( enumXULWindow )
+  : mWindowMediator(&inMediator), mType(inTypeString),
+    mCurrentPosition(inMediator.mOldestWindow),
+    mEnumXULWindow(enumXULWindow)
 {
   NS_INIT_REFCNT();
   mWindowMediator->AddEnumerator( this );
@@ -301,28 +302,26 @@ NS_IMETHODIMP nsWindowEnumerator::HasMoreElements(PRBool *retval)
     return NS_ERROR_INVALID_ARG;
 
   *retval = PR_FALSE;
-  if ( FindNext() )
+  if (mCurrentPosition)
     *retval = PR_TRUE;
   return NS_OK;
 }
 	
 NS_IMETHODIMP nsWindowEnumerator::GetNext(nsISupports **retval)
 {
-  if ( !retval )
+  if (!retval)
     return NS_ERROR_INVALID_ARG;
 
   *retval = NULL;
-  nsWindowInfo *info = FindNext();
-  if (info) {
+  if (mCurrentPosition) {
     if(mEnumXULWindow)
-      CallQueryInterface(info->mWindow, retval);
+      CallQueryInterface(mCurrentPosition->mWindow, retval);
     else {
       nsCOMPtr<nsIDOMWindow> domWindow;
-      GetDOMWindow( info->mWindow, domWindow );
+      GetDOMWindow(mCurrentPosition->mWindow, domWindow);
       CallQueryInterface(domWindow, retval);
     }
-
-    mCurrentPosition = info;
+    mCurrentPosition = FindNext();
   }
   return NS_OK;
 }
@@ -333,19 +332,23 @@ nsWindowInfo * nsWindowEnumerator::FindNext() {
                *listEnd;
   PRBool        allWindows = mType.Length() == 0;
 
-  if (mCurrentPosition) {
-    info = mCurrentPosition->mYounger;
-    listEnd = mWindowMediator->mOldestWindow;
-  } else {
-    info = mWindowMediator->mOldestWindow;
-    listEnd = 0;
-  }
+  /* mCurrentPosition null is assumed to mean that the enumerator has run
+     its course and is now basically useless. It could also be interpreted
+     to mean that it was created at a time when there were no windows. In
+     that case it would probably be more appropriate to check to see whether
+     windows have subsequently been added. But it's not guaranteed that we'll
+     pick up newly added windows anyway (if they occurred previous to our
+     current position) so we just don't worry about that. */
+  if (!mCurrentPosition)
+    return 0;
+
+  info = mCurrentPosition->mYounger;
+  listEnd = mWindowMediator->mOldestWindow;
 
   while (info != listEnd) {
     if (allWindows || info->GetType() == mType)
       return info;
     info = info->mYounger;
-    listEnd = mWindowMediator->mOldestWindow;
   }
 
   return 0;
@@ -493,6 +496,7 @@ NS_METHOD nsWindowMediator::GetEnumerator( const PRUnichar* inType, nsISimpleEnu
   if ( outEnumerator == NULL )
     return NS_ERROR_INVALID_ARG;
 
+  nsAutoLock lock(mListLock);
   nsWindowEnumerator* enumerator = new nsWindowEnumerator( inType, *this, PR_FALSE );
   if (enumerator )
     return enumerator->QueryInterface( NS_GET_IID(nsISimpleEnumerator) , (void**)outEnumerator );
@@ -505,6 +509,7 @@ NS_METHOD nsWindowMediator::GetXULWindowEnumerator( const PRUnichar* inType, nsI
   if ( outEnumerator == NULL )
     return NS_ERROR_INVALID_ARG;
 
+  nsAutoLock lock(mListLock);
   nsWindowEnumerator* enumerator = new nsWindowEnumerator( inType, *this, PR_TRUE );
   if (enumerator )
     return enumerator->QueryInterface( NS_GET_IID(nsISimpleEnumerator) , (void**)outEnumerator );
@@ -515,14 +520,12 @@ NS_METHOD nsWindowMediator::GetXULWindowEnumerator( const PRUnichar* inType, nsI
 
 PRInt32 nsWindowMediator::AddEnumerator( nsWindowEnumerator* inEnumerator )
 {
-	nsAutoLock lock(mListLock);
-	return mEnumeratorList.AppendElement( inEnumerator );
+  return mEnumeratorList.AppendElement(inEnumerator);
 }
 
 PRInt32 nsWindowMediator::RemoveEnumerator( nsWindowEnumerator* inEnumerator)
 {
-	nsAutoLock lock(mListLock);
-	return mEnumeratorList.RemoveElement( inEnumerator );		
+  return mEnumeratorList.RemoveElement(inEnumerator);
 }
 
 /*
