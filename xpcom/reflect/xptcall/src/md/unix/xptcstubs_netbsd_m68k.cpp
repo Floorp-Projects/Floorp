@@ -108,22 +108,19 @@ extern "C" {
     }
 }
 
-#define STUB_ENTRY(n) \
-nsresult nsXPTCStubBase::Stub##n() \
-{ \
-  register nsresult result; \
-  __asm__ __volatile__( \
-    "lea   a6@(12), a0\n\t"       /* args */ \
-    "movl  a0, sp@-\n\t" \
-    "movl  #"#n", sp@-\n\t"       /* method index */ \
-    "movl  a6@(8), sp@-\n\t"      /* this */ \
-    "jbsr  _PrepareAndDispatch\n\t" \
-    "movl  d0, %0" \
-    : "=d" (result)     /* %0 */ \
-    : \
-    : "a0", "a1", "d0", "d1", "memory" ); \
-    return result; \
-}
+#define STUB_ENTRY(n)							\
+__asm__(								\
+    ".global	_Stub"#n"__14nsXPTCStubBase\n\t"			\
+"_Stub"#n"__14nsXPTCStubBase:\n\t"					\
+    "link  a6,#0			\n\t"				\
+    "lea   a6@(12), a0			\n\t"	/* pointer to args */	\
+    "movl  a0, sp@-			\n\t"				\
+    "movl  #"#n", sp@-			\n\t"	/* method index */	\
+    "movl  a6@(8), sp@-			\n\t"	/* this */		\
+    "jbsr  _PrepareAndDispatch		\n\t"				\
+    "unlk  a6				\n\t"				\
+    "rts				\n\t"				\
+);
 
 #define SENTINEL_ENTRY(n) \
 nsresult nsXPTCStubBase::Sentinel##n() \
