@@ -93,18 +93,22 @@
            could put kDatePicker property on the input element.
            [document.getAnonymousNodes(textBox) fails as of Moz1.7b]).
            So navigate parents to textbox in order to call parseTextBoxDate.
+         [Note: minimonth onmonthchange reshows parent popup to fix title 
+          month/year (bug 973914).  minimonth onpopuplisthidden reshows parent 
+          popup to avoid freeze (bug 278877).]
          [this comment is outside the <content> so it won't become a
           node that interferes with navigation to interior nodes.] -->
-        <content id="content">
+      <content>
           <xul:hbox flex="1" id="hbox" class="datepicker-box-class">
             <xul:menulist editable="true" sizetopopup="false"
-                          id="datepicker-text"
                           class="datepicker-text-class"
                           onkeypress="if (event.keyCode == 13) this.kDatePicker.parseTextBoxDate(true);"
                           xbl:inherits="disabled">
                 <xul:menupopup popupanchor="bottomright" popupalign="topright"
-                               onpopupshowing="onPopup()">
-                    <xul:minimonth onchange="this.kDatePicker.clickDate(this); "/>
+                               onpopupshowing="this.parentNode.kDatePicker.onPopup()">
+                    <xul:minimonth onchange="this.kDatePicker.clickDate(this); "
+                                   onmonthchange="this.kDatePicker.reshowPopup();"
+                                   onpopuplisthidden="this.kDatePicker.reshowPopup();"/>
                 </xul:menupopup>
             </xul:menulist>
           </xul:hbox>
@@ -124,9 +128,10 @@
         <constructor>
             <![CDATA[
                 var hbox = document.getAnonymousNodes(this)[0];
-                this.kTextBox = hbox.childNodes[0];
+                this.kTextBox = hbox.firstChild;
                 this.kTextBox.kDatePicker = this; // enable call back to method in Moz1.7
-                this.kMinimonth = this.kTextBox.menupopup.childNodes[0];
+                this.kTextBox.menupopup.kDatePicker = this;
+                this.kMinimonth = this.kTextBox.menupopup.firstChild;
                 this.kMinimonth.kDatePicker = this; // enable call back to method in Moz1.6
                 this.kFormatter = new DateFormater();
 
@@ -144,6 +149,8 @@
                 val = this.getAttribute("onchange");
                 if (val)
                     this.kCallback = function() { eval(val); };
+
+                this.mIsReshowing = false;
             ]]>
         </constructor>
 
@@ -163,7 +170,7 @@
                     this.mValue = aValue;
                     this.kTextBox.value = formattedValue;
                     // called before constructor, so check aRefresh before kCallBack
-                    if ( aRefresh != false && "kCallback" in this)
+                    if ( aRefresh != false && "kCallback" in this && this.kCallback)
                       this.kCallback();
                     return;
                   }
@@ -197,9 +204,26 @@
 
         <method name="onPopup">
             <body><![CDATA[
+                // avoid reinitializing during reshow, for bugs 273914 & 278877 workaround
+                if (! this.mIsReshowing) { 
                 this.kMinimonth.update( this.mValue );
                 // select all to remove cursor since can't type while popped-up
                 this.select();
+                }
+            ]]></body>
+        </method>
+
+        <!-- Reshow hides and shows parent popup without reinitializing in onPopup 
+             to workaround bugs 273914 (update title) & 278877 (avoid freeze) -->
+        <method name="reshowPopup">
+          <body><![CDATA[
+            this.mIsReshowing = true;
+            try { 
+              this.kTextBox.menupopup.hidePopup();
+              this.kTextBox.menupopup.showPopup();
+            } finally {
+              this.mIsReshowing = false;
+            }
             ]]></body>
         </method>
 
