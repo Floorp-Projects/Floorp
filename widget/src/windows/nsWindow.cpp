@@ -4508,7 +4508,7 @@ static char* GetACPString(const nsString& aStr)
       int outlen = ::WideCharToMultiByte( CP_ACP, 0, 
                       aStr.get(), aStr.Length(),
                       acp, acplen, NULL, NULL);
-      if ( outlen > 0)
+      if ( outlen >= 0)
          acp[outlen] = '\0';  // null terminate
    }
    return acp;
