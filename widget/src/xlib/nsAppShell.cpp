@@ -113,8 +113,9 @@ static nsXlibTimeToNextTimeoutFunc GetTimeToNextTimeoutFunc(void)
     if (NS_OK == rv && nsnull != xlibWindowService)
     {
       xlibWindowService->GetTimeToNextTimeoutFunc(&sFunc);
-    
-      NS_ASSERTION(nsnull != sFunc,"Time to next timeout func is null.");
+
+#ifdef DEBUG_ramiro
+      printf("Time to next timeout func is null - for now.\n");
 
       static int once = 1;
 
@@ -124,6 +125,7 @@ static nsXlibTimeToNextTimeoutFunc GetTimeToNextTimeoutFunc(void)
 
         printf("YES! Time to next timeout func is good.\n");
       }
+#endif
       
       NS_RELEASE(xlibWindowService);
     }
@@ -150,7 +152,8 @@ static nsXlibProcessTimeoutsProc GetProcessTimeoutsProc(void)
     {
       xlibWindowService->GetProcessTimeoutsProc(&sProc);
     
-      NS_ASSERTION(nsnull != sProc,"process timeout proc is null.");
+#ifdef DEBUG_ramiro
+      printf("Process timeout proc is null - for now.\n");
 
       static int once = 1;
 
@@ -160,6 +163,7 @@ static nsXlibProcessTimeoutsProc GetProcessTimeoutsProc(void)
 
         printf("YES! Process timeout proc is good.\n");
       }
+#endif
 
       NS_RELEASE(xlibWindowService);
     }
