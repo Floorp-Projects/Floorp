@@ -98,7 +98,7 @@
 // Reading bookmark files
 -(BOOL) readBookmarks;
 -(void) startImportBookmarks;
--(void) importBookmarks:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
+-(BOOL) importBookmarks:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 -(NSString *)decodedHTMLfile:(NSString *)pathToFile;
 -(BOOL)readHTMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;
 -(BOOL)readCaminoXMLFile:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder;

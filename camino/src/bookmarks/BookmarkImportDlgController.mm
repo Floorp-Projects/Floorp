@@ -40,11 +40,15 @@
 #import "BookmarkImportDlgController.h"
 #import "BookmarkManager.h"
 #import "BookmarkFolder.h"
+#import "MainController.h"
+#import "BrowserWindowController.h"
+#import "BookmarkViewController.h"
 
 @interface BookmarkImportDlgController (Private)
 
 -(void) tryAddImportFromBrowser: (NSString *) aBrowserName withBookmarkPath: (NSString *) aPath;
 -(NSString *) getSaltedBookmarkPathForProfile: (NSString *) aPath;
+-(void) beginImportFrom:(NSString *) aPath intoFolder:(BookmarkFolder *) aFolder;
 
 @end
 
@@ -53,6 +57,7 @@
 -(void) windowDidLoad
 {
   [self buildAvailableFileList];
+  [[self window] center];
 }
 
 // Check for common webbrower bookmark files and, if they exist, add import buttons.
@@ -60,7 +65,7 @@
 {
   NSString *mozPath;
   
-  // Remove everything but the "Select a File..." option, on the off-chance that someone brings
+  // Remove everything but the "Select a file..." option, on the off-chance that someone brings
   // up the import dialog, throws away a profile, then brings up the import dialog again
   while ([mBrowserListButton numberOfItems] > 1)
     [mBrowserListButton removeItemAtIndex:0];
@@ -125,16 +130,12 @@
 
 -(IBAction) cancel:(id)aSender
 {
-  [NSApp stopModal];
-  [NSApp endSheet:[self window]];
   [[self window] orderOut:self];
 
 }
+
 -(IBAction) import:(id)aSender
 {
-  [NSApp stopModal];
-  [NSApp endSheet:[self window]];
-  [[self window] orderOut:self];
   NSMenuItem *selectedItem = [mBrowserListButton selectedItem];
   BookmarkFolder *importFolder = [[[BookmarkManager sharedBookmarkManager] rootBookmarks] addBookmarkFolder];
   NSString *titleString;
@@ -144,29 +145,62 @@
     titleString = [[NSString alloc] initWithFormat:NSLocalizedString(@"Imported %@ Bookmarks",@"Imported %@ Bookmarks"),[selectedItem title]];
   [importFolder setTitle:titleString];
   [titleString release];
-  [[BookmarkManager sharedBookmarkManager] importBookmarks:[selectedItem representedObject] intoFolder:importFolder];
+  [self beginImportFrom:[selectedItem representedObject] intoFolder:importFolder];
 }
 
 -(IBAction) loadOpenPanel:(id)aSender
 {
-  [NSApp stopModal];
-  [NSApp endSheet:[self window]];
-  [[self window] orderOut:self];
   NSOpenPanel* openPanel = [NSOpenPanel openPanel];
   [openPanel setCanChooseFiles: YES];
   [openPanel setCanChooseDirectories: NO];
   [openPanel setAllowsMultipleSelection: NO];
+  [openPanel setPrompt: @"Import"];
   NSArray* array = [NSArray arrayWithObjects: @"htm",@"html",@"xml", @"plist",nil];
   int result = [openPanel runModalForDirectory: nil
                                           file: nil
                                          types: array];
   if (result == NSOKButton) {
     NSString *pathToFile = [[openPanel filenames] objectAtIndex:0];
-    BookmarkManager *bm = [BookmarkManager sharedBookmarkManager];
-    BookmarkFolder *importFolder = [[bm rootBookmarks] addBookmarkFolder];
+    BookmarkFolder *importFolder = [[[BookmarkManager sharedBookmarkManager] rootBookmarks] addBookmarkFolder];
     [importFolder setTitle:NSLocalizedString(@"Imported Bookmarks",@"Imported Bookmarks")];
-    [bm importBookmarks:pathToFile intoFolder:importFolder];
+    [self beginImportFrom:pathToFile intoFolder:importFolder];
   }
+}
+
+-(void) beginImportFrom:(NSString *) aPath intoFolder:(BookmarkFolder *) aFolder
+{
+  [mCancelButton setEnabled:NO];
+  [mImportButton setEnabled:NO];  
+  
+  BOOL success = [[BookmarkManager sharedBookmarkManager] importBookmarks:aPath intoFolder:aFolder];
+  
+  [mCancelButton setEnabled:YES];
+  [mImportButton setEnabled:YES];
+  
+  if (success) {  //show them the imported bookmarks if import succeeded
+    [[self window] orderOut:self];
+    BrowserWindowController *windowController = [(MainController *)[NSApp delegate] openBrowserWindowWithURL:@"" andReferrer:nil behind:nil];
+    [windowController manageBookmarks:self];
+    BookmarkViewController *bmController = [windowController bookmarkViewController];
+    [bmController selectContainer:[bmController containerCount]-1];
+  } else {
+    NSBeginAlertSheet(NSLocalizedString(@"ImportFailureTitle", @"Import Failed"),  // title
+                      @"",               // default button
+                      nil,               // no cancel buttton
+                      nil,               // no third button
+                      [self window],     // window
+                      self,              // delegate
+                      @selector(alertSheetDidEnd:returnCode:contextInfo:),
+                      nil,               // no dismiss sel
+                      (void *)NULL,      // no context
+                      [NSString stringWithFormat:NSLocalizedString(@"ImportFailureMessage", @"The file '%@' is not a supported bookmark file type."), [aPath lastPathComponent]]
+                      );
+  }
+}
+
+-(void) alertSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
+{
+  [[self window] orderOut:self];
 }
 
 @end

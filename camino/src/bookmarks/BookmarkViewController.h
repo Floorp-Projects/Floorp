@@ -96,6 +96,7 @@
 -(IBAction) locateBookmark:(id)aSender;
 
 
+-(int) containerCount;
 -(void) selectContainer:(int)inRowIndex;
 -(void) selectLastContainer;
 -(NSMutableDictionary *)expandedStatusDictionary;

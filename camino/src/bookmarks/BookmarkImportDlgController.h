@@ -51,6 +51,6 @@
 -(IBAction) import:(id)aSender;
 -(IBAction) loadOpenPanel:(id)aSender;
 -(IBAction) nullAction:(id)aSender;
-
+-(void) alertSheetDidEnd:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo;
 
 @end

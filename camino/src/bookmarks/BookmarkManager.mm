@@ -616,18 +616,14 @@ static unsigned gFirstUserCollection = 0;
   if (!mImportDlgController)
     mImportDlgController = [[BookmarkImportDlgController alloc] initWithWindowNibName:@"BookmarkImportDlg"];
   [mImportDlgController buildAvailableFileList];
-  [NSApp beginSheet:[mImportDlgController window]
-     modalForWindow:[[NSApp delegate] getFrontmostBrowserWindow]
-      modalDelegate:nil
-     didEndSelector:nil
-        contextInfo:nil];
+  [mImportDlgController showWindow:nil];
 }
 
--(void) importBookmarks:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
+-(BOOL) importBookmarks:(NSString *)pathToFile intoFolder:(BookmarkFolder *)aFolder
 {
   //I feel dirty doing it this way.  But we'll check file extension
   //to figure out how to handle this.  Damn you, Steve Jobs!!
-  NSUndoManager *undoManager =[self undoManager];
+  NSUndoManager *undoManager = [self undoManager];
   [undoManager beginUndoGrouping];
   BOOL success = NO;
   NSString *extension =[pathToFile pathExtension];
@@ -642,11 +638,12 @@ static unsigned gFirstUserCollection = 0;
   if (!success) {
     success = [self readHTMLFile:pathToFile intoFolder:aFolder];
     if (!success)
-      [self readCaminoXMLFile:pathToFile intoFolder:aFolder];
+      success = [self readCaminoXMLFile:pathToFile intoFolder:aFolder];
   }
   [[undoManager prepareWithInvocationTarget:[self rootBookmarks]] deleteChild:aFolder];
   [undoManager endUndoGrouping];
   [undoManager setActionName:NSLocalizedString(@"Import Bookmarks",@"Import Bookmarks")];
+  return success;
 }
 
 // spits out html file as NSString with proper encoding. it's pretty shitty, frankly.

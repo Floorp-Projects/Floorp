@@ -791,6 +791,11 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
 //
 // table view things
 //
+- (int) containerCount
+{
+  return [mRootBookmarks count];
+}
+
 - (void) selectContainer:(int)inRowIndex
 {
   [mContainerPane selectRow:inRowIndex byExtendingSelection:NO];
