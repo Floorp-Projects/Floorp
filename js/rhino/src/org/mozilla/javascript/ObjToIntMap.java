@@ -35,7 +35,10 @@
 
 package org.mozilla.javascript;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 
 /**
  * Map to associate objects to integers.
@@ -47,9 +50,9 @@ import java.io.Serializable;
  *
  */
 
-public class ObjToIntMap implements Serializable {
+public class ObjToIntMap implements Externalizable {
 
-//    static final long serialVersionUID = -55740507849272970L;
+     static final long serialVersionUID = -6999544351027769835L;
 
 // Map implementation via hashtable,
 // follows "The Art of Computer Programming" by Donald E. Knuth
@@ -200,7 +203,6 @@ public class ObjToIntMap implements Serializable {
 
     /** Return array of present keys */
     public Object[] getKeys() {
-        Object[] keys = this.keys;
         int count = keyCount;
         Object[] result = new Object[count];
         for (int i = 0; count != 0; ++i) {
@@ -260,11 +262,16 @@ public class ObjToIntMap implements Serializable {
         return -1;
     }
 
-    private int getFreeIndex(Object key, int hash) {
+// Insert key that is not present to table without deleted entries
+// and enough free space
+    private int insertNewKey(Object key, int hash) {
+        if (check && occupiedCount != keyCount) Context.codeBug();
+        if (check && keyCount == 1 << power) Context.codeBug();
         int fraction = hash * A;
         int index = fraction >>> (32 - power);
+        int N = 1 << power;
         if (keys[index] != null) {
-            int mask = (1 << power) - 1;
+            int mask = N - 1;
             int step = tableLookupStep(fraction, mask, power);
             int firstIndex = index;
             do {
@@ -273,6 +280,11 @@ public class ObjToIntMap implements Serializable {
                 if (check && firstIndex == index) Context.codeBug();
             } while (keys[index] != null);
         }
+        keys[index] = key;
+        values[N + index] = hash;
+        ++occupiedCount;
+        ++keyCount;
+
         return index;
     }
 
@@ -297,18 +309,17 @@ public class ObjToIntMap implements Serializable {
             keys = new Object[N];
             values = new int[2 * N];
 
-            for (int i = 0, remaining = keyCount; remaining != 0; ++i) {
+            int remaining = keyCount;
+            occupiedCount = keyCount = 0;
+            for (int i = 0; remaining != 0; ++i) {
                 Object key = oldKeys[i];
                 if (key != null && key != DELETED) {
                     int keyHash = oldValues[oldN + i];
-                    int index = getFreeIndex(key, keyHash);
-                    keys[index] = key;
+                    int index = insertNewKey(key, keyHash);
                     values[index] = oldValues[i];
-                    values[N + index] = keyHash;
                     --remaining;
                 }
             }
-            occupiedCount = keyCount;
         }
     }
 
@@ -368,7 +379,7 @@ public class ObjToIntMap implements Serializable {
             if (keys == null || occupiedCount * 4 >= (1 << power) * 3) {
                 // Too litle unused entries: rehash
                 rehashTable();
-                index = getFreeIndex(key, hash);
+                return insertNewKey(key, hash);
             }
             ++occupiedCount;
         }
@@ -377,6 +388,41 @@ public class ObjToIntMap implements Serializable {
         ++keyCount;
         return index;
     }
+
+    public void writeExternal(ObjectOutput out) throws IOException {
+        out.writeInt(power);
+        out.writeInt(keyCount);
+
+        int count = keyCount;
+        for (int i = 0; count != 0; ++i) {
+            Object key = keys[i];
+            if (key != null && key != DELETED) {
+                --count;
+                out.writeObject(key);
+                out.writeInt(values[i]);
+            }
+        }
+    }
+
+    public void readExternal(ObjectInput in)
+        throws IOException, ClassNotFoundException
+    {
+        power = in.readInt();
+        int writtenKeyCount = in.readInt();
+        if (writtenKeyCount != 0) {
+            int N = 1 << power;
+            keys = new Object[N];
+            values = new int[2 * N];
+            for (int i = 0; i != writtenKeyCount; ++i) {
+                Object key = in.readObject();
+                int hash = key.hashCode();
+                int index = insertNewKey(key, hash);
+                values[index] = in.readInt();
+            }
+        }
+    }
+
+
 
 // A == golden_ratio * (1 << 32) = ((sqrt(5) - 1) / 2) * (1 << 32)
 // See Knuth etc.
@@ -399,7 +445,8 @@ public class ObjToIntMap implements Serializable {
 // If true, enables consitency checks
     private static final boolean check = false;
 
-/*
+/* TEST START
+
     public static void main(String[] args) {
         if (!check) {
             System.err.println("Set check to true and re-run");
@@ -528,7 +575,34 @@ public class ObjToIntMap implements Serializable {
 
         check(map.size() == N);
 
+        System.out.print("."); System.out.flush();
+        for (int i = 0; i != N; ++i) {
+            Object key = testKey(i);
+            check(i == map.get(key, -1));
+        }
+
+        System.out.print("."); System.out.flush();
+        ObjToIntMap copy = (ObjToIntMap)writeAndRead(map);
+        check(copy.size() == N);
+
+        for (int i = 0; i != N; ++i) {
+            Object key = testKey(i);
+            check(i == copy.get(key, -1));
+        }
+
+        System.out.print("."); System.out.flush();
+        checkSameMaps(copy, map);
+
         System.out.println(); System.out.flush();
+    }
+
+    private static void checkSameMaps(ObjToIntMap map1, ObjToIntMap map2) {
+        check(map1.size() == map2.size());
+        Object[] keys = map1.getKeys();
+        check(keys.length == map1.size());
+        for (int i = 0; i != keys.length; ++i) {
+            check(map1.get(keys[i], -1) == map2.get(keys[i], -1));
+        }
     }
 
     private static void check(boolean condition) {
@@ -562,6 +636,27 @@ public class ObjToIntMap implements Serializable {
         return approx;
     }
 
+    private static Object writeAndRead(Object obj) {
+        try {
+            java.io.ByteArrayOutputStream
+                bos = new java.io.ByteArrayOutputStream();
+            java.io.ObjectOutputStream
+                out = new java.io.ObjectOutputStream(bos);
+            out.writeObject(obj);
+            out.close();
+            byte[] data = bos.toByteArray();
+            java.io.ByteArrayInputStream
+                bis = new java.io.ByteArrayInputStream(data);
+            java.io.ObjectInputStream
+                in = new java.io.ObjectInputStream(bis);
+            Object result = in.readObject();
+            in.close();
+            return result;
+        }catch (Exception ex) {
+            throw new RuntimeException("Unexpected");
+        }
+    }
 
-//*/
+// TEST END */
+
 }
