@@ -41,6 +41,14 @@
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
 
+#undef NS_FONT_DEBUG
+#define NS_FONT_DEBUG 1
+#ifdef NS_FONT_DEBUG
+#define NS_FONT_DEBUG_LOAD_FONT  0x01
+#define NS_FONT_DEBUG_CALL_TRACE 0x02
+static PRUint32 gDebug = 0;
+#endif
+
 #undef NOISY_FONTS
 #undef REALLY_NOISY_FONTS
 
@@ -592,6 +600,13 @@ FreeGlobals(void)
 static nsresult
 InitGlobals(void)
 {
+#ifdef NS_FONT_DEBUG
+  char* debug = PR_GetEnv("NS_FONT_DEBUG");
+  if (debug) {
+    PR_sscanf(debug, "%lX", &gDebug);
+  }
+#endif
+
   nsServiceManager::GetService(kCharSetManagerCID,
     NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharSetManager);
   if (!gCharSetManager) {
@@ -1519,7 +1534,6 @@ GetMapFor10646Font(XFontStruct* aFont)
       }
     }
     else {
-      // XXX look at glyph ranges property, if any
       PR_Free(map);
       map = nsnull;
     }
@@ -1558,7 +1572,21 @@ nsFontGTK::LoadFont(void)
       mBaselineAdjust = (-xFont->max_bounds.descent);
     }
 #endif /* 0 */
+
+#ifdef NS_FONT_DEBUG_LOAD_FONT
+    if (gDebug & NS_FONT_DEBUG_LOAD_FONT) {
+      printf("loaded %s\n", mName);
+    }
+#endif
+
   }
+
+#ifdef NS_FONT_DEBUG_LOAD_FONT
+  else if (gDebug & NS_FONT_DEBUG_LOAD_FONT) {
+    printf("cannot load %s\n", mName);
+  }
+#endif
+
 }
 
 nsFontGTK::nsFontGTK()
@@ -2350,6 +2378,12 @@ nsFontMetricsGTK::SearchNode(nsFontNode* aNode, PRUnichar aChar)
 static void
 GetFontNames(char* aPattern, nsFontNodeArray* aNodes)
 {
+#ifdef NS_FONT_DEBUG_CALL_TRACE
+  if (gDebug & NS_FONT_DEBUG_CALL_TRACE) {
+    printf("GetFontNames %s\n", aPattern);
+  }
+#endif
+
   nsCAutoString previousNodeName;
 
   /*
@@ -2960,6 +2994,22 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
       }
     }
   }
+
+#ifdef NS_FONT_DEBUG_CALL_TRACE
+  if (gDebug & NS_FONT_DEBUG_CALL_TRACE) {
+    printf("FindFont(%04X)[", aChar);
+    for (PRInt32 i = 0; i < mFonts.Count(); i++) {
+      printf("%s, ", mFonts.CStringAt(i)->GetBuffer());
+    }
+    printf("]\nreturns ");
+    if (font) {
+      printf("%s\n", font->mName ? font->mName : "(substitute)");
+    }
+    else {
+      printf("NULL\n");
+    }
+  }
+#endif
 
   return font;
 }
