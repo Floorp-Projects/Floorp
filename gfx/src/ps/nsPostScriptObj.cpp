@@ -29,7 +29,6 @@
 #include "nscore.h"
 #include "nsPostScriptObj.h"
 #include "xp_mem.h"
-#include "libi18n.h"
 #include "isotab.c"
 #include "nsFont.h"
 #include "nsIImage.h"
@@ -397,15 +396,7 @@ char* charset_name = NULL;
 #ifdef NOTYET
   XP_FilePrintf(f, "\n%% MozillaURL: %s\n", mPrintContext->prSetup->url->address);
 #endif
-  // get charset name of non-latin1 fonts 
-  // for external filters, supply information 
-  if (mPrintContext->prSetup->otherFontName[0] || mPrintContext->prSetup->otherFontInfo[0]){
-    INTL_CharSetIDToName(mPrintContext->prSetup->otherFontCharSetID, charset_name);
-    XP_FilePrintf(f, "%% MozillaCharsetName: %s\n\n", charset_name);
-  }else{
-    // default: iso-8859-1 
-    XP_FilePrintf(f, "%% MozillaCharsetName: iso-8859-1\n\n");
-  }
+  XP_FilePrintf(f, "%% MozillaCharsetName: iso-8859-1\n\n");
     
     // now begin prolog 
   XP_FilePrintf(f, "%%%%BeginProlog\n");

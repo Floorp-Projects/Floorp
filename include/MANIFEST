@@ -9,9 +9,7 @@ edttypes.h
 fe_proto.h
 glhist.h
 gui.h
-intl_csi.h
 libc_r.h
-libi18n.h
 lo_ele.h
 merrors.h
 mime.h

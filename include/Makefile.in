@@ -26,8 +26,6 @@ VPATH		= @srcdir@
 
 EXPORTS         = \
 		csid.h \
-		intl_csi.h \
-		libi18n.h \
 		merrors.h \
 		msgtypes.h \
 		net.h \
