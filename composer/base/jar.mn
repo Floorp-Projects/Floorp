@@ -1,2 +1,8 @@
 comm.jar:       
 +	content/editor/editor.xul                                (content/editor.xul) 
++	content/editor/editorOverlay.xul                         (content/editorOverlay.xul)
++	content/editor/calendarSmartWidgetOverlay.js             (content/calendarSmartWidgetOverlay.js)
++	content/editor/images/calendarSW.gif                     (images/calendarSW.gif)
+
+en-US.jar:
++	locale/en-US/editor/editorOverlay.dtd                    (locale/en-US/editorOverlay.dtd) 
