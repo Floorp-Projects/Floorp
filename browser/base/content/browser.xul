@@ -64,7 +64,7 @@
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_browser" src="chrome://browser/locale/browser.properties"/>
-    <stringbundle id="bundle_browser_region" src="chrome://navigator-region/locale/region.properties"/>
+    <stringbundle id="bundle_browser_region" src="chrome://browser-region/locale/region.properties"/>
     <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   </stringbundleset>
 
@@ -281,11 +281,11 @@
 
     <popup id="SearchBarPopup" position="after_start"
            datasources="rdf:internetsearch" ref="NC:SearchEngineRoot" 
-           oncommand="return SearchBarPopupCommand(event);">
+           oncommand="return SearchBarPopupCommand(event);"
+           onpopupshowing="SearchBarPopupShowing(event);">
       <menuitem id="miSearchModeFind" class="menuitem-iconic"
                 label="&findOnSearchBarCmd.label;"/>
       <menuseparator/>
-
       <template>
         <menuitem type="checkbox"
                   uri="..." value="..."

@@ -48,6 +48,8 @@
 const NS_ERROR_MODULE_NETWORK = 2152398848;
 const NS_NET_STATUS_READ_FROM = NS_ERROR_MODULE_NETWORK + 8;
 const NS_NET_STATUS_WROTE_TO  = NS_ERROR_MODULE_NETWORK + 9;
+const kXULNS = 
+    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const nsIWebNavigation = Components.interfaces.nsIWebNavigation;
 
@@ -718,9 +720,6 @@ function loadOneOrMoreURIs(aURIString)
 
 function constructGoMenuItem(goMenu, beforeItem, url, title)
 {
-  const kXULNS = 
-    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
   var menuitem = document.createElementNS(kXULNS, "menuitem");
   menuitem.setAttribute("url", url);
   menuitem.setAttribute("label", title);
@@ -1408,6 +1407,19 @@ function PageProxyDragGesture(aEvent)
   return false;
 }
 
+function SearchBarPopupShowing(aEvent)
+{
+  var currItem = document.getElementById("miAddEngines");
+  if (currItem)
+    aEvent.target.removeChild(currItem);
+
+  var browserBundle = document.getElementById("bundle_browser");  
+  var menuitem = document.createElementNS(kXULNS, "menuitem");
+  menuitem.setAttribute("label", browserBundle.getString("addEngines"));
+  menuitem.id = "miAddEngines";
+  aEvent.target.appendChild(menuitem);
+}
+  
 function SearchBarPopupCommand(aEvent)
 {
   var searchBar = document.getElementById("search-bar");
@@ -1419,6 +1431,9 @@ function SearchBarPopupCommand(aEvent)
 
     // Clear out the search engine icon
     searchBar.firstChild.removeAttribute("src");
+  } else if (aEvent.target.id == "miAddEngines") {
+    var regionBundle = document.getElementById("bundle_browser_region");
+    loadURI(regionBundle.getString("searchEnginesURL"));
   } else {
     searchBar.setAttribute("searchmode", aEvent.target.id);
     searchBar.setAttribute("autocompletesearchparam", "q");
@@ -1579,8 +1594,6 @@ function toggleAffectedChrome(aHide)
 function showPrintPreviewToolbar()
 {
   toggleAffectedChrome(true);
-  const kXULNS = 
-    "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
   var printPreviewTB = document.createElementNS(kXULNS, "toolbar");
   printPreviewTB.setAttribute("printpreview", true);
