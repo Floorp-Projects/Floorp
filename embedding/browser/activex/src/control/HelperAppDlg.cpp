@@ -472,9 +472,13 @@ CHelperAppLauncherDlg::Show(nsIHelperAppLauncher *aLauncher, nsISupports *aConte
     }
 }
 
-/* nsILocalFile promptForSaveToFile (in nsISupports aWindowContext, in wstring aDefaultFile, in wstring aSuggestedFileExtension); */
+/* nsILocalFile promptForSaveToFile (in nsIHelperAppLauncher aLauncher, in nsISupports aWindowContext, in wstring aDefaultFile, in wstring aSuggestedFileExtension); */
 NS_IMETHODIMP
-CHelperAppLauncherDlg::PromptForSaveToFile(nsISupports *aWindowContext, const PRUnichar *aDefaultFile, const PRUnichar *aSuggestedFileExtension, nsILocalFile **_retval)
+CHelperAppLauncherDlg::PromptForSaveToFile(nsIHelperAppLauncher *aLauncher, 
+                                           nsISupports *aWindowContext, 
+                                           const PRUnichar *aDefaultFile, 
+                                           const PRUnichar *aSuggestedFileExtension, 
+                                           nsILocalFile **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
     USES_CONVERSION;

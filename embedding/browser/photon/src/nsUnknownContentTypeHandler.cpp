@@ -115,7 +115,7 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher
 	}
 
 /* only Show() method is used - remove this code */
-NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsISupports * aWindowContext, const PRUnichar * aDefaultFile, const PRUnichar * aSuggestedFileExtension, nsILocalFile ** aNewFile ) {
+NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile(nsIHelperAppLauncher * aLauncher, nsISupports * aWindowContext, const PRUnichar * aDefaultFile, const PRUnichar * aSuggestedFileExtension, nsILocalFile ** aNewFile ) {
 /* ATENTIE */ //printf("PromptForSaveToFile!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
 	return NS_OK;
 	}

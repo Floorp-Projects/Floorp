@@ -114,7 +114,7 @@ nsHelperAppDialog.prototype = {
     },
 
     // promptForSaveToFile:  Display file picker dialog and return selected file.
-    promptForSaveToFile: function(aContext, aDefaultFile, aSuggestedFileExtension) {
+    promptForSaveToFile: function(aLauncher, aContext, aDefaultFile, aSuggestedFileExtension) {
         var result = "";
 
         // Use file picker to show dialog.
