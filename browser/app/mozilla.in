@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla.in,v 1.6 2004/06/03 16:46:36 mconnor%myrealbox.com Exp $
+## $Id: mozilla.in,v 1.7 2004/07/08 07:08:50 bryner%brianryner.com Exp $
 ## 
 ## Usage:
 ##
@@ -78,18 +78,19 @@ MRE_HOME=%MREDIR%
 # Use run-mozilla.sh in the current dir if it exists
 # If not, then start resolving symlinks until we find run-mozilla.sh
 found=0
-progname=$0
+progname="$0"
 curdir=`dirname "$progname"`
+progbase=`basename "$progname"`
 run_moz="$curdir/run-mozilla.sh"
 if test -x "$run_moz"; then
-  dist_bin=$curdir
+  dist_bin="$curdir"
   found=1
 else
   here=`/bin/pwd`
   while [ -h "$progname" ]; do
     bn=`basename "$progname"`
     cd `dirname "$progname"`
-    progname=`/bin/ls -l "$bn" |sed -e 's/^.* -> //' `
+    progname=`/bin/ls -l "$bn" | sed -e 's/^.* -> //' `
     if [ ! -x "$progname" ]; then
       break
     fi
@@ -107,7 +108,7 @@ fi
 if [ $found = 0 ]; then
   # Check default compile-time libdir
   if [ -x "$moz_libdir/run-mozilla.sh" ]; then
-    dist_bin=$moz_libdir
+    dist_bin="$moz_libdir"
   else 
     echo "Cannot find mozilla runtime directory. Exiting."
     exit 1
@@ -117,13 +118,13 @@ fi
 script_args=""
 moreargs=""
 debugging=0
-MOZILLA_BIN="%MOZILLA-BIN%"
+MOZILLA_BIN="${progbase}-bin"
 
 # The following is to check for a currently running instance.
 # This is taken almost verbatim from the Mozilla RPM package's launch script.
-MOZ_CLIENT_PROGRAM=$dist_bin/mozilla-xremote-client
+MOZ_CLIENT_PROGRAM="$dist_bin/mozilla-xremote-client"
 check_running() {
-    $MOZ_CLIENT_PROGRAM -a firefox 'ping()' 2>/dev/null >/dev/null
+    "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" 'ping()' 2>/dev/null >/dev/null
     RETURN_VAL=$?
     if [ $RETURN_VAL -eq 0 ]; then
         echo 1
@@ -133,23 +134,79 @@ check_running() {
         return 0
     fi
 }
-                                                                                   
-ALREADY_RUNNING=`check_running`
-
-if [ $ALREADY_RUNNING -eq 1 ] && [ -z "$1" ]; then
-   exec $MOZ_CLIENT_PROGRAM -a firefox "xfeDoCommand(openBrowser)" 2>/dev/null >/dev/null
-fi
-# End of section that checks for currently running instance. - jtg
 
 if [ "$OSTYPE" = "beos" ]; then
-  mimeset -F $MOZILLA_BIN
+  mimeset -F "$MOZILLA_BIN"
 fi
+
+ALREADY_RUNNING=`check_running`
+
+################################################################ Parse Arguments
+# If there's a command line argument but it doesn't begin with a -
+# it's probably a url.  Try to send it to a running instance.
+_USE_EXIST=0
+_NEW_WINDOW=
+_optOne="$1"
+case "${_optOne}" in
+	-*) 
+		;;
+	*)
+		_USE_EXIST=1
+		;;
+esac
+
+_optOthers=
+_optLast=
+for i in "$@"; do 
+	_optLast="${i}"
+done #last arg
+
+for i in "$@"; do
+	[ $i = ${_optLast} ] && break
+	_optOthers="${_optOthers} ${i}"
+done #others arg
+
+#???: needs check if othersopt begin with -* ?
+if [ `expr "${_optLast}" : '.*:/.*'` -eq 0 -a \( -f "${_optLast}" -o -d "${_optLast}" \) ]; then
+	# Last argument seems to be a local file/directory
+	# Check, if it is absolutely specified (ie. /home/foo/file vs. ./file)
+	# If it is just "relatively" (./file) specified, make it absolutely
+	[ `expr "${_optLast}" : '/.*'` -eq 0 ] && _optLast="file://`pwd`/${_optLast}"
+elif [ `expr "${_optLast}" : '.*:/.*'` -gt 0 -o -n "${_optOthers}" ]; then #???? like before...
+	_NEW_WINDOW=1
+fi
+################################################################ Parse Arguments
+
+########################################################################### Main
+if [ $ALREADY_RUNNING -eq 1 ]; then
+	# There's an instance already running. Use it.
+	# Any command line args passed in?
+	if [ $# -gt 0 ]; then
+		# There were "some" command line args.
+		if [ ${_USE_EXIST} -eq 1 ]; then
+			# We should use an existing instance, as _USE_EXIST=$_USE_EXIST=-1
+			_open_type="window"
+			#_open_type="tab"
+			_remote_cmd="openURL(${_optLast} , new-${_open_type})"
+			"${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" "${_remote_cmd}"
+			unset _remote_cmd _open_type
+			exit $?
+		fi
+	else
+		# No command line args. Open new window/tab
+		#exec "${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" "xfeDoCommand(openBrowser)"
+		"${run_moz}" "$MOZ_CLIENT_PROGRAM" -a "${progbase}" "xfeDoCommand(openBrowser)"
+		exit $?
+	fi
+fi
+# Default action - no running instance or _USE_EXIST (${_USE_EXIST}) ! -eq 1
+########################################################################### Main
 
 while [ $# -gt 0 ]
 do
   case "$1" in
-    -p | -pure)
-      MOZILLA_BIN="%MOZILLA-BIN%.pure"
+    -p | --pure | -pure)
+      MOZILLA_BIN="${MOZILLA_BIN}.pure"
       shift
       ;;
     -g | --debug)
