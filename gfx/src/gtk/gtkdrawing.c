@@ -57,12 +57,10 @@ extern GtkWidget* gDropdownButtonWidget;
 GtkStateType
 ConvertGtkState(GtkWidgetState* aState)
 {
-  if (aState->active)
-    return GTK_STATE_ACTIVE;
-  else if (aState->disabled)
+  if (aState->disabled)
     return GTK_STATE_INSENSITIVE;
   else if (aState->inHover)
-    return GTK_STATE_PRELIGHT;
+    return (aState->active ? GTK_STATE_ACTIVE : GTK_STATE_PRELIGHT);
   else
     return GTK_STATE_NORMAL;
 }
@@ -103,7 +101,7 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
     height -= 2;
   }
 	
-  shadow_type = (buttonState->active) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
+  shadow_type = (buttonState->active && buttonState->inHover) ? GTK_SHADOW_IN : GTK_SHADOW_OUT;
   
   if (relief != GTK_RELIEF_NONE || (button_state != GTK_STATE_NORMAL &&
                                     button_state != GTK_STATE_INSENSITIVE))
@@ -122,36 +120,21 @@ moz_gtk_button_paint(GdkWindow* window, GtkStyle* style,
 }
 
 void
-moz_gtk_check_button_draw_indicator(GdkWindow* window, GtkStyle* style,
-                                    GdkRectangle* boxRect, GdkRectangle* clipRect,
-                                    GtkToggleButtonState* aState, const char* detail)
+moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
+                       GdkRectangle* boxRect, GdkRectangle* clipRect,
+                       GtkToggleButtonState* aState, const char* detail)
 {
   GtkStateType state_type;
   GtkShadowType shadow_type;
-  gint indicator_size = 10;
-  gint indicator_spacing = 2;
+  gint indicator_size, indicator_spacing;
   GtkWidgetState* wState = (GtkWidgetState*) aState;
   gint x, y, width, height;
 
-  /* XXX get indicator size/spacing properties
-      _gtk_check_button_get_props (check_button, &indicator_size, &indicator_spacing);
-  */
+  _gtk_check_button_get_props(GTK_CHECK_BUTTON(gCheckboxWidget), &indicator_size,
+                              &indicator_spacing);
 
-  state_type = ConvertGtkState(wState);
-
-  if (state_type != GTK_STATE_NORMAL &&
-      state_type != GTK_STATE_PRELIGHT)
-    state_type = GTK_STATE_NORMAL;
-  
-  if (state_type != GTK_STATE_NORMAL) /* this is for drawing e.g. a prelight box */
-    gtk_paint_flat_box (style, window, state_type, 
-                        GTK_SHADOW_ETCHED_OUT,
-                        clipRect, gCheckboxWidget, detail,
-                        boxRect->x, boxRect->y,
-                        boxRect->width, boxRect->height);
-  
-  x = boxRect->x + indicator_spacing;
-  y = boxRect->y + (boxRect->height - indicator_size) / 2;
+  x = boxRect->x;          /* left justified within the rect */
+  y = boxRect->y + (boxRect->height - indicator_size) / 2; /* vertically centered */
   width = indicator_size;
   height = indicator_size;
   
@@ -164,32 +147,12 @@ moz_gtk_check_button_draw_indicator(GdkWindow* window, GtkStyle* style,
     state_type = ConvertGtkState(wState);
   }
   
-  if (!strcmp(detail, "radiobutton"))
+  if (detail[0] == 'r') /* radiobutton */
     gtk_paint_option(style, window, state_type, shadow_type, clipRect,
-                     gCheckboxWidget, detail, x+1, y+1, width, height);
+                     gCheckboxWidget, (char*) detail, x, y, width, height);
   else
     gtk_paint_check(style, window, state_type, shadow_type, clipRect, 
-                     gCheckboxWidget, detail, x+1, y+1, width, height);
-}
-
-void
-moz_gtk_checkbox_paint(GdkWindow* window, GtkStyle* style,
-                       GdkRectangle* boxRect, GdkRectangle* clipRect,
-                       GtkToggleButtonState* aState, const char* detail)
-{
-  moz_gtk_check_button_draw_indicator(window, style, boxRect,
-                                      clipRect, aState, detail);
-  
-#if 0
-  if (((GtkWidgetState*)aState)->focused) {
-    gint border_width = GTK_CONTAINER(gCheckboxWidget)->border_width;
-    gtk_paint_focus (style, window,
-                     NULL, gCheckboxWidget, detail,
-                     boxRect->x + border_width, boxRect->y + border_width, 
-                     boxRect->width - 2*border_width - 1,
-                     boxRect->height - 2*border_width - 1);
-  }
-#endif
+                     gCheckboxWidget, (char*) detail, x, y, width, height);
 }
 
 void
@@ -288,4 +251,22 @@ moz_gtk_dropdown_arrow_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* r
   gtk_paint_arrow(style, window, ConvertGtkState(state), state->active ? GTK_SHADOW_IN : GTK_SHADOW_OUT,
                   clipRect, gArrowWidget, "arrow", GTK_ARROW_DOWN, TRUE, rect->x, rect->y,
                   rect->width, rect->height);
+}
+
+void
+moz_gtk_container_paint(GdkWindow* window, GtkStyle* style, GdkRectangle* rect,
+                        GdkRectangle* clipRect, GtkWidgetState* state, const char* detail)
+{
+  GtkStateType state_type = ConvertGtkState(state);
+
+  if (state_type != GTK_STATE_NORMAL &&
+      state_type != GTK_STATE_PRELIGHT)
+    state_type = GTK_STATE_NORMAL;
+  
+  if (state_type != GTK_STATE_NORMAL) /* this is for drawing e.g. a prelight box */
+    gtk_paint_flat_box (style, window, state_type, 
+                        GTK_SHADOW_ETCHED_OUT,
+                        clipRect, gCheckboxWidget, (char*) detail,
+                        rect->x, rect->y,
+                        rect->width, rect->height);
 }
