@@ -42,6 +42,7 @@
 #include "nsIGenericFactory.h"
 #include "nsWalletService.h"
 #include "nsPasswordManager.h"
+#include "nsCPasswordManager.h"
 
 // Define the constructor function for the nsWalletlibService
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWalletlibService, Init)

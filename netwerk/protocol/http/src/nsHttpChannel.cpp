@@ -44,7 +44,7 @@
 #include "plstr.h"
 #include "prprf.h"
 #include "nsEscape.h"
-#include "nsIPasswordManager.h"
+#include "nsCPasswordManager.h"
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
@@ -2861,7 +2861,7 @@ nsHttpChannel::ClearPasswordManagerEntry(const char *host, PRInt32 port, const c
         domain.Append(realm);
         domain.Append(')');
 
-        passWordManager->RemoveUser(domain.get(), user);
+        passWordManager->RemoveUser(domain, nsDependentString(user));
     }
 } 
 

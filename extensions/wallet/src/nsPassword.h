@@ -62,4 +62,7 @@ protected:
   PRUnichar * passwordPswd;
 };
 
+// {CF39C2B0-1E4B-11d5-A549-0010A401EB10}
+#define NS_PASSWORD_CID {0xcf39c2b0,0x1e4b,0x11d5,{0xa5,0x49,0x0,0x10,0xa4,0x1,0xeb,0x10}}
+
 #endif /* nsPassword_h__ */

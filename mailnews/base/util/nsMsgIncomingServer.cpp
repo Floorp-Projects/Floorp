@@ -74,7 +74,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 
 #include "nsIMsgAccountManager.h"
-#include "nsIPasswordManager.h"
+#include "nsCPasswordManager.h"
 
 #ifdef DEBUG_sspitzer
 #define DEBUG_MSGINCOMING_SERVER
@@ -1627,8 +1627,8 @@ nsMsgIncomingServer::GetIsAuthenticated(PRBool *isAuthenticated)
   *isAuthenticated = PR_FALSE;
   // If the password is empty, check to see if it is stored and to be retrieved
   if (m_password.IsEmpty()) {
-    nsCOMPtr <nsIPasswordManager> passwordMgr = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
-    if(NS_SUCCEEDED(rv) && passwordMgr) {
+    nsCOMPtr <nsIPasswordManagerInternal> passwordMgrInt = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
+    if(NS_SUCCEEDED(rv) && passwordMgrInt) {
 
       // Get the current server URI
       nsXPIDLCString currServerUri;
@@ -1637,27 +1637,22 @@ nsMsgIncomingServer::GetIsAuthenticated(PRBool *isAuthenticated)
 
       // Obtain the server URI which is in the format <protocol>://<userid>@<hostname>.
       // Password manager uses the same format when it stores the password on user's request.
-      char* hostURI;
-      hostURI = ToNewCString(currServerUri);
 
-      nsXPIDLString userName;
-      nsXPIDLString password;
+      nsCAutoString hostFound;
+      nsAutoString userNameFound;
+      nsAutoString passwordFound;
 
       // Get password entry corresponding to the host URI we are passing in.
-      rv = passwordMgr->FindPasswordEntry(&hostURI, getter_Copies(userName), getter_Copies(password));
+      rv = passwordMgrInt->FindPasswordEntry(currServerUri, nsString(), nsString(),
+                                             hostFound, userNameFound, passwordFound);
       if (NS_FAILED(rv)) {
-        // release hostURI
-        nsMemory::Free(hostURI);
         return rv;
       }
 
-      // release hostURI
-      nsMemory::Free(hostURI);
-
       // If a match is found, password element is filled in. Convert the
       // obtained password and store it for the session.
-      if (!password.IsEmpty()) {
-        rv = SetPassword(NS_ConvertUCS2toUTF8(password).get());
+      if (!passwordFound.IsEmpty()) {
+        rv = SetPassword(NS_ConvertUCS2toUTF8(passwordFound).get());
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }

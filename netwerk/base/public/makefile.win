@@ -29,11 +29,12 @@ EXPORTS =                           \
         nsNetUtil.h                 \
         nsUnixColorPrintf.h         \
         nsReadLine.h		    \
+        nsCPasswordManager.h        \
 	$(NULL)
 
 XPIDLSRCS =                             \
         .\nsIAuthenticator.idl          \
-	    .\nsIAuthPrompt.idl             \
+        .\nsIAuthPrompt.idl             \
         .\nsIChannel.idl                \
         .\nsIDirectoryListing.idl       \
         .\nsIFileChannel.idl	        \
@@ -46,6 +47,7 @@ XPIDLSRCS =                             \
         .\nsINetModuleMgr.idl           \
         .\nsINetNotify.idl              \
         .\nsIPasswordManager.idl        \
+        .\nsIPasswordManagerInternal.idl \
         .\nsIProgressEventSink.idl      \
         .\nsIPrompt.idl                 \
         .\nsIProtocolHandler.idl        \

@@ -28,6 +28,9 @@ XPIDLSRCS= \
         .\nsIPassword.idl    \
         $(NULL)
 
+EXPORTS = nsCPassword.h    \
+          $(NULL)
+
 MODULE = wallet
 
 include <$(DEPTH)\config\rules.mak>

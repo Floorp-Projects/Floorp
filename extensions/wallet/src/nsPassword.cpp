@@ -61,25 +61,27 @@ nsPassword::~nsPassword(void) {
   CRTFREEIF(passwordPswd);
 }
 
-NS_IMETHODIMP nsPassword::GetHost(char * *aHost) {
+NS_IMETHODIMP nsPassword::GetHost(nsACString& aHost) {
+//NS_IMETHODIMP nsPassword::GetHost(nsAUTF8String& aHost) {
+// using nsACString above instead of nsAUTF8String because the latter doesn't exist yet
   if (passwordHost) {
-    *aHost = (char *) nsMemory::Clone(passwordHost, strlen(passwordHost) + 1);
+    aHost = passwordHost;
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsPassword::GetUser(PRUnichar * *aUser) {
+NS_IMETHODIMP nsPassword::GetUser(nsAString& aUser) {
   if (passwordUser) {
-    *aUser = (PRUnichar *) nsMemory::Clone(passwordUser, 2*(nsCRT::strlen(passwordUser) + 1));
+    aUser = passwordUser;
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsPassword::GetPassword(PRUnichar * *aPswd) {
+NS_IMETHODIMP nsPassword::GetPassword(nsAString& aPswd) {
   if (passwordPswd) {
-    *aPswd = (PRUnichar *) nsMemory::Clone(passwordPswd, 2*(nsCRT::strlen(passwordPswd) + 1));
+    aPswd = passwordPswd;
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;

@@ -12,6 +12,7 @@ nsIFileChannel.idl
 nsIFileTransportService.idl
 nsIMIMEInputStream.idl
 nsIPasswordManager.idl
+nsIPasswordManagerInternal.idl
 nsIPrompt.idl
 nsIProtocolProxyService.idl
 nsIProxiedProtocolHandler.idl

@@ -44,6 +44,7 @@ XPIDLSRCS	= \
 		nsINetModuleMgr.idl \
 		nsINetNotify.idl \
 		nsIPasswordManager.idl \
+		nsIPasswordManagerInternal.idl \
 		nsIProgressEventSink.idl \
 		nsIPrompt.idl \
 		nsIProtocolHandler.idl \
@@ -88,6 +89,7 @@ EXPORTS		= \
 		nsNetUtil.h \
 		nsUnixColorPrintf.h \
 		nsReadLine.h \
+		nsCPasswordManager.h \
 		$(NULL)
 
 PREF_JS_EXPORTS = $(srcdir)/security-prefs.js

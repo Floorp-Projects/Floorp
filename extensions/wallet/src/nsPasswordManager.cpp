@@ -147,8 +147,8 @@ NS_IMPL_ISUPPORTS1(nsPasswordManagerRejectEnumerator, nsISimpleEnumerator);
 ////////////////////////////////////////////////////////////////////////////////
 // nsPasswordManager Implementation
 
-NS_IMPL_ISUPPORTS2(nsPasswordManager, nsIPasswordManager, nsISupportsWeakReference);
-
+NS_IMPL_ISUPPORTS3(nsPasswordManager, nsIPasswordManager, nsIPasswordManagerInternal, nsISupportsWeakReference);
+ 
 nsPasswordManager::nsPasswordManager()
 {
   NS_INIT_REFCNT();
@@ -175,14 +175,17 @@ NS_IMETHODIMP nsPasswordManager::GetEnumerator(nsISimpleEnumerator * *entries)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPasswordManager::AddUser(const char *host, const PRUnichar *user, const PRUnichar *pwd) {
-  SINGSIGN_StorePassword(host, user, pwd);
+NS_IMETHODIMP nsPasswordManager::AddUser(const nsACString& aHost, const nsAString& aUser, const nsAString& aPwd) {
+  SINGSIGN_StorePassword(PromiseFlatCString(aHost).get(),
+                         PromiseFlatString(aUser).get(),
+                         PromiseFlatString(aPwd).get());
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPasswordManager::RemoveUser(const char *host, const PRUnichar *user)
+NS_IMETHODIMP nsPasswordManager::RemoveUser(const nsACString& aHost, const nsAString& aUser)
 {
-  return ::SINGSIGN_RemoveUser(host, user);
+  return ::SINGSIGN_RemoveUser(PromiseFlatCString(aHost).get(),
+                               PromiseFlatString(aUser).get());
 }
 
 NS_IMETHODIMP nsPasswordManager::GetRejectEnumerator(nsISimpleEnumerator * *entries)
@@ -197,68 +200,63 @@ NS_IMETHODIMP nsPasswordManager::GetRejectEnumerator(nsISimpleEnumerator * *entr
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPasswordManager::RemoveReject(const char *host)
+NS_IMETHODIMP nsPasswordManager::RemoveReject(const nsACString& aHost)
 {
-  return ::SINGSIGN_RemoveReject(host);
+  return ::SINGSIGN_RemoveReject(PromiseFlatCString(aHost).get());
 }
 
 NS_IMETHODIMP
-nsPasswordManager::FindPasswordEntry(char **hostURI, PRUnichar **username, PRUnichar **password)
+nsPasswordManager::FindPasswordEntry
+  (const nsACString& aHostURI, const nsAString& aUsername, const nsAString& aPassword,
+   nsACString& aHostURIFound, nsAString& aUsernameFound, nsAString& aPasswordFound)
 {
-  NS_ENSURE_ARG_POINTER(hostURI);
-  NS_ENSURE_ARG_POINTER(username);
-  NS_ENSURE_ARG_POINTER(password);
-
   nsresult rv;
   nsCOMPtr<nsIPassword> passwordElem;
 
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   rv = GetEnumerator(getter_AddRefs(enumerator));
-  if(NS_SUCCEEDED(rv) && enumerator) {
-    PRBool hasMoreElements = PR_FALSE;
-    enumerator->HasMoreElements(&hasMoreElements);
-    // Emumerate through password elements
-    while (hasMoreElements) {
-      rv = enumerator->GetNext(getter_AddRefs(passwordElem));
-      if (NS_FAILED(rv)) {
-        return rv; // could not unlock the database
-      }
-
-      // Get the server URI stored as host
-      nsXPIDLCString thisHostURI;
-      passwordElem->GetHost(getter_Copies(thisHostURI));
-
-      nsXPIDLString thisUsername;
-      passwordElem->GetUser(getter_Copies(thisUsername));
-
-      nsXPIDLString thisPassword;
-      passwordElem->GetPassword(getter_Copies(thisPassword));
-
-      // Check if any of the params are null (set by getter_Copies as
-      // preparation for output parameters) and treat them wild card
-      // entry matches or if they match with current password element 
-      // attribute values.
-      PRBool hostURIOK  = !*hostURI  || thisHostURI.Equals(*hostURI);
-      PRBool usernameOK = !*username || thisUsername.Equals(*username);
-      PRBool passwordOK = !*password || thisPassword.Equals(*password);
-
-      // If a password match is found based on given input params, 
-      // fill in those params which are passed in as empty strings.
-      if (hostURIOK && usernameOK && passwordOK)
-      {
-        if (!*hostURI) {
-          *hostURI  = ToNewCString(thisHostURI);
-        }
-        if (!*username) {
-          *username = ToNewUnicode(thisUsername);
-        }
-        if (!*password) {
-          *password = ToNewUnicode(thisPassword);
-        }
-        break; 
-      }
-      enumerator->HasMoreElements(&hasMoreElements);
-    }
+  if (NS_FAILED(rv)) {
+    return rv; // could not unlock the database
   }
-  return NS_OK;
+
+  PRBool hasMoreElements = PR_FALSE;
+  enumerator->HasMoreElements(&hasMoreElements);
+
+  // Emumerate through set of saved logins
+  while (hasMoreElements) {
+    rv = enumerator->GetNext(getter_AddRefs(passwordElem));
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (NS_SUCCEEDED(rv) && passwordElem) {
+
+      // Get the contents of this saved login
+      nsCAutoString hostURI;
+      nsAutoString username;
+      nsAutoString password;
+
+      passwordElem->GetHost(hostURI);
+      passwordElem->GetUser(username);
+      passwordElem->GetPassword(password);
+
+      // Check for a match with the input parameters, treating null input values as
+      // wild cards
+      PRBool hostURIOK  = aHostURI.IsEmpty()  || hostURI.Equals(aHostURI);
+      PRBool usernameOK = aUsername.IsEmpty() || username.Equals(aUsername);
+      PRBool passwordOK = aPassword.IsEmpty() || password.Equals(aPassword);
+
+      // If a match is found, return success
+      if (hostURIOK && usernameOK && passwordOK) {
+        aHostURIFound = hostURI;
+        aUsernameFound = username;
+        aPasswordFound = password;
+        return NS_OK;
+      }
+    }
+    enumerator->HasMoreElements(&hasMoreElements);
+  }
+
+  // no match found
+  return NS_ERROR_FAILURE;
 }

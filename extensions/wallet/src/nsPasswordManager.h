@@ -40,14 +40,16 @@
 #define nsPasswordManager_h___
 
 #include "nsIPasswordManager.h"
+#include "nsIPasswordManagerInternal.h"
 #include "nsWeakReference.h"
 
-class nsPasswordManager : public nsIPasswordManager,
+class nsPasswordManager : public nsIPasswordManager, public nsIPasswordManagerInternal,
                       public nsSupportsWeakReference {
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPASSWORDMANAGER
+  NS_DECL_NSIPASSWORDMANAGERINTERNAL
 
   nsPasswordManager();
   nsresult Init();
@@ -56,5 +58,7 @@ protected:
   virtual ~nsPasswordManager();
 };
 
+// {AAAB6710-0F2C-11d5-A53B-0010A401EB10}
+#define NS_PASSWORDMANAGER_CID {0x173562f0,0x2173,0x11d5,{0xa5,0x4c,0x0,0x10,0xa4,0x1,0xeb,0x10}}
 
 #endif /* nsPasswordManager_h___ */

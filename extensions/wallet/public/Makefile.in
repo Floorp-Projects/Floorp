@@ -35,5 +35,9 @@ XPIDLSRCS   = \
     nsIPassword.idl    \
     $(NULL)
 
+EXPORTS	= \
+	nsCPassword.h \
+	$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
