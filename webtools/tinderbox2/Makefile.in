@@ -109,6 +109,9 @@ popup_test: compile_bin_code
 	mkdir -p $(html_prefix)/popup
 	perl $(builddir)/test/popup.tst
 
+vcdisplay_test: compile_bin_code
+	perl $(builddir)/test/vcdisplay.tst
+
 gen_test: compile_bin_code
 	rm -rf $(html_prefix)
 	perl $(builddir)/test/genbuilds.tst
