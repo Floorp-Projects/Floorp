@@ -37,6 +37,7 @@ public:
   virtual ~nsTransactionItem();
 
   virtual nsresult AddChild(nsTransactionItem *aTransactionItem);
+  virtual nsresult GetTransaction(nsITransaction **aTransaction);
 
   virtual nsresult Do(void);
   virtual nsresult Undo(void);

@@ -53,6 +53,17 @@ nsTransactionItem::AddChild(nsTransactionItem *aTransactionItem)
 }
 
 nsresult
+nsTransactionItem::GetTransaction(nsITransaction **aTransaction)
+{
+  if (!aTransaction)
+    return NS_ERROR_NULL_POINTER;
+
+  *aTransaction = mTransaction;
+
+  return NS_OK;
+}
+
+nsresult
 nsTransactionItem::Do()
 {
   if (mTransaction)
