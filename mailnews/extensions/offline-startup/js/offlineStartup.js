@@ -32,10 +32,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 const kDebug               = false;
-const kUNBundleURI         = "chrome://messenger/locale/offlineStartup.properties";
+const kBundleURI         = "chrome://messenger/locale/offlineStartup.properties";
 const kOfflineStartupPref = "offline.startup_state";
 var gShuttingDown = false;
 var gOfflineStartupMode; //0 = remember last state, 1 = ask me, 2 == online, 3 == offline
+const kRememberLastState = 0;
+const kAskForOnlineState = 1;
 ////////////////////////////////////////////////////////////////////////
 // 
 //   nsOfflineStartup : nsIProfileStartupListener, nsIObserver
@@ -58,7 +60,7 @@ var nsOfflineStartup =
   
       gOfflineStartupMode = prefs.getIntPref(kOfflineStartupPref);
 
-    if (gOfflineStartupMode == 0)
+    if (gOfflineStartupMode == kRememberLastState)
     {    
       var prefs = Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefBranch);
@@ -71,20 +73,20 @@ var nsOfflineStartup =
       observerService.addObserver(this, "network:offline-status-changed", false);
       observerService.addObserver(this, "quit-application", false);
     }
-    else if (gOfflineStartupMode == 1)
+    else if (gOfflineStartupMode == kAskForOnlineState)
     {
       var promptService = Components.
         classes["@mozilla.org/embedcomp/prompt-service;1"].
         getService(Components.interfaces.nsIPromptService);
       
-      var unBundle = getBundle(kUNBundleURI);
-      if (!unBundle)
+      var bundle = getBundle(kBundleURI);
+      if (!bundle)
         return;
 
-      var title = unBundle.GetStringFromName("title");
-      var desc = unBundle.GetStringFromName("desc");
-      var button0Text = unBundle.GetStringFromName("workOnline");
-      var button1Text = unBundle.GetStringFromName("workOffline");
+      var title = bundle.GetStringFromName("title");
+      var desc = bundle.GetStringFromName("desc");
+      var button0Text = bundle.GetStringFromName("workOnline");
+      var button1Text = bundle.GetStringFromName("workOffline");
       var checkVal = {value:0};
 
       var result = promptService.confirmEx(null, title, desc, 
@@ -105,10 +107,7 @@ var nsOfflineStartup =
   {
     debug("observe: " + aTopic);
 
-    if (aTopic == "domwindowopened")
-    {
-    }
-    else if (aTopic == "network:offline-status-changed")
+    if (aTopic == "network:offline-status-changed")
     {
       debug("network:offline-status-changed: " + aData);
       // if we're not shutting down, and startup mode is "remember online state"
