@@ -85,6 +85,8 @@ class NS_COM nsCString :
 
 public:
   friend class nsString;
+  friend NS_COM void ToUpperCase( nsCString& );
+  friend NS_COM void ToLowerCase( nsCString& );
 
 protected:
   virtual const nsBufferHandle<char>* GetFlatBufferHandle() const;
