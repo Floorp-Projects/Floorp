@@ -186,8 +186,25 @@ nsresult
 nsDownloadManager::DownloadStarted(const PRUnichar* aPath)
 {
   nsStringKey key(aPath);
-  if (mCurrDownloads.Exists(&key))
+  if (mCurrDownloads.Exists(&key)) {
+  
+    // Assert the date and time that the download ended.    
+    nsCOMPtr<nsIRDFDate> dateLiteral;
+    if (NS_SUCCEEDED(gRDFService->GetDateLiteral(PR_Now(), getter_AddRefs(dateLiteral)))) {    
+      nsCOMPtr<nsIRDFResource> res;
+      nsCOMPtr<nsIRDFNode> node;
+      
+      gRDFService->GetUnicodeResource(aPath, getter_AddRefs(res));
+      
+      mDataSource->GetTarget(res, gNC_DateStarted, PR_TRUE, getter_AddRefs(node));
+      if (node)
+        mDataSource->Change(res, gNC_DateStarted, node, dateLiteral);
+      else
+        mDataSource->Assert(res, gNC_DateStarted, dateLiteral, PR_TRUE);
+    }
+  
     AssertProgressInfoFor(aPath);
+  }
 
   return NS_OK;
 }
@@ -477,21 +494,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
     return rv;
   }
-
-  nsCOMPtr<nsIRDFDate> dateLiteral;
-  rv = gRDFService->GetDateLiteral(PR_Now(), getter_AddRefs(dateLiteral));
-  if (NS_FAILED(rv)) return rv;
-  mDataSource->GetTarget(downloadRes, gNC_DateStarted, PR_TRUE, getter_AddRefs(node));
-  if (node)
-    rv = mDataSource->Change(downloadRes, gNC_DateStarted, node, dateLiteral);
-  else
-    rv = mDataSource->Assert(downloadRes, gNC_DateStarted, dateLiteral, PR_TRUE);
-  if (NS_FAILED(rv)) {
-    downloads->IndexOf(downloadRes, &itemIndex);
-    downloads->RemoveElementAt(itemIndex, PR_TRUE, getter_AddRefs(node));
-    return rv;
-  }
-  
+ 
   // Now flush all this to disk
   nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(mDataSource));
   rv = remote->Flush();
