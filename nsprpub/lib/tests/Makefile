@@ -21,6 +21,8 @@ MOD_DEPTH = ../..
 
 include $(MOD_DEPTH)/config/config.mk
 
+DIRS = windows
+
 ifeq ($(OS_TARGET), WIN16)
 OS_CFLAGS = $(OS_EXE_CFLAGS)
 endif
@@ -45,9 +47,9 @@ INCLUDES = -I$(DIST)/include
 # Setting the variables LDOPTS and LIBPR.  We first initialize
 # them to the default values, then adjust them for some platforms.
 LDOPTS = -L$(DIST)/lib
-LIBPR = -lnspr$(MOD_VERSION)
-LIBPLC = -lplc$(MOD_VERSION)
-LIBDS = -lplds$(MOD_VERSION)
+LIBPR = -llibnspr$(MOD_VERSION)
+LIBPLC = -llibplc$(MOD_VERSION)
+LIBDS = -llibplds$(MOD_VERSION)
 
 ifeq ($(OS_ARCH), WINNT)
 ifeq ($(OS_TARGET), WIN16)
@@ -57,9 +59,9 @@ ifeq ($(OS_TARGET), WIN16)
 else
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
   ifeq ($(OS_TARGET), WIN95)
-  LIBPR = $(DIST)/lib/nspr$(MOD_VERSION).$(LIB_SUFFIX)
-  LIBPLC= $(DIST)/lib/plc$(MOD_VERSION).$(LIB_SUFFIX)
-  LIBDS= $(DIST)/lib/plds$(MOD_VERSION).$(LIB_SUFFIX)
+  LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
+  LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
+  LIBDS= $(DIST)/lib/libplds$(MOD_VERSION).$(LIB_SUFFIX)
   else
   LIBPR = $(DIST)/lib/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
   LIBPLC= $(DIST)/lib/libplc$(MOD_VERSION).$(LIB_SUFFIX)
