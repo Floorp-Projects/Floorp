@@ -458,7 +458,7 @@ class NS_BASE nsFileSpec
                                     return Rename(newName);
                                 }
         nsresult                Copy(const nsFileSpec& inNewParentDirectory) const;
-        nsresult                Move(const nsFileSpec& inNewParentDirectory) const;
+        nsresult                Move(const nsFileSpec& inNewParentDirectory);
         nsresult                Execute(const char* args) const;
         nsresult                Execute(const nsString& args) const
                                 {

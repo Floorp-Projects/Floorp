@@ -231,11 +231,19 @@ nsresult nsFileSpec::Rename(const char* inNewName)
     if (strchr(inNewName, '/')) 
         return NS_FILE_FAILURE;
 
-    if (PR_Rename(mPath, inNewName) != 0)
+    char* oldPath = PL_strdup(mPath);
+    
+    SetLeafName(inNewName); 
+
+    if (PR_Rename(oldPath, mPath) != NS_OK)
     {
+        // Could not rename, set back to the original.
+        mPath = oldPath;
         return NS_FILE_FAILURE;
     }
-    SetLeafName(inNewName);
+    
+    delete [] oldPath;
+
     return NS_OK;
 } // nsFileSpec::Rename
 
@@ -313,7 +321,7 @@ nsresult nsFileSpec::Copy(const nsFileSpec& inParentDirectory) const
 } // nsFileSpec::Copy
 
 //----------------------------------------------------------------------------------------
-nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory) const
+nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory)
 //----------------------------------------------------------------------------------------
 {
     // We can only copy into a directory, and (for now) can not copy entire directories
@@ -331,8 +339,11 @@ nsresult nsFileSpec::Move(const nsFileSpec& inNewParentDirectory) const
         if (result == NS_OK)
         {
             // cast to fix const-ness
-            ((nsFileSpec*)this)->Delete(PR_FALSE);
-        }
+		    ((nsFileSpec*)this)->Delete(PR_FALSE);
+        
+            *this = inNewParentDirectory + GetLeafName(); 
+    	}
+	    delete [] destPath;
     }
     return result;
 } 
