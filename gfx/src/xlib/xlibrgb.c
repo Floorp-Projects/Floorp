@@ -1,37 +1,39 @@
-/* This code is derived from GTK and GDK - The GIMP Drawing Kit
- * Copyright (C) 1995-1997 Peter Mattis, Spencer Kimball and Josh MacDonald
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.0 (the "MPL"); you may not use this file except in
+ * compliance with the MPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/MPL/
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
- * Library General Public License for more details.
+ * Software distributed under the MPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the MPL
+ * for the specific language governing rights and limitations under the
+ * MPL.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU Library General Public License (the "LGPL"), in
+ * which case the provisions of the LGPL are applicable instead of
+ * those above.  If you wish to allow use of your version of this file
+ * only under the terms of the LGPL and not to allow others to use
+ * your version of this file under the MPL, indicate your decision by
+ * deleting the provisions above and replace them with the notice and
+ * other provisions required by the LGPL.  If you do not delete the
+ * provisions above, a recipient may use your version of this file
+ * under either the MPL or the LGPL.
  */
 
-/* For more information on GdkRgb, see http://www.levien.com/gdkrgb/
-
-   Raph Levien <raph@acm.org>
-   */
-
 /*
- * Modified by the GTK+ Team and others 1997-1999.  See the AUTHORS
- * file for a list of people on the GTK+ Team.
+ * This code is derived from GdkRgb.
+ * For more information on GdkRgb, see http://www.levien.com/gdkrgb/
+ * Raph Levien <raph@acm.org>
  */
 
 /* Ported by Christopher Blizzard to Xlib.  With permission from the
  * original authors of this file, the contents of this file are also
  * redistributable under the terms of the Mozilla Public license.  For
  * information about the Mozilla Public License, please see the
- * license information at http://www.mozilla.org/MPL/ */
+ * license information at http://www.mozilla.org/MPL/
+ */
 
 #include <math.h>
 
@@ -47,15 +49,26 @@
 #  include <stdlib.h>
 #endif
 
-/* XXX this is only for 32 bit platforms.  Gotta fix this... */
+/* Porting Note:
+ * If you are going to use this code somewhere other than mozilla
+ * you will need to set these defines.  It's pretty easy for Intel
+ * but I'm not sure about other platforms.
+ */
+#if USE_MOZILLA_TYPES
+/* prtypes contains definitions for uint32/int32 and uint16/int16 */
+#include "prtypes.h"
+#else
 typedef unsigned int uint32;
 typedef int int32;
 typedef unsigned short uint16;
 typedef short int16;
+#endif
 
 #define ENABLE_GRAYSCALE
 
 /* XXX fix this for an autodetect for endian-ness */
+#define G_LITTLE_ENDIAN 1
+#define G_BIG_ENDIAN 2
 #define G_BYTE_ORDER G_LITTLE_ENDIAN
 
 #ifndef MIN
@@ -611,7 +624,7 @@ xlib_rgb_choose_visual (void)
   }
 }
 
-static void xlib_rgb_select_conv (XImage *image, int bpp, ByteOrder byte_order);
+static void xlib_rgb_select_conv (XImage *image, ByteOrder byte_order);
 
 static void
 xlib_rgb_set_gray_cmap (Colormap cmap)
@@ -779,10 +792,9 @@ xlib_rgb_init (Display *display, Screen *screen)
 
       image_info->bitmap = (image_info->visual->depth == 1);
 
-      for (i = 0; i < N_IMAGES; i++)
+      for (i = 0; i < N_IMAGES; i++) {
 	if (image_info->bitmap) {
 	  /* Use malloc() instead of g_malloc since X will free() this mem */
-	  image_info->bpp = 1;
 	  static_image[i] = XCreateImage(image_info->display,
 					 image_info->visual->visual,
 					 1,
@@ -795,7 +807,6 @@ xlib_rgb_init (Display *display, Screen *screen)
 	  static_image[i]->byte_order = MSBFirst;
 	}
 	else {
-	  image_info->bpp = image_info->visual->depth;
 	  static_image[i] = XCreateImage(image_info->display,
 					 image_info->visual->visual,
 					 (unsigned int)image_info->visual->depth,
@@ -804,9 +815,30 @@ xlib_rgb_init (Display *display, Screen *screen)
 					 IMAGE_WIDTH,
 					 IMAGE_HEIGHT,
 					 32, 0);
+	  /* remove this when we are using shared memory.. */
+	  static_image[i]->data = malloc((size_t)IMAGE_WIDTH * IMAGE_HEIGHT * image_info->visual->depth);
+	  static_image[i]->bitmap_bit_order = MSBFirst;
+	  static_image[i]->byte_order = MSBFirst;
 	}
-
-      xlib_rgb_select_conv (static_image[0], (int)image_info->bpp, MSB_FIRST);
+      }
+      /* ok, so apparently, image_info->bpp is actually
+	 BYTES per pixel.  What fun! */
+      switch (static_image[0]->bits_per_pixel) {
+      case 1:
+      case 8:
+	image_info->bpp = 1;
+	break;
+      case 16:
+	image_info->bpp = 2;
+	break;
+      case 24:
+	image_info->bpp = 3;
+	break;
+      case 32:
+	image_info->bpp = 4;
+	break;
+      }
+      xlib_rgb_select_conv (static_image[0], MSB_FIRST);
     }
 }
 
@@ -2812,10 +2844,11 @@ xlib_rgb_convert_indexed_generic_d (XImage *image,
 /* Select a conversion function based on the visual and a
    representative image. */
 static void
-xlib_rgb_select_conv (XImage *image, int bpp, ByteOrder byte_order)
+xlib_rgb_select_conv (XImage *image, ByteOrder byte_order)
 {
   int depth, byterev;
   int vtype; /* visual type */
+  int bpp; /* bits per pixel - from the visual */
   uint32 red_mask, green_mask, blue_mask;
   XlibRgbConvFunc conv, conv_d;
   XlibRgbConvFunc conv_32, conv_32_d;
@@ -2824,7 +2857,7 @@ xlib_rgb_select_conv (XImage *image, int bpp, ByteOrder byte_order)
   Bool mask_rgb, mask_bgr;
 
   depth = image_info->visual->depth;
-
+  bpp = image->bits_per_pixel;
   if (xlib_rgb_verbose)
     printf ("Chose visual 0x%x, image bpp=%d, %s first\n",
 	    (int)image_info->visual->visual->visualid,
@@ -3278,9 +3311,9 @@ xlib_rgb_cmap_new (uint32 *colors, int n_colors)
   int i, j;
   uint32 rgb;
 
-  if (n_colors >= 0)
+  if (n_colors < 0)
     return NULL;
-  if(n_colors <= 256)
+  if (n_colors > 256)
     return NULL;
   cmap = malloc(sizeof(XlibRgbCmap));
   memcpy (cmap->colors, colors, n_colors * sizeof(uint32));
