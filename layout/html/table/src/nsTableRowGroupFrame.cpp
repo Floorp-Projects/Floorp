@@ -455,8 +455,8 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
  *
  * @param   aPresContext presentation context to use
  * @param   aReflowState current inline state
- * @return  true if we successfully pulled-up all the children and false
- *            otherwise, e.g. child didn't fit
+ * @return  NS_FRAME_COMPLETE if there are no frames to pull-up or if we pulled
+ *            up all the next-in-flow frames, and NS_FRAME_NOT_COMPLETE otherwise
  */
 NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext,
                                                nsHTMLReflowMetrics& aDesiredSize,
@@ -469,6 +469,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
   nsIFrame*      prevKidFrame = LastFrame(mFirstChild);
   nsresult       rv = NS_OK;
 
+  aStatus = NS_FRAME_COMPLETE;
   while (nsnull != nextInFlow) {
     nsHTMLReflowMetrics kidSize(pKidMaxElementSize);
     kidSize.width=kidSize.height=kidSize.ascent=kidSize.descent=0;
@@ -476,12 +477,11 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
     // Get the next child
     nsIFrame* kidFrame = nextInFlow->mFirstChild;
 
-    // Any more child frames?
+    // Any more row frames?
     if (nsnull == kidFrame) {
       // No. Any frames on its overflow list?
       if (nsnull != nextInFlow->mOverflowList) {
         // Move the overflow list to become the child list
-//        NS_ABORT();
         nextInFlow->AppendChildren(nextInFlow->mOverflowList);
         nextInFlow->mOverflowList = nsnull;
         kidFrame = nextInFlow->mFirstChild;
@@ -493,8 +493,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
     }
 
     // See if the child fits in the available space. If it fits or
-    // it's splittable then reflow it. The reason we can't just move
-    // it is that we still need ascent/descent information
+    // it's splittable then reflow it
     nsSize            kidFrameSize;
     nsSplittableType  kidIsSplittable;
 
@@ -502,6 +501,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
     kidFrame->IsSplittable(kidIsSplittable);
     if ((kidFrameSize.height > aReflowState.availSize.height) &&
         NS_FRAME_IS_NOT_SPLITTABLE(kidIsSplittable)) {
+      aStatus = NS_FRAME_NOT_COMPLETE;
       break;
     }
     nsHTMLReflowState kidReflowState(aPresContext, kidFrame,
@@ -511,10 +511,8 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
     rv = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
 
     // Did the child fit?
-    if ((kidSize.height > aReflowState.availSize.height) && (nsnull != mFirstChild)) {
-      // The child is too wide to fit in the available space, and it's
-      // not our first child
-      //result = PR_FALSE;
+    if (kidSize.height > aReflowState.availSize.height) {
+      aStatus = NS_FRAME_NOT_COMPLETE;  // the child doesn't fit
       break;
     }
 
@@ -526,6 +524,8 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
     PlaceChild(aPresContext, aReflowState, kidFrame, kidRect, aDesiredSize.maxElementSize, *pKidMaxElementSize);
 
     // Remove the frame from its current parent
+    // XXX We need to do this BEFORE we reflow the child; otherwise we're reflowing
+    // it without its geometric parent set properly...
     kidFrame->GetNextSibling(nextInFlow->mFirstChild);
 
     // Link the frame into our list of children
@@ -576,7 +576,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpChildren(nsIPresContext&      aPresContext
 
       // If the child isn't complete then it means that we've used up
       // all of our available space.
-      //result = PR_FALSE;
+      aStatus = NS_FRAME_NOT_COMPLETE;
       break;
     }
   }
@@ -876,13 +876,8 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
   
     // Did we successfully reflow our mapped children?
     if (NS_FRAME_COMPLETE==aStatus) {
-      // Any space left?
-      PRInt32 numKids;
-      mContent->ChildCount(numKids);
-      if (state.availSize.height > 0) {
-        // Try and pull-up some children from a next-in-flow
-        rv = PullUpChildren(aPresContext, aDesiredSize, state, aStatus);
-      }
+      // Try and pull-up some children from a next-in-flow
+      rv = PullUpChildren(aPresContext, aDesiredSize, state, aStatus);
     }
   
     if (NS_FRAME_IS_COMPLETE(aStatus)) {

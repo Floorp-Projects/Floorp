@@ -1064,15 +1064,9 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
     }
   }
   
-  /* if we're incomplete, take up all the remaining height so we don't waste time
-   * trying to lay out in a slot that we know isn't tall enough to fit our minimum.
-   * otherwise, we're as tall as our kids want us to be */
-  if (NS_FRAME_IS_NOT_COMPLETE(aStatus))
-    aDesiredSize.height = aReflowState.maxSize.height;
-  else 
-    aDesiredSize.height = state.y;
   // Return our desired rect
   aDesiredSize.width = state.innerTableMaxSize.width;
+  aDesiredSize.height = state.y;
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
