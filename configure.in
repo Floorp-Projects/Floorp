@@ -997,6 +997,7 @@ dnl the qsort routine under solaris is faulty
     TARGET_NSPR_MDCPUCFG='\"md/_solaris32.cfg\"'
     SYSTEM_MAKEDEPEND=
     if test -z "$GNU_CC"; then
+       NS_USE_NATIVE=1
        AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
        LDFLAGS='-xildoff'
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
@@ -3611,7 +3612,6 @@ MOZ_ARG_ENABLE_BOOL(ultrasparc,
         case $OS_TEST in
         sun4u)
             if test -z "$GNU_CC"; then
-                NS_USE_NATIVE=1
                 ASFLAGS='-xarch=v8plus -DULTRA_SPARC -P -L -D_ASM -D__STDC__=0 -K PIC'
                 AC_DEFINE(ULTRA_SPARC)
             else
