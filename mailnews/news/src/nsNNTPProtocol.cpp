@@ -2804,8 +2804,15 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 #else
 	mBytesReceived += status;
 #endif
+#if 0
 	m_newsHost->AddNewNewsgroup(line, oldest, youngest, flag, PR_FALSE);
-
+#else
+	NS_ASSERTION(m_nntpServer, "no nntp incoming server");
+	if (m_nntpServer) {
+		rv = m_nntpServer->AddNewsgroupToSubscribeDS(line);
+		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add to subscribe ds");
+	}
+#endif /* 0 */
     PRBool xactive=PR_FALSE;
     rv = m_newsHost->QueryExtension("XACTIVE",&xactive);
     if (NS_SUCCEEDED(rv) && xactive)
@@ -2939,7 +2946,7 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 	else {
 		rv = NS_ERROR_FAILURE;
 	}
-#endif
+#endif /* 0 */
 
 	if (m_readNewsListCount == READ_NEWS_LIST_COUNT_MAX) {
 		m_readNewsListCount = 0;
@@ -4300,6 +4307,7 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 {
 	char *line;
 	PRUint32 status = 0;
+	nsresult rv;
 
 	NS_ASSERTION(m_responseCode == MK_NNTP_RESPONSE_LIST_OK, "code != LIST_OK");
 	if (m_responseCode != MK_NNTP_RESPONSE_LIST_OK)
@@ -4351,9 +4359,18 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 					   &m_lastPossibleArticle,
 					   flags);
 
-                m_newsHost->AddNewNewsgroup(line,
+#if 0
+				m_newsHost->AddNewNewsgroup(line,
                                           m_firstPossibleArticle,
                                           m_lastPossibleArticle, flags, PR_TRUE);
+#else
+				NS_ASSERTION(m_nntpServer, "no nntp incoming server");
+				if (m_nntpServer) {
+					rv = m_nntpServer->AddNewsgroupToSubscribeDS(line);
+					NS_ASSERTION(NS_SUCCEEDED(rv),"failed to add to subscribe ds");
+				}
+#endif /* 0 */
+                
 				/* we're either going to list prettynames first, or list
                    all prettynames every time, so we won't care so much
                    if it gets interrupted. */
@@ -4367,7 +4384,6 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 		}
 		else
 		{
-          nsresult rv;
           PRBool xactive=PR_FALSE;
           rv = m_newsHost->QueryExtension("XACTIVE",&xactive);
           if (m_typeWanted == NEW_GROUPS &&

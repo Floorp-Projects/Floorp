@@ -851,7 +851,7 @@ nsNntpIncomingServer::LoadHostInfoFile()
 #ifdef DEBUG_NEWS
 	printf("LoadHostInfoFile()\n");
 #endif
-  	mHostInfoLoaded = PR_TRUE;
+	mHostInfoLoaded = PR_TRUE;
 	return NS_OK;
 }
 
@@ -980,7 +980,10 @@ nsNntpIncomingServer::PopulateSubscribeDatasource(nsIMsgWindow *aMsgWindow, PRBo
   	if (NS_FAILED(rv)) return rv;
   }
 
-  if (!aForceToServer && mHostInfoLoaded && (mVersion == VALID_VERSION)) {
+  // it is possible for the hostinfo.dat file to be empty or be non-empty but have no groups.  
+  // in this case, mGroupsOnServer.Count() will be zero.  If so, treat it like we didn't
+  // load the hostinfo.dat file, so that we will contact the server.
+  if (!aForceToServer && mHostInfoLoaded && mGroupsOnServer.Count() && (mVersion == VALID_VERSION)) {
 	mGroupsOnServerIndex = 0;
 	mGroupsOnServerCount = mGroupsOnServer.Count();
 	mMsgWindow = aMsgWindow;
