@@ -134,6 +134,8 @@ typedef struct PRTime       PRTime;
 #define PR_CALLBACK
 #define PR_STATIC_CALLBACK(__x)	static __x
 #define PR_EXTERN(__type) extern __type
+#define PR_IMPLEMENT(__type) __type
+
 #endif /* Mac or Unix */
 
 /************************************************************************/
