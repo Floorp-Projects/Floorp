@@ -86,12 +86,18 @@ namespace MetaData {
     // Execute the opcode sequence at pc.
     js2val JS2Engine::interpreterLoop()
     {
+        js2val a = JS2VAL_VOID;
+        js2val b = JS2VAL_VOID;
+        js2val baseVal = JS2VAL_VOID;
+        js2val indexVal = JS2VAL_VOID;
+	    ParameterFrame *pFrame = NULL;
+        const String *astr = NULL;
+        const String *bstr = NULL;
+        DEFINE_ROOTKEEPER(rk1, pFrame);
+        DEFINE_ROOTKEEPER(rk2, astr);
+        DEFINE_ROOTKEEPER(rk3, bstr);
+
         retval = JS2VAL_VOID;
-        baseVal = JS2VAL_VOID;
-        indexVal = JS2VAL_VOID;
-        astr = NULL;
-        bstr = NULL;
-        pFrame = NULL;
         while (true) {
             try {
                 a = JS2VAL_VOID;
@@ -434,14 +440,6 @@ namespace MetaData {
                   pc(NULL),
                   bCon(NULL),
                   phase(RunPhase),
-                  retval(JS2VAL_VOID),
-                  a(JS2VAL_VOID),
-                  b(JS2VAL_VOID),
-                  baseVal(JS2VAL_VOID),
-                  indexVal(JS2VAL_VOID),
-                  pFrame(NULL),
-                  astr(NULL),
-                  bstr(NULL),
                   INIT_STRINGATOM(true),
                   INIT_STRINGATOM(false),
                   INIT_STRINGATOM(null),
@@ -1055,14 +1053,6 @@ namespace MetaData {
                 JS2Object::mark(float64Table[i]);
         }
         GCMARKVALUE(retval);
-        GCMARKVALUE(a);
-        GCMARKVALUE(b);
-        GCMARKVALUE(baseVal);
-        GCMARKVALUE(indexVal);
-        GCMARKOBJECT(pFrame);
-
-        if (astr) JS2Object::mark(astr);
-        if (bstr) JS2Object::mark(bstr);
 
         JS2Object::mark(true_StringAtom);
         JS2Object::mark(false_StringAtom);

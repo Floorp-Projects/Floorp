@@ -242,6 +242,6 @@ namespace JavaScript
 }
 
 #define JS7_ISHEX(c)    ((c) < 128 && isxdigit(c))
-#define JS7_UNHEX(c)    (uintN)(isdigit(c) ? (c) - '0' : 10 + tolower(c) - 'a')
+#define JS7_UNHEX(c)    (uint32)(isdigit(c) ? (c) - '0' : 10 + tolower(c) - 'a')
 
 #endif /* strings_h___ */

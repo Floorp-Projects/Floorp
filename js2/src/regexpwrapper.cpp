@@ -113,6 +113,12 @@ void JS_ReportErrorNumber(JS2Metadata *meta, const char *message)
 #define JUMP_OFFSET_MAX         ((int16)0x7fff)
 
 
+typedef bool JSBool;
+typedef uint32 uintN;
+typedef int32 intN;
+typedef uint32 jsint;
+typedef char16 JSString;
+typedef char16 JSSubString;
 
 
 typedef struct REMatchState {

@@ -266,15 +266,8 @@ private:
     // A cache of f.p. values (XXX experimentally trying to reduce # of double pointers XXX)
     float64 *float64Table[256];
     float64 *newDoubleValue(float64 x);
+
     js2val retval;
-
-    js2val a,b;
-    js2val baseVal,indexVal;
-
-	ParameterFrame *pFrame;
-
-    const String *astr;
-    const String *bstr;
 public:
 
 

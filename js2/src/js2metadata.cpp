@@ -3743,8 +3743,11 @@ static const uint8 urlCharType[256] =
     
     static js2val Object_underbarProtoGet(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
     {
-        ASSERT(JS2VAL_IS_OBJECT(thisValue));
-        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
+        JS2Object *obj;
+        if (!JS2VAL_IS_OBJECT(thisValue))
+            obj = JS2VAL_TO_OBJECT(meta->toObject(thisValue));
+        else 
+            obj = JS2VAL_TO_OBJECT(thisValue);
         if (obj->kind == SimpleInstanceKind)
             return (checked_cast<SimpleInstance *>(obj))->super;
         else
@@ -3753,8 +3756,11 @@ static const uint8 urlCharType[256] =
 
     static js2val Object_underbarProtoSet(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
     {
-        ASSERT(JS2VAL_IS_OBJECT(thisValue));
-        JS2Object *obj = JS2VAL_TO_OBJECT(thisValue);
+        JS2Object *obj;
+        if (!JS2VAL_IS_OBJECT(thisValue))
+            obj = JS2VAL_TO_OBJECT(meta->toObject(thisValue));
+        else 
+            obj = JS2VAL_TO_OBJECT(thisValue);
         if ((argc > 0) && (obj->kind == SimpleInstanceKind)) {
             (checked_cast<SimpleInstance *>(obj))->super = argv[0];
             return argv[0];
@@ -3893,7 +3899,7 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_underbarProtoSet, env);
         fInst->fWrap->length = 0;
         InstanceSetter *s = new InstanceSetter(&mn, fInst, objectClass, true, true);
-        defineInstanceMember(objectClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, g, 0);
+        defineInstanceMember(objectClass, &cxt, mn.name, *mn.nsList, Attribute::NoOverride, false, s, 0);
 
 
 // Adding 'toString' to the Object.prototype XXX Or make this a static class member?
@@ -5142,30 +5148,25 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         pond.resetMarks();
         // Anything on the root list may also be a pointer to a JS2Object.
         for (RootIterator i = rootList.begin(), end = rootList.end(); (i != end); i++) {
-#ifdef DEBUG
             RootKeeper *r = *i;
-            if (*(r->p)) {
-                PondScum *p = (*(r->p) - 1);
-                ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
-                if (p->isJS2Object()) {
-                    JS2Object *obj = (JS2Object *)(p + 1);
+            PondScum *scum = NULL;
+            if (r->is_js2val) {
+                if (JS2VAL_IS_OBJECT(*(r->p))
+                    scum = ((PondScum *)(JS2VAL_TO_OBJECT(*(r->p)))) - 1;
+            }
+            else {
+                if (*(r->p))
+                    scum = (*(r->p) - 1);
+            }
+            if (scum) {
+                ASSERT(scum->owner && (scum->getSize() >= sizeof(PondScum)) && (scum->owner->sanity == POND_SANITY));
+                if (scum->isJS2Object()) {
+                    JS2Object *obj = (JS2Object *)(scum + 1);
                     GCMARKOBJECT(obj)
                 }
                 else
-                    mark(p + 1);
+                    mark(scum + 1);
             }
-#else
-            if (**i) {
-                PondScum *p = (**i) - 1;
-                ASSERT(p->owner && (p->getSize() >= sizeof(PondScum)) && (p->owner->sanity == POND_SANITY));
-                if (p->isJS2Object()) {
-                    JS2Object *obj = (JS2Object *)(p + 1);
-                    GCMARKOBJECT(obj)
-                }
-                else
-                    mark(p + 1);
-            }
-#endif
         }
         return pond.moveUnmarkedToFreeList();
     }

@@ -223,16 +223,10 @@ public:
     ObjectKind kind;
 
     static Pond pond;
-#ifdef DEBUG
     static std::list<RootKeeper *> rootList;
     typedef std::list<RootKeeper *>::iterator RootIterator;
     static RootIterator addRoot(RootKeeper *t);
-#else
-    static std::list<PondScum **> rootList;
-    typedef std::list<PondScum **>::iterator RootIterator;
-    static RootIterator addRoot(void *t);   // pass the address of any JS2Object pointer
-                                            // Note: Not the address of a JS2VAL!
-#endif
+
     static uint32 gc();
     static void clear(JS2Metadata *meta);
     static void removeRoot(RootIterator ri);
@@ -256,7 +250,13 @@ public:
 class RootKeeper {
 public:
 #ifdef DEBUG
-    RootKeeper(void *p, int line, char *pfile) : p((PondScum **)p), line(line)
+    RootKeeper(JS2Object **p, int line, char *pfile) : is_js2val(false), p(p), line(line)
+    {
+        file = new char[strlen(pfile) + 1];
+        strcpy(file, pfile);
+        ri = JS2Object::addRoot(this);
+    }
+    RootKeeper(js2val *p, int line, char *pfile) : is_js2val(true), p(p), line(line)
     {
         file = new char[strlen(pfile) + 1];
         strcpy(file, pfile);
@@ -264,14 +264,16 @@ public:
     }
     ~RootKeeper() { JS2Object::removeRoot(ri); delete file; }
 #else
-    RootKeeper(void *p) { ri = JS2Object::addRoot(p); }
+    RootKeeper(JS2Object **p) : is_js2val(false), p(p), { ri = JS2Object::addRoot(p); }
+    RootKeeper(js2val *p) : is_js2val(true), p(p) { ri = JS2Object::addRoot(p); }
     ~RootKeeper() { JS2Object::removeRoot(ri); }
 #endif
 
     JS2Object::RootIterator ri;
+    bool is_js2val;
+    void *p;
 
 #ifdef DEBUG
-    PondScum **p;
     int line;
     char *file;
 #endif
