@@ -269,6 +269,7 @@ sub BuildDist()
     [":mozilla:layout:html:style:public:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:html:base:src:MANIFEST", "$distdirectory:layout:"],
     [":mozilla:layout:html:document:public:MANIFEST", "$distdirectory:layout:"],
+    [":mozilla:layout:base:src:MANIFEST", "$distdirectory:layout:"],
 #WIDGET
     [":mozilla:widget:public:MANIFEST", "$distdirectory:widget:"],
 #GFX
