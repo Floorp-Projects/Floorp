@@ -30,6 +30,7 @@
 MWContext*
 FE_GetRDFContext()
 {
+#if 0
   MozBrowserFrame * frame;
   frame = moz_browser_frame_create();
   
@@ -37,4 +38,6 @@ FE_GetRDFContext()
   
   printf("FE_GetRDFContext (done?)\n");
   return moz_frame_get_context(MOZ_FRAME(frame));
+#endif
+  return NULL;
 }
