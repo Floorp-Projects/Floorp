@@ -208,7 +208,19 @@ public:
 
     // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
+
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+  // Resize Reflow Optimiaztion Methods
+  static void SetupCachedSizes(nsSize& aCacheSize,
+                               nsSize& aCachedMaxElementSize,
+                               nsHTMLReflowMetrics& aDesiredSize);
+
+  static nsresult SkipResizeReflow(nsSize& aCacheSize,
+                                   nsSize& aCachedMaxElementSize,
+                                   nsIPresContext* aPresContext,
+                                   nsHTMLReflowMetrics& aDesiredSize,
+                                   const nsHTMLReflowState& aReflowState,
+                                   nsReflowStatus& aStatus);
 
 protected:
 
@@ -288,6 +300,10 @@ protected:
   nsFormFrame* mFormFrame;
   nscoord      mSuggestedWidth;
   nscoord      mSuggestedHeight;
+
+  // Reflow Optimization
+  nsSize       mCacheSize;
+  nsSize       mCachedMaxElementSize;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
