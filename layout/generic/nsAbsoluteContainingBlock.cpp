@@ -539,7 +539,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   }
 
   nscoord availWidth = aReflowState.mComputedWidth;
-  enum { NOT_SHRINK_TO_FIT, SHRINK_TO_FIT_UNCONSTRAINED, SHRINK_TO_FIT_CONSTRAINED };
+  enum { NOT_SHRINK_TO_FIT, SHRINK_TO_FIT_AVAILWIDTH, SHRINK_TO_FIT_MEW };
   PRUint32 situation = NOT_SHRINK_TO_FIT;
   while (1) {
     nsHTMLReflowMetrics kidDesiredSize(nsnull);
@@ -549,8 +549,12 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
       if (eStyleUnit_Auto == stylePosition->mWidth.GetUnit() &&
           (eStyleUnit_Auto == stylePosition->mOffset.GetLeftUnit() ||
            eStyleUnit_Auto == stylePosition->mOffset.GetRightUnit())) {
-        situation = SHRINK_TO_FIT_UNCONSTRAINED;
-        availWidth = NS_UNCONSTRAINEDSIZE;  // first reflow is unconstrained
+        situation = SHRINK_TO_FIT_AVAILWIDTH;
+        if (aContainingBlockWidth != -1) {
+          availWidth = aContainingBlockWidth;
+        } else {
+          availWidth = aReflowState.mComputedWidth;
+        }
         kidDesiredSize.mComputeMEW = PR_TRUE;
       }
     }
@@ -560,6 +564,33 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                      availSize, aContainingBlockWidth,
                                      aContainingBlockHeight,
                                      aReason);
+
+    if (situation == SHRINK_TO_FIT_MEW) {
+      situation = NOT_SHRINK_TO_FIT; // This is the last reflow
+      kidReflowState.mComputedWidth = PR_MIN(availWidth, kidReflowState.mComputedMaxWidth);
+      if (kidReflowState.mComputedWidth < kidReflowState.mComputedMinWidth) {
+        kidReflowState.mComputedWidth = kidReflowState.mComputedMinWidth;
+      }
+    } else if (NS_UNCONSTRAINEDSIZE != availWidth) {
+      if (aContainingBlockWidth != -1) {
+        availWidth = aContainingBlockWidth;
+      } else {
+        availWidth = aReflowState.mComputedWidth;
+      }
+      PRInt32 maxWidth = availWidth -
+        (kidReflowState.mComputedMargin.left + kidReflowState.mComputedBorderPadding.left +
+         kidReflowState.mComputedBorderPadding.right + kidReflowState.mComputedMargin.right);
+      if (NS_AUTOOFFSET != kidReflowState.mComputedOffsets.right) {
+        maxWidth -= kidReflowState.mComputedOffsets.right;
+      }
+      if (NS_AUTOOFFSET != kidReflowState.mComputedOffsets.left) {
+        maxWidth -= kidReflowState.mComputedOffsets.left;
+      }
+      // The following also takes care of maxWidth<0
+      if (kidReflowState.mComputedMaxWidth > maxWidth) {
+        kidReflowState.mComputedMaxWidth = PR_MAX(maxWidth, kidReflowState.mComputedMinWidth);
+      }
+    }
 
     // Send the WillReflow() notification and position the frame
     aKidFrame->WillReflow(aPresContext);
@@ -586,17 +617,9 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     // Do the reflow
     rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
 
-    if (situation == SHRINK_TO_FIT_UNCONSTRAINED) {
+    if (situation == SHRINK_TO_FIT_AVAILWIDTH) {
       // ...continued CSS2.1 10.3.7 width:auto and at least one of left/right is auto
-      if (aContainingBlockWidth == -1) {
-        kidReflowState.ComputeContainingBlockRectangle(aPresContext,
-                                                       &aReflowState,
-                                                       aContainingBlockWidth,
-                                                       aContainingBlockHeight);
-      }
-      availWidth = aContainingBlockWidth -
-                   kidReflowState.mComputedMargin.left -
-                   kidReflowState.mComputedMargin.right;
+      availWidth -= kidReflowState.mComputedMargin.left + kidReflowState.mComputedMargin.right;
 
       if (NS_AUTOOFFSET == kidReflowState.mComputedOffsets.right) {
         NS_ASSERTION(NS_AUTOOFFSET != kidReflowState.mComputedOffsets.left,
@@ -611,16 +634,17 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
         availWidth = 0;
       }
 
-      aKidFrame->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
-
       // Shrink-to-fit: min(max(preferred minimum width, available width), preferred width).
+      // XXX this is not completely correct - see bug 201897 comment 56/58 and bug 268499.
       if (kidDesiredSize.mMaxElementWidth > availWidth) {
-        availWidth = kidDesiredSize.mMaxElementWidth;
-      } else if (kidDesiredSize.width < availWidth) {
-        availWidth = kidDesiredSize.width;
+        aKidFrame->DidReflow(aPresContext, &kidReflowState, NS_FRAME_REFLOW_FINISHED);
+        availWidth = PR_MAX(0, kidDesiredSize.mMaxElementWidth -
+                               kidReflowState.mComputedBorderPadding.left -
+                               kidReflowState.mComputedBorderPadding.right);
+        situation = SHRINK_TO_FIT_MEW;
+        aReason = eReflowReason_Resize;
+        continue; // Do a second reflow constrained to MEW.
       }
-      situation = SHRINK_TO_FIT_CONSTRAINED;
-      continue; // do a second reflow (constrained this time)
     }
 
     // If we're solving for 'left' or 'top', then compute it now that we know the
