@@ -2628,7 +2628,7 @@ static PRBool IsSpecialRaptorKey(UInt32 macKeyCode)
   if (aMessage == NS_KEY_PRESS && !IsSpecialRaptorKey([aKeyEvent keyCode])) 
   {
     if (!outGeckoEvent->isControl && !outGeckoEvent->isMeta)
-      outGeckoEvent->isControl = outGeckoEvent->isAlt = outGeckoEvent->isMeta = 0;
+      outGeckoEvent->isShift = outGeckoEvent->isControl = outGeckoEvent->isAlt = outGeckoEvent->isMeta = 0;
     
     // We're not a special key.
     outGeckoEvent->keyCode	= 0;
