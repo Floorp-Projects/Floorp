@@ -36,31 +36,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-function acctTypePageInit() {
-  // this is a total hack.
-  // select the first radio button, assuming the wizard hasn't
-  // already selected one for us. The wizard can get in this wierd state
-  var rg = document.getElementById("acctyperadio");
-  if (!rg.selectedItem) {
-    var elements = rg.getElementsByTagName("radio");
-    rg.selectedItem = elements[0];
-  }
-
-  var selectedItemId = rg.selectedItem.getAttribute('id');
-  if (selectedItemId == "mailaccount")
-    setMailAccountTypeData();
-  else if (selectedItemId == "newsaccount")
-    setNewsAccountTypeData();
-}
-
 function acctTypePageUnload() {
-    dump("OnUnload!\n");
 
+    setAccountTypeData();
     initializeIspData();
     
     return true;
 }
 
+function setAccountTypeData() 
+{
+  var rg = document.getElementById("acctyperadio");
+  var selectedItemId = rg.selectedItem.id;
+
+  if (selectedItemId == "mailaccount")
+    setMailAccountTypeData();
+  else if (selectedItemId == "newsaccount")
+    setNewsAccountTypeData();
+}
 
 function initializeIspData()
 {

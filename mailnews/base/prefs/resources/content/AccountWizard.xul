@@ -45,17 +45,15 @@ Rights Reserved.
   <!-- Account Type page : Displays choices of mail and news accounts that user can create -->
   <wizardpage id="accounttype" pageid="accounttype"
               label="&accountTypeTitle.label;"
-              onpageshow="return acctTypePageInit();"
               onpageadvanced="return acctTypePageUnload();">
     <vbox flex="1">
       <description>&accountTypeDesc.label;</description>
       <description>&accountTypeDirections.label;</description>
       <separator/>
-      <radiogroup name="acctyperadio" id="acctyperadio" >
+      <radiogroup id="acctyperadio" >
         <radio id="mailaccount" value="mailaccount"
-               oncommand="setMailAccountTypeData();"
-               wsm_persist="true"
-               label="&accountTypeMail.label;"/>
+               label="&accountTypeMail.label;"
+               selected="true"/>
   
         <vbox datasources="rdf:ispdefaults" 
               containment="http://home.netscape.com/NC-rdf#providers"
@@ -63,15 +61,13 @@ Rights Reserved.
               ref="NC:ispinfo">
           <template>
             <rule nc:wizardShow="true">
-              <radio uri="..." wsm_persist="true"
+              <radio uri="..."
                      value="rdf:http://home.netscape.com/NC-rdf#wizardShortName"
                      label="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
             </rule>
          </template>
         </vbox>
         <radio id="newsaccount" value="newsaccount"
-               oncommand="setNewsAccountTypeData();"
-               wsm_persist="true"
                label="&accountTypeNews.label;"/>
       </radiogroup>
     </vbox>
