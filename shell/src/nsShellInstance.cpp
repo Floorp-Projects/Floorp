@@ -17,11 +17,13 @@
  */
 #define NS_IMPL_IDS 1
 
-#include "nspr.h"
-#include "net.h"
 
 #include <stdio.h>
 #include "nscore.h"
+
+#include "nspr.h"
+#include "net.h"
+
 
 #ifdef NS_WIN32
 #include "windows.h"
