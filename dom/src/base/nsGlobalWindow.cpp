@@ -1592,7 +1592,7 @@ NS_IMETHODIMP
 GlobalWindowImpl::Prompt(const nsAReadableString& aMessage,
                          const nsAReadableString& aInitial,
                          const nsAReadableString& aTitle,
-                         const PRUint32 aSavePassword,
+                         PRUint32 aSavePassword,
                          nsAWritableString& aReturn)
 {
   NS_ENSURE_STATE(mDocShell);
