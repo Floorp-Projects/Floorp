@@ -33,7 +33,7 @@
 #include "nsISupports.h"
 #include "prtypes.h"
 #include "nsHTMLTags.h"
-#include "nsDeque.h"
+#include "nsVoidArray.h"
 
 
 // {4672AA04-F6AE-11d2-B3B7-00805F8A6670}
@@ -67,7 +67,7 @@ public:
                     const PRUnichar* valueArray[]) = 0;
   
   NS_IMETHOD Notify(nsISupports* aDocumentID, const PRUnichar* aTag, 
-                    const nsDeque* aKeys, const nsDeque* aValues) = 0;
+                    const nsStringArray* aKeys, const nsStringArray* aValues) = 0;
 
 };
 
