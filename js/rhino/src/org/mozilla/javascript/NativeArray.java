@@ -550,7 +550,8 @@ public class NativeArray extends IdScriptable {
                             Object tls = ScriptRuntime.
                                     getObjectProp(obj, "toLocaleString", cx);
                             elem = ScriptRuntime.call(cx, tls, elem,
-                                                      ScriptRuntime.emptyArgs);
+                                                      ScriptRuntime.emptyArgs,
+                                                      scope);
                         }
                         result.append(ScriptRuntime.toString(elem));
                     }
