@@ -25,7 +25,6 @@
 #include "nsLatin1ToUnicode.h"
 #include "nsISO88597ToUnicode.h"
 #include "nsCP1253ToUnicode.h"
-#include "nsConverterCID.h"
 #include "nsUCvLatinCID.h"
 // just for NS_IMPL_IDS
 #include "nsIUnicodeDecodeUtil.h"
