@@ -1,11 +1,11 @@
 //
 // window.arguments[0] is the nsIExtensionItemUpdater object
 //
-// window.arguments[1...] is an array of nsIExtensionItem implementing objects 
+// window.arguments[1...] is an array of nsIUpdateItem implementing objects 
 // that are to be updated. 
 //  * if the array is empty, all items are updated (like a background update
 //    check)
-//  * if the array contains one or two ExtensionItems, with null id fields, 
+//  * if the array contains one or two UpdateItems, with null id fields, 
 //    all items of that /type/ are updated.
 //
 // This UI can be opened from the following places, and in the following modes:
@@ -13,16 +13,16 @@
 // - from the Version Compatibility Checker at startup
 //    as the application starts a check is done to see if the application being
 //    started is the same version that was started last time. If it isn't, a
-//    list of ExtensionItems that are incompatible with the verison being 
+//    list of UpdateItems that are incompatible with the verison being 
 //    started is generated and this UI opened with that list. This UI then
-//    offers to check for updates to those ExtensionItems that are compatible
+//    offers to check for updates to those UpdateItems that are compatible
 //    with the version of the application being started. 
 //    
 //    In this mode, the wizard is opened to panel 'mismatch'. 
 //
 // - from the Extension Manager or Options Dialog or any UI where the user
 //   directly requests to check for updates.
-//    in this case the user selects ExtensionItem(s) to update and this list
+//    in this case the user selects UpdateItem(s) to update and this list
 //    is passed to this UI. If a single item is sent with the id field set to
 //    null but the type set correctly, this UI will check for updates to all 
 //    items of that type.
@@ -41,11 +41,10 @@
 //    performed again. 
 //
 
-const nsIExtensionItem = Components.interfaces.nsIExtensionItem;
+const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
 const MISMATCH = Components.interfaces.nsIExtensionManager.UPDATE_TYPE_MISMATCH;
 const USERINVOKED = Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED;
 
-var gExtensionItems = [];
 var gUpdater = null;
 
 var gUpdateWizard = {
@@ -56,6 +55,7 @@ var gUpdateWizard = {
   itemsToUpdate: [],
   // The items that we successfully installed updates for
   updatedCount: 0,
+  appUpdatesAvailable: false,
 
   shouldSuggestAutoChecking: false,
   shouldAutoCheck: false,
@@ -64,7 +64,7 @@ var gUpdateWizard = {
   {
     gUpdater = window.arguments[0].QueryInterface(Components.interfaces.nsIExtensionItemUpdater);
     for (var i = 1; i < window.arguments.length; ++i)
-      this.items.push(window.arguments[i].QueryInterface(nsIExtensionItem));
+      this.items.push(window.arguments[i].QueryInterface(nsIUpdateItem));
       
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
@@ -138,13 +138,15 @@ var gMismatchPage = {
   }
 };
 
+const nsIBUS = Components.interfaces.nsIBackgroundUpdateService;
 var gUpdatePage = {
   _completeCount: 0,
-  _messages: ["update-started", 
-              "update-ended", 
-              "update-item-started", 
-              "update-item-ended",
-              "update-item-error"],
+  _updateState: 0,
+  _messages: ["Update:Extension:Started", 
+              "Update:Extension:Ended", 
+              "Update:Extension:Item-Started", 
+              "Update:Extension:Item-Ended",
+              "Update:Extension:Item-Error"],
   
   onPageShow: function ()
   {
@@ -159,6 +161,8 @@ var gUpdatePage = {
       os.addObserver(this, this._messages[i], false);
 
     gUpdater.checkForUpdates();
+    
+    this._updateState = nsIBUS.UPDATED_NONE;
   },
   
   uninit: function ()
@@ -171,12 +175,13 @@ var gUpdatePage = {
   
   observe: function (aSubject, aTopic, aData)
   {
+    var canFinish = false;
     switch (aTopic) {
-    case "update-started":
+    case "Update:Extension:Started":
       break;
-    case "update-item-started":
+    case "Update:Extension:Item-Started":
       break;
-    case "update-item-ended":
+    case "Update:Extension:Item-Ended":
       gUpdateWizard.itemsToUpdate.push(aSubject);
       
       ++this._completeCount;
@@ -185,17 +190,36 @@ var gUpdatePage = {
       progress.value = Math.ceil(this._completeCount / gUpdateWizard.itemsToUpdate.length) * 100;
       
       break;
-    case "update-ended":
-      if (gUpdateWizard.itemsToUpdate.length > 0)
+    case "Update:Extension:Ended":
+      // If we were passed a set of extensions/themes/other to update, this
+      // means we're not checking for app updates, so don't wait for the app
+      // update to complete before advancing (because there is none).
+      canFinish = gUpdateWizard.items.length > 0;
+      break;
+    case "Update:Ended":
+      // If we're doing a general update check, (that is, no specific extensions/themes
+      // were passed in for us to check for updates to), this notification means both
+      // extension and app updates have completed.
+      canFinish = true;
+      break;
+    case "Update:App:Ended":
+      // The "Updates Found" page of the update wizard needs to know if it there are app 
+      // updates so it can list them first. 
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+      gUpdateWizard.appUpdatesAvailable = pref.getBoolPref(PREF_UPDATE_APPUPDATESAVAILABLE);     
+      break;
+    }
+
+    if (canFinish) {    
+      if (gUpdateWizard.itemsToUpdate.length > 0 || gUpdateWizard.appUpdatesAvailable)
         document.getElementById("checking").setAttribute("next", "found");
       document.documentElement.advance();
-      break;
     }
   }
 };
 
 var gFoundPage = {
-  
   onPageShow: function ()
   {
     gUpdateWizard.setButtonLabels(null, true, 
@@ -210,16 +234,15 @@ var gFoundPage = {
       
       var item = gUpdateWizard.itemsToUpdate[i];
       updateitem.name = item.name + " " + item.version;
-      updateitem.url = item.xpiURL;
+      updateitem.url = item.updateURL;
       updateitem.checked = true;
       if (item.iconURL != "")
         updateitem.icon = item.iconURL;
     }
-  },
+  }
 };
 
 var gInstallingPage = {
-
   onPageShow: function ()
   {
     gUpdateWizard.setButtonLabels(null, true, 
@@ -236,8 +259,7 @@ var gInstallingPage = {
       document.documentElement.advance();
     }
     setTimeout("advance()", 2000);
-  },
-
+  }
 };
 
 var gFinishedPage = {
@@ -265,6 +287,7 @@ var gFinishedPage = {
     
     if (gUpdater.updateType == MISMATCH) {
       document.getElementById("finishedMismatch").hidden = false;
+      document.getElementById("incompatibleAlert").hidden = false;
     }
   }
 };

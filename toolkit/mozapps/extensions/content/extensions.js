@@ -2,7 +2,7 @@
 // Globals
 
 const kObserverServiceProgID = "@mozilla.org/observer-service;1";
-const nsIExtensionItem = Components.interfaces.nsIExtensionItem;
+const nsIUpdateItem = Components.interfaces.nsIUpdateItem;
 
 var gExtensionManager = null;
 var gDownloadListener = null;
@@ -230,7 +230,7 @@ var gExtensionsViewController = {
     case "cmd_close":
       return true;
     case "cmd_options":
-      return selectedItem && !selectedItem.disabled;
+      return selectedItem && !selectedItem.disabled && selectedItem.getAttribute("optionsURL") != "";
     case "cmd_about":
       return !selectedItem || (selectedItem.disabled ? selectedItem.getAttribute("aboutURL") == "" : true);
     case "cmd_homepage":
@@ -367,9 +367,9 @@ var gExtensionsViewController = {
     cmd_update: function ()
     { 
       var id = stripPrefix(gExtensionsView.selected.id);
-      var items = gExtensionManager.getItemList(id, nsIExtensionItem.TYPE_EXTENSION, { });
+      var items = gExtensionManager.getItemList(id, nsIUpdateItem.TYPE_EXTENSION, { });
       gExtensionManager.update(items, items.length, 
-                               Components.interfaces.nsIExtensionManager.UPDATE_TYPE_USERINVOKED);
+                               Components.interfaces.nsIUpdateItem.UPDATE_TYPE_USERINVOKED);
     },
 
     cmd_uninstall: function ()

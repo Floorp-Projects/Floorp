@@ -21,7 +21,7 @@ toolkit.jar:
 * content/mozapps/extensions/about.js                       (extensions/content/about.js)
 * content/mozapps/update/update.xul                         (update/content/update.xul)
 * content/mozapps/update/update.js                          (update/content/update.js)
-* content/mozapps/update/updateItem.xml                     (update/content/updateItem.xml)
+* content/mozapps/update/updates.xml                        (update/content/updates.xml)
 * content/mozapps/update/update.css                         (update/content/update.css)
 * content/mozapps/shared/richview.xml                       (shared/content/richview.xml)
   content/mozapps/contents.rdf                              (contents-content.rdf)
