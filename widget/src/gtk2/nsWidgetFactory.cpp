@@ -44,6 +44,10 @@
 #include "nsWindow.h"
 #include "nsScrollbar.h"
 #include "nsGtkMozRemoteHelper.h"
+#include "nsTransferable.h"
+#include "nsClipboardHelper.h"
+#include "nsHTMLFormatConverter.h"
+#include "nsClipboard.h"
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
@@ -52,10 +56,14 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 #ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGtkXRemoteWidgetHelper)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
 
 static
 nsresult nsHorizScrollbarConstructor (nsISupports *aOuter,
@@ -145,6 +153,22 @@ static const nsModuleComponentInfo components[] =
     NS_GTKXREMOTEWIDGETHELPER_CID,
     NS_IXREMOTEWIDGETHELPER_CONTRACTID,
     nsGtkXRemoteWidgetHelperConstructor },
+  { "Transferable",
+    NS_TRANSFERABLE_CID,
+    "@mozilla.org/widget/transferable;1",
+    nsTransferableConstructor },
+  { "Gtk Clipboard",
+    NS_CLIPBOARD_CID,
+    "@mozilla.org/widget/clipboard;1",
+    nsClipboardConstructor },
+  { "Clipboard Helper",
+    NS_CLIPBOARDHELPER_CID,
+    "@mozilla.org/widget/clipboardhelper;1",
+    nsClipboardHelperConstructor },
+  { "HTML Format Converter",
+    NS_HTMLFORMATCONVERTER_CID,
+    "@mozilla.org/widget/htmlformatconverter/gtk;1",
+    nsHTMLFormatConverterConstructor },
 #ifdef IBMBIDI
     { "Gtk2 Bidi Keyboard",
       NS_BIDIKEYBOARD_CID,
