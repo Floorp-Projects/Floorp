@@ -33,6 +33,8 @@
  *   +- defaultNet (String) default network to use for irc:// urls
  *   +- initialURLs (String) irc:// urls to connect to on startup, semicolon
  *   |                       seperated
+ *   +- initialScripts (String) urls for scripts to run at startup,
+ *   |                          semicolon seperated
  *   +- munger   (Boolean) send output through text->html munger
  *   |  +- smileyText (Boolean) true => display text (and graphic) when
  *   |                                  matching smileys
@@ -49,10 +51,7 @@
  *   +- settings
  *   |  +- autoSave (Boolean) Save settings on exit
  *   +- style   
- *   |  +- default (String) default style (relative to chrome://chatzilla/skin)
- *   |  +- user
- *   |     +- pre  (String) full path to user css, loaded before system style
- *   |     +- post (String) full path to user css, loaded after system style
+ *   |  +- default (String) url to default style sheet
  *   +- views
  *   |  +- client
  *   |  |  +- maxlines (Number) max lines to keep in *client* view
@@ -92,6 +91,8 @@ function readIRCPrefs (rootNode)
         getCharPref (pref, rootNode + "defaultNet", "moznet");    
     client.INITIAL_URLS =
         getCharPref (pref, rootNode + "initialURLs", "");
+    client.INITIAL_SCRIPTS =
+        getCharPref (pref, rootNode + "initialScripts", "");
     client.ADDRESSED_NICK_SEP =
         getCharPref (pref, rootNode + "nickCompleteStr",
                      client.ADDRESSED_NICK_SEP);
@@ -114,14 +115,9 @@ function readIRCPrefs (rootNode)
         getBoolPref (pref, rootNode + "settings.autoSave", true);
 
     client.DEFAULT_STYLE =
-        getCharPref (pref, rootNode + "style.default", "output-default.css");
+        getCharPref (pref, rootNode + "style.default",
+                     "chrome://chatzilla/skin/output-default.css");
     
-    client.USER_CSS_PRE =
-        getCharPref (pref, rootNode + "style.user.pre", "");
-
-    client.USER_CSS_POST =
-        getCharPref (pref, rootNode + "style.user.post", "");
-
     client.MAX_MESSAGES = 
         getIntPref (pref, rootNode + "views.client.maxlines",
                     client.MAX_MESSAGES);
@@ -161,6 +157,7 @@ function writeIRCPrefs (rootNode)
                       CIRCNetwork.prototype.INITIAL_NAME);
     pref.SetCharPref (rootNode + "desc", CIRCNetwork.prototype.INITIAL_DESC);
     pref.SetCharPref (rootNode + "nickCompleteStr", client.ADDRESSED_NICK_SEP);
+    pref.SetCharPref (rootNode + "style.default", client.DEFAULT_STYLE);
     pref.SetCharPref (rootNode + "stalkWords",
                       client.stalkingVictims.join ("; "));
     pref.SetBoolPref (rootNode + "munger", client.munger.enabled);
