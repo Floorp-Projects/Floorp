@@ -1291,161 +1291,6 @@ NS_IMETHODIMP nsRenderingContextOS2 :: GetWidth(const char* aString,
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsRenderingContextOS2::GetWidth(const char *aString,
-                                PRInt32     aLength,
-                                PRInt32     aAvailWidth,
-                                PRInt32*    aBreaks,
-                                PRInt32     aNumBreaks,
-                                nscoord&    aWidth,
-                                PRInt32&    aNumCharsFit,
-                                PRInt32*    aFontID = nsnull)
-{
-  NS_PRECONDITION(aBreaks[aNumBreaks - 1] == aLength, "invalid break array");
-
-  if (nsnull != mFontMetrics) {
-    // If we need to back up this state represents the last place we could
-    // break. We can use this to avoid remeasuring text
-    struct PrevBreakState {
-      PRInt32   mBreakIndex;
-      nscoord   mWidth;    // accumulated width to this point
-
-      PrevBreakState() {
-        mBreakIndex = -1;  // not known (hasn't been computed)
-        mWidth = 0;
-      }
-    };
-
-    // Initialize OUT parameter
-    aNumCharsFit = 0;
-
-    // Setup the font and foreground color
-    SetupFontAndTextColor ();
-
-    // Iterate each character in the string and determine which font to use
-    nsFontMetricsOS2* metrics = (nsFontMetricsOS2*)mFontMetrics;
-    PrevBreakState    prevBreakState;
-    nscoord           width = 0;
-    PRInt32           start = 0;
-    nscoord           aveCharWidth;
-    metrics->GetAveCharWidth(aveCharWidth);
-
-    while (start < aLength) {
-      // Estimate how many characters will fit. Do that by diving the available
-      // space by the average character width. Make sure the estimated number
-      // of characters is at least 1
-      PRInt32 estimatedNumChars = 0;
-      if (aveCharWidth > 0) {
-        estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
-      }
-      if (estimatedNumChars < 1) {
-        estimatedNumChars = 1;
-      }
-
-      // Find the nearest break offset
-      PRInt32 estimatedBreakOffset = start + estimatedNumChars;
-      PRInt32 breakIndex;
-      nscoord numChars;
-
-      // Find the nearest place to break that is less than or equal to
-      // the estimated break offset
-      if (aLength < estimatedBreakOffset) {
-        // All the characters should fit
-        numChars = aLength - start;
-        breakIndex = aNumBreaks - 1;
-
-      } else {
-        breakIndex = prevBreakState.mBreakIndex;
-        while (((breakIndex + 1) < aNumBreaks) &&
-               (aBreaks[breakIndex + 1] <= estimatedBreakOffset)) {
-          breakIndex++;
-        }
-        if (breakIndex == prevBreakState.mBreakIndex) {
-          breakIndex++; // make sure we advanced past the previous break index
-        }
-        numChars = aBreaks[breakIndex] - start;
-      }
-
-      // Measure the text
-      nscoord twWidth;
-      if ((1 == numChars) && (aString[start] == ' ')) {
-        metrics->GetSpaceWidth(twWidth);
-
-      } else {
-        SIZEL size;
-        ::GetTextExtentPoint32(mPS, &aString[start], numChars, &size);
-        twWidth = NSToCoordRound(float(size.cx) * mP2T);
-      }
-
-      // See if the text fits
-      PRBool  textFits = (twWidth + width) <= aAvailWidth;
-
-      // If the text fits then update the width and the number of
-      // characters that fit
-      if (textFits) {
-        aNumCharsFit += numChars;
-        width += twWidth;
-        start += numChars;
-
-        // This is a good spot to back up to if we need to so remember
-        // this state
-        prevBreakState.mBreakIndex = breakIndex;
-        prevBreakState.mWidth = width;
-
-      } else {
-        // See if we can just back up to the previous saved state and not
-        // have to measure any text
-        if (prevBreakState.mBreakIndex > 0) {
-          // If the previous break index is just before the current break index
-          // then we can use it
-          if (prevBreakState.mBreakIndex == (breakIndex - 1)) {
-            aNumCharsFit = aBreaks[prevBreakState.mBreakIndex];
-            width = prevBreakState.mWidth;
-            break;
-          }
-        }
-          
-        // We can't just revert to the previous break state
-        if (0 == breakIndex) {
-          // There's no place to back up to so even though the text doesn't fit
-          // return it anyway
-          aNumCharsFit += numChars;
-          width += twWidth;
-          break;
-        }
-
-        // Repeatedly back up until we get to where the text fits or we're all
-        // the way back to the first word
-        width += twWidth;
-        while ((breakIndex >= 1) && (width > aAvailWidth)) {
-          start = aBreaks[breakIndex - 1];
-          numChars = aBreaks[breakIndex] - start;
-          
-          if ((1 == numChars) && (aString[start] == ' ')) {
-            metrics->GetSpaceWidth(twWidth);
-
-          } else {
-            SIZEL size;
-            ::GetTextExtentPoint32(mPS, &aString[start], numChars, &size);
-            twWidth = NSToCoordRound(float(size.cx) * mP2T);
-          }
-
-          width -= twWidth;
-          aNumCharsFit = start;
-          breakIndex--;
-        }
-        break;
-      }
-    }
-
-    aWidth = width;
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
-
 NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const nsString &aString,
                                                nscoord &aWidth,
                                                PRInt32 *aFontID)
@@ -1578,6 +1423,47 @@ NS_IMETHODIMP nsRenderingContextOS2::GetWidth( const PRUnichar *aString,
 //  int convertedLength = WideCharToMultiByte( ((nsFontMetricsOS2*)mFontMetrics)->mCodePage, aString, aLength, buf, sizeof(buf));
 //  temp = GetWidth( buf, newLength, aWidth);
   return temp;
+}
+
+NS_IMETHODIMP
+nsRenderingContextOS2::GetTextDimensions(const char*       aString,
+                                         PRInt32           aLength,
+                                         PRInt32           aAvailWidth,
+                                         PRInt32*          aBreaks,
+                                         PRInt32           aNumBreaks,
+                                         nsTextDimensions& aDimensions,
+                                         PRInt32&          aNumCharsFit,
+                                         nsTextDimensions& aLastWordDimensions,
+                                         PRInt32*          aFontID)
+{
+}
+
+NS_IMETHODIMP
+nsRenderingContextOS2::GetTextDimensions(const PRUnichar*  aString,
+                                         PRInt32           aLength,
+                                         PRInt32           aAvailWidth,
+                                         PRInt32*          aBreaks,
+                                         PRInt32           aNumBreaks,
+                                         nsTextDimensions& aDimensions,
+                                         PRInt32&          aNumCharsFit,
+                                         nsTextDimensions& aLastWordDimensions,
+                                         PRInt32*          aFontID)
+{
+}
+
+NS_IMETHODIMP
+nsRenderingContextOS2::GetTextDimensions(const char*       aString,
+                                         PRUint32          aLength,
+                                         nsTextDimensions& aDimensions)
+{
+}
+
+NS_IMETHODIMP
+nsRenderingContextOS2::GetTextDimensions(const PRUnichar*  aString,
+                                         PRUint32          aLength,
+                                         nsTextDimensions& aDimensions,
+                                         PRInt32*          aFontID)
+{
 }
 
 NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const char *aString, PRUint32 aLength,
@@ -1756,6 +1642,18 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const nsString& aString,
   return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
 
+NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const char *aString, PRUint32 aLength,
+                                                  nscoord aX, nscoord aY,
+                                                  const nscoord* aSpacing)
+{
+}
+
+NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const PRUnichar *aString, PRUint32 aLength,
+                                                  nscoord aX, nscoord aY,
+                                                  PRInt32 aFontID,
+                                                  const nscoord* aSpacing)
+{
+}
 
 // Image drawing: just proxy on to the image object, so no worries yet.
 NS_IMETHODIMP nsRenderingContextOS2::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY)
