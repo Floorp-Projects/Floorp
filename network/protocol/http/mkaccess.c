@@ -1374,8 +1374,9 @@ net_CheckForCookiePermission(char * hostname) {
 		&& !PL_strcmp(hostname, cookie_s->host)) {
 	    net_unlock_cookie_permission_list();
 	    return(cookie_s);
-	}
+        }
     }
+    net_unlock_cookie_permission_list();
     return(NULL);
 }
 #endif
