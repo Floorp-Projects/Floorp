@@ -21,13 +21,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: NamedMap.h,v 1.4 2000/04/12 22:30:54 nisheeth%netscape.com Exp $
+ * $Id: NamedMap.h,v 1.5 2001/01/22 09:38:29 kvisco%ziplink.net Exp $
  */
 
 /**
  * A Named Map for MITREObjects
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/04/12 22:30:54 $
+ * @version $Revision: 1.5 $ $Date: 2001/01/22 09:38:29 $
 **/
 
 #ifndef TRANSFRMX_NAMEDMAP_H
@@ -36,6 +36,7 @@
 #include "TxString.h"
 #include "baseutils.h"
 #include "MITREObject.h"
+#include "TxObject.h"
 #include "StringList.h"
 
 class NamedMap : public MITREObject {
@@ -75,23 +76,23 @@ public:
      *  Returns the object reference in this Map associated with the given name
      * @return the object reference in this Map associated with the given name
     **/
-    MITREObject* get(const String& name);
+    TxObject* get(const String& name);
 
     /**
      *  Returns the object reference in this Map associated with the given name
      * @return the object reference in this Map associated with the given name
     **/
-    MITREObject* get(const char* name);
+    TxObject* get(const char* name);
 
     /**
      *  Adds the Object reference to the map and associates it with the given name
     **/
-    void  put(const String& name, MITREObject* obj);
+    void  put(const String& name, TxObject* obj);
 
     /**
      *  Adds the Object reference to the map and associates it with the given name
     **/
-    void  put(const char* name, MITREObject* obj);
+    void  put(const char* name, TxObject* obj);
 
     /**
      * Removes all elements from the Map table
@@ -129,7 +130,7 @@ public:
      * @param index the position in the NodeSet to remove the Node from
      * @return the Node that was removed from the list
     **/
-    MITREObject* remove(String& key);
+    TxObject* remove(String& key);
 
     /**
      * Sets the object deletion flag. If set to true, objects in
@@ -158,7 +159,7 @@ private:
 
     struct BucketItem {
         String key;
-        MITREObject* item;
+        TxObject* item;
         BucketItem* next;
         BucketItem* prev;
     };
@@ -176,7 +177,7 @@ private:
      //- Private Methods -/
     //-------------------/
 
-    BucketItem* createBucketItem(const String& key, MITREObject* objPtr);
+    BucketItem* createBucketItem(const String& key, TxObject* objPtr);
 
     BucketItem* getBucketItem(const String& key);
 

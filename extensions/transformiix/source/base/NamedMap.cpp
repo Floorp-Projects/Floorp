@@ -25,13 +25,13 @@
  *    -- fixed memory leak in NamedMap::hashKey method by deleting
  *       up char[] chars;
  *
- * $Id: NamedMap.cpp,v 1.4 2001/01/19 10:43:27 axel%pike.org Exp $
+ * $Id: NamedMap.cpp,v 1.5 2001/01/22 09:38:28 kvisco%ziplink.net Exp $
  */
 
 /**
  * A Named Map for MITREObjects
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2001/01/19 10:43:27 $
+ * @version $Revision: 1.5 $ $Date: 2001/01/22 09:38:28 $
 **/
 
 #include "NamedMap.h"
@@ -161,7 +161,7 @@ MBool NamedMap::equals(NamedMap* namedMap) {
  *  Returns the object reference in this Map associated with the given name
  * @return the object reference in this Map associated with the given name
 **/
-MITREObject* NamedMap::get(const char* key) {
+TxObject* NamedMap::get(const char* key) {
     String sKey = key;
     return get(sKey);
 } //-- get
@@ -170,7 +170,7 @@ MITREObject* NamedMap::get(const char* key) {
  *  Returns the object reference in this Map associated with the given name
  * @return the object reference in this Map associated with the given name
 **/
-MITREObject* NamedMap::get(const String& key) {
+TxObject* NamedMap::get(const String& key) {
     BucketItem* item = getBucketItem(key);
     if ( item ) return item->item;
     return 0;
@@ -205,7 +205,7 @@ StringList* NamedMap::keys() {
  * Adds the specified Node to the top of this Stack.
  * @param node the Node to add to the top of the Stack
 **/
-void NamedMap::put(const char* key, MITREObject* obj) {
+void NamedMap::put(const char* key, TxObject* obj) {
     String sKey = key;
     put(sKey, obj);
 } //-- put
@@ -214,7 +214,7 @@ void NamedMap::put(const char* key, MITREObject* obj) {
  * Adds the specified Node to the top of this Stack.
  * @param node the Node to add to the top of the Stack
 **/
-void NamedMap::put(const String& key, MITREObject* obj) {
+void NamedMap::put(const String& key, TxObject* obj) {
 
     //-- compute hash for key
     unsigned long hashCode = hashKey(key);
@@ -258,7 +258,7 @@ void NamedMap::put(const String& key, MITREObject* obj) {
  * @param key the key of the Object to remove from the NamedMap
  * @return the Object being removed
 **/
-MITREObject* NamedMap::remove(String& key) {
+TxObject* NamedMap::remove(String& key) {
 
     // compute hash for key
     long hashCode = hashKey(key);
@@ -279,10 +279,10 @@ MITREObject* NamedMap::remove(String& key) {
                 bktItem->next->prev = bktItem->prev;
         };
         numberOfElements--;
-        MITREObject* mObject = bktItem->item;
+        TxObject* txObject = bktItem->item;
         bktItem->item = 0;
         delete bktItem;
-        return mObject;
+        return txObject;
     }
     return 0;
 
@@ -309,7 +309,7 @@ int NamedMap::size() {
  //- Private Methods -/
 //-------------------/
 
-NamedMap::BucketItem* NamedMap::createBucketItem(const String& key, MITREObject* objPtr)
+NamedMap::BucketItem* NamedMap::createBucketItem(const String& key, TxObject* objPtr)
 {
     BucketItem* bktItem = new BucketItem;
     bktItem->next = 0;
