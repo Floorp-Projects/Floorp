@@ -110,6 +110,11 @@ nsEventQueueServiceImpl::CreateThreadEventQueue(void)
   }
   
   evQueue = PL_CreateEventQueue("Thread event queue...", PR_GetCurrentThread());
+#ifdef XP_PC
+  // XXX: For now only use the main eventQ...  When the event queue is
+  //      created via PL_CreateNativeEventQueue(...) this can go away...
+  PL_InitializeEventsLib("");
+#endif
   if (NULL == evQueue) {
     rv = NS_ERROR_OUT_OF_MEMORY;
     goto done;
