@@ -1853,9 +1853,9 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         lateness = PR_IntervalToMilliseconds(lateness);
         timeout->argv[timeout->argc] = INT_TO_JSVAL((jsint)lateness);
         PRBool aBoolResult;
-        rv = mContext->CallFunctionObject(mScriptObject, timeout->funobj,
-                                    timeout->argc + 1, timeout->argv,
-				                            &aBoolResult);
+        rv = mContext->CallEventHandler(mScriptObject, timeout->funobj,
+                                        timeout->argc + 1, timeout->argv,
+                                        &aBoolResult);
       }
       if (NS_FAILED(rv)) {
         NS_RELEASE(temp);

@@ -552,9 +552,28 @@ nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
     rv = aScriptObjectOwner->GetScriptObject(aContext, (void**)&scriptObject);
     if (NS_FAILED(rv))
       return rv;
-    rv = aContext->CompileEventHandler(scriptObject, aName, aBody, nsnull);
-    if (NS_FAILED(rv))
-      return rv;
+
+    nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(aScriptObjectOwner);
+    void *handler = nsnull;
+    PRBool done = PR_FALSE;
+
+    if (handlerOwner) {
+      rv = handlerOwner->GetCompiledEventHandler(aName, &handler);
+      if (NS_SUCCEEDED(rv) && handler) {
+        rv = aContext->BindCompiledEventHandler(scriptObject, aName, handler);
+        if (NS_FAILED(rv))
+          return rv;
+        done = PR_TRUE;
+      }
+    }
+
+    if (!done) {
+      rv = aContext->CompileEventHandler(scriptObject, aName, aBody, &handler);
+      if (NS_FAILED(rv))
+        return rv;
+      if (handlerOwner)
+        handlerOwner->SetCompiledEventHandler(aName, handler);
+    }
   }
   return SetJSEventListener(aContext, aScriptObjectOwner, aName, aIID, aDeferCompilation);
 }

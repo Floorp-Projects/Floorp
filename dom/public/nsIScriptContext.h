@@ -63,8 +63,8 @@ public:
    * Compile and execute a script.
    *
    * @param aScript a string representing the script to be executed
-   * @param aObj a JavaScript JSObject for the scope to execute in, or nsnull
-   *             to use a default scope
+   * @param aScopeObject a JavaScript JSObject for the scope to execute in, or
+   *                     nsnull to use a default scope
    * @param aPrincipal the principal that produced the script
    * @param aURL the URL or filename for error messages
    * @param aLineNo the starting line number for the script for error messages
@@ -77,7 +77,7 @@ public:
    *
    **/
   NS_IMETHOD EvaluateString(const nsString& aScript,
-                            void *aObj,
+                            void *aScopeObject,
                             nsIPrincipal *aPrincipal,
                             const char *aURL,
                             PRUint32 aLineNo,
@@ -105,9 +105,9 @@ public:
    **/
   NS_IMETHOD CompileScript(const PRUnichar* aText,
                            PRInt32 aTextLength,
-                           void *aScopeObject,
-                           nsIPrincipal *aPrincipal,
-                           const char *aURL,
+                           void* aScopeObject,
+                           nsIPrincipal* aPrincipal,
+                           const char* aURL,
                            PRUint32 aLineNo,
                            const char* aVersion,
                            void** aScriptObject) = 0;
@@ -127,66 +127,65 @@ public:
    *
    */
   NS_IMETHOD ExecuteScript(void* aScriptObject,
-                           void *aScopeObject,
+                           void* aScopeObject,
                            nsString* aRetValue,
                            PRBool* aIsUndefined) = 0;
 
   /**
    * Compile the event handler named by atom aName, with function body aBody
-   * into a function object returned if ok via *aFunObj.  Bind the lowercase
-   * ASCII name to the function in scope aObj, or in the context's global if
-   * aObj is null.
+   * into a function object returned if ok via *aHandler.  Bind the lowercase
+   * ASCII name to the function in its parent object aTarget.
    *
-   * @param aObj an object telling the scope in which to bind the compiled
-   *             event handler function.
+   * @param aTarget an object telling the scope in which to bind the compiled
+   *        event handler function to aName.
    * @param aName an nsIAtom pointer naming the function; it must be lowercase
    *        and ASCII, and should not be longer than 63 chars.  This bound on
    *        length is enforced only by assertions, so caveat caller!
    * @param aBody the event handler function's body
-   * @param aFunObj the out parameter in which a void pointer to the compiled
+   * @param aHandler the out parameter in which a void pointer to the compiled
    *        function object is returned on success; may be null, meaning the
-   *        caller doesn't care.
+   *        caller doesn't need to store the handler for later use.
    *
    * @return NS_OK if the function body was valid and got compiled
    */
-  NS_IMETHOD CompileEventHandler(void *aObj,
-                                 nsIAtom *aName,
+  NS_IMETHOD CompileEventHandler(void* aTarget,
+                                 nsIAtom* aName,
                                  const nsString& aBody,
-                                 void** aFunObj) = 0;
+                                 void** aHandler) = 0;
 
   /**
    * Call the function object with given args and return its boolean result,
    * or true if the result isn't boolean.
    *
-   * @param aObj an object telling the scope in which to bind the compiled
-   *             event handler function.
-   * @param aFunObj function object (function and static scope) to invoke.
+   * @param aTarget an object telling the scope in which to bind the compiled
+   *        event handler function.
+   * @param aHandler function object (function and static scope) to invoke.
    * @param argc actual argument count; length of argv
    * @param argv vector of arguments; length is argc
    * @param aBoolResult out parameter returning boolean function result, or
    *        true if the result was not boolean.
    **/
-  NS_IMETHOD CallFunctionObject(void *aObj, void *aFunObj,
-                                PRUint32 argc, void *argv,
-                                PRBool *aBoolResult) = 0;
+  NS_IMETHOD CallEventHandler(void* aTarget, void* aHandler,
+                              PRUint32 argc, void* argv,
+                              PRBool* aBoolResult) = 0;
 
   /**
    * Bind an already-compiled event handler function to a name in the given
    * scope object.  The same restrictions on aName (lowercase ASCII, not too
    * long) applies here as for CompileEventHandler.
    *
-   * @param aObj an object telling the scope in which to bind the compiled
-   *             event handler function
+   * @param aTarget an object telling the scope in which to bind the compiled
+   *        event handler function.
    * @param aName an nsIAtom pointer naming the function; it must be lowercase
    *        and ASCII, and should not be longer than 63 chars.  This bound on
    *        length is enforced only by assertions, so caveat caller!
-   * @param aFunObj the function object to name, created by an earlier call to
+   * @param aHandler the function object to name, created by an earlier call to
    *        CompileEventHandler
    * @return NS_OK if the function was successfully bound to the name
    */
-  NS_IMETHOD BindCompiledEventHandler(void *aObj,
-                                      nsIAtom *aName,
-                                      void *aFunObj) = 0;
+  NS_IMETHOD BindCompiledEventHandler(void* aTarget,
+                                      nsIAtom* aName,
+                                      void* aHandler) = 0;
 
   /**
    * Set the default scripting language version for this context, which must

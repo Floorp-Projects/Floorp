@@ -49,6 +49,10 @@ public:
 
 };
 
-extern "C" NS_DOM nsresult NS_NewScriptEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, void* aObj, void *aFun);
+extern "C" NS_DOM nsresult
+NS_NewScriptEventListener(nsIDOMEventListener ** aInstancePtrResult,
+                          nsIScriptContext *aContext,
+                          void *aTarget,
+                          void *aHandler);
 
 #endif // nsIScriptEventListener_h__
