@@ -180,6 +180,10 @@ bin\components\necko_ftp.xpt
 bin\components\necko_http.xpt
 bin\components\necko_jar.xpt
 bin\components\necko_res.xpt
+bin\components\necko_cookie.xpt
+bin\components\necko_file.xpt
+bin\components\necko_socket.xpt
+bin\components\necko_viewsource.xpt
 bin\components\nslocale.dll
 bin\components\nsprefm.dll
 bin\components\nsSidebar.js
