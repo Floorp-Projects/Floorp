@@ -62,3 +62,42 @@ NS_IMETHODIMP nsXULButtonFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXULButtonFrame::HandleEvent(nsIPresContext* aPresContext, 
+                                      nsGUIEvent* aEvent,
+                                      nsEventStatus* aEventStatus)
+{
+  switch (aEvent->message) {
+    case NS_KEY_PRESS:
+      if (NS_KEY_EVENT == aEvent->eventStructType) {
+        nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+        if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
+          MouseClicked(aPresContext);
+        }
+      }
+      break;
+
+    case NS_MOUSE_LEFT_CLICK:
+      MouseClicked(aPresContext);
+      break;
+  }
+
+  return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+}
+
+void 
+nsXULButtonFrame::MouseClicked (nsIPresContext* aPresContext) 
+{
+  // Execute the oncommand event handler.
+  nsEventStatus status = nsEventStatus_eIgnore;
+  nsMouseEvent event;
+  event.eventStructType = NS_EVENT;
+  event.message = NS_MENU_ACTION;
+  event.isShift = PR_FALSE;
+  event.isControl = PR_FALSE;
+  event.isAlt = PR_FALSE;
+  event.isMeta = PR_FALSE;
+  event.clickCount = 0;
+  event.widget = nsnull;
+  mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+}

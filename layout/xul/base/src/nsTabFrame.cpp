@@ -52,7 +52,7 @@ NS_NewTabFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTabFrame* it = new (aPresShell) nsTabFrame;
+  nsTabFrame* it = new (aPresShell) nsTabFrame(aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -60,6 +60,12 @@ NS_NewTabFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   return NS_OK;
   
 } // NS_NewTabFrame
+
+nsTabFrame::nsTabFrame(nsIPresShell* aPresShell)
+:nsXULButtonFrame(aPresShell)
+{
+
+}
 
 void
 nsTabFrame::MouseClicked(nsIPresContext* aPresContext) 
@@ -77,7 +83,7 @@ nsTabFrame::MouseClicked(nsIPresContext* aPresContext)
    GetChildWithTag(nsXULAtoms::tabpanel, tabcontrol, tabpanel);
 
    if (!tabpanel) {
-	return;
+	   return;
    }
 
    // unselect the old tab

@@ -19,6 +19,7 @@
 #include "nsLayoutCID.h"
 #include "nsXMLDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMText.h"
 #include "nsSupportsArray.h"
 #include "nsINameSpace.h"
 
@@ -110,6 +111,10 @@ public:
   static nsIAtom* kTypeAtom;
   static nsIAtom* kCapturerAtom;
   static nsIAtom* kExtendsAtom;
+  static nsIAtom* kChildrenAtom;
+  static nsIAtom* kHasChildrenAtom;
+  static nsIAtom* kHTMLAtom;
+  static nsIAtom* kValueAtom;
 
   // Used to easily obtain the correct IID for an event.
   struct EventHandlerMapEntry {
@@ -123,6 +128,7 @@ public:
 // Internal member functions
 protected:
   void GetImmediateChild(nsIAtom* aTag, nsIContent** aResult);
+  void GetNestedChild(nsIAtom* aTag, nsIContent* aContent, nsIContent** aResult);
   PRBool IsInExcludesList(nsIAtom* aTag, const nsString& aList);
 
   NS_IMETHOD ConstructAttributeTable(nsIContent* aElement); 
@@ -154,6 +160,10 @@ nsIAtom* nsXBLBinding::kInheritsAtom = nsnull;
 nsIAtom* nsXBLBinding::kTypeAtom = nsnull;
 nsIAtom* nsXBLBinding::kCapturerAtom = nsnull;
 nsIAtom* nsXBLBinding::kExtendsAtom = nsnull;
+nsIAtom* nsXBLBinding::kChildrenAtom = nsnull;
+nsIAtom* nsXBLBinding::kHasChildrenAtom = nsnull;
+nsIAtom* nsXBLBinding::kValueAtom = nsnull;
+nsIAtom* nsXBLBinding::kHTMLAtom = nsnull;
 
 nsXBLBinding::EventHandlerMapEntry
 nsXBLBinding::kEventHandlerMap[] = {
@@ -222,6 +232,10 @@ nsXBLBinding::nsXBLBinding(void)
     kTypeAtom = NS_NewAtom("type");
     kCapturerAtom = NS_NewAtom("capturer");
     kExtendsAtom = NS_NewAtom("extends");
+    kChildrenAtom = NS_NewAtom("children");
+    kHasChildrenAtom = NS_NewAtom("haschildren");
+    kHTMLAtom = NS_NewAtom("html");
+    kValueAtom = NS_NewAtom("value");
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -245,6 +259,10 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kTypeAtom);
     NS_RELEASE(kCapturerAtom);
     NS_RELEASE(kExtendsAtom);
+    NS_RELEASE(kChildrenAtom);
+    NS_RELEASE(kHasChildrenAtom);
+    NS_RELEASE(kHTMLAtom);
+    NS_RELEASE(kValueAtom);
 
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeName) {
@@ -342,32 +360,6 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     else return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
-  nsCOMPtr<nsIDOMNamedNodeMap> namedMap;
-
-  node->GetAttributes(getter_AddRefs(namedMap));
-  PRUint32 length;
-  namedMap->GetLength(&length);
-
-  nsCOMPtr<nsIDOMNode> attribute;
-  for (PRUint32 i = 0; i < length; ++i)
-  {
-    namedMap->Item(i, getter_AddRefs(attribute));
-    nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(attribute));
-    nsAutoString name;
-    attr->GetName(name);
-    if (name != "excludes") {
-      nsAutoString value;
-      nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mBoundElement));
-      element->GetAttribute(name, value);
-      if (value == "") {
-        nsAutoString value2;
-        attr->GetValue(value2);
-        element->SetAttribute(name, value2);
-      }
-    }
-  }
-
   // Plan to build the content by default.
   PRBool buildContent = PR_TRUE;
   PRInt32 childCount;
@@ -395,7 +387,50 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     else buildContent = PR_FALSE;
   }
   
+  if (!buildContent) {
+    nsAutoString hasChildren;
+    mBinding->GetAttribute(kNameSpaceID_None, kHasChildrenAtom, hasChildren);
+    if (hasChildren == "") {
+      // see if we have a <children/> element
+      nsCOMPtr<nsIContent> child;
+      GetNestedChild(kChildrenAtom, content, getter_AddRefs(child));
+      if (child) {
+        buildContent = PR_TRUE;
+        mBinding->SetAttribute(kNameSpaceID_None, kHasChildrenAtom, "true", PR_FALSE);
+      }
+    }
+    else
+      buildContent = PR_TRUE;
+  }
+
   if (buildContent) {
+    nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+    nsCOMPtr<nsIDOMNamedNodeMap> namedMap;
+
+    node->GetAttributes(getter_AddRefs(namedMap));
+    PRUint32 length;
+    namedMap->GetLength(&length);
+
+    nsCOMPtr<nsIDOMNode> attribute;
+    for (PRUint32 i = 0; i < length; ++i)
+    {
+      namedMap->Item(i, getter_AddRefs(attribute));
+      nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(attribute));
+      nsAutoString name;
+      attr->GetName(name);
+      if (name != "excludes") {
+        nsAutoString value;
+        nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mBoundElement));
+        element->GetAttribute(name, value);
+        if (value == "") {
+          nsAutoString value2;
+          attr->GetValue(value2);
+          element->SetAttribute(name, value2);
+        }
+      }
+    }
+
+    
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(content);
 
     nsCOMPtr<nsIDOMNode> clonedNode;
@@ -565,6 +600,34 @@ nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool
         if (attrPresent)
           element->SetAttribute(aNameSpaceID, setAttr, value, PR_TRUE);
       }
+
+      // See if we're the <html> tag in XUL, and see if value is being
+      // set or unset on us.
+      nsCOMPtr<nsIAtom> tag;
+      element->GetTag(*getter_AddRefs(tag));
+      if ((tag.get() == kHTMLAtom) && (setAttr.get() == kValueAtom)) {
+        // Flush out all our kids.
+        PRInt32 childCount;
+        element->ChildCount(childCount);
+        if (childCount > 0)
+          element->RemoveChildAt(0, PR_TRUE);
+        
+        if (!aRemoveFlag) {
+          // Construct a new text node and insert it.
+          nsAutoString value;
+          nsresult result = mBoundElement->GetAttribute(aNameSpaceID, aAttribute, value);
+          if (value != "") {
+            nsCOMPtr<nsIDOMText> textNode;
+            nsCOMPtr<nsIDocument> doc;
+            mBoundElement->GetDocument(*getter_AddRefs(doc));
+            nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+            domDoc->CreateTextNode(value, getter_AddRefs(textNode));
+            nsCOMPtr<nsIDOMNode> dummy;
+            nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(element));
+            domElement->AppendChild(textNode, getter_AddRefs(dummy));
+          }
+        }
+      }
     }
   }
 
@@ -588,6 +651,32 @@ nsXBLBinding::GetImmediateChild(nsIAtom* aTag, nsIContent** aResult)
       *aResult = child;
       NS_ADDREF(*aResult);
       return;
+    }
+  }
+
+  return;
+}
+
+void
+nsXBLBinding::GetNestedChild(nsIAtom* aTag, nsIContent* aContent, nsIContent** aResult) 
+{
+  *aResult = nsnull;
+  PRInt32 childCount;
+  aContent->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aContent->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsIAtom> tag;
+    child->GetTag(*getter_AddRefs(tag));
+    if (aTag == tag.get()) {
+      *aResult = child;
+      NS_ADDREF(*aResult);
+      return;
+    }
+    else {
+      GetNestedChild(aTag, child, aResult);
+      if (*aResult)
+        return;
     }
   }
 
@@ -691,8 +780,21 @@ nsXBLBinding::ConstructAttributeTable(nsIContent* aElement)
       PRBool attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
                             result == NS_CONTENT_ATTR_HAS_VALUE);
 
-      if (attrPresent)
+      if (attrPresent) {
         aElement->SetAttribute(kNameSpaceID_None, attribute, value, PR_TRUE);
+        nsCOMPtr<nsIAtom> tag;
+        aElement->GetTag(*getter_AddRefs(tag));
+        if ((tag.get() == kHTMLAtom) && (attribute.get() == kValueAtom) && value != "") {
+          nsCOMPtr<nsIDOMText> textNode;
+          nsCOMPtr<nsIDocument> doc;
+          mBoundElement->GetDocument(*getter_AddRefs(doc));
+          nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
+          domDoc->CreateTextNode(value, getter_AddRefs(textNode));
+          nsCOMPtr<nsIDOMNode> dummy;
+          nsCOMPtr<nsIDOMElement> domElement(do_QueryInterface(aElement));
+          domElement->AppendChild(textNode, getter_AddRefs(dummy));
+        }
+      }
 
       token = nsCRT::strtok( newStr, ", ", &newStr );
     }
