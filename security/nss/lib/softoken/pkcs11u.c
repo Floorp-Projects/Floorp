@@ -2653,6 +2653,40 @@ pk11_mkHandle(PK11Slot *slot, SECItem *dbKey, CK_OBJECT_HANDLE class)
     return handle;
 }
 
+PRBool
+pk11_poisonHandle(PK11Slot *slot, SECItem *dbKey, CK_OBJECT_HANDLE class)
+{
+    unsigned char hashBuf[4];
+    CK_OBJECT_HANDLE handle;
+    SECItem *key;
+
+    handle = class;
+    /* there is only one KRL, use a fixed handle for it */
+    if (handle != PK11_TOKEN_KRL_HANDLE) {
+	pk11_XORHash(hashBuf,dbKey->data,dbKey->len);
+	handle = (hashBuf[0] << 24) | (hashBuf[1] << 16) | 
+					(hashBuf[2] << 8)  | hashBuf[3];
+	handle = PK11_TOKEN_MAGIC | class | 
+			(handle & ~(PK11_TOKEN_TYPE_MASK|PK11_TOKEN_MASK));
+	/* we have a CRL who's handle has randomly matched the reserved KRL
+	 * handle, increment it */
+	if (handle == PK11_TOKEN_KRL_HANDLE) {
+	    handle++;
+	}
+    }
+    pk11_tokenKeyLock(slot);
+    while ((key = pk11_lookupTokenKeyByHandle(slot,handle)) != NULL) {
+	if (SECITEM_ItemsAreEqual(key,dbKey)) {
+	   key->data[0] ^= 0x80;
+    	   pk11_tokenKeyUnlock(slot);
+	   return PR_TRUE;
+	}
+	handle++;
+    }
+    pk11_tokenKeyUnlock(slot);
+    return PR_FALSE;
+}
+
 void
 pk11_addHandle(PK11SearchResults *search, CK_OBJECT_HANDLE handle)
 {

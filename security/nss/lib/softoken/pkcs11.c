@@ -998,7 +998,11 @@ pk11_handleCrlObject(PK11Session *session,PK11Object *object)
 	    return CKR_DEVICE_ERROR;
 	}
 
-	object->handle = pk11_mkHandle(slot,&derSubj,
+	/* if we overwrote the existing CRL, poison the handle entry so we get
+	 * a new object handle */
+	(void) pk11_poisonHandle(slot, &derSubj,
+			isKRL ? PK11_TOKEN_KRL_HANDLE : PK11_TOKEN_TYPE_CRL);
+	object->handle = pk11_mkHandle(slot, &derSubj,
 			isKRL ? PK11_TOKEN_KRL_HANDLE : PK11_TOKEN_TYPE_CRL);
     	pk11_FreeAttribute(subject);
     }
