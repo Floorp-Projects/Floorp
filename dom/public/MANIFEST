@@ -22,3 +22,4 @@ nsIScriptObjectOwner.h
 nsIScriptContextOwner.h
 nsIJSScriptObject.h
 nsIScriptGlobalObject.h
+nsIScriptEventListener.h
