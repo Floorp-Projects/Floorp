@@ -498,10 +498,12 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
                    nsIRegion *aClipRegion)
 {
 
+#ifdef NS_DEBUG
   if (this == debugWidget) {
     g_print("nsWindow::DoPaint %d %d %d %d\n",
             aX, aY, aWidth, aHeight);
   }
+#endif // NS_DEBUG
   if (mEventCallback) 
   {
     nsPaintEvent event;
