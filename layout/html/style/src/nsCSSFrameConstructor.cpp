@@ -1358,6 +1358,12 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
   nsIPresShell *shell = aPresContext->PresShell();
 
   if (eStyleContentType_URL == type) {
+    if (!data.mContent.mURL) {
+      // CSS had something specified that couldn't be converted to a URI object
+      *aFrame = nsnull;
+      return NS_ERROR_FAILURE;
+    }
+    
     // Create an HTML image content object, and set the SRC.
     // XXX Check if it's an image type we can handle...
 
