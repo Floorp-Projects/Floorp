@@ -45,6 +45,16 @@ sub show_graph {
 
   my $PNGFILE  = "/tmp/gnuplot.$$";
 
+  # Find gnuplot, sorry this is for solaris.
+  my $gnuplot;
+  if(-f "/usr/bin/gnuplot") {
+	$gnuplot = "/usr/bin/gnuplot";
+  } elsif(-f "/usr/local/bin/gnuplot") {
+	$gnuplot = "/usr/local/bin/gnuplot";
+  } else {
+	die "Can't find gnuplot.";
+  }
+
   # interpolate params into gnuplot command
   my $cmds = qq{
 				reset
@@ -65,7 +75,7 @@ sub show_graph {
 				plot "$DATAFILE" using 1:2 with points ls 1, "$DATAFILE" using 1:2 with lines ls 2
 			   };
 
-  open  (GNUPLOT, "| /usr/bin/gnuplot") || die "can't fork: $!";
+  open  (GNUPLOT, "| $gnuplot") || die "can't fork: $!";
   print  GNUPLOT $cmds;
   close (GNUPLOT) || die "can't close: $!";
   open  (GNUPLOT, "< $PNGFILE") || die "can't read: $!";
