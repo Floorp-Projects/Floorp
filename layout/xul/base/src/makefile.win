@@ -48,6 +48,7 @@ CPPSRCS=					\
 	nsTreeIndentationFrame.cpp \
 	nsTreeCellFrame.cpp \
 	nsTreeTwistyListener.cpp \
+	nsTreeItemDragCapturer.cpp \
 	nsSpinnerFrame.cpp \
 	nsScrollbarFrame.cpp \
         nsScrollbarButtonFrame.cpp \
@@ -84,6 +85,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsTreeIndentationFrame.obj \
 	.\$(OBJDIR)\nsTreeCellFrame.obj \
 	.\$(OBJDIR)\nsTreeTwistyListener.obj \
+	.\$(OBJDIR)\nsTreeItemDragCapturer.obj \
 	.\$(OBJDIR)\nsSpinnerFrame.obj \
 	.\$(OBJDIR)\nsScrollbarFrame.obj \
 	.\$(OBJDIR)\nsScrollbarButtonFrame.obj \
