@@ -400,8 +400,9 @@ Contributor(s): ______________________________________. -->
   <box id="sidebar-box" chromeclass="extrachrome"/>
   <splitter id="sidebar-splitter" chromeclass="extrachrome" />
   
-  <box id="appcontent" align="vertical" flex="100%">
-
+  <box id="appcontent" align="vertical" flex="100%"
+    ondragover="return DragOverContentArea(event);"
+    ondragdrop="return DropOnContentArea(event);">
 
     <!-- type attribute is used by frame construction to locate iframes
          intended to hold (html) content -->

@@ -226,6 +226,87 @@ this doesn't work anymore (target is null), not sure why.
 
   } // DragOverPersonalToolbar
 
+
+  //
+  // DragOverContentArea
+  //
+  // An example of how to handle drag-over. Looks for any of a handful of flavors and
+  // if it finds them it marks the dragSession that the drop is allowed.
+  //
+  function DragOverContentArea ( event )
+  {
+    var validFlavor = false;
+    var dragSession = null;
+
+    var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+    if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+    if ( dragService ) {
+      dragSession = dragService.getCurrentSession();
+      if ( dragSession ) {
+        if ( dragSession.isDataFlavorSupported("moz/toolbaritem") )
+          validFlavor = true;
+        else if ( dragSession.isDataFlavorSupported("text/plain") )
+          validFlavor = true;
+        //XXX other flavors here...such as files from the desktop?
+        
+        if ( validFlavor ) {
+          // XXX do some drag feedback here, set a style maybe???
+          
+          dragSession.canDrop = true;
+        }
+      }
+    }
+
+    return true;  
+  } // DragOverContentArea
+
+
+  //
+  // DropOnContentArea
+  //
+  // An example of how to handle a drop. Basically looks for the text flavor, extracts it,
+  // shoves it into the url bar, and loads the given URL. No checking is done to make sure
+  // this is a url ;)
+  //
+  function DropOnContentArea ( event )
+  { 
+    var dropAccepted = false;
+    
+    var dragService = Components.classes["component://netscape/widget/dragservice"].getService();
+    if ( dragService ) dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+    if ( dragService ) {
+      var dragSession = dragService.getCurrentSession();
+      if ( dragSession ) {
+        var trans = Components.classes["component://netscape/widget/transferable"].createInstance();
+        if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
+        if ( trans ) {
+          trans.addDataFlavor("text/plain");
+          for ( var i = 0; i < dragSession.numDropItems; ++i ) {
+            dragSession.getData ( trans, i );
+            var dataObj = new Object();
+            var bestFlavor = new Object();
+            var len = new Object();
+            trans.getAnyTransferData ( bestFlavor, dataObj, len );
+            if ( dataObj ) dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
+            if ( dataObj ) {
+            
+              // pull the URL out of the data object
+              var id = dataObj.data.substring(0, len.value);
+              dump("ID: '" + id + "'\n");
+
+              // stuff it into the url field and go, baby, go!
+              var urlBar = document.getElementById ( "urlbar" );
+              urlBar.value = id;
+              BrowserLoadURL();             
+            }
+          } // foreach drag item
+        }
+      }
+    }
+  } // DropOnContentArea
+
+
+  
 function UpdateHistory(event)
 {
     // This is registered as a capturing "load" event handler. When a
