@@ -66,7 +66,7 @@
 
 #define PSM_VERSION_REG_KEY "/Netscape/Personal Security Manager"
 
-#ifdef WIN32
+#if defined(WIN32) || defined(XP_OS2)
 #define PSM_FILE_NAME "psm.exe"
 #elif XP_UNIX
 #define PSM_FILE_NAME "start-psm"
