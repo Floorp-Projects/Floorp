@@ -29,23 +29,25 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  /*NS_IMETHOD*/virtual int WriteReady();
+  NS_IMETHOD WriteReady(PRUint32 *chunksizep);
   
-  virtual int FirstWrite(const unsigned char *str, int32 len);
+  NS_IMETHOD FirstWrite(const unsigned char *str, int32 len);
 
-  virtual int Write(const unsigned char *str, int32 len);
+  NS_IMETHOD Write(const unsigned char *str, int32 len);
 
-  virtual void StreamAbort(int status);
+  NS_IMETHOD StreamAbort(int status);
 
-  virtual void StreamComplete(PRBool is_multipart);
+  NS_IMETHOD StreamComplete(PRBool is_multipart);
 
-  virtual void NetRequestDone(ilIURL *urls, int status);
+  NS_IMETHOD NetRequestDone(ilIURL *urls, int status);
   
   virtual PRBool StreamCreated(ilIURL *urls, int type);
   
   virtual PRBool IsMulti();
 
-  il_container *GetContainer() {return ilContainer;}
+    // XXX Need to fix this to make sure return type is nsresult
+  il_container *GetContainer() {return ilContainer;};
+ // il_container *SetContainer(il_container *ic) {ilContainer=ic; return ic;};
 
 private:
   il_container *ilContainer;
@@ -63,63 +65,73 @@ NetReaderImpl::~NetReaderImpl()
 
 NS_IMPL_ISUPPORTS(NetReaderImpl, kINetReaderIID)
 
-int
-NetReaderImpl::WriteReady()
+NS_IMETHODIMP
+NetReaderImpl::WriteReady(PRUint32* maxread)
 {
-    PRUint32 ret;
-
     if (ilContainer != NULL) {
-        ret = IL_StreamWriteReady(ilContainer);
-        if( ret != 0)
-            return -1;
+        *maxread =IL_StreamWriteReady(ilContainer);      
+        if (*maxread < 0)
+            *maxread = 0;
     }
-    return 0;
+    return NS_OK;
 }
   
-int 
+NS_IMETHODIMP 
 NetReaderImpl::FirstWrite(const unsigned char *str, int32 len)
 {
+    int ret = 0;
+ 
     if (ilContainer != NULL) {
-        return IL_StreamFirstWrite(ilContainer, str, len);
+        ret = IL_StreamFirstWrite(ilContainer, str, len);
+        if(ret == 0)
+            return NS_OK;
     }
-    else {
-        return 0;
-    }
+    return NS_ERROR_FAILURE;
 }
 
-int 
+NS_IMETHODIMP 
 NetReaderImpl::Write(const unsigned char *str, int32 len)
 {
+    int ret = 0;
+
     if (ilContainer != NULL) {
-        return IL_StreamWrite(ilContainer, str, len);
+        ret=  IL_StreamWrite(ilContainer, str, len);
+        if(ret >= 0)
+            return NS_OK;
     }
     else {
-        return 0;
+        return NS_ERROR_FAILURE;
     }
 }
 
-void 
+NS_IMETHODIMP 
 NetReaderImpl::StreamAbort(int status)
 {
     if (ilContainer != NULL) {
         IL_StreamAbort(ilContainer, status);
+        return NS_OK;
     }
+    return NS_ERROR_FAILURE;
 }
 
-void 
+NS_IMETHODIMP 
 NetReaderImpl::StreamComplete(PRBool is_multipart)
 {
     if (ilContainer != NULL) {
         IL_StreamComplete(ilContainer, is_multipart);
+        return NS_OK;
     }
+    return NS_ERROR_FAILURE;
 }
 
-void 
+NS_IMETHODIMP 
 NetReaderImpl::NetRequestDone(ilIURL *urls, int status)
 {
     if (ilContainer != NULL) {
         IL_NetRequestDone(ilContainer, urls, status);
+        return NS_OK;
     }
+    return NS_ERROR_FAILURE;
 }
   
 PRBool 
