@@ -1522,13 +1522,11 @@ nsJSContext::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 {
   mScriptsEnabled = aEnabled;
 
-  if (aFireTimeouts) {
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    GetGlobalObject(getter_AddRefs(global));
+  nsCOMPtr<nsIScriptGlobalObject> global;
+  GetGlobalObject(getter_AddRefs(global));
 
-    if (global) {
-      global->SetScriptsEnabled(aEnabled);
-    }
+  if (global) {
+    global->SetScriptsEnabled(aEnabled, aFireTimeouts);
   }
 
   return NS_OK;

@@ -137,7 +137,7 @@ public:
                             nsEventStatus* aEventStatus);
   NS_IMETHOD_(JSObject *) GetGlobalJSObject();
   NS_IMETHOD OnFinalize(JSObject *aJSObject);
-  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled);
+  NS_IMETHOD SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
   // nsIScriptObjectPrincipal
   NS_IMETHOD GetPrincipal(nsIPrincipal **prin);
