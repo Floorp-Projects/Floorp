@@ -36,6 +36,7 @@ class nsIScriptContext;
 class nsIDOMWindow;
 class nsIURL;
 class nsIWebShellWindow;
+class nsIHistoryDataSource;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +140,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
     nsIWebShell *       mWebShell;
     nsIWebShell *       mContentAreaWebShell;
 
+    nsIHistoryDataSource* mHistory;
 };
 
 #endif // nsBrowserAppCore_h___
