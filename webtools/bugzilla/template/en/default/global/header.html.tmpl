@@ -53,7 +53,7 @@
   # mistakenly treats empty strings as undefined and gives h1 the
   # value of title anyway.  To get around that problem we explicitly
   # set h1's default value here only if it is undefined. %]
-[% h1 = title IF !h1.defined %]
+[% IF !h1.defined %][% h1 = title %][% END %]
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
