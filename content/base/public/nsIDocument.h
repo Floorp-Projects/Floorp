@@ -40,7 +40,6 @@
 #include "nsISupports.h"
 #include "nsEvent.h"
 #include "nsString.h"
-#include "nsChangeHint.h"
 #include "nsCOMArray.h"
 #include "nsIDocumentObserver.h"
 #include "nsCOMPtr.h"
