@@ -911,6 +911,43 @@ NS_NewMathMLElement(nsIContent** aResult, nsINodeInfo* aNodeInfo)
 
 ////////////////////////////////////////////////////////////////////////
 
+PRBool
+nsXMLContentSink::SetDocElement(PRInt32 aNameSpaceID,
+                                nsIAtom* aTagName,
+                                nsIContent *aContent)
+{
+  if (mDocElement)
+    return PR_FALSE;
+
+  // check for root elements that needs special handling for
+  // prettyprinting
+  if ((aNameSpaceID == kNameSpaceID_XBL &&
+       aTagName == nsXBLAtoms::bindings) ||
+      (aNameSpaceID == kNameSpaceID_XSLT &&
+       (aTagName == nsLayoutAtoms::stylesheet ||
+        aTagName == nsLayoutAtoms::transform))) {
+    mPrettyPrintHasSpecialRoot = PR_TRUE;
+    if (mPrettyPrintXML) {
+      // In this case, disable script execution, stylesheet
+      // loading, and auto XLinks since we plan to prettyprint.
+      mAllowAutoXLinks = PR_FALSE;
+      nsIScriptLoader* scriptLoader = mDocument->GetScriptLoader();
+      if (scriptLoader) {
+        scriptLoader->SetEnabled(PR_FALSE);
+      }
+      if (mCSSLoader) {
+        mCSSLoader->SetEnabled(PR_FALSE);
+      }
+    }        
+  }
+
+  mDocElement = aContent;
+  NS_ADDREF(mDocElement);
+
+  mDocument->SetRootContent(mDocElement);
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP 
 nsXMLContentSink::HandleStartElement(const PRUnichar *aName, 
                                      const PRUnichar **aAtts, 
@@ -967,44 +1004,17 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
                          getter_AddRefs(content), &appendContent);
   NS_ENSURE_SUCCESS(result, result);
 
-  content->SetContentID(mDocument->GetAndIncrementContentID());
+  if (mDocument) {
+    content->SetContentID(mDocument->GetAndIncrementContentID());
+  }
   content->SetDocument(mDocument, PR_FALSE, PR_TRUE);
 
   // Set the attributes on the new content element
   result = AddAttributes(aAtts, content);
 
   if (NS_OK == result) {
-    // If this is the document element
-    if (!mDocElement) {
-
-      // check for root elements that needs special handling for
-      // prettyprinting
-      if ((nameSpaceID == kNameSpaceID_XBL &&
-           tagAtom == nsXBLAtoms::bindings) ||
-          (nameSpaceID == kNameSpaceID_XSLT &&
-           (tagAtom == nsLayoutAtoms::stylesheet ||
-            tagAtom == nsLayoutAtoms::transform))) {
-        mPrettyPrintHasSpecialRoot = PR_TRUE;
-        if (mPrettyPrintXML) {
-          // In this case, disable script execution, stylesheet
-          // loading, and auto XLinks since we plan to prettyprint.
-          mAllowAutoXLinks = PR_FALSE;
-          nsIScriptLoader* scriptLoader = mDocument->GetScriptLoader();
-          if (scriptLoader) {
-            scriptLoader->SetEnabled(PR_FALSE);
-          }
-          if (mCSSLoader) {
-            mCSSLoader->SetEnabled(PR_FALSE);
-          }
-        }        
-      }
-
-      mDocElement = content;
-      NS_ADDREF(mDocElement);
-
-      mDocument->SetRootContent(mDocElement);
-    }
-    else if (appendContent) {
+    // Store the element 
+    if (!SetDocElement(nameSpaceID,tagAtom,content) && appendContent) {
       nsCOMPtr<nsIContent> parent = GetCurrentContent();
       NS_ENSURE_TRUE(parent, NS_ERROR_UNEXPECTED);
 
@@ -1266,6 +1276,15 @@ NS_IMETHODIMP
 nsXMLContentSink::ReportError(const PRUnichar* aErrorText, 
                               const PRUnichar* aSourceText)
 {
+  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mDocument));
+  return ReportErrorFrom( aErrorText, aSourceText, node );
+}
+
+NS_IMETHODIMP
+nsXMLContentSink::ReportErrorFrom(const PRUnichar* aErrorText, 
+                                  const PRUnichar* aSourceText,
+                                  nsIDOMNode* aNode)
+{
   nsresult rv = NS_OK;
   
   mPrettyPrintXML = PR_FALSE;
@@ -1278,14 +1297,13 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
 
   // Clear the current content and
   // prepare to set <parsererror> as the document root
-  nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mDocument));
-  if (node) {
+  if (aNode) {
     for (;;) {
       nsCOMPtr<nsIDOMNode> child, dummy;
-      node->GetLastChild(getter_AddRefs(child));
+      aNode->GetLastChild(getter_AddRefs(child));
       if (!child)
         break;
-      node->RemoveChild(child, getter_AddRefs(dummy));
+      aNode->RemoveChild(child, getter_AddRefs(dummy));
     }
   }
   NS_IF_RELEASE(mDocElement); 

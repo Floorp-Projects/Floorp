@@ -134,6 +134,7 @@ HTML_ATOM(em, "em")
 HTML_ATOM(embed, "embed")
 HTML_ATOM(encoding, "encoding")
 HTML_ATOM(enctype, "enctype")
+HTML_ATOM(endnote, "endnote")  // contextual fragments
 HTML_ATOM(_event, "event")
 HTML_ATOM(face, "face")
 HTML_ATOM(fieldset, "fieldset")

@@ -53,7 +53,7 @@ EXPORTS = \
 		nsIContentSink.h            \
 		nsITokenizer.h              \
 		nsIHTMLContentSink.h        \
-		nsIHTMLFragmentContentSink.h\
+		nsIFragmentContentSink.h    \
 		nsIParserNode.h             \
 		nsIParser.h                 \
 		nsIDTD.h                    \

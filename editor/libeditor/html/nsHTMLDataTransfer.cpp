@@ -93,7 +93,8 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsLinebreakConverter.h"
-#include "nsIHTMLFragmentContentSink.h"
+#include "nsIFragmentContentSink.h"
+#include "nsIContentSink.h"
 
 // netwerk
 #include "nsIURI.h"
@@ -2529,7 +2530,7 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
     sink = do_CreateInstance(NS_HTMLFRAGMENTSINK_CONTRACTID);
 
   NS_ENSURE_TRUE(sink, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIHTMLFragmentContentSink> fragSink(do_QueryInterface(sink));
+  nsCOMPtr<nsIFragmentContentSink> fragSink(do_QueryInterface(sink));
   NS_ENSURE_TRUE(fragSink, NS_ERROR_FAILURE);
 
   fragSink->SetTargetDocument(aTargetDocument);
@@ -2539,7 +2540,7 @@ nsresult nsHTMLEditor::ParseFragment(const nsAString & aFragStr,
   if (bContext)
     parser->Parse(aFragStr, (void*)0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE, eDTDMode_fragment);
   else
-    parser->ParseFragment(aFragStr, 0, aTagStack, 0, NS_LITERAL_CSTRING("text/html"), eDTDMode_quirks);
+    parser->ParseFragment(aFragStr, 0, aTagStack, PR_FALSE, NS_LITERAL_CSTRING("text/html"), eDTDMode_quirks);
   // get the fragment node
   nsCOMPtr<nsIDOMDocumentFragment> contextfrag;
   res = fragSink->GetFragment(getter_AddRefs(contextfrag));

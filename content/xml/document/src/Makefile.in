@@ -72,6 +72,7 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		nsXMLContentSink.cpp \
+		nsXMLFragmentContentSink.cpp \
 		nsXMLDocument.cpp \
 		nsXMLPrettyPrinter.cpp \
 		$(NULL)

@@ -218,10 +218,13 @@ class nsParser : public nsIParser,
                      PRBool aLastCall,
                      nsDTDMode aMode = eDTDMode_autodetect);
 
+    /**
+     * This method needs documentation
+     */
     NS_IMETHOD ParseFragment(const nsAString& aSourceBuffer,
                              void* aKey,
                              nsVoidArray& aTagStack,
-                             PRUint32 anInsertPos,
+                             PRBool aXMLMode,
                              const nsACString& aContentType,
                              nsDTDMode aMode = eDTDMode_autodetect);
 
