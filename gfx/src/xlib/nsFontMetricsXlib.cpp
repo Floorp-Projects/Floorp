@@ -60,6 +60,7 @@
 #include "nsAWritableString.h"
 #include "nsXPIDLString.h"
 #include <stdlib.h>
+#include <errno.h>
 #include <X11/Xatom.h>
 #ifdef USE_XPRINT
 #include <X11/extensions/Print.h>
@@ -208,7 +209,8 @@ static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
 static nsHashtable* gAliases = nsnull;
 static nsHashtable* gCharSetMaps = nsnull;
 static nsHashtable* gFamilies = nsnull;
-static nsHashtable* gNodes = nsnull;
+static nsHashtable* gFFRENodes = nsnull;
+static nsHashtable* gAFRENodes = nsnull;
 /* gCachedFFRESearches holds the "already looked up"
    FFRE (Foundry Family Registry Encoding) font searches */
 static nsHashtable* gCachedFFRESearches = nsnull;
@@ -725,10 +727,16 @@ nsFontMetricsXlib::FreeGlobals(void)
     gCachedFFRESearches = nsnull;
   }
 
-  if (gNodes) {
-    gNodes->Reset(FreeNode, nsnull);
-    delete gNodes;
-    gNodes = nsnull;
+  if (gFFRENodes) {
+    gFFRENodes->Reset(FreeNode, nsnull);
+    delete gFFRENodes;
+    gFFRENodes = nsnull;
+  }
+
+  if (gAFRENodes) {
+    gAFRENodes->Reset(FreeNode, nsnull);
+    delete gAFRENodes;
+    gAFRENodes = nsnull;
   }
 
   NS_IF_RELEASE(gPref);
@@ -833,8 +841,14 @@ nsFontMetricsXlib::InitGlobals(nsIDeviceContext *aDevice)
   if (percent)
     gBitmapUndersize = percent / 100.0;
 
-  gNodes = new nsHashtable();
-  if (!gNodes) {
+  gFFRENodes = new nsHashtable();
+  if (!gFFRENodes) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  gAFRENodes = new nsHashtable();
+  if (!gAFRENodes) {
     FreeGlobals();
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -2602,7 +2616,11 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
 #endif /* !ABS */
   // if we do not have the correct size 
   // check if we can use a scaled font
-  if ((mPixelSize != bitmap_size) && (aStretch->mScalable)) {
+  // (when the size of a hand tuned font is close to the desired size
+  // favor it over outline scaled font)
+  if ((  (bitmap_size < mPixelSize-(mPixelSize/10))
+      || (bitmap_size > mPixelSize+(mPixelSize/10)))
+       && (aStretch->mScalable)) {
     // if we have an outline font then use that
     // if it is allowed to be closer than the bitmap
     if (aStretch->mOutlineScaled) {
@@ -2627,7 +2645,7 @@ nsFontMetricsXlib::PickASizeAndLoad(nsFontStretchXlib* aStretch,
 
   NS_ASSERTION((bitmap_size < NOT_FOUND_FONT_SIZE) || use_scaled_font, "did not find font size");
 
-  if (use_scaled_font) {
+  if (use_scaled_font && aStretch->mScalable) {
     PRInt32 i;
     PRInt32 n = aStretch->mScaledFonts.Count();
     nsFontXlib *p = nsnull;
@@ -3073,11 +3091,154 @@ SetFontLangGroupInfo(nsFontCharSetMapXlib* aCharSetMap)
     }
 }
 
-static void
-GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
+static nsFontStyleXlib*
+NodeGetStyle(nsFontNodeXlib* aNode, int aStyleIndex)
 {
-  nsCAutoString previousNodeName;
+  nsFontStyleXlib* style = aNode->mStyles[aStyleIndex];
+  if (!style) {
+    style = new nsFontStyleXlib;
+    if (!style) {
+      return nsnull;
+    }
+    aNode->mStyles[aStyleIndex] = style;
+  }
+  return style;
+}
+
+static nsFontWeightXlib*
+NodeGetWeight(nsFontStyleXlib* aStyle, int aWeightIndex)
+{
+  nsFontWeightXlib* weight = aStyle->mWeights[aWeightIndex];
+  if (!weight) {
+    weight = new nsFontWeightXlib;
+    if (!weight) {
+      return nsnull;
+    }
+    aStyle->mWeights[aWeightIndex] = weight;
+  }
+  return weight;
+}
+
+static nsFontStretchXlib* 
+NodeGetStretch(nsFontWeightXlib* aWeight, int aStretchIndex)
+{
+  nsFontStretchXlib* stretch = aWeight->mStretches[aStretchIndex];
+  if (!stretch) {
+    stretch = new nsFontStretchXlib;
+    if (!stretch) {
+      return nsnull;
+    }
+    aWeight->mStretches[aStretchIndex] = stretch;
+  }
+  return stretch;
+}
+
+static PRBool
+NodeAddScalable(nsFontStretchXlib* aStretch, PRBool aOutlineScaled, 
+                const char *aDashFoundry, const char *aFamily, 
+                const char *aWeight,      const char *aSlant, 
+                const char *aWidth,       const char *aStyle, 
+                const char *aSpacing,     const char *aCharSet)
+{
+#ifdef USE_XPRINT
+  /* gisburn: disabled for Xprint - this kills printer buildin fonts
+   * Xprint printer-buildin fonts look like bitmap scaled fonts but are 
+   * (scaleable) printer-buildin fonts in reality.
+   */
+  if (nsFontMetricsXlib::mPrinterMode)
+    return PR_TRUE;
+#endif /* USE_XPRINT */      
+  
+  // if we have both an outline scaled font and a bitmap 
+  // scaled font pick the outline scaled font
+  if ((aStretch->mScalable) && (!aStretch->mOutlineScaled) 
+      && (aOutlineScaled)) {
+    PR_smprintf_free(aStretch->mScalable);
+    aStretch->mScalable = nsnull;
+  }
+  if (!aStretch->mScalable) {
+    aStretch->mOutlineScaled = aOutlineScaled;
+    if (aOutlineScaled) {
+      aStretch->mScalable = 
+          PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-0-0-%s-*-%s", 
+          aDashFoundry, aFamily, aWeight, aSlant, aWidth, aStyle, 
+          aSpacing, aCharSet);
+      if (!aStretch->mScalable)
+        return PR_FALSE;
+    }
+    else {
+      aStretch->mScalable = 
+          PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-*-*-%s-*-%s", 
+          aDashFoundry, aFamily, aWeight, aSlant, aWidth, aStyle, 
+          aSpacing, aCharSet);
+      if (!aStretch->mScalable)
+        return PR_FALSE;
+    }
+  } 
+  return PR_TRUE;
+}
+
+static PRBool
+NodeAddSize(nsFontStretchXlib* aStretch, int aSize, const char *aName,
+        nsFontCharSetXlibInfo* aCharSetInfo)
+{
+  PRBool haveSize = PR_FALSE;
+  if (aStretch->mSizesCount) {
+    nsFontXlib** end = &aStretch->mSizes[aStretch->mSizesCount];
+    nsFontXlib** s;
+    for (s = aStretch->mSizes; s < end; s++) {
+      if ((*s)->mSize == aSize) {
+        haveSize = PR_TRUE;
+        break;
+      }
+    }
+  }
+  if (!haveSize) {
+    if (aStretch->mSizesCount == aStretch->mSizesAlloc) {
+      int newSize = 2 * (aStretch->mSizesAlloc ? aStretch->mSizesAlloc : 1);
+      nsFontXlib** newSizes = new nsFontXlib*[newSize];
+      if (!newSizes)
+        return PR_FALSE;
+      for (int j = aStretch->mSizesAlloc - 1; j >= 0; j--) {
+        newSizes[j] = aStretch->mSizes[j];
+      }
+      aStretch->mSizesAlloc = newSize;
+      delete [] aStretch->mSizes;
+      aStretch->mSizes = newSizes;
+    }
+    char* copy = PR_smprintf("%s", aName);
+    if (!copy) {
+      return PR_FALSE;
+    }
+    nsFontXlib* size = new nsFontXlibNormal();
+    if (!size) {
+      return PR_FALSE;
+    }
+    aStretch->mSizes[aStretch->mSizesCount++] = size;
+    size->mName           = copy;
+    // size->mFont is initialized in the constructor
+    size->mSize           = aSize;
+    size->mBaselineAdjust = 0;
+    size->mCCMap          = nsnull;
+    size->mCharSetInfo    = aCharSetInfo;
+  }
+  return PR_TRUE;
+}
+
+static void
+GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArrayXlib * aNodes)
+{
   Display       *dpy = xxlib_rgb_get_display(gXlibRgbHandle);
+  nsCAutoString  previousNodeName;
+  nsHashtable   *node_hash;
+  
+  if (aAnyFoundry) {
+    NS_ASSERTION(aPattern[1] == '*', "invalid 'anyFoundry' pattern");
+    node_hash = gAFRENodes;
+  }
+  else {
+    node_hash = gFFRENodes;
+  }
 
 #ifdef USE_XPRINT
 #ifdef DEBUG
@@ -3193,6 +3354,25 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
     FIND_FIELD(averageWidth);
     if (averageWidth[0] == '0') {
       scalable = 1;
+/* Workaround for bug 103159 ("sorting fonts by foundry names cause font
+ * size of css ignored in some cases").
+ * Hardcoded font ban until bug 104075 ("need X font banning") has been
+ * implemented. See http://bugzilla.mozilla.org/show_bug.cgi?id=94327#c34
+ * for additional comments...
+ */      
+#ifndef ENABLE_X_FONT_BANNING
+#ifdef USE_XPRINT
+      /* The following check kills Xprint printer-buildin fonts... ;-( */
+      if (!nsFontMetricsXlib::mPrinterMode)
+#endif /* USE_XPRINT */
+      {
+        // skip 'mysterious' and 'spurious' cases like
+        // -adobe-times-medium-r-normal--17-120-100-100-p-0-iso8859-9
+        if ((pixelSize[0] != '0' || pointSize[0] != 0) && 
+            (outline_scaled == PR_FALSE) )
+          continue;
+      }    
+#endif /* ENABLE_X_FONT_BANNING */        
     }
     char* charSetName = p; // CHARSET_REGISTRY & CHARSET_ENCODING
     if (!*charSetName) {
@@ -3225,20 +3405,24 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
     SetCharsetLangGroup(charSetInfo);
     SetFontLangGroupInfo(charSetMap);
 
-    nsCAutoString nodeName(foundry);
+    nsCAutoString nodeName;
+    if (aAnyFoundry)
+      nodeName.Assign('*');
+    else
+      nodeName.Assign(foundry);
     nodeName.Append('-');
     nodeName.Append(familyName);
     nodeName.Append('-');
     nodeName.Append(charSetName);
 
     nsCStringKey key(nodeName);
-    nsFontNodeXlib* node = (nsFontNodeXlib*) gNodes->Get(&key);
+    nsFontNodeXlib* node = (nsFontNodeXlib*) node_hash->Get(&key);
 
     if (!node) {
       node = new nsFontNodeXlib;
       if (!node)
         continue;
-      gNodes->Put(&key, node);
+      node_hash->Put(&key, node);
       node->mName = nodeName;
       node->mCharSetInfo = charSetInfo;
     }
@@ -3269,14 +3453,9 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
       styleIndex = NS_FONT_STYLE_NORMAL;
       break;
     }
-    nsFontStyleXlib* style = node->mStyles[styleIndex];
-    if (!style) {
-      style = new nsFontStyleXlib;
-      if (!style) {
-        continue;
-      }
-      node->mStyles[styleIndex] = style;
-    }
+    nsFontStyleXlib* style = NodeGetStyle(node, styleIndex);
+    if (!style)
+      continue;
 
     nsCStringKey weightKey(weightName);
     int weightNumber = NS_PTR_TO_INT32(gWeights->Get(&weightKey));
@@ -3286,14 +3465,9 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
       weightNumber = NS_FONT_WEIGHT_NORMAL;
     }
     int weightIndex = WEIGHT_INDEX(weightNumber);
-    nsFontWeightXlib* weight = style->mWeights[weightIndex];
-    if (!weight) {
-      weight = new nsFontWeightXlib;
-      if (!weight) {
-        continue;
-      }
-      style->mWeights[weightIndex] = weight;
-    }
+    nsFontWeightXlib *weight = NodeGetWeight(style, weightIndex);
+    if (!weight)
+      continue;
 
     nsCStringKey setWidthKey(setWidth);
     int stretchIndex = NS_PTR_TO_INT32(gStretches->Get(&setWidthKey));
@@ -3303,78 +3477,16 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
       stretchIndex = 5;
     }
     stretchIndex--;
-    nsFontStretchXlib* stretch = weight->mStretches[stretchIndex];
-    if (!stretch) {
-      stretch = new nsFontStretchXlib;
-      if (!stretch) {
-        continue;
-      }
-      weight->mStretches[stretchIndex] = stretch;
-    }
-    if (scalable) {
-/* gisburn: disabled for Xprint - this kills printer buildin fonts
- * Xprint printer-buildin fonts look like bitmap scaled fonts but are 
- * (scaleable) printer-buildin fonts in reality.
- */
-#ifdef USE_XPRINT
-      if(!nsFontMetricsXlib::mPrinterMode)
-#endif /* USE_XPRINT */      
-      {
-        // if we have both an outline scaled font and a bitmap 
-        // scaled font pick the outline scaled font
-        if ((stretch->mScalable) && (!stretch->mOutlineScaled)
-            && (outline_scaled)) {
-          PR_smprintf_free(stretch->mScalable);
-          stretch->mScalable = nsnull;
-        }
-      }
-      
-      if (!stretch->mScalable) {
-        stretch->mOutlineScaled = outline_scaled;
-        if (outline_scaled) {
-          stretch->mScalable = PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-0-0-%s-*-%s",
-          name, familyName, weightName, slant, setWidth, addStyle, spacing, charSetName);
-        }
-        else {
-          stretch->mScalable =
-            PR_smprintf("%s-%s-%s-%s-%s-%s-%%d-*-*-*-%s-*-%s",
-            name, familyName, weightName, slant, setWidth, addStyle,
-            spacing, charSetName);
-        }
-      }
+    nsFontStretchXlib* stretch = NodeGetStretch(weight, stretchIndex);
+    if (!stretch)
       continue;
-    }
 
-    int pixels = atoi(pixelSize);
-    NS_ASSERTION((pixels > 0), "unexpected pixel size");
-    
-    if (stretch->mSizesCount) {
-      nsFontXlib** end = &stretch->mSizes[stretch->mSizesCount];
-      nsFontXlib** s;
-      for (s = stretch->mSizes; s < end; s++) {
-        if ((*s)->mSize == pixels) {
-          break;
-        }
-      }
-      if (s != end) {
+    if (scalable) {
+      if (!NodeAddScalable(stretch, outline_scaled, name, familyName, 
+           weightName, slant, setWidth, addStyle, spacing, charSetName))
         continue;
-      }
     }
-    if (stretch->mSizesCount == stretch->mSizesAlloc) {
-      int newSize = 2 * (stretch->mSizesAlloc ? stretch->mSizesAlloc : 1);
-      nsFontXlib** newPointer = new nsFontXlib*[newSize];
-      if (newPointer) {
-        for (int j = stretch->mSizesAlloc - 1; j >= 0; j--) {
-          newPointer[j] = stretch->mSizes[j];
-        }
-        stretch->mSizesAlloc = newSize;
-        delete [] stretch->mSizes;
-        stretch->mSizes = newPointer;
-      }
-      else {
-        continue;
-      }
-    }
+  
     p = name;
     while (p < charSetName) {
       if (!*p) {
@@ -3383,23 +3495,10 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
       p++;
     }
 
-    char* copy = PR_smprintf("%s", name);
-
-    if (!copy) {
-      continue;
-    }
-    nsFontXlib* size = new nsFontXlibNormal();
-    if (!size)
-      continue;
-
-    stretch->mSizes[stretch->mSizesCount++] = size;
-
-    size->mName = copy;
-    size->mFont = nsnull;
-    size->mSize = pixels;
-    size->mBaselineAdjust = 0;
-    size->mCCMap = nsnull;
-    size->mCharSetInfo = charSetInfo;
+    int pixels = atoi(pixelSize);
+    NS_ASSERTION(!((pixels == 0) && (errno == EINVAL)), "unexpected pixel size");
+    if (!NodeAddSize(stretch, pixels, name, charSetInfo))
+       continue;
   }
   XFreeFontNames(list);
 
@@ -3420,7 +3519,7 @@ GetAllFontNames(void)
     }
     /* Using "-*" instead of the full-qualified "-*-*-*-*-*-*-*-*-*-*-*-*-*-*"
      * because it's faster and "smarter" - see bug 34242 for details. */
-    GetFontNames("-*", gGlobalList);
+    GetFontNames("-*", PR_FALSE, gGlobalList);
   }
 
   return NS_OK;
@@ -3437,7 +3536,7 @@ FindFamily(nsCString* aName)
       char pattern[256];
       PR_snprintf(pattern, sizeof(pattern), "-*-%s-*-*-*-*-*-*-*-*-*-*-*-*",
         aName->get());
-      GetFontNames(pattern, &family->mNodes);
+      GetFontNames(pattern, PR_TRUE, &family->mNodes);
       gFamilies->Put(&key, family);
     }
   }
@@ -3504,7 +3603,9 @@ FFRESubstituteEncoding(nsAWritableCString &aFFREName, const char *aReplacementEn
 nsFontXlib*
 nsFontMetricsXlib::TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar)
 {
-  nsCStringKey key(PromiseFlatCString(aFFREName).get());
+  const char *FFREName = PromiseFlatCString(aFFREName).get();
+  nsCStringKey key(FFREName);
+  PRBool anyFoundry = (FFREName[0] == '*');  
   nsFontNodeArrayXlib* nodes = (nsFontNodeArrayXlib*) gCachedFFRESearches->Get(&key);
   if (!nodes) {
     nsCAutoString pattern;
@@ -3512,7 +3613,7 @@ nsFontMetricsXlib::TryNodes(nsAWritableCString &aFFREName, PRUnichar aChar)
     nodes = new nsFontNodeArrayXlib;
     if (!nodes)
       return nsnull;
-    GetFontNames(pattern.get(), nodes);
+    GetFontNames(pattern.get(), anyFoundry, nodes);
     gCachedFFRESearches->Put(&key, nodes);
   }
   int i, cnt = nodes->Count();
@@ -3533,17 +3634,16 @@ nsFontMetricsXlib::TryNode(nsCString* aName, PRUnichar aChar)
   nsFontXlib* font;
  
   nsCStringKey key(*aName);
-  nsFontNodeXlib* node = (nsFontNodeXlib*) gNodes->Get(&key);
+  nsFontNodeXlib* node = (nsFontNodeXlib*) gFFRENodes->Get(&key);
   if (!node) {
     nsCAutoString pattern;
     FFREToXLFDPattern(*aName, pattern);
     nsFontNodeArrayXlib nodes;
-    GetFontNames(pattern.get(), &nodes);
-    // no need to call gNodes->Put() since GetFontNames already did
+    GetFontNames(pattern.get(), PR_FALSE, &nodes);
+    // no need to call gFFRENodes->Put() since GetFontNames already did
     if (nodes.Count() > 0) {
-      // XXX This assertion may be spurious; you can have more than
-      // -*-courier-iso8859-1 font, for example, from different
-      // foundries.    
+      // This assertion is not spurious; when searching for an FFRE
+      // like -*-courier-iso8859-1 TryNodes should be called not TryNode
       NS_ASSERTION((nodes.Count() == 1), "unexpected number of nodes");
       node = nodes.GetElement(0);
     }
@@ -3553,7 +3653,7 @@ nsFontMetricsXlib::TryNode(nsCString* aName, PRUnichar aChar)
       if (!node) {
         return nsnull;
       }
-      gNodes->Put(&key, node);
+      gFFRENodes->Put(&key, node);
       node->mDummy = 1;
     }
   }
@@ -4025,10 +4125,10 @@ nsFontMetricsXlib::FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCSt
 
     // look for a font with this charset (registry-encoding) & char
     //
-    nsCAutoString ffreName("");
+    nsCAutoString ffreName;
     if (aName) {
       // if aName was specified so call TryNode() not TryNodes()
-      ffreName.Append(*aName);
+      ffreName.Assign(*aName);
       FFRESubstituteCharset(ffreName, charSetMap->mName); 
       if(aName->First() == '*') {
          // called from TryFamily()
@@ -4039,7 +4139,7 @@ nsFontMetricsXlib::FindLangGroupFont(nsIAtom* aLangGroup, PRUnichar aChar, nsCSt
       NS_ASSERTION(font ? font->SupportsChar(aChar) : 1, "font supposed to support this char");
     } else {
       // no name was specified so call TryNodes() for this charset
-      ffreName.Append("*-*-*-*");
+      ffreName.Assign("*-*-*-*");
       FFRESubstituteCharset(ffreName, charSetMap->mName); 
       font = TryNodes(ffreName, aChar);
       NS_ASSERTION(font ? font->SupportsChar(aChar) : 1, "font supposed to support this char");
