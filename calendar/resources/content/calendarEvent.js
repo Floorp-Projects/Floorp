@@ -101,15 +101,37 @@ function CalendarEventDataSource( observer, UserPath, syncPath )
             
       this.gICalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
         
-      var dirServiceProvider = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIDirectoryServiceProvider);   
+      /*
+      ** FROM HERE TO "<<HERE" IS A HACK FROM JSLIB, REPLACE THIS IF YOU KNOW HOW
+      */
+      const JS_DIR_UTILS_FILE_DIR_CID             = "@mozilla.org/file/directory_service;1";
       
-      var persistent = new Object();
+      const JS_DIR_UTILS_I_PROPS                  = "nsIProperties";
       
-      var UserPath = dirServiceProvider.getFile("Home", persistent);
+      const JS_DIR_UTILS_DIR                  = new Components.Constructor(
+                                                JS_DIR_UTILS_FILE_DIR_CID,
+                                                JS_DIR_UTILS_I_PROPS);
+      
+      const JS_DIR_UTILS_NSIFILE                  = Components.interfaces.nsIFile;
+      
+      var rv;
 
-      this.UserPath = UserPath.unicodePath;
+      try { rv=(new JS_DIR_UTILS_DIR()).get("ProfD", JS_DIR_UTILS_NSIFILE).path; }
+      
+      catch (e)
+      {
+       dump("ERROR! IN CALENDAR EVENT.JS");
+       rv=null;
+      }
+      
+      /*
+      ** <<HERE
+      */
 
-      this.gICalLib.setServer( this.UserPath+"/.oecalendar" );
+
+      this.UserPath = rv;
+
+      this.gICalLib.setServer( this.UserPath+"/CalendarDataFile.txt" );
       
       this.gICalLib.addObserver( observer );
       
