@@ -48,7 +48,15 @@
 
 #include "nsAEApplicationClass.h"
 
+#include "nsINativeAppSupport.h"
 #include "nsCommandLineServiceMac.h"
+#include "nsICmdLineService.h"
+#include "nsCOMPtr.h"
+#include "nsAppShellCIDs.h"
+#include "nsIAppShellService.h"
+
+static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 
 /*----------------------------------------------------------------------------
 	AEApplicationClass 
@@ -312,6 +320,32 @@ void AEApplicationClass::HandleRun(AEDesc *token, const AppleEvent *appleEvent, 
 }
 
 /*----------------------------------------------------------------------------
+	HandleReOpen 
+
+	
+----------------------------------------------------------------------------*/
+void AEApplicationClass::HandleReOpen(AEDesc *token, const AppleEvent *appleEvent, AppleEvent *reply)
+{
+  OSErr	err = noErr;
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsINativeAppSupport> nas;
+  
+  nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID, &rv));
+  NS_WARN_IF_FALSE(rv==NS_OK, "Failed to get AppShellService");
+  if(NS_FAILED(rv)) ThrowIfOSErr(errAEEventNotHandled);
+  
+  rv = appShell->GetNativeAppSupport(getter_AddRefs(nas));
+  NS_WARN_IF_FALSE(rv==NS_OK, "Failed to get NativeAppSupport");  
+  if(NS_FAILED(rv)) ThrowIfOSErr(errAEEventNotHandled);
+    
+  rv = nas->ReOpen();
+  if(NS_FAILED(rv)) ThrowIfOSErr(errAEEventNotHandled);    
+    
+	err = CheckForUnusedParameters(appleEvent);
+	ThrowIfOSErr(err);
+}
+
+/*----------------------------------------------------------------------------
 	HandleOpen 
 
 	
@@ -356,7 +390,7 @@ void AEApplicationClass::HandleOpen(AEDesc *token, const AppleEvent *appleEvent,
 ----------------------------------------------------------------------------*/
 void AEApplicationClass::HandlePrint(AEDesc *token, const AppleEvent *appleEvent, AppleEvent *reply)
 {
-	OSErr	err;
+	OSErr	err=noErr;
 	
 	err = CheckForUnusedParameters(appleEvent);
 	ThrowIfOSErr(err);
@@ -894,4 +928,3 @@ long AEApplicationClass::CountApplicationObjects(const AEDesc *token, DescType d
 	ThrowIfOSErr(err);
 	return numberOfObjects;
 }
-
