@@ -128,6 +128,11 @@ NS_IMETHODIMP nsChromeTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContent
    return NS_OK;
 }
 
+NS_IMETHODIMP nsChromeTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell)
+{
+   return mXULWindow->GetPrimaryContentShell(aShell);
+}
+
 NS_IMETHODIMP nsChromeTreeOwner::GetNewBrowserChrome(PRInt32 aChromeFlags,
    nsIWebBrowserChrome** aWebBrowserChrome)
 {
