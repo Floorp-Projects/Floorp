@@ -160,7 +160,7 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
 
   PL_strfree(mURI);
   if (mObservers) {
-      for (PRInt32 i = mObservers->Count(); i >= 0; --i) {
+      for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
           nsIRDFObserver* obs = (nsIRDFObserver*) mObservers->ElementAt(i);
           NS_RELEASE(obs);
       }
@@ -194,19 +194,12 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
 
 	nsIRDFResourceFactory *folderFactory;
 
-	if(NS_SUCCEEDED(NS_NewRDFMsgFolderResourceFactory(&folderFactory)))
-		gRDFService->RegisterResourceFactory("mailbox:", folderFactory);
-
-
   if (! kNC_Child) {
     gRDFService->GetResource(kURINC_child,   &kNC_Child);
     gRDFService->GetResource(kURINC_Folder,  &kNC_Folder);
     gRDFService->GetResource(kURINC_Name,    &kNC_Name);
     gRDFService->GetResource(kURINC_MSGFolderRoot, &kNC_MSGFolderRoot);
   }
-    // register this as a named data source with the service manager
-  if (NS_FAILED(rv = gRDFService->RegisterDataSource(this)))
-      return rv;
 
 	//create the folder for the root folder
 	nsIMsgFolder *rootFolder;
@@ -216,7 +209,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
 		{
 			rootFolder->SetName("Mail and News");
 			rootFolder->SetDepth(0);
-			nsNativeFileSpec startPath("your mail folder", PR_FALSE);
+			nsNativeFileSpec startPath("your mail path here", PR_FALSE);
 			if (NS_FAILED(rv = InitLocalFolders(rootFolder, startPath, 1)))
 				return rv;
 
@@ -377,7 +370,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
 
   temp->AppendElement(kNC_Child);
   temp->AppendElement(kNC_Name);
-  *labels = new ArrayMsgFolderCursor(source, kNC_Child, temp);
+  *labels = new MsgFolderArcsOutCursor(source, temp);
   return NS_OK;
 }
 
@@ -790,9 +783,96 @@ ArrayMsgFolderCursor::QueryInterface(REFNSIID iid, void** result)
   *result = nsnull;
   if (iid.Equals(kIRDFAssertionCursorIID) ||
       iid.Equals(kIRDFCursorIID) ||
-      iid.Equals(kIRDFArcsOutCursorIID) ||
       iid.Equals(kISupportsIID)) {
       *result = NS_STATIC_CAST(nsIRDFAssertionCursor*, this);
+      AddRef();
+      return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+
+MsgFolderArcsOutCursor::MsgFolderArcsOutCursor(nsIRDFResource* source,
+											   nsISupportsArray* array)
+{
+    //  getsources and gettargets will call this with the array
+  mSource = source;
+  mProperty = nsnull;
+  mArray = array;
+  NS_ADDREF(source);
+	NS_ADDREF(mArray);
+  mCount = 0;
+}
+
+MsgFolderArcsOutCursor::~MsgFolderArcsOutCursor(void)
+{
+  NS_IF_RELEASE(mSource);
+  NS_IF_RELEASE(mProperty);
+	NS_IF_RELEASE(mArray);
+}
+
+
+    // nsIRDFCursor interface
+NS_IMETHODIMP
+MsgFolderArcsOutCursor::Advance(void)
+{
+	nsresult rv = NS_ERROR_FAILURE;
+
+  if (mArray->Count() <= mCount) return  NS_ERROR_RDF_CURSOR_EMPTY;
+  NS_IF_RELEASE(mProperty);
+  mProperty = (nsIRDFResource*)mArray->ElementAt(mCount++);
+  NS_ADDREF(mProperty);
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+MsgFolderArcsOutCursor::GetValue(nsIRDFNode** aValue)
+{
+  NS_ADDREF(mProperty);
+  *aValue = mProperty;
+  return NS_OK;
+}
+
+    // nsIRDFAssertionCursor interface
+NS_IMETHODIMP
+MsgFolderArcsOutCursor::GetDataSource(nsIRDFDataSource** aDataSource)
+{
+  NS_ADDREF(gMsgFolderDataSource);
+  *aDataSource = gMsgFolderDataSource;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MsgFolderArcsOutCursor::GetSubject(nsIRDFResource** aResource)
+{
+	NS_ADDREF(mSource);
+  *aResource = mSource;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+MsgFolderArcsOutCursor::GetPredicate(nsIRDFResource** aPredicate)
+{
+  NS_ADDREF(mProperty);
+  *aPredicate = mProperty;
+  return NS_OK;
+}
+
+
+NS_IMPL_ADDREF(MsgFolderArcsOutCursor);
+NS_IMPL_RELEASE(MsgFolderArcsOutCursor);
+
+NS_IMETHODIMP
+MsgFolderArcsOutCursor::QueryInterface(REFNSIID iid, void** result)
+{
+  if (! result)
+    return NS_ERROR_NULL_POINTER;
+
+  *result = nsnull;
+  if (iid.Equals(kIRDFCursorIID) ||
+      iid.Equals(kIRDFArcsOutCursorIID) ||
+      iid.Equals(kISupportsIID)) {
+      *result = NS_STATIC_CAST(nsIRDFArcsOutCursor*, this);
       AddRef();
       return NS_OK;
   }

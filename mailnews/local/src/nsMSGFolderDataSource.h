@@ -177,3 +177,27 @@ public:
   NS_IMETHOD GetTruthValue(PRBool* aTruthValue);
 };
 
+class MsgFolderArcsOutCursor :  public nsIRDFArcsOutCursor
+{
+private:
+  nsIRDFResource* mSource;
+  nsIRDFResource* mProperty;
+  int             mCount;
+  nsISupportsArray*    mArray;
+
+public:
+  MsgFolderArcsOutCursor(nsIRDFResource* source, nsISupportsArray* array);
+  virtual ~MsgFolderArcsOutCursor(void);
+  // nsISupports interface
+  NS_DECL_ISUPPORTS
+ 
+  // nsIRDFCursor interface
+  NS_IMETHOD Advance(void);
+  NS_IMETHOD GetValue(nsIRDFNode** aValue);
+  // nsIRDFAssertionCursor interface
+  NS_IMETHOD GetDataSource(nsIRDFDataSource** aDataSource);
+  NS_IMETHOD GetSubject(nsIRDFResource** aResource);
+  NS_IMETHOD GetPredicate(nsIRDFResource** aPredicate);
+};
+
+
