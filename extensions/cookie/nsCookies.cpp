@@ -841,6 +841,13 @@ cookie_IsInDomain(const nsACString &domain,
   // the lengthDifference tests are for efficiency, so we do only one .Equals()
   PRUint32 domainLength = domain.Length();
   PRInt32 lengthDifference = host.Length() - domainLength;
+  // case for host & domain equal
+  // (e.g. .netscape.com & .netscape.com)
+  // this gives us slightly more efficiency, since we don't have
+  // to call up Substring().
+  if (lengthDifference == 0) {
+    return domain.Equals(host);
+  }
   // normal case
   if (lengthDifference > 0) {
     return domain.Equals(Substring(host, lengthDifference, domainLength));
