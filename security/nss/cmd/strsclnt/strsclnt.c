@@ -106,13 +106,14 @@ int ssl3CipherSuites[] = {
  * which ciphers to use. 
  */
 
-const char *cipherString;
+static const char *cipherString;
 
-int certsTested;
-int MakeCertOK;
-int NoReuse;
+static int certsTested;
+static int MakeCertOK;
+static int NoReuse;
+static PRBool NoDelay;
 
-SSL3Statistics * ssl3stats;
+static SSL3Statistics * ssl3stats;
 
 
 char * ownPasswd( PK11SlotInfo *slot, PRBool retry, void *arg)
@@ -138,9 +139,10 @@ Usage(const char *progName)
 {
     fprintf(stderr, 
     	"Usage: %s [-n rsa_nickname] [-p port] [-d dbdir] [-c connections]\n"
-	"          [-v] [-N] [-f fortezza_nickname] [-2 filename]\n"
+	"          [-DNv] [-f fortezza_nickname] [-2 filename]\n"
 	"          [-w dbpasswd] [-C cipher(s)] [-t threads] hostname\n"
 	" where -v means verbose\n"
+	"       -D means no TCP Delays\n"
 	"       -N means no session reuse\n",
 	progName);
     exit(1);
@@ -659,9 +661,21 @@ retry:
     opt.value.non_blocking = PR_FALSE;
     prStatus = PR_SetSocketOption(tcp_sock, &opt);
     if (prStatus != PR_SUCCESS) {
+	errWarn("PR_SetSocketOption(PR_SockOpt_Nonblocking, PR_FALSE)");
     	PR_Close(tcp_sock);
 	return SECSuccess;
     } 
+
+    if (!NoDelay) {
+	opt.option         = PR_SockOpt_NoDelay;
+	opt.value.no_delay = PR_TRUE;
+	prStatus = PR_SetSocketOption(tcp_sock, &opt);
+	if (prStatus != PR_SUCCESS) {
+	    errWarn("PR_SetSocketOption(PR_SockOpt_NoDelay, PR_TRUE)");
+	    PR_Close(tcp_sock);
+	    return SECSuccess;
+	} 
+    }
 
     prStatus = PR_Connect(tcp_sock, addr, PR_INTERVAL_NO_TIMEOUT);
     if (prStatus != PR_SUCCESS) {
@@ -934,43 +948,29 @@ main(int argc, char **argv)
     progName = progName ? progName + 1 : tmp;
  
 
-    optstate = PL_CreateOptState(argc, argv, "2:C:Nc:d:f:n:op:t:vw:");
+    optstate = PL_CreateOptState(argc, argv, "2:C:DNc:d:f:n:op:t:vw:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch(optstate->option) {
 
-	case '2':
-	    fileName = optstate->value;
-	    break;
-	case 'C':
-	    cipherString = optstate->value;
-	    break;
+	case '2': fileName = optstate->value; break;
 
-	case 'N':
-	    NoReuse = 1;
-	    break;
+	case 'C': cipherString = optstate->value; break;
 
-	case 'c':
-	    connections = PORT_Atoi(optstate->value);
-	    break;
+	case 'D': NoDelay = PR_TRUE; break;
 
-	case 'd':
-	    dir = optstate->value;
-	    break;
+	case 'N': NoReuse = 1; break;
 
-	case 'f':
-	    fNickName = optstate->value;
-	    break;
+	case 'c': connections = PORT_Atoi(optstate->value); break;
 
-        case 'n':
-	    nickName = optstate->value;
-	    break;
-	case 'o':
-	    MakeCertOK = 1;
-	    break;
+	case 'd': dir = optstate->value; break;
 
-	case 'p':
-	    port = PORT_Atoi(optstate->value);
-	    break;
+	case 'f': fNickName = strdup(optstate->value); break;
+
+        case 'n': nickName = strdup(optstate->value); break;
+
+	case 'o': MakeCertOK = 1; break;
+
+	case 'p': port = PORT_Atoi(optstate->value); break;
 
 	case 't':
 	    tmpInt = PORT_Atoi(optstate->value);
@@ -978,12 +978,9 @@ main(int argc, char **argv)
 	        max_threads = tmpInt;
 	    break;
 
-        case 'v':
-	    verbose++;
-	    break;
-	case 'w':
-	    passwd = optstate->value;
-	    break;
+        case 'v': verbose++; break;
+
+	case 'w': passwd = strdup(optstate->value); break;
 
 	case 0:   /* positional parameter */
 	    if (hostName) {
