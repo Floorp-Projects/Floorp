@@ -61,6 +61,7 @@ embed_chrome: embed-jar.mn
 
 libs:: embed_chrome
  $(PERL) $(DEPTH)\xpinstall\packager\pkgcp.pl -s $(DIST)\bin -d $(DIST) --f basebrowser-win -o dos -v
+ $(PERL) $(DEPTH)\xpinstall\packager\pkgcp.pl -s $(DIST)\bin -d $(DIST) --f basebrowser-win-supp -o dos -v
  $(MAKE_INSTALL) installed-chrome.txt $(DIST)\Embed\chrome
  $(MAKE_INSTALL) readme.html $(DIST)\Embed
 !IF  "$(APP)" == "mfcembed"
@@ -75,3 +76,14 @@ libs:: embed_chrome
 
 clobber::
  rm -f $(DIST)\Embed\chrome\installed-chrome.txt
+
+mre:: embed_chrome
+ $(PERL) mre.pl mre < basebrowser-win > mre-win.tmp
+ $(PERL) $(DEPTH)\xpinstall\packager\pkgcp.pl -s $(DIST)\bin -d $(DIST) --f mre-win.tmp -o dos -v
+ -$(RM) -f mre-win.tmp
+ $(PERL) mre.pl mre_app_support < basebrowser-win-supp > mre-win-supp.tmp
+ $(PERL) $(DEPTH)\xpinstall\packager\pkgcp.pl -s $(DIST)\bin -d $(DIST) --f mre-win-supp.tmp -o dos -v
+ -$(RM) -f mre-win-supp.tmp
+ $(MAKE_INSTALL) installed-chrome.txt $(DIST)\mre_app_support\chrome
+ $(MKDIR) $(DIST)\mre_app_support\plugins
+ $(MKDIR) $(DIST)\mre_app_support\components
