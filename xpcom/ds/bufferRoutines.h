@@ -654,7 +654,7 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
 
     //this code converts /n, /t, /r into normal space ' ';
     //it also compresses runs of whitespace down to a single char...
-  if(aSet){
+  if(aSet && aString && (0 < aLength)){
     PRUint32 aSetLen=strlen(aSet);
     while (from <= end) {
       chartype theChar = *from++;
@@ -697,7 +697,7 @@ PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){
 
     //this code converts /n, /t, /r into normal space ' ';
     //it also compresses runs of whitespace down to a single char...
-  if(aSet){
+  if(aSet && aString && (0 < aLength)){
     PRUint32 aSetLen=strlen(aSet);
     while (from <= end) {
       chartype theChar = *from++;
