@@ -182,7 +182,7 @@ nsTextNode::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Text refcount=%d<", mRefCnt);
+  fprintf(out, "Text@%p refcount=%d<", this, mRefCnt);
 
   nsAutoString tmp;
   mInner.ToCString(tmp, 0, mInner.mText.GetLength());
