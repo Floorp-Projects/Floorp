@@ -233,6 +233,7 @@ cookie_Localize(char* genericString) {
   }
 
   ret = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
+  NS_RELEASE(uri);
   nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
 
   if (NS_FAILED(ret)) {
@@ -246,12 +247,14 @@ cookie_Localize(char* genericString) {
     kIStringBundleServiceIID, (nsISupports**) &pStringService);
   if (NS_FAILED(ret)) {
     printf("cannot get string service\n");
+    NS_RELEASE(url);
     return v.ToNewUnicode();
   }
   nsILocale* locale = nsnull;
   nsIStringBundle* bundle = nsnull;
   char* spec = nsnull;
   ret = url->GetSpec(&spec);
+  NS_RELEASE(url);
   if (NS_FAILED(ret)) {
     printf("cannot get url spec\n");
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
