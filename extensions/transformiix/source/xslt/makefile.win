@@ -23,10 +23,9 @@ DEPTH=..\..\..\..
 
 DIRS=util functions
 
-LIBRARY_NAME=transformix_xslt
-MODULE=transformix
-
+!if defined(MOZ_XSL)
 DEFINES=-DMOZ_XSL
+!endif
 
 CPPSRCS=					\
 	Names.cpp				\
@@ -47,7 +46,6 @@ CPP_OBJS=					\
 	$(NULL)
 
 EXPORTS = 					\
-	XSLTProcessor.h				\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\xpath -I..\xml\dom -I..\xml\dom\mozImpl \
@@ -60,8 +58,4 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+install:: $(CPP_OBJS)

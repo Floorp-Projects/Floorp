@@ -21,46 +21,46 @@
 
 DEPTH=..\..\..\..
 
-LIBRARY_NAME=transformix_base
-MODULE=transformix
-DEFINES=-DMOZILLA
+!if defined(MOZ_XSL)
+DEFINES=-DMOZ_XSL
+!endif
 
-CPPSRCS=								\
-	ArrayList.cpp \
-	CommandLineUtils.cpp				\
-	DefaultStringComparator.cpp				\
-	Double.cpp							\
-	HashTable.cpp \
-	Integer.cpp							\
-	List.cpp							\
-	MITREObjectWrapper.cpp				\
-	MozillaString.cpp				\
-	NamedMap.cpp						\
-	SimpleErrorObserver.cpp				\
-	Stack.cpp							\
-	TxString.cpp							\
-	StringComparator.cpp							\
-	StringList.cpp						\
-	Tokenizer.cpp						\
+CPPSRCS=				\
+	ArrayList.cpp 			\
+	CommandLineUtils.cpp		\
+	DefaultStringComparator.cpp	\
+	Double.cpp			\
+	HashTable.cpp 			\
+	Integer.cpp			\
+	List.cpp			\
+	MITREObjectWrapper.cpp		\
+	MozillaString.cpp		\
+	NamedMap.cpp			\
+	SimpleErrorObserver.cpp		\
+	Stack.cpp			\
+	Map.cpp				\
+	StringComparator.cpp		\
+	StringList.cpp			\
+	Tokenizer.cpp			\
 	$(NULL)
 
-CPP_OBJS=							        \
-	.\$(OBJDIR)\ArrayList.obj \
-	.\$(OBJDIR)\CommandLineUtils.obj		\
-	.\$(OBJDIR)\DefaultStringComparator.obj					\
-	.\$(OBJDIR)\Double.obj					\
-	.\$(OBJDIR)\HashTable.obj					\
-	.\$(OBJDIR)\Integer.obj					\
-	.\$(OBJDIR)\List.obj					\
-	.\$(OBJDIR)\MITREObjectWrapper.obj		\
+CPP_OBJS=					\
+	.\$(OBJDIR)\ArrayList.obj 		\
+	.\$(OBJDIR)\CommandLineUtils.obj	\
+	.\$(OBJDIR)\DefaultStringComparator.obj	\
+	.\$(OBJDIR)\Double.obj			\
+	.\$(OBJDIR)\HashTable.obj		\
+	.\$(OBJDIR)\Integer.obj			\
+	.\$(OBJDIR)\List.obj			\
+	.\$(OBJDIR)\MITREObjectWrapper.obj	\
 	.\$(OBJDIR)\MozillaString.obj		\
-	.\$(OBJDIR)\NamedMap.obj				\
-    .\$(OBJDIR)\SimpleErrorObserver.obj		\
-	.\$(OBJDIR)\Stack.obj					\
-	.\$(OBJDIR)\TxString.obj					\
-	.\$(OBJDIR)\StringComparator.obj					\
-	.\$(OBJDIR)\StringList.obj				\
-	.\$(OBJDIR)\Tokenizer.obj				\
+	.\$(OBJDIR)\NamedMap.obj		\
+	.\$(OBJDIR)\SimpleErrorObserver.obj	\
+	.\$(OBJDIR)\Stack.obj			\
+	.\$(OBJDIR)\Map.obj			\
+	.\$(OBJDIR)\StringComparator.obj	\
+	.\$(OBJDIR)\StringList.obj		\
+	.\$(OBJDIR)\Tokenizer.obj		\
 	$(NULL)
 
 EXPORTS = 					\
@@ -75,8 +75,4 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+install:: $(CPP_OBJS)

@@ -19,27 +19,24 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..
+DEPTH=..\..\..\..
 
 !if defined(MOZ_XSL)
-DEFINES=$(DEFINES) -DMOZ_XSL
+DEFINES=-DMOZ_XSL
 !endif
 
-CPPSRCS=			\
-	NodeStack.cpp		\
-	NodeSorter.cpp		\
+CPPSRCS=		\
+	URIUtils.cpp 	\
 	$(NULL)
 
-CPP_OBJS=				\
-	.\$(OBJDIR)\NodeStack.obj	\
-	.\$(OBJDIR)\NodeSorter.obj	\
+CPP_OBJS=			\
+	.\$(OBJDIR)\URIUtils.obj \
 	$(NULL)
 
-EXPORTS =	\
+EXPORTS = 			\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\base -I..\..\xml\dom \
-      -I..\..\xpath -I..\..\xml -I..\ -I..\..\xml\util -I..\functions
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\base
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -49,4 +46,3 @@ LCFLAGS = \
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(CPP_OBJS)
-

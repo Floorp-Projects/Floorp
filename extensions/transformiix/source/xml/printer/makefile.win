@@ -26,20 +26,19 @@ DEFINES=$(DEFINES) -DMOZ_XSL
 !endif
 
 CPPSRCS=			\
-	NodeStack.cpp		\
-	NodeSorter.cpp		\
+	XMLPrinter.cpp		\
+	HTMLPrinter.cpp		\
 	$(NULL)
 
 CPP_OBJS=				\
-	.\$(OBJDIR)\NodeStack.obj	\
-	.\$(OBJDIR)\NodeSorter.obj	\
+	.\$(OBJDIR)\XMLPrinter.obj	\
+	.\$(OBJDIR)\HTMLPrinter.obj	\
 	$(NULL)
 
 EXPORTS =	\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\base -I..\..\xml\dom \
-      -I..\..\xpath -I..\..\xml -I..\ -I..\..\xml\util -I..\functions
+LINCS=-I..\..\base -I..\dom
 
 LCFLAGS = \
         $(LCFLAGS) \

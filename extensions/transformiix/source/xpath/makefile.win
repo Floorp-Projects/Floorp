@@ -21,8 +21,9 @@
 
 DEPTH=..\..\..\..
 
-LIBRARY_NAME=transformix_xpath
-MODULE=transformix
+!if defined(MOZ_XSL)
+DEFINES=$(DEFINES) -DMOZ_XSL
+!endif
 
 CPPSRCS=				\
 	AdditiveExpr.cpp		\
@@ -113,8 +114,4 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+install:: $(CPP_OBJS)

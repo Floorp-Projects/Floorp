@@ -21,16 +21,18 @@
 
 DEPTH=..\..\..\..
 
-DIRS=dom
+DIRS=dom parser util
 
-LIBRARY_NAME=transformix_xml
-MODULE=transformix
-CPPSRCS=						\
+!if defined(MOZ_XSL)
+DEFINES=$(DEFINES) -DMOZ_XSL
+!endif
+
+CPPSRCS=				\
 	XMLDOMUtils.cpp			\
 	XMLUtils.cpp			\
 	$(NULL)
 
-CPP_OBJS=					\
+CPP_OBJS=				\
 	.\$(OBJDIR)\XMLDOMUtils.obj	\
 	.\$(OBJDIR)\XMLUtils.obj	\
 	$(NULL)
@@ -47,8 +49,4 @@ LCFLAGS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+install:: $(CPP_OBJS)
