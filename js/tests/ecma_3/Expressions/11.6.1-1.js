@@ -79,17 +79,17 @@ addThis();
  * The next sections test the + operator via eval()
  */
 status = inSection(5);
-actual = plusThese(1, 1, 'a', 1, 1, 'b');
+actual = sumThese(1, 1, 'a', 1, 1, 'b');
 expect = '2a11b';
 addThis();
 
 status = inSection(6);
-actual = plusThese(new Number(1), new Number(1), 'a');
+actual = sumThese(new Number(1), new Number(1), 'a');
 expect = '2a';
 addThis();
 
 status = inSection(7);
-actual = plusThese('a', new Number(1), new Number(1));
+actual = sumThese('a', new Number(1), new Number(1));
 expect = 'a11';
 addThis();
 
@@ -127,7 +127,7 @@ function addThis()
  * If we eval() the former, we get the right expression to test.
  * If we eval() the latter: 'ReferenceError: a is not defined'.
  */
-function plusThese()
+function sumThese()
 {
   var sEval = '';
   var arg;
