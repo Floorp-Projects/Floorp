@@ -929,6 +929,14 @@ nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow**
 }
 
 NS_IMETHODIMP
+nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                              PRInt32 aXPos, PRInt32 aYPos, 
+                              const nsString& aPopupType, const nsString& aPopupAlignment)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsWebShellWindow::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode)
 {
   // Find out the id of the frameNode in question 

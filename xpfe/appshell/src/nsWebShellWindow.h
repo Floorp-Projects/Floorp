@@ -84,6 +84,10 @@ public:
                         PRInt32 aStatus);
 
 
+  NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
+                         PRInt32 aXPos, PRInt32 aYPos, 
+                         const nsString& aPopupType, const nsString& aPopupAlignment);
+
   NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
 
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
