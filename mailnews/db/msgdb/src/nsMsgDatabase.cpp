@@ -231,13 +231,15 @@ nsrefcnt nsMsgDatabase::Release(void)
 	return mRefCnt;
 }
 
-/* static */ mdbFactory *nsMsgDatabase::GetMDBFactory()
+extern nsIMdbFactory *NS_NewIMdbFactory();
+
+/* static */ nsIMdbFactory *nsMsgDatabase::GetMDBFactory()
 {
-	static mdbFactory *gMDBFactory = NULL;
+	static nsIMdbFactory *gMDBFactory = NULL;
 	if (!gMDBFactory)
 	{
 		// ### hook up class factory code when it's working
-		gMDBFactory = new mdbFactory;
+		gMDBFactory = NS_NewIMdbFactory(); //new nsIMdbFactory;
 	}
 	return gMDBFactory;
 }
@@ -248,20 +250,20 @@ nsrefcnt nsMsgDatabase::Release(void)
 nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 {
 	nsresult ret = NS_OK;
-	mdbFactory *myMDBFactory = GetMDBFactory();
+	nsIMdbFactory *myMDBFactory = GetMDBFactory();
 	if (myMDBFactory)
 	{
-		ret = myMDBFactory->MakeEnv(&m_mdbEnv);
+		ret = myMDBFactory->MakeEnv(NULL, &m_mdbEnv);
 		if (NS_SUCCEEDED(ret))
 		{
-			mdbThumb *thumb;
+			nsIMdbThumb *thumb;
 			struct stat st;
 
 			m_dbName = dbName;
 			if (stat(dbName, &st)) 
 				ret = NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
 			else
-				ret = myMDBFactory->OpenFileStore(m_mdbEnv, dbName, NULL, /* const mdbOpenPolicy* inOpenPolicy */
+				ret = myMDBFactory->OpenFileStore(m_mdbEnv, NULL, dbName, NULL, /* const mdbOpenPolicy* inOpenPolicy */
 				&thumb); 
 			if (NS_SUCCEEDED(ret))
 			{
@@ -283,7 +285,7 @@ nsresult nsMsgDatabase::OpenMDB(const char *dbName, PRBool create)
 			}
 			else if (create)	// ### need error code saying why open file store failed
 			{
-				ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, dbName, NULL, &m_mdbStore);
+				ret = myMDBFactory->CreateNewFileStore(m_mdbEnv, NULL, dbName, NULL, &m_mdbStore);
 				if (ret == NS_OK)
 					ret = InitNewDB();
 			}
@@ -338,7 +340,7 @@ nsresult nsMsgDatabase::ForceClosed()
 nsresult	nsMsgDatabase::Commit(msgDBCommitType commitType)
 {
 	nsresult	err = NS_OK;
-	mdbThumb	*commitThumb = NULL;
+	nsIMdbThumb	*commitThumb = NULL;
 
 	if (m_mdbStore)
 	{
@@ -407,7 +409,7 @@ nsresult nsMsgDatabase::InitNewDB()
 		if (dbFolderInfo)
 		{
 			err = dbFolderInfo->AddToNewMDB();
-			mdbStore *store = GetStore();
+			nsIMdbStore *store = GetStore();
 			// create the unique table for the dbFolderInfo.
 			mdb_err err = store->NewTable(GetEnv(), m_hdrRowScopeToken, 
 				m_hdrTableKindToken, PR_FALSE, &m_mdbAllMsgHeadersTable);
@@ -492,11 +494,11 @@ nsresult nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsMsgHdr **pmsgHdr)
 	err = m_mdbAllMsgHeadersTable->HasOid(GetEnv(), &rowObjectId, &rowPos);
 	if (err == NS_OK)
 	{
-		mdbTableRowCursor *rowCursor;
+		nsIMdbTableRowCursor *rowCursor;
 		err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), rowPos, &rowCursor);
 		if (err == NS_OK && rowPos >= 0) // ### is rowPos > 0 the right thing to check?
 		{
-			mdbRow	*hdrRow;
+			nsIMdbRow	*hdrRow;
 			err = rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
 			if (err == NS_OK)
 			{
@@ -1038,7 +1040,7 @@ class ListContext
 public:
 	ListContext();
 	virtual ~ListContext();
-	mdbTableRowCursor *m_rowCursor;
+	nsIMdbTableRowCursor *m_rowCursor;
 };
 
 ListContext::ListContext()
@@ -1081,7 +1083,7 @@ nsresult	nsMsgDatabase::ListFirst(ListContext **ppContext, nsMsgHdr **pResultHdr
 nsresult	nsMsgDatabase::ListNext(ListContext *pContext, nsMsgHdr **pResultHdr)
 {
 	nsresult	err = NS_OK;
-	mdbRow	*hdrRow;
+	nsIMdbRow	*hdrRow;
 	mdb_pos		rowPos;
 
 	if (!pResultHdr || !pContext)
@@ -1105,7 +1107,7 @@ nsresult	nsMsgDatabase::ListDone(ListContext *pContext)
 nsresult nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 {
 	nsresult	err = NS_OK;
-	mdbTableRowCursor *rowCursor;
+	nsIMdbTableRowCursor *rowCursor;
 	err = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
 	while (err == NS_OK)
 	{
@@ -1160,7 +1162,7 @@ nsresult nsMsgDatabase::ListNextUnread(ListContext **pContext, nsMsgHdr **pResul
 nsresult nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsMsgHdr **pnewHdr)
 {
 	nsresult	err = NS_OK;
-	mdbRow		*hdrRow;
+	nsIMdbRow		*hdrRow;
 	struct mdbOid allMsgHdrsTableOID;
 
 	if (!pnewHdr || !m_mdbAllMsgHeadersTable)
@@ -1183,7 +1185,7 @@ nsresult nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsMsgHdr **pnewHdr)
 nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStruct, nsMsgHdr **pnewHdr, PRBool notify /* = FALSE */)
 {
 	nsresult	err = NS_OK;
-	mdbRow		*hdrRow;
+	nsIMdbRow		*hdrRow;
 	struct mdbOid allMsgHdrsTableOID;
 
 	if (!pnewHdr || !m_mdbAllMsgHeadersTable)
@@ -1261,10 +1263,10 @@ nsresult nsMsgDatabase::GetMsgHdrStructFromnsMsgHdr(nsMsgHdr *msgHdr, MessageHdr
 	return err;
 }
 
-nsresult nsMsgDatabase::RowCellColumnTonsString(mdbRow *hdrRow, mdb_token columnToken, nsString &resultStr)
+nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token columnToken, nsString &resultStr)
 {
 	nsresult	err = NS_OK;
-	mdbCell	*hdrCell;
+	nsIMdbCell	*hdrCell;
 
 	err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
 	if (err == NS_OK)
@@ -1276,10 +1278,10 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(mdbRow *hdrRow, mdb_token column
 	return err;
 }
 
-nsresult nsMsgDatabase::RowCellColumnToUInt32(mdbRow *hdrRow, mdb_token columnToken, PRUint32 *uint32Result)
+nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token columnToken, PRUint32 *uint32Result)
 {
 	nsresult	err = NS_OK;
-	mdbCell	*hdrCell;
+	nsIMdbCell	*hdrCell;
 
 	err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
 	if (err == NS_OK)

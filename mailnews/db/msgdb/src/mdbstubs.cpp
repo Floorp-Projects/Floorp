@@ -1,71 +1,77 @@
 #include "mdb.h"
 #include "stdio.h"
 
+nsIMdbFactory *NS_NewIMdbFactory()
+{
+	return new nsIMdbFactory;
+}
+
    mdb_err
-	   mdbFactory::ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
-    mdbEnv* ev, // context
-    mdbThumb* ioThumb, // thumb from OpenFileStore() with done status
-    mdbStore** acqStore)  // acquire new db store object
+	   nsIMdbFactory::ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb* ioThumb, // thumb from OpenFileStore() with done status
+    nsIMdbStore** acqStore)  // acquire new db store object
    {
-	   *acqStore = new mdbStore;
+	   *acqStore = new nsIMdbStore;
 	   return 0;
    }
   
-   mdb_err mdbFactory::CreateNewFileStore( // create a new db with minimal content
-    mdbEnv* ev, // context
+   mdb_err nsIMdbFactory::CreateNewFileStore( // create a new db with minimal content
+    nsIMdbEnv* ev, // context
+    nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
     const char* inFilePath, // name of file which should not yet exist
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
-    mdbStore** acqStore)
+    nsIMdbStore** acqStore)
    {
 	   printf("new file store for %s\n", inFilePath);
-	   *acqStore = new mdbStore;
+	   *acqStore = new nsIMdbStore;
 	   return 0;
    }
 
-   mdb_err mdbStore::SmallCommit( // save minor changes if convenient and uncostly
-	   mdbEnv* ev)
+   mdb_err nsIMdbStore::SmallCommit( // save minor changes if convenient and uncostly
+	   nsIMdbEnv* ev)
    {
 	   return 0;
    }
-   mdb_err mdbStore::LargeCommit( // save important changes if at all possible
-    mdbEnv* ev, // context
-    mdbThumb** acqThumb) 
+   mdb_err nsIMdbStore::LargeCommit( // save important changes if at all possible
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb** acqThumb) 
    {
 	   return 0;
    }
 
-   mdb_err mdbStore::SessionCommit( // save all changes if large commits delayed
-    mdbEnv* ev, // context
-    mdbThumb** acqThumb)
+   mdb_err nsIMdbStore::SessionCommit( // save all changes if large commits delayed
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb** acqThumb)
    {
 	   return 0;
    }
 
    mdb_err
-  mdbStore::CompressCommit( // commit and make db physically smaller if possible
-    mdbEnv* ev, // context
-    mdbThumb** acqThumb)
+  nsIMdbStore::CompressCommit( // commit and make db physically smaller if possible
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb** acqThumb)
    {
 	   return 0;
    }
 
-  mdb_err mdbStore::NewTable( // make one new table of specific type
-    mdbEnv* ev, // context
+  mdb_err nsIMdbStore::NewTable( // make one new table of specific type
+    nsIMdbEnv* ev, // context
     mdb_scope inRowScope,    // row scope for row ids
     mdb_kind inTableKind,    // the type of table to access
     mdb_bool inMustBeUnique, // whether store can hold only one of these
-    mdbTable** acqTable) ;     // acquire scoped collection of rows
+    nsIMdbTable** acqTable) ;     // acquire scoped collection of rows
 
-  mdb_err mdbPort::GetTable( // access one table with specific oid
-    mdbEnv* ev, // context
+  mdb_err nsIMdbPort::GetTable( // access one table with specific oid
+    nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical table oid
-    mdbTable** acqTable)
+    nsIMdbTable** acqTable)
   {
-	  *acqTable = new mdbTable;
+	  *acqTable = new nsIMdbTable;
 	  return 0;
   }
 
-mdb_err mdbPort::StringToToken (  mdbEnv* ev, // context
+mdb_err nsIMdbPort::StringToToken (  nsIMdbEnv* ev, // context
     const char* inTokenName, // Latin1 string to tokenize if possible
     mdb_token* outToken)
 {
@@ -73,21 +79,21 @@ mdb_err mdbPort::StringToToken (  mdbEnv* ev, // context
 	return 0;
 }
  
-mdb_err mdbPort::GetTableKind (
-    mdbEnv* ev, // context
+mdb_err nsIMdbPort::GetTableKind (
+    nsIMdbEnv* ev, // context
     mdb_scope inRowScope,      // row scope for row ids
     mdb_kind inTableKind,      // the type of table to access
     mdb_count* outTableCount, // current number of such tables
     mdb_bool* outMustBeUnique, // whether port can hold only one of these
-    mdbTable** acqTable) 
+    nsIMdbTable** acqTable) 
 {
-	*acqTable = new mdbTable;
+	*acqTable = new nsIMdbTable;
 	return 0;
 }
 
 
-mdb_err mdbTable::HasOid( // test for the table position of a row member
-    mdbEnv* ev, // context
+mdb_err nsIMdbTable::HasOid( // test for the table position of a row member
+    nsIMdbEnv* ev, // context
     const mdbOid* inOid, // row to find in table
     mdb_pos* outPos)
 {
@@ -96,7 +102,7 @@ mdb_err mdbTable::HasOid( // test for the table position of a row member
 
 	for (iteratePos = 0; iteratePos  < m_rows.Count(); iteratePos++)
 	{
-		mdbRow *row = (mdbRow *) m_rows.ElementAt(iteratePos);
+		nsIMdbRow *row = (nsIMdbRow *) m_rows.ElementAt(iteratePos);
 		if (row && row->m_oid.mOid_Id == inOid->mOid_Id)
 		{
 			*outPos = iteratePos;
@@ -106,57 +112,57 @@ mdb_err mdbTable::HasOid( // test for the table position of a row member
 	return 0;
 }
 
-  mdb_err mdbTable::GetTableRowCursor( // make a cursor, starting iteration at inRowPos
-    mdbEnv* ev, // context
+  mdb_err nsIMdbTable::GetTableRowCursor( // make a cursor, starting iteration at inRowPos
+    nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
-    mdbTableRowCursor** acqCursor)
+    nsIMdbTableRowCursor** acqCursor)
   {
-	  *acqCursor = new mdbTableRowCursor;
+	  *acqCursor = new nsIMdbTableRowCursor;
 	  (*acqCursor)->SetTable(ev, this);
 	  (*acqCursor)->m_pos = inRowPos;
 	  return 0;
   }
 
- mdb_err mdbTableRowCursor::SetTable(mdbEnv* ev, mdbTable* ioTable) 
+ mdb_err nsIMdbTableRowCursor::SetTable(nsIMdbEnv* ev, nsIMdbTable* ioTable) 
  {
 	 m_table = ioTable;
 	 m_pos = -1;
 	 return 0;
  }
 
-mdb_err  mdbTableRowCursor::NextRow( // get row cells from table for cells already in row
-    mdbEnv* ev, // context
-    mdbRow** acqRow, // acquire next row in table
+mdb_err  nsIMdbTableRowCursor::NextRow( // get row cells from table for cells already in row
+    nsIMdbEnv* ev, // context
+    nsIMdbRow** acqRow, // acquire next row in table
     mdb_pos* outRowPos)
 {
 	if (m_pos < 0)
 		m_pos = 0;
 
 	*outRowPos = m_pos;
-	*acqRow = (mdbRow *) m_table->m_rows.ElementAt(m_pos++);
+	*acqRow = (nsIMdbRow *) m_table->m_rows.ElementAt(m_pos++);
 	return 0;
 }
 
-mdb_err mdbTable::CutRow  ( // make sure the row with inOid is not a member 
-    mdbEnv* ev, // context
-    mdbRow* ioRow) 
+mdb_err nsIMdbTable::CutRow  ( // make sure the row with inOid is not a member 
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioRow) 
 {
 	return 0;
 }
 
-mdb_err mdbStore::NewRowWithOid (mdbEnv* ev, // new row w/ caller assigned oid
+mdb_err nsIMdbStore::NewRowWithOid (nsIMdbEnv* ev, // new row w/ caller assigned oid
     mdb_scope inRowScope,   // row scope for row ids
     const mdbOid* inOid,   // caller assigned oid
-    mdbRow** acqRow) 
+    nsIMdbRow** acqRow) 
 {
-	*acqRow = new mdbRow;
+	*acqRow = new nsIMdbRow;
 	(*acqRow)->m_oid = *inOid;	
 	return 0;
 }
 
-mdb_err mdbTable::AddRow ( // make sure the row with inOid is a table member 
-    mdbEnv* ev, // context
-    mdbRow* ioRow) 
+mdb_err nsIMdbTable::AddRow ( // make sure the row with inOid is a table member 
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioRow) 
 {
 	m_rows.AppendElement(ioRow);
 	return 0;
@@ -164,15 +170,15 @@ mdb_err mdbTable::AddRow ( // make sure the row with inOid is a table member
 
 
 
-mdb_err mdbRow::AddColumn( // make sure a particular column is inside row
-    mdbEnv* ev, // context
+mdb_err nsIMdbRow::AddColumn( // make sure a particular column is inside row
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to add
     const mdbYarn* inYarn)
 {
 	// evilly, I happen to know the column token is a char * const str pointer.
 	printf("adding column %s : %s\n", inColumn, inYarn->mYarn_Buf);
 	mdbCellImpl	newCell;
-	mdbCell *existingCell = NULL;
+	nsIMdbCell *existingCell = NULL;
 
 	newCell.m_column = inColumn;
 	GetCell(ev, inColumn, &existingCell);
@@ -193,10 +199,10 @@ mdb_err mdbRow::AddColumn( // make sure a particular column is inside row
 	return 0;
 }
 
-mdb_err mdbRow::GetCell( // find a cell in this row
-    mdbEnv* ev, // context
+mdb_err nsIMdbRow::GetCell( // find a cell in this row
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to find
-    mdbCell** acqCell) 
+    nsIMdbCell** acqCell) 
 {
 	mdbCellImpl	newCell;
 
@@ -209,23 +215,23 @@ mdb_err mdbRow::GetCell( // find a cell in this row
 	return 0;
 }
 
-mdb_err mdbCollection::GetOid   (mdbEnv* ev,
+mdb_err nsIMdbCollection::GetOid   (nsIMdbEnv* ev,
     const mdbOid* outOid) 
 {
 	return 0;
 }
 
-mdb_err mdbTableRowCursor::NextRowOid  ( // get row id of next row in the table
-    mdbEnv* ev, // context
+mdb_err nsIMdbTableRowCursor::NextRowOid  ( // get row id of next row in the table
+    nsIMdbEnv* ev, // context
     mdbOid* outOid, // out row oid
     mdb_pos* outRowPos)
 {
-	mdbRow *curRow;
+	nsIMdbRow *curRow;
 	if (m_pos < 0)
 		m_pos = 0;
 
 	*outRowPos = m_pos;
-	curRow = (mdbRow *) m_table->m_rows.ElementAt(m_pos++);
+	curRow = (nsIMdbRow *) m_table->m_rows.ElementAt(m_pos++);
 	if (curRow)
 		*outOid = curRow->m_oid;
 	else
@@ -233,23 +239,23 @@ mdb_err mdbTableRowCursor::NextRowOid  ( // get row id of next row in the table
 	return 0;
  }
 
-mdb_err mdbBlob::AliasYarn(mdbEnv* ev, 
+mdb_err nsIMdbBlob::AliasYarn(nsIMdbEnv* ev, 
     mdbYarn* outYarn)
 {
 	return 0;
 }
 
-mdb_err mdbObject::CutStrongRef(mdbEnv* ev)
+mdb_err nsIMdbObject::CutStrongRef(nsIMdbEnv* ev)
 {
 	return 0;
 }
 
-mdb_err mdbFactory::MakeEnv(mdbEnv** acqEnv)
+mdb_err nsIMdbFactory::MakeEnv(nsIMdbHeap* ioHeap, nsIMdbEnv** acqEnv)
 {
 	return 0;
 }
 
-mdb_err mdbThumb::DoMore(mdbEnv* ev,
+mdb_err nsIMdbThumb::DoMore(nsIMdbEnv* ev,
     mdb_count* outTotal,    // total somethings to do in operation
     mdb_count* outCurrent,  // subportion of total completed so far
     mdb_bool* outDone,      // is operation finished?
@@ -260,16 +266,16 @@ mdb_err mdbThumb::DoMore(mdbEnv* ev,
 	return 0;
 }
 
-mdb_err mdbFactory::OpenFileStore(class mdbEnv *,char const *fileName,struct mdbOpenPolicy const *,class mdbThumb **retThumb)
+mdb_err nsIMdbFactory::OpenFileStore(class nsIMdbEnv *, nsIMdbHeap* , char const *fileName,struct mdbOpenPolicy const *,class nsIMdbThumb **retThumb)
 {
 
-	*retThumb = new mdbThumb;
+	*retThumb = new nsIMdbThumb;
 	return 0;
 }
 
-mdb_err mdbStore::NewTable(class mdbEnv *,unsigned long,unsigned long,unsigned char,class mdbTable **retTable)
+mdb_err nsIMdbStore::NewTable(class nsIMdbEnv *,unsigned long,unsigned long,unsigned char,class nsIMdbTable **retTable)
 {
-	*retTable = new mdbTable;
+	*retTable = new nsIMdbTable;
 	return 0;
 }
 
@@ -296,7 +302,7 @@ PRBool	mdbCellImpl::Equals(const mdbCellImpl& other)
 }
 
 
-mdb_err mdbCellImpl::AliasYarn(mdbEnv* ev, 
+mdb_err mdbCellImpl::AliasYarn(nsIMdbEnv* ev, 
     mdbYarn* outYarn)
 {
 	outYarn->mYarn_Buf = m_cellValue;

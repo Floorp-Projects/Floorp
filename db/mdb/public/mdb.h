@@ -184,8 +184,8 @@ typedef struct mdbYarn mdbYarn;
 **|| Grow(): a method for requesting that a yarn instance be made
 **| larger in size.  Note that such requests need not be honored, and
 **| need not be honored in full if only partial size growth is desired.
-**| (Note that no mdbEnv instance is passed as argument, although one
-**| might be needed in some circumstances.  So if an mdbEnv is needed,
+**| (Note that no nsIMdbEnv instance is passed as argument, although one
+**| might be needed in some circumstances.  So if an nsIMdbEnv is needed,
 **| a reference to one might be held inside a mdbYarn member slot.)
 **|
 **|| self: a yarn instance to be grown.  Presumably this yarn is
@@ -281,24 +281,25 @@ struct mdbYarn { // buffer with caller space allocation semantics
 
 // { %%%%% begin class forward defines %%%%%
 class mdbISupports;
-class mdbEnv;
-class mdbObject;
-class mdbErrorHook;
-class mdbCompare;
-class mdbThumb;
-class mdbFactory;
-class mdbPort;
-class mdbStore;
-class mdbCursor;
-class mdbPortTableCursor;
-class mdbCollection;
-class mdbTable;
-class mdbTableRowCursor;
-class mdbRow;
-class mdbRowCellCursor;
-class mdbBlob;
-class mdbCell;
+class nsIMdbEnv;
+class nsIMdbObject;
+class nsIMdbErrorHook;
+class nsIMdbCompare;
+class nsIMdbThumb;
+class nsIMdbFactory;
+class nsIMdbPort;
+class nsIMdbStore;
+class nsIMdbCursor;
+class nsIMdbPortTableCursor;
+class nsIMdbCollection;
+class nsIMdbTable;
+class nsIMdbTableRowCursor;
+class nsIMdbRow;
+class nsIMdbRowCellCursor;
+class nsIMdbBlob;
+class nsIMdbCell;
 class mdbCellImpl;
+class nsIMdbHeap;
 
 // } %%%%% end class forward defines %%%%%
 
@@ -361,9 +362,9 @@ private:
 
 // { %%%%% begin C++ abstract class interfaces %%%%%
 
-/*| mdbObject: base class for all message db class interfaces
+/*| nsIMdbObject: base class for all message db class interfaces
 **|
-**|| factory: all mdbObjects from the same code suite have the same factory
+**|| factory: all nsIMdbObjects from the same code suite have the same factory
 **|
 **|| refcounting: both strong and weak references, to ensure strong refs are
 **| acyclic, while weak refs can cause cycles.  CloseMdbObject() is
@@ -374,55 +375,55 @@ private:
 **| calls to AddRef() and release ref map directly to strong use ref calls,
 **| but the total ref count for COM objects is the sum of weak & strong refs.
 |*/
-class mdbObject : public mdbISupports { // msg db base class
+class nsIMdbObject : public mdbISupports { // msg db base class
 public:
-// { ===== begin mdbObject methods =====
+// { ===== begin nsIMdbObject methods =====
 
   // { ----- begin attribute methods -----
-   mdb_err IsFrozenMdbObject(mdbEnv* ev, mdb_bool* outIsReadonly) ;
-  // same as mdbPort::GetIsPortReadonly() when this object is inside a port.
+   mdb_err IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly) ;
+  // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
   // } ----- end attribute methods -----
 
   // { ----- begin factory methods -----
-   mdb_err GetMsgDbFactory(mdbEnv* ev, mdbFactory** acqFactory) ; 
+   mdb_err GetMsgDbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory) ; 
   // } ----- end factory methods -----
 
   // { ----- begin ref counting for well-behaved cyclic graphs -----
-   mdb_err GetWeakRefCount(mdbEnv* ev, // weak refs
+   mdb_err GetWeakRefCount(nsIMdbEnv* ev, // weak refs
     mdb_count* outCount) ;  
-   mdb_err GetStrongRefCount(mdbEnv* ev, // strong refs
+   mdb_err GetStrongRefCount(nsIMdbEnv* ev, // strong refs
     mdb_count* outCount) ;
 
-   mdb_err AddWeakRef(mdbEnv* ev) ;
-   mdb_err AddStrongRef(mdbEnv* ev) ;
+   mdb_err AddWeakRef(nsIMdbEnv* ev) ;
+   mdb_err AddStrongRef(nsIMdbEnv* ev) ;
 
-   mdb_err CutWeakRef(mdbEnv* ev) ;
-   mdb_err CutStrongRef(mdbEnv* ev) ;
+   mdb_err CutWeakRef(nsIMdbEnv* ev) ;
+   mdb_err CutStrongRef(nsIMdbEnv* ev) ;
   
-   mdb_err CloseMdbObject(mdbEnv* ev) ; // called at strong refs zero
-   mdb_err IsOpenMdbObject(mdbEnv* ev, mdb_bool* outOpen) ;
+   mdb_err CloseMdbObject(nsIMdbEnv* ev) ; // called at strong refs zero
+   mdb_err IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen) ;
   // } ----- end ref counting -----
   
-// } ===== end mdbObject methods =====
+// } ===== end nsIMdbObject methods =====
 };
 
 /*| mdbErrorHook: a base class for clients of this API to subclass, in order
-**| to provide a callback installable in mdbEnv for error notifications. If
+**| to provide a callback installable in nsIMdbEnv for error notifications. If
 **| apps that subclass mdbErrorHook wish to maintain a reference to the env
 **| that contains the hook, then this should be a weak ref to avoid cycles.
 **|
-**|| OnError: when mdbEnv has an error condition that causes the total count
-**| of errors to increase, then mdbEnv should call OnError() to report the
+**|| OnError: when nsIMdbEnv has an error condition that causes the total count
+**| of errors to increase, then nsIMdbEnv should call OnError() to report the
 **| error in some fashion when an instance of mdbErrorHook is installed.  The
 **| variety of string flavors is currently due to the uncertainty here in the
-**| mdbBlob and mdbCell interfaces.  (Note that overloading by using the
+**| nsIMdbBlob and nsIMdbCell interfaces.  (Note that overloading by using the
 **| same method name is not necessary here, and potentially less clear.)
 |*/
 class mdbErrorHook { // env callback handler to report errors
 
 // { ===== begin mdbErrorHook methods =====
-   mdb_err OnErrorString(mdbEnv* ev, const char* inAscii) ;
-   mdb_err OnErrorYarn(mdbEnv* ev, const mdbYarn* inYarn) ;
+   mdb_err OnErrorString(nsIMdbEnv* ev, const char* inAscii) ;
+   mdb_err OnErrorYarn(nsIMdbEnv* ev, const mdbYarn* inYarn) ;
 // } ===== end mdbErrorHook methods =====
 };
 
@@ -436,7 +437,7 @@ class mdbErrorHook { // env callback handler to report errors
 class mdbCompare { // caller-supplied yarn comparison
 
 // { ===== begin mdbCompare methods =====
-   mdb_err Order(mdbEnv* ev,      // compare first to second yarn
+   mdb_err Order(nsIMdbEnv* ev,      // compare first to second yarn
     const mdbYarn* inFirst,   // first yarn in comparison
     const mdbYarn* inSecond,  // second yarn in comparison
     mdb_order* outOrder) ; // negative="<", zero="=", positive=">"
@@ -444,19 +445,19 @@ class mdbCompare { // caller-supplied yarn comparison
   
 };
 
-/*| mdbThumb: 
+/*| nsIMdbThumb: 
 |*/
-class mdbThumb : public mdbObject { // closure for repeating incremental method
+class nsIMdbThumb : public nsIMdbObject { // closure for repeating incremental method
 public:
-// { ===== begin mdbThumb methods =====
-   mdb_err GetProgress(mdbEnv* ev,
+// { ===== begin nsIMdbThumb methods =====
+   mdb_err GetProgress(nsIMdbEnv* ev,
     mdb_count* outTotal,    // total somethings to do in operation
     mdb_count* outCurrent,  // subportion of total completed so far
     mdb_bool* outDone,      // is operation finished?
     mdb_bool* outBroken     // is operation irreparably dead and broken?
   ) ;
   
-   mdb_err DoMore(mdbEnv* ev,
+   mdb_err DoMore(nsIMdbEnv* ev,
     mdb_count* outTotal,    // total somethings to do in operation
     mdb_count* outCurrent,  // subportion of total completed so far
     mdb_bool* outDone,      // is operation finished?
@@ -464,29 +465,29 @@ public:
   ) ;
   
    mdb_err CancelAndBreakThumb( // cancel pending operation
-    mdbEnv* ev) ;
-// } ===== end mdbThumb methods =====
+    nsIMdbEnv* ev) ;
+// } ===== end nsIMdbThumb methods =====
 };
 
-/*| mdbEnv: a context parameter used when calling most abstract db methods.
+/*| nsIMdbEnv: a context parameter used when calling most abstract db methods.
 **| The main purpose of such an object is to permit a database implementation
 **| to avoid the use of globals to share information between various parts of
 **| the implementation behind the abstract db interface.  An environment acts
 **| like a session object for a given calling thread, and callers should use
-**| at least one different mdbEnv instance for each thread calling the API.
+**| at least one different nsIMdbEnv instance for each thread calling the API.
 **| While the database implementation might not be threaded, it is highly
 **| desirable that the db be thread-safe if calling threads use distinct
-**| instances of mdbEnv.  Callers can stop at one mdbEnv per thread, or they
-**| might decide to make on mdbEnv instance for every mdbPort opened, so that
+**| instances of nsIMdbEnv.  Callers can stop at one nsIMdbEnv per thread, or they
+**| might decide to make on nsIMdbEnv instance for every nsIMdbPort opened, so that
 **| error information is segregated by database instance.  Callers create
-**| instances of mdbEnv by calling the MakeEnv() method in mdbFactory. 
+**| instances of nsIMdbEnv by calling the MakeEnv() method in nsIMdbFactory. 
 **|
 **|| tracing: an environment might support some kind of tracing, and this
 **| boolean attribute permits such activity to be enabled or disabled.
 **|
 **|| errors: when a call to the abstract db interface returns, a caller might
 **| check the number of outstanding errors to see whether the operation did
-**| actually succeed. Each mdbEnv should have all its errors cleared by a
+**| actually succeed. Each nsIMdbEnv should have all its errors cleared by a
 **| call to ClearErrors() before making each call to the abstract db API,
 **| because outstanding errors might disable further database actions.  (This
 **| is not done inside the db interface, because the db cannot in general know
@@ -497,9 +498,9 @@ public:
 **| be uninstalled by passing a null pointer.
 **|
 |*/
-class mdbEnv : public mdbObject { // db specific context parameter
+class nsIMdbEnv : public nsIMdbObject { // db specific context parameter
 
-// { ===== begin mdbEnv methods =====
+// { ===== begin nsIMdbEnv methods =====
 
   // { ----- begin attribute methods -----
   mdb_err GetErrorCount(mdb_count* outCount,
@@ -514,22 +515,22 @@ class mdbEnv : public mdbObject { // db specific context parameter
   // } ----- end attribute methods -----
   
   mdb_err ClearErrors() ; // clear errors beore re-entering db API
-// } ===== end mdbEnv methods =====
+// } ===== end nsIMdbEnv methods =====
 };
 
-/*| mdbFactory: the main entry points to the abstract db interface.  A DLL
+/*| nsIMdbFactory: the main entry points to the abstract db interface.  A DLL
 **| that supports this mdb interface need only have a single exported method
-**| that will return an instance of mdbFactory, so that further methods in
-**| the suite can be accessed from objects returned by mdbFactory methods.
+**| that will return an instance of nsIMdbFactory, so that further methods in
+**| the suite can be accessed from objects returned by nsIMdbFactory methods.
 **|
-**|| mdbYarn: note all mdbFactory subclasses must guarantee null
+**|| mdbYarn: note all nsIMdbFactory subclasses must guarantee null
 **| termination of all strings written into mdbYarn instances, as long as
 **| mYarn_Size and mYarn_Buf are nonzero.  Even truncated string values must
 **| be null terminated.  This is more strict behavior than mdbYarn requires,
-**| but it is part of the mdbFactory interface.
+**| but it is part of the nsIMdbFactory interface.
 **|
 **|| envs: an environment instance is required as per-thread context for
-**| most of the db method calls, so mdbFactory creates such instances.
+**| most of the db method calls, so nsIMdbFactory creates such instances.
 **|
 **|| rows: callers must be able to create row instances that are independent
 **| of storage space that is part of the db content graph.  Many interfaces
@@ -538,9 +539,9 @@ class mdbEnv : public mdbObject { // db specific context parameter
 **| cells are an independenty copy of unexposed content inside the db model.
 **| Callers are expected to maintain one or more row instances as a buffer
 **| for staging cell content copied into or out of a table inside the db.
-**| Callers are urged to use an instance of mdbRow created by the mdbFactory
+**| Callers are urged to use an instance of nsIMdbRow created by the nsIMdbFactory
 **| code suite, because reading and writing might be much more efficient than
-**| when using a hand-rolled mdbRow subclass with no relation to the suite.
+**| when using a hand-rolled nsIMdbRow subclass with no relation to the suite.
 **|
 **|| ports: a port is a readonly interface to a specific database file. Most
 **| of the methods to access a db file are suitable for a readonly interface,
@@ -548,7 +549,7 @@ class mdbEnv : public mdbObject { // db specific context parameter
 **| possible to read other external formats for import purposes, without
 **| needing the code or competence necessary to write every such format.  So
 **| we can write generic import code just once, as long as every format can
-**| show a face based on mdbPort. (However, same suite import can be faster.)
+**| show a face based on nsIMdbPort. (However, same suite import can be faster.)
 **| Given a file name and the first 512 bytes of a file, a factory can say if
 **| a port can be opened by this factory.  Presumably an app maintains chains
 **| of factories for different suites, and asks each in turn about opening a
@@ -563,43 +564,43 @@ class mdbEnv : public mdbObject { // db specific context parameter
 **| file name which does not yet exist (callers are always responsible for
 **| destroying any existing files before calling this method). 
 |*/
-class mdbFactory : public mdbObject { // suite entry points
+class nsIMdbFactory : public nsIMdbObject { // suite entry points
 public:
-// { ===== begin mdbFactory methods =====
+// { ===== begin nsIMdbFactory methods =====
 
   // { ----- begin env methods -----
-   mdb_err MakeEnv(mdbEnv** acqEnv); // acquire new env instance
+   mdb_err MakeEnv(nsIMdbHeap* ioHeap, nsIMdbEnv** acqEnv); // acquire new env instance
   // } ----- end env methods -----
 
   // { ----- begin row methods -----
-  mdb_err MakeRow(mdbEnv* ev, mdbRow** acqRow); // acquire new row
+  mdb_err MakeRow(nsIMdbEnv* ev, nsIMdbRow** acqRow); // acquire new row
   // } ----- end row methods -----
   
   // { ----- begin port methods -----
    mdb_err CanOpenFilePort(
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const char* inFilePath, // the file to investigate
     const mdbYarn* inFirst512Bytes,
     mdb_bool* outCanOpen, // whether OpenFilePort() might succeed
     mdbYarn* outFormatVersion) ; // informal file format description
     
    mdb_err OpenFilePort(
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const char* inFilePath, // the file to open for readonly import
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
-    mdbThumb** acqThumb); // acquire thumb for incremental port open
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
-  // then call mdbFactory::ThumbToOpenPort() to get the port instance.
+    nsIMdbThumb** acqThumb); // acquire thumb for incremental port open
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+  // then call nsIMdbFactory::ThumbToOpenPort() to get the port instance.
 
    mdb_err ThumbToOpenPort( // redeeming a completed thumb from OpenFilePort()
-    mdbEnv* ev, // context
-    mdbThumb* ioThumb, // thumb from OpenFilePort() with done status
-    mdbPort** acqPort); // acquire new port object
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb* ioThumb, // thumb from OpenFilePort() with done status
+    nsIMdbPort** acqPort); // acquire new port object
   // } ----- end port methods -----
   
   // { ----- begin store methods -----
    mdb_err CanOpenFileStore(
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const char* inFilePath, // the file to investigate
     const mdbYarn* inFirst512Bytes,
     mdb_bool* outCanOpenAsStore, // whether OpenFileStore() might succeed
@@ -607,44 +608,46 @@ public:
     mdbYarn* outFormatVersion); // informal file format description
     
    mdb_err OpenFileStore( // open an existing database
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
+    nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
     const char* inFilePath, // the file to open for general db usage
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
-    mdbThumb** acqThumb) ; // acquire thumb for incremental store open
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
-  // then call mdbFactory::ThumbToOpenStore() to get the store instance.
+    nsIMdbThumb** acqThumb) ; // acquire thumb for incremental store open
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+  // then call nsIMdbFactory::ThumbToOpenStore() to get the store instance.
     
    mdb_err
   ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
-    mdbEnv* ev, // context
-    mdbThumb* ioThumb, // thumb from OpenFileStore() with done status
-    mdbStore** acqStore) ; // acquire new db store object
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb* ioThumb, // thumb from OpenFileStore() with done status
+    nsIMdbStore** acqStore) ; // acquire new db store object
   
    mdb_err CreateNewFileStore( // create a new db with minimal content
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
+    nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
     const char* inFilePath, // name of file which should not yet exist
     const mdbOpenPolicy* inOpenPolicy, // runtime policies for using db
-    mdbStore** acqStore) ; // acquire new db store object
+    nsIMdbStore** acqStore) ; // acquire new db store object
   // } ----- end store methods -----
 
-// } ===== end mdbFactory methods =====
+// } ===== end nsIMdbFactory methods =====
 };
 
 
-/*| mdbPort: a readonly interface to a specific database file. The mutable
-**| mdbStore interface is a subclass that includes writing behavior, but
-**| most of the needed db methods appear in the readonly mdbPort interface.
+/*| nsIMdbPort: a readonly interface to a specific database file. The mutable
+**| nsIMdbStore interface is a subclass that includes writing behavior, but
+**| most of the needed db methods appear in the readonly nsIMdbPort interface.
 **|
-**|| mdbYarn: note all mdbPort and mdbStore subclasses must guarantee null
+**|| mdbYarn: note all nsIMdbPort and nsIMdbStore subclasses must guarantee null
 **| termination of all strings written into mdbYarn instances, as long as
 **| mYarn_Size and mYarn_Buf are nonzero.  Even truncated string values must
 **| be null terminated.  This is more strict behavior than mdbYarn requires,
-**| but it is part of the mdbPort and mdbStore interface.
+**| but it is part of the nsIMdbPort and nsIMdbStore interface.
 **|
 **|| attributes: methods are provided to distinguish a readonly port from a
 **| mutable store, and whether a mutable store actually has any dirty content.
 **|
-**|| filepath: the file path used to open the port from the mdbFactory can be
+**|| filepath: the file path used to open the port from the nsIMdbFactory can be
 **| queried and discovered by GetPortFilePath(), which includes format info.
 **|
 **|| export: a port can write itself in other formats, with perhaps a typical
@@ -671,7 +674,7 @@ public:
 **| considered scoped inside row scope, so passing a zero for table kind will
 **| find all table kinds for some nonzero row scope.  Passing a zero for row
 **| scope will iterate over all tables in the port, in some undefined order.
-**| (A new table can be added to a port using mdbStore::NewTable(), even when
+**| (A new table can be added to a port using nsIMdbStore::NewTable(), even when
 **| the requested scope and kind combination is already used by other tables.)
 **|
 **|| memory: callers can request that a database use less memory footprint in
@@ -689,47 +692,47 @@ public:
 **| thinks application failure might otherwise occur.  (Apps might better close
 **| an open db, so panic purges only make sense when a db is urgently needed.)
 |*/
-class mdbPort : public mdbObject {
+class nsIMdbPort : public nsIMdbObject {
 public:
-// { ===== begin mdbPort methods =====
+// { ===== begin nsIMdbPort methods =====
 
   // { ----- begin attribute methods -----
-   mdb_err GetIsPortReadonly(mdbEnv* ev, mdb_bool* outBool) ;
-   mdb_err GetIsStore(mdbEnv* ev, mdb_bool* outBool) ;
-   mdb_err GetIsStoreAndDirty(mdbEnv* ev, mdb_bool* outBool) ;
+   mdb_err GetIsPortReadonly(nsIMdbEnv* ev, mdb_bool* outBool) ;
+   mdb_err GetIsStore(nsIMdbEnv* ev, mdb_bool* outBool) ;
+   mdb_err GetIsStoreAndDirty(nsIMdbEnv* ev, mdb_bool* outBool) ;
 
-   mdb_err GetUsagePolicy(mdbEnv* ev, 
+   mdb_err GetUsagePolicy(nsIMdbEnv* ev, 
     mdbUsagePolicy* ioUsagePolicy) ;
 
-   mdb_err SetUsagePolicy(mdbEnv* ev, 
+   mdb_err SetUsagePolicy(nsIMdbEnv* ev, 
     const mdbUsagePolicy* inUsagePolicy) ;
   // } ----- end attribute methods -----
 
   // { ----- begin memory policy methods -----  
    mdb_err IdleMemoryPurge( // do memory management already scheduled
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_size* outEstimatedBytesFreed) ; // approximate bytes actually freed
 
    mdb_err SessionMemoryPurge( // determine preferred export format
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_size inDesiredBytesFreed, // approximate number of bytes wanted
     mdb_size* outEstimatedBytesFreed) ; // approximate bytes actually freed
 
    mdb_err PanicMemoryPurge( // desperately free all possible memory
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_size* outEstimatedBytesFreed) ; // approximate bytes actually freed
   // } ----- end memory policy methods -----
 
   // { ----- begin filepath methods -----
    mdb_err GetPortFilePath(
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdbYarn* outFilePath, // name of file holding port content
     mdbYarn* outFormatVersion) ; // file format description
   // } ----- end filepath methods -----
 
   // { ----- begin export methods -----
    mdb_err BestExportFormat( // determine preferred export format
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdbYarn* outFormatVersion) ; // file format description
 
   // some tentative suggested import/export formats
@@ -751,28 +754,28 @@ public:
 
    mdb_err
   CanExportToFormat( // can export content in given specific format?
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const char* inFormatVersion, // file format description
     mdb_bool* outCanExport); // whether ExportSource() might succeed
 
    mdb_err ExportToFormat( // export content in given specific format
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const char* inFilePath, // the file to receive exported content
     const char* inFormatVersion, // file format description
-    mdbThumb** acqThumb); // acquire thumb for incremental export
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
+    nsIMdbThumb** acqThumb); // acquire thumb for incremental export
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the export will be finished.
 
   // } ----- end export methods -----
 
   // { ----- begin token methods -----
    mdb_err TokenToString( // return a string name for an integer token
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_token inToken, // token for inTokenName inside this port
     mdbYarn* outTokenName); // the type of table to access
   
    mdb_err StringToToken( // return an integer token for scope name
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const char* inTokenName, // Latin1 string to tokenize if possible
     mdb_token* outToken); // token for inTokenName inside this port
     
@@ -782,7 +785,7 @@ public:
   // But a readonly port will return zero for an unknown scope name.
 
    mdb_err QueryToken( // like StringToToken(), but without adding
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const char* inTokenName, // Latin1 string to tokenize if possible
     mdb_token* outToken); // token for inTokenName inside this port
   
@@ -794,34 +797,34 @@ public:
 
   // { ----- begin row methods -----  
    mdb_err HasRow( // contains a row with the specified oid?
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
     mdb_bool* outHasRow); // whether GetRow() might succeed
     
    mdb_err GetRow( // access one row with specific oid
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
-    mdbRow** acqRow); // acquire specific row (or null)
+    nsIMdbRow** acqRow); // acquire specific row (or null)
 
    mdb_err GetRowRefCount( // get number of tables that contain a row 
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
     mdb_count* outRefCount); // number of tables containing inRowKey 
   // } ----- end row methods -----
 
   // { ----- begin table methods -----  
    mdb_err HasTable( // supports a table with the specified oid?
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical table oid
     mdb_bool* outHasTable); // whether GetTable() might succeed
     
    mdb_err GetTable( // access one table with specific oid
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical table oid
-    mdbTable** acqTable); // acquire specific table (or null)
+    nsIMdbTable** acqTable); // acquire specific table (or null)
   
    mdb_err HasTableKind( // supports a table of the specified type?
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_scope inRowScope, // rid scope for row ids
     mdb_kind inTableKind, // the type of table to access
     mdb_count* outTableCount, // current number of such tables
@@ -842,25 +845,25 @@ public:
   // "ns:msg:db:table:kind:mail:thread"
     
    mdb_err GetTableKind( // access one (random) table of specific type
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_scope inRowScope,      // row scope for row ids
     mdb_kind inTableKind,      // the type of table to access
     mdb_count* outTableCount, // current number of such tables
     mdb_bool* outMustBeUnique, // whether port can hold only one of these
-    mdbTable** acqTable) ;       // acquire scoped collection of rows
+    nsIMdbTable** acqTable) ;       // acquire scoped collection of rows
     
    mdb_err
   GetPortTableCursor( // get cursor for all tables of specific type
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_scope inRowScope, // row scope for row ids
     mdb_kind inTableKind, // the type of table to access
-    mdbPortTableCursor** acqCursor); // all such tables in the port
+    nsIMdbPortTableCursor** acqCursor); // all such tables in the port
   // } ----- end table methods -----
 
-// } ===== end mdbPort methods =====
+// } ===== end nsIMdbPort methods =====
 };
 
-/*| mdbStore: a mutable interface to a specific database file.
+/*| nsIMdbStore: a mutable interface to a specific database file.
 **|
 **|| tables: one can force a new table to exist in a store with NewTable()
 **| and nonzero values for both row scope and table kind.  (If one wishes only
@@ -924,106 +927,106 @@ public:
 **| This implies an app that closes a store will need to send a "scramble"
 **| event notification to any views that depend on old discarded content.
 |*/
-class mdbStore : public mdbPort {
+class nsIMdbStore : public nsIMdbPort {
 public:
-// { ===== begin mdbStore methods =====
+// { ===== begin nsIMdbStore methods =====
 
   // { ----- begin table methods -----
    mdb_err NewTable( // make one new table of specific type
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_scope inRowScope,    // row scope for row ids
     mdb_kind inTableKind,    // the type of table to access
     mdb_bool inMustBeUnique, // whether store can hold only one of these
-    mdbTable** acqTable) ;     // acquire scoped collection of rows
+    nsIMdbTable** acqTable) ;     // acquire scoped collection of rows
   // } ----- end table methods -----
 
   // { ----- begin row scope methods -----
-   mdb_err RowScopeHasAssignedIds(mdbEnv* ev,
+   mdb_err RowScopeHasAssignedIds(nsIMdbEnv* ev,
     mdb_scope inRowScope,   // row scope for row ids
     mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
     mdb_bool* outStoreAssigned) ; // nonzero if store db assigned specified
 
-   mdb_err SetCallerAssignedIds(mdbEnv* ev,
+   mdb_err SetCallerAssignedIds(nsIMdbEnv* ev,
     mdb_scope inRowScope,   // row scope for row ids
     mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
     mdb_bool* outStoreAssigned) ; // nonzero if store db assigned specified
 
-   mdb_err SetStoreAssignedIds(mdbEnv* ev,
+   mdb_err SetStoreAssignedIds(nsIMdbEnv* ev,
     mdb_scope inRowScope,   // row scope for row ids
     mdb_bool* outCallerAssigned, // nonzero if caller assigned specified
     mdb_bool* outStoreAssigned) ; // nonzero if store db assigned specified
   // } ----- end row scope methods -----
 
   // { ----- begin row methods -----
-   mdb_err NewRowWithOid(mdbEnv* ev, // new row w/ caller assigned oid
+   mdb_err NewRowWithOid(nsIMdbEnv* ev, // new row w/ caller assigned oid
     mdb_scope inRowScope,   // row scope for row ids
     const mdbOid* inOid,   // caller assigned oid
-    mdbRow** acqRow) ; // create new row
+    nsIMdbRow** acqRow) ; // create new row
 
-   mdb_err NewRow(mdbEnv* ev, // new row with db assigned oid
+   mdb_err NewRow(nsIMdbEnv* ev, // new row with db assigned oid
     mdb_scope inRowScope,   // row scope for row ids
-    mdbRow** acqRow) ; // create new row
+    nsIMdbRow** acqRow) ; // create new row
   // Note this row must be added to some table or cell child before the
   // store is closed in order to make this row persist across sesssions.
   // } ----- end row methods -----
 
   // { ----- begin inport/export methods -----
    mdb_err ImportContent( // import content from port
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_scope inRowScope, // scope for rows (or zero for all?)
-    mdbPort* ioPort, // the port with content to add to store
-    mdbThumb** acqThumb) ; // acquire thumb for incremental import
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
+    nsIMdbPort* ioPort, // the port with content to add to store
+    nsIMdbThumb** acqThumb) ; // acquire thumb for incremental import
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the import will be finished.
   // } ----- end inport/export methods -----
 
   // { ----- begin hinting methods -----
    mdb_err
   ShareAtomColumnsHint( // advise re shared column content atomizing
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_scope inScopeHint, // zero, or suggested shared namespace
     const mdbColumnSet* inColumnSet) ; // cols desired tokenized together
 
    mdb_err
   AvoidAtomColumnsHint( // advise column with poor atomizing prospects
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbColumnSet* inColumnSet) ; // cols with poor atomizing prospects
   // } ----- end hinting methods -----
 
   // { ----- begin commit methods -----
    mdb_err SmallCommit( // save minor changes if convenient and uncostly
-    mdbEnv* ev); // context
+    nsIMdbEnv* ev); // context
   
    mdb_err LargeCommit( // save important changes if at all possible
-    mdbEnv* ev, // context
-    mdbThumb** acqThumb) ; // acquire thumb for incremental commit
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb** acqThumb) ; // acquire thumb for incremental commit
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the commit will be finished.  Note the store is effectively write
   // locked until commit is finished or canceled through the thumb instance.
   // Until the commit is done, the store will report it has readonly status.
 
    mdb_err SessionCommit( // save all changes if large commits delayed
-    mdbEnv* ev, // context
-    mdbThumb** acqThumb) ; // acquire thumb for incremental commit
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb** acqThumb) ; // acquire thumb for incremental commit
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the commit will be finished.  Note the store is effectively write
   // locked until commit is finished or canceled through the thumb instance.
   // Until the commit is done, the store will report it has readonly status.
 
    mdb_err
   CompressCommit( // commit and make db physically smaller if possible
-    mdbEnv* ev, // context
-    mdbThumb** acqThumb) ; // acquire thumb for incremental commit
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb** acqThumb) ; // acquire thumb for incremental commit
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the commit will be finished.  Note the store is effectively write
   // locked until commit is finished or canceled through the thumb instance.
   // Until the commit is done, the store will report it has readonly status.
   // } ----- end commit methods -----
 
-// } ===== end mdbStore methods =====
+// } ===== end nsIMdbStore methods =====
 };
 
-/*| mdbCursor: base cursor class for iterating row cells and table rows
+/*| nsIMdbCursor: base cursor class for iterating row cells and table rows
 **|
 **|| count: the number of elements in the collection (table or row)
 **|
@@ -1045,60 +1048,60 @@ public:
 **| default, a cursor should assume this attribute is false until specified,
 **| so that iterations quietly try to re-sync when they loose coherence.
 |*/
-class mdbCursor : public mdbObject { // collection iterator
+class nsIMdbCursor : public nsIMdbObject { // collection iterator
 
-// { ===== begin mdbCursor methods =====
+// { ===== begin nsIMdbCursor methods =====
 
   // { ----- begin attribute methods -----
-   mdb_err GetCount(mdbEnv* ev, mdb_count* outCount) ; // readonly
-   mdb_err GetSeed(mdbEnv* ev, mdb_seed* outSeed) ;    // readonly
+   mdb_err GetCount(nsIMdbEnv* ev, mdb_count* outCount) ; // readonly
+   mdb_err GetSeed(nsIMdbEnv* ev, mdb_seed* outSeed) ;    // readonly
   
-   mdb_err SetPos(mdbEnv* ev, mdb_pos inPos) ;   // mutable
-   mdb_err GetPos(mdbEnv* ev, mdb_pos* outPos) ;
+   mdb_err SetPos(nsIMdbEnv* ev, mdb_pos inPos) ;   // mutable
+   mdb_err GetPos(nsIMdbEnv* ev, mdb_pos* outPos) ;
   
-   mdb_err SetDoFailOnSeedOutOfSync(mdbEnv* ev, mdb_bool inFail) ;
-   mdb_err SetDoFailOnSeedOutOfSync(mdbEnv* ev, mdb_bool* outFail) ;
+   mdb_err SetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool inFail) ;
+   mdb_err SetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool* outFail) ;
   // } ----- end attribute methods -----
 
-// } ===== end mdbCursor methods =====
+// } ===== end nsIMdbCursor methods =====
 };
 
-/*| mdbPortTableCursor: cursor class for iterating port tables
+/*| nsIMdbPortTableCursor: cursor class for iterating port tables
 **|
 **|| port: the cursor is associated with a specific port, which can be
 **| set to a different port (which resets the position to -1 so the
 **| next table acquired is the first in the port.
 **|
 |*/
-class mdbPortTableCursor : public mdbCursor { // table collection iterator
+class nsIMdbPortTableCursor : public nsIMdbCursor { // table collection iterator
 
-// { ===== begin mdbPortTableCursor methods =====
+// { ===== begin nsIMdbPortTableCursor methods =====
 
   // { ----- begin attribute methods -----
-   mdb_err SetPort(mdbEnv* ev, mdbPort* ioPort) ; // sets pos to -1
-   mdb_err GetPort(mdbEnv* ev, mdbPort** acqPort) ;
+   mdb_err SetPort(nsIMdbEnv* ev, nsIMdbPort* ioPort) ; // sets pos to -1
+   mdb_err GetPort(nsIMdbEnv* ev, nsIMdbPort** acqPort) ;
   
-   mdb_err SetRowScope(mdbEnv* ev, // sets pos to -1
+   mdb_err SetRowScope(nsIMdbEnv* ev, // sets pos to -1
     mdb_scope inRowScope) ;
-   mdb_err GetRowScope(mdbEnv* ev, mdb_scope* outRowScope) ; 
+   mdb_err GetRowScope(nsIMdbEnv* ev, mdb_scope* outRowScope) ; 
   // setting row scope to zero iterates over all row scopes in port
     
-   mdb_err SetTableKind(mdbEnv* ev, // sets pos to -1
+   mdb_err SetTableKind(nsIMdbEnv* ev, // sets pos to -1
     mdb_kind inTableKind) ;
-   mdb_err GetTableKind(mdbEnv* ev, mdb_kind* outTableKind) ;
+   mdb_err GetTableKind(nsIMdbEnv* ev, mdb_kind* outTableKind) ;
   // setting table kind to zero iterates over all table kinds in row scope
   // } ----- end attribute methods -----
 
   // { ----- begin table iteration methods -----
    mdb_err NextTable( // get table at next position in the db
-    mdbEnv* ev, // context
-    mdbTable** acqTable) ; // the next table in the iteration
+    nsIMdbEnv* ev, // context
+    nsIMdbTable** acqTable) ; // the next table in the iteration
   // } ----- end table iteration methods -----
 
-// } ===== end mdbPortTableCursor methods =====
+// } ===== end nsIMdbPortTableCursor methods =====
 };
 
-/*| mdbCollection: an object that collects a set of other objects as members.
+/*| nsIMdbCollection: an object that collects a set of other objects as members.
 **| The main purpose of this base class is to unify the perceived semantics
 **| of tables and rows where their collection behavior is similar.  This helps
 **| isolate the mechanics of collection behavior from the other semantics that
@@ -1129,8 +1132,8 @@ class mdbPortTableCursor : public mdbCursor { // table collection iterator
 **|
 **|| port: every collection is associated with a specific database instance.
 **|
-**|| cursor: a subclass of mdbCursor suitable for this specific collection
-**| subclass.  The ability to GetCursor() from the base mdbCollection class
+**|| cursor: a subclass of nsIMdbCursor suitable for this specific collection
+**| subclass.  The ability to GetCursor() from the base nsIMdbCollection class
 **| is not really as useful as getting a more specifically typed cursor more
 **| directly from the base class without any casting involved.  So including
 **| this method here is more for conceptual illustration.
@@ -1174,43 +1177,43 @@ class mdbPortTableCursor : public mdbCursor { // table collection iterator
 **| immediately elsewhere. Such use soon after the drop request might cause
 **| the drop to be cancelled.)
 |*/
-class mdbCollection : public mdbObject { // sequence of objects
+class nsIMdbCollection : public nsIMdbObject { // sequence of objects
 public:
-// { ===== begin mdbCollection methods =====
+// { ===== begin nsIMdbCollection methods =====
 
   // { ----- begin attribute methods -----
-   mdb_err GetSeed(mdbEnv* ev,
+   mdb_err GetSeed(nsIMdbEnv* ev,
     mdb_seed* outSeed) ;    // member change count
-   mdb_err GetCount(mdbEnv* ev,
+   mdb_err GetCount(nsIMdbEnv* ev,
     mdb_count* outCount) ; // member count
 
-   mdb_err GetPort(mdbEnv* ev,
-    mdbPort** acqPort) ; // collection container
+   mdb_err GetPort(nsIMdbEnv* ev,
+    nsIMdbPort** acqPort) ; // collection container
   // } ----- end attribute methods -----
 
   // { ----- begin cursor methods -----
    mdb_err GetCursor( // make a cursor starting iter at inMemberPos
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_pos inMemberPos, // zero-based ordinal pos of member in collection
-    mdbCursor** acqCursor) ; // acquire new cursor instance
+    nsIMdbCursor** acqCursor) ; // acquire new cursor instance
   // } ----- end cursor methods -----
 
   // { ----- begin ID methods -----
-   mdb_err GetOid(mdbEnv* ev,
+   mdb_err GetOid(nsIMdbEnv* ev,
     const mdbOid* outOid) ; // read object identity
-   mdb_err BecomeContent(mdbEnv* ev,
+   mdb_err BecomeContent(nsIMdbEnv* ev,
     const mdbOid* inOid) ; // exchange content
   // } ----- end ID methods -----
 
   // { ----- begin activity dropping methods -----
    mdb_err DropActivity( // tell collection usage no longer expected
-    mdbEnv* ev) ;
+    nsIMdbEnv* ev) ;
   // } ----- end activity dropping methods -----
 
-// } ===== end mdbCollection methods =====
+// } ===== end nsIMdbCollection methods =====
 };
 
-/*| mdbTable: an ordered collection of rows
+/*| nsIMdbTable: an ordered collection of rows
 **|
 **|| row scope: an integer token for an atomized string in this database
 **| that names a space for row IDs.  This attribute of a table is intended
@@ -1274,10 +1277,10 @@ public:
 **| containing a row as a member or a child.
 **|
 **|| row content: one can access or modify the cell content in a table's row
-**| by moving content to or from an instance of mdbRow.  Note that mdbRow
+**| by moving content to or from an instance of nsIMdbRow.  Note that nsIMdbRow
 **| never represents the actual row inside a table, and this is the reason
-**| why mdbRow instances do not have row IDs or row scopes.  So an instance
-**| of mdbRow always and only contains a snapshot of some or all content in
+**| why nsIMdbRow instances do not have row IDs or row scopes.  So an instance
+**| of nsIMdbRow always and only contains a snapshot of some or all content in
 **| past, present, or future persistent row inside a table.  This means that
 **| reading and writing rows in tables has strictly copy semantics, and we
 **| currently do not plan any exceptions for specific performance reasons.
@@ -1287,29 +1290,29 @@ public:
 **|
 **|| indexes:
 |*/
-class mdbTable : public mdbCollection { // a collection of rows
+class nsIMdbTable : public nsIMdbCollection { // a collection of rows
 public:
-// { ===== begin mdbTable methods =====
+// { ===== begin nsIMdbTable methods =====
 
   // { ----- begin attribute methods -----
-   mdb_err GetTableKind(mdbEnv* ev, mdb_kind* outTableKind) ;
-   mdb_err GetRowScope(mdbEnv* ev, mdb_scope* outRowScope) ;
+   mdb_err GetTableKind(nsIMdbEnv* ev, mdb_kind* outTableKind) ;
+   mdb_err GetRowScope(nsIMdbEnv* ev, mdb_scope* outRowScope) ;
   
    mdb_err GetPort( // get port containing this table
-    mdbEnv* ev, // context
-    mdbPort** acqPort) ; // acquire containing port or store
+    nsIMdbEnv* ev, // context
+    nsIMdbPort** acqPort) ; // acquire containing port or store
   // } ----- end attribute methods -----
 
   // { ----- begin cursor methods -----
    mdb_err GetTableRowCursor( // make a cursor, starting iteration at inRowPos
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
-    mdbTableRowCursor** acqCursor) ; // acquire new cursor instance
+    nsIMdbTableRowCursor** acqCursor) ; // acquire new cursor instance
   // } ----- end row position methods -----
 
   // { ----- begin row position methods -----
    mdb_err RowPosToOid( // get row member for a table position
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     mdbOid* outOid) ; // row oid at the specified position
     
@@ -1318,51 +1321,51 @@ public:
 
   // { ----- begin oid set methods -----
    mdb_err AddOid( // make sure the row with inOid is a table member 
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbOid* inOid) ; // row to ensure membership in table
 
    mdb_err HasOid( // test for the table position of a row member
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbOid* inOid, // row to find in table
     mdb_pos* outPos) ; // zero-based ordinal position of row in table
 
    mdb_err CutOid( // make sure the row with inOid is not a member 
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbOid* inOid) ; // row to remove from table
   // } ----- end oid set methods -----
 
   // { ----- begin row set methods -----
    mdb_err NewRow( // create a new row instance in table
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdbOid* ioOid, // please use zero (unbound) rowId for db-assigned IDs
-    mdbRow** acqRow) ; // create new row
+    nsIMdbRow** acqRow) ; // create new row
 
    mdb_err AddRow( // make sure the row with inOid is a table member 
-    mdbEnv* ev, // context
-    mdbRow* ioRow) ; // row to ensure membership in table
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioRow) ; // row to ensure membership in table
 
    mdb_err HasRow( // test for the table position of a row member
-    mdbEnv* ev, // context
-    mdbRow* ioRow, // row to find in table
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioRow, // row to find in table
     mdb_pos* outPos) ; // zero-based ordinal position of row in table
 
    mdb_err CutRow( // make sure the row with inOid is not a member 
-    mdbEnv* ev, // context
-    mdbRow* ioRow) ; // row to remove from table
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioRow) ; // row to remove from table
   // } ----- end row set methods -----
 
   // { ----- begin searching methods -----
    mdb_err SearchOneSortedColumn( // search only currently sorted col
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbYarn* inPrefix, // content to find as prefix in row's column cell
     mdbRange* outRange) ; // range of matching rows
     
    mdb_err SearchManyColumns( // search variable number of sorted cols
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbYarn* inPrefix, // content to find as prefix in row's column cell
     mdbSearch* ioSearch, // columns to search and resulting ranges
-    mdbThumb** acqThumb) ; // acquire thumb for incremental search
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
+    nsIMdbThumb** acqThumb) ; // acquire thumb for incremental search
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the search will be finished.  Until that time, the ioSearch argument
   // is assumed referenced and used by the thumb; one should not inspect any
   // output results in ioSearch until after the thumb is finished with it.
@@ -1370,11 +1373,11 @@ public:
 
   // { ----- begin hinting methods -----
    mdb_err SearchColumnsHint( // advise re future expected search cols  
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbColumnSet* inColumnSet) ; // columns likely to be searched
     
    mdb_err SortColumnsHint( // advise re future expected sort columns  
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbColumnSet* inColumnSet) ; // columns for likely sort requests
   // } ----- end hinting methods -----
 
@@ -1384,64 +1387,64 @@ public:
 
    mdb_err
   CanSortColumn( // query which column is currently used for sorting
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to query sorting potential
     mdb_bool* outCanSort) ; // whether the column can be sorted
   
    mdb_err
   NewSortColumn( // change the column used for sorting in the table
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // requested new column for sorting table
     mdb_column* outActualColumn, // column actually used for sorting
-    mdbThumb** acqThumb) ; // acquire thumb for incremental table resort
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
+    nsIMdbThumb** acqThumb) ; // acquire thumb for incremental table resort
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the sort will be finished. 
   
    mdb_err
   NewSortColumnWithCompare( // change sort column with explicit compare
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdbCompare* ioCompare, // explicit interface for yarn comparison
     mdb_column inColumn, // requested new column for sorting table
     mdb_column* outActualColumn, // column actually used for sorting
-    mdbThumb** acqThumb) ; // acquire thumb for incremental table resort
+    nsIMdbThumb** acqThumb) ; // acquire thumb for incremental table resort
   // Note the table will hold a reference to inCompare if this object is used
   // to sort the table.  Until the table closes, callers can only force release
   // of the compare object by changing the sort (by say, changing to unsorted).
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the sort will be finished. 
   
    mdb_err GetSortColumn( // query which col is currently sorted
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column* outColumn) ; // col the table uses for sorting (or zero)
 
   
    mdb_err CloneSortColumn( // view same table with a different sort
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // requested new column for sorting table
-    mdbThumb** acqThumb) ; // acquire thumb for incremental table clone
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
-  // then call mdbTable::ThumbToCloneSortTable() to get the table instance.
+    nsIMdbThumb** acqThumb) ; // acquire thumb for incremental table clone
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
+  // then call nsIMdbTable::ThumbToCloneSortTable() to get the table instance.
     
    mdb_err
   ThumbToCloneSortTable( // redeem complete CloneSortColumn() thumb
-    mdbEnv* ev, // context
-    mdbThumb* ioThumb, // thumb from CloneSortColumn() with done status
-    mdbTable** acqTable) ; // new table instance (or old if sort unchanged)
+    nsIMdbEnv* ev, // context
+    nsIMdbThumb* ioThumb, // thumb from CloneSortColumn() with done status
+    nsIMdbTable** acqTable) ; // new table instance (or old if sort unchanged)
   // } ----- end sorting methods -----
 
   // { ----- begin moving methods -----
   // moving a row does nothing unless a table is currently unsorted
   
    mdb_err MoveOid( // change position of row in unsorted table
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // row oid to find in table
     mdb_pos inHintFromPos, // suggested hint regarding start position
     mdb_pos inToPos,       // desired new position for row inRowId
     mdb_pos* outActualPos) ; // actual new position of row in table
 
    mdb_err MoveRow( // change position of row in unsorted table
-    mdbEnv* ev, // context
-    mdbRow* ioRow,  // row oid to find in table
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioRow,  // row oid to find in table
     mdb_pos inHintFromPos, // suggested hint regarding start position
     mdb_pos inToPos,       // desired new position for row inRowId
     mdb_pos* outActualPos) ; // actual new position of row in table
@@ -1449,43 +1452,43 @@ public:
   
   // { ----- begin index methods -----
    mdb_err AddIndex( // create a sorting index for column if possible
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // the column to sort by index
-    mdbThumb** acqThumb) ; // acquire thumb for incremental index building
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
+    nsIMdbThumb** acqThumb) ; // acquire thumb for incremental index building
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the index addition will be finished.
   
    mdb_err CutIndex( // stop supporting a specific column index
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // the column with index to be removed
-    mdbThumb** acqThumb) ; // acquire thumb for incremental index destroy
-  // Call mdbThumb::DoMore() until done, or until the thumb is broken, and
+    nsIMdbThumb** acqThumb) ; // acquire thumb for incremental index destroy
+  // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then the index removal will be finished.
   
    mdb_err HasIndex( // query for current presence of a column index
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // the column to investigate
     mdb_bool* outHasIndex) ; // whether column has index for this column
 
   
    mdb_err EnableIndexOnSort( // create an index for col on first sort
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn) ; // the column to index if ever sorted
   
    mdb_err QueryIndexOnSort( // check whether index on sort is enabled
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // the column to investigate
     mdb_bool* outIndexOnSort) ; // whether column has index-on-sort enabled
   
    mdb_err DisableIndexOnSort( // prevent future index creation on sort
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn) ; // the column to index if ever sorted
   // } ----- end index methods -----
 	nsVoidArray		m_rows;
-// } ===== end mdbTable methods =====
+// } ===== end nsIMdbTable methods =====
 };
 
-/*| mdbTableRowCursor: cursor class for iterating table rows
+/*| nsIMdbTableRowCursor: cursor class for iterating table rows
 **|
 **|| table: the cursor is associated with a specific table, which can be
 **| set to a different table (which resets the position to -1 so the
@@ -1509,182 +1512,182 @@ public:
 **| and empty are semantically equivalent).
 **|
 |*/
-class mdbTableRowCursor : public mdbCursor { // table row iterator
+class nsIMdbTableRowCursor : public nsIMdbCursor { // table row iterator
 public:
-// { ===== begin mdbTableRowCursor methods =====
+// { ===== begin nsIMdbTableRowCursor methods =====
 
   // { ----- begin attribute methods -----
-   mdb_err SetTable(mdbEnv* ev, mdbTable* ioTable) ; // sets pos to -1
-   mdb_err GetTable(mdbEnv* ev, mdbTable** acqTable) ;
+   mdb_err SetTable(nsIMdbEnv* ev, nsIMdbTable* ioTable) ; // sets pos to -1
+   mdb_err GetTable(nsIMdbEnv* ev, nsIMdbTable** acqTable) ;
   // } ----- end attribute methods -----
 
   // { ----- begin oid iteration methods -----
    mdb_err NextRowOid( // get row id of next row in the table
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdbOid* outOid, // out row oid
     mdb_pos* outRowPos) ;    // zero-based position of the row in table
   // } ----- end oid iteration methods -----
 
   // { ----- begin row iteration methods -----
    mdb_err NextRow( // get row cells from table for cells already in row
-    mdbEnv* ev, // context
-    mdbRow** acqRow, // acquire next row in table
+    nsIMdbEnv* ev, // context
+    nsIMdbRow** acqRow, // acquire next row in table
     mdb_pos* outRowPos) ;    // zero-based position of the row in table
   // } ----- end row iteration methods -----
 
   // { ----- begin copy iteration methods -----
    mdb_err NextRowCopy( // put row cells into sink only when already in sink
-    mdbEnv* ev, // context
-    mdbRow* ioSinkRow, // sink for row cells read from next row
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioSinkRow, // sink for row cells read from next row
     const mdbOid* outOid, // out row oid
     mdb_pos* outRowPos) ;    // zero-based position of the row in table
 
    mdb_err NextRowCopyAll( // put all row cells into sink, adding to sink
-    mdbEnv* ev, // context
-    mdbRow* ioSinkRow, // sink for row cells read from next row
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioSinkRow, // sink for row cells read from next row
     const mdbOid* outOid, // out row oid
     mdb_pos* outRowPos) ;    // zero-based position of the row in table
   // } ----- end copy iteration methods -----
 	mdb_pos		m_pos;
-	mdbTable	*m_table;
-// } ===== end mdbTableRowCursor methods =====
+	nsIMdbTable	*m_table;
+// } ===== end nsIMdbTableRowCursor methods =====
 };
 
-/*| mdbRow: a collection of cells
+/*| nsIMdbRow: a collection of cells
 **|
 |*/
-class mdbRow : public mdbCollection { // cell tuple
+class nsIMdbRow : public nsIMdbCollection { // cell tuple
 public:
-// { ===== begin mdbRow methods =====
+// { ===== begin nsIMdbRow methods =====
 
   // { ----- begin cursor methods -----
    mdb_err
   GetRowCellCursor( // make a cursor starting iteration at inRowPos
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
-    mdbTableRowCursor** acqCursor) ; // acquire new cursor instance
+    nsIMdbTableRowCursor** acqCursor) ; // acquire new cursor instance
   // } ----- end cursor methods -----
 
   // { ----- begin column methods -----
    mdb_err AddColumn( // make sure a particular column is inside row
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to add
     const mdbYarn* inYarn) ; // cell value to install
 
    mdb_err CutColumn( // make sure a column is absent from the row
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn) ; // column to ensure absent from row
 
    mdb_err CutAllColumns( // remove all columns from the row
-    mdbEnv* ev) ; // context
+    nsIMdbEnv* ev) ; // context
   // } ----- end column methods -----
 
   // { ----- begin cell methods -----
    mdb_err NewCell( // get cell for specified column, or add new one
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to add
-    mdbCell** acqCell) ; // cell column and value
+    nsIMdbCell** acqCell) ; // cell column and value
     
    mdb_err AddCell( // copy a cell from another row to this row
-    mdbEnv* ev, // context
-    const mdbCell* inCell) ; // cell column and value
+    nsIMdbEnv* ev, // context
+    const nsIMdbCell* inCell) ; // cell column and value
     
    mdb_err GetCell( // find a cell in this row
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to find
-    mdbCell** acqCell) ; // cell for specified column, or null
+    nsIMdbCell** acqCell) ; // cell for specified column, or null
     
    mdb_err EmptyAllCells( // make all cells in row empty of content
-    mdbEnv* ev) ; // context
+    nsIMdbEnv* ev) ; // context
   // } ----- end cell methods -----
 
   // { ----- begin row methods -----
    mdb_err AddRow( // add all cells in another row to this one
-    mdbEnv* ev, // context
-    mdbRow* ioSourceRow) ; // row to union with
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioSourceRow) ; // row to union with
     
    mdb_err SetRow( // make exact duplicate of another row
-    mdbEnv* ev, // context
-    mdbRow* ioSourceRow) ; // row to duplicate
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioSourceRow) ; // row to duplicate
   // } ----- end row methods -----
 
-// } ===== end mdbRow methods =====
+// } ===== end nsIMdbRow methods =====
 	MDBCellArray	m_cells;
 	mdbOid			m_oid;
 
 };
 
-/*| mdbRowCellCursor: cursor class for iterating row cells
+/*| nsIMdbRowCellCursor: cursor class for iterating row cells
 **|
 **|| row: the cursor is associated with a specific row, which can be
 **| set to a different row (which resets the position to -1 so the
 **| next cell acquired is the first in the row.
 **|
 **|| NextCell: get the next cell in the row and return its position and
-**| a new instance of a mdbCell to represent this next cell.
+**| a new instance of a nsIMdbCell to represent this next cell.
 |*/
-class mdbRowCellCursor : public mdbCursor { // cell collection iterator
+class nsIMdbRowCellCursor : public nsIMdbCursor { // cell collection iterator
 
-// { ===== begin mdbRowCellCursor methods =====
+// { ===== begin nsIMdbRowCellCursor methods =====
 
   // { ----- begin attribute methods -----
-   mdb_err SetRow(mdbEnv* ev, mdbRow* ioRow) ; // sets pos to -1
-   mdb_err GetRow(mdbEnv* ev, mdbRow** acqRow) ;
+   mdb_err SetRow(nsIMdbEnv* ev, nsIMdbRow* ioRow) ; // sets pos to -1
+   mdb_err GetRow(nsIMdbEnv* ev, nsIMdbRow** acqRow) ;
   // } ----- end attribute methods -----
 
   // { ----- begin cell iteration methods -----
    mdb_err NextCell( // get next cell in the row
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     mdb_column* outColumn, // column for this particular cell
     mdb_pos* outPos, // position of cell in row sequence
-    mdbCell** acqCell) ; // the next cell in the iteration
+    nsIMdbCell** acqCell) ; // the next cell in the iteration
     
    mdb_err PickNextCell( // get next cell in row within filter set
-    mdbEnv* ev, // context
+    nsIMdbEnv* ev, // context
     const mdbColumnSet* inFilterSet, // set of cols with actual caller interest
     mdb_column* outColumn, // column for this particular cell
     mdb_pos* outPos, // position of cell in row sequence
-    mdbCell** acqCell) ; // the next cell in the iteration
+    nsIMdbCell** acqCell) ; // the next cell in the iteration
 
   // Note that inFilterSet should not have too many (many more than 10?)
   // cols, since this might imply a potential excessive consumption of time
   // over many cursor calls when looking for column and filter intersection.
   // } ----- end cell iteration methods -----
 
-// } ===== end mdbRowCellCursor methods =====
+// } ===== end nsIMdbRowCellCursor methods =====
 };
 
-/*| mdbBlob: a base class for objects composed mainly of byte sequence state.
-**| (This provides a base class for mdbCell, so that cells themselves can
+/*| nsIMdbBlob: a base class for objects composed mainly of byte sequence state.
+**| (This provides a base class for nsIMdbCell, so that cells themselves can
 **| be used to set state in another cell, without extracting a buffer.)
 |*/
-class mdbBlob : public mdbObject { // a string with associated charset
+class nsIMdbBlob : public nsIMdbObject { // a string with associated charset
 public:
-// { ===== begin mdbBlob methods =====
+// { ===== begin nsIMdbBlob methods =====
 
   // { ----- begin attribute methods -----
-   mdb_err SetBlob(mdbEnv* ev,
-    mdbBlob* ioBlob) ; // reads inBlob slots
+   mdb_err SetBlob(nsIMdbEnv* ev,
+    nsIMdbBlob* ioBlob) ; // reads inBlob slots
   // when inBlob is in the same suite, this might be fastest cell-to-cell
   
    mdb_err ClearBlob( // make empty (so content has zero length)
-    mdbEnv* ev) ;
+    nsIMdbEnv* ev) ;
   // clearing a yarn is like SetYarn() with empty yarn instance content
   
-   mdb_err GetBlobFill(mdbEnv* ev,
+   mdb_err GetBlobFill(nsIMdbEnv* ev,
     mdb_fill* outFill) ;  // size of blob 
   // Same value that would be put into mYarn_Fill, if one called GetYarn()
   // with a yarn instance that had mYarn_Buf==nil and mYarn_Size==0.
   
-   mdb_err SetYarn(mdbEnv* ev, 
+   mdb_err SetYarn(nsIMdbEnv* ev, 
     const mdbYarn* inYarn) ;   // reads from yarn slots
   // make this text object contain content from the yarn's buffer
   
-   mdb_err GetYarn(mdbEnv* ev, 
+   mdb_err GetYarn(nsIMdbEnv* ev, 
     mdbYarn* outYarn) ;  // writes some yarn slots 
   // copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
   
-   virtual mdb_err AliasYarn(mdbEnv* ev, 
+   virtual mdb_err AliasYarn(nsIMdbEnv* ev, 
     mdbYarn* outYarn) ; // writes ALL yarn slots
   // AliasYarn() reveals sensitive internal text buffer state to the caller
   // by setting mYarn_Buf to point into the guts of this text implementation.
@@ -1703,8 +1706,8 @@ public:
   // member slot.  But let's ignore that complexity in the current design.)
   //
   // AliasYarn() is specifically intended as the first step in transferring
-  // content from mdbBlob to a nsString representation, without forcing extra
-  // allocations and/or memory copies. (A standard mdbBlob_AsString() utility
+  // content from nsIMdbBlob to a nsString representation, without forcing extra
+  // allocations and/or memory copies. (A standard nsIMdbBlob_AsString() utility
   // will use AliasYarn() as the first step in setting a nsString instance.)
   //
   // This is an alternative to the GetYarn() method, which has copy semantics
@@ -1721,15 +1724,15 @@ public:
   
   // } ----- end attribute methods -----
 
-// } ===== end mdbBlob methods =====
+// } ===== end nsIMdbBlob methods =====
 };
 
-/*| mdbCell: the text in a single column of a row.  The base mdbBlob
+/*| nsIMdbCell: the text in a single column of a row.  The base nsIMdbBlob
 **| class provides all the interface related to accessing cell text.
 **|
 **|| column: each cell in a row appears in a specific column, where this
 **| column is identified by the an integer mdb_scope value (generated by
-**| the StringToScopeToken() method in the containing mdbPort instance).
+**| the StringToScopeToken() method in the containing nsIMdbPort instance).
 **| Because a row cannot have more than one cell with the same column,
 **| something must give if one calls SetColumn() with an existing column
 **| in the same row. When this happens, the other cell is replaced with
@@ -1747,19 +1750,19 @@ public:
 **|
 **|| child: a cell might reference another row or a table, rather than text.
 **| The interface for putting and getting children rows and tables was first
-**| defined in the mdbTable interface, but then this was moved to this cell
+**| defined in the nsIMdbTable interface, but then this was moved to this cell
 **| interface as more natural. 
 |*/
-class mdbCell : public mdbBlob { // text attribute in row with column scope
+class nsIMdbCell : public nsIMdbBlob { // text attribute in row with column scope
 
-// { ===== begin mdbCell methods =====
+// { ===== begin nsIMdbCell methods =====
 
   // { ----- begin attribute methods -----
-   mdb_err SetColumn(mdbEnv* ev, mdb_column inColumn) ; 
-   mdb_err GetColumn(mdbEnv* ev, mdb_column* outColumn) ;
+   mdb_err SetColumn(nsIMdbEnv* ev, mdb_column inColumn) ; 
+   mdb_err GetColumn(nsIMdbEnv* ev, mdb_column* outColumn) ;
   
    mdb_err GetCellInfo(  // all cell metainfo except actual content
-    mdbEnv* ev, 
+    nsIMdbEnv* ev, 
     mdb_column* outColumn,           // the column in the containing row
     mdb_fill*   outBlobFill,         // the size of text content in bytes
     mdbOid*     outChildOid,         // oid of possible row or table child
@@ -1768,54 +1771,54 @@ class mdbCell : public mdbBlob { // text attribute in row with column scope
   // Checking all cell metainfo is a good way to avoid forcing a large cell
   // in to memory when you don't actually want to use the content.
   
-   mdb_err GetRow(mdbEnv* ev, // parent row for this cell
-    mdbRow** acqRow) ;
-   mdb_err GetPort(mdbEnv* ev, // port containing cell
-    mdbPort** acqPort) ;
+   mdb_err GetRow(nsIMdbEnv* ev, // parent row for this cell
+    nsIMdbRow** acqRow) ;
+   mdb_err GetPort(nsIMdbEnv* ev, // port containing cell
+    nsIMdbPort** acqPort) ;
   // } ----- end attribute methods -----
 
   // { ----- begin children methods -----
    mdb_err HasAnyChild( // does cell have a child instead of text?
-    mdbEnv* ev,
+    nsIMdbEnv* ev,
     const mdbOid* outOid,  // out id of row or table (or unbound if no child)
     mdb_bool* outIsRow) ; // nonzero if child is a row (rather than a table)
 
    mdb_err GetAnyChild( // access table of specific attribute
-    mdbEnv* ev, // context
-    mdbRow** acqRow, // child row (or null)
-    mdbTable** acqTable) ; // child table (or null)
+    nsIMdbEnv* ev, // context
+    nsIMdbRow** acqRow, // child row (or null)
+    nsIMdbTable** acqTable) ; // child table (or null)
 
 
    mdb_err SetChildRow( // access table of specific attribute
-    mdbEnv* ev, // context
-    mdbRow* ioRow) ; // inRow must be bound inside this same db port
+    nsIMdbEnv* ev, // context
+    nsIMdbRow* ioRow) ; // inRow must be bound inside this same db port
 
    mdb_err GetChildRow( // access row of specific attribute
-    mdbEnv* ev, // context
-    mdbRow** acqRow) ; // acquire child row (or nil if no child)
+    nsIMdbEnv* ev, // context
+    nsIMdbRow** acqRow) ; // acquire child row (or nil if no child)
 
 
    mdb_err SetChildTable( // access table of specific attribute
-    mdbEnv* ev, // context
-    mdbTable* inTable) ; // table must be bound inside this same db port
+    nsIMdbEnv* ev, // context
+    nsIMdbTable* inTable) ; // table must be bound inside this same db port
 
    mdb_err GetChildTable( // access table of specific attribute
-    mdbEnv* ev, // context
-    mdbTable** acqTable) ; // acquire child table (or nil if no child)
+    nsIMdbEnv* ev, // context
+    nsIMdbTable** acqTable) ; // acquire child table (or nil if no child)
   // } ----- end children methods -----
 
-// } ===== end mdbCell methods =====
+// } ===== end nsIMdbCell methods =====
 };
 
 // } %%%%% end C++ abstract class interfaces %%%%%
 
-class mdbCellImpl : public mdbCell
+class mdbCellImpl : public nsIMdbCell
 {
 public:
 	mdbCellImpl() {}
 	mdbCellImpl(const mdbCellImpl &anotherCell);
 	mdbCellImpl& operator=(const mdbCellImpl& other);
-	virtual mdb_err AliasYarn(mdbEnv* ev, mdbYarn* outYarn) ; 
+	virtual mdb_err AliasYarn(nsIMdbEnv* ev, mdbYarn* outYarn) ; 
 	mdb_column	m_column;
 	PRBool		Equals(const mdbCellImpl& other);
 	char		*m_cellValue;

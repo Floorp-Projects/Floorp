@@ -116,7 +116,7 @@ nsresult nsDBFolderInfo::AddToNewMDB()
 	nsresult ret = NS_OK;
 	if (m_mdb && m_mdb->GetStore())
 	{
-		mdbStore *store = m_mdb->GetStore();
+		nsIMdbStore *store = m_mdb->GetStore();
 		// create the unique table for the dbFolderInfo.
 		mdb_err err = store->NewTable(m_mdb->GetEnv(), m_rowScopeToken, 
 			m_tableKindToken, PR_TRUE, &m_mdbTable);
@@ -141,7 +141,7 @@ nsresult nsDBFolderInfo::InitFromExistingDB()
 	nsresult ret = NS_OK;
 	if (m_mdb && m_mdb->GetStore())
 	{
-		mdbStore *store = m_mdb->GetStore();
+		nsIMdbStore *store = m_mdb->GetStore();
 		if (store)
 		{
 			mdb_count outTableCount; // current number of such tables
@@ -159,8 +159,8 @@ nsresult nsDBFolderInfo::InitMDBInfo()
 	nsresult ret = NS_OK;
 	if (!m_mdbTokensInitialized && m_mdb && m_mdb->GetStore())
 	{
-		mdbStore *store = m_mdb->GetStore();
-		mdbEnv	*env = m_mdb->GetEnv();
+		nsIMdbStore *store = m_mdb->GetStore();
+		nsIMdbEnv	*env = m_mdb->GetEnv();
 
 		store->StringToToken(env,  kNumVisibleMessagesColumnName, &m_numVisibleMessagesColumnToken);
 		store->StringToToken(env,  kNumMessagesColumnName, &m_numMessagesColumnToken);

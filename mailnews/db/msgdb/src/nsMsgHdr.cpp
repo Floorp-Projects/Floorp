@@ -44,7 +44,7 @@ nsMsgHdr::QueryInterface(REFNSIID iid, void** result)
 	return nsRDFResource::QueryInterface(iid, result);
 }
 
-nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, mdbRow *dbRow)
+nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
     : nsRDFResource(nsnull)
 {
     NS_INIT_REFCNT();

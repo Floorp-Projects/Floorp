@@ -75,7 +75,7 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     // nsMsgHdr methods:
-    nsMsgHdr(nsMsgDatabase *db, mdbRow *dbRow);
+    nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow);
     void		Init();
 
     virtual		~nsMsgHdr();
@@ -84,7 +84,7 @@ public:
 
     void		SetCSID(PRUint16 csid) {m_csID = csid;}
     PRInt16		GetCSID();
-    mdbRow		*GetMDBRow() {return m_mdbRow;}
+    nsIMdbRow		*GetMDBRow() {return m_mdbRow;}
 protected:
     nsresult	SetStringColumn(const char *str, mdb_token token);
     nsresult	SetUInt32Column(PRUint32 value, mdb_token token);
@@ -104,7 +104,7 @@ protected:
     // just a wrapper around the msg row in the mdb. This could cause problems,
     // though I hope not.
     nsMsgDatabase	*m_mdb;
-    mdbRow			*m_mdbRow;
+    nsIMdbRow			*m_mdbRow;
 };
 
 #endif

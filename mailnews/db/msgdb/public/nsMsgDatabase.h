@@ -196,16 +196,16 @@ public:
 	// but also useful to tell the summary to mark itself invalid
 	virtual nsresult	SetSummaryValid(PRBool valid = TRUE);
 
-	static mdbFactory		*GetMDBFactory();
+	static nsIMdbFactory		*GetMDBFactory();
 	nsDBFolderInfo *GetDBFolderInfo() {return m_dbFolderInfo;}
-	mdbEnv		*GetEnv() {return m_mdbEnv;}
-	mdbStore	*GetStore() {return m_mdbStore;}
+	nsIMdbEnv		*GetEnv() {return m_mdbEnv;}
+	nsIMdbStore	*GetStore() {return m_mdbStore;}
 
 	static nsMsgDatabase* FindInCache(nsFilePath &dbName);
 
 	//helper function to fill in nsStrings from hdr row cell contents.
-	nsresult				RowCellColumnTonsString(mdbRow *row, mdb_token columnToken, nsString &resultStr);
-	nsresult				RowCellColumnToUInt32(mdbRow *row, mdb_token columnToken, PRUint32 *uint32Result);
+	nsresult				RowCellColumnTonsString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
+	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 *uint32Result);
 
 	// helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
 	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
@@ -220,9 +220,9 @@ public:
 #endif
 protected:
 	nsDBFolderInfo 	*m_dbFolderInfo;
-	mdbEnv			*m_mdbEnv;	// to be used in all the db calls.
-	mdbStore		*m_mdbStore;
-	mdbTable		*m_mdbAllMsgHeadersTable;
+	nsIMdbEnv			*m_mdbEnv;	// to be used in all the db calls.
+	nsIMdbStore		*m_mdbStore;
+	nsIMdbTable		*m_mdbAllMsgHeadersTable;
 	nsFilePath		m_dbName;
 
 	nsNewsSet *m_newSet;		// new messages since last open.

@@ -142,8 +142,8 @@ protected:
 // the db folder info will have to know what db and row it belongs to, since it is really
 // just a wrapper around the singleton folder info row in the mdb. 
 	nsMsgDatabase		*m_mdb;
-	mdbTable			*m_mdbTable;	// singleton table in db
-	mdbRow				*m_mdbRow;	// singleton row in table;
+	nsIMdbTable			*m_mdbTable;	// singleton table in db
+	nsIMdbRow			*m_mdbRow;	// singleton row in table;
 
 	PRBool				m_mdbTokensInitialized;
 
