@@ -2041,6 +2041,7 @@ GetFontNames(char* aPattern)
     size->mMap = nsnull;
     size->mCharSetInfo = charSetInfo;
   }
+  XFreeFontNames(list);
 
 #ifdef DEBUG_DUMP_TREE
   //DumpTree();
