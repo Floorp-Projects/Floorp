@@ -7,7 +7,7 @@
     {
       behavior            : url("chrome://global/content/xulBindings.xml#buttontop");
       min-width           : 0px;
-      margin              : 1px;
+      margin              : 0px 1px 0px 1px;
       border              : 1px solid transparent;
     }
 
@@ -33,11 +33,16 @@
       text-align          : center;
       border              : 1px solid transparent;
     }    
+    
+  .button-toolbar > .button-internal-box > .button-text-container
+    {
+      padding-left        : 4px;
+    }    
 
   .button-toolbar > .button-internal-box,
   .button-toolbar-4 > .button-internal-box
     {
-      padding             : 2px 4px 2px 3px;
+      padding             : 1px 4px 1px 3px;
       vertical-align      : middle;
       text-align          : center;
       border              : 1px solid transparent;
@@ -85,7 +90,7 @@
   .button-toolbar:hover:active > .button-internal-box,
   .button-toolbar-4:hover:active > .button-internal-box
     {
-      padding             : 3px 3px 1px 4px;
+      padding             : 1px 3px 0px 4px;
       border-left         : 1px solid threedshadow !important;
       border-top          : 1px solid threedshadow !important;
       border-right        : 1px solid threedhighlight !important;

@@ -26,6 +26,11 @@
 
 */
 
+#Tree, .tree-container-treerows
+  {
+    border                : none;
+  }
+
 treeitem[container="true"][open="true"][loading="true"] > treerow > .treecell-indent
 {
     list-style-image      : url("chrome://global/skin/loading.gif") ! important ;

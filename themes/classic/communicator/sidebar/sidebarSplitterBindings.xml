@@ -19,5 +19,14 @@
       </xul:box>
     </content>
   </binding>
+  
+  <binding id="panelheader" extends="xul:button">
+    <content excludes="observes,template">
+      <xul:box class="panelheader-box-1" flex="1">
+        <xul:image class="panelheader-image" inherits="src"/>
+        <xul:text class="panelheader-icon" inherits="value,crop"/>
+      </xul:box>
+    </content>
+  </binding>
           
 </bindings> 
