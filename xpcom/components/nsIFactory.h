@@ -1,45 +1,39 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /*
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIFactory.idl
  */
 
-#ifndef __nsIFactory_h
-#define __nsIFactory_h
+#ifndef __gen_nsIFactory_h__
+#define __gen_nsIFactory_h__
 
-#include "prtypes.h"
-#include "nsISupports.h"
+#include "nsISupports.h" /* interface nsISupports */
+#include "nsrootidl.h" /* interface nsrootidl */
 
-/*
- * nsIFactory interface
- */
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
 
-// {00000001-0000-0000-c000-000000000046}
+/* starting interface:    nsIFactory */
+
+/* {00000001-0000-0000-c000-000000000046} */
+#define NS_IFACTORY_IID_STR "00000001-0000-0000-c000-000000000046"
 #define NS_IFACTORY_IID \
-{ 0x00000001, 0x0000, 0x0000, \
-  { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } }
+  {0x00000001, 0x0000, 0x0000, \
+    { 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 }}
 
-class nsIFactory: public nsISupports {
-public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IFACTORY_IID; return iid; }
+class nsIFactory : public nsISupports {
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFACTORY_IID)
 
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            REFNSIID aIID,
-                            void **aResult) = 0;
+  /* voidStar CreateInstance (in nsISupports aOuter, in nsIIDRef iid); */
+  NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID & iid, void * *_retval) = 0;
 
-  NS_IMETHOD LockFactory(PRBool aLock) = 0;
+  /* void LockFactory (in PRBool lock); */
+  NS_IMETHOD LockFactory(PRBool lock) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIFactory *priv);
+#endif
 };
 
-#endif
+#endif /* __gen_nsIFactory_h__ */
