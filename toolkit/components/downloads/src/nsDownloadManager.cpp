@@ -491,7 +491,31 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   internalDownload->SetTarget(aTarget);
   internalDownload->SetSource(aSource);
 
-  // the persistent descriptor of the target is the unique identifier we use
+  // The path is the uniquifier of the download resource. 
+  // XXXben - this is a little risky - really we should be using anonymous
+  // resources because of duplicate file paths on MacOSX. We can't use persistent
+  // descriptor here because in most cases the file doesn't exist on the local disk
+  // yet (it's being downloaded) and persistentDescriptor fails on MacOSX for 
+  // non-existent files. 
+
+  // XXXben - This is not really ideal. If the download is to be handled by a 
+  //          helper application, then we want to see if there is a duplicate file
+  //          in place in the temp folder and remove it _NOW_ before the External
+  //          Helper App Service gets a chance to make a unique clone. If we don't,
+  //          the EHAS will create a unique version of the name which will muck
+  //          with our RDF datasource. We can't create a unique name here either,
+  //          because the EHAS isn't smart enough to know that we're fooling with
+  //          it... 
+  nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
+  aMIMEInfo->GetPreferredAction(&action);
+  if (action == nsIMIMEInfo::useHelperApp || 
+    action == nsIMIMEInfo::useSystemDefault) {
+    PRBool fileExists;
+    aTarget->Exists(&fileExists);
+    if (fileExists)
+      aTarget->Remove(PR_TRUE);
+  }
+
   nsAutoString path;
   rv = aTarget->GetPath(path);
   if (NS_FAILED(rv)) return rv;
