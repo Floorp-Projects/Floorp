@@ -33,7 +33,7 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 
-#include "nsIMimeService.h"
+#include "nsIMIMEService.h"
 #include "nsMimeTypes.h"
 #include "nsCExternalHandlerService.h"
 
