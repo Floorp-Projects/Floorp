@@ -532,6 +532,7 @@ sub MakeResourceAliases()
                 my($chatzilla_bin_dir) = "$chrome_dir"."chatzilla";
 
                 _InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST",                                    "$chatzilla_bin_dir:content:lib:js");
+                _InstallResources(":mozilla:extensions:irc:js:lib:MANIFEST_COMPONENTS","${dist_dir}Components");
                 _InstallResources(":mozilla:extensions:irc:xul:lib:MANIFEST",                                   "$chatzilla_bin_dir:content:lib:xul");
                 _InstallResources(":mozilla:extensions:irc:xul:content:MANIFEST",                               "$chatzilla_bin_dir:content");
                 _InstallResources(":mozilla:extensions:irc:xul:skin:MANIFEST",                                  "$chatzilla_bin_dir:skin");
