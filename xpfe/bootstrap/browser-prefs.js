@@ -112,6 +112,12 @@ pref("browser.search.param.Google.1.default", "chrome://navigator/content/search
 pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
 
+// Tabbed browser
+pref("browser.tabs.loadDivertedInBackground", false);
+pref("browser.tabs.loadInBackground", false);
+pref("browser.tabs.opentabfor.middleclick", false);
+pref("browser.tabs.opentabfor.urlbar", false);
+
 // Translation service
 pref("browser.translation.service", "chrome://navigator-region/locale/region.properties");
 pref("browser.translation.serviceDomain", "chrome://navigator-region/locale/region.properties");
