@@ -462,8 +462,32 @@ nsHTMLImageElement::SetDocument(nsIDocument* aDocument,
 NS_IMETHODIMP
 nsHTMLImageElement::GetSrc(nsString& aSrc)
 {
-  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, aSrc);
-  return NS_OK;
+  // Resolve url to an absolute url
+  nsresult rv = NS_OK;
+  nsAutoString relURLSpec;
+  nsIURI* baseURL = nsnull;
+
+  // Get base URL.
+  GetBaseURL(baseURL);
+
+  // Get href= attribute (relative URL).
+  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, relURLSpec);
+
+  // If there is no href=, then use base target.
+  if (relURLSpec.Length() == 0) {
+    GetBaseTarget(relURLSpec);
+  }
+
+  if (nsnull != baseURL) {
+    // Get absolute URL.
+    rv = NS_MakeAbsoluteURI(relURLSpec, baseURL, aSrc);
+  }
+  else {
+    // Absolute URL is same as relative URL.
+    aSrc = relURLSpec;
+  }
+  NS_IF_RELEASE(baseURL);
+  return rv;
 }
 
 NS_IMETHODIMP 

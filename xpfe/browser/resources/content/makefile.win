@@ -34,6 +34,7 @@ install::
 	$(MAKE_INSTALL) NetSupportConfirmYN.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) NetSupportConfirmCheckYN.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) tooltip.js $(DISTBROWSWER)
+	$(MAKE_INSTALL) nsContextMenu.js $(DISTBROWSWER)
 
 
 clobber::
@@ -49,3 +50,4 @@ clobber::
   rm -f $(DISTBROWSER)\NetSupportConfirmYN.xul
   rm -f $(DISTBROWSER)\NetSupportConfirmCheckYN.xul
   rm -f $(DISTBROWSER)\tooltip.js
+  rm -f $(DISTBROWSER)\nsContextMenu.js

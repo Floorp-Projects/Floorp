@@ -48,6 +48,7 @@ Contributor(s): ______________________________________. -->
 
 <html:script language="javascript" src="chrome://global/content/strres.js" />
 <html:script language="javascript" src="navigator.js" />
+<html:script language="javascript" src="nsContextMenu.js" />
 <html:script language="javascript" src="tooltip.js" />
 
 <!-- broadcasters are appended from the overlay -->
@@ -81,15 +82,18 @@ Contributor(s): ______________________________________. -->
 </popupset>
 
 <!-- Context menu -->
+<html:script language="javascript">
+    // Global variable that holds the nsContextMenu instance.
+    var contextMenu = null;
+</html:script>
 <popupset>
     <!-- This is the skeleton context menu.  It is populated and emptied
          dynamically, from the template (see below) via the oncreate/ondestroy
          handlers.
     -->
     <popup id="context"
-           oncreate="BrowserCreateContextMenu(this,event)"
-           ondestroy="BrowserDestroyContextMenu(this)">
-    </popup>
+        oncreate="contextMenu = new nsContextMenu( this );"
+        ondestroy="contextMenu.onDestroy(); contextMenu = null;"/>
 
     <!-- This is the context menu template used to populate the actual
          content menu on demand.  It holds everything and is whittled down
@@ -100,15 +104,15 @@ Contributor(s): ______________________________________. -->
         <menuitem id="template-openlink"
                   value="&openLinkCmd.label;"
                   accesskey=""
-                  oncommand="BrowserOpenLink();"/>
+                  oncommand="contextMenu.openLink();"/>
         <menuitem id="template-editlink"
                   value="&editLinkCmd.label;"
                   accesskey=""
-                  oncommand="BrowserEditLink();"/>
+                  oncommand="contextMenu.editLink();"/>
         <menuitem id="template-openframe"
                   value="&openFrameCmd.label;"
                   accesskey=""
-                  oncommand="BrowserOpenFrame();"/>
+                  oncommand="contextMenu.openFrame();"/>
         <menuseparator id="context-sep-open"/>
         <!-- Navigation ============================== -->
         <menuitem id="template-back"
@@ -136,19 +140,19 @@ Contributor(s): ______________________________________. -->
         <menuitem id="template-viewframesource"
                   value="&viewFrameSourceCmd.label;"
                   accesskey=""
-                  oncommand="BrowserViewFrameSource();"/>
+                  oncommand="contextMenu.viewFrameSource();"/>
         <menuitem id="template-viewinfo"
                   value="&viewPageInfoCmd.label;"
                   accesskey=""
-                  oncommand="BrowserViewInfo();"/>
+                  oncommand="contextMenu.viewInfo();"/>
         <menuitem id="template-viewframeinfo"
                   value="&viewFrameInfoCmd.label;"
                   accesskey=""
-                  oncommand="BrowserViewFrameInfo();"/>
+                  oncommand="contextMenu.viewFrameInfo();"/>
         <menuitem id="template-viewimage"
                   value="&viewImageCmd.label;"
                   accesskey=""
-                  oncommand="BrowserViewImage();"/>
+                  oncommand="contextMenu.viewImage();"/>
         <menuseparator/>
         <!-- Misc ==================================== -->
 		<menuitem id="template-bookmarkpage"
@@ -165,23 +169,23 @@ Contributor(s): ______________________________________. -->
         <menuitem id="template-savepage"
                   value="&savePageCmd.label;"
                   accesskey="&savePageCmd.accesskey;"
-                  oncommand="BrowserSavePage();"/>
+                  oncommand="contextMenu.savePage();"/>
         <menuitem id="template-saveframe"
                   value="&saveFrameCmd.label;"
                   accesskey="&saveFrameCmd.accesskey;"
-                  oncommand="BrowserSaveFrame();"/>
+                  oncommand="contextMenu.saveFrame();"/>
         <menuitem id="template-savelink"
                   value="&saveLinkCmd.label;"
                   accesskey="&saveLinkCmd.accesskey;"
-                  oncommand="BrowserSaveLink();"/>
+                  oncommand="contextMenu.saveLink();"/>
         <menuitem id="template-saveimage"
                   value="&saveImageCmd.label;"
                   accesskey="&saveImageCmd.accesskey;"
-                  oncommand="BrowserSaveImage();"/>
+                  oncommand="contextMenu.saveImage();"/>
         <menuitem id="template-savebgimage"
                   value="&saveBGImageCmd.label;"
                   accesskey="&saveBGImageCmd.accesskey;"
-                  oncommand="BrowserSaveBGImage();"/>
+                  oncommand="contextMenu.saveBGImage();"/>
         <menuseparator/>
         <!-- Clipboard =============================== -->
         <menuitem id="template-selectall"
@@ -195,11 +199,11 @@ Contributor(s): ______________________________________. -->
         <menuitem id="template-copylink"
                   value="&copyLinkCmd.label;"
                   accesskey="&copyLinkCmd.accesskey;"
-                  oncommand="BrowserCopyLink();"/>
+                  oncommand="contextMenu.copyLink();"/>
         <menuitem id="template-copyimage"
                   value="&copyImageCmd.label;"
                   accesskey="&copyImageCmd.accesskey;"
-                  oncommand="BrowserCopyImage();"/>
+                  oncommand="contextMenu.copyImage();"/>
     </popup>
 </popupset>
 
