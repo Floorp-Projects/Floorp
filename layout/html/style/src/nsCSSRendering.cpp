@@ -985,7 +985,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
 
 //----------------------------------------------------------------------
 
-static PRBool
+static void
 ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
                              const nsRect& aBounds,
                              nscoord aTileWidth, nscoord aTileHeight,
@@ -1062,7 +1062,6 @@ ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
     }
   }
   aResult.y = y;
-  return (0 != x) || (0 != y);
 }
 
 void
@@ -1119,29 +1118,30 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     }
 
     // Based on the repeat setting, compute how many tiles we should
-    // lay down for each axis.
+    // lay down for each axis. The value computed is the maximum based
+    // on the dirty rect before accounting for the background-position.
     PRIntn repeat = aColor.mBackgroundRepeat;
-    PRIntn xCount, yCount;
+    nscoord xDistance, yDistance;
     switch (aColor.mBackgroundRepeat) {
     case NS_STYLE_BG_REPEAT_OFF:
     default:
-      xCount = 0;
-      yCount = 0;
+      xDistance = tileWidth;
+      yDistance = tileHeight;
       needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_X:
-      xCount = PRIntn(aDirtyRect.XMost() / tileWidth);
-      yCount = 0;
+      xDistance = aDirtyRect.width;
+      yDistance = tileHeight;
       needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_Y:
-      xCount = 0;
-      yCount = PRIntn(aDirtyRect.YMost() / tileHeight);
+      xDistance = tileWidth;
+      yDistance = aDirtyRect.height;
       needBackgroundColor = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_XY:
-      xCount = PRIntn(aDirtyRect.XMost() / tileWidth);
-      yCount = PRIntn(aDirtyRect.YMost() / tileHeight);
+      xDistance = aDirtyRect.width;
+      yDistance = aDirtyRect.height;
       break;
     }
     if (needBackgroundColor) {
@@ -1149,35 +1149,66 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       aRenderingContext.FillRect(aBounds);
     }
 
-    // When we have non-zero background position values, we have to
-    // adjust how many tiles we draw (by at most one) and the starting
-    // position from where the tiles are rendered.
+    // Compute the anchor point, relative to the bounding box
+    // (aBounds) where the background image rendering should
+    // begin. When tiling, the anchor coordinate values will be
+    // negative offsets from aBounds origin.
     nsPoint anchor;
-    if (ComputeBackgroundAnchorPoint(aColor, aBounds, tileWidth, tileHeight,
-                                     anchor)) {
-      if (NS_STYLE_BG_REPEAT_X & aColor.mBackgroundRepeat) {
-        xCount++;
+    ComputeBackgroundAnchorPoint(aColor, aBounds,
+                                 tileWidth, tileHeight, anchor);
+
+    // Setup clipping so that rendering doesn't leak out of the dirty rect
+    PRBool clipState;
+    aRenderingContext.PushState();
+    aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect,
+                                  clipState);
+
+    // Compute the x and y starting points and limits for tiling
+    nscoord x0, x1;
+    if (NS_STYLE_BG_REPEAT_X & aColor.mBackgroundRepeat) {
+      // When tiling in the x direction, adjust the starting position
+      // of the tile to account for the aDirtyRect.x. When tiling in
+      // x, the anchor.x value will be a negative value used to adjust
+      // the starting coordinate.
+      x0 = (aDirtyRect.x / tileWidth) * tileWidth + anchor.x;
+      x1 = x0 + xDistance + tileWidth;
+      if (0 != anchor.x) {
+        x1 += tileWidth;
       }
-      if (NS_STYLE_BG_REPEAT_Y & aColor.mBackgroundRepeat) {
-        yCount++;
+    }
+    else {
+      // When tiling is off in x, anchor.x is relative to aBounds.x
+      x0 = aBounds.x + anchor.x;
+      x1 = x0 + tileWidth;
+    }
+
+    nscoord y0, y1;
+    if (NS_STYLE_BG_REPEAT_Y & aColor.mBackgroundRepeat) {
+      // When tiling in the y direction, adjust the starting position
+      // of the tile to account for the aDirtyRect.y. When tiling in
+      // y, the anchor.y value will be a negative value used to adjust
+      // the starting coordinate.
+      y0 = (aDirtyRect.y / tileHeight) * tileHeight + anchor.y;
+      y1 = y0 + yDistance + tileHeight;
+      if (0 != anchor.y) {
+        y1 += tileHeight;
+      }
+    }
+    else {
+      // When tiling is off in y, anchor.y is relative to aBounds.y
+      y0 = aBounds.y + anchor.y;
+      y1 = y0 + tileHeight;
+    }
+
+    // Tile the image in x and y
+    nscoord x, y;
+    for (y = y0; y < y1; y += tileHeight) {
+      for (x = x0; x < x1; x += tileWidth) {
+        aRenderingContext.DrawImage(image, x, y, tileWidth, tileHeight);
       }
     }
 
-    // Tile the background
-    PRIntn y = PRIntn(aDirtyRect.y / tileHeight);
-    nscoord ypos = aBounds.y + y * tileHeight + anchor.y;
-    PRIntn xstart = PRIntn(aDirtyRect.x / tileWidth);
-    PRBool clipState;
-    nscoord xpostart = aBounds.x + xstart * tileWidth + anchor.x;
-    aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect, clipState);
-    for (; y <= yCount; ++y, ypos += tileHeight) {
-      PRIntn x = xstart;
-      nscoord xpos = xpostart;
-      for (; x <= xCount; ++x, xpos += tileWidth) {
-        aRenderingContext.DrawImage(image, xpos, ypos, tileWidth, tileHeight);
-      }
-    }
+    // Restore clipping
     aRenderingContext.PopState(clipState);
   } else {
     if (0 == (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT)) {
