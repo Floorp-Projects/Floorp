@@ -25,6 +25,7 @@ VPATH           = @srcdir@
 
 MODULE          = embed_base
 LIBRARY_NAME    = embed_base_s
+XPIDL_MODULE	= embed_base
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -33,6 +34,9 @@ REQUIRES	= xpcom widget view dom js oji java necko rdf appshell  uriloader layou
 EXPORTS         = \
                 nsEmbedAPI.h \
                 $(NULL)
+
+XPIDLSRCS	= nsIWindowCreator.idl \
+                  $(NULL)
 
 CPPSRCS         = \
                 nsSetupRegistry.cpp \

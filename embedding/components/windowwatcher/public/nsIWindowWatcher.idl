@@ -21,8 +21,8 @@
 
 /*
 nsIWindowWatcher is the keeper of Gecko/DOM Windows. It maintains
-opens and closes windows, and maintains a traversable list of open
-windows.
+maintains a traversable list of open top-level windows, and allows
+some operations on them.
 
 Usage notes:
 
@@ -37,9 +37,8 @@ interface for doing so).
 claim no ownership. Since it's the nature of this service to always
 hold a ("weak") reference to an open window, this requirement removes
 a potential reference loop.  It should be safe because it's a
-design requirement that clients explicitly maintain |activeWindow| and
-|currentWindow|, and that windows remove themselves from the service
-when they are closed.
+design requirement that clients explicitly maintain |activeWindow|,
+and that windows remove themselves from the service when they are closed.
 */
 
 #include "nsISupports.idl"
@@ -47,35 +46,9 @@ when they are closed.
 interface nsIDOMWindow;
 interface nsIObserver;
 interface nsISimpleEnumerator;
+interface nsIWindowCreator;
 
 [scriptable, uuid(002286a8-494b-43b3-8ddd-49e3fc50622b)]
-
-/*
-  Subject to change without revision of CID until further notice.
-
-Assumptions:
-
-  For now I'm assuming we'll use this component to track the current
-"networking context." That is, the window currently being serviced by
-the network libraries, and therefore the proper parent of any alerts
-those libraries may need to pose. I'm not yet convinced that this will
-actually work or be necessary.
-  The "networking context" must provide two things: an nsIDOMWindow
-to provide a script context and a native window to act as a parent
-for a networking dialog. This implies the nsIDOMWindow will be able
-to walk up some chain to find its container native embedding window.
-  In fact, I believe I can always pull a JS context off that stack
-of the things that people keep around when they're switching back and forth
-between C++ and JS, so all I really need to create a window is a (native)
-parent.
-  All windows must inform the Watcher when they're being closed (perhaps
-automatically through the DOMWindow's destructor), so the Watcher can
-trust all its windows to be real, so there's no need for the Watcher to
-addref any of its windows. This means, for instance, that setCurrentContext
-won't cause a leak if you don't unset it. It would be an error to fail
-to set the current context before getting into a situation where one
-might be necessary.
-*/
 
 interface nsIWindowWatcher : nsISupports {
 
@@ -87,8 +60,8 @@ interface nsIWindowWatcher : nsISupports {
       @param aFeatures window features from JS window.open
       @return the new window
   */
-  nsIDOMWindow openWindow(in nsIDOMWindow aParent, in string aUrl,
-               in string aName, in string aFeatures);
+  nsIDOMWindow openWindow(in nsIDOMWindow aParent, in wstring aUrl,
+               in wstring aName, in wstring aFeatures);
 
   /** Clients of this service can register themselves to be notified
       when a window is opened or closed (added to or removed from this
@@ -114,13 +87,21 @@ interface nsIWindowWatcher : nsISupports {
   */
   void unregisterNotification(in nsIObserver aObserver);
 
-  /** iterates over currently open windows in the order they were opened,
+  /** Get an iterator for currently open windows in the order they were opened,
       guaranteeing that each will be visited exactly once.
-      @return an enumerator which will itself return an nsISupports which
+      @return an enumerator which will itself return nsISupports objects which
               can be QIed to an nsIDOMWindow
   */
 
   nsISimpleEnumerator getWindowEnumerator();
+
+  /** Set the window creator callback. It must be filled in by the app.
+      openWindow will use it to create new windows.
+      @param creator the callback. if null, the callback will be cleared
+                     and window creation capabilities lost.
+  */
+  void setWindowCreator(in nsIWindowCreator creator);
+
 
   /** The Watcher serves as a global storage facility for the current active
       (frontmost non-floating-palette-type) window, storing and returning

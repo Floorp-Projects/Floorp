@@ -31,6 +31,10 @@ XPIDLSRCS=						\
 
 LIBRARY_NAME=baseembed_s
 
+XPIDLSRCS = \
+    .\nsIWindowCreator.idl \
+    $(NULL)
+
 CPP_OBJS=											\
     .\$(OBJDIR)\nsEmbedAPI.obj \
     .\$(OBJDIR)\nsEmbedWin32.obj \

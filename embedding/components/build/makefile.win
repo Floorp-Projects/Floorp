@@ -33,6 +33,7 @@ CPP_OBJS = \
 
 LLIBS = \
 	$(LIBNSPR) \
+        $(DIST)\lib\js3250.lib \
 	$(DIST)\lib\xpcom.lib \
 	$(DIST)\lib\windowwatcher_s.lib \
 	$(NULL)

@@ -22,11 +22,40 @@
 
 //#define USEWEAKREFS // (haven't quite figured that out yet)
 
-#include "nsAutoLock.h"
 #include "nsWindowWatcher.h"
+
+#include "jscntxt.h"
+#include "nsAutoLock.h"
+#include "nsCRT.h"
+#include "nsEscape.h"
+#include "nsWWJSUtils.h"
+#include "nsNetUtil.h"
+#include "plstr.h"
+
+#include "nsIBaseWindow.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellLoadInfo.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMScreen.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIEventQueue.h"
+#include "nsIEventQueueService.h"
 #include "nsIGenericFactory.h"
+#include "nsIJSContextStack.h"
 #include "nsIObserverService.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsIScriptSecurityManager.h"
+#include "nsIURI.h"
+#include "nsIWebBrowser.h"
+#include "nsIWebBrowserChrome.h"
+#include "nsIWebNavigation.h"
+#include "nsIWindowCreator.h"
 #ifdef USEWEAKREFS
 #include "nsIWeakReference.h"
 #endif
@@ -34,20 +63,21 @@
 #define NOTIFICATION_OPENED NS_LITERAL_STRING("domwindowopened")
 #define NOTIFICATION_CLOSED NS_LITERAL_STRING("domwindowclosed")
 
+static const char *sJSStackContractID="@mozilla.org/js/xpc/ContextStack;1";
+
 /****************************************************************
- ************************* winfowInfo ***************************
+ ************************* WindowInfo ***************************
  ****************************************************************/
 
 class nsWindowWatcher;
 
 struct WindowInfo {
 
-#ifdef USEWEAKREFS
   WindowInfo(nsIDOMWindow* inWindow) {
+#ifdef USEWEAKREFS
     mWindow = getter_AddRefs(NS_GetWeakReference(inWindow));
 #else
-  WindowInfo(nsIDOMWindow* inWindow) :
-    mWindow(inWindow) {
+    mWindow = inWindow;
 #endif
     ReferenceSelf();
   }
@@ -59,8 +89,8 @@ struct WindowInfo {
 
 #ifdef USEWEAKREFS
   nsCOMPtr<nsIWeakReference> mWindow;
-#else
-  nsCOMPtr<nsIDOMWindow>     mWindow;
+#else // still not an owning ref
+  nsIDOMWindow              *mWindow;
 #endif
   // each struct is in a circular, doubly-linked list
   WindowInfo                *mYounger, // next younger in sequence
@@ -208,7 +238,7 @@ nsWindowWatcher::nsWindowWatcher() :
         mActiveWindow(0),
         mListLock(0)
 {
-   NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 nsWindowWatcher::~nsWindowWatcher()
@@ -232,12 +262,256 @@ nsWindowWatcher::Init()
 
 NS_IMETHODIMP
 nsWindowWatcher::OpenWindow(nsIDOMWindow *aParent,
-                            const char *aUrl,
-                            const char *aName,
-                            const char *aFeatures,
+                            const PRUnichar *aUrl,
+                            const PRUnichar *aName,
+                            const PRUnichar *aFeatures,
                             nsIDOMWindow **_retval)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return OpenWindowJS(aParent, aUrl, aName, aFeatures, PR_FALSE, 0, 0, _retval);
+}
+
+NS_IMETHODIMP
+nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
+                            const PRUnichar *aUrl,
+                            const PRUnichar *aName,
+                            const PRUnichar *aFeatures,
+                            PRBool aDialog,
+                            PRUint32 argc,
+                            jsval *argv,
+                            nsIDOMWindow **_retval)
+{
+  nsresult                        rv = NS_OK;
+  JSContext                      *cx;
+  PRBool                          nameSpecified,
+                                  featuresSpecified;
+  PRUint32                        chromeFlags;
+  nsAutoString                    name;             // string version of aName
+  nsCString                       features;         // string version of aFeatures
+  nsCOMPtr<nsIURI>                uriToLoad;        // from aUrl, if any
+  nsCOMPtr<nsIDocShellTreeOwner>  parentTreeOwner;  // from the parent window, if any
+  nsCOMPtr<nsIDocShellTreeItem>   newDocShellItem;  // from the new window
+
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = 0;
+
+  if (aParent)
+    GetWindowTreeOwner(aParent, getter_AddRefs(parentTreeOwner));
+
+  cx = GetJSContext(aParent);
+  if (!cx)
+    return NS_ERROR_FAILURE;
+
+  if (aUrl)
+    rv = URIfromURL(aUrl, aParent, getter_AddRefs(uriToLoad));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nameSpecified = PR_FALSE;
+  if (aName) {
+    name.Assign(aName);
+    CheckWindowName(name);
+    nameSpecified = PR_TRUE;
+  }
+
+  featuresSpecified = PR_FALSE;
+  if (aFeatures) {
+    features.AssignWithConversion(aFeatures);
+    featuresSpecified = PR_TRUE;
+  }
+
+  chromeFlags = CalculateChromeFlags(features, featuresSpecified, aDialog);
+
+  // try to find an extant window with the given name
+  if (nameSpecified) {
+    /* Oh good. special target names are now handled in multiple places:
+       Here and within FindItemWithName, just below. I put _top here because
+       here it's able to do what it should: get the topmost shell of the same
+       (content/chrome) type as the docshell. treeOwner is always chrome, so
+       this scheme doesn't work there, where a lot of other special case
+       targets are handled. (treeOwner is, however, a good place to look
+       for browser windows by name, as it does.)
+     */
+    if (aParent) {
+      if (name.EqualsIgnoreCase("_top")) {
+        nsCOMPtr<nsIDocShellTreeItem> shelltree;
+        GetWindowTreeItem(aParent, getter_AddRefs(shelltree));
+        if (shelltree)
+          shelltree->GetSameTypeRootTreeItem(getter_AddRefs(newDocShellItem));
+      } else
+        parentTreeOwner->FindItemWithName(name.GetUnicode(), nsnull,
+                                          getter_AddRefs(newDocShellItem));
+    } else
+      FindItemWithName(name.GetUnicode(), getter_AddRefs(newDocShellItem));
+  }
+
+  nsCOMPtr<nsIEventQueue> modalEventQueue;   // This has an odd ownership model
+  nsCOMPtr<nsIEventQueueService> eventQService;
+
+  PRBool windowIsNew = PR_FALSE;
+  PRBool windowIsModal = PR_FALSE;
+
+  // no extant window? make a new one.
+  if (!newDocShellItem) {
+    windowIsNew = PR_TRUE;
+    PRBool weAreModal = PR_FALSE;
+    if (parentTreeOwner)
+      parentTreeOwner->IsModal(&weAreModal);
+    if (weAreModal || (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL)) {
+      eventQService = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+      if (eventQService &&
+          NS_SUCCEEDED(eventQService->
+                       PushThreadEventQueue(getter_AddRefs(modalEventQueue))))
+          windowIsModal = PR_TRUE;
+          // in case we added this because weAreModal
+          chromeFlags |= nsIWebBrowserChrome::CHROME_MODAL | nsIWebBrowserChrome::CHROME_DEPENDENT;
+    }
+    if (parentTreeOwner)
+      parentTreeOwner->GetNewWindow(chromeFlags, getter_AddRefs(newDocShellItem));
+    else if (mWindowCreator) {
+      nsCOMPtr<nsIWebBrowserChrome> newChrome;
+      mWindowCreator->CreateWindow(0, chromeFlags, getter_AddRefs(newChrome));
+      if (newChrome) {
+        nsCOMPtr<nsIWebBrowser> newBrowser;
+        newChrome->GetWebBrowser(getter_AddRefs(newBrowser));
+        if (newBrowser) {
+          nsCOMPtr<nsIDOMWindow> newWindow;
+          newBrowser->GetContentDOMWindow(getter_AddRefs(newWindow));
+          GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
+        }
+      }
+    }
+  }
+
+  // better have a window to use by this point
+  if (!newDocShellItem)
+    return NS_ERROR_FAILURE;
+
+  rv = ReadyOpenedDocShellItem(newDocShellItem, aParent, _retval);
+  if (NS_FAILED(rv))
+    return rv;
+
+  /* disable persistence of size/position in popups (determined by
+     looking for the outerWidth/outerHeight features. seems backward
+     though -- it's a popup if both features are lacking? */
+  if (windowIsNew) {
+    PRBool present = PR_FALSE;
+
+    if (!(WinHasOption(features, "outerWidth", 0, &present) || present) &&
+        !(WinHasOption(features, "outerHeight", 0, &present) || present)) {
+
+      nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
+      newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
+      if (newTreeOwner) {
+        nsCOMPtr<nsIWebBrowserChrome> newChrome = do_GetInterface(newTreeOwner);
+        if (newChrome)
+          newChrome->SetPersistence(PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE,
+                                    PR_FALSE);
+      }
+    }
+  }
+
+  if (aDialog && argc > 3)
+    AttachArguments(*_retval, argc-3, argv+3);
+
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+
+  if (uriToLoad) {
+    /* Get security manager, check to see if URI is allowed.
+       Don't call CheckLoadURI for dialogs - see bug 56851
+       The security of this function depends on window.openDialog being 
+       inaccessible from web scripts */
+    nsCOMPtr<nsIScriptContext> scriptCX;
+#if 0
+    nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scriptCX));
+#else
+    JSContext *tempCX;
+    JSObject *scriptObject;
+    if (aParent)
+      GetWindowScriptContextAndObject(aParent, &tempCX, &scriptObject);
+    else
+      GetWindowScriptContextAndObject(*_retval, &tempCX, &scriptObject);
+    nsWWJSUtils::nsGetStaticScriptContext(tempCX, scriptObject,
+                                          getter_AddRefs(scriptCX));
+#endif
+    if (!scriptCX ||
+        NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
+        ((!aDialog && NS_FAILED(secMan->CheckLoadURIFromScript(cx, uriToLoad)))))
+      return NS_ERROR_FAILURE;
+  }
+
+  newDocShellItem->SetName(nameSpecified ? name.GetUnicode() : nsnull);
+
+  nsCOMPtr<nsIDocShell> newDocShell(do_QueryInterface(newDocShellItem));
+  if (uriToLoad) { // Get script principal and pass to docshell
+    nsCOMPtr<nsIPrincipal> principal;
+    if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+    newDocShell->CreateLoadInfo(getter_AddRefs(loadInfo));
+    NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+
+    if (principal) {
+      nsCOMPtr<nsISupports> owner(do_QueryInterface(principal));
+      loadInfo->SetOwner(owner);
+    }
+
+    // Get the calling context off the JS context stack
+    nsCOMPtr<nsIJSContextStack> stack = do_GetService(sJSStackContractID);
+
+    JSContext* ccx = nsnull;
+
+    if (stack && NS_SUCCEEDED(stack->Peek(&ccx)) && ccx) {
+      JSObject *global = ::JS_GetGlobalObject(ccx);
+
+      if (global) {
+        JSClass* jsclass = ::JS_GetClass(ccx, global);
+
+        // Check if the global object on the calling context has
+        // nsISupports * private data
+        if (jsclass &&
+            !((~jsclass->flags) & (JSCLASS_HAS_PRIVATE |
+                                   JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
+          nsISupports* sup = (nsISupports *)::JS_GetPrivate(ccx, global);
+
+          nsCOMPtr<nsIDOMWindow> w(do_QueryInterface(sup));
+
+          if (w) {
+            nsCOMPtr<nsIDOMDocument> document;
+
+            // Get the document from the window.
+            w->GetDocument(getter_AddRefs(document));
+
+            nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
+
+            if (doc) { 
+              nsCOMPtr<nsIURI> uri(dont_AddRef(doc->GetDocumentURL()));
+
+              // Set the referrer
+              loadInfo->SetReferrer(uri);
+            }
+          }
+        }
+      }
+    }
+
+    newDocShell->LoadURI(uriToLoad, loadInfo,
+                         nsIWebNavigation::LOAD_FLAGS_NONE);
+  }
+
+  if (windowIsNew)
+    SizeOpenedDocShellItem(newDocShellItem, aParent, features, chromeFlags);
+  if (windowIsModal) {
+    nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
+    newDocShellItem->GetTreeOwner(getter_AddRefs(newTreeOwner));
+
+    if (newTreeOwner)
+      newTreeOwner->ShowModal();
+
+    eventQService->PopThreadEventQueue(modalEventQueue);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -290,7 +564,14 @@ nsWindowWatcher::GetWindowEnumerator(nsISimpleEnumerator** _retval)
 }
 	
 NS_IMETHODIMP
-nsWindowWatcher::GetActiveWindow(nsIDOMWindow * *aActiveWindow)
+nsWindowWatcher::SetWindowCreator(nsIWindowCreator *creator)
+{
+  mWindowCreator = creator; // it's an nsCOMPtr, so this is an ownership ref
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowWatcher::GetActiveWindow(nsIDOMWindow **aActiveWindow)
 {
   if (!aActiveWindow)
     return NS_ERROR_INVALID_ARG;
@@ -301,7 +582,7 @@ nsWindowWatcher::GetActiveWindow(nsIDOMWindow * *aActiveWindow)
 }
 
 NS_IMETHODIMP
-nsWindowWatcher::SetActiveWindow(nsIDOMWindow * aActiveWindow)
+nsWindowWatcher::SetActiveWindow(nsIDOMWindow *aActiveWindow)
 {
   mActiveWindow = aActiveWindow;
   return NS_OK;
@@ -370,16 +651,17 @@ nsWindowWatcher::RemoveWindow(nsIDOMWindow *aWindow)
   return found ? rv : NS_ERROR_INVALID_ARG;
 #else
   while (info != listEnd) {
-    if (info->mWindow.get() == aWindow)
+    if (info->mWindow == aWindow)
       return RemoveWindow(info);
     info = info->mYounger;
     listEnd = mOldestWindow;
   }
+  NS_WARNING("requested removal of nonexistent window\n");
   return NS_ERROR_INVALID_ARG;
 #endif
 }
 
-NS_IMETHODIMP nsWindowWatcher::RemoveWindow(WindowInfo *inInfo)
+nsresult nsWindowWatcher::RemoveWindow(WindowInfo *inInfo)
 {
   PRInt32  ctr,
            count = mEnumeratorList.Count();
@@ -430,3 +712,714 @@ nsWindowWatcher::RemoveEnumerator(nsWindowEnumerator* inEnumerator)
   return mEnumeratorList.RemoveElement(inEnumerator);
 }
 
+JSContext *
+nsWindowWatcher::GetJSContext(nsIDOMWindow *aWindow)
+{
+  JSContext *cx;
+
+  // given a window, we'll use its
+  cx = 0;
+  if (aWindow) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aWindow));
+    if (sgo) {
+      nsCOMPtr<nsIScriptContext> scx;
+      sgo->GetContext(getter_AddRefs(scx));
+      if (scx)
+        cx = (JSContext *) scx->GetNativeContext(); // from iffy to skank. is this guaranteed?
+    }
+    /* apparently, if it comes to it, the nsIScriptContext can be retrieved by
+    nsCOMPtr<nsIScriptContext> scx;
+    nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(scx));
+    */
+  }
+
+  // still no JSContext? try pulling one from the stack.
+  if (!cx) {
+    nsCOMPtr<nsIThreadJSContextStack> cxStack(do_GetService(sJSStackContractID));
+    if (cxStack)
+      cxStack->Peek(&cx);
+  }
+
+  // better have one by now
+  NS_ASSERTION(cx, "no available JSContext");
+  return cx;
+}
+
+// stolen from GlobalWindowImpl
+nsresult
+nsWindowWatcher::Escape(const nsAReadableString& aStr, nsAWritableString& aReturn,
+                        nsIDOMWindow *aWindow)
+{
+  nsresult                    rv = NS_OK;
+  nsCOMPtr<nsIUnicodeEncoder> encoder;
+  nsAutoString                charset;
+
+  // Get the document character set
+  charset.AssignWithConversion("UTF-8"); // default to utf-8
+  if (aWindow) {                         // or use aWindow's, if possible
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aWindow->GetDocument(getter_AddRefs(domDoc));
+    if (domDoc) {
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
+      if (doc)
+        rv = doc->GetDocumentCharacterSet(charset);
+    }
+  }
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsICharsetConverterManager>
+    ccm(do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID));
+  if (!ccm)
+    return NS_ERROR_FAILURE;
+
+  // Get an encoder for the character set
+  rv = ccm->GetUnicodeEncoder(&charset, getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = encoder->Reset();
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRInt32 maxByteLen, srcLen;
+  srcLen = aStr.Length();
+
+  nsPromiseFlatString flatSrc(aStr);
+  const PRUnichar* src = flatSrc.get();
+
+  // Get the expected length of result string
+  rv = encoder->GetMaxLength(src, srcLen, &maxByteLen);
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Allocate a buffer of the maximum length
+  char* dest = (char *) nsMemory::Alloc(maxByteLen + 1);
+  PRInt32 destLen2, destLen = maxByteLen;
+  if (!dest)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  // Convert from unicode to the character set
+  rv = encoder->Convert(src, &srcLen, dest, &destLen);
+  if (NS_SUCCEEDED(rv)) {
+    // Allow the encoder to finish the conversion
+    destLen2 = maxByteLen - destLen;
+    encoder->Finish(dest + destLen, &destLen2);
+    dest[destLen + destLen2] = '\0';
+
+    // Escape the string
+    char *outBuf =
+      nsEscape(dest, nsEscapeMask(url_XAlphas | url_XPAlphas | url_Path));
+    CopyASCIItoUCS2(nsLiteralCString(outBuf), aReturn);
+    nsMemory::Free(outBuf);
+  }
+
+  nsMemory::Free(dest);
+
+  return rv;
+}
+
+nsresult
+nsWindowWatcher::URIfromURL(const PRUnichar *aURL,
+                            nsIDOMWindow *aParent,
+                            nsIURI **aURI)
+{
+  *aURI = 0;
+
+  nsresult     rv = NS_OK;
+  nsAutoString unescapedURL(aURL);
+  nsAutoString escapedURL;
+
+  // fix bug 35076
+  // if the URL contains non ASCII, then escape from the first non ASCII char
+  if (unescapedURL.IsASCII())
+    escapedURL = unescapedURL;
+  else {
+    const PRUnichar *pt = unescapedURL.GetUnicode();
+    PRUint32 len = unescapedURL.Length();
+    PRUint32 i;
+    for (i = 0; i < len; i++)
+      if (0xFF80 & *pt++)
+        break;
+
+    nsAutoString right, escapedRight;
+    unescapedURL.Left(escapedURL, i);
+    unescapedURL.Right(right, len - i);
+    if (NS_SUCCEEDED(Escape(right, escapedRight, aParent)))
+      escapedURL.Append(escapedRight);
+    else
+      escapedURL = unescapedURL;
+  }
+
+  if (!escapedURL.IsEmpty()) {
+    nsAutoString          absoluteURL;
+    nsCOMPtr<nsIDocument> doc;
+    nsCOMPtr<nsIURI>      baseURI;
+
+    if (aParent) {
+      nsCOMPtr<nsIDOMDocument> domDoc;
+      aParent->GetDocument(getter_AddRefs(domDoc));
+      if (domDoc)
+        doc = do_QueryInterface(domDoc);
+    }
+    if (doc) {
+      // build absolute URI relative to this document.
+      baseURI = dont_AddRef(doc->GetDocumentURL());
+      rv = NS_MakeAbsoluteURI(absoluteURL, escapedURL, baseURI);
+    }
+    if (NS_FAILED(rv) || !baseURI) {
+      /* probably no document, probably because the context window's
+         URL hasn't finished loading. (don't call this function with
+         no context window and a relative URL!). All we can do is hope
+         the URL we've been given is absolute. */
+      absoluteURL = escapedURL;
+    }
+    // make URI; if absoluteURL is relative (or otherwise bogus) this will fail.
+    rv = NS_NewURI(aURI, absoluteURL);
+  }
+
+  return rv;
+}
+
+/* Check for an illegal name e.g. frame3.1
+   This just prints a warning message an continues; we open the window anyway,
+   (see bug 32898). */
+void nsWindowWatcher::CheckWindowName(nsString& aName)
+{
+  nsReadingIterator<PRUnichar> scan;
+  nsReadingIterator<PRUnichar> endScan;
+
+  aName.EndReading(endScan);
+  for (aName.BeginReading(scan); scan != endScan; ++scan)
+    if (!nsCRT::IsAsciiAlpha(*scan) && !nsCRT::IsAsciiDigit(*scan) &&
+        *scan != '_') {
+
+      // Don't use js_ReportError as this will cause the application
+      // to shut down (JS_ASSERT calls abort())  See bug 32898
+      nsAutoString warn;
+      warn.AssignWithConversion("Illegal character in window name ");
+      warn.Append(aName);
+      char *cp = warn.ToNewCString();
+      NS_WARNING(cp);
+      nsCRT::free(cp);
+      break;
+    }
+}
+
+/**
+ * Calculate the chrome bitmask from a string list of features.
+ * @param aFeatures a string containing a list of named chrome features
+ * @param aNullFeatures true if aFeatures was a null pointer (which fact
+ *                      is lost by its conversion to a string in the caller)
+ * @param aDialog affects the assumptions made about unnamed features
+ * @return the chrome bitmask
+ */
+PRUint32 nsWindowWatcher::CalculateChromeFlags(const char *aFeatures,
+                                               PRBool aFeaturesSpecified,
+                                               PRBool aDialog)
+{
+   if(!aFeaturesSpecified || !aFeatures) {
+      if(aDialog)
+         return   nsIWebBrowserChrome::CHROME_ALL | 
+                  nsIWebBrowserChrome::CHROME_OPENAS_DIALOG | 
+                  nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
+      else
+         return nsIWebBrowserChrome::CHROME_ALL;
+   }
+
+  /* This function has become complicated since browser windows and
+     dialogs diverged. The difference is, browser windows assume all
+     chrome not explicitly mentioned is off, if the features string
+     is not null. Exceptions are some OS border chrome new with Mozilla.
+     Dialogs interpret a (mostly) empty features string to mean
+     "OS's choice," and also support an "all" flag explicitly disallowed
+     in the standards-compliant window.(normal)open. */
+
+  PRUint32 chromeFlags = 0;
+  PRBool presenceFlag = PR_FALSE;
+
+  chromeFlags = nsIWebBrowserChrome::CHROME_WINDOW_BORDERS;
+  if (aDialog && WinHasOption(aFeatures, "all", 0, &presenceFlag))
+    chromeFlags = nsIWebBrowserChrome::CHROME_ALL;
+
+  /* Next, allow explicitly named options to override the initial settings */
+
+  chromeFlags |= WinHasOption(aFeatures, "titlebar", 0, &presenceFlag)
+                 ? nsIWebBrowserChrome::CHROME_TITLEBAR : 0;
+  chromeFlags |= WinHasOption(aFeatures, "close", 0, &presenceFlag)
+                 ? nsIWebBrowserChrome::CHROME_WINDOW_CLOSE : 0;
+  chromeFlags |= WinHasOption(aFeatures, "toolbar", 0, &presenceFlag)
+                 ? nsIWebBrowserChrome::CHROME_TOOLBAR : 0;
+  chromeFlags |= WinHasOption(aFeatures, "location", 0, &presenceFlag)
+                 ? nsIWebBrowserChrome::CHROME_LOCATIONBAR : 0;
+  chromeFlags |= (WinHasOption(aFeatures, "directories", 0, &presenceFlag) ||
+                  WinHasOption(aFeatures, "personalbar", 0, &presenceFlag))
+                 ? nsIWebBrowserChrome::CHROME_PERSONAL_TOOLBAR : 0;
+  chromeFlags |= WinHasOption(aFeatures, "status", 0, &presenceFlag)
+                 ? nsIWebBrowserChrome::CHROME_STATUSBAR : 0;
+  chromeFlags |= WinHasOption(aFeatures, "menubar", 0, &presenceFlag)
+                 ? nsIWebBrowserChrome::CHROME_MENUBAR : 0;
+  chromeFlags |= WinHasOption(aFeatures, "scrollbars", 0, &presenceFlag)
+                 ? nsIWebBrowserChrome::CHROME_SCROLLBARS : 0;
+  chromeFlags |= WinHasOption(aFeatures, "resizable", 0, &presenceFlag)
+                 ? nsIWebBrowserChrome::CHROME_WINDOW_RESIZE : 0;
+
+  /* OK.
+     Normal browser windows, in spite of a stated pattern of turning off
+     all chrome not mentioned explicitly, will want the new OS chrome (window
+     borders, titlebars, closebox) on, unless explicitly turned off.
+     Dialogs, on the other hand, take the absence of any explicit settings
+     to mean "OS' choice." */
+
+  // default titlebar and closebox to "on," if not mentioned at all
+  if (!PL_strcasestr(aFeatures, "titlebar"))
+    chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
+  if (!PL_strcasestr(aFeatures, "close"))
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_CLOSE;
+
+  if (aDialog && !presenceFlag)
+    chromeFlags = nsIWebBrowserChrome::CHROME_DEFAULT;
+
+  /* Finally, once all the above normal chrome has been divined, deal
+     with the features that are more operating hints than appearance
+     instructions. (Note modality implies dependence.) */
+
+  if (WinHasOption(aFeatures, "alwaysLowered", 0, nsnull) ||
+      WinHasOption(aFeatures, "z-lock", 0, nsnull))
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
+  else if (WinHasOption(aFeatures, "alwaysRaised", 0, nsnull))
+    chromeFlags |= nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
+
+  chromeFlags |= WinHasOption(aFeatures, "chrome", 0, nsnull) ?
+    nsIWebBrowserChrome::CHROME_OPENAS_CHROME : 0;
+  chromeFlags |= WinHasOption(aFeatures, "centerscreen", 0, nsnull) ?
+    nsIWebBrowserChrome::CHROME_CENTER_SCREEN : 0;
+  chromeFlags |= WinHasOption(aFeatures, "dependent", 0, nsnull) ?
+    nsIWebBrowserChrome::CHROME_DEPENDENT : 0;
+  chromeFlags |= WinHasOption(aFeatures, "modal", 0, nsnull) ?
+    (nsIWebBrowserChrome::CHROME_MODAL | nsIWebBrowserChrome::CHROME_DEPENDENT) : 0;
+  chromeFlags |= WinHasOption(aFeatures, "dialog", 0, nsnull) ?
+    nsIWebBrowserChrome::CHROME_OPENAS_DIALOG : 0;
+
+  /* and dialogs need to have the last word. assume dialogs are dialogs,
+     and opened as chrome, unless explicitly told otherwise. */
+  if (aDialog) {
+    if (!PL_strcasestr(aFeatures, "dialog"))
+      chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_DIALOG;
+    if (!PL_strcasestr(aFeatures, "chrome"))
+      chromeFlags |= nsIWebBrowserChrome::CHROME_OPENAS_CHROME;
+  }
+
+  /* missing
+     chromeFlags->copy_history
+   */
+
+  /* Allow disabling of commands only if there is no menubar */
+  /*if(!chromeFlags & NS_CHROME_MENU_BAR_ON) {
+     chromeFlags->disable_commands = !WinHasOption(aFeatures, "hotkeys");
+     if(XP_STRCASESTR(aFeatures,"hotkeys")==NULL)
+     chromeFlags->disable_commands = FALSE;
+     }
+   */
+
+  //Check security state for use in determing window dimensions
+  nsCOMPtr<nsIScriptSecurityManager>
+    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+  NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
+
+  PRBool enabled;
+  nsresult res =
+    securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+
+   res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+ 
+  if (NS_FAILED(res) || !enabled) {
+    //If priv check fails, set all elements to minimum reqs., else leave them alone.
+    chromeFlags |= nsIWebBrowserChrome::CHROME_TITLEBAR;
+    chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_LOWERED;
+    chromeFlags &= ~nsIWebBrowserChrome::CHROME_WINDOW_RAISED;
+    //XXX Temporarily removing this check to allow modal dialogs to be
+    //raised from script.  A more complete security based fix is needed.
+    //chromeFlags &= ~nsIWebBrowserChrome::CHROME_MODAL;
+  }
+
+  return chromeFlags;
+}
+
+PRInt32
+nsWindowWatcher::WinHasOption(const char *aOptions, const char *aName,
+                              PRInt32 aDefault, PRBool *aPresenceFlag)
+{
+  if (!aOptions)
+    return 0;
+
+  char *comma, *equal;
+  PRInt32 found = 0;
+
+  while (PR_TRUE) {
+    while (nsCRT::IsAsciiSpace(*aOptions))
+      aOptions++;
+
+    comma = strchr(aOptions, ',');
+    if (comma)
+      *comma = '\0';
+    equal = strchr(aOptions, '=');
+    if (equal)
+      *equal = '\0';
+    if (nsCRT::strcasecmp(aOptions, aName) == 0) {
+      if (aPresenceFlag)
+        *aPresenceFlag = PR_TRUE;
+      if (equal)
+        if (*(equal + 1) == '*')
+          found = aDefault;
+        else if (nsCRT::strcasecmp(equal + 1, "yes") == 0)
+          found = 1;
+        else
+          found = atoi(equal + 1);
+      else
+        found = 1;
+    }
+    if (equal)
+      *equal = '=';
+    if (comma)
+      *comma = ',';
+    if (found || !comma)
+      break;
+    aOptions = comma + 1;
+  }
+  return found;
+}
+
+/* try to find an nsIDocShellTreeItem with the given name in any
+   known open window. a failure to find the item will not
+   necessarily return a failure method value. check aFoundItem.
+*/
+nsresult
+nsWindowWatcher::FindItemWithName(
+                    const PRUnichar* aName,
+                    nsIDocShellTreeItem** aFoundItem)
+{
+  PRBool   more;
+  nsresult rv;
+
+  *aFoundItem = 0;
+
+  nsCOMPtr<nsISimpleEnumerator> windows;
+  GetWindowEnumerator(getter_AddRefs(windows));
+  if (!windows)
+    return NS_ERROR_FAILURE;
+
+  rv = NS_OK;
+  do {
+    windows->HasMoreElements(&more);
+    if (!more)
+      break;
+    nsCOMPtr<nsISupports> nextSupWindow;
+    windows->GetNext(getter_AddRefs(nextSupWindow));
+    if (nextSupWindow) {
+      nsCOMPtr<nsIDOMWindow> nextWindow(do_QueryInterface(nextSupWindow));
+      if (nextWindow) {
+        nsCOMPtr<nsIDocShellTreeItem> treeItem;
+        GetWindowTreeItem(nextWindow, getter_AddRefs(treeItem));
+        if (treeItem) {
+          rv = treeItem->FindItemWithName(aName, treeItem, aFoundItem);
+          if (NS_FAILED(rv) || *aFoundItem)
+            break;
+        }
+      }
+    }
+  } while(1);
+
+  return rv;
+}
+
+/* Fetch the nsIDOMWindow corresponding to the given nsIDocShellTreeItem.
+   This forces the creation of a script context, if one has not already
+   been created. Note it also sets the window's opener to the parent,
+   if applicable -- because it's just convenient, that's all. null aParent
+   is acceptable. */
+nsresult
+nsWindowWatcher::ReadyOpenedDocShellItem(nsIDocShellTreeItem *aOpenedItem,
+                                         nsIDOMWindow        *aParent,
+                                         nsIDOMWindow        **aOpenedWindow)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  *aOpenedWindow = 0;
+  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(aOpenedItem));
+  if (globalObject) {
+    if (aParent) {
+      nsCOMPtr<nsIDOMWindowInternal> internalParent(do_QueryInterface(aParent));
+      globalObject->SetOpenerWindow(internalParent); // damnit
+    }
+    rv = CallQueryInterface(globalObject, aOpenedWindow);
+  }
+  return rv;
+}
+
+void
+nsWindowWatcher::SizeOpenedDocShellItem(nsIDocShellTreeItem *aDocShellItem,
+                                        nsIDOMWindow *aParent,
+                                        const char *aFeatures,
+                                        PRUint32 aChromeFlags)
+{
+  PRInt32 chromeX = 0, chromeY = 0, chromeCX = 100, chromeCY = 100;
+  PRInt32 contentCX = 100, contentCY = 100;
+
+  // Use sizes from the parent window, if any, as our default
+  if (aParent) {
+    nsCOMPtr<nsIDocShellTreeItem> item;
+
+    GetWindowTreeItem(aParent, getter_AddRefs(item));
+    if (item) {
+      // if we are content, we may need the content sizes
+      nsCOMPtr<nsIBaseWindow> win(do_QueryInterface(item));
+      win->GetSize(&contentCX, &contentCY);
+
+      // now the main window
+      nsCOMPtr<nsIDocShellTreeOwner> owner;
+      item->GetTreeOwner(getter_AddRefs(owner));
+      if (owner) {
+        nsCOMPtr<nsIBaseWindow> basewin(do_QueryInterface(owner));
+        if (basewin)
+          basewin->GetPositionAndSize(&chromeX, &chromeY,
+                                      &chromeCX, &chromeCY);
+      }
+    }
+  }
+
+  PRBool present = PR_FALSE;
+  PRBool positionSpecified = PR_FALSE;
+  PRInt32 temp;
+
+  if ((temp = WinHasOption(aFeatures, "left", 0, &present)) || present)
+    chromeX = temp;
+  else if ((temp = WinHasOption(aFeatures, "screenX", 0, &present)) || present)
+    chromeX = temp;
+
+  if (present)
+    positionSpecified = PR_TRUE;
+
+  present = PR_FALSE;
+
+  if ((temp = WinHasOption(aFeatures, "top", 0, &present)) || present)
+    chromeY = temp;
+  else if ((temp = WinHasOption(aFeatures, "screenY", 0, &present)) || present)
+    chromeY = temp;
+
+  if (present)
+    positionSpecified = PR_TRUE;
+
+  present = PR_FALSE;
+
+  PRBool sizeChrome = PR_FALSE;
+  PRBool sizeSpecified = PR_FALSE;
+
+  if ((temp = WinHasOption(aFeatures, "outerWidth", chromeCX, &present)) ||
+      present) {
+    chromeCX = temp;
+    sizeChrome = PR_TRUE;
+    sizeSpecified = PR_TRUE;
+  }
+
+  present = PR_FALSE;
+
+  if ((temp = WinHasOption(aFeatures, "outerHeight", chromeCY, &present)) ||
+      present) {
+    chromeCY = temp;
+    sizeChrome = PR_TRUE;
+    sizeSpecified = PR_TRUE;
+  }
+
+  // We haven't switched to chrome sizing so we need to get the content area
+  if (!sizeChrome) {
+    if ((temp = WinHasOption(aFeatures, "width", chromeCX, &present)) ||
+        present) {
+      contentCX = temp;
+      sizeSpecified = PR_TRUE;
+    }
+    else if ((temp = WinHasOption(aFeatures, "innerWidth", chromeCX, &present))
+             || present) {
+      contentCX = temp;
+      sizeSpecified = PR_TRUE;
+    }
+
+    if ((temp = WinHasOption(aFeatures, "height", chromeCY, &present)) ||
+        present) {
+      contentCY = temp;
+      sizeSpecified = PR_TRUE;
+    }
+    else if ((temp = WinHasOption(aFeatures, "innerHeight", chromeCY, &present))
+             || present) {
+      contentCY = temp;
+      sizeSpecified = PR_TRUE;
+    }
+  }
+
+  nsresult res;
+  PRBool enabled = PR_FALSE;
+  PRInt32 screenWidth = 0, screenHeight = 0;
+  PRInt32 winWidth, winHeight;
+
+  // Check security state for use in determing window dimensions
+  nsCOMPtr<nsIScriptSecurityManager>
+    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+  if (securityManager) {
+    res = securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+    if (NS_FAILED(res))
+      enabled = PR_FALSE;
+  }
+
+  if (!enabled) {
+    // Security check failed.  Ensure all args meet minimum reqs.
+    if (sizeSpecified) {
+      if (sizeChrome) {
+        chromeCX = chromeCX < 100 ? 100 : chromeCX;
+        chromeCY = chromeCY < 100 ? 100 : chromeCY;
+      }
+      else {
+        contentCX = contentCX < 100 ? 100 : contentCX;
+        contentCY = contentCY < 100 ? 100 : contentCY;
+      }
+    }
+
+    if (positionSpecified) {
+      // We'll also need the screen dimensions
+      // XXX This should use nsIScreenManager once it's fully fleshed out.
+      nsCOMPtr<nsIDOMScreen> screen;
+      if (aParent) {
+        nsCOMPtr<nsIDOMWindowInternal> intparent(do_QueryInterface(aParent));
+        if (intparent)
+          intparent->GetScreen(getter_AddRefs(screen));
+      } else {
+        // XXX hmmph. try the new window.
+      }
+      if (screen) {
+        screen->GetAvailWidth(&screenWidth);
+        screen->GetAvailHeight(&screenHeight);
+      }
+
+      // This isn't strictly true but close enough
+      winWidth = sizeSpecified ? (sizeChrome ? chromeCX : contentCX) : 100;
+      winHeight = sizeSpecified ? (sizeChrome ? chromeCY : contentCY) : 100;
+
+      chromeX =
+        screenWidth < chromeX + winWidth ? screenWidth - winWidth : chromeX;
+      chromeX = chromeX < 0 ? 0 : chromeX;
+      chromeY = screenHeight < chromeY + winHeight
+                ? screenHeight - winHeight
+                : chromeY;
+      chromeY = chromeY < 0 ? 0 : chromeY;
+    }
+  }
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  aDocShellItem->GetTreeOwner(getter_AddRefs(treeOwner));
+  nsCOMPtr<nsIBaseWindow> treeOwnerAsWin(do_QueryInterface(treeOwner));
+  if (treeOwnerAsWin) {
+    if (sizeChrome) {
+      if (positionSpecified && sizeSpecified)
+        treeOwnerAsWin->SetPositionAndSize(chromeX, chromeY, chromeCX,
+                                           chromeCY, PR_FALSE);
+      else {
+        if (sizeSpecified)
+          treeOwnerAsWin->SetSize(chromeCX, chromeCY, PR_FALSE);
+        if (positionSpecified)
+          treeOwnerAsWin->SetPosition(chromeX, chromeY);
+      }
+    }
+    else {
+      if (positionSpecified)
+        treeOwnerAsWin->SetPosition(chromeX, chromeY);
+      if (sizeSpecified)
+        treeOwner->SizeShellTo(aDocShellItem, contentCX, contentCY);
+    }
+    treeOwnerAsWin->SetVisibility(PR_TRUE);
+  }
+}
+
+// attach the given array of JS values to the given window, as a property array
+// named "arguments"
+void
+nsWindowWatcher::AttachArguments(nsIDOMWindow *aWindow,
+                                 PRUint32 argc, jsval *argv)
+{
+  if (argc == 0)
+    return;
+
+  JSContext *cx;
+  JSObject  *object;
+
+  GetWindowScriptContextAndObject(aWindow, &cx, &object);
+
+  // copy the extra parameters into a JS Array and attach it
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(aWindow));
+  if (scriptGlobal) {
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    scriptGlobal->GetContext(getter_AddRefs(scriptContext));
+    if (scriptContext) {
+      JSContext *cx;
+      cx = (JSContext *) scriptContext->GetNativeContext();
+      nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(aWindow));
+      if (owner) {
+        JSObject *scriptObject;
+        owner->GetScriptObject(scriptContext, (void **) &scriptObject);
+        JSObject *args;
+        args = ::JS_NewArrayObject(cx, argc, argv);
+        if (args) {
+          jsval argsVal = OBJECT_TO_JSVAL(args);
+          // ::JS_DefineProperty(cx, scriptObject, "arguments",
+          // argsVal, NULL, NULL, JSPROP_PERMANENT);
+          ::JS_SetProperty(cx, scriptObject, "arguments", &argsVal);
+        }
+      }
+    }
+  }
+}
+
+void
+nsWindowWatcher::GetWindowTreeItem(nsIDOMWindow *inWindow,
+                                   nsIDocShellTreeItem **outTreeItem)
+{
+  *outTreeItem = 0;
+
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(inWindow));
+  if (sgo) {
+    nsCOMPtr<nsIDocShell> docshell;
+    sgo->GetDocShell(getter_AddRefs(docshell));
+    if (docshell)
+      CallQueryInterface(docshell, outTreeItem);
+  }
+}
+
+void
+nsWindowWatcher::GetWindowTreeOwner(nsIDOMWindow *inWindow,
+                                    nsIDocShellTreeOwner **outTreeOwner)
+{
+  *outTreeOwner = 0;
+
+  nsCOMPtr<nsIDocShellTreeItem> treeItem;
+  GetWindowTreeItem(inWindow, getter_AddRefs(treeItem));
+  if (treeItem)
+    treeItem->GetTreeOwner(outTreeOwner);
+}
+
+void nsWindowWatcher::GetWindowScriptContextAndObject(nsIDOMWindow *inWindow,
+                                                      JSContext **cx,
+                                                      JSObject **outObject)
+{
+  *cx = 0;
+  *outObject = 0;
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobal(do_QueryInterface(inWindow));
+  if (scriptGlobal) {
+    nsCOMPtr<nsIScriptContext> scriptContext;
+    scriptGlobal->GetContext(getter_AddRefs(scriptContext));
+    if (scriptContext) {
+      *cx = (JSContext *) scriptContext->GetNativeContext();
+
+      nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(inWindow));
+      if (owner)
+        owner->GetScriptObject(scriptContext, (void **) outObject);
+    }
+  }
+}
