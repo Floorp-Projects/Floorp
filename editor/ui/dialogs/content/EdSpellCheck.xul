@@ -39,9 +39,14 @@
   <broadcaster id="args" value=""/>
 
 <box align="vertical" debug="true">
-  <html:label for="Word"> &wordEditField.label; </html:label>
   <box align="horizontal">
-    <html:input type="text" class="SpellCheckWord" id="Word" size="24"/>
+    <html:label for="MisspelledWord"> &misspelledWord.label; </html:label>
+    <spring class="bigspacer"/>
+    <titledbutton id="MisspelledWord"/>
+  </box>
+  <html:label for="ReplaceWord"> &wordEditField.label; </html:label>
+  <box align="horizontal">
+    <html:input type="text" class="SpellCheckWord" id="ReplaceWord" size="24" onkeyup="ChangeReplaceWord()"/>
     <spring class="bigspacer"/>
     <titledbutton class="push SizeToParent" id="CheckWord" onclick="CheckWord()" value="&checkwordButton.label;"/>
     <spring flex="100%"/>
