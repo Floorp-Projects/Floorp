@@ -40,7 +40,7 @@ sub databaseType {
 sub getString { 
     my $self = shift;
     my($app, $variant, $string) = @_;    
-    return $self->database($app)->execute("SELECT data FROM strings WHERE variant = ? AND name = ?", $variant, $string)->rows;
+    return $self->database($app)->execute("SELECT data FROM strings WHERE variant = ? AND name = ?", $variant, $string)->row;
 }
 
 sub getVariants {

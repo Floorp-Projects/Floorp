@@ -74,6 +74,15 @@ sub peekArgument {
     return undef;
 }
 
+# 'username' and 'password' are two out of bands arguments that may be
+# provided as well, they are accessed as properties of the input
+# object (e.g., |if (defined($input->username)) {...}|).  Input
+# services that have their own username syntaxes (e.g. AIM, ICQ)
+# should have a username syntax of "SERVICE: <username>" e.g., my AIM
+# username would be "AIM: HixieDaPixie". Other services, which get the
+# username from the user (e.g. HTTP), should pass the username
+# directly. See the user service for more details.
+
 
 # XXX I don't like having these here:
 

@@ -66,7 +66,7 @@ sub get {
     }
     my $result;
     eval {
-        $self->getString($app, $variant, $string);
+        $result = $self->getString($app, $variant, $string);
     };
     if ($@) {
         # ok, so, er, it seems that didn't go to well
