@@ -25,6 +25,7 @@
 #include "nsAppShellCIDs.h"
 #include "nsIAllocator.h"
 #include "nsIGenericFactory.h"
+#include "nsIWebShellWindow.h"
 
 #include "nsINetService.h"
 #include "nsIComponentManager.h"
