@@ -1,3 +1,8 @@
+/** this should only contain XUL widget defaults. Defaults for widgets of
+    a particular application should be in that application's style sheet.
+	For example style definitions for navigator can be found in navigator.css
+**/
+
 box {
   display: block;
 }
@@ -197,75 +202,3 @@ titledbutton[class=push][pseudoclass~="focus"]:-moz-focus-inner {
    margin: 0px;
    border : 1px dotted black;
 }
-
-
-/**** Please put all browser specific style here eventually it will be moved 
-      out to another .css file like navigator.xul 
-****/
-
-titledbutton#Throbber
-{
-	list-style-image:url("resource:/res/throbber/anims00.gif");
-}
-
-titledbutton#Throbber[busy="true"] {
-	list-style-image:url("resource:/res/throbber/throbbingN.gif");
-}
-
-toolbar#taskbar titledbutton{
-  color:#CCCCFF; 
-}
-
-toolbar#taskbar titledbutton[pseudoclass~="active"] {
-
-  text-decoration:none;
-  border: 1px inset;
-
-  padding-left: 2px;
-  padding-right: 0px;
-  padding-top: 2px;
-  padding-bottom: 0px;
-}
-
-toolbar#taskbar titledbutton[pseudoclass~="hover"] {
-  border: 1px outset #666699;
-	color:white;
-	//text-decoration:underline;
-  padding: 1px;
-}
-
-toolbar#taskbar {
-    display:block;
-    background-color: #666699;
-    border-bottom: solid #333366 1px;
-    border-top: solid #9999AA 1px;
-    border-left: solid #9999AA 1px;
-    border-right: solid #333366 1px;
-    font: 10pt sans-serif;
-    min-height: 16px;
-    color: white;
-}
-
-
-box[class=insecure] {
-   margin-top: 2px;
-   border-top: 0px;
-}
-
-box[class=secure] {
-   border-top: 2px solid yellow;
-   margin-top: 0px;
-}
-
-box#status-bar titledbutton {
-     font: 2.5mm sans-serif;
-}
-
-titledbutton[class=secure] {
-  background-color: yellow;
-}
-
-titledbutton[class=insecure] {
-}
-
-

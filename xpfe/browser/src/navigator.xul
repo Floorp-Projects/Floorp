@@ -1,5 +1,6 @@
 <?xml version="1.0"?> 
 <?xml-stylesheet href="xul.css" type="text/css"?> 
+<?xml-stylesheet href="navigator.css" type="text/css"?> 
 
 <!DOCTYPE window> 
 
@@ -206,35 +207,6 @@
 
 	appCore.loadUrl(document.getElementById('urlbar').value);
       
-  }
-
-  //Obsolete - to be removed
-  function onThrobber() {
-    var throbber = document.getElementById("Throbber");
-    if ( throbber ) {
-        var busy = throbber.getAttribute("busy");
-        if ( busy == "true" ) {
-    	    throbber.setAttribute("style", "list-style-image:url(resource:/res/throbber/throbbingN.gif);");
-        } else {
-    	    throbber.setAttribute("style", "list-style-image:url(resource:/res/throbber/anims00.gif);");
-        }
-    }
-  }
-
-  //Obsolete - to be removed
-  function SetThrobberBusy() {
-     var throbber = document.getElementById("Throbber");
-     if (throbber != null) {
-	    throbber.setAttribute("style", "list-style-image:url(resource:/res/throbber/throbbingN.gif);");
-     }
-  }
-
-  //Obsolete - to be removed
-  function resetthrobber() {
-     var throbber = document.getElementById("Throbber");
-     if (throbber != null) {
-	    throbber.setAttribute("style", "list-style-image:url(resource:/res/throbber/anims00.gif);");
-     }
   }
 
   function WalletEditor()
@@ -545,21 +517,21 @@
   <box align="vertical" style="width: 100%; height:100%">
    <toolbox>
     <toolbar type="toolbar">
-		  <titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onclick="BrowserBack()">	
+		  <titledbutton id="back-button" align="bottom" value="Back" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled"/>			
 	      </titledbutton>
 
-	      <titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward" 
+	      <titledbutton id="forward-button" align="bottom" value="Forward" 
 				onclick="BrowserForward()">
 				  <observes element="canGoForward" attribute="disabled"/>
 	      </titledbutton>
 
-	      <titledbutton src="resource:/res/toolbar/TB_Reload.gif" align="bottom" value="Reload" 
+	      <titledbutton id="reload-button" align="bottom" value="Reload" 
 				  onclick="window.frames[0].location.reload()">
 				  <observes element="canReload" attribute="disabled"/>
 	      </titledbutton>
 
-	      <titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop" 
+	      <titledbutton id="stop-button" align="bottom" value="Stop" 
 				onclick="window.frames[0].stop()">
 	        <observes element="canStop" attribute="disabled"/>
 	      </titledbutton>
@@ -570,58 +542,24 @@
 			  onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
 			<spring flex="100%"/>
 	      </box>
-	  <titledbutton src="resource:/res/toolbar/TB_Print.gif" align="bottom" value="Print"  
+	      <titledbutton id="print-button" align="bottom" value="Print"  
 				onclick="">
 	        <observes element="canPrint" attribute="disabled"/>
 	      </titledbutton>
 
-          <titledbutton id="Throbber" style="list-style-image:url(resource:/res/throbber/anims00.gif);" onclick="window.frames[0].home()">
+          <titledbutton id="Throbber" onclick="window.frames[0].home()">
              <observes element="Browser:Throbber" attribute="busy"/>
           </titledbutton>
 	</toolbar>
 
     <toolbar type="toolbar">
-    	<titledbutton src="resource:/res/toolbar/TB_Home.gif" align="right" value="Home" 
+    	<titledbutton id="home-button" align="right" value="Home" 
 			onclick="BrowserHome()"/>
-		<titledbutton src="resource:/res/toolbar/TB_Netscape.gif" align="right" value="Netscape" 
+		<titledbutton id="netscape-button" align="right" value="Netscape" 
 			onclick="window.frames[0].location.href='http://my.netscape.com'"/>
 		<spring flex="100%"/>
 	</toolbar>
   </toolbox>
- 
-  <!-- side tool bar test
- <box flex="100%">
-
-
- <toolbox align="horizontal">
-    <toolbar align="vertical">
-		  <titledbutton src="resource:/res/toolbar/TB_Back.gif" align="bottom" value="Back" onclick="BrowserBack()">	
-				  <observes element="canGoBack" attribute="disabled"/>			
-	      </titledbutton>
-
-	      <titledbutton src="resource:/res/toolbar/TB_Forward.gif" align="bottom" value="Forward" 
-				onclick="BrowserForward()">
-				  <observes element="canGoForward" attribute="disabled"/>
-	      </titledbutton>
-
-	      <titledbutton src="resource:/res/toolbar/TB_Reload.gif" align="bottom" value="Reload" 
-				  onclick="window.frames[0].location.reload()">
-				  <observes element="canReload" attribute="disabled"/>
-	      </titledbutton>
-
-	      <titledbutton src="resource:/res/toolbar/TB_Stop.gif" align="bottom" value="Stop" 
-				onclick="window.frames[0].stop()">
-	        <observes element="canStop" attribute="disabled"/>
-	      </titledbutton>
-	</toolbar>
-	</toolbox>
- 
-
-  <html:iframe html:name="content" html:src="BrowserInitPage.html" flex="100%" style="width: 100px; height: 100px" />
-
-  </box>
-
-  -->
 
   
   <html:iframe html:name="content" html:src="BrowserInitPage.html" flex="100%" style="width: 100px; height: 100px" />
@@ -772,30 +710,30 @@
 		<titledbutton align="right" value="Build ID: 99032911" style="font-family:sans-serif;font-size:2.5mm">
 		</titledbutton>
 
-		<titledbutton id="security-button" class="insecure" value="Secure Conn" align="right" src="resource:/res/toolbar/StatusBar-secure.gif" onclick="securityOff();"/>
+		<titledbutton id="security-button" class="insecure" value="Secure Conn" align="right" onclick="securityOff();"/>
      </box>
   </box>
 
   <toolbox>
 	  <toolbar id="taskbar">
 	  	  <box align="horizontal">
-  	 	     <titledbutton align="left" src="resource:/res/toolbar/TB_popup.gif" value="Web" />
-  	 	     <titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Mail" />
-  	 	     <titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Chat" />
+  	 	     <titledbutton align="left" class="popup"  value="Web" />
+  	 	     <titledbutton align="left" class="popup"  value="Mail" />
+  	 	     <titledbutton align="left" class="popup"  value="Chat" />
 		  </box>
 		  <spring flex="100%"/>
 	 	  <box align="horizontal">
-  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="DayPlanner" />
-  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Shopping" />
-  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="My Desk" />
+  	 		<titledbutton align="left"  class="popup"  value="DayPlanner" />
+  	 		<titledbutton align="left"  class="popup"  value="Shopping" />
+  	 		<titledbutton align="left"  class="popup"  value="My Desk" />
           </box>
 		  <spring flex="100%"/>
 	   	  <box align="horizontal">
-  			<titledbutton align="left"  src="resource:/res/toolbar/TB_popup.gif" value="Open Windows" />
-  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniNav.gif" value="" />
-  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniMail.gif" value="" onclick="OpenMessenger()"/>
-  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniAddr.gif" value="" />
-  	 		<titledbutton align="left"  src="resource:/res/toolbar/TB_MiniComp.gif" value="" />
+  			<titledbutton align="left" class="popup" value="Open Windows" />
+  	 		<titledbutton align="left" id="mini-nav" value="" />
+  	 		<titledbutton align="left" id="mini-mail" value="" onclick="OpenMessenger()"/>
+  	 		<titledbutton align="left" id="mini-addr" value="" />
+  	 		<titledbutton align="left" id="mini-comp" value="" />
 	      </box>
 	  </toolbar>
 	</toolbox>

@@ -568,6 +568,8 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
 
   // -----set all the grippy locations-----
   mNumToolbars = 0;
+
+  
   childFrame = mFrames.FirstChild(); 
   while (nsnull != childFrame) 
   {    
@@ -593,6 +595,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
       NS_ASSERTION(rv == NS_OK,"failed to get next child");
       mNumToolbars++;
   }
+  
 
   return result;
 } // Reflow
