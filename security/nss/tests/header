@@ -15,7 +15,7 @@
 #
 # parameters
 # ----------
-#   nssversion (supported: 30b, 31, tip, 32)
+#   nssversion (supported: 30b, 31, tip 32)
 #   builddate (default - today)
 #
 # options
@@ -29,7 +29,6 @@
 #       as would have been produced with -cron
 #   -m <mailinglist> - send filename to mailinglist (csl) only useful
 #       with -f
-#   -l <mozroot> run on a local build O_LOCAL
 #   -cron equivalient to -y -s -d -f $RESULTDIR/$HOST.<scriptname>
 #
 # special strings
@@ -241,7 +240,6 @@ find_nt_masterbuild()
 ########################################################################
 set_dirs()
 {
-#O_LOCAL
     if [ "$O_WIN" = "ON" ]
     then
         win_set_dirs
@@ -249,7 +247,6 @@ set_dirs()
         D1=/h/hs-sca15c/export/builds/mccrel/nss/nss$NSSVER
         D3=${D2}/${MASTERBUILD}
         UXDIST=${D3}/mozilla/dist
-        RESULTDIR=${D3}/mozilla/tests_results/security
     fi
 
     D2=${D1}/builds/${QAYEAR}${BUILDDATE}.${BUILDNUMBER}
@@ -261,8 +258,6 @@ set_dirs()
 
     RESULTDIR=${UX_MASTERDIR}/mozilla/tests_results/security
 
-
-#O_LOCAL
     if [ "$O_WIN" = "ON" ]
     then
         MASTERBUILD=$NT_MASTERBUILD
@@ -360,17 +355,6 @@ eval_opts()
             write_to_tmpfile
             
             export O_CRON
-            ;;
-        -l)
-            O_LOCAL=ON    #Now what - 
-            shift
-            MOZROOT=$1
-            if [ -z "$MOZROOT" ]
-            then
-                glob_usage "Error: -l requires a directory to follow, for example $HOME/src/tip1025 "
-            fi
-            Warning "-l not implemented yet (or only halfway)"
-            Debug "testing locally on $MOZROOT"
             ;;
         -S*|-s*)
             O_SILENT=ON
@@ -606,6 +590,8 @@ bc()
   DON_T_SET_PATHS="TRUE"
   case $1 in
     0)
+      #unset TESTDIR
+      TESTDIR=${RESULTDIR}
       if [ "$O_WIN" = "ON" -a "$O_CYGNUS" != ON ] ; then
           PATH="$TESTSCRIPTDIR;$LOCALDIST_BIN;$BASEPATH"
       else
@@ -615,7 +601,8 @@ bc()
       DON_T_SET_PATHS="FALSE" #let init.sh override - FIXME - check if necessary
       ;;
     1)
-      BC_ACTION="backward compatibility against shlibs in $BC_MASTER"
+      TESTDIR=${RESULTDIR}/bc_libs
+     BC_ACTION="backward compatibility shlibs in $BC_MASTER to new binaries"
       LD_LIBRARY_PATH=${BCDIST}/${OBJDIR}/lib
       if [ "$O_WIN" = "ON" ] ; then
           if [ "$O_CYGNUS" = ON ] ; then
@@ -629,7 +616,8 @@ bc()
       Debug "1st stage of backward compatibility test"
       ;;
     *)
-      BC_ACTION="forward compatibility of binaries in $BC_MASTER"
+      TESTDIR=${RESULTDIR}/bc_bins
+      BC_ACTION="backward compatibility of binaries in $BC_MASTER to new libs"
       BCDIST_BIN=${BCDIST}/${OBJDIR}/bin
       LD_LIBRARY_PATH=${LOCALDIST}/${OBJDIR}/lib
       if [ "$O_WIN" = "ON" ] ; then
@@ -644,6 +632,12 @@ bc()
       Debug "2nd stage of backward compatibility test"
       ;;
   esac
+  if [ -n "$TESTDIR" ] ; then
+      if [ ! -d $TESTDIR ] ; then
+          mkdir -p $TESTDIR
+      fi
+      export TESTDIR
+  fi
   SHLIB_PATH=${LD_LIBRARY_PATH}
   LIBPATH=${LD_LIBRARY_PATH}
   Debug "PATH $PATH"
@@ -723,10 +717,10 @@ early_exit()
             cat $FILENAME | sed -e "s/^/<br>/" >>${FILENAME}.err
         fi
         echo '</body></html>' >>${FILENAME}.err
-        cat ${FILENAME}.err | rmail $MAILINGLIST
+        cat ${FILENAME}.err | $RMAIL $MAILINGLIST
         
         rm ${FILENAME}.err 2>/dev/null
-        #echo "cat ${FILENAME}.err | rmail $MAILINGLIST "
+        #echo "cat ${FILENAME}.err | $RMAIL $MAILINGLIST "
     fi
 }
 
@@ -766,7 +760,7 @@ Exit()
             early_exit "$1"
         elif [ -n "$FILENAME" -a -f "$FILENAME" ]
         then
-            cat $FILENAME | rmail $MAILINGLIST
+            cat $FILENAME | $RMAIL $MAILINGLIST
         fi
         #rm $FILENAME 2>/dev/null
     elif  [ $O_MAIL = "ON" -a $EARLY_EXIT = TRUE ]
