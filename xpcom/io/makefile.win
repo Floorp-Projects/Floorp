@@ -38,7 +38,6 @@ EXPORTS =                          \
         nsStorageStream.h          \
         nsScriptableInputStream.h  \
         nsDirectoryService.h       \
-        nsIByteArrayInputStream.h  \
         $(NULL)                 
 
 NO_XPT_GEN=1
