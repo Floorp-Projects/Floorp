@@ -469,7 +469,7 @@ nsContinueDespiteCertError(nsNSSSocketInfo *infoObject,
   return retVal;
 }
 
-static int
+static SECStatus
 nsNSSBadCertHandler(void *arg, PRFileDesc *socket)
 {
   SECStatus rv = SECFailure;
@@ -488,7 +488,7 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *socket)
     rv = SECSuccess; //This will eventually re-verify the cert to
                      //make sure nothing else is wrong.
   }
-  return (int)rv;
+  return rv;
 }
 
 nsresult
@@ -564,7 +564,7 @@ nsSSLIOLayerAddToSocket(const char* host,
   if (SECSuccess != SSL_OptionSet(sslSock, SSL_ENABLE_FDX, PR_TRUE)) {
     goto loser;
   }
-  if (SECSuccess != SSL_BadCertHook(sslSock, nsNSSBadCertHandler,
+  if (SECSuccess != SSL_BadCertHook(sslSock, (SSLBadCertHandler) nsNSSBadCertHandler,
                                     infoObject)) {
     goto loser;
   }
