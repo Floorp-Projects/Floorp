@@ -2973,7 +2973,6 @@ NS_IMETHODIMP nsPluginHostImpl::GetURLWithHeaders(nsISupports* pluginInst,
                      const char* getHeaders)
 {
   nsAutoString      string; string.AssignWithConversion(url);
-  nsIPluginInstance *instance;
   nsresult          rv;
 
   // we can only send a stream back to the plugin (as specified by a 
@@ -2981,7 +2980,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetURLWithHeaders(nsISupports* pluginInst,
   if(target == nsnull && streamListener == nsnull)
    return NS_ERROR_ILLEGAL_VALUE;
 
-  rv = pluginInst->QueryInterface(kIPluginInstanceIID, (void **)&instance);
+  nsCOMPtr<nsIPluginInstance> instance = do_QueryInterface(pluginInst, &rv);
 
   if (NS_SUCCEEDED(rv))
   {
@@ -3031,7 +3030,6 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
                     const char* postHeaders)
 {
   nsAutoString      string; string.AssignWithConversion(url);
-  nsIPluginInstance *instance;
   nsresult          rv;
   
   // we can only send a stream back to the plugin (as specified 
@@ -3040,8 +3038,7 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
   if(target == nsnull && streamListener == nsnull)
    return NS_ERROR_ILLEGAL_VALUE;
   
-  rv = pluginInst->QueryInterface(kIPluginInstanceIID, (void **)&instance);
-
+  nsCOMPtr<nsIPluginInstance> instance = do_QueryInterface(pluginInst, &rv);
   if (NS_SUCCEEDED(rv))
   {
       char *dataToPost;
@@ -3097,8 +3094,6 @@ NS_IMETHODIMP nsPluginHostImpl::PostURL(nsISupports* pluginInst,
         rv = NewPluginURLStream(string, instance, streamListener,
                                 (const char*)dataToPost, isFile, postDataLen,
                                 postHeaders, postHeadersLength);
-
-      NS_RELEASE(instance);
       if (isFile) {
         nsCRT::free(dataToPost);
       }
@@ -5586,7 +5581,6 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIPluginInstancePeer> peer;
   rv = aInstance->GetPeer(getter_AddRefs(peer));
-  rv = aInstance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
   if (NS_SUCCEEDED(rv) && peer)
   {
     nsCOMPtr<nsPIPluginInstancePeer> privpeer(do_QueryInterface(peer));
