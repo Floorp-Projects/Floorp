@@ -52,6 +52,7 @@ function createShortcuts()
   var is_winnt;
   var szCurrentVersion;
   var restrictedAccess;
+  var ikwDefined;
 
   winreg               = getWinRegistry();
   fWindows             = getFolder("Windows");
@@ -69,11 +70,15 @@ function createShortcuts()
      * determine which Desktop, Programs, and Start Menu folders
      * are to used: common or per user
      */
-    winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-    if(winreg.isKeyWritable("SOFTWARE"))
-      restrictedAccess = false;
-    else
-      restrictedAccess = true;
+    restrictedAccess = false;
+    ikwDefined = typeof(winreg.isKeyWritable);
+    logComment("winreg.isKeyWritable(): " + ikwDefined);
+    if(ikwDefined == "function")
+    {
+      winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
+      if(!winreg.isKeyWritable("SOFTWARE"))
+        restrictedAccess = true;
+    }
 
     /* determine if the script is running under NT or not */
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
