@@ -227,6 +227,7 @@ public:
 
 
     // Cached StringAtoms for handy access
+    // These are all engine-allocated, so can be used as JS2VAL's
     const String *true_StringAtom;
     const String *false_StringAtom;
     const String *null_StringAtom;

@@ -130,7 +130,7 @@ static int readEvalPrint(FILE *in)
                 ASSERT(p.lexer.peek(true).hasKind(Token::end));
                 if (metadata->showTrees)
                 {
-                    PrettyPrinter f(stdOut, 30);
+                    PrettyPrinter f(stdOut, 80);
                     {
                         PrettyPrinter::Block b(f, 2);
                         f << "Program =";

@@ -47,11 +47,23 @@
                 push(a);
             }
             else {
+                FunctionWrapper *fWrap = NULL;
+                if ((obj->kind == CallableInstanceKind)
+                            && (meta->objectType(a) == meta->functionClass)) {
+                    fWrap = (checked_cast<CallableInstance *>(obj))->fWrap;
+                }
+                else
+                    if ((obj->kind == PrototypeInstanceKind)
+                            && ((checked_cast<PrototypeInstance *>(obj))->type == meta->functionClass)) {
+                        fWrap = (checked_cast<FunctionInstance *>(obj))->fWrap;
+                    }
+/*
                 if (obj->kind == CallableInstanceKind) {
                     FunctionWrapper *fWrap = NULL;
                     CallableInstance *dInst = (checked_cast<CallableInstance *>(obj));
                     if (dInst->type == meta->functionClass)
                         fWrap = dInst->fWrap;
+*/
                     if (fWrap) {
                         // XXX - I made this stuff up - extract the 'prototype' property from
                         // the function being invoked (defaulting to Object.prototype). Then 
@@ -64,7 +76,9 @@
                         js2val protoVal;
                         JS2Object *protoObj = meta->objectClass->prototype;
                         Multiname mn(prototype_StringAtom);     // gc safe because the content is rooted elsewhere
-                        LookupKind lookup(false, JS2VAL_NULL);
+                        LookupKind lookup(true, JS2VAL_NULL);   // make it a lexical lookup since we want it to
+                                                                // fail if 'prototype' hasn't been defined
+                                                                // XXX (prototype should always exist for functions)
                         if (meta->readProperty(a, &mn, &lookup, RunPhase, &protoVal)) {
                             if (!JS2VAL_IS_OBJECT(protoVal))
                                 meta->reportError(Exception::badValueError, "Non-object prototype value", errorPos());
@@ -89,9 +103,9 @@
                     }
                     else
                         meta->reportError(Exception::typeError, "object is not a constructor", errorPos());
-                }
-                else
-                    meta->reportError(Exception::typeError, "object is not a constructor", errorPos());
+//                }
+//                else
+//                    meta->reportError(Exception::typeError, "object is not a constructor", errorPos());
             }
         }
         break;
@@ -107,20 +121,26 @@
             if (JS2VAL_IS_PRIMITIVE(b))
                 meta->reportError(Exception::badValueError, "Can't call on primitive value", errorPos());
             JS2Object *fObj = JS2VAL_TO_OBJECT(b);
+            FunctionWrapper *fWrap = NULL;
             if ((fObj->kind == CallableInstanceKind)
                         && (meta->objectType(b) == meta->functionClass)) {
-                FunctionWrapper *fWrap;
                 fWrap = (checked_cast<CallableInstance *>(fObj))->fWrap;
-                js2val compileThis = fWrap->compileFrame->thisObject;
-                if (JS2VAL_IS_VOID(compileThis))
-                    a = JS2VAL_VOID;
-                else {
-                    if (JS2VAL_IS_INACCESSIBLE(compileThis)) {
+            }
+            else
+                if ((fObj->kind == PrototypeInstanceKind)
+                        && ((checked_cast<PrototypeInstance *>(fObj))->type == meta->functionClass)) {
+                    fWrap = (checked_cast<FunctionInstance *>(fObj))->fWrap;
+                }
+            if (fWrap) {
+
+                if (fWrap->compileFrame->prototype) {
+                    if (JS2VAL_IS_VOID(a) || JS2VAL_IS_NULL(a)) {
                         Frame *g = meta->env->getPackageOrGlobalFrame();
-                        if (fWrap->compileFrame->prototype && (JS2VAL_IS_NULL(a) || JS2VAL_IS_VOID(a)) && (g->kind == GlobalObjectKind))
+                        if (g->kind == GlobalObjectKind)
                             a = OBJECT_TO_JS2VAL(g);
                     }
                 }
+
                 ParameterFrame *runtimeFrame = new ParameterFrame(fWrap->compileFrame);
                 runtimeFrame->instantiate(meta->env);
                 runtimeFrame->thisObject = a;

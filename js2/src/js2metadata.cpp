@@ -162,14 +162,25 @@ namespace MetaData {
         }
     }
      
-    CallableInstance *JS2Metadata::validateStaticFunction(FunctionStmtNode *f, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
+    JS2Object *JS2Metadata::validateStaticFunction(FunctionStmtNode *f, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env)
     {
         ParameterFrame *compileFrame = new ParameterFrame(compileThis, prototype);
-        CallableInstance *fInst = new CallableInstance(functionClass);
-        fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
-        f->fWrap = fInst->fWrap;
+        JS2Object *result;
+        
+        if (prototype) {
+            FunctionInstance *fInst = new FunctionInstance(functionClass->prototype, functionClass);
+            fInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
+            f->fWrap = fInst->fWrap;
+            result = fInst;
+        }
+        else {
+            CallableInstance *cInst = new CallableInstance(functionClass);
+            cInst->fWrap = new FunctionWrapper(unchecked, compileFrame);
+            f->fWrap = cInst->fWrap;
+            result = cInst;
+        }
 
-        JS2Object::RootIterator ri = JS2Object::addRoot(&fInst);
+        JS2Object::RootIterator ri = JS2Object::addRoot(&result);
         Frame *curTopFrame = env->getTopFrame();
 
         try {
@@ -184,6 +195,8 @@ namespace MetaData {
                     pCount++;
                     pb = pb->next;
                 }
+                if (prototype)
+                    writeDynamicProperty(result, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(pCount), RunPhase);
                 pb = f->function.parameters;
                 compileFrame->positional = new Variable *[pCount];
                 compileFrame->positionalCount = pCount;
@@ -206,7 +219,7 @@ namespace MetaData {
             throw x;
         }
         JS2Object::removeRoot(ri);
-        return fInst;
+        return result;
     }
 
     /*
@@ -499,17 +512,17 @@ namespace MetaData {
                                 // XXX getter/setter --> ????
                             }
                             else {
-                                CallableInstance *fInst = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
+                                JS2Object *fObj = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
                                 if (unchecked 
                                         && (f->attributes == NULL)
                                         && ((topFrame->kind == GlobalObjectKind)
                                                         || (topFrame->kind == BlockKind)
                                                         || (topFrame->kind == ParameterKind)) ) {
                                     HoistedVar *v = defineHoistedVar(env, f->function.name, p);
-                                    v->value = OBJECT_TO_JS2VAL(fInst);
+                                    v->value = OBJECT_TO_JS2VAL(fObj);
                                 }
                                 else {
-                                    Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
+                                    Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fObj), true);
                                     vb->mn = defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
                                 }
                             }
@@ -519,17 +532,18 @@ namespace MetaData {
                     case Attribute::Final:
                         {
                     // XXX Here the spec. has ???, so the following is tentative
-                            CallableInstance *fInst = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
+                            JS2Object *fObj = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
                             JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
-                            InstanceMember *m = new InstanceMethod(fInst);
+                            InstanceMember *m = new InstanceMethod(checked_cast<CallableInstance *>(fObj));
                             defineInstanceMember(c, cxt, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
                         }
                         break;
                     case Attribute::Constructor:
                         {
                     // XXX Here the spec. has ???, so the following is tentative
-                            CallableInstance *fInst = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
-                            ConstructorMethod *cm = new ConstructorMethod(OBJECT_TO_JS2VAL(fInst));
+                            ASSERT(!prototype); // XXX right?
+                            JS2Object *fObj = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
+                            ConstructorMethod *cm = new ConstructorMethod(OBJECT_TO_JS2VAL(fObj));
                             vb->mn = defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos);
                         }
                         break;
@@ -2982,9 +2996,16 @@ doUnary:
         return result;
     }
 
-    static js2val Object_toString(JS2Metadata *meta, const js2val /* thisValue */, js2val /* argv */ [], uint32 /* argc */)
+    static js2val Object_toString(JS2Metadata *meta, const js2val thisValue, js2val /* argv */ [], uint32 /* argc */)
     {
-        return STRING_TO_JS2VAL(meta->engine->object_StringAtom);
+        ASSERT(JS2VAL_IS_OBJECT(thisValue));
+        JS2Class *type = (checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue)))->type;
+        
+        // XXX objectType returns the ECMA4 type, not the [[class]] value, so returns class 'Prototype' for ECMA3 objects
+        //        JS2Class *type = meta->objectType(thisValue);
+
+        String s = "[" + *meta->engine->object_StringAtom + " " + *type->getName() + "]";
+        return STRING_TO_JS2VAL(meta->engine->allocString(s));
     }
     
     static js2val GlobalObject_isNaN(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 /* argc */)
@@ -3085,11 +3106,17 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             defineStaticMember(env, engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         env->removeTopFrame();
 
-// XXX Or make this a static class member?
-        CallableInstance *fInst = new CallableInstance(functionClass);
+/*** ECMA 3  Function Class ***/
+// Need this initialized early, as subsequent FunctionInstances need the Function.prototype value
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(functionClass), true);
+        defineStaticMember(env, &world.identifiers["Function"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        initFunctionObject(this);
+
+// Adding 'toString' to the Object.prototype XXX Or make this a static class member?
+        FunctionInstance *fInst = new FunctionInstance(functionClass->prototype, functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
         writeDynamicProperty(objectClass->prototype, new Multiname(engine->toString_StringAtom, publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
-
+        writeDynamicProperty(fInst, new Multiname(engine->length_StringAtom, publicNamespace), true, INT_TO_JS2VAL(0), RunPhase);
 
 /*** ECMA 3  Date Class ***/
         MAKEBUILTINCLASS(dateClass, objectClass, true, true, true, &world.identifiers["Date"], JS2VAL_NULL);
@@ -3130,11 +3157,6 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         v = new Variable(classClass, OBJECT_TO_JS2VAL(arrayClass), true);
         defineStaticMember(env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initArrayObject(this);
-
-/*** ECMA 3  Function Class ***/
-        v = new Variable(classClass, OBJECT_TO_JS2VAL(functionClass), true);
-        defineStaticMember(env, &world.identifiers["Function"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
-        // XXX more here!
 
 /*** ECMA 3  Error Classes ***/
         MAKEBUILTINCLASS(errorClass, objectClass, true, true, true, &world.identifiers["Error"], JS2VAL_NULL);
@@ -4069,22 +4091,33 @@ deleteClassProperty:
     // function result value.
     bool JS2Metadata::invokeFunctionOnObject(js2val thisValue, const String *fnName, js2val &result)
     {
-        Multiname mn(engine->toString_StringAtom, publicNamespace);
-        LookupKind lookup(false, JS2VAL_NULL);
+        Multiname mn(fnName, publicNamespace);
+        LookupKind lookup(true, JS2VAL_NULL);   // XXX using lexical lookup since we want readProperty to fail
+                                                // if the function isn't defined
         js2val fnVal;
 
         if (readProperty(thisValue, &mn, &lookup, RunPhase, &fnVal)) {
             if (JS2VAL_IS_OBJECT(fnVal)) {
                 JS2Object *fnObj = JS2VAL_TO_OBJECT(fnVal);
-                if ((fnObj->kind == CallableInstanceKind) && (objectType(fnVal) == functionClass)) {
-                    FunctionWrapper *fWrap = (checked_cast<CallableInstance *>(fnObj))->fWrap;
+                FunctionWrapper *fWrap = NULL;
+                if ((fnObj->kind == CallableInstanceKind)
+                            && (objectType(fnVal) == functionClass)) {
+                    fWrap = (checked_cast<CallableInstance *>(fnObj))->fWrap;
+                }
+                else
+                    if ((fnObj->kind == PrototypeInstanceKind)
+                            && ((checked_cast<PrototypeInstance *>(fnObj))->type == functionClass)) {
+                        fWrap = (checked_cast<FunctionInstance *>(fnObj))->fWrap;
+                    }
+                if (fWrap) {
                     if (fWrap->code) {
                         result = (fWrap->code)(this, thisValue, NULL, 0);
                         return true;
                     }
                 }
-                else // XXX here we accept the bound this, can that be right?
+                else 
                 if (fnObj->kind == MethodClosureKind) {
+                    // XXX here we accept the bound this, can that be right?
                     MethodClosure *mc = checked_cast<MethodClosure *>(fnObj);
                     CallableInstance *fInst = mc->method->fInst;
                     FunctionWrapper *fWrap = fInst->fWrap;
@@ -4534,6 +4567,30 @@ deleteClassProperty:
         for (DynamicPropertyIterator i = dynamicProperties.begin(), end = dynamicProperties.end(); (i != end); i++) {
             GCMARKVALUE(i->second);
         }        
+    }
+
+
+ /************************************************************************************
+ *
+ *  FunctionInstance
+ *
+ ************************************************************************************/
+
+    FunctionInstance::FunctionInstance(JS2Object *parent, JS2Class *type)
+     : PrototypeInstance(parent, type), fWrap(NULL) 
+    {
+    }
+
+
+    // gc-mark all contained JS2Objects and visit contained structures to do likewise
+    void FunctionInstance::markChildren()
+    {
+        PrototypeInstance::markChildren();
+        if (fWrap) {
+            GCMARKOBJECT(fWrap->compileFrame);
+            if (fWrap->bCon)
+                fWrap->bCon->mark();
+        }
     }
 
 

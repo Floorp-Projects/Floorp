@@ -589,8 +589,8 @@ namespace JavaScript
         auto_ptr<T> newBuffer(new T[newBufferSize]);
         T *oldBuffer = buffer;
         size_t eltsToEnd = toSize_t(bufferEnd - f);
-        if (eltsToEnd <= length)
-            std::copy(f, f + eltsToEnd, newBuffer.get());
+        if (eltsToEnd >= length)
+            std::copy(f, f + length, newBuffer.get());
         else {
             std::copy(f, bufferEnd, newBuffer.get());
             std::copy(oldBuffer, b, newBuffer.get() + eltsToEnd);

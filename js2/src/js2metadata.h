@@ -66,6 +66,7 @@ extern void initRegExpObject(JS2Metadata *meta);
 extern void initNumberObject(JS2Metadata *meta);
 extern void initErrorObject(JS2Metadata *meta);
 extern void initBooleanObject(JS2Metadata *meta);
+extern void initFunctionObject(JS2Metadata *meta);
 
 extern js2val Error_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 extern js2val EvalError_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
@@ -616,15 +617,29 @@ public:
     NumberInstance(JS2Class *type) : CallableInstance(type), mValue(0.0) { }
 
     float64     mValue;
+    virtual ~NumberInstance()            { }
 };
 
-// Boolean instances are PrototypeInstance created by the Boolean class, they have an extra field 
+// Boolean instances are PrototypeInstances created by the Boolean class, they have an extra field 
 // that contains the bool data
 class BooleanInstance : public PrototypeInstance {
 public:
     BooleanInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type), mValue(false) { }
 
     bool     mValue;
+    virtual ~BooleanInstance()           { }
+};
+
+// Function instances are PrototypeInstances created by the Function class, they have an extra field 
+// that contains a pointer to the function implementation
+class FunctionInstance : public PrototypeInstance {
+public:
+    FunctionInstance(JS2Object *parent, JS2Class *type);
+
+    FunctionWrapper *fWrap;
+
+    virtual void markChildren();
+    virtual ~FunctionInstance()          { }
 };
 
 // Array instances are Callable instances created by the Array class, they 
@@ -635,7 +650,7 @@ public:
     ArrayInstance(JS2Class *type) : CallableInstance(type) { }
 
     virtual void writeProperty(JS2Metadata *meta, const String *name, js2val newValue);
-    virtual ~ArrayInstance()            { }
+    virtual ~ArrayInstance()             { }
 };
 
 // RegExp instances are Callable instances created by the RegExp class, they have an extra field 
@@ -656,8 +671,8 @@ public:
     js2val getIgnoreCase(JS2Metadata *meta);
     js2val getSource(JS2Metadata *meta);
 
-    REState     *mRegExp;
-    virtual ~RegExpInstance()            { }
+    REState  *mRegExp;
+    virtual ~RegExpInstance()             { }
 };
 
 // A base class for objects from another world
@@ -1024,7 +1039,7 @@ public:
     void ValidateStmt(Context *cxt, Environment *env, Plurality pl, StmtNode *p);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
-    CallableInstance *validateStaticFunction(FunctionStmtNode *f, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env);
+    JS2Object *validateStaticFunction(FunctionStmtNode *f, js2val compileThis, bool prototype, bool unchecked, Context *cxt, Environment *env);
 
     js2val ExecuteStmtList(Phase phase, StmtNode *p);
     js2val EvalExpression(Environment *env, Phase phase, ExprNode *p);

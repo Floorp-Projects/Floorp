@@ -118,35 +118,42 @@ namespace MetaData {
         publicNamespaceList.push_back(meta->publicNamespace);
 
         meta->booleanClass->prototype = new BooleanInstance(meta->objectClass->prototype, meta->booleanClass);
+        
 
-        // Adding "prototype" as a static member of the class - not a dynamic property
+        // Adding "prototype" & "length" as static members of the class - not dynamic properties; XXX
         meta->env->addFrame(meta->booleanClass);
             Variable *v = new Variable(meta->booleanClass, OBJECT_TO_JS2VAL(meta->booleanClass->prototype), true);
             meta->defineStaticMember(meta->env, meta->engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+            v = new Variable(meta->numberClass, INT_TO_JS2VAL(1), true);
+            meta->defineStaticMember(meta->env, meta->engine->length_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         meta->env->removeTopFrame();
 
         // Add "constructor" as a dynamic property of the prototype
-        CallableInstance *fInst = new CallableInstance(meta->functionClass);
+        FunctionInstance *fInst = new FunctionInstance(meta->functionClass->prototype, meta->functionClass);
+        meta->writeDynamicProperty(fInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(1), RunPhase);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), Boolean_Constructor);
         meta->writeDynamicProperty(meta->booleanClass->prototype, new Multiname(&meta->world.identifiers["constructor"], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
 
 
         PrototypeFunction *pf = &prototypeFunctions[0];
         while (pf->name) {
-            fInst = new CallableInstance(meta->functionClass);
-            fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
+            CallableInstance *callInst = new CallableInstance(meta->functionClass);
+            callInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
     /*
     XXX not static members, since those can't be accessed from the instance
-              Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(fInst), true);
+              Variable *v = new Variable(meta->functionClass, OBJECT_TO_JS2VAL(callInst), true);
               meta->defineStaticMember(&meta->env, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
     */
-            InstanceMember *m = new InstanceMethod(fInst);
+            InstanceMember *m = new InstanceMethod(callInst);
             meta->defineInstanceMember(meta->booleanClass, &meta->cxt, &meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
 
     /*
         Dynamic property of the prototype:
     */
+            FunctionInstance *fInst = new FunctionInstance(meta->functionClass->prototype, meta->functionClass);
+            fInst->fWrap = callInst->fWrap;
             meta->writeDynamicProperty(meta->booleanClass->prototype, new Multiname(&meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+            meta->writeDynamicProperty(fInst, new Multiname(meta->engine->length_StringAtom, meta->publicNamespace), true, INT_TO_JS2VAL(pf->length), RunPhase);
             
             pf++;
         }
