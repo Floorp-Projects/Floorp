@@ -46,8 +46,8 @@ NS_IMETHODIMP IMECommitTxn::Init(void)
 
 NS_IMETHODIMP IMECommitTxn::Do(void)
 {
-#ifdef DEBUG_TAGUE
-	printf("Do IME Commit); }
+#ifdef DEBUG_tague
+	printf("Do IME Commit");
 #endif
 
 	return NS_OK;
