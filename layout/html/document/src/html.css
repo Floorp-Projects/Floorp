@@ -187,10 +187,18 @@ table[align="right"] {
   -moz-opacity: inherit;
 }
    
+/* caption inherits from table not table-outer */  
 caption {
   display: table-caption;
   text-align: center;
+  margin-left: inherit; 
+  margin-right: inherit;
   -moz-box-sizing: border-box;
+}
+
+table[align="center"] > caption {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 tr {
