@@ -54,6 +54,22 @@ nsPlaceholderFrame::~nsPlaceholderFrame()
 {
 }
 
+// XXX Major hack...
+NS_IMETHODIMP
+nsPlaceholderFrame::DidReflow(nsIPresContext& aPresContext, nsDidReflowStatus aStatus)
+{
+  // XXX Floated frames aren't being returned by block's FirstChild() member function
+  // so make sure they get a DidReflow notification
+  if (nsnull != mAnchoredItem) {
+    nsIHTMLReflow*  htmlReflow;
+    if (NS_SUCCEEDED(mAnchoredItem->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow))) {
+      htmlReflow->DidReflow(aPresContext, aStatus);
+    }
+  }
+
+  return nsFrame::DidReflow(aPresContext, aStatus);
+}
+
 NS_IMETHODIMP
 nsPlaceholderFrame::Reflow(nsIPresContext&          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
