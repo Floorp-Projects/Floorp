@@ -38,6 +38,8 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsAppShellCIDs.h"
 #include "nsIAppShellService.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIInterfaceRequestor.h"
 
 static const char* kLoadAsData = "loadAsData";
 
@@ -157,9 +159,8 @@ nsSyncLoader::~nsSyncLoader()
     //if (XML_HTTP_REQUEST_SENT == mStatus) {
     //    Abort();
     //}
-    if (mDocShellTreeOwner) {
-        mDocShellTreeOwner->ExitModalLoop(NS_OK);
-    }
+    if (mChromeWindow)
+        mChromeWindow->ExitModalEventLoop(NS_OK);
 }
 
 NS_IMPL_ISUPPORTS3(nsSyncLoader, nsISyncLoader, nsIDOMLoadListener, nsISupportsWeakReference)
@@ -275,8 +276,15 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDOMDocument **_retval)
         nsCOMPtr<nsIDocShellTreeItem> item = do_QueryInterface(docshell);
         if (!item) return NS_ERROR_FAILURE;
 
-        rv = item->GetTreeOwner(getter_AddRefs(mDocShellTreeOwner));
+        nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+        rv = item->GetTreeOwner(getter_AddRefs(treeOwner));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+        nsCOMPtr<nsIInterfaceRequestor> treeRequestor(do_GetInterface(treeOwner));
+        if (!treeRequestor) return NS_ERROR_FAILURE;
+
+        treeRequestor->GetInterface(NS_GET_IID(nsIWebBrowserChrome), getter_AddRefs(mChromeWindow));
+        if (mChromeWindow) return NS_ERROR_FAILURE;
 
         eventQService = do_GetService(kEventQueueServiceCID);
         if(!eventQService || 
@@ -308,8 +316,8 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDOMDocument **_retval)
     }  
 
     // Spin an event loop here and wait
-    if (mDocShellTreeOwner) {
-        rv = mDocShellTreeOwner->ShowModal();
+    if (mChromeWindow) {
+        rv = mChromeWindow->ShowAsModal();
     
         eventQService->PopThreadEventQueue(modalEventQueue);
     
@@ -332,9 +340,9 @@ nsSyncLoader::HandleEvent(nsIDOMEvent* aEvent)
 nsresult
 nsSyncLoader::Load(nsIDOMEvent* aEvent)
 {
-    if (mDocShellTreeOwner) {
-        mDocShellTreeOwner->ExitModalLoop(NS_OK);
-        mDocShellTreeOwner = 0;
+    if (mChromeWindow) {
+        mChromeWindow->ExitModalEventLoop(NS_OK);
+        mChromeWindow = 0;
     }
 
     return NS_OK;
@@ -349,9 +357,9 @@ nsSyncLoader::Unload(nsIDOMEvent* aEvent)
 nsresult
 nsSyncLoader::Abort(nsIDOMEvent* aEvent)
 {
-    if (mDocShellTreeOwner) {
-        mDocShellTreeOwner->ExitModalLoop(NS_OK);
-        mDocShellTreeOwner = 0;
+    if (mChromeWindow) {
+        mChromeWindow->ExitModalEventLoop(NS_OK);
+        mChromeWindow = 0;
     }
 
     return NS_OK;
@@ -360,9 +368,9 @@ nsSyncLoader::Abort(nsIDOMEvent* aEvent)
 nsresult
 nsSyncLoader::Error(nsIDOMEvent* aEvent)
 {
-    if (mDocShellTreeOwner) {
-        mDocShellTreeOwner->ExitModalLoop(NS_OK);
-        mDocShellTreeOwner = 0;
+    if (mChromeWindow) {
+        mChromeWindow->ExitModalEventLoop(NS_OK);
+        mChromeWindow = 0;
     }
 
     return NS_OK;

@@ -30,7 +30,7 @@
 #include "nsString.h"
 #include "nsIDOMLoadListener.h"
 #include "nsIDocument.h"
-#include "nsIDocShellTreeOwner.h"
+#include "nsIWebBrowserChrome.h"
 #include "nsWeakReference.h"
 #include "nsISyncLoader.h"
 
@@ -56,7 +56,7 @@ public:
     virtual nsresult Error(nsIDOMEvent* aEvent);
 
 protected:
-    nsCOMPtr<nsIDocShellTreeOwner> mDocShellTreeOwner;
+    nsCOMPtr<nsIWebBrowserChrome> mChromeWindow;
 };
 
 #endif
