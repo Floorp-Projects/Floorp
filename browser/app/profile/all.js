@@ -38,7 +38,7 @@
 // SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
 //  The first character after a period must be alphabetic.
 
-// pref("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
+// pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
 pref("browser.chromeURL","chrome://browser/content/");
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul");
 
