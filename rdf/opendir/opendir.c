@@ -135,8 +135,10 @@ int main(int argc, char **argv)
 		if (argc == 0) {
 			RDF_ReadFile("three_level");
 		} else {
-        while (n <= argc) {
-             RDF_ReadFile(argv[n++]);
+        while (n < argc) {
+           char* name = argv[n++];
+             printf("Reading %s\n", name);
+             RDF_ReadFile(name);
        }
 		}
         printf("done");

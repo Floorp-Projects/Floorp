@@ -24,6 +24,7 @@
 
 void describeItem (WriteClientProc callBack, void* obj, RDF_Resource u) ;
 void describeItemSimple (WriteClientProc callBack, void* obj, RDF_Resource u) ;
+extern int startsWith(const char* prefix, const char* pattern);
 
 RDF_Resource 
 getNodeFromQuery (char* query) {
@@ -87,6 +88,7 @@ Init () {
   if (!gInited) {
     int n = 0;
     FILE *templateFile = fopen("template.html", "r");
+    if (!templateFile) printf("Could not open template!\n");
     gInited = 1;    
     gNarrow = RDF_GetResource("narrow", 1);
     gLink = RDF_GetResource("link", 1);
@@ -95,7 +97,7 @@ Init () {
     gDesc = RDF_GetResource("description", 1);
     gEditor = RDF_GetResource("editor", 1);
     gNewsGroup = RDF_GetResource("newsGroup", 1);
-    gTemplate = malloc(MAX_TEMPLATE_SIZE+1);
+    gTemplate = (char*) malloc(MAX_TEMPLATE_SIZE+1);
     memset(gTemplate, '\0', MAX_TEMPLATE_SIZE);
     n = fread(gTemplate, 1, MAX_TEMPLATE_SIZE, templateFile);
     gTemplate[n] = '\0';
@@ -165,7 +167,7 @@ AnswerOpenDirQuery (WriteClientProc callBack, void* obj, char *query, char* cook
   size_t n = 0;
   char buff[MAX_TEMPLATE_SIZE];
   char* pbegin = 0;
-  char* begin;   
+  char* begin;  
   Init();
   begin = gTemplate;
   while (pbegin = strstr(begin, "&Topic")) {
