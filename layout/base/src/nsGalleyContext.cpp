@@ -17,6 +17,7 @@
  */
 #include "nsPresContext.h"
 #include "nsGfxCIID.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kIPresContextIID, NS_IPRESCONTEXT_IID);
 
@@ -25,6 +26,7 @@ public:
   GalleyContext();
   ~GalleyContext();
 
+  NS_IMETHOD GetMedium(nsIAtom*& aMedium);
   virtual PRBool IsPaginated();
   virtual nscoord GetPageWidth();
   virtual nscoord GetPageHeight();
@@ -36,6 +38,14 @@ GalleyContext::GalleyContext()
 
 GalleyContext::~GalleyContext()
 {
+}
+
+NS_IMETHODIMP
+GalleyContext::GetMedium(nsIAtom*& aMedium)
+{
+  aMedium = nsLayoutAtoms::screen;
+  NS_ADDREF(aMedium);
+  return NS_OK;
 }
 
 PRBool GalleyContext::IsPaginated()
