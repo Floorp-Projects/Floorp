@@ -55,6 +55,7 @@
 #endif
 
 #include "nsHashtable.h"
+#include "nsIContent.h"
 
 // Base class for concrete presentation context classes
 class nsPresContext : public nsIPresContext, public nsIObserver {
@@ -278,6 +279,7 @@ protected:
   void   GetFontPreferences();
   void   GetDocumentColorPreferences();
   void   UpdateCharSet(const PRUnichar* aCharSet);
+  void SetImgAnimations(nsCOMPtr<nsIContent>& aParent, nsImageAnimation aMode);
 
 private:
   static int PR_CALLBACK PrefChangedCallback(const char*, void*);
