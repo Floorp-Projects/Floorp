@@ -719,7 +719,8 @@ NS_IMETHODIMP nsMsgDatabase::Commit(nsMsgDBCommit commitType)
 		{
 			err = commitThumb->DoMore(GetEnv(), &outTotal, &outCurrent, &outDone, &outBroken);
 		}
-		NS_RELEASE(commitThumb);
+		if(commitThumb)
+			commitThumb->CutStrongRef(m_mdbEnv);
 	}
 	// ### do something with error, but clear it now because mork errors out on commits.
 	if (GetEnv())
@@ -1049,7 +1050,7 @@ nsresult nsMsgDatabase::RemoveHeaderFromDB(nsMsgHdr *msgHdr)
 		ret = thread->RemoveChildHdr(msgHdr);
 	else
 	{
-		NS_ASSERTION(PR_FALSE, "couldn't find thread containing deleted message");
+//		NS_ASSERTION(PR_FALSE, "couldn't find thread containing deleted message");
 	}
 	// even if we couldn't find the thread,we should try to remove the header.
 //	if (NS_SUCCEEDED(ret))
