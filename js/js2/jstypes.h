@@ -442,26 +442,29 @@ namespace JSTypes {
         
         JSValue& setVariable(const String& name, const JSValue& value)
         {
-            return setProperty(name, value);
+            return (mProperties[name] = value);
         }
         
         JSValue& defineVariable(const String& name, JSType* type, const JSValue& value)
         {
-            if (type != &Any_Type) setType(name, type);
-            return setProperty(name, value);
+            if (type != &Any_Type)
+                mTypes[name] = type;
+            return (mProperties[name] = value);
         }
 
         JSValue& defineVariable(const String& name, JSType* type)
         {
-            if (type != &Any_Type) setType(name, type);
-            return setProperty(name, kUndefinedValue);
+            if (type != &Any_Type)
+                mTypes[name] = type;
+            return (mProperties[name] = kUndefinedValue);
         }
 
         void setType(const String& name, JSType* type)
         {
-            JSProperties::iterator i = mTypes.find(name);
-            if (i != mTypes.end())
-                i->second = type;
+            // only type variables that are defined in this scope.
+            JSProperties::iterator i = mProperties.find(name);
+            if (i != mProperties.end())
+                mTypes[name] = type;
             else
                 if (mParent)
                     mParent->setType(name, type);
@@ -469,12 +472,19 @@ namespace JSTypes {
 
         JSType* getType(const String& name)
         {
-            JSProperties::const_iterator i = mTypes.find(name);
-            if (i != mTypes.end())
-                return i->second.type;
-            if (mParent)
-                return mParent->getType(name);
-            return &Any_Type;
+            JSType* result = &Any_Type;
+            // only consider types for variables defined in this scope.
+            JSProperties::const_iterator i = mProperties.find(name);
+            if (i != mProperties.end()) {
+                i = mTypes.find(name);
+                if (i != mTypes.end())
+                    result = i->second.type;
+            } else {
+                // see if variable is defined in parent scope.
+                if (mParent)
+                    result = mParent->getType(name);
+            }
+            return result;
         }
         
         JSValue& defineFunction(const String& name, ICodeModule* iCode)
