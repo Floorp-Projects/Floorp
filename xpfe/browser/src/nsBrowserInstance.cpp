@@ -95,7 +95,6 @@
 #include "nsIObserverService.h"
 #include "nsFileLocations.h"
 
-#include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
 #include "nsIWalletService.h"
 

@@ -47,7 +47,8 @@
 #include "nsISupportsArray.h"
 #include "nsEnumeratorUtils.h"
 #include "nsRDFCID.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "plhash.h"
@@ -63,8 +64,6 @@
 #include "nsIMdbFactoryFactory.h"
 #include "mdb.h"
 
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h" 
 #include "nsIPref.h"
 
 #ifdef DEBUG_sspitzer
@@ -78,7 +77,6 @@
 // CIDs
 
 static NS_DEFINE_CID(kRDFServiceCID,        NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
 
 static nsresult
@@ -1539,16 +1537,8 @@ nsGlobalHistory::OpenDB()
 {
   nsresult rv;
 
-  nsCOMPtr <nsIFileSpec> historyFile;
-  nsFileSpec dbfile;
-
-  NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = locator->GetFileLocation(nsSpecialFileSpec::App_History50, getter_AddRefs(historyFile));
-  if (NS_FAILED(rv)) return rv; 
-
-  rv = historyFile->GetFileSpec(&dbfile);
+  nsCOMPtr <nsIFile> historyFile;
+  rv = NS_GetSpecialDirectory(NS_APP_HISTORY_50_FILE, getter_AddRefs(historyFile));
   if (NS_FAILED(rv)) return rv;
 
   static NS_DEFINE_CID(kMorkCID, NS_MORK_CID);
@@ -1575,13 +1565,21 @@ nsGlobalHistory::OpenDB()
 
   nsIMdbHeap* dbHeap = 0;
   mdb_bool dbFrozen = mdbBool_kFalse; // not readonly, we want modifiable
+  PRBool exists;
 
-  if (dbfile.Exists()) {
+  nsXPIDLCString filePath;
+  rv = historyFile->GetPath(getter_Copies(filePath));
+  if (NS_FAILED(rv)) return rv;
+    
+  rv = historyFile->Exists(&exists);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (exists) {
     mdb_bool canopen = 0;
     mdbYarn outfmt = { nsnull, 0, 0, 0, 0, nsnull };
 
     nsMdbPtr<nsIMdbFile> oldFile(mEnv); // ensures file is released
-    err = factory->OpenOldFile(mEnv, dbHeap, dbfile.GetNativePathCString(),
+    err = factory->OpenOldFile(mEnv, dbHeap, filePath,
                                dbFrozen, getter_Acquires(oldFile));
 
     if ((err != 0) || !oldFile) return NS_ERROR_FAILURE;
@@ -1627,7 +1625,7 @@ nsGlobalHistory::OpenDB()
   else {
 
     nsMdbPtr<nsIMdbFile> newFile(mEnv); // ensures file is released
-    err = factory->CreateNewFile(mEnv, dbHeap, dbfile.GetNativePathCString(),
+    err = factory->CreateNewFile(mEnv, dbHeap, filePath,
                                  getter_Acquires(newFile));
 
     if ((err != 0) || !newFile) return NS_ERROR_FAILURE;
