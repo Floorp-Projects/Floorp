@@ -1077,7 +1077,8 @@ void EDT_DestroyEditBuffer(MWContext * pContext){
 //    0 - Done ok, stopping.
 //   -1 - not done, error.
 //
-intn EDT_ProcessTag(void *data_object, PA_Tag *tag, intn status){
+intn EDT_ProcessTag(void *data_object, PA_Tag *tag, intn status)
+{
     pa_DocData *pDocData = (pa_DocData*)data_object;
     int parseRet = OK_CONTINUE;
     intn retVal;
@@ -1090,60 +1091,20 @@ intn EDT_ProcessTag(void *data_object, PA_Tag *tag, intn status){
 
     if( pDocData->edit_buffer == 0 )
     {
-#if 0
-// Don't do this - we end up here when using View | Reload 
-// TODO: NEED TO INVESTIGATE FURTHER - WE ARE CREATING A NEW DOC BEFORE
-//       DELETING THE OLD ONE when using reload.
-        // We shouldn't have a buffer associated with a context and
-        //  not have one in pDocData as well...
-        // (This is needed because we now end up here when inserting images!)
-        if( pEditBuffer )
-        {
-            // ...We should NEVER be in this situation
-//            XP_ASSERT(FALSE);
-            pDocData->edit_buffer = pEditBuffer;
-        } 
-        else 
-#endif
-        {
-            // HACK ALERT
-            // Libnet does not seem to be able to supply us with a reliable
-            //  "content_type" in the URL_Struct passed around to the front ends,
-            //  so we need to figure out when we are converting a text file into
-            //  HTML here.
-            // Since we just created our edit buffer for the first tag encountered,
-            //  if it is the PLAIN_TEXT type, then we are probably importing a text file
-            pDocData->edit_buffer = EDT_MakeEditBuffer( pDocData->window_id, tag->type == P_PLAIN_TEXT );
-            bCreatedEditor = pDocData->edit_buffer != NULL;
-        }
+        // Libnet does not seem to be able to supply us with a reliable
+        //  "content_type" in the URL_Struct passed around to the front ends,
+        //  so we need to figure out when we are converting a text file into HTML here.
+        // We decide we are importing text if the tag type we encounter for the first tag = PLAIN_TEXT
+        pDocData->edit_buffer = EDT_MakeEditBuffer( pDocData->window_id, tag->type == P_PLAIN_TEXT );
+        bCreatedEditor = pDocData->edit_buffer != NULL;
     }
 
-#if 0
-    // if parsing is complete and we didn't end up with anything, force a NOBR
-    //  space.
-    if( tag == NULL && status == PA_COMPLETE ) {
-        CEditRootDocElement* pRoot = pDocData->edit_buffer->m_pRoot;
-        XP_Bool bNoData = ! pRoot || ! pRoot->GetChild();
-        if ( bNoData ){
-            pDocData->edit_buffer->DummyCharacterAddedDuringLoad();
-            PA_Tag *pNewTag = XP_NEW( PA_Tag );
-            XP_BZERO( pNewTag, sizeof( PA_Tag ) );
-
-            // Non-breaking-spaces cause a memory leak when they are laid out in 3.0b5.
-            // See bug 23404.
-            // And anyway, we strip out this character.
-            // So it can be any character.
-            // edt_SetTagData( pNewTag, NON_BREAKING_SPACE_STRING );
-            edt_SetTagData( pNewTag, "$" );
-
-            pDocData->edit_buffer->ParseTag( pDocData, pNewTag, status );
-
-            PA_FreeTag( pNewTag );
+    if( tag )
+    {
+        if( tag->type == P_HTML && tag->is_end )
+        {
+            XP_TRACE(("P_HTML tag"));
         }
-    }
-#endif
-
-    if( tag ){
         // Fix bug 67427 - if the MWContext doesn't have an editor at this point, it
         // means that the editor has been deleted.
         CEditBuffer* pEditBuffer = (CEditBuffer*) LO_GetEDBuffer(pDocData->window_id);
@@ -1160,29 +1121,16 @@ intn EDT_ProcessTag(void *data_object, PA_Tag *tag, intn status){
     if( parseRet == NOT_OK )
         return NOT_OK;
 
-    if( parseRet != OK_IGNORE ){
-#if 0
-        //
-        // Check to see if the tag went away.  Text without an Edit Element
-        //
-        // LTNOTE: this case should now return OK_IGNORE, don't check.
-        //
-        if( tag
-                && tag->type == P_TEXT
-                && tag->data
-                && tag->edit_element == 0 )
-            {
-                PA_FREE( tag->data );
-                return 1;
-            }
-#endif
+    if( parseRet != OK_IGNORE )
+    {
         retVal = LO_ProcessTag( data_object, tag, status );
         if( tag == 0 ){
             //pDocData->edit_buffer->FinishedLoad();
         }
         return retVal;
     }
-    else{
+    else
+    {
     	PA_FreeTag(tag);
         return OK_CONTINUE;
     }

@@ -6977,7 +6977,7 @@ void CEditRootDocElement::PrintEnd( CPrintState *pPrintState ){
 void CEditRootDocElement::FinishedLoad( CEditBuffer *pBuffer ){
     CEditSubDocElement::FinishedLoad(pBuffer);
     if ( ! GetLastChild() || ! GetLastChild()->IsEndContainer() ) {
-        CEditEndContainerElement* pEndContainer = new CEditEndContainerElement(NULL);
+        CEditEndContainerElement* pEndContainer = new CEditEndContainerElement((CEditElement *)NULL);
         // Creating the element automaticly inserts it.
         (void) new CEditEndElement(pEndContainer);
         pEndContainer->InsertAsLastChild(this);
@@ -12014,7 +12014,7 @@ void CEditInternalAnchorElement::PrintEnd( CPrintState * /*pPrintState*/ ){
 //---------------------------------------------------------------------------
 
 CEditEndContainerElement::CEditEndContainerElement(CEditElement *pParent) :
-        CEditContainerElement(pParent, NULL, 0 /* Never used for an end container */, ED_ALIGN_LEFT)
+        CEditContainerElement(pParent, (PA_Tag*)NULL, 0 /* Never used for an end container */, ED_ALIGN_LEFT)
         {
 }
 

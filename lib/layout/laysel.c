@@ -6438,18 +6438,16 @@ LO_ComputeNewPosition( MWContext *context, intn chunkType,
                         }
                     }
                 }
-
-                result = TRUE;    /* Bogus -- should remove. */
                 wordEdge = caret;
            }
            else
            {
-                /* If we are searching backwards,
-                 * we want the character before the character we're currently on.
-                 */
                 result = TRUE;
                 if ( !bForward )
                 {
+                    /* We are searching backwards,
+                     * we want the character before the character we're currently on.
+                     */
                     result = lo_BumpEditablePosition(context, state, &caret.element, &caret.position, bForward);
                 }
                 if ( result )

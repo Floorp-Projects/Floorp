@@ -10753,7 +10753,7 @@ void CEditBuffer::ConvertCurrentDocToNewDoc()
     while (pLeaf) {
         ED_LinkId linkId = pLeaf->Leaf()->GetHREF();
         if (linkId && !linkManager.GetAdjusted(linkId)) {
-            linkManager.AdjustLink(linkId, pBaseURL, NULL, NULL);          
+            linkManager.AdjustLink(linkId, pBaseURL, (char*)NULL, (ED_HREFList *)NULL);
             linkManager.SetAdjusted(linkId,TRUE);
         }
         pLeaf = pLeaf->FindNextElement(&CEditElement::FindLeafAll,0 );
@@ -17009,12 +17009,12 @@ void CEditBuffer::CleanupForDeletedElement(CEditElement *pElement)
         {
             if( pElement->IsTable() )
             {
-                SelectTable(FALSE, NULL, (CEditTableElement*)pElement);
+                SelectTable(FALSE, (LO_TableStruct*)NULL, (CEditTableElement*)pElement);
                 return;
             }
             else if( pElement->IsTableCell() )
             {
-                SelectCell(FALSE, NULL, (CEditTableCellElement*)pElement);
+                SelectCell(FALSE, (LO_CellStruct*)NULL, (CEditTableCellElement*)pElement);
                 return;
             }
         }
