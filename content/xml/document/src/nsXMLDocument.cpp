@@ -1026,9 +1026,15 @@ nsXMLDocument::GetElementById(const nsAReadableString& aElementId,
   if (aElementId.IsEmpty())
     return NS_OK;
 
+  // If we tried to load a document and something went wrong, we might not have
+  // root content. This can happen when you do document.load() and the document
+  // to load is not XML, for example.
+  if (!mRootContent)
+    return NS_OK;
+
   // XXX For now, we do a brute force search of the content tree.
   // We should come up with a more efficient solution.
-  nsCOMPtr<nsIContent> content = do_QueryInterface(MatchName(mRootContent,aElementId));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(MatchName(mRootContent,aElementId)));
 
   nsresult rv = NS_OK;
   if (content) {
