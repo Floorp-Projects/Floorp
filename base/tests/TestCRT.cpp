@@ -32,8 +32,8 @@ static void Check(const char* s1, const char* s2, PRIntn n)
   PRIntn clib_case_n = PL_strncasecmp(s1, s2, n);
 
   nsAutoString t1(s1), t2(s2);
-  PRUnichar* us1 = t1.GetUnicode();
-  PRUnichar* us2 = t2.GetUnicode();
+  const PRUnichar* us1 = t1.GetUnicode();
+  const PRUnichar* us2 = t2.GetUnicode();
 
   PRIntn u = nsCRT::strcmp(us1, s2);
   PRIntn u_n = nsCRT::strncmp(us1, s2, n);
