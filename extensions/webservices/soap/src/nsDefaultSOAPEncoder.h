@@ -36,19 +36,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsDefaultSOAPEncoder_h__
-#define nsDefaultSOAPEncoder_h__
+#ifndef nsDefaultSOAPEncoding_h__
+#define nsDefaultSOAPEncoding_h__
 
 #include "nsSOAPEncoding.h"
 
-class nsDefaultSOAPEncoder_1_1:public nsSOAPEncoding {
+class nsDefaultSOAPEncoding_1_1:public nsSOAPEncoding {
 public:
-  nsDefaultSOAPEncoder_1_1();
+
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
+  nsDefaultSOAPEncoding_1_1();
+  virtual ~nsDefaultSOAPEncoding_1_1() {}
 };
 
-class nsDefaultSOAPEncoder_1_2:public nsSOAPEncoding {
+class nsDefaultSOAPEncoding_1_2:public nsSOAPEncoding {
 public:
-  nsDefaultSOAPEncoder_1_2();
+
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
+
+  nsDefaultSOAPEncoding_1_2();
+  virtual ~nsDefaultSOAPEncoding_1_2() {}
 };
 
 #endif

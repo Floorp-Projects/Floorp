@@ -297,16 +297,16 @@ interface nsISOAPEncoding : nsISupports {
 "@mozilla.org/xmlextras/soap/encoding;1"
 #define NS_SOAPENCODING_CONTRACTID_PREFIX \
 NS_SOAPENCODING_CONTRACTID "?uri="
-#define NS_DEFAULTSOAPENCODER_1_1_CID                            \
+#define NS_DEFAULTSOAPENCODING_1_1_CID                            \
 { /* 06fb035c-1dd2-11b2-bc30-f6d8e314d6b9 */        \
   0x06fb035c, 0x1dd2, 0x11b2,                       \
  {0xbc, 0x30, 0xf6, 0xd8, 0xe3, 0x14, 0xd6, 0xb9} }
-#define NS_DEFAULTSOAPENCODER_1_1_CONTRACTID \
+#define NS_DEFAULTSOAPENCODING_1_1_CONTRACTID \
 NS_SOAPENCODING_CONTRACTID_PREFIX "http://schemas.xmlsoap.org/soap/encoding/"
-#define NS_DEFAULTSOAPENCODER_1_2_CID                            \
+#define NS_DEFAULTSOAPENCODING_1_2_CID                            \
 { /* e0ee4044-1dd1-11b2-9d7e-8899d4d89648 */        \
   0xe0ee4044, 0x1dd1, 0x11b2,                       \
  {0x9d, 0x7e, 0x88, 0x99, 0xd4, 0xd8, 0x96, 0x48} }
-#define NS_DEFAULTSOAPENCODER_1_2_CONTRACTID \
+#define NS_DEFAULTSOAPENCODING_1_2_CONTRACTID \
 NS_SOAPENCODING_CONTRACTID_PREFIX "http://www.w3.org/2001/09/soap-encoding"
 %}

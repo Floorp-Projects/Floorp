@@ -58,7 +58,7 @@
 static PRBool PR_CALLBACK
 DeleteEncodingEntry(nsHashKey *aKey, void *aData, void *aClosure)
 {
-  NS_DELETEXPCOM(aData);
+  NS_DELETEXPCOM((nsISOAPEncoding*)aData);
   return PR_TRUE;
 }
 
@@ -73,7 +73,7 @@ nsSOAPEncodingRegistry::nsSOAPEncodingRegistry(nsISOAPEncoding *aEncoding)
 : mEncodings(nsnull, nsnull, DeleteEncodingEntry, nsnull, 4)
 {
   nsAutoString style;
-  nsresult rc = aEncoding->GetStyleURI(style);
+  aEncoding->GetStyleURI(style);
   NS_ASSERTION(!style.IsEmpty(), "nsSOAPEncoding Regsitry constructed without style");
 
   nsStringKey styleKey(style);
@@ -177,7 +177,7 @@ nsSOAPEncoding::nsSOAPEncoding() : mEncoders(),
 {
   mStyleURI.Assign(nsSOAPUtils::kSOAPEncURI11);
   mRegistry = new nsSOAPEncodingRegistry(this);
-  mDefaultEncoding = do_GetService(NS_DEFAULTSOAPENCODER_1_1_CONTRACTID);
+  mDefaultEncoding = do_GetService(NS_DEFAULTSOAPENCODING_1_1_CONTRACTID);
 }
 
 nsSOAPEncoding::nsSOAPEncoding(const nsAString & aStyleURI, 
