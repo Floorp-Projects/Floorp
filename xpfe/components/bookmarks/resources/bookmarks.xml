@@ -343,7 +343,6 @@
           case "cmd_bm_open":
           case "cmd_bm_openinnewwindow":
           case "cmd_bm_openfolder":
-          case "cmd_bm_openfolderinnewwindow":
           case "cmd_bm_newbookmark":
           case "cmd_bm_newfolder":
           case "cmd_bm_newseparator":
@@ -376,10 +375,9 @@
             // container item.
             return bo.view.rowCount && bo.selection.count == 1 && bo.view.isContainer(this.mOuter.firstSelectedIndex);
           case "cmd_bm_open":
-          case "cmd_bm_openinnewwindow":
-            if (bo.selection.count != 1) 
-              return false;
             return this.mOuter.getTypeAtIndex(this.mOuter.firstSelectedIndex) == this.mOuter.NC_NS + "Bookmark";
+          case "cmd_bm_openinnewwindow":
+            return true;
           case "cmd_bm_rename":
           case "cmd_bm_properties":
             if (bo.selection.count != 1)  
@@ -415,10 +413,6 @@
             return bo.selection.count >= 1;
           case "cmd_bm_paste":
             return this.mOuter.canPaste();
-          case "cmd_bm_openfolderinnewwindow":
-            if (bo.selection.count != 1)
-              return false;
-            return this.mOuter.getTypeAtIndex(this.mOuter.firstSelectedIndex) == this.mOuter.NC_NS + "Folder";
           case "cmd_bm_setnewbookmarkfolder":
           case "cmd_bm_setpersonaltoolbarfolder":
           case "cmd_bm_setnewsearchfolder":
@@ -468,13 +462,17 @@
             this.mOuter.selectAll();
             break;
           case "cmd_bm_open":
-            this.mOuter.openItem(true);
+            this.mOuter.openItem(null, false);
             break;
           case "cmd_bm_openfolder":
             this.mOuter.outlinerBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
             break;
-          case "cmd_bm_openfolderinnewwindow":
-            this.mOuter.openFolderInNewWindow();
+          case "cmd_bm_openinnewwindow":
+            var type = this.mOuter.getTypeAtIndex(this.mOuter.currentIndex);
+            if (type == this.mOuter.NC_NS + "Folder")
+              this.mOuter.openFolderInNewWindow();
+            else
+              this.mOuter.openItem(null, true);
             break;
           case "cmd_bm_newbookmark":
             this.mOuter.addBookmark();
@@ -523,7 +521,7 @@
                           "cmd_bm_setpersonaltoolbarfolder", 
                           "cmd_bm_setnewbookmarkfolder",
                           "cmd_bm_setnewsearchfolder", "cmd_bm_fileBookmark", 
-                          "cmd_bm_openfolderinnewwindow", "cmd_bm_openfolder"];
+                          "cmd_bm_openfolder"];
           for (var i = 0; i < commands.length; ++i) {
             var enabled = this.controller.isCommandEnabled(commands[i]);
             var commandNode = document.getElementById(commands[i]);
@@ -1144,13 +1142,13 @@
                         "bm_newfolder"];
             break;
           case "http://home.netscape.com/NC-rdf#Bookmark":
-            commands = ["bm_open", "bm_separator", "bm_cut", 
+            commands = ["bm_open", "bm_openinnewwindow", "bm_separator", "bm_cut", 
                         "bm_copy", "bm_paste", "bm_delete", "bm_separator", "bm_rename",
                         "bm_separator", "bm_fileBookmark", "bm_separator", "bm_newfolder", 
                         "bm_separator", "bm_properties"];
             break;
           case "http://home.netscape.com/NC-rdf#Folder":
-            commands = ["bm_openfolder", "bm_openfolderinnewwindow", "bm_separator", 
+            commands = ["bm_openfolder", "bm_openinnewwindow", "bm_separator", 
                         "bm_cut", "bm_copy", "bm_paste", "bm_delete", "bm_separator", "bm_rename", 
                         "bm_separator", "bm_fileBookmark", "bm_separator", 
                         "bm_newfolder", "bm_separator", "bm_properties"];
@@ -1559,17 +1557,33 @@
         <body><![CDATA[
           if (this.outlinerBoxObject.view.isContainer(this.outlinerBoxObject.selection.currentIndex))
             return;
-          var urlRes = this.rdf.GetResource(this.NC_NS + "URL");
-          var urlValue = this.db.GetTarget(this.currentRes, urlRes, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     
-          // Ignore "NC:" and empty urls.
-          if (urlValue.substring(0,3) == "NC:" || !urlValue) return;
+          var urlRes, urlValue;
           if (aEvent && aEvent.altKey)
             this.openPropertiesForItem();
-          else if (aInNewWindow)
-            openDialog (this._browserURL, "_blank", "chrome,all,dialog=no", urlValue);
-          else
+          else if (aInNewWindow) {
+            var seln = this.outlinerBoxObject.selection;
+            var rangeCount = seln.getRangeCount();
+            for (var i = rangeCount - 1; i >= 0; --i) {
+              var rangeMin = { };
+              var rangeMax = { };
+              seln.getRangeAt(i, rangeMin, rangeMax);
+              for (var k = rangeMax.value; k >= rangeMin.value; --k) {
+                urlRes = this.rdf.GetResource(this.NC_NS + "URL");
+                urlValue = this.db.GetTarget(this.outlinerBuilder.getResourceAtIndex(k), urlRes, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+                // Ignore "NC:" and empty urls
+                if (!urlValue || urlValue.substring(0,3) == "NC:") return;
+                openDialog (this._browserURL, "_blank", "chrome,all,dialog=no", urlValue);
+              }
+            }
+          }
+          else {
+            urlRes = this.rdf.GetResource(this.NC_NS + "URL");
+            urlValue = this.db.GetTarget(this.currentRes, urlRes, true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+            // Ignore "NC:" and empty urls
+            if (!urlValue || urlValue.substring(0,3) == "NC:") return;
             openTopWin(urlValue);
+          }
           if (aEvent) 
             aEvent.preventBubble();
         ]]></body>
@@ -1603,7 +1617,7 @@
         <outliner flex="1" flags="dont-test-empty" anonid="bookmarks-outliner" enableColumnDrag="true"
                            onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.openItem(event, true);">
           <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
-                        ondblclick="this.parentNode.parentNode.parentNode.openItem(event, true);"
+                        ondblclick="this.parentNode.parentNode.parentNode.openItem(event, false);"
                         ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode.parentNode.DNDObserver);"
                         onselect="this.parentNode.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
             <template>
@@ -1654,7 +1668,7 @@
                          onkeypress="if (event.keyCode == 13) this.parentNode.openItem(event, false);">
         <outlinerbody anonid="bookmarks-outlinerbody" datasources="rdf:bookmarks rdf:internetsearch rdf:files rdf:localsearch" flex="1" ref="NC:BookmarksRoot"
                       ondraggesture="nsDragAndDrop.startDrag(event, this.parentNode.parentNode.DNDObserver);"
-                      onclick="this.parentNode.parentNode.openItem(event, false);"
+                      onclick="if (event.button == 0) this.parentNode.parentNode.openItem(event, false);"
                       onselect="this.parentNode.parentNode.outlinerBoxObject.view.selectionChanged();">
           <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
