@@ -679,6 +679,9 @@ nsresult nsMsgCompose::SetDocumentCharset(const char *charset)
 	// Set charset, this will be used for the MIME charset labeling.
 	m_compFields->SetCharacterSet(charset);
 	
+  // notify the change to editor
+  m_editor->SetDocumentCharacterSet(NS_ConvertASCIItoUCS2(charset).get());
+
 	return NS_OK;
 }
 
