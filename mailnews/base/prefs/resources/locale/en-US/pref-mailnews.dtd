@@ -38,5 +38,5 @@ Rights Reserved.
 <!ENTITY playSound.label "Play sound when messages arrive">
 <!ENTITY rememberLastMsg.label "Remember the last selected message">
 <!ENTITY confirmMove.label "Confirm when moving folders to the trash">
-<!ENTITY useMessenger.label "Use Netscape Messenger from MAPI-based applications">
+<!ENTITY useMessenger.label "Use Mozilla Messenger from MAPI-based applications">
 

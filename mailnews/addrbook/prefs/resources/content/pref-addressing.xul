@@ -31,7 +31,6 @@
 			<html:input id="dirCheck" type="checkbox" class="indent"/>
 			<html:label for="dirCheck">&dirCheck.label;</html:label>
 			<html:select>
-				<html:option>&nsbook.label;</html:option>
 			</html:select>
 		</html:div>
 		
@@ -64,11 +63,6 @@
 			<html:tr><html:td>
 				<html:input type="checkbox"/>
 				<html:label>&dirCheck.label;</html:label>
-			</html:td></html:tr>
-			<html:tr><html:td>
-				<html:select>
-				<html:option>&nsbook.label;</html:option>
-				</html:select>
 			</html:td></html:tr>
 		<html:tr><html:td>&mulFound.label;</html:td></html:tr>
 			<html:tr><html:td>

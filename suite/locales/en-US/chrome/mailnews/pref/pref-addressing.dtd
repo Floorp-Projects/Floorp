@@ -25,7 +25,6 @@ Rights Reserved.
 <!ENTITY lookFor.label "Look for addresses in the following:">
 <!ENTITY padCheck.label "Address Books">
 <!ENTITY dirCheck.label "Directory Server">
-<!ENTITY nsbook.label "Netscape Phonebook">
 <!ENTITY mulFound.label "When there are multiple addresses found:">
 <!ENTITY showList.label "Show me a list of choices">
 <!ENTITY acceptList.label "Accept what I have typed">

@@ -1,10 +1,10 @@
 <!-- extracted from aw-accounttype.xul -->
 
 <!ENTITY accountTypeTitle.label "New Account Setup">
-<!ENTITY accountTypeDesc.label "This Wizard will collect the information necessary to setup a new Netscape Mail account. If you do not know the information requested, please contact your System Administrator or Internet Service Provider.">
+<!ENTITY accountTypeDesc.label "This Wizard will collect the information necessary to setup a new Mozilla Mail account. If you do not know the information requested, please contact your System Administrator or Internet Service Provider.">
 <!ENTITY accountTypeDirections.label "Select the type of account you would like to setup:">
 <!ENTITY accountTypeMail.label "Mail">
 <!ENTITY accountTypeNews.label "News">
-<!ENTITY accountTypeWebMail.label "Netscape WebMail">
+<!ENTITY accountTypeWebMail.label "WebMail">
 <!ENTITY webMailNew.label "New Account">
 <!ENTITY webMailExisting.label "Existing Account">

@@ -7,8 +7,8 @@
 <!ENTITY usernameLabel.label "User Name:">
 
 <!ENTITY passwordTitle.label "Password Storage">
-<!ENTITY savePasswordDesc.label "Netscape Mail can save your password and send it to the server so that you are not asked for it each time you access this account. This is not recommended if other people have access to your computer.">
-<!ENTITY savePasswordLabel.label "If you want Netscape Mail to save your password, check the box below.">
+<!ENTITY savePasswordDesc.label "Mozilla Mail can save your password and send it to the server so that you are not asked for it each time you access this account. This is not recommended if other people have access to your computer.">
+<!ENTITY savePasswordLabel.label "If you want Mozilla Mail to save your password, check the box below.">
 <!ENTITY savePasswordCheckbox.label "Save my password">
 
 <!ENTITY passwordDesc.label "Enter the password given to you by your email provider">
