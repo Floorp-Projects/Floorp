@@ -39,6 +39,9 @@
  * ***** END LICENSE BLOCK ***** */
 #include "stdafx.h"
 
+#include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
+
 #include "nsIMozAxPlugin.h"
 #include "nsIClassInfo.h"
 #include "nsIVariant.h"
@@ -311,6 +314,9 @@ nsScriptablePeer::ConvertVariants(VARIANT *aIn, nsIVariant **aOut)
     {
         return NS_ERROR_INVALID_ARG;
     }
+
+    nsresult rv;
+    nsCOMPtr<nsIWritableVariant> v = do_CreateInstance("@mozilla.org/variant;1", &rv); 
 
     return E_NOTIMPL;
 } 
@@ -595,5 +601,7 @@ NS_IMETHODIMP nsScriptablePeer::SetProperty(const char *propertyName, nsIVariant
     { 
         return NPERR_GENERIC_ERROR;
     }
+
     return NS_OK;
 }
+

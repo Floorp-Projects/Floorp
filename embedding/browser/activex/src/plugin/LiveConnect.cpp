@@ -42,21 +42,21 @@
 #include "jni.h"
 #include "npapi.h"
 
-#include "_gen/java_lang_Throwable.h"
-#include "_gen/java_lang_Error.h"
-#include "_gen/java_lang_String.h"
-#include "_gen/java_lang_Boolean.h"
-#include "_gen/java_lang_Number.h"
-#include "_gen/java_lang_Integer.h"
-#include "_gen/java_lang_Long.h"
+#include "_java/java_lang_Throwable.h"
+#include "_java/java_lang_Error.h"
+#include "_java/java_lang_String.h"
+#include "_java/java_lang_Boolean.h"
+#include "_java/java_lang_Number.h"
+#include "_java/java_lang_Integer.h"
+#include "_java/java_lang_Long.h"
 // TODO:
 // These things require certain native statics to be implemented
 // so they're commented out for the time being.
-//#include "_gen/java_lang_Double.h"
-//#include "_gen/java_lang_Float.h"
-#include "_gen/java_lang_Character.h"
-#include "_gen/netscape_plugin_Plugin.h"
-#include "_gen/MozAxPlugin.h"
+//#include "_java/java_lang_Double.h"
+//#include "_java/java_lang_Float.h"
+#include "_java/java_lang_Character.h"
+#include "_java/netscape_plugin_Plugin.h"
+#include "_java/MozAxPlugin.h"
 
 #include "LegacyPlugin.h"
 
