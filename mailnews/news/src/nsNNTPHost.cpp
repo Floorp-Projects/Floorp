@@ -23,7 +23,7 @@
 static NS_DEFINE_CID(kNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
 static NS_DEFINE_CID(kNNTPNewsgroupListCID, NS_NNTPNEWSGROUPLIST_CID);
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 static const char LINEBREAK_START = '\012';
 #else
 static const char LINEBREAK_START = '\015';
@@ -212,7 +212,7 @@ nsNNTPHost::WriteNewsrc()
 	
 	PRInt32 status = 0;
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 	/* Clone the permissions of the "real" newsrc file into the temp file,
 	   so that when we rename the finished temp file to the real file, the
 	   preferences don't appear to change. */
@@ -225,7 +225,7 @@ nsNNTPHost::WriteNewsrc()
 		/* SCO doesn't define fchmod at all.  no big deal.
 		   AIX3, however, defines it to take a char* as the first parameter.  The
 		   man page says it takes an int, though.  ... */
-#if defined( SCO_SV ) || defined ( AIXV3 )
+#if defined( SCO_SV ) || defined ( AIXV3 ) || defined(XP_BEOS)
 	  {
 	    		char *really_tmp_file = WH_FileName(GetNewsrcFileName(), xpTemporaryNewsRC);
 

@@ -32,7 +32,7 @@ static const char kNewsMessageRootURI[] = "news_message:/";
  * some platforms (like Windows and Mac) use a map file, because of
  * file name length limitations.
  */
-#ifndef XP_UNIX
+#if !defined(XP_UNIX) && !defined(XP_BEOS)
 #define USE_NEWSRC_MAP_FILE
 
 #if defined(XP_PC)
@@ -48,7 +48,7 @@ static const char kNewsMessageRootURI[] = "news_message:/";
 #error dont_know_what_your_fat_file_is
 #endif
 
-#endif /* ! XP_UNIX */
+#endif /* ! XP_UNIX && ! XP_BEOS */
 
 extern nsresult
 nsGetNewsHostName(const char *rootURI, const char *uriStr, char **hostName);

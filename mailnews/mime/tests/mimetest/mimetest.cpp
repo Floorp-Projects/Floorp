@@ -48,7 +48,7 @@
 #define MIME_DLL  "mime.dll"
 #define PREF_DLL  "xppref32.dll"
 #define UNICHAR_DLL  "uconv.dll"
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 #define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
 #define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
 #define MIME_DLL  "libmime.dll"MOZ_DLL_SUFFIX
