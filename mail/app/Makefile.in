@@ -47,7 +47,7 @@ DEFINES += -DTHUNDERBIRD_ICO=\"$(DIST)/branding/thunderbird.ico\"
 DIRS		= profile
 
 PREF_JS_EXPORTS = \
-    $(srcdir)/profile/thunderbird.js \
+    $(srcdir)/profile/all-thunderbird.js \
     $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
@@ -248,7 +248,7 @@ install:: thunderbird
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
 GARBAGE += thunderbird
-GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js thunderbird.js mailnews.js)
+GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js all-thunderbird.js mailnews.js)
 endif
 
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
