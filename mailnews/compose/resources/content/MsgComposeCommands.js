@@ -261,6 +261,72 @@ function SaveAsTemplate()
   GenericSendMessage(5);
 }
 
+
+function MessageFcc(menuItem)
+{
+	// Get the id for the folder we're FCC into
+	destUri = menuItem.getAttribute('id');
+	dump(destUri);
+}
+
+function PriorityMenuSelect(target)
+{
+	dump("Set Message Priority to " + target.getAttribute('id') + "\n");
+	if (msgCompose)
+	{
+		var msgCompFields = msgCompose.compFields;
+		if (msgCompFields)
+			msgCompFields.SetPriority(target.getAttribute('id'));
+	}
+}
+
+function ReturnReceiptMenuSelect()
+{
+	if (msgCompose)
+	{
+		var msgCompFields = msgCompose.compFields;
+		if (msgCompFields)
+		{
+			if (msgCompFields.GetReturnReceipt())
+			{
+				dump("Set Return Receipt to FALSE\n");
+				msgCompFields.SetReturnReceipt(false);
+			}
+			else
+			{
+				dump("Set Return Receipt to TRUE\n");
+				msgCompFields.SetReturnReceipt(true);
+			}
+		}
+	}
+}
+
+function UUEncodeMenuSelect()
+{
+	if (msgCompose)
+	{
+		var msgCompFields = msgCompose.compFields;
+		if (msgCompFields)
+		{
+			if (msgCompFields.GetUUEncodeAttachments())
+			{
+				dump("Set Return UUEncodeAttachments to FALSE\n");
+				msgCompFields.SetUUEncodeAttachments(false);
+			}
+			else
+			{
+				dump("Set Return UUEncodeAttachments to TRUE\n");
+				msgCompFields.SetUUEncodeAttachments(true);
+			}
+		}
+	}
+}
+
+function OutputFormatMenuSelect(target)
+{
+//	dump(target.getAttribute('id') + "\n");
+}
+
 function SelectAddress() 
 {
 	var msgCompFields = msgCompose.compFields;
