@@ -187,3 +187,62 @@ rdf_MakeAbsoluteURI(nsIURI* aBase, nsCString& aURI)
 
     return NS_OK;
 }
+
+void
+rdf_FormatDate(PRTime aTime, nsACString &aResult)
+{
+    // Outputs Unixish date in GMT plus usecs; e.g.,
+    //   Wed Jan  9 19:15:13 GMT 2002 +002441
+    //
+    PRExplodedTime t;
+    PR_ExplodeTime(aTime, PR_LocalTimeParameters, &t);
+
+    char buf[32];
+    PR_FormatTimeUSEnglish(buf, sizeof buf, "%a %b %d %H:%M:%S %Z %Y", &t);
+    aResult.Append(buf);
+
+    // usecs
+    aResult.Append(" +");
+    PRInt32 usec = t.tm_usec;
+    for (PRInt32 digit = 100000; digit > 1; digit /= 10) {
+        aResult.Append(char('0' + (usec / digit)));
+        usec %= digit;
+    }
+    aResult.Append(char('0' + usec));
+}
+
+PRTime
+rdf_ParseDate(const nsACString &aTime)
+{
+    PRTime t;
+    PR_ParseTimeString(PromiseFlatCString(aTime).get(), PR_TRUE, &t);
+
+    PRInt32 usec = 0;
+
+    nsACString::const_iterator begin, digit, end;
+    aTime.BeginReading(begin);
+    aTime.EndReading(end);
+
+    // Walk backwards until we find a `+', run out of string, or a
+    // non-numeric character.
+    digit = end;
+    while (--digit != begin && *digit != '+') {
+        if (*digit < '0' || *digit > '9')
+            break;
+    }
+
+    if (digit != begin && *digit == '+') {
+        // There's a usec field specified (or, at least, something
+        // that looks close enough. Parse it, and add it to the time.
+        while (++digit != end) {
+            usec *= 10;
+            usec += *digit - '0';
+        }
+
+        PRTime temp;
+        LL_I2L(temp, usec);
+        LL_ADD(t, t, temp);
+    }
+
+    return t;
+}
