@@ -45,7 +45,7 @@ en-US.jar:
     locale/en-US/communicator/wallet/WalletEditor.dtd         (editor/WalletEditor.dtd)
     locale/en-US/communicator/wallet/SignonViewer.properties  (signonviewer/SignonViewer.properties)
     locale/en-US/communicator/wallet/SignonViewer.dtd         (signonviewer/SignonViewer.dtd)
-    locale/en-US/communicator/wallet/WalletPreview.properties (walletpreview/WalletPreview.properties)
+    locale/en-US/communicator/wallet/WalletPreview.dtd        (walletpreview/WalletPreview.dtd)
     locale/en-US/communicator/wallet/cookie.properties        (src/cookie.properties)
     locale/en-US/communicator/wallet/wallet.properties        (src/wallet.properties)
     locale/en-US/communicator/wallet/privacy.dtd              (editor/privacy.dtd)

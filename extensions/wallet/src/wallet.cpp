@@ -3318,16 +3318,17 @@ WLLT_PrefillReturn(const nsString& results)
     }
 
     /* Change the value */
-     if ((next == mapElementPtr->value) || ((mapElementPtr->count>0) && next.IsEmpty())) {
-       if (((next == mapElementPtr->value) || next.IsEmpty()) && mapElementPtr->inputElement) {
-         mapElementPtr->inputElement->SetValue(next);
-       } else {
-         nsresult result;
-         result = wallet_GetSelectIndex(mapElementPtr->selectElement, next, mapElementPtr->selectIndex);
-         if (NS_SUCCEEDED(result)) {
-           mapElementPtr->selectElement->SetSelectedIndex(mapElementPtr->selectIndex);
-         } else {
-           mapElementPtr->selectElement->SetSelectedIndex(0);
+
+    if (!next.IsEmpty()) {
+      if (mapElementPtr->inputElement) {
+        mapElementPtr->inputElement->SetValue(next);
+      } else {
+        nsresult result;
+        result = wallet_GetSelectIndex(mapElementPtr->selectElement, next, mapElementPtr->selectIndex);
+        if (NS_SUCCEEDED(result)) {
+          mapElementPtr->selectElement->SetSelectedIndex(mapElementPtr->selectIndex);
+        } else {
+          mapElementPtr->selectElement->SetSelectedIndex(0);
         }
       }
     }

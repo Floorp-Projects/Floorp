@@ -23,10 +23,9 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/SignonViewer.dtd" >
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/WalletPreview.dtd" >
 
-<window id="walletpreview"
-        title="&windowtitle.label;"
+<window title="&windowtitle.label;"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         align="vertical"
@@ -35,31 +34,21 @@
 
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
   <script type="application/x-javascript" src="chrome://communicator/content/wallet/WalletPreview.js"/>
+  <script type="application/x-javascript" src="chrome://wallet/content/walletOverlay.js"/>
 
   <keyset id="keyset"/>
            
-  <label id="heading"/>
+  <box>
+    <text value="&heading.label;"/>
+    <spring flex="100%"/>
+    <button label="&viewdata.label;" oncommand="formShow();"/>
+  </box>
 
   <spring style="height: 20px;"/>
-
-  <grid class="indent">
-    <columns>
-      <column width="150"/>
-      <column width="250"/>
-    </columns>
-    <rows>
-      <row>
-        <text id="fieldHeading"/>
-        <text id="valueHeading"/>
-      </row>
-    </rows>
-  </grid>
-
-  <spring style="height: 20px;"/>
-
   <box class="tabpanel" autostretch="never" style="overflow: auto; height: 260px;">
     <grid class="indent">
       <columns>
+        <column width="25"/>
         <column width="150"/>
         <column width="250"/>
       </columns>
@@ -71,7 +60,7 @@
   <spring style="height: 20px;"/>
 
   <box align="horizontal">
-    <checkbox id="checkbox"/>
+    <checkbox id="checkbox" label="&bypass.label;"/>
     <spring flex="100%"/>
   </box>
 

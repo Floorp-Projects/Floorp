@@ -21,13 +21,6 @@
  * Contributor(s): 
  */
 
-/* for localization */
-var JS_STRINGS_FILE = "chrome://communicator/locale/wallet/WalletPreview.properties";
-var bundle = srGetStrBundle(JS_STRINGS_FILE);
-var heading = bundle.GetStringFromName("heading");
-var bypass = bundle.GetStringFromName("bypass");
-var doNotPrefill = bundle.GetStringFromName("doNotPrefill");
-
 /* for xpconnect */
 var walletpreview =
     Components.classes
@@ -44,17 +37,6 @@ function Startup() {
   var list = walletpreview.GetPrefillValue();
   var BREAK = list[0];
   prefillList = list.split(BREAK);
-
-  /* create the heading */
-
-  var title = document.getElementById("walletpreview");
-  title.setAttribute("title", bundle.GetStringFromName("title"));
-  var heading = document.getElementById("heading");
-  heading.setAttribute("value", bundle.GetStringFromName("heading"));
-  var fieldHeading = document.getElementById("fieldHeading");
-  fieldHeading.setAttribute("value", bundle.GetStringFromName("fieldHeading"));
-  var valueHeading = document.getElementById("valueHeading");
-  valueHeading.setAttribute("value", bundle.GetStringFromName("valueHeading"));
 
   var menuPopup;
   var count;
@@ -74,42 +56,66 @@ function Startup() {
       menuItem.setAttribute("selected", "true");
     }
     menuItem.setAttribute("data", prefillList[i+1]);
-    menuItem.setAttribute("value", prefillList[i+2]);
+    menuItem.setAttribute("label", prefillList[i+2]);
     menuPopup.appendChild(menuItem);
 
     if(count == 0) {
-      var lastMenuItem = document.createElement("menuitem");
-      lastMenuItem.setAttribute("data", prefillList[i+1]);
-      lastMenuItem.setAttribute("value", "<"+doNotPrefill+">");
-      menuPopup.appendChild(lastMenuItem);
-
       var menuList = document.createElement("menulist");
-      menuList.setAttribute("id", "x"+(++fieldCount));
+      menuList.setAttribute("id", "xx"+(++fieldCount));
       menuList.setAttribute("allowevents", "true");
+      menuList.setAttribute("onchange", "UpdateMenuListValue(this)");
+//    menuList.setAttribute("editable", "true");  // done later to avoid crash
       menuList.appendChild(menuPopup);
 
-      var textBox = document.createElement("textbox");
-      textBox.setAttribute("value", prefillList[i+1]);
-      textBox.setAttribute("readonly", "true");
+      var text = document.createElement("text");
+      text.setAttribute("value", prefillList[i+1]);
+
+      var localCheckBox = document.createElement("checkbox");
+      localCheckBox.setAttribute("id", "x"+fieldCount);
+      // Note: menulist name is deliberately chosen to be x + checkbox name in
+      //       order to make it easy to get to menulist from associated checkbox
+      localCheckBox.setAttribute("oncommand", "UpdateMenuListEnable(this)");
+      localCheckBox.setAttribute("checked", "true");
 
       var row = document.createElement("row");
-      row.appendChild(textBox);
+      row.appendChild(localCheckBox);
+      row.appendChild(text);
       row.appendChild(menuList);
 
       var rows = document.getElementById("rows");
       rows.appendChild(row);
 
+      // xul bug: if this is done earlier, it will result in a crash (???)
+      menuList.setAttribute("editable", "true");
+
     }
   }
-
-  /* create checkbox label */
-
-  var checkBox = document.getElementById("checkbox");
-  checkBox.setAttribute("value", bypass);
 
   /* initialization OK and Cancel buttons */
 
   doSetOKCancel(Save, Cancel);
+}
+
+function UpdateMenuListValue(menuList) {
+  /* transfer value from menu list to the selected menu item */
+  var menuItem = menuList.selectedItem;
+  if (menuItem) {
+    menuItem.setAttribute('value', menuList.value);
+  }
+}
+
+function UpdateMenuListEnable(checkBox) {
+  var id = checkBox.getAttribute("id");
+  var menuList = document.getElementById("x" + id);
+  var menuItem = menuList.selectedItem;
+  if (checkBox.checked) {
+    menuList.removeAttribute("disabled");
+    menuList.setAttribute("editable", "true");
+  } else {
+    menuList.setAttribute("disabled", "true");
+    menuList.removeAttribute("editable");
+  }
+  menuList.selectedItem = menuItem;
 }
 
 function EncodeVerticalBars(s) {
@@ -124,10 +130,16 @@ function Save() {
   var fillins = "";
 
   for (var i=1; i<=fieldCount; i++) { 
-    var menuList = document.getElementById("x" + i);
-    fillins +=
-      menuList.selectedItem.getAttribute("data") + "#*%$" +
-      menuList.selectedItem.getAttribute("value") + "#*%$";
+    var menuList = document.getElementById("xx" + i);
+    var menuItem = menuList.selectedItem;
+    if (menuItem) {
+      fillins += menuItem.getAttribute("data") + "#*%$";
+      var localCheckBox = document.getElementById("x" + i);
+      if (localCheckBox.checked) {
+        fillins += menuItem.getAttribute("label");
+      }
+      fillins += "#*%$";
+    }
   }
 
   var checkBox = document.getElementById("checkbox");
