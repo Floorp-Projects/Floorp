@@ -118,6 +118,7 @@ toolbarbutton[type="menu-button"][disabled="true"]:hover:active {
   -moz-box-align: center;
   padding: 0 0 1px 0;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  -moz-image-region: auto; /* cut off inheritance */
 }
 
 .toolbarbutton-menubutton-dropmarker[disabled="true"] {
