@@ -117,6 +117,7 @@ public:
   NS_IMETHOD           Destroy();
   nsWindow*            FindTopLevelWindow(); // returns nsnull if WE are top level
   void                 ResizeTransparencyBitmap(PRInt32 aNewWidth, PRInt32 aNewHeight);
+  void                 ApplyTransparencyBitmap();
 #ifdef INCLUDE_XUL
   NS_IMETHOD           SetWindowTranslucency(PRBool aTransparent);
   NS_IMETHOD           GetWindowTranslucency(PRBool& aTransparent);

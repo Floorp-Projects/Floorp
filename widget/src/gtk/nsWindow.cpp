@@ -2577,6 +2577,17 @@ void nsWindow::SetInternalVisibility(PRBool aVisible)
 
   if (aVisible)
   {
+    // GTK wants us to set the window mask before we show the window
+    // for the first time, or setting the mask later won't work.
+    // GTK also wants us to NOT set the window mask if we're not really
+    // going to need it, because GTK won't let us unset the mask properly
+    // later.
+    // So, we delay setting the mask until the last moment: when the window
+    // is shown.
+    if (mTransparencyBitmap) {
+      ApplyTransparencyBitmap();
+    }
+
     // show mSuperWin
     gdk_window_show(mSuperWin->bin_window);
     gdk_window_show(mSuperWin->shell_window);
@@ -4387,6 +4398,18 @@ static void UpdateMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHe
   }
 }
 
+void nsWindow::ApplyTransparencyBitmap() {
+  gtk_widget_reset_shapes(mShell);
+  GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(mShell->window,
+                                                      mTransparencyBitmap,
+                                                      mBounds.width, mBounds.height);
+  if (!maskBitmap)
+    return NS_ERROR_FAILURE;
+
+  gtk_widget_shape_combine_mask(mShell, maskBitmap, 0, 0);
+  gdk_bitmap_unref(maskBitmap);
+}
+
 NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint8* aAlphas) {
   nsWindow* top = FindTopLevelWindow();
   if (top) {
@@ -4403,7 +4426,7 @@ NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint
     memset(mTransparencyBitmap, 255, size);
   }
 
-  NS_ASSERTION(aRect.x >= 0 && aRect.y >= 0 
+  NS_ASSERTION(aRect.x >= 0 && aRect.y >= 0
                && aRect.XMost() <= mBounds.width && aRect.YMost() <= mBounds.height,
                "Rect is out of window bounds");
 
@@ -4414,15 +4437,9 @@ NS_IMETHODIMP nsWindow::UpdateTranslucentWindowAlpha(const nsRect& aRect, PRUint
 
   UpdateMaskBits(mTransparencyBitmap, mBounds.width, mBounds.height, aRect, aAlphas);
 
-  gtk_widget_reset_shapes(mShell);
-  GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(mShell->window,
-                                                      mTransparencyBitmap,
-                                                      mBounds.width, mBounds.height);
-  if (!maskBitmap)
-    return NS_ERROR_FAILURE;
-
-  gtk_widget_shape_combine_mask(mShell, maskBitmap, 0, 0);
-  gdk_bitmap_unref(maskBitmap);
+  if (mShown) {
+    ApplyTransparencyBitmap();
+  }
 
   return NS_OK;
 }
