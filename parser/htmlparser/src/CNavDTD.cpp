@@ -1387,6 +1387,13 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
       result=CloseContainer(theNode,theChildTag,PR_FALSE);
       break;
 
+    case eHTMLTag_br:
+      {
+        CToken* theToken=(CHTMLToken*)gRecycler->CreateTokenOfType(eToken_start,eHTMLTag_br);
+        result=HandleStartToken(theToken);
+      }
+      break;
+
     default:
       {
         //now check to see if this token should be omitted, or 
