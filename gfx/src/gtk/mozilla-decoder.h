@@ -65,7 +65,7 @@ struct _MozillaDecoderClass
 };
 
 GType           mozilla_decoder_get_type (void);
-MozillaDecoder *mozilla_decoder_new      (void);
+int             mozilla_decoders_init    (void);
 
 G_END_DECLS
 
