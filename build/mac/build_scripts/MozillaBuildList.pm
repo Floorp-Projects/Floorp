@@ -996,7 +996,6 @@ sub BuildClientDist()
     
     #GFX
     InstallFromManifest(":mozilla:gfx:public:MANIFEST",                            "$distdirectory:gfx:");
-    InstallFromManifest(":mozilla:gfx:src:MANIFEST",                               "$distdirectory:gfx:");
     InstallFromManifest(":mozilla:gfx:idl:MANIFEST_IDL",                           "$distdirectory:idl:");
 
     #VIEW
