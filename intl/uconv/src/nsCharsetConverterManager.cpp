@@ -278,15 +278,19 @@ nsresult nsCharsetConverterManager::CreateMapping()
       if (!strcmp(src, "Unicode")) {
         str = new nsString(dest);
         GetCharsetName(str,&mEncArray[mEncSize].mCharset);
+        delete str;
         mEncArray[mEncSize].mCID = cid;
         mEncSize++;
       } else if (!strcmp(dest, "Unicode")) {
         str = new nsString(src);
         GetCharsetName(str,&mDecArray[mDecSize].mCharset);
+        delete str;
         mDecArray[mDecSize].mCID = cid;
         mDecSize++;
       }
 
+      nsCRT::free(src);
+      nsCRT::free(dest);
       nsCRT::free(name);
       NS_RELEASE(node);
       NS_RELEASE(base);
@@ -301,16 +305,9 @@ done:
     nsServiceManager::ReleaseService(NS_REGISTRY_PROGID, registry);
   }
 
+  NS_IF_RELEASE(components);
+
   return res;
-
-/*  XXX old code
-  mMappingDone = PR_TRUE;
-
-  nsresult res = CreateConvertersList();
-  if NS_FAILED(res) return res;
-
-  return GatherConvertersInfo();
-*/
 }
 
 // XXX Hack! These lists should be obtained from the Repository, in a Component 
