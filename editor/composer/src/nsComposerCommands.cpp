@@ -474,9 +474,12 @@ nsRemoveListCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * r
     PRUnichar *tagStr;
     nsresult rv = editorShell->GetListState(&bMixed, &tagStr);
     if (NS_FAILED(rv)) return rv;
-    
-    *outCmdEnabled = (tagStr && *tagStr != nsnull);
 
+    if (bMixed)
+      *outCmdEnabled = PR_TRUE;
+    else
+      *outCmdEnabled = (tagStr && *tagStr);
+    
     if (tagStr) nsCRT::free(tagStr);
   }
   

@@ -31,9 +31,15 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMSelection.h"
+#include "nsIDOMRange.h"
+#include "nsIDOMNSRange.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMNSUIEvent.h"
 #include "nsIDOMHTMLTableElement.h"
 #include "nsIDOMHTMLTableCellElement.h"
+
+#include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
 
 /*
  * nsEditorShellMouseListener implementation
@@ -160,104 +166,144 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     //non-ui event passed in.  bad things.
     return NS_OK;
   }
-
-  PRUint16 buttonNumber;
-  nsresult res = mouseEvent->GetButton(&buttonNumber);
+  // Don't do anything special if not an HTML editor
+  nsCOMPtr<nsIEditor> editor;
+  nsresult res = mEditorShell->GetEditor(getter_AddRefs(editor));
   if (NS_FAILED(res)) return res;
 
-  PRBool isContextClick;
-  // Test if special 'table selection' key is pressed when double-clicking
-  //  so we look for an enclosing cell or table
-  PRBool tableMode = PR_FALSE;
-
-#ifdef XP_MAC
-  // Cmd is Mac table-select key
-  res = mouseEvent->GetMetaKey(&tableMode);
-  if (NS_FAILED(res)) return res;
-
-  // Ctrl+Click for context menu
-  res = mouseEvent->GetCtrlKey(&isContextClick);
-#else
-  // Right mouse button for Windows, UNIX
-  isContextClick = buttonNumber == 3;
-  res = mouseEvent->GetCtrlKey(&tableMode);
-#endif
-  if (NS_FAILED(res)) return res;
-
-  nsCOMPtr<nsIDOMEventTarget> target;
-  res = aMouseEvent->GetTarget(getter_AddRefs(target));
-  if (NS_FAILED(res)) return res;
-  if (!target) return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
-
-  PRInt32 clickCount;
-  res = mouseEvent->GetDetail(&clickCount);
-  if (NS_FAILED(res)) return res;
-
-  PRBool NodeIsInSelection = PR_FALSE;
-
-  if (isContextClick || (buttonNumber == 1 && clickCount == 2))
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (htmlEditor)
   {
-    // Context menu or double click
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
-    if (node)
+    PRUint16 buttonNumber;
+    res = mouseEvent->GetButton(&buttonNumber);
+    if (NS_FAILED(res)) return res;
+
+    PRBool isContextClick;
+    // Test if special 'table selection' key is pressed when double-clicking
+    //  so we look for an enclosing cell or table
+    PRBool tableMode = PR_FALSE;
+
+  #ifdef XP_MAC
+    // Cmd is Mac table-select key
+    res = mouseEvent->GetMetaKey(&tableMode);
+    if (NS_FAILED(res)) return res;
+
+    // Ctrl+Click for context menu
+    res = mouseEvent->GetCtrlKey(&isContextClick);
+  #else
+    // Right mouse button for Windows, UNIX
+    isContextClick = buttonNumber == 3;
+    res = mouseEvent->GetCtrlKey(&tableMode);
+  #endif
+    if (NS_FAILED(res)) return res;
+
+    nsCOMPtr<nsIDOMEventTarget> target;
+    res = aMouseEvent->GetTarget(getter_AddRefs(target));
+    if (NS_FAILED(res)) return res;
+    if (!target) return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
+
+    PRInt32 clickCount;
+    res = mouseEvent->GetDetail(&clickCount);
+    if (NS_FAILED(res)) return res;
+
+    nsCOMPtr<nsIDOMSelection> selection;
+    mEditorShell->GetEditorSelection(getter_AddRefs(selection));
+    if (!selection) return NS_OK;
+
+    nsCOMPtr<nsIDOMNode> parent;
+    PRInt32 offset = 0;
+
+    // Get location of mouse within target node
+    nsCOMPtr<nsIDOMNSUIEvent> uiEvent = do_QueryInterface(aMouseEvent);
+    if (!uiEvent) return NS_ERROR_FAILURE;
+
+    res = uiEvent->GetRangeParent(getter_AddRefs(parent));
+    if (NS_FAILED(res)) return res;
+    if (!parent) return NS_ERROR_FAILURE;
+
+    res = uiEvent->GetRangeOffset(&offset);
+    if (NS_FAILED(res)) return res;
+
+    // Detect if mouse point is withing current selection
+    PRBool NodeIsInSelection = PR_FALSE;
+    PRBool isCollapsed;
+    selection->GetIsCollapsed(&isCollapsed);
+
+    if (!isCollapsed)
     {
-      nsCOMPtr<nsIDOMSelection> selection;
-      mEditorShell->GetEditorSelection(getter_AddRefs(selection));
-      if (selection)
+      PRInt32 rangeCount;
+      res = selection->GetRangeCount(&rangeCount);
+      if (NS_FAILED(res)) return res;
+
+      for (PRInt32 i = 0; i < rangeCount; i++)
       {
-        res = selection->ContainsNode(node, PR_TRUE, &NodeIsInSelection);
-        // Kludge: We really want to reposition the caret exactly as done for
-        //  left mouse button, but we never reach the frame's HandlePress method.
-        //  Thus for text nodes, the best we can do is reposition to the start of the node,
-        //   but only if not already selected, of course
-        if (!NodeIsInSelection)
-          selection->Collapse(node, 0);
+        nsCOMPtr<nsIDOMRange> range;
+
+        res = selection->GetRangeAt(i, getter_AddRefs(range));
+        if (NS_FAILED(res) || !range) 
+          continue;//dont bail yet, iterate through them all
+
+        nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
+        if (NS_FAILED(res) || !nsrange) 
+          continue;//dont bail yet, iterate through them all
+
+        res = nsrange->IsPointInRange(parent, offset, &NodeIsInSelection);
       }
-      
-      // Get enclosing link
-      nsCOMPtr<nsIDOMElement> linkElement;
-      res = mEditorShell->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), node, getter_AddRefs(linkElement));
-      if (NS_FAILED(res)) return res;
-      if (linkElement)
-        element = linkElement;
     }
-  }
 
-  if (isContextClick)
-  {
-    // Set selection to node clicked on if NOT within an existing selection
-    if (element && !NodeIsInSelection)
-      mEditorShell->SelectElement(element);
-      // Always fall through to do other actions, such as context menu
-  }
-  else if (buttonNumber == 1)
-  {
-#ifdef DEBUG_cmanske
-//    printf("nsEditorShellMouseListener::MouseDown: clickCount=%d\n",clickCount);
-#endif
-
-    if (tableMode && clickCount == 2)
+    if (isContextClick || (buttonNumber == 1 && clickCount == 2))
     {
-      if (!GetParentCell(aMouseEvent, getter_AddRefs(element)))
-        GetParentTable(aMouseEvent, getter_AddRefs(element));
+      // Context menu or double click
+      nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
+      if (node && !NodeIsInSelection)
+      {
+        selection->Collapse(parent, offset);
+
+        // Get enclosing link
+        nsCOMPtr<nsIDOMElement> linkElement;
+        res = mEditorShell->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), node, getter_AddRefs(linkElement));
+        if (NS_FAILED(res)) return res;
+        if (linkElement)
+          element = linkElement;
+      }
     }
-    // No table or cell -- look for other element (ignore text nodes)
-    if (element)
+
+    if (isContextClick)
     {
-      PRInt32 x,y;
-      res = mouseEvent->GetClientX(&x);
-      if (NS_FAILED(res)) return res;
+      // Set selection to node clicked on if NOT within an existing selection
+      if (element && !NodeIsInSelection)
+        mEditorShell->SelectElement(element);
+        // Always fall through to do other actions, such as context menu
+    }
+    else if (buttonNumber == 1)
+    {
+      if (tableMode && clickCount == 2)
+      {
+        if (!GetParentCell(aMouseEvent, getter_AddRefs(element)))
+          GetParentTable(aMouseEvent, getter_AddRefs(element));
+      }
+      // No table or cell -- look for other element (ignore text nodes)
+      if (element)
+      {
+        PRInt32 x,y;
+        res = mouseEvent->GetClientX(&x);
+        if (NS_FAILED(res)) return res;
 
-      res = mouseEvent->GetClientY(&y);
-      if (NS_FAILED(res)) return res;
+        res = mouseEvent->GetClientY(&y);
+        if (NS_FAILED(res)) return res;
 
-      // Let editor decide what to do with this
-      PRBool handled = PR_FALSE;
-      mEditorShell->HandleMouseClickOnElement(element, clickCount, x, y, &handled);
+        // KLUDGE to work around bug 50703: Prevent drag/drop events until we are done
+        if (clickCount == 2)
+          htmlEditor->IgnoreSpuriousDragEvent(PR_TRUE);
 
-      if (handled)
-        mouseEvent->PreventDefault();
+        // Let editor decide what to do with this
+        PRBool handled = PR_FALSE;
+        mEditorShell->HandleMouseClickOnElement(element, clickCount, x, y, &handled);
+
+        if (handled)
+          mouseEvent->PreventDefault();
+      }
     }
   }
 
@@ -267,10 +313,7 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 nsresult
 nsEditorShellMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-#ifdef DEBUG_cmanske
-printf("* nsEditorShellMouseListener::MouseUp message\n");
-#endif
-  return NS_OK; // didn't handle event
+  return NS_OK;
 }
 
 nsresult

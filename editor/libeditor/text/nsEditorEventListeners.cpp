@@ -682,11 +682,11 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
   {
     nsresult rv;
     NS_WITH_SERVICE(nsIDragService, dragService, "component://netscape/widget/dragservice", &rv);
-	if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
     if (dragSession)
-	{
+    {
        PRBool flavorSupported = PR_FALSE;
       dragSession->IsDataFlavorSupported(kUnicodeMime, &flavorSupported);
       if ( !flavorSupported ) 
@@ -696,54 +696,73 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
       if ( !flavorSupported ) 
         dragSession->IsDataFlavorSupported(kJPEGImageMime, &flavorSupported);
       if (! flavorSupported ) 
-		return NS_OK;     
-	}
+        return NS_OK;     
+    }
 
+    nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aMouseEvent));
+    if (!nsuiEvent) return NS_OK;
 
     //some day we want to use another way to stop this from bubbling.
     aMouseEvent->PreventBubble();
     aMouseEvent->PreventDefault();
 
     /* for bug 47399, when dropping a drag session, if you are over your original
-       selection, nothing should happen. */
-    nsCOMPtr<nsIDOMSelection> tempSelection;
-    rv = mEditor->GetSelection(getter_AddRefs(tempSelection));
-    if (NS_FAILED(rv) || !tempSelection) 
+       selection, nothing should happen. 
+       cmanske: But do this only if drag source is not the same as target (current) document!
+    */
+    nsCOMPtr<nsIDOMSelection> selection;
+    rv = mEditor->GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(rv) || !selection) 
       return rv?rv:NS_ERROR_FAILURE;
     
-    PRInt32 rangeCount;
-    rv = tempSelection->GetRangeCount(&rangeCount);
-    if (NS_FAILED(rv)) 
-      return rv?rv:NS_ERROR_FAILURE;
+    nsCOMPtr<nsIEditor> editor = do_QueryInterface(htmlEditor);
+    nsCOMPtr<nsIDOMDocument> domdoc;
+    rv = editor->GetDocument(getter_AddRefs(domdoc));
+    if (NS_FAILED(rv)) return rv;
 
-    for(int i = 0; i < rangeCount; i++)
+    nsCOMPtr<nsIDOMDocument> sourceDoc;
+    rv = dragSession->GetSourceDocument(getter_AddRefs(sourceDoc));
+    if (NS_FAILED(rv)) return rv;
+    if (domdoc == sourceDoc)
     {
-      nsCOMPtr<nsIDOMRange> range;
+      PRBool isCollapsed;
+      rv = selection->GetIsCollapsed(&isCollapsed);
+      if (NS_FAILED(rv)) return rv;
+  
+      // Don't bother if collapsed - can always drop
+      if (!isCollapsed)
+      {
+        nsCOMPtr<nsIDOMNode> parent;
+        rv = nsuiEvent->GetRangeParent(getter_AddRefs(parent));
+        if (NS_FAILED(rv)) return rv;
+        if (!parent) return NS_ERROR_FAILURE;
 
-      rv = tempSelection->GetRangeAt(i, getter_AddRefs(range));
-      if (NS_FAILED(rv) || !range) 
-        continue;//dont bail yet, iterate through them all
+        PRInt32 offset = 0;
+        rv = nsuiEvent->GetRangeOffset(&offset);
+        if (NS_FAILED(rv)) return rv;
 
-      nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
-      if (NS_FAILED(rv) || !nsrange) 
-        continue;//dont bail yet, iterate through them all
+        PRInt32 rangeCount;
+        rv = selection->GetRangeCount(&rangeCount);
+        if (NS_FAILED(rv)) return rv;
 
-      nsCOMPtr<nsIDOMNSUIEvent> nsuiEvent (do_QueryInterface(aMouseEvent));
-      if (!nsuiEvent)
-        continue;//dont bail yet, iterate through them all
+        for (PRInt32 i = 0; i < rangeCount; i++)
+        {
+          nsCOMPtr<nsIDOMRange> range;
 
-      nsCOMPtr<nsIDOMNode> parent;
-      if (!NS_SUCCEEDED(nsuiEvent->GetRangeParent(getter_AddRefs(parent))))
-        continue;//dont bail yet, iterate through them all
+          rv = selection->GetRangeAt(i, getter_AddRefs(range));
+          if (NS_FAILED(rv) || !range) 
+            continue;//dont bail yet, iterate through them all
 
-      PRInt32 offset = 0;
-      if (!NS_SUCCEEDED(nsuiEvent->GetRangeOffset(&offset)))
-        continue;//dont bail yet, iterate through them all
+          nsCOMPtr<nsIDOMNSRange> nsrange(do_QueryInterface(range));
+          if (NS_FAILED(rv) || !nsrange) 
+            continue;//dont bail yet, iterate through them all
 
-      PRBool inrange;
-      rv = nsrange->IsPointInRange(parent, offset, &inrange);
-      if(inrange)
-        return NS_ERROR_FAILURE;//okay, now you can bail, we are over the orginal selection
+          PRBool inrange;
+          rv = nsrange->IsPointInRange(parent, offset, &inrange);
+          if(inrange)
+            return NS_ERROR_FAILURE;//okay, now you can bail, we are over the orginal selection
+        }
+      }
     }
     // if we are not over orginal selection, drop that baby!
     return htmlEditor->InsertFromDrop(aMouseEvent);

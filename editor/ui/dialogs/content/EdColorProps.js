@@ -362,8 +362,6 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   }
   else backgroundImage = null;
 
-dump("ValidateAndPreviewImage: styleValue ="+styleValue+"\n");
-
   // Set style on preview (removes image if not valid)
   dialog.ColorPreview.setAttribute(styleStr, styleValue);
 
