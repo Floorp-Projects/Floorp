@@ -1647,6 +1647,12 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTART_PROPERTY );
     if ( prop != 0) {
         m_start->m_datetime = icalproperty_get_dtstart( prop );
+        if( m_start->m_datetime.is_date == true ) {
+            m_allday = true;
+            m_start->SetHour( 0 );
+            m_start->SetMinute( 0 );
+            m_start->m_datetime.is_date == false; //Because currently we depend on m_datetime being a complete datetime value.
+        }
     } else {
         m_start->m_datetime = icaltime_null_time();
     }
@@ -1857,13 +1863,14 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
         icalcomponent_add_property( vevent, prop );
     }
 
-    //allday
+//No need for allday x-prop anymore
+/*    //allday
     if( m_allday ) {
         tmppar = icalparameter_new_member( "AllDay" );
         prop = icalproperty_new_x( "TRUE" );
         icalproperty_add_parameter( prop, tmppar );
         icalcomponent_add_property( vevent, prop );
-    }
+    }*/
 
     //alarm
     if( m_hasalarm ) {
@@ -2068,9 +2075,11 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
         if( m_allday ) {
             m_start->SetHour( 0 );
             m_start->SetMinute( 0 );
+            m_start->m_datetime.is_date = true; //This will reflect the event being an all-day event
         }
         prop = icalproperty_new_dtstart( m_start->m_datetime );
         icalcomponent_add_property( vevent, prop );
+        m_start->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
     }
 
     if( m_end && !icaltime_is_null_time( m_end->m_datetime ) ) {
@@ -2079,8 +2088,10 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
             m_end->SetHour( 23 );
             m_end->SetMinute( 59 );
         }
-        prop = icalproperty_new_dtend( m_end->m_datetime );
-        icalcomponent_add_property( vevent, prop );
+        if( !m_allday ) { //Include end-date only if this is not an all day event
+            prop = icalproperty_new_dtend( m_end->m_datetime );
+            icalcomponent_add_property( vevent, prop );
+        }
     }
 
     if( m_stamp && !icaltime_is_null_time( m_stamp->m_datetime ) ) {
