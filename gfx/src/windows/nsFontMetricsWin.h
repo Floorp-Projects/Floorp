@@ -34,16 +34,12 @@
 #include "nsVoidArray.h"
 #include "nsICharRepresentable.h"
 #include "nsCompressedCharMap.h"
+#include "nsUnicharUtils.h"
 
 #ifdef ADD_GLYPH
 #undef ADD_GLYPH
 #endif
 #define ADD_GLYPH(map, g) SET_REPRESENTABLE(map, g)
-
-#ifdef IS_IN_BMP
-#undef IS_IN_BMP
-#endif
-#define IS_IN_BMP(ucs4)   ((ucs4) < 0x10000)
 
 enum eFontType {
  eFontType_UNKNOWN = -1,
@@ -82,14 +78,26 @@ public:
   nsFontWin(LOGFONT* aLogFont, HFONT aFont, PRUint16* aCCMap);
   virtual ~nsFontWin();
 
+  virtual PRInt32 GetWidth(HDC aDC, const char* aString,
+                           PRUint32 aLength);
+
   virtual PRInt32 GetWidth(HDC aDC, const PRUnichar* aString,
                            PRUint32 aLength) = 0;
+
+  virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
+                          const char* aString, PRUint32 aLength, INT* aDx0);
 
   virtual void DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
                           const PRUnichar* aString, PRUint32 aLength) = 0;
 
   virtual PRBool HasGlyph(PRUint32 ch) {return CCMAP_HAS_CHAR_EXT(mCCMap, ch);};
 #ifdef MOZ_MATHML
+  virtual nsresult
+  GetBoundingMetrics(HDC                aDC, 
+                     const char*        aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+
   virtual nsresult
   GetBoundingMetrics(HDC                aDC, 
                      const PRUnichar*   aString,
