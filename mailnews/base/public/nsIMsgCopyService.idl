@@ -22,13 +22,12 @@
 #include "nsIFileSpec.idl"
 #include "nsIMessage.idl"
 #include "nsIMsgCopyServiceListener.idl"
+#include "nsISupportsArray.idl"
 
 %{C++
-#include "nsISupportsArray.h"
 #include "nsITransactionManager.h"
 %}
 
-interface nsISupportsArray;
 interface nsITransactionManager;
 
 [scriptable, uuid(bce41600-28df-11d3-abf7-00805f8ac968)]

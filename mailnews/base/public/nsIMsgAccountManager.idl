@@ -20,13 +20,7 @@
 #include "nsIMsgAccount.idl"
 #include "nsIMsgIdentity.idl"
 #include "nsIMsgIncomingServer.idl"
-
-interface nsISupportsArray;
-
-%{C++
-#include "nsISupportsArray.h"
-%}
-
+#include "nsISupportsArray.idl"
 
 [scriptable, uuid(6ed2cc00-e623-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgAccountManager : nsISupports {

@@ -21,16 +21,15 @@
 #include "nsIMsgThread.idl"
 #include "nsIMsgIncomingServer.idl"
 #include "nsIFileSpec.idl"
+#include "nsISupportsArray.idl"
 
 %{ C++
-#include "nsISupportsArray.h"
 #include "nsIMessage.h"
 #include "nsITransactionManager.h"
 #include "nsIMsgDatabase.h"
 #include "nsMsgKeyArray.h"
 %}
 
-interface nsISupportsArray;
 interface nsIMessage;
 interface nsITransactionManager;
 interface nsIMsgDatabase;
