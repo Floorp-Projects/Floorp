@@ -30,12 +30,29 @@
 #include "nsICopyMessageListener.h"
 #include "nsFileStream.h"
 #include "nsIPop3IncomingServer.h"  // need this for an interface ID
+#include "nsMsgTxn.h"
+#include "nsIMsgMessageService.h"
 
-typedef struct {
-	nsOutputFileStream* fileStream;
-	nsCOMPtr<nsIMessage> message;
-	nsMsgKey dstKey;
-} nsLocalMailCopyState;
+#define FOUR_K 4096
+
+struct nsLocalMailCopyState
+{
+  nsLocalMailCopyState();
+  virtual ~nsLocalMailCopyState();
+  
+  nsOutputFileStream* fileStream;
+  nsCOMPtr<nsISupports> srcSupport;
+  nsCOMPtr<nsISupportsArray> messages;
+  nsCOMPtr<nsMsgTxn> undoMsgTxn;
+  nsCOMPtr<nsIMessage> message; // current copy message
+  
+  nsIMsgMessageService* messageService;
+  PRBool isMove;
+  nsMsgKey curDstKey;
+  PRUint32 curCopyIndex;
+  PRUint32 totalMsgCount;
+  char dataBuffer[FOUR_K];
+};
 
 class nsMsgLocalMailFolder : public nsMsgDBFolder,
                              public nsIMsgLocalMailFolder,
@@ -96,7 +113,13 @@ public:
 	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
-                            nsITransactionManager *txnMgr, PRBool deleteStorage);
+                            nsITransactionManager *txnMgr, PRBool
+                            deleteStorage);
+  NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray* messages,
+                          PRBool isMove, nsITransactionManager* txnMgr);
+  NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, nsIMessage* msgToReplace,
+                             PRBool isDraft, nsISupports* aSupport,
+                             nsITransactionManager* txnMgr);
 	NS_IMETHOD CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message);
 	NS_IMETHOD GetNewMessages();
 
@@ -115,6 +138,7 @@ protected:
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
 	nsresult GetDatabase();
+  nsresult GetTrashFolder(nsIMsgFolder** trashFolder);
 
 	/* Finds the directory associated with this folder.  That is if the path is
 	c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
@@ -126,10 +150,14 @@ protected:
 	//Returns the child as well.
 	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
 
-	nsresult DeleteMessage(nsIMessage *message, nsITransactionManager *txnMgr, PRBool deleteStorage);
-	nsresult MoveMessageToTrash(nsIMessage *message, nsIMsgFolder *trashFolder);
+	nsresult DeleteMessage(nsIMessage *message, nsITransactionManager *txnMgr,
+                         PRBool deleteStorage);
+  // copy message helper
+	nsresult CopyMessageTo(nsIMessage *message, nsIMsgFolder *dstFolder,
+                         PRBool isMove);
 
 	virtual const char* GetIncomingServerType() {return "pop3";}
+  nsresult SetTransactionManager(nsITransactionManager* txnMgr);
 
 protected:
 	nsNativeFileSpec *mPath;
@@ -137,7 +165,9 @@ protected:
 	PRBool		mHaveReadNameFromDB;
 	PRBool		mGettingMail;
 	PRBool		mInitialized;
-	nsLocalMailCopyState *mCopyState; //We will only allow one of these at a time
+	nsLocalMailCopyState *mCopyState; //We will only allow one of these at a
+                                    //time
+  nsCOMPtr<nsITransactionManager> mTxnMgr;
 };
 
 

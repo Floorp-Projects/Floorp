@@ -134,9 +134,13 @@ nsLocalMoveCopyMsgTxn::Undo()
             rv = dstDB->GetMsgHdrForKey(m_dstKeyArray.GetAt(i), 
                                         getter_AddRefs(oldHdr));
             if (m_isMove && NS_SUCCEEDED(rv))
+            {
                 rv = srcDB->CopyHdrFromExistingHdr(m_srcKeyArray.GetAt(i),
                                                    oldHdr,
                                                    getter_AddRefs(newHdr));
+                if (NS_SUCCEEDED(rv))
+                    srcDB->UndoDelete(newHdr);
+            }
             if (oldHdr)
                 rv = dstDB->DeleteHeader(oldHdr, nsnull, PR_TRUE, PR_TRUE);
         }
@@ -165,9 +169,13 @@ nsLocalMoveCopyMsgTxn::Redo()
             rv = srcDB->GetMsgHdrForKey(m_srcKeyArray.GetAt(i), 
                                         getter_AddRefs(oldHdr));
             if (NS_SUCCEEDED(rv))
+            {
                 rv = dstDB->CopyHdrFromExistingHdr(m_dstKeyArray.GetAt(i),
                                                    oldHdr,
                                                    getter_AddRefs(newHdr));
+                if (NS_SUCCEEDED(rv))
+                    dstDB->UndoDelete(newHdr);
+            }
             if (m_isMove && oldHdr)
                 rv = srcDB->DeleteHeader(oldHdr, nsnull, PR_TRUE, PR_TRUE);
         }
