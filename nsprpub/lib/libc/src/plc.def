@@ -1,0 +1,49 @@
+# nm -n -C -p libplc4.so | awk '/[^ ]* T PL_/ {print $3}'
+NSPR_4.0 {
+    global:
+PL_Base64Decode;
+PL_Base64Encode;
+PL_CreateOptState;
+PL_DestroyOptState;
+PL_FPrintError;
+PL_GetNextOpt;
+PL_PrintError;
+PL_strcasecmp;
+PL_strcaserstr;
+PL_strcasestr;
+PL_strcat;
+PL_strcatn;
+PL_strchr;
+PL_strcmp;
+PL_strcpy;
+PL_strdup;
+PL_strfree;
+PL_strlen;
+PL_strncasecmp;
+PL_strncaserstr;
+PL_strncasestr;
+PL_strncat;
+PL_strnchr;
+PL_strncmp;
+PL_strncpy;
+PL_strncpyz;
+PL_strndup;
+PL_strnlen;
+PL_strnpbrk;
+PL_strnprbrk;
+PL_strnrchr;
+PL_strnrstr;
+PL_strnstr;
+PL_strpbrk;
+PL_strprbrk;
+PL_strrchr;
+PL_strrstr;
+PL_strstr;
+libVersionPoint;
+    local: *;
+};
+NSPR_4.2 {
+    global:
+PL_strtok_r;
+    local: *;
+};
