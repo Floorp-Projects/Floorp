@@ -352,3 +352,24 @@ export::
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
 	rm -f unallmakefiles $(DIST_GARBAGE)
+
+ifeq ($(OS_ARCH),WINNT)
+rebase:
+ifdef $(MOZILLA_OFFICIAL)
+	echo rebasing $(DIST)
+	/bin/find $(DIST) -name "*.dll" > rebase.lst
+	rebase -b 60000000 -R . -G rebase.lst
+        rm rebase.lst
+endif
+
+splitsymbols:
+ifdef $(MOZILLA_OFFICIAL)
+	echo splitting symbols out of binaries
+	/bin/find $(DIST) -name "*.dll" -exec splitsym {} \;
+	/bin/find $(DIST) -name "*.exe" -exec splitsym {} \;
+	/bin/find $(DIST) -name "*.EXE" -exec splitsym {} \;
+endif # MOZILLA_OFFICIAL
+
+deliver: splitsymbols rebase
+
+endif # WINNT
