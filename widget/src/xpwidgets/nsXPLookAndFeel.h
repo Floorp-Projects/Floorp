@@ -55,7 +55,7 @@ typedef enum {
 
 struct nsLookAndFeelIntPref
 {
-  char* name;
+  const char* name;
   nsILookAndFeel::nsMetricID id;
   PRPackedBool isSet;
   nsLookAndFeelType type;
@@ -64,7 +64,7 @@ struct nsLookAndFeelIntPref
 
 struct nsLookAndFeelFloatPref
 {
-  char* name;
+  const char* name;
   nsILookAndFeel::nsMetricFloatID id;
   PRPackedBool isSet;
   nsLookAndFeelType type;

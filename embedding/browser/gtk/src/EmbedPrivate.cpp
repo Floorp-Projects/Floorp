@@ -61,7 +61,7 @@
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
-static char *sWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
+static const char sWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
 
 PRUint32     EmbedPrivate::sWidgetCount = 0;
 char        *EmbedPrivate::sCompPath    = nsnull;

@@ -63,7 +63,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMutationEvent.h"
 
-static char* mEventNames[] = {
+static const char* const mEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "contextmenu", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "unload", "abort", "error",

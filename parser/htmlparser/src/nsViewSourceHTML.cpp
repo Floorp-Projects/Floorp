@@ -232,7 +232,7 @@ enum {
   VIEW_SOURCE_MARKUPDECLARATION = 12
 };
 
-static char* kElementClasses[] = {
+static const char* const kElementClasses[] = {
   "start-tag",
   "end-tag",
   "comment",
@@ -248,7 +248,7 @@ static char* kElementClasses[] = {
   "markupdeclaration"  
 };
 
-static char* kBeforeText[] = {
+static const char* const kBeforeText[] = {
   "<",
   "</",
   "",
@@ -264,7 +264,7 @@ static char* kBeforeText[] = {
   ""
 };
 
-static char* kAfterText[] = {
+static const char* const kAfterText[] = {
   ">",
   ">",
   "",
@@ -281,7 +281,7 @@ static char* kAfterText[] = {
 };
 
 #ifdef DUMP_TO_FILE
-static char* kDumpFileBeforeText[] = {
+static const char* const kDumpFileBeforeText[] = {
   "&lt;",
   "&lt;/",
   "",
@@ -297,7 +297,7 @@ static char* kDumpFileBeforeText[] = {
   ""
 };
 
-static char* kDumpFileAfterText[] = {
+static const char* const kDumpFileAfterText[] = {
   "&gt;",
   "&gt;",
   "",

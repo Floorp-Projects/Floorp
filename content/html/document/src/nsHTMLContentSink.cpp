@@ -4658,8 +4658,8 @@ HTMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
   if(aChannel) {
     nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aChannel));
     if (httpchannel) {
-      char*  headers[]={"link","default-style","content-base",0}; // add more http headers if you need
-      char** name=headers;
+      const char *const headers[]={"link","default-style","content-base",0}; // add more http headers if you need
+      const char *const *name=headers;
       nsXPIDLCString tmp;
 
       while(*name) {

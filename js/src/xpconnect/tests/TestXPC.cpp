@@ -306,7 +306,7 @@ MySecMan::CanAccess(PRUint32 aAction, nsIXPCNativeCallContext *aCallContext, JSC
 static void
 TestSecurityManager(JSContext* jscontext, JSObject* glob, nsIXPConnect* xpc)
 {
-    char* t;
+    const char* t;
     jsval rval;
     JSBool success = JS_TRUE;
     MySecMan* sm = new MySecMan();

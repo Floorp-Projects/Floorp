@@ -52,7 +52,7 @@
 #include <os2.h>
 #endif
 
-extern "C" void ShowOSAlert(char* aMessage);
+extern "C" void ShowOSAlert(const char* aMessage);
 
 #if defined (MOZ_WIDGET_GTK)
 
@@ -96,7 +96,7 @@ ns_gtk_alert_OK_callback(GtkWidget *aWidget, gpointer aData)
  *                              returns -2 for widget creation error
  */
 int
-NS_gtk_alert(char *aMessage, char *aTitle, char *aOKBtnText)
+NS_gtk_alert(const char *aMessage, const char *aTitle, const char *aOKBtnText)
 {
 #ifdef DEBUG_dbragg
     printf ("\n*** Now inside NS_gtk_alert *** \n");
@@ -107,8 +107,8 @@ NS_gtk_alert(char *aMessage, char *aTitle, char *aOKBtnText)
     GtkWidget *msgLabel = NULL;
     GtkWidget *packerLbl = NULL;
     GtkWidget *packerBtn = NULL;
-    char *okBtnText = aOKBtnText;
-    char *title = aTitle;
+    const char *okBtnText = aOKBtnText;
+    const char *title = aTitle;
 
     if (!aMessage)
         return -1;
@@ -178,7 +178,7 @@ NS_gtk_alert(char *aMessage, char *aTitle, char *aOKBtnText)
 
 
 // The maximum allowed length of aMessage is 255 characters!
-void ShowOSAlert(char* aMessage)
+void ShowOSAlert(const char* aMessage)
 {
 #ifdef DEBUG_dbragg
 printf("\n****Inside ShowOSAlert ***\n");	

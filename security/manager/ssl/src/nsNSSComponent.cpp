@@ -446,7 +446,7 @@ nsNSSComponent::RegisterPSMContentListener()
 
 /* Table of pref names and SSL cipher ID */
 typedef struct {
-  char* pref;
+  const char* pref;
   long id;
 } CipherPref;
 

@@ -140,7 +140,7 @@ struct nsFontCharSetInfo
 
 struct nsFontCharSetMap
 {
-  char*              mName;
+  const char*        mName;
   nsFontLangGroup*   mFontLangGroup;
   nsFontCharSetInfo* mInfo;
 };
@@ -173,8 +173,8 @@ struct nsFontNode
 
 struct nsFontPropertyName
 {
-  char* mName;
-  int   mValue;
+  const char* mName;
+  int         mValue;
 };
 
 struct nsFontStretch
@@ -3396,7 +3396,8 @@ FFREToXLFDPattern(nsAWritableCString &aFFREName, nsAWritableCString &oPattern)
 // substitute the charset in a FFRE (Foundry-Family-Registry-Encoding)
 //
 static void
-FFRESubstituteCharset(nsAWritableCString &aFFREName, char *aReplacementCharset)
+FFRESubstituteCharset(nsAWritableCString &aFFREName,
+                      const char *aReplacementCharset)
 {
   PRInt32 charsetHyphen = aFFREName.FindChar('-');
   charsetHyphen = aFFREName.FindChar('-', charsetHyphen + 1);
@@ -3408,7 +3409,8 @@ FFRESubstituteCharset(nsAWritableCString &aFFREName, char *aReplacementCharset)
 // substitute the encoding in a FFRE (Foundry-Family-Registry-Encoding)
 //
 static void
-FFRESubstituteEncoding(nsAWritableCString &aFFREName, char *aReplacementEncoding)
+FFRESubstituteEncoding(nsAWritableCString &aFFREName,
+                       const char *aReplacementEncoding)
 {
   PRInt32 encodingHyphen = aFFREName.FindChar('-');
   encodingHyphen = aFFREName.FindChar('-', encodingHyphen + 1);

@@ -169,7 +169,7 @@ main(int argc, char* argv[])
     // in other modules (necko converters for example).
 
     PRUint32 converterListSize = 7;
-    char *converterList[] = {
+    const char *const converterList[] = {
         "?from=a/foo&to=b/foo",
         "?from=b/foo&to=c/foo",
         "?from=b/foo&to=d/foo",

@@ -1475,7 +1475,7 @@ nsFtpState::S_pasv() {
     }
 
 
-    char * string;
+    const char * string;
     if (mIPv6ServerAddress)
         string = "EPSV" CRLF;
     else

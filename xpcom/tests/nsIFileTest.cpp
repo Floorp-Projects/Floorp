@@ -69,7 +69,7 @@ NS_SetupRegistry()
   nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL);
 }
 
-void InitTest(char* creationPath, char* appendPath)
+void InitTest(const char* creationPath, const char* appendPath)
 {
     nsILocalFile* file = nsnull;
     nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_CONTRACTID, 
@@ -120,7 +120,7 @@ void InitTest(char* creationPath, char* appendPath)
 }
 
 
-void CreationTest(char* creationPath, char* appendPath,
+void CreationTest(const char* creationPath, const char* appendPath,
 		  PRInt32 whatToCreate, PRInt32 perm)
 {
     nsCOMPtr<nsILocalFile> file;
@@ -172,7 +172,7 @@ void CreationTest(char* creationPath, char* appendPath,
     
 }    
 
-void CreateUniqueTest(char* creationPath, char* appendPath,
+void CreateUniqueTest(const char* creationPath, const char* appendPath,
                  PRInt32 whatToCreate, PRInt32 perm)
 {
     nsCOMPtr<nsILocalFile> file;
@@ -226,7 +226,7 @@ void CreateUniqueTest(char* creationPath, char* appendPath,
 
 
 void
-CopyTest(char *testFile, char *targetDir)
+CopyTest(const char *testFile, const char *targetDir)
 {
   nsCOMPtr<nsILocalFile> file;
   nsCOMPtr<nsILocalFile> dir;
@@ -267,7 +267,7 @@ CopyTest(char *testFile, char *targetDir)
 }
     
 void
-DeletionTest(char* creationPath, char* appendPath, PRBool recursive)
+DeletionTest(const char* creationPath, const char* appendPath, PRBool recursive)
 {
     nsCOMPtr<nsILocalFile> file;
     nsresult rv = 

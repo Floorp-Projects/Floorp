@@ -73,7 +73,7 @@ static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_I
 /* 
  * Paper Names 
  */
-char* paper_string[]={ "Letter", "Legal", "Executive", "A4", "A3" };
+const char*const paper_string[]={ "Letter", "Legal", "Executive", "A4", "A3" };
 
 /* 
  * global
@@ -886,7 +886,8 @@ nsPostScriptObj::end_document()
  *	@update 2/1/99 dwc
  */
 void
-nsPostScriptObj::annotate_page(char *aTemplate, int y, int delta_dir, int pn)
+nsPostScriptObj::annotate_page(const char *aTemplate,
+                               int y, int delta_dir, int pn)
 {
 
 }
@@ -896,7 +897,7 @@ nsPostScriptObj::annotate_page(char *aTemplate, int y, int delta_dir, int pn)
  *	@update 2/1/99 dwc. Updated 3/22/2000 to deal with only non-Unicode chars. yueheng.xu@intel.com
  */
 void 
-nsPostScriptObj::show(const char* txt, int len, char *align)
+nsPostScriptObj::show(const char* txt, int len, const char *align)
 {
 FILE *f;
 
@@ -979,7 +980,7 @@ nsPostScriptObj::preshow(const PRUnichar* txt, int len)
  *	@update 3/22/2000 to deal with only unicode chars. yueheng.xu@intel.com
  */
 void 
-nsPostScriptObj::show(const PRUnichar* txt, int len, char *align)
+nsPostScriptObj::show(const PRUnichar* txt, int len, const char *align)
 {
  FILE *f = mPrintContext->prSetup->out;
  unsigned char highbyte, lowbyte;
@@ -1554,7 +1555,7 @@ int postscriptFont = 0;
  *	@update 2/1/98 dwc
  */
 void 
-nsPostScriptObj::comment(char *aTheComment)
+nsPostScriptObj::comment(const char *aTheComment)
 {
 
   fprintf(mPrintContext->prSetup->out,"%%%s\n", aTheComment);
@@ -1635,11 +1636,11 @@ nsPostScriptObj::GetUnixPrinterSetting(const nsCAutoString& aKey, char** aVal)
 
 
 typedef struct _unixPrinterFallbacks_t {
-    char *key;
-    char *val;
+    const char *key;
+    const char *val;
 } unixPrinterFallbacks_t;
 
-static unixPrinterFallbacks_t unixPrinterFallbacks[] = {
+static const unixPrinterFallbacks_t unixPrinterFallbacks[] = {
   {"print.psnativefont.ja", "Ryumin-Light-EUC-H"},
   {"print.psnativecode.ja", "euc-jp"},
   {nsnull, nsnull}
@@ -1648,7 +1649,7 @@ static unixPrinterFallbacks_t unixPrinterFallbacks[] = {
 PRBool
 GetUnixPrinterFallbackSetting(const nsCAutoString& aKey, char** aVal)
 {
-  unixPrinterFallbacks_t *p;
+  const unixPrinterFallbacks_t *p;
   const char* key = aKey.get();
   for (p=unixPrinterFallbacks; p->key; p++) {
     if (strcmp(key, p->key) == 0) {

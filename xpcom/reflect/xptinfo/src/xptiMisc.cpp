@@ -41,7 +41,7 @@
 
 struct xptiFileTypeEntry
 {
-    char*               name;
+    const char*         name;
     int                 len;
     xptiFileType::Type  type;
 };

@@ -595,8 +595,8 @@ nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
     mExists = PR_FALSE;
     if (!mDir)
         return *this;
-    char* dot    = ".";
-    char* dotdot = "..";
+    const char dot[]    = ".";
+    const char dotdot[] = "..";
     struct dirent* entry = readdir(mDir);
     if (entry && strcmp(entry->d_name, dot) == 0)
         entry = readdir(mDir);

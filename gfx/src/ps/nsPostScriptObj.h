@@ -159,8 +159,8 @@ struct PrintSetup_ {
   int width;                       /* Paper size, # of cols for text xlate */
   int height;
   
-  char* header;
-  char* footer;
+  const char* header;
+  const char* footer;
 
   int *sizes;
   XP_Bool reverse;              /* Output order */
@@ -176,9 +176,9 @@ struct PrintSetup_ {
   int bigger;                   /* Used to init sizes if sizesin NULL */
   int paper_size;               /* Paper Size(letter,legal,exec,a4,a3) */
 
-  char* prefix;                 /* For text xlate, prepended to each line */
-  char* eol;			              /* For text translation, line terminator  */
-  char* bullet;                 /* What char to use for bullets */
+  const char* prefix;           /* For text xlate, prepended to each line */
+  const char* eol;              /* For text translation, line terminator  */
+  const char* bullet;           /* What char to use for bullets */
 
   struct URL_Struct_ *url;      /* url of doc being translated */
   FILE *out;                  /* Where to send the output */
@@ -347,7 +347,7 @@ public:
    *  ???
    *	@update 2/1/99 dwc
    */
-  void annotate_page( char*, int, int, int);
+  void annotate_page( const char*, int, int, int);
   /** ---------------------------------------------------
    *  translate the current coordinate system
    *	@update 2/1/99 dwc
@@ -357,12 +357,12 @@ public:
    *  Issue a PS show command, which causes image to be rastered
    *	@update 2/1/99 dwc
    */
-  void show(const char* aText, int aLen, char *aAlign);
+  void show(const char* aText, int aLen, const char *aAlign);
   /** ---------------------------------------------------
    *  This version takes an Unicode string. 
    *	@update 3/22/2000 yueheng.xu@intel.com
    */
-  void show(const PRUnichar* aText, int aLen, char *aAlign);
+  void show(const PRUnichar* aText, int aLen, const char *aAlign);
   /** ---------------------------------------------------
    *  set the clipping path to the current path using the winding rule
    *	@update 2/1/99 dwc
@@ -402,7 +402,7 @@ public:
    *  output a postscript comment
    *	@update 2/1/99 dwc
    */
-  void comment(char *aTheComment);
+  void comment(const char *aTheComment);
   /** ---------------------------------------------------
    *  setup language group
    *	@update 5/30/00 katakai

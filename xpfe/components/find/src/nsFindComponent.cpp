@@ -571,7 +571,7 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
             return rv;
 
         // Open Find dialog and prompt for search parameters.
-        char * urlStr = "chrome://global/content/finddialog.xul";
+        const char urlStr[] = "chrome://global/content/finddialog.xul";
 
         // We need the parent's nsIDOMWindowInternal...
         // 1. Get topLevelWindow nsIWebShellContainer (chrome included).
@@ -659,7 +659,7 @@ nsFindComponent::Replace( nsISupports *aContext )
             return rv;
 
         // Open Replace dialog and prompt for search parameters.
-        char * urlStr = "chrome://global/content/replacedialog.xul";
+        const char urlStr[] = "chrome://global/content/replacedialog.xul";
 
         // We need the parent's nsIDOMWindowInternal...
         // 1. Get topLevelWindow nsIWebShellContainer (chrome included).

@@ -221,8 +221,7 @@ static void LoadExtraSharedLibs()
         if (!sonameList) {
             // pref is not set, lets use hardcoded list
             prefSonameListIsSet = PR_FALSE;
-            sonameList = DEFAULT_EXTRA_LIBS_LIST;
-            sonameList = PL_strdup(sonameList);
+            sonameList = PL_strdup(DEFAULT_EXTRA_LIBS_LIST);
         }
         if (sonameList) {
             char *arrayOfLibs[PLUGIN_MAX_NUMBER_OF_EXTRA_LIBS] = {0};

@@ -39,7 +39,7 @@
 ** The names of the characters in the ISO Latin1 set.
 ** Index into this array is the encoding for that character
 */
-char *isotab[256] = {
+const char *const isotab[256] = {
 "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
 "", "", "", "", "", "", "", "", "", "", "", "", "", "", "space",
 "exclam", "quotedbl", "numbersign", "dollar", "percent", "ampersand",

@@ -93,10 +93,10 @@ private:
       nsIStringBundle ** aResult);
 
   static nsresult RegisterConverterTitles(nsIRegistry * aRegistry, 
-      char * aRegistryPath);
+      const char * aRegistryPath);
 
   static nsresult RegisterConverterData(nsIRegistry * aRegistry, 
-      char * aRegistryPath);
+      const char * aRegistryPath);
 
   nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
     nsString * aProp, PRUnichar ** aResult);
@@ -104,10 +104,10 @@ private:
   nsresult GetBundleValue(nsIStringBundle * aBundle, const nsIAtom * aName, 
     nsString * aProp, nsIAtom ** aResult);
 
-  nsresult GetRegistryEnumeration(char * aRegistryKey, char * aAddPrefix,
-    nsISupportsArray ** aArray);
+  nsresult GetRegistryEnumeration(const char * aRegistryKey,
+    const char * aAddPrefix, nsISupportsArray ** aArray);
 
-  nsresult GetRegistryEnumeration2(char * aRegistryKey, PRBool aDecoder,
+  nsresult GetRegistryEnumeration2(const char * aRegistryKey, PRBool aDecoder,
     nsISupportsArray ** aArray);
 
 public:
@@ -239,7 +239,7 @@ nsresult nsCharsetConverterManager::RegisterConverterManagerData()
 
 nsresult nsCharsetConverterManager::RegisterConverterTitles(
                                     nsIRegistry * aRegistry,
-                                    char * aRegistryPath)
+                                    const char * aRegistryPath)
 {
   nsresult res;
   nsRegistryKey key;
@@ -259,7 +259,7 @@ nsresult nsCharsetConverterManager::RegisterConverterTitles(
 
 nsresult nsCharsetConverterManager::RegisterConverterData(
                                     nsIRegistry * aRegistry,
-                                    char * aRegistryPath)
+                                    const char * aRegistryPath)
 {
   nsresult res;
   nsRegistryKey key;
@@ -329,8 +329,8 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
 }
 
 nsresult nsCharsetConverterManager::GetRegistryEnumeration(
-                                    char * aRegistryKey,
-                                    char * aAddPrefix,
+                                    const char * aRegistryKey,
+                                    const char * aAddPrefix,
                                     nsISupportsArray ** aArray)
 {
   nsresult res = NS_OK;
@@ -401,7 +401,7 @@ next:
 // .../uconv/decoder/name
 // .../uconv/encoder/name
 nsresult nsCharsetConverterManager::GetRegistryEnumeration2(
-                                    char * aRegistryKey, 
+                                    const char * aRegistryKey, 
                                     PRBool aDecoder,
                                     nsISupportsArray ** aArray)
 {

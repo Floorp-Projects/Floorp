@@ -584,7 +584,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPa
   if (NS_FAILED(rv)) return rv;
   
   // the flavors that we can deal with
-  char* textEditorFlavors[] = { kUnicodeMime, nsnull };
+  const char* const textEditorFlavors[] = { kUnicodeMime, nsnull };
 
   nsCOMPtr<nsISupportsArray> flavorsList;
   rv = nsComponentManager::CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, nsnull, 
@@ -595,7 +595,7 @@ NS_IMETHODIMP nsPlaintextEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPa
   GetFlags(&editorFlags);
   
   // add the flavors for text editors
-  for (char** flavor = textEditorFlavors; *flavor; flavor++)
+  for (const char* const* flavor = textEditorFlavors; *flavor; flavor++)
   {
     nsCOMPtr<nsISupportsString> flavorString;            
     nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, nsnull, 

@@ -255,7 +255,7 @@ static PRUint32 g_StreamConverterCount = 16;
 static PRUint32 g_StreamConverterCount = 15;
 #endif
 
-static char *g_StreamConverterArray[] = {
+static const char *const g_StreamConverterArray[] = {
         FTP_UNIX_TO_INDEX,
         FTP_NT_TO_INDEX,
         FTP_OS2_TO_INDEX,

@@ -1996,7 +1996,7 @@ nsHttpChannel::GetReferrer(nsIURI **referrer)
 
 #define numInvalidReferrerSchemes 8
 
-static char * invalidReferrerSchemes [numInvalidReferrerSchemes] = 
+static const char *const invalidReferrerSchemes [numInvalidReferrerSchemes] = 
 {
   "chrome",
   "resource",

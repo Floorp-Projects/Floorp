@@ -44,7 +44,7 @@
 
 struct DirectoryTable
 {
-	char *  directoryName;			/* The formal directory name */
+	const char * directoryName;		/* The formal directory name */
 	PRInt32 folderEnum;		        /* Directory ID */
 };
 

@@ -394,10 +394,10 @@ static void
 StripCommentDelimiters(nsString& aCommentString)
 {
   PRInt32 offset;
-  static char* kCommentStart = "<!";
-  static char* kCommentEnd = "->";
-  static char* kCommentAlternateEnd = "--!>";
-  static char kMinus = '-';
+  static const char kCommentStart[] = "<!";
+  static const char kCommentEnd[] = "->";
+  static const char kCommentAlternateEnd[] = "--!>";
+  static const char kMinus = '-';
 
   offset = aCommentString.Find(kCommentStart);
   if (-1 != offset) {

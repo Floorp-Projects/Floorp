@@ -64,7 +64,7 @@
 #include "nsRect.h"
 #include "nsIWebBrowserChromeFocus.h"
 
-static char *sWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
+static const char sWindowWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
 
 
 

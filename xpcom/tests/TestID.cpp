@@ -38,7 +38,7 @@
 #include "plstr.h"
 #include "nsID.h"
 
-static char* ids[] = {
+static const char* const ids[] = {
   "5C347B10-D55C-11D1-89B7-006008911B81",
   "{5C347B10-D55C-11D1-89B7-006008911B81}",
   "5c347b10-d55c-11d1-89b7-006008911b81",
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 {
   nsID id;
   for (int i = 0; i < NUM_IDS; i++) {
-    char* idstr = ids[i];
+    const char* idstr = ids[i];
     if (!id.Parse(idstr)) {
       fprintf(stderr, "TestID: Parse failed on test #%d\n", i);
       return -1;

@@ -42,7 +42,7 @@ Atom nsGtkMozRemoteHelper::sMozResponseAtom = 0;
 Atom nsGtkMozRemoteHelper::sMozUserAtom     = 0;
 
 // XXX get this dynamically
-static char *sRemoteVersion          = "5.0";
+static const char sRemoteVersion[]   = "5.0";
 
 void
 nsGtkMozRemoteHelper::SetupVersion(GdkWindow *aWindow)

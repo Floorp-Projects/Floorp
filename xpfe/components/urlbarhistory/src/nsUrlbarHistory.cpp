@@ -46,7 +46,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFCUtilsCID, NS_RDFCONTAINERUTILS_CID);
 
-static char * ignoreArray[] = {
+static const char * const ignoreArray[] = {
 		"http://",
 	    "ftp://",
 		"gopher://",

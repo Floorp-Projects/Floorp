@@ -92,7 +92,7 @@ NS_COM char* nsEscapeCount(
 		return 0;
 
     int i, extra = 0;
-    char* hexChars = "0123456789ABCDEF";
+    static const char hexChars[] = "0123456789ABCDEF";
 
 	register const unsigned char* src = (const unsigned char *) str;
     for (i = 0; i < len; i++)
@@ -339,7 +339,7 @@ NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result)
         return NS_OK;
 
     int i = 0;
-    char* hexChars = "0123456789ABCDEF";
+    static const char hexChars[] = "0123456789ABCDEF";
     int len = PL_strlen(str);
     PRBool forced = PR_FALSE;
 

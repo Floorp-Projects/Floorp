@@ -238,7 +238,7 @@ Consumer::Validate(nsIRequest* request, nsISupports *aContext) {
     return rv;
 }
 
-nsresult StartLoad(char *);
+nsresult StartLoad(const char *);
 
 int main(int argc, char *argv[]) {
     nsresult rv = NS_OK;
@@ -299,7 +299,7 @@ int main(int argc, char *argv[]) {
     return rv;
 }
 
-nsresult StartLoad(char *aURISpec) {
+nsresult StartLoad(const char *aURISpec) {
     nsresult rv = NS_OK;
     
     // create a context

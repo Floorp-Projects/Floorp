@@ -550,8 +550,8 @@ reload_clicked_cb  (GtkButton *button, TestGtkBrowser *browser)
 void 
 stream_clicked_cb  (GtkButton   *button, TestGtkBrowser *browser)
 {
-  char *data;
-  char *data2;
+  const char *data;
+  const char *data2;
   data = "<html>Hi";
   data2 = " there</html>\n";
   g_print("stream_clicked_cb\n");
@@ -587,8 +587,8 @@ void
 menu_stream_cb     (GtkMenuItem *menuitem, TestGtkBrowser *browser)
 {
   g_print("menu_stream_cb\n");
-  char *data;
-  char *data2;
+  const char *data;
+  const char *data2;
   data = "<html>Hi";
   data2 = " there</html>\n";
   g_print("stream_clicked_cb\n");
