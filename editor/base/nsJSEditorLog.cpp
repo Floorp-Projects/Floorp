@@ -725,12 +725,6 @@ nsJSEditorLog::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 }
 
 NS_IMETHODIMP
-nsJSEditorLog::InsertTable()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsJSEditorLog::InsertTableCell(PRInt32 aNumber, PRBool aAfter)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

@@ -133,7 +133,6 @@ public:
   NS_IMETHOD GetCellAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell);
   NS_IMETHOD GetCellDataAt(nsIDOMElement* aTable, PRInt32 aRowIndex, PRInt32 aColIndex, nsIDOMElement* &aCell, 
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, PRInt32& aRowSpan, PRInt32& aColSpan, PRBool& aIsSelected);
-  NS_IMETHOD InsertTable();
   NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter);
   NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter);
   NS_IMETHOD InsertTableRow(PRInt32 aNumber, PRBool aAfter);

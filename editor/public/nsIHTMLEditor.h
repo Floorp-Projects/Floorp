@@ -274,7 +274,6 @@ public:
     * @param aAfter     If TRUE, insert after the current cell,
     *                     else insert before current cell
     */
-  NS_IMETHOD InsertTable()=0;
   NS_IMETHOD InsertTableCell(PRInt32 aNumber, PRBool aAfter)=0;
   NS_IMETHOD InsertTableColumn(PRInt32 aNumber, PRBool aAfter)=0;
   NS_IMETHOD InsertTableRow(PRInt32 aNumber, PRBool aAfter)=0;

@@ -2007,11 +2007,13 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
           iter->Init(range);
           // loop through the content iterator for each content node
           nsCOMPtr<nsIContent> content;
-          res = iter->CurrentNode(getter_AddRefs(content));
-          //PRBool bOtherNodeTypeFound = PR_FALSE;
-
           while (NS_COMFALSE == iter->IsDone())
           {
+            res = iter->CurrentNode(getter_AddRefs(content));
+            // Note likely!
+            if (NS_FAILED(res))
+              return NS_ERROR_FAILURE;
+
              // Query interface to cast nsIContent to nsIDOMNode
              //  then get tagType to compare to  aTagName
              // Clone node of each desired type and append it to the aDomFrag
