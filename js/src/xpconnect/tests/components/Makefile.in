@@ -31,7 +31,7 @@ MODULE=xpctest
 
 CPPSRCS=		\
 	xpctest_echo.cpp		\
-	xpctest_echo.cpp	\
+	xpctest_module.cpp	\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
