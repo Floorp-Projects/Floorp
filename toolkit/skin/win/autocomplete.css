@@ -90,6 +90,7 @@ textbox {
 }
 
 .autocomplete-treecol {
+  -moz-appearance: none;
   margin: 0 !important;
   border: none !important;
   padding: 0 !important;
