@@ -619,6 +619,7 @@ nsScrollPortFrame::Release(void)
 
 NS_INTERFACE_MAP_BEGIN(nsScrollPortFrame)
   NS_INTERFACE_MAP_ENTRY(nsIBox)
+  NS_INTERFACE_MAP_ENTRY(nsIStatefulFrame)
 #ifdef NS_DEBUG
   NS_INTERFACE_MAP_ENTRY(nsIFrameDebug)
 #endif
