@@ -1548,6 +1548,7 @@ public class Codegen extends Interpreter {
                 FunctionNode fn = (FunctionNode) fns.elementAt(i);
                 if (fn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
                     visitFunction(fn, true);
+                    addByteCode(ByteCode.POP);
                 }
             }
         }
