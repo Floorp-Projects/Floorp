@@ -706,6 +706,18 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     // UA components
     //
 
+    // Gather application values.
+    if (PREF_CHANGED(UA_PREF("appName"))) {
+        prefs->GetCharPref(UA_PREF("appName"),
+            getter_Copies(mAppName));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+    if (PREF_CHANGED(UA_PREF("appVersion"))) {
+        prefs->GetCharPref(UA_PREF("appVersion"),
+            getter_Copies(mAppVersion));
+        mUserAgentIsDirty = PR_TRUE;
+    }
+
     // Gather vendor values.
     if (PREF_CHANGED(UA_PREF("vendor"))) {
         prefs->GetCharPref(UA_PREF("vendor"),
