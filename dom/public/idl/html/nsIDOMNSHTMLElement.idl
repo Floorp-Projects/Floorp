@@ -22,7 +22,7 @@
 #include "domstubs.idl"
 
 [scriptable, uuid(da83b2ec-8264-4410-8496-ada3acd2ae42)]
-interface nsIDOMHTMLIEElement : nsISupports
+interface nsIDOMNSHTMLElement : nsISupports
 {
   readonly attribute long             offsetTop;
   readonly attribute long             offsetLeft;
