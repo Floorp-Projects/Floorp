@@ -154,10 +154,10 @@
     </glossentry>
 
     <glossentry id="gloss-cpan">
-      <glossterm>
-        <acronym>CPAN</acronym>
-      </glossterm>
+      <glossterm>Comprehensive Perl Archive Network</glossterm>
+      <acronym>CPAN</acronym>
 
+      <!-- TODO: Rewrite def for CPAN -->
       <glossdef>
         <para>
         <acronym>CPAN</acronym>
@@ -282,6 +282,16 @@
 
   <glossdiv id="gloss-p">
     <title>P</title>
+
+    <glossentry id="gloss-ppm">
+      <glossterm>Perl Package Manager</glossterm>
+      <acronym>PPM</acronym>
+
+      <glossdef>
+        <para><ulink url="http://aspn.activestate.com/ASPN/Downloads/ActivePerl/PPM/"/>
+        </para>
+      </glossdef>
+    </glossentry>
 
     <glossentry>
       <glossterm id="gloss-product">Product</glossterm>

@@ -1,209 +1,78 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<chapter id="installation" xreflabel="Bugzilla Installation">
+<!-- $Id: installation.xml,v 1.45 2003/05/17 01:27:47 jake%bugzilla.org Exp $ -->
+<chapter id="installation">
   <title>Installation</title>
 
-  <section id="stepbystep" xreflabel="Bugzilla Installation Step-by-step">
+  <section id="stepbystep">
     <title>Step-by-step Install</title>
 
-    <section id="intstall-into">
-      <title>Introduction</title>
-
-      <para>Bugzilla has been successfully installed under Solaris, Linux,
-      and Win32. Win32 is not yet officially supported, but many people
-      have got it working fine.
-      Please see  
-      <xref linkend="os-win32" />
-      for further advice on getting Bugzilla to work on Microsoft
-      Windows.</para>
-
-    </section>
-
-    <section id="install-package-list">
-      <title>Package List</title>
+      <para>Bugzilla has been successfully installed under many different
+      operating systems including almost all Unix clones and
+      <productname class="registered">Microsoft Windows</productname>.  Many
+      operating systems have utilities that make installation easier or quirks
+      that make it harder. We have tried to collect that information in
+      <xref linkend="os-specific"/>, so be sure to check out that section before
+      you start your installation.
+      </para>
 
       <note>
-        <para> If you are running the very most recent
-        version of Perl and MySQL (both the executables and development
-        libraries) on your system, you can skip these manual installation 
-        steps for the Perl modules by using Bundle::Bugzilla; see
-        <xref linkend="bundlebugzilla" />.
+        <para>Windows is one of those operating systems that has many quirks
+        and is not yet officially supported by the Bugzilla team. If you wish
+        to install Bugzilla on Windows, be sure to see
+        <xref linkend="os-win32"/>.
         </para>
       </note>
 
-      <para>The software packages necessary for the proper running of
-      Bugzilla (with download links) are: 
-      <orderedlist>
-      
-      
-<listitem>
-  <para>
-    <ulink url="http://www.mysql.com/">MySQL database server</ulink>
-    (&min-mysql-ver; or greater)
-  </para>
-</listitem>
-
-<listitem>
-  <para>
-    <ulink url="http://www.perl.org/">Perl</ulink>
-    (&min-perl-ver;, 5.6.1 is recommended if you wish to
-    use Bundle::Bugzilla)
-  </para>
-</listitem>
-
-<listitem>
-  <para>Perl Modules (minimum version):
-  <orderedlist>
-
-    <listitem>
-      <para>
-        <ulink url="http://www.template-toolkit.org">Template</ulink>
-        (v&min-template-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <ulink url="http://www.perldoc.com/perl5.6/lib/File/Temp.html">
-	File::Temp</ulink>
-        (&min-file-temp-ver;) (Prerequisite for Template)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <ulink url="http://www.cpan.org/modules/by-module/AppConfig/">AppConfig 
-        </ulink>
-        (&min-appconfig-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <ulink url="http://www.cpan.org/authors/id/MUIR/modules/Text-Tabs%2BWrap-2001.0131.tar.gz">Text::Wrap</ulink> 
-        (&min-text-wrap-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <ulink url="http://search.cpan.org/search?dist=File-Spec">File::Spec 
-        </ulink>
-        (&min-file-spec-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <ulink url="http://www.cpan.org/modules/by-module/Data/">Data::Dumper 
-        </ulink> 
-        (&min-data-dumper-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <ulink url="http://www.cpan.org/modules/by-module/Mysql/">DBD::mysql
-        </ulink> 
-        (&min-dbd-mysql-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <ulink url="http://www.cpan.org/modules/by-module/DBI/">DBI</ulink> 
-        (&min-dbi-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <ulink url="http://www.cpan.org/modules/by-module/Date/">Date::Parse
-        </ulink> 
-        (&min-date-format-ver;)
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <ulink url="http://www.cpan.org/modules/by-module/CGI/">CGI
-        </ulink> 
-        (&min-cgi-ver;)
-      </para>
-    </listitem>
-
-  </orderedlist>
-  and, optionally:
-  <orderedlist>  
-    <listitem>
-      <para>
-        <ulink url="http://www.cpan.org/modules/by-module/GD/">GD</ulink>
-        (&min-gd-ver;) for bug charting
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        GD::Graph
-        (&min-gd-graph-ver;) for bug charting
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        GD::Text::Align
-        (&min-gd-text-align-ver;) for bug charting
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        <ulink url="http://www.cpan.org/modules/by-module/Chart/">Chart::Base 
-        </ulink>
-        (&min-chart-base-ver;) for bug charting
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        XML::Parser 
-        (&min-xml-parser-ver;) for the XML interface
-      </para>
-    </listitem>
-
-    <listitem>
-      <para>
-        MIME::Parser 
-        (&min-mime-parser-ver;) for the email interface
-      </para>
-    </listitem>
-  </orderedlist>          
-  </para>
-</listitem>
-
-
-<listitem>
-  <para>
-    The web server of your choice. 
-    <ulink url="http://www.apache.org/">Apache</ulink> 
-    is highly recommended.
-  </para>
-</listitem>
-
-
-      </orderedlist>
-
       <warning>
-        <para>It is a good idea, while installing Bugzilla, to ensure that there
-        is some kind of firewall between you and the rest of the Internet,
-        because your machine may be insecure for periods during the install.
-        Many
+        <para>While installing Bugzilla, it is a good idea to ensure that there
+        is some kind of firewall between you and the rest of the Internet
+        as your machine may be insecure for periods during the install. Many
         installation steps require an active Internet connection to complete,
         but you must take care to ensure that at no point is your machine
         vulnerable to an attack.</para>
       </warning>
 
+      <para>This guide assumes that you already have your operating system
+      installed, network configured, and have administrative access to the
+      shell on the machine you are installing Bugzilla onto. It is possible to
+      install and run Bugzilla without administrative access, but you have to
+      either make sure all the required software is installed or get somebody
+      with administrative access to install it for you.
       </para>
-    </section>
+
+      <para>The listing below is a basic step-by-step list. More information
+      can be found in the sections below. Minimum versions will be
+      included in parenthesis where appropriate.
+      </para>
+
+      <procedure>
+        <step>
+          <para><link linkend="install-mysql">Install MySQL</link>
+          (&min-mysql-ver;)
+          </para>
+        </step>
+        <step>
+          <para><link linkend="install-perl">Install Perl</link>
+          (&min-perl-ver;)
+          </para>
+        </step>
+        <step>
+          <para><link linkend="install-perlmodules">Install Perl Modules</link>
+          </para>
+        </step>
+        <step>
+          <para><link linkend="install-webserver">Install a Webserver</link>
+          </para>
+        </step>
+        <step>
+          <para><link linkend="install-bzfiles">Put Bugzilla in the Webspace</link>
+          </para>
+        </step>
+        <step>
+          <para><link linkend="install-setupdatabase">Setup the MySQL Database</link>
+          </para>
+        </step>
+      </procedure>
 
     <section id="install-mysql">
       <title>MySQL</title>
@@ -216,156 +85,108 @@
       <note>
         <para> Many of the binary
         versions of MySQL store their data files in 
-        <filename>/var</filename>.
+        <filename class="directory">/var</filename>.
         On some Unix systems, this is part of a smaller root partition,
         and may not have room for your bug database. You can set the data
          directory as an option to <filename>configure</filename>
          if you build MySQL from source yourself.</para>
       </note>
 
-      <para>If you install from something other than an RPM or Debian 
-      package, you will need to add <filename>mysqld</filename>
-      to your init scripts so the server daemon will come back up whenever
-      your machine reboots. Further discussion of UNIX init sequences are
-      beyond the scope of this guide. 
+      <para>If you install from something other than a packaging/installation
+      system (such as .rpm, .dep, .exe, or .msi) you will need to configure
+      your system so the MySQL server daemon will come back up whenever
+      your machine reboots.
       </para>
 
-      <para>Change your init script to start 
-      <filename>mysqld</filename>
-      with the ability to accept large packets. By default, 
-      <filename>mysqld</filename>
-      only accepts packets up to 64K long. This limits the size of
-      attachments you may put on bugs. If you add 
-      <option>-O max_allowed_packet=1M</option>
-      to the command that starts 
-      <filename>mysqld</filename>
-      (or <filename>safe_mysqld</filename>), 
-      then you will be able to have attachments up to about 1 megabyte.
-      There is a Bugzilla parameter for maximum attachment size;
-      you should configure it to match the value you choose here.</para>
+      <para>If you wish to have attachments larger than 64K, you will have to
+      configure MySQL to accept large packets. This is done by adding the text
+      in <xref linkend="install-mysql-packets"/> to your
+      <filename>my.conf</filename> file. There is also a parameter in Bugzilla
+      for setting the maximum allowable attachment size.
+      <!-- TODO: xref to a param() page for max attachment size -->
+      You should set this value to be slightly larger than that parameter.
+      </para>
 
-      <para>If you plan on running Bugzilla and MySQL on the same machine,
-      consider using the 
-      <option>--skip-networking</option>
-      option in the init script. This enhances security by preventing
-      network access to MySQL.</para>
-        
+      <figure id="install-mysql-packets">
+        <title>Set Max Packet Size in MySQL</title>
+
+        <programlisting>
+[mysqld]
+# Allow packets up to 1M
+set-variable = max_allowed_packet=1M
+        </programlisting>
+      </figure>
+
+      <para>If you are running Bugzilla and MySQL on the same machine, you may
+      also wish to utilize the <option>skip-networking</option> option as
+      mentioned in <xref linkend="security-mysql"/> for the added security.
+      </para>
     </section>
 
     <section id="install-perl">
       <title>Perl</title>
 
       <para>Any machine that doesn't have Perl on it is a sad machine indeed.
-      Perl can be got in source form from 
-      <ulink url="http://www.perl.org"/> for the rare 
-      *nix systems which don't have it. 
+      Perl can be got in source form from <ulink url="http://www.perl.com"/>.
+      There are also binary versions available for many platforms, most of which
+      are linked to from perl.com.
       Although Bugzilla runs with perl &min-perl-ver;,
       it's a good idea to be up to the very latest version
       if you can when running Bugzilla. As of this writing, that is Perl
       version &newest-perl-ver;.</para>
-
-      <tip id="bundlebugzilla"
-      xreflabel="Using Bundle::Bugzilla instead of manually installing Perl modules">
-
-        <para>You can skip the following Perl module installation steps by
-        installing 
-        <productname>Bundle::Bugzilla</productname>
-
-        from 
-        <glossterm linkend="gloss-cpan">CPAN</glossterm>, 
-        which installs all required modules for you.</para>
-
-        <para>
-          <computeroutput>
-            <prompt>bash#</prompt>
-
-            <command>perl -MCPAN -e 'install "Bundle::Bugzilla"'</command>
-          </computeroutput>
-        </para>
-
-        <para>Bundle::Bugzilla doesn't include GD, Chart::Base, or
-        MIME::Parser, which are not essential to a basic Bugzilla install. If
-        installing this bundle fails, you should install each module
-        individually to isolate the problem.</para>
-      </tip>
     </section>
 
-    <section id="perl-modules">
+    <section id="install-perlmodules">
       <title>Perl Modules</title>
       
-    <para> 
-      All Perl modules can be found on the
-      <ulink url="http://www.cpan.org">Comprehensive Perl 
-      Archive Network</ulink> (CPAN). The
-      CPAN servers have a real tendency to bog down, so please use mirrors.
-    </para>
+      <para>Perl modules can be found using
+      <glossterm linkend="gloss-cpan">CPAN</glossterm> on Unix based systems or
+      <glossterm linkend="gloss-ppm">PPM</glossterm> on Win32. The root servers
+      have a real tendency to bog down, so please use mirrors.
+      </para>
     
-      <para>Quality, general Perl module installation instructions can be
-      found on the CPAN website, but the easy thing to do is to just use the
-      CPAN shell which does all the hard work for you.
-      To use the CPAN shell to install a module: 
+      <para>Good instuctions can be found for using each of these services on
+      their respective websites. The basics can be found in
+      <xref linkend="install-perlmodules-cpan"/> for CPAN and
+      <xref linkend="win32-perlmodules"/> for PPM.
       </para>
 
-      <para>
-        <computeroutput>
-          <prompt>bash#</prompt>
-          <command>perl -MCPAN -e 'install "&lt;modulename&gt;"'</command>
-        </computeroutput>
-      </para>
-      
-      <para>
-      To do it the hard way: 
-      </para>
-      
-      <para>Untar the module tarball -- it should create its own
-      directory</para>
+      <example id="install-perlmodules-cpan">
+        <title>Installing perl modules with CPAN</title>
 
-      <para>CD to the directory just created, and enter the following
-      commands: 
-      <orderedlist>
-        <listitem>
-          <para>
-            <computeroutput>
-              <prompt>bash#</prompt>
+        <para>The easy way:
+          <screen>
+<prompt>bash#</prompt> perl -MCPAN -e 'install "&lt;modulename&gt;"'
+          </screen>
+        </para>
 
-              <command>perl Makefile.PL</command>
-            </computeroutput>
-          </para>
-        </listitem>
+        <para>Or the hard way:
+          <screen>
+<prompt>bash#</prompt> tar xzvf &lt;module&gt;.tar.gz     <co id="cpan-moduletar"/>
+<prompt>bash#</prompt> cd &lt;module&gt;                  <co id="cpan-moduledir"/>
+<prompt>bash#</prompt> perl Makefile.PL
+<prompt>bash#</prompt> make
+<prompt>bash#</prompt> make test
+<prompt>bash#</prompt> make install
+          </screen>
+          <calloutlist>
+            <callout arearefs="cpan-moduletar">
+              <para>This assumes that you've already downloaded the
+              <filename>&lt;module&gt;.tar.gz</filename> to the current working
+              directory.
+              </para>
+            </callout>
+            <callout arearefs="cpan-moduledir">
+              <para>The process of untaring the module as defined in
+              <xref linkend="cpan-moduletar"/> will create the
+              <filename class="directory">&lt;module&gt;</filename> directory.
+              </para>
+            </callout>
+          </calloutlist>
+        </para>
+      </example>
 
-        <listitem>
-          <para>
-            <computeroutput>
-              <prompt>bash#</prompt>
-
-              <command>make</command>
-            </computeroutput>
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
-            <computeroutput>
-              <prompt>bash#</prompt>
-
-              <command>make test</command>
-            </computeroutput>
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
-            <computeroutput>
-              <prompt>bash#</prompt>
-
-              <command>make install</command>
-            </computeroutput>
-          </para>
-        </listitem>
-      </orderedlist>
-      </para>
-      
-      <warning>
+      <tip>
         <para>Many people complain that Perl modules will not install for
         them. Most times, the error messages complain that they are missing a
         file in 
@@ -378,29 +199,248 @@
         <emphasis>are</emphasis>
         the local UNIX sysadmin, please consult the newsgroup/mailing list
         for further assistance or hire someone to help you out.</para>
-      </warning>
+      </tip>
 
 
-    <section>
-      <title>DBI</title>
+<!-- TODO: Fix indentation before checkin -->
+  <para>Perl Modules (minimum version):
+  <orderedlist>
+
+    <!-- TODO: Don't think we actually care about AppConfig anymore -->
+    <listitem>
+      <para>
+        <link linkend="install-modules-bundle-bugzilla">Bundle::Bugzilla</link>
+        (Will allow you to skip the rest)
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-appconfig">AppConfig</link>
+        (&min-appconfig-ver;)
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-cgi">CGI</link> 
+        (&min-cgi-ver;)
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-data-dumper">Data::Dumper</link> 
+        (&min-data-dumper-ver;)
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-date-format">Date::Format</link>
+        (&min-date-format-ver;)
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-dbi">DBI</link> 
+        (&min-dbi-ver;)
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-dbd-mysql">DBD::mysql</link>
+        (&min-dbd-mysql-ver;)
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-file-spec">File::Spec</link>
+        (&min-file-spec-ver;)
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-file-temp">File::Temp</link>
+        (&min-file-temp-ver;)
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-template">Template Toolkit</link>
+        (&min-template-ver;)
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-text-wrap">Text::Wrap</link> 
+        (&min-text-wrap-ver;)
+      </para>
+    </listitem>
+  </orderedlist>
+
+  and, optionally:
+  <orderedlist>  
+    <listitem>
+      <para>
+        <link linkend="install-modules-gd">GD</link>
+        (&min-gd-ver;) for bug charting
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-chart-base">Chart::Base</link>
+        (&min-chart-base-ver;) for bug charting
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-xml-parser">XML::Parser</link>
+        (&min-xml-parser-ver;) for the XML interface
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-gd-graph">GD::Graph</link>
+        (&min-gd-graph-ver;) for bug charting
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-gd-text-align">GD::Text::Align</link>
+        (&min-gd-text-align-ver;) for bug charting
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        <link linkend="install-modules-mime-parser">MIME::Parser</link>
+        (&min-mime-parser-ver;) for the email interface
+      </para>
+    </listitem>
+  </orderedlist>          
+  </para>
+
+
+
+
+    <section id="install-modules-bundle-bugzilla">
+      <title>Bundle::Bugzilla</title>
+
+      <para>If you are running at least perl 5.6.1, you can save yourself a lot
+      of time by using Bundle::Bugzilla. This bundle contains every module
+      required to get Bugzilla running. It does not include GD and friends, but
+      these are not required for a base install and can always be added later
+      if the need arises.
+      </para>
+
+      <para>Assuming your perl was installed with CPAN (most unix installations
+      are), using Bundle::Bugzilla is really easy. Simply follow along with the
+      commands below.
+      </para>
+
+
+        <screen>
+<prompt>bash#</prompt> <command>perl -MCPAN -eshell</command>              <co id="bundle-cpanconfig"/>
+cpan shell -- CPAN exploration and modules installation (v1.63)
+ReadLine support enabled
+
+<prompt>cpan&gt;</prompt>
+
+        </screen>
+
+        <calloutlist>
+          <callout arearefs="bundle-cpanconfig">
+            <para>At this point, unless you've used CPAN on this machine before,
+            you'll have to go through a series of configuration steps.
+            </para>
+          </callout>
+        </calloutlist>
+    </section>
+
+    <section id="install-modules-appconfig">
+      <title>AppConfig (&min-appconfig-ver;)</title>
+
+      <para>Dependency for Template Toolkit. We probably don't need to
+      specifically check for it anymore.
+      </para>
+    </section>
+
+    <section id="install-modules-cgi">
+      <title>CGI (&min-cgi-ver;)</title>
+
+      <para>The CGI module parses form elements and cookies and does many
+      other usefule things. It come as a part of recent perl distributions, but
+      Bugzilla needs a fairly new version.
+      </para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/CGI.pm/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/CGI.zip"/>
+        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/CGI.html"/>
+      </literallayout>
+    </section>
+
+    <section id="install-modules-data-dumper">
+      <title>Data::Dumper (&min-data-dumper-ver;)</title>
+
+      <para>The Data::Dumper module provides data structure persistence for
+      Perl (similar to Java's serialization). It comes with later
+      sub-releases of Perl 5.004, but a re-installation just to be sure it's
+      available won't hurt anything.
+      </para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/Data-Dumper/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Data-Dumper.zip"/>
+        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/Data/Dumper.html"/>
+      </literallayout>
+    </section>
+
+    <section id="install-modules-date-format">
+      <title>TimeDate modules (&min-date-format-ver;)</title>
+
+      <para>Many of the more common date/time/calendar related Perl modules
+      have been grouped into a bundle similar to the MySQL modules bundle.
+      This bundle is stored on the CPAN under the name TimeDate. 
+      The component module we're most interested in is the Date::Format
+      module, but installing all of them is probably a good idea anyway.
+      </para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/TimeDate/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/TimeDate.zip"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/TimeDate/lib/Date/Format.pm"/>
+      </literallayout>
+    </section>
+
+    <section id="install-modules-dbi">
+      <title>DBI (&min-dbi-ver;)</title>
         
       <para>The DBI module is a generic Perl module used the
       MySQL-related modules. As long as your Perl installation was done
       correctly the DBI module should be a breeze. It's a mixed Perl/C
       module, but Perl's MakeMaker system simplifies the C compilation
       greatly.</para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/DBI/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBI.zip"/>
+        Documentation: <ulink url="http://dbi.perl.org/doc/"/>
+      </literallayout>
     </section>
 
-    <section>
-      <title>Data::Dumper</title>
-
-      <para>The Data::Dumper module provides data structure persistence for
-      Perl (similar to Java's serialization). It comes with later
-      sub-releases of Perl 5.004, but a re-installation just to be sure it's
-      available won't hurt anything.</para>
-    </section>
-
-    <section>
+    <section id="install-modules-dbd-mysql">
       <title>MySQL-related modules</title>
 
       <para>The Perl/MySQL interface requires a few mutually-dependent Perl
@@ -419,24 +459,77 @@
       with a null password should find itself with sufficient access to run
       tests on the 'test' database which MySQL created upon installation.
       </para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/DBD-mysql/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/DBD-Mysql.zip"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/DBD-mysql/lib/DBD/mysql.pod"/>
+      </literallayout>
     </section>
 
-    <section>
-      <title>TimeDate modules</title>
+    <section id="install-file-spec">
+      <title>File::Spec (&min-file-spec-ver;)</title>
 
-      <para>Many of the more common date/time/calendar related Perl modules
-      have been grouped into a bundle similar to the MySQL modules bundle.
-      This bundle is stored on the CPAN under the name TimeDate. 
-      The component module we're most interested in is the Date::Format
-      module, but installing all of them is probably a good idea anyway.
+      <para>File::Spec is a perl module that allows file operations, such as
+      generating full path names, to work cross platform.
       </para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/File-Spec/"/>
+        PPM Download Page: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/File-Spec.zip"/>
+        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/File/Spec.html"/>
+      </literallayout>
     </section>
 
-    <section>
-      <title>GD (optional)</title>
+    <section id="install-modules-file-temp">
+      <title>File::Temp (&min-file-temp-ver;)</title>
+
+      <para>File::Temp is used to generate a temporary filename that is
+      guaranteed to be unique. It comes as a standard part of perl
+      </para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/File-Spec/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/File-Spec.zip"/>
+        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/File/Temp.html"/>
+      </literallayout>
+    </section>
+
+    <section id="install-modules-template">
+      <title>Template Toolkit (&min-template-ver;)</title>
+
+      <para>When you install Template Toolkit, you'll get asked various
+      questions about features to enable. The defaults are fine, except
+      that it is recommended you use the high speed XS Stash of the Template
+      Toolkit, in order to achieve best performance.
+      </para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/Template-Toolkit/"/>
+        PPM Download Link: <ulink url="http://openinteract.sourceforge.net/ppmpackages/5.6/Template-Toolkit.tar.gz"/>
+        Documentation: <ulink url="http://www.template-toolkit.org/docs.html"/>
+      </literallayout>
+    </section> 
+
+    <section id="install-modules-text-wrap">
+      <title>Text::Wrap (&min-text-wrap-ver;)</title>
+
+      <para>Text::Wrap is designed to proved intelligent text wrapping.
+      </para>
+
+      <!-- TODO: Text::Wrap doesn't seem to be available from ActiveState -->
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/Text-Tabs+Wrap/"/>
+        Documentation: <ulink url="http://www.perldoc.com/perl5.8.0/lib/Text/Wrap.html"/>
+      </literallayout>
+    </section>
+
+
+    <section id="install-modules-gd">
+      <title>GD (&min-gd-ver;) [optional]</title>
 
       <para>The GD library was written by Thomas Boutell a long while ago to
-      programatically generate images in C. Since then it's become the
+      programmatically generate images in C. Since then it's become the
       defacto standard for programmatic image construction. The Perl bindings
       to it found in the GD library are used on millions of web pages to
       generate graphs on the fly. That's what Bugzilla will be using it for
@@ -452,32 +545,99 @@
         If compiling GD fails, it's probably because you're
         missing a required library.</para>
       </note>
+
+      <tip>
+        <para>The version of the GD perl module you need is very closely tied
+        to the <classname>libgd</classname> version installed on your system.
+        If you have a version 1.x of <classname>libgd</classname> the 2.x
+        versions of the GD perl module won't work for you.
+       </para>
+     </tip>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/GD/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GD.zip"/>
+        Documentation: <ulink url="http://stein.cshl.org/WWW/software/GD/"/>
+      </literallayout>
     </section>
 
-    <section>
-      <title>Chart::Base (optional)</title>
+    <section id="install-modules-chart-base">
+      <title>Chart::Base (&min-chart-base-ver;) [optional]</title>
 
       <para>The Chart module provides Bugzilla with on-the-fly charting
       abilities. It can be installed in the usual fashion after it has been
       fetched from CPAN. 
       Note that earlier versions that 0.99c used GIFs, which are no longer
       supported by the latest versions of GD.</para>
+
+      <!-- TODO: Chart::Base doesn't seem to have any documentation -->
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/Chart/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/Chart.zip"/>
+      </literallayout>
     </section>
-    
-    <section>
-      <title>Template Toolkit</title>
 
-      <para>When you install Template Toolkit, you'll get asked various
-      questions about features to enable. The defaults are fine, except
-      that it is recommended you use the high speed XS Stash of the Template
-      Toolkit, in order to achieve best performance.
+    <section id="install-modules-xml-parser">
+      <title>XML::Parser (&min-xml-parser-ver;) [Optional]</title>
+
+      <para>XML::Parser is used by the <filename>importxml.pl</filename>
+      script. You only need it if you are going to be importing bugs (such as
+      for bug moving).  XML::Parser requires that the
+      <classname>expat</classname> library is already installed on your machine.
       </para>
-    </section> 
 
-    
+      <!-- TODO: XML::Parser - the only PPM I see is XML-Parser-EasyTree.zip;
+                 I'm not sure if it's the same thing or not. -->
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/XML-Parser/"/>
+        Documentation: <ulink url="http://www.perldoc.com/perl5.6.1/lib/XML/Parser.html"/>
+      </literallayout>
+    </section>
+
+    <section id="install-modules-gd-graph">
+      <title>GD::Graph (&min-gd-graph-ver;) [Optional]</title>
+
+      <para>In addition to GD listed above, the reporting interface of Bugzilla
+      needs to have the GD::Graph module installed.
+      </para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/GDGraph/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDGraph.zip"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/GDGraph/Graph.pm"/>
+      </literallayout>
+    </section>
+
+    <section id="install-modules-gd-text-align">
+      <title>GD::Text::Align (&min-gd-text-align-ver;) [Optional]</title>
+
+      <para>GD::Text::Align, as the name implies, is used to draw aligned
+      strings of text. It is needed by the reporting interface.
+      </para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/GDTextUtil/"/>
+        PPM Download Page: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/GDTextUtil.zip"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/GDTextUtil/Text/Align.pm"/>
+      </literallayout>
+    </section>
+
+    <section id="install-modules-mime-parser">
+      <title>MIME::Parser (&min-mime-parser-ver;) [Optional]</title>
+
+      <para>MIME::Parser is only needed if you want to use the e-mail interface
+      located in the <filename class="directory">contrib</filename> directory.
+      </para>
+
+      <literallayout>
+        CPAN Download Page: <ulink url="http://search.cpan.org/dist/MIME-tools/"/>
+        PPM Download Link: <ulink url="http://ppm.activestate.com/PPMPackages/zips/6xx-builds-only/MIME-tools.zip"/>
+        Documentation: <ulink url="http://search.cpan.org/dist/MIME-tools/lib/MIME/Parser.pm"/>
+      </literallayout>
+    </section>
   </section>
   
-    <section id="sbs-http">
+    <section id="install-webserver">
       <title>HTTP Server</title>
 
       <para>You have freedom of choice here, pretty much any web server that
@@ -490,12 +650,13 @@
         <para>We strongly recommend Apache as the web server to use. The
         Bugzilla Guide installation instructions, in general, assume you are
         using Apache. If you have got Bugzilla working using another webserver,
-        please share your experiences with us.</para>
+        please share your experiences with us by filing a bug in &bzg-bugs;.
+        </para>
       </note>
 
     </section>
 
-    <section>
+    <section id="install-bzfiles">
       <title>Bugzilla</title>
 
       <para>You should untar the Bugzilla files into a directory that you're
@@ -522,94 +683,63 @@
       until you run the post-install 
       <filename>checksetup.pl</filename>
       script, which locks down your installation.</para>
+
+      <caution>
+        <para>The default Bugzilla distribution is not designed to be placed
+        in a <filename class="directory">cgi-bin</filename> directory (this
+        includes any directory which is configured using the
+        <option>ScriptAlias</option> directive of Apache). This will probably
+        change as part of
+        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=44659">bug
+        44659</ulink>.
+        </para>
+      </caution>
     </section>
 
-    <section>
+    <section id="install-setupdatabase">
       <title>Setting Up the MySQL Database</title>
 
       <para>After you've gotten all the software installed and working you're
       ready to start preparing the database for its life as the back end to
       a high quality bug tracker.</para>
 
-      <para>First, you'll want to fix MySQL permissions to allow access from
-      Bugzilla. For the purpose of this Installation section, the Bugzilla
-      username will be 
-      <quote>bugs</quote>, and will have minimal permissions. 
+      <para>This first thing you'll want to do is make sure you've given the
+      <quote>root</quote> user a password as suggested in
+      <xref linkend="security-mysql"/>. For clarity, these instructions will
+      assume that your MySQL user for Bugzilla will be <quote>bugs_user</quote>,
+      the database will be called <quote>bugs_db</quote> and the password for
+      the <quote>bugs_user</quote> user is <quote>bugs_password</quote>. You
+      should, of course, substitute the values you intend to use for your site.
       </para>
 
-      <para>Begin by giving the MySQL root user a password. MySQL passwords are limited
-      to 16 characters. 
-      <simplelist>
-        <member>
-          <computeroutput>
-            <prompt>bash#</prompt>
-
-            <command>mysql -u root mysql</command>
-          </computeroutput>
-        </member>
-
-        <member>
-          <computeroutput>
-            <prompt>mysql&gt;</prompt>
-
-            <command>UPDATE user SET Password=PASSWORD('&lt;new_password&gt;')
-            WHERE user='root';</command>
-          </computeroutput>
-        </member>
-
-        <member>
-          <computeroutput>
-            <prompt>mysql&gt;</prompt>
-
-            <command>FLUSH PRIVILEGES;</command>
-          </computeroutput>
-        </member>
-      </simplelist>
-
-      From this point on, if you need to access MySQL as the MySQL root user,
-      you will need to use 
-      <command>mysql -u root -p</command>
-
-      and enter &lt;new_password&gt;. Remember that MySQL user names have
-      nothing to do with Unix user names (login names).</para>
+      <note>
+        <para>Most people use <quote>bugs</quote> for both the user and
+        database name.
+        </para>
+      </note>
 
       <para>Next, we use an SQL <command>GRANT</command> command to create a 
-      <quote>bugs</quote>
-
+      <quote>bugs_user</quote>
       user, and grant sufficient permissions for checksetup.pl, which we'll
       use later, to work its magic. This also restricts the 
-      <quote>bugs</quote>
+      <quote>bugs_user</quote>
       user to operations within a database called 
-      <quote>bugs</quote>, and only allows the account to connect from 
+      <quote>bugs_db</quote>, and only allows the account to connect from 
       <quote>localhost</quote>. 
       Modify it to reflect your setup if you will be connecting from
       another machine or as a different user.</para>
 
-      <para>Remember to set &lt;bugs_password&gt; to some unique password. 
-      <simplelist>
-        <member>
-          <computeroutput>
-            <prompt>mysql&gt;</prompt>
-
-            <command>GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,
-            ALTER,CREATE,DROP,REFERENCES ON bugs.* TO bugs@localhost
-            IDENTIFIED BY '&lt;bugs_password&gt;';</command>
-          </computeroutput>
-        </member>
-
-        <member>
-          <computeroutput>
-            <prompt>mysql&gt;</prompt>
-
-            <command>FLUSH PRIVILEGES;</command>
-          </computeroutput>
-        </member>
-      </simplelist>
-      </para>
+      <screen>
+<prompt>mysql&gt;</prompt> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,ALTER,CREATE,
+       DROP,REFERENCES ON bugs_db.* TO bugs_user@localhost
+       IDENTIFIED BY 'bugs_password';
+<prompt>mysql&gt;</prompt> FLUSH PRIVILEGES;
+      </screen>
 
       <note>
         <para>If you are using MySQL 4, the bugs user also needs to be granted
-        the LOCK TABLES and CREATE TEMPORARY TABLES permissions.
+        the <computeroutput>LOCK TABLES</computeroutput> and 
+        <computeroutput>CREATE TEMPORARY TABLES</computeroutput> permissions.
         </para>
       </note>
     </section>
@@ -622,22 +752,20 @@
       <para>Next, run the magic checksetup.pl script. (Many thanks to 
       <ulink url="mailto:holgerschurig@nikocity.de">Holger Schurig</ulink> 
       for writing this script!) 
-      This script is designed to make sure your MySQL database and other
+      This script is designed to make sure your perl modules are the correct
+      version and your MySQL database and other
       configuration options are consistent with the Bugzilla CGI files. 
       It will make sure Bugzilla files and directories have reasonable
       permissions, set up the 
       <filename>data</filename>
       directory, and create all the MySQL tables. 
-      <simplelist>
-        <member>
-          <computeroutput>
-            <prompt>bash#</prompt>
+      </para>
 
-            <command>./checksetup.pl</command>
-          </computeroutput>
-        </member>
-      </simplelist>
+      <screen>
+<prompt>bash#</prompt> ./checksetup.pl
+      </screen>
 
+      <para>
       The first time you run it, it will create a file called 
       <filename>localconfig</filename>.</para>
       
@@ -654,20 +782,20 @@
 
         <listitem>
           <para>database name: 
-          <quote>bugs</quote>
+          <quote>bugs_db</quote>
           if you're following these directions</para>
         </listitem>
 
         <listitem>
           <para>MySQL username: 
-          <quote>bugs</quote>
+          <quote>bugs_user</quote>
           if you're following these directions</para>
         </listitem>
 
         <listitem>
           <para>Password for the 
-          <quote>bugs</quote>
-          MySQL account; (&lt;bugs_password&gt;) above</para>
+          <quote>bugs_user</quote>
+          MySQL account; (<quote>bugs_password</quote> above)</para>
         </listitem>
       </orderedlist>
       </para>
@@ -975,7 +1103,7 @@ bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; chars
 
       which can limit connections by ip-address. You may download this module
       at 
-      <ulink url="http://www.snert.com/Software/mod_throttle/"/>
+      <ulink url="http://www.snert.com/Software/mod_throttle/"/>.
       Follow the instructions to install into your Apache install. 
       <emphasis>This module only functions with the Apache web
       server!</emphasis>
@@ -1034,12 +1162,13 @@ bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; chars
         </para>
       </section>
 
-      <section id="win32-perl-modules">
+      <section id="win32-perlmodules">
         <title>Perl Modules on Win32</title>
 
         <para>Bugzilla on Windows requires the same perl modules found in
-        <xref linkend="install-package-list"/>. The main difference is that
-        windows uses <command>ppm</command> instead of CPAN.
+        <xref linkend="install-perlmodules"/>. The main difference is that
+        windows uses <glossterm linkend="gloss-ppm">PPM</glossterm> instead of
+        CPAN.
         </para>
 
         <programlisting>
@@ -1211,7 +1340,7 @@ my $webservergid = '8'
 <prompt>bash#</prompt> <command>urpmi perl-mysql</command>
 <prompt>bash#</prompt> <command>urpmi perl-chart</command>
 <prompt>bash#</prompt> <command>urpmi perl-gd</command>
-<prompt>bash#</prompt> <command>urpmi perl-MailTools</command>    <co id="test-mailtools"/>
+<prompt>bash#</prompt> <command>urpmi perl-MailTools</command>             <co id="test-mailtools"/>
 <prompt>bash#</prompt> <command>urpmi apache-modules</command>
       </screen>
       <calloutlist>
