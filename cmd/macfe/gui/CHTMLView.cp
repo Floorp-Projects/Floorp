@@ -764,7 +764,7 @@ void MochaFormSubmitCallback(MWContext* pContext,
 
 		URL_Struct* url =  NET_CreateURLStruct((char *)submit->action, NET_DONT_RELOAD);
 		CBrowserContext* context = ExtractBrowserContext(pContext);
-		if (context)
+		if (context && url)
 		{
 			History_entry* current = context->GetCurrentHistoryEntry();
 			if (current && current->address)
@@ -772,7 +772,21 @@ void MochaFormSubmitCallback(MWContext* pContext,
 				// Fix bug -- prefer origin_url to referer
 				url->referer = XP_STRDUP(current->origin_url ? current->origin_url : current->address);
 			}
-			NET_AddLOSubmitDataToURLStruct(submit, url);
+			NET_AddLOSubmitDataToURLStruct(submit, url);			
+
+			// Toshok's fix moved over from the XFE code
+			if (submit->window_target)
+			{
+				CBrowserContext* tempContext = ExtractBrowserContext(XP_FindNamedContextInList(pContext, (char *)submit->window_target));
+				
+				if (tempContext)
+				{
+					submit->window_target = NULL;
+					url->window_target = NULL;	// don't let window_target get resolved later
+					context = tempContext;
+				}
+			}
+
 			context->SwitchLoadURL(url, FO_CACHE_AND_PRESENT);
 		}
 		LO_FreeSubmitData(submit);
@@ -831,8 +845,23 @@ void MochaImageFormSubmitCallback(MWContext* pContext,
 						theURL->referer = XP_STRDUP(theCurrentURL);
 
 					if (NET_AddLOSubmitDataToURLStruct(theSubmit, theURL))
+					{
+						// Toshok's fix moved over from the XFE code
+						if (theSubmit->window_target)
+						{
+							CBrowserContext* tempContext = ExtractBrowserContext(XP_FindNamedContextInList(pContext, (char *)theSubmit->window_target));
+							
+							if (tempContext)
+							{
+								theSubmit->window_target = NULL;
+								theURL->window_target = NULL;	// don't let window_target get resolved later
+								theContext = tempContext;
+							}
+						}
+		
 						CURLDispatcher::DispatchURL(theURL, theContext, true);
-
+					}
+					
 					LO_FreeSubmitData(theSubmit);
 					}
 				}
@@ -922,21 +951,6 @@ void CHTMLView::ListenToMessage(
 			else
 				formID = ((CFormLittleText*)ioParam)->GetLayoutForm();
 				
-/*			if ( true ) // LM_SendOnSubmit(*mContext, (LO_Element*) formID)
-			{
-				// Call the LO module to figure out the form's context
-				submit = LO_SubmitForm(*mContext,( LO_FormElementStruct *)formID);
-				if (submit == NULL)
-					return;
-				URL_Struct * url =  NET_CreateURLStruct((char *)submit->action, NET_DONT_RELOAD);
-				History_entry* current = mContext->GetCurrentHistoryEntry();
-				if (current && current->address)
-					url->referer = XP_STRDUP(current->address);
-				NET_AddLOSubmitDataToURLStruct(submit, url);
-				mContext->SwitchLoadURL(url, FO_CACHE_AND_PRESENT);
-				LO_FreeSubmitData(submit);
-			}
-*/
 			// ET_SendEvent now takes a JSEvent struct instead of an int type
 			JSEvent* event = XP_NEW_ZAP(JSEvent);
 			if (event)
@@ -3543,29 +3557,6 @@ void CHTMLView::PostProcessClickSelfLink(
 
 		case eImageForm:	// Image that is an ISMAP form
 			{
-/*			LO_FormSubmitData *theSubmit = NULL;
-			try
-				{
-				theSubmit = LO_SubmitImageForm(*mContext, &inClickRecord.mElement->lo_image, inClickRecord.mImageWhere.h, inClickRecord.mImageWhere.v);
-				ThrowIfNULL_(theSubmit);
-				
-				URL_Struct* theURL = NET_CreateURLStruct((char*)theSubmit->action, NET_DONT_RELOAD); 
-				ThrowIfNULL_(theURL);
-				
-				cstring theCurrentURL = mContext->GetCurrentURL();
-				if (theCurrentURL.length() > 0)
-					theURL->referer = XP_STRDUP(theCurrentURL);
-
-				if (NET_AddLOSubmitDataToURLStruct(theSubmit, theURL))
-					theDispatcher->DispatchToView(theSponsorContext, theURL, FO_CACHE_AND_PRESENT, inMakeNewWindow, 1010, inDelay);
-
-				LO_FreeSubmitData(theSubmit);
-				}
-			catch (...)
-				{
-				LO_FreeSubmitData(theSubmit);
-				throw;			
-				}*/
 						// ET_SendEvent now takes a JSEvent struct instead of an int type
 			ImageFormSubmitData* data = new ImageFormSubmitData;
 			LO_ImageStruct* image = &inClickRecord.mElement->lo_image;

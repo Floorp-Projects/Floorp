@@ -2840,11 +2840,24 @@ FE_SubmitInputElement(	MWContext	*	window,
 	if (currentHistoryPosition && currentHistoryPosition->address)
 		url->referer = XP_STRDUP(currentHistoryPosition->address);
 	
-	NET_AddLOSubmitDataToURLStruct(submitData, url);
-
 	CBrowserContext* theNSContext = ExtractBrowserContext(window);
-	Assert_(theNSContext != NULL);
-	theNSContext->SwitchLoadURL(url, FO_CACHE_AND_PRESENT);
+	if ( theNSContext && url ) 
+	{
+		NET_AddLOSubmitDataToURLStruct(submitData, url);
+		if (submitData->window_target)
+		{
+			CBrowserContext* tempContext = ExtractBrowserContext(XP_FindNamedContextInList(window, (char *)submitData->window_target));
+			
+			if (tempContext)
+			{
+				submitData->window_target = NULL;
+				url->window_target = NULL;	// don't let window_target get resolved later
+				theNSContext = tempContext;
+			}
+		}
+
+		theNSContext->SwitchLoadURL(url, FO_CACHE_AND_PRESENT);
+	}
 	
 	LO_FreeSubmitData(submitData);
 }	

@@ -480,7 +480,7 @@ inline CBrowserContext::operator MWContext&()
 	{	return mContext;		};
 	
 inline CBrowserContext* ExtractBrowserContext(MWContext* inContext)
-	{	return dynamic_cast<CBrowserContext*>(inContext->fe.newContext);		}
+	{	return inContext ? dynamic_cast<CBrowserContext*>(inContext->fe.newContext) : NULL;		}
 
 class CSharableCompositor : public LSharable
 {
