@@ -778,6 +778,11 @@ nsXULDocument::GetPrincipal(nsIPrincipal **aPrincipal)
     return mMasterPrototype->GetDocumentPrincipal(aPrincipal);
 }
 
+NS_IMETHODIMP
+nsXULDocument::UpdatePrincipal(nsIPrincipal **aPrincipal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 nsXULDocument::GetDocumentLoadGroup(nsILoadGroup **aGroup) const

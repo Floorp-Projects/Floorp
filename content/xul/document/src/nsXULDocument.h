@@ -120,6 +120,8 @@ public:
 
     NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal);
 
+    NS_IMETHOD UpdatePrincipal(nsIPrincipal **aPrincipal);
+
     NS_IMETHOD GetDocumentLoadGroup(nsILoadGroup **aGroup) const;
 
     NS_IMETHOD GetBaseURL(nsIURI*& aURL) const;
