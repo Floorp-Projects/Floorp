@@ -117,6 +117,9 @@ nsresult nsSound::Init()
 
   EsdOpenSoundType EsdOpenSound;
 
+  if ( elib && alib )
+	return NS_OK;
+
   elib = PR_LoadLibrary("libesd.so");
 
   if (!elib)
@@ -192,6 +195,7 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
 
   nsCOMPtr<nsIFileLocator> fl;
 
+  Init();
   if ( !mInited && NS_FAILED((rv=AllocateBuffers())) )
 	return rv;
 
@@ -282,7 +286,7 @@ NS_METHOD nsSound::Play(nsIURI *aURI)
     else 
         mask |= ESD_STEREO;
 
-    fd = (*EsdPlayStreamFallback)(mask, (int) rate, "localhost", "mozillansSound"); 
+    fd = (*EsdPlayStreamFallback)(mask, (int) rate, NULL, "mozillansSound"); 
     if (fd < 0) {
 	return NS_ERROR_FAILURE;
     }
