@@ -77,7 +77,7 @@ EXPORTS =               \
 	nsIPopUpMenu.h \
 	nsIMenuButton.h \
 	nsIImageButtonListener.h \
-	nsITreeView.h \
+	nsIContentConnector.h \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
