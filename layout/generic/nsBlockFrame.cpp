@@ -3258,23 +3258,25 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
   PRInt32 spins = 0;
 #endif
   PRUint8 lineReflowStatus = LINE_REFLOW_REDO;
-  while (LINE_REFLOW_REDO == lineReflowStatus) {
-    // Prevent overflowing limited thread stacks by creating
-    // nsLineLayout from the heap when the frame tree depth gets
-    // large.
-    if (aState.mReflowState.mReflowDepth > 30) {//XXX layout-tune.h?
-      rv = DoReflowInlineFramesMalloc(aState, aLine, aKeepReflowGoing,
-                                      &lineReflowStatus,
-                                      aUpdateMaximumWidth, aDamageDirtyArea);
-    }
-    else {
-      rv = DoReflowInlineFramesAuto(aState, aLine, aKeepReflowGoing,
-                                    &lineReflowStatus,
-                                    aUpdateMaximumWidth, aDamageDirtyArea);
-    }
-    if (NS_FAILED(rv)) {
-      break;
-    }
+  do {
+    // Once upon a time we allocated the first 30 nsLineLayout objects
+    // on the stack, and then we switched to the heap.  At that time
+    // these objects were large (1100 bytes on a 32 bit system).
+    // Then the nsLineLayout object was shrunk to 156 bytes by
+    // removing some internal buffers.  Given that it is so much
+    // smaller, the complexity of 2 different ways of allocating
+    // no longer makes sense.  Now we always allocate on the stack
+
+    nsLineLayout lineLayout(aState.mPresContext,
+                            aState.mReflowState.mSpaceManager,
+                            &aState.mReflowState,
+                            aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH));
+    lineLayout.Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
+    rv = DoReflowInlineFrames(aState, lineLayout, aLine,
+                              aKeepReflowGoing, &lineReflowStatus,
+                              aUpdateMaximumWidth, aDamageDirtyArea);
+    lineLayout.EndLineReflow();
+
 #ifdef DEBUG
     spins++;
     if (1000 == spins) {
@@ -3283,51 +3285,9 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
       NS_ABORT();
     }
 #endif
-  }
-  return rv;
-}
 
-nsresult
-nsBlockFrame::DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
-                                         line_iterator aLine,
-                                         PRBool* aKeepReflowGoing,
-                                         PRUint8* aLineReflowStatus,
-                                         PRBool aUpdateMaximumWidth,
-                                         PRBool aDamageDirtyArea)
-{
-  // XXXldb Using the PresShell arena here would be nice.
-  nsLineLayout* ll = new nsLineLayout(aState.mPresContext,
-                                      aState.mReflowState.mSpaceManager,
-                                      &aState.mReflowState,
-                                      aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH));
-  if (!ll) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  ll->Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
-  nsresult rv = DoReflowInlineFrames(aState, *ll, aLine, aKeepReflowGoing,
-                                     aLineReflowStatus, aUpdateMaximumWidth, aDamageDirtyArea);
-  ll->EndLineReflow();
-  delete ll;
-  return rv;
-}
+  } while (NS_SUCCEEDED(rv) && LINE_REFLOW_REDO == lineReflowStatus);
 
-nsresult
-nsBlockFrame::DoReflowInlineFramesAuto(nsBlockReflowState& aState,
-                                       line_iterator aLine,
-                                       PRBool* aKeepReflowGoing,
-                                       PRUint8* aLineReflowStatus,
-                                       PRBool aUpdateMaximumWidth,
-                                       PRBool aDamageDirtyArea)
-{
-  nsLineLayout lineLayout(aState.mPresContext,
-                          aState.mReflowState.mSpaceManager,
-                          &aState.mReflowState,
-                          aState.GetFlag(BRS_COMPUTEMAXELEMENTWIDTH));
-  lineLayout.Init(&aState, aState.mMinLineHeight, aState.mLineNumber);
-  nsresult rv = DoReflowInlineFrames(aState, lineLayout, aLine,
-                                     aKeepReflowGoing, aLineReflowStatus,
-                                     aUpdateMaximumWidth, aDamageDirtyArea);
-  lineLayout.EndLineReflow();
   return rv;
 }
 

@@ -39,6 +39,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#define PL_ARENA_CONST_ALIGN_MASK (sizeof(void*)-1)
+#include "plarena.h"
+
 #include "nsCOMPtr.h"
 #include "nsLineLayout.h"
 #include "nsBlockFrame.h"
@@ -174,7 +177,7 @@ nsLineLayout::nsLineLayout(nsIPresContext* aPresContext,
   // spans, we do it on demand so that situations that only use a few
   // frames and spans won't waste alot of time in unneeded
   // initialization.
-  mInitialFramesFreed = mInitialSpansFreed = 0;
+  PL_INIT_ARENA_POOL(&mArena, "nsLineLayout", 1024);
   mFrameFreeList = nsnull;
   mSpanFreeList = nsnull;
 
@@ -190,27 +193,35 @@ nsLineLayout::~nsLineLayout()
 
   NS_ASSERTION(nsnull == mRootSpan, "bad line-layout user");
 
-  // Free up all of the per-span-data items that were allocated on the heap
-  PerSpanData* psd = mSpanFreeList;
-  while (nsnull != psd) {
-    PerSpanData* nextSpan = psd->mNextFreeSpan;
-    if ((psd < &mSpanDataBuf[0]) ||
-        (psd >= &mSpanDataBuf[NS_LINELAYOUT_NUM_SPANS])) {
-      delete psd;
-    }
-    psd = nextSpan;
-  }
+  delete mWordFrames; // operator delete for this class just returns
 
-  // Free up all of the per-frame-data items that were allocated on the heap
-  PerFrameData* pfd = mFrameFreeList;
-  while (nsnull != pfd) {
-    PerFrameData* nextFrame = pfd->mNext;
-    if ((pfd < &mFrameDataBuf[0]) ||
-        (pfd >= &mFrameDataBuf[NS_LINELAYOUT_NUM_FRAMES])) {
-      delete pfd;
-    }
-    pfd = nextFrame;
-  }
+  // PL_FreeArenaPool takes our memory and puts in on a global free list so
+  // that the next time an arena makes an allocation it will not have to go
+  // all the way down to malloc.  This is desirable as this class is created
+  // and destroyed in a tight loop.
+  //
+  // I looked at the code.  It is not technically necessary to call
+  // PL_FinishArenaPool() after PL_FreeArenaPool(), but from an API
+  // standpoint, I think we are susposed to.  It will be very fast anyway,
+  // since PL_FreeArenaPool() has done all the work.
+  PL_FreeArenaPool(&mArena);
+  PL_FinishArenaPool(&mArena);
+}
+
+void*
+nsLineLayout::ArenaDeque::operator new(size_t aSize, PLArenaPool &aPool)
+{
+  void *mem;
+
+  PL_ARENA_ALLOCATE(mem, &aPool, aSize);
+  return mem;
+}
+
+PRBool nsLineLayout::AllocateDeque()
+{
+  mWordFrames = new(mArena) ArenaDeque;
+
+  return mWordFrames != nsnull;
 }
 
 // Find out if the frame has a non-null prev-in-flow, i.e., whether it
@@ -477,16 +488,12 @@ nsLineLayout::NewPerSpanData(PerSpanData** aResult)
 {
   PerSpanData* psd = mSpanFreeList;
   if (nsnull == psd) {
-    if (mInitialSpansFreed < NS_LINELAYOUT_NUM_SPANS) {
-      // use one of the ones defined in our struct...
-      psd = &mSpanDataBuf[mInitialSpansFreed++];
+    void *mem;
+    PL_ARENA_ALLOCATE(mem, &mArena, sizeof(PerSpanData));
+    if (nsnull == mem) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-    else {
-      psd = new PerSpanData;
-      if (nsnull == psd) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
+    psd = NS_REINTERPRET_CAST(PerSpanData*, mem);
   }
   else {
     mSpanFreeList = psd->mNextFreeSpan;
@@ -757,16 +764,12 @@ nsLineLayout::NewPerFrameData(PerFrameData** aResult)
 {
   PerFrameData* pfd = mFrameFreeList;
   if (nsnull == pfd) {
-    if (mInitialFramesFreed < NS_LINELAYOUT_NUM_FRAMES) {
-      // use one of the ones defined in our struct...
-      pfd = &mFrameDataBuf[mInitialFramesFreed++];
+    void *mem;
+    PL_ARENA_ALLOCATE(mem, &mArena, sizeof(PerFrameData));
+    if (nsnull == mem) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-    else {
-      pfd = new PerFrameData;
-      if (nsnull == pfd) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
+    pfd = NS_REINTERPRET_CAST(PerFrameData*, mem);
   }
   else {
     mFrameFreeList = pfd->mNext;
@@ -3018,9 +3021,9 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
 void
 nsLineLayout::ForgetWordFrame(nsIFrame* aFrame)
 {
-  if (0 != mWordFrames.GetSize()) {
-    NS_ASSERTION((void*)aFrame == mWordFrames.PeekFront(), "forget-word-frame");
-    mWordFrames.PopFront();
+  if (mWordFrames && 0 != mWordFrames->GetSize()) {
+    NS_ASSERTION((void*)aFrame == mWordFrames->PeekFront(), "forget-word-frame");
+    mWordFrames->PopFront();
   }
 }
 
