@@ -170,6 +170,7 @@ __CERT_AddTempCertToPerm(CERTCertificate *cert, char *nickname,
                                               &c->issuer,
                                               &c->subject,
                                               &c->serial,
+					      cert->emailAddr,
                                               PR_TRUE);
     PK11_FreeSlot(slot);
     if (!permInstance) {

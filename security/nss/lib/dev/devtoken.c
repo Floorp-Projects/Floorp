@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.21 $ $Date: 2002/04/26 14:33:59 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.22 $ $Date: 2002/05/07 20:38:53 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -529,12 +529,13 @@ nssToken_ImportCertificate
   NSSDER *issuer,
   NSSDER *subject,
   NSSDER *serial,
+  NSSASCII7 *email,
   PRBool asTokenObject
 )
 {
     CK_CERTIFICATE_TYPE cert_type;
     CK_ATTRIBUTE_PTR attr;
-    CK_ATTRIBUTE cert_tmpl[9];
+    CK_ATTRIBUTE cert_tmpl[10];
     CK_ULONG ctsize;
     nssTokenSearchType searchType;
     nssCryptokiObject *rvObject = NULL;
@@ -560,6 +561,9 @@ nssToken_ImportCertificate
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_ISSUER,            issuer);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT,           subject);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SERIAL_NUMBER,     serial);
+    if (email) {
+	NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NETSCAPE_EMAIL,    email);
+    }
     NSS_CK_TEMPLATE_FINISH(cert_tmpl, attr, ctsize);
     /* see if the cert is already there */
     rvObject = nssToken_FindCertificateByIssuerAndSerialNumber(tok,

@@ -1562,6 +1562,7 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	{ CKA_SERIAL_NUMBER,  NULL, 0},
 	{ CKA_VALUE,  NULL, 0},
 	{ CKA_NETSCAPE_TRUST,  NULL, 0},
+	{ CKA_NETSCAPE_EMAIL,  NULL, 0},
     };
     int certCount = sizeof(certAttrs)/sizeof(certAttrs[0]), keyCount = 2;
     int realCount = 0;
@@ -1612,6 +1613,11 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	PK11_SETATTRS(attrs,CKA_NETSCAPE_TRUST, certUsage,
 							 sizeof(SECCertUsage));
 	attrs++;
+	if (cert->emailAddr) {
+	    PK11_SETATTRS(attrs,CKA_NETSCAPE_EMAIL, cert->emailAddr,
+						PORT_Strlen(cert->emailAddr);
+	    attrs++;
+	}
     }
     realCount = attrs - certAttrs;
     PORT_Assert(realCount <= certCount);
@@ -1684,9 +1690,14 @@ done:
     nssCryptokiObject *keyobj, *certobj;
     NSSToken *token = PK11Slot_GetNSSToken(slot);
     SECItem *keyID = pk11_mkcertKeyID(cert);
+    char *emailAddr = NULL;
 
     if (keyID == NULL) {
 	goto loser;
+    }
+
+    if (PK11_IsInternal(slot) && cert->emailAddr) {
+	emailAddr = cert->emailAddr;
     }
 
     /* need to get the cert as a stan cert */
@@ -1738,6 +1749,7 @@ done:
                                          &c->issuer,
                                          &c->subject,
                                          &c->serial,
+					 emailAddr,
                                          PR_TRUE);
     if (!certobj) {
 	goto loser;
