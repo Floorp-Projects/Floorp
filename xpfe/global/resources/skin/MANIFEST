@@ -1,4 +1,7 @@
 tasksOverlay.css
+box.css
+toolbar.css
+menu.css
 global.css
 formatting.css
 textfield.css
@@ -67,6 +70,7 @@ taskbar-mail.gif
 taskbar-navigator.gif  
 taskbar-tab-minimized.gif  
 taskbar-tab.gif  
+taskbar-tab-trans.gif
 taskbar-popup-arrow.gif  
 taskbar-tab-hover.gif  
 print.gif

@@ -53,6 +53,10 @@ template {
 	display: none;
 }
 
+data {
+  display: none;
+}
+
 /**********************************
  * Window
  **********************************/
@@ -101,47 +105,60 @@ box.toolbar-holder[collapsed="true"] {
   visibility: collapse;
 }
 
-/****** Progress Meter ********/
-
 /********* XP Menus ***********/
 
+menubar > menu 
+  {
+    behavior              : url("resource:/chrome/xulBindings.xml#menu-menubar");
+  }
 
-menubar > menu {
-  behavior: url("resource:/chrome/xulBindings.xml#menu-menubar");
-}
+menubar > menu.menu-iconic 
+  {
+    behavior              : url("resource:/chrome/xulBindings.xml#menu-menubar-iconic");
+  }
 
-menubar > menu.menu-iconic {
-  behavior: url("resource:/chrome/xulBindings.xml#menu-menubar-iconic");
-}
-
-menu {
-  behavior: url("resource:/chrome/xulBindings.xml#menu");
-}
-
-menu.menu-iconic {
-  behavior: url("resource:/chrome/xulBindings.xml#menu-iconic");
-}
-
-menuitem {
-  behavior: url("resource:/chrome/xulBindings.xml#menuitem");
-}
-
-menuitem.menuitem-iconic {
-  behavior: url("resource:/chrome/xulBindings.xml#menuitem-iconic");
-}
-
-menuitem[type="checkbox"],menuitem[type="radio"] {
-  behavior: url("resource:/chrome/xulBindings.xml#menuitem-iconic");
-}
-
-menulist > menupopup > menuitem {
-  behavior: url("resource:/chrome/xulBindings.xml#menuitem-iconic");
-}
+menu 
+  {
+    behavior              : url("resource:/chrome/xulBindings.xml#menu");
+  }
   
-menupopup {
-  /*behavior: url("resource:/chrome/xulBindings.xml#popups");*/
-  display: none;
-}
+menu.menu-iconic 
+  {
+    behavior              : url("resource:/chrome/xulBindings.xml#menu-iconic");
+  }
+
+menuitem 
+  {
+    behavior              : url("resource:/chrome/xulBindings.xml#menuitem");
+  }
+
+menuitem.menuitem-iconic 
+  {
+    behavior              : url("resource:/chrome/xulBindings.xml#menuitem-iconic");
+  }
+
+menuitem[type="checkbox"],
+menuitem[type="radio"] 
+  {
+    behavior              : url("resource:/chrome/xulBindings.xml#menuitem-iconic");
+  }
+
+menulist > menupopup > menuitem 
+  {
+    behavior              : url("resource:/chrome/xulBindings.xml#menuitem-iconic");
+  }
+
+menuitem.menuitem-non-iconic
+  {
+    behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-item");
+  }
+
+  
+menupopup 
+  {
+    /*behavior: url("resource:/chrome/xulBindings.xml#popups");*/
+    display               : none;
+  }
 
 popup {
   /*behavior: url("resource:/chrome/xulBindings.xml#popups");*/
@@ -167,18 +184,6 @@ menupopup[menuactive="true"] {
 
 popup[menuactive="true"] {
   visibility: visible;
-}
-
-menulist {
-  behavior: url("resource:/chrome/xulBindings.xml#menulist");
-}
-
-menulist[editable="true"] {
-  behavior: url("resource:/chrome/xulBindings.xml#menulist-editable");
-}
-
-menubutton {
-  behavior: url("resource:/chrome/xulBindings.xml#menubutton");
 }
 
 /******** Titled buttons **********/
@@ -217,11 +222,7 @@ treecell {
 } 
 
 .treecell-indent {
-  behavior: url("resource:/chrome/xulBindings.xml#treecell-indented-leaf");
-}
-
-treeitem[container="true"] > treerow > .treecell-indent {
-  behavior: url("resource:/chrome/xulBindings.xml#treecell-indented-folder");
+  behavior: url("resource:/chrome/xulBindings.xml#treecell-indent");
 }
 
 .treecell-iconic {
@@ -288,8 +289,16 @@ button, button.left {
   behavior: url(resource:/chrome/xulBindings.xml#buttonleft);
 }
 
+button.top {
+  behavior: url(resource:/chrome/xulBindings.xml#buttontop);
+}
+
 button.right {
   behavior: url(resource:/chrome/xulBindings.xml#buttonright);
+}
+
+button.bottom {
+  behavior: url(resource:/chrome/xulBindings.xml#buttonbottom);
 }
 
 separator {
@@ -329,8 +338,41 @@ colorpicker {
   behavior: url(resource:/chrome/xulBindings.xml#colorpicker);
 }
 
-data {
-  display: none;
-  behaviour: url(resource:/chrome/xulBindings.xml#data);
-}
+/** Buttons with Menus:
+ *  - menulist
+ *  - menulist[editable="true"] (combobox)
+ *  - menubutton
+ **/
 
+  menulist 
+    {
+      behavior              : url("resource:/chrome/menulistBindings.xml#menulist");
+    }
+  
+  menulist[editable="true"] 
+    {
+      behavior              : url("resource:/chrome/menulistBindings.xml#menulist-editable");
+    }
+  
+  menubutton
+    {
+      behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-single-left");
+    }
+
+  menubutton.right
+    {
+      behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-single-right");
+    }
+    
+  menubutton.menubutton-dual
+    {
+      behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-dual");
+    }
+      
+  menubutton.menubutton-icon 
+    {
+      behavior              : url("resource:/chrome/menulistBindings.xml#menubutton-icon");
+    } 
+   
+ 
+ 

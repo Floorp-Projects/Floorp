@@ -15,14 +15,14 @@
   
   button[disabled="true"],
   button[disabled="true"]:hover,
-  button[disabled="true"]:active 
+  button[disabled="true"]:hover:active 
     {
       border              : 1px solid #999999;
       color               : #999999;
     }
         
 /* internal frame */
-  button > .internal-box 
+  button > .button-internal-box 
     {
       vertical-align      : middle;
       text-align          : center;
@@ -30,15 +30,15 @@
       padding             : 2px;
     }
     
-  button:active > .internal-box 
+  button:hover:active > .button-internal-box 
     {
       border              : 1px inset #CCCCCC;
       padding             : 3px 1px 1px 3px;  
     }
   
-  button[disabled="true"] > .internal-box,
-  button[disabled="true"]:hover > .internal-box,
-  button[disabled="true"]:active > .internal-box 
+  button[disabled="true"] > .button-internal-box,
+  button[disabled="true"]:hover > .button-internal-box,
+  button[disabled="true"]:hover:active > .button-internal-box 
     {
       border              : 1px outset #CCCCCC;
       -moz-border-radius  : 0px;
@@ -46,19 +46,19 @@
     }
 
 /* text wrapping frame (hack because <text> does not support alignment) */
-  button > .internal-box > .text-container
+  .button-text-container
     {
       text-align          : center;
       vertical-align      : middle;
     }
 
 /* text frame */
-  button > .internal-box > .text-container > text 
+  .button-text 
     {
       padding             : 0px 2px 0px 2px;
     }
   
-  button[orient="vertical"] > .internal-box > .text-container > text
+  button[orient="vertical"] > .button-internal-box > .button-text-container > .button-text
     {
       padding             : 2px 2px 0px 2px;
     }
@@ -91,13 +91,13 @@
  **/
 
 /* internal frame */
-  button.dialog > .internal-box,
-  button.dialog:hover > .internal-box
+  .button-dialog > .button-internal-box,
+  .button-dialog:hover > .button-internal-box
     {
       padding             : 2px 10px 2px 10px;
     }
   
-  button.dialog:hover:active > .internal-box 
+  .button-dialog:hover:hover:active > .button-internal-box 
     {
       padding             : 3px 9px 1px 11px;
     }
@@ -106,252 +106,47 @@
  *  editor's formatting toolbar or toolbars wanting a button similar to a command
  *  button but without an initial outset frame.
  **/ 
-  button.borderless 
+  .button-borderless 
     {
       border              : 1px solid #CCCCCC;
     }
   
-  button.borderless:hover
+  .button-borderless:hover
     {
       border              : 1px solid #000000;
     }
     
-  button.borderless > .internal-box 
+  .button-borderless > .button-internal-box 
     {
       border              : 1px solid #CCCCCC;
     }
   
-  button.borderless:hover > .internal-box 
+  .button-borderless:hover > .button-internal-box 
     {
       border              : 1px outset #CCCCCC;
     }
   
-  button.borderless:active > .internal-box 
+  .button-borderless:hover:active > .button-internal-box 
     {
       border              : 1px inset #CCCCCC;
     }
 
-/** Styles for the largest type of toolbar buttons. In the Seamonkey implementation, 
- *  these are only used in the navigation toolbar in the navigator package.
- **/
- 
-  /* outer frame */
-  button.large-toolbar 
+/** plain (raw) buttons, class="plain" **/
+  button.plain, button.plain:hover, button.plain:hover:active,
+  button.plain > .button-internal-box, 
+  button.plain > .button-internal-box:hover:active,
+  button.plain > .button-internal-box > .button-text-container, 
+  button.plain > .button-internal-box > .button-text-container:hover:active,
+  button.plain > .button-internal-box > .button-text-container > .button-text, 
+  button.plain > .button-internal-box > .button-text-container > .button.text:hover:active,
+  button-plain > .button-internal-box > .button-icon, 
+  button.plain > .button-internal-box > .button.icon:hover:active
     {
-      background-repeat   : no-repeat;
-      background-position : 50% 0px;
-      background-color    : transparent;
-      background-image    : url("chrome://global/skin/button32-bg.gif");
-      color               : #CCFFFF;
-      min-width           : 36px;
-      min-height          : 36px;
-      margin              : 6px 6px 1px 1px;
-      font-size           : smaller;
-      border              : none;
+      border              : 0px ! important;
+      margin              : 0px;
+      padding             : 0px;
     }
     
-  button.large-toolbar:hover 
-    {
-      background-image    : url("chrome://global/skin/button32-bg-hover.gif");
-      border              : none;
-    } 
-
-  button.large-toolbar:active
-    {
-      margin              : 7px 5px 0px 2px;
-      border              : none;
-    }
-
-  button.large-toolbar[disabled="true"],
-  button.large-toolbar[disabled="true"]:hover,
-  button.large-toolbar[disabled="true"]:active
-    {
-      background-image    : url("chrome://global/skin/button32-bg-disabled.gif");
-      margin              : 6px 6px 1px 1px;
-      border              : none;
-    }
     
-/* internal frame */
-  button.large-toolbar[disabled="true"] > .internal-box,
-  button.large-toolbar[disabled="true"]:hover > .internal-box,
-  button.large-toolbar[disabled="true"]:active > .internal-box
-    {
-      border              : none;
-    }
-      
-  button.large-toolbar > .internal-box,
-  button.large-toolbar:hover > .internal-box,
-  button.large-toolbar:active > .internal-box
-    {
-      border              : none;
-      vertical-align      : middle;
-    }
     
-  button.large-toolbar > .internal-box > .text-container 
-    {
-      display             : none;
-      text-align          : center;
-    }
     
-/** Styles for the standard 'large' toolbar button, these buttons are used for
- *  toolbar buttons that are the most commonly used elements on a toolbar, e.g.
- *  'GetMsg' in Mailnews or 'Send' in Mail/Compose.
- **/
-  button.key-toolbar 
-    {
-      background-repeat   : no-repeat;
-      background-position : 50% 0px;
-      background-color    : transparent;
-      background-image    : url("chrome://global/skin/button28-bg.gif");
-      color               : #CCFFFF;
-      min-width           : 28px;
-      min-height          : 28px;
-      margin              : 4px 7px 1px 1px;
-      padding             : 3px 0px 0px 1px;
-      font-size           : smaller;
-      border              : none;
-    }
-    
-  button.key-toolbar:hover 
-    {
-      background-image    : url("chrome://global/skin/button28-bg-hover.gif");
-      border              : none;
-    } 
-
-  button.key-toolbar:active
-    {
-      margin              : 5px 6px 0px 2px;
-      border              : none;
-    }
-
-  button.key-toolbar[disabled="true"],
-  button.key-toolbar[disabled="true"]:hover,
-  button.key-toolbar[disabled="true"]:active
-    {
-      background-image    : url("chrome://global/skin/button28-bg-disabled.gif");
-      margin              : 3px 7px 1px 1px;
-      border              : none;
-    }
-    
-/* internal frame */
-  button.key-toolbar[disabled="true"] > .internal-box,
-  button.key-toolbar[disabled="true"]:hover > .internal-box,
-  button.key-toolbar[disabled="true"]:active > .internal-box
-    {
-      border              : none;
-      vertical-align      : middle;
-    }
-      
-  button.key-toolbar > .internal-box,
-  button.key-toolbar:hover > .internal-box,
-  button.key-toolbar:active > .internal-box
-    {
-      border              : none;
-    }
-  
-/* text wrapper frame */
-  button.key-toolbar > .internal-box > .text-container 
-    {
-      padding-top         : 3px;
-      text-align          : center;
-    }
-
-/** Styles for the less important toolbar buttons. These buttons are used for 
- *  toolbar members of less immediate use than those of the 'key-toolbar' class.
- **/
-  button.toolbar 
-    {
-      background-repeat   : no-repeat;
-      background-position : 50% 0px;
-      background-color    : transparent;
-      background-image    : none;
-      color               : #CCFFFF;
-      min-width           : 28px;
-      min-height          : 28px;
-      margin              : 4px 7px 1px 1px;
-      padding             : 3px 0px 0px 1px;      
-      font-size           : smaller;
-      border              : none;
-    }
-    
-  button.toolbar:hover 
-    {
-      background-image    : url("chrome://global/skin/otherbutton28-bg-hover.gif");
-      border              : none;
-    } 
-
-  button.toolbar:active
-    {
-      margin              : 5px 6px 0px 2px;
-      border              : none;
-    }
-
-  button.toolbar[disabled="true"],
-  button.toolbar[disabled="true"]:hover,
-  button.toolbar[disabled="true"]:active
-    {
-      margin              : 3px 7px 1px 1px;
-      border              : none;
-      background-image    : none;
-    }
-    
-/* internal frame */
-  button.toolbar[disabled="true"] > .internal-box,
-  button.toolbar[disabled="true"]:hover > .internal-box,
-  button.toolbar[disabled="true"]:active > .internal-box
-    {
-      border              : none;
-    }
-      
-  button.toolbar > .internal-box,
-  button.toolbar:hover > .internal-box,
-  button.toolbar:active > .internal-box
-    {
-      border              : none;
-      vertical-align      : middle;
-    }
-
-/* text wrapper frame */
-  button.toolbar > .internal-box > .text-container 
-    {
-      padding-top         : 3px;
-      text-align          : center;
-    }
-
-/** Expanding Region Button **/
-
-/* outer frame */
-  button.expander
-    {
-      border              : none;
-      padding             : none;
-      margin              : 1px 5px 3px 1px;
-      background-color    : inherit;
-      list-style-image    : url("chrome://global/skin/closedtwisty.gif");
-    }
-    
-  button[open="true"].expander 
-    {
-      list-style-image    : url("chrome://global/skin/opentwisty.gif");
-    }
-    
-/* internal frame */
-  button.expander > .internal-box
-    {
-      border              : none;
-      background-color    : inherit;
-      padding             : none;
-      margin              : none;
-    }
-
-/* text frame */
-  button.expander > .internal-box > .text-container > text
-    {
-      color               : #0000FF;
-      text-decoration     : underline;
-    }
-    
-  button.expander:hover > .internal-box > .text-container > text
-    {
-      color               : #FF0000;
-    }

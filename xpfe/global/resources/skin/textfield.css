@@ -35,29 +35,28 @@
     }
 
 /* internal frame */
-  textfield > box 
+  .textfield-internal-box 
     {
       margin              : 0px;
       padding             : 1px 2px 1px 2px;
       cursor              : text;
-      border              : 1px solid black;
+      border              : 1px solid #000000;
       background-color    : inherit;
       color               : inherit;
     }
   
-  textfield[disabled="true"] > box
+  textfield[disabled="true"] > .textfield-internal-box
     {
       border              : 1px solid #999999;
     }
   
-  textfield[multiline="true"] > box
+  .textarea-internal-box
     {
       padding             : 0px 0px 0px 2px;
     }
   
 /* internal text widget */
-  textfield > box > html|input,
-  textfield > box > html|textarea
+  .textfield-input, .textfield-textarea
     {
       border              : none !important;
       margin              : 0px;
@@ -65,9 +64,18 @@
       background-color    : inherit;
     }
 
-  textfield[disabled="true"] > box > html|input,
-  textfield[disabled="true"] > box > html|textarea
+  .textfield-input, .textfield-textarea
     {
       color               : #999999;
       cursor              : default ! important;
     } 
+    
+/** plain atomic textfields, class="plain" **/
+  textfield.plain, 
+  textfield.plain > .textfield-internal-box, 
+  textfield.plain > .textarea-internal-box
+    {
+      padding             : 0px !important;
+      margin              : 0px !important;
+      border              : none !important;
+    }

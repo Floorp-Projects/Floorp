@@ -29,17 +29,23 @@ include $(DEPTH)/config/autoconf.mk
 DIRS		= unix
 
 EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/tasksOverlay.css \
-		$(srcdir)/global.css \
-		$(srcdir)/formatting.css \
-		$(srcdir)/textfield.css \
+		$(srcdir)/box.css \
 		$(srcdir)/button.css \
 		$(srcdir)/checkbox.css \
+		$(srcdir)/commonDialog.css \
+		$(srcdir)/dialogOverlay.css \
+		$(srcdir)/formatting.css \
+		$(srcdir)/global.css \
+		$(srcdir)/menu.css \
 		$(srcdir)/menubutton.css \
 		$(srcdir)/menulist.css \
 		$(srcdir)/radio.css \
+		$(srcdir)/scrollbars.css \
+		$(srcdir)/tasksOverlay.css \
+		$(srcdir)/textfield.css \
+		$(srcdir)/toolbar.css \
 		$(srcdir)/tree.css \
-    $(srcdir)/scrollbars.css \
+		$(srcdir)/wizardOverlay.css \
 		$(srcdir)/lessCols.gif \
 		$(srcdir)/lessCols_mo.gif \
 		$(srcdir)/lessCOls_dis.gif \
@@ -65,7 +71,6 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/scroll-thumb-vert-hover.gif \
 		$(srcdir)/scroll-thumb-vert-disabled.gif \
 		$(srcdir)/menu-arrow.gif \
-		$(srcdir)/dialogOverlay.css \
 		$(srcdir)/menu-arrow-hover.gif \
 		$(srcdir)/menu-arrow-disabled.gif \
 		$(srcdir)/menu-check.gif \
@@ -93,6 +98,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/taskbar-navigator.gif \
 		$(srcdir)/taskbar-tab-minimized.gif \
 		$(srcdir)/taskbar-tab.gif \
+		$(srcdir)/taskbar-tab-trans.gif \
 		$(srcdir)/taskbar-tab-hover.gif \
 		$(srcdir)/taskbar-popup-arrow.gif \
 		$(srcdir)/button28-bg-active.gif \
@@ -124,8 +130,6 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/animthrob.gif \
 		$(srcdir)/animthrob_single.gif \
 		$(srcdir)/progressmeter-busy.gif \
-		$(srcdir)/commonDialog.css \
-		$(srcdir)/wizardOverlay.css \
 		$(srcdir)/seltab-leftedge.gif \
 		$(srcdir)/seltab-rightedge.gif \
 		$(srcdir)/tab-leftedge.gif \
@@ -141,6 +145,7 @@ EXPORT_RESOURCE_CONTENT = \
 EXPORT_CHROME	= $(srcdir)/xul.css \
 		$(srcdir)/htmlBindings.xml \
                 $(srcdir)/xulBindings.xml \
+                $(srcdir)/menulistBindings.xml \
                 $(NULL)
 
 include $(topsrcdir)/config/rules.mk
