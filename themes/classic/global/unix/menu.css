@@ -168,6 +168,16 @@ menuitem[checked="true"][disabled="true"]
     list-style-image      : url("chrome://global/skin/menu-check-disabled.gif");
   }
 
+menuitem[checked="true"][type="radio"] 
+  {
+    list-style-image      : url("chrome://global/skin/menu-radio.gif");
+  }
+
+menuitem[checked="true"][type="radio"][disabled="true"] 
+  {
+    list-style-image      : url("chrome://global/skin/menu-radio-disabled.gif");
+  }
+
 .menu-right[disabled="true"] 
   {
     list-style-image      : url("chrome://global/skin/menu-arrow-disabled.gif");

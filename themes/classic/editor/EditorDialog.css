@@ -82,14 +82,18 @@ titledbox {
 
 .color-well {
   width:20px;
-  height: 1em; 
+  height: 16px; 
   border: 1px inset #CCCCCC;
-  /* Background color is set at runtime */
+  margin: 4px;
 }
 
 .color-well[default="true"] {
   border: 1px solid transparent;
   background-color: inherit;
+}
+
+.color-button {
+  background: transparent;
 }
 
 #ColorPickerSwatch {

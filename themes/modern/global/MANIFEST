@@ -46,6 +46,9 @@ menu-arrow.gif
 menu-check-disabled.gif
 menu-check-hover.gif
 menu-check.gif
+menu-radio-disabled.gif
+menu-radio-hover.gif
+menu-radio.gif
 menu.css
 menubutton.css
 menulist.css

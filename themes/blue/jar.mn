@@ -1,4 +1,4 @@
-skins/blue.jar:
+skins/modern.jar:
     manifest.rdf                                               
     communicator/skin/box.css                                  (communicator/box.css)
     communicator/skin/securityOverlay.css                      (communicator/securityOverlay.css)
@@ -76,6 +76,9 @@ skins/blue.jar:
     global/skin/menu-check-disabled.gif                        (global/menu-check-disabled.gif)
     global/skin/menu-check-hover.gif                           (global/menu-check-hover.gif)
     global/skin/menu-check.gif                                 (global/menu-check.gif)
+    global/skin/menu-radio-disabled.gif                        (global/menu-radio-disabled.gif)
+    global/skin/menu-radio-hover.gif                           (global/menu-radio-hover.gif)
+    global/skin/menu-radio.gif                                 (global/menu-radio.gif)
     global/skin/menu.css                                       (global/menu.css)
     global/skin/menubutton.css                                 (global/menubutton.css)
     global/skin/menulist.css                                   (global/menulist.css)

@@ -31,7 +31,7 @@
 titledbox {
   margin:         2px 5px; 4px; 5px;
   padding-top:    2px;
-  padding-bottom: 4px;
+  padding-bottom: 10px;
 }
 
 .MinWidth5em {
@@ -82,13 +82,18 @@ titledbox {
 
 .color-well {
   width:20px;
-  height: 1.2em; 
+  height: 16px; 
   border: 1px inset #CCCCCC;
+  margin: 1px 0px 2px 4px;
 }
 
 .color-well[default="true"] {
   border: 1px solid transparent;
   background-color: inherit;
+}
+
+.color-button {
+  background: transparent;
 }
 
 #ColorPickerSwatch {
