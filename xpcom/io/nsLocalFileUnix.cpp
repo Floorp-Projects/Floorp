@@ -1438,7 +1438,7 @@ NS_IMETHODIMP nsLocalFile::GetURL(char * *aURL)
                 // make sure we have a trailing slash
                 escPath += "/";
             }
-            *aURL = nsCRT::strdup((const char *)escPath);
+            *aURL = ToNewCString(escPath);
             rv = *aURL ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
         }
     }
@@ -1479,7 +1479,7 @@ NS_IMETHODIMP nsLocalFile::SetURL(const char * aURL)
     
     nsUnescape((char*)path.get());
 
-    rv = InitWithPath(path);
+    rv = InitWithPath(path.get());
     
     return rv;
 }
