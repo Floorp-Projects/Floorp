@@ -145,3 +145,14 @@ enum EClickKind {
 	eImageAltText,				// Alt text part of the image
 	eEdge						// Edge
 };
+
+enum EClickState {
+	eMouseUndefined				=	0,
+	eMouseDragging				=	1,
+	eMouseTimeout,
+	eMouseUpEarly,
+	eMouseHandledByAttachment,
+	eMouseWasCommandClick
+};
+
+const Int16 kMouseHysteresis	= 6;
