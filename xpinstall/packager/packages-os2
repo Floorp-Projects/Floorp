@@ -9,6 +9,7 @@
 ;
 
 bin/chrome/installed-chrome.txt
+bin/.autoreg
 
 [langenus]
 ;

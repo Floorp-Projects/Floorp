@@ -8,6 +8,8 @@
 ; ; file comment
 ;
 
+bin/.autoreg
+
 [langenus]
 ;
 ; en-US

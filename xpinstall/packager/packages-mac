@@ -8,6 +8,8 @@
 ; ; file comment 
 ; 
 
+viewer:.autoreg
+
 [langenus]
 ;
 ; en-US 
