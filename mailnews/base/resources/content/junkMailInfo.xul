@@ -52,14 +52,12 @@
         title="&window.title;"
         windowtype="mailnews:junkmailinfo"
         buttons="accept,help"
-        width="&window.width;"
-        height="&window.height;"
         ondialogaccept="return window.close();"
         ondialoghelp="return openHelp('mail-junk');">
 
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
-  <vbox flex="1">
+  <vbox flex="1" width="&window.width;">
       <spacer/>
       <description>&info1a.label;<image align="center" id="junkIcon"/>&info1b.label;</description>
       <spacer/>
