@@ -184,7 +184,7 @@ function sendEvent()
 	 */
    var CalendarText = "";
    var EmailBody = "";
-   var Seperator = "";
+   var Separator = "";
 
 	for( var i = 0; i < gCalendarWindow.EventSelection.selectedEvents.length; i++ )
    {
@@ -197,9 +197,19 @@ function sendEvent()
             Event.method = Event.ICAL_METHOD_PUBLISH;
 
          CalendarText += Event.getIcalString();
-         EmailBody += emailStringBundle.GetStringFromName( "When" )+" " + Event.start + "-" + Event.end + "\n"+emailStringBundle.GetStringFromName( "Where" )+" " + Event.location + "\n"+emailStringBundle.GetStringFromName( "Organizer" )+" " + gMailIdentity.fullName + " <" + gMailIdentity.email + ">" + "\n"+emailStringBundle.GetStringFromName( "Summary" )+":" + Event.description;
-         EmailBody += Seperator;
-         Seperator = "\n";
+         var dateFormat = new DateFormater();
+         var eventStartDate = new Date(Event.start.getTime());
+         var eventEndDate   = new Date(Event.end.getTime());
+         var eventStartFormatted = (dateFormat.getShortFormatedDate(eventStartDate)+" "+
+                                   dateFormat.getFormatedTime(eventStartDate));
+         var eventEndFormatted   = (dateFormat.getShortFormatedDate(eventEndDate)+" "+
+                                   dateFormat.getFormatedTime(eventEndDate));
+         EmailBody += (emailStringBundle.GetStringFromName( "When" )+" " + eventStartFormatted + " - " + eventEndFormatted + "\n"+
+                      emailStringBundle.GetStringFromName( "Where" )+" " + Event.location + "\n"+
+                      emailStringBundle.GetStringFromName( "Organizer" )+" " + gMailIdentity.fullName + " <" + gMailIdentity.email + ">" + "\n" +
+                      emailStringBundle.GetStringFromName( "Summary" )+":" + Event.description);
+         EmailBody += Separator;
+         Separator = "\n";
       }
    }
    
@@ -327,7 +337,7 @@ function saveCalendarObject(FilePath, CalendarStream)
  *
  * IMPLEMENTATION NOTES
  * Attachments are still very untested, as is priority, all arguments to 
- * this function are strings, with the to, cc and bcc being comma seperated
+ * this function are strings, with the to, cc and bcc being comma separated
  * email addresses.
  **************************************************************/
 
