@@ -44,7 +44,7 @@ thumb {
   background-color: -moz-mac-accentface;
   border-left: 1px solid #000000;
   border-right: 1px solid #000000;
-  list-style-image: url("chrome://global/skin/scroll-thumb-horiz.gif");
+  list-style-image: url("chrome://global/skin/scroll-thumb-horiz.png");
 }
 
 .thumb-border {
@@ -63,7 +63,7 @@ thumb:active > .thumb-border {
 
 thumb:active {
 	background-color: -moz-mac-accentlightshadow;
-	list-style-image: url("chrome://global/skin/scroll-thumb-horiz-active.gif");
+   list-style-image: url("chrome://global/skin/scroll-thumb-horiz-active.png");
 }
 
 thumb[disabled="true"] {
@@ -73,7 +73,7 @@ thumb[disabled="true"] {
 }
 
 thumb[align="vertical"] {
-  list-style-image: url("chrome://global/skin/scroll-thumb-vert.gif");
+  list-style-image: url("chrome://global/skin/scroll-thumb-vert.png");
   border-top: 1px solid #000000;
   border-bottom: 1px solid #000000;
   border-left: none;
@@ -82,7 +82,7 @@ thumb[align="vertical"] {
 
 thumb[align="vertical"]:active {
 	background-color: -moz-mac-accentlightshadow;
-	list-style-image: url("chrome://global/skin/scroll-thumb-vert-active.gif");
+   list-style-image: url("chrome://global/skin/scroll-thumb-vert-active.png");
 }
 
 scrollbarbutton {
