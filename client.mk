@@ -388,7 +388,7 @@ endif
 
 ifdef MOZ_MAPINFO
 $(warning MOZ_MAPINFO is obsolete, use MOZ_CO_MODULE=mozilla/tools/codesighs instead.)
-MOZ_CO_MODULE += mozilla/tools/codesighs
+MOZ_MODULE_LIST += mozilla/tools/codesighs
 endif
 ifdef MOZ_INTERNAL_LIBART_LGPL
 $(error MOZ_INTERNAL_LIBART_LGPL is obsolete, use MOZ_CO_MODULE=mozilla/other-licenses/libart_lgpl instead.)
@@ -408,8 +408,12 @@ endif
 # Checkout main modules
 #
 
-# sort is used to remove duplicates
-MOZ_MODULE_LIST := $(sort $(MOZ_MODULE_LIST))
+# sort is used to remove duplicates.  SeaMonkeyAll is special-cased to
+# checkout last, because if you check it out first, there is a sticky
+# tag left over from checking out the LDAP SDK, which causes files in
+# the root directory to be missed.
+MOZ_MODULE_LIST := $(sort $(filter-out SeaMonkeyAll,$(MOZ_MODULE_LIST))) $(filter SeaMonkeyAll,$(MOZ_MODULE_LIST))
+$(warning MOZ_MODULE_LIST = $(MOZ_MODULE_LIST))
 
 MODULES_CO_FLAGS := -P
 ifdef MOZ_CO_FLAGS
@@ -417,15 +421,14 @@ ifdef MOZ_CO_FLAGS
 endif
 MODULES_CO_FLAGS := $(MODULES_CO_FLAGS) $(if $(MOZ_CO_TAG),-r $(MOZ_CO_TAG),-A)
 
-CVSCO_MODULES = $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(MOZ_MODULE_LIST)
 CVSCO_MODULES_NS = $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) -l $(NOSUBDIRS_MODULE)
 
 ifeq (,$(MOZ_MODULE_LIST))
 FASTUPDATE_MODULES = $(error No modules or projects were specified. Use MOZ_CO_PROJECT to specify a project for checkout.)
 CHECKOUT_MODULES   = $(error No modules or projects were specified. Use MOZ_CO_PROJECT to specify a project for checkout.)
 else
-FASTUPDATE_MODULES := fast_update $(CVSCO_MODULES)
-CHECKOUT_MODULES   := cvs_co      $(CVSCO_MODULES)
+FASTUPDATE_MODULES := fast_update $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(MOZ_MODULE_LIST)
+CHECKOUT_MODULES   := $(foreach module,$(MOZ_MODULE_LIST),cvs_co $(CVS) $(CVS_FLAGS) co $(MODULES_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(module);)
 endif
 ifeq (,$(NOSUBDIRS_MODULE))
 FASTUPDATE_MODULES_NS := true
@@ -538,7 +541,7 @@ real_checkout:
 	cvs_co $(CVSCO_NSPR); \
 	cvs_co $(CVSCO_NSS); \
 	cvs_co $(CVSCO_LDAPCSDK); \
-	$(CHECKOUT_MODULES); \
+	$(CHECKOUT_MODULES) \
 	$(CHECKOUT_MODULES_NS); \
 	$(CHECKOUT_LOCALES);
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
