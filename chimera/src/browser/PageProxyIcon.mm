@@ -23,7 +23,7 @@
 
 #import "NSString+Utils.h"
 
-#import "CHPageProxyIcon.h"
+#import "PageProxyIcon.h"
 
 #import "BookmarksService.h"
 #import "MainController.h"
@@ -32,7 +32,7 @@
 #include "nsNetUtil.h"
 #include "nsString.h"
 
-@implementation CHPageProxyIcon
+@implementation PageProxyIcon
 
 - (void)awakeFromNib
 {

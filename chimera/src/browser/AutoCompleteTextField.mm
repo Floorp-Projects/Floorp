@@ -22,13 +22,13 @@
 *   David Haas <haasd@cae.wisc.edu> 
 */
 
-#import "CHAutoCompleteTextField.h"
+#import "AutoCompleteTextField.h"
 #import "BrowserWindowController.h"
-#import "CHPageProxyIcon.h"
+#import "PageProxyIcon.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
 #include "nsString.h"
-#include "CHUserDefaults.h"
+#include "UserDefaults.h"
 
 static const int kMaxRows = 6;
 static const int kFrameMargin = 1;
@@ -47,7 +47,7 @@ static const int kFrameMargin = 1;
 class AutoCompleteListener : public nsIAutoCompleteListener
 {  
 public:
-  AutoCompleteListener(CHAutoCompleteTextField* aTextField)
+  AutoCompleteListener(AutoCompleteTextField* aTextField)
   {
     NS_INIT_REFCNT();
     mTextField = aTextField;
@@ -66,14 +66,14 @@ public:
   }
 
 private:
-  CHAutoCompleteTextField *mTextField;
+  AutoCompleteTextField *mTextField;
 };
 
 NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
 
 ////////////////////////////////////////////////////////////////////////
 
-@implementation CHAutoCompleteTextField
+@implementation AutoCompleteTextField
 
 - (void) awakeFromNib
 {
@@ -137,7 +137,7 @@ NS_IMPL_ISUPPORTS1(AutoCompleteListener, nsIAutoCompleteListener)
   [scrollView setDocumentView: mTableView];
 
   // construct the datasource
-  mDataSource = [[CHAutoCompleteDataSource alloc] init];
+  mDataSource = [[AutoCompleteDataSource alloc] init];
   [mTableView setDataSource: mDataSource];
 
   [mPopupWin setContentView:scrollView];

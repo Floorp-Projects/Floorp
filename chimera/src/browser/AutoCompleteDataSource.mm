@@ -25,11 +25,11 @@
 #import "NSString+Utils.h"
 
 #import <AppKit/AppKit.h>
-#import "CHAutoCompleteTextField.h"
+#import "AutoCompleteTextField.h"
 #include "nsString.h"
 #include "nsCRT.h"
 
-@implementation CHAutoCompleteDataSource
+@implementation AutoCompleteDataSource
 
 -(id)init
 {

@@ -23,20 +23,20 @@
 */
 
 #import <AppKit/AppKit.h>
-#import "CHAutoCompleteDataSource.h"
+#import "AutoCompleteDataSource.h"
 #include "nsIAutoCompleteSession.h"
 #include "nsIAutoCompleteResults.h"
 #include "nsIAutoCompleteListener.h"
 
-@class CHAutoCompleteDataSource, CHPageProxyIcon;
+@class BookmarksOutlineView, PageProxyIcon;
 
-@interface CHAutoCompleteTextField : NSTextField
+@interface AutoCompleteTextField : NSTextField
 {
-  IBOutlet CHPageProxyIcon *mProxyIcon;
+  IBOutlet PageProxyIcon *mProxyIcon;
   NSWindow *mPopupWin;
   NSTableView *mTableView;
   
-  CHAutoCompleteDataSource *mDataSource;
+  AutoCompleteDataSource *mDataSource;
 
   nsIAutoCompleteSession *mSession;
   nsIAutoCompleteResults *mResults;

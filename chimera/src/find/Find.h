@@ -24,13 +24,13 @@
 #import <Cocoa/Cocoa.h>
 
 //
-// protocol CHFind
+// protocol Find
 //
 // Any window who wants to be able to work with the Find dialog should implement
 // this protocol.
 //
 
-@protocol CHFind
+@protocol Find
 
 - (BOOL)findInPageWithPattern:(NSString*)text caseSensitive:(BOOL)inCaseSensitive
         wrap:(BOOL)inWrap backwards:(BOOL)inBackwards;

@@ -37,7 +37,7 @@
 
 #import "FindDlgController.h"
 #import "BrowserWindowController.h"
-#import "CHFind.h"
+#import "Find.h"
 #include "nsCOMPtr.h"
 
 
@@ -70,8 +70,8 @@
 -(IBAction) find: (id)aSender
 {
   NSWindowController* controller = [[NSApp mainWindow] windowController];
-  if ( [controller conformsToProtocol:@protocol(CHFind)] ) {
-    id<CHFind> browserController = controller;
+  if ( [controller conformsToProtocol:@protocol(Find)] ) {
+    id<Find> browserController = controller;
     BOOL ignoreCase = [mIgnoreCaseBox state];
     BOOL wrapSearch = [mWrapAroundBox state];
     BOOL searchBack = [mSearchBackwardsBox state];
@@ -99,8 +99,8 @@
 -(IBAction) findAgain: (id)aSender
 {
   NSWindowController* controller = [[NSApp mainWindow] windowController];
-  if ( [controller conformsToProtocol:@protocol(CHFind)] ) {
-    id<CHFind> browserController = controller;
+  if ( [controller conformsToProtocol:@protocol(Find)] ) {
+    id<Find> browserController = controller;
     BOOL ignoreCase = [mIgnoreCaseBox state];
     BOOL wrapSearch = [mWrapAroundBox state];
     BOOL searchBack = [mSearchBackwardsBox state];

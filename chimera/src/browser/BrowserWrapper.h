@@ -41,7 +41,7 @@
 @class BrowserWindowController;
 @class ToolTip;
 
-@interface CHBrowserWrapper : NSView <NSBrowserListener, NSBrowserContainer>
+@interface BrowserWrapper : NSView <NSBrowserListener, NSBrowserContainer>
 {
   NSTextField*              mUrlbar;
   NSTextField*              mStatus;

@@ -22,13 +22,13 @@
 *   Max Horn <max@quendi.de> (Context menu & tooltip code)
 */
 
-#import "CHExtendedOutlineView.h"
+#import "ExtendedOutlineView.h"
 
-@interface CHExtendedOutlineView (Private)
+@interface ExtendedOutlineView (Private)
 - (void)_updateToolTipRect;
 @end
 
-@implementation CHExtendedOutlineView
+@implementation ExtendedOutlineView
 
 - (id)initWithFrame:(NSRect)frame
 {
@@ -191,7 +191,7 @@
 @end
 
 
-@implementation CHExtendedOutlineView (Private)
+@implementation ExtendedOutlineView (Private)
 
 /*
  * Set up tooltip rects for every row, but only if the frame size or

@@ -64,12 +64,12 @@
 #include "nsNetUtil.h"
 #include "SaveHeaderSniffer.h"
 
-#import "CHBrowserWrapper.h"
+#import "BrowserWrapper.h"
 #import "CHBrowserView.h"
 
 #import "FindDlgController.h"
-#import "nsCocoaBrowserService.h"
-#import "nsCocoaBrowserListener.h"
+#import "CHBrowserService.h"
+#import "CHBrowserListener.h"
 
 #import "mozView.h"
 
@@ -100,12 +100,12 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
 {
   if ( (self = [super initWithFrame:frame]) )
   {
-    nsresult rv = nsCocoaBrowserService::InitEmbedding();
+    nsresult rv = CHBrowserService::InitEmbedding();
     if (NS_FAILED(rv)) {
 // XXX need to throw
     }
 
-    _listener = new nsCocoaBrowserListener(self);
+    _listener = new CHBrowserListener(self);
     NS_ADDREF(_listener);
     
 // Create the web browser instance
@@ -148,7 +148,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   NS_RELEASE(_listener);
   NS_IF_RELEASE(_webBrowser);
   
-  nsCocoaBrowserService::BrowserClosed();
+  CHBrowserService::BrowserClosed();
   
 #if DEBUG
   NSLog(@"CHBrowserView died.");
@@ -321,7 +321,7 @@ const char kDirServiceContractID[] = "@mozilla.org/file/directory_service;1";
   return str;
 }
 
-- (nsCocoaBrowserListener*)getCocoaBrowserListener
+- (CHBrowserListener*)getCocoaBrowserListener
 {
   return _listener;
 }

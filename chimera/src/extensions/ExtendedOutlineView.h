@@ -24,7 +24,7 @@
 
 #import <AppKit/AppKit.h>
 
-@interface CHExtendedOutlineView : NSOutlineView {
+@interface ExtendedOutlineView : NSOutlineView {
   SEL mDeleteAction;
 
   NSRect mOldFrameRect;

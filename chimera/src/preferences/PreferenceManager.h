@@ -40,14 +40,14 @@
 
 class nsIPref;
 
-@interface CHPreferenceManager : NSObject
+@interface PreferenceManager : NSObject
 {
     NSUserDefaults*	mDefaults;
     ICInstance 			mInternetConfig;
     nsIPref*        mPrefs;
 }
 
-+ (CHPreferenceManager *)sharedInstance;
++ (PreferenceManager *)sharedInstance;
 
 - (id) init;
 - (void) dealloc;

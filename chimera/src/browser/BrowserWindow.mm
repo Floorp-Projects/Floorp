@@ -37,7 +37,7 @@
 
 #import "BrowserWindow.h"
 #import "BrowserWindowController.h"
-#import "CHAutoCompleteTextField.h"
+#import "AutoCompleteTextField.h"
 
 static const int kEscapeKeyCode = 53;
 

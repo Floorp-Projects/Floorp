@@ -21,7 +21,7 @@
 *   Joe Hewitt <hewitt@netscape.com> (Original Author)
 */
 
-#import "CHBookmarksOutlineView.h"
+#import "BookmarksOutlineView.h"
 #import "BookmarksService.h"
 #import "BookmarksDataSource.h"
 
@@ -30,7 +30,7 @@
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 
-@implementation CHBookmarksOutlineView
+@implementation BookmarksOutlineView
 
 - (void)awakeFromNib
 {

@@ -45,7 +45,7 @@ class nsIRDFContainerUtils;
 class nsIRDFResource;
 class nsIRDFService;
 
-@interface CHRDFOutlineViewDataSource : NSObject {
+@interface RDFOutlineViewDataSource : NSObject {
     nsIRDFDataSource* 		mDataSource;
     nsIRDFContainer* 		mContainer;
     nsIRDFContainerUtils* 	mContainerUtils;

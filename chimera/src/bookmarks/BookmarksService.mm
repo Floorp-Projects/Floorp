@@ -37,7 +37,7 @@
 
 #import "NSString+Utils.h"
 
-#import "CHPreferenceManager.h"
+#import "PreferenceManager.h"
 #import "CHBrowserView.h"
 #import "BookmarksService.h"
 #import "BookmarksDataSource.h"
@@ -132,7 +132,7 @@ BookmarksService::BookmarksService(BookmarksDataSource* aDataSource)
   mToolbar = nil;
 }
 
-BookmarksService::BookmarksService(CHBookmarksToolbar* aToolbar)
+BookmarksService::BookmarksService(BookmarksToolbar* aToolbar)
 {
   mDataSource = nil;
   mToolbar = aToolbar;
@@ -629,7 +629,7 @@ BookmarksService::CreateIconForBookmark(nsIDOMElement* aElement)
     return [NSImage imageNamed:@"folder"];
   
   // fire off a proxy icon load
-  if ([[CHPreferenceManager sharedInstance] getBooleanPref:"browser.chrome.site_icons" withSuccess:NULL])
+  if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.chrome.site_icons" withSuccess:NULL])
   {
     nsAutoString href;
     content->GetAttr(kNameSpaceID_None, gHrefAtom, href);
@@ -1109,7 +1109,7 @@ BookmarksService::OpenBookmarkGroup(id aTabView, nsIDOMElement* aFolder)
           // XXX this needs fixing to not max out the number of tabs in a browser window.
           // See [BrowserWindowController newTabsAllowed];
           tabViewItem = [BrowserTabView makeNewTabItem];
-          CHBrowserWrapper* newView = [[[CHBrowserWrapper alloc] initWithTab: tabViewItem andWindow: [aTabView window]] autorelease];
+          BrowserWrapper* newView = [[[BrowserWrapper alloc] initWithTab: tabViewItem andWindow: [aTabView window]] autorelease];
           [tabViewItem setLabel: NSLocalizedString(@"UntitledPageTitle", @"")];
           [tabViewItem setView: newView];
           [aTabView addTabViewItem: tabViewItem];

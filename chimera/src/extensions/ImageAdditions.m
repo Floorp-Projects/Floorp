@@ -1,7 +1,7 @@
-#import "CHImageAdditions.h"
+#import "ImageAdditions.h"
 #import <Cocoa/Cocoa.h>
 
-@implementation NSImage (CHImageAdditions)
+@implementation NSImage (ImageAdditions)
 - (void) drawFlippedInRect:(NSRect) rect operation:(NSCompositingOperation) op fraction:(float) delta {
 	CGContextRef context;
 

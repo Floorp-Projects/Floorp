@@ -38,7 +38,7 @@
 
 #import "NSString+Utils.h"
 
-#import "nsCocoaBrowserService.h"
+#import "CHBrowserService.h"
 #import "CocoaPromptService.h"
 
 #include "nsCRT.h"
@@ -65,7 +65,7 @@ CocoaPromptService::Alert(nsIDOMWindow *parent,
                           const PRUnichar *dialogTitle,
                           const PRUnichar *text)
 {
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller) {
     return NS_ERROR_FAILURE;
   }
@@ -89,7 +89,7 @@ CocoaPromptService::AlertCheck(nsIDOMWindow *parent,
                                const PRUnichar *checkMsg,
                                PRBool *checkValue)
 {
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller) {
     return NS_ERROR_FAILURE;
   }
@@ -120,7 +120,7 @@ CocoaPromptService::Confirm(nsIDOMWindow *parent,
                             const PRUnichar *text,
                             PRBool *_retval)
 {
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller) {
     return NS_ERROR_FAILURE;
   }
@@ -142,7 +142,7 @@ CocoaPromptService::ConfirmCheck(nsIDOMWindow *parent,
                                  const PRUnichar *checkMsg,
                                  PRBool *checkValue, PRBool *_retval)
 {
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller) {
     return NS_ERROR_FAILURE;
   }
@@ -185,7 +185,7 @@ CocoaPromptService::ConfirmEx(nsIDOMWindow *parent,
                               const PRUnichar *checkMsg,
                               PRBool *checkValue, PRInt32 *buttonPressed)
 {
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller) {
     return NS_ERROR_FAILURE;
   }
@@ -228,7 +228,7 @@ CocoaPromptService::Prompt(nsIDOMWindow *parent,
                            PRBool *checkValue,
                            PRBool *_retval)
 {
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller) {
     return NS_ERROR_FAILURE;
   }
@@ -270,7 +270,7 @@ CocoaPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
                                               PRBool *checkValue,
                                               PRBool *_retval)
 {
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller) {
     return NS_ERROR_FAILURE;
   }
@@ -318,7 +318,7 @@ CocoaPromptService::PromptPassword(nsIDOMWindow *parent,
                                    PRBool *checkValue,
                                    PRBool *_retval)
 {
-  nsAlertController* controller = nsCocoaBrowserService::GetAlertController();
+  nsAlertController* controller = CHBrowserService::GetAlertController();
   if (!controller) {
     return NS_ERROR_FAILURE;
   }

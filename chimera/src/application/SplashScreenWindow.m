@@ -16,16 +16,16 @@
 *
 */
 
-#import "CHSplashScreenWindow.h"
+#import "SplashScreenWindow.h"
 
-@interface CHSplashScreenWindow (Private)
+@interface SplashScreenWindow (Private)
 -(void)fadeIn;
 -(void)fadeInThread;
 -(void)fadeOut;
 -(void)fadeOutThread;
 @end
 
-@implementation CHSplashScreenWindow
+@implementation SplashScreenWindow
 
 -(id)splashImage:(NSImage *)splashImage withFade:(BOOL)shouldFade withStatusRect:(NSRect)statusRect
 {

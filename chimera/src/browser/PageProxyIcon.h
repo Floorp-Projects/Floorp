@@ -23,7 +23,7 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface CHPageProxyIcon : NSImageView
+@interface PageProxyIcon : NSImageView
 {
 }
 

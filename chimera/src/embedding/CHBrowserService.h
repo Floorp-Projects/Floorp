@@ -44,13 +44,13 @@
 #include "nsIHelperAppLauncherDialog.h"
 #include "nsIFactory.h"
 
-class nsCocoaBrowserService :  public nsIWindowCreator,
+class CHBrowserService :  public nsIWindowCreator,
                                public nsIFactory, 
                                public nsIHelperAppLauncherDialog
 {
 public:
-  nsCocoaBrowserService();
-  virtual ~nsCocoaBrowserService();
+  CHBrowserService();
+  virtual ~CHBrowserService();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWINDOWCREATOR
@@ -68,7 +68,7 @@ public:
   static PRUint32 sNumBrowsers;
 
 private:
-  static nsCocoaBrowserService* sSingleton;
+  static CHBrowserService* sSingleton;
   static nsAlertController* sController;
   static PRBool sCanTerminate;
 };

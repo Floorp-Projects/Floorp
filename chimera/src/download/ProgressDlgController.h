@@ -37,7 +37,7 @@
 
 #import <AppKit/AppKit.h>
 
-#import "DownloadProgressDisplay.h"
+#import "CHDownloadProgressDisplay.h"
 
 #include "nscore.h"
 
@@ -51,7 +51,7 @@ class nsDownloadListener;
 @end
 
 
-@interface ProgressDlgController : NSWindowController <DownloadProgressDisplay>
+@interface ProgressDlgController : NSWindowController <CHDownloadProgressDisplay>
 {
     IBOutlet NSTextField *mElapsedTimeLabel;
     IBOutlet NSTextField *mFromField;
