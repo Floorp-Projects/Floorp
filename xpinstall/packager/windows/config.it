@@ -166,7 +166,7 @@ Message0=Setup has enough information to start copying the program files.  If yo
 ;   AUTO  - Don't show unless a component has its reboot show value set to
 ;           TRUE or there was at least one file in use and a reboot is
 ;           is required for the file to be replaced correctly.
-Show Dialog=FALSE
+Show Dialog=AUTO
 
 ; These SmartDownload sections contain information to configure SmartDownload.
 ; The info is applied to all components to be downloaded.
@@ -237,6 +237,9 @@ Message=Preparing SmartUpdate, please wait...
 ;   post smartupdate - process after the smartupdate engine has been launched.
 ;   pre launchapp    - process before the launching of executables.
 ;   post launchapp   - process after the launching of executables.
+;   depend reboot    - process depending on if a reboot is necessary or not.
+;                      if reboot is necessary, installer can set it up so
+;                      the app runs once upon windows reboot.
 
 ;Uncompress FileX sections
 ;[Uncompress File0]
@@ -303,7 +306,7 @@ Destination=[COMMON_PROGRAMS]\Netscape Seamonkey\Netscape AppRunner.lnk
 
 ;RunAppX sections
 [RunApp0]
-Timing=post launchapp
+Timing=depend reboot
 Wait=FALSE
 Target=[SETUP PATH]\mozilla.exe
 Parameters=-installer
