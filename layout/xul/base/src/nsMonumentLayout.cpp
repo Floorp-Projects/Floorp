@@ -30,6 +30,7 @@
 #include "nsMonumentLayout.h"
 #include "nsBoxLayoutState.h"
 #include "nsIBox.h"
+#include "nsIScrollableFrame.h"
 #include "nsBox.h"
 
 //------ nsInfoListNodeImpl ----
@@ -334,15 +335,27 @@ nsMonumentLayout::GetOtherMonuments(nsIBox* aBox, nsBoxSizeList** aList)
 NS_IMETHODIMP
 nsMonumentLayout::GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsBoxSizeList** aList, nsMonumentLayout* aRequestor)
 {
+   nsresult rv = NS_OK;
+
    PRInt32 index = -1;
    nsIBox* child = nsnull;
    aBox->GetChildBox(&child);
    PRInt32 count = 0;
    while(child)
    {
+     nsCOMPtr<nsIBox> childBox = child;
+     nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(child, &rv);
+     if (scrollFrame) {
+       nsIFrame* childFrame = nsnull;
+       scrollFrame->GetScrolledFrame(nsnull, childFrame);
+       if (!childFrame)
+         return NS_ERROR_FAILURE;
+       childBox = do_QueryInterface(childFrame);
+     }
+
      nsIBoxLayout* layout = nsnull;
-     child->GetLayoutManager(&layout);
-     nsresult rv = NS_OK;
+     childBox->GetLayoutManager(&layout);
+     
      // only all monuments
      nsCOMPtr<nsIMonument> monument = do_QueryInterface(layout, &rv);
      if (NS_SUCCEEDED(rv) && monument) 
