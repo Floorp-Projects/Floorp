@@ -71,7 +71,9 @@ enum eXIFTags
   eXIFTag_css_stylesheet,
 
   eXIFTag_doctype,
-  eXIFTag_encode,    
+  eXIFTag_document_info,
+  eXIFTag_encode, 
+  eXIFTag_entity,
   eXIFTag_import,
   eXIFTag_leaf,
   eXIFTag_link,
@@ -490,6 +492,8 @@ private:
 private:
 
     void ProcessEncodeTag(const nsIParserNode& aNode);
+    void ProcessEntityTag(const nsIParserNode& aNode);
+    void ProcessDocumentInfoTag(const nsIParserNode& aNode);
 
     void BeginCSSStyleSheet(const nsIParserNode& aNode);
     void EndCSSStyleSheet(const nsIParserNode& aNode);
@@ -556,6 +560,7 @@ protected:
     PRBool                mLowerCaseTags;
     PRBool                mLowerCaseAttributes;
     nsITokenizer*         mTokenizer;
+    nsString              mCharset;
 };
 
 

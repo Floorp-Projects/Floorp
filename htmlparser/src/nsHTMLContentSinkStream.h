@@ -53,6 +53,8 @@
 class ostream;
 #endif
 
+class nsIUnicodeEncoder;
+
 class nsHTMLContentSinkStream : public nsIHTMLContentSink {
   public:
 
@@ -135,6 +137,7 @@ protected:
     void UnicodeToHTMLString(const nsString& aSrc);
 
 
+    nsresult InitEncoder(const nsString& aCharset);
 
 
 
@@ -153,6 +156,8 @@ protected:
 
     char*     mBuffer;
     PRInt32   mBufferSize;
+
+    nsIUnicodeEncoder*  mUnicodeEncoder;
 };
 
 extern NS_HTMLPARS nsresult

@@ -51,6 +51,9 @@
 class ostream;
 #endif
 
+
+class nsIUnicodeEncoder;
+
 class nsHTMLToTXTSinkStream : public nsIHTMLContentSink {
   public:
 
@@ -117,6 +120,7 @@ protected:
     
     void EnsureBufferSize(PRInt32 aNewSize);
     void UnicodeToTXTString(const nsString& aSrc);
+    nsresult InitEncoder(const nsString& aCharset);
 
 
 protected:
@@ -127,7 +131,8 @@ protected:
     char*           mBuffer;
     PRInt32         mBufferSize;
 
-    nsString        mStrBuffer;
+    nsString            mStrBuffer;
+    nsIUnicodeEncoder*  mUnicodeEncoder;
 
 };
 
