@@ -199,6 +199,8 @@ pref("browser.tabs.opentabfor.urlbar", false);
 pref("browser.tabs.opentabfor.windowopen", false);
 pref("browser.tabs.opentabfor.bookmarks", false);
 pref("browser.tabs.warnOnClose", true);
+// 0 = append, 1 = replace
+pref("browser.tabs.loadGroup", 1);
 
 // lets new tab/window load something different than first window
 // -1 - use navigator startup preference

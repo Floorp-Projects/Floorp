@@ -590,7 +590,9 @@ var BookmarksCommand = {
           ++index;
         }
       }
-      browser.loadGroup(URIs);
+      var tab = browser.loadGroup(URIs);
+      if (!PREF.getBoolPref("browser.tabs.loadInBackground"))
+        browser.selectedTab = tab;
     } else {
       dump("Open Group in new window: not implemented...\n");
     }
