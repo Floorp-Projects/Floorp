@@ -46,6 +46,7 @@
 #include "netCore.h"
 #include "nsXPIDLString.h"
 #include "nsIPref.h"
+#include "nsReadableUtils.h"
 #include "imgILoader.h"
 
 #include "prcpucfg.h" // To get IS_LITTLE_ENDIAN / IS_BIG_ENDIAN
@@ -67,6 +68,7 @@ nsUnknownDecoder::nsUnknownDecoder()
   mBuffer = nsnull;
   mBufferLen = 0;
   mRequireHTMLsuffix = PR_FALSE;
+  mViewingSource = PR_FALSE;
 
   nsresult rv;
   nsCOMPtr<nsIPref> pPrefService = do_GetService(kPrefServiceCID, &rv);
@@ -126,7 +128,14 @@ nsUnknownDecoder::AsyncConvertData(const PRUnichar *aFromType,
 {
   NS_ASSERTION(aListener && aFromType && aToType, 
                "null pointer passed into multi mixed converter");
-
+  nsDependentString fromType(aFromType);
+  nsAString::const_iterator start, end;
+  fromType.BeginReading(start);
+  fromType.EndReading(end);
+  if (FindInReadable(NS_LITERAL_STRING("; x-view-type=view-source"),
+                     start, end)) {
+    mViewingSource = PR_TRUE;
+  }
   // hook up our final listener. this guy gets the various On*() calls we want to throw
   // at him.
   //
@@ -417,6 +426,10 @@ nsresult nsUnknownDecoder::FireListenerNotifications(nsIRequest* request,
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request, &rv);
   if (NS_FAILED(rv)) return rv;
 
+  if (mViewingSource) {
+    mContentType.Append(NS_LITERAL_CSTRING("; x-view-type=view-source"));
+  }
+  
   // Set the new content type on the channel...
   rv = channel->SetContentType(mContentType);
 
