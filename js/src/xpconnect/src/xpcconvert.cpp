@@ -614,9 +614,12 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                 nsAWritableString* ws = *((nsAWritableString**)d);
 
                 if(JSVAL_IS_NULL(s))
+                {
+                    ws->Truncate();
                     ws->SetIsVoid(PR_TRUE);
+                }
                 else
-                    ws->Assign(chars);
+                    ws->Assign(chars, length);
             }
             return JS_TRUE;
         }
