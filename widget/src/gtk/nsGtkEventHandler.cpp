@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Annema <disttsc@bart.nl>
  */
 
 #include "nsWidget.h"
@@ -32,7 +33,6 @@
 
 
 #include "stdio.h"
-#include "ctype.h"
 
 #include "gtk/gtk.h"
 #include "nsGtkEventHandler.h"
@@ -313,24 +313,18 @@ int nsPlatformToDOMKeyCode(GdkEventKey *aGEK)
 
 //==============================================================
 
+// Convert gdk key event keyvals to char codes if printable, 0 otherwise
 PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
 {
-  // For control key events, aGEK->string is fairly random,
-  // and for alt key it loses capitalization info,
-  // but keyval is reliable for both control and alt.
-  // XXX We need to get meta, too, when/if gtk adds supports for it.
-  if ((aGEK->state & GDK_CONTROL_MASK) || (aGEK->state & GDK_MOD1_MASK))
-  {
+  // Anything above 0xf000 is considered a non-printable
+  if (aGEK->keyval > 0xf000) {
+
     // Keypad keys are an exception: they return a value different
     // from their non-keypad equivalents, but mozilla doesn't distinguish.
     switch (aGEK->keyval)
     {
       case GDK_KP_Space:
         return ' ';
-      case GDK_KP_Tab:
-        return '\t';
-      case GDK_KP_Enter:
-        return 0;
       case GDK_KP_Equal:
         return '=';
       case GDK_KP_Multiply:
@@ -366,29 +360,18 @@ PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aGEK)
       case GDK_KP_9:
         return '9';
     }
-  }
 
-  if (aGEK->state & GDK_CONTROL_MASK) {
-    if (isprint(aGEK->keyval))
-      return (PRUint32)aGEK->keyval;
-
+    // non-printables
     return 0;
   }
 
-  // For now (will this need to change for IME?),
-  // only set a char code if the result is printable:
-  if (!isprint(aGEK->string[0]))
-    return 0;
+  // we're supposedly printable, let's try to convert
+  long ucs = keysym2ucs(aGEK->keyval);
+  if ((ucs != -1) && (ucs < 0x10000))
+    return ucs;
 
-  if ((aGEK->state & GDK_MOD1_MASK)
-      && !(aGEK->state & GDK_SHIFT_MASK)
-      && isupper(aGEK->string[0]))
-    return tolower(aGEK->string[0]);
-
-  //
-  // placeholder for something a little more interesting and correct
-  //
-  return aGEK->string[0];
+  // I guess we couldn't convert
+  return 0;
 }
 
 //==============================================================
@@ -427,8 +410,7 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
   anEvent.message = NS_KEY_PRESS;
   anEvent.widget = (nsWidget*)p;
 
-  if (aGEK!=nsnull)
-  {
+  if (aGEK!=nsnull) {
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
@@ -436,19 +418,6 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     anEvent.isMeta = PR_FALSE; //(aGEK->state & GDK_MOD2_MASK) ? PR_TRUE : PR_FALSE;
 
     anEvent.charCode = nsConvertCharCodeToUnicode(aGEK);
-    if (anEvent.charCode == 0)
-    {
-       // now, let's handle some keysym which XmbLookupString didn't handle
-       // because they are not part of the locale encoding
-       if( (aGEK->keyval >= 0xa0 && (aGEK->keyval <= 0xf000) ||
-           (aGEK->keyval & 0xff000000U) == 0x01000000))
-       {
-          long ucs = keysym2ucs(aGEK->keyval);
-          if( (-1 != ucs ) && ( ucs < 0x10000))
-             anEvent.charCode = ucs;
-       }
-    }
-
     if (anEvent.charCode) {
       anEvent.keyCode = 0;
       
@@ -458,10 +427,12 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
       // clear isShift so the character can be inserted in the editor
       if (!anEvent.isControl && !anEvent.isAlt && !anEvent.isMeta)
         anEvent.isShift = PR_FALSE;
-    } else
+    } else {
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
+    }
 
 #if defined(DEBUG_akkana_not) || defined (DEBUG_ftang)
+    if (!aGEK->length) printf("!length, ");
     printf("Key Press event: gtk string = '%s', keyval = '%c' = %d,\n",
            aGEK->string, aGEK->keyval, aGEK->keyval);
     printf("    --> keyCode = 0x%x, char code = '%c'",
@@ -607,7 +578,10 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
   if (event->keyval == GDK_Shift_L
       || event->keyval == GDK_Shift_R
       || event->keyval == GDK_Control_L
-      || event->keyval == GDK_Control_R)
+      || event->keyval == GDK_Control_R
+      || event->keyval == GDK_Alt_L
+      || event->keyval == GDK_Alt_R
+     )
     return PR_TRUE;
 
   NS_ADDREF(win);
@@ -642,7 +616,10 @@ gint handle_key_release_event_for_text(GtkObject *w, GdkEventKey* event,
   if (event->keyval == GDK_Shift_L
       || event->keyval == GDK_Shift_R
       || event->keyval == GDK_Control_L
-      || event->keyval == GDK_Control_R)
+      || event->keyval == GDK_Control_R
+      || event->keyval == GDK_Alt_L
+      || event->keyval == GDK_Alt_R
+     )
     return PR_TRUE;
 
   InitKeyEvent(event, p, kevent, NS_KEY_UP);
