@@ -559,6 +559,12 @@ PRInt32 nsCSSScanner::ParseEscape(PRInt32& aErrorCode)
         }
       }
       else if ((lexTable[ch] & IS_WHITESPACE) != 0) {  // single space ends escape
+        if (ch == '\r') { // if CR/LF, eat LF too
+          ch = Peek(aErrorCode);
+          if (ch == '\n') {
+            ch = Read(aErrorCode);
+          }
+        }
         break;
       }
       else {
