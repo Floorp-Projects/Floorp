@@ -2508,13 +2508,17 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
 //-------------------------------------------------------------------------
 BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte )
 {
-  wchar_t	uniChar;
-  char		charToConvert[2];
-  size_t	length;
+  wchar_t uniChar;
+  char    charToConvert[2];
+  size_t  length;
+
+  if (mIMEIsComposing)  {
+    HandleEndComposition();
+  }
 
   {
-	  charToConvert[0] = LOBYTE(mbcsCharCode);
-	  length=1;
+    charToConvert[0] = LOBYTE(mbcsCharCode);
+    length=1;
   }
 
   
