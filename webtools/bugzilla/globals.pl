@@ -115,6 +115,8 @@ sub AppendComment {
 
     SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) " .
             "VALUES($bugid, $whoid, now(), " . SqlQuote($comment) . ")");
+
+    SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $bugid");
 }
 
 sub lsearch {
