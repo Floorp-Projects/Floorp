@@ -222,7 +222,7 @@ void nsBrowserController::doUpdateToolbarState(void)
       if (NS_SUCCEEDED(rv)) {
         nsAutoString name;
         PRInt32 index = 0;
-        PRUnichar* url;
+        const PRUnichar * url;
 
         mWebWindow->GetHistoryIndex(index);
         rv = mWebWindow->GetURL(index, &url);
