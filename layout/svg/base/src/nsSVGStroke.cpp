@@ -43,6 +43,7 @@
 #include "prdtoa.h"
 #include "nsMemory.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 void
 nsSVGStroke::Build(ArtVpath* path, const nsSVGStrokeStyle& style)
