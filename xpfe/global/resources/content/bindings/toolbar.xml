@@ -182,7 +182,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULMenubarAccessible(this): null);
+            return accService.createXULMenubarAccessible(this);
           ]]>
         </getter>
        </property>

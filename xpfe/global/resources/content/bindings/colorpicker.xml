@@ -428,7 +428,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULColorPickerAccessible(this): null);
+            return accService.createXULColorPickerAccessible(this);
           ]]>
         </getter>
       </property>
@@ -559,7 +559,7 @@
         <getter>
           <![CDATA[
             var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-            return (accService? accService.createXULColorPickerTileAccessible(this): null);
+            return accService.createXULColorPickerTileAccessible(this);
           ]]>
         </getter>
       </property>

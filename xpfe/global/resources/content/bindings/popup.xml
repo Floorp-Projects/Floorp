@@ -23,9 +23,8 @@
           <![CDATA[
             if (this.localName == "popup" || this.localName == "menupopup") {
               var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
-              if (accService)
-                return (this.parentNode.localName == "menulist")? accService.createXULComboboxWindowAccessible: accService.createXULMenupopupAccessible(this);
-              }
+              return (this.parentNode.localName == "menulist")? accService.createXULComboboxWindowAccessible: accService.createXULMenupopupAccessible(this);
+            }
             return null;
           ]]>
         </getter>
