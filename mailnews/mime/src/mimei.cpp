@@ -638,8 +638,7 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
 #ifdef ENABLE_SMIME
   // see bug #189988
   if (opts && opts->format_out == nsMimeOutput::nsMimeMessageDecrypt && 
-       (clazz != (MimeObjectClass *)&mimeEncryptedCMSClass &&
-        clazz != (MimeObjectClass *)&mimeMultipartSignedCMSClass)) {
+       (clazz != (MimeObjectClass *)&mimeEncryptedCMSClass)) {
     clazz = (MimeObjectClass *)&mimeExternalObjectClass;
   }
 #endif
