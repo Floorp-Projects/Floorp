@@ -212,6 +212,8 @@ nsFindDialog::AttributeChanged( nsIDocument *aDocument,
         nsString cmd;
         nsCOMPtr<nsIAtom> atomCommand = nsDontQueryInterface<nsIAtom>( NS_NewAtom("command") );
         aContent->GetAttribute( kNameSpaceID_None, atomCommand, cmd );
+        // Reset command so we detect next request.
+        aContent->SetAttribute( kNameSpaceID_None, atomCommand, "", PR_FALSE );
         if ( cmd == "find" ) {
             OnFind( aContent );
         } else if ( cmd == "next" ) {
@@ -220,8 +222,6 @@ nsFindDialog::AttributeChanged( nsIDocument *aDocument,
             OnCancel();
         } else {
         }
-        // Reset command so we detect next request.
-        aContent->SetAttribute( kNameSpaceID_None, atomCommand, "", PR_FALSE );
     }
 
     return rv;

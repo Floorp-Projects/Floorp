@@ -29,8 +29,8 @@ public:
     NS_DEFINE_STATIC_CID_ACCESSOR( NS_FINDCOMPONENT_CID );
 
     // ctor/dtor
-    					nsFindComponent();
-    virtual 	~nsFindComponent();
+    nsFindComponent();
+    virtual ~nsFindComponent();
 
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
@@ -51,9 +51,9 @@ public:
 				virtual 		~Context();
 				NS_IMETHOD	Init( nsIWebShell *aWebShell,
 			                 const nsString &lastSearchString,
-			                 const nsString &lastIgnoreCase,
-			                 const nsString &lastSearchBackwards,
-			                 const nsString &lastWrapSearch);
+			                 PRBool lastIgnoreCase,
+			                 PRBool lastSearchBackwards,
+			                 PRBool lastWrapSearch);
 
 			  NS_IMETHOD	MakeTSDocument( nsIWebShell *aNewWebShell );
 				NS_IMETHOD	Reset( nsIWebShell *aNewWebShell );
@@ -61,21 +61,17 @@ public:
       
         // Maybe add Find/FindNext functions here?
         nsCOMPtr<nsITextServicesDocument> mTextServicesDocument;
-        nsString              mSearchString;
-        PRBool           	   	mIgnoreCase;
-        PRBool              	mSearchBackwards;
-        PRBool								mWrapSearch;
-
-				PRUint32							mLastBlockOffset;			// last offset within the cur block that we found something
-				
+        nsString mSearchString;
+        PRBool   mIgnoreCase;
+        PRBool   mSearchBackwards;
+        PRBool   mWrapSearch;
+        PRUint32 mLastBlockOffset; // last offset within the cur block that we found something
     }; // nsFindComponent::Context
 
 protected:
-    nsCOMPtr<nsIAppShellService>	mAppShell;
-    nsString                    	mLastSearchString;
-    
-    // should these really be strings?
-    nsString                    	mLastIgnoreCase;
-    nsString                    	mLastSearchBackwards;
-    nsString											mLastWrapSearch;
+    nsCOMPtr<nsIAppShellService> mAppShell;
+    nsString                     mLastSearchString;
+    PRBool                       mLastIgnoreCase;
+    PRBool                       mLastSearchBackwards;
+    PRBool                       mLastWrapSearch;
 }; // nsFindComponent

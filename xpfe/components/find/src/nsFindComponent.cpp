@@ -47,9 +47,9 @@
 nsFindComponent::nsFindComponent()
     : mAppShell(),
       mLastSearchString(),
-      mLastIgnoreCase("false"),
-      mLastSearchBackwards("false"),
-      mLastWrapSearch("false")
+      mLastIgnoreCase( PR_FALSE ),
+      mLastSearchBackwards( PR_FALSE ),
+      mLastWrapSearch( PR_FALSE )
 {
     NS_INIT_REFCNT();
 
@@ -160,17 +160,17 @@ nsFindComponent::Context::~Context()
 NS_IMETHODIMP
 nsFindComponent::Context::Init( nsIWebShell *aWebShell,
                  const nsString &lastSearchString,
-                 const nsString &lastIgnoreCase,
-                 const nsString &lastSearchBackward,
-                 const nsString &lastWrapSearch)
+                 PRBool lastIgnoreCase,
+                 PRBool lastSearchBackward,
+                 PRBool lastWrapSearch)
 {
 	if (!aWebShell)
 		return NS_ERROR_INVALID_ARG;
 		
-	mSearchString = lastSearchString;
-	mIgnoreCase = (lastIgnoreCase == "true");
-	mSearchBackwards = (lastSearchBackward == "true");
-	mWrapSearch = PR_FALSE;	//(lastWrapSearch == "true");
+	mSearchString    = lastSearchString;
+	mIgnoreCase      = lastIgnoreCase;
+	mSearchBackwards = lastSearchBackward;
+	mWrapSearch      = lastWrapSearch;
 	
   // Construct nsITextServicesDocument...
 	nsresult	rv = MakeTSDocument(aWebShell);
@@ -417,35 +417,68 @@ nsFindComponent::Context::DoFind()
 	
 	nsresult	rv = NS_OK;
   nsString str;
-	PRBool		done;
+	PRBool		done = PR_FALSE;
 	
-	while (NS_SUCCEEDED(mTextServicesDocument->IsDone(&done)) && !done)
-	{
-		rv = mTextServicesDocument->GetCurrentTextBlock(&str);
-
-		if (NS_FAILED(rv))
-			return rv;
-
-		if (mIgnoreCase)
-			str.ToLowerCase();
-		
-		
-		PRInt32		foundOffset = FindInString(str, matchString, (mLastBlockOffset == -1) ? 0 : mLastBlockOffset + 1, mSearchBackwards);
-
-		mLastBlockOffset = -1;
-
-		if (foundOffset != -1)
-		{
-			mTextServicesDocument->SetSelection(foundOffset, mSearchString.Length());
-			mLastBlockOffset = foundOffset;
-			break;
-		}
-		
-		if (mSearchBackwards)
-			mTextServicesDocument->PrevBlock();
-		else
-			mTextServicesDocument->NextBlock();
-	}
+    // Loop till we find a match or fail.
+    while ( !done ) {
+        // Remember whether we've reset to beginning/end.
+        PRBool reset = PR_FALSE;
+        // Look for next match.
+        PRBool atEnd = PR_FALSE;
+        while ( NS_SUCCEEDED(mTextServicesDocument->IsDone( &atEnd ) ) && !atEnd ) {
+            rv = mTextServicesDocument->GetCurrentTextBlock(&str);
+    
+            if (NS_FAILED(rv))
+                return rv;
+    
+            if (mIgnoreCase)
+                str.ToLowerCase();
+            
+            
+            PRInt32		foundOffset = FindInString(str, matchString, (mLastBlockOffset == -1) ? 0 : mLastBlockOffset + 1, mSearchBackwards);
+    
+            mLastBlockOffset = -1;
+    
+            if (foundOffset != -1)
+            {
+                mTextServicesDocument->SetSelection(foundOffset, mSearchString.Length());
+                mLastBlockOffset = foundOffset;
+                done = PR_TRUE;
+                break;
+            }
+            
+            if (mSearchBackwards)
+                mTextServicesDocument->PrevBlock();
+            else
+                mTextServicesDocument->NextBlock();
+        }
+        // At end (or matched).  Decide which it was...
+        if ( !done ) {
+            // Hit end without a match.  If we haven't passed this way already,
+            // then reset to the first/last block (depending on search direction).
+            if ( !reset ) {
+                // Reset now.
+                reset = PR_TRUE;
+                // If not wrapping, give up.
+                if ( !mWrapSearch ) {
+                    done = PR_TRUE;
+                } else {
+                    if ( mSearchBackwards ) {
+                        // Reset to last block.
+                        rv = mTextServicesDocument->LastBlock();
+                    } else {
+                        // Reset to first block.
+                        rv = mTextServicesDocument->FirstBlock();
+                    }
+                    // Reset offset in block.
+                    mLastBlockOffset = -1;
+                }
+            } else {
+                // already reset.  This means no matches were found.
+                done = PR_TRUE;
+            }
+        }
+    }
 
 	return NS_OK;
 }
@@ -528,10 +561,10 @@ nsFindComponent::FindNext(nsISupports *aContext)
 
 
 		// Record this for out-of-the-blue FindNext calls.
-		mLastSearchString  		= context->mSearchString;
-		mLastIgnoreCase    		= (context->mIgnoreCase) ? "true" : "false";
-		mLastSearchBackwards	= (context->mSearchBackwards) ? "true" : "false";
-		mLastWrapSearch				= (context->mWrapSearch) ? "true" : "false";
+		mLastSearchString    = context->mSearchString;
+		mLastIgnoreCase      = context->mIgnoreCase;
+		mLastSearchBackwards = context->mSearchBackwards;
+		mLastWrapSearch      = context->mWrapSearch;
 
     return rv;
 }
