@@ -313,7 +313,7 @@ function PerformExpandForAllOpenServers(tree)
 	if ( tree && tree.childNodes ) {
 		for ( var i = tree.childNodes.length - 1; i >= 0; i-- ) {
 			treechild = tree.childNodes[i];
-			if (treechild.tagName == 'treechildren') {
+			if (treechild.localName == 'treechildren') {
 				var treeitems = treechild.childNodes;
 				for ( var j = treeitems.length - 1; j >= 0; j--) {
 					open = treeitems[j].getAttribute('open');

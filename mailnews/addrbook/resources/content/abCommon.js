@@ -376,7 +376,7 @@ function GetResultsTreeChildren()
 	{
 		for ( var index = resultsTree.childNodes.length - 1; index >= 0; index-- )
 		{
-			if ( resultsTree.childNodes[index].tagName == 'treechildren' )
+			if ( resultsTree.childNodes[index].localName == 'treechildren' )
 			{
 				return(resultsTree.childNodes[index]);
 			}
