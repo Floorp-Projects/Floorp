@@ -1554,12 +1554,27 @@ nscoord width;
   }
 
 
+  // This if control whether the outline paints on the inside 
+  // or outside of the frame
+#if 1 // outside
   nsRect inside(aBorderArea);
   nsRect outside(inside);
   inside.Inflate(width, width);
 
   nsRect clipRect(aBorderArea);
   clipRect.Inflate(width, width); // make clip extra big for now
+
+#else // inside
+  nsMargin insetMargin;
+  aBorderStyle.GetMargin(insetMargin);
+
+  nsRect outside(aBorderArea);
+  outside.Deflate(insetMargin);
+  nsRect inside(outside);
+  inside.Deflate(width, width);
+
+  nsRect clipRect(outside);
+#endif
 
   PRBool clipState = PR_FALSE;
   aRenderingContext.PushState();
@@ -1569,6 +1584,7 @@ nscoord width;
   for(i=0;i<4;i++){
     if(borderRadii[i] > 0){
       PaintRoundedBorder(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aBorderStyle,aStyleContext,aSkipSides,borderRadii,aGap,PR_TRUE);
+      aRenderingContext.PopState(clipState);
       return;
     }
   }
@@ -1579,7 +1595,7 @@ nscoord width;
   if ((outlineStyle == NS_STYLE_BORDER_STYLE_DOTTED) || 
       (outlineStyle == NS_STYLE_BORDER_STYLE_DASHED))  {
     DrawDashedSides(0, aRenderingContext, aDirtyRect, aBorderStyle, PR_TRUE,
-                    inside, outside, aSkipSides, aGap);
+                    outside, inside, aSkipSides, aGap);
     aRenderingContext.PopState(clipState);
     return;
   }
@@ -1598,25 +1614,25 @@ nscoord width;
     DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
              outlineStyle,
              outlineColor,
-             bgColor->mBackgroundColor, inside,outside, aSkipSides,
+             bgColor->mBackgroundColor, outside, inside, aSkipSides,
              twipsPerPixel, aGap);
 
     DrawSide(aRenderingContext, NS_SIDE_LEFT,
              outlineStyle, 
              outlineColor,
-             bgColor->mBackgroundColor,inside, outside,aSkipSides,
+             bgColor->mBackgroundColor,outside, inside,aSkipSides,
              twipsPerPixel, aGap);
 
     DrawSide(aRenderingContext, NS_SIDE_TOP,
              outlineStyle,
              outlineColor,
-			       bgColor->mBackgroundColor,inside, outside,aSkipSides,
+			       bgColor->mBackgroundColor,outside, inside,aSkipSides,
 			       twipsPerPixel, aGap);
 
     DrawSide(aRenderingContext, NS_SIDE_RIGHT,
              outlineStyle,
              outlineColor,
-      			 bgColor->mBackgroundColor,inside, outside,aSkipSides,
+      			 bgColor->mBackgroundColor,outside, inside,aSkipSides,
 			       twipsPerPixel, aGap);
   }
   // Restore clipping
@@ -2457,12 +2473,21 @@ nscoord       twipsPerPixel,qtwips;
 float         p2t;
 
 
-  aBorderStyle.CalcBorderFor(aForFrame, border);
   if (!aIsOutline) {
+    aBorderStyle.CalcBorderFor(aForFrame, border);
     if ((0 == border.left) && (0 == border.right) &&
         (0 == border.top) && (0 == border.bottom)) {
       return;
     }
+  } else {
+    nscoord width;
+    if (!aBorderStyle.GetOutlineWidth(width)) {
+      return;
+    }
+    border.left   = width;
+    border.right  = width;
+    border.top    = width;
+    border.bottom = width;
   }
 
   // needed for our border thickness
@@ -2496,7 +2521,7 @@ float         p2t;
     thePath[np++].MoveTo(Icr2.mAnc2.x, Icr2.mAnc2.y);
     thePath[np++].MoveTo(Icr2.mCon.x, Icr2.mCon.y);
     thePath[np++].MoveTo(Icr2.mAnc1.x, Icr2.mAnc1.y);
-    RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_TOP,border,qtwips);
+    RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_TOP,border,qtwips, aIsOutline);
   }
   // RIGHT  LINE ----------------------------------------------------------------
   LR.MidPointDivide(&cr2,&cr3);
@@ -2516,7 +2541,7 @@ float         p2t;
     thePath[np++].MoveTo(Icr4.mAnc2.x,Icr4.mAnc2.y);
     thePath[np++].MoveTo(Icr4.mCon.x, Icr4.mCon.y);
     thePath[np++].MoveTo(Icr4.mAnc1.x,Icr4.mAnc1.y);
-    RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_RIGHT,border,qtwips);
+    RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_RIGHT,border,qtwips, aIsOutline);
   }
 
   // bottom line ----------------------------------------------------------------
@@ -2537,7 +2562,7 @@ float         p2t;
     thePath[np++].MoveTo(Icr3.mAnc2.x, Icr3.mAnc2.y);
     thePath[np++].MoveTo(Icr3.mCon.x, Icr3.mCon.y);
     thePath[np++].MoveTo(Icr3.mAnc1.x, Icr3.mAnc1.y);
-    RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_BOTTOM,border,qtwips);
+    RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_BOTTOM,border,qtwips, aIsOutline);
   }
   // left line ----------------------------------------------------------------
   if(0==border.left)
@@ -2558,7 +2583,7 @@ float         p2t;
   thePath[np++].MoveTo(Icr4.mCon.x, Icr4.mCon.y);
   thePath[np++].MoveTo(Icr4.mAnc1.x, Icr4.mAnc1.y);
 
-  RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_LEFT,border,qtwips);
+  RenderSide(thePath,aRenderingContext,aBorderStyle,aStyleContext,NS_SIDE_LEFT,border,qtwips, aIsOutline);
 }
 
 
@@ -2569,7 +2594,8 @@ float         p2t;
 void 
 nsCSSRendering::RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingContext,
                         const nsStyleSpacing& aBorderStyle,nsIStyleContext* aStyleContext,
-                        PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel)
+                        PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel,
+                        PRBool aIsOutline)
 {
 QBCurve   thecurve;
 nscolor   sideColor;
@@ -2579,7 +2605,11 @@ PRInt8    border_Style;
 PRInt16   thickness;
 
   // set the style information
-  aBorderStyle.GetBorderColor(aSide,sideColor);
+  if (!aIsOutline) {
+    aBorderStyle.GetBorderColor(aSide,sideColor);
+  } else {
+    aBorderStyle.GetOutlineColor(sideColor);
+  }
   aRenderingContext.SetColor ( sideColor );
 
   thickness = 0;
@@ -2608,7 +2638,11 @@ PRInt16   thickness;
     thecurve.SubDivide((nsIRenderingContext*)&aRenderingContext,0,0);
   } else {
     
-    border_Style = aBorderStyle.GetBorderStyle(aSide);
+    if (!aIsOutline) {
+      border_Style = aBorderStyle.GetBorderStyle(aSide);
+    } else {
+      border_Style = aBorderStyle.GetOutlineStyle();
+    }
     switch (border_Style){
       case NS_STYLE_BORDER_STYLE_OUTSET:
       case NS_STYLE_BORDER_STYLE_INSET:

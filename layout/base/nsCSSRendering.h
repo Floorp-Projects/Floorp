@@ -156,7 +156,8 @@ protected:
 
   static void RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingContext,
                         const nsStyleSpacing& aBorderStyle,nsIStyleContext* aStyleContext,
-                        PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel);
+                        PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel,
+                        PRBool aIsOutline=PR_FALSE);
 
   static void PaintRoundedBackground(nsIPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
