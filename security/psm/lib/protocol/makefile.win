@@ -85,6 +85,10 @@ OBJS=                         \
     .\$(OBJDIR)\protocolshr.obj \
     $(NULL)
 
+EXPORTS = \
+    .\ssmdefs.h \
+    $(NULL)
+
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
