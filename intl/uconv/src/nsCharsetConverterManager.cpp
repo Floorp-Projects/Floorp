@@ -42,6 +42,8 @@ struct ConverterInfo
   nsString      * mCharset;
   const nsCID   * mCID;
 
+  ConverterInfo() {}
+
   ~ConverterInfo ()
   {
     if (mCharset != NULL) delete mCharset;
