@@ -193,15 +193,15 @@ typedef struct nsMsgSearchValue
     nsMsgSearchAttribValue attribute;
     union
     {
-        nsMsgPriorityValue priority;
-        PRTime date;
-        PRUint32 msgStatus; /* see MSG_FLAG in msgcom.h */
-        PRUint32 size;
-        nsMsgKey key;
-		PRUint32 age; /* in days */
-		nsIMsgFolder *folder;
-		nsMsgLabelValue label;
-		PRUint32 junkStatus;
+      nsMsgPriorityValue priority;
+      PRTime date;
+      PRUint32 msgStatus; /* see MSG_FLAG in msgcom.h */
+      PRUint32 size;
+      nsMsgKey key;
+		  PRUint32 age; /* in days */
+		  nsIMsgFolder *folder;
+		  nsMsgLabelValue label;
+		  PRUint32 junkStatus;
     } u;
     char *string;
 } nsMsgSearchValue;
