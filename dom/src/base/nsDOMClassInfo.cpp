@@ -424,7 +424,7 @@ nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(Range, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(Selection, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+                           DEFAULT_SCRIPTABLE_FLAGS)
 
   // XUL classes
   NS_DEFINE_CLASSINFO_DATA(XULDocument, nsDocumentSH,
