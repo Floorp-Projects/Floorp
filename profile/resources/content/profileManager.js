@@ -20,260 +20,251 @@
  *
  */
 
-var selected    = null;
-var currProfile = "";
-var profile = Components.classes["component://netscape/profile/manager"].createInstance();
-profile = profile.QueryInterface(Components.interfaces.nsIProfile);
-//dump("profile = " + profile + "\n");
+var bundle = srGetStrBundle("chrome://profile/locale/profileManager.properties");
+var profileManagerMode = "selection";
+var set = null;
 
-function openCreateProfile()
+// invoke the createProfile Wizard
+function CreateProfileWizard()
 {
   // Need to call CreateNewProfile xuls
   window.openDialog('chrome://profile/content/createProfileWizard.xul', 'CPW', 'chrome');
 }
 
-function CreateProfile()
+// update the display to show the additional profile
+function CreateProfile( aProfName, aProfDir )
 {
-  this.location.href = "chrome://profile/content/profileManager.xul";
+  AddItem( "profilekids", aProfName, aProfName );
 }
 
-function RenameProfile(w)
+// rename the selected profile
+function RenameProfile()
 {
-  renameButton = document.getElementById("rename");
-  if (renameButton.getAttribute("disabled") == "true") {
+  renameButton = document.getElementById("renbutton");
+  if( renameButton.getAttribute("disabled") == "true" )
+    return;
+  var profileTree = document.getElementById( "profiles" );
+  if( !profileTree.selectedItems.length ) {
+    alert( bundle.GetStringFromName("noneselectedrename") );
     return;
   }
-  if (!selected) {
-    alert("Select a profile to rename.");
+  else if( profileTree.selectedItems.length != 1 ) {
+    alert( bundle.GetStringFromName("wrongnumberselectedrename") );
     return;
-  }
-
-  var newName = w.document.getElementById("NewName").value;
-  var oldName = selected.getAttribute("rowName");
-  var migrate = selected.getAttribute("rowMigrate");
-
-  if (migrate == "true") {
-    alert("Migrate this profile before renaming it.");
-    return;
-  }
-
-  //dump("RenameProfile : " + oldName + " to " + newName + "\n");
-  try {
-    profile.renameProfile(oldName, newName);
-  }
-  catch (ex) {
-    alert("Sorry, failed to rename profile.");
-  }
-  //this.location.replace(this.location);
-  this.location.href = "chrome://profile/content/profileManager.xul";
-}
-
-function DeleteProfile(deleteFiles)
-{
-  deleteButton = document.getElementById("delete");
-  if (deleteButton.getAttribute("disabled") == "true") {
-    return;
-  }
-  if (!selected) {
-    alert("Select a profile to delete.");
-    return;
-  }
-
-  var migrate = selected.getAttribute("rowMigrate");
-
-  var name = selected.getAttribute("rowName");
-  //dump("Delete '" + name + "'\n");
-  try {
-    profile.deleteProfile(name, deleteFiles);
-  }
-  catch (ex) {
-    alert("Sorry, failed to delete profile.");
-  }
-  //this.location.replace(this.location);
-  //this.location.href = this.location;
-  this.location.href = "chrome://profile/content/profileManager.xul";
-}
-
-function onStart()
-{
-  //dump("************Inside Start Communicator prof\n");
-  startButton = document.getElementById("start");
-  if (startButton.getAttribute("disabled") == "true") {
-    return;
-  }
-  if (!selected) {
-    alert("Select a profile to start.");
-    return;
-  }
-
-  var migrate = selected.getAttribute("rowMigrate");
-  var name = selected.getAttribute("rowName");
-
-  if (migrate == "true") {
-    // pass true for show progress as modal window
-    profile.migrateProfile(name, true);
-  }
-
-  //dump("************name: "+name+"\n");
-  try {
-    profile.startApprunner(name);
-    ExitApp();
-  }
-  catch (ex) {
-    alert("Failed to start communicator with the " + name + " profile.");
-  }
-}
-
-function onExit()
-{
-  try {
-    profile.forgetCurrentProfile();
-  }
-  catch (ex) {
-    //dump("Failed to forget current profile.\n");
-  }
-  ExitApp();
-}
-
-function ExitApp()
-{
-  // Need to call this to stop the event loop
-  var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
-  appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
-  appShell.Quit();
-}
-
-
-function setButtonsDisabledState(state)
-{
-  startButton = document.getElementById("start");
-  deleteButton = document.getElementById("delete");
-  renameButton = document.getElementById("rename");
-
-  deleteButton.setAttribute("disabled", state);
-  renameButton.setAttribute("disabled", state);
-  startButton.setAttribute("disabled", state);
-}
-
-function showSelection(node)
-{
-  //dump("************** In showSelection routine!!!!!!!!! \n");
-  // (see tree's onclick definition)
-  // Tree events originate in the smallest clickable object which is the cell.  The object
-  // originating the event is available as event.target.  We want the cell's row, so we go
-  // one further and get event.target.parentNode.
-  selected = node;
-  var num = node.getAttribute("rowNum");
-  //dump("num: "+num+"\n");
-
-  var name = node.getAttribute("rowName");
-  //dump("name: "+name+"\n");
-
-  //dump("Selected " + num + " : " + name + "\n");
-
-  // turn on all the buttons that should be on
-  // when something is selected.
-  setButtonsDisabledState("false");
-}
-
-function addTreeItem(num, name, migrate)
-{
-  //dump("Adding element " + num + " : " + name + "\n");
-  var body = document.getElementById("theTreeBody");
-
-  var newitem = document.createElement('treeitem');
-  var newrow = document.createElement('treerow');
-  newrow.setAttribute("rowNum", num);
-  newrow.setAttribute("rowName", name);
-  newrow.setAttribute("rowMigrate", migrate);
-
-  var elem = document.createElement('treecell');
-  
-  // Hack in a differentation for migration
-  if (migrate) {
-    elem.setAttribute("value", "Migrate");
-  }
-  
-  newrow.appendChild(elem);
-
-  var elem = document.createElement('treecell');
-  elem.setAttribute("value", name);
-  newrow.appendChild(elem);
-
-  newitem.appendChild(newrow);
-  body.appendChild(newitem);
-}
-
-function loadElements()
-{
-  //dump("****************hacked onload handler adds elements to tree widget\n");
-  var profileList = "";
-
-  profileList = profile.getProfileList();
-
-  //dump("Got profile list of '" + profileList + "'\n");
-  profileList = profileList.split(",");
-  try {
-    currProfile = profile.currentProfile;
-  }
-  catch (ex) {
-    if (profileList != "") {
-      currProfile = profileList;
-    }
-  }
-
-  for (var i=0; i < profileList.length; i++) {
-    var pvals = profileList[i].split(" - ");
-    addTreeItem(i, pvals[0], (pvals[1] == "migrate"));
-  }
-}
-
-function openRename()
-{
-  renameButton = document.getElementById("rename");
-  if (renameButton.getAttribute("disabled") == "true") {
-    return;
-  }
-  if (!selected) {
-    alert("Select a profile to rename.");
   }
   else {
-    var migrate = selected.getAttribute("rowMigrate");
-    if (migrate == "true") {
-      alert("Migrate the profile before renaming it.");
+    var selected = profileTree.selectedItems[0];
+    if( selected.getAttribute("rowMigrate") == "true" ) {
+      // auto migrate if the user wants to
+      if( confirm( bundle.GetStringFromName("migratebeforerename") ) ) 
+        profile.migrateProfile( profilename, true );
+      else
+        return false;
     }
-    else
-      window.openDialog('chrome://profile/content/renameProfile.xul', 'Renamer', 'chrome');
+    else {
+      var oldName = selected.getAttribute("rowName");
+      var newName = prompt( bundle.GetStringFromName("renameprofilepromptA") + oldName + bundle.GetStringFromName("renameprofilepromptB"), "" );
+      if( newName == "" || !newName )
+        return false;
+        
+      var migrate = selected.getAttribute("rowMigrate");
+      dump("*** oldName = "+ oldName+ ", newName = "+ newName+ ", migrate = "+ migrate+ "\n");
+      try {
+        profile.renameProfile(oldName, newName);
+        selected.firstChild.firstChild.setAttribute( "value", newName );
+        selected.setAttribute( "rowName", newName );
+        selected.setAttribute( "profile_name", newName );
+      }
+      catch (ex) {
+        alert( bundle.GetStringFromName("renamefailed") );
+      }
+    }
   }
+  // set the button state
+  DoEnabling();  
 }
 
 
 function ConfirmDelete()
 {
-  deleteButton = document.getElementById("delete");
-  if (deleteButton.getAttribute("disabled") == "true") {
+  deleteButton = document.getElementById("delbutton");
+  if( deleteButton.getAttribute("disabled") == "true" )
+    return;
+  var profileTree = document.getElementById( "profiles" );
+  if( !profileTree.selectedItems.length ) {
+    alert( bundle.GetStringFromName( "noneselecteddelete" ) );
     return;
   }
-  if (!selected) {
-    alert("Select a profile to delete.");
+  else if( profileTree.selectedItems.length != 1 ) {
+    alert( bundle.GetStringFromName("wrongnumberselectedrename") );
     return;
   }
 
-  var migrate = selected.getAttribute("rowMigrate");
+  var selected = profileTree.selectedItems[0];
   var name = selected.getAttribute("rowName");
 
-  if (migrate == "true") {
-    alert("Migrate this profile before deleting it.");
-    return;
+  if( selected.getAttribute("rowMigrate") == "true" ) {
+      // auto migrate if the user wants to. THIS IS REALLY REALLY DUMB PLEASE FIX THE BACK END.
+    if( confirm( bundle.GetStringFromName("migratebeforedelete") ) ) 
+      profile.migrateProfile( profilename, true );
+    else
+      return false;
   }
 
-  var win = window.openDialog('chrome://profile/content/deleteProfile.xul', 'Deleter', 'chrome');
+  var win = window.openDialog('chrome://profile/content/deleteProfile.xul', 'Deleter', 'chrome,modal=yes');
   return win;
 }
 
+// Delete the profile, with the delete flag set as per instruction above.
+function DeleteProfile( deleteFiles )
+{
+  var profileTree = document.getElementById( "profiles" );
+  var profileKids = document.getElementById( "profilekids" )
+  var selected = profileTree.selectedItems[0];
+  var name = selected.getAttribute( "rowName" );
+  try {
+    profile.deleteProfile( name, deleteFiles );
+    profileKids.removeChild( selected );
+  }
+  catch (ex) {
+    alert( bundle.GetStringFromName("deletefailed") );
+  }
+  // set the button state
+  DoEnabling();
+}
 
 function ConfirmMigrateAll()
 {
-  var win = window.openDialog('chrome://profile/content/profileManagerMigrateAll.xul', 'MigrateAll', 'chrome');
-  return win;
+  if( confirm( bundle.GetStringFromName("migrateallprofiles") ) )
+    return true;
+  else 
+    return false;
 }
+
+function SwitchProfileManagerMode()
+{
+  var prattleIndex  = null;
+  var captionLine   = null;
+  var buttonDisplay = null;
+  var selItems      = [];
+  
+  if( profileManagerMode == "selection" )
+  {
+    prattleIndex = 1;                                       // need to switch to manager's index
+    captionLine = bundle.GetStringFromName( "pm_title" );   // get manager's caption
+    manageButton = bundle.GetStringFromName( "pm_button" ); // get the manage button caption
+    buttonDisplay = "display: inherit;";                    // display the manager's buttons
+    profileManagerMode = "manager";                         // swap the mode
+    PersistAndLoadElements( selItems );                     // save the selection and load elements
+  } 
+  else {
+    prattleIndex = 0;
+    captionLine = bundle.GetStringFromName( "ps_title" );
+    manageButton = bundle.GetStringFromName( "ps_button" ); 
+    buttonDisplay = "display: none;";
+    profileManagerMode = "selection";
+    PersistAndLoadElements( selItems );
+  }
+
+  // swap deck  
+  var deck = document.getElementById( "prattle" );
+  deck.setAttribute( "index", prattleIndex )
+    
+  // update the manager button.
+  var manage = document.getElementById( "manage" );
+  manage.setAttribute( "value", manageButton );
+    
+  // swap caption
+  ChangeCaption( captionLine );
+  
+  // display the management buttons
+  var buttons = document.getElementById( "managementbox" );
+  buttons.setAttribute( "style", buttonDisplay );
+
+  // switch set
+  if( set )
+    set = false;
+  else
+    set = true;
+}
+
+// save which elements are selected in this mode and load elements into other mode,
+// then reselect selected elements
+function PersistAndLoadElements( aSelItems )
+{
+  // persist the profiles that are selected;
+  var profileTree = document.getElementById("profiles");
+  var selItemNodes = profileTree.selectedItems;    
+  for( var i = 0; i < selItemNodes.length; i++ )
+  {
+    aSelItems[i] = selItemNodes[i].getAttribute("profile_name");
+  }
+  loadElements();                                         // reload list of profiles
+  for( var i = 0; i < aSelItems.length; i++ )
+  {
+    var item = document.getElementsByAttribute("profile_name", aSelItems[i]);
+    if( item.length ) {
+      var item = item[0];
+      profileTree.addItemToSelection( item );
+    }
+  }
+}
+
+// change the title of the profile manager/selection window.
+function ChangeCaption( aCaption )
+{
+  var caption = document.getElementById( "caption" );
+  while( caption.hasChildNodes() )
+  {
+    caption.removeChild( caption.firstChild );
+  }
+  newCaption = document.createTextNode( aCaption );
+  caption.appendChild( newCaption );
+}
+
+// do button enabling based on tree selection
+function DoEnabling()
+{
+  var renbutton = document.getElementById( "renbutton" );
+  var delbutton = document.getElementById( "delbutton" );
+  var start     = document.getElementById( "ok" );
+  
+  var profileTree = document.getElementById( "profiles" );
+  var items = profileTree.selectedItems;
+  if( items.length != 1 )
+  {
+    renbutton.setAttribute( "disabled", "true" );
+    delbutton.setAttribute( "disabled", "true" );
+    start.setAttribute( "disabled", "true" );
+  }
+  else {
+    if( renbutton.getAttribute( "disabled" ) == "true" )
+      renbutton.removeAttribute( "disabled", "true" );
+    if( delbutton.getAttribute( "disabled" ) == "true" )
+      delbutton.removeAttribute( "disabled", "true" );
+    if( start.getAttribute( "disabled" ) == "true" )
+      start.removeAttribute( "disabled", "true" );
+  }
+}
+
+// handle key event on trees
+function HandleKeyEvent( aEvent )
+{
+  switch( aEvent.which ) 
+  {
+  case 13:
+    onStart();
+    break;
+  case 46:
+    if( profileManagerMode != "manager" )
+      return;
+    ConfirmDelete();
+    break;
+  case "VK_F2":
+    if( profileManagerMode != "manager" )
+      return;
+    RenameProfile();
+    break;
+  }
+}
+

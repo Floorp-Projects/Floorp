@@ -22,23 +22,21 @@
 <!-- this is PAGE ONE of the Profile Creation Wizard -->
 
 <?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://profile/skin/pwiz_panels.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/newProfile1_1.dtd" >
 <window 
     xmlns:html="http://www.w3.org/TR/REC-html40"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog wizardPanel"
 		onload="parent.wizardManager.onPageLoad('newProfile1_1');"> 
 
   <box flex="100%" align="vertical">
-    <html:div>&pnl1.p1.text;</html:div> 
-    <spring flex="50%"/>
+    <html:div>&pnl1.p1.text;</html:div>
+    <spring style="height: 10px;"/>
     <html:div>&pnl1.p2.text;</html:div>
-    <spring flex="50%"/>
+    <spring style="height: 10px;"/>
     <html:div>&pnl1.p3.text;</html:div>
-    <spring flex="50%"/>
+    <spring style="height: 10px;"/>
     <html:div>&pnl1.p4.text;</html:div>
-    <spring flex="50%"/>
   </box>
 
 </window>

@@ -21,28 +21,27 @@
 <!-- this is PAGE TWO of the Profile Creation Wizard -->
 
 <?xml-stylesheet href="chrome://profile/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://profile/skin/pwiz_panels.css" type="text/css"?>
 <?xml-stylesheet href="chrome://profile/skin/newProfile1_2.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://profile/locale/newProfile1_2.dtd" >
 <window 
   xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog wizardPanel"
 	width="500" height="500"
+  align="vertical"
 	onload="parent.wizardManager.onPageLoad('newProfile1_2');"> 
 
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
   <html:script language="JavaScript" src="newProfile1_2.js"/>
 
-  <box flex="100%" align="vertical">
     <html:div>&pnl2.intro.text;</html:div> 
-    <spring flex="50%"/>
+    <spring style="height: 7px;"/>
     <html:div>&pnl2.pname.label;</html:div> 
-    <html:div class="input1">
-      <html:input type="text" id="ProfileName" value="mozProfile" style="width: 95%"
-        onkeyup="ProfileNameExists(this);"/>
-      <spring flex="5%"/>
-    </html:div>
+    <spring flex="15%"/>
+    <box align="horizontal">
+      <html:input type="text" id="ProfileName" value="mozProfile" flex="100%"/>
+    </box>
+    <spring flex="15%"/>
     <html:div id="folderintro" style="padding-bottom: 0px;">
       &pnl2.pdir.label;
       <html:span id="deffoldername">&pnl2.deffldr.label;</html:span>
@@ -55,13 +54,13 @@
       </html:div>
       <spring flex="100%"/>
       <box align="vertical" id="folderbuttons">
-        <titledbutton value="&button.choosefolder.label;" onclick="getProfileDir(null,true);"/>
+        <titledbutton class="dialog push" value="&button.choosefolder.label;" onclick="getProfileDir(null,true);"/>
       </box>
       <spring flex="5%"/>
     </box>
+    <spring flex="85%"/>
     <html:div id="finishtext">&pnl2.finish.text;</html:div> 
-    <spring flex="50%"/>
-  </box>
+    <spring flex="15%"/>
 
 </window>
 

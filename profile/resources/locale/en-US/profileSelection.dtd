@@ -27,8 +27,8 @@
 
 <!ENTITY            windowtitle.label     "Select User Profile">
 
-<!ENTITY            welcometo.label       "Welcome to">
-<!ENTITY            mozilla.label         "MOZILLA">  
+<!ENTITY            welcome.label         "Welcome to Mozilla">
+<!ENTITY            profilemanager.label  "Mozilla Profile Manager">
 
 <!ENTITY            introgeneral.label    "To access your personal profile, which contains your mail, settings and other personalized information, please choose your profile from the list, and click Start Mozilla to begin your session.">
 <!ENTITY            introroaming.label    "If you have a Roaming Access profile which does not exist on this computer, choose Roaming Access. Mozilla will then prompt you to log into your Roaming Access server.">
@@ -46,4 +46,12 @@
 <!ENTITY            manage.label          "Manage Profiles...">
 
 <!ENTITY            availprofiles.label   "Available Profiles">
+
+<!ENTITY            deleteButton.label    "Delete Profile...">
+<!ENTITY            renameButton.label    "Rename Profile...">
+<!ENTITY            newButton.label       "New Profile...">
+
+<!-- manager entities -->
+<!ENTITY            pmTextA.label         "Mozilla stores information about your settings, preferences, bookmarks, stored messages and other personalised information in your personal profile.">
+<!ENTITY            pmTextB.label         "Indicates a profile created with a previous version of Communicator. These profiles must be converted before they can be loaded with Mozilla. This is an automated process.">
 
