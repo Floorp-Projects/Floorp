@@ -19,6 +19,10 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#define NS_TIMER_STYLE_RESOLUTION 1
+%}
+
 [scriptable, uuid(0e5f5cb6-6d29-11d3-aef7-00108300ff91)]
 interface nsITimeRecorder : nsISupports
 {

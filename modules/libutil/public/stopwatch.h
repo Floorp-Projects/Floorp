@@ -1,3 +1,5 @@
+#include "nscore.h"
+
 const double gTicks = 1.0e-7;
 
 #ifdef RAPTOR_PERF_METRICS

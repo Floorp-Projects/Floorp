@@ -15,7 +15,7 @@ Stopwatch::Stopwatch() {
 }
 
 
-void Stopwatch::Start(bool reset) {
+void Stopwatch::Start(PRBool reset) {
    if (reset) {
       fTotalCpuTime  = 0;
       fTotalRealTime = 0;
