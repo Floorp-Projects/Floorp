@@ -479,12 +479,12 @@ cert_init
 cert_CA 
 cert_ssl 
 cert_smime_client        
+cert_fips
 if [ -n "$DO_DIST_ST" -a "$DO_DIST_ST" = "TRUE" ] ; then
     cert_stresscerts 
     #following lines to be used when databases are to be reused
     #cp -r /u/sonmi/tmp/stress/kentuckyderby.13/* $HOSTDIR
-    #cp -r $HOSTDIR/../clio.8/* $HOSTDIR
+    #cp -r $HOSTDIR/../${HOST}.2/* $HOSTDIR
 
 fi
-cert_fips
 cert_cleanup
