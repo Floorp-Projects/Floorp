@@ -73,28 +73,28 @@ if (verifyDiskSpace(fProgram, srDest))
         // register chrome
         var cf = getFolder(fProgram, "chrome/"+chromeName);
 
-        registerChrome(chromeType, cf, "locale/global/");
-        registerChrome(chromeType, cf, "locale/global-platform/");
-        registerChrome(chromeType, cf, "locale/global-region/");
+        registerChrome(chromeType, cf, "locale/en-US/global/");
+        registerChrome(chromeType, cf, "locale/en-US/global-platform/");
+        registerChrome(chromeType, cf, "locale/en-US/global-region/");
 
         registerChrome(chromeType, cf, "locale/browser/");
         registerChrome(chromeType, cf, "locale/browser-region/");
-        registerChrome(chromeType, cf, "locale/passwordmgr/");
-        registerChrome(chromeType, cf, "locale/mozapps/");
+        registerChrome(chromeType, cf, "locale/en-US/passwordmgr/");
+        registerChrome(chromeType, cf, "locale/en-US/mozapps/");
 
-        registerChrome(chromeType, cf, "locale/necko/");
+        registerChrome(chromeType, cf, "locale/en-US/necko/");
 #ifdef EXTENSION_PREF
-        registerChrome(chromeType, cf, "locale/autoconfig/");
+        registerChrome(chromeType, cf, "locale/en-US/autoconfig/");
 #endif
-        registerChrome(chromeType, cf, "locale/cookie/");
-        registerChrome(chromeType, cf, "locale/pipnss/");
-        registerChrome(chromeType, cf, "locale/pippki/");
+        registerChrome(chromeType, cf, "locale/en-US/cookie/");
+        registerChrome(chromeType, cf, "locale/en-US/pipnss/");
+        registerChrome(chromeType, cf, "locale/en-US/pippki/");
 
 #ifdef LOCALE_HAS_HELP
-        registerChrome(chromeType, cf, "locale/help/");
+        registerChrome(chromeType, cf, "locale/en-US/help/");
 #endif
 #ifdef LOCALE_HAS_DOMI
-        registerChrome(chromeType, cf, "locale/inspector/");
+        registerChrome(chromeType, cf, "locale/en-US/inspector/");
 #endif
 
         err = performInstall(); 
