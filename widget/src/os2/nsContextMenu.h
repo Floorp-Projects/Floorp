@@ -57,6 +57,8 @@ class nsContextMenu : public nsIContextMenu, public nsDynamicMenu
    PRBool    mShowing;
    nsString  mAnchor;
    nsString  mAlignment;
+   nsString  mAnchorAlignment;
+   nsIWidget* mParentWindow;
 };
 
 #endif

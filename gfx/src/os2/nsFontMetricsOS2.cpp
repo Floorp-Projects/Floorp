@@ -63,6 +63,8 @@ NS_IMPL_ISUPPORTS( nsFontMetricsOS2, nsIFontMetrics::GetIID())
 nsresult nsFontMetricsOS2::Init( const nsFont &aFont,  nsIAtom* aLangGroup, nsIDeviceContext *aContext)
 {
    mFont = new nsFont( aFont);
+   mLangGroup = aLangGroup;
+   //   mIndexOfSubstituteFont = -1;
    mContext = (nsDeviceContextOS2 *) aContext;
    nsresult rv = RealizeFont();
    return rv;
@@ -328,6 +330,12 @@ nsresult nsFontMetricsOS2::RealizeFont()
    mMaxAscent          = NSToCoordRound( fm.lMaxAscender * dev2app);
    mMaxDescent         = NSToCoordRound( fm.lMaxDescender * dev2app);
    mMaxAdvance         = NSToCoordRound( fm.lMaxCharInc * dev2app);
+
+   mMaxHeight          = NSToCoordRound( fm.lMaxBaselineExt * dev2app);
+   mEmHeight           = NSToCoordRound( fm.lEmHeight * dev2app);
+   // XXXXOS2TODO Not sure about these two - hs
+   mEmAscent           = NSToCoordRound((fm.lMaxAscender - fm.lInternalLeading) * dev2app);
+   mEmDescent          = NSToCoordRound( fm.lMaxDescender * dev2app);
 
    mLeading            = NSToCoordRound( fm.lInternalLeading * dev2app);
    mXHeight            = NSToCoordRound( fm.lXHeight * dev2app);
