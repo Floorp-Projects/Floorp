@@ -551,21 +551,21 @@ nsresult nsAbDirectoryDataSource::createDirectoryNode(nsIAbDirectory* directory,
   nsresult rv = NS_RDF_NO_VALUE;
   
   if ((kNC_DirName == property))
-	rv = createDirectoryNameNode(directory, target);
-  if ((kNC_DirUri == property))
-	rv = createDirectoryUriNode(directory, target);
-  if ((kNC_Child == property))
-	rv = createDirectoryChildNode(directory, target);
-  if ((kNC_IsMailList == property))
-	rv = createDirectoryIsMailListNode(directory, target);
-  if ((kNC_IsRemote == property))
-	rv = createDirectoryIsRemoteNode(directory, target);
-  if ((kNC_IsSecure == property))
-	rv = createDirectoryIsSecureNode(directory, target);
-  if ((kNC_IsWriteable == property))
-	rv = createDirectoryIsWriteableNode(directory, target);
-  if ((kNC_DirTreeNameSort == property))
-  rv = createDirectoryTreeNameSortNode(directory, target);
+	  rv = createDirectoryNameNode(directory, target);
+  else if ((kNC_DirUri == property))
+	  rv = createDirectoryUriNode(directory, target);
+  else if ((kNC_Child == property))
+	  rv = createDirectoryChildNode(directory, target);
+  else if ((kNC_IsMailList == property))
+	  rv = createDirectoryIsMailListNode(directory, target);
+  else if ((kNC_IsRemote == property))
+	  rv = createDirectoryIsRemoteNode(directory, target);
+  else if ((kNC_IsSecure == property))
+	  rv = createDirectoryIsSecureNode(directory, target);
+  else if ((kNC_IsWriteable == property))
+	  rv = createDirectoryIsWriteableNode(directory, target);
+  else if ((kNC_DirTreeNameSort == property))
+    rv = createDirectoryTreeNameSortNode(directory, target);
   return rv;
 }
 
@@ -603,37 +603,26 @@ nsAbDirectoryDataSource::createDirectoryChildNode(nsIAbDirectory *directory,
 {
 	nsCOMPtr<nsISupportsArray> pAddressLists;
 	directory->GetAddressLists(getter_AddRefs(pAddressLists));
+
 	if (pAddressLists)
 	{
 		PRUint32 total = 0;
 		pAddressLists->Count(&total);
-		
-		if (total == 0)
-			return NS_RDF_NO_VALUE;
-		else
+
+		if (total)
 		{
 			PRBool isMailList = PR_FALSE;
 			directory->GetIsMailList(&isMailList);
-			if (isMailList)
-			{
-				return NS_RDF_NO_VALUE;
-			}
-
-			PRUint32 i;
-			NS_ASSERTION(total <= 1, "This code probably leaks.  Please break out of the loop or something, ok?");
-			for (i = 0; i < total; i++)
-			{
-				nsCOMPtr<nsIRDFResource> mailList = do_QueryElementAt(pAddressLists, i);
-				if (mailList)
-					NS_ADDREF(*target = mailList);
-				else
-					return NS_RDF_NO_VALUE;
-			}
-			return NS_OK;
-		}
-	}
-	else
-		return NS_RDF_NO_VALUE;
+			if (!isMailList)
+      {
+        // fetch the last element 
+        nsCOMPtr<nsIRDFResource> mailList = do_QueryElementAt(pAddressLists, total - 1);
+        NS_IF_ADDREF(*target = mailList);
+      } 
+    } // if total
+  } // if pAddressLists
+	
+  return (*target ? NS_OK : NS_RDF_NO_VALUE);
 }
 
 nsresult
