@@ -22,7 +22,7 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecQT.h"
 
-#include "nsPrintdQT.h"
+#include "../gtk/nsPrintdGTK.h"
 
 class nsDeviceContextSpecQT : public nsIDeviceContextSpec
 {
