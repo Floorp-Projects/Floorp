@@ -44,7 +44,6 @@ EXPORTS		= \
 		nsIGenericFactory.h \
 		nsIRegistryUtils.h \
 		nsIServiceManager.h \
-		nsIServiceProvider.h \
 		nsRepository.h \
 		nsXPComFactory.h \
 		$(NULL)
