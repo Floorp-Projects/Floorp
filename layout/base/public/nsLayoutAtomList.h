@@ -107,4 +107,6 @@ LAYOUT_ATOM(lineBoxFloaters, "LineBoxFloaters")
 LAYOUT_ATOM(spaceManager, "SpaceManager")
 LAYOUT_ATOM(tableStrategy, "TableLayoutStrategy")
 LAYOUT_ATOM(textRun, "TextRun")
+LAYOUT_ATOM(xml_document_entities, "XMLDocumentEntities")
+LAYOUT_ATOM(xml_document_notations, "XMLDocumentNotations")
 #endif
