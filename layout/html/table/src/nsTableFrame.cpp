@@ -2160,13 +2160,18 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   case eStyleUnit_Coord:
     maxWidth = position->mWidth.GetCoordValue();
     break;
+
+  case eStyleUnit_Auto:
+    maxWidth = aMaxSize.width;
+    break;
+
   case eStyleUnit_Percent:
   case eStyleUnit_Proportional:
+  case eStyleUnit_Inherit:
     // XXX for now these fall through
 
   default:
-  case eStyleUnit_Auto:
-  case eStyleUnit_Inherit:
+
     maxWidth = aMaxSize.width;
     break;
   }

@@ -367,6 +367,25 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
   cellWidth = kidSize.width;  // at this point, we've factored in the cell's style attributes
   if (NS_UNCONSTRAINEDSIZE!=cellWidth)
     cellWidth += leftInset + rightInset;
+  // Nav4 hack for 0 width cells.  If the cell has any content, it must have a desired width of at least 1
+  if (0==cellWidth)
+  {
+    PRInt32 childCount;
+    mFirstChild->ChildCount(childCount);
+    if (0!=childCount)
+    {
+      nsIFrame *grandChild;
+      mFirstChild->FirstChild(grandChild);
+      grandChild->ChildCount(childCount);
+      if (0!=childCount)
+      {
+        cellWidth=1;
+        if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
+          pMaxElementSize->width=1;
+      }
+    }
+  }
+  // end Nav4 hack for 0 width cells
 
   // set the cell's desired size and max element size
   aDesiredSize.width = cellWidth;

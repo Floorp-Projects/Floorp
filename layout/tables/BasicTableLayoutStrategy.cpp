@@ -16,7 +16,6 @@
  * Reserved.
  */
 
-#include <stdio.h>
 #include "BasicTableLayoutStrategy.h"
 #include "nsTableFrame.h"
 #include "nsTableColFrame.h"
@@ -946,8 +945,12 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(nsIPresContext* aPresCo
       {
         PRInt32 colIndex = autoColumns[i];
         nscoord oldColWidth = mTableFrame->GetColumnWidth(colIndex);
-        float percent = (float)oldColWidth/(float)totalWidthOfAutoColumns;
-        nscoord excessForThisColumn = excess*percent;
+        float percent;
+        if (0!=totalWidthOfAutoColumns)
+          percent = (float)oldColWidth/(float)totalWidthOfAutoColumns;
+        else
+          percent = (float)1/(float)numAutoColumns;
+        nscoord excessForThisColumn = (nscoord)(excess*percent);
         nscoord colWidth = excessForThisColumn+oldColWidth;
         if (gsDebug==PR_TRUE) 
           printf("  column %d was %d, now set to %d\n", colIndex, mTableFrame->GetColumnWidth(colIndex), colWidth);
