@@ -613,6 +613,13 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
   -moz-image-region: rect(0px 64px 16px 48px);
 }
 
+/* ::::: search-bar ::::: */
+
+#search-proxy-button {
+  margin: 2px;
+  list-style-image: url("chrome://browser/skin/search-bar.png");
+}
+
 /* ::::: autocomplete ::::: */
 
 .autocomplete-treebody:-moz-tree-cell-text(treecolAutoCompleteComment) {

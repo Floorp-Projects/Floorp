@@ -81,7 +81,8 @@ var gPrintSettings = null;
 var gChromeState = null; // chrome state before we went into print preview
 var gOldCloseHandler = null; // close handler before we went into print preview
 var gInPrintPreviewMode = false;
-var gWebProgress        = null;
+var gWebProgress = null;
+var gFormHistory = null;
 
 /**
 * We can avoid adding multiple load event listeners and save some time by adding
@@ -1162,6 +1163,94 @@ function PageProxyDragGesture(aEvent)
     return true;
   }
   return false;
+}
+
+function SearchBarPopupShowing(aEvent)
+{
+  var popup = aEvent.target;
+  if (popup.firstChild.localName == "menuitem")
+    popup.removeChild(popup.firstChild);
+  
+  var searchBar = document.getElementById("search-bar");
+  var searchMode = searchBar.getAttribute("searchmode");
+  var findItem = document.getElementById("miSearchModeFind");
+  findItem.setAttribute("checked", searchMode == "findinpage");
+
+  var searchBar = document.getElementById("search-bar");
+  if (!searchBar.enginesReady)
+    searchBar.updateEngines();
+  
+  if (searchBar.currentSearchId) {
+    var menuitem = document.createElement("menuitem");
+    menuitem.setAttribute("label", searchBar.currentSearchName);
+
+    if (searchBar.currentSearchIcon) {
+      menuitem.setAttribute("class", "menuitem-iconic");
+      menuitem.setAttribute("image", searchBar.currentSearchIcon);
+    } else {
+      menuitem.setAttribute("type", "checkbox");
+      menuitem.setAttribute("checked", searchMode == "web");
+    }
+    
+    popup.insertBefore(menuitem, popup.firstChild);
+  }
+    
+}
+
+function SearchBarPopupCommand(aEvent)
+{
+  var searchBar = document.getElementById("search-bar");
+
+  if (aEvent.target.id == "miSearchModeFind") {
+    searchBar.setAttribute("autocompletesearchparam", "__PhoenixFindInPage");
+    searchBar.setAttribute("searchmode", "findinpage");
+  } else {
+    searchBar.setAttribute("autocompletesearchparam", "q");
+    searchBar.setAttribute("searchmode", "web");
+  }
+  
+  searchBar.detachController();
+  searchBar.focus();
+}
+
+function handleSearchBarCommand(aEvent)
+{
+  var searchBar = document.getElementById("search-bar");
+
+  // Save the current value in the form history
+  if (!gFormHistory)
+    gFormHistory = Components.classes["@mozilla.org/satchel/form-history;1"]
+                             .getService(Components.interfaces.nsIFormHistory);
+  gFormHistory.addEntry(searchBar.getAttribute("autocompletesearchparam"), searchBar.value);
+
+  if (searchBar.getAttribute("searchmode") == "web") {
+    gURLBar.value = searchBar.searchValue;
+    BrowserLoadURL(aEvent);
+  } else {
+    quickFindInPage(searchBar.value);
+  }
+}
+
+function quickFindInPage(aValue)
+{
+  var focusedWindow = document.commandDispatcher.focusedWindow;
+  if (!focusedWindow || focusedWindow == window)
+    focusedWindow = window._content;
+      
+  var findInst = getBrowser().webBrowserFind;
+  var findInFrames = findInst.QueryInterface(Components.interfaces.nsIWebBrowserFindInFrames);
+  findInFrames.rootSearchFrame = _content;
+  findInFrames.currentSearchFrame = focusedWindow;
+
+  var findService = Components.classes["@mozilla.org/find/find_service;1"]
+                          .getService(Components.interfaces.nsIFindService);
+  findInst.searchString  = aValue;
+  findInst.matchCase     = findService.matchCase;
+  findInst.wrapFind      = true;
+  findInst.entireWord    = findService.entireWord;
+  findInst.findBackwards = false;
+
+  findInst.findNext();
 }
 
 function updateToolbarStates(toolbarMenuElt)

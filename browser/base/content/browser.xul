@@ -227,7 +227,14 @@ Contributor(s):
   <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
-  
+
+  <popup id="SearchBarPopup" position="after_start"
+         oncommand="return SearchBarPopupCommand(event);"
+         onpopupshowing="return SearchBarPopupShowing(event);">
+    <menuseparator/>
+    <menuitem id="miSearchModeFind" type="checkbox" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;"/>
+  </popup>
+
   <popup type="autocomplete" id="PopupAutoComplete"/>
 
   <popup id="toolbar-context-menu">
@@ -755,7 +762,16 @@ Contributor(s):
 
       <toolbaritem id="search-container" align="center"
                    title="&searchItem.title;" class="chromeclass-location">
-        <textbox id="search-bar" flex="1"/>
+        <textbox id="search-bar" type="autocomplete" flex="1"
+                 autocompletepopup="PopupAutoComplete"
+                 autocompletesearch="form-history"
+                 autocompletesearchparam="q"
+                 searchmode="web"
+                 tabscrolling="true"
+                 ontextentered="return handleSearchBarCommand(param);"
+                 persist="searchmode,searchparam">
+          <image id="search-proxy-button" popup="SearchBarPopup"/>
+        </textbox>
       </toolbaritem>
       
       <toolbaritem id="go-container" align="center" class="chromeclass-location">
