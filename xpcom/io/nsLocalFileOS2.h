@@ -140,8 +140,6 @@ private:
 
     nsresult SetModDate(PRInt64 aLastModifiedTime, PRBool resolveTerminal);
 
-    static nsresult ParseURL(const char* inURL, char **outHost, char **outDirectory,
-                             char **outFileBaseName, char **outFileExtension);
 };
 
 #endif

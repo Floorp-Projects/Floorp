@@ -59,9 +59,6 @@ public:
     // nsILocalFileMac interface
     NS_DECL_NSILOCALFILEMAC
 
-    static nsresult ParseURL(const char* inURL, char **outHost, char **outDirectory,
-                             char **outFileBaseName, char **outFileExtension);
-
 protected:
 
     void        MakeDirty();
