@@ -4,7 +4,7 @@
 <!-- Descrpt: Test nsIAccessible Interface methods for HTML Anchor Text Node
      Author: dsirnapalli@netscape.com
      Revs: 12.13.01 - Created
-     Last Run On:12.17.01.
+     Last Run On: 01.23.02.
 
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -42,7 +42,6 @@ function getDomNodeAnchorText()
   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
   var node = document.getElementsByTagName("a").item(0);
-  node = node.firstChild;
   return node;
  }
  catch(e){
@@ -53,68 +52,97 @@ function getDomNodeAnchorText()
 function executeTestCase()
 {
   var domNode = getDomNodeAnchorText();
-  if(domNode == null)
-  {
-    res = res + "Could not get the DOM Node";
+  accNode = getAccessibleNode(domNode);
+  try{
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+   accNode.accTakeFocus();
+   domNode = domNode.firstChild;
+   accNode = getAccessibleNode(domNode);
+
+   setTimeout("constructResults();", 2000);
   }
-  else
-  { //else1
-    var accNode = getAccessibleNode(domNode);
+  catch(e){
+   alert("Exception**: " + e);
+  }
+}
 
-    if(accNode == "Exception")
-    {
-      res = res + "The Node you selected is not an Accessible Node";
-    }
-    else
-    { //else2
-	  try{
-	   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
-	   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+function constructResults()
+{
+  try{
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalBrowserRead");
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
-       var name = getName(accNode);
-       var role = getRole(accNode);
-       var state = getState(accNode);
-       var value = getValue(accNode);
+   var name = getName(accNode);
+   var role = getRole(accNode);
+   var state = getState(accNode);
+   var value = getValue(accNode);
+  }
+  catch(e){
+   alert("Exception**: " + e);
+  }
 
-       var col1 = new Array("Property", "Name->", "Role->", "State->", "Value->");
-       var col2 = new Array("Values", name, role, state, value);
-       var col3 = new Array("Result");
+  var row0 = new Array("Property", "Values", "Result");
+  var row1 = new Array("Name->", name);
+  var row2 = new Array("Role->", role);
+  var row3 = new Array("State->", state);
+  var row4 = new Array("Value->", value);
 
-       if (name == "External Link") col3[1] = "PASS"; else col3[1] = "FAIL";
-       if (role == "42")            col3[2] = "PASS"; else col3[2] = "FAIL";
-       if (state == "7340096")      col3[3] = "PASS"; else col3[3] = "FAIL";
-       if (value == "http://www.yahoo.com")
-                                    col3[4] = "PASS"; else col3[4] = "FAIL";
+  if (name == "External Link") row1[2] = "PASS"; else row1[2] = "FAIL";
+  if (role == "42")            row2[2] = "PASS"; else row2[2] = "FAIL";
+  if (state == "7340100")      row3[2] = "PASS"; else row3[2] = "FAIL";
+  if (value == "http://home.netscape.com")
+                                row4[2] = "PASS"; else row4[2] = "FAIL";
 
-       res += "<table border cols=2 width='50%'>";
+  res += "<table border cols=3 width='70%'>";
+  res += "<tr>";
+  for(col=0; col<3; col++)
+    res += "<td><b>" + row0[col] + "</b></td>";
+  res += "</tr>";
+  res += "<tr>";
+  for(col=0; col<3; col++)
+  {
+   if(row1[col] == "FAIL")
+    res += "<td bgcolor='#FF0000'>" + row1[col] + "</td>";
+   else
+    res += "<td>" + row1[col] + "</td>";
+  }
+  res += "</tr>";
+  res += "<tr>";
+  for(col=0; col<3; col++)
+  {
+   if(row2[col] == "FAIL")
+    res += "<td bgcolor='#FF0000'>" + row2[col] + "</td>";
+   else
+    res += "<td>" + row2[col] + "</td>";
+  }
+  res += "</tr>";
+  res += "<tr>";
+  for(col=0; col<3; col++)
+  {
+   if(row3[col] == "FAIL")
+    res += "<td bgcolor='#FF0000'>" + row3[col] + "</td>";
+   else
+    res += "<td>" + row3[col] + "</td>";
+  }
+  res += "</tr>";
+  res += "<tr>";
+  for(col=0; col<3; col++)
+  {
+   if(row4[col] == "FAIL")
+    res += "<td bgcolor='#FF0000'>" + row4[col] + "</td>";
+   else
+    res += "<td>" + row4[col] + "</td>";
+  }
+  res += "</tr>";
+  res += "</table>";
 
-       for(i=0; i<=4; i++)
-       {
-	     res += "<tr>";
-	     res += " <td width='20%'><b>" + col1[i] + "</b></td>";
-	     if(i==0)
-	       res += " <td width='70%'><b>" + col2[i] + "</b></td>";
-	     else
-	       res += " <td>" + col2[i] + "</td>";
-	     if (i==0)
-	       res += " <td><b>" + col3[i] + "</b></td>";
-	     else
-	     {
-	       if (col3[i] == "FAIL")
-	         res += " <td bgcolor='#FF0000' width='10%'>" + col3[i] + "</td>";
-	       else
-	         res += " <td>" + col3[i] + "</td>";
-	     }
-         res += "</tr>";
-       }
-	   res += "</table>";
-      }
-      catch(e){
-       alert("Exception**: " + e);
-      }
-    }//else2
-  }//else1
+  submitToCookie();
+}
 
+function submitToCookie()
+{
   createCookie("nsIAccessibleTestAnchorTextNode", res, 14);
   setTimeout("window.location.reload();", 2000);
 }
@@ -139,7 +167,7 @@ if(readCookie("nsIAccessibleTestAnchorTextNode") == null)
   <!-- Test Anchor -->
   <!-- Anchor linking to external file -->
   document.write('Testing Link' + '<br>');
-  document.write('<a href="http://www.yahoo.com">External Link</a>');
+  document.write('<a href="http://home.netscape.com">External Link</a>');
 
   setTimeout("executeTestCase();", 2000);
 }

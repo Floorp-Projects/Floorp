@@ -73,6 +73,7 @@ function getAccessibleNode(startNode)
    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
    accessibleNode = accessibleService.getAccessibleFor(startNode);
+   
    return accessibleNode;
   }
   catch(e){
