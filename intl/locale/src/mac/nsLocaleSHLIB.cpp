@@ -141,7 +141,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   return NS_OK;
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char * path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char * path)
 {
   nsresult rv;
   nsService<nsIComponentManager> compMgr(aServMgr, kComponentManagerCID, &rv);
