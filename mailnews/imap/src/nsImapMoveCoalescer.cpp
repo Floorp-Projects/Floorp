@@ -129,8 +129,8 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
 					}
 				}
 				rv = destFolder->CopyMessages(m_sourceFolder,
-                               messages, PR_TRUE, m_msgWindow,
-                               /*nsIMsgCopyServiceListener* listener*/ nsnull, PR_FALSE);
+                               messages, PR_TRUE, m_msgWindow, 
+                               /*nsIMsgCopyServiceListener* listener*/ nsnull, PR_FALSE, PR_FALSE /*allowUndo*/);
 //			   rv = imapService->OnlineMessageCopy(eventQueue,
 //						m_sourceFolder, messageIds.get(),
 //						destFolder, PR_TRUE, PR_TRUE,

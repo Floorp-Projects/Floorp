@@ -90,6 +90,7 @@ public:
     PRBool m_streamCopy;
     char *m_dataBuffer; // temporary buffer for this copy operation
     PRUint32 m_leftOver;
+    PRBool m_allowUndo;
 };
 
 class nsImapMailFolder : public nsMsgDBFolder, 
@@ -164,11 +165,12 @@ public:
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages,
                               nsIMsgWindow *msgWindow, PRBool
                               deleteStorage, PRBool isMove,
-                              nsIMsgCopyServiceListener* listener);
+                              nsIMsgCopyServiceListener* listener, PRBool allowUndo);
   NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, 
                             nsISupportsArray* messages,
                             PRBool isMove, nsIMsgWindow *msgWindow,
-                            nsIMsgCopyServiceListener* listener, PRBool isFolder);
+                            nsIMsgCopyServiceListener* listener, PRBool isFolder, 
+                            PRBool allowUndo);
   NS_IMETHOD CopyFolder(nsIMsgFolder *srcFolder, PRBool isMove, nsIMsgWindow *msgWindow,
                             nsIMsgCopyServiceListener* listener);
   NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, 
@@ -316,7 +318,7 @@ protected:
                          PRBool isMove,
                          PRBool isCrossServerOp,
                          nsIMsgWindow *msgWindow,
-                         nsIMsgCopyServiceListener* listener);
+                         nsIMsgCopyServiceListener* listener, PRBool allowUndo);
   nsresult CopyStreamMessage(nsIMsgDBHdr* message, nsIMsgFolder* dstFolder,
                              nsIMsgWindow *msgWindow, PRBool isMove);
   nsresult InitCopyState(nsISupports* srcSupport, 
@@ -324,7 +326,8 @@ protected:
                          PRBool isMove,
                          PRBool selectedState,
                          nsIMsgCopyServiceListener* listener,
-                         nsIMsgWindow *msgWindow);
+                         nsIMsgWindow *msgWindow,
+                         PRBool allowUndo);
   void ClearCopyState(nsresult exitCode);
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,

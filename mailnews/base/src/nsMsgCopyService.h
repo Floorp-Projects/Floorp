@@ -61,7 +61,7 @@ public:
     nsresult Init(nsCopyRequestType type, nsISupports* aSupport,
                   nsIMsgFolder* dstFolder,
                   PRBool bVal, nsIMsgCopyServiceListener* listener,
-                  nsIMsgWindow *msgWindow);
+                  nsIMsgWindow *msgWindow, PRBool allowUndo);
     nsCopySource* AddNewCopySource(nsIMsgFolder* srcFolder);
 
     nsCOMPtr<nsISupports> m_srcSupport; // ui source folder or file spec
@@ -71,6 +71,7 @@ public:
 	nsCOMPtr<nsITransactionManager> m_txnMgr;
     nsCopyRequestType m_requestType;
     PRBool m_isMoveOrDraftOrTemplate;
+    PRBool m_allowUndo;
     PRBool m_processed;
     nsVoidArray m_copySourceArray; // array of nsCopySource
 };

@@ -72,25 +72,6 @@ static nsresult GetMessage(nsIURI *aURL, nsIMsgDBHdr **message)
   return msgMessageService->MessageURIToMsgHdr(uri, message);
 }
 
-
-static nsresult DeleteMessage(nsIURI *aURL, nsIMsgFolder *srcFolder)
-{
-	nsCOMPtr<nsIMsgDBHdr> message;
-	nsresult rv;
-
-	rv = GetMessage(aURL, getter_AddRefs(message));
-	if(NS_SUCCEEDED(rv) && srcFolder)
-	{
-		nsCOMPtr<nsISupportsArray> messageArray;
-		NS_NewISupportsArray(getter_AddRefs(messageArray));
-		nsCOMPtr<nsISupports> messageSupports(do_QueryInterface(message));
-		if(messageSupports)
-			messageArray->AppendElement(messageSupports);
-		rv = srcFolder->DeleteMessages(messageArray, nsnull, PR_TRUE, PR_TRUE, nsnull);
-	}
-	return rv;
-}
-
 nsCopyMessageStreamListener::nsCopyMessageStreamListener()
 {
   /* the following macro is used to initialize the ref counting data */

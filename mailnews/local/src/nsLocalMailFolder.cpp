@@ -1437,7 +1437,7 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
                                      nsIMsgWindow *msgWindow, 
                                      PRBool deleteStorage, PRBool isMove,
-                                     nsIMsgCopyServiceListener* listener)
+                                     nsIMsgCopyServiceListener* listener, PRBool allowUndo)
 {
   nsresult rv = NS_ERROR_FAILURE;
   PRBool isTrashFolder = mFlags & MSG_FOLDER_FLAG_TRASH;
@@ -1452,7 +1452,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
           if (NS_SUCCEEDED(rv))
           {
             return copyService->CopyMessages(this, messages, trashFolder,
-                                      PR_TRUE, listener, msgWindow);
+                                      PR_TRUE, listener, msgWindow, allowUndo);
           }
       }
       return rv;
@@ -1461,7 +1461,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
   {
 	  nsCOMPtr <nsITransactionManager> txnMgr;
 
-	  if (msgWindow)
+	  if (msgWindow && allowUndo)
 	  {
 		  msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
 
@@ -1512,7 +1512,8 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
                                     nsISupportsArray* messages,
                                     PRBool isMove,
                                     nsIMsgCopyServiceListener* listener, 
-                                    nsIMsgWindow *msgWindow, PRBool isFolder)
+                                    nsIMsgWindow *msgWindow, PRBool isFolder, 
+                                    PRBool allowUndo)
 {
   nsresult rv = NS_OK;
 	nsFileSpec path;
@@ -1561,6 +1562,7 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
   mCopyState->m_curCopyIndex = 0;
   mCopyState->m_isMove = isMove;
   mCopyState->m_isFolder = isFolder;
+  mCopyState->m_allowUndo = allowUndo;
   rv = messages->Count(&mCopyState->m_totalMsgCount);
   if (listener)
     mCopyState->m_listener = do_QueryInterface(listener, &rv);
@@ -1600,13 +1602,14 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
                                    messages, PRBool isMove,
                                    nsIMsgWindow *msgWindow,
-                                   nsIMsgCopyServiceListener* listener, PRBool isFolder)
+                                   nsIMsgCopyServiceListener* listener, 
+                                   PRBool isFolder, PRBool allowUndo)
 {
   if (!srcFolder || !messages)
     return NS_ERROR_NULL_POINTER;
   nsCOMPtr <nsITransactionManager> txnMgr;
 
-  if (msgWindow && !isFolder)   // no undo for folder move/copy
+  if (msgWindow && allowUndo)   // no undo for folder move/copy or from the search window
   {
 	  msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
 
@@ -1624,7 +1627,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   // don't update the counts in the dest folder until it is all over
   EnableNotifications(allMessageCountNotifications, PR_FALSE);
 
-  rv = InitCopyState(srcSupport, messages, isMove, listener, msgWindow, isFolder);
+  rv = InitCopyState(srcSupport, messages, isMove, listener, msgWindow, isFolder, allowUndo);
   if (NS_FAILED(rv)) return rv;
   char *uri = nsnull;
   rv = srcFolder->GetURI(&uri);
@@ -1647,7 +1650,7 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   }
 
   // undo stuff
-  if (!isFolder)    //no undo for folder move/copy
+  if (allowUndo)    //no undo for folder move/copy or or move/copy from search window
   {
       nsLocalMoveCopyMsgTxn* msgTxn = nsnull;
 
@@ -1746,7 +1749,7 @@ nsMsgLocalMailFolder::CopyFolderAcrossServer(nsIMsgFolder *destFolder, nsIMsgFol
   msgSupportsArray->Count(&numMsgs);
 
   if (numMsgs > 0 )   //if only srcFolder has messages..
-      newMsgFolder->CopyMessages(srcFolder, msgSupportsArray, PR_FALSE, msgWindow, listener, PR_TRUE);
+      newMsgFolder->CopyMessages(srcFolder, msgSupportsArray, PR_FALSE, msgWindow, listener, PR_TRUE /* is folder*/, PR_FALSE /* allowUndo */);
   else
       DoNextSubFolder(newMsgFolder, srcFolder, msgWindow, listener);
 	    
@@ -1924,7 +1927,7 @@ nsMsgLocalMailFolder::CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr*
   }
 
   rv = InitCopyState(fileSupport, messages, msgToReplace ? PR_TRUE:PR_FALSE,
-                     listener, msgWindow, PR_FALSE);
+                     listener, msgWindow, PR_FALSE, PR_FALSE);
   if (NS_FAILED(rv)) goto done;
 
   parseMsgState = new nsParseMailMessageState();
@@ -2342,7 +2345,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     nsresult result;
     if(!mCopyState->m_isMove)
     {
-      if (!mCopyState->m_copyingMultipleMessages)
+      if (multipleCopiesFinished)
       {
         nsCOMPtr<nsIMsgFolder> srcFolder;
         srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
@@ -2391,7 +2394,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
       if(srcFolder)
       {
         // lets delete these all at once - much faster that way
-        result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE, nsnull);
+        result = srcFolder->DeleteMessages(mCopyState->m_messages, nsnull, PR_TRUE, PR_TRUE, nsnull, mCopyState->m_allowUndo);
         srcFolder->EnableNotifications(allMessageCountNotifications, PR_TRUE);
         srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
       }
@@ -2914,8 +2917,8 @@ nsresult nsMsgLocalMailFolder::DisplayMoveCopyStatusMsg()
 		    localUndoTxn = do_QueryInterface(mCopyState->m_undoMsgTxn, &rv);
         if (NS_SUCCEEDED(rv))
           localUndoTxn->GetMsgWindow(getter_AddRefs(msgWindow));
-      }
       NS_ASSERTION(msgWindow, "no msg window");
+      }
       if (!msgWindow)
         return NS_OK; // not a fatal error.
       msgWindow->GetStatusFeedback(getter_AddRefs(mCopyState->m_statusFeedback));

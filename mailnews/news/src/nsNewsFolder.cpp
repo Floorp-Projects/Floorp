@@ -929,11 +929,18 @@ NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP 
+nsMsgNewsFolder::CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray* messages,
+                        PRBool isMove, nsIMsgWindow *msgWindow,
+                        nsIMsgCopyServiceListener* listener, PRBool isFolder, PRBool allowUndo)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 /* this is news, so remember that DeleteMessage is really CANCEL */
 NS_IMETHODIMP 
 nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages, nsIMsgWindow *aMsgWindow, 
                                 PRBool deleteStorage, PRBool isMove,
-								nsIMsgCopyServiceListener* listener)
+								nsIMsgCopyServiceListener* listener, PRBool allowUndo)
 {
   nsresult rv = NS_OK;
  

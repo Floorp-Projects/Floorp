@@ -46,7 +46,8 @@ interface nsIMsgCopyService : nsISupports {
 					  in nsIMsgFolder dstFolder,
 					  in boolean isMove,
                       in nsIMsgCopyServiceListener listener,
-					  in nsIMsgWindow msgWindow);
+					  in nsIMsgWindow msgWindow,
+					  in boolean allowUndo);
 
     /**
      *

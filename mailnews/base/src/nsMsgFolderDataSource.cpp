@@ -1648,7 +1648,7 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 	if(NS_SUCCEEDED(rv))
 	{
 		rv = copyService->CopyMessages(srcFolder, messageArray, dstFolder, isMove, 
-                              nsnull, msgWindow);
+                              nsnull, msgWindow, PR_TRUE/* allowUndo */);
 
 	}
 	return rv;
@@ -1732,7 +1732,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
 	rv = messageArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;
 	if (cnt > 0)
-		rv = folder->DeleteMessages(messageArray, msgWindow, reallyDelete, PR_FALSE, nsnull);
+		rv = folder->DeleteMessages(messageArray, msgWindow, reallyDelete, PR_FALSE, nsnull, PR_TRUE /*allowUndo*/);
 
 	rv = folderArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;

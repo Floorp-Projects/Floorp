@@ -92,18 +92,20 @@ nsresult
 nsCopyRequest::Init(nsCopyRequestType type, nsISupports* aSupport,
                     nsIMsgFolder* dstFolder,
                     PRBool bVal, nsIMsgCopyServiceListener* listener,
-                    nsIMsgWindow* msgWindow)
+                    nsIMsgWindow* msgWindow, PRBool allowUndo)
 {
   nsresult rv = NS_OK;
   m_requestType = type;
   m_srcSupport = aSupport;
   m_dstFolder = dstFolder;
   m_isMoveOrDraftOrTemplate = bVal;
+  m_allowUndo = allowUndo;
   if (listener)
       m_listener = listener;
   if (msgWindow)
 	{
     m_msgWindow = msgWindow;
+    if (m_allowUndo)
 		msgWindow->GetTransactionManager(getter_AddRefs(m_txnMgr));
 	}
   
@@ -150,7 +152,7 @@ nsMsgCopyService::ClearRequest(nsCopyRequest* aRequest, nsresult rv)
   if (aRequest)
   {
     // undo stuff
-    if (aRequest->m_copySourceArray.Count() > 1 && 
+    if (aRequest->m_allowUndo && aRequest->m_copySourceArray.Count() > 1 && 
         aRequest->m_txnMgr)
         aRequest->m_txnMgr->EndBatch();
         
@@ -218,7 +220,7 @@ nsMsgCopyService::DoNextCopy()
               rv = copyRequest->m_dstFolder->CopyMessages
                   (copySource->m_msgFolder, copySource->m_messageArray,
                    copyRequest->m_isMoveOrDraftOrTemplate,
-                   copyRequest->m_msgWindow, copyRequest->m_listener, PR_FALSE);   //isFolder operation PR_FALSE
+                   copyRequest->m_msgWindow, copyRequest->m_listener, PR_FALSE, copyRequest->m_allowUndo);   //isFolder operation PR_FALSE
                                                               
           }
           else if (copyRequest->m_requestType == nsCopyFoldersType )
@@ -290,7 +292,8 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
                                nsIMsgFolder* dstFolder,
                                PRBool isMove,
                                nsIMsgCopyServiceListener* listener,
-                               nsIMsgWindow* window)
+                               nsIMsgWindow* window,
+                               PRBool allowUndo)
 {
     nsCopyRequest* copyRequest;
     nsCopySource* copySource = nsnull;
@@ -308,7 +311,7 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
     aSupport = do_QueryInterface(srcFolder, &rv);
 
     rv = copyRequest->Init(nsCopyMessagesType, aSupport, dstFolder, 
-                           isMove, listener, window);
+                           isMove, listener, window, allowUndo);
     if (NS_FAILED(rv)) goto done;
 
     rv = NS_NewISupportsArray(getter_AddRefs(msgArray));
@@ -324,7 +327,7 @@ nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */
       copySource->AddMessage(msg);
     }
     // undo stuff
-    if (NS_SUCCEEDED(rv) && copyRequest->m_copySourceArray.Count() > 1 &&
+    if (NS_SUCCEEDED(rv) && copyRequest->m_allowUndo && copyRequest->m_copySourceArray.Count() > 1 &&
         copyRequest->m_txnMgr)
         copyRequest->m_txnMgr->BeginBatch();
 done:
@@ -366,7 +369,7 @@ nsMsgCopyService::CopyFolders( nsISupportsArray* folders,
  	if (!copyRequest) return NS_ERROR_OUT_OF_MEMORY;
        
     rv = copyRequest->Init(nsCopyFoldersType, support, dstFolder, 
-                           isMove, listener, window);
+                           isMove, listener, window, PR_FALSE);
     NS_ENSURE_SUCCESS(rv,rv);
 
     folder = do_QueryInterface(support, &rv);
@@ -414,7 +417,7 @@ nsMsgCopyService::CopyFileMessage(nsIFileSpec* fileSpec,
   if (NS_FAILED(rv)) goto done;
 
   rv = copyRequest->Init(nsCopyFileMessageType, aSupport, dstFolder,
-                         isDraft, listener, window);
+                         isDraft, listener, window, PR_FALSE);
   if (NS_FAILED(rv)) goto done;
 
   if (msgToReplace)

@@ -72,6 +72,7 @@ struct nsLocalMailCopyState
   PRUint32 m_leftOver;
   PRBool m_copyingMultipleMessages;
   PRBool m_fromLineSeen;
+  PRBool m_allowUndo;
 };
 
 class nsMsgLocalMailFolder : public nsMsgDBFolder,
@@ -137,10 +138,10 @@ public:
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
                             nsIMsgWindow *msgWindow, PRBool
                             deleteStorage, PRBool isMove,
-                            nsIMsgCopyServiceListener* listener);
+                            nsIMsgCopyServiceListener* listener, PRBool allowUndo);
   NS_IMETHOD CopyMessages(nsIMsgFolder *srcFolder, nsISupportsArray* messages,
                           PRBool isMove, nsIMsgWindow *msgWindow,
-                          nsIMsgCopyServiceListener* listener, PRBool isFolder );
+                          nsIMsgCopyServiceListener* listener, PRBool isFolder, PRBool allowUndo);
   NS_IMETHOD CopyFolder(nsIMsgFolder *srcFolder, PRBool isMoveFolder, nsIMsgWindow *msgWindow,
                           nsIMsgCopyServiceListener* listener);
   NS_IMETHOD CopyFileMessage(nsIFileSpec* fileSpec, nsIMsgDBHdr* msgToReplace,
@@ -192,7 +193,7 @@ protected:
 	virtual const char* GetIncomingServerType();
   nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
-                         PRBool isMove, nsIMsgCopyServiceListener* listener, nsIMsgWindow *msgWindow, PRBool isMoveFolder);
+                         PRBool isMove, nsIMsgCopyServiceListener* listener, nsIMsgWindow *msgWindow, PRBool isMoveFolder, PRBool allowUndo);
   void ClearCopyState(PRBool moveCopySucceeded);
 	virtual nsresult CreateBaseMessageURI(const char *aURI);
 

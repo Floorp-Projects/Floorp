@@ -109,6 +109,11 @@ nsresult nsMsgSearchDBView::FetchLocation(PRInt32 aRow, PRUnichar ** aLocationSt
   return NS_OK;
 }
 
+nsresult nsMsgSearchDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKey, PRBool /*ensureListed*/)
+{
+   return NS_OK;
+}
+
 nsresult nsMsgSearchDBView::GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **msgHdr)
 {
   nsresult rv;
@@ -339,7 +344,7 @@ nsMsgSearchDBView::InitializeGlobalsForDeleteAndFile(nsMsgViewIndex *indices, PR
 
 
 }
-
+  
 NS_IMETHODIMP
 nsMsgSearchDBView::OnStopCopy(nsresult aStatus)
 {
@@ -372,7 +377,7 @@ nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
 
     // called for delete with trash, copy and move
     if (mCommand == nsMsgViewCommandType::deleteMsg)
-        curFolder->DeleteMessages(messageArray, window, PR_FALSE /* delete storage */, PR_FALSE /* is move*/, copyServListener);
+        curFolder->DeleteMessages(messageArray, window, PR_FALSE /* delete storage */, PR_FALSE /* is move*/, copyServListener, PR_FALSE /*allowUndo*/);
     else 
     {
       NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID,&rv);
@@ -380,9 +385,9 @@ nsresult nsMsgSearchDBView::ProcessRequestsInOneFolder(nsIMsgWindow *window)
       if (NS_SUCCEEDED(rv) && curFolder != mDestFolder)
       {
          if (mCommand == nsMsgViewCommandType::moveMessages)
-           copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_TRUE /* isMove */,copyServListener, window);
+           copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_TRUE /* isMove */,copyServListener, window, PR_FALSE /*allowUndo*/);
          else if (mCommand == nsMsgViewCommandType::copyMessages)
-           copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_FALSE /* isMove */,copyServListener, window);
+           copyService->CopyMessages(curFolder, messageArray, mDestFolder, PR_FALSE /* isMove */,copyServListener, window, PR_FALSE /*allowUndo*/);
       }
     }
     return rv;
@@ -403,7 +408,7 @@ nsresult nsMsgSearchDBView::ProcessRequestsInAllFolders(nsIMsgWindow *window)
        NS_ASSERTION(msgSupports, "msgSupports is null");
        nsCOMPtr <nsISupportsArray> messageArray = do_QueryInterface(msgSupports);
 
-       curFolder->DeleteMessages(messageArray, window, PR_TRUE /* delete storage */, PR_FALSE /* is move*/, nsnull/*copyServListener*/);
+       curFolder->DeleteMessages(messageArray, window, PR_TRUE /* delete storage */, PR_FALSE /* is move*/, nsnull/*copyServListener*/, PR_FALSE /*allowUndo*/ );
     }
 
     return NS_OK;

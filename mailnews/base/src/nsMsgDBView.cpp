@@ -1396,8 +1396,10 @@ nsMsgDBView::CopyMessages(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32
     if (msgHdr)
       messageArray->AppendElement(msgHdr);
   }
+
   m_deletingMsgs = isMove;
-  rv = destFolder->CopyMessages(m_folder /* source folder */, messageArray, isMove, window, this /* listener */, PR_FALSE /* isFolder */);
+  rv = destFolder->CopyMessages(m_folder /* source folder */, messageArray, isMove, window, this /* listener */, PR_FALSE /* isFolder */, PR_TRUE /*allowUndo*/);
+
   return rv;
 }
 
@@ -1552,7 +1554,8 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
 
   }
   m_deletingMsgs = PR_TRUE;
-  m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, this);
+  m_folder->DeleteMessages(messageArray, window, deleteStorage, PR_FALSE, this, PR_TRUE /*allow Undo*/ );
+
   return rv;
 }
 

@@ -1765,7 +1765,8 @@ nsresult nsImapMailFolder::MarkMessagesImapDeleted(nsMsgKeyArray *keyArray, PRBo
 NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
                                                nsIMsgWindow *msgWindow,
                                                PRBool deleteStorage, PRBool isMove,
-                                               nsIMsgCopyServiceListener* listener)
+                                               nsIMsgCopyServiceListener* listener,
+                                               PRBool allowUndo)
 {
   nsresult rv = NS_ERROR_FAILURE;
   // *** jt - assuming delete is move to the trash folder for now
@@ -1812,7 +1813,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
 				deleteImmediatelyNoTrash = PR_TRUE;
 		}
 	}
-  if (msgWindow)
+  if (msgWindow && allowUndo)
   {
     nsCOMPtr <nsITransactionManager> txnMgr;
 
@@ -1824,15 +1825,19 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
 
   if ((NS_SUCCEEDED(rv) && deleteImmediatelyNoTrash) || deleteModel == nsMsgImapDeleteModels::IMAPDelete )
   {
-    nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
+    if (allowUndo)
+    {
+      //need to take care of these two delete models
+      nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
         this, &srcKeyArray, messageIds.get(), nsnull,
         PR_TRUE, isMove, m_eventQueue, nsnull);
-    if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
-    undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
-    // we're adding this undo action before the delete is successful. This is evil,
-    // but 4.5 did it as well.
-    if (m_transactionManager)
-      m_transactionManager->DoTransaction(undoMsgTxn);
+      if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
+      undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
+      // we're adding this undo action before the delete is successful. This is evil,
+      // but 4.5 did it as well.
+      if (m_transactionManager)
+        m_transactionManager->DoTransaction(undoMsgTxn);
+    }
 
     rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray.GetArray(), srcKeyArray.GetSize());
     if (NS_SUCCEEDED(rv))
@@ -1866,7 +1871,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
 
       rv = QueryInterface(NS_GET_IID(nsIMsgFolder),
 					  getter_AddRefs(srcFolder));
-      rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, listener,PR_FALSE);
+      rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, listener,PR_FALSE, allowUndo);
 	  }
   }
   return rv;
@@ -3765,12 +3770,21 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                         getter_AddRefs(srcDB));
                 if (NS_SUCCEEDED(rv) && srcDB)
                 {
-                    nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
-                    nsMsgKeyArray srcKeyArray;
-                    msgTxn =
-                        do_QueryInterface(m_copyState->m_undoMsgTxn); 
-                    if (msgTxn)
-                        msgTxn->GetSrcKeyArray(srcKeyArray);
+                  nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
+                  nsMsgKeyArray srcKeyArray;
+                  if (m_copyState->m_allowUndo)
+                  {
+                     msgTxn = do_QueryInterface(m_copyState->m_undoMsgTxn); 
+                     if (msgTxn)
+                       msgTxn->GetSrcKeyArray(srcKeyArray);
+                  }
+                  else
+                  {
+                     nsCAutoString messageIds;
+                     rv = BuildIdsAndKeyArray(m_copyState->m_messages, messageIds, srcKeyArray);
+                     NS_ENSURE_SUCCESS(rv,rv);
+                  }
+                 
                   if (!ShowDeletedMessages())
                   {
                     EnableNotifications(allMessageCountNotifications, PR_FALSE);
@@ -4413,7 +4427,7 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
         if (NS_SUCCEEDED(rv) && srcFolder)
         {
           srcFolder->DeleteMessages(mailCopyState->m_messages, nsnull,
-            PR_TRUE, PR_TRUE, nsnull);
+            PR_TRUE, PR_TRUE, nsnull, PR_FALSE);
           // we want to send this notification after the source messages have
           // been deleted.
           if (mCopyListener)
@@ -4423,6 +4437,7 @@ nsImapMailFolder::CopyNextStreamMessage(nsIImapProtocol* aProtocol,
             srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
         }
         
+
 
     }
     return rv;
@@ -4487,63 +4502,66 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
                                 PRBool isMove,
                                 PRBool isCrossServerOp,
                                 nsIMsgWindow *msgWindow,
-                                nsIMsgCopyServiceListener* listener)
+                                nsIMsgCopyServiceListener* listener, 
+                                PRBool allowUndo)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     if (!srcFolder || !messages) return rv;
 
     nsCOMPtr<nsISupports> aSupport(do_QueryInterface(srcFolder, &rv));
     if (NS_FAILED(rv)) return rv;
-    rv = InitCopyState(aSupport, messages, isMove, PR_FALSE, listener, msgWindow);
+    rv = InitCopyState(aSupport, messages, isMove, PR_FALSE, listener, msgWindow, allowUndo);
     if(NS_FAILED(rv)) return rv;
 
     m_copyState->m_streamCopy = PR_TRUE;
     m_copyState->m_isCrossServerOp = isCrossServerOp;
 
     // ** jt - needs to create server to server move/copy undo msg txn
-    nsCAutoString messageIds;
-    nsMsgKeyArray srcKeyArray;
-    nsCOMPtr<nsIUrlListener> urlListener;
-
-  rv = QueryInterface(NS_GET_IID(nsIUrlListener), getter_AddRefs(urlListener));
-    rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
-
-    nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
-        srcFolder, &srcKeyArray, messageIds.get(), this,
-        PR_TRUE, isMove, m_eventQueue, urlListener);
-
-    if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
-    if (isMove)
+    if (m_copyState->m_allowUndo)
     {
-        if (mFlags & MSG_FOLDER_FLAG_TRASH)
+       nsCAutoString messageIds;
+       nsMsgKeyArray srcKeyArray;
+       nsCOMPtr<nsIUrlListener> urlListener;
+
+       rv = QueryInterface(NS_GET_IID(nsIUrlListener), getter_AddRefs(urlListener));
+       rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
+
+       nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
+              srcFolder, &srcKeyArray, messageIds.get(), this,
+              PR_TRUE, isMove, m_eventQueue, urlListener);
+
+       if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
+       if (isMove)
+       {
+          if (mFlags & MSG_FOLDER_FLAG_TRASH)
             undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
-        else
+          else
             undoMsgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
+       }
+       else
+       {
+          undoMsgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
+       }
+    
+       rv = undoMsgTxn->QueryInterface(
+         NS_GET_IID(nsImapMoveCopyMsgTxn), 
+         getter_AddRefs(m_copyState->m_undoMsgTxn) );
+    }
+    nsCOMPtr<nsISupports> msgSupport;
+    msgSupport = getter_AddRefs(messages->ElementAt(0));
+    if (msgSupport)
+    {
+      nsCOMPtr<nsIMsgDBHdr> aMessage;
+      aMessage = do_QueryInterface(msgSupport, &rv);
+      if (NS_SUCCEEDED(rv))
+        CopyStreamMessage(aMessage, this, msgWindow, isMove);
+      else
+        ClearCopyState(rv);
     }
     else
     {
-        undoMsgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
+       rv = NS_ERROR_FAILURE;
     }
-    
-    rv = undoMsgTxn->QueryInterface(
-        NS_GET_IID(nsImapMoveCopyMsgTxn), 
-        getter_AddRefs(m_copyState->m_undoMsgTxn) );
-    
-  nsCOMPtr<nsISupports> msgSupport;
-  msgSupport = getter_AddRefs(messages->ElementAt(0));
-  if (msgSupport)
-  {
-    nsCOMPtr<nsIMsgDBHdr> aMessage;
-    aMessage = do_QueryInterface(msgSupport, &rv);
-    if (NS_SUCCEEDED(rv))
-      CopyStreamMessage(aMessage, this, msgWindow, isMove);
-    else
-      ClearCopyState(rv);
-  }
-  else
-  {
-    rv = NS_ERROR_FAILURE;
-  }
     return rv;
 }
 
@@ -4898,7 +4916,8 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
                                PRBool isMove,
                                nsIMsgWindow *msgWindow,
                                nsIMsgCopyServiceListener* listener,
-							   PRBool isFolder)   //isFolder for future use when we do cross-server folder move/copy
+							   PRBool isFolder, //isFolder for future use when we do cross-server folder move/copy
+                               PRBool allowUndo)  
 {
   nsresult rv = NS_OK;
   nsCAutoString messageIds;
@@ -4909,7 +4928,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
 
   mCopyListener = listener;
 
-  if (msgWindow)
+  if (msgWindow && allowUndo)
   {
     nsCOMPtr <nsITransactionManager> txnMgr;
 
@@ -4940,7 +4959,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   // if the folders aren't on the same server, do a stream base copy
   if (!sameServer) 
   {
-    rv = CopyMessagesWithStream(srcFolder, messages, isMove, PR_TRUE, msgWindow, listener);
+    rv = CopyMessagesWithStream(srcFolder, messages, isMove, PR_TRUE, msgWindow, listener, allowUndo);
     goto done;
   }
 
@@ -4950,44 +4969,45 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   srcSupport = do_QueryInterface(srcFolder);
   rv = QueryInterface(NS_GET_IID(nsIUrlListener), getter_AddRefs(urlListener));
 
-  rv = InitCopyState(srcSupport, messages, isMove, PR_TRUE, listener, msgWindow);
+  rv = InitCopyState(srcSupport, messages, isMove, PR_TRUE, listener, msgWindow, allowUndo);
   if (NS_FAILED(rv)) goto done;
 
   m_copyState->m_curIndex = m_copyState->m_totalCount;
 
   copySupport = do_QueryInterface(m_copyState);
   if (imapService)
-    rv = imapService->OnlineMessageCopy(m_eventQueue,
+  rv = imapService->OnlineMessageCopy(m_eventQueue,
                                             srcFolder, messageIds.get(),
                                             this, PR_TRUE, isMove,
                                             urlListener, nsnull,
                                             copySupport, msgWindow);
-  if (NS_SUCCEEDED(rv))
-  {
-    nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
-        srcFolder, &srcKeyArray, messageIds.get(), this,
-        PR_TRUE, isMove, m_eventQueue, urlListener);
-    if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
-    if (isMove)
+  if (m_copyState->m_allowUndo)
+    if (NS_SUCCEEDED(rv))
     {
-      if (mFlags & MSG_FOLDER_FLAG_TRASH)
-          undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
-      else
-          undoMsgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
+       nsImapMoveCopyMsgTxn* undoMsgTxn = new nsImapMoveCopyMsgTxn(
+       srcFolder, &srcKeyArray, messageIds.get(), this,
+       PR_TRUE, isMove, m_eventQueue, urlListener);
+       if (!undoMsgTxn) return NS_ERROR_OUT_OF_MEMORY;
+       if (isMove)
+       {
+         if (mFlags & MSG_FOLDER_FLAG_TRASH)
+           undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
+         else
+           undoMsgTxn->SetTransactionType(nsIMessenger::eMoveMsg);
+       }
+       else
+       {
+          undoMsgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
+       }
+       rv = undoMsgTxn->QueryInterface(
+         NS_GET_IID(nsImapMoveCopyMsgTxn), 
+         getter_AddRefs(m_copyState->m_undoMsgTxn) );
     }
-    else
+    else 
     {
-        undoMsgTxn->SetTransactionType(nsIMessenger::eCopyMsg);
+      NS_ASSERTION(PR_FALSE, "online copy failed");
+      ClearCopyState(rv);
     }
-      rv = undoMsgTxn->QueryInterface(
-        NS_GET_IID(nsImapMoveCopyMsgTxn), 
-        getter_AddRefs(m_copyState->m_undoMsgTxn) );
-  }
-  else 
-  {
-    NS_ASSERTION(PR_FALSE, "online copy failed");
-    ClearCopyState(rv);
-  }
 
 done:
     return rv;
@@ -5069,7 +5089,7 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
     }
 
     rv = InitCopyState(srcSupport, messages, PR_FALSE, isDraftOrTemplate,
-                       listener, msgWindow);
+                       listener, msgWindow, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsISupports> copySupport;
@@ -5139,7 +5159,7 @@ nsImapMailFolder::CopyStreamMessage(nsIMsgDBHdr* message,
 nsImapMailCopyState::nsImapMailCopyState() : m_msgService(nsnull),
     m_isMove(PR_FALSE), m_selectedState(PR_FALSE), m_curIndex(0),
     m_totalCount(0), m_streamCopy(PR_FALSE), m_dataBuffer(nsnull),
-    m_leftOver(0), m_isCrossServerOp(PR_FALSE)
+    m_leftOver(0), m_isCrossServerOp(PR_FALSE), m_allowUndo(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -5178,7 +5198,8 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
                                 PRBool isMove,
                                 PRBool selectedState,
                                 nsIMsgCopyServiceListener* listener,
-                                nsIMsgWindow *msgWindow)
+                                nsIMsgWindow *msgWindow,
+                                PRBool allowUndo)
 {
     nsresult rv = NS_OK;
 
@@ -5201,6 +5222,7 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
             rv = messages->Count(&m_copyState->m_totalCount);
     }
     m_copyState->m_isMove = isMove;
+    m_copyState->m_allowUndo = allowUndo;
     m_copyState->m_selectedState = selectedState;
     m_copyState->m_msgWindow = msgWindow;
     if (listener)

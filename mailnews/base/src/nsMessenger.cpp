@@ -1056,7 +1056,7 @@ nsMessenger::CopyMessages(nsIMsgFolder *srcFolder, nsIMsgFolder *destFolder,
     NS_ENSURE_ARG_POINTER(destFolder);
     NS_ENSURE_ARG_POINTER(messageArray);
 
-    rv = destFolder->CopyMessages(srcFolder, messageArray, isMove, nsnull /* nsIMsgWindow */, nsnull /* listener */, PR_FALSE /* isFolder */);
+    rv = destFolder->CopyMessages(srcFolder, messageArray, isMove, mMsgWindow /* nsIMsgWindow */, nsnull /* listener */, PR_FALSE /* isFolder */, PR_TRUE /*allowUndo*/ );
     NS_ENSURE_SUCCESS(rv,rv);
     return rv;
 }
