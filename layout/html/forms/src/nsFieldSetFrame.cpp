@@ -197,7 +197,7 @@ nsFieldSetFrame::Paint(nsIPresContext* aPresContext,
     const nsStyleDisplay* disp =
       (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
-    if (disp->mVisible && mRect.width && mRect.height) {
+    if (disp->mVisible == NS_STYLE_VISIBILITY_VISIBLE && mRect.width && mRect.height) {
       PRIntn skipSides = GetSkipSides();
       const nsStyleColor* color =
         (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);

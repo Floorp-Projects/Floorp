@@ -163,7 +163,7 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
 {
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
   mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (!disp->mVisible)
+  if (disp->mVisible != NS_STYLE_VISIBILITY_VISIBLE)
     return NS_OK;
 
   // Paint the background
@@ -190,7 +190,7 @@ nsGfxCheckboxControlFrame :: SetCheckboxState (nsIPresContext* aPresContext,
   nsFormControlHelper::ForceDrawFrame(aPresContext, this);
 }
 
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsXXX
 NS_IMETHODIMP 
 nsGfxCheckboxControlFrame::Reflow(nsIPresContext*          aPresContext, 
                                   nsHTMLReflowMetrics&     aDesiredSize,
