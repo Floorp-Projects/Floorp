@@ -475,7 +475,29 @@ SSM_UCS2_UTF8Conversion(PRBool toUnicode, unsigned char *inBuf,
     if(toUnicode) {
         retval = nlsUTF8ToUnicode(inBuf, inBufLen, outBuf, maxOutBufLen, 
                                  outBufLen);
+#ifdef IS_LITTLE_ENDIAN
+		{
+			unsigned int i;
+			char tmp;
+			/* Convert the output buffer to Network Byte Order */
+			for (i=0; i<*outBufLen; i+=2) {
+	            tmp = outBuf[i];
+		        outBuf[i]   = outBuf[i+1];
+			    outBuf[i+1] = tmp;
+			}
+		}
+#endif
+
     } else {
+#ifdef IS_LITTLE_ENDIAN
+        unsigned int i;
+        char tmp;
+		for (i=0; i < inBufLen; i+=2) {
+			tmp = inBuf[i];
+			inBuf[i] = inBuf[i+1];
+			inBuf[i+1] = tmp;
+		}
+#endif
     	retval = nlsUnicodeToUTF8(inBuf, inBufLen, outBuf, maxOutBufLen, 
                                  outBufLen);
 	}
