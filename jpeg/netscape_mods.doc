@@ -1,5 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
@@ -16,23 +15,19 @@
  * Reserved.
  */
 
-Netscape Modifications to JPEG source -
+This directory contains a subset of the IJG JPEG library.  Among other
+omissions, most of the original IJG documentation has been deleted.
+You can find the full IJG distribution at the archive sites mentioned in
+the README file.  Please note that the IJG code does not fall under the
+Netscape NPL, but is freely distributable under its own copyright terms
+(see README).
 
+Several files have been modified to allow incorporation of the IJG code
+into the Netscape environment.  As of this writing, jconfig.h, jmorecfg.h,
+and jerror.c contain Netscape-specific changes.  In addition, we have created
+our own makefiles following Netscape conventions, rather than using any of
+those provided by IJG.
 
-Changes were made to the following files to 
-create a jpeg dll:
-
-	jcapimin.c
-	jcapistd.c
-	jcparam.c
-	jdapimin.c
-	jdapistd.c
-	jdatadst.c
-	jdmarker.c
-	jdmaster.c
-	jerror.c
-
-Various changes for cross platform builds
-are clearly marked through out the source.
-
-
+There are some other changes herein, such as MMX-specific optimizations,
+which should eventually make their way back into the standard IJG
+distribution.
