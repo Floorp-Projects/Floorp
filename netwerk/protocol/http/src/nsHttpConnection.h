@@ -155,14 +155,21 @@ public:
 
         NS_INIT_ISUPPORTS();
 
-        if (host)
-          mHost.Adopt(nsCRT::strdup(host));
         if (proxyHost)
           mProxyHost.Adopt(nsCRT::strdup(proxyHost));
         if (proxyType)
           mProxyType.Adopt(nsCRT::strdup(proxyType));
 
-        mPort = port == -1 ? DefaultPort() : port;
+        SetOriginServer(host, port);
+    }
+
+    nsresult SetOriginServer(const char* host, PRInt32 port)
+    {
+        if (host)
+            mHost.Adopt(nsCRT::strdup(host));
+        mPort = port == -1 ? DefaultPort(): port;
+        
+        return NS_OK;
     }
     
     virtual ~nsHttpConnectionInfo()
@@ -203,7 +210,7 @@ public:
     PRBool      UsingSSL()  { return mUsingSSL; }
 
     PRInt32     DefaultPort() { return mUsingSSL ? 443 : 80; }
-
+            
 private:
     nsXPIDLCString     mHost;
     PRInt32            mPort;

@@ -289,6 +289,9 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
         if (NS_FAILED(rv)) return rv;
         
         connectionType = "keep-alive";
+    } else if (useProxy) {
+        // Bug 92006
+        request->SetHeader(nsHttp::Connection, "close");
     }
 
     const nsHttpAtom& connAtom = useProxy ? nsHttp::Proxy_Connection : nsHttp::Connection;
@@ -721,6 +724,9 @@ nsHttpHandler::InitiateTransaction_Locked(nsHttpTransaction *trans,
             NS_RELEASE(conn);
             return rv;
         }
+    } else {
+        // Update the connectionInfo (bug 94038)
+        conn->ConnectionInfo()->SetOriginServer(ci->Host(), ci->Port());
     }
 
     // assign the connection to the transaction.

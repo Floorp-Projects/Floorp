@@ -25,8 +25,15 @@
 [scriptable, uuid(785CA0F0-C39E-11d3-9ED6-0010A4053FD0)]
 interface nsISocketTransport : nsITransport 
 {
-    readonly attribute string host;
-    readonly attribute long port;
+    /**
+     * Destination host and port. These are used for reporting status messages
+     * Since the end server may change at any time (eg persistent connections
+     * through proxies), a client can update this to get correct results.
+     * There is no other effect of setting these attributes, and if a proxy
+     * server is not being used, NS_ERROR_FAILURE is returned.
+     */
+    attribute string host;
+    attribute long port;
 
     /**
      *
