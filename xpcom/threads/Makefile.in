@@ -32,6 +32,7 @@ XPIDLSRCS =			\
 	$(NULL)
 
 CPPSRCS =				\
+	nsAutoLock.cpp		        \
 	nsEventQueue.cpp		\
 	nsEventQueueService.cpp		\
 	nsThread.cpp			\
