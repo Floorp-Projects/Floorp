@@ -877,7 +877,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     {
       delete maincontainer; 
       if (maincontainerISrelatedpart)
-        m_related_part = nsnull;
+        m_related_part = nsnull; // in that case, m_related_part == maincontainer which we have just deleted!
       maincontainer = plainpart;
       mainbody = maincontainer;
       PR_FREEIF(m_attachment1_type);
@@ -911,7 +911,11 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   else
     toppart = maincontainer;
 
-  if (!m_crypto_closure && m_attachment_count > 0)
+  // Is the top part a multipart container?
+  // can't use m_attachment_count because it's not reliable for that
+  // instead use type of main part. See bug #174396
+  const char * toppart_type = toppart->GetType(); // GetType return directly the member variable, don't free it!
+  if (!m_crypto_closure && toppart_type && !PL_strncasecmp(toppart_type, "multipart/", 10))
   {
     status = toppart->SetBuffer(MIME_MULTIPART_BLURB);
     if (status < 0)
