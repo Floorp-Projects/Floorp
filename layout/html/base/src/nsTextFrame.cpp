@@ -131,7 +131,8 @@ public:
                                         nsIFrame **aActualSelected);
   NS_IMETHOD GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
   NS_IMETHOD PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection,  PRInt32 aStartOffset, 
-                        nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset);
+                        nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset,
+                        PRBool aEatingWS);
 
   NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end)const;
 
@@ -1769,7 +1770,7 @@ TextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRInt32* outFr
 
 NS_IMETHODIMP
 TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 aStartOffset, nsIFrame **aResultFrame, 
-                      PRInt32 *aFrameOffset, PRInt32 *aContentOffset)
+                      PRInt32 *aFrameOffset, PRInt32 *aContentOffset, PRBool aEatingWS)
 {
   //default, no matter what grab next/ previous sibling. 
   if (!aResultFrame || !aFrameOffset || !aContentOffset)
@@ -1840,11 +1841,11 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
     if (!found){
       if (frameUsed){
         return frameUsed->PeekOffset(eSelectCharacter, aDirection,  start, aResultFrame, 
-              aFrameOffset, aContentOffset);
+              aFrameOffset, aContentOffset, aEatingWS);
       }
       else {//reached end ask the frame for help
         return nsFrame::PeekOffset(eSelectCharacter, aDirection, start, aResultFrame,
-                  aFrameOffset, aContentOffset);
+                  aFrameOffset, aContentOffset, aEatingWS);
       }
     }
     *aContentOffset = mContentOffset;
@@ -1853,7 +1854,7 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
   case eSelectWord : {
     nsIFrame *frameUsed = nsnull;
     PRInt32 start;
-    PRBool found = PR_TRUE;
+    PRBool found = PR_FALSE;
     PRBool isWhitespace;
     PRInt32 wordLen, contentLen;
     if (aDirection == eDirPrevious){
@@ -1861,9 +1862,10 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
       if (tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace)){
         *aFrameOffset = aStartOffset - contentLen;
         //check for whitespace next.
-        if (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace))
+        while (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace))
           *aFrameOffset -= contentLen;
-        found = PR_TRUE;
+        if (!isWhitespace)
+          found = PR_TRUE;
       }
       frameUsed = GetPrevInFlow();
       start = -1; //start at end
@@ -1871,23 +1873,33 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
     else if (aDirection == eDirNext){
       tx.Init(this, mContentOffset + aStartOffset );
       if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace)){
-        *aFrameOffset = aStartOffset + contentLen;
-        //check for whitespace next.
-        if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace) && isWhitespace)
-          *aFrameOffset += contentLen;
-        found = PR_TRUE;
+        if ((aEatingWS && isWhitespace) || !aEatingWS){
+          *aFrameOffset = aStartOffset + contentLen;
+          //check for whitespace next.
+          while (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace) && isWhitespace)
+            *aFrameOffset += contentLen;
+        }
+        else if (aEatingWS)
+          *aFrameOffset = mContentOffset;
+
+        if (!isWhitespace){
+          found = PR_TRUE;
+          aEatingWS = PR_FALSE;
+        }
+        else 
+          aEatingWS = PR_TRUE;
       }
       frameUsed = GetNextInFlow();
       start = 0;
     }
-    if (!found || (*aFrameOffset > mContentLength) || (*aFrameOffset < mContentOffset)){ //gone too far
+    if (!found || (*aFrameOffset > mContentLength) || (*aFrameOffset < 0)){ //gone too far
       if (frameUsed){
         return frameUsed->PeekOffset(aAmount, aDirection,  start, aResultFrame, 
-              aFrameOffset, aContentOffset);
+              aFrameOffset, aContentOffset, aEatingWS);
       }
       else {//reached end ask the frame for help
         return nsFrame::PeekOffset(aAmount, aDirection, start, aResultFrame,
-                  aFrameOffset, aContentOffset);
+                  aFrameOffset, aContentOffset, aEatingWS);
       }
     }
     *aContentOffset = mContentOffset;

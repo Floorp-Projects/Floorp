@@ -217,7 +217,8 @@ public:
                                         nsIFrame **aActualSelected);
   NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
   NS_IMETHOD  PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32 aStartOffset, 
-                           nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset);
+                           nsIFrame **aResultFrame, PRInt32 *aFrameOffset, PRInt32 *aContentOffset,
+                           PRBool aEatingWS);
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
 
