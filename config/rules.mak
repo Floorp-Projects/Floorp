@@ -957,8 +957,12 @@ REGCHROME = @perl -I$(DEPTH)\config $(DEPTH)\config\add-chrome.pl $(_NO_FLOCK) $
 
 !if exist($(JAR_MANIFEST))
 
+!ifdef NO_JAR_AUTO_REG
+_JAR_AUTO_REG=-a
+!endif
+
 chrome:: $(CHROME_DEPS)
-        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\make-jars.pl -f $(_CHROME_FILE_FORMAT) $(_NO_FLOCK) -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
+        $(PERL) -I$(DEPTH)\config $(DEPTH)\config\make-jars.pl -f $(_CHROME_FILE_FORMAT) $(_NO_FLOCK) $(_JAR_AUTO_REG) -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
         $(PERL) -I$(DEPTH)\config $(DEPTH)\config\make-chromelist.pl $(DIST)\bin\chrome $(JAR_MANIFEST) $(_NO_FLOCK)
 !endif
 

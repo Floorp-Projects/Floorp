@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+NO_JAR_AUTO_REG=1
+
 include $(topsrcdir)/config/rules.mk
 
 

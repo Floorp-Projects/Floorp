@@ -16,7 +16,7 @@ use mozLock;
 
 my $objdir = getcwd;
 
-getopts("d:s:f:vl");
+getopts("d:s:f:avl");
 
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
@@ -53,6 +53,11 @@ if ("$fileformat" eq "jar") {
 my $nofilelocks = 0;
 if (defined($::opt_l)) {
     $nofilelocks = 1;
+}
+
+my $autoreg = 1;
+if (defined($::opt_a)) {
+    $autoreg = 0;
 }
 
 if ($verbose) {
@@ -142,6 +147,74 @@ sub JarIt
     mozUnlock($lockfile) if (!$nofilelocks);
     chdir($oldDir);
     #print "cd $oldDir\n";
+}
+
+
+sub RegIt
+{
+    my ($chromeDir, $jarFileName, $chromeType, $pkgName) = @_;\
+    chop($pkgName) if ($pkgName =~ m/\/$/);
+    #print "RegIt:  $jarFileName, $chromeType, $pkgName\n";
+
+    my $line;
+    if ($fileformat eq "flat")  {
+	$line = "$chromeType,install,url,resource:/chrome/$jarFileName/$chromeType/$pkgName/";
+    } else {
+	$line = "$chromeType,install,url,jar:resource:/chrome/$jarFileName.jar!/$chromeType/$pkgName/";
+    }
+    my $installedChromeFile = "$chromeDir/installed-chrome.txt";
+    my $lockfile = "$installedChromeFile.lck";
+    mozLock($lockfile) if (!$nofilelocks);
+    my $err = 0;
+    if (open(FILE, "<$installedChromeFile")) {
+	while (<FILE>) {
+	    chomp;
+	    if ($_ =~ $line) {
+		# line already appears in installed-chrome.txt file
+		# just update the mod date
+		close(FILE) or $err = 1; 
+		if ($err) {
+		    mozUnlock($lockfile) if (!$nofilelocks);
+		    die "error: can't close $installedChromeFile: $!";
+		}
+		my $now = time;
+		utime($now, $now, $installedChromeFile) or $err = 1;
+		mozUnlock($lockfile) if (!$nofilelocks);
+		if ($err) {
+		    die "couldn't touch $installedChromeFile";
+		}
+		print "+++ updating chrome $installedChromeFile\n+++\t$line\n";
+		return;
+	    }
+	}
+	close(FILE) or $err = 1;
+	if ($err) {
+	    mozUnlock($lockfile) if (!$nofilelocks);
+	    die "error: can't close $installedChromeFile: $!";
+	}
+    }
+    mozUnlock($lockfile) if (!$nofilelocks);
+    
+    my $dir = $installedChromeFile;
+    if ("$dir" =~ /([\w\d.\-\\\/]+)[\\\/]([\w\d.\-]+)/) {
+	$dir = $1;
+    }
+    mkpath($dir, 0, 0755);
+    
+    mozLock($lockfile) if (!$nofilelocks);
+    $err = 0;
+    open(FILE, ">>$installedChromeFile") or $err = 1;
+    if ($err) {
+	mozUnlock($lockfile) if (!$nofilelocks);
+	die "can't open $installedChromeFile: $!";
+    }
+    print FILE "$line\n";
+    close(FILE) or $err = 1;
+    mozUnlock($lockfile) if (!$nofilelocks);
+    if ($err) {
+	die "error: can't close $installedChromeFile: $!";
+    }
+    print "+++ adding chrome $installedChromeFile\n+++\t$line\n";
 }
 
 sub EnsureFileInDir
@@ -237,11 +310,23 @@ while (<STDIN>) {
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
 		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 0);
                 $args = "$args$dest ";
+		if ($autoreg && $dest =~ /([\w\d.\-\_]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
+		{
+		    my $chrome_type = $1;
+		    my $pkg_name = $2;
+		    RegIt($chromeDir, $jarfile, $chrome_type, $pkg_name);
+		}
             } elsif (/^\+\s+([\w\d.\-\_\\\/]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
                 my $dest = $1;
                 my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
                 EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 1);
                 $overrides = "$overrides$dest ";
+		if ($autoreg && $dest =~ /([\w\d.\-\_]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
+		{
+		    my $chrome_type = $1;
+		    my $pkg_name = $2;
+		    RegIt($chromeDir, $jarfile, $chrome_type, $pkg_name);
+		}
             } elsif (/^\s*$/) {
                 # end with blank line
                 last;
