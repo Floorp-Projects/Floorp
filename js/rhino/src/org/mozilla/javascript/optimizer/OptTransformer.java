@@ -179,7 +179,8 @@ class OptTransformer extends NodeTransformer {
                     OptFunctionNode ofn;
                     ofn = (OptFunctionNode)possibleDirectCalls.get(targetName);
                     if (ofn != null
-                        && argCount == ofn.fnode.getParamCount())
+                        && argCount == ofn.fnode.getParamCount()
+                        && !ofn.fnode.requiresActivation())
                     {
                         // Refuse to directCall any function with more
                         // than 32 parameters - prevent code explosion
