@@ -66,7 +66,7 @@ function fillSettings()
           document.getElementById("base").checked = true; break;
         case 1:
           document.getElementById("one").checked = true; break;
-        case2:
+        case 2:
           document.getElementById("sub").checked = true; break;
       }
     }
