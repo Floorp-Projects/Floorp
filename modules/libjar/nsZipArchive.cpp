@@ -40,21 +40,24 @@
 #include "xp_regexp.h"
 #define ZFILE_CREATE    PR_WRONLY | PR_CREATE_FILE
 #define READTYPE  PRInt32
+#include "zlib.h"
 
 #else
 
 #ifdef WIN32
 #include "windows.h"
 #endif
-#include "zipstub.h"
+
 #undef MOZILLA_CLIENT       // undoes prtypes damage in zlib.h
 #define ZFILE_CREATE  "wb"
 #define READTYPE  PRUint32
+#include "zlib.h"
+#undef PR_PUBLIC_API
+#include "zipstub.h"
 
 #endif /* STANDALONE */
 
 
-#include "zlib.h"
 #include "zipfile.h"
 #include "zipstruct.h"
 #include "nsZipArchive.h"
