@@ -83,7 +83,7 @@
           pref.setIntPref(element.getAttribute("prefstring"), parseInt(element.value));
         else if (eltType == "checkbox")
           pref.setBoolPref(element.getAttribute("prefstring"), element.checked);
-        else if (eltType == "textbox" && element.preftype == "int")
+        else if (eltType == "textbox" && element.getAttribute("preftype") == "int")
           pref.setIntPref(element.getAttribute("prefstring"), parseInt(element.getAttribute("value")) );
        }
     }
