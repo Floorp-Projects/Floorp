@@ -58,7 +58,7 @@
    </script>
 
    <groupbox>
-      <caption label="Alarms"/>
+      <caption label="&pref.alarmbox.label;"/>
       <description>&pref.alarmgoesoff.label;</description>
       <checkbox id="alarmplaysound" prefstring="calendar.alarms.playsound"
           label="&pref.playasound;" />
@@ -66,12 +66,12 @@
       <checkbox id="alarmshow" prefstring="calendar.alarms.show" label="&pref.showalarmbox;" />
           
       <hbox>
-         <description>Default address to send alarms to:</description>
+         <description>&pref.defaultemail.label;</description>
          <textbox id="alarmemailaddress" prefstring="calendar.alarms.emailaddress" flex="1"/>      
       </hbox>
 		
-		<hbox>
-         <description>Default text for alarms:</description>
+		<hbox collapsed="true">
+         <description>&pref.defaulttext.label;</description>
          <textbox id="alarmtext" prefstring="calendar.alarm.text" flex="1"/>      
       </hbox>
 

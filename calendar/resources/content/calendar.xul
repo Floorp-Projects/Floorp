@@ -255,7 +255,7 @@
    <menuitem label="&calendar.context.editserver.label;"     observes="edit_local_calendar_command"/>
    <menuitem label="&calendar.context.deleteserver.label;"     observes="delete_server_command"/>
    <menuitem label="&calendar.context.refreshserver.label;" observes="refresh_remote_calendars"/>
-	<menuitem label="Publish Calendar" observes="publish_calendar"/>
+	<menuitem label="&calendar.context.publish.label;" observes="publish_calendar"/>
 </popup>
 
 <popup id="oe-date-picker-popup"  position="after_start" value="">
@@ -311,14 +311,14 @@
       <vbox id="left-hand-content" flex="1" persist="width">
       <tabbox id="tablist">
          <tabs>
-            <tab label="Calendar"/>
-            <tab label="Calendars"/>
+            <tab label="&calendar.calendartab.label;"/>
+            <tab label="&calendar.listofcalendarstab.label;"/>
          </tabs>
          <tabpanels>
          <tabpanel>
             <vbox flex="1">
                <calendar flex="1" id="lefthandcalendar" onchange="gCalendarWindow.goToDay( this.value );"/>
-               <button observes="go_today_command" label="Go To Today"/>
+               <button observes="go_today_command" label="&calendar.gototoday.button.label;"/>
             </vbox>
          </tabpanel>
       

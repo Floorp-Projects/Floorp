@@ -46,7 +46,12 @@
 <!ENTITY pref.mainbox.label         "General Settings" >
 <!ENTITY pref.alarmgoesoff.label "When an alarm goes off:">
 <!ENTITY pref.playasound  "Play a sound" >
+
+<!ENTITY pref.alarmbox.label    "Alarms" >
 <!ENTITY pref.showalarmbox    "Show an alarm box" >
+<!ENTITY pref.defaultemail.label "Default address to send alarms to:">
+<!ENTITY pref.defaulttext.label "Default text for alarms:">
+
 <!ENTITY pref.dateformat.label      "Date Text Format:" >
 <!ENTITY pref.dateformat.long       "Long" >
 <!ENTITY pref.dateformat.short      "Short"  >
@@ -86,7 +91,14 @@
 <!ENTITY pref.hour.20    "20:00" >
 <!ENTITY pref.hour.21    "21:00" >
 <!ENTITY pref.hour.22    "22:00" >
-<!ENTITY pref.hour.23    "23:00" > 
+<!ENTITY pref.hour.23    "23:00" >
+
+<!ENTITY pref.calendar.view.dayview.caption "Day View"> 
+<!ENTITY pref.calendar.view.weekview.caption "Week View"> 
+
+<!ENTITY pref.calendar.view.restrict.label "Restrict Views to "> 
+<!ENTITY pref.calendar.view.starttime.label "Start time:"> 
+<!ENTITY pref.calendar.view.endtime.label   "End time:"> 
 
 <!ENTITY pref.categories.label   "Categories" >
 

@@ -70,6 +70,9 @@
 <!ENTITY calendar.import.label	"Import From File...">
 <!ENTITY calendar.import.accesskey	"i">
 
+<!ENTITY calendar.wizard.label	"Launch Wizard">
+<!ENTITY calendar.wizard.accesskey	"w">
+
 <!ENTITY calendar.export.label	"Export Selected Events...">
 <!ENTITY calendar.export.accesskey	"e">
 

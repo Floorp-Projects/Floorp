@@ -93,7 +93,7 @@
                     </row>
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end"/>
-                        <description>Something like http://www.myserver.com/webdav/test.ics</description>
+                        <description>&calendar.publish.example.url.description;</description>
                     </row>
                     
                     <!-- Username -->    
@@ -105,7 +105,7 @@
                     </row>
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end"/>
-                        <description>(Optional) The username to upload to this server.</description>
+                        <description>&calendar.publish.username.description;</description>
                     </row>
                     
                     <!-- Password -->    
@@ -117,7 +117,7 @@
                     </row>
                     <row align="center">
                         <hbox class="field-label-box-class" pack="end"/>
-                        <description>(Optional) The password to upload to this server.</description>
+                        <description>&calendar.publish.password.description;</description>
                     </row>
                   </rows>
                </grid>

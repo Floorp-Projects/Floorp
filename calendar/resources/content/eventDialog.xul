@@ -310,21 +310,21 @@
                   </hbox>
                     
                   <hbox id="repeat-extenstions-week" disabled="true" disable-controller="repeat" collapsed="false" align="center">
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Sun" id="advanced-repeat-week-0" value="0" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Mon" id="advanced-repeat-week-1" value="1" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Tue" id="advanced-repeat-week-2" value="2" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Wed" id="advanced-repeat-week-3" value="3" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Thu" id="advanced-repeat-week-4" value="4" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Fri" id="advanced-repeat-week-5" value="5" checked="false" />
-                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Sat" id="advanced-repeat-week-6" value="6" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.1.Ddd;" id="advanced-repeat-week-0" value="0" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.2.Ddd;" id="advanced-repeat-week-1" value="1" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.3.Ddd;" id="advanced-repeat-week-2" value="2" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.4.Ddd;" id="advanced-repeat-week-3" value="3" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.5.Ddd;" id="advanced-repeat-week-4" value="4" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.6.Ddd;" id="advanced-repeat-week-5" value="5" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="&day.7.Ddd;" id="advanced-repeat-week-6" value="6" checked="false" />
                   </hbox>
                          
                   <hbox id="repeat-extenstions-month" diabled="true" collapsed="true" align="center">
                      <vbox align="center">
                         <radiogroup id="advanced-repeat-month" disable-controller="repeat">
-                           <radio disable-controller="repeat" id="advanced-repeat-dayofmonth"      label="On the xth day of the month" selected="true"/>
-                           <radio disable-controller="repeat" id="advanced-repeat-dayofweek"       label="4th Tuesday of the month"/>
-                           <radio disable-controller="repeat" id="advanced-repeat-dayofweek-last"  label="Last Tuesday of the month" disabled="true"/>
+                           <radio disable-controller="repeat" id="advanced-repeat-dayofmonth"      label="&newevent.advanced.repeat.dayofmonth.label;" selected="true"/>
+                           <radio disable-controller="repeat" id="advanced-repeat-dayofweek"       label="&newevent.advanced.repeat.dayofweek.label;"/>
+                           <radio disable-controller="repeat" id="advanced-repeat-dayofweek-last"  label="&newevent.advanced.repeat.lastdayofweek.label;" disabled="true"/>
                         </radiogroup>
                      </vbox>
                   </hbox>
@@ -466,8 +466,8 @@
                 ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
                 ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
             <vbox>
-               <button onclick="AttachFile()" label="Choose File"/>
-               <button onclick="removeSelectedAttachment()" label="Remove Selected File"/>
+               <button onclick="AttachFile()" label="&newevent.choosefile.label;"/>
+               <button onclick="removeSelectedAttachment()" label="&newevent.removeselectedfile.label;"/>
                <spacer flex="1"/>
             </vbox>
          </tabpanel>
