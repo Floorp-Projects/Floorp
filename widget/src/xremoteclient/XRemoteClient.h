@@ -47,12 +47,14 @@ class XRemoteClient : public nsIXRemoteClient
 
 private:
 
-  Window         FindWindow    (void);
-  nsresult       GetLock       (Window aWindow, PRBool *aDestroyed);
-  nsresult       FreeLock      (Window aWindow);
-  nsresult       DoSendCommand (Window aWindow,
-				const char *aCommand,
-				PRBool *aDestroyed);
+  Window         FindWindow       (void);
+  Window         CheckWindow      (Window aWindow);
+  Window         CheckChildren    (Window aWindow);
+  nsresult       GetLock          (Window aWindow, PRBool *aDestroyed);
+  nsresult       FreeLock         (Window aWindow);
+  nsresult       DoSendCommand    (Window aWindow,
+				   const char *aCommand,
+				   PRBool *aDestroyed);
 
   Display       *mDisplay;
 
@@ -60,6 +62,7 @@ private:
   Atom           mMozLockAtom;
   Atom           mMozCommandAtom;
   Atom           mMozResponseAtom;
+  Atom           mMozWMStateAtom;
 
   nsCString      mLockData;
 

@@ -63,6 +63,7 @@ XRemoteClient::XRemoteClient()
   mMozLockAtom = 0;
   mMozCommandAtom = 0;
   mMozResponseAtom = 0;
+  mMozWMStateAtom = 0;
   if (!sRemoteLm)
     sRemoteLm = PR_NewLogModule("XRemoteClient");
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::XRemoteClient"));
@@ -94,6 +95,7 @@ XRemoteClient::Init (void)
   mMozLockAtom     = XInternAtom(mDisplay, MOZILLA_LOCK_PROP, False);
   mMozCommandAtom  = XInternAtom(mDisplay, MOZILLA_COMMAND_PROP, False);
   mMozResponseAtom = XInternAtom(mDisplay, MOZILLA_RESPONSE_PROP, False);
+  mMozWMStateAtom  = XInternAtom(mDisplay, "WM_STATE", False);
 
   mInitialized = PR_TRUE;
 
@@ -170,7 +172,7 @@ XRemoteClient::FindWindow(void)
   unsigned int nkids;
   Window result = 0;
   int i;
-
+  
   if (!XQueryTree(mDisplay, root, &root2, &parent, &kids, &nkids)) {
     PR_LOG(sRemoteLm, PR_LOG_DEBUG,
 	   ("XQueryTree failed in XRemoteClient::FindWindow"));
@@ -189,6 +191,9 @@ XRemoteClient::FindWindow(void)
     unsigned char *version = 0;
     Window w;
     w = kids[i];
+    // find the inner window with WM_STATE on it
+    w = CheckWindow(w);
+
     int status = XGetWindowProperty(mDisplay, w, mMozVersionAtom,
 				    0, (65536 / sizeof (long)),
 				    False, XA_STRING,
@@ -206,6 +211,69 @@ XRemoteClient::FindWindow(void)
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("FindWindow returning 0x%lx\n", result));
 
   return result;
+}
+
+Window
+XRemoteClient::CheckWindow(Window aWindow)
+{
+  Atom type = None;
+  int  format;
+  unsigned long nitems, bytesafter;
+  unsigned char *data;
+  Window innerWindow;
+
+  XGetWindowProperty(mDisplay, aWindow, mMozWMStateAtom,
+		     0, 0, False, AnyPropertyType,
+		     &type, &format, &nitems, &bytesafter, &data);
+
+  if (type)
+    return aWindow;
+
+  // didn't find it here so check the children of this window
+  innerWindow = CheckChildren(aWindow);
+
+  if (innerWindow)
+    return innerWindow;
+
+  return aWindow;
+}
+
+Window
+XRemoteClient::CheckChildren(Window aWindow)
+{
+  Window root, parent;
+  Window *children;
+  unsigned int nchildren;
+  unsigned int i;
+  Atom type = None;
+  int format;
+  unsigned long nitems, after;
+  unsigned char *data;
+  Window retval = None;
+  
+  if (!XQueryTree(mDisplay, aWindow, &root, &parent, &children,
+		  &nchildren))
+    return None;
+  
+  // scan the list first before recursing into the list of windows
+  // which can get quite deep.
+  for (i=0; !retval && (i < nchildren); i++) {
+    XGetWindowProperty(mDisplay, children[i], mMozWMStateAtom,
+		       0, 0, False, AnyPropertyType, &type, &format,
+		       &nitems, &after, &data);
+    if (type)
+      retval = children[i];
+  }
+
+  // otherwise recurse into the list
+  for (i=0; !retval && (i < nchildren); i++) {
+    retval = CheckChildren(children[i]);
+  }
+
+  if (children)
+    XFree((char *)children);
+
+  return retval;
 }
 
 nsresult
