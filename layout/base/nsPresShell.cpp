@@ -1028,7 +1028,7 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
     // absolutely positioned frame.
     const nsStylePosition*  position;
 
-    aFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)position);
+    aFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
     if ((NS_STYLE_POSITION_ABSOLUTE != position->mPosition) ||
         !IsZeroSizedFrame(aFrame)) {
       NS_RELEASE(frameContent);

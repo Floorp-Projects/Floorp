@@ -73,7 +73,7 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   /** helper method for determining if this is a nested table or not */
-  PRBool IsNested(const nsHTMLReflowState& aReflowState, nsStylePosition *& aPosition) const;
+  PRBool IsNested(const nsHTMLReflowState& aReflowState, const nsStylePosition *& aPosition) const;
 
   /** helper method to find the table parent of any table frame object */
   static NS_METHOD GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aTableFrame);

@@ -110,8 +110,8 @@ void nsHTMLReflowCommand::BuildPath()
 
   // Floating frames are handled differently. The path goes from the target
   // frame to the containing block, and then up the hierarchy
-  nsStyleDisplay* display;
-  mTargetFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct*&)display);
+  const nsStyleDisplay* display;
+  mTargetFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
   if (NS_STYLE_FLOAT_NONE != display->mFloats) {
     mPath.AppendElement((void*)mTargetFrame);
 

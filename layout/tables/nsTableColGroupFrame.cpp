@@ -264,7 +264,7 @@ NS_METHOD nsTableColGroupFrame::IR_TargetIsMe(nsIPresContext&          aPresCont
   aReflowState.reflowCommand->GetChildFrame(objectFrame); 
   const nsStyleDisplay *childDisplay=nsnull;
   if (nsnull!=objectFrame)
-    objectFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    objectFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
   if (PR_TRUE==gsDebugIR) printf("nTCGF IR: IncrementalReflow_TargetIsMe with type=%d\n", type);
   switch (type)
   {
@@ -358,7 +358,7 @@ NS_METHOD nsTableColGroupFrame::IR_ColInserted(nsIPresContext&          aPresCon
   while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
   {
     const nsStyleDisplay *display;
-    childFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
     {
       startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
@@ -395,7 +395,7 @@ NS_METHOD nsTableColGroupFrame::IR_ColAppended(nsIPresContext&          aPresCon
   while ((NS_SUCCEEDED(rv)) && (nsnull!=childFrame))
   {
     const nsStyleDisplay *display;
-    childFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
     {
       startingColIndex += ((nsTableColGroupFrame *)childFrame)->SetStartColumnIndex(startingColIndex);
@@ -437,7 +437,7 @@ NS_METHOD nsTableColGroupFrame::IR_ColRemoved(nsIPresContext&          aPresCont
       startingColIndex += GetColumnCount(); // resets all column indexes
     }
     const nsStyleDisplay *display;
-    childFrame->GetStyleData(eStyleStruct_Display, (nsStyleStruct *&)display);
+    childFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)
     {
       // we've removed aDeletedFrame, now adjust the starting col index of all subsequent col groups
@@ -522,8 +522,8 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
   if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
   {  
     // get the style for the table frame
-    nsStyleTable *tableStyle;
-    tableFrame->GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+    const nsStyleTable *tableStyle;
+    tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
 
     // if COLS is set, then map it into the COL frames
     if (NS_STYLE_TABLE_COLS_NONE != tableStyle->mCols)
@@ -540,8 +540,8 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
       nsIFrame *colFrame=mFirstChild;
       while (nsnull!=colFrame)
       {
-        nsStyleDisplay * colDisplay=nsnull;
-        colFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)colDisplay));
+        const nsStyleDisplay * colDisplay=nsnull;
+        colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
         if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
         {
           nsIStyleContextPtr colStyleContext;
@@ -573,20 +573,20 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
         nsIFrame *colFrame=mFirstChild;
         while (nsnull!=colFrame)
         {
-          nsStyleDisplay * colDisplay=nsnull;
-          colFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)colDisplay));
+          const nsStyleDisplay * colDisplay=nsnull;
+          colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
           if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
           {
             nsIStyleContextPtr colStyleContext;
-            nsStylePosition * colPosition=nsnull;
-            colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct *&)colPosition); // get a read-only version of the style context
+            const nsStylePosition * colPosition=nsnull;
+            colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)colPosition); // get a read-only version of the style context
             //XXX: how do I know this is auto because it's defaulted, vs. set explicitly to "auto"?
             if (eStyleUnit_Auto==colPosition->mWidth.GetUnit())
             {
               // notice how we defer getting a mutable style context until we're sure we really need one
               colFrame->GetStyleContext(colStyleContext.AssignRef());
-              colPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
-              colPosition->mWidth = position->mWidth;
+              nsStylePosition * mutableColPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
+              mutableColPosition->mWidth = position->mWidth;
               colStyleContext->RecalcAutomaticData(&aPresContext);
             }
           }
@@ -611,7 +611,7 @@ int nsTableColGroupFrame::GetColumnCount ()
   while (nsnull!=childFrame)
   {
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
     {
       nsTableColFrame *col = (nsTableColFrame *)childFrame;
@@ -623,7 +623,7 @@ int nsTableColGroupFrame::GetColumnCount ()
   if (0==mColCount)
   { // there were no children of this colgroup that were columns.  So use my span attribute
     const nsStyleTable *tableStyle;
-    GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+    GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
     mColCount = tableStyle->mSpan;
   }
   return mColCount;
@@ -643,7 +643,7 @@ nsTableColFrame * nsTableColGroupFrame::GetNextColumn(nsIFrame *aChildFrame)
   while (nsnull!=childFrame)
   {
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
     {
       result = (nsTableColFrame *)childFrame;
@@ -663,7 +663,7 @@ nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
   while (nsnull!=childFrame)
   {
     const nsStyleDisplay *childDisplay;
-    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    childFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
     {
       nsTableColFrame *col = (nsTableColFrame *)childFrame;
@@ -679,8 +679,8 @@ nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
 PRInt32 nsTableColGroupFrame::GetSpan()
 {
   PRInt32 span=1;
-  nsStyleTable* tableStyle=nsnull;
-  GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);    
+  const nsStyleTable* tableStyle=nsnull;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);    
   if (nsnull!=tableStyle)
   {
     span = tableStyle->mSpan;
