@@ -37,7 +37,7 @@ libs::
 install::
 	@cd gtk && $(MAKE) install && cd ..
 
-clean clobber clobber_all distclean realclean::
+clean clobber distclean::
 	@cd gtk && $(MAKE) distclean && cd ..
 endif
 
