@@ -84,8 +84,8 @@ ProxyRelease(nsIEventQueue *eventQ, nsIRequestObserver *obs)
             ProxyRelease_EventHandlerFunc,
             ProxyRelease_EventCleanupFunc);
 
-    PRStatus rv = eventQ->PostEvent(ev);
-    NS_ASSERTION(rv == PR_SUCCESS, "PostEvent failed");
+    nsresult rv = eventQ->PostEvent(ev);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "PostEvent failed");
 }
 
 //-----------------------------------------------------------------------------
@@ -314,8 +314,7 @@ nsRequestObserverProxy::FireEvent(nsARequestObserverEvent *event)
 {
     NS_ENSURE_TRUE(mEventQ, NS_ERROR_NOT_INITIALIZED);
 
-    PRStatus status = mEventQ->PostEvent(event->GetPLEvent());
-    return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
+    return mEventQ->PostEvent(event->GetPLEvent());
 }
 
 nsresult
