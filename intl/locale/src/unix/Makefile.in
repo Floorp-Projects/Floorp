@@ -36,6 +36,8 @@ CPPSRCS = \
 	nsDateTimeFormatUnix.cpp	\
 	nsLocaleFactoryUnix.cpp		\
 	nsLocaleSO.cpp			\
+	nsPosixLocale.cpp		\
+	nsPosixLocaleFactory.cpp	\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
