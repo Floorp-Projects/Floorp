@@ -610,7 +610,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     
   if (aAction == kInsertTextIME) 
   { 
-    res = mEditor->JoeInsertTextImpl(*outString, &selNode, &selOffset, doc);
+    res = mEditor->InsertTextImpl(*outString, &selNode, &selOffset, doc);
     if (NS_FAILED(res)) return res;
   }
   else // aAction == kInsertText
@@ -662,12 +662,12 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         // is it a return?
         if (subStr.Equals("\n"))
         {
-          res = mEditor->JoeCreateBR(&curNode, &curOffset, &unused, nsIEditor::eNone);
+          res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
           pos++;
         }
         else
         {
-          res = mEditor->JoeInsertTextImpl(subStr, &curNode, &curOffset, doc);
+          res = mEditor->InsertTextImpl(subStr, &curNode, &curOffset, doc);
         }
         if (NS_FAILED(res)) return res;
       }
@@ -700,18 +700,18 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         // is it a tab?
         if (subStr.Equals("\t"))
         {
-          res = mEditor->JoeInsertTextImpl(tabString, &curNode, &curOffset, doc);
+          res = mEditor->InsertTextImpl(tabString, &curNode, &curOffset, doc);
           pos++;
         }
         // is it a return?
         else if (subStr.Equals("\n"))
         {
-          res = mEditor->JoeCreateBR(&curNode, &curOffset, &unused, nsIEditor::eNone);
+          res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
           pos++;
         }
         else
         {
-          res = mEditor->JoeInsertTextImpl(subStr, &curNode, &curOffset, doc);
+          res = mEditor->InsertTextImpl(subStr, &curNode, &curOffset, doc);
         }
         if (NS_FAILED(res)) return res;
       }

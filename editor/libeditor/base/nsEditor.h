@@ -299,11 +299,11 @@ public:
 public:
 
   
-  NS_IMETHOD JoeInsertTextImpl(const nsString& aStringToInsert, 
+  NS_IMETHOD InsertTextImpl(const nsString& aStringToInsert, 
                                nsCOMPtr<nsIDOMNode> *aInOutNode, 
                                PRInt32 *aInOutOffset,
                                nsIDOMDocument *aDoc);
-  NS_IMETHOD JoeInsertTextIntoTextNodeImpl(const nsString& aStringToInsert, 
+  NS_IMETHOD InsertTextIntoTextNodeImpl(const nsString& aStringToInsert, 
                                            nsIDOMCharacterData *aTextNode, 
                                            PRInt32 aOffset);
   NS_IMETHOD DeleteSelectionImpl(EDirection aAction);

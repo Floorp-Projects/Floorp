@@ -210,9 +210,13 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
       if (NS_FAILED(res)) return res;
       
       // merge any adjacent text nodes
-      res = mEditor->CollapseAdjacentTextNodes(mDocChangeRange);
-      if (NS_FAILED(res)) return res;
-
+      if ( (action != nsEditor::kOpInsertText &&
+           action != nsEditor::kOpInsertIMEText) )
+      {
+        res = mEditor->CollapseAdjacentTextNodes(mDocChangeRange);
+        if (NS_FAILED(res)) return res;
+      }
+      
       // adjust whitespace for insert text and delete actions
       if ((action == nsEditor::kOpInsertText) || 
           (action == nsEditor::kOpInsertIMEText) ||
@@ -404,7 +408,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     
   if (aAction == kInsertTextIME) 
   { 
-    res = mEditor->JoeInsertTextImpl(*inString, &selNode, &selOffset, doc);
+    res = mEditor->InsertTextImpl(*inString, &selNode, &selOffset, doc);
     if (NS_FAILED(res)) return res;
   }
   else // aAction == kInsertText
@@ -462,12 +466,12 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         // is it a return?
         if (subStr.Equals("\n"))
         {
-          res = mEditor->JoeCreateBR(&curNode, &curOffset, &unused, nsIEditor::eNone);
+          res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
           pos++;
         }
         else
         {
-          res = mEditor->JoeInsertTextImpl(subStr, &curNode, &curOffset, doc);
+          res = mEditor->InsertTextImpl(subStr, &curNode, &curOffset, doc);
         }
         if (NS_FAILED(res)) return res;
       }
@@ -500,18 +504,18 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
         // is it a tab?
         if (subStr.Equals("\t"))
         {
-          res = mEditor->JoeInsertTextImpl(tabString, &curNode, &curOffset, doc);
+          res = mEditor->InsertTextImpl(tabString, &curNode, &curOffset, doc);
           pos++;
         }
         // is it a return?
         else if (subStr.Equals("\n"))
         {
-          res = mEditor->JoeCreateBR(&curNode, &curOffset, &unused, nsIEditor::eNone);
+          res = mEditor->CreateBRImpl(&curNode, &curOffset, &unused, nsIEditor::eNone);
           pos++;
         }
         else
         {
-          res = mEditor->JoeInsertTextImpl(subStr, &curNode, &curOffset, doc);
+          res = mEditor->InsertTextImpl(subStr, &curNode, &curOffset, doc);
         }
         if (NS_FAILED(res)) return res;
       }

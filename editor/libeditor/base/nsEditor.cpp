@@ -96,7 +96,6 @@
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
 
-
 #ifdef HACK_FORCE_REDRAW
 // INCLUDES FOR EVIL HACK TO FOR REDRAW
 // BEGIN
@@ -2491,7 +2490,7 @@ nsresult nsEditor::GetTextNodeTag(nsString& aOutString)
 }
 
 
-NS_IMETHODIMP nsEditor::JoeInsertTextImpl(const nsString& aStringToInsert, 
+NS_IMETHODIMP nsEditor::InsertTextImpl(const nsString& aStringToInsert, 
                                           nsCOMPtr<nsIDOMNode> *aInOutNode, 
                                           PRInt32 *aInOutOffset,
                                           nsIDOMDocument *aDoc)
@@ -2501,7 +2500,7 @@ NS_IMETHODIMP nsEditor::JoeInsertTextImpl(const nsString& aStringToInsert,
   // if desired.
   
   if (!aInOutNode || !*aInOutNode || !aInOutOffset || !aDoc) return NS_ERROR_NULL_POINTER;
-  if (aStringToInsert.IsEmpty()) return NS_OK;
+  if (!mInIMEMode && aStringToInsert.IsEmpty()) return NS_OK;
   nsCOMPtr<nsIDOMText> nodeAsText = do_QueryInterface(*aInOutNode);
   PRInt32 offset = *aInOutOffset;
   nsresult res;
@@ -2520,7 +2519,7 @@ NS_IMETHODIMP nsEditor::JoeInsertTextImpl(const nsString& aStringToInsert,
       if (NS_FAILED(res)) return res;
       offset = 0;
     }
-    res = JoeInsertTextIntoTextNodeImpl(aStringToInsert, nodeAsText, offset);
+    res = InsertTextIntoTextNodeImpl(aStringToInsert, nodeAsText, offset);
     if (NS_FAILED(res)) return res;
   }
   else
@@ -2528,7 +2527,7 @@ NS_IMETHODIMP nsEditor::JoeInsertTextImpl(const nsString& aStringToInsert,
     if (nodeAsText)
     {
       // we are inserting text into an existing text node.
-      res = JoeInsertTextIntoTextNodeImpl(aStringToInsert, nodeAsText, offset);
+      res = InsertTextIntoTextNodeImpl(aStringToInsert, nodeAsText, offset);
       if (NS_FAILED(res)) return res;
       *aInOutOffset += aStringToInsert.Length();
     }
@@ -2552,7 +2551,7 @@ NS_IMETHODIMP nsEditor::JoeInsertTextImpl(const nsString& aStringToInsert,
 }
 
 
-NS_IMETHODIMP nsEditor::JoeInsertTextIntoTextNodeImpl(const nsString& aStringToInsert, 
+NS_IMETHODIMP nsEditor::InsertTextIntoTextNodeImpl(const nsString& aStringToInsert, 
                                                      nsIDOMCharacterData *aTextNode, 
                                                      PRInt32 aOffset)
 {

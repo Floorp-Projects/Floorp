@@ -854,17 +854,7 @@ nsEditorShell::RemoveOneProperty(const nsString& aProp, const nsString &aAttr)
 NS_IMETHODIMP    
 nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
 {
-  // OK, I'm really hacking now. This is just so that we can accept 'all' as input.
-  // this logic should live elsewhere.
-  //TODO: FIX THIS! IT IS WRONG! IT DOESN'T CONSIDER ALL THE 
-  //  OTHER POSSIBLE TEXT ATTRIBUTES!
-  static const char*  sAllKnownStyles[] = {
-    "b",
-    "i",
-    "u",
-    nsnull      // this null is important
-  };
-  
+  // OK, I'm really hacking now. This is just so that we can accept 'all' as input.  
   nsAutoString  allStr(prop);
   nsAutoString  aAttr(attr);
   
@@ -874,19 +864,7 @@ nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
 
   if (doingAll)
   {
-    nsAutoString  thisAttr;
-    const char    **tagName = sAllKnownStyles;
-  
-    while (*tagName)
-    {
-      thisAttr.Truncate(0);
-      thisAttr += (char *)(*tagName);
-    
-      err = RemoveOneProperty(thisAttr, aAttr);
-
-      tagName ++;
-    }
-  
+    err = mEditor->RemoveAllInlineProperties();
   }
   else
   {
