@@ -1,4 +1,1 @@
-resource:/res/samples/test0.html
-resource:/res/samples/test8.html
-resource:/res/samples/test9.html
-
+http://www.mozilla.org/
