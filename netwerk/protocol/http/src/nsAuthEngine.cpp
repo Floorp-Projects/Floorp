@@ -61,15 +61,21 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
     PRInt32 port;
     rv = i_URI->GetPort(&port);
     if (NS_FAILED(rv)) return rv;
-    nsXPIDLCString path;
-    rv = i_URI->GetPath(getter_Copies(path));
+    nsXPIDLCString dir;
+    rv = i_URI->GetPath(getter_Copies(dir));
+
+    // remove everything after the last slash
+    // so we're comparing raw dirs
+    char *lastSlash = PL_strrchr(dir, '/');
+    if (lastSlash) lastSlash[1] = '\0';
+
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 count=0; 
     (void)mAuthList->Count(&count);
     if (count<=0)
         return NS_OK; // not found
-    for (PRUint32 i = count-1; i>=0; --i)
+    for (PRInt32 i = count-1; i>=0; --i)
     {
         nsAuth* auth = (nsAuth*)mAuthList->ElementAt(i);
         // perfect match case
@@ -101,15 +107,21 @@ nsAuthEngine::GetAuthString(nsIURI* i_URI, char** o_AuthString)
         */
         nsXPIDLCString authHost;
         PRInt32 authPort;
-        nsXPIDLCString authPath;
+        nsXPIDLCString authDir;
         (void)auth->uri->GetHost(getter_Copies(authHost));
         (void)auth->uri->GetPort(&authPort);
-        (void)auth->uri->GetPath(getter_Copies(authPath));
+        (void)auth->uri->GetPath(getter_Copies(authDir));
+
+        // remove everything after the last slash
+        // so we're comparing raw dirs
+        lastSlash = PL_strrchr(authDir, '/');
+        if (lastSlash) lastSlash[1] = '\0';
+
         if ((0 == PL_strncasecmp(authHost, host, 
                         PL_strlen(authHost))) &&
             (port == authPort) &&
-            (0 == PL_strncasecmp(authPath, path, 
-                        PL_strlen(authPath)))) 
+            (0 == PL_strncasecmp(authDir, dir, 
+                        PL_strlen(authDir)))) 
         {
             *o_AuthString = nsCRT::strdup(auth->encodedString);
             if (!*o_AuthString) return NS_ERROR_OUT_OF_MEMORY;
