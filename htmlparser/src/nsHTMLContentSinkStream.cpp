@@ -149,7 +149,7 @@ nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream,
   if (aCharsetOverride != nsnull)
     mCharsetOverride.AssignWithConversion(aCharsetOverride->GetUnicode());
 
-  mInPre = PR_FALSE;
+  mPreLevel = 0;
 
   return NS_OK;
 }
@@ -631,7 +631,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   // too long for news servers (and some mail servers) to handle.
   // So we map all <br> tags inside <pre> to line breaks.
   // If this turns out to be a problem, we could do this only if gMozDirty.
-  else if (tag == eHTMLTag_br && mInPre)
+  else if (tag == eHTMLTag_br && mPreLevel > 0)
   {
     Write(NS_LINEBREAK);
     return;
@@ -652,12 +652,13 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
            BreakAfterClose(tag));
 #endif
 
-  if ((mDoFormat || isDirty) && !mInPre && mColPos != 0 && BreakBeforeOpen(tag))
+  if ((mDoFormat || isDirty) && mPreLevel == 0 && mColPos != 0
+      && BreakBeforeOpen(tag))
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
   }
-  if ((mDoFormat || isDirty) && !mInPre && mColPos == 0)
+  if ((mDoFormat || isDirty) && mPreLevel == 0 && mColPos == 0)
     AddIndent();
 
   EnsureBufferSize(tagName.Length() + 1);
@@ -668,7 +669,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
   mColPos += 1 + tagName.Length();
 
-  if ((mDoFormat || isDirty) && !mInPre && tag == eHTMLTag_style)
+  if ((mDoFormat || isDirty) && mPreLevel == 0 && tag == eHTMLTag_style)
   {
     Write(kGreaterThan);
     Write(NS_LINEBREAK);
@@ -689,9 +690,9 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   }
 
   if (tag == eHTMLTag_pre)
-    mInPre = PR_TRUE;
+    ++mPreLevel;
 
-  if (((mDoFormat || isDirty) && !mInPre && BreakAfterOpen(tag)))
+  if (((mDoFormat || isDirty) && mPreLevel == 0 && BreakAfterOpen(tag)))
   {
     Write(NS_LINEBREAK);
     mColPos = 0;
@@ -734,12 +735,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   }
   else if (tag == eHTMLTag_pre)
   {
-    mInPre = PR_FALSE;  // we think we can clear the flag now
-    for (PRInt32 i = mHTMLStackPos-1; i >= 0; i--)
-    {
-      if (mHTMLTagStack[i] == eHTMLTag_pre)   // oops! Nested pre, still need flag
-        mInPre = PR_TRUE;
-    }
+    --mPreLevel;
     tagName.Assign(aNode.GetText());
   }
   else if (tag == eHTMLTag_comment)
@@ -768,7 +764,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   if (IndentChildren(tag))
     mIndent--;
 
-  if ((mDoFormat || isDirty) && !mInPre && BreakBeforeClose(tag))
+  if ((mDoFormat || isDirty) && mPreLevel == 0 && BreakBeforeClose(tag))
   {
     if (mColPos != 0)
     {
@@ -776,7 +772,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
       mColPos = 0;
     }
   }
-  if ((mDoFormat || isDirty) && !mInPre && mColPos == 0)
+  if ((mDoFormat || isDirty) && mPreLevel == 0 && mColPos == 0)
     AddIndent();
 
   EnsureBufferSize(tagName.Length() + 1);
@@ -797,7 +793,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   if (tag == eHTMLTag_body)
     mInBody = PR_FALSE;
 
-  if (((mDoFormat || isDirty) && !mInPre && BreakAfterClose(tag))
+  if (((mDoFormat || isDirty) && mPreLevel == 0 && BreakAfterClose(tag))
       || tag == eHTMLTag_body || tag == eHTMLTag_html)
   {
     Write(NS_LINEBREAK);
@@ -843,7 +839,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
       return NS_OK;
 
     const nsString& text = aNode.GetText();
-    if (mInPre)
+    if (mPreLevel > 0)
     {
       Write(text);
       mColPos += text.Length();
@@ -867,7 +863,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_whitespace)
   {
-    if (!mDoFormat || mInPre)
+    if (!mDoFormat || mPreLevel > 0)
     {
       const nsString& text = aNode.GetText();
       Write(text);
@@ -876,7 +872,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_newline)
   {
-    if (!mDoFormat || mInPre)
+    if (!mDoFormat || mPreLevel > 0)
     {
       Write(NS_LINEBREAK);
       mColPos = 0;
@@ -1181,6 +1177,7 @@ static PRBool IsInline(eHTMLTags aTag)
     case  eHTMLTag_sup:
     case  eHTMLTag_textarea:
     case  eHTMLTag_tt:
+    case  eHTMLTag_u:
     case  eHTMLTag_var:
     case  eHTMLTag_wbr:
       result = PR_TRUE;
