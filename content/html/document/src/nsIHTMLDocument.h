@@ -52,6 +52,11 @@ public:
 
   NS_IMETHOD GetForms(nsIDOMHTMLCollection** aForms) = 0;
 
+  NS_IMETHOD SetBaseURL(const nsString& aURLSpec) = 0;
+
+  NS_IMETHOD GetBaseTarget(nsString& aTarget) const = 0;
+  NS_IMETHOD SetBaseTarget(const nsString& aTarget) = 0;
+
   /**
    * Access DTD compatibility mode for this document
    */
