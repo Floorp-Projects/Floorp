@@ -23,6 +23,9 @@
 package grendel.ui;
 
 import grendel.ui.UIAction;
+import grendel.ui.ToolBarLayout;
+
+import grendel.widgets.GrendelToolBar;
 
 import java.awt.BorderLayout;
 import java.awt.Image;
@@ -34,25 +37,21 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.StringTokenizer;
 
+import javax.swing.BorderFactory;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
-import javax.swing.JToolBar;
 import javax.swing.JButton;
-
-//import netscape.orion.toolbars.NSButton;
-//import netscape.orion.toolbars.NSToolbar;
-//import netscape.orion.uimanager.IUICmd;
 
 public class GeneralPanel extends JPanel {
   private final boolean DEBUG = true;
   static ResourceBundle fLabels = ResourceBundle.getBundle("grendel.ui.Labels",
-                                                          Locale.getDefault());
+                                                         Locale.getDefault());
 
   static Clipboard fPrivateClipboard = new Clipboard("Grendel");
 
   protected String         fResourceBase = "grendel.ui";
-  protected JToolBar fToolBar;
+  protected GrendelToolBar fToolBar;
 
   public GeneralPanel() {
     setLayout(new BorderLayout());
@@ -75,25 +74,27 @@ public class GeneralPanel extends JPanel {
     res.setPressedIcon(iconPressed);
     res.setRolloverIcon(iconRollover);
     res.setActionCommand(aAction);
+    res.setRolloverEnabled(true);
+    res.setBorder(BorderFactory.createEmptyBorder());
 
     return res;
   }
 
-  protected JToolBar buildToolBar(String aToolbar, UIAction[] aActions) {
-    JToolBar res = null;
+  protected GrendelToolBar buildToolBar(String aToolbar, UIAction[] aActions) {
+    GrendelToolBar res = null;
 
     Hashtable commands = new Hashtable();
     for (int i = 0; i < aActions.length; i++)
         {
            UIAction a = aActions[i];
            String name = a.getName();
-           //  commands.put((a.getName()), a);
            commands.put(name, a);
         }
     
 
     try {
-      res = new JToolBar();
+      res = new GrendelToolBar();
+      //  res.setLayout(new ToolBarLayout());
 
       ResourceBundle resources = ResourceBundle.getBundle(fResourceBase + ".Menus");
       String toolbar = resources.getString(aToolbar);
@@ -107,7 +108,7 @@ public class GeneralPanel extends JPanel {
         UIAction action = (UIAction)commands.get(token);
 
         if (action != null) {
-          //       button.addActionListener(action);
+          button.addActionListener(action);
         } else {
           button.setEnabled(false);
         }
@@ -124,13 +125,14 @@ public class GeneralPanel extends JPanel {
       }
       else {
         System.out.println("\tbuildToolBar succeeded.");
-        System.out.println("\tJToolBar res contains " + res.getComponentCount() + " components.");
+        System.out.println("\tGrendelToolBar res contains " + res.getComponentCount() + " components.");
       }
     }
+
     return res;
   }
 
-  public JToolBar getToolBar() {
+  public GrendelToolBar getToolBar() {
     return fToolBar;
   }
 }
