@@ -523,29 +523,29 @@ nsresult nsMsgDBView::FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aSenderString)
   return NS_OK;
 }
 
-nsresult nsMsgDBView::FetchRecipient(nsIMsgHdr * aHdr, PRUnichar ** aRecipientString)
+nsresult nsMsgDBView::FetchRecipients(nsIMsgHdr * aHdr, PRUnichar ** aRecipientsString)
 {
-  nsXPIDLString unparsedRecipient;
+  nsXPIDLString unparsedRecipients;
   if (!mHeaderParser)
     mHeaderParser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 
-  nsresult rv = aHdr->GetMime2DecodedRecipients(getter_Copies(unparsedRecipient));
+  nsresult rv = aHdr->GetMime2DecodedRecipients(getter_Copies(unparsedRecipients));
   
   // *sigh* how sad, we need to convert our beautiful unicode string to utf8 
   // so we can extract the name part of the address...then convert it back to 
   // unicode again.
   if (mHeaderParser)
   {
-    nsXPIDLCString name;
-    rv = mHeaderParser->ExtractHeaderAddressName("UTF-8", NS_ConvertUCS2toUTF8(unparsedRecipient).get(), getter_Copies(name));
-    if (NS_SUCCEEDED(rv) && (const char*)name)
+    nsXPIDLCString names;
+    rv = mHeaderParser->ExtractHeaderAddressNames("UTF-8", NS_ConvertUCS2toUTF8(unparsedRecipients).get(), getter_Copies(names));
+    if (NS_SUCCEEDED(rv) && (const char*)names)
     {
-      *aRecipientString = nsCRT::strdup(NS_ConvertUTF8toUCS2(name).get());
+      *aRecipientsString = nsCRT::strdup(NS_ConvertUTF8toUCS2(names).get());
       return NS_OK;
     }
   }
   // if we got here then just return the original string
-  *aRecipientString = nsCRT::strdup(unparsedRecipient);
+  *aRecipientsString = nsCRT::strdup(unparsedRecipients);
   return NS_OK;
 }
 
@@ -1531,7 +1531,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, n
     aValue.Assign(valueText);
     break;
   case 'r': // recipient
-    rv = FetchRecipient(msgHdr, getter_Copies(valueText));
+    rv = FetchRecipients(msgHdr, getter_Copies(valueText));
     aValue.Assign(valueText);
     break;
   case 'd':  // date

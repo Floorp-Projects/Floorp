@@ -157,7 +157,7 @@ protected:
   PRPackedBool  mSuppressChangeNotification;
   virtual const char * GetViewName(void) {return "MsgDBView"; }
   nsresult FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aAuthorString);
-  nsresult FetchRecipient(nsIMsgHdr * aHdr, PRUnichar ** aRecipientString);
+  nsresult FetchRecipients(nsIMsgHdr * aHdr, PRUnichar ** aRecipientsString);
   nsresult FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue);
   nsresult FetchDate(nsIMsgHdr * aHdr, PRUnichar ** aDateString);
   nsresult FetchStatus(PRUint32 aFlags, PRUnichar ** aStatusString);
