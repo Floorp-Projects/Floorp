@@ -266,6 +266,8 @@ protected:
 
 	nsCOMPtr<nsIFileSpec>	mBaseFileSpec;
 
+    nsIDOMWindow *mParentWindow;
+
 }; // class nsFileSpecWithUIImpl
 
 #endif // nsIFileSpecWithUIImpl_h__

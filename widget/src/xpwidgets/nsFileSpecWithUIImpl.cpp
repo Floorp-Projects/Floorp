@@ -24,6 +24,11 @@
 
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
+#include "nsIDOMWindow.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIWebShell.h"
+#include "nsIDocumentViewer.h"
+#include "nsIPresShell.h"
 
 #undef NS_FILE_FAILURE
 #define NS_FILE_FAILURE NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES,(0xFFFF))
@@ -60,8 +65,52 @@ static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 
 #include "nsIComponentManager.h"
 
+// Get widget from DOM window.
+// Note that this does not AddRef the resulting widget!
+//
+// This was cribbed from nsBaseFilePicker.cpp.  I will
+// echo the comment that appears there: aaaarrrrrrgh!
+static nsIWidget *parentWidget( nsIDOMWindow *window ) {
+  nsIWidget *result = 0;
+  if ( window ) {
+    nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( window );
+    if ( sgo ) {
+      nsCOMPtr<nsIWebShell> webShell;
+      sgo->GetWebShell( getter_AddRefs( webShell ) );
+      if ( webShell ) {
+        nsCOMPtr<nsIContentViewer> contentViewer;
+        webShell->GetContentViewer( getter_AddRefs( contentViewer ) );
+        if ( contentViewer ) {
+          nsCOMPtr<nsIDocumentViewer> documentViewer = do_QueryInterface( contentViewer );
+          if ( documentViewer ) {
+            nsCOMPtr<nsIPresShell> presShell;
+            documentViewer->GetPresShell( *getter_AddRefs( presShell ) );
+            if ( presShell ) {
+              nsCOMPtr<nsIViewManager> viewManager;
+              presShell->GetViewManager( getter_AddRefs( viewManager ) );
+              if ( viewManager ) {
+                nsIView *view; // GetRootView doesn't AddRef!
+                viewManager->GetRootView( view );
+                if ( view ) {
+                  nsCOMPtr<nsIWidget> widget;
+                  view->GetWidget( *getter_AddRefs( widget ) );
+                  if ( widget ) {
+                      result = widget.get();
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
 //----------------------------------------------------------------------------------------
 nsFileSpecWithUIImpl::nsFileSpecWithUIImpl()
+    : mParentWindow( 0 )
 //----------------------------------------------------------------------------------------
 {
     NS_INIT_REFCNT();
@@ -77,6 +126,8 @@ nsFileSpecWithUIImpl::nsFileSpecWithUIImpl()
 nsFileSpecWithUIImpl::~nsFileSpecWithUIImpl()
 //----------------------------------------------------------------------------------------
 {
+    // Release parent window.
+    NS_IF_RELEASE( mParentWindow );
 }
 
 //----------------------------------------------------------------------------------------
@@ -108,7 +159,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseOutputFile(
     
     nsString winTitle(windowTitle);
 
-    nsFileDlgResults result = fileWidget->PutFile(nsnull, winTitle, spec);
+    nsFileDlgResults result = fileWidget->PutFile(parentWidget(mParentWindow), winTitle, spec);
     if (result != nsFileDlgResults_OK)
     {
       if (result == nsFileDlgResults_Cancel)
@@ -212,7 +263,6 @@ void nsFileSpecWithUIImpl::SetFileWidgetStartDir( nsIFileWidget *fileWidget ) {
     }
 }
 
-
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseInputFile(
   const char *inTitle,
@@ -236,7 +286,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseInputFile(
                           inExtraFilterTitle, inExtraFilter);
   SetFileWidgetStartDir(fileWidget);
   nsString winTitle(inTitle);
-	if (fileWidget->GetFile(nsnull, winTitle, spec) != nsFileDlgResults_OK)
+	if (fileWidget->GetFile(parentWidget(mParentWindow), winTitle, spec) != nsFileDlgResults_OK)
 		rv = NS_FILE_FAILURE;
   else
     rv = mBaseFileSpec->SetFromFileSpec(spec);
@@ -270,3 +320,30 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseDirectory(const char *title, char **_r
   return GetURLString(_retval);
 } // nsFileSpecWithUIImpl::chooseDirectory
 
+NS_IMETHODIMP
+nsFileSpecWithUIImpl::GetParentWindow( nsIDOMWindow **aResult ) {
+    nsresult rv = NS_OK;
+
+    if ( aResult ) {
+        *aResult = mParentWindow;
+        NS_IF_ADDREF( *aResult );
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsFileSpecWithUIImpl::SetParentWindow( nsIDOMWindow *aParentWindow ) {
+    nsresult rv = NS_OK;
+
+    // Release current parent.
+    NS_IF_RELEASE( mParentWindow );
+
+    // Set new parent.
+    mParentWindow = aParentWindow;
+    NS_IF_ADDREF( mParentWindow );
+
+    return rv;
+}
