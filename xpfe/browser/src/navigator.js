@@ -639,26 +639,12 @@
 
   function MsgNewMessage()
   {
-	// Generate a unique number, do we have a better way?
-	var date = new Date();
-	var composeAppCoreName = "ComposeAppCore:" + date.getTime() + Math.random();
-	var composeAppCore = XPAppCoresManager.Find(composeAppCoreName);
-	if (! composeAppCore)
-	{
-		composeAppCore = new ComposeAppCore();
-		if (composeAppCore)
-		{
-			composeAppCore.Init(composeAppCoreName);
-			//argument:
-			//	name=<name of the appcore>
-			//	editorType=[default | html | text]			; default means use the prefs value send_html
-			var args = "name=" + composeAppCoreName + ",editorType=default";
-			composeAppCore.NewMessage("chrome://messengercompose/content/", args, null, null, 0);
-			dump("Created a compose appcore from Navigator.xul, " + args);
-		}
-	}
+		var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
+		msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
+		if (msgComposeService)
+			msgComposeService.OpenComposeWindow(null, null, 0, 0, null);
   }
-
+  
   function DoPreferences()
   {
     if (!prefwindow)
