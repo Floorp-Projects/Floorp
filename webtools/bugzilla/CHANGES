@@ -10,6 +10,11 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+3/22/99 Added the ability to query by fields which have changed within a date
+range.  To make this perform a bit better, we need a new index:
+
+	alter table bugs_activity add index (field);
+
 3/10/99 Added 'groups' stuff, where we have different group bits that we can
 put on a person or on a bug.  Some of the group bits control access to bugzilla
 features.  And a person can't access a bug unless he has every group bit set

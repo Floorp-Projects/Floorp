@@ -23,6 +23,7 @@ use diagnostics;
 use strict;
 
 require "CGI.pl";
+use Date::Parse;
 
 my $serverpush = 1;
 
@@ -337,6 +338,57 @@ Click the <B>Back</B> button and try again.";
               exit;
         }
         $query .= "and to_days(now()) - to_days(bugs.delta_ts) <= $c ";
+    }
+}
+
+my $ref = $::MFORM{'chfield'};
+
+
+sub SqlifyDate {
+    my ($str) = (@_);
+    if (!defined $str) {
+        $str = "";
+    }
+    my $date = str2time($str);
+    if (!defined $date) {
+        print "The string '<tt>$str</tt>' is not a legal date.\n";
+        print "<P>Please click the <B>Back</B> button and try again.\n";
+        exit;
+    }
+    return time2str("'%Y/%m/%d %H:%M:%S'", $date);
+}
+
+
+        
+
+
+if (defined $ref && 0 < @$ref) {
+    # Do surgery on the query to tell it to patch in the bugs_activity
+    # table.
+    $query =~ s/bugs,/bugs, bugs_activity,/;
+    
+    my @list;
+    foreach my $f (@$ref) {
+        push(@list, "\nbugs_activity.field = " . SqlQuote($f));
+    }
+    $query .= "and bugs_activity.bug_id = bugs.bug_id and (" .
+        join(' or ', @list) . ") ";
+    $query .= "and bugs_activity.when >= " .
+        SqlifyDate($::FORM{'chfieldfrom'}) . "\n";
+    my $to = $::FORM{'chfieldto'};
+    if (defined $to) {
+        $to = trim($to);
+        if ($to ne "" && $to !~ /^now$/i) {
+            $query .= "and bugs_activity.when <= " . SqlifyDate($to) . "\n";
+        }
+    }
+    my $value = $::FORM{'chfieldvalue'};
+    if (defined $value) {
+        $value = trim($value);
+        if ($value ne "") {
+            $query .= "and bugs_activity.newvalue = " .
+                SqlQuote($value) . "\n";
+        }
     }
 }
 

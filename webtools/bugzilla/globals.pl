@@ -260,6 +260,7 @@ sub GenerateVersionTable {
             splice(@::log_columns, $w, 1);
         }
     }
+    @::log_columns = (sort(@::log_columns));
 
     @::legal_priority = SplitEnumType($cols->{"priority,type"});
     @::legal_severity = SplitEnumType($cols->{"bug_severity,type"});

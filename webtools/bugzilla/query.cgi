@@ -31,13 +31,13 @@ use vars @::legal_resolution,
   @::legal_product,
   @::legal_bug_status,
   @::legal_priority,
-  @::legal_resolution,
   @::legal_opsys,
   @::legal_platform,
   @::legal_components,
   @::legal_versions,
   @::legal_severity,
   @::legal_target_milestone,
+  @::log_columns,
   %::versions,
   %::components,
   %::FORM;
@@ -62,7 +62,8 @@ my %type;
 
 foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platform",
                   "priority", "bug_severity", "product", "reporter", "op_sys",
-                  "component", "version",
+                  "component", "version", "chfield", "chfieldfrom",
+                  "chfieldto", "chfieldvalue",
                   "email1", "emailtype1", "emailreporter1",
                   "emailassigned_to1", "emailcc1", "emailqa_contact1",
                   "email2", "emailtype2", "emailreporter2",
@@ -91,6 +92,11 @@ foreach my $item (split(/\&/, $::buffer)) {
     }
 }
                   
+
+if ($default{'chfieldto'} eq "") {
+    $default{'chfieldto'} = "Now";
+}
+
 
 
 my $namelist = "";
@@ -375,8 +381,26 @@ $emailinput2<p>
 
 
 
+Changed in the <NOBR>last <INPUT NAME=changedin SIZE=2 VALUE=\"$default{'changedin'}\"> days.</NOBR>
 
-<NOBR>Changed in the last <INPUT NAME=changedin SIZE=2> days.</NOBR>
+<table>
+<tr>
+<td rowspan=2 align=right>Where the field(s)
+</td><td rowspan=2>
+<SELECT NAME=\"chfield\" MULTIPLE SIZE=4>
+@{[make_options(\@::log_columns, $default{'chfield'}, $type{'chfield'})]}
+</SELECT>
+</td><td rowspan=2>
+changed.
+</td><td>
+<nobr>dates <INPUT NAME=chfieldfrom SIZE=10 VALUE=\"$default{'chfieldfrom'}\"></nobr>
+<nobr>to <INPUT NAME=chfieldto SIZE=10 VALUE=\"$default{'chfieldto'}\"></nobr>
+</td>
+</tr>
+<tr>
+<td>changed to value <nobr><INPUT NAME=chfieldvalue SIZE=10> (optional)</nobr>
+</td>
+</table>
 
 
 <P>

@@ -24,7 +24,6 @@ use bugs;
 
 drop table bugs_activity
 OK_ALL_DONE
-
 mysql << OK_ALL_DONE
 use bugs;
 create table bugs_activity (
@@ -36,7 +35,8 @@ create table bugs_activity (
         newvalue tinytext,
 
         index (bug_id),
-        index (when)
+        index (when),
+	index (field)
 );
 
 
