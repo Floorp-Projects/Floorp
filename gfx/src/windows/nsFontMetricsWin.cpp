@@ -229,16 +229,17 @@ nsFontMetricsWin::RealizeFont()
   mDeviceContext->GetDevUnitsToAppUnits(dev2app);
   OUTLINETEXTMETRIC oMetrics;
   TEXTMETRIC&  metrics = oMetrics.otmTextMetrics;
+  nscoord onePixel = NSToCoordRound(1 * dev2app);
 
   if (0 < ::GetOutlineTextMetrics(dc, sizeof(oMetrics), &oMetrics)) {
 //    mXHeight = NSToCoordRound(oMetrics.otmsXHeight * dev2app);  XXX not really supported on windows
-    mXHeight = NSToCoordRound((float)metrics.tmAscent * dev2app * 0.52f); // 52% of ascent, best average for true type
+    mXHeight = NSToCoordRound((float)metrics.tmAscent * dev2app * 0.50f); // 50% of ascent, best guess for true type
     mSuperscriptOffset = NSToCoordRound(oMetrics.otmptSuperscriptOffset.y * dev2app);
     mSubscriptOffset = NSToCoordRound(oMetrics.otmptSubscriptOffset.y * dev2app);
 
-    mStrikeoutSize = NSToCoordRound(oMetrics.otmsStrikeoutSize * dev2app);
+    mStrikeoutSize = MAX(onePixel, NSToCoordRound(oMetrics.otmsStrikeoutSize * dev2app));
     mStrikeoutOffset = NSToCoordRound(oMetrics.otmsStrikeoutPosition * dev2app);
-    mUnderlineSize = NSToCoordRound(oMetrics.otmsUnderscoreSize * dev2app);
+    mUnderlineSize = MAX(onePixel, NSToCoordRound(oMetrics.otmsUnderscoreSize * dev2app));
     mUnderlineOffset = NSToCoordRound(oMetrics.otmsUnderscorePosition * dev2app);
   }
   else {
@@ -249,9 +250,9 @@ nsFontMetricsWin::RealizeFont()
     mSuperscriptOffset = mXHeight;     // XXX temporary code!
     mSubscriptOffset = mXHeight;     // XXX temporary code!
 
-    mStrikeoutSize = NSToCoordRound(1 * dev2app); // XXX this is a guess
+    mStrikeoutSize = onePixel; // XXX this is a guess
     mStrikeoutOffset = NSToCoordRound(mXHeight / 2.0f); // 50% of xHeight
-    mUnderlineSize = NSToCoordRound(1 * dev2app); // XXX this is a guess
+    mUnderlineSize = onePixel; // XXX this is a guess
     mUnderlineOffset = -NSToCoordRound((float)metrics.tmDescent * dev2app * 0.30f); // 30% of descent
   }
 
