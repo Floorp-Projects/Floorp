@@ -1,0 +1,13 @@
+<Files ~ (find|search|source|ident|diff)$>
+SetHandler cgi-script
+order allow,deny
+allow from all
+deny from agni.nut.roche.com
+deny from user198.anilam.com
+</Files>
+
+#RewriteEngine on 
+#RewriteBase /webtools/build/ 
+#RewriteRule ^\.mozconfig\.sh(.*) config.cgi$1
+#RewriteRule ^\mozconfig\.sh(.*) config.cgi$1
+
