@@ -2944,7 +2944,7 @@ nsTextControlFrame::SetValue(const nsAString& aValue)
     nsCOMPtr<nsITextControlElement> textControl = do_QueryInterface(mContent);
     if (textControl)
     {
-      textControl->SetValueGuaranteed(aValue, this);
+      textControl->TakeTextFrameValue(aValue);
     }
   }
 }

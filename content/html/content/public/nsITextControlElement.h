@@ -60,7 +60,7 @@ public:
   /**
    * Set the control's value without security checks
    */
-  NS_IMETHOD SetValueGuaranteed(const nsAString& aValue, nsITextControlFrame* aFrame) = 0;
+  NS_IMETHOD TakeTextFrameValue(const nsAString& aValue) = 0;
 
   /**
    * Tell the control that value has been deliberately changed (or not).
