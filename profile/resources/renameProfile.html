@@ -7,7 +7,7 @@ var curProfileName = parent.GetProfileName();
 
 function RenameProfile()
 {
-	dump("************Inside RenameProfile\n");
+	//dump("************Inside RenameProfile\n");
 	// Open a dialog and get new name
 	var element = document.getElementById("NewProfileName");
 	var newProfileName = element.value;
@@ -20,6 +20,8 @@ function RenameProfile()
 	}
 	else {
 		dump("************Please enter a new profile name first\n");
+
+		this.location.replace("resource:/res/profile/renameProfile.html");
 	}
 }
 
