@@ -104,6 +104,14 @@ public:
   // nsIDOM3Node
   NS_IMETHOD    GetBaseURI(nsAWritableString& aURI)
   { aURI.Truncate(); return NS_OK; }
+  NS_IMETHOD    LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
+                                      nsAWritableString& aPrefix) {
+    aPrefix.Truncate(); return NS_OK;
+  }
+  NS_IMETHOD    LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
+                                   nsAWritableString& aNamespaceURI) {
+    aNamespaceURI.Truncate(); return NS_OK;
+  }
 
   // nsIContent
   NS_IMETHOD SetParent(nsIContent* aParent)

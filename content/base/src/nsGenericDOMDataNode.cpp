@@ -267,6 +267,34 @@ nsGenericDOMDataNode::GetBaseURI(nsAWritableString& aURI)
   return rv;
 }
 
+nsresult
+nsGenericDOMDataNode::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
+                                            nsAWritableString& aPrefix) 
+{
+  aPrefix.Truncate();
+  // DOM Data Node passes the query on to its parent
+  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(mParent));
+  if (node) {
+    return node->LookupNamespacePrefix(aNamespaceURI, aPrefix);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericDOMDataNode::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
+                                         nsAWritableString& aNamespaceURI)
+{
+  aNamespaceURI.Truncate();
+  // DOM Data Node passes the query on to its parent
+  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(mParent));
+  if (node) {
+    return node->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
+  }
+
+  return NS_OK;
+}
+
 #if 0
 nsresult
 nsGenericDOMDataNode::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
