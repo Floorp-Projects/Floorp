@@ -2407,14 +2407,16 @@ XPCWrappedNative::HandlePossibleNameCaseError(XPCCallContext& ccx,
     XPCNativeMember* member;
     XPCNativeInterface* interface;
 
+    /* PRUnichar->char->PRUnichar hack is to avoid pulling in i18n code. */
     if(JSVAL_IS_STRING(name) &&
        nsnull != (oldJSStr = JSVAL_TO_STRING(name)) &&
        nsnull != (oldStr = (PRUnichar*) JS_GetStringChars(oldJSStr)) &&
        oldStr[0] != 0 &&
-       nsCRT::IsUpper(oldStr[0]) &&
+       oldStr[0] >> 8 == 0 &&
+       nsCRT::IsUpper((char)oldStr[0]) &&
        nsnull != (newStr = nsCRT::strdup(oldStr)))
     {
-        newStr[0] = nsCRT::ToLower(newStr[0]);
+        newStr[0] = (PRUnichar) nsCRT::ToLower((char)newStr[0]);
         newJSStr = JS_NewUCStringCopyZ(ccx, (const jschar*)newStr);
         nsCRT::free(newStr);
         if(newJSStr && (set ?
