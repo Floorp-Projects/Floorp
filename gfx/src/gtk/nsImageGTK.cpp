@@ -1614,9 +1614,6 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
   if (mPendingUpdate)
     UpdateCachedImage();
 
-  if (mPendingUpdate)
-    UpdateCachedImage();
-
   if ((mAlphaDepth==1) && mIsSpacer)
     return NS_OK;
 
