@@ -21,6 +21,7 @@
 #include "nsIServiceManager.h"
 #include "nsNetService.h"
 #include "nsFileTransportService.h"
+#include "nsSocketTransportService.h"
 #include "nscore.h"
 #include "nsUrl.h"
 
@@ -28,6 +29,7 @@ static NS_DEFINE_CID(kComponentManagerCID,      NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kNetServiceCID,            NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID,  NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kTypicalUrlCID,            NS_TYPICALURL_CID);
+static NS_DEFINE_CID(kSocketTransportServiceCID,  NS_SOCKETTRANSPORTSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -105,6 +107,17 @@ nsNetFactory::CreateInstance(nsISupports *aOuter,
         }
         inst = trans;
     }
+    else if (mClassID.Equals(kSocketTransportServiceCID)) {
+        nsSocketTransportService* trans = new nsSocketTransportService();
+        if (trans == nsnull)
+            return NS_ERROR_OUT_OF_MEMORY;
+        rv = trans->Init();
+        if (NS_FAILED(rv)) {
+            delete trans;
+            return rv;
+        }
+        inst = NS_STATIC_CAST(nsISocketTransportService*, trans); 
+    }
     else if (mClassID.Equals(kTypicalUrlCID)) {
         nsUrl* url = new nsUrl(aOuter);
         if (url == nsnull)
@@ -160,11 +173,17 @@ NSRegisterSelf(nsISupports* aServMgr , const char* aPath)
                                     "Network Service",
                                     "component://netscape/network/net-service",
                                     aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;;
+    if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->RegisterComponent(kFileTransportServiceCID, 
                                     "File Transport Service",
                                     "component://netscape/network/file-transport-service",
+                                    aPath, PR_TRUE, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = compMgr->RegisterComponent(kSocketTransportServiceCID, 
+                                    "Socket Transport Service",
+                                    "component://netscape/network/socket-transport-service",
                                     aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;;
 
@@ -187,6 +206,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
     if (NS_FAILED(rv)) return rv;
 
     rv = compMgr->UnregisterComponent(kFileTransportServiceCID, aPath);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = compMgr->UnregisterComponent(kSocketTransportServiceCID, aPath);
     if (NS_FAILED(rv)) return rv;;
 
     rv = compMgr->UnregisterComponent(kTypicalUrlCID, aPath);
