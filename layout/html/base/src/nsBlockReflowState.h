@@ -2822,10 +2822,20 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       aLine->RemoveFloatersFromSpaceManager(aState.mSpaceManager);
 
       // Now reflow the line again this time without having it compute
-      // the maximum width
+      // the maximum width or max-element-size.
+      // Note: we need to reset both member variables, because the inline
+      // code examines mComputeMaxElementSize and if there is a placeholder
+      // on this line the code to reflow the floater looks at both...
+      nscoord oldComputeMaxElementSize = aState.mComputeMaxElementSize;
+      nscoord oldComputeMaximumWidth = aState.mComputeMaximumWidth;
+        
+      aState.mComputeMaxElementSize = PR_FALSE;
+      aState.mComputeMaximumWidth = PR_FALSE;
       aState.mY = oldY;
       aState.mPrevBottomMargin = oldPrevBottomMargin;
       rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
+      aState.mComputeMaxElementSize = oldComputeMaxElementSize;
+      aState.mComputeMaximumWidth = oldComputeMaximumWidth;
 
     } else {
       rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing);
@@ -4295,11 +4305,20 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     }
   }
   
-  // If we're reflowing the line just to get incrementally update the
+  // If we're reflowing the line just to incrementally update the
   // maximum width, then don't post-place the line. It's doing work we
   // don't need, and it will update things like aState.mKidXMost that
   // we don't want updated...
-  if (!aUpdateMaximumWidth) {
+  if (aUpdateMaximumWidth) {
+    // However, we do need to update the max-element-size if requested
+    if (aState.mComputeMaxElementSize) {
+      aState.UpdateMaxElementSize(maxElementSize);
+      // We also cache the max element width in the line. This is needed for
+      // incremental reflow
+      aLine->mMaxElementWidth = maxElementSize.width;
+    }
+
+  } else {
     PostPlaceLine(aState, aLine, maxElementSize);
   }
 
@@ -5126,8 +5145,10 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
   }
   floater->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
 
-  // Stash away the max-element-size for later
-  aState.StoreMaxElementSize(floater, brc.GetMaxElementSize());
+  // If we computed it, then stash away the max-element-size for later
+  if (aState.mComputeMaxElementSize) {
+    aState.StoreMaxElementSize(floater, brc.GetMaxElementSize());
+  }
 
   return NS_OK;
 }
