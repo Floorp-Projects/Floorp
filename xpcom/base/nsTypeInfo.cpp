@@ -188,7 +188,20 @@ sanity_check_vtable_i386(void** vt)
             return 0;
 
     // Is the next instruction a `push %ebx' or `push %esi'?
-    return (*ip == 0x53 || *ip == 0x56);
+    if (*ip == 0x53 || *ip == 0x56) {
+        return 1;
+    }
+
+    // Nope.  There's another variant that has a `sub' instruction,
+    // followed by a `cmpl' and a `jne'.  Check for that.
+    if (ip[0] == 0x83 && ip[1] == 0xec     // sub
+        && ip[3] == 0x83 && ip[4] == 0x3d  // cmpl
+        && ip[10] == 0x75                  // jne
+        ) {
+        return 1;
+    }
+
+    return 0;
 }
 
 static inline int
