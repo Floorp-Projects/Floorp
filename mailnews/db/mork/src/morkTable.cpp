@@ -466,7 +466,7 @@ void morkTable::build_row_map(morkEnv* ev)
       if ( ev->Good() )
       {
         mTable_RowMap = map; // put strong ref here
-        mork_count count = mTable_RowArray.mArray_Fill;
+        count = mTable_RowArray.mArray_Fill;
         mork_pos pos = -1;
         while ( ++pos < count )
         {
