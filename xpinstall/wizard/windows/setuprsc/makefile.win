@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+#     Sean Su <ssu@netscape.com>
 #     Daniel Veditz <dveditz@netscape.com>
 
 DEPTH=..\..\..\..
@@ -29,7 +30,7 @@ USE_NON_MT_LIBS=1
 #USE_STATIC_LIBS=1
 
 MODULE      = setuprsc
-#RESFILE     = $(MODULE).res
+RESFILE     = $(MODULE).res
 DLL         = $(OBJDIR)\$(MODULE).dll
 
 OBJS=                             \
