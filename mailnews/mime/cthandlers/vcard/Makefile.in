@@ -29,24 +29,22 @@ LIBRARY_NAME=mimect-vcard
 
 
 CPPSRCS = \
-		mimexpcom.cpp	\
-		comi18n.cpp	\
+    mimevcrd.cpp	\
+		mimexpcom.cpp 	\
+		nsVCard.cpp		\
+		nsVCardObj.cpp	\
+		nsVCardTransition.cpp	\
+		comi18n.cpp		\
 		$(NULL)
 
 CSRCS = \
-		oldnet.c	\
-		oldvobj.c	\
-		mimevcrd.c     	\
 		oldi18n.c      	\
-		oldvcc.c 	\
-		oldxp.c		\
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
 	$(NSPR_LIBS)	\
 	-L$(DIST)/bin	\
 	-L$(DIST)/lib	\
-	-lxp			\
 	-lraptorbase	\
 	-lxpcom			\
 	-lreg			\

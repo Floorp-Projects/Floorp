@@ -15,18 +15,26 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "mimevcrd.h"
-#include "xp_core.h"
-#include "xp_mem.h"
-#include "xpgetstr.h"
-#include "vcc.h"
-#include "vobject.h"
-#include "libi18n.h"
-#include "mimecth.h"
-#include "mimexpcom.h"
 
+#include "prlog.h"
+#include "prtypes.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "libi18n.h"
+#include "nsVCardObj.h"
+#include "nsVCard.h"
+#include "mimecth.h"
+#include "mimexpcom.h"
+#include "mimevcrd.h"
+#include "nsEscape.h"
+#include "nsVCardTransition.h"
+
+
+#include "nsVCard.h"
+#include "nsVCardObj.h"
+
+//#include "vobject.h"
+
 
 static int MimeInlineTextVCard_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextVCard_parse_eof (MimeObject *, PRBool);
@@ -202,11 +210,17 @@ MimeInlineTextVCard_parse_begin (MimeObject *obj)
 
 	clazz = ((MimeInlineTextVCardClass *) obj->clazz);
 	/* initialize vcard string to empty; */
-	StrAllocCopy(clazz->vCardString, "");
+	vCard_SACopy(&(clazz->vCardString), "");
 
     return 0;
 }
 
+char *strcpySafe (char *dest, const char *src, size_t destLength)
+{
+	char *result = strncpy (dest, src, --destLength);
+	dest[destLength] = '\0';
+	return result;
+}
 
 static int
 MimeInlineTextVCard_parse_line (char *line, PRInt32 length, MimeObject *obj)
@@ -227,8 +241,8 @@ MimeInlineTextVCard_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	linestring = (char *) PR_MALLOC (length + 1);
 
 	if (linestring) {
-		XP_STRNCPY_SAFE((char *)linestring, line, length + 1);
-		StrAllocCat (clazz->vCardString, linestring);
+    strcpySafe((char *)linestring, line, length + 1);
+		vCard_SACat (&clazz->vCardString, linestring);
 		PR_Free (linestring);
 	}
 
@@ -580,8 +594,8 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
 				}
 				else
 				{
-					htmlLine = StrAllocCat (htmlLine, htmlLine1);
-					htmlLine = StrAllocCat (htmlLine, htmlLine2);
+					htmlLine = vCard_SACat (&htmlLine, htmlLine1);
+					htmlLine = vCard_SACat (&htmlLine, htmlLine2);
 				}
 
 				PR_FREEIF (htmlLine1);
@@ -965,7 +979,7 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	if (!vCard)
 		return MK_OUT_OF_MEMORY;
 
-	vEscCard = NET_Escape (vCard, URL_XALPHAS);
+	vEscCard = nsEscape (vCard, url_XAlphas);
 
 	PR_FREEIF (vCard);
 
@@ -1066,13 +1080,13 @@ static int BeginLayer(MimeObject *obj, PRBool basic)
 
 	if (basic)
 	{
-//RICHIECSS		captionLine = PR_smprintf ("<LAYER NAME=basic%d>", unique);
+    //CSS: START OF DIV		
     captionLine = PR_smprintf ("<DIV ID=basic%d style=\"position: 'absolute';\">", unique);
 	}
 	else
 	{
-//RICHIECSS		captionLine = PR_smprintf ("<ILAYER NAME=advanced%d VISIBILITY=\"hide\">", unique);
-		captionLine = PR_smprintf ("<DIV ID=advanced%d style=\"position: 'absolute'; display: 'none';\">", unique);
+    //CSS: START OF DIV		
+		captionLine = PR_smprintf ("<DIV ID=advanced%d style=\"position: 'absolute'; display: none;\">", unique);
   }
 
 	if (captionLine)
@@ -1147,7 +1161,7 @@ static int EndLayer(MimeObject *obj, PRBool basic, VObject* v)
 
 	if (!basic) 
 	{
-//RICHIECSS		status = WriteEachLineToStream (obj, "</ILAYER>");
+    //CSS: END OF DIV		
 		status = WriteEachLineToStream (obj, "</DIV>");
     if (status < 0) return status;
 		status = WriteEachLineToStream (obj, "<P><SCRIPT>");
@@ -1158,15 +1172,15 @@ static int EndLayer(MimeObject *obj, PRBool basic, VObject* v)
 		PR_FREEIF (captionLine);
 		captionLine = NULL;
 		if (status < 0) return status;
-//RICHIECSS		captionLine = PR_smprintf ("document.layers[\"basic%d\"].visibility = \"hide\";", unique);
+    //CSS: JS
 		captionLine = PR_smprintf ("document.getElementById(\"basic%d\").style.display = \"none\";", unique);
     if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
 		PR_FREEIF (captionLine);
 		captionLine = NULL;
 		if (status < 0) return status;
-//RICHIECSS    captionLine = PR_smprintf ("document.layers[\"advanced%d\"].visibility = \"inherit\";", unique);
-    captionLine = PR_smprintf ("document.getElementById(\"advanced%d\").style.display = \"\";", unique);
+    //CSS: JS
+    captionLine = PR_smprintf ("document.getElementById(\"advanced%d\").style.display = \"block\";", unique);
 		if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
 		PR_FREEIF (captionLine);
@@ -1180,13 +1194,13 @@ static int EndLayer(MimeObject *obj, PRBool basic, VObject* v)
 		PR_FREEIF (captionLine);
 		captionLine = NULL;
 		if (status < 0) return status;
-//RICHIECSS		captionLine = PR_smprintf ("document.layers[\"advanced%d\"].visibility = \"hide\";", unique);
+    //CSS: JS
  		captionLine = PR_smprintf ("document.getElementById(\"advanced%d\").style.display = \"none\";", unique);
 		if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
 		if (status < 0) return status;
-//RICHIECSS		captionLine = PR_smprintf ("document.layers[\"basic%d\"].visibility = \"inherit\";", unique);
- 		captionLine = PR_smprintf ("document.getElementById(\"basic%d\").style.display = \"\";", unique);
+    //CSS: JS
+ 		captionLine = PR_smprintf ("document.getElementById(\"basic%d\").style.display = \"block\";", unique);
 		if (captionLine)
 			status = WriteEachLineToStream (obj, captionLine);
 		PR_FREEIF (captionLine);
@@ -1194,7 +1208,7 @@ static int EndLayer(MimeObject *obj, PRBool basic, VObject* v)
 		status = WriteEachLineToStream (obj, "}; </SCRIPT></P>");
 	} 
 	else {
-//RICHIECSS		status = WriteEachLineToStream (obj, "</LAYER>");
+    //CSS: END DIV
 		status = WriteEachLineToStream (obj, "</DIV>");
   }
 
@@ -1286,28 +1300,28 @@ static void GetAddressProperties (VObject* o, char ** attribName)
 	VObject* home = isAPropertyOf(o, VCHomeProp);
 	VObject* work = isAPropertyOf(o, VCWorkProp);
 	if (domProp) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_DOM_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_DOM_TYPE));
 	}
 	if (intlProp) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_INTL_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_INTL_TYPE));
 	}
 	if (postal) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_POSTAL_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_POSTAL_TYPE));
 	}
 	if (parcel) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_PARCEL_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_PARCEL_TYPE));
 	}
 	if (home) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_HOME_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_HOME_TYPE));
 	}
 	if (work) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_WORK_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_WORK_TYPE));
 	}
 }
 
@@ -1324,40 +1338,40 @@ static void GetTelephoneProperties (VObject* o, char ** attribName)
 	VObject* pager = isAPropertyOf(o, VCPagerProp);
 	VObject* bbs = isAPropertyOf(o, VCBBSProp);
 	if (prefProp) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_PREF_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_PREF_TYPE));
 	}
 	if (home) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_HOME_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_HOME_TYPE));
 	}
 	if (work) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_WORK_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_WORK_TYPE));
 	}
 	if (voiceProp) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_VOICE_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_VOICE_TYPE));
 	}
 	if (fax) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_FAX_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_FAX_TYPE));
 	}
 	if (msg) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_MSG_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_MSG_TYPE));
 	}
 	if (cell) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_CELL_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_CELL_TYPE));
 	}
 	if (pager) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_PAGER_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_PAGER_TYPE));
 	}
 	if (bbs) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_BBS_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_BBS_TYPE));
 	}
 }
 
@@ -1380,64 +1394,64 @@ static void GetEmailProperties (VObject* o, char ** attribName)
 	VObject* telex = isAPropertyOf(o, VCTLXProp);
 	VObject* x400 = isAPropertyOf(o, VCX400Prop);
 	if (prefProp) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_PREF_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_PREF_TYPE));
 	}
 	if (home) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_HOME_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_HOME_TYPE));
 	}
 	if (work) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_WORK_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_WORK_TYPE));
 	}
 	if (aol) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_AOL_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_AOL_TYPE));
 	}
 	if (applelink) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_APPLELINK_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_APPLELINK_TYPE));
 	}
 	if (att) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_ATTMAIL_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_ATTMAIL_TYPE));
 	}
 	if (cis) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_CSI_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_CSI_TYPE));
 	}
 	if (eworld) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_EWORLD_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_EWORLD_TYPE));
 	}
 	if (internet) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_INTERNET_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_INTERNET_TYPE));
 	}
 	if (ibmmail) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_IBMMAIL_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_IBMMAIL_TYPE));
 	}
 	if (mcimail) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_MCIMAIL_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_MCIMAIL_TYPE));
 	}
 	if (powershare) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_POWERSHARE_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_POWERSHARE_TYPE));
 	}
 	if (prodigy) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_PRODIGY_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_PRODIGY_TYPE));
 	}
 	if (telex) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_TLX_TYPE));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_TLX_TYPE));
 	}
 	if (x400) {
-		StrAllocCat ((*attribName), " ");
-		StrAllocCat ((*attribName), XP_GetString (MK_LDAP_X400));
+		vCard_SACat (&(*attribName), " ");
+		vCard_SACat (&(*attribName), XP_GetString (MK_LDAP_X400));
 	}
 
 }
@@ -1457,11 +1471,11 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 				GetTelephoneProperties(o, &attribName);
 				if (!attribName)
 					attribName = PL_strdup (XP_GetString (MK_LDAP_PHONE_NUMBER));
-				attribName = StrAllocCat(attribName, ": ");
+				attribName = vCard_SACat(&attribName, ": ");
 				value = fakeCString (vObjectUStringZValue(o));
 				if (value)
 				{
-					attribName = StrAllocCat (attribName, value);
+					attribName = vCard_SACat (&attribName, value);
 					PR_FREEIF (value);
 					if (attribName)
 					{

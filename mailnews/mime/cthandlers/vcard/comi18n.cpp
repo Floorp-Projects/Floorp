@@ -24,6 +24,7 @@
 #include "prmem.h"
 #include "prlog.h"
 #include "plstr.h"
+#include "nsVCardTransition.h"
 
 
 // BEGIN EXTERNAL DEPENDANCY
@@ -57,36 +58,10 @@ extern "C" char   *INTL_CsidToCharsetNamePt(PRInt16 id) { return "iso-8859-1"; }
 extern "C" PRInt16 INTL_CharSetNameToID(char *charset) { return 0; }
 
 
-typedef void* CCCDataObject;
-typedef unsigned char *(*CCCFunc)(CCCDataObject, const unsigned char
-*,PRInt32);
+//typedef void* CCCDataObject;
+typedef unsigned char *(*CCCFunc)(CCCDataObject, const unsigned char*,PRInt32);
 
-/*	Very similar to strdup except it free's too
- */
-char * 
-NET_SACopy (char **destination, const char *source)
-{
-	if(*destination)
-	  {
-	    PR_Free(*destination);
-		*destination = 0;
-	  }
-    if (! source)
-	  {
-        *destination = NULL;
-	  }
-    else 
-	  {
-        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-        if (*destination == NULL) 
- 	        return(NULL);
-
-        PL_strcpy (*destination, source);
-      }
-    return *destination;
-}
-
-#define StrAllocCopy(dest, src) NET_SACopy (&(dest), src)
+#define StrAllocCopy(dest, src) vCard_SACopy (&(dest), src)
 
 // END EXTERNAL DEPENDANCY
 
