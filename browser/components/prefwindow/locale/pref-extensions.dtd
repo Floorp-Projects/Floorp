@@ -7,5 +7,6 @@
 <!ENTITY  extensionSettings.label "Settings">
 
 <!ENTITY  author.tooltip          "Close Options and visit the author's web page">
-<!ENTITY  getnew.tooltip          "Close Options and visit Mozilla Firebird Help's Extensions page">
 
+<!ENTITY  getnew.tooltip          "Close Options and visit Mozilla Firebird Help's Extensions page">
+<!ENTITY  getnew.url              "http://texturizer.net/firebird/extensions.html">
