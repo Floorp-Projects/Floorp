@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  accessibility \
 		  webbrwsr \
-		  plugin \
 		  $(NULL)
 
 CPPSRCS		= \
