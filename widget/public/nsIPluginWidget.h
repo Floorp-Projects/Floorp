@@ -53,7 +53,7 @@ class NS_NO_VTABLE nsIPluginWidget : public nsISupports
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGINWIDGET_IID)
 
-  NS_IMETHOD GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin) = 0;
+  NS_IMETHOD GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible) = 0;
 
   NS_IMETHOD StartDrawPlugin(void) = 0;
 

@@ -38,6 +38,7 @@
 #define Window_h__
 
 #include "nsISupports.h"
+#include "nsIPluginWidget.h"
 #include "nsBaseWidget.h"
 #include "nsDeleteObserver.h"
 
@@ -80,17 +81,20 @@ typedef struct TRectArray
 //
 //-------------------------------------------------------------------------
 
-class nsWindow : public nsBaseWidget, public nsDeleteObserved, public nsIKBStateControl
+class nsWindow :    public nsBaseWidget,
+                    public nsDeleteObserved,
+                    public nsIKBStateControl,
+                    public nsIPluginWidget
 {
 private:
-	typedef nsBaseWidget Inherited;
+  typedef nsBaseWidget Inherited;
 
 public:
                             nsWindow();
     virtual                 ~nsWindow();
-		
-		NS_DECL_ISUPPORTS_INHERITED
-		
+    
+    NS_DECL_ISUPPORTS_INHERITED
+    
     // nsIWidget interface
     NS_IMETHOD              Create(nsIWidget *aParent,
                                    const nsRect &aRect,
@@ -111,16 +115,16 @@ public:
      // Create(nsNativeWidget...)
 
     virtual nsresult        StandardCreate(nsIWidget *aParent,
-		                            const nsRect &aRect,
-		                            EVENT_CALLBACK aHandleEventFunction,
-		                            nsIDeviceContext *aContext,
-		                            nsIAppShell *aAppShell,
-		                            nsIToolkit *aToolkit,
-		                            nsWidgetInitData *aInitData,
-		                            nsNativeWidget aNativeParent = nsnull);
+                                const nsRect &aRect,
+                                EVENT_CALLBACK aHandleEventFunction,
+                                nsIDeviceContext *aContext,
+                                nsIAppShell *aAppShell,
+                                nsIToolkit *aToolkit,
+                                nsWidgetInitData *aInitData,
+                                nsNativeWidget aNativeParent = nsnull);
 
-    NS_IMETHOD            	Destroy();
-    virtual nsIWidget*    	GetParent(void);
+    NS_IMETHOD              Destroy();
+    virtual nsIWidget*      GetParent(void);
 
     NS_IMETHOD              Show(PRBool aState);
     NS_IMETHOD              IsVisible(PRBool & aState);
@@ -130,114 +134,119 @@ public:
 
     NS_IMETHOD                  ConstrainPosition(PRBool aAllowSlop,
                                                   PRInt32 *aX, PRInt32 *aY);
-    NS_IMETHOD            	Move(PRInt32 aX, PRInt32 aY);
-    NS_IMETHOD            	Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
-    NS_IMETHOD            	Resize(PRInt32 aX, PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
+    NS_IMETHOD              Move(PRInt32 aX, PRInt32 aY);
+    NS_IMETHOD              Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
+    NS_IMETHOD              Resize(PRInt32 aX, PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
 
-    NS_IMETHOD            	Enable(PRBool aState);
-    NS_IMETHOD            	IsEnabled(PRBool *aState);
-    NS_IMETHOD            	SetFocus(PRBool aRaise);
+    NS_IMETHOD              Enable(PRBool aState);
+    NS_IMETHOD              IsEnabled(PRBool *aState);
+    NS_IMETHOD              SetFocus(PRBool aRaise);
     NS_IMETHOD              SetBounds(const nsRect &aRect);
-    NS_IMETHOD            	GetBounds(nsRect &aRect);
+    NS_IMETHOD              GetBounds(nsRect &aRect);
 
     virtual nsIFontMetrics* GetFont(void);
-    NS_IMETHOD            	SetFont(const nsFont &aFont);
+    NS_IMETHOD              SetFont(const nsFont &aFont);
     NS_IMETHOD              Validate();
-    NS_IMETHOD            	Invalidate(PRBool aIsSynchronous);
-    NS_IMETHOD				Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
-    NS_IMETHOD				InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
+    NS_IMETHOD              Invalidate(PRBool aIsSynchronous);
+    NS_IMETHOD              Invalidate(const nsRect &aRect,PRBool aIsSynchronous);
+    NS_IMETHOD              InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSynchronous);
 
     virtual void*           GetNativeData(PRUint32 aDataType);
-    NS_IMETHOD            	SetColorMap(nsColorMap *aColorMap);
-    NS_IMETHOD            	Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
-    NS_IMETHOD            	WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
-    NS_IMETHOD            	ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
-    NS_IMETHOD            	BeginResizingChildren(void);
-    NS_IMETHOD            	EndResizingChildren(void);
+    NS_IMETHOD              SetColorMap(nsColorMap *aColorMap);
+    NS_IMETHOD              Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
+    NS_IMETHOD              WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect);
+    NS_IMETHOD              ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect);
+    NS_IMETHOD              BeginResizingChildren(void);
+    NS_IMETHOD              EndResizingChildren(void);
 
     static  PRBool          ConvertStatus(nsEventStatus aStatus);
-    NS_IMETHOD          	DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+    NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
     virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
 
-    virtual void         	StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
-    virtual void         	EndDraw();
-    NS_IMETHOD				Update();
-    virtual void			UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
+    virtual void          StartDraw(nsIRenderingContext* aRenderingContext = nsnull);
+    virtual void          EndDraw();
+    NS_IMETHOD            Update();
+    virtual void          UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
     
-    virtual void			ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
-    void					LocalToWindowCoordinate(nsPoint& aPoint)						{ ConvertToDeviceCoordinates(aPoint.x, aPoint.y); }
-    void					LocalToWindowCoordinate(nscoord& aX, nscoord& aY)				{ ConvertToDeviceCoordinates(aX, aY); }
-    void					LocalToWindowCoordinate(nsRect& aRect)							{ ConvertToDeviceCoordinates(aRect.x, aRect.y); }
+    virtual void          ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
+    void                  LocalToWindowCoordinate(nsPoint& aPoint)            { ConvertToDeviceCoordinates(aPoint.x, aPoint.y); }
+    void                  LocalToWindowCoordinate(nscoord& aX, nscoord& aY)       { ConvertToDeviceCoordinates(aX, aY); }
+    void                  LocalToWindowCoordinate(nsRect& aRect)              { ConvertToDeviceCoordinates(aRect.x, aRect.y); }
 
-    NS_IMETHOD				SetMenuBar(nsIMenuBar * aMenuBar);
-    NS_IMETHOD				ShowMenuBar(PRBool aShow);
-    virtual nsIMenuBar*		GetMenuBar();
-    NS_IMETHOD 				GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
-    NS_IMETHOD 				SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
+    NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar);
+    NS_IMETHOD            ShowMenuBar(PRBool aShow);
+    virtual nsIMenuBar*   GetMenuBar();
+    NS_IMETHOD        GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
+    NS_IMETHOD        SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
     
-    NS_IMETHOD  			SetCursor(nsCursor aCursor);
+    NS_IMETHOD        SetCursor(nsCursor aCursor);
     
-    NS_IMETHOD				CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
-    NS_IMETHOD				SetTitle(const nsString& title);
+    NS_IMETHOD        CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
+    NS_IMETHOD        SetTitle(const nsString& title);
   
-    NS_IMETHOD				GetAttention();
+    NS_IMETHOD        GetAttention();
 
     // Mac specific methods
-    void 					nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const;
-    PRBool 					RgnIntersects(RgnHandle aTheRegion,RgnHandle aIntersectRgn);
-    virtual void			CalcWindowRegions();
+    static void         nsRectToMacRect(const nsRect& aRect, Rect& aMacRect);
+    PRBool              RgnIntersects(RgnHandle aTheRegion,RgnHandle aIntersectRgn);
+    virtual void        CalcWindowRegions();
 
-    virtual PRBool 			PointInWidget(Point aThePoint);
-    virtual nsWindow*		FindWidgetHit(Point aThePoint);
+    virtual PRBool      PointInWidget(Point aThePoint);
+    virtual nsWindow*   FindWidgetHit(Point aThePoint);
 
-    virtual PRBool			DispatchWindowEvent(nsGUIEvent& event);
-    virtual PRBool			DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus);
-  	virtual nsresult		HandleUpdateEvent(RgnHandle regionToValidate);
-  	virtual void			AcceptFocusOnClick(PRBool aBool) { mAcceptFocusOnClick = aBool;};
-  	PRBool					AcceptFocusOnClick() { return mAcceptFocusOnClick;};
-    void 					Flash(nsPaintEvent	&aEvent);
+    virtual PRBool      DispatchWindowEvent(nsGUIEvent& event);
+    virtual PRBool      DispatchWindowEvent(nsGUIEvent &event,nsEventStatus &aStatus);
+    virtual nsresult    HandleUpdateEvent(RgnHandle regionToValidate);
+    virtual void        AcceptFocusOnClick(PRBool aBool) { mAcceptFocusOnClick = aBool;};
+    PRBool              AcceptFocusOnClick() { return mAcceptFocusOnClick;};
+    void                Flash(nsPaintEvent  &aEvent);
 
-public:
-  	// nsIKBStateControl interface
-  	NS_IMETHOD ResetInputState();
+    // nsIPluginWidget interface
+
+    NS_IMETHOD              GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible);
+    NS_IMETHOD              StartDrawPlugin(void);
+    NS_IMETHOD              EndDrawPlugin(void);
+
+    // nsIKBStateControl interface
+    NS_IMETHOD ResetInputState();
 
 protected:
 
-	PRBool					ReportDestroyEvent();
-	PRBool					ReportMoveEvent();
-	PRBool					ReportSizeEvent();
+  PRBool          ReportDestroyEvent();
+  PRBool          ReportMoveEvent();
+  PRBool          ReportSizeEvent();
 
-	void    				CalcOffset(PRInt32 &aX,PRInt32 &aY);
+  void            CalcOffset(PRInt32 &aX,PRInt32 &aY);
   PRBool          ContainerHierarchyIsVisible();
   
-	virtual PRBool			OnPaint(nsPaintEvent & aEvent);
+  virtual PRBool      OnPaint(nsPaintEvent & aEvent);
 
-	// our own impl of ::ScrollRect() that uses CopyBits so that it looks good. On 
-	// Carbon, this just calls ::ScrollWindowRect()
-	void					ScrollBits ( Rect & foo, PRInt32 inLeftDelta, PRInt32 inTopDelta ) ;
+  // our own impl of ::ScrollRect() that uses CopyBits so that it looks good. On 
+  // Carbon, this just calls ::ScrollWindowRect()
+  void          ScrollBits ( Rect & foo, PRInt32 inLeftDelta, PRInt32 inTopDelta ) ;
 
   void          CombineRects ( TRectArray & inRectArray ) ;
   void          SortRectsLeftToRight ( TRectArray & inRectArray ) ;
 
 protected:
 #if DEBUG
-	const char*				gInstanceClassName;
+  const char*       gInstanceClassName;
 #endif
 
-	nsIWidget*				mParent;
+  nsIWidget*        mParent;
   PRPackedBool      mIsTopWidgetWindow;
   PRPackedBool      mResizingChildren;
   PRPackedBool      mSaveVisible;
   PRPackedBool      mVisible;
   PRPackedBool      mEnabled;
-	PRInt32					mPreferredWidth;
-	PRInt32					mPreferredHeight;
-	nsIFontMetrics*			mFontMetrics;
-	nsIMenuBar* 			mMenuBar;
+  PRInt32           mPreferredWidth;
+  PRInt32           mPreferredHeight;
+  nsIFontMetrics*   mFontMetrics;
+  nsIMenuBar*       mMenuBar;
 
-	RgnHandle				mWindowRegion;
-	RgnHandle				mVisRegion;
-	WindowPtr				mWindowPtr;
+  RgnHandle         mWindowRegion;
+  RgnHandle         mVisRegion;
+  WindowPtr         mWindowPtr;
 
   PRPackedBool      mDestroyCalled;
   PRPackedBool      mDestructorCalled;
@@ -247,11 +256,11 @@ protected:
   PRPackedBool      mDrawing;
   PRPackedBool      mTempRenderingContextMadeHere;
 
-	nsIRenderingContext*  	mTempRenderingContext;
-  	
-	nsPluginPort*			mPluginPort;
+  nsIRenderingContext*    mTempRenderingContext;
+    
+  nsPluginPort*     mPluginPort;
 
-	
+  
   // Routines for iterating over the rects of a region. Carbon and pre-Carbon
   // do this differently so provide a way to do both.
 #if TARGET_CARBON
@@ -263,7 +272,7 @@ protected:
   static void PaintUpdateRect (Rect * r, void* data) ;
   static void AddRectToArray (Rect * r, void* data) ;
   static void CountRect (Rect * r, void* data) ;
-	
+  
 };
 
 
@@ -285,7 +294,7 @@ protected:
 
 #include "nsChildWindow.h"
 
-#define ChildWindow 	nsChildWindow
+#define ChildWindow   nsChildWindow
 
 
 

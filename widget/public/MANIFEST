@@ -25,3 +25,4 @@ nsIPopUpMenu.h
 nsStringUtil.h
 nsWidgetAtoms.h
 nsWidgetAtomList.h
+nsIPluginWidget.h
