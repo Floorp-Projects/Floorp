@@ -7,13 +7,14 @@
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    align="vertical" flex="100%">
+    align="vertical">
 
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
   </script>
   <script language="JavaScript" src="chrome://editordlgs/content/EdHLineProps.js">
   </script>
+
   <table width="100%">
     <tr>
       <td colspan="2">
@@ -56,22 +57,17 @@
         <label><input type="checkbox" id="3dShading"/>3-D Shading</label>
       </td>
       <td align="right">
-        <button class="spaced" id="SaveDefault" onclick="onSaveDefault()">Save settings</button>
+        <xul:titledbutton class="spaced" id="SaveDefault" onclick="onSaveDefault()" value="Save settings"/>
       </td>
     </tr>
   </table>
   <hr width="100%"/>
-  <table width="100%">
-    <tr>
-      <td>
-        <button class="spaced" id="Advanced" onclick="onAdvanced()">More Attributes...</button>
-      </td>
-      <td align="right">
-        <button class="spaced" id="OK" onclick="onOK()">OK</button>  
-        <button class="spaced" id="Cancel" onclick="onCancel()">Cancel</button>
-      </td>
-    </tr>
-  </table>
+  <xul:box>
+    <xul:titledbutton class="spaced" id="Advanced" onclick="onAdvanced()" value="More Attributes..."/>
+    <xul:spring flex="100%"/>    
+    <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="OK"/>  
+    <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="Cancel"/>
+  </xul:box>
 
 <xul:popup id="PixelOrPercentMenu">
   <xul:menu>

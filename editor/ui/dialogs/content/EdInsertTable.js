@@ -59,14 +59,12 @@ function onOK()
   for (i = 0; i < rows; i++)
   {
     newRow = editorShell.CreateElementWithDefaults("tr");
-    dump("New row "+i+": "+newRow+"\n");
     if (newRow)
     {
       tableElement.appendChild(newRow);
       for (j = 0; j < columns; j++)
       {
         newCell = editorShell.CreateElementWithDefaults("td");
-        dump("New cell "+j+": "+newCell+"\n");
         if (newCell)
         {
           newRow.appendChild(newCell);
