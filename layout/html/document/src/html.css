@@ -151,12 +151,6 @@ table {
   margin-bottom: 0;
   box-sizing: border-box;
 }
-table[align=left] {
-  margin-right: 4px;
-}
-table[align=right] {
-  margin-left: 4px;
-}
 
 /* must never set padding in td, th */
 td, th {
@@ -416,13 +410,6 @@ br {
 }
 img {
   display: inline;
-}
-/* note: not exactly 4.x compatible; 4.x has 3px for *both* margins */
-img[align=left] {
-  margin-right: 4px;
-}
-img[align=right] {
-  margin-left: 4px;
 }
 :link img, :visited img, :out-of-date img,
 :link:active img, :visited:active img, :out-of-date:active img,
