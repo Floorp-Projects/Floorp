@@ -56,7 +56,7 @@ nsINIParser::nsINIParser(char *aFilename)
         goto bail;
 
     /* malloc an internal buf the size of the file */
-    mFileBuf = (char *) malloc(eofpos * sizeof(char));
+    mFileBuf = (char *) malloc((eofpos+1) * sizeof(char));
     if (!mFileBuf)
     {
         mError = E_MEM;
@@ -70,6 +70,7 @@ nsINIParser::nsINIParser(char *aFilename)
     rd = fread((void *)mFileBuf, 1, eofpos, fd);
     if (!rd)
         goto bail;
+    mFileBuf[mFileBufSize] = '\0';
 
     /* close file */
     fclose(fd);
