@@ -19,6 +19,7 @@
 #include "nsClipboard.h"
 #include <windows.h>
 #include <OLE2.h>
+#include <SHLOBJ.H>
 
 #include "nsCOMPtr.h"
 #include "nsDataObj.h"
@@ -34,6 +35,9 @@
 #include "nsWidgetsCID.h"
 
 #include "DDCOMM.h"
+
+#include "nsVoidArray.h"
+#include "nsFileSpec.h"
 
 // interface definitions
 static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
@@ -384,6 +388,31 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
             case CF_DIB :
               {
                 printf("************** DIB was dropped!\n");
+              } break;
+
+            case CF_HDROP : 
+              {
+                LPDROPFILES dropFiles = (LPDROPFILES)(*aData);
+
+                char fileName[1024];
+                UINT numFiles = DragQueryFile(dropFiles, 0xFFFFFFFF, NULL, 0);
+                if (numFiles > 0) {
+                  nsVoidArray * fileList = new nsVoidArray();
+                  for (UINT i=0;i<numFiles;i++) {
+                    UINT bytesCopied = ::DragQueryFile(dropFiles, i, fileName, 1024);
+                    //nsAutoString name((char *)fileName, bytesCopied-1);
+                    nsString name = fileName;
+                    printf("name [%s]\n", name.ToNewCString());
+                    nsFilePath filePath(name);
+                    nsFileSpec * fileSpec = new nsFileSpec(filePath);
+                    fileList->AppendElement(fileSpec);
+                  }
+                  *aLen  = (PRUint32)numFiles;
+                  *aData = fileList;
+                } else {
+                  *aData = nsnull;
+                  *aLen = 0;
+                }
               } break;
 
             default:
