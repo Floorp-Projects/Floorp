@@ -46,14 +46,10 @@ CSRCS		= swfalg.c  \
 		  $(NULL)
 DIRS = pkcs11
 
-vpath %.c $(OBJDIR)
+VPATH = $(OBJDIR)
 
 
 EXPORTS		= swfort.h swfortt.h
 PRIVATE_EXPORTS = swforti.h swfortti.h
 
 REQUIRES	= security dbm nspr
-
-GARBAGE = nslib.c
-
-
