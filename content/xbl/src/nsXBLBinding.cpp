@@ -653,7 +653,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
         PRUint32 argCount = 0;
         PRInt32 kidCount;
         child->ChildCount(kidCount);
-        for (PRInt32 j = 0; j < kidCount; i++)
+        for (PRInt32 j = 0; j < kidCount; j++)
         {
           nsCOMPtr<nsIContent> arg;
           child->ChildAt(j, *getter_AddRefs(arg));
@@ -776,7 +776,7 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
 
             if (!answer.IsEmpty()) {
               // Evaluate our script and obtain a value.
-              jsval* result;
+              jsval* result = nsnull;
               PRBool undefined;
               rv = context->EvaluateStringWithValue(answer, 
                                            scopeObject,
