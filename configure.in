@@ -2977,6 +2977,22 @@ fi
 AC_SUBST(MOZ_ENABLE_FREETYPE2)
 
 dnl ========================================================
+dnl = Xft
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(xft,
+[  --enable-xft                Enable Xft support ],
+    MOZ_ENABLE_XFT=1
+    MOZ_XFT_CFLAGS="$X_CFLAGS -I${x_includes}/X11/extensions"
+dnl    MOZ_XFT_CFLAGS="$X_CFLAGS"
+    MOZ_XFT_LIBS="$X_LIBS"
+    AC_DEFINE(MOZ_ENABLE_XFT)
+)
+
+AC_SUBST(MOZ_ENABLE_XFT)
+AC_SUBST(MOZ_XFT_CFLAGS)
+AC_SUBST(MOZ_XFT_LIBS)
+
+dnl ========================================================
 dnl = PostScript print module
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(postscript,
@@ -4593,4 +4609,10 @@ if test "$MOZ_LDAP_XPCOM"; then
         ac_configure_args="$ac_configure_args --enable-64bit"
     fi
   AC_OUTPUT_SUBDIRS(directory/c-sdk/ldap)
+fi
+
+# if we're building Xft, we need our private copy of freetype
+if test "$MOZ_ENABLE_XFT"; then
+  AC_OUTPUT_SUBDIRS(other-licenses/freetype)
+  AC_OUTPUT_SUBDIRS(other-licenses/expat)
 fi
