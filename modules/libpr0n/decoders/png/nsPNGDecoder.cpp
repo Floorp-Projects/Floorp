@@ -537,5 +537,9 @@ end_callback(png_structp png_ptr, png_infop info_ptr)
     decoder->mObserver->OnStopContainer(nsnull, nsnull, decoder->mImage);
     decoder->mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
   }
+
+  // We are never going to change the data of this frame again.  Let the OS
+  // do what it wants with this image.
+  decoder->mFrame->SetMutable(PR_FALSE);
 }
 

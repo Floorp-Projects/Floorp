@@ -866,5 +866,5 @@ term_source (j_decompress_ptr jd)
     src->decoder->mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
   }
 
-    /* No work necessary here */
+  src->decoder->mFrame->SetMutable(PR_FALSE);
 }
