@@ -2992,17 +2992,20 @@ NS_IMETHODIMP nsMsgAccountManager::SaveVirtualFolders()
             nsCOMPtr <nsIMsgDatabase> db;
             nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
             rv = msgFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(db)); // force db to get created.
-            nsXPIDLCString srchFolderUri;
-            nsXPIDLCString searchTerms; 
-            PRBool searchOnline = PR_FALSE;
-            dbFolderInfo->GetBooleanProperty("searchOnline", PR_FALSE, &searchOnline);
-            dbFolderInfo->GetCharPtrProperty("searchFolderUri", getter_Copies(srchFolderUri));
-            dbFolderInfo->GetCharPtrProperty("searchStr", getter_Copies(searchTerms));
-            folderRes->GetValueConst(&uri);
-            WriteLineToOutputStream("uri=", uri, outputStream);
-            WriteLineToOutputStream("scope=", srchFolderUri.get(), outputStream);
-            WriteLineToOutputStream("terms=", searchTerms.get(), outputStream);
-            WriteLineToOutputStream("searchOnline=", searchOnline ? "true" : "false", outputStream);
+            if (dbFolderInfo)
+            {
+              nsXPIDLCString srchFolderUri;
+              nsXPIDLCString searchTerms; 
+              PRBool searchOnline = PR_FALSE;
+              dbFolderInfo->GetBooleanProperty("searchOnline", PR_FALSE, &searchOnline);
+              dbFolderInfo->GetCharPtrProperty("searchFolderUri", getter_Copies(srchFolderUri));
+              dbFolderInfo->GetCharPtrProperty("searchStr", getter_Copies(searchTerms));
+              folderRes->GetValueConst(&uri);
+              WriteLineToOutputStream("uri=", uri, outputStream);
+              WriteLineToOutputStream("scope=", srchFolderUri.get(), outputStream);
+              WriteLineToOutputStream("terms=", searchTerms.get(), outputStream);
+              WriteLineToOutputStream("searchOnline=", searchOnline ? "true" : "false", outputStream);
+            }
           }
         }
       }
