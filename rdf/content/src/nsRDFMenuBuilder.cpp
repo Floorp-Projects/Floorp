@@ -238,10 +238,10 @@ RDFMenuBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     // Create the <xul:menuitem> element
     nsCOMPtr<nsIContent> menuItem;
-    if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_XUL,
-                                             itemAtom,
-                                             aValue,
-                                             getter_AddRefs(menuItem))))
+    if (NS_FAILED(rv = CreateElement(kNameSpaceID_XUL,
+                                     itemAtom,
+                                     aValue,
+                                     getter_AddRefs(menuItem))))
         return rv;
 
     // Add the new menu item to the <xul:menu> element.

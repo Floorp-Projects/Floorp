@@ -1107,10 +1107,10 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     // Create the <xul:treeitem> element
     nsCOMPtr<nsIContent> treeItem;
-    if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_XUL,
-                                             kTreeItemAtom,
-                                             aValue,
-                                             getter_AddRefs(treeItem))))
+    if (NS_FAILED(rv = CreateElement(kNameSpaceID_XUL,
+                                     kTreeItemAtom,
+                                     aValue,
+                                     getter_AddRefs(treeItem))))
         return rv;
 
     // Set the rdf:property attribute to be the arc label from the

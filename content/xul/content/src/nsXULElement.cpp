@@ -266,6 +266,8 @@ public:
 
     nsresult ExecuteOnChangeHandler(nsIDOMElement* anElement, const nsString& attrName);
 
+    PRBool ElementIsInDocument();
+
     static nsresult
     ExecuteJSCode(nsIDOMElement* anElement);
 
@@ -297,20 +299,20 @@ private:
     static nsIAtom*             kTooltipAtom;
     static nsIAtom*             kContextAtom;
 
-    nsIDocument*      mDocument;
-    void*             mScriptObject;
-    nsISupportsArray* mChildren;
-    nsIContent*       mParent;
-    nsINameSpace*     mNameSpace;
-    nsIAtom*          mNameSpacePrefix;
-    PRInt32           mNameSpaceID;
-    nsIAtom*          mTag;
-    nsIEventListenerManager* mListenerManager;
-    nsXULAttributes*  mAttributes;
-    PRBool            mContentsMustBeGenerated;
-    nsVoidArray*		  mBroadcastListeners;
-    nsIDOMXULElement* mBroadcaster;
-    nsXULElement*     mInnerXULElement;
+    nsIDocument*           mDocument;           // [WEAK]
+    void*                  mScriptObject;       // [OWNER]
+    nsISupportsArray*      mChildren;           // [OWNER]
+    nsIContent*            mParent;             // [WEAK]
+    nsCOMPtr<nsINameSpace> mNameSpace;          // [OWNER]
+    nsCOMPtr<nsIAtom>      mNameSpacePrefix;    // [OWNER]
+    PRInt32                mNameSpaceID;
+    nsIAtom*               mTag;                // [OWNER]
+    nsIEventListenerManager* mListenerManager;  // [OWNER]
+    nsXULAttributes*       mAttributes;         // [OWNER]
+    PRBool                 mContentsMustBeGenerated;
+    nsVoidArray*		   mBroadcastListeners; // [WEAK]
+    nsIDOMXULElement*      mBroadcaster;        // [OWNER]
+    nsXULElement*          mInnerXULElement;    // [OWNER]
 
 };
 
@@ -337,8 +339,6 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mScriptObject(nsnull),
       mChildren(nsnull),
       mParent(nsnull),
-      mNameSpace(nsnull),
-      mNameSpacePrefix(nsnull),
       mNameSpaceID(aNameSpaceID),
       mTag(aTag),
       mListenerManager(nsnull),
@@ -1022,13 +1022,7 @@ RDFElementImpl::Normalize()
 NS_IMETHODIMP
 RDFElementImpl::SetContainingNameSpace(nsINameSpace* aNameSpace)
 {
-    NS_PRECONDITION(aNameSpace != nsnull, "null ptr");
-    if (! aNameSpace)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_IF_RELEASE(mNameSpace);
-    mNameSpace = aNameSpace;
-    NS_ADDREF(mNameSpace);
+    mNameSpace = dont_QueryInterface(aNameSpace);
     return NS_OK;
 }
 
@@ -1039,8 +1033,8 @@ RDFElementImpl::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
 
     if (mNameSpace) {
         // If we have a namespace, return it.
-        NS_ADDREF(mNameSpace);
         aNameSpace = mNameSpace;
+        NS_ADDREF(aNameSpace);
         return NS_OK;
     }
 
@@ -1079,9 +1073,7 @@ RDFElementImpl::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
 NS_IMETHODIMP
 RDFElementImpl::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
 {
-    NS_IF_RELEASE(mNameSpacePrefix);
     mNameSpacePrefix = aNameSpacePrefix;
-    NS_IF_ADDREF(mNameSpacePrefix);
     return NS_OK;
 }
 
@@ -1522,17 +1514,22 @@ RDFElementImpl::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    // Make sure that we're not trying to insert the same child
+    // twice. If we do, the DOM APIs (e.g., GetNextSibling()), will
+    // freak out.
+    PRInt32 index = mChildren->IndexOf(aKid);
+    NS_ASSERTION(index < 0, "element is already a child");
+    if (index >= 0)
+        return NS_ERROR_FAILURE;
+
     PRBool insertOk = mChildren->InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
     if (insertOk) {
         NS_ADDREF(aKid);
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildInserted(this, aIndex);
-        nsIDocument* doc = mDocument;
-        if (nsnull != doc) {
-            aKid->SetDocument(doc, PR_TRUE);
-            if (aNotify) {
-                doc->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, aIndex);
-            }
+        aKid->SetDocument(mDocument, PR_TRUE);
+        if (aNotify && ElementIsInDocument()) {
+                mDocument->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, aIndex);
         }
     }
     return NS_OK;
@@ -1554,17 +1551,25 @@ RDFElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
         return NS_ERROR_NULL_POINTER;
 
     nsIContent* oldKid = (nsIContent *)mChildren->ElementAt(aIndex);
+    if (oldKid == aKid)
+        return NS_OK;
+
+    // Make sure that we're not trying to insert the same child
+    // twice. If we do, the DOM APIs (e.g., GetNextSibling()), will
+    // freak out.
+    PRInt32 index = mChildren->IndexOf(aKid);
+    NS_ASSERTION(index < 0, "element is already a child");
+    if (index >= 0)
+        return NS_ERROR_FAILURE;
+
     PRBool replaceOk = mChildren->ReplaceElementAt(aKid, aIndex);
     if (replaceOk) {
         NS_ADDREF(aKid);
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         //nsRange::OwnerChildReplaced(this, aIndex, oldKid);
-        nsIDocument* doc = mDocument;
-        if (nsnull != doc) {
-            aKid->SetDocument(doc, PR_TRUE);
-            if (aNotify) {
-                doc->ContentReplaced(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aKid, aIndex);
-            }
+        aKid->SetDocument(mDocument, PR_TRUE);
+        if (aNotify && ElementIsInDocument()) {
+            mDocument->ContentReplaced(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aKid, aIndex);
         }
         oldKid->SetDocument(nsnull, PR_TRUE);
         oldKid->SetParent(nsnull);
@@ -1587,20 +1592,30 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    // Make sure that we're not trying to insert the same child
+    // twice. If we do, the DOM APIs (e.g., GetNextSibling()), will
+    // freak out.
+    PRInt32 index = mChildren->IndexOf(aKid);
+    NS_ASSERTION(index < 0, "element is already a child");
+    if (index >= 0)
+        return NS_ERROR_FAILURE;
+
     PRBool appendOk = mChildren->AppendElement(aKid);
     if (appendOk) {
         NS_ADDREF(aKid);
         aKid->SetParent(NS_STATIC_CAST(nsIStyledContent*, this));
         // ranges don't need adjustment since new child is at end of list
-        nsIDocument* doc = mDocument;
-        if (nsnull != doc) {
-            aKid->SetDocument(doc, PR_TRUE);
-            if (aNotify) {
-                PRUint32 cnt;
-                nsresult rv = mChildren->Count(&cnt);
-                if (NS_FAILED(rv)) return rv;
-                doc->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, cnt - 1);
-            }
+        aKid->SetDocument(mDocument, PR_TRUE);
+        if (aNotify && ElementIsInDocument()) {
+            PRUint32 cnt;
+            nsresult rv = mChildren->Count(&cnt);
+            if (NS_FAILED(rv)) return rv;
+#if 0
+            // XXX Can't do this because of the tree frame trickery, I think.
+            mDocument->ContentAppended(NS_STATIC_CAST(nsIStyledContent*, this), cnt - 1);
+#else
+            mDocument->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, cnt - 1);
+#endif
         }
     }
     return NS_OK;
@@ -1618,14 +1633,12 @@ RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         return NS_ERROR_ILLEGAL_VALUE;
 
     nsIContent* oldKid = (nsIContent *)mChildren->ElementAt(aIndex);
-    if (nsnull != oldKid ) {
+    if (oldKid) {
         nsIDocument* doc = mDocument;
         PRBool removeOk = mChildren->RemoveElementAt(aIndex);
         //nsRange::OwnerChildRemoved(this, aIndex, oldKid);
-        if (aNotify && removeOk) {
-            if (nsnull != doc) {
-                doc->ContentRemoved(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aIndex);
-            }
+        if (aNotify && removeOk && ElementIsInDocument()) {
+            doc->ContentRemoved(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aIndex);
         }
         oldKid->SetDocument(nsnull, PR_TRUE);
         oldKid->SetParent(nsnull);
@@ -1873,7 +1886,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         }
     }
 
-    if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
+    if (NS_SUCCEEDED(rv) && aNotify && ElementIsInDocument()) {
         mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this), aName, NS_STYLE_HINT_UNKNOWN);
     }
 
@@ -2468,7 +2481,7 @@ RDFElementImpl::EnsureContentsGenerated(void) const
     return rv;
 }
 
-
+    
 nsresult
 RDFElementImpl::ExecuteOnChangeHandler(nsIDOMElement* anElement, const nsString& attrName)
 {
@@ -2509,6 +2522,37 @@ RDFElementImpl::ExecuteOnChangeHandler(nsIDOMElement* anElement, const nsString&
     }
 
     return NS_OK;
+}
+
+
+PRBool
+RDFElementImpl::ElementIsInDocument()
+{
+    // Check to see if the element is really _in_ the document; that
+    // is, that it actually is in the tree rooted at the document's
+    // root content.
+    if (! mDocument)
+        return PR_FALSE;
+
+    nsresult rv;
+
+    nsCOMPtr<nsIContent> root = dont_QueryInterface( mDocument->GetRootContent() );
+    if (! root)
+        return PR_FALSE;
+
+    nsCOMPtr<nsIContent> node =
+        do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this));
+
+    while (node) {
+        if (node == root)
+            return PR_TRUE;
+
+        nsCOMPtr<nsIContent> oldNode = node;
+        rv = oldNode->GetParent(*getter_AddRefs(node));
+        if (NS_FAILED(rv)) return PR_FALSE;
+    }
+
+    return PR_FALSE;
 }
 
 nsresult
