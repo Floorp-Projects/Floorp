@@ -3312,7 +3312,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 //-------------------------------------------------------------------------
 LPCTSTR nsWindow::WindowClass()
 {
-    const LPCTSTR className = "NetscapeWindowClass";
+    const LPCTSTR className = "MozillaWindowClass";
 
     if (!nsWindow::sIsRegistered) {
         WNDCLASS wc;
