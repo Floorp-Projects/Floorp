@@ -50,7 +50,7 @@ public:
                                   nscoord      aDeltaWidth,
                                   nscoord      aDeltaHeight,
                                   AffectedEdge aEdge);
-  virtual PRBool OffsetRegion(nsIFrame* aFrame, nscoord dx, nscoord dy);
+  virtual PRBool OffsetRegion(nsIFrame* aFrame, nscoord aDx, nscoord aDy);
   virtual PRBool RemoveRegion(nsIFrame* aFrame);
 
   virtual void   ClearRegions();
@@ -83,14 +83,25 @@ protected:
              nsVoidArray*);
     ~BandRect();
 
+    // List operations
+    BandRect* Next() const {return (BandRect*)PR_NEXT_LINK(this);}
+    BandRect* Prev() const {return (BandRect*)PR_PREV_LINK(this);}
+    void      InsertBefore(BandRect* aBandRect) {PR_INSERT_BEFORE(aBandRect, this);}
+    void      InsertAfter(BandRect* aBandRect) {PR_INSERT_AFTER(aBandRect, this);}
+    void      Remove() {PR_REMOVE_LINK(this);}
+
     // Split the band rect into two vertically, with this band rect becoming
     // the top part, and a new band rect being allocated and returned for the
     // bottom part
+    //
+    // Does not insert the new band rect into the linked list
     BandRect* SplitVertically(nscoord aBottom);
 
     // Split the band rect into two horizontally, with this band rect becoming
     // the left part, and a new band rect being allocated and returned for the
     // right part
+    //
+    // Does not insert the new band rect into the linked list
     BandRect* SplitHorizontally(nscoord aRight);
 
     // Accessor functions
@@ -100,9 +111,25 @@ protected:
     PRBool  HasSameFrameList(const BandRect* aBandRect) const;
   };
 
+  // Circular linked list of band rects
+  struct BandList : BandRect {
+    BandList();
+
+    // Accessors
+    PRBool    IsEmpty() const {return PR_CLIST_IS_EMPTY((PRCListStr*)this);}
+    BandRect* Head() const {return (BandRect*)PR_LIST_HEAD(this);}
+    BandRect* Tail() const {return (BandRect*)PR_LIST_TAIL(this);}
+
+    // Operations
+    void      Append(BandRect* aBandRect) {PR_APPEND_LINK(aBandRect, this);}
+
+    // Remove and delete all the band rects in the list
+    void      Clear();
+  };
+
   nsIFrame* const mFrame;     // frame associated with the space manager
   nscoord         mX, mY;     // translation from local to global coordinate space
-  PRCListStr      mBandList;
+  BandList        mBandList;  // header for circular linked list of band rects
   PLHashTable*    mFrameInfoMap;
 
 protected:
@@ -115,6 +142,7 @@ protected:
 
   BandRect*  GetNextBand(const BandRect* aBandRect) const;
   void       DivideBand(BandRect* aBand, nscoord aBottom);
+  PRBool     CanJoinBands(BandRect* aBand, BandRect* aPrevBand);
   PRBool     JoinBands(BandRect* aBand, BandRect* aPrevBand);
   void       AddRectToBand(BandRect* aBand, BandRect* aBandRect);
   void       InsertBandRect(BandRect* aBandRect);
