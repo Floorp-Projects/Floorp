@@ -355,7 +355,8 @@ GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
 {
   PRInt32 len = PL_strlen(line);
 
-  if ( (len >= 3) && (!PL_strncasecmp(line, ":-)", 3)) )
+  if ( ( (len >= 3) && (!PL_strncasecmp(line, ":-)", 3)) ) || 
+       ( (len >= 2) && (!PL_strncasecmp(line, ":)", 2)) ) )
   {
     *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/smile.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
@@ -363,7 +364,8 @@ GlyphHit(const char *line, char **outputHTML, PRInt32 *glyphTextLen)
     *glyphTextLen = 3;
     return PR_TRUE;
   }  
-  else if ( (len >= 3) && (!PL_strncasecmp(line, ":-(", 3)) )
+  else if ( ( (len >= 3) && (!PL_strncasecmp(line, ":-(", 3)) ) ||
+            ( (len >= 2) && (!PL_strncasecmp(line, ":(", 2)) ) )
   {
     *outputHTML = PL_strdup("<img SRC=\"resource:/res/mailnews/messenger/frown.gif\" height=17 width=17 align=ABSCENTER>");
     if (!(*outputHTML))
