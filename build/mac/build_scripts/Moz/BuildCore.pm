@@ -331,9 +331,9 @@ sub CheckoutModules($)
 #//--------------------------------------------------------------------------------------------------
 #// Checkout
 #//--------------------------------------------------------------------------------------------------
-sub Checkout($)
+sub Checkout($$)
 {
-    my($checkout_list) = @_;
+    my($checkout_list, $pull_date) = @_;
     
     unless ( $main::build{pull} ) { return; }
 
@@ -385,7 +385,9 @@ sub Checkout($)
         
         # strip surrounding space from date
         @cvs_co[$date] =~ s/^\s*|\s*$//g;
-        
+        if (@cvs_co[$date] eq "") {
+            @cvs_co[$date] = $pull_date;
+        }
         # print "Going to check out '@cvs_co[$module]', '@cvs_co[$revision]', '@cvs_co[$date]'\n";
         push(@cvs_co_list, \@cvs_co);
     }
@@ -444,8 +446,19 @@ sub RunBuild($$$$)
     {
         my($hours) = 8;     # update files checked in during last 8 hours
         FastUpdate($hours);
-    } else {
-        Checkout($input_files->{"checkoutdata"});
+    } else
+    {
+        my($pull_date) = "";
+        if ($main::options{pull_by_date})
+        {
+            # acceptable CVS date formats are (in local time):
+            # ISO8601 (e.g. "1972-09-24 20:05") and Internet (e.g. "24 Sep 1972 20:05").
+            # Perl's localtime() string format also seems to work.
+            $pull_date = localtime().""; # force string interp.
+            print "Pulling by date $pull_date\n";
+            
+        }
+        Checkout($input_files->{"checkoutdata"}, $pull_date);
     }
     
     unless ($do_build) { return; }
