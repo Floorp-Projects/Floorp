@@ -21,7 +21,8 @@
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 
 nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn() :
-    m_srcMsgIdString("", eOneByte), m_dstMsgIdString("", eOneByte)
+    m_srcMsgIdString("", eOneByte), m_dstMsgIdString("", eOneByte),
+    m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE)
 {
 }
 
@@ -81,17 +82,25 @@ nsImapMoveCopyMsgTxn::Undo(void)
 	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
 	if (NS_FAILED(rv)) return rv;
 	if (m_isMove)
+    {
+        nsCOMPtr<nsIUrlListener> srcListener = do_QueryInterface(m_srcFolder,
+                                                                 &rv);
 		rv = imapService->SubtractMessageFlags(m_eventQueue, m_srcFolder,
-											   m_urlListener, nsnull,
+											   srcListener, nsnull,
 											   m_srcMsgIdString.GetBuffer(),
 											   kImapMsgDeletedFlag,
 											   m_idsAreUids);
+    }
     if (m_dstKeyArray.GetSize() > 0)
+    {
+        nsCOMPtr<nsIUrlListener> dstListener = do_QueryInterface(m_dstFolder,
+                                                                 &rv);
         rv = imapService->AddMessageFlags(m_eventQueue, m_dstFolder,
-                                          m_urlListener, nsnull,
+                                          dstListener, nsnull,
                                           m_dstMsgIdString.GetBuffer(),
                                           kImapMsgDeletedFlag,
                                           m_idsAreUids);
+    }
 	return rv;
 }
 
@@ -102,17 +111,25 @@ nsImapMoveCopyMsgTxn::Redo(void)
 	NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
 	if (NS_FAILED(rv)) return rv;
 	if (m_isMove)
+    {
+        nsCOMPtr<nsIUrlListener> srcListener = do_QueryInterface(m_srcFolder,
+                                                                 &rv); 
 		rv = imapService->AddMessageFlags(m_eventQueue, m_srcFolder,
-										  m_urlListener, nsnull,
+										  srcListener, nsnull,
 										  m_srcMsgIdString.GetBuffer(),
 										  kImapMsgDeletedFlag,
 										  m_idsAreUids);
+    }
     if (m_dstKeyArray.GetSize() > 0)
+    {
+        nsCOMPtr<nsIUrlListener> dstListener = do_QueryInterface(m_dstFolder,
+                                                                 &rv); 
         rv = imapService->SubtractMessageFlags(m_eventQueue, m_dstFolder,
-                                               m_urlListener, nsnull,
+                                               dstListener, nsnull,
                                                m_dstMsgIdString.GetBuffer(),
                                                kImapMsgDeletedFlag,
                                                m_idsAreUids);
+    }
 	return rv;
 }
 
