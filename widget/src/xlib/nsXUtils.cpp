@@ -21,7 +21,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#if defined(__osf__) && defined(HAVE_USLEEP) && !defined(_XOPEN_SOURCE_EXTENDED)
+#if defined(__osf__) && !defined(_XOPEN_SOURCE_EXTENDED)
 /*
 ** DEC's compiler requires _XOPEN_SOURCE_EXTENDED to be defined in
 ** order for it to see the prototype for usleep in unistd.h, but if
@@ -52,9 +52,6 @@ nsXUtils::XFlashWindow(Display *       aDisplay,
   int          root_y;
   unsigned int i;
   XGCValues    gcv;
-#ifndef HAVE_USLEEP
-  struct timeval tv;
-#endif
   
   XGetGeometry(aDisplay,
                aWindow,
@@ -116,13 +113,7 @@ nsXUtils::XFlashWindow(Display *       aDisplay,
 	
 	XSync(aDisplay, False);
 	
-#ifdef HAVE_USLEEP
 	usleep(aInterval);
-#else
-	tv.tv_sec = aInterval / 100000;
-	tv.tv_usec = aInterval % 100000;
-	(void)select(0, NULL, NULL, NULL, &tv);
-#endif
   }
   
   

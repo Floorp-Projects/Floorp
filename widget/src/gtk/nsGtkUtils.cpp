@@ -24,11 +24,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#ifndef HAVE_USLEEP
-#include <sys/time.h>
-#endif
-
-#if defined(__osf__) && defined(HAVE_USLEEP) && !defined(_XOPEN_SOURCE_EXTENDED)
+#if defined(__osf__) && !defined(_XOPEN_SOURCE_EXTENDED)
 /*
 ** DEC's compiler requires _XOPEN_SOURCE_EXTENDED to be defined in
 ** order for it to see the prototype for usleep in unistd.h, but if
@@ -151,9 +147,6 @@ nsGtkUtils::gdk_window_flash(GdkWindow *    aGdkWindow,
   int          root_y;
   unsigned int i;
   XGCValues    gcv;
-#ifndef HAVE_USLEEP
-  struct timeval tv;
-#endif
   
   display = GDK_WINDOW_XDISPLAY(aGdkWindow);
   
@@ -219,13 +212,7 @@ nsGtkUtils::gdk_window_flash(GdkWindow *    aGdkWindow,
 	
 	XSync(display, False);
 	
-#ifdef HAVE_USLEEP
 	usleep(aInterval);
-#else
-	tv.tv_sec = aInterval / 100000;
-	tv.tv_usec = aInterval % 100000;
-	(void)select(0, NULL, NULL, NULL, &tv);
-#endif
   }
   
   
