@@ -61,7 +61,7 @@
     <description>&importFromUnix.label;</description>
 #endif
     
-    <radiogroup id="importSourceGroup">
+    <radiogroup id="importSourceGroup" align="start">
       <radio id="phoenix"   label="&importFromPhoenix.label;"   accesskey="&importFromPhoenix.accesskey;" hidden="true"/>
 #ifdef XP_UNIX
 #ifdef XP_MACOSX
