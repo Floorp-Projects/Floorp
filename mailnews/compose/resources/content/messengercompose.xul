@@ -360,18 +360,13 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 
     <!-- These toolbar items get filled out from the editorOverlay -->
 	<toolbar id="FormatToolbar">
-      <menu>
-      	<titledbutton id="ParagraphPopupButton"/>
-        <menupopup id="ParagraphPopup"/>
-      </menu>
-      <menu>
-        <titledbutton id="FontFacePopupButton"/>
-        <menupopup id="FontFacePopup"/>
-      </menu>
-      <menu>
-        <titledbutton id="FontSizePopupButton"/>
-        <menupopup id="FontSizePopup"/>
-      </menu>
+      <html:div class="toolbar-middle">
+        <!-- items are filled out from editorOverlay -->
+        <html:select id="ParagraphSelect"/>
+        <html:select id="FontFaceSelect"/>
+        <html:select id="FontSizeSelect"/>
+      </html:div>
+
       <menu>
         <titledbutton id="TextColorPopupButton"/>
         <menupopup id="TextColorPopup"/>
