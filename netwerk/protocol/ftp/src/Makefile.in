@@ -35,6 +35,7 @@ CPPSRCS		= \
 		nsFTPChannel.cpp \
 		nsFtpConnectionThread.cpp \
 		nsFtpModule.cpp \
+		nsFTPListener.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
