@@ -291,7 +291,7 @@ nsMsgAccountManagerDataSource::Init()
     // get a weak ref to the account manager
     if (!mAccountManager) {
         am = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-        mAccountManager = getter_AddRefs(NS_GetWeakReference(am));
+        mAccountManager = do_GetWeakReference(am);
     } else
         am = do_QueryReferent(mAccountManager);
 

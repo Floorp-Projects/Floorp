@@ -154,7 +154,7 @@ nsComputedDOMStyle::Init(nsIDOMElement *aElement,
   NS_ENSURE_ARG_POINTER(aElement);
   NS_ENSURE_ARG_POINTER(aPresShell);
 
-  mPresShellWeak = getter_AddRefs(NS_GetWeakReference(aPresShell));
+  mPresShellWeak = do_GetWeakReference(aPresShell);
 
   mContent = do_QueryInterface(aElement);
   if (!mContent) {

@@ -699,7 +699,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
     {
         nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
         rv = mailnewsUrl->GetServer(getter_AddRefs(server));
-        m_server = getter_AddRefs(NS_GetWeakReference(server));
+        m_server = do_GetWeakReference(server);
     }
     nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryInterface(server);
 

@@ -205,7 +205,7 @@ NS_METHOD
 nsMenu::Create( nsISupports * aParent, const nsAString &aLabel, const nsAString &aAccessKey, 
                      nsIChangeManager* aManager, nsIWebShell* aShell, nsIContent* aNode )
 {
-  mWebShellWeakRef = getter_AddRefs(NS_GetWeakReference(aShell));
+  mWebShellWeakRef = do_GetWeakReference(aShell);
   mMenuContent = aNode;
   
   // register this menu to be notified when changes are made to our content object

@@ -73,7 +73,7 @@ NS_IMETHODIMP imgContainerGIF::Init(nscoord aWidth, nscoord aHeight,
 
   mSize.SizeTo(aWidth, aHeight);
 
-  mObserver = getter_AddRefs(NS_GetWeakReference(aObserver));
+  mObserver = do_GetWeakReference(aObserver);
 
   return NS_OK;
 }

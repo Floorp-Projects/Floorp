@@ -135,7 +135,7 @@ nsQABrowserView::CreateBrowser(nativeWindow aNativeWnd, nsIWebBrowserChrome * aC
 
   // Register the QABrowserChrome object to receive progress messages
 	// These callbacks will be used to update the status/progress bars
-  nsWeakPtr weakling(dont_AddRef(NS_GetWeakReference(aChrome)));
+  nsWeakPtr weakling(do_GetWeakReference(aChrome));
   (void)mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 
 	// Finally, show the web browser window

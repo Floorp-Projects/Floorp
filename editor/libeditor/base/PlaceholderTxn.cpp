@@ -286,7 +286,7 @@ NS_IMETHODIMP PlaceholderTxn::EndPlaceHolderBatch()
 
 NS_IMETHODIMP PlaceholderTxn::ForwardEndBatchTo(nsIAbsorbingTransaction *aForwardingAddress)
 {   
-  mForwarding = getter_AddRefs( NS_GetWeakReference(aForwardingAddress) );
+  mForwarding = do_GetWeakReference(aForwardingAddress);
   return NS_OK;
 }
 

@@ -429,7 +429,7 @@ nsBrowserInstance::ReinitializeContentVariables()
     nsCOMPtr<nsIDocShell> docShell;
     globalObj->GetDocShell(getter_AddRefs(docShell));
 
-    mContentAreaDocShellWeak = dont_AddRef(NS_GetWeakReference(docShell)); // Weak reference
+    mContentAreaDocShellWeak = do_GetWeakReference(docShell); // Weak reference
 
     if (APP_DEBUG) {
       nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));

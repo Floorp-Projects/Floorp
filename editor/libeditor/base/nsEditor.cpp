@@ -258,9 +258,9 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell, nsIContent *aRoot
     return NS_ERROR_NULL_POINTER;
 
   mFlags = aFlags;
-  mDocWeak = getter_AddRefs( NS_GetWeakReference(aDoc) );  // weak reference to doc
-  mPresShellWeak = getter_AddRefs( NS_GetWeakReference(aPresShell) );   // weak reference to pres shell
-  mSelConWeak = getter_AddRefs( NS_GetWeakReference(aSelCon) );   // weak reference to selectioncontroller
+  mDocWeak = do_GetWeakReference(aDoc);  // weak reference to doc
+  mPresShellWeak = do_GetWeakReference(aPresShell);   // weak reference to pres shell
+  mSelConWeak = do_GetWeakReference(aSelCon);   // weak reference to selectioncontroller
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
   
@@ -466,7 +466,7 @@ nsEditor::DoTransaction(nsITransaction *aTxn)
     // due to our broken interface model for transactions.
 
     // save off weak reference to placeholder txn
-    mPlaceHolderTxn = getter_AddRefs( NS_GetWeakReference(plcTxn) );
+    mPlaceHolderTxn = do_GetWeakReference(plcTxn);
     plcTxn->Init(mPlaceHolderName, mSelState, this);
     mSelState = nsnull;  // placeholder txn took ownership of this pointer
 
@@ -488,7 +488,7 @@ nsEditor::DoTransaction(nsITransaction *aTxn)
           // either the one we just created, or an earlier one that we are now merging
           // into.  From here on out remember this placeholder instead of the one
           // we just created.
-          mPlaceHolderTxn = getter_AddRefs( NS_GetWeakReference(plcTxn) );
+          mPlaceHolderTxn = do_GetWeakReference(plcTxn);
         }
       }
     }

@@ -272,7 +272,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   nsCOMPtr<nsIBaseWindow> parentAsWin(do_QueryInterface(aParent));
   if (parentAsWin) {
     parentAsWin->GetMainWidget(getter_AddRefs(parentWidget));
-    mParentWindow = getter_AddRefs(NS_GetWeakReference(aParent));
+    mParentWindow = do_GetWeakReference(aParent);
   }
 
   mWindow->SetClientData(this);

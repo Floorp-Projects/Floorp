@@ -277,7 +277,7 @@ nsXBLStreamListener::nsXBLStreamListener(nsXBLService* aXBLService,
   /* member initializers and constructor code */
   mXBLService = aXBLService;
   mInner = aInner;
-  mDocument = getter_AddRefs(NS_GetWeakReference(aDocument));
+  mDocument = do_GetWeakReference(aDocument);
   mBindingDocument = aBindingDocument;
 #ifdef MOZ_XUL
   gRefCnt++;

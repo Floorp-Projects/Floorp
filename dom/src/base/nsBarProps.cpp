@@ -268,7 +268,7 @@ ScrollbarsPropImpl::ScrollbarsPropImpl(GlobalWindowImpl *aWindow)
 {
   mDOMWindow = aWindow;
   nsISupports *supwin = NS_STATIC_CAST(nsIScriptGlobalObject *, aWindow);
-  mDOMWindowWeakref = getter_AddRefs(NS_GetWeakReference(supwin));
+  mDOMWindowWeakref = do_GetWeakReference(supwin);
 }
 
 ScrollbarsPropImpl::~ScrollbarsPropImpl()

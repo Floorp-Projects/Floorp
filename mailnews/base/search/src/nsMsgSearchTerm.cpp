@@ -1433,7 +1433,7 @@ nsMsgSearchScopeTerm::nsMsgSearchScopeTerm (nsIMsgSearchSession *session,
 	m_attribute = attribute;
 	m_folder = folder;
 	m_searchServer = PR_TRUE;
-    m_searchSession = getter_AddRefs(NS_GetWeakReference(session));
+    m_searchSession = do_GetWeakReference(session);
 }
 
 nsMsgSearchScopeTerm::nsMsgSearchScopeTerm ()

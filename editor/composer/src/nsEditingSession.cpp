@@ -130,7 +130,7 @@ nsEditingSession::Init(nsIDOMWindow *aWindow)
   nsresult rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
   if (NS_FAILED(rv)) return rv;
 
-  mEditingShell = getter_AddRefs(NS_GetWeakReference(docShell));
+  mEditingShell = do_GetWeakReference(docShell);
   if (!mEditingShell) return NS_ERROR_NO_INTERFACE;
 
   return NS_OK;
@@ -154,7 +154,7 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
 {
   mEditorType.Truncate();
   mEditorFlags = 0;
-  mWindowToBeEdited = getter_AddRefs(NS_GetWeakReference(aWindow));
+  mWindowToBeEdited = do_GetWeakReference(aWindow);
 
   // disable plugins
   nsCOMPtr<nsIDocShell> docShell;

@@ -999,7 +999,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
       if (prefBranch) {
         nsCOMPtr<nsIPrefBranchInternal> prefBranchInternal(do_QueryInterface(prefBranch));
         if (prefBranchInternal) {
-          mPrefBranchWeakRef = getter_AddRefs(NS_GetWeakReference(prefBranchInternal));
+          mPrefBranchWeakRef = do_GetWeakReference(prefBranchInternal);
           prefBranchInternal->AddObserver(kFrameResizePref, this, PR_FALSE);
         }
         prefBranch->GetBoolPref(kFrameResizePref, &mForceFrameResizability);

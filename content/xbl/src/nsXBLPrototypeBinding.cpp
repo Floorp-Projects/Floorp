@@ -236,7 +236,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsACString& aID,
   
   mID = ToNewCString(aID);
 
-  mXBLDocInfoWeak = getter_AddRefs(NS_GetWeakReference(aInfo));
+  mXBLDocInfoWeak = do_GetWeakReference(aInfo);
   
   gRefCnt++;
   //  printf("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);

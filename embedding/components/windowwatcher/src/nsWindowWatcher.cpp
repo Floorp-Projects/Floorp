@@ -114,7 +114,7 @@ struct nsWatcherWindowEntry {
 
   nsWatcherWindowEntry(nsIDOMWindow *inWindow, nsIWebBrowserChrome *inChrome) {
 #ifdef USEWEAKREFS
-    mWindow = getter_AddRefs(NS_GetWeakReference(inWindow));
+    mWindow = do_GetWeakReference(inWindow);
 #else
     mWindow = inWindow;
 #endif

@@ -538,7 +538,7 @@ NS_IMETHODIMP nsWebBrowserFind::SetCurrentSearchFrame(nsIDOMWindow * aCurrentSea
 {
     // is it ever valid to set this to null?
     NS_ENSURE_ARG(aCurrentSearchFrame);
-    mCurrentSearchFrame = getter_AddRefs(NS_GetWeakReference(aCurrentSearchFrame));
+    mCurrentSearchFrame = do_GetWeakReference(aCurrentSearchFrame);
     return NS_OK;
 }
 
@@ -555,7 +555,7 @@ NS_IMETHODIMP nsWebBrowserFind::SetRootSearchFrame(nsIDOMWindow * aRootSearchFra
 {
     // is it ever valid to set this to null?
     NS_ENSURE_ARG(aRootSearchFrame);
-    mRootSearchFrame = getter_AddRefs(NS_GetWeakReference(aRootSearchFrame));
+    mRootSearchFrame = do_GetWeakReference(aRootSearchFrame);
     return NS_OK;
 }
 
@@ -758,7 +758,7 @@ nsresult nsWebBrowserFind::OnFind(nsIDOMWindow *aFoundWindow)
     {
         nsCOMPtr<nsIDOMWindowInternal> windowInt = do_QueryInterface(aFoundWindow);
         focusController->SetFocusedWindow(windowInt);
-        mLastFocusedWindow = getter_AddRefs(NS_GetWeakReference(aFoundWindow));
+        mLastFocusedWindow = do_GetWeakReference(aFoundWindow);
     }
 
     return NS_OK;

@@ -2276,7 +2276,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIRequest *request,
 nsresult
 QuotingOutputStreamListener::SetComposeObj(nsIMsgCompose *obj)
 {
-  mWeakComposeObj = getter_AddRefs(NS_GetWeakReference(obj));
+  mWeakComposeObj = do_GetWeakReference(obj);
   return NS_OK;
 }
 
@@ -2634,7 +2634,7 @@ nsMsgComposeSendListener::~nsMsgComposeSendListener(void)
 
 NS_IMETHODIMP nsMsgComposeSendListener::SetMsgCompose(nsIMsgCompose *obj)
 {
-  mWeakComposeObj = getter_AddRefs(NS_GetWeakReference(obj));
+  mWeakComposeObj = do_GetWeakReference(obj);
   return NS_OK;
 }
 

@@ -127,7 +127,7 @@ nsMenuBar::nsMenuBar()
   
   ::ClearMenuBar(); 
   mRefCnt = 1;      // NS_GetWeakReference does an addref then a release, so this +1 is needed
-  gMacMenubar = getter_AddRefs(NS_GetWeakReference((nsIMenuBar *)this));
+  gMacMenubar = do_GetWeakReference((nsIMenuBar *)this);
   mRefCnt = 0;
   // copy from nsMenu.cpp
   ScriptCode ps[1];
@@ -298,12 +298,12 @@ nsEventStatus
 nsMenuBar::MenuConstruct( const nsMenuEvent & aMenuEvent, nsIWidget* aParentWindow, 
                             void * menubarNode, void * aWebShell )
 {
-  mWebShellWeakRef = getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIWebShell*, aWebShell)));
+  mWebShellWeakRef = do_GetWeakReference(NS_STATIC_CAST(nsIWebShell*, aWebShell));
   nsIDOMNode* aDOMNode  = NS_STATIC_CAST(nsIDOMNode*, menubarNode);
   mMenuBarContent = do_QueryInterface(aDOMNode);           // strong ref
   
   if(gFirstMenuBar) {
-      gOriginalMenuBar = getter_AddRefs(NS_GetWeakReference((nsIMenuBar *)this));
+      gOriginalMenuBar = do_GetWeakReference((nsIMenuBar *)this);
       
 	  gFirstMenuBar = false;
 	  // Add the 4 Golden Hierarchical Menus to the MenuList        
@@ -579,7 +579,7 @@ NS_METHOD nsMenuBar::SetNativeData(void* aData)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::Paint()
 {
-  gMacMenubar = getter_AddRefs(NS_GetWeakReference((nsIMenuBar *)this));
+  gMacMenubar = do_GetWeakReference((nsIMenuBar *)this);
   
   ::SetMenuBar(mMacMBarHandle);
   // Now we have blown away the merged Help menu, so we have to rebuild it

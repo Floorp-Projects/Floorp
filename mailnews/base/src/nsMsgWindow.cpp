@@ -131,7 +131,7 @@ void nsMsgWindow::GetMessageWindowDocShell(nsIDocShell ** aDocShell)
 
       docShell = do_QueryInterface(msgDocShellItem);
       // we don't own mMessageWindowDocShell so don't try to keep a reference to it!
-      mMessageWindowDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell));
+      mMessageWindowDocShellWeak = do_GetWeakReference(docShell);
     }
   }
 
@@ -290,7 +290,7 @@ NS_IMETHODIMP nsMsgWindow::SetRootDocShell(nsIDocShell * aDocShell)
   mRootDocShellWeak = nsnull;
   if (aDocShell)
   {
-    mRootDocShellWeak = getter_AddRefs(NS_GetWeakReference(aDocShell));
+    mRootDocShellWeak = do_GetWeakReference(aDocShell);
     aDocShell->SetParentURIContentListener(this);
 	// be sure to set the application flag on the root docshell
 	// so it knows we are a mail application.

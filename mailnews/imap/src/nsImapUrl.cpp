@@ -206,7 +206,7 @@ NS_IMETHODIMP nsImapUrl::GetFolder(nsIMsgFolder **aMsgFolder)
 NS_IMETHODIMP nsImapUrl::SetFolder(nsIMsgFolder  * aMsgFolder)
 {
   nsresult rv;
-  m_imapFolder = getter_AddRefs(NS_GetWeakReference(aMsgFolder, &rv));
+  m_imapFolder = do_GetWeakReference(aMsgFolder, &rv);
   return rv;
 }
 
@@ -226,7 +226,7 @@ NS_IMETHODIMP nsImapUrl::GetImapMailFolderSink(nsIImapMailFolderSink **
 NS_IMETHODIMP nsImapUrl::SetImapMailFolderSink(nsIImapMailFolderSink  * aImapMailFolderSink)
 {
     nsresult rv;
-    m_imapMailFolderSink = getter_AddRefs(NS_GetWeakReference(aImapMailFolderSink, &rv));
+    m_imapMailFolderSink = do_GetWeakReference(aImapMailFolderSink, &rv);
     return rv;
 }
  
@@ -244,7 +244,7 @@ NS_IMETHODIMP nsImapUrl::GetImapMessageSink(nsIImapMessageSink ** aImapMessageSi
 NS_IMETHODIMP nsImapUrl::SetImapMessageSink(nsIImapMessageSink  * aImapMessageSink)
 {
   nsresult rv;
-  m_imapMessageSink = getter_AddRefs(NS_GetWeakReference(aImapMessageSink, &rv));
+  m_imapMessageSink = do_GetWeakReference(aImapMessageSink, &rv);
   return rv;
 }
 
@@ -262,7 +262,7 @@ NS_IMETHODIMP nsImapUrl::GetImapServerSink(nsIImapServerSink ** aImapServerSink)
 NS_IMETHODIMP nsImapUrl::SetImapServerSink(nsIImapServerSink  * aImapServerSink)
 {
   nsresult rv;
-  m_imapServerSink = getter_AddRefs(NS_GetWeakReference(aImapServerSink, &rv));
+  m_imapServerSink = do_GetWeakReference(aImapServerSink, &rv);
   return rv;
 }
 
@@ -280,7 +280,7 @@ NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExten
 NS_IMETHODIMP nsImapUrl::SetImapExtensionSink(nsIImapExtensionSink  * aImapExtensionSink)
 {
   nsresult rv;
-  m_imapExtensionSink = getter_AddRefs(NS_GetWeakReference(aImapExtensionSink, &rv));
+  m_imapExtensionSink = do_GetWeakReference(aImapExtensionSink, &rv);
   return rv;
 }
 
@@ -300,7 +300,7 @@ NS_IMETHODIMP nsImapUrl::SetImapMiscellaneousSink(nsIImapMiscellaneousSink  *
                                               aImapMiscellaneousSink)
 {
   nsresult rv;
-  m_imapMiscellaneousSink = getter_AddRefs(NS_GetWeakReference(aImapMiscellaneousSink, &rv));
+  m_imapMiscellaneousSink = do_GetWeakReference(aImapMiscellaneousSink, &rv);
   return rv;
 }
 

@@ -158,7 +158,7 @@ nsMsgQuickSearchDBView::GetSearchSession(nsIMsgSearchSession* *aSession)
 NS_IMETHODIMP
 nsMsgQuickSearchDBView::SetSearchSession(nsIMsgSearchSession *aSession)
 {
-  m_searchSession = getter_AddRefs(NS_GetWeakReference(aSession));
+  m_searchSession = do_GetWeakReference(aSession);
   return NS_OK;
 }
 

@@ -798,7 +798,7 @@ nsDummyLayoutRequest::nsDummyLayoutRequest(nsIPresShell* aPresShell)
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create about:layout-dummy-request");
   }
 
-  mPresShell = getter_AddRefs(NS_GetWeakReference(aPresShell));
+  mPresShell = do_GetWeakReference(aPresShell);
 }
 
 
@@ -6354,7 +6354,7 @@ ReflowEvent::ReflowEvent(nsIPresShell* aPresShell)
 {
   NS_ASSERTION(aPresShell, "Null parameters!");  
 
-  mPresShell = getter_AddRefs(NS_GetWeakReference(aPresShell));
+  mPresShell = do_GetWeakReference(aPresShell);
 
   PL_InitEvent(this, aPresShell,
                (PLHandleEventProc) ::HandlePLEvent,

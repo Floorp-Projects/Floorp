@@ -227,7 +227,7 @@ nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(nsnull, PR_FALSE)
 nsMsgMailboxParser::nsMsgMailboxParser(nsIMsgFolder *aFolder) : nsMsgLineBuffer(nsnull, PR_FALSE)
 {
   Init();
-  m_folder = getter_AddRefs(NS_GetWeakReference(aFolder));
+  m_folder = do_GetWeakReference(aFolder);
 }
 
 nsMsgMailboxParser::~nsMsgMailboxParser()

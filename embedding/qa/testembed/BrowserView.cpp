@@ -259,7 +259,7 @@ HRESULT CBrowserView::CreateBrowser()
 
 /*		// from WinEmbed.cpp
 	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, this));
-    nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
+    nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
     (void)mWebBrowser->AddWebBrowserListener(thisListener, 
        NS_GET_IID(nsIWebProgressListener));
 
@@ -290,7 +290,7 @@ HRESULT CBrowserView::DestroyBrowser()
 	}
 /*
 	nsWeakPtr weakling(
-    dont_AddRef(NS_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mpBrowserImpl))));
+    do_GetWeakReference(NS_STATIC_CAST(nsIWebProgressListener*, mpBrowserImpl)));
 	nsresult rv;
     rv = mWebBrowser->RemoveWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
 	if (NS_FAILED(rv))

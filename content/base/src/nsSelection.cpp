@@ -4703,7 +4703,7 @@ NS_IMPL_RELEASE(nsTypedSelection)
 NS_IMETHODIMP
 nsTypedSelection::SetPresShell(nsIPresShell *aPresShell)
 {
-  mPresShellWeak = getter_AddRefs(NS_GetWeakReference(aPresShell));
+  mPresShellWeak = do_GetWeakReference(aPresShell);
   return NS_OK;
 }
 
@@ -7035,7 +7035,7 @@ nsTypedSelection::GetPresShell(nsIPresShell **aPresShell)
   
   nsCOMPtr<nsIPresShell> shell;
   rv = presContext->GetShell(getter_AddRefs(shell));
-  mPresShellWeak = getter_AddRefs(NS_GetWeakReference(shell));    // the presshell owns us, so no addref
+  mPresShellWeak = do_GetWeakReference(shell);    // the presshell owns us, so no addref
   if (mPresShellWeak)
     NS_ADDREF(*aPresShell = shell);
   return rv;

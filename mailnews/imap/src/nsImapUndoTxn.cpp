@@ -73,8 +73,8 @@ nsImapMoveCopyMsgTxn::Init(
   m_srcMsgIdString = srcMsgIdString;
   m_idsAreUids = idsAreUids;
   m_isMove = isMove;
-  m_srcFolder = getter_AddRefs(NS_GetWeakReference(srcFolder));
-  m_dstFolder = getter_AddRefs(NS_GetWeakReference(dstFolder));
+  m_srcFolder = do_GetWeakReference(srcFolder);
+  m_dstFolder = do_GetWeakReference(dstFolder);
   m_eventQueue = do_QueryInterface(eventQueue, &rv);
   if (urlListener)
     m_urlListener = do_QueryInterface(urlListener, &rv);

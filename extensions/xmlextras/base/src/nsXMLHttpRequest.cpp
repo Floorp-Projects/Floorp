@@ -1252,7 +1252,7 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
   // Register as a load listener on the document
   nsCOMPtr<nsIDOMEventReceiver> target(do_QueryInterface(mDocument));
   if (target) {
-    nsWeakPtr requestWeak(getter_AddRefs(NS_GetWeakReference(NS_STATIC_CAST(nsIXMLHttpRequest*, this))));
+    nsWeakPtr requestWeak(do_GetWeakReference(NS_STATIC_CAST(nsIXMLHttpRequest*, this)));
     nsLoadListenerProxy* proxy = new nsLoadListenerProxy(requestWeak);
     if (!proxy) return NS_ERROR_OUT_OF_MEMORY;
 

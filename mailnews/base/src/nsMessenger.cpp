@@ -1570,7 +1570,7 @@ NS_IMPL_ISUPPORTS1(SendLaterListener, nsIMsgSendLaterListener)
 
 SendLaterListener::SendLaterListener(nsIMessenger *aMessenger)
 {
-  m_messenger = getter_AddRefs(NS_GetWeakReference(aMessenger));
+  m_messenger = do_GetWeakReference(aMessenger);
 }
 
 SendLaterListener::~SendLaterListener()

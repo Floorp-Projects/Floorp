@@ -515,7 +515,7 @@ nsTextInputSelectionImpl::nsTextInputSelectionImpl(nsIFrameSelection *aSel, nsIP
     nsCOMPtr<nsIFocusTracker> tracker = do_QueryInterface(aShell);
     mLimiter = aLimiter;
     mFrameSelection->Init(tracker, mLimiter);
-    mPresShellWeak = getter_AddRefs( NS_GetWeakReference(aShell) );
+    mPresShellWeak = do_GetWeakReference(aShell);
 #ifdef IBMBIDI
     mBidiKeyboard = do_GetService("@mozilla.org/widget/bidikeyboard;1");
 #endif

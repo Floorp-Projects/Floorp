@@ -357,7 +357,7 @@ void CBrowserShell::FinishCreateSelf()
     ThrowIfNil_(mEventSink);
         
     // Hook up our progress listener
-    nsWeakPtr weakling(dont_AddRef(NS_GetWeakReference((nsIWebProgressListener *)mProgressListener)));
+    nsWeakPtr weakling(do_GetWeakReference((nsIWebProgressListener *)mProgressListener));
     rv = mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "Call to AddWebBrowserListener failed");
       

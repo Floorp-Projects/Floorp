@@ -465,7 +465,7 @@ NS_IMETHODIMP nsMsgFolder::RemoveFolderListener(nsIFolderListener * listener)
 
 NS_IMETHODIMP nsMsgFolder::SetParent(nsIFolder *aParent)
 {
-  mParent = getter_AddRefs(NS_GetWeakReference(aParent));
+  mParent = do_GetWeakReference(aParent);
 
   if (aParent) {
     nsresult rv;
@@ -482,7 +482,7 @@ NS_IMETHODIMP nsMsgFolder::SetParent(nsIFolder *aParent)
       nsCOMPtr<nsIMsgIncomingServer> server;
       rv = parentMsgFolder->GetServer(getter_AddRefs(server));
       if (NS_SUCCEEDED(rv) && server)
-        mServer = getter_AddRefs(NS_GetWeakReference(server));
+        mServer = do_GetWeakReference(server);
     }
   }
 
@@ -675,7 +675,7 @@ nsMsgFolder::parseURI(PRBool needServer)
 
     }
 
-    mServer = getter_AddRefs(NS_GetWeakReference(server));
+    mServer = do_GetWeakReference(server);
 
   } /* !mServer */
 

@@ -48,7 +48,7 @@ nsTransactionList::nsTransactionList(nsITransactionManager *aTxnMgr, nsTransacti
   , mTxnItem(0)
 {
   if (aTxnMgr)
-    mTxnMgr = getter_AddRefs(NS_GetWeakReference(aTxnMgr));
+    mTxnMgr = do_GetWeakReference(aTxnMgr);
 }
 
 nsTransactionList::nsTransactionList(nsITransactionManager *aTxnMgr, nsTransactionItem *aTxnItem)
@@ -56,7 +56,7 @@ nsTransactionList::nsTransactionList(nsITransactionManager *aTxnMgr, nsTransacti
   , mTxnItem(aTxnItem)
 {
   if (aTxnMgr)
-    mTxnMgr = getter_AddRefs(NS_GetWeakReference(aTxnMgr));
+    mTxnMgr = do_GetWeakReference(aTxnMgr);
 }
 
 nsTransactionList::~nsTransactionList()

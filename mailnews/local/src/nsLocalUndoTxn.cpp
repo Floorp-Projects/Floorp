@@ -124,7 +124,7 @@ nsLocalMoveCopyMsgTxn::SetSrcFolder(nsIMsgFolder* srcFolder)
 {
 	nsresult rv = NS_ERROR_NULL_POINTER;
 	if (srcFolder)
-          m_srcFolder = getter_AddRefs(NS_GetWeakReference(srcFolder, &rv));
+          m_srcFolder = do_GetWeakReference(srcFolder, &rv);
 	return rv;
 }
 
@@ -133,7 +133,7 @@ nsLocalMoveCopyMsgTxn::SetDstFolder(nsIMsgFolder* dstFolder)
 {
 	nsresult rv = NS_ERROR_NULL_POINTER;
 	if (dstFolder)
-          m_dstFolder = getter_AddRefs(NS_GetWeakReference(dstFolder, &rv));
+          m_dstFolder = do_GetWeakReference(dstFolder, &rv);
 	return rv;
 }
 

@@ -66,7 +66,7 @@ NS_IMETHODIMP nsBasicStreamGenerator::Setup(PRUint32 salt, nsISupports *consumer
 
   /* reestablish setup */
   if (consumer) {
-    mWeakPasswordSink = getter_AddRefs(NS_GetWeakReference(consumer, &rv));
+    mWeakPasswordSink = do_GetWeakReference(consumer, &rv);
     if (NS_FAILED(rv)) return rv;
   }
   mSalt = salt;
