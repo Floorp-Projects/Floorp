@@ -67,12 +67,14 @@ interface nsIWebProgress : nsISupports
 		flag_net_failedDNS - DNS lookup failed.
 		flag_net_failedConnect - Connecting to server failed.
 		flag_net_failedTransfer - Transfer failed.
+		flag_net_failedTimeout - connection timed out
 		flag_net_userCancelled - User cancelled load.
 	*/
 	const long flag_net_failedDNS			= 0x00001000;
 	const long flag_net_failedConnect	= 0x00002000;
 	const long flag_net_failedTransfer	= 0x00004000;
-	const long flag_net_userCancelled	= 0x00008000;
+	const long flag_net_failedTimeout	= 0x00008000;
+	const long flag_net_userCancelled	= 0x00010000;
 
 	/* Window Activity bits |21-20|
 		flag_win_start - window activity is starting
