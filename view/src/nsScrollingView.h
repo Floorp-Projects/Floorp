@@ -46,7 +46,6 @@ public:
    // SetVisibility is overriden so that it will set it's components visibility (ClipView, 
    // CornerView, ScrollBarView's),as well as it's own visibility.
   NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
-  NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus &aStatus);
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
 
   //nsIScrollableView interface

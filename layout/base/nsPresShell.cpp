@@ -2005,7 +2005,7 @@ PresShell::HandleEvent(nsIView         *aView,
 
             //4. Give event to event manager for post event state changes and generation of synthetic events.
             if (nsnull != mCurrentEventFrame && NS_OK == rv) {
-              rv = manager->PostHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus);
+              rv = manager->PostHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
             }
           }
         }
