@@ -51,6 +51,7 @@ function Startup()
   dialog.rowsInput = document.getElementById("rowsInput");
   dialog.columnsInput = document.getElementById("columnsInput");
   dialog.widthInput = document.getElementById("widthInput");
+  dialog.heightInput = document.getElementById("heightInput");
   dialog.borderInput = document.getElementById("borderInput");
   dialog.widthPixelOrPercentMenulist = document.getElementById("widthPixelOrPercentMenulist");
   dialog.heightPixelOrPercentMenulist = document.getElementById("heightPixelOrPercentMenulist");
