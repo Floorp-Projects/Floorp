@@ -78,6 +78,10 @@ var gMenulist;
 var gBookmarksTree;
 var gGroup;
 
+# on windows, sizeToContent is buggy (see bug 227951), we''ll use resizeTo
+# instead and cache the bookmarks tree view size.
+var WSucks;
+
 function Startup()
 {
   sizeToContent(); //XXXpch buggy imo, we shouldn't need it
@@ -94,6 +98,11 @@ function Startup()
   onFieldInput();
   gSelectedFolder = RDF.GetResource(gMenulist.selectedItem.id);
   gExpander.setAttribute("tooltiptext", gExpander.getAttribute("tooltiptextdown"));
+
+# read the persisted attribute. If it is not present, set a default height.
+  WSucks = parseInt(gBookmarksTree.getAttribute("height"));
+  if (!WSucks)
+    WSucks = 150;
 
   // fix no more persisted class attribute in old profiles
   var localStore = RDF.GetDataSource("rdf:local-store");
@@ -210,9 +219,10 @@ function expandTree()
   var willCollapse = !gBookmarksTree.collapsed;
   gExpander.setAttribute("class",willCollapse?"down":"up");
   gExpander.setAttribute("tooltiptext", gExpander.getAttribute("tooltiptext"+(willCollapse?"down":"up")));
-  if (willCollapse)
+  if (willCollapse) {
     document.documentElement.buttons = "accept,cancel";
-  else {
+    WSucks = gBookmarksTree.boxObject.height;
+  } else {
     document.documentElement.buttons = "accept,cancel,extra2";
 #   always open the bookmark root folder
     if (!gBookmarksTree.treeBoxObject.view.isContainerOpen(0))
@@ -221,7 +231,7 @@ function expandTree()
     gBookmarksTree.focus();
   }
   gBookmarksTree.collapsed = willCollapse;
-  sizeToContent();
+  resizeTo(window.outerWidth, window.outerHeight+(willCollapse?-WSucks:+WSucks));
 }
 
 function setFolderTreeHeight()
