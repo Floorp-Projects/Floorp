@@ -25,6 +25,7 @@
 
 #include "nsXPIDLString.h"
 
+#include "nsIAtom.h"
 #include "nsIChannel.h"
 #include "nsILoadGroup.h"
 #include "nsIHTTPChannel.h"
@@ -462,6 +463,14 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
       this->RemoveFromCache();
 
       return NS_BINDING_ABORTED;
+    }
+
+    /* get the http expires date */
+    nsCOMPtr<nsIAtom> expiresAtom(NS_NewAtom(NS_LITERAL_CSTRING("Expires")));
+    nsXPIDLCString expires;
+    httpChannel->GetResponseHeader(expiresAtom, getter_Copies(expires));
+    if (expires.get()) {
+      printf("%s\n", expires.get());
     }
   }
 

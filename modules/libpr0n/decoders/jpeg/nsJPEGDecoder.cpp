@@ -277,7 +277,13 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     mObserver->OnStartContainer(nsnull, nsnull, mImage);
 
     mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-    mFrame->Init(0, 0, mInfo.image_width, mInfo.image_height, gfxIFormats::RGB);
+    gfx_format format;
+#ifdef XP_PC
+    format = gfxIFormats::BGR;
+#else
+    format = gfxIFormats::RGB;
+#endif
+    mFrame->Init(0, 0, mInfo.image_width, mInfo.image_height, format);
     mImage->AppendFrame(mFrame);
     mObserver->OnStartFrame(nsnull, nsnull, mFrame);
 
@@ -295,8 +301,8 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
                                            JPOOL_IMAGE,
                                            row_stride, 1);
                                          
-    mRGBPadRow = (PRUint8*) PR_MALLOC(mInfo.output_width * 4);                                       
-    memset(mRGBPadRow, 0, mInfo.output_width * 4);
+    mRGBPadRow = (PRUint8*) PR_MALLOC(row_stride);                                       
+    memset(mRGBPadRow, 0, row_stride);
   
   
 
@@ -436,23 +442,23 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
       
       /* Request one scanline.  Returns 0 or 1 scanlines. */
       int ns;
-      if(mInfo.output_components != 3)
-        ns = jpeg_read_scanlines(&mInfo, mSamples3, 1); /* XXX can have I/O suspension */
+      if(mInfo.output_components == 1)
+        ns = jpeg_read_scanlines(&mInfo, mSamples3, 1);
       else
-        ns = jpeg_read_scanlines(&mInfo, mSamples, 1); /* XXX can have I/O suspension */
+        ns = jpeg_read_scanlines(&mInfo, mSamples, 1);
         
       if (ns != 1) {
-        return PR_FALSE;
+        return PR_FALSE; /* suspend */
       }
 
       /* If grayscale image ... */
       if (mInfo.output_components == 1) {
-        JSAMPLE j, *j1, *j1end, *j3;
+        JSAMPLE j;
+        JSAMPLE *j1 = mSamples[0];
+        const JSAMPLE *j1end = j1 + mInfo.output_width;
+        JSAMPLE *j3 = mSamples3[0];
 
         /* Convert from grayscale to RGB. */
-        j1 = mSamples[0];
-        j1end = j1 + mInfo.output_width;
-        j3 = mSamples3[0];
         while (j1 < j1end) {
           j = *j1++;
           j3[0] = j;
@@ -461,28 +467,25 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
           j3 += 3;
         }
         samples = mSamples3[0];
-      } else {        /* 24-bit color image */
-        //JSAMPLE j, *j1, *j1end, *j3;
-        
-        //j1 = mSamples3[0];
-        //j1end = j1 + mInfo.output_width;
-        //j3 = mSamples3[0];
-        
-        //while(j1 < j1end) {
-        //  mSamples3[0] = j1++;
-        //  mSamples3[1] = j1++
-        //  
-        //}
-        PRUint8* ptrOutputBuf = mRGBPadRow;
-        PRUint8* ptrDecodedBuf = mSamples[0];
-        //while(j1 < j1end) {
-        //  ptrOutputBuf++ = ptrDecodedBuf++;
-        //  ptrOutputBuf++ = ptrDecodedBuf++;
-        //  ptrOutputBuf++ = ptrDecodedBuf++;
-        //  ptrOutputBuf++ = 0; //pad
-        //}
-        //samples = ptrOutputBuf;
-        samples = ptrDecodedBuf;
+      } else {
+        /* 24-bit color image */
+#ifdef XP_PC
+        JSAMPROW ptrOutputBuf = mRGBPadRow;
+
+        JSAMPLE *j1 = mSamples[0];
+        const JSAMPLE *j1end = j1 + (mInfo.output_width * mInfo.output_components);
+
+        while(j1 < j1end) {
+          ptrOutputBuf[2] = *j1++;
+          ptrOutputBuf[1] = *j1++;
+          ptrOutputBuf[0] = *j1++;
+          ptrOutputBuf += 3;
+        }
+
+        samples = ptrOutputBuf;
+#else
+        samples = mSamples[0];
+#endif
       }
 
       PRUint32 bpr;
