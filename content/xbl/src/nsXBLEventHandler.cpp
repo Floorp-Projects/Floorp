@@ -127,12 +127,12 @@ nsXBLEventHandler::RemoveEventHandlers()
   
   PRBool useCapture = PR_FALSE;
   nsAutoString capturer;
-  handlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kPhaseAtom, capturer);
+  handlerElement->GetAttr(kNameSpaceID_None, nsXBLBinding::kPhaseAtom, capturer);
   if (capturer == NS_LITERAL_STRING("capturing"))
     useCapture = PR_TRUE;
 
   nsAutoString type;
-  handlerElement->GetAttribute(kNameSpaceID_None, nsXBLBinding::kEventAtom, type);
+  handlerElement->GetAttr(kNameSpaceID_None, nsXBLBinding::kEventAtom, type);
  
   PRBool found = PR_FALSE;
   nsIID iid;

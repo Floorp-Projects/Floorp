@@ -2113,7 +2113,7 @@ GetElementByAttribute(nsIContent* aContent,
                       nsIDOMElement** aResult)
 {
   nsAutoString value;
-  nsresult rv = aContent->GetAttribute(kNameSpaceID_None, aAttrName, value);
+  nsresult rv = aContent->GetAttr(kNameSpaceID_None, aAttrName, value);
   if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
     if (aUniversalMatch || value.Equals(aAttrValue))
       return aContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aResult);

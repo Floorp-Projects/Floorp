@@ -108,27 +108,27 @@ public:
   // nsIContent
   NS_IMETHOD SetParent(nsIContent* aParent)
     { return NS_OK; }
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAReadableString& aValue,
-                          PRBool aNotify)
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify)
     { return NS_OK; }
-  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsAReadableString& aValue,
-                          PRBool aNotify)
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify)
     { return NS_OK; }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                          nsAWritableString& aResult) const
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                     nsAWritableString& aResult) const
     { return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-                          nsIAtom*& aPrefix, nsAWritableString& aResult) const
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+                     nsIAtom*& aPrefix, nsAWritableString& aResult) const
     { return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
-                            PRBool aNotify)
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
+                       PRBool aNotify)
     { return NS_OK; }
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
-                                PRInt32& aNameSpaceID, 
-                                nsIAtom*& aName,
-                                nsIAtom*& aPrefix) const
+  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
+                           PRInt32& aNameSpaceID, 
+                           nsIAtom*& aName,
+                           nsIAtom*& aPrefix) const
     {
       aName = nsnull;
       aPrefix = nsnull;

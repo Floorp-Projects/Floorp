@@ -156,7 +156,7 @@ nsHTMLButtonElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                                   nsAWritableString& aResult) const
 {
   if (aName == nsHTMLAtoms::disabled) {
-    nsresult rv = nsGenericHTMLContainerFormElement::GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, aResult);
+    nsresult rv = nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, aResult);
     if (rv == NS_CONTENT_ATTR_NOT_THERE) {
       aResult.Assign(NS_LITERAL_STRING("false"));
     } else {
@@ -166,8 +166,8 @@ nsHTMLButtonElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     return rv;
   }
 
-  return nsGenericHTMLContainerFormElement::GetAttribute(aNameSpaceID, aName,
-                                                         aResult);
+  return nsGenericHTMLContainerFormElement::GetAttr(aNameSpaceID, aName,
+                                                    aResult);
 }
 
 NS_IMETHODIMP
@@ -179,11 +179,11 @@ nsHTMLButtonElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 
   if (aName == nsHTMLAtoms::disabled &&
       value.EqualsWithConversion("false", PR_TRUE)) {
-    return UnsetAttribute(aNameSpaceID, aName, aNotify);
+    return UnsetAttr(aNameSpaceID, aName, aNotify);
   }
 
-  return nsGenericHTMLContainerFormElement::SetAttribute(aNameSpaceID, aName,
-                                                         aValue, aNotify);
+  return nsGenericHTMLContainerFormElement::SetAttr(aNameSpaceID, aName,
+                                                    aValue, aNotify);
 }
 
 

@@ -247,7 +247,7 @@ nsMenuBarFrame::FindMenuWithShortcut(PRUint32 aLetter)
     if (IsValidItem(current)) {
       // Get the shortcut attribute.
       nsAutoString shortcutKey;
-      current->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
+      current->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, shortcutKey);
       if (!shortcutKey.IsEmpty()) {
         // We've got something.
         PRUnichar letter = PRUnichar(aLetter); // throw away the high-zero-fill
@@ -683,7 +683,7 @@ PRBool
 nsMenuBarFrame::IsDisabled(nsIContent* aContent)
 {
   nsString disabled;
-  aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
+  aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
   if (disabled.EqualsWithConversion("true"))
     return PR_TRUE;
   return PR_FALSE;

@@ -776,7 +776,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
       GetAttributeValueAt(aNode, i, v);
 
       // Add attribute to content
-      aContent->SetAttribute(kNameSpaceID_HTML, keyAtom, v,aNotify);
+      aContent->SetAttr(kNameSpaceID_HTML, keyAtom, v,aNotify);
     }
     NS_RELEASE(keyAtom);
   }
@@ -4014,10 +4014,10 @@ void
 HTMLContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
 {
   if (mBaseHREF.Length() > 0) {
-    aContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, mBaseHREF, PR_FALSE);
+    aContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_baseHref, mBaseHREF, PR_FALSE);
   }
   if (mBaseTarget.Length() > 0) {
-    aContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, mBaseTarget, PR_FALSE);
+    aContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_baseTarget, mBaseTarget, PR_FALSE);
   }
 }
 
@@ -4148,10 +4148,10 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
         parent->AppendChildTo(element, PR_FALSE, PR_FALSE);
         if (!mInsideNoXXXTag) {
           nsAutoString value;
-          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
+          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::href, value)) {
             ProcessBaseHref(value);
           }
-          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::target, value)) {
+          if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::target, value)) {
             ProcessBaseTarget(value);
           }
         }
@@ -4541,10 +4541,10 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 
           // set any HTTP-EQUIV data into document's header data as well as url
           nsAutoString header;
-          it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
+          it->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::httpEquiv, header);
           if (header.Length() > 0) {
             nsAutoString result;
-            it->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
+            it->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
             if (result.Length() > 0) {
               header.ToLowerCase();
               nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
@@ -5080,7 +5080,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     }
 
     nsAutoString src;
-    element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
+    element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
     src.StripWhitespace();
 
     if (!mInsideNoXXXTag && NS_SUCCEEDED(rv) && src.IsEmpty()) {
@@ -5088,11 +5088,11 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       nsAutoString type; 
       nsAutoString media; 
 
-      element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::title, title);
+      element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::title, title);
       title.CompressWhitespace();
 
-      element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
-      element->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::media, media);
+      element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
+      element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::media, media);
       media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
 
       nsAutoString mimeType;

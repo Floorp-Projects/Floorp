@@ -443,10 +443,10 @@ void
 nsHTMLFragmentContentSink::ProcessBaseTag(nsIHTMLContent* aContent)
 {
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, value)) {
     mBaseHREF = value;
   }
-  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, value)) {
     mBaseTarget = value;
   }
 }
@@ -456,10 +456,10 @@ nsHTMLFragmentContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
 {
   if (aContent) {
     if (mBaseHREF.Length() > 0) {
-      aContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::_baseHref, mBaseHREF, PR_FALSE);
+      aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseHref, mBaseHREF, PR_FALSE);
     }
     if (mBaseTarget.Length() > 0) {
-      aContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::_baseTarget, mBaseTarget, PR_FALSE);
+      aContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::_baseTarget, mBaseTarget, PR_FALSE);
     }
   }
 }
@@ -883,12 +883,12 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
     nsIAtom*  keyAtom = NS_NewAtom(k);
     
     if (NS_CONTENT_ATTR_NOT_THERE == 
-        aContent->GetAttribute(kNameSpaceID_HTML, keyAtom, v)) {
+        aContent->GetAttr(kNameSpaceID_HTML, keyAtom, v)) {
       // Get value and remove mandatory quotes
       GetAttributeValueAt(aNode, i, v);
 
       // Add attribute to content
-      aContent->SetAttribute(kNameSpaceID_HTML, keyAtom, v, PR_FALSE);
+      aContent->SetAttr(kNameSpaceID_HTML, keyAtom, v, PR_FALSE);
     }
     NS_RELEASE(keyAtom);
   }

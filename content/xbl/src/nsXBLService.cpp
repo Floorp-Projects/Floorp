@@ -980,7 +980,7 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
       root->ChildAt(i, *getter_AddRefs(child));
 
       nsAutoString value;
-      child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value);
+      child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value);
     
       // If no ref is specified just use this.
       if ((bindingName.IsEmpty()) || (bindingName == value)) {
@@ -1028,8 +1028,8 @@ NS_IMETHODIMP nsXBLService::GetBindingInternal(nsIContent* aBoundElement,
   else if (hasBase) {
     // Check for the presence of 'extends' and 'display' attributes
     nsAutoString display, extends;
-    child->GetAttribute(kNameSpaceID_None, kDisplayAtom, display);
-    child->GetAttribute(kNameSpaceID_None, kExtendsAtom, extends);
+    child->GetAttr(kNameSpaceID_None, kDisplayAtom, display);
+    child->GetAttr(kNameSpaceID_None, kExtendsAtom, extends);
     PRBool hasDisplay = !display.IsEmpty();
     PRBool hasExtends = !extends.IsEmpty();
     
@@ -1411,7 +1411,7 @@ nsXBLService::BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** a
     aContent->ChildAt(j, *getter_AddRefs(handler));
     
     nsAutoString event;
-    handler->GetAttribute(kNameSpaceID_None, kEventAtom, event);
+    handler->GetAttr(kNameSpaceID_None, kEventAtom, event);
     
     nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
     NS_NewXBLPrototypeHandler(handler, getter_AddRefs(newHandler));

@@ -344,7 +344,7 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
 
   if (mContent) {
     nsAutoString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
         if (value.EqualsIgnoreCase("never")) 
             mMouseThrough = never;
         else if (value.EqualsIgnoreCase("always")) 
@@ -425,7 +425,7 @@ nsBoxFrameInner::GetInitialDebug(PRBool& aDebug)
     return PR_FALSE;
 
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::debug, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::debug, value)) {
       if (value.EqualsIgnoreCase("true")) {
           aDebug = PR_TRUE;
           return PR_TRUE;
@@ -448,7 +448,7 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   if (!content)
     return PR_FALSE;
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
     // XXXdwh Everything inside this if statement is deprecated code.
     if (value.EqualsIgnoreCase("left")) {
         aHalign = nsBoxFrame::hAlign_Left;
@@ -464,8 +464,8 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
   // we are checking the ALIGN attribute.
   nsresult res;
   if (IsHorizontal())
-    res = content->GetAttribute(kNameSpaceID_None, nsXULAtoms::pack, value);
-  else res = content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
+    res = content->GetAttr(kNameSpaceID_None, nsXULAtoms::pack, value);
+  else res = content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
   if (res == NS_CONTENT_ATTR_HAS_VALUE) {
     if (value.EqualsIgnoreCase("start")) {
         aHalign = nsBoxFrame::hAlign_Left;
@@ -531,7 +531,7 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   if (!content)
     return PR_FALSE;
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::valign, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::valign, value)) {
     if (value.EqualsIgnoreCase("top")) {
         aValign = nsBoxFrame::vAlign_Top;
         return PR_TRUE;
@@ -552,8 +552,8 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
   // we are checking the PACK attribute.
   nsresult res;
   if (IsHorizontal())
-    res = content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
-  else res = content->GetAttribute(kNameSpaceID_None, nsXULAtoms::pack, value);
+    res = content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value);
+  else res = content->GetAttr(kNameSpaceID_None, nsXULAtoms::pack, value);
   if (res == NS_CONTENT_ATTR_HAS_VALUE) {
     if (value.EqualsIgnoreCase("start")) {
         aValign = nsBoxFrame::vAlign_Top;
@@ -638,7 +638,7 @@ nsBoxFrame::GetInitialOrientation(PRBool& aIsHorizontal)
 
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::orient, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::orient, value)) {
     if (value.EqualsIgnoreCase("vertical"))
       aIsHorizontal = PR_FALSE;
     else if (value.EqualsIgnoreCase("horizontal"))
@@ -676,7 +676,7 @@ nsBoxFrame::GetInitialDirection(PRBool& aIsNormal)
   
   // Now see if we have an attribute.  The attribute overrides
   // the style system value.
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::dir, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::dir, value)) {
     if (value.EqualsIgnoreCase("reverse"))
       aIsNormal = !aIsNormal; // Invert our direction.
     else if (value.EqualsIgnoreCase("ltr"))
@@ -700,7 +700,7 @@ nsBoxFrame::GetInitialEqualSize(PRBool& aEqualSize)
   if (!content)
      return PR_FALSE;
 
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::equalsize, value))
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::equalsize, value))
   {
       if (value.EqualsIgnoreCase("always")) {
          aEqualSize = PR_TRUE;
@@ -725,7 +725,7 @@ nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
      return PR_FALSE;
 
   PRBool autostretchSet = PR_FALSE;
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::autostretch, value))
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::autostretch, value))
   {
       if (value.EqualsIgnoreCase("never")) {
          aStretch = PR_FALSE;
@@ -740,7 +740,7 @@ nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
 
   if (!autostretchSet) {
     // Check the align attribute.
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
       aStretch = value.EqualsIgnoreCase("stretch");
       return PR_TRUE;
     }

@@ -160,7 +160,7 @@ SpacerFrame::GetType()
   PRUint8 type = TYPE_WORD;
   nsAutoString value;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, value)) {
+      mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, value)) {
     if (value.EqualsIgnoreCase("line") ||
         value.EqualsIgnoreCase("vert") ||
         value.EqualsIgnoreCase("vertical")) {

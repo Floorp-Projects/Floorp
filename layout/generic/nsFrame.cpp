@@ -1100,7 +1100,7 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
          // Fix for bug #53326: Make sure we bail only
          // in the presence of an href with a value!
          nsAutoString href;
-         if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href))
+         if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, href))
          {// fix for bug #55921
            nsIView *dummyView = 0;
            nsRect frameRect = mRect;

@@ -91,13 +91,13 @@ nsGrippyFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent)
  
 	nsString a; a.AssignWithConversion("collapsed");
 	nsString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::state, value))
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::state, value))
     {
      if (value.EqualsWithConversion("collapsed"))
        a.AssignWithConversion("open");
     }
 
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, a, PR_TRUE);
+    content->SetAttr(kNameSpaceID_None, nsXULAtoms::state, a, PR_TRUE);
 
 }
 
@@ -126,7 +126,7 @@ nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext)
     // the child before otherwise collapse the child after
     PRBool before = PR_TRUE;
     nsString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::collapse, value))
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::collapse, value))
     {
      if (value=="after")
        before = PR_FALSE;
@@ -143,10 +143,10 @@ nsGrippyFrame::MouseClicked(nsIPresContext* aPresContext)
 
     style = "visibility: collapse";
     mCollapsedChildStyle = "";
-    mCollapsedChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, mCollapsedChildStyle);
+    mCollapsedChild->GetAttr(kNameSpaceID_None, nsHTMLAtoms::style, mCollapsedChildStyle);
   }
 
-  mCollapsedChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, style, PR_TRUE);
+  mCollapsedChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::style, style, PR_TRUE);
 
   mCollapsed = !mCollapsed;
 

@@ -225,7 +225,7 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
   // See if we have a SRC attribute
   nsAutoString src;
   nsresult ca;
-  ca = mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
+  ca = mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, src);
   if ((NS_CONTENT_ATTR_HAS_VALUE != ca) || (src.Length() == 0))
   {
     // Let's see if this is an object tag and we have a DATA attribute
@@ -233,14 +233,14 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
     mContent->GetTag(tag);
 
     if(tag == nsHTMLAtoms::object)
-      mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src);
+      mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, src);
   
     NS_IF_RELEASE(tag);
   }
 
   nsAutoString lowSrc;
   nsresult lowSrcResult;
-  lowSrcResult = mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::lowsrc, lowSrc);
+  lowSrcResult = mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::lowsrc, lowSrc);
 
   // Set the image loader's source URL and base URL
   if (NS_CONTENT_ATTR_HAS_VALUE == lowSrcResult && !lowSrc.IsEmpty()) {
@@ -526,7 +526,7 @@ NS_IMETHODIMP nsImageFrame::OnStopDecode(imgIRequest *aRequest, nsIPresContext *
   if (imageFailedToLoad && presShell) {
     if (mFailureReplace) {
       nsAutoString usemap;
-      mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
+      mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);    
       // We failed to load the image. Notify the pres shell if we aren't an image map
       if (usemap.IsEmpty()) {
         presShell->CantRenderReplacedElement(aPresContext, this);
@@ -928,7 +928,7 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
   // If there's still room, display the alt-text
   if (!inner.IsEmpty()) {
     nsAutoString altText;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::alt, altText)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::alt, altText)) {
       DisplayAltText(aPresContext, aRenderingContext, altText, inner);
     }
   }
@@ -1072,7 +1072,7 @@ nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
     }
 
     nsAutoString usemap;
-    mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);
+    mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::usemap, usemap);
 
     nsCOMPtr<nsIDOMHTMLMapElement> map;
     if (NS_SUCCEEDED(nsImageMapUtils::FindImageMap(doc,usemap,getter_AddRefs(map))) && map) {
@@ -1142,7 +1142,7 @@ nsImageFrame::IsServerImageMap()
 {
   nsAutoString ismap;
   return NS_CONTENT_ATTR_HAS_VALUE ==
-    mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::ismap, ismap);
+    mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::ismap, ismap);
 }
 
 PRIntn
@@ -1150,7 +1150,7 @@ nsImageFrame::GetSuppress()
 {
   nsAutoString s;
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::suppress, s)) {
+      mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::suppress, s)) {
     if (s.EqualsIgnoreCase("true")) {
       return SUPPRESS;
     } else if (s.EqualsIgnoreCase("false")) {
@@ -1375,7 +1375,7 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
   }
   if (nsHTMLAtoms::src == aAttribute) {
     nsAutoString newSRC;
-    aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, newSRC);
+    aChild->GetAttr(kNameSpaceID_None, nsHTMLAtoms::src, newSRC);
 
     PRUint32 loadStatus = imgIRequest::STATUS_ERROR;
 

@@ -229,26 +229,26 @@ public:
   //                           PRBool aNotify);
   // NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
   // NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
-  // NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,
-  //                                     nsINodeInfo*& aNodeInfo);
-  // NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-  //                         const nsAReadableString& aValue,
-  //                         PRBool aNotify);
-  // NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-  //                         const nsAReadableString& aValue,
-  //                         PRBool aNotify);
-  // NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-  //                         nsAWritableString& aResult) const;
-  // NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, 
-  //                         nsIAtom*& aPrefix,
-  //                         nsAWritableString& aResult) const;
-  // NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
-  //                           PRBool aNotify);
-  // NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
-  //                               PRInt32& aNameSpaceID, 
-  //                               nsIAtom*& aName,
-  //                               nsIAtom*& aPrefix) const;
-  // NS_IMETHOD GetAttributeCount(PRInt32& aResult) const;
+  // NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr,
+  //                                nsINodeInfo*& aNodeInfo);
+  // NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+  //                    const nsAReadableString& aValue,
+  //                    PRBool aNotify);
+  // NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+  //                    const nsAReadableString& aValue,
+  //                    PRBool aNotify);
+  // NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+  //                    nsAWritableString& aResult) const;
+  // NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, 
+  //                    nsIAtom*& aPrefix,
+  //                    nsAWritableString& aResult) const;
+  // NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
+  //                      PRBool aNotify);
+  // NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
+  //                          PRInt32& aNameSpaceID, 
+  //                          nsIAtom*& aName,
+  //                          nsIAtom*& aPrefix) const;
+  // NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
   // NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   // NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
   NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
@@ -448,25 +448,25 @@ public:
   }
 
   // Remainder of nsIContent
-  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,
-                                      nsINodeInfo*& aNodeInfo);
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
+  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr,
+                                 nsINodeInfo*& aNodeInfo);
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                           const nsAReadableString& aValue,
                           PRBool aNotify);
-  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsAReadableString& aValue,
-                          PRBool aNotify);
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsAWritableString& aResult) const;
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsIAtom*& aPrefix, nsAWritableString& aResult) const;
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                            PRBool aNotify);
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
-                                PRInt32& aNameSpaceID,
-                                nsIAtom*& aName,
-                                nsIAtom*& aPrefix) const;
-  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const;
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify);
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     nsAWritableString& aResult) const;
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     nsIAtom*& aPrefix, nsAWritableString& aResult) const;
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                       PRBool aNotify);
+  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
+                           PRInt32& aNameSpaceID,
+                           nsIAtom*& aName,
+                           nsIAtom*& aPrefix) const;
+  NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
   NS_IMETHOD CanContainChildren(PRBool& aResult) const;

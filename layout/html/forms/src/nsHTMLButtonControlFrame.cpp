@@ -330,7 +330,7 @@ nsHTMLButtonControlFrame::IsSubmit(nsIPresContext* aPresContext, PRInt32 type)
     // and oif it wasn't explicitly then we we allow to be a submit
     if (NS_FORM_BUTTON_BUTTON == type) {
       nsAutoString type;
-      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type)) {
+      if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type)) {
         return PR_FALSE;
       } else {
         return PR_TRUE;
@@ -810,7 +810,7 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsIPresContext* aPresContext
   if (nsHTMLAtoms::value == aName) {
     nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
     if (formControl) {
-      return formControl->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, aValue, PR_TRUE);
+      return formControl->SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue, PR_TRUE);
     }
   }
   return NS_OK;
@@ -821,7 +821,7 @@ NS_IMETHODIMP nsHTMLButtonControlFrame::GetProperty(nsIAtom* aName, nsAWritableS
   if (nsHTMLAtoms::value == aName) {
     nsCOMPtr<nsIHTMLContent> formControl(do_QueryInterface(mContent));
     if (formControl) {
-      formControl->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
+      formControl->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, aValue);
     }
   }
   return NS_OK;

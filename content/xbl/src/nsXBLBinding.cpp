@@ -683,7 +683,7 @@ nsXBLBinding::GenerateAnonymousContent()
 #ifdef DEBUG
   // See if there's an includes attribute.
   nsAutoString includes;
-  content->GetAttribute(kNameSpaceID_None, kIncludesAtom, includes);
+  content->GetAttr(kNameSpaceID_None, kIncludesAtom, includes);
   if (!includes.IsEmpty()) {
     nsCAutoString id;
     mPrototypeBinding->GetID(id);
@@ -853,28 +853,28 @@ nsXBLBinding::GenerateAnonymousContent()
   // This shorthand hack always happens, even when we didn't
   // build anonymous content.
   PRInt32 length;
-  content->GetAttributeCount(length);
+  content->GetAttrCount(length);
 
   PRInt32 namespaceID;
   nsCOMPtr<nsIAtom> name;
   nsCOMPtr<nsIAtom> prefix;
 
   for (PRInt32 i = 0; i < length; ++i) {
-    content->GetAttributeNameAt(i, namespaceID, *getter_AddRefs(name), *getter_AddRefs(prefix));
+    content->GetAttrNameAt(i, namespaceID, *getter_AddRefs(name), *getter_AddRefs(prefix));
 
     if (name.get() != kIncludesAtom) {
       nsAutoString value;
-      mBoundElement->GetAttribute(namespaceID, name, value);
+      mBoundElement->GetAttr(namespaceID, name, value);
       if (value.IsEmpty()) {
         nsAutoString value2;
-        content->GetAttribute(namespaceID, name, value2);
-        mBoundElement->SetAttribute(namespaceID, name, value2, PR_FALSE);
+        content->GetAttr(namespaceID, name, value2);
+        mBoundElement->SetAttr(namespaceID, name, value2, PR_FALSE);
       }
     }
 
     // Conserve space by wiping the attributes off the clone.
     if (mContent)
-      mContent->UnsetAttribute(namespaceID, name, PR_FALSE);
+      mContent->UnsetAttr(namespaceID, name, PR_FALSE);
   }
   
   return NS_OK;
@@ -915,7 +915,7 @@ nsXBLBinding::InstallEventHandlers()
         /*
         // Disable ATTACHTO capability for Mozilla 1.0
         nsAutoString attachType;
-        child->GetAttribute(kNameSpaceID_None, kAttachToAtom, attachType);
+        child->GetAttr(kNameSpaceID_None, kAttachToAtom, attachType);
         if (attachType == NS_LITERAL_STRING("_document") || 
             attachType == NS_LITERAL_STRING("_window"))
         {
@@ -941,7 +941,7 @@ nsXBLBinding::InstallEventHandlers()
         // Figure out if we're using capturing or not.
         PRBool useCapture = PR_FALSE;
         nsAutoString capturer;
-        child->GetAttribute(kNameSpaceID_None, kPhaseAtom, capturer);
+        child->GetAttr(kNameSpaceID_None, kPhaseAtom, capturer);
         if (capturer == NS_LITERAL_STRING("capturing"))
           useCapture = PR_TRUE;
 
@@ -1021,7 +1021,7 @@ nsXBLBinding::InstallEventHandlers()
         else {
           NS_WARNING("***** Non-compliant XBL event listener attached! *****");
           nsAutoString value;
-          child->GetAttribute(kNameSpaceID_None, kActionAtom, value);
+          child->GetAttr(kNameSpaceID_None, kActionAtom, value);
           if (value.IsEmpty())
             GetTextData(child, value);
           AddScriptEventListener(mBoundElement, eventAtom, value);
@@ -1091,7 +1091,7 @@ nsXBLBinding::InstallProperties()
     // Init our class and insert it into the prototype chain.
     nsAutoString className;
     nsCAutoString classStr; 
-    interfaceElement->GetAttribute(kNameSpaceID_None, kNameAtom, className);
+    interfaceElement->GetAttr(kNameSpaceID_None, kNameAtom, className);
     if (!className.IsEmpty()) {
       classStr.AssignWithConversion(className);
     }
@@ -1120,7 +1120,7 @@ nsXBLBinding::InstallProperties()
       if (tagName.get() == kMethodAtom && classObject) {
         // Obtain our name attribute.
         nsAutoString name, body;
-        child->GetAttribute(kNameSpaceID_None, kNameAtom, name);
+        child->GetAttr(kNameSpaceID_None, kNameAtom, name);
 
         // Now walk all of our args.
         // XXX I'm lame. 32 max args allowed.
@@ -1137,7 +1137,7 @@ nsXBLBinding::InstallProperties()
           if (kidTagName.get() == kParameterAtom) {
             // Get the argname and add it to the array.
             nsAutoString argName;
-            arg->GetAttribute(kNameSpaceID_None, kNameAtom, argName);
+            arg->GetAttr(kNameSpaceID_None, kNameAtom, argName);
             char* argStr = argName.ToNewCString();
             args[argCount] = argStr;
             argCount++;
@@ -1187,14 +1187,14 @@ nsXBLBinding::InstallProperties()
       else if (tagName.get() == kPropertyAtom) {
         // Obtain our name attribute.
         nsAutoString name;
-        child->GetAttribute(kNameSpaceID_None, kNameAtom, name);
+        child->GetAttr(kNameSpaceID_None, kNameAtom, name);
 
         if (!name.IsEmpty()) {
           // We have a property.
           nsAutoString getter, setter, readOnly;
-          child->GetAttribute(kNameSpaceID_None, kOnGetAtom, getter);
-          child->GetAttribute(kNameSpaceID_None, kOnSetAtom, setter);
-          child->GetAttribute(kNameSpaceID_None, kReadOnlyAtom, readOnly);
+          child->GetAttr(kNameSpaceID_None, kOnGetAtom, getter);
+          child->GetAttr(kNameSpaceID_None, kOnSetAtom, setter);
+          child->GetAttr(kNameSpaceID_None, kReadOnlyAtom, readOnly);
 
           void* getFunc = nsnull;
           void* setFunc = nsnull;

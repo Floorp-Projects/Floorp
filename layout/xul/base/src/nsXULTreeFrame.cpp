@@ -358,7 +358,7 @@ nsXULTreeFrame::AttributeChanged (nsIPresContext* aPresContext, nsIContent* aChi
       treeOuterGroup->GetContent(getter_AddRefs(child));
       
       nsAutoString rows;
-      mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::rows, rows);
+      mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::rows, rows);
       
       if (!rows.IsEmpty()) {
         PRInt32 dummy;
@@ -369,7 +369,7 @@ nsXULTreeFrame::AttributeChanged (nsIPresContext* aPresContext, nsIContent* aChi
         rowHeight = NSTwipsToIntPixels(rowHeight, t2p);
         nsAutoString value;
         value.AppendInt(rowHeight*count);
-        child->SetAttribute(kNameSpaceID_None, nsXULAtoms::minheight, value, PR_FALSE);
+        child->SetAttr(kNameSpaceID_None, nsXULAtoms::minheight, value, PR_FALSE);
 
         nsBoxLayoutState state(aPresContext);
         treeOuterGroup->MarkDirty(state);

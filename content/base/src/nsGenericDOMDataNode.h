@@ -462,37 +462,37 @@ struct nsGenericDOMDataNode {
   }                                                                        \
   NS_IMETHOD GetTag(nsIAtom*& aResult) const;                              \
   NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const;                     \
-  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,       \
-                                      nsINodeInfo*& aNodeInfo) {           \
+  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr,            \
+                                 nsINodeInfo*& aNodeInfo) {                \
     return _g.NormalizeAttributeString(aStr, aNodeInfo);                   \
   }                                                                        \
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,       \
-                          nsAWritableString& aResult) const {                       \
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,            \
+                     nsAWritableString& aResult) const {                   \
     return _g.GetAttribute(aNameSpaceID, aAttribute, aResult);             \
   }                                                                        \
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,       \
-                          nsIAtom*& aPrefix, nsAWritableString& aResult) const {    \
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,            \
+                     nsIAtom*& aPrefix, nsAWritableString& aResult) const {    \
     return _g.GetAttribute(aNameSpaceID, aAttribute, aPrefix, aResult);    \
   }                                                                        \
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,       \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,            \
+                     const nsAReadableString& aValue, PRBool aNotify) {    \
     return _g.SetAttribute(aNameSpaceID, aAttribute, aValue, aNotify);     \
   }                                                                        \
-  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,                          \
-                          const nsAReadableString& aValue, PRBool aNotify) {        \
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,                               \
+                     const nsAReadableString& aValue, PRBool aNotify) {    \
     return _g.SetAttribute(aNodeInfo, aValue, aNotify);                    \
   }                                                                        \
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,     \
-                            PRBool aNotify) {                              \
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,          \
+                       PRBool aNotify) {                                   \
     return _g.UnsetAttribute(aNameSpaceID, aAttribute, aNotify);           \
   }                                                                        \
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,                            \
-                                PRInt32& aNameSpaceID,                     \
-                                nsIAtom*& aName,                           \
-                                nsIAtom*& aPrefix) const {                 \
+  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,                                 \
+                           PRInt32& aNameSpaceID,                          \
+                           nsIAtom*& aName,                                \
+                           nsIAtom*& aPrefix) const {                      \
     return _g.GetAttributeNameAt(aIndex, aNameSpaceID, aName, aPrefix);    \
   }                                                                        \
-  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {                   \
+  NS_IMETHOD GetAttrCount(PRInt32& aResult) const {                        \
     return _g.GetAttributeCount(aResult);                                  \
   }                                                                        \
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;                       \

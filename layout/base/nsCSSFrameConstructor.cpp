@@ -1732,7 +1732,7 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
 
   // Figure out which type of input frame to create
   nsAutoString  val;
-  if (NS_OK == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, val)) {
+  if (NS_OK == aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, val)) {
     if (val.EqualsIgnoreCase("submit")) {
       rv = ConstructButtonControlFrame(aPresShell, aPresContext, aFrame);
     }
@@ -5533,7 +5533,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         isReplaced = PR_TRUE;
         if (aTag == nsHTMLAtoms::label || aTag == nsXULAtoms::description) {
           nsAutoString value;
-          if (aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value) ==
+          if (aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value) ==
               NS_CONTENT_ATTR_NOT_THERE)
             return NS_OK;
         }
@@ -5734,7 +5734,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
           NS_NewTreeLayout(aPresShell, layout);
 
           nsAutoString outer;
-          rv = aContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::outer, outer); 
+          rv = aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::outer, outer); 
           if (outer.EqualsIgnoreCase("true")) {
             rv = NS_NewXULTreeOuterGroupFrame(aPresShell, &newFrame, PR_FALSE, layout);
             ((nsXULTreeGroupFrame*)newFrame)->InitGroup(this, aPresContext, (nsXULTreeOuterGroupFrame*) newFrame);
@@ -8083,7 +8083,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
               aContainer->GetParent(*getter_AddRefs(parent));
               if (parent) {
                 nsAutoString open;
-                parent->GetAttribute(kNameSpaceID_None, nsXULAtoms::open, open);
+                parent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
                 if (open.EqualsIgnoreCase("true")) {
                   // Clear our undisplayed content.
                   nsCOMPtr<nsIFrameManager> frameManager;
@@ -10290,19 +10290,19 @@ GetAlternateTextFor(nsIContent* aContent,
 
   // The "alt" attribute specifies alternate text that is rendered
   // when the image can not be displayed
-  rv = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::alt, aAltText);
+  rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, aAltText);
 
   // If there's no "alt" attribute, then use the value of the "title"
   // attribute. Note that this is not the same as a value of ""
   if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-    rv = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::title, 
-                                aAltText);
+    rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::title, 
+                           aAltText);
 
     // If there's no "alt" or "title" attribute, and aContent is an input    
     // element, then use the value of the "value" attribute
     if ((NS_CONTENT_ATTR_NOT_THERE == rv) && (nsHTMLAtoms::input == aTag)) {
-      rv = aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value,
-                                  aAltText);
+      rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value,
+                             aAltText);
 
       // If there's no "value" attribute either, then use the localized string 
       // for "Submit" as the alternate text.

@@ -247,9 +247,9 @@ nsHTMLAreaElement::SetHref(const nsAReadableString& aValue)
   // asks for it.
   mLinkState = eLinkState_Unknown;
 
-  return NS_STATIC_CAST(nsIContent *, this)->SetAttribute(kNameSpaceID_HTML,
-                                                          nsHTMLAtoms::href,
-                                                          aValue, PR_TRUE);
+  return NS_STATIC_CAST(nsIContent *, this)->SetAttr(kNameSpaceID_HTML,
+                                                     nsHTMLAtoms::href,
+                                                     aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -479,9 +479,9 @@ nsHTMLAreaElement::GetHrefCString(char* &aBuf)
   nsAutoString relURLSpec;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      NS_STATIC_CAST(nsIContent *, this)->GetAttribute(kNameSpaceID_HTML,
-                                                       nsHTMLAtoms::href,
-                                                       relURLSpec)) {
+      NS_STATIC_CAST(nsIContent *, this)->GetAttr(kNameSpaceID_HTML,
+                                                  nsHTMLAtoms::href,
+                                                  relURLSpec)) {
     // Clean up any leading or trailing whitespace
     relURLSpec.Trim(" \t\n\r");
 

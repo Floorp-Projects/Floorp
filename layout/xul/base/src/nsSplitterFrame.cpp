@@ -174,7 +174,7 @@ nsSplitterFrameInner::GetResizeBefore()
     mOuter->GetContent(getter_AddRefs(content));
 
     nsString value;
-    content->GetAttribute(kNameSpaceID_None, nsXULAtoms::resizebefore, value);
+    content->GetAttr(kNameSpaceID_None, nsXULAtoms::resizebefore, value);
     if (value.EqualsIgnoreCase("farthest"))
       return Farthest;
     else
@@ -194,7 +194,7 @@ nsSplitterFrameInner::GetResizeAfter()
     mOuter->GetContent(getter_AddRefs(content));
 
     nsString value;
-    content->GetAttribute(kNameSpaceID_None, nsXULAtoms::resizeafter, value);
+    content->GetAttr(kNameSpaceID_None, nsXULAtoms::resizeafter, value);
     if (value.EqualsIgnoreCase("farthest"))
       return Farthest;
     else if (value.EqualsIgnoreCase("grow"))
@@ -210,7 +210,7 @@ nsSplitterFrameInner::GetState()
     mOuter->GetContent(getter_AddRefs(content));
 
     nsString value;
-    content->GetAttribute(kNameSpaceID_None, nsXULAtoms::state, value);
+    content->GetAttr(kNameSpaceID_None, nsXULAtoms::state, value);
     if (value.EqualsIgnoreCase("dragging"))
       return Dragging;
     else if (value.EqualsIgnoreCase("collapsed"))
@@ -327,7 +327,7 @@ nsSplitterFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
         // create a spring
         nsCOMPtr<nsIContent> content;
         CreateAnonymousNode(mContent, nsXULAtoms::spring, nsXULAtoms::nameSpaceID, getter_AddRefs(content));
-        content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, NS_ConvertASCIItoUCS2("100%"), PR_FALSE);
+        content->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, NS_ConvertASCIItoUCS2("100%"), PR_FALSE);
         aAnonymousChildren.AppendElement(content);
 
         // a grippy
@@ -336,7 +336,7 @@ nsSplitterFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
 
         // create a spring
         CreateAnonymousNode(mContent, nsXULAtoms::spring, nsXULAtoms::nameSpaceID, getter_AddRefs(content));
-        content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, NS_ConvertASCIItoUCS2("100%"), PR_FALSE);
+        content->SetAttr(kNameSpaceID_None, nsXULAtoms::flex, NS_ConvertASCIItoUCS2("100%"), PR_FALSE);
         aAnonymousChildren.AppendElement(content);
      }
   }
@@ -559,7 +559,7 @@ nsSplitterFrameInner::MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
           State newState = GetState(); 
           // if the state is dragging then make it Open.
           if (newState == Dragging)
-              mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, nsAutoString(), PR_TRUE);
+              mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, nsAutoString(), PR_TRUE);
 
           mPressed = PR_FALSE;
 
@@ -653,7 +653,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                         //printf("Collapse right\n");
                         if (GetCollapseDirection() == After) 
                         {
-                             mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("collapsed"), PR_TRUE);
+                             mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("collapsed"), PR_TRUE);
                            
                         }
 
@@ -662,7 +662,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                         //printf("Collapse left\n");
                         if (GetCollapseDirection() == Before) 
                         {
-                          mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("collapsed"), PR_TRUE);
+                          mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("collapsed"), PR_TRUE);
                          
                         }
                     }
@@ -672,7 +672,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
                 // if we are not in a collapsed position and we are not dragging make sure
                 // we are dragging.
                 if (currentState != Dragging)
-                  mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("dragging"), PR_TRUE);
+                  mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("dragging"), PR_TRUE);
 
                 if (realTimeDrag)
                   AdjustChildren(aPresContext);
@@ -815,7 +815,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
   mOuter->GetContent(getter_AddRefs(content));
 
   nsAutoString disabled;
-  content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
+  content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
   if (disabled.Equals(NS_LITERAL_STRING("true")))
     return NS_OK;
 
@@ -900,7 +900,7 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
         r.Inflate(margin);
 
         nsAutoString fixed;
-        content->GetAttribute(kNameSpaceID_None, nsXULAtoms::fixed, fixed);
+        content->GetAttr(kNameSpaceID_None, nsXULAtoms::fixed, fixed);
 
         if (count < childIndex) {
             if (!fixed.Equals(NS_LITERAL_STRING("true"))) {              
@@ -998,7 +998,7 @@ nsSplitterFrameInner::MouseMove(nsIDOMEvent* aMouseEvent)
   if (mDragging)
     return NS_OK;
 
-  mOuter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("dragging"), PR_TRUE);
+  mOuter->mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::state, NS_ConvertASCIItoUCS2("dragging"), PR_TRUE);
 
   RemoveListener();
   mOuter->CaptureMouse(mOuter->mPresContext, PR_TRUE);
@@ -1023,7 +1023,7 @@ nsSplitterFrameInner::CollapseDirection
 nsSplitterFrameInner::GetCollapseDirection()
 {
     nsString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mOuter->mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::collapse, value))
+    if (NS_CONTENT_ATTR_HAS_VALUE == mOuter->mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::collapse, value))
     {
      if (value.EqualsIgnoreCase("before"))
          return Before;
@@ -1070,14 +1070,14 @@ nsSplitterFrameInner::UpdateState()
           if (mState == Collapsed) {
             // Collapsed -> Open
             // Collapsed -> Dragging
-            sibling->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
-                                    PR_TRUE);
+            sibling->UnsetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
+                               PR_TRUE);
           } else if ((mState == Open || mState == Dragging) 
                      && newState == Collapsed) {
             // Open -> Collapsed
             // Dragging -> Collapsed
-            sibling->SetAttribute(kNameSpaceID_None, nsXULAtoms::collapsed,
-                                  NS_ConvertASCIItoUCS2("true"), PR_TRUE);
+            sibling->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed,
+                             NS_ConvertASCIItoUCS2("true"), PR_TRUE);
           }
         }
       }
@@ -1263,11 +1263,11 @@ nsSplitterFrameInner::SetPreferredSize(nsBoxLayoutState& aState, nsIBox* aChildB
   char ch[50];
   sprintf(ch,"%d",pref/aOnePixel);
   nsAutoString oldValue;
-  content->GetAttribute(kNameSpaceID_None, attribute, oldValue);
+  content->GetAttr(kNameSpaceID_None, attribute, oldValue);
   if (oldValue.EqualsWithConversion(ch))
      return;
 
-  content->SetAttribute(kNameSpaceID_None, attribute, NS_ConvertASCIItoUCS2(ch), PR_TRUE);
+  content->SetAttr(kNameSpaceID_None, attribute, NS_ConvertASCIItoUCS2(ch), PR_TRUE);
   aChildBox->MarkDirty(aState);
 }
 

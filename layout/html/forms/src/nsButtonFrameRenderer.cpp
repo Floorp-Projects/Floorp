@@ -78,9 +78,9 @@ nsButtonFrameRenderer::SetDisabled(PRBool aDisabled, PRBool notify)
   mFrame->GetContent(getter_AddRefs(content));
 
   if (aDisabled)
-    content->SetAttribute(mNameSpace, nsHTMLAtoms::disabled, nsAutoString(), notify);
+    content->SetAttr(mNameSpace, nsHTMLAtoms::disabled, nsAutoString(), notify);
   else
-    content->UnsetAttribute(mNameSpace, nsHTMLAtoms::disabled, notify);
+    content->UnsetAttr(mNameSpace, nsHTMLAtoms::disabled, notify);
 
 }
 
@@ -91,7 +91,7 @@ nsButtonFrameRenderer::isDisabled()
   nsCOMPtr<nsIContent> content;
   mFrame->GetContent(getter_AddRefs(content));
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(mNameSpace, nsHTMLAtoms::disabled, value))
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(mNameSpace, nsHTMLAtoms::disabled, value))
     return PR_TRUE;
 
   return PR_FALSE;

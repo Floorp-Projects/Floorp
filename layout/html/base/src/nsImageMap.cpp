@@ -106,7 +106,7 @@ Area::GetHREF(nsString& aHref) const
 {
   aHref.Truncate();
   if (mArea) {
-    mArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, aHref);
+    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, aHref);
   }
 }
  
@@ -115,7 +115,7 @@ Area::GetTarget(nsString& aTarget) const
 {
   aTarget.Truncate();
   if (mArea) {
-    mArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::target, aTarget);
+    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, aTarget);
   }
 }
  
@@ -124,7 +124,7 @@ Area::GetAltText(nsString& aAltText) const
 {
   aAltText.Truncate();
   if (mArea) {
-    mArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::alt, aAltText);
+    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, aAltText);
   }
 }
 
@@ -328,9 +328,9 @@ void Area::ToHTML(nsString& aResult)
   nsAutoString href, target, altText;
 
   if (mArea) {
-    mArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
-    mArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::target, target);
-    mArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::alt, altText);
+    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, href);
+    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::target, target);
+    mArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::alt, altText);
   }
 
   aResult.Truncate();
@@ -897,9 +897,9 @@ nsresult
 nsImageMap::AddArea(nsIContent* aArea)
 {
   nsAutoString shape, coords, baseURL, noHref;
-  aArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::shape, shape);
-  aArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::coords, coords);
-  PRBool hasURL = (PRBool)(NS_CONTENT_ATTR_HAS_VALUE != aArea->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::nohref, noHref));
+  aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::shape, shape);
+  aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::coords, coords);
+  PRBool hasURL = (PRBool)(NS_CONTENT_ATTR_HAS_VALUE != aArea->GetAttr(kNameSpaceID_None, nsHTMLAtoms::nohref, noHref));
   PRBool suppress = PR_FALSE;/* XXX */
 
   //Add focus listener to track area focus changes

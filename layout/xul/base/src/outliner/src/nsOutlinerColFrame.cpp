@@ -133,7 +133,7 @@ nsOutlinerColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     if (content) {
       // This allows selective overriding for subcontent.
       nsAutoString value;
-      content->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, value);
+      content->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
       if (value.EqualsWithConversion("true"))
         return result;
     }

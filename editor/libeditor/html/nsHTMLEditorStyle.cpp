@@ -580,12 +580,12 @@ PRBool nsHTMLEditor::IsOnlyAttribute(nsIDOMNode *aNode,
   
   PRInt32 attrCount, i, nameSpaceID;
   nsCOMPtr<nsIAtom> attrName, prefix;
-  content->GetAttributeCount(attrCount);
+  content->GetAttrCount(attrCount);
   
   for (i=0; i<attrCount; i++)
   {
-    content->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
-                                *getter_AddRefs(prefix));
+    content->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
+                           *getter_AddRefs(prefix));
     nsAutoString attrString, tmp;
     if (!attrName) continue;  // ooops
     attrName->ToString(attrString);
@@ -615,13 +615,13 @@ nsHTMLEditor::HasMatchingAttributes(nsIDOMNode *aNode1,
   PRInt32 attrCount, i, nameSpaceID, realCount1=0, realCount2=0;
   nsCOMPtr<nsIAtom> attrName, prefix;
   nsresult res, res2;
-  content1->GetAttributeCount(attrCount);
+  content1->GetAttrCount(attrCount);
   nsAutoString attrString, tmp, attrVal1, attrVal2;
   
   for (i=0; i<attrCount; i++)
   {
-    content1->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
-                                 *getter_AddRefs(prefix));
+    content1->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
+                            *getter_AddRefs(prefix));
     if (!attrName) continue;  // ooops
     attrName->ToString(attrString);
     // if it's a special _moz... attribute, keep going
@@ -630,17 +630,17 @@ nsHTMLEditor::HasMatchingAttributes(nsIDOMNode *aNode1,
     // otherwise, it's another attribute, so count it
     realCount1++;
     // and compare it to element2's attributes
-    res = content1->GetAttribute(nameSpaceID, attrName, attrVal1);
-    res2 = content2->GetAttribute(nameSpaceID, attrName, attrVal2);
+    res = content1->GetAttr(nameSpaceID, attrName, attrVal1);
+    res2 = content2->GetAttr(nameSpaceID, attrName, attrVal2);
     if (res != res2) return PR_FALSE;
     if (!attrVal1.EqualsIgnoreCase(attrVal2)) return PR_FALSE;
   }
 
-  content2->GetAttributeCount(attrCount);
+  content2->GetAttrCount(attrCount);
   for (i=0; i<attrCount; i++)
   {
-    content2->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
-                                 *getter_AddRefs(prefix));
+    content2->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attrName),
+                            *getter_AddRefs(prefix));
     if (!attrName) continue;  // ooops
     attrName->ToString(attrString);
     // if it's a special _moz... attribute, keep going

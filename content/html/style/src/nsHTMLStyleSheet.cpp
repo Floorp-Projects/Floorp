@@ -886,7 +886,7 @@ HTMLStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
         // if we have anchor colors, check if this is an anchor with an href
         if (tag == nsHTMLAtoms::a) {
           nsAutoString href;
-          nsresult attrState = styledContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
+          nsresult attrState = styledContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, href);
           if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
             result = NS_OK; // yes, style will depend on link state
           }

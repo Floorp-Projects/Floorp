@@ -514,24 +514,24 @@ nsPopupSetFrame::MarkAsGenerated(nsIContent* aPopupContent)
 
     // Retrieve the menugenerated attribute.
     nsAutoString value;
-    childContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
-                               value);
+    childContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, 
+                          value);
     if (value == NS_LITERAL_STRING("true")) {
       // Ungenerate this element.
-      childContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated,
-                                   PR_TRUE);
+      childContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated,
+                              PR_TRUE);
     }
   }
 
   // Set our attribute, but only if we aren't already generated.
   // Retrieve the menugenerated attribute.
   nsAutoString value;
-  aPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, 
-                              value);
+  aPopupContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, 
+                         value);
   if (value != NS_LITERAL_STRING("true")) {
     // Generate this element.
-    aPopupContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_LITERAL_STRING("true"),
-                                PR_TRUE);
+    aPopupContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menugenerated, NS_LITERAL_STRING("true"),
+                           PR_TRUE);
   }
 }
 
@@ -553,7 +553,7 @@ nsPopupSetFrame::OpenPopup(PRBool aActivateFlag)
     GetContent(getter_AddRefs(content));
     nsAutoString property;    
     // Tooltips don't get keyboard navigation
-    content->GetAttribute(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
+    content->GetAttr(kNameSpaceID_None, nsXULAtoms::ignorekeys, property);
     if ( property != NS_LITERAL_STRING("true") && 
            childPopup &&
           mPopupType != NS_LITERAL_STRING("tooltip") )
@@ -591,10 +591,10 @@ nsPopupSetFrame::ActivatePopup(PRBool aActivateFlag)
     // is set by setting the |menuactive| attribute. This used to trip css into showing the menu
     // but now we do it ourselves. 
     if (aActivateFlag)
-      content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, NS_LITERAL_STRING("true"), PR_TRUE);
+      content->SetAttr(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, NS_LITERAL_STRING("true"), PR_TRUE);
     else {
-      content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
-      content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, PR_TRUE);
+      content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+      content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menutobedisplayed, PR_TRUE);
 
       // get rid of the reflows we just created. If we leave them hanging around, we
       // can get into trouble if a dialog with a modal event loop comes along and
@@ -667,7 +667,7 @@ nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
       if (tag.get() == nsXULAtoms::menuitem) {
         // See if we have a command attribute.
         nsAutoString command;
-        grandChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::command, command);
+        grandChild->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
         if (!command.IsEmpty()) {
           // We do! Look it up in our document
           nsCOMPtr<nsIDOMElement> commandElt;
@@ -675,24 +675,24 @@ nsPopupSetFrame::OnCreate(nsIContent* aPopupContent)
           nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
           if ( commandContent ) {
             nsAutoString commandDisabled, menuDisabled;
-            commandContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, commandDisabled);
-            grandChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, menuDisabled);
+            commandContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, commandDisabled);
+            grandChild->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, menuDisabled);
             if (!commandDisabled.Equals(menuDisabled)) {
               // The menu's disabled state needs to be updated to match the command.
               if (commandDisabled.IsEmpty()) 
-                grandChild->UnsetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
-              else grandChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, commandDisabled, PR_TRUE);
+                grandChild->UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
+              else grandChild->SetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, commandDisabled, PR_TRUE);
             }
 
             nsAutoString commandValue, menuValue;
-            commandContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::label, commandValue);
-            grandChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::label, menuValue);
+            commandContent->GetAttr(kNameSpaceID_None, nsXULAtoms::label, commandValue);
+            grandChild->GetAttr(kNameSpaceID_None, nsXULAtoms::label, menuValue);
             if (!commandValue.Equals(menuValue)) {
               // The menu's value state needs to be updated to match the command.
               // Note that (unlike the disabled state) if the command has *no* value, we
               // assume the menu is supplying its own.
               if (!commandValue.IsEmpty()) 
-                grandChild->SetAttribute(kNameSpaceID_None, nsXULAtoms::label, commandValue, PR_TRUE);
+                grandChild->SetAttr(kNameSpaceID_None, nsXULAtoms::label, commandValue, PR_TRUE);
             }
           }
         }

@@ -133,7 +133,7 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   rv = content->QueryInterface(NS_GET_IID(nsIHTMLContent),(void**)&mTextContent);
 
   if (NS_SUCCEEDED(rv)) {
-    mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
+    mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("text"), PR_FALSE);
     if (nsFormFrame::GetDisabled(this)) {
       nsCOMPtr<nsIDOMHTMLInputElement> textControl = do_QueryInterface(mTextContent);
       if (textControl) {
@@ -150,8 +150,8 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   mBrowse = do_QueryInterface(content,&rv);
 
   if (NS_SUCCEEDED(rv)) {
-    mBrowse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
-    //browse->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("browse..."), PR_FALSE);
+    mBrowse->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
+    //browse->SetAttr(kNameSpaceID_None, nsHTMLAtoms::value, nsAutoString("browse..."), PR_FALSE);
 
     aChildList.AppendElement(mBrowse);
 
@@ -161,8 +161,8 @@ nsFileControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   }
 
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
-    mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value, PR_FALSE);
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
+    mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::size, value, PR_FALSE);
   }
 
   return NS_OK;
@@ -458,7 +458,7 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
 
           // It's an input, is it a text input?
           nsAutoString value;
-          if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
+          if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
             if (value.EqualsIgnoreCase("text")) {
               result = (nsNewFrame*)childFrame;      
             }
@@ -555,8 +555,8 @@ nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     }
   } else if (nsHTMLAtoms::size == aAttribute) {
     nsString value;
-    if (nsnull != mTextContent && NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
-      mTextContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::size, value, PR_TRUE);
+    if (nsnull != mTextContent && NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, value)) {
+      mTextContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::size, value, PR_TRUE);
       if (aHint != NS_STYLE_HINT_REFLOW) {
         nsFormFrame::StyleChangeReflow(aPresContext, this);
       }

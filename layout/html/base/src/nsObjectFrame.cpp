@@ -367,7 +367,7 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
     return;
 
   nsAutoString type;
-  nsresult rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
+  nsresult rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
   if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (type.Length() > 0)) 
   {
     // should be really call to imlib
@@ -386,13 +386,13 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
   }
 
   nsAutoString data;
-  rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, data);
+  rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, data);
 
   PRBool havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0);
 
   if(!havedata)
   {// try it once more for SRC attrubute
-    rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, data);
+    rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, data);
     havedata = (rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0);
   }
 
@@ -432,7 +432,7 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
   if (NS_FAILED(rv)) return;
 
   nsAutoString type;
-  rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
+  rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
   if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (type.Length() > 0)) 
   {
     nsXPIDLCString value;
@@ -447,7 +447,7 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
 
   // if we don't have a TYPE= try getting the mime-type via the DATA= url
   nsAutoString data;
-  rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, data);
+  rv = aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, data);
   if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0)) 
   {
     nsCOMPtr<nsIURI> uri;
@@ -542,9 +542,9 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
     // fix up DATA= to SRC=
     nsAutoString url;
     if (NS_CONTENT_ATTR_HAS_VALUE != 
-         aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, url))
+         aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, url))
       return rv;  // if DATA= is empty, what shall we do? bail for now...
-    aContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, url, PR_FALSE);
+    aContent->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, url, PR_FALSE);
 
     nsCOMPtr<nsIPresShell> shell;
     aPresContext->GetShell(getter_AddRefs(shell));
@@ -853,7 +853,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
     // if we have a clsid, we're either an internal widget, an ActiveX control, or an applet
     mContent->GetNameSpaceID(nameSpaceID);
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(nameSpaceID, nsHTMLAtoms::classid, classid)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(nameSpaceID, nsHTMLAtoms::classid, classid)) {
       PRBool bJavaObject = PR_FALSE;
       PRBool bJavaPluginClsid = PR_FALSE;
 
@@ -874,7 +874,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
         nsAutoString codeBase;
         if ((NS_CONTENT_ATTR_HAS_VALUE == 
-             mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) && 
+             mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) && 
             !bJavaPluginClsid) {
           nsCOMPtr<nsIURI> codeBaseURL;
           rv = NS_NewURI(getter_AddRefs(codeBaseURL), codeBase, baseURL);
@@ -912,7 +912,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
           // if we have a codebase, add it to the fullURL
           nsAutoString codeBase;
-          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) {
+          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) {
             nsCOMPtr<nsIURI> codeBaseURL;
             rv = NS_NewURI(getter_AddRefs(fullURL), codeBase, baseURL);
             if (NS_SUCCEEDED(rv)) {
@@ -957,9 +957,9 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
       nsCOMPtr<nsIAtom> tag;
       mContent->GetTag(*getter_AddRefs(tag));
       if (tag.get() == nsHTMLAtoms::applet) { 
-        if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::code, src)) {
+        if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::code, src)) {
           nsAutoString codeBase;
-          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) {
+          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::codebase, codeBase)) {
             nsCOMPtr<nsIURI> codeBaseURL;
             rv = NS_NewURI(getter_AddRefs(codeBaseURL), codeBase, baseURL);
             if(rv == NS_OK) {
@@ -975,14 +975,14 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
       } else { // traditional plugin
         nsXPIDLCString mimeTypeStr;
         nsAutoString type;
-        mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
+        mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
 
         if (type.Length()) {
           mimeTypeStr.Adopt(ToNewCString(type));
         }
         //stream in the object source if there is one...
         if (NS_CONTENT_ATTR_HAS_VALUE ==
-            mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) {
+            mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src, src)) {
           // Create an absolute URL
           rv = NS_NewURI(getter_AddRefs(fullURL), src, baseURL);
           if (NS_FAILED(rv)) {
@@ -993,7 +993,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
           }
         }
         else if (NS_CONTENT_ATTR_HAS_VALUE ==
-                 mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) {
+                 mContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::data, src)) {
           // Create an absolute URL
           rv = NS_NewURI(getter_AddRefs(fullURL), src, baseURL);
           if (NS_FAILED(rv)) {
@@ -1362,7 +1362,7 @@ nsObjectFrame::IsHidden() const
     // The <object> tag doesn't support the 'hidden' attribute, but
     // everything else does...
     nsAutoString hidden;
-    mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
+    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
 
     // Yes, these are really the kooky ways that you could tell 4.x
     // not to hide the <embed> once you'd put the 'hidden' attribute
@@ -1841,7 +1841,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
     if (NS_SUCCEEDED(rv)) {
       PRInt32 count;
 
-      if (NS_SUCCEEDED(iContent->GetAttributeCount(count))) {
+      if (NS_SUCCEEDED(iContent->GetAttrCount(count))) {
         PRInt32 index;
         mAttrNames = (char **)PR_Calloc(sizeof(char *) * count, 1);
         mAttrVals = (char **)PR_Calloc(sizeof(char *) * count, 1);
@@ -1852,12 +1852,12 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetAttributes(PRUint16& n,
             PRInt32 nameSpaceID;
             nsCOMPtr<nsIAtom> atom;
             nsCOMPtr<nsIAtom> prefix;
-            iContent->GetAttributeNameAt(index, nameSpaceID,
-                                         *getter_AddRefs(atom),
-                                         *getter_AddRefs(prefix));
+            iContent->GetAttrNameAt(index, nameSpaceID,
+                                    *getter_AddRefs(atom),
+                                    *getter_AddRefs(prefix));
             nsAutoString  value;
             if (NS_CONTENT_ATTR_HAS_VALUE ==
-                  iContent->GetAttribute(nameSpaceID, atom, value)) {
+                  iContent->GetAttr(nameSpaceID, atom, value)) {
               nsAutoString  name;
               atom->ToString(name);
 
@@ -2364,8 +2364,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetParameters(PRUint16& n, const char*const
 
                     //add param to list...
 
-                    if ((NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name)) &&
-                        (NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, val)))
+                    if ((NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::name, name)) &&
+                        (NS_CONTENT_ATTR_HAS_VALUE == kid->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::value, val)))
                     {
 
 /*       Changing to ToNewUTF8String addressing 17169, 39789

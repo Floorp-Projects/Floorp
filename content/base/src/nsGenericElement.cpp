@@ -937,7 +937,7 @@ nsGenericElement::HasAttributes(PRBool* aReturn)
   NS_ENSURE_ARG_POINTER(aReturn);
   PRInt32 attrCount = 0;
 
-  GetAttributeCount(attrCount);
+  GetAttrCount(attrCount);
 
   *aReturn = !!attrCount;
 
@@ -985,7 +985,7 @@ nsGenericElement::GetAttribute(const nsAReadableString& aName,
                                nsAWritableString& aReturn)
 {
   nsCOMPtr<nsINodeInfo> ni;
-  NormalizeAttributeString(aName, *getter_AddRefs(ni));
+  NormalizeAttrString(aName, *getter_AddRefs(ni));
   NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
   PRInt32 nsid;
@@ -995,7 +995,7 @@ nsGenericElement::GetAttribute(const nsAReadableString& aName,
   ni->GetNameAtom(*getter_AddRefs(nameAtom));
 
   nsresult rv = NS_STATIC_CAST(nsIContent *,
-                               this)->GetAttribute(nsid, nameAtom, aReturn);
+                               this)->GetAttr(nsid, nameAtom, aReturn);
 
   if (rv == NS_CONTENT_ATTR_NOT_THERE) {
     SetDOMStringToNull(aReturn);
@@ -1009,15 +1009,15 @@ nsGenericElement::SetAttribute(const nsAReadableString& aName,
                                const nsAReadableString& aValue)
 {
   nsCOMPtr<nsINodeInfo> ni;
-  NormalizeAttributeString(aName, *getter_AddRefs(ni));
-  return NS_STATIC_CAST(nsIContent *, this)->SetAttribute(ni, aValue, PR_TRUE);
+  NormalizeAttrString(aName, *getter_AddRefs(ni));
+  return NS_STATIC_CAST(nsIContent *, this)->SetAttr(ni, aValue, PR_TRUE);
 }
 
 nsresult
 nsGenericElement::RemoveAttribute(const nsAReadableString& aName)
 {
   nsCOMPtr<nsINodeInfo> ni;
-  NormalizeAttributeString(aName, *getter_AddRefs(ni));
+  NormalizeAttrString(aName, *getter_AddRefs(ni));
   NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
   PRInt32 nsid;
@@ -1026,7 +1026,7 @@ nsGenericElement::RemoveAttribute(const nsAReadableString& aName)
   ni->GetNamespaceID(nsid);
   ni->GetNameAtom(*getter_AddRefs(tag));
 
-  return UnsetAttribute(nsid, tag, PR_TRUE);
+  return UnsetAttr(nsid, tag, PR_TRUE);
 }
 
 nsresult
@@ -1158,7 +1158,7 @@ nsGenericElement::GetAttributeNS(const nsAReadableString& aNamespaceURI,
     return NS_OK;
   }
 
-  NS_STATIC_CAST(nsIContent *, this)->GetAttribute(nsid, name, aReturn);
+  NS_STATIC_CAST(nsIContent *, this)->GetAttr(nsid, name, aReturn);
 
   return NS_OK;
 }
@@ -1177,7 +1177,7 @@ nsGenericElement::SetAttributeNS(const nsAReadableString& aNamespaceURI,
                                    *getter_AddRefs(ni));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return NS_STATIC_CAST(nsIContent *, this)->SetAttribute(ni, aValue, PR_TRUE);
+  return NS_STATIC_CAST(nsIContent *, this)->SetAttr(ni, aValue, PR_TRUE);
 }
 
 nsresult
@@ -1204,7 +1204,7 @@ nsGenericElement::RemoveAttributeNS(const nsAReadableString& aNamespaceURI,
   }
 
   nsAutoString tmp;
-  UnsetAttribute(nsid, name, PR_TRUE);
+  UnsetAttr(nsid, name, PR_TRUE);
 
   return NS_OK;
 }
@@ -1304,7 +1304,7 @@ nsGenericElement::HasAttribute(const nsAReadableString& aName, PRBool* aReturn)
   NS_ENSURE_ARG_POINTER(aReturn);
 
   nsCOMPtr<nsINodeInfo> ni;
-  NormalizeAttributeString(aName, *getter_AddRefs(ni));
+  NormalizeAttrString(aName, *getter_AddRefs(ni));
   NS_ENSURE_TRUE(ni, NS_ERROR_FAILURE);
 
   PRInt32 nsid;
@@ -1314,9 +1314,9 @@ nsGenericElement::HasAttribute(const nsAReadableString& aName, PRBool* aReturn)
   ni->GetNameAtom(*getter_AddRefs(nameAtom));
 
   nsAutoString tmp;
-  nsresult rv = NS_STATIC_CAST(nsIContent *, this)->GetAttribute(nsid,
-                                                                 nameAtom,
-                                                                 tmp);
+  nsresult rv = NS_STATIC_CAST(nsIContent *, this)->GetAttr(nsid,
+                                                            nameAtom,
+                                                            tmp);
 
   *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
 
@@ -1351,8 +1351,7 @@ nsGenericElement::HasAttributeNS(const nsAReadableString& aNamespaceURI,
   }
 
   nsAutoString tmp;
-  nsresult rv = NS_STATIC_CAST(nsIContent *, this)->GetAttribute(nsid, name,
-                                                                 tmp);
+  nsresult rv = NS_STATIC_CAST(nsIContent *, this)->GetAttr(nsid, name, tmp);
 
   *aReturn = rv == NS_CONTENT_ATTR_NOT_THERE ? PR_FALSE : PR_TRUE;
 
@@ -1956,7 +1955,7 @@ nsresult
 nsGenericElement::SetFocus(nsIPresContext* aPresContext)
 {
   nsAutoString disabled;
-  if (NS_CONTENT_ATTR_HAS_VALUE == NS_STATIC_CAST(nsIContent *, this)->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE == NS_STATIC_CAST(nsIContent *, this)->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled)) {
     return NS_OK;
   }
  
@@ -2770,7 +2769,7 @@ nsGenericContainerElement::~nsGenericContainerElement()
 }
 
 nsresult
-nsGenericContainerElement::NormalizeAttributeString(const nsAReadableString& aStr, nsINodeInfo*& aNodeInfo)
+nsGenericContainerElement::NormalizeAttrString(const nsAReadableString& aStr, nsINodeInfo*& aNodeInfo)
 {
   if (mAttributes) {
     PRInt32 indx, count = mAttributes->Count();
@@ -2807,7 +2806,7 @@ nsGenericContainerElement::CopyInnerTo(nsIContent* aSrcContent,
       attr = (nsGenericAttribute*)mAttributes->ElementAt(index);
       // XXX Not very efficient, since SetAttribute does a linear search
       // through its attributes before setting each attribute.
-      result = aDst->SetAttribute(attr->mNodeInfo, attr->mValue, PR_FALSE);
+      result = aDst->SetAttr(attr->mNodeInfo, attr->mValue, PR_FALSE);
       if (NS_OK != result) {
         return result;
       }
@@ -2907,9 +2906,9 @@ nsGenericContainerElement::GetLastChild(nsIDOMNode** aNode)
 }
 
 nsresult
-nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                        const nsAReadableString& aValue,
-                                        PRBool aNotify)
+nsGenericContainerElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                   const nsAReadableString& aValue,
+                                   PRBool aNotify)
 {
   nsresult rv;
   nsCOMPtr<nsINodeInfoManager> nimgr;
@@ -2921,7 +2920,7 @@ nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           *getter_AddRefs(ni));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return SetAttribute(ni, aValue, aNotify);
+  return SetAttr(ni, aValue, aNotify);
 }
 
 // Static helper method
@@ -2995,9 +2994,9 @@ PRBool nsGenericElement::HasMutationListeners(nsIContent* aContent,
 }
 
 nsresult
-nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
-                                        const nsAReadableString& aValue,
-                                        PRBool aNotify)
+nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
+                                   const nsAReadableString& aValue,
+                                   PRBool aNotify)
 {
   NS_ENSURE_ARG_POINTER(aNodeInfo);
 
@@ -3091,17 +3090,17 @@ nsGenericContainerElement::SetAttribute(nsINodeInfo* aNodeInfo,
 }
 
 nsresult
-nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                        nsAWritableString& aResult) const
+nsGenericContainerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                   nsAWritableString& aResult) const
 {
   nsCOMPtr<nsIAtom> prefix;
-  return GetAttribute(aNameSpaceID, aName, *getter_AddRefs(prefix), aResult);
+  return GetAttr(aNameSpaceID, aName, *getter_AddRefs(prefix), aResult);
 }
 
 nsresult
-nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                                        nsIAtom*& aPrefix,
-                                        nsAWritableString& aResult) const
+nsGenericContainerElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                   nsIAtom*& aPrefix,
+                                   nsAWritableString& aResult) const
 {
   NS_ASSERTION(nsnull != aName, "must have attribute name");
   if (nsnull == aName) {
@@ -3143,8 +3142,8 @@ nsGenericContainerElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
 }
 
 nsresult
-nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID,
-                                          nsIAtom* aName, PRBool aNotify)
+nsGenericContainerElement::UnsetAttr(PRInt32 aNameSpaceID,
+                                     nsIAtom* aName, PRBool aNotify)
 {
   NS_ASSERTION(nsnull != aName, "must have attribute name");
   if (nsnull == aName) {
@@ -3218,10 +3217,10 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID,
 }
 
 nsresult
-nsGenericContainerElement::GetAttributeNameAt(PRInt32 aIndex,
-                                              PRInt32& aNameSpaceID,
-                                              nsIAtom*& aName,
-                                              nsIAtom*& aPrefix) const
+nsGenericContainerElement::GetAttrNameAt(PRInt32 aIndex,
+                                         PRInt32& aNameSpaceID,
+                                         nsIAtom*& aName,
+                                         nsIAtom*& aPrefix) const
 {
   if (nsnull != mAttributes) {
     nsGenericAttribute* attr = (nsGenericAttribute*)mAttributes->ElementAt(aIndex);
@@ -3239,7 +3238,7 @@ nsGenericContainerElement::GetAttributeNameAt(PRInt32 aIndex,
 }
 
 nsresult
-nsGenericContainerElement::GetAttributeCount(PRInt32& aResult) const
+nsGenericContainerElement::GetAttrCount(PRInt32& aResult) const
 {
   if (nsnull != mAttributes) {
     aResult = mAttributes->Count();
@@ -3254,7 +3253,7 @@ void
 nsGenericContainerElement::ListAttributes(FILE* out) const
 {
   PRInt32 index, count;
-  GetAttributeCount(count);
+  GetAttrCount(count);
 
   for (index = 0; index < count; index++) {
     const nsGenericAttribute* attr = (const nsGenericAttribute*)mAttributes->ElementAt(index);

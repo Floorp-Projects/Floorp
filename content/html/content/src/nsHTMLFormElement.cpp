@@ -320,17 +320,17 @@ nsHTMLFormElement::GetElements(nsIDOMHTMLCollection** aElements)
 NS_IMETHODIMP
 nsHTMLFormElement::GetName(nsAWritableString& aValue)
 {
-  return nsGenericHTMLContainerElement::GetAttribute(kNameSpaceID_HTML,
-                                                     nsHTMLAtoms::name,
-                                                     aValue);
+  return nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_HTML,
+                                                nsHTMLAtoms::name,
+                                                aValue);
 }
 
 NS_IMETHODIMP
 nsHTMLFormElement::SetName(const nsAReadableString& aValue)
 {
-  return nsGenericHTMLContainerElement::SetAttribute(kNameSpaceID_HTML,
-                                                     nsHTMLAtoms::name,
-                                                     aValue, PR_TRUE);
+  return nsGenericHTMLContainerElement::SetAttr(kNameSpaceID_HTML,
+                                                nsHTMLAtoms::name,
+                                                aValue, PR_TRUE);
 }
 
 NS_IMPL_STRING_ATTR(nsHTMLFormElement, AcceptCharset, acceptcharset)

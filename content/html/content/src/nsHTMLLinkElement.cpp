@@ -80,15 +80,15 @@ public:
  
   NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
                           const nsAReadableString& aValue, PRBool aNotify) {
-    nsresult rv = nsGenericHTMLLeafElement::SetAttribute(aNameSpaceID, aName,
-                                                         aValue, aNotify);
+    nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName,
+                                                    aValue, aNotify);
     UpdateStyleSheet(aNotify);
     return rv;
   }
   NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
                           const nsAReadableString& aValue, PRBool aNotify) {
-    nsresult rv = nsGenericHTMLLeafElement::SetAttribute(aNodeInfo, aValue,
-                                                         aNotify);
+    nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNodeInfo, aValue,
+                                                    aNotify);
 
     // nsGenericHTMLLeafElement::SetAttribute(nsINodeInfo* aNodeInfo,
     //                                        const nsAReadableString& aValue,
@@ -106,11 +106,11 @@ public:
 
     return rv;
   }
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                            PRBool aNotify) {
-    nsresult rv = nsGenericHTMLLeafElement::UnsetAttribute(aNameSpaceID,
-                                                           aAttribute,
-                                                           aNotify);
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                       PRBool aNotify) {
+    nsresult rv = nsGenericHTMLLeafElement::UnsetAttr(aNameSpaceID,
+                                                      aAttribute,
+                                                      aNotify);
     UpdateStyleSheet(aNotify);
     return rv;
   }
@@ -274,10 +274,10 @@ nsHTMLLinkElement::SetHref(const nsAReadableString& aValue)
   // somebody asks for it.
   mLinkState = eLinkState_Unknown;
 
-  nsresult rv = nsGenericHTMLLeafElement::SetAttribute(kNameSpaceID_HTML,
-                                                       nsHTMLAtoms::href,
-                                                       aValue,
-                                                       PR_TRUE);
+  nsresult rv = nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_HTML,
+                                                  nsHTMLAtoms::href,
+                                                  aValue,
+                                                  PR_TRUE);
   UpdateStyleSheet(PR_TRUE);
   return rv;
 }
@@ -322,8 +322,8 @@ nsHTMLLinkElement::GetHrefCString(char* &aBuf)
   nsAutoString relURLSpec;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLLeafElement::GetAttribute(kNameSpaceID_HTML,
-                                             nsHTMLAtoms::href, relURLSpec)) {
+      nsGenericHTMLLeafElement::GetAttr(kNameSpaceID_HTML,
+                                        nsHTMLAtoms::href, relURLSpec)) {
     // Clean up any leading or trailing whitespace
     relURLSpec.Trim(" \t\n\r");
 

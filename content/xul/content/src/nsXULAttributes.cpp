@@ -480,7 +480,7 @@ nsXULAttribute::SetValue(const nsAReadableString& aValue)
 {
     // We call back to the content node's SetValue() method so we can
     // share all of the work that it does.
-    return mContent->SetAttribute(mNodeInfo, aValue, PR_TRUE);
+    return mContent->SetAttr(mNodeInfo, aValue, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -599,14 +599,14 @@ nsXULAttributes::GetNamedItem(const nsAReadableString& aName,
     // PRInt32 nameSpaceID;
     nsCOMPtr<nsINodeInfo> inpNodeInfo;
 
-    if (NS_FAILED(rv = mContent->NormalizeAttributeString(aName, *getter_AddRefs(inpNodeInfo))))
+    if (NS_FAILED(rv = mContent->NormalizeAttrString(aName, *getter_AddRefs(inpNodeInfo))))
         return rv;
 
     // if (kNameSpaceID_Unknown == nameSpaceID) {
     //   nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
     // }
 
-    // XXX doing this instead of calling mContent->GetAttribute() will
+    // XXX doing this instead of calling mContent->GetAttr() will
     // make it a lot harder to lazily instantiate properties from the
     // graph. The problem is, how else do we get the named item?
     for (PRInt32 i = mAttributes.Count() - 1; i >= 0; --i) {

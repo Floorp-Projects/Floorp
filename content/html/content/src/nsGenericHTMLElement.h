@@ -114,25 +114,25 @@ public:
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
   NS_IMETHOD GetNameSpaceID(PRInt32& aID) const;
-  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr,
-                                      nsINodeInfo*& aNodeInfo);
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAReadableString& aValue,
+  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr,
+                                 nsINodeInfo*& aNodeInfo);
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAReadableString& aValue,
                           PRBool aNotify);
-  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsAReadableString& aValue,
-                          PRBool aNotify);
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsAWritableString& aResult) const;
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          nsIAtom*& aPrefix, nsAWritableString& aResult) const;
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                            PRBool aNotify);
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex,
-                                PRInt32& aNameSpaceID, 
-                                nsIAtom*& aName,
-                                nsIAtom*& aPrefix) const;
-  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const;
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify);
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     nsAWritableString& aResult) const;
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     nsIAtom*& aPrefix, nsAWritableString& aResult) const;
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                       PRBool aNotify);
+  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex,
+                           PRInt32& aNameSpaceID, 
+                           nsIAtom*& aName,
+                           nsIAtom*& aPrefix) const;
+  NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
@@ -497,12 +497,19 @@ public:
                      PRBool aRemoveFromForm = PR_TRUE);
   NS_IMETHOD Init();
 
+  // nsIContent
   NS_IMETHOD SetParent(nsIContent *aParent);
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
 
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAReadableString& aValue, PRBool aNotify);
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAReadableString& aValue, PRBool aNotify);
+
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify);
+
+
   NS_METHOD SetAttribute(const nsAReadableString& aName,
                          const nsAReadableString& aValue)
   {
@@ -532,12 +539,19 @@ public:
                      PRBool aRemoveFromForm = PR_TRUE);
   NS_IMETHOD Init();
 
+  // nsIContent
   NS_IMETHOD SetParent(nsIContent *aParent);
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
 
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAReadableString& aValue, PRBool aNotify);
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAReadableString& aValue, PRBool aNotify);
+
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo,
+                     const nsAReadableString& aValue,
+                     PRBool aNotify);
+
+
   NS_METHOD SetAttribute(const nsAReadableString& aName,
                          const nsAReadableString& aValue)
   {
@@ -560,13 +574,13 @@ protected:
   NS_IMETHODIMP                                                      \
   _class::Get##_method(nsAWritableString& aValue)                    \
   {                                                                  \
-    NS_STATIC_CAST(nsIHTMLContent *, this)->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue);     \
+    NS_STATIC_CAST(nsIHTMLContent *, this)->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue);     \
     return NS_OK;                                                    \
   }                                                                  \
   NS_IMETHODIMP                                                      \
   _class::Set##_method(const nsAReadableString& aValue)              \
   {                                                                  \
-    return NS_STATIC_CAST(nsIHTMLContent *, this)->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue, PR_TRUE); \
+    return NS_STATIC_CAST(nsIHTMLContent *, this)->SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, aValue, PR_TRUE); \
   }
 
 /**
@@ -592,7 +606,7 @@ protected:
       return NS_STATIC_CAST(nsIHTMLContent *, this)->SetHTMLAttribute(nsHTMLAtoms::_atom, empty, PR_TRUE); \
     }                                                                 \
     else {                                                            \
-      NS_STATIC_CAST(nsIHTMLContent *, this)->UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::_atom, PR_TRUE);  \
+      NS_STATIC_CAST(nsIHTMLContent *, this)->UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::_atom, PR_TRUE);  \
       return NS_OK;                                                   \
     }                                                                 \
   }

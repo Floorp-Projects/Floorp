@@ -98,8 +98,8 @@ public:
   }
 
 
-  NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr, 
-                                      nsINodeInfo*& aNodeInfo) { 
+  NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr, 
+                                 nsINodeInfo*& aNodeInfo) { 
     aNodeInfo = nsnull;
     return NS_OK; 
   }
@@ -123,20 +123,20 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAReadableString& aValue,
-                          PRBool aNotify) {  return NS_OK; }
-  NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue,
-                          PRBool aNotify) {  return NS_OK; }
-  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsAWritableString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom*& aPrefix, nsAWritableString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
-  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, nsIAtom*& aName, nsIAtom*& aPrefix) const {
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, const nsAReadableString& aValue,
+                     PRBool aNotify) {  return NS_OK; }
+  NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue,
+                     PRBool aNotify) {  return NS_OK; }
+  NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRBool aNotify) { return NS_OK; }
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsAWritableString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
+  NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute, nsIAtom*& aPrefix, nsAWritableString& aResult) const {return NS_CONTENT_ATTR_NOT_THERE; }
+  NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, nsIAtom*& aName, nsIAtom*& aPrefix) const {
     aName = nsnull;
     aPrefix = nsnull;
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
-  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const { aResult = 0; return NS_OK; }
+  NS_IMETHOD GetAttrCount(PRInt32& aResult) const { aResult = 0; return NS_OK; }
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {  return NS_OK;  }
   NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const {  return NS_OK;  }
@@ -368,7 +368,7 @@ nsAttributeContent::ValidateTextFragment()
 {
   if (nsnull != mContent) {
     nsAutoString result;
-    mContent->GetAttribute(mNameSpaceID, mAttrName, result);
+    mContent->GetAttr(mNameSpaceID, mAttrName, result);
 
     PRUnichar * text = result.ToNewUnicode();
     mText.SetTo(text, result.Length());

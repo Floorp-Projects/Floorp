@@ -415,9 +415,9 @@ nsHTMLImageElement::SetHeight(PRInt32 aHeight)
 
   val.AppendInt(aHeight);
 
-  return nsGenericHTMLLeafElement::SetAttribute(kNameSpaceID_None,
-                                                nsHTMLAtoms::height,
-                                                val, PR_TRUE);
+  return nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_None,
+                                           nsHTMLAtoms::height,
+                                           val, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -473,9 +473,9 @@ nsHTMLImageElement::SetWidth(PRInt32 aWidth)
 
   val.AppendInt(aWidth);
 
-  return nsGenericHTMLLeafElement::SetAttribute(kNameSpaceID_None,
-                                                nsHTMLAtoms::width,
-                                                val, PR_TRUE);
+  return nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_None,
+                                           nsHTMLAtoms::width,
+                                           val, PR_TRUE);
 }
 
 NS_IMETHODIMP
@@ -735,8 +735,8 @@ nsHTMLImageElement::GetSrc(nsAWritableString& aSrc)
   GetBaseURL(*getter_AddRefs(baseURL));
 
   // Get href= attribute (relative URL).
-  nsGenericHTMLLeafElement::GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src,
-                                         relURLSpec);
+  nsGenericHTMLLeafElement::GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::src,
+                                    relURLSpec);
   relURLSpec.Trim(" \t\n\r");
 
   if (baseURL && relURLSpec.Length() > 0) {
@@ -774,15 +774,15 @@ NS_IMETHODIMP nsHTMLImageElement::OnStartContainer(imgIRequest *request, nsISupp
 
   nsAutoString tmpStr;
   tmpStr.AppendInt(size.width);
-  NS_STATIC_CAST(nsIContent *, this)->SetAttribute(kNameSpaceID_None,
-                                                   nsHTMLAtoms::width,
-                                                   tmpStr, PR_FALSE);
+  NS_STATIC_CAST(nsIContent *, this)->SetAttr(kNameSpaceID_None,
+                                              nsHTMLAtoms::width,
+                                              tmpStr, PR_FALSE);
 
   tmpStr.Truncate();
   tmpStr.AppendInt(size.height);
-  NS_STATIC_CAST(nsIContent *, this)->SetAttribute(kNameSpaceID_None,
-                                                   nsHTMLAtoms::height,
-                                                   tmpStr, PR_FALSE);
+  NS_STATIC_CAST(nsIContent *, this)->SetAttr(kNameSpaceID_None,
+                                              nsHTMLAtoms::height,
+                                              tmpStr, PR_FALSE);
 
   return NS_OK;
 }
@@ -908,9 +908,9 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
 {
   nsresult result = NS_OK;
 
-  result = nsGenericHTMLLeafElement::SetAttribute(kNameSpaceID_HTML,
-                                                  nsHTMLAtoms::src, aSrc,
-                                                  PR_TRUE);
+  result = nsGenericHTMLLeafElement::SetAttr(kNameSpaceID_HTML,
+                                             nsHTMLAtoms::src, aSrc,
+                                             PR_TRUE);
 
   if (NS_SUCCEEDED(result) && mOwnerDocument) {
     nsCOMPtr<nsIPresShell> shell;

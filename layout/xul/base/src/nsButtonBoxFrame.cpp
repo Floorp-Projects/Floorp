@@ -133,7 +133,7 @@ nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent
 {
   // Don't execute if we're disabled.
   nsAutoString disabled;
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
+  mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, disabled);
   if (disabled.EqualsWithConversion("true"))
     return;
 
@@ -165,7 +165,7 @@ nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent
     // See if we have a command elt.  If so, we execute on the command instead
     // of on our content element.
     nsAutoString command;
-    mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::command, command);
+    mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::command, command);
     if (!command.IsEmpty()) {
       nsCOMPtr<nsIDocument> doc;
       mContent->GetDocument(*getter_AddRefs(doc));

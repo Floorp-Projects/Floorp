@@ -245,7 +245,7 @@ nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     PRUnichar buf[128];
     nsAutoString id(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
 
-    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, id);
+    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
     NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
     if (NS_FAILED(rv)) return rv;
 
@@ -279,7 +279,7 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
     PRUnichar buf[128];
     nsAutoString uri(CBufDescriptor(buf, PR_TRUE, sizeof(buf) / sizeof(PRUnichar), 0));
 
-    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::ref, uri);
+    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::ref, uri);
     NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving attribute");
     if (NS_FAILED(rv)) return rv;
 
@@ -428,7 +428,7 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsAWritableString& 
     aResult.Append(unicodeString);
 
     PRInt32 count;
-    rv = aElement->GetAttributeCount(count);
+    rv = aElement->GetAttrCount(count);
     if (NS_FAILED(rv)) return rv;
 
     for (PRInt32 i = 0; i < count; ++i) {
@@ -436,7 +436,7 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsAWritableString& 
 
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> name, prefix;
-        rv = aElement->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(name), *getter_AddRefs(prefix));
+        rv = aElement->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(name), *getter_AddRefs(prefix));
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString attr;
@@ -446,7 +446,7 @@ nsXULContentUtils::GetElementLogString(nsIContent* aElement, nsAWritableString& 
         aResult.Append(NS_LITERAL_STRING("=\""));
 
         nsAutoString value;
-        rv = aElement->GetAttribute(nameSpaceID, name, value);
+        rv = aElement->GetAttr(nameSpaceID, name, value);
         if (NS_FAILED(rv)) return rv;
 
         aResult.Append(value);
@@ -709,13 +709,13 @@ nsXULContentUtils::SetCommandUpdater(nsIDocument* aDocument, nsIContent* aElemen
         return NS_ERROR_UNEXPECTED;
 
     nsAutoString events;
-    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::events, events);
+    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::events, events);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
         events.Assign(NS_LITERAL_STRING("*"));
 
     nsAutoString targets;
-    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::targets, targets);
+    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::targets, targets);
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
         targets.Assign(NS_LITERAL_STRING("*"));

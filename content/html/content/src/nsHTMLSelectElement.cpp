@@ -1021,9 +1021,9 @@ nsHTMLSelectElement::SetFocus(nsIPresContext* aPresContext)
   nsAutoString disabled;
 
   if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLContainerFormElement::GetAttribute(kNameSpaceID_HTML,
-                                                      nsHTMLAtoms::disabled,
-                                                      disabled)) {
+      nsGenericHTMLContainerFormElement::GetAttr(kNameSpaceID_HTML,
+                                                 nsHTMLAtoms::disabled,
+                                                 disabled)) {
     return NS_OK;
   }
 
@@ -1667,11 +1667,11 @@ nsHTMLOptionCollection::NamedItem(const nsAReadableString& aName,
         nsAutoString name;
         // XXX Should it be an EqualsIgnoreCase?
 
-        if (((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name,
-                                    name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+        if (((content->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::name,
+                               name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name))) ||
-            ((content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id,
-                                    name) == NS_CONTENT_ATTR_HAS_VALUE) &&
+            ((content->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::id,
+                               name) == NS_CONTENT_ATTR_HAS_VALUE) &&
              (aName.Equals(name)))) {
           result = option->QueryInterface(NS_GET_IID(nsIDOMNode),
                                           (void **)aReturn);

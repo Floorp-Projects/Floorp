@@ -233,7 +233,7 @@ public:
     nsCOMPtr<nsIStyleRule>   mInlineStyleRule;    // [OWNER]
     nsClassList*             mClassList;
 
-    nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritableString& aValue);
+    nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritableString& aValue);
 };
 
 struct JSRuntime;
@@ -370,15 +370,15 @@ public:
     NS_IMETHOD GetNameSpaceID(PRInt32& aNameSpeceID) const;
     NS_IMETHOD GetTag(nsIAtom*& aResult) const;
     NS_IMETHOD GetNodeInfo(nsINodeInfo*& aResult) const;
-    NS_IMETHOD NormalizeAttributeString(const nsAReadableString& aStr, nsINodeInfo*& aNodeInfo);
-    NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue, PRBool aNotify);
-    NS_IMETHOD SetAttribute(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue, PRBool aNotify);
-    NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritableString& aResult) const;
-    NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom*& aPrefix, nsAWritableString& aResult) const;
-    NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
-    NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
-                                  nsIAtom*& aName, nsIAtom*& aPrefix) const;
-    NS_IMETHOD GetAttributeCount(PRInt32& aResult) const;
+    NS_IMETHOD NormalizeAttrString(const nsAReadableString& aStr, nsINodeInfo*& aNodeInfo);
+    NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, const nsAReadableString& aValue, PRBool aNotify);
+    NS_IMETHOD SetAttr(nsINodeInfo *aNodeInfo, const nsAReadableString& aValue, PRBool aNotify);
+    NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAWritableString& aResult) const;
+    NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom*& aPrefix, nsAWritableString& aResult) const;
+    NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
+    NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
+                             nsIAtom*& aName, nsIAtom*& aPrefix) const;
+    NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
     NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
     NS_IMETHOD DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const { return NS_OK; }
     NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;

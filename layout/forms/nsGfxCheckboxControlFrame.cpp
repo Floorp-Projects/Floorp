@@ -134,13 +134,13 @@ nsGfxCheckboxControlFrame::Init(nsIPresContext*  aPresContext,
   // we've been running for a while, so more code is in AttributeChanged() to pick
   // that up. Regardless, we need this check when initializing.
   nsAutoString value;
-  nsresult res = mContent->GetAttribute ( kNameSpaceID_None, GetTristateAtom(), value );
+  nsresult res = mContent->GetAttr ( kNameSpaceID_None, GetTristateAtom(), value );
   if ( res == NS_CONTENT_ATTR_HAS_VALUE )
     mIsTristate = PR_TRUE;
 
   // give the attribute a default value so it's always present, if we're a tristate
   if ( IsTristateCheckbox() )
-    mContent->SetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), NS_ConvertASCIItoUCS2("0"), PR_FALSE );
+    mContent->SetAttr ( kNameSpaceID_None, GetTristateValueAtom(), NS_ConvertASCIItoUCS2("0"), PR_FALSE );
   
   return NS_OK;
 }
@@ -239,7 +239,7 @@ nsGfxCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 {
   if ( aAttribute == GetTristateAtom() ) {    
     nsAutoString value;
-    nsresult res = mContent->GetAttribute ( kNameSpaceID_None, GetTristateAtom(), value );
+    nsresult res = mContent->GetAttr ( kNameSpaceID_None, GetTristateAtom(), value );
     PRBool isNowTristate = (res == NS_CONTENT_ATTR_HAS_VALUE);
     if ( isNowTristate != mIsTristate )
       SwitchModesWithEmergencyBrake(aPresContext, isNowTristate);
@@ -248,7 +248,7 @@ nsGfxCheckboxControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     // ignore this change if we're not a tri-state checkbox
     if ( IsTristateCheckbox() ) {      
       nsAutoString value;
-      nsresult res = mContent->GetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), value );
+      nsresult res = mContent->GetAttr ( kNameSpaceID_None, GetTristateValueAtom(), value );
       if ( res == NS_CONTENT_ATTR_HAS_VALUE )
         SetCheckboxControlFrameState(aPresContext, value);
     }
@@ -597,7 +597,7 @@ nsGfxCheckboxControlFrame::SwitchModesWithEmergencyBrake ( nsIPresContext* aPres
     // our parallel attribute.
     nsAutoString value;
     CheckStateToString ( GetCheckboxState(), value );
-    mContent->SetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), value, PR_FALSE );
+    mContent->SetAttr ( kNameSpaceID_None, GetTristateValueAtom(), value, PR_FALSE );
   }
   else {
     // we were a tri-state checkbox, and now we're a normal checkbox. The current
@@ -606,7 +606,7 @@ nsGfxCheckboxControlFrame::SwitchModesWithEmergencyBrake ( nsIPresContext* aPres
     // parallel attribute so that we're nice and HTML4 compliant.
     if ( GetCheckboxState() == eMixed )
       SetCheckboxState(aPresContext, eOn);
-    mContent->UnsetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), PR_FALSE );
+    mContent->UnsetAttr ( kNameSpaceID_None, GetTristateValueAtom(), PR_FALSE );
   }
 
   // switch!

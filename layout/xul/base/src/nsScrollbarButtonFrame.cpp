@@ -157,7 +157,7 @@ nsScrollbarButtonFrame::MouseClicked()
    PRInt32 increment = nsSliderFrame::GetIncrement(content);
 
    nsString value;
-   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value))
+   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value))
    {
      // if our class is DecrementButton subtract the current pos by increment amount
      // if our class is IncrementButton increment the current pos by the decrement amount
@@ -186,7 +186,7 @@ nsScrollbarButtonFrame::MouseClicked()
     char v[100];
     sprintf(v, "%d", curpos);
 
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(v), PR_TRUE);
+    content->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, NS_ConvertASCIItoUCS2(v), PR_TRUE);
    
    }
 

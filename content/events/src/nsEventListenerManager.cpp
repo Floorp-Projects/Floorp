@@ -1074,7 +1074,7 @@ nsEventListenerManager::CompileEventHandlerInternal(nsIScriptContext *aContext,
     NS_ASSERTION(content, "only content should have event handler attributes");
     if (content) {
       nsAutoString handlerBody;
-      result = content->GetAttribute(kNameSpaceID_None, aName, handlerBody);
+      result = content->GetAttr(kNameSpaceID_None, aName, handlerBody);
 
       if (NS_SUCCEEDED(result)) {
         if (handlerOwner) {

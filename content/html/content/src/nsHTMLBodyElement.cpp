@@ -285,7 +285,7 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
 
   nsHTMLValue   value;
   PRInt32       attrCount;
-  mPart->GetAttributeCount(attrCount);
+  mPart->GetAttrCount(attrCount);
   
   PRInt32 bodyMarginWidth  = -1;
   PRInt32 bodyMarginHeight = -1;
@@ -806,7 +806,7 @@ nsHTMLBodyElement::GetBgColor(nsAWritableString& aBgColor)
 {
   // If we don't have an attribute, find the actual color used for
   // (generally from the user agent style sheet) for compatibility
-  if (NS_CONTENT_ATTR_NOT_THERE == nsBodySuper::GetAttribute(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor)) {
+  if (NS_CONTENT_ATTR_NOT_THERE == nsBodySuper::GetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor, aBgColor)) {
     nsresult result = NS_OK;
     if (mDocument) {
       // Make sure the presentation is up-to-date
@@ -853,8 +853,8 @@ nsHTMLBodyElement::GetBgColor(nsAWritableString& aBgColor)
 NS_IMETHODIMP 
 nsHTMLBodyElement::SetBgColor(const nsAReadableString& aBgColor)
 {
-  return nsBodySuper::SetAttribute(kNameSpaceID_None, nsHTMLAtoms::bgcolor,
-                                   aBgColor, PR_TRUE); 
+  return nsBodySuper::SetAttr(kNameSpaceID_None, nsHTMLAtoms::bgcolor,
+                              aBgColor, PR_TRUE); 
 }
 
 NS_IMETHODIMP

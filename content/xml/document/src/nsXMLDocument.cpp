@@ -945,7 +945,7 @@ MatchId(nsIContent *aContent, const nsAReadableString& aName)
 
   aContent->GetNameSpaceID(ns);
   if (kNameSpaceID_HTML == ns) {
-    if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value)) &&
+    if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, value)) &&
         aName.Equals(value)) {
       return aContent;
     }

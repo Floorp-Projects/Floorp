@@ -800,7 +800,7 @@ nsEventStateManager :: CreateClickHoldTimer ( nsIPresContext* inPresContext, nsG
     if ( clickedContent ) {
       // check for the |popup| attribute
       nsAutoString popup;
-      clickedContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popup, popup);
+      clickedContent->GetAttr(kNameSpaceID_None, nsXULAtoms::popup, popup);
       if ( popup != NS_LITERAL_STRING("") )
         return;
       
@@ -917,7 +917,7 @@ nsEventStateManager :: FireContextClick ( )
         // of all input elements, only ones dealing with text are allowed to have context menus
         if ( tag == nsHTMLAtoms::input ) {
           nsAutoString type;
-          lastContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
+          lastContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
           if ( type != NS_LITERAL_STRING("") && type != NS_LITERAL_STRING("text") &&
                 type != NS_LITERAL_STRING("password") && type != NS_LITERAL_STRING("file") )
             allowedToDispatch = PR_FALSE;
@@ -1868,9 +1868,9 @@ nsEventStateManager::CheckDisabled(nsIContent* aContent)
       nsHTMLAtoms::textarea == tag.get() ||
       nsHTMLAtoms::button == tag.get()) {
     nsAutoString empty;
-    if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, 
-                                                           nsHTMLAtoms::disabled,
-                                                           empty)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_HTML, 
+                                                       nsHTMLAtoms::disabled,
+                                                       empty)) {
       disabled = PR_TRUE;
     }
   }
@@ -2987,7 +2987,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
                     map->ChildAt(index, *getter_AddRefs(childArea));
                     if (childArea.get() == mCurrentFocus) {
                       nsAutoString tabIndexStr;
-                      childArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+                      childArea->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
                       PRInt32 val = 0;
                       if (!tabIndexStr.IsEmpty()) {
                         PRInt32 ec, tabIndexVal = tabIndexStr.ToInteger(&ec);
@@ -3012,7 +3012,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
 
                     //Got the map area, check its tabindex.
                     nsAutoString tabIndexStr;
-                    childArea->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+                    childArea->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
                     PRInt32 val = 0;
                     if (!tabIndexStr.IsEmpty()) {
                       PRInt32 ec, tabIndexVal = tabIndexStr.ToInteger(&ec);
@@ -3047,9 +3047,9 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
       }
       else {
         nsAutoString value;
-        child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
+        child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
         nsAutoString tabStr;
-        child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabStr);
+        child->GetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabStr);
         if (!tabStr.IsEmpty()) {
           PRInt32 errorCode;
           tabIndex = tabStr.ToInteger(&errorCode);
@@ -3105,7 +3105,7 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
       }
       
       nsAutoString tabIndexStr;
-      child->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+      child->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
       PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
       if (NS_OK == ec && val > mCurrentTabIndex && val != tabIndex) {
         tabIndex = (tabIndex == 0 || val < tabIndex) ? val : tabIndex; 
@@ -3123,7 +3123,7 @@ nsEventStateManager::GetNextTabIndex(nsIContent* aParent, PRBool forward)
       }
       
       nsAutoString tabIndexStr;
-      child->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+      child->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
       PRInt32 ec, val = tabIndexStr.ToInteger(&ec);
       if (NS_OK == ec) {
         if ((mCurrentTabIndex==0 && val > tabIndex) ||
@@ -3193,7 +3193,7 @@ nsEventStateManager::HasPositiveTabIndex(nsIContent* aContent,
   *aResult = PR_FALSE;
 
   nsAutoString tabIndexStr;
-  aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
+  aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndexStr);
   if (!tabIndexStr.IsEmpty()) {
     PRInt32 ec, tabIndexVal = tabIndexStr.ToInteger(&ec);
     if (NS_SUCCEEDED(ec)) {
@@ -3717,7 +3717,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     }
     
     nsAutoString tabIndex;
-    aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndex);
+    aContent->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::tabindex, tabIndex);
     PRInt32 ec, val = tabIndex.ToInteger(&ec);
     if (NS_OK == ec) {
       mCurrentTabIndex = val;

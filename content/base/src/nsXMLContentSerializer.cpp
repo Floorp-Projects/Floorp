@@ -402,20 +402,20 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   nsAutoString nameStr, prefixStr, uriStr, valueStr;
   nsCOMPtr<nsIAtom> attrName, attrPrefix;
 
-  content->GetAttributeCount(count);
+  content->GetAttrCount(count);
   
   // First scan for namespace declarations, pushing each on the stack
   for (index = 0; index < count; index++) {
     
-    content->GetAttributeNameAt(index, 
-                                namespaceID,
-                                *getter_AddRefs(attrName),
-                                *getter_AddRefs(attrPrefix));
+    content->GetAttrNameAt(index, 
+                           namespaceID,
+                           *getter_AddRefs(attrName),
+                           *getter_AddRefs(attrPrefix));
     
     if (namespaceID == kNameSpaceID_XMLNS ||
       elementNamespaceID == kNameSpaceID_HTML /*XXX Hack*/) {
       PRBool hasPrefix = attrPrefix ? PR_TRUE : PR_FALSE;
-      content->GetAttribute(namespaceID, attrName, uriStr);
+      content->GetAttr(namespaceID, attrName, uriStr);
 
       attrName->ToString(nameStr);
       // XXX We shouldn't need this hack
@@ -467,10 +467,10 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   }
   
   for (index = 0; index < count; index++) {
-    content->GetAttributeNameAt(index, 
-                                namespaceID,
-                                *getter_AddRefs(attrName),
-                                *getter_AddRefs(attrPrefix));
+    content->GetAttrNameAt(index, 
+                           namespaceID,
+                           *getter_AddRefs(attrName),
+                           *getter_AddRefs(attrPrefix));
     if (attrPrefix) {
       attrPrefix->ToString(prefixStr);
     }
@@ -484,7 +484,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
       addNSAttr = ConfirmPrefix(prefixStr, uriStr);
     }
     
-    content->GetAttribute(namespaceID, attrName, valueStr);
+    content->GetAttr(namespaceID, attrName, valueStr);
     attrName->ToString(nameStr);
     
     if (elementNamespaceID == kNameSpaceID_HTML && nameStr.Equals(NS_LITERAL_STRING("xmlns:xmlns")))

@@ -1746,7 +1746,7 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
     //
     // XXX Namespace handling broken :-(
     nsAutoString persist;
-    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::persist, persist);
+    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::persist, persist);
     if (NS_FAILED(rv)) return rv;
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
@@ -2564,7 +2564,7 @@ nsXULDocument::Persist(const nsAReadableString& aID,
     PRInt32 nameSpaceID;
     nsCOMPtr<nsIAtom> tag;
     nsCOMPtr<nsINodeInfo> ni;
-    rv = element->NormalizeAttributeString(aAttr, *getter_AddRefs(ni));
+    rv = element->NormalizeAttrString(aAttr, *getter_AddRefs(ni));
     if (NS_FAILED(rv)) return rv;
 
     ni->GetNameAtom(*getter_AddRefs(tag));
@@ -2610,7 +2610,7 @@ nsXULDocument::Persist(nsIContent* aElement, PRInt32 aNameSpaceID,
 
     // Turn the value into a literal
     nsAutoString valuestr;
-    rv = aElement->GetAttribute(kNameSpaceID_None, aAttribute, valuestr);
+    rv = aElement->GetAttr(kNameSpaceID_None, aAttribute, valuestr);
     if (NS_FAILED(rv)) return rv;
 
     PRBool novalue = (rv != NS_CONTENT_ATTR_HAS_VALUE);
@@ -2901,7 +2901,7 @@ GetElementByAttribute(nsIContent* aContent,
                       nsIDOMElement** aResult)
 {
   nsAutoString value;
-  nsresult rv = aContent->GetAttribute(kNameSpaceID_None, aAttrName, value);
+  nsresult rv = aContent->GetAttr(kNameSpaceID_None, aAttrName, value);
   if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
     if (aUniversalMatch || value.Equals(aAttrValue))
       return aContent->QueryInterface(NS_GET_IID(nsIDOMElement), (void**)aResult);
@@ -3276,7 +3276,7 @@ nsXULDocument::AddElementToDocumentPre(nsIContent* aElement)
     // "commandupdater='true'" attribute), then add the element to the
     // document's command dispatcher
     nsAutoString value;
-    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::commandupdater, value);
+    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::commandupdater, value);
     if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value == NS_LITERAL_STRING("true")) {
         rv = nsXULContentUtils::SetCommandUpdater(this, aElement);
         if (NS_FAILED(rv)) return rv;
@@ -3380,7 +3380,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
     // 3. If the element is a 'command updater', then remove the
     // element from the document's command dispatcher.
     nsAutoString value;
-    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::commandupdater, value);
+    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::commandupdater, value);
     if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && value == NS_LITERAL_STRING("true")) {
         nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
         NS_ASSERTION(domelement != nsnull, "not a DOM element");
@@ -3441,7 +3441,7 @@ nsXULDocument::AddElementToMap(nsIContent* aElement)
 
     for (PRInt32 i = 0; kIdentityAttrs[i] != nsnull; ++i) {
         nsAutoString value;
-        rv = aElement->GetAttribute(kNameSpaceID_None, *kIdentityAttrs[i], value);
+        rv = aElement->GetAttr(kNameSpaceID_None, *kIdentityAttrs[i], value);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get attribute");
         if (NS_FAILED(rv)) return rv;
 
@@ -3463,7 +3463,7 @@ nsXULDocument::RemoveElementFromMap(nsIContent* aElement)
 
     for (PRInt32 i = 0; kIdentityAttrs[i] != nsnull; ++i) {
         nsAutoString value;
-        rv = aElement->GetAttribute(kNameSpaceID_None, *kIdentityAttrs[i], value);
+        rv = aElement->GetAttr(kNameSpaceID_None, *kIdentityAttrs[i], value);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get attribute");
         if (NS_FAILED(rv)) return rv;
 
@@ -4926,10 +4926,10 @@ nsXULDocument::ApplyPersistentAttributesToElements(nsIRDFResource* aResource, ns
             nsCOMPtr<nsIContent> element = do_QueryInterface(isupports2);
             NS_RELEASE(isupports2);
 
-            rv = element->SetAttribute(/* XXX */ kNameSpaceID_None,
-                                       attr,
-                                       nsAutoString(wrapper),
-                                       PR_FALSE);
+            rv = element->SetAttr(/* XXX */ kNameSpaceID_None,
+                                  attr,
+                                  nsAutoString(wrapper),
+                                  PR_FALSE);
         }
     }
 
@@ -5839,9 +5839,9 @@ nsXULDocument::AddAttributes(nsXULPrototypeElement* aPrototype, nsIContent* aEle
         nsAutoString  valueStr;
         protoattr->mValue.GetValue( valueStr );
 
-        rv = aElement->SetAttribute(protoattr->mNodeInfo,
-                                    valueStr,
-                                    PR_FALSE);
+        rv = aElement->SetAttr(protoattr->mNodeInfo,
+                               valueStr,
+                               PR_FALSE);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -5870,7 +5870,7 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
     }
 
     nsAutoString datasources;
-    rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::datasources, datasources);
+    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::datasources, datasources);
     if (NS_FAILED(rv)) return rv;
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE)
@@ -5994,7 +5994,7 @@ nsXULDocument::OverlayForwardReference::Resolve()
     nsresult rv;
 
     nsAutoString id;
-    rv = mOverlay->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, id);
+    rv = mOverlay->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
     if (NS_FAILED(rv)) return eResolve_Error;
 
     nsCOMPtr<nsIDOMElement> domtarget;
@@ -6049,13 +6049,13 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
     // Merge attributes from the overlay content node to that of the
     // actual document.
     PRInt32 attrCount, i;
-    rv = aOverlayNode->GetAttributeCount(attrCount);
+    rv = aOverlayNode->GetAttrCount(attrCount);
     if (NS_FAILED(rv)) return rv;
 
     for (i = 0; i < attrCount; ++i) {
         PRInt32 nameSpaceID;
         nsCOMPtr<nsIAtom> attr, prefix;
-        rv = aOverlayNode->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr), *getter_AddRefs(prefix));
+        rv = aOverlayNode->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attr), *getter_AddRefs(prefix));
         if (NS_FAILED(rv)) return rv;
 
         // We don't want to swap IDs, they should be the same.
@@ -6063,11 +6063,11 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
             continue;
 
         nsAutoString value;
-        rv = aOverlayNode->GetAttribute(nameSpaceID, attr, value);
+        rv = aOverlayNode->GetAttr(nameSpaceID, attr, value);
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString tempID;
-        rv = aOverlayNode->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, tempID);
+        rv = aOverlayNode->GetAttr(kNameSpaceID_None, nsXULAtoms::id, tempID);
 
         // Element in the overlay has the 'removeelement' attribute set
         // so remove it from the actual document.
@@ -6094,7 +6094,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
                                *getter_AddRefs(ni));
         }
 
-        rv = aTargetNode->SetAttribute(ni, value, PR_FALSE);
+        rv = aTargetNode->SetAttr(ni, value, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -6116,7 +6116,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         if (NS_FAILED(rv)) return rv;
 
         nsAutoString id;
-        rv = currContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, id);
+        rv = currContent->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
         if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIDOMElement> nodeInDocument;
@@ -6144,8 +6144,8 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
             // also has aTargetNode as its parent.
 
             nsAutoString documentParentID;
-            rv = aTargetNode->GetAttribute(kNameSpaceID_None, nsXULAtoms::id,
-                                           documentParentID);
+            rv = aTargetNode->GetAttr(kNameSpaceID_None, nsXULAtoms::id,
+                                      documentParentID);
             if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsIDOMNode> nodeParent;
@@ -6184,7 +6184,7 @@ nsXULDocument::OverlayForwardReference::~OverlayForwardReference()
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_ALWAYS) && !mResolved) {
         nsAutoString id;
-        mOverlay->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, id);
+        mOverlay->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
 
         nsCAutoString idC;
         idC.AssignWithConversion(id);
@@ -6229,14 +6229,14 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
         nsAutoString attribute;
 
         if (tag.get() == nsXULAtoms::observes) {
-            rv = mObservesElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::element, broadcasterID);
+            rv = mObservesElement->GetAttr(kNameSpaceID_None, nsXULAtoms::element, broadcasterID);
             if (NS_FAILED(rv)) return;
 
-            rv = mObservesElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::attribute, attribute);
+            rv = mObservesElement->GetAttr(kNameSpaceID_None, nsXULAtoms::attribute, attribute);
             if (NS_FAILED(rv)) return;
         }
         else {
-            rv = mObservesElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::observes, broadcasterID);
+            rv = mObservesElement->GetAttr(kNameSpaceID_None, nsXULAtoms::observes, broadcasterID);
             if (NS_FAILED(rv)) return;
 
             attribute.Assign(NS_LITERAL_STRING("*"));
@@ -6311,10 +6311,10 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
 
         listener = do_QueryInterface(parent);
 
-        rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::element, broadcasterID);
+        rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::element, broadcasterID);
         if (NS_FAILED(rv)) return rv;
 
-        rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::attribute, attribute);
+        rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::attribute, attribute);
         if (NS_FAILED(rv)) return rv;
     }
     else {
@@ -6322,13 +6322,13 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         // value of the 'observes' attribute to determine the ID of
         // the broadcaster element, and we'll watch _all_ of its
         // values.
-        rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::observes, broadcasterID);
+        rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::observes, broadcasterID);
         if (NS_FAILED(rv)) return rv;
 
         // Bail if there's no broadcasterID
         if ((rv != NS_CONTENT_ATTR_HAS_VALUE) || (broadcasterID.Length() == 0)) {
             // Try the command attribute next.
-            rv = aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::command, broadcasterID);
+            rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::command, broadcasterID);
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE && broadcasterID.Length() > 0) {
@@ -6425,12 +6425,12 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
     PRBool wasInserted = PR_FALSE;
 
     // insert after an element of a given id
-    rv = aChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::insertafter, posStr);
+    rv = aChild->GetAttr(kNameSpaceID_None, nsXULAtoms::insertafter, posStr);
     if (NS_FAILED(rv)) return rv;
     PRBool isInsertAfter = PR_TRUE;
 
     if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = aChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::insertbefore, posStr);
+        rv = aChild->GetAttr(kNameSpaceID_None, nsXULAtoms::insertbefore, posStr);
         if (NS_FAILED(rv)) return rv;
         isInsertAfter = PR_FALSE;
     }
@@ -6477,7 +6477,7 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
 
     if (!wasInserted) {
 
-        rv = aChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::position, posStr);
+        rv = aChild->GetAttr(kNameSpaceID_None, nsXULAtoms::position, posStr);
         if (NS_FAILED(rv)) return rv;
 
         if (rv == NS_CONTENT_ATTR_HAS_VALUE) {

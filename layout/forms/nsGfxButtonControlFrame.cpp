@@ -180,7 +180,7 @@ nsGfxButtonControlFrame::IsBrowse(PRInt32 type)
 
           // It's an input, is it a file input?
           nsAutoString value;
-          if (NS_CONTENT_ATTR_HAS_VALUE == parentContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
+          if (NS_CONTENT_ATTR_HAS_VALUE == parentContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
             if (value.EqualsIgnoreCase("file")) {
               rv = PR_TRUE;
             }
@@ -547,7 +547,7 @@ nsGfxButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   if (nsHTMLAtoms::value == aAttribute) {
     nsAutoString value;
     if (mTextContent && mContent) {
-      if (NS_CONTENT_ATTR_HAS_VALUE != mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value)) {
+      if (NS_CONTENT_ATTR_HAS_VALUE != mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value)) {
         value.SetLength(0);
       }
       rv = mTextContent->SetText(value.get(), value.Length(), PR_TRUE);
@@ -723,7 +723,7 @@ nsGfxButtonControlFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** 
                  NS_ERROR_UNEXPECTED);
   nsAutoString defaultStateString;
   if (!mDefaultValueWasChanged) {
-    mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, defaultStateString);
+    mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, defaultStateString);
   }
 
   if (mDefaultValueWasChanged || !stateString.Equals(defaultStateString)) {

@@ -174,7 +174,7 @@ nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext,
 
     if (aAttribute == nsnull || aAttribute == nsXULAtoms::crop) {
         nsAutoString value;
-        mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, value);
+        mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::crop, value);
         CroppingStyle cropType;
 
         if (value.EqualsIgnoreCase(CROP_LEFT) || value.EqualsIgnoreCase(CROP_START))
@@ -205,7 +205,7 @@ nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext,
 
     if (aAttribute == nsnull || aAttribute == nsHTMLAtoms::value) {
         nsAutoString value;
-        mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
+        mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value);
         if (!value.Equals(mTitle)) {
             mTitle = value;
             doUpdateTitle = PR_TRUE;
@@ -214,12 +214,12 @@ nsTextBoxFrame::UpdateAttributes(nsIPresContext*  aPresContext,
 
     if (aAttribute == nsnull || aAttribute == nsXULAtoms::accesskey) {
         nsAutoString accesskey;
-        mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, accesskey);
+        mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::accesskey, accesskey);
         if (!accesskey.Equals(mAccessKey)) {
             if (!doUpdateTitle) {
                 // Need to get clean mTitle and didn't already
                 nsAutoString value;
-                mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
+                mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::value, value);
                 mTitle = value;
                 doUpdateTitle = PR_TRUE;
             }
