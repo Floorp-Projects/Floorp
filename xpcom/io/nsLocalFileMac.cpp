@@ -1161,7 +1161,8 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 
 	ResolveAndStat(PR_TRUE);
 	
-	long dataSize, resSize;
+	long dataSize = 0;
+	long resSize = 0;
 	
 	OSErr err = FSpGetFileSize(&mTargetSpec, &dataSize, &resSize);
 							   
@@ -1169,9 +1170,18 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 		return MacErrorMapper(err);
 	
 	// For now we've only got 32 bits of file size info
-	PRInt64 resInt64, dataInt64;
-	LL_I2L(resInt64, resSize);
+	PRInt64 dataInt64 = LL_Zero();
+	PRInt64 resInt64 = LL_Zero();
+	
+	// WARNING!!!!!!
+	// 
+	// For now we do NOT add the data and resource fork sizes as there are several
+	// assumptions in the code (notably in form submit) that only the data fork is
+	// used. 
+	// LL_I2L(resInt64, resSize);
+	
 	LL_I2L(dataInt64, dataSize);
+	
 	LL_ADD((*aFileSize), dataInt64, resInt64);
 	
 	return NS_OK;
