@@ -170,7 +170,7 @@ void XXXNeverCalled()
     nsPrintfCString bar("");
     nsLinebreakConverter::ConvertStringLineBreaks(foo, 
     nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
-    NS_NewLocalFile(nsCString(), PR_FALSE, NULL);
+    NS_NewLocalFile(nsString(), PR_FALSE, NULL);
     NS_NewNativeLocalFile(nsCString(), PR_FALSE, NULL);
     nsProcess();
     NS_NewByteArrayInputStream (NULL, NULL, 0);
