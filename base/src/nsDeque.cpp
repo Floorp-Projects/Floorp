@@ -67,7 +67,9 @@ PRInt32 nsDeque::GetSize(void) const {
  * @return
  */
 nsDeque& nsDeque::Empty() {
-  nsCRT::zero(mData,mCapacity*sizeof(mData));
+  if((0<mCapacity) && (mData)) {
+    nsCRT::zero(mData,mCapacity*sizeof(mData));
+  }
   mSize=0;
   mOrigin=0;
   return *this;
