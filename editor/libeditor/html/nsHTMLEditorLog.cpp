@@ -34,8 +34,6 @@
 #define LOCK_LOG(doc)
 #define UNLOCK_LOG(doc)
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 nsHTMLEditorLog::nsHTMLEditorLog()
 {
   mRefCnt   = 0;
