@@ -108,7 +108,6 @@ class nsITokenizer;
 class nsCParserNode;
 class nsTokenAllocator;
 
-
 /***************************************************************
   Now the main event: CNavDTD.
 

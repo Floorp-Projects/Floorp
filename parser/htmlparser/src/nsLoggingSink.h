@@ -76,6 +76,10 @@ public:
   NS_IMETHOD DoFragment(PRBool aFlag);
   NS_IMETHOD BeginContext(PRInt32 aPosition);
   NS_IMETHOD EndContext(PRInt32 aPosition);
+  NS_IMETHOD WillProcessTokens(void) { return NS_OK; }
+  NS_IMETHOD DidProcessTokens(void) { return NS_OK; }
+  NS_IMETHOD WillProcessAToken(void) { return NS_OK; }
+  NS_IMETHOD DidProcessAToken(void) { return NS_OK; }
 
   // nsILoggingSink
   NS_IMETHOD SetOutputStream(PRFileDesc *aStream,PRBool autoDelete=PR_FALSE);

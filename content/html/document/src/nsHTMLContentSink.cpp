@@ -170,6 +170,35 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 #define NS_SINK_FLAG_SCRIPT_ENABLED   0x8
 #define NS_SINK_FLAG_FRAMES_ENABLED   0x10
+#define NS_SINK_FLAG_CAN_INTERRUPT_PARSER 0x20 //Interrupt parsing when mMaxTokenProcessingTime is exceeded
+
+// Timer used to determine how long the content sink
+// spends processing a tokens
+
+class nsDelayTimer
+{
+public:
+
+  void Start(void) { 
+     mStart = PR_IntervalToMicroseconds(PR_IntervalNow());
+  }
+
+  // Determine if the current time - start time is greater
+  // then aMaxDelayInMicroseconds
+  PRBool HasExceeded(PRUint32 aMaxDelayInMicroseconds) { 
+    PRUint32 stop = PR_IntervalToMicroseconds(PR_IntervalNow());
+    if ((stop - mStart) > aMaxDelayInMicroseconds) {
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+  
+private:
+  PRUint32 mStart;
+};
+
+
+
 
 class SinkContext;
 
@@ -209,6 +238,11 @@ public:
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
+  NS_IMETHOD WillProcessTokens(void);
+  NS_IMETHOD DidProcessTokens(void);
+  NS_IMETHOD WillProcessAToken(void);
+  NS_IMETHOD DidProcessAToken(void);
+
 
   // nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aID);
@@ -356,6 +390,7 @@ public:
   nsSupportsArray mScriptElements;
   PRBool mParserBlocked;
   PRBool mNeedToBlockParser;
+  nsCOMPtr<nsIRequest> mDummyParserRequest;
 
   nsCString           mRef;
 
@@ -367,6 +402,10 @@ public:
   PRInt32             mInsideNoXXXTag;
   PRInt32             mInMonolithicContainer;
   PRUint32            mFlags;
+
+  // Can interrupt parsing members
+  nsDelayTimer        mDelayTimer;
+  PRInt32             mMaxTokenProcessingTime;  // Interrupt parsing during token procesing after # of microseconds
 
   void StartLayout();
 
@@ -410,12 +449,133 @@ public:
                     nsIContent* aChildContent,
                     PRInt32 aIndexInContainer);
   PRBool IsMonolithicContainer(nsHTMLTag aTag);
+
+  // CanInterrupt parsing related routines
+  nsresult AddDummyParserRequest(void);
+  nsresult RemoveDummyParserRequest(void);
+
 #ifdef NS_DEBUG
   void ForceReflow();
 #endif
 
   MOZ_TIMER_DECLARE(mWatch) //  Measures content model creation time for current document
+
 };
+
+
+//----------------------------------------------------------------------
+//
+// DummyParserRequest
+//
+//   This is a dummy request implementation that we add to the document's load
+//   group. It ensures that EndDocumentLoad() in the docshell doesn't fire
+//   before we've finished all of parsing and tokenizing of the document.
+//
+
+class DummyParserRequest : public nsIChannel
+{
+protected:
+  DummyParserRequest(nsIHTMLContentSink* aSink);
+  virtual ~DummyParserRequest();
+
+  static PRInt32 gRefCnt;
+  static nsIURI* gURI;
+
+  nsCOMPtr<nsILoadGroup> mLoadGroup;
+
+  nsIHTMLContentSink* mSink; // Weak reference
+
+public:
+  static nsresult
+  Create(nsIRequest** aResult, nsIHTMLContentSink* aSink);
+
+  NS_DECL_ISUPPORTS
+
+	// nsIRequest
+  NS_IMETHOD GetName(PRUnichar* *result) { 
+    *result = ToNewUnicode(NS_LITERAL_STRING("about:layout-dummy-request"));
+    return NS_OK;
+  }
+  NS_IMETHOD IsPending(PRBool *_retval) { *_retval = PR_TRUE; return NS_OK; }
+  NS_IMETHOD GetStatus(nsresult *status) { *status = NS_OK; return NS_OK; } 
+  NS_IMETHOD Cancel(nsresult status);
+  NS_IMETHOD Suspend(void) { return NS_OK; }
+  NS_IMETHOD Resume(void)  { return NS_OK; }
+
+ 	// nsIChannel
+  NS_IMETHOD GetOriginalURI(nsIURI* *aOriginalURI) { *aOriginalURI = gURI; NS_ADDREF(*aOriginalURI); return NS_OK; }
+  NS_IMETHOD SetOriginalURI(nsIURI* aOriginalURI) { gURI = aOriginalURI; NS_ADDREF(gURI); return NS_OK; }
+  NS_IMETHOD GetURI(nsIURI* *aURI) { *aURI = gURI; NS_ADDREF(*aURI); return NS_OK; }
+  NS_IMETHOD SetURI(nsIURI* aURI) { gURI = aURI; NS_ADDREF(gURI); return NS_OK; }
+  NS_IMETHOD Open(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
+  NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
+  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { *aLoadFlags = nsIRequest::LOAD_NORMAL; return NS_OK; }
+  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
+  NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
+  NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
+  NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
+  NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup) { mLoadGroup = aLoadGroup; return NS_OK; }
+  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) { *aNotificationCallbacks = nsnull; return NS_OK; }
+  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor * aNotificationCallbacks) { return NS_OK; }
+  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) { *aSecurityInfo = nsnull; return NS_OK; } 
+  NS_IMETHOD GetContentType(char * *aContentType) { *aContentType = nsnull; return NS_OK; } 
+  NS_IMETHOD SetContentType(const char * aContentType) { return NS_OK; } 
+  NS_IMETHOD GetContentLength(PRInt32 *aContentLength) { return NS_OK; }
+  NS_IMETHOD SetContentLength(PRInt32 aContentLength) { return NS_OK; }
+
+};
+
+PRInt32 DummyParserRequest::gRefCnt;
+nsIURI* DummyParserRequest::gURI;
+
+NS_IMPL_ADDREF(DummyParserRequest);
+NS_IMPL_RELEASE(DummyParserRequest);
+NS_IMPL_QUERY_INTERFACE2(DummyParserRequest, nsIRequest, nsIChannel);
+
+nsresult
+DummyParserRequest::Create(nsIRequest** aResult, nsIHTMLContentSink* aSink)
+{
+  DummyParserRequest* request = new DummyParserRequest(aSink);
+  if (!request)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+  return request->QueryInterface(NS_GET_IID(nsIRequest), (void**) aResult); 
+}
+
+
+DummyParserRequest::DummyParserRequest(nsIHTMLContentSink* aSink)
+{
+  NS_INIT_REFCNT();
+
+  if (gRefCnt++ == 0) {
+      nsresult rv;
+      rv = NS_NewURI(&gURI, "about:parser-dummy-request", nsnull);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create about:parser-dummy-request");
+  }
+
+  mSink = aSink;
+}
+
+
+DummyParserRequest::~DummyParserRequest()
+{
+  if (--gRefCnt == 0) {
+      NS_IF_RELEASE(gURI);
+  }
+}
+
+NS_IMETHODIMP
+DummyParserRequest::Cancel(nsresult status)
+{
+  // Cancel parser
+  nsresult rv = NS_OK;
+  HTMLContentSink* sink = NS_STATIC_CAST(HTMLContentSink*, mSink);
+  if ((sink) && (sink->mParser)) {
+    sink->mParser->CancelParsingEvents(); 
+  }
+  return rv;
+}
+
 
 class SinkContext {
 public:
@@ -2151,6 +2311,7 @@ HTMLContentSink::HTMLContentSink() {
   mFlags=0;
   mNeedToBlockParser = PR_FALSE;
   mParserBlocked = PR_FALSE;
+  mDummyParserRequest = nsnull;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -2329,14 +2490,40 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 
   // The mNotificationInterval has a dramatic effect on how long it 
   // takes to initially display content for slow connections.
-  // The current value of 1/4 of second provides good 
+  // The current value provides good 
   // incremental display of content without causing an increase
   // in page load time. If this value is set below 1/10 of second
   // it starts to impact page load performance.
   // see bugzilla bug 72138 for more info.
-  mNotificationInterval = 250000;
+  mNotificationInterval = 120000;
   if (prefs) {
     prefs->GetIntPref("content.notify.interval", &mNotificationInterval);
+  }
+
+  // The mMaxTokenProcessingTime controls how long we stay away from
+  // the event loop when processing token. A lower value
+  // makes the app more responsive, but may increase page load time.
+  // The content sink mNotificationInterval gates how frequently the content
+  // is processed so it will also affect how interactive the app is during
+  // page load also. The mNotification prevents contents flushes from happening 
+  // too frequently. while mMaxTokenProcessingTime prevents flushes from happening 
+  // too infrequently.
+
+  // The current ratio of 3 to 1 was determined to be the lowest mMaxTokenProcessingTime
+  // which does not impact page load performance.
+  // See bugzilla bug 76722 for details.
+
+  mMaxTokenProcessingTime = mNotificationInterval * 3;
+  
+  PRBool enableInterruptParsing = PR_FALSE;
+  
+  if (prefs) {
+    prefs->GetBoolPref("content.interrupt.parsing", &enableInterruptParsing);
+    prefs->GetIntPref("content.max.tokenizing.time", &mMaxTokenProcessingTime);
+  }
+
+  if (enableInterruptParsing) {
+    mFlags |= NS_SINK_FLAG_CAN_INTERRUPT_PARSER;
   }
 
   // Changed from 8192 to greatly improve page loading performance on large
@@ -2420,6 +2607,16 @@ HTMLContentSink::Init(nsIDocument* aDoc,
 NS_IMETHODIMP
 HTMLContentSink::WillBuildModel(void)
 {
+  if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
+    nsresult rv = AddDummyParserRequest();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Adding dummy parser request failed");
+    if (NS_FAILED(rv)) {
+      // Don't return the error result, just reset flag which indicates that it can
+      // interrupt parsing. If AddDummyParserRequests fails it should not affect
+      // WillBuildModel.
+      mFlags &= ~NS_SINK_FLAG_CAN_INTERRUPT_PARSER;
+    }
+  }
   // Notify document that the load is beginning
   mDocument->BeginLoad();
   return NS_OK;
@@ -2428,6 +2625,7 @@ HTMLContentSink::WillBuildModel(void)
 NS_IMETHODIMP
 HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
+
   // NRA Dump stopwatch stop info here
 #ifdef MOZ_PERF_METRICS
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::DidBuildModel(), this=%p\n", this));
@@ -2500,6 +2698,14 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   // Drop our reference to the parser to get rid of a circular
   // reference.
   NS_IF_RELEASE(mParser);
+
+  if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
+    // Note: Don't return value from RemoveDummyParserRequest,
+    // If RemoveDummyParserRequests fails it should not affect
+    // DidBuildModel. The remove can fail if the parser request
+    // was already removed by a DummyParserRequest::Cancel
+    RemoveDummyParserRequest();
+  }
   return NS_OK;
 }
 
@@ -3111,7 +3317,7 @@ HTMLContentSink::CloseMap(const nsIParserNode& aNode)
 NS_IMETHODIMP
 HTMLContentSink::GetPref(PRInt32 aTag,PRBool& aPref) {
   nsHTMLTag theHTMLTag = nsHTMLTag(aTag);
-    
+
   if (theHTMLTag == eHTMLTag_script) {
     aPref = mFlags & NS_SINK_FLAG_SCRIPT_ENABLED;
   } 
@@ -3491,6 +3697,33 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::AddDocTypeDecl()\n"));
   MOZ_TIMER_STOP(mWatch);
   return rv;
+}
+
+
+NS_IMETHODIMP
+HTMLContentSink::WillProcessTokens(void) {
+  if (mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) {
+    mDelayTimer.Start();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::DidProcessTokens(void) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::WillProcessAToken(void) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLContentSink::DidProcessAToken(void) {
+  if ((mFlags & NS_SINK_FLAG_CAN_INTERRUPT_PARSER) && (mDelayTimer.HasExceeded(mMaxTokenProcessingTime))) {
+    return NS_ERROR_HTMLPARSER_INTERRUPTED;
+  }
+  return NS_OK;
 }
 
 
@@ -4881,3 +5114,62 @@ HTMLContentSink::DumpContentModel()
   }
   return result;
 }
+
+// If the content sink can interrupt the parser (@see mCanInteruptParsing)
+// then it needs to schedule a dummy parser request to delay the document
+// from firing onload handlers and other document done actions until all of the
+// parsing has completed. 
+
+nsresult
+HTMLContentSink::AddDummyParserRequest(void)
+{ 
+  nsresult rv = NS_OK;
+
+  NS_ASSERTION(nsnull == mDummyParserRequest,"Already have a dummy parser request");
+  rv = DummyParserRequest::Create(getter_AddRefs(mDummyParserRequest), this);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  if (mDocument) {
+    rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  if (loadGroup) {
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(mDummyParserRequest);
+    if (channel) {
+      rv = channel->SetLoadGroup(loadGroup);
+      if (NS_FAILED(rv)) return rv;
+      rv = loadGroup->AddRequest(mDummyParserRequest, nsnull);
+      if (NS_FAILED(rv)) return rv;
+    } else {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  return rv;
+}
+
+nsresult
+HTMLContentSink::RemoveDummyParserRequest(void)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  if (mDocument) {
+    rv = mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  if (loadGroup && mDummyParserRequest) {
+    rv = loadGroup->RemoveRequest(mDummyParserRequest, nsnull, NS_OK);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    mDummyParserRequest = nsnull;
+  }
+
+  return rv;
+}
+
