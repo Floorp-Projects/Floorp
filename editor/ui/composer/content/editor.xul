@@ -208,7 +208,10 @@
 
     <box align="horizontal" id="DisplayModeBar">
       <spring class="spacer5"/>
-      <html:div>&displayMode.label;</html:div>
+      <box align="vertical">
+        <spring style="height: 1px;"/>
+        <html:div>&displayMode.label;</html:div>
+      </box>
       <spring class="spacer3"/>
       <titledbutton id="EditModeButton"    class="DisplayModeButton" selected="1" value="&editModeButton.label;"    onclick="EditorSetDisplayStyle(0)"/>
       <titledbutton id="BrowserModeButton" class="DisplayModeButton" selected="0" value="&browserModeButton.label;" onclick="EditorSetDisplayStyle(1)"/>

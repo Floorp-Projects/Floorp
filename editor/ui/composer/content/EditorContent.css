@@ -31,6 +31,7 @@ a[name] {
   /* TEMPORARY TO COMPENSATE FOR BUG */
   padding-left: 16px; 
   background: url(chrome://editor/skin/images/anchor-in-doc.gif) no-repeat; 
+  background-position: center center;
 }
 
 table {
