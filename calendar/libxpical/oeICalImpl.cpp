@@ -1021,26 +1021,10 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, char **retid)
         return NS_OK;
     }
     
+    //Update Last-Modified
+    icalevent->UpdateLastModified();
+
     vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
-
-    //Add Last-Modified property
-    icalcomponent *vevent = icalcomponent_get_first_component( vcalendar, ICAL_VEVENT_COMPONENT );
-    if( vevent ) {
-        PRInt64 nowinusec = PR_Now();
-        PRExplodedTime ext;
-        PR_ExplodeTime( nowinusec, PR_GMTParameters, &ext);
-        icaltimetype now = icaltime_null_time();
-        now.year = ext.tm_year;
-        now.month = ext.tm_month + 1;
-        now.day = ext.tm_mday;
-        now.hour = ext.tm_hour;
-        now.minute = ext.tm_min;
-        now.second = ext.tm_sec;
-        now.is_utc = true;
-
-        icalproperty *prop = icalproperty_new_lastmodified( now );
-        icalcomponent_add_property( vevent, prop );
-    }
 
     icalfileset_add_component( stream, vcalendar );
     
@@ -2181,6 +2165,9 @@ NS_IMETHODIMP oeICalImpl::ModifyTodo(oeIICalTodo *icalevent, char **retid)
         return NS_OK;
     }
     
+    //Update Last-Modified
+    icalevent->UpdateLastModified();
+
     vcalendar = ((oeICalTodoImpl *)icalevent)->AsIcalComponent();
     icalfileset_add_component( stream, vcalendar );
     
@@ -2563,6 +2550,15 @@ NS_IMETHODIMP oeICalFilter::GetRecurForever(PRBool *aRetVal)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 NS_IMETHODIMP oeICalFilter::SetRecurForever(PRBool aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalFilter::GetLastModified(PRTime *aRetVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP oeICalFilter::UpdateLastModified()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -106,6 +106,8 @@ interface oeIICalEvent : nsISupports
     readonly attribute oeIDateTime stamp;
     readonly attribute oeIICal parent;
     readonly attribute Componenttype type;
+    readonly attribute PRTime lastModified;
+
     attribute string id;
     attribute AUTF8String title;
     attribute AUTF8String description;
@@ -161,6 +163,8 @@ interface oeIICalEvent : nsISupports
     void reportError( in short severity, in unsigned long errorid, in string errorstring );
     void setParameter( in string name, in string value );
     string getParameter( in string name );
+
+    void updateLastModified();
 };
 
 [scriptable, uuid(f95df40e-0d5f-49ec-9ba8-4b88d3eb53e0)]

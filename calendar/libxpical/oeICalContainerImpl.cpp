@@ -1281,10 +1281,21 @@ NS_IMETHODIMP oeICalContainerFilter::SetRecurForever(PRBool aNewVal)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP oeICalContainerFilter::GetLastAlarmAck(PRTime *aRetVal)
+NS_IMETHODIMP oeICalContainerFilter::GetLastModified(PRTime *aRetVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP oeICalContainerFilter::UpdateLastModified()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP oeICalContainerFilter::GetLastAlarmAck(PRTime *aNewVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP oeICalContainerFilter::SetLastAlarmAck(PRTime aNewVal)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

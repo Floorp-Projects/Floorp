@@ -293,6 +293,7 @@ oeICalEventImpl::oeICalEventImpl()
     m_recurweekdays = 0;
     m_recurweeknumber = 0;
     m_lastalarmack = icaltime_null_time();
+    m_lastmodified = icaltime_null_time();
     m_duration = icaldurationtype_null_duration();
     SetAlarmUnits( DEFAULT_ALARM_UNITS );
     SetRecurUnits( DEFAULT_RECUR_UNITS );
@@ -905,6 +906,38 @@ NS_IMETHODIMP oeICalEventImpl::SetRecurForever(PRBool aNewVal)
     printf( "SetRecurForever()\n" );
 #endif
     m_recurforever = aNewVal;
+    return NS_OK;
+}
+
+NS_IMETHODIMP oeICalEventImpl::GetLastModified(PRTime *aRetVal)
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "GetLastModified()\n" );
+#endif
+    if( icaltime_is_null_time( m_lastmodified ) )
+        return NS_ERROR_NOT_INITIALIZED;
+
+    *aRetVal = ConvertToPrtime( m_lastmodified );
+    return NS_OK;
+}
+NS_IMETHODIMP oeICalEventImpl::UpdateLastModified()
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "UpdateLastModified()\n" );
+#endif
+
+    PRInt64 nowinusec = PR_Now();
+    PRExplodedTime ext;
+    PR_ExplodeTime( nowinusec, PR_GMTParameters, &ext);
+    m_lastmodified = icaltime_null_time();
+    m_lastmodified.year = ext.tm_year;
+    m_lastmodified.month = ext.tm_month + 1;
+    m_lastmodified.day = ext.tm_mday;
+    m_lastmodified.hour = ext.tm_hour;
+    m_lastmodified.minute = ext.tm_min;
+    m_lastmodified.second = ext.tm_sec;
+    m_lastmodified.is_utc = true;
+
     return NS_OK;
 }
 
@@ -2130,10 +2163,15 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTAMP_PROPERTY );
     if ( prop != 0) {
         m_stamp->m_datetime = icalproperty_get_dtstamp( prop );
-    } else {
-        m_stamp->m_datetime = icaltime_null_time();
     }
 
+    //lastmodifed
+    prop = icalcomponent_get_first_property( vevent, ICAL_LASTMODIFIED_PROPERTY );
+    if ( prop != 0) {
+        m_lastmodified = icalproperty_get_dtstamp( prop );
+    } else {
+        m_lastmodified = icaltime_null_time();
+    }
 
     // scan for X- properties
 
@@ -2667,9 +2705,15 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     if( starttzid )
         nsMemory::Free( starttzid );
 
+    //stampdate
     if( m_stamp && !icaltime_is_null_time( m_stamp->m_datetime ) ) {
-        //stampdate
         prop = icalproperty_new_dtstamp( m_stamp->m_datetime );
+        icalcomponent_add_property( vevent, prop );
+    }
+
+    //lastmodified
+    if( !icaltime_is_null_time( m_lastmodified ) ) {
+        prop = icalproperty_new_lastmodified( m_lastmodified );
         icalcomponent_add_property( vevent, prop );
     }
 

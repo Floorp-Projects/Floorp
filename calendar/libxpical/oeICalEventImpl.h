@@ -157,6 +157,7 @@ private:
     oeDateTimeImpl *m_stamp;
     oeDateTimeImpl *m_recurend;
     icaltimetype m_lastalarmack;
+    icaltimetype m_lastmodified;
     nsVoidArray m_exceptiondates;
     nsVoidArray m_snoozetimes;
     icaltimetype CalculateAlarmTime( icaltimetype date );
