@@ -1344,17 +1344,28 @@ public class Context
     }
 
     /**
+     * @deprecated Use {@link #decompileScript(Script script, int indent)}
+     *             instead.
+     * <p>
+     * The implementation simply calls <tt>decompileScript(script, indent)</tt>
+     * ignoring the scope argument.
+     */
+    public final String decompileScript(Script script, Scriptable scope,
+                                        int indent)
+    {
+        return decompileScript(script, indent);
+    }
+
+    /**
      * Decompile the script.
      * <p>
      * The canonical source of the script is returned.
      *
      * @param script the script to decompile
-     * @param scope the scope under which to decompile
      * @param indent the number of spaces to indent the result
      * @return a string representing the script source
      */
-    public final String decompileScript(Script script, Scriptable scope,
-                                        int indent)
+    public final String decompileScript(Script script, int indent)
     {
         NativeFunction scriptImpl = (NativeFunction) script;
         return scriptImpl.decompile(indent, 0);
