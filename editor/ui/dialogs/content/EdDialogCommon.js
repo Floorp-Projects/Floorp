@@ -21,13 +21,6 @@
  *   Pete Collins
  *   Brian King
  */
-/*
-  if we ever need to use a different string bundle, use srGetStrBundle
-  by including
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  e.g.:
-  var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
-*/
 
 // Each editor window must include this file
 // Variables  shared by all dialogs:

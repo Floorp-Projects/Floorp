@@ -22,13 +22,6 @@
  *   Brian King
  *   Daniel Glazman <glazman@netscape.com>
  */
-/*
-  if we ever need to use a different string bundle, use srGetStrBundle
-  by including
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
-  e.g.:
-  var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
-*/
 
 /**** NAMESPACES ****/
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -95,21 +88,20 @@ function ConfirmWithTitle(title, message, okButtonText, cancelButtonText)
 
 function GetString(name)
 {
-  if (editorShell)
+  if (!gStringBundle)
   {
     try {
-      return editorShell.GetString(name);
-    } catch (e) {}
+      var strBundleService =
+          Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
+      strBundleService = 
+          strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
+
+      gStringBundle = strBundleService.createBundle("chrome://editor/locale/editor.properties"); 
+
+    } catch (ex) {}
   }
-  else
+  if (gStringBundle)
   {
-    // Non-editors (like prefs) may use these methods
-    if (!gStringBundle)
-    {
-      gStringBundle = srGetStrBundle("chrome://editor/locale/editor.properties");
-      if (!gStringBundle)
-        return null;
-    }
     try {
       return gStringBundle.GetStringFromName(name);
     } catch (e) {}
@@ -795,18 +787,13 @@ function GetHTMLOrCSSStyleValue(element, attrName, cssPropertyName)
   var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
   var value;
   if (IsCSSPrefChecked && editorShell.editorType == "html")
-  {
     value = element.style.getPropertyValue(cssPropertyName);
-    if (value == "") {
-      value = element.getAttribute(attrName);
-    }
-  }
-  else
-  {
+
+  if (!value)
     value = element.getAttribute(attrName);
-  }
-  if (value == null) {
-    value = "";
-  }
+
+  if (!value)
+    return "";
+
   return value;
 }
