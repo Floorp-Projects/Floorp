@@ -894,13 +894,13 @@ nsresult  testPlatformCharset()
 
   nsString value;
   res = cinfo->GetCharset(kPlatformCharsetSel_PlainTextInClipboard , value);
-  printf("Clipboard plain text encoding = %s\n\n",value.ToNewCString());
+  printf("Clipboard plain text encoding = %s\n",value.ToNewCString());
   
   res = cinfo->GetCharset(kPlatformCharsetSel_FileName , value);
-  printf("File Name encoding = %s\n\n",value.ToNewCString());
+  printf("File Name encoding = %s\n",value.ToNewCString());
 
   res = cinfo->GetCharset(kPlatformCharsetSel_Menu , value);
-  printf("Menu encoding = %s\n\n",value.ToNewCString());
+  printf("Menu encoding = %s\n",value.ToNewCString());
 
   cinfo->Release();
   return res;
