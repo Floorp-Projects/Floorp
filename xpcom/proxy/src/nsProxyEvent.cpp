@@ -296,10 +296,7 @@ nsProxyObject::Release(void)
                      ProxyDestructorEventHandler,
                      ProxyDestructorDestroyHandler);  
 
-        // fire it off.
-        mDestQueue->PostSynchronousEvent(event, nsnull);
-        
-        PR_DELETE(event);
+        mDestQueue->PostEvent(event);
         return 0;
   }                          
   return mRefCnt;
@@ -540,5 +537,6 @@ static void* ProxyDestructorEventHandler(PLEvent *self)
 
 static void ProxyDestructorDestroyHandler(PLEvent *self)
 {
+    PR_DELETE(self);
 }
 
