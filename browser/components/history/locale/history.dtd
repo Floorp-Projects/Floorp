@@ -12,7 +12,13 @@
 <!ENTITY byLastVisited.accesskey "L">
 <!ENTITY byDayAndSite.label "By Date and Site">
 <!ENTITY byDayAndSite.accesskey "t">
-<!ENTITY openInNewWindow.label "Open in New Window">
-<!ENTITY openInNewWindow.accesskey "W">
+<!ENTITY openLinkInWindow.label "Open">
+<!ENTITY openLinkInWindow.accesskey "O">
 <!ENTITY openInNewTab.label "Open in New Tab">
 <!ENTITY openInNewTab.accesskey "T">
+<!ENTITY openInNewWindow.label "Open in New Window">
+<!ENTITY openInNewWindow.accesskey "W">
+<!ENTITY bookmarkLink.label "Bookmark this Link">
+<!ENTITY bookmarkLink.accesskey "B">
+<!ENTITY copyLink.label "Copy Link Location">
+<!ENTITY copyLink.accesskey "C">

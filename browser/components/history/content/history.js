@@ -207,6 +207,10 @@ function historyAddBookmarks()
   BookmarksUtils.addBookmark(url, title, undefined);
 }
 
+function historyCopyLink()
+{
+  dump("Not yet implemented!");
+}
 
 function buildContextMenu()
 {
@@ -215,7 +219,7 @@ function buildContextMenu()
   var openItemInNewWindow = document.getElementById("miOpenInNewWindow");
   var openItemInNewTab = document.getElementById("miOpenInNewTab");
   var bookmarkItem = document.getElementById("miAddBookmark");
-  var copyLocationItem = document.getElementById("miCopyLinkLocation");
+  var copyLocationItem = document.getElementById("miCopyLink");
   var sep1 = document.getElementById("pre-bookmarks-separator");
   var sep2 = document.getElementById("post-bookmarks-separator");
   var collapseExpandItem = document.getElementById("miCollapseExpand");
@@ -241,7 +245,7 @@ function buildContextMenu()
       copyLocationItem.hidden = true;
       sep1.hidden = true;
       sep2.hidden = false;
-      collapseExpandItem.hidden = false;      
+      collapseExpandItem.hidden = false;
       if (isContainerOpen(gHistoryTree, currentIndex))
         collapseExpandItem.setAttribute("label", bundle.getString("collapseLabel"));
       else

@@ -20,15 +20,9 @@
 # Contributor(s): 
 # 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
-
-<!DOCTYPE window [
-<!ENTITY % contentAreaCommandsDTD SYSTEM "chrome://communicator/locale/contentAreaCommands.dtd" >
-%contentAreaCommandsDTD;
-<!ENTITY % historyDTD SYSTEM "chrome://browser/locale/history/history.dtd" >
-%historyDTD;
-]>
+<!DOCTYPE page SYSTEM "chrome://browser/locale/history/history.dtd">
 
 <page id="history-panel" orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -44,42 +38,30 @@
   <script type="application/x-javascript" src="chrome://browser/content/history/history.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/bookmarks/bookmarks.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/utilityOverlay.js"/>
+
   <stringbundle id="historyBundle" src="chrome://browser/locale/history/history.properties"/>
-  <commandset id="selectEditMenuItems">
-    <command id="cmd_delete"/>
-    <command id="cmd_copy"/>
-  </commandset>
-  <keyset id="historyKeys">
-    <key id="key_delete"/>
-    <key id="key_copy"/>
-  </keyset>
+
+  <commandset id="editMenuCommands"/>
+  <keyset id="editMenuKeys"/>
   
-  <popupset id="historyContextMenu">
-    <command id="cmd_selectAll"/>
-    <command id="cmd_cut"/>
-    <command id="cmd_copy"/>
-    <command id="cmd_delete"/>
-    <command id="cmd_selectAll"/>
-    <popup id="historyMenu" onpopupshowing="buildContextMenu();">
-      <menuitem id="miCollapseExpand" accesskey="&collapseExpand.accesskey;" default="true"
-                oncommand="collapseExpand();"/>
-      <menuitem id="miOpen" label="&openLinkInWindowCmd.label;" accesskey="&openLinkInWindowCmd.accesskey;" default="true"
-                oncommand="OpenURL(0);"/>
-      <menuitem id="miOpenInNewWindow" label="&openInNewWindow.label;" accesskey="&openInNewWindow.accesskey;"
-                oncommand="OpenURL(1);"/>
-      <menuitem id="miOpenInNewTab" label="&openInNewTab.label;" accesskey="&openInNewTab.accesskey;"
-                oncommand="OpenURL(2);"/>
-      <menuseparator id="pre-bookmarks-separator"/>
-      <menuitem id="miAddBookmark" label="&bookmarkLinkCmd.label;" oncommand="historyAddBookmarks();"/>
-      <menuitem id="miCopyLinkLocation" label="&copyLinkCmd.label;" accesskey="&copyLinkCmd.accesskey;"
-                command="cmd_copy"/>
-      <menuseparator id="post-bookmarks-separator"/>
-      <menuitem id="miDelete" label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;"
-                command="cmd_delete"/>
-      <menuitem id="miSelectAll" label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
-                command="cmd_selectAll"/>
-    </popup>
-  </popupset>
+  <popup id="historyContextMenu" onpopupshowing="buildContextMenu();">
+    <menuitem id="miCollapseExpand" accesskey="&collapseExpand.accesskey;" default="true"
+              oncommand="collapseExpand();"/>
+    <menuitem id="miOpen" label="&openLinkInWindow.label;" accesskey="&openLinkInWindow.accesskey;" default="true"
+              oncommand="OpenURL(0);"/>
+    <menuitem id="miOpenInNewWindow" label="&openInNewWindow.label;" accesskey="&openInNewWindow.accesskey;"
+              oncommand="OpenURL(1);"/>
+    <menuitem id="miOpenInNewTab" label="&openInNewTab.label;" accesskey="&openInNewTab.accesskey;"
+              oncommand="OpenURL(2);"/>
+    <menuseparator id="pre-bookmarks-separator"/>
+    <menuitem id="miAddBookmark" label="&bookmarkLink.label;" accesskey="&bookmarkLink.accesskey;" oncommand="historyAddBookmarks();"/>
+    <menuitem id="miCopyLink" label="&copyLink.label;" accesskey="&copyLink.accesskey;" oncommand="historyCopyLink();"/>
+    <menuseparator id="post-bookmarks-separator"/>
+    <menuitem id="cMenu_delete"/>
+    <menuitem id="cMenu_selectAll"/>
+  </popup>
+
   <hbox align="center">
     <label value="&find.label;" accesskey="&find.accesskey;" control="search-box"/>
     <textbox id="search-box" flex="1"
@@ -107,7 +89,7 @@
     </toolbarbutton>
   </hbox>
   <tree id="historyTree" flex="1" class="plain"
-            context="historyMenu" persist="ref"
+            context="historyContextMenu" persist="ref"
             datasources="rdf:history" ref="NC:HistoryByDate" flags="dont-build-content"
             onkeypress="if (event.keyCode == 13) OpenURL(event.shiftKey || event.metaKey);" 
             onselect="this.treeBoxObject.view.selectionChanged();
