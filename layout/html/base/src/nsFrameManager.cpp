@@ -255,7 +255,10 @@ private:
 
     // Removes the property associated with the given frame, and destroys
     // the property value
-    void  RemovePropertyForFrame(nsIFrame* aFrame);
+    void  RemovePropertyForFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
+
+    // Remove and destroy all remaining properties
+    void  RemoveAllProperties(nsIPresContext* aPresContext);
   };
 
   nsIPresShell*                   mPresShell;    // weak link, because the pres shell owns us
@@ -281,9 +284,9 @@ private:
   void RevokePostedEvents();
   CantRenderReplacedElementEvent** FindPostedEventFor(nsIFrame* aFrame);
   void DequeuePostedEventFor(nsIFrame* aFrame);
-  void DestroyPropertyList();
+  void DestroyPropertyList(nsIPresContext* aPresContext);
   PropertyList* GetPropertyListFor(nsIAtom* aPropertyName) const;
-  void RemoveAllPropertiesFor(nsIFrame* aFrame);
+  void RemoveAllPropertiesFor(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
   friend struct CantRenderReplacedElementEvent;
   static void HandlePLEvent(CantRenderReplacedElementEvent* aEvent);
@@ -316,6 +319,9 @@ NS_IMPL_RELEASE(FrameManager)
 
 FrameManager::~FrameManager()
 {
+  nsCOMPtr<nsIPresContext> presContext;
+  mPresShell->GetPresContext(getter_AddRefs(presContext));
+  
   // Revoke any events posted to the event queue that we haven't processed yet
   RevokePostedEvents();
 
@@ -327,15 +333,11 @@ FrameManager::~FrameManager()
   // we've destroyed the frame hierarchy because some frames may expect to be
   // able to retrieve their properties during destruction
   if (mRootFrame) {
-    nsIPresContext* presContext;
-
-    mPresShell->GetPresContext(&presContext);
     mRootFrame->Destroy(*presContext);
     mRootFrame = nsnull;
-    NS_IF_RELEASE(presContext);
   }
   
-  DestroyPropertyList();
+  DestroyPropertyList(presContext);
 }
 
 nsresult
@@ -641,7 +643,10 @@ FrameManager::NotifyDestroyingFrame(nsIFrame* aFrame)
   DequeuePostedEventFor(aFrame);
 
   // Remove all properties associated with the frame
-  RemoveAllPropertiesFor(aFrame);
+  nsCOMPtr<nsIPresContext> presContext;
+  mPresShell->GetPresContext(getter_AddRefs(presContext));
+
+  RemoveAllPropertiesFor(presContext, aFrame);
   return NS_OK;
 }
 
@@ -1551,13 +1556,14 @@ FrameHashTable::Dump(FILE* fp)
 #endif
 
 void
-FrameManager::DestroyPropertyList()
+FrameManager::DestroyPropertyList(nsIPresContext* aPresContext)
 {
   if (mPropertyList) {
     while (mPropertyList) {
       PropertyList* tmp = mPropertyList;
 
       mPropertyList = mPropertyList->mNext;
+      tmp->RemoveAllProperties(aPresContext);
       delete tmp;
     }
   }
@@ -1578,10 +1584,11 @@ FrameManager::GetPropertyListFor(nsIAtom* aPropertyName) const
 }
 
 void
-FrameManager::RemoveAllPropertiesFor(nsIFrame* aFrame)
+FrameManager::RemoveAllPropertiesFor(nsIPresContext* aPresContext,
+                                     nsIFrame*       aFrame)
 {
   for (PropertyList* prop = mPropertyList; prop; prop = prop->mNext) {
-    prop->RemovePropertyForFrame(aFrame);
+    prop->RemovePropertyForFrame(aPresContext, aFrame);
   }
 }
 
@@ -1639,7 +1646,10 @@ FrameManager::SetFrameProperty(nsIFrame*          aFrame,
   
   aOldValue = propertyList->mFrameValueMap->Insert(aFrame, aPropertyValue);
   if (aOldValue && propertyList->mDtorFunc) {
-    propertyList->mDtorFunc(aFrame, aPropertyName, aOldValue);
+    nsCOMPtr<nsIPresContext> presContext;
+    mPresShell->GetPresContext(getter_AddRefs(presContext));
+    
+    propertyList->mDtorFunc(presContext, aFrame, aPropertyName, aOldValue);
   }
 
   return NS_OK;
@@ -1653,7 +1663,10 @@ FrameManager::RemoveFrameProperty(nsIFrame* aFrame,
   PropertyList* propertyList = GetPropertyListFor(aPropertyName);
 
   if (propertyList) {
-    propertyList->RemovePropertyForFrame(aFrame);
+    nsCOMPtr<nsIPresContext> presContext;
+    mPresShell->GetPresContext(getter_AddRefs(presContext));
+    
+    propertyList->RemovePropertyForFrame(presContext, aFrame);
   }
 
   return NS_OK;
@@ -1821,40 +1834,47 @@ FrameManager::PropertyList::PropertyList(nsIAtom*           aName,
 {
 }
 
+FrameManager::PropertyList::~PropertyList()
+{
+  delete mFrameValueMap;
+}
+
 class DestroyPropertyValuesFunctor : public nsDSTNodeFunctor {
 public:
-  DestroyPropertyValuesFunctor(nsIAtom*           aPropertyName,
+  DestroyPropertyValuesFunctor(nsIPresContext*    aPresContext,
+                               nsIAtom*           aPropertyName,
                                FMPropertyDtorFunc aDtorFunc)
-    : mPropertyName(aPropertyName), mDtorFunc(aDtorFunc) {}
+    : mPresContext(aPresContext), mPropertyName(aPropertyName), mDtorFunc(aDtorFunc) {}
 
   virtual void operator () (void *aKey, void *aValue) {
-    mDtorFunc((nsIFrame*)aKey, mPropertyName, aValue);
+    mDtorFunc(mPresContext, (nsIFrame*)aKey, mPropertyName, aValue);
   }
 
+  nsIPresContext*    mPresContext;
   nsIAtom*           mPropertyName;
   FMPropertyDtorFunc mDtorFunc;
 };
 
-FrameManager::PropertyList::~PropertyList()
+void
+FrameManager::PropertyList::RemoveAllProperties(nsIPresContext* aPresContext)
 {
   if (mDtorFunc) {
-    DestroyPropertyValuesFunctor  functor(mName, mDtorFunc);
+    DestroyPropertyValuesFunctor  functor(aPresContext, mName, mDtorFunc);
 
     // Enumerate any remaining frame/value pairs and destroy the value object
     mFrameValueMap->Enumerate(functor);
   }
-
-  delete mFrameValueMap;
 }
 
 void
-FrameManager::PropertyList::RemovePropertyForFrame(nsIFrame* aFrame)
+FrameManager::PropertyList::RemovePropertyForFrame(nsIPresContext* aPresContext,
+                                                   nsIFrame*       aFrame)
 {
   void* value = mFrameValueMap->Remove(aFrame);
 
   if (value && mDtorFunc) {
     // Destroy the property value
-    mDtorFunc(aFrame, mName, value);
+    mDtorFunc(aPresContext, aFrame, mName, value);
   }
 }
 
