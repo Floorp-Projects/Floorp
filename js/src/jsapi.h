@@ -1098,8 +1098,40 @@ JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
 extern JS_PUBLIC_API(JSObject *)
 JS_GetFunctionObject(JSFunction *fun);
 
+/*
+ * Deprecated, useful only for diagnostics.  Use JS_GetFunctionId instead for
+ * anonymous vs. "anonymous" disambiguation and Unicode fidelity.
+ */
 extern JS_PUBLIC_API(const char *)
 JS_GetFunctionName(JSFunction *fun);
+
+/*
+ * Return the function's identifier as a JSString, or null if fun is unnamed.
+ * The returned string lives as long as fun, so you don't need to root a saved
+ * reference to it if fun is well-connected or rooted, and provided you bound
+ * the use of the saved reference by fun's lifetime.
+ *
+ * Prefer JS_GetFunctionId over JS_GetFunctionName because it returns null for
+ * truly anonymous functions, and because it doesn't chop to ISO-Latin-1 chars
+ * from UTF-16-ish jschars.
+ */
+extern JS_PUBLIC_API(JSString *)
+JS_GetFunctionId(JSFunction *fun);
+
+/*
+ * Return JSFUN_* flags for fun.
+ */
+extern JS_PUBLIC_API(uintN)
+JS_GetFunctionFlags(JSFunction *fun);
+
+/*
+ * Infallible predicate to test whether obj is a function object (faster than
+ * comparing obj's class name to "Function", but equivalent unless someone has
+ * overwritten the "Function" identifier with a different constructor and then
+ * created instances using that constructor that might be passed in as obj).
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_ObjectIsFunction(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs);
@@ -1181,6 +1213,13 @@ JS_CompileFileHandleForPrincipals(JSContext *cx, JSObject *obj,
  */
 extern JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script);
+
+/*
+ * Infallible getter for a script's object.  If JS_NewScriptObject has not been
+ * called on script yet, the return value will be null.
+ */
+extern JS_PUBLIC_API(JSObject *)
+JS_GetScriptObject(JSScript *script);
 
 extern JS_PUBLIC_API(void)
 JS_DestroyScript(JSContext *cx, JSScript *script);
