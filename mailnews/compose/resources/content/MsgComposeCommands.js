@@ -571,15 +571,20 @@ function ComposeStartup()
         fillIdentityListPopup(identityListPopup);
     }
 
-    var identity;
+    var identity = null;
     if (args.preselectid)
         identity = getIdentityForKey(args.preselectid);
     else
     {
-        // no preselect, so use the default account
-        var identities = accountManager.defaultAccount.identities;
-        
-    	identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
+       // no preselect, so use the default account
+       var identities = accountManager.defaultAccount.identities;      
+      if (identities.Count() >= 1)
+    	  identity = identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
+    	else
+    	{
+        var identities = GetIdentities();
+        identity = identities[0];
+      }	  
     }
    
     for (i=0;i<identityListPopup.childNodes.length;i++) {
