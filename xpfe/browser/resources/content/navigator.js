@@ -20,7 +20,6 @@
   var prefwindow = null;
   var appCoreName = "";
   var defaultStatus = "default status text";
-  var debugSecurity = false; // Set this true to enable Security chrome testing.
   var explicitURL = false;
 
   function UpdateHistory(event)
@@ -849,42 +848,28 @@ function OpenSearch(tabName)
                 dump("Can't find status broadcaster!\n");
             }
         }
-
-        function onSecurity() {
-            var security = document.getElementById("Browser:Security");
-            var indicator = document.getElementById("security-box");
-            var icon = document.getElementById("security-button");
+        
+        function onProtocolClick()
+        {
+            //TODO: need to hookup to page info
+            var status = document.getElementById("Browser:Status");
+            if ( status ) {
+			    //var msg = "Hey, don't touch me there!";
+				//status.setAttribute("value",msg);
+            }
+        }
+        function onProtocolChange() 
+        {
+            var protocolIcon = document.getElementById("Browser:ProtocolIcon");
+            var uri = protocolIcon.getAttribute("uri");
+            var icon = document.getElementById("protocol-icon");
  
-            if ( security.getAttribute("secure") == "true" ) {
-                indicator.setAttribute("class","secure");
-                icon.setAttribute("class","secure");
-            } else {
-                indicator.setAttribute("class","insecure");
-                icon.setAttribute("class","insecure");
-            }
+            icon.setAttribute("src",uri);
         }
 
-        function securityOn() {
-            // Set debugSecurity (at top of file) to turn this code on.
-            if ( !debugSecurity ) {
-                return;
-            }
-
-            var security = document.getElementById("Browser:Security");
-            if ( security.getAttribute("secure") == "false" ) {
-                security.setAttribute("secure","true");
-            }
-        }
-        function securityOff() {
-            var security = document.getElementById("Browser:Security");
-            if ( security.getAttribute("secure") == "true" ) {
-                security.setAttribute("secure","false");
-            }
-        }
         function doTests() {
-            // Turn security on.
-            securityOn();
         }
+
 		var startTime = 0;
         function onProgress() {
             var throbber = document.getElementById("Browser:Throbber");
