@@ -28,6 +28,7 @@
 
 #include <Appearance.h>
 #include <ImageCompression.h>
+#include <Gestalt.h>
 
 #include <string>
 #include <map>
@@ -259,6 +260,25 @@ static nsresult encodeGWorld(GWorldPtr world, OSType type, nsIInputStream **resu
     return rv;
 }
 
+static bool isMacOSXOrLater()
+{
+    static long version = 0;
+    if (version == 0)
+        Gestalt(gestaltSystemVersion, &version);
+    return (version >= 0x1000);
+}
+
+static inline void startImaging(TempGWorld& world)
+{
+    // initialize the GWorld with all black, alpha=0xFF.
+    world.fill(isMacOSXOrLater() ? 0x00000000 : 0xFF000000);
+}
+
+static inline void stopImaging(TempGWorld& world)
+{
+    if (!isMacOSXOrLater()) world.xorFill(0xFF000000);
+}
+
 struct ButtonInfo {
     const char* title;
     Rect& bounds;
@@ -352,8 +372,7 @@ static nsresult drawThemeButton(ThemeButtonKind kind, Arguments& args, nsIInputS
     
     TempGWorld world(backgroundBounds);
     if (world.valid()) {
-        // initialize the GWorld with all black, alpha=0xFF.
-        world.fill(0xFF000000);
+        startImaging(world);
         
         ButtonInfo buttonInfo = {
             title, buttonBounds, drawInfo
@@ -367,8 +386,8 @@ static nsresult drawThemeButton(ThemeButtonKind kind, Arguments& args, nsIInputS
 
         // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
         // otherwise turn it off on the pixels that weren't touched.
-        world.xorFill(0xFF000000);
-        
+        stopImaging(world);
+
         // now, encode the image as a 'PNGf' image, and return the encoded image
         // as an nsIInputStream.
         rv = encodeGWorld(world, 'PNGf', result, length);
@@ -403,18 +422,20 @@ static nsresult drawThemeMenu(Arguments& args, nsIInputStream **result, PRInt32 
     RgnHandle backgroundRgn = ::NewRgn();
     
     status = ::GetThemeMenuBackgroundRegion(&menuBounds, type, backgroundRgn);
-    if (status == noErr) {  
-    
-        TempGWorld world((*backgroundRgn)->rgnBBox);
+    if (status == noErr) {
+        Rect bounds;
+#if TARGET_CARBON
+        GetRegionBounds(backgroundRgn, &bounds);
+#else
+        bounds = (*backgroundRgn)->rgnBBox;
+#endif
+        TempGWorld world(bounds);
         if (world.valid()) {
-            // initialize the GWorld with all black, alpha=0xFF.
-            world.fill(0xFF000000);
+            startImaging(world);
             
-            status = ::DrawThemeMenuBackground (&((*backgroundRgn)->rgnBBox), type);
+            status = ::DrawThemeMenuBackground (&bounds, type);
 
-            // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
-            // otherwise turn it off on the pixels that weren't touched.
-            world.xorFill(0xFF000000);
+            stopImaging(world);
             
             // now, encode the image as a 'PNGf' image, and return the encoded image
             // as an nsIInputStream.
@@ -488,15 +509,12 @@ static nsresult drawThemeMenuItem(Arguments& args, nsIInputStream **result, PRIn
     Rect menuBounds = { 0, 0, height + mMenuDrawingBufferExtension, width };
     TempGWorld world(itemBounds);
     if (world.valid()) {
-        // initialize the GWorld with all black, alpha=0xFF.
-        world.fill(0xFF000000);
+        startImaging(world);
         
         status = ::DrawThemeMenuItem(&menuBounds, &itemBounds, 0, 
                                     height+mMenuDrawingBufferExtension, state, type, NULL, NULL);
 
-        // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
-        // otherwise turn it off on the pixels that weren't touched.
-        world.xorFill(0xFF000000);
+        stopImaging(world);
         
         // now, encode the image as a 'PNGf' image, and return the encoded image
         // as an nsIInputStream.
@@ -523,14 +541,11 @@ static nsresult drawThemeMenuSeperator(Arguments& args, nsIInputStream **result,
     Rect seperatorBounds = { 0, 0, height, width };
     TempGWorld world(seperatorBounds);
     if (world.valid()) {
-        // initialize the GWorld with all black, alpha=0xFF.
-        world.fill(0xFF000000);
+        startImaging(world);
         
         status = ::DrawThemeMenuSeparator(&seperatorBounds);
 
-        // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
-        // otherwise turn it off on the pixels that weren't touched.
-        world.xorFill(0xFF000000);
+        stopImaging(world);
         
         // now, encode the image as a 'PNGf' image, and return the encoded image
         // as an nsIInputStream.
@@ -556,9 +571,9 @@ static nsresult drawThemeScrollbarThumb(TempGWorld& world, ThemeTrackDrawInfo& d
         ::OffsetRgn(thumbRgn, -srcBounds.left, -srcBounds.top);
         TempGWorld thumbWorld(thumbBounds);
         if (thumbWorld.valid()) {
-            thumbWorld.fill(0xFF000000);
+            startImaging(thumbWorld);
             thumbWorld.copy(world, srcBounds, thumbBounds, thumbRgn);
-            thumbWorld.xorFill(0xFF000000);
+            stopImaging(thumbWorld);
             rv = encodeGWorld(thumbWorld, 'PNGf', result, length);
         }
         ::DisposeRgn(thumbRgn);
@@ -586,9 +601,9 @@ static nsresult drawThemeScrollbarArrow(TempGWorld& world, Rect& scrollbarBounds
     Rect arrowBounds = { 0, 0, srcBounds.bottom - srcBounds.top, srcBounds.right - srcBounds.left };
     TempGWorld arrowWorld(arrowBounds);
     if (arrowWorld.valid()) {
-        arrowWorld.fill(0xFF000000);
+        startImaging(arrowWorld);
         arrowWorld.copy(world, srcBounds, arrowBounds);
-        arrowWorld.xorFill(0xFF000000);
+        stopImaging(arrowWorld);
         rv = encodeGWorld(arrowWorld, 'PNGf', result, length);
     }
     return rv;
@@ -621,8 +636,7 @@ static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRI
 
     TempGWorld world(scrollbarBounds);
     if (world.valid()) {
-        // initialize the GWorld with all black, alpha=0xFF.
-        world.fill(0xFF000000);
+        startImaging(world);
 
         ThemeTrackDrawInfo drawInfo;
         status = ::DrawThemeScrollBarArrows(&scrollbarBounds, enableState, pressState, isHorizontal, &drawInfo.bounds);
@@ -659,16 +673,14 @@ static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRI
                 };
                 TempGWorld trackWorld(trackBounds);
                 if (trackWorld.valid()) {
-                    trackWorld.fill(0xFF000000);
+                    startImaging(trackWorld);
                     trackWorld.copy(world, drawInfo.bounds, trackBounds);
-                    trackWorld.xorFill(0xFF000000);
+                    stopImaging(trackWorld);
                     rv = encodeGWorld(trackWorld, 'PNGf', result, length);
                 }
             }
         } else {
-            // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
-            // otherwise turn it off on the pixels that weren't touched.
-            world.xorFill(0xFF000000);        
+            stopImaging(world);
             rv = encodeGWorld(world, 'PNGf', result, length);
         }
     }
