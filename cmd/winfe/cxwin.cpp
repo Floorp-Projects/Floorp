@@ -6750,8 +6750,11 @@ void CWinCX::invalidateElement( LO_Element *pElement )
 			pp = (LO_Any *)pElement->lo_any.next;	
 		}
 		// for other Form element type( button, text input...), the widget handles the focus.
-		ResolveElement(Rect, pp->x, pp->y, pp->x_offset,pp->y_offset, pp->width, pp->height);
-		rectEmpty = FALSE;
+		if (pp)
+		{
+			ResolveElement(Rect, pp->x, pp->y, pp->x_offset,pp->y_offset, pp->width, pp->height);
+			rectEmpty = FALSE;
+		}
 		break;
 	case LO_TEXT :
 		// for a text(link), the element itself has a dotted box as focus.
