@@ -897,8 +897,6 @@ NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
     return NS_ERROR_FAILURE;
   }
 
-  mUpdateArea->Union(*aRegion);
-
   PRUint32 len;
   PRUint32 i;
 
