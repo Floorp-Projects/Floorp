@@ -1079,6 +1079,226 @@ NSRangeIsValidFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 }
 
 
+//
+// Native method IsPointInRange
+//
+PR_STATIC_CALLBACK(JSBool)
+NSRangeIsPointInRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *privateThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMNSRange> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kINSRangeIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRBool nativeRet;
+  nsCOMPtr<nsIDOMNode> b0;
+  PRInt32 b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSRANGE_ISPOINTINRANGE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kINodeIID,
+                                           NS_ConvertASCIItoUCS2("Node"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+
+    result = nativeThis->IsPointInRange(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ComparePoint
+//
+PR_STATIC_CALLBACK(JSBool)
+NSRangeComparePoint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *privateThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMNSRange> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kINSRangeIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRInt16 nativeRet;
+  nsCOMPtr<nsIDOMNode> b0;
+  PRInt32 b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSRANGE_COMPAREPOINT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kINodeIID,
+                                           NS_ConvertASCIItoUCS2("Node"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+
+    result = nativeThis->ComparePoint(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method IntersectsNode
+//
+PR_STATIC_CALLBACK(JSBool)
+NSRangeIntersectsNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *privateThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMNSRange> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kINSRangeIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRBool nativeRet;
+  nsCOMPtr<nsIDOMNode> b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSRANGE_INTERSECTSNODE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kINodeIID,
+                                           NS_ConvertASCIItoUCS2("Node"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+
+    result = nativeThis->IntersectsNode(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method CompareNode
+//
+PR_STATIC_CALLBACK(JSBool)
+NSRangeCompareNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *privateThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMNSRange> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kINSRangeIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRInt16 nativeRet;
+  nsCOMPtr<nsIDOMNode> b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSRANGE_COMPARENODE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kINodeIID,
+                                           NS_ConvertASCIItoUCS2("Node"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+
+    result = nativeThis->CompareNode(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Range
@@ -1138,6 +1358,10 @@ static JSFunctionSpec RangeMethods[] =
   {"toString",          RangeToString,     0},
   {"createContextualFragment",          NSRangeCreateContextualFragment,     1},
   {"isValidFragment",          NSRangeIsValidFragment,     1},
+  {"isPointInRange",          NSRangeIsPointInRange,     2},
+  {"comparePoint",          NSRangeComparePoint,     2},
+  {"intersectsNode",          NSRangeIntersectsNode,     1},
+  {"compareNode",          NSRangeCompareNode,     1},
   {0}
 };
 

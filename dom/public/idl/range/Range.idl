@@ -47,4 +47,24 @@ interface NSRange {
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
    DocumentFragment createContextualFragment(in DOMString fragment);
    boolean isValidFragment(in DOMString fragment);
+
+    // Is the point contained in the range?
+    boolean isPointInRange(in Node parent, in long offset);
+
+    // comparePoint returns
+    //   -1 if point is before range,
+    //    0 if point is in range,
+    //    1 if point is after range
+    // Sort of a strcmp for ranges.
+    short comparePoint(in Node parent, in long offset);
+
+    // Does the node intersect the range?
+    boolean intersectsNode(in Node n);
+
+    // HOW does the node intersect the range?  Four possible values:
+    const unsigned short NODE_BEFORE = 0;
+    const unsigned short NODE_AFTER = 1;
+    const unsigned short NODE_BEFORE_AND_AFTER = 2;
+    const unsigned short NODE_INSIDE = 3;
+    unsigned short compareNode(in Node n);
  };

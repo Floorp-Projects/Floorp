@@ -807,7 +807,11 @@
     "nshtmltextareaelement.controllers", \
     "nslocation.reload", \
     "nslocation.replace", \
+    "nsrange.comparenode", \
+    "nsrange.comparepoint", \
     "nsrange.createcontextualfragment", \
+    "nsrange.intersectsnode", \
+    "nsrange.ispointinrange", \
     "nsrange.isvalidfragment", \
     "nsuievent.cancelbubble", \
     "nsuievent.getpreventdefault", \
