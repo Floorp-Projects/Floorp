@@ -207,7 +207,7 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
                      nsIWebProgressListener::STATE_SECURE_LOW);
 
       CERTCertificate *peerCert = SSL_PeerCertificate(fd);
-      char* caName = CERT_GetOrgName(&peerCert->subject);
+      char* caName = CERT_GetOrgName(&peerCert->issuer);
       CERT_DestroyCertificate(peerCert);
       if (!caName) {
         caName = signer;

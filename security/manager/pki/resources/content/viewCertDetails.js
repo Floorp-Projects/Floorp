@@ -225,18 +225,10 @@ function DisplayGeneralDataFromCert(cert)
   addAttributeFromCert('validityend', cert.expiresDate);
   
   //Now to populate the fields that correspond to the issuer.
-  var issuer = cert.issuer;
   var issuerCommonname, issuerOrg, issuerOrgUnit;
-  if (issuer) {
-    issuerCommonname = issuer.commonName;
-    issuerOrg        = issuer.organization;
-    issuerOrgUnit    = issuer.organizationalUnit;
-  } else {
-    var unknownIssuer = bundle.GetStringFromName('unknownIssuer');
-    issuerCommonname  = unknownIssuer;
-    issuerOrg         = unknownIssuer;
-    issuerOrgUnit     = unknownIssuer;
-  }
+  issuerCommonname = cert.issuerCommonName;
+  issuerOrg = cert.issuerOrganization;
+  issuerOrgUnit = cert.issuerOrganizationalUnit;
   addAttributeFromCert('issuercommonname', issuerCommonname);
   addAttributeFromCert('issuerorganization', issuerOrg);
   addAttributeFromCert('issuerorgunit', issuerOrgUnit);
