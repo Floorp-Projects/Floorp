@@ -576,7 +576,7 @@ nsOutlinerBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& 
 
     PRInt32 rowCount;
     mView->GetRowCount(&rowCount);
-    PRInt32 lastPageTopRow = rowCount - mPageCount;
+    PRInt32 lastPageTopRow = PR_MAX(0, rowCount - mPageCount);
     if (mTopRowIndex >= lastPageTopRow)
       ScrollToRow(lastPageTopRow);
 
