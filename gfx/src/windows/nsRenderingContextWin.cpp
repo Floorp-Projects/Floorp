@@ -2070,12 +2070,11 @@ FoundFont:
     aBoundingMetrics.width = NSToCoordRound(float(aBoundingMetrics.width) * mP2T);
     aBoundingMetrics.ascent = NSToCoordRound(float(aBoundingMetrics.ascent) * mP2T);
     aBoundingMetrics.descent = NSToCoordRound(float(aBoundingMetrics.descent) * mP2T);
-
-    if (nsnull != aFontID)
-      *aFontID = 0;
-
-    return NS_OK;
   }
+  if (nsnull != aFontID)
+    *aFontID = 0;
+
+  return NS_OK;
 }
 #endif // MOZ_MATHML
 
