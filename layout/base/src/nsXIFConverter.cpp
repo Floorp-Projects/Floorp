@@ -377,11 +377,13 @@ nsXIFConverter::AppendEntity(const PRUnichar aChar, nsAWritableString* aStr,
     // and will call us back.  So just do what it does:
 
     // ugly workaround for older compilers not understanding operator+
-    nsAReadableString *space = &mSpace;
-    nsAReadableString *value = &mValue;
-    nsAReadableString *equal = &mEqual;
-    nsAReadableString *quote = &mQuote;
-    mBuffer->Append(*space + *value + *equal + *quote + *str + *quote);
+    // and thinking that nsPromiseConcatenation doesn't exist.
+    mBuffer->Append(mSpace);
+    mBuffer->Append(mValue);
+    mBuffer->Append(mEqual);
+    mBuffer->Append(mQuote);
+    mBuffer->Append(*str);
+    mBuffer->Append(mQuote);
     FinishStartTag(mEntity, PR_TRUE, PR_FALSE);
   }
   else if (aStr)
