@@ -81,7 +81,8 @@ class nsIDataFlavor : public nsISupports {
     */
     NS_IMETHOD Equals(const nsIDataFlavor * aDataFlavor) = 0;
 
-
+    NS_IMETHOD GetPredefinedDataFlavor(nsString & aStr, 
+                                       nsIDataFlavor ** aDataFlavor) = 0;
 };
 
 #endif
