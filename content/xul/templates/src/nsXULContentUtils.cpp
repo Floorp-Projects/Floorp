@@ -333,8 +333,6 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAString& aElem
         CopyUTF16toUTF8(aElementID, aURI);
     }
     else {
-        nsresult rv;
-
         nsIURI *docURL = aDocument->GetBaseURL();
 
         // XXX Urgh. This is so broken; I'd really just like to use
@@ -351,7 +349,7 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsAString& aElem
         AppendUTF16toUTF8(aElementID, aURI);
 #else
         nsXPIDLCString spec;
-        rv = NS_MakeAbsoluteURI(nsCAutoString(aElementID), docURL, getter_Copies(spec));
+        nsresult rv = NS_MakeAbsoluteURI(nsCAutoString(aElementID), docURL, getter_Copies(spec));
         if (NS_SUCCEEDED(rv)) {
             aURI = spec;
         }
@@ -390,8 +388,6 @@ nsXULContentUtils::MakeElementID(nsIDocument* aDocument, const nsAString& aURI, 
 {
     // Convert a URI into an element ID that can be accessed from the
     // DOM APIs.
-    nsresult rv;
-
     nsCAutoString spec;
     aDocument->GetBaseURL()->GetSpec(spec);
 
