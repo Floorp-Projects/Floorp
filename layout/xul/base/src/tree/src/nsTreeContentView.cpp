@@ -916,6 +916,8 @@ nsTreeContentView::ContentInserted(nsIDocument *aDocument,
                                       nsIContent* aChild,
                                       PRInt32 aIndexInContainer)
 {
+  NS_ASSERTION(aChild, "null ptr");
+
   // Make sure this notification concerns us.
   // First check the tag to see if it's one that we care about.
   nsCOMPtr<nsIAtom> childTag;
