@@ -206,13 +206,15 @@ NS_NewLocalStore(nsILocalStore** aResult)
     // We need to read this synchronously.
     rv = impl->Refresh(PR_TRUE);
 
-#if 0
-    // XXX for the moment, ignore any refresh errors
     if (NS_FAILED(rv)) {
+
+#ifdef	DEBUG
+	printf("\n\nRDF: NS_NewLocalStore::Refresh() failed.\n\n");
+#endif
+
         delete impl;
         return rv;
     }
-#endif
 
     NS_ADDREF(impl);
     *aResult = impl;
