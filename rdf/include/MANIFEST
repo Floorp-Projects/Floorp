@@ -1,11 +1,9 @@
-htrdf.h
-jsec2rdf.h
+rdf.h
 nsIRDFCursor.h
 nsIRDFDataBase.h
 nsIRDFDataSource.h
+nsIRDFNode.h
 nsIRDFObserver.h
-nsIRDFService.h
+nsIRDFRegistry.h
+nsIRDFResourceManager.h
 nsRDFCID.h
-rdf.h
-rdfc.h
-vocab.h
