@@ -14,3 +14,6 @@ calendar.jar:
 +  skin/classic/calendar/datetimepickers/datepicker.css             (datetimepickers/datepicker.css)
 +  skin/classic/calendar/datetimepickers/minimonth.css              (datetimepickers/minimonth.css)
 +  skin/classic/calendar/datetimepickers/timepicker.css             (datetimepickers/timepicker.css)
+classic.jar:
+   ./icon.png
+   ./preview.png
