@@ -450,16 +450,15 @@ void CBrowserShell::ListenToMessage(MessageT			inMessage,
 
 NS_IMETHODIMP CBrowserShell::SetTopLevelWindow(nsIWebBrowserChrome * aTopLevelWindow)
 {
+    nsresult rv = NS_OK;
+    
     mWebBrowser->SetContainerWindow(aTopLevelWindow);  
+    if (aTopLevelWindow) {
+        rv = mWebBrowser->AddWebBrowserListener(aTopLevelWindow, NS_GET_IID(nsIWebProgressListener));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Call to AddWebBrowserListener failed");
+    }
 
-    /*
-    In case we needed to do something with the underlying docshell...   
-
-    nsCOMPtr<nsIDocShell> ourDocShell(do_GetInterface(mWebBrowser));
-    NS_ENSURE_TRUE(ourDocShell, NS_ERROR_FAILURE);
-    */
-     
-    return NS_OK;
+    return rv;
 }
 
 
