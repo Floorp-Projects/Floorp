@@ -73,6 +73,9 @@ static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
+#define PREF_MAIL_CONVERT_STRUCTS "mail.convert_structs"
+#define PREF_MAIL_STRICTLY_MIME "mail.strictly_mime"
+
 #ifdef XP_MAC
 #include "xp.h"                 // mac only 
 #include "errors.h"
@@ -1182,9 +1185,18 @@ nsMsgComposeAndSend::GetBodyFromEditor()
     (void **) getter_AddRefs(conv));
   if (NS_SUCCEEDED(rv)) 
   {
+    PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
+    PRBool enable_structs = PR_TRUE;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+    if (NS_SUCCEEDED(rv) && prefs)
+    {
+      rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_STRUCTS,&enable_structs);
+      if (NS_FAILED(rv) || enable_structs)
+	    whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
+	}
+
     PRUnichar* wresult;
-    rv = conv->ScanHTML(bodyText, ~PRUint32(mozITXTToHTMLConv::kGlyphSubstitution)
-      /* XXX Ask Prefs what to do */, &wresult);
+    rv = conv->ScanHTML(bodyText, whattodo, &wresult);
     if (NS_SUCCEEDED(rv))
     {
       Recycle(bodyText);
@@ -2355,7 +2367,7 @@ nsMsgComposeAndSend::Init(
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   if (NS_SUCCEEDED(rv) && prefs) 
   {
-    rv = prefs->GetBoolPref("mail.strictly_mime", &strictly_mime);
+    rv = prefs->GetBoolPref(PREF_MAIL_STRICTLY_MIME, &strictly_mime);
   }
 
   nsMsgMIMESetConformToStandard(strictly_mime);
