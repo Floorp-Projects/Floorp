@@ -524,11 +524,6 @@ nsMsgSearchValidityManager::InitOfflineMailFilterTable()
   m_offlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::IsntInAB, 1);
   m_offlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::IsntInAB, 1);
   
-  m_offlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Label, nsMsgSearchOp::Is, 1);
-  m_offlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Label, nsMsgSearchOp::Is, 1);
-  m_offlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::Label, nsMsgSearchOp::Isnt, 1);
-  m_offlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::Label, nsMsgSearchOp::Isnt, 1);
-  
   m_offlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
   m_offlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::To, nsMsgSearchOp::Contains, 1);
   m_offlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::To, nsMsgSearchOp::DoesntContain, 1);
@@ -614,7 +609,7 @@ nsMsgSearchValidityManager::InitOfflineMailFilterTable()
   m_offlineMailFilterTable->SetAvailable (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is,  1);
   m_offlineMailFilterTable->SetEnabled   (nsMsgSearchAttrib::AgeInDays, nsMsgSearchOp::Is, 1);
 
-  // junk status and attachment status not available for offline mail (POP) filters
+  // labels, junk status and attachment status not available for offline mail (POP) filters
   // because we won't know those until after the message has been analyzed.
   // see bug #185937
   
