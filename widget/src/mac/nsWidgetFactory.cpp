@@ -25,16 +25,18 @@
 #include "nsToolkit.h"
 #include "nsWindow.h"
 #include "nsAppShell.h"
-#include "nsButton.h"
-#include "nsScrollbar.h"
-#include "nsCheckButton.h"
-#include "nsRadioButton.h"
-#include "nsTextWidget.h"
-#include "nsTextAreaWidget.h"
-#include "nsFileWidget.h"
-#include "nsListBox.h"
-#include "nsComboBox.h"
-#include "nsLookAndFeel.h"
+//#include "nsButton.h"
+//#include "nsScrollbar.h"
+//#include "nsCheckButton.h"
+//#include "nsRadioButton.h"
+//#include "nsTextWidget.h"
+//#include "nsTextAreaWidget.h"
+//#include "nsFileWidget.h"
+//#include "nsListBox.h"
+//#include "nsComboBox.h"
+//#include "nsLookAndFeel.h"
+
+#define MACSTATIC
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
@@ -54,11 +56,11 @@ static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
 static NS_DEFINE_IID(kIWidget,        NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIAppShellIID,   NS_IAPPSHELL_IID);
-static NS_DEFINE_IID(kIButton,        NS_IBUTTON_IID);
-static NS_DEFINE_IID(kICheckButton,   NS_ICHECKBUTTON_IID);
-static NS_DEFINE_IID(kIScrollbar,     NS_ISCROLLBAR_IID);
-static NS_DEFINE_IID(kIFileWidget,    NS_IFILEWIDGET_IID);
-static NS_DEFINE_IID(kIListBox,       NS_ILISTBOX_IID);
+//static NS_DEFINE_IID(kIButton,        NS_IBUTTON_IID);
+//static NS_DEFINE_IID(kICheckButton,   NS_ICHECKBUTTON_IID);
+//static NS_DEFINE_IID(kIScrollbar,     NS_ISCROLLBAR_IID);
+//static NS_DEFINE_IID(kIFileWidget,    NS_IFILEWIDGET_IID);
+//static NS_DEFINE_IID(kIListBox,       NS_ILISTBOX_IID);
 
 static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
@@ -139,6 +141,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     if (aIID.Equals(kCWindow)) {
         inst = new nsWindow(aOuter);
     }
+#ifdef NOTNOW
     else if ( mClassID.Equals(kCCheckButtonCID)) {
         inst = new nsCheckButton(aOuter);
     }
@@ -201,6 +204,7 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
         }
         return res;
     }
+#endif
 
     if (inst == NULL) {
         return NS_ERROR_OUT_OF_MEMORY;  
@@ -225,7 +229,11 @@ nsresult nsWidgetFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller
+#ifdef MACSTATIC
+extern "C" NS_WIDGET nsresult NSGetFactory_WIDGET_DLL(const nsCID &aClass, nsIFactory **aFactory)
+#else
 extern "C" NS_WIDGET nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFactory)
+#endif
 {
     if (nsnull == aFactory) {
         return NS_ERROR_NULL_POINTER;
