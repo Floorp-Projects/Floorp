@@ -89,28 +89,37 @@ PRBool nsClipboard::GetClipboardData(const char *aFlavour)
   ULONG ulFmt = GetFormatID(aFlavour, &pRecord);
 
   // XXX OS2TODO - images: just handle text until then
-  if ( (!pRecord || strstr(pRecord->szMimeType, "text") == NULL) )
-    return PR_FALSE;
+//  if ( (!pRecord || strstr(pRecord->szMimeType, "text") == NULL) )
+//    return PR_FALSE;
 
   void* pData = (void*) WinQueryClipbrdData(0/*hab*/, ulFmt);
 
   if (pData) {
 
-    PRUint32 cbData = pRecord->pfnImport(pData, (void**) &pData);
-
     dataFound = PR_TRUE;
 
-    if (!strcmp(pRecord->szMimeType, kTextMime)) {
+    PRUint32 cbData;
 
-      const char* castText = NS_REINTERPRET_CAST(char*, pData);
-      ULONG txtLen = strlen(castText) + 1;
-      PRUnichar* uniBuf = (PRUnichar*)PR_Malloc(txtLen*sizeof(PRUnichar));
-      PRUnichar* convertedText = gModuleData.ConvertToUcs(castText, uniBuf, txtLen);
+    if (pRecord) {
+      cbData = pRecord->pfnImport(pData, (void**) &pData);
 
-      if (convertedText) {
-        pData = NS_REINTERPRET_CAST(void*, convertedText);
-        cbData = (txtLen-1) * sizeof(PRUnichar);
+      if (!strcmp(pRecord->szMimeType, kTextMime)) {
+
+        const char* castText = NS_REINTERPRET_CAST(char*, pData);
+        ULONG txtLen = strlen(castText) + 1;
+        PRUnichar* uniBuf = (PRUnichar*)PR_Malloc(txtLen*sizeof(PRUnichar));
+        PRUnichar* convertedText = gModuleData.ConvertToUcs(castText, uniBuf, txtLen);
+
+        if (convertedText) {
+          pData = NS_REINTERPRET_CAST(void*, convertedText);
+          cbData = (txtLen-1) * sizeof(PRUnichar);
+        }
       }
+    }
+    else
+    {
+      cbData = *(NS_STATIC_CAST(PRUint32*, pData));
+      pData = NS_STATIC_CAST(void*, NS_STATIC_CAST(PBYTE, pData) + sizeof(PRUint32));
     }
 
     if (dataFound == PR_TRUE) {
@@ -136,7 +145,7 @@ PRBool nsClipboard::GetClipboardData(const char *aFlavour)
   }
 
   // check for text which, if found, we convert to unicode
-  if (!strcmp(pRecord->szMimeType, kUnicodeMime) && (dataFound == PR_FALSE))
+  if (pRecord && !strcmp(pRecord->szMimeType, kUnicodeMime) && (dataFound == PR_FALSE))
     GetClipboardData(kTextMime);
 
   return dataFound;
@@ -159,11 +168,14 @@ void nsClipboard::SetClipboardData(const char *aFlavour)
 
   // Figure out how much memory we need to store the native version
   FormatRecord *pRecord;
-  GetFormatID(aFlavour, &pRecord);
-  if (!pRecord)
-    return;
+  ULONG ulFmt = GetFormatID(aFlavour, &pRecord);
+//  if (!pRecord)
+//    return;
 
-  cbData = pRecord->pfnExport(pMozData, cbMozData, 0);
+  if (pRecord)
+    cbData = pRecord->pfnExport(pMozData, cbMozData, 0);
+  else
+    cbData = cbMozData + sizeof(PRUint32);
 
   // allocate some memory to put the data in
   APIRET rc = DosAllocSharedMem(&pData, nsnull, cbData,
@@ -171,16 +183,28 @@ void nsClipboard::SetClipboardData(const char *aFlavour)
 
   if (!rc) {
 
-    // copy across & pin up.
-    pRecord->pfnExport(pMozData, cbMozData, pData);
+    if (pRecord) {
+      // copy across & pin up.
+      pRecord->pfnExport(pMozData, cbMozData, pData);
 
-    if (!WinSetClipbrdData(0/*hab*/, (ULONG)pData, pRecord->ulClipboardFmt, CFI_POINTER))
-      printf("ERROR: nsClipboard setting %s transfer data\n", pRecord->szMimeType);
+      if (!WinSetClipbrdData(0/*hab*/, (ULONG)pData, pRecord->ulClipboardFmt, CFI_POINTER))
+        printf("ERROR: nsClipboard setting %s transfer data\n", pRecord->szMimeType);
+    }
+    else
+    {
+      *(NS_STATIC_CAST(PRUint32*, pData)) = cbMozData;
+
+      memcpy(NS_STATIC_CAST(void*, NS_STATIC_CAST(PBYTE, pData) + sizeof(PRUint32)),
+             pMozData, cbMozData);
+
+      if (!WinSetClipbrdData(0/*hab*/, (ULONG)pData, ulFmt, CFI_POINTER))
+        printf("ERROR: nsClipboard setting %s transfer data\n", aFlavour);
+    }
   }
 
   // If the flavor is unicode, we also put it on the clipboard as CF_TEXT
   // after conversion to locale charset.
-  if (!strcmp(pRecord->szMimeType, kUnicodeMime)) {
+  if (pRecord && !strcmp(pRecord->szMimeType, kUnicodeMime)) {
 
     const PRUnichar* uniData = (PRUnichar*)pMozData;
     ULONG uniLen = UniStrlen(uniData) + 1;
