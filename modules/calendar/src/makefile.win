@@ -10,9 +10,17 @@
 #// root of NS
 #//
 #//------------------------------------------------------------------------
+!ifdef MOZ_TREX
+NS_DEPTH=..\..\..\
+!else
 NS_DEPTH=..\..\
+!endif
 
+!ifdef MOZ_TREX
+DIRS=libcal
+!else
 DIRS=libjulian
+!endif
 
 DEPTH = $(NS_DEPTH)
 

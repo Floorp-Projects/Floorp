@@ -11,11 +11,21 @@
 #//
 #// Need to include capi.lib in LLIBS later
 #//------------------------------------------------------------------------
+!ifdef MOZ_TREX
+NS_DEPTH=..\..
+!else
 NS_DEPTH=..
+!endif
 
 DEPTH = $(NS_DEPTH)
 
+!ifdef MOZ_TREX
+DIRS=src
+LIBDIR=libcal
+!else
 DIRS=src capi
+LIBDIR=libjulian
+!endif
 
 LIBRARY_NAME = juls$(MOZ_BITS)$(VERSION_NUMBER)
 
@@ -35,73 +45,73 @@ REQUIRES=nls
 
 OBJS = $(OBJS) \
 !ifndef MOZ_TREX
-        src\libjulian\htmlform\src\$(OBJDIR)\form.obj \
-        src\libjulian\htmlform\src\$(OBJDIR)\formFactory.obj \
-        src\libjulian\htmlform\src\$(OBJDIR)\julianform.obj \
+        src\$(LIBDIR)\htmlform\src\$(OBJDIR)\form.obj \
+        src\$(LIBDIR)\htmlform\src\$(OBJDIR)\formFactory.obj \
+        src\$(LIBDIR)\htmlform\src\$(OBJDIR)\julianform.obj \
 !endif
-        src\libjulian\util\$(OBJDIR)\jatom.obj \
-        src\libjulian\util\$(OBJDIR)\jlog.obj \
-        src\libjulian\util\$(OBJDIR)\jlogerr.obj \
-        src\libjulian\util\$(OBJDIR)\jlogvctr.obj \
-        src\libjulian\util\$(OBJDIR)\julnstr.obj \
-        src\libjulian\util\$(OBJDIR)\ptrarray.obj \
-        src\libjulian\util\$(OBJDIR)\uidrgntr.obj \
-        src\libjulian\ical\$(OBJDIR)\attendee.obj \
-        src\libjulian\ical\$(OBJDIR)\bydmgntr.obj \
-        src\libjulian\ical\$(OBJDIR)\bydwgntr.obj \
-        src\libjulian\ical\$(OBJDIR)\bydygntr.obj \
-        src\libjulian\ical\$(OBJDIR)\byhgntr.obj \
-        src\libjulian\ical\$(OBJDIR)\bymdgntr.obj \
-        src\libjulian\ical\$(OBJDIR)\bymgntr.obj \
-        src\libjulian\ical\$(OBJDIR)\bymogntr.obj \
-        src\libjulian\ical\$(OBJDIR)\bywngntr.obj \
-        src\libjulian\ical\$(OBJDIR)\byydgntr.obj \
-        src\libjulian\ical\$(OBJDIR)\capiredr.obj \
-        src\libjulian\ical\$(OBJDIR)\dategntr.obj \
-        src\libjulian\ical\$(OBJDIR)\datetime.obj \
-        src\libjulian\ical\$(OBJDIR)\deftgntr.obj \
-        src\libjulian\ical\$(OBJDIR)\dprprty.obj \
-        src\libjulian\ical\$(OBJDIR)\duprprty.obj \
-        src\libjulian\ical\$(OBJDIR)\duration.obj \
-        src\libjulian\ical\$(OBJDIR)\freebusy.obj \
-    src\libjulian\ical\$(OBJDIR)\functbl.obj \
-        src\libjulian\ical\$(OBJDIR)\icalcomp.obj \
-        src\libjulian\ical\$(OBJDIR)\icalfrdr.obj \
-        src\libjulian\ical\$(OBJDIR)\icalprm.obj \
-        src\libjulian\ical\$(OBJDIR)\icalredr.obj \
-        src\libjulian\ical\$(OBJDIR)\icalsrdr.obj \
-        src\libjulian\ical\$(OBJDIR)\icompfy.obj \
-        src\libjulian\ical\$(OBJDIR)\iprprty.obj \
-        src\libjulian\ical\$(OBJDIR)\jparser.obj \
-        src\libjulian\ical\$(OBJDIR)\jutility.obj \
-        src\libjulian\ical\$(OBJDIR)\keyword.obj \
-        src\libjulian\ical\$(OBJDIR)\nscal.obj \
-        src\libjulian\ical\$(OBJDIR)\orgnzr.obj \
-        src\libjulian\ical\$(OBJDIR)\period.obj \
-        src\libjulian\ical\$(OBJDIR)\prprty.obj \
-        src\libjulian\ical\$(OBJDIR)\prprtyfy.obj \
-        src\libjulian\ical\$(OBJDIR)\rcrrence.obj \
-        src\libjulian\ical\$(OBJDIR)\recid.obj \
-        src\libjulian\ical\$(OBJDIR)\rrday.obj \
-        src\libjulian\ical\$(OBJDIR)\sdprprty.obj \
-        src\libjulian\ical\$(OBJDIR)\sprpty.obj \
-        src\libjulian\ical\$(OBJDIR)\tmbevent.obj \
-        src\libjulian\ical\$(OBJDIR)\tzpart.obj \
-        src\libjulian\ical\$(OBJDIR)\unistrto.obj \
-        src\libjulian\ical\$(OBJDIR)\uri.obj \
-    src\libjulian\ical\$(OBJDIR)\valarm.obj \
-        src\libjulian\ical\$(OBJDIR)\vevent.obj \
-        src\libjulian\ical\$(OBJDIR)\vfrbsy.obj \
-        src\libjulian\ical\$(OBJDIR)\vjournal.obj \
-        src\libjulian\ical\$(OBJDIR)\vtimezne.obj \
-        src\libjulian\ical\$(OBJDIR)\vtodo.obj \
+        src\$(LIBDIR)\util\$(OBJDIR)\jatom.obj \
+        src\$(LIBDIR)\util\$(OBJDIR)\jlog.obj \
+        src\$(LIBDIR)\util\$(OBJDIR)\jlogerr.obj \
+        src\$(LIBDIR)\util\$(OBJDIR)\jlogvctr.obj \
+        src\$(LIBDIR)\util\$(OBJDIR)\julnstr.obj \
+        src\$(LIBDIR)\util\$(OBJDIR)\ptrarray.obj \
+        src\$(LIBDIR)\util\$(OBJDIR)\uidrgntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\attendee.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\bydmgntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\bydwgntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\bydygntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\byhgntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\bymdgntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\bymgntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\bymogntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\bywngntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\byydgntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\capiredr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\dategntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\datetime.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\deftgntr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\dprprty.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\duprprty.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\duration.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\freebusy.obj \
+    src\$(LIBDIR)\ical\$(OBJDIR)\functbl.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\icalcomp.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\icalfrdr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\icalprm.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\icalredr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\icalsrdr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\icompfy.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\iprprty.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\jparser.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\jutility.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\keyword.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\nscal.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\orgnzr.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\period.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\prprty.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\prprtyfy.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\rcrrence.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\recid.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\rrday.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\sdprprty.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\sprpty.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\tmbevent.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\tzpart.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\unistrto.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\uri.obj \
+    src\$(LIBDIR)\ical\$(OBJDIR)\valarm.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\vevent.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\vfrbsy.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\vjournal.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\vtimezne.obj \
+        src\$(LIBDIR)\ical\$(OBJDIR)\vtodo.obj \
 !ifndef MOZ_TREX
-        src\libjulian\itip\$(OBJDIR)\detxnobj.obj \
-        src\libjulian\itip\$(OBJDIR)\getxnobj.obj \
-        src\libjulian\itip\$(OBJDIR)\sttxnobj.obj \
-        src\libjulian\itip\$(OBJDIR)\txnobj.obj \
-        src\libjulian\itip\$(OBJDIR)\txnobjfy.obj \
-        src\libjulian\itip\$(OBJDIR)\user.obj \
+        src\$(LIBDIR)\itip\$(OBJDIR)\detxnobj.obj \
+        src\$(LIBDIR)\itip\$(OBJDIR)\getxnobj.obj \
+        src\$(LIBDIR)\itip\$(OBJDIR)\sttxnobj.obj \
+        src\$(LIBDIR)\itip\$(OBJDIR)\txnobj.obj \
+        src\$(LIBDIR)\itip\$(OBJDIR)\txnobjfy.obj \
+        src\$(LIBDIR)\itip\$(OBJDIR)\user.obj \
 !endif
         $(NULL)
 

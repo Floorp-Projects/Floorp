@@ -484,7 +484,6 @@ public:
      */
     JulianString& Replace(int32 m, int32 n, JulianString& p);
 
-#ifdef MOZ_TREX
     /**
      *  Starting at index i, find the first occurrence of any character
      *  in p.
@@ -494,7 +493,6 @@ public:
      *            the string was not found.
      */
     int32 Strpbrk( int32 i, const char *p ) const;
-#endif
 
 #if 0
     /* fails on BSD_3861.1 && SunOS4.1.3_U1 comment if 0 for now */
