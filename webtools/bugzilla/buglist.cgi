@@ -23,6 +23,7 @@ puts "Content-type: multipart/x-mixed-replace;boundary=ThisRandomString"
 puts ""
 puts "--ThisRandomString"
 
+
 # The below "if catch" stuff, if uncommented, will trap any error, and
 # mail the error messages to terry.  What a hideous, horrible
 # debugging hack.
@@ -155,8 +156,10 @@ select
 
 
 foreach c $collist {
-    append query ",
+    if {[info exists needquote($c)] } {
+        append query ",
 \t$key($c)"
+    }
 }
 
 
@@ -238,6 +241,7 @@ Click the <B>Back</B> button and try again."
 
 }
 
+
 if {[info exists FORM(order)]} {
     qadd "order by "
     switch -glob $FORM(order) {
@@ -267,7 +271,6 @@ if {[info exists FORM(debug)]} {
     puts "<pre>$query</pre>"
 }
 flush stdout
-
 SendSQL $query
 
 set count 0
@@ -297,15 +300,17 @@ set tablestart "<TABLE CELLSPACING=0 CELLPADDING=2>
 
 
 foreach c $collist {
-    if {$needquote($c)} {
-        append tablestart "<TH WIDTH=100% valigh=left>"
-    } else {
-        append tablestart "<TH valign=left>"
-    }
-    if {[info exists sortkey($c)]} {
-        append tablestart "<A HREF=\"buglist.cgi?[set fields]&order=$sortkey($c)$oldorder\">$title($c)</A>"
-    } else {
-        append tablestart $title($c)
+    if { [info exists needquote($c)] } {
+        if {$needquote($c)} {
+            append tablestart "<TH WIDTH=100% valigh=left>"
+        } else {
+            append tablestart "<TH valign=left>"
+        }
+        if {[info exists sortkey($c)]} {
+            append tablestart "<A HREF=\"buglist.cgi?[set fields]&order=$sortkey($c)$oldorder\">$title($c)</A>"
+        } else {
+            append tablestart $title($c)
+        }
     }
 }
 
@@ -366,7 +371,7 @@ while { $p_true } {
 
                 } 
 
-                if {$needquote($c)} {
+                if { [info exists needquote($c)] && $needquote($c)} {
                     set value [html_quote $value]
                 } else {
                     set value "<nobr>$value</nobr>"
@@ -383,7 +388,6 @@ while { $p_true } {
         }
     }
 }
-
 puts ""
 puts "--ThisRandomString"
 
@@ -398,7 +402,6 @@ if { [info exists buglist] } {
     }
 }
 puts ""
-
 set env(TZ) PST8PDT
 
 PutHeader "Bug List" "Bug List"
