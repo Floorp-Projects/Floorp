@@ -1895,13 +1895,21 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mRefContent);
 
   PRInt32 numContexts = mContextStack.Count();
+  
+  if(mCurrentContext==mHeadContext) {
+    // Pop off the second html context if it's not done earlier
+    mContextStack.RemoveElementAt(--numContexts);
+  }
+
   for (PRInt32 i = 0; i < numContexts; i++) {
     SinkContext* sc = (SinkContext*)mContextStack.ElementAt(i);
-    sc->End();
-    if (sc == mCurrentContext) {
-      mCurrentContext = nsnull;
+    if(sc) {
+      sc->End();
+      if (sc == mCurrentContext) {
+        mCurrentContext = nsnull;
+      }
+      delete sc;
     }
-    delete sc;
   }
 
   if (mCurrentContext == mHeadContext) {
