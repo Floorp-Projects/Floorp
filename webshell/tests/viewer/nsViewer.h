@@ -26,6 +26,7 @@
 #include "nsDocLoader.h"
 #include "nsIAppShell.h"
 #include "nsString.h"
+#include "nsINetContainerApplication.h"
 
 #ifdef XP_PC
 #define WIDGET_DLL "raptorwidget.dll"
@@ -134,8 +135,11 @@ struct WindowData {
   void ShowStyleSize();
 };
 
-class nsViewer : public nsDispatchListener {
+class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
   public:
+    // nsISupports
+    NS_DECL_ISUPPORTS
+
     virtual char* GetBaseURL();
     virtual char* GetDefaultStartURL();
     virtual void AddMenu(nsIWidget* aMainWindow, PRBool aForPrintPreview);
@@ -167,6 +171,12 @@ class nsViewer : public nsDispatchListener {
     virtual void OpenHTMLFile(WindowData* wd);
     virtual void SelectAll(WindowData* wd);
     virtual void ProcessArguments(int argc, char **argv);
+
+    NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName);
+    NS_IMETHOD    GetAppVersion(nsString& aAppVersion);
+    NS_IMETHOD    GetAppName(nsString& aAppName);
+    NS_IMETHOD    GetLanguage(nsString& aLanguage);
+    NS_IMETHOD    GetPlatform(nsString& aPlatform);
 };
 
   // Set the single viewer.
