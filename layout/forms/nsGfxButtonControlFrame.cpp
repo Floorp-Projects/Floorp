@@ -426,7 +426,6 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
     nsCOMPtr<nsIStyleContext> textStyleContext;
     rv = aPresContext->ResolveStyleContextForNonElement(
                                              styleContext,
-                                             PR_FALSE,
                                              getter_AddRefs(textStyleContext));
     if (NS_FAILED(rv))     { return rv; }
     if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }

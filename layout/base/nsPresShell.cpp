@@ -4618,7 +4618,7 @@ PresShell::GetGeneratedContentIterator(nsIContent*          aContent,
       
       primaryFrame->GetStyleContext(getter_AddRefs(styleContext));
       mPresContext->ProbePseudoStyleContextFor(aContent, nsCSSAtoms::afterPseudo,
-                                               styleContext, PR_FALSE,
+                                               styleContext,
                                                getter_AddRefs(pseudoStyleContext));
       if (pseudoStyleContext) {
         nsIFrame* lastChildFrame = GetLastChildFrame(mPresContext, primaryFrame, aContent);

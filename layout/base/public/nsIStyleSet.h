@@ -147,8 +147,7 @@ public:
   // get a style context for a non-pseudo frame
   virtual nsIStyleContext* ResolveStyleFor(nsIPresContext* aPresContext,
                                            nsIContent* aContent,
-                                           nsIStyleContext* aParentContext,
-                                           PRBool aForceUnique = PR_FALSE) = 0;
+                                           nsIStyleContext* aParentContext) = 0;
 
   // Get a style context for a non-element (which no rules will match).
   // Eventually, this should go away and we shouldn't even create style
@@ -162,16 +161,14 @@ public:
   //
   virtual nsIStyleContext* ResolveStyleForNonElement(
                                            nsIPresContext* aPresContext,
-                                           nsIStyleContext* aParentContext,
-                                           PRBool aForceUnique = PR_FALSE) = 0;
+                                           nsIStyleContext* aParentContext) = 0;
 
   // get a style context for a pseudo-element (i.e.,
-  // |aPseudoTag == NS_NewAtom(":first-line")|;
+  // |aPseudoTag == nsCOMPtr<nsIAtom>(do_GetAtom(":first-line"))|;
   virtual nsIStyleContext* ResolvePseudoStyleFor(nsIPresContext* aPresContext,
                                                  nsIContent* aParentContent,
                                                  nsIAtom* aPseudoTag,
                                                  nsIStyleContext* aParentContext,
-                                                 PRBool aForceUnique = PR_FALSE,
                                                  nsICSSPseudoComparator* aComparator = nsnull) = 0;
 
   // This funtions just like ResolvePseudoStyleFor except that it will
@@ -180,8 +177,7 @@ public:
   virtual nsIStyleContext* ProbePseudoStyleFor(nsIPresContext* aPresContext,
                                                nsIContent* aParentContent,
                                                nsIAtom* aPseudoTag,
-                                               nsIStyleContext* aParentContext,
-                                               PRBool aForceUnique = PR_FALSE) = 0;
+                                               nsIStyleContext* aParentContext) = 0;
 
   NS_IMETHOD Shutdown()=0;
 

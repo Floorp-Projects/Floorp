@@ -960,7 +960,6 @@ nsPresContext::GetBaseURL(nsIURI** aResult)
 NS_IMETHODIMP
 nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
                                       nsIStyleContext* aParentContext,
-                                      PRBool aForceUnique,
                                       nsIStyleContext** aResult)
 {
   NS_PRECONDITION(aResult, "null out param");
@@ -970,8 +969,7 @@ nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
   nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
   if (NS_SUCCEEDED(rv)) {
     if (set) {
-      result = set->ResolveStyleFor(this, aContent, aParentContext,
-                                    aForceUnique);
+      result = set->ResolveStyleFor(this, aContent, aParentContext);
       if (nsnull == result) {
         rv = NS_ERROR_OUT_OF_MEMORY;
       }
@@ -984,7 +982,6 @@ nsPresContext::ResolveStyleContextFor(nsIContent* aContent,
 NS_IMETHODIMP
 nsPresContext::ResolveStyleContextForNonElement(
                                       nsIStyleContext* aParentContext,
-                                      PRBool aForceUnique,
                                       nsIStyleContext** aResult)
 {
   NS_PRECONDITION(aResult, "null out param");
@@ -993,8 +990,7 @@ nsPresContext::ResolveStyleContextForNonElement(
   nsCOMPtr<nsIStyleSet> set;
   nsresult rv = mShell->GetStyleSet(getter_AddRefs(set));
   if (NS_SUCCEEDED(rv) && set) {
-    result = set->ResolveStyleForNonElement(this, aParentContext,
-                                            aForceUnique);
+    result = set->ResolveStyleForNonElement(this, aParentContext);
     if (!result)
       rv = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1006,18 +1002,16 @@ NS_IMETHODIMP
 nsPresContext::ResolvePseudoStyleContextFor(nsIContent* aParentContent,
                                             nsIAtom* aPseudoTag,
                                             nsIStyleContext* aParentContext,
-                                            PRBool aForceUnique,
                                             nsIStyleContext** aResult)
 {
   return ResolvePseudoStyleWithComparator(aParentContent, aPseudoTag, aParentContext,
-                                          aForceUnique, nsnull, aResult);
+                                          nsnull, aResult);
 }
 
 NS_IMETHODIMP
 nsPresContext::ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
                                                 nsIAtom* aPseudoTag,
                                                 nsIStyleContext* aParentContext,
-                                                PRBool aForceUnique,
                                                 nsICSSPseudoComparator* aComparator,
                                                 nsIStyleContext** aResult)
 {
@@ -1029,7 +1023,7 @@ nsPresContext::ResolvePseudoStyleWithComparator(nsIContent* aParentContent,
   if (NS_SUCCEEDED(rv)) {
     if (set) {
       result = set->ResolvePseudoStyleFor(this, aParentContent, aPseudoTag,
-                                          aParentContext, aForceUnique, aComparator);
+                                          aParentContext, aComparator);
       if (nsnull == result) {
         rv = NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1043,7 +1037,6 @@ NS_IMETHODIMP
 nsPresContext::ProbePseudoStyleContextFor(nsIContent* aParentContent,
                                           nsIAtom* aPseudoTag,
                                           nsIStyleContext* aParentContext,
-                                          PRBool aForceUnique,
                                           nsIStyleContext** aResult)
 {
   NS_PRECONDITION(aResult, "null out param");
@@ -1054,7 +1047,7 @@ nsPresContext::ProbePseudoStyleContextFor(nsIContent* aParentContent,
   if (NS_SUCCEEDED(rv)) {
     if (set) {
       result = set->ProbePseudoStyleFor(this, aParentContent, aPseudoTag,
-                                        aParentContext, aForceUnique);
+                                        aParentContext);
     }
   }
   *aResult = result;

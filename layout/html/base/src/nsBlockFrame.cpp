@@ -6070,7 +6070,7 @@ nsBlockFrame::GetFirstLetterStyle(nsIPresContext* aPresContext)
   nsIStyleContext* fls;
   aPresContext->ProbePseudoStyleContextFor(mContent,
                                            nsHTMLAtoms::firstLetterPseudo,
-                                           mStyleContext, PR_FALSE, &fls);
+                                           mStyleContext, &fls);
   return fls;
 }
 
@@ -6131,8 +6131,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
       }
       nsIStyleContext* kidSC;
       aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoElement,
-                                                 mStyleContext, PR_FALSE,
-                                                 &kidSC);
+                                                 mStyleContext, &kidSC);
 
       // Create bullet frame
       nsCOMPtr<nsIPresShell> shell;

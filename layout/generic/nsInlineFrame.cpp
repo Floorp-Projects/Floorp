@@ -1065,9 +1065,9 @@ nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
         // of the parent frame.
         nsIStyleContext* newSC;
         aPresContext->ResolvePseudoStyleContextFor(mContent,
-                                                  nsHTMLAtoms::mozLineFrame,
-                                                  parentContext,
-                                                  PR_FALSE, &newSC);
+                                                   nsHTMLAtoms::mozLineFrame,
+                                                   parentContext,
+                                                   &newSC);
         if (newSC) {
           // Switch to the new style context.
           SetStyleContext(aPresContext, newSC);

@@ -360,7 +360,6 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext*  aPresContext,
     nsresult rv = NS_OK;
     nsIStyleContext *innerStyleContext = nsnull;
     rv = aPresContext->ResolveStyleContextFor(mContent, mStyleContext,
-                                              PR_FALSE,
                                               &innerStyleContext);
     if (NS_SUCCEEDED(rv)) {
       rv = firstChild->Init(aPresContext, mContent, this, innerStyleContext, nsnull);

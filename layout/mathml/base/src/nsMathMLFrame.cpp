@@ -116,7 +116,7 @@ nsMathMLFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
     nsMathMLAtoms::fontstyle_anonymous; // savings
   nsCOMPtr<nsIStyleContext> newStyleContext;
   nsresult rv = aPresContext->ResolvePseudoStyleContextFor(aContent, fontAtom, 
-                                             aParentStyleContext, PR_FALSE,
+                                             aParentStyleContext,
                                              getter_AddRefs(newStyleContext));
   if (NS_SUCCEEDED(rv) && newStyleContext)
     aMathMLChar->SetStyleContext(newStyleContext);

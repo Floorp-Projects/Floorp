@@ -102,7 +102,6 @@ public:
 
   virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule);
 
-  virtual void ForceUnique(void);
   NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint);
 
 #ifdef DEBUG
@@ -285,8 +284,7 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
       if (nsnull != mEmptyChild) {
         child = mEmptyChild;
         do {
-          if ((!(child->mBits & NS_STYLE_UNIQUE_CONTEXT)) &&  // only look at children with un-twiddled data
-              (aPseudoTag == child->mPseudoTag)) {
+          if (aPseudoTag == child->mPseudoTag) {
             aResult = child;
             break;
           }
@@ -301,9 +299,7 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
       child = mChild;
       
       do {
-        if ((!(child->mBits & NS_STYLE_UNIQUE_CONTEXT)) &&  // only look at children with un-twiddled data
-            (child->mRuleNode == aRuleNode) &&
-            (child->mPseudoTag == aPseudoTag)) {
+        if (child->mRuleNode == aRuleNode && child->mPseudoTag == aPseudoTag) {
           aResult = child;
           break;
         }
@@ -605,11 +601,6 @@ nsStyleContext::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule
   }
 
   return NS_OK;
-}
-
-void nsStyleContext::ForceUnique(void)
-{
-  mBits |= NS_STYLE_UNIQUE_CONTEXT;
 }
 
 NS_IMETHODIMP

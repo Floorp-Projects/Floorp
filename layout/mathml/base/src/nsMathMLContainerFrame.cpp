@@ -731,7 +731,7 @@ nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
       if (NS_FAILED(rv)) return rv;
       nsCOMPtr<nsIStyleContext> newStyleContext;
       aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::mozAnonymousBlock,
-                                                 mStyleContext, PR_FALSE,
+                                                 mStyleContext,
                                                  getter_AddRefs(newStyleContext));
       rv = wrapper->Init(aPresContext, mContent, this, newStyleContext, nsnull);
       if (NS_FAILED(rv)) {
