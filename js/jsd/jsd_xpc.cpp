@@ -2656,7 +2656,9 @@ jsdService::EnumerateScripts (jsdIScriptEnumerator *enumerator)
 }
 
 #ifdef GC_MARK_DEBUG
-extern JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
+JS_BEGIN_EXTERN_C
+JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
+JS_END_EXTERN_C
 #endif
 
 NS_IMETHODIMP
