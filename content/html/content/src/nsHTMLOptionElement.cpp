@@ -643,7 +643,7 @@ nsHTMLOptionElement::RemoveChildAt(PRUint32 aIndex, PRBool aNotify)
 nsIFormControlFrame *
 nsHTMLOptionElement::GetSelectFrame() const
 {
-  if (!mParent || !mDocument) {
+  if (!GetParent() || !mDocument) {
     return nsnull;
   }
 
@@ -666,7 +666,7 @@ nsHTMLOptionElement::GetSelect(nsIDOMHTMLSelectElement **aSelectElement) const
 {
   *aSelectElement = nsnull;
 
-  for (nsIContent* parent = mParent; parent; parent = parent->GetParent()) {
+  for (nsIContent* parent = GetParent(); parent; parent = parent->GetParent()) {
     CallQueryInterface(parent, aSelectElement);
     if (*aSelectElement) {
       break;

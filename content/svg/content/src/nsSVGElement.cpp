@@ -319,8 +319,8 @@ nsSVGElement::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsSVGElement::GetParentNode(nsIDOMNode** aParentNode)
 {
-  if (mParent) {
-    return CallQueryInterface(mParent, aParentNode);
+  if (GetParent()) {
+    return CallQueryInterface(GetParent(), aParentNode);
   }
   if (mDocument) {
     // we're the root content
@@ -533,7 +533,7 @@ nsSVGElement::GetOwnerSVGElement(nsIDOMSVGSVGElement * *aOwnerSVGElement)
   if (!parent) {
     // if we didn't find an anonymous parent, use the explicit one,
     // whether it's null or not...
-    parent = mParent;
+    parent = GetParent();
   }
 
   while (parent) {    

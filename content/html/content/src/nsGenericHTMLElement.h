@@ -672,7 +672,7 @@ public:
    *
    * @param aFormControl the form control to set the form for
    */
-  nsresult FindAndSetForm(nsIFormControl *aFormControl);
+  void FindAndSetForm(nsIFormControl *aFormControl);
 
   /**
    * See if the document being tested has nav-quirks mode enabled.
@@ -957,7 +957,7 @@ public:
   NS_IMETHOD RestoreState(nsIPresState* aState) { return NS_OK; }
 
   // nsIContent
-  NS_IMETHOD SetParent(nsIContent *aParent);
+  NS_IMETHOD_(void) SetParent(nsIContent *aParent);
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
 
@@ -1004,7 +1004,7 @@ public:
   NS_IMETHOD RestoreState(nsIPresState* aState) { return NS_OK; }
 
   // nsIContent
-  NS_IMETHOD SetParent(nsIContent *aParent);
+  NS_IMETHOD_(void) SetParent(nsIContent *aParent);
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
 

@@ -420,8 +420,6 @@ PRUint32             nsXULPrototypeAttribute::gNumCacheFills;
 
 nsXULElement::nsXULElement()
     : mPrototype(nsnull),
-      mDocument(nsnull),
-      mParent(nsnull),
       mBindingParent(nsnull),
       mSlots(nsnull)
 {
@@ -451,9 +449,6 @@ nsXULElement::~nsXULElement()
         mPrototype->Release();
 
     delete mSlots;
-
-    //NS_IF_RELEASE(mDocument); // not refcounted
-    //NS_IF_RELEASE(mParent)    // not refcounted
 
     // Force child's parent to be null. This ensures that we don't
     // have dangling pointers if a child gets leaked.
@@ -683,8 +678,8 @@ nsXULElement::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsXULElement::GetParentNode(nsIDOMNode** aParentNode)
 {
-    if (mParent) {
-        return CallQueryInterface(mParent, aParentNode);
+    if (GetParent()) {
+        return CallQueryInterface(GetParent(), aParentNode);
     }
 
     if (mDocument) {
@@ -771,10 +766,10 @@ nsXULElement::GetLastChild(nsIDOMNode** aLastChild)
 NS_IMETHODIMP
 nsXULElement::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 {
-    if (nsnull != mParent) {
-        PRInt32 pos = mParent->IndexOf(this);
+    if (GetParent()) {
+        PRInt32 pos = GetParent()->IndexOf(this);
         if (pos > 0) {
-            nsIContent *prev = mParent->GetChildAt(--pos);
+            nsIContent *prev = GetParent()->GetChildAt(--pos);
             if (prev) {
                 nsresult rv = CallQueryInterface(prev, aPreviousSibling);
                 NS_ASSERTION(*aPreviousSibling, "not a DOM node");
@@ -793,10 +788,10 @@ nsXULElement::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
 NS_IMETHODIMP
 nsXULElement::GetNextSibling(nsIDOMNode** aNextSibling)
 {
-    if (nsnull != mParent) {
-        PRInt32 pos = mParent->IndexOf(this);
+    if (GetParent()) {
+        PRInt32 pos = GetParent()->IndexOf(this);
         if (pos > -1) {
-            nsIContent *next = mParent->GetChildAt(++pos);
+            nsIContent *next = GetParent()->GetChildAt(++pos);
             if (next) {
                 nsresult rv = CallQueryInterface(next, aNextSibling);
                 NS_ASSERTION(*aNextSibling, "not a DOM Node");
@@ -1720,12 +1715,6 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
 // nsIContent interface
 //
 
-NS_IMETHODIMP_(nsIDocument*)
-nsXULElement::GetDocument() const
-{
-    return mDocument;
-}
-
 nsresult
 nsXULElement::AddListenerFor(nsINodeInfo *aNodeInfo,
                              PRBool aCompileEventHandlers)
@@ -1795,7 +1784,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
           mListenerManager->SetListenerTarget(nsnull);
         mListenerManager = nsnull;
 
-        mDocument = aDocument; // not refcounted
+        nsIContent::SetDocument(aDocument, aDeep, aCompileEventHandlers);
 
         if (mDocument) {
             // When we SetDocument(), we're either adding an element
@@ -1848,23 +1837,15 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
     return NS_OK;
 }
 
-NS_IMETHODIMP_(nsIContent*)
-nsXULElement::GetParent() const
-{
-    return mParent;
-}
-
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsXULElement::SetParent(nsIContent* aParent)
 {
-    mParent = aParent; // no refcount
+    nsIContent::SetParent(aParent);
     if (aParent) {
       nsIContent* bindingPar = aParent->GetBindingParent();
       if (bindingPar)
         SetBindingParent(bindingPar);
     }
-
-    return NS_OK;
 }
 
 NS_IMETHODIMP_(PRBool)
@@ -3082,7 +3063,7 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     if (bindingParent) {
         // We're anonymous.  We may potentially need to retarget
         // our event if our parent is in a different scope.
-        if (mParent && mParent->GetBindingParent() != bindingParent) {
+        if (GetParent() && GetParent()->GetBindingParent() != bindingParent) {
             retarget = PR_TRUE;
         }
     }
@@ -3102,10 +3083,10 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     else {
         // if we didn't find an anonymous parent, use the explicit one,
         // whether it's null or not...
-        parent = mParent;
+        parent = GetParent();
     }
 
-    if (retarget || (parent != mParent)) {
+    if (retarget || (parent != GetParent())) {
       if (!*aDOMEvent) {
         // We haven't made a DOMEvent yet.  Force making one now.
         nsCOMPtr<nsIEventListenerManager> listenerManager;
@@ -3134,7 +3115,7 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
         privateEvent->SetOriginalTarget(oldTarget);
 
       if (retarget) {
-          nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mParent);
+          nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetParent());
           privateEvent->SetTarget(target);
       }
     }
@@ -3172,7 +3153,7 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
       // The event originated beneath us, and we need to perform a retargeting.
       nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
       if (privateEvent) {
-        nsCOMPtr<nsIDOMEventTarget> parentTarget(do_QueryInterface(mParent));
+        nsCOMPtr<nsIDOMEventTarget> parentTarget(do_QueryInterface(GetParent()));
         privateEvent->SetTarget(parentTarget);
       }
     }
@@ -4155,7 +4136,7 @@ nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 NS_IMETHODIMP
 nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
 {
-  for (nsIContent* current = mParent; current; current = current->GetParent()) {
+  for (nsIContent* current = GetParent(); current; current = current->GetParent()) {
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(getter_AddRefs(tag));
     if (tag == nsXULAtoms::listbox) {

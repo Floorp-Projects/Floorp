@@ -837,8 +837,7 @@ nsGenericElement::Shutdown()
 }
 
 nsGenericElement::nsGenericElement()
-  : mDocument(nsnull), mParent(nsnull),
-    mFlagsOrSlots(GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS)
+  : mFlagsOrSlots(GENERIC_ELEMENT_DOESNT_HAVE_DOMSLOTS)
 {
 }
 
@@ -1044,8 +1043,8 @@ nsGenericElement::GetNodeType(PRUint16* aNodeType)
 NS_IMETHODIMP
 nsGenericElement::GetParentNode(nsIDOMNode** aParentNode)
 {
-  if (mParent) {
-    return CallQueryInterface(mParent, aParentNode);
+  if (GetParent()) {
+    return CallQueryInterface(GetParent(), aParentNode);
   }
 
   if (mDocument) {
@@ -1069,10 +1068,10 @@ nsGenericElement::GetPreviousSibling(nsIDOMNode** aPrevSibling)
   nsIContent *sibling = nsnull;
   nsresult rv = NS_OK;
 
-  if (mParent) {
-    PRInt32 pos = mParent->IndexOf(this);
+  if (GetParent()) {
+    PRInt32 pos = GetParent()->IndexOf(this);
     if (pos > 0 ) {
-      sibling = mParent->GetChildAt(pos - 1);
+      sibling = GetParent()->GetChildAt(pos - 1);
     }
   } else if (mDocument) {
     // Nodes that are just below the document (their parent is the
@@ -1099,10 +1098,10 @@ nsGenericElement::GetNextSibling(nsIDOMNode** aNextSibling)
   nsIContent *sibling = nsnull;
   nsresult rv = NS_OK;
 
-  if (mParent) {
-    PRInt32 pos = mParent->IndexOf(this);
+  if (GetParent()) {
+    PRInt32 pos = GetParent()->IndexOf(this);
     if (pos > -1 ) {
-      sibling = mParent->GetChildAt(pos + 1);
+      sibling = GetParent()->GetChildAt(pos + 1);
     }
   } else if (mDocument) {
     // Nodes that are just below the document (their parent is the
@@ -1669,13 +1668,6 @@ nsGenericElement::Normalize()
 }
 
 
-nsIDocument*
-nsGenericElement::GetDocument() const
-{
-  return mDocument;
-}
-
-
 void
 nsGenericElement::SetDocumentInChildrenOf(nsIContent* aContent,
                                           nsIDocument* aDocument,
@@ -1740,7 +1732,7 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
       }
     }
 
-    mDocument = aDocument;
+    nsIContent::SetDocument(aDocument, aDeep, aCompileEventHandlers);
   }
 
   if (aDeep) {
@@ -1751,22 +1743,15 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
 }
 
 
-nsIContent*
-nsGenericElement::GetParent() const
-{
-  return mParent;
-}
-
-nsresult
+NS_IMETHODIMP_(void)
 nsGenericElement::SetParent(nsIContent* aParent)
 {
-  mParent = aParent;
+  nsIContent::SetParent(aParent);
   if (aParent) {
     nsIContent* bindingPar = aParent->GetBindingParent();
     if (bindingPar)
       SetBindingParent(bindingPar);
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP_(PRBool)
@@ -1848,8 +1833,8 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   if (bindingParent) {
     // We're anonymous.  We may potentially need to retarget
     // our event if our parent is in a different scope.
-    if (mParent) {
-      if (mParent->GetBindingParent() != bindingParent)
+    if (GetParent()) {
+      if (GetParent()->GetBindingParent() != bindingParent)
         retarget = PR_TRUE;
     }
   }
@@ -1868,10 +1853,10 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   } else {
     // if we didn't find an anonymous parent, use the explicit one,
     // whether it's null or not...
-    parent = mParent;
+    parent = GetParent();
   }
 
-  if (retarget || (parent.get() != mParent)) {
+  if (retarget || (parent.get() != GetParent())) {
     if (!*aDOMEvent) {
       // We haven't made a DOMEvent yet.  Force making one now.
       nsCOMPtr<nsIEventListenerManager> listenerManager;
@@ -1901,7 +1886,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
       privateEvent->SetOriginalTarget(oldTarget);
 
     if (retarget) {
-      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(mParent);
+      nsCOMPtr<nsIDOMEventTarget> target = do_QueryInterface(GetParent());
       privateEvent->SetTarget(target);
     }
   }
@@ -1979,7 +1964,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
     // retargeting.
     nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
     if (privateEvent) {
-      nsCOMPtr<nsIDOMEventTarget> parentTarget(do_QueryInterface(mParent));
+      nsCOMPtr<nsIDOMEventTarget> parentTarget(do_QueryInterface(GetParent()));
       privateEvent->SetTarget(parentTarget);
     }
   }
@@ -2206,8 +2191,8 @@ nsGenericElement::GetBaseURL(nsIURI** aBaseURL) const
   // Our base URL depends on whether we have an xml:base attribute, as
   // well as on whether any of our ancestors do.
   nsCOMPtr<nsIURI> parentBase;
-  if (mParent) {
-    mParent->GetBaseURL(getter_AddRefs(parentBase));
+  if (GetParent()) {
+    GetParent()->GetBaseURL(getter_AddRefs(parentBase));
   } else if (doc) {
     // No parent, so just use the document (we must be the root or not in the
     // tree).

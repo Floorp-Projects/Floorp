@@ -645,7 +645,7 @@ nsHTMLScriptElement::GetLineNumber(PRUint32* aLineNumber)
 void
 nsHTMLScriptElement::MaybeProcessScript()
 {
-  if (mIsEvaluated || mEvaluating || !mDocument || !mParent) {
+  if (mIsEvaluated || mEvaluating || !mDocument || !GetParent()) {
     return;
   }
 

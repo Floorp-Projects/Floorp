@@ -91,7 +91,7 @@ public:
   NS_IMETHOD SetFrameLoader(nsIFrameLoader *aFrameLoader);
 
   // nsIContent
-  NS_IMETHOD SetParent(nsIContent *aParent);
+  NS_IMETHOD_(void) SetParent(nsIContent *aParent);
   NS_IMETHOD SetDocument(nsIDocument *aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
 
@@ -274,7 +274,7 @@ nsHTMLIFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
 nsresult
 nsHTMLIFrameElement::EnsureFrameLoader()
 {
-  if (!mParent || !mDocument || mFrameLoader) {
+  if (!GetParent() || !mDocument || mFrameLoader) {
     // If frame loader is there, we just keep it around, cached
     return NS_OK;
   }
@@ -320,19 +320,18 @@ nsHTMLIFrameElement::LoadSrc()
 }
 
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(void)
 nsHTMLIFrameElement::SetParent(nsIContent *aParent)
 {
-  nsresult rv = nsGenericHTMLContainerElement::SetParent(aParent);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsGenericHTMLContainerElement::SetParent(aParent);
 
   // When parent is being set to null on the element's destruction, do not
   // call LoadSrc().
-  if (!mParent || !mDocument) {
-    return NS_OK;
+  if (!GetParent() || !mDocument) {
+    return;
   }
 
-  return LoadSrc();
+  LoadSrc();
 }
 
 NS_IMETHODIMP
@@ -359,7 +358,7 @@ nsHTMLIFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
   // When document is being set to null on the element's destruction,
   // or when the document is being set to what the document already
   // is, do not call LoadSrc().
-  if (!mParent || !aDocument || aDocument == old_doc) {
+  if (!GetParent() || !aDocument || aDocument == old_doc) {
     return NS_OK;
   }
 
