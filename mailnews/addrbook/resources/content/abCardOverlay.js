@@ -129,8 +129,10 @@ function OnLoadNewCard()
 
   // focus on first name
   var firstName = document.getElementById('FirstName');
-  if ( firstName )
-    firstName.focus();
+  if ( firstName ) {
+    // XXX Using the setTimeout hack until bug 103197 is fixed
+    setTimeout( function(firstTextBox) { firstTextBox.focus(); }, 0, firstName );
+  }
   moveToAlertPosition();
 }
 
