@@ -126,11 +126,14 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
+#if 0
   g_print("nsDrawingSurfaceGTK::Lock() called\n" \
           "  aX = %i, aY = %i,\n" \
 	  "  aWidth = %i, aHeight = %i,\n" \
 	  "  aBits, aStride, aWidthBytes,\n" \
 	  "  aFlags = %i\n", aX, aY, aWidth, aHeight, aFlags);
+#endif
+
   if (mLocked)
   {
     NS_ASSERTION(0, "nested lock attempt");
@@ -144,38 +147,91 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   mLockHeight = aHeight;
   mLockFlags = aFlags;
 
-/*
- i see. it might be that this does something that just isn't
- possible directly with x11. you probably have to copy from the
- gdkpixmap to a local gdkimage in lock(), do whatever is done to
- the bits, and copy back in unlock(). if the display is local,
- and shared pixmaps are supported, you don't need to do that.
-*/
-
+  // Obtain an ximage from the pixmap.  
   mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
  
- // FIXME
-  aBits = &mImage->mem;
-  *aStride = ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
+  // The bits will be in the ximage.
+  *aBits = mImage->mem;
+
+
+//   int bytes_per_line = ((GdkImagePrivate*)mImage)->ximage->bytes_per_line;
+
+  //
+  // All this code is a an attempt to set the stride width properly.
+  // Needs to be cleaned up alot.  For now, it will only work in the
+  // case where aWidthBytes and aStride are the same.  One is assigned to 
+  // the other.
+  // 
+
   *aWidthBytes = mImage->bpl;
+  *aStride = mImage->bpl;
+
+//   int width_in_pixels = *aWidthBytes << 8;
+
+
+//   int bitmap_pad = ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
+//   int depth = ((GdkImagePrivate*)mImage)->ximage->depth;
+
+// #define RASWIDTH8(width, bpp) (width)
+// #define RASWIDTH16(width, bpp) ((((width) * (bpp) + 15) >> 4) << 1)
+// #define RASWIDTH32(width, bpp) ((((width) * (bpp) + 31) >> 5) << 2)
+
+//   switch(bitmap_pad)
+//     {
+//     case 8:
+//       *aStride = RASWIDTH8(aWidth,bitmap_pad);
+//       break;
+
+//     case 16:
+//       //      *aStride = bytes_per_line;
+//       *aStride = RASWIDTH16(aWidth,bitmap_pad);
+//       break;
+
+//     case 32:
+//       *aStride = bytes_per_line;
+//       //      *aStride = RASWIDTH32(aWidth,bitmap_pad);
+//       break;
+
+//     default:
+
+//       NS_ASSERTION(nsnull,"something got screwed");
+      
+//     }
+
+
+  //  *aStride = (*aWidthBytes) + ((bitmap_pad >> 3) - 1);
+
+  // ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
+
+  //  *aWidthBytes = mImage->bpl;
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
 {
-  g_print("nsDrawingSurfaceGTK::UnLock() called\n");
+  //  g_print("nsDrawingSurfaceGTK::UnLock() called\n");
   if (!mLocked)
   {
     NS_ASSERTION(0, "attempting to unlock an DS that isn't locked");
     return NS_ERROR_FAILURE;
   }
 
-#if 0
-//if it is writeable, we are going to want to redraw the pixmap from the image.
-// my bit looking/mangling skills are asleep.. someone do this the right way
-  if (!(mFlags & NS_LOCK_SURFACE_READ_ONLY))
+  // If the lock was not read only, put the bits back on the pixmap
+  if (!(mLockFlags & NS_LOCK_SURFACE_READ_ONLY))
   {
+#if 0
+    g_print("gdk_draw_image(pixmap=%p,lockx=%d,locky=%d,lockw=%d,lockh=%d)\n",
+            mPixmap,
+            mLockX, mLockY,
+            mLockWidth, mLockHeight);
+#endif
+
+#if 0
+    gdk_gc_set_clip_origin(mGC, 0, 0);
+    gdk_gc_set_clip_mask(mGC, nsnull);
+#endif
+
     gdk_draw_image(mPixmap,
 		   mGC,
 		   mImage,
@@ -184,7 +240,6 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
 		   mLockWidth, mLockHeight);
 
   }
-#endif
 
   if (mImage)
     ::gdk_image_destroy(mImage);
