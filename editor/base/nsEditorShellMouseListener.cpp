@@ -263,7 +263,7 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
 
         // Get enclosing link
         nsCOMPtr<nsIDOMElement> linkElement;
-        res = mEditorShell->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), node, getter_AddRefs(linkElement));
+        res = mEditorShell->GetElementOrParentByTagName(NS_LITERAL_STRING("href").get(), node, getter_AddRefs(linkElement));
         if (NS_FAILED(res)) return res;
         if (linkElement)
           element = linkElement;
