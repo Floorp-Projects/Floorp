@@ -92,30 +92,20 @@ nsLocale::GetCategory(const nsString* category,nsString* result)
 
 
 NS_IMETHODIMP
-nsLocale::GetCategory(const char *category, char **result)
+nsLocale::GetCategory(const PRUnichar *category, const PRUnichar **result)
 {
-  nsAutoString categoryIn(category);
-  nsString resultOut;
-  nsresult res;
 
-  res = GetCategory(&categoryIn, &resultOut);
+	const nsString*	value;
 
-  if (NS_SUCCEEDED(res)) {
-    // Convert result to C string.
-    char *tmp = resultOut.ToNewCString();
-    if (NULL == tmp) {
-      res = NS_ERROR_OUT_OF_MEMORY;
-    }
-    else {
-      *result = PL_strdup(tmp);
-      if (NULL == *result) {
-        res = NS_ERROR_OUT_OF_MEMORY;
-      }
-      delete [] tmp;
-    }
-  }
+	value = (const nsString*)PL_HashTableLookup(fHashtable,category);
+	if (value!=NULL)
+	{
+		(*result)=value->GetUnicode();
+		return NS_OK;
+	}
 
-  return res;
+	return NS_ERROR_FAILURE;
+
 }
 
 

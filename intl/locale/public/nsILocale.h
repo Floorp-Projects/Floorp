@@ -37,8 +37,8 @@ public:
 	
 	NS_IMETHOD GetCategory(const nsString* category, nsString* result) = 0;
 
-  /* void GetCategory (in string category, out string result); */
-  NS_IMETHOD GetCategory(const char *category, char **result) = 0;
+  /* void GetCategory (in wstring category, [shared, retval] out wstring result); */
+  NS_IMETHOD GetCategory(const PRUnichar *category, const PRUnichar **result) = 0;
 };
 
 
