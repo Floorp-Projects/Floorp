@@ -85,7 +85,6 @@
 #include <os2.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <direct.h>
 #include "prenv.h"
 
 #elif defined(XP_UNIX)
