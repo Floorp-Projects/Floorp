@@ -40,6 +40,7 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(srcdir)/objs.mk
 
 MODULE		= profdirserviceprovider
 LIBRARY_NAME	= profdirserviceprovider_s
@@ -53,11 +54,7 @@ REQUIRES	+= ipcd \
 		  $(NULL)
 endif
 
-CPPSRCS		= nsProfileDirServiceProvider.cpp
-
-ifdef MOZ_PROFILELOCKING
-CPPSRCS		+= nsProfileLock.cpp
-endif
+CPPSRCS		= $(MODULES_PROFILEDIRSERVICE_SRC_LCSRCS)
 
 # we don't want the shared lib
 FORCE_STATIC_LIB = 1

@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= profdirserviceprovider
-DIRS		= public src
+DIRS		= public src standalone
 
 include $(topsrcdir)/config/rules.mk
 

@@ -39,10 +39,14 @@
 // Interfaces Needed
 #include "nsIDirectoryService.h"
 #include "nsILocalFile.h"
+
+#ifdef STANDALONE_PROFILEDIRSERVICE
+#include "nsEmbedString.h"
+#else
 #include "nsString.h"
+#endif
 
 // Forward Declarations
-class nsIAtom;
 class nsProfileLock;
 
 // --------------------------------------------------------------------------------------
@@ -102,29 +106,16 @@ protected:
 
 protected:
 
-  // Atoms for file locations
-  static nsIAtom*          sApp_PrefsDirectory50;
-  static nsIAtom*          sApp_PreferencesFile50;
-  static nsIAtom*          sApp_UserProfileDirectory50;
-  static nsIAtom*          sApp_UserChromeDirectory;
-  static nsIAtom*          sApp_LocalStore50;
-  static nsIAtom*          sApp_History50;
-  static nsIAtom*          sApp_UsersPanels50;
-  static nsIAtom*          sApp_UsersMimeTypes50;
-  static nsIAtom*          sApp_BookmarksFile50;
-  static nsIAtom*          sApp_DownloadsFile50;
-  static nsIAtom*          sApp_SearchFile50;
-  static nsIAtom*          sApp_MailDirectory50;
-  static nsIAtom*          sApp_ImapMailDirectory50;
-  static nsIAtom*          sApp_NewsDirectory50;
-  static nsIAtom*          sApp_MessengerFolderCache50;
-
   nsCOMPtr<nsIFile>        mProfileDir;
   nsProfileLock*           mProfileDirLock;
   PRPackedBool             mNotifyObservers;
 
   PRPackedBool             mSharingEnabled;
+#ifdef STANDALONE_PROFILEDIRSERVICE
+  nsEmbedString            mNonSharedDirName;
+#else
   nsString                 mNonSharedDirName;
+#endif
   nsCOMPtr<nsIFile>        mNonSharedProfileDir;
 };
 
