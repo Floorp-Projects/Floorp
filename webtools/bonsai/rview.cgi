@@ -33,6 +33,7 @@ use strict;
 sub sillyness {
     my $zz;
     $zz = $::Setup_String;
+    $zz = $::script_type;
 }
 
 require 'CGI.pl';
