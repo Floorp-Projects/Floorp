@@ -115,7 +115,7 @@ nsDirectoryIndexStream::Close()
 
 
 NS_IMETHODIMP
-nsDirectoryIndexStream::GetLength(PRUint32* aLength)
+nsDirectoryIndexStream::Available(PRUint32* aLength)
 {
     // Lie, and tell the caller that the stream is endless (until we
     // actually don't have anything left).
@@ -125,7 +125,7 @@ nsDirectoryIndexStream::GetLength(PRUint32* aLength)
     }
     else {
         *aLength = 0;
-        return NS_BASE_STREAM_EOF;
+        return NS_OK;
     }
 }
 

@@ -28,8 +28,6 @@ interface nsIBaseStream : nsISupports
 /** Error codes */
 %{C++
 //@{ 
-/// End of file
-#define NS_BASE_STREAM_EOF            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 1)
 /// Stream closed
 #define NS_BASE_STREAM_CLOSED         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 2)
 /// Error from the operating system

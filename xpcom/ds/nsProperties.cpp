@@ -404,7 +404,7 @@ nsPersistentProperties::Read()
   nsresult  ret;
 
   ret = mIn->Read(&c, 0, 1, &nRead);
-  if (ret == NS_OK) {
+  if (ret == NS_OK && nRead == 1) {
     return c;
   }
 

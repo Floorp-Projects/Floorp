@@ -70,7 +70,6 @@ CPP_OBJS =                                       \
         .\$(OBJDIR)\nsFileStream.obj             \
         .\$(OBJDIR)\nsIFileStream.obj            \
         .\$(OBJDIR)\nsIStringStream.obj          \
-        .\$(OBJDIR)\nsPipe.obj                   \
         .\$(OBJDIR)\nsSegmentedBuffer.obj        \
         .\$(OBJDIR)\nsPipe2.obj                  \
         .\$(OBJDIR)\nsSpecialSystemDirectory.obj \

@@ -139,7 +139,7 @@ public:
     }
 
     // nsIInputStream
-    NS_IMETHOD GetLength(PRUint32 *aLength) {
+    NS_IMETHOD Available(PRUint32 *aLength) {
         *aLength = mSize - mIndex;
         return NS_OK;
     }
@@ -590,7 +590,7 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
         PRUint32 readCount;
 
         if (NS_FAILED(rv = in->Read(buf, sizeof(buf), &readCount)))
-            break; // error or eof
+            break; // error
 
         if (readCount == 0)
             break; // eof
@@ -606,9 +606,6 @@ rdf_BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 #endif
         if (NS_FAILED(rv))
             break;
-    }
-    if (rv == NS_BASE_STREAM_EOF) {
-        rv = NS_OK;
     }
 #ifdef NECKO
     aConsumer->OnStopRequest(channel, nsnull, NS_OK, nsnull);

@@ -21,13 +21,12 @@
 [scriptable, uuid(022396f0-93b5-11d1-895b-006008911b81)]
 interface nsIInputStream : nsIBaseStream
 {
-    /** Return the number of bytes in the stream
-     *  @param aLength out parameter to hold the length
-     *         of the stream. if an error occurs, the length
-     *         will be undefined
+    /** Return the number of bytes currently available in the stream
+     *  @param aLength out parameter to hold the number of bytes
+     *         if an error occurs, the parameter will be undefined
      *  @return error status
      */
-    unsigned long GetLength();
+    unsigned long Available();
 
     /** Read data from the stream.
      *  @param aBuf the buffer into which the data is read

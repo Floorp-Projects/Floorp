@@ -432,7 +432,7 @@ nsresult TestConnection::ReadBuffer(void)
     if (buffer) {
       rv = mInStream->Read(buffer, mBufferLength, &bytesRead);
 
-      if (NS_SUCCEEDED(rv)) {
+      if (NS_SUCCEEDED(rv) && bytesRead > 0) {
         buffer[bytesRead] = '\0';
         printf("TestConnection::ReadBuffer.  Read %d bytes\n", bytesRead);
         puts(buffer);

@@ -129,6 +129,7 @@ public:
         while (aLength > 0) {
             PRUint32 amt;
             /*nsresult rv = */aIStream->Read(buf, 1024, &amt);
+            if (amt == 0) break;
             buf[amt] = '\0';
             printf(buf);
             aLength -= amt;
@@ -246,11 +247,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
         rv = out->WriteFrom(fileStr, spec.GetFileSize(), &amt);
 #endif
 #endif
-        if (rv == NS_BASE_STREAM_EOF) {
-            rv = NS_OK;
-            break;
-        }
-        if (NS_FAILED(rv)) break;
+        if (NS_FAILED(rv) || amt == 0) break;
 
         rv = reader->OnDataAvailable(nsnull, nsnull, bufStr, sourceOffset, amt);
         if (NS_FAILED(rv)) break;
@@ -374,7 +371,8 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_RELEASE(trans);
         NS_RELEASE(listener);
         NS_RELEASE(reader);
-        threads->AppendElement(readerThread);
+        rv = threads->AppendElement(readerThread) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
         NS_RELEASE(readerThread);
     }
 

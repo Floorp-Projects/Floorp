@@ -121,8 +121,8 @@ Copy(nsIInputStream* inStr, nsIOutputStream* outStr,
     while (PR_TRUE) {
         PRUint32 count;
         rv = inStr->Read(buf, bufSize, &count);
-        if (rv == NS_BASE_STREAM_EOF) break;
         if (NS_FAILED(rv)) return rv;
+        if (count == 0) break;
             
         PRUint32 writeCount;
         rv = outStr->Write(buf, count, &writeCount);

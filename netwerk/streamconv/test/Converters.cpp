@@ -23,7 +23,7 @@ TestConverter::Convert(nsIInputStream *aFromStream,
     char buf[1024];
     PRUint32 read;
     nsresult rv = aFromStream->Read(buf, 1024, &read);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv) || read == 0) return rv;
 
     // Get the first character 
     nsString2 to(aToType);
@@ -85,7 +85,7 @@ TestConverter::OnDataAvailable(nsIChannel *channel,
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 len;
-    convertedStream->GetLength(&len);
+    convertedStream->Available(&len);
     return mListener->OnDataAvailable(channel, ctxt, convertedStream, sourceOffset, len);
 };
 

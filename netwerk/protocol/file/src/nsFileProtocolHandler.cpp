@@ -218,7 +218,7 @@ nsFileProtocolHandler::Suspend(nsFileChannel* request)
         rv = NS_NewISupportsArray(&mSuspended);
         if (NS_FAILED(rv)) return rv;
     }
-    return mSuspended->AppendElement(NS_STATIC_CAST(nsIChannel*, request));
+    return mSuspended->AppendElement(NS_STATIC_CAST(nsIChannel*, request)) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
 }
 
 nsresult

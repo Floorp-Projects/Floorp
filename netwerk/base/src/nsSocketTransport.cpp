@@ -747,7 +747,9 @@ nsReadFromSocket(void* closure,
   // The read operation has completed...
   //
   else if (len == 0) {
-    rv = NS_BASE_STREAM_EOF;
+    // EOF condition
+    *readCount = 0;
+    rv = NS_OK;
   }
   //
   // Error...
@@ -873,13 +875,14 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   //
   // Deal with the possible return values...
   //
-  if (NS_BASE_STREAM_EOF == rv) {
-    mSelectFlags &= (~PR_POLL_READ);
-    rv = NS_OK;
-  } 
-  else if (NS_SUCCEEDED(rv)) {
-    // continue to return WOULD_BLOCK until we've completely finished this read
-    rv = NS_BASE_STREAM_WOULD_BLOCK;
+  if (NS_SUCCEEDED(rv)) {
+    if (totalBytesWritten == 0) {       // EOF condition
+      mSelectFlags &= (~PR_POLL_READ);
+      rv = NS_OK;
+    } 
+    else {    // continue to return WOULD_BLOCK until we've completely finished this read
+      rv = NS_BASE_STREAM_WOULD_BLOCK;
+    }
   }
 
   //
@@ -1006,7 +1009,7 @@ nsresult nsSocketTransport::doWriteFromBuffer(PRUint32 *aCount)
         ("ReadSegments [fd=%x].  rv = %x. Bytes written =%d\n",
          mSocketFD, rv, *aCount));
 
-  if (NS_BASE_STREAM_EOF == rv) {
+  if (NS_SUCCEEDED(rv) && *aCount == 0) {
     //
     // The write operation has completed...
     //
@@ -1092,7 +1095,7 @@ nsresult nsSocketTransport::doWriteFromStream(PRUint32 *aCount)
     //
     // The write operation has completed...
     //
-    if ((mWriteCount == 0) || (NS_BASE_STREAM_EOF == rv) ) {
+    if ((mWriteCount == 0) || (NS_SUCCEEDED(rv) && bytesRead == 0)) {
       mSelectFlags &= (~PR_POLL_WRITE);
       rv = NS_OK;
       break;

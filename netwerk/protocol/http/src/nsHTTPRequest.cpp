@@ -300,7 +300,7 @@ nsHTTPRequest::Build()
         NS_ASSERTION(mMethod == HM_POST, "Post data without a POST method?");
 
         PRUint32 length;
-        stream->GetLength(&length);
+        stream->Available(&length);
 
         // TODO Change reading from nsIInputStream to nsIBuffer
         char* tempBuff = new char[length+1];

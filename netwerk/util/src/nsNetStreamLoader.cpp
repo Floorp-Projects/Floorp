@@ -172,7 +172,7 @@ nsUnicharStreamLoader::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
   char buffer[BUF_SIZE];
   PRUint32 len, lenRead;
   
-  inStr->GetLength(&len);
+  inStr->Available(&len);
 
   while (len > 0) {
     if (len < BUF_SIZE) {
@@ -183,7 +183,7 @@ nsUnicharStreamLoader::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
     }
 
     rv = inStr->Read(buffer, lenRead, &lenRead);
-    if (NS_OK != rv) {
+    if (NS_FAILED(rv) || lenRead == 0) {
       return rv;
     }
 

@@ -2521,7 +2521,7 @@ SearchDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream
 		while (aLength > 0)
 		{
 			PRUint32	count=0, numBytes = (aLength > sizeof(buffer)-1 ? sizeof(buffer)-1 : aLength);
-			if (NS_FAILED(rv = aIStream->Read(buffer, numBytes, &count)))
+			if (NS_FAILED(rv = aIStream->Read(buffer, numBytes, &count)) || count == 0)
 			{
 #ifdef	DEBUG			
 				printf("Search datasource read failure.\n");

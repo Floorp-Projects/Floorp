@@ -423,7 +423,7 @@ nsHTTPIndexParser::OnDataAvailable(nsIChannel* aChannel,
     PRUint32 nread;
 
     rv = aStream->Read(buf, count, &nread);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv) || nread == 0) return rv;
 
     char* p = buf;
     while (nread != 0) {

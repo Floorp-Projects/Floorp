@@ -117,7 +117,7 @@ StreamToFile::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream,
   do {
     char buffer[4000];
     nsresult err = pIStream->Read(buffer, 0, sizeof(buffer), &len);
-    if (err == NS_OK) {
+    if (NS_SUCCEEDED(err)) {
       if (nsnull != mFile) {
         fwrite(buffer, 1, len, mFile);
       }

@@ -248,9 +248,8 @@ nsStreamConverterService::AddAdjacency(const char *aProgID) {
     nsIAtom *vertex = NS_NewAtom(toCStr); 
     if (!vertex) return NS_ERROR_OUT_OF_MEMORY;
     nsVoidArray *adjacencyList = (nsVoidArray*)edges->data;
-    adjacencyList->AppendElement(vertex);
-
-    return NS_OK;
+    rv = adjacencyList->AppendElement(vertex) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+    return rv;
 }
 
 nsresult
@@ -446,7 +445,8 @@ nsStreamConverterService::FindConverter(const char *aProgID, nsVoidArray **aEdge
         newProgID->Append(data->keyString->GetBuffer());
     
         // Add this PROGID to the chain.
-        shortestPath->AppendElement(newProgID);
+        rv = shortestPath->AppendElement(newProgID) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
 
         // move up the tree.
         data = predecessorData;

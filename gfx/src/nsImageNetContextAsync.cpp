@@ -281,7 +281,7 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
       err = NS_OK;
       break;
     }
-    if (err != NS_OK) {
+    if (NS_FAILED(err) || nb == 0) {
       break;
     }
     bytes_read += nb;
@@ -304,20 +304,20 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
     }
 
     err = reader->Write((const unsigned char *)mBuffer, (int32)nb);
-	if(NS_FAILED(err)){
-        mStatus = MK_IMAGE_LOSSAGE;
-        mInterrupted = PR_TRUE;
+    if(NS_FAILED(err)){
+      mStatus = MK_IMAGE_LOSSAGE;
+      mInterrupted = PR_TRUE;
 	    NS_RELEASE(reader);
-		return NS_ERROR_ABORT;
-	}
+      return NS_ERROR_ABORT;
+    }
   } while(nb != 0);
 
-  if ((NS_OK != err) && (NS_BASE_STREAM_EOF != err)) {
+  if (NS_FAILED(err)) {
     mStatus = MK_IMAGE_LOSSAGE;
     mInterrupted = PR_TRUE;
   }
 
-  err = pIStream->GetLength(&str_length);
+  err = pIStream->Available(&str_length);
 
   if ((NS_OK == err) && (bytes_read < str_length)) {
     // If we haven't emptied the stream, hold onto it, because
@@ -374,7 +374,7 @@ ImageConsumer::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMs
   // that needs to be read. So, pump the stream ourselves.
   if((mStream != nsnull) && (status == NS_BINDING_SUCCEEDED)) {
     PRUint32 str_length;
-    nsresult err = mStream->GetLength(&str_length);
+    nsresult err = mStream->Available(&str_length);
     if (err == NS_OK) {
 #ifdef NECKO
       err = OnDataAvailable(channel, aContext, mStream, 0, str_length);  // XXX fix offset

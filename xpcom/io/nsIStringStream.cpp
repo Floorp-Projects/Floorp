@@ -60,7 +60,7 @@ class BasicStringImpl
         						            return NS_OK;
         						        }
 
-        NS_IMETHOD                      GetLength(PRUint32 *aLength)
+        NS_IMETHOD                      Available(PRUint32 *aLength)
                                         {
                                             NS_PRECONDITION(aLength != nsnull, "null ptr");
                                             if (!aLength)

@@ -559,11 +559,12 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
   PRUint32 aReadCount = 0;
   PRUnichar             *aBuf = (PRUnichar *) PR_Malloc(bufsize);
 
-  while (NS_OK == (res=uniIn->Read(aBuf, retLen, aCount, &aReadCount))) {
-  retLen += aReadCount;
+  while (NS_OK == (res=uniIn->Read(aBuf, retLen, aCount, &aReadCount))
+         && aReadCount != 0) {
+    retLen += aReadCount;
 #if 1
-      bufsize += aCount * sizeof(PRUnichar);
-      aBuf = (PRUnichar *) PR_Realloc(aBuf, bufsize);
+    bufsize += aCount * sizeof(PRUnichar);
+    aBuf = (PRUnichar *) PR_Realloc(aBuf, bufsize);
 #else
     if (((aReadCount+32) >= aCount) &&
         ((retLen+aCount) * sizeof(PRUnichar) >= bufsize)) {
@@ -578,8 +579,6 @@ nsresult nsExpatTokenizer::LoadStream(nsIInputStream* in,
   PR_FREEIF(aBuf);      
   NS_RELEASE(uniIn);
 
-  if (NS_BASE_STREAM_EOF == res)
-    res = NS_OK;
   return res;
 }
 

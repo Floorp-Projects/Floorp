@@ -669,13 +669,13 @@ nsFileChannel::Process(void)
           nsIInputStream* fileStr = NS_STATIC_CAST(nsIInputStream*, mFileStream);
 
           PRUint32 inLen;
-          mStatus = fileStr->GetLength(&inLen);
+          mStatus = fileStr->Available(&inLen);
           if (NS_FAILED(mStatus)) goto error;
 
           // mscott --> if the user wanted to only read a fixed number of bytes
           // we need to honor that...
           if (mReadFixedAmount && inLen > mAmount)
-              inLen = mAmount; // take the min(inLen, mAmount)
+			  inLen = PR_MIN(inLen, mAmount);
 
           PRUint32 amt;
           mStatus = mBufferOutputStream->WriteFrom(fileStr, inLen, &amt);
@@ -686,7 +686,7 @@ nsFileChannel::Process(void)
               mStatus = NS_OK;
               return;
           }
-          if (NS_FAILED(mStatus)) goto error;
+          if (NS_FAILED(mStatus) || amt == 0) goto error;
           if (mReadFixedAmount)
               mAmount -= amt;   // subtract off the amount we just read from mAmount.
 
@@ -733,8 +733,8 @@ nsFileChannel::Process(void)
 #if 0
           PRUint32 amt;
           mStatus = mBuffer->ReadSegments(nsWriteToFile, mFileStream, (PRUint32)-1, &amt);
-          if (mStatus == NS_BASE_STREAM_EOF) goto error;
           if (NS_FAILED(mStatus)) goto error;
+          if (amt == 0) goto error;     // EOF condition
 
           nsAutoCMonitor mon(mBuffer);
           mon.Notify();
@@ -778,10 +778,6 @@ nsFileChannel::Process(void)
     return;
 
   error:
-    // Map EOF to NS_OK for the OnStopBinding(...) notification...
-    if (NS_BASE_STREAM_EOF == mStatus) {
-      mStatus = NS_OK;
-    }
     mState = ENDING;
     return;
 }
