@@ -558,6 +558,7 @@ DrawBarberBar(HWND hWnd, int nBars)
 	  }
   }
 
+	DeleteObject(hBrushClear);
 	DeleteObject(hBrush);
 	EndPaint(hWnd, &ps);
 }
