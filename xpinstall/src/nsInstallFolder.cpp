@@ -177,7 +177,12 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                 }
                 else
                 {
-                    rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
+                    mFileSpec = new nsFileSpec();
+                    if ( !mFileSpec )
+                        rv = NS_ERROR_OUT_OF_MEMORY;
+                    else
+                        rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
+
                     if (NS_SUCCEEDED(rv))
                     {
 #ifdef XP_MAC
@@ -197,7 +202,12 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                     mFileSpec = new nsFileSpec( nsSpecialSystemDirectory( nsSpecialSystemDirectory::OS_CurrentProcessDirectory ));
                 else
                 {
-                    rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
+                    mFileSpec = new nsFileSpec();
+                    if ( !mFileSpec )
+                        rv = NS_ERROR_OUT_OF_MEMORY;
+                    else
+                        rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
+
                     if (!NS_SUCCEEDED(rv))
                         mFileSpec = nsnull;
                 }
@@ -256,10 +266,13 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                     SetAppShellDirectory(nsSpecialFileSpec::App_ComponentsDirectory );
                 else
                 {
-                    rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
-                    if (!NS_SUCCEEDED(rv))
-                        mFileSpec = nsnull;
+                    mFileSpec = new nsFileSpec();
+                    if ( !mFileSpec )
+                        rv = NS_ERROR_OUT_OF_MEMORY;
                     else
+                        rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
+
+                    if (NS_SUCCEEDED(rv))
                     {
 #ifdef XP_MAC
                         *mFileSpec += "Components";
@@ -275,10 +288,13 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                     SetAppShellDirectory(nsSpecialFileSpec::App_ChromeDirectory );
                 else
                 {
-                    rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
-                    if (!NS_SUCCEEDED(rv))
-                        mFileSpec = nsnull;
+                    mFileSpec = new nsFileSpec();
+                    if ( !mFileSpec )
+                        rv = NS_ERROR_OUT_OF_MEMORY;
                     else
+                        rv = nsSoftwareUpdate::GetProgramDirectory()->GetFileSpec(mFileSpec);
+
+                    if (NS_SUCCEEDED(rv))
                     {
 #ifdef XP_MAC
                         *mFileSpec += "Chrome";
