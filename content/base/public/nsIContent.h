@@ -48,6 +48,8 @@ class nsIDOMRange;
 // is supported by all content objects.
 class nsIContent : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_ICONTENT_IID; return iid; }
+
   NS_IMETHOD GetDocument(nsIDocument*& aResult) const = 0;
 
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep) = 0;

@@ -34,6 +34,8 @@ class nsIContent;
 
 class nsIStyleRule : public nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_ISTYLE_RULE_IID; return iid; }
+
   NS_IMETHOD Equals(const nsIStyleRule* aRule, PRBool& aResult) const = 0;
   NS_IMETHOD HashValue(PRUint32& aValue) const = 0;
 
