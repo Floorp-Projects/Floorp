@@ -1932,14 +1932,14 @@ nsresult nsProfile::LoadNewProfilePrefs()
 
 char * nsProfile::GetOldRegLocation()
 {
-#if defined(XP_PC) || defined(XP_OS2) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
     nsCOMPtr<nsIFile> oldRegFile;
     nsCAutoString oldRegFilePath;
     nsresult rv;
 
 #if defined(XP_OS2)
     NS_GetSpecialDirectory(NS_OS2_DIR, getter_AddRefs(oldRegFile));
-#elif defined(XP_PC)
+#elif defined(XP_WIN)
     NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(oldRegFile));
 #elif defined(XP_MAC)
     NS_GetSpecialDirectory(NS_MAC_CLASSICPREFS_DIR, getter_AddRefs(oldRegFile));
