@@ -149,7 +149,7 @@ nsHTMLLayerElement::GetDocument(nsIDOMDocument** aDocument)
   
   result = mInner.GetDocument(document);
   if (NS_SUCCEEDED(result)) {
-    result = document->QueryInterface(kIDOMDocumentIID, (void**)&aDocument);
+    result = document->QueryInterface(kIDOMDocumentIID, (void**)aDocument);
     NS_RELEASE(document);
   }
   else {
