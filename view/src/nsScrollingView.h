@@ -56,13 +56,9 @@ public:
   //nsIScrollableView interface
   NS_IMETHOD  ComputeContainerSize();
   NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight);
-  // XXX TROY
-#if 0
-  NS_IMETHOD  SetVisibleOffset(nscoord aOffsetX, nscoord aOffsetY);
-  NS_IMETHOD  GetVisibleOffset(nscoord *aOffsetX, nscoord *aOffsetY);
-#endif
   NS_IMETHOD  SetScrolledView(nsIView *aScrolledView);
   NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView);
+  NS_IMETHOD  GetScrollPosition(nscoord &aX, nscoord &aY);
 
   NS_IMETHOD  ShowQuality(PRBool aShow);
   NS_IMETHOD  GetShowQuality(PRBool &aShow);

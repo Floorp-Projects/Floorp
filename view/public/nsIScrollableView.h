@@ -31,16 +31,27 @@ typedef enum
   nsScrollPreference_kAlwaysScroll
 } nsScrollPreference;
 
-// IID for the nsIView interface
+// IID for the nsIScrollableView interface
 #define NS_ISCROLLABLEVIEW_IID    \
 { 0xc95f1830, 0xc376, 0x11d1, \
 { 0xb7, 0x21, 0x0, 0x60, 0x8, 0x91, 0xd8, 0xc9 } }
 
+/**
+ * A scrolling view allows an arbitrary view that you supply to be scrolled
+ * vertically or horizontally (or both). The scrolling view creates and
+ * manages the scrollbars.
+ *
+ * You must use SetScrolledView() to specify the view that is to be scrolled,
+ * because the scrolled view is made a child of the clip view (an internal
+ * child view created by the scrolling view).
+ *
+ * XXX Rename this class nsIScrollingView
+ */
 class nsIScrollableView : public nsISupports
 {
 public:
   /**
-   * Compute the size of the scrolled contanier.
+   * Compute the size of the scrolled container.
    */
   NS_IMETHOD  ComputeContainerSize(void) = 0;
 
@@ -52,17 +63,20 @@ public:
   NS_IMETHOD  GetContainerSize(nscoord *aWidth, nscoord *aHeight) = 0;
 
   /**
-   * Set the view that we are scrolling within the
-   * scrolling view. 
+   * Set the view that we are scrolling within the scrolling view. 
    */
   NS_IMETHOD  SetScrolledView(nsIView *aScrolledView) = 0;
 
   /**
-   * Get the view that we are scrolling within the
-   * scrolling view. 
+   * Get the view that we are scrolling within the scrolling view. 
    * @result child view
    */
   NS_IMETHOD  GetScrolledView(nsIView *&aScrolledView) = 0;
+
+  /**
+   * Get the position of the scrolled view.
+   */
+  NS_IMETHOD  GetScrollPosition(nscoord &aX, nscoord& aY) = 0;
 
   /**
    * Select whether quality level should be displayed in view frame
