@@ -29,6 +29,7 @@ comm.jar:
 	content/editor/editorMailOverlay.xul                     (composer/content/editorMailOverlay.xul) 
 	content/editor/editorTasksOverlay.xul                    (composer/content/editorTasksOverlay.xul) 
 	content/editor/editorApplicationOverlay.js               (composer/content/editorApplicationOverlay.js) 
+	content/editor/StructBarContextMenu.js                   (composer/content/StructBarContextMenu.js) 
 	content/editor/images/tag-anchor.gif                     (composer/content/images/tag-anchor.gif)
 	content/editor/images/tag-abr.gif                        (composer/content/images/tag-abr.gif)
 	content/editor/images/tag-acr.gif                        (composer/content/images/tag-acr.gif)

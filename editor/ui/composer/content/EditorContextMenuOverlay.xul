@@ -29,6 +29,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://editor/content/EditorContextMenu.js"/>
+<script type="application/x-javascript" src="chrome://editor/content/StructBarContextMenu.js"/>
 
 <popupset id="editorContentContextSet">
  <popup id="editorContentContext"   
@@ -109,6 +110,24 @@
     <menuitem id="splitTableCell_cm"   label="&tableSplitCell.label;" accesskey="&tablesplitcell.accesskey;" observes="cmd_SplitTableCell"/>
     <menuitem id="tableOrCellColor_cm" label="&tableOrCellColor.label;" accesskey="&tableOrCellColor.accesskey;" observes="cmd_TableOrCellColor"/>
  </popup>
+
+ <popup id="structToolbarContext">
+   <menuitem id="structSelect"     label="&structSelect.label;"
+                                   accesskey="&structSelect.accesskey;"
+                                   oncommand="StructSelectTag()"/>
+   <menuseparator/>
+   <menuitem id="structRemoveTag"  label="&structRemoveTag.label;"
+                                   accesskey="&structRemoveTag.accesskey;"
+                                   oncommand="StructRemoveTag()"/>
+   <menuitem id="structChangeTag"  label="&structChangeTag.label;"
+                                   accesskey="&structChangeTag.accesskey;"
+                                   oncommand="StructChangeTag()"/>
+   <menuseparator/>
+   <menuitem id="advancedPropsTag" label="&advancedPropertiesCmd.label;"
+                                   accesskey="&advancedproperties.accesskey;"
+                                   oncommand="OpenAdvancedProperties()"/>
+ </popup>
+
 </popupset>
 
 </overlay>

@@ -81,6 +81,9 @@ var gDefaultBackgroundColor = "";
 var gCSSPrefListener;
 var gPrefs;
 
+var gLastFocusNode = null;
+var gLastFocusNodeWasSelected = false;
+
 // These must be kept in synch with the XUL <options> lists
 var gFontSizeNames = ["xx-small","x-small","small","medium","large","x-large","xx-large"];
 
@@ -1683,6 +1686,7 @@ function SetDisplayMode(mode)
   var previousMode = gEditorDisplayMode;
   gEditorDisplayMode = mode;
 
+  ResetStructToolbar();
   if (mode == kDisplayModeSource)
   {
     // Switch to the sourceWindow (second in the deck)
@@ -2966,4 +2970,170 @@ function SwitchInsertCharToAnotherEditorOrClose()
     // Didn't find another editor - close the dialog
     window.InsertCharWindow.close();
   }
+}
+
+function ResetStructToolbar()
+{
+  gLastFocusNode = null;
+  UpdateStructToolbar();
+}
+
+function newCommandListener(element)
+{
+  return function() { return SelectFocusNodeAncestor(element); };
+}
+
+function newContextmenuListener(button, element)
+{
+  return function() { return InitStructBarContextMenu(button, element); };
+}
+
+function UpdateStructToolbar()
+{
+  var editor = GetCurrentEditor();
+  if (!editor) return;
+
+  var mixed = GetSelectionContainer();
+  if (!mixed) return;
+  var element = mixed.node;
+  var oneElementSelected = mixed.oneElementSelected;
+
+  if (!element) return;
+
+  if (element == gLastFocusNode &&
+      oneElementSelected == gLastFocusNodeWasSelected)
+    return;
+
+  gLastFocusNode = element;
+  gLastFocusNodeWasSelected = mixed.oneElementSelected;
+
+  var toolbar = document.getElementById("statusText");
+  if (!toolbar) return;
+  var childNodes = toolbar.childNodes;
+  var childNodesLength = childNodes.length;
+  var i;
+  for (i = childNodesLength-1; i >= 0; i--) {
+    toolbar.removeChild(childNodes.item(i));
+  }
+
+  toolbar.removeAttribute("label");
+
+  if ( IsInHTMLSourceMode() ) {
+    // we have destroyed the contents of the status bar and are
+    // about to recreate it ; but we don't want to do that in
+    // Source mode
+    return;
+  }
+
+  var tag, button;
+  var bodyElement = GetBodyElement();
+  var isFocusNode = true;
+  var tmp;
+  do {
+    tag = element.nodeName.toLowerCase();
+
+    button = document.createElementNS(XUL_NS, "toolbarbutton");
+    button.setAttribute("label",   "<" + tag + ">");
+    button.setAttribute("value",   tag);
+    button.setAttribute("context", "structToolbarContext");
+
+    toolbar.insertBefore(button, toolbar.firstChild);
+
+    button.addEventListener("command", newCommandListener(element), false);
+
+    button.addEventListener("contextmenu", newContextmenuListener(button, element), false);
+
+    if (isFocusNode && oneElementSelected) {
+      button.setAttribute("style", "font-weight: bold");
+      isFocusNode = false;
+    }
+
+    tmp = element;
+    element = element.parentNode;
+
+  } while (tmp != bodyElement);
+}
+
+function SelectFocusNodeAncestor(element)
+{
+  var editor = GetCurrentEditor();
+  if (editor) {
+    if (element == GetBodyElement())
+      editor.selectAll();
+    else
+      editor.selectElement(element);
+  }
+  ResetStructToolbar();
+}
+
+function GetSelectionContainer()
+{
+  var editor = GetCurrentEditor();
+  if (!editor) return null;
+
+  var selection = editor.selection;
+  if (!selection) return null;
+
+  var result = { oneElementSelected:false };
+
+  if (selection.isCollapsed) {
+    result.node = selection.focusNode;
+  }
+  else {
+    var rangeCount = selection.rangeCount;
+    if (rangeCount == 1) {
+      result.node = editor.getSelectedElement("");
+      var range = selection.getRangeAt(0);
+
+      // check for a weird case : when we select a piece of text inside
+      // a text node and apply an inline style to it, the selection starts
+      // at the end of the text node preceding the style and ends after the
+      // last char of the style. Assume the style element is selected for
+      // user's pleasure
+      if (!result.node &&
+          range.startContainer.nodeType == Node.TEXT_NODE &&
+          range.startOffset == range.startContainer.length &&
+          range.endContainer.nodeType == Node.TEXT_NODE &&
+          range.endOffset == range.endContainer.length &&
+          range.endContainer.nextSibling == null &&
+          range.startContainer.nextSibling == range.endContainer.parentNode)
+        result.node = range.endContainer.parentNode;
+
+      if (!result.node) {
+        // let's rely on the common ancestor of the selection
+        result.node = range.commonAncestorContainer;
+      }
+      else {
+        result.oneElementSelected = true;
+      }
+    }
+    else {
+      // assume table cells !
+      var i, container = null;
+      for (i = 0; i < rangeCount; i++) {
+        range = selection.getRangeAt(i);
+        if (!container) {
+          container = range.startContainer;
+        }
+        else if (container != range.startContainer) {
+          // all table cells don't belong to same row so let's
+          // select the parent of all rows
+          result.node = container.parentNode;
+          break;
+        }
+        result.node = container;
+      }
+    }
+  }
+
+  // make sure we have an element here
+  while (result.node.nodeType != Node.ELEMENT_NODE)
+    result.node = result.node.parentNode;
+
+  // and make sure the element is not a special editor node like
+  // the <br> we insert in blank lines
+  while (result.node.hasAttribute("_moz_editor_bogus_node"))
+    result.node = result.node.parentNode;
+
+  return result;
 }
