@@ -67,7 +67,7 @@ if( $form{"allchanges"} ){
 }
 else {
     while( my ($k, $v) = each( %form ) ){
-        push( @revs, &SanitizeRevision($k) );
+        push( @revs, $k );
     }
 }
 
@@ -79,6 +79,7 @@ for my $k (@revs) {
     if ($rev eq "") {
         next;
     }
+    $rev = &SanitizeRevision($rev);
     my $prevrev = &PrevRev($rev);
     my $fullname = "$cvsroot/$dir/$file,v";
     $fullname = "$cvsroot/$dir/Attic/$file,v" if (! -r $fullname);
