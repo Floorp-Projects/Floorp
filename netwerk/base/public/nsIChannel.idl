@@ -87,5 +87,18 @@ interface nsIChannel : nsIRequest
                     in nsIEventQueue eventQueue,
                     in nsIStreamObserver observer);
 
+    /**
+     * Setting this attribute causes the loading process to not deliver status
+     * notifications to the program performing the load.
+     */
+    attribute boolean LoadQuiet;
+
+    /**
+     * Returns the content MIME type of the channel if available. Note that the 
+     * content type can often be wrongly specified (wrong file extension, wrong
+     * MIME type, wrong document type stored on a server, etc.) and the caller
+     * most likely wants to verify with the actual data. 
+     */
+    readonly attribute string ContentType;
 };
 

@@ -30,6 +30,7 @@ DIRS=            \
 	dns      \
 	build    \
 	protocol \
+	util     \
 	test     \
 	$(NULL)
 

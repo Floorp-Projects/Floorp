@@ -67,6 +67,13 @@ public:
     /* void AsyncWrite (in nsIInputStream fromStream, in unsigned long startPosition, in long writeCount, in nsISupports ctxt, in nsIEventQueue eventQueue, in nsIStreamObserver observer); */
     NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIEventQueue *eventQueue, nsIStreamObserver *observer);
 
+    /* attribute boolean LoadQuiet; */
+    NS_IMETHOD GetLoadQuiet(PRBool *aLoadQuiet);
+    NS_IMETHOD SetLoadQuiet(PRBool aLoadQuiet);
+
+    /* readonly attribute string ContentType; */
+    NS_IMETHOD GetContentType(char * *aContentType);
+
     ////////////////////////////////////////////////////////////////////////////
     // from nsIFileChannel:
 
@@ -173,8 +180,8 @@ protected:
     PRUint32                    mSourceOffset;
     PRInt32                     mAmount;
 
-private:
     PRLock*                     mLock;
+    PRBool                      mLoadQuiet;
 };
 
 #define NS_FILE_TRANSPORT_SEGMENT_SIZE   (4*1024)

@@ -1240,4 +1240,23 @@ nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *re
   return rv;
 }
 
+NS_IMETHODIMP
+nsSocketTransport::GetLoadQuiet(PRBool *aLoadQuiet)
+{
+  *aLoadQuiet = mLoadQuiet;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetLoadQuiet(PRBool aLoadQuiet)
+{
+  mLoadQuiet = aLoadQuiet;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::GetContentType(char * *aContentType)
+{
+  return NS_ERROR_FAILURE;    // XXX doesn't make sense for transports
+}
 

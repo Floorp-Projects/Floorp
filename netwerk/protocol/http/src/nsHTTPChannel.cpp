@@ -211,6 +211,26 @@ nsHTTPChannel::AsyncWrite(nsIInputStream *fromStream,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsHTTPChannel::GetLoadQuiet(PRBool *aLoadQuiet)
+{
+    *aLoadQuiet = mLoadQuiet;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetLoadQuiet(PRBool aLoadQuiet)
+{
+    mLoadQuiet = aLoadQuiet;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetContentType(char * *aContentType)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsIHTTPChannel methods:
 
@@ -297,6 +317,33 @@ nsHTTPChannel::GetResponseDataListener(nsIStreamListener* *aListener)
     return rv;
 }
 
+NS_IMETHODIMP
+nsHTTPChannel::GetBypassCache(PRBool *aBypassCache)
+{
+    *aBypassCache = mBypassCache;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetBypassCache(PRBool aBypassCache)
+{
+    mBypassCache = aBypassCache;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetBypassProxy(PRBool *aBypassProxy)
+{
+    *aBypassProxy = mBypassProxy;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetBypassProxy(PRBool aBypassProxy)
+{
+    mBypassProxy = aBypassProxy;
+    return NS_OK;
+}
 
 static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);

@@ -49,6 +49,10 @@ interface nsIHTTPChannel : nsIChannel
     readonly attribute nsIHTTPEventSink EventSink;
     
     readonly attribute nsIStreamListener ResponseDataListener;
+
+    attribute boolean BypassCache;
+
+    attribute boolean BypassProxy;
 };
 
 
