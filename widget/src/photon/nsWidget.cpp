@@ -323,7 +323,7 @@ NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::SetModal(void)
+NS_IMETHODIMP nsWidget::SetModal(PRBool aModal)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetModal - Not Implemented\n"));
 
