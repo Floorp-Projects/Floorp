@@ -177,7 +177,7 @@ NS_ScriptErrorReporter(JSContext *cx,
       //send error event first, then proceed
       nsCOMPtr<nsIDocShell> docShell;
       globalObject->GetDocShell(getter_AddRefs(docShell));
-      if (docShell) {
+      if (docShell && !JSREPORT_IS_WARNING(report->flags)) {
         static PRInt32 errorDepth; // Recursion prevention
         errorDepth++;
 
