@@ -68,6 +68,10 @@ NO_PKG_FILES = \
 	xpt_dump* \
 	xpt_link* \
 	chrome/chrome.rdf \
+	chrome/browser* \
+	searchplugins \
+	res/*.gif \
+	TestIcal \
 	$(NULL)
 
 include $(DEPTH)/config/autoconf.mk
