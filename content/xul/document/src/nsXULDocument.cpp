@@ -4676,7 +4676,7 @@ nsXULDocument::AbortFastLoads()
 #ifdef DEBUG
         gFastLoadFile->MoveTo(nsnull, "Aborted.mfasl");
 #else
-        gFastLoadFile->Delete(PR_FALSE);
+        gFastLoadFile->Remove(PR_FALSE);
 #endif
     }
 
