@@ -382,7 +382,8 @@ private:
   nsresult InitInternal(nsIWidget* aParentWidget,
                         nsIDeviceContext* aDeviceContext,
                         const nsRect& aBounds,
-                        PRBool aDoCreation);
+                        PRBool aDoCreation,
+                        PRBool aInPrintPreview);
   nsresult InitPresentationStuff(PRBool aDoInitialReflow);
 
   nsresult GetPopupNode(nsIDOMNode** aNode);
@@ -658,7 +659,7 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
                          nsIDeviceContext* aDeviceContext,
                          const nsRect& aBounds)
 {
-  return InitInternal(aParentWidget, aDeviceContext, aBounds, PR_TRUE);
+  return InitInternal(aParentWidget, aDeviceContext, aBounds, PR_TRUE, PR_FALSE);
 }
 
 nsresult
@@ -806,7 +807,8 @@ nsresult
 DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
                                  nsIDeviceContext* aDeviceContext,
                                  const nsRect& aBounds,
-                                 PRBool aDoCreation)
+                                 PRBool aDoCreation,
+                                 PRBool aInPrintPreview)
 {
   mParentWidget = aParentWidget; // not ref counted
 
@@ -868,7 +870,7 @@ DocumentViewerImpl::InitInternal(nsIWidget* aParentWidget,
       mPresContext->SetLinkHandler(linkHandler);
     }
 
-    if (!GetIsPrintPreview()) {
+    if (!aInPrintPreview) {
       // Set script-context-owner in the document
 
       nsCOMPtr<nsIScriptGlobalObject> global;
@@ -3694,6 +3696,17 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
     mPresContext->SetLinkHandler(nsnull);
   }
 
+  //------------------------------------------------
+  // NOTE:
+  // Here is why the code below is a little confusing:
+  //   1) Scripting needs to be turned back on before 
+  //      the print engine is destroyed
+  //   2) The PrintEngine must be destroyed BEFORE 
+  //      calling InitInternal when caching documents (framesets)
+  //      BUT the PrintEngine must be destroyed AFTER 
+  //      calling InitInternal when NOT caching documents (no framesets)
+  //------------------------------------------------
+
   // wasCached will be used below to indicate whether the 
   // InitInternal should create all new objects or just
   // initialize the existing ones
@@ -3709,12 +3722,6 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
 
     mWindow->Show(PR_TRUE);
 
-    // Very important! Turn On scripting
-    mPrintEngine->TurnScriptingOn(PR_TRUE);
-
-    mPrintEngine->Destroy();
-    NS_RELEASE(mPrintEngine);
-
     wasCached = PR_TRUE;
   } else {
     // Destroy the old Presentation
@@ -3727,11 +3734,16 @@ DocumentViewerImpl::ReturnToGalleyPresentation()
   if (mPrintEngine) {
     // Very important! Turn On scripting
     mPrintEngine->TurnScriptingOn(PR_TRUE);
+
+    if (wasCached) {
+      mPrintEngine->Destroy();
+      NS_RELEASE(mPrintEngine);
+    }
   }
 
-  InitInternal(mParentWidget, mDeviceContext, bounds, !wasCached);
+  InitInternal(mParentWidget, mDeviceContext, bounds, !wasCached, PR_TRUE);
 
-  if (mPrintEngine && !mPrintEngine->HasCachedPres()) {
+  if (mPrintEngine && !wasCached) {
     mPrintEngine->Destroy();
     NS_RELEASE(mPrintEngine);
   }
