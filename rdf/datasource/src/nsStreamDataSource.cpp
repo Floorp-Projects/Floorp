@@ -31,7 +31,7 @@
 #include "nsIStreamListener.h"
 #include "nsIURL.h"
 #include "nsParserCIID.h"
-#include "nsRDFBaseCID.h"
+#include "nsRDFCID.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -41,9 +41,9 @@ static NS_DEFINE_IID(kIRDFContentSinkIID, NS_IRDFCONTENTSINK_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,  NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
-static NS_DEFINE_CID(kParserCID,          NS_PARSER_IID); // XXX
-static NS_DEFINE_CID(kRDFContentSinkCID,  NS_RDFCONTENTSINK_CID);
-static NS_DEFINE_CID(kWellFormedDTDCID,   NS_WELLFORMEDDTD_CID);
+static NS_DEFINE_CID(kParserCID,                NS_PARSER_IID); // XXX
+static NS_DEFINE_CID(kRDFSimpleContentSinkCID,  NS_RDFSIMPLECONTENTSINK_CID);
+static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -169,7 +169,7 @@ StreamDataSourceImpl::Init(const char* uri)
     // XXX Get a namespace manager *here*
     PR_ASSERT(0);
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFContentSinkCID,
+    if (NS_FAILED(rv = nsRepository::CreateInstance(kRDFSimpleContentSinkCID,
                                                     nsnull,
                                                     kIRDFContentSinkIID,
                                                     (void**) &sink)))
