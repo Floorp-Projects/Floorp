@@ -243,7 +243,6 @@ static void* FP2TV(void *fp)
 ////////////////////////////////////////////////////////////////////////
 // Globals
 NPNetscapeFuncs ns4xPlugin::CALLBACKS;
-static nsIMemory* gMalloc = nsnull;
 
 ////////////////////////////////////////////////////////////////////////
 void
@@ -522,13 +521,6 @@ ns4xPlugin::~ns4xPlugin(void)
 }
 
 
-////////////////////////////////////////////////////////////////////////
-void ns4xPlugin::ReleaseStatics()
-{
-  NS_IF_RELEASE(gMalloc);
-}
-
-
 #if defined(XP_MAC) || defined(XP_MACOSX)
 ////////////////////////////////////////////////////////////////////////
 void ns4xPlugin::SetPluginRefNum(short aRefNum)
@@ -554,12 +546,6 @@ ns4xPlugin::CreatePlugin(nsIServiceManagerObsolete* aServiceMgr,
                          nsIPlugin** aResult)
 {
   CheckClassInitialized();
-
-  // set up the MemAllocator service now because it might be used by the plugin
-  if (aServiceMgr && !gMalloc) {
-    aServiceMgr->GetService(kMemoryCID, NS_GET_IID(nsIMemory),
-                            (nsISupports**)&gMalloc);
-  }
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
 
@@ -1183,7 +1169,7 @@ _memfree (void *ptr)
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemFree: ptr=%p\n", ptr));
 
   if(ptr)
-    gMalloc->Free(ptr);
+    nsMemory::Free(ptr);
 }
 
 
@@ -1193,7 +1179,7 @@ _memflush(uint32 size)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemFlush: size=%d\n", size));
 
-  gMalloc->HeapMinimize(PR_TRUE);
+  nsMemory::HeapMinimize(PR_TRUE);
   return 0;
 }
 
@@ -2062,7 +2048,7 @@ void * NP_EXPORT
 _memalloc (uint32 size)
 {
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemAlloc: size=%d\n", size));
-  return gMalloc->Alloc(size);
+  return nsMemory::Alloc(size);
 }
 
 #ifdef OJI

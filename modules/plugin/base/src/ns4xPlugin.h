@@ -101,8 +101,6 @@ public:
              nsIServiceManagerObsolete* serviceMgr);
   virtual ~ns4xPlugin(void);
 
-  static void ReleaseStatics();
-
   NS_DECL_ISUPPORTS
 
   //nsIFactory interface
