@@ -10,6 +10,14 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+1/29/99 Whoops; had a mispelled op_sys.  It was "Mac System 7.1.6"; it should
+be "Mac System 7.6.1".  It turns out I had no bugs with this value set, so I
+could just do the below simple command.  If you have bugs with this value, you
+may need to do something more complicated.
+
+	alter table bugs change column op_sys op_sys enum("All", "Windows 3.1", "Windows 95", "Windows 98", "Windows NT", "Mac System 7", "Mac System 7.5", "Mac System 7.6.1", "Mac System 8.0", "Mac System 8.5", "AIX", "BSDI", "HP-UX", "IRIX", "Linux", "OSF/1", "Solaris", "SunOS", "OS/2", "other") not null;
+
+
 
 1/20/99 Added new fields: Target Milestone, QA Contact, and Status Whiteboard.
 These fields are all optional in the UI; there are parameters to turn them on.
