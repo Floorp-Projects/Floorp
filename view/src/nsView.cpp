@@ -1023,12 +1023,16 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
   GetBounds(aClippedRect);
   const nsView* parentView = GetParent();
   PRBool lastViewIsFloating = GetFloating();
-  PRBool parentIsFloating;
 
   // Walk all of the way up the views to see if any
   // ancestor sets the NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN.
   // don't consider non-floating ancestors of a floating view.
-  while (parentView && (!lastViewIsFloating || (parentIsFloating = parentView->GetFloating()))) {
+  while (parentView) {
+    PRBool parentIsFloating = parentView->GetFloating();
+    if (lastViewIsFloating && !parentIsFloating) {
+      break;
+    }
+
     if (parentView->GetClipChildren()) {
       aIsClipped = PR_TRUE;
       // Adjust for clip specified by ancestor
