@@ -85,9 +85,14 @@ public class Parser
         }
     }
 
-    void reportError(String messageId)
+    void addError(String messageId)
     {
         ts.reportCurrentLineError(Context.getMessage0(messageId));
+    }
+
+    void reportError(String messageId)
+    {
+        addError(messageId);
 
         // Throw a ParserException exception to unwind the recursive descent
         // parse.

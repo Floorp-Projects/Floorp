@@ -54,6 +54,7 @@ import java.io.*;
  * @author Brendan Eich
  */
 
+// The class is public so NativeRegExp can access TokenStream.JSLineTerminator
 public class TokenStream
 {
     /*
@@ -64,8 +65,8 @@ public class TokenStream
     private final static int
         EOF_CHAR = -1;
 
-    public TokenStream(Parser parser, Reader sourceReader, String sourceString,
-                       int lineno)
+    TokenStream(Parser parser, Reader sourceReader, String sourceString,
+                int lineno)
     {
         this.parser = parser;
         this.pushbackToken = Token.EOF;
@@ -87,7 +88,8 @@ public class TokenStream
      * TokenStream; if getToken has been called since the passed token
      * was scanned, the op or string printed may be incorrect.
      */
-    public String tokenToString(int token) {
+    String tokenToString(int token)
+    {
         if (Token.printTrees) {
             String name = Token.name(token);
 
@@ -114,7 +116,8 @@ public class TokenStream
         return Token.EOF != stringToKeyword(s);
     }
 
-    private static int stringToKeyword(String name) {
+    private static int stringToKeyword(String name)
+    {
 // #string_id_map#
 // The following assumes that Token.EOF == 0
         final int
@@ -283,32 +286,33 @@ public class TokenStream
         return id & 0xff;
     }
 
-    public final void reportCurrentLineError(String message)
+    final void reportCurrentLineError(String message)
     {
         parser.reportError(message, getLineno(), getLine(), getOffset());
     }
 
-    public final void reportCurrentLineWarning(String message)
+    final void reportCurrentLineWarning(String message)
     {
         parser.reportWarning(message, getLineno(), getLine(), getOffset());
     }
 
-    public final int getLineno() { return lineno; }
+    final int getLineno() { return lineno; }
 
-    public final int getOp() { return op; }
+    final int getOp() { return op; }
 
-    public final String getString() { return string; }
+    final String getString() { return string; }
 
-    public final double getNumber() { return number; }
+    final double getNumber() { return number; }
 
-    public final int getTokenno() { return tokenno; }
+    final int getTokenno() { return tokenno; }
 
-    public final boolean eof() { return hitEOF; }
+    final boolean eof() { return hitEOF; }
 
     /* return and pop the token from the stream if it matches...
      * otherwise return null
      */
-    public final boolean matchToken(int toMatch) throws IOException {
+    final boolean matchToken(int toMatch) throws IOException
+    {
         int token = getToken();
         if (token == toMatch)
             return true;
@@ -319,7 +323,8 @@ public class TokenStream
         return false;
     }
 
-    public final void ungetToken(int tt) {
+    final void ungetToken(int tt)
+    {
         // Can not unread more then one token
         if (this.pushbackToken != Token.EOF && tt != Token.ERROR)
             Kit.codeBug();
@@ -327,15 +332,16 @@ public class TokenStream
         tokenno--;
     }
 
-    public final int peekToken() throws IOException {
+    final int peekToken() throws IOException
+    {
         int result = getToken();
-
         this.pushbackToken = result;
         tokenno--;
         return result;
     }
 
-    public final int peekTokenSameLine() throws IOException {
+    final int peekTokenSameLine() throws IOException
+    {
         significantEol = true;          // SCAN_NEWLINES from jsscan.h
         int result = getToken();
         this.pushbackToken = result;
@@ -344,7 +350,8 @@ public class TokenStream
         return result;
     }
 
-    public final int getToken() throws IOException {
+    final int getToken() throws IOException
+    {
         int c;
         tokenno++;
 
@@ -420,8 +427,7 @@ public class TokenStream
                             if (escapeVal < 0) { break; }
                         }
                         if (escapeVal < 0) {
-                            reportCurrentLineError(Context.getMessage0(
-                                "msg.invalid.escape"));
+                            parser.addError("msg.invalid.escape");
                             return Token.ERROR;
                         }
                         addToString(escapeVal);
@@ -434,8 +440,7 @@ public class TokenStream
                                 isUnicodeEscapeStart = true;
                                 containsEscape = true;
                             } else {
-                                reportCurrentLineError(Context.getMessage0(
-                                    "msg.illegal.character"));
+                                parser.addError("msg.illegal.character");
                                 return Token.ERROR;
                             }
                         } else {
@@ -536,8 +541,7 @@ public class TokenStream
                             c = getChar();
                         }
                         if (!isDigit(c)) {
-                            reportCurrentLineError(Context.getMessage0(
-                                "msg.missing.exponent"));
+                            parser.addError("msg.missing.exponent");
                             return Token.ERROR;
                         }
                         do {
@@ -582,8 +586,7 @@ public class TokenStream
             strLoop: while (c != quoteChar) {
                     if (c == '\n' || c == EOF_CHAR) {
                         ungetChar(c);
-                        reportCurrentLineError(Context.getMessage0(
-                            "msg.unterminated.string.lit"));
+                        parser.addError("msg.unterminated.string.lit");
                         return Token.ERROR;
                     }
 
@@ -820,8 +823,7 @@ public class TokenStream
                     for (;;) {
                         c = getChar();
                         if (c == EOF_CHAR) {
-                            reportCurrentLineError(Context.getMessage0(
-                                "msg.unterminated.comment"));
+                            parser.addError("msg.unterminated.comment");
                             return Token.ERROR;
                         } else if (c == '*') {
                             lookForSlash = true;
@@ -841,8 +843,7 @@ public class TokenStream
                     while ((c = getChar()) != '/') {
                         if (c == '\n' || c == EOF_CHAR) {
                             ungetChar(c);
-                            reportCurrentLineError(Context.getMessage0(
-                                "msg.unterminated.re.lit"));
+                            parser.addError("msg.unterminated.re.lit");
                             return Token.ERROR;
                         }
                         if (c == '\\') {
@@ -866,8 +867,7 @@ public class TokenStream
                     }
 
                     if (isAlpha(peekChar())) {
-                        reportCurrentLineError(Context.getMessage0(
-                            "msg.invalid.re.flag"));
+                        parser.addError("msg.invalid.re.flag");
                         return Token.ERROR;
                     }
 
@@ -927,14 +927,14 @@ public class TokenStream
                 return c;
 
             default:
-                reportCurrentLineError(Context.getMessage0(
-                    "msg.illegal.character"));
+                parser.addError("msg.illegal.character");
                 return Token.ERROR;
             }
         }
     }
 
-    private static boolean isAlpha(int c) {
+    private static boolean isAlpha(int c)
+    {
         // Use 'Z' < 'a'
         if (c <= 'Z') {
             return 'A' <= c;
@@ -943,11 +943,13 @@ public class TokenStream
         }
     }
 
-    static boolean isDigit(int c) {
+    static boolean isDigit(int c)
+    {
         return '0' <= c && c <= '9';
     }
 
-    static int xDigitToInt(int c) {
+    static int xDigitToInt(int c)
+    {
         // Use 0..9 < A..Z < a..z
         if (c <= '9') {
             c -= '0';
@@ -964,7 +966,8 @@ public class TokenStream
      * \v, I think.)  note that code in getChar() implicitly accepts
      * '\r' == \u000D as well.
      */
-    public static boolean isJSSpace(int c) {
+    static boolean isJSSpace(int c)
+    {
         if (c <= 127) {
             return c == 0x20 || c == 0x9 || c == 0xC || c == 0xB;
         } else {
@@ -973,11 +976,14 @@ public class TokenStream
         }
     }
 
-    public static boolean isJSLineTerminator(int c) {
+    // It is public so NativeRegExp can access it .
+    public static boolean isJSLineTerminator(int c)
+    {
         return c == '\n' || c == '\r' || c == 0x2028 || c == 0x2029;
     }
 
-    private static boolean isJSFormatChar(int c) {
+    private static boolean isJSFormatChar(int c)
+    {
         return c > 127 && Character.getType((char)c) == Character.FORMAT;
     }
 
@@ -1067,8 +1073,7 @@ public class TokenStream
                                 // throw away the string in progress
                                 stringBufferTop = 0;
                                 this.string = null;
-                                reportCurrentLineError(Context.getMessage0(
-                                    "msg.XML.bad.form"));
+                                parser.addError("msg.XML.bad.form");
                                 return Token.ERROR;
                             }
                             break;
@@ -1094,8 +1099,7 @@ public class TokenStream
                                 // throw away the string in progress
                                 stringBufferTop = 0;
                                 this.string = null;
-                                reportCurrentLineError(Context.getMessage0(
-                                    "msg.XML.bad.form"));
+                                parser.addError("msg.XML.bad.form");
                                 return Token.ERROR;
                             }
                             break;
@@ -1117,8 +1121,7 @@ public class TokenStream
                             // throw away the string in progress
                             stringBufferTop = 0;
                             this.string = null;
-                            reportCurrentLineError(Context.getMessage0(
-                                "msg.XML.bad.form"));
+                            parser.addError("msg.XML.bad.form");
                             return Token.ERROR;
                         }
                         xmlIsTagContent = true;
@@ -1144,7 +1147,7 @@ public class TokenStream
 
         stringBufferTop = 0; // throw away the string in progress
         this.string = null;
-        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        parser.addError("msg.XML.bad.form");
         return Token.ERROR;
     }
 
@@ -1160,7 +1163,7 @@ public class TokenStream
 
         stringBufferTop = 0; // throw away the string in progress
         this.string = null;
-        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        parser.addError("msg.XML.bad.form");
         return false;
     }
 
@@ -1187,7 +1190,7 @@ public class TokenStream
 
         stringBufferTop = 0; // throw away the string in progress
         this.string = null;
-        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        parser.addError("msg.XML.bad.form");
         return false;
     }
 
@@ -1201,7 +1204,7 @@ public class TokenStream
             if (c == ']' && peekChar() == ']') {
                 c = getChar();
                 addToString(c);
-                if(peekChar() == '>') {
+                if (peekChar() == '>') {
                     c = getChar(); // Skip >
                     addToString(c);
                     return true;
@@ -1214,7 +1217,7 @@ public class TokenStream
 
         stringBufferTop = 0; // throw away the string in progress
         this.string = null;
-        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        parser.addError("msg.XML.bad.form");
         return false;
     }
 
@@ -1239,7 +1242,7 @@ public class TokenStream
 
         stringBufferTop = 0; // throw away the string in progress
         this.string = null;
-        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        parser.addError("msg.XML.bad.form");
         return false;
     }
 
@@ -1259,15 +1262,17 @@ public class TokenStream
 
         stringBufferTop = 0; // throw away the string in progress
         this.string = null;
-        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        parser.addError("msg.XML.bad.form");
         return false;
     }
 
-    private String getStringFromBuffer() {
+    private String getStringFromBuffer()
+    {
         return new String(stringBuffer, 0, stringBufferTop);
     }
 
-    private void addToString(int c) {
+    private void addToString(int c)
+    {
         int N = stringBufferTop;
         if (N == stringBuffer.length) {
             char[] tmp = new char[stringBuffer.length * 2];
@@ -1278,14 +1283,16 @@ public class TokenStream
         stringBufferTop = N + 1;
     }
 
-    private void ungetChar(int c) {
+    private void ungetChar(int c)
+    {
         // can not unread past across line boundary
         if (ungetCursor != 0 && ungetBuffer[ungetCursor - 1] == '\n')
             Kit.codeBug();
         ungetBuffer[ungetCursor++] = c;
     }
 
-    private boolean matchChar(int test) throws IOException {
+    private boolean matchChar(int test) throws IOException
+    {
         int c = getChar();
         if (c == test) {
             return true;
@@ -1295,13 +1302,15 @@ public class TokenStream
         }
     }
 
-    private int peekChar() throws IOException {
+    private int peekChar() throws IOException
+    {
         int c = getChar();
         ungetChar(c);
         return c;
     }
 
-    private int getChar() throws IOException {
+    private int getChar() throws IOException
+    {
         if (ungetCursor != 0) {
             return ungetBuffer[--ungetCursor];
         }
@@ -1352,20 +1361,23 @@ public class TokenStream
         }
     }
 
-    private void skipLine() throws IOException {
+    private void skipLine() throws IOException
+    {
         // skip to end of line
         int c;
         while ((c = getChar()) != EOF_CHAR && c != '\n') { }
         ungetChar(c);
     }
 
-    public final int getOffset() {
+    final int getOffset()
+    {
         int n = sourceCursor - lineStart;
         if (lineEndChar >= 0) { --n; }
         return n;
     }
 
-    public final String getLine() {
+    final String getLine()
+    {
         if (sourceString != null) {
             // String case
             int lineEnd = sourceCursor;
@@ -1410,7 +1422,8 @@ public class TokenStream
         }
     }
 
-    private boolean fillSourceBuffer() throws IOException {
+    private boolean fillSourceBuffer() throws IOException
+    {
         if (sourceString != null) Kit.codeBug();
         if (sourceEnd == sourceBuffer.length) {
             if (lineStart != 0) {
