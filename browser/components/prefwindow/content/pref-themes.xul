@@ -107,7 +107,7 @@
     
     <listbox id="extList" datasources="rdf:chrome" 
           onselect=""
-          ref="urn:mozilla:packages:root" rows="3">
+          ref="urn:mozilla:package:root" rows="3">
       <template xmlns:chrome="http://www.mozilla.org/rdf/chrome">
         <rule chrome:extension="true">
           <listitem uri="..."
