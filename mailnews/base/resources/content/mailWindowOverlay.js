@@ -302,15 +302,6 @@ function IsNewsMessage(messageUri)
     return (messageUri.substring(0,14) == "news-message:/")
 }
 
-function InitMessageMark()
-{
-    InitMarkReadItem("markReadMenuItem");
-    InitMarkReadItem("markReadToolbarItem");
-    InitMarkFlaggedItem("markFlaggedMenuItem");
-    InitMarkFlaggedItem("markFlaggedToolbarItem");
-    document.commandDispatcher.updateCommands('create-menu-mark');
-}
-
 function SetMenuItemLabel(menuItemId, customLabel)
 {
     var menuItem = document.getElementById(menuItemId);
@@ -360,20 +351,19 @@ function InitMessageLabel(menuType)
     document.commandDispatcher.updateCommands('create-menu-label');
 }
 
-function InitMarkReadItem(id)
+function InitMessageMark()
 {
-    var areMessagesRead = SelectedMessagesAreRead();
-    var item = document.getElementById(id);
-    if(item)
-        item.setAttribute("checked", areMessagesRead);
-}
+  var areMessagesRead = SelectedMessagesAreRead();
+  var readItem = document.getElementById("cmd_markAsRead");
+  if(readItem)
+     readItem.setAttribute("checked", areMessagesRead);
 
-function InitMarkFlaggedItem(id)
-{
-    var areMessagesFlagged = SelectedMessagesAreFlagged();
-    var item = document.getElementById(id);
-    if(item)
-        item.setAttribute("checked", areMessagesFlagged);
+  var areMessagesFlagged = SelectedMessagesAreFlagged();
+  var flaggedItem = document.getElementById("cmd_markAsFlagged");
+  if(flaggedItem)
+     flaggedItem.setAttribute("checked", areMessagesFlagged);
+
+  document.commandDispatcher.updateCommands('create-menu-mark');
 }
 
 function SelectedMessagesAreRead()
