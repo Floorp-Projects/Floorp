@@ -432,7 +432,8 @@ final class PK11KeyWrapper implements KeyWrapper {
 
 
     public SymmetricKey
-    unwrapSymmetric(byte[] wrapped, SymmetricKey.Type type, int keyLen)
+    unwrapSymmetric(byte[] wrapped, SymmetricKey.Type type,
+        SymmetricKey.Usage usage, int keyLen)
         throws TokenException, IllegalStateException,
             InvalidAlgorithmParameterException
     {
@@ -454,11 +455,11 @@ final class PK11KeyWrapper implements KeyWrapper {
         if( symKey != null ) {
             Assert.assert(pubKey==null && privKey==null);
             return nativeUnwrapSymWithSym(token, symKey, wrapped, algorithm,
-                        algFromType(type), keyLen, IV );
+                        algFromType(type), keyLen, IV, usage.getVal() );
         } else {
             Assert.assert(privKey!=null && pubKey==null && symKey==null);
             return nativeUnwrapSymWithPriv(token, privKey, wrapped, algorithm,
-                        algFromType(type), keyLen, IV );
+                        algFromType(type), keyLen, IV, usage.getVal() );
         }
     }
 
@@ -508,8 +509,8 @@ final class PK11KeyWrapper implements KeyWrapper {
      */
     private static native SymmetricKey
     nativeUnwrapSymWithSym(PK11Token token, SymmetricKey unwrappingKey,
-        byte[] wrappedKey,
-        KeyWrapAlgorithm alg, Algorithm type, int keyLen, byte[] IV)
+        byte[] wrappedKey, KeyWrapAlgorithm alg, Algorithm type, int keyLen,
+        byte[] IV, int usageEnum)
             throws TokenException;
 
     /**
@@ -518,7 +519,7 @@ final class PK11KeyWrapper implements KeyWrapper {
     private static native SymmetricKey
     nativeUnwrapSymWithPriv(PK11Token token, PrivateKey unwrappingKey,
         byte[] wrappedKey, KeyWrapAlgorithm alg, Algorithm type, int keyLen,
-        byte[] IV)
+        byte[] IV, int usageEnum)
             throws TokenException;
 
 

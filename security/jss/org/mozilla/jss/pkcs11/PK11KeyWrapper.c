@@ -464,36 +464,12 @@ JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithSym
     (JNIEnv *env, jclass clazz, jobject tokenObj, jobject unwrapperObj,
         jbyteArray wrappedBA, jobject wrapAlgObj, jobject typeAlgObj,
-        jint keyLen, jbyteArray ivBA)
+        jint keyLen, jbyteArray ivBA, jint usageEnum)
 {
-    CK_BBOOL cktrue = CK_TRUE; /* sigh */
-    CK_OBJECT_CLASS keyClass = CKO_SECRET_KEY;
-    CK_KEY_TYPE keyType = CKK_GENERIC_SECRET;
-    CK_ULONG key_size = 0;
-    CK_ATTRIBUTE keyTemplate[] = {
-        { CKA_CLASS, NULL, 0},
-        { CKA_KEY_TYPE, NULL, 0},
-        { CKA_ENCRYPT, NULL, 0},
-        { CKA_DECRYPT, NULL, 0},
-        { CKA_WRAP, NULL, 0},
-        { CKA_UNWRAP, NULL, 0},
-        { CKA_VALUE_LEN, NULL, 0},
-    };
-    int templateCount = sizeof(keyTemplate)/sizeof(keyTemplate[0]);
     PK11SymKey *symKey=NULL, *wrappingKey=NULL;
-    CK_MECHANISM mechanism;
     CK_MECHANISM_TYPE wrappingMech, keyTypeMech;
-    CK_RV crv;
-    CK_ATTRIBUTE *attrs = keyTemplate;
-    PK11SlotInfo *slot=NULL;
     SECItem *wrappedKey=NULL, *iv=NULL, *param=NULL;
     jobject keyObj = NULL;
-
-    /* get the slot */
-    if( JSS_PK11_getTokenSlotPtr(env, tokenObj, &slot) != PR_SUCCESS) {
-        /* exception was thrown */
-        goto finish;
-    }
 
     /* get key type */
     keyTypeMech = JSS_getPK11MechFromAlg(env, typeAlgObj);
@@ -510,35 +486,11 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithSym
 
     /* get wrapping mechanism */
     wrappingMech = JSS_getPK11MechFromAlg(env, wrapAlgObj);
-    if( keyTypeMech == CKM_INVALID_MECHANISM ) {
+    if( wrappingMech == CKM_INVALID_MECHANISM ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Unrecognized wrapping algorithm");
         goto finish;
     }
 
-    /* set up the attribute template for the key */
-    PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass)); attrs++;
-    PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType)); attrs++;
-    PK11_SETATTRS(attrs, CKA_ENCRYPT, &cktrue, 1); attrs++;
-    PK11_SETATTRS(attrs, CKA_DECRYPT, &cktrue, 1); attrs++;
-    PK11_SETATTRS(attrs, CKA_WRAP, &cktrue, 1); attrs++;
-    PK11_SETATTRS(attrs, CKA_UNWRAP, &cktrue, 1); attrs++;
-    PK11_SETATTRS(attrs, CKA_VALUE_LEN, &key_size, sizeof(key_size)); attrs++;
-
-    /* create a key Structure */
-    symKey = PK11_CreateSymKey(slot,keyTypeMech,NULL /*wincx*/);
-    if (symKey == NULL) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION,
-            "Failed to create new symmetric key handle");
-        goto finish;
-    }
-
-    keyType = PK11_GetKeyType(keyTypeMech, keyLen);
-    key_size = keyLen;
-    symKey->size = keyLen;
-    symKey->origin = PK11_OriginUnwrap;
-    if (key_size == 0) templateCount--;
-
-    mechanism.mechanism = wrappingMech;
     /* get the mechanism parameter (IV) */
     if (ivBA == NULL) {
         param = PK11_ParamFromIV(wrappingMech,NULL);
@@ -554,13 +506,6 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithSym
             goto finish;
         }
     }
-    if (param) {
-        mechanism.pParameter = param->data;
-        mechanism.ulParameterLen = param->len;
-    } else {
-        mechanism.pParameter = NULL;
-        mechanism.ulParameterLen = 0;
-    }
 
     /* get the wrapped key */
     wrappedKey = JSS_ByteArrayToSECItem(env, wrappedBA);
@@ -569,16 +514,12 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithSym
         goto finish;
     }
 
-    pk11_EnterKeyMonitor(symKey);
-    crv = PK11_GETTAB(slot)->C_UnwrapKey(symKey->session,&mechanism,
-                wrappingKey->objectID,
-                wrappedKey->data, wrappedKey->len, keyTemplate, templateCount,
-                                                          &symKey->objectID);
-    pk11_ExitKeyMonitor(symKey);
-    if( crv != CKR_OK ) {
+    symKey = PK11_UnwrapSymKey(wrappingKey, wrappingMech, param,
+        wrappedKey, keyTypeMech, JSS_symkeyUsage[usageEnum], keyLen);
+    if( symKey == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to unwrap key");
-            goto finish;
-   }
+        goto finish;
+    }
 
     /* wrap the symmetric key in a Java object.  This will clear symKey */
     keyObj = JSS_PK11_wrapSymKey(env, &symKey);
@@ -607,40 +548,13 @@ JNIEXPORT jobject JNICALL
 Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithPriv
     (JNIEnv *env, jclass clazz, jobject tokenObj, jobject unwrapperObj,
         jbyteArray wrappedBA, jobject wrapAlgObj, jobject typeAlgObj,
-        jint keyLen, jbyteArray ivBA)
+        jint keyLen, jbyteArray ivBA, jint usageEnum)
 {
-    CK_BBOOL cktrue = CK_TRUE; /* sigh */
-    CK_OBJECT_CLASS keyClass = CKO_SECRET_KEY;
-    CK_KEY_TYPE keyType = CKK_GENERIC_SECRET;
-    CK_ULONG key_size = 0;
-    CK_ATTRIBUTE keyTemplate[] = {
-        { CKA_CLASS, NULL, 0},
-        { CKA_KEY_TYPE, NULL, 0},
-        { CKA_ENCRYPT, NULL, 0},
-        { CKA_DECRYPT, NULL, 0},
-        { CKA_WRAP, NULL, 0},
-        { CKA_UNWRAP, NULL, 0},
-        { CKA_VALUE_LEN, NULL, 0},
-    };
-    int templateCount = sizeof(keyTemplate)/sizeof(keyTemplate[0]);
     PK11SymKey *symKey=NULL;
-    CK_MECHANISM mechanism;
     CK_MECHANISM_TYPE wrappingMech, keyTypeMech;
-    CK_RV crv;
-    CK_ATTRIBUTE *attrs = keyTemplate;
-    PK11SlotInfo *slot=NULL;
     SECItem *wrappedKey=NULL, *iv=NULL, *param=NULL;
     jobject keyObj=NULL;
     SECKEYPrivateKey *wrappingKey=NULL;
-
-    /* get the slot */
-    if( JSS_PK11_getTokenSlotPtr(env, tokenObj, &slot) != PR_SUCCESS) {
-        /* exception was thrown */
-        goto finish;
-    }
-
-    /* since this is a private key op, we may need to login */
-    PK11_HandlePasswordCheck(slot, NULL /*wincx*/);
 
     /* get key type */
     keyTypeMech = JSS_getPK11MechFromAlg(env, typeAlgObj);
@@ -655,37 +569,6 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithPriv
         goto finish;
     }
 
-    /* get wrapping mechanism */
-    wrappingMech = JSS_getPK11MechFromAlg(env, wrapAlgObj);
-    if( keyTypeMech == CKM_INVALID_MECHANISM ) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION, "Unrecognized wrapping algorithm");
-        goto finish;
-    }
-
-    /* set up the attribute template for the key */
-    PK11_SETATTRS(attrs, CKA_CLASS, &keyClass, sizeof(keyClass)); attrs++;
-    PK11_SETATTRS(attrs, CKA_KEY_TYPE, &keyType, sizeof(keyType)); attrs++;
-    PK11_SETATTRS(attrs, CKA_ENCRYPT, &cktrue, 1); attrs++;
-    PK11_SETATTRS(attrs, CKA_DECRYPT, &cktrue, 1); attrs++;
-    PK11_SETATTRS(attrs, CKA_WRAP, &cktrue, 1); attrs++;
-    PK11_SETATTRS(attrs, CKA_UNWRAP, &cktrue, 1); attrs++;
-    PK11_SETATTRS(attrs, CKA_VALUE_LEN, &key_size, sizeof(key_size)); attrs++;
-
-    /* create a key Structure */
-    symKey = PK11_CreateSymKey(slot,keyTypeMech,NULL /*wincx*/);
-    if (symKey == NULL) {
-        JSS_throwMsg(env, TOKEN_EXCEPTION,
-            "Failed to create new symmetric key handle");
-        goto finish;
-    }
-
-    keyType = PK11_GetKeyType(keyTypeMech, keyLen);
-    key_size = keyLen;
-    symKey->size = keyLen;
-    symKey->origin = PK11_OriginUnwrap;
-    if (key_size == 0) templateCount--;
-
-    mechanism.mechanism = wrappingMech;
     /* get the mechanism parameter (IV) */
     if (ivBA == NULL) {
         param = PK11_ParamFromIV(wrappingMech, NULL);
@@ -701,13 +584,6 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithPriv
             goto finish;
         }
     }
-    if (param) {
-        mechanism.pParameter = param->data;
-        mechanism.ulParameterLen = param->len;
-    } else {
-        mechanism.pParameter = NULL;
-        mechanism.ulParameterLen = 0;
-    }
 
     /* get the wrapped key */
     wrappedKey = JSS_ByteArrayToSECItem(env, wrappedBA);
@@ -716,13 +592,10 @@ Java_org_mozilla_jss_pkcs11_PK11KeyWrapper_nativeUnwrapSymWithPriv
         goto finish;
     }
 
-    pk11_EnterKeyMonitor(symKey);
-    crv = PK11_GETTAB(slot)->C_UnwrapKey(symKey->session,&mechanism,
-                wrappingKey->pkcs11ID,
-                wrappedKey->data, wrappedKey->len, keyTemplate, templateCount,
-                                                          &symKey->objectID);
-    pk11_ExitKeyMonitor(symKey);
-    if( crv != CKR_OK ) {
+
+    symKey = PK11_PubUnwrapSymKey(wrappingKey, wrappedKey, keyTypeMech,
+        JSS_symkeyUsage[usageEnum], keyLen);
+    if( symKey == NULL ) {
         JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to unwrap key");
         goto finish;
     }
