@@ -1160,6 +1160,8 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
   setjmp(jb);
 
   // Stack walking code courtesy Kipp's "leaky".
+
+  // Get the frame pointer out of the jmp_buf
 #if defined(__i386) 
   u_long* bp = (u_long*) (jb[0].__jmpbuf[JB_BP]);
 #elif defined(PPC)
@@ -1167,32 +1169,26 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
 #endif
 
   int skip = 2;
-  for (;;) {
-    u_long* nextbp = (u_long*) *bp++;
-    u_long pc = *bp;
-    if ((pc < 0x08000000) || (pc > 0x7fffffff) || (nextbp < bp)) {
-      break;
-    }
+  for (u_long *nextbp = (u_long*) *bp++, pc = *bp;
+       pc >= 0x08000000 && pc < 0x7fffffff && nextbp > bp;
+       bp = nextbp, nextbp = (u_long*) *bp++, pc = *bp) {
     if (--skip <= 0) {
       Dl_info info;
       int ok = dladdr((void*) pc, &info);
-      if (!ok) {
-        fprintf(aStream, "UNKNOWN %p\n", (void *)pc);
-        bp = nextbp;
-        continue;
-      }
+      if (!ok)
+        goto unknown;
 
       const char * symbol = info.dli_sname;
-
       if (!symbol)
-        break; // XXX Lazy.  We should look at the filename or something.
+        goto unknown;
+
       int len = strlen(symbol);
       if (! len)
-        break; // XXX Lazy. We could look at the filename or something.
+        goto unknown;
 
       char demangled[4096] = "\0";
 
-      DemangleSymbol(symbol,demangled,sizeof(demangled));
+      DemangleSymbol(symbol, demangled, sizeof(demangled));
 
       if (strlen(demangled)) {
         symbol = demangled;
@@ -1203,8 +1199,11 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
       PRUint32 foff = (char*)pc - (char*)info.dli_fbase;
       fprintf(aStream, "%s+0x%08X [%s +0x%08X]\n",
               symbol, off, info.dli_fname, foff);
+
     }
-    bp = nextbp;
+    continue;
+  unknown:
+    fprintf(aStream, "UNKNOWN %p\n", (void *)pc);
   }
 }
 #elif defined(__sun) && (defined(__sparc) || defined(sparc) || defined(__i386) || defined(i386))
