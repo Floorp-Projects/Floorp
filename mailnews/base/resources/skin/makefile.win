@@ -27,6 +27,7 @@ install::
 	$(MAKE_INSTALL) messenger.css		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) folderPane.css		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) threadPane.css		$(DIST)\bin\chrome\messenger\skin\default
+  $(MAKE_INSTALL) msgHdrViewOverlay.css		$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) mailfolder.gif	$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) open-mailfolder.gif	$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) mail-message.gif		$(DIST)\bin\chrome\messenger\skin\default
