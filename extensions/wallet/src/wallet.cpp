@@ -407,6 +407,7 @@ Wallet_Localize(char* genericString) {
 
   /* localize the given string */
   ret = bundle->GetStringFromName(nsString(genericString), v);
+  NS_RELEASE(bundle);
   if (NS_FAILED(ret)) {
     printf("cannot get string from name\n");
     return v.ToNewCString();
@@ -993,6 +994,9 @@ wallet_GetLine(nsInputFileStream strm, nsAutoString*& aLine, PRBool obscure) {
 
   /* read the line */
   aLine = new nsAutoString("");   
+  if (!aLine) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   char c;
   for (;;) {
     c = strm.get()^(obscure ? Wallet_GetKey() : (char)0);
@@ -1010,7 +1014,7 @@ wallet_GetLine(nsInputFileStream strm, nsAutoString*& aLine, PRBool obscure) {
     }
   }
 
-  return 0;
+  return NS_OK;
 }
 
 /*
@@ -1023,7 +1027,7 @@ wallet_PutLine(nsOutputFileStream strm, const nsString& aLine, PRBool obscure)
   /* allocate a buffer from the heap */
   char * cp = new char[aLine.Length() + 1];
   if (! cp) {
-    return -1;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   aLine.ToCString(cp, aLine.Length() + 1);
@@ -1072,19 +1076,27 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
   /* traverse the list */
   list_ptr = list;
   while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
-    wallet_PutLine(strm, *ptr->item1, obscure);
+    if (NS_FAILED(wallet_PutLine(strm, *ptr->item1, obscure))) {
+      break;
+    }
     if (*ptr->item2 != "") {
-      wallet_PutLine(strm, *ptr->item2, obscure);
+      if (NS_FAILED(wallet_PutLine(strm, *ptr->item2, obscure))) {
+        break;
+      }
     } else {
       XP_List * list_ptr1;
       wallet_Sublist * ptr1;
       list_ptr1 = ptr->itemList;
       while((ptr1=(wallet_Sublist *) XP_ListNextObject(list_ptr1))!=0) {
-        wallet_PutLine(strm, *ptr->item1, obscure);
+        if (NS_FAILED(wallet_PutLine(strm, *ptr->item1, obscure))) {
+          break;
+        }
       }
     }
-    wallet_PutLine(strm, "", obscure);
- }
+    if (NS_FAILED(wallet_PutLine(strm, "", obscure))) {
+      break;
+    }
+  }
 
   /* close the stream */
   strm.flush();
@@ -1113,14 +1125,14 @@ wallet_ReadFromFile
 
   for (;;) {
     nsAutoString * aItem1;
-    if (wallet_GetLine(strm, aItem1, obscure) == -1) {
+    if (NS_FAILED(wallet_GetLine(strm, aItem1, obscure))) {
       /* end of file reached */
       strm.close();
       return;
     }
 
     nsAutoString * aItem2;
-    if (wallet_GetLine(strm, aItem2, obscure) == -1) {
+    if (NS_FAILED(wallet_GetLine(strm, aItem2, obscure))) {
       /* unexpected end of file reached */
       delete aItem1;
       strm.close();
@@ -1128,7 +1140,7 @@ wallet_ReadFromFile
     }
 
     nsAutoString * aItem3;
-    if (wallet_GetLine(strm, aItem3, obscure) == -1) {
+    if (NS_FAILED(wallet_GetLine(strm, aItem3, obscure))) {
       /* end of file reached */
       XP_List* dummy = NULL;
       wallet_WriteToList(*aItem1, *aItem2, dummy, list, placement);
@@ -1154,9 +1166,13 @@ wallet_ReadFromFile
       delete aItem3;
       /* add any following items to sublist up to next blank line */
       nsAutoString * dummy2 = new nsAutoString("");
+      if (!dummy2) {
+        strm.close();
+        return;
+      }
       for (;;) {
         /* get next item for sublist */
-        if (wallet_GetLine(strm, aItem3, obscure) == -1) {
+        if (NS_FAILED(wallet_GetLine(strm, aItem3, obscure))) {
           /* end of file reached */
           wallet_WriteToList(*aItem1, *dummy2, itemList, list, placement);
           strm.close();
@@ -1209,7 +1225,7 @@ wallet_ReadFromURLFieldToSchemaFile
   for (;;) {
 
     nsAutoString * aItem;
-    if (wallet_GetLine(strm, aItem, PR_FALSE) == -1) {
+    if (NS_FAILED(wallet_GetLine(strm, aItem, PR_FALSE))) {
       /* end of file reached */
       strm.close();
       return;
@@ -1217,11 +1233,15 @@ wallet_ReadFromURLFieldToSchemaFile
 
     XP_List * itemList = XP_ListNew();
     nsAutoString * dummy = new nsAutoString("");
+    if (!dummy) {
+      strm.close();
+      return;
+    }
     wallet_WriteToList(*aItem, *dummy, itemList, list, placement);
 
     for (;;) {
       nsAutoString * aItem1;
-      if (wallet_GetLine(strm, aItem1, PR_FALSE) == -1) {
+      if (NS_FAILED(wallet_GetLine(strm, aItem1, PR_FALSE))) {
         /* end of file reached */
         strm.close();
         return;
@@ -1233,7 +1253,7 @@ wallet_ReadFromURLFieldToSchemaFile
       }
 
       nsAutoString * aItem2;
-      if (wallet_GetLine(strm, aItem2, PR_FALSE) == -1) {
+      if (NS_FAILED(wallet_GetLine(strm, aItem2, PR_FALSE))) {
         /* unexpected end of file reached */
         delete aItem1;
         strm.close();
@@ -1244,7 +1264,7 @@ wallet_ReadFromURLFieldToSchemaFile
       wallet_WriteToList(*aItem1, *aItem2, dummy, itemList, placement);
 
       nsAutoString * aItem3;
-      if (wallet_GetLine(strm, aItem3, PR_FALSE) == -1) {
+      if (NS_FAILED(wallet_GetLine(strm, aItem3, PR_FALSE))) {
         /* end of file reached */
         strm.close();
         return;
@@ -1515,7 +1535,7 @@ wallet_GetPrefills(
           schemaPtr = new nsAutoString(schema);
           selectElement = nsnull;
           selectIndex = -1;
-          return 0;
+          return NS_OK;
         }
       }
     }
@@ -1541,7 +1561,7 @@ wallet_GetPrefills(
             valuePtr = new nsAutoString(value);
             schemaPtr = new nsAutoString(schema);
             inputElement = nsnull;
-            return 0;
+            return NS_OK;
           }
         } else {
           /* synonym list exists, try each value */
@@ -1552,7 +1572,7 @@ wallet_GetPrefills(
               valuePtr = new nsAutoString(value);
               schemaPtr = new nsAutoString(schema);
               inputElement = nsnull;
-              return 0;
+              return NS_OK;
             }
           }
         }
@@ -1999,7 +2019,9 @@ WLLT_PostEdit(nsAutoString walletList) {
       return;
     }
     *separator = '\0';
-    wallet_PutLine(strm, nextItem, PR_TRUE);
+    if (NS_FAILED(wallet_PutLine(strm, nextItem, PR_TRUE))) {
+      break;
+    }
     nextItem = separator+1;
     *separator = BREAK;
   }
@@ -2058,10 +2080,12 @@ WLLT_PrefillReturn(nsAutoString results) {
     XP_List* URL_list = wallet_URL_list;
     XP_List* dummy;
     nsAutoString * value = new nsAutoString("nn");
-    wallet_ReadFromList(*url, *value, dummy, URL_list);
-    value->SetCharAt('y', NO_PREVIEW);
-    wallet_WriteToList(*url, *value, dummy, wallet_URL_list, DUP_OVERWRITE);
-    wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
+    if (!url || !value) {
+      wallet_ReadFromList(*url, *value, dummy, URL_list);
+      value->SetCharAt('y', NO_PREVIEW);
+      wallet_WriteToList(*url, *value, dummy, wallet_URL_list, DUP_OVERWRITE);
+      wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
+    }
   }
 
   /* process the list, doing the fillins */
@@ -2273,10 +2297,12 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
     XP_List* dummy;
     nsAutoString * value = new nsAutoString("nn");
     nsAutoString * urlPtr = new nsAutoString(url);
-    wallet_ReadFromList(*urlPtr, *value, dummy, URL_list);
-    noPreview = (value->CharAt(NO_PREVIEW) == 'y');
-    delete value;
-    delete urlPtr;
+    if (!value || !urlPtr) {
+      wallet_ReadFromList(*urlPtr, *value, dummy, URL_list);
+      noPreview = (value->CharAt(NO_PREVIEW) == 'y');
+      delete value;
+      delete urlPtr;
+    }
   }
 
   /* determine if preview is necessary */
@@ -2324,6 +2350,10 @@ WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
   XP_List* URL_list = wallet_URL_list;
   XP_List* dummy;
   nsAutoString * value = new nsAutoString("nn");
+  if (!url || !value) {
+    *result = PR_FALSE;
+    return;
+  }
   if (wallet_ReadFromList(*url, *value, dummy, URL_list)) {
     if (value->CharAt(NO_CAPTURE) == 'y') {
       *result = PR_FALSE;
