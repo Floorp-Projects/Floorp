@@ -38,7 +38,6 @@
 #include "nsTextAreaWidget.h"
 #include "nsFileWidget.h"
 #include "nsListBox.h"
-#include "nsComboBox.h"
 #include "nsLookAndFeel.h"
 #include "nsLabel.h"
 // #include "nsFontRetrieverService.h"
@@ -62,7 +61,6 @@ static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
-static NS_DEFINE_IID(kCCombobox,      NS_COMBOBOX_CID);
 static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
 static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
@@ -179,9 +177,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     }
     else if (mClassID.Equals(kCCheckButton)) {
         inst = (nsISupports*)(nsIWidget *)new nsCheckButton();
-    }
-    else if (mClassID.Equals(kCCombobox)) {
-        inst = (nsISupports*)(nsIWidget *)new nsComboBox();
     }
     else if (mClassID.Equals(kCRadioButton)) {
         inst = (nsISupports*)(nsIWidget *)new nsRadioButton();
