@@ -59,7 +59,7 @@ JNIEXPORT jboolean
 JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanBack
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
-    jboolean result = JNI_FALSE;
+    PRBool result = PR_FALSE;
 	JNIEnv	*	pEnv = env;
 	jobject		jobj = obj;
     
@@ -67,7 +67,7 @@ JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanBac
     
 	if (nativeBrowserControl == nsnull) {
 		::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeCanBack");
-		return result;
+		return (result == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
 	}
     
     nsresult rv = 
@@ -76,7 +76,7 @@ JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanBac
         ::util_ThrowExceptionToJava(env, "Exception: Can't GetCanGoBack");
     }
 
-    return result;
+    return (result == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL 
@@ -106,7 +106,7 @@ JNIEXPORT jboolean
 JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanForward
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
-    jboolean result = JNI_FALSE;
+    PRBool result = JNI_FALSE;
 	JNIEnv	*	pEnv = env;
 	jobject		jobj = obj;
     
@@ -114,7 +114,7 @@ JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanFor
     
 	if (nativeBrowserControl == nsnull) {
 		::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeCanForward");
-		return result;
+		return (result == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
 	}
     
     nsresult rv = 
@@ -123,7 +123,7 @@ JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanFor
         ::util_ThrowExceptionToJava(env, "Exception: Can't GetCanGoForward");
     }
 
-    return result;
+    return (result == PR_TRUE) ? JNI_TRUE : JNI_FALSE;
 }
 
 
