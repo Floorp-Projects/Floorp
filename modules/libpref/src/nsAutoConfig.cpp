@@ -35,9 +35,20 @@
 #include "nsIEventQueueService.h"
 #include "nsLiteralString.h"
 
+// nsISupports Implementation
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsAutoConfig, nsIAutoConfig, nsITimerCallback, nsIStreamListener,nsIObserver)
-    
+NS_IMPL_THREADSAFE_ADDREF(nsAutoConfig)
+NS_IMPL_THREADSAFE_RELEASE(nsAutoConfig)
+
+NS_INTERFACE_MAP_BEGIN(nsAutoConfig)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAutoConfig)
+    NS_INTERFACE_MAP_ENTRY(nsIAutoConfig)
+    NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+NS_INTERFACE_MAP_END
+
 nsAutoConfig::nsAutoConfig()
 {
     NS_INIT_REFCNT();
@@ -71,13 +82,7 @@ nsresult nsAutoConfig::Init()
 
 nsAutoConfig::~nsAutoConfig()
 {
-    nsresult rv;
-    nsCOMPtr<nsIObserverService> observerService =
-        do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (observerService) 
-        rv = observerService->RemoveObserver(this,NS_LITERAL_STRING("profile-after-change").get());
 }
-
 
 NS_IMETHODIMP
 nsAutoConfig::OnStartRequest(nsIRequest* request, nsISupports* context)
@@ -184,13 +189,28 @@ NS_IMETHODIMP nsAutoConfig::Observe(nsISupports *aSubject,
         if (profile) {
             nsXPIDLString profileName;
             rv = profile->GetCurrentProfile(getter_Copies(profileName));
-            if (NS_FAILED(rv)) 
-                return rv; 
-            // setting the member variable to the current profile name
-            mCurrProfile = NS_ConvertUCS2toUTF8(profileName); 
-        }
+            if (NS_SUCCEEDED(rv)) {
+                // setting the member variable to the current profile name
+                mCurrProfile = NS_ConvertUCS2toUTF8(profileName); 
+            }
+            else {
+                NS_WARNING("nsAutoConfig::GetCurrentProfile() failed");
+            }
+        } 
+
+        // We will be calling DownloadAutoCfg even if there is no profile 
+        // name. Nothing will be passed as a parameter to the URL and the
+        // default case will be picked up by the script.
+        
         rv = DownloadAutoCfg();
+
+        // We are done with AutoConfig, removing it from the observer list
+        nsCOMPtr<nsIObserverService> observerService =
+            do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
+        if (observerService) 
+            rv = observerService->RemoveObserver(this,NS_LITERAL_STRING("profile-after-change").get());
     }  
+   
     return rv;
 }
 
