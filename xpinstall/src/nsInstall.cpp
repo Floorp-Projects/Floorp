@@ -443,20 +443,12 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
 {
     nsInstallFile*  ie;
     nsString        qualifiedRegName;
-    nsString        qualifiedVersion;
-    nsString        tempTargetName;
+    nsString        qualifiedVersion = aVersion;
+    nsString        tempTargetName   = aTargetName;
     
     PRInt32         errcode = nsInstall::SUCCESS;
 
-    if( aTargetName.Equals("") )
-    {
-      tempTargetName = aJarSource;
-    }
-    else
-    {
-      tempTargetName = aTargetName;
-    }
-    
+
     if(aJarSource.Equals("") || aFolder.Equals("") ) 
     {
         *aReturn = SaveError( nsInstall::INVALID_ARGUMENTS );
@@ -470,19 +462,13 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
         *aReturn = SaveError( result );
         return NS_OK;
     }
-
-    qualifiedVersion = aVersion;
+    
+    if( aTargetName.Equals("") )
+      tempTargetName = aJarSource;
+    
     if (qualifiedVersion == "")
-    {
-        // assume package version for overriden forms that don't take version info
-        *aReturn = mVersionInfo->ToString(qualifiedVersion);
+        qualifiedVersion.SetString("0.0.0.0");   	
 
-        if (NS_FAILED(*aReturn))
-        {
-            SaveError( nsInstall::UNEXPECTED_ERROR );
-            return NS_OK;
-        }	
-    }
 
     if ( aRegName.Equals("") ) 
     {
@@ -552,8 +538,17 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
                            const nsString& aTargetName, 
                            PRInt32* aReturn)
 {
+    nsString version;
+    *aReturn = mVersionInfo->ToString(version);
+
+    if (NS_FAILED(*aReturn))
+    {
+        SaveError( nsInstall::UNEXPECTED_ERROR );
+        return NS_OK;
+    }
+    
     return AddSubcomponent(aRegName, 
-                           "", 
+                           version, 
                            aJarSource, 
                            aFolder, 
                            aTargetName, 
@@ -570,9 +565,18 @@ nsInstall::AddSubcomponent(const nsString& aJarSource,
         *aReturn = SaveError( nsInstall::PACKAGE_FOLDER_NOT_SET );
         return NS_OK;
     }
+    
+    nsString version;
+    *aReturn = mVersionInfo->ToString(version);
+
+    if (NS_FAILED(*aReturn))
+    {
+        SaveError( nsInstall::UNEXPECTED_ERROR );
+        return NS_OK;
+    }
 
     return AddSubcomponent("", 
-                           "", 
+                           version, 
                            aJarSource, 
                            mPackageFolder, 
                            "",
