@@ -662,7 +662,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   aPresContext.GetCompatibilityMode(&mode);
   mWebShell->SetScrolling(GetScrolling(content, mode));
   mWebShell->SetIsFrame(PR_TRUE);
-
+  
   nsString frameName;
   if (GetName(content, frameName)) {
     mWebShell->SetName(frameName);
@@ -678,6 +678,27 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
     container->QueryInterface(kIWebShellIID, (void**) &outerShell);
     if (nsnull != outerShell) {
       outerShell->AddChild(mWebShell);
+
+#ifdef INCLUDE_XUL
+			// Determine whether or not the frame is content or chrome.
+			nsIAtom* typeAtom = NS_NewAtom("type");
+			nsAutoString value;
+			content->GetAttribute(kNameSpaceID_None, typeAtom, value);
+			if (value.EqualsIgnoreCase("content"))
+			{
+				// The web shell's type is content.
+				mWebShell->SetWebShellType(nsWebShellContent);
+			}
+			else
+			{
+				// Inherit our type from our parent webshell.  If it is
+				// chrome, we'll be chrome.  If it is content, we'll be
+				// content.
+				nsWebShellType parentType;
+				outerShell->GetWebShellType(parentType);
+				mWebShell->SetWebShellType(parentType);
+			}
+#endif // INCLUDE_XUL
 
       // connect the container...
       nsIWebShellContainer* outerContainer = nsnull;
