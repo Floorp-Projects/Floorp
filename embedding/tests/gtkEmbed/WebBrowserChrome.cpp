@@ -59,6 +59,7 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
+   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
    NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)  //optional
 //   NS_INTERFACE_MAP_ENTRY(nsIPrompt)
@@ -207,6 +208,19 @@ NS_IMETHODIMP WebBrowserChrome::ExitModalEventLoop(nsresult aStatus)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+//*****************************************************************************
+// WebBrowserChrome::nsIWebBrowserChromeFocus
+//*****************************************************************************
+
+NS_IMETHODIMP WebBrowserChrome::FocusNextElement()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP WebBrowserChrome::FocusPrevElement()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 //*****************************************************************************
 // WebBrowserChrome::nsIWebProgressListener
@@ -306,4 +320,3 @@ NS_IMETHODIMP WebBrowserChrome::GetSiteWindow(void ** aSiteWindow)
    *aSiteWindow = mNativeWindow;
    return NS_OK;
 }
-

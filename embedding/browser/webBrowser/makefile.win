@@ -28,6 +28,7 @@ XPIDLSRCS=                        \
     .\nsCWebBrowser.idl            \
     .\nsIWebBrowser.idl            \
     .\nsIWebBrowserChrome.idl      \
+    .\nsIWebBrowserChromeFocus.idl \
     .\nsICommandHandler.idl        \
     .\nsIWebBrowserSetup.idl       \
     .\nsIWebBrowserPersist.idl     \

@@ -1,0 +1,50 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 0 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Original Author:
+ *   Dan Rosen <dr@netscape.com>
+ * Contributor(s):
+ *
+ */
+
+#include "nsISupports.idl"
+
+/**
+ * The nsIWebBrowserChromeFocus is implemented by the same object as the
+ * nsIWebBrowserSiteWindow. It represents the focus up-calls from mozilla
+ * to the embedding chrome. See mozilla bug #70224 for gratuitous info.
+ *
+ * @status UNDER_REVIEW
+ */
+
+[scriptable, uuid(d2206418-1dd1-11b2-8e55-acddcd2bcfb8)]
+interface nsIWebBrowserChromeFocus : nsISupports
+{
+    /**
+     * Set the focus at the next focusable element in the chrome
+     */
+
+    void focusNextElement();
+
+    /**
+     * Set the focus at the previous focusable element in the chrome
+     */
+
+    void focusPrevElement();
+
+};

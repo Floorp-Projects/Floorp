@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -26,6 +26,7 @@
 #include "nsIGenericFactory.h"
 #include "nsString.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsIWebBrowserChromeFocus.h"
 
 #include "nsIDocShell.h"
 #include "nsIContentViewer.h"
@@ -40,8 +41,8 @@
 #include "nsVoidArray.h"
 
 
-
 class WebBrowserChrome   : public nsIWebBrowserChrome,
+                           public nsIWebBrowserChromeFocus, 
                            public nsIWebProgressListener,
                            public nsIEmbeddingSiteWindow,
 //                           public nsIPrompt,
@@ -56,6 +57,7 @@ public:
     NS_DECL_NSIWEBBROWSERCHROME
     NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSIEMBEDDINGSITEWINDOW
+    NS_DECL_NSIWEBBROWSERCHROMEFOCUS
     //   NS_DECL_NSIPROMPT
     NS_DECL_NSIINTERFACEREQUESTOR
 

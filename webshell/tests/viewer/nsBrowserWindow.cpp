@@ -410,8 +410,9 @@ NS_IMETHODIMP nsBrowserWindow::SetFocus()
    return NS_OK;
 }
 
-NS_IMETHODIMP nsBrowserWindow::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
-   PRBool* aTookFocus)
+NS_IMETHODIMP nsBrowserWindow::FocusAvailable(nsIBaseWindow* aCurrentFocus,
+                                              PRBool aForward,
+                                              PRBool* aTookFocus)
 {
    //XXX First Check In
    NS_ASSERTION(PR_FALSE, "Not Yet Implemented");

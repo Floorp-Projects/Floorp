@@ -2438,7 +2438,7 @@ nsEventStateManager::ShiftFocus(PRBool forward, nsIContent* aRoot)
     mPresContext->GetContainer(getter_AddRefs(container));
     nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(container));
     if (docShellAsWin) {
-      docShellAsWin->FocusAvailable(docShellAsWin, &focusTaken);
+      docShellAsWin->FocusAvailable(docShellAsWin, forward, &focusTaken);
     }
       
     //No one took focus and we're not already at the top of the doc
