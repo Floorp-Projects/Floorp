@@ -284,7 +284,7 @@ class basic_nsAReadableString
 
       int  Compare( const basic_nsAReadableString<CharT>& rhs ) const;
       int  Compare( const CharT* ) const;
-      int  Compare( const CharT*, PRUint32 ) const;
+//    int  Compare( const CharT*, PRUint32 ) const;
 //    int  Compare( CharT ) const;
 
         // |Equals()| is a synonym for |Compare()|
@@ -716,6 +716,7 @@ basic_nsAReadableString<CharT>::Compare( const CharT* rhs ) const
     return ::Compare(*this, NS_READABLE_CAST(CharT, basic_nsLiteralString<CharT>(rhs)));
   }
 
+#if 0
 template <class CharT>
 inline
 int
@@ -723,7 +724,7 @@ basic_nsAReadableString<CharT>::Compare( const CharT* rhs, PRUint32 rhs_length )
   {
     return ::Compare(*this, NS_READABLE_CAST(CharT, basic_nsLiteralString<CharT>(rhs, rhs_length)));
   }
-
+#endif
 
 
   //
