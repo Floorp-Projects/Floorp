@@ -25,6 +25,7 @@ VPATH		= @srcdir@
 EXPORTS =                           \
         nsIFtpEventSink.h          \
         nsIFtpProtocolConnection.h \
+	ftpCore.h		\
         $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
