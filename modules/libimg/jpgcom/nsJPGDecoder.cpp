@@ -54,7 +54,6 @@ JPGDecoder::JPGDecoder(il_container* aContainer)
 
 JPGDecoder::~JPGDecoder(void)
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 };
 
 

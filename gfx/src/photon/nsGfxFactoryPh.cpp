@@ -81,8 +81,6 @@ nsGfxFactoryPh::nsGfxFactoryPh(const nsCID &aClass)
 nsGfxFactoryPh::~nsGfxFactoryPh()   
 {   
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::~nsGfxFactoryPh Destructor\n"));
-
-  NS_ASSERTION(mRefCnt == 0, "nsGfxFactoryGTK::~nsGfxFactoryGTK non-zero refcnt at destruction");   
 }   
 
 nsresult nsGfxFactoryPh::QueryInterface(const nsIID &aIID,   

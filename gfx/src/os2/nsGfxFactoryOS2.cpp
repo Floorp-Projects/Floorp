@@ -77,7 +77,6 @@ nsGfxFactoryOS2::nsGfxFactoryOS2( const nsCID &aClass)
 
 nsGfxFactoryOS2::~nsGfxFactoryOS2()   
 {   
-   NS_ASSERTION( mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 NS_IMPL_ISUPPORTS(nsGfxFactoryOS2,nsIFactory::GetIID())

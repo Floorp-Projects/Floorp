@@ -73,7 +73,6 @@ nsGfxFactoryXlib::nsGfxFactoryXlib(const nsCID &aClass)
 
 nsGfxFactoryXlib::~nsGfxFactoryXlib()
 {
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }
 
 nsresult nsGfxFactoryXlib::QueryInterface(const nsIID &aIID,

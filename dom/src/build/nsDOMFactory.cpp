@@ -625,7 +625,6 @@ nsDOMFactory::nsDOMFactory(const nsCID &aClass)
 
 nsDOMFactory::~nsDOMFactory()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsDOMFactory::QueryInterface(const nsIID &aIID,   

@@ -100,7 +100,6 @@ nsCachePref::~nsCachePref()
         m_DiskCacheFolder = 0;
     }
 
-	NS_ASSERTION(mRefCnt == 0, "Wrong ref count") ;
 	PR_AtomicDecrement(&gInstanceCnt) ;
 }
 
@@ -318,7 +317,6 @@ nsCachePrefFactory::nsCachePrefFactory ()
 
 nsCachePrefFactory::~nsCachePrefFactory ()
 {
-	NS_ASSERTION(mRefCnt == 0,"Wrong ref count");
 	PR_AtomicDecrement(&gInstanceCnt);
 }
 

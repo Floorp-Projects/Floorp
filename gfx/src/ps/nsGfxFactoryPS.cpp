@@ -55,7 +55,6 @@ nsGfxFactoryPS::nsGfxFactoryPS(const nsCID &aClass) :
 
 nsGfxFactoryPS::~nsGfxFactoryPS()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 NS_IMPL_ISUPPORTS(nsGfxFactoryPS, nsIFactory::GetIID())

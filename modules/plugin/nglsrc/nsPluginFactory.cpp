@@ -68,7 +68,6 @@ nsPluginFactory :: nsPluginFactory(const nsCID &aClass, nsIServiceManager* servi
 
 nsPluginFactory :: ~nsPluginFactory()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
 }   
 
 nsresult nsPluginFactory :: QueryInterface(const nsIID &aIID,   

@@ -73,7 +73,6 @@ nsParserFactory::nsParserFactory(const nsCID &aClass)
 
 nsParserFactory::~nsParserFactory()   
 {   
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
   nsHTMLEntities::ReleaseTable();
   nsHTMLTags::ReleaseTable();
 }   

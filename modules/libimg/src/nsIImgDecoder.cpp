@@ -63,7 +63,6 @@ ImgFactoryImpl::ImgFactoryImpl(const nsCID &aClass,
 
 ImgFactoryImpl::~ImgFactoryImpl()
 {
-    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
 }
 
 NS_IMETHODIMP
