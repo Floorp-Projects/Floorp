@@ -250,7 +250,7 @@
 										 <checkbox id="alarm-checkbox" class="proper-align" label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
 										 <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
                                
-                               <menulist id="alarm-length-units" flex="1" labelnumber="labelplural">
+                               <menulist id="alarm-length-units" crop="none" labelnumber="labelplural">
 											  <menupopup>
 													<menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
 													<menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours" />
@@ -274,7 +274,7 @@
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newtodo.categories.label;"/>
                         </hbox>
-                        <menulist id="categories-field" flex="1">
+                        <menulist id="categories-field">
                             <menupopup id="categories-menulist-menupopup">
                                 <menuitem label="&priority.level.none;" value="0"/>
                             </menupopup>
@@ -286,7 +286,7 @@
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newevent.server.label;"/>
                         </hbox>
-                        <menulist id="server-field" flex="1">
+                        <menulist id="server-field">
                             <menupopup id="server-menulist-menupopup">
                                 <menuitem label="&priority.level.none;" value="0"/>
                             </menupopup>
