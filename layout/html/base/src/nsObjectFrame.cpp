@@ -142,7 +142,7 @@ public:
   //nsIEventListener interface
   nsEventStatus ProcessEvent(const nsGUIEvent & anEvent);
   
-  void Paint(const nsRect& aDirtyRect, PRUint32 ndc);
+  void Paint(const nsRect& aDirtyRect, PRUint32 ndc = nsnull);
 
   // nsITimerCallback interface
   virtual void Notify(nsITimer *timer);
