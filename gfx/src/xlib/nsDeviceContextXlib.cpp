@@ -387,7 +387,7 @@ NS_IMETHODIMP nsDeviceContextXlib::ConvertPixel(nscolor aColor, PRUint32 & aPixe
 
 NS_IMETHODIMP nsDeviceContextXlib::CheckFontExistence(const nsString& aFontName)
 {
-  return nsFontMetricsXlib::FamilyExists(aFontName);
+  return nsFontMetricsXlib::FamilyExists(this, aFontName);
 }
 
 NS_IMETHODIMP nsDeviceContextXlib::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)

@@ -1483,7 +1483,12 @@ FoundFont:
           if (aSpacing) {
             const PRUnichar* str = &aString[start];
             const PRUnichar* end = &aString[i];
+
+            // save off mCurrentFont and set it so that we cache the GC's font correctly
+            nsFontXlib *oldFont = mCurrentFont;
+            mCurrentFont = prevFont;
             UpdateGC();
+
             while (str < end) {
               x = aX;
               y = aY;
@@ -1492,12 +1497,16 @@ FoundFont:
               aX += *aSpacing++;
               str++;
             }
+            mCurrentFont = oldFont;
           }
-          else 
-          {
+          else {
+            // save off mCurrentFont and set it so that we cache the GC's font correctly
+            nsFontXlib *oldFont = mCurrentFont;
+            mCurrentFont = prevFont;
             UpdateGC();
-            prevFont->DrawString(this, mRenderingSurface, x, y, &aString[start], i - start);
-            x += prevFont->GetWidth(&aString[start], i -start);
+            x += prevFont->DrawString(this, mRenderingSurface, x, y, &aString[start],
+                                      i - start);
+            mCurrentFont = oldFont;
           }
           prevFont = currFont;
           start = i;
@@ -1510,7 +1519,11 @@ FoundFont:
     }
 
     if (prevFont) {
+      // save off mCurrentFont and set it so that we cache the GC's font correctly
+      nsFontXlib *oldFont = mCurrentFont;
+      mCurrentFont = prevFont;
       UpdateGC();
+    
       if (aSpacing) {
         const PRUnichar* str = &aString[start];
         const PRUnichar* end = &aString[i];
@@ -1522,10 +1535,13 @@ FoundFont:
           aX += *aSpacing++;
           str++;
         }
+
       }
       else {
         prevFont->DrawString(this, mRenderingSurface, x, y, &aString[start], i - start);
       }
+
+      mCurrentFont = oldFont;
     }
   }
 

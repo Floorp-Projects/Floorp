@@ -757,9 +757,17 @@ nsFontMetricsXlib::FreeGlobals(void)
  * Initialize all the font lookup hash tables and other globals
  */
 nsresult
-nsFontMetricsXlib::InitGlobals(void)
+nsFontMetricsXlib::InitGlobals(nsIDeviceContext *aDevice)
 {
   nsresult rv = NS_OK;
+
+  NS_ASSERTION(aDevice!=nsnull, "calling InitGlobals() without a device"); 
+#ifdef USE_XPRINT 
+  if (mPrinterMode)
+    gXlibRgbHandle =  NS_STATIC_CAST(nsDeviceContextXp   *,aDevice)->GetXlibRgbHandle();
+  else  
+#endif /* USE_XPRINT */  
+    gXlibRgbHandle =  NS_STATIC_CAST(nsDeviceContextXlib *,aDevice)->GetXlibRgbHandle();
 
   nsServiceManager::GetService(kCharSetManagerCID,
                                NS_GET_IID(nsICharsetConverterManager2),
@@ -1035,7 +1043,7 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mDocConverterType = nsnull;
 
   if (!gInitialized) {
-    res = InitGlobals();
+    res = InitGlobals(aContext);
     if (NS_FAILED(res))
       return res;
   }
@@ -1056,16 +1064,6 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
 #endif /* USE_XPRINT */
 
   mDeviceContext = aContext;
-
-  if (!gXlibRgbHandle)
-  {
-#ifdef USE_XPRINT 
-    if (mPrinterMode)
-      gXlibRgbHandle =  NS_STATIC_CAST(nsDeviceContextXp   *,mDeviceContext)->GetXlibRgbHandle();
-    else  
-#endif /* USE_XPRINT */  
-      gXlibRgbHandle =  NS_STATIC_CAST(nsDeviceContextXlib *,mDeviceContext)->GetXlibRgbHandle();
-  }  
 
   float app2dev;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
@@ -1885,8 +1883,6 @@ nsFontXlib::LoadFont(void)
   if (mAlreadyCalledLoadFont)
     return;
 
-  mAlreadyCalledLoadFont = PR_TRUE;
-
   Display *aDisplay = xxlib_rgb_get_display(gXlibRgbHandle);
 
 #ifdef USE_XPRINT
@@ -1896,10 +1892,16 @@ nsFontXlib::LoadFont(void)
     {
       /* applications must not make any assumptions about fonts _before_ XpSetContext() !!! */
       NS_ERROR("Obtaining font information without a valid print context (XLoadQueryFont()) _before_ XpSetContext()\n");
+#ifdef DEBUG
       abort();
+#else
+      return;
+#endif /* DEBUG */      
     }
   }
 #endif /* USE_XPRINT */
+
+  mAlreadyCalledLoadFont = PR_TRUE;
 
   XFontStruct *xlibFont = ::XLoadQueryFont(aDisplay, mName);
 
@@ -3048,8 +3050,15 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
   Display       *dpy = xxlib_rgb_get_display(gXlibRgbHandle);
 
 #ifdef USE_XPRINT
+#ifdef DEBUG
   if(nsFontMetricsXlib::mPrinterMode)
   {
+    if (!dpy)
+    {
+      NS_ERROR("Obtaining font information without having a |Display *|");
+      abort(); /* DIE!! */
+    }
+  
     if (XpGetContext(dpy) == None)
     {
       /* applications must not make any assumptions about fonts _before_ XpSetContext() !!! */
@@ -3057,6 +3066,7 @@ GetFontNames(const char* aPattern, nsFontNodeArrayXlib* aNodes)
       abort(); /* DIE!! */
     }    
   }               
+#endif /* DEBUG */
 #endif /* USE_XPRINT */
   int count;
   char** list = ::XListFonts(dpy, aPattern, INT_MAX, &count);
@@ -3404,14 +3414,14 @@ FindFamily(nsCString* aName)
 }
 
 nsresult
-nsFontMetricsXlib::FamilyExists(const nsString& aName)
+nsFontMetricsXlib::FamilyExists(nsIDeviceContext *aDevice, const nsString& aName)
 {
   if (!gInitialized) {
-    nsresult res = InitGlobals();
+    nsresult res = InitGlobals(aDevice);
     if (NS_FAILED(res))
       return res;
   }
-
+  
   if (!IsASCIIFontName(aName))
     return NS_ERROR_FAILURE;
 

@@ -117,7 +117,7 @@ public:
   static void     EnablePrinterMode(PRBool printermode);
 #endif /* USE_XPRINT */
 
-  static nsresult InitGlobals(void);
+  static nsresult InitGlobals(nsIDeviceContext *);
   static void     FreeGlobals(void);
   
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
@@ -171,7 +171,7 @@ public:
                                nsFontCharSetXlibInfo* aCharSet,
                                PRUnichar aChar);
 
-  static nsresult FamilyExists(const nsString& aFontName);
+  static nsresult FamilyExists(nsIDeviceContext*, const nsString& aFontName);
 
   nsCAutoString      mDefaultFont;
   nsCString          *mGeneric;

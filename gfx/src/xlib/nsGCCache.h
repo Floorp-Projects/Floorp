@@ -61,7 +61,9 @@ public:
   }
 
   PRInt32 AddRef(void) {
-    if(mRefCnt>100) abort();
+#ifdef DEBUG  
+    if(mRefCnt>400) abort();
+#endif /* DEBUG */
     NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
     ++mRefCnt;
     return mRefCnt;
