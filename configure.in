@@ -613,50 +613,42 @@ fi
 
 res=`echo :$MOZ_TOOLKIT | grep -c "gtk"`
 if [ test $res != 0 ]; then
-    AC_ARG_WITH(gtk-config, 
-	[  --with-gtk-config=\$prog specify which gtk-config to use],
-	if test ! -x $withval; then
-	   AC_MSG_ERROR("Specified --with-gtk-config not executable")
-	else
-	   GTK_CONFIG=$withval
-	fi
-   	, GTK_CONFIG=gtk-config )
+    AM_PATH_GTK(1.1.3,,
+      AC_MSG_ERROR(Test for GTK failed.))
 
-    _GTK_VERSION=`$GTK_CONFIG --version`
-    _GTK_MAJ_VER=`echo $_GTK_VERSION | $AWK -F\. '{ print $1 }'`
-    _GTK_MIN_VER=`echo $_GTK_VERSION | $AWK -F\. '{ print $2 }'`
-    _GTK_REL_VER=`echo $_GTK_VERSION | $AWK -F\. '{ print $3 }'`
-    if test "$_GTK_MAJ_VER" -lt "$GTK_MAJ_VER"; then
-	AC_MSG_ERROR(Must use gtk version >= $GTK_VERSION);
-    else if test "$_GTK_MIN_VER" -lt "$GTK_MIN_VER"; then
-	AC_MSG_ERROR(Must use gtk version >= $GTK_VERSION);
-    else if test "$_GTK_REL_VER" -lt "$GTK_REL_VER"; then
-	AC_MSG_ERROR(Must use gtk version >= $GTK_VERSION);
-    fi
-    fi
-    fi
-    unset _GTK_VERSION
-    unset _GTK_MAJ_VER
-    unset _GTK_MIN_VER
-    unset _GTK_REL_VER
+    AC_ARG_WITH(static-gtk,
+    [  --with-static-gtk       link gtk statically if possible],
+	sysstaticgtk=$withval)
 
-    _SAVE_LIBS=$LIBS
-    _SAVE_CFLAGS=$CFLAGS
-    LIBS="`${GTK_CONFIG} --libs` $LIBS"
-    CFLAGS="`${GTK_CONFIG} --cflags` $CFLAGS"
-    AC_MSG_CHECKING(for useable gtk)
-    AC_TRY_LINK(#include <gtk/gtk.h>
-	,
-	GtkWidget *window;
-        window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-        ,
-        [ TK_GTK_LIBS="`${GTK_CONFIG} --libs`"
-            TK_GTK_CFLAGS="`${GTK_CONFIG} --cflags`"
-    	    result="yes" ],
-        [ MISSING_GTK="`${GTK_CONFIG} --libs`" result="no" ] )
-    LIBS=$_SAVE_LIBS
-    CFLAGS=$_SAVE_CFLAGS
-    AC_MSG_RESULT("$result")
+    if [ test "$sysstaticgtk" != "yes" ]; then
+       TK_GTK_LIBS=$GTK_LIBS
+    else
+       changequote(,)
+
+       GTK_LIBS_LOC=`echo $GTK_LIBS | sed 's/\(.*\)\(-lgtk.*\)/\1/'`
+
+       GTK_STATIC_LOC=`echo $GTK_LIBS | sed 's/^ *-L\([^ ]*\) .*$/\1/'`
+       GTK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gtk[^ ]*\) .*/\1/'`
+       GDK_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gdk[^ ]*\) .*/\1/'`
+
+       GLIB_STATIC_LOC=`echo $GTK_LIBS | sed -e 's/^.*-lgdk[^ ]* *-L\([^ ]*\).*$/\1/' -e 's/^.* -lgdk[^ ]* .*$//'`
+       if test -z "$GLIB_STATIC_LOC" ; then
+         GLIB_STATIC_LOC=$GTK_STATIC_LOC
+       fi
+       GMODULE_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(gmodule[^ ]*\) .*/\1/'`
+       GLIB_STATIC=`echo $GTK_LIBS | sed 's/^.*-l\(glib[^ ]*\) .*/\1/'`
+
+       GTK_OTHER_LIBS=`echo $GTK_LIBS | sed 's/^.*-lglib *\(.*\)/\1/'`
+
+       changequote([,])
+
+       TK_GTK_LIBS="$GTK_STATIC_LOC/lib${GTK_STATIC}.a"
+       TK_GTK_LIBS="$TK_GTK_LIBS $GTK_STATIC_LOC/lib${GDK_STATIC}.a"
+       TK_GTK_LIBS="$TK_GTK_LIBS $GLIB_STATIC_LOC/lib${GMODULE_STATIC}.a"
+       TK_GTK_LIBS="$TK_GTK_LIBS $GLIB_STATIC_LOC/lib${GLIB_STATIC}.a"
+       TK_GTK_LIBS="$TK_GTK_LIBS $GTK_LIBS_LOC $GTK_OTHER_LIBS"
+    fi
+    TK_GTK_CFLAGS=$GTK_CFLAGS
 fi
 
 fi # $no_x

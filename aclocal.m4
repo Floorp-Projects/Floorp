@@ -1,5 +1,6 @@
 # Configure paths for GTK+
 # Owen Taylor     97-11-3
+# (copy of gtk.m4 (public domain))
 
 dnl AM_PATH_GTK([MINIMUM-VERSION, [ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]]])
 dnl Test for GTK, and define GTK_CFLAGS and GTK_LIBS
