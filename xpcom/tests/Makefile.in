@@ -39,6 +39,7 @@ CPPSRCS		= \
 		nsIFileEnumerator.cpp \
 		TestServMgr.cpp \
 		TestFactory.cpp \
+		TestCallTemplates.cpp \
 		TestCOMPtr.cpp \
 		TestCOMPtrEq.cpp \
 		TestID.cpp \
