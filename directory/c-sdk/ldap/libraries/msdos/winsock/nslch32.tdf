@@ -1,9 +1,0 @@
-LIBRARY         NSLCH32V$1
-DESCRIPTION     'LDAP Local DB Client API for 32-bit Windows'
-VERSION		$2
-HEAPSIZE        4096
-
-EXPORTS
-; we need to manually assign ordinal numbers so we can add new routines
-; and not disturb the ordinals and thus not require callers to relink.
-$EXPORTS
