@@ -527,42 +527,14 @@ MultiweekView.prototype.switchTo = function multiweekView_switchTo( )
 
 MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( )
 { 
-   // set the year in the header (top-left)
-   
-   var selectedDate = this.calendarWindow.getSelectedDate();
-   var newDay = selectedDate.getDate();
-   var newMonth = selectedDate.getMonth();
-   var newYear =  selectedDate.getFullYear();
-   document.getElementById( "multiweek-title" ).setAttribute( "value" , newYear );
-
-  var Offset = this.preferredWeekStart();
-  var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
-  var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
-
-   var defaultPreviousWeeksInView = this.localeDefaultsStringBundle.GetStringFromName("defaultPreviousWeeksInView" );
-   var PreviousWeeksInView = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "previousweeks.inview", defaultPreviousWeeksInView );
-   this.PreviousWeeksInView = ( PreviousWeeksInView >= this.WeeksInView - 1 ) ? this.WeeksInView - 1 : PreviousWeeksInView ;
-
-   var NewArrayOfDayNames = new Array();
-   
-   for(var i = 0; i < ArrayOfDayNames.length; i++ )
-   {
-      NewArrayOfDayNames[i] = ArrayOfDayNames[i];
-   }
-
-   for( i = 0; i < Offset; i++ )
-   {
-      var FirstElement = NewArrayOfDayNames.shift();
-
-      NewArrayOfDayNames.push( FirstElement );
-   }
-
    //set the day names 
-   for( i = 1; i <= 7; i++ )
+   var weekDayOffset = this.preferredWeekStart();
+   for(var col = 0; col < 7; col++ )
    {
-      document.getElementById( "multiweek-view-header-day-"+i ).value = NewArrayOfDayNames[ (i-1) ];
+      document.getElementById( "multiweek-view-header-day-"+(col+1)).value = ArrayOfDayNames[(weekDayOffset + col) % 7];
    }
    
+   // set visible weeks
    var weekIndex;
    for( weekIndex = 1 ;  weekIndex <= this.WeeksInView ; ++weekIndex )
    {
@@ -573,28 +545,53 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
      document.getElementById( "multiweek-week-" + weekIndex + "-row" ).setAttribute( "collapsed", "true" );
    }
 
-   // Write in all the day numbers
+   // read preference for previous weeks in view
+   var defaultPreviousWeeksInView = this.localeDefaultsStringBundle.GetStringFromName("defaultPreviousWeeksInView" );
+   var PreviousWeeksInView = getIntPref(this.calendarWindow.calendarPreferences.calendarPref, "previousweeks.inview", defaultPreviousWeeksInView );
+   this.PreviousWeeksInView = ( PreviousWeeksInView >= this.WeeksInView - 1 ) ? this.WeeksInView - 1 : PreviousWeeksInView ;
    
-   // figure out first and last days of the month, first and last date of view
-   
-   { // set newDay to first day of newMonth in prev week (negative ok)
-     var prevWeekDay = newDay - 7 * this.PreviousWeeksInView;
-     var prevWeekDate = new Date( newYear, newMonth, prevWeekDay );
-     var prevWeekDateCol = (7 - Offset + prevWeekDate.getDay()) % 7;
-     newDay = prevWeekDay - prevWeekDateCol;
+   var selectedDate = this.calendarWindow.getSelectedDate();
+   var newDayOfMonth;
+   { 
+     // set newDayMonth to first day in prev week (negative ok)
+     var prevWeekDayOfMonth = selectedDate.getDate() - 7 * this.PreviousWeeksInView;
+     var prevWeekDateCol = (7 - weekDayOffset + selectedDate.getDay()) % 7;
+     newDayOfMonth = prevWeekDayOfMonth - prevWeekDateCol;
    }
-   this.firstDateOfView = new Date( newYear, newMonth, newDay );
-   this.lastDateOfView = new Date( newYear, newMonth,  newDay + this.WeeksInView*7 -1, 23, 59, 59 );
+   var startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), newDayOfMonth);
+   this.refreshDisplayFromDate(startDate);
+}
 
-   var firstDayOfMonth  = new Date( newYear, newMonth, 1 );
+/** PRIVATE to multiweek view
+ *
+ *  Redraw display from given start date (first day of week, may be invisible).
+ *  Selected date (this.calendarWindow.getSelectedDate()) must be between
+ *  start date (inclusive) and startDate + 7 * weeksInView (exclusive)
+ */
+MultiweekView.prototype.refreshDisplayFromDate = function multiweekView_refreshDisplayFromDate(startDate) { 
+  // figure out first and last days of the month, first and last date of view
+  this.firstDateOfView = startDate;
+  this.lastDateOfView = new Date( startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + this.WeeksInView*7 - 1, 23, 59, 59 );
+  // set the year in the header (top-left)
+  document.getElementById( "multiweek-title" ).setAttribute( "value" , startDate.getFullYear() );
+
+  // 'current month' defined by current selectedDate, used to color days in grid
+  var selectedDate = this.calendarWindow.getSelectedDate();
+  var selectedDateYear = selectedDate.getFullYear();
+  var selectedDateMonth = selectedDate.getMonth();
+  var firstDayOfMonth  = new Date( selectedDateYear, selectedDateMonth, 1 );
    var firstDayOfMonthIndex = this.indexOfDate( firstDayOfMonth );
-   var lastDayOfMonth = DateUtils.getLastDayOfMonth( newYear, newMonth );
-   var lastDayOfMonthDate  = new Date( newYear, newMonth, lastDayOfMonth );
+  var lastDayOfMonth = DateUtils.getLastDayOfMonth( selectedDateYear, selectedDateMonth );
+  var lastDayOfMonthDate  = new Date( selectedDateYear, selectedDateMonth, lastDayOfMonth );
    var lastDayOfMonthIndex = this.indexOfDate( lastDayOfMonthDate );
 
+  var weekDayOffset = this.preferredWeekStart();
+  var isOnlyWorkDays = (gOnlyWorkdayChecked == "true");
+  var isDayOff = (isOnlyWorkDays? this.preferredDaysOff() : null);
+   
   // hide or unhide columns for days off
   for(var day = 0; day < 7; day++) {
-    var col = ((7 - Offset + day) % 7) + 1;
+    var col = ((7 - weekDayOffset + day) % 7) + 1;
     if( isOnlyWorkDays && isDayOff[day])
       document.getElementById( "multiweek-view-column-"+col ).setAttribute( "collapsed", "true" );
     else 
@@ -606,7 +603,7 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
      //If so we change the firstDayOfMonthIndex to the first day displayed
      var firstOfMonthWeekDay = firstDayOfMonth.getDay();
      for (var addDays = 0; addDays < 7; addDays++) {
-       var weekDay = (7 - Offset + firstOfMonthWeekDay + addDays) % 7;
+       var weekDay = (7 - weekDayOffset + firstOfMonthWeekDay + addDays) % 7;
        if (!isDayOff[weekDay]) {
 	 firstDayOfMonthIndex += addDays;
 	 break;
@@ -619,14 +616,14 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
    var weekNumberItem;
    var weekNumber ;
    var mondayDate ;
-   var newoffset = (Offset >= 5) ? 8 -Offset : 1 - Offset ;
+   var mondayOffset = (weekDayOffset >= 5) ? 8 - weekDayOffset : 1 - weekDayOffset ;
 
-   for( weekIndex = 0; weekIndex < this.WeeksInView; ++weekIndex )
+   for(var weekIndex = 0; weekIndex < this.WeeksInView; ++weekIndex )
    {
      weekNumberItem = this.weekNumberItemArray[ weekIndex+1 ] ;
      mondayDate = new Date( this.firstDateOfView.getFullYear(), 
 			    this.firstDateOfView.getMonth(),
-			    this.firstDateOfView.getDate()+newoffset+7*weekIndex );
+			    this.firstDateOfView.getDate()+mondayOffset+7*weekIndex );
 
      weekNumber=DateUtils.getWeekNumber(mondayDate);
      weekNumberItem.setAttribute( "value" , weekNumber );  
@@ -634,17 +631,21 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
    }
    //document.getElementById( "multiweek-sb-row" + this.WeeksInView).removeAttribute( "collapsed");
 
+   // Write in all the day numbers
    var dayNumberItem ;
    var dayBoxItem ;
    var thisDate = new Date();
 
+   var startYear = startDate.getFullYear();
+   var startMonth = startDate.getMonth();
+   var startDayOfMonth = startDate.getDate();
    // loop through all the day boxes
    for( var dayIndex = 0; dayIndex < this.dayNumberItemArray.length; ++dayIndex )
    {
      
      dayNumberItem = this.dayNumberItemArray[ dayIndex ];
      dayBoxItem = this.dayBoxItemArray[ dayIndex ];
-     thisDate = new Date( newYear, newMonth, newDay + dayIndex );
+     thisDate = new Date( startYear, startMonth, startDayOfMonth + dayIndex );
 
       dayBoxItem.removeAttribute( "empty" ); 
       dayNumberItem.removeAttribute( "withmonth" );
@@ -669,7 +670,7 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
 	{
 	  if(dayIndex == firstDayOfMonthIndex) 
 	    {
-	      titleMonth = this.calendarWindow.dateFormater.getShortMonthName(newMonth);
+	      titleMonth = this.calendarWindow.dateFormater.getShortMonthName(selectedDateMonth);
 	      this.dayNumberItemArray[ dayIndex ].setAttribute( "value" , thisDate.getDate()+" "+titleMonth );
 	      this.dayNumberItemArray[ dayIndex ].setAttribute( "withmonth","true" );
 	    }
@@ -680,20 +681,13 @@ MultiweekView.prototype.refreshDisplay = function multiweekView_refreshDisplay( 
 	    { dayBoxItem.removeAttribute( "weekend" ); }
 	}
   
-   if( dayIndex - 7 * this.PreviousWeeksInView < 7 & dayIndex - 7 * this.PreviousWeeksInView >=0 ) 
-     {
-       dayBoxItem.selectable=true;}
-   else
-     {dayBoxItem.selectable=false;}
    }
 
    //Modification for the first day of view
-   thisDate = new Date( newYear, newMonth, newDay );
+   thisDate = new Date( startYear, startMonth, startDayOfMonth );
    var titleMonth = this.calendarWindow.dateFormater.getShortMonthName(thisDate.getMonth());
    this.dayNumberItemArray[ 0 ].setAttribute( "value" , thisDate.getDate()+" "+titleMonth );
    this.dayNumberItemArray[ 0 ].setAttribute( "withmonth","true" );
-
-
 
    // if we aren't showing an event, highlite the selected date.
    if ( this.calendarWindow.EventSelection.selectedEvents.length < 1 ) 
@@ -781,16 +775,14 @@ MultiweekView.prototype.hiliteTodaysDate = function multiweekView_hiliteTodaysDa
 *   and we want to know what the default start date should be for the event.
 */
 
-MultiweekView.prototype.getNewEventDate = function multiweekView_getNewEventDate( candidate )
+MultiweekView.prototype.getNewEventDate = function multiweekView_getNewEventDate()
 {
    // use the selected year, month and day
    // and the current hours and minutes
    
-   var now = new Date();
-   var start ;
-   if( candidate ) { start = new Date( candidate ) }
-   else {start = new Date( this.calendarWindow.getSelectedDate() )};
+   var start = this.calendarWindow.getSelectedDate();
    
+   var now = new Date();
    start.setHours( now.getHours() );
    start.setMinutes( Math.ceil( now.getMinutes() / 30 ) * 30 );
    start.setSeconds( 0 );
@@ -802,18 +794,25 @@ MultiweekView.prototype.getNewEventDate = function multiweekView_getNewEventDate
 /** PUBLIC
 *
 *   Moves goWeeks weeks in the future, goes to next month if no argument.
+*   Negative goWeeks moves to weeks in the past.
 */
 
 MultiweekView.prototype.goToNext = function multiweekView_goToNext( goWeeks )
 {  
-   var nextDate;
-
-   if(goWeeks){
-      nextDate = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() + 7 * goWeeks );
-      this.goToDay( nextDate );
-   }else{
-      nextDate = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() + 7 );
-      this.goToDay( nextDate );
+  if (! goWeeks) goWeeks = 1;
+  var startDate = new Date(this.firstDateOfView.getFullYear(), this.firstDateOfView.getMonth(), this.firstDateOfView.getDate() + 7 * goWeeks);
+  var selectedDate = this.calendarWindow.getSelectedDate();
+  var nextPageStartDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 7 * this.WeeksInView);
+  if (startDate <= selectedDate && selectedDate < nextPageStartDate) {
+    // old selected date is still in view, keep selection
+    this.refreshDisplayFromDate(startDate);
+    this.refreshEvents();
+  } else { 
+    // old selected date is not in view, so select same day in new focus week.
+    var weekStartDay = this.preferredWeekStart();
+    var daysAfterWeekStart = (7 + selectedDate.getDay() - weekStartDay) % 7;
+    var offsetDays = 7 * this.PreviousWeeksInView + daysAfterWeekStart;
+    this.calendarWindow.goToDay(new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + offsetDays));
    }
 }
 MultiweekView.prototype.goToNextPage = function multiweekView_goToNextPage( )
@@ -828,15 +827,7 @@ MultiweekView.prototype.goToNextPage = function multiweekView_goToNextPage( )
 
 MultiweekView.prototype.goToPrevious = function multiweekView_goToPrevious( goWeeks )
 {
-   var prevDate;
-
-   if(goWeeks){
-      prevDate = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() - 7 * goWeeks );
-      this.goToDay( prevDate );
-   }else{
-      prevDate = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth(), this.calendarWindow.selectedDate.getDate() - 7 );
-      this.goToDay( prevDate );
-   }
+  this.goToNext( goWeeks? -goWeeks : -1 );
 }
 MultiweekView.prototype.goToPreviousPage = function multiweekView_goToPreviousPage( )
 {
@@ -846,7 +837,7 @@ MultiweekView.prototype.goToPreviousPage = function multiweekView_goToPreviousPa
 
 /** PUBLIC  -- multiweekview only
 *
-*   Called when a day box item is single clicked
+*   Called when a day box item is single clicked and on first click of double click
 */
 
 MultiweekView.prototype.clickDay = function multiweekView_clickDay( event )
@@ -854,15 +845,13 @@ MultiweekView.prototype.clickDay = function multiweekView_clickDay( event )
    if( event.button > 0 )
       return;
   
+   if ( event.detail == 1 ) { // first click
    var dayBoxItem = event.currentTarget;
-   
-   if(   dayBoxItem.selectable == true && event.detail == 1 )
-   {
       // change the selected date and redraw it
       this.calendarWindow.setSelectedDate( dayBoxItem.date );
 
-      //changing the selection will redraw the day as selected (colored blue) in the month view.
-      //therefor, this has to happen after setSelectedDate
+     //changing the selection will redraw the day as selected (colored blue) in the multiweek view.
+     //therefore, this has to happen after setSelectedDate
       gCalendarWindow.EventSelection.emptySelection();
    }
 }
@@ -875,13 +864,14 @@ MultiweekView.prototype.contextClickDay = function multiweekView_contextClickDay
 {
    if( event.currentTarget.date )
    {
-      // change the selected date and redraw it
+      // set the date for newEventCommand without selecting date
       gNewDateVariable = event.currentTarget.date;
    }
 }
 
 /*
-** Don't forget that clickDay gets called before double click day gets called
+** Calls newEvent dialog on 2nd click of double click.
+   clickDay will have been called on the first click, so day will be selected.
 */
 
 MultiweekView.prototype.doubleClickDay = function multiweekView_doubleClickDay( event )
@@ -889,15 +879,7 @@ MultiweekView.prototype.doubleClickDay = function multiweekView_doubleClickDay( 
    if( event.button > 0 )
       return;
    
-   if ( event.currentTarget.selectable == true )
-   {
-      // change the selected date and redraw it
       newEvent( this.getNewEventDate(), false );
-   }
-   else
-   {
-     newEvent( this.getNewEventDate(event.currentTarget.date), false );
-   }
 }
 
 
