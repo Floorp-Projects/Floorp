@@ -1262,7 +1262,7 @@ nsBookmarksService::ReadBookmarks()
 		if (NS_SUCCEEDED(rv = gRDFC->MakeSeq(mInner, kNC_IEFavoritesRoot, nsnull)))
 		{
 			BookmarkParser parser;
-			parser.Init(&ieStream, this);
+			parser.Init(&ieStream, mInner);
 			parser.Parse(kNC_IEFavoritesRoot, kNC_IEFavorite);
 				
 			nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
@@ -1278,7 +1278,7 @@ nsBookmarksService::ReadBookmarks()
 				rv = nsComponentManager::CreateInstance(kRDFContainerCID,
 														nsnull,
 														nsIRDFContainer::GetIID(),
-														getter_AddRefs(container));
+														getter_AddRefs(bookmarksRoot));
 				if (NS_FAILED(rv)) return rv;
 
 				rv = bookmarksRoot->Init(mInner, kNC_BookmarksRoot);
