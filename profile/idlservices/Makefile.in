@@ -1,4 +1,4 @@
-#!gmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -13,6 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
@@ -21,20 +22,18 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = profileservices
-LIBRARY_NAME = profileservices
-IS_COMPONENT = 1
+LIBRARY_NAME	= profileservices
+MODULE		= profileservices
+IS_COMPONENT	= 1
 
-XPIDLSRCS = \
-	nsIProfileServices.idl		\
-	$(NULL)
+REQUIRES	= profileservices raptor xpcom
 
-CPPSRCS = \
-	nsProfileServices.cpp		\
-	nsProfileServicesFactory.cpp	\
-	$(NULL)
+CPPSRCS		= \
+		nsProfileServices.cpp \
+		nsProfileServicesFactory.cpp \
+		$(NULL)
 
-REQUIRES = profileservices raptor xpcom
+XPIDLSRCS	= nsIProfileServices.idl
 
 include $(topsrcdir)/config/rules.mk
 
