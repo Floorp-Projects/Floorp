@@ -264,7 +264,9 @@
             <menuitem id="menu-view-collapse" label="&CollapseCmd.label;" 
               accesskey="&CollapseCmd.aKey;" type="checkbox"
               oncommand="onToggleMsgCollapse();"/>  
-
+            <menuitem id="menu-view-copymsgs" label="&CopyMessagesCmd.label;" 
+              accesskey="&CopyMessagesCmd.aKey;" type="checkbox"
+              oncommand="onToggleCopyMessages();"/>  
 
           </menupopup>
   
