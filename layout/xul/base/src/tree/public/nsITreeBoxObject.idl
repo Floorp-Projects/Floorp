@@ -40,8 +40,8 @@ interface nsIOutlinerBoxObject : nsISupports
   // Toggle the selection state of the row at the specified index.
   void toggleSelect(in long index);
 
-  // Select the range specified by the range.
-  void rangedSelect(in nsIOutlinerRange range);
+  // Select the range specified by the indices.
+  void rangedSelect(in long startIndex, in long endIndex);
 
   // The selected row indices in a sorted list of ranges.
   readonly attribute nsIOutlinerRangeList selectedRows;
@@ -65,7 +65,7 @@ interface nsIOutlinerBoxObject : nsISupports
   void invalidate();
   void invalidateRow(in long index);
   void invalidateCell(in long row, in wstring colID);
-  void invalidateRange(in nsIOutlinerRange range);
+  void invalidateRange(in long startIndex, in long endIndex);
   void invalidateScrollbar();
 
   // A hit test that can tell you what cell the mouse is over.
@@ -74,7 +74,7 @@ interface nsIOutlinerBoxObject : nsISupports
   // The store is responsible for calling these notification methods when
   // nodes are added or removed.  Index is the position at which the new
   // rows start.  count is the number of new contiguous rows added.  For
-  // non-contiguous additions, this method should be called multiple times.
+  // non-contiguous additions, these methods should be called multiple times.
   void rowsAdded(in long index, in long count);
   void rowsRemoved(in long index, in long count);
 };
