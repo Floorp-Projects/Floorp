@@ -293,10 +293,12 @@ nsHttpChannel::SetupTransaction()
     NS_ADDREF(mTransaction);
 
     // use the URI path if not proxying (transparent proxying such as SSL proxy
-    // does not count here).
+    // or socks does not count here).
     nsXPIDLCString requestURIStr;
     const char* requestURI;
-    if ((mConnectionInfo->ProxyHost() == nsnull) || mConnectionInfo->UsingSSL()) {
+    if (!mConnectionInfo->ProxyHost() ||
+        mConnectionInfo->UsingSSL() ||
+        !PL_strcmp(mConnectionInfo->ProxyType(), "socks")) {
         rv = mURI->GetPath(getter_Copies(requestURIStr));
         if (NS_FAILED(rv)) return rv;
         requestURI = requestURIStr.get();
