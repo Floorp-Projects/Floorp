@@ -33,6 +33,16 @@
   height: 80px;
 }
 
+#previewImageContainer {
+  overflow: hidden; 
+  height: 92px; 
+  max-width: 360px; 
+  background-color: #000000; 
+  padding: 2px;
+
+}
+
+
 /* ::::: Fonts ::::: */
 
 #sizeVar,
@@ -59,4 +69,5 @@
 .file-icon-large {
   list-style-image: url("chrome://communicator/skin/icons/content-large.gif");
 }
+
 

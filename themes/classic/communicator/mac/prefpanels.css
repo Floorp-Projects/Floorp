@@ -15,6 +15,15 @@
   {
     list-style-image : url("chrome://messenger/skin/smile.gif");
   }
+
+#previewImageContainer {
+  overflow: hidden; 
+  height: 92px; 
+  max-width: 360px; 
+  background-color: #000000; 
+  padding: 2px;
+
+}
   
 /**
  * File icon (32x32)

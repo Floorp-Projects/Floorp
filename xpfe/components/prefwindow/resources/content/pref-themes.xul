@@ -77,7 +77,7 @@
 
   <separator class="thin"/>
   
-  <box class="inset" align="center" style="overflow: hidden; height: 92px; background-color: #000000; padding: 2px;">
+  <box id="previewImageContainer" class="inset" align="center" >
     <image id="previewImage"/>
   </box>
 
