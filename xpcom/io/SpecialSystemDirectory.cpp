@@ -72,6 +72,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <direct.h>
 
 #elif defined(XP_OS2)
 
@@ -84,6 +85,7 @@
 #include <os2.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <direct.h>
 #include "prenv.h"
 
 #elif defined(XP_UNIX)
@@ -110,7 +112,17 @@
 #include <unixlib.h>
 #endif
 
-
+#ifndef MAXPATHLEN
+#ifdef MAX_PATH
+#define MAXPATHLEN MAX_PATH
+#elif defined(_MAX_PATH)
+#define MAXPATHLEN _MAX_PATH
+#elif defined(CCHMAXPATH)
+#define MAXPATHLEN CCHMAXPATH
+#else
+#define MAXPATHLEN 1024
+#endif
+#endif
 
 #if defined (XP_WIN)
 typedef BOOL (WINAPI * GetSpecialPathProc) (HWND hwndOwner, LPSTR lpszPath, int nFolder, BOOL fCreate);
@@ -227,6 +239,8 @@ nsresult
 GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
                          nsILocalFile** aFile)
 {
+    char path[MAXPATHLEN];
+
 #ifdef XP_MAC
     OSErr err;
     short vRefNum;
@@ -235,10 +249,21 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
     switch (aSystemSystemDirectory)
     {
+        case OS_CurrentWorkingDirectory:
+#if defined(XP_WIN) || defined(XP_OS2)
+            if (!_getcwd(path, MAXPATHLEN))
+                return NS_ERROR_FAILURE;
+#else
+            if(!getcwd(path, MAXPATHLEN))
+                return NS_ERROR_FAILURE;
+#endif
+            return NS_NewNativeLocalFile(nsDependentCString(path), 
+                                         PR_TRUE, 
+                                         aFile);
+
         case OS_DriveDirectory:
 #if defined (XP_WIN)
         {
-            char path[_MAX_PATH];
             PRInt32 len = GetWindowsDirectory( path, _MAX_PATH );
             if (len)
             {
@@ -276,7 +301,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         case OS_TemporaryDirectory:
 #if defined (XP_WIN)
         {
-            char path[_MAX_PATH];
             DWORD len = GetTempPath(_MAX_PATH, path);
             return NS_NewNativeLocalFile(nsDependentCString(path), 
                                          PR_TRUE, 
@@ -405,7 +429,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #if defined (XP_WIN)
         case Win_SystemDirectory:
         {    
-            char path[_MAX_PATH];
             PRInt32 len = GetSystemDirectory( path, _MAX_PATH );
         
             // Need enough space to add the trailing backslash
@@ -421,7 +444,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
         case Win_WindowsDirectory:
         {    
-            char path[_MAX_PATH];
             PRInt32 len = GetWindowsDirectory( path, _MAX_PATH );
             
             // Need enough space to add the trailing backslash
@@ -438,7 +460,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
         case Win_HomeDirectory:
         {    
-            char path[_MAX_PATH];
             if (GetEnvironmentVariable(TEXT("HOME"), path, _MAX_PATH) > 0)
             {
                 PRInt32 len = strlen(path);
@@ -612,7 +633,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #ifdef XP_BEOS
         case BeOS_SettingsDirectory:
         {
-            char path[MAXPATHLEN];
             find_directory(B_USER_SETTINGS_DIRECTORY, 0, 0, path, MAXPATHLEN);
             // Need enough space to add the trailing backslash
             int len = strlen(path);
@@ -627,7 +647,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
         case BeOS_HomeDirectory:
         {
-            char path[MAXPATHLEN];
             find_directory(B_USER_DIRECTORY, 0, 0, path, MAXPATHLEN);
             // Need enough space to add the trailing backslash
             int len = strlen(path);
@@ -643,7 +662,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
         case BeOS_DesktopDirectory:
         {
-            char path[MAXPATHLEN];
             find_directory(B_DESKTOP_DIRECTORY, 0, 0, path, MAXPATHLEN);
             // Need enough space to add the trailing backslash
             int len = strlen(path);
@@ -659,7 +677,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 
         case BeOS_SystemDirectory:
         {
-            char path[MAXPATHLEN];
             find_directory(B_BEOS_DIRECTORY, 0, 0, path, MAXPATHLEN);
             // Need enough space to add the trailing backslash
             int len = strlen(path);
