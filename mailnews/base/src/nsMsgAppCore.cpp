@@ -35,9 +35,16 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 
+#include "nsIMsgMailSession.h"
+#include "nsIMsgIdentity.h"
+#include "nsIMailboxService.h"
+#include "nsFileSpec.h"
+
 #include "nsNNTPProtocol.h" // mscott - hopefully this dependency should only be temporary...
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_CID(kCMailboxServiceCID, NS_MAILBOXSERVICE_CID);
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 
 NS_BEGIN_EXTERN_C
 
@@ -79,6 +86,10 @@ private:
   /* rhp - need this to drive message display */
   nsIDOMWindow       *mWindow;
   nsIWebShell        *mWebShell;
+
+  // mscott: temporary variable used to support running urls through the 'Demo' menu....
+  nsFileSpec m_folderPath; 
+  void InitializeFolderRoot();
 };
 
 nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset) 
@@ -112,12 +123,13 @@ nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset)
 //
 // nsMsgAppCore
 //
-nsMsgAppCore::nsMsgAppCore()
+nsMsgAppCore::nsMsgAppCore() : m_folderPath("")
 {
   NS_INIT_REFCNT();
   mScriptObject = nsnull;
   mWebShell = nsnull; 
   mWindow = nsnull;
+  InitializeFolderRoot();
 }
 
 nsMsgAppCore::~nsMsgAppCore()
@@ -319,12 +331,72 @@ nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
 	return NS_OK;
 }
 
+void nsMsgAppCore::InitializeFolderRoot()
+{
+	// get the current identity from the mail session....
+	nsIMsgMailSession * mailSession = nsnull;
+	nsresult rv = nsServiceManager::GetService(kCMsgMailSessionCID,
+	    							  nsIMsgMailSession::GetIID(),
+                                      (nsISupports **) &mailSession);
+	if (NS_SUCCEEDED(rv) && mailSession)
+	{
+		nsIMsgIdentity * identity = nsnull;
+		rv = mailSession->GetCurrentIdentity(&identity);
+		if (NS_SUCCEEDED(rv) && identity)
+		{
+			const char * folderRoot = nsnull;
+			identity->GetRootFolderPath(&folderRoot);
+			if (folderRoot)
+			{
+				// everyone should have a inbox so let's tack that folder name on to the root path...
+				// mscott: this only works on windows...add 
+				char * fullPath = PR_smprintf("%s\\%s", folderRoot, "Inbox");
+				if (fullPath)
+				{
+					m_folderPath = fullPath;
+					PR_Free(fullPath);
+				}
+			} // if we have a folder root for the current identity
+
+			NS_IF_RELEASE(identity);
+		} // if we have an identity
+
+		// now release the mail service because we are done with it
+		nsServiceManager::ReleaseService(kCMsgMailSessionCID, mailSession);
+	} // if we have a mail session
+
+	return;
+}
+
 NS_IMETHODIMP
 nsMsgAppCore::OpenURL(char * url)
 {
-    // here's where we call mscott's LoadURL...
-	// mscott: right now, this only works for news urls!!!!
-	NS_MailNewsLoadUrl(url, mWebShell);
+	// mscott, okay this is all temporary hack code to support the Demo menu item which allows us to load
+	// some hard coded news and mailbox urls.....it will ALL eventually go away.......
+
+	if (url)
+	{
+		if (PL_strncmp(url, "news:", 5) == 0) // is it a news url?
+			NS_MailNewsLoadUrl(url, mWebShell); 
+		else if (PL_strncmp(url, "mailbox:", 8) == 0)
+		{
+			// right now these urls are just mailbox:# where # is the ordinal number representing what message
+			// we want to load...we have a whole syntax for mailbox urls which are used in the normal case but
+			// we aren't using for this little demo menu....
+			url += 8; // skip past mailbox: stuff...
+			PRUint32 msgIndex = atol(url); // extract the index to use...
+
+			nsIMailboxService * mailboxService = nsnull;
+			nsresult rv = nsServiceManager::GetService(kCMailboxServiceCID, nsIMailboxService::GetIID(), (nsISupports **) &mailboxService);
+			if (NS_SUCCEEDED(rv) && mailboxService)
+			{
+				nsIURL * url = nsnull;
+				mailboxService->DisplayMessageNumber(m_folderPath, msgIndex, mWebShell, nsnull, nsnull);
+				nsServiceManager::ReleaseService(kCMailboxServiceCID, mailboxService);
+			}
+		}
+
+	}
 	return NS_OK;
 }
 
