@@ -17,6 +17,7 @@
  */
 
 #include "nsRDFTreeDataModel.h"
+#include "nsRDFTreeColumn.h"
 
 static NS_DEFINE_IID(kITreeDataModelIID, NS_ITREEDATAMODEL_IID);
 
@@ -59,14 +60,26 @@ nsRDFTreeDataModel::QueryInterface(const nsIID& iid, void** result)
 NS_IMETHODIMP
 nsRDFTreeDataModel::GetVisibleColumnCount(int& count) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    count = 0;
+    for (PRInt32 i = mColumns.GetUpperBound(); i >= 0; --i) {
+        nsRDFTreeColumn* column = static_cast<nsRDFTreeColumn*>(mColumns.Get(i));
+        if (column->IsVisible())
+            ++count;
+    }
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsRDFTreeDataModel::GetNthColumn(nsITreeColumn*& pColumn, int n) const
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (n < 0 || n > mColumns.GetUpperBound()) {
+        PR_ASSERT(0);
+        return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    pColumn = static_cast<nsITreeColumn*>(mColumns.Get(n));
+    return NS_OK;
 }
 	
 

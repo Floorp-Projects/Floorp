@@ -21,9 +21,10 @@
 
 #include "nsRDFDataModel.h"
 #include "nsITreeDataModel.h"
+#include "nsVector.h"
 #include "rdf.h"
 
-class nsITreeColumn;
+class nsISupportsArray;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -60,7 +61,8 @@ public:
 
 
 private:
-    RDF_Resource&       mRoot;
+    RDF_Resource& mRoot;
+    nsVector      mColumns;
 };
 
 
