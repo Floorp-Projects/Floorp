@@ -724,7 +724,15 @@ COOKIE_GetCookie(nsIURI * address) {
     }
     if(cookie_s->path && !PL_strncmp(path.get(), cookie_s->path, cookiePathLen)) {
       PRUint32 pathLen = path.Length();
-      if (pathLen>cookiePathLen && (path[cookiePathLen] != '/')) {
+      if (pathLen>cookiePathLen && 
+          path[cookiePathLen] != '/' && path[cookiePathLen] != '?' &&
+          path[cookiePathLen] != '#' && path[cookiePathLen] != ';') {
+        /*
+         * note that the '?' test above allows a site at host/abc?def to receive a cookie that
+         * has a path attribute of abc.  This seems strange but at least one major site
+         * (citibank, bug 156725) depends on it.  The test for # and ; are put in to proactively
+         * avoid problems with other sites.
+         */
         continue;
       }
 
@@ -1238,6 +1246,14 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
       *(iter+1) = '\0';
     }
     path_from_header = nsCRT::strdup(cur_path.get());
+#if 1
+/*
+ * The following test is part of the RFC2109 spec.  Loosely speaking, it says that a site
+ * cannot set a cookie for a path that it is not on.  See bug 155083.  However this patch
+ * broke several sites -- nordea (bug 155768) and citibank (bug 156725).  So this test is being
+ * bracketed by an if statement to allow it to be disabled in the event that we cannot
+ * evangelize these sites.
+ */
   } else {
     if(PL_strncmp(cur_path.get(), path_from_header, PL_strlen(path_from_header))) {
       PR_FREEIF(path_from_header);
@@ -1245,6 +1261,7 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
       nsCRT::free(setCookieHeaderInternal);
       return;
     }
+#endif
   }
   if(!host_from_header) {
     host_from_header = nsCRT::strdup(cur_host.get());
@@ -1525,6 +1542,9 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
       }
     }
     expires = cookie_ParseDate(date);
+    if (expires == 0) {
+      expires = 1; // avoid confusion with session cookies
+    }
     *ptr=origLast;
   }
   if (server_date && *server_date) {
