@@ -73,6 +73,10 @@
 #include "nsIEventStateManager.h"
 #include "nsStyleUtil.h"
 
+// for anonymous content and frames
+#include "nsHTMLParts.h"
+#include "nsITextContent.h"
+
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kTextAreaCID, NS_TEXTAREA_CID);
@@ -92,7 +96,6 @@ static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_I
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
-
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 #define EMPTY_DOCUMENT "about:blank"
@@ -100,8 +103,11 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 //#define NOISY
 const nscoord kSuggestedNotSet = -1;
 
-
-extern nsresult NS_NewNativeTextControlFrame(nsIFrame** aNewFrame); 
+#ifdef NS_DEBUG
+static PRBool gNoisy = PR_FALSE;
+#else
+static const PRBool gNoisy = PR_FALSE;
+#endif
 
 nsresult
 NS_NewGfxTextControlFrame(nsIFrame** aNewFrame)
@@ -114,13 +120,7 @@ NS_NewGfxTextControlFrame(nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult result = ((nsGfxTextControlFrame*)(*aNewFrame))->InitTextControl();
-  if (NS_FAILED(result))
-  { // can't properly initialized ender, probably it isn't installed
-    //NS_RELEASE(*aNewFrame); // XXX: need to release allocated ender text frame!
-    result = NS_NewNativeTextControlFrame(aNewFrame);
-  }
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -135,7 +135,7 @@ nsGfxTextControlFrame::Init(nsIPresContext&  aPresContext,
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame::InitTextControl()
+nsGfxTextControlFrame::CreateEditor()
 {
   nsresult result = NS_OK;
 
@@ -153,6 +153,22 @@ nsGfxTextControlFrame::InitTextControl()
   mDocObserver->SetFrame(this);
   NS_ADDREF(mDocObserver);
 
+    // create the focus listener for HTML Input content
+  if (mDisplayContent)
+  {
+    mFocusListenerForContent = new nsEnderFocusListenerForContent();
+    if (!mFocusListenerForContent) { return NS_ERROR_OUT_OF_MEMORY; }
+    mFocusListenerForContent->SetFrame(this);
+    NS_ADDREF(mFocusListenerForContent);
+    // get the DOM event receiver
+    nsCOMPtr<nsIDOMEventReceiver> er;
+    result = mDisplayContent->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(er));
+    if (NS_SUCCEEDED(result) && er) 
+      result = er->AddEventListenerByIID(mFocusListenerForContent, nsIDOMFocusListener::GetIID());
+    // should check to see if mDisplayContent or mContent has focus and call CreateSubDoc instead if it does
+    // do something with result
+  }
+
   nsCOMPtr<nsIHTMLEditor> theEditor;
   result = nsComponentManager::CreateInstance(kHTMLEditorCID,
                                               nsnull,
@@ -166,18 +182,23 @@ nsGfxTextControlFrame::InitTextControl()
 
 nsGfxTextControlFrame::nsGfxTextControlFrame()
 : mWebShell(0), mCreatingViewer(PR_FALSE),
-  mTempObserver(0), mDocObserver(0), 
+  mTempObserver(0), mDocObserver(0),
   mNotifyOnInput(PR_FALSE),
   mIsProcessing(PR_FALSE),
   mNeedsStyleInit(PR_TRUE),
+  mFramePresContext(nsnull),
   mCachedState(nsnull),
-  mWeakReferent(this)
+  mWeakReferent(this),
+  mDisplayFrame(nsnull)
 {
 }
 
 nsGfxTextControlFrame::~nsGfxTextControlFrame()
 {
   nsresult result;
+  if (mDisplayFrame) {
+    mDisplayFrame->Destroy(*mFramePresContext);
+  }
   if (mTempObserver)
   {
     if (mWebShell) {
@@ -190,6 +211,19 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
     mTempObserver->SetFrame(nsnull);
     NS_RELEASE(mTempObserver);
   }
+
+  if (mDisplayContent && mFocusListenerForContent)
+  {
+    nsCOMPtr<nsIDOMEventReceiver> er;
+    result = mContent->QueryInterface(nsIDOMEventReceiver::GetIID(), getter_AddRefs(er));
+    if (NS_SUCCEEDED(result) && er) 
+    {
+      er->RemoveEventListenerByIID(mFocusListenerForContent, nsIDOMFocusListener::GetIID());
+    }
+    mFocusListenerForContent->SetFrame(nsnull);
+    NS_RELEASE(mFocusListenerForContent);
+  }  
+
   if (mEventListener)
   {
     if (mEditor)
@@ -230,7 +264,7 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
   }
 
   mEditor = 0;  // editor must be destroyed before the webshell!
-  if (nsnull != mWebShell) 
+  if (mWebShell) 
   {
     mWebShell->Destroy();    
     NS_RELEASE(mWebShell);
@@ -329,17 +363,26 @@ nsGfxTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
     }
     else
     {
-      if (PR_TRUE==IsInitialized()) {
-        nsString format ("text/plain");
-        mEditor->OutputToString(*aText, format, 0);
+      if (PR_TRUE==IsInitialized())
+      {
+        if (mEditor)
+        {
+          nsString format ("text/plain");
+          mEditor->OutputToString(*aText, format, 0);
+        }
+        // we've never built our editor, so the content attribute is the value
+        else
+        {
+          result = nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
+        }
       }
       else {
         if (mCachedState) {
           *aText = *mCachedState;
-	  result = NS_OK;
-	} else {
+	        result = NS_OK;
+	      } else {
           result = nsFormControlHelper::GetInputElementValue(mContent, aText, aInitialValue);
-	}
+	      }
       }
     }
     RemoveNewlines(*aText);
@@ -373,11 +416,14 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   if (nsHTMLAtoms::value == aAttribute) 
   {
-    nsString value;
-    GetText(&value, PR_TRUE);           // get the initial value from the content attribute
-    mEditor->EnableUndo(PR_FALSE);      // wipe out undo info
-    SetTextControlFrameState(value);    // set new text value
-    mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
+    if (mEditor)
+    {
+      nsString value;
+      GetText(&value, PR_TRUE);           // get the initial value from the content attribute
+      mEditor->EnableUndo(PR_FALSE);      // wipe out undo info
+      SetTextControlFrameState(value);    // set new text value
+      mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
+    }
     if (aHint != NS_STYLE_HINT_REFLOW)
       nsFormFrame::StyleChangeReflow(aPresContext, this);
   } 
@@ -389,17 +435,17 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(mEditor);
     if (htmlEditor)
     {
-    if (NS_CONTENT_ATTR_NOT_THERE != rv) 
-    {  // set the maxLength attribute
-        htmlEditor->SetMaxTextLength(maxLength);
-      // if maxLength>docLength, we need to truncate the doc content
-    }
-    else { // unset the maxLength attribute
-        htmlEditor->SetMaxTextLength(-1);
+      if (NS_CONTENT_ATTR_NOT_THERE != rv) 
+      {  // set the maxLength attribute
+          htmlEditor->SetMaxTextLength(maxLength);
+        // if maxLength>docLength, we need to truncate the doc content
+      }
+      else { // unset the maxLength attribute
+          htmlEditor->SetMaxTextLength(-1);
       }
     }
   } 
-  else if (nsHTMLAtoms::readonly == aAttribute) 
+  else if (mEditor && nsHTMLAtoms::readonly == aAttribute) 
   {
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));     
@@ -418,7 +464,7 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     }    
     mEditor->SetFlags(flags);
   }
-  else if (nsHTMLAtoms::disabled == aAttribute) 
+  else if (mEditor && nsHTMLAtoms::disabled == aAttribute) 
   {
     nsCOMPtr<nsIPresShell> presShell;
     aPresContext->GetShell(getter_AddRefs(presShell));     
@@ -474,30 +520,96 @@ nsGfxTextControlFrame::DoesAttributeExist(nsIAtom *aAtt)
   return result;
 }
 
-void 
-nsGfxTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
-                                        nscoord& aWidth, 
-                                        nscoord& aHeight)
+// aSizeOfSubdocContainer is in pixels, not twips
+nsresult 
+nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
 {
-  nsresult rv;
-  // initialize the webshell, if it hasn't already been constructed
-  // if the size is not 0 and there is a src, create the web shell
-  if (aPresContext && (aWidth >= 0) && (aHeight >= 0))
+  if (!mFramePresContext) { nsresult NS_ERROR_NULL_POINTER; }
+
+  nsresult rv = NS_OK;
+
+  if (!IsInitialized() && !mCreatingViewer)
   {
-    if (nsnull == mWebShell) 
+    // if the editor hasn't been created yet, create it
+    if (!mEditor)
     {
-      nsSize  maxSize(aWidth, aHeight);
-      rv = CreateWebShell(*aPresContext, maxSize);
-      NS_ASSERTION(nsnull!=mWebShell, "null web shell after attempt to create.");
+      rv = CreateEditor();
+      if (NS_FAILED(rv)) { return rv; }
+      NS_ASSERTION(mEditor, "null EDITOR after attempt to create.");
     }
 
-    if (nsnull != mWebShell) 
+    // initialize the subdoc, if it hasn't already been constructed
+    // if the size is not 0 and there is a src, create the web shell
+  
+    if (nsnull == mWebShell) 
     {
-      mCreatingViewer=PR_TRUE;
-      nsAutoString url(EMPTY_DOCUMENT);
-      rv = mWebShell->LoadURL(url.GetUnicode());  // URL string with a default nsnull value for post Data
+      nsSize  size;
+      GetSize(size);
+      nsRect subBounds;
+      if (aSizeOfSubdocContainer)
+      {
+        subBounds = *aSizeOfSubdocContainer;
+      }
+      else
+      {
+        nsMargin borderPadding;
+        borderPadding.SizeTo(0, 0, 0, 0);
+        // Get the CSS border
+        const nsStyleSpacing* spacing;
+        GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+        spacing->CalcBorderPaddingFor(this, borderPadding);
+        CalcSizeOfSubDocInTwips(borderPadding, size, subBounds);
+        float t2p;
+        mFramePresContext->GetTwipsToPixels(&t2p);
+        subBounds.x = NSToCoordRound(subBounds.x * t2p);
+        subBounds.y = NSToCoordRound(subBounds.y * t2p);
+        subBounds.width = NSToCoordRound(subBounds.width * t2p);
+        subBounds.height = NSToCoordRound(subBounds.height * t2p);
+      }
+
+      rv = CreateWebShell(*mFramePresContext, size);
+      if (NS_FAILED(rv)) { return rv; }
+      NS_ASSERTION(mWebShell, "null web shell after attempt to create.");
+      if (!mWebShell) return NS_ERROR_NULL_POINTER;
+      if (gNoisy) { printf("%p webshell in CreateSubDoc set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell, subBounds.x, subBounds.y, subBounds.width, subBounds.height); }
+      mWebShell->SetBounds(subBounds.x, subBounds.y, subBounds.width, subBounds.height);
     }
+    mCreatingViewer=PR_TRUE;
+    nsAutoString url(EMPTY_DOCUMENT);
+    rv = mWebShell->LoadURL(url.GetUnicode());  // URL string with a default nsnull value for post Data
+
+    // force an incremental reflow of the text control
+    /* XXX: this is to get the view/webshell positioned correctly.
+            I don't know why it's required, it looks like this code positions the view and webshell
+            exactly the same way reflow does, but reflow works and the code above does not
+            when the text control is in a view which is scrolled.
+    */
+    nsCOMPtr<nsIReflowCommand> cmd;
+    rv = NS_NewHTMLReflowCommand(getter_AddRefs(cmd), this, nsIReflowCommand::StyleChanged);
+    if (NS_FAILED(rv)) { return rv; }
+    if (!cmd) { return NS_ERROR_NULL_POINTER; }
+    nsCOMPtr<nsIPresShell> shell;
+    rv = mFramePresContext->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(rv)) { return rv; }
+    if (!shell) { return NS_ERROR_NULL_POINTER; }
+    rv = shell->EnterReflowLock();
+    if (NS_FAILED(rv)) { return rv; }
+    rv = shell->AppendReflowCommand(cmd);
+    // must do this next line regardless of result of AppendReflowCommand
+    shell->ExitReflowLock();
   }
+  return rv;
+}
+
+void nsGfxTextControlFrame::CalcSizeOfSubDocInTwips(const nsMargin &aBorderPadding, const nsSize &aFrameSize, nsRect &aSubBounds)
+{
+
+    // XXX: the point here is to make a single-line edit field as wide as it wants to be, 
+    //      so it will scroll horizontally if the characters take up more space than the field
+    aSubBounds.x      = aBorderPadding.left;
+    aSubBounds.y      = aBorderPadding.top;
+    aSubBounds.width  = (aFrameSize.width - (aBorderPadding.left + aBorderPadding.right));
+    aSubBounds.height = (aFrameSize.height - (aBorderPadding.top + aBorderPadding.bottom));
 }
 
 PRBool
@@ -539,15 +651,12 @@ nsGfxTextControlFrame::Paint(nsIPresContext& aPresContext,
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer)
 {
-  if (mWebShell)
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
   {
-    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
-    {
-      nsAutoString text(" ");
-      nsRect rect(0, 0, mRect.width, mRect.height);
-      PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, 
-                       text, mStyleContext, rect);
-    }
+    nsAutoString text(" ");
+    nsRect rect(0, 0, mRect.width, mRect.height);
+    PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, 
+                     text, mStyleContext, rect);
   }
   return NS_OK;
 }
@@ -559,14 +668,77 @@ nsGfxTextControlFrame::PaintTextControlBackground(nsIPresContext& aPresContext,
                                                   nsFramePaintLayer aWhichLayer)
 {
   // we paint our own border, but everything else is painted by the mWebshell
-  if (mWebShell)
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
   {
-    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
-    {
-      nsAutoString text(" ");
-      nsRect rect(0, 0, mRect.width, mRect.height);
-      PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, 
-                       text, mStyleContext, rect);
+    nsAutoString text(" ");
+    nsRect rect(0, 0, mRect.width, mRect.height);
+    PaintTextControl(aPresContext, aRenderingContext, aDirtyRect, 
+                     text, mStyleContext, rect);
+  }
+}
+
+// stolen directly from nsContainerFrame
+void
+nsGfxTextControlFrame::PaintChild(nsIPresContext&      aPresContext,
+                                  nsIRenderingContext& aRenderingContext,
+                                  const nsRect&        aDirtyRect,
+                                  nsIFrame*            aFrame,
+                                  nsFramePaintLayer    aWhichLayer)
+{
+  nsIView *pView;
+  aFrame->GetView(&aPresContext, &pView);
+  if (nsnull == pView) {
+    nsRect kidRect;
+    aFrame->GetRect(kidRect);
+    nsFrameState state;
+    aFrame->GetFrameState(&state);
+
+    // Compute the constrained damage area; set the overlap flag to
+    // PR_TRUE if any portion of the child frame intersects the
+    // dirty rect.
+    nsRect damageArea;
+    PRBool overlap;
+    if (NS_FRAME_OUTSIDE_CHILDREN & state) {
+      // If the child frame has children that leak out of our box
+      // then we don't constrain the damageArea to just the childs
+      // bounding rect.
+      damageArea = aDirtyRect;
+      overlap = PR_TRUE;
+    }
+    else {
+      // Compute the intersection of the dirty rect and the childs
+      // rect (both are in our coordinate space). This limits the
+      // damageArea to just the portion that intersects the childs
+      // rect.
+      overlap = damageArea.IntersectRect(aDirtyRect, kidRect);
+#ifdef NS_DEBUG
+      if (!overlap && (0 == kidRect.width) && (0 == kidRect.height)) {
+        overlap = PR_TRUE;
+      }
+#endif
+    }
+
+    if (overlap) {
+      // Translate damage area into the kids coordinate
+      // system. Translate rendering context into the kids
+      // coordinate system.
+      damageArea.x -= kidRect.x;
+      damageArea.y -= kidRect.y;
+      aRenderingContext.PushState();
+      aRenderingContext.Translate(kidRect.x, kidRect.y);
+
+      // Paint the kid
+      aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer);
+      PRBool clipState;
+      aRenderingContext.PopState(clipState);
+
+#ifdef NS_DEBUG
+      // Draw a border around the child
+      if (nsIFrame::GetShowFrameBorders() && !kidRect.IsEmpty()) {
+        aRenderingContext.SetColor(NS_RGB(255,0,0));
+        aRenderingContext.DrawRect(kidRect);
+      }
+#endif
     }
   }
 }
@@ -588,28 +760,19 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
     const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)aStyleContext->GetStyleData(eStyleStruct_Spacing);
     PRIntn skipSides = 0;
     nsRect rect(0, 0, mRect.width, mRect.height);
-    /*if (eCompatibility_NavQuirks == mode) {
-      nscoord borderTwips = 0;
-      nsCOMPtr<nsILookAndFeel> lookAndFeel;
-      if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
-        PRInt32 tfBorder;
-        lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldBorder, tfBorder);
-        float p2t;
-        aPresContext.GetScaledPixelsToTwips(&p2t);
-        borderTwips = NSIntPixelsToTwips(tfBorder, p2t);
-      }
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                             aDirtyRect, rect, *mySpacing, 
-                                             aStyleContext, skipSides, nsnull, borderTwips, PR_TRUE);
-
-    } else {*/
     const nsStyleColor* color = (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
 	  nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                     aDirtyRect, rect,  *color, *mySpacing, 0, 0);
-      //PaintTextControl(aPresContext, aRenderingContext, text, mStyleContext, rect);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *mySpacing, aStyleContext, skipSides);
-    //}
+                                    aDirtyRect, rect,  *color, *mySpacing, 0, 0);
+    nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                aDirtyRect, rect, *mySpacing, aStyleContext, skipSides);
+    
+    if (!mWebShell)
+    {
+      if (mDisplayFrame) {
+        PaintChild(aPresContext, aRenderingContext, aDirtyRect, mDisplayFrame, NS_FRAME_PAINT_LAYER_FOREGROUND);
+        //mDisplayFrame->Paint(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FOREGROUND);
+      }
+    }
   }
 }
 
@@ -618,7 +781,7 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
 {
   aValue = "";  // initialize out param
   
-  if (PR_TRUE==IsInitialized()) 
+  if (mEditor && PR_TRUE==IsInitialized()) 
   {
     nsString format ("text/plain");
     PRUint32 flags = 0;
@@ -639,6 +802,7 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
 
     mEditor->OutputToString(aValue, format, flags);
   }
+  // otherwise, just return our text attribute
   else {
     if (mCachedState) {
       aValue = *mCachedState;
@@ -650,7 +814,7 @@ void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
 
 void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
 {
-  if (PR_TRUE==IsInitialized()) 
+  if (mEditor && PR_TRUE==IsInitialized()) 
   {
     nsAutoString currentValue;
     nsString format ("text/plain");
@@ -691,8 +855,24 @@ void nsGfxTextControlFrame::SetTextControlFrameState(const nsString& aValue)
   else {
     if (mCachedState) delete mCachedState;
     mCachedState = new nsString(aValue);
-    // XXX if (!mCachedState) rv = NS_ERROR_OUT_OF_MEMORY;
     NS_ASSERTION(mCachedState, "Error: new nsString failed!");
+    //if (!mCachedState) rv = NS_ERROR_OUT_OF_MEMORY;
+    if (mDisplayContent)
+    {
+      const PRUnichar *text = mCachedState->GetUnicode();
+      PRInt32 len = mCachedState->Length();
+      mDisplayContent->SetText(text, len, PR_TRUE);
+      if (mContent)
+      {
+        nsIDocument *doc;
+        mContent->GetDocument(doc);
+        if (doc) 
+        {
+          doc->ContentChanged(mContent, nsnull);
+          NS_RELEASE(doc);
+        }
+      }
+    }
   }
 }
 
@@ -703,9 +883,13 @@ NS_IMETHODIMP nsGfxTextControlFrame::SetProperty(nsIPresContext* aPresContext, n
     mIsProcessing = PR_TRUE;
     if (nsHTMLAtoms::value == aName) 
     {
-      mEditor->EnableUndo(PR_FALSE);      // wipe out undo info
+      if (mEditor) {
+        mEditor->EnableUndo(PR_FALSE);    // wipe out undo info
+      }
       SetTextControlFrameState(aValue);   // set new text value
-      mEditor->EnableUndo(PR_TRUE);       // fire up a new txn stack
+      if (mEditor)  {
+        mEditor->EnableUndo(PR_TRUE);     // fire up a new txn stack
+      }
     }
     else {
       return Inherited::SetProperty(aPresContext, aName, aValue);
@@ -732,49 +916,54 @@ NS_IMETHODIMP nsGfxTextControlFrame::GetProperty(nsIAtom* aName, nsString& aValu
 
 void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
-  if (mWebShell) {
-    if (aOn) {
-      nsresult result = NS_OK;
+  nsresult result;
+  if (!mWebShell)
+  {
+    result = CreateSubDoc(nsnull);
+    if (NS_FAILED(result)) return;
+  }
 
-      nsIContentViewer *viewer = nsnull;
-      mWebShell->GetContentViewer(&viewer);
-      if (viewer) {
-        nsIDocumentViewer* docv = nsnull;
-        viewer->QueryInterface(kIDocumentViewerIID, (void**) &docv);
-        if (nsnull != docv) {
-          nsIPresContext* cx = nsnull;
-          docv->GetPresContext(cx);
-          if (nsnull != cx) {
-            nsIPresShell  *shell = nsnull;
-            cx->GetShell(&shell);
-            if (nsnull != shell) {
-              nsIViewManager  *vm = nsnull;
-              shell->GetViewManager(&vm);
-              if (nsnull != vm) {
-                nsIView *rootview = nsnull;
-                vm->GetRootView(rootview);
-                if (rootview) {
-                  nsIWidget* widget;
-                  rootview->GetWidget(widget);
-                  if (widget) {
-                    result = widget->SetFocus();
-                    NS_RELEASE(widget);
-                  }
+  if (aOn) {
+    nsresult result = NS_OK;
+
+    nsIContentViewer *viewer = nsnull;
+    mWebShell->GetContentViewer(&viewer);
+    if (viewer) {
+      nsIDocumentViewer* docv = nsnull;
+      viewer->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      if (nsnull != docv) {
+        nsIPresContext* cx = nsnull;
+        docv->GetPresContext(cx);
+        if (nsnull != cx) {
+          nsIPresShell  *shell = nsnull;
+          cx->GetShell(&shell);
+          if (nsnull != shell) {
+            nsIViewManager  *vm = nsnull;
+            shell->GetViewManager(&vm);
+            if (nsnull != vm) {
+              nsIView *rootview = nsnull;
+              vm->GetRootView(rootview);
+              if (rootview) {
+                nsIWidget* widget;
+                rootview->GetWidget(widget);
+                if (widget) {
+                  result = widget->SetFocus();
+                  NS_RELEASE(widget);
                 }
-                NS_RELEASE(vm);
               }
-              NS_RELEASE(shell);
+              NS_RELEASE(vm);
             }
-            NS_RELEASE(cx);
+            NS_RELEASE(shell);
           }
-          NS_RELEASE(docv);
+          NS_RELEASE(cx);
         }
-        NS_RELEASE(viewer);
+        NS_RELEASE(docv);
       }
+      NS_RELEASE(viewer);
     }
-    else {
-      mWebShell->RemoveFocus();
-    }
+  }
+  else {
+    mWebShell->RemoveFocus();
   }
 }
 
@@ -833,7 +1022,9 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   nsIView* parView;
   nsPoint origin;
   GetOffsetFromView(&aPresContext, origin, &parView);  
+
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
+  if (gNoisy) { printf("%p view bounds: x=%d, y=%d, w=%d, h=%d\n", view, origin.x, origin.y, aSize.width, aSize.height); }
 
   nsCOMPtr<nsIViewManager> viewMan;
   presShell->GetViewManager(getter_AddRefs(viewMan));  
@@ -1322,10 +1513,6 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
       aDesiredSize.height = mSuggestedHeight;
     }
     rv = NS_OK;
-    if (!mDidInit) {
-      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
-      mDidInit = PR_TRUE;
-    }
   
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
@@ -1354,44 +1541,141 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
       }
     }
     aStatus = NS_FRAME_COMPLETE;
-
-    // Now resize the widget if there is one, in this case it is 
-    // the webshell for the editor
-    if (!mDidInit) {
-      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
-      mDidInit = PR_TRUE;
-    }
   }
- 
 
 #ifdef NOISY
   printf ("exit nsGfxTextControlFrame::Reflow: size=%d,%d",
            aDesiredSize.width, aDesiredSize.height);
 #endif
 
-
+  float t2p, p2t;
+  mFramePresContext->GetTwipsToPixels(&t2p);
+  mFramePresContext->GetPixelsToTwips(&p2t);
   // resize the sub document within the defined rect 
   // the sub-document will fit inside the border
-  if (NS_SUCCEEDED(rv) && mWebShell) {
-    float t2p;
-    aPresContext.GetTwipsToPixels(&t2p);
-
+  if (NS_SUCCEEDED(rv)) 
+  {
     nsRect subBounds;
+    nsRect subBoundsInPixels;
+    nsSize desiredSize(aDesiredSize.width, aDesiredSize.height);
+    CalcSizeOfSubDocInTwips(borderPadding, desiredSize, subBounds);
+    subBoundsInPixels.x = NSToCoordRound(subBounds.x * t2p);
+    subBoundsInPixels.y = NSToCoordRound(subBounds.y * t2p);
+    subBoundsInPixels.width = NSToCoordRound(subBounds.width * t2p);
+    subBoundsInPixels.height = NSToCoordRound(subBounds.height * t2p);
 
-    // XXX: the point here is to make a single-line edit field as wide as it wants to be, 
-    //      so it will scroll horizontally if the characters take up more space than the field
-    subBounds.x      = NSToCoordRound(borderPadding.left * t2p);
-    subBounds.y      = NSToCoordRound(borderPadding.top * t2p);
-    subBounds.width  = PR_MAX(NSToCoordRound((aDesiredSize.width - (borderPadding.left + borderPadding.right)) * t2p), 0);
-    subBounds.height = PR_MAX(NSToCoordRound((aDesiredSize.height - (borderPadding.top + borderPadding.bottom)) * t2p), 0);
-    mWebShell->SetBounds(subBounds.x, subBounds.y, subBounds.width, subBounds.height);
+    if (eReflowReason_Initial == aReflowState.reason)
+    {
+      if ((!mWebShell) && (PR_FALSE==IsSingleLineTextControl()))
+      { // multi-line text areas get their subdoc right away
+        rv = CreateSubDoc(&subBoundsInPixels);
+      }
+      
+      if (PR_TRUE==IsSingleLineTextControl())
+      {
+        // create anonymous text content
+        nsIContent* content;
+        rv = NS_NewTextNode(&content);
+        if (NS_FAILED(rv)) { return rv; }
+        if (!content) { return NS_ERROR_NULL_POINTER; }
+        nsIDocument* doc;
+        mContent->GetDocument(doc);
+        content->SetDocument(doc, PR_FALSE);
+        NS_RELEASE(doc);
+        mContent->AppendChildTo(content, PR_FALSE);
+
+        // set the value of the text node
+        content->QueryInterface(nsITextContent::GetIID(), getter_AddRefs(mDisplayContent));
+        if (!mDisplayContent) {return NS_ERROR_NO_INTERFACE; }
+        nsAutoString value;
+        GetText(&value, PR_FALSE);  // get the text value, either from input element attribute or cached state
+        const PRUnichar *initialText = value.GetUnicode();
+        PRInt32 len = value.Length();
+        mDisplayContent->SetText(initialText, len, PR_TRUE);
+
+        // create the pseudo frame for the anonymous content
+        rv = NS_NewBlockFrame((nsIFrame**)&mDisplayFrame, NS_BLOCK_SPACE_MGR);
+        if (NS_FAILED(rv)) { return rv; }
+        if (!mDisplayFrame) { return NS_ERROR_NULL_POINTER; }
+        
+        // create the style context for the anonymous frame
+        nsCOMPtr<nsIStyleContext> styleContext;
+        rv = aPresContext.ResolvePseudoStyleContextFor(content, 
+                                                       nsHTMLAtoms::mozSingleLineTextControlFrame,
+                                                       mStyleContext,
+                                                       PR_FALSE,
+                                                       getter_AddRefs(styleContext));
+        if (NS_FAILED(rv)) { return rv; }
+        if (!styleContext) { return NS_ERROR_NULL_POINTER; }
+
+        // create a text frame and put it inside the block frame
+        nsIFrame *textFrame;
+        rv = NS_NewTextFrame(&textFrame);
+        if (NS_FAILED(rv)) { return rv; }
+        if (!textFrame) { return NS_ERROR_NULL_POINTER; }
+        nsCOMPtr<nsIStyleContext> textStyleContext;
+        rv = aPresContext.ResolvePseudoStyleContextFor(content, 
+                                                       nsHTMLAtoms::mozSingleLineTextControlFrame,
+                                                       styleContext,
+                                                       PR_FALSE,
+                                                       getter_AddRefs(textStyleContext));
+        if (NS_FAILED(rv)) { return rv; }
+        if (!textStyleContext) { return NS_ERROR_NULL_POINTER; }
+        textFrame->Init(aPresContext, content, mDisplayFrame, textStyleContext, nsnull);
+        textFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
+        
+        rv = mDisplayFrame->Init(aPresContext, content, this, styleContext, nsnull);
+        if (NS_FAILED(rv)) { return rv; }
+
+        mDisplayFrame->SetInitialChildList(aPresContext, nsnull, textFrame);
+      }
+      
+    }
+    if (mWebShell) 
+    {
+      if (mDisplayFrame) 
+      {
+        mDisplayFrame->Destroy(*mFramePresContext);
+        mDisplayFrame = nsnull;
+      }
+      if (gNoisy) { printf("%p webshell in reflow set to bounds: x=%d, y=%d, w=%d, h=%d\n", mWebShell, subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height); }
+      mWebShell->SetBounds(subBoundsInPixels.x, subBoundsInPixels.y, subBoundsInPixels.width, subBoundsInPixels.height);
 
 #ifdef NOISY
-    printf("webshell set to (%d, %d, %d %d)\n", 
-           borderPadding.left, borderPadding.top, 
-           (aDesiredSize.width - (borderPadding.left + borderPadding.right)), 
-           (aDesiredSize.height - (borderPadding.top + borderPadding.bottom)));
+      printf("webshell set to (%d, %d, %d %d)\n", 
+             borderPadding.left, borderPadding.top, 
+             (aDesiredSize.width - (borderPadding.left + borderPadding.right)), 
+             (aDesiredSize.height - (borderPadding.top + borderPadding.bottom)));
 #endif
+    }
+    else
+    {
+      // pass the reflow to mDisplayFrame, forcing him to fit
+//      mDisplayFrame->SetSuggestedSize(subBounds.width, subBounds.height);
+      if (mDisplayFrame)
+      {
+        // fix any possible pixel roundoff error (the webshell is sized in whole pixel units, 
+        // and we need to make sure the text is painted in exactly the same place using either frame or shell.)
+        subBounds.x = NSToCoordRound(subBoundsInPixels.x * p2t);
+        subBounds.y = NSToCoordRound(subBoundsInPixels.y * p2t);
+        subBounds.width = NSToCoordRound(subBoundsInPixels.width * p2t);
+        subBounds.height = NSToCoordRound(subBoundsInPixels.height * p2t);
+
+        // build the data structures for reflowing mDisplayFrame
+        nsSize availSize(subBounds.width, subBounds.height);
+        nsHTMLReflowMetrics kidSize(&availSize);
+        nsHTMLReflowState kidReflowState(aPresContext, aReflowState, mDisplayFrame,
+                                         availSize);
+
+        // Send the WillReflow notification, and reflow the child frame
+        mDisplayFrame->WillReflow(aPresContext);
+        nsReflowStatus status;
+        rv = mDisplayFrame->Reflow(aPresContext, kidSize, kidReflowState, status);
+        // notice how status is ignored here
+        if (gNoisy) { printf("%p mDisplayFrame resized to: x=%d, y=%d, w=%d, h=%d\n", mWebShell, subBounds.x, subBounds.y, subBounds.width, subBounds.height); }
+        mDisplayFrame->SetRect(&aPresContext, subBounds);
+      }
+    }
   }
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
@@ -1644,7 +1928,16 @@ nsGfxTextControlFrame::InstallEditor()
           PRInt32 type;
           GetType(&type);
           if (NS_FORM_TEXTAREA == type) {
-            sv->SetScrollPreference(nsScrollPreference_kAlwaysScroll);
+            nsScrollPreference scrollPref = nsScrollPreference_kAlwaysScroll;
+            nsFormControlHelper::nsHTMLTextWrap wrapProp;
+            result = nsFormControlHelper::GetWrapPropertyEnum(mContent, wrapProp);
+            if (NS_CONTENT_ATTR_NOT_THERE != result) {
+              if (wrapProp == nsFormControlHelper::eHTMLTextWrap_Soft ||
+                  wrapProp == nsFormControlHelper::eHTMLTextWrap_Hard) {
+                scrollPref = nsScrollPreference_kAuto;
+              }
+            }
+            sv->SetScrollPreference(scrollPref);
           }
         }
         // views are not refcounted
@@ -1683,8 +1976,26 @@ nsGfxTextControlFrame::InstallEditor()
 		if (NS_SUCCEEDED(result)) {
 			mEditor->PostCreate();
 		}
+
     // check to see if mContent has focus, and if so tell the webshell.
+    nsIEventStateManager *manager;
+    result = mFramePresContext->GetEventStateManager(&manager);
+    if (NS_FAILED(result)) { return result; }
+    if (!manager) { return NS_ERROR_NULL_POINTER; }
+
+    nsIContent *focusContent=nsnull;
+    result = manager->GetFocusedContent(&focusContent);
+    if (NS_FAILED(result)) { return result; }
+    if (focusContent)
+    {
+      if (mContent==focusContent)
+      {
+        SetFocus();
+      }
+    }
+    NS_RELEASE(manager);
   }
+  mCreatingViewer = PR_FALSE;
   return result;
 }
 
@@ -2026,6 +2337,16 @@ nsGfxTextControlFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIn
 
   IndentBy(out, aIndent);
   fputs(">\n", out);
+
+    if (mDisplayFrame) {
+      IndentBy(out, aIndent);
+      nsAutoString tmp;
+      fputs("<\n", out);
+      mDisplayFrame->List(aPresContext, out, aIndent + 1);
+      IndentBy(out, aIndent);
+      fputs(">\n", out);
+    }
+
 
   return NS_OK;
 }
@@ -2496,6 +2817,18 @@ nsEnderEventListener::KeyPress(nsIDOMEvent* aKeyEvent)
   return result;
 }
 
+void GetWidgetForView(nsIView *aView, nsIWidget *&aWidget)
+{
+  aWidget = nsnull;
+  nsIView *view = aView;
+  while (!aWidget && view)
+  {
+    view->GetWidget(aWidget);
+    if (!aWidget)
+      view->GetParent(view);
+  }
+}
+
 nsresult
 nsEnderEventListener::DispatchMouseEvent(nsIDOMUIEvent *aEvent, PRInt32 aEventType)
 {
@@ -2518,6 +2851,8 @@ nsEnderEventListener::DispatchMouseEvent(nsIDOMUIEvent *aEvent, PRInt32 aEventTy
       aEvent->GetClickCount(&clickCount);
       event.clickCount = clickCount;
       event.message = aEventType;
+      GetWidgetForView(mView, event.widget);
+      NS_ASSERTION(event.widget, "null widget in mouse event redispatch.  right mouse click will crash!");
 
       nsIEventStateManager *manager=nsnull;
       result = mContext->GetEventStateManager(&manager);
@@ -2870,6 +3205,77 @@ nsEnderEventListener::NotifySelectionChanged()
     // Now have the frame handle the event
     gfxFrame->HandleEvent(*mContext, &event, status);
   }
+  return NS_OK;
+}
+
+
+
+/*******************************************************************************
+ * nsEnderFocusListenerForContent
+ ******************************************************************************/
+
+NS_IMPL_ADDREF(nsEnderFocusListenerForContent);
+NS_IMPL_RELEASE(nsEnderFocusListenerForContent);
+
+nsresult
+nsEnderFocusListenerForContent::QueryInterface(const nsIID& aIID,
+                                               void** aInstancePtr)
+{
+  NS_PRECONDITION(nsnull != aInstancePtr, "null pointer");
+  if (nsnull == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(nsIDOMFocusListener::GetIID())) {
+    *aInstancePtr = (void*) ((nsIDOMFocusListener*)this);
+    AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*) ((nsISupports*)((nsIDOMFocusListener*)this));
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+nsEnderFocusListenerForContent::nsEnderFocusListenerForContent() :
+  mFrame(nsnull)
+{
+  NS_INIT_REFCNT();
+}
+
+nsEnderFocusListenerForContent::~nsEnderFocusListenerForContent()
+{
+}
+
+nsresult 
+nsEnderFocusListenerForContent::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+
+nsresult
+nsEnderFocusListenerForContent::Focus(nsIDOMEvent* aEvent)
+{
+  if (mFrame)
+  {
+    mFrame->CreateSubDoc(nsnull);
+  }
+  return NS_OK;
+}
+
+nsresult
+nsEnderFocusListenerForContent::Blur (nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsEnderFocusListenerForContent::SetFrame(nsGfxTextControlFrame *aFrame)
+{
+  mFrame = aFrame;
   return NS_OK;
 }
 
