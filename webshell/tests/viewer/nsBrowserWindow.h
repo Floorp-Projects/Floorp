@@ -111,7 +111,6 @@ public:
   virtual nsresult CreateToolBar(PRInt32 aWidth);
   virtual nsresult CreateStatusBar(PRInt32 aWidth);
   void Layout(PRInt32 aWidth, PRInt32 aHeight);
-  void Destroy();
   void Back();
   void Forward();
   void GoTo(const PRUnichar* aURL);
@@ -155,6 +154,8 @@ public:
   void SetApp(nsViewerApp* aApp) {
     mApp = aApp;
   }
+
+  static void CloseAllWindows();
 
   nsViewerApp* mApp;
 
