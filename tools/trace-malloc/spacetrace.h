@@ -137,6 +137,11 @@
 #define ST_ROOT_CATEGORY_NAME "All"
 
 /*
+**  Size of our option string buffers.
+*/
+#define ST_OPTION_STRING_MAX 256
+
+/*
 ** Set the desired resolution of the timevals.
 ** The resolution is just mimicking what is recorded in the trace-malloc
 **  output, and that is currently milliseconds.
@@ -392,18 +397,18 @@ typedef struct __struct_STOptions
         /*
         ** The string which identifies this program.
         */
-        const char* mProgramName;
+        char mProgramName[ST_OPTION_STRING_MAX];
 
         /*
         ** File from which we retrieve the input.
         ** The input should have been generated from a trace malloc run.
         */
-        const char* mFileName;
+        char mFileName[ST_OPTION_STRING_MAX];
 
         /*
         ** Which directory we will take over and write our output.
         */
-        const char* mOutputDir;
+        char mOutputDir[ST_OPTION_STRING_MAX];
 
         /*
         ** The various batch mode requests we've received.
@@ -480,32 +485,19 @@ typedef struct __struct_STOptions
         /*
         ** Restrict callsite backtraces to those containing text.
         */
-        char* mRestrictText[ST_SUBSTRING_MATCH_MAX];
+        char mRestrictText[ST_SUBSTRING_MATCH_MAX][ST_OPTION_STRING_MAX];
 
         /*
         ** File containing rules to categorize allocations
         */
-        char* mCategoryFile;
+        char mCategoryFile[ST_OPTION_STRING_MAX];
 
-        /*n
-        ** Category to focus report on. NULL if not focussing on a category.
+        /*
+        ** Category to focus report on. '\0' if not focussing on a category.
         */
-        char *mCategoryName;
+        char mCategoryName[ST_OPTION_STRING_MAX];
 
 } STOptions;
-
-/*
-**  STRequestOptions
-**
-**  These options are likely to change on a per request/client basis.
-**  Careful on adding too many options here, this struct also hashes
-**      our content cache and more options means fewer cache hits.
-*/
-typedef struct __struct_STRequestOptions
-{
-    int nothing;
-}
-STRequestOptions;
 
 /*
 ** STRequest
@@ -522,7 +514,7 @@ typedef struct __struct_STRequest
         /*
         ** The filename requested.
         */
-        const char* mFileName;
+        const char* mGetFileName;
 
         /*
         ** The GET form data, if any.
@@ -532,7 +524,7 @@ typedef struct __struct_STRequest
         /*
         **  Options specific to this request.
         */
-        STRequestOptions mOptions;
+        STOptions mOptions;
 } STRequest;
 
 /*
@@ -552,7 +544,7 @@ typedef struct __struct_STCache
         /*
         ** Category the mSortedRun belongs to. NULL if not to any category.
         */
-        const char *mCategoryName;
+        char mCategoryName[ST_OPTION_STRING_MAX];
 
         /*
         ** Footprint graph cache.
