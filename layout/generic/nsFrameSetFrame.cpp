@@ -40,7 +40,9 @@
 #include "nsIDocumentLoader.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
-
+#include "nsILookAndFeel.h"
+#include "nsWidgetsCID.h"
+#include "nsRepository.h"
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
 #define RIGHT_VIS  0x0002
@@ -55,6 +57,8 @@ static PRInt32 LEFT_EDGE  = -1;
 static PRInt32 RIGHT_EDGE = 1000000;
 
 static NS_DEFINE_IID(kIFramesetFrameIID, NS_IFRAMESETFRAME_IID);
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 /*******************************************************************************
  * nsHTMLFramesetBorderFrame
@@ -1485,10 +1489,19 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
                                  const nsRect&        aDirtyRect)
 {
   //printf("border frame paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-  static nscolor GREY  = NS_RGB(200, 200, 200);
-  static nscolor WHITE = NS_RGB(255, 255, 255);
-  static nscolor BLACK = NS_RGB(0, 0, 0);
-  static nscolor DARK_GREY = NS_RGB(130, 130, 130);
+  nscolor WHITE    = NS_RGB(255, 255, 255);
+  nscolor bgColor  = NS_RGB(200,200,200);
+  nscolor fgColor  = NS_RGB(0,0,0);
+  nscolor hltColor = NS_RGB(255,255,255);
+  nscolor sdwColor = NS_RGB(128,128,128);
+
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  bgColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetForeground,  fgColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DShadow,    sdwColor);
+   lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DHighlight, hltColor);
+  }
 
   nscoord widthInPixels = NSTwipsToIntPixels(mWidth, aPresContext.GetTwipsToPixels());
   nscoord pixelWidth    = NSIntPixelsToTwips(1, aPresContext.GetPixelsToTwips());
@@ -1504,7 +1517,7 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
 
   nscolor color = WHITE;
   if (mVisibility) {
-    color = (NO_COLOR == mColor) ? GREY : mColor;
+    color = (NO_COLOR == mColor) ? bgColor : mColor;
   }
   aRenderingContext.SetColor(color);
   // draw grey or white first
@@ -1524,7 +1537,7 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   if (widthInPixels >= 5) {
-    aRenderingContext.SetColor(WHITE);
+    aRenderingContext.SetColor(hltColor);
     x0 = (mVertical) ? pixelWidth : 0;
     y0 = (mVertical) ? 0 : pixelWidth;
     x1 = (mVertical) ? x0 : mRect.width;
@@ -1533,7 +1546,7 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   if (widthInPixels >= 2) {
-    aRenderingContext.SetColor(DARK_GREY);
+    aRenderingContext.SetColor(sdwColor);
     x0 = (mVertical) ? mRect.width - (2 * pixelWidth) : 0;
     y0 = (mVertical) ? 0 : mRect.height - (2 * pixelWidth);
     x1 = (mVertical) ? x0 : mRect.width;
@@ -1542,7 +1555,7 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   if (widthInPixels >= 1) {
-    aRenderingContext.SetColor(BLACK);
+    aRenderingContext.SetColor(fgColor);
     x0 = (mVertical) ? mRect.width - pixelWidth : 0;
     y0 = (mVertical) ? 0 : mRect.height - pixelWidth;
     x1 = (mVertical) ? x0 : mRect.width;
