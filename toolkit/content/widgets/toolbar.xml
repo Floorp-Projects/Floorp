@@ -34,7 +34,7 @@
             this.afterPalette = node.nextSibling;
             this.palette = node;
             this.removeChild(node);
-
+            
             var currentSet = node.getAttribute("currentset");
             if (!currentSet)
               currentSet = node.getAttribute("defaultset");
