@@ -884,3 +884,21 @@ debug::
 run::
         $(DIST)\bin\mozilla.exe
 
+################################################################################
+## JAR Manifests
+
+JAR_MANIFEST = manifest.jm
+!if exist($(JAR_MANIFEST))
+
+install:: 
+        @echo +++ make: packaging jars from $(JAR_MANIFEST)
+        $(PERL) $(DEPTH)\config\make-jars.pl -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
+
+!else
+
+install::
+        @echo +++ make: $(JAR_MANIFEST) doesn't exist
+!endif
+
+################################################################################
+
