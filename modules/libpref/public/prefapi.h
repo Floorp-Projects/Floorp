@@ -196,7 +196,11 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 */
 
 typedef enum { PREF_SETDEFAULT, PREF_SETUSER, 
-			   PREF_LOCK, PREF_SETCONFIG, PREF_SETLI } PrefAction;
+			   PREF_LOCK, PREF_SETCONFIG
+#ifdef MOZ_OLD_LI_STUFF
+,PREF_SETLI 
+#endif
+} PrefAction;
 
 /*
 // <font color=blue>
@@ -362,8 +366,9 @@ PR_EXTERN(PrefResult) PREF_SavePrefFile(void);
 PR_EXTERN(PrefResult) PREF_SavePrefFileAs(const char *filename);
 
 /* LI_STUFF */
+#ifdef MOZ_OLD_UI_STUFF
 PR_EXTERN(PrefResult) PREF_SaveLIPrefFile(const char *filename);
-
+#endif /* MOZ_OLD_UI_STUFF */
 
 /*
  * Called to handle the "about:config" command.

@@ -67,8 +67,10 @@ public:
   // Save pref files
   NS_IMETHOD SavePrefFile(void) = 0;
   NS_IMETHOD SavePrefFileAs(const char *filename) = 0;
-  NS_IMETHOD SaveLIPrefFile(const char *filename) = 0;
 
+#ifdef MOZ_OLD_LI_STUFF
+  NS_IMETHOD SaveLIPrefFile(const char *filename) = 0;
+#endif /* MOZ_OLD_LI_STUFF */
 };
 
 #endif /* nsIBrowserPrefsManager_h__ */
