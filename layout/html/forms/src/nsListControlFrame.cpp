@@ -1427,7 +1427,7 @@ nsListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
     if (aSelected) {
       DisplaySelected(content);
       // Now that it is selected scroll to it
-      nsCOMPtr<nsIContent> content(do_QueryInterface(content));
+//    nsCOMPtr<nsIContent> content(do_QueryInterface(content));
       if (content) {
         ScrollToFrame(content);
       }
