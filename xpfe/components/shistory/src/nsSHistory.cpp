@@ -389,7 +389,7 @@ nsSHistory::PurgeHistory(PRInt32 aEntries)
 
   if (!purgeHistory) {
     // Listener asked us not to purge
-    return NS_OK;
+    return NS_SUCCESS_LOSS_OF_INSIGNIFICANT_DATA;
   }
 
   PRInt32 cnt = 0;
