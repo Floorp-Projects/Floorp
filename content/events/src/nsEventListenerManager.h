@@ -222,14 +222,14 @@ protected:
   nsresult GetDOM2EventGroup(nsIDOMEventGroup** aGroup);
 
   PRUint8 mManagerType;
+  PRPackedBool mListenersRemoved;
+
   EventArrayType mSingleListenerType;
   nsVoidArray* mSingleListener;
   nsVoidArray* mMultiListeners;
   nsHashtable* mGenericListeners;
-  PRBool mListenersRemoved;
   static PRUint32 mInstanceCount;
 
-  nsCOMPtr<nsIPrincipal> mPrincipal;
   nsISupports* mTarget;  //WEAK
 
   static jsval sAddListenerID;
