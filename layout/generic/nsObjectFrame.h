@@ -92,6 +92,10 @@ public:
                             nsISupports*    aSubContent);
   NS_IMETHOD GetPluginInstance(nsIPluginInstance*& aPluginInstance);
 
+  /* fail on any requests to get a cursor from us because plugins set their own! see bug 118877 */
+  NS_IMETHOD GetCursor(nsIPresContext* aPresContext, nsPoint& aPoint, PRInt32& aCursor) 
+  { return NS_ERROR_NOT_IMPLEMENTED;  };
+
   //i18n helper
   nsresult MakeAbsoluteURL(nsIURI* *aFullURI, 
                           nsString aSrc,
