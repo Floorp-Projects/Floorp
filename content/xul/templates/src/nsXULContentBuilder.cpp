@@ -64,6 +64,7 @@
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsXULAtoms.h"
+#include "nsLayoutAtoms.h"
 #include "nsXULContentUtils.h"
 #include "nsXULElement.h"
 #include "nsXULTemplateBuilder.h"
@@ -661,13 +662,26 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
                 content->SetText(value.get(), value.Length(), PR_FALSE);
 
-                rv = aRealNode->AppendChildTo(nsCOMPtr<nsIContent>( do_QueryInterface(content) ),
-                                              aNotify, PR_FALSE);
+                rv = aRealNode->AppendChildTo(content, aNotify, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
 
                 // XXX Don't bother remembering text nodes as the
                 // first element we've generated?
             }
+        }
+        else if (tag == nsLayoutAtoms::textTagName) {
+            nsCOMPtr<nsITextContent> tmplTextContent = do_QueryInterface(tmplKid);
+            if (!tmplTextContent) {
+                NS_ERROR("textnode not implementing nsITextContent??");
+                return NS_ERROR_FAILURE;
+            }
+            nsCOMPtr<nsITextContent> clonedContent = tmplTextContent->CloneContent(PR_TRUE);
+            if (!clonedContent) {
+                NS_ERROR("failed to clone textnode");
+                return NS_ERROR_FAILURE;
+            }
+            rv = aRealNode->AppendChildTo(clonedContent, aNotify, PR_FALSE);
+            if (NS_FAILED(rv)) return rv;
         }
         else {
             // It's just a generic element. Create it!
