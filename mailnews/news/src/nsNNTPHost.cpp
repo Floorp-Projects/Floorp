@@ -504,6 +504,7 @@ nsNNTPHost::nsNNTPHost(const char *name, PRInt32 port)
 	m_lastGroupUpdate = 0;
 	m_groupTree = NULL;
     m_inhaled = PR_FALSE;
+    m_uniqueId = 0;
 }
 
 /* we're not supposed to implement this */
