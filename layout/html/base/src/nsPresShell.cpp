@@ -910,7 +910,7 @@ FindFrameWithContent(nsIFrame* aFrame, nsIContent* aContent)
       return aFrame;
     }
   }
-  NS_RELEASE(frameContent);
+  NS_IF_RELEASE(frameContent);
 
   aFrame->FirstChild(nsnull, aFrame);
   while (aFrame) {

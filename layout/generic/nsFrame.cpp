@@ -235,7 +235,7 @@ void* nsFrame::operator new(size_t size)
 nsFrame::nsFrame(nsIContent* aContent, nsIFrame*   aParent)
   : mContent(aContent), mContentParent(aParent), mGeometricParent(aParent)
 {
-  NS_ADDREF(mContent);
+  NS_IF_ADDREF(mContent);
   mState = NS_FRAME_FIRST_REFLOW | NS_FRAME_SYNC_FRAME_AND_VIEW;
 }
 
@@ -344,9 +344,7 @@ nsFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
 
 NS_IMETHODIMP nsFrame::GetContent(nsIContent*& aContent) const
 {
-  if (nsnull != mContent) {
-    NS_ADDREF(mContent);
-  }
+  NS_IF_ADDREF(mContent);
   aContent = mContent;
   return NS_OK;
 }
@@ -1511,14 +1509,16 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 NS_IMETHODIMP nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
 {
   // if a filter is present, only output this frame if the filter says we should
-  nsIAtom* tag;
   nsAutoString tagString;
-  mContent->GetTag(tag);
-  if (tag != nsnull) 
-  {
-    tag->ToString(tagString);
-    NS_RELEASE(tag);
+  if (nsnull != mContent) {
+    nsIAtom* tag;
+    mContent->GetTag(tag);
+    if (tag != nsnull) {
+      tag->ToString(tagString);
+      NS_RELEASE(tag);
+    }
   }
+
   if ((nsnull==aFilter) || (PR_TRUE==aFilter->OutputTag(&tagString)))
   {
     // Indent
@@ -1542,13 +1542,15 @@ NS_IMETHODIMP nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) 
 // Output the frame's tag
 NS_IMETHODIMP nsFrame::ListTag(FILE* out) const
 {
-  nsIAtom* tag;
-  mContent->GetTag(tag);
-  if (tag != nsnull) {
-    nsAutoString buf;
-    tag->ToString(buf);
-    fputs(buf, out);
-    NS_RELEASE(tag);
+  if (nsnull != mContent) {
+    nsIAtom* tag;
+    mContent->GetTag(tag);
+    if (tag != nsnull) {
+      nsAutoString buf;
+      tag->ToString(buf);
+      fputs(buf, out);
+      NS_RELEASE(tag);
+    }
   }
 
   fprintf(out, "(%d)@%p", ContentIndexInContainer(this), this);
@@ -1653,7 +1655,7 @@ void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
   if (frameContent == aContent) {
     ForceDrawFrame((nsFrame *)aFrame);
   }
-  NS_RELEASE(frameContent);
+  NS_IF_RELEASE(frameContent);
 
   aFrame->FirstChild(nsnull, aFrame);
   while (aFrame) {
@@ -1915,6 +1917,15 @@ void addRangeToSelectionTrackers(nsIContent * aStartContent, nsIContent * aEndCo
   while (contentPtr != aEndContent) {
     contentList[inx++] = contentPtr;
     contentPtr = gDoc->GetNextContent(contentPtr); // This does an AddRef
+    if (nsnull == contentPtr) {
+      // XXX We didn't find the end content...
+      if (aType == kInsertInRemoveList) {
+        fTrackerRemoveListMax = inx;
+      } else { // kInsertInAddList
+        fTrackerAddListMax = inx;
+      }
+      return;
+    }
   }
   contentList[inx++] = aEndContent;
 

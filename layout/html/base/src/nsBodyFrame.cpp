@@ -806,11 +806,13 @@ nsBodyFrame::HandleEvent(nsIPresContext& aPresContext,
               mLastContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
             }
             //fire mouseover
-            nsEventStatus mStatus = nsEventStatus_eIgnore;
-            nsMouseEvent mEvent;
-            mEvent.eventStructType = NS_MOUSE_EVENT;
-            mEvent.message = NS_MOUSE_ENTER;
-            mTargetContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
+            if (nsnull != mTargetContent) {
+              nsEventStatus mStatus = nsEventStatus_eIgnore;
+              nsMouseEvent mEvent;
+              mEvent.eventStructType = NS_MOUSE_EVENT;
+              mEvent.message = NS_MOUSE_ENTER;
+              mTargetContent->HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
+            }
             mStateManager->SetLastMouseOverContent(mTargetContent);
           }
           NS_RELEASE(mStateManager);
@@ -1250,12 +1252,14 @@ NS_IMETHODIMP
 nsBodyFrame::ListTag(FILE* out) const
 {
   fprintf(out, "Body<");
-  nsIAtom* atom;
-  mContent->GetTag(atom);
-  if (nsnull != atom) {
-    nsAutoString tmp;
-    atom->ToString(tmp);
-    fputs(tmp, out);
+  if (nsnull != mContent) {
+    nsIAtom* atom;
+    mContent->GetTag(atom);
+    if (nsnull != atom) {
+      nsAutoString tmp;
+      atom->ToString(tmp);
+      fputs(tmp, out);
+    }
   }
   fprintf(out, ">(%d)@%p", ContentIndexInContainer(this), this);
   return NS_OK;

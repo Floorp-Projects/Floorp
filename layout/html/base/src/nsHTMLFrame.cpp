@@ -185,7 +185,9 @@ RootFrame::HandleEvent(nsIPresContext& aPresContext,
                        nsGUIEvent* aEvent,
                        nsEventStatus& aEventStatus)
 {
-  mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
+  if (nsnull != mContent) {
+    mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
+  }
 
   if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP ||
       aEvent->message == NS_MOUSE_MIDDLE_BUTTON_UP ||

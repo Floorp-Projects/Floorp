@@ -300,10 +300,10 @@ protected:
                               nsIStyleContext* aStyleContext,
                               nsIFrame*&       aNewFrame);
 
-  nsresult ConstructXMLRootFrames(nsIPresContext*  aPresContext,
-                                  nsIContent*      aContent,
-                                  nsIStyleContext* aStyleContext,
-                                  nsIFrame*&       aNewFrame);
+  nsresult ConstructXMLRootFrame(nsIPresContext*  aPresContext,
+                                 nsIContent*      aContent,
+                                 nsIStyleContext* aStyleContext,
+                                 nsIFrame*&       aNewFrame);
 
   nsresult ConstructTableFrame(nsIPresContext*  aPresContext,
                                nsIContent*      aContent,
@@ -1210,13 +1210,17 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
 }
 
 nsresult
-HTMLStyleSheetImpl::ConstructXMLRootFrames(nsIPresContext*  aPresContext,
-                                           nsIContent*      aContent,
-                                           nsIStyleContext* aStyleContext,
-                                           nsIFrame*&       aNewFrame)
+HTMLStyleSheetImpl::ConstructXMLRootFrame(nsIPresContext*  aPresContext,
+                                          nsIContent*      aContent,
+                                          nsIStyleContext* aStyleContext,
+                                          nsIFrame*&       aNewFrame)
 {
-  // Create the root frame
-  nsresult  rv = NS_NewHTMLFrame(aContent, nsnull, aNewFrame);
+  // Create the root frame. It gets a special pseudo element style
+  nsIStyleContext*  rootPseudoStyle;
+  rootPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsnull, 
+                      nsHTMLAtoms::xmlRootPseudo, nsnull);
+
+  nsresult  rv = NS_NewHTMLFrame(nsnull, nsnull, aNewFrame);
 
   if (NS_SUCCEEDED(rv)) {
     // Bind root frame to root view (and root window)
@@ -1230,33 +1234,38 @@ HTMLStyleSheetImpl::ConstructXMLRootFrames(nsIPresContext*  aPresContext,
     NS_RELEASE(viewManager);
   
     // Set the style context
-    aNewFrame->SetStyleContext(aPresContext, aStyleContext);
+    aNewFrame->SetStyleContext(aPresContext, rootPseudoStyle);
 
     // Wrap the document element in a scroll frame
     nsIFrame* scrollFrame;
     
-    if (NS_SUCCEEDED(NS_NewScrollFrame(aContent, aNewFrame, scrollFrame))) {
+    if (NS_SUCCEEDED(NS_NewScrollFrame(nsnull, aNewFrame, scrollFrame))) {
       // The scroll frame gets the original style context, and the scrolled
       // frame gets a SCROLLED-CONTENT pseudo element style context.
-      scrollFrame->SetStyleContext(aPresContext, aStyleContext);
+      scrollFrame->SetStyleContext(aPresContext, rootPseudoStyle);
 
       nsIStyleContext*  scrolledPseudoStyle;
       nsIFrame* wrapperFrame;
                     
       scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
-                                 (aContent, 
-                                  nsHTMLAtoms::scrolledContentPseudo,
-                                  aStyleContext);
+                              (nsnull, nsHTMLAtoms::scrolledContentPseudo,
+                               rootPseudoStyle);
 
       // Create a body frame to wrap the document element
-      NS_NewBodyFrame(aContent, scrollFrame, 
-                      wrapperFrame, NS_BODY_SHRINK_WRAP);
+      NS_NewBodyFrame(nsnull, scrollFrame, wrapperFrame, NS_BODY_SHRINK_WRAP);
       wrapperFrame->SetStyleContext(aPresContext, scrolledPseudoStyle);
 
+      // Construct a frame for the document element
+      nsIFrame* docElementFrame;
+      ConstructFrame(aPresContext, aContent, wrapperFrame, docElementFrame);
+      wrapperFrame->SetInitialChildList(*aPresContext, nsnull, docElementFrame);
+
+#if 0
       // Process the child content, and set the frame's initial child list
       nsIFrame* childList;
       rv = ProcessChildren(aPresContext, wrapperFrame, aContent, childList);
       wrapperFrame->SetInitialChildList(*aPresContext, nsnull, childList);
+#endif
       
       // Set the scroll frame's initial child list
       scrollFrame->SetInitialChildList(*aPresContext, nsnull, wrapperFrame);
@@ -1631,8 +1640,8 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
           }
           else {
             // Construct the root frame object for XML
-            rv = ConstructXMLRootFrames(aPresContext, aContent, styleContext,
-                                        aFrameSubTree);
+            rv = ConstructXMLRootFrame(aPresContext, aContent, styleContext,
+                                       aFrameSubTree);
             NS_RELEASE(xmlDocument);
           }
           NS_RELEASE(document);

@@ -54,6 +54,8 @@ static NS_DEFINE_IID(kIXMLDocumentIID, NS_IXMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
+#define XML_PSEUDO_ELEMENT  0
+
 nsresult
 NS_NewXMLContentSink(nsIXMLContentSink** aResult,
                      nsIDocument* aDoc,
@@ -159,6 +161,7 @@ nsXMLContentSink::WillBuildModel(void)
   mDocument->BeginLoad();
   nsresult result = NS_OK;
 
+#if XML_PSEUDO_ELEMENT
   // XXX Create a pseudo root element. This is a parent of the
   // document element. For now, it will be seen in the document
   // hierarchy. In the future we might want to get rid of it
@@ -179,6 +182,7 @@ nsXMLContentSink::WillBuildModel(void)
 
     mDocument->SetRootContent(mRootElement);
   }
+#endif
 
   return result;
 }
@@ -200,8 +204,12 @@ nsXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     }
   }
 
+#if XML_PSEUDO_ELEMENT
   // Pop the pseudo root content
   PopContent();
+#else
+  mDocument->SetRootContent(mDocElement);
+#endif
 
   StartLayout();
 
@@ -496,10 +504,11 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
         mDocElement = content;
         NS_ADDREF(mDocElement);
       }
+      else {
+        nsIContent *parent = GetCurrentContent();
 
-      nsIContent *parent = GetCurrentContent();
-      
-      parent->AppendChildTo(content, PR_FALSE);
+        parent->AppendChildTo(content, PR_FALSE);
+      }
       PushContent(content);
     }
   }

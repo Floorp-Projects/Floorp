@@ -60,7 +60,7 @@ nsHTMLContainerFrame::Paint(nsIPresContext& aPresContext,
 {
   // Probe for a JS onPaint event handler
   nsIHTMLContent* hc;
-  if (NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**)&hc)) {
+  if (mContent && NS_OK == mContent->QueryInterface(kIHTMLContentIID, (void**)&hc)) {
     nsHTMLValue val;
     if (NS_CONTENT_ATTR_HAS_VALUE ==
         hc->GetAttribute(nsHTMLAtoms::onpaint, val)) {
@@ -135,16 +135,18 @@ nsHTMLContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
   // Get child's cursor, if any
   nsContainerFrame::GetCursorAndContentAt(aPresContext, aPoint, aFrame, aContent, aCursor);
   if (aCursor != NS_STYLE_CURSOR_INHERIT) {
-    nsIAtom* tag;
-    mContent->GetTag(tag);
-    if (nsHTMLAtoms::a == tag) {
-      // Anchor tags override their child cursors in some cases.
-      if ((NS_STYLE_CURSOR_TEXT == aCursor) &&
-          (NS_STYLE_CURSOR_INHERIT != myCursor)) {
-        aCursor = myCursor;
+    if (nsnull != mContent) {
+      nsIAtom* tag;
+      mContent->GetTag(tag);
+      if (nsHTMLAtoms::a == tag) {
+        // Anchor tags override their child cursors in some cases.
+        if ((NS_STYLE_CURSOR_TEXT == aCursor) &&
+            (NS_STYLE_CURSOR_INHERIT != myCursor)) {
+          aCursor = myCursor;
+        }
       }
+      NS_RELEASE(tag);
     }
-    NS_RELEASE(tag);
     return NS_OK;
   }
 
