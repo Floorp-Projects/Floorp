@@ -35,6 +35,9 @@ CSRCS = \
 # without the shared library path being set.
 LIBS = $(DIST)/lib/libxpt.a $(LIBIDL_LIBS)
 
+# We are building a build tool
+INTERNAL_TOOLS = 1
+
 include $(topsrcdir)/config/rules.mk
 
 CFLAGS += $(LIBIDL_CFLAGS)
