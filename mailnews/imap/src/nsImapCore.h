@@ -20,7 +20,42 @@
 #define _nsImapCore_H_
 
 class nsIMAPNamespace;
+class nsImapProtocol;
+class nsImapFlagAndUidState;
 
+/* imap message flags */
+typedef uint16 imapMessageFlagsType;
+
+/* used for communication between libmsg and libnet */
+#define kNoFlags     0x00	/* RFC flags */
+#define kMarked      0x01
+#define kUnmarked    0x02
+#define kNoinferiors 0x04
+#define kNoselect    0x08
+#define kImapTrash   0x10	/* Navigator flag */
+#define kJustExpunged 0x20	/* This update is a post expunge url update. */
+#define kPersonalMailbox	0x40	/* this mailbox is in the personal namespace */
+#define kPublicMailbox		0x80	/* this mailbox is in the public namespace */
+#define kOtherUsersMailbox	0x100	/* this mailbox is in the other users' namespace */
+
+/* flags for individual messages */
+/* currently the ui only offers \Seen and \Flagged */
+#define kNoImapMsgFlag			0x0000
+#define kImapMsgSeenFlag		0x0001
+#define kImapMsgAnsweredFlag	0x0002
+#define kImapMsgFlaggedFlag		0x0004
+#define kImapMsgDeletedFlag		0x0008
+#define kImapMsgDraftFlag		0x0010
+#define kImapMsgRecentFlag		0x0020
+#define	kImapMsgForwardedFlag	0x0040		/* Not always supported, check mailbox folder */
+#define kImapMsgMDNSentFlag		0x0080		/* Not always supported. check mailbox folder */
+
+#define kImapMsgSupportMDNSentFlag 0x2000
+#define kImapMsgSupportForwardedFlag 0x4000
+#define kImapMsgSupportUserFlag 0x8000		/* This seems to be the most cost effective way of
+											 * piggying back the server support user flag
+											 * info.
+											 */
 // I think this should really go in an imap.h equivalent file
 typedef enum {
 	kPersonalNamespace = 0,
@@ -46,34 +81,6 @@ typedef enum {
 	kMailboxDataCapability = 0x00000400,    /* MAILBOXDATA SMTP posting extension */
 	kXServerInfoCapability = 0x00000800     /* XSERVERINFO extension for admin urls */
 } eIMAPCapabilityFlag;
-
-class nsIMAPNamespace
-{
-
-public:
-	nsIMAPNamespace(EIMAPNamespaceType type, const char *prefix, char delimiter, PRBool from_prefs);
-
-	~nsIMAPNamespace();
-
-	EIMAPNamespaceType	GetType() { return m_namespaceType; }
-	const char *		GetPrefix() { return m_prefix; }
-	char				GetDelimiter() { return m_delimiter; }
-	void				SetDelimiter(char delimiter);
-	PRBool				GetIsDelimiterFilledIn() { return m_delimiterFilledIn; }
-	PRBool				GetIsNamespaceFromPrefs() { return m_fromPrefs; }
-
-	// returns -1 if this box is not part of this namespace,
-	// or the length of the prefix if it is part of this namespace
-	int					MailboxMatchesNamespace(const char *boxname);
-
-protected:
-	EIMAPNamespaceType m_namespaceType;
-	char	*m_prefix;
-	char	m_delimiter;
-	PRBool	m_fromPrefs;
-	PRBool m_delimiterFilledIn;
-
-};
 
 // this used to be part of the connection object class - maybe we should move it into 
 // something similar
@@ -106,6 +113,34 @@ protected:
 	PRBool m_childrenListed;
 	char *m_mailboxName;
 };
+
+
+struct mailbox_spec {
+	PRInt32 		  	folder_UIDVALIDITY;
+	PRInt32			number_of_messages;
+	PRInt32 		  	number_of_unseen_messages;
+	PRInt32			number_of_recent_messages;
+	
+	PRUint32			box_flags;
+	
+	char          *allocatedPathName;
+	char			hierarchySeparator;
+	const char		*hostName;
+	
+	nsImapProtocol *connection;	// do we need this? It seems evil.
+	nsImapFlagAndUidState     *flagState;
+	
+	PRBool			folderSelected;
+	PRBool			discoveredFromLsub;
+
+	const char		*smtpPostAddress;
+	PRBool			onlineVerified;
+
+	nsIMAPNamespace	*namespaceForFolder;
+	PRBool			folderIsNamespace;
+};
+
+typedef struct mailbox_spec mailbox_spec;
 
 
 

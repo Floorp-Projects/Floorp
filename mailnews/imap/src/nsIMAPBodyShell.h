@@ -36,7 +36,6 @@ typedef enum _nsIMAPBodypartType {
 } nsIMAPBodypartType;
 
 class nsIMAPGenericParser;
-class TNavigatorImapConnection;
 class nsIMAPBodyShell;
 class nsIMAPBodypartMessage;
 typedef struct xp_HashTable *XP_HashTable;

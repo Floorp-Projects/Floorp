@@ -23,8 +23,6 @@
 #include "nsIMAPGenericParser.h"
 #include "nsString2.h"
 
-#define WHITESPACE " \015\012"     // token delimiter 
-
 /*************************************************
    The following functions are used to implement
    a thread safe strtok
@@ -94,7 +92,7 @@ char *strtoken_r(char ** stringp, const char *delim, int skip)
 }
 
 
-static char *XP_STRTOK_R(char *s1, const char *s2, char **lasts)
+char *nsIMAPGenericParser::Imapstrtok_r(char *s1, const char *s2, char **lasts)
 {
 	if (s1)
 		*lasts = s1;
@@ -261,12 +259,12 @@ char *nsIMAPGenericParser::GetNextToken()
 	{
 		if (fTokenizerAdvanced)
 		{
-			fNextToken = XP_STRTOK_R(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
+			fNextToken = Imapstrtok_r(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
 			fTokenizerAdvanced = PR_FALSE;
 		}
 		else
 		{
-			fNextToken = XP_STRTOK_R(nil, WHITESPACE, &fCurrentTokenPlaceHolder);
+			fNextToken = Imapstrtok_r(nil, WHITESPACE, &fCurrentTokenPlaceHolder);
 		}
 		if (!fNextToken)
 		{
@@ -299,7 +297,7 @@ void nsIMAPGenericParser::AdvanceToNextLine()
 		if (fStartOfLineOfTokens)
 		{
 			fLineOfTokens = fStartOfLineOfTokens;
-			fNextToken = XP_STRTOK_R(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
+			fNextToken = Imapstrtok_r(fLineOfTokens, WHITESPACE, &fCurrentTokenPlaceHolder);
 			if (!fNextToken)
 			{
 				fAtEndOfLine = TRUE;

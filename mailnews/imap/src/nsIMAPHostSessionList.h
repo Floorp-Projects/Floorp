@@ -21,6 +21,7 @@
 
 #include "nsImapCore.h"
 #include "nsIIMAPHostSessionList.h"
+#include "nspr.h"
 
 class nsIMAPNamespaceList;
 

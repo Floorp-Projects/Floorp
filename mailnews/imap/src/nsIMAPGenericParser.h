@@ -12,12 +12,12 @@
  *
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
 
 /* 
-nsIMAPBodyShell and associated classes
+nsIMAPGenericParser is the base parser class used by the server parser and body shell parser
 */ 
 
 #ifndef nsIMAPGenericParser_H
@@ -25,8 +25,11 @@ nsIMAPBodyShell and associated classes
 
 #include "nsImapCore.h"
 
+#define WHITESPACE " \015\012"     // token delimiter 
 
-class nsIMAPGenericParser {
+
+class nsIMAPGenericParser 
+{
 
 public:
 	nsIMAPGenericParser();
@@ -74,6 +77,8 @@ protected:
 	void AdvanceTokenizerStartingPoint (int32 bytesToAdvance);
     void ResetLexAnalyzer();
 
+	// used to be XP_STRTOK_R, but that's not defined anymore.
+	char *	Imapstrtok_r(char *s1, const char *s2, char **lasts);
 protected:
 	// use with care
     char                     *fNextToken;
@@ -81,10 +86,10 @@ protected:
 	char					 *fLineOfTokens;
     char                     *fStartOfLineOfTokens;
     char                     *fCurrentTokenPlaceHolder;
-
-private:
     PRBool                   fAtEndOfLine;
 	PRBool					  fTokenizerAdvanced;
+
+private:
 
     char                     *fSyntaxErrorLine;
     PRBool                   fDisconnected;
