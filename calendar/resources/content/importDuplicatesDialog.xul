@@ -45,7 +45,7 @@
                    disabled="true"
                    selected="true"
                    label="&calendar.importdupes.prompt.label;"
-                   oncommand="this.checked = !this.checked; setPromptOnAdd(this.checked);"/>
+                   oncommand="setPromptOnAdd(this.checked);"/>
 
       </hbox>
 
