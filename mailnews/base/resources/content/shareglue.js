@@ -79,6 +79,7 @@ function MessengerSetDefaultCharacterSet(aCharset)
     messenger.SetDocumentCharset(aCharset);
 	var folderResource = GetSelectedFolderResource();
 	SetFolderCharset(folderResource, aCharset);
+	RefreshThreadTreeView();
     MsgReload();
 }
 
