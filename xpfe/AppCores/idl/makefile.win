@@ -34,7 +34,6 @@ IDLSRCS= \
 	BrowserAppCore.idl  \
 	DOMPropsCore.idl    \
 	EditorAppCore.idl   \
-	MailCore.idl        \
 	PrefsCore.idl       \
 	RDFCore.idl         \
 	Toolbar.idl         \
