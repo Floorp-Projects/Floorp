@@ -199,7 +199,7 @@ CountTotalMimeAttachments(MimeContainer *aObj)
 }
 
 void
-ValidateRealName(nsMsgAttachmentData *aAttach)
+ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
 { 
   // Sanity.
   if (!aAttach)
@@ -219,7 +219,10 @@ ValidateRealName(nsMsgAttachmentData *aAttach)
   if (aAttach->real_type && !nsCRT::strcasecmp(aAttach->real_type, MESSAGE_RFC822) && 
      (!aAttach->real_name || *aAttach->real_name == 0))
   {
-    mime_SACopy(&(aAttach->real_name), "ForwardedMessage.eml");
+    if (aHdrs->munged_subject)
+      mime_SACopy(&(aAttach->real_name), aHdrs->munged_subject);
+    else
+      mime_SACopy(&(aAttach->real_name), "ForwardedMessage.eml");
     return;
   }
 
@@ -360,7 +363,7 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
                                        PR_FALSE, PR_FALSE);
 
     // Now, do the right thing with the name!
-    ValidateRealName(tmp);
+    ValidateRealName(tmp, child->headers);
   }
 
   return NS_OK;

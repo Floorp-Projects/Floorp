@@ -64,6 +64,7 @@
 #include "mozITXTToHTMLConv.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIMsgMailSession.h"
+#include "nsTextFormatter.h"
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
@@ -79,6 +80,7 @@ static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
 #define PREF_MAIL_CONVERT_STRUCTS "mail.convert_structs"
 #define PREF_MAIL_STRICTLY_MIME "mail.strictly_mime"
+#define PREF_MAIL_MESSAGE_WARNING_SIZE "mailnews.message_warning_size"
 
 #ifdef XP_MAC
 #include "xp.h"                 // mac only 
@@ -190,7 +192,7 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mRemoteAttachmentCount = 0;
   mCompFieldLocalAttachments = 0;
   mCompFieldRemoteAttachments = 0;
-
+  mMessageWarningSize = 0;
 
   // note: it is okay to return a null status feedback and not return an error
   // it's possible the url really doesn't have status feedback
@@ -2153,24 +2155,23 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       //
 
       // Display some feedback to user...
-      char          *printfString = nsnull;
+      PRUnichar     *printfString = nsnull;
       PRUnichar     *msg = nsnull;
 
       msg = ComposeGetStringByID(NS_MSG_GATHERING_ATTACHMENT);
-      nsCAutoString cProgressString(msg);
-      PR_FREEIF(msg);
 
       if (m_attachments[i].m_real_name)
-        printfString = PR_smprintf(cProgressString, m_attachments[i].m_real_name);
+        printfString = nsTextFormatter::smprintf(msg, m_attachments[i].m_real_name);
       else
-        printfString = PR_smprintf(cProgressString, "");
+        printfString = nsTextFormatter::smprintf(msg, "");
 
       if (printfString)
       {
-        nsString formattedString(printfString);
-        SetStatusMessage((PRUnichar *)formattedString.GetUnicode());	
-        PR_smprintf_free(printfString);  
+        SetStatusMessage(printfString);	
+        PR_FREEIF(printfString);  
       }
+
+      PR_FREEIF(msg);
       
       int status = m_attachments[i].SnarfAttachment(mCompFields);
       if (status < 0)
@@ -2483,6 +2484,7 @@ nsMsgComposeAndSend::Init(
   if (NS_SUCCEEDED(rv) && prefs) 
   {
     rv = prefs->GetBoolPref(PREF_MAIL_STRICTLY_MIME, &strictly_mime);
+    rv = prefs->GetIntPref(PREF_MAIL_MESSAGE_WARNING_SIZE, (PRInt32 *) &mMessageWarningSize);
   }
 
   nsMsgMIMESetConformToStandard(strictly_mime);
@@ -2591,6 +2593,39 @@ nsMsgComposeAndSend::DeliverMessage()
   {
 		return SaveAsTemplate();
 	}
+
+  //
+  // Ok, we are about to send the file that we have built up...but what
+  // if this is a mongo email...we should have a way to warn the user that
+  // they are about to do something they may not want to do.
+  //
+  if ( (mMessageWarningSize > 0) && (mTempFileSpec->GetFileSize() > mMessageWarningSize) )
+  {
+    PRBool abortTheSend = PR_FALSE;
+
+    PRUnichar *msg = ComposeGetStringByID(NS_MSG_LARGE_MESSAGE_WARNING);
+    
+    if (msg)
+    {
+      PRUnichar *printfString = nsTextFormatter::smprintf(msg, mTempFileSpec->GetFileSize());
+      PR_FREEIF(msg);
+
+      if (printfString)
+      {
+        nsMsgAskBooleanQuestionByString(printfString, &abortTheSend);
+        if (!abortTheSend)
+        {
+          Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, printfString);
+          PR_FREEIF(printfString);
+          NotifyListenersOnStopCopy(NS_ERROR_FAILURE);
+          return NS_ERROR_FAILURE;
+        }
+        else
+          PR_FREEIF(printfString);
+      }
+
+    }
+  }
 
 	if (news_p) {
       if (mail_p) {
@@ -3531,10 +3566,9 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
   char          *envelopeLine = nsMsgGetEnvelopeLine();
   PRBool        folderIsLocal = PR_TRUE;
   char          *turi = nsnull;
-  char          *printfString = nsnull;
+  PRUnichar     *printfString = nsnull;
   PRUnichar     *msg = nsnull; 
   char          *folderName = nsnull;
-  char          *cProgressString = nsnull;
 
   //
   // Ok, this is here to keep track of this for 2 copy operations... 
@@ -3623,24 +3657,22 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 
   // Tell the user we are copying the message... 
   msg = ComposeGetStringByID(NS_MSG_START_COPY_MESSAGE);
-  cProgressString = nsString(msg).ToNewCString();
-  PR_FREEIF(msg);
-  folderName = GetFolderNameFromURLString(turi);
-  
-  if (cProgressString)
+  if (msg)
   {
+    folderName = GetFolderNameFromURLString(turi);
     if (folderName)
-      printfString = PR_smprintf(cProgressString, folderName);
+      printfString = nsTextFormatter::smprintf(msg, folderName);
     else
-      printfString = PR_smprintf(cProgressString, "?");
-    PR_FREEIF(cProgressString);
+      printfString = nsTextFormatter::smprintf(msg, "?");
     if (printfString)
     {
-      nsString formattedString(printfString);
-      SetStatusMessage((PRUnichar *)formattedString.GetUnicode());	
-      PR_smprintf_free(printfString);  
+      SetStatusMessage(printfString);	
+      PR_FREEIF(printfString);  
     }
   }
+
+  PR_FREEIF(folderName);
+  PR_FREEIF(msg);
 
   if ( (envelopeLine) && (folderIsLocal) )
   {

@@ -131,7 +131,7 @@ nsURLFetcher::CanHandleContent(const char * aContentType,
                                 PRBool * aCanHandleContent)
 
 {
-  if (nsCRT::strcasecmp(aContentType, "message/rfc822") == 0)
+  if (nsCRT::strcasecmp(aContentType, MESSAGE_RFC822) == 0)
     *aDesiredContentType = nsCRT::strdup("text/html");
 
   // since we explicilty loaded the url, we always want to handle it!

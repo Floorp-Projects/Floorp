@@ -336,6 +336,7 @@ public:
   nsFileSpec                *mTempFileSpec;      // our temporary file
   
   nsOutputFileStream        *mOutputFile;        // the actual output file stream
+  PRUint32                  mMessageWarningSize; // Warn if a message is over this size!
 
   PRBool                    m_dont_deliver_p;    // If set, we just return the nsFileSpec of the file
 							                                   // created, instead of actually delivering message.

@@ -34,6 +34,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 #include "nsMsgPrompts.h"
+#include "nsTextFormatter.h"
 
 static  NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -424,6 +425,18 @@ FetcherURLDoneCallback(nsIURI* aURL, nsresult aStatus,
       ma->m_charset = PL_strdup(aCharset);
     }
 
+    if ( (!PL_strcasecmp(ma->m_real_name, "ForwardedMessage.eml")) &&
+         (!PL_strcasecmp(ma->m_type, MESSAGE_RFC822)) 
+       )
+    {
+      char *subject = nsMsgParseSubjectFromFile(ma->mFileSpec);
+      if (subject)
+      {
+        PR_FREEIF(ma->m_real_name);
+        ma->m_real_name = subject;
+      }
+    }
+
 	  return ma->UrlExit(aStatus, aMsg);
   }
   else
@@ -443,9 +456,9 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
     PR_FREEIF(m_real_name);
     m_real_name = PL_strdup("ForwardedMessage.eml");
     PR_FREEIF(m_type);
-    m_type = PL_strdup("message/rfc822");
+    m_type = PL_strdup(MESSAGE_RFC822);
     PR_FREEIF(m_override_type);
-    m_override_type = PL_strdup("message/rfc822");
+    m_override_type = PL_strdup(MESSAGE_RFC822);
     if (!mFileSpec) 
     {
         rv = NS_ERROR_FAILURE;
@@ -827,24 +840,17 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
     PRBool            keepOnGoing = PR_TRUE;
     nsXPIDLCString    turl;
     PRUnichar         *msg = nsnull;
-    char              *printfString = nsnull;
-    char              *tString = nsnull;
+    PRUnichar         *printfString = nsnull;
 
-    msg = ComposeGetStringByID(NS_MSG_FAILURE_ON_OBJ_EMBED);
-    nsCAutoString     cQuestionString(msg);
-    
+    msg = ComposeGetStringByID(NS_MSG_FAILURE_ON_OBJ_EMBED);    
     if (NS_SUCCEEDED(mURL->GetSpec(getter_Copies(turl))) && (turl))
-      tString = nsString(turl).ToNewCString();
-
-    if ( !tString )
-      printfString = PR_smprintf(cQuestionString, "?");
+      printfString = nsTextFormatter::smprintf(msg, turl);
     else
-      printfString = PR_smprintf(cQuestionString, tString);
+      printfString = nsTextFormatter::smprintf(msg, "?");
 
-    nsMsgAskBooleanQuestionByString(nsString(printfString).GetUnicode(), &keepOnGoing);
-    PR_smprintf_free(printfString);
+    nsMsgAskBooleanQuestionByString(printfString, &keepOnGoing);
+    PR_FREEIF(printfString);
     PR_FREEIF(msg);
-    PR_FREEIF(tString);
 
     if (!keepOnGoing)
     {

@@ -198,7 +198,7 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   NS_WITH_SERVICE(nsIStreamConverterService, streamConverterService, kIStreamConverterServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   nsAutoString from, to;
-  from = "message/rfc822";
+  from = MESSAGE_RFC822;
   to = "text/xul";
   nsCOMPtr<nsIStreamListener> convertedListener;
   rv = streamConverterService->AsyncConvertData(from.GetUnicode(),

@@ -85,6 +85,9 @@ MimeMessageClassInitialize(MimeMessageClass *clazz)
 static int
 MimeMessage_initialize (MimeObject *object)
 {
+  MimeMessage *msg = (MimeMessage *)object;
+  msg->grabSubject = PR_FALSE;
+
   return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(object);
 }
 
@@ -101,8 +104,15 @@ MimeMessage_finalize (MimeObject *object)
 static int
 MimeMessage_parse_begin (MimeObject *obj)
 {
+  MimeMessage *msg = (MimeMessage *)obj;
+
   int status = ((MimeObjectClass*)&MIME_SUPERCLASS)->parse_begin(obj);
   if (status < 0) return status;
+
+  if (obj->parent)
+  {
+    msg->grabSubject = PR_TRUE;
+  }
 
   /* Messages have separators before the headers, except for the outermost
 	 message. */
@@ -122,6 +132,27 @@ MimeMessage_parse_line (char *line, PRInt32 length, MimeObject *obj)
 #ifdef MOZ_SECURITY
   HG11013
 #endif /* MOZ_SECURITY */
+
+  if (msg->grabSubject)
+  {
+    if ( (!PL_strncasecmp(line, "Subject: ", 9)) && (obj->parent) )
+    {
+      if ( (obj->headers) && (!obj->headers->munged_subject) )
+      {
+        obj->headers->munged_subject = (char *) PL_strndup(line + 9, length - 9);
+        char *tPtr = obj->headers->munged_subject;
+        while (*tPtr)
+        {
+          if ( (*tPtr == CR) || (*tPtr == LF) )
+          {
+            *tPtr = '\0';
+            break;
+          }
+          tPtr++;
+        }
+      }
+    }
+  }
 
   /* If we already have a child object, then we're done parsing headers,
 	 and all subsequent lines get passed to the inferior object without

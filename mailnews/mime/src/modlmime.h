@@ -68,7 +68,7 @@ typedef struct MimeHeaders
 								   the subject header, after it's been
 								   charset-ified and stuff.  Remembered so that
 								   we can later use it to generate the
-								   <TITLE> tag. */
+								   <TITLE> tag. (Also works for giving names to RFC822 attachments) */
 } MimeHeaders;
 
 typedef struct MimeDisplayOptions MimeDisplayOptions;

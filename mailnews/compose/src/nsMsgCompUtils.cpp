@@ -810,7 +810,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
     PRBool sendFlowed = PR_TRUE;   /* rhp - add this  */
     if(type && !PL_strcasecmp(type, "text/plain") && prefs)
     {
-      prefs->GetBoolPref("mail.send_plaintext_flowed", &sendFlowed);
+      prefs->GetBoolPref("mailnews.send_plaintext_flowed", &sendFlowed);
       if (sendFlowed)
 			  PUSH_STRING ("; format=flowed");
 		  // else
@@ -2069,4 +2069,47 @@ DoLineEndingConJobUnicode(PRUnichar *aBuf, PRUint32 aLen)
   for (i=0; i<len; i++)
     if (aBuf[i] == CR) 
       aBuf[i] = LF;
+}
+
+// Simple parser to parse Subject. 
+// It only supports the case when the description is within one line. 
+char * 
+nsMsgParseSubjectFromFile(nsFileSpec* fileSpec) 
+{ 
+  nsIFileSpec   *tmpFileSpec = nsnull;
+  char          *subject = nsnull;
+  char          buffer[1024];
+  char          *ptr = &buffer[0];
+
+  NS_NewFileSpecWithSpec(*fileSpec, &tmpFileSpec);
+	if (!tmpFileSpec)
+    return nsnull;
+
+  if (NS_FAILED(tmpFileSpec->OpenStreamForReading()))
+    return nsnull;
+
+  PRBool eof = PR_FALSE;
+
+  while ( NS_SUCCEEDED(tmpFileSpec->Eof(&eof)) && (!eof) )
+  {
+    PRBool wasTruncated = PR_FALSE;
+
+    if (NS_FAILED(tmpFileSpec->ReadLine(&ptr, sizeof(buffer), &wasTruncated)))
+      break;
+
+    if (wasTruncated)
+      continue;
+
+    if (*buffer == CR || *buffer == LF || *buffer == 0) 
+      break; 
+
+    if ( !PL_strncasecmp(buffer, "Subject: ", 9) )
+    { 
+      subject = nsCRT::strdup(buffer + 9);
+      break;
+    } 
+  } 
+
+  tmpFileSpec->CloseStream();
+  return subject; 
 }
