@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 #ifndef FORCE_PR_LOG
@@ -82,7 +88,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
    
    A pointer to this function is passed to XP_Maphash     -km */
 
-static PR_CALLBACK PRIntn
+static PRIntn PR_CALLBACK
 net_pop3_check_for_hash_messages_marked_delete(PLHashEntry* he,
 				       						   PRIntn msgindex, 
 				       						   void *arg)
@@ -212,7 +218,7 @@ net_pop3_load_state(const char* searchhost,
   return result;
 }
 
-static PR_CALLBACK PRIntn
+static PRIntn PR_CALLBACK
 hash_clear_mapper(PLHashEntry* he, PRIntn msgindex, void* arg)
 {
 #ifdef UNREADY_CODE   // mscott: the compiler won't take this line and I can't figure out why..=(
@@ -221,7 +227,7 @@ hash_clear_mapper(PLHashEntry* he, PRIntn msgindex, void* arg)
   return HT_ENUMERATE_REMOVE;
 }
 
-static PR_CALLBACK PRIntn
+static PRIntn PR_CALLBACK
 hash_empty_mapper(PLHashEntry* he, PRIntn msgindex, void* arg)
 {
   *((PRBool*) arg) = PR_FALSE;
@@ -237,7 +243,7 @@ hash_empty(PLHashTable* hash)
 }
 
 
-static PR_CALLBACK PRIntn
+static PRIntn PR_CALLBACK
 net_pop3_write_mapper(PLHashEntry* he, PRIntn msgindex, void* arg)
 {
   nsOutputFileStream* file = (nsOutputFileStream*) arg;

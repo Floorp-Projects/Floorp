@@ -19,6 +19,12 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 #include "nsCOMPtr.h"
 #include "modmimee.h"
@@ -345,7 +351,7 @@ dummy_file_write( char *buf, PRInt32 size, void *fileHandle )
   return tStream->write(buf, size);
 }
 
-static int
+static int PR_CALLBACK
 mime_parse_stream_write ( nsMIMESession *stream, const char *buf, PRInt32 size )
 {
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream->data_object;  
@@ -1078,7 +1084,7 @@ mime_insert_forwarded_message_headers(char            **body,
 	}
 }
 
-static void
+static void PR_CALLBACK
 mime_parse_stream_complete (nsMIMESession *stream)
 {
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream->data_object;
@@ -1466,7 +1472,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
   PR_FREEIF(draftInfo);  
 }
 
-static void
+static void PR_CALLBACK
 mime_parse_stream_abort (nsMIMESession *stream, int status )
 {
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream->data_object;  

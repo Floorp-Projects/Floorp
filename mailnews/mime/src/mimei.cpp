@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 #include "mimerosetta.h"
 
@@ -96,7 +102,7 @@ nsVoidArray         *ctHandlerList = NULL;
 PRBool              foundIt = PR_FALSE; 
 PRBool              force_display = PR_FALSE;
 
-PRBool 
+PRBool PR_CALLBACK
 EnumFunction(void* aElement, void *aData)
 {
   cthandler_struct    *ptr = (cthandler_struct *) aElement;
@@ -1312,7 +1318,7 @@ MimeObject_output_init(MimeObject *obj, const char *content_type)
     // Set the charset on the channel we are dealing with so people know 
     // what the charset is set to. Do this for quoting/Printing ONLY! 
     // 
-    extern void   ResetChannelCharset(MimeObject *obj);
+    extern void   PR_CALLBACK ResetChannelCharset(MimeObject *obj);
     if ( (obj->options) && 
          ( (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting) || 
            (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) || 

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
 
 #ifndef __MSGSEND_H__
@@ -448,7 +449,7 @@ protected:
 //
 extern int    mime_write_message_body(nsMsgComposeAndSend *state, char *buf, PRInt32 size);
 extern char   *mime_get_stream_write_buffer(void);
-extern int    mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure);
+extern int PR_CALLBACK mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure);
 extern PRBool UseQuotedPrintable(void);
 
 #endif /*  __MSGSEND_H__ */

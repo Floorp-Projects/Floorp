@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 #include "mimeobj.h"
@@ -241,7 +247,7 @@ MimeObject_parse_buffer (char *buffer, PRInt32 size, MimeObject *obj)
   return mime_LineBuffer (buffer, size,
 						 &obj->ibuffer, &obj->ibuffer_size, &obj->ibuffer_fp,
 						 PR_TRUE,
-						 ((int (*) (char *, PRInt32, void *))
+						 ((int (*PR_CALLBACK) (char *, PRInt32, void *))
 						  /* This cast is to turn void into MimeObject */
 						  obj->clazz->parse_line),
 						 obj);

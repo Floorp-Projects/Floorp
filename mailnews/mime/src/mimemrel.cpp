@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 /* Thoughts on how to implement this:
@@ -179,8 +185,8 @@ MimeMultipartRelated_initialize(MimeObject* obj)
 	return ((MimeObjectClass*)&MIME_SUPERCLASS)->initialize(obj);
 }
 
-static PR_CALLBACK 
-PRIntn mime_multipart_related_nukehash(PLHashEntry *table, 
+static PRIntn PR_CALLBACK 
+mime_multipart_related_nukehash(PLHashEntry *table, 
           				       						   PRIntn indx, void *arg)                             
 {
   if (table->key)

@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
  
 /*
@@ -88,14 +94,14 @@ public:
                             const char* inBuffer, const PRInt32 inLength, char** outBuffer, PRInt32* outLength,
                             PRInt32* numUnConverted) = 0;
 
-  NS_IMETHOD B64EncoderInit(int (*output_fn) (const char *buf, PRInt32 size, void *closure), 
+  NS_IMETHOD B64EncoderInit(int (*PR_CALLBACK output_fn) (const char *buf, PRInt32 size, void *closure), 
                                 void *closure, MimeEncoderData **returnEncoderData)  = 0;
 
-  NS_IMETHOD QPEncoderInit (int (*output_fn) (const char *buf, 
+  NS_IMETHOD QPEncoderInit (int (*PR_CALLBACK output_fn) (const char *buf, 
                                 PRInt32 size, void *closure), void *closure, 
                                 MimeEncoderData ** returnEncoderData) = 0;
 
-  NS_IMETHOD UUEncoderInit (char *filename, int (*output_fn) 
+  NS_IMETHOD UUEncoderInit (char *filename, int (*PR_CALLBACK output_fn) 
                                (const char *buf, PRInt32 size, void *closure), void *closure, 
                                MimeEncoderData ** returnEncoderData) = 0;
 

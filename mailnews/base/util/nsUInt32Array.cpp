@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 #include "msgCore.h"    // precompiled header...
@@ -266,7 +272,7 @@ void nsUInt32Array::CopyArray(nsUInt32Array &oldA)
 
 /////////////////////////////////////////////////////////////////////////////
 
-static int CompareDWord (const void *v1, const void *v2, void *)
+static int PR_CALLBACK CompareDWord (const void *v1, const void *v2, void *)
 {
 	// QuickSort callback to compare array values
 	PRUint32 i1 = *(PRUint32 *)v1;
@@ -274,7 +280,7 @@ static int CompareDWord (const void *v1, const void *v2, void *)
 	return i1 - i2;
 }
 
-void nsUInt32Array::QuickSort (int (*compare) (const void *elem1, const void *elem2, void *data))
+void nsUInt32Array::QuickSort (int (* PR_CALLBACK compare) (const void *elem1, const void *elem2, void *data))
 {
 	if (m_nSize > 1)
 		NS_QuickSort(m_pData, m_nSize, sizeof(void*), compare ? compare : CompareDWord, nsnull);

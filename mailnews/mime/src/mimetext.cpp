@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 #include "mimetext.h"
 #include "libi18n.h"
@@ -253,7 +259,7 @@ MimeInlineText_parse_decoded_buffer (char *buf, PRInt32 size, MimeObject *obj)
   return mime_LineBuffer (buf, size,
 						 &obj->ibuffer, &obj->ibuffer_size, &obj->ibuffer_fp,
 						 PR_TRUE,
-						 ((int (*) (char *, PRInt32, void *))
+						 ((int (*PR_CALLBACK) (char *, PRInt32, void *))
 						  /* This cast is to turn void into MimeObject */
 						  MimeInlineText_rotate_convert_and_parse_line),
 						 obj);

@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 
 #include "nscore.h"
@@ -97,11 +103,11 @@ private:
                                    void *closure);
 
   // called by EnumerateRemove to release all elements
-  static PRBool hashElementRelease(nsHashKey *aKey, void *aData,
+  static PRBool PR_CALLBACK hashElementRelease(nsHashKey *aKey, void *aData,
                                    void *closure);
 
   // Send unload server notification.
-  static PRBool hashUnloadServer(nsHashKey *aKey, void *aData,
+  static PRBool PR_CALLBACK hashUnloadServer(nsHashKey *aKey, void *aData,
                                      void *closure);
 
   //
@@ -142,8 +148,8 @@ private:
   static PRBool findServer(nsISupports *aElement, void *data);
 
   // write out the server's cache through the given folder cache
-  static PRBool writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
-  static PRBool closeCachedConnections(nsHashKey *aKey, void *aData, void *closure);
+  static PRBool PR_CALLBACK writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
+  static PRBool PR_CALLBACK closeCachedConnections(nsHashKey *aKey, void *aData, void *closure);
 
   static char *getUniqueKey(const char* prefix, nsHashtable *hashTable);
   static char *getUniqueAccountKey(const char* prefix,
@@ -168,11 +174,11 @@ private:
   nsCOMPtr<nsISupportsArray> mFolderListeners;
   
   // add and remove listeners from the given server
-  static PRBool addListener(nsHashKey *aKey, void *element, void *aData);
-  static PRBool removeListener(nsHashKey *aKey, void *element, void *aData);
+  static PRBool PR_CALLBACK addListener(nsHashKey *aKey, void *element, void *aData);
+  static PRBool PR_CALLBACK removeListener(nsHashKey *aKey, void *element, void *aData);
   
   // folder listener enumerators
-  static PRBool addListenerToFolder(nsISupports *element, void *data);
-  static PRBool removeListenerFromFolder(nsISupports *element, void *data);
+  static PRBool PR_CALLBACK addListenerToFolder(nsISupports *element, void *data);
+  static PRBool PR_CALLBACK removeListenerFromFolder(nsISupports *element, void *data);
 };
 

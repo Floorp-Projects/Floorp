@@ -18,6 +18,12 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
+ * described herein are Copyright (c) International Business Machines Corporation, 2000.
+ * Modifications to Mozilla code or documentation identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
 #ifndef _nsUInt32Array_H_
 #define _nsUInt32Array_H_
@@ -54,7 +60,7 @@ public:
 	void               SetAtGrow(PRUint32 nIndex, PRUint32 newElement);
 
 	// Sorting member functions
-	void               QuickSort(int (*compare) (const void *elem1, const void *elem2, void *) = NULL);
+	void               QuickSort(int (* PR_CALLBACK compare) (const void *elem1, const void *elem2, void *) = NULL);
 
 	// Overloaded operators
 	PRUint32             operator[](PRUint32 nIndex) const { return GetAt(nIndex); }
