@@ -39,7 +39,6 @@ LLIBS=								\
 			$(DIST)\lib\msgbase_s.lib		\
 			$(DIST)\lib\msgsearch_s.lib		\
 			$(DIST)\lib\netlib.lib			\
-			$(DIST)\lib\raptorgfxwin.lib    	\
 			$(DIST)\lib\timer_s.lib 		\
 			$(LIBNSPR)				\
 			$(NULL)
