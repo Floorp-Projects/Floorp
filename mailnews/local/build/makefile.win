@@ -39,6 +39,8 @@ CPP_OBJS=\
 
 LLIBS=\
 	$(DIST)\lib\xpcom32.lib     \
+	$(DIST)\lib\msgcore.lib    \
+	$(DIST)\lib\msgdb.lib    \
 	$(DIST)\lib\msglocal.lib    \
     $(LIBNSPR)		            \
     $(DIST)\lib\libplc21.lib    \
@@ -55,6 +57,7 @@ LINCS=  -I$(DEPTH)\mailnews\local\src	\
 		-I$(PUBLIC)\mailnews			\
 		-I$(PUBLIC)\raptor				\
 		-I$(PUBLIC)\rdf					\
+		-I$(PUBLIC)\rdfutil				\
 		-I$(PUBLIC)\netlib				\
         $(NULL)
 

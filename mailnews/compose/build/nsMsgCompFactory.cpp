@@ -175,8 +175,10 @@ nsresult nsMsgComposeFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
-                                           nsISupports *serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+                                           const nsCID &aClass,
+                                           const char *aClassName,
+                                           const char *aProgID,
                                            nsIFactory **aFactory)
 {
 	if (nsnull == aFactory)
@@ -192,12 +194,12 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
 		return NS_ERROR_OUT_OF_MEMORY;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload() 
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr) 
 {
     return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(const char* path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char* path)
 {
 	nsresult ret;
 
@@ -210,7 +212,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char* path)
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(const char* path)
+NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
 {
 	nsresult ret;
 

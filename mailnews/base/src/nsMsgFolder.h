@@ -39,8 +39,8 @@
 class nsMsgFolder: public nsRDFResource, public nsIMsgFolder
 {
 public: 
-  nsMsgFolder(const char* uri);
-  virtual ~nsMsgFolder();
+  nsMsgFolder(void);
+  virtual ~nsMsgFolder(void);
 
   NS_DECL_ISUPPORTS
 
@@ -305,7 +305,5 @@ protected:
 	PRBool mIsCachable;
 
 };
-
-PR_EXTERN(nsresult) NS_NewRDFMsgFolderResourceFactory(nsIRDFResourceFactory** aResult);
 
 #endif

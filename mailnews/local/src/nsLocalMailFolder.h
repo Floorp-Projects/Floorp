@@ -32,8 +32,8 @@
 class nsMsgLocalMailFolder : public nsMsgFolder, public nsIMsgLocalMailFolder
 {
 public:
-	nsMsgLocalMailFolder(const char* uri);
-	virtual ~nsMsgLocalMailFolder();
+	nsMsgLocalMailFolder(void);
+	virtual ~nsMsgLocalMailFolder(void);
 
   NS_DECL_ISUPPORTS
 #if 0

@@ -28,14 +28,14 @@
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-nsMsgImapMailFolder::nsMsgImapMailFolder(const char* uri, nsString& name)
-  : nsMsgFolder(uri /*, name */)
+nsMsgImapMailFolder::nsMsgImapMailFolder(nsString& name)
+  : nsMsgFolder(/*name*/)
 {
 	mHaveReadNameFromDB = PR_FALSE;
 	mPathName = nsnull;
 }
 
-nsMsgImapMailFolder::~nsMsgImapMailFolder()
+nsMsgImapMailFolder::~nsMsgImapMailFolder(void)
 {
 }
 

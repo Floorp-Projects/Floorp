@@ -30,8 +30,8 @@
 class nsMsgImapMailFolder : public nsMsgFolder, public nsIMsgImapMailFolder
 {
 public:
-	nsMsgImapMailFolder(const char* uri, nsString& name);
-	~nsMsgImapMailFolder();
+	nsMsgImapMailFolder(nsString& name);
+	~nsMsgImapMailFolder(void);
 
   NS_DECL_ISUPPORTS
 

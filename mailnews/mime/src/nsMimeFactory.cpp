@@ -148,8 +148,10 @@ nsresult nsMimeFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
-                                           nsISupports *serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+                                           const nsCID &aClass,
+                                           const char *aClassName,
+                                           const char *aProgID,
                                            nsIFactory **aFactory)
 {
 	if (nsnull == aFactory)
@@ -166,7 +168,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
 }
 
 
-extern "C" NS_EXPORT PRBool NSCanUnload()
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr)
 {
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
@@ -179,7 +181,7 @@ extern "C" NS_EXPORT PRBool NSCanUnload()
 extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
 											  URL_Struct *url, MWContext *context);
 
-extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
+extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
   printf("*** Mime being registered\n");
   nsRepository::RegisterFactory(kCMimeMimeObjectClassAccessCID, path, 
@@ -197,7 +199,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
   return NS_OK;
 }
 
-extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char *path)
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
   printf("*** Mime being unregistered\n");
   nsRepository::UnregisterFactory(kCMimeMimeObjectClassAccessCID, path);

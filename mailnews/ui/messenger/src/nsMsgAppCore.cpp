@@ -207,7 +207,14 @@ nsMsgAppCore::Open3PaneWindow()
 	}
 
 	controllerCID = "6B75BB61-BD41-11d2-9D31-00805F8ADDDE";
-	appShell->CreateTopLevelWindow(url, controllerCID, newWindow, nsnull, 200, 200);
+	appShell->CreateTopLevelWindow(nsnull,      // parent
+                                   url,
+                                   controllerCID,
+                                   newWindow,   // result widget
+                                   nsnull,      // observer
+                                   nsnull,      // callbacks
+                                   200,         // width
+                                   200);        // height
 	done:
 	NS_RELEASE(url);
 	if (nsnull != appShell) {

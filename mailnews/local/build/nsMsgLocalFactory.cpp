@@ -22,19 +22,17 @@
 #include "nsISupports.h"
 #include "nsMsgLocalCID.h"
 #include "pratom.h"
-#include "nsIRDFMSGFolderDataSource.h"
 
 // include files for components this factory creates...
-#include "nsIMailboxUrl.h"
 #include "nsMailboxUrl.h"
-
-#include "nsIMailboxService.h"
+#include "nsMSGFolderDataSource.h"
 #include "nsMailboxService.h"
+#include "nsLocalMailFolder.h"
 
-static NS_DEFINE_CID(kCMsgLocalFactory, NS_MSGLOCALDATASOURCE_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCMailboxService, NS_MAILBOXSERVICE_CID);
-
+static NS_DEFINE_CID(kMailNewsDatasourceCID, NS_MAILNEWSDATASOURCE_CID);
+static NS_DEFINE_CID(kMailNewsResourceCID, NS_MAILNEWSRESOURCE_CID);
 
 ////////////////////////////////////////////////////////////
 //
@@ -48,28 +46,31 @@ public:
 	// nsISupports methods
 	NS_DECL_ISUPPORTS 
 
-    nsMsgLocalFactory(const nsCID &aClass); 
+  nsMsgLocalFactory(const nsCID &aClass, const char* aClassName, const char* aProgID); 
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
-    NS_IMETHOD LockFactory(PRBool aLock);   
+  // nsIFactory methods   
+  NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
+  NS_IMETHOD LockFactory(PRBool aLock);   
 
-  protected:
-    virtual ~nsMsgLocalFactory();   
+protected:
+  virtual ~nsMsgLocalFactory();   
 
-  private:  
-    nsCID     mClassID;
+  nsCID mClassID;
+  char* mClassName;
+  char* mProgID;
 };   
 
-nsMsgLocalFactory::nsMsgLocalFactory(const nsCID &aClass)   
+nsMsgLocalFactory::nsMsgLocalFactory(const nsCID &aClass, const char* aClassName, const char* aProgID)
+  : mClassID(aClass), mClassName(nsCRT::strdup(aClassName)), mProgID(nsCRT::strdup(aProgID))
 {   
 	NS_INIT_REFCNT();
-	mClassID = aClass;
 }   
 
 nsMsgLocalFactory::~nsMsgLocalFactory()   
 {
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
+  delete[] mClassName;
+  delete[] mProgID;
 }   
 
 nsresult nsMsgLocalFactory::QueryInterface(const nsIID &aIID, void **aResult)   
@@ -98,7 +99,7 @@ NS_IMPL_RELEASE(nsMsgLocalFactory)
 
 nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult)  
 {  
-	nsresult res = NS_OK;
+	nsresult rv = NS_OK;
 
 	if (aResult == NULL)  
 		return NS_ERROR_NULL_POINTER;  
@@ -111,37 +112,26 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 	// Whenever you add a new class that supports an interface, plug it in here!!!
 	
 	// do they want a local datasource ?
-	if (mClassID.Equals(kCMsgLocalFactory))
-	{
-		res = NS_NewRDFMSGFolderDataSource((nsIRDFDataSource **) &inst);
+	if (mClassID.Equals(kCMailboxUrl)) {
+		inst = NS_STATIC_CAST(nsIMailboxUrl*, new nsMailboxUrl(nsnull, nsnull));
 	}
-
-	if (mClassID.Equals(kCMailboxUrl))
-	{
-		nsMailboxUrl * mailboxUrl = new nsMailboxUrl(nsnull, nsnull);
-		if (mailboxUrl) // turn it into any ol' interface so we pick up a ref count on inst...
-			res = mailboxUrl->QueryInterface(nsIMailboxUrl::IID(), (void **) &inst);
+	else if (mClassID.Equals(kCMailboxService)) {
+		inst = new nsMailboxService();
 	}
+  else if (mClassID.Equals(kMailNewsDatasourceCID)) {
+    inst = new nsMSGFolderDataSource();
+  }
+  else if (mClassID.Equals(kMailNewsResourceCID)) {
+    inst = NS_STATIC_CAST(nsIMsgLocalMailFolder*, new nsMsgLocalMailFolder());
+  }
 
-	if (mClassID.Equals(kCMailboxService))
-	{
-		nsMailboxService * mailboxService = new nsMailboxService();
-		if (mailboxService)
-			res = mailboxService->QueryInterface(nsIMailboxService::IID(), (void **) &inst);
-	}
+  if (inst == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-	// End of checking the interface ID code....
-	if (NS_SUCCEEDED(res) && inst)
-	{
-		// so we now have the class that supports the desired interface...we need to turn around and
-		// query for our desired interface.....
-		res = inst->QueryInterface(aIID, aResult);
-		NS_RELEASE(inst);  // release our extra ref count....
-		if (NS_FAILED(res))  // if the query interface failed for some reason, then the object did not get ref counted...delete it.
-			delete inst; 
-	}
-
-  return res;  
+  rv = inst->QueryInterface(aIID, aResult);
+  if (NS_FAILED(rv))
+    delete inst;
+  return rv;
 }  
 
 nsresult nsMsgLocalFactory::LockFactory(PRBool aLock)  
@@ -156,8 +146,10 @@ nsresult nsMsgLocalFactory::LockFactory(PRBool aLock)
 }  
 
 // return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
-                                           nsISupports *serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+                                           const nsCID &aClass,
+                                           const char *aClassName,
+                                           const char *aProgID,
                                            nsIFactory **aFactory)
 {
 	if (nsnull == aFactory)
@@ -165,7 +157,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
 
 	// If we decide to implement multiple factories in the msg.dll, then we need to check the class
 	// type here and create the appropriate factory instead of always creating a nsMsgFactory...
-	*aFactory = new nsMsgLocalFactory(aClass);
+	*aFactory = new nsMsgLocalFactory(aClass, aClassName, aProgID);
 
 	if (aFactory)
 		return (*aFactory)->QueryInterface(nsIFactory::IID(), (void**)aFactory); // they want a Factory Interface so give it to them
@@ -173,32 +165,58 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
 		return NS_ERROR_OUT_OF_MEMORY;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload() 
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr) 
 {
     return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(const char* path)
+NSRegisterSelf(nsISupports* serviceMgr, const char* path)
 {
-  nsresult ret;
+  nsresult rv;
 
-  ret = nsRepository::RegisterFactory(kCMsgLocalFactory, path, PR_TRUE, PR_TRUE);
-  ret = nsRepository::RegisterFactory(kCMailboxUrl, path, PR_TRUE, PR_TRUE);
-  ret = nsRepository::RegisterFactory(kCMailboxService, path, PR_TRUE, PR_TRUE);
+  rv = nsRepository::RegisterComponent(kCMailboxUrl, nsnull, nsnull,
+                                       path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
 
-  return ret;
+  rv = nsRepository::RegisterComponent(kCMailboxService, nsnull, nsnull, 
+                                       path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  // register our RDF datasources:
+  rv = nsRepository::RegisterComponent(kMailNewsDatasourceCID, 
+                                       "Mail/News Data Source",
+                                       NS_RDF_DATASOURCE_PROGID_PREFIX "mailnews",
+                                       path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  // register our RDF resource factories:
+  rv = nsRepository::RegisterComponent(kMailNewsResourceCID,
+                                       "Mail/News Resource Factory",
+                                       NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox",
+                                       path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  return rv;
 }
 
 extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(const char* path)
+NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
 {
-  nsresult ret;
+  nsresult rv;
 
-  ret = nsRepository::UnregisterFactory(kCMsgLocalFactory, path);
-  ret = nsRepository::UnregisterFactory(kCMailboxUrl, path);
-  ret = nsRepository::UnregisterFactory(kCMailboxService, path);
+  rv = nsRepository::UnregisterFactory(kCMailboxUrl, path);
+  if (NS_FAILED(rv)) return rv;
 
-  return ret;
+  rv = nsRepository::UnregisterFactory(kCMailboxService, path);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsRepository::UnregisterComponent(kMailNewsDatasourceCID, path);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = nsRepository::UnregisterComponent(kMailNewsResourceCID, path);
+  if (NS_FAILED(rv)) return rv;
+
+  return rv;
 }
 

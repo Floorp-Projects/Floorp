@@ -23,9 +23,20 @@
 #include "nsIFactory.h"
 #include "nsRepository.h"
 
-#define NS_MSGLOCALDATASOURCE_CID                    \
-{ /* 992732A0-CABC-11d2-94BE-006097222B83 */      \
-0x992732a0, 0xcabc, 0x11d2,                      \
- {0x94, 0xbe, 0x0, 0x60, 0x97, 0x22, 0x2b, 0x83}}
+#define NS_MAILNEWSDATASOURCE_CID                    \
+{ /* ddd9d2b2-cd67-11d2-8cca-0060b0fc14a3 */         \
+    0xddd9d2b2,                                      \
+    0xcd67,                                          \
+    0x11d2,                                          \
+    {0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+#define NS_MAILNEWSRESOURCE_CID                      \
+{ /* e490d22c-cd67-11d2-8cca-0060b0fc14a3 */         \
+    0xe490d22c,                                      \
+    0xcd67,                                          \
+    0x11d2,                                          \
+    {0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
 
 #endif // nsMsgLocal_h__

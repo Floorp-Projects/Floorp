@@ -22,6 +22,8 @@
 #include "nsMsgBaseCID.h"
 #include "pratom.h"
 #include "nsRepository.h"
+#include "rdf.h"
+#include "nsCRT.h"
 
 /* Include all of the interfaces our factory can generate components for */
 #include "nsIMsgRFC822Parser.h"
@@ -42,28 +44,31 @@ public:
 	// nsISupports methods
 	NS_DECL_ISUPPORTS 
 
-    nsMsgFactory(const nsCID &aClass); 
+  nsMsgFactory(const nsCID &aClass, const char* aClassName, const char* aProgID); 
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
-    NS_IMETHOD LockFactory(PRBool aLock);   
+  // nsIFactory methods   
+  NS_IMETHOD CreateInstance(nsISupports *aOuter, const nsIID &aIID, void **aResult);   
+  NS_IMETHOD LockFactory(PRBool aLock);   
 
-  protected:
-    virtual ~nsMsgFactory();   
+protected:
+  virtual ~nsMsgFactory();   
 
-  private:  
-    nsCID     mClassID;
+  nsCID mClassID;
+  char* mClassName;
+  char* mProgID;
 };   
 
-nsMsgFactory::nsMsgFactory(const nsCID &aClass)   
+nsMsgFactory::nsMsgFactory(const nsCID &aClass, const char* aClassName, const char* aProgID)
+  : mClassID(aClass), mClassName(nsCRT::strdup(aClassName)), mProgID(nsCRT::strdup(aProgID))
 {   
 	NS_INIT_REFCNT();
-	mClassID = aClass;
 }   
 
 nsMsgFactory::~nsMsgFactory()   
 {
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
+  delete[] mClassName;
+  delete[] mProgID;
 }   
 
 nsresult nsMsgFactory::QueryInterface(const nsIID &aIID, void **aResult)   
@@ -105,20 +110,18 @@ nsresult nsMsgFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, vo
 	// Whenever you add a new class that supports an interface, plug it in here!!!
 	
 	// do they want an RFC822 Parser interface ?
-	if (mClassID.Equals(kCMsgRFC822ParserCID))
-	{
+	if (mClassID.Equals(kCMsgRFC822ParserCID)) {
 		res = NS_NewRFC822Parser((nsIMsgRFC822Parser **) &inst);
 		if (NS_FAILED(res))  // was there a problem creating the object ?
 		  return res;   
 	}
-	else if(mClassID.Equals(kCMsgFolderEventCID))
-	{
+	else if (mClassID.Equals(kCMsgFolderEventCID)) {
+    NS_NOTREACHED("hello? what happens here?");
 		return NS_OK;
 	}
 
 	// End of checking the interface ID code....
-	if (inst)
-	{
+	if (inst) {
 		// so we now have the class that supports the desired interface...we need to turn around and
 		// query for our desired interface.....
 		res = inst->QueryInterface(aIID, aResult);
@@ -143,53 +146,56 @@ nsresult nsMsgFactory::LockFactory(PRBool aLock)
   return NS_OK;
 }  
 
+////////////////////////////////////////////////////////////////////////////////
+
 // return the proper factory to the caller. 
-extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass,
-                                           nsISupports *serviceMgr,
+extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
+                                           const nsCID &aClass,
+                                           const char *aClassName,
+                                           const char *aProgID,
                                            nsIFactory **aFactory)
 {
 	if (nsnull == aFactory)
 		return NS_ERROR_NULL_POINTER;
 
-	// If we decide to implement multiple factories in the msg.dll, then we need to check the class
-	// type here and create the appropriate factory instead of always creating a nsMsgFactory...
-	*aFactory = new nsMsgFactory(aClass);
-
-	if (aFactory)
-		return (*aFactory)->QueryInterface(nsIFactory::IID(), (void**)aFactory); // they want a Factory Interface so give it to them
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
+  *aFactory = new nsMsgFactory(aClass, aClassName, aProgID);
+  if (aFactory)
+    return (*aFactory)->QueryInterface(nsIFactory::IID(), (void**)aFactory);
+  else
+    return NS_ERROR_OUT_OF_MEMORY;
 }
 
-extern "C" NS_EXPORT PRBool NSCanUnload() 
+extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* serviceMgr) 
 {
-    return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+  return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" NS_EXPORT nsresult
+NSRegisterSelf(nsISupports* serviceMgr, const char* path)
+{
+  nsresult rv;
+
+  // register the message folder factory
+  rv = nsRepository::RegisterComponent(kCMsgFolderEventCID, 
+                                       nsnull, nsnull,
+                                       path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) return rv;
+
+  return rv;
 }
 
 extern "C" NS_EXPORT nsresult
-NSRegisterSelf(const char* path)
+NSUnregisterSelf(nsISupports* serviceMgr, const char* path)
 {
-  nsresult ret;
+  nsresult rv;
 
-  ret = nsRepository::RegisterFactory(kCMsgFolderEventCID, path, PR_TRUE,
-                                      PR_TRUE);
-  if (NS_FAILED(ret)) {
-    return ret;
-  }
+  rv = nsRepository::UnregisterComponent(kCMsgFolderEventCID, path);
+  if (NS_FAILED(rv)) return rv;
 
-  return ret;
+  return rv;
 }
 
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf(const char* path)
-{
-  nsresult ret;
-
-  ret = nsRepository::UnregisterFactory(kCMsgFolderEventCID, path);
-  if (NS_FAILED(ret)) {
-    return ret;
-  }
-
-  return ret;
-}
+////////////////////////////////////////////////////////////////////////////////
 

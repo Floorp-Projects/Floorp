@@ -67,18 +67,12 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Folder);
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Subject);
 
-extern  nsresult  NS_NewRDFMsgFolderResourceFactory(nsIRDFResourceFactory** aInstancePtrResult);
-
 ////////////////////////////////////////////////////////////////////////
 // The RDF service manager. Cached in the address book data source's
 // constructor
 
 static nsIRDFService* gRDFService = nsnull;
 
-////////////////////////////////////////////////////////////////////////
-// THE address book source.
-
-static nsMSGFolderDataSource* gMsgFolderDataSource = nsnull;
 ////////////////////////////////////////////////////////////////////////
 // Utilities
 
@@ -148,8 +142,6 @@ nsMSGFolderDataSource::nsMSGFolderDataSource()
                                              (nsISupports**) &gRDFService);
 
 	PR_ASSERT(NS_SUCCEEDED(rv));
-
-	gMsgFolderDataSource = this;
 }
 
 nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
@@ -172,8 +164,6 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
   NS_RELEASE2(kNC_MSGFolderRoot, refcnt);
 
   NS_RELEASE2(kNC_Subject, refcnt);
-
-  gMsgFolderDataSource = nsnull;
 
   nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
   gRDFService = nsnull;
@@ -323,8 +313,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
 
       folder->GetSubFolders(&subFolders);
 		  nsRDFEnumeratorAssertionCursor* cursor =
-        new nsRDFEnumeratorAssertionCursor(gMsgFolderDataSource, 
-                                           source, kNC_Child, subFolders);
+        new nsRDFEnumeratorAssertionCursor(this, source, kNC_Child, subFolders);
 			NS_IF_RELEASE(subFolders);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -338,8 +327,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
 
 			folder->GetMessages(&messages);
 		  nsRDFEnumeratorAssertionCursor* cursor =
-        new nsRDFEnumeratorAssertionCursor(gMsgFolderDataSource, 
-                                           source, kNC_MessageChild, messages);
+        new nsRDFEnumeratorAssertionCursor(this, source, kNC_MessageChild, messages);
 			NS_IF_RELEASE(messages);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -350,8 +338,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
 		else if(peq(kNC_Name, property))
 		{
 			nsRDFSingletonAssertionCursor* cursor =
-        new nsRDFSingletonAssertionCursor(gMsgFolderDataSource, 
-                                          source, property);
+        new nsRDFSingletonAssertionCursor(this, source, property);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(cursor);
@@ -364,8 +351,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTargets(nsIRDFResource* source,
     if(peq(kNC_Name, property))
 		{
 			nsRDFSingletonAssertionCursor* cursor =
-        new nsRDFSingletonAssertionCursor(gMsgFolderDataSource, 
-                                          source, property, PR_FALSE);
+        new nsRDFSingletonAssertionCursor(this, source, property, PR_FALSE);
       if (cursor == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(cursor);
@@ -441,7 +427,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::ArcLabelsOut(nsIRDFResource* source,
   arcs->AppendElement(kNC_MessageChild);
   arcs->AppendElement(kNC_Name);
   nsRDFArrayArcsOutCursor* cursor =
-    new nsRDFArrayArcsOutCursor(gMsgFolderDataSource, source, arcs);
+    new nsRDFArrayArcsOutCursor(this, source, arcs);
   NS_RELEASE(arcs);
   if (cursor == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
@@ -477,21 +463,3 @@ NS_IMETHODIMP nsMSGFolderDataSource::DoCommand(const char* aCommand,
   PR_ASSERT(0);
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-NS_EXPORT nsresult
-NS_NewRDFMSGFolderDataSource(nsIRDFDataSource** result)
-{
-  if (! result)
-    return NS_ERROR_NULL_POINTER;
-
-  // Only one mail data source
-  if (! gMsgFolderDataSource) {
-    if ((gMsgFolderDataSource = new nsMSGFolderDataSource()) == nsnull)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  NS_ADDREF(gMsgFolderDataSource);
-  *result = gMsgFolderDataSource;
-  return NS_OK;
-}
-

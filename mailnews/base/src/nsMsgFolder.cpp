@@ -32,8 +32,8 @@
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-nsMsgFolder::nsMsgFolder(const char* uri)
-  : nsRDFResource(uri), mFlags(0),
+nsMsgFolder::nsMsgFolder(void)
+  : nsRDFResource(), mFlags(0),
     mNumUnreadMessages(-1),	mNumTotalMessages(0),
     mCsid(0),
     mDepth(0), 
@@ -59,7 +59,7 @@ nsMsgFolder::nsMsgFolder(const char* uri)
 	mIsCachable = TRUE;
 }
 
-nsMsgFolder::~nsMsgFolder()
+nsMsgFolder::~nsMsgFolder(void)
 {
 	if(mSubFolders)
 	{

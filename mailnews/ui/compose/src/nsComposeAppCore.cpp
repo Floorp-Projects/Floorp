@@ -273,7 +273,14 @@ nsComposeAppCore::NewMessage()
 	}
 
 	controllerCID = "6B75BB61-BD41-11d2-9D31-00805F8ADDDE";
-	appShell->CreateTopLevelWindow(url, controllerCID, newWindow, nsnull, 100, 100);
+	appShell->CreateTopLevelWindow(nsnull,      // parent
+                                   url,
+                                   controllerCID,
+                                   newWindow,   // result widget
+                                   nsnull,      // observer
+                                   nsnull,      // callbacks
+                                   100,         // width
+                                   100);        // height
 	done:
 	NS_RELEASE(url);
 	if (nsnull != appShell) {

@@ -21,7 +21,6 @@
 #include "nsLocalMailFolder.h"	 
 #include "nsMsgFolderFlags.h"
 #include "prprf.h"
-#include "nsIRDFResourceFactory.h"
 #include "nsISupportsArray.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
@@ -138,15 +137,15 @@ nsURI2Name(char* uriStr, nsString& name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsMsgLocalMailFolder::nsMsgLocalMailFolder(const char* uri)
-  : nsMsgFolder(uri), mPath(nsnull), mExpungedBytes(0), 
+nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
+  : nsMsgFolder(), mPath(nsnull), mExpungedBytes(0), 
     mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
     mInitialized(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
 
-nsMsgLocalMailFolder::~nsMsgLocalMailFolder()
+nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 {
 }
 
@@ -227,15 +226,19 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
 		uri.Append('/');
 	}
 	*/
+#if 0
     uri.Append(currentFolderName);
     char* uriStr = uri.ToNewCString();
     if (uriStr == nsnull) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       goto done;
     }
+#endif
     // XXX trim off .sbd from uriStr
-    nsMsgLocalMailFolder* folder = new nsMsgLocalMailFolder(uriStr);
+    nsMsgLocalMailFolder* folder = new nsMsgLocalMailFolder(/*uriStr*/);
+#if 0
     delete[] uriStr;
+#endif
     if (folder == nsnull) {
       rv = NS_ERROR_OUT_OF_MEMORY;
       goto done;
@@ -937,61 +940,3 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * This class creates resources for message folder URIs. It should be
- * registered for the "mailnewsfolder:" prefix.
- */
-class nsMsgFolderResourceFactoryImpl : public nsIRDFResourceFactory
-{
-public:
-  nsMsgFolderResourceFactoryImpl(void);
-  virtual ~nsMsgFolderResourceFactoryImpl(void);
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD CreateResource(const char* aURI, nsIRDFResource** aResult);
-};
-
-nsMsgFolderResourceFactoryImpl::nsMsgFolderResourceFactoryImpl(void)
-{
-  NS_INIT_REFCNT();
-}
-
-nsMsgFolderResourceFactoryImpl::~nsMsgFolderResourceFactoryImpl(void)
-{
-}
-
-NS_IMPL_ISUPPORTS(nsMsgFolderResourceFactoryImpl, nsIRDFResourceFactory::IID());
-
-NS_IMETHODIMP
-nsMsgFolderResourceFactoryImpl::CreateResource(const char* aURI, nsIRDFResource** aResult)
-{
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  nsMsgLocalMailFolder *folder = new nsMsgLocalMailFolder(aURI);
-  if (! folder)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  folder->QueryInterface(nsIRDFResource::IID(), (void**)aResult);
-  return NS_OK;
-}
-
-nsresult
-NS_NewRDFMsgFolderResourceFactory(nsIRDFResourceFactory** aResult)
-{
-  if (! aResult)
-    return NS_ERROR_NULL_POINTER;
-
-  nsMsgFolderResourceFactoryImpl* factory =
-    new nsMsgFolderResourceFactoryImpl();
-
-  if (! factory)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(factory);
-  *aResult = factory;
-  return NS_OK;
-}

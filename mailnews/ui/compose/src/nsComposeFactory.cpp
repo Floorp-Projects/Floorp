@@ -126,8 +126,10 @@ nsresult nsComposeFactory::LockFactory(PRBool aLock)
 // begin DLL exports
 //
 nsresult
-NSGetFactory(const nsCID &aClass,
-             nsISupports *serviceMgr,
+NSGetFactory(nsISupports* serviceMgr,
+             const nsCID &aClass,
+             const char *aClassName,
+             const char *aProgID,
              nsIFactory **aFactory)
 {
 #ifdef DEBUG
@@ -147,7 +149,7 @@ NSGetFactory(const nsCID &aClass,
 
 
 PRBool
-NSCanUnload()
+NSCanUnload(nsISupports* serviceMgr)
 {
 #ifdef DEBUG
     printf("compose: NSCanUnload()\n");
@@ -156,7 +158,7 @@ NSCanUnload()
 }
 
 nsresult
-NSRegisterSelf(const char *fullpath)
+NSRegisterSelf(nsISupports* serviceMgr, const char *fullpath)
 {
 #ifdef DEBUG
     printf("compose: NSRegisterSelf()\n");
@@ -166,7 +168,7 @@ NSRegisterSelf(const char *fullpath)
 }
     
 nsresult
-NSUnregisterSelf(const char *fullpath)
+NSUnregisterSelf(nsISupports* serviceMgr, const char *fullpath)
 {
 #ifdef DEBUG
     printf("compose: NSUnregisterSelf()\n");
