@@ -285,6 +285,7 @@ xpcom/libxpt/public/Makefile
 xpcom/libxpt/src/Makefile
 xpcom/libxpt/tests/Makefile
 xpcom/libxpt/tools/Makefile
+xpcom/idl/Makefile
 silentdl/Makefile
 xpfe/Makefile
 xpfe/AppCores/Makefile
