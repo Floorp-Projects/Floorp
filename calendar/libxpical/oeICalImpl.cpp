@@ -1388,8 +1388,7 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
 
 NS_IMETHODIMP
 oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **eventlist ) {
-//NOTE: checkenddateinms is being ignored for now
-#ifdef ICAL_DEBUG_ALL
+#ifdef ICAL_DEBUG
     printf( "oeICalImpl::GetFirstEventsForRange()\n" );
 #endif
     nsCOMPtr<oeEventEnumerator> eventEnum;
@@ -1417,6 +1416,8 @@ oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinm
     struct icaltimetype checkdate = ConvertFromPrtime( checkdateinms );
     icaltime_adjust( &checkdate, 0, 0, 0, -1 );
 
+    struct icaltimetype checkenddate = ConvertFromPrtime( checkenddateinms );
+
     icaltimetype nextcheckdate;
     do {
         PRUint32 num;
@@ -1431,7 +1432,10 @@ oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinm
             }
         }
 
-        nextcheckdate = soonest;
+        if ( icaltime_compare( soonest, checkenddate ) > 0 ) {
+            nextcheckdate = icaltime_null_time();
+        } else 
+            nextcheckdate = soonest;
 
         if( !icaltime_is_null_time( nextcheckdate )) {
 
@@ -1452,7 +1456,7 @@ oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinm
         }
     } while ( !icaltime_is_null_time( nextcheckdate ) );
 
-
+    eventArray->Clear();
     // bump ref count
 //    return eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
     return NS_OK;
