@@ -51,7 +51,7 @@
 #include "nsNetUtil.h"
 #include "nsOS2Uni.h"
 #include "nsdefs.h"
-#include "resource.h"
+#include "wdgtos2rc.h"
 
 NS_IMPL_ADDREF_INHERITED(nsDragService, nsBaseDragService)
 NS_IMPL_RELEASE_INHERITED(nsDragService, nsBaseDragService)

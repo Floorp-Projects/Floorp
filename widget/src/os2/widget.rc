@@ -20,7 +20,7 @@
  */
 
 #include <os2.h>
-#include "resource.h"
+#include "wdgtos2rc.h"
 
 POINTER IDC_SELECTANCHOR   res\select.ptr
 POINTER IDC_ARROWNORTH     res\arrow_north.ptr

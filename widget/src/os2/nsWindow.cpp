@@ -72,7 +72,7 @@
 #include <ctype.h>
 
 #include "nsdefs.h"
-#include "resource.h"
+#include "wdgtos2rc.h"
 
 #ifdef DEBUG_sobotka
 static int WINDOWCOUNT = 0;
