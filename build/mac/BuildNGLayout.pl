@@ -67,6 +67,8 @@ $build{apprunner}       = 0;
 $build{resources}       = 0;
 $build{jars}    		= 0;
 
+$build{xptlink}		= 0;
+
 $options{transformiix}	= 0;
 $options{mathml}		= 0;
 $options{svg}			= 0;
