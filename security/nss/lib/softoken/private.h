@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: private.h,v 1.1 2000/03/31 19:29:27 relyea%netscape.com Exp $
+ * $Id: private.h,v 1.2 2001/09/06 23:23:42 relyea%netscape.com Exp $
  */
 
 #ifndef _PRIVATE_H_
@@ -50,6 +50,8 @@ struct SECKEYKeyDBHandleStr {
     DB *updatedb;		/* used when updating an old version */
     SECItem *global_salt;	/* password hashing salt for this db */
     int version;		/* version of the database */
+    char *dbname;		/* name of the openned DB */
+    PRBool readOnly;		/* is the DB read only */
 };
 
 /*

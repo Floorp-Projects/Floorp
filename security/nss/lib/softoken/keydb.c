@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.5 2001/02/10 01:44:31 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.6 2001/09/06 23:23:42 relyea%netscape.com Exp $
  */
 
 #include "keylow.h"
@@ -587,6 +587,9 @@ SECKEY_OpenKeyDB(PRBool readOnly, SECKEYDBNameFunc namecb, void *cbarg)
     if ( dbname == NULL ) {
 	goto loser;
     }
+
+    handle->dbname = PORT_Strdup(dbname);
+    handle->readOnly = readOnly;
     
     handle->db = dbopen( dbname, openflags, 0600, DB_HASH, 0 );
 
@@ -720,6 +723,7 @@ SECKEY_CloseKeyDB(SECKEYKeyDBHandle *handle)
 	if (handle->db != NULL) {
 	    (* handle->db->close)(handle->db);
 	}
+	if (handle->dbname) PORT_Free(handle->dbname);
 	PORT_Free(handle);
     }
 }
@@ -2416,6 +2420,7 @@ done:
     return(SECSuccess);
 }
 
+#define MAX_DB_SIZE 0xffff 
 /*
  * Clear out all the keys in the existing database
  */
@@ -2432,20 +2437,24 @@ SECKEY_ResetKeyDB(SECKEYKeyDBHandle *handle)
 	return(SECSuccess);
     }
 
-    
-    /* now traverse the database */
-    ret = (* handle->db->seq)(handle->db, &key, &data, R_FIRST);
-    if ( ret ) {
-	goto done;
+    if (handle->readOnly) {
+	/* set an error code */
+	return SECFailure;
+     }
+
+    PORT_Assert(handle->dbname != NULL);
+    if (handle->dbname == NULL) {
+	return SECFailure;
+    }
+
+    (* handle->db->close)(handle->db);
+    handle->db = dbopen( handle->dbname,
+			     O_RDWR | O_CREAT | O_TRUNC, 0600, DB_HASH, 0 );
+    if (handle->db == NULL) {
+	/* set an error code */
+	return SECFailure;
     }
     
-    do {
-        /* delete each entry */
-	ret = (* handle->db->del)(handle->db, &key, 0);
-	if ( ret ) errors++;
-
-    } while ( (* handle->db->seq)(handle->db, &key, &data,
-					R_NEXT) == 0 );
     rv = makeGlobalVersion(handle);
     if ( rv != SECSuccess ) {
 	errors++;
