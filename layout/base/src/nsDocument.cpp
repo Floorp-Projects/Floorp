@@ -2267,7 +2267,11 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
   
   //Capturing stage
   if (NS_EVENT_FLAG_BUBBLE != aFlags) {
-    //XXX Check window capture here
+    nsIScriptGlobalObject* mGlobal;
+    if (NS_OK == mScriptContextOwner->GetScriptGlobalObject(&mGlobal)) {
+      mGlobal->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, NS_EVENT_FLAG_CAPTURE, aEventStatus);
+      NS_RELEASE(mGlobal);
+    }
   }
   
   //Local handling stage
