@@ -312,22 +312,17 @@ countOrCopy(char **p, char *str)
 static void
 httpGetObject(HTTP *http, App *app, int sock, URL *url, unsigned char **headers)
 {
-	char		*get;
 	unsigned char	**h;
-	char		*httpStr;
 	char		*p;
 	int		len;
 	int		i;
 	char		*buf;
 
-	get = "GET ";
-	httpStr = " HTTP/1.0\n";
-
 	p = NULL;
 	buf = NULL;
 	for (i = 0; i < 2; i++)
 	{
-		len = countOrCopy(&p, get);
+		len = countOrCopy(&p, "GET ");
 		if (url->path)
 		{
 			len += countOrCopy(&p, (char *) url->path);
@@ -340,7 +335,7 @@ httpGetObject(HTTP *http, App *app, int sock, URL *url, unsigned char **headers)
 		{
 			len += countOrCopy(&p, (char *) url->query);
 		}
-		len += countOrCopy(&p, httpStr);
+		len += countOrCopy(&p, " HTTP/1.0\n");
 		h = headers;
 		if (h)
 		{
@@ -351,7 +346,9 @@ httpGetObject(HTTP *http, App *app, int sock, URL *url, unsigned char **headers)
 				h++;
 			}
 		}
-		len += countOrCopy(&p, "\n");
+		len += countOrCopy(&p, "Host: ");
+		len += countOrCopy(&p, (char *) url->host);
+		len += countOrCopy(&p, "\n\n");
 		if (!buf)
 		{
 			buf = malloc(len + 1);

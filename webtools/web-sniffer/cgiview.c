@@ -225,7 +225,7 @@ getHTTPRequestHeaders(App *app, char *host, char *referer, char *verbose)
 	{
 		strcpy(str, "Host: ");
 		strcat(str, host);
-		*r++ = str;
+		/* *r++ = str; */	/* http.c will do Host header */
 		viewReport(app, str);
 	}
 	if (referer)
