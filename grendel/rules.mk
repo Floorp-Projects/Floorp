@@ -34,7 +34,6 @@ MOZILLA_BUILD = /disk2/mozilla
 GRENDEL_BUILD = /disk2/mozilla/grendel
 MOZILLA_HOME = /usr/local/netscape-4.5
 JAVAC	= javac
-CLASSPATH = .:/export/home/grail/java:/export/home/grail/java/grendel:/usr/local/java/lib/activation.jar:/usr/local/java/lib/iiimp.jar:/usr/local/java/lib/jsdk.jar:/usr/local/java/lib/mail.jar:/usr/local/java/lib/swingall.jar:/usr/local/java/lib/xml.jar
 
 RM	= rm -f
 
