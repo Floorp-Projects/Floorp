@@ -52,6 +52,8 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsCRT.h"
 
+#define kExpatSeparatorChar 0xFFFF
+
 static const char kWhitespace[] = " \r\n\t"; // Optimized for typical cases
 static const PRUnichar kUTF16[] = { 'U', 'T', 'F', '-', '1', '6', '\0' };
 
@@ -743,9 +745,21 @@ CreateSourceText(const PRInt32 aColNumber,
   aSourceString.Append(aSourceLine);
   aSourceString.Append(PRUnichar('\n'));
 
+  // Last character will be '^'.
+  PRInt32 last = aColNumber - 1;
   PRInt32 i;
-  for (i = aColNumber - 1; i > 0; --i) {
-    aSourceString.Append(PRUnichar('-'));
+  PRUint32 minuses = 0;
+  for (i = 0; i < last; ++i) {
+    if (aSourceLine[i] == '\t') {
+      // Since this uses |white-space: pre;| a tab stop equals 8 spaces.
+      PRUint32 add = 8 - (minuses % 8);
+      aSourceString.AppendASCII("--------", add);
+      minuses += add;
+    }
+    else {
+      aSourceString.Append(PRUnichar('-'));
+      ++minuses;
+    }
   }
   aSourceString.Append(PRUnichar('^'));
 
@@ -767,13 +781,45 @@ nsExpatDriver::HandleError(const char *aBuffer,
                                            description);
 
   if (code == XML_ERROR_TAG_MISMATCH) {
+    /**
+     *  Expat can send the following:
+     *    localName
+     *    namespaceURI<separator>localName
+     *    namespaceURI<separator>localName<separator>prefix
+     *
+     *  and we use 0xFFFF for the <separator>.
+     *
+     */
+    const PRUnichar *mismatch = MOZ_XML_GetMismatchedTag(mExpatParser);
+    const PRUnichar *uriEnd = nsnull;
+    const PRUnichar *nameEnd = nsnull;
+    const PRUnichar *pos;
+    for (pos = mismatch; *pos; ++pos) {
+      if (*pos == kExpatSeparatorChar) {
+        if (uriEnd) {
+          nameEnd = pos;
+        }
+        else {
+          uriEnd = pos;
+        }
+      }
+    }
+
+    nsAutoString tagName;
+    if (uriEnd && nameEnd) {
+        // We have a prefix.
+        tagName.Append(nameEnd + 1, pos - nameEnd - 1);
+        tagName.Append(PRUnichar(':'));
+    }
+    const PRUnichar *nameStart = uriEnd ? uriEnd + 1 : mismatch;
+    tagName.Append(nameStart, (nameEnd ? nameEnd : pos) - nameStart);
+    
     nsAutoString msg;
     nsParserMsgUtils::GetLocalizedStringByName(XMLPARSER_PROPERTIES,
                                                "Expected", msg);
+
     // . Expected: </%S>.
-    PRUnichar *message =
-      nsTextFormatter::smprintf(msg.get(),
-                                MOZ_XML_GetMismatchedTag(mExpatParser));
+    PRUnichar *message = nsTextFormatter::smprintf(msg.get(), tagName.get());
     if (!message) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -998,7 +1044,7 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
       PR_Free
     };
 
-  static const PRUnichar kExpatSeparator[] = { 0xFFFF, '\0' };
+  static const PRUnichar kExpatSeparator[] = { kExpatSeparatorChar, '\0' };
 
   mExpatParser = XML_ParserCreate_MM(kUTF16, &memsuite, kExpatSeparator);
   NS_ENSURE_TRUE(mExpatParser, NS_ERROR_FAILURE);
