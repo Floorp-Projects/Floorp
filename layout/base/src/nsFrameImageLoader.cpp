@@ -24,6 +24,7 @@
 #include "nsIImageGroup.h"
 #include "nsIImageRequest.h"
 #include "nsIStyleContext.h"
+#include "nsCOMPtr.h"
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -548,11 +549,12 @@ nsFrameImageLoader::DamageRepairFrames(const nsRect* aDamageRect)
       bounds.y += offset.y;
     }
 
-    nsIViewManager* vm;
-    view->GetViewManager(vm);
-    vm->UpdateView(view, bounds, NS_VMREFRESH_NO_SYNC);
-    NS_RELEASE(vm);
-
+    nsCOMPtr<nsIViewManager> vm = nsnull;
+    nsresult rv = NS_OK;
+    rv = view->GetViewManager(*getter_AddRefs(vm));
+    if (NS_SUCCEEDED(rv) && nsnull != vm) {
+      vm->UpdateView(view, bounds, NS_VMREFRESH_NO_SYNC);    
+    }
     pfd = pfd->mNext;
   }
 }

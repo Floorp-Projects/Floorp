@@ -33,10 +33,14 @@ static void ns_observer_proc (XP_Observable aSource,
 {
   ImageRequestImpl *image_request = (ImageRequestImpl *)aClosure;
   IL_MessageData *message_data = (IL_MessageData *)aMsgData;
-  nsVoidArray *observer_list = image_request->GetObservers();
+  nsVoidArray *observer_list = nsnull;
   nsIImage *image = nsnull;
   //  IL_ImageReq *il_image_req = image_request->GetImageRequest();
   IL_ImageReq *il_image_req = (IL_ImageReq *)aSource;
+
+  if (image_request != nsnull) {
+    observer_list = image_request->GetObservers();
+  }
 
   if (il_image_req != nsnull) {
     IL_Pixmap *pixmap = IL_GetImagePixmap(il_image_req);
