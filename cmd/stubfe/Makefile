@@ -46,7 +46,6 @@ REQUIRES	= \
 	pref \
 	rdf \
 	security \
-	softupdt \
 	libreg \
 	style \
 	util \
