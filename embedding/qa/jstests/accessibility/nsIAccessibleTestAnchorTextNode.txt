@@ -82,7 +82,7 @@ function executeTestCase()
 
        if (name == "External Link") col3[1] = "PASS"; else col3[1] = "FAIL";
        if (role == "42")            col3[2] = "PASS"; else col3[2] = "FAIL";
-       if (state == "6291520")      col3[3] = "PASS"; else col3[3] = "FAIL";
+       if (state == "7340096")      col3[3] = "PASS"; else col3[3] = "FAIL";
        if (value == "http://www.yahoo.com")
                                     col3[4] = "PASS"; else col3[4] = "FAIL";
 
