@@ -149,8 +149,11 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
       GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)cellTableStyle)); 
       nsRect  rect(0, 0, mRect.width, mRect.height);
 
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
+      // only non empty cells render their background
+      if (PR_FALSE == GetContentEmpty()) {
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
+      }
     
       // empty cells do not render their border
       PRBool renderBorder = PR_TRUE;
