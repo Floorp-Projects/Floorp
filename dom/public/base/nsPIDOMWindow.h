@@ -46,6 +46,7 @@
 #include "nsIDOMLocation.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDocument.h"
+#include "nsIDOMElement.h"
 
 class nsIDocShell;
 class nsIDOMWindowInternal;
@@ -66,7 +67,7 @@ public:
 
   NS_IMETHOD GetObjectProperty(const PRUnichar* aProperty,
                                nsISupports** aObject) = 0;
-  
+
   // This is private because activate/deactivate events are not part
   // of the DOM spec.
   NS_IMETHOD Activate() = 0;
@@ -84,6 +85,12 @@ public:
   NS_IMETHOD GetExtantDocument(nsIDOMDocument** aDocument) = 0;
 
   NS_IMETHOD ReallyCloseWindow() = 0;
+
+  // Internal getter/setter for the frame element, this version of the
+  // getter crosses chrome boundaries whereas the public scriptable
+  // one doesn't for security reasons.
+  NS_IMETHOD GetFrameElementInternal(nsIDOMElement** aFrameElement) = 0;
+  NS_IMETHOD SetFrameElementInternal(nsIDOMElement* aFrameElement) = 0;
 };
 
 #endif // nsPIDOMWindow_h__

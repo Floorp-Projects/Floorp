@@ -91,15 +91,16 @@ private:
 // objects for each of these instance variables, we put them off
 // in a side structure that's only allocated when the content is
 // accessed through the DOM.
-typedef struct {
+struct nsDOMSlots
+{
   nsChildContentList *mChildNodes;
   nsDOMCSSDeclaration *mStyle;
   nsDOMAttributeMap* mAttributeMap;
   nsVoidArray *mRangeList;
   nsIEventListenerManager* mListenerManager;
-  nsIContent* mBindingParent; // The nearest enclosing content node with a binding
-                              // that created us. [Weak]
-} nsDOMSlots;
+  nsIContent* mBindingParent; // The nearest enclosing content node with a
+                              // binding that created us. [Weak]
+};
 
 
 class nsNode3Tearoff : public nsIDOM3Node
