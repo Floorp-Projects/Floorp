@@ -194,6 +194,22 @@ CopyUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
 
 NS_COM
 void
+CopyUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest )
+  {
+    aDest.Truncate();
+    AppendUTF16toUTF8(aSource, aDest);
+  }
+
+NS_COM
+void
+CopyUTF8toUTF16( const char* aSource, nsAString& aDest )
+  {
+    aDest.Truncate();
+    AppendUTF8toUTF16(aSource, aDest);
+  }
+
+NS_COM
+void
 AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
   {
     nsAString::const_iterator source_start, source_end;
@@ -299,6 +315,24 @@ AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
                           NS_ConvertUTF8toUCS2(aSource));
           }
       }
+  }
+
+NS_COM
+void
+AppendUTF16toUTF8( const PRUnichar* aSource, nsACString& aDest )
+  {
+    if (aSource) {
+      AppendUTF16toUTF8(nsDependentString(aSource), aDest);
+    }
+  }
+
+NS_COM
+void
+AppendUTF8toUTF16( const char* aSource, nsAString& aDest )
+  {
+    if (aSource) {
+      AppendUTF8toUTF16(nsDependentCString(aSource), aDest);
+    }
   }
 
 
