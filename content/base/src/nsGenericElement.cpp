@@ -846,8 +846,9 @@ nsGenericElement::InternalIsSupported(const nsAString& aFeature,
     }
   } else if (feature.Equals(NS_LITERAL_STRING("Views"), nsCaseInsensitiveStringComparator()) ||
              feature.Equals(NS_LITERAL_STRING("StyleSheets"), nsCaseInsensitiveStringComparator()) ||
+             feature.Equals(NS_LITERAL_STRING("Core"), nsCaseInsensitiveStringComparator()) ||
              feature.Equals(NS_LITERAL_STRING("CSS"), nsCaseInsensitiveStringComparator()) ||
-//           feature.Equals(NS_LITERAL_STRING("CSS2"), nsCaseInsensitiveStringComparator()) ||
+             feature.Equals(NS_LITERAL_STRING("CSS2"), nsCaseInsensitiveStringComparator()) ||
              feature.Equals(NS_LITERAL_STRING("Events"), nsCaseInsensitiveStringComparator()) ||
 //           feature.Equals(NS_LITERAL_STRING("UIEvents"), nsCaseInsensitiveStringComparator()) ||
              feature.Equals(NS_LITERAL_STRING("MouseEvents"), nsCaseInsensitiveStringComparator()) ||
