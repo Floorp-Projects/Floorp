@@ -26,6 +26,12 @@
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"
 
+#define USE_ATSUI_HACK TRUE
+
+#include <ATSUnicode.h>
+#include <FixMath.h>
+#include <Gestalt.h>
+
 //------------------------------------------------------------------------
 
 
@@ -1379,21 +1385,227 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 }
 
 //------------------------------------------------------------------------
+// ATSUI Hack 
+// The following ATSUI hack should go away when we rework the Mac GFX
+// It is implement in a quick and dirty faction without change nsIRenderingContext
+// interface. The purpose is to use ATSUI in GFX so we can start Input Method work
+// before the real ATSUI GFX adoption get finish.
+//------------------------------------------------------------------------
+
+#define FloatToFixed(a)		((Fixed)((float)(a) * fixed1))
+OSErr
+atsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
+{
+	ATSUAttributeTag 		theTag;
+	ByteCount				theValueSize;
+	ATSUAttributeValuePtr 	theValue;
+
+	theTag = kATSUFontTag;
+	theValueSize = (ByteCount) sizeof(ATSUFontID);
+	theValue = (ATSUAttributeValuePtr) &theFontID;
+
+	return ATSUSetAttributes(theStyle, 1, &theTag, &theValueSize, &theValue);	
+}
+OSErr
+atsuSetSize(ATSUStyle theStyle, Fixed size)
+{
+	ATSUAttributeTag 		theTag;
+	ByteCount				theValueSize;
+	ATSUAttributeValuePtr 	theValue;
+
+	theTag = kATSUSizeTag;
+	theValueSize = (ByteCount) sizeof(Fixed);
+	theValue = (ATSUAttributeValuePtr) &size;
+
+	return ATSUSetAttributes(theStyle, 1, &theTag, &theValueSize, &theValue);
+}
+OSErr
+atsuSetColor(ATSUStyle theStyle, RGBColor color)
+{
+	ATSUAttributeTag 		theTag;
+	ByteCount				theValueSize;
+	ATSUAttributeValuePtr 	theValue;
+
+	theTag = kATSUColorTag;
+	theValueSize = (ByteCount) sizeof(RGBColor);
+	theValue = (ATSUAttributeValuePtr) &color;
+
+	return ATSUSetAttributes(theStyle, 1, &theTag, &theValueSize, &theValue);
+}
+
+OSErr setStyleSize (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle theStyle)
+{
+	float  dev2app;
+	aContext->GetDevUnitsToAppUnits(dev2app);
+	return atsuSetSize(theStyle, FloatToFixed((float(aFont.size) / dev2app)));
+}
+OSErr setStyleColor(nscolor aColor, ATSUStyle theStyle)
+{
+    RGBColor	thecolor;
+	thecolor.red = COLOR8TOCOLOR16(NS_GET_R(aColor));
+	thecolor.green = COLOR8TOCOLOR16(NS_GET_G(aColor));
+	thecolor.blue = COLOR8TOCOLOR16(NS_GET_B(aColor));	
+	return atsuSetColor(theStyle, thecolor);	
+}
+OSErr setStyleFont (const nsFont& aFont, nsIDeviceContext* aContext, ATSUStyle theStyle)
+
+{
+	short fontNum;
+	OSErr					err = 0;
+  	  
+	// set the size of the style		
+	nsDeviceContextMac::GetMacFontNumber(aFont.name, fontNum);
+
+	// set the font of the style
+	Style textFace = normal;
+	switch (aFont.style)
+	{
+		case NS_FONT_STYLE_NORMAL: 								break;
+		case NS_FONT_STYLE_ITALIC: 		textFace |= italic;		break;
+		case NS_FONT_STYLE_OBLIQUE: 	textFace |= italic;		break;	//XXX
+	}
+	switch (aFont.variant)
+	{
+		case NS_FONT_VARIANT_NORMAL: 							break;
+		case NS_FONT_VARIANT_SMALL_CAPS: textFace |= condense;	break;	//XXX
+	}
+	if (aFont.weight > NS_FONT_WEIGHT_NORMAL)	// don't test NS_FONT_WEIGHT_BOLD
+		textFace |= bold;
+
+	ATSUFontID atsuFontID ;
+	
+	err = ATSUFONDtoFontID( fontNum, textFace,  &atsuFontID);
+	if (noErr != err) 
+		return err;
+	return atsuSetFont(theStyle, atsuFontID);
+}
+OSErr setATSUIFont(const nsFont& aFont, nscolor aColor, nsIDeviceContext* aContext, ATSUStyle theStyle)
+{
+	OSErr					err = 0;
+	err = setStyleSize(aFont, aContext, theStyle);
+	if(noErr != err)
+		return err;
+	err = setStyleFont(aFont, aContext, theStyle);
+	if(noErr != err)
+		return err;
+	return setStyleColor(aColor, theStyle);	
+}
+
+
+static Boolean UseATSUIHack()
+{
+#ifndef USE_ATSUI_HACK
+    return FALSE;
+#endif
+	static Boolean gInitATSUIHack = FALSE;
+	static Boolean gATSUIHack = FALSE;
+	if(! gInitATSUIHack) {
+		long				version;
+		gATSUIHack = (::Gestalt(gestaltATSUVersion, &version) == noErr);
+		gInitATSUIHack = TRUE;
+	}
+	return gATSUIHack;
+}
+//------------------------------------------------------------------------
+// ATSUI Hack 
+//------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, nscoord aWidth,
                                          const nscoord* aSpacing)
 {
-	nsString nsStr;
-	nsStr.SetString(aString, aLength);
-	char* cStr = nsStr.ToNewCString();
+   if(UseATSUIHack())
+   { 
 
-	nsresult rv = DrawString(cStr, aLength, aX, aY, aWidth,aSpacing);
+		StartDraw();
 
-	delete[] cStr;
+		PRInt32 x = aX;
+		PRInt32 y = aY;
+	  	ATSUTextLayout	 	txLayout = nil;
+	  	ATSUStyle			theStyle;
+		OSErr					err = 0;
+	    err = ATSUCreateStyle(&theStyle);
+	    NS_ASSERTION((noErr != err), "ATSUCreateStyle failed");
 
-  return rv;
+		  if (mGS->mFontMetrics)
+		  {
+				// set native font and attributes
+		    nsFont *font;
+		    mGS->mFontMetrics->GetFont(font);
+				nsFontMetricsMac::SetFont(*font, mContext);
+
+				// substract ascent since drawing specifies baseline
+				nscoord ascent = 0;
+				mGS->mFontMetrics->GetMaxAscent(ascent);
+				y += ascent;
+
+			    err = setATSUIFont( *font, mGS->mColor, mContext, theStyle);
+		  		NS_ASSERTION((noErr != err), "setATSUIFont failed");
+				
+			}
+
+	  mGS->mTMatrix->TransformCoord(&x,&y);
+
+
+		UniCharCount			runLengths = aLength;
+	  err = ATSUCreateTextLayoutWithTextPtr(	(ConstUniCharArrayPtr)aString, 0, aLength, aLength,
+												1, &runLengths, &theStyle,
+												&txLayout);
+	   NS_ASSERTION((noErr != err), "ATSUCreateTextLayoutWithTextPtr failed");
+	  err = ATSUSetTransientFontMatching(txLayout, true);
+	   NS_ASSERTION((noErr != err), "ATSUSetTransientFontMatching failed");
+	  
+	  err = ATSUDrawText( txLayout, 0, aLength, Long2Fix(x), Long2Fix(y) );	
+	   NS_ASSERTION((noErr != err), "ATSUDrawText failed");
+	  err =   ATSUDisposeTextLayout(txLayout);
+	   NS_ASSERTION((noErr != err), "ATSUDisposeTextLayout failed");
+	  err =   ATSUDisposeStyle(theStyle);
+	   NS_ASSERTION((noErr != err), "ATSUDisposeStyle failed");
+
+	  if (mGS->mFontMetrics)
+		{
+			const nsFont* font;
+	    mGS->mFontMetrics->GetFont(font);
+			PRUint8 deco = font->decorations;
+
+			if (deco & NS_FONT_DECORATION_OVERLINE)
+				DrawLine(aX, aY, aX + aWidth, aY);
+
+			if (deco & NS_FONT_DECORATION_UNDERLINE)
+			{
+				nscoord ascent = 0;
+				nscoord descent = 0;
+		  	mGS->mFontMetrics->GetMaxAscent(ascent);
+		  	mGS->mFontMetrics->GetMaxDescent(descent);
+
+				DrawLine(aX, aY + ascent + (descent >> 1),
+							aX + aWidth, aY + ascent + (descent >> 1));
+			}
+
+			if (deco & NS_FONT_DECORATION_LINE_THROUGH)
+			{
+				nscoord height = 0;
+		 		mGS->mFontMetrics->GetHeight(height);
+
+				DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
+			}
+		}
+
+		EndDraw();
+ 	 	return NS_OK;
+	} else {
+		nsString nsStr;
+		nsStr.SetString(aString, aLength);
+		char* cStr = nsStr.ToNewCString();
+
+		nsresult rv = DrawString(cStr, aLength, aX, aY, aWidth,aSpacing);
+
+		delete[] cStr;
+
+		 return rv;
+	}
 }
+
 
 //------------------------------------------------------------------------
 
@@ -1401,12 +1613,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const nsString& aString,
                                          nscoord aX, nscoord aY, nscoord aWidth,
                                          const nscoord* aSpacing)
 {
-	char* cStr = aString.ToNewCString();
-	nsresult rv = DrawString(cStr, aString.Length(), aX, aY, aWidth, aSpacing);
-
-	delete[] cStr;
-
-  return rv;
+ 	nsresult rv = DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aWidth, aSpacing);
+	return rv;
 }
 
 //------------------------------------------------------------------------
