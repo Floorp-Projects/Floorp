@@ -3072,16 +3072,14 @@ nsWindow::OnDragLeaveSignal       (GtkWidget *      aWidget,
 
   // make sure to unset any drag motion timers here.
   ResetDragMotionTimer(0, 0, 0, 0, 0);
-  
-  if (mLastDragMotionWindow) {
-    // send our leave signal
-    mLastDragMotionWindow->OnDragLeave();
-    mLastDragMotionWindow = 0;
-    // since we're leaving a toplevel window, inform the drag service
-    // that we're ending the drag
-    nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
-    dragService->EndDragSession();
-  }
+
+  // create a fast timer - we're delaying the drag leave until the
+  // next mainloop in hopes that we might be able to get a drag drop
+  // signal
+  mDragLeaveTimer = do_CreateInstance("@mozilla.org/timer;1");
+  NS_ASSERTION(mDragLeaveTimer, "Failed to create drag leave timer!");
+  // fire this baby asafp
+  mDragLeaveTimer->Init(DragLeaveTimerCallback, this, 0);
 }
 
 /* static */
@@ -3147,6 +3145,10 @@ nsWindow::OnDragDropSignal        (GtkWidget        *aWidget,
     // if there was no other motion window, send an enter event
     innerMostWidget->OnDragEnter(retx, rety);
   }
+
+  // clear any drag leave timer that might be pending so that it
+  // doesn't get processed when we actually go out to get data.
+  mDragLeaveTimer = 0;
 
   // set the last window to this 
   mLastDragMotionWindow = innerMostWidget;
@@ -3341,12 +3343,41 @@ nsWindow::FireDragMotionTimer(void)
                      this);
 }
 
+void
+nsWindow::FireDragLeaveTimer(void)
+{
+#ifdef DEBUG_DND_EVENTS
+  g_print("nsWindow::FireDragLeaveTimer\n");
+#endif
+  mDragLeaveTimer = 0;
+
+  // clean up any pending drag motion window info
+  if (mLastDragMotionWindow) {
+    // send our leave signal
+    mLastDragMotionWindow->OnDragLeave();
+    mLastDragMotionWindow = 0;
+    // since we're leaving a toplevel window, inform the drag service
+    // that we're ending the drag
+    nsCOMPtr<nsIDragService> dragService = do_GetService(kCDragServiceCID);
+    dragService->EndDragSession();
+  }
+
+}
+
 /* static */
 void
 nsWindow::DragMotionTimerCallback(nsITimer *aTimer, void *aClosure)
 {
-  nsWindow *window = (nsWindow *)aClosure;
+  nsWindow *window = NS_STATIC_CAST(nsWindow *, aClosure);
   window->FireDragMotionTimer();
+}
+
+/* static */
+void
+nsWindow::DragLeaveTimerCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsWindow *window = NS_STATIC_CAST(nsWindow *, aClosure);
+  window->FireDragLeaveTimer();
 }
 
 ChildWindow::ChildWindow()
