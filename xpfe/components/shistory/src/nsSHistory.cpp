@@ -530,17 +530,13 @@ nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsI
 
 	PRBool result = PR_FALSE;
 	nsCOMPtr<nsIURI>   prevURI, nextURI;
+	PRUint32 prevID, nextID;
 
-    aPrevEntry->GetURI(getter_AddRefs(prevURI));
-	aNextEntry->GetURI(getter_AddRefs(nextURI));
-
-    // If one of the URIs is not available, then the entries are not
-    // equal...
-    if (!prevURI || !nextURI)
-	  return PR_FALSE;
-
-    prevURI->Equals(nextURI, &result);
-    if (!result) {
+	aPrevEntry->GetID(&prevID);
+	aNextEntry->GetID(&nextID);
+ 
+	// Check the IDs to verify if the pages are different.
+    if (prevID != nextID) {
        *aDSResult = aParent;
 	   *aSHEResult = aNextEntry;
 	   NS_IF_ADDREF(*aSHEResult);
