@@ -58,8 +58,8 @@ SHARED_LIBRARY_LIBS	= \
 		 	  $(DIST)/lib/$(LIB_PREFIX)sqlbase_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS	= \
-			  $(MOZ_COMPONENT_LIBS) \
 			  $(MOZ_UNICHARUTIL_LIBS) \
+			  $(MOZ_COMPONENT_LIBS) \
     			  $(NULL)
 
 ifdef MOZ_ENABLE_PGSQL
