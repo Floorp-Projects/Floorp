@@ -43,7 +43,7 @@
 #include "nsIWindowMediator.h"
 #include "nsIURI.h"
 #include "nsIXULWindow.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsWindowUtils.h"
 #include "nsMacUtils.h"
 #include "nsXPIDLString.h"
