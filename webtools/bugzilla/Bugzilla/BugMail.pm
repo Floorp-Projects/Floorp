@@ -238,6 +238,11 @@ sub ProcessOneBug($) {
             $old = FormatTimeUnit($old);
             $new = FormatTimeUnit($new);
         }
+        if ($attachid) {
+            SendSQL("SELECT isprivate FROM attachments 
+                     WHERE attach_id = $attachid");
+            $diffpart->{'isprivate'} = FetchOneColumn();
+        }
         $difftext = FormatTriple($what, $old, $new);
         $diffpart->{'header'} = $diffheader;
         $diffpart->{'fieldname'} = $fieldname;
@@ -772,6 +777,11 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
             if ($user->groups->{Param("timetrackinggroup")}) {
                 $add_diff = 1;
             }
+        } elsif (($diff->{'isprivate'}) 
+                 && Param('insidergroup')
+                 && !($user->groups->{Param('insidergroup')})
+                ) {
+            $add_diff = 0;
         } else {
             $add_diff = 1;
         }
