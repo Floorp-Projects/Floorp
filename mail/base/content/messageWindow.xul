@@ -119,6 +119,7 @@
   </popupset>
 
   <popup id="attachmentListContext"/>
+  <popup id="toolbar-context-menu"/>
 
   <toolbox id="mail-toolbox" class="toolbox-top">
   </toolbox>
