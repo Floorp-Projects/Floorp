@@ -32,7 +32,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIImageMap.h"
+#include "nsImageMap.h"
 #include "nsILinkHandler.h"
 #include "nsIURL.h"
 #include "nsIView.h"
@@ -374,9 +374,6 @@ nsImageFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
 {
   ImageFrameSuper::SizeOfWithoutThis(aHandler);
   mImageLoader.SizeOf(aHandler);
-  if (!aHandler->HaveSeen(mImageMap)) {
-    mImageMap->SizeOf(aHandler);
-  }
 }
 
 static nsresult
@@ -701,7 +698,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
     }
 
     if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
-      nsIImageMap* map = GetImageMap();
+      nsImageMap* map = GetImageMap();
       if (nsnull != map) {
         nsRect inner;
         GetInnerArea(&aPresContext, inner);
@@ -718,7 +715,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-nsIImageMap*
+nsImageMap*
 nsImageFrame::GetImageMap()
 {
   if (nsnull == mImageMap) {
@@ -740,16 +737,19 @@ nsImageFrame::GetImageMap()
     nsIHTMLDocument* hdoc;
     nsresult rv = doc->QueryInterface(kIHTMLDocumentIID, (void**)&hdoc);
     NS_RELEASE(doc);
-    if (NS_OK == rv) {
-      nsIImageMap* map;
+    if (NS_SUCCEEDED(rv)) {
+      nsIDOMHTMLMapElement* map;
       rv = hdoc->GetImageMap(usemap, &map);
       NS_RELEASE(hdoc);
-      if (NS_OK == rv) {
-        mImageMap = map;
+      if (NS_SUCCEEDED(rv)) {
+        mImageMap = new nsImageMap();
+        if (nsnull != mImageMap) {
+          mImageMap->Init(map);
+        }
       }
     }
   }
-  NS_IF_ADDREF(mImageMap);
+
   return mImageMap;
 }
 
@@ -798,7 +798,7 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
                           nsGUIEvent* aEvent,
                           nsEventStatus& aEventStatus)
 {
-  nsIImageMap* map;
+  nsImageMap* map;
   aEventStatus = nsEventStatus_eIgnore; 
 
   switch (aEvent->message) {
@@ -839,11 +839,10 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
 
         PRInt32 x = NSTwipsToIntPixels((aEvent->point.x - inner.x), t2p);
         PRInt32 y = NSTwipsToIntPixels((aEvent->point.y - inner.y), t2p);
-        nsresult r = map->IsInside(x, y, docURL, absURL, target, altText,
-                                   &suppress);
+        PRBool inside = map->IsInside(x, y, docURL, absURL, target, altText,
+                                      &suppress);
         NS_IF_RELEASE(docURL);
-        NS_RELEASE(map);
-        if (NS_OK == r) {
+        if (inside) {
           // We hit a clickable area. Time to go somewhere...
           PRBool clicked = PR_FALSE;
           if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
@@ -892,7 +891,7 @@ nsImageFrame::GetCursor(nsIPresContext& aPresContext,
                         PRInt32& aCursor)
 {
   //XXX This will need to be rewritten once we have content for areas
-  nsIImageMap* map = GetImageMap();
+  nsImageMap* map = GetImageMap();
   if (nsnull != map) {
     nsRect inner;
     GetInnerArea(&aPresContext, inner);
@@ -913,7 +912,7 @@ nsImageFrame::GetCursor(nsIPresContext& aPresContext,
 
     PRInt32 x = NSTwipsToIntPixels((pt.x - inner.x), t2p);
     PRInt32 y = NSTwipsToIntPixels((pt.y - inner.y), t2p);
-    if (NS_OK == map->IsInside(x, y)) {
+    if (map->IsInside(x, y)) {
       // Use style defined cursor if one is provided, otherwise when
       // the cursor style is "auto" we use the pointer cursor.
       const nsStyleColor* styleColor;
@@ -923,7 +922,6 @@ nsImageFrame::GetCursor(nsIPresContext& aPresContext,
         aCursor = NS_STYLE_CURSOR_POINTER;
       }
     }
-    NS_RELEASE(map);
     return NS_OK;
   }
 
