@@ -16,7 +16,7 @@
  * Reserved.
  */ 
 
-
+#include "nsDebug.h"
 #include "nsIDTDDebug.h"
 #include "CNavDTD.h"
 #include "nsHTMLTokens.h"
@@ -562,6 +562,13 @@ PRInt32 CNavDTD::DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag){
 }
 
 
+void CompareResults(PRBool canContain,PRBool canContainEx,eHTMLTags aChildTag,eHTMLTags aParentTag){
+  if(canContain!=canContainEx){
+//    printf("%s(child:%i,parent:%i)\n","can contain!=can containex",aChildTag,aParentTag);
+  }
+}
+
+
 /**
  *  This method gets called when a start token has been 
  *  encountered in the parse process. If the current container
@@ -586,7 +593,11 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
     result=CloseContainersTo(aChildTag,PR_TRUE);
   }
 
-  if(PR_FALSE==CanContain(theParentTag,aChildTag)){
+  PRBool theCanContainResult=CanContain(theParentTag,aChildTag);
+  PRBool theCanContainExResult=CanContainEx(theParentTag,aChildTag);
+  CompareResults(theCanContainResult,theCanContainExResult,aChildTag,theParentTag);
+
+  if(PR_FALSE==theCanContainResult){
     if(CanPropagate(theParentTag,aChildTag))
       result=CreateContextStackFor(aChildTag);
     else result=kCantPropagate;
@@ -595,7 +606,12 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
       //You must determine what container hierarchy you need to hold aToken,
       //and create that on the parsestack.
       result=ReduceContextStackFor(aChildTag);
-      if(PR_FALSE==CanContain(mBodyContext->mElements.Last(),aChildTag)) {
+
+      PRBool theCanContainResult=CanContain(mBodyContext->mElements.Last(),aChildTag);
+      PRBool theCanContainExResult=CanContainEx(mBodyContext->mElements.Last(),aChildTag);
+      CompareResults(theCanContainResult,theCanContainExResult,aChildTag,mBodyContext->mElements.Last());
+
+      if(PR_FALSE==theCanContainResult) {
         //we unwound too far; now we have to recreate a valid context stack.
         result=CreateContextStackFor(aChildTag);
       }
@@ -1458,6 +1474,265 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
   return result;
 }
 
+
+static eHTMLTags gBlockParentTags []={ 
+  eHTMLTag_applet,    eHTMLTag_basefont,    eHTMLTag_blockquote,
+  eHTMLTag_body,      eHTMLTag_center,      eHTMLTag_dd,    
+  eHTMLTag_div,       eHTMLTag_embed,       eHTMLTag_fieldset,
+  eHTMLTag_form,      eHTMLTag_iframe,      eHTMLTag_layer,
+  eHTMLTag_li,        eHTMLTag_listing,     eHTMLTag_multicol,
+  eHTMLTag_noembed,   eHTMLTag_noframes,    eHTMLTag_nolayer,
+  eHTMLTag_noscript,  eHTMLTag_object,      eHTMLTag_plaintext,
+  eHTMLTag_pre,       eHTMLTag_td,          eHTMLTag_th,
+  eHTMLTag_ul,
+  eHTMLTag_xmp,
+};
+
+static eHTMLTags gBlockChildTags []={ 
+  eHTMLTag_a,         eHTMLTag_abbr,        eHTMLTag_acronym,   eHTMLTag_address,     eHTMLTag_applet,
+  eHTMLTag_b,         eHTMLTag_basefont,    eHTMLTag_bdo,       eHTMLTag_bgsound,     eHTMLTag_big,
+  eHTMLTag_blink,     eHTMLTag_blockquote,  eHTMLTag_br,        eHTMLTag_button,
+  eHTMLTag_center,    eHTMLTag_cite,        eHTMLTag_code,      
+  eHTMLTag_dfn,       eHTMLTag_dir,         eHTMLTag_div,       eHTMLTag_dl,
+  eHTMLTag_em,        eHTMLTag_embed,
+  eHTMLTag_fieldset,  eHTMLTag_font,        eHTMLTag_form,
+  eHTMLTag_h1,        eHTMLTag_h2,          eHTMLTag_h3,
+  eHTMLTag_h4,        eHTMLTag_h5,          eHTMLTag_h6,
+  eHTMLTag_hr,      
+
+  eHTMLTag_i,         eHTMLTag_iframe,      eHTMLTag_ilayer,    eHTMLTag_img,         
+  eHTMLTag_isindex,   eHTMLTag_input,
+
+  eHTMLTag_kbd,     
+
+  eHTMLTag_label,     eHTMLTag_layer,       eHTMLTag_listing,
+
+  eHTMLTag_map,       /*eHTMLTag_marque,*/  eHTMLTag_menu,      eHTMLTag_multicol,
+  eHTMLTag_nobr,      eHTMLTag_noembed,     eHTMLTag_noframes,  eHTMLTag_nolayer,   eHTMLTag_noscript,
+
+  eHTMLTag_object,    eHTMLTag_ol,
+  eHTMLTag_p,         eHTMLTag_plaintext,   eHTMLTag_pre,         
+  eHTMLTag_q,
+  eHTMLTag_s,         eHTMLTag_samp,        eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,
+  eHTMLTag_sound,     eHTMLTag_spacer,      eHTMLTag_span,      eHTMLTag_strike,    eHTMLTag_strong,
+  eHTMLTag_sub,       eHTMLTag_sup,
+
+  eHTMLTag_table,     eHTMLTag_textarea,    eHTMLTag_tt,
+  eHTMLTag_u,         eHTMLTag_ul,
+  eHTMLTag_var,       eHTMLTag_wbr,         eHTMLTag_xmp,
+  
+    //a few special cases...
+  eHTMLTag_newline,
+  eHTMLTag_whitespace,
+
+
+};  
+
+static eHTMLTags gInlineParentTags []={ 
+  eHTMLTag_a,         eHTMLTag_abbr,        eHTMLTag_address,
+  eHTMLTag_b,         eHTMLTag_bdo,         eHTMLTag_big,
+  eHTMLTag_blink,     eHTMLTag_button,      eHTMLTag_caption,
+  eHTMLTag_cite,      eHTMLTag_code,        eHTMLTag_dfn,
+  eHTMLTag_dt,        eHTMLTag_em,          eHTMLTag_font,
+  eHTMLTag_h1,        eHTMLTag_h2,          eHTMLTag_h3,      
+  eHTMLTag_h4,        eHTMLTag_h5,          eHTMLTag_h6,      
+  eHTMLTag_i,         eHTMLTag_ilayer,      eHTMLTag_kbd,
+  eHTMLTag_label,     eHTMLTag_legend,      /*eHTMLTag_marquee,*/
+  eHTMLTag_nobr,      eHTMLTag_ol,          eHTMLTag_p,           
+  eHTMLTag_q,
+  eHTMLTag_s,         eHTMLTag_samp,        eHTMLTag_small,
+  eHTMLTag_span,      eHTMLTag_strike,      eHTMLTag_strong,
+  eHTMLTag_sub,       eHTMLTag_sup,         
+  eHTMLTag_td,        eHTMLTag_th,          eHTMLTag_tt,
+  eHTMLTag_u,         eHTMLTag_ul,          eHTMLTag_var
+};
+
+static eHTMLTags gInlineChildTags []={ 
+  eHTMLTag_a,       eHTMLTag_abbr,        eHTMLTag_acronym,   eHTMLTag_applet,
+  eHTMLTag_b,       eHTMLTag_bdo,         eHTMLTag_bgsound,   eHTMLTag_big,       eHTMLTag_blink,
+  eHTMLTag_br,      eHTMLTag_button,
+
+  eHTMLTag_cite,    eHTMLTag_code,
+  eHTMLTag_dfn,
+  eHTMLTag_em,      eHTMLTag_embed,
+  eHTMLTag_font,
+  eHTMLTag_i,       eHTMLTag_iframe,      eHTMLTag_ilayer,    eHTMLTag_img,       eHTMLTag_input,
+  eHTMLTag_kbd,     
+  eHTMLTag_label,   eHTMLTag_li,
+  eHTMLTag_map,
+  eHTMLTag_nobr,
+  eHTMLTag_object,
+  eHTMLTag_p,
+  eHTMLTag_pre,
+  eHTMLTag_q,
+  eHTMLTag_s,       eHTMLTag_samp,        eHTMLTag_script,    eHTMLTag_select,    eHTMLTag_small,
+  eHTMLTag_sound,   eHTMLTag_spacer,      eHTMLTag_span,      eHTMLTag_strike,    eHTMLTag_strong,
+  eHTMLTag_sub,     eHTMLTag_sup,
+  eHTMLTag_textarea,eHTMLTag_tt,
+  eHTMLTag_u,
+  eHTMLTag_var,
+  eHTMLTag_wbr,
+  eHTMLTag_text,
+  eHTMLTag_newline,
+  eHTMLTag_whitespace,
+};
+
+static eHTMLTags gPREChildTags []={ 
+  eHTMLTag_a,       eHTMLTag_abbr,        eHTMLTag_acronym,   
+  eHTMLTag_b,       eHTMLTag_bdo,         eHTMLTag_bgsound,   
+  eHTMLTag_br,      eHTMLTag_button,
+  eHTMLTag_cite,    eHTMLTag_code,        eHTMLTag_dfn,
+  eHTMLTag_em,      eHTMLTag_embed,
+  eHTMLTag_i,       eHTMLTag_ilayer,      eHTMLTag_input,
+  eHTMLTag_kbd,     eHTMLTag_label,       eHTMLTag_li,
+  eHTMLTag_map,     eHTMLTag_q,
+  eHTMLTag_s,       eHTMLTag_samp,        eHTMLTag_script,    eHTMLTag_select,    
+  eHTMLTag_sound,   eHTMLTag_spacer,      eHTMLTag_span,      eHTMLTag_strike,    eHTMLTag_strong,  
+  eHTMLTag_textarea,eHTMLTag_tt,
+  eHTMLTag_u,       eHTMLTag_var,         eHTMLTag_wbr,
+  eHTMLTag_text,    eHTMLTag_newline,     eHTMLTag_whitespace,
+};
+
+
+static eHTMLTags gHeadChildTags []={ 
+  eHTMLTag_base,    eHTMLTag_bgsound,     eHTMLTag_isindex,
+  eHTMLTag_link,    eHTMLTag_meta,        /*eHTMLTag_nextid,*/
+  eHTMLTag_script,  eHTMLTag_sound,       eHTMLTag_style,
+  eHTMLTag_title
+};
+
+static eHTMLTags gFormChildTags []={ 
+  eHTMLTag_button,  eHTMLTag_input,   eHTMLTag_keygen,
+  eHTMLTag_label,   eHTMLTag_select,  eHTMLTag_textarea     
+};
+
+/**
+ *  This method is called to determine whether or not a tag
+ *  of one type can contain a tag of another type.
+ *  
+ *  @update  gess 10/28/98
+ *  @param   aParent -- tag enum of parent container
+ *  @param   aChild -- tag enum of child container
+ *  @return  PR_TRUE if parent can contain child
+ */
+PRBool SpecialContainerRuleApplies(PRInt32 aParentTag,PRInt32 aChildTag) {
+  PRBool result=PR_FALSE;
+  
+  switch(aChildTag){
+    case eHTMLTag_area:
+      result=PRBool(eHTMLTag_map==aParentTag);  break;
+    case eHTMLTag_body:
+      result=PRBool(eHTMLTag_html==aParentTag); break;
+    case eHTMLTag_col:
+      result=PRBool(eHTMLTag_colgroup==aParentTag); break;
+    case eHTMLTag_del:
+    case eHTMLTag_ins:
+      result=PRBool(eHTMLTag_body==aParentTag); break;
+    case eHTMLTag_dt:
+    case eHTMLTag_dd:
+      result=PRBool(eHTMLTag_dl==aParentTag); break;
+    case eHTMLTag_frameset:
+      result=PRBool((eHTMLTag_html==aParentTag) || (eHTMLTag_frameset==aParentTag));  break;
+    case eHTMLTag_frame:
+    case eHTMLTag_noframes:
+      result=PRBool(eHTMLTag_frameset==aParentTag); break;
+    case eHTMLTag_head:
+      result=PRBool(eHTMLTag_html==aParentTag); break;
+    case eHTMLTag_legend:
+      result=PRBool(eHTMLTag_fieldset==aParentTag); break;
+    case eHTMLTag_option:
+    case eHTMLTag_optgroup:
+      result=PRBool((eHTMLTag_optgroup==aParentTag) || (eHTMLTag_select==aParentTag)); break;
+    case eHTMLTag_param:
+      result=PRBool((eHTMLTag_applet==aParentTag) || (eHTMLTag_object==aParentTag)); break;
+    case eHTMLTag_td:
+      result=PRBool(eHTMLTag_tr==aParentTag); break;
+    case eHTMLTag_text:
+      result=PRBool((eHTMLTag_option==aParentTag) || (eHTMLTag_body==aParentTag)); break;
+    case eHTMLTag_th:
+      result=PRBool(eHTMLTag_tr==aParentTag); break;
+    case eHTMLTag_tr:
+      result=PRBool((eHTMLTag_tbody==aParentTag) || 
+                    (eHTMLTag_thead==aParentTag) ||
+                    (eHTMLTag_tfoot==aParentTag)); break;
+
+    case eHTMLTag_caption:
+    case eHTMLTag_colgroup:
+    case eHTMLTag_tbody:
+    case eHTMLTag_tfoot:
+    case eHTMLTag_thead:
+      result=PRBool(eHTMLTag_table==aParentTag); break;
+    
+    default:
+      break;
+  }
+
+  return result;
+}
+
+/**
+ *  This method is called to determine whether or not a tag
+ *  of one type can contain a tag of another type.
+ *  
+ *  @update  gess 10/28/98
+ *  @param   aParent -- tag enum of parent container
+ *  @param   aChild -- tag enum of child container
+ *  @return  PR_TRUE if parent can contain child
+ */
+PRBool CNavDTD::CanContainEx(PRInt32 aParentTag,PRInt32 aChildTag) const {
+
+  //first, handle the case where we have an unknown parent...
+  if(eHTMLTag_unknown==aParentTag){
+    if(eHTMLTag_html==aChildTag)
+      return PR_TRUE;
+  }
+  //next, let's see if the child can be contained by a block-level tag...
+  if(FindTagInSet(aChildTag,gBlockChildTags,sizeof(gBlockChildTags)/sizeof(eHTMLTag_body)))  {
+    if(FindTagInSet(aParentTag,gBlockParentTags,sizeof(gBlockParentTags)/sizeof(eHTMLTag_body)))
+      return PR_TRUE;
+  }
+  if(FindTagInSet(aChildTag,gInlineChildTags,sizeof(gInlineChildTags)/sizeof(eHTMLTag_body)))  {
+    if(FindTagInSet(aParentTag,gInlineParentTags,sizeof(gInlineParentTags)/sizeof(eHTMLTag_body)))
+      return PR_TRUE;
+  }
+  if(FindTagInSet(aChildTag,gHeadChildTags,sizeof(gHeadChildTags)/sizeof(eHTMLTag_unknown))){
+    if(eHTMLTag_head==aParentTag)
+      return PR_TRUE;
+  }
+  if(FindTagInSet(aChildTag,gFormChildTags,sizeof(gFormChildTags)/gFormChildTags[0]))  {
+    if(HasOpenContainer(eHTMLTag_form)) 
+      return PR_TRUE;
+  }
+    //this tag is so bizarre it requires its own special handling...
+  if(aParentTag==eHTMLTag_li){
+
+    if(FindTagInSet(aChildTag,gInlineChildTags,sizeof(gInlineChildTags)/sizeof(eHTMLTag_body)))
+      return PR_TRUE;
+        
+    PRInt32 count=mBodyContext->mElements.mCount;
+    if(count>1){
+      eHTMLTags penultimate=mBodyContext->mElements.mTags[count-2];
+      if((eHTMLTag_ol==penultimate) || (eHTMLTag_ul==penultimate)){
+        //treat the li container as a block container...
+        if(FindTagInSet(aChildTag,gBlockChildTags,sizeof(gBlockChildTags)/sizeof(eHTMLTag_body)))
+          return PR_TRUE;
+      }
+    }
+  }
+
+  if(aParentTag==eHTMLTag_pre) {
+    //PRE is also very bizarre and deserves it own special handling...
+    if(FindTagInSet(aChildTag,gPREChildTags,sizeof(gPREChildTags)/sizeof(eHTMLTag_body)))
+      return PR_TRUE;    
+  }
+
+  if(SpecialContainerRuleApplies(aParentTag,aChildTag)){
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
 /**
  *  This method is called to determine whether or not 
  *  the necessary intermediate tags should be propagated
@@ -1474,7 +1749,12 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParent,eHTMLTags aChild) const {
   switch(aParent) {
     case eHTMLTag_td:
     case eHTMLTag_th:
-      result=CanContain(aParent,aChild);
+      
+      {
+        result=CanContain(aParent,aChild);
+        PRBool theCanContainExResult=CanContainEx(aParent,aChild);
+        CompareResults(result,theCanContainExResult,aChild,aParent);
+      }
       break;
 
     default:
@@ -1536,11 +1816,18 @@ PRBool CNavDTD::CanContainIndirect(eHTMLTags aParent,eHTMLTags aChild) const {
  *  @return  PR_TRUE if autoclosure should occur
  */
 PRBool CNavDTD::RequiresAutomaticClosure(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
-  static eHTMLTags gAutoCloseTags[]={eHTMLTag_li,eHTMLTag_td,eHTMLTag_tr,eHTMLTag_dt};
+  static eHTMLTags gAutoCloseTags[]={eHTMLTag_li,eHTMLTag_td,eHTMLTag_tr,eHTMLTag_dt,eHTMLTag_p,eHTMLTag_pre};
 
   PRBool    result=PR_FALSE;
   PRInt32   theParentIndex=kNotFound;
- 
+
+    //force autoclosure if you have p/pre stacks....
+  if((eHTMLTag_p==aChildTag) || (eHTMLTag_pre==aChildTag)){
+    if((eHTMLTag_p==aParentTag) || (eHTMLTag_pre==aParentTag)){
+      return PR_TRUE;
+    }
+  }
+
   /***************************************************************************************
     How this works:
       1. Find the nearest parent on the appropriate stack that can gate the given child.
@@ -1635,6 +1922,8 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
             case eHTMLTag_thead:    case eHTMLTag_tfoot:  
             case eHTMLTag_tbody:    case eHTMLTag_col:    
             case eHTMLTag_colgroup: case eHTMLTag_unknown:
+            case eHTMLTag_select:   case eHTMLTag_fieldset:
+            case eHTMLTag_frameset:
               result=PR_TRUE;
             default:
               break;
@@ -1890,12 +2179,17 @@ PRBool CNavDTD::ForwardPropagate(nsTagStack& aStack,eHTMLTags aParentTag,eHTMLTa
       //otherwise, intentionally fall through...
 
     case eHTMLTag_tr:
-      if(PR_TRUE==CanContain((PRInt32)eHTMLTag_td,(PRInt32)aChildTag)) {
-        aStack.Push(eHTMLTag_td);
-        result=BackwardPropagate(aStack,aParentTag,eHTMLTag_td);
-//        result=PR_TRUE;
-      }
+      {  
+        PRBool theCanContainResult=CanContain(eHTMLTag_td,aChildTag);
+        PRBool theCanContainExResult=CanContainEx(eHTMLTag_td,aChildTag);
+        CompareResults(theCanContainResult,theCanContainExResult,aChildTag,eHTMLTag_td);
 
+        if(PR_TRUE==theCanContainResult) {
+          aStack.Push(eHTMLTag_td);
+          result=BackwardPropagate(aStack,aParentTag,eHTMLTag_td);
+  //        result=PR_TRUE;
+        }
+      }
       break;
 
     case eHTMLTag_th:
@@ -1928,7 +2222,12 @@ PRBool CNavDTD::BackwardPropagate(nsTagStack& aStack,eHTMLTags aParentTag,eHTMLT
     if(theParentTag!=eHTMLTag_unknown) {
       aStack.Push(theParentTag);
     }
-    if(CanContain(aParentTag,theParentTag)) {
+
+    PRBool theCanContainResult=CanContain(aParentTag,theParentTag);
+    PRBool theCanContainExResult=CanContainEx(aParentTag,theParentTag);
+    CompareResults(theCanContainResult,theCanContainExResult,theParentTag,aParentTag);
+
+    if(theCanContainResult) {
       //we've found a complete sequence, so push the parent...
       theParentTag=aParentTag;
       aStack.Push(theParentTag);
