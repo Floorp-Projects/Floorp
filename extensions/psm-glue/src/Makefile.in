@@ -48,10 +48,12 @@ CSRCS = \
 	nsPSMShimLayer.c	\
 	$(NULL)
 
-EXTRA_DSO_LDOPTS = -L$(DIST)/bin -lcmt -lxpcom -lprotocol \
+EXTRA_DSO_LDOPTS = \
 	$(MOZ_COMPONENT_LIBS) \
-	$(MOZ_REGISTRY_LIBS)
-
+	-lcmt \
+	-lprotocol \
+	-lmozjs \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
