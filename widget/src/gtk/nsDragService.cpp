@@ -105,11 +105,10 @@ void nsDragService::SetTopLevelWidget(GtkWidget* w)
   sWidget = w;
 
   // Get the DragService from the service manager.
-  nsIDragService* dragService;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             kIDragServiceIID,
-                                             (nsISupports**)&dragService);
-  if (!NS_SUCCEEDED(rv)) {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIDragService, dragService, kCDragServiceCID, &rv);
+
+  if (NS_FAILED(rv)) {
     return;
   }
 

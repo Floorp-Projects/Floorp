@@ -104,11 +104,15 @@ NS_METHOD nsAppShell::Create(int *argc, char **argv)
   nsICmdLineService *cmdLineArgs=nsnull;
   nsresult   rv = NS_OK;
 
-  rv = nsServiceManager::GetService(kCmdLineServiceCID,
-                                    kICmdLineServiceIID,
-                                    (nsISupports **)&cmdLineArgs);
+  NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
   rv = cmdLineArgs->GetArgc(argc);
+  if(NS_FAILED(rv)) return rv;
+
   rv = cmdLineArgs->GetArgv(&argv);
+  if(NS_FAILED(rv)) return rv;
+
 #endif
   gtk_set_locale ();
 
@@ -161,11 +165,8 @@ NS_METHOD nsAppShell::Run()
   PLEventQueue * EQueue = nsnull;
 
   // Get the event queue service 
-  rv = nsServiceManager::GetService(kEventQueueServiceCID, 
-                                    kIEventQueueServiceIID,
-                                    (nsISupports **) &mEventQService);
-
-  if (NS_OK != rv) {
+  NS_WITH_SERVICE(nsIEventQueueService, mEventQService, kEventQueueServiceCID, &rv);
+  if (NS_FAILED(rv)) {
     NS_ASSERTION("Could not obtain event queue service", PR_FALSE);
     return rv;
   }
