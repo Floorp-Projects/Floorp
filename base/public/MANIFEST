@@ -13,3 +13,5 @@ nsRepeater.h
 nsIProperties.h
 nsCaretProperties.h
 nsSpecialSystemDirectory.h
+nsEscape.h
+nsStdFileStream.h
