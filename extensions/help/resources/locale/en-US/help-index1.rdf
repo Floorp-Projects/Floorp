@@ -1215,6 +1215,16 @@
 <rdf:Description about="help-indexAZ.rdf#h">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="helper_applications"
+         nc:name="helper applications"
+         nc:link="nav_help.html#Navigator:helper_applicationsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#h">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="home_page"
          nc:name="home page"
 	 nc:link="cs_nav_prefs_navigator.html#home_pageIDX"/>
@@ -1458,6 +1468,16 @@
        <rdf:Description ID="Internet_Keywords"
          nc:name="Internet Keywords"
 	 nc:link="nav_help.html#Internet_Keywords:using_Internet_KeywordsIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#j">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="java"
+         nc:name="Java"
+         nc:link="nav_help.html#JavaSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2461,6 +2481,17 @@
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#p">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="plugins"
+         nc:name="plug-ins"
+         nc:link="nav_help.html#Navigator:plug-insIDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
 
 <rdf:Description about="help-indexAZ.rdf#p">
    <nc:subheadings>
