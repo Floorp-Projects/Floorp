@@ -124,7 +124,6 @@ NS_INTERFACE_MAP_END
 
 nsMsgDBView::nsMsgDBView()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
   m_sortValid = PR_FALSE;
   m_sortOrder = nsMsgViewSortOrder::none;

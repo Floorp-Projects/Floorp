@@ -64,7 +64,6 @@ void OnPurgeTimer(nsITimer *timer, void *aPurgeService)
 
 nsMsgPurgeService::nsMsgPurgeService()
 {
-  NS_INIT_ISUPPORTS();
   mHaveShutdown = PR_FALSE;
 }
 

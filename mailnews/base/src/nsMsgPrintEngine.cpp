@@ -75,7 +75,6 @@ nsMsgPrintEngine::nsMsgPrintEngine() :
   mMsgInx(nsIMsgPrintEngine::MNAB_START)
 {
   mCurrentlyPrintingURI = -1;
-  NS_INIT_ISUPPORTS();
 }
 
 

@@ -51,8 +51,6 @@ nsMsgRDFDataSource::nsMsgRDFDataSource():
     mInitialized(PR_FALSE),
     mRDFService(nsnull)
 {
-    NS_INIT_ISUPPORTS();
-
     // do one-time initialization here
     
     NS_NewISupportsArray(getter_AddRefs(mObservers));

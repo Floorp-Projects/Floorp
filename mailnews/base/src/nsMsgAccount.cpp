@@ -65,8 +65,6 @@ nsMsgAccount::nsMsgAccount():
   m_incomingServer(nsnull),
   m_defaultIdentity(nsnull)
 {
-
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgAccount::~nsMsgAccount()

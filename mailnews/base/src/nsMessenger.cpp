@@ -292,7 +292,6 @@ public:
 //
 nsMessenger::nsMessenger() 
 {
-  NS_INIT_ISUPPORTS();
   mScriptObject = nsnull;
   mWindow = nsnull;
   mMsgWindow = nsnull;
@@ -1448,7 +1447,6 @@ NS_IMPL_ISUPPORTS1(SendLaterListener, nsIMsgSendLaterListener)
 SendLaterListener::SendLaterListener(nsIMessenger *aMessenger)
 {
   m_messenger = getter_AddRefs(NS_GetWeakReference(aMessenger));
-  NS_INIT_ISUPPORTS();
 }
 
 SendLaterListener::~SendLaterListener()
@@ -1573,7 +1571,6 @@ NS_IMETHODIMP nsMessenger::DoPrintPreview()
 
 nsSaveMsgListener::nsSaveMsgListener(nsIFileSpec* aSpec, nsMessenger *aMessenger)
 {
-    NS_INIT_ISUPPORTS();
     if (aSpec)
       m_fileSpec = do_QueryInterface(aSpec);
     m_messenger = aMessenger;

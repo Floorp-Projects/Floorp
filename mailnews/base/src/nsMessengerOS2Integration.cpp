@@ -59,7 +59,6 @@ nsMessengerOS2Integration::nsMessengerOS2Integration()
      pUnreadCount = (PULONG)pvObject;
   }
   *pUnreadCount = 0;
-  NS_INIT_ISUPPORTS();
 }
 
 nsMessengerOS2Integration::~nsMessengerOS2Integration()

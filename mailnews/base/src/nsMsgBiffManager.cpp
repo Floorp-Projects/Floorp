@@ -55,8 +55,6 @@ void OnBiffTimer(nsITimer *timer, void *aBiffManager)
 
 nsMsgBiffManager::nsMsgBiffManager()
 {
-  NS_INIT_ISUPPORTS();
-
   mBiffArray = nsnull;
   mHaveShutdown = PR_FALSE;
   mInited = PR_FALSE;

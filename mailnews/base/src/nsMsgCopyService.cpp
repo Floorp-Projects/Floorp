@@ -142,7 +142,6 @@ nsCopyRequest::AddNewCopySource(nsIMsgFolder* srcFolder)
 
 nsMsgCopyService::nsMsgCopyService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgCopyService::~nsMsgCopyService()

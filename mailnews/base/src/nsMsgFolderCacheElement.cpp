@@ -45,7 +45,6 @@ nsMsgFolderCacheElement::nsMsgFolderCacheElement()
 	m_mdbRow = nsnull;
 	m_owningCache = nsnull;
 	m_folderKey = nsnull;
-	NS_INIT_ISUPPORTS();
 }
 
 nsMsgFolderCacheElement::~nsMsgFolderCacheElement()

@@ -67,7 +67,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
   
 nsMsgMailSession::nsMsgMailSession()
 {
-	NS_INIT_ISUPPORTS();
 }
 
 

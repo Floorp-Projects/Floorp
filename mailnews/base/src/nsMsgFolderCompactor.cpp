@@ -67,7 +67,6 @@ NS_IMPL_ISUPPORTS5(nsFolderCompactState, nsIMsgFolderCompactor, nsIRequestObserv
 
 nsFolderCompactState::nsFolderCompactState()
 {
-  NS_INIT_ISUPPORTS();
   m_baseMessageUri = nsnull;
   m_fileStream = nsnull;
   m_size = 0;

@@ -264,8 +264,6 @@ private:
 
 nsMessengerWinIntegration::nsMessengerWinIntegration()
 {
-  NS_INIT_ISUPPORTS();
-
   mDefaultServerAtom = getter_AddRefs(NS_NewAtom("DefaultServer"));
   mTotalUnreadMessagesAtom = getter_AddRefs(NS_NewAtom("TotalUnreadMessages"));
 

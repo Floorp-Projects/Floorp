@@ -152,7 +152,6 @@ nsMsgAccountManager::nsMsgAccountManager() :
   m_shutdownInProgress(PR_FALSE),
   m_prefs(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsMsgAccountManager::~nsMsgAccountManager()

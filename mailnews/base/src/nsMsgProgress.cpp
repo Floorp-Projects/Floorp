@@ -57,7 +57,6 @@ NS_INTERFACE_MAP_END_THREADSAFE
 
 nsMsgProgress::nsMsgProgress()
 {
-  NS_INIT_ISUPPORTS();
   m_closeProgress = PR_FALSE;
   m_processCanceled = PR_FALSE;
   m_pendingStateFlags = -1;

@@ -372,8 +372,6 @@ NS_IMPL_ISUPPORTS2(nsMessengerMigrator, nsIMessengerMigrator, nsIObserver)
 nsMessengerMigrator::nsMessengerMigrator() :
   m_haveShutdown(PR_FALSE)
 {
-
-  NS_INIT_ISUPPORTS();
 }
 
 nsMessengerMigrator::~nsMessengerMigrator()
