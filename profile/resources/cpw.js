@@ -194,7 +194,7 @@ function processCreateProfileData()
     }
 
 	dump("data: "+data+"\n");
-	var profile = Components.classes[""component://netscape/profile/manager"].createInstance();
+	var profile = Components.classes["component://netscape/profile/manager"].createInstance();
 	profile = profile.QueryInterface(Components.interfaces.nsIProfile);
 	dump("profile = " + profile + "\n");  
 
