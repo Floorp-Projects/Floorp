@@ -29,7 +29,6 @@
 
 #include "nsViewsCID.h"
 #include "nsView.h"
-#include "nsViewManager.h"
 #include "nsScrollingView.h"
 #include "nsScrollPortView.h"
 
@@ -110,48 +109,16 @@ nsresult nsViewFactory::LockFactory(PRBool aLock)
   return NS_OK;
 }
 
+#define USE_NEW_COMPOSITOR 1
+
+#if USE_NEW_COMPOSITOR
+#include "nsViewManager.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager)
-
-#if 0
-// OBSOLETED by nsViewModule - dp
-
-// return the proper factory to the caller
-extern "C" NS_VIEW nsresult
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
-{
-	nsresult rv = NS_OK;
-
-	do {
-		if (nsnull == aFactory) {
-			rv = NS_ERROR_NULL_POINTER;
-			break;
-		}
-
-		*aFactory = nsnull;
-
-		if (aClass.Equals(kCViewManager)) {
-			nsIGenericFactory* factory = nsnull;
-			rv = NS_NewGenericFactory(&factory, &nsViewManagerConstructor);
-			if (NS_SUCCEEDED(rv))
-				*aFactory = factory;
-		} else if (aClass.Equals(kCView) || aClass.Equals(kCScrollingView) || aClass.Equals(kCScrollPortView)) {
-			nsViewFactory* factory = new nsViewFactory(aClass);
-			if (nsnull == factory) {
-				rv = NS_ERROR_OUT_OF_MEMORY;
-				break;
-			}
-			NS_ADDREF(factory);
-			*aFactory = factory;
-		}
-	} while (0);
-	
-	return rv;
-}
-#endif /* 0 */
+#else
+#include "nsViewManager2.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsViewManager2)
+#define nsViewManagerConstructor nsViewManager2Constructor
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // Module object definition
