@@ -289,11 +289,6 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     return NS_ERROR_INVALID_ARG;
   }
   
-  // get the account manager
-  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
   // as long as it doesn't start with anyfolder://
   if (PL_strncasecmp(ANY_SERVER, aFolderURI, PL_strlen(aFolderURI)) != 0) {
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
@@ -330,6 +325,11 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
     PRUint32                  cnt = 0;
     PRUint32                  i;
     
+    // get the account manager
+    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                    NS_MSGACCOUNTMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     // if anyfolder will do, go look for one.
     nsCOMPtr<nsISupportsArray> retval; 
     accountManager->GetServersForIdentity(userIdentity, getter_AddRefs(retval)); 

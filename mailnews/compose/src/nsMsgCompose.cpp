@@ -53,11 +53,6 @@
 #include "nsEscape.h"
 #include "plstr.h"
 
-// XXX temporary so we can use the current identity hack -alecf
-#include "nsIMsgMailSession.h"
-#include "nsMsgBaseCID.h"
-static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
-
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
