@@ -110,6 +110,9 @@ my $threshold = Param("mostfreqthreshold");
 
 while (my ($key, $value) = each %count) {
     delete $count{$key} if ($value < $threshold);
+    
+    # If there's a buglist, restrict the bugs to that list.
+    delete $count{$key} if $sortvisible && (lsearch(\@buglist, $key) == -1);
 }
 
 # Try and open the database from "changedsince" days ago
@@ -135,33 +138,29 @@ if (!tie(%before, 'AnyDBM_File', "data/duplicates/dupes$whenever",
 # Don't add CLOSED, and don't add VERIFIED unless they are INVALID or 
 # WONTFIX. We want to see VERIFIED INVALID and WONTFIX because common 
 # "bugs" which aren't bugs end up in this state.
-my $generic_query = "
-  SELECT component, bug_severity, op_sys, target_milestone,
+my $query = "
+  SELECT bugs.bug_id, component, bug_severity, op_sys, target_milestone,
          short_desc, bug_status, resolution
   FROM bugs 
   WHERE (bug_status != 'CLOSED') 
   AND   ((bug_status = 'VERIFIED' AND resolution IN ('INVALID', 'WONTFIX')) 
          OR (bug_status != 'VERIFIED'))
-  AND ";
+  AND bugs.bug_id IN (" . join(", ", keys %count) . ")";
 
 # Limit to a single product if requested             
-$generic_query .= (" product = " . SqlQuote($product) . " AND ") if $product;
+$query .= (" AND product = " . SqlQuote($product)) if $product;
  
+SendSQL(SelectVisible($query, 
+                      $userid, 
+                      $usergroupset));
+                       
 my @bugs;
 my @bug_ids; 
-my $loop = 0;
 
-foreach my $id (keys(%count)) {
-    # Maximum row count is dealt with in the template.
-    # If there's a buglist, restrict the bugs to that list.
-    next if $sortvisible && $buglist[0] && (lsearch(\@buglist, $id) == -1);
+while (MoreSQLData()) {
+    # Note: maximum row count is dealt with in the template.
 
-    SendSQL(SelectVisible("$generic_query bugs.bug_id = $id", 
-                           $userid, 
-                           $usergroupset));
-                           
-    next unless MoreSQLData();
-    my ($component, $bug_severity, $op_sys, $target_milestone, 
+    my ($id, $component, $bug_severity, $op_sys, $target_milestone, 
         $short_desc, $bug_status, $resolution) = FetchSQLData();
 
     # Limit to open bugs only if requested
@@ -178,7 +177,6 @@ foreach my $id (keys(%count)) {
                    bug_status => $bug_status, 
                    resolution => $resolution });
     push (@bug_ids, $id); 
-    $loop++;                
 }
 
 $vars->{'bugs'} = \@bugs;
