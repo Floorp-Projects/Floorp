@@ -148,7 +148,10 @@ static js2val Array_toString(JS2Metadata *meta, const js2val thisValue, js2val *
                     && !JS2VAL_IS_NULL(result) )
                 s->append(*meta->toString(result));
             if (i < (length - 1))
-                s->append(widenCString(","));
+		        if (meta->version == JS2VERSION_1_2)
+                    s->append(widenCString(", "));
+                else
+                    s->append(widenCString(","));
         }
 		if (meta->version == JS2VERSION_1_2)
 			s->append(widenCString("]"));

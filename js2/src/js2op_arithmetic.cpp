@@ -92,7 +92,7 @@
             b = pop();
             a = pop();
             a = meta->toGeneralNumber(a);
-            int32 count = meta->toInt32(b);
+            int32 count = meta->valToInt32(b);
             if (JS2VAL_IS_LONG(a)) {
                 int64 r;
                 JSLL_SHL(r, *JS2VAL_TO_LONG(a), count & 0x3F);
@@ -113,7 +113,7 @@
             b = pop();
             a = pop();
             a = meta->toGeneralNumber(a);
-            int32 count = meta->toInt32(b);
+            int32 count = meta->valToInt32(b);
             if (JS2VAL_IS_LONG(a)) {
                 int64 r;
                 JSLL_SHR(r, *JS2VAL_TO_LONG(a), count & 0x3F);
@@ -134,7 +134,7 @@
             b = pop();
             a = pop();
             a = meta->toGeneralNumber(a);
-            int32 count = meta->toInt32(b);
+            int32 count = meta->valToInt32(b);
             if (JS2VAL_IS_LONG(a)) {
                 int64 r;
                 JSLL_SHR(r, *JS2VAL_TO_LONG(a), count & 0x3F);
@@ -147,7 +147,7 @@
                 pushULong(r);
             }
             else
-            pushNumber(meta->toUInt32(a) >> (count & 0x1F));
+            pushNumber(meta->valToUInt32(a) >> (count & 0x1F));
         }
         break;
     case eBitwiseAnd:
