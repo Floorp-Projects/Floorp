@@ -33,6 +33,8 @@
  *
  */
 
+@import url(chrome://venkman/locale/venkman-output-locale.css);
+
 a.venkman-link {
     text-decoration: none;
 }
@@ -72,10 +74,6 @@ a.venkman-link:hover {
     font-weight: bold;
 }
 
-.msg-data[msg-type="LOG"]:before {
-    content: "LOG:";
-}
-
 .msg-data[msg-type="ERROR"]:before {
     content: "!!";
 }
@@ -85,17 +83,8 @@ a.venkman-link:hover {
     content: "*";
 }
 
-.msg-data[msg-type="ETRACE"]:before {
-    content: "X";
-}
-
-.msg-data[msg-type="HELP"]:before {
-    content: "Help:";
-}
-
 .msg-data[msg-type="USAGE"]:before {
     font-style: normal;
-    content: "Usage:";
 }
 
 .msg-data[msg-type="SOURCE"]:before {

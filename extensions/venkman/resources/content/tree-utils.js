@@ -697,12 +697,14 @@ function xtvr_remchild (index)
     //for (var i = index + 1; i < this.childData.length; ++i)
     //    --this.childData[i].childIndex;
     
-    var fpDelta = -this.childData[index].visualFootprint;
-    var changeStart = this.childData[index].calculateVisualRow();
+    var orphan = this.childData[index];
+    var fpDelta = -orphan.visualFootprint;
+    var changeStart = orphan.calculateVisualRow();
     //this.childData[index].childIndex = -1;
-    delete this.childData[index].parentRecord;
+    delete orphan.parentRecord;
     arrayRemoveAt (this.childData, index);
-    if ("isContainerOpen" in this && this.isContainerOpen)
+    
+    if (!orphan.isHidden && "isContainerOpen" in this && this.isContainerOpen)
     {
         //XXX why would we need to resort on a remove?
         //if (this.calculateVisualRow() >= 0)
@@ -745,7 +747,8 @@ function xtvr_uhide ()
     this.isHidden = false;
     this.invalidateCache();
     var row = this.calculateVisualRow();
-    this.parentRecord.onVisualFootprintChanged (row, this.visualFootprint);
+    if (this.parentRecord)
+        this.parentRecord.onVisualFootprintChanged (row, this.visualFootprint);
 }
 
 /*

@@ -58,6 +58,7 @@
     <script src="chrome://communicator/content/findUtils.js"/>
     <script src="chrome://global/content/strres.js"/>
   
+    <script src="chrome://venkman/content/pref-manager.js"/>
     <script src="chrome://venkman/content/command-manager.js"/>
     <script src="chrome://venkman/content/menu-manager.js"/>
     <script src="chrome://venkman/content/view-manager.js"/>

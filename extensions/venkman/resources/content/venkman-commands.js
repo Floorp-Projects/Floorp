@@ -59,10 +59,10 @@ function initCommands()
          ["commands",       cmdCommands,                            CMD_CONSOLE],
          ["cont",           cmdCont,               CMD_CONSOLE | CMD_NEED_STACK],
          ["debug-script",   cmdSetScriptFlag,                                 0],
-         ["debug-instance-on", cmdToggleSomething,                            0],
+         ["debug-instance-on",  cmdToggleSomething,                           0],
          ["debug-instance-off", cmdToggleSomething,                           0],
-         ["debug-instance", cmdSetScriptFlag,                                 0],
-         ["debug-transient", cmdSetTransientFlag,                             0],
+         ["debug-instance",     cmdSetScriptFlag,                             0],
+         ["debug-transient",    cmdSetTransientFlag,                          0],
          ["emode",          cmdEMode,                               CMD_CONSOLE],
          ["eval",           cmdEval,                                CMD_CONSOLE],
          ["evald",          cmdEvald,                               CMD_CONSOLE],
@@ -76,10 +76,10 @@ function initCommands()
          ["find-ctor",      cmdFindCreatorOrCtor,                             0],
          ["find-file",      cmdFindFile,                            CMD_CONSOLE],
          ["find-frame",     cmdFindFrame,                        CMD_NEED_STACK],
-         ["find-sourcetext", cmdFindSourceText,                               0],
+         ["find-sourcetext",      cmdFindSourceText,                          0],
          ["find-sourcetext-soft", cmdFindSourceText,                          0],
-         ["find-script",    cmdFindScript,                                    0],
-         ["find-scriptinstance", cmdFindScriptInstance,                       0],
+         ["find-script",          cmdFindScript,                              0],
+         ["find-scriptinstance",  cmdFindScriptInstance,                      0],
          ["find-url",       cmdFindURL,                             CMD_CONSOLE],
          ["find-url-soft",  cmdFindURL,                                       0],
          ["finish",         cmdFinish,             CMD_CONSOLE | CMD_NEED_STACK],
@@ -1201,7 +1201,7 @@ function cmdPref (e)
     }
     else
     {
-        var ary = console.listPrefs(e.prefName);
+        var ary = console.prefManager.listPrefs(e.prefName);
         if (ary.length == 0)
         {
             display (getMsg(MSN_ERR_UNKNOWN_PREF, [e.prefName]),
@@ -1289,7 +1289,7 @@ function cmdRestoreLayout (e)
 {   
     if (!e.name)
     {
-        var list = console.listPrefs("layoutState.");
+        var list = console.prefManager.listPrefs("layoutState.");
         for (var i = 0; i < list.length; ++i)
             list[i] = list[i].substr(12);
         list.push("factory");
@@ -1341,7 +1341,7 @@ function cmdSaveLayout (e)
 {
     if (!e.name)
     {
-        var list = console.listPrefs("layoutState.");
+        var list = console.prefManager.listPrefs("layoutState.");
         for (var i = 0; i < list.length; ++i)
             list[i] = list[i].substr(12);
         list.push("factory");
@@ -1358,7 +1358,7 @@ function cmdSaveLayout (e)
     
     var ary = console.viewManager.getLayoutState ();
     var prefName = "layoutState." + e.name;
-    console.addPref(prefName);
+    console.commandManager.addPref(prefName, "");
     console.prefs[prefName] = ary.join ("; ");
 }
 
@@ -1378,7 +1378,7 @@ function cmdSaveProfile (e)
     
     if (!e.targetFile || e.targetFile == "?")
     {
-        var list = console.listPrefs(templatePfx);
+        var list = console.prefManager.listPrefs(templatePfx);
         var extList = "";
         for (i = 0; i < list.length; ++i)
         {

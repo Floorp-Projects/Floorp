@@ -33,8 +33,8 @@
  *
  */
 
-const __vnk_version        = "0.9.40";
-const __vnk_requiredLocale = "0.9.x";
+const __vnk_version        = "0.9.44";
+const __vnk_requiredLocale = "0.9.42+";
 var   __vnk_versionSuffix  = "";
 
 const __vnk_counter_url = 
@@ -70,6 +70,8 @@ const LINE_BREAK     = 0x02;
 const LINE_FBREAK    = 0x04;
 
 var console = new Object();
+
+console.initialized = false;
 
 /* |this|less functions */
 
@@ -229,7 +231,7 @@ function dispatch (text, e, flags)
                          MT_ERROR);
                 display (formatException(ex), MT_ERROR);
                 dd (formatException(ex), MT_ERROR);
-                if ("stack" in ex)
+                if (typeof ex == "object" && "stack" in ex)
                     dd (ex.stack);
             }
             break;
@@ -529,10 +531,13 @@ function init()
     };    
 
     disableDebugCommands();
-    
+
     initDebugger();
     initProfiler();
 
+    // read prefs that have not been explicitly created, such as the layout prefs
+    console.prefManager.readPrefs();
+    
     fetchLaunchCount();
     
     console.sourceText = new HelpText();
@@ -585,6 +590,7 @@ function destroy ()
 
     destroyViews();
     destroyHandlers();
+    destroyPrefs();
     detachDebugger();
 }
 

@@ -35,17 +35,17 @@
 
 function initProfiler ()
 {
-    console.addPref ("profile.template.xml",
-                     "chrome://venkman/locale/profile.xml.tpl");
-    console.addPref ("profile.template.html",
-                     "chrome://venkman/locale/profile.html.tpl");
-    console.addPref ("profile.template.csv",
-                     "chrome://venkman/locale/profile.csv.tpl");
-    console.addPref ("profile.template.txt",
-                     "chrome://venkman/locale/profile.txt.tpl");
-    console.addPref ("profile.ranges.default",
-                     "1000000, 5000, 2500, 1000, 750, 500, 250, 100, 75, 50, " +
-                     "25, 10, 7.5, 5, 2.5, 1, 0.75, 0.5, 0.25");
+    var prefs =
+        [
+         ["profile.template.xml", "chrome://venkman/locale/profile.xml.tpl"],
+         ["profile.template.html", "chrome://venkman/locale/profile.html.tpl"],
+         ["profile.template.csv", "chrome://venkman/locale/profile.csv.tpl"],
+         ["profile.template.txt", "chrome://venkman/locale/profile.txt.tpl"],
+         ["profile.ranges.default", "1000000, 5000, 2500, 1000, 750, 500, 250," +
+          "100, 75, 50, 25, 10, 7.5, 5, 2.5, 1, 0.75, 0.5, 0.25"]
+        ];
+
+    console.prefManager.addPrefs(prefs);
 }
 
 function ProfileReport (reportTemplate, file, rangeList, scriptInstanceList)

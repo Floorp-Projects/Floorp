@@ -70,10 +70,12 @@
 <!ENTITY Session.label      "Interactive Session">
 
 <!-- script view -->
-<!ENTITY Scripts.label      "Loaded Scripts">
-<!ENTITY ScriptsCol0.header "Name">
-<!ENTITY ScriptsCol1.header "Line">
-<!ENTITY ScriptsCol2.header "Length">
+<!ENTITY Scripts.label         "Loaded Scripts">
+<!ENTITY ScriptsSearch.label   "Search">
+<!ENTITY ScriptsSearch.tooltip "Click here to clear the search field">
+<!ENTITY ScriptsCol0.header    "Name">
+<!ENTITY ScriptsCol1.header    "Line">
+<!ENTITY ScriptsCol2.header    "Length">
 
 <!-- source view -->
 <!ENTITY Source.label       "Source Code">

@@ -44,14 +44,16 @@ const JSD_SERVICE_PPBUFFER = "ppbuffer";
 
 function initJSDURL()
 {   
-    console.addPref ("services.help.css",
-                     "chrome://venkman/skin/venkman-help.css");
-    console.addPref ("services.help.template",
-                     "chrome://venkman/locale/venkman-help.tpl");
-    console.addPref ("services.source.css",
-                     "chrome://venkman/skin/venkman-source.css");
-    console.addPref ("services.source.colorize", true);
-    console.addPref ("services.source.colorizeLimit", 1500);
+    var prefs =
+        [
+         ["services.help.css", "chrome://venkman/skin/venkman-help.css"],
+         ["services.help.template", "chrome://venkman/locale/venkman-help.tpl"],
+         ["services.source.css", "chrome://venkman/skin/venkman-source.css"],
+         ["services.source.colorize", true],
+         ["services.source.colorizeLimit", 1500]
+        ];
+
+    console.prefManager.addPrefs(prefs);
 }
 
 /*
@@ -308,10 +310,13 @@ function svc_help (response, parsedURL)
                 htmlDesc = htmlDesc.replace (/\*([^\*]+)\*/g, replaceBold);
                 htmlDesc = htmlDesc.replace (/\|([^\|]+)\|/g, replaceCommand);
 
+                // remove trailing access key (non en-US locales) and ...
+                var trimmedLabel = 
+                    command.labelstr.replace(/(\([a-zA-Z]\))?(\.\.\.)?$/, "");
+
                 vars = {
                     "\\$command-name": command.name,
-                    "\\$ui-label-safe": escape(fromUnicode(command.labelstr,
-                                                           MSG_REPORT_CHARSET)),
+                    "\\$ui-label-safe": encodeURIComponent(trimmedLabel),
                     "\\$ui-label": fromUnicode(command.labelstr,
                                                MSG_REPORT_CHARSET),
                     "\\$params": fromUnicode(htmlUsage, MSG_REPORT_CHARSET),

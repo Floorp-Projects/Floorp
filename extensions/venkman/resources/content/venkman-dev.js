@@ -33,6 +33,13 @@
  *
  */
 
+console.guessFallback =
+function (scriptWrapper, sourceContext)
+{
+    dd ("guess fallback");
+    return "foo";
+}
+
 function initDev()
 {
     var cmdary =
@@ -55,9 +62,9 @@ function initDev()
 
     if (!("devState" in console.pluginState))
     {
-        console.addPref ("dbgContexts", false);
-        console.addPref ("dbgDispatch", false);
-        console.addPref ("dbgRealize", false);
+        console.prefManager.addPref ("dbgContexts", false);
+        console.prefManager.addPref ("dbgDispatch", false);
+        console.prefManager.addPref ("dbgRealize", false);
     }
     
     console.pluginState.devState = true;

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.1 (the "License"); you may not use this file except in
@@ -33,33 +33,23 @@
  *
  */
 
-function initPrefs()
-{
+/*
+ * Note to translators: Only localize the text after "content:", don't touch
+ * the [msg-type="FOO"] selectors.
+ */
 
-    console.prefManager = new PrefManager("extensions.venkman.");
-    console.prefs = console.prefManager.prefs;
-    
-    var prefs =
-        [
-         ["maxStringLength", 100],
-         ["startupCount", 0],
-         ["enableChromeFilter", true],
-         ["tabWidth", 4],
-         ["initialScripts", ""],
-         ["prettyprint", false],
-         ["guessContext", 5],
-         ["guessPattern", "(\\w+)\\s*[:=]\\s*$"],
-         ["permitStartupHit", true],
-         ["statusDuration", 5 * 1000],
-         ["menubarInFloaters", navigator.platform.indexOf ("Mac") != -1],
-         ["lastErrorMode", "ignore"],
-         ["lastThrowMode", "ignore"]
-        ];
-
-    console.prefManager.addPrefs(prefs);
+.msg-data[msg-type="HELP"]:before {
+    content: "Help:";
 }
 
-function destroyPrefs()
-{
-    console.prefManager.destroy();
+.msg-data[msg-type="USAGE"]:before {
+    content: "Usage:";
+}
+
+.msg-data[msg-type="LOG"]:before {
+    content: "LOG:";
+}
+
+.msg-data[msg-type="ETRACE"]:before {
+    content: "X";  /* X is a mnemonic for eXception */
 }

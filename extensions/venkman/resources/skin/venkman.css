@@ -214,6 +214,10 @@ browser {
     list-style-image: url("chrome://venkman/skin/images/prettyprint-act.png");
 }
 
+.scripts-search-label:hover {
+    color: blue;
+}
+
 .view-container {
     -moz-box-orient: horizontal;
 /*

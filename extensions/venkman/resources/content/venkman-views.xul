@@ -111,6 +111,13 @@
 
     <floatingview id="scripts" title="&Scripts.label;" flex="1">
       <vbox id="scripts-view-content" flex="1">
+        <hbox id="scripts-search-box" align="baseline" persist="hidden">
+          <label id="scripts-search-label" value="&ScriptsSearch.label;"
+           onclick="console.views.scripts.onSearchClear(event);"
+           tooltiptext="&ScriptsSearch.tooltip;"/>
+          <textbox id="scripts-search" flex="1"
+            oninput="console.views.scripts.onSearchInput(event);"/>
+        </hbox>
         <tree flex="1" id="scripts-tree" persist="height"
           ondblclick="console.views.scripts.onDblClick(event);"
           context="context:scripts">

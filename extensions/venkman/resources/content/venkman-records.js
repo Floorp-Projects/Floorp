@@ -58,10 +58,15 @@ function initRecords()
     FrameRecord.prototype.property    = atomsvc.getAtom("item-frame");
     FrameRecord.prototype.atomCurrent = atomsvc.getAtom("current-frame-flag");
 
+    var prefs =
+        [
+         ["valueRecord.showFunctions", false],
+         ["valueRecord.showECMAProps", false],
+         ["valueRecord.brokenObjects", "^JavaPackage$"]
+        ];
 
-    console.addPref ("valueRecord.showFunctions", false);
-    console.addPref ("valueRecord.showECMAProps", false);    
-    console.addPref ("valueRecord.brokenObjects", "^JavaPackage$");
+    console.prefManager.addPrefs(prefs);
+    
     try
     {
         ValueRecord.prototype.brokenObjects = 

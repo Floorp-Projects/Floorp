@@ -18,7 +18,7 @@
               if ("search" in result)
               {
                   document.getElementById("search").value =
-                      unescape(result.search);
+                      decodeURIComponent(result.search);
               }
 
               if ("within" in result)

@@ -111,10 +111,6 @@ function initDebugger()
     console.errorHook     = { onError: jsdErrorHook };
     console.callHook      = { onCall: jsdCallHook };
     
-    console.jsds.breakpointHook = console.executionHook;
-    console.jsds.debuggerHook   = console.executionHook;
-    console.jsds.debugHook      = console.executionHook;
-    console.jsds.errorHook      = console.errorHook;
     console.jsds.flags          = jsdIDebuggerService.ENABLE_NATIVE_FRAMES;
 
     console.jsdConsole = console.jsds.wrapValue(console);    
@@ -125,6 +121,11 @@ function initDebugger()
     var enumer = { enumerateScript: console.scriptHook.onScriptCreated };
     console.jsds.scriptHook = console.scriptHook;
     console.jsds.enumerateScripts(enumer);
+
+    console.jsds.breakpointHook = console.executionHook;
+    console.jsds.debuggerHook   = console.executionHook;
+    console.jsds.debugHook      = console.executionHook;
+    console.jsds.errorHook      = console.errorHook;
 
     dd ("} initDebugger");
 }
@@ -222,6 +223,10 @@ function jsdExecutionHook (frame, type, rv)
 {
     var hookReturn = jsdIExecutionHook.RETURN_CONTINUE;
 
+    if (!console.initialized)
+        return hookReturn;
+    
+
     if (!ASSERT(!("frames" in console), "Execution hook called while stopped") ||
         frame.isNative ||
         !ASSERT(frame.script, "Execution hook called with no script") ||
@@ -299,6 +304,9 @@ function jsdExecutionHook (frame, type, rv)
 
 function jsdCallHook (frame, type)
 {
+    if (!console.initialized)
+        return;
+    
     if (type == jsdICallHook.TYPE_FUNCTION_CALL)
     {
         setStopState(false);
@@ -318,7 +326,7 @@ function jsdCallHook (frame, type)
 
 function jsdErrorHook (message, fileName, line, pos, flags, exception)
 {
-    if (isURLFiltered (fileName))
+    if (!console.initialized || isURLFiltered (fileName))
         return true;
     
     try
@@ -899,12 +907,18 @@ function si_guessnames ()
                 ary[1] = toUnicode(ary[1], this._sourceText.charset);
             
             scriptWrapper.functionName = getMsg(MSN_FMT_GUESSEDNAME, ary[1]);
-            this.isGuessedName = true;
         }
         else
         {
-            dd ("unable to guess function name based on text ``" + 
-                scanText + "''");
+            if ("guessFallback" in console)
+            {
+                var name = console.guessFallback(scriptWrapper, scanText);
+                if (name)
+                {
+                    scriptWrapper.functionName = getMsg(MSN_FMT_GUESSEDNAME,
+                                                        name);
+                }
+            }
         }
     }
 

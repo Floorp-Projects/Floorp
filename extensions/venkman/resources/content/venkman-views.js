@@ -48,8 +48,13 @@ const DEFAULT_VURLS =
 
 function initViews()
 {
-    console.addPref ("layoutState.default", DEFAULT_VURLS);
-    console.addPref ("saveLayoutOnExit", true);
+    var prefs =
+        [
+         ["layoutState.default", DEFAULT_VURLS],
+         ["saveLayoutOnExit", true]
+        ];
+    
+    console.prefManager.addPrefs (prefs);
 
     const ATOM_CTRID = "@mozilla.org/atom-service;1";
     const nsIAtomService = Components.interfaces.nsIAtomService;
@@ -445,11 +450,13 @@ console.views.locals.viewId = VIEW_LOCALS;
 console.views.locals.init =
 function lv_init ()
 {
-    /* max number of properties the "scope" or "this" object can have before
-     * we stop auto-opening the tree node. */
-    console.addPref("localsView.autoOpenMax", 25);
-    /* max number of functions to keep open/close states for. */
-    console.addPref("localsView.savedStatesMax", 20);
+    var prefs =
+        [
+         ["localsView.autoOpenMax", 25],
+         ["localsView.savedStatesMax", 20]
+        ];
+    
+    console.prefManager.addPrefs(prefs);
 
     console.menuSpecs["context:locals"] = {
         getContext: this.getContext,
@@ -749,7 +756,22 @@ function scv_init ()
     var transientIf = "'scriptInstance' in cx && " +
         "cx.scriptInstance.scriptManager.disableTransients";
     
-    console.addPref ("scriptsView.groupFiles", true);    
+    var prefs =
+        [
+         ["scriptsView.groupFiles", true],
+         ["scriptsView.showMostRecent", true]
+        ];
+    
+    console.prefManager.addPrefs(prefs);
+
+    this.cmdary =
+        [
+         ["show-most-recent",          cmdShowMostRecent,           CMD_CONSOLE],
+         ["search-scripts",            cmdSearchScripts,            CMD_CONSOLE],
+         ["toggle-scripts-search-box", cmdToggleScriptsSearchBox,   CMD_CONSOLE],
+
+         ["toggle-show-most-recent",   "show-most-recent toggle",             0]
+        ];
 
     console.menuSpecs["context:scripts"] = {
         getContext: this.getContext,
@@ -766,7 +788,14 @@ function scv_init ()
          [">scripts:wrapper-flags", {enabledif: "has('scriptWrapper')"}],
          ["-"],
          ["save-profile"],
-         ["clear-profile"]
+         ["clear-profile"],
+         ["-"],
+         ["toggle-show-most-recent",
+                 {type: "checkbox",
+                  checkedif: "console.prefs['scriptsView.showMostRecent']"}],
+         ["toggle-chrome",
+                 {type: "checkbox",
+                  checkedif: "console.prefs['enableChromeFilter']"}]
         ]
     };
 
@@ -811,6 +840,98 @@ function scv_init ()
     this.atomFunction   = atomsvc.getAtom("file-function");
 }
 
+function cmdSearchScripts (e)
+{
+    var scriptsView = console.views.scripts;
+    var rootNode = scriptsView.childData;
+    var i;
+    
+    for (i = 0; i < rootNode.childData.length; ++i)
+    {
+        var scriptInstanceRecord = rootNode.childData[i];
+        if (e.pattern && (!scriptInstanceRecord.url ||
+                          scriptInstanceRecord.url.indexOf(e.pattern) == -1))
+        {
+            scriptInstanceRecord.searchExclude = true;
+            if (!scriptInstanceRecord.isHidden)
+                scriptInstanceRecord.hide();
+        }
+        else
+        {
+            delete scriptInstanceRecord.searchExclude;
+            
+            if (!("recentExclude" in scriptInstanceRecord) &&
+                scriptInstanceRecord.isHidden)
+            {
+                scriptInstanceRecord.unHide();
+            }
+        }
+    }
+
+    if (scriptsView.currentContent)
+    {
+        var textbox = getChildById(scriptsView.currentContent, "scripts-search");
+        textbox.value = e.pattern;
+    }
+}
+
+function cmdShowMostRecent (e)
+{
+    e.toggle = getToggle (e.toggle, console.prefs["scriptsView.showMostRecent"]);
+
+    console.prefs["scriptsView.showMostRecent"] = e.toggle;
+    
+    var rootNode = console.views.scripts.childData;
+    var i;
+    var scriptInstanceRecord;
+    
+    if (e.toggle)
+    {
+        /* want to hide duplicate script instances */
+        for (i = 0; i < rootNode.childData.length; ++i)
+        {
+            scriptInstanceRecord = rootNode.childData[i];
+            var scriptInstance = scriptInstanceRecord.scriptInstance;
+            var instances = scriptInstance.scriptManager.instances;
+            var length = instances.length;
+            if (scriptInstance != instances[length - 1])
+            {
+                scriptInstanceRecord.recentExclude = true;
+                if (!scriptInstanceRecord.isHidden)
+                    scriptInstanceRecord.hide();
+            }
+        }
+    }
+    else
+    {
+        /* show all script instances */
+        for (i = 0; i < rootNode.childData.length; ++i)
+        {
+            scriptInstanceRecord = rootNode.childData[i];
+            delete scriptInstanceRecord.recentExclude;
+            if (scriptInstanceRecord.isHidden &&
+                !("searchExclude" in scriptInstanceRecord))
+            {
+                scriptInstanceRecord.unHide();
+            }
+        }
+    }
+}
+
+function cmdToggleScriptsSearchBox(e)
+{
+    var scriptsView = console.views.scripts;
+
+    if (scriptsView.currentContent)
+    {
+        var box = getChildById(scriptsView.currentContent, "scripts-search-box");
+        if (box.hasAttribute("hidden"))
+            box.removeAttribute("hidden");
+        else
+            box.setAttribute("hidden", "true");
+    }
+}
+        
 console.views.scripts.hooks = new Object();
 
 console.views.scripts.hooks["chrome-filter"] =
@@ -921,6 +1042,20 @@ function scv_hookScriptInstanceSealed (e)
     }
     
     console.views.scripts.childData.appendChild(scr);
+
+    var length = e.scriptInstance.scriptManager.instances.length;
+    
+    if (console.prefs["scriptsView.showMostRecent"] && length > 1)
+    {        
+        var previous = e.scriptInstance.scriptManager.instances[length - 2];
+        if ("scriptInstanceRecord" in previous)
+        {
+            var record = previous.scriptInstanceRecord;
+            record.recentExclude = true;
+            if (!record.isHidden)
+                record.hide();
+        }
+    }
 }
 
 console.views.scripts.hooks["hook-script-instance-destroyed"] =
@@ -932,6 +1067,19 @@ function scv_hookScriptInstanceDestroyed (e)
     var rec = e.scriptInstance.scriptInstanceRecord;
     if ("parentRecord" in rec)
         console.views.scripts.childData.removeChildAtIndex(rec.childIndex);
+
+    var instances = e.scriptInstance.scriptManager.instances;
+    if (instances.length)
+    {
+        var previous = instances[instances.length - 1];
+        if ("scriptInstanceRecord" in previous)
+        {
+            var record = previous.scriptInstanceRecord;
+            if (!("searchExclude" in record))
+                record.unHide();
+            delete record.recentExclude;
+        }
+    }
 }
 
 console.views.scripts.hooks["hook-window-opened"] =
@@ -944,6 +1092,29 @@ console.views.scripts.hooks["hook-window-loaded"] =
 function scv_hookWindowOpen (e)
 {
     //console.views.scripts.thaw();
+}
+
+console.views.scripts.onSearchInput =
+function scv_oninput (event)
+{
+    var scriptsView = this;
+
+    function onTimeout ()
+    {
+        var textbox = getChildById(scriptsView.currentContent, "scripts-search");
+        dispatch ("search-scripts", { pattern: textbox.value });
+    };
+    
+    if ("searchTimeout" in this)
+        clearTimeout(this.searchTimeout);
+    
+    this.searchTimeout = setTimeout (onTimeout, 500);
+}
+
+console.views.scripts.onSearchClear =
+function scv_onclear (event)
+{
+    dispatch ("search-scripts");
 }
 
 console.views.scripts.onShow =
@@ -1155,21 +1326,25 @@ function ss_init ()
         return "console.prefs['sessionView.currentCSS'] == " + css;
     };
     
-    console.addPref ("sessionView.requireSlash", true);
-    console.addPref ("sessionView.commandHistory", 20);
-    console.addPref ("sessionView.dtabTime", 500);
-    console.addPref ("sessionView.maxHistory", 500);
-
-    console.addPref ("sessionView.outputWindow",
-                     "chrome://venkman/content/venkman-output-window.html?$css");
-    console.addPref ("sessionView.currentCSS",
-                     "chrome://venkman/skin/venkman-output-default.css");
-    console.addPref ("sessionView.defaultCSS",
-                     "chrome://venkman/skin/venkman-output-default.css");
-    console.addPref ("sessionView.darkCSS",
-                     "chrome://venkman/skin/venkman-output-dark.css");
-    console.addPref ("sessionView.lightCSS",
-                     "chrome://venkman/skin/venkman-output-light.css");
+    var prefs =
+        [
+         ["sessionView.requireSlash", true],
+         ["sessionView.commandHistory", 20],
+         ["sessionView.dtabTime", 500],
+         ["sessionView.maxHistory", 500],
+         ["sessionView.outputWindow",
+          "chrome://venkman/content/venkman-output-window.html?$css"],
+         ["sessionView.currentCSS",
+          "chrome://venkman/skin/venkman-output-default.css"],
+         ["sessionView.defaultCSS",
+          "chrome://venkman/skin/venkman-output-default.css"],
+         ["sessionView.darkCSS",
+          "chrome://venkman/skin/venkman-output-dark.css"],
+         ["sessionView.lightCSS",
+          "chrome://venkman/skin/venkman-output-light.css"]
+        ];
+    
+    console.prefManager.addPrefs(prefs);
     
     console.menuSpecs["context:session"] = {
         items:
@@ -1921,7 +2096,7 @@ console.views.source2.viewId = VIEW_SOURCE2;
 console.views.source2.init =
 function ss_init ()
 {
-    console.addPref ("source2View.maxTabs", 5);
+    console.prefManager.addPref ("source2View.maxTabs", 5);
 
     this.cmdary =
         [
