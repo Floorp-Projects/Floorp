@@ -676,6 +676,7 @@ protected:
   // no member variables, please, we're stateless!
 };
 
+#if 0   // Remove unless needed again, bug 204777
 class nsGoForwardCommand : public nsWebNavigationBaseCommand
 {
 protected:
@@ -693,6 +694,7 @@ protected:
   virtual nsresult    DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWebNavigation);
   // no member variables, please, we're stateless!
 };
+#endif
 
 /*---------------------------------------------------------------------------
 
@@ -756,6 +758,7 @@ nsWebNavigationBaseCommand::GetWebNavigationFromContext(nsISupports *aContext, n
 #pragma mark -
 #endif
 
+#if 0   // Remove unless needed again, bug 204777
 nsresult
 nsGoForwardCommand::IsWebNavCommandEnabled(const char * aCommandName, nsIWebNavigation* aWebNavigation, PRBool *outCmdEnabled)
 {
@@ -779,6 +782,7 @@ nsGoBackCommand::DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWe
 {
   return aWebNavigation->GoBack();
 }
+#endif
 
 /*---------------------------------------------------------------------------
 
@@ -959,8 +963,10 @@ nsWindowCommandRegistration::RegisterWindowCommands(
 
   NS_REGISTER_ONE_COMMAND(nsClipboardGetContentsCommand, "cmd_getContents");
 
+#if 0   // Remove unless needed again, bug 204777
   NS_REGISTER_ONE_COMMAND(nsGoBackCommand, "cmd_browserBack");
   NS_REGISTER_ONE_COMMAND(nsGoForwardCommand, "cmd_browserForward");
+#endif
 
   NS_REGISTER_ONE_COMMAND(nsClipboardDragDropHookCommand, "cmd_clipboardDragDropHook");
 

@@ -664,7 +664,13 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 
   // ----------- Back space -------------------------
   if (keyCode == nsIDOMKeyEvent::DOM_VK_BACK_SPACE) {
-    if (HandleBackspace()) {
+    // The order of seeing keystrokes is:
+    // 1) Chrome, 2) Typeahead, 3) [platform]HTMLBindings.xml
+    // If chrome handles backspace, it needs to do this work
+    // Otherwise, we handle backspace here.
+    PRBool backspaceUsed;
+    BackOneChar(&backspaceUsed);
+    if (backspaceUsed) {
       aEvent->PreventDefault(); // Prevent normal processing of this keystroke
     }
 
@@ -693,12 +699,14 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
 }
 
 
-PRBool
-nsTypeAheadFind::HandleBackspace()
+NS_IMETHODIMP
+nsTypeAheadFind::BackOneChar(PRBool *aIsBackspaceUsed)
 {
   // In normal type ahead find, remove a printable char from 
   // mTypeAheadBuffer, then search for buffer contents
   // Or, in repeated char find, go backwards
+
+  *aIsBackspaceUsed = PR_TRUE;
 
   // ---------- No chars in string ------------
   if (mTypeAheadBuffer.IsEmpty() || !mStartFindRange) {
@@ -722,9 +730,12 @@ nsTypeAheadFind::HandleBackspace()
           soundInterface->Beep(); // beep to warn
         }
         mIsBackspaceProtectOn = PR_FALSE;
-        return PR_TRUE;
       }
-      return PR_FALSE;
+      else {
+        *aIsBackspaceUsed = PR_FALSE;
+      }
+
+      return NS_OK;
     }
   }
 
@@ -742,7 +753,7 @@ nsTypeAheadFind::HandleBackspace()
     CancelFind();
     mIsBackspaceProtectOn = PR_TRUE;
 
-    return PR_TRUE;
+    return NS_OK;
   }
 
   // ---------- Multiple chars in string ----------
@@ -763,7 +774,7 @@ nsTypeAheadFind::HandleBackspace()
     --mBadKeysSinceMatch;
     DisplayStatus(PR_FALSE, nsnull, PR_FALSE); // Display failure status
     SaveFind();
-    return PR_TRUE;
+    return NS_OK;
   }
 
   mBadKeysSinceMatch = 0;
@@ -785,7 +796,8 @@ nsTypeAheadFind::HandleBackspace()
       }
     }
     if (!presShell) {
-      return PR_FALSE;
+      *aIsBackspaceUsed = PR_FALSE;
+      return NS_ERROR_FAILURE;
     }
     // Set the selection to the where the first character was found
     // so that find starts from there
@@ -808,7 +820,7 @@ nsTypeAheadFind::HandleBackspace()
 
   SaveFind();
 
-  return PR_TRUE;   // Backspace handled
+  return NS_OK;   // Backspace handled
 }
 
 
