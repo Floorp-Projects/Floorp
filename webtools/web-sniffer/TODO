@@ -1,27 +1,70 @@
-check HTTP error codes on 1st line
+css:
+
+parse css for urls, etc
+
+http:
+
+support accept-encoding
+
+https:
+
+implement it
+
+view:
+
+use style sheets instead of html tags and attributes for color, etc
+
+option to view glyphs instead of char codes?
+
+html:
+
+meta refresh url
+
+detect ucs-2, ucs-4
+
+more checking in iso 2022 code
+
+uri:
+
+support i18n
+
+mime:
+
 deal with content type "text/html "
-take stats on domain names e.g. foo.co.kr, www.bar.com
-URL char stats e.g. 8-bit, escaped 8-bit, etc
-hierachical tag and attribute stats, not flat attr space
-more checking in ISO 2022 code
-detect UCS-2, UCS-4
+
 deal with multiple charset parameters in one content-type
-FRAME SRC URLs
-IMG SRC URLs
-other URLs?
-NNTP robot
-FTP robot
-DNS robot
-IP robot
-parse URLs properly a la RFC
+
+robot:
+
+take stats on domain names e.g. foo.co.kr, www.bar.com
+
+url char stats e.g. 8-bit, escaped 8-bit, etc
+
+hierachical tag and attribute stats, not flat attr space
+
+nntp robot
+
+ftp robot
+
+dns robot
+
+ip robot
+
+randomize urls?
+
+hash:
+
 improve hashing (grow tables, prime numbers)
-parse <!doctype ...> where "..." appears as attribute-name-like thing
-run purify to find memory leaks
-use less memory in URL hash table (value not needed, only key needed)
-use less memory in URL list (use array, remove processed URLs, randomize?)
-get http://www.olelo.hawaii.edu/UTF8/index.html to work
-	(problem in io.c's read whole stream routine)
----
-2/17/99
-use nm to find all system calls, and do proper error checking on all of them
-  e.g. write() to catch SIGPIPE-like stuff(?)
+
+use less memory in url hash table (value not needed, only key needed)
+
+general:
+
+find memory leaks
+
+use less memory in url list (use array, remove processed urls)
+
+use nm to find all system calls, and do proper error checking on all of
+them e.g. write() to catch sigpipe-like stuff(?)
+
+remove exit() calls from underlying code
