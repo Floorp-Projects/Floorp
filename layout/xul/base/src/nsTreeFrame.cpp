@@ -445,7 +445,7 @@ nsTreeFrame::GetInsertionIndex(nsIFrame *aFrame)
     child->GetStyleData(eStyleStruct_Display,
                         (const nsStyleStruct*&)display);
 
-    if (display->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP) {
+    if (IsRowGroup(display->mDisplay)) {
         PRBool done=PR_FALSE;
         index = ((nsTreeRowGroupFrame*)child)->GetInsertionIndex(aFrame, index, done);
         if (done) return index;
