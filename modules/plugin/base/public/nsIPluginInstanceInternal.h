@@ -34,24 +34,26 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsINPRuntimePlugin_h___
-#define nsINPRuntimePlugin_h___
+#ifndef nsIPluginInstanceInternal_h___
+#define nsIPluginInstanceInternal_h___
 
 #include "nsISupports.h"
 
 struct JSObject;
 struct JSContext;
 
-#define NS_INPRUNTIMEPLUGIN_IID \
-  {0xbd962bb4, 0x54c3, 0x4d23, \
-    { 0xa8, 0xca, 0x54, 0x16, 0x08, 0x02, 0xc2, 0x59 }}
+#define NS_IPLUGININSTANCEINTERNAL_IID \
+  { 0x301f13ed, 0x50f2, 0x4ed2, \
+    { 0x83, 0x0d, 0x78, 0x36, 0x1d, 0x01, 0x76, 0xaf }}
 
-class NS_NO_VTABLE nsINPRuntimePlugin : public nsISupports
+class NS_NO_VTABLE nsIPluginInstanceInternal : public nsISupports
 {
 public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_INPRUNTIMEPLUGIN_IID)
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPLUGININSTANCEINTERNAL_IID)
 
   virtual JSObject *GetJSObject(JSContext *cx) = 0;
+
+  virtual nsresult GetFormValue(nsAString& aValue) = 0;
 };
 
-#endif /* nsINPRuntimePlugin_h___ */
+#endif /* nsIPluginInstanceInternal_h___ */
