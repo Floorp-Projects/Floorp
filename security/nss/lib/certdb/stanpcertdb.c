@@ -205,6 +205,7 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
     }
     context = STAN_GetDefaultCryptoContext();
     NSSCryptoContext_ImportCertificate(context, c);
+    c->object.trustDomain = STAN_GetDefaultTrustDomain();
     return cc;
 loser:
     nssArena_Destroy(arena);
