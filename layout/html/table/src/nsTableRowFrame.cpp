@@ -764,10 +764,10 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
     else
     {// it's an unknown frame type, give it a generic reflow and ignore the results
       nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState.reflowState,
-                                       nsSize(0,0), eReflowReason_Resize);
+                                       nsSize(0,0), eReflowReason_Initial);
       nsHTMLReflowMetrics desiredSize(nsnull);
       if (PR_TRUE==gsDebug) printf("\nTIF : Reflow Pass 2 of unknown frame %p of type %d with reason=%d\n", 
-                                     kidFrame, kidDisplay->mDisplay, eReflowReason_Resize);
+                                     kidFrame, kidDisplay->mDisplay, eReflowReason_Initial);
       ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
     }
     if (PR_FALSE==aDoSiblings)
