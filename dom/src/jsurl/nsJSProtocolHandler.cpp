@@ -45,9 +45,6 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
-
-// XXXbe why isn't there a static GetCID on nsIComponentManager?
-static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kJSProtocolHandlerCID, NS_JSPROTOCOLHANDLER_CID);
 
 /***************************************************************************/
@@ -360,64 +357,13 @@ nsJSProtocolHandler::NewChannel(const char* verb,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// Factory methods
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID& aClass,
-             const char* aClassName,
-             const char *aProgID,
-             nsIFactory* *aFactory)
-{
-    if (!aFactory)
-        return NS_ERROR_NULL_POINTER;
+static nsModuleComponentInfo gJSModuleInfo[] = {
+    { "JavaScript Protocol Handler", 
+      NS_JSPROTOCOLHANDLER_CID,
+      NS_NETWORK_PROTOCOL_PROGID_PREFIX "javascript",
+      nsJSProtocolHandler::Create }
+};
 
-    if (!aClass.Equals(kJSProtocolHandlerCID))
-        return NS_ERROR_FAILURE;
-
-    nsIGenericFactory* fact;
-    nsresult rv;
-    rv = NS_NewGenericFactory(&fact, nsJSProtocolHandler::Create);
-    if (NS_SUCCEEDED(rv))
-        *aFactory = fact;
-    return rv;
-}
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
-{
-    nsresult rv;
-
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = compMgr->RegisterComponent(kJSProtocolHandlerCID,
-                                    "JavaScript Protocol Handler",
-                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "javascript",
-                                    aPath, PR_TRUE, PR_TRUE);
-
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = compMgr->RegisterComponent(kJSProtocolHandlerCID,
-                                    "JavaScript Protocol Handler",
-                                    NS_NETWORK_PROTOCOL_PROGID_PREFIX "mocha",
-                                    aPath, PR_TRUE, PR_TRUE);
-
-    return rv;
-}
-
-extern "C" PR_IMPLEMENT(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
-{
-    nsresult rv;
-
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = compMgr->UnregisterComponent(kJSProtocolHandlerCID, aPath);
-    return rv;
-}
+NS_IMPL_NSGETMODULE("javascript: protocol", gJSModuleInfo)
 
 ////////////////////////////////////////////////////////////////////////////////
