@@ -143,8 +143,8 @@ sub DoEmail {
     # Note that the value of "excludeself" is assumed to be off if the
     # preference does not exist in the user's list, unlike other 
     # preferences whose value is assumed to be on if they do not exist.
-    if (exists($emailflags{'excludeself'}) 
-        && $emailflags{'excludeself'} eq 'on')
+    if (exists($emailflags{'ExcludeSelf'}) 
+        && $emailflags{'ExcludeSelf'} eq 'on')
     {
         $vars->{'excludeself'} = 1;
     }
