@@ -2004,7 +2004,12 @@ nsScriptSecurityManager::InitFromPrefs()
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
 	if (NS_FAILED(rv))
 		return NS_ERROR_FAILURE;
-    rv = prefs->EnumerateChildren("security.policy", enumeratePolicy,
-                                  (void *) domPropertyPolicyTypes);
+    /*
+    Comment out for now; for some reason nsIPref.idl isn't getting built
+    into inIPref.h in time.
+
+    prefs->EnumerateChildren("security.policy", enumeratePolicy,
+                             (void *) domPropertyPolicyTypes);
+    */
     return NS_OK;
 }
