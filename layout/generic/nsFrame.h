@@ -429,6 +429,8 @@ protected:
   // applies to its situation.
   void SetOverflowClipRect(nsIRenderingContext& aRenderingContext);
 
+  NS_IMETHOD GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon);
+
   nsRect           mRect;
   nsIContent*      mContent;
   nsIStyleContext* mStyleContext;

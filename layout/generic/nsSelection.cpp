@@ -24,6 +24,8 @@
  * Implementation of selection: nsIDOMSelection and nsIFrameSelection
  */
 
+#include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 #include "nsIFactory.h"
 #include "nsIEnumerator.h"
 #include "nsIDOMRange.h"
@@ -36,7 +38,6 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"
-#include "nsCOMPtr.h"
 #include "nsRange.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMKeyEvent.h"
@@ -107,7 +108,7 @@ class nsSelectionIterator;
 class nsSelection;
 class nsAutoScrollTimer;
 
-class nsDOMSelection : public nsIDOMSelection , public nsIScriptObjectOwner
+class nsDOMSelection : public nsIDOMSelection , public nsIScriptObjectOwner, public nsSupportsWeakReference
 {
 public:
   nsDOMSelection(nsSelection *aList);
@@ -199,6 +200,8 @@ public:
   SelectionType GetType(){return mType;}
   void          SetType(SelectionType aType){mType = aType;}
 
+  nsresult     NotifySelectionListeners();
+
 private:
   friend class nsSelectionIterator;
 
@@ -225,6 +228,7 @@ private:
   void*		mScriptObject;
   SelectionType mType;//type of this nsDOMSelection;
   nsAutoScrollTimer *mAutoScrollTimer; // timer for autoscrolling.
+  nsCOMPtr<nsISupportsArray> mSelectionListeners;
 };
 
 // Stack-class to turn on/off selection batching for table selection
@@ -289,9 +293,6 @@ public:
   nsSelection();
   virtual ~nsSelection();
 
-  //methods called from nsDomSelection to allow ONE list of listeners for all types of selections
-  NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener);
-  NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove);
   NS_IMETHOD    StartBatchChanges();
   NS_IMETHOD    EndBatchChanges();
   NS_IMETHOD    DeleteFromDocument();
@@ -351,9 +352,7 @@ private:
   PRInt32 mBatching;
   PRBool mChangesDuringBatching;
   PRBool mNotifyFrames;
-  
-  nsCOMPtr<nsISupportsArray> mSelectionListeners;
-  
+    
   nsIContent *mLimiter;     //limit selection navigation to a child of this node.
   nsIFocusTracker *mTracker;
   PRBool mMouseDownState;   //for drag purposes
@@ -747,7 +746,6 @@ nsSelection::nsSelection()
     mDomSelections[i]->AddRef();
     mDomSelections[i]->SetType(GetSelectionTypeFromIndex(i));
   }
-  NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
   mBatching = 0;
   mChangesDuringBatching = PR_FALSE;
   mNotifyFrames = PR_TRUE;
@@ -789,16 +787,6 @@ nsSelection::nsSelection()
 
 nsSelection::~nsSelection()
 {
-  if (mSelectionListeners)
-  {
-	  PRUint32 cnt;
-    nsresult rv = mSelectionListeners->Count(&cnt);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-    for (PRUint32 i=0;i < cnt; i++)
-	  {
-	    mSelectionListeners->RemoveElementAt(i);
-	  }
-  }
   if (sInstanceCount <= 1)
   {
     NS_IF_RELEASE(sTableAtom);
@@ -874,7 +862,8 @@ nsSelection::FetchDesiredX() //the x position requested by the Key Handling for 
     if (NS_FAILED(result) || !caret)
       return result;
 
-    result = caret->GetWindowRelativeCoordinates(coord,collapsed);
+    PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    result = caret->GetWindowRelativeCoordinates(coord,collapsed,mDomSelections[index]);
     if (NS_FAILED(result))
       return result;
     return coord.x;
@@ -1929,34 +1918,6 @@ NS_IMETHODIMP nsSelection::SelectAll()
 }
 
 //////////END FRAMESELECTION
-NS_METHOD
-nsSelection::AddSelectionListener(nsIDOMSelectionListener* inNewListener)
-{
-  if (!mSelectionListeners)
-    return NS_ERROR_FAILURE;
-  if (!inNewListener)
-    return NS_ERROR_NULL_POINTER;
-  nsresult result;
-  nsCOMPtr<nsISupports> isupports = do_QueryInterface(inNewListener , &result);
-  if (NS_SUCCEEDED(result))
-    result = mSelectionListeners->AppendElement(isupports) ? NS_OK : NS_ERROR_FAILURE;		// addrefs
-  return result;
-}
-
-
-
-NS_IMETHODIMP
-nsSelection::RemoveSelectionListener(nsIDOMSelectionListener* inListenerToRemove)
-{
-  if (!mSelectionListeners)
-    return NS_ERROR_FAILURE;
-  if (!inListenerToRemove )
-    return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsISupports> isupports = do_QueryInterface(inListenerToRemove);
-  return mSelectionListeners->RemoveElement(isupports) ? NS_OK : NS_ERROR_FAILURE;		// releases
-}
-
-
 
 NS_IMETHODIMP
 nsSelection::StartBatchChanges()
@@ -1986,39 +1947,12 @@ nsSelection::EndBatchChanges()
 nsresult
 nsSelection::NotifySelectionListeners(SelectionType aType)
 {
-  if (!mSelectionListeners)
-    return NS_ERROR_FAILURE;
- 
-  if (GetBatching()){
-    SetDirty();
-    return NS_OK;
-  }
-  PRUint32 cnt;
-  nsresult rv = mSelectionListeners->Count(&cnt);
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsIPresShell> shell;
-  PRInt8 idx = GetIndexFromSelectionType(aType);
-  if (idx < 0)
-    return NS_ERROR_FAILURE;
-  rv = mDomSelections[idx]->GetPresShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell)
+  PRInt8 index = GetIndexFromSelectionType(aType);
+  if (index >=0)
   {
-    rv = shell->GetDocument(getter_AddRefs(doc));
-    if (NS_FAILED(rv))
-      doc = 0;
-    domdoc = do_QueryInterface(doc);
+    return mDomSelections[index]->NotifySelectionListeners();
   }
-  for (PRUint32 i = 0; i < cnt;i++)
-  {
-    nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
-    nsCOMPtr<nsIDOMSelectionListener> thisListener = do_QueryInterface(isupports);
-    if (thisListener)
-    	thisListener->NotifySelectionChanged(domdoc,mDomSelections[idx], (short) mMouseDownState);
-  }
-	return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 // Start of Table Selection methods
@@ -2678,6 +2612,7 @@ nsDOMSelection::nsDOMSelection(nsSelection *aList)
   NS_NewISupportsArray(getter_AddRefs(mRangeArray));
   mScriptObject = nsnull;
   mAutoScrollTimer = nsnull;
+  NS_NewISupportsArray(getter_AddRefs(mSelectionListeners));
   NS_INIT_REFCNT();
 }
 
@@ -2686,6 +2621,16 @@ nsDOMSelection::nsDOMSelection(nsSelection *aList)
 nsDOMSelection::~nsDOMSelection()
 {
   PRUint32 cnt = 0;
+  if (mSelectionListeners)
+  {
+	  PRUint32 cnt;
+    nsresult rv = mSelectionListeners->Count(&cnt);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
+    for (PRUint32 i=0;i < cnt; i++)
+	  {
+	    mSelectionListeners->RemoveElementAt(i);
+	  }
+  }
   nsresult rv = mRangeArray->Count(&cnt);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
   PRUint32 j;
@@ -2704,44 +2649,7 @@ NS_IMPL_ADDREF(nsDOMSelection)
 
 NS_IMPL_RELEASE(nsDOMSelection)
 
-NS_IMETHODIMP
-nsDOMSelection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    nsIDOMSelection *temp = (nsIDOMSelection *)this;
-    *aInstancePtr = (void*)(nsISupports *)temp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMSelection))) {
-    *aInstancePtr = (void*) this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-
-    /* The following clause needs to go away, as soon as we've caught any offending callers */
-  if (aIID.Equals(NS_GET_IID(nsIEnumerator))
-   || aIID.Equals(NS_GET_IID(nsIBidirectionalEnumerator))) {
-  	NS_ASSERTION(0, "(tell scc or mjudge) -- Error: Get new enumerators with |GetEnumerator|, not |QueryInterface|!  Caller must be fixed");
-  	return NS_NOINTERFACE;
-  }
-
-
-  if (aIID.Equals(NS_GET_IID(nsIScriptObjectOwner))) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  //NS_ASSERTION(PR_FALSE,"bad query interface in nsDOMSelection");
-  //do not assert here javascript will assert here sometimes thats OK
-  return NS_NOINTERFACE;
-}
-
+NS_IMPL_QUERY_INTERFACE3(nsDOMSelection, nsIDOMSelection, nsIScriptObjectOwner, nsISupportsWeakReference)
 
 
 NS_METHOD
@@ -5173,7 +5081,15 @@ nsDOMSelection::ScrollIntoView(SelectionRegion aRegion)
 NS_IMETHODIMP
 nsDOMSelection::AddSelectionListener(nsIDOMSelectionListener* aNewListener)
 {
-  return mFrameSelection->AddSelectionListener(aNewListener);
+  if (!mSelectionListeners)
+    return NS_ERROR_FAILURE;
+  if (!aNewListener)
+    return NS_ERROR_NULL_POINTER;
+  nsresult result;
+  nsCOMPtr<nsISupports> isupports = do_QueryInterface(aNewListener , &result);
+  if (NS_SUCCEEDED(result))
+    result = mSelectionListeners->AppendElement(isupports) ? NS_OK : NS_ERROR_FAILURE;		// addrefs
+  return result;
 }
 
 
@@ -5181,10 +5097,49 @@ nsDOMSelection::AddSelectionListener(nsIDOMSelectionListener* aNewListener)
 NS_IMETHODIMP
 nsDOMSelection::RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove)
 {
-  return mFrameSelection->RemoveSelectionListener(aListenerToRemove);
+  if (!mSelectionListeners)
+    return NS_ERROR_FAILURE;
+  if (!aListenerToRemove )
+    return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISupports> isupports = do_QueryInterface(aListenerToRemove);
+  return mSelectionListeners->RemoveElement(isupports) ? NS_OK : NS_ERROR_FAILURE;		// releases
 }
 
 
+nsresult
+nsDOMSelection::NotifySelectionListeners()
+{
+  if (!mSelectionListeners)
+    return NS_ERROR_FAILURE;
+ 
+  if (mFrameSelection->GetBatching()){
+    mFrameSelection->SetDirty();
+    return NS_OK;
+  }
+  PRUint32 cnt;
+  nsresult rv = mSelectionListeners->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIPresShell> shell;
+  rv = GetPresShell(getter_AddRefs(shell));
+  if (NS_SUCCEEDED(rv) && shell)
+  {
+    rv = shell->GetDocument(getter_AddRefs(doc));
+    if (NS_FAILED(rv))
+      doc = 0;
+    domdoc = do_QueryInterface(doc);
+  }
+  for (PRUint32 i = 0; i < cnt;i++)
+  {
+    nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
+    nsCOMPtr<nsIDOMSelectionListener> thisListener = do_QueryInterface(isupports);
+    if (thisListener)
+    	thisListener->NotifySelectionChanged(domdoc,this, (short) mFrameSelection->mMouseDownState);
+  }
+	return NS_OK;
+}
 
 NS_IMETHODIMP
 nsDOMSelection::StartBatchChanges()

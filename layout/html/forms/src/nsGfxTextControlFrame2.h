@@ -70,6 +70,10 @@ public:
   // Utility methods to get and set current widget state
   void GetTextControlFrameState(nsString& aValue);
   void SetTextControlFrameState(const nsString& aValue);
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
+                                  nsIAtom*        aListName,
+                                  nsIFrame*       aChildList);
+  NS_IMETHOD GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon);
 
   NS_DECL_ISUPPORTS_INHERITED
 protected:

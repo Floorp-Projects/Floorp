@@ -291,10 +291,10 @@ nsFrame::Init(nsIPresContext*  aPresContext,
   mContent = aContent;
   NS_IF_ADDREF(mContent);
   mParent = aParent;
+  nsFrameState  state;
 
   if (aPrevInFlow) {
     // Make sure the general flags bits are the same
-    nsFrameState  state;
     aPrevInFlow->GetFrameState(&state);
     if ((state & NS_FRAME_SYNC_FRAME_AND_VIEW) == 0) {
       mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
@@ -305,8 +305,18 @@ nsFrame::Init(nsIPresContext*  aPresContext,
     if (state & NS_FRAME_SELECTED_CONTENT) {
       mState |= NS_FRAME_SELECTED_CONTENT;
     }
+    if (state & NS_FRAME_INDEPENDENT_SELECTION) {
+      mState |= NS_FRAME_INDEPENDENT_SELECTION;
+    }
   }
+  if(mParent)
+  {
+    mParent->GetFrameState(&state);
+    if (state & NS_FRAME_INDEPENDENT_SELECTION) {
+      mState |= NS_FRAME_INDEPENDENT_SELECTION;
+    }
 
+  }
   return SetStyleContext(aPresContext, aContext);
 }
 
@@ -581,34 +591,30 @@ nsFrame::DisplaySelection(nsIPresContext* aPresContext, PRBool isOkToTurnOn)
 {
   PRInt16 result = nsISelectionController::SELECTION_OFF;
 
-  nsCOMPtr<nsIPresShell> shell;
-  nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv) && shell) {
-    nsCOMPtr<nsISelectionController> selCon;
-    selCon = do_QueryInterface(shell, &rv);
-    if (NS_SUCCEEDED(rv) && selCon) {
-      selCon->GetDisplaySelection(&result);
-		  if (result) {
-				// check whether style allows selection
-		    const nsStyleUserInterface* userinterface;
-		    GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-		    if (userinterface) {
-					if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
-							// if 'user-select' isn't set for this frame, use the parent's
-							if (mParent) {
-								mParent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
-							}
-					}
-		      if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
-		        result = nsISelectionController::SELECTION_OFF;
-		        isOkToTurnOn = PR_FALSE;
-		      }
+  nsCOMPtr<nsISelectionController> selCon;
+  result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
+  if (NS_SUCCEEDED(result) && selCon) {
+    selCon->GetDisplaySelection(&result);
+		if (result) {
+			// check whether style allows selection
+		  const nsStyleUserInterface* userinterface;
+		  GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+		  if (userinterface) {
+				if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_AUTO) {
+						// if 'user-select' isn't set for this frame, use the parent's
+						if (mParent) {
+							mParent->GetStyleData(eStyleStruct_UserInterface, (const nsStyleStruct*&)userinterface);
+						}
+				}
+		    if (userinterface->mUserSelect == NS_STYLE_USER_SELECT_NONE) {
+		      result = nsISelectionController::SELECTION_OFF;
+		      isOkToTurnOn = PR_FALSE;
 		    }
 		  }
-      if (isOkToTurnOn && !result) {
-        selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
-        result = nsISelectionController::SELECTION_ON;
-      }
+		}
+    if (isOkToTurnOn && !result) {
+      selCon->SetDisplaySelection(nsISelectionController::SELECTION_ON);
+      result = nsISelectionController::SELECTION_ON;
     }
   }
   return result;
@@ -670,7 +676,7 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     }
 
     nsCOMPtr<nsISelectionController> selCon;
-    selCon = do_QueryInterface(shell, &result);
+    result = GetSelectionController(aPresContext, getter_AddRefs(selCon));
     if (NS_FAILED(result) || !selCon)
       return result? result:NS_ERROR_FAILURE;
 
@@ -982,7 +988,11 @@ nsFrame::HandleMultiplePress(nsIPresContext* aPresContext,
     return NS_OK;
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-  nsCOMPtr<nsISelectionController> selcon = do_QueryInterface(shell); 
+  nsCOMPtr<nsISelectionController> selcon;
+  if (NS_SUCCEEDED(rv))
+  {
+    rv = GetSelectionController(aPresContext, getter_AddRefs(selcon));
+  }
 
   if (NS_SUCCEEDED(rv) && shell && selcon) {
     nsCOMPtr<nsIRenderingContext> acx;      
@@ -1902,6 +1912,44 @@ nsFrame::ParentDisablesSelection() const
   return PR_FALSE; //default this does not happen
   */
 }
+
+
+
+nsresult 
+nsFrame::GetSelectionController(nsIPresContext *aPresContext, nsISelectionController **aSelCon)
+{
+  if (!aPresContext || !aSelCon)
+    return NS_ERROR_INVALID_ARG;
+  nsFrameState  state;
+  GetFrameState(&state);
+  if (state & NS_FRAME_INDEPENDENT_SELECTION) 
+  {
+    nsIFrame *tmp = this;
+    nsIFrame *parent;
+    while ( NS_SUCCEEDED(tmp->GetParent(&parent)) && parent)
+    {
+      parent->GetFrameState(&state);
+      if (! (state & NS_FRAME_INDEPENDENT_SELECTION)) //we have found the nsGfx*
+      {
+        nsFrame* castParent = NS_STATIC_CAST(nsFrame *,parent);
+        return castParent->GetSelectionController(aPresContext, aSelCon);
+      }
+    }
+  }
+  else
+  {
+    nsCOMPtr<nsIPresShell> shell;
+    if (NS_SUCCEEDED(aPresContext->GetShell(getter_AddRefs(shell))) && shell)
+    {
+      nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(shell);
+      NS_IF_ADDREF(*aSelCon = selCon);
+      return NS_OK;
+    }
+  }
+  return NS_OK;
+}
+
+
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
