@@ -347,7 +347,7 @@ protected:
     static nsIAtom* kResourceAtom;
     static nsIAtom* kRuleAtom;
     static nsIAtom* kTemplateAtom;
-    static nsIAtom* kTextAtom;
+    static nsIAtom* kTextNodeAtom;
     static nsIAtom* kTreeAtom;
     static nsIAtom* kTreeChildrenAtom;
     static nsIAtom* kTreeItemAtom;
@@ -394,7 +394,7 @@ nsIAtom* RDFGenericBuilderImpl::kPropertyAtom;
 nsIAtom* RDFGenericBuilderImpl::kResourceAtom;
 nsIAtom* RDFGenericBuilderImpl::kRuleAtom;
 nsIAtom* RDFGenericBuilderImpl::kTemplateAtom;
-nsIAtom* RDFGenericBuilderImpl::kTextAtom;
+nsIAtom* RDFGenericBuilderImpl::kTextNodeAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeChildrenAtom;
 nsIAtom* RDFGenericBuilderImpl::kTreeItemAtom;
@@ -484,7 +484,7 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
         NS_IF_RELEASE(kResourceAtom);
         NS_IF_RELEASE(kRuleAtom);
         NS_IF_RELEASE(kTemplateAtom);
-        NS_IF_RELEASE(kTextAtom);
+        NS_IF_RELEASE(kTextNodeAtom);
         NS_IF_RELEASE(kTreeAtom);
         NS_IF_RELEASE(kTreeChildrenAtom);
         NS_IF_RELEASE(kTreeItemAtom);
@@ -547,7 +547,7 @@ RDFGenericBuilderImpl::Init()
         kResourceAtom                   = NS_NewAtom("resource");
         kRuleAtom                       = NS_NewAtom("rule");
         kTemplateAtom                   = NS_NewAtom("template");
-        kTextAtom                       = NS_NewAtom("text");
+        kTextNodeAtom                   = NS_NewAtom("textnode");
         kTreeAtom                       = NS_NewAtom("tree");
         kTreeChildrenAtom               = NS_NewAtom("treechildren");
         kTreeItemAtom                   = NS_NewAtom("treeitem");
@@ -1976,7 +1976,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 if (NS_FAILED(rv)) return rv;
             }
         }
-        else if ((tag.get() == kTextAtom) && (nameSpaceID == kNameSpaceID_XUL)) {
+        else if ((tag.get() == kTextNodeAtom) && (nameSpaceID == kNameSpaceID_XUL)) {
             // <xul:text value="..."> is replaced by text of the
             // actual value of the 'rdf:resource' attribute for the
             // given node.

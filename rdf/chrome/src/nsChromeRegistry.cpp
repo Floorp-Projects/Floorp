@@ -491,7 +491,7 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFD
   nsCAutoString overlayFile;
 
   // Retrieve the mInner data source.
-  overlayFile = "resource:/chrome/";
+  overlayFile = mInstallRoot;
   overlayFile += package;
   overlayFile += "/";
   overlayFile += provider;
@@ -830,8 +830,7 @@ NS_IMETHODIMP nsChromeRegistry::ReallyRemoveOverlayFromDataSource(const PRUnicha
     return NS_OK;
 
   nsCOMPtr<nsIRDFResource> resource;
-  rv = GetResource(aDocURI,
-                              getter_AddRefs(resource));
+  rv = GetResource(aDocURI, getter_AddRefs(resource));
 
   if (NS_FAILED(rv))
     return NS_OK;
