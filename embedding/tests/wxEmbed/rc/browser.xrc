@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource version="2.3.0.1">
+  
+  
+  <object class="wxFrame" name="browser_frame">
+    <title>wxEmbed Browser</title>
+    <size>300,300</size>
+    <style>wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxCLIP_CHILDREN</style>
+    <pos>-1,-1</pos>
+
+
+    <!-- Browser menu -->
+    <object class="wxMenuBar" name="mainmenu">
+      <style>wxMB_DOCKABLE</style>
+      <object class="wxMenu" name="menu_file">
+        <label>_File</label>
+        <style>wxMENU_TEAROFF</style>
+        <object class="wxMenuItem" name="menu_about">
+          <label>_About...</label>
+        </object>
+        <object class="separator"/>
+        <object class="wxMenuItem" name="menu_quit">
+          <label>E_xit\tAlt-Q</label>
+        </object>
+      </object>
+      <object class="wxMenu" name="menu_apps">
+        <label>_Other Apps</label>
+        <object class="wxMenuItem" name="menu_mail">
+          <label>_Mail\tAlt-M</label>
+        </object>
+      </object>
+    </object>
+
+
+    <!-- Browser tool bar -->
+    <object class="wxToolBar" name="toolbar">
+      <style>wxTB_FLAT|wxTB_DOCKABLE</style>
+      <margins>2,2</margins>
+      <bitmapsize>20,18</bitmapsize>
+  
+      <object class="tool" name="browse_back">
+        <bitmap>back.gif</bitmap>
+        <tooltip>Back</tooltip>
+      </object>
+      <object class="tool" name="browse_fwd">
+        <bitmap>forward.gif</bitmap>
+        <tooltip>Forward</tooltip>
+      </object>
+      <object class="separator"/>
+      <object class="tool" name="browse_reload">
+        <bitmap>reload.gif</bitmap>
+        <tooltip>Reload</tooltip>
+      </object>
+      <object class="tool" name="browse_stop">
+        <bitmap>stop.gif</bitmap>
+        <tooltip>Stop</tooltip>
+      </object>
+      <object class="separator"/>
+      <object class="tool" name="browse_home">
+        <bitmap>home.gif</bitmap>
+        <tooltip>Home</tooltip>
+      </object>
+    </object>
+
+
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <rows>2</rows>
+      <vgap>0</vgap>
+      <hgap>0</hgap>
+      <growablecols>0</growablecols>
+      <growablerows>1</growablerows>
+
+      <!-- Address bar -->
+
+      <object class="sizeritem">
+        <flag>wxALIGN_LEFT|wxGROW|wxALL</flag>
+        <object class="wxPanel">
+          <style>wxCLIP_CHILDREN</style>
+          <object class="wxFlexGridSizer">
+            <cols>3</cols>
+            <rows>1</rows>
+            <vgap>0</vgap>
+            <hgap>0</hgap>
+            <growablecols>1</growablecols>
+            <growablerows>0</growablerows>
+
+            <orient>wxHORIZONTAL</orient>
+            <object class="sizeritem">
+              <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+              <object class="wxStaticText">
+                <label>Address:</label>
+              </object>
+            </object>
+            <object class="sizeritem">
+              <flag>wxGROW|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+              <object class="wxTextCtrl" name="url">
+                <style>wxTE_PROCESS_ENTER</style>
+              </object>
+            </object>
+            <object class="sizeritem">
+              <flag>wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
+              <object class="wxButton" name="browser_go">
+                <label>Go!</label>
+              </object>
+            </object>
+          </object>
+        </object>
+      </object>
+
+      <!-- Gecko Window -->
+
+      <object class="sizeritem">
+        <flag>wxGROW|wxALL</flag>
+        <object class="wxPanel" name="gecko" subclass="GeckoWindow">
+          <style>wxCLIP_CHILDREN|wxSUNKEN_BORDER</style>
+          <size>500,280</size>
+        </object>
+      </object>
+    </object>
+
+  </object>
+  
+</resource>
