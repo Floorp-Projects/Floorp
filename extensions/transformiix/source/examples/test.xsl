@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    - original author.
  *
- * $Id: test.xsl,v 1.8 2001/01/22 09:56:42 kvisco%ziplink.net Exp $
+ * $Id: test.xsl,v 1.9 2001/04/11 10:32:45 axel%pike.org Exp $
  */
 -->
 
@@ -573,7 +573,7 @@
    <TR>
       <TD VALIGN="TOP"><B>Test:</B></TD>
       <TD>
-         &lt;xsl:value-of select="7mod4"/&gt;<BR />
+         &lt;xsl:value-of select="7mod 4"/&gt;<BR />
       </TD>
    </TR>
    <TR>
@@ -586,7 +586,7 @@
       <TD><B>Result:</B></TD>
       <TD>
          <FONT COLOR="blue">
-            <xsl:value-of select="7mod4"/>
+            <xsl:value-of select="7mod 4"/>
          </FONT>
       </TD>
    </TR>
@@ -594,7 +594,7 @@
    <TR>
       <TD VALIGN="TOP"><B>Test:</B></TD>
       <TD>
-         &lt;xsl:value-of select="7div4"/&gt;<BR />
+         &lt;xsl:value-of select="7div 4"/&gt;<BR />
       </TD>
    </TR>
    <TR>
@@ -607,7 +607,7 @@
       <TD><B>Result:</B></TD>
       <TD>
          <FONT COLOR="blue">
-            <xsl:value-of select="7div4"/>
+            <xsl:value-of select="7div 4"/>
          </FONT>
       </TD>
    </TR>
@@ -615,7 +615,7 @@
    <TR>
       <TD VALIGN="TOP"><B>Test:</B></TD>
       <TD>
-         &lt;xsl:value-of select="7div0"/&gt;<BR />
+         &lt;xsl:value-of select="7div 0"/&gt;<BR />
       </TD>
    </TR>
    <TR>
@@ -628,7 +628,7 @@
       <TD><B>Result:</B></TD>
       <TD>
          <FONT COLOR="blue">
-            <xsl:value-of select="7div0"/>
+            <xsl:value-of select="7div 0"/>
          </FONT>
       </TD>
    </TR>
