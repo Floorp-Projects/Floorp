@@ -30,6 +30,8 @@ class nsIDOMNode;
 
 class nsICSSStyleSheet : public nsIStyleSheet {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_ICSS_STYLE_SHEET_IID; return iid; }
+
   virtual PRBool ContainsStyleSheet(nsIURL* aURL) const = 0;
 
   virtual void AppendStyleSheet(nsICSSStyleSheet* aSheet) = 0;
