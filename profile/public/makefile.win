@@ -21,10 +21,14 @@
 MODULE=profile 
 DEPTH=..\.. 
 EXPORTS= profileSwitch.h \
-         nsIProfile.h \
 	nsIAccount.h \
 	dialshr.h \
 	resource.h \
 	     $(NULL)
 
+XPIDLSRCS = \
+    .\nsIProfile.idl	\
+    $(NULL)
+
 include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\config\config.mak>
