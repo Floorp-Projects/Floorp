@@ -651,6 +651,12 @@ _XfeLiberalGeometryManager(Widget				child,
 		_XfeBorderWidth(child) = request->border_width;
 	}
 
+	/*
+	 * This should be a lot more clever.  We dont want to always
+	 * re layout the children.  It works for now, but it could be 
+	 * a lot more efficient. -re
+	 */
+
 	/* Layout the components */
 	_XfeManagerLayoutComponents(w);
 	
