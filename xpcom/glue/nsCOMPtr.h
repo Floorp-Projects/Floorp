@@ -151,7 +151,11 @@
   #define NSCAP_LOG_EXTERNAL_ASSIGNMENT
 #else
     // ...otherwise, just strip it out of the code
-  #define NSCAP_LOG_ASSIGNMENT(this, ptr);
+  #define NSCAP_LOG_ASSIGNMENT(this, ptr)
+#endif
+
+#ifndef NSCAP_LOG_RELEASE
+  #define NSCAP_LOG_RELEASE(this, ptr)
 #endif
 
 
@@ -271,7 +275,7 @@ getter_AddRefs( T* aRawPtr )
 template <class T>
 inline
 const already_AddRefed<T>
-getter_AddRefs( const already_AddRefed<T>& aAlreadyAddRefedPtr )
+getter_AddRefs( const already_AddRefed<T> aAlreadyAddRefedPtr )
   {
     return aAlreadyAddRefedPtr;
   }
@@ -431,6 +435,7 @@ class nsCOMPtr_base
           nsISupports* oldPtr = mRawPtr;
           mRawPtr = newPtr;
           NSCAP_LOG_ASSIGNMENT(this, newPtr);
+          NSCAP_LOG_RELEASE(this, oldPtr);
           if ( oldPtr )
             NSCAP_RELEASE(this, oldPtr);
         }
@@ -468,6 +473,7 @@ class nsCOMPtr
           T* oldPtr = mRawPtr;
           mRawPtr = newPtr;
           NSCAP_LOG_ASSIGNMENT(this, newPtr);
+          NSCAP_LOG_RELEASE(this, oldPtr);
           if ( oldPtr )
             NSCAP_RELEASE(this, oldPtr);
         }
@@ -486,6 +492,7 @@ class nsCOMPtr
 #ifndef NSCAP_FEATURE_FACTOR_DESTRUCTOR
      ~nsCOMPtr()
         {
+          NSCAP_LOG_RELEASE(this, mRawPtr);
           if ( mRawPtr )
             NSCAP_RELEASE(this, mRawPtr);
         }
@@ -617,6 +624,40 @@ class nsCOMPtr
         }
 #endif
 
+      void
+      swap( nsCOMPtr<T>& rhs )
+          // ...exchange ownership with |rhs|; can save a pair of refcount operations
+        {
+#ifdef NSCAP_FEATURE_DEBUG_PTR_TYPES
+          T* temp = rhs.mRawPtr;
+#else
+          nsISupports* temp = rhs.mRawPtr;
+#endif
+          NSCAP_LOG_ASSIGNMENT(&rhs, mRawPtr);
+          NSCAP_LOG_ASSIGNMENT(this, temp);
+          NSCAP_LOG_RELEASE(this, mRawPtr);
+          NSCAP_LOG_RELEASE(&rhs, temp);
+          rhs.mRawPtr = mRawPtr;
+          mRawPtr = temp;
+          // |rhs| maintains the same invariants, so we don't need to |NSCAP_ASSERT_NO_QUERY_NEEDED|
+        }
+
+      void
+      swap( T*& rhs )
+          // ...exchange ownership with |rhs|; can save a pair of refcount operations
+        {
+#ifdef NSCAP_FEATURE_DEBUG_PTR_TYPES
+          T* temp = rhs;
+#else
+          nsISupports* temp = rhs;
+#endif
+          NSCAP_LOG_ASSIGNMENT(this, temp);
+          NSCAP_LOG_RELEASE(this, mRawPtr);
+          rhs = mRawPtr;
+          mRawPtr = temp;
+          NSCAP_ASSERT_NO_QUERY_NEEDED();
+        }
+
 
         // Other pointer operators
 
@@ -727,10 +768,11 @@ class nsCOMPtr<nsISupports>
 
 #ifndef NSCAP_FEATURE_FACTOR_DESTRUCTOR
      ~nsCOMPtr()
-         {
-           if ( mRawPtr )
-             NSCAP_RELEASE(this, mRawPtr);
-         }
+        {
+          NSCAP_LOG_RELEASE(this, mRawPtr);
+          if ( mRawPtr )
+            NSCAP_RELEASE(this, mRawPtr);
+        }
 #endif
 
 
@@ -811,6 +853,30 @@ class nsCOMPtr<nsISupports>
         {
           assign_from_helper(rhs, NS_GET_IID(nsISupports));
           return *this;
+        }
+
+      void
+      swap( nsCOMPtr<nsISupports>& rhs )
+          // ...exchange ownership with |rhs|; can save a pair of refcount operations
+        {
+          nsISupports* temp = rhs.mRawPtr;
+          NSCAP_LOG_ASSIGNMENT(&rhs, mRawPtr);
+          NSCAP_LOG_ASSIGNMENT(this, temp);
+          NSCAP_LOG_RELEASE(this, mRawPtr);
+          NSCAP_LOG_RELEASE(&rhs, temp);
+          rhs.mRawPtr = mRawPtr;
+          mRawPtr = temp;
+        }
+
+      void
+      swap( nsISupports*& rhs )
+          // ...exchange ownership with |rhs|; can save a pair of refcount operations
+        {
+          nsISupports* temp = rhs;
+          NSCAP_LOG_ASSIGNMENT(this, temp);
+          NSCAP_LOG_RELEASE(this, mRawPtr);
+          rhs = mRawPtr;
+          mRawPtr = temp;
         }
 
 

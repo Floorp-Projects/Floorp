@@ -60,6 +60,7 @@ nsQueryInterface::operator()( const nsIID& aIID, void** answer ) const
 #ifdef NSCAP_FEATURE_FACTOR_DESTRUCTOR
 nsCOMPtr_base::~nsCOMPtr_base()
 	{
+	  NSCAP_LOG_RELEASE(this, mRawPtr);
 		if ( mRawPtr )
 			NSCAP_RELEASE(this, mRawPtr);
 	}
