@@ -3475,14 +3475,12 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
 
       if (populateMailList)
       {
-        PRUnichar * str = recipientsStr.ToNewUnicode();
         switch (i)
         {
-          case 0 : m_compFields->SetTo(str);  break;
-          case 1 : m_compFields->SetCc(str);  break;
-          case 2 : m_compFields->SetBcc(str); break;
+          case 0 : m_compFields->SetTo(recipientsStr.get());  break;
+          case 1 : m_compFields->SetCc(recipientsStr.get());  break;
+          case 2 : m_compFields->SetBcc(recipientsStr.get()); break;
         }
-        Recycle(str);
       }
   }
 
