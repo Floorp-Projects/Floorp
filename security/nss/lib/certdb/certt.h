@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.8 2001/10/17 14:37:10 ian.mcgreer%sun.com Exp $
+ * $Id: certt.h,v 1.9 2001/10/18 13:58:28 ian.mcgreer%sun.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -49,7 +49,9 @@
 #include "prio.h"
 #include "prmon.h"
 
+#ifndef NSS_3_4_CODE
 #define NSS_3_4_CODE
+#endif /* NSS_3_4_CODE */
 #include "nsspkit.h"
 
 /* Non-opaque objects */
