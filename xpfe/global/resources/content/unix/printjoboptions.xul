@@ -72,5 +72,37 @@ Contributor(s):
     </rows>
   </grid>
 
+  <grid>
+    <columns>
+      <column/>
+    </columns>
+    <rows>
+      <row>
+       <groupbox flex="1">
+        <caption label="&edgeMarginInput.label;"/>
+        <hbox>
+          <hbox align="center">
+            <label id="topLabel" control="topInput" value="&topInput.label;"/>
+            <textbox id="topInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="bottomLabel" control="bottomInput" value="&bottomInput.label;"/>
+            <textbox id="bottomInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="leftLabel" control="leftInput" value="&leftInput.label;"/>
+            <textbox id="leftInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+          <hbox align="center">
+            <label id="rightLabel" control="rightInput" value="&rightInput.label;"/>
+            <textbox id="rightInput" style="width:5em;" onkeyup="checkDouble(this, 0.5)"/>
+          </hbox>
+        </hbox>
+        </groupbox>
+      </row>
+
+    </rows>
+  </grid>
+
 </dialog>
 

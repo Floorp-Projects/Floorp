@@ -232,11 +232,6 @@ mime_type("mime.image_x_xpixmap", "image/x-xpixmap", "xpm", 2, "Unknown", "ttxt"
 // Add mime type for SimpleText read only files
 mime_type("mime.SimpleText_ReadOnly", "text/plain", "", 2, "SimpleText", "ttxt", "ttro");
 
-// print_headerfooter_gap enables platforms to specify an extra "gap" in twips
-// between the H/F and the edge of the paper,  
-// this is used by both Printing and Print Preview
-pref("print.print_headerfooter_gap", 0); // twips
-
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)

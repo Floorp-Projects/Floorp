@@ -49,6 +49,32 @@ var gPrintSetInterface = Components.interfaces.nsIPrintSettings;
 var doDebug            = true;
 
 //---------------------------------------------------
+function checkDouble(element, maxVal)
+{
+  var value = element.value;
+  if (value && value.length > 0) {
+    value = value.replace(/[^\.|^0-9]/g,"");
+    if (!value) {
+      element.value = "";
+    } else {
+      if (value > maxVal) {
+        element.value = maxVal;
+      } else {
+        element.value = value;
+      }
+    }
+  }
+}
+
+//---------------------------------------------------
+function getDoubleStr(val, dec)
+{
+  var str = val.toString();
+  var inx = str.indexOf(".");
+  return str.substring(0, inx+dec+1);
+}
+
+//---------------------------------------------------
 function initDialog()
 {
   dialog = new Object;
@@ -62,6 +88,11 @@ function initDialog()
   dialog.colorGroup      = document.getElementById("colorGroup");
   dialog.colorRadio      = document.getElementById("colorRadio");
   dialog.grayRadio       = document.getElementById("grayRadio");
+
+  dialog.topInput        = document.getElementById("topInput");
+  dialog.bottomInput     = document.getElementById("bottomInput");
+  dialog.leftInput       = document.getElementById("leftInput");
+  dialog.rightInput      = document.getElementById("rightInput");
 }
 
 //---------------------------------------------------
@@ -187,7 +218,21 @@ function loadDialog()
     dialog.colorGroup.selectedItem = dialog.grayRadio;
   }
 
-  dialog.cmdInput.value    = print_command;
+  dialog.cmdInput.value = print_command;
+
+  try {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    dialog.topInput.value    = pref.getIntPref("print.print_edge_top") / 100.0;
+    dialog.bottomInput.value = pref.getIntPref("print.print_edge_left") / 100.0;
+    dialog.leftInput.value   = pref.getIntPref("print.print_edge_right") / 100.0;
+    dialog.rightInput.value  = pref.getIntPref("print.print_edge_bottom") / 100.0;
+  } catch (e) {
+    dialog.topInput.value    = "0.04";
+    dialog.bottomInput.value = "0.04";
+    dialog.leftInput.value   = "0.04";
+    dialog.rightInput.value  = "0.04";
+  }
 }
 
 var param;
@@ -243,6 +288,25 @@ function onAccept()
     // save these out so they can be picked up by the device spec
     gPrintSettings.printInColor = dialog.colorRadio.selected;
     gPrintSettings.printCommand = dialog.cmdInput.value;
+
+    // 
+    try {
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+      var i = dialog.topInput.value * 100;
+      pref.setIntPref("print.print_edge_top", i);
+
+      i = dialog.bottomInput.value * 100;
+      pref.setIntPref("print.print_edge_left", i);
+
+      i = dialog.leftInput.value * 100;
+      pref.setIntPref("print.print_edge_right", i);
+
+      i = dialog.rightInput.value * 100;
+      pref.setIntPref("print.print_edge_bottom", i);
+    } catch (e) {
+    }
+
     if (doDebug) {
       dump("onAccept******************************\n");
       dump("paperSize     "+gPrintSettings.paperSize+" (deprecated)\n");

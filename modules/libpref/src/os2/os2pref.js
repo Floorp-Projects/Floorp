@@ -205,11 +205,6 @@ pref("layout.word_select.stop_at_punctuation", false);
 // by the image font.
 pref("font.substitute_vector_fonts", true);
 
-// print_headerfooter_gap enables platforms to specify an extra "gap" in twips
-// between the H/F and the edge of the paper,  
-// this is used by both Printing and Print Preview
-pref("print.print_headerfooter_gap", 0); // twips
-
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
 pref("print.print_extra_margin", 90); // twips (90 twips is an eigth of an inch)

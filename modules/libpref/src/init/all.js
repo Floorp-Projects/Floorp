@@ -226,6 +226,13 @@ pref("print.use_native_print_dialog", false);
 
 pref("print.whileInPrintPreview", true);
 
+// Enables you to specify the gap from the edge of the paper to the margin
+// this is used by both Printing and Print Preview
+pref("print.print_edge_top", 0); // 1/100 of an inch
+pref("print.print_edge_left", 0); // 1/100 of an inch
+pref("print.print_edge_right", 0); // 1/100 of an inch
+pref("print.print_edge_bottom", 0); // 1/100 of an inch
+
 // Default Capability Preferences: Security-Critical! 
 // Editing these may create a security risk - be sure you know what you're doing
 //pref("capability.policy.default.barprop.visible.set", "UniversalBrowserWrite");
