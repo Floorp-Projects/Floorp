@@ -121,20 +121,27 @@ nsresult nsCalCommandCanvas :: Init()
 
   rect.width = width ;
 
-  mStaticTextField->SetReadOnly(PR_TRUE);
 
   nsIWidget * widget = nsnull;
   nsresult res = mStaticTextField->QueryInterface(kIWidgetIID,(void**)&widget);
-  NS_RELEASE(widget);
 
-  mStaticTextField->Create(GetWidget(), 
-                           rect, 
-                           HandleEventTextField, 
-                           nsnull, nsnull, nsnull);
+  if (NS_OK == res)
+  {
 
-  mStaticTextField->SetText(text);
-  mStaticTextField->Show(PR_TRUE);
+    PRBool old;
 
+    mStaticTextField->SetReadOnly(PR_TRUE,old);
+
+    widget->Create(GetWidget(), 
+                   rect, 
+                   HandleEventTextField, 
+                   nsnull, nsnull, nsnull);
+
+    PRUint32 length;
+    mStaticTextField->SetText(text,length);
+    widget->Show(PR_TRUE);
+    NS_RELEASE(widget);
+  }
 
   /*
    * Writeable Command field
@@ -152,16 +159,21 @@ nsresult nsCalCommandCanvas :: Init()
 
   widget = nsnull;
   res = mTextField->QueryInterface(kIWidgetIID,(void**)&widget);
-  NS_RELEASE(widget);
-  
-  mTextField->Create(GetWidget(), 
-                     rect, 
-                     HandleEventTextField, 
-                     NULL);
 
-  text = "TimebarScale setbackgroundcolor #FF0000";
-  mTextField->SetText(text);
-  mTextField->Show(PR_TRUE);
+  if (NS_OK == res)
+  {  
+    widget->Create(GetWidget(), 
+                   rect, 
+                   HandleEventTextField, 
+                   NULL);
+
+    text = "TimebarScale setbackgroundcolor #FF0000";
+    PRUint32 length;
+    mTextField->SetText(text,length);
+    widget->Show(PR_TRUE);
+    NS_RELEASE(widget);
+  }
+  
 
   return NS_OK;
 }
@@ -203,42 +215,58 @@ nsresult nsCalCommandCanvas :: SetBounds(const nsRect &aBounds)
   nsRect rect = aBounds;
   nscoord width = 0;
 
-
   if (mStaticTextField) {
 
-    nsString text("COMMAND: ");
+    nsIWidget * widget = nsnull;
+    nsresult res = mStaticTextField->QueryInterface(kIWidgetIID,(void**)&widget);
 
-    nsFont font("Times", NS_FONT_STYLE_NORMAL,
-		    NS_FONT_VARIANT_NORMAL,
-		    NS_FONT_WEIGHT_BOLD,
-		    0,
-		    8);
+    if (NS_OK == res)
+    {
 
-    nsIFontMetrics * fm ;
+      nsString text("COMMAND: ");
+
+      nsFont font("Times", NS_FONT_STYLE_NORMAL,
+		      NS_FONT_VARIANT_NORMAL,
+		      NS_FONT_WEIGHT_BOLD,
+		      0,
+		      8);
+
+      nsIFontMetrics * fm ;
     
-    mStaticTextField->GetDeviceContext()->GetMetricsFor(font,fm);
+      widget->GetDeviceContext()->GetMetricsFor(font,fm);
 
-    fm->GetWidth(text,width);
+      fm->GetWidth(text,width);
 
-    rect.width = width ;
+      rect.width = width ;
 
-    mStaticTextField->Invalidate(PR_FALSE);
+      widget->Invalidate(PR_FALSE);
 
-    mStaticTextField->Resize(rect.x, rect.y, rect.width, rect.height, PR_FALSE);
+      widget->Resize(rect.x, rect.y, rect.width, rect.height, PR_FALSE);
+
+      NS_RELEASE(widget);
+    }
 
 
   }
 
   if (mTextField) {
 
-    rect = aBounds;
+    nsIWidget * widget = nsnull;
+    nsresult res = mTextField->QueryInterface(kIWidgetIID,(void**)&widget);
 
-    rect.x += (width);
-    rect.width -= (width);
+    if (NS_OK == res)
+    {
+      rect = aBounds;
 
-    mTextField->Invalidate(PR_FALSE);
+      rect.x += (width);
+      rect.width -= (width);
 
-    mTextField->Resize(rect.x, rect.y, rect.width, rect.height, PR_FALSE);
+      widget->Invalidate(PR_FALSE);
+
+      widget->Resize(rect.x, rect.y, rect.width, rect.height, PR_FALSE);
+
+      NS_RELEASE(widget);
+    }
   }
 
   return NS_OK;
@@ -248,8 +276,14 @@ nsresult nsCalCommandCanvas :: SetBounds(const nsRect &aBounds)
 nsEventStatus nsCalCommandCanvas :: OnPaint(nsIRenderingContext& aRenderingContext,
                                             const nsRect& aDirtyRect)
 {
-  mTextField->Invalidate(PR_FALSE);
-  mStaticTextField->Invalidate(PR_FALSE);
+  nsIWidget * widget = nsnull;
+  nsresult res = mTextField->QueryInterface(kIWidgetIID,(void**)&widget);
+  widget->Invalidate(PR_FALSE);
+  NS_RELEASE(widget);
+
+  res = mStaticTextField->QueryInterface(kIWidgetIID,(void**)&widget);
+  widget->Invalidate(PR_FALSE);
+  NS_RELEASE(widget);
 
   return nsEventStatus_eConsumeNoDefault;  
 }
@@ -270,7 +304,9 @@ nsEventStatus nsCalCommandCanvas :: HandleEvent(nsGUIEvent *aEvent)
         if (res != NS_OK)
           return nsEventStatus_eIgnore;        
 
-        text_widget->GetText(text, 1000);
+        PRUint32 length;
+
+        text_widget->GetText(text, 1000, length);
 
         SendCommand(text,reply);
 

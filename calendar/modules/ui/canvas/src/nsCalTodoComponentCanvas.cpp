@@ -23,11 +23,12 @@
 #include "nsIDeviceContext.h"
 
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kCalTodoComponentCanvasCID, NS_CAL_TODOCOMPONENTCANVAS_CID);
-static NS_DEFINE_IID(kIXPFCCanvasIID, NS_IXPFC_CANVAS_IID);
-static NS_DEFINE_IID(kIListWidgetIID, NS_ILISTWIDGET_IID);
-static NS_DEFINE_IID(kCListWidgetCID, NS_LISTBOX_CID);
+static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kCalTodoComponentCanvasCID,  NS_CAL_TODOCOMPONENTCANVAS_CID);
+static NS_DEFINE_IID(kIXPFCCanvasIID,             NS_IXPFC_CANVAS_IID);
+static NS_DEFINE_IID(kIListWidgetIID,             NS_ILISTWIDGET_IID);
+static NS_DEFINE_IID(kIWidgetIID,                 NS_IWIDGET_IID);
+static NS_DEFINE_IID(kCListWidgetCID,             NS_LISTBOX_CID);
 
 nsEventStatus PR_CALLBACK HandleEventListWidget(nsGUIEvent *aEvent);
 
@@ -80,7 +81,7 @@ nsresult nsCalTodoComponentCanvas :: Init()
 
   nsresult res = nsRepository::CreateInstance(kCListWidgetCID, 
                                               nsnull, 
-                                              kIListWidgetIID, 
+                                              kIWidgetIID, 
                                               (void **)&mWidget);
 
   if (NS_OK != res)

@@ -177,15 +177,20 @@ nsresult nsTrexTestShell::Init()
   aRect.height-=HEIGHT;
   aRect.width-=10;
 
-  mDisplay->Create(mShellInstance->GetApplicationWidget(), 
+  nsIWidget * dw = nsnull;
+  res = mDisplay->QueryInterface(kIWidgetIID, (void**)&dw);
+
+  dw->Create(mShellInstance->GetApplicationWidget(), 
                    aRect, 
                    HandleEventTextField, 
                    NULL);
 
-  mDisplay->SetText("TrexTest 0.1\r\n");
-  mDisplay->InsertText("-------------------\r\n",0x7fffffff,0x7fffffff);
-  mDisplay->Show(PR_TRUE);
-  mDisplay->SetReadOnly(PR_TRUE);
+  PRUint32 length;
+  mDisplay->SetText("TrexTest 0.1\r\n",length);
+  mDisplay->InsertText("-------------------\r\n",0x7fffffff,0x7fffffff,length);
+  dw->Show(PR_TRUE);
+  PRBool prev;
+  mDisplay->SetReadOnly(PR_TRUE,prev);
 
 
   aRect.y = aRect.height - HEIGHT;
@@ -196,21 +201,16 @@ nsresult nsTrexTestShell::Init()
                                kITextWidgetIID, 
                                (void **)&mInput);
 
-  mInput->Create(mShellInstance->GetApplicationWidget(), 
+  nsIWidget * iw = nsnull;
+  res = mInput->QueryInterface(kIWidgetIID, (void**)&iw);
+
+  iw->Create(mShellInstance->GetApplicationWidget(), 
                  aRect, 
                  HandleEventTextField, 
                  NULL);
 
-  mInput->Show(PR_TRUE);
-
-  nsIWidget * inputwidget = nsnull;
-
-  if (mInput)
-    mInput->QueryInterface(kIWidgetIID,(void**)&inputwidget);
-
-  inputwidget->SetFocus();
-
-  NS_RELEASE(inputwidget);
+  iw->Show(PR_TRUE);
+  iw->SetFocus();
 
 
   nsIWidget * app = mShellInstance->GetApplicationWidget();
@@ -222,9 +222,11 @@ nsresult nsTrexTestShell::Init()
   rect.x = 0;
   rect.y = 0;
 
-  mDisplay->Resize(rect.x,rect.y,rect.width,rect.height-HEIGHT,PR_TRUE);
+  dw->Resize(rect.x,rect.y,rect.width,rect.height-HEIGHT,PR_TRUE);
+  iw->Resize(rect.x,rect.height-HEIGHT,rect.width,HEIGHT,PR_TRUE);
 
-  mInput->Resize(rect.x,rect.height-HEIGHT,rect.width,HEIGHT,PR_TRUE);
+  NS_RELEASE(dw);
+  NS_RELEASE(iw);
 
   mShellInstance->ShowApplicationWindow(PR_TRUE) ;
 
@@ -347,11 +349,17 @@ nsresult nsTrexTestShell::GetWebViewerContainer(nsIWebViewerContainer ** aWebVie
 nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
 {
   PRThread *t;
-  mInput->RemoveText();
-  mInput->Invalidate(PR_TRUE);
-  nsString string("COMMAND: ");
 
-  mDisplay->InsertText(string,0x7fffffff,0x7fffffff);
+  nsIWidget * iw = nsnull;
+  nsresult res = mInput->QueryInterface(kIWidgetIID, (void**)&iw);
+  nsIWidget * dw = nsnull;
+  res = mDisplay->QueryInterface(kIWidgetIID, (void**)&dw);
+
+  mInput->RemoveText();
+  iw->Invalidate(PR_TRUE);
+  nsString string("COMMAND: ");
+  PRUint32 length;
+  mDisplay->InsertText(string,0x7fffffff,0x7fffffff,length);
 
 
   /*
@@ -383,14 +391,24 @@ nsresult nsTrexTestShell::SendCommand(nsString& aCommand)
 
   PR_ExitMonitor(mClientMon);
 
+  NS_RELEASE(iw);
+  NS_RELEASE(dw);
+
   return (ReceiveCommand(mCommand,mCommand));
 }
 
 nsresult nsTrexTestShell::ReceiveCommand(nsString& aCommand, nsString& aReply)
 {
-  mDisplay->InsertText(aReply,0x7fffffff,0x7fffffff);
-  mDisplay->InsertText("\r\n",0x7fffffff,0x7fffffff);
-  mDisplay->Invalidate(PR_TRUE);
+  PRUint32 length;
+  mDisplay->InsertText(aReply,0x7fffffff,0x7fffffff,length);
+  mDisplay->InsertText("\r\n",0x7fffffff,0x7fffffff,length);
+
+  nsIWidget * dw = nsnull;
+
+  mDisplay->QueryInterface(kIWidgetIID,(void**)&dw);
+
+  dw->Invalidate(PR_TRUE);
+
   return NS_OK;
 }
 
@@ -416,8 +434,8 @@ nsEventStatus nsTrexTestShell::HandleEvent(nsGUIEvent *aEvent)
             if (NS_VK_RETURN == ((nsKeyEvent*)aEvent)->keyCode) 
             {
               nsString text;
-
-              mInput->GetText(text, 1000);
+              PRUint32 length;
+              mInput->GetText(text, 1000, length);
 
               SendCommand(text);
 
@@ -453,9 +471,16 @@ nsEventStatus nsTrexTestShell::HandleEvent(nsGUIEvent *aEvent)
           rect->x = 0;
           rect->y = 0;
 
-          mDisplay->Resize(rect->x,rect->y,rect->width,rect->height-HEIGHT,PR_TRUE);
+          nsIWidget * iw = nsnull;
+          mInput->QueryInterface(kIWidgetIID, (void**)&iw);
+          nsIWidget * dw = nsnull;
+          mDisplay->QueryInterface(kIWidgetIID, (void**)&dw);
 
-          mInput->Resize(rect->x,rect->height-HEIGHT,rect->width,HEIGHT,PR_TRUE);
+          dw->Resize(rect->x,rect->y,rect->width,rect->height-HEIGHT,PR_TRUE);
+          iw->Resize(rect->x,rect->height-HEIGHT,rect->width,HEIGHT,PR_TRUE);
+
+          NS_RELEASE(iw);
+          NS_RELEASE(dw);
 
           return nsEventStatus_eConsumeNoDefault;
         }
