@@ -33,7 +33,7 @@ class ControlNode {
     
     ControlNode eval(Environment theEnv)
     {
-        if (expr != null) expr.eval(theEnv);
+        if (expr != null) theEnv.resultValue = expr.eval(theEnv);
         return next;
     }
     

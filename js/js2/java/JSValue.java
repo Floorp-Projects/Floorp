@@ -151,6 +151,10 @@ class JSValue extends ExpressionNode {
         return toJSObject(theEnv).putProp(theEnv, id, rV);
     }
     
+    JSValue call(Environment theEnv, JSValue rV) {
+        throw new JSException(new JSString("[[call]] not implemented"));
+    }
+    
     JSValue defaultValue(Environment theEnv, String hint) {
 /*
 When the [[DefaultValue]] method of O is called with hint String, the following steps are taken:

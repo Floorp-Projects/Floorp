@@ -29,6 +29,12 @@ class BinaryNode extends ExpressionNode {
         
         if (op == ".")
             return lV.getProp(theEnv, rV.toJSString(theEnv));
+        else
+        if (op == "()")
+            return lV.call(theEnv, rV);
+        else
+        if (op == ",")
+            return JSValueList.buildList(lV, rV);
         else {
             System.out.println("missing binary op " + op);
             return null;

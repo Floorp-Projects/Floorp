@@ -12,5 +12,6 @@ class Environment {
         return result.toString();
     }
 
+    JSValue resultValue;
 
 }
