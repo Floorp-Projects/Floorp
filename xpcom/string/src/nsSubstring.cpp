@@ -76,12 +76,20 @@ class nsStringStats
             return;
 
           printf("nsStringStats\n");
-          printf(" => mAllocCount: %d\n", mAllocCount);
-          printf(" => mReallocCount: %d\n", mReallocCount);
-          printf(" => mFreeCount: %d\n", mFreeCount);
-          printf(" => mShareCount: %d\n", mShareCount);
-          printf(" => mAdoptCount: %d\n", mAdoptCount);
-          printf(" => mAdoptFreeCount: %d\n", mAdoptFreeCount);
+          printf(" => mAllocCount:     % 10d\n", mAllocCount);
+          printf(" => mReallocCount:   % 10d\n", mReallocCount);
+          printf(" => mFreeCount:      % 10d", mFreeCount);
+          if (mAllocCount > mFreeCount)
+            printf("  --  LEAKED %d !!!\n", mAllocCount - mFreeCount);
+          else
+            printf("\n");
+          printf(" => mShareCount:     % 10d\n", mShareCount);
+          printf(" => mAdoptCount:     % 10d\n", mAdoptCount);
+          printf(" => mAdoptFreeCount: % 10d", mAdoptFreeCount);
+          if (mAdoptCount > mAdoptFreeCount)
+            printf("  --  LEAKED %d !!!\n", mAdoptCount - mAdoptFreeCount);
+          else
+            printf("\n");
         }
 
       PRInt32 mAllocCount;
