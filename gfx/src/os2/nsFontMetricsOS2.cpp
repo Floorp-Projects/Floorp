@@ -603,9 +603,9 @@ nsFontMetricsOS2::SetFontHandle( HPS aPS, nsFontOS2* aFont )
   mLangGroup->GetUTF8String(&langGroup);
   for (int j=0; j < eCharset_COUNT; j++ )
   {
-    if (langGroup.get()[0] == gCharsetInfo[j].mLangGroup[0])
+    if (langGroup[0] == gCharsetInfo[j].mLangGroup[0])
     {
-      if (!strcmp(langGroup.get(), gCharsetInfo[j].mLangGroup))
+      if (!strcmp(langGroup, gCharsetInfo[j].mLangGroup))
       {
         mConvertCodePage = gCharsetInfo[j].mCodePage;
         break;
