@@ -842,6 +842,26 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
 {
     nsresult rv = NS_OK;
 
+    // See if find dialog is already up.
+    if ( aContext ) {
+        nsCOMPtr<nsISearchContext> context = do_QueryInterface( aContext, &rv );
+        if ( NS_SUCCEEDED( rv ) && context ) {
+            nsCOMPtr<nsIDOMWindow> dialog;
+            rv = context->GetFindDialog( getter_AddRefs( dialog ) );
+            if ( NS_SUCCEEDED( rv ) && dialog ) {
+                // Just give focus back to the dialog.
+                dialog->Focus();
+                return NS_OK;
+            }
+        }
+        // Test for error (GetFindDialog succeeds if there's no dialog).
+        if ( NS_FAILED( rv ) ) {
+            DEBUG_PRINTF( PR_STDOUT, "%s %d: Error getting find dialog, rv=0x%08X\n",
+                          __FILE__, (int)__LINE__, (int)rv );
+            return rv;
+        }
+    }
+
     if ( aContext && GetAppShell() )
     {
         nsCOMPtr<nsISearchContext> context = do_QueryInterface( aContext, &rv );
