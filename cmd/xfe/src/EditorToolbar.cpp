@@ -22,7 +22,7 @@
  *  EditorToolbar.cpp --- Toolbar for Editor and HTML Mail Compose.
  *
  *  Created: David Williams <djw@netscape.com>, Feb-7-1997
- *  RCSID: "$Id: EditorToolbar.cpp,v 3.6 1998/09/29 07:11:22 mcafee%netscape.com Exp $"
+ *  RCSID: "$Id: EditorToolbar.cpp,v 3.7 1998/10/09 22:15:37 kin%netscape.com Exp $"
  *
  *----------------------------------------------------------------------------
  */
@@ -894,7 +894,7 @@ XFE_PixmapMenu::XFE_PixmapMenu(Widget         parent,
 	Widget       menu = getMenuWidget();
 
 	for (; child_spec->toolbarButtonName != NULL; child_spec++) {
-		XFE_XmPushButton* baby = new XFE_XmPushButton(menu, child_spec, this);
+		XFE_XmPushButton* baby = new XFE_XmPushButton(menu, child_spec, tb);
 		baby->show();
 	}
 }
