@@ -144,8 +144,8 @@ FE_IsAltMailUsed(MWContext* context)
 {
 }
 
-int
-FE_PromptIMAPSubscriptionUpgrade(MWContext* context)
+MSG_IMAPUpgradeType
+FE_PromptIMAPSubscriptionUpgrade(MWContext* context, const char *hostName)
 {
 }
 
