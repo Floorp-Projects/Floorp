@@ -40,6 +40,7 @@ RSC=rc.exe
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
+# PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NPSPY_EXPORTS" /YX /FD /c
 # ADD CPP /nologo /MT /W3 /GX /O2 /I "..\include" /I "..\..\..\..\..\dist\include" /I "..\..\..\..\..\dist\include\nspr" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NPSPY_EXPORTS" /YX /FD /c
@@ -78,7 +79,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib version.lib advapi32.lib comctl32.lib mpr.lib /nologo /dll /debug /machine:I386 /out:"..\..\..\..\dist\WIN32_D.OBJ\bin\plugins\npspy.dll" /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib version.lib advapi32.lib comctl32.lib mpr.lib /nologo /dll /debug /machine:I386 /out:"..\..\..\..\..\dist\WIN32_D.OBJ\bin\plugins\npspy.dll" /pdbtype:sept
 
 !ENDIF 
 
@@ -96,10 +97,6 @@ SOURCE=.\dirpick.cpp
 # Begin Source File
 
 SOURCE=..\common\epmanager.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\fileutils.cpp
 # End Source File
 # Begin Source File
 
@@ -172,6 +169,10 @@ SOURCE=..\common\profile.cpp
 # Begin Source File
 
 SOURCE=.\profilew.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\utils.cpp
 # End Source File
 # Begin Source File
 
