@@ -75,6 +75,10 @@ static NS_DEFINE_CID(kCookieServiceCID,    NS_COOKIESERVICE_CID);
 // header file for profile manager
 #include "nsIProfile.h"
 
+#if defined(XP_UNIX)
+  extern void InstallUnixSignalHandlers(const char *ProgramName);
+#endif
+
 #if defined(XP_MAC)
 
 #include "macstdlibextras.h"
@@ -600,52 +604,12 @@ void DumpVersion(char *appname)
 	printf("%s: version info\n", appname);
 }
 
-#ifdef DEBUG_ramiro
-#define CRAWL_STACK_ON_SIGSEGV
-#endif // DEBUG_ramiro
-
-#ifdef CRAWL_STACK_ON_SIGSEGV
-
-#include <signal.h>
-#include <unistd.h>
-#include "nsTraceRefcnt.h"
-
-extern "C" char * strsignal(int);
-
-static char _progname[1024] = "huh?";
-
-void
-ah_crap_handler(int signum)
-{
-  PR_CurrentThread();
-
-  printf("prog = %s\npid = %d\nsignal = %s\n",
-         _progname,
-         getpid(),
-         strsignal(signum));
-  
-  printf("stack logged to someplace\n");
-  nsTraceRefcnt::WalkTheStack(stdout);
-
-  printf("Sleeping for 5 minutes.\n");
-  printf("Type 'gdb %s %d' to attatch your debugger to this thread.\n",
-         _progname,
-         getpid());
-
-  sleep(300);
-
-  printf("Done sleeping...\n");
-} 
-#endif // CRAWL_STACK_ON_SIGSEGV
 
 int main(int argc, char* argv[])
 {
-#ifdef CRAWL_STACK_ON_SIGSEGV
-  strcpy(_progname,argv[0]);
-  signal(SIGSEGV, ah_crap_handler);
-  signal(SIGILL, ah_crap_handler);
-  signal(SIGABRT, ah_crap_handler);
-#endif // CRAWL_STACK_ON_SIGSEGV
+#if defined(XP_UNIX)
+  InstallUnixSignalHandlers(argv[0]);
+#endif
 
   nsresult rv;
 
