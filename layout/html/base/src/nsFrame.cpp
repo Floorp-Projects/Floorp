@@ -1257,14 +1257,25 @@ nsFrame::Invalidate(const nsRect& aDamageRect,
                     PRBool aImmediate) const
 {
   nsIViewManager* viewManager = nsnull;
+  nsRect damageRect(aDamageRect);
+
+  // Checks to see if the damaged rect should be infalted 
+  // to include the outline
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+  nscoord width;
+  spacing->GetOutlineWidth(width);
+  if (width > 0) {
+    damageRect.Inflate(width, width);
+  }
 
   PRUint32 flags = aImmediate ? NS_VMREFRESH_IMMEDIATE : NS_VMREFRESH_NO_SYNC;
   if (nsnull != mView) {
     mView->GetViewManager(viewManager);
-    viewManager->UpdateView(mView, aDamageRect, flags);
+    viewManager->UpdateView(mView, damageRect, flags);
     
   } else {
-    nsRect    rect(aDamageRect);
+    nsRect    rect(damageRect);
     nsPoint   offset;
     nsIView*  view;
   
