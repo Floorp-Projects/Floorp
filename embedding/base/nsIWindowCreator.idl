@@ -43,8 +43,8 @@ interface nsIWindowCreator : nsISupports {
       @param chromeFlags chrome features from nsIWebBrowserChrome
       @return the new window
   */
-  nsIWebBrowserChrome createWindow(in nsIWebBrowserChrome parent,
-                                   in PRUint32 chromeFlags);
+  nsIWebBrowserChrome createChromeWindow(in nsIWebBrowserChrome parent,
+                                         in PRUint32 chromeFlags);
 };
 
 %{C++
