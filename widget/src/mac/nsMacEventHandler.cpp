@@ -237,7 +237,7 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 //-------------------------------------------------------------------------
 PRBool nsMacEventHandler::HandleUpdateEvent(EventRecord& aOSEvent)
 {
-	mTopLevelWidget->Update();
+	mTopLevelWidget->HandleUpdateEvent();
 
 	return PR_TRUE;
 }
