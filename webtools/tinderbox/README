@@ -195,6 +195,7 @@ rows separated by "\n" and columns by '|'.
 $tree/${logfile}
 $tree/${logfile}.brief.html
 $tree/ignorebuilds.pl
+$tree/scrapebuilds.pl
 $tree/rules.pl
 $tree/status.pl
 $tree/sheriff.pl
@@ -214,6 +215,9 @@ file and is recreated when the logfile gets updated.
 ignorebuilds.pl is a file which specifies builds that should not be
 performed.  It is valid perl code which sets the hash reference
 $ignore_builds, each key is a tree name.
+
+scrapebuilds.pl: same as ignorebuilds.pl, but selects a build to be
+"scraped" for data, with a token in the form TinderboxPrint:aaa,bbb,...
 
 status.pl stores the tree-specific status.  Its contents looks like:
           $status_message = 'message';
