@@ -1290,10 +1290,9 @@ nsGenericElement::AddRef()
 NS_IMETHODIMP_(nsrefcnt) 
 nsGenericElement::Release()
 {
-  nsIContent* content = mContent;
-
-  // Release the copy since the macro will null the pointer.
-  return NS_RELEASE(content);
+  nsrefcnt rc;
+  NS_RELEASE2(mContent, rc);
+  return rc;
 }
 
 //----------------------------------------------------------------------
