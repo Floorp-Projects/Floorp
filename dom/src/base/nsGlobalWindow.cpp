@@ -1478,7 +1478,7 @@ GlobalWindowImpl::SetStatus(const nsAString& aStatus)
    * prevent setting window.status by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_status_change") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_status_change")) {
     return NS_OK;
   }
 
@@ -1509,7 +1509,7 @@ GlobalWindowImpl::SetDefaultStatus(const nsAString& aDefaultStatus)
    * prevent setting window.defaultStatus by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_status_change") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_status_change")) {
     return NS_OK;
   }
 
@@ -1569,7 +1569,7 @@ GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
    * prevent setting window.innerWidth by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -1621,7 +1621,7 @@ GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
    * prevent setting window.innerHeight by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -1675,7 +1675,7 @@ GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
    * prevent setting window.outerWidth by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -1719,7 +1719,7 @@ GlobalWindowImpl::SetOuterHeight(PRInt32 aOuterHeight)
    * prevent setting window.outerHeight by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -1762,7 +1762,7 @@ GlobalWindowImpl::SetScreenX(PRInt32 aScreenX)
    * prevent setting window.screenX by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -1806,7 +1806,7 @@ GlobalWindowImpl::SetScreenY(PRInt32 aScreenY)
    * prevent setting window.screenY by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -2459,7 +2459,7 @@ GlobalWindowImpl::Focus()
    * prevent setting window.focus() by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_flip") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_flip")) {
     return NS_OK;
   }
 
@@ -2596,7 +2596,7 @@ GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
    * prevent window.moveTo() by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -2621,7 +2621,7 @@ GlobalWindowImpl::MoveBy(PRInt32 aXDif, PRInt32 aYDif)
    * prevent window.moveBy() by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -2650,7 +2650,7 @@ GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
    * prevent window.resizeTo() by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -2675,7 +2675,7 @@ GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
    * prevent window.resizeBy() by exiting early
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -2705,7 +2705,7 @@ GlobalWindowImpl::SizeToContent()
    * block window.SizeToContent() by exiting
    */
 
-  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+  if (!CanSetProperty("dom.disable_window_move_resize")) {
     return NS_OK;
   }
 
@@ -2952,12 +2952,14 @@ void FirePopupWindowEvent(nsIDOMDocument* aDoc)
 PRBool
 GlobalWindowImpl::CanSetProperty(const char *aPrefName)
 {
-  PRBool prefValue =
-    nsContentUtils::GetBoolPref(aPrefName, PR_TRUE);
+  // Chrome can set any property.
+  if (IsCallerChrome()) {
+    return PR_TRUE;
+  }
 
   // If the pref is set to true, we can not set the property
   // and vice versa.
-  return !prefValue;
+  return !nsContentUtils::GetBoolPref(aPrefName, PR_TRUE);
 }
 
 
