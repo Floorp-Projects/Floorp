@@ -353,6 +353,16 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
   nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(t);
   if (domElement && (domElement != mCurrentElement)) {
     SetFocusedElement(domElement);
+
+    // Also set focus to our innermost window.
+    // XXX Must be done for the Ender case, since ender causes a blur,
+    // but we don't hear the subsequent focus to the Ender window.
+    nsCOMPtr<nsIDOMDocument> ownerDoc;
+    domElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    GetParentWindowFromDocument(ownerDoc, getter_AddRefs(domWindow));
+    if (domWindow)
+      SetFocusedWindow(domWindow);
   }
   else {
     // We're focusing a window.  We only want to do an update commands
