@@ -47,6 +47,8 @@
 #include <stdlib.h>
 #endif 
 
+#include <sys/stat.h>
+
 //*****************************************************************************
 // greEmbedFileLocProvider::Constructor/Destructor
 //*****************************************************************************   
@@ -117,8 +119,16 @@ nsGREDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
 char * 
 nsGREDirServiceProvider::GetGREDirectoryPath()
 {
-  char *pGreLocation = NULL;
+  char *pGreLocation = nsnull;
   
+  // If there exists a file named ".gre.conf" in the current working directory,
+  // then we will not use any GRE.  The assumption here is that the GRE is in the
+  // same directory as the executable.
+  
+  struct stat configStat;
+  if (stat(".gre.config", &configStat) != -1)
+    return nsnull;
+
   // check in the HOME directory
   char * path = PR_GetEnv("HOME");
   if (path) {
@@ -127,9 +137,9 @@ nsGREDirServiceProvider::GetGREDirectoryPath()
 	sprintf(greConfHomePath, "%s" XPCOM_FILE_PATH_SEPARATOR GRE_CONF_NAME, path);
     
 	pGreLocation = GetPathFromConfigFile(greConfHomePath);
-    free(greConfHomePath);
-    if (pGreLocation)
-      return pGreLocation;
+        free(greConfHomePath);
+        if (pGreLocation)
+          return pGreLocation;
   }
   
   path = PR_GetEnv("MOZ_GRE_CONF");
