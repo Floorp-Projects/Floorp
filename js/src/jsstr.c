@@ -2167,8 +2167,8 @@ static JSFunctionSpec string_methods[] = {
     {"toUpperCase",         str_toUpperCase,        0,0,0},
     {"charAt",              str_charAt,             1,0,0},
     {"charCodeAt",          str_charCodeAt,         1,0,0},
-    {"indexOf",             str_indexOf,            2,0,0},
-    {"lastIndexOf",         str_lastIndexOf,        2,0,0},
+    {"indexOf",             str_indexOf,            1,0,0},
+    {"lastIndexOf",         str_lastIndexOf,        1,0,0},
     {"toLocaleLowerCase",   str_toLocaleLowerCase,  0,0,0},
     {"toLocaleUpperCase",   str_toLocaleUpperCase,  0,0,0},
     {"localeCompare",       str_localeCompare,      1,0,0},
@@ -2177,7 +2177,7 @@ static JSFunctionSpec string_methods[] = {
     {"match",               str_match,              1,0,0},
     {"search",              str_search,             1,0,0},
     {"replace",             str_replace,            2,0,0},
-    {"split",               str_split,              1,0,0},
+    {"split",               str_split,              2,0,0},
     {"substr",              str_substr,             2,0,0},
 
     /* Python-esque sequence methods. */
