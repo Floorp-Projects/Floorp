@@ -1612,30 +1612,28 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     nsresult result;
     NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
                     kMsgCopyServiceCID, &result); 
-    if(NS_SUCCEEDED(result))
-    {
-      if (NS_SUCCEEDED(result))
-        copyService->NotifyCompletion(mCopyState->srcSupport, this, rv);
+
+    if (NS_SUCCEEDED(result))
+      copyService->NotifyCompletion(mCopyState->srcSupport, this, rv);
       
-      // CopyFileMessage() only
-      if (mCopyState->parseMsgState)
+    // CopyFileMessage() only
+    if (mCopyState->parseMsgState)
+    {
+      nsCOMPtr<nsIMsgDatabase> msgDb;
+      nsCOMPtr<nsIMsgDBHdr> newHdr;
+      result =
+        mCopyState->parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
+      if (NS_SUCCEEDED(result) && newHdr)
       {
-        nsCOMPtr<nsIMsgDatabase> msgDb;
-        nsCOMPtr<nsIMsgDBHdr> newHdr;
-        result =
-          mCopyState->parseMsgState->GetNewMsgHdr(getter_AddRefs(newHdr));
-        if (NS_SUCCEEDED(result) && newHdr)
-        {
-          result = GetMsgDatabase(getter_AddRefs(msgDb));
-          if (NS_SUCCEEDED(result) && msgDb)
-            msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
-        }
+        result = GetMsgDatabase(getter_AddRefs(msgDb));
+        if (NS_SUCCEEDED(result) && msgDb)
+          msgDb->AddNewHdrToDB(newHdr, PR_TRUE);
       }
     }
 
     if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->undoMsgTxn)
       mTxnMgr->Do(mCopyState->undoMsgTxn);
-
+    
     ClearCopyState();
   }
 
