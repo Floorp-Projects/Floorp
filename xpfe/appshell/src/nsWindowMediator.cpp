@@ -44,7 +44,6 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIRDFDataSourceIID,        NS_IRDFDATASOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,           NS_IRDFSERVICE_IID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);
@@ -176,22 +175,9 @@ public:
 	nsWindowMediator();
 	virtual ~nsWindowMediator();
   nsresult Init();
-	
-	NS_IMETHOD GetEnumerator( const PRUnichar* inType, nsISimpleEnumerator** outEnumerator );
-	NS_IMETHOD GetMostRecentWindow( const PRUnichar* inType, nsIDOMWindow** outWindow );
-	
-	NS_IMETHOD RegisterWindow( nsIWebShellWindow* inWindow );
-	NS_IMETHOD UnregisterWindow( nsIWebShellWindow* inWindow );
-	
-	NS_IMETHOD UpdateWindowTimeStamp( nsIWebShellWindow* inWindow );
-	NS_IMETHOD UpdateWindowTitle( nsIWebShellWindow* inWindow , const PRUnichar* inTitle );
-	NS_IMETHOD GetWindowForResource( const PRUnichar* inResource, nsIDOMWindow** outWindow );
 
-	NS_IMETHOD ConvertISupportsToDOMWindow( nsISupports* inInterface, nsIDOMWindow** outWindow )
-	{
-		
-		return inInterface->QueryInterface(NS_GET_IID(nsIDOMWindow)  , (void**) outWindow );
-	}
+  NS_DECL_NSIWINDOWMEDIATOR
+	
 	// COM and RDF 
 	NS_DECL_ISUPPORTS	
 
@@ -331,7 +317,8 @@ class nsWindowEnumerator : public nsISimpleEnumerator
 {
 
 public:
-	nsWindowEnumerator ( const PRUnichar* inTypeString,  nsWindowMediator& inMediator  );
+	nsWindowEnumerator ( const PRUnichar* inTypeString,  nsWindowMediator& inMediator,
+      PRBool enumXULWindow  );
 	virtual ~nsWindowEnumerator();
 	NS_IMETHOD HasMoreElements(PRBool *retval);
   NS_IMETHOD GetNext(nsISupports **retval);
@@ -346,6 +333,7 @@ private:
 	nsWindowMediator* mWindowMediator;
 	nsString mType;
 	PRInt32 mCurrentPosition;
+   PRBool   mEnumXULWindow;
 };
 
 
@@ -471,13 +459,26 @@ NS_METHOD nsWindowMediator::GetEnumerator( const PRUnichar* inType, nsISimpleEnu
 		if ( outEnumerator == NULL )
 			return NS_ERROR_INVALID_ARG;
 	
-		nsWindowEnumerator* enumerator = new nsWindowEnumerator( inType, *this );
+		nsWindowEnumerator* enumerator = new nsWindowEnumerator( inType, *this, PR_FALSE );
 		if (enumerator )
 		{
 			return enumerator->QueryInterface( kISimpleEnumerator , (void**)outEnumerator );
 		}
 		return NS_ERROR_OUT_OF_MEMORY;
-};	
+}
+	
+NS_METHOD nsWindowMediator::GetXULWindowEnumerator( const PRUnichar* inType, nsISimpleEnumerator** outEnumerator )
+{
+		if ( outEnumerator == NULL )
+			return NS_ERROR_INVALID_ARG;
+	
+		nsWindowEnumerator* enumerator = new nsWindowEnumerator( inType, *this, PR_TRUE );
+		if (enumerator )
+		{
+			return enumerator->QueryInterface( kISimpleEnumerator , (void**)outEnumerator );
+		}
+		return NS_ERROR_OUT_OF_MEMORY;
+}	
  
 
 PRInt32 nsWindowMediator::AddEnumerator( nsWindowEnumerator* inEnumerator )
@@ -633,6 +634,12 @@ NS_IMETHODIMP  nsWindowMediator::GetWindowForResource( const PRUnichar* inResour
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsWindowMediator::ConvertISupportsToDOMWindow( nsISupports* inInterface, nsIDOMWindow** outWindow )
+{
+   return inInterface->QueryInterface(NS_GET_IID(nsIDOMWindow)  , (void**) outWindow );
+} 
+
+
 // COM
 NS_IMPL_ADDREF( nsWindowMediator );
 NS_IMPL_RELEASE( nsWindowMediator );
@@ -645,7 +652,7 @@ NS_IMETHODIMP nsWindowMediator::QueryInterface(REFNSIID iid, void **result)
 	*result = nsnull;
 	if (iid.Equals(kIRDFDataSourceIID) ||
 		iid.Equals(kIWindowMediatorIID)	||
-		 iid.Equals(kISupportsIID) )
+		 iid.Equals(NS_GET_IID(nsISupports)) )
 	{
 		*result = NS_STATIC_CAST(nsIWindowMediator *, this);
 		AddRef();
@@ -839,8 +846,10 @@ nsresult NS_NewWindowMediatorFactory(nsIFactory** aResult)
 }
 
 // window Enumerator
-nsWindowEnumerator::nsWindowEnumerator ( const PRUnichar* inTypeString, nsWindowMediator& inMediator )
-	: mWindowMediator( &inMediator ), mType( inTypeString ), mCurrentPosition( -1 )
+nsWindowEnumerator::nsWindowEnumerator ( const PRUnichar* inTypeString, nsWindowMediator& inMediator,
+   PRBool enumXULWindow )
+	: mWindowMediator( &inMediator ), mType( inTypeString ), mCurrentPosition( -1 ),
+   mEnumXULWindow(enumXULWindow)
 {
 	NS_INIT_REFCNT();
 	mWindowMediator->AddEnumerator( this );
@@ -873,9 +882,14 @@ NS_IMETHODIMP nsWindowEnumerator::GetNext(nsISupports **retval)
 	if ( index >= 0 )
 	{
 		nsWindowInfo* windowInfo = (nsWindowInfo*) mWindowMediator->mWindowList[index];
-		nsCOMPtr<nsIDOMWindow> domWindow;
-		GetDOMWindow( windowInfo->mWindow, domWindow );
-		domWindow->QueryInterface( kISupportsIID ,(void**)retval );
+      if(mEnumXULWindow)
+         CallQueryInterface(windowInfo->mWindow, retval);
+      else
+         {
+	   	nsCOMPtr<nsIDOMWindow> domWindow;
+		   GetDOMWindow( windowInfo->mWindow, domWindow );
+         CallQueryInterface(domWindow, retval);
+         }
 		
 		mCurrentPosition = index;
 	}
