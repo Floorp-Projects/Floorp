@@ -19,87 +19,91 @@
 * Contributor(s): pschwartau@netscape.com
 *
 *
-*The idea behind bug 53268 is as follows. The item 'five' below is defined 
+*The idea behind bug 53268 is as follows. The item 'five' below is defined
 *as a const, hence is a read-only property of the global object. So if we set
-* obj.__proto__  = this,  'five' should become a read-only propery of obj. 
+* obj.__proto__  = this,  'five' should become a read-only propery of obj.
 *
 *If we then change obj.__proto__  to null, obj.five should initially be
 *undefined. We should be able to define obj.five to whatever we want,
-*and be able to access this value as obj.five.  
+*and be able to access this value as obj.five.
 *
 *Bug 53268 was filed because obj.five could not be set or accessed after
 *obj.__proto__  had been set to the global object and then to null.
 */
 //-------------------------------------------------------------------------------------------------
 var bug = '53268';
-var stat = stat= 'Testing scope after changing obj.__proto__';
+var status = 'Testing scope after changing obj.__proto__';
 var expect= '';
-var res = '';
+var actual = '';
 var obj = {};
 const five = 5;
 
+
+//-------------------------------------------------------------------------------------------------
 test();
+//-------------------------------------------------------------------------------------------------
 
 
-function test() {
-   enterFunc ("test"); 
+function test()
+{
+   enterFunc ("test");
    printBugNumber (bug);
-   printStatus (stat);
+   printStatus (status);
 
 
-   stat= 'Step 1:  setting obj.__proto__ = global object';
+   status= 'Step 1:  setting obj.__proto__ = global object';
    obj.__proto__ = this;
 
-   res = obj.five;
+   actual = obj.five;
    expect=5;
-   reportCompare (expect, res, stat);
+   reportCompare (expect, actual, status);
  
    obj.five=1;
-   res = obj.five;
+   actual = obj.five;
    expect=5;
-   reportCompare (expect, res, stat);
+   reportCompare (expect, actual, status);
 
 
 
-   stat= 'Step 2:  setting obj.__proto__ = null';
+   status= 'Step 2:  setting obj.__proto__ = null';
    obj.__proto__ = null;
 
-   res = obj.five;
+   actual = obj.five;
    expect=undefined;
-   reportCompare (expect, res, stat);
+   reportCompare (expect, actual, status);
 
    obj.five=2;
-   res = obj.five;
+   actual = obj.five;
    expect=2;
-   reportCompare (expect, res, stat);
+   reportCompare (expect, actual, status);
  
 
   
-   stat= 'Step 3:  setting obj.__proto__  to global object again';
+   status= 'Step 3:  setting obj.__proto__  to global object again';
    obj.__proto__ = this;
 
-   res = obj.five;
+   actual = obj.five;
    expect=2;  //<--- (FROM STEP 2 ABOVE)
-   reportCompare (expect, res, stat);
+   reportCompare (expect, actual, status);
  
    obj.five=3;
-   res = obj.five;
+   actual = obj.five;
    expect=3;
-   reportCompare (expect, res, stat);
+   reportCompare (expect, actual, status);
 
 
 
-   stat= 'Step 4:  setting obj.__proto__   to  null again';
+   status= 'Step 4:  setting obj.__proto__   to  null again';
    obj.__proto__ = null;
 
-   res = obj.five;
+   actual = obj.five;
    expect=3;  //<--- (FROM STEP 3 ABOVE)
-   reportCompare (expect, res, stat);
+   reportCompare (expect, actual, status);
 
    obj.five=4;
-   res = obj.five;
+   actual = obj.five;
    expect=4;
-   reportCompare (expect, res, stat);
+   reportCompare (expect, actual, status);
 
 
    exitFunc ("test");
