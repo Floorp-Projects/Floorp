@@ -15,6 +15,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+// sorry, this has to be before the pre-compiled header
+#define FORCE_PR_LOG /* Allow logging in the release build */
+
 #include "msgCore.h"
 
 #include "nsMailboxProtocol.h"
@@ -35,8 +38,7 @@
 #include "prprf.h"
 
 #include "nsFileStream.h"
-
-#define ENABLE_SMOKETEST  1
+PRLogModuleInfo *MAILBOX;
 
 static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -56,6 +58,11 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 nsMailboxProtocol::nsMailboxProtocol(nsIURI * aURL)
 {
 	Initialize(aURL);
+	SetUrl(aURL);
+
+    // initialize the pr log if it hasn't been initialiezed already
+	if (!MAILBOX)
+		MAILBOX = PR_NewLogModule("MAILBOX");
 }
 
 nsMailboxProtocol::~nsMailboxProtocol()
@@ -120,11 +127,8 @@ NS_IMETHODIMP nsMailboxProtocol::OnStartRequest(nsIChannel * aChannel, nsISuppor
 		// we need to inform our mailbox parser that it's time to start...
 		m_mailboxParser->OnStartRequest(aChannel, ctxt);
 	}
-	else if(m_mailboxCopyHandler) 
-		m_mailboxCopyHandler->OnStartRequest(aChannel, ctxt); 
 
-	return NS_OK;
-
+	return nsMsgProtocol::OnStartRequest(aChannel, ctxt);
 }
 
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
@@ -135,8 +139,6 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIChannel * aChannel, nsISupport
 		// we need to inform our mailbox parser that there is no more incoming data...
 		m_mailboxParser->OnStopRequest(aChannel, ctxt, 0, nsnull);
 	}
-	else if (m_mailboxCopyHandler) 
-		m_mailboxCopyHandler->OnStopRequest(aChannel, ctxt, 0, nsnull); 
 	else if (m_nextState == MAILBOX_READ_MESSAGE) 
 	{
 		DoneReadingMessage();
@@ -153,11 +155,8 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopRequest(nsIChannel * aChannel, nsISupport
 	// is printed out to the console and determining if the mail app loaded up correctly...obviously
 	// this solution is not very good so we should look at something better, but don't remove this
 	// line before talking to me (mscott) and mailnews QA....
-#ifdef ENABLE_SMOKETEST
-	nsFileSpec smokeFile("MailSmokeTest.txt");
-	nsOutputFileStream smokeTestFile(smokeFile, PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE);
-	smokeTestFile << "Mailbox Done\n";
-#endif
+    
+    PR_LOG(MAILBOX, PR_LOG_ALWAYS, ("Mailbox Done\n"));
 
 	// when on stop binding is called, we as the protocol are done...let's close down the connection
 	// releasing all of our interfaces. It's important to remember that this on stop binding call
@@ -182,19 +181,12 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
 {
 	nsresult rv = NS_OK;
 	// and close the article file if it was open....
-	if (m_tempMessageFile)
+
+	if (m_mailboxAction == nsIMailboxUrl::ActionSaveMessageToDisk && m_tempMessageFile)
 		rv = m_tempMessageFile->CloseStream();
 
-	// disply hack: run a file url on the temp file
-	if (m_mailboxAction == nsIMailboxUrl::ActionDisplayMessage && m_displayConsumer)
+	if (m_mailboxAction == nsIMailboxUrl::ActionDisplayMessage)
 	{
-		nsFileURL  fileURL(m_tempMsgFileSpec);
-		char * message_path_url = PL_strdup(fileURL.GetAsString());
-
-		rv = m_displayConsumer->LoadURL(nsAutoString(message_path_url).GetUnicode(), nsnull, PR_TRUE);
-
-		PR_FREEIF(message_path_url);
-
 		// now mark the message as read
 		nsCOMPtr<nsIMsgDBHdr> msgHdr;
 
@@ -236,8 +228,6 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		m_runningUrl = do_QueryInterface(aURL);
 		if (m_runningUrl)
 		{
-			if (aConsumer)
-				m_displayConsumer = do_QueryInterface(aConsumer);
 
 			// find out from the url what action we are supposed to perform...
 			rv = m_runningUrl->GetMailboxAction(&m_mailboxAction);
@@ -257,23 +247,22 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 					// to be the name of our save message to disk file. Since save message to disk
 					// urls are run without a webshell to display the msg into, we won't be trying
 					// to display the message after we write it to disk...
-					m_runningUrl->GetMessageFile(getter_AddRefs(m_tempMessageFile));
+                    {
+                        nsCOMPtr<nsIMsgMessageUrl> msgUri = do_QueryInterface(m_runningUrl);
+					    msgUri->GetMessageFile(getter_AddRefs(m_tempMessageFile));
+					    m_tempMessageFile->OpenStreamForWriting();
+                    }
+        case nsIMailboxUrl::ActionCopyMessage:
+				case nsIMailboxUrl::ActionMoveMessage:
 				case nsIMailboxUrl::ActionDisplayMessage:
 					// create a temp file to write the message into. We need to do this because
 					// we don't have pluggable converters yet. We want to let mkfile do the work of 
 					// converting the message from RFC-822 to HTML before displaying it...
-					if (m_mailboxAction ==
-                        nsIMailboxUrl::ActionSaveMessageToDisk) 
+					if (m_mailboxAction == nsIMailboxUrl::ActionSaveMessageToDisk) 
                         SetFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
                     else
-                        ClearFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
-					m_tempMessageFile->OpenStreamForWriting();
-					m_nextState = MAILBOX_READ_MESSAGE;
-					break;
+                      ClearFlag(MAILBOX_MSG_PARSE_FIRST_LINE);
 
-				case nsIMailboxUrl::ActionCopyMessage:
-				case nsIMailboxUrl::ActionMoveMessage:
-					rv = m_runningUrl->GetMailboxCopyHandler(getter_AddRefs(m_mailboxCopyHandler));
 					m_nextState = MAILBOX_READ_MESSAGE;
 					break;
 
@@ -282,7 +271,7 @@ nsresult nsMailboxProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 				}
 			}
 
-			rv = nsMsgProtocol::LoadUrl(aURL);
+			rv = nsMsgProtocol::LoadUrl(aURL, aConsumer);
 
 		} // if we received an MAILBOX url...
 	} // if we received a url!
@@ -330,13 +319,10 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 	// if we are doing a move or a copy, forward the data onto the copy handler...
 	// if we want to display the message then parse the incoming data...
 
-	if (m_mailboxAction == nsIMailboxUrl::ActionCopyMessage || m_mailboxAction == nsIMailboxUrl::ActionMoveMessage) 
+	if (m_mailboxAction == nsIMailboxUrl::ActionDisplayMessage || m_mailboxAction == nsIMailboxUrl::ActionCopyMessage || m_mailboxAction == nsIMailboxUrl::ActionMoveMessage)
 	{
-		if (m_mailboxCopyHandler)
-		{
-			nsCOMPtr <nsIURI> url = do_QueryInterface(m_runningUrl);
-			rv = m_mailboxCopyHandler->OnDataAvailable(nsnull, url, inputStream, sourceOffset, length);
-		}
+		// just forward the data we read in to the listener...
+		m_channelListener->OnDataAvailable(this, m_channelContext, inputStream, sourceOffset, length);
 	}
 	else
 	{
@@ -454,3 +440,4 @@ nsresult nsMailboxProtocol::CloseSocket()
 	m_mailboxParser = null_nsCOMPtr();
 	return 0;
 }
+

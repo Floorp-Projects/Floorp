@@ -22,6 +22,7 @@
 #include "nsMsgProtocol.h"
 #include "nsCOMPtr.h"
 #include "nsIFileSpec.h"
+#include "nsIChannel.h"
 #include "rosetta.h"
 #include HG40855
 
@@ -90,7 +91,6 @@ private:
 
 	// Event sink handles
 	nsCOMPtr<nsIStreamListener> m_mailboxParser;
-	nsCOMPtr<nsIStreamListener> m_mailboxCopyHandler;
 
 	// Local state for the current operation
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
@@ -103,8 +103,6 @@ private:
 	PRUint32	m_messageID;
 
 	nsCOMPtr<nsIFileSpec> m_tempMessageFile;
-	nsCOMPtr<nsIWebShell>	 m_displayConsumer; // if we are displaying an article this is the rfc-822 display sink...
-	
 
 	virtual nsresult ProcessProtocolState(nsIURI * url, nsIInputStream * inputStream, 
 									      PRUint32 sourceOffset, PRUint32 length);
