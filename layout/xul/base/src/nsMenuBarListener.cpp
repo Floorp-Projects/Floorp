@@ -61,8 +61,11 @@ NS_IMPL_QUERY_INTERFACE3(nsMenuBarListener, nsIDOMKeyListener, nsIDOMFocusListen
 
 ////////////////////////////////////////////////////////////////////////
 
+nsMenuBarListener::mAccessKey = -1;
+nsMenuBarListener::mAccessKeyFocuses = PR_FALSE;
+
 nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
-  :mAccessKeyDown(PR_FALSE), mAccessKeyFocuses(PR_FALSE), mAccessKey(-1)
+  :mAccessKeyDown(PR_FALSE)
 {
   NS_INIT_REFCNT();
   mMenuBarFrame = aMenuBar;
@@ -71,6 +74,16 @@ nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar)
 ////////////////////////////////////////////////////////////////////////
 nsMenuBarListener::~nsMenuBarListener() 
 {
+}
+
+NS_IMETHODIMP
+nsMenuBarListener::GetMenuAccessKey(PRInt32* aAccessKey)
+{
+  if (!aAccessKey)
+    return NS_ERROR_INVALID_POINTER;
+  InitAccessKey();
+  *aAccessKey = mAccessKey;
+  return NS_OK;
 }
 
 void nsMenuBarListener::InitAccessKey()

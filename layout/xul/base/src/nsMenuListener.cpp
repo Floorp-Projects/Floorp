@@ -84,30 +84,58 @@ nsMenuListener::KeyUp(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
-#if !defined(XP_UNIX) || defined(NTO)
-  // See if the ALT key goes down by itself.
-  // If so, then close up the menu completely.
-  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-  PRUint32 theChar;
-	keyEvent->GetKeyCode(&theChar);
-  PRBool alt;
-  keyEvent->GetAltKey(&alt);
-  if (theChar == NS_VK_ALT && alt) {
-    // No other modifiers can be down.
-    // Especially CTRL.  CTRL+ALT == AltGR, and
-    // we'll fuck up on non-US enhanced 102-key
-    // keyboards if we don't check this.
-    PRBool ctrl,shift,meta;
-    keyEvent->GetCtrlKey(&ctrl);
-    keyEvent->GetShiftKey(&shift);
-    keyEvent->GetMetaKey(&meta);
-    if (!(ctrl || shift || meta)) {
-      // The ALT key just went down by itself. This means kill
-      // the menu.
-      mMenuParent->DismissChain();
+  PRInt32 menuAccessKey = -1;
+  nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
+  if (menuAccessKey) {
+    PRUint32 theChar;
+    nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
+    keyEvent->GetKeyCode(&theChar);
+
+    PRBool access = PR_FALSE;
+    PRBool accessKeyDown = PR_FALSE;
+    switch (menuAccessKey)
+    {
+      case nsIDOMKeyEvent::DOM_VK_CONTROL:
+        keyEvent->GetCtrlKey(&access);
+        break;
+      case nsIDOMKeyEvent::DOM_VK_ALT:
+        keyEvent->GetAltKey(&access);
+        break;
+      case nsIDOMKeyEvent::DOM_VK_META:
+        keyEvent->GetMetaKey(&access);
+        break;
+      default:
+        access = 0;
     }
+    if (theChar == nsIDOMKeyEvent::DOM_VK_TAB && accessKeyDown) {
+      accessKeyDown = PR_FALSE;
+    }
+
+    if (theChar == (PRUint32)menuAccessKey || access) {
+      // No other modifiers can be down.
+      // Especially CTRL.  CTRL+ALT == AltGR, and
+      // we'll fuck up on non-US enhanced 102-key
+      // keyboards if we don't check this.
+      PRBool ctrl = PR_FALSE;
+      if (menuAccessKey != nsIDOMKeyEvent::DOM_VK_CONTROL)
+        keyEvent->GetCtrlKey(&ctrl);
+      PRBool alt=PR_FALSE;
+      if (menuAccessKey != nsIDOMKeyEvent::DOM_VK_ALT)
+        keyEvent->GetAltKey(&alt);
+      PRBool shift=PR_FALSE;
+      if (menuAccessKey != nsIDOMKeyEvent::DOM_VK_SHIFT)
+        keyEvent->GetShiftKey(&shift);
+      PRBool meta=PR_FALSE;
+      if (menuAccessKey != nsIDOMKeyEvent::DOM_VK_META)
+        keyEvent->GetMetaKey(&meta);
+      if (!(ctrl || alt || shift || meta)) {
+        // The access key just went down by itself. Track this.
+        accessKeyDown = PR_TRUE;
+      }
+    }
+    if (accessKeyDown)
+      mMenuParent->DismissChain();
   }
-#endif
 
   aKeyEvent->PreventBubble();
 	aKeyEvent->PreventCapture();
@@ -144,15 +172,17 @@ nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
     // Open one level.
     mMenuParent->Enter();
   }
-#if !defined(XP_UNIX) || defined(NTO)
   else {
-    // Do shortcut navigation.
-    // A letter was pressed. We want to see if a shortcut gets matched. If
-    // so, we'll know the menu got activated.
-    keyEvent->GetCharCode(&theChar);
-    mMenuParent->ShortcutNavigation(theChar, handled);
+    PRInt32 menuAccessKey = -1;
+    nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
+    if (menuAccessKey) {
+      // Do shortcut navigation.
+      // A letter was pressed. We want to see if a shortcut gets matched. If
+      // so, we'll know the menu got activated.
+      keyEvent->GetCharCode(&theChar);
+      mMenuParent->ShortcutNavigation(theChar, handled);
+    }
   }
-#endif
 
   aKeyEvent->PreventBubble();
 	aKeyEvent->PreventCapture();
