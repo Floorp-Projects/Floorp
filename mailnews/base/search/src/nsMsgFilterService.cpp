@@ -138,13 +138,19 @@ NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, n
   if (NS_FAILED(ret)) 
     return ret;
 
+  ret = tmpFiltersFile->MakeUnique();  //need a unique tmp file to prevent dataloss in multiuser environment
+  NS_ENSURE_SUCCESS(ret, ret);
+
+  nsFileSpec tmpFileSpec;
+  tmpFiltersFile->GetFileSpec(&tmpFileSpec);
+
 	nsIOFileStream *tmpFileStream = nsnull;
   
   if (NS_SUCCEEDED(ret))
     ret = filterFile->GetParent(getter_AddRefs(parentDir));
 
   if (NS_SUCCEEDED(ret))
-    tmpFileStream = new nsIOFileStream(tmpFile);
+    tmpFileStream = new nsIOFileStream(tmpFileSpec);
 	if (!tmpFileStream)
 		return NS_ERROR_OUT_OF_MEMORY;
   ret = filterList->SaveToFile(tmpFileStream);
@@ -159,7 +165,9 @@ NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, n
     if (NS_SUCCEEDED(ret))
     {
       filterFile->Delete(PR_FALSE);
-      parentDir->AppendRelativeUnixPath("tmprules.dat");
+      nsXPIDLCString tmpFileName;
+      tmpFiltersFile->GetLeafName(getter_Copies(tmpFileName));
+      parentDir->AppendRelativeUnixPath(tmpFileName.get());
       parentDir->Rename("rules.dat");
       tmpFiltersFile->Delete(PR_FALSE);
     }
