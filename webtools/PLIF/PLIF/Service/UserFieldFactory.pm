@@ -132,4 +132,5 @@ sub setupInstall {
     my($app) = @_;
     $app->output->setupProgress('user fields');
     $app->getCollectingServiceList('user.fieldRegisterer')->register($app, $self);
+    return;
 }
