@@ -34,8 +34,8 @@
 #include "nsDebug.h"
   // for |NS_ASSERTION|
 
-#include "nsMemory.h"
-  // for |nsMemory::Free|
+#include "nscore.h"
+  // for |PRUnichar|
 
   /**
    *
@@ -63,6 +63,47 @@ class nsBufferHandle
   };
 
 
+  /**
+   * string allocator stuff needs to move to its own file
+   * also see http://bugzilla.mozilla.org/show_bug.cgi?id=70087
+   */
+
+template <class CharT>
+class nsStringAllocator
+  {
+    public:
+      // more later
+      virtual void Deallocate( CharT* ) const = 0;
+  };
+
+  /**
+   * the following two routines must be provided by the client embedding strings
+   */
+nsStringAllocator<char>&      StringAllocator_char();
+nsStringAllocator<PRUnichar>& StringAllocator_wchar_t();
+
+
+  /**
+   * this traits class lets templated clients pick the appropriate non-template global allocator
+   */
+template <class T>
+struct nsStringAllocatorTraits
+  {
+  };
+
+NS_SPECIALIZE_TEMPLATE
+struct nsStringAllocatorTraits<char>
+  {
+    static nsStringAllocator<char>&      global_string_allocator() { return StringAllocator_char(); }
+  };
+
+NS_SPECIALIZE_TEMPLATE
+struct nsStringAllocatorTraits<PRUnichar>
+  {
+    static nsStringAllocator<PRUnichar>& global_string_allocator() { return StringAllocator_wchar_t(); }
+  };
+
+
 
   /**
    *
@@ -75,10 +116,11 @@ class nsSharedBufferHandle
       enum
         {
           kIsShared                       = 1<<31,
-          kIsSingleAllocationWithBuffer   = 1<<30,
-          kIsStorageDefinedSeparately     = 1<<29,
+          kIsSingleAllocationWithBuffer   = 1<<30,  // handle and buffer are one piece, no separate deallocation is possible for the buffer
+          kIsStorageDefinedSeparately     = 1<<29,  // i.e., we're using the ``flex'' structure defined below
+          kIsUserAllocator                = 1<<28,  // can't |delete|, call a hook instead
 
-          kFlagsMask                      = kIsShared | kIsSingleAllocationWithBuffer | kIsStorageDefinedSeparately,
+          kFlagsMask                      = kIsShared | kIsSingleAllocationWithBuffer | kIsStorageDefinedSeparately | kIsUserAllocator,
           kRefCountMask                   = ~kFlagsMask
         };
 
@@ -129,6 +171,8 @@ class nsSharedBufferHandle
           mFlags = (mFlags & kFlagsMask) | aNewRefCount;
           return aNewRefCount;
         }
+
+      nsStringAllocator<CharT>& get_allocator() const;
   };
 
 
@@ -163,6 +207,61 @@ class nsFlexBufferHandle
   };
 
 template <class CharT>
+class nsSharedBufferHandleWithAllocator
+    : public nsSharedBufferHandle<CharT>
+  {
+    public:
+      nsSharedBufferHandleWithAllocator( CharT* aDataStart, CharT* aDataEnd, nsStringAllocator<CharT>& aAllocator )
+          : nsSharedBufferHandle<CharT>(aDataStart, aDataEnd),
+            mAllocator(aAllocator)
+        {
+          mFlags |= kIsUserAllocator;
+        }
+
+      nsStringAllocator<CharT>& get_allocator() const { return mAllocator; }
+
+    protected:
+      nsStringAllocator<CharT>& mAllocator;
+  };
+
+template <class CharT>
+class nsFlexBufferHandleWithAllocator
+    : public nsFlexBufferHandle<CharT>
+  {
+    public:
+      nsFlexBufferHandleWithAllocator( CharT* aDataStart, CharT* aDataEnd,
+                                       CharT* aStorageStart, CharT* aStorageEnd,
+                                       nsStringAllocator<CharT>& aAllocator )
+          : nsFlexBufferHandle<CharT>(aDataStart, aDataEnd, aStorageStart, aStorageEnd),
+            mAllocator(aAllocator)
+        {
+          mFlags |= kIsUserAllocator;
+        }
+
+      nsStringAllocator<CharT>& get_allocator() const { return mAllocator; }
+
+    protected:
+      nsStringAllocator<CharT>& mAllocator;
+  };
+
+
+template <class CharT>
+nsStringAllocator<CharT>&
+nsSharedBufferHandle<CharT>::get_allocator() const
+  {
+    if ( mFlags & kIsUserAllocator )
+      {
+        if ( mFlags & kIsStorageDefinedSeparately )
+          return NS_REINTERPRET_CAST(const nsFlexBufferHandleWithAllocator<CharT>*, this)->get_allocator();
+        else
+          return NS_REINTERPRET_CAST(const nsSharedBufferHandleWithAllocator<CharT>*, this)->get_allocator();
+      }
+
+    return nsStringAllocatorTraits<CharT>::global_string_allocator();
+  }
+
+
+template <class CharT>
 nsSharedBufferHandle<CharT>::~nsSharedBufferHandle()
     // really don't want this to be |inline|
   {
@@ -173,7 +272,9 @@ nsSharedBufferHandle<CharT>::~nsSharedBufferHandle()
         CharT* string_storage = this->mDataStart;
         if ( mFlags & kIsStorageDefinedSeparately )
           string_storage = NS_REINTERPRET_CAST(nsFlexBufferHandle<CharT>*, this)->StorageStart();
-        nsMemory::Free(string_storage);
+
+        get_allocator().Deallocate(string_storage);
+        // nsMemory::Free(string_storage);
       }
   }
 
