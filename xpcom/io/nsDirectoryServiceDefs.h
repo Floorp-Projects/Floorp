@@ -28,7 +28,7 @@
 //
 // Defines the property names for directories available from nsIDirectoryService. These
 // dirs are always available even if no nsIDirectoryServiceProviders have been registered
-// with the service. Application level keys are defined in mozilla\xpfe\appfilelocprovider\.
+// with the service. Application level keys are defined in nsAppDirectoryServiceDefs.h.
 //
 //========================================================================================
 
@@ -40,8 +40,6 @@
 #define NS_XPCOM_CURRENT_PROCESS_DIR            "CurProcD"
 #define NS_XPCOM_COMPONENT_REGISTRY_FILE        "ComRegF"
 #define NS_XPCOM_COMPONENT_DIR                  "ComsD"
-#define NS_XPCOM_APPLICATION_REGISTRY_FILE      "AppRegF"
-#define NS_XPCOM_APPLICATION_REGISTRY_DIR       "AppRegD"
 
 #define NS_OS_HOME_DIR                          "Home"
 #define NS_OS_DRIVE_DIR                         "DrvD"

@@ -823,9 +823,7 @@ nsresult CBrowserShell::GetClipboardHandler(nsIClipboardCommands **aCommand)
 {
     NS_ENSURE_ARG_POINTER(aCommand);
 
-    nsCOMPtr<nsIDocShell> docShell(do_GetInterface(mWebBrowser));
-    NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-    nsCOMPtr<nsIClipboardCommands> clipCmd(do_QueryInterface(docShell));
+    nsCOMPtr<nsIClipboardCommands> clipCmd(do_GetInterface(mWebBrowser));
     NS_ENSURE_TRUE(clipCmd, NS_ERROR_FAILURE);
 
     *aCommand = clipCmd;

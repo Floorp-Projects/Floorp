@@ -57,7 +57,6 @@
 #include "nsIContentHandler.h"
 #include "nsIBrowserInstance.h"
 #include "nsIEventQueueService.h"
-#include "nsAppFileLocationProvider.h"
 #include "nsMPFileLocProvider.h" 
 #include "nsDirectoryServiceDefs.h" 
 #include "nsIHTTPProtocolHandler.h"
@@ -714,32 +713,6 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
   return rv;
 }
 
-static nsresult CreateAndRegisterDirectoryService()
-{
-  nsresult rv = NS_OK;
-  // Create and register a directory service provider
-  nsAppFileLocationProvider* appFileLocProvider = new nsAppFileLocationProvider;
-
-  if (!appFileLocProvider) {
-    NS_ASSERTION(PR_FALSE, "Could not create nsAppFileLocationProvider\n");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsCOMPtr<nsIDirectoryService> directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
-  if (!directoryService) {
-    NS_ASSERTION(PR_FALSE, "failed to get directory service");
-    return rv;
-  }
-  // RegisterProvider will AddRef it and own it - notice we have not AddRef'd it
-  rv = directoryService->RegisterProvider(appFileLocProvider);
-  if (NS_FAILED(rv)) {
-    NS_ASSERTION(PR_FALSE, "Could not register directory service provider\n");
-    return rv;
-  }
-
-  return rv;
-}
-
 // Do the righe thing to provide locations depending on whether an
 // application is standalone or not 
 static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
@@ -874,10 +847,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
       obsService->AddObserver(splashScreenObserver, NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).get());
     }
   }
-
-  rv = CreateAndRegisterDirectoryService();
-  if (NS_FAILED(rv))
-    return rv;
 
   //----------------------------------------------------------------
   // XPInstall needs to clean up after any updates that couldn't

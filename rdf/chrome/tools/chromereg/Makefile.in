@@ -33,7 +33,6 @@ CPPSRCS		= regchrome.cpp
 SIMPLE_PROGRAMS = $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 LIBS		= \
-		$(DIST)/lib/libxpfelocation_s.$(LIB_SUFFIX) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 

@@ -35,7 +35,6 @@ CPPSRCS		= \
 
 SHARED_LIBRARY_LIBS= \
 		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libxpfelocation_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libmpfilelocprovider_s.$(LIB_SUFFIX) \
 		$(NULL)
 

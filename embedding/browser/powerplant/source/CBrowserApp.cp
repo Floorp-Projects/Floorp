@@ -46,6 +46,8 @@
 #include "CThrobber.h"
 #include "CWebBrowserCMAttachment.h"
 #include "UMacUnicode.h"
+#include "CAppFileLocationProvider.h"
+
 #include "nsIImageManager.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
@@ -168,8 +170,11 @@ CBrowserApp::CBrowserApp()
              appDir = do_QueryInterface(macDir);
       }
    }
+   
+   CAppFileLocationProvider *fileLocProvider = new CAppFileLocationProvider(kProgramName);
+   ThrowIfNil_(fileLocProvider);
 
-   rv = NS_InitEmbedding(appDir, nsnull);
+   rv = NS_InitEmbedding(appDir, fileLocProvider);
 
 }
 
@@ -208,9 +213,9 @@ CBrowserApp::StartUp()
     nsCOMPtr<nsIFile> rootDir;   
     nsMPFileLocProvider *locationProvider = new nsMPFileLocProvider;
     ThrowIfNil_(locationProvider);
-    rv = NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(rootDir));
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(rootDir));
     ThrowIfNil_(rootDir);
-    rv = locationProvider->Initialize(rootDir, kProgramName);   
+    rv = locationProvider->Initialize(rootDir, "guest");   
     ThrowIfError_(rv);
     
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);

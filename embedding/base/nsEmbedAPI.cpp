@@ -29,7 +29,6 @@
 #include "nsIStringBundle.h"
 
 #include "nsIDirectoryService.h"
-#include "nsAppFileLocationProvider.h"
 
 #include "nsEmbedAPI.h"
 
@@ -86,26 +85,10 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
 #endif
     {
         // Initialise XPCOM
-        NS_InitXPCOM(&sServiceManager, mozBinDirectory);
+        NS_InitXPCOM2(&sServiceManager, mozBinDirectory, appFileLocProvider);
         if (!sServiceManager)
             return NS_ERROR_NULL_POINTER;
-        
-        // Hook up the file location provider - make one if nsnull was passed
-        if (!appFileLocProvider)
-        {
-            appFileLocProvider = new nsAppFileLocationProvider;
-            if (!appFileLocProvider)
-                return NS_ERROR_OUT_OF_MEMORY;
-            NS_ADDREF(appFileLocProvider);
-        }
-        NS_WITH_SERVICE(nsIDirectoryService, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
-        if (NS_FAILED(rv))
-            return rv;
-        rv = directoryService->RegisterProvider(appFileLocProvider);
-        if (NS_FAILED(rv))
-            return rv;
-        NS_RELEASE(appFileLocProvider); // RegisterProvider did AddRef - It owns it now 
-        
+                
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
         sXPCOMInitializedFlag = PR_TRUE;
         sXPCOMCleanupHack.mCleanOnExit = PR_TRUE;

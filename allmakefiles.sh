@@ -278,12 +278,6 @@ layout/xsl/document/Makefile
 layout/xsl/document/src/Makefile
 "
 
-MAKEFILES_appfilelocprovider="
-modules/appfilelocprovider/Makefile
-modules/appfilelocprovider/public/Makefile
-modules/appfilelocprovider/src/Makefile
-"
-
 MAKEFILES_mpfilelocprovider="
 modules/mpfilelocprovider/Makefile
 modules/mpfilelocprovider/public/Makefile
@@ -737,7 +731,6 @@ modules/libpref/public/Makefile
 profile/public/Makefile
 caps/idl/Makefile
 caps/include/Makefile
-modules/appfilelocprovider/public/Makefile
 netwerk/protocol/http/public/Makefile
 widget/public/Makefile
 rdf/base/idl/Makefile
@@ -982,7 +975,6 @@ $MAKEFILES_libimg
 $MAKEFILES_libjar
 $MAKEFILES_libpref
 $MAKEFILES_libutil
-$MAKEFILES_appfilelocprovider
 $MAKEFILES_mpfilelocprovider
 $MAKEFILES_liveconnect
 $MAKEFILES_mailnews

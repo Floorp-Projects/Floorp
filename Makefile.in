@@ -87,7 +87,6 @@ DIRS		+= \
 		include \
 		modules/libutil \
 		netwerk \
-		modules/appfilelocprovider \
 		modules/mpfilelocprovider \
 		uriloader \
 		intl \

@@ -39,6 +39,7 @@ EXPORTS =                          \
         nsScriptableInputStream.h  \
         nsDirectoryService.h       \
         nsDirectoryServiceDefs.h   \
+        nsAppDirectoryServiceDefs.h \
         nsStringIO.h               \
         $(NULL)                 
 
@@ -95,6 +96,7 @@ CPP_OBJS =                                       \
         .\$(OBJDIR)\nsFileSpecStreaming.obj      \
         .\$(OBJDIR)\nsSpecialSystemDirectory.obj \
         .\$(OBJDIR)\nsByteArrayInputStream.obj	 \
+        .\$(OBJDIR)\nsAppFileLocationProvider.obj \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
