@@ -18,6 +18,8 @@
 #ifndef DROPTARGET_H
 #define DROPTARGET_H
 
+#include "MozillaBrowser.h"
+
 // Simple drop target implementation
 
 class CDropTarget : public CComObjectRootEx<CComSingleThreadModel>,
@@ -30,6 +32,15 @@ public:
 BEGIN_COM_MAP(CDropTarget)
 	COM_INTERFACE_ENTRY(IDropTarget)
 END_COM_MAP()
+
+	// Data object currently being dragged
+	CIPtr(IDataObject) m_spDataObject;
+
+	// Owner of this object
+	CMozillaBrowser *m_pOwner;
+
+	// Sets the owner of this object
+	void SetOwner(CMozillaBrowser *pOwner);
 
 // IDropTarget
 	virtual HRESULT STDMETHODCALLTYPE DragEnter(/* [unique][in] */ IDataObject __RPC_FAR *pDataObj, /* [in] */ DWORD grfKeyState, /* [in] */ POINTL pt, /* [out][in] */ DWORD __RPC_FAR *pdwEffect);
