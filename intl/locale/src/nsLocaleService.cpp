@@ -78,7 +78,7 @@ const char* LocaleList[LocaleListLength] =
 #define NSILOCALE_MAX_ACCEPT_LANGUAGE	16
 #define NSILOCALE_MAX_ACCEPT_LENGTH		18
 
-#if defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
+#if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS) || defined(XP_OS2)
 static int posix_locale_category[LocaleListLength] =
 {
   LC_COLLATE,
@@ -190,7 +190,7 @@ nsLocaleService::nsLocaleService(void)
         if (NS_FAILED(result)) { return;}
     }
 #endif
-#if (defined(XP_UNIX) || defined(XP_BEOS)) && !defined(XP_MACOSX)
+#if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS)
     nsCOMPtr<nsIPosixLocale> posixConverter = do_CreateInstance(NS_POSIXLOCALE_CONTRACTID);
 
     nsAutoString xpLocale, platformLocale;
