@@ -221,7 +221,8 @@ public:
                   PRBool aAllowPlugins = PR_TRUE);
   NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD SizeContentTo(PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD SizeWindowTo(PRInt32 aWidth, PRInt32 aHeight,
+                          PRBool aWidthTransient, PRBool aHeightTransient);
   NS_IMETHOD GetContentBounds(nsRect& aResult);
   NS_IMETHOD GetWindowBounds(nsRect& aResult);
   NS_IMETHOD IsIntrinsicallySized(PRBool& aResult);
@@ -267,6 +268,7 @@ protected:
   void                     SetBoundsFromXUL(PRBool aPosition, PRBool aSize);
   void                     SetTitleFromXUL();
   void                     StoreBoundsToXUL(PRBool aPosition, PRBool aSize);
+  void                     KillPersistentSize();
   void                     ShowAppropriateChrome();
   void                     LoadContentAreas();
   PRBool                   ExecuteCloseHandler();
