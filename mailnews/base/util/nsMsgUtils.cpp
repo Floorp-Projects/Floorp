@@ -79,9 +79,9 @@ nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *mes
 }
 
 
-NS_IMPL_ISUPPORTS(nsMessageFromMsgHdrEnumerator, nsCOMTypeInfo<nsIEnumerator>::GetIID())
+NS_IMPL_ISUPPORTS(nsMessageFromMsgHdrEnumerator, nsCOMTypeInfo<nsISimpleEnumerator>::GetIID())
 
-nsMessageFromMsgHdrEnumerator::nsMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
+nsMessageFromMsgHdrEnumerator::nsMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcEnumerator,
 															 nsIMsgFolder *folder)
 {
     NS_INIT_REFCNT();
@@ -96,25 +96,15 @@ nsMessageFromMsgHdrEnumerator::~nsMessageFromMsgHdrEnumerator()
 	//member variables are nsCOMPtr's
 }
 
-NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::First(void)
-{
-	return mSrcEnumerator->First();
 
-}
-
-NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::Next(void)
-{
-	return mSrcEnumerator->Next();
-}
-
-NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::CurrentItem(nsISupports **aItem)
+NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::GetNext(nsISupports **aItem)
 {
 	nsCOMPtr<nsISupports> currentItem;
 	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
 	nsCOMPtr<nsIMessage> message;
 	nsresult rv;
 
-	rv = mSrcEnumerator->CurrentItem(getter_AddRefs(currentItem));
+	rv = mSrcEnumerator->GetNext(getter_AddRefs(currentItem));
 	if(NS_SUCCEEDED(rv))
 	{
 		msgDBHdr = do_QueryInterface(currentItem, &rv);
@@ -127,19 +117,21 @@ NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::CurrentItem(nsISupports **aItem)
 
 	if(NS_SUCCEEDED(rv))
 	{
-		*aItem = message;
+		currentItem = do_QueryInterface(message);
+		*aItem = currentItem;
 		NS_ADDREF(*aItem);
 	}
 
+	NS_ASSERTION(NS_SUCCEEDED(rv),"getnext shouldn't fail");
 	return rv;
 }
 
-NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::IsDone(void)
+NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::HasMoreElements(PRBool *aResult)
 {
-	return mSrcEnumerator->IsDone();
+	return mSrcEnumerator->HasMoreElements(aResult);
 }
 
-nsresult NS_NewMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
+nsresult NS_NewMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcEnumerator,
 										   nsIMsgFolder *folder,	
 										   nsMessageFromMsgHdrEnumerator **messageEnumerator)
 {

@@ -115,10 +115,9 @@ public:
   // counters and things for enumeration 
   PRUint32                  mTotalSentSuccessfully;
   PRUint32                  mTotalSendCount;
-  nsIEnumerator             *mEnumerator;
+  nsISimpleEnumerator             *mEnumerator;
   nsIMsgIdentity            *mIdentity;
   nsCOMPtr<nsIMsgFolder>    mMessageFolder;
-  PRBool                    mFirstTime;
  
   // Private Information
 private:

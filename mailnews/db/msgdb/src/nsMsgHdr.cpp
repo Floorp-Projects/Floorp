@@ -79,7 +79,7 @@ nsresult nsMsgHdr::InitCachedValues()
 		err = GetUInt32Column(m_mdb->m_threadParentColumnToken, &m_threadParent);
 		if (NS_SUCCEEDED(err))
 			m_numReferences = (PRUint16) uint32Value;
-		
+
 		if (NS_SUCCEEDED(err))
 			m_cachedValuesInitialized = PR_TRUE;
 	}
@@ -427,8 +427,8 @@ NS_IMETHODIMP nsMsgHdr::GetStatusOffset(PRUint32 *result)
 
 NS_IMETHODIMP nsMsgHdr::SetPriority(nsMsgPriority priority)
 {
-	m_priority = priority; 
-    return NS_OK;
+	SetUInt32Column((PRUint32) priority, m_mdb->m_priorityColumnToken);
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgHdr::GetPriority(nsMsgPriority *result)
@@ -436,7 +436,10 @@ NS_IMETHODIMP nsMsgHdr::GetPriority(nsMsgPriority *result)
 	if (!result)
 	    return NS_ERROR_NULL_POINTER;
 
-	*result = m_priority;
+	PRUint32 priority = 0;
+	nsresult res = GetUInt32Column(m_mdb->m_priorityColumnToken, &priority);
+
+	*result = (nsMsgPriority) priority;
 	return NS_OK;
 }
 
@@ -465,7 +468,6 @@ NS_IMETHODIMP nsMsgHdr::GetLineCount(PRUint32 *result)
 
 NS_IMETHODIMP nsMsgHdr::SetPriority(const char *priority)
 {
-//	m_priority = MSG_GetPriorityFromString(priority);
 	nsMsgPriority priorityVal = nsMsgPriorityNormal;
 
 	// NS_MsgGetPriorityFromString will return normal in case of error,

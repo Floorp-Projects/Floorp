@@ -43,6 +43,6 @@ interface nsIMsgThread : nsISupports {
 
   void MarkChildRead(in boolean bRead);
 
-  nsIEnumerator EnumerateMessages(in nsMsgKey parent);
+  nsISimpleEnumerator EnumerateMessages(in nsMsgKey parent);
   
 };

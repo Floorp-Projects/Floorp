@@ -53,7 +53,7 @@ public:
 	NS_IMETHOD 		RemoveChildAt(PRInt32 index);
 	NS_IMETHOD		RemoveChildHdr(nsIMsgDBHdr *child, nsIDBChangeAnnouncer *announcer);
 	NS_IMETHOD		MarkChildRead(PRBool bRead);
-	NS_IMETHOD		EnumerateMessages(nsMsgKey parent, nsIEnumerator* *result);
+	NS_IMETHOD		EnumerateMessages(nsMsgKey parent, nsISimpleEnumerator* *result);
 	NS_IMETHOD		GetRootHdr(PRInt32 *resultIndex, nsIMsgDBHdr **result);
 
 	// non-interface methods

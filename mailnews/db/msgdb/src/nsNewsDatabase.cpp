@@ -286,13 +286,12 @@ NS_IMETHODIMP nsNewsDatabase::GetLowWaterArticleNum(nsMsgKey *key)
   nsresult		rv;
   nsMsgHdr		*pHeader;
 
-  nsCOMPtr<nsIEnumerator> hdrs;
+  nsCOMPtr<nsISimpleEnumerator> hdrs;
   rv = EnumerateMessages(getter_AddRefs(hdrs));
   if (NS_FAILED(rv))
     return rv;
 
-  hdrs->First(); 
-  rv = hdrs->CurrentItem((nsISupports**)&pHeader);
+  rv = hdrs->GetNext((nsISupports**)&pHeader);
   NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
   if (NS_FAILED(rv)) 
     return rv;

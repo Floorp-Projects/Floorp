@@ -255,7 +255,7 @@ NS_IMETHODIMP
 nsMsgNewsFolder::Enumerate(nsIEnumerator **result)
 {
   nsresult rv = NS_OK;
-
+#if 0
   // for now, news folders contain both messages and folders
   // server is a folder, and it contains folders
   // newsgroup is a folder, and it contains messages
@@ -270,7 +270,9 @@ nsMsgNewsFolder::Enumerate(nsIEnumerator **result)
   if (NS_FAILED(rv)) return rv;
   return NS_NewConjoiningEnumerator(folders, messages, 
                                     (nsIBidirectionalEnumerator**)result);
-  return NS_OK;
+#endif
+  NS_ASSERTION(PR_FALSE, "obsolete, right?");
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -377,7 +379,7 @@ nsresult nsMsgNewsFolder::GetDatabase()
 }
 
 NS_IMETHODIMP
-nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
+nsMsgNewsFolder::GetMessages(nsISimpleEnumerator* *result)
 {
 #ifdef DEBUG_NEWS
   printf("nsMsgNewsFolder::GetMessages(%s)\n",mURI);
@@ -409,68 +411,16 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
   	number_to_show = 0;
   }
   
-  if (number_to_show) {
-    rv = GetDatabase();
+  rv = GetDatabase();
     *result = nsnull;
     
-    if(NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
-      nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
-      rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
-      nsCOMPtr <nsISupportsArray> shortlist;
-      
-      if(NS_SUCCEEDED(rv)) {
-        NS_NewISupportsArray(getter_AddRefs(shortlist));
-        PRInt32 total = 0;
-        for (msgHdrEnumerator->First(); NS_FAILED(msgHdrEnumerator->IsDone()); msgHdrEnumerator->Next()) {
-          total++;
-        }
-#ifdef DEBUG_NEWS
-        printf("total = %d\n",total);
-#endif
-        PRInt32 count = 0;
-        for (msgHdrEnumerator->First(); NS_FAILED(msgHdrEnumerator->IsDone()); msgHdrEnumerator->Next()) {
-          if (count >= (total - number_to_show)) {
-            nsCOMPtr<nsISupports> i;
-            rv = msgHdrEnumerator->CurrentItem(getter_AddRefs(i));
-            if (NS_FAILED(rv)) return rv;
-            shortlist->AppendElement(i);
-#ifdef DEBUG_NEWS
-            printf("not skipping %d\n", count);
-#endif
-          }
-#ifdef DEBUG_NEWS
-          else {
-            printf("skipping %d\n", count);
-          }
-#endif
-          count++;
-        }
-        
-        if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr <nsIBidirectionalEnumerator> enumerator;
-          rv = NS_NewISupportsArrayEnumerator(shortlist, getter_AddRefs(enumerator));
-          if (NS_SUCCEEDED(rv)) {
-            rv = NS_NewMessageFromMsgHdrEnumerator(enumerator,
-                                                   this, &messageEnumerator);
-            *result = messageEnumerator;
-          }
-        }
-      }
-    }
-  }
-  else {
-    rv = GetDatabase();
-    *result = nsnull;
-    
-    if(NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
-        nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
-        rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
-        if(NS_SUCCEEDED(rv))
-          rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator, this, &messageEnumerator);
-        *result = messageEnumerator;
-    }
+  if(NS_SUCCEEDED(rv)) {
+		nsCOMPtr<nsISimpleEnumerator> msgHdrEnumerator;
+		nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
+		rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
+		if(NS_SUCCEEDED(rv))
+		  rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator, this, &messageEnumerator);
+		*result = messageEnumerator;
   }
 
   rv = GetNewMessages();

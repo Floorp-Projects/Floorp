@@ -91,8 +91,8 @@ public:
   NS_IMETHOD AddUnique(nsISupports* element);
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetVisibleSubFolders(nsIEnumerator* *result);
-  NS_IMETHOD GetMessages(nsIEnumerator* *result);
-  NS_IMETHOD GetThreads(nsIEnumerator ** threadEnumerator);
+  NS_IMETHOD GetMessages(nsISimpleEnumerator* *result);
+  NS_IMETHOD GetThreads(nsISimpleEnumerator ** threadEnumerator);
   NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
   NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
 

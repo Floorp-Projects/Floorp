@@ -2141,6 +2141,7 @@ nsMsgGetExtensionFromFileURL(nsString aUrl)
   }
 
 ERROR_OUT:
-  PR_FREEIF(url);
+  if (url)
+	nsAllocator::Free(url);
   return nsnull;
 }

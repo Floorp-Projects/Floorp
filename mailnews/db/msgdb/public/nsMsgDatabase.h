@@ -89,14 +89,10 @@ public:
   NS_IMETHOD CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *existingHdr, nsIMsgDBHdr **newHdr);
   NS_IMETHOD AddNewHdrToDB(nsIMsgDBHdr *newHdr, PRBool notify);
 
-#if HAVE_INT_ENUMERATORS
-  NS_IMETHOD EnumerateKeys(nsIEnumerator* *outputKeys);
-#else
   NS_IMETHOD ListAllKeys(nsMsgKeyArray &outputKeys);
-#endif
-  NS_IMETHOD EnumerateMessages(nsIEnumerator* *result);
-  NS_IMETHOD EnumerateUnreadMessages(nsIEnumerator* *result);
-  NS_IMETHOD EnumerateThreads(nsIEnumerator* *result);
+  NS_IMETHOD EnumerateMessages(nsISimpleEnumerator* *result);
+  NS_IMETHOD EnumerateUnreadMessages(nsISimpleEnumerator* *result);
+  NS_IMETHOD EnumerateThreads(nsISimpleEnumerator* *result);
 
   // this might just be for debugging - we'll see.
   nsresult ListAllThreads(nsMsgKeyArray *threadIds);

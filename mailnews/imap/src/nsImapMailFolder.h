@@ -96,16 +96,16 @@ public:
 
 	NS_DECL_ISUPPORTS_INHERITED
 
-    // nsICollection methods:
-    NS_IMETHOD Enumerate(nsIEnumerator* *result);
-    
+    // nsICollection methods
+	NS_IMETHOD Enumerate(nsIEnumerator **result);
+
     // nsIFolder methods:
     NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
     
     // nsIMsgFolder methods:
     NS_IMETHOD AddUnique(nsISupports* element);
     NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
-    NS_IMETHOD GetMessages(nsIEnumerator* *result);
+    NS_IMETHOD GetMessages(nsISimpleEnumerator* *result);
     
 	NS_IMETHOD CreateSubfolder(const char *folderName);
     

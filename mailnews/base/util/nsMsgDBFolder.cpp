@@ -65,7 +65,7 @@ nsMsgDBFolder::~nsMsgDBFolder(void)
 	}
 }
 
-NS_IMETHODIMP nsMsgDBFolder::GetThreads(nsIEnumerator** threadEnumerator)
+NS_IMETHODIMP nsMsgDBFolder::GetThreads(nsISimpleEnumerator** threadEnumerator)
 {
 	nsresult rv = GetDatabase();
 	

@@ -191,17 +191,17 @@ protected:
 
 };
 
-class nsMessageViewMessageEnumerator: public nsIEnumerator
+class nsMessageViewMessageEnumerator: public nsISimpleEnumerator
 {
 
 public:
 
 	NS_DECL_ISUPPORTS
 
-	nsMessageViewMessageEnumerator(nsIEnumerator *srcEnumerator, PRUint32 showStatus);
+	nsMessageViewMessageEnumerator(nsISimpleEnumerator *srcEnumerator, PRUint32 showStatus);
 	virtual ~nsMessageViewMessageEnumerator();
 
-  NS_DECL_NSIENUMERATOR
+  NS_DECL_NSISIMPLEENUMERATOR
 
 protected:
 	nsresult SetAtNextItem();
@@ -209,30 +209,35 @@ protected:
 
 protected:
 
-	nsCOMPtr<nsIEnumerator> mSrcEnumerator;
+	nsCOMPtr<nsISimpleEnumerator> mSrcEnumerator;
+	nsCOMPtr<nsISupports> mCurMsg;
+	nsCOMPtr<nsISupports> mCurThread;
 	PRUint32 mShowStatus;
 
 };
 
-class nsMessageViewThreadEnumerator: public nsIEnumerator
+class nsMessageViewThreadEnumerator: public nsISimpleEnumerator
 {
 
 public:
 
 	NS_DECL_ISUPPORTS
 
-	nsMessageViewThreadEnumerator(nsIEnumerator *srcEnumerator, nsIMsgFolder *srcFolder);
+	nsMessageViewThreadEnumerator(nsISimpleEnumerator *srcEnumerator, nsIMsgFolder *srcFolder);
 	virtual ~nsMessageViewThreadEnumerator();
 
-  NS_DECL_NSIENUMERATOR
+  NS_DECL_NSISIMPLEENUMERATOR
 
 protected:
 	nsresult GetMessagesForCurrentThread();
+	nsresult Prefetch();
 protected:
 
-	nsCOMPtr<nsIEnumerator> mThreads;
-	nsCOMPtr<nsIEnumerator> mMessages;
+	nsCOMPtr<nsISimpleEnumerator> mThreads;
+	nsCOMPtr<nsISimpleEnumerator> mMessages;
+	nsCOMPtr<nsISupports> mCurThread;
 	nsCOMPtr<nsIMsgFolder> mFolder;
+	PRBool					mNeedToPrefetch;
 
 };
 #endif

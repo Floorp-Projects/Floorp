@@ -36,22 +36,22 @@ NS_MSG_BASE nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessage
 
 
 //An enumerator for converting nsIMsgHdrs to nsIMessages.
-class NS_MSG_BASE nsMessageFromMsgHdrEnumerator: public nsIEnumerator
+class NS_MSG_BASE nsMessageFromMsgHdrEnumerator: public nsISimpleEnumerator
 {
 protected:
-	nsCOMPtr<nsIEnumerator> mSrcEnumerator;
+	nsCOMPtr<nsISimpleEnumerator> mSrcEnumerator;
 	nsCOMPtr<nsIMsgFolder> mFolder;
 
 public:
 	NS_DECL_ISUPPORTS
-	nsMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator, nsIMsgFolder *folder);
+	nsMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcEnumerator, nsIMsgFolder *folder);
 	nsMessageFromMsgHdrEnumerator(){} //Default constructor that does nothing so nsComPtr will work.
 	virtual ~nsMessageFromMsgHdrEnumerator();
 
-  NS_DECL_NSIENUMERATOR
+  NS_DECL_NSISIMPLEENUMERATOR
 };
 
-NS_MSG_BASE nsresult NS_NewMessageFromMsgHdrEnumerator(nsIEnumerator *srcEnumerator,
+NS_MSG_BASE nsresult NS_NewMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcEnumerator,
 										   nsIMsgFolder *folder,	
 										   nsMessageFromMsgHdrEnumerator **messageEnumerator);
 

@@ -270,14 +270,14 @@ NS_IMETHODIMP nsMsgFolder::GetParent(nsIFolder **parent)
 }
 
 NS_IMETHODIMP
-nsMsgFolder::GetMessages(nsIEnumerator* *result)
+nsMsgFolder::GetMessages(nsISimpleEnumerator* *result)
 {
   // XXX should this return an empty enumeration?
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsMsgFolder::GetThreads(nsIEnumerator ** threadEnumerator)
+nsMsgFolder::GetThreads(nsISimpleEnumerator ** threadEnumerator)
 {
   // XXX should this return an empty enumeration?
 	return NS_ERROR_FAILURE;

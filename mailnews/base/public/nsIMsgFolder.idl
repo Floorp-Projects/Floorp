@@ -49,8 +49,8 @@ interface nsIMsgFolder : nsIFolder {
   void AddUnique(in nsISupports element);
   void ReplaceElement(in nsISupports element, in nsISupports newElement);
   
-	nsIEnumerator GetMessages();
-	nsIEnumerator GetThreads();
+	nsISimpleEnumerator GetMessages();
+	nsISimpleEnumerator GetThreads();
 	nsIMsgThread GetThreadForMessage(in nsIMessage message);
 	boolean HasMessage(in nsIMessage message);
   nsIEnumerator GetVisibleSubFolders();

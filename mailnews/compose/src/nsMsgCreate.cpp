@@ -410,8 +410,8 @@ HackUpAURIToPlayWith(void)
   if (!folder)
     return nsnull;
 
-  nsIEnumerator           *enumerator;
-  rv = folder->GetMessages(&enumerator);
+  nsCOMPtr <nsISimpleEnumerator> enumerator;
+  rv = folder->GetMessages(getter_AddRefs(enumerator));
   if (NS_FAILED(rv) || (!enumerator))
   {
     // RICHIE - Possible bug that will bite us in this hack...
@@ -419,38 +419,27 @@ HackUpAURIToPlayWith(void)
     return nsnull;
   }
 
-  enumerator->First();
-  if (enumerator->IsDone() == NS_OK) 
-  {
-    NS_IF_RELEASE(enumerator);
+  PRBool hasMore = PR_FALSE;
+  rv = enumerator->HasMoreElements(&hasMore);
+
+  if (!NS_SUCCEEDED(rv) || !hasMore) 
     return nsnull;
-  }
 
   nsCOMPtr<nsISupports>   currentItem;
-  rv = enumerator->CurrentItem(getter_AddRefs(currentItem));
+  rv = enumerator->GetNext(getter_AddRefs(currentItem));
   if (NS_FAILED(rv))
-  {
-    NS_IF_RELEASE(enumerator);
     return nsnull;
-  }
 
   nsCOMPtr<nsIMessage>      message;
   message = do_QueryInterface(currentItem); 
   if (!message)
-  {
-    NS_IF_RELEASE(enumerator);
     return nsnull;
-  }
 
   nsCOMPtr<nsIRDFResource>  myRDFNode;
   myRDFNode = do_QueryInterface(message, &rv);
   if (NS_FAILED(rv) || (!myRDFNode))
-  {
-    NS_IF_RELEASE(enumerator);
     return nsnull;
-  }
 
-  NS_IF_RELEASE(enumerator);
   char    *tURI;
   myRDFNode->GetValue(&tURI);
   nsString   workURI(tURI);

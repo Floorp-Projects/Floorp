@@ -487,12 +487,12 @@ PRBool nsMsgThread::TryReferenceThreading(nsIMsgDBHdr *newHeader)
 }
 
 
-class nsMsgThreadEnumerator : public nsIEnumerator {
+class nsMsgThreadEnumerator : public nsISimpleEnumerator {
 public:
     NS_DECL_ISUPPORTS
 
-    // nsIEnumerator methods:
-    NS_DECL_NSIENUMERATOR
+    // nsISimpleEnumerator methods:
+    NS_DECL_NSISIMPLEENUMERATOR
 
     // nsMsgThreadEnumerator methods:
     typedef nsresult (*nsMsgThreadEnumeratorFilter)(nsIMsgDBHdr* hdr, void* closure);
@@ -503,6 +503,9 @@ public:
     virtual ~nsMsgThreadEnumerator();
 
 protected:
+
+	nsresult					Prefetch();
+
 	nsIMdbTableRowCursor*       mRowCursor;
     nsCOMPtr <nsIMsgDBHdr>      mResultHdr;
 	nsMsgThread*				mThread;
@@ -510,6 +513,7 @@ protected:
 	nsMsgKey					mFirstMsgKey;
 	PRInt32						mChildIndex;
     PRBool                      mDone;
+	PRBool						mNeedToPrefetch;
     nsMsgThreadEnumeratorFilter     mFilter;
     void*                       mClosure;
 };
@@ -523,6 +527,7 @@ nsMsgThreadEnumerator::nsMsgThreadEnumerator(nsMsgThread *thread, nsMsgKey start
 	mThreadParentKey = startKey;
 	mChildIndex = 0;
 	mThread = thread;
+	mNeedToPrefetch = PR_TRUE;
 	mFirstMsgKey = nsMsgKey_None;
 
 	nsresult rv = mThread->GetRootHdr(nsnull, getter_AddRefs(mResultHdr));
@@ -589,19 +594,8 @@ nsMsgThreadEnumerator::~nsMsgThreadEnumerator()
     NS_RELEASE(mThread);
 }
 
-NS_IMPL_ISUPPORTS(nsMsgThreadEnumerator, nsIEnumerator::GetIID())
+NS_IMPL_ISUPPORTS(nsMsgThreadEnumerator, nsISimpleEnumerator::GetIID())
 
-NS_IMETHODIMP nsMsgThreadEnumerator::First(void)
-{
-	nsresult rv = NS_OK;
-
-	if (!mThread)
-		return NS_ERROR_NULL_POINTER;
-		
-    rv = Next();
-	NS_ASSERTION(mThreadParentKey != nsMsgKey_None || NS_SUCCEEDED(rv), "first failed, can't have that");
-	return rv;
-}
 
 PRInt32 nsMsgThreadEnumerator::MsgKeyFirstChildIndex(nsMsgKey inMsgKey)
 {
@@ -643,7 +637,25 @@ PRInt32 nsMsgThreadEnumerator::MsgKeyFirstChildIndex(nsMsgKey inMsgKey)
 	return firstChildIndex;
 }
 
-NS_IMETHODIMP nsMsgThreadEnumerator::Next(void)
+NS_IMETHODIMP nsMsgThreadEnumerator::GetNext(nsISupports **aItem)
+{
+	if (!aItem)
+		return NS_ERROR_NULL_POINTER;
+	nsresult rv = NS_OK;
+
+	if (mNeedToPrefetch)
+		rv = Prefetch();
+
+    if (NS_SUCCEEDED(rv) && mResultHdr) 
+	{
+        *aItem = mResultHdr;
+        NS_ADDREF(*aItem);
+		mNeedToPrefetch = PR_TRUE;
+    }
+	return rv;
+}
+
+nsresult nsMsgThreadEnumerator::Prefetch()
 {
 	nsresult rv=NS_OK;          // XXX or should this default to an error?
 	mResultHdr = nsnull;
@@ -694,28 +706,21 @@ NS_IMETHODIMP nsMsgThreadEnumerator::Next(void)
 	printf("next for %ld = %ld\n", mThreadParentKey, debugMsgKey);
 #endif
 
-	return rv;
+    return rv;
 }
 
-NS_IMETHODIMP nsMsgThreadEnumerator::CurrentItem(nsISupports **aItem)
+NS_IMETHODIMP nsMsgThreadEnumerator::HasMoreElements(PRBool *aResult)
 {
-	if (!aItem)
+	if (!aResult)
 		return NS_ERROR_NULL_POINTER;
-    if (mResultHdr) {
-        *aItem = mResultHdr;
-        NS_ADDREF(*aItem);
-        return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP nsMsgThreadEnumerator::IsDone(void)
-{
-    return mDone ? NS_OK : NS_COMFALSE;
+	if (mNeedToPrefetch)
+		Prefetch();
+	*aResult = !mDone;
+    return NS_OK;
 }
 
 
-NS_IMETHODIMP nsMsgThread::EnumerateMessages(nsMsgKey parentKey, nsIEnumerator* *result)
+NS_IMETHODIMP nsMsgThread::EnumerateMessages(nsMsgKey parentKey, nsISimpleEnumerator* *result)
 {
 	nsresult ret = NS_OK;
 	nsMsgThreadEnumerator* e = new nsMsgThreadEnumerator(this, parentKey, nsnull, nsnull);

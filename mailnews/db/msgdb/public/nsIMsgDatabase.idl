@@ -27,7 +27,7 @@
 
 interface nsIDBChangeListener;
 interface nsIMsgDBHdr;
-interface nsIEnumerator;
+interface nsISimpleEnumerator;
 interface nsIMsgThread;
 interface nsIDBFolderInfo;
 
@@ -77,8 +77,8 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
 
   [noscript] void ListAllKeys(in nsMsgKeyArrayRef outputKeys);
 
-  nsIEnumerator EnumerateMessages();
-  nsIEnumerator EnumerateThreads();
+  nsISimpleEnumerator EnumerateMessages();
+  nsISimpleEnumerator EnumerateThreads();
 
   nsIMsgThread GetThreadContainingMsgHdr(in nsIMsgDBHdr msgHdr) ;
 

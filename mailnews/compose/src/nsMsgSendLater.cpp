@@ -83,7 +83,6 @@ nsMsgSendLater::nsMsgSendLater()
   mHackTempFileSpec = nsnull;
   mOutFile = nsnull;
   mEnumerator = nsnull;
-  mFirstTime = PR_TRUE;
   mTotalSentSuccessfully = 0;
   mTotalSendCount = 0;
   mMessageFolder = nsnull;
@@ -399,8 +398,6 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
 	      if (NS_FAILED(ret) || (!(mSendLater->mEnumerator)))
           mSendLater->mEnumerator = nsnull;   // just to be sure!
 
-        // Do the first call next time through!
-        mSendLater->mFirstTime = PR_TRUE;
       }
 
       ++(mSendLater->mTotalSentSuccessfully);
@@ -540,23 +537,9 @@ nsMsgSendLater::StartNextMailFileSend()
   nsresult      rv;
   char          *aMessageURI = nsnull;
 
-  //
-  // Now, go to the next entry and check where we are in the 
-  // enumerator!
-  //
-  if (mFirstTime)
-  {
-    mFirstTime = PR_FALSE;
-    if (mEnumerator)
-      mEnumerator->First();
-  }
-  else
-  {
-    if (mEnumerator)
-      mEnumerator->Next();
-  }
+  PRBool hasMore = PR_FALSE;
 
-  if ( (!mEnumerator) || (mEnumerator->IsDone() == NS_OK) )
+  if ( (!mEnumerator) || !NS_SUCCEEDED(mEnumerator->HasMoreElements(&hasMore)) || !hasMore )
   {
     // Call any listeners on this operation and then exit cleanly
 #ifdef NS_DEBUG
@@ -568,7 +551,7 @@ nsMsgSendLater::StartNextMailFileSend()
 
   nsCOMPtr<nsISupports>   currentItem;
 
-  rv = mEnumerator->CurrentItem(getter_AddRefs(currentItem));
+  rv = mEnumerator->GetNext(getter_AddRefs(currentItem));
   if (NS_FAILED(rv))
   {
     return rv;
@@ -732,7 +715,6 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
     return NS_ERROR_FAILURE;
   }
 
-  mFirstTime = PR_TRUE;
 	return StartNextMailFileSend();
 }
 

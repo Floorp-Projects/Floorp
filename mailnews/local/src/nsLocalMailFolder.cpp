@@ -294,6 +294,7 @@ nsresult nsMsgLocalMailFolder::ParseFolder(nsFileSpec& path)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
 {
+#if 0
   nsresult rv; 
 
   // local mail folders contain both messages and folders:
@@ -305,6 +306,9 @@ nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
   if (NS_FAILED(rv)) return rv;
   return NS_NewConjoiningEnumerator(folders, messages, 
                                     (nsIBidirectionalEnumerator**)result);
+#endif
+  NS_ASSERTION(PR_FALSE, "isn't this obsolete?");
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -457,13 +461,13 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 }
 
 NS_IMETHODIMP
-nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
+nsMsgLocalMailFolder::GetMessages(nsISimpleEnumerator* *result)
 {
 	nsresult rv = GetDatabase();
 
 	if(NS_SUCCEEDED(rv))
 	{
-		nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
+		nsCOMPtr<nsISimpleEnumerator> msgHdrEnumerator;
 		nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
 		rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
 		if(NS_SUCCEEDED(rv))

@@ -1398,13 +1398,15 @@ NS_IMETHODIMP nsMsgDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 	//ListContext		*listContext = NULL;
 	PRInt32			numChanged = 0;
 
-    nsIEnumerator* hdrs;
+    nsISimpleEnumerator* hdrs;
     rv = EnumerateMessages(&hdrs);
     if (NS_FAILED(rv))
 		return rv;
-	for (hdrs->First(); hdrs->IsDone() != NS_OK; hdrs->Next()) 
+	PRBool hasMore = PR_FALSE;
+
+	while (NS_SUCCEEDED(rv = hdrs->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
 	{
-        rv = hdrs->CurrentItem((nsISupports**)&pHeader);
+		rv = hdrs->GetNext((nsISupports**)&pHeader);
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
         if (NS_FAILED(rv)) 
 			break;
@@ -1438,7 +1440,7 @@ NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (PRTime startDate, PRTime endDate, n
 	//ListContext		*listContext = NULL;
 	PRInt32			numChanged = 0;
 
-    nsIEnumerator* hdrs;
+    nsISimpleEnumerator* hdrs;
     rv = EnumerateMessages(&hdrs);
     if (NS_FAILED(rv)) 
 		return rv;
@@ -1446,9 +1448,11 @@ NS_IMETHODIMP nsMsgDatabase::MarkReadByDate (PRTime startDate, PRTime endDate, n
 	nsTime t_startDate(startDate);
 	nsTime t_endDate(endDate);
 		
-	for (hdrs->First(); hdrs->IsDone() != NS_OK; hdrs->Next()) 
+	PRBool hasMore = PR_FALSE;
+
+	while (NS_SUCCEEDED(rv = hdrs->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
 	{
-        rv = hdrs->CurrentItem((nsISupports**)&pHeader);
+		rv = hdrs->GetNext((nsISupports**)&pHeader);
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
         if (NS_FAILED(rv)) break;
 
@@ -1568,12 +1572,12 @@ NS_IMETHODIMP nsMsgDatabase::GetFirstNew(nsMsgKey *result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsMsgDBEnumerator : public nsIEnumerator {
+class nsMsgDBEnumerator : public nsISimpleEnumerator {
 public:
     NS_DECL_ISUPPORTS
 
-    // nsIEnumerator methods:
-    NS_DECL_NSIENUMERATOR
+    // nsISimpleEnumerator methods:
+    NS_DECL_NSISIMPLEENUMERATOR
 
     // nsMsgDBEnumerator methods:
     typedef nsresult (*nsMsgDBEnumeratorFilter)(nsIMsgDBHdr* hdr, void* closure);
@@ -1583,10 +1587,13 @@ public:
     virtual ~nsMsgDBEnumerator();
 
 protected:
+	nsresult					GetRowCursor();
+	nsresult					PrefetchNext();
     nsMsgDatabase*              mDB;
 	nsIMdbTableRowCursor*       mRowCursor;
     nsIMsgDBHdr*                 mResultHdr;
     PRBool                      mDone;
+	PRBool						mNextPrefetched;
     nsMsgDBEnumeratorFilter     mFilter;
     void*                       mClosure;
 };
@@ -1598,6 +1605,7 @@ nsMsgDBEnumerator::nsMsgDBEnumerator(nsMsgDatabase* db,
 {
     NS_INIT_REFCNT();
     NS_ADDREF(mDB);
+	mNextPrefetched = PR_FALSE;
 }
 
 nsMsgDBEnumerator::~nsMsgDBEnumerator()
@@ -1608,9 +1616,9 @@ nsMsgDBEnumerator::~nsMsgDBEnumerator()
 	NS_IF_RELEASE(mResultHdr);
 }
 
-NS_IMPL_ISUPPORTS(nsMsgDBEnumerator, nsIEnumerator::GetIID())
+NS_IMPL_ISUPPORTS(nsMsgDBEnumerator, nsISimpleEnumerator::GetIID())
 
-NS_IMETHODIMP nsMsgDBEnumerator::First(void)
+nsresult nsMsgDBEnumerator::GetRowCursor()
 {
 	nsresult rv = 0;
 	mDone = PR_FALSE;
@@ -1618,17 +1626,42 @@ NS_IMETHODIMP nsMsgDBEnumerator::First(void)
 	if (!mDB || !mDB->m_mdbAllMsgHeadersTable)
 		return NS_ERROR_NULL_POINTER;
 		
-	mDB->m_mdbAllMsgHeadersTable->GetTableRowCursor(mDB->GetEnv(), -1, &mRowCursor);
-	if (NS_FAILED(rv)) return rv;
-    return Next();
+	rv = mDB->m_mdbAllMsgHeadersTable->GetTableRowCursor(mDB->GetEnv(), -1, &mRowCursor);
+    return rv;
 }
 
-NS_IMETHODIMP nsMsgDBEnumerator::Next(void)
+NS_IMETHODIMP nsMsgDBEnumerator::GetNext(nsISupports **aItem)
 {
+	if (!aItem)
+		return NS_ERROR_NULL_POINTER;
 	nsresult rv;
+	if (!mNextPrefetched)
+		rv = PrefetchNext();
+	if (NS_SUCCEEDED(rv))
+	{
+		if (mResultHdr) 
+		{
+			*aItem = mResultHdr;
+			NS_ADDREF(mResultHdr);
+			mNextPrefetched = PR_FALSE;
+		}
+	}
+	return rv;
+}
+
+nsresult nsMsgDBEnumerator::PrefetchNext()
+{
+	nsresult rv = NS_OK;
 	nsIMdbRow* hdrRow;
 	mdb_pos rowPos;
 	PRUint32 flags;
+
+	if (!mRowCursor)
+	{
+		rv = GetRowCursor();
+		if (!NS_SUCCEEDED(rv))
+			return rv;
+	}
 
     do {
         NS_IF_RELEASE(mResultHdr);
@@ -1658,28 +1691,30 @@ NS_IMETHODIMP nsMsgDBEnumerator::Next(void)
 			flags = 0;
     } 
 	while (mFilter && mFilter(mResultHdr, mClosure) != NS_OK && !(flags & MSG_FLAG_EXPUNGED));
-	return rv;
-}
 
-NS_IMETHODIMP nsMsgDBEnumerator::CurrentItem(nsISupports **aItem)
-{
-    if (mResultHdr) {
-        *aItem = mResultHdr;
-        NS_ADDREF(mResultHdr);
+    if (mResultHdr) 
+	{
+		mNextPrefetched = PR_TRUE;
         return NS_OK;
     }
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMsgDBEnumerator::IsDone(void)
+NS_IMETHODIMP nsMsgDBEnumerator::HasMoreElements(PRBool *aResult)
 {
-    return mDone ? NS_OK : NS_COMFALSE;
+	if (!aResult)
+		return NS_ERROR_NULL_POINTER;
+
+	if (!mNextPrefetched)
+		PrefetchNext();
+	*aResult = !mDone;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP 
-nsMsgDatabase::EnumerateMessages(nsIEnumerator* *result)
+nsMsgDatabase::EnumerateMessages(nsISimpleEnumerator* *result)
 {
     nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsnull, nsnull);
     if (e == nsnull)
@@ -1690,29 +1725,6 @@ nsMsgDatabase::EnumerateMessages(nsIEnumerator* *result)
 }
 
 
-#if HAVE_INT_ENUMERATORS
-NS_IMETHODIMP nsMsgDatabase::EnumerateKeys(nsIEnumerator* *result)
-{
-    nsISupportsArray* keys;
-    nsresult rv = NS_NewISupportsArray(&keys);
-    if (NS_FAILED(rv)) return rv;
-
-	nsIMdbTableRowCursor *rowCursor;
-	rv = m_mdbAllMsgHeadersTable->GetTableRowCursor(GetEnv(), -1, &rowCursor);
-
-	while (NS_SUCCEEDED(rv)) {
-		mdbOid outOid;
-		mdb_pos	outPos;
-
-		rv = rowCursor->NextRowOid(GetEnv(), &outOid, &outPos);
-        if (NS_FAILED(rv)) return rv;
-		if (outPos < 0)	// is this right?
-			break;
-        keys->AppendElement(outOid.mOid_Id);
-	}
-	return keys->Enumerate(result);
-}
-#else
 // resulting output array is sorted by key.
 NS_IMETHODIMP nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 {
@@ -1738,16 +1750,15 @@ NS_IMETHODIMP nsMsgDatabase::ListAllKeys(nsMsgKeyArray &outputKeys)
 	outputKeys.QuickSort();
 	return err;
 }
-#endif
 
 
-class nsMsgDBThreadEnumerator : public nsIEnumerator
+class nsMsgDBThreadEnumerator : public nsISimpleEnumerator
 {
 public:
     NS_DECL_ISUPPORTS
 
-    // nsIEnumerator methods:
-    NS_DECL_NSIENUMERATOR
+    // nsISimpleEnumerator methods:
+    NS_DECL_NSISIMPLEENUMERATOR
 
     // nsMsgDBEnumerator methods:
     typedef nsresult (*nsMsgDBThreadEnumeratorFilter)(nsIMsgThread* hdr, void* closure);
@@ -1757,10 +1768,13 @@ public:
     virtual ~nsMsgDBThreadEnumerator();
 
 protected:
+	nsresult					GetTableCursor(void);
+	nsresult					PrefetchNext();
     nsMsgDatabase*              mDB;
 	nsIMdbPortTableCursor*       mTableCursor;
     nsIMsgThread*                 mResultThread;
     PRBool                      mDone;
+	PRBool						mNextPrefetched;
     nsMsgDBThreadEnumeratorFilter     mFilter;
     void*                       mClosure;
 };
@@ -1772,6 +1786,7 @@ nsMsgDBThreadEnumerator::nsMsgDBThreadEnumerator(nsMsgDatabase* db,
 {
     NS_INIT_REFCNT();
     NS_ADDREF(mDB);
+	mNextPrefetched = PR_FALSE;
 }
 
 nsMsgDBThreadEnumerator::~nsMsgDBThreadEnumerator()
@@ -1781,9 +1796,9 @@ nsMsgDBThreadEnumerator::~nsMsgDBThreadEnumerator()
     NS_RELEASE(mDB);
 }
 
-NS_IMPL_ISUPPORTS(nsMsgDBThreadEnumerator, nsIEnumerator::GetIID())
+NS_IMPL_ISUPPORTS(nsMsgDBThreadEnumerator, nsISimpleEnumerator::GetIID())
 
-NS_IMETHODIMP nsMsgDBThreadEnumerator::First(void)
+nsresult nsMsgDBThreadEnumerator::GetTableCursor(void)
 {
 	nsresult rv = 0;
 
@@ -1795,14 +1810,41 @@ NS_IMETHODIMP nsMsgDBThreadEnumerator::First(void)
 
 	if (NS_FAILED(rv)) 
 		return rv;
-    return Next();
+    return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBThreadEnumerator::Next(void)
+NS_IMETHODIMP nsMsgDBThreadEnumerator::GetNext(nsISupports **aItem)
+{
+	if (!aItem)
+		return NS_ERROR_NULL_POINTER;
+	*aItem = nsnull;
+	nsresult rv = NS_OK;
+	if (!mNextPrefetched)
+		PrefetchNext();
+	if (NS_SUCCEEDED(rv))
+	{
+		if (mResultThread) 
+		{
+			*aItem = mResultThread;
+			NS_ADDREF(mResultThread);
+			mNextPrefetched = PR_FALSE;
+		}
+	}
+	return rv;
+}
+
+
+nsresult nsMsgDBThreadEnumerator::PrefetchNext()
 {
 	nsresult rv;
 	nsIMdbTable *table = nsnull;
 
+	if (!mTableCursor)
+	{
+		rv = GetTableCursor();
+		if (!NS_SUCCEEDED(rv))
+			return rv;
+	}
     while (PR_TRUE) 
 	{
         NS_IF_RELEASE(mResultThread);
@@ -1837,27 +1879,26 @@ NS_IMETHODIMP nsMsgDBThreadEnumerator::Next(void)
 		else
 			break;
     }
-	return rv;
-}
-
-NS_IMETHODIMP nsMsgDBThreadEnumerator::CurrentItem(nsISupports **aItem)
-{
     if (mResultThread) 
 	{
-        *aItem = mResultThread;
-        NS_ADDREF(mResultThread);
+		mNextPrefetched = PR_TRUE;
         return NS_OK;
     }
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMsgDBThreadEnumerator::IsDone(void)
+NS_IMETHODIMP nsMsgDBThreadEnumerator::HasMoreElements(PRBool *aResult)
 {
-    return mDone ? NS_OK : NS_COMFALSE;
+	if (!aResult)
+		return NS_ERROR_NULL_POINTER;
+	if (!mNextPrefetched)
+		PrefetchNext();
+	*aResult = !mDone;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsMsgDatabase::EnumerateThreads(nsIEnumerator* *result)
+nsMsgDatabase::EnumerateThreads(nsISimpleEnumerator* *result)
 {
     nsMsgDBThreadEnumerator* e = new nsMsgDBThreadEnumerator(this, nsnull, nsnull);
     if (e == nsnull)
@@ -1917,7 +1958,7 @@ nsMsgUnreadFilter(nsIMsgDBHdr* msg, void* closure)
 }
 
 NS_IMETHODIMP 
-nsMsgDatabase::EnumerateUnreadMessages(nsIEnumerator* *result)
+nsMsgDatabase::EnumerateUnreadMessages(nsISimpleEnumerator* *result)
 {
     nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsMsgUnreadFilter, this);
     if (e == nsnull)
@@ -2673,13 +2714,15 @@ nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
 	nsresult		rv;
 	nsMsgThread		*pThread;
 
-    nsIEnumerator* threads;
+    nsISimpleEnumerator* threads;
     rv = EnumerateThreads(&threads);
     if (NS_FAILED(rv)) 
 		return rv;
-	for (threads->First(); threads->IsDone() != NS_OK; threads->Next()) 
+	PRBool hasMore = PR_FALSE;
+
+	while (NS_SUCCEEDED(rv = threads->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
 	{
-        rv = threads->CurrentItem((nsISupports**)&pThread);
+        rv = threads->GetNext((nsISupports**)&pThread);
         NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
         if (NS_FAILED(rv)) 
 			break;
@@ -2731,20 +2774,10 @@ nsresult nsMsgDatabase::DumpContents()
     nsMsgKey key;
     PRUint32 i;
 
-#ifdef HAVE_INT_ENUMERATORS
-    nsIEnumerator* keys;
-	nsresult rv = EnumerateKeys(&keys);
-    if (NS_FAILED(rv)) return rv;
-    for (keys->First(); keys->IsDone != NS_OK; keys->Next()) {
-        rv = keys->CurrentItem((nsISupports**)&key);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
-        if (NS_FAILED(rv)) break;
-#else
     nsMsgKeyArray keys;
     nsresult rv = ListAllKeys(keys);
     for (i = 0; i < keys.GetSize(); i++) {
         key = keys[i];
-#endif /* HAVE_INT_ENUMERATORS */
 		nsIMsgDBHdr *msg = NULL;
         rv = GetMsgHdrForKey(key, &msg);
         nsMsgHdr* msgHdr = NS_STATIC_CAST(nsMsgHdr*, msg);      // closed system, cast ok
@@ -2784,23 +2817,25 @@ nsresult nsMsgDatabase::DumpMsgChildren(nsIMsgDBHdr *msgHdr)
 
 nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
 {
-	nsresult ret = NS_OK;
+	nsresult rv = NS_OK;
 	nsIMsgThread	*thread = nsnull;
 
 	thread = GetThreadForThreadId(threadId);
 	if (thread)
 	{
-		nsIEnumerator *enumerator = nsnull;
+		nsISimpleEnumerator *enumerator = nsnull;
 
-		ret = thread->EnumerateMessages(nsMsgKey_None, &enumerator);
-		if (NS_SUCCEEDED(ret) && enumerator)
+		rv = thread->EnumerateMessages(nsMsgKey_None, &enumerator);
+		if (NS_SUCCEEDED(rv) && enumerator)
 		{
-			for (enumerator->First(); enumerator->IsDone() != NS_OK; enumerator->Next()) 
+			PRBool hasMore = PR_FALSE;
+
+			while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
 			{
 				nsIMsgDBHdr *pMessage = nsnull;
-				ret = enumerator->CurrentItem((nsISupports**)&pMessage);
-				NS_ASSERTION(NS_SUCCEEDED(ret), "nsMsgDBEnumerator broken");
-				if (NS_FAILED(ret)) 
+				rv = enumerator->GetNext((nsISupports**)&pMessage);
+				NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
+				if (NS_FAILED(rv)) 
 					break;
 
 #ifdef DEBUG_bienvenu                    
@@ -2821,7 +2856,7 @@ nsresult	nsMsgDatabase::DumpThread(nsMsgKey threadId)
 
 		}
 	}
-	return ret;
+	return rv;
 }
 #endif /* DEBUG */
 

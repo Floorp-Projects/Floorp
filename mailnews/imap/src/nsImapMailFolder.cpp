@@ -189,6 +189,7 @@ NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec** aPathName)
 
 NS_IMETHODIMP nsImapMailFolder::Enumerate(nsIEnumerator* *result)
 {
+#if 0
     nsresult rv = NS_OK;
     nsIEnumerator* folders;
     nsIEnumerator* messages;
@@ -198,6 +199,9 @@ NS_IMETHODIMP nsImapMailFolder::Enumerate(nsIEnumerator* *result)
     if (NS_FAILED(rv)) return rv;
     return NS_NewConjoiningEnumerator(folders, messages, 
                                       (nsIBidirectionalEnumerator**)result);
+#endif
+	NS_ASSERTION(PR_FALSE, "obsolete, right?");
+	return NS_ERROR_FAILURE;
 }
 
 nsresult nsImapMailFolder::AddDirectorySeparator(nsFileSpec &path)
@@ -410,7 +414,7 @@ nsresult nsImapMailFolder::GetDatabase()
 	return folderOpen;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
+NS_IMETHODIMP nsImapMailFolder::GetMessages(nsISimpleEnumerator* *result)
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
 	PRBool selectFolder = PR_FALSE;
@@ -447,7 +451,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 
     if(NS_SUCCEEDED(rv))
     {
-        nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
+        nsCOMPtr<nsISimpleEnumerator> msgHdrEnumerator;
         nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
         rv = NS_ERROR_UNEXPECTED;
         if (mDatabase)

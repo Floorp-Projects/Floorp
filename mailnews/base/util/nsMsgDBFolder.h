@@ -39,7 +39,7 @@ public:
 	nsMsgDBFolder(void);
 	virtual ~nsMsgDBFolder(void);
 
-	NS_IMETHOD GetThreads(nsIEnumerator** threadEnumerator);
+	NS_IMETHOD GetThreads(nsISimpleEnumerator** threadEnumerator);
 	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
 	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset);

@@ -285,17 +285,13 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
     }
     else if ((kNC_MessageChild == property))
     {
-      nsCOMPtr<nsIEnumerator> messages;
+      nsCOMPtr<nsISimpleEnumerator> messages;
 
       rv = folder->GetMessages(getter_AddRefs(messages));
       if (NS_SUCCEEDED(rv))
 	  {
-		  nsAdapterEnumerator* cursor =
-			new nsAdapterEnumerator(messages);
-		  if (cursor == nsnull)
-			return NS_ERROR_OUT_OF_MEMORY;
-		  NS_ADDREF(cursor);
-		  *targets = cursor;
+		  *targets = messages;
+		  NS_ADDREF(*targets);
 		  rv = NS_OK;
 	  }
     }
@@ -959,16 +955,19 @@ nsresult
 nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
                                                nsIRDFNode **target)
 {
-  nsCOMPtr<nsIEnumerator> messages;
+  nsCOMPtr<nsISimpleEnumerator> messages;
   nsresult rv = folder->GetMessages(getter_AddRefs(messages));
   if (NS_SUCCEEDED(rv) && rv != NS_RDF_CURSOR_EMPTY) {
-	rv = messages->First();
-    if (NS_SUCCEEDED(rv)) {
-      nsCOMPtr<nsISupports> firstMessage;
-      rv = messages->CurrentItem(getter_AddRefs(firstMessage));
-      if (NS_SUCCEEDED(rv)) {
-		rv = firstMessage->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**)target);
-      }
+	PRBool hasMore = PR_FALSE;
+	rv = messages->HasMoreElements(&hasMore);
+	if (NS_SUCCEEDED(rv) && hasMore)
+	{
+		nsCOMPtr<nsISupports> firstMessage;
+		rv = messages->GetNext(getter_AddRefs(firstMessage));
+		if (NS_SUCCEEDED(rv)) 
+		{
+			rv = firstMessage->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**)target);
+		}
     }
   }
   return rv == NS_OK ? NS_OK : NS_RDF_NO_VALUE;
