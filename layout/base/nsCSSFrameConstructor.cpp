@@ -6142,6 +6142,8 @@ IsAncestorFrame(nsIFrame* aFrame, nsIFrame* aAncestorFrame)
  * 2. for child frames that have been moved out of the flow we delete
  *    the out-of-flow frame as well
  *
+ * Note: this function should only be called by DeletingFrameSubtree()
+ *
  * @param   aRemovedFrame this is the frame that was removed from the
  *            content model. As we recurse we need to remember this so we
  *            can check if out-of-flow frames are a descendent of the frame
@@ -6151,86 +6153,109 @@ IsAncestorFrame(nsIFrame* aFrame, nsIFrame* aAncestorFrame)
  *            this changes
  */
 static nsresult
+DoDeletingFrameSubtree(nsIPresContext*  aPresContext,
+                       nsIPresShell*    aPresShell,
+                       nsIFrameManager* aFrameManager,
+                       nsIFrame*        aRemovedFrame,
+                       nsIFrame*        aFrame)
+{
+  NS_PRECONDITION(aFrameManager, "no frame manager");
+  
+  // Remove the mapping from the content object to its frame
+  nsCOMPtr<nsIContent> content;
+  aFrame->GetContent(getter_AddRefs(content));
+  aFrameManager->SetPrimaryFrameFor(content, nsnull);
+  aFrameManager->ClearAllUndisplayedContentIn(content);
+
+  // Walk aFrame's child frames
+  nsIAtom*  childListName = nsnull;
+  PRInt32   childListIndex = 0;
+
+  do {
+    // Recursively walk aFrame's child frames looking for placeholder frames
+    nsIFrame* childFrame;
+    aFrame->FirstChild(childListName, &childFrame);
+    while (childFrame) {
+      nsIAtom*  frameType;
+      PRBool    isPlaceholder;
+  
+      // See if it's a placeholder frame
+      childFrame->GetFrameType(&frameType);
+      isPlaceholder = (nsLayoutAtoms::placeholderFrame == frameType);
+      NS_IF_RELEASE(frameType);
+  
+      if (isPlaceholder) {
+        // Get the out-of-flow frame
+        nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)childFrame)->GetOutOfFlowFrame();
+        NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
+  
+        // Remove the mapping from the out-of-flow frame to its placeholder
+        aFrameManager->SetPlaceholderFrameFor(outOfFlowFrame, nsnull);
+        
+        // Recursively find and delete any of its out-of-flow frames, and remove
+        // the mapping from content objects to frames
+        DoDeletingFrameSubtree(aPresContext, aPresShell, aFrameManager, aRemovedFrame,
+                               outOfFlowFrame);
+        
+        // Don't delete the out-of-flow frame if aRemovedFrame is one of its
+        // ancestor frames, because when aRemovedFrame is deleted it will delete
+        // its child frames including this out-of-flow frame
+        if (!IsAncestorFrame(outOfFlowFrame, aRemovedFrame)) {
+          // Get the out-of-flow frame's parent
+          nsIFrame* parentFrame;
+          outOfFlowFrame->GetParent(&parentFrame);
+  
+          // Get the child list name for the out-of-flow frame
+          nsIAtom* listName;
+          GetChildListNameFor(parentFrame, outOfFlowFrame, &listName);
+  
+          // Ask the parent to delete the out-of-flow frame
+          aFrameManager->RemoveFrame(*aPresContext, *aPresShell, parentFrame,
+                                     listName, outOfFlowFrame);
+          NS_IF_RELEASE(listName);
+        }
+  
+      } else {
+        // Recursively find and delete any of its out-of-flow frames, and remove
+        // the mapping from content objects to frames
+        DoDeletingFrameSubtree(aPresContext, aPresShell, aFrameManager, aRemovedFrame,
+                               childFrame);
+      }
+  
+      // Get the next sibling child frame
+      childFrame->GetNextSibling(&childFrame);
+    }
+
+    // Look for any additional named child lists
+    NS_IF_RELEASE(childListName);
+    aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
+  } while (childListName);
+
+  return NS_OK;
+}
+
+/**
+ * Called to delete a frame subtree. Calls DoDeletingFrameSubtree()
+ * for aFrame and each of its continuing frames
+ */
+static nsresult
 DeletingFrameSubtree(nsIPresContext*  aPresContext,
                      nsIPresShell*    aPresShell,
                      nsIFrameManager* aFrameManager,
-                     nsIFrame*        aRemovedFrame,
                      nsIFrame*        aFrame)
 {
   // If there's no frame manager it's probably because the pres shell is
   // being destroyed
   if (aFrameManager) {
-    // Remove the mapping from the content object to its frame
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
-    aFrameManager->SetPrimaryFrameFor(content, nsnull);
-    aFrameManager->ClearAllUndisplayedContentIn(content);
-    
-    nsIAtom*  childListName = nsnull;
-    PRInt32   childListIndex = 0;
-
-    // Look at aFrame and each of its continuations
     while (aFrame) {
-      do {
-        // Recursively walk aFrame's child frames looking for placeholder frames
-        nsIFrame* childFrame;
-        aFrame->FirstChild(childListName, &childFrame);
-        while (childFrame) {
-          nsIAtom*  frameType;
-          PRBool    isPlaceholder;
-      
-          // See if it's a placeholder frame
-          childFrame->GetFrameType(&frameType);
-          isPlaceholder = (nsLayoutAtoms::placeholderFrame == frameType);
-          NS_IF_RELEASE(frameType);
-      
-          if (isPlaceholder) {
-            // Get the out-of-flow frame
-            nsIFrame* outOfFlowFrame = ((nsPlaceholderFrame*)childFrame)->GetOutOfFlowFrame();
-            NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
-      
-            // Remove the mapping from the out-of-flow frame to its placeholder
-            aFrameManager->SetPlaceholderFrameFor(outOfFlowFrame, nsnull);
-            
-            // Recursively find and delete any of its out-of-flow frames, and remove
-            // the mapping from content objects to frames
-            DeletingFrameSubtree(aPresContext, aPresShell, aFrameManager, aRemovedFrame,
-                                 outOfFlowFrame);
-            
-            // Don't delete the out-of-flow frame if aRemovedFrame is one of its
-            // ancestor frames, because when aRemovedFrame is deleted it will delete
-            // its child frames including this out-of-flow frame
-            if (!IsAncestorFrame(outOfFlowFrame, aRemovedFrame)) {
-              // Get the out-of-flow frame's parent
-              nsIFrame* parentFrame;
-              outOfFlowFrame->GetParent(&parentFrame);
-      
-              // Get the child list name for the out-of-flow frame
-              nsIAtom* listName;
-              GetChildListNameFor(parentFrame, outOfFlowFrame, &listName);
-      
-              // Ask the parent to delete the out-of-flow frame
-              aFrameManager->RemoveFrame(*aPresContext, *aPresShell, parentFrame,
-                                         listName, outOfFlowFrame);
-              NS_IF_RELEASE(listName);
-            }
-      
-          } else {
-            // Recursively find and delete any of its out-of-flow frames, and remove
-            // the mapping from content objects to frames
-            DeletingFrameSubtree(aPresContext, aPresShell, aFrameManager, aRemovedFrame,
-                                 childFrame);
-          }
-      
-          // Get the next sibling child frame
-          childFrame->GetNextSibling(&childFrame);
-        }
-  
-        NS_IF_RELEASE(childListName);
-        aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
-      } while (childListName);
+      DoDeletingFrameSubtree(aPresContext, aPresShell, aFrameManager,
+                             aFrame, aFrame);
 
-      // If it's split, then get the continuing frame
+      // If it's split, then get the continuing frame. Note that we only do
+      // this for the top-most frame being deleted. Don't do it if we're
+      // recursing over a subtree, because those continuing frames should be
+      // found as part of the walk over the top-most frame's continuing frames.
+      // Walking them again will make this an N^2/2 algorithm
       aFrame->GetNextInFlow(&aFrame);
     }
   }
@@ -6246,8 +6271,7 @@ nsCSSFrameConstructor::RemoveMappingsForFrameSubtree(nsIPresContext* aPresContex
   aPresContext->GetShell(getter_AddRefs(presShell));
   nsCOMPtr<nsIFrameManager> frameManager;
   presShell->GetFrameManager(getter_AddRefs(frameManager));
-  return DeletingFrameSubtree(aPresContext, presShell, frameManager, aRemovedFrame,
-                              aRemovedFrame);
+  return DeletingFrameSubtree(aPresContext, presShell, frameManager, aRemovedFrame);
 }
 
 NS_IMETHODIMP
@@ -6437,8 +6461,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 
     // Walk the frame subtree deleting any out-of-flow frames, and
     // remove the mapping from content objects to frames
-    DeletingFrameSubtree(aPresContext, shell, frameManager, childFrame,
-                         childFrame);
+    DeletingFrameSubtree(aPresContext, shell, frameManager, childFrame);
 
     // See if the child frame is a floating frame
     const nsStyleDisplay* display;
@@ -6469,8 +6492,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       // that it doesn't retain a dangling pointer to memory)
       if (nsnull != placeholderFrame) {
         placeholderFrame->GetParent(&parentFrame);
-        DeletingFrameSubtree(aPresContext, shell, frameManager,
-                             placeholderFrame, placeholderFrame);
+        DeletingFrameSubtree(aPresContext, shell, frameManager, placeholderFrame);
         rv = frameManager->RemoveFrame(*aPresContext, *shell, parentFrame,
                                        nsnull, placeholderFrame);
       }
