@@ -23,7 +23,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifdef ENABLE_TESTS
-DIRS = scribble widget
+DIRS = widget
+#sspitzer: scribble is bogus, waiting to hear back from the layout team...
+#DIRS += scribble
 endif
 
 include $(topsrcdir)/config/config.mk
