@@ -365,7 +365,7 @@ NS_IMETHODIMP nsXULMenubarAccessible::GetAccState(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULMenubarAccessible::GetAccName(nsAString& _retval)
 {
-  _retval = NS_LITERAL_STRING("menubar");
+  _retval = NS_LITERAL_STRING("Application");
 
   return NS_OK;
 }
