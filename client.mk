@@ -141,6 +141,20 @@ endif
 
 
 #######################################################################
+# NSPR
+#
+
+NSPR_CO_MODULE        = mozilla/nsprpub
+NSPR_CO_FLAGS := -P
+CVSCO_NSPR    = cvs $(CVS_FLAGS) co $(NSPR_CO_FLAGS)
+NSPR_CO_TAG   = NSPRPUB_20000201
+
+ifdef NSPR_CO_TAG
+  NSPR_CO_FLAGS := $(NSPR_CO_FLAGS) -r $(NSPR_CO_TAG)
+endif
+
+
+#######################################################################
 # Rules
 # 
 
@@ -175,9 +189,13 @@ checkout:
 	 : error. If the file is created, remove it and return an error.  \
 	 ; \
 	echo "checkout start: "`date` | tee $(CVSCO_LOGFILE); \
-	echo "cd $(ROOTDIR); $(CVSCO) $(MOZ_CO_MODULE)"; \
+	echo "cd $(ROOTDIR)"; \
 	cd $(ROOTDIR); \
 	rm -f cvs-failed.tmp*; \
+       echo "$(CVSCO_NSPR) $(NSPR_CO_MODULE)"; \
+       ( $(CVSCO_NSPR) $(NSPR_CO_MODULE) || touch cvs-failed.tmp ) 2>&1 \
+         | tee -a $(CVSCO_LOGFILE); \
+       echo "$(CVSCO) $(MOZ_CO_MODULE)"; \
 	( $(CVSCO) $(MOZ_CO_MODULE) || touch cvs-failed.tmp ) 2>&1 \
 	  | tee -a $(CVSCO_LOGFILE); \
 	if test -f cvs-failed.tmp ; then \
