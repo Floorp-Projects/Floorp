@@ -1425,6 +1425,7 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
     return NS_OK;
 
   nsCOMPtr<nsIDOMElement> cell2;
+  nsCOMPtr<nsIDOMElement> lastCellFound;
   PRInt32 startRowIndex2, startColIndex2, rowSpan2, colSpan2, actualRowSpan2, actualColSpan2;
   PRBool  isSelected2;
   PRInt32 colIndex = 0;
@@ -1463,16 +1464,28 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
         }
         // New cell isn't first in row,
         // so stop after we find the last cell before new cell's column
-        if ((startColIndex2 + actualColSpan2) >= startColIndex) break;
+        if ((startColIndex2 + actualColSpan2) >= startColIndex)
+          break;
       }
       else
       {
         break; // Inserting before, so stop at first cell in row we want to insert into
       }
+      lastCellFound = cell2;
     }
     // Skip to next available cellmap location
     colIndex += actualColSpan2;
   } while(PR_TRUE);
+
+  if (!cell2 && lastCellFound)
+  {
+    // Edge case where we didn't find a cell to insert after
+    //  or before because column(s) before desired column 
+    //  and all columns after it are spanned from above. 
+    //  We can insert after the last cell we found 
+    cell2 = lastCellFound;
+    insertAfter = PR_TRUE; // Should always be true, but let's be sure
+  }
 
   res = InsertCell(cell2, aRowSpanBelow, actualColSpan, insertAfter, aNewCell);
   if (NS_FAILED(res)) return res;
