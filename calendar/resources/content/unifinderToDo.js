@@ -164,25 +164,6 @@ function checkboxClick( event )
 
 
 /**
-*  This is called from the unifinder's edit command
-*/
-
-function unifinderEditCommand()
-{
-}
-
-
-/**
-*  This is called from the unifinder's delete command
-*/
-
-function unifinderDeleteCommand( DoNotConfirm )
-{
-   
-}
-
-
-/**
 *  Redraw the categories unifinder tree
 */
 
