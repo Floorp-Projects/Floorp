@@ -2060,7 +2060,8 @@ ULONG nsWindow::IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey)
       break;
 
     case VK_MENU:
-      keyType = DONT_PROCESS_KEY;
+      // Let this through for XP menus.
+      *aAsciiKey = aVirtualKeyCode;
       break;
 
     default:        
@@ -2212,7 +2213,7 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode)
 
   if (asciiKey) {
     //printf("Dispatching Key Up [%d]\n", asciiKey);
-    return DispatchKeyEvent(NS_KEY_UP, asciiKey, aVirtualKeyCode);
+    DispatchKeyEvent(NS_KEY_UP, asciiKey, aVirtualKeyCode);
   }
 
   // always let the def proc process a WM_KEYUP
@@ -2467,6 +2468,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 				      result = PR_FALSE;
             break;
 
+        // Let ths fall through if it isn't a key pad
+        case WM_SYSKEYDOWN:
+            // if it's a keypad key don't process a WM_CHAR will come or...oh well...
+            if (IsKeypadKey(wParam, lParam & 0x01000000)) {
+				      result = PR_TRUE;
+              break;
+            }
         case WM_KEYDOWN: {
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
             mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
