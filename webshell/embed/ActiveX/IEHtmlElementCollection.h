@@ -49,6 +49,9 @@ public:
 	// Sets the parent node of this collection
 	virtual HRESULT SetParentNode(IDispatch *pIDispParent);
 
+	// Populates the collection with items from the DOM node
+	virtual HRESULT PopulateFromDOMNode(nsIDOMNode *pIDOMNode, BOOL bRecurseChildren);
+
 	// Helper method creates a collection from a parent node
 	static HRESULT CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance, BOOL bRecurseChildren = FALSE);
 

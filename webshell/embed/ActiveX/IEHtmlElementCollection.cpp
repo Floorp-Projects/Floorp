@@ -55,59 +55,46 @@ struct NodeListPos
 };
 
 
-HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance, BOOL bRecurseChildren)
+HRESULT CIEHtmlElementCollection::PopulateFromDOMNode(nsIDOMNode *pIDOMNode, BOOL bRecurseChildren)
 {
-	if (pInstance == NULL)
-	{
-		return E_INVALIDARG;
-	}
-	
-	if (pParentNode == NULL)
-	{
-		return E_INVALIDARG;
-	}
-
-	nsIDOMNode *pIDOMNode = nsnull;
-	pParentNode->GetDOMNode(&pIDOMNode);
 	if (pIDOMNode == nsnull)
 	{
+		NG_ASSERT(0);
 		return E_INVALIDARG;
 	}
 
-	*pInstance = NULL;
+	// Get elements from the DOM node
+	nsIDOMNodeList *pNodeList = nsnull;
+	pIDOMNode->GetChildNodes(&pNodeList);
+	if (pNodeList == nsnull)
+	{
+		return S_OK;
+	}
 
-	CIEHtmlElementCollectionInstance *pCollection = NULL;
-	CIEHtmlElementCollectionInstance::CreateInstance(&pCollection);
-
-	CIPtr(IDispatch) cpDispNode;
-	pParentNode->GetIDispatch(&cpDispNode);
-	pCollection->SetParentNode(cpDispNode);
-
-	// Get elements
+	// Recurse through the children of the node (and the children of that)
+	// to populate the collection
 
 	std::stack< NodeListPos > cNodeStack;
-
-	nsIDOMNodeList *pIDOMNodeList = nsnull;
-	pIDOMNode->GetChildNodes(&pIDOMNodeList);
-
-	if (pIDOMNodeList)
-	{
-		cNodeStack.push(NodeListPos(pIDOMNodeList, 0));
-	}
+	cNodeStack.push(NodeListPos(pNodeList, 0));
 	while (!cNodeStack.empty())
 	{
+		// Pop an item from the stack
 		NodeListPos pos = cNodeStack.top();
 		cNodeStack.pop();
 
-		nsIDOMNodeList *pIDOMNodeList = pos.m_pIDOMNodeList;
+		// Iterate through items in list
 		PRUint32 aLength = 0;
-		pIDOMNodeList->GetLength(&aLength);
+		pNodeList = pos.m_pIDOMNodeList;
+		pNodeList->GetLength(&aLength);
 		for (PRUint32 i = pos.m_nListPos; i < aLength; i++)
 		{
+			// Get the next item from the list
 			nsIDOMNode *pChildNode = nsnull;
-			pIDOMNodeList->Item(i, &pChildNode);
+			pNodeList->Item(i, &pChildNode);
 			if (pChildNode == nsnull)
 			{
+				// Empty node (unexpected, but try and carry on anyway)
+				NG_ASSERT(0);
 				continue;
 			}
 
@@ -117,23 +104,78 @@ HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode,
 			if (pElement)
 			{
 				pElement->SetDOMNode(pChildNode);
-				pElement->SetParentNode(pCollection->m_pIDispParent);
-				pCollection->AddNode(pElement);
+				pElement->SetParentNode(m_pIDispParent);
+				AddNode(pElement);
+			}
 
-				if (bRecurseChildren)
+			if (bRecurseChildren)
+			{
+				// Test if the node has children and pop them onto the stack too
+				nsIDOMNodeList *pChildNodeList = nsnull;
+				pChildNode->GetChildNodes(&pChildNodeList);
+				if (pChildNodeList)
 				{
-					// TODO recurse through
-					CIPtr(IHTMLElementCollection) cpCollection;
+					// Push the child collection onto the stack
+					cNodeStack.push(NodeListPos(pChildNodeList, 0));
+					// Push the current position onto the stack ( if necessary )
+					if (i + 1 < aLength)
+					{
+						pNodeList->AddRef();
+						cNodeStack.push(NodeListPos(pNodeList, i + 1));
+					}
+					break;
 				}
 			}
+			
+			// Cleanup for next iteration
 			pChildNode->Release();
 		}
-		pIDOMNodeList->Release();
+
+		// Cleanup for next iteration
+		pNodeList->Release();
 	}
 
-	*pInstance = pCollection;
+	return S_OK;
+}
+
+
+HRESULT CIEHtmlElementCollection::CreateFromParentNode(CIEHtmlNode *pParentNode, CIEHtmlElementCollection **pInstance, BOOL bRecurseChildren)
+{
+	if (pInstance == NULL || pParentNode == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	// Get the DOM node from the parent node
+	nsIDOMNode *pIDOMNode = nsnull;
+	pParentNode->GetDOMNode(&pIDOMNode);
+	if (pIDOMNode == nsnull)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	*pInstance = NULL;
+
+	// Create a collection object
+	CIEHtmlElementCollectionInstance *pCollection = NULL;
+	CIEHtmlElementCollectionInstance::CreateInstance(&pCollection);
+	if (pCollection == NULL)
+	{
+		NG_ASSERT(0);
+		return E_OUTOFMEMORY;
+	}
+
+	// Initialise and populate the collection
+	CIPtr(IDispatch) cpDispNode;
+	pParentNode->GetIDispatch(&cpDispNode);
+	pCollection->SetParentNode(cpDispNode);
+	pCollection->PopulateFromDOMNode(pIDOMNode, bRecurseChildren);
 
 	pIDOMNode->Release();
+
+	*pInstance = pCollection;
 
 	return S_OK;
 }
