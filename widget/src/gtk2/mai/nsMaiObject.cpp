@@ -41,12 +41,65 @@
 
 #include "nsMaiObject.h"
 #include "nsIAccessibleEventListener.h"
-#include "nsString2.h"
+#include "nsString.h"
 
-#ifdef  DEBUG_MAI
+#ifdef MAI_LOGGING
 gint num_created_mai_object = 0;
 gint num_deleted_mai_object = 0;
 #endif
+
+G_BEGIN_DECLS
+/* callbacks for MaiAtkObject */
+static void classInitCB(AtkObjectClass *aClass);
+static void initializeCB(AtkObject *aObj, gpointer aData);
+static void finalizeCB(GObject *aObj);
+
+/* callbacks for AtkObject virtual functions */
+static const gchar*        getNameCB (AtkObject *aObj);
+static const gchar*        getDescriptionCB (AtkObject *aObj);
+static AtkObject*          getParentCB(AtkObject *aObj);
+static gint                getChildCountCB(AtkObject *aObj);
+static AtkObject*          refChildCB(AtkObject *aObj, gint aChildIndex);
+static gint                getIndexInParentCB(AtkObject *aObj);
+static AtkRelationSet*     refRelationSetCB(AtkObject *aObj);
+static AtkRole             getRoleCB(AtkObject *aObj);
+static AtkLayer            getLayerCB(AtkObject *aObj);
+static gint                getMdiZorderCB(AtkObject *aObj);
+
+/* the missing atkobject virtual functions */
+/*
+  static AtkStateSet*        refStateSetCB(AtkObject *aObj);
+  static void                SetNameCB(AtkObject *aObj,
+  const gchar *name);
+  static void                SetDescriptionCB(AtkObject *aObj,
+  const gchar *description);
+  static void                SetParentCB(AtkObject *aObj,
+  AtkObject *parent);
+  static void                SetRoleCB(AtkObject *aObj,
+  AtkRole role);
+  static guint               ConnectPropertyChangeHandlerCB(
+  AtkObject  *aObj,
+  AtkPropertyChangeHandler *handler);
+  static void                RemovePropertyChangeHandlerCB(
+  AtkObject *aObj,
+  guint handler_id);
+  static void                InitializeCB(AtkObject *aObj,
+  gpointer data);
+  static void                ChildrenChangedCB(AtkObject *aObj,
+  guint change_index,
+  gpointer changed_child);
+  static void                FocusEventCB(AtkObject *aObj,
+  gboolean focus_in);
+  static void                PropertyChangeCB(AtkObject *aObj,
+  AtkPropertyValues *values);
+  static void                StateChangeCB(AtkObject *aObj,
+  const gchar *name,
+  gboolean state_set);
+  static void                VisibleDataChangedCB(AtkObject *aObj);
+*/
+G_END_DECLS
+
+static gpointer parent_class = NULL;
 
 GType
 mai_atk_object_get_type(void)
@@ -58,7 +111,7 @@ mai_atk_object_get_type(void)
             sizeof(MaiAtkObjectClass),
             (GBaseInitFunc)NULL,
             (GBaseFinalizeFunc)NULL,
-            (GClassInitFunc)MaiObject::classInitCB,
+            (GClassInitFunc)classInitCB,
             (GClassFinalizeFunc)NULL,
             NULL, /* class data */
             sizeof(MaiAtkObject), /* instance size */
@@ -76,43 +129,38 @@ mai_atk_object_get_type(void)
 MaiObject::MaiObject(nsIAccessible *aAcc)
 {
     mAccessible = aAcc;
-    mMaiAtkObject = nsnull;
+    mMaiAtkObject = NULL;
 
-#ifdef  DEBUG_MAI
+#ifdef MAI_LOGGING
     num_created_mai_object++;
-    g_print("====MaiObject creating this=%u,total =%d= created\n",
-            this,num_created_mai_object);
 #endif
+    MAI_LOG_DEBUG(("====MaiObject creating this=0x%x,total =%d= created\n",
+                   (unsigned int)this, num_created_mai_object));
 }
 
 MaiObject::~MaiObject()
 {
-    /* destory this */
-
     /* mAccessible will get released here automatically */
-    /* "mAccessible = nsnull" is not needed */
-    if (mMaiAtkObject)
-        ;   /* Should we call the parent->finalize ?? */
+    mMaiAtkObject = NULL;
 
-#ifdef  DEBUG_MAI
+#ifdef MAI_LOGGING
     num_deleted_mai_object++;
-    g_print("====MaiObject deleting this=%u, total =%d= deleted\n",
-            this,num_deleted_mai_object);
 #endif
+    MAI_LOG_DEBUG(("====MaiObject deleting this=0x%x, total =%d= deleted\n",
+                   (unsigned int)this, num_deleted_mai_object));
 }
 
 void
 MaiObject::EmitAccessibilitySignal(PRUint32 aEvent)
 {
-    if (mMaiAtkObject || GetAtkObject()) {
-        gchar * name = NULL;
+    AtkObject *atkObj = GetAtkObject();
+    if (atkObj) {
+        gchar *name = NULL;
         name = GetAtkSignalName(aEvent);
         if (name) {
-            g_signal_emit_by_name(ATK_OBJECT(mMaiAtkObject), name);
+            g_signal_emit_by_name(atkObj, name);
 
-#ifdef DEBUG_MAI
-            g_print("MaiObject, emit signal %s\n", name );
-#endif
+            MAI_LOG_DEBUG(("MaiObject, emit signal %s\n", name));
         }
     }
 }
@@ -123,35 +171,10 @@ MaiObject::GetNSAccessible(void)
     return mAccessible;
 }
 
-#if 0
-AtkObject *
-MaiObject::GetAtkObject (void)
-{
-    g_return_val_if_fail(mAccessible != NULL, NULL);
-  
-    if (mMaiAtkObject)
-        return ATK_OBJECT(mMaiAtkObject);
-
-    nsCOMPtr<nsIAccessible> accessIf(do_QueryInterface(mAccessible));
-    if (accessIf) {
-        /* the atk object should be created according to accessIf, not yet */
-        mMaiAtkObject = (MaiAtkObject*)g_object_new(MAI_TYPE_ATK_OBJECT,NULL);
-        g_return_val_if_fail(mMaiAtkObject != NULL, NULL);
-
-        atk_object_initialize(ATK_OBJECT(mMaiAtkObject), this);
-        ATK_OBJECT(mMaiAtkObject)->role = ATK_ROLE_INVALID;
-        ATK_OBJECT(mMaiAtkObject)->layer = ATK_LAYER_INVALID;
-
-        return ATK_OBJECT(mMaiAtkObject);
-    }
-    return NULL;
-}
-#endif
-
-gchar*
+gchar *
 MaiObject::GetAtkSignalName(PRUint32 aEvent)
 {
-    gchar * name = NULL;
+    gchar *name = NULL;
 
     switch (aEvent) {
     default:
@@ -161,46 +184,74 @@ MaiObject::GetAtkSignalName(PRUint32 aEvent)
 }
 
 /* virtual functions to ATK callbacks */
-gchar*
+
+/* for those get functions who have a related memeber vairable in AtkObject
+ * (see atkobject.h), save a copy of the value in atkobject, return them
+ * when available, get a new one and save if not.
+ *
+ * virtual functions that fall into this scope:
+ *   GetName x
+ *   GetDescription x
+ *   GetParent x
+ *   GetRole
+ *   GetRelationSet
+ *   GetLayer
+ */
+
+gchar *
 MaiObject::GetName(void)
 {
-    gchar *new_str;
-    gint len;
-
     g_return_val_if_fail(mAccessible != NULL, NULL);
 
-    nsAutoString uniName;
+    AtkObject *atkObject = (AtkObject*)mMaiAtkObject;
+    static gchar default_name[] = "no name";
 
-    /* nsIAccessible is responsible for the non-NULL name */
-    nsresult rv = mAccessible->GetAccName(uniName);
-    if (NS_FAILED (rv))
-        return NULL;
-    len = uniName.Length();
-    new_str = g_new(gchar, len + 1);
-    uniName.ToCString(new_str, len);
-    new_str[len] = '\0';
-    return new_str;
+    if (!atkObject->name) {
+        gint len;
+        nsAutoString uniName;
+
+        /* nsIAccessible is responsible for the non-NULL name */
+        nsresult rv = mAccessible->GetAccName(uniName);
+        if (NS_FAILED(rv))
+            return NULL;
+        len = uniName.Length();
+        if (len > 0) {
+            atk_object_set_name(atkObject,
+                                NS_ConvertUCS2toUTF8(uniName).get());
+        }
+        else {
+            atk_object_set_name(atkObject, default_name);
+        }
+    }
+    return atkObject->name;
 }
 
-gchar*
+gchar *
 MaiObject::GetDescription(void)
 {
-    gchar *new_str;
-    gint len;
-
     g_return_val_if_fail(mAccessible != NULL, NULL);
 
-    nsAutoString uniDescription;
-  
-    /* nsIAccessible is responsible for the non-NULL description */
-    nsresult rv = mAccessible->GetAccDescription(uniDescription);
-    if (NS_FAILED(rv))
-        return NULL;
-    len = uniDescription.Length();
-    new_str = g_new(gchar, len + 1);
-    uniDescription.ToCString(new_str, len);
-    new_str[len] = '\0';
-    return new_str;
+    AtkObject *atkObject = (AtkObject*)mMaiAtkObject;
+
+    if (!atkObject->description) {
+        gchar default_description[] = "no description";
+        gint len;
+        nsAutoString uniDesc;
+
+        /* nsIAccessible is responsible for the non-NULL description */
+        nsresult rv = mAccessible->GetAccDescription(uniDesc);
+        if (NS_FAILED(rv))
+            return NULL;
+        len = uniDesc.Length();
+        if (len > 0) {
+            atk_object_set_description(atkObject,
+                                       NS_ConvertUCS2toUTF8(uniDesc).get());
+        }
+        else {
+            atk_object_set_description(atkObject, default_description);
+        }
+    }
+    return atkObject->description;
 }
 
 gint
@@ -209,35 +260,21 @@ MaiObject::GetChildCount(void)
     return 0;
 }
 
-MaiObject*
-MaiObject::RefChild(gint i)
+MaiObject *
+MaiObject::RefChild(gint aChildIndex)
 {
     return NULL;
+}
+
+gint
+MaiObject::GetIndexInParent()
+{
+    return -1;
 }
 
 void
 MaiObject::Initialize(void)
 {
-    g_return_if_fail(mAccessible != NULL);
-    g_return_if_fail(mMaiAtkObject != NULL);
-
-    gchar default_name[] = "no name";
-    gchar default_description[] = "no description";
-
-    /* we can set name, description, etc for atkobject here */
-    gchar * name, *description;
-    name = GetName();
-    description = GetDescription();
-
-    atk_object_set_name(ATK_OBJECT(mMaiAtkObject),
-                        (!name || strlen(name) == 0)? default_name : name);
-    atk_object_set_description(ATK_OBJECT(mMaiAtkObject),
-                               (!description || strlen(description) == 0)?
-                               default_description : description);
-    if (name)
-        g_free(name);
-    if (description)
-        g_free(description);
 }
 
 void
@@ -246,78 +283,135 @@ MaiObject::Finalize(void)
     delete this;
 }
 
-/* static functions for ATK callback */
-
-void
-MaiObject::classInitCB(AtkObjectClass *klass)
+/* global */
+guint
+GetNSAccessibleUniqueID(nsIAccessible *aObj)
 {
-    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+    g_return_val_if_fail(aObj != NULL, 0);
 
-    //  klass->get_name = MaiObject::getNameCB;
-    klass->get_n_children = MaiObject::getChildCountCB;
-    klass->ref_child = MaiObject::refChildCB;
-    //  klass->ref_state_set = MaiObject::refStateSetCB;
-    klass->initialize = MaiObject::initializeCB;
-
-    gobject_class->finalize = MaiObject::finalizeCB;
+    nsCOMPtr<nsIDOMNode> domNode;
+    aObj->AccGetDOMNode(getter_AddRefs(domNode));
+    guint uid = -NS_REINTERPRET_CAST(gint, (domNode.get()));
+    return uid;
 }
 
-/*
-  const gchar*
-  MaiObject::getNameCB(AtkObject *obj)
-  {
-  g_return_val_if_fail(MAI_IS_ATK_OBJECT(obj), NULL);
+/* static functions for ATK callbacks */
 
-  MaiObject * maiObject = MAI_ATK_OBJECT(obj)->maiObject;
-  g_return_val_if_fail(maiObject!=NULL, NULL);
-    
-  return maiObject->GetName();
-  }
-*/
+void
+classInitCB(AtkObjectClass *aClass)
+{
+    GObjectClass *gobject_class = G_OBJECT_CLASS(aClass);
+
+    parent_class = g_type_class_peek_parent(aClass);
+
+    aClass->get_name = getNameCB;
+    aClass->get_description = getDescriptionCB;
+    aClass->get_parent = getParentCB;
+    aClass->get_n_children = getChildCountCB;
+    aClass->ref_child = refChildCB;
+    aClass->get_index_in_parent = getIndexInParentCB;
+    //  aClass->ref_state_set = refStateSetCB;
+    aClass->initialize = initializeCB;
+
+    gobject_class->finalize = finalizeCB;
+}
+
+void
+initializeCB(AtkObject *aObj, gpointer aData)
+{
+    g_return_if_fail(MAI_IS_ATK_OBJECT(aObj));
+    g_return_if_fail(aData != NULL);
+
+    /* call parent init function */
+    /* AtkObjectClass has not a "initialize" function now,
+     * maybe it has later
+     */
+
+    if (ATK_OBJECT_CLASS(parent_class)->initialize)
+        ATK_OBJECT_CLASS(parent_class)->initialize(aObj, aData);
+
+    /* initialize object */
+    MAI_ATK_OBJECT(aObj)->maiObject = (MaiObject*)aData;
+    ((MaiObject*)aData)->Initialize();
+}
+
+void
+finalizeCB(GObject *aObj)
+{
+    MAI_CHECK_ATK_OBJECT_RETURN_IF_FAIL(aObj);
+    MaiObject *maiObject = MAI_ATK_OBJECT(aObj)->maiObject;
+    maiObject->Finalize();
+
+    /* call parent finalize function */
+    if (G_OBJECT_CLASS (parent_class)->finalize)
+        G_OBJECT_CLASS (parent_class)->finalize(aObj);
+}
+
+const gchar *
+getNameCB(AtkObject *aObj)
+{
+    MAI_CHECK_ATK_OBJECT_RETURN_VAL_IF_FAIL(aObj, NULL);
+    MaiObject *maiObject = MAI_ATK_OBJECT(aObj)->maiObject;
+    return maiObject->GetName();
+}
+
+const gchar *
+getDescriptionCB(AtkObject *aObj)
+{
+    MAI_CHECK_ATK_OBJECT_RETURN_VAL_IF_FAIL(aObj, NULL);
+    MaiObject *maiObject = MAI_ATK_OBJECT(aObj)->maiObject;
+    return maiObject->GetDescription();
+}
+
+AtkObject *
+getParentCB(AtkObject *aObj)
+{
+    MAI_CHECK_ATK_OBJECT_RETURN_VAL_IF_FAIL(aObj, NULL);
+    MaiObject *maiObject = MAI_ATK_OBJECT(aObj)->maiObject;
+
+    MaiObject *parentObj = maiObject->GetParent();
+    if (!parentObj)
+        return NULL;
+
+    AtkObject *parentAtkObj = parentObj->GetAtkObject();
+    if (parentAtkObj && !aObj->accessible_parent) {
+        atk_object_set_parent(aObj, parentAtkObj);
+    }
+    return parentAtkObj;
+}
 
 gint
-MaiObject::getChildCountCB(AtkObject* obj)
+getChildCountCB(AtkObject *aObj)
 {
-    g_return_val_if_fail(MAI_IS_ATK_OBJECT(obj), 0);
-
-    MaiObject * maiObject = MAI_ATK_OBJECT(obj)->maiObject;
-    g_return_val_if_fail(maiObject!=NULL, 0);
-    
+    MAI_CHECK_ATK_OBJECT_RETURN_VAL_IF_FAIL(aObj, 0);
+    MaiObject * maiObject = MAI_ATK_OBJECT(aObj)->maiObject;
     return maiObject->GetChildCount();
 }
 
-AtkObject*
-MaiObject::refChildCB(AtkObject *obj, gint i)
+AtkObject *
+refChildCB(AtkObject *aObj, gint aChildIndex)
 {
-    g_return_val_if_fail(MAI_IS_ATK_OBJECT(obj), NULL);
+    MAI_CHECK_ATK_OBJECT_RETURN_VAL_IF_FAIL(aObj, NULL);
+    MaiObject *maiObject = MAI_ATK_OBJECT(aObj)->maiObject;
 
-    MaiObject * maiObject = MAI_ATK_OBJECT(obj)->maiObject;
-    g_return_val_if_fail(maiObject!=NULL, NULL);
-    
-    MaiObject * childObject = maiObject->RefChild(i);
-    g_return_val_if_fail(childObject!=NULL, NULL);
-  
-    return childObject->GetAtkObject();
+    MaiObject *childObject = maiObject->RefChild(aChildIndex);
+    if (!childObject)
+        return NULL;
+
+    AtkObject *childAtkObj = childObject->GetAtkObject();
+    if (childAtkObj) {
+        g_object_ref(childAtkObj);
+        if (!childAtkObj->accessible_parent)
+            atk_object_set_parent(childAtkObj, aObj);
+    }
+    return childAtkObj;
 }
 
-void
-MaiObject::initializeCB(AtkObject *obj,
-                        gpointer   data)
+gint
+getIndexInParentCB(AtkObject *aObj)
 {
-    g_return_if_fail(MAI_IS_ATK_OBJECT(obj));
-    g_return_if_fail(data != NULL);
+    MAI_CHECK_ATK_OBJECT_RETURN_VAL_IF_FAIL(aObj, -1);
+    MaiObject *maiObject = MAI_ATK_OBJECT(aObj)->maiObject;
 
-    MAI_ATK_OBJECT(obj)->maiObject = (MaiObject*)data;
-    ((MaiObject*)data)->Initialize();
-}
-
-void
-MaiObject::finalizeCB(GObject  *obj)
-{
-    g_return_if_fail(MAI_IS_ATK_OBJECT(obj));
-
-    MaiObject * maiObject = MAI_ATK_OBJECT(obj)->maiObject;
-    g_return_if_fail(maiObject!=NULL);
-  
-    maiObject->Finalize();
+    return maiObject->GetIndexInParent();
 }

@@ -62,9 +62,11 @@ CPPSRCS		= \
                 nsMaiUtil.cpp \
                 nsMaiObject.cpp \
                 nsMaiInterface.cpp \
-                nsMaiRoot.cpp \
+                nsMaiCache.cpp \
+                nsMaiAppRoot.cpp \
                 nsMaiTopLevel.cpp \
                 nsMaiWidget.cpp \
+                nsMaiInterfaceComponent.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \

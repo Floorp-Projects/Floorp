@@ -39,34 +39,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __MAI_ROOT_H__
-#define __MAI_ROOT_H__
+#ifndef __MAI_CACHE_H__
+#define __MAI_CACHE_H__
 
-#include "nsIAccessibleEventReceiver.h"
 #include "nsMaiObject.h"
-#include "nsMaiTopLevel.h"
 
-#define MAI_TYPE_ROOT (MAI_TYPE_ATK_OBJECT)
-
-class MaiRoot: public MaiObject
+struct MaiCacheItem
 {
-public:
-    MaiRoot();
-    virtual ~MaiRoot();
-
-    gboolean AddTopLevelAccessible(nsIAccessible *root);
-    gboolean RemoveTopLevelAccessible(nsIAccessible *root);
-
-public:
-    virtual AtkObject *GetAtkObject(void);
-    virtual void Initialize(void);
-    virtual void Finalize(void);
-
-private:
-    gint toplevel_count;
-    gint toplevel_index;
-
-    GList *mMaiTopLevelList;
+    guint uid;
+    MaiObject *maiObject;
 };
 
-#endif   /* __MAI_ROOT_H__ */
+class MaiCache
+{
+public:
+    MaiCache();
+    ~MaiCache();
+
+    gboolean Add(MaiObject *aMaiObj);
+    gboolean Remove(MaiObject *aMaiObj);
+    MaiObject *Fetch(guint uid);
+    MaiObject *Fetch(MaiObject *aMaiObj);
+    MaiObject *Fetch(nsIAccessible *aAccess);
+    MaiObject *Fetch(AtkObject *aAtkObj);
+
+private:
+    enum { MAI_CACHE_SIZE = 100 };
+    MaiCacheItem mCache [MAI_CACHE_SIZE];
+    gint mCacheIndex;
+};
+
+#endif   /* __MAI_CACHE_H__ */

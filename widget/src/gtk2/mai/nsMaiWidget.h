@@ -45,11 +45,7 @@
 #include "nsMaiObject.h"
 #include "nsMaiInterface.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    /* MaiAtkWidget */
+/* MaiAtkWidget */
 
 #define MAI_TYPE_ATK_WIDGET            (mai_atk_widget_get_type ())
 #define MAI_ATK_WIDGET(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
@@ -76,42 +72,37 @@ struct _MaiAtkWidgetClass
     MaiAtkObjectClass parent_class;
 };
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
 GType mai_atk_widget_get_type(void);
+
+/* MaiWidget is General MaiObject for all the Widgets/Domnodes (through
+ * nsIAccessible) except for root, the mozilla application.
+ * a MaiWidget can have one or more interfaces on it.
+ */
 
 class MaiWidget: public MaiObject
 {
 public:
     MaiWidget(nsIAccessible *aAcc);
     virtual ~MaiWidget();
+#ifdef MAI_LOGGING
+    virtual void DumpMaiObjectInfo(int aDepth);
+#endif
 
-    /* virtual function from nsMaiObject */
-    virtual AtkObject *GetAtkObject(void);
-  
+    virtual guint GetNSAccessibleUniqueID();
+    MaiInterface *GetMaiInterface(MaiInterfaceType aInterfacefaceType);
+    AtkRole GetAtkRole();
+
 public:
     /* callbacks and their virtual functions */
 
-    /* component interface virtual functions */
-    virtual void GetExtents(gint *x, gint *y,
-                            gint *width, gint *height,
-                            AtkCoordType coord_type);
+    /* virtual functions from MaiObject */
+    virtual AtkObject *GetAtkObject(void);
+    virtual MaiObject *GetParent(void);
+    virtual gint GetChildCount(void);
+    virtual MaiObject *RefChild(gint aChildIndex);
+    virtual gint GetIndexInParent();
 
-    /* component interface callbacks */
-    static void atkComponentInterfaceInitCB(AtkComponentIface *iface);
-    static void getExtentsCB(AtkComponent   *component,
-                             gint           *x,
-                             gint           *y,
-                             gint           *width,
-                             gint           *height,
-                             AtkCoordType   coord_type);
-  
 private:
-
-    MaiObject *CreateMaiObjectFor(nsIAccessible* aAccessible);
-
     /* Interfaces */
     MaiInterface *mMaiInterface[MAI_INTERFACE_NUM];
     gint mMaiInterfaceCount;
@@ -122,6 +113,14 @@ private:
 
     static gulong mAtkTypeNameIndex;
     static gchar *GetUniqueMaiAtkTypeName(void);
+
+private:
+    /* the hash table is not the real cache for children, it only remember
+     * the uid of some children
+     */
+    GHashTable *mChildren;
+    guint GetChildUniqueID(gint aChildIndex);
+    void SetChildUniqueID(gint aChildIndex, guint aChildUid);
 };
 
 #endif /* __MAI_WIDGET_H__ */

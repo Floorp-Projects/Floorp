@@ -44,10 +44,6 @@
 
 #include <atk/atk.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #define MAI_TYPE_UTIL              (mai_util_get_type ())
 #define MAI_UTIL(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
                                     MAI_TYPE_UTIL, MaiUtil))
@@ -62,6 +58,9 @@ extern "C" {
 
 typedef struct _MaiUtil                  MaiUtil;
 typedef struct _MaiUtilClass             MaiUtilClass;
+
+class MaiAppRoot;
+class MaiCache;
   
 struct _MaiUtil
 {
@@ -76,10 +75,14 @@ struct _MaiUtilClass
     AtkUtilClass parent_class;
 };
 
-int gtk_module_init(gint *argc, char** argv[]);
+#define MAI_VERSION "0.0.6"
+#define MAI_NAME "MAI-Mozilla Atk Interface"
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+MaiAppRoot *mai_get_root(void);
+MaiCache *mai_get_cache(void);
+
+G_BEGIN_DECLS
+int gtk_module_init(gint *argc, char** argv[]);
+G_END_DECLS
 
 #endif /* __MAI_UTIL_H__ */

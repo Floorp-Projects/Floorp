@@ -39,6 +39,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef __MAI_OBJECT_H__
+#define __MAI_OBJECT_H__
+
 #include <atk/atk.h>
 #include <glib.h>
 #include <glib-object.h>
@@ -46,28 +49,36 @@
 #include "nsCOMPtr.h"
 #include "nsIAccessible.h"
 
-#ifndef __MAI_OBJECT_H__
-#define __MAI_OBJECT_H__
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+#define MAI_LOGGING
+#endif /* #ifdef PR_LOGGING */
+
+extern PRLogModuleInfo *gMaiLog;
+
+#define MAI_LOG(level, args) PR_LOG(gMaiLog, (level), args)
+#define MAI_LOG_DEBUG(args) PR_LOG(gMaiLog, PR_LOG_DEBUG, args)
+#define MAI_LOG_WARNING(args) PR_LOG(gMaiLog, PR_LOG_WARNING, args)
+#define MAI_LOG_ERROR(args) PR_LOG(gMaiLog, PR_LOG_ERROR, args)
 
 class MaiObject;
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
-    /* MaiAtkObject */
+/* MaiAtkObject */
 
 #define MAI_TYPE_ATK_OBJECT             (mai_atk_object_get_type ())
 #define MAI_ATK_OBJECT(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), \
-                                        MAI_TYPE_ATK_OBJECT, MaiAtkObject))
+                                         MAI_TYPE_ATK_OBJECT, MaiAtkObject))
 #define MAI_ATK_OBJECT_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST ((klass), \
-                                        MAI_TYPE_ATK_OBJECT, MaiAtkObjectClass))
+                                         MAI_TYPE_ATK_OBJECT, \
+                                         MaiAtkObjectClass))
 #define MAI_IS_ATK_OBJECT(obj)          (G_TYPE_CHECK_INSTANCE_TYPE ((obj), \
-                                        MAI_TYPE_ATK_OBJECT))
+                                         MAI_TYPE_ATK_OBJECT))
 #define MAI_IS_ATK_OBJECT_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), \
-                                        MAI_TYPE_ATK_OBJECT))
+                                         MAI_TYPE_ATK_OBJECT))
 #define MAI_ATK_OBJECT_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), \
-                                        MAI_TYPE_ATK_OBJECT, MaiAtkObjectClass))
+                                         MAI_TYPE_ATK_OBJECT, \
+                                         MaiAtkObjectClass))
 
 typedef struct _MaiAtkObject                MaiAtkObject;
 typedef struct _MaiAtkObjectClass           MaiAtkObjectClass;
@@ -94,9 +105,17 @@ struct _MaiAtkObjectClass
 
 GType mai_atk_object_get_type(void);
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+/* MaiObject is the base class for all MAI object class (but not for MAI
+ * interface class). MaiObject is nothing but a connection between
+ * nsIAccessible and AtkObject. It maps one nsIAccessible object
+ * with some nsIAccessible Interfaces (e.g. nsIAccessibleAction,
+ * nsIAccessileText) to right AtkObject with right Atk interfaces (i.e.
+ * AtkAction, AtkText), and provide methods to make the pair of
+ * nsIAccessilbe object and Atk object communicate with each
+ * other.
+ *
+ * MaiObject, and its descendents provide the implementation of AtkObject.
+ */
 
 class MaiObject
 {
@@ -104,51 +123,60 @@ public:
     MaiObject(nsIAccessible *aAcc = NULL);
     virtual ~MaiObject();
 
-public:
+#ifdef MAI_LOGGING
+    virtual void DumpMaiObjectInfo(int aDepth) = 0;
+#endif
+    virtual guint GetNSAccessibleUniqueID() = 0;
 
+public:
     virtual void EmitAccessibilitySignal(PRUint32 aEvent);
     virtual AtkObject *GetAtkObject(void) = 0;
     virtual nsIAccessible *GetNSAccessible(void);
     virtual gchar* GetAtkSignalName(PRUint32 aEvent);
 
     /* virtual functions called by callbacks */
-    virtual gchar *GetName(void);
-    virtual gchar *GetDescription(void);
-    virtual gint GetChildCount(void);
-    virtual MaiObject *RefChild(gint i);
     virtual void Initialize(void);
     virtual void Finalize(void);
+
+    /* the virtual functions should not use the type of AtkObject* as return
+     * value or Parameters, they should use the type of MaiObject
+     * its the callbacks's repsonsibility to make convertion when needed
+     */
+    virtual gchar *GetName(void);
+    virtual gchar *GetDescription(void);
+    virtual MaiObject *GetParent(void) = 0;
+    virtual gint GetChildCount(void);
+    virtual MaiObject *RefChild(gint aChildIndex);
+    virtual gint GetIndexInParent();
+
 protected:
     nsCOMPtr<nsIAccessible> mAccessible;
     MaiAtkObject *mMaiAtkObject;
-
-public:
-
-    /* callbacks for AtkObject */
-    static void classInitCB(AtkObjectClass *klass);
-    static void initializeCB(AtkObject *obj,
-                             gpointer data);
-    static void finalizeCB(GObject *obj);
-
-
-    static const gchar* getNameCB (AtkObject *obj);
-    static gchar* getDescriptionCB (AtkObject *obj);
-    static AtkObject* getParent(AtkObject *obj);
-    static gint                getChildCountCB(AtkObject *obj);
-    static AtkObject*          refChildCB(AtkObject *obj, gint  i);
-    static gint                getIndexInParentCB(AtkObject *obj);
-    static AtkRelationSet*     refRelationSetCB(AtkObject *obj);
-    static AtkRole             getRoleCB(AtkObject *obj);
-    static AtkLayer            getLayerCB(AtkObject *obj);
-    static gint                getMdiZorder(AtkObject *obj);
 };
 
-#ifdef DEBUG_MAI
+#define MAI_CHECK_ATK_OBJECT_RETURN_VAL_IF_FAIL(obj, val) \
+    do {\
+        g_return_val_if_fail(MAI_IS_ATK_OBJECT(obj), (val));\
+        MaiObject * tmpMaiObjPassedIn = MAI_ATK_OBJECT(obj)->maiObject;\
+        g_return_val_if_fail(tmpMaiObjPassedIn != NULL, (val));\
+        g_return_val_if_fail(tmpMaiObjPassedIn->GetAtkObject() ==\
+                             (AtkObject*)(obj), (val));\
+    } while (0)
 
+#define MAI_CHECK_ATK_OBJECT_RETURN_IF_FAIL(obj) \
+    do {\
+        g_return_if_fail(MAI_IS_ATK_OBJECT(obj));\
+        MaiObject * tmpMaiObjPassedIn = MAI_ATK_OBJECT(obj)->maiObject;\
+        g_return_if_fail(tmpMaiObjPassedIn != NULL);\
+        g_return_if_fail(tmpMaiObjPassedIn->GetAtkObject() ==\
+                         (AtkObject*)(obj));\
+    } while (0)
+
+guint GetNSAccessibleUniqueID(nsIAccessible *aObj);
+
+#ifdef MAI_LOGGING
 extern gint num_created_mai_object;
 extern gint num_deleted_mai_object;
-
 #endif
-
 
 #endif /* __MAI_OBJECT_H__ */

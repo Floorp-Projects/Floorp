@@ -40,20 +40,25 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdlib.h>
+
 #include "nsMaiHook.h"
 #include "nsMaiUtil.h"
-#include "nsMaiRoot.h"
+#include "nsMaiAppRoot.h"
 
-void mai_init();
+gboolean mai_init(void);
+gboolean mai_shutdown(void);
+void mai_delete_root(void);
+
 static void mai_util_class_init(MaiUtilClass *klass);
 
 /* atkutil.h */
 
 static guint mai_util_add_global_event_listener(GSignalEmissionHook listener,
-                                                const gchar* event_type);
-static void  mai_util_remove_global_event_listener(guint remove_listener);
-static AtkObject* mai_util_get_root(void);
+                                                const gchar *event_type);
+static void mai_util_remove_global_event_listener(guint remove_listener);
+static AtkObject *mai_util_get_root(void);
 static G_CONST_RETURN gchar *mai_util_get_toolkit_name(void);
+static G_CONST_RETURN gchar *mai_util_get_toolkit_version(void);
 static gboolean mai_add_toplevel_accessible(nsIAccessible *toplevel);
 static gboolean mai_remove_toplevel_accessible(nsIAccessible *toplevel);
 
@@ -63,14 +68,13 @@ static void _listener_info_destroy(gpointer data);
 
 static GHashTable *listener_list = NULL;
 static gint listener_idx = 1;
+
 typedef struct _MaiUtilListenerInfo MaiUtilListenerInfo;
 
 /* supporting */
 static int mai_initialized = FALSE;
 static MaiHook maiHook;
-
-static MaiRoot *mai_get_root_accessible(void);
-static AtkObject* mai_get_root_atk_object(void);
+PRLogModuleInfo *gMaiLog = NULL;
 
 struct _MaiUtilListenerInfo
 {
@@ -104,6 +108,9 @@ mai_util_get_type(void)
     return type;
 }
 
+/* intialize the the atk interface (function pointers) with MAI implementation.
+ * When atk bridge get loaded, these interface can be used.
+ */
 static void
 mai_util_class_init(MaiUtilClass *klass)
 {
@@ -117,8 +124,15 @@ mai_util_class_init(MaiUtilClass *klass)
         mai_util_add_global_event_listener;
     atk_class->remove_global_event_listener =
         mai_util_remove_global_event_listener;
+    /*
+      atk_class->add_key_event_listener =
+      mai_util_add_key_event_listener;
+      atk_class->remove_key_event_listener =
+      mai_util_remove_key_event_listener;
+    */
     atk_class->get_root = mai_util_get_root;
     atk_class->get_toolkit_name = mai_util_get_toolkit_name;
+    atk_class->get_toolkit_version = mai_util_get_toolkit_version;
 
     listener_list = g_hash_table_new_full(g_int_hash, g_int_equal, NULL,
                                           _listener_info_destroy);
@@ -131,13 +145,13 @@ mai_util_add_global_event_listener(GSignalEmissionHook listener,
     GType type;
     guint signal_id;
     gchar **split_string;
-    gint  rc = 0;
+    gint rc = 0;
 
     split_string = g_strsplit(event_type, ":", 3);
 
     type = g_type_from_name(split_string[1]);
     if (type > 0) {
-        signal_id  = g_signal_lookup(split_string[2], type);
+        signal_id = g_signal_lookup(split_string[2], type);
         if (signal_id > 0) {
             MaiUtilListenerInfo *listener_info;
 
@@ -212,16 +226,27 @@ mai_util_remove_global_event_listener(guint remove_listener)
     }
 }
 
-static AtkObject*
+static AtkObject *
 mai_util_get_root(void)
 {
-    return mai_get_root_atk_object();
+    static AtkObject *gRootAtkObject = NULL;
+    MaiAppRoot *root;
+
+    if (!gRootAtkObject && (root = mai_get_root()))
+        gRootAtkObject = root->GetAtkObject();
+    return gRootAtkObject;
 }
 
 static G_CONST_RETURN gchar *
 mai_util_get_toolkit_name(void)
 {
-    return "MAI";
+    return MAI_NAME;
+}
+
+static G_CONST_RETURN gchar *
+mai_util_get_toolkit_version(void)
+{
+    return MAI_VERSION;
 }
 
 static void
@@ -230,53 +255,90 @@ _listener_info_destroy(gpointer data)
     free(data);
 }
 
-void
-mai_init()
+gboolean
+mai_init(void)
 {
     if (mai_initialized) {
-        return;
+        return TRUE;
     }
     mai_initialized = TRUE;
-  
-    g_print("Mozilla Atk Implementation initialized\n");
+
+    //no MAI_LOG should come before this
+    if (!gMaiLog) {
+        gMaiLog = PR_NewLogModule("Mai");
+        PR_ASSERT(gMaiLog);
+    }
+
+    MAI_LOG_DEBUG(("Mozilla Atk Implementation initialized\n"));
     g_type_init();
     /* Initialize the MAI Utility class */
     g_type_class_unref(g_type_class_ref(MAI_TYPE_UTIL));
 
-    /* initialize the mai hook */
+    /* initialize the MAI hook
+     * MAI provide the functions of "startup", "shutdown", "add toplvel"
+     * "remove toplevel", which are used by Mozilla through the MAI hook.
+     */
     gMaiHook = &maiHook;
+    maiHook.MaiShutdown = mai_shutdown;
+    maiHook.MaiStartup = mai_init;
     maiHook.AddTopLevelAccessible = mai_add_toplevel_accessible;
     maiHook.RemoveTopLevelAccessible = mai_remove_toplevel_accessible;
+    return TRUE;
+
+    return TRUE;
+}
+
+gboolean
+mai_shutdown(void)
+{
+    if (!mai_initialized) {
+        return TRUE;
+    }
+    mai_initialized = FALSE;
+    MAI_LOG_DEBUG(("Mozilla Atk Implementation shutdown\n"));
+    gMaiHook = NULL;
+    mai_delete_root();
+    return TRUE;
 }
 
 int
-gtk_module_init(gint *argc, char** argv[])
+gtk_module_init(gint *argc, char **argv[])
 {
     mai_init();
     return 0;
 }
 
 /* supporting funcs */
-MaiRoot*
-mai_get_root_accessible(void)
-{
-    static MaiRoot *gRootAccessible = NULL;
 
-    if (gRootAccessible || (gRootAccessible = new MaiRoot()))
+static MaiAppRoot *gRootAccessible = NULL;
+
+MaiAppRoot *
+mai_get_root(void)
+{
+    if (gRootAccessible || (gRootAccessible = new MaiAppRoot()))
         return gRootAccessible;
 
     return NULL;
 }
 
-AtkObject*
-mai_get_root_atk_object(void)
+void
+mai_delete_root(void)
 {
-    static AtkObject *gRootAtkObject = NULL;
-    MaiRoot *root;
+    if (gRootAccessible) {
+        delete gRootAccessible;
+        gRootAccessible = NULL;
+    }
+}
 
-    if (!gRootAtkObject && (root = mai_get_root_accessible()))
-        gRootAtkObject = root->GetAtkObject();
-    return gRootAtkObject;
+/* return the reference of MaiCache.
+ */
+MaiCache *
+mai_get_cache(void)
+{
+    MaiAppRoot *root = mai_get_root();
+    if (root)
+        return root->GetCache();
+    return NULL;
 }
 
 gboolean
@@ -284,11 +346,16 @@ mai_add_toplevel_accessible(nsIAccessible *toplevel)
 {
     g_return_val_if_fail(toplevel != NULL, TRUE);
 
-    MaiRoot *root;
-    root = mai_get_root_accessible();
+    MaiAppRoot *root;
+    root = mai_get_root();
     if (root) {
-        root->AddTopLevelAccessible(toplevel);
-        return TRUE;
+        MaiTopLevel *mai_top_level = new MaiTopLevel(toplevel);
+        g_return_val_if_fail(mai_top_level != NULL, PR_FALSE);
+        gboolean res = root->AddMaiTopLevel(mai_top_level);
+
+        /* root will add ref for itself use */
+        g_object_unref(mai_top_level->GetAtkObject());
+        return res;
     }
     else
         return FALSE;
@@ -299,11 +366,11 @@ mai_remove_toplevel_accessible(nsIAccessible *toplevel)
 {
     g_return_val_if_fail(toplevel != NULL, TRUE);
 
-    MaiRoot *root;
-    root = mai_get_root_accessible();
+    MaiAppRoot *root;
+    root = mai_get_root();
     if (root) {
-        root->RemoveTopLevelAccessible(toplevel);
-        return TRUE;
+        MaiTopLevel *mai_top_level = root->FindMaiTopLevel(toplevel);
+        return root->RemoveMaiTopLevel(mai_top_level);
     }
     else
         return FALSE;

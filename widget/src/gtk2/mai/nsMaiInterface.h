@@ -43,6 +43,7 @@
 #define __MAI_INTERFACE_H__
 
 #include <glib-object.h>
+#include "nsIAccessible.h"
 
 enum MaiInterfaceType {
     MAI_INTERFACE_INVALID,  /* 0 */
@@ -60,6 +61,16 @@ enum MaiInterfaceType {
 
 class MaiWidget;
 
+/* MaiInterface is the base class for all the MAI interface class (e.g.
+ * MaiInterfaceAction, MaiInterfaceComponent, etc).
+ *
+ * MaiInterface is different from MaiObject in that MaiInterface does not
+ * related to a nsIAccessilbe object directly. MaiInterface is created for
+ * being inserted in a MaiObject.
+ *
+ * Descendents of MaiInterface provide all the implementation for corresponding
+ * interfaces in ATK, and map them onto nsIAccessible interfaces.
+ */
 class MaiInterface
 {
 public:
@@ -67,9 +78,10 @@ public:
     virtual ~MaiInterface();
 
     GType GetAtkType();
+    nsIAccessible *GetNSAccessible(void);
 
     virtual MaiInterfaceType GetType() = 0;
-    virtual GInterfaceInfo *GetInterfaceInfo() = 0;
+    virtual const GInterfaceInfo *GetInterfaceInfo() = 0;
 
 private:
     MaiWidget *mMaiWidget;
