@@ -471,8 +471,116 @@ if (@badbugs) {
           "table: " . join(', ', @badbugs));
 }
 
+###########################################################################
+# Perform status/resolution checks
+###########################################################################
 
+Status("Checking statuses/resolutions");
 
+my @open_states = map(SqlQuote($_), OpenStates());
+my $open_states = join(', ', @open_states);
+
+@badbugs = ();
+
+SendSQL("SELECT   bug_id FROM bugs " .
+        "WHERE    bug_status IN ($open_states) " .
+        "AND      resolution != '' " .
+        "ORDER BY bug_id");
+
+while (@row = FetchSQLData()) {
+    my ($id) = (@row);
+    push(@badbugs, $id);
+}
+
+if (@badbugs > 0) {
+    Alert("Bugs with open status and a resolution: " .
+          join (", ", @badbugs));
+}
+
+@badbugs = ();
+
+SendSQL("SELECT   bug_id FROM bugs " .
+        "WHERE    bug_status NOT IN ($open_states) " .
+        "AND      resolution = '' " .
+        "ORDER BY bug_id");
+
+while (@row = FetchSQLData()) {
+    my ($id) = (@row);
+    push(@badbugs, $id);
+}
+
+if (@badbugs > 0) {
+    Alert("Bugs with non-open status and no resolution: " .
+          join (", ", @badbugs));
+}
+
+###########################################################################
+# Perform status/everconfirmed checks
+###########################################################################
+
+Status("Checking statuses/everconfirmed");
+
+@badbugs = ();
+
+SendSQL("SELECT   bug_id FROM bugs " .
+        "WHERE    bug_status = " . SqlQuote($::unconfirmedstate) . ' ' .
+        "AND      everconfirmed = 1 " .
+        "ORDER BY bug_id");
+
+while (@row = FetchSQLData()) {
+    my ($id) = (@row);
+    push(@badbugs, $id);
+}
+
+if (@badbugs > 0) {
+    Alert("Bugs that are UNCONFIRMED but have everconfirmed set: " .
+          join (", ", @badbugs));
+}
+
+@badbugs = ();
+
+SendSQL("SELECT   bug_id FROM bugs " .
+        "WHERE    bug_status IN ('NEW', 'ASSIGNED', 'REOPENED') " .
+        "AND      everconfirmed = 0 " .
+        "ORDER BY bug_id");
+
+while (@row = FetchSQLData()) {
+    my ($id) = (@row);
+    push(@badbugs, $id);
+}
+
+if (@badbugs > 0) {
+    Alert("Bugs with confirmed status but don't have everconfirmed set: " .
+          join (", ", @badbugs));
+}
+
+###########################################################################
+# Perform vote/everconfirmed checks
+###########################################################################
+
+Status("Checking votes/everconfirmed");
+
+@badbugs = ();
+
+SendSQL("SELECT   bug_id FROM bugs, products " .
+        "WHERE    bugs.product = products.product " .
+        "AND      bug_status = " . SqlQuote($::unconfirmedstate) . ' ' .
+        "AND      votestoconfirm <= votes " .
+        "ORDER BY bug_id");
+
+while (@row = FetchSQLData()) {
+    my ($id) = (@row);
+    push(@badbugs, $id);
+}
+
+if (@badbugs > 0) {
+    Alert("Bugs that have enough votes to be confirmed but haven't been: " .
+          join (", ", @badbugs));
+}
+
+###########################################################################
+# End
+###########################################################################
 
 Status("Sanity check completed.");
 PutFooter();
