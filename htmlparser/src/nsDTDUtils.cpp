@@ -642,13 +642,15 @@ PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size
  ******************************************************************************/
 
 CObserverDictionary::CObserverDictionary() {
-  static nsString theTopicList[2] = {"htmlparser","xmlparser"};
-  PRInt32 theIndex=0;
+
+  nsAutoString theHTMLTopic("htmlparser");
+  RegisterObservers(theHTMLTopic);
+
+  nsAutoString theXMLTopic("xmlparser");
+  RegisterObservers(theXMLTopic);
+
   nsCRT::zero(mObservers,sizeof(mObservers));
-  while(theTopicList[theIndex].Length() > 0) {
-    RegisterObservers(theTopicList[theIndex]);
-    theIndex++;
-  }
+
 }
 
 CObserverDictionary::~CObserverDictionary() {
