@@ -136,7 +136,7 @@ public:
 
   /** dump a representation of the cell map to stdout for debugging */
 #ifdef NS_DEBUG
-  void Dump() const;
+  void Dump(char* aString = nsnull) const;
 #endif
 
 #ifdef DEBUG

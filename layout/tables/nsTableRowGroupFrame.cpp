@@ -1269,13 +1269,14 @@ nsTableRowGroupFrame::InsertFrames(nsIPresContext* aPresContext,
     }
   }
 
+  PRInt32 startRowIndex = GetStartRowIndex();
   // Insert the frames in the sibling chain
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
 
   PRInt32 numRows = rows.Count();
   if (numRows > 0) {
     nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(aPresContext, this, aPrevFrame, nsLayoutAtoms::tableRowFrame);
-    PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : 0;
+    PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : startRowIndex;
     tableFrame->InsertRows(*aPresContext, *this, rows, rowIndex, PR_TRUE);
 
     // Reflow the new frames. They're already marked dirty, so generate a reflow
