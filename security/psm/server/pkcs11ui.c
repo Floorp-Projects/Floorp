@@ -74,7 +74,7 @@ ssmpkcs11_convert_module(SSMTextGenContext *cx,
 {
     char *dllName = NULL;
     char *tempStr = NULL;
-    char *lib_ch = NULL;
+    char *lib_ch  = NULL;
     CK_INFO modInfo;
     SSMStatus rv = SSM_FAILURE;
     SECStatus srv;
@@ -83,17 +83,25 @@ ssmpkcs11_convert_module(SSMTextGenContext *cx,
     char buf2[65];
 
     srv = PK11_GetModInfo(mod, &modInfo);
-    if (srv != SECSuccess)
-        goto loser;
-
-    /* we provide the space in (buf), so we don't deallocate lib_ch */
-    lib_ch = PK11_MakeString(NULL,buf2,(char *)modInfo.libraryDescription,
-                             sizeof(modInfo.libraryDescription));
+    if (srv != SECSuccess) {
+        /*
+         * The module was not properly loaded at start-up,
+         * so just make all the strings blank.
+         */
+        lib_ch     = "";
+        buf[0]     = '\0';
+    } else {
+        /* we provide the space in (buf), so we don't deallocate lib_ch */
+        lib_ch = PK11_MakeString(NULL,buf2,(char *)modInfo.libraryDescription,
+                                 sizeof(modInfo.libraryDescription));
+        PR_snprintf(buf, sizeof(buf), "%d.%d",
+                    modInfo.libraryVersion.major, modInfo.libraryVersion.minor);
+    }
     if (mod->dllName)
     {
         char *cursor, *newString;
         int numSlashes = 0, newLen, i, j, oldLen;
-
+        
         dllName = mod->dllName;
         /*
          * Now we need to escape the '\' characters so the string shows
@@ -132,10 +140,7 @@ ssmpkcs11_convert_module(SSMTextGenContext *cx,
         if (rv != SSM_SUCCESS)
             goto loser;
     }
-
-    PR_snprintf(buf, sizeof(buf), "%d.%d",
-                modInfo.libraryVersion.major, modInfo.libraryVersion.minor);
-
+    
     tempStr = PR_smprintf(fmt, modIndex, (long)mod->moduleID, lib_ch,
                           mod->commonName, dllName, buf);
     if (tempStr == NULL) {
