@@ -22,6 +22,7 @@
 
 #include "nsDocShell.h"
 #include "nsDSURIContentListener.h"
+#include "nsIChannel.h"
 
 //*****************************************************************************
 //***    nsDSURIContentListener: Object Management
@@ -103,6 +104,39 @@ NS_IMETHODIMP nsDSURIContentListener::CanHandleContent(const char* aContentType,
    return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDSURIContentListener::GetParentContentListener(nsIURIContentListener**
+   aParentListener)
+{
+   *aParentListener = mParentContentListener;
+   NS_IF_ADDREF(*aParentListener);
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDSURIContentListener::SetParentContentListener(nsIURIContentListener* 
+   aParentListener)
+{
+   // Weak Reference, don't addref
+   mParentContentListener = aParentListener;
+   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDSURIContentListener::GetLoadCookie(nsISupports ** aLoadCookie)
+{
+  *aLoadCookie = mLoadCookie;
+  NS_IF_ADDREF(*aLoadCookie);
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDSURIContentListener::SetLoadCookie(nsISupports * aLoadCookie)
+{
+  mLoadCookie = aLoadCookie;
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsDSURIContentListener: Helpers
 //*****************************************************************************   
@@ -134,20 +168,6 @@ nsDocShell* nsDSURIContentListener::DocShell()
 {
    return mDocShell;
 }
-
-void nsDSURIContentListener::GetParentContentListener(nsIURIContentListener**
-   aParentListener)
-{
-   *aParentListener = mParentContentListener;
-   NS_IF_ADDREF(*aParentListener);
-}
-
-void nsDSURIContentListener::SetParentContentListener(nsIURIContentListener* 
-   aParentListener)
-{
-   // Weak Reference, don't addref
-   mParentContentListener = aParentListener;
-}  
 
 void nsDSURIContentListener::GetPresContext(nsIPresContext** aPresContext)
 {
