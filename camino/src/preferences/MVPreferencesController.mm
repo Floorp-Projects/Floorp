@@ -282,6 +282,14 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
     [[self currentPane] didActivate];
 }
 
+- (id)windowWillReturnFieldEditor:(NSWindow *)sender toObject:(id)anObject
+{
+  if ([[self currentPane] respondsToSelector:@selector(fieldEditorForObject:)])
+    return [[self currentPane] fieldEditorForObject:anObject];
+  
+  return nil;
+}
+
 #pragma mark -
 
 - (NSToolbarItem *) toolbar:(NSToolbar *) toolbar
@@ -435,7 +443,24 @@ NSString* const MVPreferencesWindowNotification = @"MVPreferencesWindowNotificat
 
 - (void)changeFont:(id)sender
 {
-  [[self currentPane] changeFont:sender];
+  if ([[self currentPane] respondsToSelector:@selector(changeFont:)])
+    [[self currentPane] changeFont:sender];
+}
+
+- (BOOL)fontManager:(id)theFontManager willIncludeFont:(NSString *)fontName
+{
+  if ([[self currentPane] respondsToSelector:@selector(fontManager:willIncludeFont:)])
+    return [[self currentPane] fontManager:theFontManager willIncludeFont:fontName];
+
+  return YES;
+}
+
+- (unsigned int)validModesForFontPanel:(NSFontPanel *)fontPanel
+{
+  if ([[self currentPane] respondsToSelector:@selector(validModesForFontPanel:)])
+    return [[self currentPane] validModesForFontPanel:fontPanel];
+
+  return 0xFFFF;  // NSFontPanelStandardModesMask
 }
 
 @end
