@@ -1130,67 +1130,24 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     }
                 }
                 else {
-                    boolean twodigitescape = false;
-                    if (index < (source.length - 1) 
-                                && source[index + 1] >= '0' 
-                                    && source[index + 1] <= '9') {
-                        if (c >= '0' && c <= '3') {
-                            if (source[index + 1] <= '7') { 
-                                                /* ZeroToThree OctalDigit */
-                                if (index < (source.length - 2) 
-                                            && source[index + 2] >= '0' 
-                                                && source[index + 2] <= '9') {
-                        	        ren = new RENode(state, REOP_FLAT1, null);
-                                    c = (char)(64 * unDigit(c) 
-                                                + 8 * unDigit(source[++index]) 
-                                                    + unDigit(source[++index]));
-                                }
-                                else 
-                           /*ZeroToThree OctalDigit lookahead != OctalDigit */
-                                    twodigitescape = true;
-                            }
-                            else /* ZeroToThree EightOrNine */
-                                twodigitescape = true;
-                        }
-                        else { /* FourToNine DecimalDigit */
-                            twodigitescape = true;
-                        }
-                        if (twodigitescape) {
-                            num = 10 * unDigit(c) + unDigit(source[index + 1]);
-                            if (num >= 10 && num <= state.parenCount) {
-                                index++;
-            	                ren = new RENode(state, REOP_BACKREF, null);
-            	                ren.num = num - 1;/* \1 is numbered 0, etc. */
-            	                /* Avoid common chr- and flags-setting
-            	                    code after switch. */
-            	                ren.flags = RENode.NONEMPTY;
-            	                skipCommon = true;
-                            }
-                            if (c > '7' || source[index + 1] > '7') {
-                                throw NativeGlobal.constructError(
-                                             state.cx, "SyntaxError",
-                                             ScriptRuntime.getMessage(
-                                                  "msg.invalid.backref", null),
-                                             state.scope);
-                            }
-                            ren = new RENode(state, REOP_FLAT1, null);
-                            c = (char)(8 * unDigit(c) + unDigit(source[++index]));
-                        }
+                    if (c == '0') {
+                        ren = new RENode(state, REOP_FLAT1, null);
+                        c = 0;
                     }
-                    else { /* DecimalDigit lookahead != DecimalDigit */
-                        if (c == '0') {
-                	        ren = new RENode(state, REOP_FLAT1, null);
-                            c = 0;
+                    else {
+                        num = unDigit(c);
+                        len = 1;
+                        while (++index < source.length
+                                            && isDigit(c = source[index])) {
+                            num = 10 * num + unDigit(c);
+                            len++;
                         }
-                        else {
-                            num = (char)unDigit(c);
-        	                ren = new RENode(state, REOP_BACKREF, null);
-        	                ren.num = num - 1;	/* \1 is numbered 0, etc. */
-        	                /* Avoid common chr- and flags-setting 
-        	                                            code after switch. */
-        	                ren.flags = RENode.NONEMPTY;
-        	                skipCommon = true;
-                        }
+                        ren = new RENode(state, REOP_BACKREF, null);
+                        ren.num = num - 1;       /* \1 is numbered 0, etc. */
+                        /* Avoid common chr- and flags-setting 
+                                                        code after switch. */
+                        ren.flags = RENode.NONEMPTY;
+                        skipCommon = true;
                     }
                 }
                 break;
