@@ -26,80 +26,171 @@
 
 #include "xcDll.h"
 #include "plstr.h"	// strdup and strfree
+#include "nsIComponentManager.h"
 
-nsDll::nsDll(const char *libFullPath) : m_fullpath(NULL), m_instance(NULL),
-	m_status(DLL_OK)
+// MAC ONLY
+nsDll::nsDll(const char *codeDllName, int type)
+  : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
+    m_instance(NULL), m_status(DLL_OK)
+    
 {
-	m_lastModTime = LL_ZERO;
+    if (!codeDllName || !*codeDllName)
+    {
+        m_status = DLL_INVALID_PARAM;
+        return;
+    }
+    m_dllName = PL_strdup(codeDllName);
+    if (!m_dllName)
+    {
+        m_status = DLL_NO_MEM;
+        return;
+    }
+}
+
+nsDll::nsDll(nsIFileSpec *dllSpec)
+  : m_dllName(NULL), m_dllSpec(dllSpec), m_modDate(0), m_size(0),
+    m_instance(NULL), m_status(DLL_OK)
+{
+    Init(dllSpec);
+}
+
+nsDll::nsDll(const char *libPersistentDescriptor)
+  : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
+    m_instance(NULL), m_status(DLL_OK)
+{
+    Init(libPersistentDescriptor);
+}
+
+nsDll::nsDll(const char *libPersistentDescriptor, PRUint32 modDate, PRUint32 fileSize)
+  : m_dllName(NULL), m_dllSpec(NULL), m_modDate(0), m_size(0),
+    m_instance(NULL), m_status(DLL_OK)
+{
+    Init(libPersistentDescriptor);
+
+    // and overwrite the modData and fileSize
+	m_modDate = modDate;
+	m_size = fileSize;
+}
+ 
+void
+nsDll::Init(nsIFileSpec *dllSpec)
+{
+    // Addref the m_dllSpec
+    m_dllSpec = dllSpec;
+    NS_ADDREF(m_dllSpec);
+
+    // Make sure we are dealing with a file
+    PRBool isFile = PR_FALSE;
+    nsresult rv = m_dllSpec->isFile(&isFile);
+    if (NS_FAILED(rv))
+    {
+        m_status = DLL_INVALID_PARAM;
+        return;
+    }
+    if (isFile == PR_FALSE)
+    {
+      // Not a file. Cant work with it.
+      m_status = DLL_NOT_FILE;
+      return;
+    }
+    
+    // Populate m_modDate and m_size
+    if (NS_FAILED(m_dllSpec->GetModDate(&m_modDate)) ||
+        NS_FAILED(m_dllSpec->GetFileSize(&m_size)))
+    {
+        m_status = DLL_INVALID_PARAM;
+        return;
+    }
+
+	m_status = DLL_OK;			
+}
+
+void
+nsDll::Init(const char *libPersistentDescriptor)
+{
+    nsresult rv;
+    m_modDate = 0;
 	m_size = 0;
 	
-	if (libFullPath == NULL)
+	if (libPersistentDescriptor == NULL)
 	{
 		m_status = DLL_INVALID_PARAM;
 		return;
 	}
-	m_fullpath = PL_strdup(libFullPath);
-	if (m_fullpath == NULL)
-	{
-		// No more memory
-		m_status = DLL_NO_MEM;
-		return;
-	}
 
-	PRFileInfo statinfo;
-	if (PR_GetFileInfo(m_fullpath, &statinfo) != PR_SUCCESS)
-	{
-		// The stat things works only if people pass in the full pathname.
-		// Even if our stat fails, we could be able to load it because of
-		// LD_LIBRARY_PATH and other such paths where dlls are searched for
+    // Create a FileSpec from the persistentDescriptor
+    nsIFileSpec *dllSpec = NULL;
+    NS_DEFINE_IID(kFileSpecIID, NS_IFILESPEC_IID);
+    rv = nsComponentManager::CreateInstance(NS_FILESPEC_PROGID, NULL, kFileSpecIID, (void **) &dllSpec);
+    if (NS_FAILED(rv))
+    {
+        m_status = DLL_INVALID_PARAM;
+        return;
+    }
 
-		// XXX we need a way of marking this occurance.
-		// XXX m_status = DLL_STAT_ERROR;
-	}
-	else 
-	{
-		m_size = statinfo.size;
-		m_lastModTime = statinfo.modifyTime;
-		if (statinfo.type != PR_FILE_FILE)
-		{
-			// Not a file. Cant work with it.
-			m_status = DLL_NOT_FILE;
-			return;
-		}
-	}
-	m_status = DLL_OK;			
+    rv = dllSpec->SetPersistentDescriptorString((char *)libPersistentDescriptor);
+    if (NS_FAILED(rv))
+    {
+        m_status = DLL_INVALID_PARAM;
+        return;
+    }
+
+    Init(dllSpec);
 }
 
-
-nsDll::nsDll(const char *libFullPath, PRTime lastModTime, PRUint32 fileSize)
-:  m_fullpath(NULL), m_instance(NULL), m_status(DLL_OK)
-{
-	m_lastModTime = lastModTime;
-	m_size = fileSize;
-	
-	if (libFullPath == NULL)
-	{
-		m_status = DLL_INVALID_PARAM;
-		return;
-	}
-	m_fullpath = PL_strdup(libFullPath);
-	if (m_fullpath == NULL)
-	{
-		// No more memory
-		m_status = DLL_NO_MEM;
-		return;
-	}
-
-	m_status = DLL_OK;			
-}
 
 nsDll::~nsDll(void)
 {
 	if (m_instance != NULL)
 		Unload();
-	if (m_fullpath != NULL) PL_strfree(m_fullpath);
-	m_fullpath = NULL;
+    if (m_dllSpec)
+        NS_RELEASE(m_dllSpec);
+    if (m_dllName)
+        PL_strfree(m_dllName);
 }
+
+const char *
+nsDll::GetNativePath()
+{
+    if (m_dllName)
+        return m_dllName;
+    char *nativePath = NULL;
+    m_dllSpec->GetNativePath(&nativePath);
+    return nativePath;
+}
+
+const char *
+nsDll::GetPersistentDescriptorString()
+{
+    if (m_dllName)
+        return m_dllName;
+    char *persistentDescriptor = NULL;
+    m_dllSpec->GetPersistentDescriptorString(&persistentDescriptor);
+    return persistentDescriptor;
+}
+
+PRBool
+nsDll::HasChanged()
+{
+    if (m_dllName)
+        return PR_FALSE;
+
+    // If mod date has changed, then dll has changed
+    PRBool modDateChanged = PR_FALSE;
+    nsresult rv = m_dllSpec->modDateChanged(m_modDate, &modDateChanged);
+    if (NS_FAILED(rv) || modDateChanged == PR_TRUE)
+      return PR_TRUE;
+
+    // If size has changed, then dll has changed
+    PRUint32 aSize = 0;
+    rv = m_dllSpec->GetFileSize(&aSize);
+    if (NS_FAILED(rv) || aSize != m_size)
+      return PR_TRUE;
+
+    return PR_FALSE;
+}
+
+
 
 
 PRBool nsDll::Load(void)
@@ -113,35 +204,46 @@ PRBool nsDll::Load(void)
 		// Already loaded
 		return (PR_TRUE);
 	}
+
+    if (m_dllName)
+    {
+        m_instance = PR_LoadLibrary(m_dllName);
+    }
+    else
+    {
+        char *nsprPath = NULL;
+        nsresult rv = m_dllSpec->GetNSPRPath(&nsprPath);
+        if (NS_FAILED(rv)) return PR_FALSE;
+
 #ifdef	XP_MAC
-	// err = ConvertUnixPathToMacPath(m_fullpath, &macFileName);
-	char *macFileName = PL_strdup(m_fullpath);
-	if (macFileName != NULL)
-	{
-		if (macFileName[0] == '/')
-		{
-			// convert '/' to ':'
-			int c;
-			char* str = macFileName;
-			while ((c = *str++) != 0)
-			{
-				if (c == '/')
-					str[-1] = ':';
-			}
-			m_instance = PR_LoadLibrary(&macFileName[1]);		// skip over initial slash
-		}
-		else
-		{
-			m_instance = PR_LoadLibrary(macFileName);
-		}
-        PL_strfree(macFileName);
-	}
+        // NSPR path is / separated. This works for all NSPR functions
+        // except Load Library. Translate to something NSPR can accepts.
+        char *macFileName = PL_strdup(nsprPath);
+        if (macFileName != NULL)
+        {
+            if (macFileName[0] == '/')
+            {
+                // convert '/' to ':'
+                int c;
+                char* str = macFileName;
+                while ((c = *str++) != 0)
+                {
+                    if (c == '/')
+                        str[-1] = ':';
+                }
+                m_instance = PR_LoadLibrary(&macFileName[1]);		// skip over initial slash
+            }
+            else
+            {
+                m_instance = PR_LoadLibrary(macFileName);
+            }
+            PL_strfree(macFileName);
+        }
 #else
-	// This is the only right way of doing this...
-	m_instance = PR_LoadLibrary(m_fullpath);
+        m_instance = PR_LoadLibrary(nsprPath);
 #endif /* XP_MAC */
-	return ((m_instance == NULL) ? PR_FALSE : PR_TRUE);
-	
+    }
+    return ((m_instance == NULL) ? PR_FALSE : PR_TRUE);
 }
 
 PRBool nsDll::Unload(void)

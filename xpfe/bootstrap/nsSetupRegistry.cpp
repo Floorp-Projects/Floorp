@@ -84,19 +84,8 @@ static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 static NS_DEFINE_IID(kWindowMediatorCID,  NS_WINDOWMEDIATOR_CID);
 nsresult NS_AutoregisterComponents()
 {
-  nsIFileSpec* spec = NS_LocateFileOrDirectory(
-  							nsSpecialFileSpec::App_ComponentsDirectory);
-  if (!spec)
-  	return NS_ERROR_FAILURE;
-
-  char *componentsDirPath;
-  nsresult rv = spec->GetNSPRPath(&componentsDirPath);
-  if (NS_FAILED(rv))
-    return rv;
-
-  if (componentsDirPath)
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDirPath);
-  NS_RELEASE(spec);
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
+                                                 NULL /* default */);
   return rv;
 }
 
@@ -115,15 +104,6 @@ nsresult NS_AutoregisterComponents()
 extern "C" void
 NS_SetupRegistry_1()
 {
-  nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-
-  // This *has* to happen after registration of nsIFileLocator as the call
-  // required it.
-  //
-  // The right thing for autoregistration which causes dynamic component
-  // registraion is to happen after all the static RegisterComponents()
-  // have been registered. But doing that is causing a coredump with
-  // jsdom.dll. Puttin that off until that gets resolved.
   NS_AutoregisterComponents();
 
   /*
@@ -132,23 +112,25 @@ NS_SetupRegistry_1()
    */
   NS_SetupRegistry();
 
-  nsComponentManager::RegisterComponent(kCAppShellServiceCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kNetSupportDialogCID, NULL, NULL, APPSHELL_DLL, PR_TRUE, PR_TRUE);
-  nsComponentManager::RegisterComponent(kProtocolHelperCID, NULL, NULL, APPSHELL_DLL, PR_TRUE, PR_TRUE);
-
-
-  nsComponentManager::RegisterComponent(kAppCoresManagerCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kToolkitCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kDOMPropsCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kProfileCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE); 
-  nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kRDFCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kSessionHistoryCID,     NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kWindowMediatorCID,
+  // APPSHELL_DLL
+  nsComponentManager::RegisterComponentLib(kCAppShellServiceCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kXPConnectFactoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kNetSupportDialogCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kProtocolHelperCID,   NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kWindowMediatorCID,
                                          "window-mediator", NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",
                                          APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kSessionHistoryCID,   NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+
+  // APPCORES_DLL
+  nsComponentManager::RegisterComponentLib(kAppCoresManagerCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kToolkitCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kDOMPropsCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kProfileCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE); 
+  nsComponentManager::RegisterComponentLib(kBrowserAppCoreCID,  NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kRDFCoreCID,         NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+
   //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
 
 }

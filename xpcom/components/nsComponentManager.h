@@ -75,12 +75,37 @@ public:
                                PRBool aReplace);
 
     // Manually register a dynamically loaded component.
+    // The libraryPersistentDescriptor is what gets passed to the library
+    // self register function from ComponentManager. The format of this string
+    // is the same as nsIFileSpec::GetPersistentDescriptorString()
+    //
+    // This function will go away in favour of RegisterComponentSpec. In fact,
+    // it internally turns around and calls RegisterComponentSpec.
     NS_IMETHOD RegisterComponent(const nsCID &aClass,
                                  const char *aClassName,
                                  const char *aProgID,
-                                 const char *aLibrary,
+                                 const char *aLibraryPersistentDescriptor,
                                  PRBool aReplace,
                                  PRBool aPersist);
+
+    // Register a component using its FileSpec as its identification
+    // This is the more prevalent use.
+    NS_IMETHOD RegisterComponentSpec(const nsCID &aClass,
+                                 const char *aClassName,
+                                 const char *aProgID,
+                                 nsIFileSpec *aLibrary,
+                                 PRBool aReplace,
+                                 PRBool aPersist);
+
+    // Register a component using its dllName. This could be a dll name with
+    // no path so that LD_LIBRARY_PATH on unix or PATH on win can load it. Or
+    // this could be a code fragment name on the Mac.
+    NS_IMETHOD RegisterComponentLib(const nsCID &aClass,
+                                    const char *aClassName,
+                                    const char *aProgID,
+                                    const char *adllName,
+                                    PRBool aReplace,
+                                    PRBool aPersist);
 
     // Manually unregister a factory for a class
     NS_IMETHOD UnregisterFactory(const nsCID &aClass,
@@ -104,13 +129,9 @@ public:
     // ".shlb",	// Mac
     // ".dlm",    // new for all platforms
     //
-    // Directory and fullname are what NSPR will accept. For eg.
-    //	MAC		/Hard drive/mozilla/dist/bin
-    // 	WIN		y:\Hard drive\mozilla\dist\bin (or) y:/Hard drive/mozilla/dist/bin
-    //	UNIX	/Hard drive/mozilla/dist/bin
     //
-    NS_IMETHOD AutoRegister(RegistrationTime when, const char* directory);
-    NS_IMETHOD AutoRegisterComponent(RegistrationTime when, const char *fullname);
+    NS_IMETHOD AutoRegister(RegistrationTime when, nsIFileSpec *directory);
+    NS_IMETHOD AutoRegisterComponent(RegistrationTime when, nsIFileSpec *component);
 
     // nsComponentManagerImpl methods:
     nsComponentManagerImpl();
@@ -122,10 +143,13 @@ public:
 protected:
     nsresult LoadFactory(nsFactoryEntry *aEntry, nsIFactory **aFactory);
 
-    nsresult SyncComponentsInDir(RegistrationTime when, const char *directory);
+    nsresult SyncComponentsInDir(RegistrationTime when, nsIFileSpec *dirSpec);
     nsresult SelfRegisterDll(nsDll *dll);
     nsresult SelfUnregisterDll(nsDll *dll);
     nsresult HashProgID(const char *aprogID, const nsCID &aClass);
+    nsDll *CreateCachedDll(const char *persistentDescriptor, PRUint32 modDate, PRUint32 size);
+    nsDll *CreateCachedDll(nsIFileSpec *dllSpec);
+    nsDll *CreateCachedDllName(const char *dllName);
 
     // The following functions are the only ones that operate on the persistent
     // registry
@@ -138,7 +162,8 @@ protected:
     nsresult PlatformFind(const nsCID &aCID, nsFactoryEntry* *result);
     nsresult PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass);
     nsresult PlatformCLSIDToProgID(nsCID *aClass, char* *aClassName, char* *aProgID);
-    void     PlatformGetFileInfo(nsIRegistry::Key Key,PRTime *lastModifiedTime,PRUint32 *fileSize);
+    void     PlatformGetFileInfo(nsIRegistry::Key Key, PRUint32 *lastModifiedTime, PRUint32 *fileSize);
+    void     PlatformSetFileInfo(nsIRegistry::Key Key, PRUint32 lastModifiedTime, PRUint32 fileSize);
 
 protected:
     nsHashtable*     mFactories;
@@ -187,8 +212,9 @@ protected:
  * alpha0.40 : repository -> component manager
  * alpha0.50 : using nsIRegistry
  * alpha0.60 : xpcom 2.0 landing
+ * alpha0.70 : using nsIFileSpec. PRTime -> PRUint32
  */
-#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.60"
+#define NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING "alpha0.70"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -207,7 +233,7 @@ protected:
 
 class nsFactoryEntry {
 public:
-    nsFactoryEntry();
+    nsFactoryEntry(const nsCID &aClass, nsDll *dll);
     nsFactoryEntry(const nsCID &aClass, nsIFactory *aFactory);
     ~nsFactoryEntry();
 
@@ -219,7 +245,7 @@ public:
 
     // DO NOT DELETE THIS. Many nsFactoryEntry(s) could be sharing the same Dll.
     // This gets deleted from the dllStore going away.
-    nsDll *dll;	
+    nsDll *dll;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
