@@ -5,7 +5,7 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onConstruction="StartUp()"> 
+        onConstruction="startup()"> 
   
 <html:style>
 	#toolbar {
@@ -41,7 +41,7 @@
 <html:script>
 	var appCore = null;
 
-	function StartUp()
+	function startup()
 	{
 		dump("Compose: StartUp\n");
 		appCore = XPAppCoresManager.Find("ComposeAppCore");  
