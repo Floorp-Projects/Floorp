@@ -31,20 +31,36 @@
 #include "nsString.h"
 #include "nsIAutoCompleteResults.h"
 #include "nsISimpleEnumerator.h"
+#include "nsIPref.h"
 #include "nsIServiceManager.h"
 
+
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 static char * ignoreArray[] = {
 		"http://",
 	    "ftp://",
 		"www.",
 		"http://www.",
-        "keyword:"
+        "keyword:",
+		"://",
+		"//",
+		"\\",
+		":\\",
+		"file:///",
+		".com",
+		".org",
+		".net",
+		"."
 	};
 static nsIRDFResource * kNC_CHILD;
 static nsIRDFResource * kNC_URLBARHISTORY;
 static nsIRDFService * gRDFService;
+
+static nsIPref * gPrefs;
+#define PREF_AUTOCOMPLETE_ENABLED "browser.urlbar.autocomplete.enabled"
+
 
 
 //*****************************************************************************
@@ -70,7 +86,11 @@ nsUrlbarHistory::nsUrlbarHistory():mLength(0)
 	 res = gRDFService->GetResource("http://home.netscape.com/NC-rdf#child", &kNC_CHILD);
 	 res = gRDFService->GetResource("nc:urlbar-history", &kNC_URLBARHISTORY);
    }
-
+   // Get the pref service
+   res = nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref),
+	                                    (nsISupports **) &gPrefs);
+   if (gPrefs)
+	   printf("***** Got the pref service *****\n");
 }
 
 
@@ -92,6 +112,10 @@ nsUrlbarHistory::~nsUrlbarHistory()
 	mDataSource = nsnull;
 	NS_IF_RELEASE(kNC_URLBARHISTORY);
 	NS_IF_RELEASE(kNC_CHILD);
+    if (gPrefs) {
+		nsServiceManager::ReleaseService(kPrefServiceCID, gPrefs);
+	    gPrefs = nsnull;
+	}
 }
 
 //*****************************************************************************
@@ -122,14 +146,12 @@ nsUrlbarHistory::ClearHistory()
 
 	 PRBool moreElements = PR_FALSE;
 
-     while (NS_SUCCEEDED(entries->HasMoreElements(&moreElements)) && (moreElements == PR_TRUE)) {
-	  // printf("nsUrlbarHistory::ClearHistory Entries has more elements\n");
+     while (NS_SUCCEEDED(entries->HasMoreElements(&moreElements)) && (moreElements == PR_TRUE)) {	  
        nsCOMPtr<nsISupports> baseNode;
 	   nsCOMPtr<nsIRDFNode> node;
     
 	   entries->GetNext(getter_AddRefs(baseNode));
-       if (baseNode) {
-		 //printf("Got a node\n");
+       if (baseNode) {		 
          node = do_QueryInterface(baseNode);
 		 if (node) {
 		    rv = mDataSource->Unassert(kNC_URLBARHISTORY,
@@ -148,8 +170,6 @@ nsUrlbarHistory::GetCount(PRInt32 * aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
 	PRInt32   ubhCount = 0;
-
-	printf("In nsUrlbarHistory::GetCount\n");
 	nsCOMPtr<nsISimpleEnumerator>    entries;
   	(void)mDataSource->GetTargets(kNC_URLBARHISTORY,
                                     kNC_CHILD,
@@ -164,8 +184,6 @@ nsUrlbarHistory::GetCount(PRInt32 * aResult)
 		entries->GetNext(getter_AddRefs(entry));
 		ubhCount ++;
 	 }  // while
-   
-	printf("In nsUrlbarHistory:: Out of the while loop\n");
 
 	*aResult = ubhCount;
     return NS_OK;
@@ -198,6 +216,16 @@ nsUrlbarHistory::OnStartLookup(const PRUnichar *uSearchString, nsIAutoCompleteRe
     if (!listener)
         return NS_ERROR_NULL_POINTER;
       
+	PRBool enabled  = PR_FALSE;
+	if (gPrefs) {
+       rv = gPrefs->GetBoolPref(PREF_AUTOCOMPLETE_ENABLED, &enabled);      
+	}
+
+	if (!enabled) {// urlbar autocomplete is not enabled
+		listener->OnAutoComplete(nsnull, nsIAutoCompleteStatus::ignored);
+		return NS_OK;
+	}
+ //   printf("Autocomplete is enabled\n");   
 
     if (uSearchString[0] == 0)
     {
@@ -343,11 +371,9 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 	nsCOMPtr<nsISimpleEnumerator>  entries;
     PRUnichar * rdfValue = nsnull;
     nsAutoString searchAutoStr(searchStr);
-	//char * searchCSTR = searchAutoStr.ToNewCString();
-	   PRUnichar * match = nsnull;
-	   PRInt32 index = -1;
+	PRUnichar * match = nsnull;
+	PRInt32 index = -1;
 	   
-//	printf("In SEARCHCACHE searching for %s\n", searchCSTR);
 	if (!gRDFService || !kNC_URLBARHISTORY || !kNC_CHILD || !mDataSource)
 		return NS_ERROR_FAILURE;
 
@@ -362,6 +388,7 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 	    nsCOMPtr<nsISupports>  entry;
 		nsCOMPtr<nsIRDFLiteral>  literal;
 		nsAutoString rdfAStr;
+		nsAutoString  prefix;
 
 		rv = entries->GetNext(getter_AddRefs(entry));
 		if (entry) {
@@ -372,28 +399,39 @@ nsUrlbarHistory::SearchCache(const PRUnichar* searchStr, nsIAutoCompleteResults*
 		    rdfAStr = (rdfValue);
 			index = rdfAStr.Find(searchStr, PR_TRUE);
 			match = rdfAStr.ToNewUnicode();
-			//  printf("SearchCache Round I-found item %s in rdf\n", rdfAStr.ToNewCString());
+		    //printf("SearchCache Round I-found item %s in rdf\n", rdfAStr.ToNewCString());
 	   }
+		/* Didn't succeed in the first attempt. See if there
+		 * is any prefix in the searchString, strip off the prefix
+		 * and see if it matches
+		 */
 	   if (index < 0) {
-		   // strip off any http:// ftp:// and see if that matches.
-		   char * searchCString = nsnull;
-		   searchCString = searchAutoStr.ToNewCString();
-           if (searchCString) {
-             char * searchSubStr = PL_strstr(searchCString, "//");
-			 if (searchSubStr) {
-			   searchSubStr++;searchSubStr++;
-		  //     printf("SearchCache::Comparing %s with %s\n", searchSubStr, item->ToNewCString());
-		        index = rdfAStr.Find(searchSubStr, PR_TRUE);
-		       if (match)
-			     Recycle(match);
-		        match = rdfAStr.ToNewUnicode();
-			    //printf("SearchCache Round II-found item %s in rdf\n", rdfAStr.ToNewCString());
-			 }
+		   PRInt32 slashIndex = -1, searchStrLen = -1;
+		   searchStrLen = searchAutoStr.Length();
+		   slashIndex = searchAutoStr.RFind("//", PR_TRUE);
+		   nsAutoString  resultStr;
+		   
+		   if (slashIndex > -1) {
+			   slashIndex += 2; // Increment by 2 for //		  		      
+		       searchAutoStr.Mid(resultStr, slashIndex, searchStrLen);
+			   searchAutoStr.Left(prefix, slashIndex);
 		   }
-		   Recycle(searchCString);
+           if ((resultStr.Length())) {
+		        index = rdfAStr.Find(resultStr, PR_TRUE);
+				//printf("SearchCache Round II, searching for %s, prefix = %s\n", resultStr.ToNewCString(), prefix.ToNewCString());
+				if (match)
+			     Recycle(match);
+				if (index == 0) {
+				  resultStr = prefix + rdfAStr;
+			      //printf("SearchCache Round III, searching for %s\n", resultStr.ToNewCString());
+			      match = resultStr.ToNewUnicode();  
+				}
+				else		       
+		           match = rdfAStr.ToNewUnicode();			  
+			 }		  
 	   }
 
-	   if (index >=0) {
+	   if (index ==0) {
            // Item found. Create an AutoComplete Item 
 		   nsCOMPtr<nsIAutoCompleteItem> newItem(do_CreateInstance(NS_AUTOCOMPLETEITEM_PROGID));
 		   NS_ENSURE_TRUE(newItem, NS_ERROR_FAILURE);
