@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://messenger/skin/folderPane.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+	<!ENTITY nameColumn.label   "Name"> 
+	<!ENTITY unreadColumn.label "Unread"> 
+	<!ENTITY totalColumn.label "Total"> 
+	<!ENTITY accounts.label "Accounts">
+	<!ENTITY accounts.img "chrome://messenger/skin/localMailHost.gif">
+]>
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+<tree rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager" id="folderTree" onclick="return parent.parent.ChangeFolderByDOMNode(event.target.parentNode)">
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
+  <treecol rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+  <treehead>
+    <treeitem>
+      <treecell>&nameColumn.label;</treecell>
+      <treecell>&unreadColumn.label;</treecell>
+      <treecell>&totalColumn.label;</treecell>
+    </treeitem>
+  </treehead>
+
+  <treebody rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
+    <treeitem id="msgaccounts:/" open="true">
+      <treecell>
+        <treeindentation/>
+        <html:img hspace="2" style="vertical-align: bottom" src="&accounts.img;"/>&accounts.label;
+      </treecell>
+      <treecell/>
+      <treecell/>
+    </treeitem>
+  </treebody>
+
+</tree>
+</window>

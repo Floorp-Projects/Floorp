@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/threadPane.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+	<!ENTITY senderColumn.label "Sender">
+	<!ENTITY subjectColumn.label "Subject">
+	<!ENTITY dateColumn.label "Date">
+	<!ENTITY statusColumn.label "Status">
+]>   
+
+<window
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+<tree datasources="rdf:mailnewsfolders rdf:mailnewsmessages" id="threadTree" onclick="return parent.parent.LoadMessage(event.target.parentNode)" containment="http://home.netscape.com/NC-rdf#MessageChild">
+
+
+  <treecol style="width:40%" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
+  <treecol style="width:30%" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
+  <treecol style="width:15%" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
+  <treecol style="width:15%" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
+  <treehead>
+    <treeitem>
+		<treecell onclick="return parent.parent.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');">&subjectColumn.label;</treecell>
+		<treecell onclick="return parent.parent.SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');">&senderColumn.label;</treecell>
+		<treecell onclick="return parent.parent.SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');">&dateColumn.label;</treecell>
+		<treecell onclick="return parent.parent.SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');">&statusColumn.label;</treecell>
+    </treeitem>
+  </treehead>
+  
+
+  <treebody id="" name="threadTreeBody">
+  </treebody>
+</tree>
+</window>
