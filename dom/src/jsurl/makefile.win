@@ -16,7 +16,7 @@
 # Reserved.
 
 DEPTH=..\..\..
-MODULE=dom
+MODULE=jsurl
 include <$(DEPTH)/config/config.mak>
 
 IS_COMPONENT=1
@@ -52,6 +52,10 @@ OBJS=   \
 CPPSRCS = \
 	nsJSProtocolHandler.cpp	\
 	$(NULL)
+
+XPIDLSRCS = \
+    .\nsIEvaluateStringProxy.idl \
+    $(NULL) 
 
 
 REQUIRES=netwerk 

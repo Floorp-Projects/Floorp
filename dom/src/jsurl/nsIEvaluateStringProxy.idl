@@ -1,0 +1,19 @@
+#include "nsISupports.idl"
+
+interface nsIPrincipal;
+interface nsIScriptContext;
+
+[uuid(67411da0-7c2e-11d3-8c67-00609792278c)]
+interface nsIEvaluateStringProxy: nsISupports 
+{
+
+    void evaluateString(    in nsIScriptContext scriptContext,
+                            in string script,
+                            in voidStar aObj,
+                            in nsIPrincipal principal,
+                            in string aURL,
+                            in long aLineNo,
+                            out string aRetValue,
+                            out boolean aIsUndefined);
+};
+

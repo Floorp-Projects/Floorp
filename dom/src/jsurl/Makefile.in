@@ -22,9 +22,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= dom
+MODULE		= jsurl
 LIBRARY_NAME	= jsurl
 IS_COMPONENT	= 1
+
+XPIDLSRCS	= \
+		nsIEvaluateStringProxy.idl \
+		$(NULL)
 
 REQUIRES	= netwerk xpcom
 
