@@ -87,7 +87,22 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
   imgRequest *request = nsnull;
 
-  ImageCache::Get(aURI, &request); // addrefs
+#ifdef MOZ_NEW_CACHE
+  nsCOMPtr<nsICacheEntryDescriptor> entry;
+  ImageCache::Get(aURI, &request, getter_AddRefs(entry)); // addrefs request
+
+  if (request && entry && aLoadGroup) {
+    PRUint32 flags = 0;
+    aLoadGroup->GetDefaultLoadAttributes(&flags);
+    if (flags & nsIChannel::FORCE_RELOAD) {
+      entry->Doom(); // doom this thing.
+      entry = nsnull;
+      NS_RELEASE(request);
+      request = nsnull;
+    }
+  }
+#endif
+
   if (!request) {
 #ifdef LOADER_THREADSAFE
     nsAutoLock lock(mLock); // lock when we are adding things to the cache
@@ -101,9 +116,11 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
     ioserv->NewChannelFromURI(aURI, getter_AddRefs(newChannel));
     if (!newChannel) return NS_ERROR_FAILURE;
 
-    // XXX this only handles the first load of the image... ugh
-    if (aLoadGroup)
-      newChannel->SetLoadGroup(aLoadGroup);
+    if (aLoadGroup) {
+      PRUint32 flags;
+      aLoadGroup->GetDefaultLoadAttributes(&flags);
+      newChannel->SetLoadAttributes(flags);
+    }
 
     nsCOMPtr<imgIRequest> req(do_CreateInstance(kImageRequestCID));
     request = NS_REINTERPRET_CAST(imgRequest*, req.get());
@@ -114,8 +131,9 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
     request->Init(newChannel);
 
-    ImageCache::Put(aURI, request);
-
+#ifdef MOZ_NEW_CACHE
+    ImageCache::Put(aURI, request, getter_AddRefs(entry));
+#endif
     PR_LOG(gImgLog, PR_LOG_DEBUG,
            ("[this=%p] imgLoader::LoadImage -- Calling channel->AsyncOpen()\n", this));
 
@@ -133,8 +151,11 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
   nsCOMPtr<imgIRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
   // init adds itself to imgRequest's list of observers
-  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, aObserver, cx);
-
+#ifdef MOZ_NEW_CACHE
+  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, aLoadGroup, aObserver, cx, entry);
+#else
+  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, aLoadGroup, aObserver, cx, nsnull);
+#endif
   NS_RELEASE(request);
 
   *_retval = proxyRequest;
@@ -153,7 +174,10 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   nsCOMPtr<nsIURI> uri;
   channel->GetOriginalURI(getter_AddRefs(uri));
 
-  ImageCache::Get(uri, &request);
+#ifdef MOZ_NEW_CACHE
+  nsCOMPtr<nsICacheEntryDescriptor> entry;
+  ImageCache::Get(uri, &request, getter_AddRefs(entry)); // addrefs request
+#endif
   if (request) {
     // we have this in our cache already.. cancel the current (document) load
 
@@ -175,7 +199,9 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 
     request->Init(channel);
 
-    ImageCache::Put(uri, request);
+#ifdef MOZ_NEW_CACHE
+    ImageCache::Put(uri, request, getter_AddRefs(entry));
+#endif
 
     *listener = NS_STATIC_CAST(nsIStreamListener*, request);
     NS_IF_ADDREF(*listener);
@@ -184,8 +210,11 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   nsCOMPtr<imgIRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
 
   // init adds itself to imgRequest's list of observers
-  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, aObserver, cx);
-
+#ifdef MOZ_NEW_CACHE
+  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, nsnull, aObserver, cx, entry);
+#else
+  NS_REINTERPRET_CAST(imgRequestProxy*, proxyRequest.get())->Init(request, nsnull, aObserver, cx, nsnull);
+#endif
   NS_RELEASE(request);
 
   *_retval = proxyRequest;

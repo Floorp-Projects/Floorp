@@ -23,7 +23,7 @@
 
 #include "ImageCache.h"
 
-#ifdef USE_CACHE
+#ifdef MOZ_NEW_CACHE
 
 #include "prlog.h"
 
@@ -33,38 +33,16 @@ extern PRLogModuleInfo *gImgLog;
 #define gImgLog
 #endif
 
-
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
 
-#include "nsHashtable.h"
+#include "nsICache.h"
+#include "nsICacheService.h"
+#include "nsICacheSession.h"
+#include "nsICacheEntryDescriptor.h"
 
-nsSupportsHashtable mCache;
-
-class nsIURIKey : public nsHashKey {
-protected:
-  nsCOMPtr<nsIURI> mKey;
-
-public:
-  nsIURIKey(nsIURI* key) : mKey(key) {}
-  ~nsIURIKey(void) {}
-
-  PRUint32 HashCode(void) const {
-    nsXPIDLCString spec;
-    mKey->GetSpec(getter_Copies(spec));
-    return (PRUint32) PL_HashString(spec);
-  }
-
-  PRBool Equals(const nsHashKey *aKey) const {
-    PRBool eq;
-    mKey->Equals( ((nsIURIKey*) aKey)->mKey, &eq );
-    return eq;
-  }
-
-  nsHashKey *Clone(void) const {
-    return new nsIURIKey(mKey);
-  }
-};
+nsCOMPtr<nsICacheSession> mSession;
 
 ImageCache::ImageCache()
 {
@@ -76,38 +54,106 @@ ImageCache::~ImageCache()
   /* destructor code */
 }
 
-PRBool ImageCache::Put(nsIURI *aKey, imgRequest *request)
+void GetCacheSession(nsICacheSession **_retval)
+{
+  static nsCOMPtr<nsICacheSession> session;
+
+  if (!session) {
+    nsCOMPtr<nsICacheService> cacheService(do_GetService("@mozilla.org/network/cache-service;1"));
+    cacheService->CreateSession("images", nsICache::NOT_STREAM_BASED, PR_FALSE, getter_AddRefs(session));
+  }
+
+  *_retval = session;
+  NS_IF_ADDREF(*_retval);
+}
+
+
+PRBool ImageCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor **aEntry)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("ImageCache::Put\n"));
 
-  nsIURIKey key(aKey);
-  return mCache.Put(&key, NS_STATIC_CAST(imgIRequest*, request));
+  nsresult rv;
+
+  nsCOMPtr<nsICacheSession> ses;
+  GetCacheSession(getter_AddRefs(ses));
+
+  nsXPIDLCString spec;
+  aKey->GetSpec(getter_Copies(spec));
+
+  nsCOMPtr<nsICacheEntryDescriptor> entry;
+
+  rv = ses->OpenCacheEntry(spec, nsICache::ACCESS_WRITE, getter_AddRefs(entry));
+
+  if (!entry || NS_FAILED(rv))
+    return PR_FALSE;
+
+  entry->SetCacheElement(NS_STATIC_CAST(nsISupports *, NS_STATIC_CAST(imgIRequest*, request)));
+
+  entry->MarkValid();
+
+  *aEntry = entry;
+  NS_ADDREF(*aEntry);
+
+  return PR_TRUE;
 }
 
-PRBool ImageCache::Get(nsIURI *aKey, imgRequest **request)
+PRBool ImageCache::Get(nsIURI *aKey, imgRequest **aRequest, nsICacheEntryDescriptor **aEntry)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("ImageCache::Get\n"));
+       ("ImageCache::Get\n"));
 
-  nsIURIKey key(aKey);
-  imgRequest *sup = NS_REINTERPRET_CAST(imgRequest*, NS_STATIC_CAST(imgIRequest*, mCache.Get(&key))); // this addrefs
-  
-  if (sup) {
-    *request = sup;
-    return PR_TRUE;
-  } else {
+  nsresult rv;
+
+  nsCOMPtr<nsICacheSession> ses;
+  GetCacheSession(getter_AddRefs(ses));
+
+  nsXPIDLCString spec;
+  aKey->GetSpec(getter_Copies(spec));
+
+  nsCOMPtr<nsICacheEntryDescriptor> entry;
+
+  rv = ses->OpenCacheEntry(spec, nsICache::ACCESS_READ, getter_AddRefs(entry));
+
+  if (!entry || NS_FAILED(rv))
     return PR_FALSE;
-  }
+
+  nsCOMPtr<nsISupports> sup;
+  entry->GetCacheElement(getter_AddRefs(sup));
+
+  nsCOMPtr<imgIRequest> req(do_QueryInterface(sup));
+  *aRequest = NS_REINTERPRET_CAST(imgRequest*, req.get());
+  NS_IF_ADDREF(*aRequest);
+
+  *aEntry = entry;
+  NS_ADDREF(*aEntry);
+
+  return PR_TRUE;
 }
+
 
 PRBool ImageCache::Remove(nsIURI *aKey)
 {
   PR_LOG(gImgLog, PR_LOG_DEBUG,
          ("ImageCache::Remove\n"));
 
-  nsIURIKey key(aKey);
-  return mCache.Remove(&key);
-}
+  nsresult rv;
 
-#endif /* USE_CACHE */
+  nsCOMPtr<nsICacheSession> ses;
+  GetCacheSession(getter_AddRefs(ses));
+
+  nsXPIDLCString spec;
+  aKey->GetSpec(getter_Copies(spec));
+
+  nsCOMPtr<nsICacheEntryDescriptor> entry;
+
+  rv = ses->OpenCacheEntry(spec, nsICache::ACCESS_READ, getter_AddRefs(entry));
+
+  if (!entry || NS_FAILED(rv))
+    return PR_FALSE;
+
+  entry->Doom();
+
+  return PR_TRUE;
+}
+#endif /* MOZ_NEW_CACHE */

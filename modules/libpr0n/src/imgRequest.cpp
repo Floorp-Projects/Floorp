@@ -46,7 +46,7 @@ PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
 #endif
 
 
-NS_IMPL_ISUPPORTS5(imgRequest, imgIRequest, 
+NS_IMPL_ISUPPORTS6(imgRequest, imgIRequest, nsIRequest,
                    imgIDecoderObserver, gfxIImageContainerObserver,
                    nsIStreamListener, nsIStreamObserver)
 
@@ -163,8 +163,25 @@ PRBool imgRequest::RemoveFromCache()
 }
 
 
-/** imgIRequest methods **/
+/**  nsIRequest / imgIRequest methods **/
 
+/* readonly attribute wstring name; */
+NS_IMETHODIMP imgRequest::GetName(PRUnichar * *aName)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean isPending (); */
+NS_IMETHODIMP imgRequest::IsPending(PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* readonly attribute nsresult status; */
+NS_IMETHODIMP imgRequest::GetStatus(nsresult *aStatus)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 /* void cancel (in nsresult status); */
 NS_IMETHODIMP imgRequest::Cancel(nsresult status)
@@ -187,6 +204,20 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
 
   return NS_OK;
 }
+
+/* void suspend (); */
+NS_IMETHODIMP imgRequest::Suspend()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void resume (); */
+NS_IMETHODIMP imgRequest::Resume()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** imgIRequest methods **/
 
 /* readonly attribute gfxIImageContainer image; */
 NS_IMETHODIMP imgRequest::GetImage(gfxIImageContainer * *aImage)
@@ -385,7 +416,20 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   LOG_SCOPE(gImgLog, "imgRequest::OnStartRequest");
 
   NS_ASSERTION(!mDecoder, "imgRequest::OnStartRequest -- we already have a decoder");
-  
+
+  /* notify our kids */
+  PRInt32 i = -1;
+  PRInt32 count = mObservers.Count();
+
+  while (++i < count) {
+    imgIDecoderObserver *iob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
+    if (iob) {
+      nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(iob));
+      if (ob) ob->OnStartRequest(aRequest, ctxt);
+    }
+  }
+
+  /* do our real work */
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
 
   if (mChannel && (mChannel != chan)) {
@@ -398,7 +442,6 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 
     return NS_ERROR_FAILURE;
   }
-
 
   nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(chan));
   if (httpChannel) {
@@ -450,7 +493,8 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 
     // XXX notify the person that owns us now that wants the gfxIImageContainer off of us?
 
-    return NS_BINDING_ABORTED;
+    //return NS_ERROR_IMAGELIB_NO_DECODER;
+    return NS_ERROR_FAILURE;
   }
 
   mDecoder->Init(NS_STATIC_CAST(imgIRequest*, this));
@@ -471,6 +515,7 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
   switch(status) {
   case NS_BINDING_ABORTED:
   case NS_BINDING_FAILED:
+  case NS_ERROR_IMAGELIB_NO_DECODER:
 
     mStatus |= imgIRequest::STATUS_ERROR;
 
@@ -495,6 +540,18 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     mDecoder = nsnull; // release the decoder so that it can rest peacefully ;)
   }
 
+  /* notify the kids */
+  PRInt32 i = -1;
+  PRInt32 count = mObservers.Count();
+
+  while (++i < count) {
+    imgIDecoderObserver *iob = NS_STATIC_CAST(imgIDecoderObserver*, mObservers[i]);
+    if (iob) {
+      nsCOMPtr<nsIStreamObserver> ob(do_QueryInterface(iob));
+      if (ob) ob->OnStopRequest(aRequest, ctxt, status, statusArg);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -515,9 +572,11 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     PR_LOG(gImgLog, PR_LOG_WARNING,
            ("[this=%p] imgRequest::OnDataAvailable -- no decoder\n", this));
 
-    return NS_OK;
+    return NS_BASE_STREAM_CLOSED;
   }
 
   PRUint32 wrote;
-  return mDecoder->WriteFrom(inStr, count, &wrote);
+  nsresult rv = mDecoder->WriteFrom(inStr, count, &wrote);
+
+  return NS_OK;
 }
