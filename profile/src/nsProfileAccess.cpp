@@ -1181,7 +1181,7 @@ nsProfileAccess::Get4xProfileInfo(nsIFile *registryFile, PRBool fromImport)
             profileLocation += "/.netscape";
 
             nsCOMPtr<nsILocalFile> fileInNSDir;
-            rv = NS_NewNativeLocalFile(profileLocation + NS_LITERAL_CSTRING("/preferences.js"),
+            rv = NS_NewNativeLocalFile(nsCAutoString(profileLocation + NS_LITERAL_CSTRING("/preferences.js")),
                                        PR_TRUE,
                                        getter_AddRefs(fileInNSDir));
             if (NS_FAILED(rv))
