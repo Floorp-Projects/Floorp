@@ -101,17 +101,11 @@ public:
     Type                     mType;
     PRInt32                  mLineNo;
 
-    virtual ~nsXULPrototypeNode()
-    {
-        MOZ_COUNT_DTOR(nsXULPrototypeNode);
-    }
+    virtual ~nsXULPrototypeNode() {}
 
 protected:
     nsXULPrototypeNode(Type aType, PRInt32 aLineNo)
-        : mType(aType), mLineNo(aLineNo)
-    {
-        MOZ_COUNT_CTOR(nsXULPrototypeNode);
-    }
+        : mType(aType), mLineNo(aLineNo) {}
 };
 
 class nsXULPrototypeElement : public nsXULPrototypeNode
