@@ -47,7 +47,7 @@
 #link-top[disabled="true"],
 #link-top[disabled="true"]:hover,
 #link-top[disabled="true"]:hover:active {
-  list-style-image: url("chrome://navigator/skin/btn1/top-dis.gif");
+  list-style-image: url("chrome://navigator/skin/btn1/top-dis.gif") !important;
 }
 
 #link-top:hover,
@@ -62,7 +62,7 @@
 #link-up[disabled="true"],
 #link-up[disabled="true"]:hover,
 #link-up[disabled="true"]:hover:active {
-  list-style-image: url("chrome://navigator/skin/btn1/up-dis.gif");
+  list-style-image: url("chrome://navigator/skin/btn1/up-dis.gif") !important;
 }
 
 #link-up:hover,
@@ -77,7 +77,7 @@
 #link-first[disabled="true"],
 #link-first[disabled="true"]:hover,
 #link-first[disabled="true"]:hover:active {
-  list-style-image: url("chrome://navigator/skin/btn1/first-dis.gif");
+  list-style-image: url("chrome://navigator/skin/btn1/first-dis.gif") !important;
 }
 
 #link-first:hover,
@@ -92,7 +92,7 @@
 #link-prev[disabled="true"],
 #link-prev[disabled="true"]:hover,
 #link-prev[disabled="true"]:hover:active {
-  list-style-image: url("chrome://navigator/skin/btn1/previous-dis.gif");
+  list-style-image: url("chrome://navigator/skin/btn1/previous-dis.gif") !important;
 }
 
 #link-prev:hover,
@@ -107,7 +107,7 @@
 #link-next[disabled="true"],
 #link-next[disabled="true"]:hover,
 #link-next[disabled="true"]:hover:active {
-  list-style-image: url("chrome://navigator/skin/btn1/next-dis.gif");
+  list-style-image: url("chrome://navigator/skin/btn1/next-dis.gif") !important;
 }
 
 #link-next:hover,
@@ -122,7 +122,7 @@
 #link-last[disabled="true"],
 #link-last[disabled="true"]:hover,
 #link-last[disabled="true"]:hover:active {
-  list-style-image: url("chrome://navigator/skin/btn1/last-dis.gif");
+  list-style-image: url("chrome://navigator/skin/btn1/last-dis.gif") !important;
 }
 
 #link-last:hover,
