@@ -852,7 +852,7 @@ createNewAttachmentInfo.prototype.saveAttachment = function saveAttachment()
 {
   messenger.saveAttachment(this.contentType, 
                            this.url, 
-                           escape(this.displayName), 
+                           encodeURIComponent(this.displayName), 
                            this.uri);
 }
 
@@ -860,7 +860,7 @@ createNewAttachmentInfo.prototype.openAttachment = function openAttachment()
 {
   messenger.openAttachment(this.contentType, 
                            this.url, 
-                           escape(this.displayName), 
+                           encodeURIComponent(this.displayName), 
                            this.uri);
 }
 
@@ -869,7 +869,7 @@ createNewAttachmentInfo.prototype.printAttachment = function printAttachment()
   /* we haven't implemented the ability to print attachments yet...
   messenger.printAttachment(this.contentType, 
                             this.url, 
-                            escape(this.displayName), 
+                            encodeURIComponent(this.displayName), 
                             this.uri);
   */
 }
@@ -1089,7 +1089,7 @@ function SaveAllAttachments()
      var attachment = currentAttachments[index];
      attachmentContentTypeArray[index] = attachment.contentType;
      attachmentUrlArray[index] = attachment.url;
-     attachmentDisplayNameArray[index] = escape(attachment.displayName);
+     attachmentDisplayNameArray[index] = encodeURI(attachment.displayName);
      attachmentMessageUriArray[index] = attachment.uri;
    }
 

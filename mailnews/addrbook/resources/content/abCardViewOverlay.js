@@ -207,7 +207,7 @@ function DisplayCardViewPane(card)
     cvSetVisible(data.cvEmail1Box, false);
     cvSetVisible(data.cvScreennameBox, false);
 
-    visible = HandleLink(data.cvListName, zListName, card.displayName, data.cvListNameBox, "mailto:" + escape(GenerateAddressFromCard(card))) || visible;
+    visible = HandleLink(data.cvListName, zListName, card.displayName, data.cvListNameBox, "mailto:" + encodeURIComponent(GenerateAddressFromCard(card))) || visible;
   }
   else { 
     // listname always hidden if not a mailing list
@@ -493,12 +493,12 @@ function CreateMapItURL(address1, address2, city, state, zip, country)
   if (!gMapItURLFormat)
     return null;
 
-  var urlFormat = gMapItURLFormat.replace("@A1", escape(address1));
-  urlFormat = urlFormat.replace("@A2", escape(address2));
-  urlFormat = urlFormat.replace("@CO", escape(country));
-  urlFormat = urlFormat.replace("@CI", escape(city));
-  urlFormat = urlFormat.replace("@ST", escape(state));
-  urlFormat = urlFormat.replace("@ZI", escape(zip));
+  var urlFormat = gMapItURLFormat.replace("@A1", encodeURIComponent(address1));
+  urlFormat = urlFormat.replace("@A2", encodeURIComponent(address2));
+  urlFormat = urlFormat.replace("@CO", encodeURIComponent(country));
+  urlFormat = urlFormat.replace("@CI", encodeURIComponent(city));
+  urlFormat = urlFormat.replace("@ST", encodeURIComponent(state));
+  urlFormat = urlFormat.replace("@ZI", encodeURIComponent(zip));
   
   return urlFormat;
 }

@@ -1086,7 +1086,7 @@ function GetArgs(originalData)
       args[argname] = argvalue.substring(1, argvalue.length - 1);
     else
       try {
-        args[argname] = unescape(argvalue);
+        args[argname] = decodeURIComponent(argvalue);
       } catch (e) {args[argname] = argvalue;}
     dump("[" + argname + "=" + args[argname] + "]\n");
   }
@@ -1261,9 +1261,10 @@ function ComposeStartup(recycled, aParams)
           {
             var cleanBody;
             try {
-              cleanBody = unescape(body);
+              cleanBody = decodeURI(body);
             } catch(e) { cleanBody = body;}
 
+            // XXX : need to do html-escaping here !
             msgCompFields.body = "<BR><A HREF=\"" + body + "\">" + cleanBody + "</A><BR>";
           }
           else
@@ -2188,7 +2189,7 @@ function AddAttachment(attachment)
     item.setAttribute("label", attachment.name);    //use for display only
     item.attachment = attachment;   //full attachment object stored here
     try {
-      item.setAttribute("tooltiptext", unescape(attachment.url));
+      item.setAttribute("tooltiptext", decodeURI(attachment.url));
     } catch(e) {
       item.setAttribute("tooltiptext", attachment.url);
     }

@@ -993,7 +993,7 @@ function onEnterInSearchBar()
   var sortDirection = selectedNode.getAttribute("sortDirection");
 
   if (gSearchInput.value != "") {
-    searchURI += gQueryURIFormat.replace(/@V/g, escape(gSearchInput.value));
+    searchURI += gQueryURIFormat.replace(/@V/g, encodeURIComponent(gSearchInput.value));
   }
 
   SetAbView(searchURI, sortColumn, sortDirection);

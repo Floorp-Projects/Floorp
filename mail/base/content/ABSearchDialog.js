@@ -307,7 +307,7 @@ function onSearch()
 
       for (var j=0;j<max_attrs;j++) {
        // append the term(s) to the searchUri
-       searchUri += "(" + attrs[j] + "," + opStr + "," + escape(searchTerm.value.str) + ")";
+       searchUri += "(" + attrs[j] + "," + opStr + "," + encodeURIComponent(searchTerm.value.str) + ")";
       }
     }
 

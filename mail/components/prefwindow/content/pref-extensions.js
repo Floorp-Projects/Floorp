@@ -166,7 +166,8 @@ function installExtension()
   if (ret == nsIFilePicker.returnOK) 
   {
     var file = '';
-    file = 'file:///' + escape(fp.file.path.replace(/\\/g,'/'));
+    // XXX To fix : see bugzilla 225695 comment #43
+    file = encodeURI('file:///' + fp.file.path.replace(/\\/g,'/'));
     doXPIInstall(file, getName(file));
   }
 }

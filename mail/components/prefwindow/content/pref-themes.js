@@ -256,7 +256,8 @@ function installSkin()
 function installTheme(filePath) 
 {
   var file = '';
-  file = 'file:///' + escape(filePath.replace(/\\/g,'/'));
+  // XXX To fix : see bugzilla 225695 comment #43
+  file = encodeURI('file:///' + filePath.replace(/\\/g,'/'));
   InstallTrigger.installChrome(InstallTrigger.SKIN, file, getName(file));
 }
 

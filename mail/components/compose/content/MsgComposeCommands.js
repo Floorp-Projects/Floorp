@@ -1089,7 +1089,7 @@ function GetArgs(originalData)
       args[argname] = argvalue.substring(1, argvalue.length - 1);
     else
       try {
-        args[argname] = unescape(argvalue);
+        args[argname] = decodeURIComponent(argvalue);
       } catch (e) {args[argname] = argvalue;}
     dump("[" + argname + "=" + args[argname] + "]\n");
   }
@@ -1278,9 +1278,10 @@ function ComposeStartup(recycled, aParams)
           {
             var cleanBody;
             try {
-              cleanBody = unescape(body);
+              cleanBody = decodeURI(body);
             } catch(e) { cleanBody = body;}
 
+            // XXX : need html-escaping here
             msgCompFields.body = "<BR><A HREF=\"" + body + "\">" + cleanBody + "</A><BR>";
           }
           else
@@ -1777,9 +1778,15 @@ function Save()
 
 function SaveAsFile(saveAs)
 {
+<<<<<<< MsgComposeCommands.js
+  dump("SaveAsFile from XUL\n");
+  var subject = document.getElementById('msgSubject').value;
+  GetCurrentEditor().setDocumentTitle(subject);
+=======
   dump("SaveAsFile from XUL\n");
   var subject = document.getElementById('msgSubject').value; 
   GetCurrentEditor().setDocumentTitle(subject); 
+>>>>>>> 1.26
 
   if (gMsgCompose.bodyConvertible() == nsIMsgCompConvertible.Plain)
     SaveDocument(saveAs, false, "text/plain");
@@ -2233,7 +2240,7 @@ function AddAttachment(attachment)
     item.setAttribute("label", attachment.name);    //use for display only
     item.attachment = attachment;   //full attachment object stored here
     try {
-      item.setAttribute("tooltiptext", unescape(attachment.url));
+      item.setAttribute("tooltiptext", decodeURI(attachment.url));
     } catch(e) {
       item.setAttribute("tooltiptext", attachment.url);
     }
