@@ -174,6 +174,8 @@ toolkit.jar:
     content/global/unknownContent.js                            (ucth/resources/unknownContent.js)
     content/global/helperAppLauncher.xul                        (ucth/resources/helperAppLauncher.xul)
     content/global/helperAppLauncher.js                         (ucth/resources/helperAppLauncher.js)
+    content/global/helperAppDldProgress.js                      (ucth/resources/helperAppDldProgress.js)
+    content/global/helperAppDldProgress.xul                     (ucth/resources/helperAppDldProgress.xul)
     content/global/downloadProgress.xul                         (xfer/resources/downloadProgress.xul)
     content/global/downloadProgress.js                          (xfer/resources/downloadProgress.js)
     content/global/autocomplete.xml                             (autocomplete/resources/content/autocomplete.xml)
