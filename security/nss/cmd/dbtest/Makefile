@@ -54,6 +54,10 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 include ../platlibs.mk
 
+ifdef XP_OS2_VACPP
+CFLAGS += -I../modutil
+endif
+
 ifeq ($(OS_ARCH), WINNT)
 ifndef BUILD_OPT
 LDFLAGS   +=  /subsystem:console /profile /debug /machine:I386 /incremental:no
