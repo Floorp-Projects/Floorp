@@ -553,20 +553,26 @@
          <parameter name="aPopup"/>
          <body>
            <![CDATA[
-             var popupChild = aPopup.firstChild;
-             var firstTime = !popupChild ? true : false;
              var currCol = this.parentNode.parentNode.firstChild;
              var count = 0;
+
+             // we no longer cache the picker content.  
+             // remove the old content
+             while (aPopup.childNodes.length) {
+               aPopup.removeChild(aPopup.childNodes[0]);
+             }
+
 
              while (currCol) {
                while (currCol && currCol.localName != "outlinercol")
                  currCol = currCol.nextSibling;
  
                if (currCol && (currCol != this)) {
-                 // Construct an entry for each cell in the row.
-                 if (firstTime) {
+                 // Construct an entry for each cell in the row, unless
+                 // it is not being show
+                 if (currCol.getAttribute("ignoreincolumnpicker") != "true") {
                      var columnName = currCol.getAttribute("label");
-                     popupChild = document.createElement("menuitem");
+                     var popupChild = document.createElement("menuitem");
                      popupChild.setAttribute("type", "checkbox");
                      popupChild.setAttribute("label", columnName);
                      if (columnName == "") {
