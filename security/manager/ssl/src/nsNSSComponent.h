@@ -88,7 +88,7 @@ public:
 protected:
   char* mByteData;
   PRInt32 mBufferOffset;
-  PRInt32 mContentLength;
+  PRInt32 mBufferSize;
   PRUint32 mType;
   PRBool mDoSilentDownload;
   nsAutoString mCrlAutoDownloadKey;
