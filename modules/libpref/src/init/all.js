@@ -121,7 +121,7 @@ pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
 
 // Translation service
-pref("browser.translation.service", "http://cgi.netscape.com/cgi-bin/translate.cgi?AlisUI=simple_frames/ns_home&AlisTargetURI=");
+pref("browser.translation.service", "http://www.teletranslator.com:8120/?AlisUI=frames_ex/moz_home&alis_info=moz&AlisTargetURI=");
 pref("browser.translation.serviceDomain", "teletranslator.com");
   
 // Platform for Internet Content Selection
