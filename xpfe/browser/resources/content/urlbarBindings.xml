@@ -95,12 +95,14 @@
         <parameter name="aEngineId"/>
         <parameter name="aName"/>
         <parameter name="aIcon"/>
+        <parameter name="aSearchBarUrl"/>
         <body><![CDATA[
           var box = document.createElement("box");
           box.setAttribute("class", "autocomplete-search-engine");
           box.setAttribute("searchEngine", aEngineId);
           box.setAttribute("name", aName);
           box.setAttribute("icon", aIcon);
+          box.setAttribute("searchBarUrl", aSearchBarUrl);
           box.setAttribute("engineIndex", this.childNodes.length);
           this.mSearchBox.appendChild(box);
         ]]></body>
@@ -113,7 +115,7 @@
             this.mSearchBox.removeChild(kids[i]);
         ]]></body>
       </method>
-
+   
       <method name="updateEngines">
         <body><![CDATA[
           var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
@@ -122,6 +124,7 @@
                       
           const kNC_Name = rdf.GetResource("http://home.netscape.com/NC-rdf#Name");
           const kNC_Icon = rdf.GetResource("http://home.netscape.com/NC-rdf#Icon");
+          const kNC_searchBarUrl = rdf.GetResource("http://home.netscape.com/NC-rdf#actionBar");
         
           var defaultEngine = null;
           try {
@@ -136,9 +139,15 @@
             
             if (ds) {
               var res = rdf.GetResource(defaultEngine);
-              this.addEngine(res.Value, 
-                              this.readRDFString(ds, res, kNC_Name), 
-                              this.readRDFString(ds, res, kNC_Icon));
+              try {
+                 searchBarUrl = this.readRDFString(ds, res, kNC_searchBarUrl);
+              } catch(ex) {
+                searchBarUrl = null;
+              }
+                this.addEngine(res.Value, 
+                              this.readRDFString(ds, res, kNC_Name),
+                              this.readRDFString(ds, res, kNC_Icon),
+                              searchBarUrl);					  							  
             }
           }
           
@@ -151,7 +160,6 @@
         <parameter name="aDS"/>
         <body><![CDATA[
           var defaultName = this.mPrefs.getLocalizedUnicharPref("browser.search.defaultenginename");
-        
           const kNC_Root = aRDF.GetResource("NC:SearchEngineRoot");
           const kNC_child = aRDF.GetResource("http://home.netscape.com/NC-rdf#child");
           const kNC_Name = aRDF.GetResource("http://home.netscape.com/NC-rdf#Name");
@@ -173,7 +181,7 @@
         <body><![CDATA[
           var n = aDS.GetTarget(aRes, aProp, true);
           if (n)
-            return n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+             return n.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
         ]]></body>
       </method>
 
@@ -206,8 +214,7 @@
       <handler event="create"><![CDATA[
         if (!this.mEnginesReady && this.defaultSearchEngine)
           this.updateEngines();
-          
-        this.textbox.addEventListener("input", this.mInputListener, false);
+          this.textbox.addEventListener("input", this.mInputListener, false);
         if ("searchValue" in this.mSearchBox)
           this.mSearchBox.searchValue = this.textbox.value;
         else
@@ -303,13 +310,18 @@
           var item = this.activeChild;
           if (item) {
             const ISEARCH_CONTRACTID = "@mozilla.org/rdf/datasource;1?name=internetsearch";
-            const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;
-            
+            const nsIInternetSearchService = Components.interfaces.nsIInternetSearchService;           
             var searchService = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
-            return searchService.GetInternetSearchURL(item.getAttribute("searchEngine"), 
-                                                      escape(this.mSearchValue));
+            var searchEng = item.getAttribute("searchEngine");
+            var searchEngUrl = item.getAttribute("searchBarUrl");
+            var escapedSearch = escape(this.mSearchValue)
+            if (searchEngUrl) {
+                searchEngUrl += escapedSearch;
+                return searchEngUrl;
+            } else {
+              return searchService.GetInternetSearchURL(item.getAttribute("searchEngine"),escapedSearch);
+            }
           }
-          
           return null;
         ]]></body>
       </method>
