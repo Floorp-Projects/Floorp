@@ -58,6 +58,8 @@
 
 #include "nsBaseDragService.h"
 
+#include <Drag.h>
+
 
 
 class  nsNativeDragTarget;
@@ -68,15 +70,13 @@ class  nsNativeDragTarget;
 
 //
 
-// Native MAC DragService wrapper
+// Native MacOS DragService/DragSession implementation
 
 //
 
 class nsDragService : public nsBaseDragService
 
 {
-
-
 
 public:
 
@@ -92,15 +92,33 @@ public:
 
   
 
-  
-
   //nsIDragService
 
-  NS_IMETHOD StartDragSession (nsITransferable * aTransferable, PRUint32 aActionType);
+  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType);
+
+  //NS_IMETHOD InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType);
 
 
+
+  //nsIDragSession
+
+  NS_IMETHOD GetData (nsITransferable * aTransferable);
+
+  NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor);
+
+
+
+private:
+
+
+
+  DragReference mDragRef;    // reference to _the_ drag. There can be only one.
+
+  
 
 }; // class nsDragService
+
+
 
 
 
