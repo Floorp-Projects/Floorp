@@ -52,7 +52,6 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetCID.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIWebShellWindow.h"
 #include "nsIWebShell.h"
 #include "nsIDOMWindow.h"
@@ -194,11 +193,21 @@ nsresult nsMacCommandLine::AddToCommandLine(const char* inOptionString, const FS
 //----------------------------------------------------------------------------------------
 {
   // Convert the filespec to a URL
-  nsFileSpec nsspec(inFileSpec);
-  nsFileURL fileAsURL(nsspec);
+  FSSpec nonConstSpec = inFileSpec;
+  nsCOMPtr<nsILocalFileMac> inFile;
+  nsresult rv = NS_NewLocalFileWithFSSpec(&nonConstSpec, PR_TRUE, getter_AddRefs(inFile));
+  if (NS_FAILED(rv))
+    return rv;
+  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID));
+  if (!ioService)
+    return NS_ERROR_FAILURE;
+  nsCAutoString specBuf;
+  rv = ioService->GetURLSpecFromFile(inFile, specBuf);
+  if (NS_FAILED(rv))
+    return rv;
   mTempArgsString.Append(" ");
-  AddToCommandLine(inOptionString);
-  AddToCommandLine(fileAsURL.GetAsString());
+  AddToCommandLine(inOptionString);  
+  AddToCommandLine(specBuf.get());
   return NS_OK;
 }
 
@@ -267,10 +276,21 @@ OSErr nsMacCommandLine::HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFile
     return AddToCommandLine("-url", inFileSpec);
   }
   // Final case: we're not just starting up. How do we handle this?
-  nsFileSpec fileSpec(inFileSpec);
-  nsFileURL fileURL(fileSpec);
-  nsString urlString; urlString.AssignWithConversion(fileURL.GetURLString());
   nsresult rv;
+  FSSpec nonConstSpec = inFileSpec;
+  nsCOMPtr<nsILocalFileMac> inFile;
+  rv = NS_NewLocalFileWithFSSpec(&nonConstSpec, PR_TRUE, getter_AddRefs(inFile));
+  if (NS_FAILED(rv))
+    return errAEEventNotHandled;
+  nsCOMPtr<nsIIOService> ioService(do_GetService(NS_IOSERVICE_CONTRACTID));
+  if (!ioService)
+    return errAEEventNotHandled;
+  nsCAutoString specBuf;
+  rv = ioService->GetURLSpecFromFile(inFile, specBuf);
+  if (NS_FAILED(rv))
+    return errAEEventNotHandled;
+  nsAutoString urlString;
+  CopyASCIItoUCS2(specBuf, urlString);    
   rv = OpenWindow( "chrome://navigator/content", urlString.get() );
   if (NS_FAILED(rv))
     return errAEEventNotHandled;
