@@ -49,6 +49,7 @@
 #endif
 
 #include "nsIIOService.h"
+#include "nsIURI.h"
 
 class nsIPrompt;
 class nsIHttpChannel;
@@ -56,10 +57,10 @@ class nsIHttpChannel;
 extern nsresult COOKIE_Read();
 extern nsresult COOKIE_Write();
 //XXX these should operate on |const char*|
-extern char * COOKIE_GetCookie(char * address, nsIIOService* ioService);
-extern char * COOKIE_GetCookieFromHttp(char * address, char * firstAddress, nsIIOService* ioService);
-extern void COOKIE_SetCookieString(char * cur_url, nsIPrompt *aPrompter, const char * set_cookie_header, nsIIOService* ioService, nsIHttpChannel* aHttpChannel);
-extern void COOKIE_SetCookieStringFromHttp(char * cur_url, char * first_url, nsIPrompt *aPRompter, const char * set_cookie_header, char * server_date, nsIIOService* ioService, nsIHttpChannel* aHttpChannel);
+extern char * COOKIE_GetCookie(nsIURI * address);
+extern char * COOKIE_GetCookieFromHttp(nsIURI * address, nsIURI * firstAddress);
+extern void COOKIE_SetCookieString(nsIURI * cur_url, nsIPrompt * aPrompter, const char * set_cookie_header, nsIHttpChannel* aHttpChannel);
+extern void COOKIE_SetCookieStringFromHttp(nsIURI * cur_url, nsIURI * first_url, nsIPrompt *aPrompter, const char * set_cookie_header, char * server_date, nsIHttpChannel* aHttpChannel);
 extern void COOKIE_RegisterPrefCallbacks(void);
 
 extern void COOKIE_RemoveSessionCookies();

@@ -45,7 +45,6 @@
 #include "nsVoidArray.h"
 #include "prprf.h"
 #include "prmem.h"
-#include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIPref.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -701,10 +700,10 @@ cookie_pathOK(const char* cookiePath, const char* currentPath) {
 **             to the caller to free any returned string
 */
 PUBLIC char *
-COOKIE_GetCookie(char * address, nsIIOService* ioService) {
+COOKIE_GetCookie(nsIURI * address) {
   char *name=0;
   cookie_CookieStruct * cookie_s;
-  PRBool isSecure = PR_FALSE;
+  PRBool isSecure = PR_TRUE;
   time_t cur_time = get_current_time();
 
   int host_length;
@@ -716,9 +715,10 @@ COOKIE_GetCookie(char * address, nsIIOService* ioService) {
   if(cookie_GetBehaviorPref() == PERMISSION_DontUse) {
     return nsnull;
   }
-  if (!PL_strncasecmp(address, "https:", 6)) {
-     isSecure = PR_TRUE;
-  }
+
+  /* Is this an https "secure" cookie? */
+  if NS_FAILED(address->SchemeIs("https", &isSecure))
+      isSecure = PR_TRUE;
 
   /* search for all cookies */
   if (cookie_list == nsnull) {
@@ -726,19 +726,14 @@ COOKIE_GetCookie(char * address, nsIIOService* ioService) {
   }
   nsCAutoString host, path;
   // Get host and path
-  nsresult result;
-  NS_ASSERTION(ioService, "IOService not available");
-  result = ioService->ExtractUrlPart(nsDependentCString(address),
-                                     nsIIOService::url_Host |
-                                     nsIIOService::url_Port, host);
+  nsresult result = address->GetHostPort(host);
   if (NS_FAILED(result)) {
     return nsnull;
   }
   if ((host.RFindChar(' ') != -1) || (host.RFindChar('\t') != -1)) {
     return nsnull;
   }
-  result = ioService->ExtractUrlPart(nsDependentCString(address),
-                                     nsIIOService::url_Path, path);
+  result = address->GetPath(path);
   if (NS_FAILED(result)) {
     return nsnull;
   }
@@ -859,17 +854,13 @@ cookie_SameDomain(char * currentHost, char * firstHost) {
 }
 
 PRBool
-cookie_isFromMailNews(char *firstURL, nsIIOService* ioService) {
+cookie_isFromMailNews(nsIURI *firstURL) {
   
   if (!firstURL) 
     return PR_FALSE;
 
-  NS_ASSERTION(ioService, "IOService not available");
-  if (!ioService)
-    return PR_FALSE;  // we cannot check the scheme of orignal uri
-
   nsCAutoString schemeString;
-  nsresult rv = ioService->ExtractScheme(nsDependentCString(firstURL), schemeString);
+  nsresult rv = firstURL->GetScheme(schemeString);
   if (NS_FAILED(rv))  //malformed uri
     return PR_FALSE; 
   
@@ -881,31 +872,28 @@ cookie_isFromMailNews(char *firstURL, nsIIOService* ioService) {
 
 
 PRBool
-cookie_isForeign (char * curURL, char * firstURL, nsIIOService* ioService) {
+cookie_isForeign (nsIURI * curURL, nsIURI * firstURL) {
   if (!firstURL) {
     return PR_FALSE;
   }
-  if (!PL_strncasecmp(firstURL, "chrome:", 7)) {
+  PRBool isChrome = PR_FALSE;
+  nsresult rv = firstURL->SchemeIs("chrome", &isChrome);
+  if (NS_SUCCEEDED(rv) && isChrome) {
      return PR_FALSE; // chrome URLs are never foreign (otherwise sidebar cookies won't work)
   }
   nsCAutoString curHost, firstHost;
-  nsresult rv;
-  NS_ASSERTION(ioService, "IOService not available");
+
   // Get hosts
-  rv = ioService->ExtractUrlPart(nsDependentCString(curURL),
-                                 nsIIOService::url_Host |
-                                 nsIIOService::url_Port,
-                                 curHost);
+  rv = curURL->GetHostPort(curHost);
   if (NS_FAILED(rv)) {
     return PR_FALSE;
   }
-  rv = ioService->ExtractUrlPart(nsDependentCString(firstURL),
-                                 nsIIOService::url_Host |
-                                 nsIIOService::url_Port,
-                                 firstHost);
+
+  rv = firstURL->GetHostPort(firstHost);
   if (NS_FAILED(rv)) {
     return PR_FALSE;
   }
+
   char * curHostColon = 0;
   char * firstHostColon = 0;
 
@@ -971,12 +959,15 @@ cookie_GetPolicy(int policy) {
  * P3P_ExplicitConsent, or P3P_NoIdentInfo based on site
  */
 int
-P3P_SitePolicy(char * curURL, nsIHttpChannel* aHttpChannel) {
+P3P_SitePolicy(nsIURI * curURL, nsIHttpChannel* aHttpChannel) {
   int consent = P3P_UnknownPolicy;
   if (cookie_GetBehaviorPref() == PERMISSION_P3P) {
     nsCOMPtr<nsICookieConsent> p3p(do_GetService(NS_COOKIECONSENT_CONTRACTID));
     if (p3p) {
-      p3p->GetConsent(curURL,aHttpChannel,&consent);
+      nsCAutoString curURLSpec;
+      if (NS_FAILED(curURL->GetSpec(curURLSpec)))
+          return consent;
+      p3p->GetConsent(curURLSpec.get(),aHttpChannel,&consent);
     }
   }
   return consent;
@@ -1011,11 +1002,11 @@ cookie_P3PUserPref(PRInt32 policy, PRBool foreign) {
  * returns STATUS_ACCEPT, STATUS_DOWNGRADE, STATUS_FLAG, or STATUS_REJECT based on user's preferences
  */
 nsCookieStatus
-cookie_P3PDecision (char * curURL, char * firstURL, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
+cookie_P3PDecision (nsIURI * curURL, nsIURI * firstURL, nsIHttpChannel* aHttpChannel) {
   return cookie_GetStatus(
            cookie_P3PUserPref(
              P3P_SitePolicy(curURL, aHttpChannel),
-             cookie_isForeign(curURL, firstURL, ioService)));
+             cookie_isForeign(curURL, firstURL)));
 }
 
 /* returns PR_TRUE if authorization is required
@@ -1025,16 +1016,15 @@ cookie_P3PDecision (char * curURL, char * firstURL, nsIIOService* ioService, nsI
 **             to the caller to free any returned string
 */
 PUBLIC char *
-COOKIE_GetCookieFromHttp(char * address, char * firstAddress, 
-                         nsIIOService* ioService) {
+COOKIE_GetCookieFromHttp(nsIURI * address, nsIURI * firstAddress) {
 
 #ifdef DEBUG_morse
-   printf("--- curURL=%s\n",address);
-   printf("--- 1stURL=%s\n",firstAddress);
+   //printf("--- curURL=%s\n",address);
+   //printf("--- 1stURL=%s\n",firstAddress);
 #endif
 
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
-      (!firstAddress || cookie_isForeign(address, firstAddress, ioService))) {
+      (!firstAddress || cookie_isForeign(address, firstAddress))) {
 
     /*
      * WARNING!!! This is a different behavior than 4.x.  In 4.x we used this pref to
@@ -1047,7 +1037,7 @@ COOKIE_GetCookieFromHttp(char * address, char * firstAddress,
 
     return nsnull;
   }
-  return COOKIE_GetCookie(address, ioService);
+  return COOKIE_GetCookie(address);
 }
 
 MODULE_PRIVATE PRBool
@@ -1095,29 +1085,23 @@ cookie_Count(char * host) {
  * this via COOKIE_SetCookieStringFromHttp.
  */
 PRIVATE void
-cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader,
-                       time_t timeToExpire, nsIIOService* ioService,
-                       nsIHttpChannel* aHttpChannel, nsCookieStatus status) {
+cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCookieHeader,
+                       time_t timeToExpire, nsIHttpChannel* aHttpChannel, nsCookieStatus status) {
   cookie_CookieStruct * prev_cookie;
   char *path_from_header=nsnull, *host_from_header=nsnull;
   char *name_from_header=nsnull, *cookie_from_header=nsnull;
   nsCAutoString cur_host, cur_path;
   nsresult rv;
-  NS_ASSERTION(ioService, "IOService not available");
-  // Get host and path
-  rv = ioService->ExtractUrlPart(nsDependentCString(curURL),
-                                 nsIIOService::url_Host | 
-                                 nsIIOService::url_Port,
-                                 cur_host);
+  rv = curURL->GetHostPort(cur_host);
   if (NS_FAILED(rv)) {
     return;
   }
-  rv = ioService->ExtractUrlPart(nsDependentCString(curURL),
-                                 nsIIOService::url_Path, 
-                                 cur_path);
+
+  rv = curURL->GetPath(cur_path);
   if (NS_FAILED(rv)) {
     return;
   }
+
   char *semi_colon, *ptr, *equal;
   PRBool isSecure=PR_FALSE, isDomain=PR_FALSE;
   PRBool bCookieAdded;
@@ -1496,20 +1480,15 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 }
 
 PUBLIC void
-COOKIE_SetCookieString(char * aURL, nsIPrompt *aPrompter, const char * setCookieHeader, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
+COOKIE_SetCookieString(nsIURI * aURL, nsIPrompt *aPrompter, const char * setCookieHeader, nsIHttpChannel* aHttpChannel) {
   nsCOMPtr<nsIURI> pFirstURL;
   nsresult rv;
-  nsCAutoString firstSpec;
 
   if (aHttpChannel) {
     rv = aHttpChannel->GetDocumentURI(getter_AddRefs(pFirstURL));
     if (NS_FAILED(rv)) return;
-    if (pFirstURL) {
-      rv = pFirstURL->GetSpec(firstSpec);
-      if (NS_FAILED(rv)) return;
-    }
   }
-  COOKIE_SetCookieStringFromHttp(aURL, NS_CONST_CAST(char *, firstSpec.get()), aPrompter, setCookieHeader, 0, ioService, aHttpChannel);
+  COOKIE_SetCookieStringFromHttp(aURL, pFirstURL, aPrompter, setCookieHeader, 0, aHttpChannel);
 }
 
 /* This function wrapper wraps COOKIE_SetCookieString for the purposes of 
@@ -1521,20 +1500,20 @@ COOKIE_SetCookieString(char * aURL, nsIPrompt *aPrompter, const char * setCookie
 */
 
 PUBLIC void
-COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPrompter, const char * setCookieHeader, char * server_date, nsIIOService* ioService, nsIHttpChannel* aHttpChannel) {
+COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aPrompter,  const char * setCookieHeader, char * server_date, nsIHttpChannel* aHttpChannel) {
 
 #ifdef DEBUG_morse
-   printf("... curURL=%s\n",curURL);
-   printf("... 1stURL=%s\n",firstURL);
+//   printf("... curURL=%s\n",curURL);
+//   printf("... 1stURL=%s\n",firstURL);
 #endif
 
   /* allow for multiple cookies separated by newlines */
    char *newline = PL_strchr(setCookieHeader, '\n');
    if(newline) {
      *newline = '\0';
-     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, setCookieHeader, server_date, ioService, aHttpChannel);
+     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, setCookieHeader, server_date, aHttpChannel);
      *newline = '\n';
-     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, newline+1, server_date, ioService, aHttpChannel);
+     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, newline+1, server_date, aHttpChannel);
      return;
    }
 
@@ -1550,7 +1529,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
   /* check to see if P3P pref is satisfied */
   nsCookieStatus status = nsICookie::STATUS_UNKNOWN;
   if (cookie_GetBehaviorPref() == PERMISSION_P3P) {
-    status = cookie_P3PDecision(curURL, firstURL, ioService, aHttpChannel);
+    status = cookie_P3PDecision(curURL, firstURL, aHttpChannel);
     if (status == nsICookie::STATUS_REJECTED) {
       nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
       if (os) {
@@ -1562,13 +1541,13 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
  
   /* check for foreign cookie if pref says to reject such */
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
-      cookie_isForeign(curURL, firstURL, ioService)) {
+      cookie_isForeign(curURL, firstURL)) {
     /* it's a foreign cookie so don't set the cookie */
     return;
   }
 
   /* check if a Mail/News message is setting the cookie */
-  if (cookie_GetDisableCookieForMailNewsPref() && cookie_isFromMailNews(firstURL, ioService))
+  if (cookie_GetDisableCookieForMailNewsPref() && cookie_isFromMailNews(firstURL))
     return;
 
   /* Determine when the cookie should expire. This is done by taking the difference between 
@@ -1624,7 +1603,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
   }
 
   cookie_SetCookieString(curURL, aPrompter, setCookieHeader, gmtCookieExpires,
-                         ioService, aHttpChannel, status);
+                         aHttpChannel, status);
 }
 
 /* saves out the HTTP cookies to disk */
