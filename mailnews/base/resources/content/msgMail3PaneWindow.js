@@ -468,10 +468,7 @@ function PerformExpandForAllOpenServers()
                     var server = msgFolder.server;
                     // Don't do this for imap servers. See bug #41943
                     if (server.type != "imap")
-                    {
-                        dump("perform expand #1" + msgFolder.URI + "\n");
                         server.performExpand(msgWindow);
-                    }
                 }
             }
         }
@@ -528,15 +525,8 @@ function loadStartFolder(initialUri)
             }
         }
 
-        var startFolderIndex = GetFolderIndex(folderOutliner, startFolderResource);
-        //if it's not here we will have to make sure it's open.
-        if(startFolderIndex < 0 && startFolderResource && isLoginAtStartUpEnabled)
-        {
-            // Opens the twisty for the default account 
-            OpenTwistyForServer(folderOutliner, defaultServer);
-            startFolderIndex = GetFolderIndex(folderOutliner, startFolderResource);
-        }
-        ChangeSelection(folderOutliner, startFolderIndex);
+        var startFolder = startFolderResource.QueryInterface(Components.interfaces.nsIFolder);
+        SelectFolder(startFolder.URI);
                 
         // only do this on startup, when we pass in null
         if (!initialUri && isLoginAtStartUpEnabled)
