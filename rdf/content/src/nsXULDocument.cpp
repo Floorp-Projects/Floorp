@@ -4001,9 +4001,6 @@ nsXULDocument::CreateElement(PRInt32 aNameSpaceID,
             return NS_ERROR_UNEXPECTED;
     }
 
-#if 1 // XXXwaterson remove this eventually
-    result->SetDocument(this, PR_FALSE);
-#endif
     result->SetContentID(mNextContentID++);
 
     *aResult = result;
@@ -5669,6 +5666,17 @@ nsXULDocument::InsertElement(nsIContent* aParent, nsIContent* aChild)
         rv = aParent->AppendChildTo(aChild, PR_FALSE);
         if (NS_FAILED(rv)) return rv;
     }
+
+    // Both InsertChildAt() and AppendChildTo() only do a "shallow"
+    // SetDocument(); make sure that we do a "deep" one now...
+    nsCOMPtr<nsIDocument> doc;
+    rv = aParent->GetDocument(*getter_AddRefs(doc));
+    if (NS_FAILED(rv)) return rv;
+
+    NS_ASSERTION(doc != nsnull, "merging into null document");
+
+    rv = aChild->SetDocument(doc, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }
