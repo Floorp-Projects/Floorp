@@ -357,6 +357,9 @@
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);" modifiers="shift"/>
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);"/>
 
+  <!-- View Toggle Keys (F8) -->
+  <key id="key_toggleMessagePane" keycode="VK_F8" oncommand="MsgToggleMessagePane();"/>
+
   <!-- Label Keys -->
   <key id="key_label0" charcode="&labelCmd0.key;"  oncommand="goDoCommand('cmd_label0')"/>
   <key id="key_label1" charcode="&labelCmd1.key;"  oncommand="goDoCommand('cmd_label1')"/>
@@ -1141,7 +1144,7 @@
               <menuitem id="messagePaneVertical" type="radio" label="&messagePaneVertical.label;"
                         accesskey="&messagePaneVertical.accesskey;" oncommand="ChangeMailLayout(kVerticalMailLayout);"/>
               <menuseparator/>
-              <menuitem id="menu_showMessage" type="checkbox" label="&showMessageCmd.label;"
+              <menuitem id="menu_showMessage" type="checkbox" label="&showMessageCmd.label;" key="key_toggleMessagePane"
                         accesskey="&showMessageCmd.accesskey;" oncommand="MsgToggleMessagePane();"/>
             </menupopup>
           </menu>
