@@ -53,6 +53,7 @@
         this.ifSetAttribute("autoFill", false);
         this.ifSetAttribute("autoFillAfterMatch", false);
         this.ifSetAttribute("showPopup", true);
+        this.ifSetAttribute("minResultsForPopup", 0);
         this.ifSetAttribute("flexPopup", true);
         this.ifSetAttribute("alwaysOpenPopup", false);
         this.ifSetAttribute("disableAutocomplete", false);
@@ -225,6 +226,10 @@
       <property name="hideHistory"
                 onset="this.setAttribute('hideHistory', val);"
                 onget="return this.getAttribute('hideHistory') == 'true';"/>
+
+      <property name="minResultsForPopup"
+                onset="return this.setAttribute('minResultsForPopup', val);"
+                onget="var t = parseInt(this.getAttribute('minResultsForPopup')); return t ? t : 0;"/>
       
       <!-- state which indicates the current action being performed by the user.
            Possible values are : none, typing, scrolling -->
@@ -545,14 +550,20 @@
           // if this is the first session to return...
           if (firstReturn) {
             this.autoFillInput(aSessionName, aResults);
-            this.openResultPopup();
           }
+
+          // always call openResultPopup...we may not have opened it
+          // if a previous search session didn't return enough search results.
+          // it's smart and doesn't try to open itself multiple times...
+          // be sure to add our result elements before calling openResultPopuup as we need
+          // to know the total # of results found so far.
+          this.addResultElements(aSessionName, aResults);      
+          this.openResultPopup();
          
           // if this is the last session to return... 
           if (this.mSessionReturns == 0) 
             this.postSearchCleanup();
-          
-          this.addResultElements(aSessionName, aResults);            
+               
         ]]></body>
       </method>
 
@@ -880,7 +891,7 @@
       <!--  -->
       <method name="openResultPopup">
         <body><![CDATA[
-          if (!this.mMenuOpen && this.showPopup && this.focused) {
+          if (!this.mMenuOpen && this.showPopup && this.focused && (this.getResultCount("") >= this.minResultsForPopup) ) {
             if (this.flexPopup) {
               var w = this.boxObject.width;
               if (w != this.resultsPopup.boxObject.width)
