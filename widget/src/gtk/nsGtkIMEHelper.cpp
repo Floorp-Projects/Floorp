@@ -1287,6 +1287,10 @@ nsIMEGtkIC::ResetIC(PRUnichar **aUnichar, PRInt32 *aUnisize)
   }
   mPreedit->Reset();
 
+  if (!gdk_im_ready()) {
+    return 0;
+  }
+
 #if XlibSpecificationRelease >= 6
   /* restore conversion state after resetting ic later */
   XIMPreeditState preedit_state = XIMPreeditUnKnown;
@@ -1342,6 +1346,9 @@ nsIMEGtkIC::IsPreeditComposing()
 
 void
 nsIMEGtkIC::SetPreeditFont(GdkFont *aFontset) {
+  if (!gdk_im_ready()) {
+    return;
+  }
   GdkICAttr *attr = gdk_ic_attr_new();
   if (attr) {
     attr->preedit_fontset = aFontset;
@@ -1367,6 +1374,9 @@ nsIMEGtkIC::SetStatusText(const char *aText) {
 
 void
 nsIMEGtkIC::SetStatusFont(GdkFont *aFontset) {
+  if (!gdk_im_ready()) {
+    return;
+  }
   if (mInputStyle & GDK_IM_STATUS_CALLBACKS) {
     if (!gStatus) {
       gStatus = new nsIMEStatus(aFontset);
@@ -1386,6 +1396,9 @@ nsIMEGtkIC::SetStatusFont(GdkFont *aFontset) {
 
 void
 nsIMEGtkIC::SetPreeditSpotLocation(unsigned long aX, unsigned long aY) {
+  if (!gdk_im_ready()) {
+    return;
+  }
   GdkICAttr *attr = gdk_ic_attr_new();
   if (attr) {
     GdkICAttributesType attrMask = GDK_IC_SPOT_LOCATION;
@@ -1398,6 +1411,9 @@ nsIMEGtkIC::SetPreeditSpotLocation(unsigned long aX, unsigned long aY) {
 
 void
 nsIMEGtkIC::SetPreeditArea(int aX, int aY, int aW, int aH) {
+  if (!gdk_im_ready()) {
+    return;
+  }
   GdkICAttr *attr = gdk_ic_attr_new();
   if (attr) {
     GdkICAttributesType attrMask = GDK_IC_PREEDIT_AREA;
