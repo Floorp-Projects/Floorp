@@ -50,7 +50,6 @@ CPPSRCS= \
   nsNativeCheckboxControlFram.cpp \
   nsNativeFormControlFrame.cpp \
   nsNativeRadioControlFrame.cpp \
-  nsNativeSelectControlFrame.cpp \
   nsRadioControlGroup.cpp
 
 CPP_OBJS= \
@@ -80,7 +79,6 @@ CPP_OBJS= \
   .\$(OBJDIR)\nsNativeCheckboxControlFram.obj \
   .\$(OBJDIR)\nsNativeFormControlFrame.obj \
   .\$(OBJDIR)\nsNativeRadioControlFrame.obj \
-  .\$(OBJDIR)\nsNativeSelectControlFrame.obj \
   .\$(OBJDIR)\nsRadioControlGroup.obj
 
 
