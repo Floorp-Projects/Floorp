@@ -483,7 +483,7 @@ nsProgressDialog.prototype = {
                                                .getService( Components.interfaces.nsIPromptService );
              } catch (ex) {
                // getService doesn't return null, it throws
-               break;
+               return;
              }
              var title = this.getProperty( "openingAlertTitle",
 					   [ this.fileName() ],
