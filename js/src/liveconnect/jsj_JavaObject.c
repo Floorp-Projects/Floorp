@@ -282,7 +282,8 @@ JavaObject_finalize(JSContext *cx, JSObject *obj)
 static JSIntn
 enumerate_remove_java_obj(JSJHashEntry *he, JSIntn i, void *arg)
 {
-    JNIEnv *jEnv = (JNIEnv*)arg;
+    JSJavaThreadState *jsj_env = (JSJavaThreadState *)arg;
+    JNIEnv *jEnv = jsj_env->jEnv;
     jobject java_obj;
     JavaObjectWrapper *java_wrapper;
     JSObject *java_wrapper_obj;
@@ -290,7 +291,7 @@ enumerate_remove_java_obj(JSJHashEntry *he, JSIntn i, void *arg)
     java_wrapper_obj = (JSObject *)he->value;
 
     /* Warning: NULL argument may cause assertion in JS engine, but it's actually OK */
-    java_wrapper = JS_GetPrivate(NULL, java_wrapper_obj);
+    java_wrapper = JS_GetPrivate(jsj_env->cx, java_wrapper_obj);
     java_obj = java_wrapper->java_obj;
     (*jEnv)->DeleteGlobalRef(jEnv, java_obj);
     java_wrapper->java_obj = NULL;
@@ -303,16 +304,22 @@ enumerate_remove_java_obj(JSJHashEntry *he, JSIntn i, void *arg)
 void
 jsj_DiscardJavaObjReflections(JNIEnv *jEnv)
 {
-#if 0
-    /* Causes assert-botch in JS_GetPrivate, so disable for now */
+    JSJavaThreadState *jsj_env;
+    char *err_msg;
+
+    /* Get the per-thread state corresponding to the current Java thread */
+    jsj_env = jsj_MapJavaThreadToJSJavaThreadState(jEnv, &err_msg);
+    JS_ASSERT(jsj_env);
+    if (!jsj_env)
+        return;
+
     if (java_obj_reflections) {
         JSJ_HashTableEnumerateEntries(java_obj_reflections,
                                       enumerate_remove_java_obj,
-                                      (void*)jEnv);
+                                      (void*)jsj_env);
         JSJ_HashTableDestroy(java_obj_reflections);
         java_obj_reflections = NULL;
     }
-#endif
 }
 
 JSBool JS_DLL_CALLBACK
