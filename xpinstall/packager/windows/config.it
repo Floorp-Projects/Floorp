@@ -82,7 +82,7 @@ Setup Title2 Font Shadow=TRUE
 ;
 [Locate Previous Product Path0]
 HRoot=HKEY_LOCAL_MACHINE
-HKey=[Netscape Seamonkey CurrentVersion]\Main
+HKey=[Mozilla Seamonkey CurrentVersion]\Main
 Name=Install Directory
 Decrypt HKey=TRUE
 Contains Filename=FALSE
