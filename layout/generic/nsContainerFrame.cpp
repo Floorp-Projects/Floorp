@@ -324,12 +324,12 @@ nsContainerFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 {
   // The container frame always generates a reflow command
   // targeted at its child
-  if (!(mState & NS_FRAME_HAS_DIRTY_CHILDREN)) {    
-    mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
+  // Note that even if this flag is already set, we still need to reflow the
+  // child because the frame may have more than one child
+  mState |= NS_FRAME_HAS_DIRTY_CHILDREN;
 
-    nsFrame::CreateAndPostReflowCommand(aPresShell, aChild, 
-      nsIReflowCommand::ReflowDirty, nsnull, nsnull, nsnull);
-  }
+  nsFrame::CreateAndPostReflowCommand(aPresShell, aChild, 
+    nsIReflowCommand::ReflowDirty, nsnull, nsnull, nsnull);
 
   return NS_OK;
 }
