@@ -89,9 +89,17 @@ rdf_complete(NET_StreamClass *stream)
       if (uf != NULL)  {
 #ifdef MOZ_SMARTUPDATE
         checkForAutoUpdate((void *)FE_GetRDFContext(), uf, fSize);
-#endif
+#endif /* MOZ_SMARTUPDATE */
         freeMem(uf);
-      }
+      } 
+
+      /* A temporary hack to demo AutoUpdate on windows */
+#ifndef MOZ_SMARTUPDATE
+#ifdef XP_WIN
+        checkForAutoUpdate((void *)FE_GetRDFContext(), "http://warp/u/raman/gromit/softupdt.exe", 45328);
+#endif /* XP_WIN */
+#endif /* MOZ_SMARTUPDATE */
+
     } 
   }
   if (f) {
