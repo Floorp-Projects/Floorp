@@ -102,3 +102,25 @@ Uint32 URDFUtilities::GetContainerSize(HT_Resource container)
 	}
 	return result;
 }
+
+
+//
+// StHTEventMasking
+//
+// Change HT's event masking in the given pane for the lifetime of this class. This is
+// meant to be used as a stack-based class. The new notification mask is set in the contsructor
+// and is reset to the original mask in the destructor.
+// 
+
+URDFUtilities::StHTEventMasking :: StHTEventMasking ( HT_Pane inPane, HT_NotificationMask inNewMask )
+	: mPane(inPane)
+{
+	HT_GetNotificationMask ( mPane, &mOldMask );
+	HT_SetNotificationMask ( mPane, inNewMask );
+}
+
+
+URDFUtilities::StHTEventMasking :: ~StHTEventMasking ( ) 
+{
+	HT_SetNotificationMask ( mPane, mOldMask );
+}

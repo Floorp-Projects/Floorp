@@ -38,6 +38,18 @@ class URDFUtilities
 		static Uint32			HTRowToPPRow ( TableIndexT inHTRow )
 			{ return inHTRow + 1; }
 
+			// Change HT's event masking for the lifetime of this class
+		class StHTEventMasking
+		{
+			public:
+				StHTEventMasking ( HT_Pane inPane, HT_NotificationMask inNewMask );
+				~StHTEventMasking ( ) ;
+			
+			private:
+				HT_NotificationMask mOldMask;
+				HT_Pane mPane;
+		};
+		
 	protected:
 		static Boolean			sIsInited;
 };
