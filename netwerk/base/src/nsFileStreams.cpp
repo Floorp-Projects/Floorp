@@ -507,22 +507,9 @@ nsSafeFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
         mTargetFileExists = PR_TRUE; // Safer to assume it exists - we just do more work.
     }
 
-    // follow symlinks, for two reasons:
-    // 1) if a user has deliberately set up a profile file as a symlink, we honor it
-    // 2) to make the MoveToNative() in Finish() an atomic operation (which may not
-    //    be the case if moving across directories on different filesystems).
-    nsCOMPtr<nsIFile> tempResult = do_CreateInstance("@mozilla.org/file/local;1", &rv);
-    if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsILocalFile> tempLocal = do_QueryInterface(tempResult);
-        tempLocal->SetFollowLinks(PR_TRUE);
-        nsCOMPtr<nsILocalFile> fileLocal = do_QueryInterface(file, &rv);
-        if (NS_SUCCEEDED(rv))
-            rv = tempLocal->InitWithFile(fileLocal);
-    }
-    // XP_UNIX ignores SetFollowLinks(), so we have to normalize.
-    if (NS_SUCCEEDED(rv))
-        rv = tempResult->Normalize();
-
+    // XXXdwitte I think we want to be following symlinks here... see e.g. bug 206567.
+    nsCOMPtr<nsIFile> tempResult;
+    rv = file->Clone(getter_AddRefs(tempResult));
     if (NS_SUCCEEDED(rv) && mTargetFileExists) {
         PRUint32 origPerm;
         if (NS_FAILED(file->GetPermissions(&origPerm))) {
