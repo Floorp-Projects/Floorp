@@ -128,7 +128,10 @@ Java_org_mozilla_webclient_wrapper_1native_WindowControlImpl_nativeDestroyInitCo
     initContext->actionQueue = nsnull;
     initContext->embeddedThread = nsnull;
     initContext->env = nsnull;
-    initContext->nativeEventThread = nsnull;
+    if (nsnull != initContext->nativeEventThread) {
+        ::util_DeleteGlobalRef(env, initContext->nativeEventThread);
+        initContext->nativeEventThread = nsnull;
+    }
     initContext->stopThread = -1;
     initContext->initComplete = FALSE;
     initContext->initFailCode = 0;

@@ -210,7 +210,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
     
     if (nsnull == initContext->nativeEventThread) {
         // store the java EventRegistrationImpl class in the initContext
-        initContext->nativeEventThread = obj; // VERY IMPORTANT!!
+        initContext->nativeEventThread = 
+            ::util_NewGlobalRef(env, obj); // VERY IMPORTANT!!
+        
         // This enables the listener to call back into java
     }
     
