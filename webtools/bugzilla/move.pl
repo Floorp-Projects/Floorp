@@ -109,7 +109,7 @@ $host =~ s#http://([^/]+)/.*#$1#;
 my $to = "endico\@localhost";
 my $msg = "To: $to\n";
 $msg .= "From: Bugzilla <bugzilla\@$host>\n";
-$msg .= "Subject: Moving bugs $buglist\n\n";
+$msg .= "Subject: Moving bug(s) $buglist\n\n";
 $msg .= $xml . "\n";
 
 open(SENDMAIL,
