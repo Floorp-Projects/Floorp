@@ -27,18 +27,13 @@ public:
   virtual ~AtomImpl();
 
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIATOM
 
   void* operator new(size_t size, const PRUnichar* us, PRInt32 uslen);
 
   void operator delete(void* ptr) {
     ::operator delete(ptr);
   }
-
-  virtual void ToString(nsString& aBuf) const;
-
-  virtual const PRUnichar* GetUnicode() const;
-
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
 
   // Actually more; 0 terminated. This slot is reserved for the
   // terminating zero.

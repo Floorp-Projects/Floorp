@@ -2218,7 +2218,9 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
     // bit of a hack: a bridge until we get to a more DOM-based
     // solution.
     nsCOMPtr<nsIHTMLContent> element;
-    rv = mHTMLElementFactory->CreateInstanceByTag(aTagName->GetUnicode(),
+    PRUnichar *unicodeString;
+    aTagName->GetUnicode(&unicodeString);
+    rv = mHTMLElementFactory->CreateInstanceByTag(unicodeString,
                                                   getter_AddRefs(element));
 
     if (NS_FAILED(rv)) return rv;
@@ -3068,7 +3070,9 @@ RDFXULBuilderImpl::GetResource(PRInt32 aNameSpaceID,
     gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
 
     // XXX check to see if we need to insert a '/' or a '#'
-    nsAutoString tag(aNameAtom->GetUnicode());
+    PRUnichar *unicodeString;
+    aNameAtom->GetUnicode(&unicodeString);
+    nsAutoString tag(unicodeString);
     if (0 < uri.Length() && uri.Last() != '#' && uri.Last() != '/' && tag.First() != '#')
         uri.Append('#');
 
@@ -3104,7 +3108,9 @@ RDFXULBuilderImpl::MakeProperty(PRInt32 aNameSpaceID, nsIAtom* aTagName, nsIRDFR
     if (uri.Last() != PRUnichar('#') && uri.Last() != PRUnichar('/'))
         uri.Append('#');
 
-    uri.Append(aTagName->GetUnicode());
+    PRUnichar *unicodeString;
+    aTagName->GetUnicode(&unicodeString);
+    uri.Append(unicodeString);
 
     rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), aResult);
     return rv;

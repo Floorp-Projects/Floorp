@@ -31,7 +31,8 @@ MODULE = xpcom
 XPIDL_MODULE = xpcom_ds
 
 XPIDLSRCS =			\
-	nsICollection.idl	   \
+	nsIAtom.idl	   \
+    nsICollection.idl	   \
 	nsIEnumerator.idl	   \
     nsIObserver.idl        \
     nsIObserverService.idl \

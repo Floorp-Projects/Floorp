@@ -59,6 +59,7 @@ EXPORTS =                          \
 XPIDL_MODULE = xpcom_ds
 
 XPIDLSRCS =                 \
+        .\nsIAtom.idl       \
         .\nsICollection.idl \
         .\nsIEnumerator.idl \
 		.\nsIObserver.idl   \

@@ -352,7 +352,9 @@ nsRDFContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
             nsAutoString prefixStr;
             prefix->ToString(prefixStr);
             if (prefixStr.Length()) {
-                aResult.Append(prefix->GetUnicode());
+                PRUnichar *unicodeString;
+                prefix->GetUnicode(&unicodeString);
+                aResult.Append(unicodeString);
                 aResult.Append(':');
             }
         }
@@ -362,7 +364,9 @@ nsRDFContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
     rv = aElement->GetTag(*getter_AddRefs(tag));
     if (NS_FAILED(rv)) return rv;
 
-    aResult.Append(tag->GetUnicode());
+    PRUnichar *unicodeString;
+    tag->GetUnicode(&unicodeString);
+    aResult.Append(unicodeString);
 
     PRInt32 count;
     rv = aElement->GetAttributeCount(count);
@@ -424,13 +428,17 @@ nsRDFContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpac
             nsAutoString prefixStr;
             prefix->ToString(prefixStr);
             if (prefixStr.Length()) {
-                aResult.Append(prefix->GetUnicode());
+                PRUnichar *unicodeString;
+                prefix->GetUnicode(&unicodeString);
+                aResult.Append(unicodeString);
                 aResult.Append(':');
             }
         }
     }
 
-    aResult.Append(aTag->GetUnicode());
+    PRUnichar *unicodeString;
+    aTag->GetUnicode(&unicodeString);
+    aResult.Append(unicodeString);
     return NS_OK;
 }
 

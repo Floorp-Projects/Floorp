@@ -355,9 +355,15 @@ XULContentSinkImpl::~XULContentSinkImpl()
 
                 nsAutoString prefix;
                 if (prefixAtom)
-                    prefix = prefixAtom->GetUnicode();
+                {
+                    PRUnichar *unicodeString;
+                    prefixAtom->GetUnicode(&unicodeString);
+                    prefix = unicodeString;
+                }
                 else
+                {
                     prefix = "<default>";
+                }
 
                 char* prefixStr = prefix.ToNewCString();
                 char* uriStr = uri.ToNewCString();
@@ -405,7 +411,9 @@ XULContentSinkImpl::~XULContentSinkImpl()
                             nsCOMPtr<nsIAtom> tagAtom;
                             rv = rdfDoc->SplitProperty(type, &nameSpaceID, getter_AddRefs(tagAtom));
                             if (NS_SUCCEEDED(rv)) {
-                                tag = tagAtom->GetUnicode();
+                                PRUnichar *unicodeString;
+                                tagAtom->GetUnicode(&unicodeString);
+                                tag = unicodeString;
                                 mNameSpaceManager->GetNameSpaceURI(nameSpaceID, nameSpaceURI);
                             }
                         }
