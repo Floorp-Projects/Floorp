@@ -176,12 +176,12 @@ nsHTMLDivElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::gutter) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 1)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 1)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

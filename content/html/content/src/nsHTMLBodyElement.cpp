@@ -170,8 +170,8 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
   if (mPart->GetAttrCount() > 0) {
     // if marginwidth/marginheight are set, reflect them as 'margin'
     mPart->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
-    if (eHTMLUnit_Pixel == value.GetUnit()) {
-      bodyMarginWidth = value.GetPixelValue();
+    if (eHTMLUnit_Integer == value.GetUnit()) {
+      bodyMarginWidth = value.GetIntValue();
       if (bodyMarginWidth < 0) bodyMarginWidth = 0;
       nsCSSRect& margin = aData->mMarginData->mMargin;
       if (margin.mLeft.GetUnit() == eCSSUnit_Null)
@@ -181,8 +181,8 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
     }
 
     mPart->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
-    if (eHTMLUnit_Pixel == value.GetUnit()) {
-      bodyMarginHeight = value.GetPixelValue();
+    if (eHTMLUnit_Integer == value.GetUnit()) {
+      bodyMarginHeight = value.GetIntValue();
       if (bodyMarginHeight < 0) bodyMarginHeight = 0;
       nsCSSRect& margin = aData->mMarginData->mMargin;
       if (margin.mTop.GetUnit() == eCSSUnit_Null)
@@ -194,8 +194,8 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
     if (eCompatibility_NavQuirks == mode){
       // topmargin (IE-attribute)
       mPart->GetHTMLAttribute(nsHTMLAtoms::topmargin, value);
-      if (eHTMLUnit_Pixel == value.GetUnit()) {
-        bodyTopMargin = value.GetPixelValue();
+      if (eHTMLUnit_Integer == value.GetUnit()) {
+        bodyTopMargin = value.GetIntValue();
         if (bodyTopMargin < 0) bodyTopMargin = 0;
         nsCSSRect& margin = aData->mMarginData->mMargin;
         if (margin.mTop.GetUnit() == eCSSUnit_Null)
@@ -204,8 +204,8 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
 
       // bottommargin (IE-attribute)
       mPart->GetHTMLAttribute(nsHTMLAtoms::bottommargin, value);
-      if (eHTMLUnit_Pixel == value.GetUnit()) {
-        bodyBottomMargin = value.GetPixelValue();
+      if (eHTMLUnit_Integer == value.GetUnit()) {
+        bodyBottomMargin = value.GetIntValue();
         if (bodyBottomMargin < 0) bodyBottomMargin = 0;
         nsCSSRect& margin = aData->mMarginData->mMargin;
         if (margin.mBottom.GetUnit() == eCSSUnit_Null)
@@ -214,8 +214,8 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
 
       // leftmargin (IE-attribute)
       mPart->GetHTMLAttribute(nsHTMLAtoms::leftmargin, value);
-      if (eHTMLUnit_Pixel == value.GetUnit()) {
-        bodyLeftMargin = value.GetPixelValue();
+      if (eHTMLUnit_Integer == value.GetUnit()) {
+        bodyLeftMargin = value.GetIntValue();
         if (bodyLeftMargin < 0) bodyLeftMargin = 0;
         nsCSSRect& margin = aData->mMarginData->mMargin;
         if (margin.mLeft.GetUnit() == eCSSUnit_Null)
@@ -224,8 +224,8 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
 
       // rightmargin (IE-attribute)
       mPart->GetHTMLAttribute(nsHTMLAtoms::rightmargin, value);
-      if (eHTMLUnit_Pixel == value.GetUnit()) {
-        bodyRightMargin = value.GetPixelValue();
+      if (eHTMLUnit_Integer == value.GetUnit()) {
+        bodyRightMargin = value.GetIntValue();
         if (bodyRightMargin < 0) bodyRightMargin = 0;
         nsCSSRect& margin = aData->mMarginData->mMargin;
         if (margin.mRight.GetUnit() == eCSSUnit_Null)
@@ -484,7 +484,7 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
            (aAttribute == nsHTMLAtoms::bottommargin) ||
            (aAttribute == nsHTMLAtoms::leftmargin) ||
            (aAttribute == nsHTMLAtoms::rightmargin)) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -520,22 +520,23 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
       if (doc) {
         nsIHTMLStyleSheet* styleSheet = doc->GetAttributeStyleSheet();
         if (styleSheet) {
-          aAttributes->GetAttribute(nsHTMLAtoms::link, value);
-          if ((eHTMLUnit_Color == value.GetUnit()) || 
-              (eHTMLUnit_ColorName == value.GetUnit())) {
-            styleSheet->SetLinkColor(value.GetColorValue());
+          nscolor color;
+          if (aAttributes->GetAttribute(nsHTMLAtoms::link, value) !=
+              NS_CONTENT_ATTR_NOT_THERE &&
+              value.GetColorValue(color)) {
+            styleSheet->SetLinkColor(color);
           }
 
-          aAttributes->GetAttribute(nsHTMLAtoms::alink, value);
-          if ((eHTMLUnit_Color == value.GetUnit()) || 
-              (eHTMLUnit_ColorName == value.GetUnit())) {
-            styleSheet->SetActiveLinkColor(value.GetColorValue());
+          if (aAttributes->GetAttribute(nsHTMLAtoms::alink, value) !=
+              NS_CONTENT_ATTR_NOT_THERE &&
+              value.GetColorValue(color)) {
+            styleSheet->SetActiveLinkColor(color);
           }
 
-          aAttributes->GetAttribute(nsHTMLAtoms::vlink, value);
-          if ((eHTMLUnit_Color == value.GetUnit()) ||
-              (eHTMLUnit_ColorName == value.GetUnit())) {
-            styleSheet->SetVisitedLinkColor(value.GetColorValue());
+          if (aAttributes->GetAttribute(nsHTMLAtoms::vlink, value) !=
+              NS_CONTENT_ATTR_NOT_THERE &&
+              value.GetColorValue(color)) {
+            styleSheet->SetVisitedLinkColor(color);
           }
         }
       }
@@ -546,10 +547,11 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
     if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
       // color: color
       nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::text, value);
-      if (((eHTMLUnit_Color == value.GetUnit())) ||
-          (eHTMLUnit_ColorName == value.GetUnit()))
-        aData->mColorData->mColor.SetColorValue(value.GetColorValue());
+      nscolor color;
+      if (aAttributes->GetAttribute(nsHTMLAtoms::text, value) !=
+          NS_CONTENT_ATTR_NOT_THERE &&
+          value.GetColorValue(color))
+        aData->mColorData->mColor.SetColorValue(color);
     }
   }
 

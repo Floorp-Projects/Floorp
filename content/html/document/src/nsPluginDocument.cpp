@@ -164,7 +164,7 @@ nsPluginDocument::CreateSyntheticPluginDocument()
   }
 
   // remove margins from body
-  nsHTMLValue zero(0, eHTMLUnit_Pixel);
+  nsHTMLValue zero(0, eHTMLUnit_Integer);
   body->SetHTMLAttribute(nsHTMLAtoms::marginwidth, zero, PR_FALSE);
   body->SetHTMLAttribute(nsHTMLAtoms::marginheight, zero, PR_FALSE);
 

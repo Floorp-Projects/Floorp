@@ -50,26 +50,20 @@
 #include "nsICSSStyleRule.h"
 #include "nsCSSDeclaration.h"
 
-nsHTMLValue::nsHTMLValue(nsHTMLUnit aUnit)
-  : mUnit(aUnit)
+nsHTMLValue::nsHTMLValue()
+  : mUnit(eHTMLUnit_String)
 {
-  NS_ASSERTION(GetUnitClass() == HTMLUNIT_NOSTORE, "not a valueless unit");
-  if (GetUnitClass() != HTMLUNIT_NOSTORE) {
-    mUnit = eHTMLUnit_Null;
-  }
   mValue.mString = nsnull;
 }
 
 nsHTMLValue::nsHTMLValue(PRInt32 aValue, nsHTMLUnit aUnit)
   : mUnit(aUnit)
 {
-  NS_ASSERTION(GetUnitClass() == HTMLUNIT_INTEGER ||
-               GetUnitClass() == HTMLUNIT_PIXEL, "unit not an integer unit");
-  if (GetUnitClass() == HTMLUNIT_INTEGER ||
-      GetUnitClass() == HTMLUNIT_PIXEL) {
+  NS_ASSERTION(GetUnitClass() == HTMLUNIT_INTEGER, "unit not an integer unit");
+  if (GetUnitClass() == HTMLUNIT_INTEGER) {
     mValue.mInt = aValue;
   } else {
-    mUnit = eHTMLUnit_Null;
+    mUnit = eHTMLUnit_String;
     mValue.mString = nsnull;
   }
 }
@@ -130,9 +124,6 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
   // Call GetUnitClass() so that we turn StringWithLength into String
   PRUint32 unitClass = GetUnitClass();
   switch (unitClass) {
-    case HTMLUNIT_NOSTORE:
-      return PR_TRUE;
-
     case HTMLUNIT_STRING:
       if (mValue.mString && aOther.mValue.mString) {
         return GetDependentString().Equals(aOther.GetDependentString());
@@ -141,7 +132,6 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
       return mValue.mString == aOther.mValue.mString;
 
     case HTMLUNIT_INTEGER:
-    case HTMLUNIT_PIXEL:
       return mValue.mInt == aOther.mValue.mInt;
 
     case HTMLUNIT_COLOR:
@@ -211,7 +201,7 @@ void nsHTMLValue::Reset(void)
   else if (mUnit == eHTMLUnit_AtomArray) {
     delete mValue.mAtomArray;
   }
-  mUnit = eHTMLUnit_Null;
+  mUnit = eHTMLUnit_String;
   mValue.mString = nsnull;
 }
 
@@ -224,15 +214,9 @@ void nsHTMLValue::SetIntValue(PRInt32 aValue, nsHTMLUnit aUnit)
   if (GetUnitClass() == HTMLUNIT_INTEGER) {
     mValue.mInt = aValue;
   } else {
-    mUnit = eHTMLUnit_Null;
+    mUnit = eHTMLUnit_String;
+    mValue.mString = nsnull;
   }
-}
-
-void nsHTMLValue::SetPixelValue(PRInt32 aValue)
-{
-  Reset();
-  mUnit = eHTMLUnit_Pixel;
-  mValue.mInt = aValue;
 }
 
 void nsHTMLValue::SetPercentValue(float aValue)
@@ -254,7 +238,7 @@ void nsHTMLValue::SetStringValueInternal(const nsAString& aValue,
       nsCheapStringBufferUtils::CopyToBuffer(mValue.mString, aValue);
     }
   } else {
-    mUnit = eHTMLUnit_Null;
+    mUnit = eHTMLUnit_String;
     mValue.mString = nsnull;
   }
 }
@@ -282,21 +266,11 @@ void nsHTMLValue::SetColorValue(nscolor aValue)
   mValue.mColor = aValue;
 }
 
-void nsHTMLValue::SetEmptyValue(void)
-{
-  Reset();
-  mUnit = eHTMLUnit_Empty;
-}
-
 void
 nsHTMLValue::InitializeFrom(const nsHTMLValue& aCopy)
 {
   mUnit = aCopy.mUnit;
   switch (GetUnitClass()) {
-    case HTMLUNIT_NOSTORE:
-      mValue.mString = nsnull;
-      break;
-
     case HTMLUNIT_STRING:
       if (aCopy.mValue.mString) {
         nsCheapStringBufferUtils::Clone(mValue.mString, aCopy.mValue.mString);
@@ -306,7 +280,6 @@ nsHTMLValue::InitializeFrom(const nsHTMLValue& aCopy)
       break;
 
     case HTMLUNIT_INTEGER:
-    case HTMLUNIT_PIXEL:
       mValue.mInt = aCopy.mValue.mInt;
       break;
 
@@ -326,7 +299,8 @@ nsHTMLValue::InitializeFrom(const nsHTMLValue& aCopy)
     case HTMLUNIT_ATOMARRAY:
       mValue.mAtomArray = new nsCOMArray<nsIAtom>(*aCopy.mValue.mAtomArray);
       if (!mValue.mAtomArray) {
-        mUnit = eHTMLUnit_Null;
+        mUnit = eHTMLUnit_String;
+        mValue.mString = nsnull;
       }
       break;
 
@@ -411,11 +385,7 @@ nsHTMLValue::ParseSpecialIntValue(const nsAString& aString,
     }
 
     // Straight number is interpreted with the default unit
-    if (aDefaultUnit == eHTMLUnit_Pixel) {
-      SetPixelValue(val);
-    } else {
-      SetIntValue(val, aDefaultUnit);
-    }
+    SetIntValue(val, aDefaultUnit);
     return PR_TRUE;
   }
 
@@ -448,11 +418,6 @@ nsHTMLValue::ToString(nsAString& aResult) const
       }
       return PR_TRUE;
 
-    case eHTMLUnit_Pixel:
-      intStr.AppendInt(GetPixelValue());
-      aResult.Append(intStr);
-      return PR_TRUE;
-
     case eHTMLUnit_Percent:
     {
       float percentVal = GetPercentValue() * 100.0f;
@@ -463,14 +428,14 @@ nsHTMLValue::ToString(nsAString& aResult) const
     }
     case eHTMLUnit_Color:
     {
-      nscolor v = GetColorValue();
+      nscolor v;
+      GetColorValue(v);
       char buf[10];
       PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
                   NS_GET_R(v), NS_GET_G(v), NS_GET_B(v));
       AppendASCIItoUTF16(buf, aResult);
       return PR_TRUE;
     }
-    case eHTMLUnit_ColorName:
     case eHTMLUnit_String:
       GetStringValue(aResult);
       return PR_TRUE;
@@ -516,11 +481,7 @@ nsHTMLValue::ParseIntWithBounds(const nsAString& aString,
   if (NS_SUCCEEDED(ec)) {
     val = PR_MAX(val, aMin);
     val = PR_MIN(val, aMax);
-    if (aDefaultUnit == eHTMLUnit_Pixel) {
-      SetPixelValue(val);
-    } else {
-      SetIntValue(val, aDefaultUnit);
-    }
+    SetIntValue(val, aDefaultUnit);
     return PR_TRUE;
   }
 
@@ -549,7 +510,7 @@ nsHTMLValue::ParseColor(const nsAString& aString, nsIDocument* aDocument)
   // No color names begin with a '#', but numerical colors do so
   // it is a very common first char
   if ((colorStr.CharAt(0) != '#') && NS_ColorNameToRGB(colorStr, &color)) {
-    SetStringValue(colorStr, eHTMLUnit_ColorName);
+    SetStringValue(colorStr, eHTMLUnit_String);
     return PR_TRUE;
   }
 

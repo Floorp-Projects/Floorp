@@ -178,18 +178,14 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
                                    nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::width) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 1, 1000)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 1, 1000)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
-  }
-  else if (aAttribute == nsHTMLAtoms::noshade) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     if (aResult.ParseEnumValue(aValue, kAlignTable)) {
@@ -228,19 +224,18 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
   nsHTMLValue value;
   PRBool noshade = PR_FALSE;
 
-  nsHTMLValue color;
-  aAttributes->GetAttribute(nsHTMLAtoms::color, color);
-
-  PRBool colorIsSet = color.GetUnit() == eHTMLUnit_Color ||
-                      color.GetUnit() == eHTMLUnit_ColorName;
+  nsHTMLValue colorValue;
+  nscolor color;
+  PRBool colorIsSet = aAttributes->GetAttribute(nsHTMLAtoms::color, colorValue) !=
+                      NS_CONTENT_ATTR_NOT_THERE &&
+                      colorValue.GetColorValue(color);
 
   if (aData->mSID == eStyleStruct_Position ||
       aData->mSID == eStyleStruct_Border) {
     if (colorIsSet) {
       noshade = PR_TRUE;
     } else {
-      aAttributes->GetAttribute(nsHTMLAtoms::noshade, value);
-      noshade = value.GetUnit() != eHTMLUnit_Null;
+      noshade = !!aAttributes->GetAttr(nsHTMLAtoms::noshade);
     }
   }
 
@@ -273,18 +268,18 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
   }
   else if (aData->mSID == eStyleStruct_Position) {
-    // width: pixel, percent
+    // width: integer, percent
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
       aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-      if (value.GetUnit() == eHTMLUnit_Pixel) {
-        aData->mPositionData->mWidth.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+      if (value.GetUnit() == eHTMLUnit_Integer) {
+        aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
       } else if (value.GetUnit() == eHTMLUnit_Percent) {
         aData->mPositionData->mWidth.SetPercentValue(value.GetPercentValue());
       }
     }
 
     if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
-      // size: pixel
+      // size: integer
       if (noshade) {
         // noshade case: size is set using the border
         aData->mPositionData->mHeight.SetAutoValue();
@@ -294,20 +289,20 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         // for size=1, html.css has a special case rule that makes this work by
         // removing all but the top border.
         aAttributes->GetAttribute(nsHTMLAtoms::size, value);
-        if (value.GetUnit() == eHTMLUnit_Pixel) {
-          aData->mPositionData->mHeight.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+        if (value.GetUnit() == eHTMLUnit_Integer) {
+          aData->mPositionData->mHeight.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
         } // else use default value from html.css
       }
     }
   }
   else if (aData->mSID == eStyleStruct_Border && noshade) { // if not noshade, border styles are dealt with by html.css
-    // size: pixel
+    // size: integer
     // if a size is set, use half of it per side, otherwise, use 1px per side
     float sizePerSide;
     PRBool allSides = PR_TRUE;
     aAttributes->GetAttribute(nsHTMLAtoms::size, value);
-    if (value.GetUnit() == eHTMLUnit_Pixel) {
-      sizePerSide = (float)value.GetPixelValue() / 2.0f;
+    if (value.GetUnit() == eHTMLUnit_Integer) {
+      sizePerSide = (float)value.GetIntValue() / 2.0f;
       if (sizePerSide < 1.0f) {
         // XXX When the pixel bug is fixed, all the special casing for
         // subpixel borders should be removed.
@@ -377,7 +372,7 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // (we got the color attribute earlier)
     if (colorIsSet &&
         aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
-      aData->mColorData->mColor.SetColorValue(color.GetColorValue());
+      aData->mColorData->mColor.SetColorValue(color);
     }
   }
 

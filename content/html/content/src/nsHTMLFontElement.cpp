@@ -173,11 +173,11 @@ nsHTMLFontElement::StringToAttribute(nsIAtom* aAttribute,
       //rickg: fixed flaw where ToInteger error code was not being checked.
       //       This caused wrong default value for font size.
     PRInt32 ec, v = tmp.ToInteger(&ec);
-    if(NS_SUCCEEDED(ec)){
+    if(NS_SUCCEEDED(ec)) {
       tmp.CompressWhitespace(PR_TRUE, PR_FALSE);
       PRUnichar ch = tmp.IsEmpty() ? 0 : tmp.First();
-      aResult.SetIntValue(v, ((ch == '+') || (ch == '-')) ?
-                          eHTMLUnit_Integer : eHTMLUnit_Enumerated);
+      aResult.SetIntValue(v, (ch == '+' || ch == '-') ?
+                             eHTMLUnit_Enumerated : eHTMLUnit_Integer);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -197,20 +197,16 @@ nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
   if ((aAttribute == nsHTMLAtoms::size) ||
       (aAttribute == nsHTMLAtoms::pointSize) ||
       (aAttribute == nsHTMLAtoms::fontWeight)) {
-    aResult.Truncate();
-    nsAutoString intVal;
     if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
-      intVal.AppendInt(aValue.GetIntValue(), 10);
-      aResult.Append(intVal);
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-    else if (aValue.GetUnit() == eHTMLUnit_Integer) {
+      nsAutoString intVal;
       PRInt32 value = aValue.GetIntValue(); 
+      intVal.AppendInt(value, 10);
       if (value >= 0) {
-        aResult.Append(NS_LITERAL_STRING("+"));
+        aResult = NS_LITERAL_STRING("+") + intVal;
       }
-      intVal.AppendInt(value, 10);      
-      aResult.Append(intVal);
+      else {
+        aResult = intVal;
+      }
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
 
@@ -230,8 +226,9 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     
     // face: string list
     if (font.mFamily.GetUnit() == eCSSUnit_Null) {
-      aAttributes->GetAttribute(nsHTMLAtoms::face, value);
-      if (value.GetUnit() == eHTMLUnit_String) {
+      if (aAttributes->GetAttribute(nsHTMLAtoms::face, value) !=
+          NS_CONTENT_ATTR_NOT_THERE &&
+          value.GetUnit() == eHTMLUnit_String) {
         nsAutoString familyList;
         value.GetStringValue(familyList);
         if (!familyList.IsEmpty()) {
@@ -255,8 +252,8 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         nsHTMLUnit unit = value.GetUnit();
         if (unit == eHTMLUnit_Integer || unit == eHTMLUnit_Enumerated) { 
           PRInt32 size = value.GetIntValue();
-          if (unit == eHTMLUnit_Integer) // int (+/-)
-            size += 3;  // XXX should be BASEFONT, not three
+          if (unit == eHTMLUnit_Enumerated) // int (+/-)
+            size += 3;  // XXX should be BASEFONT, not three see bug 3875
 	            
           size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
           font.mSize.SetIntValue(size, eCSSUnit_Enumerated);
@@ -277,11 +274,11 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null) {
       // color: color
       nsHTMLValue value;
+      nscolor color;
       if (NS_CONTENT_ATTR_NOT_THERE !=
-          aAttributes->GetAttribute(nsHTMLAtoms::color, value)) {
-        if (((eHTMLUnit_Color == value.GetUnit())) ||
-            (eHTMLUnit_ColorName == value.GetUnit()))
-          aData->mColorData->mColor.SetColorValue(value.GetColorValue());
+          aAttributes->GetAttribute(nsHTMLAtoms::color, value) &&
+          value.GetColorValue(color)) {
+        aData->mColorData->mColor.SetColorValue(color);
       }
     }
   }
@@ -290,10 +287,10 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // in quirks mode.  The NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL flag only
     // affects quirks mode rendering.
     nsHTMLValue value;
+    nscolor color;
     if (NS_CONTENT_ATTR_NOT_THERE !=
         aAttributes->GetAttribute(nsHTMLAtoms::color, value) &&
-        (eHTMLUnit_Color == value.GetUnit() ||
-         eHTMLUnit_ColorName == value.GetUnit())) {
+        value.GetColorValue(color)) {
       nsCSSValue& decoration = aData->mTextData->mDecoration;
       PRInt32 newValue = NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL;
       if (decoration.GetUnit() == eCSSUnit_Enumerated) {

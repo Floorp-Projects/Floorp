@@ -176,10 +176,6 @@ nsHTMLDirectoryElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::compact) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_NO_VALUE;
-  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
@@ -202,11 +198,13 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
     if (aData->mListData->mType.GetUnit() == eCSSUnit_Null) {
       nsHTMLValue value;
       // type: enum
-      aAttributes->GetAttribute(nsHTMLAtoms::type, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated)
-        aData->mListData->mType.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
-      else if (value.GetUnit() != eHTMLUnit_Null)
-        aData->mListData->mType.SetIntValue(NS_STYLE_LIST_STYLE_DISC, eCSSUnit_Enumerated);
+      if (aAttributes->GetAttribute(nsHTMLAtoms::type, value) !=
+          NS_CONTENT_ATTR_NOT_THERE) {
+        if (value.GetUnit() == eHTMLUnit_Enumerated)
+          aData->mListData->mType.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+        else
+          aData->mListData->mType.SetIntValue(NS_STYLE_LIST_STYLE_DISC, eCSSUnit_Enumerated);
+      }
     }
   }
 

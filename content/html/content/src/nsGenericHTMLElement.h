@@ -218,7 +218,7 @@ public:
   //----------------------------------------
   /**
    * Turn an attribute value into string based on the type of attribute
-   * (does not need to do standard types such as string, integer, pixel,
+   * (does not need to do standard types such as string, integer,
    * color ...).  Called by GetAttr().
    *
    * @param aAttribute the attribute to convert
@@ -417,18 +417,6 @@ public:
   static PRBool ParseImageAttribute(nsIAtom* aAttribute,
                                     const nsAString& aString,
                                     nsHTMLValue& aResult);
-  /**
-   * Convert an image attribute to string
-   *
-   * @param aAttribute the attribute to parse
-   * @param aValue the value to convert
-   * @param aResult the resulting string
-   * @return whether the value was converted
-   */
-  static PRBool ImageAttributeToString(nsIAtom* aAttribute,
-                                       const nsHTMLValue& aValue,
-                                       nsAString& aResult);
-
   /**
    * Convert a frameborder string to value (yes/no/1/0)
    *
@@ -893,14 +881,12 @@ protected:
   NS_IMETHODIMP                                                       \
   _class::Set##_method(PRBool aValue)                                 \
   {                                                                   \
-    nsHTMLValue empty(eHTMLUnit_Empty);                               \
     if (aValue) {                                                     \
-      return SetHTMLAttribute(nsHTMLAtoms::_atom, empty, PR_TRUE);    \
+      return SetHTMLAttribute(nsHTMLAtoms::_atom, nsHTMLValue(),      \
+                              PR_TRUE);                               \
     }                                                                 \
-    else {                                                            \
-      UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, PR_TRUE);      \
-      return NS_OK;                                                   \
-    }                                                                 \
+    UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::_atom, PR_TRUE);        \
+    return NS_OK;                                                     \
   }
 
 /**
@@ -934,40 +920,6 @@ protected:
   _class::Set##_method(PRInt32 aValue)                              \
   {                                                                 \
     nsHTMLValue value(aValue, eHTMLUnit_Integer);                   \
-    return SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE);    \
-  }
-
-/**
- * A macro to implement the getter and the setter for a given pixel
- * valued content property. The method uses the generic GetAttr and
- * SetAttr methods.
- */
-#define NS_IMPL_PIXEL_ATTR(_class, _method, _atom)                  \
-  NS_IMPL_PIXEL_ATTR_DEFAULT_VALUE(_class, _method, _atom, -1)
-
-/**
- * A macro to implement the getter and the setter for a given pixel
- * valued content property with a default value.
- * The method uses the generic GetAttr and SetAttr methods.
- */
-#define NS_IMPL_PIXEL_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
-  NS_IMETHODIMP                                                     \
-  _class::Get##_method(PRInt32* aValue)                             \
-  {                                                                 \
-    nsHTMLValue value;                                              \
-    *aValue = _default;                                                   \
-    if (NS_CONTENT_ATTR_HAS_VALUE ==                                \
-        GetHTMLAttribute(nsHTMLAtoms::_atom, value)) {              \
-      if (value.GetUnit() == eHTMLUnit_Pixel) {                     \
-        *aValue = value.GetPixelValue();                            \
-      }                                                             \
-    }                                                               \
-    return NS_OK;                                                   \
-  }                                                                 \
-  NS_IMETHODIMP                                                     \
-  _class::Set##_method(PRInt32 aValue)                              \
-  {                                                                 \
-    nsHTMLValue value(aValue, eHTMLUnit_Pixel);                     \
     return SetHTMLAttribute(nsHTMLAtoms::_atom, value, PR_TRUE);    \
   }
 

@@ -371,14 +371,14 @@ nsHTMLTableCellElement::StringToAttribute(nsIAtom* aAttribute,
   else if (aAttribute == nsHTMLAtoms::height) {
     /* attributes that resolve to integers or percents */
 
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
     /* attributes that resolve to integers or percents */
 
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -447,9 +447,9 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     nsHTMLValue value;
     if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
       aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-      if (value.GetUnit() == eHTMLUnit_Pixel) {
-        if (value.GetPixelValue() > 0)
-          aData->mPositionData->mWidth.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel); 
+      if (value.GetUnit() == eHTMLUnit_Integer) {
+        if (value.GetIntValue() > 0)
+          aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel); 
         // else 0 implies auto for compatibility.
       }
       else if (value.GetUnit() == eHTMLUnit_Percent) {
@@ -462,9 +462,9 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     // height: value
     if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
       aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-      if (value.GetUnit() == eHTMLUnit_Pixel) {
-        if (value.GetPixelValue() > 0)
-          aData->mPositionData->mHeight.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+      if (value.GetUnit() == eHTMLUnit_Integer) {
+        if (value.GetIntValue() > 0)
+          aData->mPositionData->mHeight.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
         // else 0 implies auto for compatibility.
       }
       else if (value.GetUnit() == eHTMLUnit_Percent) {
@@ -486,12 +486,12 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (aData->mTextData->mWhiteSpace.GetUnit() == eCSSUnit_Null) {
       // nowrap: enum
       nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::nowrap, value);
-      if (value.GetUnit() != eHTMLUnit_Null) {
-        // See if our width is not a pixel width.
+      if (aAttributes->GetAttribute(nsHTMLAtoms::nowrap, value) !=
+          NS_CONTENT_ATTR_NOT_THERE) {
+        // See if our width is not a integer width.
         nsHTMLValue widthValue;
         aAttributes->GetAttribute(nsHTMLAtoms::width, widthValue);
-        if (widthValue.GetUnit() != eHTMLUnit_Pixel)
+        if (widthValue.GetUnit() != eHTMLUnit_Integer)
           aData->mTextData->mWhiteSpace.SetIntValue(NS_STYLE_WHITESPACE_NOWRAP, eCSSUnit_Enumerated);
       }
     }

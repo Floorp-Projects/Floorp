@@ -106,9 +106,6 @@ public:
   NS_IMETHOD Initialize(JSContext* aContext, JSObject *aObj, 
                         PRUint32 argc, jsval *argv);
 
-  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
-                               const nsAString& aValue,
-                               nsHTMLValue& aResult);
   NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
                                     PRInt32 aModType,
                                     nsChangeHint& aHint) const;
@@ -368,17 +365,11 @@ nsHTMLOptionElement::GetDisabled(PRBool* aDisabled)
 NS_IMETHODIMP
 nsHTMLOptionElement::SetDisabled(PRBool aDisabled)
 {
-  nsresult rv = NS_OK;
-  nsHTMLValue empty(eHTMLUnit_Empty);
-
-
   if (aDisabled) {
-    rv = SetHTMLAttribute(nsHTMLAtoms::disabled, empty, PR_TRUE);
-  } else {
-    rv = UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
+    return SetHTMLAttribute(nsHTMLAtoms::disabled, nsHTMLValue(), PR_TRUE);
   }
 
-  return NS_OK;
+  return UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::disabled, PR_TRUE);
 }
 
 NS_IMETHODIMP                                                      
@@ -418,16 +409,11 @@ nsHTMLOptionElement::GetDefaultSelected(PRBool* aDefaultSelected)
 NS_IMETHODIMP
 nsHTMLOptionElement::SetDefaultSelected(PRBool aDefaultSelected)
 {
-  nsHTMLValue empty(eHTMLUnit_Empty);
-  nsresult rv = NS_OK;
-
   if (aDefaultSelected) {
-    rv = SetHTMLAttribute(nsHTMLAtoms::selected, empty, PR_TRUE);
-  } else {
-    rv = UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::selected, PR_TRUE);
+    return SetHTMLAttribute(nsHTMLAtoms::selected, nsHTMLValue(), PR_TRUE);
   }
 
-  return rv;
+  return UnsetAttr(kNameSpaceID_None, nsHTMLAtoms::selected, PR_TRUE);
 }
 
 NS_IMETHODIMP 
@@ -467,23 +453,6 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLOptionElement::StringToAttribute(nsIAtom* aAttribute,
-                                const nsAString& aValue,
-                                nsHTMLValue& aResult)
-{
-  if (aAttribute == nsHTMLAtoms::selected) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-  else if (aAttribute == nsHTMLAtoms::disabled) {
-    aResult.SetEmptyValue();
-    return NS_CONTENT_ATTR_HAS_VALUE;
-  }
-
-  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
@@ -725,13 +694,8 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
                                           argv[2],
                                           &defaultSelected)) &&
             (JS_TRUE == defaultSelected)) {
-          nsHTMLValue empty(eHTMLUnit_Empty);
-
-          result = SetHTMLAttribute(nsHTMLAtoms::selected, empty, PR_FALSE);
-
-          if (NS_FAILED(result)) {
-            return result;
-          }          
+          result = SetHTMLAttribute(nsHTMLAtoms::selected, nsHTMLValue(), PR_FALSE);
+          NS_ENSURE_SUCCESS(result, result);
         }
 
         // XXX This is *untested* behavior.  Should work though.

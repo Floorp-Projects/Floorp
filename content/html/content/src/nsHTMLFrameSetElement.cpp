@@ -351,7 +351,7 @@ nsHTMLFrameSetElement::StringToAttribute(nsIAtom* aAttribute,
     }
   } 
   else if (aAttribute == nsHTMLAtoms::border) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0, 100)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0, 100)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }

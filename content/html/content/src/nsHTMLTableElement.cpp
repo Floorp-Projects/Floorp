@@ -947,10 +947,10 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
                                       nsHTMLValue& aResult)
 {
   /* ignore summary, just a string */
-  /* attributes that resolve to pixels, with min=0 */
+  /* attributes that resolve to integer, with min=0 */
   if (aAttribute == nsHTMLAtoms::cellspacing ||
       aAttribute == nsHTMLAtoms::cellpadding) {
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -962,35 +962,32 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::border) {
-    /* attributes that are either empty, or pixels */
+    /* attributes that are either empty, or integer */
 
     PRInt32 min = (aValue.IsEmpty()) ? 1 : 0;
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, min)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, min)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
     else { 
       // XXX this should really be NavQuirks only to allow non numeric value
-      aResult.SetPixelValue(1);
+      aResult.SetIntValue(1, eHTMLUnit_Integer);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::height) {
     /* attributes that resolve to integers or percents */
 
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
   else if (aAttribute == nsHTMLAtoms::width) {
     /* attributes that resolve to integers or percents or proportions */
 
-    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
+    if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
       // treat 0 width as auto
       nsHTMLUnit unit = aResult.GetUnit();
-      if ((eHTMLUnit_Pixel == unit) && (0 == aResult.GetPixelValue())) {
-        return NS_CONTENT_ATTR_NOT_THERE;
-      }
-      else if ((eHTMLUnit_Integer == unit) && (0 == aResult.GetIntValue())) {
+      if ((eHTMLUnit_Integer == unit) && (0 == aResult.GetIntValue())) {
         return NS_CONTENT_ATTR_NOT_THERE;
       }
       else if ((eHTMLUnit_Percent == unit) && (0.0f == aResult.GetPercentValue())) {
@@ -1029,7 +1026,7 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   }
   else if (aAttribute == nsHTMLAtoms::hspace ||
            aAttribute == nsHTMLAtoms::vspace) {
-    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
+    if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -1139,62 +1136,58 @@ MapTableBorderInto(const nsMappedAttributes* aAttributes,
                    nsRuleData* aData, PRUint8 aBorderStyle)
 {
   nsHTMLValue borderValue;
-
-  aAttributes->GetAttribute(nsHTMLAtoms::border, borderValue);
-  if (borderValue.GetUnit() == eHTMLUnit_Null) {
+  if (aAttributes->GetAttribute(nsHTMLAtoms::border, borderValue) ==
+      NS_CONTENT_ATTR_NOT_THERE) {
     // the absence of "border" with the presence of "frame" implies
     // border = 1 pixel
-    nsHTMLValue frameValue;
-    aAttributes->GetAttribute(nsHTMLAtoms::frame, frameValue);
-
-    if (frameValue.GetUnit() != eHTMLUnit_Null)
-      borderValue.SetPixelValue(1);
+    if (!aAttributes->GetAttr(nsHTMLAtoms::frame)) {
+      return;
+    }
+    borderValue.SetIntValue(1, eHTMLUnit_Integer);
   }
 
-  if (borderValue.GetUnit() != eHTMLUnit_Null) {
-    if (borderValue.GetUnit() != eHTMLUnit_Pixel) {
-      // empty values of border get rules=all and frame=border
+  if (borderValue.GetUnit() != eHTMLUnit_Integer) {
+    // empty values of border get rules=all and frame=border
+    if (aData->mTableData) {
+      aData->mTableData->mRules.SetIntValue(NS_STYLE_TABLE_RULES_ALL, eCSSUnit_Enumerated);
+      aData->mTableData->mFrame.SetIntValue(NS_STYLE_TABLE_FRAME_BORDER, eCSSUnit_Enumerated);
+    }
+    borderValue.SetIntValue(1, eHTMLUnit_Integer);
+  }
+  else {
+    PRInt32 borderThickness = borderValue.GetIntValue();
+
+    if (0 != borderThickness) {
+      // border != 0 implies rules=all and frame=border
       if (aData->mTableData) {
         aData->mTableData->mRules.SetIntValue(NS_STYLE_TABLE_RULES_ALL, eCSSUnit_Enumerated);
         aData->mTableData->mFrame.SetIntValue(NS_STYLE_TABLE_FRAME_BORDER, eCSSUnit_Enumerated);
       }
-      borderValue.SetPixelValue(1);
     }
     else {
-      PRInt32 borderThickness = borderValue.GetPixelValue();
-      
-      if (0 != borderThickness) {
-        // border != 0 implies rules=all and frame=border
-        if (aData->mTableData) {
-          aData->mTableData->mRules.SetIntValue(NS_STYLE_TABLE_RULES_ALL, eCSSUnit_Enumerated);
-          aData->mTableData->mFrame.SetIntValue(NS_STYLE_TABLE_FRAME_BORDER, eCSSUnit_Enumerated);
-        }
-      }
-      else {
-        // border = 0 implies rules=none and frame=void
-        if (aData->mTableData) {
-          aData->mTableData->mRules.SetIntValue(NS_STYLE_TABLE_RULES_NONE, eCSSUnit_Enumerated);
-          aData->mTableData->mFrame.SetIntValue(NS_STYLE_TABLE_FRAME_NONE, eCSSUnit_Enumerated);
-        }
+      // border = 0 implies rules=none and frame=void
+      if (aData->mTableData) {
+        aData->mTableData->mRules.SetIntValue(NS_STYLE_TABLE_RULES_NONE, eCSSUnit_Enumerated);
+        aData->mTableData->mFrame.SetIntValue(NS_STYLE_TABLE_FRAME_NONE, eCSSUnit_Enumerated);
       }
     }
+  }
 
-    PRInt32 borderThickness = borderValue.GetPixelValue();
+  PRInt32 borderThickness = borderValue.GetIntValue();
 
-    if (aData->mMarginData) {
-      // by default, set all border sides to the specified width
-      if (aData->mMarginData->mBorderWidth.mLeft.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderWidth.mLeft.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
-      if (aData->mMarginData->mBorderWidth.mRight.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderWidth.mRight.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
-      if (aData->mMarginData->mBorderWidth.mTop.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderWidth.mTop .SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
-      if (aData->mMarginData->mBorderWidth.mBottom.GetUnit() == eCSSUnit_Null)
-        aData->mMarginData->mBorderWidth.mBottom.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
+  if (aData->mMarginData) {
+    // by default, set all border sides to the specified width
+    if (aData->mMarginData->mBorderWidth.mLeft.GetUnit() == eCSSUnit_Null)
+      aData->mMarginData->mBorderWidth.mLeft.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
+    if (aData->mMarginData->mBorderWidth.mRight.GetUnit() == eCSSUnit_Null)
+      aData->mMarginData->mBorderWidth.mRight.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
+    if (aData->mMarginData->mBorderWidth.mTop.GetUnit() == eCSSUnit_Null)
+      aData->mMarginData->mBorderWidth.mTop .SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
+    if (aData->mMarginData->mBorderWidth.mBottom.GetUnit() == eCSSUnit_Null)
+      aData->mMarginData->mBorderWidth.mBottom.SetFloatValue((float)borderThickness, eCSSUnit_Pixel);
 
-      // now account for the frame attribute
-      MapTableFrameInto(aAttributes, aData, aBorderStyle);
-    }
+    // now account for the frame attribute
+    MapTableFrameInto(aAttributes, aData, aBorderStyle);
   }
 }
 
@@ -1220,11 +1213,11 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // cellspacing 
       nsHTMLValue value;
       aAttributes->GetAttribute(nsHTMLAtoms::cellspacing, value);
-      if (value.GetUnit() == eHTMLUnit_Pixel) {
+      if (value.GetUnit() == eHTMLUnit_Integer) {
         if (aData->mTableData->mBorderSpacingX.GetUnit() == eCSSUnit_Null)
-          aData->mTableData->mBorderSpacingX.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+          aData->mTableData->mBorderSpacingX.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
         if (aData->mTableData->mBorderSpacingY.GetUnit() == eCSSUnit_Null)
-          aData->mTableData->mBorderSpacingY.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+          aData->mTableData->mBorderSpacingY.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
       }
       else if ((value.GetUnit() == eHTMLUnit_Percent) && (eCompatibility_NavQuirks == mode)) {
         // in quirks mode, treat a % cellspacing value a pixel value.
@@ -1249,8 +1242,8 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       }
       
       // cols
-      aAttributes->GetAttribute(nsHTMLAtoms::cols, value);
-      if (value.GetUnit() != eHTMLUnit_Null) {
+      if (aAttributes->GetAttribute(nsHTMLAtoms::cols, value) !=
+          NS_CONTENT_ATTR_NOT_THERE) {
         if (value.GetUnit() == eHTMLUnit_Integer) 
           aData->mTableData->mCols.SetIntValue(value.GetIntValue(), eCSSUnit_Integer);
         else // COLS had no value, so it refers to all columns
@@ -1289,22 +1282,22 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       if (eCompatibility_NavQuirks == mode) {
         aAttributes->GetAttribute(nsHTMLAtoms::hspace, value);
 
-        if (value.GetUnit() == eHTMLUnit_Pixel) {
+        if (value.GetUnit() == eHTMLUnit_Integer) {
           nsCSSRect& margin = aData->mMarginData->mMargin;
           if (margin.mLeft.GetUnit() == eCSSUnit_Null)
-            margin.mLeft.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel); 
+            margin.mLeft.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel); 
           if (margin.mRight.GetUnit() == eCSSUnit_Null)
-            margin.mRight.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+            margin.mRight.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
         }
 
         aAttributes->GetAttribute(nsHTMLAtoms::vspace, value);
 
-        if (value.GetUnit() == eHTMLUnit_Pixel) {
+        if (value.GetUnit() == eHTMLUnit_Integer) {
           nsCSSRect& margin = aData->mMarginData->mMargin;
           if (margin.mTop.GetUnit() == eCSSUnit_Null)
-            margin.mTop.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel); 
+            margin.mTop.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel); 
           if (margin.mBottom.GetUnit() == eCSSUnit_Null)
-            margin.mBottom.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel); 
+            margin.mBottom.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel); 
         }
       }
     }
@@ -1315,12 +1308,12 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     if (readDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL) {
       nsHTMLValue value;
       aAttributes->GetAttribute(nsHTMLAtoms::cellpadding, value);
-      if (value.GetUnit() == eHTMLUnit_Pixel || value.GetUnit() == eHTMLUnit_Percent) {
+      if (value.GetUnit() == eHTMLUnit_Integer || value.GetUnit() == eHTMLUnit_Percent) {
         // We have cellpadding.  This will override our padding values if we don't
         // have any set.
         nsCSSValue padVal;
-        if (value.GetUnit() == eHTMLUnit_Pixel)
-          padVal.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+        if (value.GetUnit() == eHTMLUnit_Integer)
+          padVal.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
         else {
           // when we support % cellpadding in standard mode, uncomment the following
           float pctVal = value.GetPercentValue();
@@ -1351,8 +1344,8 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // width: value
       if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
         aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-        if (value.GetUnit() == eHTMLUnit_Pixel) 
-          aData->mPositionData->mWidth.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+        if (value.GetUnit() == eHTMLUnit_Integer) 
+          aData->mPositionData->mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
         else if (value.GetUnit() == eHTMLUnit_Percent)
           aData->mPositionData->mWidth.SetPercentValue(value.GetPercentValue());
       }
@@ -1360,8 +1353,8 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // height: value
       if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
         aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-        if (value.GetUnit() == eHTMLUnit_Pixel) 
-          aData->mPositionData->mHeight.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+        if (value.GetUnit() == eHTMLUnit_Integer) 
+          aData->mPositionData->mHeight.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
         else if (value.GetUnit() == eHTMLUnit_Percent)
           aData->mPositionData->mHeight.SetPercentValue(value.GetPercentValue()); 
       }
@@ -1382,10 +1375,11 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
         // Set the cell's border from the table in the separate border model. If there is a border
         // on the table, then the mapping to rules=all will take care of borders in the collapsing model.
         nsHTMLValue value;
-        aAttributes->GetAttribute(nsHTMLAtoms::border, value);
-        if (((value.GetUnit() == eHTMLUnit_Pixel) &&
-             (value.GetPixelValue() > 0)) ||
-            (value.GetUnit() == eHTMLUnit_Empty)) {
+        if (aAttributes->GetAttribute(nsHTMLAtoms::border, value) !=
+            NS_CONTENT_ATTR_NOT_THERE &&
+            ((value.GetUnit() == eHTMLUnit_Integer &&
+              value.GetIntValue() > 0) ||
+             value.IsEmptyString())) {
           if (aData->mMarginData->mBorderWidth.mLeft.GetUnit() == eCSSUnit_Null)
             aData->mMarginData->mBorderWidth.mLeft.SetFloatValue(1.0f, eCSSUnit_Pixel);
           if (aData->mMarginData->mBorderWidth.mRight.GetUnit() == eCSSUnit_Null)
@@ -1424,10 +1418,10 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
                               NS_STYLE_BORDER_STYLE_OUTSET;
       // bordercolor
       nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::bordercolor, value);
-      if ((eHTMLUnit_Color == value.GetUnit()) ||
-          (eHTMLUnit_ColorName == value.GetUnit())) {
-        nscolor color = value.GetColorValue();
+      nscolor color;
+      if (aAttributes->GetAttribute(nsHTMLAtoms::bordercolor, value) !=
+          NS_CONTENT_ATTR_NOT_THERE &&
+          value.GetColorValue(color)) {
         if (aData->mMarginData->mBorderColor.mLeft.GetUnit() == eCSSUnit_Null)
           aData->mMarginData->mBorderColor.mLeft.SetColorValue(color);
         if (aData->mMarginData->mBorderColor.mRight.GetUnit() == eCSSUnit_Null)

@@ -239,7 +239,7 @@ nsHTMLSharedLeafElement::StringToAttribute(nsIAtom* aAttribute,
     }
   } else if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
     if (aAttribute == nsHTMLAtoms::size) {
-      if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Pixel, 0)) {
+      if (aResult.ParseIntWithBounds(aValue, eHTMLUnit_Integer, 0)) {
         return NS_CONTENT_ATTR_HAS_VALUE;
       }
     } else if (aAttribute == nsHTMLAtoms::align) {
@@ -248,7 +248,7 @@ nsHTMLSharedLeafElement::StringToAttribute(nsIAtom* aAttribute,
       }
     } else if ((aAttribute == nsHTMLAtoms::width) ||
                (aAttribute == nsHTMLAtoms::height)) {
-      if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Pixel, PR_TRUE, PR_FALSE)) {
+      if (aResult.ParseSpecialIntValue(aValue, eHTMLUnit_Integer, PR_TRUE, PR_FALSE)) {
         return NS_CONTENT_ATTR_HAS_VALUE;
       }
     }
@@ -268,8 +268,6 @@ nsHTMLSharedLeafElement::AttributeToString(nsIAtom* aAttribute,
         AlignValueToString(aValue, aResult);
         return NS_CONTENT_ATTR_HAS_VALUE;
       }
-    } else if (ImageAttributeToString(aAttribute, aValue, aResult)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
     }
   } else if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
     if (aAttribute == nsHTMLAtoms::align) {
@@ -301,9 +299,9 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // width: value
       if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
         aAttributes->GetAttribute(nsHTMLAtoms::width, value);
-        if (value.GetUnit() == eHTMLUnit_Pixel) {
+        if (value.GetUnit() == eHTMLUnit_Integer) {
           aData->mPositionData->
-            mWidth.SetFloatValue((float)value.GetPixelValue(), eCSSUnit_Pixel);
+            mWidth.SetFloatValue((float)value.GetIntValue(), eCSSUnit_Pixel);
         } else if (value.GetUnit() == eHTMLUnit_Percent) {
           aData->mPositionData->
             mWidth.SetPercentValue(value.GetPercentValue());
@@ -313,9 +311,9 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // height: value
       if (aData->mPositionData->mHeight.GetUnit() == eCSSUnit_Null) {
         aAttributes->GetAttribute(nsHTMLAtoms::height, value);
-        if (value.GetUnit() == eHTMLUnit_Pixel) {
+        if (value.GetUnit() == eHTMLUnit_Integer) {
           aData->mPositionData->
-            mHeight.SetFloatValue((float)value.GetPixelValue(),
+            mHeight.SetFloatValue((float)value.GetIntValue(),
                                   eCSSUnit_Pixel);
         } else if (value.GetUnit() == eHTMLUnit_Percent) {
           aData->mPositionData->
@@ -326,9 +324,9 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
       // size: value
       if (aData->mPositionData->mWidth.GetUnit() == eCSSUnit_Null) {
         aAttributes->GetAttribute(nsHTMLAtoms::size, value);
-        if (value.GetUnit() == eHTMLUnit_Pixel)
+        if (value.GetUnit() == eHTMLUnit_Integer)
           aData->mPositionData->
-            mWidth.SetFloatValue((float)value.GetPixelValue(),
+            mWidth.SetFloatValue((float)value.GetIntValue(),
                                  eCSSUnit_Pixel);
       }
     }
@@ -348,8 +346,9 @@ SpacerMapAttributesIntoRule(const nsMappedAttributes* aAttributes,
     }
 
     if (aData->mDisplayData->mDisplay == eCSSUnit_Null) {
-      aAttributes->GetAttribute(nsHTMLAtoms::type, value);
-      if (eHTMLUnit_String == value.GetUnit()) {
+      if (aAttributes->GetAttribute(nsHTMLAtoms::type, value) !=
+          NS_CONTENT_ATTR_NOT_THERE &&
+          eHTMLUnit_String == value.GetUnit()) {
         nsAutoString tmp;
         value.GetStringValue(tmp);
         if (tmp.EqualsIgnoreCase("line") ||

@@ -69,11 +69,6 @@
 
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 
-// XXX suppress
-
-// XXX either suppress is handled in the event code below OR we need a
-// custom frame
-
 class nsHTMLAnchorElement : public nsGenericHTMLElement,
                             public nsIDOMHTMLAnchorElement,
                             public nsIDOMNSHTMLAnchorElement,
@@ -325,17 +320,9 @@ nsHTMLAnchorElement::StringToAttribute(nsIAtom* aAttribute,
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
-  else if (aAttribute == nsHTMLAtoms::suppress) {
-    if (!aValue.Equals(NS_LITERAL_STRING("true"),
-                       nsCaseInsensitiveStringComparator())) {
-      aResult.SetEmptyValue();  // XXX? shouldn't just leave "true"
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
-// XXX support suppress in here
 nsresult
 nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
