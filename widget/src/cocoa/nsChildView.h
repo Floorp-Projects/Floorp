@@ -92,7 +92,7 @@ class nsIEventSink;
 
   // create a gecko key event out of a cocoa event
 - (void) convert:(NSEvent*)aKeyEvent message:(PRUint32)aMessage 
-           isChar:(PRBool*)outIsChar convertChar:(PRBool)aConvertChar
+           isChar:(PRBool*)outIsChar
            toGeckoEvent:(nsKeyEvent*)outGeckoEvent;
 
 - (NSWindow*) getNativeWindow;
