@@ -533,6 +533,9 @@ void nsRenderingContextGTK::UpdateGC()
                        &values,
                        valuesMask,
                        rgn);
+
+  if (mDashes)
+    ::gdk_gc_set_dashes(mGC, 0, mDashList, mDashes);
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
@@ -682,6 +685,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetLineStyle(nsLineStyle aLineStyle)
 
       case nsLineStyle_kDashed:
         {
+          mLineStyle = GDK_LINE_ON_OFF_DASH;
           static char dashed[2] = {4,4};
           mDashList = dashed;
           mDashes = 2;
@@ -694,7 +698,8 @@ NS_IMETHODIMP nsRenderingContextGTK::SetLineStyle(nsLineStyle aLineStyle)
 
       case nsLineStyle_kDotted:
         {
-          static char dotted[2] = {3,1};
+          mLineStyle = GDK_LINE_ON_OFF_DASH;
+          static char dotted[2] = {1,1};
           mDashList = dotted;
           mDashes = 2;
 
@@ -1290,6 +1295,9 @@ nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
     g_return_val_if_fail(aString != NULL, NS_ERROR_FAILURE);
 
     nsFontMetricsGTK* metrics = (nsFontMetricsGTK*) mFontMetrics;
+
+    g_return_val_if_fail(metrics != NULL, NS_ERROR_FAILURE);
+
     nsFontGTK* prevFont = nsnull;
     gint rawWidth = 0;
     PRUint32 start = 0;
