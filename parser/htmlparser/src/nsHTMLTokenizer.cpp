@@ -355,7 +355,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
           AddToken(theToken,result,mTokenDeque);
         }
       }
-      else if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result){
+      else { //if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result){
         aToken->SetEmpty(PR_TRUE);
         theRecycler->RecycleToken(theToken);
         result=NS_OK;
