@@ -105,8 +105,8 @@ nsDeviceContextOS2::~nsDeviceContextOS2()
 {
   if(mPrintDC)
   {
-     GFX (::GpiDestroyPS (mPrintPS), FALSE);
-     PrnCloseDC(mPrintDC);
+    GFX (::GpiDestroyPS (mPrintPS), FALSE);
+    ::DevCloseDC(mPrintDC);
   }
 
   NS_IF_RELEASE(mSpec);
@@ -950,46 +950,91 @@ nsresult nsDeviceContextOS2::CreateFontAliasTable()
 // Printing ------------------------------------------------------------------
 nsresult nsDeviceContextOS2::BeginDocument(PRUnichar * aTitle)
 {
-   NS_ASSERTION(mPrintDC, "BeginDocument for non-print DC");
-   if( mPrintState == nsPrintState_ePreBeginDoc)
-   {
-      PrnStartJob( mPrintDC, "Warpzilla NGLayout job");
-#ifdef DEBUG
-      printf( "BeginDoc\n");
-#endif
-      mPrintState = nsPrintState_eBegunDoc;
-   }
-   return NS_OK;
+  nsresult rv = NS_OK;
+
+  if (NULL != mPrintDC){
+    nsString titleStr;
+    titleStr = aTitle;
+    char *title = GetACPString(titleStr);
+
+    PSZ pszDocName = title != nsnull?title:"Mozilla Document";
+
+    long lDummy = 0;
+    long lResult = ::DevEscape(mPrintDC, DEVESC_STARTDOC,
+                               strlen(pszDocName) + 1, pszDocName,
+                               &lDummy, NULL);
+
+    if (lResult == DEV_OK)
+      rv = NS_OK;
+    else
+      rv = NS_ERROR_FAILURE;
+
+    if (title != nsnull) {
+      delete [] title;
+    }
+  }
+
+  return rv;
 }
 
 nsresult nsDeviceContextOS2::EndDocument()
 {
-   PrnEndJob( mPrintDC);
-   mPrintState = nsPrintState_ePreBeginDoc;
-#ifdef DEBUG
-   printf("EndDoc\n");
-#endif
-   return NS_OK;
+  if (NULL != mPrintDC)
+  {
+    long   lOutCount = 2;
+    USHORT usJobID = 0;
+    long   lResult = ::DevEscape(mPrintDC, DEVESC_ENDDOC,
+                                 0, NULL,
+                                 &lOutCount, (PBYTE)&usJobID);
+    if (lResult == DEV_OK)
+      return NS_OK;
+    else
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 nsresult nsDeviceContextOS2::BeginPage()
 {
-   if( mPrintState == nsPrintState_eBegunDoc)
-      mPrintState = nsPrintState_eBegunFirstPage;
-   else
-   {
-      PrnNewPage( mPrintDC);
-#ifdef DEBUG
-      printf("NewPage");
-#endif
-   }
-   return NS_OK;
+  if (NULL != mPrintDC)
+  {
+
+    long lDummy = 0;
+    long lResult = ::DevEscape(mPrintDC, DEVESC_NEWFRAME, 0, NULL,
+                               &lDummy, NULL);
+
+    if (lResult == DEV_OK)
+      return NS_OK;
+    else
+      return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
 }
 
 nsresult nsDeviceContextOS2::EndPage()
 {
-   /* nop */
-   return NS_OK;
+  return NS_OK;
+}
+
+char* 
+nsDeviceContextOS2::GetACPString(const nsString& aStr)
+{
+   int acplen = aStr.Length() * 2 + 1;
+   if (acplen == 1) {
+      return nsnull;
+   } /* endif */
+   char * acp = new char[acplen];
+   if(acp)
+   {
+      int outlen = ::WideCharToMultiByte( 0,
+                      aStr.get(), aStr.Length(),
+                      acp, acplen);
+      if ( outlen > 0)
+         acp[outlen] = '\0';  // null terminate
+   }
+   return acp;
 }
 
 BOOL nsDeviceContextOS2::isPrintDC()

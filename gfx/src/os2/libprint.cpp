@@ -272,32 +272,6 @@ if (hdc == 0)
    return hdc;
 }
 
-BOOL PrnCloseDC( HDC hdc)
-{
-   return (hdc != 0 && DEV_OK == ::DevCloseDC( hdc));
-}
-
-BOOL PrnStartJob( HDC hdc, PSZ pszJobName)
-{
-   BOOL rc = FALSE;
-
-   if( hdc && pszJobName)
-   {
-      long lDummy = 0;
-      long lResult = ::DevEscape( hdc, DEVESC_STARTDOC,
-                                  (long) strlen( pszJobName) + 1, pszJobName,
-                                  &lDummy, NULL);
-      rc = (lResult == DEV_OK);
-   }
-
-   return rc;
-}
-
-BOOL PrnNewPage( HDC hdc)
-{
-   return prnEscape( hdc, DEVESC_NEWFRAME);
-}
-
 BOOL prnEscape( HDC hdc, long lEscape)
 {
    BOOL rc = FALSE;
@@ -315,22 +289,6 @@ BOOL prnEscape( HDC hdc, long lEscape)
 BOOL PrnAbortJob( HDC hdc)
 {
    return prnEscape( hdc, DEVESC_ABORTDOC);
-}
-
-BOOL PrnEndJob( HDC hdc)
-{
-   BOOL rc = FALSE;
-
-   if( hdc)
-   {
-      long   lOutCount = 2;
-      USHORT usJobID = 0;
-      long   lResult = ::DevEscape( hdc, DEVESC_ENDDOC,
-                                    0, NULL, &lOutCount, (PBYTE) &usJobID);
-      rc = (lResult == DEV_OK);
-   }
-
-   return rc;
 }
 
 /* find the selected form */
