@@ -1,0 +1,114 @@
+#!gmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH = ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+LIBRARY_NAME = raptorhtmlpars
+
+DEFINES += -D_IMPL_NS_HTMLPARS
+
+CPPSRCS=					\
+	nsDTDUtils.cpp				\
+	CNavDTD.cpp				\
+	COtherDTD.cpp				\
+	CRtfDTD.cpp				\
+	nsDTDDebug.cpp				\
+	nsHTMLEntities.cpp			\
+	nsHTMLNullSink.cpp			\
+	nsHTMLTags.cpp				\
+	nsHTMLTokens.cpp			\
+	nsLoggingSink.cpp			\
+	nsParser.cpp				\
+	CParserContext.cpp			\
+	nsParserFactory.cpp			\
+	nsParserNode.cpp			\
+	nsScanner.cpp				\
+	nsToken.cpp				\
+	nsTokenHandler.cpp			\
+	nsHTMLContentSinkStream.cpp		\
+	nsValidDTD.cpp				\
+	nsWellFormedDTD.cpp			\
+	nsXIFDTD.cpp				\
+	prstrm.cpp				\
+	$(NULL)
+
+EXPORTS =     \
+  nshtmlpars.h    \
+  nsIContentSink.h  \
+  nsIHTMLContentSink.h  \
+  nsHTMLContentSinkStream.h \
+  nsHTMLEntities.h    \
+  nsHTMLTokens.h    \
+  nsILoggingSink.h   \
+  nsIParserNode.h   \
+  nsIParser.h   \
+  nsIDTD.h \
+  nsIParserFilter.h \
+  nsToken.h   \
+  CNavDTD.h \
+  COtherDTD.h \
+  nsWellFormedDTD.h \
+  nsValidDTD.h \
+  CRtfDTD.h \
+  nsXIFDTD.h \
+  nsParserCIID.h \
+  $(NULL)
+
+EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+
+EXTRA_EXPORTS =					\
+	$(OBJDIR)/nsHTMLTags.h				\
+	$(NULL)
+
+MODULE = raptor
+
+REQUIRES = xpcom netlib raptor
+
+include $(topsrcdir)/config/config.mk
+
+GARBAGE	+= $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLTags.cpp $(OBJDIR)/nsHTMLEntities.cpp
+
+include $(topsrcdir)/config/rules.mk
+
+INCLUDES += -I.
+
+export:: removecheckedinkludge generate
+	$(INSTALL) $(EXTRA_EXPORTS) $(PUBLIC)/$(MODULE)
+
+# Why are generated files being checked in?
+removecheckedinkludge:
+	@rm -f $(srcdir)/nsHTMLTags.h $(srcdir)/nsHTMLEntities.cpp
+ 
+generate: $(OBJDIR)/nsHTMLTags.h $(OBJDIR)/nsHTMLEntities.cpp
+
+$(OBJDIR)/nsHTMLTags.o: $(OBJDIR)/nsHTMLTags.h
+
+GENTAGS = $(topsrcdir)/htmlparser/tools/gentags.pl
+GENENTITIES = $(topsrcdir)/htmlparser/tools/genentities.pl
+
+$(OBJDIR)/nsHTMLTags.h: $(GENTAGS)
+	rm -f $@
+	$(PERL) $(GENTAGS) nsHTMLTags
+
+$(OBJDIR)/nsHTMLEntities.cpp: $(GENENTITIES)
+	rm -f $@
+	$(PERL) $(GENENTITIES) nsHTMLEntities
