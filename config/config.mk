@@ -647,6 +647,13 @@ endif
 endif
 endif
 
+ifeq ($(OS_ARCH),Darwin)
+ifdef USE_PREBINDING
+export LD_PREBIND=1
+export LD_SEG_ADDR_TABLE=$(shell cd $(topsrcdir); pwd)/config/prebind-address-table
+endif
+endif
+
 ifdef MOZ_NATIVE_MAKEDEPEND
 MKDEPEND_DIR	=
 MKDEPEND	= $(MOZ_NATIVE_MAKEDEPEND)
