@@ -127,11 +127,11 @@ static NS_IMETHODIMP
 Construct_nsIPrincipalManager(nsISupports * aOuter, REFNSIID aIID, void * * aResult)
 {
 	nsresult rv;
-	nsISupports * obj;
+	nsPrincipalManager* obj = nsnull;
 	if(!aResult) return NS_ERROR_NULL_POINTER;
 	*aResult = NULL;
 	if(aOuter) return NS_ERROR_NO_AGGREGATION;
-	rv = nsPrincipalManager::GetPrincipalManager((nsPrincipalManager * *)& obj);
+	rv = nsPrincipalManager::GetPrincipalManager(&obj);
 	if(!obj) return NS_ERROR_OUT_OF_MEMORY;
   if(NS_FAILED(rv)) return rv;
 	rv = obj->QueryInterface(aIID, aResult);
