@@ -78,7 +78,7 @@ private:
   static void EnsureAtoms();
   static PLDHashOperator StartupHandler(const void* aKey,
                                         nsIWeakReference* aData,
-                                        void* aData);
+                                        void* aClosure);
 
   static const char* HandleCommand(char* aCommand, nsIDOMWindow* aWindow);
 
