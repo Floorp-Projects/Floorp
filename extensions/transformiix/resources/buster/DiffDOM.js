@@ -41,6 +41,8 @@ function DiffNodeAndChildren(node1, node2)
   }
   var attributes = node1.attributes;
   if ( attributes && attributes.length ) {
+    if (!node2.attributes || node2.attributes.length!=attributes.length)
+      return false;
     var item, name, value;
     
     for ( var index = 0; index < attributes.length; index++ ) {
