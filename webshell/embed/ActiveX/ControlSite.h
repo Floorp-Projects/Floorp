@@ -48,19 +48,21 @@ class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 	// Position of the site and the contained object
 	RECT m_rcObjectPos;
 	// Flag indicating if client site should be set early or late
-	BOOL m_bSetClientSiteFirst;
+	unsigned m_bSetClientSiteFirst:1;
 	// Flag indicating whether control is visible or not
-	BOOL m_bVisibleAtRuntime;
+	unsigned m_bVisibleAtRuntime:1;
 	// Flag indicating if control is in-place active
-	BOOL m_bInPlaceActive;
+	unsigned m_bInPlaceActive:1;
 	// Flag indicating if control is UI active
-	BOOL m_bUIActive;
+	unsigned m_bUIActive:1;
 	// Flag indicating if control is in-place locked and cannot be deactivated
-	BOOL m_bInPlaceLocked;
+	unsigned m_bInPlaceLocked:1;
 	// Flag indicating if the site allows windowless controls
-	BOOL m_bSupportWindowlessActivation;
+	unsigned m_bSupportWindowlessActivation:1;
 	// Flag indicating if control is windowless
-	BOOL m_bWindowless;
+	unsigned m_bWindowless:1;
+	// Flag indicating if only safely scriptable controls are allowed
+	unsigned m_bSafeForScriptingObjectsOnly:1;
 
 	// Raw pointer to the object
 	CComPtr<IUnknown> m_spObject;
