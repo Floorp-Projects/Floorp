@@ -236,7 +236,7 @@ void nsScrollbar::CreateNative(Window aParent, nsRect aRect)
                        mBarBounds.x, mBarBounds.y,
                        mBarBounds.width, mBarBounds.height,
                        2,  // border width
-                       gDepth,
+                       mDepth,
                        InputOutput,
                        mVisual,
                        attr_mask,

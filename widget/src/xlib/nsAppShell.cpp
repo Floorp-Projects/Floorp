@@ -104,6 +104,9 @@ nsAppShell::nsAppShell()
 { 
   NS_INIT_REFCNT();
   mDispatchListener = 0;
+
+  mDisplay = nsnull;
+  mScreen = nsnull;
 }
 
 nsresult nsAppShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -122,33 +125,28 @@ nsresult nsAppShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 {
-  // open the display
-  if ((gDisplay = XOpenDisplay(NULL)) == NULL) {
+  // Open the display
+  mDisplay = XOpenDisplay(NULL);
+
+  if (mDisplay == NULL) 
+    {
     fprintf(stderr, "%s: Cannot connect to X server %s\n",
-            argv[0], XDisplayName(NULL));
+            argv[0], 
+            XDisplayName(NULL));
+    
     exit(1);
   }
+
   _Xdebug = 1;
-  gScreen = DefaultScreenOfDisplay(gDisplay);
 
-  // init the rgb layer.  this will provide
-  // the visual information for us.
-  xlib_rgb_init(gDisplay, gScreen);
+  mScreen = DefaultScreenOfDisplay(mDisplay);
 
-  gVisual = xlib_rgb_get_visual();
+  xlib_rgb_init(mDisplay, mScreen);
 
-  NS_ASSERTION(nsnull != gVisual,"Visual from xlibrgb is null.");
-
-#if 1
-  XVisualInfo * x_visual_info = xlib_rgb_get_visual_info();
-
-  NS_ASSERTION(nsnull != x_visual_info,"Visual info from xlibrgb is null.");
-
-  if (nsnull != x_visual_info)
-  {
-    gDepth = x_visual_info->depth;
-  }
-#endif
+  printf("nsAppShell::Create(dpy=%p  screen=%p)\
+n",
+           mDisplay,
+           mScreen);
 
   return NS_OK;
 }
@@ -196,7 +194,7 @@ nsresult nsAppShell::Run()
   }    
  done:
   printf("Getting the xlib connection number.\n");
-  xlib_fd = ConnectionNumber(gDisplay);
+  xlib_fd = ConnectionNumber(mDisplay);
   queue_fd = EQueue->GetEventQueueSelectFD();
   if (xlib_fd >= queue_fd) {
     max_fd = xlib_fd + 1;
@@ -246,8 +244,8 @@ nsresult nsAppShell::Run()
     // xlib
     if (FD_ISSET(xlib_fd, &select_set)) {
       //printf("xlib data available.\n");
-      //XNextEvent(gDisplay, &event);
-      while (XCheckMaskEvent(gDisplay, ALL_EVENTS, &event)) {
+      //XNextEvent(mDisplay, &event);
+      while (XCheckMaskEvent(mDisplay, ALL_EVENTS, &event)) {
         DispatchEvent(&event);
       }
     }
@@ -256,7 +254,7 @@ nsresult nsAppShell::Run()
       NS_ProcessTimeouts();
     }
     // make sure that any pending X requests are flushed.
-    XFlush(gDisplay);
+    XFlush(mDisplay);
   }
 
 	NS_IF_RELEASE(EQueue);
@@ -308,7 +306,7 @@ nsAppShell::DispatchEvent(XEvent *event)
   case ConfigureNotify:
     // we need to make sure that this is the LAST of the
     // config events.
-    while (XCheckWindowEvent(gDisplay, event->xany.window, StructureNotifyMask, event) == True);
+    while (XCheckWindowEvent(mDisplay, event->xany.window, StructureNotifyMask, event) == True);
     HandleConfigureNotifyEvent(event, widget);
     break;
   case ButtonPress:

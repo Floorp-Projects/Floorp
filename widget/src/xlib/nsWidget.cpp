@@ -18,6 +18,9 @@
 
 #include "nsWidget.h"
 #include "nsGfxCIID.h"
+
+#include "xlibrgb.h"
+
 // set up our static members here.
 nsHashtable *nsWidget::window_list = nsnull;
 
@@ -55,6 +58,7 @@ nsWidget::nsWidget() : nsBaseWidget()
   mDisplay = 0;
   mScreen = 0;
   mVisual = 0;
+  mDepth = 0;
 
   mBaseWindow = 0;
   mBackground = NS_RGB(192, 192, 192);
@@ -124,9 +128,10 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   
   Window parent;
 
-  mDisplay = gDisplay;
-  mScreen = gScreen;
-  mVisual = gVisual;
+  mDisplay = xlib_rgb_get_display();
+  mScreen = xlib_rgb_get_screen();
+  mVisual = xlib_rgb_get_visual();
+  mDepth = xlib_rgb_get_depth();
 
   // set up the BaseWidget parts.
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
@@ -453,7 +458,7 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
                               aRect.x, aRect.y,
                               width, height,
                               0,                // border width
-                              gDepth,
+                              mDepth,           // depth
                               InputOutput,      // class
                               mVisual,          // visual
                               aMask,

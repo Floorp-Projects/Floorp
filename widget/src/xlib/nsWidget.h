@@ -131,6 +131,7 @@ protected:
   Screen *       mScreen;
   Window         mBaseWindow;
   Visual *       mVisual;
+  int            mDepth;
   unsigned long  mBackgroundPixel;
   PRUint32       mBorderRGB;
   unsigned long  mBorderPixel;
@@ -138,21 +139,6 @@ protected:
   nsString       mName;           // name of the type of widget
 
 };
-
-extern Display         *gDisplay;
-extern Screen          *gScreen;
-extern int              gDepth;
-extern Visual          *gVisual;
-
-// this is from the xlibrgb code.
-
-extern "C"
-unsigned long
-xlib_rgb_xpixel_from_rgb (unsigned int rgb);
-
-extern "C"
-Colormap
-xlib_rgb_get_cmap (void);
 
 #endif
 

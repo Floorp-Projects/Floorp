@@ -18,7 +18,7 @@
 
 #include "nsWindow.h"
 
-
+#include "xlibrgb.h"
 
 nsWindow::nsWindow() : nsWidget()
 {
