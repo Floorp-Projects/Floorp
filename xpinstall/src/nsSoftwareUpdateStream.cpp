@@ -33,8 +33,6 @@
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#include "nsIEventQueueService.h"
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 #endif // NECKO
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
@@ -81,21 +79,13 @@ nsSoftwareUpdateListener::nsSoftwareUpdateListener(const nsString& fromURL, cons
     NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return;
 
-    nsIEventQueue *eventQ = nsnull;
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
-    if (NS_FAILED(rv)) return;
-    
-    mResult = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
-    if (NS_FAILED(rv)) return;
-
     // XXX NECKO verb? getter?
     nsIChannel *channel = nsnull;
     const char *urlStr = fromURL.GetBuffer();
     rv = service->NewChannel("load", urlStr, nsnull, nsnull, &channel);
     if (NS_FAILED(mResult)) return;
 
-    rv = channel->AsyncRead(0, -1, nsnull, eventQ, this);
-    NS_RELEASE(eventQ);
+    rv = channel->AsyncRead(0, -1, nsnull, this);
     NS_RELEASE(channel);
     mResult = rv;
     return;
