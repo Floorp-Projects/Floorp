@@ -522,59 +522,58 @@ public class NativeGlobal {
         return newInstance;
     }
 
-	/* 
-	*   ECMA 3, 15.1.3 URI Handling Function Properties
-	*
-	*   The following are implementations of the algorithms
-	*   given in the ECMA specification for the hidden functions
-	*   'Encode' and 'Decode'.
-	*/
-	private static String encode(Context cx, String str, String unescapedSet)
-	{
-	    int j, k = 0, L;
-	    char C, C2;
-	    int V;
-	    char utf8buf[] = new char[6];
-	    StringBuffer R;
+    /* 
+    *   ECMA 3, 15.1.3 URI Handling Function Properties
+    *
+    *   The following are implementations of the algorithms
+    *   given in the ECMA specification for the hidden functions
+    *   'Encode' and 'Decode'.
+    */
+    private static String encode(Context cx, String str, String unescapedSet) {
+        int j, k = 0, L;
+        char C, C2;
+        int V;
+        char utf8buf[] = new char[6];
+        StringBuffer R;
 
-	    R = new StringBuffer();
-			
-	    while (k < str.length()) {
-	        C = str.charAt(k);
-			if (unescapedSet.indexOf(C) != -1) {
-				R.append(C);
-	        } else {
-	            if ((C >= 0xDC00) && (C <= 0xDFFF)) {
-		            throw cx.reportRuntimeError(
-										cx.getMessage("msg.bad.uri", null));
-	            }
-	            if ((C < 0xD800) || (C > 0xDBFF))
-	                V = C;
-	            else {
-	                k++;
-	                if (k == str.length()) {
-						throw cx.reportRuntimeError(
-										cx.getMessage("msg.bad.uri", null));
-	                }
-	                C2 = str.charAt(k);
-	                if ((C2 < 0xDC00) || (C2 > 0xDFFF)) {
-	                    throw cx.reportRuntimeError(
-										cx.getMessage("msg.bad.uri", null));
-	                }
-	                V = ((C - 0xD800) << 10) + (C2 - 0xDC00) + 0x10000;
-	            }
-	            L = oneUcs4ToUtf8Char(utf8buf, V);
-	            for (j = 0; j < L; j++) {
-					R.append('%');
-					if (utf8buf[j] < 16)
-						R.append('0');
-					R.append(Integer.toHexString(utf8buf[j]));
-	            }
-	        }
-	        k++;
-	    }
-	    return R.toString();			
-	}
+        R = new StringBuffer();
+        
+        while (k < str.length()) {
+            C = str.charAt(k);
+            if (unescapedSet.indexOf(C) != -1) {
+                R.append(C);
+            } else {
+                if ((C >= 0xDC00) && (C <= 0xDFFF)) {
+                    throw cx.reportRuntimeError(
+                        cx.getMessage("msg.bad.uri", null));
+                }
+                if ((C < 0xD800) || (C > 0xDBFF))
+                    V = C;
+                else {
+                    k++;
+                    if (k == str.length()) {
+                        throw cx.reportRuntimeError(
+                            cx.getMessage("msg.bad.uri", null));
+                    }
+                    C2 = str.charAt(k);
+                    if ((C2 < 0xDC00) || (C2 > 0xDFFF)) {
+                        throw cx.reportRuntimeError(
+                            cx.getMessage("msg.bad.uri", null));
+                    }
+                    V = ((C - 0xD800) << 10) + (C2 - 0xDC00) + 0x10000;
+                }
+                L = oneUcs4ToUtf8Char(utf8buf, V);
+                for (j = 0; j < L; j++) {
+                    R.append('%');
+                    if (utf8buf[j] < 16)
+                        R.append('0');
+                    R.append(Integer.toHexString(utf8buf[j]));
+                }
+            }
+            k++;
+        }
+        return R.toString();			
+    }
 
     private static boolean isHex(char c) {
         return ((c >= '0' && c <= '9')
@@ -583,176 +582,173 @@ public class NativeGlobal {
     }
 
     private static int unHex(char c) {
-		if (c >= '0' && c <= '9')
-			return c - '0';
-		else
-			if (c >= 'a' && c <= 'f')
-				return c - 'a' + 10;
-			else
-				return c - 'A' +10;
+        if (c >= '0' && c <= '9')
+            return c - '0';
+        else
+            if (c >= 'a' && c <= 'f')
+                return c - 'a' + 10;
+            else
+                return c - 'A' +10;
     }
 
-	private static String decode(Context cx, String str, String reservedSet)
-	{
-	    int start, k = 0;
-	    char C, H;
-	    int V;
-	    int B;
-	    char[] octets = new char[6];
-	    StringBuffer R;
-	    int j, n;
+    private static String decode(Context cx, String str, String reservedSet) {
+        int start, k = 0;
+        char C, H;
+        int V;
+        int B;
+        char[] octets = new char[6];
+        StringBuffer R;
+        int j, n;
 
-	    R = new StringBuffer();
+        R = new StringBuffer();
 
-	    while (k < str.length()) {
-	        C = str.charAt(k);
-	        if (C == '%') {
-	            start = k;
-	            if ((k + 2) >= str.length())
-					throw cx.reportRuntimeError(
-									cx.getMessage("msg.bad.uri", null));
-	            if (!isHex(str.charAt(k + 1)) || !isHex(str.charAt(k + 2)))
-	                throw cx.reportRuntimeError(
-										cx.getMessage("msg.bad.uri", null));
-	            B = unHex(str.charAt(k + 1)) * 16 + unHex(str.charAt(k + 2));
-	            k += 2;
-	            if ((B & 0x80) == 0)
-	                C = (char)B;
-	            else {
-	                n = 1;
-	                while ((B & (0x80 >>> n)) != 0) n++;
-					if ((n == 1) || (n > 6))
-						throw cx.reportRuntimeError(
-										cx.getMessage("msg.bad.uri", null));
-	                octets[0] = (char)B;
-	                if ((k + 3 * (n - 1)) >= str.length())
-						throw cx.reportRuntimeError(
-										cx.getMessage("msg.bad.uri", null));
-	                for (j = 1; j < n; j++) {
-	                    k++;
-	                    if (str.charAt(k) != '%')
-							throw cx.reportRuntimeError(
-										cx.getMessage("msg.bad.uri", null));
-	                    if (!isHex(str.charAt(k + 1)) 
-												|| !isHex(str.charAt(k + 2)))
-							throw cx.reportRuntimeError(
-										cx.getMessage("msg.bad.uri", null));
-	                    B = unHex(str.charAt(k + 1)) * 16 
-												+ unHex(str.charAt(k + 2));
-	                    if ((B & 0xC0) != 0x80)
-							throw cx.reportRuntimeError(
-										cx.getMessage("msg.bad.uri", null));
-	                    k += 2;
-	                    octets[j] = (char)B;
-	                }
-	                V = utf8ToOneUcs4Char(octets, n);
-	                if (V >= 0x10000) {
-	                    V -= 0x10000;
-	                    if (V > 0xFFFFF)
-							throw cx.reportRuntimeError(
-										cx.getMessage("msg.bad.uri", null));
-	                    C = (char)((V & 0x3FF) + 0xDC00);
-	                    H = (char)((V >>> 10) + 0xD800);
-						R.append(H);
-	                }
-	                else
-	                    C = (char)V;
-	            }
-				if (reservedSet.indexOf(C) != -1) {
-					for (int x = 0; x < (k - start + 1); x++)
-						R.append(str.charAt(start + x));
-	            }
-	            else
-	                R.append(C);
-	        }
-	        else
-	            R.append(C);
-	        k++;
-	    }
-	    return R.toString();
-	}
-	
-	private static String uriReservedPlusPound = ";/?:@&=+$,#";
-	private static String uriUnescaped = 
-	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.!~*'()";
+        while (k < str.length()) {
+            C = str.charAt(k);
+            if (C == '%') {
+                start = k;
+                if ((k + 2) >= str.length())
+                    throw cx.reportRuntimeError(
+                        cx.getMessage("msg.bad.uri", null));
+                if (!isHex(str.charAt(k + 1)) || !isHex(str.charAt(k + 2)))
+                    throw cx.reportRuntimeError(
+                        cx.getMessage("msg.bad.uri", null));
+                B = unHex(str.charAt(k + 1)) * 16 + unHex(str.charAt(k + 2));
+                k += 2;
+                if ((B & 0x80) == 0)
+                    C = (char)B;
+                else {
+                    n = 1;
+                    while ((B & (0x80 >>> n)) != 0) n++;
+                    if ((n == 1) || (n > 6))
+                        throw cx.reportRuntimeError(
+                            cx.getMessage("msg.bad.uri", null));
+                    octets[0] = (char)B;
+                    if ((k + 3 * (n - 1)) >= str.length())
+                        throw cx.reportRuntimeError(
+                            cx.getMessage("msg.bad.uri", null));
+                    for (j = 1; j < n; j++) {
+                        k++;
+                        if (str.charAt(k) != '%')
+                            throw cx.reportRuntimeError(
+                                cx.getMessage("msg.bad.uri", null));
+                        if (!isHex(str.charAt(k + 1)) 
+                            || !isHex(str.charAt(k + 2)))
+                            throw cx.reportRuntimeError(
+                                cx.getMessage("msg.bad.uri", null));
+                        B = unHex(str.charAt(k + 1)) * 16 
+                            + unHex(str.charAt(k + 2));
+                        if ((B & 0xC0) != 0x80)
+                            throw cx.reportRuntimeError(
+                                cx.getMessage("msg.bad.uri", null));
+                        k += 2;
+                        octets[j] = (char)B;
+                    }
+                    V = utf8ToOneUcs4Char(octets, n);
+                    if (V >= 0x10000) {
+                        V -= 0x10000;
+                        if (V > 0xFFFFF)
+                            throw cx.reportRuntimeError(
+                                cx.getMessage("msg.bad.uri", null));
+                        C = (char)((V & 0x3FF) + 0xDC00);
+                        H = (char)((V >>> 10) + 0xD800);
+                        R.append(H);
+                    }
+                    else
+                        C = (char)V;
+                }
+                if (reservedSet.indexOf(C) != -1) {
+                    for (int x = 0; x < (k - start + 1); x++)
+                        R.append(str.charAt(start + x));
+                }
+                else
+                    R.append(C);
+            }
+            else
+                R.append(C);
+            k++;
+        }
+        return R.toString();
+    }
+    
+    private static String uriReservedPlusPound = ";/?:@&=+$,#";
+    private static String uriUnescaped = 
+                                        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.!~*'()";
 
-	public static String decodeURI(Context cx, Scriptable thisObj,
-										Object[] args, Function funObj)
+    public static String decodeURI(Context cx, Scriptable thisObj,
+                                   Object[] args, Function funObj)
     {
-		String str = ScriptRuntime.toString(args[0]);
-	    return decode(cx, str, uriReservedPlusPound);
-	}	
-	
+        String str = ScriptRuntime.toString(args[0]);
+        return decode(cx, str, uriReservedPlusPound);
+    }	
+    
     public static String decodeURIComponent(Context cx, Scriptable thisObj,
-												Object[] args, Function funObj)
+                                            Object[] args, Function funObj)
     {
-		String str = ScriptRuntime.toString(args[0]);
-	    return decode(cx, str, "");
-	}	
-	
+        String str = ScriptRuntime.toString(args[0]);
+        return decode(cx, str, "");
+    }	
+    
     public static Object encodeURI(Context cx, Scriptable thisObj,
-										Object[] args, Function funObj)
+                                   Object[] args, Function funObj)
     {
-		String str = ScriptRuntime.toString(args[0]);
-	    return encode(cx, str, uriReservedPlusPound + uriUnescaped);
-	}	
-	
+        String str = ScriptRuntime.toString(args[0]);
+        return encode(cx, str, uriReservedPlusPound + uriUnescaped);
+    }	
+    
     public static String encodeURIComponent(Context cx, Scriptable thisObj,
-												Object[] args, Function funObj)
+                                            Object[] args, Function funObj)
     {
-		String str = ScriptRuntime.toString(args[0]);
-	    return encode(cx, str, uriUnescaped);
-	}	
-	
-	/* Convert one UCS-4 char and write it into a UTF-8 buffer, which must be
-	 * at least 6 bytes long.  Return the number of UTF-8 bytes of data written.
-	 */
-	private static int oneUcs4ToUtf8Char(char[] utf8Buffer, int ucs4Char)
-	{
-	    int utf8Length = 1;
+        String str = ScriptRuntime.toString(args[0]);
+        return encode(cx, str, uriUnescaped);
+    }	
+    
+    /* Convert one UCS-4 char and write it into a UTF-8 buffer, which must be
+    * at least 6 bytes long.  Return the number of UTF-8 bytes of data written.
+    */
+    private static int oneUcs4ToUtf8Char(char[] utf8Buffer, int ucs4Char) {
+        int utf8Length = 1;
 
-//	    JS_ASSERT(ucs4Char <= 0x7FFFFFFF);
-	    if ((ucs4Char < 0x80) && (ucs4Char >= 0))
-	        utf8Buffer[0] = (char)ucs4Char;
-	    else {
-	        int i;
-	        int a = ucs4Char >>> 11;
-	        utf8Length = 2;
-	        while (a != 0) {
-	            a >>>= 5;
-	            utf8Length++;
-	        }
-	        i = utf8Length;
-	        while (--i > 0) {
-	            utf8Buffer[i] = (char)((ucs4Char & 0x3F) | 0x80);
-	            ucs4Char >>>= 6;
-	        }
-	        utf8Buffer[0] = (char)(0x100 - (1 << (8-utf8Length)) + ucs4Char);
-	    }
-	    return utf8Length;
-	}
+        //JS_ASSERT(ucs4Char <= 0x7FFFFFFF);
+        if ((ucs4Char < 0x80) && (ucs4Char >= 0))
+            utf8Buffer[0] = (char)ucs4Char;
+        else {
+            int i;
+            int a = ucs4Char >>> 11;
+            utf8Length = 2;
+            while (a != 0) {
+                a >>>= 5;
+                utf8Length++;
+            }
+            i = utf8Length;
+            while (--i > 0) {
+                utf8Buffer[i] = (char)((ucs4Char & 0x3F) | 0x80);
+                ucs4Char >>>= 6;
+            }
+            utf8Buffer[0] = (char)(0x100 - (1 << (8-utf8Length)) + ucs4Char);
+        }
+        return utf8Length;
+    }
 
 
-	/* Convert a utf8 character sequence into a UCS-4 character and return that
-	 * character.  It is assumed that the caller already checked that the sequence is valid.
-	 */
-	private static int utf8ToOneUcs4Char(char[] utf8Buffer, int utf8Length)
-	{
-	    int ucs4Char;
-		int k = 0;
-//	    JS_ASSERT(utf8Length >= 1 && utf8Length <= 6);
-	    if (utf8Length == 1) {
-	        ucs4Char = utf8Buffer[0];
-//			JS_ASSERT(!(ucs4Char & 0x80));
-	    } else {
-//	        JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7-utf8Length)))) == (0x100 - (1 << (8-utf8Length))));
-	        ucs4Char = utf8Buffer[k++] & ((1<<(7-utf8Length))-1);
-	        while (--utf8Length > 0) {
-//	            JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
-	            ucs4Char = ucs4Char<<6 | (utf8Buffer[k++] & 0x3F);
-	        }
-	    }
-	    return ucs4Char;
-	}
+    /* Convert a utf8 character sequence into a UCS-4 character and return that
+    * character.  It is assumed that the caller already checked that the sequence is valid.
+    */
+    private static int utf8ToOneUcs4Char(char[] utf8Buffer, int utf8Length) {
+        int ucs4Char;
+        int k = 0;
+        //JS_ASSERT(utf8Length >= 1 && utf8Length <= 6);
+        if (utf8Length == 1) {
+            ucs4Char = utf8Buffer[0];
+            //			JS_ASSERT(!(ucs4Char & 0x80));
+        } else {
+            //JS_ASSERT((*utf8Buffer & (0x100 - (1 << (7-utf8Length)))) == (0x100 - (1 << (8-utf8Length))));
+            ucs4Char = utf8Buffer[k++] & ((1<<(7-utf8Length))-1);
+            while (--utf8Length > 0) {
+                //JS_ASSERT((*utf8Buffer & 0xC0) == 0x80);
+                ucs4Char = ucs4Char<<6 | (utf8Buffer[k++] & 0x3F);
+            }
+        }
+        return ucs4Char;
+    }
 
 }
