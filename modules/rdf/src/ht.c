@@ -3114,7 +3114,7 @@ fillContainer (HT_Resource node)
 			}
 			pr = rn;
 		}
-#if defined(WIN32) || defined(XP_MAC)
+#if defined(XP_WIN) || defined(XP_MAC)
 		if (advertURL) XP_GetURLForView(node->view, advertURL);
 #endif
 		RDF_DisposeCursor(c);
@@ -10283,7 +10283,7 @@ HT_HasHTMLPane(HT_View htView)
 	{
 		if ((top = HT_TopNode(htView)) != NULL)
 		{
-			HT_GetNodeData (top, gNavCenter->RDF_HTMLURL, HT_COLUMN_STRING, (void *)&url);
+			HT_GetTemplateData (top, gNavCenter->RDF_HTMLURL, HT_COLUMN_STRING, (void *)&url);
 			if (url != NULL)
 			{
 				hasHTML = PR_TRUE;
@@ -10310,7 +10310,7 @@ HT_HTMLPaneHeight(HT_View htView)
 		{
 			if ((top = HT_TopNode(htView)) != NULL)
 			{
-				HT_GetNodeData (top, gNavCenter->RDF_HTMLHeight, HT_COLUMN_STRING, (void *)&paneHeightStr);
+				HT_GetTemplateData (top, gNavCenter->RDF_HTMLHeight, HT_COLUMN_STRING, (void *)&paneHeightStr);
 			}
 		}
 	}
