@@ -72,7 +72,7 @@ function onLoad()
 function setDetails()
 {
   var index = parseInt(document.getElementById("nicknames").value);
-  details = dialogParams.GetString(index+itemCount+2);
+  var details = dialogParams.GetString(index+itemCount+2);
   document.getElementById("details").value = details;
 }
 
