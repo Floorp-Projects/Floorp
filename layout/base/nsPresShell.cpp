@@ -345,7 +345,7 @@ public:
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame);
   // caret handling
   NS_IMETHOD GetCaret(nsICaret **outCaret);
-  NS_IMETHOD RefreshCaret();
+  NS_IMETHOD SetCaretEnabled(PRBool inEnable);
 
   // nsIDOMSelectionListener interface
   NS_IMETHOD NotifySelectionChanged();
@@ -359,9 +359,14 @@ protected:
   nsresult ReconstructFrames(void);
 
   // turn the caret on and off.
-  nsresult EnableCaret();
-  nsresult DisableCaret();
-    
+  nsresult RefreshCaret(nsIView *aView,
+  									nsIRenderingContext& aRendContext,
+  									const nsRect& aDirtyRect);
+  nsresult SuspendCaret();
+  nsresult ResumeCaret();
+   
+  PRBool	mCaretEnabled;
+  
 #ifdef NS_DEBUG
   void VerifyIncrementalReflow();
   PRBool mInVerifyReflow;
@@ -451,6 +456,7 @@ PresShell::PresShell()
 {
   //XXX joki 11/17 - temporary event hack.
   mIsDestroying = PR_FALSE;
+  mCaretEnabled = PR_FALSE;
   EnableScrolling();
 }
 
@@ -625,10 +631,15 @@ PresShell::Init(nsIDocument* aDocument,
   // make the caret
   nsresult  err = NS_NewCaret(getter_AddRefs(mCaret));
   if (NS_SUCCEEDED(err))
+  {
     mCaret->Init(this, caretProperties);
-  
+  }
   delete caretProperties;
   caretProperties = nsnull;
+
+  // do this when we have a way of figuring out how to tell chrome
+  // from content
+  //SetCaretEnabled(PR_TRUE);			// make it show in browser windows
 #endif  
 
   return NS_OK;
@@ -832,7 +843,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 {
   nsIContent* root = nsnull;
 
-  DisableCaret();
+  SuspendCaret();
   EnterReflowLock();
 
   if (nsnull != mPresContext) {
@@ -893,7 +904,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   ExitReflowLock();
-  EnableCaret();
+  ResumeCaret();
 
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -901,7 +912,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 NS_IMETHODIMP
 PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 {
-  DisableCaret();
+  SuspendCaret();
   EnterReflowLock();
 
   if (nsnull != mPresContext) {
@@ -958,7 +969,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 #endif
   }
   ExitReflowLock();
-  EnableCaret();
+  ResumeCaret();
   
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -1002,13 +1013,32 @@ NS_IMETHODIMP PresShell::GetCaret(nsICaret **outCaret)
   return mCaret->QueryInterface(kICaretIID,(void **)outCaret);
 }
 
-NS_IMETHODIMP PresShell::RefreshCaret()
+NS_METHOD PresShell::RefreshCaret(nsIView *aView, nsIRenderingContext& aRendContext, const nsRect& aDirtyRect)
 {
   if (mCaret)
-  	mCaret->Refresh();
+  	mCaret->Refresh(aView, aRendContext, aDirtyRect);
 
   return NS_OK;
 }
+
+NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool inEnable)
+{
+	nsresult	result = NS_OK;
+	PRBool	oldEnabled = mCaretEnabled;
+	
+	mCaretEnabled = inEnable;
+	
+	if (mCaret && (mCaretEnabled != oldEnabled))
+	{
+		if (mCaretEnabled)
+			result = mCaret->SetCaretVisible(PR_TRUE);
+		else
+			result = mCaret->SetCaretVisible(PR_FALSE);
+	}
+	
+	return result;
+}
+
 
 /*implementation of the nsIDOMSelectionListener
   it will invoke the resetselection to update the presentation shell's frames
@@ -1021,16 +1051,16 @@ NS_IMETHODIMP PresShell::NotifySelectionChanged()
   return NS_ERROR_NULL_POINTER;
 }
 
-nsresult PresShell::DisableCaret()
+nsresult PresShell::SuspendCaret()
 {
 	if (mCaret)
 		return mCaret->SetCaretVisible(PR_FALSE);
 	return NS_OK;
 }
 
-nsresult PresShell::EnableCaret()
+nsresult PresShell::ResumeCaret()
 {
-	if (mCaret)
+	if (mCaret && mCaretEnabled)
 		return mCaret->SetCaretVisible(PR_TRUE);
 	return NS_OK;
 }
@@ -1251,6 +1281,11 @@ PresShell::ClearFrameRefs(nsIFrame* aFrame)
     manager->ClearFrameRefs(aFrame);
     NS_RELEASE(manager);
   }
+  
+  if (mCaret) {
+  	mCaret->ClearFrameRefs(aFrame);
+  }
+  
   if (aFrame == mCurrentEventFrame) {
     mCurrentEventFrame = nsnull;
   }
@@ -1961,6 +1996,9 @@ PresShell::Paint(nsIView              *aView,
       aRenderingContext.DrawRect(0, 0, r.width, r.height);
     }
 #endif
+
+	// ensure the caret gets redrawn
+    RefreshCaret(aView, aRenderingContext, aDirtyRect);
   }
   return rv;
 }
