@@ -301,14 +301,14 @@ class nsTSubstring_CharT : public nsTAString_CharT
     // array variable. Use AssignASCII for those.
 #ifdef NS_DISABLE_LITERAL_TEMPLATE
       void AssignLiteral( const char* str )
-                  { return AssignASCII(str); }
+                  { AssignASCII(str); }
 #else
       template<int N>
       void AssignLiteral( const char (&str)[N] )
-                  { return AssignASCII(str, N-1); }
+                  { AssignASCII(str, N-1); }
       template<int N>
       void AssignLiteral( char (&str)[N] )
-                  { return AssignASCII(str, N-1); }
+                  { AssignASCII(str, N-1); }
 #endif
 
       self_type& operator=( char_type c )                                                       { Assign(c);        return *this; }
