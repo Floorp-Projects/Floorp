@@ -63,7 +63,7 @@ sub objectProvides {
 sub filterOutput {
     my $self = shift;
     my($args) = @_;
-    $args{'string'} =~ s/\n\n.*$/\n\n/os; # strip out everything after the header
+    $args->{'string'} =~ s/\n\n.*$/\n\n/os; # strip out everything after the header
 }
 
 # return 1 if we are not allowed to have side effects
