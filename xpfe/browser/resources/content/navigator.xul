@@ -224,7 +224,7 @@ Contributor(s): ______________________________________. -->
       // container so we have to be able to identify it (bug 19588).
       //     - pinkerton
       -->
-      <menu id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" 
+      <menu id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
             ref="NC:BookmarksRoot"
             oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)">
         <titledbutton align="right" class="bookmarkFolder toolbar-flat" container="true"
