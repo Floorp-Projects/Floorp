@@ -31,9 +31,9 @@
 static NS_DEFINE_IID(kIDOMHTMLHRElementIID, NS_IDOMHTMLHRELEMENT_IID);
 
 class nsHTMLHRElement : public nsIDOMHTMLHRElement,
-                 public nsIScriptObjectOwner,
-                 public nsIDOMEventReceiver,
-                 public nsIHTMLContent
+                        public nsIScriptObjectOwner,
+                        public nsIDOMEventReceiver,
+                        public nsIHTMLContent
 {
 public:
   nsHTMLHRElement(nsIAtom* aTag);
@@ -143,8 +143,8 @@ static nsGenericHTMLElement::EnumTable kAlignTable[] = {
 
 NS_IMETHODIMP
 nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
-                            const nsString& aValue,
-                            nsHTMLValue& aResult)
+                                   const nsString& aValue,
+                                   nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::width) {
     nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
@@ -169,8 +169,8 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLHRElement::AttributeToString(nsIAtom* aAttribute,
-                            nsHTMLValue& aValue,
-                            nsString& aResult) const
+                                   nsHTMLValue& aValue,
+                                   nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
@@ -222,10 +222,10 @@ nsHTMLHRElement::GetAttributeMappingFunction(nsMapAttributesFunc& aMapFunc) cons
 
 NS_IMETHODIMP
 nsHTMLHRElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                         nsEvent* aEvent,
-                         nsIDOMEvent** aDOMEvent,
-                         PRUint32 aFlags,
-                         nsEventStatus& aEventStatus)
+                                nsEvent* aEvent,
+                                nsIDOMEvent** aDOMEvent,
+                                PRUint32 aFlags,
+                                nsEventStatus& aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
