@@ -175,7 +175,7 @@ sub outputPage {
     my $basepath = $pagedata->httpbase;
     $basepath =~ s/^http:/https:/i
 	 if $ENV{SERVER_PORT} == 443;
-    warn "basepath: $basepath";
+    #warn "basepath: $basepath";
     $basepath =~ s#^(.*?)(/base/)$#$1/nocache$2# if ($params{nocache});
     $hook .= "<base href='". $basepath . $relpath .
       "' xmlns='http://www.w3.org/1999/xhtml' />";
@@ -205,10 +205,10 @@ sub outputPage {
 
     $gResponseNow = [gettimeofday];  # for logging
     { # turn on output autoflush, locally in this block
-        local $| = 1; 
         print "Set-Cookie: moztest_SomeRandomCookie1=somerandomstring\n";
         print "Set-Cookie: moztest_SomeRandomCookie2=somerandomstring\n";
         print $contentTypeHeader;
+        local $| = 1; 
         print $content;
     }
 
