@@ -828,173 +828,182 @@ nsXBLBinding::InstallEventHandlers()
     nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
     nsXBLEventHandler* currHandler = nsnull;
 
-    for (nsXBLPrototypeHandler* curr = handlerChain; curr;
-         curr = curr->GetNextHandler()) {
-      // Fetch the event type.
-      nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
-      if (!eventAtom) 
-        continue;
-
+    if (handlerChain) {
       nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
-      // Figure out if we're using capturing or not.
-      PRUint8 phase = curr->GetPhase();
-      PRBool useCapture = (phase == NS_PHASE_CAPTURING);
-        
-      // Create a new nsXBLEventHandler.
-      nsXBLEventHandler* handler = nsnull;
-      
-      nsAutoString type;
-      eventAtom->ToString(type);
-      
-      nsIID iid;
-      PRBool found = PR_FALSE;
-      GetEventHandlerIID(eventAtom, &iid, &found);
-
-      // If this is a command, add it in the system event group, otherwise 
-      // add it to the standard event group.
-
       nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(receiver);
-      nsCOMPtr<nsIDOMEventGroup> eventGroup;
-      if (curr->GetType() & NS_HANDLER_TYPE_XBL_COMMAND)
-        receiver->GetSystemEventGroup(getter_AddRefs(eventGroup));
+      nsCOMPtr<nsIDOMEventGroup> systemEventGroup;
 
-      if (found) { 
-        /*
-        // Disable ATTACHTO capability for Mozilla 1.0
-        nsAutoString attachType;
-        child->GetAttr(kNameSpaceID_None, kAttachToAtom, attachType);
-        if (attachType == NS_LITERAL_STRING("_document") || 
-            attachType == NS_LITERAL_STRING("_window"))
-        {
-          nsCOMPtr<nsIDocument> boundDoc;
-          mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
-          if (attachType == NS_LITERAL_STRING("_window")) {
-            nsCOMPtr<nsIScriptGlobalObject> global;
-            boundDoc->GetScriptGlobalObject(getter_AddRefs(global));
-            receiver = do_QueryInterface(global);
-          }
-          else receiver = do_QueryInterface(boundDoc);
-        }
-        else if (!attachType.IsEmpty() && !attachType.Equals(NS_LITERAL_STRING("_element"))) {
-          nsCOMPtr<nsIDocument> boundDoc;
-          mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
-          nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(boundDoc));
-          nsCOMPtr<nsIDOMElement> otherElement;
-          domDoc->GetElementById(attachType, getter_AddRefs(otherElement));
-          receiver = do_QueryInterface(otherElement);
-        }
-        */
-
-        if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
-          nsXBLMouseHandler* mouseHandler;
-          NS_NewXBLMouseHandler(receiver, curr, &mouseHandler);
-          target->AddGroupedEventListener(type,
-                                          (nsIDOMMouseListener*)mouseHandler,
-                                          useCapture, eventGroup);
-          handler = mouseHandler;
-        }
-        else if(iid.Equals(NS_GET_IID(nsIDOMKeyListener))) {
-          nsXBLKeyHandler* keyHandler;
-          NS_NewXBLKeyHandler(receiver, curr, &keyHandler);
-          target->AddGroupedEventListener(type,
-                                          (nsIDOMKeyListener*)keyHandler,
-                                          useCapture, eventGroup);
-          handler = keyHandler;
-        }
-        else if (iid.Equals(NS_GET_IID(nsIDOMMouseMotionListener))) {
-          nsXBLMouseMotionHandler* mouseHandler;
-          NS_NewXBLMouseMotionHandler(receiver, curr, &mouseHandler);
-          target->AddGroupedEventListener(type,
-                                          (nsIDOMMouseListener*)mouseHandler,
-                                          useCapture, eventGroup);
-          handler = mouseHandler;
-        }
-        else if(iid.Equals(NS_GET_IID(nsIDOMFocusListener))) {
-          nsXBLFocusHandler* focusHandler;
-          NS_NewXBLFocusHandler(receiver, curr, &focusHandler);
-          target->AddGroupedEventListener(type,
-                                          (nsIDOMFocusListener*)focusHandler,
-                                          useCapture, eventGroup);
-          handler = focusHandler;
-        }
-        else if (iid.Equals(NS_GET_IID(nsIDOMXULListener))) {
-          nsXBLXULHandler* xulHandler;
-          NS_NewXBLXULHandler(receiver, curr, &xulHandler);
-          target->AddGroupedEventListener(type,
-                                           (nsIDOMXULListener*)xulHandler,
-                                           useCapture, eventGroup);
-          handler = xulHandler;
-        }
-        else if (iid.Equals(NS_GET_IID(nsIDOMScrollListener))) {
-          nsXBLScrollHandler* scrollHandler;
-          NS_NewXBLScrollHandler(receiver, curr, &scrollHandler);
-          target->AddGroupedEventListener(type,
-                                          (nsIDOMScrollListener*)scrollHandler,
-                                          useCapture, eventGroup);
-          handler = scrollHandler;
-        }
-        else if (iid.Equals(NS_GET_IID(nsIDOMFormListener))) {
-          nsXBLFormHandler* formHandler;
-          NS_NewXBLFormHandler(receiver, curr, &formHandler);
-          target->AddGroupedEventListener(type,
-                                          (nsIDOMFormListener*)formHandler,
-                                          useCapture, eventGroup);
-          handler = formHandler;
-        }
-        else if(iid.Equals(NS_GET_IID(nsIDOMDragListener))) {
-          nsXBLDragHandler* dragHandler;
-          NS_NewXBLDragHandler(receiver, curr, &dragHandler);
-          target->AddGroupedEventListener(type,
-                                          (nsIDOMDragListener*)dragHandler,
-                                          useCapture, eventGroup);
-          handler = dragHandler;
-        }
-        else if(iid.Equals(NS_GET_IID(nsIDOMLoadListener))) {
-          nsXBLLoadHandler* loadHandler;
-          NS_NewXBLLoadHandler(receiver, curr, &loadHandler);
-          target->AddGroupedEventListener(type,
-                                          (nsIDOMLoadListener*)loadHandler,
-                                          useCapture, eventGroup);
-          handler = loadHandler;
-        }
-        else if(iid.Equals(NS_GET_IID(nsIDOMMutationListener))) {
-          nsXBLMutationHandler* mutationHandler;
-          NS_NewXBLMutationHandler(receiver, curr, &mutationHandler);
-          target->AddGroupedEventListener(type,
-                                          (nsIDOMMutationListener*)mutationHandler,
-                                          useCapture, eventGroup);
-          handler = mutationHandler;
-        }
-        else if(iid.Equals(NS_GET_IID(nsIDOMContextMenuListener))) {
-          nsXBLContextMenuHandler* menuHandler;
-          NS_NewXBLContextMenuHandler(receiver, curr, &menuHandler);
-          target->AddGroupedEventListener(type,
-                                          (nsIDOMContextMenuListener*)menuHandler,
-                                          useCapture, eventGroup);
-          handler = menuHandler;
-        }
-      }
-      else {
-        nsXBLCustomHandler* customHandler;
-        NS_NewXBLCustomHandler(receiver, curr, &customHandler);
-        target->AddGroupedEventListener(type,
-                                        (nsIDOMEventListener*)customHandler,
-                                        useCapture, eventGroup);
-        handler = customHandler;
-      }
-
-      // We chain all our event handlers together for easy
-      // removal later (if/when the binding dies).
-      if (handler) {
-        if (!currHandler)
-          mFirstHandler = handler;
-        else 
-          currHandler->SetNextHandler(handler);
+      for (nsXBLPrototypeHandler* curr = handlerChain; curr;
+           curr = curr->GetNextHandler()) {
+        // Fetch the event type.
+        nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
+        if (!eventAtom) 
+          continue;
         
-        currHandler = handler;
+        // Figure out if we're using capturing or not.
+        PRUint8 phase = curr->GetPhase();
+        PRBool useCapture = (phase == NS_PHASE_CAPTURING);
+        
+        // Create a new nsXBLEventHandler.
+        nsXBLEventHandler* handler = nsnull;
+      
+        nsAutoString type;
+        eventAtom->ToString(type);
+      
+        nsIID iid;
+        PRBool found = PR_FALSE;
+        GetEventHandlerIID(eventAtom, &iid, &found);
 
-        // Let the listener manager hold on to the handler.
-        NS_RELEASE(handler);
+        // If this is a command, add it in the system event group, otherwise 
+        // add it to the standard event group.
+
+        // This is a weak ref. systemEventGroup above is already a
+        // strong ref, so we are guaranteed it will not go away.
+        nsIDOMEventGroup* eventGroup = nsnull;
+        if (curr->GetType() & NS_HANDLER_TYPE_XBL_COMMAND) {
+          if (!systemEventGroup)
+            receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+          eventGroup = systemEventGroup;
+        }
+
+        if (found) { 
+          /*
+          // Disable ATTACHTO capability for Mozilla 1.0
+          nsAutoString attachType;
+          child->GetAttr(kNameSpaceID_None, kAttachToAtom, attachType);
+          if (attachType == NS_LITERAL_STRING("_document") || 
+              attachType == NS_LITERAL_STRING("_window"))
+            {
+              nsCOMPtr<nsIDocument> boundDoc;
+              mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
+              if (attachType == NS_LITERAL_STRING("_window")) {
+                nsCOMPtr<nsIScriptGlobalObject> global;
+                boundDoc->GetScriptGlobalObject(getter_AddRefs(global));
+                receiver = do_QueryInterface(global);
+              }
+              else receiver = do_QueryInterface(boundDoc);
+            }
+          else if (!attachType.IsEmpty() && !attachType.Equals(NS_LITERAL_STRING("_element"))) {
+            nsCOMPtr<nsIDocument> boundDoc;
+            mBoundElement->GetDocument(*getter_AddRefs(boundDoc));
+            nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(boundDoc));
+            nsCOMPtr<nsIDOMElement> otherElement;
+            domDoc->GetElementById(attachType, getter_AddRefs(otherElement));
+            receiver = do_QueryInterface(otherElement);
+          }
+          */
+
+          if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
+            nsXBLMouseHandler* mouseHandler;
+            NS_NewXBLMouseHandler(receiver, curr, &mouseHandler);
+            target->AddGroupedEventListener(type,
+                                            (nsIDOMMouseListener*)mouseHandler,
+                                            useCapture, eventGroup);
+            handler = mouseHandler;
+          }
+          else if(iid.Equals(NS_GET_IID(nsIDOMKeyListener))) {
+            nsXBLKeyHandler* keyHandler;
+            NS_NewXBLKeyHandler(receiver, curr, &keyHandler);
+            target->AddGroupedEventListener(type,
+                                            (nsIDOMKeyListener*)keyHandler,
+                                            useCapture, eventGroup);
+            handler = keyHandler;
+          }
+          else if (iid.Equals(NS_GET_IID(nsIDOMMouseMotionListener))) {
+            nsXBLMouseMotionHandler* mouseHandler;
+            NS_NewXBLMouseMotionHandler(receiver, curr, &mouseHandler);
+            target->AddGroupedEventListener(type,
+                                            (nsIDOMMouseListener*)mouseHandler,
+                                            useCapture, eventGroup);
+            handler = mouseHandler;
+          }
+          else if(iid.Equals(NS_GET_IID(nsIDOMFocusListener))) {
+            nsXBLFocusHandler* focusHandler;
+            NS_NewXBLFocusHandler(receiver, curr, &focusHandler);
+            target->AddGroupedEventListener(type,
+                                            (nsIDOMFocusListener*)focusHandler,
+                                            useCapture, eventGroup);
+            handler = focusHandler;
+          }
+          else if (iid.Equals(NS_GET_IID(nsIDOMXULListener))) {
+            nsXBLXULHandler* xulHandler;
+            NS_NewXBLXULHandler(receiver, curr, &xulHandler);
+            target->AddGroupedEventListener(type,
+                                            (nsIDOMXULListener*)xulHandler,
+                                            useCapture, eventGroup);
+            handler = xulHandler;
+          }
+          else if (iid.Equals(NS_GET_IID(nsIDOMScrollListener))) {
+            nsXBLScrollHandler* scrollHandler;
+            NS_NewXBLScrollHandler(receiver, curr, &scrollHandler);
+            target->AddGroupedEventListener(type,
+                                            (nsIDOMScrollListener*)scrollHandler,
+                                            useCapture, eventGroup);
+            handler = scrollHandler;
+          }
+          else if (iid.Equals(NS_GET_IID(nsIDOMFormListener))) {
+            nsXBLFormHandler* formHandler;
+            NS_NewXBLFormHandler(receiver, curr, &formHandler);
+            target->AddGroupedEventListener(type,
+                                            (nsIDOMFormListener*)formHandler,
+                                            useCapture, eventGroup);
+            handler = formHandler;
+          }
+          else if(iid.Equals(NS_GET_IID(nsIDOMDragListener))) {
+            nsXBLDragHandler* dragHandler;
+            NS_NewXBLDragHandler(receiver, curr, &dragHandler);
+            target->AddGroupedEventListener(type,
+                                            (nsIDOMDragListener*)dragHandler,
+                                            useCapture, eventGroup);
+            handler = dragHandler;
+          }
+          else if(iid.Equals(NS_GET_IID(nsIDOMLoadListener))) {
+            nsXBLLoadHandler* loadHandler;
+            NS_NewXBLLoadHandler(receiver, curr, &loadHandler);
+            target->AddGroupedEventListener(type,
+                                            (nsIDOMLoadListener*)loadHandler,
+                                            useCapture, eventGroup);
+            handler = loadHandler;
+          }
+          else if(iid.Equals(NS_GET_IID(nsIDOMMutationListener))) {
+            nsXBLMutationHandler* mutationHandler;
+            NS_NewXBLMutationHandler(receiver, curr, &mutationHandler);
+            target->AddGroupedEventListener(type,
+                                            (nsIDOMMutationListener*)mutationHandler,
+                                            useCapture, eventGroup);
+            handler = mutationHandler;
+          }
+          else if(iid.Equals(NS_GET_IID(nsIDOMContextMenuListener))) {
+            nsXBLContextMenuHandler* menuHandler;
+            NS_NewXBLContextMenuHandler(receiver, curr, &menuHandler);
+            target->AddGroupedEventListener(type,
+                                            (nsIDOMContextMenuListener*)menuHandler,
+                                            useCapture, eventGroup);
+            handler = menuHandler;
+          }
+        }
+        else {
+          nsXBLCustomHandler* customHandler;
+          NS_NewXBLCustomHandler(receiver, curr, &customHandler);
+          target->AddGroupedEventListener(type,
+                                          (nsIDOMEventListener*)customHandler,
+                                          useCapture, eventGroup);
+          handler = customHandler;
+        }
+
+        // We chain all our event handlers together for easy
+        // removal later (if/when the binding dies).
+        if (handler) {
+          if (!currHandler)
+            mFirstHandler = handler;
+          else 
+            currHandler->SetNextHandler(handler);
+        
+          currHandler = handler;
+
+          // Let the listener manager hold on to the handler.
+          NS_RELEASE(handler);
+        }
       }
     }
   }
