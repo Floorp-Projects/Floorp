@@ -24,11 +24,6 @@
 
 #include "nsITextWidget.h"
 
-typedef struct _PasswordData {
-  nsString mPassword;
-  PRBool  mIgnore;
-} PasswordData;
-
 /**
  * Native Motif single line edit control wrapper.
  */
@@ -45,17 +40,9 @@ public:
 
   virtual PRBool  OnPaint(nsPaintEvent & aEvent);
   virtual PRBool  OnResize(nsSizeEvent &aEvent);
-  NS_IMETHOD SetPassword(PRBool aIsPassword);
 
 protected:
   NS_IMETHOD CreateNative(GtkWidget *parentWindow);
-
-  PRBool mIsPasswordCallBacksInstalled;
-
-private:
-  PRBool mMakeReadOnly;
-  PRBool mMakePassword;
-
 };
 
 #endif // nsTextWidget_h__

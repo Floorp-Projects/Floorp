@@ -29,13 +29,21 @@
   g.green=NS_GET_G(n); \
   g.blue=NS_GET_R(n);
 
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
+static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+
 //#define DBG 1
 
 nsWidget::nsWidget()
 {
   // XXX Shouldn't this be done in nsBaseWidget?
   NS_INIT_REFCNT();
-  mBackground = NS_RGB(214,214,214);
+
+  // get the proper color from the look and feel code
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground, mBackground);
+  }
   mGC = nsnull;
   mWidget = nsnull;
   mParent = nsnull;

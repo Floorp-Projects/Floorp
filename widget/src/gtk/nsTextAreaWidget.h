@@ -44,10 +44,6 @@ public:
 
 protected:
   NS_METHOD CreateNative(GtkWidget *parentWindow);
-
-private:
-  PRBool mMakeReadOnly;
-
 };
 
 #endif // nsTextAreaWidget_h__

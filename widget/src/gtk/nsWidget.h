@@ -22,9 +22,12 @@
 #include "nsBaseWidget.h"
 #include "nsToolkit.h"
 #include "nsIAppShell.h"
+#include "nsWidgetsCID.h"
 
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
+
+#include "nsLookAndFeel.h"
 
 #include <gtk/gtk.h>
 #ifndef GTK_HAVE_FEATURES_1_1_6

@@ -37,10 +37,7 @@ NS_IMPL_RELEASE(nsTextWidget)
 // nsTextWidget constructor
 //
 //-------------------------------------------------------------------------
-nsTextWidget::nsTextWidget() : nsTextHelper(),
-  mIsPasswordCallBacksInstalled(PR_FALSE),
-  mMakeReadOnly(PR_FALSE),
-  mMakePassword(PR_FALSE)
+nsTextWidget::nsTextWidget() : nsTextHelper()
 {
 }
 
@@ -62,7 +59,6 @@ NS_METHOD nsTextWidget::CreateNative(GtkWidget *parentWindow)
 {
   mWidget = gtk_entry_new();
   gtk_widget_set_name(mWidget, "nsTextWidget");
-  gtk_editable_set_editable(GTK_EDITABLE(mWidget), mMakeReadOnly?PR_FALSE:PR_TRUE);
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "key_release_event",
                      GTK_SIGNAL_FUNC(nsGtkWidget_Text_Callback),
@@ -105,31 +101,4 @@ PRBool nsTextWidget::OnPaint(nsPaintEvent & aEvent)
 PRBool nsTextWidget::OnResize(nsSizeEvent &aEvent)
 {
   return PR_FALSE;
-}
-
-//--------------------------------------------------------------
-NS_METHOD nsTextWidget::SetPassword(PRBool aIsPassword)
-{
-  if (mWidget == nsnull && aIsPassword) {
-    mMakePassword = PR_TRUE;
-    return NS_OK;
-  }
-  gtk_entry_set_visibility(GTK_ENTRY(mWidget), aIsPassword);
-#if 0
-  if (aIsPassword) {
-    if (!mIsPasswordCallBacksInstalled) {
-      XtAddCallback(mWidget, XmNmodifyVerifyCallback, nsXtWidget_Text_Callback, NULL);
-      XtAddCallback(mWidget, XmNactivateCallback,     nsXtWidget_Text_Callback, NULL);
-      mIsPasswordCallBacksInstalled = PR_TRUE;
-    }
-  } else {
-    if (mIsPasswordCallBacksInstalled) {
-      XtRemoveCallback(mWidget, XmNmodifyVerifyCallback, nsXtWidget_Text_Callback, NULL);
-      XtRemoveCallback(mWidget, XmNactivateCallback,     nsXtWidget_Text_Callback, NULL);
-      mIsPasswordCallBacksInstalled = PR_FALSE;
-    }
-  }
-#endif
-  nsTextHelper::SetPassword(aIsPassword);
-  return NS_OK;
 }
