@@ -398,7 +398,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             NS_LoadString(hSetupRscInst, IDS_STR_CREATE_DIRECTORY, szStrCreateDirectory, MAX_BUF);
             if(NS_LoadString(hSetupRscInst, IDS_MSG_CREATE_DIRECTORY, szMsgCreateDirectory, MAX_BUF) == WIZ_OK)
             {
-              lstrcpy(szBufTemp, "\n\n    ");
+              lstrcpy(szBufTemp, "\n\n");
               lstrcat(szBufTemp, szBuf);
               RemoveBackSlash(szBufTemp);
               lstrcat(szBufTemp, "\n\n");
@@ -413,7 +413,7 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
               {
                 char szECreateDirectory[MAX_BUF];
 
-                lstrcpy(szBufTemp, "\n\n    ");
+                lstrcpy(szBufTemp, "\n\n");
                 lstrcat(szBufTemp, sgProduct.szPath);
                 RemoveBackSlash(szBufTemp);
                 lstrcat(szBufTemp, "\n\n");
