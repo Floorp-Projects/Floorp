@@ -21,6 +21,7 @@
  */
 
 var editCard;
+var gOnSaveListeners = new Array;
 
 function OnLoadNewCard()
 {
@@ -88,6 +89,18 @@ function OnLoadEditCard()
 	GetCardValues(editCard.card, document);
 		
 	top.window.title = editCard.titlePrefix + editCard.card.displayName;
+}
+
+function RegisterSaveListener(func)
+{
+  var length = gOnSaveListeners.length;
+  gOnSaveListeners[length] = func;  
+}
+
+function CallSaveListeners()
+{
+	for ( var i = 0; i < gOnSaveListeners.length; i++ )
+		gOnSaveListeners[i]();
 }
 
 function InitEditCard()
@@ -268,6 +281,7 @@ function SetCardValues(cardproperty, doc)
 		cardproperty.custom4 = doc.getElementById('Custom4').value;
 		cardproperty.notes = doc.getElementById('Notes').value;
 	}
+  CallSaveListeners();
 }
 
 
