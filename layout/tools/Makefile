@@ -23,7 +23,7 @@ TARGETS = generated
 
 include $(DEPTH)/config/rules.mk
 
-all:: nsHTMLTags.cpp nsCSSProps.cpp nsCSSKeywords.cpp nsColorNames.cpp
+all:: nsCSSProps.cpp nsCSSKeywords.cpp nsColorNames.cpp
 
 # XXX copy this to a shared config file for raptor
 PERL = /usr/sbin/perl
