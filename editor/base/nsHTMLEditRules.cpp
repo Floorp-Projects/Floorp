@@ -585,11 +585,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
     // about what to do here.  i may need to switch from thinking about an array of
     // nodes to act on to instead think of an array of ranges to act on.
   
-  // Next we remove all the <br>'s in the array.  This won't prevent <br>'s 
-  // inside of <p>'s from being significant - those <br>'s are not hit by 
-  // the subtree iterator, since they are enclosed in a <p>.
-  
-  // We also remove all non-editable nodes.  Leave them be.
+  // Remove all non-editable nodes.  Leave them be.
   
   PRUint32 listCount;
   PRInt32 i;
@@ -598,11 +594,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
   {
     nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(isupports ) );
-    if (IsBreak(testNode))
-    {
-      arrayOfNodes->RemoveElementAt(i);
-    }
-    else if (!mEditor->IsEditable(testNode))
+    if (!mEditor->IsEditable(testNode))
     {
       arrayOfNodes->RemoveElementAt(i);
     }
@@ -655,6 +647,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
   arrayOfNodes->Count(&listCount);
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curList;
+  nsCOMPtr<nsIDOMNode> prevListItem;
     
     for (i=0; i<listCount; i++)
     {
@@ -728,29 +721,59 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
         res = mEditor->CreateNode(listType, curParent, offset, getter_AddRefs(curList));
         if (NS_FAILED(res)) return res;
         // curList is now the correct thing to put curNode in
+        prevListItem = 0;
       }
     
+      // if curNode is a Break, delete it, and quit remember prev list item
+      if (IsBreak(curNode)) 
+      {
+        res = mEditor->DeleteNode(curNode);
+        if (NS_FAILED(res)) return res;
+        prevListItem = 0;
+        continue;
+      }
+      
       // if curNode isn't a list item, we must wrap it in one
       nsCOMPtr<nsIDOMNode> listItem;
       if (!IsListItem(curNode))
       {
-        nsAutoString listItemType = "li";
-        res = InsertContainerAbove(curNode, &listItem, listItemType);
-        if (NS_FAILED(res)) return res;
+        if (nsEditor::IsInlineNode(curNode) && prevListItem)
+        {
+          // this is a continuation of some inline nodes that belong together in
+          // the same list item.  use prevListItem
+          PRUint32 listItemLen;
+          res = mEditor->GetLengthOfDOMNode(prevListItem, listItemLen);
+          if (NS_FAILED(res)) return res;
+          res = mEditor->DeleteNode(curNode);
+          if (NS_FAILED(res)) return res;
+          res = mEditor->InsertNode(curNode, prevListItem, listItemLen);
+          if (NS_FAILED(res)) return res;
+        }
+        else
+        {
+          nsAutoString listItemType = "li";
+          res = InsertContainerAbove(curNode, &listItem, listItemType);
+          if (NS_FAILED(res)) return res;
+          if (nsEditor::IsInlineNode(curNode)) 
+            prevListItem = listItem;
+        }
       }
       else
       {
         listItem = curNode;
       }
     
-      // tuck the listItem into the end of the active list
-      PRUint32 listLen;
-      res = mEditor->GetLengthOfDOMNode(curList, listLen);
-      if (NS_FAILED(res)) return res;
-      res = mEditor->DeleteNode(listItem);
-      if (NS_FAILED(res)) return res;
-      res = mEditor->InsertNode(listItem, curList, listLen);
-      if (NS_FAILED(res)) return res;
+      if (listItem)  // if we made a new list item, deal with it
+      {
+        // tuck the listItem into the end of the active list
+        PRUint32 listLen;
+        res = mEditor->GetLengthOfDOMNode(curList, listLen);
+        if (NS_FAILED(res)) return res;
+        res = mEditor->DeleteNode(listItem);
+        if (NS_FAILED(res)) return res;
+        res = mEditor->InsertNode(listItem, curList, listLen);
+        if (NS_FAILED(res)) return res;
+      }
     }
 
   return res;
@@ -1669,11 +1692,13 @@ nsHTMLEditRules::MakeTransitionList(nsISupportsArray *inArrayOfNodes,
     transNode->GetParentNode(getter_AddRefs(curElementParent));
     if (curElementParent != prevElementParent)
     {
-      inTransitionArray->InsertElementAt((void*)PR_TRUE,i);  // different parents: transition point
+      // different parents, or seperated by <br>: transition point
+      inTransitionArray->InsertElementAt((void*)PR_TRUE,i);  
     }
     else
     {
-      inTransitionArray->InsertElementAt((void*)PR_FALSE,i); // same parents: these nodes grew up together
+      // same parents: these nodes grew up together
+      inTransitionArray->InsertElementAt((void*)PR_FALSE,i); 
     }
     prevElementParent = curElementParent;
   }
