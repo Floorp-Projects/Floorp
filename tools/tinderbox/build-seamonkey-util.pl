@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.12 $ ';
+$::UtilsVersion = '$Revision: 1.13 $ ';
 
 package TinderUtils;
 
@@ -632,7 +632,7 @@ sub run_tests {
     # MailNews test needs this preference set:
     #   user_pref("signed.applets.codebase_principal_support",true);
     # First run gives two dialogs; they set this preference:
-    #   user_pref("security.principal.X0","[Codebase http://www.mozilla.org/quality/mailnews/popTest.html] UniversalBrowserRead=1 UniversalXPConnect=1");
+    #   user_pref("security.principal.X0","[Codebase http://www.mozilla.org/quality/mailnews/popTest.html] UniversalBrowserRead=4 UniversalXPConnect=4");
     #
     # Only do pop3 test now.
     #
