@@ -130,7 +130,7 @@ void GetWindowType(nsIXULWindow* aWindow, nsString &outType)
 /********************************************************************/
 
 nsWindowInfo::nsWindowInfo(nsIXULWindow* inWindow, PRInt32 inTimeStamp) :
-  mWindow(inWindow),mTimeStamp(inTimeStamp)
+  mWindow(inWindow),mTimeStamp(inTimeStamp),mZLevel(nsIXULWindow::normalZ)
 {
   ReferenceSelf(PR_TRUE, PR_TRUE);
 }
