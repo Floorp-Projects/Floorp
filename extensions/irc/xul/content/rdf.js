@@ -76,8 +76,8 @@ function RDFHelper()
     this.ds.Assert (this.resNullUser, this.resUser, this.litUnk, true);
     this.ds.Assert (this.resNullUser, this.resHost, this.litUnk, true);
     this.ds.Assert (this.resRoot, this.resChannel, this.resNullChan, true);
-    this.ds.Assert (this.resNullChan, this.resChanUser, this.resNullUser,
-                    true);    
+    //this.ds.Assert (this.resNullChan, this.resChanUser, this.resNullUser,
+    //                true);    
 }
 
 RDFHelper.prototype.GetResource =

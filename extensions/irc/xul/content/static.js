@@ -34,7 +34,7 @@
  *  Samuel Sieb, samuel@sieb.net, MIRC color codes, munger menu, and various
  */
 
-const __cz_version   = "0.9.28";
+const __cz_version   = "0.9.35";
 const __cz_condition = "yellow";
 
 var warn;
@@ -115,6 +115,8 @@ CIRCChanUser.prototype.MAX_MESSAGES = 200;
 
 function init()
 {
+    client.initialized = false;
+
     client.networks = new Object();
     client.eventPump = new CEventPump (200);
 
@@ -142,10 +144,10 @@ function init()
     // start logging.  nothing should call display() before this point.
     if (client.prefs["log"])
        client.openLogFile(client);
-
+ 
     client.display(MSG_WELCOME, "HELLO");
-    setCurrentObject(client);
-
+    setCurrentObject (client);
+   
     importFromFrame("updateHeader");
     importFromFrame("setHeaderState");
     importFromFrame("changeCSS");
@@ -154,8 +156,10 @@ function init()
 
     client.commandManager.installKeys(document);
     createMenus();
-    
-    dispatch("networks")
+
+    client.initialized = true;
+
+    dispatch("networks");
     dispatch("commands");
     
     processStartupURLs();
@@ -173,6 +177,11 @@ function initStatic()
         Components.classes["@mozilla.org/sound;1"].createInstance(nsISound);
 
     multilineInputMode(client.prefs["multiline"]);
+    if (client.prefs["showModeSymbols"])
+        setListMode("symbol");
+    else
+        setListMode("graphic");
+    setDebugMode(client.prefs["debugMode"]);
     
     var ary = navigator.userAgent.match (/;\s*([^;\s]+\s*)\).*\/(\d+)/);
     if (ary)
@@ -325,6 +334,30 @@ function getPluginIndexById(id)
     return -1;
 }
 
+function getPluginByURL(url)
+{
+    for (var i = 0; i < client.plugins.length; ++i)
+    {
+        if (client.plugins[i].url == url)
+            return client.plugins[i];
+        
+    }
+
+    return null;
+}
+
+function getPluginIndexByURL(url)
+{
+    for (var i = 0; i < client.plugins.length; ++i)
+    {
+        if (client.plugins[i].url == url)
+            return i;
+        
+    }
+
+    return -1;
+}
+
 function processStartupURLs()
 {
     var wentSomewhere = false;
@@ -337,7 +370,7 @@ function processStartupURLs()
         if (url.search(/^irc:\/?\/?$/i) == -1)
         {
             /* if the url is not irc: irc:/ or irc://, then go to it. */
-            gotoIRCURL (url);
+            gotoIRCURL(url);
             wentSomewhere = true;
         }
     }    
@@ -705,6 +738,25 @@ function insertHyphenatedWord (longWord, containerTag)
     }
 }
 
+function combineNicks(nickList, max)
+{
+    if (!max)
+        max = 4;
+
+    var combinedList = [];
+    
+    for (var i = 0; i < nickList.length; i += max)
+    {
+        count = Math.min(max, nickList.length - i);
+        var nicks = nickList.slice(i, i + count);
+        var str = new String(nicks.join(" "));
+        str.count = count;
+        combinedList.push(str);
+    }
+    
+    return combinedList;
+}
+
 function updateAllStalkExpressions()
 {
     var list = client.prefs["stalkWords"];
@@ -774,9 +826,10 @@ function getMessagesContext(cx, element)
                     break;
                 
                 if (cx.channel)
-                    cx.user = cx.channel.users[nickname];
+                    cx.user = cx.channel.getUser(nickname);
                 else
-                    cx.user = cx.network.users[nickname];
+                    cx.user = cx.network.getUser(nickname);
+
                 if (cx.user)
                 {
                     cx.nickname = cx.user.properNick;
@@ -826,13 +879,16 @@ function getUserlistContext(cx)
         {
             var item = tree.contentView.getItemAtIndex(k);
             var cell = item.firstChild.firstChild;
-            var user = cx.channel.getUser(cell.getAttribute("label"))
-            cx.userList.push(user);
-            cx.nicknameList.push(user.nick);
-            if (i == 0 && k == start.value)
+            var user = cx.channel.getUser(cell.getAttribute("label"));
+            if (user)
             {
-                cx.user = user;
-                cx.nickname = user.properNick;
+                cx.userList.push(user);
+                cx.nicknameList.push(user.nick);
+                if (i == 0 && k == start.value)
+                {
+                    cx.user = user;
+                    cx.nickname = user.properNick;
+                }
             }
         }
     }
@@ -911,236 +967,6 @@ function mainStep()
 {
     client.eventPump.stepEvents();
     setTimeout ("mainStep()", client.STEP_TIMEOUT);
-}
-
-CIRCChannel.prototype.dispatch =
-CIRCNetwork.prototype.dispatch =
-CIRCUser.prototype.dispatch =
-client.dispatch =
-function this_dispatch(text, e, isInteractive, flags)
-{
-    e = getObjectDetails(this, e);
-    dispatch(text, e, isInteractive, flags);
-}
-
-function dispatch(text, e, isInteractive, flags)
-{
-    if (typeof isInteractive == "undefined")
-        isInteractive = false;
-    
-    if (!e)
-        e = new Object();
-
-    if (!("sourceObject" in e))
-        e.__proto__ = getObjectDetails(client.currentObject);
-    
-    if (!("isInteractive" in e))
-        e.isInteractive = isInteractive;
-
-    if (!("inputData" in e))
-        e.inputData = "";
-    
-    /* split command from arguments */
-    var ary = text.match(/(\S+) ?(.*)/);
-    e.commandText = ary[1];
-    if (ary[2])
-        e.inputData = stringTrim(ary[2]);
-    
-    /* list matching commands */
-    ary = client.commandManager.list(e.commandText, flags);
-    var rv = null;
-    var i;
-    
-    switch (ary.length)
-    {            
-        case 0:
-            /* no match, try again */
-            if (e.server && e.server.isConnected &&
-                client.prefs["guessCommands"])
-            {
-                return dispatch("quote", {inputData: e.commandText + " " +
-                                                     e.inputData});
-            }
-
-            display(getMsg(MSG_NO_CMDMATCH, e.commandText), MT_ERROR);
-            break;
-            
-        case 1:
-            /* one match, good for you */
-            var ex;
-            try
-            {
-                rv = dispatchCommand(ary[0], e, flags);
-            }
-            catch (ex)
-            {
-                display(getMsg(MSG_ERR_INTERNAL_DISPATCH, ary[0].name),
-                        MT_ERROR);
-                display(formatException(ex), MT_ERROR);
-                dd(formatException(ex), MT_ERROR);
-                if (typeof ex == "object" && "stack" in ex)
-                    dd (ex.stack);
-            }
-            break;
-            
-        default:
-            /* more than one match, show the list */
-            var str = "";
-            for (i in ary)
-                str += (str) ? MSG_COMMASP + ary[i].name : ary[i].name;
-            display(getMsg(MSG_ERR_AMBIGCOMMAND,
-                           [e.commandText, ary.length, str]), MT_ERROR);
-    }
-
-    return rv;
-}
-
-function displayUsageError (e, details)
-{
-    if (!("isInteractive" in e) || !e.isInteractive)
-    {
-        var caller = Components.stack.caller.caller;
-        if (caller.name == "dispatch")
-            caller = caller.caller;
-        var error = new Error (details);
-        error.fileName = caller.filename;
-        error.lineNumber = caller.lineNumber;
-        error.name = caller.name;
-        display (formatException(error), MT_ERROR);
-    }
-    else
-    {
-        display (details, MT_ERROR);
-    }
-
-    //display (getMsg(MSG_FMT_USAGE, [e.command.name, e.command.usage]),
-    //         MT_USAGE);
-}
-
-function dispatchCommand (command, e, flags)
-{
-    function callHooks (command, isBefore)
-    {
-        var names, hooks;
-        
-        if (isBefore)
-            hooks = command.beforeHooks;
-        else
-            hooks = command.afterHooks;
-
-        for (var h in hooks)
-        {
-            if ("dbgDispatch" in client && client.dbgDispatch)
-            {
-                dd ("calling " + (isBefore ? "before" : "after") + 
-                    " hook " + h);
-            }
-            try
-            {
-                hooks[h](e);
-            }
-            catch (ex)
-            {
-                if (e.command.name != "hook-session-display")
-                {
-                    display(getMsg(MSG_ERR_INTERNAL_HOOK, h), MT_ERROR);
-                    display(formatException(ex), MT_ERROR);
-                }
-                else
-                {
-                    dd(getMsg(MSG_ERR_INTERNAL_HOOK, h));
-                }
-
-                dd("Caught exception calling " +
-                   (isBefore ? "before" : "after") + " hook " + h);
-                dd(formatException(ex));
-                if (typeof ex == "object" && "stack" in ex)
-                    dd(ex.stack);
-                else
-                    dd(getStackTrace());
-            }
-        }
-    };
-    
-    e.command = command;
-
-    if (!e.command.enabled)
-    {
-        /* disabled command */
-        display (getMsg(MSG_ERR_DISABLED, e.command.name),
-                 MT_ERROR);
-        return null;
-    }
-    
-    var h, i;
-    
-    if (typeof e.command.func == "function")
-    {
-        /* dispatch a real function */
-        if (e.command.usage)
-            client.commandManager.parseArguments (e);
-        if ("parseError" in e)
-        {
-            displayUsageError(e, e.parseError);
-        }
-        else
-        {
-            if ("beforeHooks" in e.command)
-                callHooks (e.command, true);
-    
-            if ("dbgDispatch" in client && client.dbgDispatch)
-            {
-                var str = "";
-                for (i = 0; i < e.command.argNames.length; ++i)
-                {
-                    var name = e.command.argNames[i];
-                    if (name in e)
-                        str += " " + name + ": " + e[name];
-                    else if (name != ":")
-                        str += " ?" + name;
-                }
-                dd (">>> " + e.command.name + str + " <<<");
-                e.returnValue = e.command.func(e);
-                /* set client.lastEvent *after* dispatching, so the dispatched
-                 * function actually get's a chance to see the last event. */
-                client.lastEvent = e;
-            }
-            else
-            {
-                e.returnValue = e.command.func(e);
-            }
-
-        }
-    }
-    else if (typeof e.command.func == "string")
-    {
-        /* dispatch an alias (semicolon delimited list of subcommands) */
-        if ("beforeHooks" in e.command)
-            callHooks (e.command, true);
-
-        var commandList = e.command.func.split(";");
-        for (i = 0; i < commandList.length; ++i)
-        {
-            var newEvent = Clone(e);
-            delete newEvent.command;            
-            commandList[i] = stringTrim(commandList[i]);
-            if (i == commandList.length - 1)
-                dispatch(commandList[i] + " " + e.inputData, newEvent, flags);
-            else
-                dispatch(commandList[i], newEvent, flags);
-        }
-    }
-    else
-    {
-        display (getMsg(MSG_ERR_NOTIMPLEMENTED, e.command.name),
-                 MT_ERROR);
-        return null;
-    }
-    
-    if ("afterHooks" in e.command)
-        callHooks (e.command, false);
-    
-    return ("returnValue" in e) ? e.returnValue : null;
 }
 
 function openQueryTab (server, nick)
@@ -1512,9 +1338,8 @@ function gotoIRCURL (url)
             dd ("gotoIRCURL: not already connected to " +
                 "server " + url.host + " trying to connect...");
             */
-            dispatch("server", {hostname: url.host, port: url.port,
-                                password: pass});
-            network = client.networks[url.host];
+            network = dispatch("server", {hostname: url.host, port: url.port,
+                                          password: pass});
             if (!("pendingURLs" in network))
                 network.pendingURLs = new Array();
             network.pendingURLs.unshift(url);
@@ -1524,6 +1349,12 @@ function gotoIRCURL (url)
     else
     {
         /* parsed as a network name */
+        if (!(url.host in client.networks))
+        {
+            display(getMsg(MSG_ERR_UNKNOWN_NETWORK, url.host));
+            return;
+        }
+        
         network = client.networks[url.host];
         if (!network.isConnected())
         {
@@ -1531,7 +1362,7 @@ function gotoIRCURL (url)
             dd ("gotoIRCURL: not already connected to " +
                 "network " + url.host + " trying to connect...");
             */
-            client.connectToNetwork(url.host);
+            client.connectToNetwork(network);
             if (!("pendingURLs" in network))
                 network.pendingURLs = new Array();
             network.pendingURLs.unshift(url);
@@ -1837,6 +1668,12 @@ client.__defineGetter__ ("currentFrame", getFrame);
 
 function setCurrentObject (obj)
 {
+    function clearList()
+    {
+        client.rdf.Unassert (client.rdf.resNullChan, client.rdf.resChanUser,
+                             client.rdf.resNullUser, true);
+    };
+        
     if (!ASSERT(obj.messages, "INVALID OBJECT passed to setCurrentObject **"))
         return;
 
@@ -1871,7 +1708,11 @@ function setCurrentObject (obj)
         }
         else
         {
-            client.rdf.setTreeRoot("user-list", client.rdf.resNullChan);
+            var rdf = client.rdf;
+            rdf.setTreeRoot("user-list", rdf.resNullChan);
+            rdf.Assert (rdf.resNullChan, rdf.resChanUser, rdf.resNullUser,
+                        true);
+            setTimeout(clearList, 100);
         }
     }
     
@@ -1984,17 +1825,41 @@ function notifyAttention (source)
     
 }
 
+function setDebugMode(mode)
+{
+    if (mode.indexOf("t") != -1)
+        client.debugHook.enabled = true;
+    else
+        client.debugHook.enabled = false;
+    
+    if (mode.indexOf("c") != -1)
+        client.dbgContexts = true;
+    else
+        delete client.dbgContexts;
+    
+    if (mode.indexOf("d") != -1)
+        client.dbgDispatch = true;
+    else
+        delete client.dbgDispatch;
+}
+
+function setListMode(mode)
+{
+    var elem = document.getElementById("user-list");
+    if (mode)
+        elem.setAttribute("mode", mode);
+    else
+        elem.removeAttribute("mode");
+    updateUserList();
+}
+
 function updateUserList()
 {
     var node;
     var sortDirection;
     
     node = document.getElementById("user-list");
-    sortUserList(node);
-}
 
-function sortUserList(node, sortDirection)
-{
     const nsIXULSortService = Components.interfaces.nsIXULSortService;
     const isupports_uri = "@mozilla.org/xul/xul-sort-service;1";
 
@@ -2075,7 +1940,7 @@ function client_statechange (webProgress, request, stateFlags, status)
         if (cwin && "initOutputWindow" in cwin)
         {
             cwin.getMsg = getMsg;
-            cwin.initOutputWindow(client, frame.source);
+            cwin.initOutputWindow(client, frame.source, onMessageViewClick);
             scrollDown(frame, true);
             webProgress.removeProgressListener(this);
         }
@@ -2356,16 +2221,30 @@ function cli_addnet(name, serverList)
 }
 
 client.connectToNetwork =
-function cli_connect(name)
+function cli_connect(networkOrName)
 {
-    if (!(name in client.networks))
+    var network;
+    var name;
+    
+    
+    if (networkOrName instanceof CIRCNetwork)
     {
-        display(getMsg(MSG_ERR_UNKNOWN_NETWORK, name), MT_ERROR);
-        return false;
+        network = networkOrName;
+        name = network.name;
+    }
+    else
+    {
+        name = networkOrName;
+        
+        if (!(name in client.networks))
+        {
+            display(getMsg(MSG_ERR_UNKNOWN_NETWORK, name), MT_ERROR);
+            return null;
+        }
+    
+        network = client.networks[name];
     }
     
-    var network = client.networks[name];
-
     if (!("messages" in network))
         network.displayHere(getMsg(MSG_NETWORK_OPENED, name));
 
@@ -2374,11 +2253,11 @@ function cli_connect(name)
     if (network.isConnected())
     {
         network.display(getMsg(MSG_ALREADY_CONNECTED, name));
-        return true;
+        return network;
     }
 
     if (network.connecting)
-        return true;
+        return network;
     
     if (network.prefs["nickname"] == DEFAULT_NICK)
         network.prefs["nickname"] = prompt(MSG_ENTER_NICK, DEFAULT_NICK);
@@ -2393,7 +2272,7 @@ function cli_connect(name)
     client.updateHeader();
     updateTitle();
 
-    return true;
+    return network;
 }
 
 
@@ -3298,20 +3177,11 @@ function usr_updres()
     var sortname;
 
     if (this.isOp)
-    {
-        if (this.isVoice)
-            sortname = "n-";
-        else
-            sortname = "o-";
-    }
+        sortname = "o-";
     else if (this.isVoice)
-    {
         sortname = "v-";
-    }
     else
-    {
         sortname = "x-";
-    }
     
     sortname += this.nick;
     rdf.Change (this.rdfRes, rdf.resSortName, rdf.GetLiteral(sortname));

@@ -113,11 +113,12 @@ function initPrefs()
          ["queryBeep",          "beep"],
          ["raiseNewTab",        false],
          ["reconnect",          true],
+         ["showModeSymbols",    false],
          ["stalkBeep",          "beep"],
          ["stalkWholeWords",    true],
          ["stalkWords",         []],
          ["username",           "chatzilla"],
-         ["usermode",           "+ix"],
+         ["usermode",           "+i"],
          ["userHeader",         true],
          ["userLog",            false],
          ["userMaxLines",       200]
@@ -299,7 +300,15 @@ function onPrefChanged(prefName, newValue, oldValue)
 
         case "clientMaxLines":
             client.MAX_MESSAGES = newValue;
-
+            break;
+            
+        case "showModeSymbols":
+            if (newValue)
+                setListMode("symbol");
+            else
+                setListMode("graphic");
+            break;
+            
         case "nickname":
             CIRCNetwork.prototype.INITIAL_NICK = newValue;
             break;
@@ -317,20 +326,7 @@ function onPrefChanged(prefName, newValue, oldValue)
             break;
             
         case "debugMode":
-            if (newValue.indexOf("e") != -1)
-                client.debugHook.enabled = true;
-            else
-                client.debugHook.enabled = false;
-
-            if (newValue.indexOf("c") != -1)
-                client.dbgContexts = true;
-            else
-                delete client.dbgContexts;
-
-            if (newValue.indexOf("d") != -1)
-                client.dbgDispatch = true;
-            else
-                delete client.dbgDispatch;
+            setDebugMode(newValue);
             break;
 
         case "desc":

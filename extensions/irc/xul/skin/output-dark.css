@@ -43,11 +43,14 @@ a.chatzilla-link:visited {
     color: lightgrey;
 }
 
+.header-outer {
+    background-color: black;
+}
+
 .header {
     color: lightslategrey;
     background-color: #333333;
-/*    -moz-opacity: 0.9; */ causes memory leak?
-    border: 1px white solid;
+/*    -moz-opacity: 0.9;  causes memory leak? */
     -moz-border-radius: 7px;
 }
 

@@ -1,6 +1,11 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
-<html>
+<!--DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN"-->
+
+<html
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
       <style>
         [hidden="true"] {
           display: none;
@@ -8,6 +13,9 @@
 
         .header-outer {
           position: fixed;
+          top: 0px;
+          margin: 0px;
+          padding: 0px;
         }
 
         .header {
@@ -67,21 +75,18 @@
 
       </style>
 
-    <link id="pre-effect-css" rel="stylesheet" type="text/css"
-          href="about-blank">
-    <link id="main-css" rel="stylesheet" type="text/css"
-          href="about:blank">
-    <link id="post-effect-css" rel="stylesheet" type="text/css"
-          href="about:blank">
     <head>
-      <script src="chrome://chatzilla/content/output-window.js"></script>
-<!--      <script src="file:///home/rginda/.chatzilla/scripts/goodies/output-window.js"></script> -->
+      <script src="chrome://chatzilla/content/output-window.js"/>
     </head>
 
   <body class="chatzilla-body">
 
     <div class="header-outer">
 
+      <xul:vbox flex="1">
+        <xul:label value="foo"/>
+      </xul:vbox>
+        
       <div class="header" id="cli-container" hidden="true">
         <table id="h-table">
           <tbody>
@@ -130,10 +135,14 @@
               <td class="label" id="ch-usercount-l">Users</td>
               <td class="value" id="ch-usercount">&lt;none&gt;</td>
             </tr>
-            <tr>
+            <tr onclick="onTopicNodesClick(event);" style="cursor:default">
               <td class="label" id="ch-topicnodes-l">Topic</td>
-              <td class="value" id="ch-topicnodes"
-                  colspan="6">&lt;none&gt;</td>
+              <td class="value" colspan="6">
+                <span id="ch-topicnodes">&lt;none&gt;</span>
+                <input hidden="true" id="ch-topicinput" style="width:100%"
+                       onblur="cancelTopicEdit();"
+                       onkeypress="onTopicKeypress(event);">
+              </td>
             </tr>
           </tbody>
         </table>

@@ -42,7 +42,9 @@ if (DEBUG) {
     var _dd_currentDepth = 0;
     dd = function _dd(str) {
              if (typeof str != "string") {
-                 dump (str + "\n");
+                 dump(str + "\n");
+             } else if (str == "") {
+                 dump("<empty-string>\n");
              } else if (str[str.length - 1] == "{") {
                  ++_dd_currentDepth;
                  if (_dd_currentDepth >= _dd_disableDepth)

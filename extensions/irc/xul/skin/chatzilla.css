@@ -140,32 +140,60 @@ treecol {
 
 /* we need to define both the : and :: versions of the treechildren selector
  *  so that we work on both 1.5 and pre 1.5 builds.
+ *
+ * The userlist can be in one of two state.  In "symbol", the user's
+ * channel mode is shown as a @ or + image, while in "graphic" mode, the
+ * image is one of the LED images.
  */
 
-/* voice image column */
+/* no mode */
 treechildren:-moz-tree-image {
-    list-style-image: url(chrome://chatzilla/skin/images/is-nada.png);
+    list-style-image: url(chrome://chatzilla/skin/images/no-symbol.png);
 }
 
 treechildren::-moz-tree-image {
-    list-style-image: url(chrome://chatzilla/skin/images/is-nada.png);
+    list-style-image: url(chrome://chatzilla/skin/images/no-symbol.png);
 }
 
-/* voice image column */
+#user-list[mode="graphic"] treechildren:-moz-tree-image {
+    list-style-image: url(chrome://chatzilla/skin/images/no-graphic.png);
+}
+
+#user-list[mode="graphic"] treechildren::-moz-tree-image {
+    list-style-image: url(chrome://chatzilla/skin/images/no-graphic.png);
+}
+
+/* voice */
 treechildren:-moz-tree-image(voice-true) {
-    list-style-image: url(chrome://chatzilla/skin/images/is-voice.png);
+    list-style-image: url(chrome://chatzilla/skin/images/voice-symbol.png);
 }
 
 treechildren::-moz-tree-image(voice-true) {
-    list-style-image: url(chrome://chatzilla/skin/images/is-voice.png);
+    list-style-image: url(chrome://chatzilla/skin/images/voice-symbol.png);
 }
 
-/* op image column */
+#user-list[mode="graphic"] treechildren:-moz-tree-image(voice-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/voice-graphic.png);
+}
+
+#user-list[mode="graphic"] treechildren::-moz-tree-image(voice-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/voice-graphic.png);
+}
+
+/* chanop */
 treechildren:-moz-tree-image(op-true) {
-    list-style-image: url(chrome://chatzilla/skin/images/is-op.png);
+    list-style-image: url(chrome://chatzilla/skin/images/op-symbol.png);
 }
 
 treechildren::-moz-tree-image(op-true) {
-    list-style-image: url(chrome://chatzilla/skin/images/is-op.png);
+    list-style-image: url(chrome://chatzilla/skin/images/op-symbol.png);
+}
+
+#user-list[mode="graphic"] treechildren:-moz-tree-image(op-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/op-graphic.png);
+}
+
+#user-list[mode="graphic"] treechildren::-moz-tree-image(op-true) {
+    list-style-image: url(chrome://chatzilla/skin/images/op-graphic.png);
 }
 

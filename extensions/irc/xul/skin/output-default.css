@@ -31,12 +31,8 @@
 
 @import url(chrome://chatzilla/content/output-base.css);
 
-.chatzilla-highlight[name="Italic"] {
-    font-style: italic;
-}
-
-.chatzilla-highlight[name="SmallCap"] {
-    font-variant: small-caps;
+.header-outer {
+    background-color: white;
 }
 
 .msg-data[msg-type="ACTION"] {

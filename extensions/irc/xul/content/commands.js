@@ -53,13 +53,15 @@ function initCommands()
          ["channel-charset",   cmdCharset,         CMD_NEED_CHAN | CMD_CONSOLE],
          ["channel-motif",     cmdMotif,           CMD_NEED_CHAN | CMD_CONSOLE],
          ["channel-pref",      cmdPref,            CMD_NEED_CHAN | CMD_CONSOLE],
+         ["op",                cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
+         ["deop",              cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
+         ["voice",             cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
+         ["devoice",           cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
          ["clear-view",        cmdClearView,                       CMD_CONSOLE],
          ["client",            cmdClient,                          CMD_CONSOLE],
          ["commands",          cmdCommands,                        CMD_CONSOLE],
          ["ctcp",              cmdCTCP,             CMD_NEED_SRV | CMD_CONSOLE],
          ["delete-view",       cmdDeleteView,                      CMD_CONSOLE],
-         ["deop",              cmdDeop,            CMD_NEED_CHAN | CMD_CONSOLE],
-         ["devoice",           cmdDevoice,         CMD_NEED_CHAN | CMD_CONSOLE],
          ["disable-plugin",    cmdAblePlugin,                      CMD_CONSOLE],
          ["disconnect",        cmdDisconnect,       CMD_NEED_SRV | CMD_CONSOLE],
          ["echo",              cmdEcho,                            CMD_CONSOLE],
@@ -92,7 +94,6 @@ function initCommands()
          ["networks",          cmdNetworks,                        CMD_CONSOLE],
          ["nick",              cmdNick,                            CMD_CONSOLE],
          ["notify",            cmdNotify,           CMD_NEED_SRV | CMD_CONSOLE],
-         ["op",                cmdOp,              CMD_NEED_CHAN | CMD_CONSOLE],
          ["open-at-startup",   cmdOpenAtStartup,                   CMD_CONSOLE],
          ["ping",              cmdPing,             CMD_NEED_SRV | CMD_CONSOLE],
          ["pref",              cmdPref,                            CMD_CONSOLE],
@@ -119,7 +120,6 @@ function initCommands()
          ["user-motif",        cmdMotif,           CMD_NEED_USER | CMD_CONSOLE],
          ["user-pref",         cmdPref,            CMD_NEED_USER | CMD_CONSOLE],
          ["version",           cmdVersion,                         CMD_CONSOLE],
-         ["voice",             cmdVoice,           CMD_NEED_CHAN | CMD_CONSOLE],
          ["who",               cmdSimpleCommand,    CMD_NEED_SRV | CMD_CONSOLE],
          ["whois",             cmdWhoIs,            CMD_NEED_SRV | CMD_CONSOLE],
          ["whowas",            cmdSimpleCommand,    CMD_NEED_SRV | CMD_CONSOLE],
@@ -136,6 +136,7 @@ function initCommands()
          ["toggle-ccm",       "toggle-pref collapseMsgs",                    0],
          ["toggle-copy",      "toggle-pref copyMessages",                    0],
          ["toggle-usort",     "toggle-pref sortUsersByMode",                 0],
+         ["toggle-umode",     "toggle-pref showModeSymbols",                 0],
          ["motif-dark",       "motif dark",                                  0],
          ["motif-light",      "motif light",                                 0],
          ["motif-default",    "motif default",                               0],
@@ -156,10 +157,10 @@ function initCommands()
     client.commandManager.defineCommands(cmdary);
 
     client.commandManager.argTypes.__aliasTypes__(["reason", "action", "text",
-                                                   "message", "reason",
-                                                   "expression", "ircCommand",
-                                                   "prefValue", "newTopic",
-                                                   "commandList"],
+                                                   "message", "params", 
+                                                   "reason", "expression",
+                                                   "ircCommand", "prefValue",
+                                                   "newTopic", "commandList"],
                                                   "rest");
     client.commandManager.argTypes["plugin"] = parsePlugin;
 }
@@ -216,6 +217,237 @@ function isCommandSatisfied(e, command)
     return CommandManager.prototype.isCommandSatisfied(e, command);
 }
 
+CIRCChannel.prototype.dispatch =
+CIRCNetwork.prototype.dispatch =
+CIRCUser.prototype.dispatch =
+client.dispatch =
+function this_dispatch(text, e, isInteractive, flags)
+{
+    e = getObjectDetails(this, e);
+    dispatch(text, e, isInteractive, flags);
+}
+
+function dispatch(text, e, isInteractive, flags)
+{
+    if (typeof isInteractive == "undefined")
+        isInteractive = false;
+    
+    if (!e)
+        e = new Object();
+
+    if (!("sourceObject" in e))
+        e.__proto__ = getObjectDetails(client.currentObject);
+    
+    if (!("isInteractive" in e))
+        e.isInteractive = isInteractive;
+
+    if (!("inputData" in e))
+        e.inputData = "";
+    
+    /* split command from arguments */
+    var ary = text.match(/(\S+) ?(.*)/);
+    e.commandText = ary[1];
+    if (ary[2])
+        e.inputData = stringTrim(ary[2]);
+    
+    /* list matching commands */
+    ary = client.commandManager.list(e.commandText, flags);
+    var rv = null;
+    var i;
+    
+    switch (ary.length)
+    {            
+        case 0:
+            /* no match, try again */
+            if (e.server && e.server.isConnected &&
+                client.prefs["guessCommands"])
+            {
+                return dispatch("quote", {inputData: e.commandText + " " +
+                                                     e.inputData});
+            }
+
+            display(getMsg(MSG_NO_CMDMATCH, e.commandText), MT_ERROR);
+            break;
+            
+        case 1:
+            /* one match, good for you */
+            var ex;
+            try
+            {
+                rv = dispatchCommand(ary[0], e, flags);
+            }
+            catch (ex)
+            {
+                display(getMsg(MSG_ERR_INTERNAL_DISPATCH, ary[0].name),
+                        MT_ERROR);
+                display(formatException(ex), MT_ERROR);
+                dd(formatException(ex), MT_ERROR);
+                if (typeof ex == "object" && "stack" in ex)
+                    dd (ex.stack);
+            }
+            break;
+            
+        default:
+            /* more than one match, show the list */
+            var str = "";
+            for (i in ary)
+                str += (str) ? MSG_COMMASP + ary[i].name : ary[i].name;
+            display(getMsg(MSG_ERR_AMBIGCOMMAND,
+                           [e.commandText, ary.length, str]), MT_ERROR);
+    }
+
+    return rv;
+}
+
+function dispatchCommand (command, e, flags)
+{
+    function displayUsageError (e, details)
+    {
+        if (!("isInteractive" in e) || !e.isInteractive)
+        {
+            var caller = Components.stack.caller.caller;
+            if (caller.name == "dispatch")
+                caller = caller.caller;
+            var error = new Error (details);
+            error.fileName = caller.filename;
+            error.lineNumber = caller.lineNumber;
+            error.name = caller.name;
+            display (formatException(error), MT_ERROR);
+        }
+        else
+        {
+            display (details, MT_ERROR);
+        }
+        
+        //display (getMsg(MSG_FMT_USAGE, [e.command.name, e.command.usage]),
+        //         MT_USAGE);
+    };
+
+    function callHooks (command, isBefore)
+    {
+        var names, hooks;
+        
+        if (isBefore)
+            hooks = command.beforeHooks;
+        else
+            hooks = command.afterHooks;
+
+        for (var h in hooks)
+        {
+            if ("dbgDispatch" in client && client.dbgDispatch)
+            {
+                dd ("calling " + (isBefore ? "before" : "after") + 
+                    " hook " + h);
+            }
+            try
+            {
+                hooks[h](e);
+            }
+            catch (ex)
+            {
+                if (e.command.name != "hook-session-display")
+                {
+                    display(getMsg(MSG_ERR_INTERNAL_HOOK, h), MT_ERROR);
+                    display(formatException(ex), MT_ERROR);
+                }
+                else
+                {
+                    dd(getMsg(MSG_ERR_INTERNAL_HOOK, h));
+                }
+
+                dd("Caught exception calling " +
+                   (isBefore ? "before" : "after") + " hook " + h);
+                dd(formatException(ex));
+                if (typeof ex == "object" && "stack" in ex)
+                    dd(ex.stack);
+                else
+                    dd(getStackTrace());
+            }
+        }
+    };
+    
+    e.command = command;
+
+    if (!e.command.enabled)
+    {
+        /* disabled command */
+        display (getMsg(MSG_ERR_DISABLED, e.command.name),
+                 MT_ERROR);
+        return null;
+    }
+    
+    var h, i;
+    
+    if (typeof e.command.func == "function")
+    {
+        /* dispatch a real function */
+        if (e.command.usage)
+            client.commandManager.parseArguments (e);
+        if ("parseError" in e)
+        {
+            displayUsageError(e, e.parseError);
+        }
+        else
+        {
+            if ("beforeHooks" in e.command)
+                callHooks (e.command, true);
+    
+            if ("dbgDispatch" in client && client.dbgDispatch)
+            {
+                var str = "";
+                for (i = 0; i < e.command.argNames.length; ++i)
+                {
+                    var name = e.command.argNames[i];
+                    if (name in e)
+                        str += " " + name + ": " + e[name];
+                    else if (name != ":")
+                        str += " ?" + name;
+                }
+                dd (">>> " + e.command.name + str + " <<<");
+                e.returnValue = e.command.func(e);
+                /* set client.lastEvent *after* dispatching, so the dispatched
+                 * function actually get's a chance to see the last event. */
+                client.lastEvent = e;
+            }
+            else
+            {
+                e.returnValue = e.command.func(e);
+            }
+
+        }
+    }
+    else if (typeof e.command.func == "string")
+    {
+        /* dispatch an alias (semicolon delimited list of subcommands) */
+        if ("beforeHooks" in e.command)
+            callHooks (e.command, true);
+
+        var commandList = e.command.func.split(";");
+        for (i = 0; i < commandList.length; ++i)
+        {
+            var newEvent = Clone(e);
+            delete newEvent.command;            
+            commandList[i] = stringTrim(commandList[i]);
+            if (i == commandList.length - 1)
+                dispatch(commandList[i] + " " + e.inputData, newEvent, flags);
+            else
+                dispatch(commandList[i], newEvent, flags);
+        }
+    }
+    else
+    {
+        display (getMsg(MSG_ERR_NOTIMPLEMENTED, e.command.name),
+                 MT_ERROR);
+        return null;
+    }
+    
+    if ("afterHooks" in e.command)
+        callHooks (e.command, false);
+    
+    return ("returnValue" in e) ? e.returnValue : null;
+}
+
+/* parse function for <plugin> parameters */
 function parsePlugin(e, name)
 {
     var ary = e.unparsedData.match (/(?:(\d+)|(\S+))(?:\s+(.*))?$/);
@@ -297,6 +529,41 @@ function cmdCancel(e)
     display(getMsg(MSG_CANCELLING, network.name));
     network.dispatch("disconnect");
 }    
+
+function cmdChanUserMode(e)
+{
+    var modestr;
+    switch (e.command.name)
+    {
+        case "op":
+            modestr = "+oooo";
+            break;
+            
+        case "deop":
+            modestr = "-oooo";
+            break;
+            
+        case "voice":
+            modestr = "+vvvv";
+            break;
+            
+        case "devoice":
+            modestr = "-vvvv";
+            break;
+
+        default:
+            ASSERT(0, "Dispatch from unknown name " + e.command.name);
+            return;
+    }
+    
+    var nicks = combineNicks(e.nicknameList);
+    for (var i = 0; i < nicks.length; ++i)
+    {
+        e.server.sendData("MODE " + e.channel.name + " " +
+                          modestr.substr(0, nicks[i].count + 1) +
+                          " " + nicks[i] + "\n");
+    }
+}
 
 function cmdCharset(e)
 {
@@ -656,20 +923,22 @@ function cmdNetworks(e)
 
 function cmdServer(e)
 {
+    var name = e.hostname.toLowerCase();
+    
     if (!e.port)
         e.port = 6667;
+    else if (e.port != 6667)
+        name += ":" + e.port;
 
-    e.hostname = e.hostname.toLowerCase();
-    
-    if (!(e.hostname in client.networks))
+    if (!(name in client.networks))
     {
         /* if there wasn't already a network created for this server,
          * make one. */
-        client.addNetwork(e.hostname, [{name: e.hostname, port: e.port,
+        client.addNetwork(name, [{name: e.hostname, port: e.port,
                                         password: e.password}])
     }
 
-    client.connectToNetwork(e.hostname);
+    return client.connectToNetwork(name);
 }
 
 function cmdQuit(e)
@@ -689,6 +958,9 @@ function cmdQuitMozilla(e)
 
 function cmdDisconnect(e)
 {
+    if (typeof e.reason != "string")
+        e.reason = client.userAgent;
+    
     e.network.quit(e.reason);
 }
 
@@ -967,6 +1239,8 @@ function cmdList(e)
 {
     e.network.list = new Array();
     e.network.list.regexp = null;
+    if (!e.channelName)
+        e.channelName = "";
     e.server.sendData("LIST " + e.channelName + "\n");
 }
 
@@ -1254,7 +1528,11 @@ function cmdLoad (e)
         if (!("__description" in e.scope))
             e.scope.__description = null;
 
-        client.plugins.push(e.scope.plugin);
+        var i = getPluginIndexByURL(e.url);
+        if (i != -1)
+            client.plugins[i] = e.scope.plugin;
+        else
+            client.plugins.push(e.scope.plugin);
 
         feedback(e, getMsg(MSG_SUBSCRIPT_LOADED, [e.url, rvStr]), MT_INFO);
         return rv;
@@ -1371,25 +1649,6 @@ function cmdAway(e)
         e.server.sendData ("AWAY\n");
     }
 }    
-
-function cmdDeop(e)
-{
-    for (var i = 0; i < e.nicknameList.length; ++i)
-    {
-        var cuser = e.channel.getUser(e.nickname);
-        cuser.setOp(false);
-    }
-}
-
-
-function cmdOp(e)
-{
-    for (var i = 0; i < e.nicknameList.length; ++i)
-    {
-        var cuser = e.channel.getUser(e.nickname);
-        cuser.setOp(true);
-    }
-}
 
 function cmdOpenAtStartup(e)
 {
@@ -1554,24 +1813,6 @@ function cmdVersion(e)
     e.network.dispatch("ctcp", { target: e.nickname, code: "VERSION"});
 }
 
-function cmdVoice(e)
-{
-    for (var i = 0; i < e.nicknameList.length; ++i)
-    {
-        var cuser = e.channel.getUser(e.nickname);
-        cuser.setVoice(true);
-    }
-}
-
-function cmdDevoice(e) 
-{
-    for (var i = 0; i < e.nicknameList.length; ++i)
-    {
-        var cuser = e.channel.getUser(e.nickname);
-        cuser.setVoice(false);
-    }
-}
-
 function cmdEcho(e)
 {
     display(e.message);
@@ -1622,11 +1863,18 @@ function cmdKick(e)
 
 function cmdClient(e)
 {
-    if (!client.messages)
-        client.display(MSG_CLIENT_OPENED);
-    
     getTabForObject (client, true);
-    setCurrentObject (client);
+
+    if (!client.messages)
+    {
+        client.display(MSG_CLIENT_OPENED);
+        setCurrentObject (client);
+        client.display(MSG_WELCOME, "HELLO");
+        dispatch("networks");
+        dispatch("commands");
+    } else {
+        setCurrentObject (client);
+    }
 }
 
 function cmdNotify(e)

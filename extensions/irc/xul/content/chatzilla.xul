@@ -82,7 +82,8 @@
             </template>
     
             <treecols>
-              <treecol id="usercol" flex="1" properties="op-?op voice-?voice"/>
+              <treecol id="usercol" hideheader="true" flex="1"
+                properties="op-?op voice-?voice"/>
             </treecols>
           </tree>
     

@@ -132,6 +132,15 @@ function net_geturl(target)
     return "irc://" + escape(this.name) + "/" + target;
 }
 
+CIRCNetwork.prototype.getUser =
+function net_getuser (nick) 
+{
+    if ("primServ" in this && this.primServ)
+        return this.primServ.getUser(nick);
+    
+    return null;
+}
+
 CIRCNetwork.prototype.addServer =
 function net_addsrv(host, port, password)
 {
@@ -284,6 +293,17 @@ function serv_geturl(target)
         url += ",needpass";
 
     return url;
+}
+
+CIRCServer.prototype.getUser =
+function chan_getuser (nick) 
+{
+    nick = nick.toLowerCase();
+
+    if (nick in this.users)
+        return this.users[nick];
+
+    return null;
 }
 
 CIRCServer.prototype.connect = 
@@ -1250,7 +1270,8 @@ function serv_nick (e)
     
     for (var c in this.channels)
     {
-        if (oldKey in this.channels[c].users)
+        if (this.channels[c].active &&
+            ((oldKey in this.channels[c].users) || e.user == this.me))
         {
             var cuser = this.channels[c].users[oldKey];
             renameProperty (this.channels[c].users, oldKey, newKey);
@@ -1708,9 +1729,12 @@ function chan_adduser (nick, isOp, isVoice)
 CIRCChannel.prototype.getUser =
 function chan_getuser (nick) 
 {
-    nick = nick.toLowerCase(); // assumes valid param!
-    var cuser = this.users[nick];
-    return cuser; // caller expected to check for undefinededness
+    nick = nick.toLowerCase();
+
+    if (nick in this.users)
+        return this.users[nick];
+
+    return null;
 }
 
 CIRCChannel.prototype.removeUser =
@@ -2173,7 +2197,7 @@ function cusr_kick (reason)
     var server = this.parent.parent;
     var me = server.me;
 
-    reason = typeof reason == "string" ? reason : this.nick;
+    reason = typeof reason == "string" ? reason : "";
     if (!this.parent.users[me.nick].isOp)
         return false;
     

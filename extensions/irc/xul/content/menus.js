@@ -185,6 +185,8 @@ function initMenus()
         [
          ["toggle-usort", {type: "checkbox",
                            checkedif: "client.prefs['sortUsersByMode']"}],
+         ["toggle-umode", {type: "checkbox",
+                           checkedif: "client.prefs['showModeSymbols']"}],
          ["-"],
          [">popup:opcommands", {enabledif: "cx.channel && cx.channel.iAmOp()"}],
          ["whois"],

@@ -124,7 +124,10 @@ function onMessageViewClick(e)
     {
         dispatch(command, cx);
         e.preventDefault();
+        return true;
     }
+
+    return false;
 }
 
 function onMouseOver (e)
@@ -1020,18 +1023,18 @@ function my_netdisconnect (e)
         switch (e.disconnectStatus)
         {
             case 0:
-                msg = getMsg(MSG_CONNECTION_CLOSED, [this.name,
-                             e.server.hostname, e.server.port]);
+                msg = getMsg(MSG_CONNECTION_CLOSED,
+                             [this.getURL(), e.server.getURL()]);
                 break;
 
             case NS_ERROR_CONNECTION_REFUSED:
-                msg = getMsg(MSG_CONNECTION_REFUSED, [this.name,
-                             e.server.hostname, e.server.port]);
+                msg = getMsg(MSG_CONNECTION_REFUSED,
+                             [this.getURL(), e.server.getURL()]);
                 break;
 
             case NS_ERROR_NET_TIMEOUT:
-                msg = getMsg(MSG_CONNECTION_TIMEOUT, [this.name,
-                             e.server.hostname, e.server.port]);
+                msg = getMsg(MSG_CONNECTION_TIMEOUT,
+                             [this.getURL(), e.server.getURL()]);
                 break;
 
             case NS_ERROR_UNKNOWN_HOST:
@@ -1102,19 +1105,17 @@ function my_umode (e)
 CIRCNetwork.prototype.onNick =
 function my_cnick (e)
 {
-    if (userIsMe (e.user))
+    if (!ASSERT(userIsMe(e.user), "network nick event for third party"))
+        return;
+
+    if (getTabForObject(this))
     {
-        if (client.currentObject == this)
-            this.displayHere(getMsg(MSG_NEWNICK_YOU, e.user.properNick),
-                             "NICK", "ME!", e.user, this);
-        this.updateHeader();
-        updateStalkExpression(this);
+        this.displayHere(getMsg(MSG_NEWNICK_YOU, e.user.properNick),
+                         "NICK", "ME!", e.user, this);
     }
-    else
-    {
-        this.display(getMsg(MSG_NEWNICK_NOTYOU, [e.oldNick, e.user.properNick]),
-                     "NICK", e.user, this);
-    }
+    
+    this.updateHeader();
+    updateStalkExpression(this);
 }
 
 CIRCNetwork.prototype.onPing =
@@ -1333,7 +1334,7 @@ function my_ckick (e)
 {
     if (userIsMe (e.lamer))
     {
-        this.display (getMsg(MSG_YOUR_GONE,
+        this.display (getMsg(MSG_YOURE_GONE,
                              [e.channel.unicodeName, e.user.properNick,
                               e.reason]),
                       "KICK", e.user, this);
@@ -1386,9 +1387,11 @@ function my_cnick (e)
 {
     if (userIsMe (e.user))
     {
-        if (client.currentObject == this)
+        if (getTabForObject(this))
+        {
             this.displayHere(getMsg(MSG_NEWNICK_YOU, e.user.properNick),
                              "NICK", "ME!", e.user, this);
+        }
         this.parent.parent.updateHeader();
     }
     else
