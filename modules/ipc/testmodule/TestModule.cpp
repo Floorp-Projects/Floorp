@@ -12,6 +12,11 @@ static const nsID TestModuleID =
 
 struct TestModule
 {
+    static void Init()
+    {
+        printf("*** TestModule::Init\n");
+    }
+
     static void Shutdown()
     {
         printf("*** TestModule::Shutdown\n");
@@ -30,6 +35,7 @@ struct TestModule
 static ipcModuleMethods gTestMethods =
 {
     IPC_MODULE_METHODS_VERSION,
+    TestModule::Init,
     TestModule::Shutdown,
     TestModule::HandleMsg
 };
