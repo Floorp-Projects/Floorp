@@ -1291,9 +1291,8 @@ XULContentSinkImpl::AddAttributes(const nsIParserNode& aNode, nsXULPrototypeElem
                 if (NS_FAILED(rv)) return rv;
             }
 
-            rv = mCSSParser->ParseDeclarations(value,
-                                               mDocumentURL,
-                                               *getter_AddRefs(aElement->mInlineStyleRule));
+            rv = mCSSParser->ParseStyleAttribute(value, mDocumentURL,
+                                   getter_AddRefs(aElement->mInlineStyleRule));
 
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse style rule");
             if (NS_FAILED(rv)) return rv;
