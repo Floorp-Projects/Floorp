@@ -496,6 +496,25 @@ public:
     js2val value;                // This fixed property's current value; uninitialised if the fixed property is an uninitialised constant
 };
 
+typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
+
+class ParameterFrame;
+
+class FunctionWrapper {
+public:
+    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame) 
+        : bCon(new BytecodeContainer()), code(NULL), unchecked(unchecked), compileFrame(compileFrame) { }
+    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, NativeCode *code) 
+        : bCon(NULL), code(code), unchecked(unchecked), compileFrame(compileFrame) { }
+
+    BytecodeContainer   *bCon;
+    NativeCode          *code;
+    bool                unchecked;      // true if the function is untyped, non-method, normal
+    ParameterFrame      *compileFrame;
+};
+
+
+
 // Instances of non-dynamic classes are represented as FIXEDINSTANCE records. These instances can contain only fixed properties.
 class FixedInstance : public JS2Object {
 public:
@@ -837,23 +856,6 @@ public:
 private:
     Frame *firstFrame;
 };
-
-
-typedef js2val (NativeCode)(JS2Metadata *meta, const js2val thisValue, js2val argv[], uint32 argc);
-
-class FunctionWrapper {
-public:
-    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame) 
-        : bCon(new BytecodeContainer()), code(NULL), unchecked(unchecked), compileFrame(compileFrame) { }
-    FunctionWrapper(bool unchecked, ParameterFrame *compileFrame, NativeCode *code) 
-        : bCon(NULL), code(code), unchecked(unchecked), compileFrame(compileFrame) { }
-
-    BytecodeContainer   *bCon;
-    NativeCode          *code;
-    bool                unchecked;      // true if the function is untyped, non-method, normal
-    ParameterFrame      *compileFrame;
-};
-
 
 
 typedef std::vector<Namespace *> NamespaceList;
