@@ -286,15 +286,15 @@ static NSArray* sToolbarDefaults = nil;
     NS_IF_RELEASE(mURIFixer);
   } // matters
   
-  // Loop over all tabs, and tell them that the window is closed. This
-  // stops gecko from going any further on any of its open connections
-  // and breaks all the necessary cycles between Gecko and the BrowserWrapper.
+// Loop over all tabs, and tell them that the window is closed. This
+// stops gecko from going any further on any of its open connections
+// and breaks all the necessary cycles between Gecko and the BrowserWrapper.
   int numTabs = [mTabBrowser numberOfTabViewItems];
   for (int i = 0; i < numTabs; i++) {
     NSTabViewItem* item = [mTabBrowser tabViewItemAtIndex: i];
     [[item view] windowClosed];
   }
-
+  
   // autorelease just in case we're here because of a window closing
   // initiated from gecko, in which case this BWC would still be on the 
   // stack and may need to stay alive until it unwinds. We've already
@@ -302,6 +302,19 @@ static NSArray* sToolbarDefaults = nil;
   [self autorelease];
 }
 
+//
+// - stopAllPendingLoads
+//
+// For each tab, stop it from loading
+//
+- (void)stopAllPendingLoads
+{
+  int numTabs = [mTabBrowser numberOfTabViewItems];
+  for (int i = 0; i < numTabs; i++) {
+    NSTabViewItem* item = [mTabBrowser tabViewItemAtIndex: i];
+    [[[item view] getBrowserView] stop: nsIWebNavigation::STOP_ALL];
+  }
+}
 
 - (void)dealloc
 {
@@ -796,8 +809,14 @@ static NSArray* sToolbarDefaults = nil;
   // Check the action and see if it matches.
   SEL action = [theItem action];
 //  NSLog(@"Validating toolbar item %@ with selector %s", [theItem label], action);
-  if (action == @selector(back:))
-    return [[mBrowserView getBrowserView] canGoBack];
+  if (action == @selector(back:)) {
+    // if the bookmark manager is showing, we enable the back button so that
+    // they can click back to return to the webpage they were viewing.
+    if ( [mContentView isBookmarkManagerVisible] )
+      return YES;
+    else
+      return [[mBrowserView getBrowserView] canGoBack];
+  }
   else if (action == @selector(forward:))
     return [[mBrowserView getBrowserView] canGoForward];
   else if (action == @selector(reload:))
@@ -1172,7 +1191,12 @@ static NSArray* sToolbarDefaults = nil;
 
 - (IBAction)back:(id)aSender
 {
-  [[mBrowserView getBrowserView] goBack];
+  // if the bookmark manager is visible, hitting the back button will restore
+  // the browser views, not actually go back.
+  if ( [mContentView isBookmarkManagerVisible] )
+    [self toggleBookmarkManager:self];
+  else
+    [[mBrowserView getBrowserView] goBack];
 }
 
 - (IBAction)forward:(id)aSender
@@ -2133,6 +2157,9 @@ mSidebarBookmarksDataSource->mOutlineView = mBookmarksController->mItemPane;
   // if we're now showing the bm manager, force it to have focus,
   // otherwise give focus back to gecko.
   if ( [mContentView isBookmarkManagerVisible] ) {
+    // cancel all pending loads. safari does this, i think we should too
+    [self stopAllPendingLoads];
+    
     // set focus to appropriate area of bm manager
     [mBookmarksController focus];
   }
@@ -2141,6 +2168,17 @@ mSidebarBookmarksDataSource->mOutlineView = mBookmarksController->mItemPane;
     if (browserView)
       [browserView setActive:YES];
   }
+}
+
+//
+// - ensureBrowserVisible:
+//
+// Make sure that the browser is showing, not the bookmarks manager
+//
+- (void)ensureBrowserVisible:(id)sender
+{
+  if ( [mContentView isBookmarkManagerVisible] )
+    [self toggleBookmarkManager:self];
 }
 
 @end
@@ -2330,7 +2368,6 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
   if ( columns ) {
     int numColumns = [columns count];
     NSFont* smallerFont = [NSFont systemFontOfSize:11];
-    NSLog(@"font is %@", smallerFont);
     for ( int i = 0; i < numColumns; ++i )
       [[[columns objectAtIndex:i] dataCell] setFont:smallerFont];
   }

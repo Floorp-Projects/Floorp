@@ -289,6 +289,7 @@ typedef enum
 - (IBAction)reload:(id)aSender;
 - (IBAction)stop:(id)aSender;
 - (IBAction)home:(id)aSender;
+- (void)stopAllPendingLoads;
 
 - (IBAction)reloadWithNewCharset:(NSString*)charset;
 - (NSString*)currentCharset;
@@ -372,6 +373,7 @@ typedef enum
 - (BookmarksDataSource*)bookmarksDataSource;
 
 - (void)toggleBookmarkManager:(id)sender;
+- (void)ensureBrowserVisible:(id)sender;
 
 @end
 

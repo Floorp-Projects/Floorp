@@ -327,6 +327,7 @@ const NSString* kOfflineNotificationName = @"offlineModeChanged";
     mDefaultStatusString = nil;
   }
 
+  [mWindowController ensureBrowserVisible:self];
   [mWindowController showProgressIndicator];
   [[mWindowController progressIndicator] setIndeterminate:YES];
   [[mWindowController progressIndicator] startAnimation:self];
