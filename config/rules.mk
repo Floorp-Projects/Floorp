@@ -115,7 +115,7 @@ ifeq ($(MOZ_OS2_TOOLS),VACPP)
 EXTRA_DSO_LIBS		:= $(addsuffix .$(LIB_SUFFIX),$(addprefix $(DIST)/lib/,$(EXTRA_DSO_LIBS)))
 EXTRA_DSO_LIBS		:= $(filter-out %/bin %/lib,$(EXTRA_DSO_LIBS))
 EXTRA_DSO_LDOPTS    := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(EXTRA_DSO_LDOPTS))
-LIBS                := $(patsubst -l%,$(DIST)/lib/%.$(LIB_SUFFIX),$(LIBS))
+LIBS                := $(patsubst -l%,$(DIST)/lib/lib%.$(LIB_SUFFIX),$(LIBS))
 else
 EXTRA_DSO_LIBS		:= $(addprefix -l,$(EXTRA_DSO_LIBS))
 endif
