@@ -22,6 +22,7 @@
  * Contributor(s):
  *  - Kevin Puetz (puetzk@iastate.edu)
  *  - Ben Goodger <ben@netscape.com> 
+ *  - Blake Ross <blaker@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -437,15 +438,15 @@ var searchButtonObserver = {
       return flavourSet;
     }
 };
-var gDidOpen = false;
-var bookmarksButtonObserver = {
+var gOpenFolder = null;
+var folderObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession)
     {
+      if (aEvent.target.getAttribute("open") == "true")
+        return false;
+
       aEvent.target.setAttribute("dragover", "true");
-      if (!gDidOpen) {
-        aEvent.target.firstChild.showPopup(document.getElementById("bookmarks-button"), -1, -1, "menupopup", "bottomleft", "bottomleft");
-        gDidOpen = true;
-      }
+      aEvent.target.firstChild.showPopup(aEvent.target, -1, -1, "menupopup", "bottomleft", "bottomleft");
       return true;
     },
   getSupportedFlavours: function ()
@@ -463,37 +464,33 @@ function closeOpenMenu()
 {
   if (gCurrentDragOverMenu && gCurrentTarget.firstChild != gCurrentDragOverMenu) {
     if (gCurrentTarget.parentNode != gCurrentDragOverMenu) {
-      gMenuIsOpen = false;
       gCurrentDragOverMenu.hidePopup();
       gCurrentDragOverMenu = null;
     }
   }
 }
         
-var gMenuIsOpen = false;
 var menuDNDObserver = {
   onDragOver: function(aEvent, aFlavour, aDragSession) 
   {
     // if we're a folder just one level deep, open it
-    var dropPosition = determineDropPosition(aEvent, aEvent.target.parentNode != document.getElementById("bookmarks-button").firstChild);
+    var isOneLevelDeep = aEvent.target.parentNode.parentNode.getAttribute("open") == "true" && aEvent.target.parentNode.parentNode.localName == "toolbarbutton";
+    var dropPosition = determineDropPosition(aEvent, !isOneLevelDeep);
     gCurrentTarget = aEvent.target;
     if (aEvent.target.firstChild && aEvent.target.firstChild.localName == "menupopup") {
-      if (aEvent.target.parentNode == document.getElementById("bookmarks-button").firstChild) {
-        if (gCurrentDragOverMenu && gCurrentDragOverMenu != aEvent.target.firstChild) {
+      if (isOneLevelDeep) {
+        if (gCurrentDragOverMenu && gCurrentDragOverMenu != aEvent.target.firstChild)
           gCurrentDragOverMenu.hidePopup();
-          gCurrentDragOverMenu = null;
-          gMenuIsOpen = false;
-        }
-        if (!gMenuIsOpen) {
-          gCurrentDragOverMenu = aEvent.target.firstChild;
+        if (!gCurrentDragOverMenu) {
           aEvent.target.firstChild.showPopup(aEvent.target, -1, -1, "menupopup", "topright, topright");
-          gMenuIsOpen = true;
+          gCurrentDragOverMenu = aEvent.target.firstChild;
         }
       }
       else {
         aEvent.target.setAttribute("menuactive", "true"); 
       }
-    }   
+    }
+  
     // remove drag attributes from old item once we move to a new item
     if (this.mCurrentDragOverItem != aEvent.target) {
       if (this.mCurrentDragOverItem) {
@@ -550,7 +547,6 @@ var menuDNDObserver = {
     var linkCharset = aDragSession.sourceDocument ? aDragSession.sourceDocument.characterSet : null;
     // determine title of link
     var linkTitle;
-      
     // look it up in bookmarks
     var bookmarksDS = RDFUtils.rdf.GetDataSource("rdf:bookmarks");
     var nameRes = RDFUtils.getResource(NC_RDF("Name"));
@@ -578,7 +574,8 @@ var menuDNDObserver = {
     dropElementRes = RDFUtils.getResource(dropElement);
     rdfContainer.Init(childDB, parentContainer);
     dropIndex = rdfContainer.IndexOf(dropElementRes);
-    dropPosition = determineDropPosition(aEvent, aEvent.target.parentNode != document.getElementById("bookmarks-button").firstChild);
+    var isOneLevelDeep = aEvent.target.parentNode.parentNode.getAttribute("open") == "true" && aEvent.target.parentNode.parentNode.localName == "toolbarbutton";
+    dropPosition = determineDropPosition(aEvent, !isOneLevelDeep);
     switch (dropPosition) {
       case DROP_BEFORE:
         --dropIndex;
@@ -666,10 +663,12 @@ function findParentContainer(aElement)
       return RDFUtils.getResource(box.getAttribute("ref"));
     case "menu":
     case "menuitem":
-      var menu = aElement.parentNode.parentNode;
-      if (menu.getAttribute("type") != "http://home.netscape.com/NC-rdf#Folder")
+      var parentNode = aElement.parentNode.parentNode;
+     
+      if (parentNode.getAttribute("type") != NC_RDF("Folder") &&
+          parentNode.getAttributeNS("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "type") != "http://home.netscape.com/NC-rdf#Folder")
         return RDFUtils.getResource("NC:BookmarksRoot");
-      return RDFUtils.getResource(menu.id);
+      return RDFUtils.getResource(parentNode.id);
     case "treecell":
       var treeitem = aElement.parentNode.parentNode.parentNode.parentNode;
       var res = treeitem.getAttribute("ref");

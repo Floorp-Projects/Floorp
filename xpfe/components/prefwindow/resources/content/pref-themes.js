@@ -47,10 +47,6 @@ try {
 }
 catch(e) {}
 
-const kPrefSvcContractID = "@mozilla.org/preferences;1";
-const kPrefSvcIID = Components.interfaces.nsIPref;
-const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-
 function Startup()
 {
   gData = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-themes.xul"];
@@ -61,15 +57,32 @@ function Startup()
   }
   gData.loaded = true;
   parent.hPrefWindow.registerOKCallbackFunc( applySkin );
+
+  const kPrefSvcContractID = "@mozilla.org/preferences;1";
+  const kPrefSvcIID = Components.interfaces.nsIPref;
+  const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+
+  var theme = null;
+  try {
+    theme = kPrefSvc.getComplexValue("general.skins.selectedSkin",
+                                     Components.interfaces.nsISupportsWString).data;
+  } catch (e) {
+  }
   var theSkinKids = document.getElementById("theSkinKids");
+  var matches;
   for (var i = 0; i < theSkinKids.childNodes.length; ++i) {
     var child = theSkinKids.childNodes[i];
-    var selected = chromeRegistry.isSkinSelected(child.getAttribute("name"), true);
-    if (selected == Components.interfaces.nsIChromeRegistry.FULL) {
+    var name = child.getAttribute("name");
+    if (!theme)
+      matches = chromeRegistry.isSkinSelected(name, true) == Components.interfaces.nsIChromeRegistry.FULL;
+    else
+      matches = name == theme;
+    if (matches) {
       tree.selectItem(child);
       break;
-    }
+    }      
   }
+
   var navbundle = document.getElementById("bundle_navigator");
   var showSkinsDescription = navbundle.getString("showskinsdescription");
   if( showSkinsDescription == "false" )
@@ -87,6 +100,19 @@ function applySkin()
   if (data.name == null)
     return;
 
+  const kPrefSvcContractID = "@mozilla.org/preferences;1";
+  const kPrefSvcIID = Components.interfaces.nsIPref;
+  const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+
+  var theme = null;
+  try {
+    theme = kPrefSvc.getComplexValue("general.skins.selectedSkin",
+                                     Components.interfaces.nsISupportsWString).data;
+  } catch (e) {
+  }
+
+  if (theme == data.name) return;
+
   try {
     var reg = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
     if (reg)
@@ -95,11 +121,27 @@ function applySkin()
   catch(e) {}
 
   var inUse = reg.isSkinSelected(data.name, true);
-  if (inUse == Components.interfaces.nsIChromeRegistry.FULL)
-    return;
+  if (!theme && inUse == Components.interfaces.nsIChromeRegistry.FULL) return;
 
-  reg.selectSkin(data.name, true);
-  reg.refreshSkins();
+  var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                      .createInstance(Components.interfaces.nsISupportsWString);
+  str.data = data.name;
+
+  kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsWString, str);
+
+  var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+
+  var strBundleService = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(); 
+  strBundleService = strBundleService.QueryInterface(Components.interfaces.nsIStringBundleService);
+  var navbundle = strBundleService.createBundle("chrome://navigator/locale/navigator.properties"); 
+  var brandbundle = strBundleService.createBundle("chrome://global/locale/brand.properties");
+  
+  if (promptService && navbundle && brandbundle) {                                                          
+    var dialogTitle = navbundle.GetStringFromName("switchskinstitle");          
+    var brandName = brandbundle.GetStringFromName("brandShortName");            
+    var msg = navbundle.formatStringFromName("switchskins", [brandName], 1);                                
+    promptService.alert(window, dialogTitle, msg); 
+  }
 }
 
 function uninstallSkin()
@@ -156,6 +198,9 @@ function themeSelect()
     // XXX - this sucks and should only be temporary.
     var selectedSkin = "";
     try {
+      const kPrefSvcContractID = "@mozilla.org/preferences;1";
+      const kPrefSvcIID = Components.interfaces.nsIPref;
+      const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
       selectedSkin = kPrefSvc.CopyCharPref("general.skins.selectedSkin");
     }
     catch (e) {
