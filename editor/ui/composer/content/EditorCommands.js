@@ -36,11 +36,14 @@ var DisplayModePreview = 0;
 var DisplayModeNormal = 1;
 var DisplayModeAllTags = 2;
 var DisplayModeSource = 3;
+var PreviousNonSourceDisplayMode = 1;
 var EditorDisplayMode = 1;  // Normal Editor mode
 var WebCompose = false;     // Set true for Web Composer, leave false for Messenger Composer
 var docWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
 var contentWindow = 0;
 var sourceContentWindow = 0;
+var ContentWindowDeck;
+var EditorMenuAndToolbars;
 
 var gPrefs;
 // These must be kept in synch with the XUL <options> lists
@@ -122,6 +125,10 @@ function EditorStartup(editorType, editorElement)
 {
   contentWindow = window.content;
   sourceContentWindow = document.getElementById("HTMLSourceWindow");
+
+  // XUL elements we use when switching from normal editor to edit source
+  ContentWindowDeck = document.getElementById("ContentWindowDeck");
+  EditorMenuAndToolbars = document.getElementById("EditorMenuAndToolbars");
   
   // store the editor shell in the window, so that child windows can get to it.
   editorShell = editorElement.editorShell;
@@ -881,11 +888,42 @@ function EditorAlign(commandID, alignType)
   goDoCommand(commandID);
 }
 
-function EditorSetDisplayMode(mode)
+function SetEditMode(mode)
+{
+  SetDisplayMode(mode);
+
+  if (mode == DisplayModeSource)
+  {
+    // Get the current doc and output into the SourceWindow
+    sourceContentWindow.value = "this is sample text. We will insert current page source here";
+
+    contentWindow.blur();
+    sourceContentWindow.focus();
+  }
+  else 
+  {
+    // Get the Source Window contents and paste into the HTML editor
+    contentWindow.focus();
+  }
+}
+
+function CancelSourceEditing()
+{
+  // Empty the source window
+  sourceContentWindow.value="";
+  SetDisplayMode(PreviousNonSourceDisplayMode);
+}
+
+function SetDisplayMode(mode)
 {
   EditorDisplayMode = mode;
+
+  // Save the last non-source mode so we can cancel source editing easily
+  if (mode != DisplayModeSource)
+    PreviousNonSourceDisplayMode = mode;
   
-  // Editor does the style sheet loading/unloading
+  
+  // Editorshell does the style sheet loading/unloading
   editorShell.SetDisplayMode(mode);
 
   // Set the UI states
@@ -895,11 +933,38 @@ function EditorSetDisplayMode(mode)
   var HTMLButton = document.getElementById("SourceModeButton");
   if (HTMLButton)
     HTMLButton.setAttribute("selected", Number(mode == DisplayModeSource));
-dump(sourceContentWindow+"=SourceWindow\n");  
+
+
   if (mode == DisplayModeSource)
+  {
+    // Switch to the sourceWindow (second in the deck)
+    ContentWindowDeck.setAttribute("index","1");
+
+    // Get the current doc and output into the SourceWindow
+
+    // Hide normal chrome
+    EditorMenuAndToolbars.setAttribute("style", "display:none");
+
+    // THIS DOESN'T WORK!?
+    //EditorMenuAndToolbars.setAttribute("collapsed", "true");
+
+    // TODO: WE MUST DISABLE ALL KEYBOARD COMMANDS!
+    contentWindow.blur();
     sourceContentWindow.focus();
+  }
   else 
+  {
+    // Switch to the normal editor (first in the deck)
+    ContentWindowDeck.setAttribute("index","0");
+
+    // Show normal chrome
+    EditorMenuAndToolbars.setAttribute("style", "display:inherit");
+    //EditorMenuAndToolbars.removeAttribute("collapsed");
+
+    // TODO: WE MUST ENABLE ALL KEYBOARD COMMANDS!
+
     contentWindow.focus();
+  }
 }
 
 function EditorToggleParagraphMarks()
@@ -962,6 +1027,23 @@ function InitBackColorPopup()
 function EditorInitEditMenu()
 {
   // We will be modifying the Paste menuitem in the future  
+}
+
+function InitRecentFilesMenu()
+{
+  //Build submenu of
+  var popup = document.getElementById("menupopup_RecentFiles");
+  if (popup)
+  {
+    // Delete existing menu
+    while (popup.firstChild)
+      popup.removeChild(popup.firstChild);
+
+    // Rebuild from values in prefs (use gPrefs)
+    //  but be sure to exclude the current page from the list!
+    //TODO: Kathy will do this
+
+  }
 }
 
 function EditorInitFormatMenu()
@@ -1549,8 +1631,11 @@ function HideInapplicableUIElements()
 
 }
 
+function onEditorFocus()
+{
+dump("onEditorFocus called\n");
+}
 
-//-----------------------------------------------------------------------------------
 function GetPrefsService()
 {
   // Store the prefs object

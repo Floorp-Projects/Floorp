@@ -86,6 +86,7 @@
 	<!-- keys are appended from the overlay -->
   <keyset id="defaultKeySet"/>
 
+<box orient="vertical" id="EditorMenuAndToolbars" collapsed="true">
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
@@ -184,6 +185,8 @@
     <spring flex="1"/>
   </toolbar>
 </toolbox>
+</box> <!-- EditorMenuAndToolbars -->
+
 
 <!-- sidebar/toolbar/content/status -->
 <box id="sidebar-parent" flex="1">
@@ -194,12 +197,19 @@
   <box id="appcontent" orient="vertical" flex="1">
     <deck id="ContentWindowDeck" index="0" flex="1">
       <editor type="content-primary" id="content-frame" src="about:blank" flex="1"/>
-
-<!-- DAMN! This worked for a few minutes on 5/1/00, but after updating tree, it crashes creating the textarea editor! -->
-<!-- <textfield id="HTMLSourceWindow" multiline="true" rows="2" flex="1" style="width:10em; height:10em;"/> -->
+      <box orient="vertical" flex="1">
+        <box id="source-editor-label" autostretch="never" valign="middle">
+          <text class="label bold" value="&sourceEditor.label;"/>
+          <spring flex="1"/>
+          <button value="&sourceEditorCancelButton.label;" oncommand="CancelSourceEditing()"/>
+        </box>
+        <textfield class="source-editor" id="HTMLSourceWindow" multiline="true" rows="1"
+                   flex="1" style="width:1em; height:1em;"/>
+      </box>
     </deck>
 
-    <toolbar id="EditModeToolbar" chromeclass="extrachrome" collapsed="true" persist="collapsed">
+    <!-- TODO: Set collapsed="true" so default is to not show the editmode toolbar -->
+    <toolbar id="EditModeToolbar" chromeclass="extrachrome" persist="collapsed">
       <text class="margin-left-right" value="&editMode.label;"/>
       <!-- From editorOverlay.xul -->
       <text id="NormalModeButton"/>
@@ -229,5 +239,5 @@
     </box><!-- status-bar -->
   </box> <!-- appcontent -->
 </box><!-- sidebar-parent -->
-<toolbar id="taskbar" chromeclass="extrachrome" />
+<toolbar id="taskbar" chromeclass="extrachrome" style="min-width: 1px" />
 </window>

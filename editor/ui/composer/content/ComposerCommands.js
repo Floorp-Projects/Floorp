@@ -402,7 +402,7 @@ var nsInsertHTMLCommand =
   },
   doCommand: function(aCommand)
   {
-    window.openDialog("chrome://editor/content/EdInsSrc.xul","_blank", "chrome,close,titlebar,modal,resizeable", "");
+    window.openDialog("chrome://editor/content/EdInsSrc.xul","_blank", "chrome,close,titlebar,modal,resizable", "");
   }
 };
 
