@@ -287,7 +287,7 @@ public class ScriptRuntime {
             // check for "Infinity"
             if (startChar == '+' || startChar == '-')
                 start++;
-            if (s.regionMatches(start, "Infinity", 0, 9))
+            if (s.regionMatches(start, "Infinity", 0, 8))
                 return startChar == '-'
                     ? Double.NEGATIVE_INFINITY
                     : Double.POSITIVE_INFINITY;
