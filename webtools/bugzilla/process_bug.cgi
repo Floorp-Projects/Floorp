@@ -709,7 +709,7 @@ if ($::FORM{'component'} ne $::FORM{'dontchange'}) {
     $comp_id = get_component_id($prod_id,
                                 $::FORM{'component'});
     $comp_id || ThrowCodeError("invalid_component", 
-                               {component => $::FORM{'component'},
+                               {name => $::FORM{'component'},
                                 product => $::FORM{'product'}});
     
     DoComma();

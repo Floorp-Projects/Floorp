@@ -125,7 +125,7 @@
          
   [% ELSIF error == "invalid_component" %]
     [% title = "Invalid Component" %]
-    The [% component FILTER html %] component doesn't exist in the 
+    The [% name FILTER html %] component doesn't exist in the 
     [% product FILTER html %] product.
     
   [% ELSIF error == "invalid_dimensions" %]
@@ -159,7 +159,7 @@
     is invalid.
   
   [% ELSIF error == "flag_type_component_nonexistent" %]
-    The component <em>[% component FILTER html %]</em> does not exist
+    The component <em>[% name FILTER html %]</em> does not exist
     in the product <em>[% product FILTER html %]</em>.
   
   [% ELSIF error == "flag_type_component_without_product" %]

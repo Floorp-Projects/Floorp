@@ -484,7 +484,7 @@ sub validateComponent {
     defined($component_id)
       || ThrowCodeError("flag_type_component_nonexistent", 
                         { product   => $::FORM{'product'},
-                          component => $::FORM{'component'} });
+                          name => $::FORM{'component'} });
 }
 
 sub validateSortKey {
