@@ -1113,7 +1113,7 @@ function MsgOpenExistingWindowForMessage(aMessageUri)
           windowID.gCurrentFolderUri = msgHdr.folder.URI;
           windowID.UpdateMailToolbar('MsgOpenExistingWindowForMessage');
           windowID.CreateView(gDBView);
-          windowID.gDBView.loadMessageByMsgKey(msgHdr.messageKey);
+          windowID.LoadMessageByMsgKey(msgHdr.messageKey);
         }
         else
           return false;
@@ -1585,25 +1585,24 @@ function MsgAddAllToAddressBook() {}
 function SpaceHit(event)
 {
   var contentWindow = window.top._content;
-  var oldScrollY = contentWindow.scrollY;
-
-  var numPages;
-  var command;
 
   if (event && event.shiftKey) {
-    numPages = -1;
-    command = "cmd_previousUnreadMsg";
+    // if at the start of the message, go to the previous one
+    if (contentWindow.scrollY > 0) {
+      contentWindow.scrollByPages(-1);
+    }
+    else {
+      goDoCommand("cmd_previousUnreadMsg");
+    }
   }
   else {
-    numPages = 1;
-    command = "cmd_nextUnreadMsg";
-  }
-
-  contentWindow.scrollByPages(numPages);
-
-  // if at the end (or start) of the message, go to the next one
-  if (oldScrollY == contentWindow.scrollY) {
-    goDoCommand(command);
+    // if at the end of the message, go to the next one
+    if (contentWindow.scrollY < contentWindow.scrollMaxY) {
+      contentWindow.scrollByPages(1);
+    }
+    else {
+      goDoCommand("cmd_nextUnreadMsg");
+    }
   }
 }
 
@@ -1834,7 +1833,11 @@ function SetupUndoRedoCommand(command)
 
 function HandleJunkStatusChanged(folder)
 {
-  if (IsCurrentLoadedFolder(folder)) {
+  // this might be the stand alone window, open to a message that was
+  // and attachment (or on disk), in which case, we want to ignore it.
+  var loadedMessage = GetLoadedMessage();
+  if (loadedMessage && (!(/type=x-message-display/.test(loadedMessage))) && IsCurrentLoadedFolder(folder))
+  {
     var messageURI = GetLoadedMessage();
     // if multiple message are selected
     // and we change the junk status
@@ -1873,8 +1876,13 @@ function SetUpJunkBar(aMsgHdr)
 
 function OnMsgLoaded(folder, aMessageURI)
 {
+    if (/type=x-message-display/.test(aMessageURI))
+      SetUpJunkBar(null);
+    else
+    {
     var msgHdr = messenger.messageServiceFromURI(aMessageURI).messageURIToMsgHdr(aMessageURI);
     SetUpJunkBar(msgHdr);
+    }
 
     var currentMsgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
     if (!IsImapMessage(aMessageURI))
@@ -1976,11 +1984,12 @@ function OpenOrFocusWindow(args, windowType, chromeURL)
     window.openDialog(chromeURL, "", "chrome,resizable,status,centerscreen,dialog=no", args);
 }
 
+
 function loadThrobberUrl(urlPref)
 {
     var url;
     try {
         url = gPrefs.getComplexValue(urlPref, Components.interfaces.nsIPrefLocalizedString).data;
-        messenger.loadURL(window, url);  
+        messenger.loadExternalURL(window, url);  
     } catch (ex) {}
 }

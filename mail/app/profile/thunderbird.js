@@ -48,8 +48,8 @@ pref("keyword.URL", "http://keyword.netscape.com/keyword/");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
-pref("general.useragent.misc", "rv:1.3b");
-pref("general.useragent.vendor", "Minotaur");
+pref("general.useragent.misc", "rv:1.4b");
+pref("general.useragent.vendor", "Thunderbird");
 pref("general.useragent.vendorSub", "0.1a");
 
 pref("general.startup.browser",             false);

@@ -203,7 +203,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
     {
       var nextMstKey = gDBView.getKeyAt(gNextMessageViewIndexAfterDelete);
       if (nextMstKey != nsMsgKey_None) {
-        gDBView.loadMessageByMsgKey(nextMstKey);
+        LoadMessageByMsgKey(nextMstKey);
       }
       else {
         window.close();
@@ -271,34 +271,62 @@ function delayedOnLoadMessageWindow()
   }
 
   var originalView = null;
-
+  var folder = null;
+  var messageUri;
+  var loadCustomMessage = false;       //set to true when either loading a message/rfc822 attachment or a .eml file
 	if (window.arguments)
 	{
 		if (window.arguments[0])
+    {
+      try
+      {
+        messageUri = window.arguments[0];
+        if (messageUri instanceof Components.interfaces.nsIURI)
+        {
+          loadCustomMessage = /type=x-message-display/.test(messageUri.spec);
+          gCurrentMessageUri = messageUri.spec;
+          if (messageUri instanceof Components.interfaces.nsIMsgMailNewsUrl)
+            folder = messageUri.folder;
+        }
+      } 
+      catch(ex) 
+      {
+        folder = null;
+        dump("## ex=" + ex + "\n");
+      }
+
+      if (!gCurrentMessageUri)
 			gCurrentMessageUri = window.arguments[0];
+    }
 		else
 			gCurrentMessageUri = null;
 
 		if (window.arguments[1])
 			gCurrentFolderUri = window.arguments[1];
 		else
-			gCurrentFolderUri = null;
+      gCurrentFolderUri = folder ? folder.folderURL : null;
 
     if (window.arguments[2])
       originalView = window.arguments[2];      
+
 	}	
 
-  CreateView(originalView)
+  CreateView(originalView);
  
-  setTimeout(OnLoadMessageWindowDelayed, 0);
+  setTimeout(OnLoadMessageWindowDelayed, 0, loadCustomMessage);
   
   SetupCommandUpdateHandlers();
 }
 
-function OnLoadMessageWindowDelayed()
+function OnLoadMessageWindowDelayed(loadCustomMessage)
+{
+  if (loadCustomMessage)
+    gDBView.loadMessageByUrl(gCurrentMessageUri);
+  else
 {
   var msgKey = extractMsgKeyFromURI(gCurrentMessageUri); 
   gDBView.loadMessageByMsgKey(msgKey); 
+  }
   gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete; 
   UpdateStandAloneMessageCounts();
    
@@ -616,7 +644,7 @@ function GetMsgHdrFromUri(messageUri)
 function SelectMessage(messageUri)
 {
   var msgHdr = GetMsgHdrFromUri(messageUri);
-  gDBView.loadMessageByMsgKey(msgHdr.messageKey);
+  LoadMessageByMsgKey(msgHdr.messageKey);
 }
  
 function ReloadMessage()
@@ -651,10 +679,8 @@ var MessageWindowController =
 {
    supportsCommand: function(command)
 	{
-
 		switch ( command )
 		{
-			case "cmd_close":
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":
@@ -666,8 +692,6 @@ var MessageWindowController =
 			case "cmd_forwardInline":
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
-      case "cmd_createFilterFromPopup":
-      case "cmd_createFilterFromMenu":
 			case "cmd_delete":
       case "cmd_undo":
       case "cmd_redo":
@@ -676,32 +700,15 @@ var MessageWindowController =
 			case "button_delete":
       case "button_junk":
 			case "cmd_shiftDelete":
-      case "button_print":
-			case "cmd_print":
-			case "cmd_printpreview":
-		  case "cmd_printSetup":
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
 			case "cmd_viewPageSource":
-			case "cmd_reload":
-			case "cmd_getNewMessages":
-      case "button_getNewMessages":
       case "cmd_getMsgsForAuthAccounts":
-			case "cmd_getNextNMessages":
-			case "cmd_find":
-			case "cmd_findAgain":
-			case "cmd_findPrev":
-      case "cmd_search":
       case "button_mark":
 			case "cmd_markAsRead":
 			case "cmd_markAllRead":
 			case "cmd_markThreadAsRead":
 			case "cmd_markAsFlagged":
-			case "cmd_markAsJunk":
-			case "cmd_markAsNotJunk":
-      case "cmd_applyFilters":
-      case "cmd_runJunkControls":
-      case "cmd_deleteJunk":
       case "cmd_label0":
       case "cmd_label1":
       case "cmd_label2":
@@ -710,7 +717,11 @@ var MessageWindowController =
       case "cmd_label5":
       case "button_file":
 			case "cmd_file":
-			case "cmd_settingsOffline":
+      case "cmd_markAsJunk":
+      case "cmd_markAsNotJunk":
+      case "cmd_applyFilters":
+      case "cmd_runJunkControls":
+      case "cmd_deleteJunk":
 			case "cmd_nextMsg":
       case "button_next":
 			case "cmd_nextUnreadMsg":
@@ -719,6 +730,23 @@ var MessageWindowController =
 			case "cmd_previousMsg":
 			case "cmd_previousUnreadMsg":
 			case "cmd_previousFlaggedMsg":
+        return !(gDBView.keyForFirstSelectedMessage == nsMsgKey_None);
+      case "cmd_getNextNMessages":
+      case "cmd_find":
+      case "cmd_findAgain":
+      case "cmd_findPrev":
+      case "cmd_search":
+      case "cmd_reload":
+      case "cmd_getNewMessages":
+      case "button_getNewMessages":
+      case "button_print":
+      case "cmd_print":
+      case "cmd_printpreview":
+      case "cmd_printSetup":
+      case "cmd_close":
+      case "cmd_settingsOffline":
+      case "cmd_createFilterFromPopup":
+      case "cmd_createFilterFromMenu":
 				return true;
       case "cmd_synchronizeOffline":
 			case "cmd_downloadFlagged":
@@ -1021,7 +1049,7 @@ function LoadMessageByNavigationType(type)
   if ((resultId.value != nsMsgKey_None) && (resultIndex.value != nsMsgKey_None)) 
   {
     // load the message key
-    gDBView.loadMessageByMsgKey(resultId.value);
+    LoadMessageByMsgKey(resultId.value);
     // if we changed folders, the message counts changed.
     UpdateStandAloneMessageCounts();
 
@@ -1053,4 +1081,15 @@ function GetDBView()
   return gDBView;
 }
 
-  
+function LoadMessageByMsgKey(messageKey)
+{
+  // we only want to update the toolbar if there was no previous selected message.
+  if (nsMsgKey_None == gDBView.keyForFirstSelectedMessage)
+  {
+    gDBView.loadMessageByMsgKey(messageKey);
+    UpdateMailToolbar("update toolbar for message Window");
+  }
+  else
+    gDBView.loadMessageByMsgKey(messageKey);
+
+}

@@ -44,7 +44,6 @@ var MSG_FOLDER_FLAG_TEMPLATES = 0x400000;
 
 function OpenURL(url)
 {
-  //dump("\n\nOpenURL from XUL\n\n\n");
   messenger.SetWindow(window, msgWindow);
   messenger.OpenURL(url);
 }
@@ -100,19 +99,18 @@ function LoadMessageByUri(uri)
 
 function setTitleFromFolder(msgfolder, subject)
 {
-    if (!msgfolder) return;
+    var title = subject || "";
 
-    var title;
-    var server = msgfolder.server;
+    if (msgfolder)
+    {
+      if (title)
+        title += " - ";
 
-    if (null != subject)
-      title = subject+" - ";
-    else
-      title = "";
+      title += msgfolder.prettyName;
 
-    if (msgfolder.isServer) 
-      title += server.prettyName;
-    else {
+      if (!msgfolder.isServer)
+      {
+        var server = msgfolder.server;
         var middle;
         var end;
         if (server.type == "nntp") {
@@ -128,16 +126,12 @@ function setTitleFromFolder(msgfolder, subject)
                 // <folder> for <email>
                 middle = gMessengerBundle.getString("titleMailPreHost");
                 end = identity.email;
-            } catch (ex) {
+          } catch (ex) {}
             }
-
-        }
-
-        title += msgfolder.prettyName;
         if (middle) title += " " + middle;
         if (end) title += " " + end;
     }
-
+    }
     title += " - " + gBrandBundle.getString("brandShortName");
     window.title = title;
 }

@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 {
   nsXREAppData appData;
   appData.SetSplashEnabled(PR_FALSE);
-  appData.SetProductName(NS_LITERAL_CSTRING("Minotaur"));
+  appData.SetProductName(NS_LITERAL_CSTRING("Thunderbird"));
   appData.SetUseStartupPrefs(PR_TRUE);
   return xre_main(argc, argv, appData);
 }

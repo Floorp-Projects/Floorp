@@ -564,8 +564,8 @@ Rights Reserved.
 <!ENTITY helpMenu.accesskey "H"> 
 <!ENTITY releaseCmd.label "Release Notes">
 <!ENTITY releaseCmd.accesskey "R"> 
-<!ENTITY hintsAndTips.label "Minotaur Help">
-<!ENTITY hintsAndTips.accesskey "M"> 
+<!ENTITY hintsAndTips.label "Thunderbird Help">
+<!ENTITY hintsAndTips.accesskey "h"> 
 
 
 

@@ -50,9 +50,9 @@ PREF_JS_EXPORTS = \
     $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
-PROGRAM = minotaur$(BIN_SUFFIX)
+PROGRAM = thunderbird$(BIN_SUFFIX)
 else
-PROGRAM = minotaur-bin$(BIN_SUFFIX)
+PROGRAM = thunderbird-bin$(BIN_SUFFIX)
 endif
 
 REQUIRES = \
@@ -98,7 +98,7 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
 RCINCLUDE = splash.rc
-RCFLAGS += -DMOZ_MINOTAUR -I$(srcdir)
+RCFLAGS += -DMOZ_THUNDERBIRD -I$(srcdir)
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -119,27 +119,27 @@ install:: $(DESKTOP_ICONS)
 	$(SYSINSTALL) $(IFLAGS1) $^ $(DESTDIR)$(mozappdir)/chrome/icons/default
 
 ifneq (,$(filter-out OS2 WINNT Darwin,$(OS_ARCH)))
-minotaur:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
+thunderbird:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
 		-e "s|%MREDIR%|$(mredir)|" \
 		-e "s|mozilla-bin|$(PROGRAM)|g" > $@
 	chmod +x $@
 
-libs:: minotaur
+libs:: thunderbird
 	$(INSTALL) $< $(DIST)/bin
 
-install:: minotaur
+install:: thunderbird
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
-GARBAGE += minotaur
+GARBAGE += thunderbird
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
 ifdef MOZ_DEBUG
-APP_NAME = MinotaurDebug
+APP_NAME = ThunderbirdDebug
 else
-APP_NAME = Minotaur
+APP_NAME = Thunderbird
 endif
 
 libs:: $(PROGRAM)

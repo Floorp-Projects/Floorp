@@ -53,6 +53,9 @@
 //     mail file at the same time
 pref("mail.migration.copyMailFiles", true);
 
+// pref defined by stand alone mail apps
+pref("mail.standalone", true);
+
 //mailnews.timeline_is_enabled should be set to true ONLY for perf measurement-timeline builds.
 pref("mailnews.timeline_is_enabled", false);
 
