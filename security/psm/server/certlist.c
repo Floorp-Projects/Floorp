@@ -777,6 +777,7 @@ SSM_CertListKeywordHandler(SSMTextGenContext *cx)
     ssmCLState state;
     SSMResourceType targetType = SSM_RESTYPE_NULL;
     PRIntn certType[clAllCA+1];
+    SSMSortedList *nullHash = NULL;
 
     certType[clAllMine] =        0x00000001;
     certType[clEmailRecipient] = 0x00000010;
@@ -843,7 +844,7 @@ SSM_CertListKeywordHandler(SSMTextGenContext *cx)
         state.hash = &((SSMSecurityAdvisorContext *)target)->m_certhash;
     }
     else 
-        *state.hash = NULL;
+        state.hash = &nullHash;
 
     state.output = state.temp = NULL;
 
