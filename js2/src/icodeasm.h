@@ -104,16 +104,22 @@ namespace ICodeASM {
 
     public:
         void ParseSourceFromString (const string source);
+
+        /* locate the beginning of the next token, and guess what it might be */
         TokenLocation SeekTokenStart (iter begin, iter end);
+
+        /* general purpose parse functions */
         iter ParseAlpha (iter begin, iter end, string *rval);
         iter ParseBool (iter begin, iter end, bool *rval);
         iter ParseDouble  (iter begin, iter end, double *rval);
         iter ParseString  (iter begin, iter end, string *rval);
-        iter ParseStatement (iter begin, iter end);
         iter ParseUInt32  (iter begin, iter end, uint32 *rval);
 
+        /* "high level" parse functions */
         iter ParseInstruction (uint icodeID, iter start, iter end);
+        iter ParseStatement (iter begin, iter end);
 
+        /* parse particular operand types */
         iter ParseArgumentListOperand (iter begin, iter end, AnyOperand *o);
         iter ParseBinaryOpOperand (iter begin, iter end, AnyOperand *o);
         iter ParseBoolOperand (iter begin, iter end, AnyOperand *o);
