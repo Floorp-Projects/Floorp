@@ -50,12 +50,25 @@ CPU_ARCH = $(shell uname -m)
 ifeq (86,$(findstring 86,$(CPU_ARCH)))
 CPU_ARCH = x86
 OS_CFLAGS+= -DX86_LINUX
+
+ifeq (gcc, $(CC))
+# if using gcc on x86, check version for opt bug 
+# (http://bugzilla.mozilla.org/show_bug.cgi?id=24892)
+GCC_VERSION := $(shell gcc -v 2>&1 | grep version | awk '{ print $$3 }')
+GCC_LIST:=$(sort 2.91.66 $(GCC_VERSION) )
+
+ifeq (2.91.66, $(firstword $(GCC_LIST)))
+CFLAGS+= -DGCC_OPT_BUG
+endif
+endif
+
 endif
 GFX_ARCH = x
 
 OS_LIBS = -lm -lc
 
 ASFLAGS += -x assembler-with-cpp
+
 
 ifeq ($(CPU_ARCH),alpha)
 

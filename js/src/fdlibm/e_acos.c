@@ -97,7 +97,12 @@ qS4 =  7.70381505559019352791e-02; /* 0x3FB3B8C5, 0xB12E9282 */
 	double x;
 #endif
 {
-	double z,p,q,r,w,s,c,df;
+#ifdef GCC_OPT_BUG
+        volatile double df;
+#else
+        double df;
+#endif
+	double z,p,q,r,w,s,c;
 	int hx,ix;
 	hx = __HI(x);
 	ix = hx&0x7fffffff;
