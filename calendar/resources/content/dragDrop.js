@@ -374,7 +374,7 @@ var calendarViewDNDObserver = {
          try {
             var fileObj = dataObj.value.QueryInterface(Components.interfaces.nsIFile);
             var aDataStream = readDataFromFile( fileObj.path );
-            var calendarEventArray = parseIcalData( aDataStream );
+            var calendarEventArray = parseIcalEvents( aDataStream );
             // LINAGORA (- TODO Move to calendarImportExport to have the option to turn off dialogs)
             addEventsToCalendar( calendarEventArray, 1 );
          }

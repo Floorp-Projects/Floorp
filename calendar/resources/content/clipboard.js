@@ -209,7 +209,7 @@ function pasteFromClipboard()
 	 switch (flavour.value) {
 	 case "text/calendar":
             
-            calendarEventArray = parseIcalData( data );
+            calendarEventArray = parseIcalEvents( data );
             
             //change the date of all the events to now
             startDate = gCalendarWindow.currentView.getNewEventDate();
@@ -238,7 +238,7 @@ function pasteFromClipboard()
             }
             else
             {
-               calendarEventArray = parseIcalData( data );
+               calendarEventArray = parseIcalEvents( data );
                //change the date of all the events to now
                startDate = gCalendarWindow.currentView.getNewEventDate();
                MinutesToAddOn = getIntPref(gCalendarWindow.calendarPreferences.calendarPref, "event.defaultlength", 60 );

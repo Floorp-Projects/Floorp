@@ -118,9 +118,9 @@ function doWizardImport()
    var aDataStream = readDataFromFile( fileName, "UTF-8" );
 
    if( fileName.indexOf( ".ics" ) != -1 )
-      calendarEventArray = parseIcalData( aDataStream );
+      calendarEventArray = parseIcalEvents( aDataStream );
    else if( fileName.indexOf( ".xcs" ) != -1 )
-      calendarEventArray = parseXCSData( aDataStream );
+      calendarEventArray = parseIcalEvents(transformXCSData( aDataStream ));
    
    if( document.getElementById( "import-2-radiogroup" ).selectedItem.value == "silent" )
    {
