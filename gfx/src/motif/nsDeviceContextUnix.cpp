@@ -37,54 +37,29 @@ static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
 
 nsDeviceContextUnix :: nsDeviceContextUnix()
 {
-  NS_INIT_REFCNT();
-
-  mFontCache = nsnull;
   mSurface = nsnull;
-
   mTwipsToPixels = 1.0;
   mPixelsToTwips = 1.0;
-
-  mDevUnitsToAppUnits = 1.0f;
-  mAppUnitsToDevUnits = 1.0f;
-
-  mGammaValue = 1.0f;
-  mGammaTable = new PRUint8[256];
-
-  mZoom = 1.0f;
-
   mVisual = nsnull;
-
   mRedMask = 0;
   mGreenMask = 0;
   mBlueMask = 0;
-
   mRedBits = 0;
   mGreenBits = 0;
   mBlueBits = 0;
-
   mRedOffset = 0;
   mGreenOffset = 0;
   mBlueOffset = 0;
-
-  mNativeWidget = nsnull;
-
   mDepth = 0 ;
   mColormap = 0 ;
 }
 
 nsDeviceContextUnix :: ~nsDeviceContextUnix()
 {
-
-  if (nsnull != mGammaTable)
-  {
-    delete mGammaTable;
-    mGammaTable = nsnull;
+  if (mSurface) {
+    delete mSurface;
+    mSurface = nsnull;
   }
-
-  NS_IF_RELEASE(mFontCache);
-
-  if (mSurface) delete mSurface;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextUnix, kDeviceContextIID)
@@ -101,12 +76,12 @@ nsresult nsDeviceContextUnix :: Init(nsNativeWidget aNativeWidget)
   // XXX We really need to have Display passed to us since it could be specified
   //     not from the environment, which is the one we use here.
 
-  mNativeWidget = aNativeWidget;
+  mWidget = aNativeWidget;
 
-  if (nsnull != mNativeWidget)
+  if (nsnull != mWidget)
   {
-    mTwipsToPixels = (((float)::XDisplayWidth(XtDisplay((Widget)mNativeWidget), DefaultScreen(XtDisplay((Widget)mNativeWidget)))) /
-  		    ((float)::XDisplayWidthMM(XtDisplay((Widget)mNativeWidget),DefaultScreen(XtDisplay((Widget)mNativeWidget)) )) * 25.4) / 
+    mTwipsToPixels = (((float)::XDisplayWidth(XtDisplay((Widget)mWidget), DefaultScreen(XtDisplay((Widget)mWidget)))) /
+  		    ((float)::XDisplayWidthMM(XtDisplay((Widget)mWidget),DefaultScreen(XtDisplay((Widget)mWidget)) )) * 25.4) / 
       (float)NSIntPointsToTwips(72);
     
     mPixelsToTwips = 1.0f / mTwipsToPixels;
@@ -115,36 +90,6 @@ nsresult nsDeviceContextUnix :: Init(nsNativeWidget aNativeWidget)
   return NS_OK;
 }
 
-float nsDeviceContextUnix :: GetTwipsToDevUnits() const
-{
-  return mTwipsToPixels;
-}
-
-float nsDeviceContextUnix :: GetDevUnitsToTwips() const
-{
-  return mPixelsToTwips;
-}
-
-
-void nsDeviceContextUnix :: SetAppUnitsToDevUnits(float aAppUnits)
-{
-  mAppUnitsToDevUnits = aAppUnits;
-}
-
-void nsDeviceContextUnix :: SetDevUnitsToAppUnits(float aDevUnits)
-{
-  mDevUnitsToAppUnits = aDevUnits;
-}
-
-float nsDeviceContextUnix :: GetAppUnitsToDevUnits() const
-{
-  return mAppUnitsToDevUnits;
-}
-
-float nsDeviceContextUnix :: GetDevUnitsToAppUnits() const
-{
-  return mDevUnitsToAppUnits;
-}
 
 float nsDeviceContextUnix :: GetScrollBarWidth() const
 {
@@ -158,123 +103,10 @@ float nsDeviceContextUnix :: GetScrollBarHeight() const
   return 240.0;
 }
 
-nsIRenderingContext * nsDeviceContextUnix :: CreateRenderingContext(nsIView *aView)
-{
-  nsIRenderingContext *pContext = nsnull;
-  nsIWidget *win = aView->GetWidget();
-  nsresult            rv;
-
-  static NS_DEFINE_IID(kRCCID, NS_RENDERING_CONTEXT_CID);
-  static NS_DEFINE_IID(kRCIID, NS_IRENDERING_CONTEXT_IID);
-
-  rv = NSRepository::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
-
-  if (NS_OK == rv) {
-    rv = InitRenderingContext(pContext, win);
-    if (NS_OK != rv) {
-      NS_RELEASE(pContext);
-    }
-  }
-
-  NS_IF_RELEASE(win);  
-  return pContext;
-}
-
-nsresult nsDeviceContextUnix :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
-{
-  return (aContext->Init(this, aWin));
-}
-
-nsIFontCache* nsDeviceContextUnix::GetFontCache()
-{
-  if (nsnull == mFontCache) {
-    if (NS_OK != CreateFontCache()) {
-      return nsnull;
-    }
-  }
-  NS_ADDREF(mFontCache);
-  return mFontCache;
-}
-
-nsresult nsDeviceContextUnix::CreateFontCache()
-{
-  nsresult rv = NS_NewFontCache(&mFontCache);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  mFontCache->Init(this);
-  return NS_OK;
-}
-
-void nsDeviceContextUnix::FlushFontCache()
-{
-  NS_RELEASE(mFontCache);
-}
-
-
-nsIFontMetrics* nsDeviceContextUnix::GetMetricsFor(const nsFont& aFont)
-{
-  if (nsnull == mFontCache) {
-    if (NS_OK != CreateFontCache()) {
-      return nsnull;
-    }
-  }
-  return mFontCache->GetMetricsFor(aFont);
-}
-
-void nsDeviceContextUnix :: SetZoom(float aZoom)
-{
-  mZoom = aZoom;
-}
-
-float nsDeviceContextUnix :: GetZoom() const
-{
-  return mZoom;
-}
 
 nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface(nsIRenderingContext &aContext)
 {
   return aContext.CreateDrawingSurface(nsnull);
-}
-
-float nsDeviceContextUnix :: GetGamma(void)
-{
-  return mGammaValue;
-}
-
-void nsDeviceContextUnix :: SetGamma(float aGamma)
-{
-  if (aGamma != mGammaValue)
-  {
-    //we don't need to-recorrect existing images for this case
-    //so pass in 1.0 for the current gamma regardless of what it
-    //really happens to be. existing images will get a one time
-    //re-correction when they're rendered the next time. MMP
-
-    SetGammaTable(mGammaTable, 1.0f, aGamma);
-
-    mGammaValue = aGamma;
-  }
-}
-
-PRUint8 * nsDeviceContextUnix :: GetGammaTable(void)
-{
-  //XXX we really need to ref count this somehow. MMP
-
-  return mGammaTable;
-}
-
-void nsDeviceContextUnix :: SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma)
-{
-  double fgval = (1.0f / aCurrentGamma) * (1.0f / aNewGamma);
-
-  for (PRInt32 cnt = 0; cnt < 256; cnt++)
-    aTable[cnt] = (PRUint8)(pow((double)cnt * (1. / 256.), fgval) * 255.99999999);
-}
-
-nsNativeWidget nsDeviceContextUnix :: GetNativeWidget(void)
-{
-  return mNativeWidget;
 }
 
 PRUint32 nsDeviceContextUnix :: ConvertPixel(nscolor aColor)
@@ -513,12 +345,6 @@ nsDrawingSurface nsDeviceContextUnix :: GetDrawingSurface()
 }
 
 
-NS_IMETHODIMP nsDeviceContextUnix :: LoadIconImage(PRInt32 aId, nsIImage*& aImage)
-{
-  // XXX Unix should be using DeviceContextImpl...
-  aImage = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const char * aFontName)
 {
@@ -556,25 +382,6 @@ NS_IMETHODIMP nsDeviceContextUnix :: CheckFontExistence(const char * aFontName)
   return rv;
 }
 
-NS_IMETHODIMP nsDeviceContextUnix::CreateILColorSpace(IL_ColorSpace*& aColorSpace)
-{
-  IL_RGBBits colorRGBBits;
-
-  // Default is to create a 24-bit color space
-  colorRGBBits.red_shift = 16;  
-  colorRGBBits.red_bits = 8;
-  colorRGBBits.green_shift = 8;
-  colorRGBBits.green_bits = 8; 
-  colorRGBBits.blue_shift = 0; 
-  colorRGBBits.blue_bits = 8;  
-
-  aColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-  if (nsnull == aColorSpace) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
-}
 
 
 

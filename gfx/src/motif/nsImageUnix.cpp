@@ -53,21 +53,21 @@ nsImageUnix :: ~nsImageUnix()
   }
   if(nsnull != mConvertedBits) 
     {
-    delete[] (PRUint8*)mConvertedBits;
+//NOD   delete[] (PRUint8*)mConvertedBits;
     mConvertedBits = nsnull;
     }
 
   if(nsnull != mImageBits)
     {
-    delete[] (PRUint8*)mImageBits;
+//NOD    delete[] (PRUint8*)mImageBits;
     mImageBits = nsnull;
     }
-  if(nsnull!= mColorMap)
-    delete mColorMap;
+//NOD  if(nsnull!= mColorMap)
+//NOD    delete mColorMap;
 
-  if (nsnull != mAlphaBits) {
-    delete mAlphaBits;
-  }
+//NOD  if (nsnull != mAlphaBits) {
+//NOD    delete mAlphaBits;
+//NOD }
   
 }
 
@@ -77,16 +77,16 @@ NS_IMPL_ISUPPORTS(nsImageUnix, kIImageIID);
 
 nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
-  if(nsnull != mImageBits)
-    delete[] (PRUint8*)mImageBits;
+//NOD  if(nsnull != mImageBits)
+//NOD    delete[] (PRUint8*)mImageBits;
 
-  if(nsnull != mColorMap)
-    delete[] mColorMap;
+//NOD  if(nsnull != mColorMap)
+//NOD    delete[] mColorMap;
 
-  if (nsnull != mImage) {
-    XDestroyImage(mImage);
-    mImage = nsnull;
-  }
+//NOD  if (nsnull != mImage) {
+//NOD    XDestroyImage(mImage);
+//NOD    mImage = nsnull;
+//NOD  }
   mWidth = aWidth;
   mHeight = aHeight;
   mDepth = aDepth;
