@@ -49,7 +49,6 @@ interface nsIDOMNSDocument : nsISupports
 {
   readonly attribute DOMString            characterSet;
            attribute DOMString            dir;
-  readonly attribute nsIDOMPluginArray    plugins;
 
   readonly attribute nsIDOMLocation       location;
 
