@@ -44,7 +44,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
-#include "nsFixedSizeAllocator.h"
 #include "nsIAtom.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
@@ -556,12 +555,6 @@ protected:
     PRInt32 mRefCnt;
 
 public:
-    static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-        return aAllocator.Alloc(aSize); }
-
-    static void operator delete(void* aPtr, size_t aSize) {
-        nsFixedSizeAllocator::Free(aPtr, aSize); }
-
     Match(const Rule* aRule, const Instantiation& aInstantiation, nsBindingSet aBindings)
         : mRefCnt(1),
           mRule(aRule),
@@ -624,12 +617,6 @@ private:
 
 protected:
     struct MatchList {
-        static void* operator new(size_t aSize, nsFixedSizeAllocator& aPool) {
-            return aPool.Alloc(aSize); }
-
-        static void operator delete(void* aPtr, size_t aSize) {
-            nsFixedSizeAllocator::Free(aPtr, aSize); }
-
         Match* mMatch;
         MatchList* mNext;
         MatchList* mPrev;
@@ -637,7 +624,7 @@ protected:
 
     MatchList mHead;
 
-    // Lazily created when we pass a size threshold.
+    // XXXwaterson Lazily create this if we pass a size threshold.
     PLHashTable* mMatches;
     PRInt32 mCount;
 
@@ -654,31 +641,7 @@ protected:
 
     enum { kHashTableThreshold = 8 };
 
-    static PLHashAllocOps gAllocOps;
-
-    static void* PR_CALLBACK AllocTable(void* aPool, PRSize aSize) {
-        return new char[aSize]; }
-
-    static void PR_CALLBACK FreeTable(void* aPool, void* aItem) {
-        delete[] NS_STATIC_CAST(char*, aItem); }
-
-    static PLHashEntry* PR_CALLBACK AllocEntry(void* aPool, const void* aKey) {
-        nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
-        PLHashEntry* entry = NS_STATIC_CAST(PLHashEntry*, pool->Alloc(sizeof(PLHashEntry)));
-        return entry; }
-
-    static void PR_CALLBACK FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag) {
-        if (aFlag == HT_FREE_ENTRY)
-            nsFixedSizeAllocator::Free(aEntry, sizeof(PLHashEntry)); }
-
 public:
-    // Used to initialize the nsFixedSizeAllocator that's used to pool
-    // entries.
-    enum {
-        kEntrySize = sizeof(MatchList),
-        kIndexSize = sizeof(PLHashEntry)
-    };
-
     class ConstIterator {
     protected:
         friend class Iterator; // XXXwaterson so broken.
@@ -777,18 +740,16 @@ public:
     const Match* GetLastMatch() const { return mLastMatch; }
     void SetLastMatch(const Match* aMatch) { mLastMatch = aMatch; }
 
-    Iterator Insert(nsFixedSizeAllocator& aPool, Iterator aIterator, Match* aMatch);
+    Iterator Insert(Iterator aIterator, Match* aMatch);
 
-    Iterator Add(nsFixedSizeAllocator& aPool, Match* aMatch) {
-        return Insert(aPool, Last(), aMatch); }
+    Iterator Add(Match* aMatch) {
+        return Insert(Last(), aMatch); }
 
     void Clear();
 
     Iterator Erase(Iterator aIterator);
 };
 
-PLHashAllocOps MatchSet::gAllocOps = {
-    AllocTable, FreeTable, AllocEntry, FreeEntry };
 
 
 MatchSet::MatchSet()
@@ -816,7 +777,7 @@ MatchSet::~MatchSet()
 
 
 MatchSet::Iterator
-MatchSet::Insert(nsFixedSizeAllocator& aPool, Iterator aIterator, Match* aMatch)
+MatchSet::Insert(Iterator aIterator, Match* aMatch)
 {
     if (++mCount > kHashTableThreshold && !mMatches) {
         // If we've exceeded a high-water mark, then hash everything.
@@ -824,8 +785,8 @@ MatchSet::Insert(nsFixedSizeAllocator& aPool, Iterator aIterator, Match* aMatch)
                                    HashMatch,
                                    CompareMatches,
                                    PL_CompareValues,
-                                   &gAllocOps,
-                                   &aPool);
+                                   nsnull /* XXXwaterson use an arena */,
+                                   nsnull);
 
         Iterator last = Last();
         for (Iterator match = First(); match != last; ++match) {
@@ -839,7 +800,7 @@ MatchSet::Insert(nsFixedSizeAllocator& aPool, Iterator aIterator, Match* aMatch)
         }
     }
 
-    MatchList* newelement = new (aPool) MatchList();
+    MatchList* newelement = new MatchList();
     if (newelement) {
         newelement->mMatch = aMatch;
         aMatch->AddRef();
@@ -1035,8 +996,6 @@ protected:
     PLHashTable* mTable;
     Entry mHead;
 
-    nsFixedSizeAllocator mPool;
-
 public:
     KeySet();
     ~KeySet();
@@ -1086,56 +1045,53 @@ public:
 protected:
     static PLHashAllocOps gAllocOps;
 
-    static void* PR_CALLBACK AllocTable(void* aPool, PRSize aSize) {
-        return new char[aSize]; }
-
-    static void PR_CALLBACK FreeTable(void* aPool, void* aItem) {
-        delete[] NS_STATIC_CAST(char*, aItem); }
-
-    static PLHashEntry* PR_CALLBACK AllocEntry(void* aPool, const void* aKey) {
-        nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
-        const Key* key = NS_STATIC_CAST(const Key*, aKey);
-
-        Entry* entry = NS_STATIC_CAST(Entry*, pool->Alloc(sizeof(Entry)));
-        if (! entry)
-            return nsnull;
-
-        // Need to explicitly call ctor
-        entry->Entry::Entry(*key);
-
-        return NS_REINTERPRET_CAST(PLHashEntry*, entry); }
-
-    static void PR_CALLBACK FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag) {
-        if (aFlag == HT_FREE_ENTRY) {
-            Entry* entry = NS_REINTERPRET_CAST(Entry*, aEntry);
-
-            // Need to explicitly call dtor
-            entry->Entry::~Entry();
-
-            nsFixedSizeAllocator::Free(entry, sizeof(Entry));
-        } }
+    static void*        PR_CALLBACK AllocTable(void* aPool, PRSize aSize);
+    static void         PR_CALLBACK FreeTable(void* aPool, void* aItem);
+    static PLHashEntry* PR_CALLBACK AllocEntry(void* aPool, const void* aKey);
+    static void         PR_CALLBACK FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag);
 };
 
 PLHashAllocOps KeySet::gAllocOps = {
-    AllocTable, FreeTable, AllocEntry, FreeEntry };
+    AllocTable,
+    FreeTable,
+    AllocEntry,
+    FreeEntry
+};
 
+void* PR_CALLBACK
+KeySet::AllocTable(void* aPool, PRSize aSize)
+{
+    return new char[aSize];
+}
+
+void PR_CALLBACK
+KeySet::FreeTable(void* aPool, void* aItem)
+{
+    delete[] NS_STATIC_CAST(char*, aItem);
+}
+
+PLHashEntry* PR_CALLBACK
+KeySet::AllocEntry(void* aPool, const void* aKey)
+{
+    const Key* key = NS_STATIC_CAST(const Key*, aKey);
+    Entry* entry = new Entry(*key);
+    return NS_REINTERPRET_CAST(PLHashEntry*, entry);
+}
+
+void PR_CALLBACK
+KeySet::FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag)
+{
+    Entry* entry = NS_REINTERPRET_CAST(Entry*, aEntry);
+    delete entry;
+}
 
 KeySet::KeySet()
     : mTable(nsnull)
 {
     mHead.mPrev = mHead.mNext = &mHead;
 
-    static const size_t kBucketSizes[] = { sizeof(Entry) };
-    static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
-    static const PRInt32 kInitialEntries = 8;
-
-    static const PRInt32 kInitialPoolSize = 
-        NS_SIZE_IN_HEAP(sizeof(Entry)) * kInitialEntries;
-
-    mPool.Init("KeySet", kBucketSizes, kNumBuckets, kInitialPoolSize);
-
-    mTable = PL_NewHashTable(kInitialEntries, Key::HashKey, Key::CompareKeys,
-                             PL_CompareValues, &gAllocOps, &mPool);
+    mTable = PL_NewHashTable(8, Key::HashKey, Key::CompareKeys, PL_CompareValues,
+                             &gAllocOps, nsnull);
 
     MOZ_COUNT_CTOR(KeySet);
 }
@@ -1205,8 +1161,6 @@ public:
 
     void Clear();
 
-    nsFixedSizeAllocator& GetPool() { return mPool; }
-
 protected:
     nsresult Init();
     nsresult Destroy();
@@ -1225,35 +1179,10 @@ protected:
     };
 
     static PLHashAllocOps gMatchAllocOps;
-
-    static void* PR_CALLBACK AllocMatchTable(void* aPool, PRSize aSize) {
-        return new char[aSize]; }
-
-    static void PR_CALLBACK FreeMatchTable(void* aPool, void* aItem) {
-        delete[] NS_STATIC_CAST(char*, aItem); }
-
-    static PLHashEntry* PR_CALLBACK AllocMatchEntry(void* aPool, const void* aKey) {
-        nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
-
-        MatchEntry* entry = NS_STATIC_CAST(MatchEntry*, pool->Alloc(sizeof(MatchEntry)));
-        if (! entry)
-            return nsnull;
-
-        // Need to explicitly call ctor
-        entry->MatchEntry::MatchEntry();
-
-        entry->mKey = *NS_STATIC_CAST(const Key*, aKey);
-        return NS_REINTERPRET_CAST(PLHashEntry*, entry); }
-
-    static void PR_CALLBACK FreeMatchEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag) {
-        if (aFlag == HT_FREE_ENTRY) {
-            MatchEntry* entry = NS_REINTERPRET_CAST(MatchEntry*, aHashEntry);
-
-            // Need to explicitly call dtor
-            entry->MatchEntry::~MatchEntry();
-
-            nsFixedSizeAllocator::Free(entry, sizeof(MatchEntry));
-        } }
+    static void*        PR_CALLBACK AllocMatchTable(void* aPool, PRSize aSize);
+    static void         PR_CALLBACK FreeMatchTable(void* aPool, void* aItem);
+    static PLHashEntry* PR_CALLBACK AllocMatchEntry(void* aPool, const void* aKey);
+    static void         PR_CALLBACK FreeMatchEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag);
 
     // Maps a MemoryElement to the matches that it supports
     PLHashTable* mSupport;
@@ -1272,39 +1201,11 @@ protected:
         MatchSet           mMatchSet;
     };
 
-    static PLHashAllocOps gSupportAllocOps;
-
-    static void* PR_CALLBACK AllocSupportTable(void* aPool, PRSize aSize) {
-        return new char[aSize]; }
-
-    static void PR_CALLBACK FreeSupportTable(void* aPool, void* aItem) {
-        delete[] NS_STATIC_CAST(char*, aItem); }
-
-    static PLHashEntry* PR_CALLBACK AllocSupportEntry(void* aPool, const void* aKey) {
-        nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
-
-        SupportEntry* entry = NS_STATIC_CAST(SupportEntry*, pool->Alloc(sizeof(SupportEntry)));
-        if (! entry)
-            return nsnull;
-
-        // Need to explicitly call ctor
-        entry->SupportEntry::SupportEntry();
-
-        const MemoryElement* element = NS_STATIC_CAST(const MemoryElement*, aKey);
-        entry->mElement = element->Clone(aPool);
-
-        return NS_REINTERPRET_CAST(PLHashEntry*, entry); }
-
-    static void PR_CALLBACK FreeSupportEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag) {
-        if (aFlag == HT_FREE_ENTRY) {
-            SupportEntry* entry = NS_REINTERPRET_CAST(SupportEntry*, aHashEntry);
-
-            // Need to explicitly call dtor
-            entry->SupportEntry::~SupportEntry();
-
-            nsFixedSizeAllocator::Free(entry, sizeof(SupportEntry));
-        } }
-
+    static PLHashAllocOps gBindingAllocOps;
+    static void*        PR_CALLBACK AllocSupportTable(void* aPool, PRSize aSize);
+    static void         PR_CALLBACK FreeSupportTable(void* aPool, void* aItem);
+    static PLHashEntry* PR_CALLBACK AllocSupportEntry(void* aPool, const void* aKey);
+    static void         PR_CALLBACK FreeSupportEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag);
 
     static PLHashNumber HashMemoryElement(const void* aBinding);
     static PRIntn CompareMemoryElements(const void* aLeft, const void* aRight);
@@ -1331,44 +1232,90 @@ protected:
 
     static PLHashEntry* PR_CALLBACK
     AllocResourceEntry(void* aPool, const void* aKey) {
-        nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
-
-        ResourceEntry* entry =
-            NS_STATIC_CAST(ResourceEntry*, pool->Alloc(sizeof(ResourceEntry)));
-
-        if (! entry)
-            return nsnull;
-
-        // Need to explicitly call ctor
-        entry->ResourceEntry::ResourceEntry();
-
+        ResourceEntry* entry = new ResourceEntry;
         return NS_REINTERPRET_CAST(PLHashEntry*, entry); }
 
     static void PR_CALLBACK
     FreeResourceEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag) {
-        if (aFlag == HT_FREE_ENTRY) {
-            ResourceEntry* entry = NS_REINTERPRET_CAST(ResourceEntry*, aEntry);
-
-            // Need to explicitly call dtor
-            entry->ResourceEntry::~ResourceEntry();
-
-            nsFixedSizeAllocator::Free(entry, sizeof(ResourceEntry));
-        } }
+        delete NS_REINTERPRET_CAST(ResourceEntry*, aEntry); }
 
     static PLHashNumber
     HashPointer(const void* aKey) {
         return PLHashNumber(aKey) >> 3; }
-
-    nsFixedSizeAllocator mPool;
 };
 
 // Allocation operations for the match table
 PLHashAllocOps ConflictSet::gMatchAllocOps = {
     AllocMatchTable, FreeMatchTable, AllocMatchEntry, FreeMatchEntry };
 
+
+void* PR_CALLBACK
+ConflictSet::AllocMatchTable(void* aPool, PRSize aSize)
+{
+    return new char[aSize];
+}
+
+void PR_CALLBACK
+ConflictSet::FreeMatchTable(void* aPool, void* aItem)
+{
+    delete[] NS_STATIC_CAST(char*, aItem);
+}
+
+PLHashEntry* PR_CALLBACK
+ConflictSet::AllocMatchEntry(void* aPool, const void* aKey)
+{
+    MatchEntry* entry = new MatchEntry();
+    if (! entry)
+        return nsnull;
+
+    entry->mKey = *NS_STATIC_CAST(const Key*, aKey);
+    return NS_REINTERPRET_CAST(PLHashEntry*, entry);
+}
+
+void PR_CALLBACK
+ConflictSet::FreeMatchEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag)
+{
+    MatchEntry* entry = NS_REINTERPRET_CAST(MatchEntry*, aHashEntry);
+    delete entry;
+}
+
 // Allocation operations for the bindings table
-PLHashAllocOps ConflictSet::gSupportAllocOps = {
+PLHashAllocOps ConflictSet::gBindingAllocOps = {
     AllocSupportTable, FreeSupportTable, AllocSupportEntry, FreeSupportEntry };
+
+
+void* PR_CALLBACK
+ConflictSet::AllocSupportTable(void* aPool, PRSize aSize)
+{
+    return new char[aSize];
+}
+
+void PR_CALLBACK
+ConflictSet::FreeSupportTable(void* aPool, void* aItem)
+{
+    delete[] NS_STATIC_CAST(char*, aItem);
+}
+
+PLHashEntry* PR_CALLBACK
+ConflictSet::AllocSupportEntry(void* aPool, const void* aKey)
+{
+    SupportEntry* entry = new SupportEntry();
+    if (! entry)
+        return nsnull;
+
+    const MemoryElement* element = NS_STATIC_CAST(const MemoryElement*, aKey);
+    entry->mElement = element->Clone();
+
+    return NS_REINTERPRET_CAST(PLHashEntry*, entry);
+}
+
+void PR_CALLBACK
+ConflictSet::FreeSupportEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag)
+{
+    SupportEntry* entry = NS_REINTERPRET_CAST(SupportEntry*, aHashEntry);
+    delete entry;
+}
+
 
 ConflictSet::ConflictSet()
     : mMatches(nsnull), mSupport(nsnull)
@@ -1385,48 +1332,26 @@ ConflictSet::~ConflictSet()
 nsresult
 ConflictSet::Init()
 {
-    static const size_t kBucketSizes[] = {
-        sizeof(MatchEntry),
-        sizeof(SupportEntry),
-        sizeof(ResourceEntry),
-        MatchSet::kEntrySize,
-        MatchSet::kIndexSize
-    };
-
-    static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
-
-    static const PRInt32 kNumResourceElements = 64;
-
-    static const PRInt32 kInitialSize =
-        (NS_SIZE_IN_HEAP(sizeof(MatchEntry)) +
-         NS_SIZE_IN_HEAP(sizeof(SupportEntry)) +
-         NS_SIZE_IN_HEAP(sizeof(ResourceEntry))) * kNumResourceElements +
-        (NS_SIZE_IN_HEAP(MatchSet::kEntrySize) +
-         NS_SIZE_IN_HEAP(MatchSet::kIndexSize)) * kNumResourceElements;
-
-    mPool.Init("ConflictSet", kBucketSizes, kNumBuckets, kInitialSize);
-
-    mMatches = PL_NewHashTable(kNumResourceElements /* XXXwaterson we need a way to give a hint? */,
+    mMatches = PL_NewHashTable(16 /* XXXwaterson we need a way to give a hint? */,
                                Key::HashKey,
                                Key::CompareKeys,
                                PL_CompareValues,
                                &gMatchAllocOps,
-                               &mPool);
+                               nsnull /* XXXwaterson use an arena */);
 
-    mSupport = PL_NewHashTable(kNumResourceElements, /* XXXwaterson need hint */
+    mSupport = PL_NewHashTable(16, /* XXXwaterson need hint */
                                HashMemoryElement,
                                CompareMemoryElements,
                                PL_CompareValues,
-                               &gSupportAllocOps,
-                               &mPool);
+                               &gBindingAllocOps,
+                               nsnull /* XXXwaterson use an arena */);
 
-    mResources = PL_NewHashTable(kNumResourceElements /* XXX arbitrary */,
+    mResources = PL_NewHashTable(16 /* XXX arbitrary */,
                                  HashPointer,
                                  PL_CompareValues,
                                  PL_CompareValues,
                                  &gResourceAllocOps,
-                                 &mPool);
-
+                                 nsnull /* XXX use an arena! */);
     return NS_OK;
 }
 
@@ -1475,7 +1400,7 @@ ConflictSet::Add(Match* aMatch, PRBool* aDidAddKey)
         }
 
         if (! set->Contains(*aMatch)) {
-            set->Add(mPool, aMatch);
+            set->Add(aMatch);
             *aDidAddKey = PR_TRUE;
         }
     }
@@ -1508,7 +1433,7 @@ ConflictSet::Add(Match* aMatch, PRBool* aDidAddKey)
             }
 
             if (! set->Contains(*aMatch)) {
-                set->Add(mPool, aMatch);
+                set->Add(aMatch);
             }
         }
     }
@@ -1546,7 +1471,7 @@ ConflictSet::Add(Match* aMatch, PRBool* aDidAddKey)
                 set = &entry->mMatches;
             }
 
-            set->Add(mPool, aMatch);
+            set->Add(aMatch);
         }
     }
 
@@ -1589,7 +1514,7 @@ ConflictSet::Remove(const MemoryElement& aMemoryElement,
         // instantiation we're to remove.
         for (MatchSet::Iterator match = set->First(); match != set->Last(); ++match) {
             // Note the retraction
-            aRetractedMatches.Add(mPool, match.operator->());
+            aRetractedMatches.Add(match.operator->());
         }
 
         // We'll eagerly remove it from the table.
@@ -1620,7 +1545,7 @@ ConflictSet::Remove(const MemoryElement& aMemoryElement,
                     set->FindMatchWithHighestPriority();
 
                 if (newmatch)
-                    aNewMatches.Add(mPool, newmatch);
+                    aNewMatches.Add(newmatch);
 
                 break;
             }
@@ -1675,11 +1600,11 @@ PLHashAllocOps ConflictSet::gResourceAllocOps = {
 class InstantiationNode : public ReteNode
 {
 public:
-    InstantiationNode(ConflictSet& aConflictSet,
-                      Rule* aRule,
+    InstantiationNode(Rule* aRule,
+                      ConflictSet* aConflictSet,
                       nsIRDFDataSource* aDataSource)
-        : mConflictSet(aConflictSet),
-          mRule(aRule) {}
+        : mRule(aRule),
+          mConflictSet(aConflictSet) {}
 
     ~InstantiationNode();
 
@@ -1688,7 +1613,7 @@ public:
 
 protected:
     Rule*        mRule;
-    ConflictSet& mConflictSet;
+    ConflictSet* mConflictSet;
 };
 
 
@@ -1712,12 +1637,12 @@ InstantiationNode::Propogate(const InstantiationSet& aInstantiations, void* aClo
 
         mRule->ComputeBindings(bindings);
 
-        Match* match = new (mConflictSet.GetPool()) Match(mRule, *inst, bindings);
+        Match* match = new Match(mRule, *inst, bindings);
         if (! match)
             return NS_ERROR_OUT_OF_MEMORY;
 
         PRBool didAddKey;
-        mConflictSet.Add(match, &didAddKey);
+        mConflictSet->Add(match, &didAddKey);
 
         match->Release();
 
@@ -1761,7 +1686,8 @@ public:
     /**
      *
      */
-    virtual void Retract(nsIRDFResource* aSource,
+    virtual void Retract(ConflictSet& aConflictSet,
+                         nsIRDFResource* aSource,
                          nsIRDFResource* aProperty,
                          nsIRDFNode* aTarget,
                          MatchSet& aFirings,
@@ -1795,7 +1721,6 @@ public:
 
 protected:
     PLHashTable* mMap;
-    nsFixedSizeAllocator mPool;
 
     struct Entry {
         PLHashEntry mHashEntry;
@@ -1814,24 +1739,14 @@ protected:
 
     static PLHashEntry* PR_CALLBACK
     AllocEntry(void* aPool, const void* aKey) {
-        nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
-
-        Entry* entry = NS_STATIC_CAST(Entry*, pool->Alloc(sizeof(Entry)));
-        if (! entry)
-            return nsnull;
-
+        Entry* entry = new Entry;
         return NS_REINTERPRET_CAST(PLHashEntry*, entry); }
 
     static void PR_CALLBACK
     FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag) {
-        if (aFlag == HT_FREE_ENTRY) {
-            Entry* entry = NS_REINTERPRET_CAST(Entry*, aEntry);
-
-            if (entry->mMatch)
-                entry->mMatch->Release();
-
-            nsFixedSizeAllocator::Free(entry, sizeof(Entry));
-        } }
+        Entry* entry = NS_REINTERPRET_CAST(Entry*, aEntry);
+        entry->mMatch->Release();
+        delete entry; }
 
     static PLHashNumber
     HashPointer(const void* aKey) {
@@ -1843,22 +1758,12 @@ PLHashAllocOps ContentSupportMap::gAllocOps = {
 
 ContentSupportMap::ContentSupportMap()
 {
-    static const size_t kBucketSizes[] = { sizeof(Entry) };
-    static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
-
-    static const kInitialEntries = 16; // XXX arbitrary
-
-    static const kInitialSize =
-        NS_SIZE_IN_HEAP(sizeof(Entry)) * kInitialEntries;
-
-    mPool.Init("ContentSupportMap", kBucketSizes, kNumBuckets, kInitialSize);
-
-    mMap = PL_NewHashTable(kInitialEntries,
+    mMap = PL_NewHashTable(16 /* XXX arbitrary */,
                            HashPointer,
                            PL_CompareValues,
                            PL_CompareValues,
                            &gAllocOps,
-                           &mPool);
+                           nsnull /* XXX use an arena! */);
 }
 
 
@@ -2201,30 +2106,22 @@ protected:
     {
     public:
         ContentIdTestNode(InnerNode* aParent,
-                          ConflictSet& aConflictSet,
                           nsIXULDocument* aDocument,
                           nsIContent* aRoot,
                           PRInt32 aContentVariable,
                           PRInt32 aIdVariable)
             : TestNode(aParent),
-              mConflictSet(aConflictSet),
               mDocument(aDocument),
               mRoot(aRoot),
               mContentVariable(aContentVariable),
               mIdVariable(aIdVariable) {}
 
-        virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const;
+        virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
 
         virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
 
         class Element : public MemoryElement {
         public:
-            static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-                return aAllocator.Alloc(aSize); }
-
-            static void operator delete(void* aPtr, size_t aSize) {
-                nsFixedSizeAllocator::Free(aPtr, aSize); }
-
             Element(nsIContent* aContent)
                 : mContent(aContent) {
                 MOZ_COUNT_CTOR(ContentIdTestNode::Element); }
@@ -2244,16 +2141,14 @@ protected:
                 }
                 return PR_FALSE; }
 
-        virtual MemoryElement* Clone(void* aPool) const {
-            return new (*NS_STATIC_CAST(nsFixedSizeAllocator*, aPool))
-                Element(mContent); }
+        virtual MemoryElement* Clone() const {
+            return new Element(mContent); }
 
         protected:
             nsCOMPtr<nsIContent> mContent;
         };
 
     protected:
-        ConflictSet& mConflictSet;
         nsIXULDocument* mDocument; // [WEAK] because we know the document will outlive us
         nsCOMPtr<nsIContent> mRoot;
         PRInt32 mContentVariable;
@@ -2297,13 +2192,11 @@ class RDFPropertyTestNode : public RDFTestNode
 public:
     // Both source and target unbound (?source ^property ?target)
     RDFPropertyTestNode(InnerNode* aParent,
-                        ConflictSet& aConflictSet,
                         nsIRDFDataSource* aDataSource,
                         PRInt32 aSourceVariable,
                         nsIRDFResource* aProperty,
                         PRInt32 aTargetVariable)
         : RDFTestNode(aParent),
-          mConflictSet(aConflictSet),
           mDataSource(aDataSource),
           mSourceVariable(aSourceVariable),
           mSource(nsnull),
@@ -2313,13 +2206,11 @@ public:
 
     // Source bound, target unbound (source ^property ?target)
     RDFPropertyTestNode(InnerNode* aParent,
-                        ConflictSet& aConflictSet,
                         nsIRDFDataSource* aDataSource,
                         nsIRDFResource* aSource,
                         nsIRDFResource* aProperty,
                         PRInt32 aTargetVariable)
         : RDFTestNode(aParent),
-          mConflictSet(aConflictSet),
           mDataSource(aDataSource),
           mSourceVariable(0),
           mSource(aSource),
@@ -2329,13 +2220,11 @@ public:
 
     // Source unbound, target bound (?source ^property target)
     RDFPropertyTestNode(InnerNode* aParent,
-                        ConflictSet& aConflictSet,
                         nsIRDFDataSource* aDataSource,
                         PRInt32 aSourceVariable,
                         nsIRDFResource* aProperty,
                         nsIRDFNode* aTarget)
         : RDFTestNode(aParent),
-          mConflictSet(aConflictSet),
           mDataSource(aDataSource),
           mSourceVariable(aSourceVariable),
           mSource(nsnull),
@@ -2343,7 +2232,7 @@ public:
           mTargetVariable(0),
           mTarget(aTarget) {}
 
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
 
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
 
@@ -2354,7 +2243,8 @@ public:
                  Instantiation& aInitialBindings) const;
 
     virtual void
-    Retract(nsIRDFResource* aSource,
+    Retract(ConflictSet& aConflictSet,
+            nsIRDFResource* aSource,
             nsIRDFResource* aProperty,
             nsIRDFNode* aTarget,
             MatchSet& aFirings,
@@ -2363,12 +2253,6 @@ public:
 
     class Element : public MemoryElement {
     public:
-        static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-            return aAllocator.Alloc(aSize); }
-
-        static void operator delete(void* aPtr, size_t aSize) {
-            nsFixedSizeAllocator::Free(aPtr, aSize); }
-
         Element(nsIRDFResource* aSource,
                 nsIRDFResource* aProperty,
                 nsIRDFNode* aTarget)
@@ -2396,9 +2280,8 @@ public:
             }
             return PR_FALSE; }
 
-        virtual MemoryElement* Clone(void* aPool) const {
-            return new (*NS_STATIC_CAST(nsFixedSizeAllocator*, aPool))
-                Element(mSource, mProperty, mTarget); }
+        virtual MemoryElement* Clone() const {
+            return new Element(mSource, mProperty, mTarget); }
 
     protected:
         nsCOMPtr<nsIRDFResource> mSource;
@@ -2407,7 +2290,6 @@ public:
     };
 
 protected:
-    ConflictSet&             mConflictSet;
     nsCOMPtr<nsIRDFDataSource> mDataSource;
     PRInt32                  mSourceVariable;
     nsCOMPtr<nsIRDFResource> mSource;
@@ -2418,7 +2300,7 @@ protected:
 
 
 nsresult
-RDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
+RDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
 {
     nsresult rv;
 
@@ -2458,15 +2340,9 @@ RDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations, voi
 
             if (hasAssertion) {
                 // it's consistent.
-                Element* element = new (mConflictSet.GetPool())
-                    Element(VALUE_TO_IRDFRESOURCE(sourceValue),
-                            mProperty,
-                            VALUE_TO_IRDFNODE(targetValue));
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                inst->AddSupportingElement(element);
+                inst->AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(sourceValue),
+                                                       mProperty,
+                                                       VALUE_TO_IRDFNODE(targetValue)));
             }
             else {
                 // it's inconsistent. remove it.
@@ -2532,17 +2408,9 @@ RDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations, voi
                 // introduced. Ownership will be transferred to the
                 Instantiation newinst = *inst;
                 newinst.AddBinding(variable, value);
-
-                Element* element = new (mConflictSet.GetPool())
-                    Element(VALUE_TO_IRDFRESOURCE(sourceValue),
-                            mProperty,
-                            VALUE_TO_IRDFNODE(targetValue));
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                newinst.AddSupportingElement(element);
-
+                newinst.AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(sourceValue),
+                                                         mProperty,
+                                                         VALUE_TO_IRDFNODE(targetValue)));
                 aInstantiations.Insert(inst, newinst);
             }
 
@@ -2602,14 +2470,15 @@ RDFPropertyTestNode::CanPropogate(nsIRDFResource* aSource,
 }
 
 void
-RDFPropertyTestNode::Retract(nsIRDFResource* aSource,
+RDFPropertyTestNode::Retract(ConflictSet& aConflictSet,
+                             nsIRDFResource* aSource,
                              nsIRDFResource* aProperty,
                              nsIRDFNode* aTarget,
                              MatchSet& aFirings,
                              MatchSet& aRetractions) const
 {
     if (aProperty == mProperty.get()) {
-        mConflictSet.Remove(Element(aSource, aProperty, aTarget), aFirings, aRetractions);
+        aConflictSet.Remove(Element(aSource, aProperty, aTarget), aFirings, aRetractions);
     }
 }
 
@@ -2620,19 +2489,17 @@ class RDFContainerMemberTestNode : public RDFTestNode
 {
 public:
     RDFContainerMemberTestNode(InnerNode* aParent,
-                               ConflictSet& aConflictSet,
                                nsIRDFDataSource* aDataSource,
                                const PropertySet& aMembershipProperties,
                                PRInt32 aContainerVariable,
                                PRInt32 aMemberVariable)
         : RDFTestNode(aParent),
-          mConflictSet(aConflictSet),
           mDataSource(aDataSource),
           mMembershipProperties(aMembershipProperties),
           mContainerVariable(aContainerVariable),
           mMemberVariable(aMemberVariable) {}
 
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
 
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
 
@@ -2643,7 +2510,8 @@ public:
                  Instantiation& aInitialBindings) const;
 
     virtual void
-    Retract(nsIRDFResource* aSource,
+    Retract(ConflictSet& aConflictSet,
+            nsIRDFResource* aSource,
             nsIRDFResource* aProperty,
             nsIRDFNode* aTarget,
             MatchSet& aFirings,
@@ -2651,12 +2519,6 @@ public:
 
     class Element : public MemoryElement {
     public:
-        static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-            return aAllocator.Alloc(aSize); }
-
-        static void operator delete(void* aPtr, size_t aSize) {
-            nsFixedSizeAllocator::Free(aPtr, aSize); }
-
         Element(nsIRDFResource* aContainer,
                 nsIRDFNode* aMember)
             : mContainer(aContainer),
@@ -2679,9 +2541,8 @@ public:
             }
             return PR_FALSE; }
 
-        virtual MemoryElement* Clone(void* aPool) const {
-            return new (*NS_STATIC_CAST(nsFixedSizeAllocator*, aPool))
-                Element(mContainer, mMember); }
+        virtual MemoryElement* Clone() const {
+            return new Element(mContainer, mMember); }
 
     protected:
         nsCOMPtr<nsIRDFResource> mContainer;
@@ -2689,7 +2550,6 @@ public:
     };
 
 protected:
-    ConflictSet& mConflictSet;
     nsCOMPtr<nsIRDFDataSource> mDataSource;
     const PropertySet& mMembershipProperties;
     PRInt32 mContainerVariable;
@@ -2697,7 +2557,7 @@ protected:
 };
 
 nsresult
-RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
+RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
 {
     // XXX Uh, factor me, please!
     nsresult rv;
@@ -2777,14 +2637,8 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
 
             if (isconsistent) {
                 // Add a memory element to our set-of-support.
-                Element* element = new (mConflictSet.GetPool())
-                    Element(VALUE_TO_IRDFRESOURCE(containerValue),
-                            VALUE_TO_IRDFNODE(memberValue));
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                inst->AddSupportingElement(element);
+                inst->AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(containerValue),
+                                                       VALUE_TO_IRDFNODE(memberValue)));
             }
             else {
                 // it's inconsistent. remove it.
@@ -2821,15 +2675,8 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
 
                 Instantiation newinst = *inst;
                 newinst.AddBinding(mMemberVariable, Value(node.get()));
-
-                Element* element = new (mConflictSet.GetPool())
-                    Element(VALUE_TO_IRDFRESOURCE(containerValue), node);
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                newinst.AddSupportingElement(element);
-
+                newinst.AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(containerValue),
+                                                         node));
                 aInstantiations.Insert(inst, newinst);
             }
         }
@@ -2902,15 +2749,7 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
                         // Add a new instantiation
                         Instantiation newinst = *inst;
                         newinst.AddBinding(mContainerVariable, Value(source.get()));
-
-                        Element* element = new (mConflictSet.GetPool())
-                            Element(source, VALUE_TO_IRDFNODE(memberValue));
-
-                        if (! element)
-                            return NS_ERROR_OUT_OF_MEMORY;
-
-                        newinst.AddSupportingElement(element);
-
+                        newinst.AddSupportingElement(new Element(source, VALUE_TO_IRDFNODE(memberValue)));
                         aInstantiations.Insert(inst, newinst);
                     }
                 }
@@ -2975,24 +2814,14 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
                     // introduced. Ownership will be transferred to the
                     Instantiation newinst = *inst;
                     newinst.AddBinding(variable, value);
-
-                    Element* element;
                     if (hasContainerBinding) {
-                        element = new (mConflictSet.GetPool())
-                            Element(VALUE_TO_IRDFRESOURCE(containerValue),
-                                    VALUE_TO_IRDFNODE(value));
+                        newinst.AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(containerValue),
+                                                                 VALUE_TO_IRDFNODE(value)));
                     }
                     else {
-                        element = new (mConflictSet.GetPool())
-                            Element(VALUE_TO_IRDFRESOURCE(value),
-                                    VALUE_TO_IRDFNODE(memberValue));
+                        newinst.AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(value),
+                                                                 VALUE_TO_IRDFNODE(memberValue)));
                     }
-
-                    if (! element)
-                        return NS_ERROR_OUT_OF_MEMORY;
-
-                    newinst.AddSupportingElement(element);
-
                     aInstantiations.Insert(inst, newinst);
                 }
             }
@@ -3054,7 +2883,8 @@ RDFContainerMemberTestNode::CanPropogate(nsIRDFResource* aSource,
 }
 
 void
-RDFContainerMemberTestNode::Retract(nsIRDFResource* aSource,
+RDFContainerMemberTestNode::Retract(ConflictSet& aConflictSet,
+                                    nsIRDFResource* aSource,
                                     nsIRDFResource* aProperty,
                                     nsIRDFNode* aTarget,
                                     MatchSet& aFirings,
@@ -3072,7 +2902,7 @@ RDFContainerMemberTestNode::Retract(nsIRDFResource* aSource,
     }
 
     if (canretract) {
-        mConflictSet.Remove(Element(aSource, aTarget), aFirings, aRetractions);
+        aConflictSet.Remove(Element(aSource, aTarget), aFirings, aRetractions);
     }
 }
 
@@ -3084,21 +2914,19 @@ public:
     enum Test { eFalse, eTrue, eDontCare };
 
     RDFContainerInstanceTestNode(InnerNode* aParent,
-                                 ConflictSet& aConflictSet,
                                  nsIRDFDataSource* aDataSource,
                                  const PropertySet& aMembershipProperties,
                                  PRInt32 aContainerVariable,
                                  Test aContainer,
                                  Test aEmpty)
         : RDFTestNode(aParent),
-          mConflictSet(aConflictSet),
           mDataSource(aDataSource),
           mMembershipProperties(aMembershipProperties),
           mContainerVariable(aContainerVariable),
           mContainer(aContainer),
           mEmpty(aEmpty) {}
 
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
 
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
 
@@ -3109,7 +2937,8 @@ public:
                  Instantiation& aInitialBindings) const;
 
     virtual void
-    Retract(nsIRDFResource* aSource,
+    Retract(ConflictSet& aConflictSet,
+            nsIRDFResource* aSource,
             nsIRDFResource* aProperty,
             nsIRDFNode* aTarget,
             MatchSet& aFirings,
@@ -3118,12 +2947,6 @@ public:
 
     class Element : public MemoryElement {
     public:
-        static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-            return aAllocator.Alloc(aSize); }
-
-        static void operator delete(void* aPtr, size_t aSize) {
-            nsFixedSizeAllocator::Free(aPtr, aSize); }
-
         Element(nsIRDFResource* aContainer,
                 Test aContainerTest,
                 Test aEmptyTest)
@@ -3151,9 +2974,8 @@ public:
             }
             return PR_FALSE; }
 
-        virtual MemoryElement* Clone(void* aPool) const {
-            return new (*NS_STATIC_CAST(nsFixedSizeAllocator*, aPool))
-                Element(mContainer, mContainerTest, mEmptyTest); }
+        virtual MemoryElement* Clone() const {
+            return new Element(mContainer, mContainerTest, mEmptyTest); }
 
     protected:
         nsCOMPtr<nsIRDFResource> mContainer;
@@ -3162,7 +2984,6 @@ public:
     };
 
 protected:
-    ConflictSet& mConflictSet;
     nsCOMPtr<nsIRDFDataSource> mDataSource;
     const PropertySet& mMembershipProperties;
     PRInt32 mContainerVariable;
@@ -3171,7 +2992,7 @@ protected:
 };
 
 nsresult
-RDFContainerInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
+RDFContainerInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
 {
     nsresult rv;
 
@@ -3228,14 +3049,8 @@ RDFContainerInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiat
             }
 
             if (empty == mEmpty) {
-                Element* element = new (mConflictSet.GetPool())
-                    Element(VALUE_TO_IRDFRESOURCE(value),
-                            mContainer, mEmpty);
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                inst->AddSupportingElement(element);
+                inst->AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(value),
+                                                       mContainer, mEmpty));
             }
             else {
                 aInstantiations.Erase(inst--);
@@ -3285,14 +3100,8 @@ RDFContainerInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiat
             }
 
             if (container == mContainer) {
-                Element* element = new (mConflictSet.GetPool())
-                    Element(VALUE_TO_IRDFRESOURCE(value), mContainer, mEmpty);
-
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                inst->AddSupportingElement(element);
+                inst->AddSupportingElement(new Element(VALUE_TO_IRDFRESOURCE(value),
+                                                       mContainer, mEmpty));
             }
             else {
                 aInstantiations.Erase(inst--);
@@ -3341,7 +3150,8 @@ RDFContainerInstanceTestNode::CanPropogate(nsIRDFResource* aSource,
 }
 
 void
-RDFContainerInstanceTestNode::Retract(nsIRDFResource* aSource,
+RDFContainerInstanceTestNode::Retract(ConflictSet& aConflictSet,
+                                      nsIRDFResource* aSource,
                                       nsIRDFResource* aProperty,
                                       nsIRDFNode* aTarget,
                                       MatchSet& aFirings,
@@ -3349,7 +3159,7 @@ RDFContainerInstanceTestNode::Retract(nsIRDFResource* aSource,
 {
     // XXXwaterson oof. complicated. figure this out.
     if (0) {
-        mConflictSet.Remove(Element(aSource, mContainer, mEmpty), aFirings, aRetractions);
+        aConflictSet.Remove(Element(aSource, mContainer, mEmpty), aFirings, aRetractions);
     }
 }
 
@@ -3359,26 +3169,23 @@ class ContentTagTestNode : public TestNode
 {
 public:
     ContentTagTestNode(InnerNode* aParent,
-                       ConflictSet& aConflictSet,
                        PRInt32 aContentVariable,
                        nsIAtom* aTag)
         : TestNode(aParent),
-          mConflictSet(aConflictSet),
           mContentVariable(aContentVariable),
           mTag(aTag) {}
 
-    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const;
+    virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations) const;
 
     virtual nsresult GetAncestorVariables(VariableSet& aVariables) const;
 
 protected:
-    ConflictSet& mConflictSet;
     PRInt32 mContentVariable;
     nsCOMPtr<nsIAtom> mTag;
 };
 
 nsresult
-ContentTagTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
+ContentTagTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
 {
     nsresult rv;
 
@@ -3930,7 +3737,7 @@ nsXULTemplateBuilder::Propogate(nsIRDFResource* aSource,
                 InstantiationSet instantiations;
                 instantiations.Append(seed);
 
-                rv = rdftestnode->Constrain(instantiations, &mConflictSet);
+                rv = rdftestnode->Constrain(instantiations);
                 if (NS_FAILED(rv)) return rv;
 
                 if (! instantiations.Empty()) {
@@ -4076,7 +3883,7 @@ nsXULTemplateBuilder::Retract(nsIRDFResource* aSource,
 
         MatchSet firings;
         MatchSet retractions;
-        rdftestnode->Retract(aSource, aProperty, aTarget, firings, retractions);
+        rdftestnode->Retract(mConflictSet, aSource, aProperty, aTarget, firings, retractions);
 
         {
             MatchSet::Iterator last = retractions.Last();
@@ -5816,7 +5623,7 @@ nsXULTemplateBuilder::Log(const char* aOperation,
 //----------------------------------------------------------------------
 
 nsresult
-nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void* aClosure) const
+nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& aInstantiations) const
 {
     nsresult rv;
 
@@ -5838,13 +5645,7 @@ nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& 
             gXULUtils->GetElementRefResource(VALUE_TO_ICONTENT(contentValue), getter_AddRefs(resource));
             
             if (resource.get() == VALUE_TO_IRDFRESOURCE(idValue)) {
-                Element* element = new (mConflictSet.GetPool())
-                    Element(VALUE_TO_ICONTENT(contentValue));
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                inst->AddSupportingElement(element);
+                inst->AddSupportingElement(new Element(VALUE_TO_ICONTENT(contentValue)));
             }
             else {
                 aInstantiations.Erase(inst--);
@@ -5859,15 +5660,7 @@ nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& 
             if (resource) {
                 Instantiation newinst = *inst;
                 newinst.AddBinding(mIdVariable, Value(resource.get()));
-
-                Element* element = new (mConflictSet.GetPool())
-                    Element(VALUE_TO_ICONTENT(contentValue));
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                newinst.AddSupportingElement(element);
-
+                newinst.AddSupportingElement(new Element(VALUE_TO_ICONTENT(contentValue)));
                 aInstantiations.Insert(inst, newinst);
             }
 
@@ -5888,20 +5681,13 @@ nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& 
 
             for (PRInt32 j = PRInt32(count) - 1; j >= 0; --j) {
                 nsISupports* isupports = elements->ElementAt(j);
-                nsCOMPtr<nsIContent> content = do_QueryInterface(isupports);
+                nsCOMPtr<nsIContent> element = do_QueryInterface(isupports);
                 NS_IF_RELEASE(isupports);
 
-                if (IsElementContainedBy(content, mRoot)) {
+                if (IsElementContainedBy(element, mRoot)) {
                     Instantiation newinst = *inst;
-                    newinst.AddBinding(mContentVariable, Value(content.get()));
-
-                    Element* element = new (mConflictSet.GetPool()) Element(content);
-
-                    if (! element)
-                        return NS_ERROR_OUT_OF_MEMORY;
-
-                    newinst.AddSupportingElement(element);
-
+                    newinst.AddBinding(mContentVariable, Value(element.get()));
+                    newinst.AddSupportingElement(new Element(element));
                     aInstantiations.Insert(inst, newinst);
                 }
             }
@@ -6013,7 +5799,6 @@ nsXULTemplateBuilder::InitializeRuleNetwork(InnerNode** aChildNode)
 
     ContentIdTestNode* idnode =
         new ContentIdTestNode(mRules.GetRoot(),
-                              mConflictSet,
                               xuldoc,
                               mRoot,
                               mContentVar,
@@ -6028,7 +5813,6 @@ nsXULTemplateBuilder::InitializeRuleNetwork(InnerNode** aChildNode)
     // Create (?container ^member ?member)
     RDFContainerMemberTestNode* membernode =
         new RDFContainerMemberTestNode(idnode,
-                                       mConflictSet,
                                        mDB,
                                        mContainmentProperties,
                                        mContainerVar,
@@ -6235,7 +6019,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
             // JoinNode in here somewhere.
             nsCOMPtr<nsIAtom> tag = dont_AddRef(NS_NewAtom(value));
 
-            testnode = new ContentTagTestNode(aParentNode, mConflictSet, mContentVar, tag);
+            testnode = new ContentTagTestNode(aParentNode, mContentVar, tag);
             if (! testnode)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -6278,7 +6062,6 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
             }
 
             testnode = new RDFContainerInstanceTestNode(aParentNode,
-                                                        mConflictSet,
                                                         mDB,
                                                         mContainmentProperties,
                                                         mMemberVar,
@@ -6313,7 +6096,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
                 target = do_QueryInterface(literal);
             }
 
-            testnode = new RDFPropertyTestNode(aParentNode, mConflictSet, mDB, mMemberVar, property, target);
+            testnode = new RDFPropertyTestNode(aParentNode, mDB, mMemberVar, property, target);
             if (! testnode)
                 return NS_ERROR_OUT_OF_MEMORY;
 
@@ -6335,7 +6118,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
 
     // The InstantiationNode owns the rule now.
     InstantiationNode* instnode =
-        new InstantiationNode(mConflictSet, rule, mDB);
+        new InstantiationNode(rule, &mConflictSet, mDB);
 
     if (! instnode)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -6390,7 +6173,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRule,
 
     // And now add the instantiation node: it owns the rule now.
     InstantiationNode* instnode =
-        new InstantiationNode(mConflictSet, rule, mDB);
+        new InstantiationNode(rule, &mConflictSet, mDB);
 
     if (! instnode)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -6580,13 +6363,13 @@ nsXULTemplateBuilder::CompileTripleCondition(Rule* aRule,
     RDFPropertyTestNode* testnode = nsnull;
 
     if (svar && ovar) {
-        testnode = new RDFPropertyTestNode(aParentNode, mConflictSet, mDB, svar, pres, ovar);
+        testnode = new RDFPropertyTestNode(aParentNode, mDB, svar, pres, ovar);
     }
     else if (svar) {
-        testnode = new RDFPropertyTestNode(aParentNode, mConflictSet, mDB, svar, pres, onode);
+        testnode = new RDFPropertyTestNode(aParentNode, mDB, svar, pres, onode);
     }
     else if (ovar) {
-        testnode = new RDFPropertyTestNode(aParentNode, mConflictSet, mDB, sres, pres, ovar);
+        testnode = new RDFPropertyTestNode(aParentNode, mDB, sres, pres, ovar);
     }
     else {
         PR_LOG(gLog, PR_LOG_ALWAYS,
@@ -6652,7 +6435,6 @@ nsXULTemplateBuilder::CompileMemberCondition(Rule* aRule,
 
     TestNode* testnode =
         new RDFContainerMemberTestNode(aParentNode,
-                                       mConflictSet,
                                        mDB,
                                        mContainmentProperties,
                                        containervar,
@@ -6706,7 +6488,6 @@ nsXULTemplateBuilder::CompileContentCondition(Rule* aRule,
     // <content id="?x"/> condition.
     TestNode* testnode = 
         new ContentIdTestNode(aParentNode,
-                              mConflictSet,
                               mDocument,
                               mRoot,
                               mContentVar, // XXX see above
