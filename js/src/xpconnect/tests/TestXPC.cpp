@@ -659,7 +659,7 @@ static void TestCategoryManmager()
     printf("\n");    
 
     nsresult rv;
-    NS_WITH_SERVICE(nsICategoryManager, catman, "mozilla.categorymanager.1", &rv);
+    NS_WITH_SERVICE(nsICategoryManager, catman, "@mozilla.org/categorymanager;1", &rv);
     if(NS_SUCCEEDED(rv) && catman)
     {
         printf("got category manager\n");    

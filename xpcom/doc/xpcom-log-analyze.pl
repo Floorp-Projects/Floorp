@@ -9,7 +9,7 @@
 #	./mozilla
 #	<quit>
 #
-# To get registry (used to figure out progid mappings)
+# To get registry (used to figure out contractid mappings)
 #	./regExport component.reg > registry.txt
 
 # Usage:
@@ -17,7 +17,7 @@
 # a) To get simple output
 #    cat xpcom.log | perl xpcom-log-analyze.pl > xpcom-log.html
 #
-# b) To get all possible cid->progid mappings filled in
+# b) To get all possible cid->contractid mappings filled in
 #    cat xpcom.log registry.txt | perl xpcom-log-analyze.pl > xpcom-log.html
 #
 #
@@ -27,23 +27,23 @@
 while (<>)
 {
     chomp;
-    if ( /ProgIDToClassID.*\}/ )
+    if ( /ContractIDToClassID.*\}/ )
     {
-        # Passed progid to cid mapping. Add progid to cid mapping
+        # Passed contractid to cid mapping. Add contractid to cid mapping
         $cid = GetCID();
-        $progid = GetProgID();
-        $progid_map{$cid} = $progid;
-        $progid_passed{$progid}++;
-        $nprogid_passed++;
+        $contractid = GetContractID();
+        $contractid_map{$cid} = $contractid;
+        $contractid_passed{$contractid}++;
+        $ncontractid_passed++;
         next;
     }
 
-    if ( /ProgIDToClassID.*FAILED/ )
+    if ( /ContractIDToClassID.*FAILED/ )
     {
-        # Failed progid. Collect it.
-        $progid = GetProgID();
-        $progid_failed{$progid}++;
-        $nprogid_failed++;
+        # Failed contractid. Collect it.
+        $contractid = GetContractID();
+        $contractid_failed{$contractid}++;
+        $ncontractid_failed++;
         next;
     }
 
@@ -74,26 +74,26 @@ while (<>)
 
     if ( / classID -  \{/ )
     {
-        # this is from the output of registry. Try to update progid_map
+        # this is from the output of registry. Try to update contractid_map
         $cid = GetCID();
-        # Get the next progid or classname line until a empty new line
-        $_ = <STDIN> until (/ProgID|ClassName/ || length == 1);
+        # Get the next contractid or classname line until a empty new line
+        $_ = <STDIN> until (/ContractID|ClassName/ || length == 1);
         chomp;
-        $progid = $_;
-        $progid =~ s/^.*= //;
-        $progid_map{$cid} = $progid;
+        $contractid = $_;
+        $contractid =~ s/^.*= //;
+        $contractid_map{$cid} = $contractid;
     }
 }
 
 PrintHTMLResults();
 
 
-sub GetProgID() {
+sub GetContractID() {
     # Get a proid from a line
-    my($progid) = $_;
-    $progid =~ s/^.*\((.*)\).*$/$1/;
-#    print "Got Progid: $progid\n";
-    return $progid;
+    my($contractid) = $_;
+    $contractid =~ s/^.*\((.*)\).*$/$1/;
+#    print "Got Progid: $contractid\n";
+    return $contractid;
 }
 
 sub GetCID() {
@@ -142,17 +142,17 @@ sub PrintHTMLResults()
     @sorted_key = SortKeyByValue(%objects);
     foreach $cid (@sorted_key)
     {
-        printf("%5d %s [%s]\n", $objects{$cid}, $cid, $progid_map{$cid});
+        printf("%5d %s [%s]\n", $objects{$cid}, $cid, $contractid_map{$cid});
     }
     print "</blockquote></pre>\n";
 
-# Passed progid calls
-    print "<H3>Succeeded ProgIDToClassID() : $nprogid_passed</H3>\n";
+# Passed contractid calls
+    print "<H3>Succeeded ContractIDToClassID() : $ncontractid_passed</H3>\n";
     print "<blockquote><pre>\n";
-    @sorted_key = SortKeyByValue(%progid_passed);
-    foreach $progid (@sorted_key)
+    @sorted_key = SortKeyByValue(%contractid_passed);
+    foreach $contractid (@sorted_key)
     {
-        printf("%5d %s\n", $progid_passed{$progid}, $progid);
+        printf("%5d %s\n", $contractid_passed{$contractid}, $contractid);
     }
     print "</blockquote></pre>\n";
 
@@ -168,17 +168,17 @@ sub PrintHTMLResults()
     @sorted_key = SortKeyByValue(%objects_failed);
     foreach $cid (@sorted_key)
     {
-        printf("%5d %s [%s]\n", $objects_failed{$cid}, $cid, $progid_map{$cid});
+        printf("%5d %s [%s]\n", $objects_failed{$cid}, $cid, $contractid_map{$cid});
     }
     print "</blockquote></pre>\n";
 
-# ProgIDToClassID() FAILED with a histogram
-    print "<H3>Failed ProgIDToClassID() : $nprogid_failed</H3>\n";
+# ContractIDToClassID() FAILED with a histogram
+    print "<H3>Failed ContractIDToClassID() : $ncontractid_failed</H3>\n";
     print "<blockquote><pre>\n";
-    @sorted_key = SortKeyByValue(%progid_failed);
-    foreach $progid (@sorted_key)
+    @sorted_key = SortKeyByValue(%contractid_failed);
+    foreach $contractid (@sorted_key)
     {
-        printf("%5d %s\n", $progid_failed{$progid}, $progid);
+        printf("%5d %s\n", $contractid_failed{$contractid}, $contractid);
     }
     print "</blockquote></pre>\n";
 

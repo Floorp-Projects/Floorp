@@ -830,7 +830,7 @@ pre_call_clean_up:
                 // Log the exception to the JS Console, so that users can do
                 // something with it.
                 nsCOMPtr<nsIConsoleService> consoleService
-                    (do_GetService("mozilla.consoleservice.1"));
+                    (do_GetService("@mozilla.org/consoleservice;1"));
                 if(nsnull != consoleService)
                 {
                     nsresult rv;

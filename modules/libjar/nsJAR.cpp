@@ -789,7 +789,7 @@ void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
   }
   
   // Report error in JS console
-  nsCOMPtr<nsIConsoleService> console(do_GetService("mozilla.consoleservice.1"));
+  nsCOMPtr<nsIConsoleService> console(do_GetService("@mozilla.org/consoleservice;1"));
   if (console)
   {
     PRUnichar* messageUni = message.ToNewUnicode();

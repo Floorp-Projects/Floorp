@@ -90,7 +90,7 @@ NS_IMETHODIMP macro_class::GetOpenWindowWithArgs(PRBool *aOpenWindowWithArgs) \
 NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation, const char *componentType) \
 { \
     nsresult rv; \
-    nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv); \
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("@mozilla.org/categorymanager;1", &rv); \
     if (NS_FAILED(rv)) return rv; \
     nsXPIDLCString prevEntry; \
     rv = catman->AddCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_pretty_name, macro_contractid, PR_TRUE, PR_TRUE, getter_Copies(prevEntry)); \
@@ -99,7 +99,7 @@ NS_METHOD macro_class::RegisterProc(nsIComponentManager *aCompMgr, nsIFile *aPat
 NS_METHOD macro_class::UnregisterProc(nsIComponentManager *aCompMgr, nsIFile *aPath, const char *registryLocation) \
 { \
     nsresult rv; \
-    nsCOMPtr<nsICategoryManager> catman = do_GetService("mozilla.categorymanager.1", &rv); \
+    nsCOMPtr<nsICategoryManager> catman = do_GetService("@mozilla.org/categorymanager;1", &rv); \
     if (NS_FAILED(rv)) return rv; \
     nsXPIDLCString prevEntry; \
     rv = catman->DeleteCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS, macro_contractid, PR_TRUE, getter_Copies(prevEntry)); \

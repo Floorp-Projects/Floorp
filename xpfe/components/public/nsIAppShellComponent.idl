@@ -54,7 +54,7 @@ class nsICmdLineService;
 |      adds functions specific to that component.                              |
 |   3. Register (using the Mozilla XPCOM component registration facilities)    |
 |      using a ContractID of the form:                                             |
-|       component://netscape/appshell/component/foo                            |
+|       @mozilla.org/appshell/component/foo;1                            |
 |      where "foo" is a component-specific identifier (which should match the  |
 |      component-specific interface name).                                     |
 |                                                                              |

@@ -60,7 +60,7 @@ XPC_MSG_DEF(NS_ERROR_XPC_CANT_CALL_WO_SCRIPTABLE        , "Can not use wrapper a
 XPC_MSG_DEF(NS_ERROR_XPC_CANT_CTOR_WO_SCRIPTABLE        , "Can not use wrapper as constuctor unless it implements nsIXPCScriptable")
 XPC_MSG_DEF(NS_ERROR_XPC_CI_RETURNED_FAILURE            , "ComponentManager::CreateInstance returned failure code:")
 XPC_MSG_DEF(NS_ERROR_XPC_GS_RETURNED_FAILURE            , "ServiceManager::GetService returned failure code:")
-XPC_MSG_DEF(NS_ERROR_XPC_BAD_CID                        , "Invalid ClassID or ProgID")
+XPC_MSG_DEF(NS_ERROR_XPC_BAD_CID                        , "Invalid ClassID or ContractID")
 XPC_MSG_DEF(NS_ERROR_XPC_BAD_IID                        , "Invalid InterfaceID")
 XPC_MSG_DEF(NS_ERROR_XPC_CANT_CREATE_WN                 , "Can not create wrapper around native interface")
 XPC_MSG_DEF(NS_ERROR_XPC_JS_THREW_EXCEPTION             , "JavaScript component threw exception")

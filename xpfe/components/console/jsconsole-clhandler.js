@@ -62,7 +62,7 @@ var jsConsoleHandlerModule = {
             'JS Console Commandline Handler component',
             JSCONSOLEHANDLER_CONTRACTID, fileSpec,
             location, true, true, type);
-        var catman = Components.classes["mozilla.categorymanager.1"]
+        var catman = Components.classes["@mozilla.org/categorymanager;1"]
             .getService(Components.interfaces.nsICategoryManager);
         catman.addCategoryEntry("command-line-argument-handlers", "jsconsole command line handler",
             JSCONSOLEHANDLER_CONTRACTID,
@@ -71,7 +71,7 @@ var jsConsoleHandlerModule = {
 
     unregisterSelf: function(compMgr, fileSpec, location) {
         compMgr.unregisterComponentSpec(JSCONSOLEHANDLER_CID, fileSpec);
-        var catman = Components.classes["mozilla.categorymanager.1"]
+        var catman = Components.classes["@mozilla.org/categorymanager;1"]
             .getService(Components.interfaces.nsICategoryManager);
         catman.deleteCategoryEntry("command-line-argument-handlers",
             JSCONSOLEHANDLER_CONTRACTID, true);

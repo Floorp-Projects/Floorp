@@ -2853,7 +2853,7 @@ nsHTMLDocument::GetSelection(nsAWritableString& aReturn)
   nsCOMPtr<nsISelectionPrivate> privSel(do_QueryInterface(domSelection));
 
   nsCOMPtr<nsIConsoleService> consoleService
-    (do_GetService("mozilla.consoleservice.1"));
+    (do_GetService("@mozilla.org/consoleservice;1"));
 
   if (consoleService) {
     consoleService->LogStringMessage(NS_LITERAL_STRING("Deprecated method document.getSelection() called.  Please use window.getSelection() instead.").get());

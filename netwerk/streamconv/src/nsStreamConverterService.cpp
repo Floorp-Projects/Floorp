@@ -101,7 +101,7 @@ nsStreamConverterService::Init() {
 // An edge in this case is comprised of a FROM and TO MIME type combination.
 // 
 // CONTRACTID format:
-// component://netscape/strmconv?from=text/html&to=text/plain
+// @mozilla.org/streamconv;1?from=text/html&to=text/plain
 // XXX curently we only handle a single from and to combo, we should repeat the 
 // XXX registration process for any series of from-to combos.
 // XXX can use nsTokenizer for this.
