@@ -42,6 +42,7 @@
 
 #include "nsICharsetAlias.h"
 #include "nslog.h"
+#undef fprintf
 
 NS_IMPL_LOG(nsPostScriptObjLog)
 #define PRINTF NS_LOG_PRINTF(nsPostScriptObjLog)
