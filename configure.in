@@ -1613,7 +1613,7 @@ AM_PATH_LIBIDL($LIBIDL_VERSION,,
   [echo libIDL $LIBIDL_VERSION or higher is required.]
   [echo Get yourself a RPM or source package from ftp://ftp.mozilla.org/]
   [echo before your tree is HOSED.]
-  [echo See http://www.rpi.edu/~veliaa/libIDL/ for more information.]
+  [echo See http://atv.ne.mediaone.net/libIDL/ for more information.]
   [AC_MSG_ERROR(libIDL not installed.)])
 fi
 
