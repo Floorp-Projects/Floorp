@@ -183,5 +183,5 @@
 <!ENTITY windowMenu.label                       "Window">
 <!ENTITY minimizeWindow.label                   "Réduire">
 <!ENTITY zoomWindow.label                       "Zoom">
-<!ENTITY minimizeWindow.accesskey               "M">
+<!ENTITY minimizeWindow.key                     "M">
 <!ENTITY bringAllToFront.label                  "Ramener tout à l'avant-plan">

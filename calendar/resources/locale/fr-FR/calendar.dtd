@@ -494,3 +494,10 @@
 <!ENTITY mainWindow.titlemodifier "&brandFullName;">
 <!-- LOCALIZATION NOTE (mainWindow.titlemodifiermenuseparator): DONT_TRANSLATE -->
 <!ENTITY mainWindow.titlemodifiermenuseparator " - ">
+
+<!-- Temporary, until brand.dtd works again. bug 272643 -->
+<!ENTITY  lang.version          "1.7a">
+<!ENTITY  brandShortName        "Sunbird">
+<!ENTITY  brandFullName         "Mozilla Sunbird">
+<!ENTITY  vendorShortName       "Mozilla">
+<!ENTITY  releaseURL            "http://www.mozilla.org/projects/calendar">
