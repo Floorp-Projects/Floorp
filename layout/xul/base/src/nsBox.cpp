@@ -67,8 +67,9 @@
 static PRInt32 coelesced = 0;
 #endif
 
+#ifdef DEBUG_LAYOUT
 PRInt32 gIndent = 0;
-PRInt32 gLayout = 0;
+#endif
 
 #ifdef DEBUG_LAYOUT
 void
