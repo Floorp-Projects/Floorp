@@ -242,7 +242,7 @@ nsDOMEvent::GetCancelable(PRBool* aCancelable)
 NS_IMETHODIMP
 nsDOMEvent::GetTimeStamp(PRUint64* aTimeStamp)
 {
-  *aTimeStamp = mEvent->time;
+  *aTimeStamp = (PRUint64)mEvent->time;
   return NS_OK;
 }
 
