@@ -97,7 +97,6 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
       INCOMINGSERVERPTR->INCOMINGSERVERMETHOD(oldStr); \
       PR_FREEIF(oldStr); \
       macro_rv = m_prefs->ClearUserPref(PREFNAME); \
-      NS_ASSERTION(NS_SUCCEEDED(macro_rv), "failed to clear 4.x pref"); \
     } \
   }
 
@@ -109,7 +108,6 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
     if (NS_SUCCEEDED(macro_rv)) { \
       INCOMINGSERVERPTR->INCOMINGSERVERMETHOD(oldInt); \
       macro_rv = m_prefs->ClearUserPref(PREFNAME); \
-      NS_ASSERTION(NS_SUCCEEDED(macro_rv), "failed to clear 4.x pref"); \
     } \
   }
 
@@ -121,7 +119,6 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
     if (NS_SUCCEEDED(macro_rv)) { \
       INCOMINGSERVERPTR->INCOMINGSERVERMETHOD(oldBool); \
       macro_rv = m_prefs->ClearUserPref(PREFNAME); \
-      NS_ASSERTION(NS_SUCCEEDED(macro_rv), "failed to clear 4.x pref"); \
     } \
   }
 
@@ -136,7 +133,6 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
       INCOMINGSERVERPTR->INCOMINGSERVERMETHOD(oldStr); \
       PR_FREEIF(oldStr); \
       macro_rv = m_prefs->ClearUserPref(prefName); \
-      NS_ASSERTION(NS_SUCCEEDED(macro_rv), "failed to clear 4.x pref"); \
     } \
   }
 
@@ -150,7 +146,6 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
     if (NS_SUCCEEDED(macro_rv)) { \
       INCOMINGSERVERPTR->INCOMINGSERVERMETHOD(oldInt); \
       macro_rv = m_prefs->ClearUserPref(prefName); \
-      NS_ASSERTION(NS_SUCCEEDED(macro_rv), "failed to clear 4.x pref"); \
     } \
   }
 
@@ -164,7 +159,6 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
     if (NS_SUCCEEDED(macro_rv)) { \
       INCOMINGSERVERPTR->INCOMINGSERVERMETHOD(oldBool); \
       macro_rv = m_prefs->ClearUserPref(prefName); \
-      NS_ASSERTION(NS_SUCCEEDED(macro_rv), "failed to clear 4.x pref"); \
     } \
   }
 
@@ -299,18 +293,18 @@ private:
   nsresult createSpecialFile(nsFileSpec & dir, const char *specialFileName);
   nsresult CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *destIdentity);
   
-  PRInt32 MigrateImapAccounts(nsIMsgIdentity *identity);
-  nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname, PRInt32 accountNum);
+  nsresult MigrateImapAccounts(nsIMsgIdentity *identity);
+  nsresult MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname);
   
   nsresult MigrateAndClearOldImapPrefs(nsIMsgIncomingServer *server, const char *hostname);
   
-  PRInt32 MigratePopAccounts(nsIMsgIdentity *identity);
+  nsresult  MigratePopAccounts(nsIMsgIdentity *identity);
   
-  PRInt32 MigrateLocalMailAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum);
+  nsresult MigrateLocalMailAccounts(nsIMsgIdentity *identity);
   nsresult MigrateAndClearOldPopPrefs(nsIMsgIncomingServer *server, const char *hostname);
   
-  PRInt32 MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum);
-  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, PRInt32 accountNum);
+  nsresult MigrateNewsAccounts(nsIMsgIdentity *identity);
+  nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile);
   nsresult MigrateAndClearOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostname, const char *newsrcfile);
   
   static char *getUniqueKey(const char* prefix, nsHashtable *hashTable);
@@ -419,6 +413,7 @@ nsMsgAccountManager::getUniqueAccountKey(const char *prefix,
     accounts->EnumerateForwards(findAccountByKey, (void *)&findEntry);
 
     if (!findEntry.account) unique=PR_TRUE;
+    findEntry.account = nsnull;
   } while (!unique);
 
   return nsCRT::strdup(key);
@@ -1100,7 +1095,6 @@ nsMsgAccountManager::UpgradePrefs()
 {
     nsresult rv;
     PRInt32 oldMailType;
-    PRInt32 numAccounts = 0;
     char *oldStr = nsnull;
     PRBool oldBool;
 
@@ -1117,7 +1111,6 @@ nsMsgAccountManager::UpgradePrefs()
 #ifdef DEBUG_CLEAR_PREF
     // clear the 4.x pref to avoid confusion
     rv = m_prefs->ClearUserPref(PREF_4X_MAIL_SERVER_TYPE);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
 
     nsCOMPtr<nsIMsgIdentity> identity;
@@ -1138,7 +1131,6 @@ nsMsgAccountManager::UpgradePrefs()
 #ifdef DEBUG_CLEAR_PREF
       // clear the 4.x pref to avoid confusion
       rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_USEREMAIL);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
     }
     
@@ -1155,7 +1147,6 @@ nsMsgAccountManager::UpgradePrefs()
 #ifdef DEBUG_CLEAR_PREF
       // clear the 4.x pref to avoid confusion
       rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_USERNAME);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
     }
     rv = m_prefs->CopyCharPref(PREF_4X_MAIL_IDENTITY_REPLY_TO, &oldStr);
@@ -1171,7 +1162,6 @@ nsMsgAccountManager::UpgradePrefs()
 #ifdef DEBUG_CLEAR_PREF
       // clear the 4.x pref to avoid confusion
       rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_REPLY_TO);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
     }
 
@@ -1188,7 +1178,6 @@ nsMsgAccountManager::UpgradePrefs()
 #ifdef DEBUG_CLEAR_PREF
       // clear the 4.x pref to avoid confusion
       rv = m_prefs->ClearUserPref(PREF_4X_MAIL_IDENTITY_ORGANIZATION);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
     }
 
@@ -1199,7 +1188,6 @@ nsMsgAccountManager::UpgradePrefs()
 #ifdef DEBUG_CLEAR_PREF
       // clear the 4.x pref to avoid confusion
       rv = m_prefs->ClearUserPref(PREF_4X_MAIL_COMPOSE_HTML);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
     }
 
@@ -1216,7 +1204,6 @@ nsMsgAccountManager::UpgradePrefs()
 #ifdef DEBUG_CLEAR_PREF
       // clear the 4.x pref to avoid confusion
       rv = m_prefs->ClearUserPref(PREF_4X_NETWORK_HOSTS_SMTP_SERVER);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
     }
 
@@ -1233,18 +1220,21 @@ nsMsgAccountManager::UpgradePrefs()
 #ifdef DEBUG_CLEAR_PREF
       // clear the 4.x pref to avoid confusion
       rv = m_prefs->ClearUserPref(PREF_4X_MAIL_SMTP_NAME);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
     }
     
     if ( oldMailType == 0) {      // POP
-      numAccounts += MigratePopAccounts(identity);
+      rv = MigratePopAccounts(identity);
+      if (NS_FAILED(rv)) return rv;
 	}
     else if (oldMailType == 1) {  // IMAP
-      numAccounts += MigrateImapAccounts(identity);
+      rv = MigrateImapAccounts(identity);
+      if (NS_FAILED(rv)) return rv;
+      
       // if they had IMAP, they also had "Local Mail"
       // we need to migrate that, too.  
-      numAccounts += MigrateLocalMailAccounts(identity, numAccounts); 
+      rv = MigrateLocalMailAccounts(identity);
+      if (NS_FAILED(rv)) return rv;
 	}
     else {
 #ifdef DEBUG_ACCOUNTMANAGER
@@ -1253,95 +1243,41 @@ nsMsgAccountManager::UpgradePrefs()
       return NS_ERROR_UNEXPECTED;
     }
 
-	numAccounts += MigrateNewsAccounts(identity, numAccounts);
-
-    if (numAccounts == 0) return NS_ERROR_FAILURE;
-    
-    // we still need to create these additional prefs.
-    // assume there is at least one account
-    m_prefs->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,"account1");
-    m_prefs->SetCharPref("mail.account.account1.identities","identity1");
-    m_prefs->SetCharPref("mail.account.account1.server","server1");
-
-    char *oldAccountsValueBuf=nsnull;
-    char newAccountsValueBuf[BUF_STR_LEN];
-    char prefNameBuf[BUF_STR_LEN];
-    char prefValueBuf[BUF_STR_LEN];
-
-    // handle the rest of the accounts.
-    for (PRInt32 i=2;i<=numAccounts;i++) {
-      rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS, &oldAccountsValueBuf);
-      if (NS_SUCCEEDED(rv)) {
-        PR_snprintf(newAccountsValueBuf, BUF_STR_LEN, "%s,account%d",oldAccountsValueBuf,i);
-        m_prefs->SetCharPref(PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS,
-                                   newAccountsValueBuf);
-      }
-      PR_FREEIF(oldAccountsValueBuf);
-      oldAccountsValueBuf = nsnull;
-      
-      PR_snprintf(prefNameBuf, BUF_STR_LEN, "mail.account.account%d.identities", i);
-      PR_snprintf(prefValueBuf, BUF_STR_LEN, "identity%d", i);
-      m_prefs->SetCharPref(prefNameBuf, prefValueBuf);
-
-      PR_snprintf(prefNameBuf, BUF_STR_LEN, "mail.account.account%d.server", i);
-      PR_snprintf(prefValueBuf, BUF_STR_LEN, "server%d", i);
-      m_prefs->SetCharPref(prefNameBuf, prefValueBuf);
-    }
+	rv = MigrateNewsAccounts(identity);
+    if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }
 
-PRInt32
-nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum) 
+nsresult
+nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity) 
 {
   nsresult rv;
-  PRInt32 accountNum = baseAccountNum + 1;
-
-  if (baseAccountNum < 1) return NS_ERROR_FAILURE;
   
-  //
   // create the account
-  //
-  char accountStr[BUF_STR_LEN];
-  PR_snprintf(accountStr,BUF_STR_LEN,"account%d",accountNum);
-#ifdef DEBUG_ACCOUNTMANAGER
-  printf("account str = %s\n",accountStr);
-#endif
   nsCOMPtr<nsIMsgAccount> account;
-  rv = createKeyedAccount(accountStr, getter_AddRefs(account));
+  rv = CreateAccount(getter_AddRefs(account));
   if (NS_FAILED(rv)) return rv;
 
-  //
   // create the server
-  //
-  char serverStr[BUF_STR_LEN];
-  PR_snprintf(serverStr,BUF_STR_LEN,"server%d",accountNum);
-#ifdef DEBUG_ACCOUNTMANAGER
-  printf("server str = %s\n",serverStr);
-#endif
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = createKeyedServer(serverStr, "none", getter_AddRefs(server));
+  rv = CreateIncomingServer("none", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
-  //
   // create the identity
-  //
-  char identityStr[BUF_STR_LEN];
-  PR_snprintf(identityStr,BUF_STR_LEN,"identity%d",accountNum);
-  
   nsCOMPtr<nsIMsgIdentity> copied_identity;
-  rv = createKeyedIdentity(identityStr, getter_AddRefs(copied_identity));
+  rv = CreateIdentity(getter_AddRefs(copied_identity));
   if (NS_FAILED(rv)) return rv;
-  
+
+  // make this new identity to copy of the identity
+  // that we created out of the 4.x prefs
   rv = CopyIdentity(identity,copied_identity);
   if (NS_FAILED(rv)) return rv;
   
   // the server needs a username, but we never plan to use it.
   server->SetUsername("nobody");
 
-  //
   // hook them together
-  //
   account->SetIncomingServer(server);
   account->AddIdentity(copied_identity);
   
@@ -1349,18 +1285,18 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity, PRInt32 
   nsFileSpec profileDir;
   
   NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  
+  if (NS_FAILED(rv)) return rv;
+    
   rv = profile->GetCurrentProfileDir(&profileDir);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  
+  if (NS_FAILED(rv)) return rv;
+    
   // some of this ought to be moved out into the NONE implementation
   nsCOMPtr<nsINoIncomingServer> noServer;
   noServer = do_QueryInterface(server, &rv);
   if (NS_FAILED(rv)) return rv;
 
   // "none" is the type we use for migrate Local Mail
-  server->SetType("none");	
+  server->SetType("none");
   server->SetHostName(LOCAL_MAIL_FAKE_HOST_NAME);
     
   // create the directory structure for old 4.x "Local Mail"
@@ -1380,10 +1316,10 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity, PRInt32 
   dir += LOCAL_MAIL_FAKE_HOST_NAME;
   
   rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(mailDir));
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   rv = mailDir->Exists(&dirExists);
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   if (!dirExists) {
     mailDir->CreateDir();
@@ -1398,17 +1334,16 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity, PRInt32 
   }
   
   rv = mailDir->Exists(&dirExists);
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   if (!dirExists) {
     mailDir->CreateDir();
   }
   
-  // we only migrated one account so return 1
-  return 1;
+  return NS_OK;
 }
 
-PRInt32
+nsresult
 nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
 {
   nsresult rv;
@@ -1416,11 +1351,11 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   nsCOMPtr<nsIMsgAccount> account;
   nsCOMPtr<nsIMsgIncomingServer> server;
 
-  rv = createKeyedAccount("account1", getter_AddRefs(account));
-  if (NS_FAILED(rv)) return 0;
+  rv = CreateAccount(getter_AddRefs(account));
+  if (NS_FAILED(rv)) return rv;
 
-  rv = createKeyedServer("server1", "pop3", getter_AddRefs(server));
-  if (NS_FAILED(rv)) return 0;
+  rv = CreateIncomingServer("pop3", getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
   
   account->SetIncomingServer(server);
   account->AddIdentity(identity);
@@ -1429,10 +1364,10 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   nsFileSpec profileDir;
   
   NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   rv = profile->GetCurrentProfileDir(&profileDir);
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   server->SetType("pop3");
   char *hostname=nsnull;
@@ -1443,7 +1378,6 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
 #ifdef DEBUG_CLEAR_PREF
     // clear the 4.x pref to avoid confusion
     rv = m_prefs->ClearUserPref(PREF_4X_NETWORK_HOSTS_POP_SERVER);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
   }
 
@@ -1465,10 +1399,10 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   PR_FREEIF(hostname);
   
   rv = NS_NewFileSpecWithSpec(dir, getter_AddRefs(mailDir));
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   rv = mailDir->Exists(&dirExists);
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   if (!dirExists) {
     mailDir->CreateDir();
@@ -1483,7 +1417,7 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   }
   
   rv = mailDir->Exists(&dirExists);
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   if (!dirExists) {
     mailDir->CreateDir();
@@ -1493,25 +1427,24 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
   // TODO:  use string bundles
   // TODO:  should we even be doing this here?
   rv = createSpecialFile(dir,"Inbox");
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   rv = createSpecialFile(dir,"Sent");
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   rv = createSpecialFile(dir,"Trash");
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   rv = createSpecialFile(dir,"Drafts");
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   rv = createSpecialFile(dir,"Templates");
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
   rv = createSpecialFile(dir,"Unsent Messages");
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
-  // one account created
-  return 1;
+  return NS_OK;
 }
 
 nsresult
@@ -1536,25 +1469,23 @@ nsMsgAccountManager::MigrateAndClearOldPopPrefs(nsIMsgIncomingServer * server, c
   return NS_OK;
 }
 
-PRInt32
+nsresult
 nsMsgAccountManager::MigrateImapAccounts(nsIMsgIdentity *identity)
 {
   nsresult rv;
-  PRInt32 numAccounts = 0;
   char *hostList=nsnull;
   rv = getPrefService();
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
 
   rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER, &hostList);
-  if (NS_FAILED(rv)) return 0;
+  if (NS_FAILED(rv)) return rv;
   
 #ifdef DEBUG_CLEAR_PREF
   // clear the 4.x pref to avoid confusion
   rv = m_prefs->ClearUserPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
   
-  if (!hostList || !*hostList) return 0;
+  if (!hostList || !*hostList) return NS_OK;  // NS_ERROR_FAILURE?
   
   char *token = nsnull;
   char *rest = NS_CONST_CAST(char*,(const char*)hostList);
@@ -1566,18 +1497,18 @@ nsMsgAccountManager::MigrateImapAccounts(nsIMsgIdentity *identity)
     str.StripWhitespace();
     
     if (!str.IsEmpty()) {
-	  numAccounts++;
       // str is the hostname
-      if (NS_FAILED(MigrateImapAccount(identity,str,numAccounts))) {
-		// failed to migrate.  bail out.
-        return 0;
+      rv = MigrateImapAccount(identity,str);
+      if  (NS_FAILED(rv)) {
+        // failed to migrate.  bail.
+        return rv;
       }
       str = "";
     }
     token = nsCRT::strtok(rest, ",", &rest);
   }
   PR_FREEIF(hostList);
-  return numAccounts;
+  return NS_OK;
 }
 
 nsresult
@@ -1648,57 +1579,34 @@ nsMsgAccountManager::CopyIdentity(nsIMsgIdentity *srcIdentity, nsIMsgIdentity *d
 }
 
 nsresult
-nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname, PRInt32 accountNum)
+nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *hostname)
 {
   nsresult rv;
 
   if (!hostname) return NS_ERROR_NULL_POINTER;
-  if (accountNum < 1) return NS_ERROR_FAILURE;
   
-  //
   // create the account
-  //
-  char accountStr[BUF_STR_LEN];
-  PR_snprintf(accountStr,BUF_STR_LEN,"account%d",accountNum);
-#ifdef DEBUG_ACCOUNTMANAGER
-  printf("account str = %s\n",accountStr);
-#endif
-  
   nsCOMPtr<nsIMsgAccount> account;
-  rv = createKeyedAccount(accountStr, getter_AddRefs(account));
+  rv = CreateAccount(getter_AddRefs(account));
   if (NS_FAILED(rv)) return rv;
 
-  //
   // create the server
-  //
-  char serverStr[BUF_STR_LEN];
-  PR_snprintf(serverStr,BUF_STR_LEN,"server%d",accountNum);
-#ifdef DEBUG_ACCOUNTMANAGER
-  printf("server str = %s\n",serverStr);
-#endif
-
   nsCOMPtr<nsIMsgIncomingServer> server;
-  rv = createKeyedServer(serverStr, "imap", getter_AddRefs(server));
+  rv = CreateIncomingServer("imap", getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;
 
-  //
   // create the identity
-  //
-  char identityStr[BUF_STR_LEN];
-  PR_snprintf(identityStr,BUF_STR_LEN,"identity%d",accountNum);
-
   nsCOMPtr<nsIMsgIdentity> copied_identity;
-  rv = createKeyedIdentity(identityStr, getter_AddRefs(copied_identity));
+  rv = CreateIdentity(getter_AddRefs(copied_identity));
   if (NS_FAILED(rv)) return rv;
 
-  //
-  // connect all three together
-  //
-  account->SetIncomingServer(server);
-
+  // make this new identity to copy of the identity
+  // that we created out of the 4.x prefs
   rv = CopyIdentity(identity,copied_identity);
   if (NS_FAILED(rv)) return rv;
 
+  // hook them together
+  account->SetIncomingServer(server);
   account->AddIdentity(copied_identity);
 
   // now upgrade all the prefs
@@ -1790,10 +1698,9 @@ nsMsgAccountManager::MigrateAndClearOldImapPrefs(nsIMsgIncomingServer *server, c
 #define NEWSRC_MAP_FILE_COOKIE "netscape-newsrc-map-file"
 #endif /* USE_NEWSRC_MAP_FILE */
 
-PRInt32
-nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseAccountNum)
+nsresult
+nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity)
 {
-	PRInt32 numAccounts = 0;
 	nsresult rv;
 
 	// there should be one imap or one pop by this point.
@@ -1834,7 +1741,7 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 	
 	if (inputStream.eof()) {
 		inputStream.close();
-		return 0;
+		return NS_ERROR_FAILURE;
 	}
 	
     /* we expect the first line to be NEWSRC_MAP_FILE_COOKIE */
@@ -1842,7 +1749,7 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 	
     if ((!ok) || (PL_strncmp(buffer, NEWSRC_MAP_FILE_COOKIE, PL_strlen(NEWSRC_MAP_FILE_COOKIE)))) {
 		inputStream.close();
-		return 0;
+		return NS_ERROR_FAILURE;
 	}   
 	
 	while (!inputStream.eof()) {
@@ -1852,7 +1759,7 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 		ok = inputStream.readline(buffer, sizeof(buffer));
 		if (!ok) {
 			inputStream.close();
-			return 0;
+			return NS_ERROR_FAILURE;
 		}  
 		
 		/* TODO: replace this with nsString code? */
@@ -1881,17 +1788,7 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 			}
 		}
 		
-		if(!PL_strncmp(is_newsgroup, "TRUE", 4)) {
-#ifdef DEBUG_ACCOUNTMANAGER
-			printf("is_newsgroups_file = TRUE\n");
-#endif
-		}
-		else {
-#ifdef DEBUG_ACCOUNTMANAGER
-          printf("is_newsgroups_file = FALSE\n");
-  
-          printf("psuedo_name=%s,filename=%s\n", psuedo_name, filename);
-#endif			
+		if(PL_strncmp(is_newsgroup, "TRUE", 4)) {
 #ifdef NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS
 			// most likely, the fat file has been copied (or moved ) from
 			// its old location.  So the absolute file paths will be wrong.
@@ -1910,8 +1807,6 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 			rcFile += filename;
 #endif /* NEWS_FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS */
 
-			numAccounts++;
-				
 			// psuedo-name is of the form newsrc-<host> or snewsrc-<host>.  
 			// right now, we can't handle snewsrc, so if we get one of those
 			// gracefully handle it by ignoring it.
@@ -1922,16 +1817,14 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
 			// check that there is a hostname to get after the "newsrc-" part
 			NS_ASSERTION(PL_strlen(psuedo_name) > PL_strlen(PSUEDO_NAME_PREFIX), "psuedo_name is too short");
 			if (PL_strlen(psuedo_name) <= PL_strlen(PSUEDO_NAME_PREFIX)) {
-				return 0;
+				return NS_ERROR_FAILURE;
 			}
 
 			char *hostname = psuedo_name + PL_strlen(PSUEDO_NAME_PREFIX);
-#ifdef DEBUG_ACCOUNTMANAGER
-            printf("rcFile?  should it be a const char *?\n");
-#endif
-			if (NS_FAILED(MigrateNewsAccount(identity, hostname, rcFile, baseAccountNum + numAccounts))) {
+            rv = MigrateNewsAccount(identity, hostname, rcFile);
+            if (NS_FAILED(rv)) {
 				// failed to migrate.  bail out
-				return 0;
+				return rv;
 			}
 		}
 	}
@@ -1952,7 +1845,6 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
       
       // clear the 4.x pref to avoid confusion
       rv = m_prefs->ClearUserPref(PREF_NEWS_DIRECTORY);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "failed to clear 4.x pref");
 #endif
 	}
     else {
@@ -1973,20 +1865,16 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
       nsFileSpec possibleRcFile = i.Spec();
 
       char *filename = possibleRcFile.GetLeafName();
-#ifdef DEBUG_ACCOUNTMANAGER
-      printf("leaf = %s\n", filename);
-#endif
       
       if ((PL_strncmp(NEWSRC_FILE_PREFIX, filename, PL_strlen(NEWSRC_FILE_PREFIX)) == 0) && (PL_strlen(filename) > PL_strlen(NEWSRC_FILE_PREFIX))) {
 #ifdef DEBUG_ACCOUNTMANAGER
-        printf("found a newsrc file!\n");
+        printf("found a newsrc file: %s\n", filename);
 #endif
-        numAccounts++;
-
         char *hostname = filename + PL_strlen(NEWSRC_FILE_PREFIX);
-        if (NS_FAILED(MigrateNewsAccount(identity, hostname, possibleRcFile, baseAccountNum + numAccounts))) {
+        rv = MigrateNewsAccount(identity, hostname, possibleRcFile);
+        if (NS_FAILED(rv)) {
           // failed to migrate.  bail out
-          return 0;
+          return rv;
         }
       }
       nsCRT::free(filename);
@@ -1994,59 +1882,38 @@ nsMsgAccountManager::MigrateNewsAccounts(nsIMsgIdentity *identity, PRInt32 baseA
     }
 #endif /* USE_NEWSRC_MAP_FILE */
 
-	return numAccounts;
+	return NS_OK;
 }
 
 nsresult
-nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile, PRInt32 accountNum)
+nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, const char *newsrcfile)
 {  
 	nsresult rv;
 	
 	if (!newsrcfile) return NS_ERROR_NULL_POINTER;
 	if (!hostname) return NS_ERROR_NULL_POINTER;
-	if (accountNum < 1) return NS_ERROR_FAILURE;
-	
 
-    //
     // create the account
-    //
-	char accountStr[BUF_STR_LEN];
-	PR_snprintf(accountStr,BUF_STR_LEN,"account%d",accountNum);
-#ifdef DEBUG_ACCOUNTMANAGER
-	printf("account str = %s\n",accountStr);
-#endif
 	nsCOMPtr<nsIMsgAccount> account;
-    rv = createKeyedAccount(accountStr, getter_AddRefs(account));
+    rv = CreateAccount(getter_AddRefs(account));
 	if (NS_FAILED(rv)) return rv;
 
-    //
     // create the server
-    //
-	char serverStr[BUF_STR_LEN];
-	PR_snprintf(serverStr,BUF_STR_LEN,"server%d",accountNum);
-#ifdef DEBUG_ACCOUNTMANAGER
-	printf("server str = %s\n",serverStr);
-#endif
 	nsCOMPtr<nsIMsgIncomingServer> server;
-    rv = createKeyedServer(serverStr, "nntp", getter_AddRefs(server));
+    rv = CreateIncomingServer("nntp", getter_AddRefs(server));
 	if (NS_FAILED(rv)) return rv;
 
-    //
     // create the identity
-    //
-	char identityStr[BUF_STR_LEN];
-	PR_snprintf(identityStr,BUF_STR_LEN,"identity%d",accountNum);
-	
 	nsCOMPtr<nsIMsgIdentity> copied_identity;
-    rv = createKeyedIdentity(identityStr, getter_AddRefs(copied_identity));
+    rv = CreateIdentity(getter_AddRefs(copied_identity));
 	if (NS_FAILED(rv)) return rv;
 
+    // make this new identity to copy of the identity
+    // that we created out of the 4.x prefs
 	rv = CopyIdentity(identity,copied_identity);
 	if (NS_FAILED(rv)) return rv;
 
-    //
     // hook them together
-    //
 	account->SetIncomingServer(server);
 	account->AddIdentity(copied_identity);
 	
@@ -2060,7 +1927,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 		
 	server->SetType("nntp");
-	server->SetHostName((char *)hostname);
+    server->SetHostName((char *)hostname);
 
     rv = MigrateAndClearOldNntpPrefs(server, hostname, newsrcfile);
     if (NS_FAILED(rv)) return rv;
@@ -2097,8 +1964,8 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	}
 	
 	rv = newsDir->Exists(&dirExists);
-	if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-	
+	if (NS_FAILED(rv)) return rv;
+    	
 	if (!dirExists) {
 		newsDir->CreateDir();
 	}
