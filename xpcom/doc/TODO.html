@@ -26,7 +26,7 @@ TODO List for XPCOM</h1></center>
 <th NOSAVE>MileStone complete/Status</th>
 </tr>
 
-<tr NOSAVE>
+<tr BGCOLOR="#3366FF" NOSAVE>
 <td NOSAVE>Move xpcom from using NR_*() functions (modules/libreg) to nsIRegistry
 (xpcom/src/nsRegistry.cpp)
 <ul>
@@ -49,7 +49,8 @@ Mostly, there is equivalence between NR_*() calls and nsRegistry calls.&nbsp;</t
 
 <td>3/22/1999 started
 <br>3/27/1999 Patch submitted
-<br>4/1/1999 Espected date of landing</td>
+<br>3/30/1999 landing
+<br><b>DONE</b></td>
 </tr>
 
 <tr>
@@ -130,16 +131,59 @@ Possibly move autoreg out of xpcom</li>
 
 <td>P3</td>
 
-<td><a href="mailto:warren"></a></td>
+<td></td>
 
 <td></td>
 </tr>
 
 <tr>
-<td>PATH&nbsp;argument to NSRegisterSelf() and NSUnregisterSelf() to be
-a nsISupports</td>
+<td>PATH argument to NSRegisterSelf() and NSUnregisterSelf() to be a nsISupports</td>
 
 <td>P1</td>
+
+<td></td>
+
+<td></td>
+</tr>
+
+<tr>
+<td>Code Cleanup:
+<ul>
+<li>
+Registry path strings in nsComponentManager.cpp #defined</li>
+</ul>
+</td>
+
+<td>P3</td>
+
+<td>Nick Ambrose &lt;<a href="mailto:nicka87@hotmail.com">nicka87@hotmail.com</a>></td>
+
+<td>4/1/1999 started</td>
+</tr>
+
+<tr>
+<td>Performance
+<ul>
+<li>
+Cache commonly used registry keys</li>
+
+<li>
+Factories: Use previously created factories for object creation instead
+of creating the factory everytime the object needs to be created</li>
+</ul>
+</td>
+
+<td>P1</td>
+
+<td>Nick Ambrose &lt;<a href="mailto:nicka87@hotmail.com">nicka87@hotmail.com</a>></td>
+
+<td>4/1/1999 started</td>
+</tr>
+
+<tr>
+<td>nsIAllocator: wrap it in a static api</td>
+
+<td>P2</td>
 
 <td></td>
 
