@@ -43,7 +43,6 @@ sub sillyness {
     $zz = @::legal_product;
     $zz = @::legal_resolution_no_dup;
     $zz = @::legal_severity;
-    $zz = @::legal_target_milestone;
     $zz = @::versions;
     $zz = @::target_milestone;
 };
