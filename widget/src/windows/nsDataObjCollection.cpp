@@ -17,7 +17,7 @@
  */
 
 #include "nsDataObjCollection.h"
-#include "nsString.h"
+//#include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsITransferable.h"
 #include "nsClipboard.h"
