@@ -646,7 +646,6 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
                                          nsIRenderingContext& aRenderingContext,
                                          const nsRect& aDirtyRect)
 {
-#ifdef XP_PC
   aRenderingContext.PushState();
 
 
@@ -798,12 +797,12 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
       const nsStyleColor*   arrowColor   = (const nsStyleColor*)arrowStyle->GetStyleData(eStyleStruct_Color);
 
       nsRect srect(mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
-	    DrawArrow(eArrowDirection_Down, aRenderingContext,aPresContext, 
+	    PaintArrow(eArrowDirection_Down, aRenderingContext,aPresContext, 
 			          aDirtyRect, srect, onePixel, *arrowColor, *arrowSpacing, this, mRect);
     } else {
       nsRect srect(mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
 
-      DrawScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_FALSE, onePixel, 
+      PaintScrollbar(aRenderingContext,aPresContext, aDirtyRect, srect, PR_FALSE, onePixel, 
 																    scrollbarStyle, arrowStyle, this, mRect);   
     }
   }
@@ -816,7 +815,7 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
 
   NS_RELEASE(scrollbarStyle);
   NS_RELEASE(arrowStyle);
-#endif
+
 }
 
 NS_METHOD 
@@ -824,8 +823,7 @@ nsSelectControlFrame::Paint(nsIPresContext& aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect)
 {
-#ifdef XP_PC
   PaintSelectControl(aPresContext, aRenderingContext, aDirtyRect);
-#endif
+
   return NS_OK;
 }
