@@ -95,18 +95,13 @@ ContainerEnumeratorImpl::ContainerEnumeratorImpl(nsIRDFDataSource* aDataSource,
 
     if (gRefCnt++ == 0) {
         nsresult rv;
-        nsIRDFService* service;
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsIRDFService::GetIID(),
-                                          (nsISupports**) &service);
-
+        NS_WITH_SERVICE(nsIRDFService, service, kRDFServiceCID, &rv);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to acquire resource manager");
-        if (! service)
+        if (NS_FAILED(rv))
             return;
 
         rv = service->GetResource(RDF_NAMESPACE_URI "nextVal", &kRDF_nextVal);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-
     }
 }
 
