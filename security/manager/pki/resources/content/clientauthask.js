@@ -34,9 +34,9 @@ function onLoad()
     var issuer;
 
     dialogParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-    cn = dialogParams.GetString(1);
-    org = dialogParams.GetString(2);
-    issuer = dialogParams.GetString(3);
+    cn = dialogParams.GetString(0);
+    org = dialogParams.GetString(1);
+    issuer = dialogParams.GetString(2);
 
     var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
     var message1 = bundle.formatStringFromName("clientAuthMessage1", 
@@ -50,10 +50,10 @@ function onLoad()
     setText("issuer", message2);
 
     var selectElement = document.getElementById("nicknames");
-    itemCount = dialogParams.GetInt(1);
+    itemCount = dialogParams.GetInt(0);
     for (var i=0; i < itemCount; i++) {
         var menuItemNode = document.createElement("menuitem");
-        var nick = dialogParams.GetString(i+4);
+        var nick = dialogParams.GetString(i+3);
         menuItemNode.setAttribute("value", i);
         menuItemNode.setAttribute("label", nick); // this is displayed
         selectElement.firstChild.appendChild(menuItemNode);
@@ -68,7 +68,7 @@ function onLoad()
 function setDetails()
 {
   var index = parseInt(document.getElementById("nicknames").value);
-  details = dialogParams.GetString(index+itemCount+4);
+  details = dialogParams.GetString(index+itemCount+3);
   document.getElementById("details").value = details;
 }
 
@@ -79,14 +79,14 @@ function onCertSelected()
 
 function doOK()
 {
-  dialogParams.SetInt(1,1);
+  dialogParams.SetInt(0,1);
   var index = parseInt(document.getElementById("nicknames").value);
-  dialogParams.SetInt(2, index);
+  dialogParams.SetInt(1, index);
   window.close();
 }
 
 function doCancel()
 {
-  dialogParams.SetInt(1,0);
+  dialogParams.SetInt(0,0);
   window.close();
 }

@@ -30,13 +30,14 @@ function onLoad()
 {
     dialogParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
     var selectElement = document.getElementById("tokens");
-    for (var i=1; i <= dialogParams.GetInt(1); i++) {
+    var aCount = dialogParams.GetInt(0);
+    for (var i=0; i < aCount; i++) {
         var menuItemNode = document.createElement("menuitem");
         var token = dialogParams.GetString(i);
         menuItemNode.setAttribute("value", token);
         menuItemNode.setAttribute("label", token);
         selectElement.firstChild.appendChild(menuItemNode);
-        if (i == 1) {
+        if (i == 0) {
             selectElement.selectedItem = menuItemNode;
         }
     }
@@ -46,13 +47,13 @@ function doOK()
 {
   var tokenList = document.getElementById("tokens");
   var token = tokenList.value;
-  dialogParams.SetInt(1,1);
-  dialogParams.SetString(1, token);
+  dialogParams.SetInt(0,1);
+  dialogParams.SetString(0, token);
   window.close();
 }
 
 function doCancel()
 {
-  dialogParams.SetInt(1,0);
+  dialogParams.SetInt(0,0);
   window.close();
 }

@@ -37,12 +37,12 @@ function setWindowName()
   //  Get the cert from the cert database
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
   
-  var typeFlag = params.GetString(1);
-  var numberOfCerts = params.GetInt(2);
+  var typeFlag = params.GetString(0);
+  var numberOfCerts = params.GetInt(0);
   var dbkey;
   for(var x=0; x<numberOfCerts;x++)
   {
-     dbkey = params.GetString(x+3);
+     dbkey = params.GetString(x+1);
      certs[x] = certdb.getCertByDBKey(dbkey , null);
   }
   
