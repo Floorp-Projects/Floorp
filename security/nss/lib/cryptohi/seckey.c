@@ -1721,16 +1721,23 @@ SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type)
     pubk->arena = NULL;
     pubk->pkcs11Slot = NULL;
     pubk->pkcs11ID = CK_INVALID_HANDLE;
-    pubk->keyType = (type == CKK_RSA) ? rsaKey : dsaKey;
 
-    if( type == CKK_RSA) {
-        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_RSAPublicKeyTemplate,
-                                derKey);
-    } else if( type == CKK_DSA) {
-        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_DSAPublicKeyTemplate,
-                                derKey);
-    } else {
+    switch( type ) {
+      case CKK_RSA:
+        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_RSAPublicKeyTemplate,derKey);
+        pubk->keyType = rsaKey;
+        break;
+      case CKK_DSA:
+        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_DSAPublicKeyTemplate,derKey);
+        pubk->keyType = dsaKey;
+        break;
+      case CKK_DH:
+        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_DHPublicKeyTemplate, derKey);
+        pubk->keyType = dhKey;
+        break;
+      default:
         rv = SECFailure;
+        break;
     }
 
 finish:
