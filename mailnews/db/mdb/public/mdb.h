@@ -506,7 +506,7 @@ public:
 **|
 |*/
 class nsIMdbEnv : public nsIMdbObject { // db specific context parameter
-
+public:
 // { ===== begin nsIMdbEnv methods =====
 
   // { ----- begin attribute methods -----
@@ -521,7 +521,7 @@ class nsIMdbEnv : public nsIMdbObject { // db specific context parameter
     mdbErrorHook* ioErrorHook); // becomes referenced
   // } ----- end attribute methods -----
   
-  mdb_err ClearErrors() ; // clear errors beore re-entering db API
+  mdb_err ClearErrors() {return 0;} // clear errors beore re-entering db API
 // } ===== end nsIMdbEnv methods =====
 };
 
