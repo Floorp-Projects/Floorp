@@ -405,8 +405,11 @@ nsresult nsIMAP4TestDriver::OnIdentityCheck()
 
 	if (NS_SUCCEEDED(result) && accountManager)
 	{
-		nsIMsgIncomingServer * server = nsnull;
-		result = accountManager->GetCurrentServer(&server);
+        nsCOMPtr<nsIMsgAccount> account;
+        accountManager->GetDefaultAccount(getter_AddRefs(account));
+        
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        result = account->GetIncomingServer(getter_AddRefs(server));
 		if (NS_SUCCEEDED(result) && server)
 		{
 			char * value = nsnull;
