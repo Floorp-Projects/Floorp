@@ -2067,12 +2067,6 @@ nsEditor::RemoveEditorObserver(nsIEditorObserver *aObserver)
   if (!mEditorObservers->RemoveElement((void *)aObserver))
     return NS_ERROR_FAILURE;
 
-  if (mEditorObservers->Count() < 1)
-  {
-    delete mEditorObservers;
-    mEditorObservers = 0;
-  }
-
   return NS_OK;
 }
 
