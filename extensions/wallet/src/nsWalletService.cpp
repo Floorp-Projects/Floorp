@@ -211,12 +211,33 @@ NS_IMETHODIMP nsWalletlibService::SI_SignonViewerReturn(nsAutoString results){
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const char *aTopic, const PRUnichar *someData) 
+NS_IMETHODIMP nsWalletlibService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData) 
 {
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     WLLT_ClearUserData();
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get())) {
       WLLT_DeletePersistentUserData();
+    }
+  }
+  else if (!nsCRT::strcmp(aTopic, "login-succeeded")) {
+    // A login succeeded; store the password.
+    nsCOMPtr<nsIURI> uri = do_QueryInterface(aSubject);
+    if (uri) {
+      nsXPIDLCString spec;
+      uri->GetSpec(getter_Copies(spec));
+      if (spec)
+        SI_StorePassword(spec, nsnull, someData);
+    }
+  }
+  else if (!nsCRT::strcmp(aTopic, "login-failed")) {
+    // A login failed; clean out any information we've stored about
+    // the URL where the failure occurred.
+    nsCOMPtr<nsIURI> uri = do_QueryInterface(aSubject);
+    if (uri) {
+      nsXPIDLCString spec;
+      uri->GetSpec(getter_Copies(spec));
+      if (spec)
+        SI_RemoveUser(spec, nsnull);
     }
   }
   return NS_OK;
@@ -301,6 +322,9 @@ nsresult nsWalletlibService::Init()
     svc->AddObserver(this, NS_FORMSUBMIT_SUBJECT, PR_TRUE);
     // Register as an observer of profile changes
     svc->AddObserver(this, "profile-before-change", PR_TRUE);
+    // Register as an observer for login
+    svc->AddObserver(this, "login-succeeded", PR_TRUE);
+    svc->AddObserver(this, "login-failed", PR_TRUE);
   }
   else
     NS_ASSERTION(PR_FALSE, "Could not get nsIObserverService");
