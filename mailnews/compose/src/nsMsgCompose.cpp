@@ -2752,7 +2752,8 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-
+  (void)prefs;
+  
 	PR_ASSERT(context == m_context);
 
 	// *** We don't want to set m_status to status. The default value

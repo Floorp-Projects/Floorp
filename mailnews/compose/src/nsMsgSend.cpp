@@ -593,6 +593,7 @@ static void msg_escape_file_name (URL_Struct *m_url)
 {
   nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);   
+  (void)prefs;
   
   NS_ASSERTION (m_url->address && !PL_strncasecmp(m_url->address, "file:", 5), "Invalid URL type");
 	if (!m_url->address || PL_strncasecmp(m_url->address, "file:", 5))
