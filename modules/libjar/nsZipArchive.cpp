@@ -333,8 +333,7 @@ PRInt32 nsZipArchive::GetItem( const char * aFilename, nsZipItem *result)
 		return ZIP_ERR_FNF;
 	}
 
-    memcpy(result, &aItem, sizeof(aItem));    // copy struct
-	return ZIP_OK;
+    return result->Init(aItem);
 }
 
 //---------------------------------------------
