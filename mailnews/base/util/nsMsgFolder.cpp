@@ -1309,7 +1309,7 @@ NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRInt32 *numUnread)
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv;
-  PRUint32 total = mNumUnreadMessages + mNumPendingUnreadMessages;
+  PRInt32 total = mNumUnreadMessages + mNumPendingUnreadMessages;
   if (deep)
   {
     if (total < 0) // deep search never returns negative counts
