@@ -24,14 +24,19 @@
 #define nsCookieService_h__
 
 #include "nsICookieService.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsCookieService : public nsICookieService {
+class nsCookieService : public nsICookieService,
+                        public nsIObserver,
+                        public nsSupportsWeakReference {
 public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
 
   NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie);
   NS_IMETHOD GetCookieStringFromHTTP(nsIURI *aURL, nsIURI *aFirstURL, nsString& aCookie);
