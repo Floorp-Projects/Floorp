@@ -10670,22 +10670,18 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
           nsCOMPtr<nsIFrameManager> frameManager;
           shell->GetFrameManager(getter_AddRefs(frameManager));
           frameManager->GetUndisplayedContent(aContent, getter_AddRefs(styleContext));
+#ifdef DEBUG
           if (!styleContext) {
-            // Well, we don't have a context to use as a guide.  
-            // Attempt #3 will be to resolve style if we at least have a parent frame.
             nsCOMPtr<nsIContent> parent;
             aContent->GetParent(*getter_AddRefs(parent));
             if (parent) {
               nsIFrame* parentFrame;
               shell->GetPrimaryFrameFor(parent, &parentFrame);
-              if (parentFrame) {
-                nsCOMPtr<nsIStyleContext> parentContext;
-                parentFrame->GetStyleContext(getter_AddRefs(parentContext));
-                aPresContext->ResolveStyleContextFor(aContent, parentContext,
-                                                     getter_AddRefs(styleContext));  
-              }
+              NS_ASSERTION(!parentFrame,
+                       "parent frame but no child frame or undisplayed entry");
             }
           }
+#endif
         }
       }
     }
@@ -10719,22 +10715,19 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
                       nsCOMPtr<nsIFrameManager> frameManager;
                       shell->GetFrameManager(getter_AddRefs(frameManager));
                       frameManager->GetUndisplayedContent(aContent, getter_AddRefs(styleContext));
+#ifdef DEBUG
                       if (!styleContext) {
-                        // Well, we don't have a context to use as a guide.  
-                        // Attempt #3 will be to resolve style if we at least have a parent frame.
                         nsCOMPtr<nsIContent> parent;
                         aContent->GetParent(*getter_AddRefs(parent));
                         if (parent) {
                           nsIFrame* parentFrame;
                           shell->GetPrimaryFrameFor(parent, &parentFrame);
-                          if (parentFrame) {
-                            nsCOMPtr<nsIStyleContext> parentContext;
-                            parentFrame->GetStyleContext(getter_AddRefs(parentContext));
-                            aPresContext->ResolveStyleContextFor(aContent, parentContext,
-                                                                 getter_AddRefs(styleContext));  
-                          }
+                          NS_ASSERTION(!parentFrame,
+                                       "parent frame but no child frame "
+                                       "or undisplayed entry");
                         }
                       }
+#endif
                     }
                     //-----
                   }
@@ -10759,6 +10752,8 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       !reframe) {
     nsCOMPtr<nsIStyleSet> set;
     shell->GetStyleSet(getter_AddRefs(set));
+    // XXXldb If |styleContext| is null, wouldn't it be faster to pass
+    // in something to tell it that this change is for inline style?
     set->ClearStyleData(aPresContext, rule, styleContext);
   }
 
@@ -12178,6 +12173,8 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
       // Now that the old frame is gone (and has stopped depending on obsolete style
       // data), we need to blow away our style information if this reframe happened as
       // a result of an inline style attribute changing.
+      // XXXldb Why does this look different from the code in
+      // |AttributeChanged|?
       if (aInlineStyle) {
         if (aStyleContext)
           aStyleContext->ClearCachedDataForRule(aInlineStyleRule);

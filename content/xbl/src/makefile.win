@@ -46,6 +46,7 @@ REQUIRES	= xpcom \
       rdf \
       content_xul \
       unicharutil \
+      locale \
       $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN

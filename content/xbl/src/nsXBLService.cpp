@@ -83,6 +83,8 @@
 
 #include "nsIPresShell.h"
 #include "nsIDocumentObserver.h"
+#include "nsIFrameManager.h"
+#include "nsIStyleContext.h"
 
 #include "nsIXULPrototypeCache.h"
 #include "nsIDOMLoadListener.h"
@@ -150,14 +152,31 @@ public:
     if (parent)
       parent->IndexOf(mBoundElement, index);
         
+    // If |mBoundElement| is (in addition to having binding |mBinding|)
+    // also a descendant of another element with binding |mBinding|,
+    // then we might have just constructed it due to the
+    // notification of its parent.  (We can know about both if the
+    // binding loads were triggered from the DOM rather than frame
+    // construction.)  So we have to check both whether the element
+    // has a primary frame and whether it's in the undisplayed map
+    // before sending a ContentInserted notification, or bad things
+    // will happen.
     nsCOMPtr<nsIPresShell> shell;
     doc->GetShellAt(0, getter_AddRefs(shell));
     if (shell) {
       nsIFrame* childFrame;
       shell->GetPrimaryFrameFor(mBoundElement, &childFrame);
-      nsCOMPtr<nsIDocumentObserver> obs(do_QueryInterface(shell));
-      if (!childFrame)
-        obs->ContentInserted(doc, parent, mBoundElement, index);
+      if (!childFrame) {
+        // Check to see if it's in the undisplayed content map.
+        nsCOMPtr<nsIFrameManager> frameManager;
+        shell->GetFrameManager(getter_AddRefs(frameManager));
+        nsCOMPtr<nsIStyleContext> sc;
+        frameManager->GetUndisplayedContent(mBoundElement, getter_AddRefs(sc));
+        if (!sc) {
+          nsCOMPtr<nsIDocumentObserver> obs(do_QueryInterface(shell));
+          obs->ContentInserted(doc, parent, mBoundElement, index);
+        }
+      }
     }
   }
 

@@ -52,7 +52,8 @@ REQUIRES	= xpcom \
 		  rdf \
 		  imglib2 \
 		  unicharutil \
-      webbrwsr \
+		  webbrwsr \
+		  locale \
 		  $(NULL)
 
 CPPSRCS		= \
