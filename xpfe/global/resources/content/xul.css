@@ -14,7 +14,6 @@
 
 * {
   display: block;
-  user-select: none;
 }
 
 *[collapsed="true"] {
@@ -390,6 +389,7 @@ progressmeter {
 
 textfield {
   behavior: url(chrome://global/content/xulBindings.xml#textfield);
+  user-select: text;
 }
 
 textfield[multiline="true"] {
@@ -398,6 +398,10 @@ textfield[multiline="true"] {
 
 text {
   behavior: url(chrome://global/content/xulBindings.xml#text);
+}
+
+text[editable="true"] {
+  user-select: text;
 }
 
 text[editable="true"], text[editable="true"][mode="display"] {
