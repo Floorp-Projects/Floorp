@@ -3535,8 +3535,9 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsIPresContext* aPresConte
 
 
 nsIFrame*
-nsCSSFrameConstructor::GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresContext,
-                                   nsIContent* aContent)
+nsCSSFrameConstructor::GetFrameFor(nsIPresShell*   aPresShell, 
+                                   nsIPresContext* aPresContext,
+                                   nsIContent*     aContent)
 {
   // Get the primary frame associated with the content
   nsIFrame* frame;
@@ -3550,9 +3551,13 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPr
 
     if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
       frame->FirstChild(nsnull, &frame);
-    } else if (NS_STYLE_DISPLAY_TABLE == display->mDisplay) { // we got an outer table frame, need an inner
-      frame->FirstChild(nsnull, &frame);                      // the inner frame is always the 1st child
-    }    
+    } 
+    // if we get an outer table frame use its 1st child which is a table inner frame
+    // if we get a table cell frame   use its 1st child which is an area frame
+    else if ((NS_STYLE_DISPLAY_TABLE      == display->mDisplay) ||
+             (NS_STYLE_DISPLAY_TABLE_CELL == display->mDisplay)) {
+      frame->FirstChild(nsnull, &frame);                   
+    }
   }
 
   return frame;

@@ -489,25 +489,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
           aStatus = NS_FRAME_COMPLETE;
           return rv;
         }
-        // BEGIN bug 4577 ---------------------------------------------------------
-        // XXX: this code should be replaced with the assertion below
-        //      the real fix belongs in the incr. reflow dispatch code
-        //      see bug 4577
-        else
-        {
-          nsIFrame *child;
-          FirstChild(nsnull, &child);
-          NS_ASSERTION(nsnull!=child, "cells can never have 0 children");
-          aReflowState.reflowCommand->SetTarget(child);
-        }
-        // XXX: this else block should replace the one above 
-        //      when the incr. relfow dispatch code is changed
-        /*
         else {
           NS_ASSERTION(PR_FALSE, "table cell target of illegal incremental reflow type");
         }
-        */
-        // END bug 4577 -------------------------------------------------------
       }
       else if (gsDebug) { printf("IR target is cell content\n"); }
     }
