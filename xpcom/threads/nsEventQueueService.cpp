@@ -166,8 +166,11 @@ nsEventQueueServiceImpl::GetThreadEventQueue(PRThread* aThread, PLEventQueue** a
   evQueue = (PLEventQueue*)mEventQTable->Get(&key);
   if (NULL != evQueue) {
     *aResult = evQueue;
-    // XXX: For now only use the main eventQ...
+#ifdef XP_PC
+    // XXX: For now only use the main eventQ...  When the event queue is
+    //      created via PL_CreateNativeEventQueue(...) this can go away...
     *aResult = PL_GetMainEventQueue();
+#endif
   } else {
     // XXX: Need error code for requesting an event queue when none exists...
     rv = NS_ERROR_FAILURE;
