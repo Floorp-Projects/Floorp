@@ -83,7 +83,7 @@
 $SIG{'INT'}  = sub { &killed('INT'); };
 $SIG{'KILL'} = sub { &killed('KILL'); };
 $SIG{'TERM'} = sub { &killed('TERM'); };
-$SIG{'CHLD'} = 'IGNORE'; # autoreap children
+$SIG{'CHLD'} = sub { wait(); }; # reap children
 
 # this allows us to exit() without shutting down (by exec($0)ing)
 BEGIN { exit() if ((defined($ARGV[0])) and ($ARGV[0] eq '--abort')); }
@@ -2482,10 +2482,11 @@ sub Restart {
     $self->debug("About to defer to a new $0 process...");
     # we have done our best to shutdown, so go for it!
     eval {
+        $0 =~ m/^(.*)$/os; # untaint $0 so that we can call it below (as $1)
         if ($CHROOT) {
-            exec { $0 } ($0, '--assume-chrooted', $cfgfile);
+            exec { $1 } ($1, '--assume-chrooted', $cfgfile);
         } else {
-            exec { $0 } ($0, $cfgfile);
+            exec { $1 } ($1, $cfgfile);
         }
         # I am told (by some nice people in #perl on Efnet) that our
         # memory is all cleared up for us. So don't worry that even
