@@ -25,25 +25,15 @@
 #include "nsMathMLOperators.h"
 #include "nsIMathMLFrame.h"
 
-// chars that we know how something about
+// enum of chars that we know something about
 enum nsMathMLCharEnum {
   eMathMLChar_DONT_STRETCH = -1,
-  eMathMLChar_LeftParenthesis,
-  eMathMLChar_RightParenthesis,
-  eMathMLChar_Integral ,
-  eMathMLChar_LeftSquareBracket,
-  eMathMLChar_RightSquareBracket,
-  eMathMLChar_LeftCurlyBracket, 
-  eMathMLChar_RightCurlyBracket, 
-  eMathMLChar_DownArrow, 
-  eMathMLChar_UpArrow, 
-  eMathMLChar_LeftArrow, 
-  eMathMLChar_RightArrow,   
-  eMathMLChar_RadicalBar,
-  eMathMLChar_Radical,
-  eMathMLChar_VerticalBar,
+#define MATHML_CHAR(_name, _value, _direction) eMathMLChar_##_name,
+#include "nsMathMLCharList.h"
+#undef MATHML_CHAR
   eMathMLChar_COUNT
 };
+
 
 // class used to handle stretchy symbols (accent and boundary symbol)
 class nsMathMLChar
@@ -124,12 +114,18 @@ public:
     mRect = aRect;
   }
 
+  void
+  GetBoundingMetrics(nsBoundingMetrics aBoundingMetrics) {
+    aBoundingMetrics = mBoundingMetrics;
+  }
+
 private:
   nsString           mData;
   PRUnichar          mGlyph;
   nsRect             mRect;
   nsStretchDirection mDirection;
   nsMathMLCharEnum   mEnum;
+  nsBoundingMetrics  mBoundingMetrics;
 
   // helper methods
 

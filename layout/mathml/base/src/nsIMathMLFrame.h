@@ -22,7 +22,7 @@
 #ifndef nsIMathMLFrame_h___
 #define nsIMathMLFrame_h___
 
-struct nsEmbellishState;
+struct nsEmbellishData;
 struct nsStretchMetrics;
 typedef PRInt32 nsStretchDirection;
 
@@ -59,13 +59,13 @@ public:
 
   NS_IMETHOD
   SetBoundingMetrics(const nsBoundingMetrics& aBoundingMetrics) = 0;
-/*
+
   NS_IMETHOD
   GetReference(nsPoint& aReference) = 0;
 
   NS_IMETHOD
   SetReference(const nsPoint& aReference) = 0;
-*/
+
 
  /* SUPPORT FOR STRETCHY ELEMENTS: <mo> */
  /*====================================================================*/
@@ -161,15 +161,15 @@ public:
   NS_IMETHOD
   EmbellishOperator() = 0;
 
- /* GetEmbellishState/SetEmbellishState :
+ /* GetEmbellishData/SetEmbellishData :
   * Get/Set the mEmbellish member data.
   */
 
   NS_IMETHOD
-  GetEmbellishState(nsEmbellishState& aEmbellishState) = 0;
+  GetEmbellishData(nsEmbellishData& aEmbellishData) = 0;
 
   NS_IMETHOD
-  SetEmbellishState(const nsEmbellishState& aEmbellishState) = 0;
+  SetEmbellishData(const nsEmbellishData& aEmbellishData) = 0;
 
 
  /* SUPPORT FOR SCRIPTING ELEMENTS: */
@@ -199,7 +199,7 @@ public:
   * their mDisplayStyle to aDisplayStyle and increment their mScriptLevel
   * with aScriptLevelIncrement. The increment is propagated down to the 
   * subtrees of each of these child frames. Note that <mstyle> is the only
-  * tag which allows <mstyle  displaystyle="true|false" scriptlevel="[+|-]number">
+  * tag which allows <mstyle displaystyle="true|false" scriptlevel="[+|-]number">
   * to reset or increment the scriptlevel in a manual way. Therefore <mstyle> 
   * has its own peculiar version of this method.
   */
@@ -259,6 +259,26 @@ struct nsStretchMetrics {
   }
 };
 
+// struct used by an embellished container to keep track of its embellished child
+struct nsEmbellishData {
+  PRUint32  flags;
+  nsIFrame* firstChild; // handy pointer on our embellished child 
+  nsIFrame* core; // pointer on the mo frame at the core of the embellished hierarchy
+  nsStretchDirection direction;
+  nscoord leftSpace, rightSpace;
+
+  nsEmbellishData()
+  {
+    flags = 0;
+    firstChild = nsnull;
+    core = nsnull;
+    direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
+    leftSpace = rightSpace = 0;
+  }
+};
+
+// --------------
+
 #define NS_MATHML_EMBELLISH_OPERATOR    0x1
 
 #define NS_MATHML_STRETCH_FIRST_CHILD   NS_MATHML_EMBELLISH_OPERATOR
@@ -279,24 +299,6 @@ struct nsStretchMetrics {
 // <mrow> (or an inferred mrow) will fire a stretch command to all its (non-empty) children
 #define NS_MATHML_WILL_STRETCH_ALL_CHILDREN(_flags) \
   (NS_MATHML_STRETCH_ALL_CHILDREN == ((_flags) & NS_MATHML_STRETCH_ALL_CHILDREN))
-
-// struct used by an embellished container to keep track of its embellished child
-struct nsEmbellishState {
-  PRUint32  flags;
-  nsIFrame* firstChild;     // handy pointer on our embellished child 
-  nsIFrame* core;           // pointer on the mo frame at the core of the embellished hierarchy
-  nsStretchDirection direction;
-  nscoord leftSpace, rightSpace;
-
-  nsEmbellishState()
-  {
-    flags = 0;
-    firstChild = nsnull;
-    core = nsnull;
-    direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    leftSpace = rightSpace = 0;
-  }
-};
 
 #endif /* nsIMathMLFrame_h___ */
 

@@ -18,6 +18,7 @@
  * Contributor(s):
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu> (added TeX rendering rules)
  */
 
 
@@ -67,67 +68,170 @@ nsMathMLmsubFrame::~nsMathMLmsubFrame()
 }
 
 NS_IMETHODIMP
+nsMathMLmsubFrame::Init(nsIPresContext*  aPresContext,
+			nsIContent*      aContent,
+			nsIFrame*        aParent,
+			nsIStyleContext* aContext,
+			nsIFrame*        aPrevInFlow)
+{
+  nsresult rv = nsMathMLContainerFrame::Init
+    (aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  mSubScriptShiftFactor = 0.0;
+  mScriptSpace = NSFloatPointsToTwips(0.5f); // 0.5pt as in plain TeX
+
+  // check for subscriptshift attribute in ex units
+  nsAutoString value;
+  mUserSetFlag = PR_FALSE;
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute
+      (kNameSpaceID_None, nsMathMLAtoms::subscriptshift_, value)) {
+    PRInt32 aErrorCode;
+    float aUserValue = value.ToFloat(&aErrorCode);
+    if (NS_SUCCEEDED(aErrorCode)) {
+      mUserSetFlag = PR_TRUE;
+      mSubScriptShiftFactor = aUserValue;
+    }
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          PRBool               aPlaceOrigin,
                          nsHTMLReflowMetrics& aDesiredSize)
 {
-  nscoord count = 0;
-  nsRect rect[2];
-  nsIFrame* child[2];
-  nsIFrame* childFrame = mFrames.FirstChild();
-  while (childFrame) {
-    if (!IsOnlyWhitespace(childFrame) && 2 > count) {
-      childFrame->GetRect(rect[count]);
-      child[count] = childFrame;
+  nsresult rv = NS_OK;
+
+  ////////////////////////////////////
+  // Get the children's desired sizes
+
+  PRInt32 count = 0;
+  nsRect aRect;
+  nsHTMLReflowMetrics baseSize (nsnull);
+  nsHTMLReflowMetrics subScriptSize (nsnull);
+  nsIFrame* baseFrame;
+  nsIFrame* subScriptFrame;
+  // parameter v, Rule 18a, Appendix G of the TeXbook
+  nscoord minSubScriptShift = 0; 
+
+  nsBoundingMetrics baseBounds, subScriptBounds;
+
+  nsIFrame* aChildFrame = mFrames.FirstChild();
+  while (nsnull != aChildFrame)
+  {
+    if (!IsOnlyWhitespace(aChildFrame)) {
+      aChildFrame->GetRect(aRect);
+      if (0 == count) {
+	// base 
+	baseFrame = aChildFrame;
+	baseSize.descent = aRect.x; baseSize.ascent = aRect.y;
+	baseSize.width = aRect.width; baseSize.height = aRect.height;
+        if (NS_SUCCEEDED(GetBoundingMetricsFor(baseFrame, baseBounds))) {
+          baseBounds.descent = -baseBounds.descent;
+        } else {
+          baseBounds.descent = baseSize.descent;
+          baseBounds.ascent = baseSize.ascent;
+          baseBounds.width = baseSize.width;
+        }
+      }
+      else if (1 == count) {
+	// subscript
+	subScriptFrame = aChildFrame;
+	subScriptSize.descent = aRect.x; subScriptSize.ascent = aRect.y;
+	subScriptSize.width = aRect.width; subScriptSize.height = aRect.height;
+        if (NS_SUCCEEDED(GetBoundingMetricsFor(subScriptFrame, subScriptBounds))) {
+          subScriptBounds.descent = -subScriptBounds.descent;
+        } else {
+          subScriptBounds.descent = subScriptSize.descent;
+          subScriptBounds.ascent = subScriptSize.ascent;
+          subScriptBounds.width = subScriptSize.width;
+        }
+	// get the subdrop from the subscript font
+	nscoord aSubDrop;
+	GetSubDropFromChild (aPresContext, subScriptFrame, aSubDrop);
+	// parameter v, Rule 18a, App. G, TeXbook
+	minSubScriptShift = baseSize.descent + aSubDrop;
+      }
+      else {
+	NS_ASSERTION((count < 2),"nsMathMLmsubFrame : invalid markup");
+      }
       count++;
     }
-    childFrame->GetNextSibling(&childFrame);
+    
+    rv = aChildFrame->GetNextSibling(&aChildFrame);
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
   }
-  aDesiredSize.ascent = rect[0].y;
 
-  // Get the subscript offset
-  nscoord subscriptOffset, leading;
+  //////////////////
+  // Place Children
+  
+  // get min subscript shift limit from x-height
+  // = h(x) - 4/5 * sigma_5, Rule 18b, App. G, TeXbook
+  nscoord xHeight = 0;
   nsCOMPtr<nsIFontMetrics> fm;
   const nsStyleFont* aFont =
-    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  aPresContext->GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
-  fm->GetSubscriptOffset(subscriptOffset);
-  fm->GetLeading(leading);
+    (const nsStyleFont*) mStyleContext->GetStyleData (eStyleStruct_Font);
+  aPresContext->GetMetricsFor (aFont->mFont, getter_AddRefs(fm));
+  fm->GetXHeight (xHeight);
+  nscoord minShiftFromXHeight = (nscoord) 
+    (subScriptSize.ascent - (4.0f/5.0f) * xHeight);
 
-// XXX temporary hack pending bug http://bugzilla.mozilla.org/show_bug.cgi?id=9640
-//#if 0
-nscoord fmAscent, xHeight;
-fm->GetMaxAscent(fmAscent);
-fm->GetXHeight(xHeight);
-subscriptOffset = PR_MAX(subscriptOffset,fmAscent-(xHeight*4)/5);
-//#endif
+  // aSubScriptShift
+  // = minimum amount to shift the subscript down set by user or from the font
+  // = sub1 in TeX
+  // = subscriptshift attribute * x-height
+  nscoord aSubScriptShift, dummy;
+  // get aSubScriptShift default from font
+  GetSubScriptShifts (fm, aSubScriptShift, dummy);
+  if (mUserSetFlag == PR_TRUE) {
+    // the user has set the subscriptshift attribute
+    aSubScriptShift = NSToCoordRound(mSubScriptShiftFactor * xHeight);
+  }
 
-//for (int i=0; i<100; i++) {
-//printf("Ascent:%d   xHeight:%d  subscriptOffset:%d leading: %d ",
-//fmAscent, xHeight, subscriptOffset, leading);
-//}
+  // get actual subscriptshift to be used
+  // Rule 18b, App. G, TeXbook
+  nscoord actualSubScriptShift = 
+    PR_MAX(minSubScriptShift,PR_MAX(aSubScriptShift,minShiftFromXHeight));
+#if 0
+  // get bounding box for base + subscript
+  aDesiredSize.ascent = 
+    PR_MAX(baseSize.ascent,(subScriptSize.ascent-actualSubScriptShift));
+  aDesiredSize.descent = 
+    PR_MAX(baseSize.descent,(actualSubScriptShift+subScriptSize.descent));
+  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+  // add mScriptSpace between base and subscript
+  aDesiredSize.width = baseSize.width + mScriptSpace + subScriptSize.width;
+#endif
 
-  subscriptOffset += leading;
+  mBoundingMetrics.ascent = 
+    PR_MAX(baseBounds.ascent, subScriptBounds.ascent - actualSubScriptShift);
+  mBoundingMetrics.descent = 
+   PR_MAX(baseBounds.descent, subScriptBounds.descent + actualSubScriptShift);
+  // add mScriptSpace between base and supscript
+  mBoundingMetrics.width = baseBounds.width + mScriptSpace + subScriptBounds.width;
 
-  // logic derived after examining the boxes on three cases: h0==h1, h0>h1, h0<h1
-  aDesiredSize.height = rect[0].height + rect[1].height - subscriptOffset;
-  aDesiredSize.width = rect[0].width + rect[1].width;
-  rect[0].x = 0;
-  rect[0].y = 0;
-  rect[1].x = rect[0].width;
-  rect[1].y = aDesiredSize.height - rect[1].height;
-  aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
+  aDesiredSize.ascent = 
+     PR_MAX(baseSize.ascent, subScriptSize.ascent - actualSubScriptShift);
+  aDesiredSize.descent = 
+     PR_MAX(baseSize.descent, subScriptSize.descent + actualSubScriptShift);
+  aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
+
+//XXX wrong  aDesiredSize.width = mBoundingMetrics.width;
+
+  mBoundingMetrics.descent = -mBoundingMetrics.descent;
 
   if (aPlaceOrigin) {
-    // child[0]->SetRect(aPresContext, rect[0]);
-    // child[1]->SetRect(aPresContext, rect[1]);
-    nsHTMLReflowMetrics childSize(nsnull);
-    for (PRInt32 i=0; i<count; i++) {
-      childSize.width = rect[i].width;
-      childSize.height = rect[i].height;
-      FinishReflowChild(child[i], aPresContext, childSize, rect[i].x, rect[i].y, 0);
-    }
+    nscoord dx, dy;
+    // now place the base ...
+    dx = 0; dy = aDesiredSize.ascent - baseSize.ascent;
+    FinishReflowChild (baseFrame, aPresContext, baseSize, dx, dy, 0);
+    // ... and subscript
+    dx = baseSize.width; 
+    dy = aDesiredSize.ascent - subScriptSize.ascent + actualSubScriptShift;
+    FinishReflowChild (subScriptFrame, aPresContext, subScriptSize, dx, dy, 0);
   }
+
   return NS_OK;
 }

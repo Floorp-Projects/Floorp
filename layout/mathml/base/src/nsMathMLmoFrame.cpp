@@ -184,10 +184,10 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
   nsIFrame* firstChild = mFrames.FirstChild();
   while (firstChild) {
     if (!IsOnlyWhitespace(firstChild)) {
-      mEmbellish.flags = NS_MATHML_EMBELLISH_OPERATOR;
-      mEmbellish.firstChild = firstChild;
-      mEmbellish.core = this;
-      mEmbellish.direction = mMathMLChar.GetStretchDirection();
+      mEmbellishData.flags = NS_MATHML_EMBELLISH_OPERATOR;
+      mEmbellishData.firstChild = firstChild;
+      mEmbellishData.core = this;
+      mEmbellishData.direction = mMathMLChar.GetStretchDirection();
       break;
     }
     firstChild->GetNextSibling(&firstChild);
@@ -219,22 +219,22 @@ nsMathMLmoFrame::InitData()
   else {
     // Get our outermost embellished container and its parent
     nsIFrame* aParent = this;
-    nsIFrame* aEmbellish = this;
+    nsIFrame* aEmbellishAncestor = this;
     do {
-      aEmbellish = aParent;
+      aEmbellishAncestor = aParent;
       aParent->GetParent(&aParent);
     } while (IsEmbellishOperator(aParent));
     // flag if we have an embellished ancestor
-    if (aEmbellish != this) {
+    if (aEmbellishAncestor != this) {
       hasEmbellishAncestor = PR_TRUE;
     }
 
     // Find the position of our outermost embellished container w.r.t
-    // its sibblings (frames are singly-linked together).
+    // its siblings (frames are singly-linked together).
     //////////////
     // WHITESPACE: don't forget that whitespace doesn't count in MathML!
     // Here is the situation: we may have empty frames between us:
-    // [space*] [prev] [space*] [aEmbellish] [space*] [next]
+    // [space*] [prev] [space*] [aEmbellishAncestor] [space*] [next]
     // We want to skip them...
     // The problem looks like a regexp, we ask a little flag to help us.
     PRInt32 state = 0;
@@ -244,7 +244,7 @@ nsMathMLmoFrame::InitData()
 
     aParent->FirstChild(nsnull, &aFrame);
     while (aFrame) {
-      if (aFrame == aEmbellish) { // we start looking for next
+      if (aFrame == aEmbellishAncestor) { // we start looking for next
         state++;
       }
       else if (!IsOnlyWhitespace(aFrame)) {
@@ -272,8 +272,8 @@ nsMathMLmoFrame::InitData()
   PRBool found = nsMathMLOperators::LookupOperator(aData, aForm,
                                                    &mFlags, &mLeftSpace, &mRightSpace);
 
-  // All operators are symmetric. But this symmetric flag is *not* stored in the 
-  // operator dictionary and operaptors are treated as non-symmetric...
+  // All operators are symmetric. But this symmetric flag is *not* stored in 
+  // the operator dictionary and operators are treated as non-symmetric...
   // Uncomment the folllowing line to change this behavior. 
   // mFlags |= NS_MATHML_OPERATOR_SYMMETRIC;
 
@@ -359,11 +359,11 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
                          nsStretchMetrics&    aContainerSize,
                          nsStretchMetrics&    aDesiredStretchSize)
 {
-  if (NS_MATHML_STRETCH_WAS_DONE(mEmbellish.flags)) {
+  if (NS_MATHML_STRETCH_WAS_DONE(mEmbellishData.flags)) {
     printf("WARNING *** it is wrong to fire stretch more than once on a frame...\n");
     return NS_OK;
   }
-  mEmbellish.flags |= NS_MATHML_STRETCH_DONE;
+  mEmbellishData.flags |= NS_MATHML_STRETCH_DONE;
 
 //  if (0 == mFlags) { // first time...
     InitData();
@@ -396,6 +396,10 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     if (old == aDesiredStretchSize) { // hasn't changed !
       mFlags &= ~NS_MATHML_OPERATOR_MUTABLE;
     }
+    else {
+      // update our bounding metrics... it becomes that our MathML char
+      mMathMLChar.GetBoundingMetrics(mBoundingMetrics);
+    }
   }
 
   /////////
@@ -405,7 +409,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
     // The rendering will be handled by our MathML char
     mMathMLChar.SetRect(nsRect(0, 0, aDesiredStretchSize.width,
                                aDesiredStretchSize.height));
-  }
+ }
   else {
     nsHTMLReflowMetrics aReflowMetrics(nsnull);
     Place(aPresContext, aRenderingContext, PR_TRUE, aReflowMetrics);
@@ -453,3 +457,22 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMathMLmoFrame::Reflow(nsIPresContext*          aPresContext,
+                        nsHTMLReflowMetrics&     aDesiredSize,
+                        const nsHTMLReflowState& aReflowState,
+                        nsReflowStatus&          aStatus)
+{
+  return ReflowTokenFor(this, aPresContext, aDesiredSize,
+                        aReflowState, aStatus);
+}
+
+NS_IMETHODIMP
+nsMathMLmoFrame::Place(nsIPresContext*      aPresContext,
+                       nsIRenderingContext& aRenderingContext,
+                       PRBool               aPlaceOrigin,
+                       nsHTMLReflowMetrics& aDesiredSize)
+{
+  return PlaceTokenFor(this, aPresContext, aRenderingContext,
+                       aPlaceOrigin, aDesiredSize);
+}

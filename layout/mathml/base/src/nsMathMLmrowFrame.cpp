@@ -75,7 +75,7 @@ nsMathMLmrowFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mEmbellish.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
+  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
 
   // XXX Attributes?
   return rv;

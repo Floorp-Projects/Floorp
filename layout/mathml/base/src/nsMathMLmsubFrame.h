@@ -18,6 +18,7 @@
  * Contributor(s): 
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   David J. Fiddes <D.J.Fiddes@hw.ac.uk>
+ *   Shyjan Mahamud <mahamud@cs.cmu.edu> (added TeX rendering rules)
  */
 
 #ifndef nsMathMLmsubFrame_h___
@@ -33,6 +34,13 @@
 class nsMathMLmsubFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLmsubFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+
+  NS_IMETHOD
+  Init(nsIPresContext*  aPresContext,
+       nsIContent*      aContent,
+       nsIFrame*        aParent,
+       nsIStyleContext* aContext,
+       nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
   Place(nsIPresContext*      aPresContext,
@@ -55,11 +63,15 @@ public:
     return rv;
   }
 
-protected:
+ protected:
   nsMathMLmsubFrame();
   virtual ~nsMathMLmsubFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }
+
+ private:
+  float   mSubScriptShiftFactor;
+  PRBool  mUserSetFlag;
 };
 
 #endif /* nsMathMLmsubFrame_h___ */

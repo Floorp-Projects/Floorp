@@ -75,7 +75,7 @@ nsMathMLmoverFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mEmbellish.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
+  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
 
   return rv;
 }
@@ -136,10 +136,10 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
           NS_ASSERTION(NS_SUCCEEDED(rv) && aMathMLFrame, "Mystery!");
           if (NS_SUCCEEDED(rv) && aMathMLFrame) {
             nsRect rect;
-            nsEmbellishState embellishState;
-            aMathMLFrame->GetEmbellishState(embellishState);
-            embellishState.core->GetRect(rect);
-            width[count] = rect.width + embellishState.leftSpace + embellishState.rightSpace;
+            nsEmbellishData embellishData;
+            aMathMLFrame->GetEmbellishData(embellishData);
+            embellishData.core->GetRect(rect);
+            width[count] = rect.width + embellishData.leftSpace + embellishData.rightSpace;
           }
         }
         maxWidth = PR_MAX(maxWidth, width[count]); // clean up and use "if" later
@@ -190,5 +190,10 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
+
+  // XXX Fix me!
+  mBoundingMetrics.ascent  =  aDesiredSize.ascent;
+  mBoundingMetrics.descent = -aDesiredSize.descent;
+  mBoundingMetrics.width   =  aDesiredSize.width;
   return NS_OK;
 }

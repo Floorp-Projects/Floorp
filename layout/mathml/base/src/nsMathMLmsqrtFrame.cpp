@@ -63,8 +63,8 @@ nsMathMLmsqrtFrame::nsMathMLmsqrtFrame() :
   mSqrChar(),
   mBarChar()
 {
-  mSqrChar.SetEnum(eMathMLChar_Radical);
-  mBarChar.SetEnum(eMathMLChar_RadicalBar);
+  mSqrChar.SetEnum(eMathMLChar_Sqrt);
+  mBarChar.SetEnum(eMathMLChar_OverBar);
 }
 
 nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame()
@@ -82,7 +82,7 @@ nsMathMLmsqrtFrame::Init(nsIPresContext*  aPresContext,
   rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent,
                                     aContext, aPrevInFlow);
 
-  mEmbellish.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
+  mEmbellishData.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
 
   // TODO: other attributes...
   return rv;
