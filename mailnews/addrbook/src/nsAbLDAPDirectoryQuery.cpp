@@ -307,8 +307,12 @@ nsresult nsAbQueryLDAPMessageListener::OnLDAPMessageBind (nsILDAPMessage *aMessa
     rv = mUrl->GetAttributes (attributes.GetSizeAddr (), attributes.GetArrayAddr ());
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = mSearchOperation->SearchExt (NS_ConvertASCIItoUCS2(dn).get(), scope,
-            NS_ConvertASCIItoUCS2(filter).get(),
+    // when we called SetSpec(), our spec contained UTF8 data
+    // so when we call GetFilter(), it's not going to be ASCII.
+    // it will be UTF8, so we need to convert from UTF8 to UCS2
+    // see bug #124995
+    rv = mSearchOperation->SearchExt (NS_ConvertUTF8toUCS2(dn).get(), scope,
+            NS_ConvertUTF8toUCS2(filter).get(),
             attributes.GetSize (), attributes.GetArray (),
             mTimeOut, mResultLimit);
     NS_ENSURE_SUCCESS(rv, rv);
