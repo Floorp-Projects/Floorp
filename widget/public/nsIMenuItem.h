@@ -56,6 +56,8 @@ class nsIMenuItem : public nsISupports {
   public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENUITEM_IID)
 
+    enum EMenuItemType { eRegular = 0, eCheckbox, eRadio } ;
+
    /**
     * Creates the MenuItem
     *
@@ -72,7 +74,6 @@ class nsIMenuItem : public nsISupports {
 
    /**
     * Get the MenuItem label
-
     *
     */
     NS_IMETHOD SetLabel(nsString &aText) = 0;
@@ -113,16 +114,16 @@ class nsIMenuItem : public nsISupports {
     NS_IMETHOD GetChecked(PRBool *aIsEnabled) = 0;
 
    /**
-    * Sets whether the item is a checkbox type
+    * Sets whether the item is a checkbox or radio
     *
     */
-    NS_IMETHOD SetCheckboxType(PRBool aIsCheckbox) = 0;
+    NS_IMETHOD SetMenuItemType(EMenuItemType aType) = 0;
 
    /**
-    * Gets whether the item is a checkbox type
+    * Gets whether the item is a checkbox or radio
     *
     */
-    NS_IMETHOD GetCheckboxType(PRBool *aIsCheckbox) = 0;
+    NS_IMETHOD GetMenuItemType(EMenuItemType *aType) = 0;
     
    /**
     * Gets the MenuItem Command identifier

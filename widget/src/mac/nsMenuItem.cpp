@@ -57,7 +57,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mKeyEquivalent      = " ";
   mEnabled            = PR_TRUE;
   mIsChecked          = PR_FALSE;
-  mIsCheckboxType     = PR_FALSE;
+  mMenuType           = eRegular;
 }
 
 //-------------------------------------------------------------------------
@@ -72,100 +72,6 @@ nsMenuItem::~nsMenuItem()
   NS_IF_RELEASE(mXULCommandListener);
 }
 
-#ifdef NOTNOW
-//-------------------------------------------------------------------------
-void nsMenuItem::Create(nsIWidget      *aMBParent, 
-                        Widget          aParent, 
-                        const nsString &aLabel, 
-                        PRUint32        aCommand)
-{
-  /*
-  mTarget  = aMBParent;
-  mCommand = aCommand;
-  mLabel   = aLabel;
-
-  if (NULL == aParent || nsnull == aMBParent) {
-    return;
-  }
-
-  mTarget = aMBParent;
-  char * nameStr = mLabel.ToNewCString();
-
-  Widget parentMenuHandle = GetNativeParent();
-
-  mMenu = XtVaCreateManagedWidget(nameStr, xmCascadeButtonGadgetClass,
-                                          parentMenuHandle,
-                                          NULL);
-
-  XtAddCallback(mMenu, XmNactivateCallback, nsXtWidget_Menu_Callback, 
-                (nsIMenuItem *)this);
-
-  delete[] nameStr;
-  */
-
-}
-//-------------------------------------------------------------------------
-Widget nsMenuItem::GetNativeParent()
-{
-
-  void * voidData;
-  if (nsnull != mMenuParent) {
-    mMenuParent->GetNativeData(voidData);
-  } else if (nsnull != mPopUpParent) {
-    mPopUpParent->GetNativeData(voidData);
-  } else {
-    return NULL;
-  }
-  return (Widget)voidData;
-
-}
-
-#endif
-
-//-------------------------------------------------------------------------
-nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
-{
-  nsIWidget    * widget  = nsnull; // MenuBar's Parent
-  nsIMenu      * menu    = nsnull;
-  nsIMenuBar   * menuBar = nsnull;
-  nsIPopUpMenu * popup   = nsnull;
-  nsISupports  * parent  = aParent;
-
-/*
-  // Bump the ref count on the parent, since it gets released unconditionally..
-  NS_ADDREF(parent);
-  while (1) {
-    if (NS_OK == parent->QueryInterface(NS_GET_IID(nsIMenu),(void**)&menu)) {
-      NS_RELEASE(parent);
-      if (NS_OK != menu->GetParent(parent)) {
-        NS_RELEASE(menu);
-        return nsnull;
-      }
-      NS_RELEASE(menu);
-
-    } else if (NS_OK == parent->QueryInterface(NS_GET_IID(nsIPopUpMenu),(void**)&popup)) {
-      if (NS_OK != popup->GetParent(widget)) {
-        widget =  nsnull;
-      } 
-      NS_RELEASE(parent);
-      NS_RELEASE(popup);
-      return widget;
-
-    } else if (NS_OK == parent->QueryInterface(NS_GET_IID(nsIMenuBar),(void**)&menuBar)) {
-      if (NS_OK != menuBar->GetParent(widget)) {
-        widget =  nsnull;
-      } 
-      NS_RELEASE(parent);
-      NS_RELEASE(menuBar);
-      return widget;
-    } else {
-      NS_RELEASE(parent);
-      return nsnull;
-    }
-  }
-  */
-  return nsnull;
-}
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::Create(nsISupports    *aParent, 
@@ -240,13 +146,10 @@ NS_METHOD nsMenuItem::GetEnabled(PRBool *aIsEnabled)
 NS_METHOD nsMenuItem::SetChecked(PRBool aIsEnabled)
 {
   mIsChecked = aIsEnabled;
-  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-  if (domElement) {
-    if(mIsChecked)
-      domElement->SetAttribute("checked", "true");
-    else
-      domElement->SetAttribute("checked", "false");
-  }
+  if(mIsChecked)
+    mDOMElement->SetAttribute("checked", "true");
+  else
+    mDOMElement->SetAttribute("checked", "false");
   return NS_OK;
 }
 
@@ -258,16 +161,16 @@ NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetCheckboxType(PRBool aIsCheckbox)
+NS_METHOD nsMenuItem::SetMenuItemType(EMenuItemType aType)
 {
-  mIsCheckboxType = aIsCheckbox;
+  mMenuType = aType;
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::GetCheckboxType(PRBool *aIsCheckbox)
+NS_METHOD nsMenuItem::GetMenuItemType(EMenuItemType *aType)
 {
-  *aIsCheckbox = mIsCheckboxType;
+  *aType = mMenuType;
   return NS_OK;
 }
 
@@ -319,11 +222,61 @@ NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-    if(mIsCheckboxType) {
+  switch ( mMenuType ) {
+    case eCheckbox:
       SetChecked(!mIsChecked);
+      break;
+
+    case eRadio:
+    {
+      // we only want to muck with things if we were selected and we're not
+      // already checked.
+      if ( mIsChecked )
+        break;       
+      SetChecked(PR_TRUE);
+      
+      // walk the sibling list looking for nodes with the same name and
+      // uncheck them all.
+      
+      nsAutoString myGroupName;
+      mDOMElement->GetAttribute("name", myGroupName);
+      
+      nsCOMPtr<nsIDOMNode> parent;
+      mDOMNode->GetParentNode(getter_AddRefs(parent));
+      if ( !parent )
+        break;
+      nsCOMPtr<nsIDOMNode> currSibling;
+      parent->GetFirstChild(getter_AddRefs(currSibling));
+      while ( currSibling ) {
+        // skip this node
+        if ( currSibling != mDOMNode ) {        
+          nsCOMPtr<nsIDOMElement> currElement = do_QueryInterface(currSibling);
+          if ( !currElement )
+            break;
+          
+          // if the current sibling is in the same group, clear it
+          nsAutoString currGroupName;
+          currElement->GetAttribute("name", currGroupName);
+          if ( currGroupName == myGroupName )
+            currElement->SetAttribute("checked", "false");
+        }
+        
+        // advance to the next node
+        nsIDOMNode* next;
+        currSibling->GetNextSibling(&next);
+        currSibling = dont_AddRef(next);
+        
+      } // for each sibling
+      break;
     }
-    DoCommand();
-  	return nsEventStatus_eConsumeNoDefault;
+      
+    case eRegular:
+      break;          // do nothing special
+      
+  } // which menu type
+      
+  DoCommand();
+  return nsEventStatus_eConsumeNoDefault;
 }
 
 //-------------------------------------------------------------------------
