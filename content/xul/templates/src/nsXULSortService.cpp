@@ -1021,10 +1021,16 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 	nsIDOMXULTreeElement	*domXulTree;
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = nsnull;
+
+    // Maintain an nsCOMPtr to _here_ to the composite datasource so
+    // that we're sure that we'll hold a reference to it (and actually
+    // release that reference when the stack frame goes away).
+    nsCOMPtr<nsIRDFCompositeDataSource> cds;
 	if (NS_SUCCEEDED(rv = treeNode->QueryInterface(kIDomXulTreeElementIID, (void**)&domXulTree)))
 	{
-		if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(&sortInfo.db)))
+		if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(getter_AddRefs(cds))))
 		{
+            sortInfo.db = cds;
 		}
 	}
 
