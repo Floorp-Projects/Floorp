@@ -4456,13 +4456,19 @@ nsHTMLEditRules::CheckForWhitespaceDeletion(nsCOMPtr<nsIDOMNode> *ioStartNode,
       else if (aAction == nsIEditor::eNext)
         res = wsObj.DeleteWSForward();
       *aHandled = PR_TRUE;
-      return res;
     } 
-    else if (visNode)
+    else if (wsType==nsWSRunObject::eText)
     {
       // reposition startNode and startOffset so that we skip over any non-significant ws
       *ioStartNode = visNode;
       *ioStartOffset = visOffset;
+    }
+    else if (visNode)
+    {
+      // reposition startNode and startOffset so that we skip over any non-significant ws
+      res = nsEditor::GetNodeLocation(visNode, ioStartNode, ioStartOffset);
+      if (aAction == nsIEditor::ePrevious) 
+        (*ioStartOffset)++;
     }
   }
   return res;
