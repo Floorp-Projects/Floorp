@@ -283,18 +283,26 @@ if (@::legal_keywords) {
 };
 }
 
-print "<tr><td align=right><B>Attachments:</b></td>\n";
-SendSQL("select attach_id, creation_ts, mimetype, description from attachments where bug_id = $id");
-while (MoreSQLData()) {
-    my ($attachid, $date, $mimetype, $desc) = (FetchSQLData());
-    if ($date =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
-        $date = "$3/$4/$2 $5:$6";
+# 2001-05-16 myk@mozilla.org: use the attachment tracker to display attachments
+# if this installation has enabled use of the attachment tracker.
+if (Param('useattachmenttracker')) {
+    print "</table>\n";
+    use Attachment;
+    &Attachment::list($id);
+} else {
+    print "<tr><td align=right><B>Attachments:</b></td>\n";
+    SendSQL("select attach_id, creation_ts, mimetype, description from attachments where bug_id = $id");
+    while (MoreSQLData()) {
+        my ($attachid, $date, $mimetype, $desc) = (FetchSQLData());
+        if ($date =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
+            $date = "$3/$4/$2 $5:$6";
+        }
+        my $link = "showattachment.cgi?attach_id=$attachid";
+        $desc = value_quote($desc);
+        print qq{<td><a href="$link">$date</a></td><td colspan=6>$desc&nbsp;&nbsp;&nbsp;($mimetype)</td></tr><tr><td></td>};
     }
-    my $link = "showattachment.cgi?attach_id=$attachid";
-    $desc = value_quote($desc);
-    print qq{<td><a href="$link">$date</a></td><td colspan=6>$desc&nbsp;&nbsp;&nbsp;($mimetype)</td></tr><tr><td></td>};
+    print "<td colspan=7><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
 }
-print "<td colspan=7><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
 
 
 sub EmitDependList {

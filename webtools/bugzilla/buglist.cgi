@@ -415,6 +415,22 @@ sub GenerateSQL {
              }
              $f = "$table.$field";
          },
+         # 2001-05-16 myk@mozilla.org: enable querying against attachment status
+         # if this installation has enabled use of the attachment manager.
+         "^attachstatusdefs.name," => sub {
+             my $attachtable = "attachments_$chartid";
+             my $statustable = "attachstatuses_$chartid";
+             my $statusdefstable = "attachstatusdefs_$chartid";
+             push(@supptables, "attachments $attachtable");
+             push(@supptables, "attachstatuses $statustable");
+             push(@supptables, "attachstatusdefs $statusdefstable");
+             push(@wherepart, "bugs.bug_id = $attachtable.bug_id");
+             push(@wherepart, "$attachtable.attach_id = $statustable.attach_id");
+             push(@wherepart, "$statustable.statusid = $statusdefstable.id");
+             my $table = $statusdefstable;
+             my $field = "name";
+             $f = "$table.$field";
+         },
          "^changedin," => sub {
              $f = "(to_days(now()) - to_days(bugs.delta_ts))";
          },

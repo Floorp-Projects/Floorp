@@ -669,4 +669,9 @@ DefParam("moved-default-component",
          "t",
          '');
 
+DefParam("useattachmenttracker",
+         "Whether or not to use the attachment tracker that adds additional features for tracking bug attachments.",
+         "b",
+         0);
+
 1;

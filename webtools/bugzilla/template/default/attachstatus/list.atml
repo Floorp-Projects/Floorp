@@ -1,0 +1,52 @@
+[% INCLUDE global/header 
+  title = 'Administer Attachment Statuses'
+  message = message
+  style = "
+    th { text-align: left; }
+  "
+%]
+
+<table cellspacing="0" cellpadding="4" border="1">
+
+  <tr>
+    <th>Name</th>
+    <th>Description</th>
+    <th>Sort Key</th>
+    <th>Product</th>
+    <th>Action(s)</th>
+  </tr>
+
+  [% FOREACH statusdef = statusdefs %]
+
+    <tr>
+      <td>[% statusdef.name FILTER html %]</td>
+      <td>[% statusdef.description FILTER html %]</td>
+      <td>[% statusdef.sortkey %]</td>
+      <td>[% statusdef.product %]</td>
+      <td>
+        <a href="editattachstatuses.cgi?action=edit&id=[% statusdef.id %]">Edit</a>
+        <a href="editattachstatuses.cgi?action=delete&id=[% statusdef.id %]" onclick="return confirmDelete();">Delete</a>
+      </td>
+    </tr>
+
+  [% END %]
+
+  <tr>
+    <td colspan="4"></td>
+    <td>
+      <a href="editattachstatuses.cgi?action=create">Create</a>
+    </td>
+  </tr>
+
+</table>
+
+<script language="JavaScript">
+  function confirmDelete()
+  {
+    return confirm('Are you sure you want to permanently delete ' +
+                   'this attachment status?  All attachments ' + 
+                   'with this status will have it unset.');
+  }
+</script>
+
+[% INCLUDE global/footer %]

@@ -1,0 +1,58 @@
+<br>
+<table cellspacing="0" cellpadding="4" border="1">
+  <tr>
+    <th bgcolor="#cccccc" align="left">Attachment</th>
+    <th bgcolor="#cccccc" align="left">Type</th>
+    <th bgcolor="#cccccc" align="left">Modified</th>
+    <th bgcolor="#cccccc" align="left">Status</th>
+    <th bgcolor="#cccccc" align="left">Actions</th>
+  </tr>
+
+  [% FOREACH attachment = attachments %]
+    <tr>
+      <td valign="top">
+        [% IF attachment.isobsolete %]
+          <strike><a href="attachment.cgi?id=[% attachment.attachid %]&action=view">[% attachment.description %]</a></strike>
+        [% ELSE %]
+          <a href="attachment.cgi?id=[% attachment.attachid %]&action=view">[% attachment.description %]</a> 
+        [% END %]
+      </td>
+
+      <td valign="top">
+        [% IF attachment.ispatch %]
+          <i>patch</i>
+        [% ELSE %]
+          [% attachment.mimetype %]
+        [% END %]
+      </td>
+
+      <td valign="top">[% attachment.date %]</td>
+
+      <td valign="top">
+        <nobr>
+        [% IF attachment.statuses.size == 0 %]
+          <i>none</i>
+        [% ELSE %]
+          [% FOREACH s = attachment.statuses %]
+            [% s %]<br>
+          [% END %]
+        [% END %]
+        </nobr>
+      </td>
+
+      <td valign="top">
+        <a href="attachment.cgi?id=[% attachment.attachid %]&action=edit">Edit</a> 
+      </td>
+    </tr>
+  [% END %]
+
+  <tr>
+    <td colspan="4">
+      <a href="createattachment.cgi?id=[% bugid %]">Create a new attachment</a> (proposed patch, testcase, etc.)
+    </td>
+    <td colspan="1">
+      <a href="attachment.cgi?bugid=[% bugid %]&action=viewall">View All</a>
+    </td>
+  </tr>
+</table>
+<br>

@@ -1194,7 +1194,8 @@ sub DumpBugActivity {
         $datepart = "and bugs_activity.bug_when >= $starttime";
     }
     my $query = "
-        SELECT IFNULL(fielddefs.name, bugs_activity.fieldid),
+        SELECT IFNULL(fielddefs.description, bugs_activity.fieldid),
+                bugs_activity.attach_id,
                 bugs_activity.bug_when,
                 bugs_activity.removed, bugs_activity.added,
                 profiles.login_name
@@ -1219,7 +1220,9 @@ sub DumpBugActivity {
     my @row;
     my $incomplete_data = 0;
     while (@row = FetchSQLData()) {
-        my ($field,$when,$removed,$added,$who) = (@row);
+        my ($field,$attachid,$when,$removed,$added,$who) = (@row);
+        $field =~ s/^Attachment/<a href="attachment.cgi?id=$attachid&action=view">Attachment #$attachid<\/a>/ 
+          if (Param('useattachmenttracker') && $attachid);
         $removed = html_quote($removed);
         $added = html_quote($added);
         $removed = "&nbsp;" if $removed eq "";
@@ -1289,6 +1292,8 @@ Actions:
         }
         if (UserInGroup("editcomponents")) {
             $html .= ", <a href=editproducts.cgi>components</a>";
+            $html .= ", <a href=editattachstatuses.cgi><NOBR>attachment statuses</NOBR></a>"
+              if Param('useattachmenttracker');
         }
         if (UserInGroup("creategroups")) {
             $html .= ", <a href=editgroups.cgi>groups</a>";

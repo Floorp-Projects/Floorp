@@ -1,0 +1,49 @@
+[% DEFAULT
+  title = ""
+  h1 = title
+  h2 = ""
+  extra = ""
+  jscript = ""
+  style = ""
+  message = ""
+%]
+
+<html>
+  <head>
+    <title>[% title %]</title>
+    [% Param('headerhtml') %]
+    [% jscript %]
+    <style>
+      [% style %]
+    </style>
+  </head>
+  <body [% Param('bodyhtml') %] [% extra %]>
+
+  [% PerformSubsts(Param('bannerhtml')) %]
+    
+[% IF h1 || h2 %]
+    <table border="0" cellspacing="0" width="100%">
+      <tr>
+        <td width="10%" valign="top" align="left">
+          <table border="0" cellpadding="0" cellspacing="2">
+            <tr>
+              <td valign="top" align="left" nowrap>
+                <font size="+1"><b>[% h1 %]</b></font>
+              </td>
+            </tr>
+          </table>
+        </td>
+        <td valign="center">&nbsp;</td>
+        <td valign="center" align="left">[% h2 %]</td>
+      </tr>
+    </table>
+[% END %]
+
+    [% IF message %]
+      <table width="100%" cellspacing="0" cellpadding="5" border="1"><tr><td>
+        <font color="green">[% message %]</font>
+      </td></tr></table>
+    [% END %]
+
+    [% Param('shutdownhtml') %]
+

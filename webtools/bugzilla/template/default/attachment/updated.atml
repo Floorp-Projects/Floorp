@@ -1,0 +1,16 @@
+[% INCLUDE global/header 
+  title = "Changes Submitted"
+  style = "th { text-align: left; }"
+%]
+
+<p>
+  Your changes have been submitted for 
+  <a href="attachment.cgi?id=[% attachid %]&action=edit">attachment #[% attachid %]</a>
+  of <a href="show_bug.cgi?id=[% bugid %]">bug #[% bugid %]</a>.
+</p>
+
+[% mailresults %]
+
+<br>
+
+[% INCLUDE global/footer %]

@@ -1,0 +1,78 @@
+[% INCLUDE global/header 
+  title = "View All Attachments for Bug #$bugid"
+  h1 = "View All Attachments for <a href=\"show_bug.cgi?id=$bugid\">Bug #$bugid</a>"
+  h2 = bugsummary
+  style = "
+    th { text-align: right; vertical-align: top; }
+    td { text-align: left; vertical-align: top; }
+    td#info { text-align: right; vertical-align: top; }
+    td#actions { text-align: right; vertical-align: bottom; }
+  "
+%]
+
+<br>
+
+[% FOREACH a = attachments %]
+
+  <div align="center">
+  <table cellspacing="0" cellpadding="4" border="1" width="75%">
+    <tr>
+      <td valign="top" bgcolor="#cccccc" colspan="5">
+        <big><b>Attachment #[% a.attachid %]</b></big>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">
+        [% IF a.isobsolete %]
+          <strike>[% a.description %]</strike>
+        [% ELSE %]
+          [% a.description %]
+        [% END %]
+      </td>
+
+      <td valign="top">
+        [% IF a.ispatch %]
+          <i>patch</i>
+        [% ELSE %]
+          [% a.mimetype %]
+        [% END %]
+      </td>
+
+      <td valign="top">[% a.date %]</td>
+
+      <td valign="top">
+        <nobr>
+        [% IF a.statuses.size == 0 %]
+          <i>none</i>
+        [% ELSE %]
+          [% FOREACH s = a.statuses %]
+            [% s %]<br>
+          [% END %]
+        [% END %]
+        </nobr>
+      </td>
+
+      <td valign="top">
+        <a href="attachment.cgi?id=[% a.attachid %]&action=edit">Edit</a> 
+      </td>
+    </tr>
+  </table>
+
+  [% IF a.isviewable %]
+    <iframe src="attachment.cgi?id=[% a.attachid %]&action=view" width="75%" height="350">
+      <b>You cannot view the attachment on this page because your browser does not support IFRAMEs.
+      <a href="attachment.cgi?id=[% a.attachid %]&action=view">View the attachment on a separate page</a>.</b>
+    </iframe>
+  [% ELSE %]
+    <p><b>
+      Attachment cannot be viewed because its MIME type is not text/*, image/*, or application/vnd.mozilla.*.
+      <a href="attachment.cgi?id=[% a.attachid %]&action=view">Download the attachment instead</a>.
+    </b></p>
+  [% END %]
+  </div>
+
+  <br><br>
+
+[% END %]
+
+[% INCLUDE global/footer %]

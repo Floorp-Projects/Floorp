@@ -135,7 +135,7 @@ sub ProcessOneBug {
 
 
     SendSQL("SELECT profiles.login_name, fielddefs.description, " .
-            "       bug_when, removed, added " .
+            "       bug_when, removed, added, attach_id " .
             "FROM bugs_activity, fielddefs, profiles " .
             "WHERE bug_id = $id " .
             "  AND fielddefs.fieldid = bugs_activity.fieldid " .
@@ -153,13 +153,14 @@ sub ProcessOneBug {
     my $difftext = "";
     my $lastwho = "";
     foreach my $ref (@diffs) {
-        my ($who, $what, $when, $old, $new) = (@$ref);
+        my ($who, $what, $when, $old, $new, $attachid) = (@$ref);
         if ($who ne $lastwho) {
             $lastwho = $who;
             $difftext .= "\n$who" . Param('emailsuffix') . " changed:\n\n";
             $difftext .= FormatTriple("What    ", "Removed", "Added");
             $difftext .= ('-' x 76) . "\n";
         }
+        $what =~ s/^Attachment/Attachment #$attachid/ if (Param('useattachmenttracker') && $attachid);
         $difftext .= FormatTriple($what, $old, $new);
     }
 

@@ -1,0 +1,52 @@
+[% INCLUDE global/header 
+  title = "Edit Attachment Status"
+  style = "
+    th { text-align: right; vertical-align: top; }
+    td { text-align: left; vertical-align: top; }
+  "
+%]
+
+<form method="post" action="editattachstatuses.cgi">
+  <input type="hidden" name="action" value="update">
+  <input type="hidden" name="id" value="[% id %]">
+
+  <table cellspacing="0" cellpadding="4" border="0">
+    <tr>
+      <th>Name:</th>
+      <td>
+        <input type="text" name="name" value="[% name %]" size="50" maxlength="50">
+      </td>
+    </tr>
+
+    <tr>
+      <th>Description:</th>
+      <td>
+        <textarea name="desc" rows="4" cols="50">[% desc %]</textarea>
+      </td>
+    </tr>
+
+    <tr>
+      <th>Sort Key:</th>
+      <td>
+        <input type="text" name="sortkey" value="[% sortkey %]" size="5" maxlength="5">
+      </td>
+    </tr>
+
+    <tr>
+      <th>Product:</th>
+      <td>
+        [% product %]
+      </td>
+    </tr>
+
+    <tr>
+      <th></th>
+      <td>
+        <input type="submit" value="Update">
+      </td>
+    </tr>
+
+  </table>
+</form>
+
+[% INCLUDE global/footer %]

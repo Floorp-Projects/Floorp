@@ -192,6 +192,7 @@ unless (have_vers("DBI","1.13"))          { push @missing,"DBI" }
 unless (have_vers("Data::Dumper",0))      { push @missing,"Data::Dumper" }
 unless (have_vers("DBD::mysql","1.2209")) { push @missing,"DBD::mysql" }
 unless (have_vers("Date::Parse",0))       { push @missing,"Date::Parse" }
+unless (have_vers("Template","2.01"))       { push @missing,"Template" }
 
 # If CGI::Carp was loaded successfully for version checking, it changes the
 # die and warn handlers, we don't want them changed, so we need to stash the
@@ -838,6 +839,7 @@ my %table;
 
 $table{bugs_activity} = 
    'bug_id mediumint not null,
+    attach_id mediumint null,
     who mediumint not null,
     bug_when datetime not null,
     fieldid mediumint not null,
@@ -859,9 +861,32 @@ $table{attachments} =
     filename mediumtext not null,
     thedata longblob not null,
     submitter_id mediumint not null,
+    isobsolete tinyint not null default 0, 
 
     index(bug_id),
     index(creation_ts)';
+
+# 2001-05-05 myk@mozilla.org: Tables to support the attachment tracker.
+# "attachstatuses" stores one record for each status on each attachment.
+# "attachstatusdefs" defines the statuses that can be set on attachments.
+# Note: These tables are only used if the parameter "useattachmenttracker"
+# is turned on via editparameters.cgi.
+
+$table{attachstatuses} =
+   '
+     attach_id    MEDIUMINT    NOT NULL , 
+     statusid     SMALLINT     NOT NULL , 
+     PRIMARY KEY(attach_id, statusid) 
+   ';
+
+$table{attachstatusdefs} =
+   '
+     id           SMALLINT     NOT NULL  PRIMARY KEY , 
+     name         VARCHAR(50)  NOT NULL , 
+     description  MEDIUMTEXT   NULL , 
+     sortkey      SMALLINT     NOT NULL  DEFAULT 0 , 
+     product      VARCHAR(64)  NOT NULL 
+   ';
 
 #
 # Apostrophe's are not supportied in the enum types.
@@ -1294,6 +1319,8 @@ AddFDef("attachments.description", "Attachment description", 0);
 AddFDef("attachments.thedata", "Attachment data", 0);
 AddFDef("attachments.mimetype", "Attachment mime type", 0);
 AddFDef("attachments.ispatch", "Attachment is patch", 0);
+AddFDef("attachments.isobsolete", "Attachment is obsolete", 0);
+AddFDef("attachstatusdefs.name", "Attachment Status", 0);
 AddFDef("target_milestone", "Target Milestone", 0);
 AddFDef("delta_ts", "Last changed date", 0);
 AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
@@ -2322,6 +2349,12 @@ unless (-d 'data/duplicates') {
 #
 AddField('groups', 'isactive', 'tinyint not null default 1');
 
+#
+# 2001-06-15 myk@mozilla.org:
+# isobsolete determines whether or not an attachment is pertinent/relevant/valid.
+#
+AddField('attachments', 'isobsolete', 'tinyint not null default 0');
+
 # 2001-04-29 jake@acutex.net - Remove oldemailtech
 #   http://bugzilla.mozilla.org/show_bugs.cgi?id=71552
 if (-d 'shadow') {
@@ -2469,6 +2502,11 @@ AddField("bugs", "reporter_accessible", "tinyint not null default 1");
 AddField("bugs", "assignee_accessible", "tinyint not null default 1");
 AddField("bugs", "qacontact_accessible", "tinyint not null default 1");
 AddField("bugs", "cclist_accessible", "tinyint not null default 1");
+
+# 2001-08-21 myk@mozilla.org bug84338:
+# Add a field for the attachment ID to the bugs_activity table, so installations
+# using the attachment manager can record changes to attachments.
+AddField("bugs_activity", "attach_id", "mediumint null");
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
