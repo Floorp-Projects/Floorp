@@ -191,7 +191,6 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mTokenObserver=anObserver;
   mStreamStatus=0;
   mDTDVerification=PR_FALSE;
-  mParserTerminated=PR_FALSE;
   mCharsetSource=kCharsetUninitialized;
   mInternalState=NS_OK;
 }
@@ -585,8 +584,11 @@ void nsParser::SetUnusedInput(nsString& aBuffer) {
  *  @return  should return NS_OK once implemented
  */
 nsresult nsParser::Terminate(void){
-  mParserTerminated=PR_TRUE;
-  return NS_OK;
+  nsresult result=NS_OK;
+  if(mParserContext && mParserContext->mDTD)
+    result=mParserContext->mDTD->Terminate();
+  mInternalState=result;
+  return result;
 }
 
 /**
@@ -612,7 +614,12 @@ PRBool nsParser::EnableParser(PRBool aState){
 
   // If we're reenabling the parser
   mParserContext->mParserEnabled=aState;
-  nsresult result=(aState) ? ResumeParse() : NS_OK;
+  nsresult result=NS_OK;
+  if(aState) {
+    result=ResumeParse();
+    if(result!=NS_OK) 
+      result=mInternalState;
+  }
 
   // Release reference if we added one at the top of this routine
   NS_IF_RELEASE(me);
@@ -870,17 +877,20 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
 nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
   
   nsresult result=NS_OK;
-  if(mParserContext->mParserEnabled && !mParserTerminated) {
+  if(mParserContext->mParserEnabled && mInternalState!=NS_ERROR_HTMLPARSER_STOPPARSING) {
     result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
     if(mParserContext->mDTD) {
       mParserContext->mDTD->WillResumeParse();
       if(NS_OK==result) {     
         result=Tokenize(aIsFinalChunk);
         result=BuildModel();
+        
+        if(result==NS_ERROR_HTMLPARSER_STOPPARSING) mInternalState=result;
 
-        if((!mParserContext->mMultipart) || (mParserTerminated) || 
+        if((!mParserContext->mMultipart) || (mInternalState==NS_ERROR_HTMLPARSER_STOPPARSING) || 
           ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
           DidBuildModel(mStreamStatus);
+          return mInternalState;
         }
         else {
           mParserContext->mDTD->WillInterruptParse();
@@ -928,11 +938,8 @@ nsresult nsParser::BuildModel() {
     }
 
     nsIDTD* theRootDTD=theRootContext->mDTD;
-    if(theRootDTD) {
+    if(theRootDTD)
       result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);
-      if(NS_ERROR_HTMLPARSER_STOPPARSING==result)
-        Terminate();
-    }
   }
   else{
     mInternalState=result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
@@ -1254,7 +1261,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
           break;
         }
         else if(NS_ERROR_HTMLPARSER_STOPPARSING==result)
-          Terminate();
+          return Terminate();
       }
     } 
     DidTokenize(aIsFinalChunk);

@@ -370,7 +370,6 @@ protected:
     nsIContentSink*     mSink;
     nsIParserFilter*    mParserFilter;
     PRBool              mDTDVerification;
-    PRBool              mParserTerminated;
     nsString            mCommand;
     PRInt32             mStreamStatus;
     nsITokenObserver*   mTokenObserver;

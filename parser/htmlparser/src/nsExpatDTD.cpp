@@ -279,6 +279,20 @@ nsITokenRecycler* nsExpatDTD::GetTokenRecycler(void){
   return 0;
 }
 
+/**
+ * Use this id you want to stop the building content model
+ * --------------[ Sets DTD to STOP mode ]----------------
+ * It's recommended to use this method in accordance with
+ * the parser's terminate() method.
+ *
+ * @update	harishd 07/22/99
+ * @param 
+ * @return
+ */
+nsresult  nsExpatDTD::Terminate(void)
+{
+  return NS_ERROR_HTMLPARSER_STOPPARSING;
+}
 
 /**
  * Sets up the callbacks for the expat parser      

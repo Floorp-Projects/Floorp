@@ -200,6 +200,18 @@ class nsIDTD : public nsISupports {
      */
     virtual PRBool Verify(nsString& aURLRef,nsIParser* aParser)=0;
 
+    /**
+     * Use this id you want to stop the building content model
+     * --------------[ Sets DTD to STOP mode ]----------------
+     * It's recommended to use this method in accordance with
+     * the parser's terminate() method.
+     *
+     * @update	harishd 07/22/99
+     * @param 
+     * @return
+     */
+    virtual nsresult  Terminate(void) = 0;
+
 /* XXX Temporary measure, pending further work by RickG  */
     
     /**
@@ -207,6 +219,7 @@ class nsIDTD : public nsISupports {
      * become useful.
      */
     NS_IMETHOD StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const =0;
+
 };
 
 
