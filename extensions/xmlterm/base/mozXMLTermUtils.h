@@ -32,6 +32,7 @@
 #include "nsIScrollableView.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
+#include "nsIScriptContext.h"
 
 class mozXMLTermUtils
 {
