@@ -20,6 +20,7 @@ int main(int argc, char *argv[])
   CString che_path;
   CString che_file;
   
+  CoInitialize(NULL);
 
   if(argc == 3)
   {
@@ -86,6 +87,7 @@ int main(int argc, char *argv[])
            "or \"ibengine.exe -u <your_config_file_path>\"\n");
     return 1;
   }
-      
+
+  CoUninitialize();	
   return 0;
 }
