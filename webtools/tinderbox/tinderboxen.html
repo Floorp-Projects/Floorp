@@ -25,7 +25,7 @@
 
   // Add trees here.
   var $tree1 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey&express=1";
-  var $tree2 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=Mozilla-0.8-Branch&express=1";
+  var $tree2 = "http://tinderbox.mozilla.org/showbuilds.cgi?tree=SeaMonkey-Embed&express=1";
 
   // Print out using layers for 4.x
   function printLayer(tree) {
@@ -44,26 +44,16 @@
 
   if(document.layers) {
       // 4.x 
-	  document.write("<h2>Trunk</h2>");
-
       printLayer($tree1);
-
       document.write("<hr>");
-	  document.write("<h2>Mozilla 0.8 Branch</h2>");
-
       printLayer($tree2);
-
 
   } else {
       // Mozilla or IE
-	  document.write("<h2>Trunk</h2>");
-
       printIFrame($tree1);
-
       document.write("<hr>");
-	  document.write("<h2>Mozilla 0.8 Branch</h2>");
-
       printIFrame($tree2);
+
   }
 	  
 </script>
