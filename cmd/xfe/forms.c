@@ -195,7 +195,7 @@ static void htmlarea_get_value(FEFormData *, LO_FormElementStruct *, XP_Bool);
 static void htmlarea_reset(FEFormData *, LO_FormElementStruct *);
 static void htmlarea_text_focus(FEFormData *, LO_FormElementStruct *);
 static void htmlarea_lost_focus(FEFormData *);
-static void htmlarea_element_free(FEFormData *, LO_FormElementStruct *);
+static void htmlarea_element_free(FEFormData *, LO_FormElementData *);
 
 #endif /* ENDER */
 
@@ -2524,7 +2524,8 @@ htmlarea_get_value(FEFormData *fed, LO_FormElementStruct *form, XP_Bool delete_p
   if (current_text && current_text != default_text)
     free (current_text);
 
-  XP_FormSetCurrentText(form_data, (char *)text);
+  /* XXX: Get rid of this PA_Block cast! */
+  XP_FormSetCurrentText(form_data, (PA_Block)text);
 
   if (delete_p)
   {
@@ -2569,7 +2570,7 @@ htmlarea_lost_focus(FEFormData *fed)
 }
 
 static void
-htmlarea_element_free(FEFormData *fed, LO_FormElementStruct *form)
+htmlarea_element_free(FEFormData *fed, LO_FormElementData *form)
 {
   extern Widget XFE_DestroyEmbeddedEditor(Widget, MWContext *);
 
