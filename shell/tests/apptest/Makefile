@@ -30,14 +30,14 @@ DIRS	=
 OBJS	= $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = $(DIST)/lib/libshell_s.a \
-	$(DIST)/lib/libxpcom.a	\
-	$(DIST)/lib/libreg.a	\
-	$(DIST)/lib/libraptorbase.a	\
-	$(DIST)/lib/libraptorgfx.a	\
+	$(DIST)/bin/libxpcom.so	\
+	$(DIST)/bin/libreg.so	\
+	$(DIST)/bin/libraptorbase.so	\
+	$(DIST)/bin/libraptorgfx.so	\
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
-	$(DIST)/lib/libshell.a \
+	$(DIST)/bin/libshell.so \
 	$(NULL)
 
 PROGS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
@@ -55,7 +55,7 @@ $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 ifeq ($(OS_ARCH),linux)
 	$(CCC) -rdynamic -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 -lXp -lXext
 else
-	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXt -lX11 
+	$(CCC) -o $@ $@.o $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) -lXm -lXt -lX11 
 endif
 
 export::

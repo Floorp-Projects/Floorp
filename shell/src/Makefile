@@ -26,14 +26,8 @@ LIBRARY_NAME = shell
 DEFINES = -D_IMPL_NS_SHELL
 
 EXTRA_DSO_LDOPTS+= -L$(DIST)/lib \
-		$(DIST)/lib/libxpcom.a \
-		$(DIST)/lib/libraptorbase.a \
-		$(DIST)/lib/libraptorgfx.a \
-		$(DIST)/lib/libnspr21.a \
-		$(DIST)/lib/libplds21.a \
-		$(DIST)/lib/libplc21.a \
-		$(DIST)/lib/libmsgc21.a \
-		$(DIST)/lib/libreg.a
+		$(DIST)/bin/libxpcom.so \
+		$(DIST)/bin/libreg.so -lXm -lXt -lX11 $(LIBNSPR)
 
 ifeq ($(OS_ARCH),linux)
 EXTRA_DSO_LDOPTS+= /usr/lib/libc.a /usr/lib/libstdc++.a 

@@ -84,6 +84,7 @@ nsresult nsShellInstance::Run()
   extern   XtAppContext app_context ;
 
   XtAppMainLoop(app_context) ;
+  return NS_OK;
 #else
   return NS_OK;
 #endif
@@ -222,6 +223,11 @@ nsresult nsShellInstance::ExitApplication()
 void * nsShellInstance::GetApplicationWindowNativeInstance()
 {
   return (mApplicationWindow->GetNativeData(NS_NATIVE_WINDOW));
+}
+
+nsIWidget * nsShellInstance::GetApplicationWidget()
+{
+  return (mApplicationWindow);
 }
 
 nsShellInstanceFactory::nsShellInstanceFactory()
