@@ -112,6 +112,9 @@ static NS_DEFINE_CID(kPresStateCID,  NS_PRESSTATE_CID);
 // XXX todo: add in missing out-of-memory checks
 
 #include "nsIPref.h" // Used by the temp pref, should be removed!
+#include "nsIPluginHost.h"
+#include "nsPIPluginHost.h"
+static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 //----------------------------------------------------------------------
 
@@ -4155,6 +4158,16 @@ nsGenericHTMLElement::GetPluginScriptObject(nsIScriptContext* aContext,
     *aScriptObject = elementObject;
 
     return NS_OK;
+  }
+
+  // notify the PluginManager that this one is scriptable -- 
+  // it will need some special treatment later
+  nsCOMPtr<nsIPluginHost> pluginManager = do_GetService(kCPluginManagerCID, &rv);
+  if(NS_SUCCEEDED(rv) && pluginManager) {
+    nsCOMPtr<nsPIPluginHost> pluginHost = do_QueryInterface(pluginManager, &rv);
+    if(NS_SUCCEEDED(rv) && pluginHost) {
+      pluginHost->SetIsScriptableInstance(pi, PR_TRUE);
+    }
   }
 
   // Wrap it.
