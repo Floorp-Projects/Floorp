@@ -260,7 +260,7 @@ modules/plugin/nglsrc/Makefile
 modules/plugin/public/Makefile
 modules/plugin/src/Makefile
 modules/plugin/test/Makefile
-modules/security/freenav/Makefile
+#modules/security/freenav/Makefile
 modules/zlib/Makefile
 modules/zlib/src/Makefile
 #nav-java/Makefile

@@ -65,7 +65,6 @@ DIRS		+= \
 		modules/libutil \
 		intl \
 		js \
-		modules/security/freenav \
 		modules/libpref \
 		modules/libimg \
 		modules/oji \
