@@ -30,7 +30,6 @@ EXPORTS=\
 	nsIRDFObserver.h        \
         nsIRDFResourceManager.h \
         nsIRDFXMLSource.h       \
-        nsRDFBaseCID.h          \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

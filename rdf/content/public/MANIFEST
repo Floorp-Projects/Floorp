@@ -1,4 +1,3 @@
 nsIRDFContent.h
 nsIRDFContentSink.h
 nsIRDFDocument.h
-nsRDFContentCID.h

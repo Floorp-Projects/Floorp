@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-LIBRARY_NAME = rdfbase
+LIBRARY_NAME = rdfbase_s
 
 CPPSRCS =				\
 	nsContainerCursor.cpp		\
@@ -43,15 +43,11 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = rdfbase
 
-REQUIRES = dom js netlib rdf raptor xpcom
+REQUIRES = rdf raptor xpcom
+
+MKSHLIB :=
+
+# we don't want the shared lib
+NO_SHARED_LIB=1
 
 include $(topsrcdir)/config/rules.mk
-
-
-export::
-
-install:: $(TARGETS)
-
-
-clobber::
-

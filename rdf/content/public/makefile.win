@@ -24,7 +24,6 @@ EXPORTS	= \
         nsIRDFContent.h         \
         nsIRDFContentSink.h     \
         nsIRDFDocument.h        \
-        nsRDFContentCID.h       \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

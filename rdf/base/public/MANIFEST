@@ -6,4 +6,3 @@ nsIRDFNode.h
 nsIRDFObserver.h
 nsIRDFResourceManager.h
 nsIRDFXMLSource.h
-nsRDFBaseCID.h

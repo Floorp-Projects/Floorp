@@ -28,7 +28,6 @@ EXPORTS =				\
 	nsIRDFContent.h			\
 	nsIRDFContentSink.h		\
 	nsIRDFDocument.h		\
-        nsRDFContentCID.h		\
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
