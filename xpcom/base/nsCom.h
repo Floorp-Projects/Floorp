@@ -28,19 +28,19 @@
  */
 
 #ifdef _IMPL_NS_COM
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #define NS_COM _declspec(dllexport)
 #elif defined(XP_MAC)
 #define NS_COM __declspec(export)
-#else  /* !XP_PC */
+#else  /* !XP_WIN */
 #define NS_COM
-#endif /* !XP_PC */
+#endif /* !XP_WIN */
 #else  /* !_IMPL_NS_COM */
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #define NS_COM _declspec(dllimport)
-#else  /* !XP_PC */
+#else  /* !XP_WIN */
 #define NS_COM
-#endif /* !XP_PC */
+#endif /* !XP_WIN */
 #endif /* !_IMPL_NS_COM */
 
 /*
@@ -111,7 +111,7 @@
 #define NS_CALLBACK_(_type, _name) _type (* _name)
 #define NS_CALLBACK(_name) nsresult (* _name)
 
-#endif /* !XP_PC */
+#endif /* !XP_WIN */
 
 /* use these functions to associate get/set methods with a
    C++ member variable

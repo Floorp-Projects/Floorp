@@ -30,7 +30,7 @@
 #include "nsIEventQueueService.h"
 #include "nsString.h"
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #include <windows.h>
 #define NS_MEMORY_FLUSHER_THREAD
 #elif defined(XP_MAC)
@@ -336,7 +336,7 @@ nsMemoryImpl::HeapMinimize(PRBool aImmediate)
 NS_IMETHODIMP
 nsMemoryImpl::IsLowMemory(PRBool *result)
 {
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     MEMORYSTATUS stat;
     GlobalMemoryStatus(&stat);
     *result = ((float)stat.dwAvailPageFile / stat.dwTotalPageFile) < 0.1;

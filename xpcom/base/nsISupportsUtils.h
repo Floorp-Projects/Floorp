@@ -65,7 +65,7 @@
  * To maintain binary compatibility of nsISupports with nsIUnknown, we are
  * doing this ifdeffing.
  */
-#if defined(XP_PC) && !defined(XP_OS2) && PR_BYTES_PER_LONG == 4
+#if defined(XP_WIN) && PR_BYTES_PER_LONG == 4
 typedef unsigned long nsrefcnt;
 #else
 typedef PRUint32 nsrefcnt;

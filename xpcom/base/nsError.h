@@ -264,7 +264,7 @@ NS_ErrorAccordingToNSPR();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #pragma warning(disable: 4251) // 'nsCOMPtr<class nsIInputStream>' needs to have dll-interface to be used by clients of class 'nsInputStream'
 #pragma warning(disable: 4275) // non dll-interface class 'nsISupports' used as base for dll-interface class 'nsIRDFNode'
 #endif
