@@ -29,8 +29,7 @@
 /////////////////////////////////////////////////////////////////////////////
 // CBasicWindowsPrefs implementation
 CBasicWindowsPrefs::CBasicWindowsPrefs()
-	: CPropertyPageEx(CComDll::m_hInstance, IDD_BASICWINPREFS, HELP_PREFS_BASICWINPREFS)
-{
+	: CPropertyPageEx(CComDll::m_hInstance, IDD_BASICWINPREFS, "" ) {
 	// Set member data using XP preferences
 }
 

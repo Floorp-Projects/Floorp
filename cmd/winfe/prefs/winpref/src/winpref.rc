@@ -90,7 +90,7 @@ BEGIN
     PUSHBUTTON      "&Details...",IDD_WINACTIVEDESKTOPSETTINGS,184,115,57,14
 END
 
-IDD_WINACTIVEDESKTOPSETTINGS DIALOG DISCARDABLE  0, 0, 256, 191
+IDD_WINACTIVEDESKTOPSETTINGS DIALOGEX 0, 0, 256, 201
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Active Desktop Integration Details"
 FONT 8, "MS Sans Serif"
@@ -111,6 +111,9 @@ BEGIN
     CONTROL         "&Turn off Active Desktop.",IDC_DISABLEACTIVEDESKTOP,
                     "Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,14,
                     147,230,20
+    DEFPUSHBUTTON   "&OK",IDOK,91,178,50,14
+    PUSHBUTTON      "&Cancel",IDCANCEL,145,178,50,14
+    PUSHBUTTON      "&Help",IDHELP,199,178,50,14,0,0
 END
 
 IDD_WINFILETYPES DIALOGEX 0, 0, 256, 158
@@ -139,7 +142,7 @@ BEGIN
     LTEXT           "",IDC_STATIC,160,93,8,8
     CONTROL         "&Plain text files (*.txt)",IDC_HANDLETXT,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,28,103,77,10
-    PUSHBUTTON      "&Help",IDHELP,199,135,50,14,0,0,IDHELP
+    PUSHBUTTON      "&Help",IDHELP,199,135,50,14,0,0
 END
 
 IDD_WINSHORTCUTTYPES DIALOGEX 0, 0, 256, 153
@@ -149,7 +152,7 @@ FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "&OK",IDOK,91,131,50,14
     PUSHBUTTON      "&Cancel",IDCANCEL,145,131,50,14
-    PUSHBUTTON      "&Help",IDHELP,199,130,50,14,0,0,IDHELP
+    PUSHBUTTON      "&Help",IDHELP,199,130,50,14,0,0
     GROUPBOX        "",IDC_STATIC,7,4,242,117
     LTEXT           "Select the types of Internet Shortcuts you want the Mozilla browser to handle.\n\nWindows will launch Mozilla when you open any of the selected types of shortcuts.",
                     IDC_STATIC,14,15,232,41
