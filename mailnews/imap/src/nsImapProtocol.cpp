@@ -1741,7 +1741,7 @@ void nsImapProtocol::SelectMailbox(const char *mailboxName)
             
     PR_FREEIF( escapedName);
            
-    int                 ioStatus = SendData(commandBuffer.GetBuffer());
+    SendData(commandBuffer.GetBuffer());
 	ParseIMAPandCheckForNewMail();
 
 	PRInt32 numOfMessagesInFlagState = 0;
@@ -1774,7 +1774,7 @@ void nsImapProtocol::Bodystructure(const char *messageId, PRBool idIsUid)
 	commandString.Append("  (BODYSTRUCTURE)" CRLF);
 
 	            
-    int ioStatus = SendData(commandString.GetBuffer());
+    SendData(commandString.GetBuffer());
 	    
 
 	ParseIMAPandCheckForNewMail(commandString.GetBuffer());
@@ -1839,7 +1839,7 @@ void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePa
 		commandString.Append(" (");
 		commandString.Append(stringToFetch.GetBuffer());
 		commandString.Append(")" CRLF);
-		int ioStatus = SendData(commandString.GetBuffer());
+		SendData(commandString.GetBuffer());
 		ParseIMAPandCheckForNewMail(commandString.GetBuffer());
 	}
 }
@@ -2050,7 +2050,7 @@ nsImapProtocol::FetchMessage(nsString2 &messageIds,
 					cMessageIdsStr);
 		}
 	            
-	    int                 ioStatus = SendData(protocolString);
+	    SendData(protocolString);
 	    
 		delete [] cCommandStr;
 		delete [] cMessageIdsStr;
@@ -2173,7 +2173,7 @@ void nsImapProtocol::PipelinedFetchMessageParts(nsString2 &uid, nsIMAPMessagePar
 
 		if (commandString)
 		{
-			int ioStatus = SendData(commandString);
+			SendData(commandString);
 			ParseIMAPandCheckForNewMail(commandString);
 			PR_Free(commandString);
 		}
@@ -3512,7 +3512,7 @@ nsImapProtocol::Store(nsString2 &messageList, const char * messageData,
 	            messageList,
 	            messageData);
 	            
-	    int                 ioStatus = SendData(protocolString);
+	    SendData(protocolString);
 	    
 		ParseIMAPandCheckForNewMail(protocolString); // ??? do we really need this
 	    PR_Free(protocolString);
@@ -3578,7 +3578,7 @@ void nsImapProtocol::Capability()
 
     command.Append(" capability" CRLF);
             
-    int ioStatus = SendData(command.GetBuffer());
+    SendData(command.GetBuffer());
     
 	ParseIMAPandCheckForNewMail();
 }
@@ -3870,7 +3870,7 @@ void nsImapProtocol::OnRefreshACLForFolder(const char *mailboxName)
             
     PR_FREEIF( escapedName);
             
-    int ioStatus = SendData(command.GetBuffer());
+    SendData(command.GetBuffer());
     
     ParseIMAPandCheckForNewMail();
 }
@@ -3890,7 +3890,7 @@ void nsImapProtocol::Logout()
 
 	command.Append("logout" CRLF);
 
-	int ioStatus = SendData(command.GetBuffer());
+	SendData(command.GetBuffer());
 
 	// the socket may be dead before we read the response, so drop it.
 	ParseIMAPandCheckForNewMail();
@@ -3904,7 +3904,7 @@ void nsImapProtocol::Noop()
     
 	command.Append("noop" CRLF);
             
-    int ioStatus = SendData(command.GetBuffer());
+    SendData(command.GetBuffer());
     
 	ParseIMAPandCheckForNewMail();
 }
@@ -3918,7 +3918,7 @@ void nsImapProtocol::XServerInfo()
   
 	command.Append(" XSERVERINFO MANAGEACCOUNTURL MANAGELISTSURL MANAGEFILTERSURL" CRLF);
           
-    int ioStatus = SendData(command.GetBuffer());
+    SendData(command.GetBuffer());
     
 	ParseIMAPandCheckForNewMail();
 }
@@ -3934,7 +3934,7 @@ void nsImapProtocol::XMailboxInfo(const char *mailboxName)
 	command.Append(mailboxName);
 	command.Append("\"  MANAGEURL POSTURL" CRLF);
             
-    int ioStatus = SendData(command.GetBuffer());
+    SendData(command.GetBuffer());
     
 	ParseIMAPandCheckForNewMail();
 }
@@ -3948,7 +3948,7 @@ void nsImapProtocol::Namespace()
 	nsString2 command(GetServerCommandTag(), eOneByte);
 	command.Append(" namespace" CRLF);
             
-    int ioStatus = SendData(command.GetBuffer());
+    SendData(command.GetBuffer());
     
 	ParseIMAPandCheckForNewMail();
 }
@@ -3961,7 +3961,7 @@ void nsImapProtocol::MailboxData()
 	nsString2 command(GetServerCommandTag(), eOneByte);
 	command.Append(" mailboxdata" CRLF);
             
-    int ioStatus = SendData(command.GetBuffer());
+    SendData(command.GetBuffer());
 	ParseIMAPandCheckForNewMail();
 }
 
@@ -3979,7 +3979,7 @@ void nsImapProtocol::GetMyRightsForFolder(const char *mailboxName)
             
     PR_FREEIF( escapedName);
             
-    int ioStatus = SendData(command.GetBuffer());
+    SendData(command.GetBuffer());
     
     ParseIMAPandCheckForNewMail();
 }
@@ -3997,7 +3997,7 @@ void nsImapProtocol::OnStatusForFolder(const char *mailboxName)
             
     PR_FREEIF( escapedName);
             
-    int ioStatus = SendData(command.GetBuffer());
+    SendData(command.GetBuffer());
     
     ParseIMAPandCheckForNewMail();
 
@@ -4521,7 +4521,7 @@ void nsImapProtocol::Search(nsString2 &searchCriteria,
 	protocolString.Append(searchCriteria);
 	protocolString.Append(CRLF);;
 
-    int                 ioStatus = SendData(protocolString.GetBuffer());
+    SendData(protocolString.GetBuffer());
     
 	ParseIMAPandCheckForNewMail();
 }
@@ -4543,7 +4543,7 @@ void nsImapProtocol::Copy(nsString2 &messageList,
 	protocolString.Append(escapedDestination);
 	protocolString.Append("\"" CRLF);
 	    
-	int                 ioStatus = SendData(protocolString.GetBuffer());
+	SendData(protocolString.GetBuffer());
 	
 	ParseIMAPandCheckForNewMail(protocolString.GetBuffer());
         
@@ -4804,7 +4804,7 @@ void nsImapProtocol::Close()
 
 	GetServerStateParser().ResetFlagInfo(0);
     
-    int ioStatus = SendData(command.GetBuffer());
+    SendData(command.GetBuffer());
     
 	ParseIMAPandCheckForNewMail();
 }
@@ -4817,7 +4817,7 @@ void nsImapProtocol::Check()
 	nsString2 command(GetServerCommandTag(), eOneByte);
 	command.Append(" check" CRLF);
             
-    int ioStatus = SendData(command.GetBuffer());
+    SendData(command.GetBuffer());
     
 	ParseIMAPandCheckForNewMail();
 }
