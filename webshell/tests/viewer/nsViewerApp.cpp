@@ -481,7 +481,7 @@ BOOL CreateRobotDialog(HWND hParent)
 NS_IMETHODIMP
 nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
 {
-#ifdef XP_PC
+#if defined(XP_PC) && defined(NS_DEBUG)
   if (CreateRobotDialog(aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET)))
   {
     nsIPresShell* shell = aWindow->GetPresShell();
