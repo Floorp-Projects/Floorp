@@ -33,8 +33,10 @@
 #include <Files.h>
 #include <Dialogs.h>
 #include <Appearance.h>
+#include <Resources.h>
 
 extern MRJConsole* theConsole;
+extern short thePluginRefnum;
 
 static Boolean appearanceManagerExists()
 {
@@ -55,13 +57,13 @@ static void debug_out(StringPtr stream, const void *message, UInt32 messageLengt
 			false, 	// Boolean helpButton;				/* Is there a help button? */
 			NULL, 	// ModalFilterUPP filterProc;		/* Event filter */
 			"\pOK",	// StringPtr defaultText;			/* Text for button in OK position */
-			NULL,		// StringPtr cancelText;			/* Text for button in cancel position */
-			NULL,		// StringPtr otherText;				/* Text for button in left position */
+			NULL,	// StringPtr cancelText;			/* Text for button in cancel position */
+			NULL,	// StringPtr otherText;				/* Text for button in left position */
 			1, 		// SInt16 defaultButton;			/* Which button behaves as the default */
-			0,			// SInt16 cancelButton;				/* Which one behaves as cancel (can be 0) */
+			0,		// SInt16 cancelButton;				/* Which one behaves as cancel (can be 0) */
 			kWindowDefaultPosition
-						// UInt16 position;					/* Position (kWindowDefaultPosition in this case */
-																	/* equals kWindowAlertPositionParentWindowScreen) */
+					// UInt16 position;					/* Position (kWindowDefaultPosition in this case */
+														/* equals kWindowAlertPositionParentWindowScreen) */
 		};
 		SInt16 itemHit = 0;
 		OSErr result = ::StandardAlert(kAlertPlainAlert, stream, pmsg, &params, &itemHit);
@@ -120,9 +122,72 @@ static Boolean java_exit(JMSessionRef session, SInt32 status)
 	return false;					/* not allowed in a plugin. */
 }
 
+static void getItemText(DialogPtr dialog, DialogItemIndex index, ResType textTag, char str[256])
+{
+	ControlHandle control;
+	if (::GetDialogItemAsControl(dialog, index, &control) == noErr) {
+		Size textSize;
+		::GetControlDataSize(control, kControlNoPart, textTag, &textSize);
+		if (textSize > 255) textSize = 255;
+		::GetControlData(control, kControlNoPart, textTag, textSize, (Ptr)str, &textSize);
+		str[textSize] = '\0';
+	}
+}
+
+static ControlHandle getItemControl(DialogPtr dialog, DialogItemIndex index)
+{
+	ControlHandle control;
+	if (::GetDialogItemAsControl(dialog, index, &control) == noErr)
+		return control;
+	else
+		return NULL;
+}
+
+enum {
+	kUserNameIndex = 3,
+	kPasswordIndex,
+	kAuthenticationDialog = 128
+};
+
 static Boolean java_authenticate(JMSessionRef session, const char *url, const char *realm, char userName[255], char password[255])
 {
-	return false;
+	Boolean result = false;
+	if (thePluginRefnum != -1) {
+		// ensure resources come from the plugin (yuck!).
+		short oldRefnum = ::CurResFile();
+		::UseResFile(thePluginRefnum);
+		
+		DialogRecord storage;
+		DialogPtr dialog = ::GetNewDialog(kAuthenticationDialog, &storage, WindowPtr(-1));
+		if (dialog != NULL) {
+			// set up default buttons.
+			::SetDialogDefaultItem(dialog, kStdOkItemIndex);
+			::SetDialogCancelItem(dialog, kStdCancelItemIndex);
+			::SetDialogTracksCursor(dialog, true);
+
+			// set up default keyboard focus.
+			ControlHandle userNameControl = getItemControl(dialog, kUserNameIndex);
+			if (userNameControl != NULL)
+				::SetKeyboardFocus(dialog, userNameControl, kControlFocusNextPart);
+			
+			::ShowWindow(dialog);
+
+			DialogItemIndex itemHit = 0;
+			do {
+				::ModalDialog(ModalFilterUPP(NULL), &itemHit);
+			} while (itemHit != 1 && itemHit != 2);
+			
+			if (itemHit == 1) {
+				getItemText(dialog, kUserNameIndex, kControlEditTextTextTag, userName);
+				getItemText(dialog, kPasswordIndex, kControlEditTextPasswordTag, password);
+				result = true;
+			}
+			
+			::CloseDialog(dialog);
+			::UseResFile(oldRefnum);
+		}
+	}
+	return result;
 }
 
 static void java_lowmem(JMSessionRef session)
