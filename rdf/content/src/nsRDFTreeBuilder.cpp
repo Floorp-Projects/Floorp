@@ -553,30 +553,30 @@ rdfSortCallback(const void *data1, const void *data2, void *sortData)
 	node2 = *(nsIRDFNode **)data2;
 	_sortStruct	*sortPtr = (_sortStruct *)sortData;
 
-	nsCOMPtr<nsIRDFResource> res1 = nsnull;
-	nsCOMPtr<nsIRDFResource> res2 = nsnull;
+	nsIRDFResource	*res1;
+	nsIRDFResource	*res2;
 	const PRUnichar	*uniStr1 = nsnull;
 	const PRUnichar	*uniStr2 = nsnull;
 
-	if (NS_SUCCEEDED(node1->QueryInterface(kIRDFResourceIID, (void **) getter_AddRefs(res1))))
+	if (NS_SUCCEEDED(node1->QueryInterface(kIRDFResourceIID, (void **) &res1)))
 	{
-		nsCOMPtr<nsIRDFNode>	nodeVal1 = nsnull;
-		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res1, sortPtr->sortProperty, PR_TRUE, getter_AddRefs(nodeVal1))))
+		nsIRDFNode	*nodeVal1;
+		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res1, sortPtr->sortProperty, PR_TRUE, &nodeVal1)))
 		{
-			nsCOMPtr<nsIRDFLiteral> literal1 = nsnull;
-			if (NS_SUCCEEDED(nodeVal1->QueryInterface(kIRDFLiteralIID, (void **) getter_AddRefs(literal1))))
+			nsIRDFLiteral *literal1;
+			if (NS_SUCCEEDED(nodeVal1->QueryInterface(kIRDFLiteralIID, (void **) &literal1)))
 			{
 				literal1->GetValue(&uniStr1);
 			}
 		}
 	}
-	if (NS_SUCCEEDED(node2->QueryInterface(kIRDFResourceIID, (void **) getter_AddRefs(res2))))
+	if (NS_SUCCEEDED(node2->QueryInterface(kIRDFResourceIID, (void **) &res2)))
 	{
-		nsCOMPtr<nsIRDFNode>	nodeVal2 = nsnull;
-		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res2, sortPtr->sortProperty, PR_TRUE, getter_AddRefs(nodeVal2))))
+		nsIRDFNode	*nodeVal2;
+		if (NS_SUCCEEDED(rv = sortPtr->db->GetTarget(res2, sortPtr->sortProperty, PR_TRUE, &nodeVal2)))
 		{
-			nsCOMPtr<nsIRDFLiteral> literal2 = nsnull;
-			if (NS_SUCCEEDED(nodeVal2->QueryInterface(kIRDFLiteralIID, (void **) getter_AddRefs(literal2))))
+			nsIRDFLiteral	*literal2;
+			if (NS_SUCCEEDED(nodeVal2->QueryInterface(kIRDFLiteralIID, (void **) &literal2)))
 			{
 				literal2->GetValue(&uniStr2);
 			}
