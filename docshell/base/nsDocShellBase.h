@@ -35,11 +35,21 @@
 #include "nsIDocShell.h"
 #include "nsIDocShellEdit.h"
 #include "nsIDocShellFile.h"
+#include "nsIDocShellContainer.h"
 #include "nsIGenericWindow.h"
 #include "nsIScrollable.h"
 #include "nsITextScroll.h"
+#include "nsIContentViewerContainer.h"
+
+#include "nsIDocumentLoader.h"
+#include "nsIDocumentLoaderObserver.h"
+
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptContextOwner.h"
 
 #include "nsDSURIContentListener.h"
+
+#include "nsVoidArray.h"
 
 class nsDocShellInitInfo
 {
@@ -52,9 +62,14 @@ public:
    PRBool         visible;
 };
 
-class nsDocShellBase : public nsIDocShell, public nsIDocShellEdit, 
-   public nsIDocShellFile, public nsIGenericWindow, public nsIScrollable, 
-   public nsITextScroll
+class nsDocShellBase : public nsIDocShell, 
+                       public nsIDocShellEdit, 
+                       public nsIDocShellFile, 
+                       public nsIDocShellContainer,
+                       public nsIGenericWindow, 
+                       public nsIScrollable, 
+                       public nsITextScroll, 
+                       public nsIContentViewerContainer
 {
 friend class nsDSURIContentListener;
 
@@ -64,9 +79,26 @@ public:
    NS_DECL_NSIDOCSHELL
    NS_DECL_NSIDOCSHELLEDIT
    NS_DECL_NSIDOCSHELLFILE
+   NS_DECL_NSIDOCSHELLCONTAINER
    NS_DECL_NSIGENERICWINDOW
    NS_DECL_NSISCROLLABLE
    NS_DECL_NSITEXTSCROLL
+
+   // XXX: move to a macro
+   // nsIContentViewerContainer
+  NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult);
+
+  NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
+                   const char* aCommand,
+                   nsISupports* aExtraInfo);
+
+  NS_IMETHOD GetContentViewer(nsIContentViewer** aResult);
+
+  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* aLoader,
+                                      nsIChannel* channel,
+                                      const char *aContentType,
+                                      const char *aCommand);
+
 
 protected:
    nsDocShellBase();
@@ -80,15 +112,31 @@ protected:
 
    void SetCurrentURI(nsIURI* aUri);
 
+   NS_IMETHOD FireStartDocumentLoad(nsIDocumentLoader* aLoader,
+                                    nsIURI* aURL,
+                                    const char* aCommand);
+
+   NS_IMETHOD FireEndDocumentLoad(nsIDocumentLoader* aLoader,
+                                  nsIChannel* aChannel,
+                                  nsresult aStatus,
+                                  nsIDocumentLoaderObserver * aObserver);
+
+   NS_IMETHOD DestroyChildren();
+
 protected:
    PRBool                     mCreated;
    nsString                   mName;
+   nsVoidArray                mChildren;
    nsDSURIContentListener*    mContentListener;
    nsDocShellInitInfo*        mBaseInitInfo;
    nsCOMPtr<nsIContentViewer> mContentViewer;
+   nsCOMPtr<nsIDocumentLoader>mDocLoader;
+   nsCOMPtr<nsIDocumentLoaderObserver> mDocLoaderObserver;
    nsCOMPtr<nsIWidget>        mParentWidget;
    nsCOMPtr<nsIPref>          mPrefs;
    nsCOMPtr<nsIURI>           mCurrentURI;
+   nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
+   nsCOMPtr<nsIScriptContext> mScriptContext;
    nsCOMPtr<nsISupports>      mLoadCookie;
 
    /* Note this can not be nsCOMPtr as that that would cause an addref on the 
