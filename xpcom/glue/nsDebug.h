@@ -224,7 +224,7 @@ public:
 
 #define NS_ENSURE_TRUE(x, ret)                                \
   PR_BEGIN_MACRO                                              \
-    if (!(x)) {                                               \
+    if (NS_UNLIKELY(!(x))) {                                  \
        NS_WARNING("NS_ENSURE_TRUE(" #x ") failed");           \
        return ret;                                            \
     }                                                         \
