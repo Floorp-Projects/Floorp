@@ -182,6 +182,9 @@ sub directive_ok {
     
     # Params
     return 1 if $directive =~ /^Param\(/;
+    
+    # Hooks
+    return 1 if $directive =~ /^Hook.process\(/;
 
     # Other functions guaranteed to return OK output
     return 1 if $directive =~ /^(time2str|GetBugLink|url)\(/;
