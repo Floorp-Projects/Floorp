@@ -699,8 +699,6 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
 
         if (mAssertion && mAssertion->mHashEntry) {
             // its our magical HASH_ENTRY forward hash for assertions
-            mAssertion = nsnull;
-
             nsresult rv = NS_NewISupportsArray(getter_AddRefs(mHashArcs));
             if (NS_SUCCEEDED(rv)) {
                 NS_AUTOLOCK(mLock);
@@ -708,6 +706,7 @@ InMemoryArcsEnumeratorImpl::InMemoryArcsEnumeratorImpl(InMemoryDataSource* aData
                 PL_DHashTableEnumerate(mAssertion->u.hash.mPropertyHash,
                     ArcEnumerator, mHashArcs.get());
             }
+            mAssertion = nsnull;
         }
     }
     else {
@@ -756,9 +755,10 @@ InMemoryArcsEnumeratorImpl::HasMoreElements(PRBool* aResult)
         nsresult    rv;
         if (NS_FAILED(rv = mHashArcs->Count(&itemCount)))   return(rv);
         if (itemCount > 0) {
-            nsCOMPtr<nsIRDFResource> res = do_QueryInterface(mHashArcs->ElementAt(itemCount-1));
-            mCurrent = res;
-            NS_IF_ADDREF(mCurrent);
+            --itemCount;
+            mCurrent = NS_STATIC_CAST(nsIRDFResource *,
+                                      mHashArcs->ElementAt(itemCount));
+            mHashArcs->RemoveElementAt(itemCount);
             *aResult = PR_TRUE;
             return NS_OK;
         }
