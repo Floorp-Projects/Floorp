@@ -145,6 +145,14 @@ void nsMacEventDispatchHandler::SetActivated(nsWindow *aActivatedWidget)
 	if (aActivatedWidget == mActiveWidget)
 		return;
 
+	// tell the old widget it is not focused
+	if (mActiveWidget)
+	{
+		mActiveWidget->ResetInputState();
+		mActiveWidget->RemoveDeleteObserver(this);
+		DispatchGuiEvent(mActiveWidget, NS_LOSTFOCUS);
+	}
+
 	mActiveWidget = aActivatedWidget;
 
 	// let the new one know it got activation
