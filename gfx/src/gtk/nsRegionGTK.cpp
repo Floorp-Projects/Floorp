@@ -175,7 +175,7 @@ void nsRegionGTK::GetBoundingBox(PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRIn
 {
   GdkRectangle rect;
 
-  gdk_region_get_clipbox(mRegion, &rect);
+  ::gdk_region_get_clipbox(mRegion, &rect);
 
   *aX = rect.x;
   *aY = rect.y;
@@ -249,7 +249,7 @@ GdkRegion * nsRegionGTK::CreateRectRegion(PRInt32 aX, PRInt32 aY, PRInt32 aWidth
   rect.height = aHeight;
 
   GdkRegion *rRegion = ::gdk_region_union_with_rect(tRegion, &rect);
-  gdk_region_destroy(tRegion);
+  ::gdk_region_destroy(tRegion);
   
   return (rRegion);
 }
