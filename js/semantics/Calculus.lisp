@@ -2886,7 +2886,7 @@
 
 (defstruct preprocessor-state
   (kind nil :type (member nil :grammar :lexer))       ;The kind of grammar being accumulated or nil if none
-  (kind2 nil :type (member nil :lalr-1 :lr-1))        ;The kind of parser
+  (kind2 nil :type (member nil :lalr-1 :lr-1 :canonical-lr-1)) ;The kind of parser
   (name nil :type symbol)                             ;Name of the grammar being accumulated or nil if none
   (parametrization nil :type (or null grammar-parametrization)) ;Parametrization of the grammar being accumulated or nil if none
   (start-symbol nil :type symbol)                     ;Start symbol of the grammar being accumulated or nil if none

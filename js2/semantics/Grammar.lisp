@@ -700,10 +700,17 @@
                   (:copier nil)
                   (:predicate state?))
   (number nil :type integer :read-only t)  ;Serial number of the state
-  (kernel nil :type list :read-only t)     ;List of kernel items in order of increasing item-number values
-  (laitems nil :type list :read-only t)    ;List of laitems (topologically sorted by the propagates relation when parsing LR(1))
-  (transitions nil :type list)             ;List of (terminal . transition)
+  (kernel nil :type list)                  ;List of kernel items [list of (item . lookahead) for canonical LR(1)] in order of increasing item-number values
+  (laitems nil :type list)                 ;List of laitems
+  (transitions nil :type list)             ;List of (terminal . transition).  A null terminal indicates "all terminals".
   (gotos nil :type list))                  ;List of (nonterminal . state)
+
+
+; Return the transition for the given terminal or nil if there is none.
+(defun state-transition (state terminal)
+  (cdr 
+   (or (assoc terminal (state-transitions state) :test *grammar-symbol-=*)
+       (assoc nil (state-transitions state) :test *grammar-symbol-=*))))
 
 
 ; If all outgoing transitions from the state are the same reduction, return that
@@ -746,7 +753,12 @@
       (let ((grammar (laitem-grammar (first laitems))))
         (labels
           ((lhs-matches-some-kernel-item (lhs-nonterminal)
-             (member lhs-nonterminal (state-kernel state) :test *grammar-symbol-=* :key #'item-lhs))
+             (member lhs-nonterminal (state-kernel state)
+                     :test *grammar-symbol-=*
+                     :key #'(lambda (kernel-item)
+                              (when (consp kernel-item)
+                                (setq kernel-item (car kernel-item)))
+                              (item-lhs kernel-item))))
            (laitem-< (laitem1 laitem2)
              (let* ((item1 (laitem-item laitem1))
                     (item2 (laitem-item laitem2))
@@ -797,7 +809,10 @@
           (pprint-exit-if-list-exhausted)
           (let ((transition-cons (pprint-pop)))
             (pprint-logical-block (stream nil)
-              (pprint-fill stream (car transition-cons) nil)
+              (let ((terminals (car transition-cons)))
+                (if (equal terminals '(nil))
+                  (write-string "any" stream)
+                  (pprint-fill stream terminals nil)))
               (format stream " ~2I~_=> ")
               (print-transition (cdr transition-cons) stream))
             (format stream "   ~:_")))))
@@ -1021,7 +1036,7 @@
   (general-productions nil :type hash-table :read-only t);Hash table of production-name -> general-production
   (n-productions nil :type integer :read-only t)         ;Number of productions in the grammar
   ;The following fields are used for the parser.
-  (items-hash nil :type hash-table :read-only t)         ;Hash table of (production . dot) -> item
+  (items-hash nil :type (or null hash-table))            ;Hash table of (production . dot) -> item; nil for a cleaned grammar or a grammar without a parser
   (states nil :type list)                                ;List of LR(0) states (in order of state numbers)
   ;The following fields are used for the action generator.
   (action-signatures nil :type (or null hash-table)))    ;Hash table of grammar-symbol -> list of (action-symbol . type-or-type-expr)
@@ -1357,8 +1372,7 @@
                         :parameter-trees (make-hash-table :test *grammar-symbol-=*)
                         :max-production-length max-production-length
                         :general-productions general-productions
-                        :n-productions production-number
-                        :items-hash (make-hash-table :test #'equal))))
+                        :n-productions production-number)))
           
           ;Compute the terminalsets in the terminal-terminalsets.
           (dotimes (n (length terminals))
@@ -1476,6 +1490,8 @@
         (pprint-newline :mandatory stream)
         (pprint-logical-block (stream (grammar-states grammar))
           (pprint-exit-if-list-exhausted)
+          (unless (grammar-items-hash grammar)
+            (error "Can't print a cleaned grammar's states"))
           (format stream "States:")
           (pprint-indent :block 2 stream)
           (pprint-newline :mandatory stream)

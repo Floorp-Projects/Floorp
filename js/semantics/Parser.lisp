@@ -29,10 +29,14 @@
 ; kernel-item-alist is a list of pairs (item . prev), where item is a kernel item
 ; and prev is either nil or a laitem.  kernel is a list of the kernel items in a canonical order.
 ; Return a new state with the given list of kernel items and state number.
-; If update-propagates is true, for each non-null prev in kernel-item-alist, update
+; If mode is :lalr-1, for each non-null prev in kernel-item-alist, update
 ; (laitem-propagates prev) to include the corresponding laitem in the new state.  Do this anyway
-; for internal lookaheads, regardless of update-propagates.
-(defun make-state (grammar kernel kernel-item-alist update-propagates number initial-lookaheads)
+; for internal lookaheads, regardless of mode.
+;
+; If mode is :canonical-lr-1, kernel-item-alist is a list of pairs (item . lookaheads), where
+; lookaheads is a terminalset of lookaheads for that item.  Use these lookaheads instead of
+; initial-lookaheads.
+(defun make-state (grammar kernel kernel-item-alist mode number initial-lookaheads)
   (let ((laitems nil)
         (laitems-hash (make-hash-table :test #'eq)))
     (labels
@@ -85,20 +89,20 @@
       (dolist (acons kernel-item-alist)
         (close-item (car acons) 
                     *empty-terminalset*
-                    initial-lookaheads
-                    (and update-propagates (cdr acons))
+                    (if (eq mode :canonical-lr-1) (cdr acons) initial-lookaheads)
+                    (and (eq mode :lalr-1) (cdr acons))
                     *full-terminalset*))
       (allocate-state number kernel (nreverse laitems)))))
 
 
 ; f is a function that takes three arguments:
 ;   a grammar symbol;
-;   a list of kernel items in order of increasing item number;
+;   a list of kernel items in order of increasing item number [list of (item . lookahead) when mode is :canonical-lr-1];
 ;   a list of pairs (item . prev), where item is a kernel item and prev is a laitem.
 ; For each possible symbol X that can be shifted while in the given state S, call
 ; f giving it S and the list of items that constitute the kernel of that shift's destination
 ; state.  The prev's are the sources of the corresponding shifted items.
-(defun state-each-shift-item-alist (f state)
+(defun state-each-shift-item-alist (f state mode)
   (let ((shift-symbols-hash (make-hash-table :test *grammar-symbol-=*)))
     (dolist (source-laitem (state-laitems state))
       (let* ((source-item (laitem-item source-laitem))
@@ -108,8 +112,15 @@
                 (gethash shift-symbol shift-symbols-hash)))))
     ;Use dolist/gethash instead of maphash to make state assignments deterministic.
     (dolist (shift-symbol (sorted-hash-table-keys shift-symbols-hash))
-      (let ((kernel-item-alist (gethash shift-symbol shift-symbols-hash)))
-        (funcall f shift-symbol (sort (mapcar #'car kernel-item-alist) #'< :key #'item-number) kernel-item-alist)))))
+      (let* ((kernel-item-alist (gethash shift-symbol shift-symbols-hash))
+             (kernel (if (eq mode :canonical-lr-1)
+                       (sort (mapcar #'(lambda (acons)
+                                         (cons (car acons) (laitem-lookaheads (cdr acons))))
+                                     kernel-item-alist)
+                             #'<
+                             :key #'(lambda (acons) (item-number (car acons))))
+                       (sort (mapcar #'car kernel-item-alist) #'< :key #'item-number))))
+        (funcall f shift-symbol kernel kernel-item-alist)))))
 
 
 ; f is a function that takes a terminal variant as an argument.
@@ -136,6 +147,58 @@
           (funcall f variant))))
     (when (zerop n-applicable-variants)
       (error "Internal parser error"))))
+
+
+;;; ------------------------------------------------------------------------------------------------------
+;;; CANONICAL LR(1)
+;;;
+;;; Canonical LR(1) is accepts the same set of languages as LR(1) except that it produces vastly larger,
+;;; unoptimizied state tables.  The only advantage to using Canonical LR(1) instead of LR(1) is that
+;;; a Canonical LR(1) parser will not make any reductions from an error state, whereas a LR(1) or LALR(1)
+;;; parser might make reductions (but not shifts).  In other words, a Canonical LR(1) parser's shift and
+;;; reduce tables are fully accurate rather than conservative approximations based on merged states.
+
+
+; Make all states in the grammar and return the initial state.
+; Initialize the grammar's list of states.
+; Initialize the states' gotos lists.
+; Initialize the states' shift (but not reduce or accept) transitions in the transitions lists.
+(defun add-all-canonical-lr-states (grammar)
+  (let* ((initial-item (make-item grammar (grammar-start-production grammar) 0))
+         (lr-states-hash (make-hash-table :test #'equal))  ;canonical kernel -> state
+         (initial-kernel (list (cons initial-item (make-terminalset grammar *end-marker*))))
+         (initial-state (make-state grammar initial-kernel initial-kernel :canonical-lr-1 0 nil))
+         (states (list initial-state))
+         (next-state-number 1))
+    (setf (gethash initial-kernel lr-states-hash) initial-state)
+    (do ((source-states (list initial-state)))
+        ((endp source-states))
+      (let ((source-state (pop source-states)))
+        ;Propagate the source state's internal lookaheads and then erase the propagates chains.
+        (propagate-internal-lookaheads source-state)
+        (dolist (laitem (state-laitems source-state))
+          (setf (laitem-propagates laitem) nil))
+        
+        (state-each-shift-item-alist
+         #'(lambda (shift-symbol kernel kernel-item-alist)
+             (let ((destination-state (gethash kernel lr-states-hash)))
+               (unless destination-state
+                 (setq destination-state (make-state grammar kernel kernel :canonical-lr-1 next-state-number nil))
+                 (setf (gethash kernel lr-states-hash) destination-state)
+                 (incf next-state-number)
+                 (push destination-state states)
+                 (push destination-state source-states))
+               (if (nonterminal? shift-symbol)
+                 (push (cons shift-symbol destination-state)
+                       (state-gotos source-state))
+                 (each-shift-symbol-variant
+                  #'(lambda (shift-symbol-variant)
+                      (push (cons shift-symbol-variant (make-shift-transition destination-state))
+                            (state-transitions source-state)))
+                  grammar shift-symbol kernel-item-alist))))
+         source-state :canonical-lr-1)))
+    (setf (grammar-states grammar) (nreverse states))
+    initial-state))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -182,12 +245,19 @@
 
 ; Propagate all lookaheads in the state.
 (defun propagate-internal-lookaheads (state)
-  (dolist (src-laitem (state-laitems state))
-    (let ((src-lookaheads (laitem-lookaheads src-laitem)))
-      (dolist (propagation (laitem-propagates src-laitem))
-        (let ((dst-laitem (car propagation))
-              (mask (cdr propagation)))
-          (terminalset-union-f (laitem-lookaheads dst-laitem) (terminalset-intersection src-lookaheads mask)))))))
+  (do ((changed t))
+      ((not changed))
+    (setq changed nil)
+    (dolist (src-laitem (state-laitems state))
+      (let ((src-lookaheads (laitem-lookaheads src-laitem)))
+        (dolist (propagation (laitem-propagates src-laitem))
+          (let* ((dst-laitem (car propagation))
+                 (mask (cdr propagation))
+                 (old-dst-lookaheads (laitem-lookaheads dst-laitem))
+                 (new-dst-lookaheads (terminalset-union old-dst-lookaheads (terminalset-intersection src-lookaheads mask))))
+            (setf (laitem-lookaheads dst-laitem) new-dst-lookaheads)
+            (unless (terminalset-= old-dst-lookaheads new-dst-lookaheads)
+              (setq changed t))))))))
 
 
 ; Propagate all lookaheads in kernel-item-alist, which must target destination-state.
@@ -202,14 +272,13 @@
 
 ; Make all states in the grammar and return the initial state.
 ; Initialize the grammar's list of states.
-; Set up the laitems' propagate lists but do not propagate lookaheads yet.
 ; Initialize the states' gotos lists.
 ; Initialize the states' shift (but not reduce or accept) transitions in the transitions lists.
 (defun add-all-lr-states (grammar)
   (let* ((initial-item (make-item grammar (grammar-start-production grammar) 0))
          (lr-states-hash (make-hash-table :test #'equal))  ;kernel -> list of states with that kernel
          (initial-kernel (list initial-item))
-         (initial-state (make-state grammar initial-kernel (list (cons initial-item nil)) nil 0 (make-terminalset grammar *end-marker*)))
+         (initial-state (make-state grammar initial-kernel (list (cons initial-item nil)) :lr-1 0 (make-terminalset grammar *end-marker*)))
          (states (list initial-state))
          (next-state-number 1))
     (setf (gethash initial-kernel lr-states-hash) (list initial-state))
@@ -229,7 +298,7 @@
                                                 possible-destination-states))
                (propagate-external-lookaheads kernel-item-alist destination-state dirty-states))
               (t
-               (setq destination-state (make-state grammar kernel kernel-item-alist nil next-state-number *empty-terminalset*))
+               (setq destination-state (make-state grammar kernel kernel-item-alist :lr-1 next-state-number *empty-terminalset*))
                (propagate-external-lookaheads kernel-item-alist destination-state dirty-states)
                (push destination-state (gethash kernel lr-states-hash))
                (incf next-state-number)
@@ -261,7 +330,7 @@
                           (push (cons shift-symbol-variant (make-shift-transition destination-state))
                                 (state-transitions source-state)))
                       grammar shift-symbol kernel-item-alist))))
-             source-state))
+             source-state :lr-1))
           (dolist (dirty-state (sort (hash-table-keys dirty-states) #'< :key #'state-number))
             (when (remhash dirty-state dirty-states)
               (propagate-internal-lookaheads dirty-state)
@@ -274,12 +343,12 @@
                        (setf (cdr destination-binding) (update-destination-state destination-state kernel-item-alist)))
                      (each-shift-symbol-variant
                       #'(lambda (shift-symbol-variant)
-                          (let* ((destination-transition (cdr (assoc shift-symbol-variant (state-transitions dirty-state) :test *grammar-symbol-=*)))
+                          (let* ((destination-transition (state-transition dirty-state shift-symbol-variant))
                                  (destination-state (assert-non-null (transition-state destination-transition))))
                             (setf (transition-state destination-transition)
                                   (update-destination-state destination-state kernel-item-alist))))
                       grammar shift-symbol kernel-item-alist)))
-               dirty-state))))))
+               dirty-state :lr-1))))))
     (setf (grammar-states grammar) (nreverse states))
     initial-state))
 
@@ -297,7 +366,7 @@
   (let* ((initial-item (make-item grammar (grammar-start-production grammar) 0))
          (lalr-states-hash (make-hash-table :test #'equal))  ;kernel -> state
          (initial-kernel (list initial-item))
-         (initial-state (make-state grammar initial-kernel (list (cons initial-item nil)) t 0 (make-terminalset grammar *end-marker*)))
+         (initial-state (make-state grammar initial-kernel (list (cons initial-item nil)) :lalr-1 0 (make-terminalset grammar *end-marker*)))
          (states (list initial-state))
          (next-state-number 1))
     (setf (gethash initial-kernel lalr-states-hash) initial-state)
@@ -311,7 +380,7 @@
                  (dolist (acons kernel-item-alist)
                    (laitem-add-propagation (cdr acons) (state-laitem destination-state (car acons)) *full-terminalset*))
                  (progn
-                   (setq destination-state (make-state grammar kernel kernel-item-alist t next-state-number *empty-terminalset*))
+                   (setq destination-state (make-state grammar kernel kernel-item-alist :lalr-1 next-state-number *empty-terminalset*))
                    (setf (gethash kernel lalr-states-hash) destination-state)
                    (incf next-state-number)
                    (push destination-state states)
@@ -324,7 +393,7 @@
                       (push (cons shift-symbol-variant (make-shift-transition destination-state))
                             (state-transitions source-state)))
                   grammar shift-symbol kernel-item-alist))))
-         source-state)))
+         source-state :lalr-1)))
     (setf (grammar-states grammar) (nreverse states))
     initial-state))
 
@@ -457,31 +526,57 @@
       (write-char #\newline stream))))
 
 
+; Remove the temporary item and laitem lists from the grammar's states.  This reduces the grammar's lisp
+; heap usage but prevents it from being printed.
+(defun clean-grammar (grammar)
+  (when (grammar-items-hash grammar)
+    (setf (grammar-items-hash grammar) nil)
+    (dolist (state (grammar-states grammar))
+      (setf (state-kernel state) nil)
+      (setf (state-laitems state) nil))))
+
+
 ; Erase the existing parser, if any, for the given grammar.
 (defun clear-parser (grammar)
-  (clrhash (grammar-items-hash grammar))
+  (setf (grammar-items-hash grammar) nil)
   (setf (grammar-states grammar) nil))
 
 
-; Construct a LR or LALR parser in the given grammar.  kind should be either :lalr-1 or :lr-1.
+; Construct a LR or LALR parser in the given grammar.  kind should be :lalr-1, :lr-1, or :canonical-lr-1.
 ; Return the grammar.
 (defun compile-parser (grammar kind)
   (clear-parser grammar)
+  (setf (grammar-items-hash grammar) (make-hash-table :test #'equal))
   (ecase kind
     (:lalr-1
      (add-all-lalr-states grammar)
      (propagate-lalr-lookaheads grammar))
     (:lr-1
-     (add-all-lr-states grammar)))
+     (add-all-lr-states grammar))
+    (:canonical-lr-1
+     (add-all-canonical-lr-states grammar)))
   (finish-transitions grammar)
   (report-and-fix-ambiguities grammar *error-output*)
   grammar)
 
 
-; Make the grammar and compile its parser.  kind should be either :lalr-1 or :lr-1.
+; Make the grammar and compile its parser.  kind should be :lalr-1, :lr-1, or :canonical-lr-1.
 (defun make-and-compile-grammar (kind parametrization start-symbol grammar-source &rest grammar-options)
   (compile-parser (apply #'make-grammar parametrization start-symbol grammar-source grammar-options)
                   kind))
+
+
+; Collapse states that have at most one possible reduction into forwarding states.
+; DON'T DO THIS ON GRAMMARS THAT HAVE CONSTRAINTS AT THE TAIL END OF A PRODUCTION.
+; Return the number of states optimized.
+(defun forward-parser-states (grammar)
+  (let ((n-forwarded-states 0))
+    (dolist (state (grammar-states grammar))
+      (let ((production (forwarding-state-production state)))
+        (when production
+          (setf (state-transitions state) (list (cons nil (make-reduce-transition production))))
+          (incf n-forwarded-states))))
+    n-forwarded-states))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -501,7 +596,7 @@
      ;input-rest contains the input tokens after the next token.
      (parse-step-1 (stack terminal token input-rest)
        (let* ((state (caar stack))
-              (transition (cdr (assoc terminal (state-transitions state) :test *grammar-symbol-=*))))
+              (transition (state-transition state terminal)))
          (if transition
            (case (transition-kind transition)
              (:shift (parse-step (acons (transition-state transition) token stack) input-rest))
@@ -648,51 +743,7 @@
 (defun action-parse (grammar token-terminal input &key trace)
   (labels
     (;Continue the parse with the given stacks and remainder of input.
-     (parse-step (state-stack value-stack input)
-       (if (endp input)
-         (parse-step-1 state-stack value-stack *end-marker* nil nil)
-         (let ((token (first input)))
-           (parse-step-1 state-stack value-stack (funcall token-terminal token) token (rest input)))))
-     
-     ;Same as parse-step except that the next input terminal has been determined already.
-     ;input-rest contains the input tokens after the next token.
-     (parse-step-1 (state-stack value-stack terminal token input-rest)
-       (let* ((state (car state-stack))
-              (transition (cdr (assoc terminal (state-transitions state) :test *grammar-symbol-=*))))
-         (if transition
-           (case (transition-kind transition)
-             (:shift
-              (dolist (action-function-binding (gethash terminal (grammar-terminal-actions grammar)))
-                (push (funcall (cdr action-function-binding) token) value-stack))
-              (parse-step (cons (transition-state transition) state-stack) value-stack input-rest))
-             (:reduce
-              (let* ((production (transition-production transition))
-                     (state-stack (nthcdr (production-rhs-length production) state-stack))
-                     (state (car state-stack))
-                     (dst-state (assert-non-null
-                                 (cdr (assoc (production-lhs production) (state-gotos state) :test *grammar-symbol-=*))))
-                     (value-stack (funcall (production-evaluator production) value-stack)))
-                (parse-step-1 (cons dst-state state-stack) value-stack terminal token input-rest)))
-             (:accept (values (nreverse value-stack) (grammar-user-start-action-types grammar)))
-             (t (error "Bad transition: ~S" transition)))
-           (error "Parse error on ~S followed by ~S ..." token (ldiff input-rest (nthcdr 10 input-rest)))))))
-    
-    (if trace
-      (trace-action-parse grammar token-terminal input trace)
-      (parse-step (list (grammar-start-state grammar)) nil input))))
-
-
-; Same as action-parse, but with tracing information
-; If trace is:
-;   :code,   print trace information, including action code
-;   other    print trace information
-; Return two values:
-;   the list of action results;
-;   the list of action results' types.
-(defun trace-action-parse (grammar token-terminal input trace)
-  (labels
-    (;Continue the parse with the given stacks and remainder of input.
-     ;type-stack contains the types of corresponding value-stack entries.
+     ;When trace is non-null, type-stack contains the types of corresponding value-stack entries.
      (parse-step (state-stack value-stack type-stack input)
        (if (endp input)
          (parse-step-1 state-stack value-stack type-stack *end-marker* nil nil)
@@ -703,38 +754,50 @@
      ;input-rest contains the input tokens after the next token.
      (parse-step-1 (state-stack value-stack type-stack terminal token input-rest)
        (let* ((state (car state-stack))
-              (transition (cdr (assoc terminal (state-transitions state) :test *grammar-symbol-=*))))
-         (format *trace-output* "S~D: ~@_" (state-number state))
-         (print-values (reverse value-stack) (reverse type-stack) *trace-output*)
-         (pprint-newline :mandatory *trace-output*)
+              (transition (state-transition state terminal)))
+         (when trace
+           (format *trace-output* "S~D: ~@_" (state-number state))
+           (print-values (reverse value-stack) (reverse type-stack) *trace-output*)
+           (pprint-newline :mandatory *trace-output*))
          (if transition
            (case (transition-kind transition)
              (:shift
-              (format *trace-output* "  shift ~W~:@_" terminal)
+              (when trace
+                (format *trace-output* "  shift ~W~:@_" terminal)
+                (dolist (action-signature (grammar-symbol-signature grammar terminal))
+                  (push (cdr action-signature) type-stack)))
               (dolist (action-function-binding (gethash terminal (grammar-terminal-actions grammar)))
                 (push (funcall (cdr action-function-binding) token) value-stack))
-              (dolist (action-signature (grammar-symbol-signature grammar terminal))
-                (push (cdr action-signature) type-stack))
               (parse-step (cons (transition-state transition) state-stack) value-stack type-stack input-rest))
+             
              (:reduce
               (let ((production (transition-production transition)))
-                (write-string "  reduce " *trace-output*)
-                (if (eq trace :code)
-                  (write production :stream *trace-output* :pretty t)
-                  (print-production production *trace-output*))
-                (pprint-newline :mandatory *trace-output*)
+                (when trace
+                  (write-string "  reduce " *trace-output*)
+                  (if (eq trace :code)
+                    (write production :stream *trace-output* :pretty t)
+                    (print-production production *trace-output*))
+                  (pprint-newline :mandatory *trace-output*))
                 (let* ((state-stack (nthcdr (production-rhs-length production) state-stack))
                        (state (car state-stack))
                        (dst-state (assert-non-null
                                    (cdr (assoc (production-lhs production) (state-gotos state) :test *grammar-symbol-=*))))
-                       (value-stack (funcall (production-evaluator production) value-stack))
-                       (type-stack (nthcdr (production-n-action-args production) type-stack)))
-                  (dolist (action-signature (grammar-symbol-signature grammar (production-lhs production)))
-                    (push (cdr action-signature) type-stack))
+                       (value-stack (funcall (production-evaluator production) value-stack)))
+                  (when trace
+                    (setq type-stack (nthcdr (production-n-action-args production) type-stack))
+                    (dolist (action-signature (grammar-symbol-signature grammar (production-lhs production)))
+                      (push (cdr action-signature) type-stack)))
                   (parse-step-1 (cons dst-state state-stack) value-stack type-stack terminal token input-rest))))
+             
              (:accept
-              (format *trace-output* "  accept~:@_")
-              (values (nreverse value-stack) (nreverse type-stack)))
+              (when trace
+                (format *trace-output* "  accept~:@_"))
+              (values
+               (nreverse value-stack)
+               (if trace
+                 (nreverse type-stack)
+                 (grammar-user-start-action-types grammar))))
+             
              (t (error "Bad transition: ~S" transition)))
            (error "Parse error on ~S followed by ~S ..." token (ldiff input-rest (nthcdr 10 input-rest)))))))
     
