@@ -68,6 +68,19 @@ function checkDouble(element, maxVal)
 }
 
 //---------------------------------------------------
+function isListOfPrinterFeaturesAvailable()
+{
+  var has_printerfeatures = false;
+  
+  try {
+    has_printerfeatures = gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".has_special_printerfeatures");
+  } catch(ex) {
+  }
+  
+  return has_printerfeatures;
+}
+
+//---------------------------------------------------
 function getDoubleStr(val, dec)
 {
   var str = val.toString();
@@ -225,16 +238,8 @@ function createPaperArrayFromPrinterFeatures()
 
 //---------------------------------------------------
 function createPaperArray()
-{
-  var use_paper_array_from_printerfeatures = false;
-
-  try {
-    use_paper_array_from_printerfeatures = gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".has_special_printerfeatures");
-  }
-  catch (e) {
-  }
-  
-  if (use_paper_array_from_printerfeatures) {
+{  
+  if (isListOfPrinterFeaturesAvailable()) {
     createPaperArrayFromPrinterFeatures();    
   }
   else {
@@ -310,6 +315,20 @@ function loadDialog()
   }
 
   createPaperSizeList(selectedInx);
+  
+  // Enable/disable widgets based in the information whether the selected
+  // printer supports the matching feature or not
+  if (isListOfPrinterFeaturesAvailable()) {
+    if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".can_change_spoolercommand"))
+      dialog.cmdInput.removeAttribute("disabled");
+    else
+      dialog.cmdInput.setAttribute("disabled","true");
+
+    if (gPrefs.getBoolPref("print.tmp.printerfeatures." + gPrintSettings.printerName + ".can_change_paper_size"))
+      dialog.paperList.removeAttribute("disabled");
+    else
+      dialog.paperList.setAttribute("disabled","true");
+  }
 
   if (print_command == "") {
     print_command = default_command;
