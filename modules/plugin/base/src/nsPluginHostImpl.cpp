@@ -96,7 +96,11 @@
 #include "nsCExternalHandlerService.h"
 
 #ifdef XP_UNIX
+#if defined(MOZ_WIDGET_GTK)
 #include <gdk/gdkx.h> // for GDK_DISPLAY()
+#elif defined(MOZ_WIDGET_QT)
+#include <qwindowdefs.h> // for qt_xdisplay()
+#endif
 #endif
 
 // We need this hackery so that we can dynamically register doc
@@ -1519,11 +1523,15 @@ NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void
 #ifdef XP_UNIX
   if (nsPluginManagerVariable_XDisplay == aVariable) {
     Display** value = NS_REINTERPRET_CAST(Display**, aValue);
-      *value = GDK_DISPLAY();
-      if (!(*value)) {
-        return NS_ERROR_FAILURE;
-      }
+#if defined(MOZ_WIDGET_GTK)
+    *value = GDK_DISPLAY();
+#elif defined(MOZ_WIDGET_QT)
+    *value = qt_xdisplay();
+#endif
+    if (!(*value)) {
+      return NS_ERROR_FAILURE;
     }
+  }
 #endif
   return rv;
 }
@@ -1534,6 +1542,8 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
       // we should. Otherwise LoadPlugins will add the same plugins to the list
   // XXX for new-style plugins, we should also call nsIComponentManager::AutoRegister()
   mPluginsLoaded = PR_FALSE;
+
+  // load them again
   return LoadPlugins();
 }
 
