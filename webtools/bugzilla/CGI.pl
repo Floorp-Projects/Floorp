@@ -240,7 +240,10 @@ sub ValidateBugID {
     # Make sure the bug number is a positive integer.
     # Whitespace can be ignored because the SQL server will ignore it.
     $id =~ /^\s*([1-9][0-9]*)\s*$/
-      || DisplayError("The bug number is invalid.") 
+      || DisplayError("The bug number is invalid. If you are trying to use " .
+                      "QuickSearch, you need to enable JavaScript in your " .
+                      "browser. To help us fix this limitation, look " .
+                      "<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=70907\">here</a>.") 
       && exit;
 
     # Get the values of the usergroupset and userid global variables
