@@ -40,7 +40,7 @@
 #define _BSD_SOURCE 1
 #endif
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>
 #elif defined(XP_MAC)
 #include <Files.h>
@@ -471,14 +471,14 @@ nsFileStream::SetEOF()
     if (mFD == nsnull)
         return NS_BASE_STREAM_CLOSED;
 
-#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_OS2)
+#if defined(XP_UNIX) || defined(XP_MAC) || defined(XP_OS2) || defined(XP_BEOS)
     // Some system calls require an EOF offset.
     PRUint32 offset;
     nsresult rv = Tell(&offset);
     if (NS_FAILED(rv)) return rv;
 #endif
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
     if (ftruncate(PR_FileDesc2NativeHandle(mFD), offset) != 0) {
         NS_ERROR("ftruncate failed");
         return NS_ERROR_FAILURE;

@@ -25,7 +25,7 @@
 #include <limits.h>
 
 // include files for ftruncate (or equivalent)
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>
 #elif defined(XP_MAC)
 #include <Files.h>
@@ -276,7 +276,7 @@ nsDiskCache::Truncate(PRFileDesc *  fd, PRUint32  newEOF)
 {
     // use modified SetEOF from nsFileStreams::SetEOF()
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
     if (ftruncate(PR_FileDesc2NativeHandle(fd), newEOF) != 0) {
         NS_ERROR("ftruncate failed");
         return NS_ERROR_FAILURE;
