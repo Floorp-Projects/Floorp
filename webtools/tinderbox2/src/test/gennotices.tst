@@ -5,8 +5,8 @@
 # current time.
 
 
-# $Revision: 1.6 $ 
-# $Date: 2000/09/22 14:55:58 $ 
+# $Revision: 1.7 $ 
+# $Date: 2000/11/09 19:14:00 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/gennotices.tst,v $ 
 # $Name:  $ 
@@ -54,8 +54,12 @@ use HTMLPopUp;
 # make it easy to change.
 
 
-$TINDERBOX_DIR = ( $TinderConfig::TINDERBOX_DIR ||
-		   "/usr/apache/cgibin/webtools/tinderbox");
+
+$TINDERBOX_HTML_DIR = ( $TinderConfig::TINDERBOX_HTML_DIR ||
+			"/usr/apache/cgibin/webtools/tinderbox");
+
+$TINDERBOX_DATA_DIR = ( $TinderConfig::TINDERBOX_DATA_DIR ||
+			"/usr/apache/cgibin/webtools/tinderbox");
 
 
 @TREES = ('Project_A', 'Project_B', 'Project_C');
@@ -94,8 +98,8 @@ $TINDERBOX_DIR = ( $TinderConfig::TINDERBOX_DIR ||
 foreach $tree (@TREES) {
 
 
-  mkdir_R("$TINDERBOX_DIR/$tree/db", 0777);
-  mkdir_R("$TINDERBOX_DIR/$tree/h", 0777);
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/db", 0777);
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/h", 0777);
       
   my ($timenow) = time();
 
@@ -155,8 +159,17 @@ $out = <<EOF;
            };
 EOF
   ;
- 
-      open(FILE, ">$TINDERBOX_DIR/$tree/db/Notice.Update.$timenow.$mailaddr");
+
+      my ($update_file) = ("$TINDERBOX_DATA_DIR/$tree/db/".
+			   "Notice.Update.$timenow.$mailaddr");
+      
+      # first we try and make the file name leagal, then we check by using
+      # the definiative legal filename checker.
+
+      $update_file =~ s/\@/\./g;
+      $update_file = main::extract_filename_chars($update_file);
+
+      open(FILE, ">$update_file");
       
       print FILE $out;
       

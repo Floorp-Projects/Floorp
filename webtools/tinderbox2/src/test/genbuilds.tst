@@ -6,8 +6,8 @@
 # URL.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2000/09/22 14:55:47 $ 
+# $Revision: 1.9 $ 
+# $Date: 2000/11/09 19:14:20 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
@@ -53,14 +53,17 @@ use HTMLPopUp;
 # sufficent, we hardcode the test data here at the top of the file to
 # make it easy to change.
 
-$TINDERBOX_DIR = ( $TinderConfig::TINDERBOX_DIR ||
-		   "/usr/apache/cgibin/webtools/tinderbox");
+$TINDERBOX_HTML_DIR = ( $TinderConfig::TINDERBOX_HTML_DIR ||
+			"/usr/apache/cgibin/webtools/tinderbox");
+
+$TINDERBOX_DATA_DIR = ( $TinderConfig::TINDERBOX_DATA_DIR ||
+			"/usr/apache/cgibin/webtools/tinderbox");
 
 
 @TREES = ('Project_A', 'Project_B', 'Project_C');
 
 @BUILD_NAMES = (
-		'Build_Packages (Solaris)', 'Build_Packages (Linux)',
+		'Build_Packages_(Solaris)', 'Build_Packages_(Linux)',
 		'Coverage_Tests', 'Performance_Tests', 'Failover_Tests', 
 		'Lint_Tests', 
 		'Next_Milestone',
@@ -192,10 +195,17 @@ $out = <<EOF;
 EOF
   ;
  
-      mkdir_R("$TINDERBOX_DIR/$tree/db", 0777);
-      mkdir_R("$TINDERBOX_DIR/$tree/h", 0777);
-      
-      open(FILE, ">$TINDERBOX_DIR/$tree/db/Build.Update.$tree.$build.$timenow");
+       mkdir_R("$TINDERBOX_DATA_DIR/$tree/db", 0777);
+       mkdir_R("$TINDERBOX_DATA_DIR/$tree/h", 0777);
+    
+       my ($update_file) = ("$TINDERBOX_DATA_DIR/$tree/db/".
+			   "Build.Update.$tree.$build.$timenow");
+    
+      $update_file =~ s/([^0-9a-zA-Z\.\-\_\/\:]+)/\./g;
+
+      $update_file = main::extract_filename_chars($update_file);
+
+      open(FILE, ">$update_file");
       
       print FILE $out;
       

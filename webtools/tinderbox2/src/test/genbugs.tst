@@ -5,8 +5,8 @@
 # current time.
 
 
-# $Revision: 1.2 $ 
-# $Date: 2000/10/17 23:56:31 $ 
+# $Revision: 1.3 $ 
+# $Date: 2000/11/09 19:14:31 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbugs.tst,v $ 
 # $Name:  $ 
@@ -54,8 +54,12 @@ use HTMLPopUp;
 # make it easy to change.
 
 
-$TINDERBOX_DIR = ( $TinderConfig::TINDERBOX_DIR ||
-		   "/usr/apache/cgibin/webtools/tinderbox");
+
+$TINDERBOX_HTML_DIR = ( $TinderConfig::TINDERBOX_HTML_DIR ||
+			"/usr/apache/cgibin/webtools/tinderbox");
+
+$TINDERBOX_DATA_DIR = ( $TinderConfig::TINDERBOX_DATA_DIR ||
+			"/usr/apache/cgibin/webtools/tinderbox");
 
 
 @TREES = ('Project_A', 'Project_B', 'Project_C');
@@ -99,8 +103,8 @@ $TINDERBOX_DIR = ( $TinderConfig::TINDERBOX_DIR ||
 foreach $tree (@TREES) {
 
 
-  mkdir_R("$TINDERBOX_DIR/$tree/db", 0777);
-  mkdir_R("$TINDERBOX_DIR/$tree/h", 0777);
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/db", 0777);
+  mkdir_R("$TINDERBOX_DATA_DIR/$tree/h", 0777);
       
   my ($timenow) = time();
 
@@ -163,7 +167,7 @@ $out = <<EOF;
 EOF
   ;
  
-      open(FILE, ">$TINDERBOX_DIR/$tree/db/BT.Update.$timenow.$bug_id");
+      open(FILE, ">$TINDERBOX_DATA_DIR/$tree/db/BT.Update.$timenow.$bug_id");
       
       print FILE $out;
       
