@@ -308,7 +308,7 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
+NS_METHOD nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
   if (mWidget) {
     ::gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
@@ -316,7 +316,7 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 #if 0
   printf("nsWidget::Resize %s (%p) to %d %d\n",
@@ -337,8 +337,8 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
   return NS_OK;
 }
 
-NS_METHOD nsWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
-                           PRUint32 aHeight, PRBool aRepaint)
+NS_METHOD nsWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
+                           PRInt32 aHeight, PRBool aRepaint)
 {
   Resize(aWidth,aHeight,aRepaint);
   Move(aX,aY);

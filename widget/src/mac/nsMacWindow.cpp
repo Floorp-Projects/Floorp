@@ -487,7 +487,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 // Move this window
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsMacWindow::Move(PRUint32 aX, PRUint32 aY)
+NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 {
 	if (mWindowMadeHere)
 	{
@@ -567,7 +567,7 @@ NS_IMETHODIMP nsMacWindow::Move(PRUint32 aX, PRUint32 aY)
 // Resize this window
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsMacWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 	if (mWindowMadeHere)
 	{

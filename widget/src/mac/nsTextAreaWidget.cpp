@@ -563,7 +563,7 @@ NS_METHOD  nsTextAreaWidget::GetText(nsString& aTextBuffer, PRUint32 aBufferSize
  * @param   aRepaint -- indicates if a repaint is needed.
  * @return  PR_TRUE if the pt is contained in the widget
  */ 
-NS_IMETHODIMP nsTextAreaWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsTextAreaWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 	return Resize(0, 0, aWidth, aHeight, aRepaint);
 }
@@ -578,7 +578,7 @@ NS_IMETHODIMP nsTextAreaWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool
  * @param  aW
  * @return  PR_TRUE
  */ 
-NS_IMETHODIMP nsTextAreaWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsTextAreaWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 	Inherited::Resize(aX, aY, aWidth, aHeight, aRepaint);
 

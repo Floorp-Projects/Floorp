@@ -693,7 +693,17 @@ NS_METHOD nsWindow::ShowMenuBar(PRBool aShow)
   return NS_OK;
 }
 
+NS_METHOD nsWindow::IsMenuBarVisible(PRBool *aVisible)
+{
+  *aVisible = PR_TRUE;
+  return NS_ERROR_FAILURE; // todo: (maybe. method isn't actually used yet.)
+}
+
+<<<<<<< nsWindow.cpp
+NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
+=======
 NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
+>>>>>>> 1.135
 {
   // not implimented for toplevel windows
   if (mIsToplevel && mShell)
@@ -719,7 +729,7 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 }
 
 
-NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 #if 0
   printf("nsWidget::Resize %s (%p) to %d %d\n",
@@ -759,8 +769,8 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 }
 
 
-NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth,
-                           PRUint32 aHeight, PRBool aRepaint)
+NS_METHOD nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
+                           PRInt32 aHeight, PRBool aRepaint)
 {
   Resize(aWidth,aHeight,aRepaint);
   Move(aX,aY);

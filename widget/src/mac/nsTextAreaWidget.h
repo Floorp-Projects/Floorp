@@ -67,8 +67,8 @@ public:
   NS_IMETHOD        GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel);
   NS_IMETHOD        SetCaretPosition(PRUint32 aPosition);
   NS_IMETHOD        GetCaretPosition(PRUint32& aPosition);
-  NS_IMETHOD        Resize(PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
-  NS_IMETHOD        Resize(PRUint32 aX, PRUint32 aY,PRUint32 aWidth,PRUint32 aHeight, PRBool aRepaint);
+  NS_IMETHOD        Resize(PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
+  NS_IMETHOD        Resize(PRInt32 aX, PRInt32 aY,PRInt32 aWidth,PRInt32 aHeight, PRBool aRepaint);
 
 
   virtual PRBool  OnPaint(nsPaintEvent & aEvent);

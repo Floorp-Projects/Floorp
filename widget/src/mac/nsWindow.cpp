@@ -525,7 +525,7 @@ NS_IMETHODIMP nsWindow::GetBounds(nsRect &aRect)
 // Move this component
 // aX and aY are in the parent widget coordinate system
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Move(PRUint32 aX, PRUint32 aY)
+NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
 	if ((mBounds.x != aX) || (mBounds.y != aY))
 	{
@@ -551,7 +551,7 @@ NS_IMETHODIMP nsWindow::Move(PRUint32 aX, PRUint32 aY)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 	if ((mBounds.width != aWidth) || (mBounds.height != aHeight))
 	{
@@ -577,7 +577,7 @@ NS_IMETHODIMP nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepain
 // Resize this component
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_IMETHODIMP nsWindow::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 	nsWindow::Move(aX, aY);
 	nsWindow::Resize(aWidth, aHeight, aRepaint);

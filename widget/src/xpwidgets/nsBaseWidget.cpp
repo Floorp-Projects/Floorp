@@ -650,16 +650,6 @@ NS_METHOD nsBaseWidget::GetBounds(nsRect &aRect)
   return NS_OK;
 }
 
-/**
- * This implementation of nsWindow MUST be overridden.
- *
- **/
-
-NS_METHOD nsBaseWidget::GetAbsoluteBounds(nsRect &aRect)
-{
-  return NS_ERROR_FAILURE;
-}
-
 
 /**
 * If the implementation of nsWindow supports borders this method MUST be overridden

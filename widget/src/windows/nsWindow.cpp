@@ -659,6 +659,10 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
         extendedStyle = WS_EX_TOPMOST;
         style = WS_POPUP;
         mBorderlessParent = parent;
+         // Get the top most level window to use as the parent
+        while (::GetParent(parent)) {
+          parent = ::GetParent(parent);
+        } 
       }
 
       if (aInitData->mBorderStyle != eBorderStyle_all) {
@@ -882,7 +886,7 @@ NS_METHOD nsWindow::IsVisible(PRBool & bState)
 // Move this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
+NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
    // When moving a borderless top-level window the window
    // must be placed relative to its parent. WIN32 wants to
@@ -931,8 +935,10 @@ NS_METHOD nsWindow::Move(PRUint32 aX, PRUint32 aY)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
+NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
+  NS_ASSERTION((aWidth >=0 ) , "Negative width passed to nsWindow::Resize");
+  NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
   // Set cached value for lightweight and printing
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
@@ -970,12 +976,15 @@ NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 // Resize this component
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsWindow::Resize(PRUint32 aX,
-                      PRUint32 aY,
-                      PRUint32 aWidth,
-                      PRUint32 aHeight,
+NS_METHOD nsWindow::Resize(PRInt32 aX,
+                      PRInt32 aY,
+                      PRInt32 aWidth,
+                      PRInt32 aHeight,
                       PRBool   aRepaint)
 {
+  NS_ASSERTION((aWidth >=0 ),  "Negative width passed to nsWindow::Resize");
+  NS_ASSERTION((aHeight >=0 ), "Negative height passed to nsWindow::Resize");
+
   // Set cached value for lightweight and printing
   mBounds.x      = aX;
   mBounds.y      = aY;
@@ -1079,28 +1088,6 @@ NS_METHOD nsWindow::GetBounds(nsRect &aRect)
     aRect = mBounds;
   }
 
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Get the bounding rectangle in screen coordinates
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::GetAbsoluteBounds(nsRect &aRect)
-{
-  if (mWnd) {
-    RECT r;
-    VERIFY(::GetWindowRect(mWnd, &r));
-
-    // assign size
-    aRect.width  = r.right - r.left;
-    aRect.height = r.bottom - r.top; 
-    aRect.x = r.left;
-    aRect.y = r.top;
-  }
   return NS_OK;
 }
 
