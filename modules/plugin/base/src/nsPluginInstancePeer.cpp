@@ -65,8 +65,6 @@
 
 nsPluginInstancePeerImpl::nsPluginInstancePeerImpl()
 {
-  NS_INIT_ISUPPORTS();
-
   mInstance = nsnull;
   mOwner = nsnull;
   mMIMEType = nsnull;
@@ -155,8 +153,6 @@ nsPluginStreamToFile::nsPluginStreamToFile(const char* target, nsIPluginInstance
   mTarget(PL_strdup(target)),
   mOwner(owner)
 {
-  NS_INIT_ISUPPORTS();
-
   nsresult rv;
   nsCOMPtr<nsIFile> pluginTmp;
   rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pluginTmp));

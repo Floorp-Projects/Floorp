@@ -181,7 +181,6 @@ nsNetModuleMgr::EnumerateModules(const char *aTopic, nsISimpleEnumerator **aEnum
 ///////////////////////////////////
 
 nsNetModuleMgr::nsNetModuleMgr() {
-    NS_INIT_ISUPPORTS();
     mMonitor = nsAutoMonitor::NewMonitor("nsNetModuleMgr");
 }
 

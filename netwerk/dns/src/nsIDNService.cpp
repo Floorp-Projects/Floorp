@@ -47,7 +47,6 @@ NS_IMPL_ISUPPORTS1(nsIDNService, nsIIDNService)
 
 nsIDNService::nsIDNService()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

@@ -30,7 +30,6 @@
 
 nsSOCKSSocketProvider::nsSOCKSSocketProvider()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsresult

@@ -10,7 +10,6 @@
 NS_IMPL_ISUPPORTS2(TestConverter, nsIStreamConverter, nsIStreamListener);
 
 TestConverter::TestConverter() {
-    NS_INIT_ISUPPORTS();
 }
 
 // Convert aFromStream (of type aFromType), to _retval (nsIInputStream of type aToType).
@@ -115,7 +114,6 @@ TestConverterFactory::TestConverterFactory(const nsCID &aClass,
                                    const char* contractID)
     : mClassID(aClass), mClassName(className), mContractID(contractID)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 TestConverterFactory::~TestConverterFactory()

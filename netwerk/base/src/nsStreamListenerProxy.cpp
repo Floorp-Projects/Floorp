@@ -81,7 +81,6 @@ nsStreamListenerProxy::nsStreamListenerProxy()
     , mPipeEmptied(PR_FALSE)
     , mListenerStatus(NS_OK)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsStreamListenerProxy::~nsStreamListenerProxy()

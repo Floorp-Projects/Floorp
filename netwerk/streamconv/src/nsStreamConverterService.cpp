@@ -59,7 +59,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsStreamConverterService, nsIStreamConverterServic
 ////////////////////////////////////////////////////////////
 // nsStreamConverterService methods
 nsStreamConverterService::nsStreamConverterService() : mAdjacencyList(nsnull) {
-    NS_INIT_ISUPPORTS();
 }
 
 nsStreamConverterService::~nsStreamConverterService() {

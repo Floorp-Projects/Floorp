@@ -87,7 +87,6 @@ nsDiskCacheInputStream::nsDiskCacheInputStream( nsDiskCacheStreamIO * parent,
     , mPos(0)
     , mClosed(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
     mStreamIO->IncrementInputStreamCount();
 }
 
@@ -208,7 +207,6 @@ nsDiskCacheOutputStream::nsDiskCacheOutputStream( nsDiskCacheStreamIO * parent)
     : mStreamIO(parent)
     , mClosed(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 
@@ -327,7 +325,6 @@ nsDiskCacheStreamIO::nsDiskCacheStreamIO(nsDiskCacheBinding *   binding)
     , mBufDirty(PR_FALSE)
     , mBuffer(nsnull)
 {
-    NS_INIT_ISUPPORTS();
     mDevice = (nsDiskCacheDevice *)mBinding->mCacheEntry->CacheDevice();
 
     // acquire "death grip" on cache service

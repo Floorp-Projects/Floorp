@@ -95,7 +95,6 @@ TestListener::TestListener(char *filename)
     : mFilename(filename)
     , mFile(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 TestListener::~TestListener()

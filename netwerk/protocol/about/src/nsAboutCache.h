@@ -54,7 +54,7 @@ public:
     NS_DECL_NSIABOUTMODULE
     NS_DECL_NSICACHEVISITOR
 
-    nsAboutCache() { NS_INIT_ISUPPORTS(); }
+    nsAboutCache() {}
     virtual ~nsAboutCache() {}
 
     static NS_METHOD

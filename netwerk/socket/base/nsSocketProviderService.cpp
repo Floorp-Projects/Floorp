@@ -45,7 +45,6 @@
 
 nsSocketProviderService::nsSocketProviderService()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsresult

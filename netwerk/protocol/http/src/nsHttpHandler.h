@@ -333,7 +333,7 @@ public:
     NS_FORWARD_NSIPROXIEDPROTOCOLHANDLER (nsHttpHandler::get()->)
     NS_FORWARD_NSIHTTPPROTOCOLHANDLER    (nsHttpHandler::get()->)
 
-    nsHttpsHandler() { NS_INIT_ISUPPORTS(); }
+    nsHttpsHandler() { }
     virtual ~nsHttpsHandler() { }
 
     nsresult Init();

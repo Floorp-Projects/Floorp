@@ -296,7 +296,6 @@ NS_IMPL_ISUPPORTS2(ns4xPlugin, nsIPlugin, nsIFactory);
 
 ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManagerObsolete* serviceMgr)
 {
-  NS_INIT_ISUPPORTS();
   memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
   gServiceMgr = serviceMgr;
   fLibrary = nsnull;

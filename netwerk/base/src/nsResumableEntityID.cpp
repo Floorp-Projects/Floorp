@@ -43,7 +43,6 @@ NS_IMPL_ISUPPORTS1(nsResumableEntityID, nsIResumableEntityID)
 nsResumableEntityID::nsResumableEntityID() :
     mSize(PRUint32(-1)),
     mLastModified(PRTime(LL_INIT(-1,-1))) {
-    NS_INIT_ISUPPORTS();
 }
 
 nsResumableEntityID::~nsResumableEntityID() {}

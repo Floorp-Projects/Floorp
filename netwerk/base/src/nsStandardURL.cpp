@@ -318,8 +318,6 @@ nsStandardURL::nsStandardURL(PRBool aSupportsFileURL)
 
     LOG(("Creating nsStandardURL @%p\n", this));
 
-    NS_INIT_ISUPPORTS();
-
     if (!gInitialized) {
         gInitialized = PR_TRUE;
         InitGlobalObjects();

@@ -60,7 +60,6 @@ nsGopherChannel::nsGopherChannel()
       mType(-1),
       mStatus(NS_OK)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsGopherChannel::~nsGopherChannel()

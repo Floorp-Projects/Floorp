@@ -76,8 +76,6 @@ protected:
 nsSOCKSSocketInfo::nsSOCKSSocketInfo()
 : mSOCKSVersion(-1)
 {
-    NS_INIT_ISUPPORTS();
-    
     mProxyHost = nsnull;
     mProxyPort = -1;
     mProxyType = nsnull;

@@ -906,7 +906,6 @@ mozTXTToHTMLConv::GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBoo
 
 mozTXTToHTMLConv::mozTXTToHTMLConv()
 {
-  NS_INIT_ISUPPORTS();
   MOZ_TIMER_RESET(mScanTXTTimer);
   MOZ_TIMER_RESET(mGlyphHitTimer);
   MOZ_TIMER_RESET(mTotalMimeTime);

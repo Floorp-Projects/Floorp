@@ -74,7 +74,6 @@ nsFileChannel::nsFileChannel()
       ,mInitiator(nsnull)
 #endif
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsresult

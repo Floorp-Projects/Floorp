@@ -174,7 +174,6 @@ public:
     nsDiskCacheDeviceInfo(nsDiskCacheDevice* device)
         :   mDevice(device)
     {
-        NS_INIT_ISUPPORTS();
     }
 
     virtual ~nsDiskCacheDeviceInfo() {}

@@ -112,7 +112,6 @@ nsDiskCacheBinding::nsDiskCacheBinding(nsCacheEntry* entry, nsDiskCacheRecord * 
     :   mCacheEntry(entry)
 {
     NS_ASSERTION(record->ValidRecord(), "bad record");
-    NS_INIT_ISUPPORTS();
     PR_INIT_CLIST(this);
     mRecord     = *record;
     mDoomed     = entry->IsDoomed();

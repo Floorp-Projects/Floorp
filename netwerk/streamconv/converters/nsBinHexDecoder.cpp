@@ -68,7 +68,6 @@ nsBinHexDecoder::nsBinHexDecoder() :
   mDonePos(3), mInCRC(0), mCount(0), mMarker(0), mPosInbuff(0), 
   mPosOutputBuff(0)
 {
-  NS_INIT_ISUPPORTS();
   mDataBuffer = nsnull;
   mOutgoingBuffer = nsnull;
 

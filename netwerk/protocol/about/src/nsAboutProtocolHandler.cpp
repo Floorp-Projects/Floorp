@@ -53,7 +53,6 @@ static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 
 nsAboutProtocolHandler::nsAboutProtocolHandler()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsresult

@@ -83,7 +83,7 @@ class MyProgressEventSink : public nsIProgressEventSink
 public:
     NS_DECL_ISUPPORTS
 
-    MyProgressEventSink() { NS_INIT_ISUPPORTS(); }
+    MyProgressEventSink() { }
 
     NS_IMETHOD OnProgress(nsIRequest *request, nsISupports *ctxt,
                           PRUint32 progress, PRUint32 progressMax) {
@@ -152,7 +152,6 @@ public:
     }
 
     MyListener(PRUint32 stopCount = 1) : mTotal(0), mStopCount(stopCount) {
-        NS_INIT_ISUPPORTS();
     }
 
     nsresult Init(const char* origFile) {
@@ -330,7 +329,7 @@ public:
         return NS_OK;
     }
 
-    MyOpenObserver() { NS_INIT_ISUPPORTS(); }
+    MyOpenObserver() { }
     virtual ~MyOpenObserver() {}
 };
 

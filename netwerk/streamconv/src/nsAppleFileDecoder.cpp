@@ -45,8 +45,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsAppleFileDecoder, nsIAppleFileDecoder, nsIOutput
 
 nsAppleFileDecoder::nsAppleFileDecoder()
 {
-  NS_INIT_ISUPPORTS();
-
   m_state = parseHeaders;
   m_dataBufferLength = 0;
   m_dataBuffer = (unsigned char*) PR_MALLOC(MAX_BUFFERSIZE);

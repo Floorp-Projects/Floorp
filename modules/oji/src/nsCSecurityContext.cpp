@@ -238,7 +238,6 @@ nsCSecurityContext::nsCSecurityContext(JSContext* cx)
                      m_HasUniversalBrowserReadCapability(PR_FALSE)
 {
     MOZ_COUNT_CTOR(nsCSecurityContext);
-    NS_INIT_ISUPPORTS();
 
       // Get the Script Security Manager.
 
@@ -282,7 +281,6 @@ nsCSecurityContext::nsCSecurityContext(nsIPrincipal *principal)
                      m_HasUniversalBrowserReadCapability(PR_FALSE)
 {
     MOZ_COUNT_CTOR(nsCSecurityContext);
-    NS_INIT_ISUPPORTS();
 
       // Get the Script Security Manager.
 

@@ -107,7 +107,6 @@ nsFileIO::nsFileIO()
       mPerm(0),
       mStatus(NS_OK)
 {
-    NS_INIT_ISUPPORTS();
 #if defined(PR_LOGGING)
     //
     // Initialize the global PRLogModule for socket transport logging
@@ -401,7 +400,6 @@ nsFileStream::nsFileStream()
     : mFD(nsnull)
     , mCloseFD(PR_TRUE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsFileStream::~nsFileStream()

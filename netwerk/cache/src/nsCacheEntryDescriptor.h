@@ -128,7 +128,6 @@ private:
                                nsIOutputStream *        output)
              : mDescriptor(nsnull), mOutput(output)
          {
-             NS_INIT_ISUPPORTS();
              NS_ADDREF(mDescriptor = descriptor);
          }
     

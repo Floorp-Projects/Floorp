@@ -496,8 +496,6 @@ SimplePluginInstance::UnregisterSelf(nsIComponentManager* aCompMgr,
 SimplePluginInstance::SimplePluginInstance(void)
     : fText(NULL), fPeer(NULL), fWindow(NULL), fMode(nsPluginMode_Embedded)
 {
-    NS_INIT_ISUPPORTS();
-
     static const char text[] = "Hello World!";
     fText = (char*) nsMemory::Clone(text, sizeof(text));
 
@@ -811,7 +809,6 @@ SimplePluginStreamListener::SimplePluginStreamListener(SimplePluginInstance* ins
                                                        const char* msgName)
     : fMessageName(msgName)
 {
-    NS_INIT_ISUPPORTS();
     char msg[256];
     sprintf(msg, "### Creating SimplePluginStreamListener for %s\n", fMessageName);
 }

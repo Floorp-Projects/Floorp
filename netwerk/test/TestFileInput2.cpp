@@ -207,7 +207,6 @@ public:
         : mInPath(nsnull), mOutPath(nsnull), mBuffer(nsnull),
           mBufferSize(0)
     {
-        NS_INIT_ISUPPORTS();
     }
 
     nsresult Init(nsIFile* inPath, nsIFile* outPath,
@@ -300,7 +299,6 @@ public:
         : mInPath(nsnull), mOutPath(nsnull), mBuffer(nsnull),
           mBufferSize(0)
     {
-        NS_INIT_ISUPPORTS();
     }
 
     nsresult Init(nsIFile* inPath, nsIFile* outPath,

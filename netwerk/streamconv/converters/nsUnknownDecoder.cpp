@@ -66,8 +66,6 @@ static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 
 nsUnknownDecoder::nsUnknownDecoder()
 {
-  NS_INIT_ISUPPORTS();
-
   mBuffer = nsnull;
   mBufferLen = 0;
   mRequireHTMLsuffix = PR_FALSE;

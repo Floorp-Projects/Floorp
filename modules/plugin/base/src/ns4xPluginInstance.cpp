@@ -94,7 +94,6 @@ ns4xPluginStreamListener::ns4xPluginStreamListener(nsIPluginInstance* inst,
       mCallNotify(PR_FALSE),      
       mStreamInfo(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   mInst = (ns4xPluginInstance*) inst;
   mPosition = 0;
   mStreamBufferSize = 0;
@@ -563,8 +562,6 @@ NS_IMPL_ISUPPORTS2(ns4xPluginInstance, nsIPluginInstance, nsIScriptablePlugin)
 ns4xPluginInstance :: ns4xPluginInstance(NPPluginFuncs* callbacks, PRLibrary* aLibrary)
   : fCallbacks(callbacks)
 {
-  NS_INIT_ISUPPORTS();
-
   NS_ASSERTION(fCallbacks != NULL, "null callbacks");
 
   // Initialize the NPP structure.

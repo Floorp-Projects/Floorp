@@ -241,7 +241,6 @@ nsGopherDirListingConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 
 // nsGopherDirListingConv methods
 nsGopherDirListingConv::nsGopherDirListingConv() {
-    NS_INIT_ISUPPORTS();
     mFinalListener      = nsnull;
     mPartChannel        = nsnull;
     mSentHeading        = PR_FALSE;

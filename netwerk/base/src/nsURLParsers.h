@@ -51,7 +51,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURLPARSER
 
-    nsBaseURLParser() { NS_INIT_ISUPPORTS(); }
+    nsBaseURLParser() { }
 
 protected:
     // implemented by subclasses

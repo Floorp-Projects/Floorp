@@ -74,7 +74,6 @@ public:
         , mMemoryCacheEnabled(PR_TRUE)
         , mMemoryCacheCapacity(4 * 1024 * 1024)
     {
-        NS_INIT_ISUPPORTS();
     }
 
     virtual ~nsCacheProfilePrefObserver() {}
@@ -384,8 +383,6 @@ nsCacheService::nsCacheService()
       mDeactivateFailures(0),
       mDeactivatedUnboundEntries(0)
 {
-    NS_INIT_ISUPPORTS();
-
     NS_ASSERTION(gService==nsnull, "multiple nsCacheService instances!");
     gService = this;
 

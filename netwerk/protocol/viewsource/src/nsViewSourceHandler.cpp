@@ -48,7 +48,6 @@ static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsViewSourceHandler::nsViewSourceHandler() {
-    NS_INIT_ISUPPORTS();
 }
 
 nsViewSourceHandler::~nsViewSourceHandler() {

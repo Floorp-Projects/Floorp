@@ -52,7 +52,7 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  nsStreamLoader() { NS_INIT_ISUPPORTS(); };
+  nsStreamLoader() { };
   virtual ~nsStreamLoader() {};
 
   static NS_METHOD

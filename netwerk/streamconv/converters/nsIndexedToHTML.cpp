@@ -585,7 +585,6 @@ void nsIndexedToHTML::FormatSizeString(PRUint32 inSize, nsString& outSizeString)
 }
 
 nsIndexedToHTML::nsIndexedToHTML() {
-    NS_INIT_ISUPPORTS();
 }
 
 nsIndexedToHTML::~nsIndexedToHTML() {

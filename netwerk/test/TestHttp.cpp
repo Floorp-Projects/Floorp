@@ -29,7 +29,7 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
-    MyListener() { NS_INIT_ISUPPORTS(); }
+    MyListener() { }
     virtual ~MyListener() {}
 };
 
@@ -91,7 +91,7 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
 
-    MyNotifications() { NS_INIT_ISUPPORTS(); }
+    MyNotifications() { }
     virtual ~MyNotifications() {}
 };
 

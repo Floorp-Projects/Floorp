@@ -115,8 +115,6 @@ nsPartChannel::nsPartChannel(nsIChannel *aMultipartChannel) :
   mByteRangeStart(0),
   mByteRangeEnd(0)
 {
-    NS_INIT_ISUPPORTS();
-
     mMultipartChannel = aMultipartChannel;
 
     // Inherit the load flags from the original channel...
@@ -715,7 +713,6 @@ nsMultiMixedConv::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 
 // nsMultiMixedConv methods
 nsMultiMixedConv::nsMultiMixedConv() {
-    NS_INIT_ISUPPORTS();
     mTokenLen           = 0;
     mNewPart            = PR_TRUE;
     mContentLength      = -1;

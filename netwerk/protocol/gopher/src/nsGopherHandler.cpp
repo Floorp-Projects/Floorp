@@ -48,7 +48,6 @@ static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsGopherHandler::nsGopherHandler() {
-    NS_INIT_ISUPPORTS();
 #ifdef PR_LOGGING
     if (!gGopherLog)
         gGopherLog = PR_NewLogModule("nsGopherProtocol");

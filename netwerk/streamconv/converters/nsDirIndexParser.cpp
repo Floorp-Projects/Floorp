@@ -59,7 +59,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsDirIndexParser,
                               nsIDirIndexParser)
 
 nsDirIndexParser::nsDirIndexParser() {
-  NS_INIT_ISUPPORTS();
 }
 
 nsresult

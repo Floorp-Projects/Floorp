@@ -63,8 +63,6 @@ nsHttpConnection::nsHttpConnection()
 {
     LOG(("Creating nsHttpConnection @%x\n", this));
 
-    NS_INIT_ISUPPORTS();
-
     // grab a reference to the handler to ensure that it doesn't go away.
     nsHttpHandler *handler = nsHttpHandler::get();
     NS_ADDREF(handler);

@@ -82,8 +82,6 @@ static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 nsDirectoryIndexStream::nsDirectoryIndexStream()
     : mOffset(0), mPos(0)
 {
-    NS_INIT_ISUPPORTS();
-
 #ifdef PR_LOGGING
     if (! gLog)
         gLog = PR_NewLogModule("nsDirectoryIndexStream");

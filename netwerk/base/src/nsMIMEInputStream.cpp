@@ -95,7 +95,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsMIMEInputStream,
 nsMIMEInputStream::nsMIMEInputStream() : mAddContentLength(PR_FALSE),
                                          mStartedReading(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsMIMEInputStream::~nsMIMEInputStream()

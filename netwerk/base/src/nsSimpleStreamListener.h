@@ -48,7 +48,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSISIMPLESTREAMLISTENER
 
-    nsSimpleStreamListener() { NS_INIT_ISUPPORTS(); }
+    nsSimpleStreamListener() { }
     virtual ~nsSimpleStreamListener() {}
 
 protected:

@@ -107,7 +107,6 @@ public:
     nsMemoryCacheDeviceInfo(nsMemoryCacheDevice* device)
         :   mDevice(device)
     {
-        NS_INIT_ISUPPORTS();
     }
 
     virtual ~nsMemoryCacheDeviceInfo() {}

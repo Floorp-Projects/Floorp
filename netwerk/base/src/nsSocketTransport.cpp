@@ -197,8 +197,6 @@ nsSocketTransport::nsSocketTransport():
     mReadRequest(nsnull),
     mWriteRequest(nsnull)
 {
-    NS_INIT_ISUPPORTS();
-
 #if defined(PR_LOGGING)
     if (!gSocketTransportLog)
         gSocketTransportLog = PR_NewLogModule("nsSocketTransport");
@@ -2318,7 +2316,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsSocketBIS, nsIInputStream)
 
 nsSocketBIS::nsSocketBIS()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSocketBIS::~nsSocketBIS()
@@ -2399,7 +2396,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsSocketBOS, nsIOutputStream)
 
 nsSocketBOS::nsSocketBOS()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSocketBOS::~nsSocketBOS()
@@ -2503,7 +2499,6 @@ nsSocketIS::nsSocketIS()
     , mSock(nsnull)
     , mError(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 NS_IMETHODIMP
@@ -2605,7 +2600,6 @@ nsSocketOS::nsSocketOS()
     , mSock(nsnull)
     , mError(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 NS_METHOD
@@ -2720,7 +2714,6 @@ nsSocketRequest::nsSocketRequest()
     , mStartFired(0)
     , mStopFired(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsSocketRequest::~nsSocketRequest()

@@ -87,7 +87,6 @@ public:
     MRJInputStream(MRJSession* session)
         :   mMonitor(session), mOffset(0), mComplete(false)
     {
-        NS_INIT_ISUPPORTS();
         mBuffer.reserve(8192);
     }
     

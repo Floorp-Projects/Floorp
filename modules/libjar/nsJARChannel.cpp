@@ -70,8 +70,6 @@ nsJARChannel::nsJARChannel()
     , mInitiator(nsnull)
 #endif
 {
-    NS_INIT_ISUPPORTS();
-
 #if defined(PR_LOGGING)
     //
     // Initialize the global PRLogModule for socket transport logging

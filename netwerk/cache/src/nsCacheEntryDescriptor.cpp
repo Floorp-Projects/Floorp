@@ -40,7 +40,6 @@ nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
     : mCacheEntry(entry),
       mAccessGranted(accessGranted)
 {
-  NS_INIT_ISUPPORTS();
   PR_INIT_CLIST(this);
   NS_ADDREF(nsCacheService::GlobalInstance());  // ensure it lives for the lifetime of the descriptor
 }

@@ -185,7 +185,6 @@ static int CompareVersion(verBlock vbVersionOld, verBlock vbVersionNew)
 
 nsPluginDirServiceProvider::nsPluginDirServiceProvider()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsPluginDirServiceProvider::~nsPluginDirServiceProvider()

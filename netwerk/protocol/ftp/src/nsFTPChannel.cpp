@@ -87,7 +87,6 @@ nsFTPChannel::nsFTPChannel()
       mStatus(NS_OK),
       mCanceled(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsFTPChannel::~nsFTPChannel()
