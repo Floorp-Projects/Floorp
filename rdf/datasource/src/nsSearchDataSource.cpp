@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 4; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -885,7 +885,6 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 						rv = pts->SendData(postData, (PRUint32)strlen(postData));
 						delete []postData;
 						postData = nsnull;
-						
 					}
 			        }
 			}
@@ -1760,22 +1759,6 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 				}
 			}
 		}
-/*
-		char	*engineURI = nsnull;
-		if (NS_SUCCEEDED(rv = mEngine->GetValue(&engineURI)))
-		{
-			nsAutoString		engineStr(engineURI);
-			const PRUnichar		*engineUni = engineStr.GetUnicode();
-			nsCOMPtr<nsIRDFLiteral>	engineLiteral;
-			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(engineUni, getter_AddRefs(engineLiteral))))
-			{
-				if (engineLiteral)
-				{
-					mDataSource->Assert(res, kNC_Engine, engineLiteral, PR_TRUE);
-				}
-			}
-		}
-*/
 
 		// Note: always add in parent-child relationship last!
 		rv = mDataSource->Assert(mParent, kNC_Child, res, PR_TRUE);
