@@ -143,11 +143,8 @@ nsLDAPConnection::Init(const char *aHost, PRInt16 aPort, const char *aBindName)
 #ifdef DEBUG_dmose
     const int lDebug = 0;
     ldap_set_option(this->mConnectionHandle, LDAP_OPT_DEBUG_LEVEL, &lDebug);
-
-#if 0
-    const int aSync = 0;
-    ldap_set_option(this->mConnectionHandle, LDAP_OPT_ASYNC_CONNECT, &aSync);
-#endif
+    ldap_set_option(this->mConnectionHandle, LDAP_OPT_ASYNC_CONNECT, 
+		    NS_REINTERPRET_CAST(void *, 0));
 #endif
 
     // kick off a thread for result listening and marshalling
