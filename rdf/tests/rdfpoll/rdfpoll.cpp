@@ -290,7 +290,9 @@ main(int argc, char** argv)
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to initialize data source");
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIRDFObserver> observer = do_QueryInterface(new Observer());
+    // The do_QI() on the pointer is a hack to make sure that the new
+    // object gets AddRef()-ed.
+    nsCOMPtr<nsIRDFObserver> observer = do_QueryInterface(new Observer);
     if (! observer)
         return NS_ERROR_OUT_OF_MEMORY;
 
