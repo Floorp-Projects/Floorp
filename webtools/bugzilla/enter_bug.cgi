@@ -374,7 +374,7 @@ if ($::usergroupset ne '0') {
 
 $vars->{'default'} = \%default;
 
-my $format = ValidateOutputFormat($::FORM{'format'}, "create");
+my $format = ValidateOutputFormat($::FORM{'format'}, "create", "bug/create");
 
 print "Content-type: $format->{'contenttype'}\n\n";
 $template->process("bug/create/$format->{'template'}", $vars)
