@@ -528,6 +528,13 @@ SWITCH: for ($::FORM{'knob'}) {
                          "make sense to mark a bug as a duplicate of " .
                          "itself, does it?");
         }
+        my $checkid = trim($::FORM{'id'});
+        SendSQL("SELECT bug_id FROM bugs where bug_id = " .  SqlQuote($checkid));
+        $checkid = FetchOneColumn();
+        if (!$checkid) {
+            PuntTryAgain("The bug id $::FORM{'id'} is invalid. Please reload this bug ".
+                         "and try again.");
+        }
         AppendComment($num, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
         if ( Param('strictvaluechecks') ) {
           CheckFormFieldDefined(\%::FORM,'comment');
