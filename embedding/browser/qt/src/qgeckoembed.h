@@ -50,7 +50,6 @@ class nsIDirectoryServiceProvider;
 class nsIAppShell;
 class nsVoidArray;
 class nsProfileDirServiceProvider;
-class nsIPref;
 class nsISupports;
 class EmbedWindow;
 class EmbedEventListener;

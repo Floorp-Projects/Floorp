@@ -64,7 +64,6 @@
 #include <nsProfileDirServiceProvider.h>
 #include <nsIGenericFactory.h>
 #include <nsIComponentRegistrar.h>
-#include <nsIPref.h>
 #include <nsVoidArray.h>
 #include <nsIDOMBarProp.h>
 #include <nsIDOMWindow.h>
@@ -77,7 +76,6 @@ char        *QGeckoGlobals::sCompPath    = nsnull;
 nsIAppShell *QGeckoGlobals::sAppShell    = nsnull;
 char        *QGeckoGlobals::sProfileDir  = nsnull;
 char        *QGeckoGlobals::sProfileName = nsnull;
-nsIPref     *QGeckoGlobals::sPrefs       = nsnull;
 nsVoidArray *QGeckoGlobals::sWindowList  = nsnull;
 nsIDirectoryServiceProvider *QGeckoGlobals::sAppFileLocProvider = nsnull;
 nsProfileDirServiceProvider *QGeckoGlobals::sProfileDirServiceProvider = nsnull;
@@ -243,14 +241,6 @@ QGeckoGlobals::startupProfile(void)
             return rv;
         // Keep a ref so we can shut it down.
         NS_ADDREF(sProfileDirServiceProvider = locProvider);
-
-        // get prefs
-        nsCOMPtr<nsIPref> pref;
-        pref = do_GetService(NS_PREF_CONTRACTID);
-        if (!pref)
-            return NS_ERROR_FAILURE;
-        sPrefs = pref.get();
-        NS_ADDREF(sPrefs);
     }
     return NS_OK;
 }
@@ -263,10 +253,6 @@ QGeckoGlobals::shutdownProfile(void)
         sProfileDirServiceProvider->Shutdown();
         NS_RELEASE(sProfileDirServiceProvider);
         sProfileDirServiceProvider = 0;
-    }
-    if (sPrefs) {
-        NS_RELEASE(sPrefs);
-        sPrefs = 0;
     }
 }
 
