@@ -457,7 +457,8 @@ nsNSSDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx)
 {
   nsresult rv;
 
-  rv = AlertDialog(ctx, ENTER_SITE_PREF, NS_LITERAL_STRING("EnterSiteMessage"));
+  rv = AlertDialog(ctx, ENTER_SITE_PREF, 
+                   NS_LITERAL_STRING("EnterSiteMessage").get());
 
   return rv;
 }
@@ -468,7 +469,8 @@ nsNSSDialogs::AlertLeavingSecure(nsIInterfaceRequestor *ctx)
 {
   nsresult rv;
 
-  rv = AlertDialog(ctx, LEAVE_SITE_PREF, NS_LITERAL_STRING("LeaveSiteMessage"));
+  rv = AlertDialog(ctx, LEAVE_SITE_PREF, 
+                   NS_LITERAL_STRING("LeaveSiteMessage").get());
 
   return rv;
 }
@@ -479,7 +481,8 @@ nsNSSDialogs::AlertMixedMode(nsIInterfaceRequestor *ctx)
 {
   nsresult rv;
 
-  rv = AlertDialog(ctx, MIXEDCONTENT_PREF, NS_LITERAL_STRING("MixedContentMessage"));
+  rv = AlertDialog(ctx, MIXEDCONTENT_PREF, 
+                   NS_LITERAL_STRING("MixedContentMessage").get());
 
   return rv;
 }
@@ -506,11 +509,11 @@ nsNSSDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
   // Get messages strings from localization file
   nsXPIDLString windowTitle, message, dontShowAgain;
 
-  mStringBundle->GetStringFromName(NS_LITERAL_STRING("Title"),
+  mStringBundle->GetStringFromName(NS_LITERAL_STRING("Title").get(),
                                    getter_Copies(windowTitle));
   mStringBundle->GetStringFromName(dialogMessageName,
                                    getter_Copies(message));
-  mStringBundle->GetStringFromName(NS_LITERAL_STRING("DontShowAgain"),
+  mStringBundle->GetStringFromName(NS_LITERAL_STRING("DontShowAgain").get(),
                                    getter_Copies(dontShowAgain));
   if (!windowTitle || !message || !dontShowAgain) return NS_ERROR_FAILURE;
       
@@ -530,7 +533,8 @@ nsNSSDialogs::ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool* _result)
   nsresult rv;
 
   rv = ConfirmDialog(ctx, INSECURE_SUBMIT_PREF,
-                     NS_LITERAL_STRING("PostToInsecureFromInsecure"), _result);
+                     NS_LITERAL_STRING("PostToInsecureFromInsecure").get(),
+                     _result);
 
   return rv;
 }
@@ -541,7 +545,7 @@ nsNSSDialogs::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool
   nsresult rv;
 
   rv = ConfirmDialog(ctx, INSECURE_SUBMIT_PREF,
-                     NS_LITERAL_STRING("PostToInsecure"), _result);
+                     NS_LITERAL_STRING("PostToInsecure").get(), _result);
 
   return rv;
 }
@@ -570,11 +574,11 @@ nsNSSDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
   // Get messages strings from localization file
   nsXPIDLString windowTitle, message, dontShowAgain;
 
-  mStringBundle->GetStringFromName(NS_LITERAL_STRING("Title"),
+  mStringBundle->GetStringFromName(NS_LITERAL_STRING("Title").get(),
                                    getter_Copies(windowTitle));
   mStringBundle->GetStringFromName(messageName,
                                    getter_Copies(message));
-  mStringBundle->GetStringFromName(NS_LITERAL_STRING("DontShowAgain"),
+  mStringBundle->GetStringFromName(NS_LITERAL_STRING("DontShowAgain").get(),
                                    getter_Copies(dontShowAgain));
   if (!windowTitle || !message || !dontShowAgain) return NS_ERROR_FAILURE;
       
