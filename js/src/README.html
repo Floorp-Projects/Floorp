@@ -87,7 +87,7 @@ threadsafe.&nbsp; If you require thread-safety, you must also populate
 the <tt>mozilla/dist</tt> directory with <a href="http://www.mozilla.org/docs/tplist/catCode/nsprdesc.htm">NSPR</a>
 headers and libraries.&nbsp; (NSPR implements a portable threading library,
 among other things.&nbsp; The source is downloadable via <a href="http://www.mozilla.org/cvs.html">CVS</a>
-from <tt><a href="http://cvs-mirror.mozilla.org/webtools/lxr/source/nsprpub">mozilla/nsprpub</a></tt>.)&nbsp;
+from <tt><a href="http://lxr.mozilla.org/mozilla/source/nsprpub">mozilla/nsprpub</a></tt>.)&nbsp;
 Next, you must define <tt>JS_THREADSAFE</tt> when building the JS engine,
 either on the command-line (gmake/nmake) or in a universal header file.
 <h3>
@@ -153,7 +153,8 @@ know</a>.)</li>
 
 <li>
 <font color="#000000">If you define <tt>JS_LIVECONNECT</tt>, gmake will
-descend into the liveconnect directory and build <a href="http://cvs-mirror.mozilla.org/webtools/lxr/source/js/src/liveconnect/README.html">LiveConnect</a>
+descend into the liveconnect directory and build 
+<a href="http://lxr.mozilla.org/mozilla/source/js/src/liveconnect/README.html">LiveConnect</a>
 after building the JS engine.</font></li>
 
 <li>

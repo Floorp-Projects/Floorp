@@ -65,7 +65,7 @@ browser and Netscape's server-side JavaScript. Now, it is a standalone library
 that can be embedded within other projects, such as the Mozilla browser. More 
 information on LiveConnect can be found by <a href="http://developer.netscape.com/find/find.cgi?scope=LiveConnect&browse-category=&ui=sr&chunk-size=&page=1&taxonomy=DevEdge+Online">searching 
 the index on Netscape's DevEdge site</a>.&nbsp; This README assumes basic familiarity 
-with <a href="http://cvs-mirror.mozilla.org/webtools/lxr/source/js/src/README.html">JSRef</a>, 
+with <a href="http://lxr.mozilla.org/mozilla/source/js/src/README.html">JSRef</a>, 
 the reference implementation of JavaScript, and with the LiveConnect technology. 
 <p>The JSRef project/makefiles (located in another directory) build a library 
   or DLL containing the JavaScript runtime (compiler, interpreter, decompiler, 
@@ -322,7 +322,7 @@ in 7/98, but it was not used in any products.)
   directory with <a href="http://www.mozilla.org/docs/tplist/catCode/nsprdesc.htm">NSPR</a> 
   headers and libraries.&nbsp; (NSPR implements a portable threading library, 
   among other things.&nbsp; The source is downloadable via <a href="http://www.mozilla.org/cvs.html">CVS</a> 
-  from <tt><a href="http://cvs-mirror.mozilla.org/webtools/lxr/source/nsprpub">mozilla/nsprpub</a></tt>.)&nbsp; 
+  from <tt><a href="http://lxr.mozilla.org/mozilla/source/nsprpub">mozilla/nsprpub</a></tt>.)&nbsp; 
   Next, you must define <tt>JS_THREADSAFE</tt> when building LiveConnect, either 
   on the command-line (gmake/nmake) or in a universal header file.&nbsp; Note 
   that JSRef must also be built with <tt>JS_THREADSAFE</tt>. 
@@ -335,7 +335,8 @@ in 7/98, but it was not used in any products.)
 <ul><b>Windows</b>
 <ul>
 <li>
-Build the JS runtime and interpreter, <tt>js32.dll</tt>, by using the <a href="http://cvs-mirror.mozilla.org/webtools/lxr/source/js/src/README.html#Build">normal
+Build the JS runtime and interpreter, <tt>js32.dll</tt>, by using the 
+<a href="http://lxr.mozilla.org/mozilla/source/js/src/README.html#Build">normal
 JSRef build procedure</a>.</li>    <li> Set the <tt>JDK</tt> environment variable to point to the top-level JDK directory, 
       e.g. <tt>D:\jdk1.1.5</tt>.&nbsp; This is used to establish paths for header 
       file inclusion, linking and execution.&nbsp; If you are not using Sun's 
@@ -470,7 +471,8 @@ it should be used after the return type and before the function name).</li>
 
 <h2>
 <a NAME="API"></a>The LiveConnect API</h2>
-All public LiveConnect entry points and callbacks are documented in <A HREF=http://cvs-mirror.mozilla.org/webtools/lxr/source/js/src/liveconnect/jsjava.h>jsjava.h</A>,
+All public LiveConnect entry points and callbacks are documented in 
+<A HREF=http://lxr.mozilla.org/mozilla/source/js/src/liveconnect/jsjava.h>jsjava.h</A>,
 the header file that exports those functions.
 <br>&nbsp;
 <h2>
