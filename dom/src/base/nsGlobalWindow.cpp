@@ -4323,7 +4323,7 @@ GlobalWindowImpl::OpenInternal(const nsAString& aUrl,
                                nsISupports *aExtraArgument,
                                nsIDOMWindow **aReturn)
 {
-  nsXPIDLCString url;
+  nsCAutoString url;
   nsresult rv = NS_OK;  
 
   *aReturn = nsnull;
