@@ -35,6 +35,7 @@
 #else
 #include "nsIIOService.h"
 #endif // NECKO
+#include "prio.h"
 #include "nsIOutputStream.h"
 #include "nsIGenericFactory.h"
 #include "nsIRDFCompositeDataSource.h"
