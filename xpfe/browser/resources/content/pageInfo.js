@@ -218,7 +218,7 @@ function makeGeneralTab()
 
       pageSize = cacheEntryDescriptor.dataSize;
       kbSize = pageSize / 1024;
-      sizeText = pageSize; // + " (" + 0 + "Kb)";
+      sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
 
       expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, notSet);
     }
@@ -245,7 +245,7 @@ function makeGeneralTab()
 
         pageSize = cacheEntryDescriptor.dataSize;
         kbSize = pageSize / 1024;
-        sizeText = pageSize; // + " (" + 0 + "Kb)";
+        sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
 
         expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, notSet);
       }
@@ -391,8 +391,7 @@ function findFirstControl(node)
     }     
   }
 
-  var nodeFilter = new FormControlFilter;
-  var iterator = theDocument.createTreeWalker(node, NodeFilter.SHOW_ELEMENT, nodeFilter, true);
+  var iterator = theDocument.createTreeWalker(node, NodeFilter.SHOW_ELEMENT, FormControlFilter, true);
 
   return iterator.nextNode();
 }
@@ -509,6 +508,8 @@ function grabAllXLinks(aDocument)
 
   var nodeFilter = new XLinkFilter;
   var iterator = aDocument.createTreeWalker(aDocument, NodeFilter.SHOW_ELEMENT, nodeFilter, true);
+// why doesn't this work? the same thing works in findFirstControl() :P
+//  var iterator = aDocument.createTreeWalker(aDocument, NodeFilter.SHOW_ELEMENT, XLinkFilter, true);
 
   var theList = new Array();
 
@@ -705,7 +706,9 @@ function makePreview(item)
           break;
       }
 
-      sizeText = cacheEntryDescriptor.dataSize;
+      pageSize = cacheEntryDescriptor.dataSize;
+      kbSize = pageSize / 1024;
+      sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
 
       expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, notSet);
     }
@@ -730,7 +733,9 @@ function makePreview(item)
             break;
         }
 
-        sizeText = cacheEntryDescriptor.dataSize;
+        pageSize = cacheEntryDescriptor.dataSize;
+        kbSize = pageSize / 1024;
+        sizeText = theBundle.getFormattedString("generalSize", [Math.round(kbSize*100)/100, pageSize]);
 
         expirationText = formatDate(cacheEntryDescriptor.expirationTime*1000, notSet);
       }
