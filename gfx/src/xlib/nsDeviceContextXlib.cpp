@@ -509,3 +509,35 @@ NS_IMETHODIMP nsDeviceContextXlib::EndPage(void)
   PR_LOG(DeviceContextXlibLM, PR_LOG_DEBUG, ("nsDeviceContextXlib::EndPage()\n"));
   return NS_OK;
 }
+
+class nsFontCacheXlib : public nsFontCache
+{
+public:
+  /* override DeviceContextImpl::CreateFontCache() */
+  NS_IMETHODIMP CreateFontMetricsInstance(nsIFontMetrics** aResult);
+};
+
+
+NS_IMETHODIMP nsFontCacheXlib::CreateFontMetricsInstance(nsIFontMetrics** aResult)
+{
+  NS_PRECONDITION(aResult, "null out param");
+  nsIFontMetrics *fm = new nsFontMetricsXlib();
+  if (!fm)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(fm);
+  *aResult = fm;
+  return NS_OK;
+}
+
+/* override DeviceContextImpl::CreateFontCache() */
+NS_IMETHODIMP nsDeviceContextXlib::CreateFontCache()
+{
+  mFontCache = new nsFontCacheXlib();
+  if (nsnull == mFontCache) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mFontCache->Init(this);
+  return NS_OK;
+}
+
+

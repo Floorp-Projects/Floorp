@@ -18,9 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
- * Bradley Baetz <bbaetz@cs.mcgill.ca>
- *
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Bradley Baetz <bbaetz@cs.mcgill.ca>
  */
  
 #include <strings.h>
@@ -55,8 +54,6 @@ nsDeviceContextXp :: nsDeviceContextXp()
   mPrintContext        = nsnull;
   mSpec                = nsnull; 
   mParentDeviceContext = nsnull;
-
-  NS_NewISupportsArray(getter_AddRefs(mFontMetrics));
 }
 
 /** ---------------------------------------------------
@@ -325,19 +322,19 @@ NS_IMETHODIMP nsDeviceContextXp::EndDocument(void)
   PR_LOG(nsDeviceContextXpLM, PR_LOG_DEBUG, ("nsDeviceContextXp::EndDocument()\n"));
   nsresult  rv = NS_OK;
   if (mPrintContext != nsnull) {
-      rv = mPrintContext->EndDocument();
-      
-      // gisburn: mPrintContext cannot be reused between to print 
-      // tasks as the destination print server may be a different one 
-      // or the printer used on the same print server has other 
-      // properties (build-in fonts for example ) than the printer 
-      // previously used
-      mFontMetrics = nsnull; /* nsCOMPtr will release/free all objects */
-      nsRenderingContextXlib::Shutdown();
-      nsFontMetricsXlib::FreeGlobals();
-      
-      delete mPrintContext;
-      mPrintContext = nsnull;
+    rv = mPrintContext->EndDocument();
+    
+    // gisburn: mPrintContext cannot be reused between to print 
+    // tasks as the destination print server may be a different one 
+    // or the printer used on the same print server has other 
+    // properties (build-in fonts for example ) than the printer 
+    // previously used
+    FlushFontCache();           
+    nsRenderingContextXlib::Shutdown();
+    nsFontMetricsXlib::FreeGlobals();
+    
+    delete mPrintContext;
+    mPrintContext = nsnull;
   } 
   
   return rv;
@@ -402,68 +399,40 @@ NS_IMETHODIMP nsDeviceContextXp::GetDepth(PRUint32& aDepth)
    return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- */
-NS_IMETHODIMP nsDeviceContextXp::GetMetricsFor(const nsFont& aFont, 
-                        nsIAtom* aLangGroup, nsIFontMetrics  *&aMetrics)
-{
-    return GetMetricsFor(aFont, aMetrics);
-}
-
-NS_IMETHODIMP nsDeviceContextXp::GetMetricsFor(const nsFont& aFont, 
-                                        nsIFontMetrics  *&aMetrics)
-{
-  PRUint32 n, cnt;
-  nsresult rv;
-
-  // First check our cache
-  rv = mFontMetrics->Count(&n);
-  if (NS_FAILED(rv))
-    return rv;
-  
-  nsCOMPtr<nsIFontMetrics> m;
-
-  for (cnt = 0; cnt < n; cnt++) {
-    if (NS_SUCCEEDED(mFontMetrics->QueryElementAt(cnt,
-                                                  NS_GET_IID(nsIFontMetrics),
-                                                  getter_AddRefs(m)))) {
-      const nsFont* font;
-      m->GetFont(font);
-      if (aFont.Equals(*font)) {
-        aMetrics = m;
-        NS_ADDREF(aMetrics);
-        return NS_OK;
-      }
-    }
-  }
-
-  // It's not in the cache. Get font metrics and then cache them.
-  nsCOMPtr<nsIFontMetrics> fm = new nsFontMetricsXlib();
-  if (!fm) {
-    aMetrics = nsnull;
-    return NS_ERROR_FAILURE;
-  }
-
-  // XXX need to pass real lang group
-  rv = fm->Init(aFont, nsnull, this);
-
-  if (NS_FAILED(rv)) {
-    aMetrics = nsnull;
-    return rv;
-  }
-
-  mFontMetrics->AppendElement(fm);
-
-  aMetrics = fm;
-  NS_ADDREF(aMetrics);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDeviceContextXp::GetPrintContext(nsXPrintContext*& aContext) {
   aContext = mPrintContext;
-  //NS_ADDREF(aContext);
   return NS_OK;
 }
+
+class nsFontCacheXp : public nsFontCache
+{
+public:
+  /* override DeviceContextImpl::CreateFontCache() */
+  NS_IMETHODIMP CreateFontMetricsInstance(nsIFontMetrics** aResult);
+};
+
+
+NS_IMETHODIMP nsFontCacheXp::CreateFontMetricsInstance(nsIFontMetrics** aResult)
+{
+  NS_PRECONDITION(aResult, "null out param");
+  nsIFontMetrics *fm = new nsFontMetricsXlib();
+  if (!fm)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(fm);
+  *aResult = fm;
+  return NS_OK;
+}
+
+/* override DeviceContextImpl::CreateFontCache() */
+NS_IMETHODIMP nsDeviceContextXp::CreateFontCache()
+{
+  mFontCache = new nsFontCacheXp();
+  if (nsnull == mFontCache) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mFontCache->Init(this);
+  return NS_OK;
+}
+
 

@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roland Mainz <Roland.Mainz@informatik.med.uni-giessen.de>
+ *
  * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
  * described herein are Copyright (c) International Business Machines Corporation, 2000.
  * Modifications to Mozilla code or documentation identified per MPL Section 3.3
@@ -34,7 +36,6 @@
 #include "nsImageRequest.h"
 #include "nsIImageGroup.h"
 #include "il_util.h"
-#include "nsVoidArray.h"
 #include "nsIFontMetrics.h"
 #include "nsHashtable.h"
 #include "nsILanguageAtomService.h"
@@ -53,25 +54,6 @@
 static NS_DEFINE_CID(kIOServiceCID,            NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 // done I10N
-
-class nsFontCache
-{
-public:
-  nsFontCache();
-  ~nsFontCache();
-
-  nsresult Init(nsIDeviceContext* aContext);
-  nsresult GetDeviceContext(nsIDeviceContext *&aContext) const;
-  nsresult GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
-                         nsIFontMetrics *&aMetrics);
-  nsresult Flush();
-
-protected:
-  nsVoidArray       mFontMetrics;
-  nsIDeviceContext  *mContext;      //we do not addref this since
-                                    //ownership is implied. MMP.
-};
-
 
 NS_IMPL_ISUPPORTS1(DeviceContextImpl, nsIDeviceContext)
 
@@ -242,7 +224,7 @@ NS_IMETHODIMP DeviceContextImpl :: InitRenderingContext(nsIRenderingContext *aCo
   return aContext->Init(this, aWin);
 }
 
-nsresult DeviceContextImpl::CreateFontCache()
+NS_IMETHODIMP DeviceContextImpl::CreateFontCache()
 {
   mFontCache = new nsFontCache();
   if (nsnull == mFontCache) {
@@ -306,9 +288,7 @@ NS_IMETHODIMP DeviceContextImpl :: SetZoom(float aZoom)
 {
   if (mZoom != aZoom) {
     mZoom = aZoom;
-    if (mFontCache) {
-      mFontCache->Flush();
-    }
+    FlushFontCache();
   }
   return NS_OK;
 }
@@ -323,9 +303,7 @@ NS_IMETHODIMP DeviceContextImpl :: SetTextZoom(float aTextZoom)
 {
   if (mTextZoom != aTextZoom) {
     mTextZoom = aTextZoom;
-    if (mFontCache) {
-      mFontCache->Flush();
-    }
+    FlushFontCache();
   }
   return NS_OK;
 }
@@ -761,7 +739,8 @@ nsFontCache :: ~nsFontCache()
   Flush();
 }
 
-nsresult nsFontCache :: Init(nsIDeviceContext* aContext)
+NS_IMETHODIMP 
+nsFontCache :: Init(nsIDeviceContext* aContext)
 {
   NS_PRECONDITION(nsnull != aContext, "null ptr");
   // Note: we don't hold a reference to the device context, because it
@@ -770,14 +749,16 @@ nsresult nsFontCache :: Init(nsIDeviceContext* aContext)
   return NS_OK;
 }
 
-nsresult nsFontCache :: GetDeviceContext(nsIDeviceContext *&aContext) const
+NS_IMETHODIMP 
+nsFontCache :: GetDeviceContext(nsIDeviceContext *&aContext) const
 {
   NS_IF_ADDREF(mContext);
   aContext = mContext;
   return NS_OK;
 }
 
-nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
+NS_IMETHODIMP 
+nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   nsIFontMetrics *&aMetrics)
 {
   // First check our cache
@@ -808,19 +789,17 @@ nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
 
   // It's not in the cache. Get font metrics and then cache them.
 
-  static NS_DEFINE_CID(kFontMetricsCID, NS_FONT_METRICS_CID);
+  nsIFontMetrics *fm = nsnull;
+  nsresult rv = CreateFontMetricsInstance(&fm);
 
-  nsIFontMetrics* fm;
-  nsresult        rv = nsComponentManager::CreateInstance(kFontMetricsCID, nsnull,
-                                                    NS_GET_IID(nsIFontMetrics), (void **)&fm);
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     aMetrics = nsnull;
     return rv;
   }
 
   rv = fm->Init(aFont, aLangGroup, mContext);
 
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     aMetrics = nsnull;
     return rv;
   }
@@ -831,6 +810,17 @@ nsresult nsFontCache :: GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
   aMetrics = fm;
   return NS_OK;
 }
+
+/* PostScript and Xprint module may override this method to create 
+ * nsIFontMetrics objects with their own classes 
+ */
+NS_IMETHODIMP
+nsFontCache::CreateFontMetricsInstance(nsIFontMetrics** fm)
+{
+  static NS_DEFINE_CID(kFontMetricsCID, NS_FONT_METRICS_CID);
+  return CallCreateInstance(kFontMetricsCID, fm);
+}
+
 
 nsresult nsFontCache :: Flush()
 {

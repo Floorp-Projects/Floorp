@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #include "nsDeviceContextPS.h"
@@ -36,7 +37,6 @@ static NS_DEFINE_IID(kIDeviceContextSpecPSIID, NS_IDEVICE_CONTEXT_SPEC_PS_IID);
  */
 nsDeviceContextPS :: nsDeviceContextPS()
 {
-
   NS_INIT_REFCNT();
   mSpec = nsnull; 
   mParentDeviceContext = nsnull;
@@ -48,19 +48,8 @@ nsDeviceContextPS :: nsDeviceContextPS()
  */
 nsDeviceContextPS :: ~nsDeviceContextPS()
 {
-PRInt32 i, n;
-
-  // get rid of the fonts in our mFontMetrics cache
-  n= mFontMetrics.Count();
-  for (i = 0; i < n; i++){
-    nsIFontMetrics* fm = (nsIFontMetrics*) mFontMetrics.ElementAt(i);
-    fm->Destroy();
-    NS_RELEASE(fm);
-  }
-  mFontMetrics.Clear();
   NS_IF_RELEASE(mSpec);
   NS_IF_RELEASE(mParentDeviceContext);
-
 }
 
 NS_IMETHODIMP
@@ -359,64 +348,34 @@ NS_IMETHODIMP nsDeviceContextPS :: ConvertPixel(nscolor aColor, PRUint32 & aPixe
   return NS_OK;
 }
 
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *	@update 12/21/98 dwc
- */
-NS_IMETHODIMP nsDeviceContextPS::GetMetricsFor(const nsFont& aFont, nsIFontMetrics  *&aMetrics)
+class nsFontCachePS : public nsFontCache
 {
-    GetLocaleLangGroup();
-    return GetMetricsFor(aFont, mLocaleLangGroup, aMetrics);
-}
+public:
+  /* override DeviceContextImpl::CreateFontCache() */
+  NS_IMETHODIMP CreateFontMetricsInstance(nsIFontMetrics** aResult);
+};
 
-NS_IMETHODIMP nsDeviceContextPS::GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup, nsIFontMetrics  *&aMetrics)
+
+NS_IMETHODIMP nsFontCachePS::CreateFontMetricsInstance(nsIFontMetrics** aResult)
 {
-PRInt32         n,cnt;
-nsresult        rv;
-
-  // First check our cache
-  n = mFontMetrics.Count();
-
-  for (cnt = 0; cnt < n; cnt++)
-  {
-    aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
-
-    const nsFont* font;
-    aMetrics->GetFont(font);
-    nsCOMPtr<nsIAtom> langGroup;
-    aMetrics->GetLangGroup(getter_AddRefs(langGroup));
-    if (aFont.Equals(*font) && (aLangGroup == langGroup.get()))
-    {
-      NS_ADDREF(aMetrics);
-      return NS_OK;
-    }
-  }
-
-  // It's not in the cache. Get font metrics and then cache them.
-  nsIFontMetrics* fm = new nsFontMetricsPS();
-  if (nsnull == fm) {
-    aMetrics = nsnull;
-    return NS_ERROR_FAILURE;
-  }
-
-  rv = fm->Init(aFont, aLangGroup, this);
-
-  if (NS_OK != rv) {
-    aMetrics = nsnull;
-    return rv;
-  }
-
-  mFontMetrics.AppendElement(fm);
-  NS_ADDREF(fm);     // this is for the cache
-
-
-  for (cnt = 0; cnt < n; cnt++){
-    aMetrics = (nsIFontMetrics*) mFontMetrics.ElementAt(cnt);
-    const nsFont  *font;
-    aMetrics->GetFont(font);
-  }
-
-  NS_ADDREF(fm);      // this is for the routine that needs this font
-  aMetrics = fm;
+  NS_PRECONDITION(aResult, "null out param");
+  nsIFontMetrics *fm = new nsFontMetricsPS();
+  if (!fm)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(fm);
+  *aResult = fm;
   return NS_OK;
 }
+
+/* override DeviceContextImpl::CreateFontCache() */
+NS_IMETHODIMP nsDeviceContextPS::CreateFontCache()
+{
+  mFontCache = new nsFontCachePS();
+  if (nsnull == mFontCache) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  mFontCache->Init(this);
+  return NS_OK;
+}
+
+

@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Roland Mainz <Roland.Mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsDeviceContext_h___
@@ -29,11 +30,33 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIStringBundle.h"
-
+#include "nsVoidArray.h"
 
 class nsIImageRequest;
 class nsHashtable;
-class nsFontCache;
+
+class nsFontCache
+{
+public:
+  nsFontCache();
+  ~nsFontCache();
+
+  nsresult   Init(nsIDeviceContext* aContext);
+  nsresult   GetDeviceContext(nsIDeviceContext *&aContext) const;
+  nsresult   GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
+                           nsIFontMetrics *&aMetrics);
+  nsresult   Flush();
+  /* printer device context classes may create their own
+   * subclasses of nsFontCache (and override this method) and override 
+   * DeviceContextImpl::CreateFontCache (see bug 81311).
+   */           
+  NS_IMETHOD CreateFontMetricsInstance(nsIFontMetrics** fm);
+  
+protected:
+  nsVoidArray      mFontMetrics;
+  nsIDeviceContext *mContext; // we do not addref this since
+                              // ownership is implied. MMP.
+};
 
 class NS_GFX DeviceContextImpl : public nsIDeviceContext
 {
@@ -83,6 +106,8 @@ public:
   NS_IMETHOD GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
                               PRBool& aAliased);
 
+  NS_IMETHOD CreateFontCache();
+
   NS_IMETHOD FlushFontCache(void);
 
   NS_IMETHOD GetDepth(PRUint32& aDepth);
@@ -98,7 +123,6 @@ protected:
   virtual ~DeviceContextImpl();
 
   void CommonInit(void);
-  nsresult CreateFontCache();
   void SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma);
   nsresult CreateIconILGroupContext();
   virtual nsresult CreateFontAliasTable();

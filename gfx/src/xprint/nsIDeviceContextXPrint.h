@@ -17,7 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #include "nsISupports.h"
@@ -44,10 +45,6 @@ public:
                                  nsIDeviceContext *aPrinterContext) = 0;
 
   NS_IMETHOD GetPrintContext(nsXPrintContext*& aContext) = 0;
-
-  NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics) = 0;
-  NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
-                           nsIFontMetrics*& aMetrics) = 0;
 };
 
 
