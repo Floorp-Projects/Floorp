@@ -383,12 +383,40 @@ nsLabelFrame::Paint(nsIPresContext& aPresContext,
   return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
-NS_IMETHODIMP 
-nsLabelFrame::Reflow(nsIPresContext& aPresContext,
-                               nsHTMLReflowMetrics& aDesiredSize,
-                               const nsHTMLReflowState& aReflowState,
-                               nsReflowStatus& aStatus)
+// XXX a hack until the reflow state does this correctly
+// XXX when it gets fixed, leave in the printf statements or add an assertion
+void LabelHack(nsHTMLReflowState& aReflowState, char* aMessage)
 {
+  if (aReflowState.computedWidth == 0) {
+    aReflowState.computedWidth = aReflowState.availableWidth;
+  }
+  if ((aReflowState.computedWidth != NS_INTRINSICSIZE) &&
+      (aReflowState.computedWidth > aReflowState.availableWidth) &&
+      (aReflowState.availableWidth > 0)) {
+//    printf("BUG - %s has a computed width = %d, available width = %d \n", 
+//    aMessage, aReflowState.computedWidth, aReflowState.availableWidth);
+    aReflowState.computedWidth = aReflowState.availableWidth;
+  }
+  if (aReflowState.computedHeight == 0) {
+    aReflowState.computedHeight = aReflowState.availableHeight;
+  }
+  if ((aReflowState.computedHeight != NS_INTRINSICSIZE) &&
+      (aReflowState.computedHeight > aReflowState.availableHeight) &&
+      (aReflowState.availableHeight > 0)) {
+//    printf("BUG - %s has a computed height = %d, available height = %d \n", 
+//    aMessage, aReflowState.computedHeight, aReflowState.availableHeight);
+    aReflowState.computedHeight = aReflowState.availableHeight;
+  }
+}
+
+NS_IMETHODIMP 
+nsLabelFrame::Reflow(nsIPresContext&          aPresContext,
+                     nsHTMLReflowMetrics&     aDesiredSize,
+                     const nsHTMLReflowState& aReflowState,
+                     nsReflowStatus&          aStatus)
+{
+  // XXX remove the following when the reflow state is fixed
+  LabelHack((nsHTMLReflowState&)aReflowState, "BUG - label");
   if (!mDidInit) {
     // create our view, we need a view to grab the mouse 
     nsIView* view;
@@ -424,18 +452,29 @@ nsLabelFrame::Reflow(nsIPresContext& aPresContext,
     }
   }
 
-  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
-
-  // reflow the child
-  nsIFrame* firstKid = mFrames.FirstChild();
-  nsHTMLReflowState reflowState(aPresContext, firstKid, aReflowState, availSize);
-  ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState, aStatus);
+  nsSize availSize(aReflowState.computedWidth, aReflowState.computedHeight);
 
   // get border and padding
   const nsStyleSpacing* spacing =
     (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
+
+  if (NS_INTRINSICSIZE != availSize.width) {
+    availSize.width -= borderPadding.left + borderPadding.right;
+    availSize.width = PR_MAX(availSize.width,0);
+  }
+  if (NS_AUTOHEIGHT != availSize.height) {
+    availSize.height -= borderPadding.top + borderPadding.bottom;
+    availSize.height = PR_MAX(availSize.height,0);
+  }
+
+  // reflow the child
+  nsIFrame* firstKid = mFrames.FirstChild();
+  nsHTMLReflowState reflowState(aPresContext, firstKid, aReflowState, availSize);
+  // XXX remove when reflow state is fixed
+  LabelHack(reflowState, "label's area");
+  ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState, aStatus);
 
   // Place the child
   nsRect rect = nsRect(borderPadding.left, borderPadding.top, aDesiredSize.width, aDesiredSize.height);
@@ -451,12 +490,12 @@ nsLabelFrame::Reflow(nsIPresContext& aPresContext,
   }
 
   // if we are constrained and the child is smaller, use the constrained values
-  if (aReflowState.HaveFixedContentWidth() && (aDesiredSize.width < aReflowState.computedWidth)) {
-    aDesiredSize.width = aReflowState.computedWidth;
-  }
-  if (aReflowState.HaveFixedContentHeight() && (aDesiredSize.height < aReflowState.computedHeight)) {
-    aDesiredSize.height = aReflowState.computedHeight;
-  }
+  //if (aReflowState.HaveFixedContentWidth() && (aDesiredSize.width < aReflowState.computedWidth)) {
+  //  aDesiredSize.width = aReflowState.computedWidth;
+  //}
+  //if (aReflowState.HaveFixedContentHeight() && (aDesiredSize.height < aReflowState.computedHeight)) {
+  //  aDesiredSize.height = aReflowState.computedHeight;
+  //}
 
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;

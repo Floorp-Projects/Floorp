@@ -243,6 +243,8 @@ nsListControlFrame::PaintChildren(nsIPresContext&      aPresContext,
 }
 
 //----------------------------------------------------------------------
+// XXX this needs to properly deal with max element size. percentage based unconstrained widths cannot
+// be allowed to return large max element sizes or tables will get too large.
 NS_IMETHODIMP 
 nsListControlFrame::Reflow(nsIPresContext&          aPresContext, 
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -890,6 +892,7 @@ nsListControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
 
 
 //----------------------------------------------------------------------
+
 void 
 nsListControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                              const nsHTMLReflowState& aReflowState,
@@ -933,14 +936,15 @@ nsListControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
 
   PRInt32 rowHeight = 0;
-  nsSize calcSize;
+  nsSize desiredSize;
+  nsSize minSize;
   PRBool widthExplicit, heightExplicit;
   nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull, nsnull,
                                 maxWidth, PR_TRUE, nsHTMLAtoms::size, 1);
   // XXX fix CalculateSize to return PRUint32
-  mNumRows = (PRUint32)nsFormControlHelper::CalculateSize(aPresContext, this, styleSize, textSpec, 
-                                                           calcSize, widthExplicit, heightExplicit, rowHeight,
-                                                           aReflowState.rendContext);
+  mNumRows = (PRUint32)nsFormControlHelper::CalculateSize (aPresContext, aReflowState.rendContext, this, styleSize, 
+                                                           textSpec, desiredSize, minSize, widthExplicit, 
+                                                           heightExplicit, rowHeight);
 
   float sp2t;
   float p2t;
@@ -954,16 +958,16 @@ nsListControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   if (mInDropDownMode) {
     //PRUint32 numOptions;
     //options->GetLength(&numOptions);
-    nscoord extra = calcSize.height - (rowHeight * mNumRows);
+    nscoord extra = desiredSize.height - (rowHeight * mNumRows);
 
     mNumRows = (numOptions > 20 ? 20 : numOptions);
-    calcSize.height = (mNumRows * rowHeight) + extra;
+    desiredSize.height = (mNumRows * rowHeight) + extra;
     if (mNumRows < 21) {
       //calcSize.width += scrollbarWidth;
     }
   }
 
-  aDesiredLayoutSize.width = calcSize.width;
+  aDesiredLayoutSize.width = desiredSize.width;
   // account for vertical scrollbar, if present  
   //if (!widthExplicit && ((mNumRows < numOptions) || mIsComboBox)) {
   //if (!widthExplicit && (mNumRows < (PRInt32)numOptions)) {
@@ -974,9 +978,12 @@ nsListControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   //aDesiredLayoutSize.height = (mIsComboBox)
   //  ? rowHeight + (2 * GetVerticalInsidePadding(p2t, rowHeight))
   //  : calcSize.height; 
-  aDesiredLayoutSize.height = calcSize.height; 
+  aDesiredLayoutSize.height = desiredSize.height; 
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
+
+  // XXX When this code is working, max element size needs to be set properly from CalculateSize 
+  // above. look at some of the other form control to see how to do it.
 
   aDesiredWidgetSize.width  = maxWidth;
   aDesiredWidgetSize.height = rowHeight;

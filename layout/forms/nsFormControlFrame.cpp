@@ -322,9 +322,7 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
   aDesiredSize.descent = 0;
 
   if (nsnull != aDesiredSize.maxElementSize) {
-//XXX    aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
-    aDesiredSize.maxElementSize->width = aDesiredSize.width;
-	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
+    //XXX aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
   }
     
   aStatus = NS_FRAME_COMPLETE;

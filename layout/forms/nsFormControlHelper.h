@@ -90,13 +90,16 @@ class nsFormControlHelper
 public:
   
 
-  static nscoord CalculateSize (nsIPresContext* aPresContext, nsIFormControlFrame* aFrame,
-                                const nsSize& aCSSSize, nsInputDimensionSpec& aDimensionSpec, 
-                                nsSize& aBounds, PRBool& aWidthExplicit, 
-                                PRBool& aHeightExplicit, nscoord& aRowSize,
-                                nsIRenderingContext *aRendContext);
-
-  
+  static nscoord CalculateSize (nsIPresContext*       aPresContext, 
+                                nsIRenderingContext*  aRendContext,
+                                nsIFormControlFrame*  aFrame,
+                                const nsSize&         aCSSSize, 
+                                nsInputDimensionSpec& aDimensionSpec, 
+                                nsSize&               aDesiredSize,
+                                nsSize&               aMinSize, 
+                                PRBool&               aWidthExplicit, 
+                                PRBool&               aHeightExplicit, 
+                                nscoord&              aRowSize);
 
   static nscoord GetTextSize(nsIPresContext& aContext, nsIFormControlFrame* aFrame,
                              const nsString& aString, nsSize& aSize,

@@ -301,8 +301,6 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
     AddBordersAndPadding(&aPresContext, aReflowState, aDesiredSize, bp);
     if (nsnull != aDesiredSize.maxElementSize) {
       aDesiredSize.AddBorderPaddingToMaxElementSize(bp);
-      aDesiredSize.maxElementSize->width = aDesiredSize.width;
-      aDesiredSize.maxElementSize->height = aDesiredSize.height;
     }
     aStatus = NS_FRAME_COMPLETE;
     return NS_OK;
@@ -313,56 +311,64 @@ nsButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
 }
 
 void 
-nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                   const nsHTMLReflowState& aReflowState,
-                                   nsHTMLReflowMetrics& aDesiredLayoutSize,
-                                   nsSize& aDesiredWidgetSize)
+nsButtonControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
+                                     const nsHTMLReflowState& aReflowState,
+                                     nsHTMLReflowMetrics&     aDesiredLayoutSize,
+                                     nsSize&                  aDesiredWidgetSize)
 {
   PRInt32 type;
   GetType(&type);
 
   if (NS_FORM_INPUT_HIDDEN == type) { // there is no physical rep
-    aDesiredLayoutSize.width  = 0;
-    aDesiredLayoutSize.height = 0;
-    aDesiredLayoutSize.ascent = 0;
+    aDesiredLayoutSize.width   = 0;
+    aDesiredLayoutSize.height  = 0;
+    aDesiredLayoutSize.ascent  = 0;
     aDesiredLayoutSize.descent = 0;
   } else {
 #ifdef NS_GFX_RENDER_FORM_ELEMENTS
-	nsCOMPtr<nsIStyleContext> outlineStyle( dont_QueryInterface(mStyleContext) );
-	nsCOMPtr<nsIAtom> sbAtom ( dont_QueryInterface(NS_NewAtom(":button-outline")) );
-  aPresContext->ProbePseudoStyleContextFor(mContent, sbAtom, mStyleContext, PR_FALSE, getter_AddRefs(outlineStyle));
+	  nsCOMPtr<nsIStyleContext> outlineStyle( dont_QueryInterface(mStyleContext) );
+	  nsCOMPtr<nsIAtom> sbAtom ( dont_QueryInterface(NS_NewAtom(":button-outline")) );
+    aPresContext->ProbePseudoStyleContextFor(mContent, sbAtom, mStyleContext, PR_FALSE, getter_AddRefs(outlineStyle));
 
-	const nsStyleSpacing* outline = (const nsStyleSpacing*)outlineStyle->GetStyleData(eStyleStruct_Spacing);
- 
-	nsMargin outlineBorder;
-	outline->CalcBorderFor(this, outlineBorder);
+	  const nsStyleSpacing* outline = (const nsStyleSpacing*)outlineStyle->GetStyleData(eStyleStruct_Spacing);
+	  nsMargin outlineBorder;
+	  outline->CalcBorderFor(this, outlineBorder);
 #endif
     nsSize styleSize;
     GetStyleSize(*aPresContext, aReflowState, styleSize);
-    // a browse button shares is style context with its parent nsInputFile
+    // a browse button shares its style context with its parent nsInputFile
     // it uses everything from it except width
     if (NS_FORM_BROWSE == type) {
       styleSize.width = CSS_NOTSET;
     }
-    nsSize size;
+    nsSize desiredSize;
+    nsSize minSize;
     PRBool widthExplicit, heightExplicit;
     PRInt32 ignore;
     nsAutoString defaultLabel;
     GetDefaultLabel(defaultLabel);
     nsInputDimensionSpec spec(nsHTMLAtoms::size, PR_TRUE, nsHTMLAtoms::value, 
                               &defaultLabel, 1, PR_FALSE, nsnull, 1);
-    nsFormControlHelper::CalculateSize(aPresContext, this, styleSize, spec, size, 
-                  widthExplicit, heightExplicit, ignore,
-                  aReflowState.rendContext);
- #ifdef NS_GFX_RENDER_FORM_ELEMENTS
-    aDesiredLayoutSize.width = size.width + outlineBorder.left + outlineBorder.right;
-    aDesiredLayoutSize.height= size.height + outlineBorder.top + outlineBorder.bottom;
-#else
-    aDesiredLayoutSize.width = size.width;
-    aDesiredLayoutSize.height= size.height;
+    nsFormControlHelper::CalculateSize(aPresContext, aReflowState.rendContext, this, styleSize, 
+                                       spec, desiredSize, minSize, widthExplicit, heightExplicit, ignore);
+
+    // set desired size, max element size
+    aDesiredLayoutSize.width = desiredSize.width;
+    aDesiredLayoutSize.height= desiredSize.height;
+    if (aDesiredLayoutSize.maxElementSize) {
+      aDesiredLayoutSize.maxElementSize->width  = minSize.width;
+      aDesiredLayoutSize.maxElementSize->height = minSize.height;
+    }
+#ifdef NS_GFX_RENDER_FORM_ELEMENTS
+    nscoord horOutline = outlineBorder.left + outlineBorder.right;
+    nscoord verOutline = outlineBorder.top  + outlineBorder.bottom;
+    aDesiredLayoutSize.width  += horOutline;
+    aDesiredLayoutSize.height += verOutline;
+    if (aDesiredLayoutSize.maxElementSize) {
+      aDesiredLayoutSize.maxElementSize->width  += horOutline;
+      aDesiredLayoutSize.maxElementSize->height += verOutline; 
+    }
 #endif
-    aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
-    aDesiredLayoutSize.descent = 0;
   }
 
   aDesiredWidgetSize.width = aDesiredLayoutSize.width;

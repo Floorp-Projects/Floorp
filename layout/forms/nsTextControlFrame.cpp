@@ -226,6 +226,7 @@ nsTextControlFrame::EnterPressed(nsIPresContext& aPresContext)
   }
 }
 
+#define DEFAULT_PIXEL_WIDTH 20
 void 
 nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    const nsHTMLReflowState& aReflowState,
@@ -239,7 +240,8 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   nsSize styleSize;
   GetStyleSize(*aPresContext, aReflowState, styleSize);
 
-  nsSize size;
+  nsSize desiredSize;
+  nsSize minSize;
   
   PRBool widthExplicit, heightExplicit;
   PRInt32 ignore;
@@ -248,22 +250,20 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   if ((NS_FORM_INPUT_TEXT == type) || (NS_FORM_INPUT_PASSWORD == type)) {
     PRInt32 width;
     if (NS_CONTENT_ATTR_HAS_VALUE != GetSizeFromContent(&width)) {
-      width = 20;
+      width = DEFAULT_PIXEL_WIDTH;
     }
     //if (eCompatibility_NavQuirks == mode) {
     //  width += 1;
     //}
     nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull,
                                   nsnull, width, PR_FALSE, nsnull, 1);
-    nsFormControlHelper::CalculateSize(aPresContext, this, styleSize, textSpec, size, 
-                                       widthExplicit, heightExplicit, ignore,
-                                       aReflowState.rendContext);
+    nsFormControlHelper::CalculateSize(aPresContext, aReflowState.rendContext, this, styleSize, 
+                                       textSpec, desiredSize, minSize, widthExplicit, heightExplicit, ignore);
   } else {
-    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, nsnull, 20, 
+    nsInputDimensionSpec areaSpec(nsHTMLAtoms::cols, PR_FALSE, nsnull, nsnull, DEFAULT_PIXEL_WIDTH, 
                                   PR_FALSE, nsHTMLAtoms::rows, 1);
-    nsFormControlHelper::CalculateSize(aPresContext, this, styleSize, areaSpec, size, 
-                                      widthExplicit, heightExplicit, ignore,
-                                      aReflowState.rendContext);
+    nsFormControlHelper::CalculateSize(aPresContext, aReflowState.rendContext, this, styleSize, 
+                                       areaSpec, desiredSize, minSize, widthExplicit, heightExplicit, ignore);
   }
 
   if (NS_FORM_TEXTAREA == type) {
@@ -287,20 +287,28 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
 
     if (!heightExplicit) {
-      size.height += scrollbarHeight;
+      desiredSize.height += scrollbarHeight;
+      minSize.height     += scrollbarHeight;
     } 
     if (!widthExplicit) {
-      size.width += scrollbarWidth;
+      desiredSize.width += scrollbarWidth;
+      minSize.width     += scrollbarWidth;
     }
   }
 
-
-  aDesiredLayoutSize.width  = size.width;
-  aDesiredLayoutSize.height = size.height;
+  aDesiredLayoutSize.width  = desiredSize.width;
+  aDesiredLayoutSize.height = desiredSize.height;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
   aDesiredLayoutSize.descent = 0;
+
+  if (aDesiredLayoutSize.maxElementSize) {
+    aDesiredLayoutSize.maxElementSize->width  = minSize.width;
+    aDesiredLayoutSize.maxElementSize->height = minSize.width;
+  }
+
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = aDesiredLayoutSize.height;
+
 }
 
 nsWidgetInitData*

@@ -603,12 +603,40 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
   return result;
 }
 
+// XXX a hack until the reflow state does this correctly
+// XXX when it gets fixed, leave in the printf statements or add an assertion
+void ButtonHack(nsHTMLReflowState& aReflowState, char* aMessage)
+{
+  if (aReflowState.computedWidth == 0) {
+    aReflowState.computedWidth = aReflowState.availableWidth;
+  }
+  if ((aReflowState.computedWidth != NS_INTRINSICSIZE) &&
+      (aReflowState.computedWidth > aReflowState.availableWidth) &&
+      (aReflowState.availableWidth > 0)) {
+//    printf("BUG - %s has a computed width = %d, available width = %d \n", 
+//    aMessage, aReflowState.computedWidth, aReflowState.availableWidth);
+    aReflowState.computedWidth = aReflowState.availableWidth;
+  }
+  if (aReflowState.computedHeight == 0) {
+    aReflowState.computedHeight = aReflowState.availableHeight;
+  }
+  if ((aReflowState.computedHeight != NS_INTRINSICSIZE) &&
+      (aReflowState.computedHeight > aReflowState.availableHeight) &&
+      (aReflowState.availableHeight > 0)) {
+//    printf("BUG - %s has a computed height = %d, available height = %d \n", 
+//    aMessage, aReflowState.computedHeight, aReflowState.availableHeight);
+    aReflowState.computedHeight = aReflowState.availableHeight;
+  }
+}
+
 NS_IMETHODIMP 
 nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
                                nsHTMLReflowMetrics& aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus& aStatus)
 {
+  // XXX remove the following when the reflow state is fixed
+  ButtonHack((nsHTMLReflowState&)aReflowState, "html4 button");
   if (!mDidInit) {
     // create our view, we need a view to grab the mouse 
     nsIView* view;
@@ -640,8 +668,26 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
 
   // reflow the child
   nsIFrame* firstKid = mFrames.FirstChild();
-  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
+  nsSize availSize(aReflowState.computedWidth, aReflowState.computedHeight);
+
+  // get border and padding
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+
+  if (NS_INTRINSICSIZE != availSize.width) {
+    availSize.width -= borderPadding.left + borderPadding.right;
+    availSize.width = PR_MAX(availSize.width,0);
+  }
+  if (NS_AUTOHEIGHT != availSize.height) {
+    availSize.height -= borderPadding.top + borderPadding.bottom;
+    availSize.height = PR_MAX(availSize.height,0);
+  }
+
   nsHTMLReflowState reflowState(aPresContext, firstKid, aReflowState, availSize);
+  // XXX remove the following when the reflow state is fixed
+  ButtonHack(reflowState, "html4 button's area");
 
   // XXX Proper handling of incremental reflow...
   if (eReflowReason_Incremental == aReflowState.reason) {
@@ -663,12 +709,6 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
 
   ReflowChild(firstKid, aPresContext, aDesiredSize, reflowState, aStatus);
 
-  // get border and padding
-  const nsStyleSpacing* spacing =
-    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-  nsMargin borderPadding;
-  spacing->CalcBorderPaddingFor(this, borderPadding);
-
   // Place the child
   nsRect rect = nsRect(borderPadding.left, borderPadding.top, aDesiredSize.width, aDesiredSize.height);
   firstKid->SetRect(rect);
@@ -677,18 +717,18 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
   aDesiredSize.width  += borderPadding.left + borderPadding.right;
   aDesiredSize.height += borderPadding.top + borderPadding.bottom;
 
-  // adjust our max element size, if necessary
+  //adjust our max element size, if necessary
   if (aDesiredSize.maxElementSize) {
     aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
   }
 
   // if we are constrained and the child is smaller, use the constrained values
-  if (aReflowState.HaveFixedContentWidth() && (aDesiredSize.width < aReflowState.computedWidth)) {
-    aDesiredSize.width = aReflowState.computedWidth;
-  }
-  if (aReflowState.HaveFixedContentHeight() && (aDesiredSize.height < aReflowState.computedHeight)) {
-    aDesiredSize.height = aReflowState.computedHeight;
-  }
+  //if (aReflowState.HaveFixedContentWidth() && (aDesiredSize.width < aReflowState.computedWidth)) {
+  //  aDesiredSize.width = aReflowState.computedWidth;
+  //}
+  //if (aReflowState.HaveFixedContentHeight() && (aDesiredSize.height < aReflowState.computedHeight)) {
+  //  aDesiredSize.height = aReflowState.computedHeight;
+  //}
 
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
