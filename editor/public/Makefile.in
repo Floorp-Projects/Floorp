@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 EXPORTS =		\
     nsIContextLoader.h \
     nsIEditor.h	\
+    nsITextEditor.h	\
     nsEditorCID.h	\
     $(NULL)
 
