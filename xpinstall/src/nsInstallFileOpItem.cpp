@@ -285,7 +285,7 @@ char* nsInstallFileOpItem::toString()
   char*    dstPath;
 
     // STRING USE WARNING: perhaps |result| should be an |nsCAutoString| to avoid all this double converting
-  
+  *resultCString = nsnull;
   switch(mCommand)
   {
     case NS_FOP_FILE_COPY:
@@ -632,7 +632,10 @@ nsInstallFileOpItem::NativeFileOpFileRenamePrepare()
 
       mSrc->GetParent(&target);
       nsAutoCString tempTargetString(*mStrTarget);
-      target->Append(tempTargetString);
+      nsresult rv = target->Append(tempTargetString);
+      //90% of the failures during Append will be because the target wasn't in string form
+      // which it must be.
+      if (NS_FAILED(rv)) return nsInstall::INVALID_ARGUMENTS;
 
       target->Exists(&flagExists);
       if(flagExists)
