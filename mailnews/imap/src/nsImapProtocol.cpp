@@ -18,9 +18,13 @@
 
 // sorry, this has to be before the pre-compiled header
 #define FORCE_PR_LOG /* Allow logging in the release build */
-
+// as does this
+#define NS_IMPL_IDS
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
 
 #include "msgCore.h"  // for pre-compiled headers
+
 #include "nsMsgImapCID.h"
 
 #ifdef XP_PC
@@ -52,8 +56,6 @@ PRLogModuleInfo *IMAP;
 
 #include "nsIMsgIncomingServer.h"
 #include "nsIImapIncomingServer.h"
-
-#include "nsICharsetConverterManager.h"
 
 // for temp message hack
 #ifdef XP_UNIX
@@ -3713,12 +3715,15 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 	nsresult res;
 	char *dstPtr = nsnull;
 	PRInt32 dstLength = 0;
+	static PRBool tryCharsetConversion = PR_FALSE;
     // ***** temporary **** Fix me ****
-    if (aSourceString)
-        return PL_strdup(aSourceString);
-    else
-        return nsnull;
-
+	if (!tryCharsetConversion)
+	{
+		if (aSourceString)
+			return PL_strdup(aSourceString);
+		else
+			return nsnull;
+	}
 	// we haven't turned this code on yet - we're working on it.
 	char *convertedString = NULL;
 	
@@ -3741,7 +3746,7 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 				PRInt32 srcLen = PL_strlen(aSourceString);
 				res = decoder->Length(aSourceString, 0, srcLen, &unicharLength);
 				// temporary buffer to hold unicode string
-				unichars = new PRUnichar[unicharLength];
+				unichars = new PRUnichar[unicharLength + 1];
 				if (unichars == nsnull) 
 				{
 					res = NS_ERROR_OUT_OF_MEMORY;
@@ -3749,31 +3754,39 @@ nsImapProtocol::CreateUtf7ConvertedString(const char * aSourceString,
 				else 
 				{
 					res = decoder->Convert(unichars, 0, &unicharLength, aSourceString, 0, &srcLen);
+					unichars[srcLen] = 0;
 				}
 				NS_IF_RELEASE(decoder);
+				nsString2 unicodeStr(unichars, eTwoByte);
+				convertedString = unicodeStr.ToNewCString();
 			}
 		}
 		else
 		{
-			// convert from unicode to modified utf7
+			// convert from 8 bit ascii string to modified utf7
+			nsString2 unicodeStr(aSourceString, eTwoByte);
 			nsIUnicodeEncoder* encoder = nsnull;
 			aCharset.SetString("x-imap4-modified-utf7");
 			res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
 			if(NS_SUCCEEDED(res) && (nsnull != encoder)) 
 			{
-				res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
+				res = encoder->GetMaxLength(unicodeStr.GetUnicode(), unicodeStr.Length(), &dstLength);
 				// allocale an output buffer
-				dstPtr = (char *) PR_Malloc(dstLength + 1);
+				dstPtr = (char *) PR_CALLOC(dstLength + 1);
+				unicharLength = unicodeStr.Length();
 				if (dstPtr == nsnull) 
 				{
 					res = NS_ERROR_OUT_OF_MEMORY;
 				}
 				else 
 				{
-					res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
+					res = encoder->Convert(unicodeStr.GetUnicode(), &unicharLength, dstPtr, &dstLength);
+					dstPtr[dstLength] = 0;
 				}
 			}
 			NS_IF_RELEASE(encoder);
+			nsString2 unicodeStr2(dstPtr, eTwoByte);
+			convertedString = unicodeStr2.ToNewCString();
         }
         delete [] unichars;
       }
