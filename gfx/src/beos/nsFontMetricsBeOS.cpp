@@ -134,6 +134,8 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   PRInt16  face = 0;
 
   mFont = new nsFont(aFont);
+  if (!mFont)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   float       app2dev, app2twip;
   aContext->GetAppUnitsToDevUnits(app2dev);

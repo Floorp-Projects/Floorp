@@ -81,7 +81,7 @@ nsRenderingContextBeOS::~nsRenderingContextBeOS() {
 		mStateCache = nsnull;
 	}
 	
-	if (mTranMatrix) delete mTranMatrix;
+	delete mTranMatrix;
 	NS_IF_RELEASE(mOffscreenSurface);
 	NS_IF_RELEASE(mFontMetrics);
 	NS_IF_RELEASE(mContext);
@@ -113,11 +113,14 @@ NS_IMETHODIMP nsRenderingContextBeOS::Init(nsIDeviceContext *aContext, nsDrawing
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::CommonInit() {
-	mContext->GetDevUnitsToAppUnits(mP2T);
-	float app2dev;
-	mContext->GetAppUnitsToDevUnits(app2dev);
-	mTranMatrix->AddScale(app2dev, app2dev);
-	return NS_OK;
+  if (!mTranMatrix)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  mContext->GetDevUnitsToAppUnits(mP2T);
+  float app2dev;
+  mContext->GetAppUnitsToDevUnits(app2dev);
+  mTranMatrix->AddScale(app2dev, app2dev);
+  return NS_OK;
 }
 
 // We like PRUnichar rendering, hopefully it's not slowing us too much
@@ -167,28 +170,40 @@ NS_IMETHODIMP nsRenderingContextBeOS::GetDeviceContext(nsIDeviceContext *&aConte
 // Get a new GS
 NS_IMETHODIMP nsRenderingContextBeOS::PushState() {
 #ifdef USE_GS_POOL
-	nsGraphicsState *state = nsGraphicsStatePool::GetNewGS();
+  nsGraphicsState *state = nsGraphicsStatePool::GetNewGS();
 #else
-	nsGraphicsState *state = new nsGraphicsState;
+  nsGraphicsState *state = new nsGraphicsState;
 #endif
+  // Push into this state object, add to vector
+  if (!state) return NS_ERROR_OUT_OF_MEMORY;
 
-	// Push into this state object, add to vector
-	if (!state) return NS_ERROR_FAILURE;
-	
-	state->mMatrix = mTranMatrix;
-	if (nsnull == mTranMatrix) mTranMatrix = new nsTransform2D();
-	else mTranMatrix = new nsTransform2D(mTranMatrix);
-	
-	// Set state to mClipRegion. SetClip{Rect,Region}() will do copy-on-write stuff
-	state->mClipRegion = mClipRegion;
-	
-	NS_IF_ADDREF(mFontMetrics);
-	state->mFontMetrics = mFontMetrics;
-	state->mColor = mCurrentColor;
-	state->mLineStyle = mCurrentLineStyle;
-	
-	mStateCache->AppendElement(state);
-	return NS_OK;
+  nsTransform2D *tranMatrix;
+  if (nsnull == mTranMatrix)
+    tranMatrix = new nsTransform2D();
+  else
+    tranMatrix = new nsTransform2D(mTranMatrix);
+
+  if (!tranMatrix) {
+#ifdef USE_GS_POOL
+    nsGraphicsStatePool::ReleaseGS(state);
+#else
+    delete state;
+#endif
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  state->mMatrix = mTranMatrix;
+  mTranMatrix = tranMatrix;
+
+  // Set state to mClipRegion. SetClip{Rect,Region}() will do copy-on-write stuff
+  state->mClipRegion = mClipRegion;
+
+  NS_IF_ADDREF(mFontMetrics);
+  state->mFontMetrics = mFontMetrics;
+  state->mColor = mCurrentColor;
+  state->mLineStyle = mCurrentLineStyle;
+
+  mStateCache->AppendElement(state);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextBeOS::PopState(PRBool &aClipEmpty) {
@@ -201,7 +216,7 @@ NS_IMETHODIMP nsRenderingContextBeOS::PopState(PRBool &aClipEmpty) {
 		
 		// Assign all local attributes from the state object just popped
 		if (state->mMatrix) {
-			if (mTranMatrix) delete mTranMatrix;
+			delete mTranMatrix;
 			mTranMatrix = state->mMatrix;
 		}
 		
