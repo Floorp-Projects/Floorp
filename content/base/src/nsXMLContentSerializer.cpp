@@ -55,6 +55,7 @@
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
+#include "nsLayoutAtoms.h"
 
 typedef struct {
   nsString mPrefix;
@@ -330,26 +331,28 @@ nsXMLContentSerializer::PopNameSpaceDeclsFor(nsIDOMElement* aOwner)
   }
 }
 
-/* ConfirmPrefix() is needed for cases where scripts have 
- * moved/modified elements/attributes 
- */
 PRBool
 nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
-                                      const nsAString& aURI)
+                                      const nsAString& aURI,
+                                      nsIDOMElement* aElement,
+                                      PRBool aMustHavePrefix)
 {
-  if (aPrefix.EqualsLiteral(kXMLNS)) {
+  if (aPrefix.EqualsLiteral(kXMLNS) ||
+      (aPrefix.EqualsLiteral("xml") &&
+       aURI.EqualsLiteral("http://www.w3.org/XML/1998/namespace"))) {
     return PR_FALSE;
   }
   if (aURI.IsEmpty()) {
     aPrefix.Truncate();
     return PR_FALSE;
   }
-  PRInt32 index, count;
+
   nsAutoString closestURIMatch;
   PRBool uriMatch = PR_FALSE;
 
-  count = mNameSpaceStack.Count();
-  for (index = count - 1; index >= 0; index--) {
+  PRInt32 count = mNameSpaceStack.Count();
+  PRInt32 index = count - 1;
+  while (index >= 0) {
     NameSpaceDecl* decl = (NameSpaceDecl*)mNameSpaceStack.ElementAt(index);
     // Check if we've found a prefix match
     if (aPrefix.Equals(decl->mPrefix)) {
@@ -358,35 +361,88 @@ nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
       if (aURI.Equals(decl->mURI)) {
         return PR_FALSE;
       }
-      // If they don't, we can't use this prefix
-      else {
-        aPrefix.Truncate();
+
+      // If they don't, and either:
+      // 1) We have a prefix (so we'd be redeclaring this prefix to point to a
+      //    different namespace) or
+      // 2) We're looking at an existing default namespace decl on aElement (so
+      //    we can't create a new default namespace decl for this URI)
+      // then generate a new prefix.  Note that we do NOT generate new prefixes
+      // if we happen to have aPrefix == decl->mPrefix == "" and mismatching
+      // URIs when |decl| doesn't have aElement as its owner.  In that case we
+      // can simply push the new namespace URI as the default namespace for
+      // aElement.
+      if (!aPrefix.IsEmpty() ||
+          (decl->mPrefix.IsEmpty() && decl->mOwner == aElement)) {
+        GenerateNewPrefix(aPrefix);
+        // Now we need to validate our new prefix/uri combination; check it
+        // against the full namespace stack again.  Note that just restarting
+        // the while loop is ok, since we haven't changed aURI, so the
+        // closestURIMatch state is not affected.
+        index = count - 1;
+        continue;
       }
     }
+    
     // If we've found a URI match, then record the first one
-    else if (!uriMatch && aURI.Equals(decl->mURI)) {
-      uriMatch = PR_TRUE;
-      closestURIMatch.Assign(decl->mPrefix);
+    if (!uriMatch && aURI.Equals(decl->mURI)) {
+      // Need to check that decl->mPrefix is not declared anywhere closer to
+      // us.  If it is, we can't use it.
+      PRBool prefixOK = PR_TRUE;
+      PRInt32 index2;
+      for (index2 = count-1; index2 > index && prefixOK; --index2) {
+        NameSpaceDecl* decl2 =
+          (NameSpaceDecl*)mNameSpaceStack.ElementAt(index2);
+        prefixOK = (decl2->mPrefix != decl->mPrefix);
+      }
+      
+      if (prefixOK) {
+        uriMatch = PR_TRUE;
+        closestURIMatch.Assign(decl->mPrefix);
+      }
     }
+    
+    --index;
   }
 
-  // There are no namespace declarations that match the prefix, uri pair. 
-  // If there's another prefix that matches that URI, us it.
-  if (uriMatch) {
+  // At this point the following invariants hold:
+  // 1) There is nothing on the namespace stack that matches the pair
+  //    (aPrefix, aURI)
+  // 2) There is nothing on the namespace stack that has aPrefix as the prefix
+  //    and a _different_ URI, except for the case aPrefix.IsEmpty (and
+  //    possible default namespaces on ancestors)
+  // 3) The prefix in closestURIMatch is mapped to aURI in our scope if
+  //    uriMatch is set.
+  
+  // So if uriMatch is set it's OK to use the closestURIMatch prefix.  The one
+  // exception is when closestURIMatch is actually empty (default namespace
+  // decl) and we must have a prefix.
+  if (uriMatch && (!aMustHavePrefix || !closestURIMatch.IsEmpty())) {
     aPrefix.Assign(closestURIMatch);
     return PR_FALSE;
   }
-  // If we don't have a prefix, create one
-  else if (aPrefix.IsEmpty()) {
-    aPrefix.AssignLiteral("a");
-    char buf[128];
-    PR_snprintf(buf, sizeof(buf), "%d", mPrefixIndex++);
-    AppendASCIItoUTF16(buf, aPrefix);
+  
+  // At this point, if aPrefix is empty (which means we never had a prefix to
+  // start with) and we must have a prefix, just generate a new prefix and then
+  // send it back through the namespace stack checks to make sure it's OK.
+  if (aPrefix.IsEmpty() && aMustHavePrefix) {
+    GenerateNewPrefix(aPrefix);
+    return ConfirmPrefix(aPrefix, aURI, aElement, aMustHavePrefix);
   }
+  // else we will just set aURI as the new default namespace URI
 
   // Indicate that we need to create a namespace decl for the
   // final prefix
   return PR_TRUE;
+}
+
+void
+nsXMLContentSerializer::GenerateNewPrefix(nsAString& aPrefix)
+{
+  aPrefix.AssignLiteral("a");
+  char buf[128];
+  PR_snprintf(buf, sizeof(buf), "%d", mPrefixIndex++);
+  AppendASCIItoUTF16(buf, aPrefix);
 }
 
 void
@@ -505,7 +561,14 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
                            getter_AddRefs(attrName),
                            getter_AddRefs(attrPrefix));
     
-    if (namespaceID == kNameSpaceID_XMLNS) {
+    if (namespaceID == kNameSpaceID_XMLNS ||
+        // Also push on the stack attrs named "xmlns" in the null
+        // namespace... because once we serialize those out they'll look like
+        // namespace decls.  :(
+        // XXXbz what if we have both "xmlns" in the null namespace and "xmlns"
+        // in the xmlns namespace?
+        (namespaceID == kNameSpaceID_None &&
+         attrName == nsLayoutAtoms::xmlnsNameSpace)) {
       content->GetAttr(namespaceID, attrName, uriStr);
 
       if (!attrPrefix) {
@@ -522,7 +585,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     
   MaybeAddNewline(aStr);
 
-  addNSAttr = ConfirmPrefix(tagPrefix, tagNamespaceURI);
+  addNSAttr = ConfirmPrefix(tagPrefix, tagNamespaceURI, aElement, PR_FALSE);
   // Serialize the qualified name of the element
   AppendToString(NS_LITERAL_STRING("<"), aStr);
   if (!tagPrefix.IsEmpty()) {
@@ -534,7 +597,13 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   // If we had to add a new namespace declaration, serialize
   // and push it on the namespace stack
   if (addNSAttr) {
-    SerializeAttr(xmlnsStr, tagPrefix, tagNamespaceURI, aStr, PR_TRUE);
+    if (tagPrefix.IsEmpty()) {
+      // Serialize default namespace decl
+      SerializeAttr(EmptyString(), xmlnsStr, tagNamespaceURI, aStr, PR_TRUE);
+    } else {
+      // Serialize namespace decl
+      SerializeAttr(xmlnsStr, tagPrefix, tagNamespaceURI, aStr, PR_TRUE);
+    }
     PushNameSpaceDecl(tagPrefix, tagNamespaceURI, aElement);
   }
 
@@ -558,7 +627,8 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     if (kNameSpaceID_XMLNS != namespaceID) {
       nsContentUtils::GetNSManagerWeakRef()->GetNameSpaceURI(namespaceID,
                                                              uriStr);
-      addNSAttr = ConfirmPrefix(prefixStr, uriStr);
+      addNSAttr = ConfirmPrefix(prefixStr, uriStr, aElement,
+                                namespaceID != kNameSpaceID_None);
     }
     
     content->GetAttr(namespaceID, attrName, valueStr);
@@ -583,6 +653,8 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     SerializeAttr(prefixStr, nameStr, valueStr, aStr, PR_TRUE);
     
     if (addNSAttr) {
+      NS_ASSERTION(!prefixStr.IsEmpty(),
+                   "Namespaced attributes must have a prefix");
       SerializeAttr(xmlnsStr, prefixStr, uriStr, aStr, PR_TRUE);
       PushNameSpaceDecl(prefixStr, uriStr, aElement);
     }
@@ -623,7 +695,11 @@ nsXMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   aElement->GetLocalName(tagLocalName);
   aElement->GetNamespaceURI(tagNamespaceURI);
 
-  ConfirmPrefix(tagPrefix, tagNamespaceURI);
+#ifdef DEBUG
+  PRBool debugNeedToPushNamespace =
+#endif
+  ConfirmPrefix(tagPrefix, tagNamespaceURI, aElement, PR_FALSE);
+  NS_ASSERTION(!debugNeedToPushNamespace, "Can't push namespaces in closing tag!");
 
   AppendToString(NS_LITERAL_STRING("</"), aStr);
   if (!tagPrefix.IsEmpty()) {
