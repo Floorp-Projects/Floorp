@@ -1045,8 +1045,8 @@ namespace JavaScript {
 	struct ListQueue: private ListQueueEntry {
 		ListQueue() {next = this; prev = this;}
 	
-		operator bool() const {return next != this;}	// Return true if the ListQueue is nonempty
-		bool operator !() const {return next == this;}	// Return true if the ListQueue is empty
+		operator bool() const {return next != static_cast<const ListQueueEntry *>(this);}	// Return true if the ListQueue is nonempty
+		bool operator !() const {return next == static_cast<const ListQueueEntry *>(this);}	// Return true if the ListQueue is empty
 
 		E &front() const {ASSERT(operator bool()); return *static_cast<E *>(next);}
 		E &back() const {ASSERT(operator bool()); return *static_cast<E *>(prev);}
@@ -1311,6 +1311,10 @@ namespace JavaScript {
 	class PrettyPrinter: public Formatter {
 	  public:
 		STATIC_CONST(uint32, unlimitedLineWidth = 0x7FFFFFFF);
+		class Region;
+		class Indent;
+		class Block;
+
 	  private:
 		STATIC_CONST(uint32, infiniteLength = 0x80000000);
 		const uint32 lineWidth;			// Current maximum desired line width
@@ -1329,10 +1333,6 @@ namespace JavaScript {
 		ArrayBuffer<BlockInfo, 20> savedBlocks; // Stack of saved information about partially printed blocks
 
 		// Variables for the front end that calculates block sizes
-		class Region;
-		class Indent;
-		class Block;
-
 		struct Item: ListQueueEntry {
 			enum Kind {text, blockBegin, indentBlockBegin, blockEnd, indent, linearBreak, fillBreak};
 
