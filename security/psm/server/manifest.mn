@@ -55,6 +55,7 @@ CSRCS = \
 	certsearch.c \
 	main.c     \
 	autorenewal.c \
+	derprint.c \
 	$(NULL) 
 
 CPPSRCS = \

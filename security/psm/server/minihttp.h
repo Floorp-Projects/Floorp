@@ -119,6 +119,12 @@ struct HTTPRequest
     SSMResourceID rid;      /* ID of requested resource */
 };
 
+typedef struct SSMHTTPParamMultValuesStr{
+    const char *key;
+    char **values;
+    int numValues;
+} SSMHTTPParamMultValues;
+
 /* Typedef for a command handler. */
 typedef SSMStatus (*SSMCommandHandlerFunc)(HTTPRequest *req);
 
@@ -197,8 +203,11 @@ SSMStatus SSM_HTTPReportError(HTTPRequest *req, HTTPErrorCode statusCode);
 void SSM_HTTPReportSpecificError(HTTPRequest *req, char *fmt, ...);
 
 SSMStatus SSM_HTTPParamValue(HTTPRequest *req, const char *key, char **value);
+SSMStatus SSM_HTTPParamValueMultiple(HTTPRequest *req, const char *key, 
+                                     SSMHTTPParamMultValues *values);
+
 SSMStatus SSM_HTTPAddParamValue(HTTPRequest *req, const char * key, 
-	const char * value);
+                                const char * value);
 
 SSMStatus
 SSM_HTTPSendOKHeader(HTTPRequest *req, 

@@ -329,7 +329,7 @@ extern "C" PRBool nlsASCIIToUnicode(unsigned char * inBuf, unsigned int inBufByt
 	if (NS_FAILED(res)) {
 		goto loser;
 	}
-
+	*outBufLen = (unsigned int)dstLength*2;
 	ret = PR_TRUE;
 
 loser:

@@ -1232,6 +1232,7 @@ SSMStatus SSM_PrettyFormatCert(CERTCertificate* cert, char* fmt,
     char* serialNumber = NULL;
     char * notBefore = NULL;
     char * notAfter = NULL;
+    char * tmp = NULL;
     unsigned char fingerprint[16];
     SECItem fpItem;
     char* fpStr = NULL;
@@ -1269,8 +1270,20 @@ SSMStatus SSM_PrettyFormatCert(CERTCertificate* cert, char* fmt,
         country = PL_strdup("");
 
     issuer = CERT_GetOrgName(&cert->issuer);
-    if (issuer == NULL) 
+    if (issuer == NULL) {
         issuer = PL_strdup("");
+    } else {
+        /*
+         * Don't add the extra link if this is a self-signed cert.
+         */
+        if (CERT_CompareName(&cert->subject, &cert->issuer) != SECEqual) {
+            tmp=PR_smprintf("<a href=\"javascript:openIssuerWindow();\">%s</a>",
+                              issuer);
+            PR_Free(issuer);
+            issuer = tmp;
+            tmp = NULL;
+        }
+    }
 
     serialNumber = CERT_Hexify(&cert->serialNumber, 1);
     if (serialNumber == NULL) {

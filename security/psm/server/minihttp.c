@@ -235,7 +235,17 @@ http_register_handlers(void)
                                         SSM_HTTPCloseIfCancel);
     if (rv != SSM_SUCCESS)
         goto loser;
-    
+
+    rv = SSM_HTTPRegisterCommandHandler("showIssuer",
+                                        SSM_ShowCertIssuer);
+    if (rv != SSM_SUCCESS)
+        goto loser;
+
+    rv = SSM_HTTPRegisterCommandHandler("certPrettyPrint",
+                                        SSM_PrettyPrintCert);
+    if (rv != SSM_SUCCESS)
+        goto loser;
+
     goto done;
  loser:
     if (rv == SSM_SUCCESS)
@@ -716,8 +726,9 @@ http_read_request(PRFileDesc *sock, HTTPRequest **returnReq)
     return rv;
 }
 
-SSMStatus
-SSM_HTTPParamValue(HTTPRequest *req, const char *key, char **value)
+static SSMStatus
+ssm_http_param_from_index(HTTPRequest *req, const char *key, char **value,
+                          int startIndex, int *valueIndex)
 {
     PRUint32 i;
     SSMStatus rv = SSM_FAILURE;
@@ -726,11 +737,13 @@ SSM_HTTPParamValue(HTTPRequest *req, const char *key, char **value)
       return rv;
 
     *value = NULL; /* in case we fail */
-    for(i=0; i < req->numParams; i++)
+    *valueIndex = -1;
+    for(i=startIndex; i < req->numParams; i++)
     {
         if (req->paramNames[i] && (!PL_strcmp(req->paramNames[i], key)))
         {
             *value = req->paramValues[i];
+            *valueIndex = i;
             rv = SSM_SUCCESS;
             break;
         }
@@ -739,6 +752,58 @@ SSM_HTTPParamValue(HTTPRequest *req, const char *key, char **value)
         SSM_DEBUG("HTTPParamValue: Error %d attempting to get parameter '%s'.\n"
                   , rv, key);
     return rv;
+}
+
+SSMStatus
+SSM_HTTPParamValueMultiple(HTTPRequest *req, const char *key,
+                           SSMHTTPParamMultValues *values)
+{
+    int currIndex, nextIndex;
+    unsigned int i, numVars = 0;
+    char *tmp;
+    SSMStatus rv;
+    /*
+     * First, let's count the number of parameters there are, the fill in
+     * the array.
+     */
+    PR_ASSERT(values->key == NULL && values->values == NULL);
+    for (i=0; i<req->numParams; i++) {
+        rv = ssm_http_param_from_index(req,key,&tmp,i,&currIndex);
+        if (rv != SSM_SUCCESS || currIndex == -1) {
+            break;
+        }
+        numVars++;
+        i = currIndex;
+    }
+    if (numVars == 0) {
+        goto loser;
+    }
+    values->values = SSM_NEW_ARRAY(char*, numVars);
+    currIndex = 0;
+    for (i=0; i<numVars;i++) {
+        rv = ssm_http_param_from_index(req,key,&values->values[i], currIndex,
+                                       &nextIndex);
+        if (rv != SSM_SUCCESS || nextIndex == -1) {
+            break;
+        }
+        currIndex = nextIndex+1;
+    }
+    values->numValues = numVars;
+    values->key = key;
+    return SSM_SUCCESS;
+ loser:
+    PR_FREEIF(values->values);
+    values->values = NULL;
+    values->numValues=0;
+    return SSM_FAILURE;
+}
+
+SSMStatus
+SSM_HTTPParamValue(HTTPRequest *req, const char *key, char **value)
+{
+    int valueIndex;
+
+    return ssm_http_param_from_index(req, key, value, 0, &valueIndex);
 }
 
 static SSMStatus
