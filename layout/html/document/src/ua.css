@@ -548,11 +548,6 @@ input[type=image]:focus {
 input[type=image] {
   box-sizing: border-box;
   border: 2px solid blue;
-  cursor: pointer;
-}
-
-input[type=image][disabled] {
-  cursor: default;
 }
 
 input[type=file] {
@@ -932,7 +927,7 @@ select, select[size="1"] {
   border: none;
   background-color:rgb(204, 204, 204);  
   color:black;
-  white-space:pre;
+  white-space:nowrap;
   text-align: left; 
 }
 
@@ -972,7 +967,7 @@ select[size="1"] {
   border: none;
   background-color:rgb(204, 204, 204);  
   color:black;
-  white-space:pre;
+  white-space:nowrap;
   text-align: left; 
 }
 
@@ -1033,6 +1028,7 @@ select input#-moz-display:active {
 
 
 option {
+  min-height: 1em;
   display:block;
   padding-left:3px;
   padding-right:3px;
