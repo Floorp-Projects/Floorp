@@ -81,16 +81,6 @@ NS_IMETHODIMP nsProxyCreateInstance::CreateInstanceByProgID(const char *aProgID,
                                                 result);
 }
 
-
-
-
-
-
-
-
-
-
-
 /////////////////////////////////////////////////////////////////////////
 // nsProxyObjectManager
 /////////////////////////////////////////////////////////////////////////
@@ -185,25 +175,12 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
         }
     }
     
-    nsISupports* realObject;
-    
-    // we need to do make sure that we addref the passed in object as well as ensure
-    // that it is of the requested IID;
-    
-    rv = aObj->QueryInterface(aIID, (void**)&realObject);
-
-    if ( NS_FAILED( rv ) )
-        return rv;
-
     // check to see if proxy is there or not.
-    *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(postQ, proxyType, realObject, aIID);
+    *aProxyObject = nsProxyEventObject::GetNewOrUsedProxy(postQ, proxyType, aObj, aIID);
     
     if (*aProxyObject == nsnull)
-    {
-         NS_RELEASE(aObj);
-         return NS_ERROR_NO_INTERFACE; //fix error code?
-    }
-    
+        return NS_ERROR_NO_INTERFACE; //fix error code?
+        
     return NS_OK;   
 }   
 
