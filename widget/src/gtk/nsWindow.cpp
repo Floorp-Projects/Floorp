@@ -637,11 +637,13 @@ void nsWindow::OnDestroy()
 
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
+/*
   nsRect* size = aEvent.windowSize;
 
   if (mEventCallback && !mIgnoreResize) {
     return DispatchWindowEvent(&aEvent);
   }
+*/
   return FALSE;
 }
 
@@ -761,53 +763,6 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
     return(aNewY - 12 /*KLUDGE fix this later mBounds.height */);
   }
   return(aNewY);
-}
-
-
-static gint DoResize(GtkWidget *w, GtkAllocation *allocation, gpointer data)
-{
-  nsWindow *win = (nsWindow*)data;
-
-  nsRect bounds;
-  win->GetBounds(bounds);
-  g_print("DoResized called a->w %d a->h %d b.w %d b.h %d\n",
-          allocation->width, allocation->height, bounds.width, bounds.height);
-  if (bounds.width != allocation->width ||
-      bounds.height != allocation->height) {
-    g_print("RESIZE!\n");
-
-    nsSizeEvent sizeEvent;
-    sizeEvent.eventStructType = NS_SIZE_EVENT;
-    sizeEvent.message         = NS_SIZE;
-    sizeEvent.point.x         = bounds.x;
-    sizeEvent.point.y         = bounds.y;
-    sizeEvent.time            = PR_IntervalNow();
-
-    // nsGUIEvent
-    sizeEvent.widget          = win;
-    sizeEvent.nativeMsg       = nsnull;
-
-    bounds.width = allocation->width;
-    bounds.height = allocation->height;
-    bounds.x = 0;
-    bounds.y = 0;
-
-    // nsSizeEvent
-    sizeEvent.windowSize     = &bounds;
-    sizeEvent.mWinWidth      = bounds.width;
-    sizeEvent.mWinHeight     = bounds.height;
-
-    win->OnResize(sizeEvent);
-    win->SetBounds(bounds);
-
-    nsPaintEvent pevent;
-    pevent.message = NS_PAINT;
-    pevent.widget = win;
-    pevent.time = PR_IntervalNow();
-    pevent.rect = (nsRect *)&bounds;
-    win->OnPaint(pevent);
-  }
-  return TRUE;  /*  Stop the handling of this signal */
 }
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)

@@ -146,9 +146,9 @@ NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-#ifdef DBG
+//#ifdef DBG
   g_print("nsWidget::Resize(%3d,%3d) - %s %p %s\n", aWidth, aHeight, mWidget->name, this, aRepaint ? "paint" : "no paint");
-#endif
+//#endif
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   gtk_widget_set_usize(mWidget, aWidth, aHeight);
