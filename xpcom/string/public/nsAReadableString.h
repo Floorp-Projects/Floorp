@@ -72,8 +72,8 @@
   NS_DEF_1_STRING_COMPARISON_OPERATOR(> , T1, T2)
 
 #define NS_DEF_STRING_COMPARISONS(T) \
-  NS_DEF_STRING_COMPARISON_OPERATORS(const T<CharT>&, const CharT*) \
-  NS_DEF_STRING_COMPARISON_OPERATORS(const CharT*, const T<CharT>&)
+  NS_DEF_STRING_COMPARISON_OPERATORS(const T&, const CharT*) \
+  NS_DEF_STRING_COMPARISON_OPERATORS(const CharT*, const T&)
 
 template <class CharT> class basic_nsAWritableString;
   // ...because we sometimes use them as `out' params
@@ -242,8 +242,8 @@ class basic_nsAReadableString
       // CharT First() const;
       // CharT Last() const;
 
-      void ToLowerCase( basic_nsAWritableString<CharT>& ) const;
-      void ToUpperCase( basic_nsAWritableString<CharT>& ) const;
+      // void ToLowerCase( basic_nsAWritableString<CharT>& ) const;
+      // void ToUpperCase( basic_nsAWritableString<CharT>& ) const;
 
       // PRUint32 CountChar( char_type ) const;
 
@@ -296,7 +296,7 @@ class basic_nsAReadableString
       PRBool operator> ( const basic_nsAReadableString<CharT>& rhs ) const { return Compare(rhs)> 0; }
   };
 
-NS_DEF_STRING_COMPARISONS(basic_nsAReadableString)
+NS_DEF_STRING_COMPARISONS(basic_nsAReadableString<CharT>)
 
 
 
@@ -366,10 +366,10 @@ class basic_nsLiteralString
       const CharT* mEnd;
   };
 
-NS_DEF_STRING_COMPARISONS(basic_nsLiteralString)
+NS_DEF_STRING_COMPARISONS(basic_nsLiteralString<CharT>)
 
 template <class CharT>
-class nsConcatString
+class nsPromiseConcatenation
       : public basic_nsAReadableString<CharT>
     /*
       ...not unlike RickG's original |nsSubsumeString| in _intent_.
@@ -385,7 +385,7 @@ class nsConcatString
       static const int kRightString = 1;
 
     public:
-      nsConcatString( const basic_nsAReadableString<CharT>& aLeftString, const basic_nsAReadableString<CharT>& aRightString )
+      nsPromiseConcatenation( const basic_nsAReadableString<CharT>& aLeftString, const basic_nsAReadableString<CharT>& aRightString )
         {
           mStrings[kLeftString] = &aLeftString;
           mStrings[kRightString] = &aRightString;
@@ -395,21 +395,21 @@ class nsConcatString
 
     private:
       const basic_nsAReadableString<CharT>* mStrings[2];
-      ConstFragment mFragment;
+      mutable ConstFragment mFragment;
   };
 
-NS_DEF_STRING_COMPARISONS(nsConcatString)
+NS_DEF_STRING_COMPARISONS(nsPromiseConcatenation<CharT>)
 
 template <class CharT>
 PRUint32
-nsConcatString<CharT>::Length() const
+nsPromiseConcatenation<CharT>::Length() const
   {
     return mStrings[kLeftString]->Length() + mStrings[kRightString]->Length();
   }
 
 template <class CharT>
 const CharT*
-nsConcatString<CharT>::GetFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aPosition ) const
+nsPromiseConcatenation<CharT>::GetFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aPosition ) const
   {
     const int kLeftString   = 0;
     const int kRightString  = 1;
@@ -477,6 +477,68 @@ nsConcatString<CharT>::GetFragment( ConstFragment& aFragment, FragmentRequest aR
   }
 
 
+template <class CharT>
+class nsPromiseSubstring
+      : public basic_nsAReadableString<CharT>
+  {
+    typedef typename basic_nsAReadableString<CharT>::FragmentRequest  FragmentRequest;
+    typedef typename basic_nsAWritableString<CharT>::ConstFragment    ConstFragment;
+
+    protected:
+      virtual const CharT* GetFragment( ConstFragment&, FragmentRequest, PRUint32 ) const;
+
+    public:
+      nsPromiseSubstring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PRUint32 aLength )
+          : mString(aString),
+            mStartPos( min(aStartPos, aString.Length()) ),
+            mLength( min(aLength, aString.Length()-mStartPos) )
+        {
+          // nothing else to do here
+        }
+
+      virtual PRUint32 Length() const;
+
+    private:
+      const basic_nsAReadableString<CharT>& mString;
+      PRUint32 mStartPos;
+      PRUint32 mLength;
+  };
+
+NS_DEF_STRING_COMPARISONS(nsPromiseSubstring<CharT>)
+
+template <class CharT>
+PRUint32
+nsPromiseSubstring<CharT>::Length() const
+  {
+    return mLength;
+  }
+
+template <class CharT>
+const CharT*
+nsPromiseSubstring<CharT>::GetFragment( ConstFragment& aFragment, FragmentRequest aRequest, PRUint32 aPosition ) const
+  {
+    if ( aRequest == kFirstFragment )
+      {
+        aPosition = mStartPos;
+        aRequest = kFragmentAt;
+      }
+    else if ( aRequest == kLastFragment )
+      {
+        aPosition = mLength + mStartPos;
+        aRequest = kFragmentAt;
+      }
+    else if ( aRequest == kFragmentAt )
+      aPosition += mStartPos;
+
+    return mString.GetFragment(aFragment, aRequest, aPosition);
+  }
+
+template <class CharT>
+nsPromiseSubstring<CharT>
+Substring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
+  {
+    return nsPromiseSubstring<CharT>(aString, aStartPos, aSubstringLength);
+  }
 
 
 template <class CharT>
@@ -509,84 +571,29 @@ basic_nsLiteralString<CharT>::Length() const
 
 
 template <class CharT>
-class do_ToLowerCase : unary_function<CharT, CharT>
-  {
-    // std::locale loc;
-    // std::ctype<CharT> ct;
-
-    public:
-      // do_ToLowerCase() : ct( use_facet< std::ctype<CharT> >(loc) ) { }
-   
-      CharT
-      operator()( CharT aChar )
-        {
-          // return ct.tolower(aChar);
-          return CharT(std::tolower(aChar));
-        }
-  };
-
-template <class CharT>
-void
-basic_nsAReadableString<CharT>::ToLowerCase( basic_nsAWritableString<CharT>& aResult ) const
-  {
-    aResult.SetLength(Length());
-    std::transform(Begin(), End(), aResult.Begin(), do_ToLowerCase<CharT>());
-  }
-
-template <class CharT>
-class do_ToUpperCase : unary_function<CharT, CharT>
-  {
-    // std::locale loc;
-    // std::ctype<CharT> ct;
-
-    public:
-      // do_ToUpperCase() : ct( use_facet< std::ctype<CharT> >(loc) ) { }
-   
-      CharT
-      operator()( CharT aChar )
-        {
-          // return ct.toupper(aChar);
-          return CharT(std::toupper(aChar));
-        }
-  };
-
-template <class CharT>
-void
-basic_nsAReadableString<CharT>::ToUpperCase( basic_nsAWritableString<CharT>& aResult ) const
-  {
-    aResult.SetLength(Length());
-    std::transform(Begin(), End(), aResult.Begin(), do_ToUpperCase<CharT>());
-  }
-
-template <class CharT>
 PRUint32
 basic_nsAReadableString<CharT>::Left( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
   {
-    aLengthToCopy = min(aLengthToCopy, Length());
-    aResult.SetLength(aLengthToCopy);
-    std::copy(Begin(), Begin(aLengthToCopy), aResult.Begin());
-    return aLengthToCopy;
+    aResult = Substring(*this, 0, aLengthToCopy);
+    return aResult.Length();
   }
 
 template <class CharT>
 PRUint32
 basic_nsAReadableString<CharT>::Mid( basic_nsAWritableString<CharT>& aResult, PRUint32 aStartPos, PRUint32 aLengthToCopy ) const
   {
-    aStartPos = min(aStartPos, Length());
-    aLengthToCopy = min(aLengthToCopy, Length()-aStartPos);
-    aResult.SetLength(aLengthToCopy);
-    std::copy(Begin(aStartPos), Begin(aStartPos+aLengthToCopy), aResult.Begin());
-    return aLengthToCopy;
+    aResult = Substring(*this, aStartPos, aLengthToCopy);
+    return aResult.Length();
   }
 
 template <class CharT>
 PRUint32
 basic_nsAReadableString<CharT>::Right( basic_nsAWritableString<CharT>& aResult, PRUint32 aLengthToCopy ) const
   {
-    aLengthToCopy = min(aLengthToCopy, Length());
-    aResult.SetLength(aLengthToCopy);
-    std::copy(End(aLengthToCopy), End(), aResult.Begin());
-    return aLengthToCopy;
+    PRUint32 myLength = Length();
+    aLengthToCopy = min(myLength, aLengthToCopy);
+    aResult = Substring(*this, myLength-aLengthToCopy, aLengthToCopy);
+    return aResult.Length();
   }
 
 template <class CharT>
@@ -665,7 +672,7 @@ basic_nsAReadableString<CharT>::Compare( const basic_nsAReadableString<CharT>& r
     will really want to do with the result.  What might be better, though,
     is to return a `promise' to concatenate some strings...
 
-    By making |nsConcatString| inherit from readable strings, we automatically handle
+    By making |nsPromiseConcatenation| inherit from readable strings, we automatically handle
     assignment and other interesting uses within writable strings, plus we drastically reduce
     the number of cases we have to write |operator+()| for.  The cost is extra temporary concat strings
     in the evaluation of strings of '+'s, e.g., |A + B + C + D|, and that we have to do some work
@@ -673,31 +680,31 @@ basic_nsAReadableString<CharT>::Compare( const basic_nsAReadableString<CharT>& r
   */
 
 template <class CharT>
-nsConcatString<CharT>
+nsPromiseConcatenation<CharT>
 operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
-    return nsConcatString<CharT>(lhs, rhs);
+    return nsPromiseConcatenation<CharT>(lhs, rhs);
   }
 
 template <class CharT>
-nsConcatString<CharT>
+nsPromiseConcatenation<CharT>
 operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsLiteralString<CharT>& rhs )
   {
-    return nsConcatString<CharT>(lhs, rhs);
+    return nsPromiseConcatenation<CharT>(lhs, rhs);
   }
 
 template <class CharT>
-nsConcatString<CharT>
+nsPromiseConcatenation<CharT>
 operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
-    return nsConcatString<CharT>(lhs, rhs);
+    return nsPromiseConcatenation<CharT>(lhs, rhs);
   }
 
 template <class CharT>
-nsConcatString<CharT>
+nsPromiseConcatenation<CharT>
 operator+( const basic_nsLiteralString<CharT>& lhs, const basic_nsLiteralString<CharT>& rhs )
   {
-    return nsConcatString<CharT>(lhs, rhs);
+    return nsPromiseConcatenation<CharT>(lhs, rhs);
   }
 
 template <class CharT, class TraitsT>
