@@ -312,7 +312,8 @@ var nsSaveAsCharsetCommand =
   {    
     FinishHTMLSource();
     window.ok = false;
-    if (window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal"))
+    window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal")
+    if (window.ok)
     {
       window.ok = window.editorShell.saveDocument(true, false);
     }
