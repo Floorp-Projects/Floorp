@@ -213,16 +213,18 @@ nsHelperAppDialog.prototype = {
          var win   = this.dialogElement( "nsHelperAppDlg" );
          var suggestedFileName = this.mLauncher.suggestedFileName;
 
-         var url   = this.mLauncher.source.QueryInterface( Components.interfaces.nsIURL );
+         // Some URIs do not implement nsIURL, so we can't just QI.
+         var url   = this.mLauncher.source;
          var fname = "";
          this.mSourcePath = url.prePath;
-         if ( url ) {
+         try {
+             url = url.QueryInterface( Components.interfaces.nsIURL );
              // A url, use file name from it.
              fname = url.fileName;
              this.mSourcePath += url.directory;
-         } else {
+         } catch (ex) {
              // A generic uri, use path.
-             fname = this.mLauncher.source.path;
+             fname = url.path;
              this.mSourcePath += url.path;
          }
 
