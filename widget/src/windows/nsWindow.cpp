@@ -2040,7 +2040,7 @@ void nsWindow::Enumerator::GrowArray()
 //-------------------------------------------------------------------------
 DWORD ChildWindow::WindowStyle()
 {
-    return WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | GetBorderStyle(mBorderStyle);
+    return WS_CHILD | WS_CLIPCHILDREN | GetBorderStyle(mBorderStyle);
 }
 
 

@@ -435,7 +435,7 @@ LPCTSTR nsScrollbar::WindowClass()
 //-------------------------------------------------------------------------
 DWORD nsScrollbar::WindowStyle()
 {
-    return mPositionFlag | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS;
+    return mPositionFlag | WS_CHILD | WS_CLIPSIBLINGS;
 }
 
 
