@@ -89,7 +89,7 @@ public:
   * @return The return value is currently ignored.
   */
   NS_IMETHOD OnStopRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */, nsresult aStatus, const PRUnichar* aMsg);
-;
+
 
 
 private:
