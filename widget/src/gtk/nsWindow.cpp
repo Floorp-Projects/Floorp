@@ -2797,6 +2797,19 @@ nsWindow::GrabInProgress(void)
   return nsWindow::mIsGrabbing;
 }
 
+/* static */
+nsWindow *
+nsWindow::GetGrabWindow(void)
+{
+  if (nsWindow::mIsGrabbing)
+  {
+    NS_ADDREF(mGrabWindow);
+    return mGrabWindow;
+  }
+  else
+    return nsnull;
+}
+
 /* virtual */ GdkWindow *
 nsWindow::GetRenderWindow(GtkObject * aGtkObject)
 {
