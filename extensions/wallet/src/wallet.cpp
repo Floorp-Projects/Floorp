@@ -3681,13 +3681,15 @@ public:
 };
 
 PUBLIC void
-WLLT_OnSubmit(nsIContent* formNode) {
+WLLT_OnSubmit(nsIContent* currentForm) {
+
+  nsCOMPtr<nsIDOMHTMLFormElement> currentFormNode(do_QueryInterface(currentForm));
 
   /* get url name as ascii string */
   char *URLName = nsnull;
   nsCOMPtr<nsIURI> docURL;
   nsCOMPtr<nsIDocument> doc;
-  formNode->GetDocument(*getter_AddRefs(doc));
+  currentForm->GetDocument(*getter_AddRefs(doc));
   if (!doc) {
     return;
   }
@@ -3794,7 +3796,9 @@ WLLT_OnSubmit(nsIContent* formNode) {
           }
 
           /* save login if appropriate */
-          SINGSIGN_RememberSignonData (URLName, signonData);
+          if (currentFormNode == formNode) {
+            SINGSIGN_RememberSignonData (URLName, signonData);
+          }
           PRInt32 count2 = signonData->Count();
           for (PRInt32 i=count2-1; i>=0; i--) {
             data = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(i));
