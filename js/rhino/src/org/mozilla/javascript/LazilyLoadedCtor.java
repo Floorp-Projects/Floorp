@@ -75,8 +75,6 @@ public final class LazilyLoadedCtor {
                 // Treat security exceptions as absence of object.
                 // They can be due to the following reasons:
                 //  java.lang.RuntimePermission createClassLoader
-                //  java.util.PropertyPermission
-                //        org.mozilla.javascript.JavaAdapter read
 
                 Class cl = Kit.classOrNull(className);
                 if (cl == null) {

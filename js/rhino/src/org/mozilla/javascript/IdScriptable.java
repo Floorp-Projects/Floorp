@@ -206,7 +206,7 @@ public abstract class IdScriptable extends ScriptableObject
                 if (hasValue(id)) {
                     if (getAll || (getIdAttributes(id) & DONTENUM) == 0) {
                         if (count == 0) {
-                            // Need extra room for nor more then [1..id] names
+                            // Need extra room for no more then [1..id] names
                             ids = new Object[id];
                         }
                         ids[count++] = getIdName(id);
