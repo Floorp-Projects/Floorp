@@ -27,6 +27,7 @@
 #include "nsHTMLButtonControlFrame.h"
 #include "nsCOMPtr.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsITextContent.h"
 
 // Class which implements the input[type=button, reset, submit] and
 // browse button for input[type=file].
