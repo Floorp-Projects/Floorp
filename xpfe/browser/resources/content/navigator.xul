@@ -111,9 +111,9 @@ Contributor(s): ______________________________________. -->
   </keyset>
   
   <popupset id="aHTMLTooltipSet">
-    <popup id="aHTMLTooltip" class="tooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);" > 
+    <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);" > 
       <vbox id="HTML_TOOLTIP_tooltipBox"/>
-    </popup>
+    </tooltip>
     <popup id="backMenu" position="after_start" onpopupshowing="return BrowserBackMenu(event);" oncommand="gotoHistoryIndex(event);"/>
     <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
     <popup id="sidebarPopup"/>

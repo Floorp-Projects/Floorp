@@ -4,6 +4,13 @@
    xmlns="http://www.mozilla.org/xbl"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
+  <binding id="basewindow">
+    <content>
+      <children/>
+      <xul:popupgroup/>
+    </content>
+  </binding>
+
   <binding id="basetext">
     <implementation>
       <!-- public implementation -->
@@ -16,12 +23,10 @@
                                          return val;"
                                   onget="var v = this.getAttribute('disabled');
                                          if (v == 'true') return true; return false;"/>                                  
-      <property name="src"        onset="return this.setAttribute('src',val);"
-                                  onget="return this.getAttribute('src');"/>
+      <property name="image"      onset="return this.setAttribute('image',val);"
+                                  onget="return this.getAttribute('image');"/>
       <property name="accesskey"  onset="return this.setAttribute('accesskey',val);"
                                   onget="return this.getAttribute('accesskey');"/>
-      <property name="imgalign"   onset="return this.setAttribute('imgalign',val);"
-                                  onget="return this.getAttribute('imgalign');"/>
     </implementation>      
   </binding>
   

@@ -26,10 +26,10 @@ menupopup, popup
     padding               : 1px;
   }  
   
-/** Tooltips (tooltip <popup> element)
+/** Tooltips (tooltip <popup> element is deprecated! Use <tooltip> instead!)
  *  class="tooltip"
  **/
-.tooltip
+.tooltip, tooltip
   {
     border                : 1px solid WindowFrame;
     padding               : 2px;
@@ -39,7 +39,8 @@ menupopup, popup
     font                  : message-box;
   }
 
-.tooltip > .popup-internal-box
+.tooltip > .popup-internal-box,
+tooltip > .popup-internal-box
   {
   	border                : 0px;
   	padding               : 0px;

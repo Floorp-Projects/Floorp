@@ -155,7 +155,7 @@ extern nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewScrollBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewEditorBoxObject(nsIBoxObject** aResult);
-extern nsresult NS_NewPopupSetBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewPopupBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewBrowserBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewIFrameBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewOutlinerBoxObject(nsIBoxObject** aResult);
@@ -196,7 +196,7 @@ MAKE_CTOR(CreateNewPrintContext,        nsIPrintContext,        NS_NewPrintConte
 MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
 MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObject)
-MAKE_CTOR(CreateNewPopupSetBoxObject,   nsIBoxObject,           NS_NewPopupSetBoxObject)
+MAKE_CTOR(CreateNewPopupBoxObject,      nsIBoxObject,           NS_NewPopupBoxObject)
 MAKE_CTOR(CreateNewBrowserBoxObject,    nsIBoxObject,           NS_NewBrowserBoxObject)
 MAKE_CTOR(CreateNewEditorBoxObject,     nsIBoxObject,           NS_NewEditorBoxObject)
 MAKE_CTOR(CreateNewIFrameBoxObject,     nsIBoxObject,           NS_NewIFrameBoxObject)
@@ -275,10 +275,10 @@ static nsModuleComponentInfo gComponents[] = {
     "@mozilla.org/layout/xul-boxobject-menu;1",
     CreateNewMenuBoxObject },
 
-  { "XUL PopupSet Box Object",
-    NS_POPUPSETBOXOBJECT_CID,
-    "@mozilla.org/layout/xul-boxobject-popupset;1",
-    CreateNewPopupSetBoxObject },
+  { "XUL Popup Box Object",
+    NS_POPUPBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-popup;1",
+    CreateNewPopupBoxObject },
 
   { "XUL Browser Box Object",
     NS_BROWSERBOXOBJECT_CID,

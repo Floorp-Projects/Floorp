@@ -46,14 +46,15 @@ popup {
 
 /* ::::: tooltip popup ::::: */
 
-.tooltip {
+.tooltip, tooltip {
   border: 1px solid #000000;
   padding: 2px 3px 2px 3px;
   background-color: #FFFFE7;
   color: #000000;
 }
 
-.tooltip > .popup-internal-box {
+.tooltip > .popup-internal-box,
+tooltip > .popup-internal-box {
   border: none;
 }
 

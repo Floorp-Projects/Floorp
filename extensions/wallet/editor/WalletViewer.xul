@@ -55,16 +55,16 @@
       <button id="clearButton" label="&removeall.label;" oncommand="ClearAll()"/>
     </vbox>
     <iframe id="panelFrame" name="panelFrame" style="width:0px" flex="7"/>
-    <script type="application/x-javascript">
-    <![CDATA[
-      document.getElementById("panelFrame").setAttribute("src", "chrome://communicator-region/locale/wallet/WalletName.xul");
-      document.getElementById("panelFrame").setAttribute("tag", "" );
-    ]]>
-    </script>
   </hbox>
 
   <separator/>
 
   <hbox id="okCancelButtonsRight" />
 
+  <script type="application/x-javascript">
+    <![CDATA[
+      document.getElementById("panelFrame").setAttribute("src", "chrome://communicator-region/locale/wallet/WalletName.xul");
+      document.getElementById("panelFrame").setAttribute("tag", "" );
+    ]]>
+  </script>
 </window>

@@ -19,8 +19,7 @@
       <xul:hbox class="textbox-internal-box" flex="1">
         <html:input class="textbox-input" flex="1" inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly"/>
       </xul:hbox>
-      <xul:popupset>
-        <xul:popup onpopupshowing="this.parentNode.parentNode.doPopupItemEnabling(this); this.focus();">
+        <xul:menupopup onpopupshowing="this.parentNode.doPopupItemEnabling(this); this.focus();">
           <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');              
             controller.doCommand('cmd_undo');"/>
@@ -41,8 +40,7 @@
           <xul:menuitem label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;" cmd="cmd_selectAll" oncommand="
             var controller = document.commandDispatcher.getControllerForCommand('cmd_selectAll');
             controller.doCommand('cmd_selectAll');"/>
-        </xul:popup>
-      </xul:popupset>
+        </xul:menupopup>
     </content>
     
     <implementation>

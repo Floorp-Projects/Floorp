@@ -18,34 +18,27 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   David Hyatt (hyatt@netscape.com)
  */
 
-#ifndef nsIPopupSetFrame_h___
-#define nsIPopupSetFrame_h___
 
-// {E2D804A1-50CA-11d3-BF87-00105A1B0627}
-#define NS_IPOPUPSETFRAME_IID \
-{ 0xe2d804a1, 0x50ca, 0x11d3, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
+#ifndef nsIRootBox_h___
+#define nsIRootBox_h___
 
+#include "nsISupports.h"
 class nsIFrame;
-class nsIContent;
-class nsIDOMElement;
 
-#include "nsString.h"
+// {DF05F6AB-320B-4e06-AFB3-E39E632A7555}
+#define NS_IROOTBOX_IID \
+{ 0xdf05f6ab, 0x320b, 0x4e06, { 0xaf, 0xb3, 0xe3, 0x9e, 0x63, 0x2a, 0x75, 0x55 } }
 
-class nsIPopupSetFrame : public nsISupports {
+class nsIRootBox : public nsISupports {
 
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IPOPUPSETFRAME_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IROOTBOX_IID; return iid; }
 
-  NS_IMETHOD ShowPopup(nsIContent* aElementContent, nsIContent* aPopupContent, 
-                       PRInt32 aXPos, PRInt32 aYPos, 
-                       const nsString& aPopupType, const nsString& anAnchorAlignment,
-                       const nsString& aPopupAlignment) = 0;
-  NS_IMETHOD HidePopup(nsIFrame* aPopup) = 0;
-  NS_IMETHOD DestroyPopup(nsIFrame* aPopup) = 0;
-
-  NS_IMETHOD AddPopupFrame(nsIFrame* aPopup) = 0;
+  NS_IMETHOD GetPopupSetFrame(nsIFrame** aResult)=0;
+  NS_IMETHOD SetPopupSetFrame(nsIFrame* aPopupSet)=0;
 };
 
 #endif

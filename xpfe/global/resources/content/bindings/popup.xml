@@ -30,15 +30,15 @@
         <body>
         <![CDATA[
           try {
-            var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+            var popupBox = this.boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
           } catch(e) {}
           try {
             var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
           } catch(e) {}
-          if (popupSetBox)
-            popupSetBox.createPopup(element, this, xpos, ypos, popuptype, anchoralignment, popupalignment);
-          else if (menuBox)
+          if (menuBox)
             menuBox.openMenu(true);
+          else if (popupBox)
+            popupBox.showPopup(element, this, xpos, ypos, popuptype, anchoralignment, popupalignment);
         ]]>
         </body>
       </method>
@@ -46,52 +46,18 @@
         <body>
         <![CDATA[
           try {
-            var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
+            var popupBox = this.boxObject.QueryInterface(Components.interfaces.nsIPopupBoxObject);
           } catch(e) {}
           try {
             var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
           } catch(e) {}
-          if (popupSetBox)
-            popupSetBox.destroyPopup();
-          else if (menuBox)
+          if (menuBox)
             menuBox.openMenu(false);
+          else if (popupBox)
+            popupBox.hidePopup();
         ]]>
         </body>
       </method>
-      <property name="activeChild">
-        <getter>
-          <![CDATA[
-            try {
-              var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
-            } catch(e) {}
-            try {
-              var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
-            } catch(e) {}
-            if (popupSetBox)
-              return popupSetBox.activeChild;
-            else if (menuBox)
-              return menuBox.activeChild;
-            else
-              return null;
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-            try {
-              var popupSetBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIPopupSetBoxObject);
-            } catch(e) {}
-            try {
-              var menuBox = this.parentNode.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
-            } catch(e) {}
-            if (popupSetBox)
-              return popupSetBox.activeChild = val;
-            else if (menuBox)
-              return menuBox.activeChild = val;
-            else
-              return null;
-          ]]>
-        </setter>
-      </property>
     </implementation>     
 
     <handlers>

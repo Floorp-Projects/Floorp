@@ -48,7 +48,7 @@ outliner {
 }
 
 menulist[editable="true"],
-popup, menupopup,
+popup, menupopup, tooltip, 
 scrollbar, scrollbarbutton, slider, thumb, autorepeater,
 splitter, statusbar, statusbarpanel,
 toolbox, menubar, toolbar, spinbuttons {
@@ -68,6 +68,10 @@ radiogroup {
 
 window { 
   overflow: hidden;
+}
+
+window,wizard,dialog,page {
+  -moz-binding: url(chrome://global/content/bindings/general.xml#basewindow);
 }
 
 /******** box *******/
@@ -223,8 +227,11 @@ menuseparator {
 
 /********* popup & menupopup ***********/
 
+/* POPUP is deprecated.  Only <menupopup> and <tooltip> are still valid. */ 
+
 popup,
-menupopup {
+menupopup,
+tooltip {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#popup");
   -moz-box-orient: vertical;
   display: none;
@@ -232,12 +239,15 @@ menupopup {
 }
 
 menupopup[menugenerated="true"],
-popup[menugenerated="true"] {
+popup[menugenerated="true"],
+tooltip[menugenerated="true"] {
   display: -moz-popup;
 }
 
+/* Everything here is deprecated except the tooltip tag */
 popup.tooltip,
-.popup-infopopup {
+.popup-infopopup,
+tooltip {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#tooltips");
 }
 

@@ -8,10 +8,10 @@ menupopup, popup
     -moz-user-focus			  : ignore;
   }
 
-/** Tooltips (tooltip <popup> element)
+/** Tooltips (tooltip <popup> element is deprecated.  USE <tooltip> instead!)
  *  class="tooltip"
  **/
-.tooltip
+.tooltip, tooltip
   {
     background-color      : InfoBackground;
     border                : 1px solid #000000;
@@ -21,7 +21,8 @@ menupopup, popup
     margin				  : 0px;
   }
 
-.tooltip > .popup-internal-box
+.tooltip > .popup-internal-box,
+tooltip > .popup-internal-box
   {
   	border: none;
   	padding: 0px;

@@ -8,6 +8,30 @@
     <resources>
       <stylesheet src="chrome://global/skin/button.css"/>
     </resources>
+    <implementation>
+      <constructor>
+      <![CDATA[
+        if (this.menu == "") {
+          var children = this.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            if (children[i].localName == "menupopup") {
+              this.menu = "_child";
+              break;
+            }
+          }
+        }
+        if (this.tooltip == "") {
+          var children = this.childNodes;
+          for (var i = 0; i < children.length; i++) {
+            if (children[i].localName == "tooltip") {
+              this.tooltip = "_child";
+              break;
+            }
+          }
+        }
+        ]]>
+      </constructor>
+    </implementation>
   </binding>
 
   <binding id="buttonleft" extends="chrome://global/content/bindings/button.xml#button-base">

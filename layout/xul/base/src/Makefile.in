@@ -47,7 +47,7 @@ CPPSRCS		= \
        nsEditorBoxObject.cpp \
        nsMenuBoxObject.cpp \
        nsTreeBoxObject.cpp \
-       nsPopupSetBoxObject.cpp \
+       nsPopupBoxObject.cpp \
        nsBoxObject.cpp \
        nsGridLayout.cpp \
        nsObeliskLayout.cpp \
