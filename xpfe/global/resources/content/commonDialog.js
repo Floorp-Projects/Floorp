@@ -18,309 +18,200 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Alec Flett <alecf@netscape.com>
+ *  Alec Flett <alecf@netscape.com>
+ *  Ben Goodger <ben@netscape.com>
  */
 
+var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"; 
+ 
 function commonDialogOnLoad()
 {
-	dump("commonDialogOnLoad \n");
-	doSetOKCancel( commonDialogOnOK, commonDialogOnCancel, commonDialogOnButton2, commonDialogOnButton3 );
+  doSetOKCancel(commonDialogOnOK, commonDialogOnCancel, commonDialogOnButton2, commonDialogOnButton3);
+  param = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
 	
-	param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
-	if( !param )
-		dump( " error getting param block interface\n" );
-	
-	var messageText = param.GetString( 0 );
-	//dump("message: "+ msg +"\n");
-	//SetElementText("info.txt", msg ); 
-	{
-		 var messageFragment;
+  // display the main text
+	var messageText = param.GetString(0);
+  var messageParent = document.getElementById("info.box");
+  var messageParagraphs = messageText.split("\n");
+  
+  for (var i = 0; i < messageParagraphs.length; i++)
+    {
+      var htmlNode = document.createElement("html");
+      //htmlNode.setAttribute("style", "max-width: 45em;");
+      var text = document.createTextNode(messageParagraphs[i]);
+      htmlNode.appendChild(text);
+      messageParent.appendChild(htmlNode);
+    }
+  
+  setElementText("info.header", param.GetString(3), true); 
+    
+  // set the window title
+  window.title = param.GetString(12);
+  
+  // set the icon	
+  var iconElement = document.getElementById("info.icon");
+  var iconURL = param.GetString(2);
+  if (iconURL) iconElement.setAttribute("src", iconURL);
+  
+  // set the number of command buttons
+  var nButtons = param.GetInt(2);
+  switch (nButtons)
+    {
+      case 4:
+        unHideElementByID("Button3");
+        setElementText("Button3", param.GetString(11));
+      case 3:
+        unHideElementByID("Button2");
+        setElementText("Button2", param.GetString(10));
+        break;
+      case 1:
+        hideElementById("cancel");
+        break;
+      default:
+      case 2:
+        var string = param.GetString(8);
+        if (string) setElementText("ok", string);
+        string = param.GetString(9);
+        if (string) setElementText("cancel", string);
+        break;
+    }
 
-    	// Let the caller use "\n" to cause breaks
-    	// Translate these into <br> tags
-		 var messageParent = (document.getElementById("info.box"));
-	   	 done = false;
-	   	 while (!done) {
-	      breakIndex =   messageText.indexOf('\n');
-	      if (breakIndex == 0) {
-	        // Ignore break at the first character
-	        messageText = messageText.slice(1);
-	        dump("Found break at begining\n");
-	        messageFragment = "";
-	      } else if (breakIndex > 0) {
-	        // The fragment up to the break
-	        messageFragment = messageText.slice(0, breakIndex);
+  // initialize the checkbox
+  setCheckbox(param.GetString(1), param.GetInt(1));
+	
+  // initialize the edit fields
+	var nEditFields = param.GetInt(3);
+  switch (nEditFields)
+    {
+      case 2:
+        var password2Container = document.getElementById("password2EditField");
+        password2Container.removeAttribute("hidden");
+        var password2Field = document.getElementById("dialog.password2");
+        password2Field.value = param.GetString(7);
+        
+        var password2Label = param.GetString(5);
+        if (password2Label) setElementText("password2.text", password2Label);
+        
+        var containerID, fieldID, labelID;
+        if (param.GetInt(4) == 1)
+          {
+            // two password fields ('password' and 'retype password')
+            containerID = "password1EditField";
+            fieldID = "dialog.password1";
+            labelID = "password1.text";
+          }
+        else
+          {
+            containerID = "loginEditField";
+            fieldID = "dialog.loginname";
+            labelID = "login.text";
+          }
+          
+        unHideElementByID(containerID);
+        var field = document.getElementById(fieldID);
+        field.value = param.GetString(6);
+            
+        var label = param.GetString(4);
+        if (label) setElementText(labelID, label);
+        field.focus();
 
-	        // Chop off fragment we just found from remaining string
-	        messageText = messageText.slice(breakIndex+1);
-	      } else {
-	        // "\n" not found. We're done
-	        done = true;
-	        messageFragment = messageText;
-	      }
-                var textnode = document.createTextNode(messageFragment);
-                var htmlnode = document.createElement("html");
-                htmlnode.appendChild(textnode);
-                messageParent.appendChild(htmlnode);
-	    }
-	}
-	var msg = param.GetString( 3 );
-//	dump("title message: "+ msg +"\n");
-	SetElementText("info.header", msg ); 
-	
-	var windowTitle = param.GetString( 12 );
-	window.title = windowTitle;
-	
-	var iconURL = param.GetString(2 ); 
-	var element = document.getElementById("info.icon");
-	if( element )
-		element.setAttribute("src",iconURL);
-	else
-		dump("couldn't find icon element \n");
-	// Set button names
-	var buttonText = param.GetString( 8 );
-	if ( buttonText != "" )
-	{
-//		dump( "Setting OK Button to "+buttonText+"\n");
-		var okButton = document.getElementById("ok");
-		okButton.setAttribute("value", buttonText);
-	}
-	
-	buttonText = param.GetString( 9 );
-	if ( buttonText != "" )
-	{
-	
-//		dump( "Setting Cancel Button to"+buttonText+"\n");
-		var cancelButton = document.getElementById("cancel");
-		cancelButton.setAttribute( "value",buttonText);
-	}
-	
-	// Adjust number buttons
-	var numButtons = param.GetInt( 2 );
-	if ( numButtons == 1 )
-	{
-		
-	}
+        break;
+    case 1:
+      var editFieldIsPassword = param.GetInt(4);
+      var containerID, fieldID;
+      if (editFieldIsPassword == 1) 
+        {
+          containerID = "password1EditField";
+          fieldID = "dialog.password1";
+        }
+      else
+        {
+          containerID = "loginEditField";
+          fieldID = "dialog.loginname";
+          setElementText("login.text", param.GetString(4));
+        }
+      
+      unHideElementByID(containerID);
+      var field = document.getElementById(fieldID);
+      field.value = param.GetString(6);
+      field.focus();
+      break;
+  }	
 
-dump("There are " + numButtons + " buttons\n");
-	switch ( numButtons )
-	{
-		case 4:
-			{
-				var button = document.getElementById("Button3");
-				button.removeAttribute("hidden");
-				var buttonText = param.GetString( 11 );
-				button.setAttribute( "value",buttonText);
-			}
-		case 3:
-			{
-				var button = document.getElementById("Button2");
-				button.removeAttribute("hidden");
-				var buttonText = param.GetString( 10 );
-				button.setAttribute( "value",buttonText);
-			}
-			break;
-		case 1:
-			var element = document.getElementById("cancel");
-			if ( element )
-			{
-	//			dump( "hide button \n" );
-				element.setAttribute("hidden", "true"  );
-			}
-			else
-			{
-	//			dump( "couldn't find button \n");	
-			}
-			break;	
-	}
-	
-	
-	
-  // Set the Checkbox
-  var checkMsg = param.GetString(1);
-  dump("*** checkMsg = " + checkMsg + "\n");
-  if (checkMsg)
+	// set the pressed button to cancel to handle the case where the close box is pressed
+	param.SetInt(0, 1);
+
+}
+
+function setCheckbox (aChkMsg, aChkValue)
+{
+  if (aChkMsg)
   {	
     var checkboxElement = document.getElementById("checkbox");
-    var checkboxContainer = document.getElementById("checkboxContainer");
-    checkboxContainer.removeAttribute("hidden");
-    checkboxElement.setAttribute("value", checkMsg);
-    var checkValue = param.GetInt( 1 );
-    checkboxElement.checked = checkValue > 0 ? true : false;
+    unHideElementByID("checkboxContainer");
+    checkboxElement.setAttribute("value", aChkMsg);
+    checkboxElement.checked = aChkValue > 0 ? true : false;
   }
-
-	// handle the edit fields
-//	dump("set editfields \n");
-	var numEditfields = param.GetInt( 3 );
-	switch( numEditfields )
-	{
-		case 2:
-      var editFieldsBox = document.getElementById("editFields");
-      editFieldsBox.removeAttribute("hidden");
-			var element = document.getElementById("dialog.password2");
-			element.value = param.GetString( 7 );
-
-			var editMsg = param.GetString( 5 );
-        		if (editMsg) {
-				SetElementText("password2.text", editMsg ); 
-			}
-
-	 		var editfield1Password = param.GetInt( 4 );
-	 		if ( editfield1Password == 1 )
-			 {
-				var element = document.getElementById("dialog.password1");
-				element.value = param.GetString( 6 );
-
-				var editMsg1 = param.GetString( 4 );
-       				if (editMsg1) {
-					SetElementText("password1.text", editMsg1 ); 
-				}
-//		 	 	dump("hiding loginEditField");
-		 		var element = document.getElementById("loginEditField");
-				element.setAttribute("hidden", "true");
-				var element = document.getElementById("dialog.password1");
-				element.focus();
-			 }
-			 else
-			 {
-				var element = document.getElementById("dialog.loginname");
-				element.value = param.GetString( 6 );
-
-				var editMsg1 = param.GetString( 4 );
-       				if (editMsg1) {
-					SetElementText("login.text", editMsg1 ); 
-				}
-//		 	 	dump("hiding password1EditField");
-		 		var element = document.getElementById("password1EditField");
-				element.setAttribute("hidden", "true");
-				var element = document.getElementById("dialog.loginname");
-				element.focus();
-			 }
-			break;
-	 	case 1:
-      var editFieldsBox = document.getElementById("editFields");
-      editFieldsBox.removeAttribute("hidden");
-	 		var editfield1Password = param.GetInt( 4 );
-	 		if ( editfield1Password == 1 )
-		 	 {
-				var element = document.getElementById("dialog.password1");
-				element.value = param.GetString( 6 );
-
-//				var editMsg1 = param.GetString( 4 );
-//				if (editMsg1) {
-//					SetElementText("password1.text", editMsg1 ); 
-//				}
-				// Now hide the meaningless text
-				var element = document.getElementById("password1.text");
-				element.setAttribute("hidden", "true");
-//		 	 	dump("hiding loginEditField and password2EditField");
-		 		var element = document.getElementById("loginEditField");
-				element.setAttribute("hidden", "true");
-		 		var element = document.getElementById("password2EditField");
-				element.setAttribute("hidden", "true");
-				var element = document.getElementById("dialog.password1");
-//				dump("give keyboard focus to password edit field \n");
-				element.focus();
-		 	 }
-		 	 else
-		 	 {
-				var element = document.getElementById("dialog.loginname");
-				element.value = param.GetString( 6 );
-
-				var editMsg1 = param.GetString( 4 );
-       				if (editMsg1) {
-					SetElementText("login.text", editMsg1 ); 
-				}
-				// Now hide the meaningless text
-				var element = document.getElementById("login.text");
-				element.setAttribute("hidden", "true");
-//		 		dump("hiding password1EditField and password2EditField");
-		 		var element = document.getElementById("password1EditField");
-				element.setAttribute("hidden", "true");
-		 		var element = document.getElementById("password2EditField");
-				element.setAttribute("hidden", "true");
-				var element = document.getElementById("dialog.loginname");
-//				dump("give keyboard focus to password edit field \n");
-				element.focus();
-			}
-			break;
-	}
-	
-	// set the pressed button to cancel to handle the case where the close box is pressed
-	param.SetInt(0, 1 );
-
-	// resize the window to the content
-	window.sizeToContent();
-
-	// Move to the right location
-	moveToAlertPosition();
 }
 
-function onCheckboxClick()
+function unHideElementByID (aElementID)
 {
-    var element=document.getElementById("checkbox" );
-	param.SetInt( 1, element.checked );
+  var element = document.getElementById(aElementID);
+  element.removeAttribute("hidden");
 }
 
-function SetElementText( elementID, text )
+function hideElementById (aElementID)
 {
-	dump("setting "+elementID+" to "+text +"\n");
-	var element = document.getElementById(elementID);
-	if( element )
-		element.setAttribute("value", text);
-	else
-		dump("couldn't find element \n");
+  var element = document.getElementById(aElementID)
+  element.setAttribute("hidden", "true");
+}
+
+function onCheckboxClick(aCheckboxElement)
+{
+  param.SetInt(1, aCheckboxElement.checked);
+}
+
+function setElementText(aElementID, aValue, aChildNodeFlag)
+{
+	var element = document.getElementById(aElementID);
+  if (!aChildNodeFlag && element)
+    element.setAttribute("value", aValue);
+  else if (aChildNodeFlag && element)
+    element.appendChild(document.createTextNode(aValue));
 }
 
 
 function commonDialogOnOK()
 {
-//	dump("commonDialogOnOK \n");
 	param.SetInt(0, 0 );
-	var element1, element2;
 	var numEditfields = param.GetInt( 3 );
-	if (numEditfields == 2) {
-		var editfield1Password = param.GetInt( 4 );
-		if ( editfield1Password == 1 ) {
-			element1 = document.getElementById("dialog.password1");
-		} else {
-			element1 = document.getElementById("dialog.loginname");
-		}
-		param.SetString( 6, element1.value );
-		element2 = document.getElementById("dialog.password2");
-		param.SetString( 7, element2.value );
-//			dump(" login name - "+ element1.value+ "\n");
-//			dump(" password - "+ element2.value+ "\n");
-	} else if (numEditfields == 1) {
-		var editfield1Password = param.GetInt( 4 );
-		if ( editfield1Password == 1 ) {
-			element1 = document.getElementById("dialog.password1");
-			param.SetString( 6, element1.value );
-		} else {
-			element1 = document.getElementById("dialog.loginname");
-			param.SetString( 6, element1.value );
-		}
-//			dump(" login name - "+ element2.value+ "\n");
-	}
-	return true;
+	if (numEditfields == 2) 
+    {
+      var editField2 = document.getElementById("dialog.password2");
+      param.SetString(7, editField2.value);
+    }
+  var editfield1Password = param.GetInt(4);
+  var editField1 = editfield1Password == 1 ? document.getElementById("dialog.password1") :
+                                             document.getElementById("dialog.loginname");
+  param.SetString(6, editField1.value);
+  return true;
 }
 
 function commonDialogOnCancel()
 {
-//	dump("commonDialogOnCancel \n");
-	param.SetInt(0, 1 );
+	param.SetInt(0, 1);
 	return true;
 }
 
 function commonDialogOnButton2()
 {
-	param.SetInt(0, 2 );
+	param.SetInt(0, 2);
 	return true;
 }
 
 function commonDialogOnButton3()
 {
-	param.SetInt(0, 3 );
+	param.SetInt(0, 3);
 	return true;
 }
 
