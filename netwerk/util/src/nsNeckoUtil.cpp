@@ -44,7 +44,8 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
 }
 
 nsresult
-NS_OpenURI(nsIURI* uri, nsIInputStream* *result)
+NS_OpenURI(nsIInputStream* *result, nsIURI* uri, 
+           nsILoadGroup* group)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
@@ -56,15 +57,24 @@ NS_OpenURI(nsIURI* uri, nsIInputStream* *result)
 
     nsIInputStream* inStr;
     rv = channel->OpenInputStream(0, -1, &inStr);
-    NS_RELEASE(channel);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) goto done;
 
+    if (group) {
+        rv = group->AddChannel(channel);
+        if (NS_FAILED(rv)) {
+            NS_RELEASE(inStr);
+            goto done;
+        }
+    }
     *result = inStr;
+  done:
+    NS_RELEASE(channel);
     return rv;
 }
 
 nsresult
-NS_OpenURI(nsIURI* uri, nsIStreamListener* aConsumer)
+NS_OpenURI(nsIStreamListener* aConsumer, nsIURI* uri,
+           nsILoadGroup* group)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
@@ -77,6 +87,13 @@ NS_OpenURI(nsIURI* uri, nsIStreamListener* aConsumer)
     rv = channel->AsyncRead(0, -1, uri, // uri used as context
                             nsnull,     // XXX need event queue of current thread
                             aConsumer);
+    if (NS_FAILED(rv)) goto done;
+
+    if (group) {
+        rv = group->AddChannel(channel);
+        if (NS_FAILED(rv)) goto done;
+    }
+  done:
     NS_RELEASE(channel);
     return rv;
 }

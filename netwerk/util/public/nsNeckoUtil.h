@@ -23,6 +23,7 @@
 #include "netCore.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
+#include "nsILoadGroup.h"
 #include "nsIEventSinkGetter.h"
 #include "nsString.h"
 
@@ -37,10 +38,12 @@ extern nsresult
 NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull);
 
 extern nsresult
-NS_OpenURI(nsIURI* uri, nsIInputStream* *result);
+NS_OpenURI(nsIInputStream* *result, nsIURI* uri,
+           nsILoadGroup* group = nsnull);
 
 extern nsresult
-NS_OpenURI(nsIURI* uri, nsIStreamListener* aConsumer);
+NS_OpenURI(nsIStreamListener* aConsumer, nsIURI* uri,
+           nsILoadGroup* group = nsnull);
 
 extern nsresult
 NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result);
