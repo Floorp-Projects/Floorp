@@ -813,10 +813,13 @@ typelib_attr_accessor(TreeState *state, XPTMethodDescriptor *meth,
     fprintf(stdout, "DBG: adding %cetter for %s\n",
             getter ? 'g' : 's', ATTR_IDENT(state->tree).str);
 #endif
-    if (!XPT_FillMethodDescriptor(meth, getter ? XPT_MD_GETTER : XPT_MD_SETTER,
+    if (!XPT_FillMethodDescriptor(meth, 
+                                  (PRUint8) (getter ? 
+                                    XPT_MD_GETTER : XPT_MD_SETTER),
                                   ATTR_IDENT(state->tree).str, 1) ||
         !fill_pd_from_type(state, meth->params,
-                           getter ? (XPT_PD_RETVAL | XPT_PD_OUT) : XPT_PD_IN,
+                           (uint8) (getter ? 
+                            (XPT_PD_RETVAL | XPT_PD_OUT) : XPT_PD_IN),
                           ATTR_TYPE_DECL(state->tree)))
         return FALSE;
 
@@ -832,7 +835,7 @@ typelib_attr_dcl(TreeState *state)
     XPTMethodDescriptor *meth;
     gboolean ro = IDL_ATTR_DCL(state->tree).f_readonly;
 
-    if (!XPT_InterfaceDescriptorAddMethods(id, ro ? 1 : 2))
+    if (!XPT_InterfaceDescriptorAddMethods(id, (PRUint16) (ro ? 1 : 2)))
         return FALSE;
 
     meth = &id->method_descriptors[NEXT_METH(state)];
@@ -873,7 +876,7 @@ typelib_op_dcl(TreeState *state)
             IDL_IDENT(op->ident).str, num_args);
 #endif
     if (!XPT_FillMethodDescriptor(meth, op_flags, IDL_IDENT(op->ident).str,
-                                  num_args))
+                                  (uint8) num_args))
         return FALSE;
 
     for (num_args = 0, iter = op->parameter_dcls; iter;
