@@ -53,7 +53,7 @@
   <hbox>
     <separator orient="vertical" class="thin"/>
     <vbox flex="1">
-      <description>&enter.label;</description>
+      <label value="&enter.label;" control="dialog.input" accesskey="&enter.accesskey;"/>
       <separator class="thin"/>
 
       <hbox align="center">
@@ -66,10 +66,10 @@
                      onpopupshowing="createUBHistoryMenu(event.target);"
                      oncommand="useUBHistoryItem(event.target)"/>
         </textbox>
-        <button label="&chooseFile.label;" oncommand="onChooseFile();"/>
+        <button label="&chooseFile.label;" accesskey="&chooseFile.accesskey;" oncommand="onChooseFile();"/>
       </hbox>
       <hbox align="center">
-        <label value="&openWhere.label;"/>
+        <label value="&openWhere.label;" accesskey="&openWhere.accesskey;" control="openAppList"/>
         <menulist id="openAppList">
           <menupopup>
             <menuitem value="0" id="currentWindow" label="&topWindow.label;"/>
@@ -83,5 +83,5 @@
       </hbox>
     </vbox>
   </hbox> 
-           
- </dialog>
+
+</dialog>
