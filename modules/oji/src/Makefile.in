@@ -30,7 +30,7 @@ MODULE		= oji
 XPIDL_MODULE	= ojiimpl
 IS_COMPONENT	= 1
 MODULE_NAME	= nsCJVMManagerModule
-REQUIRES	= xpcom string java js plugin caps pref js jar necko dom widget xpconnect
+REQUIRES	= xpcom string java js plugin caps pref js jar necko dom widget xpconnect windowwatcher layout docshell webbrwsr intl
 
 ifdef MOZ_OJI
 LIBRARY_NAME	= oji
