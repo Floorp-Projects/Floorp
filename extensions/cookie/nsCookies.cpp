@@ -1565,7 +1565,7 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
                         status,
                         cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel)));
 #if defined(PR_LOGGING)
-  if (NS_SUCCEEDED(rv))
+  if (NS_FAILED(rv))
     cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "cookie_add failed");
   else {
     cookie_CookieStruct logCookie; // temporary for logging purposes
