@@ -178,7 +178,7 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
       aPresContext->GetShell(&presShell);
       presShell->GetStyleSet(&styleSet);
       NS_RELEASE(presShell);
-      styleSet->CreateContinuingFrame(aPresContext, prevLastChild, this, &newFrame);
+      styleSet->CreateContinuingFrame(aPresContext, prevLastChild, contentPage, &newFrame);
       NS_RELEASE(styleSet);
       contentPage->mFrames.SetFrames(newFrame);
     }
@@ -654,7 +654,9 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
     }
   }
 
-  DrawBackground(aPresContext,aRenderingContext,aDirtyRect) ;
+  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+    DrawBackground(aPresContext,aRenderingContext,aDirtyRect);
+  }
 
   nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
@@ -742,10 +744,11 @@ nsPageFrame::DrawBackground(nsIPresContext*      aPresContext,
 {
   nsSimplePageSequenceFrame* seqFrame = NS_STATIC_CAST(nsSimplePageSequenceFrame*, mParent);
   if (seqFrame != nsnull) {
-    nsRect rect = mPD->mReflowRect;
-    rect.Deflate(mPD->mReflowMargin);
-    rect.Deflate(mPD->mExtraMargin);
+    nsIFrame* pageContentFrame  = mFrames.FirstChild();
+    NS_ASSERTION(pageContentFrame, "Must always be there.");
 
+    nsRect rect;
+    pageContentFrame->GetRect(rect);
     const nsStyleBorder* border = NS_STATIC_CAST(const nsStyleBorder*,
                              mStyleContext->GetStyleData(eStyleStruct_Border));
 
