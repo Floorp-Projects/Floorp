@@ -40,7 +40,6 @@ REQUIRES	= xpcom \
 		  mozreg \
 		  js \
 		  pref \
-		  appshell \
 		  widget \
 		  layout \
 		  uriloader \
