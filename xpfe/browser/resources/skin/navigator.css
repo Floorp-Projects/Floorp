@@ -63,13 +63,16 @@ titledbutton#Throbber[busy="true"] {
 }
 
 toolbar#taskbar titledbutton{
-  min-width: 2em;
   color:#CCCCFF; 
+}
+
+toolbox#taskbar-toolbox {
+  min-width: 2em;
 }
 
 toolbar#taskbar titledbutton:active {
   border: 1px outset #666699;
-	color:white;
+  color:white;
 }
 
 toolbar#taskbar {
@@ -93,16 +96,28 @@ box[class=secure] {
    border-top: 2px solid yellow;
 }
 
-box#statusbar {
-	margin:0px;
-	padding: 0px;
+box#status-bar titledbutton {
+     border: none;
+	 padding: none;
+     margin: none;
+     font: inherit;
+     min-width: 3em;
 }
 
-box#status-bar titledbutton {
-		border-color: 1px solid transparent;
-     font: inherit;
-     margin-top: 0px;
-     margin-bottom: 0px;
+box#status-bar titledbutton:hover {
+     text-decoration: none;
+	 color: inherit;
+}
+
+box#status-bar titledbutton:active {
+     border: none;
+     padding: none;
+     margin: none;
+	 color: inherit;
+}
+
+box#status-bar {
+   min-width: 1em;
 }
 
 titledbutton[class~=secure] {
@@ -147,15 +162,21 @@ box[type="unsecure"] {
    border-top: 2px solid transparent;
 }
 
-toolbar[class="main-bar"] {
+toolbox#main-toolbox {
+   min-width: 10px;
+}
+
+toolbar.main-bar {
 }
 
 window#main-window {
-   width: 100%; 
-   height: 100%;
 }
 
 iframe#content-frame {
  min-width: 0px;
  min-height: 0px;
+}
+
+input[type="text"]#urlbar {
+   min-width: 10em;
 }

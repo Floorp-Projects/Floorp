@@ -96,6 +96,10 @@ static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 #define ALIGN_TOP    "top"
 #define ALIGN_BOTTOM "bottom"
 
+#define CROP_LEFT   "left"
+#define CROP_RIGHT  "right"
+#define CROP_CENTER "center"
+
 nsresult
 nsTitledButtonFrame::UpdateImageFrame(nsIPresContext* aPresContext,
                                       nsHTMLImageLoader* aLoader,
@@ -186,7 +190,7 @@ nsTitledButtonFrame::nsTitledButtonFrame()
 {
 	mTitle = "";
 	mAlign = NS_SIDE_BOTTOM;
-	mTruncationType = Right;
+	mCropType = CropRight;
 	mNeedsLayout = PR_TRUE;
 	mHasImage = PR_FALSE;
   mHasOnceBeenInMixedState = PR_FALSE;
@@ -295,6 +299,16 @@ nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
   else 
 	  mAlign = NS_SIDE_BOTTOM;
 
+  value=CROP_RIGHT;
+	mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, value);
+
+  if (value.EqualsIgnoreCase(CROP_LEFT))
+	  mCropType = CropLeft;
+  else if (value.EqualsIgnoreCase(CROP_CENTER))
+	  mCropType = CropCenter;
+  else 
+	  mCropType = CropRight;
+
   value = "";
 	mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
   mTitle = value;
@@ -402,7 +416,7 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
 		 return;
 
 	 // given our rect try to place the image and text
-	 // if they don't fit then truncate the text, the image can't be squeezed.
+	 // if they don't fit then crop the text, the image can't be squeezed.
 
 	 nsRect rect; 
 	 mRenderer.GetButtonContentRect(nsRect(0,0,mRect.width,mRect.height), rect);
@@ -415,8 +429,17 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
 	 nscoord center_x   = rect.x + rect.width/2;
 	 nscoord center_y   = rect.y + rect.height/2;
 
-   mTruncatedTitle = "";
+   mCroppedTitle = "";
 
+   nscoord spacing = 0;
+
+   // if we have a title or an image we need to do spacing
+   if (mTitle.Length() > 0 && mHasImage) 
+   {
+     spacing = mSpacing;
+   }
+
+   /*
 	 // if we don't have a title
 	 if (mTitle.Length() == 0)
 	 {
@@ -437,7 +460,7 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
 			 mTitleRect.x = center_x  - mTitleRect.width/2;
 			 mTitleRect.y = center_y  - mTitleRect.height/2;
 		 } else { // image too?
-					 
+			*/		 
 		// for each type of alignment layout of the image and the text.
 			 switch (mAlign) {
 			  case NS_SIDE_TOP: {
@@ -450,7 +473,7 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
 
 				  // image bottom center
 				  mImageRect.x = center_x - mImageRect.width/2;
-				  mImageRect.y = rect.y + (rect.height - mTitleRect.height - mSpacing)/2 - mImageRect.height/2 + mTitleRect.height + mSpacing;
+				  mImageRect.y = rect.y + (rect.height - mTitleRect.height - spacing)/2 - mImageRect.height/2 + mTitleRect.height + spacing;
 			  }       
 			  break;
 			  case NS_SIDE_BOTTOM:{
@@ -459,7 +482,7 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
 
 				  // image top center
 				  mImageRect.x = center_x  - mImageRect.width/2;
-				  mImageRect.y = rect.y + (rect.height - mTitleRect.height - mSpacing)/2 - mImageRect.height/2 + mSpacing;
+				  mImageRect.y = rect.y + (rect.height - mTitleRect.height - spacing)/2 - mImageRect.height/2 + spacing;
 
 				  // title bottom
 				  mTitleRect.x = center_x - mTitleRect.width/2;
@@ -468,33 +491,34 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
 			  break;
 			 case NS_SIDE_LEFT: {
 				  // get title
-				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width - (mImageRect.width + mSpacing));
+				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width - (mImageRect.width + spacing));
 
  				  // title left
 				  mTitleRect.x = left_x;
 				  mTitleRect.y = center_y  - mTitleRect.height/2;
 
-				  // image right center
-				  mImageRect.x = (rect.width - mTitleRect.width - mSpacing)/2 - mImageRect.width/2 + mTitleRect.width + rect.x + mSpacing;
+				  // image after text
+				  mImageRect.x = mTitleRect.x + mTitleRect.width + spacing;
 				  mImageRect.y = center_y - mImageRect.height/2;
 			  }       
 			  break;
 			  case NS_SIDE_RIGHT: {
-				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width - (mImageRect.width + mSpacing));
+				  CalculateTitleForWidth(aPresContext, aRenderingContext, rect.width - (mImageRect.width + spacing));
 
-  				  // image left center
-				  mImageRect.x = (rect.width - mTitleRect.width - mSpacing)/2 - mImageRect.width/2 +  rect.x;
-				  mImageRect.y = center_y  - mImageRect.height/2;
-
-				  // title right
+ 				  // title right
 				  mTitleRect.x = right_x - mTitleRect.width;
 				  mTitleRect.y = center_y - mTitleRect.height/2;
+
+  				  // image left of title
+				  mImageRect.x = mTitleRect.x - spacing - mImageRect.width;
+				  mImageRect.y = center_y  - mImageRect.height/2;
+
 			   }
 			  break;
 		   }
 
-		 }
-	 }
+		 //}
+	 //}
 	 
    // ok layout complete
    mNeedsLayout = PR_FALSE;
@@ -520,6 +544,9 @@ nsTitledButtonFrame::GetTextSize(nsIPresContext& aPresContext, nsIRenderingConte
 void 
 nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth)
 {
+  if (mTitle.Length() == 0)
+     return;
+
   const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
 
   nsFont font(fontStyle->mFont);
@@ -534,7 +561,7 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRen
   // see if the text will completely fit in the width given
   aRenderingContext.GetWidth(mTitle, mTitleRect.width);
   fontMet->GetHeight(mTitleRect.height);
-  mTruncatedTitle = mTitle;
+  mCroppedTitle = mTitle;
 
   if ( aWidth >= mTitleRect.width)
           return;  // fits done.
@@ -547,18 +574,18 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRen
    mTitleRect.width = aWidth;
  
    if (aWidth <= elipsisWidth) {
-       mTruncatedTitle = "";
+       mCroppedTitle = "";
        return;
    }
 
-   mTruncatedTitle = ELIPSIS;
+   mCroppedTitle = ELIPSIS;
 
    aWidth -= elipsisWidth;
 
-   // ok truncate things
-    switch (mTruncationType)
+   // ok crop things
+    switch (mCropType)
     {
-       case Right: 
+       case CropRight: 
        {
 		   nscoord cwidth;
 		   nscoord twidth = 0;
@@ -580,12 +607,11 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRen
 		   // insert what character we can in.
            nsString title = mTitle;
            title.Truncate(i);
-		   mTruncatedTitle = title + mTruncatedTitle;
-           return;
+		   mCroppedTitle = title + mCroppedTitle;
        } 
        break;
        
-       case Left:
+       case CropLeft:
        {
 		   nscoord cwidth;
 		   nscoord twidth = 0;
@@ -602,16 +628,72 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRen
            }
 
            if (i == 0) 
-               return;
+               break;
         
-           return;       
+           nsString copy = "";
+           mTitle.Right(copy, length-i-1);
+           mCroppedTitle = mCroppedTitle + copy;
        } 
        break;
 
-       case Center:
-          // TBD
-       break;
+       case CropCenter:
+
+       nsString elipsisLeft = ELIPSIS;
+
+       if (aWidth <= elipsisWidth) 
+         elipsisLeft = "";
+       else
+          aWidth -= elipsisWidth;
+    
+
+	     nscoord cwidth;
+		   nscoord twidth = 0;
+       aRenderingContext.GetWidth(mTitle, twidth);
+
+       int length = mTitle.Length();
+		   int i = 0;
+       int i2 = length-1;
+           for (i = 0; i < length;)
+           {
+              PRUnichar ch = mTitle.CharAt(i);
+              aRenderingContext.GetWidth(ch,cwidth);
+              twidth -= cwidth;
+              i++;
+
+              if (twidth <= aWidth) 
+                  break;
+
+              ch = mTitle.CharAt(i2);
+              aRenderingContext.GetWidth(ch,cwidth);
+              i2--;
+			        twidth -= cwidth;
+
+              if (twidth <= aWidth) {
+                  break;
+              }
+
+           }
+
+
+           nsString copy = "";
+
+           if (i2 > i)
+              mTitle.Mid(copy, i,i2-i);
+
+           /*
+           char cht[100];
+           mTitle.ToCString(cht,100);
+
+           char chc[100];
+           copy.ToCString(chc,100);
+
+           printf("i=%d, i2=%d, diff=%d, old='%s', new='%s', aWidth=%d\n", i, i2, i2-i, cht,chc, aWidth);
+           */
+           mCroppedTitle = elipsisLeft + copy + mCroppedTitle;
+           break;
     }
+
+    aRenderingContext.GetWidth(mCroppedTitle, mTitleRect.width);
 }
 
 NS_IMETHODIMP
@@ -622,6 +704,9 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
 {
    if (eFramePaintLayer_Content == aWhichLayer) {
  
+     if (mTitle.Length() == 0)
+         return NS_OK;
+
    	 // place 4 pixels of spacing
 		 float p2t;
 		 aPresContext.GetScaledPixelsToTwips(&p2t);
@@ -643,11 +728,11 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
 	   if (PR_TRUE == mRenderer.isDisabled())
 	   {
 		   aRenderingContext.SetColor(NS_RGB(255,255,255));
-		   aRenderingContext.DrawString(mTruncatedTitle, disabledRect.x, disabledRect.y);
+		   aRenderingContext.DrawString(mCroppedTitle, disabledRect.x, disabledRect.y);
 	   }
 
 	   aRenderingContext.SetColor(colorStyle->mColor);
-	   aRenderingContext.DrawString(mTruncatedTitle, mTitleRect.x, mTitleRect.y);
+	   aRenderingContext.DrawString(mCroppedTitle, mTitleRect.x, mTitleRect.y);
 
    }
 
@@ -669,7 +754,7 @@ nsTitledButtonFrame::PaintImage(nsIPresContext& aPresContext,
   }
 
   // don't draw if the image is not dirty
-  if (PR_FALSE == aDirtyRect.Intersects(mImageRect))
+  if (!mHasImage || !aDirtyRect.Intersects(mImageRect))
       return NS_OK;
 
 
@@ -1183,6 +1268,12 @@ nsTitledButtonFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflow
    switch (mAlign) {
       case NS_SIDE_TOP:
       case NS_SIDE_BOTTOM:
+
+      if (mHasImage)
+           aSize.minSize.width = aSize.prefSize.width;
+        else
+           aSize.minSize.width = size.width;
+
 		  if (size.width > aSize.prefSize.width)
 			  aSize.prefSize.width = size.width;
 
@@ -1193,21 +1284,24 @@ nsTitledButtonFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflow
               aSize.prefSize.height += mSpacing;
 
         aSize.minSize.height = aSize.prefSize.height;
-          
+
         break;
      case NS_SIDE_LEFT:
      case NS_SIDE_RIGHT:
 		  if (size.height > aSize.prefSize.height)
 			  aSize.prefSize.height = size.height;
 
-   		  if (mTitle.Length() > 0) 
+      if (mHasImage)
+         aSize.minSize.width = aSize.prefSize.width;
+      else
+         aSize.minSize.width = size.width;
+
+   		if (mTitle.Length() > 0) 
              aSize.prefSize.width += size.width;
 
 		  if (mTitle.Length() > 0 && mHasImage)
              aSize.prefSize.width += mSpacing;
-
-         aSize.minSize.width = aSize.prefSize.width;
-
+      
          break;
    }
 

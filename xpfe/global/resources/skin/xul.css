@@ -948,19 +948,31 @@ box[debug] progressmeter {
         color : #9999CC;         
 }
 
-
 thumb {
    background-color: rgb(206, 207, 206);
    border: 2px outset rgb(156, 154, 156);
-   list-style-image: url(chrome://global/skin/scrollThumb.gif)
+   list-style-image: url(chrome://global/skin/scroll-thumb-horiz.gif)
 }
 
 thumb:hover {
-   list-style-image: url(chrome://global/skin/scrollThumb_mo.gif);
+   list-style-image: url(chrome://global/skin/scroll-thumb-horiz-hover.gif);
 }
 
 thumb[disabled="true"] {
-   list-style-image: url(chrome://global/skin/scrollThumb_dis.gif);
+   list-style-image: url(chrome://global/skin/scroll-thumb-horiz-disabled.gif);
+}
+
+slider[align="vertical"] thumb {
+   background-color: green;
+   list-style-image: url(chrome://global/skin/scroll-thumb-vert.gif)
+}
+
+slider[align="vertical"] thumb:hover {
+   list-style-image: url(chrome://global/skin/scroll-thumb-vert-hover.gif);
+}
+
+slider[align="vertical"] thumb[disabled="true"] {
+   list-style-image: url(chrome://global/skin/scroll-thumb-vert-disabled.gif);
 }
 
 thumb:active {
@@ -994,26 +1006,51 @@ scrollbarbutton:active {
 }
 
 scrollbarbutton.decrement {
-   list-style-image: url(chrome://global/skin/scrollUp.gif)
+   list-style-image: url(chrome://global/skin/scrollLeft.gif)
 }
 
 scrollbarbutton.decrement:hover {
-   list-style-image: url(chrome://global/skin/scrollUp_mo.gif)
+   list-style-image: url(chrome://global/skin/scrollLeft-hover.gif)
 }
 
 scrollbarbutton.decrement[disabled="true"] {
-   list-style-image: url(chrome://global/skin/scrollUp_dis.gif) 
+   list-style-image: url(chrome://global/skin/scrollLeft-disabled.gif) 
 }
 
 scrollbarbutton.increment {
-   list-style-image: url(chrome://global/skin/scrollDown.gif)
+   list-style-image: url(chrome://global/skin/scrollRight.gif)
 }
 
 scrollbarbutton.increment:hover {
-   list-style-image: url(chrome://global/skin/scrollDown_mo.gif)
+   list-style-image: url(chrome://global/skin/scrollRight-hover.gif)
 }
 
 scrollbarbutton.increment[disabled="true"] {
+   list-style-image: url(chrome://global/skin/scrollRight-disabled.gif) 
+}
+
+
+scrollbar[align="vertical"] scrollbarbutton.decrement {
+   list-style-image: url(chrome://global/skin/scrollUp.gif)
+}
+
+scrollbar[align="vertical"] scrollbarbutton.decrement:hover {
+   list-style-image: url(chrome://global/skin/scrollUp_mo.gif)
+}
+
+scrollbar[align="vertical"] scrollbarbutton.decrement[disabled="true"] {
+   list-style-image: url(chrome://global/skin/scrollUp_dis.gif) 
+}
+
+scrollbar[align="vertical"] scrollbarbutton.increment {
+   list-style-image: url(chrome://global/skin/scrollDown.gif)
+}
+
+scrollbar[align="vertical"] scrollbarbutton.increment:hover {
+   list-style-image: url(chrome://global/skin/scrollDown_mo.gif)
+}
+
+scrollbar[align="vertical"] scrollbarbutton.increment[disabled="true"] {
    list-style-image: url(chrome://global/skin/scrollDown_dis.gif) 
 }
 
@@ -1053,11 +1090,31 @@ grippy {
    margin: 1px;
 }
 
+grippy:hover {
+   background-color: rgb(220, 210, 210);
+}
+
 box[align="vertical"] splitter[collapse="after"] grippy {
    list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
 }
 
 box splitter[collapse="after"] grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
+}
+
+window[align="vertical"] splitter grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-vertical-before.gif);
+}
+
+window[align="vertical"] splitter[collapse="after"] grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
+}
+
+window splitter grippy {
+   list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
+}
+
+window splitter[collapse="after"] grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
 }
 

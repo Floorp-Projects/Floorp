@@ -137,6 +137,10 @@ nsSplitterFrame::Init(nsIPresContext&  aPresContext,
   nsIFrame* box = nsnull;
   nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::box, this, box);
 
+  // if no box get the window because it is a box.
+  if (box == nsnull)
+      nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::window, this, box);
+
   // see if the box is horizontal or vertical
   if (box) {
     nsCOMPtr<nsIContent> content;  

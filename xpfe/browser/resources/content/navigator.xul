@@ -686,7 +686,7 @@ Contributor(s): ______________________________________. -->
 		</menu>
   </menubar>
   
-   <toolbox>
+   <toolbox id="main-toolbox">
     <toolbar class="main-bar" chromeclass="toolbar">
 		  <titledbutton id="back-button" align="bottom" value="&backButton.label;" onclick="BrowserBack()">	
 				  <observes element="canGoBack" attribute="disabled" onChange="BrowserSetBack()"/>			
@@ -714,7 +714,7 @@ Contributor(s): ______________________________________. -->
 	  
 	      <box align="vertical" flex="100%">
 		    <spring flex="100%"/>
-	  		<html:input id="urlbar" type="text" chromeclass="location" style="min-width: 100px; min-height: 25px; height: 20px"
+	  		<html:input id="urlbar" type="text" chromeclass="location" 
 			  onkeyup="if (event.which == 13) { BrowserLoadURL(); }"/>   
 			<spring flex="100%"/>
 	      </box>
@@ -771,7 +771,7 @@ Contributor(s): ______________________________________. -->
 			<spring flex="100%"/>
 		</box>
 
-		<titledbutton id="statusText" align="right" flex="100%" value="&statusText.label;" style="font-family:sans-serif;font-size:2.5mm">
+		<titledbutton id="statusText" align="left" flex="100%" value="&statusText.label;" style="font-family:sans-serif;font-size:2.5mm">
 					   <observes element="Browser:Status" attribute="value" onchange="onStatus()"/>			
 		</titledbutton>
 		
@@ -783,7 +783,7 @@ Contributor(s): ______________________________________. -->
      </box>
   </box>
 
-  <toolbox>
+  <toolbox id="taskbar-toolbox">
 	  <toolbar id="taskbar" />
 	</toolbox>
 </window>
