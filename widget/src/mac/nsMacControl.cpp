@@ -29,6 +29,11 @@
 #include "nsColor.h"
 #include "nsFontMetricsMac.h"
 
+#include "nsIServiceManager.h"
+#define NS_IMPL_IDS
+#include "nsIPlatformCharset.h"
+#undef NS_IMPL_IDS
+
 #if TARGET_CARBON
 #include <ControlDefinitions.h>
 #endif
@@ -37,6 +42,12 @@
 #include <TextUtils.h>
 #include <UnicodeConverter.h>
 #include <Fonts.h>
+
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+// TODO: leaks, need to release when unloading the dll
+nsIUnicodeEncoder * nsMacControl::mUnicodeEncoder = nsnull;
+nsIUnicodeDecoder * nsMacControl::mUnicodeDecoder = nsnull;
+
 
 //-------------------------------------------------------------------------
 //
@@ -380,12 +391,35 @@ void nsMacControl::SetupMacControlFont()
 void nsMacControl::StringToStr255(const nsString& aText, Str255& aStr255)
 {
 	char buffer[256];
+	nsresult rv = NS_OK;
 	
-	aText.ToCString(buffer,255);
-		
-	PRInt32 len = strlen(buffer);
-	memcpy(&aStr255[1],buffer,len);
-	aStr255[0] = len;
+	// get file system charset and create a unicode encoder
+	if (nsnull == mUnicodeEncoder) {
+		nsAutoString fileSystemCharset;
+		GetFileSystemCharset(fileSystemCharset);
+
+		NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+		if (NS_SUCCEEDED(rv)) {
+			rv = ccm->GetUnicodeEncoder(&fileSystemCharset, &mUnicodeEncoder);
+		}
+	}
+
+	// converts from unicode to the file system charset
+	if (NS_SUCCEEDED(rv)) {
+		PRInt32 inLength = aText.Length();
+		PRInt32 outLength = 255;
+		rv = mUnicodeEncoder->Convert(aText.GetUnicode(), &inLength, (char *) &aStr255[1], &outLength);
+		if (NS_SUCCEEDED(rv))
+			aStr255[0] = outLength;
+	}
+
+	if (NS_FAILED(rv)) {
+		NS_ASSERTION(0, "error: charset covnersion");
+		aText.ToCString(buffer, 255);
+		PRInt32 len = nsCRT::strlen(buffer);
+		memcpy(&aStr255[1], buffer, len);
+		aStr255[0] = len;
+	}
 }
 
 //-------------------------------------------------------------------------
@@ -395,13 +429,34 @@ void nsMacControl::StringToStr255(const nsString& aText, Str255& aStr255)
 
 void nsMacControl::Str255ToString(const Str255& aStr255, nsString& aText)
 {
-	char 		buffer[256];
-	PRInt32 len = aStr255[0];
-  
-	memcpy(buffer,&aStr255[1],len);
-	buffer[len] = 0;
+	nsresult rv = NS_OK;
+	
+	// get file system charset and create a unicode encoder
+	if (nsnull == mUnicodeDecoder) {
+		nsAutoString fileSystemCharset;
+		GetFileSystemCharset(fileSystemCharset);
 
-	aText = buffer;		
+		NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+		if (NS_SUCCEEDED(rv)) {
+			rv = ccm->GetUnicodeDecoder(&fileSystemCharset, &mUnicodeDecoder);
+		}
+	}
+  
+	// converts from the file system charset to unicode
+	if (NS_SUCCEEDED(rv)) {
+		PRUnichar buffer[512];
+		PRInt32 inLength = aStr255[0];
+		PRInt32 outLength = 512;
+		rv = mUnicodeDecoder->Convert((char *) &aStr255[1], &inLength, buffer, &outLength);
+		if (NS_SUCCEEDED(rv)) {
+			aText.SetString(buffer, outLength);
+		}
+	}
+	
+	if (NS_FAILED(rv)) {
+		NS_ASSERTION(0, "error: charset covnersion");
+		aText.SetString((char *) &aStr255[1], aStr255[0]);
+	}
 }
 
 //-------------------------------------------------------------------------
@@ -527,5 +582,27 @@ void nsMacControl::SetupMacControlFontForScript(short theScript)
 	fontStyleRec.size = theStyle.tsSize;
 	fontStyleRec.style = theStyle.tsFace;
 	::SetControlFontStyle(mControl, &fontStyleRec);
+}
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void nsMacControl::GetFileSystemCharset(nsString & fileSystemCharset)
+{
+  static nsAutoString aCharset;
+  nsresult rv;
+
+  if (aCharset.Length() < 1) {
+	  nsCOMPtr <nsIPlatformCharset> platformCharset;
+	  rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
+	                                          NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+	  if (NS_SUCCEEDED(rv)) 
+		  rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aCharset);
+
+    NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
+	  if (NS_FAILED(rv)) 
+		  aCharset.SetString("x-mac-roman");
+  }
+  fileSystemCharset = aCharset;
 }
 	

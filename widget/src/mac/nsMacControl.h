@@ -23,6 +23,10 @@
 #ifndef nsMacControl_h__
 #define nsMacControl_h__
 
+#include "nsIServiceManager.h"
+#define NS_IMPL_IDS
+#include "nsICharsetConverterManager.h"
+#undef NS_IMPL_IDS
 #include "nsChildWindow.h"
 #include <Controls.h>
 
@@ -68,6 +72,7 @@ protected:
 	void				ControlChanged(PRInt32 aNewValue);
 	void				NSStringSetControlTitle(ControlHandle theControl, nsString title);
 	void				SetupMacControlFontForScript(short theScript);
+	static void			GetFileSystemCharset(nsString & fileSystemCharset);
 	
 	nsString			mLabel;
 	PRBool				mWidgetArmed;
@@ -83,6 +88,9 @@ protected:
 	nsRect				mLastBounds;
 	PRInt32				mLastValue;
 	PRInt16				mLastHilite;
+
+	static nsIUnicodeEncoder*     mUnicodeEncoder;
+	static nsIUnicodeDecoder*     mUnicodeDecoder;
 };
 
 #endif // nsMacControl_h__
