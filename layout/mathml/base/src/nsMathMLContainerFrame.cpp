@@ -22,6 +22,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsHTMLReflowCommand.h"
 #include "nsHTMLParts.h"
 #include "nsIHTMLContent.h"
 #include "nsFrame.h"
@@ -37,7 +38,6 @@
 #include "nsIRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsStyleUtil.h"
-#include "nsHTMLReflowMetrics.h"
 
 #include "nsIDOMText.h"
 #include "nsITextContent.h"
@@ -1071,9 +1071,9 @@ nsMathMLContainerFrame::AttributeChanged(nsIPresContext* aPresContext,
                                                        aNameSpaceID, aAttribute, aModType, aHint);
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIPresShell> shell;
-  nsCOMPtr<nsHTMLReflowCommand> reflowCmd;
+  nsHTMLReflowCommand *reflowCmd;
   aPresContext->GetShell(getter_AddRefs(shell));
-  rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
+  rv = NS_NewHTMLReflowCommand(&reflowCmd, this,
                                eReflowType_ContentChanged,
                                nsnull, aAttribute);
   if (NS_SUCCEEDED(rv) && shell) shell->AppendReflowCommand(reflowCmd);
