@@ -5905,7 +5905,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   if (xulDoc) {
     ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_NO_XUL, PR_FALSE);
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   // Get the webshell for this documentviewer
@@ -6296,7 +6296,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
   if (xulDoc) {
     ShowPrintErrorDialog(NS_ERROR_GFX_PRINTER_NO_XUL);
-    return NS_OK;
+    return NS_ERROR_FAILURE;
   }
 
   nsresult rv = NS_ERROR_FAILURE;
