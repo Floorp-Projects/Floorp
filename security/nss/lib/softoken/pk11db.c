@@ -123,8 +123,8 @@ secmod_getSecmodName(char *param, PRBool *rw)
 	
 
     while (*param) {
-	PK11_HANDLE_STRING_ARG(param,configdir,"configdir",;)
-	PK11_HANDLE_STRING_ARG(param,secmodName,"secmod",;)
+	PK11_HANDLE_STRING_ARG(param,configdir,"configdir=",;)
+	PK11_HANDLE_STRING_ARG(param,secmodName,"secmod=",;)
 	PK11_HANDLE_FINAL_ARG(param)
    }
 
@@ -524,7 +524,7 @@ SECMOD_ReadPermDB(char *dbname, char *params, PRBool rw) {
     int moduleCount = 1;
     int useCount = SECMOD_STEP;
 
-    moduleList = (char **) PORT_Alloc(useCount*sizeof(char **));
+    moduleList = (char **) PORT_ZAlloc(useCount*sizeof(char **));
     if (moduleList == NULL) return NULL;
 
     pkcs11db = secmod_OpenDB(dbname,PR_TRUE);
@@ -538,11 +538,13 @@ SECMOD_ReadPermDB(char *dbname, char *params, PRBool rw) {
     do {
 	char *moduleString;
 	PRBool internal = PR_FALSE;
-	if (moduleCount >= useCount) {
+	if ((moduleCount+1) >= useCount) {
 	    useCount += SECMOD_STEP;
 	    moduleList = 
-		(char **)PORT_Realloc(moduleList,useCount*sizeof(char **));
+		(char **)PORT_Realloc(moduleList,useCount*sizeof(char *));
 	    if (moduleList == NULL) goto done;
+	    PORT_Memset(&moduleList[moduleCount+1],0,
+						sizeof(char *)*SECMOD_STEP);
 	}
 	moduleString = secmod_DecodeData(params,&data,&internal);
 	if (internal) {
@@ -612,6 +614,7 @@ SECMOD_AddPermDB(char *dbname, char *module, PRBool rw) {
     int ret;
 
 
+#ifdef notdef
     if (!rw) return SECFailure;
 
     /* make sure we have a db handle */
@@ -622,13 +625,11 @@ SECMOD_AddPermDB(char *dbname, char *module, PRBool rw) {
 
     rv = secmod_MakeKey(&key,module);
     if (rv != SECSuccess) goto done;
-#ifdef notdef
     rv = secmod_EncodeData(&data,module);
     if (rv != SECSuccess) {
 	secmod_FreeKey(&key);
 	goto done;
     }
-#endif
     rv = SECFailure;
     ret = (*pkcs11db->put)(pkcs11db, &key, &data, 0);
     secmod_FreeKey(&key);
@@ -640,5 +641,6 @@ SECMOD_AddPermDB(char *dbname, char *module, PRBool rw) {
 
 done:
     secmod_CloseDB(pkcs11db);
+#endif
     return rv;
 }
