@@ -97,7 +97,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="backing_up_certificates"
          nc:name="backing up certificates"
-	 nc:link="certs_help.html#backing_up_certificatesIDX"/>
+	 nc:link="certs_help.xhtml#your_certificates"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="bookmarks"
@@ -774,7 +774,7 @@
      <rdf:li>
        <rdf:Description ID="import_certificates"
          nc:name="import certificates"
-	 nc:link="certs_help.html#import_certificatesIDX"/>
+	 nc:link="certs_help.xhtml#your_certificates"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="intermediate_server_CA_certificates"

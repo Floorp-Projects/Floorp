@@ -25,7 +25,7 @@ en-US.jar:
         locale/en-US/help/mail_sec_help.xhtml           (locale/en-US/mail_sec_help.xhtml)
         locale/en-US/help/composer_help.html            (locale/en-US/composer_help.html)
         locale/en-US/help/customize_help.html           (locale/en-US/customize_help.html)
-        locale/en-US/help/certs_help.html               (locale/en-US/certs_help.html)
+        locale/en-US/help/certs_help.xhtml              (locale/en-US/certs_help.xhtml)
         locale/en-US/help/cert_dialog_help.xhtml        (locale/en-US/cert_dialog_help.xhtml)
         locale/en-US/help/certs_prefs_help.xhtml        (locale/en-US/certs_prefs_help.xhtml) 
         locale/en-US/help/cs_nav_prefs_advanced.html    (locale/en-US/cs_nav_prefs_advanced.html) 
