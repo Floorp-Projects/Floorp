@@ -67,7 +67,7 @@
 #ifdef DEBUG
 #include "pure.h"
 #endif
-
+#include "pldhash.h"
 class dummyComparitor: public nsAVLNodeComparitor {
 public:
   virtual PRInt32 operator()(void* anItem1,void* anItem2)
