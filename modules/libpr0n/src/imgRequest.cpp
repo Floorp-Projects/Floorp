@@ -57,7 +57,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS6(imgRequest, imgILoad,
 imgRequest::imgRequest() : 
   mObservers(0),
   mLoading(PR_FALSE), mProcessing(PR_FALSE),
-  mImageStatus(imgIRequest::STATUS_NONE), mState(0), mCacheId(0)
+  mImageStatus(imgIRequest::STATUS_NONE), mState(0),
+  mContentType(nsnull), mCacheId(0)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -66,6 +67,8 @@ imgRequest::imgRequest() :
 imgRequest::~imgRequest()
 {
   /* destructor code */
+  if (mContentType)
+    nsCRT::free(mContentType);
 }
 
 nsresult imgRequest::Init(nsIChannel *aChannel,
@@ -642,7 +645,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     /* NS_WARNING if the content type from the channel isn't the same if the sniffing */
 #endif
 
-    if (mContentType.IsEmpty()) {
+    if (!mContentType) {
       LOG_SCOPE(gImgLog, "imgRequest::OnDataAvailable |sniffing of mimetype failed|");
 
       nsXPIDLCString contentType;
@@ -665,13 +668,13 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
       LOG_MSG(gImgLog, "imgRequest::OnDataAvailable", "Got content type from the channel");
 
-      mContentType = contentType;
+      mContentType = nsCRT::strdup(contentType.get());
     }
 
-    LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "content type", mContentType.get());
+    LOG_MSG_WITH_PARAM(gImgLog, "imgRequest::OnDataAvailable", "content type", mContentType);
 
     nsCAutoString conid("@mozilla.org/image/decoder;2?type=");
-    conid += mContentType.get();
+    conid += mContentType;
 
     mDecoder = do_CreateInstance(conid);
 
@@ -742,8 +745,14 @@ void
 imgRequest::SniffMimeType(const char *buf, PRUint32 len)
 {
   /* Is it a GIF? */
+
+  if (mContentType) {
+    nsCRT::free(mContentType);
+    mContentType = nsnull;
+  }
+
   if (len >= 4 && !nsCRT::strncmp(buf, "GIF8", 4))  {
-    mContentType = NS_LITERAL_CSTRING("image/gif");
+    mContentType = nsCRT::strndup("image/gif", 9);
     return;
   }
 
@@ -753,7 +762,7 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
                    (unsigned char)buf[2]==0x4E &&
                    (unsigned char)buf[3]==0x47))
   { 
-    mContentType = NS_LITERAL_CSTRING("image/png");
+    mContentType = nsCRT::strndup("image/png", 9);
     return;
   }
 
@@ -769,7 +778,7 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
      ((unsigned char)buf[1])==0xD8 &&
      ((unsigned char)buf[2])==0xFF)
   {
-    mContentType = NS_LITERAL_CSTRING("image/jpeg");
+    mContentType = nsCRT::strndup("image/jpeg", 10);
     return;
   }
 
@@ -782,7 +791,7 @@ imgRequest::SniffMimeType(const char *buf, PRUint32 len)
    ((unsigned char) buf[1])==0x47 &&
    ((unsigned char) buf[4])==0x00 )
   {
-    mContentType = NS_LITERAL_CSTRING("image/x-jg");
+    mContentType = nsCRT::strndup("image/x-jg", 10);
     return;
   }
 

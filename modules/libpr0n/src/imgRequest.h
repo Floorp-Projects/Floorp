@@ -83,10 +83,8 @@ private:
   void Cancel(nsresult aStatus);
   nsresult GetURI(nsIURI **aURI);
   void RemoveFromCache();
-  inline const char *GetMimeType() const { 
-    if (mContentType.IsEmpty())
-      return nsnull;
-    return mContentType.get();
+  inline const char *GetMimeType() const {
+    return mContentType;
   }
 
 public:
@@ -110,7 +108,7 @@ private:
   PRUint32 mImageStatus;
   PRUint32 mState;
 
-  nsCString mContentType;
+  char *mContentType;
 
   nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry; /* we hold on to this to this so long as we have observers */
 
