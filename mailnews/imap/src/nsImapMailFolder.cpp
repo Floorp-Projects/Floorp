@@ -67,11 +67,12 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 #endif
 
 nsImapMailFolder::nsImapMailFolder() :
-	m_pathName(""),
     m_initialized(PR_FALSE), m_haveReadNameFromDB(PR_FALSE),
     m_msgParser(nsnull), m_curMsgUid(0), m_nextMessageByteLength(0),
     m_urlRunning(PR_FALSE), m_haveDiscoverAllFolders(PR_FALSE)
 {
+	m_pathName = nsnull;
+
     //XXXX This is a hack for the moment.  I'm assuming the only listener is
     //our rdf:mailnews datasource. 
     //In reality anyone should be able to listen to folder changes. 
@@ -102,6 +103,8 @@ nsImapMailFolder::nsImapMailFolder() :
 
 nsImapMailFolder::~nsImapMailFolder()
 {
+	if (m_pathName)
+		delete m_pathName;
 }
 
 NS_IMPL_ADDREF_INHERITED(nsImapMailFolder, nsMsgDBFolder)
@@ -152,13 +155,16 @@ NS_IMETHODIMP nsImapMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePt
 
 NS_IMETHODIMP nsImapMailFolder::GetPathName(nsNativeFileSpec& aPathName)
 {
-    nsFileSpec nopath("");
-    if (m_pathName == nopath) 
+    if (! m_pathName) 
     {
-        nsresult rv = nsImapURI2Path(kImapRootURI, mURI, m_pathName);
+    	m_pathName = new nsNativeFileSpec("");
+    	if (! m_pathName)
+    		return NS_ERROR_OUT_OF_MEMORY;
+   
+        nsresult rv = nsImapURI2Path(kImapRootURI, mURI, *m_pathName);
         if (NS_FAILED(rv)) return rv;
     }
-    aPathName = m_pathName;
+    aPathName = *m_pathName;
 	return NS_OK;
 }
 

@@ -255,7 +255,7 @@ protected:
 
 	nsresult GetDatabase();
 
-    nsNativeFileSpec m_pathName;
+    nsNativeFileSpec *m_pathName;
     PRBool m_initialized;
     PRBool m_haveDiscoverAllFolders;
     PRBool m_haveReadNameFromDB;
