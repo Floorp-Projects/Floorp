@@ -87,6 +87,7 @@ textbox {
 .autocomplete-tree {
   border: none;
   background-color: transparent !important;
+  -moz-appearance: none;
 }
 
 .autocomplete-treecol {

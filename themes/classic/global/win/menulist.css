@@ -119,6 +119,7 @@ html|*.menulist-editable-input {
   padding: 0px !important;
   background: inherit;
   font: inherit;
+  -moz-appearance: none !important;
 }
 
 /* ::::: compact menulists ::::: */

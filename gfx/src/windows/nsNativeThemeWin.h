@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  * 
  * Contributors:
+ *   Tim Hill (tim@prismelite.com)
  */
 
 #include "nsITheme.h"
@@ -67,10 +68,33 @@ protected:
   HANDLE GetTheme(PRUint8 aWidgetType);
   nsresult GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
                                 PRInt32& aPart, PRInt32& aState);
+  nsresult ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
+                                   PRInt32& aPart, PRInt32& aState, PRBool& aFocused);
+  nsresult ClassicDrawWidgetBackground(nsIRenderingContext* aContext,
+                                  nsIFrame* aFrame,
+                                  PRUint8 aWidgetType,
+                                  const nsRect& aRect,
+                                  const nsRect& aClipRect);
+  nsresult ClassicGetWidgetBorder(nsIDeviceContext* aContext, 
+                             nsIFrame* aFrame,
+                             PRUint8 aWidgetType,
+                             nsMargin* aResult);
+
+  nsresult ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
+                                  PRUint8 aWidgetType,
+                                  nsSize* aResult,
+                                  PRBool* aIsOverridable);
+
+  PRBool ClassicThemeSupportsWidget(nsIPresContext* aPresContext, 
+                             nsIFrame* aFrame,
+                             PRUint8 aWidgetType);
+
+
   PRBool IsDisabled(nsIFrame* aFrame);
   PRBool IsReadOnly(nsIFrame* aFrame);
   PRBool IsChecked(nsIFrame* aFrame);
   PRBool IsSelected(nsIFrame* aFrame);
+  PRBool IsBottomTab(nsIFrame* aFrame);
 
 private:
   HMODULE mThemeDLL;
@@ -95,6 +119,7 @@ private:
   nsCOMPtr<nsIAtom> mTypeAtom;
   nsCOMPtr<nsIAtom> mReadOnlyAtom;
   nsCOMPtr<nsIAtom> mDefaultAtom;
+  nsCOMPtr<nsIAtom> mClassAtom;
 };
 
 // Creator function
