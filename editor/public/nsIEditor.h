@@ -30,6 +30,11 @@ class nsIFileSpec;
 class nsIDOMTextRangeList;
 class nsICSSStyleSheet;
 class nsIOutputStream;
+class nsIDocumentStateListener;
+class nsIDOMDocument;
+class nsIDOMSelection;
+class nsIPresShell;
+class nsString;
 
 /*
 Editor interface to outside world
@@ -55,11 +60,6 @@ Editor interface to outside world
 0xbd62f312, 0xcb8a, 0x11d2,  \
 { 0x98, 0x3a, 0x0, 0x80, 0x5f, 0x8a, 0xa8, 0xb8 } }
 
-
-class nsIDOMDocument;
-class nsIDOMSelection;
-class nsIPresShell;
-class nsString;
 
 /**
  * A generic editor interface. 
@@ -428,6 +428,15 @@ public:
   /** Remove an EditActionListener from the editor's list of listeners. */
   NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener)=0;
 
+  /** Add a DocumentStateListener to the editors list of doc state listeners. */
+  NS_IMETHOD AddDocumentStateListener(nsIDocumentStateListener *aListener)=0;
+
+  /** Remove a DocumentStateListener to the editors list of doc state listeners. */
+  NS_IMETHOD RemoveDocumentStateListener(nsIDocumentStateListener *aListener)=0;
+  
+  /** Returns true if the document is modifed and needs saving */
+  NS_IMETHOD GetDocumentModified(PRBool *outDocModified)=0;
+  
   /** Dumps a text representation of the content tree to standard out */
   NS_IMETHOD DebugDumpContent() const =0;
 
