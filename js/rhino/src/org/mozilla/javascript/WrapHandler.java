@@ -15,13 +15,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-1999 Netscape Communications Corporation. All
+ * Copyright (C) 1997-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s):
- * Norris Boyd
- * Roger Lawrence
- * Andi Vajda
+ * Contributor(s): 
+ * Marshall Cline
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -35,27 +33,36 @@
  * file under either the NPL or the GPL.
  */
 
+// API class
+
 package org.mozilla.javascript;
 
-public interface ClassNameHelper {
+/**
+ * Embeddings that wish to provide their own custom wrappings for Java
+ * objects may implement this interface and call Context.setWrapHandler.
+ * @see org.mozilla.javascript.Context.setWrapHandler
+ */
+public interface WrapHandler {
 
-    public String getTargetClassFileName();
-
-    public void setTargetClassFileName(String classFileName);
-
-    public String getTargetPackage();
-
-    public void setTargetPackage(String targetPackage);
-
-    public String getTargetClassFileName(String className);
-    
-    public String getGeneratingDirectory();
-    
-    public void setTargetExtends(Class extendsClass);
-    
-    public void setTargetImplements(Class[] implementsClasses);
-
-    public ClassOutput getClassOutput();
-
-    public void setClassOutput(ClassOutput classOutput);
+    /**
+     * Wrap the object.
+     * <p>
+     * The value returned must be one of 
+     * <UL>
+     * <LI>java.lang.Boolean</LI>
+     * <LI>java.lang.String</LI>
+     * <LI>java.lang.Number</LI>
+     * <LI>org.mozilla.javascript.Scriptable objects</LI>
+     * <LI>The value returned by Context.getUndefinedValue()</LI>
+     * <LI>null</LI>
+     * <p>
+     * If null is returned, the value obj will be wrapped as if 
+     * no WrapHandler had been called.
+     * </UL>
+     * @param scope the scope of the executing script
+     * @param obj the object to be wrapped
+     * @staticType the static type of the object to be wrapped
+     * @return the wrapped value.
+     */
+    public Object wrap(Scriptable scope, Object obj, Class staticType);
 }

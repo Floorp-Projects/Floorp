@@ -26,6 +26,7 @@
  * Roger Lawrence
  * Mike McCabe
  * Ian D. Stewart
+ * Andi Vajda
  * Andrew Wason
  *
  * Alternatively, the contents of this file may be used under the
@@ -1286,6 +1287,30 @@ public final class Context {
     }
 
     /**
+     * Get the current interface to write class bytes into.
+     *
+     * @see ClassOutput
+     * @since 1.5 Release 2
+     */
+    public ClassOutput getClassOutput() {
+        return nameHelper == null ? null : nameHelper.getClassOutput();
+    }
+
+    /**
+     * Set the interface to write class bytes into.
+     * Unless setTargetClassFileName() has been called classOutput will be
+     * used each time the javascript compiler has generated the bytecode for a
+     * script class.
+     *
+     * @see ClassOutput
+     * @since 1.5 Release 2
+     */
+    public void setClassOutput(ClassOutput classOutput) {
+        if (nameHelper != null)
+            nameHelper.setClassOutput(classOutput);
+    }
+        
+    /**
      * Return true if a security domain is required on calls to
      * compile and evaluate scripts.
      *
@@ -1427,6 +1452,16 @@ public final class Context {
         }
         isCachingEnabled = cachingEnabled;
     }
+    
+    /**
+     */
+    public void setWrapHandler(WrapHandler wrapHandler) {
+        this.wrapHandler = wrapHandler;
+    }
+    
+    public WrapHandler getWrapHandler() {
+        return wrapHandler;
+    }
 
     /**** debugger oriented portion of API: CURRENTLY UNSUPPORTED ****/
 
@@ -1437,6 +1472,7 @@ public final class Context {
      * @return the current hook
      * @see org.mozilla.javascript.SourceTextManager
      * @see org.mozilla.javascript.Context#setSourceTextManager
+     * @deprecated
      */
     public SourceTextManager getSourceTextManager() {
         return debug_stm;
@@ -1851,6 +1887,7 @@ public final class Context {
 
         Object result = compiler.compile(this, scope, tree, securityDomain,
                                          securitySupport, nameHelper);
+
         return errorCount == 0 ? result : null;
     }
 
@@ -2010,6 +2047,7 @@ public final class Context {
     private boolean generatingSource=true;
     private boolean compileFunctionsWithDynamicScopeFlag;
     private int optimizationLevel;
+    WrapHandler wrapHandler;
     private SourceTextManager debug_stm;
     private DeepScriptHook debug_scriptHook;
     private DeepCallHook debug_callHook;
@@ -2028,4 +2066,3 @@ public final class Context {
     int interpreterLine;
     String interpreterSourceFile;
 }
-

@@ -23,6 +23,7 @@
  * Norris Boyd
  * Mike McCabe
  * Matthias Radestock
+ * Andi Vajda
  * Andrew Wason
  *
  * Alternatively, the contents of this file may be used under the
@@ -234,21 +235,37 @@ public class JavaAdapter extends ScriptableObject {
         }
         byte[] bytes = out.toByteArray();
         
-        if (nameHelper != null && nameHelper.getGeneratingDirectory() != null) 
+        if (nameHelper != null)
         {
-            try {
-                int lastDot = adapterName.lastIndexOf('.');
-                if (lastDot != -1)
-                    adapterName = adapterName.substring(lastDot+1);
-                String filename = nameHelper.getTargetClassFileName(adapterName);
-                FileOutputStream file = new FileOutputStream(filename);
-                file.write(bytes);
-                file.close();
+            if (nameHelper.getGeneratingDirectory() != null) {
+                try {
+                    int lastDot = adapterName.lastIndexOf('.');
+                    if (lastDot != -1)
+                        adapterName = adapterName.substring(lastDot+1);
+                    String filename = nameHelper.getTargetClassFileName(adapterName);
+                    FileOutputStream file = new FileOutputStream(filename);
+                    file.write(bytes);
+                    file.close();
+                }
+                catch (IOException iox) {
+                    throw WrappedException.wrapException(iox);
+                }
+                return null;
+            } else {
+                try {
+                    ClassOutput classOutput = nameHelper.getClassOutput();
+
+                    if (classOutput != null) {
+                        OutputStream cOut =
+                            classOutput.getOutputStream(adapterName);
+
+                        cOut.write(bytes);
+                        cOut.close();
+                    }
+                } catch (IOException iox) {
+                    throw WrappedException.wrapException(iox);
+                }
             }
-            catch (IOException iox) {
-                throw WrappedException.wrapException(iox);
-            }
-            return null;
         }
             
         SecuritySupport ss = cx.getSecuritySupport();

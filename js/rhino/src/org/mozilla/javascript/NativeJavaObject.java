@@ -152,6 +152,12 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     {
         if (obj == null)
             return obj;
+        Context cx = Context.getCurrentContext();
+        if (cx != null && cx.wrapHandler != null) {
+            Object result = cx.wrapHandler.wrap(scope, obj, staticType);
+            if (result != null)
+                return result;
+        }
         Class cls = obj.getClass();
         if (staticType != null && staticType.isPrimitive()) {
             if (staticType == Void.TYPE)

@@ -22,7 +22,7 @@
  * Norris Boyd
  * Frank Mitchell
  * Mike Shaver
- * Kurt Westerfield
+ * Kurt Westerfeld
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -484,6 +484,18 @@ class JavaMembers {
             Modifier.isPublic(staticType.getModifiers()))
         {
             cl = staticType;
+            
+            // We can use the static type, and that is OK, but we'll trace
+            // back the java class chain here to look for something more suitable.
+            for (Class parentType = dynamicType; 
+                 parentType != null && parentType != ScriptRuntime.ObjectClass;
+                 parentType = parentType.getSuperclass())
+            {
+                if (Modifier.isPublic(parentType.getModifiers())) {
+                   cl = parentType;
+                   break;
+                }
+            }
         }
         try {
             members = new JavaMembers(scope, cl);

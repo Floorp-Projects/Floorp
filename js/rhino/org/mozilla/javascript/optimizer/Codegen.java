@@ -20,6 +20,7 @@
  * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
+ * Andi Vajda
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -103,6 +104,19 @@ public class Codegen extends Interpreter {
                         throw WrappedException.wrapException(iox);
                     }
                 } else {
+                    ClassOutput classOutput = nameHelper.getClassOutput();
+
+                    if (classOutput != null) {
+                        try {
+                            OutputStream out =
+                                classOutput.getOutputStream(name);
+
+                            out.write(classFile);
+                            out.close();
+                        } catch (IOException iox) {
+                            throw WrappedException.wrapException(iox);
+                        }
+                    }
                     try {
                         Class clazz;
                         if (securitySupport == null) {

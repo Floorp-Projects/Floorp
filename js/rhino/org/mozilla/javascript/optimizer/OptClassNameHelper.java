@@ -20,6 +20,7 @@
  * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
+ * Andi Vajda
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -132,6 +133,14 @@ public class OptClassNameHelper implements ClassNameHelper {
         serial = 0;
     }
 
+    public ClassOutput getClassOutput() {
+        return classOutput;
+    }
+
+    public void setClassOutput(ClassOutput classOutput) {
+        this.classOutput = classOutput;
+    }
+
     private String generatingDirectory;
     private String packageName = "org.mozilla.javascript.gen";
     private String initialName = "c";
@@ -139,4 +148,5 @@ public class OptClassNameHelper implements ClassNameHelper {
     private int serial=1;
     private Class targetExtends;
     private Class[] targetImplements;
+    private ClassOutput classOutput;
 }

@@ -21,6 +21,7 @@
  * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
+ * Andi Vajda
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -53,4 +54,8 @@ public interface ClassNameHelper {
     public void setTargetExtends(Class extendsClass);
     
     public void setTargetImplements(Class[] implementsClasses);
+
+    public ClassOutput getClassOutput();
+
+    public void setClassOutput(ClassOutput classOutput);
 }
