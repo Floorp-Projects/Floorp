@@ -117,12 +117,14 @@ dnl set the defaults first
 dnl ========================================================
 MKSHLIB='$(LD) $(DSO_LDOPTS)'
 DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.so=%.so)'
+DSO_CFLAGS='-KPIC'
 
 dnl gcc can come with its own linker so its better to use the pass-thru calls
 dnl ========================================================
 if test "$GNU_CC" = 1; then
     MKSHLIB='$(CC) $(DSO_LDOPTS)'
     DSO_LDOPTS='-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.so=%.so)'
+    DSO_CFLAGS='-fPIC'
 fi
 
 dnl now the exceptions
@@ -785,6 +787,7 @@ AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
 
 AC_SUBST(MKSHLIB)
+AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
 
 dnl Check for missing components
