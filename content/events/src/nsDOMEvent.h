@@ -226,12 +226,14 @@ protected:
                          float* aT2P);
   nsresult SetEventType(const nsAString& aEventTypeArg);
   const char* GetEventName(PRUint32 aEventType);
+  void GetTargetFromFrame(nsIDOMEventTarget** aTarget);
 
   nsEvent* mEvent;
   nsIPresContext* mPresContext;
   nsIDOMEventTarget* mTarget;
   nsIDOMEventTarget* mCurrentTarget;
   nsIDOMEventTarget* mOriginalTarget;
+  nsIDOMEventTarget* mExplicitOriginalTarget;
   nsString*	mText;
   nsIPrivateTextRangeList*	mTextRange;
   PRPackedBool mEventIsInternal;

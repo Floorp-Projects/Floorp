@@ -52,6 +52,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMWindow.h"
@@ -724,7 +725,7 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
   
   nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(inMouseEvent));
   if ( !uiEvent )
-    return NS_ERROR_FAILURE;
+    return PR_FALSE;
 
   nsCOMPtr<nsIDOMEventTarget> target;
   inMouseEvent->GetTarget(getter_AddRefs(target));
@@ -759,7 +760,16 @@ nsContentAreaDragDrop::BuildDragData(nsIDOMEvent* inMouseEvent, nsAString & outU
   PRBool containsTarget = PR_FALSE;
   if ( selection ) {
     selection->GetIsCollapsed(&isCollapsed);
-    selection->ContainsNode(draggedNode, PR_FALSE, &containsTarget);
+    // Get the real target and see if it is in the selection
+    nsCOMPtr<nsIDOMNSEvent> internalEvent = do_QueryInterface(inMouseEvent);
+    if (internalEvent) {
+      nsCOMPtr<nsIDOMEventTarget> realTarget;
+      internalEvent->GetExplicitOriginalTarget(getter_AddRefs(realTarget));
+      nsCOMPtr<nsIDOMNode> realTargetNode = do_QueryInterface(realTarget);
+      if (realTargetNode) {
+        selection->ContainsNode(realTargetNode, PR_FALSE, &containsTarget);
+      }
+    }
   }
     
   PRBool getFormattedStrings = PR_FALSE;

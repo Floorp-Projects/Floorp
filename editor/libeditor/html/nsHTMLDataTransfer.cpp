@@ -1284,7 +1284,7 @@ NS_IMETHODIMP nsHTMLEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool *aCanDrag)
 
   if (nsevent) 
   {
-    res = nsevent->GetOriginalTarget(getter_AddRefs(eventTarget));
+    res = nsevent->GetExplicitOriginalTarget(getter_AddRefs(eventTarget));
     if (NS_FAILED(res)) 
     {
       return res;
