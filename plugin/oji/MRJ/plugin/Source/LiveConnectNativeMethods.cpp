@@ -866,7 +866,6 @@ Java_netscape_javascript_JSObject_eval(JNIEnv* env,
 #else
     /* determine the plugin instance so we can obtain its codebase. */
     // beard: should file a bug with Apple that JMJNIToAWTContext doesn't work.
-    // MRJPluginInstance* pluginInstance = theJVMPlugin->getPluginInstance(env);
     MRJPluginInstance* pluginInstance = GetCurrentInstance(env);
 #if 0
     if (pluginInstance == NULL) {
@@ -950,6 +949,11 @@ public:
     GetWindowMessage(MRJPluginInstance* pluginInstance, jsobject* windowResult)
         :   mPluginInstance(pluginInstance), mWindowResult(windowResult)
     {
+    }
+    
+    ~GetWindowMessage()
+    {
+        NS_RELEASE(mPluginInstance);
     }
     
     virtual void execute(JNIEnv* env)
