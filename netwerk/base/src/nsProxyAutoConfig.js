@@ -115,6 +115,7 @@ nsProxyAutoConfig.prototype = {
             // see bugs 80363 and 92516.
             ProxySandBox.myIP = "127.0.0.1";
         }
+        ProxySandBox.dnsResolve = dnsResolve;
         LocalFindProxyForURL=ProxySandBox.FindProxyForURL;
     },
 
@@ -122,6 +123,16 @@ nsProxyAutoConfig.prototype = {
         var ins = new this.sis(inStream);
         pac += ins.read(count);
     }
+}
+
+// wrapper for dns.resolve to catch exception on failure
+function dnsResolve(host) {
+    try {
+        var ip = dns.resolve(host);
+        return ip;
+    }
+    catch (e) {}
+    return null;
 }
 
 var pacModule = new Object();
@@ -198,6 +209,8 @@ var pacUtils =
 "    var test = /^(\\d{1,4})\\.(\\d{1,4})\\.(\\d{1,4})\\.(\\d{1,4})$/(ipaddr);\n"+
 "    if (test == null) {\n"+
 "        ipaddr = dnsResolve(ipaddr);\n"+
+"        if (ipaddr == null)\n"+
+"            return false;\n"+
 "    } else if (test[1] > 255 || test[2] > 255 || \n"+
 "               test[3] > 255 || test[4] > 255) {\n"+
 "        return false;    // not an IP address\n"+
