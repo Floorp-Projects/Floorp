@@ -45,12 +45,19 @@
 /* ::::: hypertext links ::::: */
 
 .text-link {
-  cursor: pointer;
-  color: #424F63;
+  color: blue;
   text-decoration: underline;
 }
 
 .text-link:hover {
-  color: #1455D6;
+  cursor: pointer;
+}
+
+.text-link:hover:active {
+  color: red;
+}
+
+.text-link[visited="true"] {
+  color: purple;
 }
 

@@ -11,6 +11,8 @@
 
 <input name="q" user>
 <input name="sourceid" value="mozilla-search">
+<inputnext name="start" factor="20">
+<inputprev name="start" factor="20">
 
 <interpret 
     browserResultType="result" 

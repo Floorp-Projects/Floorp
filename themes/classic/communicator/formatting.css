@@ -40,17 +40,22 @@
 /* class for text with a 'link' appearance */
 .text-link
   {
-    color                 : #666699;
+    color                 : blue;
     text-decoration       : underline;
-    cursor                : pointer;
   }
   
 .text-link:hover
   {
-    color                 : #333366;
+    cursor                : pointer;
   } 
   
 .text-link:hover:active
   {
-    color                 : #990000;
+    color                 : red;
   } 
+
+.text-link[visited="true"] 
+  {
+    color                 : purple;
+  }
+  

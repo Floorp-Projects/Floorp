@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -45,7 +45,7 @@
 #include "nsISupports.idl"
 #include "nsIRDFDataSource.idl"
 
-interface	nsIUnicodeDecoder;
+interface  nsIUnicodeDecoder;
 
 [scriptable, uuid(1222e6f0-a5e3-11d2-8b7c-00805f8a7db6)]
 interface nsILocalSearchService : nsISupports
@@ -55,40 +55,44 @@ interface nsILocalSearchService : nsISupports
 [scriptable, uuid(6bd1d803-1c67-11d3-9820-ed1b357eb3c4)]
 interface nsIInternetSearchService : nsISupports
 {
-	string			GetInternetSearchURL(in string searchEngineURI, in wstring searchStr);
-	void			RememberLastSearchText(in wstring escapedSearchStr);
-	boolean			FindInternetSearchResults(in string url);
-	void			Stop();
-	void			ClearResults(in boolean flushLastSearchRef);
-	void			ClearResultSearchSites();
-	nsIRDFDataSource	GetCategoryDataSource();
-	void			AddSearchEngine(in string engineURL, in string iconURL,
-				                 in wstring suggestedTitle, in wstring suggestedCategory);
+  // constants set in the whichButtons out param of GetInternetSearchURL() 
+  const unsigned short kHaveNext = 1;
+  const unsigned short kHavePrev = 2;
+
+  string      GetInternetSearchURL(in string searchEngineURI, in wstring searchStr, in short direction, in unsigned short pageNumber, out unsigned short whichButtons);
+  void      RememberLastSearchText(in wstring escapedSearchStr);
+  boolean      FindInternetSearchResults(in string url);
+  void      Stop();
+  void      ClearResults(in boolean flushLastSearchRef);
+  void      ClearResultSearchSites();
+  nsIRDFDataSource  GetCategoryDataSource();
+  void      AddSearchEngine(in string engineURL, in string iconURL,
+                         in wstring suggestedTitle, in wstring suggestedCategory);
 };
 
 [noscript, uuid(ac0c0781-ab71-11d3-a652-b09b68feee44)]
 interface nsIInternetSearchContext : nsISupports
 {
-	// context types: WEB_SEARCH_CONTEXT=1, ENGINE_DOWNLOAD_CONTEXT, ICON_DOWNLOAD_CONTEXT };
-	const unsigned long WEB_SEARCH_CONTEXT      = 1;
-	const unsigned long ENGINE_DOWNLOAD_CONTEXT = 2;
-	const unsigned long ICON_DOWNLOAD_CONTEXT   = 3;
-	const unsigned long ENGINE_UPDATE_CONTEXT   = 4;
-	const unsigned long ICON_UPDATE_CONTEXT     = 5;
+  // context types: WEB_SEARCH_CONTEXT=1, ENGINE_DOWNLOAD_CONTEXT, ICON_DOWNLOAD_CONTEXT };
+  const unsigned long WEB_SEARCH_CONTEXT      = 1;
+  const unsigned long ENGINE_DOWNLOAD_CONTEXT = 2;
+  const unsigned long ICON_DOWNLOAD_CONTEXT   = 3;
+  const unsigned long ENGINE_UPDATE_CONTEXT   = 4;
+  const unsigned long ICON_UPDATE_CONTEXT     = 5;
 
-	// attributes
-	readonly attribute unsigned long ContextType;
+  // attributes
+  readonly attribute unsigned long ContextType;
 
-	// methods
-	nsIUnicodeDecoder	GetUnicodeDecoder();
-	nsIRDFResource		GetParent();
-	nsIRDFResource		GetEngine();
-	void			GetHintConst([shared] out wstring buffer);
-	void			AppendBytes(in string buffer, in long numBytes);
-	void			AppendUnicodeBytes(in wstring buffer, in long numUniBytes);
-	long			GetBufferLength();
-	void			GetBufferConst([shared] out wstring buffer);
-	void			Truncate();
+  // methods
+  nsIUnicodeDecoder  GetUnicodeDecoder();
+  nsIRDFResource    GetParent();
+  nsIRDFResource    GetEngine();
+  void      GetHintConst([shared] out wstring buffer);
+  void      AppendBytes(in string buffer, in long numBytes);
+  void      AppendUnicodeBytes(in wstring buffer, in long numUniBytes);
+  long      GetBufferLength();
+  void      GetBufferConst([shared] out wstring buffer);
+  void      Truncate();
 };
 
 %{C++

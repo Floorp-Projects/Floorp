@@ -10,19 +10,6 @@
     list-style-image      : url("resource:/res/rdf/document.gif") ! important ;
   }
 
-.searchresult-cell:hover
-  {
-    color                 : blue;
-    text-decoration       : underline;
-    cursor                : pointer;
-  }
-
-.searchresult-cell:hover:active
-  {
-    color                 : red;
-    text-decoration       : underline;
-  }
-
 .searchresult-item[selected="true"] > .searchresult
   {
     background-color      : transparent;

@@ -155,7 +155,8 @@ friend  int  PR_CALLBACK  searchModePrefCallback(const char *pref, void *aClosur
   nsresult  ReadFileContents(const nsFileSpec &baseFilename, nsString & sourceContents);
   nsresult  GetData(const PRUnichar *data, const char *sectionToFind, PRUint32 sectionNum, const char *attribToFind, nsString &value);
   nsresult  GetNumInterpretSections(const PRUnichar *data, PRUint32 &numInterpretSections);
-  nsresult  GetInputs(const PRUnichar *data, nsString &userVar, const nsString &text, nsString &input);
+  nsresult  GetInputs(const PRUnichar *data, nsString &userVar, const nsString &text, nsString &input, PRInt16 direction, PRUint16 pageNumber, PRUint16 *whichButtons);
+  PRInt32   computeIndex(nsAutoString &factor, PRUint16 page, PRInt16 direction);
   nsresult  GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
   nsresult  validateEngineNow(nsIRDFResource *engine);
   nsresult  webSearchFinalize(nsIChannel *channel, nsIInternetSearchContext *context);

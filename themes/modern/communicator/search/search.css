@@ -59,7 +59,3 @@ treeitem[selected="true"] > .searchresult {
   background-color: transparent;
 }
 
-.searchresult-cell:hover {
-  color: blue;
-  text-decoration: underline;
-}
