@@ -68,4 +68,18 @@ static const char* kTag##prefix##_##name = kURI##prefix##_##name## + sizeof(##na
 
 /*@}*/
 
+#ifdef _IMPL_NS_RDF
+#ifdef XP_PC
+#define NS_RDF _declspec(dllexport)
+#else  /* !XP_PC */
+#define NS_RDF
+#endif /* !XP_PC */
+#else  /* !_IMPL_NS_RDF */
+#ifdef XP_PC
+#define NS_RDF _declspec(dllimport)
+#else  /* !XP_PC */
+#define NS_RDF
+#endif /* !XP_PC */
+#endif /* !_IMPL_NS_RDF */
+
 #endif /* rdf_h___ */

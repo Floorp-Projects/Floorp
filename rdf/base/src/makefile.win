@@ -16,6 +16,9 @@
 # Reserved.
 
 DEPTH=..\..\..
+
+LCFLAGS=-D_IMPL_NS_RDF -DWIN32_LEAN_AND_MEAN
+
 MODULE=rdf
 LIBRARY_NAME=rdfbase_s
 
