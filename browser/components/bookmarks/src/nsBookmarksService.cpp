@@ -4786,16 +4786,23 @@ nsBookmarksService::LoadBookmarks()
             rv = rootContainer->Init(this, kNC_BookmarksRoot);
             if (NS_FAILED(rv)) return rv;
                
-            rv = mInner->Assert(kNC_HTMLPanelsFolder, kRDF_type, kNC_Folder, PR_TRUE);
+            nsCOMPtr<nsIRDFResource> webPanels;
+            gRDF->GetResource(NS_LITERAL_CSTRING("NC:WebPanels"), getter_AddRefs(webPanels));
+
+            nsCOMPtr<nsIRDFResource>    newAnonURL;
+            gRDF->GetAnonymousResource(getter_AddRefs(newAnonURL));
+            mInner->Assert(webPanels, kNC_URL, newAnonURL, PR_TRUE);
+
+            rv = mInner->Assert(webPanels, kRDF_type, kNC_Folder, PR_TRUE);
             if (NS_FAILED(rv)) return rv;
 
-            rv = mInner->Assert(kNC_HTMLPanelsFolder, kNC_Name, panelNameLiteral, PR_TRUE);
+            rv = mInner->Assert(webPanels, kNC_Name, panelNameLiteral, PR_TRUE);
             if (NS_FAILED(rv)) return rv;
 
-            rv = rootContainer->AppendElement(kNC_HTMLPanelsFolder);
+            rv = rootContainer->AppendElement(webPanels);
             if (NS_FAILED(rv)) return rv;
 
-            setFolderHint(kNC_HTMLPanelsFolder, kNC_HTMLPanelsFolder);
+            setFolderHint(webPanels, kNC_HTMLPanelsFolder);
         }
     
       // Sets the default bookmarks root name.
