@@ -4,7 +4,7 @@
   FILE: icalproperty.c
   CREATOR: eric 28 April 1999
   
-  $Id: icalproperty.c,v 1.5 2004/09/07 16:12:29 mostafah%oeone.com Exp $
+  $Id: icalproperty.c,v 1.6 2004/09/10 13:38:38 mostafah%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -197,10 +197,12 @@ icalproperty* icalproperty_new_from_string(const char* str)
 
     /* Is this a HACK or a crafty reuse of code? */
 
-    icalmemory_append_string(&buf, &buf_ptr, &buf_size, "BEGIN:VCALENDAR\n");
+    icalmemory_append_string(&buf, &buf_ptr, &buf_size, "BEGIN:VCALENDAR");
+    icalmemory_append_string(&buf, &buf_ptr, &buf_size, newline);
     icalmemory_append_string(&buf, &buf_ptr, &buf_size, str);
-    icalmemory_append_string(&buf, &buf_ptr, &buf_size, newline);    
-    icalmemory_append_string(&buf, &buf_ptr, &buf_size, "END:VCALENDAR\n");
+    icalmemory_append_string(&buf, &buf_ptr, &buf_size, newline);
+    icalmemory_append_string(&buf, &buf_ptr, &buf_size, "END:VCALENDAR");
+    icalmemory_append_string(&buf, &buf_ptr, &buf_size, newline);
 
     comp = icalparser_parse_string(buf);
 
