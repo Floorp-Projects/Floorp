@@ -3792,22 +3792,6 @@ const uint32 js_A[] = {
 0x00000012   /*  123   Co */
 };
 
-#ifndef __GNUC__
-jschar
-js_ToUpper(jschar c)
-{
-    uint32 v = JS_CCODE(c);
-    return (v & 0x00100000) ? c - ((int32)v >> 22) : c;
-}
-
-jschar
-js_ToLower(jschar c)
-{
-    uint32 v = JS_CCODE(c);
-    return (v & 0x00200000) ? c + ((int32)v >> 22) : c;
-}
-#endif /* !__GNUC__ */
-
 char *uriReservedPlusPound = ";/?:@&=+$,#";
 char *uriUnescaped = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.!~*'()";
 
