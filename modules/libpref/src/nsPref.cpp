@@ -632,7 +632,7 @@ NS_IMETHODIMP nsPref::SaveLIPrefFile(nsIFileSpec* fileSpec)
 NS_IMETHODIMP nsPref::SavePrefFile()
 //----------------------------------------------------------------------------------------
 {
-    if (!gHashTable)
+    if (!gHashTable || !mFileSpec)
         return PREF_NOT_INITIALIZED;
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
     if (gFileName)
@@ -1363,13 +1363,13 @@ extern "C" JSBool pref_InitInitialObjects()
 	for (; Exists(i); i->next())
 	{
 		nsIFileSpec* child;
+		PRBool shouldParse = PR_TRUE;
 		if NS_FAILED(i->GetCurrentSpec(&child))
 			continue;
 		char* leafName;
 		rv = child->GetLeafName(&leafName);
 		if NS_FAILED(rv)
 			goto next_child;
-		PRBool shouldParse = PR_TRUE;
 		// Skip non-js files
 		if (strstr(leafName, ".js") + strlen(".js") != leafName + strlen(leafName))
 			shouldParse = PR_FALSE;
