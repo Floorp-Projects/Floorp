@@ -27,6 +27,7 @@ DIRS    += tests
 
 DIRS	+= tools
 
-DIRS	+= xptinfo xptcall
+# Don't recur into xptinfo and xptcall, because they may require xpidl,
+# which hasn't been built yet.  They'll be called from the xpcom makefile.
 
 include $(topsrcdir)/config/rules.mk
