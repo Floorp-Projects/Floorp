@@ -224,9 +224,10 @@ nsTreeColumn::nsTreeColumn(nsIContent* aColElement, nsIFrame* aFrame)
   mCropStyle = 0;
   nsAutoString crop;
   mColElement->GetAttr(kNameSpaceID_None, nsXULAtoms::crop, crop);
-  if (crop.EqualsIgnoreCase("center"))
+  if (crop.Equals(NS_LITERAL_STRING("center")))
     mCropStyle = 1;
-  else if (crop.EqualsIgnoreCase("left") || crop.EqualsIgnoreCase("start"))
+  else if (crop.Equals(NS_LITERAL_STRING("left")) ||
+           crop.Equals(NS_LITERAL_STRING("start")))
     mCropStyle = 2;
 
   // Cache our text alignment policy.
@@ -243,7 +244,7 @@ nsTreeColumn::nsTreeColumn(nsIContent* aColElement, nsIFrame* aFrame)
   mIsPrimaryCol = PR_FALSE;
   nsAutoString primary;
   mColElement->GetAttr(kNameSpaceID_None, nsXULAtoms::primary, primary);
-  if (primary.EqualsIgnoreCase("true"))
+  if (primary.Equals(NS_LITERAL_STRING("true")))
     mIsPrimaryCol = PR_TRUE;
 
   // Figure out if we're a cycling column (one that doesn't cause a selection
@@ -251,16 +252,16 @@ nsTreeColumn::nsTreeColumn(nsIContent* aColElement, nsIFrame* aFrame)
   mIsCyclerCol = PR_FALSE;
   nsAutoString cycler;
   mColElement->GetAttr(kNameSpaceID_None, nsXULAtoms::cycler, cycler);
-  if (cycler.EqualsIgnoreCase("true"))
+  if (cycler.Equals(NS_LITERAL_STRING("true")))
     mIsCyclerCol = PR_TRUE;
 
   // Figure out our column type. Default type is text.
   mType = eText;
   nsAutoString type;
   mColElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-  if (type.EqualsIgnoreCase("checkbox"))
+  if (type.Equals(NS_LITERAL_STRING("checkbox")))
     mType = eCheckbox;
-  else if (type.EqualsIgnoreCase("progressmeter"))
+  else if (type.Equals(NS_LITERAL_STRING("progressmeter")))
     mType = eProgressMeter;
 
   // Cache our index.
@@ -833,7 +834,7 @@ NS_IMETHODIMP nsTreeBodyFrame::GetKeyColumnIndex(PRInt32 *_retval)
   for (nsTreeColumn* currCol = mColumns; currCol; currCol = currCol->GetNext()) {
     // Skip hidden column
     currCol->GetElement()->GetAttr(kNameSpaceID_None, nsHTMLAtoms::hidden, attr);
-    if (attr.EqualsIgnoreCase("true"))
+    if (attr.Equals(NS_LITERAL_STRING("true")))
       continue;
 
     // Skip non-text column

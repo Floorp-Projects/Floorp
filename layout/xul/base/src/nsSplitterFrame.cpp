@@ -186,7 +186,7 @@ nsSplitterFrameInner::GetResizeBefore()
     nsString value;
     mOuter->GetContent()->GetAttr(kNameSpaceID_None,
                                   nsXULAtoms::resizebefore, value);
-    if (value.EqualsIgnoreCase("farthest"))
+    if (value.Equals(NS_LITERAL_STRING("farthest")))
       return Farthest;
     else
       return Closest;
@@ -204,9 +204,9 @@ nsSplitterFrameInner::GetResizeAfter()
     nsString value;
     mOuter->GetContent()->GetAttr(kNameSpaceID_None,
                                   nsXULAtoms::resizeafter, value);
-    if (value.EqualsIgnoreCase("farthest"))
+    if (value.Equals(NS_LITERAL_STRING("farthest")))
       return Farthest;
-    else if (value.EqualsIgnoreCase("grow"))
+    else if (value.Equals(NS_LITERAL_STRING("grow")))
       return Grow;
     else 
       return Closest;
@@ -218,9 +218,9 @@ nsSplitterFrameInner::GetState()
     nsString value;
     mOuter->GetContent()->GetAttr(kNameSpaceID_None,
                                   nsXULAtoms::state, value);
-    if (value.EqualsIgnoreCase("dragging"))
+    if (value.Equals(NS_LITERAL_STRING("dragging")))
       return Dragging;
-    else if (value.EqualsIgnoreCase("collapsed"))
+    else if (value.Equals(NS_LITERAL_STRING("collapsed")))
       return Collapsed;
 	else 
       return Open;
@@ -961,9 +961,9 @@ nsSplitterFrameInner::GetCollapseDirection()
     nsString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == mOuter->mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::collapse, value))
     {
-     if (value.EqualsIgnoreCase("before"))
+     if (value.Equals(NS_LITERAL_STRING("before")))
          return Before;
-     else if (value.EqualsIgnoreCase("after"))
+     else if (value.Equals(NS_LITERAL_STRING("after")))
          return After;
      else 
        return None;

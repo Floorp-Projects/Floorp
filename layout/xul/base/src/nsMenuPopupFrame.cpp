@@ -1407,7 +1407,7 @@ NS_IMETHODIMP nsMenuPopupFrame::ConsumeOutsideClicks(PRBool& aConsumeOutsideClic
       // Don't consume outside clicks for autocomplete widget
       nsAutoString typeString;
       parentContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, typeString);
-      if (typeString.EqualsIgnoreCase("autocomplete"))
+      if (typeString.Equals(NS_LITERAL_STRING("autocomplete")))
         aConsumeOutsideClicks = PR_FALSE;
     }
   }
