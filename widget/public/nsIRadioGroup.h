@@ -30,10 +30,9 @@ class nsIRadioButton;
 class nsIEnumerator;
 
 /**
- * Help class for implementing a "group" of radio buttons
+ * Helper class for implementing a "group" of radio buttons
  * 
  */
-
 class nsIRadioGroup : public nsISupports 
 {
 
@@ -54,7 +53,7 @@ public:
     virtual void Remove(nsIRadioButton * aRadioBtn) = 0;
 
     /**
-     * Setd the name of the RadioGroup
+     * Sets the name of the RadioGroup
      * @param aName The new name of the radio group
      *
      */
@@ -70,7 +69,7 @@ public:
 
     /**
      * Gets the enumeration of children
-     * @param nsIEnumerator* The enumeration of children (radio buttons) in the RadioGroup
+     * @return The enumeration of children (radio buttons) in the RadioGroup
      *
      */
     virtual nsIEnumerator* GetChildren() = 0;

@@ -49,7 +49,7 @@ public:
     
     /**
      * Get the scrollbar range
-     * @returns the upper end of the scrollbar range
+     * @return the upper end of the scrollbar range
      */
     virtual PRUint32 GetMaxRange() = 0;
 
@@ -62,7 +62,7 @@ public:
 
     /**
      * Get the thumb position. 
-     * @returns a value between (startRange) and (endRange - thumbSize)
+     * @return a value between (startRange) and (endRange - thumbSize)
      *
      */
     virtual PRUint32 GetPosition() = 0;
@@ -76,7 +76,7 @@ public:
     
     /**
      * Get the thumb size. 
-     * @returns size of the thumb. The value is between 
+     * @return size of the thumb. The value is between 
      *          startRange and endRange
      */
     virtual PRUint32 GetThumbSize() = 0;
@@ -90,7 +90,7 @@ public:
   
     /**
      * Get the line increment.
-     * @returns size of the line increment. The value is
+     * @return size of the line increment. The value is
      *          between startRange and endRange
      */
     virtual PRUint32 GetLineIncrement() = 0;

@@ -55,7 +55,7 @@ class nsIRadioButton : public nsIButton {
     /**
      * Gets the state the RadioButton
      *
-     * @return BRBool PR_TRUE if set, PR_FALSE if unset
+     * @return PR_TRUE if set, PR_FALSE if unset
      *
      */
     virtual PRBool GetState() = 0;
@@ -63,7 +63,7 @@ class nsIRadioButton : public nsIButton {
     /**
      * Gets the RadioGroup associated with this button
      *
-     * @return nsIRadioGroup* its RadioGroup
+     * @return The Radio Group
      *
      */
     virtual nsIRadioGroup* GetRadioGroup() = 0;
