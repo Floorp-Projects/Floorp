@@ -106,6 +106,8 @@ public:
                   nsIFrame*        aPrevInFlow);
 
 
+  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
+
   static nsresult AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
                                              nsIFrame*       aTableFrame);
   /*
@@ -227,6 +229,12 @@ public:
     * column information yet.
     */
   NS_METHOD GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aColFrame);
+
+  static nsMargin GetPadding(const nsHTMLReflowState& aReflowState,
+                             const nsTableCellFrame*  aCellFrame);
+
+  static nsMargin GetPadding(const nsSize&           aBasis,
+                             const nsTableCellFrame* aCellFrame);
 
   nsFrameList& GetColGroups();
 
@@ -403,8 +411,6 @@ public:
                                   PRInt32*           aColSpan = nsnull);
 
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
-
-  NS_METHOD GetBorderPlusMarginPadding(nsMargin& aResult);
 
   PRBool HasNonPercentSpanningPercent() const;
   void SetHasNonPercentSpanningPercent(PRBool aValue);
@@ -624,7 +630,8 @@ protected:
                                    nsSize*                  aMaxElementSize);
 
   /** sets the width of the table according to the computed widths of each column. */
-  virtual void SetTableWidth(nsIPresContext*  aPresContext);
+  virtual void SetTableWidth(nsIPresContext*          aPresContext,
+                             const nsHTMLReflowState& aReflowState);
 
   /** returns PR_TRUE if the cached pass 1 data is still valid */
   virtual PRBool IsFirstPassValid() const;
@@ -732,7 +739,9 @@ public:
 
 protected:
 
-  void SetColumnDimensions(nsIPresContext* aPresContext, nscoord aHeight);
+  void SetColumnDimensions(nsIPresContext* aPresContext, 
+                           nscoord         aHeight,
+                           const nsMargin& aReflowState);
 
 #ifdef NS_DEBUG
   /** for debugging only
@@ -789,7 +798,8 @@ public: /* ----- Cell Map public methods ----- */
   /** compute the max-element-size for the table
     * @param aMaxElementSize  [OUT] width field set to the min legal width of the table
     */
-  void SetMaxElementSize(nsSize* aMaxElementSize);
+  void SetMaxElementSize(nsSize*         aMaxElementSize,
+                         const nsMargin& aPadding);
 
   /** returns PR_TRUE if table layout requires a preliminary pass over the content */
   virtual PRBool IsAutoLayout(const nsHTMLReflowState* aReflowState = nsnull);

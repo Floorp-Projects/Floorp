@@ -248,9 +248,10 @@ protected:
 
   /** set the size and the location of both the inner table frame and the caption. */
   NS_IMETHOD SizeAndPlaceChildren(nsIPresContext*        aPresContext,
-                                  const nsSize &         aInnerSize, 
-                                  const nsSize &         aCaptionSize,
-                                  OuterTableReflowState& aReflowState);
+                                  const nsSize&          aInnerSize, 
+                                  const nsSize&          aCaptionSize,
+                                  OuterTableReflowState& aReflowState,
+                                  const nsMargin&        aCaptionMargin);
 
 // end Incremental Reflow methods
 

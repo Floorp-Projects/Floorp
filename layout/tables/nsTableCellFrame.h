@@ -137,7 +137,8 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
-  virtual void VerticallyAlignChild(nsIPresContext* aPresContext);
+  virtual void VerticallyAlignChild(nsIPresContext*          aPresContext,
+                                    const nsHTMLReflowState& aReflowState);
 
   /**
    * return the cell's specified row span. this is what was specified in the

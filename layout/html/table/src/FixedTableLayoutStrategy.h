@@ -96,8 +96,9 @@ protected:
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
     */
-  virtual PRBool AssignPreliminaryColumnWidths(nsIPresContext* aPresContext,
-                                               nscoord         aComputedWidth);
+  virtual PRBool AssignPreliminaryColumnWidths(nsIPresContext*          aPresContext,
+                                               nscoord                  aComputedWidth,
+                                               const nsHTMLReflowState& aReflowState);
 
 
 };

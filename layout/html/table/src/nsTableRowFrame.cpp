@@ -289,7 +289,7 @@ nsTableRowFrame::DidResize(nsIPresContext* aPresContext,
         //     But some content crashes when this reflow is issued, to be investigated
         //XXX nsReflowStatus status;
         //ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
-        ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild(aPresContext);
+        ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild(aPresContext, aReflowState);
         /* if we're collapsing borders, notify the cell that the border edge length has changed */
         if (NS_STYLE_BORDER_COLLAPSE == tableFrame->GetBorderCollapseStyle()) {
           ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_LEFT,
@@ -948,12 +948,6 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
       nsMargin  kidMargin;
       aReflowState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame, kidMargin);
 
-      // get border padding values
-      nsMargin borderPadding;
-      const nsStyleSpacing* cellSpacingStyle;
-      kidFrame->GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)cellSpacingStyle));
-      cellSpacingStyle->CalcBorderPaddingFor(kidFrame, borderPadding);
-
       // For the initial reflow always allow the child to be as high as it
       // wants. The default available width is also unconstrained so we can
       // get the child's maximum width
@@ -1437,7 +1431,7 @@ void nsTableRowFrame::ReflowCellFrame(nsIPresContext*          aPresContext,
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState,
               0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
   aCellFrame->SizeTo(aPresContext, cellSize.width, aAvailableHeight);
-  aCellFrame->VerticallyAlignChild(aPresContext);
+  aCellFrame->VerticallyAlignChild(aPresContext, aReflowState);
   aCellFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 }
 

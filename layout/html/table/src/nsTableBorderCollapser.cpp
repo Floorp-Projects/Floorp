@@ -758,14 +758,16 @@ void nsTableBorderCollapser::ComputeBorderSegment(PRUint8      aSide,
           return;
         }
         else if (spacing->GetBorderStyle(side)!=NS_STYLE_BORDER_STYLE_NONE) {
-          spacing->GetBorder(border);
-          nscoord borderWidth = GetWidthForSide(border, side);
-          if (borderWidth == maxWidth)
-            sameWidthBorders.AppendElement(spacing);
-          else if (borderWidth > maxWidth) {
-            maxWidth = borderWidth;
-            sameWidthBorders.Clear();
-            sameWidthBorders.AppendElement(spacing);
+          if (spacing->GetBorder(border)) {
+            nscoord borderWidth = GetWidthForSide(border, side);
+            if (borderWidth == maxWidth) {
+              sameWidthBorders.AppendElement(spacing);
+            }
+            else if (borderWidth > maxWidth) {
+              maxWidth = borderWidth;
+              sameWidthBorders.Clear();
+              sameWidthBorders.AppendElement(spacing);
+            }
           }
         }
       }

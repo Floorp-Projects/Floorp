@@ -29,6 +29,7 @@
 class nsIPresContext;
 class nsIStyleContext;
 struct nsHTMLReflowState;
+struct nsMargin;
 class nsTableCellFrame;
 class nsStyleCoord;
 class nsISizeOfHandler;
@@ -41,14 +42,16 @@ public:
     * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
     * @param aComputedWidth   the computed size of the table
     */
-  virtual PRBool Initialize(nsIPresContext* aPresContext,
-                            nsSize*         aMaxElementSize, 
-                            nscoord         aComputedWidth)=0;
+  virtual PRBool Initialize(nsIPresContext*          aPresContext,
+                            nsSize*                  aMaxElementSize, 
+                            nscoord                  aComputedWidth,
+                            const nsHTMLReflowState& aBorderPadding)=0;
 
   /** compute the max-element-size for the table
     * @param aMaxElementSize  [OUT] width field set to the min legal width of the table
     */
-  virtual void SetMaxElementSize(nsSize* aMaxElementSize)=0;
+  virtual void SetMaxElementSize(nsSize*         aMaxElementSize,
+                                 const nsMargin& aPadding)=0;
 
   /** assign widths for each column, taking into account the table content, the effective style, 
     * the layout constraints, and the compatibility mode.  Sets mColumnWidths as a side effect.

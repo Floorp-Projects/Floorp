@@ -58,14 +58,16 @@ public:
     * in the table (content, structure, or style) 
     * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
     */
-  virtual PRBool Initialize(nsIPresContext* aPresContext,
-                            nsSize*         aMaxElementSize,
-                            nscoord         aMaxSize);
+  virtual PRBool Initialize(nsIPresContext*          aPresContext,
+                            nsSize*                  aMaxElementSize,
+                            nscoord                  aMaxSize,
+                            const nsHTMLReflowState& aReflowState);
 
   /** compute the max element size of the table.
     * assumes that Initialize has been called
     */
-  virtual void SetMaxElementSize(nsSize* aMaxElementSize);
+  virtual void SetMaxElementSize(nsSize*         aMaxElementSize,
+                                 const nsMargin& aPadding);
 
   void SetMinAndMaxTableContentWidths();
 
@@ -99,8 +101,9 @@ protected:
     * @return PR_TRUE if all is well, PR_FALSE if there was an unrecoverable error
     *
     */
-  virtual PRBool AssignPreliminaryColumnWidths(nsIPresContext* aPresContext,
-                                               nscoord         aComputedWidth);
+  virtual PRBool AssignPreliminaryColumnWidths(nsIPresContext*          aPresContext,
+                                               nscoord                  aComputedWidth,
+                                               const nsHTMLReflowState& aReflowState);
 
   /** 
     * Calculate the adjusted widths (min, desired, fixed, or pct) for a cell
@@ -115,7 +118,8 @@ protected:
                             nsTableCellFrame* aCellFrame,
                             PRInt32           aColIndex,
                             PRInt32           aColSpan,
-                            PRBool            aConsiderPct);
+                            PRBool            aConsiderPct,
+                            nscoord           aPercentBase);
 
   /** 
     * main helper for above. For min width calculations, it can get called up to
