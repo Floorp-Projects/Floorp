@@ -4220,7 +4220,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
           nsCOMPtr<nsIClassicPluginFactory> factory = 
                    do_GetService(NS_CLASSIC_PLUGIN_FACTORY_CONTRACTID, &rv);
           if (NS_SUCCEEDED(rv)) 
-            rv = factory->CreatePlugin(serviceManager, 
+            rv = factory->CreatePlugin((nsIServiceManager*)serviceManager, 
                                        pluginTag->mFileName, 
                                        pluginTag->mLibrary, 
                                        &pluginTag->mEntryPoint);
