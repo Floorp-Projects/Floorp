@@ -22,12 +22,13 @@
 * SUMMARY: Testing regular expressions containing the ? character.
 * Arose from Bugzilla bug 57572: "RegExp with ? matches incorrectly"
 *
-*  See http://bugzilla.mozilla.org/show_bug.cgi?id=57572
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=57572
+*
 */
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 var i = 0;
 var bug = 57572;
-var summary = 'Testing regular expressions containing "?"\n';
+var summary = 'Testing regular expressions containing "?"';
 var cnEmptyString = ''; var cnSingleSpace = ' ';
 var status = '';
 var statusmessages = new Array();
@@ -45,15 +46,15 @@ status = inSection(1);
 pattern = /(\S+)?(.*)/;
 string = 'Test this';
 actualmatch = string.match(pattern);
-expectedmatch = Array(string,  'Test',  ' this');  //single space in front of  'this'
+expectedmatch = Array(string, 'Test', ' this');  //single space in front of 'this'
 addThis();
 
 status = inSection(2);
 pattern = /(\S+)? ?(.*)/;  //single space between the ? characters
 string= 'Test this';
 actualmatch = string.match(pattern);
-expectedmatch = Array(string,  'Test',  'this');  //NO space in front of  'this'
-addThis(); 
+expectedmatch = Array(string, 'Test', 'this');  //NO space in front of 'this'
+addThis();
 
 status = inSection(3);
 pattern = /(\S+)????(.*)/;
@@ -66,14 +67,14 @@ status = inSection(4);
 pattern = /(\S+)?(.*)/;
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
-expectedmatch = Array(string,  'Stupid',  ' phrase, with six - (short) words');  //single space in front of 'phrase'
+expectedmatch = Array(string, 'Stupid', ' phrase, with six - (short) words');  //single space in front of 'phrase'
 addThis();
 
 status = inSection(5);
 pattern = /(\S+)? ?(.*)/;  //single space between the ? characters
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
-expectedmatch = Array(string,  'Stupid',  'phrase, with six - (short) words');  //NO space in front of 'phrase'
+expectedmatch = Array(string, 'Stupid', 'phrase, with six - (short) words');  //NO space in front of 'phrase'
 addThis();
 
 
@@ -82,35 +83,35 @@ status = inSection(6);
 pattern = /(\S+)?( ?)(.*)/;  //single space before second ? character
 string = 'Stupid phrase, with six - (short) words';
 actualmatch = string.match(pattern);
-expectedmatch = Array(string,  'Stupid', cnSingleSpace, 'phrase, with six - (short) words');
+expectedmatch = Array(string, 'Stupid', cnSingleSpace, 'phrase, with six - (short) words');
 addThis();
 
 status = inSection(7);
 pattern = /^(\S+)?( ?)(B+)$/;  //single space before second ? character
 string = 'AAABBB';
 actualmatch = string.match(pattern);
-expectedmatch = Array(string,  'AAABB', cnEmptyString,  'B');
+expectedmatch = Array(string, 'AAABB', cnEmptyString, 'B');
 addThis();
 
 status = inSection(8);
 pattern = /(\S+)?(!?)(.*)/;
 string = 'WOW !!! !!!';
 actualmatch = string.match(pattern);
-expectedmatch = Array(string, 'WOW', cnEmptyString,  ' !!! !!!');
+expectedmatch = Array(string, 'WOW', cnEmptyString, ' !!! !!!');
 addThis();
 
 status = inSection(9);
 pattern = /(.+)?(!?)(!+)/;
 string = 'WOW !!! !!!';
 actualmatch = string.match(pattern);
-expectedmatch = Array(string, 'WOW !!! !!', cnEmptyString,  '!');
+expectedmatch = Array(string, 'WOW !!! !!', cnEmptyString, '!');
 addThis();
 
 
 
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 test();
-//-------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 
 
 
