@@ -503,16 +503,16 @@ done:
 
 OSErr NSLoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName, CFragConnectionID *outConnectionID)
 {
-	UInt32		fragOffset, fragLength;
+    UInt32      fragOffset, fragLength;
     short       fragNameLength;
-	Ptr				main;
+    Ptr             main;
     Str255      fragName;
-	Str255		errName;
-	OSErr			err;
-	
-	err = GetNamedFragmentOffsets(fileSpec, fragmentName, &fragOffset, &fragLength);
-	if (err != noErr) return err;
-				
+    Str255      errName;
+    OSErr           err;
+    
+    err = GetNamedFragmentOffsets(fileSpec, fragmentName, &fragOffset, &fragLength);
+    if (err != noErr) return err;
+    
     // convert fragment name to pascal string
     fragNameLength = strlen(fragmentName);
     if (fragNameLength > 255)
@@ -524,9 +524,9 @@ OSErr NSLoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName, CFra
     // This value affects the ability of debuggers, and the Talkback system,
     // to match code fragments with symbol files
     err = GetDiskFragment(fileSpec, fragOffset, fragLength, fragName, 
-					kLoadCFrag, outConnectionID, &main, errName);
+                    kLoadCFrag, outConnectionID, &main, errName);
 
-	return err;
+    return err;
 }
 
 
@@ -543,42 +543,42 @@ OSErr NSLoadNamedFragment(const FSSpec *fileSpec, const char* fragmentName, CFra
 -----------------------------------------------------------------*/
 
 OSErr NSLoadIndexedFragment(const FSSpec *fileSpec, PRUint32 fragmentIndex,
-							char** outFragName, CFragConnectionID *outConnectionID)
+                            char** outFragName, CFragConnectionID *outConnectionID)
 {
-	UInt32		fragOffset, fragLength;
-	char			*fragNameBlock = NULL;
-	Ptr				main;
-	Str255		fragName = "\p";
-	Str255		errName;
-	OSErr			err;
+    UInt32      fragOffset, fragLength;
+    char        *fragNameBlock = NULL;
+    Ptr         main;
+    Str255      fragName = "\p";
+    Str255      errName;
+    OSErr       err;
 
-	*outFragName = NULL;
-	
-	err = GetIndexedFragmentOffsets(fileSpec, fragmentIndex, &fragOffset, &fragLength, &fragNameBlock);
-	if (err != noErr) return err;
-				
-	if (fragNameBlock)
-	{
-		UInt32 nameLen = strlen(fragNameBlock);
-		if (nameLen > 63)
-			nameLen = 63;
-		BlockMoveData(fragNameBlock, &fragName[1], nameLen);
-		fragName[0] = nameLen;
-	}
+    *outFragName = NULL;
+    
+    err = GetIndexedFragmentOffsets(fileSpec, fragmentIndex, &fragOffset, &fragLength, &fragNameBlock);
+    if (err != noErr) return err;
+                
+    if (fragNameBlock)
+    {
+        UInt32 nameLen = strlen(fragNameBlock);
+        if (nameLen > 63)
+            nameLen = 63;
+        BlockMoveData(fragNameBlock, &fragName[1], nameLen);
+        fragName[0] = nameLen;
+    }
 
     // Note that we pass the fragment name as the 4th param to GetDiskFragment.
     // This value affects the ability of debuggers, and the Talkback system,
     // to match code fragments with symbol files
     err = GetDiskFragment(fileSpec, fragOffset, fragLength, fragName, 
-					kLoadCFrag, outConnectionID, &main, errName);
-	if (err != noErr)
-	{
-		free(fragNameBlock);
-		return err;
-	}
+                    kLoadCFrag, outConnectionID, &main, errName);
+    if (err != noErr)
+    {
+        free(fragNameBlock);
+        return err;
+    }
 
-	*outFragName = fragNameBlock;
-	return noErr;
+    *outFragName = fragNameBlock;
+    return noErr;
 }
 
 
