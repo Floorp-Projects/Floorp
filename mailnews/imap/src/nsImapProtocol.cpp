@@ -589,9 +589,9 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         }
 
 		    if (m_overRideUrlConnectionInfo)
-			    rv = socketService->CreateTransportOfType(connectionType, m_logonHost.GetBuffer(), m_logonPort, nsnull, 0, 0, getter_AddRefs(m_channel));
+			    rv = socketService->CreateTransportOfType(connectionType, m_logonHost.GetBuffer(), m_logonPort, nsnull, 0, 0, 0, getter_AddRefs(m_channel));
 		    else
-			    rv = socketService->CreateTransportOfType(connectionType, hostName, port, nsnull, 0, 0, getter_AddRefs(m_channel));
+			    rv = socketService->CreateTransportOfType(connectionType, hostName, port, nsnull, 0, 0, 0, getter_AddRefs(m_channel));
         
         if (NS_SUCCEEDED(rv))
           rv = m_channel->OpenOutputStream(getter_AddRefs(m_outputStream));

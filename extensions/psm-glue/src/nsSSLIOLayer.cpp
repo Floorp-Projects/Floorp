@@ -50,13 +50,22 @@ public:
     nsresult SetControlPtr(CMT_CONTROL *aControlPtr);
     nsresult SetFileDescPtr(PRFileDesc *aControlPtr);
     nsresult SetHostName(char *aHostName);
+    nsresult SetProxyName(char *aName);
+
+    nsresult SetHostPort(PRInt32 aPort);
+    nsresult SetProxyPort(PRInt32 aPort);
     nsresult SetPickledStatus();
 
 protected:
     CMT_CONTROL* mControl;
     CMSocket*    mSocket;
     PRFileDesc*  mFd;
+    
     nsString     mHostName;
+    PRInt32      mHostPort;
+    
+    nsString     mProxyName;
+    PRInt32      mProxyPort;
     
     unsigned char* mPickledStatus;
 };
@@ -68,33 +77,14 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
     nsresult                result;
     PRStatus                rv = PR_SUCCESS;
     CMTStatus               status = CMTFailure;
-    char*                   hostName;
-
+    
     /* Set the error in case of failure. */
 
     PR_SetError(PR_UNKNOWN_ERROR, status);
 
-    if (!fd || !addr || !fd->secret)
+    if (!fd || !addr || !fd->secret || !gPSMService)
         return PR_FAILURE;
     
-    if (gPSMService == nsnull)
-    {
-        result = nsServiceManager::GetService( PSM_COMPONENT_PROGID,
-                                               NS_GET_IID(nsIPSMComponent), 
-                                               (nsISupports**)&gPSMService);  //FIX leak one per app run
-        if (NS_FAILED(result))
-            return PR_FAILURE;
-    }
-    
-    
-    // Make the socket non-blocking...
-    PRSocketOptionData opt;
-    opt.option = PR_SockOpt_Nonblocking;
-    opt.value.non_blocking = PR_FALSE;
-    rv = PR_SetSocketOption(fd->lower, &opt);
-    if (PR_SUCCESS != rv) 
-        return PR_FAILURE;
-
     char ipBuffer[PR_NETDB_BUF_SIZE];
     rv = PR_NetAddrToString(addr, (char*)&ipBuffer, PR_NETDB_BUF_SIZE);
     if (rv != PR_SUCCESS)
@@ -106,39 +96,68 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
       strcpy(ipBuffer, ipBuffer + 7);
     }
 
-
+    
+    CMT_CONTROL *control;
+    result = gPSMService->GetControlConnection(&control);
+    if (result != PR_SUCCESS)
+        return PR_FAILURE;
+    
     CMSocket* cmsock = (CMSocket *)PR_Malloc(sizeof(CMSocket));
     if (!cmsock)
         return PR_FAILURE;
     
     memset(cmsock, 0, sizeof(CMSocket));
     
-    CMT_CONTROL *control;
-    result = gPSMService->GetControlConnection(&control);
-
-    if (result != PR_SUCCESS)
-    {
-        PR_FREEIF(cmsock)
-        return PR_FAILURE;
-    }
-    
     cmsock->fd        = fd->lower;
     cmsock->isUnix    = PR_FALSE;
    
     nsPSMSocketInfo *infoObject = (nsPSMSocketInfo *)fd->secret;
     
-    infoObject->GetHostName(&hostName);
     infoObject->SetControlPtr(control);
     infoObject->SetSocketPtr(cmsock);
     
-    status = CMT_OpenSSLConnection(control,
-                                   cmsock,
-                                   SSM_REQUEST_SSL_DATA_SSL,
-                                   PR_ntohs(addr->inet.port),
-                                   ipBuffer,
-                                   (hostName ? hostName : ipBuffer),
-                                   CM_FALSE, 
-                                   nsnull);
+    char* proxyName;
+    char* hostName;
+    infoObject->GetProxyName(&proxyName);
+    infoObject->GetHostName(&hostName);
+
+    if (!proxyName)
+    {
+        // Direct connection
+        status = CMT_OpenSSLConnection(control,
+                                       cmsock,
+                                       SSM_REQUEST_SSL_DATA_SSL,
+                                       PR_ntohs(addr->inet.port),
+                                       ipBuffer,
+                                       (hostName ? hostName : ipBuffer),
+                                       CM_FALSE, 
+                                       nsnull);
+    
+    }
+    else
+    {
+        // not supported yet.
+
+        return PR_FAILURE;
+#if 0
+        PRInt32 destPort;
+        
+        infoObject->GetProxyPort(&destPort);
+
+        status = CMT_OpenSSLProxyConnection(control,
+                                            cmsock,
+                                            destPort, 
+                                            proxyName,  // wants IP
+                                            hostName);
+#endif
+    }
+
+    Recycle(hostName);
+    Recycle(proxyName);
+    
+
+    
+    
     if (CMTSuccess == status)
     {
         // since our stuff can block, what we want to do is return PR_FAILURE,
@@ -172,12 +191,11 @@ nsSSLIOLayerClose(PRFileDesc *fd)
     infoObject->GetSocketPtr(&socket);
     infoObject->SetPickledStatus();
 
-    if (((PRStatus) CMT_GetSSLDataErrorCode(control, socket, &errorCode)) == PR_SUCCESS)
-    {
-        CMT_DestroyDataConnection(control, socket);
-        NS_RELEASE(infoObject);  // if someone is interested in us, the better have an addref.
-        fd->identity = PR_INVALID_IO_LAYER;
-    }
+    CMT_GetSSLDataErrorCode(control, socket, &errorCode);
+    CMT_DestroyDataConnection(control, socket);
+    NS_RELEASE(infoObject);  // if someone is interested in us, the better have an addref.
+    fd->identity = PR_INVALID_IO_LAYER;
+    
     return (PRStatus)errorCode;
   }
 
@@ -340,7 +358,10 @@ nsPSMSocketInfo::SetFileDescPtr(PRFileDesc *aFilePtr)
 NS_IMETHODIMP 
 nsPSMSocketInfo::GetHostName(char * *aHostName)
 {
-    *aHostName = mHostName.ToNewCString();
+    if (mHostName.IsEmpty())
+        *aHostName = nsnull;
+    else
+        *aHostName = mHostName.ToNewCString();
     return NS_OK;
 }
 
@@ -351,6 +372,56 @@ nsPSMSocketInfo::SetHostName(char *aHostName)
     mHostName.AssignWithConversion(aHostName);
     return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsPSMSocketInfo::GetHostPort(PRInt32 *aPort)
+{
+    *aPort = mHostPort;
+    return NS_OK;
+}
+
+nsresult 
+nsPSMSocketInfo::SetHostPort(PRInt32 aPort)
+{
+    mHostPort = aPort;
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsPSMSocketInfo::GetProxyName(char * *aName)
+{
+    if (mProxyName.IsEmpty())
+        *aName = nsnull;
+    else
+        *aName = mProxyName.ToNewCString();
+    return NS_OK;
+}
+
+
+nsresult 
+nsPSMSocketInfo::SetProxyName(char *aName)
+{
+    mProxyName.AssignWithConversion(aName);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP 
+nsPSMSocketInfo::GetProxyPort(PRInt32 *aPort)
+{
+    *aPort = mProxyPort;
+    return NS_OK;
+}
+
+nsresult 
+nsPSMSocketInfo::SetProxyPort(PRInt32 aPort)
+{
+    mProxyPort = aPort;
+    return NS_OK;
+}
+
+
 
 nsresult
 nsPSMSocketInfo::SetPickledStatus()
@@ -396,7 +467,12 @@ nsPSMSocketInfo::GetPickledStatus(char * *pickledStatusString)
 }
 
 nsresult
-nsSSLIOLayerNewSocket(const char* hostName, PRFileDesc **fd, nsISupports** info)
+nsSSLIOLayerNewSocket( const char *host, 
+                       PRInt32 port, 
+                       const char *proxyHost, 
+                       PRInt32 proxyPort,
+                       PRFileDesc **fd, 
+                       nsISupports** info)
 {
     static PRBool  firstTime = PR_TRUE;
     if (firstTime)
@@ -408,7 +484,16 @@ nsSSLIOLayerNewSocket(const char* hostName, PRFileDesc **fd, nsISupports** info)
         nsSSLIOLayerMethods.close   = nsSSLIOLayerClose;
         nsSSLIOLayerMethods.read    = nsSSLIOLayerRead;
         nsSSLIOLayerMethods.write   = nsSSLIOLayerWrite;
+        
+        
+        nsresult result = nsServiceManager::GetService( PSM_COMPONENT_PROGID,
+                                                        NS_GET_IID(nsIPSMComponent), 
+                                                        (nsISupports**)&gPSMService);  
+        if (NS_FAILED(result))
+            return PR_FAILURE;
+    
         firstTime                   = PR_FALSE;
+
     }
     
 
@@ -419,6 +504,14 @@ nsSSLIOLayerNewSocket(const char* hostName, PRFileDesc **fd, nsISupports** info)
     /* Get a normal NSPR socket */
     sock = PR_NewTCPSocket();  
     if (! sock) return NS_ERROR_OUT_OF_MEMORY;
+    
+    // Make the socket non-blocking...
+    PRSocketOptionData opt;
+    opt.option = PR_SockOpt_Nonblocking;
+    opt.value.non_blocking = PR_FALSE;
+    rv = PR_SetSocketOption(sock, &opt);
+    if (PR_SUCCESS != rv)
+        return PR_FAILURE;
 
     layer = PR_CreateIOLayerStub(nsSSLIOLayerIdentity, &nsSSLIOLayerMethods);
     if (! layer)
@@ -436,7 +529,12 @@ nsSSLIOLayerNewSocket(const char* hostName, PRFileDesc **fd, nsISupports** info)
     }
     
     NS_ADDREF(infoObject);
-    infoObject->SetHostName((char*)hostName);
+    
+    infoObject->SetHostName((char*)host);
+    infoObject->SetHostPort(port);
+    infoObject->SetProxyName((char*)proxyHost);
+    infoObject->SetProxyPort(proxyPort);
+
     layer->secret = (PRFilePrivate*) infoObject;
     rv = PR_PushIOLayer(sock, PR_GetLayersIdentity(sock), layer);
     

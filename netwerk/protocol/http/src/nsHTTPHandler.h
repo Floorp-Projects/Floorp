@@ -103,6 +103,7 @@ public:
 
     virtual nsresult CreateTransport(const char* host, PRInt32 port, 
                                      const char* aPrintHost,
+                                     PRBool usingProxy, 
                                      PRUint32 bufferSegmentSize,
                                      PRUint32 bufferMaxSize,
                                      nsIChannel** o_pTrans);

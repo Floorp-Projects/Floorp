@@ -127,7 +127,7 @@ nsFtpConnectionThread::Process() {
                     if (NS_FAILED(rv)) return rv;
 
                     // build our own
-                    rv = mSTS->CreateTransport(host, mPort, host, 
+                    rv = mSTS->CreateTransport(host, mPort, nsnull, 0, 
                                                FTP_COMMAND_CHANNEL_SEG_SIZE,
                                                FTP_COMMAND_CHANNEL_MAX_SIZE,
                                                getter_AddRefs(mCPipe)); // the command channel
@@ -1391,7 +1391,7 @@ nsFtpConnectionThread::R_pasv() {
 
     // now we know where to connect our data channel
     rv = mSTS->CreateTransport(mIPv6ServerAddress ? mIPv6ServerAddress : host.GetBuffer(),
-                               port, nsnull, 
+                               port, nsnull, 0, 
                                mBufferSegmentSize, mBufferMaxSize,
                                getter_AddRefs(mDPipe)); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;

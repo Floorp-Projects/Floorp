@@ -489,12 +489,13 @@ nsSocketTransportService::Run(void)
 NS_IMETHODIMP
 nsSocketTransportService::CreateTransport(const char* aHost, 
                                           PRInt32 aPort,
-                                          const char* aPrintHost,
+                                          const char* proxyHost, 
+                                          PRInt32 proxyPort, 
                                           PRUint32 bufferSegmentSize,
                                           PRUint32 bufferMaxSize, 
                                           nsIChannel** aResult)
 {
-  return CreateTransportOfType(nsnull, aHost, aPort, aPrintHost,
+  return CreateTransportOfType(nsnull, aHost, aPort, proxyHost, proxyPort,
                                bufferSegmentSize, bufferMaxSize, aResult);
 }
 
@@ -502,7 +503,8 @@ NS_IMETHODIMP
 nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
                                                 const char* aHost, 
                                                 PRInt32 aPort,
-                                                const char* aPrintHost,
+                                                const char* proxyHost, 
+                                                PRInt32 proxyPort, 
                                                 PRUint32 bufferSegmentSize,
                                                 PRUint32 bufferMaxSize,
                                                 nsIChannel** aResult)
@@ -527,7 +529,7 @@ nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
   // Create and initialize a new connection object...
   NS_NEWXPCOM(transport, nsSocketTransport);
   if (transport) {
-    rv = transport->Init(this, aHost, aPort, aSocketType, aPrintHost,
+    rv = transport->Init(this, aHost, aPort, aSocketType, proxyHost, proxyPort,
                          bufferSegmentSize, bufferMaxSize);
     if (NS_FAILED(rv)) {
       delete transport;

@@ -81,7 +81,7 @@ nsresult nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName, PRInt3
 	m_readCount = -1; // with socket connections we want to read as much data as arrives
 	m_startPosition = 0;
 
-  rv = socketService->CreateTransportOfType(connectionType, aHostName, aGetPort, nsnull, 0, 0, getter_AddRefs(m_channel));
+  rv = socketService->CreateTransportOfType(connectionType, aHostName, aGetPort, nsnull, 0, 0, 0, getter_AddRefs(m_channel));
   if (NS_FAILED(rv)) return rv;
 
   m_socketIsOpen = PR_FALSE;

@@ -157,7 +157,7 @@ nsDateTimeChannel::OpenInputStream(nsIInputStream **_retval)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    rv = socketService->CreateTransport(mHost, mPort, mHost, 32, 32, getter_AddRefs(channel));
+    rv = socketService->CreateTransport(mHost, mPort, nsnull, 0, 32, 32, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->SetNotificationCallbacks(mCallbacks);
@@ -182,7 +182,7 @@ nsDateTimeChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    rv = socketService->CreateTransport(mHost, mPort, mHost, 32, 32, getter_AddRefs(channel));
+    rv = socketService->CreateTransport(mHost, mPort, nsnull, 0, 32, 32, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->SetNotificationCallbacks(mCallbacks);
@@ -201,7 +201,7 @@ nsDateTimeChannel::AsyncRead(nsIStreamListener *aListener,
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    rv = socketService->CreateTransport(mHost, mPort, mHost, 32, 32, getter_AddRefs(channel));
+    rv = socketService->CreateTransport(mHost, mPort, nsnull, 0, 32, 32, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->SetNotificationCallbacks(mCallbacks);

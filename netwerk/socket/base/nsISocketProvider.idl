@@ -31,7 +31,12 @@
 [noscript, uuid(0906de00-5414-11d3-bbc8-0000861d1237)]
 interface nsISocketProvider : nsISupports {
 
-  void NewSocket ( in string hostName, out nsFileDescStar fileDesc, out nsISupports securityInfo );
+  void NewSocket(in string host, 
+                 in long port,
+                 in string proxyHost,
+                 in long proxyPort,
+                 out nsFileDescStar fileDesc, 
+                 out nsISupports securityInfo );
 
 };
 
