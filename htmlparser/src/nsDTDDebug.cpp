@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   IBM Corp.
  */
   
 /**
@@ -296,7 +297,7 @@ PRBool CDTDDebug::DebugRecord(char * path, nsString& aURLRef, char * filename)
  * sorts in descending order
  */
 
-static int compare( const void *arg1, const void *arg2 , void *unused)
+static int PR_CALLBACK compare( const void *arg1, const void *arg2 , void *unused)
 {
 	VectorInfo ** p1 = (VectorInfo**)arg1;
 	VectorInfo ** p2 = (VectorInfo**)arg2;
