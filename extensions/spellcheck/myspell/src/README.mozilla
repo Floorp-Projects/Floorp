@@ -11,3 +11,4 @@ Changes made for mozilla:
   the resulting library.
 * Commented out std namespace declarations from .cpp files (using namespace std;)
 * Removed #include <unistd.h> for the build system
+* Some specific changes are needed for SunONE studio compiler, please refer to https://bugzilla.mozilla.org/show_bug.cgi?id=278672

@@ -9,8 +9,9 @@
 extern void mychomp(char * s);
 extern char * mystrdup(const char *);
 
-// using namespace std;
-
+#ifdef __SUNPRO_CC // for SunONE Studio compiler
+using namespace std;
+#endif
 
 // build a hash table from a munched word list
 
