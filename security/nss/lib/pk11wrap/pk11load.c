@@ -44,6 +44,7 @@
 
 extern void FC_GetFunctionList(void);
 extern void NSC_GetFunctionList(void);
+extern void NSC_ModuleDBFunc(void);
 
 
 /* build the PKCS #11 2.01 lock files */
@@ -140,6 +141,10 @@ SECMOD_LoadModule(SECMODModule *mod) {
 	} else {
 	    entry = (CK_C_GetFunctionList) NSC_GetFunctionList;
 	}
+	if (mod->isModuleDB) {
+	    mod->moduleDBFunc = (void *) NSC_ModuleDBFunc;
+	}
+	if (mod->moduleDBOnly) return SECSuccess;
     } else {
 	/* Not internal, load the DLL and look up C_GetFunctionList */
 	if (mod->dllName == NULL) {
@@ -169,9 +174,21 @@ SECMOD_LoadModule(SECMODModule *mod) {
 	/*
 	 * now we need to get the entry point to find the function pointers
 	 */
-	entry = (CK_C_GetFunctionList)
+	if (mod->moduleDBOnly) {
+	    entry = (CK_C_GetFunctionList)
 			PR_FindSymbol(library, "C_GetFunctionList");
+	}
+	if (mod->isModuleDB) {
+	    mod->moduleDBFunc = (void *)
+			PR_FindSymbol(library, "NSS_ReturnModuleSpecData");
+	}
+	if (mod->moduleDBFunc == NULL) mod->isModuleDB = PR_FALSE;
 	if (entry == NULL) {
+	    if (mod->isModuleDB) {
+		mod->loaded = PR_TRUE;
+		mod->moduleDBOnly = PR_TRUE;
+		return SECSuccess;
+	    }
 	    PR_UnloadLibrary(library);
 	    return SECFailure;
 	}
@@ -185,6 +202,11 @@ SECMOD_LoadModule(SECMODModule *mod) {
 
     mod->isThreadSafe = PR_TRUE;
     /* Now we initialize the module */
+    if (mod->libraryParams) {
+	secmodLockFunctions.LibraryParameters = (void *) mod->libraryParams;
+    } else {
+	secmodLockFunctions.LibraryParameters = NULL;
+    }
     if (PK11_GETTAB(mod)->C_Initialize(&secmodLockFunctions) != CKR_OK) {
 	mod->isThreadSafe = PR_FALSE;
     	if (PK11_GETTAB(mod)->C_Initialize(NULL) != CKR_OK) goto fail;
@@ -237,9 +259,6 @@ SECMOD_LoadModule(SECMODModule *mod) {
 	mod->slotInfoCount = 0;
 	PORT_Free(slotIDs);
     }
-	
-
-
     
     mod->loaded = PR_TRUE;
     mod->moduleID = nextModuleID++;
@@ -260,7 +279,7 @@ SECMOD_UnloadModule(SECMODModule *mod) {
 	return SECFailure;
     }
 
-    PK11_GETTAB(mod)->C_Finalize(NULL);
+    if (!mod->moduleDBOnly) PK11_GETTAB(mod)->C_Finalize(NULL);
     mod->moduleID = 0;
     mod->loaded = PR_FALSE;
     

@@ -1241,6 +1241,7 @@ PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
 
     if (isToken) {
         PK11_SETATTRS(attrs, CKA_TOKEN, &cktrue, sizeof(cktrue));  attrs++;
+        PK11_SETATTRS(attrs, CKA_PRIVATE, &cktrue, sizeof(cktrue));  attrs++;
     }
 
     PK11_SETATTRS(attrs, CKA_SIGN, &cktrue, sizeof(cktrue));  attrs++;
@@ -1287,6 +1288,7 @@ PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
 
     /* Get session and perform locking */
     if (isToken) {
+	PK11_Authenticate(symKey->slot,PR_TRUE,wincx);
         session = PK11_GetRWSession(symKey->slot);  /* Should always be original slot */
     } else {
         session = symKey->session;

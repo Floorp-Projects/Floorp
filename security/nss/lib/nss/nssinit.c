@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.21 2001/06/25 19:31:12 nicolson%netscape.com Exp $
+ # $Id: nssinit.c,v 1.22 2001/08/24 21:16:30 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -46,173 +46,151 @@
 #include "sslproto.h"
 #include "secmod.h"
 #include "secmodi.h"
+#include "secoid.h"
 #include "nss.h"
 #include "secrng.h"
-#include "cdbhdl.h"	/* ??? */
 #include "pk11func.h"
 
-#ifdef macintosh
-#define PATH_SEPARATOR ":"
-#define SECMOD_DB "Security Modules"
-#define CERT_DB_FMT "%sCertificates%s"
-#define KEY_DB_FMT "%sKey Database%s"
-#else
-#define PATH_SEPARATOR "/"
+#define NSS_MAX_FLAG_SIZE  sizeof("readOnly")+sizeof("noCertDB")+ \
+	sizeof("noModDB")+sizeof("forceOpen")+sizeof("passwordRequired")
+#define NSS_DEFAULT_MOD_NAME "NSS Internal Module"
 #define SECMOD_DB "secmod.db"
-#define CERT_DB_FMT "%scert%s.db"
-#define KEY_DB_FMT "%skey%s.db"
-#endif
-
-static char *secmodname = NULL;  
 
 static char *
-nss_certdb_name_cb(void *arg, int dbVersion)
+nss_makeFlags(PRBool readOnly, PRBool noCertDB, 
+		PRBool noModDB, PRBool forceOpen, PRBool passwordRequired) 
 {
-    const char *configdir = (const char *)arg;
-    const char *dbver;
+    char *flags = (char *)PORT_Alloc(NSS_MAX_FLAG_SIZE);
+    PRBool first = PR_TRUE;
 
-    switch (dbVersion) {
-      case 7:
-	dbver = "7";
-	break;
-      case 6:
-	dbver = "6";
-	break;
-      case 5:
-	dbver = "5";
-	break;
-      case 4:
-      default:
-	dbver = "";
-	break;
+    PORT_Memset(flags,0,NSS_MAX_FLAG_SIZE);
+    if (readOnly) {
+        PORT_Strcat(flags,"readOnly");
+        first = PR_FALSE;
     }
-
-    return PR_smprintf(CERT_DB_FMT, configdir, dbver);
-}
-    
-static char *
-nss_keydb_name_cb(void *arg, int dbVersion)
-{
-    const char *configdir = (const char *)arg;
-    const char *dbver;
-    
-    switch (dbVersion) {
-      case 3:
-	dbver = "3";
-	break;
-      case 1:
-	dbver = "1";
-	break;
-      case 2:
-      default:
-	dbver = "";
-	break;
+    if (noCertDB) {
+        if (!first) PORT_Strcat(flags,",");
+        PORT_Strcat(flags,"noCertDB");
+        first = PR_FALSE;
     }
-
-    return PR_smprintf(KEY_DB_FMT, configdir, dbver);
-}
-
-static SECStatus 
-nss_OpenCertDB(const char * configdir,  const char *prefix, PRBool readOnly)
-{
-    CERTCertDBHandle *certdb;
-    SECStatus         status;
-    char * name = NULL;
-
-    certdb = CERT_GetDefaultCertDB();
-    if (certdb)
-    	return SECSuccess;	/* idempotency */
-
-    name = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,prefix);
-    if (name == NULL) goto loser;
-
-    certdb = (CERTCertDBHandle*)PORT_ZAlloc(sizeof(CERTCertDBHandle));
-    if (certdb == NULL) 
-    	goto loser;
-
-    status = CERT_OpenCertDB(certdb, readOnly, nss_certdb_name_cb, (void *)name);
-    if (status == SECSuccess)
-	CERT_SetDefaultCertDB(certdb);
-    else {
-	PR_Free(certdb);
-loser: 
-	status = SECFailure;
+    if (noModDB) {
+        if (!first) PORT_Strcat(flags,",");
+        PORT_Strcat(flags,"noModDB");
+        first = PR_FALSE;
     }
-    if (name) PORT_Free(name);
-    return status;
+    if (forceOpen) {
+        if (!first) PORT_Strcat(flags,",");
+        PORT_Strcat(flags,"forceOpen");
+        first = PR_FALSE;
+    }
+    if (passwordRequired) {
+        if (!first) PORT_Strcat(flags,",");
+        PORT_Strcat(flags,"passwordRequired");
+        first = PR_FALSE;
+    }
+    return flags;
 }
 
-static SECStatus
-nss_OpenKeyDB(const char * configdir, const char *prefix, PRBool readOnly)
+/*
+ * statics to remember the PKCS11_ConfigurePKCS11()
+ * info.
+ */
+static char * pk11_config_strings = NULL;
+static char * pk11_config_name = NULL;
+static PRBool pk11_password_required = PR_FALSE;
+
+/*
+ * this is a legacy configuration function which used to be part of
+ * the PKCS #11 internal token.
+ */
+void
+PK11_ConfigurePKCS11(char *man, char *libdes, char *tokdes, char *ptokdes,
+        char *slotdes, char *pslotdes, char *fslotdes, char *fpslotdes,
+        int minPwd, int pwRequired)
 {
-    SECKEYKeyDBHandle *keydb;
-    char * name = NULL;
+   char *strings = NULL;
+   char *newStrings;
 
-    keydb = SECKEY_GetDefaultKeyDB();
-    if (keydb)
-    	return SECSuccess;
-    name = PR_smprintf("%s" PATH_SEPARATOR "%s",configdir,prefix);	
-    if (name == NULL) 
-	return SECFailure;
-    keydb = SECKEY_OpenKeyDB(readOnly, nss_keydb_name_cb, (void *)name);
-    if (keydb == NULL)
-	return SECFailure;
-    SECKEY_SetDefaultKeyDB(keydb);
-    PORT_Free(name);
-    return SECSuccess;
-}
+   /* make sure the internationalization was done correctly... */
+   strings = PR_smprintf("");
+   if (strings == NULL) return;
 
-static SECStatus
-nss_OpenSecModDB(const char * configdir,const char *dbname)
-{
-    /* XXX
-     * For idempotency, this should check to see if the secmodDB is alredy open
-     * but no function exists to make that determination.
-     */
-    if (secmodname)
-    	return SECSuccess;
-    secmodname = PR_smprintf("%s" PATH_SEPARATOR "%s", configdir,dbname);
-    if (secmodname == NULL)
-      return SECFailure;
-    SECMOD_init(secmodname);
-    return SECSuccess;
-}
+    if (man) {
+        newStrings = PR_smprintf("%s manufacturerID='%s'",strings,man);
+	PR_smprintf_free(strings);
+	strings = newStrings;
+    }
+   if (strings == NULL) return;
 
-static CERTCertDBHandle certhandle = { 0 };
+    if (libdes) {
+        newStrings = PR_smprintf("%s libraryDescription='%s'",strings,libdes);
+	PR_smprintf_free(strings);
+	strings = newStrings;
+	if (pk11_config_name != NULL) {
+	    PORT_Free(pk11_config_name);
+	}
+	pk11_config_name = PORT_Strdup(libdes);
+    }
+   if (strings == NULL) return;
 
-static PRBool isInitialized = PR_FALSE;
+    if (tokdes) {
+        newStrings = PR_smprintf("%s cryptoTokenDescription='%s'",strings,
+								tokdes);
+	PR_smprintf_free(strings);
+	strings = newStrings;
+    }
+   if (strings == NULL) return;
 
-static SECStatus
-nss_OpenVolatileCertDB() {
-      SECStatus rv = SECSuccess;
-      /* now we want to verify the signature */
-      /*  Initialize the cert code */
-      rv = CERT_OpenVolatileCertDB(&certhandle);
-      if (rv != SECSuccess) {
-	   return rv;
-      }
-      CERT_SetDefaultCertDB(&certhandle);
-      return rv;
-}
+    if (ptokdes) {
+        newStrings = PR_smprintf("%s dbTokenDescription='%s'",strings,ptokdes);
+	PR_smprintf_free(strings);
+	strings = newStrings;
+    }
+   if (strings == NULL) return;
 
-static SECStatus
-nss_OpenVolatileSecModDB() {
-      SECStatus rv = SECSuccess;
-      SECMODModule *module;
+    if (slotdes) {
+        newStrings = PR_smprintf("%s cryptoSlotDescription='%s'",strings,
+								slotdes);
+	PR_smprintf_free(strings);
+	strings = newStrings;
+    }
+   if (strings == NULL) return;
 
-      PK11_InitSlotLists();
+    if (pslotdes) {
+        newStrings = PR_smprintf("%s dbSlotDescription='%s'",strings,pslotdes);
+	PR_smprintf_free(strings);
+	strings = newStrings;
+    }
+   if (strings == NULL) return;
 
-      module = SECMOD_NewInternal();
-      if (module == NULL) {
-	   return SECFailure;
-      }
-      rv = SECMOD_LoadModule(module);
-      if (rv != SECSuccess) {
-	   return rv;
-      }
+    if (fslotdes) {
+        newStrings = PR_smprintf("%s FIPSSlotDescription='%s'",
+							strings,fslotdes);
+	PR_smprintf_free(strings);
+	strings = newStrings;
+    }
+   if (strings == NULL) return;
 
-      SECMOD_SetInternalModule(module);
-      return rv;
+    if (fpslotdes) {
+        newStrings = PR_smprintf("%s FIPSTokenDescription='%s'",
+							strings,fpslotdes);
+	PR_smprintf_free(strings);
+	strings = newStrings;
+    }
+   if (strings == NULL) return;
+
+    newStrings = PR_smprintf("%s minPS=%d", strings, minPwd);
+    PR_smprintf_free(strings);
+    strings = newStrings;
+   if (strings == NULL) return;
+
+    if (pk11_config_strings != NULL) {
+	PR_smprintf_free(pk11_config_strings);
+    }
+    pk11_config_strings = strings;
+    pk11_password_required = pwRequired;
+
+    return;
 }
 
 /*
@@ -232,67 +210,34 @@ nss_OpenVolatileSecModDB() {
  * forceOpen - Continue to force initializations even if the databases cannot
  * 			be opened.
  */
+
 static SECStatus
 nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 		 const char *secmodName, PRBool readOnly, PRBool noCertDB, 
 					PRBool noModDB, PRBool forceOpen)
 {
-    SECStatus status;
-    SECStatus rv      = SECFailure;
+    char *moduleSpec = NULL;
+    char *flags = NULL;
+    SECStatus rv = SECFailure;
 
-    if( isInitialized ) {
-	return SECSuccess;
+    flags = nss_makeFlags(readOnly,noCertDB,noModDB,forceOpen,
+						pk11_password_required);
+    if (flags == NULL) return rv;
+
+    moduleSpec = PR_smprintf("library= name=\"%s\" parameters=\"configdir=%s certPrefix=%s keyPrefix=%s secmod=%s flags='%s' %s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
+		pk11_config_name ? pk11_config_name : NSS_DEFAULT_MOD_NAME,
+		configdir,certPrefix,keyPrefix,secmodName,flags,
+		pk11_config_strings ? pk11_config_strings : "");
+    PORT_Free(flags);
+
+    if (moduleSpec) {
+	rv = PK11_LoadPKCS11Module(moduleSpec,NULL);
+	PR_smprintf_free(moduleSpec);
     }
 
-    status = RNG_RNGInit();     	/* initialize random number generator */
-    if (status != SECSuccess)
-	goto loser;
-    RNG_SystemInfoForRNG();
-
-    if (noCertDB) {
-	status = nss_OpenVolatileCertDB();
-	if (status != SECSuccess) {
-	    goto loser;
-	}
-    } else {
-	status = nss_OpenCertDB(configdir, certPrefix, readOnly);
-	if (status != SECSuccess) {
-	    if (!forceOpen) goto loser;
-	    status = nss_OpenVolatileCertDB();
-	    if (status != SECSuccess) {
-		goto loser;
-	    }
-	}
-
-	status = nss_OpenKeyDB(configdir, keyPrefix, readOnly);
-	if (status != SECSuccess) {
-	    if (!forceOpen) goto loser;
-	}
-    }
-
-    if (noModDB) {
-	status = nss_OpenVolatileSecModDB();
-	if (status != SECSuccess) {
-	    goto loser;
-	}
-    } else {
-	status = nss_OpenSecModDB(configdir, secmodName);
-	if (status != SECSuccess) {
-	    if (!forceOpen) goto loser;
-	    status = nss_OpenVolatileSecModDB();
-	    if (status != SECSuccess) {
-		goto loser;
-	    }
-	}
-    }
-    rv = SECSuccess;
-    isInitialized = PR_TRUE;
-
-loser:
-    if (rv != SECSuccess) 
-	NSS_Shutdown();
     return rv;
 }
+
 
 SECStatus
 NSS_Init(const char *configdir)
@@ -345,6 +290,7 @@ NSS_NoDB_Init(const char * configdir)
 {
           
       SECStatus rv = SECSuccess;
+#ifdef notdef
 
       if( isInitialized ) {
 	   return SECSuccess;
@@ -364,6 +310,7 @@ NSS_NoDB_Init(const char * configdir)
 
       isInitialized = PR_TRUE;
 
+#endif
       return rv;
 }
 
@@ -372,6 +319,9 @@ NSS_Shutdown(void)
 {
     CERTCertDBHandle *certHandle;
     SECKEYKeyDBHandle *keyHandle;
+
+#ifdef notdef
+    SECOID_Shutdown();
 
     SECMOD_Shutdown();
     PR_FREEIF(secmodname);
@@ -386,6 +336,7 @@ NSS_Shutdown(void)
     SECKEY_SetDefaultKeyDB(NULL); 
 
     isInitialized = PR_FALSE;
+#endif
 }
 
 

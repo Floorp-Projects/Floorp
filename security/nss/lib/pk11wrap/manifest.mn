@@ -51,8 +51,9 @@ CSRCS = \
 	pk11cert.c \
 	pk11err.c  \
 	pk11load.c \
+	pk11pars.c \
 	pk11slot.c \
-	pk11db.c \
+	pk11modu.c \
 	pk11list.c \
 	pk11skey.c \
 	pk11kea.c \

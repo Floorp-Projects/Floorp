@@ -558,3 +558,9 @@ PK11_DestroyPBEParams;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.4 { 	# NSS 3.4 release
+;+    global:
+PK11_LoadPKCS11Module;
+;+    local:
+;+       *;
+;+};

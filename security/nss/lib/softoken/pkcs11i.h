@@ -351,6 +351,28 @@ struct PK11SSLMACInfoStr {
 #define pk11_attr_expand(ap) (ap)->type,(ap)->pValue,(ap)->ulValueLen
 #define pk11_item_expand(ip) (ip)->data,(ip)->len
 
+typedef struct pk11_parametersStr {
+    char *configdir;
+    char *certPrefix;
+    char *keyPrefix;
+    char *secmodName;
+    char *man;
+    char *libdes; 
+    char *tokdes;
+    char *ptokdes;
+    char *slotdes;
+    char *pslotdes;
+    char *fslotdes;
+    char *fpslotdes;
+    int minPW; 
+    PRBool readOnly;
+    PRBool noCertDB;
+    PRBool noModDB;
+    PRBool forceOpen;
+    PRBool pwRequired;
+} pk11_parameters;
+
+
 SEC_BEGIN_PROTOS
 
 /* shared functions between PKCS11.c and PK11FIPS.c */
@@ -422,6 +444,13 @@ extern SECKEYLowPrivateKey *pk11_GetPrivKey(PK11Object *object,
 extern void pk11_FormatDESKey(unsigned char *key, int length);
 extern PRBool pk11_CheckDESKey(unsigned char *key);
 extern PRBool pk11_IsWeakKey(unsigned char *key,CK_KEY_TYPE key_type);
+
+extern CK_RV secmod_parseParameters(char *param, pk11_parameters *parsed);
+extern void secmod_freeParams(pk11_parameters *params);
+extern char *secmod_getSecmodName(char *params, PRBool *rw);
+extern char ** SECMOD_ReadPermDB(char *dbname, char *params, PRBool rw);
+extern SECStatus SECMOD_DeletePermDB(char *dbname,char *args, PRBool rw);
+extern SECStatus SECMOD_AddPermDB(char *dbname, char *module, PRBool rw);
 
 SEC_END_PROTOS
 

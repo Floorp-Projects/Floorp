@@ -430,8 +430,8 @@ pk11_setStringName(char *inString, char *buffer, int buffer_length) {
 /*
  * Configuration utils
  */
-void
-PK11_ConfigurePKCS11(char *man, char *libdes, char *tokdes, char *ptokdes,
+static CK_RV
+pk11_configure(char *man, char *libdes, char *tokdes, char *ptokdes,
 	char *slotdes, char *pslotdes, char *fslotdes, char *fpslotdes,
 	int minPwd, int pwRequired) 
 {
@@ -472,7 +472,7 @@ PK11_ConfigurePKCS11(char *man, char *libdes, char *tokdes, char *ptokdes,
 
     PK11_ConfigureFIPS(fslotdes,fpslotdes);
 
-    return;
+    return CKR_OK;
 }
 
 /*
@@ -1141,6 +1141,9 @@ pk11_handleSecretKeyObject(PK11Object *object,CK_KEY_TYPE key_type,
 	rv = SECKEY_StoreKeyByPublicKey(SECKEY_GetDefaultKeyDB(),
 			privKey, &pubKey, label,
 			(SECKEYGetPasswordKey) pk11_givePass, object->slot);
+	if (rv != SECSuccess) {
+	    crv = CKR_DEVICE_ERROR;
+	}
 
 	object->inDB = PR_TRUE;
         object->handle |= (PK11_TOKEN_MAGIC | PK11_TOKEN_TYPE_PRIV);
@@ -2412,23 +2415,84 @@ PK11_SlotInit(CK_SLOT_ID slotID, PRBool needLogin)
     return CKR_OK;
 }
 
+
 /*
  * common initialization routines between PKCS #11 and FIPS
  */
 CK_RV PK11_LowInitialize(CK_VOID_PTR pReserved)
 {
     SECStatus rv = SECSuccess;
+    CK_RV crv = CKR_OK;
+    CK_C_INITIALIZE_ARGS *init_args = (CK_C_INITIALIZE_ARGS *) pReserved;
 
-    /* initialize the Random number generater */
-    rv =  RNG_RNGInit();
+    /* NOTE:
+     * we should be getting out mutexes from this list, not statically binding
+     * them from NSPR. This should happen before we allow the internal to split
+     * off from the rest on NSS.
+     */
 
-    if (rv != SECSuccess) {
-	return CKR_DEVICE_ERROR;
+    /* initialize the key and cert db's */
+    SECKEY_SetDefaultKeyDBAlg(SEC_OID_PKCS12_PBE_WITH_SHA1_AND_TRIPLE_DES_CBC);
+
+    if ((init_args && init_args->LibraryParameters)) {
+	pk11_parameters paramStrings;
+       
+	crv = secmod_parseParameters
+		((char *)init_args->LibraryParameters,&paramStrings);
+	if (crv != CKR_OK) {
+	    return crv;
+	}
+	    
+	crv = pk11_DBInit(paramStrings.configdir,paramStrings.certPrefix,
+	    paramStrings.keyPrefix,paramStrings.secmodName,				    paramStrings.readOnly,paramStrings.noCertDB,
+	    paramStrings.noModDB, paramStrings.forceOpen);
+	if (crv != CKR_OK) {
+	    secmod_freeParams(&paramStrings);
+	    return crv;
+	}
+	crv = pk11_configure(paramStrings.man, paramStrings.libdes, 
+		paramStrings.tokdes,paramStrings.ptokdes,paramStrings.slotdes,
+		paramStrings.pslotdes,paramStrings.fslotdes,
+		paramStrings.fpslotdes, paramStrings.minPW, 
+					paramStrings.pwRequired);
+	secmod_freeParams(&paramStrings);
+	if (crv != CKR_OK) {
+	    return crv;
+	}
+    } else {
+	return CKR_ARGUMENTS_BAD;
     }
 
-    SECKEY_SetDefaultKeyDBAlg(SEC_OID_PKCS12_PBE_WITH_SHA1_AND_TRIPLE_DES_CBC);
+
     return CKR_OK;
 }
+
+/*
+ * handle the SECMOD.db
+ */
+char **
+NSC_ModuleDBFunc(unsigned long function,char *parameters, char *args)
+{
+    char *secmod;
+    PRBool rw;
+    static char *success="Success";
+    static char *fail="Fail";
+
+    secmod = secmod_getSecmodName(parameters,&rw);
+
+    switch (function) {
+    case SECMOD_MODULE_DB_FUNCTION_FIND:
+	return SECMOD_ReadPermDB(secmod,parameters,rw);
+    case SECMOD_MODULE_DB_FUNCTION_ADD:
+	return (SECMOD_AddPermDB(secmod,args,rw) == SECSuccess) 
+							? &success: &fail;
+    case SECMOD_MODULE_DB_FUNCTION_DEL:
+	return (SECMOD_DeletePermDB(secmod,args,rw) == SECSuccess) 
+							? &success: &fail;
+    }
+    return NULL;
+}
+
 
 /* NSC_Initialize initializes the Cryptoki library. */
 CK_RV NSC_Initialize(CK_VOID_PTR pReserved)
