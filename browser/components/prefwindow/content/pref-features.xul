@@ -126,14 +126,5 @@
       </vbox>
     </hbox>            
   </groupbox>
-
-  <groupbox>
-    <hbox align="center">
-      <description flex="1">&fontsInfo.label;</description>
-      <button label="&showFontsAndColors.label;" 
-              accesskey="&showFontsAndColors.accesskey;" 
-              oncommand="showFontsAndColors();"/>
-    </hbox>
-  </groupbox>    
 </page>
 
