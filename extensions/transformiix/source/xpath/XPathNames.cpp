@@ -20,14 +20,17 @@
  * Contributor(s): 
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
- *    
- * $Id: XPathNames.cpp,v 1.1 2000/04/06 07:46:08 kvisco%ziplink.net Exp $
+ *
+ * Marina Mechtcheriakova, mmarina@mindspring.com
+ *   -- added LANG_FN
+ *
+ * $Id: XPathNames.cpp,v 1.2 2000/05/23 08:32:42 kvisco%ziplink.net Exp $
  */
 
 /**
  * XPath names
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/04/06 07:46:08 $
+ * @version $Revision: 1.2 $ $Date: 2000/05/23 08:32:42 $
 **/
 
 #include "FunctionLib.h"
@@ -58,6 +61,8 @@ const String XPathNames::ROUND_FN                = "round";
 const String XPathNames::CEILING_FN              = "ceiling";
 const String XPathNames::FLOOR_FN                = "floor";
 // OG-
+//Marina M. boolean function lang
+const String XPathNames::LANG_FN				 = "lang";
 
 //-- internal XSL processor functions
 const String XPathNames::ERROR_FN                = "error";
