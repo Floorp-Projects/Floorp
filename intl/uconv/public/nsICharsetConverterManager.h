@@ -91,8 +91,11 @@ public:
       nsIUnicodeDecoder ** aResult) = 0;
   NS_IMETHOD GetDecoderList(nsString *** aResult, PRInt32 * aCount) = 0;
   NS_IMETHOD GetEncoderList(nsString *** aResult, PRInt32 * aCount) = 0;
-  NS_IMETHOD GetDecoderFlags(nsString * aName, PRInt32 * aFlags) = 0;
-  NS_IMETHOD GetEncoderFlags(nsString * aName, PRInt32 * aFlags) = 0;
+  NS_IMETHOD GetMIMEMailCharset(nsString * aCharset, nsString ** aResult) = 0;
+  NS_IMETHOD GetMIMEHeaderEncodingMethod(nsString * aCharset, 
+      nsString ** aResult) = 0;
+  NS_IMETHOD GetCharsetData(nsString * aCharset, nsString * aProp, 
+      nsString ** aResult) = 0;
 };
 
 #endif /* nsICharsetConverterManager_h___ */
