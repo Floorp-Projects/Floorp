@@ -68,7 +68,7 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID, NS_RDFXMLDATASOURCE_CID);
 
 // forward declaration of a private helper function
-static PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure);
+static PRBool PR_CALLBACK DeleteEntry(nsHashKey *aKey, void *aData, void* closure);
 
 // The following static table lists all of the "default" content type mappings we are going to use.                 
 static nsDefaultMimeTypeEntry defaultMimeEntries [] = 
@@ -129,7 +129,7 @@ nsExternalHelperAppService::~nsExternalHelperAppService()
 {
   if (mMimeInfoCache)
   {
-    mMimeInfoCache->Reset((nsHashtableEnumFunc)DeleteEntry, nsnull);
+    mMimeInfoCache->Reset(DeleteEntry, nsnull);
     delete mMimeInfoCache;
   }
 }
