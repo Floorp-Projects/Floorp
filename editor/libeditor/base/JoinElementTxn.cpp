@@ -134,7 +134,7 @@ NS_IMETHODIMP JoinElementTxn::Undo(void)
     nsCOMPtr<nsIDOMNode>child;
     nsCOMPtr<nsIDOMNode>nextSibling;
     result = mRightNode->GetFirstChild(getter_AddRefs(child));
-    PRInt32 i;
+    PRUint32 i;
     for (i=0; i<mOffset; i++)
     {
       if (NS_FAILED(result)) {return result;}
