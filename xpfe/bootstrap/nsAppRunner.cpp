@@ -361,7 +361,7 @@ int main(int argc, char* argv[])
           char* profileName = nsnull;
           profileService->GetCurrentProfile(&profileName);
           if (profileName && strcmp(profileName, "default") == 0)
-              urlstr = "resource:/res/mailnews/messenger/cpw.xul"; 
+              urlstr = "resource:/res/profile/cpw.xul"; 
       }
   } 
 
