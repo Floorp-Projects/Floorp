@@ -20,7 +20,7 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-
+MODULE=layout
 EXPORTS =				\
   nsCSSAtomList.h \
   nsCSSAtoms.h \

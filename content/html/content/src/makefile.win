@@ -22,7 +22,8 @@
 DEPTH=..\..\..\..
 
 LIBRARY_NAME = contenthtmlcontent_s
-MODULE=raptor 
+MODULE=content
+REQUIRES	= xpcom string widget dom js locale webshell htmlparser necko view pref docshell xpconnect xuldoc caps editor uconv gfx2 imglib2 layout raptor gfx
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 !if defined(XP_NEW_SELECTION)
 DEFINES = $(DEFINES) -DXP_NEW_SELECTION

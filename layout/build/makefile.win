@@ -20,11 +20,12 @@
 # Contributor(s): 
 
 DEPTH=..\..
+MODULE=layout
+REQUIRES	= xpcom string widget locale timer gfx content layout_xul raptor
 include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_HTML 
 
-MODULE=layout
 LIBRARY_NAME=gklayout
 MODULE_NAME=nsLayoutModule
 

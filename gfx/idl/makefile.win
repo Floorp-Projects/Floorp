@@ -23,8 +23,7 @@ DEPTH=..\..
 
 
 DEFINES=-D_IMPL_NS_UI 
-MODULE=raptor 
-XPIDL_MODULE=gfx
+MODULE=gfx
 
 XPIDLSRCS =               \
   .\nsIFontEnumerator.idl          \

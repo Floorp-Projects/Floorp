@@ -20,12 +20,11 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-include <$(DEPTH)/config/config.mak>
 
 MODULE=gfx
 LIBRARY_NAME=gkgfxwin
 MODULE_NAME=nsGfxModule
-
+REQUIRES=xpcom string widget intl view pref uconv locale necko
 DEFINES=-DWIN32_LEAN_AND_MEAN -DSTRICT
 
 !if defined(NGLAYOUT_DDRAW)

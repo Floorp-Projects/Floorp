@@ -33,20 +33,13 @@ EXPORTS = \
 	nsWidgetSupport.h \
 	$(NULL)
 
-MODULE=raptor 
+MODULE=widget 
+REQUIRES	= xpcom string widget layout gfx
 
 OBJS= \
 	.\$(OBJDIR)\nsWidgetSupport.obj  \
 	$(NULL)
 
-LINCS=                                  \
-	-I$(PUBLIC)\raptor              \
-	-I$(PUBLIC)\xpcom               \
-	-I..\windows               \
-	-I$(PUBLIC)\dom                 \
-	-I$(PUBLIC)\js				\
-	-I$(PUBLIC)\network	-I$(PUBLIC)\netlib	\
-	$(NULL)
 
 LCFLAGS =                               \
 	$(LCFLAGS)                      \

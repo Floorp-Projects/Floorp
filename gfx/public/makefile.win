@@ -47,7 +47,7 @@ EXPORTS =				\
   nsIDrawingSurface.h \
 	$(NULL)
 
-MODULE=raptor 
+MODULE=gfx 
 
 include <$(DEPTH)\config\rules.mak>
 

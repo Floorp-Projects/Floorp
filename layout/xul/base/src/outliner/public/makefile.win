@@ -27,6 +27,7 @@ XPIDLSRCS=      .\nsIOutlinerView.idl    \
 				.\nsIOutlinerColFrame.idl \
                 $(NULL)
 
-MODULE=layout_xul_outliner
+MODULE=layout_xul
+XPIDL_MODULE=layout_xul_outliner
 
 include <$(DEPTH)\config\rules.mak>

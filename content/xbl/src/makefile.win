@@ -22,7 +22,8 @@
 DEPTH=..\..\..
 
 LIBRARY_NAME=contentxbl_s 
-MODULE=raptor 
+MODULE=content
+REQUIRES	= xpcom string js dom widget caps htmlparser necko xpconnect pref docshell chrome lwbrk xul xuldoc gfx2 imglib2 layout raptor gfx
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

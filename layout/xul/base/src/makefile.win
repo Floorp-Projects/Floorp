@@ -22,8 +22,9 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=layoutxulbase_s 
-MODULE=raptor 
+MODULE=layout_xul
 DIRS=outliner
+REQUIRES	= xpcom string dom locale widget view timer docshell necko editor htmlparser webshell pref intl gfx2 imglib2 unicharutil gfx layout content raptor
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -48,7 +49,7 @@ CPPSRCS=					\
         nsSplitterFrame.cpp        \
 		nsButtonBoxFrame.cpp \
         nsSpringFrame.cpp \
-    	nsSliderFrame.cpp \
+		nsSliderFrame.cpp \
         nsProgressMeterFrame.cpp        \
         nsTitledBoxFrame.cpp        \
         nsBox.cpp        \
@@ -110,7 +111,7 @@ CPP_OBJS=					\
         .\$(OBJDIR)\nsSplitterFrame.obj    \
 		.\$(OBJDIR)\nsButtonBoxFrame.obj    \
         .\$(OBJDIR)\nsSpringFrame.obj    \
-    	.\$(OBJDIR)\nsSliderFrame.obj \
+	 	.\$(OBJDIR)\nsSliderFrame.obj \
         .\$(OBJDIR)\nsProgressMeterFrame.obj    \
          .\$(OBJDIR)\nsTitledBoxFrame.obj    \
         .\$(OBJDIR)\nsBox.obj    \
@@ -145,14 +146,11 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsResizerFrame.obj \
 	$(NULL)
 
-EXPORTS =					\
-	$(NULL)
-
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I..\..\..\html\style\src -I..\..\..\html\base\src -I$(PUBLIC)\dom \
+LINCS= \
+  -I..\..\..\html\style\src -I..\..\..\html\base\src \
    -I..\..\content\src \
    -I..\..\..\html\forms\src \
-  -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref \
+   -I..\..\..\base\src \
   -I..\..\..\xml\content\src \
   -I..\..\..\base\public
 

@@ -23,6 +23,7 @@ DEPTH=..\..\..\..
 
 LIBRARY_NAME=layouthtmlstyle_s 
 MODULE=raptor 
+REQUIRES	= xpcom string dom widget timer locale view necko webshell pref docshell plugin gkplugin xuldoc imglib2 gfx2 layout gfx content layout_xul
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -41,7 +42,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsCSSRendering.obj 		\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \
+LINCS= \
   -I..\..\..\base\src \
   -I..\..\..\xul\content\src \
   -I..\..\..\xul\base\src \
@@ -54,7 +55,8 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \
   -I..\..\..\svg\base\src \
 !endif
   -I..\..\forms\src \
-  -I..\..\base\src -I..\..\table\src -I..\..\content\src -I$(PUBLIC)\js -I$(PUBLIC)\dom
+  -I..\..\base\src -I..\..\table\src -I..\..\content\src \
+	$(NULL)
 
 LCFLAGS = \
         -DENDER_LITE \

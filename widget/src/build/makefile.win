@@ -25,7 +25,7 @@ DEPTH=..\..\..
 MODULE         = gkwidget
 LIBRARY_NAME   = gkwidget
 MODULE_NAME = nsWidgetModule
-
+REQUIRES = xpcom string widget necko uconv gfx dom timer
 RESFILE = widget.res
 
 CPPSRCS  = nsWinWidgetFactory.cpp
@@ -35,14 +35,11 @@ CPP_OBJS = .\$(OBJDIR)\nsWinWidgetFactory.obj
 
 DEFINES =-D_IMPL_NS_WIDGET
 
-LINCS=                                  \
-	-I$(PUBLIC)\raptor              \
-	-I$(PUBLIC)\xpcom               \
-	-I..\xpwidgets               \
-        -I..\windows               \
-        -I$(PUBLIC)\netlib \
-        -I$(PUBLIC)\dom \
+LINCS= \
+	-I..\xpwidgets \
+	-I..\windows \
 	$(NULL)
+
 
 LCFLAGS =                               \
 	$(LCFLAGS)                      \
@@ -59,11 +56,11 @@ WIN_LIBS=                               \
 # oleacc.lib \
  oleaut32.lib
 
-SUB_LIBRARIES=                          \
- $(DIST)\lib\raptorbasewidget_s.lib     \
- $(DIST)\lib\raptorwidget_s.lib	        \
- $(DIST)\lib\timer_s.lib                \
- $(NULL)
+SUB_LIBRARIES= \
+	$(DIST)\lib\raptorbasewidget_s.lib \
+	$(DIST)\lib\raptorwidget_s.lib \
+	$(DIST)\lib\timer_s.lib \
+	$(NULL)
 
 LLIBS= \
  $(DIST)\lib\xpcom.lib                \

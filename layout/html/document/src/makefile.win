@@ -22,7 +22,8 @@
 DEPTH=..\..\..\.. 
 
 LIBRARY_NAME=layouthtmldoc_s 
-MODULE=raptor 
+MODULE=layout
+REQUIRES	= xpcom string widget dom necko locale view js webshell docshell caps pref uriloader shistory xpconnect accessibility gfx content raptor layout_xul
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN 
 !if defined(XP_NEW_SELECTION)
@@ -39,11 +40,11 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsFrameSetFrame.obj		\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I..\..\base\src \
-  -I$(PUBLIC)\dom \
-  -I..\..\content\src \
-  -I$(PUBLIC)\netlib -I..\..\..\base\src -I$(PUBLIC)\pref
+LINCS= \
+	-I..\..\base\src \
+	-I..\..\content\src \
+	-I..\..\..\base\src \
+	$(NULL)
 
 !ifdef NECKO
 LINCS = $(LINCS) -I$(PUBLIC)\necko

@@ -20,7 +20,6 @@
 # Contributor(s): 
 
 DEPTH=..\..
-include <$(DEPTH)/config/config.mak>
 
 DEFINES=-D_IMPL_NS_HTML 
 
@@ -32,23 +31,22 @@ CPP_OBJS=				\
 
 EXPORTS=nsContentCID.h
 
-MODULE=layout
+MODULE=content
 LIBRARY_NAME=gkcontent
 MODULE_NAME=nsContentModule
+REQUIRES	= xpcom string widget necko rdf docshell dom htmlparser uriloader webshell locale unicharutil lwbrk js pref xul xuldoc xultmpl timer raptor layout gfx layout_xul
 
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
-	-I$(PUBLIC)\js -I..\html\base\src -I..\base\src \
+LINCS=-I..\html\base\src -I..\base\src \
 	-I..\html\style\src \
 	-I..\xul\content\src \
         -I..\xul\templates\src \
 	-I..\xul\base\src \
 	-I..\events\src \
-  -I$(PUBLIC)\rdf
 
 # These are the libraries we need to link with to create the dll
 SUB_LIBRARIES=\

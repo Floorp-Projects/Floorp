@@ -63,7 +63,8 @@ CPPSRCS =				\
 	nsStyleLinkElement.cpp		\
 	$(NULL)
 
-MODULE=raptor 
+MODULE=content
+REQUIRES	= xpcom string dom widget view locale timer htmlparser js webshell necko caps lwbrk uconv chrome docshell pref xpconnect util unicharutil xsl_doc raptor layout gfx layout_xul
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsStyleContext.obj		\
