@@ -42,6 +42,7 @@ SOURCES =						\
 	$(PATH_PREFIX)/FunctionNode.java		\
 	$(PATH_PREFIX)/FunctionObject.java		\
 	$(PATH_PREFIX)/IRFactory.java			\
+	$(PATH_PREFIX)/ImporterTopLevel.java		\
 	$(PATH_PREFIX)/InterpretedFunction.java		\
 	$(PATH_PREFIX)/InterpretedScript.java		\
 	$(PATH_PREFIX)/Interpreter.java			\
@@ -52,6 +53,7 @@ SOURCES =						\
 	$(PATH_PREFIX)/Label.java			\
 	$(PATH_PREFIX)/LabelTable.java			\
 	$(PATH_PREFIX)/LineBuffer.java			\
+	$(PATH_PREFIX)/ListenerCollection.java		\
 	$(PATH_PREFIX)/LocalVariable.java		\
 	$(PATH_PREFIX)/NativeArray.java			\
 	$(PATH_PREFIX)/NativeBoolean.java		\
