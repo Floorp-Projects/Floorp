@@ -371,7 +371,7 @@ nsAbSync::NotifyListenersOnStopAuthOperation(nsresult aStatus, const PRUnichar *
 }
 
 nsresult
-nsAbSync::NotifyListenersOnStartSync(PRInt32 aTransactionID, PRUint32 aMsgSize)
+nsAbSync::NotifyListenersOnStartSync(PRInt32 aTransactionID, const PRUint32 aMsgSize)
 {
   PRInt32 i;
   for (i=0; i<mListenerArrayCount; i++)
@@ -797,8 +797,8 @@ GetCRC(char *str)
   p->cm_width = 32;
   p->cm_poly = 0x4C11DB7;
   p->cm_init = 0xFFFFFFFF;
-  p->cm_refin = TRUE;
-  p->cm_refot = TRUE;
+  p->cm_refin = PR_TRUE;
+  p->cm_refot = PR_TRUE;
   p->cm_xorot = 0xFFFFFFFF;
 
   char *pChar = str;

@@ -69,6 +69,8 @@
 #ifndef CM_DONE
 #define CM_DONE
 
+#include "prtypes.h"
+
 /******************************************************************************/
 
 /* The following definitions are extracted from my style header file which    */
@@ -77,11 +79,6 @@
 
 typedef unsigned long   ulong;
 typedef unsigned char * p_ubyte_;
-
-#ifndef TRUE
-#define FALSE 0
-#define TRUE  1
-#endif
 
 /* Change to the second definition if you don't have prototypes. */
 #define P_(A) A
@@ -102,8 +99,8 @@ typedef struct
    int   cm_width;   /* Parameter: Width in bits [8,32].       */
    ulong cm_poly;    /* Parameter: The algorithm's polynomial. */
    ulong cm_init;    /* Parameter: Initial register value.     */
-   bool  cm_refin;   /* Parameter: Reflect input bytes?        */
-   bool  cm_refot;   /* Parameter: Reflect output CRC?         */
+   PRBool  cm_refin;   /* Parameter: Reflect input bytes?        */
+   PRBool  cm_refot;   /* Parameter: Reflect output CRC?         */
    ulong cm_xorot;   /* Parameter: XOR this to output CRC.     */
 
    ulong cm_reg;     /* Context: Context during execution.     */
