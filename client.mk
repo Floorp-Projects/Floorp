@@ -193,6 +193,16 @@ LOCALES_CO_TAG       =
 
 BUILD_MODULES = all
 
+#######################################################################
+# Check for cygwin make on win32
+#
+UNAME := $(shell uname -s)
+ifneq (,$(filter CYGWIN% WIN%,$(UNAME)))
+_IS_CYGWIN_MAKE := $(findstring built for i686-pc-cygwin,$(shell $(MAKE) -h))
+ifeq (,$(_IS_CYGWIN_MAKE))
+$(error Cygwin make is required to build Mozilla. If you typed 'gmake', try 'make' instead)
+endif
+endif
 
 #######################################################################
 # Defines
