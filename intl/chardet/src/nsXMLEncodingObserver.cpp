@@ -73,8 +73,8 @@ public:
                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
   NS_IMETHOD Notify(PRUint32 aDocumentID, const PRUnichar* aTag, PRUint32 numOfAttributes, 
                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
-  NS_IMETHOD Notify(nsISupports* aDocumentID, const PRUnichar* aTag, nsDeque& keys, nsDeque& values)
-      { return NS_ERROR_NOT_IMPLEMENTED; };
+  NS_IMETHOD Notify(nsISupports* aDocumentID, const PRUnichar* aTag, const nsDeque* keys, const nsDeque* values)
+      { return NS_ERROR_NOT_IMPLEMENTED; }
 
   /* methode for nsIObserver */
   NS_DECL_NSIOBSERVER

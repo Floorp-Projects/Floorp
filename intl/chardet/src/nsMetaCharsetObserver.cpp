@@ -74,7 +74,7 @@ public:
   NS_IMETHOD Notify(PRUint32 aDocumentID, const PRUnichar* aTag, PRUint32 numOfAttributes, 
                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
 
-  NS_IMETHOD Notify(nsISupports* aDocumentID, const PRUnichar* aTag, nsDeque& keys, nsDeque& values);
+  NS_IMETHOD Notify(nsISupports* aDocumentID, const PRUnichar* aTag, const nsDeque* keys, const nsDeque* values);
 
   /* methode for nsIObserver */
   NS_DECL_NSIOBSERVER
@@ -88,7 +88,7 @@ private:
   NS_IMETHOD Notify(PRUint32 aDocumentID, PRUint32 numOfAttributes, 
                     const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
 
-  NS_IMETHOD Notify(nsISupports* aDocumentID, nsDeque& keys, nsDeque& values);
+  NS_IMETHOD Notify(nsISupports* aDocumentID, const nsDeque* keys, const nsDeque* values);
 
   nsICharsetAlias *mAlias;
 
@@ -178,12 +178,12 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
        keys.Push((void*)nameArray[i]);
        values.Push((void*)valueArray[i]);
    }
-   return Notify((nsISupports*)aDocumentID,  keys, values);
+   return Notify((nsISupports*)aDocumentID, &keys, &values);
 }
 NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                      nsISupports* aDocumentID, 
                      const PRUnichar* aTag, 
-                    nsDeque& keys, nsDeque& values)
+                     const nsDeque* keys, const nsDeque* values)
 {
     if(0 != nsCRT::strcasecmp(aTag, "META")) 
         return NS_ERROR_ILLEGAL_VALUE;
@@ -192,10 +192,12 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 }
 NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                     nsISupports* aDocumentID, 
-                    nsDeque& keys, nsDeque& values)
+                    const nsDeque* keys, const nsDeque* values)
 {
-    PRInt32 numOfAttributes = keys.GetSize();
-    NS_ASSERTION( numOfAttributes == values.GetSize(), "size mismatch");
+    NS_PRECONDITION(keys!=nsnull && values!=nsnull,"Need key-value pair");
+
+    PRInt32 numOfAttributes = keys->GetSize();
+    NS_ASSERTION( numOfAttributes == values->GetSize(), "size mismatch");
     nsresult res=NS_OK;
 #ifdef DEBUG
     PRUnichar Uxcommand[]={'X','_','C','O','M','M','A','N','D','\0'};
@@ -203,11 +205,11 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
          {'c','h','a','r','s','e','t','S','o','u','r','c','e','\0'};
     PRUnichar Ucharset[]={'c','h','a','r','s','e','t','\0'};
     NS_ASSERTION(numOfAttributes >= 3, "should have at least 3 private attribute");
-    NS_ASSERTION(0==nsCRT::strcmp(Uxcommand,(const PRUnichar*)keys.ObjectAt(numOfAttributes-1)),
+    NS_ASSERTION(0==nsCRT::strcmp(Uxcommand,(const PRUnichar*)keys->ObjectAt(numOfAttributes-1)),
                  "last name should be 'X_COMMAND'" );
-    NS_ASSERTION(0==nsCRT::strcmp(UcharsetSource,(const PRUnichar*)keys.ObjectAt(numOfAttributes-2)),
+    NS_ASSERTION(0==nsCRT::strcmp(UcharsetSource,(const PRUnichar*)keys->ObjectAt(numOfAttributes-2)),
                  "2nd last name should be 'charsetSource'" );
-    NS_ASSERTION(0==nsCRT::strcmp(Ucharset,(const PRUnichar*)keys.ObjectAt(numOfAttributes-3)),
+    NS_ASSERTION(0==nsCRT::strcmp(Ucharset,(const PRUnichar*)keys->ObjectAt(numOfAttributes-3)),
                  "3rd last name should be 'charset'" );
 #endif
     NS_ASSERTION(mAlias, "Didn't get nsICharsetAlias in constructor");
@@ -218,8 +220,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
     // we need at least 5 - HTTP-EQUIV, CONTENT and 3 private
     if(numOfAttributes >= 5 ) 
     {
-      const PRUnichar *charset = (const PRUnichar*)values.ObjectAt(numOfAttributes-3);
-      const PRUnichar *source = (const PRUnichar*)values.ObjectAt(numOfAttributes-2);
+      const PRUnichar *charset = (const PRUnichar*)values->ObjectAt(numOfAttributes-3);
+      const PRUnichar *source = (const PRUnichar*)values->ObjectAt(numOfAttributes-2);
       PRInt32 err;
       nsAutoString srcStr(source);
       nsCharsetSource  src = (nsCharsetSource) srcStr.ToInteger(&err);
@@ -236,10 +238,10 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
       const PRUnichar *contentValue=nsnull;
       for(i=0;i<(numOfAttributes-3);i++)
       {
-        if(0 == nsCRT::strcasecmp((const PRUnichar*)keys.ObjectAt(i), "HTTP-EQUIV"))
-              httpEquivValue=(const PRUnichar*)values.ObjectAt(i);
-        else if(0 == nsCRT::strcasecmp((const PRUnichar*)keys.ObjectAt(i), "content"))
-              contentValue=(const PRUnichar*)values.ObjectAt(i);
+        if(0 == nsCRT::strcasecmp((const PRUnichar*)keys->ObjectAt(i), "HTTP-EQUIV"))
+              httpEquivValue=(const PRUnichar*)values->ObjectAt(i);
+        else if(0 == nsCRT::strcasecmp((const PRUnichar*)keys->ObjectAt(i), "content"))
+              contentValue=(const PRUnichar*)values->ObjectAt(i);
       }
       static nsAutoString contenttype = NS_ConvertToString("Content-Type");
       static nsAutoString texthtml = NS_ConvertToString("text/html");
