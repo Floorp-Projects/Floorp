@@ -1848,6 +1848,12 @@ nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
   value.Append(scrollTo);
   scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::curpos,
                                  value, PR_TRUE);
+
+  // This change has to happen immediately.
+  // Flush any pending reflow commands.
+  nsCOMPtr<nsIDocument> doc;
+  mContent->GetDocument(*getter_AddRefs(doc));
+  doc->FlushPendingNotifications();
 }
 
 void
