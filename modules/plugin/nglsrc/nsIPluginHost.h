@@ -24,6 +24,8 @@
 #include "nsIFactory.h"
 #include "nsString.h"
 
+class nsIURL;
+
 #define NS_IPLUGINHOST_IID \
 { 0x264c0640, 0x1c31, 0x11d2, \
 { 0xa8, 0x2e, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
@@ -39,7 +41,7 @@ public:
   LoadPlugins(void) = 0;
 
   NS_IMETHOD
-  InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst) = 0;
+  InstantiatePlugin(const char *aMimeType, nsIURL *aURL, nsIPluginInstance ** aPluginInst) = 0;
 
   NS_IMETHOD
   InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst,

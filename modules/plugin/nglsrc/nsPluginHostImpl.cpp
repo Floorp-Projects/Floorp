@@ -164,6 +164,8 @@ private:
   void                *mNotifyData;
   nsPluginWindow      *mWindow;
   nsIPluginHost       *mHost;
+  PRInt32             mLength;
+  PRBool              mGotProgress;
 };
 
 nsPluginStreamListener :: nsPluginStreamListener()
@@ -180,6 +182,8 @@ nsPluginStreamListener :: nsPluginStreamListener()
   mNotifyData = nsnull;
   mWindow = nsnull;
   mHost = nsnull;
+  mLength = 0;
+  mGotProgress = PR_FALSE;
 }
 
 nsPluginStreamListener :: ~nsPluginStreamListener()
@@ -291,9 +295,9 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStartBinding(nsIURL* aURL, const char 
   //to load a plugin...
 
   if ((nsnull == mInstance) && (nsnull != mFarInstance) &&
-      (nsnull != mHost) && (nsnull != mWindow) && (nsnull != mMIMEType))
+      (nsnull != mHost) && (nsnull != mWindow))
   {
-    rv = mHost->InstantiatePlugin(mMIMEType, mFarInstance);
+    rv = mHost->InstantiatePlugin(aContentType, aURL, mFarInstance);
 
     if (NS_OK == rv)
     {
@@ -305,6 +309,19 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStartBinding(nsIURL* aURL, const char 
     }
   }
 
+  if ((PR_TRUE == mGotProgress) && (nsnull == mPeer) &&
+      (nsnull != mInstance) && (PR_FALSE == mBound))
+  {
+    //need to create new peer and and tell plugin that we have new stream...
+
+    mPeer = (nsPluginStreamPeer *)new nsPluginStreamPeer();
+
+    NS_ADDREF(mPeer);
+
+    mPeer->Initialize(aURL, mLength, 0, aContentType, mNotifyData);
+    mInstance->NewStream(mPeer, &mStream);
+  }
+
   mBound = PR_TRUE;
 
   return rv;
@@ -312,9 +329,7 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStartBinding(nsIURL* aURL, const char 
 
 NS_IMETHODIMP nsPluginStreamListener :: OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
-  NS_ASSERTION(!(mBound == PR_FALSE), "ack, got progress without start binding");
-
-  if ((PR_TRUE == mBound) && (nsnull == mPeer))
+  if ((aProgress == 0) && (nsnull == mPeer) && (nsnull != mInstance))
   {
     //need to create new peer and and tell plugin that we have new stream...
 
@@ -325,6 +340,9 @@ NS_IMETHODIMP nsPluginStreamListener :: OnProgress(nsIURL* aURL, PRInt32 aProgre
     mPeer->Initialize(aURL, aProgressMax, 0, mMIMEType, mNotifyData);
     mInstance->NewStream(mPeer, &mStream);
   }
+
+  mLength = aProgressMax;
+  mGotProgress = PR_TRUE;
 
   return NS_OK;
 }
@@ -836,25 +854,101 @@ printf("plugin %s added to list %s\n", plugintag->mName, (plugintag->mFlags & NS
   return NS_OK;
 }
 
-nsresult nsPluginHostImpl :: InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst)
+nsresult nsPluginHostImpl :: InstantiatePlugin(const char *aMimeType, nsIURL *aURL,
+                                               nsIPluginInstance ** aPluginInst)
 {
-  nsPluginTag *plugins = mPlugins;
+  nsPluginTag *plugins = nsnull;
   PRInt32     variants, cnt;
 
-  while (nsnull != plugins)
+  if (nsnull != aMimeType)
   {
-    variants = plugins->mVariants;
+    plugins = mPlugins;
 
-    for (cnt = 0; cnt < variants; cnt++)
+    while (nsnull != plugins)
     {
-      if (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType))
+      variants = plugins->mVariants;
+
+      for (cnt = 0; cnt < variants; cnt++)
+      {
+        if (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType))
+          break;
+      }
+
+      if (cnt < variants)
         break;
+
+      plugins = plugins->mNext;
     }
+  }
 
-    if (cnt < variants)
-      break;
+  if ((nsnull == plugins) && (nsnull != aURL))
+  {
+    const char  *name = aURL->GetSpec();
+    PRInt32     len = strlen(name);
 
-    plugins = plugins->mNext;
+    //find the plugin by filename extension.
+
+    if ((nsnull != name) && (len > 1))
+    {
+      len--;
+
+      while ((name[len] != 0) && (name[len] != '.'))
+        len--;
+
+      if (name[len] == '.')
+      {
+        const char  *ext = name + len + 1;
+
+        len = strlen(ext);
+
+        plugins = mPlugins;
+
+        while (nsnull != plugins)
+        {
+          variants = plugins->mVariants;
+
+          for (cnt = 0; cnt < variants; cnt++)
+          {
+            char    *extensions = plugins->mExtensionsArray[cnt];
+            char    *nextexten;
+            PRInt32 extlen;
+
+            while (nsnull != extensions)
+            {
+              nextexten = strchr(extensions, ',');
+
+              if (nsnull != nextexten)
+                extlen = nextexten - extensions;
+              else
+                extlen = strlen(extensions);
+
+              if (extlen == len)
+              {
+                if (strnicmp(extensions, ext, extlen) == 0)
+                  break;
+              }
+
+              if (nsnull != nextexten)
+                extensions = nextexten + 1;
+              else
+                extensions = nsnull;
+            }
+
+            if (nsnull != extensions)
+              break;
+          }
+
+          if (cnt < variants)
+          {
+            aMimeType = plugins->mMimeTypeArray[cnt];
+printf("found plugin via extension %s\n", ext);
+            break;
+          }
+
+          plugins = plugins->mNext;
+        }
+      }
+    }
   }
 
   if (nsnull != plugins)
@@ -895,7 +989,6 @@ printf("result of creating plugin adapter: %d\n", rv);
         if (NS_OK == plugins->mEntryPoint->CreateInstance(nsnull, kIPluginInstanceIID, (void **)aPluginInst))
         {
 printf("successfully created plugin instance\n");
-
           nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
 
           peer->Initialize(*aPluginInst);     //this will not add a ref to the instance. MMP
@@ -910,38 +1003,41 @@ printf("successfully created plugin instance\n");
   }
   else
   {
-printf("unable to find plugin to handle %s\n", aMimeType);
+    if ((nsnull != aURL) || (nsnull != aMimeType))
+printf("unable to find plugin to handle %s\n", aMimeType ? aMimeType : "(mime type unspecified)");
 
     return NS_ERROR_FAILURE;
   }
 }
 
 nsresult nsPluginHostImpl :: InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst,
-                                               nsPluginWindow *aWindow, nsString& aURL)
+                                               nsPluginWindow *aWindow, nsString& aURLSpec)
 {
   nsresult  rv;
 
-  if (nsnull == aMimeType)
+  rv = InstantiatePlugin(aMimeType, nsnull, aPluginInst);
+
+  if ((rv != NS_OK) || (nsnull == aMimeType))
   {
-    if (aURL.Length() > 0)
+    //either the plugin could not be identified based
+    //on the mime type or there was no mime type
+
+    if (aURLSpec.Length() > 0)
     {
       //we need to stream in enough to get the mime type...
 
-      rv = NewPluginStream(aURL, aPluginInst, aWindow);
+      rv = NewPluginStream(aURLSpec, aPluginInst, aWindow);
     }
     else
       rv = NS_ERROR_FAILURE;
   }
   else
   {
-    rv = InstantiatePlugin(aMimeType, aPluginInst);
+    //we got a plugin built, now stream
 
-    if (NS_OK == rv)
-    {
-      (*aPluginInst)->Start();
-      (*aPluginInst)->SetWindow(aWindow);
-      NewPluginStream(aURL, *aPluginInst, nsnull);
-    }
+    (*aPluginInst)->Start();
+    (*aPluginInst)->SetWindow(aWindow);
+    NewPluginStream(aURLSpec, *aPluginInst, nsnull);
   }
 
   return rv;

@@ -107,7 +107,7 @@ public:
   LoadPlugins(void);
 
   NS_IMETHOD
-  InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst);
+  InstantiatePlugin(const char *aMimeType, nsIURL *aURL, nsIPluginInstance ** aPluginInst);
 
   NS_IMETHOD
   InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst,
