@@ -37,7 +37,6 @@ REQUIRES = string \
 OBJS = ../base/Double.$(OBJ_SUFFIX) \
   ../base/List.$(OBJ_SUFFIX) \
   ../base/Map.$(OBJ_SUFFIX) \
-  ../base/NamedMap.$(OBJ_SUFFIX) \
   ../base/SimpleErrorObserver.$(OBJ_SUFFIX) \
   ../base/txAtoms.$(OBJ_SUFFIX) \
   ../base/txExpandedNameMap.$(OBJ_SUFFIX) \

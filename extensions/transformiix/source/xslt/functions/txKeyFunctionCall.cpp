@@ -19,7 +19,6 @@
  */
 
 #include "ProcessorState.h"
-#include "NamedMap.h"
 #include "txAtoms.h"
 #include "txSingleNodeContext.h"
 #include "XMLDOMUtils.h"
