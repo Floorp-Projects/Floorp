@@ -1290,6 +1290,32 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					CopyDir(from, to, NULL, TRUE);
 				}
 			}
+			else if (strcmp(pcmd, "DisableFields") == 0)
+			{
+				// Disable widgets specified in parms list
+				WIDGET *w;
+				char *widgetName = strtok(parms, ",)");
+				while (widgetName != NULL)
+				{
+					w = findWidget(widgetName);
+					if (w)
+						w->control->EnableWindow(FALSE);
+					widgetName = strtok(NULL, ",)");
+				}
+			}
+			else if (strcmp(pcmd, "EnableFields") == 0)
+			{
+				// Enable widgets specified in parms list
+				WIDGET *w;
+				char *widgetName = strtok(parms, ",)");
+				while (widgetName != NULL)
+				{
+					w = findWidget(widgetName);
+					if (w)
+						w->control->EnableWindow(TRUE);
+					widgetName = strtok(NULL, ",)");
+				}
+			}
 			else if (strcmp(pcmd, "SetGlobal") == 0)
 			{
 				char *p2 = strchr(parms, ',');
