@@ -80,7 +80,7 @@ var folderListener = {
 
 	OnItemIntPropertyChanged: function(item, property, oldValue, newValue)
 	{
-		if(property == "TotalMessages" || property == "TotalUnreadMessages")
+		if(property.GetUnicode() == "TotalMessages" || property.GetUnicode() == "TotalUnreadMessages")
 		{
 			folder = item.QueryInterface(Components.interfaces.nsIMsgFolder);
 			if(folder)
@@ -103,11 +103,11 @@ var folderListener = {
 
 
 		}
-	
 	},
 
 	OnItemBoolPropertyChanged: function(item, property, oldValue, newValue) {},
 
+    OnItemUnicharPropertyChanged: function(item, property, oldValue, newValue){},
 	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
 
 	OnFolderLoaded: function (folder)
@@ -158,9 +158,11 @@ function OnLoadMessenger()
 	AddDataSources();
 	InitPanes();
 
-  loadStartFolder();
 
   AddToSession();
+  //need to add to session before trying to load start folder otherwise listeners aren't
+  //set up correctly.
+  loadStartFolder();
 
   // FIX ME - later we will be able to use onload from the overlay
   OnLoadMsgHeaderPane();
@@ -269,32 +271,39 @@ function loadStartPage() {
 function loadStartFolder()
 {
 	//First get default account
-	var defaultAccount = accountManager.defaultAccount;
-
-	var server = defaultAccount.incomingServer;
-	var rootFolder = server.RootFolder;
-	var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
-
-	//now find Inbox
-    var outNumFolders = new Object();
-    var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
-	if(!inboxFolder) return;
-
-	var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-	var inboxURI = resource.Value;
-
-	//first, let's see if it's already in the dom.  This will make life easier.
-	var inbox = document.getElementById(inboxURI);
-
-	//if it's not here we will have to make sure it's open.
-	if(!inbox)
+	try
 	{
+		var defaultAccount = accountManager.defaultAccount;
+
+		var server = defaultAccount.incomingServer;
+		var rootFolder = server.RootFolder;
+		var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+		//now find Inbox
+		var outNumFolders = new Object();
+		var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
+		if(!inboxFolder) return;
+
+		var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+		var inboxURI = resource.Value;
+
+		//first, let's see if it's already in the dom.  This will make life easier.
+		var inbox = document.getElementById(inboxURI);
+
+		//if it's not here we will have to make sure it's open.
+		if(!inbox)
+		{
 
 
+		}
+
+		var folderTree= GetFolderTree();
+		ChangeSelection(folderTree, inbox);
 	}
-
-	var folderTree= GetFolderTree();
-	ChangeSelection(folderTree, inbox);
+	catch(ex)
+	{
+		dump('Exception in LoadStartFolder caused by no default account.  We know about this\n');
+	}
 
 }
 
