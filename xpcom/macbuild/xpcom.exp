@@ -80,6 +80,9 @@ PL_VectorInitialize
 PL_VectorDestroy
 PL_NewVector
 
+# GetFactory call
+NSGetFactory
+
 # nsServiceManager static method exports.
 ReleaseService__16nsServiceManagerFRC4nsIDP11nsISupportsP19nsIShutdownListener
 GetService__16nsServiceManagerFRC4nsIDRC4nsIDPP11nsISupportsP19nsIShutdownListener
