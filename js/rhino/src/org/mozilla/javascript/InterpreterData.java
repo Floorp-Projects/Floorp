@@ -100,6 +100,8 @@ final class InterpreterData implements Serializable, DebuggableScript
 
     boolean topLevel;
 
+    InterpreterData parentData;
+
     public boolean isTopLevel()
     {
         return topLevel;
@@ -139,4 +141,10 @@ final class InterpreterData implements Serializable, DebuggableScript
     {
         return itsNestedFunctions[index];
     }
+
+    public DebuggableScript getParent()
+    {
+         return parentData;
+    }
+
 }

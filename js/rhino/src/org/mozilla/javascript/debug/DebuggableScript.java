@@ -83,4 +83,6 @@ public interface DebuggableScript
 
     public DebuggableScript getFunction(int index);
 
+    public DebuggableScript getParent();
+
 }

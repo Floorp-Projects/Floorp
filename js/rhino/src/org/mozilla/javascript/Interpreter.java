@@ -255,6 +255,7 @@ public class Interpreter
             jsi.scriptOrFn = def;
             jsi.itsData = new InterpreterData(itsData.securityDomain,
                                               itsData.languageVersion);
+            jsi.itsData.parentData = itsData;
             jsi.itsData.itsSourceFile = itsData.itsSourceFile;
             jsi.itsData.encodedSource = itsData.encodedSource;
             jsi.itsData.itsCheckThis = def.getCheckThis();
