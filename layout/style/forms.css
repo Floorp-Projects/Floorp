@@ -244,6 +244,12 @@ input[type="file"] > input[type="button"] {
   height: inherit;
 }
 
+input[type="file"] > input[type="button"]:-moz-focus-inner
+ {
+  padding: 0px 2px 0px 2px;
+  border: 1px dotted transparent;
+}
+
 /* radio buttons */
 input[type="radio"] {
   border: 2px inset ThreeDFace;
@@ -314,7 +320,7 @@ input[type="submit"] {
   border: 2px outset ButtonFace;
   background-color: ButtonFace;
   color: ButtonText; 
-  padding: 1px 1px 1px 1px;
+  padding: 0px 1px 0px 1px;
   font: button;
   cursor: default;
   white-space: pre;
