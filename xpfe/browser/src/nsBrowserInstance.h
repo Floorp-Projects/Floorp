@@ -132,6 +132,9 @@ class nsBrowserInstance : public nsIBrowserInstance,
 
     NS_IMETHOD SetTitleForIndex(PRInt32 aIndex, const PRUnichar * aTitle);
 
+	NS_IMETHOD GetHistoryObjectForIndex(PRInt32 aIndex,  nsISupports ** aState);
+
+    NS_IMETHOD SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports * aState);
 
   protected:
     NS_IMETHOD DoDialog();

@@ -2026,6 +2026,24 @@ nsBrowserAppCore::SetTitleForIndex(PRInt32 aIndex, const PRUnichar* aTitle)
       mSHistory->SetTitleForIndex(aIndex, aTitle);
    return NS_OK;
 }
+
+NS_IMETHODIMP
+nsBrowserAppCore::GetHistoryObjectForIndex(PRInt32 aIndex, nsISupports ** aState)
+{
+
+   if (mSHistory)
+      mSHistory->GetHistoryObjectForIndex(aIndex, aState);
+   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowserAppCore::SetHistoryObjectForIndex(PRInt32 aIndex, nsISupports * aState)
+{
+   if (mSHistory)
+      mSHistory->SetHistoryObjectForIndex(aIndex, aState);
+   return NS_OK;
+}
+
 /*
 NS_IMETHODIMP
 cloneHistory(nsISessionHistory * aSessionHistory) {
