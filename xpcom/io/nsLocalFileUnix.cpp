@@ -271,8 +271,10 @@ nsLocalFile::InitWithPath(const char *filePath)
     
     int   len  = strlen(filePath);
     char* name = (char*) nsAllocator::Clone( filePath, len+1 );
-    if(name[len-1] == '/')
-        name[len-1] = '\0';
+    if (name[len-1] == '/') {
+        if (len != 1)
+            name[len-1] = '\0';
+    }
     
     mPath = name;
     
