@@ -1155,7 +1155,7 @@ void nsString::AppendWithConversion(char aChar) {
  * @param   aRadix:
  * @return
  */
-void nsString::AppendWithConversion(PRInt32 anInteger,PRInt32 aRadix) {
+void nsString::AppendInt(PRInt32 anInteger,PRInt32 aRadix) {
 
   PRUint32 theInt=(PRUint32)anInteger;
 
@@ -1193,7 +1193,7 @@ void nsString::AppendWithConversion(PRInt32 anInteger,PRInt32 aRadix) {
  * @param   aFloat:
  * @return
  */
-void nsString::AppendWithConversion(float aFloat){
+void nsString::AppendFloat(double aFloat){
   char buf[40];
   // *** XX UNCOMMENT THIS LINE
   //PR_snprintf(buf, sizeof(buf), "%g", aFloat);
@@ -2303,6 +2303,31 @@ nsAutoString::nsAutoString(const CBufDescriptor& aBuffer) : nsString() {
     AddNullTerminator(*this);
 }
 
+NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( const char* aCString, PRUint32 aLength )
+  {
+    Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+    AddNullTerminator(*this);
+    AppendWithConversion(aCString,aLength);
+  }
+
+NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( const char* aCString )
+  {
+    Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+    AddNullTerminator(*this);
+    AppendWithConversion(aCString);
+  }
+
+#if 0
+#ifdef NEW_STRING_APIS
+NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( const nsAReadableCString& )
+  {
+  }
+#else
+NS_ConvertASCIItoUCS2::NS_ConvertASCIItoUCS2( const nsCString& )
+  {
+  }
+#endif
+#endif
 
 #ifndef NEW_STRING_APIS
 /**

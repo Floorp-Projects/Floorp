@@ -51,6 +51,11 @@
 #include "nsAWritableString.h"
 #endif
 
+#ifdef STANDALONE_MI_STRING_TESTS
+  class nsAReadableString { public: virtual ~nsAReadableString() { } };
+  class nsAWritableString : public nsAReadableString { public: virtual ~nsAWritableString() { } };
+#endif
+
 class nsISizeOfHandler;
 
 
@@ -60,13 +65,14 @@ class nsISizeOfHandler;
 class NS_COM nsSubsumeStr;
 
 class NS_COM nsString :
-#ifdef NEW_STRING_APIS
+#if defined(NEW_STRING_APIS) || defined(STANDALONE_MI_STRING_TESTS)
   public nsAWritableString,
 #endif
   public nsStr {
 
 protected:
 #ifdef NEW_STRING_APIS
+  virtual const void* Implementation() const { return "nsString"; }
   virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
   virtual PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
 #endif
@@ -482,9 +488,9 @@ public:
    *  @return  number of chars copied
    */
 
+  void AppendInt(PRInt32, PRInt32=10); //radix=8,10 or 16
+  void AppendFloat(double);
   void AppendWithConversion(const char*, PRInt32=-1);
-  void AppendWithConversion(PRInt32, PRInt32=10); //radix=8,10 or 16
-  void AppendWithConversion(float);
   void AppendWithConversion(char);
 
 #ifndef NEW_STRING_APIS
@@ -504,10 +510,13 @@ public:
   nsString& Append(const PRUnichar* aString,PRInt32 aCount=-1);
   nsString& Append(PRUnichar aChar);
 
-  nsString& Append(const char* aString,PRInt32 aCount=-1)   {AppendWithConversion(aString,aCount); return *this;}
-  nsString& Append(char aChar)                              {AppendWithConversion(aChar); return *this;}
-  nsString& Append(PRInt32 aInteger,PRInt32 aRadix=10)      {AppendWithConversion(aInteger,aRadix); return *this;}
-  nsString& Append(float aFloat)                            {AppendWithConversion(aFloat); return *this;}
+  void  AppendWithConversion( PRInt32 i, PRInt32 radix=10 ) { AppendInt(i, radix); }
+  void  AppendWithConversion( float f )                     { AppendFloat(f); }
+
+  nsString& Append(const char* aString,PRInt32 aCount=-1)   { AppendWithConversion(aString,aCount); return *this; }
+  nsString& Append(char aChar)                              { AppendWithConversion(aChar); return *this; }
+  nsString& Append(PRInt32 aInteger,PRInt32 aRadix=10)      { AppendInt(aInteger,aRadix); return *this; }
+  nsString& Append(float aFloat)                            { AppendFloat(aFloat); return *this; }
 
   /**
    * Here's a bunch of methods that append varying types...
@@ -916,6 +925,29 @@ public:
     char mBuffer[kDefaultStringSize<<eTwoByte];
 };
 
+
+class NS_COM NS_ConvertASCIItoUCS2
+      : public nsAutoString
+    /*
+      ...
+    */
+  {
+    public:
+      NS_ConvertASCIItoUCS2( const char* );
+      NS_ConvertASCIItoUCS2( const char*, PRUint32 );
+#if 0
+#ifdef NEW_STRING_APIS
+      NS_ConvertASCIItoUCS2( const nsAReadableCString& );
+#else
+      class nsCString;
+      NS_ConvertASCIItoUCS2( const nsCString& );
+#endif
+#endif
+  };
+
+#define NS_ConvertToString NS_ConvertASCIItoUCS2
+
+#if 0
 inline
 nsAutoString
 NS_ConvertToString( const char* aCString )
@@ -933,6 +965,7 @@ NS_ConvertToString( const char* aCString, PRUint32 aLength )
     result.AssignWithConversion(aCString, aLength);
     return result;
   }
+#endif
 
 /***************************************************************
   The subsumestr class is very unusual. 

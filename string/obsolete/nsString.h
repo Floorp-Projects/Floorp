@@ -77,6 +77,7 @@ class NS_COM nsCString :
 
 #ifdef NEW_STRING_APIS
 protected:
+  virtual const void* Implementation() const { return "nsCString"; }
   virtual const char* GetReadableFragment( nsReadableFragment<char>&, nsFragmentRequest, PRUint32 ) const;
   virtual char* GetWritableFragment( nsWritableFragment<char>&, nsFragmentRequest, PRUint32 );
 #endif
@@ -453,10 +454,14 @@ public:
    */
 
   void AppendWithConversion(const nsString&, PRInt32=-1);
-  void AppendWithConversion(PRInt32 aInteger,PRInt32 aRadix=10); //radix=8,10 or 16
-  void AppendWithConversion(float aFloat);
   void AppendWithConversion(PRUnichar aChar);
   // Why no |AppendWithConversion(const PRUnichar*)|?
+  void AppendInt(PRInt32 aInteger,PRInt32 aRadix=10); //radix=8,10 or 16
+  void AppendFloat( double aFloat );
+
+#ifdef NEW_STRING_APIS
+  virtual void do_AppendFromReadable( const nsAReadableCString& );
+#endif
 
 #ifndef NEW_STRING_APIS
   nsCString& Append(const nsStr& aString,PRInt32 aCount=-1);
@@ -466,8 +471,11 @@ public:
   nsCString& Append(char aChar);
 
   nsCString& Append(PRUnichar aChar)                    {AppendWithConversion(aChar); return *this;}
-  nsCString& Append(PRInt32 aInteger,PRInt32 aRadix=10) {AppendWithConversion(aInteger,aRadix); return *this;}
-  nsCString& Append(float aFloat)                       {AppendWithConversion(aFloat); return *this;}
+  nsCString& Append(PRInt32 aInteger,PRInt32 aRadix=10) {AppendInt(aInteger,aRadix); return *this;}
+  nsCString& Append(float aFloat)                       {AppendFloat(aFloat); return *this;}
+
+  void  AppendWithConversion(PRInt32 aInteger, PRInt32 aRadix=10) {AppendInt(aInteger,aRadix);}
+  void  AppendWithConversion(float aFloat)                        {AppendFloat(aFloat);}
 
   /**
    * Here's a bunch of methods that append varying types...
@@ -518,6 +526,10 @@ public:
 
   void InsertWithConversion(PRUnichar aChar,PRUint32 anOffset);
   // Why no |InsertWithConversion(PRUnichar*)|?
+
+#ifdef NEW_STRING_APIS
+  virtual void do_InsertFromReadable( const nsAReadableCString&, PRUint32 );
+#endif
 
 #ifndef NEW_STRING_APIS
   /*
