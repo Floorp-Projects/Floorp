@@ -40,6 +40,7 @@
   <broadcaster  id="intlAcceptLanguages" 
                 value="" 
                 preftype="localizedstring" 
+                prefattribute="value"
                 prefstring="intl.accept_languages"/>
 
                 
