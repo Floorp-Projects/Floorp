@@ -103,6 +103,9 @@ nsWidgetStateManager.prototype =
     savePageData: 
       function ( aPageTag )
         {
+          if (!(aPageTag in this.dataManager.pageData))
+            return;
+
           if( 'GetFields' in this.contentArea)
             {
               // save page data based on user supplied function in content area
