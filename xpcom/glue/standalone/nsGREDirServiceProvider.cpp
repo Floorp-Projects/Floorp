@@ -38,7 +38,6 @@
 
 #include "nsBuildID.h"
 
-#include "nsGREDirServiceProvider.h"
 #include "nsEmbedString.h"
 #include "nsXPCOMPrivate.h"
 #include "nsXPCOMGlue.h"
@@ -79,6 +78,8 @@
 #endif
 
 #include <sys/stat.h>
+
+#include "nsGREDirServiceProvider.h"
 
 PRBool GRE_GetCurrentProcessDirectory(char* buffer);
 PRBool GRE_GetPathFromConfigDir(const char* dirname, char* buffer);
