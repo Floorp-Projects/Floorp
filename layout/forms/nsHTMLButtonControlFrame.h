@@ -109,10 +109,27 @@ public:
   virtual void SetAdditionalStyleContext(PRInt32 aIndex, 
                                          nsStyleContext* aStyleContext);
  
-  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
-                           nsIPresShell&   aPresShell,
-                           nsIAtom*        aListName,
-                           nsIFrame*       aFrameList);
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aFrameList);
+
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
+
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
+
+  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame,
+                          nsIFrame*       aNewFrame);
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -154,6 +171,7 @@ public:
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
 protected:
+  void ReParentFrameList(nsIFrameManager* aFrameManager, nsIFrame* aFrameList);
   virtual PRBool IsReset(PRInt32 type);
   virtual PRBool IsSubmit(PRInt32 type);
   void ReflowButtonContents(nsIPresContext* aPresContext,
