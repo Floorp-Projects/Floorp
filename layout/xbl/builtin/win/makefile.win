@@ -28,19 +28,23 @@ install:: $(LIBRARY)
 	$(MAKE_INSTALL) platformButtonBindings.xml $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) platformSelectBindings.xml $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) platformCheckboxBindings.xml $(DIST)\bin\res\builtin
+  $(MAKE_INSTALL) platformFieldsetBindings.xml $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) xbl-forms.css $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) buttons.css $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) select.css $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) textfields.css $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) checkbox.css $(DIST)\bin\res\builtin
+  $(MAKE_INSTALL) fieldset.css $(DIST)\bin\res\builtin
 
 clobber::
 	rm -f $(DIST)\bin\res\builtin\platformHTMLBindings.xml
 	rm -f $(DIST)\bin\res\builtin\platformButtonBindings.xml
 	rm -f $(DIST)\bin\res\builtin\platformSelectBindings.xml
 	rm -f $(DIST)\bin\res\builtin\platformCheckboxBindings.xml
+  rm -f $(DIST)\bin\res\builtin\platformFieldsetBindings.xml
 	rm -f $(DIST)\bin\res\builtin\xbl-forms.css
 	rm -f $(DIST)\bin\res\builtin\buttons.css
 	rm -f $(DIST)\bin\res\builtin\select.css
 	rm -f $(DIST)\bin\res\builtin\textfields.css
 	rm -f $(DIST)\bin\res\builtin\checkbox.css
+  rm -f $(DIST)\bin\res\builtin\fieldset.css
