@@ -186,6 +186,13 @@ nsresult nsHTMLContent::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
+NS_METHOD
+nsHTMLContent::IsSynthetic(PRBool& aResult)
+{
+  aResult = PR_FALSE;
+  return NS_OK;
+}
+
 void nsHTMLContent::Compact()
 {
 }
