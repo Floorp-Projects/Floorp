@@ -428,11 +428,7 @@ endif
 
 $(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 ifdef USE_NT_C_SYNTAX
-ifdef XP_OS2_VACPP
-	$(CC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$(shell pwd)/$<)
-else
 	$(CC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$<)
-endif
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
