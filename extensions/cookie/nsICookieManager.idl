@@ -34,7 +34,7 @@ interface nsICookieManager : nsISupports
 {
   void removeAll();
   readonly attribute nsISimpleEnumerator enumerator;
-  void remove(in string domain, in string name, in string path, in boolean permanent);
+  void remove(in string domain, in string name, in string path, [const] in boolean permanent);
 };
 
 %{ C++
