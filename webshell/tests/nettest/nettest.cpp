@@ -148,9 +148,7 @@ int main(int argc, char **argv)
 #endif
     nsString url_address;
     nsIStreamNotification *pConsumer;
-    nsIInputStream *pStream;
     nsIURL *pURL;
-    nsINetService *pNetlib;
     nsresult result;
 
     if (argc < 2) {
@@ -159,11 +157,6 @@ int main(int argc, char **argv)
     }
 
     urlLoaded = 0;
-
-    /* Create an instance of the INetService... (aka Netlib) */
-    if (NS_OK != NS_NewINetService(&pNetlib, NULL)) {
-        return 1;
-    }
 
     // Turn on netlib tracing...
     if (PL_strcasecmp(argv[1], "-trace") == 0) {
@@ -191,11 +184,7 @@ int main(int argc, char **argv)
 
 
     // Start the URL load...
-#if 1
-    result = pNetlib->OpenStream(pURL, pConsumer);
-#else
-    result = pNetlib->OpenBlockingStream(pURL, pConsumer, &pStream);
-#endif
+    result = pURL->Open(pConsumer);
 
     /* If the open failed, then do not drop into the message loop... */
     if (NS_OK != result) {
@@ -215,7 +204,6 @@ int main(int argc, char **argv)
     }
 
     pURL->Release();
-    pNetlib->Release();
 
     return 0;
 
