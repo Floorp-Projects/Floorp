@@ -186,35 +186,16 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
     // advance past hostname
     while ((*curPos)=='/') curPos++;
     while (*curPos && (*curPos)!='/') curPos++;
-    while ((*curPos)=='/') curPos++;
 
     // get the seperator
     nsAutoString sbdSep;
     rv = nsGetMailFolderSeparator(sbdSep);
     
-    // for each token in between the /'s, put a .sbd on the end and
-    // append to the path
-    char *newStr=nsnull;
-    char *temp = PL_strdup(curPos);
-    char *token = nsCRT::strtok(temp, "/", &newStr);
-    while (token) {
-      nsCAutoString dir(token);
-      
-      // look for next token
-      token = nsCRT::strtok(newStr, "/", &newStr);
-      
-      // check if we're the last entry
-      if (token) {
-        NS_MsgHashIfNecessary(dir);
-        dir += sbdSep;            // no, we're not, so append .sbd
-        pathResult += (const char *) dir;
-      }
-      else {
-        NS_MsgHashIfNecessary(dir);
-        pathResult += (const char *) dir;
-      }
-    }
-    PL_strfree(temp);
+        
+    nsCAutoString newPath("");
+	NS_MsgCreatePathStringFromFolderURI(curPos, newPath);
+
+    pathResult+=newPath.GetBuffer();
   }
   return NS_OK;
 }

@@ -575,43 +575,7 @@ nsMsgFolder::parseURI(PRBool needServer)
     // to be appended onto the server's path
       
     nsCAutoString newPath("");
-
-	nsCAutoString oldPath(result);
-	nsCAutoString pathPiece;
-
-	PRInt32 startSlashPos = oldPath.FindChar('/');
-	PRInt32 endSlashPos = (startSlashPos >= 0) 
-		? oldPath.FindChar('/', PR_FALSE, startSlashPos + 1) : oldPath.Length() - 1;
-	if (endSlashPos == -1)
-		endSlashPos = oldPath.Length();
-    // trick to make sure we only add the path to the first n-1 folders
-    PRBool haveFirst=PR_FALSE;
-    while (startSlashPos != -1) {
-	  oldPath.Mid(pathPiece, startSlashPos + 1, endSlashPos - startSlashPos);
-      // skip leading '/' (and other // style things)
-      if (pathPiece.Length() > 0) {
-
-        // add .sbd onto the previous path
-        if (haveFirst) {
-          newPath+=".sbd";
-          newPath += "/";
-        }
-        
-        NS_MsgHashIfNecessary(pathPiece);
-        newPath += pathPiece;
-        haveFirst=PR_TRUE;
-      }
-	  // look for the next slash
-      startSlashPos = endSlashPos;
-
-	  endSlashPos = (startSlashPos >= 0) 
-			? oldPath.FindChar('/', PR_FALSE, startSlashPos + 1) : oldPath.Length() - 1;
-	  if (endSlashPos == -1)
-			endSlashPos = oldPath.Length();
-
-      if (startSlashPos == endSlashPos)
-		  break;
-    }
+	NS_MsgCreatePathStringFromFolderURI(result, newPath);
 
     // now append munged path onto server path
     nsCOMPtr<nsIFileSpec> serverPath;

@@ -70,6 +70,7 @@
 #include "nsIMessenger.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
+#include "nsMsgI18N.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -216,6 +217,8 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 {
 	nsresult rv = NS_OK;
 	nsAutoString currentFolderNameStr;
+    nsAutoString convertedFolderNameStr;
+    const nsString fileCharset = msgCompFileSystemCharset();
 	nsCOMPtr<nsIMsgFolder> child;
 	char *folderName;
 	for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) {
@@ -230,6 +233,8 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 		}
 
 		AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
+        ConvertToUnicode(fileCharset, folderName, convertedFolderNameStr);
+        child->SetName(convertedFolderNameStr.GetUnicode());
 		PL_strfree(folderName);
     }
 	return rv;
