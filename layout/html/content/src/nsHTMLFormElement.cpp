@@ -294,16 +294,16 @@ nsHTMLFormElement::Submit()
 {
   // XXX Need to do something special with mailto: or news: URLs
   nsIDocument* doc = nsnull;
-  nsresult result = GetDocument(doc);
-  if ((NS_OK == result) && doc) {
+  nsresult res = GetDocument(doc);
+  if ((NS_OK == res) && doc) {
     nsIPresShell *shell = doc->GetShellAt(0);
     if (nsnull != shell) {
       nsIFrame* frame;
       shell->GetPrimaryFrameFor(this, &frame);
       if (frame) {
         nsIFormManager* formMan = nsnull;
-        nsresult result = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
-        if ((NS_OK == result) && formMan) {
+        res = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
+        if ((NS_OK == res) && formMan) {
           nsCOMPtr<nsIPresContext> context;
           shell->GetPresContext(getter_AddRefs(context));
           if (context) {
@@ -311,7 +311,7 @@ nsHTMLFormElement::Submit()
             // It works for now, but might not always
             // be correct. In the future, we might not need the 
             // frame to be passed to the link handler.
-            result = formMan->OnSubmit(context, nsnull);
+            res = formMan->OnSubmit(context, nsnull);
           }
         }
       }
@@ -320,7 +320,7 @@ nsHTMLFormElement::Submit()
     NS_RELEASE(doc);
   }
 
-  return result;
+  return res;
 }
 
 NS_IMETHODIMP
@@ -328,24 +328,24 @@ nsHTMLFormElement::Reset()
 {
   // XXX Need to do something special with mailto: or news: URLs
   nsIDocument* doc = nsnull;
-  nsresult result = GetDocument(doc);
-  if ((NS_OK == result) && doc) {
+  nsresult res = GetDocument(doc);
+  if ((NS_OK == res) && doc) {
     nsIPresShell *shell = doc->GetShellAt(0);
     if (nsnull != shell) {
       nsIFrame* frame;
       shell->GetPrimaryFrameFor(this, &frame);
       if (frame) {
         nsIFormManager* formMan = nsnull;
-        nsresult result = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
-        if ((NS_OK == result) && formMan) {
-          result = formMan->OnReset();
+        res = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
+        if ((NS_OK == res) && formMan) {
+          res = formMan->OnReset();
         }
       }
       NS_RELEASE(shell);
     }
   }
 
-  return result;
+  return res;
 }
 static nsGenericHTMLElement::EnumTable kFormMethodTable[] = {
   { "get", NS_FORM_METHOD_GET },
@@ -656,9 +656,7 @@ nsresult nsFormControlList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
-  static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
   if (aIID.Equals(kIDOMHTMLCollectionIID)) {
     *aInstancePtr = (void*)(nsIDOMHTMLCollection*)this;
     AddRef();
