@@ -154,18 +154,18 @@ txParseFromStream(istream& aInputStream, const nsAString& aUri,
 // shortcut macro for redirection into txXMLParser method calls
 #define TX_XMLPARSER(_userData) NS_STATIC_CAST(txXMLParser*, _userData)
 
-PR_STATIC_CALLBACK(int)
+PR_STATIC_CALLBACK(void)
 startElement(void *aUserData, const XML_Char *aName, const XML_Char **aAtts)
 {
     NS_ENSURE_TRUE(aUserData, XML_ERROR_NONE);
-    return TX_XMLPARSER(aUserData)->StartElement(aName, aAtts);
+    TX_XMLPARSER(aUserData)->StartElement(aName, aAtts);
 }
 
-PR_STATIC_CALLBACK(int)
+PR_STATIC_CALLBACK(void)
 endElement(void *aUserData, const XML_Char* aName)
 {
     NS_ENSURE_TRUE(aUserData, XML_ERROR_NONE);
-    return TX_XMLPARSER(aUserData)->EndElement(aName);
+    TX_XMLPARSER(aUserData)->EndElement(aName);
 }
 
 PR_STATIC_CALLBACK(void)
@@ -188,11 +188,11 @@ commentHandler(void* aUserData, const XML_Char* aChars)
     TX_XMLPARSER(aUserData)->Comment(aChars);
 }
 
-PR_STATIC_CALLBACK(int)
+PR_STATIC_CALLBACK(void)
 piHandler(void *aUserData, const XML_Char *aTarget, const XML_Char *aData)
 {
     NS_ENSURE_TRUE(aUserData, XML_ERROR_NONE);
-    return TX_XMLPARSER(aUserData)->ProcessingInstruction(aTarget, aData);
+    TX_XMLPARSER(aUserData)->ProcessingInstruction(aTarget, aData);
 }
 
 PR_STATIC_CALLBACK(int)

@@ -57,28 +57,26 @@ static const char kWhitespace[] = " \r\n\t"; // Optimized for typical cases
 /***************************** EXPAT CALL BACKS *******************************/
 
  // The callback handlers that get called from the expat parser 
-PR_STATIC_CALLBACK(int)
+PR_STATIC_CALLBACK(void)
 Driver_HandleStartElement(void *aUserData, 
                           const XML_Char *aName, 
                           const XML_Char **aAtts) 
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    return NS_STATIC_CAST(nsExpatDriver*,aUserData)->HandleStartElement((const PRUnichar*)aName,
-                                                                        (const PRUnichar**)aAtts);
+    NS_STATIC_CAST(nsExpatDriver*,aUserData)->HandleStartElement((const PRUnichar*)aName,
+                                                                 (const PRUnichar**)aAtts);
   }
-  return XML_ERROR_NONE;
 }
 
-PR_STATIC_CALLBACK(int)
+PR_STATIC_CALLBACK(void)
 Driver_HandleEndElement(void *aUserData, 
                         const XML_Char *aName) 
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    return NS_STATIC_CAST(nsExpatDriver*,aUserData)->HandleEndElement((const PRUnichar*)aName);
+    NS_STATIC_CAST(nsExpatDriver*,aUserData)->HandleEndElement((const PRUnichar*)aName);
   }
-  return XML_ERROR_NONE;
 }
 
 PR_STATIC_CALLBACK(void)
@@ -103,17 +101,16 @@ Driver_HandleComment(void *aUserData,
   }
 }
 
-PR_STATIC_CALLBACK(int)
+PR_STATIC_CALLBACK(void)
 Driver_HandleProcessingInstruction(void *aUserData, 
                                    const XML_Char *aTarget, 
                                    const XML_Char *aData)
 {
   NS_ASSERTION(aUserData, "expat driver should exist");
   if (aUserData) {
-    return NS_STATIC_CAST(nsExpatDriver*,aUserData)->HandleProcessingInstruction((const PRUnichar*)aTarget,
-                                                                                 (const PRUnichar*)aData);
+    NS_STATIC_CAST(nsExpatDriver*,aUserData)->HandleProcessingInstruction((const PRUnichar*)aTarget,
+                                                                          (const PRUnichar*)aData);
   }
-  return XML_ERROR_NONE;
 }
 
 PR_STATIC_CALLBACK(void)
