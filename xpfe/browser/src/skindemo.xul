@@ -1,0 +1,49 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+
+
+<!DOCTYPE window> 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+  		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script>
+function applySkin(url)
+{
+   dump("Retrieving data source.\n");
+   var ds = document.rdf.GetDataSource("rdf:chrome");
+   
+   dump("Getting the source.\n");
+   var s = document.rdf.GetResource("chrome://navigator/skin/");
+   
+   dump("Getting the property.\n");
+   var p = document.rdf.GetResource("http://chrome.mozilla.org/rdf#main");
+   
+   dump("Getting the original target.\n");
+   var originalTarget = ds.GetTarget(s, p, true);
+
+   dump("Doing the unassert.\n");
+   ds.Unassert(s, p, originalTarget);
+
+   dump("Getting the literal.\n");
+   var newTarget = document.rdf.GetLiteral(url);
+
+   dump("Doing the assert.\n");
+   ds.Assert(s, p, newTarget, true);
+
+   ds.Flush();
+   dump("Loading the new chrome.\n");
+   window.top.location.href = "chrome://navigator/content/";
+}
+</html:script>
+
+<html:button onclick="applySkin('navigator-mozillazine0.css')">
+  Click to switch to MozillaZine skin.
+</html:button>
+
+<html:button onclick="applySkin('navigator.css')">
+  Click to switch to default skin.
+</html:button>
+
+
+</window>
