@@ -1,0 +1,62 @@
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<!ENTITY pane.title                           "Composing Messages">
+<!ENTITY pane.description                     "Composing mail messages">
+<!ENTITY forwardReply.label                   "Forwarding and replying to messages">
+<!ENTITY forwardMsg.label                     "Forward messages:">
+<!ENTITY forwardMsg.accesskey                 "f">
+<!ENTITY inline.label                         "Inline">
+<!ENTITY inline.accesskey                     "i">
+<!ENTITY quoted.label                         "Quoted">
+<!ENTITY quoted.accesskey                     "q">
+<!ENTITY asAttachment.label                   "As Attachment">
+<!ENTITY asAttachment.accesskey               "a">
+<!ENTITY autoQuote.label                      "Automatically quote the original message when replying">
+<!ENTITY autoQuote.accesskey                  "u">
+<!ENTITY then.label                           "then,">
+<!ENTITY then.accesskey                       "h">
+<!ENTITY aboveQuote.label                     "start my reply above the quoted text">
+<!ENTITY aboveQuote.accesskey                 "v">
+<!ENTITY belowQuote.label                     "start my reply below the quoted text">
+<!ENTITY belowQuote.accesskey                 "b">
+<!ENTITY selectAndAboveQuote.label            "start my reply above, and select the quoted text">
+<!ENTITY selectAndAboveQuote.accesskey        "e">
+<!ENTITY selectAndBelowQuote.label            "start my reply below, and select the quoted text">
+<!ENTITY selectAndBelowQuote.accesskey        "r">
+
+<!ENTITY readingMessagesHeader.label          "For incoming messages">
+<!ENTITY messageWrapping.label                "Message Wrapping">
+<!ENTITY wrapInMsg.label                      "Wrap plain text messages to fit window width">
+<!ENTITY wrapInMsg.accesskey                  "w">
+<!ENTITY convertStructs.label                 "Add html styles to structured phrases. For example, format text contained within asterisks as bold.">
+<!ENTITY convertStructs.accesskey             "s">
+
+<!ENTITY sendingMessagesHeader.label          "For outgoing messages">
+<!ENTITY spellCheck.label                     "Check spelling before sending">
+<!ENTITY spellCheck.accesskey                 "p">
+<!ENTITY wrapOutMsg.label                     "Wrap plain text messages at">
+<!ENTITY wrapOutMsg.accesskey                 "l">
+<!ENTITY char.label                           "characters">
+<!ENTITY use8Bits.label                       "Send messages that use 8-bit characters">
+<!ENTITY asIs.label                           "As is (does not work well with some mail servers)">
+<!ENTITY asIs.accesskey                       "t">
+<!ENTITY useMIME.label                        "Using the 'quoted printable' MIME encoding (does not work well with some mail or newsgroups readers)">
+<!ENTITY useMIME.accesskey                    "m">

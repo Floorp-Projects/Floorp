@@ -204,7 +204,7 @@
       <menuseparator id="edEditMenuSep4" />
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_checkSpelling"/>
       <menuseparator id="edEditMenuSep5" />
-      <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-composer.xul')"/>
+      <menuitem id="menu_preferences" oncommand="goPreferences('navigator.xul', 'chrome://communicator/content/pref/pref-composer.xul','editor')"/>
     </menupopup>
   </menu>
 

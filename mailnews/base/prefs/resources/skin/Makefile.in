@@ -30,6 +30,7 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/skin
 
 EXPORT_RESOURCE_SAMPLES = \
 		AccountManager.css \
+		pref-mailnews.css \
 		wizard.css \
 		winclassic.gif \
 		winwide.gif \

@@ -19,23 +19,30 @@ Rights Reserved.
 --> 
 
 <!-- LOCALIZATION NOTE pref-diskspace.dtd: UI for Mail/News Disk Space prefs -->
-<!ENTITY pane.title "Disk Space">
-<!ENTITY pane.description "Manage the amount of disk space taken by messages">
-<!ENTITY allMsg.label "All Messages">
+<!ENTITY pane.title                     "Disk Space">
+<!ENTITY pane.description               "Manage the amount of disk space taken by messages">
+<!ENTITY allMsg.label                   "All Messages">
 <!-- LOCALIZATION NOTE storeMsgLimit.label: This string is followed by a number, then by kb.label -->
-<!ENTITY storeMsgLimit.label "Do not store messages locally that are larger than">
+<!ENTITY storeMsgLimit.label            "Do not store messages locally that are larger than">
+<!ENTITY storeMsgLimit.accesskey        "s">
 <!-- LOCALIZATION NOTE autoCompact.label: This string is followed by a number, then by kb.label -->
-<!ENTITY autoCompact.label "Automatically compact folders when it will save over">
-<!ENTITY kb.label " kB">
-<!ENTITY newgroupMsgOnly.label " Newsgroup Messages Only">
-<!ENTITY whenToClean.label "When it's time to clean up messages:">
+<!ENTITY autoCompact.label              "Automatically compact folders when it will save over">
+<!ENTITY autoCompact.accesskey          "c">
+<!ENTITY kb.label                       "kB">
+<!ENTITY newgroupMsgOnly.label          "Newsgroup Messages Only">
+<!ENTITY whenToClean.label              "When it's time to clean up messages:">
 <!-- LOCALIZATION NOTE keepMsgs.label: This string is followed by a number, then by days.label -->
-<!ENTITY keepMsgs.label "Keep messages which have arrived within the past">
-<!ENTITY days.label "days">
-<!ENTITY keepAllMsg.label "Keep all messages">
+<!ENTITY keepMsgs.label                 "Keep messages which have arrived within the past">
+<!ENTITY keepMsgs.accesskey             "k">
+<!ENTITY days.label                     "days">
+<!ENTITY keepAllMsg.label               "Keep all messages">
+<!ENTITY keepAllMsg.accesskey           "a">
 <!-- LOCALIZATION NOTE keepTheNewest.label: This string is followed by a number, then by messages.label -->
-<!ENTITY keepTheNewest.label "Keep the newest">
-<!ENTITY messages.label "messages">
-<!ENTITY keepUnread.label "Keep only unread messages">
+<!ENTITY keepTheNewest.label            "Keep the newest">
+<!ENTITY keepTheNewest.accesskey        "n">
+<!ENTITY messages.label                 "messages">
+<!ENTITY keepUnread.label               "Keep only unread messages">
+<!ENTITY keepUnread.accesskey           "u">
 <!-- LOCALIZATION NOTE removeMsg.label: This string is followed by a number, then by days.label -->
-<!ENTITY removeMsg.label "Remove message bodies only older than">
+<!ENTITY removeMsg.label                "Remove message bodies only older than">
+<!ENTITY removeMsg.accesskey            "r">

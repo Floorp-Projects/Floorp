@@ -18,29 +18,32 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!-- LOCALIZATION NOTE pref-mailnews.dtd: UI for Mail/News prefs -->
-<!ENTITY pane.title "Mail and Newsgroups">
-<!ENTITY pane.description "General Mail/News settings">
-<!ENTITY textBegin.label "Quoted plain text appearance">
-<!ENTITY style.label "Style:">
-<!ENTITY regular.label "Regular">
-<!ENTITY bold.label "Bold">
-<!ENTITY italic.label "Italic">
-<!ENTITY boldItalic.label "Bold Italic">
-<!ENTITY size.label "Size:">
-<!ENTITY regular.label "Regular">
-<!ENTITY bigger.label "Bigger">
-<!ENTITY smaller.label "Smaller">
-<!ENTITY color.label "Color:">
-<!ENTITY displayWidth.label "Display plain text messages and articles with">
-<!ENTITY fixedWidth.label "Fixed width font">
-<!ENTITY variableWidth.label "Variable width font">
-<!ENTITY playSound.label "Play sound when messages arrive">
-<!ENTITY rememberLastMsg.label "Remember the last selected message">
-<!ENTITY confirmMove.label "Confirm when moving folders to the trash">
-<!ENTITY useMessenger.label "Use Messenger from MAPI-based applications">
-<!ENTITY startPageHeader.label "Messenger Start Page">
-<!ENTITY location "Location:">
-<!ENTITY useCurrent "Use Current Page">
-<!ENTITY browseFile "Select File...">
-<!ENTITY enableStartPage.label "Enabled">
+<!ENTITY pane.title                       "Mail and Newsgroups">
+<!ENTITY pane.description                 "General Mail/News settings">
+
+<!ENTITY windowSettings.label             "Window Settings">
+<!ENTITY selectWindowLayout.label         "Choose a window layout for Mail:">
+<!ENTITY chooseExp.label                  "Note: changes to this setting will only take effect the next time you open a Mail window.">
+<!ENTITY playSound.label                  "Play sound when messages arrive">
+<!ENTITY playSound.accesskey              "p">
+<!ENTITY rememberLastMsg.label            "Remember the last selected message">
+<!ENTITY rememberLastMsg.accesskey        "r">
+<!ENTITY confirmMove.label                "Confirm when moving folders to the trash">
+<!ENTITY confirmMove.accesskey            "m">
+<!ENTITY useMessenger.label               "Use Mail from MAPI-based applications">
+<!ENTITY useMessenger.accesskey           "u">
+<!ENTITY messengerStartPage.label         "Mail Start Page">
+<!ENTITY enableStartPage.label            "When Mail launches, show the start page in the message area">
+<!ENTITY enableStartPage.accesskey        "t">
+<!ENTITY location.label                   "Location:">
+<!ENTITY location.accesskey               "l">
+<!ENTITY useCurrent.label                 "Use Current Page">
+<!ENTITY useCurrent.accesskey             "g">
+<!ENTITY chooseFile.label                 "Choose File...">
+<!ENTITY chooseFile.accesskey             "h">
+
+<!ENTITY reuseThread.label                "Double-clicking a folder opens it in a new window.">
+<!ENTITY reuseThread.accesskey            "f">
+<!ENTITY reuseMessage.label               "Double-clicking a message opens it in a new window.">
+<!ENTITY reuseMessage.accesskey           "n">
+<!ENTITY reuseExp.label                   "If you prefer fewer windows, unselect these options, and Mail will open items into existing windows.">

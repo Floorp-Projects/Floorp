@@ -30,6 +30,7 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/content/addressbook
 
 EXPORT_RESOURCE_SAMPLES = \
 		pref-addressing.xul \
+		pref-addressbookOverlay.xul \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

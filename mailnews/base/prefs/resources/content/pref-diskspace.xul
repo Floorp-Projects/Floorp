@@ -1,74 +1,84 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-diskspace.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-		onload="if (parent.handle) parent.handle.onpageload('pref-diskspace'); else parent.queuedTag='pref-diskspace';"
-		align="vertical">
+		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+		    onload="parent.initPanel('chrome://messenger/content/pref-diskspace.xul');"
+		    orient="vertical">
+        
+  <script language="javascript">
+  <![CDATA[
+    var _elementIDs = ["limitMessageSize", "maxSize", "newsKeepMethod", "newsKeepDays",
+                       "newsKeepCount", "newsKeepOnlyUnread", "newsRemoveBodiesByAge",
+                       "newsRemoveBodiesDays"];
+  ]]>
+  </script>
 
-  <box type="smallheader" title="&pane.title;" description="&pane.description;"/>
+  <box class="box-smallheader" title="&pane.title;" description="&pane.description;"/>
+
 	<titledbox orient="vertical">
-		<title>
-			<text value="&allMsg.label;"/>
-		</title>
+		<title><text value="&allMsg.label;"/></title>
 		
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.limit_message_size" id="mail.limit_message_size" type="checkbox"/>
-			<html:label for="mail.limit_message_size">&storeMsgLimit.label;</html:label>
-			<html:input name="maxsize" pref="true" preftype="int" prefstring="mail.max_size" id="mail.max_size" size="4" type="text"/>
-			<html:label>&kb.label;</html:label>
-		</html:div>
-		
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.prompt_purge_threshhold" id="mail.prompt_purge_threshhold" type="checkbox"/>
-			<html:label for="mail.prompt_purge_threshhold">&autoCompact.label;</html:label>
-			<html:input name="purgesize" pref="true" preftype="int" prefstring="mail.purge_threshhold" id="mail.purge_threshhold" size="4" type="text"/>
-			<html:label>&kb.label;</html:label>
-		</html:div>
+    <box autostretch="never">
+      <checkbox id="limitMessageSize" value="&storeMsgLimit.label;" accesskey="&storeMsgLimit.accesskey;"
+                pref="true" preftype="bool" prefstring="mail.limit_message_size" 
+                prefattribute="checked"/>
+      <textfield id="maxSize" size="4" pref="true" preftype="int"
+                 prefstring="mail.max_size" prefattribute="value"/>
+      <text class="label" value="&kb.label;"/>
+    </box>                                 
+  
+	  <box autostretch="never">
+      <checkbox id="promptPurgeThreshold" value="&autoCompact.label;" accesskey="&autoCompact.accesskey;"
+                pref="true" preftype="bool" prefstring="mail.prompt_purge_threshold"
+                prefattribute="checked"/>
+      <textfield id="purgeThreshhold" size="4" pref="true" preftype="int"
+                 prefstring="mail.purge_threshhold" prefattribute="value"/>
+      <text class="label" value="&kb.label;"/>
+    </box>                                   
 	</titledbox>
 
 	<titledbox orient="vertical">
-		<title>
-			<text value="&newgroupMsgOnly.label;"/>
-		</title>
+		<title><text value="&newgroupMsgOnly.label;"/></title>
 		
-		<html:div class="vertical-gap">&whenToClean.label;</html:div>
+    <html>&whenToClean.label;</html>
 
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="news.keep.method" prefindex="1" id="news.keep.method1" class="indent" name="keepmsg" type="radio"/>
-			<html:label for="news.keep.method1">&keepMsgs.label;</html:label>
-			<html:input name="keepdays" pref="true" preftype="int" prefstring="news.keep.days" id="news.keep.days" size="4" type="text"/>
-			<html:label>&days.label;</html:label>
-		</html:div>
+    <radiogroup id="newsKeepMethod" orient="vertical" autostretch="never" 
+                pref="true" preftype="int" prefstring="news.keep.method" 
+                prefattribute="data">
+      <box autostretch="never">
+        <radio data="1" value="&keepMsgs.label;" accesskey="&keepMsgs.accesskey;"/>
+        <textfield id="newsKeepDays" size="4" pref="true" preftype="int"
+                   prefstring="news.keep.days" prefattribute="value"/>
+        <text class="label" value="&days.label;"/>
+      </box>
+      <radio data="0" value="&keepAllMsg.label;" accesskey="&keepAllMsg.accesskey;"/>
+      <box autostretch="never">
+        <radio data="2" value="&keepTheNewest.label;" accesskey="&keepTheNewest.accesskey;"/>
+        <textfield id="newsKeepCount" size="4" pref="true" preftype="int"
+                   prefstring="news.keep.count" prefattribute="value"/>
+        <text class="label" value="&messages.label;"/>
+      </box>
+    </radiogroup>
 
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="news.keep.method" prefindex="0" id="news.keep.method0" class="indent" name="keepmsg" type="radio"/>
-			<html:label for="news.keep.method0">&keepAllMsg.label;</html:label>
-		</html:div>
-
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="news.keep.method" prefindex="2" id="news.keep.method2" class="indent" name="keepmsg" type="radio"/>
-			<html:label for="news.keep.method2">&keepTheNewest.label;</html:label>
-			<html:input name="keepmsgcount" pref="true" preftype="int" prefstring="news.keep.count" id="news.keep.count" size="4" type="text"/>
-			<html:label>&messages.label;</html:label>
-		</html:div>
-
-		<html:div class="vertical-gap">
-			<html:input pref="true" preftype="bool" prefstring="news.keep.only_unread" id="news.keep.only_unread" type="checkbox"/>
-			<html:label for="news.keep.only_unread">&keepUnread.label;</html:label>
-		</html:div>
-
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="news.remove_bodies.by_age" id="news.remove_bodies.by_age" type="checkbox"/>
-			<html:label for="news.remove_bodies.by_age">&removeMsg.label;</html:label>
-			<html:input name="removedays" pref="true" preftype="int" prefstring="news.remove_bodies.days" id="news.remove_bodies.days" size="4" type="text"/>
-			<html:label>&days.label;</html:label>
-		</html:div>
+    <separator/>
+    
+    <checkbox id="newsKeepOnlyUnread" value="&keepUnread.label;" accesskey="&keepUnread.accesskey;"
+              pref="true" preftype="bool" prefstring="news.keep.only_unread"
+              prefattribute="checked"/>
+    <box autostretch="never">
+      <checkbox id="newsRemoveBodiesByAge" value="&removeMsg.label;" accesskey="&removeMsg.accesskey;"
+                pref="true" preftype="bool" prefstring="news.remove_bodies.by_age"
+                prefattribute="checked"/>
+      <textfield id="newsRemoveBodiesDays" size="4" pref="true" preftype="int" 
+                 prefstring="news.remove_bodies.days" prefattribute="value"/>
+      <text class="label" value="&days.label;"/>
+    </box>
 	</titledbox>
 
 </window>

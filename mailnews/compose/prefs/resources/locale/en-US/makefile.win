@@ -26,9 +26,9 @@ include <$(DEPTH)\config\rules.mak>
 DISTBROWSER=$(DIST)\bin\chrome\messenger\locale\messengercompose
 
 install::
-	$(MAKE_INSTALL) pref-messages.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) pref-composing_messages.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) pref-formatting.dtd $(DISTBROWSER)
 
 clobber::
-	rm -f $(DIST)\bin\chrome\messenger\locale\messengercompose\pref-messages.dtd
+	rm -f $(DIST)\bin\chrome\messenger\locale\messengercompose\pref-composing_messages.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\messengercompose\pref-formatting.dtd

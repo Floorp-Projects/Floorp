@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+
+<overlay id="messengerPrefTreeOverlay"
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <!-- pref tree overlay -->
+  <treechildren id="panelChildren">
+    <treeitem container="true" open="true" position="3">
+      <treerow>       
+        <treecell indent="true" url="chrome://messenger/content/pref-mailnews.xul" value="&mail.label;"/> 
+      </treerow>
+      <treechildren id="messengerChildren">
+        <treeitem open="true">
+          <treerow>
+            <treecell indent="true" url="chrome://messenger/content/pref-viewing_messages.xul" value="&viewingMessages.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem open="true">
+          <treerow>
+            <treecell indent="true" url="chrome://messengercompose/content/pref-composing_messages.xul" value="&composingMessages.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem open="true">
+          <treerow>
+            <treecell indent="true" url="chrome://messengercompose/content/pref-formatting.xul" value="&format.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem open="true">
+          <treerow>
+            <treecell indent="true" url="chrome://messenger/content/pref-receipts.xul" value="&return.label;"/> 
+          </treerow>
+        </treeitem>
+        <treeitem open="true">
+          <treerow>
+            <treecell indent="true" url="chrome://messenger/content/pref-diskspace.xul" value="&disk.label;"/> 
+          </treerow>
+        </treeitem>
+      </treechildren>
+    </treeitem>
+  </treechildren>
+         
+</overlay> 

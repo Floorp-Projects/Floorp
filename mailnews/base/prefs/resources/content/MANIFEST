@@ -40,10 +40,13 @@ am-imap-advanced.xul
 am-imap-advanced.js
 am-smtp.xul
 am-smtp.js
+pref-appearance_overlay.xul
+pref-advanced_overlay.xul
+pref-tree_overlay.xul
 pref-mailnews.xul
 pref-mailnews.js
-pref-winsetting.xul
 pref-receipts.xul
+pref-viewing_messages.xul
 custreceipt.xul
 pref-diskspace.xul
 AccountWizard.xul

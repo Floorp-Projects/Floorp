@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/content/messengercompose
 
 EXPORT_RESOURCE_SAMPLES = \
-		pref-messages.xul \
+		pref-composing_messages.xul \
 		pref-formatting.xul \
 		$(NULL)
 

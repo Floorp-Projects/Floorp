@@ -49,9 +49,12 @@ EXPORT_RESOURCE_SAMPLES = \
 		am-imap-advanced.js \
 		am-smtp.xul \
 		am-smtp.js \
+		pref-advanced_overlay.xul \
+		pref-appearance_overlay.xul \
+		pref-tree_overlay.xul \
+		pref-viewing_messages.xul \
 		pref-mailnews.xul \
 		pref-mailnews.js \
-		pref-winsetting.xul \
 		pref-receipts.xul \
 		custreceipt.xul \
 		pref-diskspace.xul \

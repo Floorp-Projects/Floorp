@@ -30,10 +30,10 @@ SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/locale
 
 EXPORT_RESOURCE_SAMPLES = \
 		custreceipt.dtd \
+		pref-viewing_messages.dtd \
 		pref-diskspace.dtd \
 		pref-mailnews.dtd \
 		pref-receipts.dtd \
-		pref-winsetting.dtd \
 		aw-accname.dtd \
 		aw-accounttype.dtd \
 		aw-done.dtd \

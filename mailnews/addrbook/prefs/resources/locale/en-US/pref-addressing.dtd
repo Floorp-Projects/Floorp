@@ -18,15 +18,21 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY window.title "Addressing">
-<!ENTITY pane.title "Addressing">
-<!ENTITY pane.description "Settings for addressing messages">
-<!ENTITY pinpoint.label "Pinpoint Addressing">
-<!ENTITY lookFor.label "Look for addresses in the following:">
-<!ENTITY padCheck.label "Address Books">
-<!ENTITY dirCheck.label "Directory Server">
-<!ENTITY mulFound.label "When there are multiple addresses found:">
-<!ENTITY showList.label "Show me a list of choices">
-<!ENTITY acceptList.label "Accept what I have typed">
-<!ENTITY oneMatch.label "If there is one match in your personal address books:">
-<!ENTITY useAddress.label "Use the address and do not search in the directory">
+<!ENTITY window.title           "Addressing">
+<!ENTITY pane.title             "Addressing">
+<!ENTITY pane.description       "Settings for addressing messages">
+<!ENTITY pinpoint.label         "Pinpoint Addressing">
+<!ENTITY lookFor.label          "Look for addresses in the following:">
+<!ENTITY padCheck.label         "Address Books">
+<!ENTITY padCheck.accesskey     "a">
+<!ENTITY dirCheck.label         "Directory Server">
+<!ENTITY dirCheck.accesskey     "d">
+<!ENTITY mulFound.label         "When there are multiple addresses found:">
+<!ENTITY showList.label         "Show me a list of choices">
+<!ENTITY showList.accesskey     "s">
+<!ENTITY acceptList.label       "Accept what I have typed">
+<!ENTITY acceptList.accesskey   "c">
+<!ENTITY oneMatch.label         "If there is one match in your personal address books:">
+<!ENTITY useAddress.label       "Use the address and do not search in the directory">
+<!ENTITY useAddress.accesskey   "u">
+

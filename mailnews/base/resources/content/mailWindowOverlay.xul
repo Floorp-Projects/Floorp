@@ -159,7 +159,7 @@ Rights Reserved.
 			<menuitem value="&folderPropsCmd.label;" disabled="true" oncommand="MsgFolderProperties();"/>
 			<menuseparator/>
 			<menuitem value="&accountManagerCmd.label;" oncommand="MsgAccountManager();"/>
-			<menuitem id="menu_preferences" oncommand="goPreferences('messenger.xul', 'chrome://messenger/content/pref-mailnews.xul')"/>
+			<menuitem id="menu_preferences" oncommand="goPreferences('messenger.xul', 'chrome://messenger/content/pref-mailnews.xul','mailnews')"/>
 		</menupopup>
 	</menu>
 

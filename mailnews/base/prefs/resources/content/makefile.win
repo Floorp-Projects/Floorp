@@ -42,9 +42,12 @@ install::
 	$(MAKE_INSTALL) am-imap-advanced.js	$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) am-smtp.xul		$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) am-smtp.js		$(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) pref-advanced_overlay.xul	$(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) pref-appearance_overlay.xul	$(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) pref-tree_overlay.xul	$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) pref-mailnews.xul	$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) pref-mailnews.js	$(DIST)\bin\chrome\messenger\content
-	$(MAKE_INSTALL) pref-winsetting.xul $(DIST)\bin\chrome\messenger\content
+	$(MAKE_INSTALL) pref-viewing_messages.xul $(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) pref-receipts.xul	$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) custreceipt.xul		$(DIST)\bin\chrome\messenger\content
 	$(MAKE_INSTALL) pref-diskspace.xul	$(DIST)\bin\chrome\messenger\content
@@ -100,9 +103,12 @@ clobber::
 	rm -f $(DIST)\chrome\messenger\content\aw-login.xul
 	rm -f $(DIST)\chrome\messenger\content\aw-accname.xul
 	rm -f $(DIST)\chrome\messenger\content\aw-done.xul
+	rm -f $(DIST)\chrome\messenger\content\pref-tree_overlay.xul
+	rm -f $(DIST)\chrome\messenger\content\pref-appearance_overlay.xul
+	rm -f $(DIST)\chrome\messenger\content\pref-advanced_overlay.xul
 	rm -f $(DIST)\chrome\messenger\content\pref-mailnews.xul
 	rm -f $(DIST)\chrome\messenger\content\pref-mailnews.js
-	rm -f $(DIST)\chrome\messenger\content\pref-winsetting.xul
+	rm -f $(DIST)\chrome\messenger\content\pref-viewing_messages.xul
 	rm -f $(DIST)\chrome\messenger\content\pref-receipts.xul
 	rm -f $(DIST)\chrome\messenger\content\custreceipt.xul
 	rm -f $(DIST)\chrome\messenger\content\pref-diskspace.xul

@@ -6,76 +6,64 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-receipts.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-		onload="if (parent.handle) parent.handle.onpageload('pref-receipts'); else parent.queuedTag='pref-receipts';"
-		align="vertical">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        onload="parent.initPanel('chrome://messenger/content/pref-receipts.xul');"
+        orient="vertical">
 
-<html:script language="javascript">
+  <script language="javascript">
+  <![CDATA[
+    _elementIDs = ["requestReturnReceipt", "mdnReportEnabled", "incorporateReturnReceipt"];
+    
+    function doCustomize() 
+    {
+    	var dialog = window.openDialog("chrome://messenger/content/custreceipt.xul","","chrome");
+    }
+  ]]>  
+  </script>
 
-function DoCustomize() 
-{
-	var dialog = window.openDialog("chrome://messenger/content/custreceipt.xul",
-								   "",
-								   "chrome");
-}
 
-</html:script>
+  <box class="box-smallheader" title="&pane.title;" description="&pane.description;"/>
 
-
-  <box type="smallheader" title="&pane.title;" description="&pane.description;"/>
-	<titledbox orient="vertical">
-		<title>
-			<text value="&requestReceipt.label;"/>
-		</title>
+  <titledbox orient="vertical">
+    <title><text value="&requestReceipt.label;"/></title>
 		
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.request.return_receipt" prefindex="1" id="mail.request.return_receipt1" name="msgreceipt" type="radio"/>
-			<html:label for="mail.request.return_receipt1">&dsn.label;</html:label> 
-		</html:div>
-		
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.request.return_receipt" prefindex="2" id="mail.request.return_receipt2" name="msgreceipt" type="radio"/>
-			<html:label for="mail.request.return_receipt2">&mdn.label;</html:label>
-		</html:div>
+    <radiogroup id="requestReturnReceipt" orient="vertical" autostretch="never"
+                pref="true" preftype="int" prefstring="mail.request.return_receipt"
+                prefattribute="data">
+      <radio data="1" value="&dsn.label;" accesskey="&dsn.accesskey;"/>
+      <radio data="2" value="&mdn.label;" accesskey="&mdn.accesskey;"/>
+      <radio data="3" value="&both.label;" accesskey="&both.accesskey;"/>		
+    </radiogroup>
+    
+  </titledbox>
 
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.request.return_receipt" prefindex="3" id="mail.request.return_receipt3" name="msgreceipt" type="radio"/>
-			<html:label for="mail.request.return_receipt3">&both.label;</html:label>
-		</html:div>
+  <titledbox orient="vertical">
+    <title><text value="&receiptArrive.label;"/></title>
+		
+    <radiogroup id="incorporateReturnReceipt" orient="vertical" autostretch="never"
+                pref="true" preftype="int" prefstring="mail.incorporate.return_receipt"
+                prefattribute="data">
+      <radio data="0" value="&leaveIt.label;" accesskey="&leaveIt.accesskey;"/>
+      <radio data="1" value="&moveToSent.label;" accesskey="&moveToSent.accesskey;"/>		
+    </radiogroup>
+
 	</titledbox>
 
-	<titledbox orient="vertical">
-		<title>
-			<text value="&receiptArrive.label;"/>
-		</title>
-		
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.incorporate.return_receipt" prefindex="0" id="mail.incorporate.return_receipt0" name="getreceipt" type="radio"/>
-			<html:label for="mail.incorporate.return_receipt0">&leaveIt.label;</html:label>
-		</html:div>
-		
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.incorporate.return_receipt" prefindex="1" id="mail.incorporate.return_receipt1" name="getreceipt" type="radio"/>
-			<html:label for="mail.incorporate.return_receipt1">&moveToSent.label;</html:label>
-		</html:div>
-	</titledbox>
-
-	<titledbox orient="vertical">
-		<title>
-			<text value="&requestMDN.label;"/>
-		</title>
-		
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.mdn.report.enabled" prefindex="false" id="mail.mdn.report.enabled0" name="returnreceipt" type="radio"/>
-			<html:label for="mail.mdn.report.enabled0">&never.label;</html:label>
-		</html:div>
-		
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.mdn.report.enabled" prefindex="true" id="mail.mdn.report.enabled1" name="returnreceipt" type="radio"/>
-			<html:label for="mail.mdn.report.enabled1">&returnSome.label;</html:label>
-			<titledbutton class="push dialog" value="&custom.label;"/>
-		</html:div>
-	</titledbox>
+  <titledbox orient="vertical">
+    <title><text value="&requestMDN.label;"/></title>
+	
+    <radiogroup id="mdnReportEnabled" orient="vertical"
+                pref="true" preftype="bool" prefstring="mail.mdn.report.enabled"
+                prefattribute="data">
+      <radio data="false" value="&never.label;" accesskey="&never.accesskey;"/>
+      <box autostretch="never">
+        <radio data="true" value="&returnSome.label;" accesskey="&returnSome.accesskey;"/>	
+        <spring flex="1"/>
+        <button class="dialog" value="&custom.label;" accesskey="&custom.accesskey;"
+                oncommand="doCustomize();"/>
+      </box>
+    </radiogroup>
+  </titledbox>
 
 </window>

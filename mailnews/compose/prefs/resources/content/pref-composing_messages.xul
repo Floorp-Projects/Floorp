@@ -1,14 +1,40 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://messengercompose/locale/pref-messages.dtd">
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/pref-composing_messages.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		onload="parent.initPanel('chrome://messengercompose/content/pref-messages.xul');"
-		orient="vertical"
-		class="color-dialog">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');"
+        orient="vertical"
+        class="color-dialog">
+    
+  <script language="JavaScript">
+  <![CDATA[
+    var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "sendStruct", "wrapLength", "strictlyMime"];
+    
+    function Startup()
+    {
+      doEnabling();
+    }
+    
+    function doEnabling()
+    {
+      var quotebox = document.getElementById("thenBox");
+      var quotecheck = document.getElementById("autoQuote");
+      if( quotecheck.checked ) {
+        quotebox.firstChild.removeAttribute("disabled");
+        quotebox.lastChild.removeAttribute("disabled");
+      }
+      else {
+        quotebox.firstChild.setAttribute("disabled","true");
+        quotebox.lastChild.setAttribute("disabled","true");
+      }
+    }
+  ]]>
+  </script>  
     
   <box class="box-smallheader" title="&pane.title;" description="&pane.description;"/>
 
@@ -30,8 +56,8 @@
     
     <checkbox id="autoQuote" value="&autoQuote.label;" accesskey="&autoQuote.accesskey;" 
               pref="true" preftype="bool" prefstring="mail.auto_quote"
-              prefattribute="checked"/>		
-    <box autostretch="never">
+              prefattribute="checked" oncommand="doEnabling();"/>		
+    <box class="indent" autostretch="never" id="thenBox">
       <text class="label" value="&then.label;" accesskey="&then.accesskey;" for="replyOnTop"/>
       <menulist id="replyOnTop" pref="true" preftype="int" prefstring="mailnews.reply_on_top"
                 prefattribute="data">
@@ -45,23 +71,8 @@
     </box>
   </titledbox>
 
-	<!-- Reading -->
+	<!-- Composing Mail -->
 	<titledbox orient="vertical" autostretch="never">
-		<title><text value="&readingMessagesHeader.label;"/></title>
-
-    <checkbox id="wrapLongLines" value="&wrapInMsg.label;" accesskey="&wrapInMsg.accesskey;"
-              pref="true" preftype="bool" prefstring="mail.wrap_long_lines" 
-              prefattribute="checked"/>
-    <checkbox id="displayGlyph" value="&convertEmoticons.label;" accesskey="&convertEmoticons.accesskey;"
-              pref="true" preftype="bool" prefstring="mail.display_glyph"
-              prefattribute="checked"/>		
-    <checkbox id="displayStruct" value="&convertStructs.label;" accesskey="&convertStructs.accesskey;" 
-              pref="true" preftype="bool" prefstring="mail.display_struct"
-              prefattribute="checked"/>
-  </titledbox>
-
-	<!-- Sending -->
-	<titledbox orient="vertical">
 		<title><text value="&sendingMessagesHeader.label;"/></title>
         
     <checkbox id="spellCheckBeforeSend" value="&spellCheck.label;" accesskey="&spellCheck.accesskey;"
@@ -70,14 +81,18 @@
     <checkbox id="sendStruct" value="&convertStructs.label;" accesskey="&convertStructs.accesskey;"
               pref="true" preftype="bool" prefstring="mail.send_struct"
               prefattribute="checked"/>
-    <box autostretch="never">
-      <text class="label" value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" for="wrapLength"/>
-      <textfield id="wrapLength" size="3" pref="true" preftype="int"
-                 prefstring="mailnews.wraplength" prefattribute="value"/>
-      <text class="label" value="&char.label;"/>
-    </box>	
-
-    <html>&use8Bits.label;</html>
+  </titledbox>
+              
+  <titledbox autostretch="never">
+    <title><text value="&messageWrapping.label;"/></title>
+    <text class="label" value="&wrapOutMsg.label;" accesskey="&wrapOutMsg.accesskey;" for="wrapLength"/>
+    <textfield id="wrapLength" size="3" pref="true" preftype="int"
+               prefstring="mailnews.wraplength" prefattribute="value"/>
+    <text class="label" value="&char.label;"/>
+  </titledbox>
+    
+  <titledbox orient="vertical">
+    <title><text value="&use8Bits.label;"/></title>
     <radiogroup id="strictlyMime" orient="vertical" autostretch="never"
                 pref="true" preftype="bool" prefstring="mail.strictly_mime"
                 prefattribute="data">

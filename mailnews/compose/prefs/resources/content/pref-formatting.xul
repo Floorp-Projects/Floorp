@@ -6,45 +6,34 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messengercompose/pref-formatting.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		onload="if (parent.handle) parent.handle.onpageload('pref-formatting'); else parent.queuedTag='pref-formatting';"
-		align="vertical"
-		class="dialog">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="parent.initPanel('chrome://messenger/content/messengercompose/pref-formatting.xul');"
+        orient="vertical"
+        class="color-dialog">
 
-  <box type="smallheader" title="&pane.title;" description="&pane.description;"/>
-	<titledbox orient="vertical">
-		<html:div class="vertical-gap">&sendMail.label;</html:div>
-		<spring class="vgap"/>
+  <script language="javascript">
+  <![CDATA[
+    var _elementIDs = ["mailDefaultHTMLAction"];
+  ]]>
+  </script>  
+    
+  <box class="box-smallheader" title="&pane.title;" description="&pane.description;"/>
 
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.default_html_action" prefindex="0" id="mail.default_html_action0" class="indent" name="recipients" type="radio"/>
-   			<html:label for="mail.default_html_action0">&askMe.label;</html:label>
-            <html:br/>
-  		    <html:label for="mail.default_html_action0" class="indent-second-label">&askMe2.label;</html:label>
-		</html:div>
+  <titledbox orient="vertical">
+    <title><html>&sendMail.label;</html></title>
 
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.default_html_action" prefindex="1" id="mail.default_html_action1" class="indent" name="recipients" type="radio"/>
-			<html:label for="mail.default_html_action1">&convertPlain.label;</html:label>
-			<html:br/>
-			<html:label for="mail.default_html_action1" class="indent-second-label">&convertPlain2.label;</html:label>
-		</html:div>
+    <radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never"
+                pref="true" preftype="int" prefstring="mail.default_html_action"
+                prefattribute="data">
+      <radio data="0" value="&askMe.label;" accesskey="&askMe.accesskey;"/>
+      <radio data="1" value="&convertPlain.label;" accesskey="&convertPlain.accesskey;"/>                
+      <radio data="2" value="&sendHTML.label;" accesskey="&sendHTML.accesskey;"/>
+      <radio data="3" value="&sendBoth.label;" accesskey="&sendBoth.accesskey;"/>
+    </radiogroup>
+    
+    <separator/>
 
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.default_html_action" prefindex="2" id="mail.default_html_action2" class="indent" name="recipients" type="radio"/>
-			<html:label for="mail.default_html_action2">&sendHTML.label;</html:label>
-			<html:br/>
-			<html:label for="mail.default_html_action2" class="indent-second-label">&sendHTML2.label;</html:label>
-		</html:div>
-
-		<html:div>
-			<html:input pref="true" preftype="int" prefstring="mail.default_html_action" prefindex="3" id="mail.default_html_action3" class="indent" name="recipients" type="radio"/>
-			<html:label for="pref:3:int:mail.default_html_action3">&sendBoth.label;</html:label>
-			<html:br/>
-			<html:label for="mail.default_html_action3" class="indent-second-label">&sendBoth2.label;</html:label>
-		</html:div>
-
-		<html:div class="vertical-gap">&override.label;</html:div>
-	</titledbox>
+    <html>&override.label;</html>
+  </titledbox>
 
 </window>

@@ -1,128 +1,88 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/pref/pref.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/pref-mailnews.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/pref-mailnews.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
-		onload="if (parent.handle) parent.handle.onpageload('pref-mailnews'); else parent.queuedTag='pref-mailnews';"
-		align="vertical">
-<html:script language="javascript" src="chrome://global/content/strres.js"/>
-<html:script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
-<html:script language="javascript" src="chrome://messenger/content/pref-mailnews.js"/>
+		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+		    onload="parent.initPanel('chrome://messenger/content/pref-mailnews.xul');"
+		    orient="vertical">
 
-	  <box type="smallheader" title="&pane.title;" description="&pane.description;"/>
-	<titledbox orient="vertical">
+  <script language="javascript">
+  <![CDATA[
+    var _elementIDs = ["mailPaneConfig", "mailPlaySound", "mailnewsConfirmMoveFoldersToTrash", 
+                       "mailUseMapiServer", "reuseThreadWindow2", "reuseThreadWindow", 
+                       "mailnewsStartPageEnabled", "mailnewsStartPageUrl"];
+  ]]>
+  </script>
+  <script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://communicator/content/pref/prefutilities.js"></script>
+  
+  <box class="box-smallheader" title="&pane.title;" description="&pane.description;"/>
 
-		<title>
-			<text value="&textBegin.label;"/>
-		</title>
+  <titledbox orient="vertical">
+    <title><text value="&windowSettings.label;"/></title>
+    
+    <box autostretch="never">
+      <text class="label" value="&selectWindowLayout.label;"/>
+      <spring flex="1"/>
+      <radiogroup id="mailPaneConfig" pref="true" preftype="int" prefstring="mail.pane_config"
+                  prefattribute="data">
+        <radio class="iconic" data="0" id="classic"/>
+        <radio class="iconic" data="1" id="wide"/>
+      </radiogroup>
+    </box>
+    
+    <html>&chooseExp.label;</html>
+  </titledbox>
 
-		<box align="horizontal">
-		
-			<html:div>
-				<html:label for="mail.quoted_style">&style.label;</html:label>
-				<html:select pref="true"
-	                         preftype="int"
-	                         prefstring="mail.quoted_style"
-	                         id="mail.quoted_style">
-					<html:option value="0" label="&regular.label;"/>
-					<html:option value="1" label="&bold.label;"/>
-					<html:option value="2" label="&italic.label;"/>
-					<html:option value="3" label="&boldItalic.label;"/>
-				</html:select>
-			</html:div>
-
-			<html:label for="mail.quoted_size">&size.label;</html:label>
-
-			<html:div>
-				<html:select pref="true" preftype="int" id="mail.quoted_size" prefstring="mail.quoted_size">
-					<html:option value="0" label="&regular.label;"/>
-					<html:option value="1" label="&bigger.label;"/>
-					<html:option value="2" label="&smaller.label;"/>
-				</html:select>
-			</html:div>
-
-			<menu id="citationmenu">
-				<titledbutton value="&color.label;" class="popup" align="right"/> 
-				<html:div nopref="true" preftype="string" prefstring="mail.citation_color" style="width:30px; background-color:white"/>
-				<menupopup>
-					<colorpicker id="citation" palettename="standard" onclick="setColorWell(this.parentNode.parentNode,null,false);"/>
-				</menupopup>
-        	</menu>  
-		
-        </box>
-
-	</titledbox>
-
-	<titledbox orient="vertical">
-		<title>
-			<text value="&displayWidth.label;"/>
-		</title>
-
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.fixed_width_messages" prefindex="true" id="fixed_width" name="fontwidth" type="radio"/>
-			<html:label for="fixed_width">&fixedWidth.label;</html:label>
-		</html:div>
-			
-		<html:div>
-            <html:input id="var_width" name="fontwidth" type="radio"/>
-			<html:label for="var_width">&variableWidth.label;</html:label>
-		</html:div>
-
-	</titledbox>
-	 
-	<titledbox orient="vertical">
-
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.play_sound" id="mail.play_sound" type="checkbox"/>
-			<html:label for="mail.play_sound">&playSound.label;</html:label>
-		</html:div>
-			
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mailnews.remember_selected_message" id="mailnews.remember_selected_message" type="checkbox"/>
-			<html:label for="mailnews.remember_selected_message">&rememberLastMsg.label;</html:label>
-		</html:div>
-			
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash" id="mailnews.confirm.moveFoldersToTrash" type="checkbox"/>
-			<html:label for="mailnews.confirm.moveFoldersToTrash">&confirmMove.label;</html:label>
-		</html:div>
-			
+  <titledbox orient="vertical" autostretch="never">
+	  <checkbox id="mailPlaySound" value="&playSound.label;" accesskey="&playSound.accesskey;"
+              pref="true" preftype="bool" prefstring="mail.play_sound"
+              prefattribute="checked"/>
+    <checkbox id="mailnewsRememberSelectedMessage" value="&rememberLastMsg.label;" accesskey="&rememberLastMsg.accesskey;"
+              pref="true" preftype="bool" prefstring="mailnews.remember_selected_message" 
+              prefattribute="checked"/>
+    <checkbox id="mailnewsConfirmMoveFoldersToTrash" value="&confirmMove.label;" accesskey="&confirmMove.label;"
+              pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash"
+              prefattribute="checked"/>
 		<!-- this should be in a platform specific overlay, as Linux and Mac don't have MAPI -->
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.use_mapi_server" id="mail.use_mapi_server" type="checkbox"/>
-			<html:label for="mail.use_mapi_server">&useMessenger.label;</html:label>
-		</html:div>
-
+    <checkbox id="mailUseMapiServer" value="&useMessenger.label;" accesskey="&useMessenger.label;" 
+              pref="true" preftype="bool" prefstring="mail.use_mapi_server" 
+              prefattribute="checked"/>
+  </titledbox>
+  
+  <titledbox orient="vertical" autostretch="never">              
+    <checkbox id="reuseThreadWindow2" value="&reuseThread.label;" accesskey="&reuseThread.accesskey;"
+              pref="true" preftype="bool" prefstring="mailnews.reuse_thread_window2"
+              prefattribute="checked"/>
+    <checkbox id="reuseThreadWindow" value="&reuseMessage.label;" accesskey="&reuseMessage.accesskey;"
+              pref="true" preftype="bool" prefstring="mailnews.reuse_message_window"
+              prefattribute="checked"/>
+		<html>&reuseExp.label;</html>		
 	</titledbox>
+
 	<titledbox orient="vertical">
-		<title>
-			<text value="&startPageHeader.label;"/>
-		</title>
-		<html:div>
-			<html:input type="checkbox" pref="true" preftype="bool" prefstring="mailnews.start_page.enabled" id="mailnews.start_page.enabled"/>
-			<html:label for="mailnews.start_page.enabled">
-			&enableStartPage.label;
-			</html:label>
-        </html:div>
+    <title><text value="&messengerStartPage.label;"/></title>
 
-		<html:div>
-			<html:label>&location;</html:label>
-
-			<html:input name="homepage" size="30" type="text" pref="true" preftype="string" 
-			prefstring="mailnews.start_page.url" id="mailnews.start_page.url"/>
-		</html:div>
-		<box align="horizontal">
-			<titledbutton class="dialog push" name="starts" type="button" 
-			value="&useCurrent;" onclick="setHomePageToCurrentPage('mailnews.start_page.url');" />
-
-			<titledbutton class="dialog push" name="browse" type="button" 
-			value="&browseFile;" onclick="prefNavSelectFile('mailnews.start_page.url', 'choosehomepage', false)"/>
-		</box>
+    <checkbox allowevents="true" id="mailnewsStartPageEnabled" value="&enableStartPage.label;" accesskey="&enableStartPage.accesskey;"
+              pref="true" preftype="bool" prefstring="mailnews.start_page_enabled"
+              prefattribute="checked"/>
+    <box autostretch="never" class="indent">
+      <text class="label" value="&location.label;" accesskey="&location.label;" for="mailnews.start_page.url"/>
+      <textfield id="mailnewsStartPageUrl" flex="1" pref="true" preftype="string"
+                 prefstring="mailnews.start_page.url" prefattribute="value"/>
+    </box>
+    <box autostretch="never" halign="right">
+      <button class="dialog" value="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
+              oncommand="setHomePageToCurrentPage('mailnews.start_page.url');" />
+      <button class="dialog" value="&chooseFile.label;" accesskey="&chooseFile.accesskey;"
+              oncommand="prefNavSelectFile('mailnews.start_page.url', 'choosehomepage', false)"/>
+    </box>
 
 	</titledbox>
 

@@ -19,17 +19,25 @@ Rights Reserved.
 --> 
 
 <!-- LOCALIZATION NOTE pref-receipts.dtd: UI for Mail/News Return Receipts prefs -->
-<!ENTITY pane.title "Return Receipts">
-<!ENTITY pane.description "Settings for requesting or returning receipts">
-<!ENTITY requestReceipt.label " If I request a receipt when sending a message, I want">
-<!ENTITY dsn.label "A delivery receipt from the receiving server (DSN)">
-<!ENTITY mdn.label "A read receipt, notifying me when recipients display the message (MDN)">
-<!ENTITY both.label "Both types of receipt">
-<!ENTITY receiptArrive.label " When a receipt arrives">
-<!ENTITY leaveIt.label "Leave it in my Inbox">
+<!ENTITY pane.title                   "Return Receipts">
+<!ENTITY pane.description             "Settings for requesting or returning receipts">
+<!ENTITY requestReceipt.label         "If I request a receipt when sending a message, I want">
+<!ENTITY dsn.label                    "A delivery receipt from the receiving server (DSN)">
+<!ENTITY dsn.accesskey                "d">
+<!ENTITY mdn.label                    "A read receipt, notifying me when recipients display the message (MDN)">
+<!ENTITY mdn.accesskey                "m">
+<!ENTITY both.label                   "Both types of receipt">
+<!ENTITY both.accesskey               "b">
+<!ENTITY receiptArrive.label          "When a receipt arrives">
+<!ENTITY leaveIt.label                "Leave it in my Inbox">
+<!ENTITY leaveIt.accesskey            "i">
 <!-- LOCALIZATION NOTE moveToSent.label Translate: 'Sent Mail' according to Netscape glossary -->
-<!ENTITY moveToSent.label "Move it to my Sent Mail folder">
-<!ENTITY requestMDN.label " When I receive a message and the sender requested a receipt (MDN)">
-<!ENTITY returnSome.label "Return receipts for some messages">
-<!ENTITY never.label "Never return a receipt">
-<!ENTITY custom.label "Customize...">
+<!ENTITY moveToSent.label             "Move it to my Sent Mail folder">
+<!ENTITY moveToSent.accesskey         "m">
+<!ENTITY requestMDN.label             "When I receive a message and the sender requested a receipt (MDN)">
+<!ENTITY returnSome.label             "Return receipts for some messages">
+<!ENTITY returnSome.accesskey         "r">
+<!ENTITY never.label                  "Never return a receipt">
+<!ENTITY never.accesskey              "n">
+<!ENTITY custom.label                 "Customize...">
+<!ENTITY custom.accesskey             "c">

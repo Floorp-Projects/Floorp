@@ -6,77 +6,46 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/pref-addressing.dtd">
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		onload="if (parent.handle) parent.handle.onpageload('pref-addressing'); else parent.queuedTag='pref-addressing';"
-        class="dialog"
-		align="vertical">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="parent.initPanel('chrome://messenger/content/addressbook/pref-addressing.xul');"
+        class="color-dialog"
+        orient="vertical">
 
-  <box type="smallheader" title="&pane.title;" description="&pane.description;"/>
-	<titledbox orient="vertical">
-		<title>
-			<text value="&pinpoint.label;"/>
-		</title>
+  <script language="javascript">
+  <![CDATA[
+    var _elementIDs = ["padCheck", "dirCheck", "showDialogForMultipleMatches", "useAddress"];
+  ]]>
+  </script>  
+    
+  <box class="box-smallheader" title="&pane.title;" description="&pane.description;"/>
+
+  <titledbox orient="vertical">
+    <title><text value="&pinpoint.label;"/></title>
 			
-		<html:div>&lookFor.label;</html:div>
+    <html>&lookFor.label;</html>
+    <checkbox id="padCheck" value="&padCheck.label;" accesskey="&padCheck.accesskey;"/>
+    <box autostretch="never">
+      <checkbox id="dirCheck" value="&dirCheck.label;" accesskey="&dirCheck.accesskey;"/>
+      <menulist>
+        <menupopup/>
+      </menulist>
+    </box>
 		
-		<html:div>
-			<html:input id="padCheck" type="checkbox" class="indent"/>
-			<html:label for="padCheck">&padCheck.label;</html:label>
-		</html:div>
-		
-		<html:div>
-			<html:input id="dirCheck" type="checkbox" class="indent"/>
-			<html:label for="dirCheck">&dirCheck.label;</html:label>
-			<html:select>
-			</html:select>
-		</html:div>
-		
-		<html:div class="vertical-gap">&mulFound.label;</html:div>
+    <separator class="thin"/>
 
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="ldap_2.autoComplete.showDialogForMultipleMatches" prefindex="false" id="ldap_2.autoComplete.showDialogForMultipleMatches1" name="multilist" type="radio"/>
-			<html:label for="ldap_2.autoComplete.showDialogForMultipleMatches1">&acceptList.label;</html:label>
-		</html:div>
-		
-		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="ldap_2.autoComplete.showDialogForMultipleMatches" prefindex="true" id="ldap_2.autoComplete.showDialogForMultipleMatches0" name="multilist" type="radio"/>
-			<html:label for="ldap_2.autoComplete.showDialogForMultipleMatches0">&showList.label;</html:label>
-		</html:div>
-		
-		<html:div class="vertical-gap">&oneMatch.label;</html:div>
-		
-		<html:div>
-			<html:input id="useAddress" type="checkbox" class="indent"/>
-			<html:label for="useAddress">&useAddress.label;</html:label>
-		</html:div>
-		
-		
-		<!--html:table>
-		<html:tr><html:td>&lookFor.label;</html:td></html:tr>
-			<html:tr><html:td>
-				<html:input id="padCheck" type="checkbox"/>
-				<html:label for="padCheck">&padCheck.label;</html:label>
-			</html:td></html:tr>
-			<html:tr><html:td>
-				<html:input type="checkbox"/>
-				<html:label>&dirCheck.label;</html:label>
-			</html:td></html:tr>
-		<html:tr><html:td>&mulFound.label;</html:td></html:tr>
-			<html:tr><html:td>
-				<html:input name="multilist" type="radio"/>
-				<html:label>&showList.label;</html:label>
-			</html:td></html:tr>
-			<html:tr><html:td>
-				<html:input name="multilist" type="radio"/>
-				<html:label>&acceptList.label;</html:label>
-			</html:td></html:tr>
-			<html:tr><html:td>&oneMatch.label;</html:td></html:tr>
-			<html:tr><html:td>
-				<html:input type="checkbox"/>
-				<html:label>&useAddress.label;</html:label>
-			</html:td></html:tr>
-		</html:table-->
+    <html>&mulFound.label;</html>
+    <radiogroup id="showDialogForMultipleMatches" orient="vertical" autostretch="never"
+              pref="true" preftype="bool" prefstring="ldap_2.autoComplete.showDialogForMultipleMatches"
+              prefattribute="data">
+      <radio data="false" value="&acceptList.label;" accesskey="&acceptList.accesskey;"/>
+      <radio data="true" value="&showList.label;" accesskey="&showList.accesskey;"/>
+    </radiogroup>
+
+    <separator class="thin"/>
+    
+    <html>&oneMatch.label;</html>		
+    <checkbox id="useAddress" value="&useAddress.label;" accesskey="&useAddress.accesskey;"/>
 	
-	</titledbox>
+  </titledbox>
 
 </window>

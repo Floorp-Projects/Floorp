@@ -30,7 +30,7 @@ install::
 	$(MAKE_INSTALL) pref-diskspace.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) pref-mailnews.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) pref-receipts.dtd $(DISTBROWSER)
-	$(MAKE_INSTALL) pref-winsetting.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) pref-viewing_messages.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) aw-accname.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) aw-accounttype.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) aw-done.dtd $(DISTBROWSER)
@@ -57,7 +57,7 @@ clobber::
 	rm -f $(DIST)\bin\chrome\messenger\locale\pref-diskspace.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\pref-mailnews.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\pref-receipts.dtd
-	rm -f $(DIST)\bin\chrome\messenger\locale\pref-winsetting.dtd
+	rm -f $(DIST)\bin\chrome\messenger\locale\pref-viewing_messages.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\aw-accname.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\aw-accounttype.dtd
 	rm -f $(DIST)\bin\chrome\messenger\locale\aw-done.dtd
