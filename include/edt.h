@@ -160,6 +160,7 @@ void EDT_SaveToBuffer ( MWContext * pContext, XP_HUGE_CHAR_PTR* pBuffer );
 void EDT_ReadFromBuffer ( MWContext * pContext, XP_HUGE_CHAR_PTR pBuffer );
 
 #ifdef MOZ_ENDER_MIME
+ED_FileError EDT_SaveMimeToBuffer(MWContext *pContext, XP_HUGE_CHAR_PTR *pBuffer, XP_Bool async);
 void EDT_ReadMimeFromBuffer ( MWContext * pContext, XP_HUGE_CHAR_PTR pBuffer );
 #endif /*MOZ_ENDER_MIME*/
 
