@@ -40,7 +40,7 @@
 
   <broadcaster  id="intlAcceptLanguages" 
                 value="" 
-                preftype="string" 
+                preftype="localizedstring" 
                 prefstring="intl.accept_languages"/>
 
                 
@@ -57,7 +57,7 @@
     <html>&languages.customize.active.label;</html>
     <hbox flex="1">
       <tree class="inset" id="active_languages" flex="1" style="width: 0px; height: 0px;"
-            pref="true" preftype="string" prefstring="intl.accept_languages" prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
+            pref="true" preftype="localizedstring" prefstring="intl.accept_languages" prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
             datasources="rdf:null" multiple="true" onselect="SelectLanguage();">
         <treecolgroup>
           <treecol flex="1"/>
@@ -93,7 +93,7 @@
     <label value="&languages.customize.Charset.grouplabel;"/>
     <text class="label" value="&languages.customize.DefaultCharset.label;" for="DefaultCharsetList"/>
     <menulist id="DefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
-        pref="true" preftype="string" prefstring="intl.charset.default"
+        pref="true" preftype="localizedstring" prefstring="intl.charset.default"
         prefattribute="value" wsm_attributes="value">
         <template>
           <menupopup>

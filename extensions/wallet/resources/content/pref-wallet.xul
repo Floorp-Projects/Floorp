@@ -68,7 +68,7 @@
       <textbox id="walletServer"
                  flex="1"
                  pref="true"
-                 preftype="string"
+                 preftype="localizedstring"
                  prefstring="wallet.Server"
                  prefattribute="value"/>
     </hbox>

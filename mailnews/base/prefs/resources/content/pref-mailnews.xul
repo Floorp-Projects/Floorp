@@ -82,7 +82,7 @@ Contributor(s):
       <hbox autostretch="never">
         <text class="label" value="&location.label;" accesskey="&location.accesskey;" 
                    for="mailnews.start_page.url"/>
-        <textbox id="mailnewsStartPageUrl" flex="1" pref="true" preftype="string"
+        <textbox id="mailnewsStartPageUrl" flex="1" pref="true" preftype="localizedstring"
                  prefstring="mailnews.start_page.url" prefattribute="value"/>
       </hbox>
 

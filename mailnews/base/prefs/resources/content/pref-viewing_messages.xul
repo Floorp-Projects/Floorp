@@ -110,7 +110,7 @@
       <text class="label"  for="sendDefaultCharsetList"
             value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;"/>
         <menulist class="small-margin" id="sendDefaultCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"
-                pref="true" preftype="string" prefstring="mailnews.view_default_charset"
+                pref="true" preftype="localizedstring" prefstring="mailnews.view_default_charset"
                 prefattribute="value">
         <template>
           <menupopup>

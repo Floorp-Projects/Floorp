@@ -70,7 +70,7 @@
         <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="browserStartupHomepage"/>
         <textbox id="browserStartupHomepage" type="autocomplete" flex="1" wsm_persist="true" 
                    searchSessions="history" timeout="50" maxrows="6"
-                   pref="true" preftype="string" prefstring="browser.startup.homepage"
+                   pref="true" preftype="localizedstring" prefstring="browser.startup.homepage"
                    prefattribute="value"/>  <!-- we may wish to change this to data
                                                  when we support fancy formatted local filenames -->
       </hbox>

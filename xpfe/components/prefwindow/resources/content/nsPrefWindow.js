@@ -145,19 +145,7 @@ nsPrefWindow.prototype =
                     case "color":
                     case "string":
                     default:
-                    // BEN: please remove this hacky coe once you add a new
-					// preftype for localizable pref.
-                      if((aPrefString == "browser.startup.homepage") ||
-                         (aPrefString == "wallet.Server") ||
-                         (aPrefString == "intl.accept_languages") ||
-                         (aPrefString == "intl.charset.default") ||
-                         (aPrefString == "mailnews.start_page.url") ||
-                         (aPrefString == "mailnews.view_default_charset") ||
-                         (aPrefString == "mailnews.send_default_charset")) {
-                            return  pref.getLocalizedUnicharPref( aPrefString );
-                      } else {
                          return !aDefaultFlag ? pref.CopyUnicharPref( aPrefString ) : pref.CopyDefaultUnicharPref( aPrefString );
-                      }
                   }
               }
             catch (e)
