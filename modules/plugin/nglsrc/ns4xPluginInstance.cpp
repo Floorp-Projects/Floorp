@@ -679,6 +679,9 @@ NS_IMETHODIMP ns4xPluginInstance::Print(nsPluginPrint* platformPrint)
 
 NS_IMETHODIMP ns4xPluginInstance::HandleEvent(nsPluginEvent* event, PRBool* handled)
 {
+  if(!mStarted)
+    return NS_OK;
+
   if (fNPP.pdata == nsnull)
     return NS_ERROR_FAILURE;
 

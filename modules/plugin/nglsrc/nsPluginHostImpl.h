@@ -27,7 +27,9 @@
 #include "nsIPluginManager.h"
 #include "nsIPluginManager2.h"
 #include "nsIPluginHost.h"
+#include "nsIObserver.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
 #include "prlink.h"
 #include "nsIFileUtilities.h"
 #include "nsICookieStorage.h"
@@ -80,17 +82,20 @@ struct nsActivePlugin
   nsActivePlugin*        mNext;
   char*                  mURL;
   nsIPluginInstancePeer* mPeer;
+  nsCOMPtr<nsIPlugin>    mPlugin;
   nsIPluginInstance*     mInstance;
   PRBool                 mStopped;
   PRTime                 mllStopTime;
   PRBool                 mDefaultPlugin;
 
-  nsActivePlugin(nsIPluginInstance* aInstance, char * url, PRBool aDefaultPlugin);
+  nsActivePlugin(nsCOMPtr<nsIPlugin> aPlugin,
+                 nsIPluginInstance* aInstance, 
+                 char * url,
+                 PRBool aDefaultPlugin);
   ~nsActivePlugin();
 
   void setStopped(PRBool stopped);
 };
-
 
 class nsActivePluginList
 {
@@ -112,6 +117,7 @@ public:
   nsActivePlugin * findOldestStopped();
   void removeAllStopped();
   void stopRunning();
+  PRBool IsLastInstance(nsActivePlugin * plugin);
 };
 
 // The purpose of this list is to keep track of unloaded plugin libs
@@ -137,7 +143,8 @@ public:
 class nsPluginHostImpl : public nsIPluginManager2,
                          public nsIPluginHost,
                          public nsIFileUtilities,
-                         public nsICookieStorage
+                         public nsICookieStorage,
+                         public nsIObserver
 {
 public:
   nsPluginHostImpl();
@@ -316,6 +323,10 @@ public:
   NS_IMETHOD
   SetCookie(const char* inCookieURL, const void* inCookieBuffer, PRUint32 inCookieSize);
   
+  // Methods from nsIObserver
+  NS_IMETHOD
+  Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData);
+
   /* Called by GetURL and PostURL */
 
   NS_IMETHOD
@@ -374,7 +385,9 @@ private:
   SetUpDefaultPluginInstance(const char *aMimeType, nsIURI *aURL, nsIPluginInstanceOwner *aOwner);
 
   void
-  AddInstanceToActiveList(nsIPluginInstance* aInstance, nsIURI* aURL, PRBool aDefaultPlugin = PR_FALSE);
+  AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
+                          nsIPluginInstance* aInstance,
+                          nsIURI* aURL, PRBool aDefaultPlugin);
 
   nsresult 
   RegisterPluginMimeTypesWithLayout(nsPluginTag *pluginTag, nsIComponentManager * compManager, nsIFile * layoutPath);
@@ -392,6 +405,7 @@ private:
   nsPluginTag *mPlugins;
   PRBool      mPluginsLoaded;
   PRBool      mDontShowBadPluginMessage;
+  PRBool      mIsDestroyed;
 
   nsActivePluginList mActivePluginList;
   nsUnloadedLibrary *mUnloadedLibraries;
