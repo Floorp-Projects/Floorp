@@ -1238,7 +1238,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     }
     else
     {
-      NS_NAMED_LITERAL_STRING(tabStr, "  ");
+      NS_NAMED_LITERAL_STRING(tabStr, "\t");
       NS_NAMED_LITERAL_STRING(spacesStr, "    ");
       char specialChars[] = {'\t','\n',0};
       while (unicodeBuf && (pos != -1) && (pos < (PRInt32)inString->Length()))
