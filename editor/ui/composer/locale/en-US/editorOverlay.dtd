@@ -424,19 +424,19 @@
 <!ENTITY toolspellcheck.accesskey "s">
 
 <!-- editor toolbar -->
-<!ENTITY newEditorIcon.url "chrome://editor/skin/images/ED_NewFile.gif">
-<!ENTITY openEditorIcon.url "chrome://editor/skin/images/ED_OpenFile.gif">
-<!ENTITY saveIcon.url "chrome://editor/skin/images/ED_SaveFile.gif">
-<!ENTITY publishIcon.url "chrome://editor/skin/images/ED_Publish.gif">
-<!ENTITY previewIcon.url "chrome://editor/skin/images/ED_Preview.gif">
-<!ENTITY printIcon.url "chrome://editor/skin/images/ED_Print.gif">
-<!ENTITY findIcon.url "chrome://editor/skin/images/ED_Find.gif">
-<!ENTITY linkIcon.url "chrome://editor/skin/images/ED_Link.gif">
-<!ENTITY imageIcon.url "chrome://editor/skin/images/ED_Image.gif">
-<!ENTITY targetIcon.url "chrome://editor/skin/images/ED_Target.gif">
-<!ENTITY hlineIcon.url "chrome://editor/skin/images/ED_HLine.gif">
-<!ENTITY tableIcon.url "chrome://editor/skin/images/ED_Table.gif">
-<!ENTITY spellingIcon.url "chrome://editor/skin/images/ED_Spell.gif">
+<!ENTITY newEditorIcon.url "chrome://editor/skin/images/newfile.gif">
+<!ENTITY openEditorIcon.url "chrome://editor/skin/images/openfile.gif">
+<!ENTITY saveIcon.url "chrome://editor/skin/images/savefile.gif">
+<!ENTITY publishIcon.url "chrome://editor/skin/images/publish.gif">
+<!ENTITY previewIcon.url "chrome://editor/skin/images/preview.gif">
+<!ENTITY printIcon.url "chrome://editor/skin/images/print.gif">
+<!ENTITY findIcon.url "chrome://editor/skin/images/find.gif">
+<!ENTITY linkIcon.url "chrome://editor/skin/images/link.gif">
+<!ENTITY imageIcon.url "chrome://editor/skin/images/image.gif">
+<!ENTITY targetIcon.url "chrome://editor/skin/images/target.gif">
+<!ENTITY hlineIcon.url "chrome://editor/skin/images/hline.gif">
+<!ENTITY tableIcon.url "chrome://editor/skin/images/table.gif">
+<!ENTITY spellingIcon.url "chrome://editor/skin/images/spell.gif">
 
 <!-- formatting toolbar -->
 <!ENTITY paragraphToolbarMenu.label "Paragraph">
@@ -445,11 +445,11 @@
 <!ENTITY formatToolbar.boldChar "B">
 <!ENTITY formatToolbar.italicChar "I">
 <!ENTITY formatToolbar.underlineChar "U">
-<!ENTITY bulletListIcon.url "chrome://editor/skin/images/ED_Bullets.gif">
-<!ENTITY numberListIcon.url "chrome://editor/skin/images/ED_Numbers.gif">
-<!ENTITY outdentIcon.url "chrome://editor/skin/images/ED_Outdent.gif">
-<!ENTITY indentIcon.url "chrome://editor/skin/images/ED_Indent.gif">
-<!ENTITY alignpopupIcon.url "chrome://editor/skin/images/ED_Align.gif">
+<!ENTITY bulletListIcon.url "chrome://editor/skin/images/bullets.gif">
+<!ENTITY numberListIcon.url "chrome://editor/skin/images/numbers.gif">
+<!ENTITY outdentIcon.url "chrome://editor/skin/images/outdent.dif">
+<!ENTITY indentIcon.url "chrome://editor/skin/images/indent.gif">
+<!ENTITY alignpopupIcon.url "chrome://editor/skin/images/align.gif">
 <!ENTITY alignLeft.label "Left">
 <!ENTITY alignCenter.label "Center">
 <!ENTITY alignRight.label "Right">

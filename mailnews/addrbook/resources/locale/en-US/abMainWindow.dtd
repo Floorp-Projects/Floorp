@@ -74,9 +74,9 @@ Rights Reserved.
 <!ENTITY newmsgButton.label "New Msg">  
 <!ENTITY deleteButton.img "chrome://messenger/skin/trash.gif">
 <!ENTITY deleteButton.label "Delete">  
-<!ENTITY stopButton.img "resource:/res/toolbar/TB_Stop.gif">
+<!ENTITY stopButton.img "chrome://global/skin/stop.gif">
 <!ENTITY stopButton.label ".Stop">  
-<!ENTITY searchButton.img "resource:/res/toolbar/TB_Search.gif">
+<!ENTITY searchButton.img "chrome://navigator/skin/search.gif">
 <!ENTITY searchButton.label ".Search">  
 <!ENTITY showNames.label "Show names containing:">  
 <!ENTITY throbber.img "resource:/res/throbber/anims00.gif">
