@@ -151,7 +151,7 @@ function printInitWindow(printFunction,printFunctionArg)
 				"chrome,dialog=no,all,centerscreen",
 				printFunction,printFunctionArg,mytitle,showprivate,gArgs,gCalendarWindow );
   // to set the title of the page
-  printwindow.title = printwindow.name ; 
+//  printwindow.title = printwindow.name ; 
   return printwindow ;
 }
 

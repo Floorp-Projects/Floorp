@@ -1515,3 +1515,10 @@ description.tooltipBody
   font-weight : normal;
   white-space : normal;
 }
+
+/*--------------------------------------------------------------------
+ * print preview
+ *-------------------------------------------------------------------*/
+toolbar[printpreview="true"] {
+  -moz-binding: url("chrome://global/content/printPreviewBindings.xml#printpreviewtoolbar");
+}

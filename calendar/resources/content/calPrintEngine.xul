@@ -19,13 +19,8 @@ Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
 -->
 
-<?xml-stylesheet href="chrome://communicator/content/communicator.css" type="text/css"?>
-<?xml-stylesheet href="chrome://messenger/skin/dialogs.css" type="text/css"?>
-
-<!--
-?xul-overlay href="chrome://global/content/globalOverlay.xul"?
-?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?
--->
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
 
 <!-- DTD File with all strings specific to the calendar -->
 <!DOCTYPE dialog 

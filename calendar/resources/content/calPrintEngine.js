@@ -116,14 +116,19 @@ function BrowserPrintPreview()
   try {
     ifreq = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
-    gPrintSettings = GetPrintSettings();
-
   } catch (e) {
     // Pressing cancel is expressed as an NS_ERROR_ABORT return value,
     // causing an exception to be thrown which we catch here.
     // Unfortunately this will also consume helpful failures, so add a
     // dump(e); // if you need to debug
   }
+  try {
+    gPrintSettings = GetPrintSettings();
+  } catch(e) {
+    gPrintSettings = PrintUtils.getPrintSettings();
+  }
+
+
   gWebProgress = new Object();
 
   var printPreviewParams    = new Object();
@@ -159,7 +164,11 @@ function FinishPrintPreview()
     var ifreq = content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
     var webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);     
     if (webBrowserPrint) {
-      gPrintSettings = GetPrintSettings();
+      try {
+        gPrintSettings = GetPrintSettings();
+      } catch(e) {
+        gPrintSettings = PrintUtils.getPrintSettings();
+      }
       // Don't print the fake title and url
       gPrintSettings.docURL=" ";
       gPrintSettings.title=" ";
@@ -247,6 +256,12 @@ function showPrintPreviewToolbar()
 function BrowserExitPrintPreview()
 {
   window.close();
+}
+
+// hack around the toolkit problems in bug 270235
+function getBrowser()
+{
+  BrowserExitPrintPreview();
 }
 
 function initHTMLView()
