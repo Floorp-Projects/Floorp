@@ -46,7 +46,7 @@
                 onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsITreeContentView)*/"
                 readonly="true"/>
       <property name="builderView"
-                onget="return this.view.QueryInterface(Components.interfaces.nsIXULTreeBuilder);"
+                onget="return this.treeBoxObject.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
                 readonly="true"/>
       <property name="currentIndex"
                 onget="return this.treeBoxObject.selection.currentIndex;"
