@@ -20,7 +20,7 @@
 #include "prlog.h"
 #include "prinit.h"
 
-#if defined(HPUX)
+#if defined(XP_UNIX)
 /* for abort() */
 #include <stdlib.h>
 #endif
