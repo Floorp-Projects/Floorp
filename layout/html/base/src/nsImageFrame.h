@@ -267,16 +267,12 @@ private:
   PRBool HandleIconLoads(imgIRequest* aRequest, PRBool aCompleted);
   void InvalidateIcon(nsIPresContext *aPresContext);
 
-#ifdef XP_OS2_VACPP
-public:
-#endif
+  class IconLoad;
+  friend class IconLoad; // to allow |IconLoad| to access |SingleIconLoad|.
   struct SingleIconLoad {
     nsCOMPtr<imgIRequest> mRequest;
   };
 
-#ifdef XP_OS2_VACPP
-private:
-#endif
   class IconLoad {
     // private class that wraps the data and logic needed for 
     // broken image and loading image icons
@@ -316,7 +312,6 @@ private:
     PRPackedBool     mPrefShowPlaceholders;
   };
   static IconLoad* mIconLoad; // singleton pattern: one LoadIcons instance is used
-
 };
 
 #endif /* nsImageFrame_h___ */
