@@ -878,7 +878,7 @@
           <![CDATA[
             var l = this.mPanelContainer.childNodes.length;
             for (var i = 0; i < l; i++)
-              this.mPanelContainer.childNodes[i].webNavigation.reload(true);
+              this.mPanelContainer.childNodes[i].reload();
           ]]>
         </body>
       </method>
@@ -887,10 +887,10 @@
         <parameter name="aTab"/>
         <body>
           <![CDATA[
-            var l = this.mPanelContainer.childNodes.length;
-            for (var i = 0; i < l; i++)
-              if (this.mTabContainer.childNodes[i] == aTab)
-                this.mPanelContainer.childNodes[i].webNavigation.reload(true);
+            if (aTab.localName != "tab")
+              aTab = this.mCurrentTab;
+
+            this.getBrowserForTab(aTab).reload();
           ]]>
         </body>
       </method>
