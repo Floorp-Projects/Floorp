@@ -19,3 +19,18 @@
   {
     list-style-image      : url("chrome://communicator/skin/online.gif");
   }
+
+/**
+ * Hides ugly inset borders on sidebar trees (e.g history, bookmarks, search)
+ */
+
+.sidebarTree
+  {
+    border                : none;
+  }
+
+.sidebarTree > .tree-container-treerows
+  {
+    border                : none;
+  }
+

@@ -38,6 +38,20 @@
   list-style-image:url("chrome://global/skin/scroll-down-disabled.gif");
 }
 
+/**
+ * Hides ugly inset borders on sidebar trees (e.g history, bookmarks, search)
+ */
+
+.sidebarTree
+  {
+    border                : none;
+  }
+
+.sidebarTree > .tree-container-treerows
+  {
+    border                : none;
+  }
+
 /*
  comment out really bad style rules, but leave them here so future intent is
  clear
