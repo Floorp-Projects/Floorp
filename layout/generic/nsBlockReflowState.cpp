@@ -1111,7 +1111,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   if (isLeftFloater ||
       !GetFlag(BRS_UNCONSTRAINEDWIDTH) ||
       !GetFlag(BRS_SHRINKWRAPWIDTH)) {
-    nsBlockFrame::CombineRects(combinedArea, mFloaterCombinedArea);
+    mFloaterCombinedArea.UnionRect(combinedArea, mFloaterCombinedArea);
   } else if (GetFlag(BRS_SHRINKWRAPWIDTH)) {
     // Mark the line dirty so we come back and re-place the floater once
     // the shrink wrap width is determined

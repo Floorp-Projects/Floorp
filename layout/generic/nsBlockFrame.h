@@ -195,8 +195,6 @@ public:
 
   static nsresult GetCurrentLine(nsBlockReflowState *aState, nsLineBox **aOutCurrentLine);
 
-  static void CombineRects(const nsRect& r1, nsRect& r2);
-
   inline nscoord GetAscent() { return mAscent; }
 
   // Create a contination for aPlaceholder and its out of flow frame and
