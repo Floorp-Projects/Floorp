@@ -819,16 +819,6 @@ nsXMLDocument::GetElementById(const nsString& aElementId,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsXMLDocument::GetElementsByTagNameNS(const nsString& aNamespaceURI, 
-                                      const nsString& aLocalName, 
-                                      nsIDOMNodeList** aReturn)
-{
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 // nsIXMLDocument interface
 static nsIContent *
 MatchName(nsIContent *aContent, const nsString& aName)
