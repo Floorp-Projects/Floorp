@@ -2,11 +2,11 @@
 
  use Cwd;
 
- die "\nUsage: perl TestParser.pl [-b|-v] <bin-path> <urllist>
+ die "\nUsage: perl TestParser.pl [-b|-v] <bin-path> <filelist>
  b        -> create baseline 
  v        -> verify changes
- bin-path -> Ex. drive:/mozilla/dist/bin
- filelist -> Run ListGen.pl which will yield url_list.txt\n"
+ bin-path -> Ex. <drive>:/<path>/mozilla/dist/bin
+ filelist -> Run ListGen.pl which will yield file_list.txt\n"
 
  if(@ARGV < 3 || @ARGV > 3);
 
