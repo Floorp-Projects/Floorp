@@ -364,17 +364,9 @@ nsXULTreeOuterGroupFrame::GetAvailableHeight()
   if (!box)
     return 0;
 
-  box->GetParentBox(&box);
-  if (!box)
-    return 0;
-
-  nsCOMPtr<nsIScrollableFrame> scrollFrame(do_QueryInterface(box));
-  if (!scrollFrame)
-    return 0;
-
-  nscoord x, y;
-  scrollFrame->GetClipSize(mPresContext, &x, &y);
-  return y;
+  nsRect contentRect;
+  box->GetContentRect(contentRect);
+  return contentRect.height;
 }
 
 void
