@@ -604,6 +604,12 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
 
+  if (aDesiredSize.maxElementSize != nsnull) {
+    aDesiredSize.maxElementSize->width  = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
+
+
   return rv;
 }
 
