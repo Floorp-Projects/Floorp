@@ -60,8 +60,8 @@
   // for |NS_PRECONDITION|
 #endif
 
-#ifndef nsISupports_h___
-#include "nsISupports.h"
+#ifndef nsISupportsUtils_h__
+#include "nsISupportsUtils.h"
   // for |nsresult|, |NS_ADDREF|, |NS_GET_IID| et al
 #endif
 
