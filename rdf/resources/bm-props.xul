@@ -4,7 +4,7 @@
 <xul:window
   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   xmlns="http://www.w3.org/TR/REC-html40"
-  onload="onLoad();">
+  onload="onLoad()" title="Bookmark Properties">
 
 
   <xul:data>
@@ -25,7 +25,7 @@
 
       var element;
       var value;
-      for (var ii=0; ii < form_ids.length; ii++) {
+      for (var ii=0; ii != form_ids.length; ii++) {
         element = document.getElementById(form_ids[ii]);
         value = node.getAttribute(bm_attrs[ii]);
         element.setAttribute("value", value);
@@ -34,7 +34,7 @@
     function commit() {
       var element;
       var value;
-      for (var ii=0; ii < form_ids.length; ii++) {
+      for (var ii=0; ii != form_ids.length; ii++) {
         element = document.getElementById(form_ids[ii]);
         node.setAttribute(bm_attrs[ii], element.value);
       }
@@ -87,7 +87,7 @@
      </tr>
     </table>
   </td></tr><tr><td>
-   <table width="100%"><tr align=center><td>
+   <table width="100%"><tr align="center"><td>
     <input type="button" value="Ok" onclick="return commit();"/>
    </td><td>
     <input type="button" value="Cancel" onclick="return cancel();"/>
