@@ -77,10 +77,10 @@ NS_IMETHODIMP nsDragService::StartDragSession()
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsDragService::StartDragSession this=<%p>\n", this));
 
-  NS_WARNING("nsDragService::StartDragSession()\n");
+  NS_WARNING("nsDragService::StartDragSession() - Not Supported Yet");
   nsBaseDragService::StartDragSession();
   
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsDragService::EndDragSession()
@@ -92,7 +92,7 @@ NS_IMETHODIMP nsDragService::EndDragSession()
   
   //gtk_drag_source_unset(mWidget);
 
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 

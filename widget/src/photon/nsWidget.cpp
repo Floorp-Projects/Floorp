@@ -334,20 +334,6 @@ NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::SetModal(PRBool aModal)
-{
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetModal - Not Implemented\n"));
-
-  if (!mWidget)
-	return NS_ERROR_FAILURE;
-
-  PtWidget_t *toplevel = PtFindDisjoint(mWidget);
-  if (!toplevel)
-	return NS_ERROR_FAILURE;
-	
-  return NS_OK;
-}
-
 NS_METHOD nsWidget::IsVisible(PRBool &aState)
 {
   if( mWidget )
@@ -1128,6 +1114,13 @@ NS_METHOD nsWidget::SetMenuBar(nsIMenuBar * aMenuBar)
   return NS_ERROR_FAILURE;
 }
 
+
+NS_IMETHODIMP nsWidget::SetModal(PRBool aModal)
+{
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::SetModal - Not Implemented\n"));
+  return NS_ERROR_FAILURE;
+}
+
 NS_METHOD nsWidget::ShowMenuBar( PRBool aShow)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::ShowMenuBar aShow=<%d> - Not Implemented.\n",aShow));
@@ -1723,7 +1716,7 @@ void nsWidget::InitKeyEvent(PhKeyEvent_t *aPhKeyEvent,
       anEvent.keyCode =  0;  /* I think the spec says this should be 0 */
 printf("nsWidget::InitKeyEvent charCode=<%d>\n", anEvent.charCode);
 
-      if (anEvent.isControl)
+      if ((anEvent.isControl) || (anEvent.isAlt))
       {
         anEvent.charCode = aPhKeyEvent->key_cap;
 	  }
@@ -1830,7 +1823,8 @@ PRBool  nsWidget::DispatchKeyEvent(PhKeyEvent_t *aPhKeyEvent)
 //-------------------------------------------------------------------------
 int nsWidget::RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 {
-  //printf ("kedl: nswidget raweventhandler\n");
+  //PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::RawEventHandler raweventhandler widget=<%p> this=<%p> IsFocused=<%d>\n", widget, data,  PtIsFocused(widget)));
+  //printf("nsWidget::RawEventHandler raweventhandler widget=<%p> this=<%p> IsFocused=<%d>\n", widget, data,  PtIsFocused(widget));
 
   // Get the window which caused the event and ask it to process the message
   nsWidget *someWidget = (nsWidget*) data;
@@ -1849,6 +1843,7 @@ int nsWidget::RawEventHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
 PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
 {
   PRBool  result = PR_FALSE; // call the default nsWindow proc
+  int     err;
 
     PhEvent_t* event = aCbInfo->event;
     switch ( event->type )
@@ -1861,17 +1856,98 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
        }
         break;
 
-      case Ph_EV_PTR_MOTION_BUTTON:
+      case Ph_EV_DRAG:
+	    {
+          PhDragEvent_t* ptrev = (PhDragEvent_t*) PhGetData( event );
+          nsMouseEvent   theMouseEvent;
+
+		  //printf("nsWidget::HandleEvent Ph_EV_DRAG subtype=<%d> flags=<%d>\n", event->subtype, ptrev->flags );
+          switch(event->subtype)
+		  {
+		  case Ph_EV_DRAG_BOUNDARY: 
+  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_BOUNDARY\n");
+			break;
+		  case Ph_EV_DRAG_COMPLETE: 
+            {  
+ 		      nsMouseEvent      theMouseEvent;
+              PhPointerEvent_t* ptrev2 = (PhPointerEvent_t*) PhGetData( event );
+
+              printf("nsWidget::HandleEvent Ph_EV_DRAG_COMPLETE\n");
+              ScreenToWidget( ptrev2->pos );
+              InitMouseEvent(ptrev2, this, theMouseEvent, NS_MOUSE_LEFT_BUTTON_UP );
+              result = DispatchMouseEvent(theMouseEvent);
+            }
+			break;
+		  case Ph_EV_DRAG_INIT: 
+  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_INIT\n");
+			break;
+		  case Ph_EV_DRAG_KEY_EVENT: 
+  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_KEY_EVENT\n");
+			break;
+		  case Ph_EV_DRAG_MOTION_EVENT: 
+  		    {
+            PhPointerEvent_t* ptrev2 = (PhPointerEvent_t*) PhGetData( event );
+            ScreenToWidget( ptrev2->pos );
+			printf("nsWidget::HandleEvent Ph_EV_DRAG_MOTION_EVENT pos=(%d,%d)\n", ptrev2->pos.x,ptrev2->pos.y );
+  	        InitMouseEvent(ptrev2, this, theMouseEvent, NS_MOUSE_MOVE );
+            result = DispatchMouseEvent(theMouseEvent);
+			}
+			break;
+		  case Ph_EV_DRAG_MOVE: 
+  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_BOUNDARY\n");
+			break;
+		  case Ph_EV_DRAG_START: 
+  		    printf("nsWidget::HandleEvent Ph_EV_DRAG_START\n");
+			break;			
+		  }
+		}
+        break;
+
+     case Ph_EV_PTR_MOTION_BUTTON:
+      {
+        PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
+	    nsMouseEvent   theMouseEvent;
+
+		//printf("nsWidget::HandleEvent Ph_EV_PTR_MOTION_BUTTON\n");
+
+        if( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
+        {
+          /* Initiate a PhInitDrag() */
+            /* I am not sure what rect and boundary should be but this works */
+			PhRect_t rect = {0,0,0,0};
+			PhRect_t boundary = {0,0,640,480};
+			err=PhInitDrag( PtWidgetRid(mWidget), ( Ph_DRAG_KEY_MOTION | Ph_DRAG_TRACK ),&rect, &boundary, aCbInfo->event->input_group , NULL, NULL, NULL);
+            if (err==-1)
+			{
+			  NS_WARNING("nsWidget::HandleEvent PhInitDrag Failed!\n");
+			  result = NS_ERROR_FAILURE;
+			}
+        }
+
+        if( ptrev )
+        {
+          ScreenToWidget( ptrev->pos );
+  	 	  //printf("nsWidget::HandleEvent Ph_EV_PTR_MOTION_BUTTON pos=(%d,%d)\n", ptrev->pos.x,ptrev->pos.y );
+
+ 	      InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MOVE );
+          result = DispatchMouseEvent(theMouseEvent);
+        }
+      }
+      break;
+
       case Ph_EV_PTR_MOTION_NOBUTTON:
        {
 	    PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
 	    nsMouseEvent   theMouseEvent;
 
+		//printf("nsWidget::HandleEvent Ph_EV_PTR_MOTION_NOBUTTON\n");
+
         if( ptrev )
         {
           ScreenToWidget( ptrev->pos );
+  	 	  //printf("nsWidget::HandleEvent Ph_EV_PTR_MOTION_NOBUTTON pos=(%d,%d)\n", ptrev->pos.x,ptrev->pos.y );
+
  	      InitMouseEvent(ptrev, this, theMouseEvent, NS_MOUSE_MOVE );
-          //result = DispatchMouseEvent( ptrev->pos, NS_MOUSE_MOVE );
           result = DispatchMouseEvent(theMouseEvent);
         }
        }
@@ -1882,22 +1958,26 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
 	    PhPointerEvent_t* ptrev = (PhPointerEvent_t*) PhGetData( event );
         nsMouseEvent   theMouseEvent;
 		
+		printf("nsWidget::HandleEvent Ph_EV_BUT_PRESS this=<%p>\n", this);
 
         if (gRollupWidget && gRollupListener)
         {
           PtWidget_t *rollupWidget =  gRollupWidget->GetNativeData(NS_NATIVE_WIDGET);
           PtWidget_t *thisWidget = GetNativeData(NS_NATIVE_WIDGET);
+ 
+          printf("nsWidget::HandleEvent Ph_EV_BUT_PRESS rollupWidget=%p thisWidget=%p\n", rollupWidget, thisWidget);
+          printf("nsWidget::HandleEvent Ph_EV_BUT_PRESS PtFindDisjoint(thisWidget)=%p\n", PtFindDisjoint(thisWidget));
+
           if (rollupWidget != thisWidget && PtFindDisjoint(thisWidget) != rollupWidget)
           {
             gRollupListener->Rollup();
             return;
           }
         }
-  
 
         if( ptrev )
         {
-          printf( "nsWidget::HandleEvent Window mouse click: (%ld,%ld)\n", ptrev->pos.x, ptrev->pos.y );
+          //printf( "nsWidget::HandleEvent Window mouse click: (%ld,%ld) mWidget=<%p>\n", ptrev->pos.x, ptrev->pos.y, mWidget );
 
           ScreenToWidget( ptrev->pos );
           if( ptrev->buttons & Ph_BUTTON_SELECT ) // Normally the left mouse button
@@ -1916,7 +1996,7 @@ PRBool nsWidget::HandleEvent( PtCallbackInfo_t* aCbInfo )
 		  result = DispatchMouseEvent(theMouseEvent);
         }
        }
-	    break;
+	    break;		
 
       case Ph_EV_BUT_RELEASE:
        {
@@ -2363,25 +2443,29 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> mUpdate
   return Pt_END;
 }
 
-
 int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 {
   nsWidget *pWidget = (nsWidget *) data;
 
 
-  if ((widget->parent) && (PtIsFocused(widget) != 2))
+  if (widget->parent)
+    printf("nsWidget::GotFocusCallback widget->parent=<%p> PtIsFocused(widget)=<%d>\n", widget->parent, PtIsFocused(widget));
+  else
+    printf("nsWidget::GotFocusCallback widget->parent=<%p>\n", widget->parent);
+  
+  
+  if ((!widget->parent) || (PtIsFocused(widget) != 2))
   {
-     printf("nsWidget::GetFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget));
+     //printf("nsWidget::GotFocusCallback widget->parent=<%p>\n", widget->parent);
      return Pt_CONTINUE;
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::GetFocusCallback pWidget=<%p>\n", pWidget));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::GotFocusCallback pWidget=<%p>\n", pWidget));
 
   pWidget->DispatchStandardEvent(NS_GOTFOCUS);
 
   return Pt_CONTINUE;
 }
-
 
 int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
 {
@@ -2389,8 +2473,8 @@ int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_
 
   if ((widget->parent) && (PtIsFocused(widget) != 2))
   {
-     PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::GetFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget)));
-     printf("nsWidget::GetFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget));
+     PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::LostFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget)));
+     printf("nsWidget::LostFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget));
      return Pt_CONTINUE;
   }
   

@@ -24,48 +24,28 @@
 #define nsAppShell_h__
 
 #include "nsIAppShell.h"
+#include "nsIEventQueue.h"
+
 #include <Pt.h>
 
 /**
  * Native Photon Application shell wrapper
  */
-
-class nsIEventQueueService;
-class EventQueueTokenQueue;
-
 class nsAppShell : public nsIAppShell
 {
-  public:
-    nsAppShell(); 
-    virtual           ~nsAppShell();
+public:
+  nsAppShell(); 
+  virtual ~nsAppShell();
 
-    NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIAPPSHELL
 
-    PRBool            OnPaint();
-
-    // nsIAppShellInterface
-  
-    NS_IMETHOD        Create(int* argc, char ** argv);
-    virtual nsresult  Run(); 
-    NS_IMETHOD        Spinup();
-    NS_IMETHOD        Spindown();
-    NS_IMETHOD        ListenToEventQueue(nsIEventQueue *aQueue, PRBool aListen);
-    NS_IMETHOD        GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
-    NS_IMETHOD        DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
-
-    NS_IMETHOD        Exit();
-    NS_IMETHOD        SetDispatchListener(nsDispatchListener* aDispatchListener);
+public:
+  static PRBool  gExitMainLoop;
 
 private:
-    nsDispatchListener   *mDispatchListener;
-	EventQueueTokenQueue *mEventQueueTokens;
-    static PRBool        mPtInited;
-    static int           mModalCount;
-	
-//  unsigned long        mEventBufferSz;
-//  PhEvent_t            *mEvent;
-//  nsIEventQueueService * mEventQService;
-//	PRLock               *mLock;
+  nsIEventQueue* mEventQueue;
+  int			 mFD;
 
 };
 

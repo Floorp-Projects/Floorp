@@ -26,7 +26,8 @@
 #include "nsPhWidgetLog.h"
 
 /* Set our static member to NULL */
-PhDrawContext_t * nsToolkit::mDefaultPhotonDrawContext = nsnull;
+PhDrawContext_t   *nsToolkit::mDefaultPhotonDrawContext = nsnull;
+PRBool             nsToolkit::mPtInited = PR_FALSE;
 
 NS_IMPL_ISUPPORTS1(nsToolkit,nsIToolkit);
 
@@ -37,14 +38,9 @@ NS_IMPL_ISUPPORTS1(nsToolkit,nsIToolkit);
 //-------------------------------------------------------------------------
 nsToolkit::nsToolkit()  
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::nsToolkit this=<%p>\n", this));
+//  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::nsToolkit this=<%p>\n", this));
 
   NS_INIT_REFCNT();
-  
-  if (mDefaultPhotonDrawContext == nsnull)
-  {
-    mDefaultPhotonDrawContext = PhDCGetCurrent();  
-  }
 }
 
 
@@ -55,7 +51,7 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::~nsToolkit this=<%p>\n", this));
+//  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::~nsToolkit this=<%p>\n", this));
 }
 
 
@@ -65,6 +61,19 @@ nsToolkit::~nsToolkit()
 //-------------------------------------------------------------------------
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
+  /* Run this only once per application startup */
+  if( !mPtInited )
+  {
+    PtInit( NULL );
+    PtChannelCreate(); // Force use of pulses
+    mPtInited = PR_TRUE;
+  }
+  
+  if (mDefaultPhotonDrawContext == nsnull)
+  {
+    mDefaultPhotonDrawContext = PhDCGetCurrent();  
+  }
+  
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsToolkit::Init this=<%p> aThread=<%p>\n", this, aThread));
   return NS_OK;
 }
