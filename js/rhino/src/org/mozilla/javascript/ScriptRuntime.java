@@ -1915,7 +1915,7 @@ public class ScriptRuntime {
         return scope;
     }
     
-    public static FlattenedObject runScript(Script script) {
+    public static Scriptable runScript(Script script) {
         Context cx = Context.enter();
         Scriptable global = cx.initStandardObjects(new ImporterTopLevel());
         try {
@@ -1924,11 +1924,10 @@ public class ScriptRuntime {
             throw new Error(e.toString());
         }
         Context.exit();
-        return new FlattenedObject(global);
+        return global;
     }
     
-    public static void setAdapterProto(FlattenedObject fobj, Object adapter) {
-        Scriptable obj = fobj.getObject();
+    public static void setAdapterProto(Scriptable obj, Object adapter) {
         Scriptable p = obj.getPrototype();
         Scriptable scope = ScriptableObject.getTopLevelScope(obj);
         if (p == null || p == ScriptableObject.getObjectPrototype(scope)) {
