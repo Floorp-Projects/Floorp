@@ -2308,6 +2308,13 @@ NS_IMETHODIMP XPCWrappedNative::RefreshPrototype()
     return NS_OK;
 }
 
+NS_IMETHODIMP XPCWrappedNative::GetSecurityInfoAddress(void*** securityInfoAddrPtr)
+{
+    NS_ENSURE_ARG_POINTER(securityInfoAddrPtr);
+    *securityInfoAddrPtr = GetSecurityInfoAddr();
+    return NS_OK;
+}
+
 /* void debugDump (in short depth); */
 NS_IMETHODIMP XPCWrappedNative::DebugDump(PRInt16 depth)
 {
