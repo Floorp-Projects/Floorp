@@ -182,6 +182,9 @@ public:
   static PRBool ColorToString(const nsHTMLValue& aValue,
                               nsString& aResult);
 
+  static PRBool ParseCommonAttribute(nsIAtom* aAttribute, 
+                                     const nsString& aValue, 
+                                     nsHTMLValue& aResult);
   static PRBool ParseAlignValue(const nsString& aString, nsHTMLValue& aResult);
 
   static PRBool ParseDivAlignValue(const nsString& aString,
