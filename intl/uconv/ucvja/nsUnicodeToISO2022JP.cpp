@@ -47,18 +47,21 @@ static PRInt16 g_uf0208Shift [] =  {
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
-static PRUint16 * g_ufMappingTables[4] = {
-  g_ufAsciiMapping,
-  g_uf0201GLMapping,
-  g_uf0208Mapping,
-  g_uf0208Mapping,
+#define SIZE_OF_TABLES 5
+static PRUint16 * g_ufMappingTables[SIZE_OF_TABLES] = {
+  g_ufAsciiMapping,             // ASCII           ISOREG 6
+  g_uf0201GLMapping,            // JIS X 0201-1976 ISOREG 14
+  g_uf0208Mapping,              // JIS X 0208-1983 ISOREG 87
+  g_uf0208extMapping,           // JIS X 0208 - cp932 ext
+  g_uf0208Mapping,              // JIS X 0208-1978 ISOREG 42
 };
 
-static PRInt16 * g_ufShiftTables[4] = {
-  g_ufAsciiShift,
-  g_uf0201Shift,
-  g_uf0208Shift,
-  g_uf0208Shift,
+static PRInt16 * g_ufShiftTables[SIZE_OF_TABLES] = {
+  g_ufAsciiShift,               // ASCII           ISOREG 6
+  g_uf0201Shift,                // JIS X 0201-1976 ISOREG 14
+  g_uf0208Shift,                // JIS X 0208-1983 ISOREG 87
+  g_uf0208Shift,                // JIS X 0208- cp932 ext
+  g_uf0208Shift,                // JIS X 0208-1978 ISOREG 42
 };
 
 //----------------------------------------------------------------------
@@ -90,7 +93,17 @@ nsresult nsUnicodeToISO2022JP::ChangeCharset(PRInt32 aCharset,
                                              char * aDest, 
                                              PRInt32 * aDestLength)
 {
-  if (aCharset == mCharset) {
+  // both 2 and 3 generate the same escape sequence. 2 is for
+  // the standard JISx0208 table, and 3 is for theCP932 extensions
+  // therefore, we treat them as the same one.
+  if(((2 == aCharset) && ( 3 == mCharset)) ||
+     ((3 == aCharset) && ( 2 == mCharset)) )
+  {
+    mCharset = aCharset;
+  }
+
+  if(aCharset == mCharset) 
+  {
     *aDestLength = 0;
     return NS_OK;
   } 
@@ -101,22 +114,25 @@ nsresult nsUnicodeToISO2022JP::ChangeCharset(PRInt32 aCharset,
   }
 
   switch (aCharset) {
-    case 0:
+    case 0: // ASCII ISOREG 6
       aDest[0] = 0x1b;
       aDest[1] = '(';
       aDest[2] = 'B';
       break;
-    case 1:
+    case 1: // JIS X 0201-1976 ("Roman" set) ISOREG 14
       aDest[0] = 0x1b;
       aDest[1] = '(';
       aDest[2] = 'J';
       break;
-    case 2:
+    case 2: // JIS X 0208-1983 ISOREG 87
+    case 3: // JIS X 0208-1983 
+            // we currently use this for CP932 ext
       aDest[0] = 0x1b;
       aDest[1] = '$';
       aDest[2] = 'B';
       break;
-    case 3:
+    case 4: // JIS X 0201-1978 ISOREG 87- 
+            // we currently do not have a diff mapping for it.
       aDest[0] = 0x1b;
       aDest[1] = '$';
       aDest[2] = '@';
@@ -141,7 +157,9 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::FillInfo(PRUint32* aInfo)
     
     if (NS_FAILED(res)) return NS_ERROR_UENC_NOHELPER;
   }
-  return mHelper->FillInfo(aInfo, 4, (uMappingTable **) g_ufMappingTables);
+  return mHelper->FillInfo(aInfo, 
+                  SIZE_OF_TABLES, 
+                  (uMappingTable **) g_ufMappingTables);
 
 }
 NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
@@ -167,7 +185,7 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
   PRInt32 i;
 
   while (src < srcEnd) {
-    for (i=0; i<4; i++) {
+    for (i=0; i< SIZE_OF_TABLES ; i++) {
       bcr = 1;
       bcw = destEnd - dest;
       res = mHelper->ConvertByTable(src, &bcr, dest, &bcw, 
@@ -176,7 +194,7 @@ NS_IMETHODIMP nsUnicodeToISO2022JP::ConvertNoBuffNoErr(
       if (res != NS_ERROR_UENC_NOMAPPING) break;
     }
 
-    if (i>=4) {
+    if ( i>=  SIZE_OF_TABLES) {
       res = NS_ERROR_UENC_NOMAPPING;
       src++;
     }
