@@ -25,7 +25,7 @@ browser.jar:
     content/browser/pref/pref-smart_browsing-ac.xul        (content/pref-smart_browsing-ac.xul)
     content/browser/pref/pref.xul                          (content/pref.xul)
     content/browser/pref/nsPrefWindow.js                   (content/nsPrefWindow.js)
-    content/browser/pref/preftree.xul                      (content/preftree.xul)
+*   content/browser/pref/preftree.xul                      (content/preftree.xul)
     content/browser/pref/autocomplete-autofill-on.gif      (content/autocomplete-autofill-on.gif)
     content/browser/pref/autocomplete-autofill-off.gif      (content/autocomplete-autofill-off.gif)
     content/browser/pref/autocomplete-showpopup.gif        (content/autocomplete-showpopup.gif)
