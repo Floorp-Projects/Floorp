@@ -97,40 +97,6 @@ nsContainerFrame::Destroy(nsIPresContext* aPresContext)
   return nsFrame::Destroy(aPresContext);
 }
 
-NS_IMETHODIMP
-nsContainerFrame::DidReflow(nsIPresContext* aPresContext,
-                            nsDidReflowStatus aStatus)
-{
-  NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
-                     ("enter nsContainerFrame::DidReflow: status=%d",
-                      aStatus));
-  // Let nsFrame position and size our view (if we have one), and clear
-  // the NS_FRAME_IN_REFLOW bit
-  nsresult  result = nsFrame::DidReflow(aPresContext, aStatus);
-
-  // XXX TROY
-#if 0
-  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
-    // Apply DidReflow to each and every list that this frame implements
-    nsIAtom* listName = nsnull;
-    PRInt32 listIndex = 0;
-    do {
-      nsIFrame* kid;
-      FirstChild(listName, &kid);
-      while (nsnull != kid) {
-        kid->DidReflow(aPresContext, aStatus);
-        kid->GetNextSibling(&kid);
-      }
-      NS_IF_RELEASE(listName);
-      GetAdditionalChildListName(listIndex++, &listName);
-    } while(nsnull != listName);
-  }
-#endif
-
-  NS_FRAME_TRACE_OUT("nsContainerFrame::DidReflow");
-  return result;
-}
-
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 

@@ -61,10 +61,6 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
-  // nsIHTMLReflow overrides
-  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
-                       nsDidReflowStatus aStatus);
-
   // nsContainerFrame methods
   virtual void DeleteChildsNextInFlow(nsIPresContext* aPresContext,
                                       nsIFrame* aChild);
