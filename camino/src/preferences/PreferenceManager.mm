@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *    Bruce Davidson <Bruce.Davidson@ipl.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -292,6 +293,29 @@ static BOOL gMadePrefManager;
     return YES;
 }
 
+// Convert an Apple locale (or language with the dialect specified) from the form en_GB
+// to the en-gb form required for HTTP accept-language headers.
+// If the locale isn't in the expected form we return nil. (Systems upgraded
+// from 10.1 report human readable locales (e.g. "English")).
++ (NSString*)convertLocaleToHTTPLanguage: (NSString*)inAppleLocale
+{
+    NSString* r = nil;
+    if ( inAppleLocale ) {
+      NSMutableString* language = [NSMutableString string];
+      NSArray* localeParts = [inAppleLocale componentsSeparatedByString:@"_"];
+			
+      [language appendString:[localeParts objectAtIndex:0]];
+      if ( [localeParts count] > 1 ) {
+        [language appendString:@"-"];
+        [language appendString:[[localeParts objectAtIndex:1] lowercaseString]];
+      }
+
+      if ( [language length] == 2 || ( [language length] == 5 && [language characterAtIndex:2] == '-' ) )
+        r = [NSString stringWithString:language];
+    }
+    return r;
+}
+
 - (void)syncMozillaPrefs
 {
     if (!mPrefs) {
@@ -348,6 +372,42 @@ static BOOL gMadePrefManager;
     }
 
     [self configureProxies];
+
+    // Now work out the user's preferred accept-language headers
+    // Read the set of languages the user understands from System preferences
+    // Read the user's current locale to determine the variant of the main
+    // language that the user would prefer
+    NSUserDefaults *defs = [NSUserDefaults standardUserDefaults];
+    NSArray *languages = [defs objectForKey:@"AppleLanguages"];
+    NSString* primaryLocale = [defs objectForKey:@"AppleLocale"];
+		
+    // Set up the user's primary language using the locale (so we get dialect info)
+    NSMutableArray* acceptableLanguages = [NSMutableArray array];
+    NSString* primaryLanguage = [PreferenceManager convertLocaleToHTTPLanguage:primaryLocale];
+    if ( primaryLanguage )
+        [acceptableLanguages addObject:primaryLanguage];
+
+    // Now set up all the other languages the user understands
+    // (from System Preferences | International). Strip duplicates because the
+    // user may have their primary locale set up as a language too (e.g. British English)
+    for ( unsigned i = 0; i < [languages count]; ++i ) {
+      NSString* language = [PreferenceManager convertLocaleToHTTPLanguage:[languages objectAtIndex:i]];
+      if ( language && ![acceptableLanguages containsObject:language] )
+        [acceptableLanguages addObject:language];
+    }
+
+    // Now set up the accept-language header itself
+    // Note that necko will determine quality factors itself
+    NSMutableString* acceptLangHeader = [NSMutableString string];
+    for ( unsigned i = 0; i < [acceptableLanguages count]; ++i ) {
+      if ( i > 0 )
+        [acceptLangHeader appendString:@","];
+
+      [acceptLangHeader appendString:[acceptableLanguages objectAtIndex:i]];
+    }
+
+    if ( [acceptLangHeader length] > 0 )
+      [self setPref:"intl.accept_languages" toString:acceptLangHeader];
 }
 
 #pragma mark -
