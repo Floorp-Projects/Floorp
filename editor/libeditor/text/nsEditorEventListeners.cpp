@@ -1088,8 +1088,7 @@ nsTextEditorFocusListener::Blur(nsIDOMEvent* aEvent)
       if (selCon)
       {
         selCon->SetCaretEnabled(PR_FALSE);
-        if((flags & nsIHTMLEditor::eEditorSingleLineMask) ||
-          (flags & nsIHTMLEditor::eEditorPlaintextMask) ||
+        if((flags & nsIHTMLEditor::eEditorWidgetMask)  ||
           (flags & nsIHTMLEditor::eEditorPasswordMask) ||
           (flags & nsIHTMLEditor::eEditorReadonlyMask) ||
           (flags & nsIHTMLEditor::eEditorDisabledMask) ||

@@ -1578,6 +1578,9 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
   if (IsPasswordTextControl())
     editorFlags |= nsIHTMLEditor::eEditorPasswordMask;
 
+  //all gfxtextcontrolframe2's are widgets
+  editorFlags |= nsIHTMLEditor::eEditorWidgetMask;
+
   // Now initialize the editor.
   //
   // NOTE: Conversion of '\n' to <BR> happens inside the

@@ -840,17 +840,18 @@
     "pluginarray.refresh", \
     "processinginstruction.data", \
     "processinginstruction.target", \
-    "range.clone", \
     "range.clonecontents", \
+    "range.clonerange", \
     "range.collapse", \
-    "range.commonparent", \
-    "range.compareendpoints", \
+    "range.collapsed", \
+    "range.commonancestorcontainer", \
+    "range.compareboundarypoints", \
     "range.deletecontents", \
+    "range.detach", \
+    "range.endcontainer", \
     "range.endoffset", \
-    "range.endparent", \
     "range.extractcontents", \
     "range.insertnode", \
-    "range.iscollapsed", \
     "range.selectnode", \
     "range.selectnodecontents", \
     "range.setend", \
@@ -859,8 +860,8 @@
     "range.setstart", \
     "range.setstartafter", \
     "range.setstartbefore", \
+    "range.startcontainer", \
     "range.startoffset", \
-    "range.startparent", \
     "range.surroundcontents", \
     "range.tostring", \
     "rect.bottom", \

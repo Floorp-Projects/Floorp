@@ -246,7 +246,7 @@ nsSelectionState::IsCollapsed()
   item->GetRange(&range);
   if (!range) return PR_FALSE;
   PRBool bIsCollapsed;
-  range->GetIsCollapsed(&bIsCollapsed);
+  range->GetCollapsed(&bIsCollapsed);
   return bIsCollapsed;
 }
 
@@ -272,9 +272,9 @@ nsSelectionState::IsEqual(nsSelectionState *aSelState)
     if (!myRange || !itsRange) return PR_FALSE;
   
     PRInt32 compResult;
-    myRange->CompareEndPoints(nsIDOMRange::START_TO_START, itsRange, &compResult);
+    myRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, itsRange, &compResult);
     if (compResult) return PR_FALSE;
-    myRange->CompareEndPoints(nsIDOMRange::END_TO_END, itsRange, &compResult);
+    myRange->CompareBoundaryPoints(nsIDOMRange::END_TO_END, itsRange, &compResult);
     if (compResult) return PR_FALSE;
   }
   // if we got here, they are equal
@@ -613,8 +613,8 @@ nsSelectionState::DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOM
 nsresult SelRangeStore::StoreRange(nsIDOMRange *aRange)
 {
   if (!aRange) return NS_ERROR_NULL_POINTER;
-  aRange->GetStartParent(getter_AddRefs(startNode));
-  aRange->GetEndParent(getter_AddRefs(endNode));
+  aRange->GetStartContainer(getter_AddRefs(startNode));
+  aRange->GetEndContainer(getter_AddRefs(endNode));
   aRange->GetStartOffset(&startOffset);
   aRange->GetEndOffset(&endOffset);
   return NS_OK;
@@ -4523,7 +4523,7 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
               {
                 nsCOMPtr<nsIDOMNode> lastStartNode;
                 nsCOMPtr<nsIDOMElement> blockParentOfLastStartNode;
-                lastRange->GetStartParent(getter_AddRefs(lastStartNode));
+                lastRange->GetStartContainer(getter_AddRefs(lastStartNode));
                 blockParentOfLastStartNode = do_QueryInterface(GetBlockNodeParent(lastStartNode));
                 if (blockParentOfLastStartNode)
                 {
@@ -4740,7 +4740,7 @@ nsEditor::GetStartNodeAndOffset(nsIDOMSelection *aSelection,
   if (!range)
     return NS_ERROR_FAILURE;
     
-  if (NS_FAILED(range->GetStartParent(getter_AddRefs(*outStartNode))))
+  if (NS_FAILED(range->GetStartContainer(getter_AddRefs(*outStartNode))))
     return NS_ERROR_FAILURE;
     
   if (NS_FAILED(range->GetStartOffset(outStartOffset)))
@@ -4775,7 +4775,7 @@ nsEditor::GetEndNodeAndOffset(nsIDOMSelection *aSelection,
   if (!range)
     return NS_ERROR_FAILURE;
     
-  if (NS_FAILED(range->GetEndParent(getter_AddRefs(*outEndNode))))
+  if (NS_FAILED(range->GetEndContainer(getter_AddRefs(*outEndNode))))
     return NS_ERROR_FAILURE;
     
   if (NS_FAILED(range->GetEndOffset(outEndOffset)))
@@ -5569,7 +5569,7 @@ nsEditor::CreateTxnForDeleteSelection(nsIEditor::EDirection aAction,
         if ((NS_SUCCEEDED(result)) && (currentItem))
         {
           nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-          range->GetIsCollapsed(&isCollapsed);
+          range->GetCollapsed(&isCollapsed);
           if (PR_FALSE==isCollapsed)
           {
             DeleteRangeTxn *txn;
@@ -5615,7 +5615,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
   PRInt32 offset;
 
   // get the node and offset of the insertion point
-  nsresult result = aRange->GetStartParent(getter_AddRefs(node));
+  nsresult result = aRange->GetStartContainer(getter_AddRefs(node));
   if (NS_FAILED(result))
     return result;
   result = aRange->GetStartOffset(&offset);
@@ -5830,7 +5830,7 @@ nsEditor::GetFirstNodeInRange(nsIDOMRange *aRange, nsIDOMNode **aNode)
   *aNode = nsnull;
 
   nsCOMPtr<nsIDOMNode> startParent;
-  nsresult res = aRange->GetStartParent(getter_AddRefs(startParent));
+  nsresult res = aRange->GetStartContainer(getter_AddRefs(startParent));
   if (NS_FAILED(res)) return res;
   if (!startParent) return NS_ERROR_FAILURE;
 

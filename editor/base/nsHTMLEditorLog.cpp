@@ -987,7 +987,7 @@ nsHTMLEditorLog::PrintSelection()
     if (NS_FAILED(result))
       return result;
     
-    result = range->GetStartParent(getter_AddRefs(startNode));
+    result = range->GetStartContainer(getter_AddRefs(startNode));
 
     if (NS_FAILED(result))
       return result;
@@ -1000,7 +1000,7 @@ nsHTMLEditorLog::PrintSelection()
     if (NS_FAILED(result))
       return result;
 
-    result = range->GetEndParent(getter_AddRefs(endNode));
+    result = range->GetEndContainer(getter_AddRefs(endNode));
 
     if (NS_FAILED(result))
       return result;

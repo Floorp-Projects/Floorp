@@ -566,7 +566,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         nsCOMPtr<nsIScriptGlobalObject> globalObject;
         if(gLastFocusedDocument) {
           gLastFocusedDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
-          //gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+          gLastFocusedDocument->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
           if(globalObject)
             globalObject->HandleDOMEvent(gLastFocusedPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
         }

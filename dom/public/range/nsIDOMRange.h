@@ -46,17 +46,17 @@ public:
     END_TO_END = 3
   };
 
-  NS_IMETHOD    GetStartParent(nsIDOMNode** aStartParent)=0;
+  NS_IMETHOD    GetStartContainer(nsIDOMNode** aStartContainer)=0;
 
   NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset)=0;
 
-  NS_IMETHOD    GetEndParent(nsIDOMNode** aEndParent)=0;
+  NS_IMETHOD    GetEndContainer(nsIDOMNode** aEndContainer)=0;
 
   NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset)=0;
 
-  NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed)=0;
+  NS_IMETHOD    GetCollapsed(PRBool* aCollapsed)=0;
 
-  NS_IMETHOD    GetCommonParent(nsIDOMNode** aCommonParent)=0;
+  NS_IMETHOD    GetCommonAncestorContainer(nsIDOMNode** aCommonAncestorContainer)=0;
 
   NS_IMETHOD    SetStart(nsIDOMNode* aParent, PRInt32 aOffset)=0;
 
@@ -76,7 +76,7 @@ public:
 
   NS_IMETHOD    SelectNodeContents(nsIDOMNode* aN)=0;
 
-  NS_IMETHOD    CompareEndPoints(PRUint16 aHow, nsIDOMRange* aSrcRange, PRInt32* aReturn)=0;
+  NS_IMETHOD    CompareBoundaryPoints(PRUint16 aHow, nsIDOMRange* aSrcRange, PRInt32* aReturn)=0;
 
   NS_IMETHOD    DeleteContents()=0;
 
@@ -88,19 +88,21 @@ public:
 
   NS_IMETHOD    SurroundContents(nsIDOMNode* aN)=0;
 
-  NS_IMETHOD    Clone(nsIDOMRange** aReturn)=0;
+  NS_IMETHOD    CloneRange(nsIDOMRange** aReturn)=0;
+
+  NS_IMETHOD    Detach()=0;
 
   NS_IMETHOD    ToString(nsAWritableString& aReturn)=0;
 };
 
 
 #define NS_DECL_IDOMRANGE   \
-  NS_IMETHOD    GetStartParent(nsIDOMNode** aStartParent);  \
+  NS_IMETHOD    GetStartContainer(nsIDOMNode** aStartContainer);  \
   NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset);  \
-  NS_IMETHOD    GetEndParent(nsIDOMNode** aEndParent);  \
+  NS_IMETHOD    GetEndContainer(nsIDOMNode** aEndContainer);  \
   NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset);  \
-  NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed);  \
-  NS_IMETHOD    GetCommonParent(nsIDOMNode** aCommonParent);  \
+  NS_IMETHOD    GetCollapsed(PRBool* aCollapsed);  \
+  NS_IMETHOD    GetCommonAncestorContainer(nsIDOMNode** aCommonAncestorContainer);  \
   NS_IMETHOD    SetStart(nsIDOMNode* aParent, PRInt32 aOffset);  \
   NS_IMETHOD    SetStartBefore(nsIDOMNode* aSibling);  \
   NS_IMETHOD    SetStartAfter(nsIDOMNode* aSibling);  \
@@ -110,24 +112,25 @@ public:
   NS_IMETHOD    Collapse(PRBool aToStart);  \
   NS_IMETHOD    SelectNode(nsIDOMNode* aN);  \
   NS_IMETHOD    SelectNodeContents(nsIDOMNode* aN);  \
-  NS_IMETHOD    CompareEndPoints(PRUint16 aHow, nsIDOMRange* aSrcRange, PRInt32* aReturn);  \
+  NS_IMETHOD    CompareBoundaryPoints(PRUint16 aHow, nsIDOMRange* aSrcRange, PRInt32* aReturn);  \
   NS_IMETHOD    DeleteContents();  \
   NS_IMETHOD    ExtractContents(nsIDOMDocumentFragment** aReturn);  \
   NS_IMETHOD    CloneContents(nsIDOMDocumentFragment** aReturn);  \
   NS_IMETHOD    InsertNode(nsIDOMNode* aN);  \
   NS_IMETHOD    SurroundContents(nsIDOMNode* aN);  \
-  NS_IMETHOD    Clone(nsIDOMRange** aReturn);  \
+  NS_IMETHOD    CloneRange(nsIDOMRange** aReturn);  \
+  NS_IMETHOD    Detach();  \
   NS_IMETHOD    ToString(nsAWritableString& aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMRANGE(_to)  \
-  NS_IMETHOD    GetStartParent(nsIDOMNode** aStartParent) { return _to GetStartParent(aStartParent); } \
+  NS_IMETHOD    GetStartContainer(nsIDOMNode** aStartContainer) { return _to GetStartContainer(aStartContainer); } \
   NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset) { return _to GetStartOffset(aStartOffset); } \
-  NS_IMETHOD    GetEndParent(nsIDOMNode** aEndParent) { return _to GetEndParent(aEndParent); } \
+  NS_IMETHOD    GetEndContainer(nsIDOMNode** aEndContainer) { return _to GetEndContainer(aEndContainer); } \
   NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset) { return _to GetEndOffset(aEndOffset); } \
-  NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed) { return _to GetIsCollapsed(aIsCollapsed); } \
-  NS_IMETHOD    GetCommonParent(nsIDOMNode** aCommonParent) { return _to GetCommonParent(aCommonParent); } \
+  NS_IMETHOD    GetCollapsed(PRBool* aCollapsed) { return _to GetCollapsed(aCollapsed); } \
+  NS_IMETHOD    GetCommonAncestorContainer(nsIDOMNode** aCommonAncestorContainer) { return _to GetCommonAncestorContainer(aCommonAncestorContainer); } \
   NS_IMETHOD    SetStart(nsIDOMNode* aParent, PRInt32 aOffset) { return _to SetStart(aParent, aOffset); }  \
   NS_IMETHOD    SetStartBefore(nsIDOMNode* aSibling) { return _to SetStartBefore(aSibling); }  \
   NS_IMETHOD    SetStartAfter(nsIDOMNode* aSibling) { return _to SetStartAfter(aSibling); }  \
@@ -137,13 +140,14 @@ public:
   NS_IMETHOD    Collapse(PRBool aToStart) { return _to Collapse(aToStart); }  \
   NS_IMETHOD    SelectNode(nsIDOMNode* aN) { return _to SelectNode(aN); }  \
   NS_IMETHOD    SelectNodeContents(nsIDOMNode* aN) { return _to SelectNodeContents(aN); }  \
-  NS_IMETHOD    CompareEndPoints(PRUint16 aHow, nsIDOMRange* aSrcRange, PRInt32* aReturn) { return _to CompareEndPoints(aHow, aSrcRange, aReturn); }  \
+  NS_IMETHOD    CompareBoundaryPoints(PRUint16 aHow, nsIDOMRange* aSrcRange, PRInt32* aReturn) { return _to CompareBoundaryPoints(aHow, aSrcRange, aReturn); }  \
   NS_IMETHOD    DeleteContents() { return _to DeleteContents(); }  \
   NS_IMETHOD    ExtractContents(nsIDOMDocumentFragment** aReturn) { return _to ExtractContents(aReturn); }  \
   NS_IMETHOD    CloneContents(nsIDOMDocumentFragment** aReturn) { return _to CloneContents(aReturn); }  \
   NS_IMETHOD    InsertNode(nsIDOMNode* aN) { return _to InsertNode(aN); }  \
   NS_IMETHOD    SurroundContents(nsIDOMNode* aN) { return _to SurroundContents(aN); }  \
-  NS_IMETHOD    Clone(nsIDOMRange** aReturn) { return _to Clone(aReturn); }  \
+  NS_IMETHOD    CloneRange(nsIDOMRange** aReturn) { return _to CloneRange(aReturn); }  \
+  NS_IMETHOD    Detach() { return _to Detach(); }  \
   NS_IMETHOD    ToString(nsAWritableString& aReturn) { return _to ToString(aReturn); }  \
 
 

@@ -603,8 +603,8 @@ nsGenericDOMDataNode::ConvertContentToXIF(const nsIContent *aOuterContent,
           PRInt32 startOffset = 0;
           PRInt32 endOffset = 0;
 
-          range->GetStartParent(getter_AddRefs(startNode));
-          range->GetEndParent(getter_AddRefs(endNode));
+          range->GetStartContainer(getter_AddRefs(startNode));
+          range->GetEndContainer(getter_AddRefs(endNode));
 
           range->GetStartOffset(&startOffset);
           range->GetEndOffset(&endOffset);

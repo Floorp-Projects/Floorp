@@ -126,13 +126,13 @@ PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange)
   if (!GetNodeBracketPoints(aNode, &parent, &nodeStart, &nodeEnd))
     return PR_FALSE;
   
-  if (NS_FAILED(aRange->GetStartParent(getter_AddRefs(rangeStartParent))))
+  if (NS_FAILED(aRange->GetStartContainer(getter_AddRefs(rangeStartParent))))
     return PR_FALSE;
 
   if (NS_FAILED(aRange->GetStartOffset(&rangeStartOffset)))
     return PR_FALSE;
 
-  if (NS_FAILED(aRange->GetEndParent(getter_AddRefs(rangeEndParent))))
+  if (NS_FAILED(aRange->GetEndContainer(getter_AddRefs(rangeEndParent))))
     return PR_FALSE;
 
   if (NS_FAILED(aRange->GetEndOffset(&rangeEndOffset)))
@@ -198,13 +198,13 @@ nsresult CompareNodeToRange(nsIContent* aNode,
   if (!GetNodeBracketPoints(aNode, &parent, &nodeStart, &nodeEnd))
     return NS_ERROR_FAILURE;
   
-  if (NS_FAILED(aRange->GetStartParent(getter_AddRefs(rangeStartParent))))
+  if (NS_FAILED(aRange->GetStartContainer(getter_AddRefs(rangeStartParent))))
     return NS_ERROR_FAILURE;
 
   if (NS_FAILED(aRange->GetStartOffset(&rangeStartOffset)))
     return NS_ERROR_FAILURE;
 
-  if (NS_FAILED(aRange->GetEndParent(getter_AddRefs(rangeEndParent))))
+  if (NS_FAILED(aRange->GetEndContainer(getter_AddRefs(rangeEndParent))))
     return NS_ERROR_FAILURE;
 
   if (NS_FAILED(aRange->GetEndOffset(&rangeEndOffset)))
@@ -934,7 +934,7 @@ nsresult nsRange::GetIsPositioned(PRBool* aIsPositioned)
   return NS_OK;
 }
 
-nsresult nsRange::GetStartParent(nsIDOMNode** aStartParent)
+nsresult nsRange::GetStartContainer(nsIDOMNode** aStartParent)
 {
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
@@ -956,7 +956,7 @@ nsresult nsRange::GetStartOffset(PRInt32* aStartOffset)
   return NS_OK;
 }
 
-nsresult nsRange::GetEndParent(nsIDOMNode** aEndParent)
+nsresult nsRange::GetEndContainer(nsIDOMNode** aEndParent)
 {
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
@@ -978,7 +978,7 @@ nsresult nsRange::GetEndOffset(PRInt32* aEndOffset)
   return NS_OK;
 }
 
-nsresult nsRange::GetIsCollapsed(PRBool* aIsCollapsed)
+nsresult nsRange::GetCollapsed(PRBool* aIsCollapsed)
 {
   if (!mIsPositioned)
     return NS_ERROR_NOT_INITIALIZED;
@@ -990,7 +990,7 @@ nsresult nsRange::GetIsCollapsed(PRBool* aIsCollapsed)
   return NS_OK;
 }
 
-nsresult nsRange::GetCommonParent(nsIDOMNode** aCommonParent)
+nsresult nsRange::GetCommonAncestorContainer(nsIDOMNode** aCommonParent)
 { 
   *aCommonParent = CommonParent(mStartParent,mEndParent);
   NS_IF_ADDREF(*aCommonParent);
@@ -1313,7 +1313,7 @@ nsresult nsRange::DeleteContents()
   return NS_OK;
 }
 
-nsresult nsRange::CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange,
+nsresult nsRange::CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange,
                                    PRInt32* aCmpRet)
 {
   nsresult res;
@@ -1330,28 +1330,28 @@ nsresult nsRange::CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange,
   case nsIDOMRange::START_TO_START:
     node1 = mStartParent;
     offset1 = mStartOffset;
-    res = srcRange->GetStartParent(getter_AddRefs(node2));
+    res = srcRange->GetStartContainer(getter_AddRefs(node2));
     if (NS_SUCCEEDED(res))
       res = srcRange->GetStartOffset(&offset2);
     break;
   case nsIDOMRange::START_TO_END:
     node1 = mStartParent;
     offset1 = mStartOffset;
-    res = srcRange->GetEndParent(getter_AddRefs(node2));
+    res = srcRange->GetEndContainer(getter_AddRefs(node2));
     if (NS_SUCCEEDED(res))
       res = srcRange->GetEndOffset(&offset2);
     break;
   case nsIDOMRange::END_TO_START:
     node1 = mEndParent;
     offset1 = mEndOffset;
-    res = srcRange->GetStartParent(getter_AddRefs(node2));
+    res = srcRange->GetStartContainer(getter_AddRefs(node2));
     if (NS_SUCCEEDED(res))
       res = srcRange->GetStartOffset(&offset2);
     break;
   case nsIDOMRange::END_TO_END:
     node1 = mEndParent;
     offset1 = mEndOffset;
-    res = srcRange->GetEndParent(getter_AddRefs(node2));
+    res = srcRange->GetEndContainer(getter_AddRefs(node2));
     if (NS_SUCCEEDED(res))
       res = srcRange->GetEndOffset(&offset2);
     break;
@@ -1536,7 +1536,7 @@ return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
 
-nsresult nsRange::Clone(nsIDOMRange** aReturn)
+nsresult nsRange::CloneRange(nsIDOMRange** aReturn)
 {
   if (aReturn == 0)
     return NS_ERROR_NULL_POINTER;
@@ -1652,6 +1652,15 @@ nsresult nsRange::ToString(nsAWritableString& aReturn)
 #endif /* DEBUG */
   return NS_OK;
 }
+
+
+
+nsresult
+nsRange::Detach()
+{
+  return DoSetRange(nsnull,0,nsnull,0);
+}
+
 
 
 nsresult nsRange::OwnerGone(nsIContent* aDyingNode)

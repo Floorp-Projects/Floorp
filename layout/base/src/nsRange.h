@@ -51,15 +51,15 @@ public:
   
   NS_IMETHOD    GetIsPositioned(PRBool* aIsPositioned);
 
-  NS_IMETHOD    GetStartParent(nsIDOMNode** aStartParent);
+  NS_IMETHOD    GetStartContainer(nsIDOMNode** aStartParent);
   NS_IMETHOD    GetStartOffset(PRInt32* aStartOffset);
 
-  NS_IMETHOD    GetEndParent(nsIDOMNode** aEndParent);
+  NS_IMETHOD    GetEndContainer(nsIDOMNode** aEndParent);
   NS_IMETHOD    GetEndOffset(PRInt32* aEndOffset);
 
-  NS_IMETHOD    GetIsCollapsed(PRBool* aIsCollapsed);
+  NS_IMETHOD    GetCollapsed(PRBool* aIsCollapsed);
 
-  NS_IMETHOD    GetCommonParent(nsIDOMNode** aCommonParent);
+  NS_IMETHOD    GetCommonAncestorContainer(nsIDOMNode** aCommonParent);
 
   NS_IMETHOD    SetStart(nsIDOMNode* aParent, PRInt32 aOffset);
   NS_IMETHOD    SetStartBefore(nsIDOMNode* aSibling);
@@ -76,7 +76,7 @@ public:
   NS_IMETHOD    SelectNode(nsIDOMNode* aN);
   NS_IMETHOD    SelectNodeContents(nsIDOMNode* aN);
 
-  NS_IMETHOD    CompareEndPoints(PRUint16 how, nsIDOMRange* srcRange, PRInt32* ret);
+  NS_IMETHOD    CompareBoundaryPoints(PRUint16 how, nsIDOMRange* srcRange, PRInt32* ret);
 
   NS_IMETHOD    DeleteContents();
 
@@ -86,7 +86,9 @@ public:
   NS_IMETHOD    InsertNode(nsIDOMNode* aN);
   NS_IMETHOD    SurroundContents(nsIDOMNode* aN);
 
-  NS_IMETHOD    Clone(nsIDOMRange** aReturn);
+  NS_IMETHOD    CloneRange(nsIDOMRange** aReturn);
+
+  NS_IMETHOD    Detach();
 
   NS_IMETHOD    ToString(nsAWritableString& aReturn);
 

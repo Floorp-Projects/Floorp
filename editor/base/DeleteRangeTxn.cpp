@@ -59,15 +59,15 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
   mEditor = aEditor;
   mRange  = do_QueryInterface(aRange);
   
-  nsresult result = aRange->GetStartParent(getter_AddRefs(mStartParent));
+  nsresult result = aRange->GetStartContainer(getter_AddRefs(mStartParent));
   NS_ASSERTION((NS_SUCCEEDED(result)), "GetStartParent failed.");
-  result = aRange->GetEndParent(getter_AddRefs(mEndParent));
+  result = aRange->GetEndContainer(getter_AddRefs(mEndParent));
   NS_ASSERTION((NS_SUCCEEDED(result)), "GetEndParent failed.");
   result = aRange->GetStartOffset(&mStartOffset);
   NS_ASSERTION((NS_SUCCEEDED(result)), "GetStartOffset failed.");
   result = aRange->GetEndOffset(&mEndOffset);
   NS_ASSERTION((NS_SUCCEEDED(result)), "GetEndOffset failed.");
-  result = aRange->GetCommonParent(getter_AddRefs(mCommonParent));
+  result = aRange->GetCommonAncestorContainer(getter_AddRefs(mCommonParent));
   NS_ASSERTION((NS_SUCCEEDED(result)), "GetCommonParent failed.");
 
 #ifdef NS_DEBUG

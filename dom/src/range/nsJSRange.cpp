@@ -52,12 +52,12 @@ static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
 // Range property ids
 //
 enum Range_slots {
-  RANGE_STARTPARENT = -1,
+  RANGE_STARTCONTAINER = -1,
   RANGE_STARTOFFSET = -2,
-  RANGE_ENDPARENT = -3,
+  RANGE_ENDCONTAINER = -3,
   RANGE_ENDOFFSET = -4,
-  RANGE_ISCOLLAPSED = -5,
-  RANGE_COMMONPARENT = -6
+  RANGE_COLLAPSED = -5,
+  RANGE_COMMONANCESTORCONTAINER = -6
 };
 
 /***********************************************************************/
@@ -80,12 +80,12 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     if (!secMan)
         return PR_FALSE;
     switch(JSVAL_TO_INT(id)) {
-      case RANGE_STARTPARENT:
+      case RANGE_STARTCONTAINER:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_STARTPARENT, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_STARTCONTAINER, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
           nsIDOMNode* prop;
-          rv = a->GetStartParent(&prop);
+          rv = a->GetStartContainer(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -105,12 +105,12 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case RANGE_ENDPARENT:
+      case RANGE_ENDCONTAINER:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_ENDPARENT, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_ENDCONTAINER, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
           nsIDOMNode* prop;
-          rv = a->GetEndParent(&prop);
+          rv = a->GetEndContainer(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -130,24 +130,24 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case RANGE_ISCOLLAPSED:
+      case RANGE_COLLAPSED:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_ISCOLLAPSED, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_COLLAPSED, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
           PRBool prop;
-          rv = a->GetIsCollapsed(&prop);
+          rv = a->GetCollapsed(&prop);
           if (NS_SUCCEEDED(rv)) {
             *vp = BOOLEAN_TO_JSVAL(prop);
           }
         }
         break;
       }
-      case RANGE_COMMONPARENT:
+      case RANGE_COMMONANCESTORCONTAINER:
       {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_COMMONPARENT, PR_FALSE);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_COMMONANCESTORCONTAINER, PR_FALSE);
         if (NS_SUCCEEDED(rv)) {
           nsIDOMNode* prop;
-          rv = a->GetCommonParent(&prop);
+          rv = a->GetCommonAncestorContainer(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -661,10 +661,10 @@ RangeSelectNodeContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
 
 //
-// Native method CompareEndPoints
+// Native method CompareBoundaryPoints
 //
 PR_STATIC_CALLBACK(JSBool)
-RangeCompareEndPoints(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+RangeCompareBoundaryPoints(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
@@ -681,7 +681,7 @@ RangeCompareEndPoints(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_COMPAREENDPOINTS, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_COMPAREBOUNDARYPOINTS, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -700,7 +700,7 @@ RangeCompareEndPoints(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
       return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    result = nativeThis->CompareEndPoints(b0, b1, &nativeRet);
+    result = nativeThis->CompareBoundaryPoints(b0, b1, &nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -914,10 +914,10 @@ RangeSurroundContents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
 
 //
-// Native method Clone
+// Native method CloneRange
 //
 PR_STATIC_CALLBACK(JSBool)
-RangeClone(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+RangeCloneRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
@@ -932,17 +932,52 @@ RangeClone(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_CLONE, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_CLONERANGE, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
 
-    result = nativeThis->Clone(&nativeRet);
+    result = nativeThis->CloneRange(&nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, obj, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Detach
+//
+PR_STATIC_CALLBACK(JSBool)
+RangeDetach(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *nativeThis = (nsIDOMRange*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_RANGE_DETACH, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->Detach();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
   }
 
   return JS_TRUE;
@@ -1324,12 +1359,12 @@ JSClass RangeClass = {
 //
 static JSPropertySpec RangeProperties[] =
 {
-  {"startParent",    RANGE_STARTPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"startContainer",    RANGE_STARTCONTAINER,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"startOffset",    RANGE_STARTOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"endParent",    RANGE_ENDPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"endContainer",    RANGE_ENDCONTAINER,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"endOffset",    RANGE_ENDOFFSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"isCollapsed",    RANGE_ISCOLLAPSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"commonParent",    RANGE_COMMONPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"collapsed",    RANGE_COLLAPSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"commonAncestorContainer",    RANGE_COMMONANCESTORCONTAINER,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -1348,13 +1383,14 @@ static JSFunctionSpec RangeMethods[] =
   {"collapse",          RangeCollapse,     1},
   {"selectNode",          RangeSelectNode,     1},
   {"selectNodeContents",          RangeSelectNodeContents,     1},
-  {"compareEndPoints",          RangeCompareEndPoints,     2},
+  {"compareBoundaryPoints",          RangeCompareBoundaryPoints,     2},
   {"deleteContents",          RangeDeleteContents,     0},
   {"extractContents",          RangeExtractContents,     0},
   {"cloneContents",          RangeCloneContents,     0},
   {"insertNode",          RangeInsertNode,     1},
   {"surroundContents",          RangeSurroundContents,     1},
-  {"clone",          RangeClone,     0},
+  {"cloneRange",          RangeCloneRange,     0},
+  {"detach",          RangeDetach,     0},
   {"toString",          RangeToString,     0},
   {"createContextualFragment",          NSRangeCreateContextualFragment,     1},
   {"isValidFragment",          NSRangeIsValidFragment,     1},

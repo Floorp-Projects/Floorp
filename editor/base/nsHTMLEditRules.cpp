@@ -2982,7 +2982,7 @@ nsHTMLEditRules::GetPromotedRanges(nsIDOMSelection *inSelection,
     if (NS_FAILED(res)) return res;
 
     // clone range so we dont muck with actual selection ranges
-    res = selectionRange->Clone(getter_AddRefs(opRange));
+    res = selectionRange->CloneRange(getter_AddRefs(opRange));
     if (NS_FAILED(res)) return res;
 
     // make a new adjusted range to represent the appropriate block content.
@@ -3013,11 +3013,11 @@ nsHTMLEditRules::PromoteRange(nsIDOMRange *inRange,
   nsCOMPtr<nsIDOMNode> startNode, endNode;
   PRInt32 startOffset, endOffset;
   
-  res = inRange->GetStartParent(getter_AddRefs(startNode));
+  res = inRange->GetStartContainer(getter_AddRefs(startNode));
   if (NS_FAILED(res)) return res;
   res = inRange->GetStartOffset(&startOffset);
   if (NS_FAILED(res)) return res;
-  res = inRange->GetEndParent(getter_AddRefs(endNode));
+  res = inRange->GetEndContainer(getter_AddRefs(endNode));
   if (NS_FAILED(res)) return res;
   res = inRange->GetEndOffset(&endOffset);
   if (NS_FAILED(res)) return res;
@@ -4381,11 +4381,11 @@ nsHTMLEditRules::AdjustWhitespace(nsIDOMSelection *aSelection)
   // This is an efficiency hack for normal typing in the editor.
   nsCOMPtr<nsIDOMNode> startNode, endNode;
   PRInt32 startOffset, endOffset;
-  res = mDocChangeRange->GetStartParent(getter_AddRefs(startNode));
+  res = mDocChangeRange->GetStartContainer(getter_AddRefs(startNode));
   if (NS_FAILED(res)) return res;
   res = mDocChangeRange->GetStartOffset(&startOffset);
   if (NS_FAILED(res)) return res;
-  res = mDocChangeRange->GetEndParent(getter_AddRefs(endNode));
+  res = mDocChangeRange->GetEndContainer(getter_AddRefs(endNode));
   if (NS_FAILED(res)) return res;
   res = mDocChangeRange->GetEndOffset(&endOffset);
   if (NS_FAILED(res)) return res;
@@ -4781,7 +4781,7 @@ nsHTMLEditRules::SelectionEndpointInNode(nsIDOMNode *aNode, PRBool *aResult)
 
     nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
     nsCOMPtr<nsIDOMNode> startParent, endParent;
-    range->GetStartParent(getter_AddRefs(startParent));
+    range->GetStartContainer(getter_AddRefs(startParent));
     if (startParent)
     {
       if (aNode == startParent.get())
@@ -4795,7 +4795,7 @@ nsHTMLEditRules::SelectionEndpointInNode(nsIDOMNode *aNode, PRBool *aResult)
         return NS_OK;
       }
     }
-    range->GetEndParent(getter_AddRefs(endParent));
+    range->GetEndContainer(getter_AddRefs(endParent));
     if (startParent == endParent) continue;
     if (endParent)
     {
@@ -5089,7 +5089,7 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
   if (!mDocChangeRange)
   {
     // clone aRange.  
-    res = aRange->Clone(getter_AddRefs(mDocChangeRange));
+    res = aRange->CloneRange(getter_AddRefs(mDocChangeRange));
     return res;
   }
   else
@@ -5097,13 +5097,13 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
     PRInt32 result;
     
     // compare starts of ranges
-    res = mDocChangeRange->CompareEndPoints(nsIDOMRange::START_TO_START, aRange, &result);
+    res = mDocChangeRange->CompareBoundaryPoints(nsIDOMRange::START_TO_START, aRange, &result);
     if (NS_FAILED(res)) return res;
     if (result < 0)  // negative result means aRange start is before mDocChangeRange start
     {
       nsCOMPtr<nsIDOMNode> startNode;
       PRInt32 startOffset;
-      res = aRange->GetStartParent(getter_AddRefs(startNode));
+      res = aRange->GetStartContainer(getter_AddRefs(startNode));
       if (NS_FAILED(res)) return res;
       res = aRange->GetStartOffset(&startOffset);
       if (NS_FAILED(res)) return res;
@@ -5112,13 +5112,13 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
     }
     
     // compare ends of ranges
-    res = mDocChangeRange->CompareEndPoints(nsIDOMRange::END_TO_END, aRange, &result);
+    res = mDocChangeRange->CompareBoundaryPoints(nsIDOMRange::END_TO_END, aRange, &result);
     if (NS_FAILED(res)) return res;
     if (result > 0)  // positive result means aRange end is after mDocChangeRange end
     {
       nsCOMPtr<nsIDOMNode> endNode;
       PRInt32 endOffset;
-      res = aRange->GetEndParent(getter_AddRefs(endNode));
+      res = aRange->GetEndContainer(getter_AddRefs(endNode));
       if (NS_FAILED(res)) return res;
       res = aRange->GetEndOffset(&endOffset);
       if (NS_FAILED(res)) return res;
