@@ -96,9 +96,7 @@ sub BuildMozilla()
 		
 		BuildProject(":mozilla:sun-java:stubs:macbuild:JavaStubs.mcp",						"JavaRuntime$D.shlb");
 		MakeAlias(":mozilla:sun-java:stubs:macbuild:JavaRuntime$D.shlb", "$dist_dir");	
-		
-		BuildProject(":mozilla:js:jsj:macbuild:JSJ_PPC.mcp", 								"JSJ$D.o");
-		
+				
 		BuildProject(":mozilla:js:macbuild:JavaScriptPPC.mcp",								"JavaScript$D.shlb");
 		MakeAlias(":mozilla:js:macbuild:JavaScript$D.shlb", "$dist_dir");
 		
