@@ -32,6 +32,10 @@
 #include <Types.h>
 #include <QuickDraw.h>
 
+class nsIScreen;
+class nsIScreenManager;
+
+
 class nsDeviceContextMac : public DeviceContextImpl
 {
 public:
@@ -56,7 +60,7 @@ public:
   NS_IMETHOD 	ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
   NS_IMETHOD 	GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
-  NS_IMETHOD    GetClientRect(nsRect &aRect);
+  NS_IMETHOD  GetClientRect(nsRect &aRect);
 
   NS_IMETHOD 	GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                  nsIDeviceContext *&aContext);
@@ -75,11 +79,14 @@ protected:
   
 	virtual nsresult CreateFontAliasTable();
 
+  void FindScreenForSurface ( nsIScreen** outScreen ) ;
+
   nsDrawingSurface 			mSurface;
-  PRUint32 							mDepth;
   Rect									mPageRect;
   nsIDeviceContextSpec  *mSpec;
   GrafPtr								mOldPort;
+  nsCOMPtr<nsIScreenManager> mScreenManager;
+  
 public:
   // InitFontInfoList and nsHashTable are static because GetMacFontNumber is static
   static void InitFontInfoList();
@@ -90,6 +97,7 @@ public:
 private:
 	static PRUint32		mPixelsPerInch;
 	static PRBool			mDisplayVerySmallFonts;
+	static PRUint32   sNumberOfScreens;       // how many screens we have.
 public:
 	static PRUint32		GetScreenResolution();
 	static PRBool			DisplayVerySmallFonts();
