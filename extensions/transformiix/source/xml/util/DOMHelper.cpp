@@ -33,7 +33,9 @@
 /**
  * Creates a new DOMHelper
 **/
-DOMHelper::DOMHelper() {};
+DOMHelper::DOMHelper() {
+    orders.setOwnership(Map::eOwnsItems);
+};
 
 /**
  * Delets this DOMHelper
@@ -179,7 +181,7 @@ OrderInfo* DOMHelper::getDocumentOrder(Node* node) {
                 orderInfo->order[0] = 0;            
             }
         }
-        orders.put(orderInfo, node);
+        orders.put(node, orderInfo);
     }
 
     return orderInfo;
