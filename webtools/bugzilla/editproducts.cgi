@@ -363,10 +363,14 @@ if ($action eq 'new') {
     # product as well.  -JMR, 2/16/00
     if (Param("makeproductgroups")) {
         # Next we insert into the groups table
+        my $productgroup = $product;
+        while (GroupExists($productgroup)) {
+            $productgroup .= '_';
+        }
         SendSQL("INSERT INTO groups " .
                 "(name, description, isbuggroup, last_changed) " .
                 "VALUES (" .
-                SqlQuote($product) . ", " .
+                SqlQuote($productgroup) . ", " .
                 SqlQuote("Access to bugs in the $product product") . ", 1, NOW())");
         SendSQL("SELECT last_insert_id()");
         my $gid = FetchOneColumn();
@@ -383,25 +387,6 @@ if ($action eq 'new') {
                 "($gid, $product_id, " . Param("useentrygroupdefault") .
                 ", " . CONTROLMAPDEFAULT . ", " .
                 CONTROLMAPNA . ", 0)");
-        
-        # Permit the new product to use any non-product bug groups.
-        SendSQL("SELECT groups.id, products.id IS NULL FROM groups " .
-                "LEFT JOIN products " .
-                "ON groups.name = products.name " .
-                "WHERE isactive != 0 AND isbuggroup != 0 ");
-        while (MoreSQLData()) {
-            my ($grpid, $nonproductgroup) = FetchSQLData();
-            if ($nonproductgroup) {
-                PushGlobalSQLState();
-                SendSQL("INSERT INTO group_control_map " .
-                        "(group_id, product_id, entry, " .
-                        "membercontrol, othercontrol, canedit) VALUES " .
-                        "($grpid, $product_id, 0, " .
-                        CONTROLMAPSHOWN . ", " .
-                        CONTROLMAPNA . ", 0)");
-                PopGlobalSQLState();
-            }
-        }
     }
 
     # Insert default charting queries for this product.
@@ -1191,16 +1176,6 @@ if ($action eq 'update') {
         }
 
         SendSQL("UPDATE products SET name=$qp WHERE id=$product_id");
-        # Need to do an update to groups as well.  If there is 
-        # a corresponding bug group, we want to update it so it will 
-        # match in the future.  If there is no group, this
-        # update statement will do nothing, so no harm done.  -JMR, 3/8/00
-        SendSQL("UPDATE groups " .
-                "SET name = $qp, " .
-                "description = " .
-                SqlQuote("Access to bugs in the $product product") .
-                " WHERE name = $qpold");
-        
         print "Updated product name.<BR>\n";
     }
     unlink "$datadir/versioncache";
