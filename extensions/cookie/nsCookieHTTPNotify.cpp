@@ -137,7 +137,7 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
     // Preconditions
     NS_ENSURE_ARG_POINTER(aContext);
 
-    nsCOMPtr<nsIHTTPChannel> pHTTPConnection = do_QueryInterface(aContext);
+    nsCOMPtr<nsIHTTPChannel> pHTTPConnection = do_QueryInterface(aContext, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // Get the Cookie header
