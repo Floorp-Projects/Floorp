@@ -113,6 +113,8 @@ public:
   NS_IMETHOD ContentChanged(nsIPresContext*  aPresContext,
                             nsIContent* aContent,
                             nsISupports* aSubContent);
+  NS_IMETHOD ContentStateChanged(nsIPresContext* aPresContext, 
+                                 nsIContent* aContent);
   NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
                               nsIContent* aChild,
                               nsIAtom* aAttribute,
@@ -781,6 +783,14 @@ StyleSetImpl::ContentChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
+StyleSetImpl::ContentStateChanged(nsIPresContext* aPresContext, 
+                                  nsIContent* aContent)
+{
+  return mFrameConstructor->ContentStateChanged(aPresContext, aContent);
+}
+
+
+NS_IMETHODIMP
 StyleSetImpl::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aContent,
                                nsIAtom* aAttribute,
@@ -848,9 +858,9 @@ void StyleSetImpl::List(FILE* out, PRInt32 aIndent, nsISupportsArray* aSheets)
 
 void StyleSetImpl::List(FILE* out, PRInt32 aIndent)
 {
-  List(out, aIndent, mOverrideSheets);
+//  List(out, aIndent, mOverrideSheets);
   List(out, aIndent, mDocSheets);
-  List(out, aIndent, mBackstopSheets);
+//  List(out, aIndent, mBackstopSheets);
 }
 
 void StyleSetImpl::ListContexts(nsIStyleContext* aRootContext, FILE* out, PRInt32 aIndent)
