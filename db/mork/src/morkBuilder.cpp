@@ -530,6 +530,16 @@ morkBuilder::OnNewRow(morkEnv* ev, const morkPlace& inPlace,
 }
 
 /*virtual*/ void
+morkBuilder::OnRowPos(morkEnv* ev, mork_pos inRowPos) 
+{
+  if ( mBuilder_Row && mBuilder_Table && !mParser_InMeta )
+  {
+    mork_pos hintFromPos = 0; // best hint when we don't know position
+    mBuilder_Table->MoveRow(ev, mBuilder_Row, hintFromPos, inRowPos);
+  }
+}
+
+/*virtual*/ void
 morkBuilder::OnRowGlitch(morkEnv* ev, const morkGlitch& inGlitch) 
 {
   this->LogGlitch(ev, inGlitch, "row");

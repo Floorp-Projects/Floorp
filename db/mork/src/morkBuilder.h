@@ -261,6 +261,7 @@ public: // out virtual morkParser methods, data flow parser to subclass
   virtual void OnMinusRow(morkEnv* ev);
   virtual void OnNewRow(morkEnv* ev, const morkPlace& inPlace, 
     const morkMid& inMid, mork_bool inCutAllCols);
+  virtual void OnRowPos(morkEnv* ev, mork_pos inRowPos);  
   virtual void OnRowGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
   virtual void OnRowEnd(morkEnv* ev, const morkSpan& inSpan);  
 
