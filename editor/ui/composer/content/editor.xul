@@ -60,7 +60,6 @@
   <script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
   <script language="JavaScript" src="chrome://editor/content/EditorContextMenu.js"/>
   <script language="javascript" src="chrome://global/content/strres.js"/>
-  <script language="JavaScript" src="chrome://navigator/content/nsContextMenu.js"/>
 
   <popupset id="aTooltipSet" />
   <popupset id="editorContentContextSet"/>
@@ -113,7 +112,6 @@
       <menu id="viewToolbar"/>
       <menuseparator/>
       <menuitem id="viewSourceMenuitem"/>
-      <menuitem id="viewParagraphMarks"/>
       <menuseparator />
       <menu id = "composerCharsetMenu" />
     </menupopup>
