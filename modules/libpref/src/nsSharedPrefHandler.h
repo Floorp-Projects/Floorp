@@ -71,7 +71,7 @@ public:
 
   nsresult        OnSavePrefs();
   
-  nsresult        OnPrefChanged(PrefAction action,
+  nsresult        OnPrefChanged(PRBool defaultPref,
                                 PrefHashEntry* pref,
                                 PrefValue newValue);
 

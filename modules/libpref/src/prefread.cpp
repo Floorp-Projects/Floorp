@@ -134,13 +134,9 @@ pref_GrowBuf(PrefParseState *ps)
 static PRBool
 pref_DoCallback(PrefParseState *ps)
 {
-    PrefType   type;
-    PrefAction action;
     PrefValue  value;
 
-    type   = ps->vtype;
-    action = ps->fuser ? PREF_SETUSER : PREF_SETDEFAULT;
-    switch (type) {
+    switch (ps->vtype) {
     case PREF_STRING:
         value.stringVal = ps->vb;
         break;
@@ -157,7 +153,7 @@ pref_DoCallback(PrefParseState *ps)
     default:
         break;
     }
-    (*ps->reader)(ps->closure, ps->lb, value, type, action);
+    (*ps->reader)(ps->closure, ps->lb, value, ps->vtype, ps->fdefault);
     return PR_TRUE;
 }
 
@@ -214,7 +210,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 ps->lbcur = ps->lb;
                 ps->vb    = NULL;
                 ps->vtype = PREF_INVALID;
-                ps->fuser = PR_FALSE;
+                ps->fdefault = PR_FALSE;
             }
             switch (c) {
             case '/':       /* begin comment block or line? */
@@ -253,7 +249,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
         /* name parsing */
         case PREF_PARSE_UNTIL_NAME:
             if (c == '\"') {
-                ps->fuser = (ps->smatch == kUserPref);
+                ps->fdefault = (ps->smatch == kPref);
                 state = PREF_PARSE_NAME;
             }
             else if (c == '/') {       /* allow embedded comment */
@@ -468,7 +464,7 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
             /* need to handle mac, unix, or dos line endings.
              * PREF_PARSE_INIT will eat the next \n in case
              * we have \r\n. */
-            if (c == '\r' || c == '\n') {
+            if (c == '\r' || c == '\n' || c == 0x1A) {
                 state = ps->nextstate;
                 ps->nextstate = PREF_PARSE_INIT; /* reset next state */
             }

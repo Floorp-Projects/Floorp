@@ -55,14 +55,14 @@ NSPR_BEGIN_EXTERN_C
  *        preference value
  * @param type
  *        preference type (PREF_STRING, PREF_INT, or PREF_BOOL)
- * @param action
- *        preference action (PREF_SETDEFAULT or PREF_SETUSER)
+ * @param defPref
+ *        preference type (PR_TRUE: default, PR_FALSE: user preference)
  */
 typedef void (*PrefReader)(void       *closure,
                            const char *pref,
                            PrefValue   val,
                            PrefType    type,
-                           PrefAction  action);
+                           PRBool      defPref);
 
 /* structure fields are private */
 typedef struct PrefParseState {
@@ -77,7 +77,7 @@ typedef struct PrefParseState {
     char       *lbend;      /* line buffer end               */
     char       *vb;         /* value buffer (ptr into lb)    */
     PrefType    vtype;      /* PREF_STRING,INT,BOOL          */
-    PRBool      fuser;      /* PR_TRUE if user_pref          */
+    PRBool      fdefault;   /* PR_TRUE if (default) pref     */
 } PrefParseState;
 
 /**

@@ -37,7 +37,6 @@
 
 /* Data shared between prefapi.c and nsPref.cpp */
 
-extern PRBool				gErrorOpeningUserPrefs;
 extern PLDHashTable			gHashTable;
 extern PRBool               gDirty;
 
@@ -49,7 +48,7 @@ struct pref_saveArgs {
   pref_SaveTypes saveTypes;
 };
 
-PLDHashOperator PR_CALLBACK pref_savePref(PLDHashTable*, PLDHashEntryHdr *, PRUint32, void *arg);
+PLDHashOperator
+pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg);
 
 int PR_CALLBACK pref_CompareStrings(const void *v1, const void *v2, void* unused);
-extern PRBool pref_InitInitialObjects(void);

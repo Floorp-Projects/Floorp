@@ -533,11 +533,7 @@ NS_IMETHODIMP nsPref::UnregisterCallback( const char* domain,
                         void* instance_data )
 //----------------------------------------------------------------------------------------
 {
-  if (PREF_UnregisterCallback(domain, callback, instance_data) == PREF_NOERROR) {
-    return NS_OK;
-  } else {
-    return NS_ERROR_FAILURE;
-  }
+  return PREF_UnregisterCallback(domain, callback, instance_data);
 }
 
 /*
