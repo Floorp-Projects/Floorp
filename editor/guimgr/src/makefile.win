@@ -20,9 +20,9 @@ IGNORE_MANIFEST=1
 
 LIBRARY_NAME=editguimgr
 
-CPPSRCS =                 \
-	nsEditGuiManager.cpp  \
-	nsGuiMgrFactory.cpp   \
+CPPSRCS =                    \
+	nsEditGuiManager.cpp     \
+	nsGuiManagerFactory.cpp  \
 	$(NULL)
 
 CPP_OBJS =					\
