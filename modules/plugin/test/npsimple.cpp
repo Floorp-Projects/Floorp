@@ -381,6 +381,15 @@ SimplePluginInstance::GetScriptablePeer(void **aScriptablePeer)
 {
    // We implement the interface we want to be scriptable by
    // (nsISimplePluginInstance) so we just return this.
+
+   // NOTE if this function returns something other than
+   // nsIPluginInstance, then that object will also need to implement
+   // nsISecurityCheckedComponent to be scriptable.  The security
+   // system knows to special-case nsIPluginInstance when checking
+   // security, but in general, XPCOM components must implement
+   // nsISecurityCheckedComponent to be scriptable from content
+   // javascript.
+
    *aScriptablePeer = NS_STATIC_CAST(nsISimplePluginInstance *, this);
    NS_ADDREF(NS_STATIC_CAST(nsISimplePluginInstance *, *aScriptablePeer));
    return NS_OK;
