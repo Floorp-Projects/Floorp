@@ -35,6 +35,7 @@ use IPC::Open2;
 # Collect program options
 $::opt_help = 0;
 $::opt_format = "boehm";
+$::opt_fragment = 10;
 $::opt_nostacks = 0;
 $::opt_nochildstacks = 0;
 $::opt_depth = 9999;
@@ -42,13 +43,14 @@ $::opt_noentrained = 0;
 $::opt_noslop = 0;
 $::opt_showtype = 100000000;
 
-GetOptions("help", "format=s", "nostacks", "nochildstacks", "depth=i", "noentrained", "noslop", "showtype=i");
+GetOptions("help", "format=s", "fragment=i", "nostacks", "nochildstacks", "depth=i", "noentrained", "noslop", "showtype=i");
 
 if ($::opt_help) {
     die "usage: leak-soup.pl [options] <leakfile>
   --help          Display this message
   --format=[boehm*|trace-malloc]
                   Parse input as if from boehm (default) or trace-malloc
+  --fragment=n    Histogram bucket ration for fragmentation analysis
   --nostacks      Do not compute stack traces
   --nochildstacks Do not compute stack traces for entrained objects
   --depth=<max>   Only compute stack traces to depth of <max>
@@ -79,6 +81,8 @@ $::TotalSize = 0; # sum of sizes of all objects included $::Types{}
 # tallies into parents.  Note that after all children have
 # been swept into a parent, that parent may also become a leaf node.
 @::Leafs = @{0};
+
+
 
 
 #----------------------------------------------------------------------
@@ -338,25 +342,115 @@ sub validate_addresses() {
     my $prev_addr_end = -1;
     my $prev_addr = -1;
     my $index = 0;
+    my $overlap_tally = 0; # overlapping object memory
+    my $unused_tally = 0;  # unused memory between blocks
     while ($index <= $#::SortedAddresses) {
 	my $address = $::SortedAddresses[$index];
 	if ($prev_addr_end > $address) {
 	    print "Overlap from $::Objects{$prev_addr}->{'type'}:$prev_addr-$prev_addr_end into";
 	    my $test_index = $index;
+	    my $prev_addr_overlap_tally = 0;
+
 	    while ($test_index <=  $#::SortedAddresses) {
-		$::Objects{$address}->{'overlap_count'}++;
-		my $testaddress = $::SortedAddresses[$test_index];
-		last if ($prev_addr_end < $testaddress);
-		print " $::Objects{$testaddress}->{'type'}:$testaddress";
-		$::Objects{$testaddress}->{'overlap_count'}++;
+		my $test_address = $::SortedAddresses[$test_index];
+		last if ($prev_addr_end < $test_address);
+		print " $::Objects{$test_address}->{'type'}:$test_address";
+
+		$::Objects{$prev_addr}->{'overlap_count'}++;
+		$::Objects{$test_address}->{'overlap_count'}++;
+		my $overlap = $prev_addr_end - $test_address;
+		if ($overlap > $::Objects{$test_address}->{'size'}) {
+		    $overlap = $::Objects{$test_address}->{'size'};
+		}
+		print "($overlap bytes)";
+		$prev_addr_overlap_tally += $overlap;
+
 		$test_index++;
 	    }
+	    print " [total $prev_addr_overlap_tally bytes]";
+	    $overlap_tally += $prev_addr_overlap_tally;
 	    print "\n";
 	} 
+
 	$prev_addr = $address;
 	$prev_addr_end = $prev_addr + $::Objects{$prev_addr}->{'size'} - 1;
 	$index++;
+    } #end while
+    if ($overlap_tally) {
+	print "Total overlap of $overlap_tally bytes\n";
     }
+}
+
+#----------------------------------------------------------------------
+#
+# Evaluate sizes of interobject spacing (fragmentation loss?)
+# Gather the sizes into histograms for analysis
+# This function assumes a sorted list of addresses is present globally
+
+sub histogram_fragments() {
+    my $prev_addr_end = -1;
+    my $prev_addr = -1;
+    my $index = 0;
+
+    my @fragment_count;
+    my @fragment_tally;
+    my $power;
+    my $bucket_size;
+
+    my $max_power = 0;
+
+    while ($index <= $#::SortedAddresses) {
+	my $address = $::SortedAddresses[$index];
+
+	my $unused = $address - $prev_addr_end;
+
+	# handle overlaps gracefully
+	if ($unused < 0) {
+	    $unused = 0;
+	}
+
+	$power = 0;
+	$bucket_size = 1;
+	while ($bucket_size < $unused) {
+	    $bucket_size *= $::opt_fragment;
+	    $power++;
+	}
+	$fragment_count[$power]++;
+	$fragment_tally[$power] += $unused;
+	if ($power > $max_power) {
+	    $max_power = $power;
+	}
+
+	$prev_addr_end = $address + $::Objects{$address}->{'size'} - 1;
+	$index++;
+    }
+
+    print "\nInterobject spacing (fragmentation waste) Statistics\n";
+    $power = 0;
+    $bucket_size = 1;
+    my $tally = 0;
+    my $count = 0;
+    while ($power <= $max_power) {
+	if (! defined $fragment_count[$power]) {
+	    $fragment_count[$power] = $fragment_tally[$power] = 0;
+	}
+	$count += $fragment_count[$power];
+	$tally += $fragment_tally[$power];
+	print "$count gaps, totaling $tally bytes, were under $bucket_size each, for an average of ", $tally/$count, " bytes per gap\n";
+	$power++;
+	$bucket_size *= $::opt_fragment;
+    }
+
+    $power = 0;
+    $bucket_size = 1;
+    print "Basic gap histogram is: ";
+    while ($power <= $max_power) {
+	print " $bucket_size:", $fragment_count[$power];
+	$power++;
+	$bucket_size *= $::opt_fragment;
+    }    
+    print "\n";
+    
 }
 
 #----------------------------------------------------------------------
@@ -368,6 +462,9 @@ sub create_parent_links(){
     my $min_addr = $::SortedAddresses[0];
     my $max_addr = $::SortedAddresses[ $#::SortedAddresses]; #allow one beyond each object
     $max_addr += $::Objects{$max_addr}->{'size'};
+
+    print "Viable addresses runs from $min_addr to $max_addr for a total of ", 
+    $max_addr-$min_addr, " bytes\n\n";
 
     # Gather stats as we try to convert slots to children
     my $slot_count = 0;   # total slots examined
@@ -552,6 +649,7 @@ sub expand_type_names($) {
 #----------------------------------------------------------------------
 # Provide a nice summary of the types during the process
 validate_addresses();
+histogram_fragments();
 
 print "\nBefore doing any work on types:\n";
 init_type_table();
