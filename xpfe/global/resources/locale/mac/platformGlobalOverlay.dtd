@@ -1,3 +1,5 @@
+<!-- mac -->
+
 <!ENTITY closeCmd.label						"Close">  
 <!ENTITY closeCmd.key						"W">  
 <!ENTITY quitApplicationCmd.label			"Quit"> 

@@ -1,4 +1,5 @@
 <?xml version="1.0"?> 
+<?xul-overlay href="chrome://global/content/platformDialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/dialogOverlay.dtd">
 
@@ -10,17 +11,5 @@
 
 <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js"/>
 
-	<!-- OK & Cancel Buttons -->
-	 <box id="okCancelButtons" align="horizontal" style="margin-top: 0.5em">
-		<spring flex="100%"/>
-		<titledbutton id="ok" value="&okButton.label;" onclick="doOKButton()"/>	
-		<spring style="width:10px"/>
-		<titledbutton id="cancel" value="&cancelButton.label;" onclick="doCancelButton()"/>	
-		<spring style="width:10px"/>
-		<titledbutton id="Button2" value="&cancelButton.label;" style = "display:none;" onclick="doButton2()"/>	
-		<spring style="width:10px"/>
-		<titledbutton id="Button3" value="&cancelButton.label;" style = "display:none;" onclick="doButton3()"/>	
-		<spring style="width:10px"/>
-	</box>
 	
 </overlay>		

@@ -1,4 +1,5 @@
 <?xml version="1.0"?> 
+<?xul-overlay href="chrome://global/content/platformGlobalOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://global/locale/globalOverlay.dtd">
 
@@ -11,15 +12,6 @@
 
 	<!-- File Menu -->
 	<menu id="menu_File" value="&fileMenu.label;"/>
-	<!-- close -->
-	<menuitem id="menu_close" value="&closeCmd.label;" key="key_close" observes="cmd_close"/>
-	<key id="key_close" command="true" key="&closeCmd.key;" observes="cmd_close"/>
-	<!-- quit -->
-	<menupopup id="menu_FilePopup">
-		<menuitem value="&quitApplicationCmd.label;" key="key_quit" observes="cmd_quit"/>
-	</menupopup>
-	<key id="key_quit" command="true" key="&quitApplicationCmd.key;" observes="cmd_quit"/>
- 	<broadcaster id="cmd_quit" oncommand="goQuitApplication()"/>
 	
 	<!-- Page Setup menu item -->
 	<menuitem id="menu_pageSetup" value="&pageSetupCmd.label;" oncommand="goPageSetup()"/>
@@ -27,7 +19,6 @@
 	<!-- Edit Menu -->
 	<menu id="menu_Edit" value="&editMenu.label;"/>
 	<menuitem id="menu_undo" value="&undoCmd.label;" key="key_undo" observes="cmd_undo"/>
-	<menuitem id="menu_redo" value="&redoCmd.label;" key="key_redo" observes="cmd_redo"/>
 	<menuitem id="menu_cut" value="&cutCmd.label;" key="key_cut" observes="cmd_cut"/>
 	<menuitem id="menu_copy" value="&copyCmd.label;" key="key_copy" observes="cmd_copy"/>
 	<menuitem id="menu_paste" value="&pasteCmd.label;" key="key_paste" observes="cmd_paste"/>
@@ -35,7 +26,6 @@
 	<menuitem id="menu_selectAll" value="&selectAllCmd.label;" key="key_selectAll" observes="cmd_selectAll"/>
 	
 	<key id="key_undo" command="true" key="&undoCmd.key;" observes="cmd_undo"/>
-	<key id="key_redo" shift="true" command="true" key="&redoCmd.key;" observes="cmd_redo"/>
 	<key id="key_cut" command="true" key="&cutCmd.key;" observes="cmd_cut"/>
 	<key id="key_copy" command="true" key="&copyCmd.key;" observes="cmd_copy"/>
 	<key id="key_paste" command="true" key="&pasteCmd.key;" observes="cmd_paste"/>

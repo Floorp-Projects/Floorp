@@ -1,4 +1,4 @@
-<!-- unix version of platformGlobalOverlay.dtd -->
+<!-- unix -->
 
 <!ENTITY closeCmd.label						"Close">  
 <!ENTITY closeCmd.key						"W">  

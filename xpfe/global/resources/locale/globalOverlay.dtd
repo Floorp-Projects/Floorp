@@ -2,16 +2,10 @@
 
 <!ENTITY fileMenu.label					"File"> 
 <!ENTITY pageSetupCmd.label					".Page Setup...">  
-<!ENTITY closeCmd.label						"Close">  
-<!ENTITY closeCmd.key						"W">  
-<!ENTITY quitApplicationCmd.label			"Quit"> 
-<!ENTITY quitApplicationCmd.key				"Q"> 
 
 <!ENTITY editMenu.label					"Edit"> 
 <!ENTITY undoCmd.label						"Undo">  
 <!ENTITY undoCmd.key						"Z">  
-<!ENTITY redoCmd.label						"Redo">  
-<!ENTITY redoCmd.key						"Z">  
 <!ENTITY cutCmd.label						"Cut">  
 <!ENTITY cutCmd.key							"X">  
 <!ENTITY copyCmd.label						"Copy">  
