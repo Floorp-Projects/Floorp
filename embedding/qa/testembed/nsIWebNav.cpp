@@ -46,8 +46,8 @@
 
 #include "stdafx.h"
 #include "testembed.h"
-#include "Tests.h"
 #include "qautils.h"
+#include "nsiwebnav.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -58,22 +58,14 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CNsIWebNav 
 
-CNsIWebNav::CNsIWebNav(CTests *mTests)
+CNsIWebNav::CNsIWebNav(nsIWebNavigation *mWebNav)
 {
-	// Assign Local pointer to the CTest Object
-	qaTests = mTests ;
+	qaWebNav = mWebNav ;
 }
 
 CNsIWebNav::~CNsIWebNav()
 {
 }
-
-
-BEGIN_MESSAGE_MAP(CNsIWebNav, CWnd)
-	//{{AFX_MSG_MAP(CNsIWebNav)
-	ON_COMMAND(ID_INTERFACES_NSIWEBNAV, OnInterfacesNsiwebnav)
-	//}}AFX_MSG_MAP
-END_MESSAGE_MAP()
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -92,11 +84,94 @@ NavElement UrlTable[] = {
 };
 
 
-void CNsIWebNav::OnInterfacesNsiwebnav()
+
+void CNsIWebNav::OnStartTests(UINT nMenuID)
+{
+
+	switch(nMenuID)
+	{
+		case ID_INTERFACES_NSIWEBNAV_RUNALLTESTS :
+			RunAllTests();
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_GETCANGOBACK :
+		    CanGoBackTest();
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_GETCANGOFORWARD :
+			CanGoForwardTest();
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_GOBACK  :
+			GoBackTest();
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_GOFORWARD :
+			GoForwardTest();
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_GOTOINDEX :
+			GoToIndexTest();
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_LOADURI :
+			LoadUriandReload();
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_RELOAD  :
+			LoadUriandReload();
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_STOP    :
+			StopUriTest("http://www.microsoft.com/");
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_GETDOCUMENT :
+			GetDocumentTest();
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_GETCURRENTURI :
+			GetCurrentURITest();
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_GETSESSIONHISTORY :
+			GetSHTest();
+			break ;
+		case ID_INTERFACES_NSIWEBNAV_SETSESSIONHISTORY :
+			break ;
+	}
+
+}
+
+void CNsIWebNav::LoadUriandReload()
+{
+   int i=0;
+   // LoadURI() & reload tests
+
+   QAOutput("Run a few LoadURI() tests.", 2);
+	
+   for (i=0; i < 5; i++)
+   {
+       LoadUriTest(UrlTable[i].theUri, UrlTable[i].theFlag);
+       switch (i)
+       {
+       case 0:
+           ReloadTest(nsIWebNavigation::LOAD_FLAGS_NONE);
+           break;
+       case 1:
+           ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE);
+           break;
+       case 2:
+           ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
+           break;
+       // simulate shift-reload
+       case 3:
+           ReloadTest(nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE |
+                      nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY);
+           break;
+       case 4:
+           ReloadTest(nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE);
+           break;
+       }
+   }
+
+}
+
+
+void CNsIWebNav::RunAllTests()
 {
    int i=0;
 
-   if (qaTests->qaWebNav)
+   if ( qaWebNav)
 	   QAOutput("We have the web nav object.", 2);
    else {
 	   QAOutput("We don't have the web nav object. No tests performed.", 2);
@@ -162,34 +237,35 @@ void CNsIWebNav::OnInterfacesNsiwebnav()
    GetSHTest();
 }
 
+
 // ***********************************************************************
 // Individual nsIWebNavigation tests
 
 void CNsIWebNav::CanGoBackTest()
 {
    PRBool canGoBack = PR_FALSE;
-   rv = qaTests->qaWebNav->GetCanGoBack(&canGoBack);
+   rv =  qaWebNav->GetCanGoBack(&canGoBack);
    RvTestResult(rv, "GetCanGoBack() attribute test", 2);
    FormatAndPrintOutput("canGoBack value = ", canGoBack, 2);
 }
 
 void CNsIWebNav::GoBackTest()
 {
-   rv = qaTests->qaWebNav->GoBack();
+   rv =  qaWebNav->GoBack();
    RvTestResult(rv, "GoBack() test", 2);
 }
 
 void CNsIWebNav::CanGoForwardTest()
 {
    PRBool canGoForward = PR_FALSE;
-   rv = qaTests->qaWebNav->GetCanGoForward(&canGoForward);
+   rv =  qaWebNav->GetCanGoForward(&canGoForward);
    RvTestResult(rv, "GetCanGoForward() attribute test", 2);
    FormatAndPrintOutput("canGoForward value = ", canGoForward, 2); 
 }
 
 void CNsIWebNav::GoForwardTest()
 {
-   rv = qaTests->qaWebNav->GoForward();
+   rv =  qaWebNav->GoForward();
    RvTestResult(rv, "GoForward() test", 2);
 }
 
@@ -197,14 +273,14 @@ void CNsIWebNav::GoToIndexTest()
 {
    PRInt32 theIndex = 0;
 
-   rv = qaTests->qaWebNav->GotoIndex(theIndex);
+   rv =  qaWebNav->GotoIndex(theIndex);
    RvTestResult(rv, "GotoIndex() test", 2);
 }
 
 void CNsIWebNav::LoadUriTest(char *theUrl, const unsigned long theFlag)
 {
    char theTotalString[500];
-   char theFlagName[100];
+   char theFlagName[200];
 
    switch(theFlag)
    {
@@ -237,7 +313,7 @@ void CNsIWebNav::LoadUriTest(char *theUrl, const unsigned long theFlag)
 	   break;
    }
 
-   rv = qaTests->qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
+   rv =  qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
 						theFlag);
    sprintf(theTotalString, "%s%s%s%s%s", "LoadURI(): ", theUrl, " w/ ", theFlagName, " test");
    RvTestResult(rv, theTotalString, 2);
@@ -246,7 +322,7 @@ void CNsIWebNav::LoadUriTest(char *theUrl, const unsigned long theFlag)
 void CNsIWebNav::ReloadTest(const unsigned long theFlag)
 {
    char theTotalString[500];
-   char theFlagName[100];
+   char theFlagName[200];
 
    switch(theFlag)
   {
@@ -278,13 +354,13 @@ void CNsIWebNav::ReloadTest(const unsigned long theFlag)
       strcpy(theFlagName, "LOAD_FLAGS_CHARSET_CHANGE");
       break;
   case nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | \
-      nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY: \
-      strcpy(theFlagName, "nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | \
-                           nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY");
+      nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY:
+      strcpy(theFlagName, "nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE | "
+                          "nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY");
       break;
   } 
 
-   rv = qaTests->qaWebNav->Reload(theFlag);
+   rv =  qaWebNav->Reload(theFlag);
    sprintf(theTotalString, "%s%s%s%s", "Reload(): ", " w/ ", theFlagName, " test");
    RvTestResult(rv, theTotalString, 2);
 }
@@ -293,9 +369,9 @@ void CNsIWebNav::StopUriTest(char *theUrl)
 {
    char theTotalString[200];
 
-   qaTests->qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
+    qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUrl).get(), 
 						nsIWebNavigation::LOAD_FLAGS_NONE);
-   rv = qaTests->qaWebNav->Stop(nsIWebNavigation::STOP_ALL);
+   rv =  qaWebNav->Stop(nsIWebNavigation::STOP_ALL);
    sprintf(theTotalString, "%s%s%s", "Stop(): ", theUrl, " test");
    RvTestResult(rv, theTotalString, 2);
 }
@@ -305,7 +381,7 @@ void CNsIWebNav::GetDocumentTest()
    nsCOMPtr<nsIDOMDocument> theDocument;
    nsCOMPtr<nsIDOMDocumentType> theDocType;
    
-   rv = qaTests->qaWebNav->GetDocument(getter_AddRefs(theDocument));
+   rv =  qaWebNav->GetDocument(getter_AddRefs(theDocument));
    if (!theDocument) {
 	  QAOutput("We didn't get the document. Test failed.", 2);
 	  return;
@@ -321,7 +397,7 @@ void CNsIWebNav::GetCurrentURITest()
 {
    nsCOMPtr<nsIURI> theUri;
 
-   rv = qaTests->qaWebNav->GetCurrentURI(getter_AddRefs(theUri));
+   rv =  qaWebNav->GetCurrentURI(getter_AddRefs(theUri));
    if (!theUri) {
       QAOutput("We didn't get the URI. Test failed.", 2);
 	  return;
@@ -341,7 +417,7 @@ void CNsIWebNav::GetSHTest()
    PRInt32 numOfElements;
 
    nsCOMPtr<nsISHistory> theSessionHistory;
-   rv = qaTests->qaWebNav->GetSessionHistory(getter_AddRefs(theSessionHistory));
+   rv =  qaWebNav->GetSessionHistory(getter_AddRefs(theSessionHistory));
    if (!theSessionHistory) {
       QAOutput("We didn't get the session history. Test failed.", 2);
 	  return;

@@ -51,9 +51,6 @@
 #include "BrowserView.h"
 #include "BrowserImpl.h"
 #include "StdAfx.h"
-//#include "nsirequest.h"
-#include "nsihistory.h"
-#include "nsiwebnav.h"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -104,9 +101,6 @@ public:
 
 private:
 	// Individual interface Objects
-//    CNsIRequest	*nsirequest ;
-    CNsIHistory	*nsihistory ;
-	CNsIWebNav  *nsiwebnav ;
 
 	// Generated message map functions
 protected:
@@ -144,6 +138,9 @@ protected:
 	afx_msg void OnInterfacesNsiselection();
 	afx_msg void OnVerifybugs90195();
 	afx_msg void OnInterfacesNsiprofile();
+	afx_msg void OnInterfacesNsishistory();
+	afx_msg void OnTestsRemovehistorylistener();
+	afx_msg void OnInterfacesNsiwebnav();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 

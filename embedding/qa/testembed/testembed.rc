@@ -152,14 +152,105 @@ BEGIN
         MENUITEM "Create &File",                ID_TESTS_CREATEFILE
         MENUITEM "Create/Switch &Profile",      ID_TESTS_CREATEPROFILE
         MENUITEM "&Add Web Prog Listener",      ID_TESTS_ADDWEBPROGLISTENER
+        MENUITEM SEPARATOR
         MENUITEM "Add History &Listener",       ID_TESTS_ADDHISTORYLISTENER
+        MENUITEM "Remove History Listener",     ID_TESTS_REMOVEHISTORYLISTENER
+
     END
     POPUP "&Interfaces"
     BEGIN
         MENUITEM "nsI&File",                    ID_INTERFACES_NSIFILE
-        MENUITEM "nsI&SHistory",                ID_INTERFACES_NSISHISTORY
-        MENUITEM "nsI&WebNav",                  ID_INTERFACES_NSIWEBNAV
-        MENUITEM "nsI&Request",                 ID_INTERFACES_NSIREQUEST
+        POPUP "nsI&SHistory"
+        BEGIN
+            MENUITEM "Run All Tests",               ID_INTERFACES_NSISHISTORY_RUNALLTESTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetCount",                    ID_INTERFACES_NSISHISTORY_GETCOUNT
+
+            MENUITEM "GetIndex",                    ID_INTERFACES_NSISHISTORY_GETINDEX
+
+            MENUITEM "GetMaxLength",                ID_INTERFACES_NSISHISTORY_GETMAXLENGTH
+
+            MENUITEM "SetMaxLength",                ID_INTERFACES_NSISHISTORY_SETMAXLENGTH
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetEntryAtIndex",             ID_INTERFACES_NSISHISTORY_GETENTRYATINDEX
+
+            MENUITEM "PurgeHistory",                ID_INTERFACES_NSISHISTORY_PURGEHISTORY
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetSHistoryEnumerator",       ID_INTERFACES_NSISHISTORY_GETSHISTORYENUMERATOR
+
+            MENUITEM SEPARATOR
+            POPUP "nsIHistoryEntry"
+            BEGIN
+                MENUITEM "Run All Tests",               ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_RUNALLTESTS
+
+                MENUITEM SEPARATOR
+                MENUITEM "GetURI",                      ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETURI
+
+                MENUITEM "GetTitle",                    ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETTITLE
+
+                MENUITEM "GetIsSubFrame",               ID_INTERFACES_NSISHISTORY_NSIHISTORYENTRY_GETISSUBFRAME
+
+            END
+        END
+        POPUP "nsI&WebNav"
+        BEGIN
+            MENUITEM "RunAllTests",                 ID_INTERFACES_NSIWEBNAV_RUNALLTESTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetCanGoBack",                ID_INTERFACES_NSIWEBNAV_GETCANGOBACK
+
+            MENUITEM "GetCanGoForward",             ID_INTERFACES_NSIWEBNAV_GETCANGOFORWARD
+
+            MENUITEM "GoBack",                      ID_INTERFACES_NSIWEBNAV_GOBACK
+
+            MENUITEM "GoForward",                   ID_INTERFACES_NSIWEBNAV_GOFORWARD
+
+            MENUITEM "GoToIndex",                   ID_INTERFACES_NSIWEBNAV_GOTOINDEX
+
+            MENUITEM "LoadURI",                     ID_INTERFACES_NSIWEBNAV_LOADURI
+
+            MENUITEM "Reload",                      ID_INTERFACES_NSIWEBNAV_RELOAD
+
+            MENUITEM "Stop",                        ID_INTERFACES_NSIWEBNAV_STOP
+
+            MENUITEM "GetDocument",                 ID_INTERFACES_NSIWEBNAV_GETDOCUMENT
+
+            MENUITEM "GetCurrentURI",               ID_INTERFACES_NSIWEBNAV_GETCURRENTURI
+
+            MENUITEM "GetSessionHistory",           ID_INTERFACES_NSIWEBNAV_GETSESSIONHISTORY
+
+            MENUITEM "SetSessionHistory",           ID_INTERFACES_NSIWEBNAV_SETSESSIONHISTORY
+
+        END
+        POPUP "nsI&Request"
+        BEGIN
+            MENUITEM "Run All Tests",               ID_INTERFACES_NSIREQUEST_RUNALLTESTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "GetName",                     ID_INTERFACES_NSIREQUEST_GETNAME
+
+            MENUITEM "IsPending",                   ID_INTERFACES_NSIREQUEST_ISPENDING
+
+            MENUITEM "Cancel",                      ID_INTERFACES_NSIREQUEST_CANCEL
+
+            MENUITEM "GetStatus",                   ID_INTERFACES_NSIREQUEST_GETSTATUS
+
+            MENUITEM "Suspend",                     ID_INTERFACES_NSIREQUEST_SUSPEND
+
+            MENUITEM "Resume",                      ID_INTERFACES_NSIREQUEST_RESUME
+
+            MENUITEM "GetLoadGroup",                ID_INTERFACES_NSIREQUEST_GETLOADGROUP
+
+            MENUITEM "SetLoadGroup",                ID_INTERFACES_NSIREQUEST_SETLOADGROUP
+
+            MENUITEM "GetLoadFlags",                ID_INTERFACES_NSIREQUEST_GETLOADFLAGS
+
+            MENUITEM "SetLoadFlags",                ID_INTERFACES_NSIREQUEST_SETLOADFLAGS
+
+        END
         POPUP "nsIDirectoryService"
         BEGIN
             MENUITEM "Run All Tests",               ID_INTERFACES_NSIDIRECTORYSERVICE_RUNALLTESTS
