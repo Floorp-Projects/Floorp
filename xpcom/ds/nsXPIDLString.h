@@ -29,7 +29,7 @@
       attribute string Bar;
     };
 
-  This will generated the following C++ header file:
+  This will generate the following C++ header file:
 
     class nsIFoo {
       NS_IMETHOD SetBar(const PRUnichar* aValue);
@@ -43,12 +43,14 @@
     PRUnichar* bar;
     aFoo->GetFoo(&bar);
     // Use bar here...
+    printf("bar is %s!\n", bar);
     delete[] bar;
 
   (Strictly speaking, the `delete[] bar' should use the proper XPCOM
-  de-allocator that; we'll ignore that for now.) This makes your life
-  harder, because you need to convolute your code to ensure that you
-  don't leak `bar'.
+  de-allocator; we'll ignore that for now.)
+
+  This makes your life harder, because you need to convolute your code
+  to ensure that you don't leak `bar'.
 
   Enter nsXPIDLString, which manages the ownership of the allocated
   string, and automatically destroys it when the nsXPIDLString goes
@@ -58,15 +60,19 @@
     nsXPIDLString bar;
     aFoo->GetFoo( getter_Copies(bar) );
     // Use bar here...
+    printf("bar is %s!\n", (const char*) bar);
+    // no need to remember to delete[].
 
   Like nsCOMPtr, nsXPIDLString uses some syntactic sugar to make it
   painfully clear exactly what the code expects. You need to wrap an
   nsXPIDLString object with either `getter_Copies()' or
-  `getter_Shares()': these tell the nsXPIDLString how ownership is
-  being handled. In the case of `getter_Copies()', the callee is
-  allocating a copy (which is usually the case). In the case of
-  `getter_Shares()', the callee is returning a const reference to `the
-  real deal' (this can be done using the [shared] attribute in XPIDL).
+  `getter_Shares()' before passing it to a getter: these tell the
+  nsXPIDLString how ownership is being handled.
+
+  In the case of `getter_Copies()', the callee is allocating a copy
+  (which is usually the case). In the case of `getter_Shares()', the
+  callee is returning a const reference to `the real deal' (this can
+  be done using the [shared] attribute in XPIDL).
 
  */
 
