@@ -100,7 +100,6 @@ enum {
 - (id)initWithFrame:(NSRect)frame;
 - (void)dealloc;
 - (void)setFrame:(NSRect)frameRect;
-- (BOOL)isOpaque;
 
 // nsIWebBrowser methods
 - (void)addListener:(id <NSBrowserListener>)listener;
