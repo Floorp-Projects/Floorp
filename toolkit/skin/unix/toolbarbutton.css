@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
+ *   Brian Ryner <bryner@netscape.com>
  */
 
 /* ===== toolbarbutton.css =====================================================
@@ -59,7 +60,6 @@ toolbarbutton[buttonover="true"] {
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight;
-  color: #0000FF;
 } 
     
 toolbarbutton:hover:active,
@@ -69,7 +69,6 @@ toolbarbutton[open="true"] {
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDHighlight;
   -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
   padding: 3px 1px 1px 3px;
-  color: #0000FF;
 }
 
 toolbarbutton[disabled="true"],
@@ -110,6 +109,7 @@ toolbarbutton[checked="true"] {
 
 toolbarbutton[type="menu-button"] {
   -moz-box-align: stretch;
+  -moz-appearance: dualbutton;
 }
 
 toolbarbutton[type="menu-button"],
@@ -172,6 +172,7 @@ toolbarbutton[type="menu-button"][open="true"] > .toolbarbutton-menubutton-dropm
   -moz-box-align: center;
   padding: 0 0 1px 0;
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  -moz-appearance: dualbutton-dropdown;
 }
 
 .toolbarbutton-menubutton-dropmarker[disabled="true"] {
