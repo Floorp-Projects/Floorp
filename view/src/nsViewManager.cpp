@@ -1613,6 +1613,14 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
 
         aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
         aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
+
+		//
+		// if the event is an nsTextEvent, we need to map the reply back into platform coordinates
+		//
+		if (aEvent->message==NS_TEXT_EVENT) {
+			((nsTextEvent*)aEvent)->theReply.mCursorPosition.x=NSTwipsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.x, t2p);
+			((nsTextEvent*)aEvent)->theReply.mCursorPosition.y=NSTwipsToIntPixels(((nsTextEvent*)aEvent)->theReply.mCursorPosition.y, t2p);
+       }
       }
 
       break;
