@@ -40,11 +40,18 @@ static CK_FUNCTION_LIST debug_functions;
 
 static void print_final_statistics(void);
 
+/* The AIX 64-bit compiler chokes on large switch statements (see
+ * bug #63815).  I tried the trick recommended there, using -O2 in
+ * debug builds, and it didn't work.  Instead, I'll suppress some of
+ * the verbose output and just dump values.
+ */
+
 static void get_attr_type_str(CK_ATTRIBUTE_TYPE atype, char *str, int len)
 {
 #define SETA(attr) \
     PR_snprintf(str, len, "%s", attr); break;
     switch (atype) {
+#ifndef AIX_64BIT
     case CKA_CLASS: SETA("CKA_CLASS");
     case CKA_TOKEN: SETA("CKA_TOKEN");
     case CKA_PRIVATE: SETA("CKA_PRIVATE");
@@ -136,6 +143,7 @@ static void get_attr_type_str(CK_ATTRIBUTE_TYPE atype, char *str, int len)
     case CKA_CERT_MD5_HASH: SETA("CKA_CERT_MD5_HASH");
     case CKA_NETSCAPE_DB: SETA("CKA_NETSCAPE_DB");
     case CKA_NETSCAPE_TRUST: SETA("CKA_NETSCAPE_TRUST");
+#endif
     default: PR_snprintf(str, len, "0x%p", atype); break;
     }
 }
@@ -145,6 +153,7 @@ static void get_obj_class(CK_OBJECT_CLASS class, char *str, int len)
 #define SETO(objc) \
     PR_snprintf(str, len, "%s", objc); break;
     switch (class) {
+#ifndef AIX_64BIT
     case CKO_DATA: SETO("CKO_DATA");
     case CKO_CERTIFICATE: SETO("CKO_CERTIFICATE");
     case CKO_PUBLIC_KEY: SETO("CKO_PUBLIC_KEY");
@@ -156,6 +165,7 @@ static void get_obj_class(CK_OBJECT_CLASS class, char *str, int len)
     case CKO_NETSCAPE_SMIME: SETO("CKO_NETSCAPE_SMIME");
     case CKO_NETSCAPE_TRUST: SETO("CKO_NETSCAPE_TRUST");
     case CKO_NETSCAPE_BUILTIN_ROOT_LIST: SETO("CKO_NETSCAPE_BUILTIN_ROOT_LIST");
+#endif
     default: PR_snprintf(str, len, "0x%p", class); break;
     }
 }
@@ -165,6 +175,7 @@ static void get_trust_val(CK_TRUST trust, char *str, int len)
 #define SETT(objc) \
     PR_snprintf(str, len, "%s", objc); break;
     switch (trust) {
+#ifndef AIX_64BIT
     case CKT_NETSCAPE_TRUSTED: SETT("CKT_NETSCAPE_TRUSTED");
     case CKT_NETSCAPE_TRUSTED_DELEGATOR: SETT("CKT_NETSCAPE_TRUSTED_DELEGATOR");
     case CKT_NETSCAPE_UNTRUSTED: SETT("CKT_NETSCAPE_UNTRUSTED");
@@ -172,6 +183,7 @@ static void get_trust_val(CK_TRUST trust, char *str, int len)
     case CKT_NETSCAPE_TRUST_UNKNOWN: SETT("CKT_NETSCAPE_TRUST_UNKNOWN");
     case CKT_NETSCAPE_VALID: SETT("CKT_NETSCAPE_VALID");
     case CKT_NETSCAPE_VALID_DELEGATOR: SETT("CKT_NETSCAPE_VALID_DELEGATOR");
+#endif
     default: PR_snprintf(str, len, "0x%p", trust); break;
     }
 }
