@@ -37,21 +37,11 @@
 #include "nsCanvas.h"
 #include <stdio.h>
 
-PRBool nsCanvas::OnKey( MPARAM mp1, MPARAM mp2)
-{
-   nsWindow::OnKey( mp1, mp2);
-   return PR_TRUE; // Gecko doesn't expect unhandled events to propagate
-}
-
 extern BOOL g_bHandlingMouseClick;
 
 PRBool nsCanvas::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2)
 {
    PRBool rc = PR_FALSE;
-
-   // Stop multiple messages for the same PM action
-   if( g_bHandlingMouseClick)
-      return rc;
 
    // Don't capture mb2 so that drag'n'drop works.
  

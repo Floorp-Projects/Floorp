@@ -115,7 +115,6 @@ class nsWindow : public nsBaseWidget,
                       PRInt32 aHeight,
                       PRBool   aRepaint);
    NS_IMETHOD GetClientBounds( nsRect &aRect);
-   NS_IMETHOD GetBorderSize( PRInt32 &aWidth, PRInt32 &aHeight);
    NS_IMETHOD Enable( PRBool bState);
    NS_IMETHOD SetFocus(PRBool aRaise);
    NS_IMETHOD IsVisible( PRBool &aState);
@@ -137,10 +136,6 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent);
 
    // Widget appearance
-   virtual nscolor         GetForegroundColor();
-   NS_IMETHOD              SetForegroundColor( const nscolor &aColor);
-   virtual nscolor         GetBackgroundColor();
-   NS_IMETHOD              SetBackgroundColor( const nscolor &aColor);
    virtual nsIFontMetrics *GetFont();
    NS_IMETHOD              SetFont( const nsFont &aFont);
    NS_IMETHOD              SetColorMap( nsColorMap *aColorMap);
@@ -200,9 +195,6 @@ protected:
    virtual nsresult GetWindowText( nsString &str, PRUint32 *rc);
    virtual void     AddToStyle( ULONG style);
    virtual void     RemoveFromStyle( ULONG style);
-   virtual void     GetStyle( ULONG &out);
-   virtual nscolor  QueryPresParam( ULONG ppID);
-   virtual void     SetPresParam( ULONG ppID, const nscolor &c);
    // return true if deferred
    virtual BOOL     SetWindowPos( HWND hwndInsertBehind, long x, long y,
                                   long cx, long cy, unsigned long flags);
@@ -231,6 +223,8 @@ protected:
    virtual PRBool OnDragOver( MPARAM mp1, MPARAM mp2, MRESULT &mr);
    virtual PRBool OnDragLeave( MPARAM mp1, MPARAM mp2);
    virtual PRBool OnDrop( MPARAM mp1, MPARAM mp2);
+
+   static BOOL sIsRegistered;
 
    // PM data members
    HWND      mWnd;            // window handle

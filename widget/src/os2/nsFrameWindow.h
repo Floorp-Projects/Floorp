@@ -40,10 +40,10 @@ class nsFrameWindow : public nsWindow
    virtual ~nsFrameWindow();
 
    // So Destroy, Show, SetWindowPos, SetTitle, etc. work
-   HWND GetMainWindow() const { return hwndFrame; }
+   HWND GetMainWindow() const { return mFrameWnd; }
 
  protected:
-   HWND   hwndFrame;
+   HWND mFrameWnd;
    PFNWP  fnwpDefFrame;
    nsSize mSizeClient;
    nsSize mSizeBorder;
@@ -73,7 +73,6 @@ class nsFrameWindow : public nsWindow
    void SetWindowListVisibility( PRBool bState);
 
    // We have client
-   NS_IMETHOD GetBorderSize( PRInt32 &aWidth, PRInt32 &aHeight);
    NS_IMETHOD GetClientBounds( nsRect &aRect);
 
    friend MRESULT EXPENTRY fnwpFrame( HWND, ULONG, MPARAM, MPARAM);
