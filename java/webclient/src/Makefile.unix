@@ -23,7 +23,7 @@ STUBINCLUDE = ${JAVAINCLUDE}
 STUBLIBS = ${JAVALIBS}
 # For the latest mozilla build
 LIBS =  ${GTKLIBS} ${JAVALIBS} \
--L${DIST}/bin -lraptorgfx -ljsurl -lmozdbm -lmozjs -lsecfree -lmozutil -lnspr3 -lxp -ljpeg -lpng -lz -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -limg -lplds3 -lgfx_gtk -lraptorwebwidget -lraptorhtmlpars -lraptorplugin -lpref -lplds3 -lplc3 -ljsdom -L${DIST}/lib -ltimer_s
+-L${DIST}/bin -lraptorgfx -lmozjs -lsecfree -lnspr3 -ljpeg -lpng -lz -lpthread -lXm -lXt -L${DIST}/lib -lxpcom -lplds3 -lgfx_gtk -lraptorwebwidget -lraptorhtmlpars -lraptorplugin -lpref -lplds3 -lplc3 -ljsdom -L${DIST}/lib -ltimer_s
 
 LN = ln -f -s
 
