@@ -25,13 +25,45 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-PROGS= $(OBJDIR)/apprunner
+TOOLKIT_GFX_LIB     = -lgfx$(MOZ_TOOLKIT)
+TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_TOOLKIT)
+TOOLKIT_BASE_LIB    = -lgmbase$(MOZ_TOOLKIT)
 
-MODULE=apprunner
+ifneq (,$(filter gtk, $(MOZ_TOOLKIT)))
+TOOLKIT_CFLAGS = \
+        -DWIDGET_DLL = \"libwidgetgtk.so\" \
+        -DGFXWIN_DLL = \"libgfxgtk.so\" \
+        $(TK_GTK_CFLAGS)
 
-REQUIRES=raptor xpcom base netlib pref js dom
+TOOLKIT_CPPSRCS = \
+        nsGTKMain.cpp \
+        nsGTKMenu.cpp
 
-INCLUDES+= -I../public -I$(PUBLIC)/raptor	\
+TOOLKIT_LIBS = $(TK_GTK_LIBS)
+else
+ifneq (,$(filter motif, $(MOZ_TOOLKIT)))
+TOOLKIT_CFLAGS = \
+        -DWIDGET_DLL = \"libwidgetmotif.so\" \
+        -DGFXWIN_DLL = \"libgfxmotif.so\" \
+        $(TK_MOTIF_CFLAGS)
+
+TOOLKIT_CPPSRCS = \
+        nsMotifMenu.cpp \
+        nsUnixMain.cpp
+
+TOOLKIT_LIBS = $(TK_MOTIF_LIBS) $(XLDFLAGS) $(XLIBS)
+
+endif
+endif
+
+
+PROGS = $(OBJDIR)/apprunner
+
+MODULE = apprunner
+
+REQUIRES = raptor xpcom base netlib pref js dom
+
+INCLUDES += -I../public -I$(PUBLIC)/raptor	\
 	   -I$(PUBLIC)/xpcom	\
 	   -I$(PUBLIC)/base	\
 	   -I$(PUBLIC)/netlib	\
@@ -39,15 +71,15 @@ INCLUDES+= -I../public -I$(PUBLIC)/raptor	\
 	   -I$(PUBLIC)/js	\
 	   -I$(PUBLIC)/dom
 
-EX_LIBS=\
+EX_LIBS = \
 	-L$(DIST)/bin	\
 	-lnsappshell	\
 	-lxpcom		\
 	-lraptorbase	\
-	-lwidgetgtk	\
+	$(TOOLKIT_WIDGET_LIB)\
 	-lraptorgfx	\
-	-lgfxgtk	\
-	-lgmbasegtk	\
+	$(TOOLKIT_GFX_LIB)\
+	$(TOOLKIT_BASE_LIB)\
 	-lreg		\
 	-labouturl	\
 	-lhttpurl	\
@@ -84,13 +116,13 @@ EX_LIBS=\
 	$(NULL)
 
 
-CPPSRCS= \
+CPPSRCS = \
 	nsAppRunner.cpp 	\
 	nsSetupRegistry.cpp	\
 	nsUnixStubs.cpp		\
 	$(NULL)
 
-CPP_OBJS=			\
+CPP_OBJS =			\
  ./$(OBJDIR)/nsAppRunner.o  	\
  ./$(OBJDIR)/nsSetupRegistry.o	\
  ./$(OBJDIR)/nsUnixStubs.o	\
@@ -103,7 +135,7 @@ include $(topsrcdir)/config/rules.mk
 
 $(PROGS) : $(OBJS)
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS)
+	$(CCC) -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(OS_LIBS) $(TOOLKIT_LIBS)
 
 install:: $(TARGETS)
 	$(INSTALL) $(PROGS) $(DIST)/bin
