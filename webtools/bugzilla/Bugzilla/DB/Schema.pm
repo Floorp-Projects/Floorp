@@ -1131,8 +1131,8 @@ sub get_table_columns {
     my @ddl = ();
 
     my $thash = $self->{schema}{$table};
-    ThrowCodeError("Table $table does not exist in the database schema.")
-      unless (ref($thash));
+    die "Table $table does not exist in the database schema."
+        unless (ref($thash));
 
     my @columns = ();
     my @fields = @{ $thash->{FIELDS} };
@@ -1162,8 +1162,8 @@ sub get_table_ddl {
     my($self, $table) = @_;
     my @ddl = ();
 
-    ThrowCodeError("Table $table does not exist in the database schema.")
-      unless (ref($self->{schema}{$table}));
+    die "Table $table does not exist in the database schema."
+        unless (ref($self->{schema}{$table}));
 
     my $create_table = $self->_get_create_table_ddl($table);
     push(@ddl, $create_table) if $create_table;
@@ -1208,8 +1208,8 @@ sub _get_create_table_ddl {
     my($self, $table) = @_;
 
     my $thash = $self->{schema}{$table};
-    ThrowCodeError("Table $table does not exist in the database schema.")
-      unless (ref($thash));
+    die "Table $table does not exist in the database schema."
+        unless (ref($thash));
 
     my $create_table = "CREATE TABLE $table \(\n";
 
