@@ -416,6 +416,9 @@ PluginViewerImpl::SetDOMDocument(nsIDOMDocument *aDocument)
 static nsEventStatus PR_CALLBACK
 HandlePluginEvent(nsGUIEvent *aEvent)
 {
+  if( (*aEvent).message == NS_PLUGIN_ACTIVATE) {
+    (nsIWidget*)((*aEvent).widget)->SetFocus();
+  }
   return nsEventStatus_eIgnore;
 }
 nsresult
