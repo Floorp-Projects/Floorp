@@ -35,6 +35,7 @@
 <!ENTITY bz-date "2004-02-05">
 <!ENTITY % bz-devel "INCLUDE">
 
+<!ENTITY landfillbase "http://landfill.bugzilla.org/bugzilla-tip/">
 <!ENTITY bz "http://www.bugzilla.org/">
 <!ENTITY bzg-bugs "<ulink url='http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla Documentation</ulink>">
 <!ENTITY mysql "http://www.mysql.com/">

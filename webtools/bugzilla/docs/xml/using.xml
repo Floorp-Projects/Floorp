@@ -5,13 +5,13 @@
 
   <section id="using-intro">
     <title>Introduction</title>
-    <para>This section contains information for end-users of Bugzilla. 
-    There is a Bugzilla test installation, called 
-    <ulink url="http://landfill.bugzilla.org/bugzilla-tip/">Landfill</ulink>, 
-    which you are welcome to play with (if it's up.) 
-    However, it does not necessarily
-    have all Bugzilla features enabled, and runs an up-to-the-minute version, 
-    so some things may not quite work as this document describes.</para>
+    <para>This section contains information for end-users of Bugzilla.  There
+    is a Bugzilla test installation, called
+    <ulink url="http://landfill.bugzilla.org/">Landfill</ulink>, which you are
+    welcome to play with (if it's up). However, not all of the Bugzilla
+    installations there will necessarily have all Bugzilla features enabled,
+    and different installations run different versions, so some things may not
+    quite work as this document describes.</para>
   </section>
       
   <section id="myaccount">
@@ -21,7 +21,7 @@
     Consult with the administrator responsible for your installation of
     Bugzilla for the URL you should use to access it. If you're
     test-driving Bugzilla, use this URL: 
-    <ulink url="http://landfill.bugzilla.org/bugzilla-tip/"/>.
+    <ulink url="&landfillbase;"/>.
     </para>
 
     <orderedlist>
@@ -67,7 +67,7 @@
     <para>The core of Bugzilla is the screen which displays a particular
     bug. It's a good place to explain some Bugzilla concepts. 
     <ulink
-    url="http://landfill.bugzilla.org/bugzilla-tip/show_bug.cgi?id=1">
+    url="&landfillbase;show_bug.cgi?id=1">
     Bug 1 on Landfill</ulink>
 
     is a good example. Note that the labels for most fields are hyperlinks;
@@ -267,7 +267,7 @@
     <para>The Bugzilla Search page is is the interface where you can find
     any bug report, comment, or patch currently in the Bugzilla system. You
     can play with it here: 
-    <ulink url="http://landfill.bugzilla.org/bugzilla-tip/query.cgi"/>.</para>
+    <ulink url="&landfillbase;query.cgi"/>.</para>
 
     <para>The Search page has controls for selecting different possible
     values for all of the fields in a bug, as described above. For some
@@ -344,7 +344,7 @@
     <para>Years of bug writing experience has been distilled for your
     reading pleasure into the 
     <ulink
-    url="http://landfill.bugzilla.org/bugzilla-tip/bugwritinghelp.html">
+    url="&landfillbase;bugwritinghelp.html">
     Bug Writing Guidelines</ulink>. 
     While some of the advice is Mozilla-specific, the basic principles of
     reporting Reproducible, Specific bugs, isolating the Product you are
@@ -358,11 +358,11 @@
     <orderedlist>
       <listitem>
         <para>Go to 
-        <ulink url="http://landfill.bugzilla.org/bugzilla-tip/">
+        <ulink url="&landfillbase;">
         Landfill</ulink>
         in your browser and click 
         <ulink
-        url="http://landfill.bugzilla.org/bugzilla-tip/enter_bug.cgi">
+        url="&landfillbase;enter_bug.cgi">
         Enter a new bug report</ulink>.
         </para>
       </listitem>
