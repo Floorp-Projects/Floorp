@@ -311,7 +311,8 @@
   list-style-image: url("chrome://browser/skin/home.gif");
 }
   
-#home-button:hover {
+#home-button:hover,
+#home-button[dragover] {
   list-style-image: url("chrome://browser/skin/home-hover.gif");
 }
   
