@@ -335,7 +335,7 @@ function StyleRuleView(aObject)
     this.mRules = this.mDOMUtils.getCSSStyleRules(aObject);
     if (aObject.hasAttribute("style"))
       this.mStyleAttribute =
-        Components.lookupMethod(aObject, "style").call(aObject);
+        new XPCNativeWrapper(aObject, "style").style;
   }
 }
 
