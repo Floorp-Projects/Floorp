@@ -425,6 +425,8 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement)
             receiver->AddEventListener(type, (nsIDOMMouseListener*)handler, useCapture);
           else
             receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
+
+          NS_RELEASE(handler);
         }
       
         // XXX Call AddScriptEventListener for other IID types
