@@ -12,6 +12,7 @@ toolkit.jar:
         content/global/strres.js                    (resources/content/strres.js) 
         content/global/logo.gif                     (resources/content/logo.gif) 
         content/global/about.xul                    (resources/content/about.xul) 
+        content/global/about.js                     (resources/content/about.js) 
         content/global/config.xul                   (resources/content/config.xul) 
         content/global/config.css                   (resources/content/config.css) 
         content/global/config.js                    (resources/content/config.js) 

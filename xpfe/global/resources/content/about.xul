@@ -32,7 +32,10 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        title="&title.label;">
+        title="&title.label;"
+        onload="aboutStartUp();">
+        
+<script type="application/x-javascript" src="chrome://global/content/about.js"/>
 
 <keyset id="dialogKeys"/>
 
@@ -45,8 +48,8 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
   </tabs>
 
   <tabpanels flex="100%">
-    <iframe style="border: 1px inset gray;" src="about:"/>
-    <iframe style="border: 1px inset gray;" src="about:credits"/>
+    <iframe id="aboutframe"  src="about:"/>
+    <iframe id="creditsframe"  src="about:blank"/>
   </tabpanels>
 </tabbox>
 
