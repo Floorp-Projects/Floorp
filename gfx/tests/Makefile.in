@@ -36,6 +36,8 @@ INCLUDES+=-I$(srcdir)/../src -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom
 
 LIBS = \
 	-lraptorgfx \
+	-lgfx$(MOZ_TOOLKIT) \
+	-lgfxps \
 	-lnetlib \
 	-lhttpurl \
 	-lgophurl \
