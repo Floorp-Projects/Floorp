@@ -39,7 +39,8 @@ install::
 	$(MAKE_INSTALL) pref-editing.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-fonts.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-languages.dtd  $(DIST)\bin\chrome\communicator\locale\pref
-	$(MAKE_INSTALL) pref-navigator.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-languages2.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+  $(MAKE_INSTALL) pref-navigator.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-offline.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-policies.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-proxies.dtd  $(DIST)\bin\chrome\communicator\locale\pref

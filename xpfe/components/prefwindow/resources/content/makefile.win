@@ -44,7 +44,10 @@ install::
 	$(MAKE_INSTALL) pref-fonts.xul  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-fonts.js  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-languages.xul  $(DIST)\bin\chrome\communicator\content\pref
-	$(MAKE_INSTALL) pref-navigator.js  $(DIST)\bin\chrome\communicator\content\pref
+	$(MAKE_INSTALL) pref-languages2.xul  $(DIST)\bin\chrome\communicator\content\pref
+	$(MAKE_INSTALL) pref-languages-add.xul  $(DIST)\bin\chrome\communicator\content\pref
+	$(MAKE_INSTALL) pref-languages.js  $(DIST)\bin\chrome\communicator\content\pref
+  $(MAKE_INSTALL) pref-navigator.js  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-navigator.xul  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-offline.xul  $(DIST)\bin\chrome\communicator\content\pref
 	$(MAKE_INSTALL) pref-proxies.js  $(DIST)\bin\chrome\communicator\content\pref
