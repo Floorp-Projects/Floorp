@@ -49,23 +49,25 @@ sub getDefaultString {
  !
  !  This example will dump every single string passed into it. For
  !  example, if you pass it a hash with one item 'data' containing two
- !  items 'a' and 'b' with 'a' containing 'hello' and 'b' containing
- !  an array of two values 'wonderful' and 'world', you would get as
- !  output the following:
+ !  items 'a' and '(b)' with 'a' containing 'hello' and '(b)'
+ !  containing an array of two values 'wonderful' and 'world', you
+ !  would get as output the following (note that special characters
+ !  '(' and ')' are automatically sanitised by COSES to '[' and ']'):
  !
  !     coses: last condition = 0
  !     coses: white space = 1
  !     data.a = hello
- !     data.b.1 = wonderful
- !     data.b.2 = world
+ !     data.[b].1 = wonderful
+ !     data.[b].2 = world
  !
  !  This example uses almost all the features of COSES, and so is
- !  quite a useful example to study. (It doesn't use <else/> or all
- !  the values of <set>'s attributes.) It's also a great help when
- !  debugging! You can use it at any point in a COSES document merely
- !  by nesting it, so you can, for example, study what is happening
- !  with a <set> statement. If you declare this example as having the
- !  name 'debug.dumpVars' then to embed it you would do:
+ !  quite a useful example to study. (It doesn't use all of the values
+ !  of <set>'s attributes nor the escaping attributes of <text>.) It's
+ !  also a great help when debugging! You can use it at any point in a
+ !  COSES document merely by nesting it, so you can, for example,
+ !  study what is happening with a <set> statement. If you declare
+ !  this example as having the name 'debug.dumpVars' then to embed it
+ !  you would do:
  !
  !     <embed string="debug.dumpVars"/>
  !
@@ -80,9 +82,16 @@ sub getDefaultString {
     </if>
     <if lvalue="((prefix))" condition="is not" rvalue="scalar">
       <set variable="index" value="((prefix))" source="keys" order="case insensitive lexical">
-        <set variable="prefix" value="(prefix).(index)">
-          <embed string="debug.dumpVars"/>
-        </set>
+        <if lvalue="(index)" condition="=~" rvalue="'[\.\(\)]">
+          <!-- this can only be hit if COSES has been told to not 
+               sanitise keys with special characters -->
+          <text value="  (prefix).|(index)| is inaccessible"/><br/>
+        </if>
+        <else>
+          <set variable="prefix" value="(prefix).(index)">
+            <embed string="debug.dumpVars"/>
+          </set>
+        </else>
       </set>
       <else>
         <text value="  (prefix)"/><br/>

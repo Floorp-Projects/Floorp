@@ -46,6 +46,7 @@ sub provides {
     return ($service eq 'input.verify' or 
             $service eq 'component.adminCommands' or 
             $service eq 'dispatcher.output.generic' or 
+            $service eq 'dispatcher.output' or 
             $service eq 'dataSource.strings.default' or
             $class->SUPER::provides($service));
 }
@@ -88,7 +89,7 @@ sub cmdSetup {
 sub outputSetupSucceeded {
     my $self = shift;
     my($app, $output) = @_;
-    $output->output(undef, 'setup', {
+    $output->output('setup', {
         'failed' => 0,
     });
 }
@@ -97,7 +98,7 @@ sub outputSetupSucceeded {
 sub outputSetupFailed {
     my $self = shift;
     my($app, $output, $result) = @_;
-    $output->output(undef, 'setup', {
+    $output->output('setup', {
         'failed' => 1,
         'result' => $result,
     });
@@ -107,9 +108,17 @@ sub outputSetupFailed {
 sub outputSetupProgress {
     my $self = shift;
     my($app, $output, $component) = @_;
-    $output->output(undef, 'setup.progress', {
+    $output->output('setup.progress', {
         'component' => $component,
     });
+}
+
+# dispatcher.output
+sub strings {
+    return (
+            'setup' => 'The message given at the end of the setup command (only required for stdout, since it is the only way to trigger setup); data.failed is a boolean, data.result is the error message if any',
+            'setup.progress' => 'Progress messages given during setup (only required for stdout); data.component is the item being set up',
+            );
 }
 
 # dataSource.strings.default

@@ -42,6 +42,7 @@ sub provides {
             $service eq 'component.userLogin' or
             $service eq 'dispatcher.commands' or 
             $service eq 'dispatcher.output.generic' or 
+            $service eq 'dispatcher.output' or 
             $service eq 'dataSource.strings.default' or
             $class->SUPER::provides($service));
 }
@@ -142,7 +143,7 @@ sub requireLogin {
 sub outputLoginInsufficient {
     my $self = shift;
     my($app, $output, $right) = @_;
-    $output->output(undef, 'loginAccessDenied', {
+    $output->output('login.accessDenied', {
         'right' => $right,
     });   
 }
@@ -151,7 +152,7 @@ sub outputLoginInsufficient {
 sub outputLoginFailed {
     my $self = shift;
     my($app, $output, $tried) = @_;
-    $output->output(undef, 'loginFailed', {
+    $output->output('login.failed', {
         'tried' => $tried,
     });   
 }
@@ -160,7 +161,7 @@ sub outputLoginFailed {
 sub outputLoginDetailsSent {
     my $self = shift;
     my($app, $output, $address, $protocol) = @_;
-    $output->output(undef, 'loginDetailsSent', {
+    $output->output('login.detailsSent', {
         'address' => $address,
         'protocol' => $protocol,
     });   
@@ -170,10 +171,20 @@ sub outputLoginDetailsSent {
 sub outputLoginDetails {
     my $self = shift;
     my($app, $output, $username, $password) = @_;
-    $output->output(undef, 'loginDetails', {
+    $output->output('login.details', {
         'username' => $username,
         'password' => $password,
     });   
+}
+
+# dispatcher.output
+sub strings {
+    return (
+            'login.accessDenied' => 'Displayed when the user does not have the requisite right (namely, data.right)',
+            'login.failed' => 'Displayed when the user has not logged in (data.tried is false) or when the credentials were wrong (data.tried is true)',
+            'login.detailsSent' => 'The password was sent to data.address using data.protocol',
+            'login.details' => 'The message containing the data.username and data.password of a new account or when the user has forgotten his password (only required for contact protocols, e.g. e-mail)',
+            );
 }
 
 # dataSource.strings.default
@@ -181,19 +192,19 @@ sub getDefaultString {
     my $self = shift;
     my($app, $protocol, $string) = @_;
     if ($protocol eq 'stdout') {
-        if ($string eq 'loginAccessDenied') {
+        if ($string eq 'login.accessDenied') {
             return '<text>Access Denied<br/></text>';
-        } elsif ($string eq 'loginFailed') {
+        } elsif ($string eq 'login.failed') {
             return '<text><if lvalue="(data.tried)" condition="=" rvalue="1">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --><br/></text>';
-        } elsif ($string eq 'loginDetailsSent') {
+        } elsif ($string eq 'login.detailsSent') {
             return '<text>Login details were sent. (Protocol: <text value="(data.protocol)"/>; Address: <text value="(data.address)"/>)<br/></text>';
         }
     } elsif ($protocol eq 'http') {
-        if ($string eq 'loginAccessDenied') {
+        if ($string eq 'login.accessDenied') {
             return '<text>HTTP/1.1 401 Access Denied<br/>Content-Type: text/plain<br/><br/>Access Denied</text>';
-        } elsif ($string eq 'loginFailed') {
+        } elsif ($string eq 'login.failed') {
             return '<text>HTTP/1.1 401 Login Required<br/>WWW-Authenticate: Basic realm="<text value="(data.app.name)"/>"<br/>Content-Type: text/plain<br/><br/><if lvalue="(data.tried)" condition="=" rvalue="1">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --></text>';
-        } elsif ($string eq 'loginDetailsSent') {
+        } elsif ($string eq 'login.detailsSent') {
             return '<text>HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>Login details were sent.<br/>Protocol: <text value="(data.protocol)"/><br/>Address: <text value="(data.address)"/>)</text>';
         }
     }

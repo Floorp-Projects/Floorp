@@ -88,6 +88,8 @@ use PLIF::Output;
 # hard. But at least this means we can do it in HTML and SVG without
 # changing the underlying code.
 
+# To find the list of strings required, do this:
+#    my %strings = @{$self->getCollectingServiceList('dispatcher.output')->strings};
 
 sub protocol {
     return 'generic';
@@ -104,7 +106,7 @@ sub init {
 
 sub output {
     my $self = shift;
-    my($session, $string, $data) = @_;
+    my($string, $data, $session) = @_;
     if (not defined($session)) {
         $session = $self->actualSession;
     }

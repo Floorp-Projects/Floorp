@@ -26,7 +26,7 @@
 # provisions above, a recipient may use your version of this file
 # under either the MPL or the GPL.
 
-package PLIF::MagicSelectingArray;
+package PLIF::MagicCollectingArray;
 use strict;
 use vars qw($AUTOLOAD);  # it's a package global
 use Carp qw(cluck confess); # stack trace versions of warn and die
@@ -34,8 +34,9 @@ use Carp qw(cluck confess); # stack trace versions of warn and die
 
 # This can be used separate from PLIF, and so does not inherit from
 # the PLIF core. Calling any method except 'create' will result in the
-# method call being forwarded to each of the wrapped objects until one
-# returns a value (including 'undef'), which will then be returned.
+# method call being forwarded to the wrapped objects. Calling 'create'
+# will create a new MagicCollectingArray object, see the AUTOLOAD
+# function below for an example.
 
 sub create {
     my $class = shift;
@@ -51,23 +52,16 @@ sub AUTOLOAD {
     my $self = shift;
     my $name = $AUTOLOAD;
     $name =~ s/^.*://o; # strip fully-qualified portion
-    my @allResults;
+    my @allResults = ();
     foreach my $object (@$self) {
         my $method = $object->can($name);
         if ($method) {
-            my @result = &$method($object, @_);
-            if (@result) {
-                if (wantarray) {
-                    return @result;
-                } else {
-                    return $result[0];
-                }
-            }
+            push(@allResults, &$method($object, @_));
         } else {
-            confess("Failed to find method or property '$name' in object '$object' of MagicSelectingArray '$self', aborting"); # die with stack trace
+            confess("Failed to find method or property '$name' in object '$object' of MagicCollectingArray '$self', aborting"); # die with stack trace
         }
     }
-    return;
+    return $self->create(@allResults);
 }
 
-sub DESTROY {} # stub to prevent propagation to members of magic array
+sub DESTROY {} # stub to not cause infinite loop with AUTOLOAD :-)

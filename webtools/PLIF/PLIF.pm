@@ -103,20 +103,20 @@ sub AUTOLOAD {
     $name =~ s/^.*://o; # strip fully-qualified portion
     if ($self->propertyImpliedAccessAllowed($name)) {
         if (scalar(@_) == 1) {
-            $self->dump(10, "setting implied property $name in $self");
+            $self->dump(10, "setting implied property '$name' in '$self'");
             return $self->propertySet($name, @_);
         } elsif (scalar(@_) == 0) {
             if ($self->propertyExists($name)) {
-                $self->dump(10, "getting implied property $name in $self");
+                $self->dump(10, "getting implied property '$name' in '$self'");
                 return $self->propertyGet($name);
             } else {
-                $self->dump(10, "not getting non-existent implied property $name in $self");
+                $self->dump(10, "not getting non-existent implied property '$name' in '$self'");
                 return $self->propertyGetUndefined($name);
             }
         }
-        $self->dump(10, "neither setting nor getting implied property $name in $self");
+        $self->dump(10, "neither setting nor getting implied property '$name' in '$self'");
     } else {
-        $self->dump(10, "not treating $name in $self as an implied property, regardless of its existence");
+        $self->dump(10, "not treating '$name' in '$self' as an implied property, regardless of its existence");
     }
     $self->methodMissing($name, @_);
 }
@@ -133,7 +133,7 @@ sub propertyExists {
     my $self = shift;
     my($name) = @_;
     $self->assert($name, 0, 'propertyExists() cannot be called without arguments');
-    $self->dump(10, "checking for existence of property $name in $self");
+    $self->dump(10, "checking for existence of property '$name' in '$self'");
     return exists($self->{$name});
 }
 
@@ -159,7 +159,7 @@ sub propertyGetUndefined {
 sub methodMissing {
     my $self = shift;
     my($method) = @_;
-    $self->error(0, "Internal Error: Tried to access non-existent method $method in object $self");
+    $self->error(0, "Internal Error: Tried to access non-existent method '$method' in object '$self'");
 }
 
 

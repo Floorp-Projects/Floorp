@@ -37,6 +37,7 @@ sub provides {
     my $class = shift;
     my($service) = @_;
     return ($service eq 'dispatcher.output.generic' or 
+            $service eq 'dispatcher.output' or 
             $service eq 'dataSource.strings.default' or
             $class->SUPER::provides($service));
 }
@@ -46,7 +47,7 @@ sub provides {
 sub outputRequest {
     my $self = shift;
     my($app, $output, $argument) = @_;
-    $output->output(undef, 'request', {
+    $output->output('request', {
         'command' => $app->command,
         'argument' => $argument,
     });
@@ -56,9 +57,17 @@ sub outputRequest {
 sub outputReportFatalError {
     my $self = shift;
     my($app, $output, $error) = @_;
-    $output->output(undef, 'error', {
+    $output->output('error', {
         'error' => $error,
     });   
+}
+
+# dispatcher.output
+sub strings {
+    return (
+            'request' => 'A prompt for user input (only required for interactive protocols, namely stdout)',
+            'error' => 'The message given to the user when something goes horribly wrong',
+            );
 }
 
 # dataSource.strings.default

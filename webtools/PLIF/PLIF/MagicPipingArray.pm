@@ -52,7 +52,7 @@ sub AUTOLOAD {
     my $self = shift;
     my $name = $AUTOLOAD;
     $name =~ s/^.*://o; # strip fully-qualified portion
-    my @allResults;
+    my @allResults = ();
     foreach my $object (@$self) {
         my $method = $object->can($name);
         if ($method) {
@@ -70,3 +70,5 @@ sub AUTOLOAD {
     }
     return $self->create(@allResults);
 }
+
+sub DESTROY {} # stub to not cause infinite loop with AUTOLOAD :-)

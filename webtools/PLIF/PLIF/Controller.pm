@@ -32,6 +32,7 @@ use vars qw(@ISA);
 use PLIF;
 use PLIF::MagicPipingArray;
 use PLIF::MagicSelectingArray;
+use PLIF::MagicCollectingArray;
 @ISA = qw(PLIF);
 1;
 
@@ -157,14 +158,14 @@ sub getObjectList {
     return @services;
 }
 
-sub getSelectingServiceList {
+sub getCollectingServiceList {
     my $self = shift;
-    return PLIF::MagicSelectingArray->create($self->getServiceList(@_));
+    return PLIF::MagicCollectingArray->create($self->getServiceList(@_));
 }
 
-sub getSelectingObjectList {
+sub getCollectingObjectList {
     my $self = shift;
-    return PLIF::MagicSelectingArray->create($self->getObjectList(@_));
+    return PLIF::MagicCollectingArray->create($self->getObjectList(@_));
 }
 
 sub getPipingServiceList {
@@ -175,6 +176,16 @@ sub getPipingServiceList {
 sub getPipingObjectList {
     my $self = shift;
     return PLIF::MagicPipingArray->create($self->getObjectList(@_));
+}
+
+sub getSelectingServiceList {
+    my $self = shift;
+    return PLIF::MagicSelectingArray->create($self->getServiceList(@_));
+}
+
+sub getSelectingObjectList {
+    my $self = shift;
+    return PLIF::MagicSelectingArray->create($self->getObjectList(@_));
 }
 
 sub getServiceInstance {

@@ -54,7 +54,7 @@ sub cmdCosesEditor {
 sub outputCosesEditor {
     my $self = shift;
     my($app, $output, $right) = @_;
-    $output->output(undef, 'cosesEditor', {
+    $output->output('cosesEditor', {
     });   
 }
 

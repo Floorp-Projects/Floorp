@@ -47,6 +47,9 @@ sub expand {
     my @stack = (); my $stack = $self->parseString($self->getString($app, $session, $protocol, $string));
     my @scope = (); my $scope = {'data' => $data};
     my $result = '';
+    if (not $scope->{'coses: skip sanitation'}) {
+        $self->sanitiseScope($scope);
+    }
     node: while (1) {
         if ($index > $#$stack) {
             # end of this level, pop the stack
@@ -233,7 +236,7 @@ sub evaluateNestedVariableSafely {
     my($variable, $scope) = @_;
     $scope = $self->evaluateVariable($variable, $scope);
     if ($scope =~ /[\(\)]/o) {
-        $self->error(1, "Evaluated nested variable '$variable' to '$scope' which contains one of '(', or ')' and is therefore not safe to use as a variable part");
+        $self->error(1, "Evaluated nested variable '$variable' to '$scope' which contains one of '(' or ')' and is therefore not safe to use as a variable part");
     }
     return $scope;
 }
@@ -266,6 +269,7 @@ sub evaluateExpression {
                                     $ # end of the line
                                    /$1.$self->evaluateNestedVariableSafely($2, $scope).$3/sexo) {
                 # this should cope with this smoketest (d=ab, g=fcde): (f.(c).((a).(b)).(e))
+                # note that if b="x" and a="(b)" then "(a)" should be evaluated to "x"
             }
             # expand outer variable without safety checks, if there are any
             # first, check if the result would be a single variable
@@ -283,7 +287,7 @@ sub evaluateExpression {
                     $result .= $1.$self->evaluateVariable($2, $scope);
                     # the bit we've dealt with so far will end up
                     # removed from the $expression string (so the
-                    # current state is "$result$expression). This is
+                    # current state is "$result$expression"). This is
                     # so that things that appear to be variables in
                     # the strings we are expanding don't themselves
                     # get expanded.
@@ -389,4 +393,30 @@ sub sort {
     } 
     # else:
     return reverse @list;
+}
+
+sub sanitiseScope {
+    my $self = shift;
+    my($data) = @_;
+    my @stack = ($data);
+    while (@stack) {
+        my $value = pop(@stack);
+        if (ref($value) eq 'HASH') {
+            push(@stack, values(%$value));
+            foreach my $key (keys(%$value)) {
+                if ($key =~ /[\(\.\)]/) {
+                    my $backup = $value->{$key};
+                    delete($value->{$key});
+                    $key =~ tr/(.)/[:]/;
+                    while (exists($value->{$key})) {
+                        $key .= '_';
+                    }
+                    $value->{$key} = $backup;
+                }
+            }
+        } elsif (ref($value) eq 'ARRAY') {
+            push(@stack, @$value);
+        }
+    }
+    return $data;
 }
