@@ -1,8 +1,8 @@
 delay:=2
 file:///s|/mozilla/layout/html/tests/table/bugs/bug14007-1.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug14007-2.html
-delay:=1
 file:///s|/mozilla/layout/html/tests/table/bugs/bug14159-1.html
+delay:=1
 file:///s|/mozilla/layout/html/tests/table/bugs/bug14159-2.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug14159-3.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug1430.html
