@@ -725,7 +725,13 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
           SetStyle(eHTMLTag_i,PR_TRUE,*mSink);
         }
         nsString& theText=aToken->GetStringValueXXX();
+
+        //if the comment has had it's markup stripped, then write it out seperately...
+        if(0!=theText.Find("<!",0))
+          WriteText(nsAutoString("<!"),*mSink,PR_TRUE);
         WriteText(theText,*mSink,PR_TRUE);
+        if(kGreaterThan!=theText.Last())
+          WriteText(nsAutoString(">"),*mSink,PR_TRUE);
         if(!mIsPlaintext){
           SetStyle(eHTMLTag_i,PR_FALSE,*mSink);
           SetStyle(eHTMLTag_font,PR_FALSE,*mSink);
