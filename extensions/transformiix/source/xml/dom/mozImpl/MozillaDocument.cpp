@@ -36,6 +36,7 @@
 #include "mozilladom.h" 
 #include "iostream.h" 
 #include "nsCOMPtr.h" 
+#include "nsIContent.h" 
  
 // 
 //Construct a Document Wrapper object without specificy a nsIDOMDocument 
@@ -43,13 +44,17 @@
 // 
 Document::Document() 
 { 
+  /* XXX (Pvdb)
+     Do we really need this? It causes a link dependency on layout, so i
+     commented it out 'till we figure out what to do.
+
   nsCOMPtr<nsIDocument> document;
   nsresult res = NS_NewXMLDocument(getter_AddRefs(document));
   if (NS_SUCCEEDED(res) && document) {
     document->QueryInterface(NS_GET_IID(nsIDOMDocument), (void**) &nsDocument);
   }
-  Node::setNSObj(nsDocument, this); 
-} 
+  Node::setNSObj(nsDocument, this);*/
+}
  
 // 
 //Construct a Document Wrapper object with a nsIDOMDocument object 
@@ -137,73 +142,40 @@ DOMImplementation* Document::getImplementation()
 } 
  
 // 
-// DEFFER this functionality to the NODE parent class 
 //Ensure that no Element node is inserted if the document already has an 
 //associated Element child. 
 // 
-/* 
 Node* Document::insertBefore(Node* newChild, Node* refChild) 
 { 
-  Node* returnVal = NULL; 
- 
-  NodeDefinition* pCurrentNode = NULL; 
-  NodeDefinition* pNextNode = NULL; 
- 
-  //Convert to a NodeDefinition Pointer 
-  NodeDefinition* pNewChild = (NodeDefinition*)newChild; 
-  NodeDefinition* pRefChild = (NodeDefinition*)refChild; 
- 
-  //Check to see if the reference node is a child of this node 
-  if ((refChild != NULL) && (pRefChild->getParentNode() != this)) 
-    return NULL; 
- 
-  switch (pNewChild->getNodeType()) 
-    { 
-      case Node::DOCUMENT_FRAGMENT_NODE : 
-        pCurrentNode = (NodeDefinition*)pNewChild->getFirstChild(); 
-        while (pCurrentNode) 
-          { 
-            pNextNode = (NodeDefinition*)pCurrentNode->getNextSibling(); 
- 
-            //Make sure that if the current node is an Element, the document 
-            //doesn't already have one. 
-            if ((pCurrentNode->getNodeType() != Node::ELEMENT_NODE) || 
-                ((pCurrentNode->getNodeType() == Node::ELEMENT_NODE) && 
-                  (documentElement == NULL))) 
-              { 
-                pCurrentNode = (NodeDefinition*)pNewChild->removeChild(pCurrentNode); 
-                implInsertBefore(pCurrentNode, pRefChild); 
- 
-                if (pCurrentNode->getNodeType() == Node::ELEMENT_NODE) 
-                  documentElement = (Element*)pCurrentNode; 
-              } 
-            pCurrentNode = pNextNode; 
-          } 
-        returnVal = newChild; 
-        break; 
- 
-      case Node::PROCESSING_INSTRUCTION_NODE : 
-      case Node::COMMENT_NODE : 
-      case Node::DOCUMENT_TYPE_NODE : 
-        returnVal = implInsertBefore(pNewChild, pRefChild); 
-        break; 
- 
-      case Node::ELEMENT_NODE : 
-        if (!documentElement) 
-          { 
-          documentElement = (Element*)pNewChild; 
-          returnVal = implInsertBefore(pNewChild, pRefChild); 
-          } 
-        else 
-          returnVal = NULL; 
-        break; 
-      default: 
-        returnVal =  NULL; 
-    } 
- 
-  return returnVal; 
+  /* XXX HACK (Pvdb)
+     Work around Bugzilla bug #25123, we can't do insertBefore for the
+     first node. So we fiddle with SetRootContent. If the bug gets
+     resolved, defer to node implementation.
+  */
+  nsIDOMNode* returnValue = NULL;
+
+  if (nsDocument == NULL)
+    return NULL;
+
+  nsCOMPtr<nsIDocument> nsTempDocument = do_QueryInterface(nsDocument);
+
+  if (nsTempDocument->GetRootContent() && (newChild->getNodeType() != Node::ELEMENT_NODE)) {
+    if (nsDocument->InsertBefore(newChild->getNSObj(), refChild->getNSObj(),
+			     &returnValue) == NS_OK)
+      return ownerDocument->createWrapper(returnValue);
+    else
+      return NULL;
+  }
+  else
+  {
+    nsCOMPtr<nsIContent> nsRootContent = do_QueryInterface(newChild->getNSObj());
+    nsIDOMElement* theElement = NULL; 
+
+    nsTempDocument->SetRootContent(nsRootContent);
+    nsDocument->GetDocumentElement(&theElement); 
+    return ownerDocument->createWrapper(theElement);
+  }
 } 
-*/ 
  
 // 
 //  DEFFER this functionality to the NODE implementation 
@@ -265,6 +237,37 @@ Node* Document::removeChild(Node* oldChild)
 } 
 */ 
  
+Node* Document::appendChild(Node* newChild)
+{
+  /* XXX HACK (Pvdb)
+     Work around Bugzilla bug #25123, we can't do appendChild for the
+     first node. So we fiddle with SetRootContent. If the bug gets
+     resolved, defer to node implementation.
+  */
+  nsIDOMNode* returnValue = NULL;
+
+  if (nsDocument == NULL)
+    return NULL;
+
+  nsCOMPtr<nsIDocument> nsTempDocument = do_QueryInterface(nsDocument);
+
+  if (nsTempDocument->GetRootContent() && (newChild->getNodeType() != Node::ELEMENT_NODE)) {
+    if (nsDocument->AppendChild(newChild->getNSObj(), &returnValue) == NS_OK)
+      return ownerDocument->createWrapper(returnValue);
+    else
+      return NULL;
+  }
+  else
+  {
+    nsCOMPtr<nsIContent> nsRootContent = do_QueryInterface(newChild->getNSObj());
+    nsIDOMElement* theElement = NULL; 
+
+    nsTempDocument->SetRootContent(nsRootContent);
+    nsDocument->GetDocumentElement(&theElement); 
+    return ownerDocument->createWrapper(theElement);
+  }
+}
+
 // 
 //Call the nsIDOMDocument::CreateDocumentFragment function, then create or 
 //retrieve a wrapper class for it. 
