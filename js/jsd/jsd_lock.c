@@ -41,7 +41,7 @@
 #include "pprthred.h"   /* need this as long as JS_AttachThread is needed */
 #endif
 
-typedef struct JSDStaticLock
+struct JSDStaticLock
 {
     void*     owner;
     PRLock*   lock;
@@ -49,7 +49,7 @@ typedef struct JSDStaticLock
 #ifdef DEBUG
     uint16    sig;
 #endif
-} JSDStaticLock;
+};
 
 /* 
  * This exists to wrap non-NSPR theads (e.g. Java threads) in NSPR wrappers.

@@ -33,18 +33,20 @@
  * nested calls to lock and unlock.
  */
 
+typedef struct JSDStaticLock JSDStaticLock;
+
 extern void*
 jsd_CreateLock();
 
 extern void
-jsd_Lock(void* lock);
+jsd_Lock(JSDStaticLock* lock);
 
 extern void
-jsd_Unlock(void* lock);
+jsd_Unlock(JSDStaticLock* lock);
 
 #ifdef DEBUG
 extern JSBool
-jsd_IsLocked(void* lock);
+jsd_IsLocked(JSDStaticLock* lock);
 #endif /* DEBUG */
 
 extern void*
