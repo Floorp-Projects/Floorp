@@ -832,7 +832,10 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
     return HandleChild(aPresContext, aMetrics, aReflowState, aStatus, child);
   // if we are printing, bail for now
   nsCOMPtr<nsIPrintContext> thePrinterContext = do_QueryInterface(aPresContext);
-  if (thePrinterContext) return rv;
+  if (thePrinterContext) {
+    aStatus = NS_FRAME_COMPLETE;
+    return rv;
+  }
 
   // if mInstance is null, we need to determine what kind of object we are and instantiate ourselves
   if (!mInstanceOwner) {
