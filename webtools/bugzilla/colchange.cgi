@@ -126,7 +126,7 @@ if (defined $cgi->cookie('COLUMNLIST')) {
 }
 
 $vars->{'collist'} = \@collist;
-$vars->{'splitheader'} = $::COOKIE{'SPLITHEADER'} ? 1 : 0;
+$vars->{'splitheader'} = $cgi->cookie('SPLITHEADER') ? 1 : 0;
 
 $vars->{'buffer'} = $::buffer;
 
