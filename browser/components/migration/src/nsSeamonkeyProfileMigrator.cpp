@@ -255,8 +255,6 @@ nsSeamonkeyProfileMigrator::GetSourceProfile(const PRUnichar* aProfile)
 nsresult
 nsSeamonkeyProfileMigrator::FillProfileDataFromSeamonkeyRegistry()
 {
-  nsresult rv = NS_OK;
-
   // Find the Seamonkey Registry
   nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1"));
   nsCOMPtr<nsILocalFile> seamonkeyRegistry;
