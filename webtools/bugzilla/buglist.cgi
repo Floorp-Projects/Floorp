@@ -285,7 +285,7 @@ if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
             last ORDER;
         };
         /Import/ && do {
-            $::FORM{'order'} = "bugs.priority";
+            $::FORM{'order'} = "bugs.priority, bugs.bug_severity";
             last ORDER;
         };
         /Assign/ && do {
