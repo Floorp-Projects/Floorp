@@ -187,24 +187,28 @@ PRBool  nsHTMLFramesetFrame::gDragInProgress = PR_FALSE;
 nsHTMLFramesetFrame::nsHTMLFramesetFrame()
   : nsHTMLContainerFrame()
 {
-  mNumRows           = 0;
-  mRowSpecs          = nsnull;
-  mRowSizes          = nsnull;
-  mNumCols           = 0;
-  mColSpecs          = nsnull;
-  mColSizes          = nsnull;
-  mEdgeVisibility    = 0;
-  mParentFrameborder = eFrameborder_Yes; // default
-  mParentBorderWidth = -1; // default not set
-  mParentBorderColor = NO_COLOR; // default not set
-  mLastDragPoint.x   = mLastDragPoint.y = 0;
-  mMinDrag           = 0;
+  mNumRows             = 0;
+  mRowSpecs            = nsnull;
+  mRowSizes            = nsnull;
+  mNumCols             = 0;
+  mColSpecs            = nsnull;
+  mColSizes            = nsnull;
+  mEdgeVisibility      = 0;
+  mParentFrameborder   = eFrameborder_Yes; // default
+  mParentBorderWidth   = -1; // default not set
+  mParentBorderColor   = NO_COLOR; // default not set
+  mLastDragPoint.x     = mLastDragPoint.y = 0;
+  mMinDrag             = 0;
+  mNonBorderChildCount = 0;
+  mNonBlankChildCount  = 0;
+  mDragger             = nsnull;
+  mChildCount          = 0;
+  mTopLevelFrameset    = nsnull;
   mEdgeColors.Set(NO_COLOR);
 }
 
 nsHTMLFramesetFrame::~nsHTMLFramesetFrame()
 {
-  printf("nsFramesetFrame destructor %p \n", this);
   if (mRowSizes) delete [] mRowSizes;
   if (mRowSpecs) delete [] mRowSpecs;
   if (mColSizes) delete [] mColSizes;
@@ -1349,7 +1353,7 @@ nsHTMLFramesetFrame::SetBorderResize(PRInt32*                   aChildTypes,
     for (int rowX = 0; rowX < mNumRows; rowX++) {
       PRInt32 childX = aBorderFrame->mPrevNeighbor + (rowX * mNumCols);
       if (!CanChildResize(PR_TRUE, PR_FALSE, childX, (FRAMESET == aChildTypes[childX])) ||
-          !CanChildResize(PR_TRUE, PR_TRUE, childX+1,(FRAMESET == aChildTypes[childX]))) {
+          !CanChildResize(PR_TRUE, PR_TRUE, childX+1,(FRAMESET == aChildTypes[childX+1]))) {
         aBorderFrame->mCanResize = PR_FALSE;
       }
     }
@@ -1524,8 +1528,10 @@ nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(PRInt32 aWidth,
                                                      PRBool  aVisibility)
   : nsLeafFrame(), mWidth(aWidth), mVertical(aVertical), mVisibility(aVisibility)
 {
-   mCanResize = PR_TRUE;
-   mColor = NO_COLOR;
+   mCanResize    = PR_TRUE;
+   mColor        = NO_COLOR;
+   mPrevNeighbor = 0;
+   mNextNeighbor = 0;
 }
 
 nsHTMLFramesetBorderFrame::~nsHTMLFramesetBorderFrame()
@@ -1713,7 +1719,7 @@ NS_IMETHODIMP nsHTMLFramesetBorderFrame::GetFrameName(nsString& aResult) const
 
 nsHTMLFramesetBlankFrame::~nsHTMLFramesetBlankFrame()
 {
-  printf("nsHTMLFramesetBlankFrame destructor %p \n", this);
+  //printf("nsHTMLFramesetBlankFrame destructor %p \n", this);
 }
 
 void nsHTMLFramesetBlankFrame::GetDesiredSize(nsIPresContext*          aPresContext,

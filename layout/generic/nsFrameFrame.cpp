@@ -408,9 +408,9 @@ NS_NewHTMLFrameOuterFrame(nsIFrame*& aResult)
 nsHTMLFrameInnerFrame::nsHTMLFrameInnerFrame()
   : nsLeafFrame()
 {
-  mWebShell = nsnull;
+  mWebShell       = nsnull;
   mCreatingViewer = PR_FALSE;
-  mTempObserver = new TempObserver();
+  mTempObserver   = new TempObserver();
   NS_ADDREF(mTempObserver);
 }
 
