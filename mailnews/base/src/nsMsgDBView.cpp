@@ -46,12 +46,18 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
 
 nsrefcnt nsMsgDBView::gInstanceCount	= 0;
-nsIAtom * nsMsgDBView::kUnreadMsgAtom	= nsnull;
+
 nsIAtom * nsMsgDBView::kHighestPriorityAtom	= nsnull;
 nsIAtom * nsMsgDBView::kHighPriorityAtom	= nsnull;
 nsIAtom * nsMsgDBView::kLowestPriorityAtom	= nsnull;
 nsIAtom * nsMsgDBView::kLowPriorityAtom	= nsnull;
+
+nsIAtom * nsMsgDBView::kUnreadMsgAtom	= nsnull;
 nsIAtom * nsMsgDBView::kOfflineMsgAtom	= nsnull;
+nsIAtom * nsMsgDBView::kFlaggedMsgAtom = nsnull;
+nsIAtom * nsMsgDBView::kNewsMsgAtom = nsnull;
+nsIAtom * nsMsgDBView::kImapDeletedMsgAtom = nsnull;
+nsIAtom * nsMsgDBView::kAttachMsgAtom = nsnull;
 
 PRUnichar * nsMsgDBView::kHighestPriorityString = nsnull;
 PRUnichar * nsMsgDBView::kHighPriorityString = nsnull;
@@ -84,7 +90,8 @@ nsMsgDBView::nsMsgDBView()
   m_currentlyDisplayedMsgKey = nsMsgKey_None;
   mNumSelectedRows = 0;
   mSupressMsgDisplay = PR_FALSE;
-  mSpecialFolder = PR_FALSE;
+  mIsSpecialFolder = PR_FALSE;
+  mIsNews = PR_FALSE;
 
   // initialize any static atoms or unicode strings
   if (gInstanceCount == 0) 
@@ -99,6 +106,10 @@ void nsMsgDBView::InitializeAtomsAndLiterals()
 {
   kUnreadMsgAtom = NS_NewAtom("unread");
   kOfflineMsgAtom = NS_NewAtom("offline");
+  kFlaggedMsgAtom = NS_NewAtom("flagged");
+  kNewsMsgAtom = NS_NewAtom("news");
+  kImapDeletedMsgAtom = NS_NewAtom("imapdeleted");
+  kAttachMsgAtom = NS_NewAtom("attach");
 
   kHighestPriorityAtom = NS_NewAtom("priority-highest");
   kHighPriorityAtom = NS_NewAtom("priority-high");
@@ -128,6 +139,11 @@ nsMsgDBView::~nsMsgDBView()
   {
     NS_IF_RELEASE(kUnreadMsgAtom);
     NS_IF_RELEASE(kOfflineMsgAtom);
+    NS_IF_RELEASE(kFlaggedMsgAtom);
+    NS_IF_RELEASE(kNewsMsgAtom);
+    NS_IF_RELEASE(kImapDeletedMsgAtom);
+    NS_IF_RELEASE(kAttachMsgAtom);
+
     NS_IF_RELEASE(kHighestPriorityAtom);
     NS_IF_RELEASE(kHighPriorityAtom);
     NS_IF_RELEASE(kLowestPriorityAtom);
@@ -180,7 +196,7 @@ nsresult nsMsgDBView::FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aSenderString)
     mHeaderParser = do_CreateInstance(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
 
   nsresult rv = NS_OK;
-  if (mSpecialFolder)
+  if (mIsSpecialFolder)
     rv = aHdr->GetMime2DecodedRecipients(getter_Copies(unparsedAuthor));
   else
     rv = aHdr->GetMime2DecodedAuthor(getter_Copies(unparsedAuthor));
@@ -306,6 +322,14 @@ nsresult nsMsgDBView::FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString)
 {
   nsAutoString formattedSizeString;
   PRUint32 msgSize = 0;
+
+  // for news, show the line count not the size
+  if (mIsNews) {
+    aHdr->GetLineCount(&msgSize);
+    formattedSizeString.AppendInt(msgSize);
+    return NS_OK;
+  }
+ 
   aHdr->GetMessageSize(&msgSize);
 
 	if(msgSize < 1024)
@@ -314,6 +338,7 @@ nsresult nsMsgDBView::FetchSize(nsIMsgHdr * aHdr, PRUnichar ** aSizeString)
   PRUint32 sizeInKB = msgSize/1024;
   
   formattedSizeString.AppendInt(sizeInKB);
+  // XXX todo, fix this hard coded string?
   formattedSizeString.Append(NS_LITERAL_STRING("KB"));
 
   *aSizeString = formattedSizeString.ToNewUnicode();
@@ -633,7 +658,6 @@ NS_IMETHODIMP nsMsgDBView::GetColumnProperties(const PRUnichar *colID, nsIDOMEle
   return NS_OK;
 }
 
-
 NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colID, nsISupportsArray *properties)
 {
   // this is where we tell the outliner to apply styles to a particular row
@@ -665,7 +689,16 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
 
   if (flags & MSG_FLAG_OFFLINE)
     properties->AppendElement(kOfflineMsgAtom);  
+  
+  if (flags & MSG_FLAG_ATTACHMENT) 
+    properties->AppendElement(kAttachMsgAtom);
 
+  if (flags & MSG_FLAG_IMAP_DELETED) 
+    properties->AppendElement(kImapDeletedMsgAtom);
+
+  if (mIsNews)
+    properties->AppendElement(kNewsMsgAtom);
+    
   if (colID[0] == 'p') // for the priority column, add special styles....
   {
     nsMsgPriorityValue priority;
@@ -686,6 +719,13 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
       break;
     default:
       break;
+    }
+  }
+  else if (colID[0] == 'f')  
+  {
+    if (m_flags[aRow] & MSG_FLAG_MARKED) 
+    {
+      properties->AppendElement(kFlaggedMsgAtom); 
     }
   }
       
@@ -854,21 +894,9 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, P
   case 'p': // priority
     rv = FetchPriority(msgHdr, aValue);
     break;
-  case 't':   // threaded mode (this is temporary...it's how we are faking twisties
-    if (aColID[1] == 'h')
-    {
-      if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
-      {
-        // if it's an open container, print a '-' sign. If it's a closed container,
-        // print a "+" sign. o.t. do nothing.
-        if (m_flags[aRow] & MSG_FLAG_ELIDED)
-          *aValue = nsCRT::strdup(NS_LITERAL_STRING("+").get());
-        else if (m_flags[aRow] & MSG_VIEW_FLAG_HASCHILDREN)
-          *aValue = nsCRT::strdup(NS_LITERAL_STRING("-").get());      
-      }
-    }
+  case 't':   
     // total msgs in thread column
-    else  if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
+    if (aColID[1] == 'o' && (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))
     {
       if (m_flags[aRow] & MSG_VIEW_FLAG_ISTHREAD)
       {
@@ -884,22 +912,9 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, P
       }
     }
     break;
-  case 'f':
-    if (m_flags[aRow] & MSG_FLAG_MARKED)
-      *aValue = nsCRT::strdup(NS_LITERAL_STRING("*").get());
-    else
-      *aValue = nsCRT::strdup(NS_LITERAL_STRING("'").get());
-    break;      
-  case 'u': // unread button column
-    if (aColID[6] == 'B')
-    {
-      if (m_flags[aRow] & MSG_FLAG_READ)
-        *aValue = nsCRT::strdup(NS_LITERAL_STRING("'").get());
-      else
-        *aValue = nsCRT::strdup(NS_LITERAL_STRING("*").get());
-    }
+  case 'u':
     // unread msgs in thread col
-    else if (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay)
+    if (aColID[6] == 'C' && (m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay))
     {
       if (m_flags[aRow] & MSG_VIEW_FLAG_ISTHREAD)
       {
@@ -933,9 +948,14 @@ NS_IMETHODIMP nsMsgDBView::SetOutliner(nsIOutlinerBoxObject *outliner)
 
 NS_IMETHODIMP nsMsgDBView::ToggleOpenState(PRInt32 index)
 {
-  PRUint32 numChanged;
+  PRUint32 numChanged = 0;
+  PRInt32 multiplier = -1;
+  if (m_flags[index] & MSG_FLAG_ELIDED)
+    multiplier = 1;
   nsresult rv = ToggleExpansion(index, &numChanged);
-  return rv;
+  NS_ENSURE_SUCCESS(rv,rv);
+  mOutliner->RowCountChanged(index, numChanged * multiplier);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDBView::CycleHeader(const PRUnichar * aColID, nsIDOMElement * aElement)
@@ -965,7 +985,7 @@ NS_IMETHODIMP nsMsgDBView::CycleHeader(const PRUnichar * aColID, nsIDOMElement *
     }
     else if (aColID[1] == 'e') // sort by sender
     {
-      if (mSpecialFolder)
+      if (mIsSpecialFolder)
         sortType = nsMsgViewSortType::byRecipient;
       else
         sortType = nsMsgViewSortType::byAuthor;
@@ -1059,13 +1079,7 @@ NS_IMETHODIMP nsMsgDBView::CycleCell(PRInt32 row, const PRUnichar *colID)
   case 't': // threaded cell or total cell
     if ((colID[1] == 'h') && ((m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) && (m_flags [row] & MSG_VIEW_FLAG_HASCHILDREN))) // 'th' for threaded, 'to' for total
     {
-      PRUint32 numChanged = 0;
-      PRInt32 multiplier = -1;
-      if (m_flags [row] & MSG_FLAG_ELIDED)
-        multiplier = 1;
-      ToggleExpansion(row, &numChanged);
-
-      mOutliner->RowCountChanged(row, numChanged * multiplier);
+      ExpandAndSelectThreadByIndex(row);
     }
     break;
   case 'f': // flagged column
@@ -1133,13 +1147,23 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
 	  m_db->AddListener(this);
     m_folder = folder;
 
-    // for sent, unsent and draft folders, be sure to set mSpecialFolder so we'll show the recipient field
+    // determine if we are in a news folder or not.
+    // if yes, we'll show lines instead of size, and special icons in the thread pane
+    nsCOMPtr <nsIMsgIncomingServer> server;
+    rv = folder->GetServer(getter_AddRefs(server));
+    NS_ENSURE_SUCCESS(rv,rv);
+    nsXPIDLCString type;
+    rv = server->GetType(getter_Copies(type));
+    NS_ENSURE_SUCCESS(rv,rv);
+    mIsNews = !nsCRT::strcmp("nntp",type.get());
+
+    // for sent, unsent and draft folders, be sure to set mIsSpecialFolder so we'll show the recipient field
     // in place of the author.
     PRUint32 folderFlags = 0;
     m_folder->GetFlags(&folderFlags);
     if ( (folderFlags & MSG_FOLDER_FLAG_DRAFTS) || (folderFlags & MSG_FOLDER_FLAG_SENTMAIL)
           || (folderFlags & MSG_FOLDER_FLAG_QUEUE))
-      mSpecialFolder = PR_TRUE;
+      mIsSpecialFolder = PR_TRUE;
   }
 #ifdef HAVE_PORT
 	CacheAdd ();
@@ -1478,7 +1502,7 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
   nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
 	PRBool thisIsImapFolder = (imapFolder != nsnull);
   if (command == nsMsgViewCommandType::deleteMsg)
-		rv = DeleteMessages (mMsgWindow, indices, numIndices, PR_FALSE);
+		rv = DeleteMessages(mMsgWindow, indices, numIndices, PR_FALSE);
 	else if (command == nsMsgViewCommandType::deleteNoTrash)
 		rv = DeleteMessages(mMsgWindow, indices, numIndices, PR_TRUE);
 	else
@@ -2611,39 +2635,54 @@ nsresult nsMsgDBView::ExpandAndSelectThread()
     rv = mOutlinerSelection->GetCurrentIndex(&index);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    nsMsgViewIndex threadIndex = ThreadIndexOfMsg(GetAt(index), index);
-    if (threadIndex == nsMsgViewIndex_None) {
-        NS_ASSERTION(PR_FALSE, "couldn't find thread");
-        return NS_MSG_MESSAGE_NOT_FOUND;
-    }
-
-    PRInt32 flags = m_flags[threadIndex];
-    PRInt32 count = 0;
-
-    if ((flags & MSG_VIEW_FLAG_ISTHREAD) && (flags && MSG_VIEW_FLAG_HASCHILDREN)) {
-      // if closed, expand this thread.
-      if (flags & MSG_FLAG_ELIDED) {
-        PRUint32 numExpanded;
-        rv = ExpandByIndex(threadIndex, &numExpanded);
-        NS_ENSURE_SUCCESS(rv,rv);
-      }
-
-      // get the number of messages in the expanded thread
-      // so we know how many to select
-      count = CountExpandedThread(threadIndex); 
-    }
-    NS_ASSERTION(count > 0, "bad count");
-
-    // clear the existing selection.
-    mOutlinerSelection->ClearSelection(); 
-
-    // is this correct?
-    mOutlinerSelection->SetCurrentIndex(threadIndex); 
-
-    // the count should be 1 or greater. if there was only one message in the thread, we just select it.
-    // if more, we select all of them.
-    mOutlinerSelection->RangedSelect(threadIndex, threadIndex + count - 1, PR_TRUE /* augment */);
+    rv = ExpandAndSelectThreadByIndex(index);
+    NS_ENSURE_SUCCESS(rv,rv);
     return NS_OK;
+}
+
+nsresult nsMsgDBView::ExpandAndSelectThreadByIndex(nsMsgViewIndex index)
+{
+  nsresult rv;
+  nsMsgViewIndex threadIndex = ThreadIndexOfMsg(GetAt(index), index);
+  if (threadIndex == nsMsgViewIndex_None) {
+    NS_ASSERTION(PR_FALSE, "couldn't find thread");
+    return NS_MSG_MESSAGE_NOT_FOUND;
+  }
+
+  PRInt32 flags = m_flags[threadIndex];
+  PRInt32 count = 0;
+
+  if ((flags & MSG_VIEW_FLAG_ISTHREAD) && (flags && MSG_VIEW_FLAG_HASCHILDREN)) {
+    // if closed, expand this thread.
+    if (flags & MSG_FLAG_ELIDED) {
+      PRUint32 numExpanded;
+      rv = ExpandByIndex(threadIndex, &numExpanded);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+
+    // get the number of messages in the expanded thread
+    // so we know how many to select
+    count = CountExpandedThread(threadIndex); 
+  }
+  NS_ASSERTION(count > 0, "bad count");
+
+  NS_ASSERTION(mOutlinerSelection, "no outliner selection");
+  if (!mOutlinerSelection) return NS_ERROR_UNEXPECTED;
+
+  // clear the existing selection.
+  mOutlinerSelection->ClearSelection(); 
+
+  // is this correct?
+  mOutlinerSelection->SetCurrentIndex(threadIndex); 
+
+  // the count should be 1 or greater. if there was only one message in the thread, we just select it.
+  // if more, we select all of them.
+  mOutlinerSelection->RangedSelect(threadIndex, threadIndex + count - 1, PR_TRUE /* augment */);
+
+  //do we want to do something like this to clear the message pane
+  //when the user selects a thread?
+  //NoteChange(?, ?, nsMsgViewNotificationCode::clearMessagePane);
+  return NS_OK;
 }
 
 nsresult nsMsgDBView::ExpandAll()

@@ -91,9 +91,6 @@ outlinercol.threadColumnHeader[sortDirection="descending"] {
   list-style-image: url("chrome://messenger/skin/icons/threadcol-threaded.gif");
 }
 
-
-/* message row icons */
-
 outlinerbody:-moz-outliner-image(threadCol, container) {
   list-style-image: url("chrome://messenger/skin/icons/thread-closed.gif");
 }
@@ -102,14 +99,19 @@ outlinerbody:-moz-outliner-image(threadCol, container, open) {
   list-style-image: url("chrome://messenger/skin/icons/thread-open.gif");
 }
 
+outlinerbody:-moz-outliner-image(threadCol, container, unread) {
+  list-style-image: url("chrome://messenger/skin/icons/thread-new-closed.gif");
+}
+
+outlinerbody:-moz-outliner-image(threadCol, container, unread, open) {
+  list-style-image: url("chrome://messenger/skin/icons/thread-new-open.gif");
+}
+
 /* ..... read column ..... */
 
 outlinercol.readColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/readcol-unread.gif");
 }
-
-
-/* message row icons */
 
 outlinerbody:-moz-outliner-image(unreadButtonColHeader) {
   list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
@@ -125,12 +127,36 @@ outlinercol.flagColumnHeader {
   list-style-image: url("chrome://messenger/skin/icons/flagcol-flagged.gif");
 }
 
-/* message row icons */
-
 outlinerbody:-moz-outliner-image(flaggedCol) {
   list-style-image: url("chrome://messenger/skin/icons/readcol-read.gif");
 }
 
 outlinerbody:-moz-outliner-image(flaggedCol, flagged) {
   list-style-image: url("chrome://messenger/skin/icons/flagcol-flagged.gif");
+}
+
+/* ..... subject column ..... */
+
+outlinerbody:-moz-outliner-image(subjectCol) {
+  list-style-image: url("chrome://messenger/skin/icons/message-mail.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, unread) {
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-new.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, mail, imapdeleted) {
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, mail, attach) {
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, news) {
+  list-style-image: url("chrome://messenger/skin/icons/message-news.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, news, unread) {
+  list-style-image: url("chrome://messenger/skin/icons/message-news-new.gif");
 }

@@ -77,6 +77,11 @@ protected:
   // these so i'm going to make them static.
   static nsIAtom* kUnreadMsgAtom;
   static nsIAtom* kOfflineMsgAtom;
+  static nsIAtom* kFlaggedMsgAtom;
+  static nsIAtom* kNewsMsgAtom;
+  static nsIAtom* kImapDeletedMsgAtom;
+  static nsIAtom* kAttachMsgAtom;
+
   static nsIAtom* kHighestPriorityAtom;
   static nsIAtom* kHighPriorityAtom;
   static nsIAtom* kLowestPriorityAtom;
@@ -140,6 +145,7 @@ protected:
   nsresult CollapseByIndex(nsMsgViewIndex index, PRUint32 *pNumCollapsed);
   nsresult ExpandAll();
   nsresult CollapseAll();
+  nsresult ExpandAndSelectThreadByIndex(nsMsgViewIndex index);
   nsresult ExpandAndSelectThread();
 
   // helper routines for thread expanding and collapsing.
@@ -247,7 +253,8 @@ protected:
   nsMsgKey                m_currentlyDisplayedMsgKey;
 
   nsCOMPtr <nsIMsgFolder> m_folder;
-  PRBool mSpecialFolder; // for special folders, the Sender column really shows recipients.
+  PRBool mIsSpecialFolder; // for special folders, the Sender column really shows recipients.
+  PRBool mIsNews;          // we have special icons for news, and for news, we show lines instead of size
   nsCOMPtr <nsIMsgDatabase> m_db;
   PRBool		m_sortValid;
   nsMsgViewSortTypeValue  m_sortType;
