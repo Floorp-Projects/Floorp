@@ -206,12 +206,10 @@ NSRegisterSelf(nsISupports* aServMgr, const char *aPath)
     rv = compMgr->RegisterComponent(kJSCID_CID,
                                     "nsIJSCID","nsCID",
                                     aPath, PR_TRUE, PR_TRUE);
-// XXX linkage to xptcall is not working here.
-#ifdef XP_PC
+
     rv = compMgr->RegisterComponent(kXPConnect_CID,
                                     "nsIXPConnect","nsIXPConnect",
                                     aPath, PR_TRUE, PR_TRUE);
-#endif
     return rv;
 }
 
