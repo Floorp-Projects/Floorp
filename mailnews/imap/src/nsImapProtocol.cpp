@@ -2247,7 +2247,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
           if (subtractFlags.Length() > 0)
           {
             nsCAutoString storeString("-FLAGS (");
-            storeString.Append(addFlags);
+            storeString.Append(subtractFlags);
             storeString.Append(")");
             Store(messageIdString, storeString.get(), PR_TRUE);
           }
