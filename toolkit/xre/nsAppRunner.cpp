@@ -1472,6 +1472,9 @@ static int HandleRemoteArguments(int argc, char* argv[], PRBool *aArgUsed)
     }
   }
 
+  if (!remote)
+    return 0; // No remote argument == success
+
   // try to get the X remote client
   nsCOMPtr<nsIXRemoteClient> client (do_CreateInstance(NS_XREMOTECLIENT_CONTRACTID));
   if (!client)
