@@ -3,8 +3,6 @@ var gEditorShell = null;
 
 function doLoad()
 {
-	dump("doLoad() entered.\n");
-
 	var editorShell = Components.classes["component://netscape/editor/editorshell"].createInstance();
 	if (editorShell)	editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
 	if (editorShell)
@@ -12,23 +10,20 @@ function doLoad()
 		window.editorShell = editorShell;
 
 		editorShell.Init();
-		dump("init\n");
+
 //		editorShell.SetWebShellWindow(window);
 //		dump("SetWebShellWindow\n");
 //		editorShell.SetToolbarWindow(window)
 //		dump("SetToolbarWindow\n");
+
 		editorShell.SetEditorType("html");
-		dump("SetEditorType\n");
 		editorShell.SetContentWindow(window.content);
 
-		// Get url for editor content and load it.
-		// the editor gets instantiated by the editor shell when the URL has finished loading.
+		// The editor gets instantiated by the editor shell when the URL has finished loading.
 		editorShell.LoadUrl("about:blank");
 		
 		gEditorShell = editorShell;
-		dump("doLoad() succeeded.\n");
 	}
-	else dump("doLoad(): problem loading component://netscape/editor/editorshell \n");
 }
 
 function doClick(node)
@@ -46,7 +41,13 @@ function doClick(node)
 			if (internetSearchStore)
 			{
 				var src = rdf.GetResource(theID, true);
+				var bannerProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#Banner", true);
 				var htmlProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#HTML", true);
+
+				var banner = internetSearchStore.GetTarget(src, bannerProperty, true);
+				if (banner)	banner = banner.QueryInterface(Components.interfaces.nsIRDFLiteral);
+				if (banner)	banner = banner.Value;
+
 				var target = internetSearchStore.GetTarget(src, htmlProperty, true);
 				if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
 				if (target)	target = target.Value;
@@ -58,14 +59,17 @@ function doClick(node)
 					}
 					if (gEditorShell)
 					{
-						var text = target;
+						var text = "";
+						if (banner)
+						{
+							// add a </A> and a <BR> just in case
+							text += banner + "</A><BR>";
+						}
+						text += target;
 
 						gEditorShell.SelectAll();
 						gEditorShell.DeleteSelection(2);
-//						gEditorShell.SetTextProperty("font", "size", "-2");
 						gEditorShell.InsertSource(text);
-//						gEditorShell.SelectAll();
-//						gEditorShell.SetTextProperty("font", "size", "-2");
 					}
 				}
 			}
