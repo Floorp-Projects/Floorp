@@ -412,10 +412,10 @@ NS_IMETHODIMP nsMessage::SetPriority(nsMsgPriority priority)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::SetPriority(const char *priority)
+NS_IMETHODIMP nsMessage::SetPriorityString(const char *priority)
 {
 	if(mMsgHdr)
-		return mMsgHdr->SetPriority(priority);
+		return mMsgHdr->SetPriorityString(priority);
 	else
 		return NS_ERROR_FAILURE;
 }
@@ -511,3 +511,26 @@ NS_IMETHODIMP nsMessage::GetMsgDBHdr(nsIMsgDBHdr **hdr)
 		return NS_ERROR_NULL_POINTER;
 }
 
+NS_IMETHODIMP nsMessage::GetMsgKey(nsMsgKey *aMsgKey)
+{
+  nsCAutoString uriStr(mURI);
+
+	PRInt32 keySeparator = uriStr.FindChar('#');
+	if(keySeparator != -1)
+	{
+    PRInt32 keyEndSeparator = uriStr.FindCharInSet("?&", 
+                                                   keySeparator); 
+		nsCAutoString keyStr;
+    if (keyEndSeparator != -1)
+        uriStr.Mid(keyStr, keySeparator+1, 
+                   keyEndSeparator-(keySeparator+1));
+    else
+        uriStr.Right(keyStr, uriStr.Length() - (keySeparator + 1));
+    
+		PRInt32 errorCode;
+		*aMsgKey = keyStr.ToInteger(&errorCode);
+    return (nsresult)errorCode;
+	}
+
+  return NS_ERROR_FAILURE;
+}

@@ -1272,7 +1272,7 @@ int nsParseMailMessageState::FinalizeHeaders()
 						m_newMsgHdr->SetDate(nsTime(resultTime));
 				}
 				if (priority)
-					m_newMsgHdr->SetPriority(priority->value);
+					m_newMsgHdr->SetPriorityString(priority->value);
 				else if (priorityFlags == nsMsgPriorityNotSet)
 					m_newMsgHdr->SetPriority(nsMsgPriorityNone);
 			}

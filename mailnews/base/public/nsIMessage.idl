@@ -26,6 +26,7 @@ interface nsIMsgFolder;
 [scriptable, uuid(5B926BB4-F839-11d2-8A5F-0060B0FC04D2)]
 interface nsIMessage : nsIMsgHdr {
 
+  readonly attribute nsMsgKey msgKey;
 	nsIMsgFolder GetMsgFolder();
 	void SetMsgFolder(in nsIMsgFolder folder);
 };

@@ -37,11 +37,14 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsCOMPtr.h"
 #include "nsIURL.h"
+#include "nsWeakReference.h"
+
  /* 
   * MsgFolder
   */ 
 
 class NS_MSG_BASE nsMsgFolder : public nsRDFResource,
+                                public nsSupportsWeakReference,
                                 public nsIMsgFolder
 {
 public: 

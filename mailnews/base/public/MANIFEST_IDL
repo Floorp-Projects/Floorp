@@ -35,8 +35,4 @@ nsIUrlListenerManager.idl
 nsIMsgProtocolInfo.idl
 nsIMsgRDFDataSource.idl
 nsIIncomingServerListener.idl
-
-
-
-
-
+nsIMsgHdr.idl

@@ -30,7 +30,6 @@ MODULE		= msgbase
 
 EXPORTS		= \
 		msgCore.h \
-		nsIMsgHdr.h \
 		nsMsgFolderFlags.h \
 		nsMsgHeaderMasks.h \
 		nsMsgMessageFlags.h \
@@ -71,6 +70,7 @@ XPIDLSRCS	= \
 		nsIMsgProtocolInfo.idl \
 		nsIMsgRDFDataSource.idl \
 		nsIIncomingServerListener.idl \
+		nsIMsgHdr.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

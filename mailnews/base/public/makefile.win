@@ -55,6 +55,7 @@ XPIDLSRCS =								\
 		.\nsIMsgProtocolInfo.idl		\
 		.\nsIMsgRDFDataSource.idl		\
 		.\nsIIncomingServerListener.idl \
+		.\nsIMsgHdr.idl \
 		$(NULL)
 
 ################################################################################
@@ -67,7 +68,6 @@ EXPORTS =                           \
 			nsMsgLocalFolderHdrs.h  \
 			nsMsgMessageFlags.h     \
 			nsMsgMD5.h	\
-			nsIMsgHdr.h	\
 			$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

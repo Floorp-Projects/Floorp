@@ -514,7 +514,7 @@ NS_IMETHODIMP nsMsgHdr::GetLineCount(PRUint32 *result)
         return res;
 }
 
-NS_IMETHODIMP nsMsgHdr::SetPriority(const char *priority)
+NS_IMETHODIMP nsMsgHdr::SetPriorityString(const char *priority)
 {
 	nsMsgPriority priorityVal = nsMsgPriorityNormal;
 
