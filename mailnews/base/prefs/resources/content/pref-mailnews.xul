@@ -18,11 +18,13 @@
 	</box>
 
 	<html:fieldset>
+
 		<html:legend align="left">
 			<html:div>&textBegin.label;</html:div>
 		</html:legend>
+
+		<box align="horizontal">
 		
-		<html:div>
 			<html:label for="mail.quoted_style">&style.label;</html:label>
 			<html:select pref="true"
                          preftype="int"
@@ -33,9 +35,7 @@
 				<html:option value="2" label="&italic.label;"/>
 				<html:option value="3" label="&boldItalic.label;"/>
 			</html:select>
-		</html:div>
 
-		<html:div>
 			<html:label for="mail.quoted_size">&size.label;</html:label>
 
 			<html:select pref="true" preftype="int" id="mail.quoted_size" prefstring="mail.quoted_size">
@@ -43,16 +43,17 @@
 				<html:option value="1" label="&bigger.label;"/>
 				<html:option value="2" label="&smaller.label;"/>
 			</html:select>
-		</html:div>
 
-		<menu id="citationmenu">
-			<titledbutton value="&color.label;" class="popup" align="right"/> 
-			<html:div nopref="true" preftype="string" prefstring="mail.citation_color" style="width:30px; background-color:white"/>
-			<menupopup>
-				<colorpicker id="citation" palettename="standard" onclick="setColorWell(this.parentNode.parentNode,null,false);"/>
-			</menupopup>
-        </menu>  
+			<menu id="citationmenu">
+				<titledbutton value="&color.label;" class="popup" align="right"/> 
+				<html:div nopref="true" preftype="string" prefstring="mail.citation_color" style="width:30px; background-color:white"/>
+				<menupopup>
+					<colorpicker id="citation" palettename="standard" onclick="setColorWell(this.parentNode.parentNode,null,false);"/>
+				</menupopup>
+        	</menu>  
 		
+        </box>
+
 	</html:fieldset>
 
 	<html:fieldset>
@@ -61,25 +62,15 @@
 		</html:legend>
 
 		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.fixed_width_messages" prefindex="1" id="fixed_width" name="fontwidth" type="radio" checked="true"/>
+			<html:input pref="true" preftype="bool" prefstring="mail.fixed_width_messages" prefindex="true" id="fixed_width" name="fontwidth" type="radio"/>
 			<html:label for="fixed_width">&fixedWidth.label;</html:label>
 		</html:div>
 			
 		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.fixed_width_messages" prefindex="0" id="var_width" name="fontwidth" type="radio"/>
+			<html:input pref="true" preftype="bool" prefstring="mail.fixed_width_messages" prefindex="false" id="var_width" name="fontwidth" type="radio"/>
 			<html:label for="var_width">&variableWidth.label;</html:label>
 		</html:div>
 
-		<!--html:table>
-			<html:tr><html:td><html:input name="fontwidth" type="radio"
-				id="pref:1:bool:mail.fixed_width_messages" checked="true"/>
-				<html:label for="pref:1:bool:mail.fixed_width_messages">&fixedWidth.label;</html:label>
-			</html:td></html:tr>
-			<html:tr><html:td><html:input name="fontwidth" type="radio"
-				id="pref:0:bool:mail.fixed_width_messages"/>
-				<html:label for="pref:0:bool:mail.fixed_width_messages">&variableWidth.label;</html:label>
-			</html:td></html:tr>
-		</html:table-->
 	</html:fieldset>
 	 
 	<html:fieldset>
@@ -105,16 +96,6 @@
 			<html:label for="mail.use_mapi_server">&useMessenger.label;</html:label>
 		</html:div>
 
-		<!--html:table>
-			<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mail.play_sound"/>
-			<html:label>&playSound.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mailnews.remember_selected_message"/>
-			<html:label>&rememberLastMsg.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:input type="checkbox" id="pref:1:bool:mailnews.confirm.moveFoldersToTrash"/>
-			<html:label>&confirmMove.label;</html:label></html:td></html:tr>
-			<html:tr><html:td><html:input type="checkbox" id="pref:0:bool:mail.use_mapi_server"/>
-			<html:label>&useMessenger.label;</html:label></html:td></html:tr>
-		</html:table-->
 	</html:fieldset>
 	<html:fieldset>
 		<html:legend align="left">
@@ -125,15 +106,22 @@
 			<html:label for="mailnews.start_page.enabled">
 			&enableStartPage.label;
 			</html:label>
-                </html:div>
-		<html:div>&startPageInfo.label;</html:div>
-                &location;
-		<html:input name="homepage" type="text" pref="true" preftype="string" prefstring="mailnews.start_page.url" id="mailnews.start_page.url" size="50" />
-                <html:div>
-			<spring flex="100%"/>
-			<titledbutton class="dialog push" name="starts" type="button" value="&useCurrent;" onclick="SetPrefToCurrentPage('mailnews.start_page.url');" />
-			<titledbutton class="dialog push" name="browse" type="button" value="&browseFile;" onclick="PrefNavSelectFile('mailnews.start_page.url')"/>
-                </html:div>
+        </html:div>
+
+		<box align="horizontal">
+			<html:label>&location;</html:label>
+
+			<html:input name="homepage" type="text" pref="true" preftype="string" 
+			prefstring="mailnews.start_page.url" id="mailnews.start_page.url"/>
+		</box>
+		<box align="horizontal">
+			<titledbutton class="dialog push" name="starts" type="button" 
+			value="&useCurrent;" onclick="SetPrefToCurrentPage('mailnews.start_page.url');" />
+
+			<titledbutton class="dialog push" name="browse" type="button" 
+			value="&browseFile;" onclick="PrefNavSelectFile('mailnews.start_page.url')"/>
+		</box>
+
 	</html:fieldset>
 
 </window>

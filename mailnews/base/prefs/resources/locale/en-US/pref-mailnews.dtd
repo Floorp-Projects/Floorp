@@ -20,8 +20,8 @@ Rights Reserved.
 
 <!-- LOCALIZATION NOTE pref-mailnews.dtd: UI for Mail/News prefs -->
 <!ENTITY pane.title "Mail and Newsgroups">
-<!ENTITY pane.description "Settings for Mail and Newsgroups">
-<!ENTITY textBegin.label "Plain quoted text beginning with '>' is displayed with">
+<!ENTITY pane.description "General Mail/News settings">
+<!ENTITY textBegin.label "Quoted plain text appearance">
 <!ENTITY style.label "Style:">
 <!ENTITY regular.label "Regular">
 <!ENTITY bold.label "Bold">
@@ -38,9 +38,8 @@ Rights Reserved.
 <!ENTITY playSound.label "Play sound when messages arrive">
 <!ENTITY rememberLastMsg.label "Remember the last selected message">
 <!ENTITY confirmMove.label "Confirm when moving folders to the trash">
-<!ENTITY useMessenger.label "Use Mozilla Messenger from MAPI-based applications">
+<!ENTITY useMessenger.label "Use Messenger from MAPI-based applications">
 <!ENTITY startPageHeader.label "Messenger Start Page">
-<!ENTITY startPageInfo.label "This is the page you see when you launch Messenger.">
 <!ENTITY location "Location:">
 <!ENTITY useCurrent "Use Current Page">
 <!ENTITY browseFile "Select File...">
