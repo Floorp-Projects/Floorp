@@ -423,7 +423,7 @@
             var searchService = Components.classes[ISEARCH_CONTRACTID].getService(nsIInternetSearchService);
             var searchEng = item.getAttribute("searchEngine");
             var searchEngUrl = item.getAttribute("searchBarUrl");
-            var escapedSearch = escape(this.mSearchValue)
+            var escapedSearch = encodeURIComponent(this.mSearchValue)
             if (searchEngUrl) {
                 searchEngUrl += escapedSearch;
                 return searchEngUrl;

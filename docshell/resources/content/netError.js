@@ -6,7 +6,7 @@ function getErrorCode()
   url = document.location.href;
   error = url.search(/e\=/);
   duffUrl = url.search(/\&u\=/);
-  return unescape(url.slice(error + 2, duffUrl));
+  return decodeURIComponent(url.slice(error + 2, duffUrl));
 }
 
 function getDuffUrl()
@@ -14,14 +14,14 @@ function getDuffUrl()
   url = document.location.href;
   duffUrl = url.search(/u\=/);
   desc = url.search(/\&d\=/);
-  return unescape(url.slice(duffUrl + 2, desc));
+  return decodeURIComponent(url.slice(duffUrl + 2, desc));
 }
 
 function getDescription()
 {
   url = document.location.href;
   desc = url.search(/d\=/);
-  return unescape(url.slice(desc + 2));
+  return decodeURIComponent(url.slice(desc + 2));
 }
 
 function retryThis()

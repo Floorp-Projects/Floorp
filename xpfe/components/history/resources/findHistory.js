@@ -57,7 +57,7 @@ function find()
   var searchURI = "find:datasource=history"
   searchURI += "&match=" + match.selectedItem.value;
   searchURI += "&method=" + method.selectedItem.value;
-  searchURI += "&text=" + escape(gSearchField.value);
+  searchURI += "&text=" + encodeURIComponent(gSearchField.value);
   var hstWindow = findMostRecentWindow("history:searchresults", "chrome://communicator/content/history/history.xul", searchURI);
   
   // Update the root of the tree if we're using an existing search window. 

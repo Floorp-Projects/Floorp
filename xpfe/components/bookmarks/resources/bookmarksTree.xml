@@ -438,7 +438,7 @@
               this.originalRef = this.tree.getAttribute("ref");
             }
             this.tree.setAttribute("ref",
-                                   "find:datasource=rdf:bookmarks&match=http://home.netscape.com/NC-rdf#Name&method=contains&text=" + escape(aInput));
+                                   "find:datasource=rdf:bookmarks&match=http://home.netscape.com/NC-rdf#Name&method=contains&text=" + encodeURIComponent(aInput));
           }
         ]]></body>
       </method>

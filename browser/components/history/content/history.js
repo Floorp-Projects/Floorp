@@ -274,7 +274,7 @@ function searchHistory(aInput)
      GroupBy(gHistoryGrouping);
    else
      gHistoryTree.setAttribute("ref",
-                               "find:datasource=history&match=Name&method=contains&text=" + escape(aInput));
+                               "find:datasource=history&match=Name&method=contains&text=" + encodeURIComponent(aInput));
  }
 
 function onUnload()

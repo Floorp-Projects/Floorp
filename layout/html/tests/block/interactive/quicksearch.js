@@ -224,7 +224,7 @@ function make_chart(expr, field, type, value) {
               "</tr>";
     return "&field" + expr + "=" + field +
            "&type"  + expr + "=" + type  +
-           "&value" + expr + "=" + escape(value).replace(/[+]/g,"%2B");
+           "&value" + expr + "=" + encodeURIComponent(value).replace(/[+]/g,"%2B");
 }
 
 // returns true if at least one of comparelist had the prefix, false otherwise
@@ -302,7 +302,7 @@ function make_query_URL(url, input, searchLong) {
         return no_result;      
     }
     for (i=1; i<parts.length; i+=2) {
-        parts[i] = escape(parts[i]);
+        parts[i] = encodeURIComponent(parts[i]);
     }
     input2 = parts.join('"');
 
@@ -423,7 +423,7 @@ function make_query_URL(url, input, searchLong) {
             abort = true;
         }
         for (var i=1; i<parts.length; i+=2) {
-            parts[i] = unescape(parts[i]);
+            parts[i] = decodeURIComponent(parts[i]);
         }
         var value2 = parts.join('');
 
@@ -712,10 +712,10 @@ function QuickSearch ()
     {
         if (input.indexOf(",") == -1) {
             // only _one_ bug number --> show_bug
-            go_to(bugzilla+"show_bug.cgi?id="+escape(input));
+            go_to(bugzilla+"show_bug.cgi?id="+encodeURIComponent(input));
         } else {
             // comma-separated bug numbers --> buglist
-            go_to(bugzilla+"buglist.cgi?bug_id="+escape(input)
+            go_to(bugzilla+"buglist.cgi?bug_id="+encodeURIComponent(input)
                   + "&bugidtype=include&order=bugs.bug_id");
         }
     }
