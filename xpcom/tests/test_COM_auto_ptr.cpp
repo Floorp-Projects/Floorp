@@ -327,7 +327,7 @@ main()
 
 			cout << endl << "### Test 16: what if I don't want to |AddRef| when I assign in?" << endl;
 			COM_auto_ptr<IFoo> foo2p;
-			foo2p = dont_AddRef<IFoo>(raw_foo2p);
+			foo2p = dont_AddRef(raw_foo2p);
 		}
 
 
