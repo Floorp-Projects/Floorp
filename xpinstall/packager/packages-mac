@@ -153,6 +153,8 @@ defaults\pref\xpinstall.js
 res:toolbar:* 
 res:throbber:* 
 res:ua.css 
+res:maccharset.properties 
+res:charsetalias.properties 
 
 [mail] 
 Components:MsgAddrbook.shlb 
