@@ -34,6 +34,7 @@
 #include "nsIWebProgressListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIIOService.h"
+#include "nsINetDataCacheManager.h"
 
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -575,3 +576,41 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetFilePath(const char *i_DirFile)
 {
 	return m_baseURL->SetFilePath(i_DirFile);
 }
+
+NS_IMETHODIMP nsMsgMailNewsUrl:: GetMemCacheEntry(nsICachedNetData **memCacheEntry)
+{
+  NS_ENSURE_ARG(memCacheEntry);
+  nsresult rv = NS_OK;
+
+  if (!m_memCacheEntry)
+  {
+    nsCOMPtr<nsINetDataCacheManager> cacheManager = do_GetService(NS_NETWORK_CACHE_MANAGER_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv) && cacheManager)
+    {
+      // Retrieve an existing cache entry or create a new one if none exists for the
+      // given URL.
+      nsXPIDLCString urlCString; 
+      // eventually we are going to want to use the url spec - the query/ref part 'cause that doesn't
+      // distinguish urls.......
+      GetSpec(getter_Copies(urlCString));
+      // for now, truncate of the query part so we don't duplicate urls in the cache...
+      char * anchor = PL_strrchr(urlCString, '?');
+      if (anchor)
+        *anchor = '\0';
+      rv = cacheManager->GetCachedNetData(urlCString, 0, 0, nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE,
+                                          getter_AddRefs(m_memCacheEntry));
+    }
+  }
+  if (m_memCacheEntry)
+  {
+    *memCacheEntry = m_memCacheEntry;
+    NS_ADDREF(*memCacheEntry);
+  }
+  else
+  {
+    *memCacheEntry = nsnull;
+    return NS_ERROR_NULL_POINTER;
+  }
+  return rv;
+}
+

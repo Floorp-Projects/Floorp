@@ -30,6 +30,7 @@ interface nsIMsgIncomingServer;
 interface nsIMsgWindow;
 interface nsILoadGroup;
 interface nsIMsgSearchSession;
+interface nsICachedNetData;
 
 [scriptable, uuid(6CFFCEB0-CB8C-11d2-8065-006008128C4E)]
 interface nsIMsgMailNewsUrl : nsIURL {
@@ -68,6 +69,7 @@ interface nsIMsgMailNewsUrl : nsIURL {
 	attribute nsIMsgSearchSession searchSession;
 	attribute boolean updatingFolder;
 	attribute boolean addToMemoryCache; 
+  readonly attribute nsICachedNetData memCacheEntry;
 
 	const unsigned long eCopy     = 0;
 	const unsigned long eMove     = 1;
