@@ -67,17 +67,19 @@ public:
 public:
 
 	// individual nsIWebNavigation tests
-	void CanGoBackTest();
-	void GoBackTest();
-	void CanGoForwardTest();
-	void GoForwardTest();
-	void GoToIndexTest();
-	void LoadUriTest(char *, PRUint32, PRInt16 displayMode=2);
-	void ReloadTest(PRUint32);
-	void StopUriTest(char *, PRUint32);
-	void GetDocumentTest(void);
-	void GetCurrentURITest(void);
-	void GetSHTest(void);
+	void CanGoBackTest(PRInt16);
+	void GoBackTest(PRInt16);
+	void CanGoForwardTest(PRInt16);
+	void GoForwardTest(PRInt16);
+	void GoToIndexTest(PRInt16);
+	void LoadUriTest(char *, PRUint32, PRInt16 displayMode=1, 
+					 PRBool runAllTests=PR_FALSE);
+	void ReloadTest(PRUint32, PRInt16);
+	void StopUriTest(char *, PRUint32, PRInt16);
+	void GetDocumentTest(PRInt16);
+	void GetCurrentURITest(PRInt16);
+	void GetSHTest(PRInt16);
+	void SetSHTest(PRInt16);
 	void LoadUriandReload(int);
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests();

@@ -484,6 +484,8 @@ BEGIN
 
             MENUITEM "GetDOMWindow",                ID_INTERFACES_NSIWEBPROGRESS_GETDOMWINDOW
 
+            MENUITEM "IsLoadingDocument",           ID_INTERFACES_NSIWEBPROGRESS_ISLOADINGDOCUMENT
+
         END
         POPUP "nsIWebBrowserFind"
         BEGIN

@@ -70,13 +70,14 @@ public:
 	nsCOMPtr<nsIWebBrowser> qaWebBrowser;
 	CBrowserImpl	*qaBrowserImpl;
 	nsIWebProgress * GetWebProgObject();
-	void AddWebProgLstnr(PRUint32);
-	void RemoveWebProgLstnr(void);
-	void GetTheDOMWindow(void);
+	void AddWebProgLstnr(PRUint32, PRInt16);
+	void RemoveWebProgLstnr(PRInt16);
+	void GetTheDOMWindow(PRInt16);
+	void GetIsLoadingDocTest(PRInt16);
 
 	void ConvertWPFlagToString(PRUint32, nsCAutoString&);
 	void StoreWebProgFlag(PRUint32);
-	void RetrieveWebProgFlag();
+	void RetrieveWebProgFlag(void);
 
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests(void);
@@ -96,6 +97,9 @@ public:
 
 	// Generated message map functions
 protected:
+
+private:
+	nsCOMPtr<nsIWebProgress> qaWebProgress;
 
 };
 

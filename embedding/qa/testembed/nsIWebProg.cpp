@@ -90,45 +90,52 @@ nsIWebProgress * CnsiWebProg::GetWebProgObject()
 	}
 }
 
-void CnsiWebProg::AddWebProgLstnr(PRUint32 theFlag)
+void CnsiWebProg::AddWebProgLstnr(PRUint32 theFlag, PRInt16 displayMode)
 {
 	nsCAutoString flagName(NS_LITERAL_CSTRING("xxxx"));
 
 	ConvertWPFlagToString(theFlag, flagName);
 
 			// addWebProgListener
-	nsCOMPtr<nsIWebProgress> qaWebProgress;
 	qaWebProgress = GetWebProgObject();
 	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
 	rv = qaWebProgress->AddProgressListener(listener, theFlag);
 //	StoreWebProgFlag(theFlag);
-	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 1);
+	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebProgress::AddProgressListener() test", true);
-	FormatAndPrintOutput("WebProgressListener flag = ", flagName, 1);
+	FormatAndPrintOutput("WebProgressListener flag = ", flagName, displayMode);
 }
 
-void CnsiWebProg::RemoveWebProgLstnr()
+void CnsiWebProg::RemoveWebProgLstnr(PRInt16 displayMode)
 {
 		// removeWebProgListener
-	nsCOMPtr<nsIWebProgress> qaWebProgress;
 	qaWebProgress = GetWebProgObject();
 	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
 	rv = qaWebProgress->RemoveProgressListener(listener);
-	RvTestResult(rv, "nsIWebProgress::RemoveProgressListener() test", 1);
+	RvTestResult(rv, "nsIWebProgress::RemoveProgressListener() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebProgress::RemoveProgressListener() test");
 }
 
-void CnsiWebProg::GetTheDOMWindow()
+void CnsiWebProg::GetTheDOMWindow(PRInt16 displayMode)
 {
 		// getTheDOMWindow
-	nsCOMPtr<nsIWebProgress> qaWebProgress;
 	qaWebProgress = GetWebProgObject();
 	nsCOMPtr<nsIDOMWindow> qaDOMWindow;
 	rv = qaWebProgress->GetDOMWindow(getter_AddRefs(qaDOMWindow));
-	RvTestResult(rv, "nsIWebProgress::GetDOMWindow() test", 1);
+	RvTestResult(rv, "nsIWebProgress::GetDOMWindow() test", displayMode);
 	RvTestResultDlg(rv, "nsIWebProgress::GetDOMWindow() test");
 	if (!qaDOMWindow)
-		QAOutput("Didn't get DOM Window object.", 2);
+		QAOutput("Didn't get DOM Window object.", displayMode);
+}
+
+void CnsiWebProg::GetIsLoadingDocTest(PRInt16 displayMode)
+{
+	PRBool docLoading;
+	qaWebProgress = GetWebProgObject();
+	rv = qaWebProgress->GetIsLoadingDocument(&docLoading);
+	RvTestResult(rv, "nsIWebProgress::GetisLoadingDocument() test", displayMode);
+	RvTestResultDlg(rv, "nsIWebProgress::GetisLoadingDocument() test");
+	FormatAndPrintOutput("GetisLoadingDocument return value = ", docLoading, displayMode);
 }
 
 void CnsiWebProg::ConvertWPFlagToString(PRUint32 theFlag,
@@ -193,6 +200,7 @@ void CnsiWebProg::RetrieveWebProgFlag()
 	ConvertWPFlagToString(theFlag, flagName);
 	FormatAndPrintOutput("WebProgressListener flag = ", flagName, 2);
 }
+
 void CnsiWebProg::OnStartTests(UINT nMenuID)
 {
 	CWebProgDlg myDialog;
@@ -204,14 +212,17 @@ void CnsiWebProg::OnStartTests(UINT nMenuID)
 			break ;
 		case ID_INTERFACES_NSIWEBPROGRESS_ADDPROGRESSLISTENER :
 			if (myDialog.DoModal() == IDOK)
-				AddWebProgLstnr(myDialog.m_wpFlagValue);
+				AddWebProgLstnr(myDialog.m_wpFlagValue, 2);
 			break ;
 		case ID_INTERFACES_NSIWEBPROGRESS_REMOVEPROGRESSLISTENER :
-			RemoveWebProgLstnr();
+			RemoveWebProgLstnr(2);
 			break ;
 		case ID_INTERFACES_NSIWEBPROGRESS_GETDOMWINDOW  :
-			GetTheDOMWindow();
+			GetTheDOMWindow(2);
 			break ;
+		case ID_INTERFACES_NSIWEBPROGRESS_ISLOADINGDOCUMENT :
+			GetIsLoadingDocTest(2);
+			break;
 	}
 }
 
@@ -252,10 +263,11 @@ void CnsiWebProg::RunAllTests(void)
 			theFlag = nsIWebProgress::NOTIFY_ALL;
 			break;
 		}
-		AddWebProgLstnr(theFlag);
-		RemoveWebProgLstnr();
+		AddWebProgLstnr(theFlag, 1);
+		RemoveWebProgLstnr(1);
 	}
-	GetTheDOMWindow();
+	GetTheDOMWindow(1);
+	GetIsLoadingDocTest(1);
 }
 
 /////////////////////////////////////////////////////////////////////////////

@@ -297,6 +297,21 @@ void WebProgDOMWindowTest(nsIWebProgress *progress, const char *inString,
 		RvTestResult(rv, totalStr2.get(), displayMethod);
 }
 
+void WebProgIsDocLoadingTest(nsIWebProgress *progress, const char *inString,
+								  int displayMethod)
+{
+	nsresult rv;
+	PRBool docLoading;
+	nsCString totalStr;
+
+	totalStr = inString;
+	totalStr += ": nsIWebProgress:IsDocumentLoading attribute test";
+
+	rv = progress->GetIsLoadingDocument(&docLoading);
+	RvTestResult(rv, totalStr.get(), displayMethod);
+	FormatAndPrintOutput("nsIWebProgress: isDocumentLoading return value = ", docLoading, displayMethod);
+}
+
 nsIDOMWindow * GetTheDOMWindow(nsIWebBrowser *webBrowser)
 {
 	nsCOMPtr<nsIDOMWindow> theDOMWindow;

@@ -104,7 +104,7 @@ NS_IMETHODIMP CBrowserImpl::OnProgressChange(nsIWebProgress *progress, nsIReques
 
 		QAOutput("nsIWebProgLstnr::OnProgressChange(): Progress Update complete!", 1);
 	}
-
+	WebProgIsDocLoadingTest(progress, "OnProgressChange()", 1);
 	m_pBrowserFrameGlue->UpdateProgress(nProgress, nProgressMax);
 
 	QAOutput("Exiting nsIWebProgLstnr::OnProgressChange().\r\n");
@@ -144,8 +144,9 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 		else if (progressStateFlags & STATE_REDIRECTING)
 			strcpy(theStateType, "STATE_REDIRECTING");
 
-		else if (progressStateFlags & STATE_TRANSFERRING)
-			strcpy(theStateType, "STATE_TRANSFERRING");		
+		else if (progressStateFlags & STATE_TRANSFERRING) {
+			strcpy(theStateType, "STATE_TRANSFERRING");	
+		}
 
 		else if (progressStateFlags & STATE_NEGOTIATING)
 			strcpy(theStateType, "STATE_NEGOTIATING");				
@@ -162,8 +163,7 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 			m_pBrowserFrameGlue->UpdateStatusBarText(nsnull);  // Clear the status bar
 
 		// web progress DOMWindow test
-		WebProgDOMWindowTest(progress, "OnStateChange()", 1);
-
+			WebProgDOMWindowTest(progress, "OnStateChange()", 1);
 		}
 
 		onStateChangeString(theStateType, theDocType, stringMsg, status, displayMode);
@@ -233,6 +233,8 @@ NS_IMETHODIMP CBrowserImpl::OnStateChange(nsIWebProgress *progress, nsIRequest *
 		onStateChangeString(theStateType, theDocType, stringMsg, status, displayMode);
 
 	}
+	// web progress isDocumentLoading test
+	WebProgIsDocLoadingTest(progress, "OnStateChange()", 1);
 
 	QAOutput("Exiting nsIWebProgLstnr::OnStateChange().\r\n");
 
@@ -273,6 +275,7 @@ NS_IMETHODIMP CBrowserImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 		}
 		if (domWindow != topDomWindow)
 			isSubFrameLoad = PR_TRUE;
+		WebProgIsDocLoadingTest(aWebProgress, "OnLocationChange()", 1);
 	}
 
 	if (!isSubFrameLoad) // Update urlbar only if it is not a subframe load
@@ -302,6 +305,8 @@ CBrowserImpl::OnStatusChange(nsIWebProgress* aWebProgress,
 
 			// web progress DOMWindow test (typically the host name)
 	WebProgDOMWindowTest(aWebProgress, "OnStatusChange(): web prog DOM window test", 1);
+			// web progress isDocumentLoading test
+	WebProgIsDocLoadingTest(aWebProgress, "OnStatusChange()", 1);
 
 	m_pBrowserFrameGlue->UpdateStatusBarText(aMessage);
 
@@ -339,6 +344,8 @@ CBrowserImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 				// web progress DOMWindow test
 	WebProgDOMWindowTest(aWebProgress, "OnSecurityChange()", 1);
+				// web progress isDocumentLoading test
+	WebProgIsDocLoadingTest(aWebProgress, "OnSecurityChange()", 1);
 
 	QAOutput("Exiting nsIWebProgLstnr::OnSecurityChange().\r\n");
 
