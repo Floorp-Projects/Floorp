@@ -662,6 +662,7 @@ Bool XpuParseMediumSourceSize( const char *value,
     s++;  
   }
   while(*s);
+  *d = '\0';
     
   /* seperate medium name from string */
   d = (char *)search_next_space(name);
@@ -682,10 +683,16 @@ Bool XpuParseMediumSourceSize( const char *value,
    * the original locale.
    * XXX: This may affect all threads and not only the calling one...
    */
-  cur_locale = setlocale(LC_NUMERIC, NULL);
-  setlocale(LC_NUMERIC, "C"); 
-  num_input_items = sscanf(d, "%s %f %f %f %f", boolbuf, ma1, ma2, ma3, ma4);
-  setlocale(LC_NUMERIC, cur_locale);
+  {
+#define CUR_LOCALE_SIZE 256
+    char cur_locale[CUR_LOCALE_SIZE+1];
+    strncpy(cur_locale, setlocale(LC_NUMERIC, NULL), CUR_LOCALE_SIZE);
+    cur_locale[CUR_LOCALE_SIZE]='\0';
+    setlocale(LC_NUMERIC, "C"); 
+    num_input_items = sscanf(d, "%s %f %f %f %f", boolbuf, ma1, ma2, ma3, ma4);
+    setlocale(LC_NUMERIC, cur_locale);
+#undef CUR_LOCALE_SIZE
+  }
 
   if( num_input_items != 5 )
   {
