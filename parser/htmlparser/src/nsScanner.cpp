@@ -47,6 +47,7 @@
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include "nsUTF8Utils.h" // for LossyConvertEncoding
+#include "nsCRT.h"
 
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
 
@@ -101,7 +102,8 @@ nsScanner::nsScanner(const nsAString& anHTMLString, const nsACString& aCharset, 
   AppendToBuffer(anHTMLString);
   mSlidingBuffer->BeginReading(mCurrentPosition);
   mMarkPosition = mCurrentPosition;
-  mIncremental=PR_FALSE;
+  mIncremental = PR_FALSE;
+  mFirstNonWhitespacePosition = -1;
   mUnicodeDecoder = 0;
   mCharsetSource = kCharsetUninitialized;
   SetDocumentCharset(aCharset, aSource);
@@ -132,7 +134,8 @@ nsScanner::nsScanner(nsString& aFilename,PRBool aCreateStream, const nsACString&
   mMarkPosition = mCurrentPosition;
   mEndPosition = mCurrentPosition;
 
-  mIncremental=PR_TRUE;
+  mIncremental = PR_TRUE;
+  mFirstNonWhitespacePosition = -1;
   mCountRemaining = 0;
   mTotalRead=0;
 
@@ -175,7 +178,8 @@ nsScanner::nsScanner(const nsAString& aFilename,nsIInputStream* aStream,const ns
   mMarkPosition = mCurrentPosition;
   mEndPosition = mCurrentPosition;
 
-  mIncremental=PR_FALSE;
+  mIncremental = PR_FALSE;
+  mFirstNonWhitespacePosition = -1;
   mCountRemaining = 0;
   mTotalRead=0;
   mInputStream=aStream;
@@ -527,7 +531,7 @@ nsresult nsScanner::Peek(PRUnichar& aChar, PRUint32 aOffset) {
   return result;
 }
 
-nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars)
+nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars, PRInt32 aOffset)
 {
   if (!mSlidingBuffer) {
     return kEOF;
@@ -541,12 +545,20 @@ nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars)
 
   start = mCurrentPosition;
 
-  if (mCountRemaining < PRUint32(aNumChars)) {
+  if (mCountRemaining <= aOffset) {
+    return kEOF;
+  }
+
+  if (aOffset > 0) {
+    start.advance(aOffset);
+  }
+
+  if (mCountRemaining < PRUint32(aNumChars + aOffset)) {
     end = mEndPosition;
   }
   else {
     end = start;
-    end.advance(aNumChars);
+    end.advance(aNumChars + aOffset);
   }
 
   CopyUnicodeTo(start, end, aStr);
@@ -1315,6 +1327,21 @@ void nsScanner::AppendToBuffer(nsScannerString::Buffer* aBuf)
     }
     mSlidingBuffer->EndReading(mEndPosition);
     mCountRemaining += aBuf->DataLength();
+  }
+
+  if (mFirstNonWhitespacePosition == -1) {
+    nsScannerIterator iter(mCurrentPosition);
+    nsScannerIterator end(mEndPosition);
+
+    while (iter != end) {
+      if (!nsCRT::IsAsciiSpace(*iter)) {
+        mFirstNonWhitespacePosition = Distance(mCurrentPosition, iter);
+
+        break;
+      }
+
+      ++iter;
+    }
   }
 }
 
