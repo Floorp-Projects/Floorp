@@ -16,7 +16,7 @@
 #endif
 class nsIFolderListener; /* forward decl */
 
-/* starting interface nsIFolder */
+/* starting interface:    nsIFolder */
 
 /* {361c89b0-c481-11d2-8614-000000000001} */
 #define NS_IFOLDER_IID_STR "361c89b0-c481-11d2-8614-000000000001"
