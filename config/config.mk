@@ -163,7 +163,26 @@ FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 # 
 NSS_3_4=1
 
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 NSS_LIBS	= \
+	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)smime3.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)ssl3.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)nss3.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)softokn3.$(LIB_SUFFIX) \
+	$(NULL)
+else
+NSS_LIBS	= \
+	-L$(LIBS_DIR) \
+	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
+	-lsmime3 \
+	-lssl3 \
+	-lnss3 \
+	-lsoftokn3 \
+	$(NULL)
+endif
+
+NSS_DEP_LIBS	= \
 	$(DIST)/lib/$(LIB_PREFIX)crmf.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)smime3$(DLL_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)ssl3$(DLL_SUFFIX) \
