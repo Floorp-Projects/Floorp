@@ -397,8 +397,8 @@ NS_IMETHODIMP nsGenericInterfaceInfo::GetName(char * *aName)
     return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-/* readonly attribute nsIIDPtr IID; */
-NS_IMETHODIMP nsGenericInterfaceInfo::GetIID(nsIID * *aIID)
+/* readonly attribute nsIIDPtr InterfaceIID; */
+NS_IMETHODIMP nsGenericInterfaceInfo::GetInterfaceIID(nsIID * *aIID)
 {
     *aIID = (nsIID*) nsMemory::Clone(&mIID, sizeof(nsIID));
     return *aIID ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
