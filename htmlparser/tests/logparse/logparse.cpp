@@ -44,8 +44,8 @@ static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
 
 static void SetupRegistry()
 {
-  nsRepository::RegisterFactory(kParserCID, PARSER_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kLoggingSinkCID, PARSER_DLL,PR_FALSE,PR_FALSE);
+  nsRepository::RegisterComponent(kParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kLoggingSinkCID, NULL, NULL, PARSER_DLL,PR_FALSE,PR_FALSE);
 }
 
 //----------------------------------------------------------------------
