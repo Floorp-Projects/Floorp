@@ -4020,7 +4020,7 @@ nsTableFrame::IsAutoHeight()
       isAuto = PR_FALSE;
       break;
     case eStyleUnit_Percent:
-      if (position->mWidth.GetPercentValue() > 0.0f) {
+      if (position->mHeight.GetPercentValue() > 0.0f) {
         isAuto = PR_FALSE;
       }
       break;
