@@ -533,7 +533,7 @@ have_fun:
             /* walk up to find the top-level object */
             JSObject *p;
             thisp = parent;
-            while (p = OBJ_GET_PARENT(cx, thisp))
+            while ((p = OBJ_GET_PARENT(cx, thisp)) != NULL)
                 thisp = p;
         }
     }
