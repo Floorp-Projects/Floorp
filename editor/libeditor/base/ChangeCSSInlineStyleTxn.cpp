@@ -165,10 +165,10 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::Init(nsIEditor      *aEditor,
   NS_ADDREF(mProperty);
   mValue.Assign(aValue);
   mRemoveProperty = aRemoveProperty;
-  mPropertyWasSet = PR_FALSE;
   mUndoAttributeWasSet = PR_FALSE;
   mRedoAttributeWasSet = PR_FALSE;
   mUndoValue.SetLength(0);
+  mRedoValue.SetLength(0);
   return NS_OK;
 }
 
@@ -177,160 +177,139 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
   NS_ASSERTION(mEditor && mElement, "bad state");
   if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 
-  nsresult result=NS_OK;
+  nsresult result = NS_OK;
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  PRUint32 length = 0;
   nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(mElement);
   if (!inlineStyles) return NS_ERROR_NULL_POINTER;
   result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
   if (NS_FAILED(result)) return result;
   if (!cssDecl) return NS_ERROR_NULL_POINTER;
-  result = cssDecl->GetLength(&length);
-  if (NS_FAILED(result)) return result;
 
-  nsAutoString newDeclString, propertyNameString, undoString, redoString;
+  nsAutoString propertyNameString;
   mProperty->ToString(propertyNameString);
 
-  mPropertyWasSet = PR_FALSE;
   // does this property accept more than 1 value ?
+  // we need to know that because of bug 62682
   PRBool multiple = AcceptsMoreThanOneValue(mProperty);
   
   nsAutoString styleAttr(NS_LITERAL_STRING("style"));
 
-  result = mEditor->GetAttributeValue(mElement, styleAttr, mUndoValue, &mUndoAttributeWasSet);
+  result = mElement->HasAttribute(styleAttr, &mUndoAttributeWasSet);
   if (NS_FAILED(result)) return result;
 
-  if (0 == length && !mRemoveProperty && mUndoAttributeWasSet) {
-    // dirty case, the style engine did not have the time to parse the style attribute
-    newDeclString.Append(mUndoValue + NS_LITERAL_STRING(" "));
-    AppendDeclaration(newDeclString, propertyNameString, mValue);
-    result = mElement->SetAttribute(styleAttr, newDeclString);
-  }
-  else if (0 == length) {
-    if (mRemoveProperty) {
-      // there is no style attribute or it is empty and we want to remove something
-      // so it is an early way out
-      result = mElement->RemoveAttribute(styleAttr);
-    }
-    else {
-      // the style attribute is empty or absent and we want to add a property
-      // let's do it...
-      AppendDeclaration(newDeclString, propertyNameString, mValue);
-      result = mElement->SetAttribute(styleAttr, newDeclString);
-    }
-  }
-  else if (mRemoveProperty && (1 == length)) {
-    // let's deal with a special case : we want to remove a property from the
-    // style attribute and it contains only one declaration...
-    // if it is the one we look for, let's remove the attribute ! Otherwise,
-    // do nothing.
-    nsAutoString itemPropertyNameString;
-    cssDecl->Item(0, itemPropertyNameString);
-    PRBool thisOne = propertyNameString.Equals(itemPropertyNameString, nsCaseInsensitiveStringComparator());
-    if (thisOne) {
-      mPropertyWasSet = PR_TRUE;
-      if (multiple) {
-        // the property accepts more than one value...
-        // cssDecl->GetPropertyValue(propertyNameString, mUndoValue);
-        nsAutoString values;
-        cssDecl->GetPropertyValue(propertyNameString, values);
-        RemoveValueFromListOfValues(values, NS_LITERAL_STRING("none"));
-        RemoveValueFromListOfValues(values, mValue);
-        if (0 != values.Length()) {
-          AppendDeclaration(newDeclString, propertyNameString, values);
-        }
-        result = mElement->SetAttribute(styleAttr, newDeclString);
+  nsAutoString values;
+  result = cssDecl->GetPropertyValue(propertyNameString, values);
+  if (NS_FAILED(result)) return result;     
+  mUndoValue.Assign(values);
+
+  if (mRemoveProperty) {
+    nsAutoString returnString;
+    if (multiple) {
+      // the property can have more than one value, let's remove only
+      // the value we have to remove and not the others
+
+      // the 2 lines below are a workaround because nsDOMCSSDeclaration::GetPropertyCSSValue
+      // is not yet implemented (bug 62682)
+      RemoveValueFromListOfValues(values, NS_LITERAL_STRING("none"));
+      RemoveValueFromListOfValues(values, mValue);
+      if (values.IsEmpty()) {
+        result = cssDecl->RemoveProperty(propertyNameString, returnString);
+        if (NS_FAILED(result)) return result;     
       }
       else {
-        result = mElement->RemoveAttribute(styleAttr);
+        nsAutoString priority;
+        result = cssDecl->GetPropertyPriority(propertyNameString, priority);
+        if (NS_FAILED(result)) return result;     
+        result = cssDecl->SetProperty(propertyNameString, values,
+                                      priority);
+        if (NS_FAILED(result)) return result;     
       }
+    }
+    else {
+      result = cssDecl->RemoveProperty(propertyNameString, returnString);
+      if (NS_FAILED(result)) return result;     
     }
   }
   else {
-    // general case, we are going to browse all the CSS declarations in the
-    // style attribute, and, if needed, remove or rewrite the one we want
-    PRUint32 index;
-    nsAutoString itemPropertyNameString;
-    for (index = 0 ; index < length; index++) {
-      cssDecl->Item(index, itemPropertyNameString);
-      PRBool thisOne = propertyNameString.Equals(itemPropertyNameString, nsCaseInsensitiveStringComparator());
-      if (thisOne) {
-        // we have found the property we are looking for...
-        // if we have to remove it, do nothing or remove only the corresponding value
-        // if we have to change it, do it below
-        if (mRemoveProperty) {
-          if (multiple) {
-            nsAutoString values;
-            cssDecl->GetPropertyValue(propertyNameString, values);
-            RemoveValueFromListOfValues(values, NS_LITERAL_STRING("none"));
-            RemoveValueFromListOfValues(values, mValue);
-            if (0 != values.Length()) {
-              AppendDeclaration(newDeclString, propertyNameString, values);
-            }
-          }
-        }
-        else {
-          newDeclString.Append(propertyNameString + NS_LITERAL_STRING(": "));
-          if (multiple) {
-            nsAutoString values;
-            cssDecl->GetPropertyValue(propertyNameString, values);
-            AddValueToMultivalueProperty(values, mValue);
-            newDeclString.Append(values);
-          }
-          else {
-            newDeclString.Append(mValue);
-          }
-          newDeclString.Append(NS_LITERAL_STRING("; "));
-        }
-        mPropertyWasSet = PR_TRUE;
-      }
-      else {
-        // this is not the property we are looking for, let's recreate the declaration
-        nsAutoString stringValue;
-        cssDecl->GetPropertyValue(itemPropertyNameString, stringValue);
-        AppendDeclaration(newDeclString, itemPropertyNameString, stringValue);
-      }
+    nsAutoString priority;
+    result = cssDecl->GetPropertyPriority(propertyNameString, priority);
+    if (NS_FAILED(result)) return result;
+    if (multiple) {
+      // the property can have more than one value, let's add
+      // the value we have to add to the others
+
+      // the line below is a workaround because nsDOMCSSDeclaration::GetPropertyCSSValue
+      // is not yet implemented (bug 62682)
+      AddValueToMultivalueProperty(values, mValue);
     }
-    // if we DON'T have to remove the property, ie if we have to change or set it,
-    // did we find it earlier ? If not, let's set it now...
-    if (!mRemoveProperty && !mPropertyWasSet) {
-      AppendDeclaration(newDeclString, propertyNameString, mValue);
-    }
-    result = mElement->SetAttribute(styleAttr, newDeclString);
+    else
+      values.Assign(mValue);
+    result = cssDecl->SetProperty(propertyNameString, values,
+                                  priority);
+    if (NS_FAILED(result)) return result;     
   }
-  result = mEditor->GetAttributeValue(mElement, styleAttr, mRedoValue, &mRedoAttributeWasSet);
+
+  // let's be sure we don't keep an empty style attribute
+  PRUint32 length;
+  result = cssDecl->GetLength(&length);
+  if (NS_FAILED(result)) return result;     
+  if (!length) {
+    result = mElement->RemoveAttribute(styleAttr);
+    if (NS_FAILED(result)) return result;     
+  }
+  else
+    mRedoAttributeWasSet = PR_TRUE;
+
+  return cssDecl->GetPropertyValue(propertyNameString, mRedoValue);
+}
+
+nsresult ChangeCSSInlineStyleTxn::SetStyle(PRBool aAttributeWasSet,
+                                           nsAString & aValue)
+{
+  NS_ASSERTION(mEditor && mElement, "bad state");
+  if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
+
+  nsresult result = NS_OK;
+  if (aAttributeWasSet) {
+    // the style attribute was set and not empty, let's recreate the declaration
+    nsAutoString propertyNameString;
+    mProperty->ToString(propertyNameString);
+
+    nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+    nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(mElement);
+    if (!inlineStyles) return NS_ERROR_NULL_POINTER;
+    result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
+    if (NS_FAILED(result)) return result;
+    if (!cssDecl) return NS_ERROR_NULL_POINTER;
+
+    if (aValue.IsEmpty()) {
+      // an empty value means we have to remove the property
+      nsAutoString returnString;
+      result = cssDecl->RemoveProperty(propertyNameString, returnString);
+    }
+    else {
+      // let's recreate the declaration as it was
+      nsAutoString priority;
+      result = cssDecl->GetPropertyPriority(propertyNameString, priority);
+      if (NS_FAILED(result)) return result;
+      result = cssDecl->SetProperty(propertyNameString, aValue, priority);
+    }
+  }
+  else
+    result = mElement->RemoveAttribute(NS_LITERAL_STRING("style"));
+
   return result;
 }
 
-// to undo a transaction, just reset the style attribute to its former value...
 NS_IMETHODIMP ChangeCSSInlineStyleTxn::UndoTransaction(void)
 {
-  NS_ASSERTION(mEditor && mElement, "bad state");
-  if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
-
-  nsresult result=NS_OK;
-  if (PR_TRUE == mUndoAttributeWasSet)
-    result = mElement->SetAttribute(NS_LITERAL_STRING("style"), mUndoValue);
-  else
-    result = mElement->RemoveAttribute(NS_LITERAL_STRING("style"));
-
-  return result;
+  return SetStyle(mUndoAttributeWasSet, mUndoValue);
 }
 
-// to redo a transaction, just set again the style attribute
 NS_IMETHODIMP ChangeCSSInlineStyleTxn::RedoTransaction(void)
 {
-  NS_ASSERTION(mEditor && mElement, "bad state");
-  if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
-
-  nsresult result=NS_OK;
-  if (PR_TRUE == mRedoAttributeWasSet)
-    result = mElement->SetAttribute(NS_LITERAL_STRING("style"), mRedoValue);
-  else
-    result = mElement->RemoveAttribute(NS_LITERAL_STRING("style"));
-
-  return result;
+  return SetStyle(mRedoAttributeWasSet, mRedoValue);
 }
 
 NS_IMETHODIMP ChangeCSSInlineStyleTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMerge)
