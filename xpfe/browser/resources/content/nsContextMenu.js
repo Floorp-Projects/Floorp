@@ -42,6 +42,7 @@ function nsContextMenu( xulMenu ) {
     this.inFrame    = false;
     this.hasBGImage = false;
     this.inDirList  = false;
+    this.shouldDisplay = true;
 
     // Initialize new menu.
     this.initMenu( xulMenu );
@@ -140,7 +141,9 @@ nsContextMenu.prototype = {
         this.showItem( "context-sep-view", !this.inDirList || this.inFrame || this.onImage );
     },
     initMiscItems : function () {
-        // Add bookmark always OK.
+        // Use "Bookmark This Link" if on a link.
+        this.showItem( "context-bookmarkpage", !this.onLink );
+        this.showItem( "context-bookmarklink", this.onLink );
     
         // Send Page not working yet.
         this.showItem( "context-sendpage", false );
@@ -267,14 +270,21 @@ nsContextMenu.prototype = {
                         root = root.parentNode;
                     }
                 }
+            } else if ( this.target.parentNode.tagName == "scrollbar" 
+                        ||
+                        this.target.parentNode.tagName == "thumb" ) {
+                this.shouldDisplay = false;
             } else {
-                var cssAttr = this.target.style.getPropertyValue( "list-style-image" ) ||
-                              this.target.style.getPropertyValue( "list-style" ) || 
-                              this.target.style.getPropertyValue( "background-image" ) || 
-                              this.target.style.getPropertyValue( "background" );
-                if ( cssAttr ) {
-                    this.onImage = true;
-                    this.imageURL = cssAttr.toLowerCase().replace(/url\("*(.+)"*\)/, "$1");
+                try {
+                    var cssAttr = this.target.style.getPropertyValue( "list-style-image" ) ||
+                                  this.target.style.getPropertyValue( "list-style" ) || 
+                                  this.target.style.getPropertyValue( "background-image" ) || 
+                                  this.target.style.getPropertyValue( "background" );
+                    if ( cssAttr ) {
+                        this.onImage = true;
+                        this.imageURL = cssAttr.toLowerCase().replace(/url\("*(.+)"*\)/, "$1");
+                    }
+                } catch ( exception ) {
                 }
             }
         }
@@ -530,6 +540,54 @@ nsContextMenu.prototype = {
           throw "Empty href"; // Without this we try to save as the current doc, for example, HTML case also throws if empty
         }
         return href;
+    },
+    // Get text of link (if possible).
+    linkText : function () {
+        var text = this.gatherTextUnder( this.link );
+        return text;
+    },
+    // Gather all descendent text under given document node.
+    gatherTextUnder : function ( root ) {
+         var text = "";
+         var node = root.firstChild;
+         var depth = 1;
+         while ( node && depth > 0 ) {
+             // See if this node is text.
+             if ( node.nodeName == "#text" ) {
+                 // Add this text to our collection.
+                 text += " " + node.data;
+             } else if ( node.tagName == "IMG" ) {
+                 // If it has an alt= attribute, use that.
+                 altText = node.getAttribute( "alt" );
+                 if ( altText && altText != "" ) {
+                     text = altText;
+                     break;
+                 }
+             }
+             // Find next node to test.
+             // First, see if this node has children.
+             if ( node.hasChildNodes() ) {
+                 // Go to first child.
+                 node = node.firstChild;
+                 depth++;
+             } else {
+                 // No children, try next sibling.
+                 if ( node.nextSibling ) {
+                     node = node.nextSibling;
+                 } else {
+                     // Last resort is our next oldest uncle/aunt.
+                     node = node.parentNode.nextSibling;
+                     depth--;
+                 }
+             }
+         }
+         // Strip leading whitespace.
+         text = text.replace( /^\s+/, "" );
+         // Strip trailing whitespace.
+         text = text.replace( /\s+$/, "" );
+         // Compress remaining whitespace.
+         text = text.replace( /\s+/g, " " );
+         return text;
     },
     // Returns "true" if there's no text selected, null otherwise.
     isNoTextSelected : function ( event ) {
