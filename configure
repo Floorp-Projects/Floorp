@@ -9507,7 +9507,7 @@ then
   exit 1
 fi
 
-MOZ_TIMER_LIBS=-ltimer_s
+MOZ_TIMER_LIBS='$(DIST)/lib/libtimer_s.a'
 
 # Beos needs to link the timer in dynamically
 case "$target" in
