@@ -2435,21 +2435,23 @@ XP_Bool EDT_CanSetCharacterAttribute(MWContext * pMWContext)
     if( !pMWContext || pMWContext->waitingMode || EDT_IsBlocked(pMWContext) ){
         return FALSE;
     }
-    GET_WRITABLE_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer) FALSE;
 
     ED_ElementType type = EDT_GetCurrentElementType(pMWContext);
-    if( (type == ED_ELEMENT_TEXT || type == ED_ELEMENT_SELECTION ||
-         type >= ED_ELEMENT_TABLE) && !EDT_IsJavaScript(pMWContext) )
+    return ( (type == ED_ELEMENT_TEXT || type == ED_ELEMENT_SELECTION ||
+              type >= ED_ELEMENT_TABLE) && !EDT_IsJavaScript(pMWContext) );
+}
+
+// TODO: Should probably go through all containers in a selection
+XP_Bool EDT_IsPreformat(MWContext *pMWContext)
+{
+    GET_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer) FALSE;
+    CEditInsertPoint ip;
+    pEditBuffer->GetInsertPoint(ip);
+    if( ip.m_pElement )
     {
-        CEditContainerElement *pContainer;
-        CEditInsertPoint ip;
-        pEditBuffer->GetInsertPoint(ip);
-        if( ip.m_pElement )
-        {
-            pContainer = ip.m_pElement->FindContainer();
-            if( pContainer )
-                return pContainer->GetType() != P_PREFORMAT;
-        }
+        CEditContainerElement *pContainer = ip.m_pElement->FindContainer();
+        if( pContainer )
+            return pContainer->GetType() == P_PREFORMAT;
     }
     return FALSE;
 }
