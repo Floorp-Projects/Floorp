@@ -27,5 +27,3 @@
 #define DEBUG 1
 
 #include "MemAllocatorConfig.h"
-
-#pragma profile on
