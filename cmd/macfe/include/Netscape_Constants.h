@@ -71,10 +71,14 @@ typedef enum {
 // Browser File Menu cmd id's
 const CommandT cmd_OpenURL		=	1032;
 
-// Browser Go Menu cmd id's
+// Browser Toolbar Button cmd id's
 const CommandT cmd_GoForward	=	1005;
 const CommandT cmd_GoBack		=	1006;
 const CommandT cmd_Home			=	1009;
+const CommandT cmd_Stop			=	1016;
+const CommandT cmd_NetSearch	=	1080;		// load a search page
+const CommandT cmd_ToolbarButton =	'Tlbr';		// a container or url button, always enabled.
+const CommandT cmd_Reload		=	1004;		// Reload the URL in the top window
 
 // other cmd id's
 const CommandT cmd_PageServices		=	1195;

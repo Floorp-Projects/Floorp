@@ -75,18 +75,13 @@
 #define cmd_Preferences				1001
 #define cmd_EditNetwork				1002	// Edit Network Prefs
 #define cmd_EditSecurity			1003	// Edit Security Prefs
-#define cmd_Reload					1004	// Reload the URL in the top window
-//#define cmd_GoForward				1005	// Go forward
-#define cmd_Back					1006	// Go back
 #define cmd_ViewSource				1007	// View source. Handled by hyperWindow
 #define cmd_MailTo					1008	// Mail to
-//#define cmd_Home					1009	// Go home
 #define cmd_DelayImages				1010	// Delay image loading
 #define cmd_LoadImages				1011	// Load all images
 #define cmd_ReloadImage				1013	// Reload images
 #define cmd_Find					1014	// Find
 #define cmd_FindAgain				1015	// Find again
-#define cmd_Stop					1016
 #define cmd_ToggleToolbar			1017
 #define cmd_ToggleLocationBar		1018	// The 4.0 and later terminology
 #define cmd_TogglePersonalToolbar	1199
@@ -115,8 +110,6 @@
 #define cmd_ToggleTaskBar			1037
 
 #define cmd_NewFolder				1048
-
-#define cmd_NetSearch				1080
 
 #ifdef FORTEZZA
 #define	cmd_FortezzaCard			1095
