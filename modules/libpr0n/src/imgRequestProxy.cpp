@@ -219,10 +219,6 @@ NS_IMETHODIMP imgRequestProxy::GetImage(imgIContainer * *aImage)
   mOwner->GetImage(aImage);
   return NS_OK;
 }
-NS_IMETHODIMP imgRequestProxy::SetImage(imgIContainer *aImage)
-{
-  return NS_ERROR_FAILURE;
-}
 
 /* readonly attribute unsigned long imageStatus; */
 NS_IMETHODIMP imgRequestProxy::GetImageStatus(PRUint32 *aStatus)

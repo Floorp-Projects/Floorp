@@ -22,19 +22,19 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIOutputStream.idl"
 
+interface nsIInputStream;
 interface imgILoad;
 
 /**
  * imgIDecoder interface
  *
  * @author Stuart Parmenter <pavlov@netscape.com>
- * @version 0.1
+ * @version 0.2
  * @see imagelib2
  */
 [scriptable, uuid(9eebf43a-1dd1-11b2-953e-f1782f4cbad3)]
-interface imgIDecoder : nsIOutputStream
+interface imgIDecoder : nsISupports
 {
   /**
    * Initalize an image decoder.
@@ -46,4 +46,31 @@ interface imgIDecoder : nsIOutputStream
    * all of the imgIDecoderObserver APIs.
    */
   void init(in imgILoad aLoad);
+
+  /** 
+   * Closes the stream. 
+   */
+  void close();
+
+  /**
+   * Flushes the stream.
+   */
+  void flush();
+
+  /**
+   * Writes data into the stream from an input stream.
+   * Implementer's note: This method is defined by this interface in order
+   * to allow the output stream to efficiently copy the data from the input
+   * stream into its internal buffer (if any). If this method was provide
+   * as an external facility, a separate char* buffer would need to be used
+   * in order to call the output stream's other Write method.
+   * @param fromStream the stream from which the data is read
+   * @param count the maximun number of bytes to write
+   * @return aWriteCount out parameter to hold the number of
+   *         bytes written. if an error occurs, the writecount
+   *         is undefined
+   */
+  unsigned long writeFrom(in nsIInputStream inStr,
+                          in unsigned long count);
+
 };

@@ -49,7 +49,6 @@ class nsPNGDecoder : public imgIDecoder
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIDECODER
-  NS_DECL_NSIOUTPUTSTREAM
 
   nsPNGDecoder();
   virtual ~nsPNGDecoder();

@@ -24,29 +24,22 @@
 
 #include "nsJPEGDecoder.h"
 
+#include "imgIContainerObserver.h"
+
+#include "nsIComponentManager.h"
 #include "nsIInputStream.h"
 
 #include "nspr.h"
-
 #include "nsCRT.h"
-
-#include "nsIComponentManager.h"
-
-#include "imgIContainerObserver.h"
-
-
 #include "ImageLogging.h"
 
-
-NS_IMPL_ISUPPORTS2(nsJPEGDecoder, imgIDecoder, nsIOutputStream)
-
+NS_IMPL_ISUPPORTS1(nsJPEGDecoder, imgIDecoder)
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gJPEGlog = PR_NewLogModule("JPEGDecoder");
 #else
 #define gJPEGlog
 #endif
-
 
 
 static void PR_CALLBACK init_source (j_decompress_ptr jd);
@@ -163,10 +156,6 @@ NS_IMETHODIMP nsJPEGDecoder::Init(imgILoad *aLoad)
 }
 
 
-
-
-/** nsIOutputStream methods **/
-
 /* void close (); */
 NS_IMETHODIMP nsJPEGDecoder::Close()
 {
@@ -196,12 +185,6 @@ NS_IMETHODIMP nsJPEGDecoder::Flush()
     return this->WriteFrom(nsnull, 0, &ret);
 
   return NS_OK;
-}
-
-/* unsigned long write (in string buf, in unsigned long count); */
-NS_IMETHODIMP nsJPEGDecoder::Write(const char *buf, PRUint32 count, PRUint32 *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 /* unsigned long writeFrom (in nsIInputStream inStr, in unsigned long count); */
@@ -578,36 +561,6 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
 
   return rv;
 }
-
-
-/* [noscript] unsigned long writeSegments (in nsReadSegmentFun reader, in voidPtr closure, in unsigned long count); */
-NS_IMETHODIMP nsJPEGDecoder::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute boolean nonBlocking; */
-NS_IMETHODIMP nsJPEGDecoder::GetNonBlocking(PRBool *aNonBlocking)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsJPEGDecoder::SetNonBlocking(PRBool aNonBlocking)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute nsIOutputStreamObserver observer; */
-NS_IMETHODIMP nsJPEGDecoder::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsJPEGDecoder::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-
 
 
 /* Override the standard error method in the IJG JPEG decoder code. */

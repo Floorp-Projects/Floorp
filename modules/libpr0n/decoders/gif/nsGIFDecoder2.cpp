@@ -37,7 +37,7 @@
 // GIF Decoder Implementation
 // This is an adaptor between GIF2 and imgIDecoder
 
-NS_IMPL_ISUPPORTS2(nsGIFDecoder2, imgIDecoder, nsIOutputStream);
+NS_IMPL_ISUPPORTS1(nsGIFDecoder2, imgIDecoder);
 
 nsGIFDecoder2::nsGIFDecoder2()
 {
@@ -137,13 +137,6 @@ NS_IMETHODIMP nsGIFDecoder2::Flush()
 }
 
 //******************************************************************************
-/* unsigned long write (in string buf, in unsigned long count); */
-NS_IMETHODIMP nsGIFDecoder2::Write(const char *buf, PRUint32 count, PRUint32 *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//******************************************************************************
 /* static callback from nsIInputStream::ReadSegments */
 static NS_METHOD ReadDataOut(nsIInputStream* in,
                              void* closure,
@@ -229,39 +222,6 @@ NS_IMETHODIMP nsGIFDecoder2::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     //mRequest->Cancel(NS_BINDING_ABORTED); // XXX is this the correct error ?
   return NS_OK;
 }
-
-//******************************************************************************
-/* [noscript] unsigned long writeSegments (in nsReadSegmentFun reader, in voidPtr closure, in unsigned long count); */
-NS_IMETHODIMP nsGIFDecoder2::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//******************************************************************************
-/* attribute boolean nonBlocking; */
-NS_IMETHODIMP nsGIFDecoder2::GetNonBlocking(PRBool *aNonBlocking)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-//******************************************************************************
-NS_IMETHODIMP nsGIFDecoder2::SetNonBlocking(PRBool aNonBlocking)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//******************************************************************************
-/* attribute nsIOutputStreamObserver observer; */
-NS_IMETHODIMP nsGIFDecoder2::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//******************************************************************************
-NS_IMETHODIMP nsGIFDecoder2::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 
 //******************************************************************************

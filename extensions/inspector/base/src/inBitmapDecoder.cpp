@@ -34,8 +34,6 @@ NS_IMPL_THREADSAFE_ADDREF(inBitmapDecoder);
 NS_IMPL_THREADSAFE_RELEASE(inBitmapDecoder);
 
 NS_INTERFACE_MAP_BEGIN(inBitmapDecoder)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIOutputStream)
-   NS_INTERFACE_MAP_ENTRY(nsIOutputStream)
    NS_INTERFACE_MAP_ENTRY(imgIDecoder)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -80,11 +78,6 @@ NS_IMETHODIMP inBitmapDecoder::Close()
 }
 
 NS_IMETHODIMP inBitmapDecoder::Flush()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP inBitmapDecoder::Write(const char *buf, PRUint32 count, PRUint32 *_retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -146,29 +139,4 @@ NS_IMETHODIMP inBitmapDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, 
   PR_FREEIF(buf);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP inBitmapDecoder::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP inBitmapDecoder::GetNonBlocking(PRBool *aNonBlocking)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP inBitmapDecoder::SetNonBlocking(PRBool aNonBlocking)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP inBitmapDecoder::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP inBitmapDecoder::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }

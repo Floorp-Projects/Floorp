@@ -34,7 +34,7 @@
 
 #include "nsRect.h"
 
-NS_IMPL_ISUPPORTS2(nsPPMDecoder, imgIDecoder, nsIOutputStream)
+NS_IMPL_ISUPPORTS1(nsPPMDecoder, imgIDecoder)
 
 
 nsPPMDecoder::nsPPMDecoder()
@@ -72,12 +72,6 @@ NS_IMETHODIMP nsPPMDecoder::Init(imgILoad *aLoad)
   return NS_OK;
 }
 
-
-
-
-
-/** nsIOutputStream methods **/
-
 /* void close (); */
 NS_IMETHODIMP nsPPMDecoder::Close()
 {
@@ -92,12 +86,6 @@ NS_IMETHODIMP nsPPMDecoder::Close()
 
 /* void flush (); */
 NS_IMETHODIMP nsPPMDecoder::Flush()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* unsigned long write (in string buf, in unsigned long count); */
-NS_IMETHODIMP nsPPMDecoder::Write(const char *buf, PRUint32 count, PRUint32 *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -268,30 +256,3 @@ NS_IMETHODIMP nsPPMDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRU
 
   return NS_OK;
 }
-
-/* [noscript] unsigned long writeSegments (in nsReadSegmentFun reader, in voidPtr closure, in unsigned long count); */
-NS_IMETHODIMP nsPPMDecoder::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute boolean nonBlocking; */
-NS_IMETHODIMP nsPPMDecoder::GetNonBlocking(PRBool *aNonBlocking)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsPPMDecoder::SetNonBlocking(PRBool aNonBlocking)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute nsIOutputStreamObserver observer; */
-NS_IMETHODIMP nsPPMDecoder::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsPPMDecoder::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
