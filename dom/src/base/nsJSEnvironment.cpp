@@ -463,44 +463,51 @@ NotifyXPCIfExceptionPending(JSContext *cx)
 // The number of branch callbacks between calls to JS_MaybeGC
 #define MAYBE_GC_BRANCH_COUNT_MASK 0x00000fff // 4095
 
-// The number of branch callbacks between elapsed time checks.  This is
-// slightly more than the number of callbacks a slow machine makes in a second
-// when running a script that makes callbacks infrequently.
-#define MAYBE_STOP_BRANCH_COUNT_MASK 0x00007fff // 32767
+// The number of branch callbacks before we even check if our start
+// timestamp is initialized. This is a fairly low number as we want to
+// initialize the timestamp early enough to not waste much time before
+// we get there, but we don't want to bother doing this too early as
+// it's not generally necessary.
+#define INITIALIZE_TIME_BRANCH_COUNT_MASK 0x000000ff // 255
 
-// This function is called after each JS branch callback
+// This function is called after each JS branch execution
 JSBool JS_DLL_CALLBACK
 nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 {
   // Get the native context
   nsJSContext *ctx = NS_STATIC_CAST(nsJSContext *, ::JS_GetContextPrivate(cx));
 
-  // Filter out most of the calls to this callback
-  if (++ctx->mBranchCallbackCount & MAYBE_GC_BRANCH_COUNT_MASK)
+  PRUint32 callbackCount = ++ctx->mBranchCallbackCount;
+
+  if (callbackCount & INITIALIZE_TIME_BRANCH_COUNT_MASK) {
     return JS_TRUE;
+  }
+
+  if (callbackCount == INITIALIZE_TIME_BRANCH_COUNT_MASK + 1 &&
+      LL_IS_ZERO(ctx->mBranchCallbackTime)) {
+    // Initialize mBranchCallbackTime to start timing how long the
+    // script has run
+    ctx->mBranchCallbackTime = PR_Now();
+
+    return JS_TRUE;
+  }
+
+  if (callbackCount & MAYBE_GC_BRANCH_COUNT_MASK) {
+    return JS_TRUE;
+  }
 
   // Run the GC if we get this far.
   JS_MaybeGC(cx);
 
-  // Filter out even more of the calls to this callback
-  if (ctx->mBranchCallbackCount & MAYBE_STOP_BRANCH_COUNT_MASK)
-    return JS_TRUE;
-
   PRTime now = PR_Now();
-
-  // If this is the first time we've made it this far, we start timing how
-  // long the script has run
-  if (LL_IS_ZERO(ctx->mBranchCallbackTime)) {
-    ctx->mBranchCallbackTime = now;
-    return JS_TRUE;
-  }
 
   PRTime duration;
   LL_SUB(duration, now, ctx->mBranchCallbackTime);
 
   // Check the amount of time this script has been running
-  if (LL_CMP(duration, <, sMaxScriptRunTime))
+  if (LL_CMP(duration, <, sMaxScriptRunTime)) {
     return JS_TRUE;
+  }
 
   // If we get here we're most likely executing an infinite loop in JS,
   // we'll tell the user about this and we'll give the user the option
@@ -528,15 +535,16 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 
   // Open the dialog.
   PRInt32 buttonPressed = 0;
-  nsresult rv = prompt->ConfirmEx(title.get(), msg.get(),
-                                  (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
-                                  (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
-                                  nsnull, nsnull, nsnull, nsnull, nsnull, &buttonPressed);
+  nsresult rv =
+    prompt->ConfirmEx(title.get(), msg.get(),
+                      (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
+                      (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+                      nsnull, nsnull, nsnull, nsnull, nsnull, &buttonPressed);
 
   if (NS_FAILED(rv) || (buttonPressed == 1)) {
-
     // Allow the script to run this long again
     ctx->mBranchCallbackTime = PR_Now();
+
     return JS_TRUE;
   }
 
