@@ -65,7 +65,7 @@ public:
 
     nsresult              FlattenMetaData(char * buffer, PRUint32 bufSize);
 
-    nsresult              UnflattenMetaData(char * buffer, PRUint32 bufSize);
+    nsresult              UnflattenMetaData(const char * buffer, PRUint32 bufSize);
 
     nsresult              VisitElements(nsICacheMetaDataVisitor * visitor);
 

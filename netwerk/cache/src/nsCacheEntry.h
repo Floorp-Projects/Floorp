@@ -102,8 +102,8 @@ public:
     /**
      * Data accessors
      */
-    nsresult GetData( nsISupports ** result);
-    void     SetData( nsISupports *  data)        { mData = data; }
+    nsISupports *Data()                           { return mData; }
+    void         SetData( nsISupports *  data)    { mData = data; }
 
     PRUint32 DataSize()                           { return mDataSize; }
     void     SetDataSize( PRUint32  size)         { mDataSize = size; }
@@ -120,7 +120,7 @@ public:
                                      const char *  value) { return mMetaData.SetElement(key, value); }
     nsresult VisitMetaDataElements( nsICacheMetaDataVisitor * visitor) { return mMetaData.VisitElements(visitor); }
     nsresult FlattenMetaData(char * buffer, PRUint32 bufSize) { return mMetaData.FlattenMetaData(buffer, bufSize); }
-    nsresult UnflattenMetaData(char * buffer, PRUint32 bufSize) { return mMetaData.UnflattenMetaData(buffer, bufSize); }
+    nsresult UnflattenMetaData(const char * buffer, PRUint32 bufSize) { return mMetaData.UnflattenMetaData(buffer, bufSize); }
     PRUint32 MetaDataSize() { return mMetaData.Size(); }  
 
     void     TouchMetaData();

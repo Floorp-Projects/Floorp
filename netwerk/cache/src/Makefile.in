@@ -1,3 +1,4 @@
+# vim:set ts=8 sw=8 sts=8 noet:
 #
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -66,6 +67,13 @@ CPPSRCS		= \
 	$(NULL)
 
 ifdef NECKO_DISK_CACHE
+ifdef NECKO_DISK_CACHE_SQL
+DEFINES		+= -DNECKO_DISK_CACHE_SQL
+REQUIRES	+= storage
+CPPSRCS += \
+	nsDiskCacheDeviceSQL.cpp \
+	$(NULL)
+else
 CPPSRCS += \
 	nsDiskCacheBinding.cpp \
 	nsDiskCacheBlockFile.cpp \
@@ -74,6 +82,7 @@ CPPSRCS += \
 	nsDiskCacheMap.cpp \
 	nsDiskCacheStreams.cpp \
 	$(NULL)
+endif
 endif
 
 include $(topsrcdir)/config/config.mk

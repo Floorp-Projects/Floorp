@@ -304,7 +304,8 @@ nsCacheEntryDescriptor::GetCacheElement(nsISupports ** result)
     if (!mCacheEntry)                 return NS_ERROR_NOT_AVAILABLE;
     if (mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_STREAM;
 
-    return mCacheEntry->GetData(result);
+    NS_IF_ADDREF(*result = mCacheEntry->Data());
+    return NS_OK;
 }
 
 

@@ -46,10 +46,15 @@
 #include "nsCacheEntry.h"
 #include "nsCacheEntryDescriptor.h"
 #include "nsCacheDevice.h"
-#include "nsDiskCacheDevice.h"
 #include "nsMemoryCacheDevice.h"
 #include "nsICacheVisitor.h"
 #include "nsCRT.h"
+
+#ifdef NECKO_DISK_CACHE_SQL
+#include "nsDiskCacheDeviceSQL.h"
+#else
+#include "nsDiskCacheDevice.h"
+#endif
 
 #include "nsAutoLock.h"
 #include "nsIEventQueue.h"
@@ -341,10 +346,11 @@ nsCacheProfilePrefObserver::ReadPrefs(nsIPrefBranch* branch)
             rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                                         getter_AddRefs(directory));
 #if DEBUG
-        } else if (NS_FAILED(rv)) {
-            // use current process directory during development
-            rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
-                                        getter_AddRefs(directory));
+            if (NS_FAILED(rv)) {
+                // use current process directory during development
+                rv = NS_GetSpecialDirectory(NS_XPCOM_CURRENT_PROCESS_DIR,
+                                            getter_AddRefs(directory));
+            }
 #endif
         }
         if (directory)

@@ -129,15 +129,6 @@ nsCacheEntry::GetDeviceID()
 }
 
 
-nsresult
-nsCacheEntry::GetData(nsISupports **result)
-{
-    NS_ENSURE_ARG_POINTER(result);
-    NS_IF_ADDREF(*result = mData);
-    return NS_OK;
-}
-
-
 void
 nsCacheEntry::TouchData()
 {
