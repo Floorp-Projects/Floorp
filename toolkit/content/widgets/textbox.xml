@@ -48,8 +48,8 @@
       <property name="size"       onset="this.inputField.size = val; return val;"
                                   onget="return this.inputField.size;"/>
       <property name="readonly"   onset="this.inputField.readonly = val;
-                                         if (val) this.setAttribute('disabled', 'true');
-                                         else this.removeAttribute('disabled'); return val;"
+                                         if (val) this.setAttribute('readonly', 'true');
+                                         else this.removeAttribute('readonly'); return val;"
                                   onget="return this.inputField.readonly;"/>
       
       <method name="select">
