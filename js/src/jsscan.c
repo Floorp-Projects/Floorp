@@ -265,12 +265,42 @@ js_CloseTokenStream(JSContext *cx, JSTokenStream *ts)
     return !ts->file || fclose(ts->file) == 0;
 }
 
+static int
+my_fgets(char *buf, int size, FILE *file)
+{
+    int n, i, c;
+    JSBool crflag;
+
+    n = size - 1;
+    if (n < 0)
+        return -1;
+
+    crflag = JS_FALSE;
+    for (i = 0; i < n && (c = getc(file)) != EOF; i++) {
+        buf[i] = c;
+        if (c == '\n') {        /* any \n ends a line */
+            i++;                /* keep the \n; we know there is room for \0 */
+            break;
+        }
+        if (crflag) {           /* \r not followed by \n ends line at the \r */
+            ungetc(c, file);
+            break;              /* and overwrite c in buf with \0 */
+        }
+        crflag = (c == '\r');
+    }
+
+    buf[i] = '\0';
+    return i;
+}
+
 static int32
 GetChar(JSTokenStream *ts)
 {
     int32 c;
-    ptrdiff_t len, olen;
-    jschar *nl;
+    ptrdiff_t i, j, len, olen;
+    JSBool crflag;
+    char cbuf[JS_LINE_LIMIT];
+    jschar *ubuf, *nl;
 
     if (ts->ungetpos != 0) {
         c = ts->ungetbuf[--ts->ungetpos];
@@ -279,38 +309,33 @@ GetChar(JSTokenStream *ts)
             if (ts->linebuf.ptr == ts->linebuf.limit) {
                 len = PTRDIFF(ts->userbuf.limit, ts->userbuf.ptr, jschar);
                 if (len <= 0) {
-                    /* Fill ts->userbuf so that \r and \r\n convert to \n. */
-                    if (ts->file) {
-                        JSBool crflag;
-                        char cbuf[JS_LINE_LIMIT];
-                        jschar *ubuf;
-                        ptrdiff_t i, j;
-
-                        crflag = (ts->flags & TSF_CRFLAG) != 0;
-                        if (!fgets(cbuf, JS_LINE_LIMIT - crflag, ts->file)) {
-                            ts->flags |= TSF_EOF;
-                            return EOF;
-                        }
-                        len = olen = strlen(cbuf);
-                        JS_ASSERT(len > 0);
-                        ubuf = ts->userbuf.base;
-                        i = 0;
-                        if (crflag) {
-                            ts->flags &= ~TSF_CRFLAG;
-                            if (cbuf[0] != '\n') {
-                                ubuf[i++] = '\n';
-                                len++;
-                                ts->linepos--;
-                            }
-                        }
-                        for (j = 0; i < len; i++, j++)
-                            ubuf[i] = (jschar) (unsigned char) cbuf[j];
-                        ts->userbuf.limit = ubuf + len;
-                        ts->userbuf.ptr = ubuf;
-                    } else {
+                    if (!ts->file) {
                         ts->flags |= TSF_EOF;
                         return EOF;
                     }
+
+                    /* Fill ts->userbuf so that \r and \r\n convert to \n. */
+                    crflag = (ts->flags & TSF_CRFLAG) != 0;
+                    len = my_fgets(cbuf, JS_LINE_LIMIT - crflag, ts->file);
+                    if (len <= 0) {
+                        ts->flags |= TSF_EOF;
+                        return EOF;
+                    }
+                    olen = len;
+                    ubuf = ts->userbuf.base;
+                    i = 0;
+                    if (crflag) {
+                        ts->flags &= ~TSF_CRFLAG;
+                        if (cbuf[0] != '\n') {
+                            ubuf[i++] = '\n';
+                            len++;
+                            ts->linepos--;
+                        }
+                    }
+                    for (j = 0; i < len; i++, j++)
+                        ubuf[i] = (jschar) (unsigned char) cbuf[j];
+                    ts->userbuf.limit = ubuf + len;
+                    ts->userbuf.ptr = ubuf;
                 }
                 if (ts->listener) {
                     ts->listener(ts->filename, ts->lineno, ts->userbuf.ptr, len,
@@ -323,9 +348,9 @@ GetChar(JSTokenStream *ts)
                  */
                 for (nl = ts->userbuf.ptr; nl < ts->userbuf.limit; nl++) {
                     /*
-                    * Try to prevent value-testing on most characters by
-                    * filtering out characters that aren't 000x or 202x.
-                    */
+                     * Try to prevent value-testing on most characters by
+                     * filtering out characters that aren't 000x or 202x.
+                     */
                     if ((*nl & 0xDFD0) == 0) {
                         if (*nl == '\n')
                             break;
