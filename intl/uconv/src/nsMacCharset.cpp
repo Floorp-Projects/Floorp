@@ -75,7 +75,7 @@ public:
 };
 
 NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsMacCharsetFactory , NS_IFACTORY_IID);
+NS_IMPL_ISUPPORTS( nsMacCharsetFactory , kIFactoryIID);
 
 NS_IMETHODIMP nsMacCharsetFactory::CreateInstance(
     nsISupports* aDelegate, const nsIID &aIID, void** aResult)
