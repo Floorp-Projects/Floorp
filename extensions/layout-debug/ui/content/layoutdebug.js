@@ -75,6 +75,10 @@ nsLDBBrowserContentListener.prototype = {
   // nsIWebProgressListener implementation
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
     {
+      if (!(aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) ||
+          aWebProgress != gBrowser.webProgress)
+        return;
+
       if (aStateFlags & nsIWebProgressListener.STATE_START) {
         this.setButtonEnabled(this.mStopButton, true);
         this.setButtonEnabled(this.mForwardButton, gBrowser.canGoForward);
@@ -104,6 +108,8 @@ nsLDBBrowserContentListener.prototype = {
   onLocationChange : function(aWebProgress, aRequest, aLocation)
     {
       this.mURLBar.value = aLocation.spec;
+      this.setButtonEnabled(this.mForwardButton, gBrowser.canGoForward);
+      this.setButtonEnabled(this.mBackButton, gBrowser.canGoBack);
     },
 
   onStatusChange : function(aWebProgress, aRequest, aStatus, aMessage)
