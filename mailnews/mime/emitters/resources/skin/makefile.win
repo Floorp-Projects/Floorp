@@ -26,10 +26,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: 
 	$(MAKE_INSTALL) mailheader.css	      $(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) addcard.gif		$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) attach.gif		$(DIST)\bin\chrome\messenger\skin\default
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messenger\skin\default\mailheader.css
-	rm -f $(DIST)\bin\chrome\messenger\skin\default\addcard.gif
-	rm -f $(DIST)\bin\chrome\messenger\skin\default\attach.gif
+
