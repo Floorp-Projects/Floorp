@@ -100,7 +100,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths()
 
     // Get the columns's style
     const nsStylePosition* colPosition;
-    colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+    colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)colPosition);
 
     // Get fixed column width if it has one
     if (eStyleUnit_Coord==colPosition->mWidth.GetUnit()) 
@@ -120,7 +120,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths()
       {
         // Get the cell's style
         const nsStylePosition* cellPosition;
-        cellFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)cellPosition);
+        cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)cellPosition);
 
         // Get fixed column width if it has one
         if (eStyleUnit_Coord==cellPosition->mWidth.GetUnit()) 
@@ -143,7 +143,7 @@ PRBool FixedTableLayoutStrategy::AssignPreliminaryColumnWidths()
   {
     // Get the table's style
     const nsStylePosition* tablePosition;
-    mTableFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)tablePosition);
+    mTableFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)tablePosition);
     if (eStyleUnit_Coord==tablePosition->mWidth.GetUnit())
     {
       nscoord specifiedTableWidth = tablePosition->mWidth.GetCoordValue();
