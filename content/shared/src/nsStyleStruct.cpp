@@ -1088,6 +1088,12 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
   return NS_STYLE_HINT_VISUAL;
 }
 
+PRBool nsStyleBackground::HasFixedBackground() const
+{
+  return mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
+         mBackgroundImage;
+}
+
 // --------------------
 // nsStyleDisplay
 //
