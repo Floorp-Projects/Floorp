@@ -8,6 +8,9 @@ function run_test() {
   var chan = ios.newChannel("http://www.mozilla.org/", null, null)
                 .QueryInterface(Components.interfaces.nsIHttpChannel);
 
+  check_header(chan, "host", "www.mozilla.org");
+  check_header(chan, "Host", "www.mozilla.org");
+
   chan.setRequestHeader("foopy", "bar", false);
   check_header(chan, "foopy", "bar");
 
