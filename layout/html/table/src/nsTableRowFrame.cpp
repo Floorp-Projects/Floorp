@@ -1203,6 +1203,8 @@ nsTableRowFrame::IR_TargetIsChild(nsIPresContext*          aPresContext,
     // which will bias the balancing. Leave the avail width alone, since it is a best guess.
     // After the table balances, the cell will get reflowed with the correct computed width.
     PRBool resetComputedWidth = aTableFrame.NeedStrategyInit() || aTableFrame.NeedStrategyBalance();
+    if (resetComputedWidth)
+      cellFrame->SetNeedPass2Reflow(PR_TRUE);
     InitChildReflowState(*aPresContext, cellAvailSize, aTableFrame.IsBorderCollapse(), 
                          p2t, kidRS, resetComputedWidth); 
 
