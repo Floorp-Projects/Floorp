@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.4 2000/05/18 00:41:38 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.5 2000/05/18 15:32:18 mcgreer%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -6818,7 +6818,7 @@ ssl3_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
 	    /* must be copied to msg_body and dealt with from there */
 	    unsigned int bytes;
 
-	    bytes = MIN(buf->len, ssl3->hs.msg_len);
+	    bytes = PR_MIN(buf->len, ssl3->hs.msg_len);
 
 	    /* Grow the buffer if needed */
 	    if (bytes > ssl3->hs.msg_body.space - ssl3->hs.msg_body.len) {
