@@ -184,7 +184,7 @@ fips_140_1()
   html_msg $? 46 "Init NSS with a corrupted library (dbtest -r)"
   echo "cp ${TMP}/softokn3.sav ${SOFTOKEN}"
   cp ${TMP}/softokn3.sav ${SOFTOKEN}
-  echor "rm ${TMP}/softokn3.sav"
+  echo "rm ${TMP}/softokn3.sav"
   rm ${TMP}/softokn3.sav
 }
 
