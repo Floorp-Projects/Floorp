@@ -353,6 +353,7 @@
   (n-type-names 0 :type integer)                     ;Number of type names defined so far
   (types-reverse nil :type (or null hash-table))     ;Hash table of (kind tags parameters) -> type; nil if invalid
   (oneof-tags nil :type (or null hash-table))        ;Hash table of (oneof-tag . field-type) -> (must-be-unique oneof-type ... oneof-type); nil if invalid
+  (bottom-type nil :type (or null type))             ;Subtype of all types used for nonterminating computations
   (void-type nil :type (or null type))               ;Type used for placeholders
   (boolean-type nil :type (or null type))            ;Type used for booleans
   (integer-type nil :type (or null type))            ;Type used for integers
@@ -612,6 +613,7 @@
 
 (deftype typekind ()
   '(member     ;tags             ;parameters
+    :bottom    ;nil              ;nil
     :void      ;nil              ;nil
     :boolean   ;nil              ;nil
     :integer   ;nil              ;nil
@@ -624,6 +626,13 @@
     :tuple     ;(tag1 ... tagn)  ;(element1-type ... elementn-type)
     :oneof     ;(tag1 ... tagn)  ;(element1-type ... elementn-type)
     :address)) ;nil              ;(element-type)
+
+
+; Return true if typekind1 is the same or more specific (i.e. a subtype) than typekind2.
+(defun typekind<= (typekind1 typekind2)
+  (or (eq typekind1 typekind2)
+      (eq typekind1 :bottom)
+      (and (eq typekind1 :integer) (eq typekind2 :rational))))
 
 
 (defstruct (type (:constructor allocate-type (kind tags parameters))
@@ -688,6 +697,28 @@
   (car (type-parameters type)))
 
 
+; Return true if type1 is the same or more specific (i.e. a subtype) than type2.
+(defun type<= (type1 type2)
+  (or (eq type1 type2)
+      (let ((kind1 (type-kind type1))
+            (kind2 (type-kind type2)))
+        (or (eq kind1 :bottom)
+            (and (eq kind1 :integer) (eq kind2 :rational))
+            (and (eq kind1 :->) (eq kind2 :->)
+                 ; For now we require the argument types to match exactly.
+                 (equal (->-argument-types type1) (->-argument-types type2))
+                 ; This might fall into an infinite loop, but it's OK for now.
+                 (type<= (->-result-type type1) (->-result-type type2)))))))
+
+
+; Return the most specific common supertype of type1 and type2 or nil if there is none.
+(defun type-lub (type1 type2)
+  (cond
+   ((type<= type1 type2) type2)
+   ((type<= type2 type1) type1)
+   (t nil)))
+
+
 ; Return true if serial-number-1 is less than serial-number-2.
 ; Each serial-number is either an integer or nil, which is considered to
 ; be positive infinity.
@@ -723,6 +754,7 @@
            (print-type (->-result-type type) stream))))
       
       (case (type-kind type)
+        (:bottom (write-string "bottom" stream))
         (:void (write-string "void" stream))
         (:boolean (write-string "boolean" stream))
         (:integer (write-string "integer" stream))
@@ -1276,6 +1308,7 @@
 ; If shallow is true, only test at the top level.
 (defun value-has-type (value type &optional shallow)
   (case (type-kind type)
+    (:bottom nil)
     (:void (null value))
     (:boolean t)
     (:integer (integerp value))
@@ -1447,7 +1480,8 @@
                (arg-types (nreverse arg-types))
                (arg-annotated-exprs (nreverse arg-annotated-exprs)))
            (unless (and (eq (type-kind function-type) :->)
-                        (equal (->-argument-types function-type) arg-types))
+                        (= (length arg-types) (length (->-argument-types function-type)))
+                        (every #'type<= arg-types (->-argument-types function-type)))
              (error "~@<Call type mismatch in ~S: ~_Function of type ~A called with arguments of types~:_~{ ~A~}~:>"
                     value-expr
                     (print-type-to-string function-type)
@@ -1531,7 +1565,7 @@
 ;   The annotated value-expr
 (defun scan-typed-value (world type-env value-expr expected-type)
   (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
-    (unless (eq type expected-type)
+    (unless (type<= type expected-type)
       (error "Expected type ~A for ~:W but got type ~A"
              (print-type-to-string expected-type)
              value-expr
@@ -1546,7 +1580,7 @@
 ;   The annotated value-expr
 (defun scan-kinded-value (world type-env value-expr expected-type-kind)
   (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
-    (unless (eq (type-kind type) expected-type-kind)
+    (unless (typekind<= (type-kind type) expected-type-kind)
       (error "Expected ~(~A~) for ~:W but got type ~A"
              expected-type-kind
              value-expr
@@ -1574,7 +1608,7 @@
                             (format *error-output* "~&~@<~2IWhile computing ~A: ~_~:W~:>~%"
                                     symbol value-expr))))
           (multiple-value-bind (value-code type) (scan-value (symbol-world symbol) *null-type-env* value-expr)
-            (unless (eq type (symbol-type symbol))
+            (unless (type<= type (symbol-type symbol))
               (error "~A evaluates to type ~A, but is defined with type ~A"
                      symbol
                      (print-type-to-string type)
@@ -1667,16 +1701,14 @@
 (defun eval-bottom ()
   (error "Reached a BOTTOM statement"))
 
-; (bottom <type>)
-; Raises an error.  type is its phantom result type to satisfy type-checking
-; even though bottom never returns.
-(defun scan-bottom (world type-env special-form type-expr)
+; (bottom)
+; Raises an error.
+(defun scan-bottom (world type-env special-form)
   (declare (ignore type-env))
-  (let ((type (scan-type world type-expr)))
-    (values
-     '(eval-bottom)
-     type
-     (list 'expr-annotation:special-form special-form type-expr))))
+  (values
+   '(eval-bottom)
+   (world-bottom-type world)
+   (list 'expr-annotation:special-form special-form)))
 
 
 ; (function ((<var1> <type1> [:unused]) ... (<varn> <typen> [:unused])) <body>)
@@ -1715,14 +1747,53 @@
                        (scan-typed-value world type-env condition-expr (world-boolean-type world))
     (multiple-value-bind (true-code true-type true-annotated-expr) (scan-value world type-env true-expr)
       (multiple-value-bind (false-code false-type false-annotated-expr) (scan-value world type-env false-expr)
-        (unless (eq true-type false-type)
-          (error "~S: ~A and ~S: ~A used as alternatives in an if"
-                 true-expr (print-type-to-string true-type)
-                 false-expr (print-type-to-string false-type)))
-        (values
-         (list 'if condition-code true-code false-code)
-         true-type
-         (list 'expr-annotation:special-form special-form condition-annotated-expr true-annotated-expr false-annotated-expr))))))
+        (let ((join-type (type-lub true-type false-type)))
+          (unless join-type
+            (error "~S: ~A and ~S: ~A used as alternatives in an if"
+                   true-expr (print-type-to-string true-type)
+                   false-expr (print-type-to-string false-type)))
+          (values
+           (list 'if condition-code true-code false-code)
+           join-type
+           (list 'expr-annotation:special-form special-form condition-annotated-expr true-annotated-expr false-annotated-expr)))))))
+
+
+(defconstant *semantic-exception-type-name* 'semantic-exception)
+
+; (throw <value-expr>)
+; <value-expr> must have type *semantic-exception-type-name*, which must be the name of some user-defined type in the environment.
+(defun scan-throw (world type-env special-form value-expr)
+  (multiple-value-bind (value-code value-annotated-expr)
+                       (scan-typed-value world type-env value-expr (scan-type world *semantic-exception-type-name*))
+    (values
+     (list 'throw ':semantic-exception value-code)
+     (world-bottom-type world)
+     (list 'expr-annotation:special-form special-form value-annotated-expr))))
+
+
+; (catch <body> (<var> [:unused]) <handler>)
+(defun scan-catch (world type-env special-form body-expr arg-binding-expr handler-expr)
+  (multiple-value-bind (body-code body-type body-annotated-expr) (scan-value world type-env body-expr)
+    (unless (and (consp arg-binding-expr)
+                 (member (cdr arg-binding-expr) '(nil (:unused)) :test #'equal))
+      (error "Bad catch binding ~S" arg-binding-expr))
+    (let* ((arg-symbol (scan-name world (first arg-binding-expr)))
+           (arg-type (scan-type world *semantic-exception-type-name*))
+           (arg-bindings (list (cons arg-symbol arg-type)))
+           (type-env (type-env-add-bindings type-env arg-bindings)))
+      (multiple-value-bind (handler-code handler-type handler-annotated-expr) (scan-value world type-env handler-expr)
+        (let ((join-type (type-lub body-type handler-type)))
+          (unless join-type
+            (error "~S: ~A and ~S: ~A used as alternatives in a catch"
+                   body-expr (print-type-to-string body-type)
+                   handler-expr (print-type-to-string handler-type)))
+          (values
+           `(block nil
+              (let ((,arg-symbol (catch ':semantic-exception (return ,body-code))))
+                ,@(and (eq (second arg-binding-expr) ':unused) `((declare (ignore ,arg-symbol))))
+                ,handler-code))
+           join-type
+           (list 'expr-annotation:special-form special-form body-annotated-expr arg-binding-expr handler-annotated-expr)))))))
 
 
 ;;; Vectors
@@ -1990,15 +2061,18 @@
                 (setq unseen-tags (delete tag unseen-tags))
                 (error "Duplicate case tag ~A" tag))
               (when var
-                (unless (eq field-type (scan-type world var-type-expr))
-                  (error "Case tag ~A type mismatch: ~A and ~S" tag
-                         (print-type-to-string field-type) var-type-expr))
-                (setq local-type-env (type-env-add-bindings local-type-env (list (cons var field-type)))))))
+                (let ((var-type (scan-type world var-type-expr)))
+                  (unless (eq field-type var-type)
+                    (error "Case tag ~A type mismatch: ~A and ~S" tag
+                           (print-type-to-string field-type) var-type-expr))
+                  (setq local-type-env (type-env-add-bindings local-type-env (list (cons var field-type))))))))
           (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world local-type-env (second case))
-            (cond
-             ((null body-type) (setq body-type value-type))
-             ((not (eq body-type value-type))
-              (error "Case result type mismatch: ~A and ~A" (print-type-to-string body-type) (print-type-to-string value-type))))
+            (if body-type
+              (let ((new-body-type (type-lub body-type value-type)))
+                (unless new-body-type
+                  (error "Case result type mismatch: ~A and ~A" (print-type-to-string body-type) (print-type-to-string value-type)))
+                (setq body-type new-body-type))
+              (setq body-type value-type))
             (push (list tags
                         (if var
                           `(let ((,var (cdr ,oneof-var)))
@@ -2299,6 +2373,8 @@
      (bottom scan-bottom depict-bottom)
      (function scan-function depict-function)
      (if scan-if depict-if)
+     (throw scan-throw depict-throw)
+     (catch scan-catch depict-catch)
      
      ;;Vectors
      (vector scan-vector-form depict-vector-form)
@@ -2340,7 +2416,8 @@
 
 
 (defparameter *default-types*
-  '((void . :void)
+  '((bottom-type . :bottom)
+    (void . :void)
     (boolean . :boolean)
     (integer . :integer)
     (rational . :rational)
@@ -2383,7 +2460,6 @@
     (bitwise-xor (-> (integer integer) integer) #'logxor)
     (bitwise-shift (-> (integer integer) integer) #'ash)
     
-    (integer-to-rational (-> (integer) rational) #'identity :phantom)
     (rational-to-double (-> (rational) double) #'rational-to-double)
     
     (double-is-zero (-> (double) boolean) #'double-is-zero)
@@ -2713,6 +2789,7 @@
     (dolist (command commands)
       (scan-command world grammar-info-var command)))
   (unite-types world)
+  (setf (world-bottom-type world) (make-type world :bottom nil nil))
   (setf (world-void-type world) (make-type world :void nil nil))
   (setf (world-boolean-type world) (make-type world :boolean nil nil))
   (setf (world-integer-type world) (make-type world :integer nil nil))
