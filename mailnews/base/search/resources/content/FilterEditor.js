@@ -27,12 +27,16 @@ var gFilter;
 // cache the key elements we need
 var gFilterNameElement;
 var gActionElement;
+var gActionTargetElement;
 
 // search stuff (move to overlay)
 var gSearchRowContainer;
 var gSearchTermContainer;
 
 var nsIMsgSearchValidityManager = Components.interfaces.nsIMsgSearchValidityManager;
+
+var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
+var nsIMsgSearchTerm = Components.interfaces.nsIMsgSearchTerm;
 
 function filterEditorOnLoad()
 {
@@ -86,6 +90,19 @@ function initializeDialog(filter)
     gActionElement = document.getElementById("actionMenu");
     gActionElement.selectedItem=gActionElement.getElementsByAttribute("data", filter.action)[0];
 
+    gActionTargetElement = document.getElementById("actionTargetFolder");
+    if (filter.action == nsMsgFilterAction.MoveToFolder) {
+        // there are multiple sub-items that have given attribute
+        var targets = gActionTargetElement.getElementsByAttribute("data", filter.actionTargetFolderUri);
+
+        if (targets && targets.length) {
+            var target = targets[0];
+            if (target.tagName == "menuitem")
+                gActionTargetElement.selectedItem = target;
+        }
+    }
+        
+
     var scope = getScope(filter);
     
     initializeSearchRows(scope, filter.searchTerms)
@@ -96,7 +113,6 @@ function initializeSearchRows(scope, searchTerms)
 {
     gSearchRowContainer = document.getElementById("searchTermList");
     gSearchTermContainer = document.getElementById("searchterms");
-    dump("gSearchTermContainer = " + gSearchTermContainer + "\n");
     var numTerms = searchTerms.Count();
     for (var i=0; i<numTerms; i++) {
         createSearchRow(i);
@@ -107,7 +123,7 @@ function initializeSearchRows(scope, searchTerms)
       if (searchTermElement) {
           searchTermElement.searchScope = scope;
           var searchTerm =
-              searchTerms.QueryElementAt(i, Components.interfaces.nsIMsgSearchTerm);
+              searchTerms.QueryElementAt(i, nsIMsgSearchTerm);
           if (searchTerm) searchTermElement.searchTerm = searchTerm;
       }
       else {
@@ -188,9 +204,7 @@ function constructRow(treeCellChildren)
 
 function saveFilter() {
 
-    var filterName = document.getElementById("filterName");
-    filterName.value = gFilter.filterName;
-
+    gFilter.filterName = gFilterNameElement.value;
 
     var searchTermElements =
         document.getElementById("searchterms").childNodes;
@@ -204,6 +218,13 @@ function saveFilter() {
             dump("**** error: " + ex + "\n");
         }
     }
-    
 
+    var action = gActionElement.selectedItem.getAttribute("data");
+    gFilter.action = action;
+    if (action == nsMsgFilterAction.MoveToFolder &&
+        gActionElement.selectedItem)
+        gFilter.actionTargetFolderUri =
+            gActionTargetElement.selectedItem.getAttribute("data");
+    else if (action == nsMsgFilterAction.ChangePriority)
+        gFilter.actionPriority = 0; // whatever, fix this
 }

@@ -120,7 +120,7 @@ Rights Reserved.
           <menupopup>
               <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup>
-                  <menuitem uri="..." value="file here" />
+                  <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
                   <menuseparator/>
                 </menupopup>
               </menu>
