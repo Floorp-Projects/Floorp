@@ -1355,8 +1355,14 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
           else {
             NS_ADDREF(data);
             URLKey  key(aURL);
-            mLoadingSheets.Put(&key, data);
-            result = ParseSheet(uin, data, aCompleted, aSheet);
+						if (aObserver == nsnull) {
+	            mLoadingSheets.Put(&key, data);
+	            result = ParseSheet(uin, data, aCompleted, aSheet);
+	          }
+						else {
+	      			result = LoadSheet(key, data); // this may steal pending alternates too
+	      			aCompleted = PR_FALSE;
+	      		}
           }
           NS_RELEASE(uin);
         }
