@@ -45,7 +45,7 @@
 
 JS_BEGIN_EXTERN_C
 
-#if defined(__GNUC__) && defined(__i386__)
+#if defined(__GNUC__) && defined(__i386__) && (__GNUC__ >= 3)
 #define JS_DHASH_FASTCALL __attribute__ ((regparm (3),stdcall))
 #else
 #define JS_DHASH_FASTCALL
