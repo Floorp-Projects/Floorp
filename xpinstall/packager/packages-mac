@@ -32,9 +32,11 @@ viewer:Mozilla Editor
 viewer:Mozilla Installer
 viewer:Mozilla Message Compose 
 viewer:Mozilla Messenger 
+viewer:Mozilla NSPR Log
 viewer:Mozilla Preferences 
 viewer:Mozilla Profile Manager
 viewer:Mozilla Profile Wizard
+viewer:Mozilla Select Profile
 viewer:Essential Files:AppCores.shlb 
 viewer:Essential Files:AppShell.shlb 
 viewer:Essential Files:gfx.shlb 
