@@ -29,6 +29,7 @@
 #include "nsIServiceManager.h"
 #include "nsPSMShimLayer.h"
 #include "nsSSLIOLayer.h"
+#include "nsIWebProgressListener.h"
 
 static PRDescIdentity  nsSSLIOLayerIdentity;
 static PRIOMethods     nsSSLIOLayerMethods;
@@ -218,7 +219,15 @@ nsSSLIOLayerClose(PRFileDesc *fd)
         
         infoObject->GetControlPtr(&control);
         infoObject->GetSocketPtr(&sock);
-        infoObject->SetPickledStatus();
+        /*
+         * was       infoObject->SetPickledStatus();
+         * The PSM code decrements the refcount on the SSL state 
+         * whenever it is asked for the pickled status.  Until we
+         * get a PSM protocol change implemented, we have to avoid
+         * asking for the pickled status twice on the same connection.
+         * --jgmyers
+         */
+        infoObject->GetPickledStatus(nsnull);
         
         CMT_GetSSLDataErrorCode(control, sock, &errorCode);
         CMT_DestroyDataConnection(control, sock);
@@ -531,14 +540,30 @@ nsPSMSocketInfo::GetPickledStatus(char * *pickledStatusString)
     
     if (mPickledStatus)
     {
-        PRInt32 len = *(int*)mPickledStatus;
-        char *out = (char *)nsMemory::Alloc(len);
-        memcpy(out, mPickledStatus, len);
-        *pickledStatusString = out;
+        if (pickledStatusString) {
+            PRInt32 len = *(int*)mPickledStatus;
+            char *out = (char *)nsMemory::Alloc(len);
+            memcpy(out, mPickledStatus, len);
+            *pickledStatusString = out;
+        }
         return NS_OK;
     }
-    *pickledStatusString = nsnull;
+    if (pickledStatusString) {
+        *pickledStatusString = nsnull;
+    }
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsPSMSocketInfo::GetSecurityState(PRInt32 *aSecurityState)
+{
+    if (!mPickledStatus)
+        SetPickledStatus();
+
+    *aSecurityState = mPickledStatus ? nsIWebProgressListener::STATE_IS_SECURE
+        : nsIWebProgressListener::STATE_IS_BROKEN;
+
+    return NS_OK;
 }
 
 nsresult

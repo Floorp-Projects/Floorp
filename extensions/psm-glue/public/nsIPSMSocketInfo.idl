@@ -40,5 +40,7 @@ interface nsIPSMSocketInfo : nsISecureSocketInfo {
     readonly attribute nsFileDescStar   fileDescPtr;
 
     void getPickledStatus(out charPtr pickledStatus);
+    
+    readonly attribute long securityState;
 };
 
