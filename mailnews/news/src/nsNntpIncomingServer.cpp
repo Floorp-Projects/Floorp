@@ -1309,9 +1309,11 @@ NS_IMETHODIMP
 nsNntpIncomingServer::CommitSubscribeChanges()
 {
     nsresult rv;
+
+    // we force the newrc to be dirty, so it will get written out when
+    // we call WriteNewsrcFile()
     rv = SetNewsrcHasChanged(PR_TRUE);
     NS_ENSURE_SUCCESS(rv,rv);
-
     return WriteNewsrcFile();
 }
 
