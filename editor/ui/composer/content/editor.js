@@ -306,7 +306,7 @@ function EditorStartup(editorType, editorElement)
   editorShell.LoadUrl(url);
 }
 
-// This is the only method also called by Message Composer
+// This is also called by Message Composer
 function EditorSharedStartup()
 {
   // Just for convenience
@@ -367,6 +367,33 @@ function EditorSharedStartup()
   gColorObj.LastTextColor = "";
   gColorObj.LastBackgroundColor = "";
   gColorObj.LastHighlightColor = "";
+}
+
+// This method is only called by Message composer when recycling a compose window
+function EditorResetFontAndColorAttributes()
+{
+  document.getElementById("cmd_fontFace").setAttribute("state", "");
+  window.editorShell.RemoveTextProperty("font", "color");
+  window.editorShell.RemoveTextProperty("font", "bgcolor");
+  window.editorShell.RemoveTextProperty("font", "size");
+  window.editorShell.RemoveTextProperty("small", "");
+  window.editorShell.RemoveTextProperty("big", "");
+  var bodyelement = GetBodyElement();
+  if (bodyelement)
+  {
+    bodyelement.removeAttribute("text");
+    bodyelement.removeAttribute("bgcolor");
+    bodyelement.removeAttribute("link");
+    bodyelement.removeAttribute("alink");
+    bodyelement.removeAttribute("vlink");
+    bodyelement.removeAttribute("background");
+  }
+  gColorObj.LastTextColor = "";
+  gColorObj.LastBackgroundColor = "";
+  gColorObj.LastHighlightColor = "";
+  document.getElementById("cmd_fontColor").setAttribute("state", "");
+  document.getElementById("cmd_backgroundColor").setAttribute("state", "");
+  UpdateDefaultColors();
 }
 
 function _EditorNotImplemented()
