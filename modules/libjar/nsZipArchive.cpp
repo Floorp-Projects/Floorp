@@ -667,7 +667,7 @@ PRInt32 nsZipArchive::GetItem( const char * aFilename, nsZipItem **result)
 //---------------------------------------------
 // nsZipArchive::ReadInit
 //---------------------------------------------
-PRInt32 nsZipArchive::ReadInit(const char* zipEntry, nsZipRead** aRead)
+PRInt32 nsZipArchive::ReadInit(const char* zipEntry, nsZipRead* aRead)
 {
   //-- Parameter validity check
   if (zipEntry == 0 || aRead == 0)
@@ -680,10 +680,8 @@ PRInt32 nsZipArchive::ReadInit(const char* zipEntry, nsZipRead** aRead)
   if (!item)
     return ZIP_ERR_FNF; 
 
-  //-- Create nsZipRead object
-  *aRead = new nsZipRead(this, item);
-  if (aRead == 0)
-    return ZIP_ERR_MEMORY;
+  //-- Initialize nsZipRead object
+  aRead->Init(this, item);
 
   //-- Read the item into memory
   //   Inflate if necessary and save in mInflatedFileBuffer
@@ -704,7 +702,7 @@ PRInt32 nsZipArchive::ReadInit(const char* zipEntry, nsZipRead** aRead)
   }
 
   if (result == ZIP_OK)
-    (*aRead)->mFileBuffer = buf;
+    aRead->mFileBuffer = buf;
   return result;
 }
   
@@ -1735,26 +1733,10 @@ nsZipItem::~nsZipItem()
 }
 
 //------------------------------------------
-// nsZipRead constructor and destructor
+// nsZipRead
 //------------------------------------------
 
 MOZ_DECL_CTOR_COUNTER(nsZipRead)
-
-nsZipRead::nsZipRead( nsZipArchive* aZipArchive, nsZipItem* aZipItem )
-: mArchive(aZipArchive), 
-  mItem(aZipItem), 
-  mCurPos(0), 
-  mFileBuffer(0)
-{
-  MOZ_COUNT_CTOR(nsZipRead);
-}
-
-nsZipRead::~nsZipRead()
-{
-  PR_FREEIF(mFileBuffer);
-
-  MOZ_COUNT_DTOR(nsZipRead);
-}
 
 //------------------------------------------
 // nsZipFind constructor and destructor
