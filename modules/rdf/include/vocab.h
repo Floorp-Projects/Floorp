@@ -38,7 +38,10 @@ typedef struct _RDF_CoreVocabStruct {
   RDF_Resource RDF_lessThanOrEqual;
   RDF_Resource RDF_greaterThanOrEqual;
   RDF_Resource RDF_stringEquals;
+  RDF_Resource RDF_stringNotEquals;
   RDF_Resource RDF_substring;
+  RDF_Resource RDF_stringStartsWith;
+  RDF_Resource RDF_stringEndsWith;
   RDF_Resource RDF_child;
   RDF_Resource RDF_comment;
   RDF_Resource RDF_content;
@@ -73,6 +76,7 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_HTMLURL;
   RDF_Resource RDF_HTMLHeight;
   RDF_Resource RDF_LocalFiles;
+  RDF_Resource RDF_FTP;
   RDF_Resource RDF_Appletalk;
   RDF_Resource RDF_Mail;
   RDF_Resource RDF_Password;
@@ -92,12 +96,15 @@ typedef struct _RDF_NCVocabStruct {
   RDF_Resource RDF_HTMLType;
   RDF_Resource RDF_URLShortcut;
   RDF_Resource RDF_Cookies;
+  RDF_Resource RDF_Toolbar;
 
   /* Commands */
   
   RDF_Resource RDF_Command;
   RDF_Resource RDF_Command_Launch;
   RDF_Resource RDF_Command_Refresh;
+  RDF_Resource RDF_Command_Atalk_FlatHierarchy;
+  RDF_Resource RDF_Command_Atalk_Hierarchy;
 
   /* NavCenter appearance styles */
 

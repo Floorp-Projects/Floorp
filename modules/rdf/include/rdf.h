@@ -182,7 +182,7 @@ PR_PUBLIC_API(RDF_Resource) RDFUtil_GetQuickFileFolder();
 PR_PUBLIC_API(void) RDFUtil_SetQuickFileFolder(RDF_Resource container);
 PR_PUBLIC_API(RDF_Resource) RDFUtil_GetPTFolder();
 PR_PUBLIC_API(void) RDFUtil_SetPTFolder(RDF_Resource container);
-PR_PUBLIC_API(RDF_Cursor)  RDF_Find (RDF_Resource s, void* v, RDF_ValueType type);
+PR_PUBLIC_API(RDF_Cursor)  RDF_Find (RDF_Resource s, RDF_Resource match, void* v, RDF_ValueType type);
 PR_PUBLIC_API(RDF_Resource) RDFUtil_GetNewBookmarkFolder();
 PR_PUBLIC_API(void) RDFUtil_SetNewBookmarkFolder(RDF_Resource container);
 PR_PUBLIC_API(RDF_Resource) RDFUtil_GetDefaultSelectedView();

@@ -24,6 +24,7 @@
 
 #include "rdf-int.h"
 #include "xpassert.h"
+#include "fs2rdf.h"
 #include "glue.h"
 #include "vocab.h"
 #include "vocabint.h"
@@ -47,7 +48,13 @@ char * gNavCenterDataSources[15] =
  /* "rdf:ldap", */
  "rdf:esftp",
  "rdf:lfs", "rdf:CookieStore",
- "rdf:columns",  NULL
+ "rdf:columns",  "rdf:find",
+
+#ifdef	XP_MAC
+	"rdf:appletalk",
+#endif
+ 
+ NULL, NULL
 };
 
 
@@ -59,14 +66,30 @@ newNavCenterDB()
 }
 
 
+void
+walkThroughAllBookmarks (RDF_Resource u)
+{
+#ifdef MOZILLA_CLIENT
+  RDF_Cursor c = RDF_GetSources(gNCDB, u, gCoreVocab->RDF_parent, RDF_RESOURCE_TYPE, true);
+  RDF_Resource next;
+  while (next = RDF_NextValue(c)) {
+    if (resourceType(next) == RDF_RT) walkThroughAllBookmarks(next);
+  }
+#endif
+}
+
+
 
 PR_PUBLIC_API(RDF_Error)
 RDF_Init(RDF_InitParams params)
 {
+#ifdef MOZILLA_CLIENT
   char* navCenterURL;
+#endif
   if ( sRDFInitedB )
     return -1;
 
+#ifdef MOZILLA_CLIENT
   XP_ASSERT(params->profileURL != NULL);
   XP_ASSERT(params->bookmarksURL != NULL);
   XP_ASSERT(params->globalHistoryURL != NULL);
@@ -79,14 +102,18 @@ RDF_Init(RDF_InitParams params)
   profileDirURL     = copyString(params->profileURL);
   gBookmarkURL      = copyString(params->bookmarksURL);
   gGlobalHistoryURL = copyString(params->globalHistoryURL);
+#endif
 
   resourceHash = PL_NewHashTable(500, PL_HashString, PL_CompareStrings, PL_CompareValues,  
+				 NULL, NULL);
+  dataSourceHash = PL_NewHashTable(100, PL_HashString, PL_CompareStrings, PL_CompareValues,  
 				 NULL, NULL);
   RDFglueInitialize();
   MakeRemoteStore("rdf:remoteStore");
   createVocabs();
   sRDFInitedB = PR_TRUE;
 
+#ifdef MOZILLA_CLIENT
   PREF_SetDefaultCharPref("browser.NavCenter", "http://rdf.netscape.com/rdf/navcntr.rdf");
   PREF_CopyCharPref("browser.NavCenter", &navCenterURL);
   if (!strchr(navCenterURL, ':')) {
@@ -99,7 +126,11 @@ RDF_Init(RDF_InitParams params)
   freeMem(navCenterURL);
 
   HT_Startup();
-
+#ifdef XP_WIN
+  GuessIEBookmarks();
+#endif  
+#endif
+  walkThroughAllBookmarks(RDF_GetResource(NULL, "NC:Bookmarks", true));
   return 0;
 }
 
@@ -113,7 +144,7 @@ RDF_Init(RDF_InitParams params)
 PR_PUBLIC_API(RDF_Error)
 RDF_Shutdown ()
 {
-
+#ifdef MOZILLA_CLIENT
   /*  flushBookmarks(); */
   HT_Shutdown();
   RDFglueExit();
@@ -137,9 +168,9 @@ RDF_Shutdown ()
   	freeMem(gLocalStoreURL);
   	gLocalStoreURL = NULL;
   }
+#endif
   disposeAllDBs();
   sRDFInitedB = PR_FALSE;
   
   return 0;
 }
-

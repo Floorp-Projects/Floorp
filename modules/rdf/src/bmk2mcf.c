@@ -49,6 +49,7 @@
 #include "mcff2mcf.h"
 #include "utils.h"
 
+#ifdef MOZILLA_CLIENT
 
 	/* extern declarations */
 PR_PUBLIC_API(void) HT_WriteOutAsBookmarks (RDF r, PRFileDesc *fp, RDF_Resource u);	/* XXX this should be elsewhere */
@@ -71,7 +72,7 @@ createSeparator(void)
   return sep;
 }
 
-
+#endif
 
 RDF_Resource
 createContainer (char* id)
@@ -81,7 +82,7 @@ createContainer (char* id)
   return r;
 }
 
-
+#ifdef MOZILLA_CLIENT
 
 char *
 resourceDescription (RDF rdf, RDF_Resource r)
@@ -248,6 +249,9 @@ newFolderBkItem(RDFFile f, char* token)
 void
 newLeafBkItem (RDFFile f, char* token)
 {
+  char			buffer[128];
+  struct tm		*time;
+  uint32		dateVal;
   char* url = NULL;
   char* addDate = NULL;
   char* lastVisit = NULL;
@@ -288,18 +292,48 @@ newLeafBkItem (RDFFile f, char* token)
 	       RDF_STRING_TYPE, true); */
   if (addDate != NULL)
     {
-      addSlotValue(f, newR, gNavCenter->RDF_bookmarkAddDate, (void*)copyString(addDate), 
-	       RDF_STRING_TYPE, true);
+	dateVal = atol(addDate);
+	if ((time = localtime((time_t *) &dateVal)) != NULL)
+	{
+#ifdef	XP_MAC
+		time->tm_year += 4;
+		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
+#else
+		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
+#endif
+		addSlotValue(f, newR, gNavCenter->RDF_bookmarkAddDate,
+			(void*)copyString(buffer), RDF_STRING_TYPE, true);
+	}
     }
   if (lastVisit != NULL)
     {
-      addSlotValue(f, newR, gWebData->RDF_lastVisitDate, (void*)copyString(lastVisit), 
-	       RDF_STRING_TYPE, true);
+	dateVal = atol(lastVisit);
+	if ((time = localtime((time_t *) &dateVal)) != NULL)
+	{
+#ifdef	XP_MAC
+		time->tm_year += 4;
+		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
+#else
+		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
+#endif
+		addSlotValue(f, newR, gWebData->RDF_lastVisitDate,
+			(void*)copyString(buffer), RDF_STRING_TYPE, true);
+	}
     }
   if (lastModified != NULL)
     {
-      addSlotValue(f, newR, gWebData->RDF_lastModifiedDate, (void*)copyString(lastModified),
-	       RDF_STRING_TYPE, true);
+	dateVal = atol(lastModified);
+	if ((time = localtime((time_t *) &dateVal)) != NULL)
+	{
+#ifdef	XP_MAC
+		time->tm_year += 4;
+		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
+#else
+		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
+#endif
+		addSlotValue(f, newR, gWebData->RDF_lastModifiedDate,
+			(void*)copyString(buffer), RDF_STRING_TYPE, true);
+	}
     }
   f->lastItem = newR;
 }
@@ -441,3 +475,5 @@ flushBookmarks()
 		}
 	}
 }
+
+#endif

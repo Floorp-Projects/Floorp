@@ -36,27 +36,25 @@ extern	RDF	gNCDB;
 RDFT
 MakeESFTPStore (char* url)
 {
-  RDFT ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct));
+  RDFT ntr = NewRemoteStore(url);
   ntr->assert = ESAssert;
   ntr->unassert = ESUnassert;
-  ntr->getSlotValue = remoteStoreGetSlotValue;
-  ntr->getSlotValues = remoteStoreGetSlotValues;
-  ntr->hasAssertion = remoteStoreHasAssertion;
-  ntr->nextValue = remoteStoreNextValue;
-  ntr->disposeCursor = remoteStoreDisposeCursor;
   ntr->possiblyAccessFile =  ESFTPPossiblyAccessFile;
-  ntr->url = copyString(url);
   return ntr;
 }
 
 
-void ESFTPPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep) {
-  if (((resourceType(u) == ES_RT) ||	  (resourceType(u) == FTP_RT)) &&
-             (s == gCoreVocab->RDF_parent) && (containerp(u))) {
-    char* id =  resourceID(u);
+
+void
+ESFTPPossiblyAccessFile (RDFT rdf, RDF_Resource u, RDF_Resource s, PRBool inversep)
+{
+  if (((resourceType(u) == ES_RT) || (resourceType(u) == FTP_RT)) &&
+	(s == gCoreVocab->RDF_parent) && (containerp(u))) {
+    char* id = resourceID(u);
     readRDFFile((resourceType(u) == ES_RT ? &id[4] : id), u, false, rdf);
    }
 }
+
 
 
 PRBool
@@ -86,8 +84,6 @@ ESUnassert (RDFT rdf, RDF_Resource u, RDF_Resource s, void* v,
     return 0;
   }
 }
-
-
 
 
 
@@ -287,38 +283,157 @@ ESRemoveChild (RDF_Resource parent, RDF_Resource child)
 void
 parseNextESFTPLine (RDFFile f, char* line)
 {
-  int16 i1, i2;
-  char url[100];
-  RDF_Resource ru;
-  PRBool directoryp;
-   
-  if (f->fileType == FTP_RT) {
-	  if (!startsWith("201", line)) return;
-	  line = &line[5];
-  }
-  i1 = charSearch(' ', line);
-  if (i1 == -1) return;
-  i2 = charSearch(' ', &line[i1+1]) + i1 + 1;
-  line[i1] = '\0';
-  directoryp = 0;
-  if (strlen(line) > 64) return;
-  if (resourceType(f->top) == ES_RT) {
-    directoryp = startsWith("Director", &line[i1+1]);
-     sprintf(url, "nes:%s%s%s", f->url, line, (directoryp ? "/" : ""));
-  } else {
-    int i3 = charSearch(' ', &line[i1+i2+1]);
-    directoryp = startsWith("Directory", &line[i1+i2+i3+2]);
+	PRBool		directoryp;
+	RDF_Resource	ru;
+	char		*token, *url;
+	int16		loop, tokenNum = 0;
+	int32		val;
 
-/* this is bad as files can be of zero-length!
-    if ((charSearch('.', line) ==-1) && (startsWith("0", &line[i1+1]))) directoryp = 1;
+	if (f->fileType != FTP_RT && f->fileType != ES_RT)	return;
+
+	/* work around bug where linefeeds are actually encoded as %0A */
+	if (endsWith("%0A", line))	line[strlen(line)-3] = '\0';
+
+	if ((token = strtok(line, " ")) != NULL)
+	{
+		/* skip 1st token (the numeric command) */
+		token = strtok(NULL, " \t");
+	}
+
+	if (startsWith("200:", line))
+	{
+		while (token != NULL)
+		{
+			while ((token != NULL) && (tokenNum < RDF_MAX_NUM_FILE_TOKENS))
+			{
+				if (!strcmp(token, "Filename"))
+				{
+					f->tokens[f->numFileTokens].token = gCoreVocab->RDF_name;
+					f->tokens[f->numFileTokens].type = RDF_STRING_TYPE;
+					f->tokens[f->numFileTokens].tokenNum = tokenNum;
+					++(f->numFileTokens);
+				}
+				else if (!strcmp(token, "Content-Length"))
+				{
+					f->tokens[f->numFileTokens].token = gWebData->RDF_size;
+					f->tokens[f->numFileTokens].type = RDF_INT_TYPE;
+					f->tokens[f->numFileTokens].tokenNum = tokenNum;
+					++(f->numFileTokens);
+				}
+				else if (!strcmp(token, "File-type"))
+				{
+					f->tokens[f->numFileTokens].token = gWebData->RDF_description;
+					f->tokens[f->numFileTokens].type = RDF_STRING_TYPE;
+					f->tokens[f->numFileTokens].tokenNum = tokenNum;
+					++(f->numFileTokens);
+				}
+				else if (!strcmp(token, "Last-Modified"))
+				{
+					f->tokens[f->numFileTokens].token = gWebData->RDF_lastModifiedDate;
+					f->tokens[f->numFileTokens].type = RDF_STRING_TYPE;
+					f->tokens[f->numFileTokens].tokenNum = tokenNum;
+					++(f->numFileTokens);
+				}
+/*
+				else if (!strcmp(token, "Permissions"))
+				{
+					f->tokens[f->numFileTokens].token = NULL;
+					f->tokens[f->numFileTokens].type = RDF_STRING_TYPE;
+					f->tokens[f->numFileTokens].tokenNum = tokenNum;
+					++(f->numFileTokens);
+				}
 */
+				++tokenNum;
+				token = strtok(NULL, " \t");
+			}
+		}
+	}
+	else if (startsWith("201:", line))
+	{
+		directoryp = false;
+		while (token != NULL)
+		{
+			for (loop=0; loop<f->numFileTokens; loop++)
+			{
+				if (tokenNum == f->tokens[loop].tokenNum)
+				{
+					f->tokens[loop].data = strdup(token);
+					if (f->tokens[loop].token == gWebData->RDF_description)
+					{
+						if (startsWith("Directory", token) ||
+							startsWith("Sym-Directory", token))
+						{
+							directoryp = true;
+						}
+					}
+				}
+			}
+			++tokenNum;
+			token = strtok(NULL, " \t");
+		}
 
-    sprintf(url, "%s%s%s", f->url, line, (directoryp ? "/" : ""));
-   }
-  ru = RDF_GetResource(NULL, url, 1);
-  setResourceType(ru, resourceType(f->top));
-  if (directoryp) setContainerp(ru, 1);
-  addSlotValue(f, ru, gCoreVocab->RDF_parent, f->top, RDF_RESOURCE_TYPE, 1);
+		ru = NULL;
+		for (loop=0; loop<f->numFileTokens; loop++)
+		{
+			/* find name, create resource from it */
+
+			if (f->tokens[loop].token == gCoreVocab->RDF_name)
+			{
+				if (resourceType(f->top) == ES_RT)
+				{
+					url = PR_smprintf("nes:%s%s%s", f->url, f->tokens[loop].data, (directoryp) ? "/":"");
+				}
+				else
+				{
+					url = PR_smprintf("%s%s%s", f->url, f->tokens[loop].data, (directoryp) ? "/":"");
+				}
+				if (url != NULL)
+				{
+					if ((ru = RDF_GetResource(NULL, url, 1)) != NULL)
+					{
+						setResourceType(ru, resourceType(f->top));
+						if (directoryp == true)
+							{
+							setContainerp(ru, 1);
+						}
+					XP_FREE(url);
+					}
+				}
+				break;				
+			}
+		}
+		if (ru != NULL)
+		{
+			for (loop=0; loop<f->numFileTokens; loop++)
+			{
+				if (f->tokens[loop].data != NULL)
+				{
+					switch(f->tokens[loop].type)
+					{
+						case	RDF_STRING_TYPE:
+						addSlotValue(f, ru, f->tokens[loop].token,
+							unescapeURL(f->tokens[loop].data),
+							f->tokens[loop].type, 1);
+						break;
+	
+						case	RDF_INT_TYPE:
+						if (directoryp == false)
+						{
+							sscanf(f->tokens[loop].data, "%lu", &val);
+							if (val != 0)
+							{
+								addSlotValue(f, ru, f->tokens[loop].token,
+									(void *)val, f->tokens[loop].type, 1);
+							}
+						}
+						break;
+					}
+				}
+			}
+			addSlotValue(f, ru, gCoreVocab->RDF_parent, f->top, RDF_RESOURCE_TYPE, 1);
+		}
+		
+	}
 }
 
 
@@ -362,5 +477,3 @@ parseNextESFTPBlob(NET_StreamClass *stream, char* blob, int32 size)
   }
   return(size);
 }
-
-

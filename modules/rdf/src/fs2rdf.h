@@ -27,12 +27,16 @@
 #include "prlong.h"
 
 #ifdef	XP_MAC
+#include <Appletalk.h>
+#include <Devices.h>
 #include <Files.h>
 #endif
 
 
 
 /* fs2rdf.c data structures and defines */
+
+extern	int	RDF_VOLUME_DESC_STR, RDF_DIRECTORY_DESC_STR, RDF_FILE_DESC_STR;
 
 #define fsUnitp(u) (resourceType(u) == LFS_RT)
 
@@ -51,8 +55,8 @@
 
 XP_BEGIN_PROTOS
 
-char *		getVolume(int volNum);
-void		buildVolumeList(RDF_Resource fs);
+void		GuessIEBookmarks(void);
+char *		getVolume(int16 volNum, PRBool afpVols);
 PRDir *		OpenDir(char *name);
 RDFT		MakeLFSStore (char* url);
 PRBool		fsRemoveFile(char *filePathname, PRBool justCheckWriteAccess);

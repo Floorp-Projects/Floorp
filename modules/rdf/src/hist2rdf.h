@@ -44,19 +44,15 @@
 #endif
 
 #ifdef IS_LITTLE_ENDIAN
-#define COPY_INT32(_a,_b)  XP_MEMCPY(_a, _b, sizeof(int32));
+#define HIST_COPY_INT32(_a,_b)  XP_MEMCPY(_a, _b, sizeof(int32));
 #else
-#define	COPY_INT32(_a,_b)				\
+#define	HIST_COPY_INT32(_a,_b)				\
 	do {						\
 	((char *)(_a))[0] = ((char *)(_b))[3];		\
 	((char *)(_a))[1] = ((char *)(_b))[2];		\
 	((char *)(_a))[2] = ((char *)(_b))[1];		\
 	((char *)(_a))[3] = ((char *)(_b))[0];		\
 	} while(0)
-#endif
-
-#if !defined(XP_MAC) && !defined(COPY_INT32)
-	#define COPY_INT32(_a,_b)  XP_MEMCPY(_a, _b, sizeof(int32));
 #endif
 
 
@@ -69,6 +65,7 @@
 #define SECS_IN_HOUR            (60L * 60L)
 #define SECS_IN_DAY             (SECS_IN_HOUR * 24L)
 
+extern	int	RDF_HTML_WINDATE, RDF_HTML_MACDATE;
 
 
 /* hist2rdf.c function prototypes */

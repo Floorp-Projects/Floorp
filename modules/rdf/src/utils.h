@@ -58,6 +58,7 @@ int16		charSearch (const char c, const char* data);
 PRBool		endsWith (const char* pattern, const char* uuid);
 
 PRBool		substring (const char* pattern, const char* data);
+int			compareStrings(char *s1, char *s2);
 int16		revCharSearch (const char c, const char* data);
 PRBool		urlEquals (const char* url1, const char* url2);
 PRBool		isSeparator (RDF_Resource r);

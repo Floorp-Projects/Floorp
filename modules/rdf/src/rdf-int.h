@@ -43,6 +43,8 @@
 #include "xp.h"
 #include "xp_str.h"
 
+XP_BEGIN_PROTOS
+
 #ifndef XP_WIN32
 #include "prefapi.h"
 #endif
@@ -76,7 +78,6 @@
 #define	ATALK_RT 12
 #define	ATALKVIRTUAL_RT 13
 #define COOKIE_RT       14
-#define WILDCARD_RT 15
 
 
 #define CHECK_VAR(var, return_value) {if (var == NULL) {XP_ASSERT(var); return return_value;}}
@@ -108,15 +109,16 @@ struct RDF_ResourceStruct {
 struct RDF_CursorStruct {
   RDF_Resource u;
   RDF_Resource s;
+  RDF_Resource match;
+  void *value;
+  struct RDF_CursorStruct* current;
+  RDF    rdf;
+  void* pdata;
   PRBool tv;
   PRBool inversep;
-  void* value;
   RDF_ValueType type;
-  struct RDF_CursorStruct* current;
   int16 count;
-  void* pdata;
   uint16 size;
-  RDF    rdf;
   uint8 queryType;
 };
 
@@ -143,6 +145,7 @@ typedef struct RDF_FileStruct *RDFFile;
 
 
 RDF	newNavCenterDB();
+void	walkThroughAllBookmarks (RDF_Resource u);
 typedef PRBool (*assertProc)(RDFT r, RDF_Resource u, RDF_Resource  s, void* value, RDF_ValueType type, PRBool tv);
 typedef PRBool (*hasAssertionProc)(RDFT r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
 typedef void* (*getSlotValueProc)(RDFT r, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  PRBool inversep, PRBool tv) ;
@@ -183,6 +186,7 @@ struct RDF_TranslatorStruct {
 
 
 extern     PLHashTable*  resourceHash;  
+extern     PLHashTable*  dataSourceHash;  
 struct RDF_DBStruct {
   int16 numTranslators;
   int16 translatorArraySize;
@@ -210,6 +214,15 @@ struct XMLNameSpaceStruct {
 } ;
 
 typedef struct XMLNameSpaceStruct *XMLNameSpace;
+
+#define	RDF_MAX_NUM_FILE_TOKENS		8
+
+struct	RDF_FileStructTokens {
+	RDF_Resource	token;
+	RDF_ValueType	type;
+	int16		tokenNum;
+	char		*data;
+};
 
 struct RDF_FileStruct {
   char* url;
@@ -243,10 +256,12 @@ struct RDF_FileStruct {
   RDFT     db;
   void* pdata;
   XMLNameSpace namespaces;
-} ;
+  int16	numFileTokens;
+  struct RDF_FileStructTokens tokens[RDF_MAX_NUM_FILE_TOKENS];
+};
 
 
-
+RDFT NewRemoteStore (char* url);
 RDF_Resource nextFindValue (RDF_Cursor c) ;
 PRBool isTypeOf (RDF rdf, RDF_Resource u,  RDF_Resource v); 
 RDF getRDFDB (void);
@@ -272,7 +287,7 @@ PRBool		asEqual(RDFT r, Assertion as, RDF_Resource u, RDF_Resource s, void* v, R
 Assertion	makeNewAssertion (RDFT r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv);
 
 RDFT MakeRemoteStore (char* url);
-
+PRDir * OpenDir(char *name);
 
 void readResourceFile(RDF rdf, RDF_Resource u);
 void possiblyGCResource(RDF_Resource u);
@@ -374,7 +389,7 @@ void* remoteStoreNextValue (RDFT mcf, RDF_Cursor c) ;
 RDF_Error remoteStoreDisposeCursor (RDFT mcf, RDF_Cursor c) ;
 PRBool remoteStoreHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv) ;
 PRBool remoteStoreHasAssertionInt (RDFT mcf, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type, PRBool tv) ;
-PRBool  nlocalStoreAddChildAt(RDFT mcf, RDF_Resource obj, RDF_Resource ref, RDF_Resource new, 
+PRBool  nlocalStoreAddChildAt(RDFT mcf, RDF_Resource obj, RDF_Resource ref, RDF_Resource _new, 
 		      PRBool beforep);
 
 RDFT MakeCookieStore (char* url);
@@ -388,5 +403,6 @@ extern RDF_WDVocab gWebData;
 extern RDF_NCVocab gNavCenter;
 extern RDF_CoreVocab gCoreVocab;
 
-
+XP_END_PROTOS
+      
 #endif

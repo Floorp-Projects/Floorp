@@ -52,14 +52,20 @@ createVocabs ()
   createCoreVocab();
   createNavCenterVocab();
   createWebDataVocab();
-  while (n < (sizeof(RDF_CoreVocabStruct)/sizeof(RDF_Resource))) {*(gAllVocab + m++) = *((RDF_Resource*)gCoreVocab + n++);}
+
+  while (n < (sizeof(RDF_CoreVocabStruct)/sizeof(RDF_Resource))) {
+    *(gAllVocab + m++) = *((RDF_Resource*)gCoreVocab + n++);
+  }
 
   n = 0;
-  while (n < (sizeof(RDF_NCVocabStruct)/sizeof(RDF_Resource))) {*(gAllVocab + m++) = *((RDF_Resource*)gNavCenter + n++);}
+  while (n < (sizeof(RDF_NCVocabStruct)/sizeof(RDF_Resource))) {
+    *(gAllVocab + m++) = *((RDF_Resource*)gNavCenter + n++);
+  }
 
   n = 0;
-  while (n < (sizeof(RDF_WDVocabStruct)/sizeof(RDF_Resource))) {*(gAllVocab + m++) = *((RDF_Resource*)gWebData + n++);}
-
+  while (n < (sizeof(RDF_WDVocabStruct)/sizeof(RDF_Resource))) {
+    *(gAllVocab + m++) = *((RDF_Resource*)gWebData + n++);
+  }
 }
 
 
@@ -85,8 +91,11 @@ createCoreVocab ()
   gCoreVocab->RDF_greaterThan = RDF_GetResource(gCoreDB, "greaterThan", 1);
   gCoreVocab->RDF_lessThanOrEqual = RDF_GetResource(gCoreDB, "lessThanOrEqualTo", 1);
   gCoreVocab->RDF_greaterThanOrEqual = RDF_GetResource(gCoreDB, "greaterThanOrEqualTo", 1);
-  gCoreVocab->RDF_stringEquals = RDF_GetResource(gCoreDB, "stringEquals", 1);
-  gCoreVocab->RDF_substring = RDF_GetResource(gCoreDB, "substring", 1);
+  gCoreVocab->RDF_stringEquals = newResource("stringEquals", RDF_IS_STR);
+  gCoreVocab->RDF_stringNotEquals = newResource("stringNotEquals", RDF_IS_NOT_STR);
+  gCoreVocab->RDF_substring = newResource("substring", RDF_CONTAINS_STR);
+  gCoreVocab->RDF_stringStartsWith = newResource("stringStartsWith", RDF_STARTS_WITH_STR);
+  gCoreVocab->RDF_stringEndsWith = newResource("stringEndsWith", RDF_ENDS_WITH_STR);
   gCoreVocab->RDF_child = RDF_GetResource(gCoreDB, "child", 1);
   gCoreVocab->RDF_content = RDF_GetResource(gCoreDB, "content", 1);
   gCoreVocab->RDF_summary = RDF_GetResource(gCoreDB, "summary", 1);
@@ -99,12 +108,14 @@ createCoreVocab ()
 void
 createNavCenterVocab () {
   gNavCenter = (RDF_NCVocab) getMem(sizeof(RDF_NCVocabStruct));
+#ifdef MOZILLA_CLIENT
   gNavCenter->RDF_overview = RDF_GetResource(gCoreDB, "overview", 1);
   gNavCenter->RDF_Trash = createContainer("Trash");
   gNavCenter->RDF_Clipboard = createContainer("Clipboard");
   gNavCenter->RDF_Top = createContainer("NC:NavCenter"); 
   setResourceType(gNavCenter->RDF_Top, RDF_RT);
   gNavCenter->RDF_Search = createContainer("NC:Search");
+  setResourceType(gNavCenter->RDF_Search, SEARCH_RT);  
   gNavCenter->RDF_Sitemaps = createContainer("NC:Sitemaps");
   gNavCenter->RDF_BreadCrumbCategory = createContainer("BreadCrumbs");
   gNavCenter->RDF_BookmarkFolderCategory = createContainer("NC:Bookmarks");
@@ -127,7 +138,10 @@ createNavCenterVocab () {
   gNavCenter->RDF_HTMLURL = newResource("htmlURL", RDF_HTML_URL_STR);
   gNavCenter->RDF_HTMLHeight = newResource("htmlHeight", RDF_HTML_HEIGHT_STR);
   gNavCenter->RDF_LocalFiles = RDF_GetResource(gCoreDB, "NC:LocalFiles", true);
-  gNavCenter->RDF_Appletalk = createContainer("at:");
+  gNavCenter->RDF_FTP = createContainer("NC:FTP");
+  gNavCenter->RDF_FTP = newResource("NC:FTP", RDF_FTP_NAME_STR);
+  gNavCenter->RDF_Appletalk = createContainer("NC:Appletalk");
+  gNavCenter->RDF_Appletalk = newResource("NC:Appletalk", RDF_APPLETALK_TOP_NAME);
   setResourceType(gNavCenter->RDF_Appletalk, ATALKVIRTUAL_RT);
   gNavCenter->RDF_Mail = RDF_GetResource(gCoreDB, "NC:Mail", true);
   gNavCenter->RDF_Guide = RDF_GetResource(gCoreDB, "NC:Guide", true);
@@ -148,12 +162,15 @@ createNavCenterVocab () {
   gNavCenter->RDF_HTMLType = RDF_GetResource (gCoreDB, "HTMLPage", true);
   gNavCenter->RDF_URLShortcut = RDF_GetResource(gCoreDB, "URLShortcut", true);
   gNavCenter->RDF_Cookies = createContainer("NC:Cookies");
+  gNavCenter->RDF_Toolbar = createContainer("NC:Toolbar");
 
   /* Commands */
   
   gNavCenter->RDF_Command = RDF_GetResource (gCoreDB, "Command", true);
   gNavCenter->RDF_Command_Launch = RDF_GetResource(gCoreDB, "Command:Launch", true);
   gNavCenter->RDF_Command_Refresh = RDF_GetResource(gCoreDB, "Command:Refresh", true);
+  gNavCenter->RDF_Command_Atalk_FlatHierarchy = RDF_GetResource(gCoreDB, "Command:at:View Zone List", true);
+  gNavCenter->RDF_Command_Atalk_Hierarchy = RDF_GetResource(gCoreDB, "Command:at:View Zone Hierarchy", true);
 
   /* NavCenter appearance styles */
 
@@ -182,6 +199,7 @@ createNavCenterVocab () {
   gNavCenter->selectedColumnHeaderBGColor = newResource("selectedColumnHeaderBGColor", RDF_SELECTED_HEADER_BG_COLOR_STR);
   gNavCenter->showColumnHilite = newResource("showColumnHilite", RDF_SHOW_COLUMN_HILITING_STR);
   gNavCenter->triggerPlacement = newResource("triggerPlacement", RDF_TRIGGER_PLACEMENT_STR);
+#endif /* MOZILLA_CLIENT */
 }
 
 
@@ -190,6 +208,7 @@ void
 createWebDataVocab ()
 {
   gWebData = (RDF_WDVocab) getMem(sizeof(RDF_WDVocabStruct));
+#ifdef MOZILLA_CLIENT
   gWebData->RDF_URL =  newResource("URL", RDF_URL_STR);
   gWebData->RDF_description = newResource("description", RDF_DESCRIPTION_STR);
   gWebData->RDF_Container = RDF_GetResource (gCoreDB, "Container", true);
@@ -199,6 +218,7 @@ createWebDataVocab ()
   gWebData->RDF_creationDate = newResource("creationDate", RDF_CREATED_ON_STR);
   gWebData->RDF_lastModifiedDate = newResource("lastModifiedDate", RDF_LAST_MOD_STR);
   gWebData->RDF_size = newResource("size", RDF_SIZE_STR);
+#endif /* MOZILLA_CLIENT */
 } 
 
 
@@ -206,19 +226,73 @@ createWebDataVocab ()
 RDF_Resource
 newResource(char *id, int optionalNameStrID)
 {
-	RDF_Resource		r, RDF_name;
-	char			*optionalNameStr;
+	RDF_Resource		r;
 
-	if ((r = RDF_GetResource(gCoreDB, id, true)) != NULL)
-	{
-		if ((optionalNameStr = XP_GetString(optionalNameStrID)) != NULL)
-		{
-			/* need to have our own private "name" resource */
-			RDF_name = RDF_GetResource(gCoreDB, "name", 1);
-
-			remoteStoreAdd(gRemoteStore, r, RDF_name, copyString(optionalNameStr),
-					RDF_STRING_TYPE, PR_TRUE);
-		}
-	}
+	r = RDF_GetResource(gCoreDB, id, true);
 	return(r);
+}
+
+
+
+char *
+getResourceDefaultName(RDF_Resource node)
+{
+	int			strID = 0;
+	char			*defaultName = NULL;
+
+#ifdef MOZILLA_CLIENT
+	/* if a vocabulary resource doesn't have a name specified in the graph, get a default */
+
+	if (node == gCoreVocab->RDF_stringEquals)			strID = RDF_IS_STR;
+	else if (node == gCoreVocab->RDF_stringNotEquals)		strID = RDF_IS_NOT_STR;
+	else if (node == gCoreVocab->RDF_substring)			strID = RDF_CONTAINS_STR;
+	else if (node == gCoreVocab->RDF_stringStartsWith)		strID = RDF_STARTS_WITH_STR;
+	else if (node == gCoreVocab->RDF_stringEndsWith)		strID = RDF_ENDS_WITH_STR;
+	else if (node == gNavCenter->RDF_bookmarkAddDate)		strID = RDF_ADDED_ON_STR;
+	else if (node == gNavCenter->RDF_smallIcon)			strID = RDF_ICON_URL_STR;
+	else if (node == gNavCenter->RDF_largeIcon)			strID = RDF_LARGE_ICON_URL_STR;
+	else if (node == gNavCenter->RDF_HTMLURL)			strID = RDF_HTML_URL_STR;
+	else if (node == gNavCenter->RDF_HTMLHeight)			strID = RDF_HTML_HEIGHT_STR;
+	else if (node == gNavCenter->RDF_FTP)				strID = RDF_FTP_NAME_STR;
+	else if (node == gNavCenter->RDF_Appletalk)			strID = RDF_APPLETALK_TOP_NAME;
+	else if (node == gWebData->RDF_URL)				strID = RDF_URL_STR;
+	else if (node == gWebData->RDF_description)			strID = RDF_DESCRIPTION_STR;
+	else if (node == gWebData->RDF_firstVisitDate)			strID = RDF_FIRST_VISIT_STR;
+	else if (node == gWebData->RDF_lastVisitDate)			strID = RDF_LAST_VISIT_STR;
+	else if (node == gWebData->RDF_numAccesses)			strID = RDF_NUM_ACCESSES_STR;
+	else if (node == gWebData->RDF_creationDate)			strID = RDF_CREATED_ON_STR;
+	else if (node == gWebData->RDF_lastModifiedDate)		strID = RDF_LAST_MOD_STR;
+	else if (node == gWebData->RDF_size)				strID =	RDF_SIZE_STR;
+	else if (node == gNavCenter->treeFGColor)			strID = RDF_FOREGROUND_COLOR_STR;
+	else if (node == gNavCenter->treeBGColor)			strID = RDF_BACKGROUND_COLOR_STR;
+	else if (node == gNavCenter->treeBGURL)				strID = RDF_BACKGROUND_IMAGE_STR;
+	else if (node == gNavCenter->showTreeConnections)		strID = RDF_SHOW_TREE_CONNECTIONS_STR;
+	else if (node == gNavCenter->treeConnectionFGColor)		strID = RDF_CONNECTION_FG_COLOR_STR;
+	else if (node == gNavCenter->treeOpenTriggerIconURL)		strID = RDF_OPEN_TRIGGER_IMAGE_STR;
+	else if (node == gNavCenter->treeClosedTriggerIconURL)		strID = RDF_CLOSED_TRIGGER_IMAGE_STR;
+	else if (node == gNavCenter->selectionFGColor)			strID = RDF_FOREGROUND_COLOR_STR;
+	else if (node == gNavCenter->selectionBGColor)			strID = RDF_BACKGROUND_COLOR_STR;
+	else if (node == gNavCenter->columnHeaderFGColor)		strID = RDF_FOREGROUND_COLOR_STR;
+	else if (node == gNavCenter->columnHeaderBGColor)		strID = RDF_BACKGROUND_COLOR_STR;
+	else if (node == gNavCenter->columnHeaderBGURL)			strID = RDF_BACKGROUND_IMAGE_STR;
+	else if (node == gNavCenter->showColumnHeaders)			strID = RDF_SHOW_HEADERS_STR;
+	else if (node == gNavCenter->showColumnHeaderDividers)		strID = RDF_SHOW_HEADER_DIVIDERS_STR;
+	else if (node == gNavCenter->sortColumnFGColor)			strID = RDF_SORT_COLUMN_FG_COLOR_STR;
+	else if (node == gNavCenter->sortColumnBGColor)			strID = RDF_SORT_COLUMN_BG_COLOR_STR;
+	else if (node == gNavCenter->titleBarFGColor)			strID = RDF_FOREGROUND_COLOR_STR;
+	else if (node == gNavCenter->titleBarBGColor)			strID = RDF_BACKGROUND_COLOR_STR;
+	else if (node == gNavCenter->titleBarBGURL)			strID = RDF_BACKGROUND_IMAGE_STR;
+	else if (node == gNavCenter->dividerColor)			strID = RDF_DIVIDER_COLOR_STR;
+	else if (node == gNavCenter->showDivider)			strID = RDF_SHOW_COLUMN_DIVIDERS_STR;
+	else if (node == gNavCenter->selectedColumnHeaderFGColor)	strID = RDF_SELECTED_HEADER_FG_COLOR_STR;
+	else if (node == gNavCenter->selectedColumnHeaderBGColor)	strID = RDF_SELECTED_HEADER_BG_COLOR_STR;
+	else if (node == gNavCenter->showColumnHilite)			strID = RDF_SHOW_COLUMN_HILITING_STR;
+	else if (node == gNavCenter->triggerPlacement)			strID = RDF_TRIGGER_PLACEMENT_STR;
+
+	if (strID != 0)
+	{
+		defaultName = XP_GetString(strID);
+	}
+#endif /* MOZILLA_CLIENT */
+	return(defaultName);
 }

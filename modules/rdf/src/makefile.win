@@ -25,36 +25,58 @@ LIBRARY_SUFFIX=$(MOZ_BITS)
 !ifndef MAKE_OBJ_TYPE
 MAKE_OBJ_TYPE=DLL
 !else
+!ifdef MAKE_SPF
+OBJS= $(OBJS) .\$(OBJDIR)\spf2ldif.obj \
+              .\$(OBJDIR)\hashtable.obj
+!else
 OBJS= $(OBJS) .\$(OBJDIR)\test.obj
-# LLIBS=$(LIBNSPR) $(DEPTH)\lib\libdbm\$(DIST_PREFIX)$(MOZ_BITS)_D.OBJ\dbm.lib
+!endif
+# LLIBS=$(LIBNSPR) 
 # !endif
 !ifndef	MOZ_DEBUG
-LLIBS=$(LIBNSPR) $(DEPTH)\lib\libdbm\$(DIST_PREFIX)$(MOZ_BITS)_O.OBJ\dbm.lib
+LLIBS=$(LIBNSPR)
 !else
-LLIBS=$(LIBNSPR) $(DEPTH)\lib\libdbm\$(DIST_PREFIX)$(MOZ_BITS)_D.OBJ\dbm.lib
+LLIBS=$(LIBNSPR)
 !endif
 !endif
 
-
-PROGRAM=.\$(OBJDIR)\test.exe
-
-
+TESTPROG = .\$(OBJDIR)\test.exe
+SPFPROG = .\$(OBJDIR)\spf2ldif.exe
 
 MODULE=rdf 
 LIBRARY_NAME=rdf 
 REQUIRES=nspr dbm java js htmldlgs util img layer pref
-CSRCS=bmk2mcf.c vocab.c  nlcstore.c mcf.c mcff2mcf.c rdfht.c \
-    remstore.c ht.c glue.c utils.c fs2rdf.c hist2rdf.c \
-    rdfparse.c   es2mcf.c columns.c   \
 
+C_OBJS=.\$(OBJDIR)\vocab.obj \
+       .\$(OBJDIR)\mcf.obj \
+       .\$(OBJDIR)\remstore.obj \
+       .\$(OBJDIR)\utils.obj \
+       .\$(OBJDIR)\rdfparse.obj \
+       .\$(OBJDIR)\ldap2rdf.obj \
+       .\$(OBJDIR)\mcff2mcf.obj \
+       .\$(OBJDIR)\bmk2mcf.obj \
+       .\$(OBJDIR)\glue.obj \
+       .\$(OBJDIR)\rdfht.obj \
+       $(NULL)
 
-C_OBJS=.\$(OBJDIR)\bmk2mcf.obj .\$(OBJDIR)\vocab.obj \
-     .\$(OBJDIR)\nlcstore.obj \
-    .\$(OBJDIR)\mcf.obj .\$(OBJDIR)\mcff2mcf.obj .\$(OBJDIR)\rdfht.obj \
-    .\$(OBJDIR)\remstore.obj .\$(OBJDIR)\ht.obj \
-    .\$(OBJDIR)\glue.obj .\$(OBJDIR)\utils.obj .\$(OBJDIR)\fs2rdf.obj \
-    .\$(OBJDIR)\hist2rdf.obj .\$(OBJDIR)\rdfparse.obj \
-     .\$(OBJDIR)\es2mcf.obj     .\$(OBJDIR)\columns.obj  
+       
+!ifdef RDF_STANDALONE
+# evil hack since no xp library on windows.
+EXTRA_OBJS =  \
+       $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\allxpstr.obj \
+       $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\xp_str.obj \
+       $(DEPTH)\cmd\winfe\mkfiles32\x86dbg\xpassert.obj
+!else
+C_OBJS = $(C_OBJS) \
+       .\$(OBJDIR)\ht.obj \
+       .\$(OBJDIR)\find2rdf.obj \
+       .\$(OBJDIR)\fs2rdf.obj \
+       .\$(OBJDIR)\hist2rdf.obj \
+       .\$(OBJDIR)\es2mcf.obj \
+       .\$(OBJDIR)\columns.obj \
+       .\$(OBJDIR)\nlcstore.obj
+!endif
+       
 !if "$(MOZ_BITS)" != "16"
 LINCS=-I$(XPDIST)\public\nspr -I$(XPDIST)\public\dbm \
     -I$(XPDIST)\public\java -I$(XPDIST)\public\js \
@@ -67,6 +89,10 @@ LINCS=-I$(XPDIST)\public\nspr -I$(XPDIST)\public\dbm \
 
 include <$(DEPTH)\config\rules.mak>
 
+!ifdef RDF_STANDALONE
+CFLAGS = $(CFLAGS) -UMOZILLA_CLIENT
+!endif
+
 !if "$(MOZ_BITS)" == "32"
 LINCS= $(LINCS) -I$(PUBLIC)\rdf
 !endif
@@ -77,7 +103,18 @@ libs:: $(LIBRARY)
 
 test: 
 	echo make test
-	nmake /nologo -f makefile.win MAKE_OBJ_TYPE=EXE $(PROGRAM)
+	nmake /nologo -f makefile.win MAKE_OBJ_TYPE=EXE $(TESTPROG)
+	
+spf2ldif:
+	echo make spf2ldif
+	nmake /nologo -f makefile.win MAKE_OBJ_TYPE=EXE MAKE_SPF=1 $(SPFPROG)
+	
+$(TESTPROG): $(OBJS)
+   $(LD) /NOLOGO /OUT:$@ $(LFLAGS) $(OBJS) $(EXTRA_OBJS) $(LLIBS) $(OS_LIBS)
+	
+$(SPFPROG) : $(OBJS)
+   $(LD) /NOLOGO /OUT:$@ $(LFLAGS) $(OBJS) $(EXTRA_OBJS) $(LLIBS) $(OS_LIBS)
+
 
 JNI_GEN_DIR = _jni
 
@@ -92,5 +129,5 @@ LINCS = $(LINCS) -I$(JNI_GEN_DIR)
 
 display_jni_header_msg:
 	echo +++ make: Generating JNI header files...
-
+	
 !endif

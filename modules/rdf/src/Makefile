@@ -22,40 +22,61 @@
 DEPTH		= ../../..
 MODULE		= rdf
 LIBRARY_NAME	= $(LITE_PREFIX)rdf
+LIBXP		= $(DIST)/lib/libxp.$(LIB_SUFFIX)
 
 REQUIRES	= nspr dbm java js htmldlgs util img layer pref
 
 JNI_GEN		= netscape.rdf.core.NativeRDF netscape.rdf.core.NativeRDFEnumeration
 
-CSRCS		= bmk2mcf.c \
+CSRCS		= \
 		  vocab.c \
-		  nlcstore.c \
-		  mcff2mcf.c \
-		  rdfht.c \
+		  mcf.c \
 		  remstore.c \
-		  glue.c \
 		  utils.c \
+		  rdfparse.c \
+		  mcff2mcf.c \
+		  bmk2mcf.c \
+		  ldap2rdf.c \
+		  glue.c \
+		  rdfht.c \
+		  $(NULL)
+
+ifndef RDF_STANDALONE
+CSRCS		+= \
+		  nlcstore.c \
+		  find2rdf.c \
 		  fs2rdf.c \
 		  hist2rdf.c \
-		  rdfparse.c \
 		  pm2rdf.c \
 		  es2mcf.c \
 		  columns.c \
 		  rdfjava.c \
-		  mcf.c \
 		  ht.c \
 		  $(NULL)
+endif
+
+SPF_OBJS	= $(OBJDIR)/spf2ldif.o \
+		  $(OBJDIR)/hashtable.o
 
 LOCAL_INCLUDES	= -I$(PUBLIC)/rdf
 
 include $(DEPTH)/config/rules.mk
 
+ifdef RDF_STANDALONE
+DEFINES := $(filter-out -DMOZILLA_CLIENT, $(DEFINES))
+endif
+
 $(LIBRARY): $(OBJS)
 
-test:	$(OBJDIR)/test
+test:		$(OBJDIR)/test
+spf2ldif:	$(OBJDIR)/spf2ldif
 
-.PHONY: test
+.PHONY: test spf2ldif
 
 $(OBJDIR)/test: $(OBJDIR)/test.o $(LIBRARY)
 	    @$(MAKE_OBJDIR)
-	    $(CC) -o $@ $(OBJDIR)/test.o $(LIBRARY) $(LIBNSPR) $(DIST)/lib/libdbm.$(LIB_SUFFIX) $(LDFLAGS)
+	    $(CC) -o $@ $(OBJDIR)/test.o $(LIBRARY) $(LIBNSPR) $(LIBXP) $(LDFLAGS) $(OS_LIBS) 
+	    
+$(OBJDIR)/spf2ldif: $(SPF_OBJS)  $(LIBRARY)
+	    @$(MAKE_OBJDIR)
+	    $(CC) -o $@ $(SPF_OBJS) $(LIBRARY) $(LIBNSPR) $(LIBXP) $(LDFLAGS) $(OS_LIBS) 

@@ -25,6 +25,7 @@
 
 #include "mcf.h"
 #include "columns.h"
+#include "find2rdf.h"
 #include "fs2rdf.h"
 #include "hist2rdf.h"
 #include "nlcstore.h"
@@ -33,6 +34,8 @@
 #include "pm2rdf.h"
 #include "scook.h"
 #include "atalk.h"
+#include "ht.h"
+#include "utils.h"
 
 	/* globals */
 RDFL		gAllDBs = 0;
@@ -42,33 +45,53 @@ RDFL		gAllDBs = 0;
 RDFT
 getTranslator (char* url)
 {
+  RDFT ans = PL_HashTableLookup(dataSourceHash, url);
+  if (ans) return ans;
+#ifdef MOZILLA_CLIENT
   if (startsWith(url, "rdf:localStore")) {
-    return MakeLocalStore(url);
-  } else if (startsWith(url, "rdf:remoteStore")) {
-    return MakeRemoteStore(url);
-  } else if (startsWith(url, "rdf:history")) {
-    return MakeHistoryStore(url);
+    ans = MakeLocalStore(url);
+  } else
+#endif
+  if (startsWith(url, "rdf:remoteStore")) {
+    ans =  MakeRemoteStore(url);
+  } 
+#ifdef MOZILLA_CLIENT  
+  else if (startsWith(url, "rdf:history")) {
+    ans = MakeHistoryStore(url);
   } else if (startsWith(url, "rdf:esftp")) {
-    return MakeESFTPStore(url);
+    ans = MakeESFTPStore(url);
     /*  } else if (startsWith(url, "rdf:mail")) {
-    return MakeMailStore(url); */
+    ans = MakeMailStore(url); */
   } else if (startsWith(url, "rdf:lfs")) {
-    return MakeLFSStore(url);
+    ans = MakeLFSStore(url);
 
 #ifdef	XP_MAC
   } else if (startsWith(url, "rdf:appletalk")) {
-    return MakeAtalkStore(url);
+    ans = MakeAtalkStore(url);
 #endif
 
-  } else if (endsWith(".rdf", url) || (endsWith(".mcf", url))) {
-    return MakeFileDB(url);
+  } else if (strstr(url, ".rdf") || strstr(url, ".RDF") || 
+		     strstr(url, ".mcf") || strstr(url, ".MCF")) {
+    ans = MakeFileDB(url);
   } else if (startsWith("rdf:columns", url)) {
-    return MakeColumnStore (url);
+    ans = MakeColumnStore (url);
   } else if (startsWith("rdf:ht", url) || startsWith("rdf:scook", url)) {
-    return MakeSCookDB(url);
+    ans = MakeSCookDB(url);
   } else if (startsWith("rdf:CookieStore", url)) {
+    ans = MakeCookieStore(url);
     return MakeCookieStore(url);
-  } else return NULL;
+  } else if (startsWith("rdf:find", url)) {
+    return MakeFindStore(url);
+  } 
+#endif
+  if (ans) {
+    PL_HashTableAdd(dataSourceHash, url, ans);
+    return ans;
+  } else if (startsWith("http://", url)) {
+	  ans = MakeFileDB(url);
+  } else
+    return NULL;
+  
 }
 
 
@@ -105,8 +128,27 @@ RDF_GetDB (const char** dataSources)
   return r;
 }
 
-PR_PUBLIC_API(RDFT) RDF_AddDataSource(RDF rdf, char* dataSource) {
+
+
+PR_PUBLIC_API(RDFT)
+RDF_AddDataSource(RDF rdf, char* dataSource)
+{
   RDFT newDB;
+  int16 n = 0;
+  RDFT next;
+  while ((next = rdf->translators[n++]) && (n < rdf->numTranslators)) {
+    if (strcmp(next->url, dataSource) == 0) return next;
+  }
+#ifdef MOZILLA_CLIENT
+#ifdef DEBUG
+  {
+    char* traceLine = getMem(500);
+    sprintf(traceLine, "\nAdding %s \n", dataSource);
+    FE_Trace(traceLine);
+    freeMem(traceLine);
+  }
+#endif
+#endif
   if (rdf->numTranslators == rdf->translatorArraySize) {
     RDFT* tmp = (RDFT*)getMem((rdf->numTranslators+5)*(sizeof(RDFT)));
     memcpy(tmp, rdf->translators, (rdf->numTranslators * sizeof(RDFT)));
@@ -119,15 +161,21 @@ PR_PUBLIC_API(RDFT) RDF_AddDataSource(RDF rdf, char* dataSource) {
     return NULL;  
   } else {
     RDFL rl = (RDFL)getMem(sizeof(struct RDF_ListStruct));
+    RDFT tr = rdf->translators[rdf->numTranslators];
     rl->rdf = rdf;
     rl->next = newDB->rdf;
     newDB->rdf = rl;
+    rdf->translators[rdf->numTranslators] = newDB;
     rdf->numTranslators++;
     return newDB;
   }	
 }
 
-PR_PUBLIC_API(RDF_Error) RDF_ReleaseDataSource(RDF rdf, RDFT dataSource) {
+
+
+PR_PUBLIC_API(RDF_Error)
+RDF_ReleaseDataSource(RDF rdf, RDFT dataSource)
+{
   RDFT* temp = (RDFT*)getMem((rdf->numTranslators-1)*(sizeof(RDFT)));
   int16 m = 0;
   int16 n= 0;
@@ -143,6 +191,7 @@ PR_PUBLIC_API(RDF_Error) RDF_ReleaseDataSource(RDF rdf, RDFT dataSource) {
   deleteFromRDFList(dataSource->rdf, rdf);
   return 0;
 }
+
 
 
 RDFL
@@ -360,13 +409,19 @@ iscontainerp (RDF_Resource u)
   char* id = resourceID(u);
   if (containerIDp(id)) {
     return 1;
-  } else if (startsWith("file:", id)) {
+  } 
+#ifdef MOZILLA_CLIENT  
+  else if (startsWith("file:", id)) {
     return fileDirectoryp(u);
   } else if (startsWith("ftp:", id) && (endsWith("/", id))) {
     return 1;
   } else if (startsWith("cache:container", id)) {
     return 1;
-  } else  return 0; 
+  } else if (startsWith("find:", id)) {
+    return 1;
+  }
+#endif   
+  else  return 0; 
 } 
 
 
@@ -437,7 +492,7 @@ RDF_DeleteAllArcs (RDF rdf, RDF_Resource u)
     remoteStoreRemove(gRemoteStore, as->u, as->s, as->value, as->type);
     as = next;
   }
-#ifdef DBMTEST
+#if defined(DBMTEST) && defined(MOZILLA_CLIENT)
  nlclStoreKill(gLocalStore, u);
 #endif
   return 0;
@@ -467,9 +522,10 @@ RDF_GetSlotValue (RDF rdf, RDF_Resource u, RDF_Resource s,
 {
   uint16 size =  rdf->numTranslators; 
   uint16 n = 0;
-  if (s == gWebData->RDF_URL && tv && !inversep && type == RDF_STRING_TYPE) 
+  if ((s == gWebData->RDF_URL) && (tv) && (!inversep) && (type == RDF_STRING_TYPE))
     return  copyString(resourceID(u));         
   while (n < size) {
+	RDFT translator = rdf->translators[n];
     void*  ans = callGetSlotValue(n, rdf, u, s, type, inversep, tv);
     if ((ans != NULL) && ((n == 0)||(!callHasAssertions(0, rdf, u, s, ans, type, !tv))))
     if (type == RDF_RESOURCE_TYPE) {
@@ -482,8 +538,11 @@ RDF_GetSlotValue (RDF rdf, RDF_Resource u, RDF_Resource s,
   return NULL; 
 }
 
+
+
 RDFT
-RDFTNamed (RDF rdf, char* name) {
+RDFTNamed (RDF rdf, char* name)
+{
   uint16 size =  rdf->numTranslators; 
   uint16 n = 0;
   while (n < size) {
@@ -493,6 +552,8 @@ RDFTNamed (RDF rdf, char* name) {
   }
   return NULL;
 }
+
+
 
 RDF_Cursor
 getSlotValues (RDF rdf, RDF_Resource u, RDF_Resource s, 
@@ -634,14 +695,17 @@ RDF_NextValue (RDF_Cursor c)
   rdf =  c->rdf;
   ans = (*rdf->translators[c->count]->nextValue)(rdf->translators[c->count], c->current);
   while (ans != NULL) {
-    if (c->count == 0) return addDep(c->rdf, ans);
+    if ((c->count == 0) || (c->queryType != RDF_GET_SLOT_VALUES_QUERY)) {
+      if (c->type == RDF_RESOURCE_TYPE)  return addDep(c->rdf, ans);
+      else				 return ans;
+      }
     if (((!c->inversep) && 
-	(!(callHasAssertions(0, rdf, c->u, c->s, ans, c->type, !c->tv)))) ||
-	((c->inversep) && 
-	 (!(callHasAssertions(0, rdf, (RDF_Resource)ans, c->s, c->u, 
-			      c->type, !c->tv))))) {
+         (!(callHasAssertions(0, rdf, c->u, c->s, ans, c->type, !c->tv)))) ||
+        ((c->inversep) && 
+         (!(callHasAssertions(0, rdf, (RDF_Resource)ans, c->s, c->u, 
+                              c->type, !c->tv))))) {
       if (c->type == RDF_RESOURCE_TYPE) {
-	return addDep(c->rdf, (RDF_Resource)ans);
+        return addDep(c->rdf, (RDF_Resource)ans);
       } else return ans;
     }
     ans = (*rdf->translators[c->count]->nextValue)(rdf->translators[c->count], c->current);
@@ -650,8 +714,19 @@ RDF_NextValue (RDF_Cursor c)
   c->current = NULL;
   while ((c->count < rdf->numTranslators - 1) && (!c->current)) {
     c->count++;
-    c->current = callGetSlotValues(c->count,rdf, c->u, c->s, c->type, 
-				   c->inversep, c->tv);
+    switch (c->queryType) {
+    case RDF_GET_SLOT_VALUES_QUERY : 
+      c->current = callGetSlotValues(c->count,rdf, c->u, c->s, c->type, 
+                                     c->inversep, c->tv);
+      break;
+    case RDF_ARC_LABELS_OUT_QUERY :
+      c->current = callArcLabelsOut(c->count, rdf, c->u);
+      break;
+    case RDF_ARC_LABELS_IN_QUERY :
+      c->current = callArcLabelsIn(c->count, rdf, c->u);
+      break;
+    }
+    
   }
   if (c->current == NULL) return NULL;
   return RDF_NextValue(c);
@@ -702,18 +777,19 @@ findEnumerator (PLHashEntry *he, PRIntn i, void *arg)
 {
   RDF_Cursor c = (RDF_Cursor) arg;
   RDF_Resource u = (RDF_Resource)he->value;
-  if (itemMatchesFind(c->rdf, u, c->s, c->value, c->type)) {
-    c->count++;
-    if (c->size <= c->count) {
-      RDF_Resource* newBlock = getMem(c->size+5);
+  if (itemMatchesFind(c->rdf, u, c->s, c->value, c->match, c->type)) {
+    /* if (c->size <= c->count) */ {
+      RDF_Resource* newBlock = getMem(c->size + sizeof(RDF_Resource *));
       if (newBlock == NULL) return  HT_ENUMERATE_STOP;
       if (c->size > 0) {
-	memcpy(newBlock, c->pdata, c->size * sizeof(RDF_Resource*));
+	memcpy(newBlock, c->pdata, c->size);
 	freeMem(c->pdata);
       }
       c->pdata = newBlock;
+      c->size += sizeof(RDF_Resource *);
     }
-    *((RDF_Resource*)c->pdata + c->count) = u;
+    *((RDF_Resource*)(((char *)c->pdata) + (c->count*sizeof(RDF_Resource *)))) = u;
+    c->count++;
   }
   return  HT_ENUMERATE_NEXT;
 }
@@ -721,14 +797,15 @@ findEnumerator (PLHashEntry *he, PRIntn i, void *arg)
 
 
 PR_PUBLIC_API(RDF_Cursor)
-RDF_Find (RDF_Resource s, void* v, RDF_ValueType type)
+RDF_Find (RDF_Resource s, RDF_Resource match, void* v, RDF_ValueType type)
 {
   RDF_Cursor c = (RDF_Cursor) getMem(sizeof(struct RDF_CursorStruct));
   c->s = s;
+  c->match = match;
   c->value = v;
   c->type = type;
   c->queryType =  RDF_FIND_QUERY;
-  c->count = 0;
+  c->rdf = gAllDBs->rdf;
   PL_HashTableEnumerateEntries(resourceHash, findEnumerator, c);
   c->count = 0;
   return c;
@@ -737,21 +814,70 @@ RDF_Find (RDF_Resource s, void* v, RDF_ValueType type)
 
 
 PRBool
-itemMatchesFind (RDF r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
+matchStrings(RDF_Resource match, char *data, char *pattern)
 {
-  RDF_Cursor c = RDF_GetTargets(r, u, s, type, 1);
-  void* val;
-  while (val = RDF_NextValue(c)) {
-    PRBool ok = 0;
-    if (type == RDF_RESOURCE_TYPE) {
-      ok = (u == v);
-    } else if (type == RDF_STRING_TYPE) {
-      ok = (strstr(val, v) != NULL);
+	PRBool		ok = 0;
+
+	if (match == NULL)	match = gCoreVocab->RDF_substring;
+
+	if (match == gCoreVocab->RDF_substring)
+	{
+		ok = substring(pattern, data);
+	}
+	else if (match == gCoreVocab->RDF_stringEquals)
+	{
+		ok = (PRBool)(!compareStrings(data, pattern));
+	}
+	else if (match == gCoreVocab->RDF_stringNotEquals)
+	{
+		ok = (PRBool)compareStrings(data, pattern);
+	}
+	else if (match == gCoreVocab->RDF_stringStartsWith)
+	{
+		ok = startsWith(pattern, data);
+	}
+	else if (match == gCoreVocab->RDF_stringEndsWith)
+	{
+		ok = endsWith(pattern, data);
+	}
+	return(ok);
+}
+
+
+
+PRBool
+itemMatchesFind (RDF r, RDF_Resource u, RDF_Resource s, void* v,
+				RDF_Resource match, RDF_ValueType type)
+{
+	RDF_Cursor	c;
+	void		*val;
+    PRBool		ok = 0;
+
+  if ((s == gWebData->RDF_URL) && (type == RDF_STRING_TYPE))
+  {
+	val = resourceID(u);
+	ok = matchStrings(match, val, v);
+	return(ok);
+  }
+
+  c = RDF_GetTargets(r, u, s, type, 1);
+  if (c != NULL) {
+    while (val = RDF_NextValue(c)) {
+      if (type == RDF_RESOURCE_TYPE) {
+        ok = (u == v);
+      } else if (type == RDF_STRING_TYPE) {
+      	if (s == gWebData->RDF_URL)
+      	{
+      		val = resourceID(u);
+      	}
+      	ok = matchStrings(match, val, v);
+      }
+      if (ok) {
+        RDF_DisposeCursor(c);
+        return 1;
+      }
     }
-    if (ok) {
-      RDF_DisposeCursor(c);
-      return 1;
-    }
+    RDF_DisposeCursor(c);
   }
   return 0;
 }
@@ -761,11 +887,15 @@ itemMatchesFind (RDF r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType t
 RDF_Resource
 nextFindValue (RDF_Cursor c)
 {
-  if (c->count < c->size && (*((RDF_Resource*)c->pdata + c->count) != NULL)) {
-    RDF_Resource ans = (RDF_Resource)*((RDF_Resource*)c->pdata + c->count);
+	RDF_Resource ans = NULL;
+
+  if (((c->count*sizeof(RDF_Resource *)) < c->size) &&
+  	(*(RDF_Resource *)((char *)c->pdata + (c->count*sizeof(RDF_Resource *))) != NULL))
+  {
+    ans = *(RDF_Resource *)((char *)c->pdata + (c->count*sizeof(RDF_Resource *)));
     c->count++;
-    return ans;
-  } else   return NULL;
+  }
+  return ans;
 }
 
 

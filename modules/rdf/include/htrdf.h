@@ -187,7 +187,7 @@ PR_PUBLIC_API(HT_Error) HT_SetSelectedView (HT_Pane pane, HT_View view);
 
 
 enum    _HT_ViewType	{
-        HT_VIEW_BOOKMARK=0, HT_VIEW_HISTORY, HT_VIEW_SITEMAP
+        HT_VIEW_BOOKMARK=0, HT_VIEW_HISTORY, HT_VIEW_SITEMAP, HT_VIEW_FILES, HT_VIEW_SEARCH
         } ;
 typedef	enum	_HT_ViewType		HT_ViewType;
 
@@ -314,7 +314,7 @@ enum    _HT_MenuCmd     {
 	HT_CMD_DELETE_WORKSPACE, HT_CMD_MOVE_WORKSPACE_UP, HT_CMD_MOVE_WORKSPACE_DOWN,
 	HT_CMD_REFRESH, HT_CMD_EXPORT, HT_CMD_REMOVE_BOOKMARK_MENU,
 	HT_CMD_REMOVE_BOOKMARK_FOLDER, HT_CMD_SET_PASSWORD, HT_CMD_REMOVE_PASSWORD,
-	HT_CMD_EXPORTALL, HT_CMD_UNDO, HT_CMD_NEW_WORKSPACE, HT_CMD_RENAME
+	HT_CMD_EXPORTALL, HT_CMD_UNDO, HT_CMD_NEW_WORKSPACE, HT_CMD_RENAME, HT_CMD_FIND
         };
 typedef enum    _HT_MenuCmd     HT_MenuCmd;
 
@@ -328,6 +328,11 @@ PR_PUBLIC_API(char *)		HT_GetMenuCmdName(HT_MenuCmd menuCmd);
 PR_PUBLIC_API(HT_Error)		HT_DoMenuCmd(HT_Pane pane, HT_MenuCmd menuCmd);
 PR_PUBLIC_API(PRBool)		HT_IsMenuCmdEnabled(HT_Pane pane, HT_MenuCmd menuCmd);
 
+/*
+ * HT_Find
+ * show HTML find dialog (hint is the default string to look for and can be NULL)
+ */
+PR_PUBLIC_API(void)	HT_Find(char *hint);
 
 /*
  * HT_Properties
@@ -394,6 +399,7 @@ PR_PUBLIC_API(HT_Resource)	HT_GetNextSelection(HT_View view, HT_Resource startin
 PR_PUBLIC_API(void)	HT_ToggleSelection(HT_Resource node);
 
 PR_PUBLIC_API(PRBool)	HT_Launch(HT_Resource node, MWContext *context);
+PR_PUBLIC_API(PRBool)	HT_LaunchURL(HT_Pane pane, char *url, MWContext *context);
 
 /*
  * HT_NewCursor, HT_GetNextItem, HT_DeleteCursor

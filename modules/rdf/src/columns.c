@@ -70,20 +70,17 @@ ColumnsGetSlotValue(RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type
 		else if (u == gWebData->RDF_lastModifiedDate)	val = copyString(XP_GetString(RDF_LAST_MOD_STR));
 		else if (u == gWebData->RDF_size)		val = copyString(XP_GetString(RDF_SIZE_STR));
 		else if (u == gNavCenter->RDF_bookmarkAddDate)	val = copyString(XP_GetString(RDF_ADDED_ON_STR));
-		else val = copyString(resourceID(u));
 	}
 	else if ((s == gNavCenter->RDF_ColumnDataType) &&
 		(type == RDF_INT_TYPE) && (!inversep) && (tv))
 	{
 		if (u == gNavCenter->RDF_bookmarkAddDate ||
+		    u == gWebData->RDF_firstVisitDate ||
 		    u == gWebData->RDF_lastVisitDate ||
-		    u == gWebData->RDF_lastModifiedDate)
+		    u == gWebData->RDF_lastModifiedDate ||
+		    u == gWebData->RDF_creationDate)
 		{
-			val = (void *)HT_COLUMN_DATE_STRING;
-		}
-		else if (u == gWebData->RDF_firstVisitDate)
-		{
-			val = (void *)HT_COLUMN_DATE_INT;
+			val = (void *)HT_COLUMN_STRING;
 		}
 		else if (u == gWebData->RDF_size ||
 			 u == gWebData->RDF_numAccesses)
@@ -92,7 +89,7 @@ ColumnsGetSlotValue(RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type
 		}
 		else
 		{
-			/* default to string... XXX wrong thing to do */
+			/* default to string... XXX wrong thing to do? */
 			val = (void *)HT_COLUMN_STRING;
 		}
 	}
@@ -173,6 +170,9 @@ ColumnsNextValue (RDFT rdf, RDF_Cursor c)
 		{
 			case	0:	arc = gCoreVocab->RDF_name;		break;
 			case	1:	arc = gWebData->RDF_URL;		break;
+			case	2:	arc = gWebData->RDF_description;	break;
+			case	3:	arc = gWebData->RDF_size;		break;
+			case	4:	arc = gWebData->RDF_lastModifiedDate;	break;
 		}
 		break;
 
@@ -181,11 +181,10 @@ ColumnsNextValue (RDFT rdf, RDF_Cursor c)
 		{
 			case	0:	arc = gCoreVocab->RDF_name;		break;
 			case	1:	arc = gWebData->RDF_URL;		break;
-			case	2:	arc = gWebData->RDF_size;		break;
-#ifdef	NSPR20
-			case	3:	arc = gWebData->RDF_creationDate;	break;
-#endif
+			case	2:	arc = gWebData->RDF_description;	break;
+			case	3:	arc = gWebData->RDF_size;		break;
 			case	4:	arc = gWebData->RDF_lastModifiedDate;	break;
+			case	5:	arc = gWebData->RDF_creationDate;	break;
 		}
 		break;
 
@@ -202,6 +201,16 @@ ColumnsNextValue (RDFT rdf, RDF_Cursor c)
 		{
 			case	0:	arc = gCoreVocab->RDF_name;		break;
 			case	1:	arc = gWebData->RDF_URL;		break;
+		}
+		break;
+
+		case	SEARCH_RT:
+		switch(c->count)
+		{
+			case	0:	arc = gCoreVocab->RDF_name;		break;
+			case	1:	arc = gNavCenter->RDF_URLShortcut;	break;
+			case	2:	arc = gWebData->RDF_URL;		break;
+			case	3:	arc = gWebData->RDF_description;	break;
 		}
 		break;
 

@@ -37,6 +37,8 @@ extern	int	RDF_SHOW_COLUMN_HILITING_STR, RDF_TRIGGER_PLACEMENT_STR, RDF_URL_STR;
 extern	int	RDF_DESCRIPTION_STR, RDF_FIRST_VISIT_STR, RDF_LAST_VISIT_STR, RDF_NUM_ACCESSES_STR;
 extern	int	RDF_CREATED_ON_STR, RDF_LAST_MOD_STR, RDF_SIZE_STR, RDF_ADDED_ON_STR, RDF_ICON_URL_STR;
 extern	int	RDF_LARGE_ICON_URL_STR, RDF_HTML_URL_STR, RDF_HTML_HEIGHT_STR;
+extern	int	RDF_CONTAINS_STR, RDF_IS_STR, RDF_IS_NOT_STR, RDF_STARTS_WITH_STR, RDF_ENDS_WITH_STR;
+extern	int	RDF_FTP_NAME_STR, RDF_APPLETALK_TOP_NAME;
 
 
 /* vocab.c function prototypes */
@@ -48,6 +50,7 @@ void			createCoreVocab ();
 void			createNavCenterVocab ();
 void			createWebDataVocab ();
 RDF_Resource		newResource(char *id, int optionalNameStrID);
+char			*getResourceDefaultName(RDF_Resource r);
 
 XP_END_PROTOS
 

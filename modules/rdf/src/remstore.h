@@ -53,6 +53,10 @@ PRBool		remoteStoreHasAssertion (RDFT mcf, RDF_Resource u, RDF_Resource s, void*
 void *		remoteStoreGetSlotValue (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PRBool inversep,  PRBool tv);
 RDF_Cursor	remoteStoreGetSlotValuesInt (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  PRBool inversep, PRBool tv);
 RDF_Cursor	remoteStoreGetSlotValues (RDFT mcf, RDF_Resource u, RDF_Resource s, RDF_ValueType type,  PRBool inversep, PRBool tv);
+RDF_Cursor	remoteStoreArcLabelsIn (RDFT mcf, RDF_Resource u);
+RDF_Cursor	remoteStoreArcLabelsOut (RDFT mcf, RDF_Resource u);
+void *		arcLabelsOutNextValue (RDFT mcf, RDF_Cursor c);
+void *		arcLabelsInNextValue (RDFT mcf, RDF_Cursor c);
 void *		remoteStoreNextValue (RDFT mcf, RDF_Cursor c);
 RDF_Error	remoteStoreDisposeCursor (RDFT mcf, RDF_Cursor c);
 void		gcRDFFile (RDFFile f);

@@ -238,9 +238,23 @@ addSlotValue (RDFFile f, RDF_Resource u, RDF_Resource s, void* v,
      v = u;
      u = temp;
    }
-   if (s == gCoreVocab->RDF_parent) f->genlAdded = true; 
+   if ((s == gCoreVocab->RDF_parent) && (type == RDF_RESOURCE_TYPE)) {
+     f->genlAdded = true; 
+     if (strstr(resourceID(u), ".rdf")) {
+       RDFL rl = f->db->rdf;
+       char* dburl = getBaseURL(resourceID(u));
+       while (rl) {
+         RDF_AddDataSource(rl->rdf, dburl);
+         rl = rl->next;
+       }
+       freeMem(dburl);
+     }
+   }
    (*f->assert)(f, f->db, u, s, v, type, tv);
    if (s == gCoreVocab->RDF_parent) setContainerp((RDF_Resource)v, 1);
+#ifndef MOZILLA_CLIENT
+   notifySlotValueAdded(u, s, v, type);
+#endif
 }
 
 

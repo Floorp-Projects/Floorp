@@ -22,18 +22,29 @@
    For more information on RDF, look at the RDF section of www.mozilla.org
 */
 
+#include "fs2rdf.h"
 #include "utils.h"
 #include "nlcstore.h"
+#include "vocabint.h"
 
 
 	/* globals */
 PRBool rdfDBInited = 0;
 PLHashTable*  resourceHash = 0;
+PLHashTable*  dataSourceHash = 0;
 RDFT gRemoteStore = 0;
 RDFT gSessionDB = 0;
 
 	/* externs */
 extern	char	*profileDirURL;
+
+
+
+int
+compareStrings(char *s1, char *s2)
+{
+   return XP_STRCASECMP(s1, s2);
+}
 
 
 
@@ -145,7 +156,6 @@ ht_rjcprintf(PRFileDesc *file, const char *fmt, const char *data)
 }
 
 
-
 char *
 makeDBURL(char* name)
 {
@@ -167,7 +177,6 @@ makeDBURL(char* name)
   }
   return(ans);
 }
-
 
 
 PLHashNumber
@@ -256,7 +265,7 @@ endsWith (const char* pattern, const char* uuid)
   if (l2 < l1) return false;
   
   for (index = 1; index <= l1; index++) {
-    if (pattern[l1-index] != uuid[l2-index]) return false;
+    if (toupper(pattern[l1-index]) != toupper(uuid[l2-index])) return false;
   }
   
   return true;
@@ -270,7 +279,7 @@ startsWith (const char* pattern, const char* uuid)
   short l1 = strlen(pattern);
   short l2 = strlen(uuid);
   if (l2 < l1) return false;
-  return strncmp(pattern, uuid, l1)  == 0;
+  return (XP_STRNCASECMP(pattern, uuid, l1)  == 0);
 }
 
 
@@ -278,7 +287,7 @@ startsWith (const char* pattern, const char* uuid)
 PRBool
 substring (const char* pattern, const char* data)
 {
-  char *p = strstr(data, pattern);
+  char *p = XP_STRCASESTR(data, pattern);
   return p != NULL;
 }
 
@@ -391,18 +400,32 @@ char *
 resourceID(RDF_Resource r)
 {
   return r->url;
-}
+ }
 
 
 
 char *
 makeResourceName (RDF_Resource node)
 {
-  char* name;
-  name =  resourceID(node);
-  if (startsWith("http:", name)) return copyString(&name[7]);
-  if (startsWith("file:", name)) return copyString(&name[8]);
-  return copyString(name);
+	char		*name = NULL;
+
+	name =  resourceID(node);
+	if (startsWith("http:", resourceID(node)))
+	{
+		name = &name[7];
+	}
+	else if (startsWith("file:", resourceID(node)))
+	{
+		name = &name[FS_URL_OFFSET];
+	}
+	else
+	{
+		if ((name = getResourceDefaultName(node)) == NULL)
+		{
+			name = resourceID(node);
+		}
+	}
+	return ((name != NULL) ? copyString(name) : NULL);
 }
 
 
@@ -416,10 +439,11 @@ RDF_GetResourceName(RDF rdf, RDF_Resource node)
 }
 
 
-
+#ifdef MOZILLA_CLIENT
 PR_PUBLIC_API(RDF_Resource)
 RDFUtil_GetFirstInstance (RDF_Resource type, char* defaultURL)
 {
+
   RDF_Resource bmk = nlocalStoreGetSlotValue(gLocalStore, type,
 					     gCoreVocab->RDF_instanceOf,
 					     RDF_RESOURCE_TYPE, true, true);
@@ -430,7 +454,6 @@ RDFUtil_GetFirstInstance (RDF_Resource type, char* defaultURL)
   }
   return bmk;
 }
-
 
 
 PR_PUBLIC_API(void)
@@ -522,6 +545,8 @@ RDFT gCookieStore = 0;
 PUBLIC void
 NET_InitRDFCookieResources (void) ;
 
+
+
 PR_PUBLIC_API(void)
 RDF_AddCookieResource(char* name, char* path, char* host, char* expires) {
   char* url = getMem(strlen(name) + strlen(host) + strlen(path));
@@ -540,18 +565,19 @@ RDF_AddCookieResource(char* name, char* path, char* host, char* expires) {
   remoteStoreAdd(gCookieStore, ru, gCoreVocab->RDF_parent, hostUnit, RDF_RESOURCE_TYPE, 1);  
 }
 
-PUBLIC void
-NET_DeleteCookie(char* cookieURL);
+
 
 PRBool
 CookieUnassert (RDFT r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type) {
   if (resourceType(u) == COOKIE_RT) {
     /* delete the cookie */
-    NET_DeleteCookie(resourceID(u));
+    /* NET_DeleteCookie(resourceID(u)); */
     remoteStoreRemove(r, u, s, v, type);
     return 1;
   } else return 0;
 }
+
+
 
 RDF_Cursor
 CookieGetSlotValues(RDFT rdf, RDF_Resource u, RDF_Resource s,
@@ -559,9 +585,8 @@ CookieGetSlotValues(RDFT rdf, RDF_Resource u, RDF_Resource s,
 {
 	RDF_Cursor	c = NULL;
 
-	if ((resourceType(u) == COOKIE_RT) &&
-		(s == gNavCenter->RDF_Command) &&
-		(type == RDF_RESOURCE_TYPE) && (tv))
+	if ((resourceType(u) == COOKIE_RT) && (s == gNavCenter->RDF_Command) &&
+		(type == RDF_RESOURCE_TYPE) && (inversep) && (tv))
 	{
 		if ((c = (RDF_Cursor)getMem(sizeof(struct RDF_CursorStruct))) != NULL)
 		{
@@ -582,8 +607,10 @@ CookieGetSlotValues(RDFT rdf, RDF_Resource u, RDF_Resource s,
 	return(c);
 }
 
-#define	COOKIE_CMD_PREFIX	"CookieCommand:"
-#define	COOKIE_CMD_HOSTS	"CookieCommand:TBD"	/* actual cmd name */
+
+
+#define	COOKIE_CMD_PREFIX	"Command:Cookie:"
+#define	COOKIE_CMD_HOSTS	"Command:Cookie:TBD"	/* actual cmd name */
 
 void *
 CookieGetNextValue(RDFT rdf, RDF_Cursor c)
@@ -608,7 +635,7 @@ CookieGetNextValue(RDFT rdf, RDF_Cursor c)
 				}
 				break;
 			}
-            c->count++;
+          		c->count++;
 		}
 		else
 		{
@@ -617,6 +644,8 @@ CookieGetNextValue(RDFT rdf, RDF_Cursor c)
 	}
 	return(data);
 }
+
+
 
 RDF_Error
 CookieDisposeCursor(RDFT rdf, RDF_Cursor c)
@@ -643,6 +672,8 @@ CookieDisposeCursor(RDFT rdf, RDF_Cursor c)
 	return(err);
 }
 
+
+
 PRBool
 CookieAssert(RDFT rdf, RDF_Resource u, RDF_Resource s, void *v,
 		RDF_ValueType type, PRBool tv)
@@ -668,6 +699,8 @@ CookieAssert(RDFT rdf, RDF_Resource u, RDF_Resource s, void *v,
 	return(retVal);
 }
 
+
+
 void *
 CookieGetSlotValue(RDFT rdf, RDF_Resource u, RDF_Resource s,
 	RDF_ValueType type, PRBool inversep, PRBool tv)
@@ -687,12 +720,14 @@ CookieGetSlotValue(RDFT rdf, RDF_Resource u, RDF_Resource s,
 	return(data);
 }
 
+
+
 RDFT
 MakeCookieStore (char* url)
 {
   if (startsWith("rdf:CookieStore", url)) {
     if (gCookieStore == 0) {
-      RDFT ntr = (RDFT)getMem(sizeof(struct RDF_TranslatorStruct));
+      RDFT ntr = NewRemoteStore(url);
       ntr->assert = CookieAssert;
       ntr->unassert = CookieUnassert;
       ntr->getSlotValue = CookieGetSlotValue;
@@ -701,9 +736,9 @@ MakeCookieStore (char* url)
       ntr->nextValue = CookieGetNextValue;
       ntr->disposeCursor = CookieDisposeCursor;
       gCookieStore = ntr;
-      ntr->url = copyString(url);
       NET_InitRDFCookieResources (    ) ;
       return ntr;
     } else return gCookieStore;
   } else return NULL;
 }
+#endif /* MOZILLA_CLIENT */

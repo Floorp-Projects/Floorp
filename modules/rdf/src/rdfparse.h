@@ -39,6 +39,7 @@
 
 XP_BEGIN_PROTOS
 
+char *		copyStringIgnoreWhiteSpace(char* string);
 char *		getHref(char** attlist);
 int		parseNextRDFXMLBlob (NET_StreamClass *stream, char* blob, int32 size);
 void		parseRDFProcessingInstruction (RDFFile f, char* token);

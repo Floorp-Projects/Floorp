@@ -22,6 +22,10 @@
    For more information on RDF, look at the RDF section of www.mozilla.org
 */
 
+#ifdef XP_PC
+#define strcasecomp strcmp
+#endif
+
 #include "query.h"
 #include "rdf-int.h"
 
