@@ -86,6 +86,7 @@
   <broadcaster id="modify_command" disabled="true"/>
   <broadcaster id="send_event_command" disabled="true"/>
   <broadcaster id="copy_command" disabled="true"/>
+  <broadcaster id="cut_command" disabled="true"/>
 </broadcasterset>
 
 
@@ -125,20 +126,29 @@
 <tooltip id="savetip"/>
 
 <popup id="context-menu">
-   <menuitem label="&calendar.context.newevent;" oncommand="newEventCommand()"/>
-   <menuitem label="&calendar.context.modifyevent;" observes="modify_command" oncommand="unifinderEditCommand()"/>
-   <menuitem label="&calendar.context.deleteevent;" observes="delete_command" oncommand="unifinderDeleteCommand()"/>
+   <menuitem label="&calendar.context.newevent.label;" accesskey="&calendar.context.newevent.accesskey;" oncommand="newEventCommand()"/>
+   <menuitem label="&calendar.context.modifyevent.label;" accesskey="&calendar.context.modifyevent.accesskey;" observes="modify_command" oncommand="unifinderEditCommand()"/>
+   <menuitem label="&calendar.context.deleteevent.label;" accesskey="&calendar.context.deleteevent.accesskey;" observes="delete_command" oncommand="unifinderDeleteCommand()"/>
+
    <menuseparator/>
-   <menuitem label="&calendar.context.gototoday;" oncommand="gCalendarWindow.goToToday()"/>
+   <menuitem label="&calendar.context.cutevent.label;" accesskey="&calendar.context.cutevent.accesskey;" observes="cut_command" oncommand="cutToClipboard()"/>
+   <menuitem label="&calendar.context.copyevent.label;" accesskey="&calendar.context.copyevent.accesskey;" observes="copy_command" oncommand="copyToClipboard()"/>
+   <menuitem label="&calendar.context.pasteevent.label;" accesskey="&calendar.context.pasteevent.accesskey;" oncommand="pasteFromClipboard()"/>
    <menuseparator/>
-   <menuitem label="&calendar.context.dayview;" oncommand="gCalendarWindow.switchToDayView()"/>
-   <menuitem label="&calendar.context.weekview;" oncommand="gCalendarWindow.switchToWeekView()"/>
-   <menuitem label="&calendar.context.monthview;" oncommand="gCalendarWindow.switchToMonthView()"/>
+   <menuitem label="&calendar.context.selectall.label;" accesskey="&calendar.context.selectall.accesskey;" oncommand="selectAllEvents()"/>
    <menuseparator/>
-   <menuitem label="&calendar.context.emailevent;" observes="send_event_command" oncommand="sendEvent();"/>
+   <menuitem label="&calendar.context.gototoday.label;" accesskey="&calendar.context.gototoday.accesskey;" oncommand="gCalendarWindow.goToToday()"/>
    <menuseparator/>
-   <menuitem label="&calendar.context.toggleBackground;" oncommand="MonthView.toggleBackground()"/>
-   <menuitem label="&calendar.context.reload;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
+   <menuitem label="&calendar.context.dayview.label;" accesskey="&calendar.context.dayview.accesskey;" oncommand="gCalendarWindow.switchToDayView()"/>
+   <menuitem label="&calendar.context.weekview.label;" accesskey="&calendar.context.weekview.accesskey;" oncommand="gCalendarWindow.switchToWeekView()"/>
+   <menuitem label="&calendar.context.monthview.label;" accesskey="&calendar.context.monthview.accesskey;" oncommand="gCalendarWindow.switchToMonthView()"/>
+
+   <menuseparator/>
+   <menuitem label="&calendar.context.emailevent.label;" accesskey="&calendar.context.emailevent.accesskey;" observes="send_event_command" oncommand="sendEvent();"/>
+   
+   <menuseparator/>
+   <menuitem label="&calendar.context.toggleBackground.label;" accesskey="&calendar.context.toggleBackground.accesskey;" oncommand="MonthView.toggleBackground()"/>
+   <menuitem label="&calendar.context.reload.label;" accesskey="&calendar.context.reload.accesskey;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
 </popup>
 
 <popup id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>

@@ -140,6 +140,8 @@ CalendarEventSelection.prototype.onSelectionChanged = function ( )
 {
    if( this.selectedEvents.length > 0 )
    {
+      document.getElementById( "cut_command" ).removeAttribute( "disabled" );
+      
       document.getElementById( "copy_command" ).removeAttribute( "disabled" );
 
       document.getElementById( "delete_command" ).removeAttribute( "disabled" );
@@ -156,6 +158,8 @@ CalendarEventSelection.prototype.onSelectionChanged = function ( )
    }
    else
    {
+      document.getElementById( "cut_command" ).setAttribute( "disabled", "true" );
+      
       document.getElementById( "copy_command" ).setAttribute( "disabled", "true" );
 
       document.getElementById( "delete_command" ).setAttribute( "disabled", "true" );
