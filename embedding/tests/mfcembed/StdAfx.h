@@ -56,6 +56,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebProgressListener.h"
+#include "nsIWebProgress.h"
 #include "nsIWindowCreator.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIDocShellTreeOwner.h"
