@@ -160,6 +160,7 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
+#define FILE_PROTOCOL "file://"
 
 // prototypes
 #if 0
@@ -355,6 +356,42 @@ HandleForwardEvent(nsGUIEvent *aEvent)
   return result;
 }
 
+//----------------------------------------------------------
+static void BuildFileURL(const char * aFileName, nsString & aFileURL) 
+{
+  nsAutoString fileName(aFileName);
+  char * str = fileName.ToNewCString();
+
+  PRInt32 len = strlen(str);
+  PRInt32 sum = len + sizeof(FILE_PROTOCOL);
+  char* lpszFileURL = new char[sum];
+
+  // Translate '\' to '/'
+  for (PRInt32 i = 0; i < len; i++) {
+    if (str[i] == '\\') {
+	    str[i] = '/';
+    }
+  }
+
+  // Build the file URL
+  PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, str);
+
+  // create string
+  aFileURL = lpszFileURL;
+  delete [] lpszFileURL;
+
+}
+
+//----------------------------------------------------------
+static void BuildFileURL(const PRUnichar * aFileName, nsString & aFileURL) 
+{
+  nsAutoString fileName(aFileName);
+  char * str = fileName.ToNewCString();
+  BuildFileURL(str, aFileURL);
+  delete str;
+}
+
+
 static nsEventStatus PR_CALLBACK
 HandleLocationEvent(nsGUIEvent *aEvent)
 {
@@ -365,12 +402,43 @@ HandleLocationEvent(nsGUIEvent *aEvent)
     switch (aEvent->message) {
     case NS_KEY_UP:
       if (NS_VK_RETURN == ((nsKeyEvent*)aEvent)->keyCode) {
-	nsAutoString text;
-	PRUint32 size;
-	bw->mLocation->GetText(text, 1000, size);
-	bw->GoTo(text);
+        nsAutoString text;
+        PRUint32 size;
+        bw->mLocation->GetText(text, 1000, size);
+        bw->GoTo(text);
       }
       break;
+
+    case NS_DRAGDROP_EVENT: {
+      printf("Drag & Drop Event\n");
+      nsDragDropEvent * ev = (nsDragDropEvent *)aEvent;
+      nsAutoString fileURL;
+      BuildFileURL(ev->mURL, fileURL);
+      /*nsAutoString fileName(ev->mURL);
+      char * str = fileName.ToNewCString();
+
+      PRInt32 len = strlen(str);
+      PRInt32 sum = len + sizeof(FILE_PROTOCOL);
+      char* lpszFileURL = new char[sum];
+  
+      // Translate '\' to '/'
+      for (PRInt32 i = 0; i < len; i++) {
+        if (str[i] == '\\') {
+	        str[i] = '/';
+        }
+      }
+
+      // Build the file URL
+      PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, str);
+
+      // Ask the Web widget to load the file URL
+      nsString urlStr(lpszFileURL);*/
+      const PRUnichar * uniStr = fileURL.GetUnicode();
+      bw->GoTo(uniStr);
+      //delete [] lpszFileURL;
+      //delete [] str;
+      } break;
+
     default:
       break;
     }
@@ -533,7 +601,6 @@ nsBrowserWindow::GoTo(const PRUnichar* aURL,const char* aCommand)
   mWebShell->LoadURL(aURL, aCommand, nsnull);
 }
 
-#define FILE_PROTOCOL "file://"
 
 static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
 					  nsString* aFileName)
@@ -576,26 +643,11 @@ void
 nsBrowserWindow::DoFileOpen()
 {
   nsAutoString fileName;
-  char szFile[1000];
   if (GetFileNameFromFileSelector(mWindow, &fileName)) {
-    fileName.ToCString(szFile, sizeof(szFile));
-    PRInt32 len = strlen(szFile);
-    PRInt32 sum = len + sizeof(FILE_PROTOCOL);
-    char* lpszFileURL = new char[sum];
-    
-    // Translate '\' to '/'
-    for (PRInt32 i = 0; i < len; i++) {
-      if (szFile[i] == '\\') {
-	szFile[i] = '/';
-      }
-    }
-
-    // Build the file URL
-    PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, szFile);
-
+    nsAutoString fileURL;
+    BuildFileURL(fileName, fileURL);
     // Ask the Web widget to load the file URL
-    mWebShell->LoadURL(nsString(lpszFileURL));
-    delete [] lpszFileURL;
+    mWebShell->LoadURL(fileURL);
     Show();
   }
 }
@@ -1173,7 +1225,12 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     widget->SetBackgroundColor(NS_RGB(255, 255, 255));
     PRUint32 size;
     mLocation->SetText("",size);
-		NS_RELEASE(widget);
+    nsIWidget* widget = nsnull;
+	  if (NS_OK == mLocation->QueryInterface(kIWidgetIID,(void**)&widget))
+	  {
+      widget->EnableFileDrop(PR_TRUE);
+		  NS_RELEASE(widget);
+    }
   }
 
   // Create and place throbber
