@@ -39,7 +39,6 @@
 <!-- LOCALIZATION NOTE sidebar.nc-panel.announcements: Do NOT localize "Netcenter" -->
 <!ENTITY sidebar.nc-panel.announcements           "Netcenter Today">
 <!ENTITY sidebar.nc-panel.bookmarks               "Web Bookmarks">
-<!ENTITY sidebar.nc-panel.calculator              "Calculator">
 <!ENTITY sidebar.nc-panel.calendar                "Calendar">
 <!ENTITY sidebar.panel.client-bookmarks           "Bookmarks">
 <!ENTITY sidebar.nc-panel.delivery                "Delivery">
