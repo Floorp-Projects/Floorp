@@ -135,9 +135,9 @@ public:
 
     bool valid() { return mExporter != NULL; }
     
-    void setInputGWorld(GWorldPtr gworld) { ::GraphicsExportSetInputGWorld(mExporter, gworld); }
-    void setOutputHandle(Handle output) { ::GraphicsExportSetOutputHandle(mExporter, output); }
-    void doExport() { ::GraphicsExportDoExport(mExporter, NULL); }
+    OSStatus setInputGWorld(GWorldPtr gworld) { return ::GraphicsExportSetInputGWorld(mExporter, gworld); }
+    OSStatus setOutputHandle(Handle output) { return ::GraphicsExportSetOutputHandle(mExporter, output); }
+    OSStatus doExport() { return ::GraphicsExportDoExport(mExporter, NULL); }
 };
 
 GraphicsExporter::GraphicsExporter(OSType type)
@@ -148,6 +148,37 @@ GraphicsExporter::GraphicsExporter(OSType type)
 GraphicsExporter::~GraphicsExporter()
 {
     if (mExporter) ::CloseComponent(mExporter);
+}
+
+static nsresult encodeGWorld(GWorldPtr world, OSType type, nsIInputStream **result, PRInt32 *length)
+{
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    GraphicsExporter exporter(type);
+    if (exporter.valid()) {
+        Handle imageHandle = ::NewHandle(0);
+        if (imageHandle != NULL) {
+            if (exporter.setInputGWorld(world) == noErr &&
+                exporter.setOutputHandle(imageHandle) == noErr &&
+                exporter.doExport() == noErr) {
+                UInt32 imageLength = ::GetHandleSize(imageHandle);
+                char* buffer = (char*) nsMemory::Alloc(imageLength);
+                if (buffer != NULL) {
+                    nsCRT::memcpy(buffer, *imageHandle, imageLength);
+                    nsCOMPtr<nsIByteArrayInputStream> stream;
+                    rv = ::NS_NewByteArrayInputStream(getter_AddRefs(stream), buffer, imageLength);
+                    if (NS_SUCCEEDED(rv)) {
+                        *result = stream;
+                        NS_ADDREF(*result);
+                        *length = imageLength;
+                    } else {
+                        nsMemory::Free(buffer);
+                    }
+                }
+            }
+            ::DisposeHandle(imageHandle);
+        }
+    }
+    return rv;
 }
 
 struct ButtonInfo {
@@ -238,59 +269,8 @@ static nsresult drawThemeButton(int width, int height, bool isActive,
         }
         
         // now, encode the image as a 'PNGf' image, and return the encoded image
-        // as an nsIInputStream result.
-#if 1
-        GraphicsExporter exporter('PNGf');
-        if (exporter.valid()) {
-            exporter.setInputGWorld(world);
-            Handle imageHandle = ::NewHandle(0);
-            if (imageHandle != NULL) {
-                exporter.setOutputHandle(imageHandle);
-                exporter.doExport();
-                UInt32 imageLength = ::GetHandleSize(imageHandle);
-                char* buffer = (char*) nsMemory::Alloc(imageLength);
-                if (buffer != NULL) {
-                    nsCRT::memcpy(buffer, *imageHandle, imageLength);
-                    nsCOMPtr<nsIByteArrayInputStream> stream;
-                    rv = ::NS_NewByteArrayInputStream(getter_AddRefs(stream), buffer, imageLength);
-                    if (NS_SUCCEEDED(rv)) {
-                        *result = stream;
-                        NS_ADDREF(*result);
-                        *length = imageLength;
-                    }
-                }
-                ::DisposeHandle(imageHandle);
-            }
-        }
-#else
-        GraphicsExportComponent exporter = ::OpenDefaultComponent(GraphicsExporterComponentType, 'PNGf');
-        if (exporter != NULL) {
-            ComponentResult cr = ::GraphicsExportSetInputGWorld(exporter, world);
-            if (cr == noErr) {
-                Handle outputHandle = ::NewHandle(0);
-                if (outputHandle != NULL) {
-                    cr = ::GraphicsExportSetOutputHandle(exporter, outputHandle);
-                    unsigned long bytesWritten = 0;
-                    cr = ::GraphicsExportDoExport(exporter, &bytesWritten);
-                    if (cr == noErr) {
-                        char* buffer = (char*) nsMemory::Alloc(bytesWritten);
-                        if (buffer != NULL) {
-                            nsCRT::memcpy(buffer, *outputHandle, bytesWritten);
-                            nsCOMPtr<nsIByteArrayInputStream> stream;
-                            rv = ::NS_NewByteArrayInputStream(getter_AddRefs(stream), buffer, bytesWritten);
-                            if (NS_SUCCEEDED(rv)) {
-                                *result = stream;
-                                NS_ADDREF(*result);
-                                *length = bytesWritten;
-                            }
-                        }
-                    }
-                    ::DisposeHandle(outputHandle);
-                }
-            }
-            ::CloseComponent(exporter);
-        }
-#endif
+        // as an nsIInputStream.
+        rv = encodeGWorld(world, 'PNGf', result, length);
     }
     return rv;
 }
@@ -301,75 +281,49 @@ static nsresult drawThemeScrollbar(int width, int height,
                                    bool isLeftArrowPressed, bool isRightArrowPressed,
                                    nsIInputStream **result, PRInt32 *length)
 {
-    nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     
-/*    public byte[] drawThemeScrollbar(int width, int height, 
-                                     final int min, final int max, final int value, final int viewSize,
-                                     boolean isActive, final boolean isHorizontal, boolean isThumbPressed,
-                                     boolean isLeftArrowPressed, boolean isRightArrowPressed,
-                                     QDColor background, int alpha) {
-        try {
-            QTSession.open();
-            
-            final byte enableState = (isActive ? kThemeTrackActive : kThemeTrackInactive);
-            final byte pressState = (byte) ((isThumbPressed ? kThemeThumbPressed : 0) |
-                                            (isRightArrowPressed ? (kThemeRightOutsideArrowPressed | kThemeLeftInsideArrowPressed) : 0) |
-                                            (isLeftArrowPressed ? (kThemeLeftOutsideArrowPressed | kThemeRightInsideArrowPressed) : 0));
-            final short trackState = (short) ((isHorizontal ? kThemeTrackHorizontal : 0) | kThemeTrackShowThumb);
-            final short[] scrollbarBounds = { 0, 0, (short) height , (short) width };
-            final short[] trackBounds = { 0, 0, 0, 0 };
+    ThemeTrackEnableState enableState = (isActive ? kThemeTrackActive : kThemeTrackInactive);
+    ThemeTrackPressState pressState = ((isThumbPressed ? kThemeThumbPressed : 0) |
+                                       (isRightArrowPressed ? (kThemeRightOutsideArrowPressed | kThemeLeftInsideArrowPressed) : 0) |
+                                       (isLeftArrowPressed ? (kThemeLeftOutsideArrowPressed | kThemeRightInsideArrowPressed) : 0));
+    ThemeTrackAttributes trackState = ((isHorizontal ? kThemeTrackHorizontal : 0) | kThemeTrackShowThumb);
+    Rect scrollbarBounds = { 0, 0, (short) height , (short) width };
 
-            QDDrawer scrollbarDrawer = new QDDrawer() {
-                public void draw(QDGraphics g) throws QTException {
-                    DrawThemeScrollBarArrows(scrollbarBounds, enableState, pressState, isHorizontal, trackBounds);
-                    short[] drawInfo = makeThemeTrackDrawInfo(kThemeScrollBar, trackBounds,
-                                                              min, max, value,
-                                                              trackState, enableState,
-                                                              viewSize, pressState);
-                    DrawThemeTrack(drawInfo, 0, 0, 0);
-                }
-            };
-            
-            QDRect bounds = new QDRect(width, height);
-            QDGraphics g = new QDGraphics(bounds);
-            
-            // Initialize all pixels to an ARGB value of 0xFF000000.
-            int backgroundRGB = background.getRGB();
-            int backgroundARGB = 0xFF000000 | backgroundRGB;
-            RawEncodedImage rawImage = g.getPixMap().getPixelData();
-            int scan = rawImage.getRowBytes() / 4;
-            int[] pixels = new int[scan * height];
-            for (int i = pixels.length - 1; i >= 0; --i)
-                pixels[i] = backgroundARGB;
-            rawImage.copyFromArray(0, pixels, 0, pixels.length);
-            
-            // draw the scrollbar.
-            g.beginDraw(scrollbarDrawer);
-            
-            // Use the fact that QuickDraw always draws pixels values
-            // with an alpha value of 0, to determine which pixels
-            // are actually set when drawing the button.
-            rawImage.copyToArray(0, pixels, 0, pixels.length);
-            for (int row = 0, offset = 0; row < height; ++row) {
-                for (int i = 0; i < scan; ++i, ++offset) {
-                    int pixel = pixels[offset];
-                    if (pixel != backgroundARGB) {
-                        pixel |= alpha;
-                    } else {
-                        pixel = backgroundRGB;
-                    }
-                    pixels[offset] = pixel;
-                }
-            }
-            rawImage.copyFromArray(0, pixels, 0, pixels.length);
-            
-            // use a Quicktime graphics exporter to encode the image.
-            QTHandle imageHandle = new QTHandle();
-            GraphicsExporter exporter = new GraphicsExporter(OSType("PNGf"));
-            exporter.setInputGWorld(g);
-            exporter.setOutputHandle(imageHandle);
-            exporter.doExport();
-*/    
+    TempGWorld world(scrollbarBounds);
+    if (world.valid()) {
+        // initialize the GWorld with all black, alpha=0xFF.
+        long* pixels = world.begin();
+        long* limit = world.end();
+        while (pixels < limit) *pixels++ = 0xFF000000;
+
+        ThemeTrackDrawInfo drawInfo;
+        DrawThemeScrollBarArrows(&scrollbarBounds, enableState, pressState, isHorizontal, &drawInfo.bounds);
+        drawInfo.kind = kThemeScrollBar;
+        drawInfo.min = min, drawInfo.max = max, drawInfo.value = value;
+        drawInfo.reserved = 0;
+        drawInfo.attributes = trackState;
+        drawInfo.enableState = enableState;
+        drawInfo.trackInfo.scrollbar.viewsize = viewSize;
+        drawInfo.trackInfo.scrollbar.pressState = pressState;
+        DrawThemeTrack(&drawInfo, NULL, NULL, 0);
+
+        // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
+        // otherwise turn it off on the pixels that weren't touched.
+        pixels = world.begin();
+        while (pixels < limit) {
+            long& pixel = *pixels++;
+            if (pixel != 0xFF000000)
+                pixel |= 0xFF000000;
+            else
+                pixel = 0x00000000;
+        }
+
+        // now, encode the image as a 'PNGf' image, and return the encoded image
+        // as an nsIInputStream.
+        rv = encodeGWorld(world, 'PNGf', result, length);
+    }
+    
     return rv;
 }
 
@@ -377,7 +331,7 @@ typedef map<string, string> Arguments;
 
 static nsresult parseArguments(string path, Arguments& args)
 {
-    // str should be of the form:  button?name1=value1&...&nameN=valueN
+    // str should be of the form:  widget?name1=value1&...&nameN=valueN
     string::size_type questionMark = path.find('?');
     if (questionMark == string::npos) return NS_OK;
     
@@ -422,8 +376,8 @@ static bool getBoolArgument(const Arguments& args, const char* name, bool defaul
 
 /*
     1.  Parse the URL path, which will be of the form:
-        theme:button?width=40&height=20&title=OK
-    2.  Generate an image of a button in an offscreen GWorld, as specified by the URL.
+        theme:widget?width=40&height=20&title=OK
+    2.  Generate an image of a widget in an offscreen GWorld, as specified by the URL.
     3.  Encode the image as a PNG file, and return that via nsIInputStream/nsIChannel.
  */
 NS_IMETHODIMP
