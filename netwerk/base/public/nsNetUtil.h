@@ -812,7 +812,7 @@ NS_ParseContentType(const nsACString &rawContentType,
     // contentCharset is left untouched if not present in rawContentType
     nsACString::const_iterator begin, it, end;
     it = rawContentType.BeginReading(begin);
-    rawContentType.BeginReading(end);
+    rawContentType.EndReading(end);
     if (FindCharInReadable(';', it, end)) {
         contentType = Substring(begin, it);
         // now look for "charset=FOO" and extract "FOO"

@@ -757,9 +757,6 @@ nsMultiMixedConv::SendStart(nsIChannel *aChannel) {
     rv = mPartChannel->SetContentType(mContentType);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mPartChannel->SetContentCharset(mContentCharset);
-    if (NS_FAILED(rv)) return rv;
-
     rv = mPartChannel->SetContentLength(mContentLength);
     if (NS_FAILED(rv)) return rv;
 
@@ -909,7 +906,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 
             // examine header
             if (headerStr.EqualsIgnoreCase("content-type")) {
-                NS_ParseContentType(headerVal, mContentType, mContentCharset);
+                mContentType = headerVal;
             } else if (headerStr.EqualsIgnoreCase("content-length")) {
                 mContentLength = atoi(headerVal.get());
             } else if (headerStr.EqualsIgnoreCase("content-disposition")) {
