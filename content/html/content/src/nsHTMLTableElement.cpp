@@ -17,8 +17,11 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMHTMLTableElement.h"
+#include "nsIDOMHTMLTableCaptionElement.h"
+#include "nsIDOMHTMLTableSectionElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsGenericDOMHTMLCollection.h"
 #include "nsIHTMLContent.h"
 #include "nsIHTMLAttributes.h"
 #include "nsGenericHTMLElement.h"
@@ -28,8 +31,19 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 
-static NS_DEFINE_IID(kIDOMHTMLTableElementIID, NS_IDOMHTMLTABLEELEMENT_IID);
+/* for collections */
+#include "nsIDOMElement.h"
+#include "nsGenericHTMLElement.h"
+extern const nsIID kIDOMElementIID;
+/* end for collections */
 
+static NS_DEFINE_IID(kIDOMHTMLTableElementIID, NS_IDOMHTMLTABLEELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLTableCaptionElementIID, NS_IDOMHTMLTABLECAPTIONELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLTableSectionElementIID, NS_IDOMHTMLTABLESECTIONELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
+
+class TableElementCollection;
+class TableRowsCollection;
 
 class nsHTMLTableElement :  public nsIDOMHTMLTableElement,
                             public nsIScriptObjectOwner,
@@ -102,7 +116,321 @@ public:
 
 protected:
   nsGenericHTMLContainerElement mInner;
+  TableElementCollection *mTBodies;
+  TableRowsCollection *mRows;
 };
+
+
+
+/* ------------------------------ TableElementCollection ------------------------------ */
+/**
+ * This class provides a late-bound collection of elements that are
+ * direct decendents of a table.
+ * mParent is NOT ref-counted to avoid circular references
+ */
+class TableElementCollection : public nsGenericDOMHTMLCollection 
+{
+public:
+  TableElementCollection(nsGenericHTMLContainerElement *aParent, 
+                         nsIAtom *aTag);
+  virtual ~TableElementCollection();
+
+  NS_IMETHOD    GetLength(PRUint32* aLength);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn);
+
+  NS_IMETHOD    ParentDestroyed();
+
+protected:
+  nsGenericHTMLContainerElement * mParent;
+  nsIAtom * mTag;
+};
+
+
+TableElementCollection::TableElementCollection(nsGenericHTMLContainerElement *aParent, 
+                                               nsIAtom *aTag)
+  : nsGenericDOMHTMLCollection()
+{
+  mParent = aParent;
+  mTag = aTag;
+}
+
+TableElementCollection::~TableElementCollection()
+{
+  // we do NOT have a ref-counted reference to mParent, so do NOT release it!
+  // this is to avoid circular references.  The instantiator who provided mParent
+  // is responsible for managing our reference for us.
+  NS_IF_RELEASE(mTag);
+}
+
+// we re-count every call.  A better implementation would be to set ourselves up as
+// an observer of contentAppended, contentInserted, and contentDeleted
+NS_IMETHODIMP 
+TableElementCollection::GetLength(PRUint32* aLength)
+{
+  if (nsnull==aLength)
+    return NS_ERROR_NULL_POINTER;
+  *aLength=0;
+  nsresult rv = NS_OK;
+  if (nsnull!=mParent)
+  {
+    nsAutoString tagAsString;
+    mTag->ToString(tagAsString);
+    nsIDOMNode *child=nsnull;
+    mParent->GetFirstChild(&child);
+    while (nsnull!=child)
+    {
+      nsIDOMElement *element=nsnull;
+      nsresult rv = child->QueryInterface(kIDOMElementIID, (void**)&element);
+      if ((NS_SUCCEEDED(rv)) && (nsnull!=element))
+      {
+        nsString elementTag;
+        element->GetTagName(elementTag);
+        if (tagAsString==elementTag)
+        {
+          *aLength++;
+        }
+        NS_RELEASE(element);
+      }
+      child->GetNextSibling(&child);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP 
+TableElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  *aReturn=nsnull;
+  PRUint32 index = 0;
+  nsresult rv = NS_OK;
+  if (nsnull!=mParent)
+  {
+    nsAutoString tagAsString;
+    mTag->ToString(tagAsString);
+    nsIDOMNode *child=nsnull;
+    mParent->GetFirstChild(&child);
+    while (nsnull!=child)
+    {
+      nsIDOMElement *element=nsnull;
+      nsresult rv = child->QueryInterface(kIDOMElementIID, (void**)&element);
+      if ((NS_SUCCEEDED(rv)) && (nsnull!=element))
+      {
+        nsString elementTag;
+        element->GetTagName(elementTag);
+        if (tagAsString==elementTag)
+        {
+          if (aIndex==index)
+          {
+            element->QueryInterface(kIDOMNodeIID, (void**)aReturn);   // out-param addref
+            NS_ASSERTION(nsnull!=aReturn, "content element must be an nsIDOMNode");
+            break;
+          }
+          index++;
+        }
+        NS_RELEASE(element);
+      }
+      child->GetNextSibling(&child);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP 
+TableElementCollection::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
+{
+  nsresult rv = NS_OK;
+  if (nsnull!=mParent)
+  {
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+TableElementCollection::ParentDestroyed()
+{
+  // see comment in destructor, do NOT release mParent!
+  mParent = nsnull;
+  return NS_OK;
+}
+
+/* ------------------------------ TableRowsCollection -------------------------------- */
+/**
+ * This class provides a late-bound collection of rows in a table.
+ * mParent is NOT ref-counted to avoid circular references
+ */
+class TableRowsCollection : public nsGenericDOMHTMLCollection 
+{
+public:
+  TableRowsCollection(nsHTMLTableElement *aParent);
+  virtual ~TableRowsCollection();
+
+  NS_IMETHOD    GetLength(PRUint32* aLength);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+  NS_IMETHOD    NamedItem(const nsString& aName, nsIDOMNode** aReturn);
+
+  NS_IMETHOD    ParentDestroyed();
+
+protected:
+  nsHTMLTableElement * mParent;
+};
+
+TableRowsCollection::TableRowsCollection(nsHTMLTableElement *aParent)
+  : nsGenericDOMHTMLCollection()
+{
+  mParent = aParent;
+}
+
+TableRowsCollection::~TableRowsCollection()
+{
+  // we do NOT have a ref-counted reference to mParent, so do NOT release it!
+  // this is to avoid circular references.  The instantiator who provided mParent
+  // is responsible for managing our reference for us.
+}
+
+// we re-count every call.  A better implementation would be to set ourselves up as
+// an observer of contentAppended, contentInserted, and contentDeleted
+NS_IMETHODIMP 
+TableRowsCollection::GetLength(PRUint32* aLength)
+{
+  if (nsnull==aLength)
+    return NS_ERROR_NULL_POINTER;
+  *aLength=0;
+  nsresult rv = NS_OK;
+  if (nsnull!=mParent)
+  {
+    // count the rows in the thead, tfoot, and all tbodies
+    nsIDOMHTMLTableSectionElement *rowGroup;
+    mParent->GetTHead(&rowGroup);
+    if (nsnull!=rowGroup)
+    {
+      TableElementCollection head((nsGenericHTMLContainerElement *)rowGroup, 
+                                  nsHTMLAtoms::tr);
+      PRUint32 rows;
+      head.GetLength(&rows);
+      *aLength = rows;
+    }
+    mParent->GetTFoot(&rowGroup);
+    if (nsnull!=rowGroup)
+    {
+      TableElementCollection foot((nsGenericHTMLContainerElement *)rowGroup, 
+                                  nsHTMLAtoms::tr);
+      PRUint32 rows;
+      foot.GetLength(&rows);
+      *aLength += rows;
+    }
+    nsIDOMHTMLCollection *tbodies;
+    mParent->GetTBodies(&tbodies);
+    if (nsnull!=tbodies)
+    {
+      rowGroup = nsnull;
+      nsIDOMNode *node;
+      PRUint32 index=0;
+      tbodies->Item(index, &node);
+      while (nsnull!=node)
+      {
+        nsresult result = node->QueryInterface(kIDOMHTMLTableSectionElementIID, 
+                                               (void**)&rowGroup);
+        if ((NS_SUCCEEDED(result)) && (nsnull!=rowGroup))
+        {
+          TableElementCollection body((nsGenericHTMLContainerElement *)rowGroup, 
+                                      nsHTMLAtoms::tr);
+          PRUint32 rows;
+          body.GetLength(&rows);
+          *aLength += rows;
+        }
+        index++;
+      }
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP 
+TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
+{
+  *aReturn=nsnull;
+  nsresult rv = NS_OK;
+  PRUint32 count = 0;
+  PRUint32 rowsInHead;
+  if (nsnull!=mParent)
+  {
+    // count the rows in the thead, tfoot, and all tbodies
+    nsIDOMHTMLTableSectionElement *rowGroup;
+    mParent->GetTHead(&rowGroup);
+    if (nsnull!=rowGroup)
+    {
+      TableElementCollection head((nsGenericHTMLContainerElement *)rowGroup, 
+                                  nsHTMLAtoms::tr);
+      head.GetLength(&rowsInHead);
+      count = rowsInHead;
+      if (count>aIndex)
+      {
+        head.Item(aIndex, aReturn);
+        return NS_OK;
+      }
+    }
+    nsIDOMHTMLCollection *tbodies;
+    mParent->GetTBodies(&tbodies);
+    if (nsnull!=tbodies)
+    {
+      rowGroup = nsnull;
+      nsIDOMNode *node;
+      PRUint32 index=0;
+      tbodies->Item(index, &node);
+      while (nsnull!=node)
+      {
+        nsresult result = node->QueryInterface(kIDOMHTMLTableSectionElementIID, 
+                                               (void**)&rowGroup);
+        if ((NS_SUCCEEDED(result)) && (nsnull!=rowGroup))
+        {
+          TableElementCollection body((nsGenericHTMLContainerElement *)rowGroup, 
+                                      nsHTMLAtoms::tr);
+          PRUint32 rows;
+          body.GetLength(&rows);
+          if ((count+rows)>aIndex)
+          {
+            body.Item(aIndex-count, aReturn);
+            return NS_OK;
+          }
+          count += rows;
+        }
+        index++;
+        tbodies->Item(index, &node);
+      }
+    }
+    // if it is to be found, it must be in the tfoot
+    mParent->GetTFoot(&rowGroup);
+    if (nsnull!=rowGroup)
+    {
+      TableElementCollection foot((nsGenericHTMLContainerElement *)rowGroup, 
+                                  nsHTMLAtoms::tr);
+      foot.Item(aIndex-count, aReturn);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP 
+TableRowsCollection::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
+{
+  nsresult rv = NS_OK;
+  if (nsnull!=mParent)
+  {
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+TableRowsCollection::ParentDestroyed()
+{
+  // see comment in destructor, do NOT release mParent!
+  mParent = nsnull;
+  return NS_OK;
+}
+
+/* ------------------------------ nsHTMLTableElement -------------------------------- */
+// the class declaration is at the top of this file
 
 nsresult
 NS_NewHTMLTableElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
@@ -122,10 +450,22 @@ nsHTMLTableElement::nsHTMLTableElement(nsIAtom* aTag)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aTag);
+  mTBodies=nsnull;
+  mRows=nsnull;
 }
 
 nsHTMLTableElement::~nsHTMLTableElement()
 {
+  if (nsnull!=mTBodies)
+  {
+    mTBodies->ParentDestroyed();
+    NS_RELEASE(mTBodies);
+  }
+  if (nsnull!=mRows)
+  {
+    mRows->ParentDestroyed();
+    NS_RELEASE(mRows);
+  }
 }
 
 NS_IMPL_ADDREF(nsHTMLTableElement)
@@ -173,53 +513,152 @@ NS_IMETHODIMP
 nsHTMLTableElement::GetCaption(nsIDOMHTMLTableCaptionElement** aValue)
 {
   *aValue = nsnull;
-  return NS_OK; // XXX write me
+  nsIDOMNode* child=nsnull;
+  mInner.GetFirstChild(&child);
+  while (nsnull!=child)
+  {
+    nsIDOMHTMLTableCaptionElement *caption=nsnull;
+    nsresult rv = child->QueryInterface(kIDOMHTMLTableCaptionElementIID, (void**)&caption);
+    if ((NS_SUCCEEDED(rv)) && (nsnull!=caption))
+    {
+      *aValue = caption;
+      break;
+    }
+    child->GetNextSibling(&child);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTableElement::SetCaption(nsIDOMHTMLTableCaptionElement* aValue)
 {
-  return NS_OK; // XXX write me
+  nsresult rv = DeleteCaption();
+  if (nsnull!=aValue)
+  {
+    nsIDOMNode* resultingChild;
+    mInner.AppendChild(aValue, &resultingChild);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetTHead(nsIDOMHTMLTableSectionElement** aValue)
 {
+  /* this is a better implementation, but GetElementsByTagName isn't implemented yet */
+  /*
   *aValue = nsnull;
-  return NS_OK; // XXX write me
+  nsIDOMNodeList *kids=nsnull;
+  nsAutoString theadAsString;
+  nsHTMLAtoms::thead->ToString(theadAsString);
+  nsresult rv = mInner.GetElementsByTagName(theadAsString, &kids);
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=kids))
+  {
+    nsIDOMNode *thead=nsnull;
+    rv = kids->Item(0, &thead);
+    if (NS_SUCCEEDED(rv))
+      *aValue = (nsIDOMHTMLTableSectionElement*)thead;
+  }
+  */
+
+  *aValue = nsnull;
+  nsIDOMNode* child=nsnull;
+  mInner.GetFirstChild(&child);
+  while (nsnull!=child)
+  {
+    nsIDOMHTMLTableSectionElement *section=nsnull;
+    nsresult rv = child->QueryInterface(kIDOMHTMLTableSectionElementIID, (void**)&section);
+    if ((NS_SUCCEEDED(rv)) && (nsnull!=section))
+    {
+      nsString tag;
+      section->GetTagName(tag);
+      nsAutoString theadAsString;
+      nsHTMLAtoms::thead->ToString(theadAsString);
+      if (theadAsString==tag)
+      {
+        *aValue = section;
+        break;
+      }
+    }
+    child->GetNextSibling(&child);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTableElement::SetTHead(nsIDOMHTMLTableSectionElement* aValue)
 {
-  return NS_OK; // XXX write me
+  nsresult rv = DeleteTHead();
+  if (nsnull!=aValue)
+  {
+    nsIDOMNode* resultingChild;
+    mInner.AppendChild(aValue, &resultingChild);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetTFoot(nsIDOMHTMLTableSectionElement** aValue)
 {
   *aValue = nsnull;
-  return NS_OK; // XXX write me
+  nsIDOMNode* child=nsnull;
+  mInner.GetFirstChild(&child);
+  while (nsnull!=child)
+  {
+    nsIDOMHTMLTableSectionElement *section=nsnull;
+    nsresult rv = child->QueryInterface(kIDOMHTMLTableSectionElementIID, (void**)&section);
+    if ((NS_SUCCEEDED(rv)) && (nsnull!=section))
+    {
+      nsString tag;
+      section->GetTagName(tag);
+      nsAutoString tfootAsString;
+      nsHTMLAtoms::tfoot->ToString(tfootAsString);
+      if (tfootAsString==tag)
+      {
+        *aValue = section;
+        break;
+      }
+    }
+    child->GetNextSibling(&child);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTableElement::SetTFoot(nsIDOMHTMLTableSectionElement* aValue)
 {
-  return NS_OK; // XXX write me
+  nsresult rv = DeleteTFoot();
+  if (nsnull!=aValue)
+  {
+    nsIDOMNode* resultingChild;
+    mInner.AppendChild(aValue, &resultingChild);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetRows(nsIDOMHTMLCollection** aValue)
 {
-  *aValue = nsnull;
-  return NS_OK; // XXX write me
+  if (nsnull==mRows)
+  {
+    NS_ADDREF(nsHTMLAtoms::tr);
+    mRows = new TableRowsCollection(this);
+    NS_ADDREF(mRows); // this table's reference, released in the destructor
+  }
+  mRows->QueryInterface(kIDOMHTMLCollectionIID, (void **)aValue);   // caller's addref 
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetTBodies(nsIDOMHTMLCollection** aValue)
 {
-  *aValue = nsnull;
-  return NS_OK; // XXX write me
+  if (nsnull==mTBodies)
+  {
+    NS_ADDREF(nsHTMLAtoms::tbody);
+    mTBodies = new TableElementCollection(&mInner, nsHTMLAtoms::tbody);
+    NS_ADDREF(mTBodies); // this table's reference, released in the destructor
+  }
+  mTBodies->QueryInterface(kIDOMHTMLCollectionIID, (void **)aValue);  // caller's addref 
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -258,7 +697,14 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
 NS_IMETHODIMP
 nsHTMLTableElement::DeleteCaption()
 {
-  return NS_OK; // XXX write me
+  nsIDOMHTMLTableCaptionElement *caption;
+  nsresult rv = GetCaption(&caption);
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=caption))
+  {
+    nsIDOMNode* resultingChild;
+    mInner.RemoveChild(caption, &resultingChild); // mInner does the notification
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -672,3 +1118,5 @@ nsHTMLTableElement::HandleDOMEvent(nsIPresContext& aPresContext,
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
+
+
