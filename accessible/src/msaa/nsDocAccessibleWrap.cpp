@@ -192,7 +192,7 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
     accessNode->Shutdown();
   }
 
-  HWND hWnd;
+  HWND hWnd = NS_REINTERPRET_CAST(HWND, mWnd);
   if (gmGetGUIThreadInfo && (aEvent == EVENT_FOCUS || 
       aEvent == EVENT_MENUPOPUPSTART ||
       aEvent == EVENT_MENUPOPUPEND)) {
@@ -201,18 +201,6 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
     if (gmGetGUIThreadInfo(NULL, &guiInfo)) {
       hWnd = guiInfo.hwndFocus;
     }
-#ifdef DEBUG
-    if (hWnd != NS_REINTERPRET_CAST(HWND, mWnd)) {
-      // Probably a menu item
-      printf("\n*** The focused window is %x, the accessible's window is %x\n", (void*)hWnd, (void*)mWnd);
-    }
-    //NS_ASSERTION(hWnd == NS_REINTERPRET_CAST(HWND, mWnd), "We need to figure out when the system focus window"
-    //                           "is different from the window that the focused accessible thinks it's in");
-    //hWnd = NS_REINTERPRET_CAST(HWND, mWnd);
-  }
-#endif
-  else {
-    hWnd = NS_REINTERPRET_CAST(HWND, mWnd);
   }
 
   // notify the window system
