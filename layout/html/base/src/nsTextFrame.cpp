@@ -1849,7 +1849,6 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   }
 
   // Setup metrics for caller; store final max-element-size information
-NS_ASSERTION(x >= 0, "whoops");
   aMetrics.width = x;
   mComputedWidth = x;
   if (0 == x) {
