@@ -128,7 +128,7 @@ function editPage(url, launchWindow, delay)
       var win = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
       if ( win && win.editorShell)
       {
-        if (win.editorShell.checkOpenWindowForURLMatch(url, window))
+        if (win.editorShell.checkOpenWindowForURLMatch(url, win))
         {
           // We found an editor with our url
           win.focus();
