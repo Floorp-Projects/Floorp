@@ -1025,6 +1025,8 @@ nsresult nsRepository::CreateInstance2(const nsCID &aClass,
 #endif /* 0 */
 
 nsresult nsRepository::RegisterFactory(const nsCID &aClass,
+                                       const char *aClassName,
+                                       const char *aProgID,
                                        nsIFactory *aFactory, 
                                        PRBool aReplace)
 {
@@ -1057,80 +1059,6 @@ nsresult nsRepository::RegisterFactory(const nsCID &aClass,
 
 	nsIDKey key(aClass);
 	factories->Put(&key, new FactoryEntry(aClass, aFactory));
-	
-	PR_ExitMonitor(monitor);
-	
-	PR_LOG(logmodule, PR_LOG_WARNING,
-		("\t\tFactory register succeeded."));
-	
-	return NS_OK;
-}
-
-
-nsresult nsRepository::RegisterFactory(const nsCID &aClass,
-                                       const char *aClassName,
-                                       const char *aProgID,
-                                       nsIFactory *aFactory, 
-                                       PRBool aReplace)
-{
-	return (RegisterFactory(aClass, aFactory, aReplace));
-}
-
-
-nsresult nsRepository::RegisterFactory(const nsCID &aClass,
-                                       const char *aLibrary,
-                                       PRBool aReplace,
-                                       PRBool aPersist)
-{
-	checkInitialized();
-	if (PR_LOG_TEST(logmodule, PR_LOG_ALWAYS))
-	{
-		char *buf = aClass.ToString();
-		PR_LogPrint("nsRepository: RegisterFactory(%s, %s), replace = %d, persist = %d.", buf, aLibrary, (int)aReplace, (int)aPersist);
-		delete [] buf;
-	}
-
-	nsIFactory *old = NULL;
-	FindFactory(aClass, &old);
-	
-	if (old != NULL)
-	{
-		old->Release();
-		if (!aReplace)
-		{
-			PR_LOG(logmodule, PR_LOG_WARNING,("\t\tFactory already registered."));
-			return NS_ERROR_FACTORY_EXISTS;
-		}
-		else
-		{
-			PR_LOG(logmodule, PR_LOG_WARNING,("\t\tdeleting registered Factory."));
-		}
-	}
-	
-	PR_EnterMonitor(monitor);
-	
-#ifdef USE_REGISTRY
-	if (aPersist == PR_TRUE)
-	{
-		// Add it to the registry
-		nsDll *dll = new nsDll(aLibrary);
-		// XXX temp hack until we get the dll to give us the entire
-		// XXX NSQuickRegisterClassData
-		NSQuickRegisterClassData cregd = {0};
-		cregd.CIDString = aClass.ToString();
-		platformRegister(&cregd, dll);
-		delete [] (char *)cregd.CIDString;
-		delete dll;
-	} 
-	else
-#endif
-	{
-		nsDll *dll = new nsDll(aLibrary);
-		nsIDKey key(aClass);
-		factories->Put(&key, new FactoryEntry(aClass, aLibrary,
-			dll->GetLastModifiedTime(), dll->GetSize()));
-		delete dll;
-	}
 	
 	PR_ExitMonitor(monitor);
 	

@@ -183,21 +183,10 @@ public:
 
   // Manually registry a factory for a class
   static nsresult RegisterFactory(const nsCID &aClass,
-                                  nsIFactory *aFactory,
-                                  PRBool aReplace);
-
-  // Manually registry a factory for a class
-  static nsresult RegisterFactory(const nsCID &aClass,
                                   const char *aClassName,
                                   const char *aProgID,
                                   nsIFactory *aFactory,
                                   PRBool aReplace);
-
-  // Manually registry a dynamically loaded factory for a class
-  static nsresult RegisterFactory(const nsCID &aClass,
-                                  const char *aLibrary,
-                                  PRBool aReplace,
-                                  PRBool aPersist);
 
   // Manually register a dynamically loaded component.
   static nsresult RegisterComponent(const nsCID &aClass,
