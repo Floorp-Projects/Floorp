@@ -2,6 +2,7 @@
 #include <Winbase.h>
 #include <direct.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "globals.h"
 #include "comp.h"
 #include "ib.h"
@@ -13,6 +14,10 @@
 #define MAX_SIZE 1024
 #define CRVALUE 0x0D
 #define BUF_SIZE 4096
+// Required disk space for Win build
+#define WDISK_SPACE 27577549
+// Required disk space for Linux build
+#define LDISK_SPACE 84934656
 
 int interpret(char *cmd);
 
@@ -1205,6 +1210,35 @@ void CreateLinuxInstaller()
 	_chdir(currentdir);
 }
 
+void InsertComma(CString& requiredSpace)
+{
+	int len = requiredSpace.GetLength();
+	int pos = len%3;
+	if (pos == 0)
+		pos = 3;
+	for(int i=pos; i<len; i+=3)
+	{
+		requiredSpace.Insert(i,',');
+		i++;
+	}
+}
+
+void DiskSpaceAlert(ULONGLONG required, ULONGLONG available)
+{
+	char tempavailspace[20], tempreqspace[20];
+	CString availableSpace, requiredSpace;
+
+	_ui64toa(available, tempavailspace, 10);
+	availableSpace = tempavailspace;
+	InsertComma(availableSpace);
+
+	_ui64toa(required, tempreqspace, 10);
+	requiredSpace = tempreqspace;
+	InsertComma(requiredSpace);
+
+	AfxMessageBox("Not enough disk space. Required: "+requiredSpace+" bytes. Available: "+availableSpace+" bytes.", MB_OK);
+}
+
 extern "C" __declspec(dllexport)
 int StartIB(CString parms, WIDGET *curWidget)
 {
@@ -1265,21 +1299,17 @@ int StartIB(CString parms, WIDGET *curWidget)
 	// Checking for 26.3MB disk space
 	if (linuxOption != "Linux")
 	{
-		if ((nTotalAvailable.QuadPart) > 27,577,549)
-			;
-		else
+		if ((nTotalAvailable.QuadPart) < WDISK_SPACE)
 		{
-			AfxMessageBox("You dont have enough Disk space ", MB_OK);
+			DiskSpaceAlert(WDISK_SPACE,(nTotalAvailable.QuadPart));
 			return FALSE;
 		}
 	}
 	else
 	{
-		if ((nTotalAvailable.QuadPart) > 84,934,656)
-			;
-		else
+		if ((nTotalAvailable.QuadPart) < LDISK_SPACE)
 		{
-			AfxMessageBox("You dont have enough Disk space ", MB_OK);
+			DiskSpaceAlert(LDISK_SPACE,(nTotalAvailable.QuadPart));
 			return FALSE;
 		}
 	}
