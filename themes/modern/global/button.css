@@ -40,12 +40,19 @@ button.plain-extended {}
     {
 	  -moz-binding			: url("chrome://global/skin/globalBindings.xml#three-slice-button");
       background-color      : transparent;
-      border				: 0px;
-      margin				: 4px 5px 5px 5px;
+      border				: 3px solid transparent;
+      margin        : 2px;
       color					: #1C1D1F;
       min-width				: 60px;
+      -moz-user-focus: normal !important;
     }
 
+  button:focus 
+    {
+      border-color: #73869C;
+      -moz-border-radius: 10px;
+    }
+    
   button[disabled="true"], button[disabled="true"]:hover, button[disabled="true"]:hover:active
     {
       border				: 0px;
@@ -122,13 +129,17 @@ button.plain-extended {}
 /* Default Button States */
 
   button[default="true"] {
-  	margin: 2px 5px 3px 5px;
+    margin        : 1px;
+  }
+
+  button[default="true"]:focus {
+    -moz-border-radius: 12px;
   }
 
   .button-image-left[default="true"] {
 	background	: url(chrome://global/skin/button-def-left.gif) no-repeat;
-	width: 11px;
-	height: 23px;
+	width: 10px;
+	height: 21px;
   }
 
   .button-image-middle[default="true"] {
@@ -137,8 +148,8 @@ button.plain-extended {}
 
   .button-image-right[default="true"] {
 	background	: url(chrome://global/skin/button-def-right.gif) no-repeat;
-	width: 9px;
-	height: 23px;
+	width: 8px;
+	height: 21px;
   }
 
   button:hover:active > .button-image-left[default="true"] {

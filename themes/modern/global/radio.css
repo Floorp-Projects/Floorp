@@ -4,19 +4,24 @@
 /* outer frame */
   radio 
     {
-      margin: 3px 5px 3px 5px;
+      border: 2px solid transparent;
+      margin: 0px 3px 0px 3px;
     }
 
   radio > .internal-box
     {
-      -moz-user-focus: none;
     }
 
-
+  #radio:focus 
+    {
+      border-color: #73869C;
+      -moz-border-radius  : 4px 5px 4px 5px;
+    }
+    
 /* checkmark outer frame */
   radio > .internal-box > .checkmark-box 
     {
-	  margin: 3px 3px 3px 3px;
+      margin: 3px;
     }
 
   radio[disabled="true"] > .internal-box > .checkmark-box,
@@ -82,11 +87,3 @@
       color: #999999;
     }
   
-  radio:focus > .internal-box > .checkmark-box 
-    { 
-      border              : 2px solid #F2C34F;
-      margin			  : 1px 1px 1px 1px;
-      -moz-border-radius  : 8px 8px 8px 8px;
-    }
-    
-    
