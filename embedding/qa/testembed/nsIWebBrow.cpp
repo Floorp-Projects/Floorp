@@ -133,9 +133,12 @@ void CNsIWebBrowser::WBGetURIContentListener()
 void CNsIWebBrowser::WBSetURIContentListener()
 {
 	// SetParentURIContentListener
+
 	rv = qaWebBrowser->SetParentURIContentListener(qaURIContentListener);
 	RvTestResult(rv, "nsIWebBrowser::SetParentURIContentListener() test", 1);
 	RvTestResultDlg(rv, "nsIWebBrowser::SetParentURIContentListener() test");
+	if (!qaURIContentListener)
+		QAOutput("Didn't get uri content listener object.", 2);
 }
 
 void CNsIWebBrowser::WBGetDOMWindow()

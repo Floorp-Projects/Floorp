@@ -521,6 +521,16 @@ void CTests::OnToolsTestYourMethod()
 
 	RvTestResult(rv, "AddWebBrowserListener(). nsIURIContentListener test", 2);
 
+	nsCOMPtr<nsIURILoader> myLoader(do_GetService(NS_URI_LOADER_CONTRACTID,&rv));
+	RvTestResult(rv, "nsIURILoader() object test", 1);
+
+	nsCOMPtr<nsIURIContentListener> cntListener(NS_STATIC_CAST(nsIURIContentListener*, qaBrowserImpl));
+	if (!cntListener)
+		QAOutput("Didn't get urIContentListener object.", 2);
+	else {
+		rv = myLoader->RegisterContentListener(cntListener);
+		RvTestResult(rv, "RegisterContentListener() test", 1);
+	}
 }
 
 // ***********************************************************************
