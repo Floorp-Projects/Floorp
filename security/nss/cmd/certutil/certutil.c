@@ -62,11 +62,6 @@
 #include "cryptohi.h"
 #include "secoid.h"
 #include "certdb.h"
-#include "cdbhdl.h"
-
-/* SEC_Init is now declared in secutil.h */
-/* We really should convert to using NSS, but it doesn't provide all
- * of the functionality we need (like opening the databases writeable). */
 
 #define MIN_KEY_BITS		512
 #define MAX_KEY_BITS		2048
@@ -742,19 +737,7 @@ ValidateCert(CERTCertDBHandle *handle, char *name, char *date,
     return (rv);
 }
 
-SECKEYLowPrivateKey*
-GetPrivKeyFromNickname(char *nickname)
-{
-    /* check if key actually exists */
-    if (SECU_CheckKeyNameExists(NULL, nickname) == PR_FALSE) {
-	SECU_PrintError(progName, "the key \"%s\" does not exist", nickname);
-	return NULL;
-    }
-
-    /* Read in key */
-    return SECU_GetPrivateKey(NULL, nickname);
-}
-
+#ifdef notdef
 static SECStatus
 DumpPublicKey(int dbindex, char *nickname, FILE *out)
 {
@@ -828,6 +811,7 @@ DumpPrivateKey(int dbindex, char *nickname, FILE *out)
     }
     return SECSuccess;
 }
+#endif
 
 static SECStatus
 printKeyCB(SECKEYPublicKey *key, SECItem *data, void *arg)
@@ -867,6 +851,7 @@ listKeys(PK11SlotInfo *slot, KeyType keyType, void *pwarg)
 {
     SECStatus rv = SECSuccess;
 
+#ifdef notdef
     if (PK11_IsInternal(slot)) {
 	/* Print all certs in internal slot db. */
 	rv = SECU_PrintKeyNames(SECKEY_GetDefaultKeyDB(), stdout);
@@ -875,6 +860,7 @@ listKeys(PK11SlotInfo *slot, KeyType keyType, void *pwarg)
 	    return SECFailure;
 	}
     } else {
+#endif
 	/* XXX need a function as below */
 	/* could iterate over certs on slot and print keys */
 	/* this would miss stranded keys */
@@ -886,9 +872,11 @@ listKeys(PK11SlotInfo *slot, KeyType keyType, void *pwarg)
 	    SECU_PrintError(progName, "problem listing keys");
 	    return SECFailure;
 	}
-	return SECFailure;
+	return SECSuccess;
+#ifdef notdef
     }
     return rv;
+#endif
 }
 
 static SECStatus
@@ -903,6 +891,7 @@ ListKeys(PK11SlotInfo *slot, char *keyname, int index,
         pwdata.data = passFile;
     }
 
+#ifdef notdef
     if (keyname) {
 	if (dopriv) {
 	    return DumpPrivateKey(index, keyname, stdout);
@@ -910,6 +899,7 @@ ListKeys(PK11SlotInfo *slot, char *keyname, int index,
 	    return DumpPublicKey(index, keyname, stdout);
 	}
     }
+#endif
     /* For now, split handling of slot to internal vs. other.  slot should
      * probably be allowed to be NULL so that all slots can be listed.
      * In that case, need to add a call to PK11_TraverseSlotCerts().
@@ -2112,7 +2102,6 @@ int
 main(int argc, char **argv)
 {
     CERTCertDBHandle *certHandle;
-    SECKEYKeyDBHandle *keyHandle;
     PK11SlotInfo *slot = NULL;
     CERTName *  subject         = 0;
     PRFileDesc *inFile          = 0;
@@ -2423,15 +2412,8 @@ main(int argc, char **argv)
 
     /*  Initialize NSPR and NSS.  */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    SEC_Init();
-    certHandle = SECU_OpenCertDB(PR_FALSE);
-    if (certHandle == NULL) {
-	SECU_PrintError(progName, "unable to open cert database");
-	return -1;
-    }
-    CERT_SetDefaultCertDB(certHandle);
-    keyHandle = SECKEY_GetDefaultKeyDB();
-    SECU_PKCS11Init(PR_FALSE);
+    NSS_InitReadWrite(SECU_ConfigDirectory(NULL));
+    certHandle = CERT_GetDefaultCertDB();
 
     if (certutil.commands[cmd_Version].activated) {
 	int version = CERT_GetDBContentVersion(certHandle);
@@ -2476,11 +2458,13 @@ main(int argc, char **argv)
 	rv = DeleteCert(certHandle, name);
 	return !rv - 1;
     }
+#ifdef notdef
     /*  Delete key (-F)  */
     if (certutil.commands[cmd_DeleteKey].activated) {
 	rv = DeleteKey(keyHandle, name);
 	return !rv - 1;
     }
+#endif
     /*  Modify trust attribute for cert (-M)  */
     if (certutil.commands[cmd_ModifyCertTrust].activated) {
 	rv = ChangeTrustAttributes(certHandle, name, 
