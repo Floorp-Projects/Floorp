@@ -32,6 +32,8 @@ calendar.jar:
     content/calendar/calendarWeekView.js (content/calendarWeekView.js)
     content/calendar/calendarWeekView.xul (content/calendarWeekView.xul)
     content/calendar/calendarWindow.js (content/calendarWindow.js)
+    content/calendar/calendarWizard.js (content/calendarWizard.js)
+    content/calendar/calendarWizard.xul (content/calendarWizard.xul)
     content/calendar/contactsSelectAddressesDialog.js (content/contactsSelectAddressesDialog.js)
     content/calendar/contents.rdf (content/contents.rdf)
     content/calendar/dateUtils.js (content/dateUtils.js)
