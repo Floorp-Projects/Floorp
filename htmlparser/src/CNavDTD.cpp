@@ -326,12 +326,7 @@ CNavDTD::CanParse(CParserContext& aParserContext,
 {
   eAutoDetectResult result=eUnknownDetect;
 
-  if(eViewSource==aParserContext.mParserCommand) {
-    if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kPlainTextContentType)) {
-      result=ePrimaryDetect;
-    }
-  }     
-  else {
+  if(aParserContext.mParserCommand != eViewSource) {
     if(PR_TRUE==aParserContext.mMimeType.EqualsWithConversion(kHTMLTextContentType)) {
       result=ePrimaryDetect;
     }
