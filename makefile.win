@@ -94,6 +94,7 @@ DIRS =                         \
   embedding                    \
   profile                      \
   editor                       \
+  accessible                   \
 !if defined(GC_LEAK_DETECTOR)
   gc\boehm                     \
 !endif
