@@ -61,7 +61,7 @@
   </path>
 
   <target name="main" 
-          depends="compile.classes_spec,compile.src_share,compile.src_moz"/>
+          depends="compile.classes_spec,compile.src_share,compile.src_moz,create.webclient.scripts"/>
 
   <target name="compile.classes_spec">
 
@@ -196,6 +196,48 @@
 
   </target>
 
+  <target name="create.webclient.scripts"
+depends="create.win32.webclient.scripts,create.unix.webclient.scripts"/>
+
+  <target name="create.win32.webclient.scripts"
+if="build.win32.classes">
+
+    <condition property="debug.options" value="-Xdebug
+-Xrunjdwp:transport=dt_shmem,address=jdbconn,server=y,suspend=n">
+      <equals arg1="${myenv.MOZ_DEBUG}" arg2="1"/>
+    </condition>
+    <condition property="debug.options" value="">
+      <not>
+       <equals arg1="${myenv.MOZ_DEBUG}" arg2="1"/>
+      </not>
+    </condition>
+
+    <echo file="${basedir}/src_moz/runem.bat">set CLASSPATH=${build.home};%CLASSPATH%
+set PATH=%PATH%;${build.home}\..\bin;${build.home}\..\bin\components;${myenv.MOZ_JDKHOME}\jre\bin
+${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.EmbeddedMozillaImpl ${build.home}\..\bin %1%
+    </echo>
+  </target>
+
+  <target name="create.unix.webclient.scripts"
+if="build.unix.classes">
+
+    <condition property="debug.options" value="-Xdebug
+-Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n">
+      <equals arg1="${myenv.MOZ_DEBUG}" arg2="1"/>
+    </condition>
+    <condition property="debug.options" value="">
+      <not>
+       <equals arg1="${myenv.MOZ_DEBUG}" arg2="1"/>
+      </not>
+    </condition>
+
+    <echo file="${basedir}/src_moz/runem">export CLASSPATH=${build.home}:$CLASSPATH
+export LD_LIBRARY_PATH=${build.home}/../bin:${build.home}/../bin/components:$LD_LIBRARY_PATH:;${myenv.MOZ_JDKHOME}/jre/bin
+${myenv.MOZ_JDKHOME}/bin/java ${debug.options} org.mozilla.webclient.test.EmbeddedMozillaImpl ${build.home}/../bin $*
+    </echo>
+    <chmod perm="755" file="${basedir}/src_moz/runem"/>
+
+  </target>
 
   <target name="clean">
 
