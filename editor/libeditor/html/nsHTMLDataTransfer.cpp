@@ -1405,9 +1405,30 @@ NS_IMETHODIMP nsHTMLEditor::Paste(PRInt32 aSelectionType)
 //
 NS_IMETHODIMP nsHTMLEditor::PasteNoFormatting(PRInt32 aSelectionType)
 {
-  ///XXX Joe Francis will write this part: bug 64647
-  return Paste(aSelectionType);
+  ForceCompositionEnd();
+
+  // Get Clipboard Service
+  nsresult rv;
+  nsCOMPtr<nsIClipboard> clipboard( do_GetService( kCClipboardCID, &rv ) );
+  if ( NS_FAILED(rv) )
+    return rv;
+    
+  // Get the nsITransferable interface for getting the data from the clipboard.
+  // use nsPlaintextEditor::PrepareTransferable() to force unicode plaintext data.
+  nsCOMPtr<nsITransferable> trans;
+  rv = nsPlaintextEditor::PrepareTransferable(getter_AddRefs(trans));
+  if (NS_SUCCEEDED(rv) && trans)
+  {
+    // Get the Data from the clipboard  
+    if (NS_SUCCEEDED(clipboard->GetData(trans, aSelectionType)) && IsModifiable())
+    {
+      rv = InsertFromTransferable(trans, nsString(), nsString());
+    }
+  }
+
+  return rv;
 }
+
 
 NS_IMETHODIMP nsHTMLEditor::CanPaste(PRInt32 aSelectionType, PRBool *aCanPaste)
 {
