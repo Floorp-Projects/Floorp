@@ -386,7 +386,7 @@ PRInt32 nsSmtpProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, 
 	PRUint32 numBytesLastRead = 0;  // total number of bytes read in the last cycle...
 	do
 	{
-		inputStream->Read(m_dataBuf, numBytesRead /* offset into m_dataBuf */, 1 /* read just one byte */, &numBytesLastRead);
+		inputStream->Read(m_dataBuf + numBytesRead, 1 /* read just one byte */, &numBytesLastRead);
 		numBytesRead += numBytesLastRead;
 	} while (numBytesRead <= numBytesToRead && numBytesLastRead > 0 && m_dataBuf[numBytesRead-1] != '\n');
 
@@ -419,7 +419,7 @@ PRInt32 nsSmtpProtocol::SendData(const char * dataBuffer)
 	NS_PRECONDITION(m_outputStream && m_outputConsumer, "no registered consumer for our output");
 	if (dataBuffer && m_outputStream)
 	{
-		nsresult rv = m_outputStream->Write(dataBuffer, 0 /* offset */, PL_strlen(dataBuffer), &writeCount);
+		nsresult rv = m_outputStream->Write(dataBuffer, PL_strlen(dataBuffer), &writeCount);
 		if (NS_SUCCEEDED(rv) && writeCount == PL_strlen(dataBuffer))
 		{
 			// notify the consumer that data has arrived
