@@ -69,9 +69,10 @@ private:
                             PRBool *profileDirSet,
                             nsCString & profileURLStr);
     nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
-	nsresult CopyDefaultFile(nsIFileSpec *profDefaultsDir, 
-								nsFileSpec& newProfDir,
+	nsresult CopyDefaultFile(nsIFile *profDefaultsDir,
+	                         nsIFile *newProfDir,
 								const char *fileName);
+	nsresult EnsureProfileFileExists(nsIFile *aFile);
 								
 	nsresult CloneProfileDirectorySpec(nsILocalFile **aLocalFile);
 	
@@ -86,10 +87,10 @@ public:
     nsresult RenameProfileDir(const PRUnichar *newProfileName);
 
     // Creates associated user directories on the creation of a new profile
-    nsresult CreateUserDirectories(const nsFileSpec& profileDir);
+    nsresult CreateUserDirectories(nsILocalFile *profileDir);
 
     // Deletes associated user directories
-    nsresult DeleteUserDirectories(const nsFileSpec& profileDir);
+    nsresult DeleteUserDirectories(nsILocalFile *profileDir);
 
     // Copies all the registry keys from old profile to new profile
     nsresult CopyRegKey(const PRUnichar *oldProfile, const PRUnichar *newProfile);

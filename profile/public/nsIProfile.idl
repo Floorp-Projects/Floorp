@@ -21,14 +21,12 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIFile.idl"
 
 interface nsICmdLineService;
-interface nsIFileSpec;
 
 %{C++
-#include "nsFileSpec.h"
 #include "nsICmdLineService.h"
-#include "nsIFile.h"
       
 #define NS_PROFILE_CID                                 \
   { /* {02b0625b-e7f3-11d2-9f5a-006008a6efe9} */       \
@@ -45,25 +43,22 @@ interface nsIFileSpec;
         "profile-startup-category"
 %}
 
-[ptr] native nsFileSpec(nsFileSpec);
-[ref] native nsFileSpecRef(nsFileSpec);
-[ptr] native nsIFile(nsIFile);
 [scriptable, uuid(02b0625a-e7f3-11d2-9f5a-006008a6efe9)]
 interface nsIProfile : nsISupports {
     [noscript] void startupWithArgs(in nsICmdLineService cmdLine);
     void startup(in wstring filename);
 
     [noscript] void getProfileDir(in wstring profileName,
-                                  in nsFileSpec profileDir);
+                                  out nsIFile profileDir);
     readonly attribute long profileCount;
     readonly attribute wstring currentProfile;
     readonly attribute wstring firstProfile;
 
     // eventually we need to depricate getCurrentProfileDir
-    [noscript] void getCurrentProfileDir(in nsFileSpec profileDir);
+    [noscript] void getCurrentProfileDir(out nsIFile profileDir);
 
     [noscript] void setProfileDir(in wstring profileName,
-                                  in nsFileSpecRef profileDir);
+                                  in nsIFile profileDir);
 
     boolean profileExists(in wstring profileName);
     
@@ -94,7 +89,7 @@ interface nsIProfile : nsISupports {
 
     attribute boolean automigrate;
 
-    readonly attribute nsIFileSpec defaultProfileParentDir;
+    readonly attribute nsIFile defaultProfileParentDir;
 
     [noscript] void updateRegistry(in nsIFile regName);
     void setRegStrings(in wstring profileName, 

@@ -33,8 +33,6 @@
 #include "nsIEnumerator.h"
 #include "nsXPIDLString.h"
 #include "nsIFileSpec.h"
-#include "nsIFileLocator.h"
-#include "nsFileLocations.h"
 #include "nsEscape.h"
 #include "nsIURL.h"
 
@@ -59,6 +57,8 @@
 #include "nsICookieService.h"
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 
 #include "nsIChromeRegistry.h" // chromeReg
@@ -144,7 +144,6 @@ static nsIAtom* sApp_MessengerFolderCache50   = nsnull;
 static NS_DEFINE_CID(kIProfileIID, NS_IPROFILE_IID);
 static NS_DEFINE_CID(kBookmarksCID, NS_BOOKMARKS_SERVICE_CID);      
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 static NS_DEFINE_CID(kRegistryCID, NS_REGISTRY_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -159,28 +158,71 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 static NS_DEFINE_CID(kChromeRegistryCID,    NS_CHROMEREGISTRY_CID);
 
+
+/*
+    Copies the contents of srcDir into destDir.
+    destDir will be created if it doesn't exist.
+*/
+
 static
-nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
+nsresult RecursiveCopy(nsIFile* srcDir, nsIFile* destDir)
 {
     nsresult rv;
-    nsCOMPtr<nsIFileSpec> spec;
+    PRBool isDir;
+    
+    rv = srcDir->IsDirectory(&isDir);
+    if (NS_FAILED(rv)) return rv;
+	if (!isDir) return NS_ERROR_INVALID_ARG;
 
-    rv = NS_NewFileSpecWithSpec(inSpec, getter_AddRefs(spec));
-    if (NS_SUCCEEDED(rv)) {
-        rv = spec->GetPersistentDescriptorString(string);
-        if (NS_SUCCEEDED(rv)) {
-            return NS_OK;
-        }
-        else {
-            nsCRT::free(*string);
-            return rv;
-        }
-    } 
-    else {
-        *string = nsnull;
-        return rv;
-    }
+    PRBool exists;
+    rv = destDir->Exists(&exists);
+	if (NS_SUCCEEDED(rv) && !exists)
+		rv = destDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+	if (NS_FAILED(rv)) return rv;
+
+    PRBool hasMore = PR_FALSE;
+    nsCOMPtr<nsISimpleEnumerator> dirIterator;
+    rv = srcDir->GetDirectoryEntries(getter_AddRefs(dirIterator));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = dirIterator->HasMoreElements(&hasMore);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIFile> dirEntry;
+    
+	while (hasMore)
+	{
+		rv = dirIterator->GetNext((nsISupports**)getter_AddRefs(dirEntry));
+		if (NS_SUCCEEDED(rv))
+		{
+		    rv = dirEntry->IsDirectory(&isDir);
+		    if (NS_SUCCEEDED(rv))
+		    {
+		        if (isDir)
+		        {
+		            nsCOMPtr<nsIFile> destClone;
+		            rv = destDir->Clone(getter_AddRefs(destClone));
+		            if (NS_SUCCEEDED(rv))
+		            {
+		                nsCOMPtr<nsILocalFile> newChild(do_QueryInterface(destClone));
+		                nsXPIDLCString leafName;
+		                dirEntry->GetLeafName(getter_Copies(leafName));
+		                newChild->AppendRelativePath(leafName);
+		                rv = RecursiveCopy(dirEntry, newChild);
+		            }
+		        }
+		        else
+		            rv = dirEntry->CopyTo(destDir, nsnull);
+		    }
+		
+		}
+        rv = dirIterator->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
+	}
+
+	return rv;
 }
+
 
 /*
  * Constructor/Destructor
@@ -515,7 +557,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 
     nsresult rv;
     nsXPIDLCString cmdResult;
-    nsFileSpec currProfileDirSpec;
+    nsCOMPtr<nsILocalFile> currProfileDir;
 
 #ifdef DEBUG_profile_verbose
     printf("Profile Manager : Command Line Options : Begin\n");
@@ -559,7 +601,8 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 *profileDirSet = PR_FALSE;
             }
             else {
-                rv = GetProfileDir(currProfileName.GetUnicode(), &currProfileDirSpec);
+                nsCOMPtr<nsIFile> aFile;
+                rv = GetProfileDir(currProfileName.GetUnicode(), getter_AddRefs(aFile));
                 if (NS_SUCCEEDED(rv)){
                     *profileDirSet = PR_TRUE;
                     mCurrentProfileAvailable = PR_TRUE;
@@ -590,32 +633,27 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             nsAutoString currProfileDirString; currProfileDirString.AssignWithConversion(strtok(NULL, " "));
         
             if (!currProfileDirString.IsEmpty()) {
-                currProfileDirSpec = currProfileDirString;
+                rv = NS_NewUnicodeLocalFile(currProfileDirString.GetUnicode(), PR_TRUE, getter_AddRefs(currProfileDir));
+                NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
             }
             else {
                 // No directory name provided. Get File Locator
-                NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-                if (NS_FAILED(rv) || !locator)
-                    return NS_ERROR_FAILURE;
-        
                 // Get current profile, make the new one a sibling...
-                nsCOMPtr <nsIFileSpec> spec;
-                rv = locator->GetFileLocation(
-                                 nsSpecialFileSpec::App_DefaultUserProfileRoot50, 
-                                 getter_AddRefs(spec));
-
-                if (NS_FAILED(rv) || !spec)
-                    return NS_ERROR_FAILURE;
-                spec->GetFileSpec(&currProfileDirSpec);
-
-                rv = locator->ForgetProfileDir();
+                nsCOMPtr<nsIFile> tempResult;                 
+                rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(tempResult));
+                NS_ENSURE_SUCCESS(rv, rv);
+                rv = tempResult->QueryInterface(NS_GET_IID(nsILocalFile), getter_AddRefs(currProfileDir));
+                NS_ENSURE_SUCCESS(rv, rv);
+                rv = currProfileDir->AppendUnicode(currProfileName.GetUnicode());
+                NS_ENSURE_SUCCESS(rv, rv);
             }
 #ifdef DEBUG_profile_verbose
             printf("profileName & profileDir are: %s\n", (const char*)cmdResult);
 #endif /* DEBUG_profile */
 
-            nsAutoString currProfileDir; currProfileDir.AssignWithConversion(currProfileDirSpec.GetNativePathCString());
-            rv = CreateNewProfile(currProfileName.GetUnicode(), currProfileDir.GetUnicode(), nsnull, PR_TRUE);
+            nsXPIDLString currProfilePath;
+            currProfileDir->GetUnicodePath(getter_Copies(currProfilePath));
+            rv = CreateNewProfile(currProfileName.GetUnicode(), currProfilePath, nsnull, PR_TRUE);
             if (NS_SUCCEEDED(rv)) {
                 *profileDirSet = PR_TRUE;
                 mCurrentProfileAvailable = PR_TRUE;
@@ -720,7 +758,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 
 // Gets the profiles directory for a given profile
 // Sets the given profile to be a current profile
-NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsFileSpec* profileDir)
+NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsIFile **profileDir)
 {
     NS_ENSURE_ARG_POINTER(profileName);   
     NS_ENSURE_ARG_POINTER(profileDir);
@@ -739,84 +777,77 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsFileSpec*
 	if (aProfile == nsnull)
 		return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIFileSpec>spec;
-    rv = NS_NewFileSpec(getter_AddRefs(spec));
+    nsCOMPtr<nsILocalFile>aProfileDir;
+    rv = NS_NewLocalFile(nsnull, PR_TRUE, getter_AddRefs(aProfileDir));
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString profileLocation;
+    PRBool validDesc;
     profileLocation.AssignWithConversion(aProfile->profileLocation);
-    rv = spec->SetPersistentDescriptorString(profileLocation.GetBuffer());
-    if (NS_FAILED(rv)) return rv;
-
-    rv = spec->GetFileSpec(profileDir);
-    if (NS_FAILED(rv)) return rv;
+    rv = aProfileDir->SetPersistentDescriptor(profileLocation.GetBuffer());
+    validDesc = NS_SUCCEEDED(rv);
                            
     // Set this to be a current profile only if it is a 5.0 profile
     if (aProfile->isMigrated.EqualsWithConversion(REGISTRY_YES_STRING))
     {
         gProfileDataAccess->SetCurrentProfile(profileName);
                                   
-        nsFileSpec tmpFileSpec(*profileDir);
         
         PRBool inTrash = PR_FALSE;
-        
+        PRBool exists = PR_FALSE;
+
+        if (validDesc)
+        {
+            rv = aProfileDir->Exists(&exists);
+            if (NS_FAILED(rv)) return rv;
+            
 #ifdef XP_MAC
-        nsSpecialSystemDirectory trashFolder(nsSpecialSystemDirectory::Mac_TrashDirectory);
-        inTrash = tmpFileSpec.IsChildOf(trashFolder);
+            if (exists)
+            {
+                nsCOMPtr<nsIFile> trashFolder;            
+                rv = NS_GetSpecialDirectory(NS_MAC_TRASH_DIR, getter_AddRefs(trashFolder));
+                if (NS_FAILED(rv)) return rv;
+                rv = trashFolder->Contains(aProfileDir, PR_TRUE, &inTrash);
+                if (NS_FAILED(rv)) return rv;
+            }
 #endif  
-        
-        if (inTrash || !tmpFileSpec.Exists()) 
+        }
+                
+        if (!validDesc || inTrash || !exists) 
         {
             // Get profile defaults folder..
-            NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-                                       
-            if (NS_FAILED(rv) || !locator)
-                return NS_ERROR_FAILURE;
+            nsCOMPtr<nsIFile> profDefaultsDir;
+            rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(profDefaultsDir));
+            if (NS_FAILED(rv)) return rv;
                                         
-            nsCOMPtr <nsIFileSpec> profDefaultsDir;
-
-            rv = locator->GetFileLocation(
-                             nsSpecialFileSpec::App_ProfileDefaultsFolder50, 
-                             getter_AddRefs(profDefaultsDir));
-            if (NS_FAILED(rv) || !profDefaultsDir)
-                return NS_ERROR_FAILURE;
-                                        
-            nsFileSpec defaultsDirSpec;
-            profDefaultsDir->GetFileSpec(&defaultsDirSpec);
-
-#ifndef XP_MAC
-            nsFilePath(tmpFileSpec.GetNativePathCString(), PR_TRUE);
-#else
             // Build new profile folder. Update Registry entries.
             // Return new folder.
             
+#ifndef XP_MAC
+            if (!exists) {
+               rv = aProfileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+               if (NS_FAILED(rv)) return rv;
+            }
+#else            
             // Get the default location for user profiles
-            nsCOMPtr <nsIFileSpec> defaultRoot;
-            rv = locator->GetFileLocation(
-                             nsSpecialFileSpec::App_DefaultUserProfileRoot50, 
-                             getter_AddRefs(defaultRoot));
-        
-            if (NS_FAILED(rv) || !defaultRoot)
-                return NS_ERROR_FAILURE;
-
-            defaultRoot->GetFileSpec(&tmpFileSpec);
-            if (!tmpFileSpec.Exists())
-                tmpFileSpec.CreateDirectory();
+            nsCOMPtr<nsIFile> newProfileDir;    
+            rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(newProfileDir));
+            if (NS_FAILED(rv)) return rv;
 
             // append profile name
-            tmpFileSpec += NS_ConvertUCS2toUTF8(profileName);
+            newProfileDir->AppendUnicode(profileName);
 
             // Create New Directory. PersistentDescriptor needs an existing object.
-            if (!tmpFileSpec.Exists())
-                tmpFileSpec.CreateDirectory();
+            rv = newProfileDir->Exists(&exists);
+            if (NS_SUCCEEDED(rv) && !exists)
+                rv = newProfileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+            if (NS_FAILED(rv)) return rv;
 
             // Get persistent string for profile directory            
+            nsCOMPtr<nsILocalFile> tmpLocalFile(do_QueryInterface(newProfileDir, &rv));
+            if (NS_FAILED(rv)) return rv;           
             nsXPIDLCString profileDirString;
-            nsCOMPtr<nsIFileSpec>dirSpec;
-            rv = NS_NewFileSpecWithSpec(tmpFileSpec, getter_AddRefs(dirSpec));
-            if (NS_SUCCEEDED(rv)) {
-                rv = dirSpec->GetPersistentDescriptorString(getter_Copies(profileDirString));
-            }
+            rv = tmpLocalFile->GetPersistentDescriptor(getter_Copies(profileDirString));
             if (NS_FAILED(rv)) return rv;
             
             // Update profile struct entries with new value.
@@ -827,40 +858,36 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsFileSpec*
             gProfileDataAccess->SetValue(aProfile);
 
             // Return new file spec. 
-            nsCOMPtr<nsIFileSpec>newSpec;
-            rv = NS_NewFileSpec(getter_AddRefs(newSpec));
-            if (NS_FAILED(rv)) return rv;
-            rv = newSpec->SetPersistentDescriptorString(profileDirString);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = newSpec->GetFileSpec(profileDir);
-            if (NS_FAILED(rv)) return rv;
+            aProfileDir = tmpLocalFile;
 #endif
                                         
             // Copy contents from defaults folder.
-            if (defaultsDirSpec.Exists())
-                defaultsDirSpec.RecursiveCopy(tmpFileSpec);
+            rv = profDefaultsDir->Exists(&exists);
+            if (NS_SUCCEEDED(rv) && exists)
+                rv = RecursiveCopy(profDefaultsDir, aProfileDir);
         }
     }
 
-	delete aProfile;
+    *profileDir = aProfileDir;
+    NS_ADDREF(*profileDir);
+    
+	 delete aProfile;
     return rv;
+
 }
 
-NS_IMETHODIMP nsProfile::GetDefaultProfileParentDir(nsIFileSpec **aDefaultProfileDir)
+NS_IMETHODIMP nsProfile::GetDefaultProfileParentDir(nsIFile **aDefaultProfileParentDir)
 {
-    NS_ENSURE_ARG_POINTER(aDefaultProfileDir);
+    NS_ENSURE_ARG_POINTER(aDefaultProfileParentDir);
 
     nsresult rv;
+    
+    nsCOMPtr<nsIFile> aDir;
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(aDir));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
-
-    rv = locator->GetFileLocation(
-                     nsSpecialFileSpec::App_DefaultUserProfileRoot50, 
-                     aDefaultProfileDir);
-    if (NS_FAILED(rv) || !aDefaultProfileDir || !*aDefaultProfileDir) 
-        return NS_ERROR_FAILURE;
+    *aDefaultProfileParentDir = aDir;
+    NS_ADDREF(*aDefaultProfileParentDir);
 
     return NS_OK;
 }
@@ -903,20 +930,19 @@ nsProfile::GetCurrentProfile(PRUnichar **profileName)
 }
 
 // Returns the name of the current profile directory
-NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
+NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsIFile **profileDir)
 {
     NS_ENSURE_ARG_POINTER(profileDir);
-
-    nsresult rv = NS_OK;
+    nsresult rv;
 
     nsXPIDLString profileName;
-
-    GetCurrentProfile(getter_Copies(profileName));
+    rv = GetCurrentProfile(getter_Copies(profileName));
+    if (NS_FAILED(rv)) return rv;
 
     rv = GetProfileDir(profileName, profileDir);
     if (NS_FAILED(rv)) return rv;
 
-    return rv;
+    return NS_OK;
 }
 
 
@@ -925,33 +951,33 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
  */
 
 // Sets the current profile directory
-NS_IMETHODIMP nsProfile::SetProfileDir(const PRUnichar *profileName, nsFileSpec& profileDir)
+NS_IMETHODIMP nsProfile::SetProfileDir(const PRUnichar *profileName, nsIFile *profileDir)
 {
-    NS_ENSURE_ARG_POINTER(profileName);   
+    NS_ENSURE_ARG(profileName);
+    NS_ENSURE_ARG(profileDir);   
 
     nsresult rv = NS_OK;
  
     // Create a tmp Filespec and create a directory if required
-    nsFileSpec tmpDir(profileDir);
-                    
-    if (!profileDir.Exists())
+    PRBool exists;
+    rv = profileDir->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;                 
+    if (!exists)
     {
         // nsPersistentFileDescriptor requires an existing
         // object. Make it first.
-        tmpDir.CreateDirectory();
+        rv = profileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+        if (NS_FAILED(rv)) return rv;
     }
-                    
+    
+    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(profileDir));
+    NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);                
     nsXPIDLCString profileDirString;
-                    
-    nsCOMPtr<nsIFileSpec>spec;
-    rv = NS_NewFileSpecWithSpec(profileDir, getter_AddRefs(spec));
-    if (NS_SUCCEEDED(rv)) {
-        rv = spec->GetPersistentDescriptorString(getter_Copies(profileDirString));
-    }
+    rv = localFile->GetPersistentDescriptor(getter_Copies(profileDirString));
     if (NS_FAILED(rv)) return rv;
 
-    // Do I need to check for NS_ERROR_OUT_OF_MEMORY when I do a new on a class?
     ProfileStruct* aProfile = new ProfileStruct();
+    NS_ENSURE_TRUE(aProfile, NS_ERROR_OUT_OF_MEMORY);
 
     nsAutoString profileLocation; profileLocation.AssignWithConversion(profileDirString);
 
@@ -961,7 +987,7 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const PRUnichar *profileName, nsFileSpec&
     aProfile->isMigrated.AssignWithConversion(REGISTRY_YES_STRING);
 
 
-    rv = CreateUserDirectories(tmpDir);
+    rv = CreateUserDirectories(localFile);
     if (NS_FAILED(rv)) {
         delete aProfile;
         return rv;
@@ -995,121 +1021,116 @@ nsProfile::CreateNewProfile(const PRUnichar* profileName,
       nsCAutoString temp1; temp1.AssignWithConversion(profileName);
       printf("Profile Name: %s\n", NS_STATIC_CAST(const char*, temp1));
 
+      if (nativeProfileDir) {
       nsCAutoString temp2; temp2.AssignWithConversion(nativeProfileDir);
       printf("Profile Dir: %s\n", NS_STATIC_CAST(const char*, temp2));
     }
+    }
 #endif
 
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-
-    if (NS_FAILED(rv) || !locator)
-        return NS_ERROR_FAILURE;
-
-    if (!profileName) return NS_ERROR_FAILURE;
-
-    nsFileSpec dirSpec;
+    nsCOMPtr<nsIFile> profileDir;
+    PRBool exists;
     
-    if (!nativeProfileDir || !*nativeProfileDir)
+    if (!nativeProfileDir)
     {
         // They didn't specify a directory path...
-        nsCOMPtr <nsIFileSpec> defaultRoot;
-        rv = locator->GetFileLocation(
-                         nsSpecialFileSpec::App_DefaultUserProfileRoot50, 
-                         getter_AddRefs(defaultRoot));
-        
-        if (NS_FAILED(rv) || !defaultRoot)
-            return NS_ERROR_FAILURE;
-
-        defaultRoot->GetFileSpec(&dirSpec);
-        if (!dirSpec.Exists())
-            dirSpec.CreateDirectory();
+                
+        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(profileDir));
+        if (NS_FAILED(rv)) return rv;
+        rv = profileDir->Exists(&exists);
+        if (NS_FAILED(rv)) return rv;        
+        if (!exists)
+            profileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
 
         // append profile name
-        dirSpec += NS_ConvertUCS2toUTF8(profileName);
-
-        // Make profile directory unique only when the user 
-        // decides to not use an already existing profile directory
-        if (!useExistingDir)
-            dirSpec.MakeUnique();
+        profileDir->AppendUnicode(profileName);
     }
     else {
-        dirSpec = NS_ConvertUCS2toUTF8(nativeProfileDir);
+    
+        rv = NS_NewUnicodeLocalFile(nativeProfileDir, PR_TRUE, (nsILocalFile **)((nsIFile **)getter_AddRefs(profileDir)));
 
         // this prevents people from choosing there profile directory
         // or another directory, and remove it when they delete the profile.
         // append profile name
-        dirSpec += NS_ConvertUCS2toUTF8(profileName);
+        profileDir->AppendUnicode(profileName);
+    }
 
-        // Make profile directory unique only when the user 
-        // decides to not use an already existing profile directory
-        if (!useExistingDir)
-            dirSpec.MakeUnique();
+    // Make profile directory unique only when the user 
+    // decides to not use an already existing profile directory
+    if (!useExistingDir) {
+        nsXPIDLCString  suggestedName;
+        profileDir->GetLeafName(getter_Copies(suggestedName));
+        rv = profileDir->CreateUnique(suggestedName, nsIFile::DIRECTORY_TYPE, 0775);
+        if (NS_FAILED(rv)) return rv;
     }
 
 #if defined(DEBUG_profile_verbose)
     printf("before SetProfileDir\n");
 #endif
 
-    if (!dirSpec.Exists())
+    rv = profileDir->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;        
+    if (!exists)
     {
-        dirSpec.CreateDirectory();
+        rv = profileDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+        if (NS_FAILED(rv)) return rv;
         useExistingDir = PR_FALSE;
     }
 
     // Set the directory value and add the entry to the registry tree.
     // Creates required user directories.
-    rv = SetProfileDir(profileName, dirSpec);
+    rv = SetProfileDir(profileName, profileDir);
 
 #if defined(DEBUG_profile_verbose)
     printf("after SetProfileDir\n");
 #endif
 
     // Get profile defaults folder..
-    nsCOMPtr <nsIFileSpec> profDefaultsDir;
-    rv = locator->GetFileLocation(
-                     nsSpecialFileSpec::App_ProfileDefaultsFolder50_nloc, 
-                     getter_AddRefs(profDefaultsDir));
-        
-    if (NS_FAILED(rv) || !profDefaultsDir)
-    {
-        return NS_ERROR_FAILURE;
-    }
+    nsCOMPtr <nsIFile> profDefaultsDir;
+    rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, getter_AddRefs(profDefaultsDir));
+    if (NS_FAILED(rv)) return rv;
 
-    nsFileSpec defaultsDirSpec;
-
-    profDefaultsDir->GetFileSpec(&defaultsDirSpec);
-
-    if (langcode) {
+    if (langcode && nsCRT::strlen(langcode) != 0) {
         // caller prefers locale subdir
-        nsFileSpec tmpdir; 
-        tmpdir = defaultsDirSpec;
-        tmpdir += NS_ConvertUCS2toUTF8(langcode);
-
-        if (tmpdir.Exists())
-            defaultsDirSpec = tmpdir;
+        nsCOMPtr<nsIFile> locProfDefaultsDir;
+        rv = profDefaultsDir->Clone(getter_AddRefs(locProfDefaultsDir));
+        if (NS_FAILED(rv)) return rv;
+        
+        locProfDefaultsDir->AppendUnicode(langcode);
+        rv = locProfDefaultsDir->Exists(&exists);
+        if (NS_SUCCEEDED(rv) && exists) {
+            profDefaultsDir = locProfDefaultsDir; // transfers ownership
+        }
 
         nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
         if (NS_SUCCEEDED(rv)) {
-            nsFileURL fileURL(dirSpec);
+            nsXPIDLCString  pathBuf;
+            rv = profileDir->GetPath(getter_Copies(pathBuf));
+            NS_ENSURE_SUCCESS(rv, rv);
+            nsFileSpec fileSpec((const char *)pathBuf);
+            nsFileURL  fileURL(fileSpec);
             const char* fileStr = fileURL.GetURLString();
             rv = chromeRegistry->SelectLocaleForProfile(langcode, 
                                                         NS_ConvertUTF8toUCS2(fileStr));
         }
     }
     // Copy contents from defaults folder.
-    if (defaultsDirSpec.Exists() && (!useExistingDir))
+    rv = profDefaultsDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && exists && (!useExistingDir))
     {
-        defaultsDirSpec.RecursiveCopy(dirSpec);
+        RecursiveCopy(profDefaultsDir, profileDir);
     }
 
     gProfileDataAccess->mNumProfiles++;
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
     gProfileDataAccess->UpdateRegistry(nsnull);
+    
     return NS_OK;
-}
+}	
+
 
 // Create required user directories like ImapMail, Mail, News, Cache etc.
-nsresult nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
+nsresult nsProfile::CreateUserDirectories(nsILocalFile *profileDir)
 {
     nsresult rv = NS_OK;
 
@@ -1117,48 +1138,50 @@ nsresult nsProfile::CreateUserDirectories(const nsFileSpec& profileDir)
     printf("ProfileManager : CreateUserDirectories\n");
 #endif
 
-    nsFileSpec tmpDir;
+    const char* subDirNames[] = {
+        NEW_NEWS_DIR_NAME,
+        NEW_IMAPMAIL_DIR_NAME,
+        NEW_MAIL_DIR_NAME,
+        "Cache",
+        "Chrome"
+    };
     
-    tmpDir = profileDir;
-    tmpDir += NEW_NEWS_DIR_NAME;
+    for (int i = 0; i < sizeof(subDirNames) / sizeof(char *); i++)
+    {
+      PRBool exists;
+      
+      nsCOMPtr<nsIFile> newDir;    
+      rv = profileDir->Clone(getter_AddRefs(newDir));
+      if (NS_FAILED(rv)) return rv;
+      rv = newDir->Append(subDirNames[i]);
+      if (NS_FAILED(rv)) return rv;
+      rv = newDir->Exists(&exists);
+      if (NS_SUCCEEDED(rv) && !exists)
+          rv = newDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+      if (NS_FAILED(rv)) return rv;
+    }
 
-    if (!tmpDir.Exists())
-        tmpDir.CreateDirectory();
-
-    tmpDir = profileDir;
-    tmpDir += NEW_IMAPMAIL_DIR_NAME;
-
-    if (!tmpDir.Exists())
-        tmpDir.CreateDirectory();
-    
-    tmpDir = profileDir;
-    tmpDir += NEW_MAIL_DIR_NAME;
-
-    if (!tmpDir.Exists())
-        tmpDir.CreateDirectory();
-    
-    tmpDir = profileDir;
-    tmpDir += "Cache";
-
-    if (!tmpDir.Exists())
-        tmpDir.CreateDirectory();
-
-    return rv;
+    return NS_OK;
 }
 
 
 // Delete all user directories associated with the a profile
 // A FileSpec of the profile's directory is taken as input param
-nsresult nsProfile::DeleteUserDirectories(const nsFileSpec& profileDir)
+nsresult nsProfile::DeleteUserDirectories(nsILocalFile *profileDir)
 {
-    nsresult rv = NS_OK;
+    NS_ENSURE_ARG(profileDir);
+    nsresult rv;
 
 #if defined(DEBUG_profile_verbose)
     printf("ProfileManager : DeleteUserDirectories\n");
 #endif
 
-    if (profileDir.Exists())
-        profileDir.Delete(PR_TRUE);
+    PRBool exists;
+    rv = profileDir->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (exists)
+        rv = profileDir->Delete(PR_TRUE);
     
     return rv;
 }
@@ -1269,14 +1292,6 @@ NS_IMETHODIMP nsProfile::ForgetCurrentProfile()
 
     gProfileDataAccess->mForgetProfileCalled = PR_TRUE;
     
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    if (!locator) return NS_ERROR_FAILURE;
-
-    rv = locator->ForgetProfileDir();
-    if (NS_FAILED(rv)) return rv;  
-
     return rv;
 }
 
@@ -1296,10 +1311,13 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const PRUnichar* profileName, PRBool canD
     if (canDeleteFiles) {
         nsFileSpec profileDirSpec;
         
-        rv = GetProfileDir(profileName, &profileDirSpec);
+        nsCOMPtr<nsIFile> profileDir;
+        rv = GetProfileDir(profileName, getter_AddRefs(profileDir));
         if (NS_FAILED(rv)) return rv;
         
-        rv = DeleteUserDirectories(profileDirSpec);
+        nsCOMPtr<nsILocalFile> localProfileDir(do_QueryInterface(profileDir));
+        if (!localProfileDir) return NS_ERROR_FAILURE;
+        rv = DeleteUserDirectories(localProfileDir);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -1347,19 +1365,6 @@ NS_IMETHODIMP nsProfile::StartApprunner(const PRUnichar* profileName)
 
     gProfileDataAccess->SetCurrentProfile(profileName);
     mCurrentProfileAvailable = PR_TRUE;
-
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    if (!locator) return NS_ERROR_FAILURE;
-    
-    rv = locator->ForgetProfileDir();
-    if (NS_FAILED(rv)) {
-#ifdef DEBUG_profile
-        printf("failed to forget the profile dir\n"); 
-#endif /* DEBUG_profile */
-        return rv;
-    }
 
     // Update registry entries
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
@@ -1432,21 +1437,55 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 }
 
 nsresult
-nsProfile::CopyDefaultFile(nsIFileSpec *profDefaultsDir, nsFileSpec& newProfDir, const char *fileName)
+nsProfile::CopyDefaultFile(nsIFile *profDefaultsDir, nsIFile *newProfDir, const char *fileName)
 {
-    nsFileSpec defaultsDirSpecFile;
-
-    profDefaultsDir->GetFileSpec(&defaultsDirSpecFile);
+    nsresult rv;
+    nsCOMPtr<nsIFile> defaultFile;
+    PRBool exists;
     
-    defaultsDirSpecFile += fileName;
+    rv = profDefaultsDir->Clone(getter_AddRefs(defaultFile));
+    if (NS_FAILED(rv)) return rv;
+    
+    defaultFile->Append(fileName);
+    rv = defaultFile->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (exists)
+        rv = defaultFile->CopyTo(newProfDir, fileName);
+    else
+        rv = NS_ERROR_FILE_NOT_FOUND;
 
-    if (defaultsDirSpecFile.Exists())
-    {
-        defaultsDirSpecFile.CopyToDir(newProfDir);
-    }
-
-	return NS_OK;
+	return rv;
 }
+
+
+nsresult
+nsProfile::EnsureProfileFileExists(nsIFile *aFile)
+{
+    nsresult rv;
+    PRBool exists;
+    
+    rv = aFile->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (exists)
+        return NS_OK;
+        
+    nsCOMPtr<nsIFile> defaultsDir;
+    nsCOMPtr<nsILocalFile> profDir;
+    
+    rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(defaultsDir));
+    if (NS_FAILED(rv)) return rv;
+    rv = CloneProfileDirectorySpec(getter_AddRefs(profDir));
+    if (NS_FAILED(rv)) return rv;
+    
+    char *leafName;
+    rv = aFile->GetLeafName(&leafName);
+    if (NS_FAILED(rv)) return rv;    
+    rv = CopyDefaultFile(defaultsDir, profDir, leafName);
+    Recycle(leafName);
+    
+    return rv;
+}
+
 
 // Migrate a selected profile
 // Set the profile to the current profile....debatable.
@@ -1463,33 +1502,31 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     printf("Inside Migrate Profile routine.\n" );
 #endif
 
-    nsFileSpec oldProfDir;
-    nsFileSpec newProfDir;
+    nsCOMPtr<nsIFile> oldProfDir;    
+    nsCOMPtr<nsIFile> newProfDir;
 
-    rv = GetProfileDir(profileName, &oldProfDir);
+    PRBool exists;
+ 
+    rv = GetProfileDir(profileName, getter_AddRefs(oldProfDir));
     if (NS_FAILED(rv)) return rv;
+   
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(newProfDir));
+    if (NS_FAILED(rv)) return rv;
+    rv = newProfDir->AppendUnicode(profileName);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString suggestedName;
+    rv = newProfDir->GetLeafName(getter_Copies(suggestedName));
+    if (NS_FAILED(rv)) return rv;
+    rv = newProfDir->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+    if (exists) {
     
-    // Create new profile dir path
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
-    
-    // Get current profile, make the new one a sibling...
-    nsCOMPtr<nsIFileSpec> newSpec;
-    rv = locator->GetFileLocation(
-                     nsSpecialFileSpec::App_DefaultUserProfileRoot50, 
-                     getter_AddRefs(newSpec));
-    if (!newSpec)
-        return NS_ERROR_FAILURE;
-
-    newSpec->GetFileSpec(&newProfDir);
-    newProfDir += NS_ConvertUCS2toUTF8(profileName);
-    newProfDir.MakeUnique();
-    if (newProfDir.Exists()) {
 #ifdef DEBUG_profile
         printf("directory already exists\n");
 #endif
         return NS_ERROR_FAILURE;
     }
+    
 
     // Call migration service to do the work.
     nsCOMPtr <nsIPrefMigration> pPrefMigrator;
@@ -1502,20 +1539,20 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     if (NS_FAILED(rv)) return rv;
     if (!pPrefMigrator) return NS_ERROR_FAILURE;
         
+    nsCOMPtr<nsILocalFile> oldProfDirLocal(do_QueryInterface(oldProfDir, &rv));
+    if (NS_FAILED(rv)) return rv;    
+    nsCOMPtr<nsILocalFile> newProfDirLocal(do_QueryInterface(newProfDir, &rv));
+    if (NS_FAILED(rv)) return rv;
+        
     nsXPIDLCString oldProfDirStr;
     nsXPIDLCString newProfDirStr;
 
-    if (!newProfDir.Exists()) {
-        newProfDir.CreateDirectory();
-    }    
-
-    rv = GetStringFromSpec(newProfDir, getter_Copies(newProfDirStr));
-    if (NS_FAILED(rv)) return rv;
+    rv = newProfDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    if (NS_FAILED(rv)) return rv;   
     
-    if (!oldProfDir.Exists()) {
-        return NS_ERROR_FAILURE;
-    }
-    rv = GetStringFromSpec(oldProfDir, getter_Copies(oldProfDirStr));
+    rv = oldProfDirLocal->GetPersistentDescriptor(getter_Copies(oldProfDirStr));
+    if (NS_FAILED(rv)) return rv;
+    rv = newProfDirLocal->GetPersistentDescriptor(getter_Copies(newProfDirStr));
     if (NS_FAILED(rv)) return rv;
 
     // you can do this a bunch of times.
@@ -1578,15 +1615,9 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
 
     // Copy the default 5.0 profile files into the migrated profile
     // Get profile defaults folder..
-    nsCOMPtr <nsIFileSpec> profDefaultsDir;
-    rv = locator->GetFileLocation(
-                     nsSpecialFileSpec::App_ProfileDefaultsFolder50, 
-                     getter_AddRefs(profDefaultsDir));
-        
-    if (NS_FAILED(rv) || !profDefaultsDir)
-    {
-        return NS_ERROR_FAILURE;
-    }
+    nsCOMPtr<nsIFile> profDefaultsDir;
+    rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(profDefaultsDir));
+    if (NS_FAILED(rv)) return rv;
 
     // Copy panels.rdf & localstore.rdf files
     // This is a hack. Once the localFileSpec implementation
@@ -1786,23 +1817,25 @@ nsresult nsProfile::RenameProfileDir(const PRUnichar* newProfileName)
 {
     NS_ASSERTION(newProfileName, "Invalid new profile name");      
 
-    nsresult rv = NS_OK;
-    nsFileSpec dirSpec;
+    nsresult rv;
+    nsCOMPtr<nsIFile> aFile;
+    nsCOMPtr<nsILocalFile> profileDir;
 
-    rv = GetProfileDir(newProfileName, &dirSpec);
+    rv = GetProfileDir(newProfileName, getter_AddRefs(aFile));
     if (NS_FAILED(rv)) return rv;
-    
-    nsFileSpec renamedDirSpec = dirSpec;
-    renamedDirSpec.SetLeafName(NS_ConvertUCS2toUTF8(newProfileName));
-    renamedDirSpec.MakeUnique();
+    profileDir = do_QueryInterface(aFile, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsCAutoString  newName; newName.AssignWithConversion(newProfileName);
 
     // rename the directory
-    rv = dirSpec.Rename(renamedDirSpec.GetLeafName());
+    rv = profileDir->MoveTo(nsnull, newName);
     if (NS_FAILED(rv)) return rv;
 
     // update the registry
-    rv = SetProfileDir(newProfileName, dirSpec);
+    rv = SetProfileDir(newProfileName, profileDir);
     if (NS_FAILED(rv)) return rv;
+    
 
     return NS_OK;
 }
@@ -1816,46 +1849,31 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
 #if defined(DEBUG_profile)
     printf("ProfileManager : CloneProfile\n");
 #endif
-    nsFileSpec currProfileDir;
-    nsFileSpec newProfileDir;
+    
+    nsCOMPtr<nsIFile> currProfileDir;
+    rv = GetCurrentProfileDir(getter_AddRefs(currProfileDir));
+    if (NS_FAILED(rv)) return rv;
 
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
-
-    GetCurrentProfileDir(&currProfileDir);
-
-    if (currProfileDir.Exists())
+    PRBool exists;    
+    rv = currProfileDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && exists)
     {
-        nsCOMPtr <nsIFileSpec> dirSpec;
-        rv = locator->GetFileLocation(
-                         nsSpecialFileSpec::App_DefaultUserProfileRoot50, 
-                         getter_AddRefs(dirSpec));
+        nsCOMPtr<nsIFile> aFile;
+        rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(aFile));
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsILocalFile> destDir(do_QueryInterface(aFile, &rv));
+        if (NS_FAILED(rv)) return rv;
+        destDir->AppendRelativeUnicodePath(newProfile);
+
+        // Find a unique name in the dest dir
+        nsCAutoString suggestedName; suggestedName.AssignWithConversion(newProfile);
+        rv = destDir->CreateUnique(suggestedName, nsIFile::DIRECTORY_TYPE, 0775);
+        if (NS_FAILED(rv)) return rv;
         
-        if (NS_FAILED(rv) || !dirSpec)
-        return NS_ERROR_FAILURE;
-
-        //Append profile name to form a directory name
-        dirSpec->GetFileSpec(&newProfileDir);
-
-        // TODO:
-        // hash profileName  (will MakeUnique do that for us?)
-        // don't allow special characters (like ..)
-        // make acceptable length (will MakeUnique do that for us?)
-        newProfileDir += NS_ConvertUCS2toUTF8(newProfile);
-        newProfileDir.MakeUnique();
-
-        if (newProfileDir.Exists()) {
-#ifdef DEBUG_profile
-            printf("directory already exists\n");
-#endif
-            return NS_ERROR_FAILURE;
-        }
-
-        currProfileDir.RecursiveCopy(newProfileDir);
-        
-        rv = SetProfileDir(newProfile, newProfileDir);
+        rv = RecursiveCopy(currProfileDir, destDir);
+        if (NS_FAILED(rv)) return rv;           
+        rv = SetProfileDir(newProfile, destDir);
     }
-
 
 #if defined(DEBUG_profile_verbose)
     {
@@ -1870,9 +1888,6 @@ NS_IMETHODIMP nsProfile::CloneProfile(const PRUnichar* newProfile)
     gProfileDataAccess->mNumProfiles++;
     gProfileDataAccess->mProfileDataChanged = PR_TRUE;
 
-    rv = locator->ForgetProfileDir();
-    if (NS_FAILED(rv)) return rv;  
-
     return rv;
 }
 
@@ -1884,24 +1899,16 @@ nsProfile::CreateDefaultProfile(void)
     nsFileSpec profileDirSpec;
     
     // Get the default user profiles folder
-    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
-    if (NS_FAILED(rv) || !locator)
-        return NS_ERROR_FAILURE;
-
-    nsCOMPtr <nsIFileSpec> spec;
-    rv = locator->GetFileLocation(
-                     nsSpecialFileSpec::App_DefaultUserProfileRoot50, 
-                     getter_AddRefs(spec));
-    if (NS_FAILED(rv) || !spec)
-        return NS_ERROR_FAILURE;
-    spec->GetFileSpec(&profileDirSpec);
-
-    rv = locator->ForgetProfileDir();
-
-    nsAutoString dirSpecStr; dirSpecStr.AssignWithConversion(profileDirSpec.GetNativePathCString());
+    nsCOMPtr<nsIFile> profileRootDir;
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILES_ROOT_DIR, getter_AddRefs(profileRootDir));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsXPIDLString profilePath;
+    rv = profileRootDir->GetUnicodePath(getter_Copies(profilePath));
+    if (NS_FAILED(rv)) return rv;
 
     nsAutoString defaultProfileName; defaultProfileName.AssignWithConversion(DEFAULT_PROFILE_NAME);
-    rv = CreateNewProfile(defaultProfileName.GetUnicode(), dirSpecStr.GetUnicode(), nsnull, PR_TRUE);
+    rv = CreateNewProfile(defaultProfileName.GetUnicode(), profilePath, nsnull, PR_TRUE);
 
     return rv;
 }
@@ -1959,11 +1966,6 @@ nsProfile::IsRegStringSet(const PRUnichar *profileName, char **regString)
  */
  
 // File Name Defines
-#if defined(XP_MAC)
-
-#else
-
-#endif
 
 #define PREFS_FILE_50_NAME          "prefs.js"
 #define USER_CHROME_DIR_50_NAME     "Chrome"
@@ -2029,14 +2031,17 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
     }
     else if (inAtom == sApp_UsersPanels50)
     {
-        // Here we differ from nsFileLocator - It checks for the
-        // existance of this file and if it does not exist, copies
-        // it from the defaults folder to the profile folder. Since
-        // WE set up any profile folder, we'll make sure it's copied then.
+        // We do need to ensure that this file exists. If
+        // not, it needs to be copied from the defaults
+        // folder. There is JS code which depends on this.
         
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
+        {
             rv = localFile->Append(PANELS_FILE_50_NAME);
+            if (NS_SUCCEEDED(rv))
+                rv = EnsureProfileFileExists(localFile);
+        }
     }
     else if (inAtom == sApp_UsersMimeTypes50)
     {
@@ -2101,22 +2106,19 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
 
 nsresult nsProfile::CloneProfileDirectorySpec(nsILocalFile **aLocalFile)
 {
+    NS_ENSURE_ARG_POINTER(aLocalFile);
+    *aLocalFile = nsnull;
+    if (!mCurrentProfileAvailable)
+        return NS_ERROR_FAILURE;
+        
     nsresult rv;    
-    nsFileSpec currentDir;
+    nsCOMPtr<nsIFile> aFile;
     
-    rv = GetCurrentProfileDir(&currentDir); // This should probably be cached...
+    rv = GetCurrentProfileDir(getter_AddRefs(aFile)); // This should probably be cached...
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aFile->QueryInterface(NS_GET_IID(nsILocalFile), (void **)aLocalFile);
     NS_ENSURE_SUCCESS(rv, rv);
     
-#if defined(XP_MAC)
-    nsCOMPtr<nsILocalFileMac> localFileMac;
-    FSSpec  tempSpec = currentDir.GetFSSpec();
-    rv = NS_NewLocalFileWithFSSpec(&tempSpec, PR_TRUE, getter_AddRefs(localFileMac));
-    if (NS_SUCCEEDED(rv))
-        rv = localFileMac->QueryInterface(NS_GET_IID(nsILocalFile), aLocalFile);
-#else
-    rv = NS_NewLocalFile(currentDir.GetNativePathCString(), PR_TRUE, aLocalFile);
-#endif
-    
-    return rv;
+    NS_ADDREF(*aLocalFile);
+    return NS_OK;
 }
-

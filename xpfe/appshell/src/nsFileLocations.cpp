@@ -202,13 +202,13 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
             return PR_FALSE;
 
         PRUnichar* currProfileName;
-        nsFileSpec currProfileDirSpec;
+        nsCOMPtr<nsIFile> currProfileDir;
         if (numProfiles == 1)
         {
             // one profile exists: use that profile
             profileService->GetFirstProfile(&currProfileName);
             if (currProfileName && (nsCRT::strlen(currProfileName) > 0)) {
-                profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+                profileService->GetProfileDir(currProfileName, getter_AddRefs(currProfileDir));
             }
             else {
                 // this should never happen
@@ -224,13 +224,13 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
             // we'll pick the first one as returned from the registry query) 
             profileService->GetCurrentProfile(&currProfileName);
             if (currProfileName && (nsCRT::strlen(currProfileName) > 0)) {
-                profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+                profileService->GetProfileDir(currProfileName, getter_AddRefs(currProfileDir));
             }
             else
             {
                 profileService->GetFirstProfile(&currProfileName);
                 if (!currProfileName || (nsCRT::strlen(currProfileName) == 0)) {
-                    profileService->GetProfileDir(currProfileName, &currProfileDirSpec);
+                    profileService->GetProfileDir(currProfileName, getter_AddRefs(currProfileDir));
                 }
             }
         }
@@ -239,6 +239,13 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
             PR_FREEIF(currProfileName);
             return PR_FALSE;
         }    
+        
+        nsFileSpec currProfileDirSpec;
+        nsXPIDLCString pathBuf;
+        rv = currProfileDir->GetPath(getter_Copies(pathBuf));
+        if (NS_FAILED(rv)) return PR_FALSE;
+        currProfileDirSpec = (const char *)pathBuf;
+    
 #if defined(NS_DEBUG)
     if (currProfileName) {
         nsCAutoString currProfileNameCStr; currProfileNameCStr.AssignWithConversion(currProfileName);
@@ -256,12 +263,17 @@ static PRBool GetProfileDirectory(nsFileSpec& outSpec)
         gProfileDir = new nsFileSpec("Default");
         if (!gProfileDir)
             return PR_FALSE;
-        if (NS_FAILED(profileService->GetCurrentProfileDir(gProfileDir)))
+        if (NS_FAILED(profileService->GetCurrentProfileDir(getter_AddRefs(currProfileDir))))
         {
             delete gProfileDir; // All that for nothing.  sigh.
             gProfileDir = nsnull;
             return PR_FALSE;
         }
+        nsXPIDLCString pathBuf2;
+        rv = currProfileDir->GetPath(getter_Copies(pathBuf2));
+        if (NS_FAILED(rv)) return PR_FALSE;
+        *gProfileDir = (const char *)pathBuf2;
+
         NS_ASSERTION(*gProfileDir == currProfileDirSpec, "Profile spec does not match!");
 
         if (!gProfileDir->Exists())
