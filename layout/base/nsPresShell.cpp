@@ -63,6 +63,8 @@
 #include "nsIFrameManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsILayoutHistoryState.h"
+#include "nsIScrollPositionListener.h"
+#include "nsICompositeListener.h"
 #include "stopwatch.h"
 #ifdef RAPTOR_PERF_METRICS
 #include "nsITimeRecorder.h"
@@ -112,6 +114,56 @@ static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
+
+class PresShellViewEventListener : public nsIScrollPositionListener,
+                                   public nsICompositeListener
+{
+public:
+  PresShellViewEventListener();
+  virtual ~PresShellViewEventListener();
+
+  NS_DECL_ISUPPORTS
+
+  // nsIScrollPositionListener methods
+  NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
+  NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
+
+  // nsICompositeListener methods
+	NS_IMETHOD WillRefreshRegion(nsIViewManager *aViewManager,
+                               nsIView *aView,
+                               nsIRenderingContext *aContext,
+                               nsIRegion *aRegion,
+                               PRUint32 aUpdateFlags);
+
+	NS_IMETHOD DidRefreshRegion(nsIViewManager *aViewManager,
+                              nsIView *aView,
+                              nsIRenderingContext *aContext,
+                              nsIRegion *aRegion,
+                              PRUint32 aUpdateFlags);
+
+	NS_IMETHOD WillRefreshRect(nsIViewManager *aViewManager,
+                             nsIView *aView,
+                             nsIRenderingContext *aContext,
+                             const nsRect *aRect,
+                             PRUint32 aUpdateFlags);
+
+	NS_IMETHOD DidRefreshRect(nsIViewManager *aViewManager,
+                            nsIView *aView,
+                            nsIRenderingContext *aContext,
+                            const nsRect *aRect,
+                            PRUint32 aUpdateFlags);
+
+  nsresult SetPresShell(nsIPresShell *aPresShell);
+
+private:
+
+  nsresult HideCaret();
+  nsresult RestoreCaretVisibility();
+
+  nsIPresShell *mPresShell;
+  PRBool        mWasVisible;
+  PRInt32       mCallCount;
+};
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker,
@@ -297,6 +349,7 @@ protected:
   PRBool                        mDisplayNonTextSelection;
   PRBool                        mScrollingEnabled; //used to disable programmable scrolling from outside
   nsIFrameManager*              mFrameManager;  // we hold a reference
+  PresShellViewEventListener    *mViewEventListener;
 
 private:
   //helper funcs for disabing autoscrolling
@@ -496,6 +549,11 @@ PresShell::~PresShell()
     mDocument->DeleteShell(this);
   }
   mRefCnt = 0;
+
+  if (mViewEventListener) {
+    mViewEventListener->SetPresShell((nsIPresShell*)nsnull);
+    NS_RELEASE(mViewEventListener);
+  }
 }
 
 /**
@@ -891,6 +949,23 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   ExitReflowLock();
+
+  if (mViewManager && mCaret && !mViewEventListener) {
+    nsIScrollableView* scrollingView = nsnull;
+    mViewManager->GetRootScrollableView(&scrollingView);
+
+    if (scrollingView) {
+      mViewEventListener = new PresShellViewEventListener;
+
+      if (!mViewEventListener)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      NS_ADDREF(mViewEventListener);
+      mViewEventListener->SetPresShell(this);
+      scrollingView->AddScrollPositionListener((nsIScrollPositionListener *)mViewEventListener);
+      mViewManager->AddCompositeListener((nsICompositeListener *)mViewEventListener);
+    }
+  }
 
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -1967,7 +2042,6 @@ PresShell::Paint(nsIView              *aView,
       aRenderingContext.DrawRect(0, 0, r.width, r.height);
     }
 #endif
-
   }
 
   return rv;
@@ -2538,3 +2612,110 @@ PresShell::VerifyIncrementalReflow()
   return ok;
 }
 #endif
+
+// PresShellViewEventListener
+
+NS_IMPL_ISUPPORTS2(PresShellViewEventListener, nsIScrollPositionListener, nsICompositeListener)
+
+PresShellViewEventListener::PresShellViewEventListener()
+{
+  NS_INIT_ISUPPORTS();
+  mPresShell  = 0;
+  mWasVisible = PR_FALSE;
+  mCallCount  = 0;
+}
+
+PresShellViewEventListener::~PresShellViewEventListener()
+{
+  mPresShell  = 0;
+}
+
+nsresult
+PresShellViewEventListener::SetPresShell(nsIPresShell *aPresShell)
+{
+  mPresShell = aPresShell;
+  return NS_OK;
+}
+
+nsresult
+PresShellViewEventListener::HideCaret()
+{
+  nsresult result = NS_OK;
+
+  if (mPresShell && 0 == mCallCount)
+  {
+    result = mPresShell->GetCaretEnabled(&mWasVisible);
+
+    if (NS_SUCCEEDED(result) && mWasVisible)
+      result = mPresShell->SetCaretEnabled(PR_FALSE);
+  }
+
+  ++mCallCount;
+
+  return result;
+}
+
+nsresult
+PresShellViewEventListener::RestoreCaretVisibility()
+{
+  nsresult result = NS_OK;
+
+  --mCallCount;
+
+  if (mPresShell && 0 == mCallCount && mWasVisible)
+    result = mPresShell->SetCaretEnabled(PR_TRUE);
+
+  return result;
+}
+
+NS_IMETHODIMP
+PresShellViewEventListener::ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY)
+{
+  return HideCaret();
+}
+
+NS_IMETHODIMP
+PresShellViewEventListener::ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY)
+{
+  return RestoreCaretVisibility();
+}
+
+NS_IMETHODIMP
+PresShellViewEventListener::WillRefreshRegion(nsIViewManager *aViewManager,
+                                     nsIView *aView,
+                                     nsIRenderingContext *aContext,
+                                     nsIRegion *aRegion,
+                                     PRUint32 aUpdateFlags)
+{
+  return HideCaret();
+}
+
+NS_IMETHODIMP
+PresShellViewEventListener::DidRefreshRegion(nsIViewManager *aViewManager,
+                                    nsIView *aView,
+                                    nsIRenderingContext *aContext,
+                                    nsIRegion *aRegion,
+                                    PRUint32 aUpdateFlags)
+{
+  return RestoreCaretVisibility();
+}
+
+NS_IMETHODIMP
+PresShellViewEventListener::WillRefreshRect(nsIViewManager *aViewManager,
+                                   nsIView *aView,
+                                   nsIRenderingContext *aContext,
+                                   const nsRect *aRect,
+                                   PRUint32 aUpdateFlags)
+{
+  return HideCaret();
+}
+
+NS_IMETHODIMP
+PresShellViewEventListener::DidRefreshRect(nsIViewManager *aViewManager,
+                                  nsIView *aView,
+                                  nsIRenderingContext *aContext,
+                                  const nsRect *aRect,
+                                  PRUint32 aUpdateFlags)
+{
+  return RestoreCaretVisibility();
+}

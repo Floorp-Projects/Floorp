@@ -42,7 +42,8 @@ class nsIScrollPositionListener : public nsISupports {
 public:
 	NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLPOSITIONLISTENER_IID)
 
-	NS_IMETHOD ScrollPositionChanged(nsIScrollableView* aScrollable, nscoord aX, nscoord aY) = 0;
+	NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY) = 0;
+	NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY) = 0;
 };
 
 #endif /* nsIScrollPositionListener_h___ */

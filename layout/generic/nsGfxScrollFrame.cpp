@@ -71,7 +71,8 @@ public:
 
   // nsIScrollPositionListener
 
-  NS_IMETHOD ScrollPositionChanged(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
+  NS_IMETHOD ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
+  NS_IMETHOD ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY);
 
  // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
@@ -653,13 +654,20 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter):mHScrollb
    mScrollAreaNeedsReflow = PR_FALSE;
 }
 
+NS_IMETHODIMP
+nsGfxScrollFrameInner::ScrollPositionWillChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+{
+   // Do nothing.
+   return NS_OK;
+}
+
 /**
  * Called if something externally moves the scroll area
  * This can happen if the user pages up down or uses arrow keys
  * So what we need to do up adjust the scrollbars to match.
  */
 NS_IMETHODIMP
-nsGfxScrollFrameInner::ScrollPositionChanged(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
+nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, nscoord aX, nscoord aY)
 {
    SetAttribute(mVScrollbarFrame, nsXULAtoms::curpos, aY);
    SetAttribute(mHScrollbarFrame, nsXULAtoms::curpos, aX);
