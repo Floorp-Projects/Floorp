@@ -71,6 +71,7 @@ toolbox {
 
 toolbar, menubar {
   display:block;
+  user-focus: ignore;
 }
 
 toolbar[collapsed="true"] {

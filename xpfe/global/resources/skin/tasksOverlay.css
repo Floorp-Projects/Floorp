@@ -24,6 +24,7 @@ toolbar#taskbar {
 	margin-top: 2px;
 	min-height: 1em;
 	font-size: smaller;
+	user-focus: ignore;
 }
 
 toolbar#taskbar titledbutton {
