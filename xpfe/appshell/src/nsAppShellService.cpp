@@ -32,6 +32,11 @@
 #include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h"
 
+/* For Javascript Namespace Access */
+#include "nsDOMCID.h"
+#include "nsIScriptNameSetRegistry.h"
+#include "nsAppShellNameset.h"
+
 #include "nsWidgetsCID.h"
 #include "nsIStreamObserver.h"
 
@@ -42,6 +47,7 @@
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellCID,          NS_APPSHELL_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
 /* Define Interface IDs */
 
@@ -50,6 +56,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIAppShellServiceIID,   NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID,          NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWebShellWindowIID,    NS_IWEBSHELL_WINDOW_IID);
+static NS_DEFINE_IID(kIScriptNameSetRegistryIID, NS_ISCRIPTNAMESETREGISTRY_IID);
 
 
 
@@ -120,15 +127,30 @@ nsAppShellService::Initialize(void)
   FCInitialize();
 #endif
   // Create the Event Queue for the UI thread...
-  nsIEventQueueService* mEventQService;
+  nsIEventQueueService* eventQService;
   rv = nsServiceManager::GetService(kEventQueueServiceCID,
                                     kIEventQueueServiceIID,
-                                    (nsISupports **)&mEventQService);
+                                    (nsISupports **)&eventQService);
   if (NS_OK == rv) {
     // XXX: What if this fails?
-    rv = mEventQService->CreateThreadEventQueue();
+    rv = eventQService->CreateThreadEventQueue();
   }
 
+  // Register the nsAppShellNameSet with the global nameset registry...
+  nsIScriptNameSetRegistry *registry;
+  rv = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
+                                    kIScriptNameSetRegistryIID,
+                                    (nsISupports **)&registry);
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+  
+  nsAppShellNameSet* nameSet;
+  nameSet = new nsAppShellNameSet();
+  registry->AddExternalNameSet(nameSet);
+  /* FIX - do we need to release this service?  When we do, it get deleted,and our name is lost. */
+
+  // Create the toplevel window list...
   rv = NS_NewISupportsArray(&mWindowList);
   if (NS_FAILED(rv)) {
     goto done;

@@ -25,9 +25,10 @@ EXPORTS =                         \
         nsIWebShellWindow.h       \
         nsAppShellCIDs.h          \
         nsIAppShellService.h      \
-        nsICmdLineService.h	  \
+        nsICmdLineService.h       \
         nsIWidgetController.h     \
         nsIXULWindowCallbacks.h   \
+        nsIDOMXPConnectFactory.h  \
         nsFileLocations.h         \
         $(NULL)
 

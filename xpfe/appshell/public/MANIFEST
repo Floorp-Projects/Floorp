@@ -8,3 +8,4 @@ nsICmdLineService.h
 nsIWebShellWindow.h
 nsIWidgetController.h
 nsFileLocations.h
+nsIDOMXPConnectFactory.h
