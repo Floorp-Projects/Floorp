@@ -78,24 +78,30 @@ public:
         return PR_FALSE;        
     }
 
-    int ParseLine(char** chunks, int maxChunks)
+    int ParseLine(char** chunks, int* lengths, int maxChunks)
     {
         NS_ASSERTION(mCur && maxChunks && chunks, "bad call to ParseLine");
         int found = 0;
         chunks[found++] = mCur;
-        
+
         if(found < maxChunks)
         {
+            char *lastchunk = mCur;
+            int *lastlength = lengths;
             for(char* cur = mCur; *cur; cur++)
             {
                 if(*cur == ',')
                 {
                     *cur = 0;
-                    chunks[found++] = cur+1;
+                    // always fill in the previous chunk's length
+                    *lastlength++ = cur - lastchunk;
+                    chunks[found++] = lastchunk = cur+1;
                     if(found == maxChunks)
                         break;
                 }
             }
+            // crazy pointer math - calculate the length of the final chunk
+            *lastlength = (mCur + mLength) - lastchunk;
         }
         return found;
     }

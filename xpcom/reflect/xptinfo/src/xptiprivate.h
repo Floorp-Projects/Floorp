@@ -531,6 +531,7 @@ class xptiInterfaceEntry
 {
 public:
     static xptiInterfaceEntry* NewEntry(const char* name,
+                                        int nameLength,
                                         const nsID& iid,
                                         const xptiTypelib& typelib,
                                         xptiWorkingSet* aWorkingSet);

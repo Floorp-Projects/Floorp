@@ -966,7 +966,8 @@ PRBool ReadSectionHeader(nsManifestLineReader& reader, const char *token)
             *p = 0;
 
             char* values[1];
-            if(2 != reader.ParseLine(values, 1))
+            int lengths[1];
+            if(2 != reader.ParseLine(values, lengths, 1))
                 break;
 
             // ignore the leading '['
@@ -1059,10 +1060,11 @@ nsComponentManagerImpl::ReadPersistentRegistry()
      if(!reader.NextLine())
          goto out;
      
-     char* values[6]; 
+     char* values[6];
+     int lengths[6];
      
      // VersionLiteral,major,minor
-     if(3 != reader.ParseLine(values, 3))
+     if(3 != reader.ParseLine(values, lengths, 3))
          goto out;
      
      // VersionLiteral
@@ -1086,7 +1088,7 @@ nsComponentManagerImpl::ReadPersistentRegistry()
             break;
 
         //name,last_modification_date
-        if(2 != reader.ParseLine(values, 2))
+        if(2 != reader.ParseLine(values, lengths, 2))
             break;
 
         PRInt64 a = nsCRT::atoll(values[1]);
@@ -1107,7 +1109,7 @@ nsComponentManagerImpl::ReadPersistentRegistry()
             break;
 
         // cid,contract_id,type,class_name,inproc_server
-        if(5 != reader.ParseLine(values, 5))
+        if(5 != reader.ParseLine(values, lengths, 5))
             break;
 
         nsCID aClass;
@@ -1148,7 +1150,7 @@ nsComponentManagerImpl::ReadPersistentRegistry()
             break;
 
         //contractID,cid
-        if(2 != reader.ParseLine(values, 2))
+        if(2 != reader.ParseLine(values, lengths, 2))
             break;
 
         nsCID aClass;
@@ -1185,7 +1187,7 @@ nsComponentManagerImpl::ReadPersistentRegistry()
             break;
 
         //type,name,value
-        if(3 != reader.ParseLine(values, 3))
+        if(3 != reader.ParseLine(values, lengths, 3))
             break;
         
         catman->AddCategoryEntry(values[0], 
