@@ -58,7 +58,6 @@ nsresult nsCommandHandler::GetCommandHandler(nsICommandHandler **aCommandHandler
     // Get the document tree owner
 
     nsCOMPtr<nsIDocShellTreeItem> docShellAsTreeItem(do_QueryInterface(docShell));
-    nsIWebBrowser *webBrowser = nsnull;
     nsIDocShellTreeOwner *treeOwner = nsnull;
     docShellAsTreeItem->GetTreeOwner(&treeOwner);
 
@@ -164,4 +163,3 @@ NS_IMETHODIMP nsCommandHandler::Query(const char *aCommand, const char *aStatus,
 
     return NS_OK;
 }
-
