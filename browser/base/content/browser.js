@@ -188,10 +188,15 @@ function UpdateBackForwardButtons()
   }
 }
 
-function CheckPageReport(event)
+function UpdatePageReport(event)
 {
+  if (!gReportButton)
+    return;
 
-
+  if (gBrowser.mCurrentBrowser.pageReport)
+    gReportButton.setAttribute("blocked", "true");
+  else
+    gReportButton.removeAttribute("blocked");
 }
 
 function Startup()
@@ -201,8 +206,9 @@ function Startup()
   gBrandBundle = document.getElementById("bundle_brand");
   gBrowser = document.getElementById("content");
   gURLBar = document.getElementById("urlbar");
-  
-  gBrowser.addEventListener("DOMCheckPageReport", CheckPageReport, false);
+  gReportButton = document.getElementById("page-report-button");
+
+  gBrowser.addEventListener("DOMUpdatePageReport", UpdatePageReport, false);
 
   var toolbox = document.getElementById("navigator-toolbox");
   toolbox.customizeDone = BrowserToolboxCustomizeDone;
