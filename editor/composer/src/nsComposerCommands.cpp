@@ -217,7 +217,7 @@ nsPasteNoFormattingCommand::IsCommandEnabled(const char * aCommandName, nsISuppo
 
   nsCOMPtr<nsIHTMLEditor> htmlEditor(do_QueryInterface(refCon));
   if (!htmlEditor)
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 
   nsCOMPtr<nsIEditor> editor(do_QueryInterface(htmlEditor));
   if (!editor)

@@ -1203,7 +1203,7 @@ nsHTMLEditor::GetIsDocumentEditable(PRBool *aIsDocumentEditable)
 
   nsCOMPtr<nsIDOMDocument> doc;
   GetDocument(getter_AddRefs(doc));
-  *aIsDocumentEditable = doc? IsModifiable() : PR_FALSE;
+  *aIsDocumentEditable = doc ? IsModifiable() : PR_FALSE;
 
   return NS_OK;
 }
@@ -1212,7 +1212,7 @@ PRBool nsHTMLEditor::IsModifiable()
 {
   PRUint32 flags;
   if (NS_SUCCEEDED(GetFlags(&flags)))
-    return ((flags & eEditorReadonlyMask) == 0);
+    return ((flags & nsIPlaintextEditor::eEditorReadonlyMask) == 0);
   else
     return PR_FALSE;
 }

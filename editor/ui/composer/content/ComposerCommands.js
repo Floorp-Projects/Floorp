@@ -157,8 +157,8 @@ function SetupComposerWindowCommands()
     return;
   }
 
-  // gEditor is null at this point, but init also creates the commandManager
-  editorController.Init(gEditor);
+  // editor is null at this point, but init also creates the commandManager
+  editorController.Init(null);
 
   var interfaceRequestor;
   var commandManager;
@@ -268,8 +268,8 @@ function GetComposerCommandManager()
   try {
     // Get the composer controller directly using ID
     // We store the controller IDs in nsIEditingSession when they are created, 
-    // (XXX We should add an nsIEditorSession methods to get them via nsIController::GetControllerByID()
-    //  For now, we will get controller by index, which is "1", eComposerController in nsEditorShell.)
+    // (XXX We should add an nsIEditorSession methods to get them via nsIControllers::GetControllerByID()
+    //  For now, we will get controller by index, which is "1" [eComposerController])
     var controller = window._content.controllers.getControllerAt(1);
     var interfaceRequestor = controller.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
 
@@ -603,8 +603,7 @@ var nsDummyHTMLCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -673,9 +672,8 @@ var nsSaveCommand =
     //  when you first open a remote file.
     try {
       var docUrl = GetDocumentUrl();
-      var editor = GetCurrentEditor();
-      return editor && editor.isDocumentEditable &&
-        (editor.documentModified || window.gHTMLSourceChanged ||
+      return IsDocumentEditable() &&
+        (IsDocumentModified() || window.gHTMLSourceChanged ||
          IsUrlAboutBlank(docUrl) || GetScheme(docUrl) != "file");
     } catch (e) {return false;}
   },
@@ -686,10 +684,11 @@ var nsSaveCommand =
   doCommand: function(aCommand)
   {
     var result = false;
-    if (window.editorShell)
+    var editor = GetCurrentEditor();
+    if (editor)
     {
       FinishHTMLSource();
-      result = SaveDocument(IsUrlAboutBlank(GetDocumentUrl()), false, editorShell.contentsMIMEType);
+      result = SaveDocument(IsUrlAboutBlank(GetDocumentUrl()), false, editor.contentsMIMEType);
       window._content.focus();
     }
     return result;
@@ -700,8 +699,7 @@ var nsSaveAsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable);
+    return (IsDocumentEditable());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -709,10 +707,11 @@ var nsSaveAsCommand =
 
   doCommand: function(aCommand)
   {
-    if (window.editorShell)
+    var editor = GetCurrentEditor();
+    if (editor)
     {
       FinishHTMLSource();
-      var result = SaveDocument(true, false, editorShell.contentsMIMEType);
+      var result = SaveDocument(true, false, editor.contentsMIMEType);
       window._content.focus();
       return result;
     }
@@ -724,8 +723,7 @@ var nsExportToTextCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable);
+    return (IsDocumentEditable());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -733,7 +731,7 @@ var nsExportToTextCommand =
 
   doCommand: function(aCommand)
   {
-    if (window.editorShell)
+    if (GetCurrentEditor())
     {
       FinishHTMLSource();
       var result = SaveDocument(true, true, "text/plain");
@@ -748,8 +746,7 @@ var nsSaveAsCharsetCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable);
+    return (IsDocumentEditable());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -774,7 +771,8 @@ var nsSaveAsCharsetCommand =
       }
       else
       {
-        window.ok = SaveDocument(true, false, editorShell.contentsMIMEType);
+        var editor = GetCurrentEditor();
+        window.ok = SaveDocument(true, false, editor ? editor.contentsMIMEType : null);
       }
     }
 
@@ -787,16 +785,14 @@ var nsPublishCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    if (editor && editor.isDocumentEditable);
+    if (IsDocumentEditable())
     {
       // Always allow publishing when editing a local document,
       //  otherwise the document modified state would prevent that
       //  when you first open any local file.
       try {
         var docUrl = GetDocumentUrl();
-        var editor = GetCurrentEditor();
-        return editor.documentModified || window.gHTMLSourceChanged
+        return IsDocumentModified() || window.gHTMLSourceChanged
                || IsUrlAboutBlank(docUrl) || GetScheme(docUrl) == "file";
       } catch (e) {return false;}
     }
@@ -808,7 +804,7 @@ var nsPublishCommand =
 
   doCommand: function(aCommand)
   {
-    if (window.editorShell)
+    if (GetCurrentEditor())
     {
       var docUrl = GetDocumentUrl();
       var filename = GetFilename(docUrl);
@@ -861,8 +857,7 @@ var nsPublishAsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable);
+    return (IsDocumentEditable());
   },
   
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -870,7 +865,7 @@ var nsPublishAsCommand =
 
   doCommand: function(aCommand)
   {
-    if (window.editorShell)
+    if (GetCurrentEditor())
     {
       FinishHTMLSource();
 
@@ -929,7 +924,7 @@ function GetSuggestedFileName(aDocumentURLString, aMIMEType)
     try {
 
       var ioService = GetIOService();
-      docURI = ioService.newURI(aDocumentURLString, window.editorShell.GetDocumentCharacterSet(), null);
+      docURI = ioService.newURI(aDocumentURLString, GetCurrentEditor().documentCharacterSet, null);
       docURI = docURI.QueryInterface(Components.interfaces.nsIURL);
 
       // grab the file name
@@ -998,7 +993,7 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, aDocumentU
     
     var isLocalFile = true;
     try {
-      var docURI = ioService.newURI(aDocumentURLString, window.editorShell.GetDocumentCharacterSet(), null);
+      var docURI = ioService.newURI(aDocumentURLString, GetCurrentEditor().documentCharacterSet, null);
       isLocalFile = docURI.schemeIs("file");
     }
     catch (e) {}
@@ -1073,8 +1068,9 @@ const webPersist = Components.interfaces.nsIWebBrowserPersist;
 function OutputFileWithPersistAPI(editorDoc, aDestinationLocation, aRelatedFilesParentDir, aMimeType)
 {
   gPersistObj = null;
+  var editor = GetCurrentEditor();
   try {
-    var imeEditor = gEditor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
+    var imeEditor = editor.QueryInterface(Components.interfaces.nsIEditorIMESupport);
     imeEditor.ForceCompositionEnd();
     } catch (e) {}
 
@@ -1160,7 +1156,10 @@ const nsIHTMLEditor = Components.interfaces.nsIHTMLEditor;
 const nsIWebBrowserPersist = Components.interfaces.nsIWebBrowserPersist;
 function GetWrapColumn()
 {
-  return gEditor.wrapWidth;
+  try {
+    return GetCurrentEditor().wrapWidth;
+  } catch (e) {}
+  return 0;
 }
 
 function GetPromptService()
@@ -1750,11 +1749,34 @@ function UpdateUsernamePasswordFromPrompt(publishData, username, password, saveP
   publishData.savePassword = savePassword;
 }
 
+const kSupportedTextMimeTypes =
+[
+  "text/plain",
+  "text/css",
+  "text/rdf",
+  "text/xml",
+  "text/xsl",
+  "text/javascript",    // obsolete type
+  "application/x-javascript",
+  "text/xul",           // obsolete type
+  "application/vnd.mozilla.xul+xml"
+];
+
+function IsSupporteTextMimeType(aMimeType)
+{
+  for (var i = 0; i < kSupportedTextMimeTypes.count; i++)
+  {
+    if (kSupportedTextMimeTypes[i] == aMimeType)
+      return true;
+  }
+  return false;
+}
+
 // throws an error or returns true if user attempted save; false if user canceled save
 function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
 {
   var editor = GetCurrentEditor();
-  if (!aMimeType || aMimeType == "" || !editor || !window.editorShell)
+  if (!aMimeType || aMimeType == "" || !editor)
     throw NS_ERROR_NOT_INITIALIZED;
 
   var editorDoc = editor.document;
@@ -1762,12 +1784,12 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     throw NS_ERROR_NOT_INITIALIZED;
 
   // if we don't have the right editor type bail (we handle text and html)
+  //XXX We need to get this from the editingSession?
   var editorType = window.editorShell.editorType;
-//  var isMailType = (editorType == "textmail" || editorType == "htmlmail")
   if (editorType != "text" && editorType != "html" && editorType != "htmlmail")
     throw NS_ERROR_NOT_IMPLEMENTED;
 
-  var saveAsTextFile = window.editorShell.isSupportedTextType(aMimeType);
+  var saveAsTextFile = IsSupportedTextMimeType(aMimeType);
 
   // check if the file is to be saved in a format we don't understand; if so, bail
   if (aMimeType != "text/html" && !saveAsTextFile)
@@ -2016,7 +2038,8 @@ function Publish(publishData)
 
 function StartPublishing()
 {
-  if (gPublishData && gPublishData.docURI && gProgressDialog)
+  var editor = GetCurrentEditor();
+  if (editor && gPublishData && gPublishData.docURI && gProgressDialog)
   {
     gRestoreDocumentSource = null;
 
@@ -2027,13 +2050,13 @@ function StartPublishing()
       try {
         // (256 = Output encoded entities)
         gRestoreDocumentSource = 
-          window.editorShell.editor.outputToString(window.editorShell.contentsMIMEType, 256);
+          editor.outputToString(editor.contentsMIMEType, 256);
       } catch (e) {}
     }
 
-    OutputFileWithPersistAPI(window.editorShell.editorDocument, 
+    OutputFileWithPersistAPI(editor.document, 
                              gPublishData.docURI, gPublishData.otherFilesURI, 
-                             window.editorShell.contentsMIMEType);
+                             editor.contentsMIMEType);
   }
 }
 
@@ -2088,7 +2111,7 @@ function CreateURIFromPublishData(publishData, doDocUri)
       spec += FormatDirForPublishing(publishData.otherDir);
 
     var ioService = GetIOService();
-    URI = ioService.newURI(spec, window.editorShell.GetDocumentCharacterSet(), null);
+    URI = ioService.newURI(spec, GetCurrentEditor().documentCharacterSet, null);
 
     if (publishData.username)
       URI.username = publishData.username;
@@ -2135,11 +2158,12 @@ function SetSaveAndPublishUI(urlstring)
 
 function SetDocumentEditable(isDocEditable)
 {
-  if (window.editorShell.editorDocument)
+  var editor = GetCurrentEditor();
+  if (editor && editor.document)
   {
     try {
-      var flags = window.editorShell.editor.flags;
-      window.editorShell.editor.flags = isDocEditable ?  
+      var flags = editor.flags;
+      editor.flags = isDocEditable ?  
             flags &= ~nsIPlaintextEditor.eEditorReadonlyMask :
             flags | nsIPlaintextEditor.eEditorReadonlyMask;
     } catch(e) {}
@@ -2156,8 +2180,7 @@ var nsPublishSettingsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable);
+    return (IsDocumentEditable());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2165,7 +2188,7 @@ var nsPublishSettingsCommand =
 
   doCommand: function(aCommand)
   {
-    if (window.editorShell)
+    if (GetCurrentEditor())
     {
       // Launch Publish Settings dialog
 
@@ -2182,9 +2205,8 @@ var nsRevertCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable &&
-            editor.documentModified &&
+    return (IsDocumentEditable() &&
+            IsDocumentModified() &&
             !IsUrlAboutBlank(GetDocumentUrl()));
   },
 
@@ -2224,7 +2246,7 @@ var nsCloseCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return window.editorShell;
+    return GetCurrentEditor() != null;
   },
   
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2245,7 +2267,10 @@ function CloseWindow()
     if (window.InsertCharWindow)
       SwitchInsertCharToAnotherEditorOrClose();
 
-    window.editorShell.CloseWindowWithoutSaving();
+    //window.editorShell.CloseWindowWithoutSaving();
+    try {
+      document.documentElement.destroy();
+    } catch (e) {}
   }
 }
 
@@ -2276,10 +2301,9 @@ var nsPreviewCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable && 
+    return (IsDocumentEditable() && 
             isHTMLEditor() && 
-            (DocumentHasBeenSaved() || editor.documentModified));
+            (DocumentHasBeenSaved() || IsDocumentModified()));
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2334,9 +2358,8 @@ var nsSendPageCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable &&
-            (DocumentHasBeenSaved() || editor.documentModified));
+    return (IsDocumentEditable() &&
+            (DocumentHasBeenSaved() || IsDocumentModified()));
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2353,12 +2376,9 @@ var nsSendPageCommand =
     if (DocumentHasBeenSaved())
     {
       // Launch Messenger Composer window with current page as contents
-      var pageDoc = window.editorShell.editorDocument;
-      var pageTitle = Components.lookupMethod(pageDoc, 'title').call(pageDoc);
-      var pageUrl = GetDocumentUrl();
       try
       {
-        openComposeWindow(pageUrl, pageTitle);        
+        openComposeWindow(GetDocumentUrl(), GetDocumentTitle());        
       } catch (ex) { dump("Cannot Send Page: " + ex + "\n"); }
     }
   }
@@ -2430,7 +2450,7 @@ var nsFindCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return ((window.editorShell));
+    return GetCurrentEditor() != null;
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2462,7 +2482,7 @@ nsFindAgainCommand.prototype =
   {
     // we can only do this if the search pattern is non-empty. Not sure how
     // to get that from here
-    return (window.editorShell && !IsInHTMLSourceMode());
+    return (GetCurrentEditor() != null && !IsInHTMLSourceMode());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2489,8 +2509,7 @@ var nsSpellingCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable && 
+    return (IsDocumentEditable() && 
             !IsInHTMLSourceMode() && IsSpellCheckerInstalled());
   },
 
@@ -2515,7 +2534,7 @@ var nsValidateCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell != null);
+    return GetCurrentEditor() != null;
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2525,7 +2544,7 @@ var nsValidateCommand =
   {
     // If the document hasn't been modified,
     // then just validate the current url.
-    if (GetCurrentEditor().documentModified || gHTMLSourceChanged)
+    if (IsDocumentModified() || gHTMLSourceChanged)
     {
       if (!CheckAndSaveDocument("cmd_validate", false))
         return;
@@ -2570,8 +2589,7 @@ var nsCheckLinksCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable);
+    return (IsDocumentEditable());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2589,8 +2607,7 @@ var nsFormCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2608,8 +2625,7 @@ var nsInputTagCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2627,8 +2643,7 @@ var nsInputImageCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2646,8 +2661,7 @@ var nsTextAreaCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2665,8 +2679,7 @@ var nsSelectCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2684,8 +2697,7 @@ var nsButtonCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    // && !editorShell.editorSelection.isCollapsed()?
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2703,8 +2715,7 @@ var nsLabelCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2713,18 +2724,22 @@ var nsLabelCommand =
   doCommand: function(aCommand)
   {
     var tagName = "label";
-    var labelElement = gEditor.getSelectedElement(tagName);
-    if (!labelElement)
-      labelElement = editorShell.GetElementOrParentByTagName(tagName, editorShell.editorSelection.anchorNode);
-    if (!labelElement)
-      labelElement = editorShell.GetElementOrParentByTagName(tagName, editorShell.editorSelection.focusNode);
-    if (labelElement) {
-      // We only open the dialog for an existing label
-      window.openDialog("chrome://editor/content/EdLabelProps.xul", "_blank", "chrome,close,titlebar,modal", labelElement);
-      window._content.focus();
-    } else {
-      editorShell.SetTextProperty(tagName, "", "");
-    }
+    try {
+      var editor = GetCurrentEditor();
+      // Find selected label or if start/end of selection is in label 
+      var labelElement = editor.getSelectedElement(tagName);
+      if (!labelElement)
+        labelElement = editor.getElementOrParentByTagName(tagName, editor.selection.anchorNode);
+      if (!labelElement)
+        labelElement = editor.getElementOrParentByTagName(tagName, editor.selection.focusNode);
+      if (labelElement) {
+        // We only open the dialog for an existing label
+        window.openDialog("chrome://editor/content/EdLabelProps.xul", "_blank", "chrome,close,titlebar,modal", labelElement);
+        window._content.focus();
+      } else {
+        EditorSetTextProperty(tagName, "", "");
+      }
+    } catch (e) {}
   }
 };
 
@@ -2733,7 +2748,7 @@ var nsFieldSetCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2751,7 +2766,7 @@ var nsIsIndexCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2759,9 +2774,12 @@ var nsIsIndexCommand =
 
   doCommand: function(aCommand)
   {
-    var isindexElement = editorShell.CreateElementWithDefaults("isindex");
-    isindexElement.setAttribute("prompt", editorShell.GetContentsAs("text/plain", 1)); // OutputSelectionOnly
-    editorShell.InsertElementAtSelection(isindexElement, true);
+    try {
+      var editor = GetCurrentEditor();
+      var isindexElement = editor.createElementWithDefaults("isindex");
+      isindexElement.setAttribute("prompt", editor.outputToString("text/plain", 1)); // OutputSelectionOnly
+      editor.insertElementAtSelection(isindexElement, true);
+    } catch (e) {}
   }
 };
 
@@ -2770,7 +2788,7 @@ var nsImageCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2788,7 +2806,7 @@ var nsHLineCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2801,56 +2819,53 @@ var nsHLineCommand =
     //  We get the last-used attributes from the prefs and insert immediately
 
     var tagName = "hr";
-    var hLine = gEditor.getSelectedElement(tagName);
+    var editor = GetCurrentEditor();
+      
+    var hLine;
+    try {
+      hLine = editor.getSelectedElement(tagName);
+    } catch (e) {return;}
 
-    if (hLine) {
+    if (hLine)
+    {
       // We only open the dialog for an existing HRule
       window.openDialog("chrome://editor/content/EdHLineProps.xul", "_blank", "chrome,close,titlebar,modal");
       window._content.focus();
-    } else {
-      hLine = window.editorShell.CreateElementWithDefaults(tagName);
+    } 
+    else
+    {
+      try {
+        hLine = editor.createElementWithDefaults(tagName);
 
-      if (hLine) {
         // We change the default attributes to those saved in the user prefs
         var prefs = GetPrefs();
-        if (prefs) {
-          try {
-            var align = prefs.getIntPref("editor.hrule.align");
-            if (align == 0 ) {
-              gEditor.setAttributeOrEquivalent(hLine, "align", "left", true);
-            } else if (align == 2) {
-              gEditor.setAttributeOrEquivalent(hLine, "align", "right", true);
-            }
+        var align = prefs.getIntPref("editor.hrule.align");
+        if (align == 0)
+          editor.setAttributeOrEquivalent(hLine, "align", "left", true);
+        else if (align == 2)
+          editor.setAttributeOrEquivalent(hLine, "align", "right", true);
 
-            //Note: Default is center (don't write attribute)
-  	  
-            var width = prefs.getIntPref("editor.hrule.width");
-            var percent = prefs.getBoolPref("editor.hrule.width_percent");
-            if (percent)
-              width = width +"%";
+        //Note: Default is center (don't write attribute)
+  
+        var width = prefs.getIntPref("editor.hrule.width");
+        var percent = prefs.getBoolPref("editor.hrule.width_percent");
+        if (percent)
+          width = width +"%";
 
-            gEditor.setAttributeOrEquivalent(hLine, "width", width, true);
+        editor.setAttributeOrEquivalent(hLine, "width", width, true);
 
-            var height = prefs.getIntPref("editor.hrule.height");
-            gEditor.setAttributeOrEquivalent(hLine, "size", String(height), true);
+        var height = prefs.getIntPref("editor.hrule.height");
+        editor.setAttributeOrEquivalent(hLine, "size", String(height), true);
 
-            var shading = prefs.getBoolPref("editor.hrule.shading");
-            if (shading) {
-              hLine.removeAttribute("noshade");
-            } else {
-              hLine.setAttribute("noshade", "noshade");
-            }
-          }
-          catch (ex) {
-            dump("failed to get HLine prefs\n");
-          }
-        }
-        try {
-          window.editorShell.InsertElementAtSelection(hLine, true);
-        } catch (e) {
-          dump("Exception occured in InsertElementAtSelection\n");
-        }
-      }
+        var shading = prefs.getBoolPref("editor.hrule.shading");
+        if (shading)
+          hLine.removeAttribute("noshade");
+        else
+          hLine.setAttribute("noshade", "noshade");
+
+        editor.insertElementAtSelection(hLine, true);
+
+      } catch (e) {}
     }
   }
 };
@@ -2860,7 +2875,7 @@ var nsLinkCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2884,7 +2899,7 @@ var nsAnchorCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2902,7 +2917,7 @@ var nsInsertHTMLCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2920,7 +2935,7 @@ var nsInsertCharsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2937,7 +2952,7 @@ var nsInsertBreakCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2945,7 +2960,9 @@ var nsInsertBreakCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.InsertSource("<br>");
+    try {
+      GetCurrentEditor().insertHTML("<br>");
+    } catch (e) {}
   }
 };
 
@@ -2954,7 +2971,7 @@ var nsInsertBreakAllCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2962,7 +2979,9 @@ var nsInsertBreakAllCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.InsertSource("<br clear='all'>");
+    try {
+      GetCurrentEditor().insertHTML("<br clear='all'>");
+    } catch (e) {}
   }
 };
 
@@ -2971,7 +2990,7 @@ var nsListPropertiesCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2990,7 +3009,7 @@ var nsPagePropertiesCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3016,10 +3035,10 @@ var nsObjectPropertiesCommand =
   isCommandEnabled: function(aCommand, dummy)
   {
     var isEnabled = false;
-    if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
+    if (IsDocumentEditable() && IsEditingRenderedHTML())
     {
       isEnabled = (GetObjectForProperties() != null ||
-                   gEditor.getSelectedElement("href") != null);
+                   GetCurrentEditor().getSelectedElement("href") != null);
     }
     return isEnabled;
   },
@@ -3096,7 +3115,9 @@ var nsObjectPropertiesCommand =
       }
     } else {
       // We get a partially-selected link if asked for specifically
-      element = gEditor.getSelectedElement("href");
+      try {
+        element = GetCurrentEditor().getSelectedElement("href");
+      } catch (e) {}
       if (element)
         goDoCommand("cmd_link");
     }
@@ -3190,7 +3211,7 @@ var nsAdvancedPropertiesCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3199,8 +3220,10 @@ var nsAdvancedPropertiesCommand =
   doCommand: function(aCommand)
   {
     // Launch AdvancedEdit dialog for the selected element
-    var element = gEditor.getSelectedElement("");
-    doAdvancedProperties(element);
+    try {
+      var element = GetCurrentEditor().getSelectedElement("");
+      doAdvancedProperties(element);
+    } catch (e) {}
   }
 };
 
@@ -3209,7 +3232,7 @@ var nsColorPropertiesCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3229,7 +3252,7 @@ var nsRemoveLinksCommand =
   isCommandEnabled: function(aCommand, dummy)
   {
     // We could see if there's any link in selection, but it doesn't seem worth the work!
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3237,7 +3260,7 @@ var nsRemoveLinksCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.RemoveTextProperty("href", "");
+    EditorRemoveTextProperty("href", "");
     window._content.focus();
   }
 };
@@ -3249,7 +3272,7 @@ var nsRemoveNamedAnchorsCommand =
   isCommandEnabled: function(aCommand, dummy)
   {
     // We could see if there's any link in selection, but it doesn't seem worth the work!
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3257,7 +3280,7 @@ var nsRemoveNamedAnchorsCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.RemoveTextProperty("name", "");
+    EditorRemoveTextProperty("name", "");
     window._content.focus();
   }
 };
@@ -3269,7 +3292,7 @@ var nsEditLinkCommand =
   isCommandEnabled: function(aCommand, dummy)
   {
     // Not really used -- this command is only in context menu, and we do enabling there
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3277,10 +3300,11 @@ var nsEditLinkCommand =
 
   doCommand: function(aCommand)
   {
-    var element = gEditor.getSelectedElement("href");
-    if (element)
-      editPage(element.href, window, false);
-
+    try {
+      var element = GetCurrentEditor().getSelectedElement("href");
+      if (element)
+        editPage(element.href, window, false);
+    } catch (e) {}
     window._content.focus();
   }
 };
@@ -3291,7 +3315,7 @@ var nsNormalModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return isHTMLEditor() && window.editorShell.documentEditable;
+    return isHTMLEditor() && IsDocumentEditable();
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3307,7 +3331,7 @@ var nsAllTagsModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && isHTMLEditor());
+    return (IsDocumentEditable() && isHTMLEditor());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3323,7 +3347,7 @@ var nsHTMLSourceModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && isHTMLEditor());
+    return (IsDocumentEditable() && isHTMLEditor());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3339,7 +3363,7 @@ var nsPreviewModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && isHTMLEditor());
+    return (IsDocumentEditable() && isHTMLEditor());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3356,7 +3380,7 @@ var nsInsertOrEditTableCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML());
+    return (IsDocumentEditable() && IsEditingRenderedHTML());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3401,7 +3425,9 @@ var nsSelectTableCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.SelectTable();
+    try {
+      GetCurrentEditor().selectTable();
+    } catch(e) {}
     window._content.focus();
   }
 };
@@ -3418,7 +3444,9 @@ var nsSelectTableRowCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.SelectTableRow();
+    try {
+      GetCurrentEditor().selectTableRow();
+    } catch(e) {}
     window._content.focus();
   }
 };
@@ -3435,7 +3463,9 @@ var nsSelectTableColumnCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.SelectTableColumn();
+    try {
+      GetCurrentEditor().selectTableColumn();
+    } catch(e) {}
     window._content.focus();
   }
 };
@@ -3452,7 +3482,9 @@ var nsSelectTableCellCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.SelectTableCell();
+    try {
+      GetCurrentEditor().selectTableCell();
+    } catch(e) {}
     window._content.focus();
   }
 };
@@ -3469,7 +3501,9 @@ var nsSelectAllTableCellsCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.SelectAllTableCells();
+    try {
+      GetCurrentEditor().selectAllTableCells();
+    } catch(e) {}
     window._content.focus();
   }
 };
@@ -3479,7 +3513,7 @@ var nsInsertTableCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML();
+    return IsDocumentEditable() && IsEditingRenderedHTML();
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3503,7 +3537,9 @@ var nsInsertTableRowAboveCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.InsertTableRow(1, false);
+    try {
+      GetCurrentEditor().insertTableRow(1, false);
+    } catch(e) {}
     window._content.focus();
   }
 };
@@ -3520,7 +3556,9 @@ var nsInsertTableRowBelowCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.InsertTableRow(1,true);
+    try {
+      GetCurrentEditor().insertTableRow(1, true);
+    } catch(e) {}
     window._content.focus();
   }
 };
@@ -3537,7 +3575,9 @@ var nsInsertTableColumnBeforeCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.InsertTableColumn(1, false);
+    try {
+      GetCurrentEditor().insertTableColumn(1, false);
+    } catch(e) {}
     window._content.focus();
   }
 };
@@ -3554,7 +3594,9 @@ var nsInsertTableColumnAfterCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.InsertTableColumn(1, true);
+    try {
+      GetCurrentEditor().insertTableColumn(1, true);
+    } catch(e) {}
     window._content.focus();
   }
 };
@@ -3571,7 +3613,10 @@ var nsInsertTableCellBeforeCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.InsertTableCell(1, false);
+    try {
+      GetCurrentEditor().insertTableCell(1, false);
+    } catch(e) {}
+    window._content.focus();
   }
 };
 
@@ -3587,7 +3632,9 @@ var nsInsertTableCellAfterCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.InsertTableCell(1, true);
+    try {
+      GetCurrentEditor().insertTableCell(1, true);
+    } catch(e) {}
     window._content.focus();
   }
 };
@@ -3605,7 +3652,9 @@ var nsDeleteTableCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.DeleteTable();        
+    try {
+      GetCurrentEditor().delectTable();
+    } catch(e) {}
     window._content.focus();
   }
 };
@@ -3628,18 +3677,16 @@ var nsDeleteTableRowCommand =
       rows = 1;
 
     try {
-      window.editorShell.BeginBatchChanges();
+      var editor = GetCurrentEditor();
+      editor.beginTransaction();
 
       // Loop to delete all blocks of contiguous, selected rows
       while (rows)
       {
-        window.editorShell.DeleteTableRow(rows);
+        editor.deleteTableRow(rows);
         rows = GetNumberOfContiguousSelectedRows();
       }
-      window.editorShell.EndBatchChanges();
-    } catch(ex) {
-      window.editorShell.EndBatchChanges();
-    }
+    } finally { editor.endTransaction(); }
     window._content.focus();
   }
 };
@@ -3662,18 +3709,16 @@ var nsDeleteTableColumnCommand =
       columns = 1;
 
     try {
-      window.editorShell.BeginBatchChanges();
+      var editor = GetCurrentEditor();
+      editor.beginTransaction();
 
       // Loop to delete all blocks of contiguous, selected columns
       while (columns)
       {
-        window.editorShell.DeleteTableColumn(columns);
+        editor.deleteTableColumn(columns);
         columns = GetNumberOfContiguousSelectedColumns();
       }
-      window.editorShell.EndBatchChanges();
-    } catch(ex) {
-      window.editorShell.EndBatchChanges();
-    }
+    } finally { editor.endTransaction(); }
     window._content.focus();
   }
 };
@@ -3690,7 +3735,9 @@ var nsDeleteTableCellCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.DeleteTableCell(1);   
+    try {
+      GetCurrentEditor().deleteTableCell(1);   
+    } catch (e) {}
     window._content.focus();
   }
 };
@@ -3707,7 +3754,9 @@ var nsDeleteTableCellContentsCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.DeleteTableCellContents();
+    try {
+      GetCurrentEditor().deleteTableCellContents();   
+    } catch (e) {}
     window._content.focus();
   }
 };
@@ -3727,7 +3776,9 @@ var nsNormalizeTableCommand =
   doCommand: function(aCommand)
   {
     // Use nsnull to let editor find table enclosing current selection
-    window.editorShell.NormalizeTable(null);
+    try {
+      GetCurrentEditor().normalizeTable(null);   
+    } catch (e) {}
     window._content.focus();
   }
 };
@@ -3737,38 +3788,43 @@ var nsJoinTableCellsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
+    if (IsDocumentEditable() && IsEditingRenderedHTML())
     {
-      var tagNameObj = { value: "" };
-      var countObj = { value: 0 };
-      var cell = window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
+      try {
+        var editor = GetCurrentEditor();
+        var tagNameObj = { value: "" };
+        var countObj = { value: 0 };
+        var cell = editor.getSelectedOrParentTableElement(tagNameObj, countObj);
 
-      // We need a cell and either > 1 selected cell or a cell to the right
-      //  (this cell may originate in a row spanned from above current row)
-      // Note that editorShell returns "td" for "th" also.
-      // (this is a pain! Editor and gecko use lowercase tagNames, JS uses uppercase!)
-      if( cell && (tagNameObj.value == "td"))
-      {
-        // Selected cells
-        if (countObj.value > 1) return true;
+        // We need a cell and either > 1 selected cell or a cell to the right
+        //  (this cell may originate in a row spanned from above current row)
+        // Note that editor returns "td" for "th" also.
+        // (this is a pain! Editor and gecko use lowercase tagNames, JS uses uppercase!)
+        if( cell && (tagNameObj.value == "td"))
+        {
+          // Selected cells
+          if (countObj.value > 1) return true;
 
-        var colSpan = cell.getAttribute("colspan");
+          var colSpan = cell.getAttribute("colspan");
 
-        // getAttribute returns string, we need number
-        // no attribute means colspan = 1
-        if (!colSpan)
-          colSpan = Number(1);
-        else
-          colSpan = Number(colSpan);
+          // getAttribute returns string, we need number
+          // no attribute means colspan = 1
+          if (!colSpan)
+            colSpan = Number(1);
+          else
+            colSpan = Number(colSpan);
 
-        // Test if cell exists to the right of current cell
-        // (cells with 0 span should never have cells to the right
-        //  if there is, user can select the 2 cells to join them)
-        return (colSpan != 0 &&
-                window.editorShell.GetCellAt(null, 
-                                   window.editorShell.GetRowIndex(cell), 
-                                   window.editorShell.GetColumnIndex(cell) + colSpan));
-      }
+          var rowObj = { value: 0 };
+          var colObj = { value: 0 };
+          editor.getCellIndexes(cell, rowObj, colObj);
+
+          // Test if cell exists to the right of current cell
+          // (cells with 0 span should never have cells to the right
+          //  if there is, user can select the 2 cells to join them)
+          return (colSpan && editor.getCellAt(null, rowObj.value,
+                                              colObj.value + colSpan));
+        }
+      } catch (e) {}
     }
     return false;
   },
@@ -3779,7 +3835,9 @@ var nsJoinTableCellsCommand =
   doCommand: function(aCommand)
   {
     // Param: Don't merge non-contiguous cells
-    window.editorShell.JoinTableCells(false);
+    try {
+      GetCurrentEditor().joinTableCells(false);
+    } catch (e) {}
     window._content.focus();
   }
 };
@@ -3789,11 +3847,15 @@ var nsSplitTableCellCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
+    if (IsDocumentEditable() && IsEditingRenderedHTML())
     {
       var tagNameObj = { value: "" };
       var countObj = { value: 0 };
-      var cell = window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj);
+      var cell;
+      try {
+        cell = GetCurrentEditor().getSelectedOrParentTableElement(tagNameObj, countObj);
+      } catch (e) {}
+
       // We need a cell parent and there's just 1 selected cell 
       // or selection is entirely inside 1 cell
       if ( cell && (tagNameObj.value == "td") && 
@@ -3816,7 +3878,9 @@ var nsSplitTableCellCommand =
 
   doCommand: function(aCommand)
   {
-    window.editorShell.SplitTableCell();
+    try {
+      GetCurrentEditor().splitTableCell();
+    } catch (e) {}
     window._content.focus();
   }
 };
@@ -3913,31 +3977,37 @@ var nsConvertToTable =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    if (window.editorShell && window.editorShell.documentEditable && IsEditingRenderedHTML())
+    if (IsDocumentEditable() && IsEditingRenderedHTML())
     {
-    var selection = window.editorShell.editorSelection;
+      var selection;
+      try {
+        selection = GetCurrentEditor().selection;
+      } catch (e) {}
 
-    if (selection && !selection.isCollapsed)
-    {
-      // Don't allow if table or cell is the selection
-      var element = gEditor.getSelectedElement("");
-      if (element)
+      if (selection && !selection.isCollapsed)
       {
-        var name = element.nodeName.toLowerCase();
-        if (name == "td" ||
-            name == "th" ||
-            name == "caption" ||
-            name == "table")
-          return false;
-      }
+        // Don't allow if table or cell is the selection
+        var element;
+        try {
+          element = GetCurrentEditor().getSelectedElement("");
+        } catch (e) {}
+        if (element)
+        {
+          var name = element.nodeName.toLowerCase();
+          if (name == "td" ||
+              name == "th" ||
+              name == "caption" ||
+              name == "table")
+            return false;
+        }
 
-      // Selection start and end must be in the same cell
-      //   in same cell or both are NOT in a cell
-      if ( GetParentTableCell(selection.focusNode) !=
-           GetParentTableCell(selection.anchorNode) )
-        return false
+        // Selection start and end must be in the same cell
+        //   in same cell or both are NOT in a cell
+        if ( GetParentTableCell(selection.focusNode) !=
+             GetParentTableCell(selection.anchorNode) )
+          return false
       
-      return true;
+        return true;
       }
     }
     return false;

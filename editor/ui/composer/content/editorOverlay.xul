@@ -869,9 +869,9 @@
            accesskey="&editpastequotation.accesskey;"
            oncommand="goDoCommand('cmd_pasteQuote')"/>
     <menuitem label="&editRewrapCmd.label;"
-           oncommand="editorShell.Rewrap(true)"/>
+           oncommand="try { GetCurrentEditor().rewrap(true); } catch (e) {}"/>
     <menuitem label="&editStripQuotesCmd.label;"
-           oncommand="editorShell.StripCites(true)"/>
+           oncommand="try { GetCurrentEditor().stripCites(); } catch (e) {}"/>
     <menuitem label="&insertTextCmd.label;"
            oncommand="EditorInsertText('All good things come to those who wait. ')"/>
     <menuitem id="menu_checkLinks" observes="cmd_checkLinks"

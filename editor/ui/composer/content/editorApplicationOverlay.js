@@ -132,7 +132,7 @@ function editPage(url, launchWindow, delay)
     while ( enumerator.hasMoreElements() )
     {
       var win = enumerator.getNext().QueryInterface(Components.interfaces.nsIDOMWindowInternal);
-      if ( win && win.editorShell)
+      if ( win && win.IsWebComposer())
       {
         if (CheckOpenWindowForURIMatch(uri, win))
         {
