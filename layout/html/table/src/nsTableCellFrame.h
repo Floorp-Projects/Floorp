@@ -220,8 +220,7 @@ protected:
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
 
   void      MapHTMLBorderStyle(nsIPresContext* aPresContext,
-                               nsStyleSpacing& aSpacingStyle, 
-                               nscoord         aBorderWidth,
+                               nsStyleSpacing& aSpacingStyle,
                                nsTableFrame*   aTableFrame);
 
   void      MapVAlignAttribute(nsIPresContext* aPresContext, nsTableFrame *aTableFrame);

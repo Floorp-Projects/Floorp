@@ -23,7 +23,7 @@
 #include "nsITableLayout.h"
 
 struct OuterTableReflowState;
-struct nsStyleText;
+struct nsStyleTable;
 
 /* TODO
 1. decide if we'll allow subclassing.  If so, decide which methods really need to be virtual.
@@ -237,8 +237,8 @@ protected:
   /** handle incremental reflow notification that the caption style was changed
     * such that it is now left|right instead of top|bottom, or vice versa.
     */
-  PRBool IR_CaptionChangedAxis(const nsStyleText* aOldStyle, 
-                               const nsStyleText* aNewStyle) const;
+  PRBool IR_CaptionChangedAxis(const nsStyleTable* aOldStyle, 
+                               const nsStyleTable* aNewStyle) const;
 
   /** set the size and the location of both the inner table frame and the caption. */
   NS_IMETHOD SizeAndPlaceChildren(const nsSize &         aInnerSize, 

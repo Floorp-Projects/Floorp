@@ -751,6 +751,12 @@ public:
                                              PRInt32 aRowIndex,
                                              PRInt32 anAdjustment);
 
+  // Return PR_TRUE if rules=groups is set for the table content 
+  PRBool HasGroupRules() const;
+
+  // Remove cell borders which aren't bordering row and/or col groups 
+  void ProcessGroupRules(nsIPresContext& aPresContext);
+
 protected:
   /** iterates all child frames and creates a new cell map */
   NS_IMETHOD ReBuildCellMap();

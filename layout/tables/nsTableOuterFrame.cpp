@@ -382,9 +382,9 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
   // if the reflow type is a style change, also remember the prior style
   nsIReflowCommand::ReflowType reflowCommandType;
   aReflowState.reflowState.reflowCommand->GetType(reflowCommandType);
-  const nsStyleText* priorCaptionTextStyle = nsnull;
+  const nsStyleTable* priorCaptionTableStyle = nsnull;
   if (nsIReflowCommand::StyleChanged == reflowCommandType) {
-    mCaptionFrame->GetStyleData(eStyleStruct_Text, ((const nsStyleStruct *&)priorCaptionTextStyle));
+    mCaptionFrame->GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)priorCaptionTableStyle));
   }
 
   // pass along the reflow command to the caption
@@ -408,9 +408,9 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
 
   // check if the caption alignment changed axis
   if (nsIReflowCommand::StyleChanged == reflowCommandType) {
-    const nsStyleText* captionTextStyle;
-    mCaptionFrame->GetStyleData(eStyleStruct_Text, ((const nsStyleStruct *&)captionTextStyle));
-    if (PR_TRUE == IR_CaptionChangedAxis(priorCaptionTextStyle, captionTextStyle)) {
+    const nsStyleTable* captionTableStyle;
+    mCaptionFrame->GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)captionTableStyle));
+    if (PR_TRUE == IR_CaptionChangedAxis(priorCaptionTableStyle, captionTableStyle)) {
       innerTableNeedsReflow=PR_TRUE;
     }
   }
@@ -560,7 +560,7 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
                                                 nsReflowStatus&        aStatus)
 {
   nsresult rv = NS_OK;
-  const nsStyleText* captionTextStyle=nsnull;
+  const nsStyleTable* captionTableStyle=nsnull;
   nsMargin captionMargin;
   // remember the old width and height
   nsRect priorInnerTableRect;
@@ -602,13 +602,12 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
     const nsStyleSpacing* spacing;
     mCaptionFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
     spacing->CalcMarginFor(mCaptionFrame, captionMargin);
-    mCaptionFrame->GetStyleData(eStyleStruct_Text, ((const nsStyleStruct *&)captionTextStyle));
+    mCaptionFrame->GetStyleData(eStyleStruct_Text, ((const nsStyleStruct *&)captionTableStyle));
     if ((priorInnerTableRect.height!=innerSize.height) || 
         (PR_TRUE==captionDimChanged)) {
       // Compute the caption's y-origin
       nscoord captionY = captionMargin.top;
-      if ((captionTextStyle->mVerticalAlign.GetUnit()==eStyleUnit_Enumerated) && 
-          (captionTextStyle->mVerticalAlign.GetIntValue()==NS_STYLE_VERTICAL_ALIGN_BOTTOM)) {
+      if (NS_SIDE_BOTTOM == captionTableStyle->mCaptionSide) {
         captionY += innerSize.height;
       }
       // Place the caption
@@ -635,9 +634,8 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
   nscoord innerY;   // innerY is the y-offset of the inner table
   if (nsnull != mCaptionFrame) { 
     // factor in caption and it's margin
-    // we're guaranteed that captionMargin and captionTextStyle are set at this point
-    if ((captionTextStyle->mVerticalAlign.GetUnit()     == eStyleUnit_Enumerated) &&
-        (captionTextStyle->mVerticalAlign.GetIntValue() == NS_STYLE_VERTICAL_ALIGN_BOTTOM)) { 
+    // we're guaranteed that captionMargin and captionTableStyle are set at this point
+    if (NS_SIDE_BOTTOM == captionTableStyle->mCaptionSide) { 
       // bottom caption
       innerY = 0;   // the inner table goes at the top of the outer table
       // the total v-space consumed is the inner table height + the caption height + the margin between them
@@ -689,46 +687,36 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
       return rv;
     }
     mMinCaptionWidth = maxElementSize.width;
-    // get the caption's alignment
-    const nsStyleText* captionTextStyle;
-    mCaptionFrame->GetStyleData(eStyleStruct_Text, ((const nsStyleStruct *&)captionTextStyle));
-    nsStyleUnit vAlignUnit = captionTextStyle->mVerticalAlign.GetUnit();
-    if (PR_TRUE ||  // XXX: this is a hack because we don't support left|right captions yet
-        (vAlignUnit != eStyleUnit_Enumerated) ||    // default is "top"
-        ((vAlignUnit == eStyleUnit_Enumerated) &&
-         ((vAlignUnit == NS_STYLE_VERTICAL_ALIGN_TOP) ||
-          (vAlignUnit == NS_STYLE_VERTICAL_ALIGN_BOTTOM)))) {
-      // XXX: caption align = left|right ignored here!
-      // if the caption's MES > table width, reflow the inner table
-      nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
-      if (mMinCaptionWidth > mRect.width) {
-        nsHTMLReflowState innerReflowState(aPresContext, aReflowState.reflowState, mInnerTableFrame,
-                                             nsSize(mMinCaptionWidth, aReflowState.reflowState.availableHeight),
-                                             eReflowReason_Resize);
-        rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
-      }
-      else { // set innerSize as if the inner table were reflowed
-        innerSize.height = mRect.height;
-        innerSize.width  = mRect.width;
-      }
-      // set maxElementSize width if requested
-      if (nsnull != aDesiredSize.maxElementSize) {
-        ((nsTableFrame *)mInnerTableFrame)->SetMaxElementSize(aDesiredSize.maxElementSize);
-        if (mMinCaptionWidth > aDesiredSize.maxElementSize->width) {
-          aDesiredSize.maxElementSize->width = mMinCaptionWidth;
-        }
-      }
-
-      rv = SizeAndPlaceChildren(nsSize (innerSize.width, innerSize.height), 
-                                nsSize (captionSize.width, captionSize.height), 
-                                aReflowState);
+    // XXX: caption align = left|right ignored here!
+    // if the caption's MES > table width, reflow the inner table
+    nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
+    if (mMinCaptionWidth > mRect.width) {
+      nsHTMLReflowState innerReflowState(aPresContext, aReflowState.reflowState, mInnerTableFrame,
+                                         nsSize(mMinCaptionWidth, aReflowState.reflowState.availableHeight),
+                                         eReflowReason_Resize);
+      rv = ReflowChild(mInnerTableFrame, aPresContext, innerSize, innerReflowState, aStatus);
     }
+    else { // set innerSize as if the inner table were reflowed
+      innerSize.height = mRect.height;
+      innerSize.width  = mRect.width;
+    }
+    // set maxElementSize width if requested
+    if (nsnull != aDesiredSize.maxElementSize) {
+      ((nsTableFrame *)mInnerTableFrame)->SetMaxElementSize(aDesiredSize.maxElementSize);
+      if (mMinCaptionWidth > aDesiredSize.maxElementSize->width) {
+        aDesiredSize.maxElementSize->width = mMinCaptionWidth;
+      }
+    }
+
+    rv = SizeAndPlaceChildren(nsSize (innerSize.width, innerSize.height), 
+                              nsSize (captionSize.width, captionSize.height), 
+                              aReflowState);
   }
   return rv;
 }
 
-PRBool nsTableOuterFrame::IR_CaptionChangedAxis(const nsStyleText* aOldStyle, 
-                                                const nsStyleText* aNewStyle) const
+PRBool nsTableOuterFrame::IR_CaptionChangedAxis(const nsStyleTable* aOldStyle, 
+                                                const nsStyleTable* aNewStyle) const
 {
   PRBool result = PR_FALSE;
   //XXX: write me to support left|right captions!
@@ -747,10 +735,9 @@ nsresult nsTableOuterFrame::SizeAndPlaceChildren(const nsSize&          aInnerSi
   spacing->CalcMarginFor(mCaptionFrame, captionMargin);
   // Compute the caption's y-origin
   nscoord captionY = captionMargin.top;
-  const nsStyleText* captionTextStyle;
-  mCaptionFrame->GetStyleData(eStyleStruct_Text, ((const nsStyleStruct *&)captionTextStyle));
-  if ((captionTextStyle->mVerticalAlign.GetUnit()==eStyleUnit_Enumerated) && 
-      (captionTextStyle->mVerticalAlign.GetIntValue()==NS_STYLE_VERTICAL_ALIGN_BOTTOM)) {
+  const nsStyleTable* captionTableStyle;
+  mCaptionFrame->GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)captionTableStyle));
+  if (NS_SIDE_BOTTOM == captionTableStyle->mCaptionSide) {
     captionY += aInnerSize.height;
   }
   // Place the caption
@@ -760,8 +747,7 @@ nsresult nsTableOuterFrame::SizeAndPlaceChildren(const nsSize&          aInnerSi
 
   // Place the inner table
   nscoord innerY;
-  if ((captionTextStyle->mVerticalAlign.GetUnit()==eStyleUnit_Enumerated) &&
-      (captionTextStyle->mVerticalAlign.GetIntValue()==NS_STYLE_VERTICAL_ALIGN_BOTTOM)) { 
+  if (NS_SIDE_BOTTOM == captionTableStyle->mCaptionSide) { 
     // bottom caption
     innerY = 0;
     aReflowState.y = captionRect.YMost() + captionMargin.bottom;
@@ -947,10 +933,9 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
 
       // Compute the caption's y-origin
       nscoord captionY = captionMargin.top;
-      const nsStyleText* captionTextStyle;
-      mCaptionFrame->GetStyleData(eStyleStruct_Text, ((const nsStyleStruct *&)captionTextStyle));
-      if ((captionTextStyle->mVerticalAlign.GetUnit()==eStyleUnit_Enumerated) &&
-          (captionTextStyle->mVerticalAlign.GetIntValue()==NS_STYLE_VERTICAL_ALIGN_BOTTOM)) {
+      const nsStyleTable* captionTableStyle;
+      mCaptionFrame->GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)captionTableStyle));
+      if (NS_SIDE_BOTTOM == captionTableStyle->mCaptionSide) {
         captionY += innerSize.height;
       }
 
@@ -979,8 +964,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
 
       // Place the inner table
       nscoord innerY;
-      if ((captionTextStyle->mVerticalAlign.GetUnit()!=eStyleUnit_Enumerated) ||
-          (captionTextStyle->mVerticalAlign.GetIntValue()!=NS_STYLE_VERTICAL_ALIGN_BOTTOM)) {
+      if (NS_SIDE_BOTTOM != captionTableStyle->mCaptionSide) {
         // top caption
         innerY = captionRect.YMost() + captionMargin.bottom;
         state.y = innerY + innerSize.height;
