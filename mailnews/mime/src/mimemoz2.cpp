@@ -68,6 +68,7 @@
 
 #include "nsIIOService.h"
 #include "nsIURI.h"
+#include "nsIMsgWindow.h"
 
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -533,6 +534,39 @@ nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase)
     return NS_ERROR_FACTORY_NOT_REGISTERED;
 
   return pService->NewURI(aSpec, aBase, aInstancePtrResult);
+}
+
+extern "C" nsresult 
+SetMailCharacterSetToMsgWindow(MimeObject *obj, const PRUnichar *aCharacterSet)
+{
+  nsresult rv = NS_OK;
+
+  if (obj && obj->options)
+  {
+    mime_stream_data *msd = (mime_stream_data *) (obj->options->stream_closure);
+    if (msd)
+    {
+      nsIChannel *channel = msd->channel;
+      if (channel)
+      {
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        if (uri)
+        {
+          nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(uri));
+          if (msgurl)
+          {
+            nsCOMPtr<nsIMsgWindow> msgWindow;
+            msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
+            if (msgWindow)
+              rv = msgWindow->SetMailCharacterSet(aCharacterSet);
+          }
+        }
+      }
+    }
+  }
+
+  return rv;
 }
 
 static char *

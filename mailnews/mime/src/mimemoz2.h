@@ -162,6 +162,8 @@ extern "C" char             *MimeGetStringByID(PRInt32 stringID);
 // Utility to create a nsIURI object...
 extern "C" nsresult         nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase);
 
+extern "C" nsresult SetMailCharacterSetToMsgWindow(MimeObject *obj, const PRUnichar *aCharacterSet); 
+
 extern "C" nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRUint32 nameBuffSize, PRInt32 *fontPixelSize);
 
 #ifdef __cplusplus

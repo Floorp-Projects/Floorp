@@ -35,6 +35,7 @@
 #include "nsMsgMessageFlags.h"
 #include "nsEscape.h"
 #include "nsString.h"
+#include "mimetext.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMessage, MimeMessageClass, mimeMessageClass,
@@ -428,6 +429,31 @@ HG09091
 	  mime_free(body);
 	  return status;
 	}
+
+  // Get a charset to be used for the conversion.  
+  const char      *input_charset = NULL;
+  MimeInlineText  *text = (MimeInlineText *) body;
+
+  if (obj->options->override_charset && (*obj->options->override_charset))
+    input_charset = obj->options->override_charset;
+  else if ( (text) && (text->charset) && (*(text->charset)) )
+    input_charset = text->charset;
+  else 
+  {
+    if (obj->options->default_charset)
+      input_charset = obj->options->default_charset;
+    else
+      input_charset = text->defaultCharset;
+  }
+
+  // Store the charset used for the conversion, so we can put a menu check mark.  
+  if (input_charset)
+  {
+    if (!nsCRT::strcasecmp(input_charset, "us-ascii"))
+      SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1"));
+    else
+      SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(input_charset));
+  }
 
   /* Now that we've added this new object to our list of children,
 	 start its parser going. */

@@ -223,6 +223,12 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
               if (cset)
               {
                 mimeEmitterUpdateCharacterSet(obj->options, cset);
+
+                // Also set this charset to msgWindow
+                if (!nsCRT::strcasecmp(cset, "us-ascii"))
+                  SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1"));
+                else
+                  SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(cset));
               }
 
               PR_FREEIF(ct);
