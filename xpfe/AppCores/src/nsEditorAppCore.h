@@ -207,7 +207,7 @@ class nsEditorAppCore : public nsBaseAppCore,
 
 		EEditorType					mEditorType;
 		nsString						mEditorTypeString;	// string which describes which editor type will be instantiated (lowercased)
-    nsISupports*	 			mEditor;						// this can be either an HTML or plain text (or other?) editor
+    nsCOMPtr<nsISupports>	 	mEditor;						// this can be either an HTML or plain text (or other?) editor
 
 };
 
