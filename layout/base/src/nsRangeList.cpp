@@ -1120,7 +1120,8 @@ nsRangeList::NotifySelectionListeners()
   for (PRInt32 i = 0; i < mSelectionListeners->Count();i++)
   {
     nsCOMPtr<nsIDOMSelectionListener> thisListener;
-    thisListener = do_QueryInterface(mSelectionListeners->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports(dont_AddRef(mSelectionListeners->ElementAt(i)));
+    thisListener = do_QueryInterface(isupports);
     if (thisListener)
     	thisListener->NotifySelectionChanged();
   }
