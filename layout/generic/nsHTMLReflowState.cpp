@@ -1253,18 +1253,18 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
 // Note: the width unit is not auto when this is called
 void
 nsHTMLReflowState::CalculateBlockSideMargins(const nsHTMLReflowState* cbrs,
-                                             nscoord amComputedWidth)
+                                             nscoord aComputedWidth)
 {
   // We can only provide values for auto side margins in a constrained
   // reflow. For unconstrained reflow there is no effective width to
   // compute against...
-  if ((NS_UNCONSTRAINEDSIZE == amComputedWidth) ||
+  if ((NS_UNCONSTRAINEDSIZE == aComputedWidth) ||
       (NS_UNCONSTRAINEDSIZE == cbrs->mComputedWidth)) {
     return;
   }
 
   nscoord sum = mComputedMargin.left + mComputedBorderPadding.left +
-    amComputedWidth + mComputedBorderPadding.right + mComputedMargin.right;
+    aComputedWidth + mComputedBorderPadding.right + mComputedMargin.right;
   if (sum == cbrs->mComputedWidth) {
     // The sum is already correct
     return;
@@ -1278,91 +1278,68 @@ nsHTMLReflowState::CalculateBlockSideMargins(const nsHTMLReflowState* cbrs,
     eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit();
 
   // Calculate how much space is available for margins
-  nscoord availMarginSpace = cbrs->mComputedWidth - amComputedWidth -
+  nscoord availMarginSpace = cbrs->mComputedWidth - aComputedWidth -
     mComputedBorderPadding.left - mComputedBorderPadding.right;
-  if (availMarginSpace < 0) {
-    // Whoops - the element is too large for the available space. In
-    // this case use the "direction" property to pin the element to
-    // the left or right side. Note that we look at the parent's
-    // direction since the parent will be placing this element.
-    mComputedMargin.left = 0;
-    mComputedMargin.right = 0;
-    const nsHTMLReflowState* prs = (const nsHTMLReflowState*)parentReflowState;
-    if (prs && (NS_STYLE_DIRECTION_RTL == prs->mStyleDisplay->mDirection)) {
-      mComputedMargin.left = availMarginSpace;
+
+  if (mStyleDisplay->mDisplay == NS_STYLE_DISPLAY_TABLE) {
+    // Special rules for tables. In general, tables will stick to the
+    // left edge when they are too large otherwise they behave like
+    // blocks.
+    if (availMarginSpace < 0) {
+      // Whoops - the TABLE element is too large for the available
+      // space. In this case use the "direction" property to pin the
+      // element to the left or right side. Note that we look at the
+      // parent's direction since the parent will be placing this
+      // element.
+      mComputedMargin.left = 0;
+      mComputedMargin.right = 0;
+      const nsHTMLReflowState* prs = (const nsHTMLReflowState*)
+        parentReflowState;
+      if (prs && (NS_STYLE_DIRECTION_RTL == prs->mStyleDisplay->mDirection)) {
+        mComputedMargin.left = availMarginSpace;
+      }
+      isAutoLeftMargin = isAutoRightMargin = PR_FALSE;
     }
   }
   else {
-    // See whether we're over constrained
-
-    // XXX NOTE: do not mess with tables so that they can be centered;
-    // we need a better way to factor this in!!!
-    if (mStyleDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE) {
-      if (!isAutoLeftMargin && !isAutoRightMargin) {
-        // Neither margin is 'auto' so we're over constrained. Use the
-        // 'direction' property of the parent to tell which margin to
-        // ignore
-        const nsHTMLReflowState* prs = (const nsHTMLReflowState*)
-          parentReflowState;
-        isAutoRightMargin = PR_TRUE;
-        if (prs &&
-            (NS_STYLE_DIRECTION_RTL == prs->mStyleDisplay->mDirection)) {
+    // The css2 spec clearly defines how block elements should be have
+    // in section 10.3.3.
+    if (!isAutoLeftMargin && !isAutoRightMargin) {
+      // Neither margin is 'auto' so we're over constrained. Use the
+      // 'direction' property of the parent to tell which margin to
+      // ignore
+      const nsHTMLReflowState* prs = (const nsHTMLReflowState*)
+        parentReflowState;
+      if (prs) {
+        if (NS_STYLE_DIRECTION_LTR == prs->mStyleDisplay->mDirection) {
+          // The specified value of margin-right is ignored (== forced
+          // to auto)
+          isAutoRightMargin = PR_TRUE;
+        }
+        else {
           isAutoLeftMargin = PR_TRUE;
         }
       }
-    }
-
-    if (isAutoLeftMargin) {
-      if (isAutoRightMargin) {
-        // Both margins are 'auto' so their computed values are equal
-        mComputedMargin.left = availMarginSpace / 2;
-        mComputedMargin.right = availMarginSpace - mComputedMargin.left;
-      } else {
-        mComputedMargin.left = availMarginSpace - mComputedMargin.right;
+      else {
+        // No parent reflow state -- assume direction is ltr
+        isAutoRightMargin = PR_TRUE;
       }
-    } else if (isAutoRightMargin) {
+    }
+  }
+
+  // Logic which is common to blocks and tables
+  if (isAutoLeftMargin) {
+    if (isAutoRightMargin) {
+      // Both margins are 'auto' so their computed values are equal
+      mComputedMargin.left = availMarginSpace / 2;
       mComputedMargin.right = availMarginSpace - mComputedMargin.left;
+    } else {
+      mComputedMargin.left = availMarginSpace - mComputedMargin.right;
     }
+  } else if (isAutoRightMargin) {
+    mComputedMargin.right = availMarginSpace - mComputedMargin.left;
   }
 }
-
-#if 0
-// XXX I have no idea if this is right or not -- kipp
-void
-nsHTMLReflowState::CalculateTableSideMargins(const nsHTMLReflowState* cbrs,
-                                             nscoord amComputedWidth)
-{
-  // We can only provide values for auto side margins in a constrained
-  // reflow. For unconstrained reflow there is no effective width to
-  // compute against...
-  if ((NS_UNCONSTRAINEDSIZE != amComputedWidth) && 
-      (NS_UNCONSTRAINEDSIZE != cbrs->mComputedWidth)) {
-    PRBool isAutoLeftMargin =
-      eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit();
-    PRBool isAutoRightMargin =
-      eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit();
-
-    // Calculate how much space is available for margins
-    nscoord availMarginSpace = cbrs->mComputedWidth - amComputedWidth -
-      mComputedBorderPadding.left - mComputedBorderPadding.right;
-
-    if (availMarginSpace != 0) {
-      // See whether we're over constrained
-      if (isAutoLeftMargin) {
-        if (isAutoRightMargin) {
-          // Both margins are 'auto' so their computed values are equal
-          mComputedMargin.left = availMarginSpace / 2;
-          mComputedMargin.right = availMarginSpace - mComputedMargin.left;
-        } else {
-          mComputedMargin.left = availMarginSpace - mComputedMargin.right;
-        }
-      } else if (isAutoRightMargin) {
-        mComputedMargin.right = availMarginSpace - mComputedMargin.left;
-      }
-    }
-  }
-}
-#endif
 
 static nsIStyleContext*
 GetNonInheritedLineHeightStyleContext(nsIStyleContext* aStyleContext)
