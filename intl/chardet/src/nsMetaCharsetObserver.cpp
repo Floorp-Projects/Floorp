@@ -176,6 +176,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 
     nsresult res = NS_OK;
     PRUint32 i;
+    char command[256];
+    command[0]='\0';
 
     // Only process if we get the HTTP-EQUIV=Content-Type in meta
     // We totaly need 4 attributes
@@ -183,6 +185,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
     //   CONTENT
     //   currentCharset            - pseudo attribute fake by parser
     //   currentCharsetSource      - pseudo attribute fake by parser
+    //   X_COMMAND                 - pseudo attribute fake by parser
 
     if((numOfAttributes >= 4) && 
        (0 == nsCRT::strcasecmp(nameArray[0], "HTTP-EQUIV")) &&
@@ -206,6 +209,9 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
          } else if(0==nsCRT::strcmp(nameArray[i], "charsetSource")) {
            bGotCharsetSource = PR_TRUE;
            charsetSourceStr = valueArray[i];
+         } else if(0==nsCRT::strcmp(nameArray[i], "X_COMMAND")) {
+           nsAutoString tmp(valueArray[i]);
+           tmp.ToCString(command, 256);
          }
       }
 
@@ -269,7 +275,8 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                                         {
                                             const char* charsetInCStr = preferred.ToNewCString();
                                             if(nsnull != charsetInCStr) {
-                                               res = NotifyWebShell(aDocumentID, charsetInCStr, kCharsetFromMetaTag );
+                                               res = NotifyWebShell(aDocumentID, charsetInCStr, kCharsetFromMetaTag , 
+                                                                    command[0]?command:nsnull);
                                                delete [] (char*)charsetInCStr;
                                                return res;
                                             }
