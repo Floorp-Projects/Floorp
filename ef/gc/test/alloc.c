@@ -44,7 +44,7 @@ foo(unsigned int num)
            num, bin1, bin2);
 }
 
-void
+int
 main()
 {
     int i;
