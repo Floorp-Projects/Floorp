@@ -116,7 +116,14 @@ public:
    */
   NS_IMETHOD ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags) = 0;
 
-  NS_IMETHOD GetClipSize(nscoord *aX, nscoord *aY) = 0;
+  /**
+   * get the size of the content display area in the view. it can be different
+   * from the bounds of the view.
+   * @param aWidth out parameter for width of clip area
+   * @param aHeight out parameter for height of clip area
+   * @return error status
+   */
+  NS_IMETHOD GetClipSize(nscoord *aWidth, nscoord *aHeight) = 0;
 };
 
 #endif
