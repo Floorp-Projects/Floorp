@@ -898,6 +898,9 @@ nsDownloadManager::ValidateDownloadsContainer()
     e->HasMoreElements(&hasMore);
   }
 
+  if (!mBatches) 
+    StartBatchUpdate();
+
   // Now Remove all the bad downloads. 
   PRUint32 cnt;
   ary->Count(&cnt);
@@ -907,6 +910,9 @@ nsDownloadManager::ValidateDownloadsContainer()
     // Use the internal method because we know what we're doing! (We hope!)
     RemoveDownload(download);
   }
+
+  if (mBatches)
+    EndBatchUpdate();
 
   return NS_OK;
 }
