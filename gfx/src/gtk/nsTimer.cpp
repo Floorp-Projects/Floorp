@@ -23,8 +23,6 @@
 #include <limits.h>
 #include <gtk/gtk.h>
 
-static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
-
 extern "C" gint nsTimerExpired(gpointer aCallData);
 
 /*
@@ -81,6 +79,8 @@ void TimerImpl::FireTimeout()
 // if (mRepeat)
 //  mTimerId = gtk_timeout_add(aDelay, nsTimerExpired, this);
 }
+
+NS_IMPL_ISUPPORTS1(nsTimer, nsITimer)
 
 
 TimerImpl::TimerImpl()
@@ -162,8 +162,6 @@ TimerImpl::Init(PRUint32 aDelay)
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
-
 
 void
 TimerImpl::Cancel()
@@ -186,7 +184,7 @@ NS_GFXNONXP nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
+    return timer->QueryInterface(NS_GET_IID(nsITimer), (void **) aInstancePtrResult);
 }
 
 gint nsTimerExpired(gpointer aCallData)

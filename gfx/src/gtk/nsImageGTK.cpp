@@ -33,7 +33,9 @@
 // ctor, dtor and update.
 #undef TRACE_IMAGE_ALLOCATION
 
-static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
+
+
+NS_IMPL_ISUPPORTS1(nsImageGTK, nsIImage)
 
 //------------------------------------------------------------
 
@@ -47,7 +49,12 @@ nsImageGTK::nsImageGTK()
   mAlphaBits = nsnull;
   mAlphaPixmap = nsnull;
   mImagePixmap = nsnull;
-
+  mAlphaDepth = 0;
+  mRowBytes = 0;
+  mSizeImage = 0;
+  mAlphaHeight = 0;
+  mAlphaWidth = 0;
+  mConvertedBits = nsnull;
 #ifdef TRACE_IMAGE_ALLOCATION
   printf("nsImageGTK::nsImageGTK(this=%p)\n",
          this);
@@ -80,8 +87,6 @@ nsImageGTK::~nsImageGTK()
          this);
 #endif
 }
-
-NS_IMPL_ISUPPORTS(nsImageGTK, kIImageIID);
 
 //------------------------------------------------------------
 
@@ -159,10 +164,14 @@ nsresult nsImageGTK::Init(PRInt32 aWidth, PRInt32 aHeight,
       break;
 
     case nsMaskRequirements_kNeeds8Bit:
-      mAlphaBits = nsnull;
-      mAlphaWidth = 0;
-      mAlphaHeight = 0;
+      mAlphaRowBytes = aWidth;
       mAlphaDepth = 8;
+
+      // 32-bit align each row
+      mAlphaRowBytes = (mAlphaRowBytes + 3) & ~0x3;
+      mAlphaBits = new PRUint8[mAlphaRowBytes * aHeight];
+      mAlphaWidth = aWidth;
+      mAlphaHeight = aHeight;
       g_print("TODO: want an 8bit mask for an image..\n");
       break;
   }
