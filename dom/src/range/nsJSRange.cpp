@@ -27,6 +27,7 @@
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMNSRange.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMRange.h"
 
@@ -35,10 +36,12 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kINSRangeIID, NS_IDOMNSRANGE_IID);
 static NS_DEFINE_IID(kIDocumentFragmentIID, NS_IDOMDOCUMENTFRAGMENT_IID);
 static NS_DEFINE_IID(kIRangeIID, NS_IDOMRANGE_IID);
 
 NS_DEF_PTR(nsIDOMNode);
+NS_DEF_PTR(nsIDOMNSRange);
 NS_DEF_PTR(nsIDOMDocumentFragment);
 NS_DEF_PTR(nsIDOMRange);
 
@@ -897,6 +900,48 @@ RangeToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 }
 
 
+//
+// Native method InsertFragment
+//
+PR_STATIC_CALLBACK(JSBool)
+NSRangeInsertFragment(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMRange *privateThis = (nsIDOMRange*)JS_GetPrivate(cx, obj);
+  nsIDOMNSRange *nativeThis = nsnull;
+  if (NS_OK != privateThis->QueryInterface(kINSRangeIID, (void **)&nativeThis)) {
+    JS_ReportError(cx, "Object must be of type NSRange");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->InsertFragment(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function insertFragment requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Range
@@ -952,6 +997,7 @@ static JSFunctionSpec RangeMethods[] =
   {"surroundContents",          RangeSurroundContents,     1},
   {"clone",          RangeClone,     0},
   {"toString",          RangeToString,     0},
+  {"insertFragment",          NSRangeInsertFragment,     1},
   {0}
 };
 

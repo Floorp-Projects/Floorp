@@ -26,6 +26,7 @@ DEFINES += -D_IMPL_NS_DOM
 
 EXPORTS =              				\
 	nsIDOMRange.h 							\
+	nsIDOMNSRange.h		\
 	nsIDOMSelection.h 					\
 	nsIDOMSelectionListener.h 	\
 	$(NULL)
