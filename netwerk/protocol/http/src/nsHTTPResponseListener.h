@@ -17,14 +17,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Original Author: Gagan Saksena <gagan@netscape.com>
- *
  * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Darin Fisher <darin@netscape.com>
  */
 
-#ifndef _nsHTTPResponseListener_h_
-#define _nsHTTPResponseListener_h_
-
+#ifndef nsHTTPResponseListener_h__
+#define nsHTTPResponseListener_h__
 
 #include "nsIChannel.h"
 #include "nsIStreamListener.h"
@@ -38,35 +37,33 @@
 
 #include "nsISupportsPrimitives.h"
 
-class nsIBufferInputStream;
 class nsHTTPResponse;
 class nsHTTPChannel;
 
 /* 
-    The nsHTTPResponseListener class is the response reader listener that 
-    receives notifications of OnStartRequest, OnDataAvailable and 
-    OnStopRequest as the data is received from the server. Each instance 
-    of this class is tied to the corresponding transport that it reads the
-    response data stream from. 
-
-  
-    The essential purpose of this class is to create the actual response 
-    based on the data that is coming off the net. 
-
-    This class is internal to the protocol handler implementation and 
-    should theroetically not be used by the app or the core netlib.
-
-    -Gagan Saksena 04/29/99
-*/
+ * The nsHTTPResponseListener class is the response reader listener that 
+ * receives notifications of OnStartRequest, OnDataAvailable and 
+ * OnStopRequest as the data is received from the server. Each instance 
+ * of this class is tied to the corresponding transport that it reads the
+ * response data stream from. 
+ *
+ *  
+ * The essential purpose of this class is to create the actual response 
+ * based on the data that is coming off the net. 
+ *
+ * This class is internal to the protocol handler implementation and 
+ * should theroetically not be used by the app or the core netlib.
+ *
+ *    -Gagan Saksena 04/29/99
+ */
 class nsHTTPResponseListener : public nsIStreamListener
 {
 public:
-    nsHTTPResponseListener (nsHTTPChannel* aConnection, nsHTTPHandler *handler);
-    virtual ~nsHTTPResponseListener();
-
-    // nsISupport methods...
     NS_DECL_ISUPPORTS
 
+    nsHTTPResponseListener(nsHTTPChannel* aChannel,
+                           nsHTTPHandler *aHandler);
+    virtual ~nsHTTPResponseListener();
 
     // abstract methods implemented by the various ResponseListener
     // subclasses...
@@ -78,8 +75,8 @@ public:
 
 protected:
     nsCOMPtr<nsIStreamListener> mResponseDataListener;
-    nsHTTPChannel*              mChannel;
-    nsHTTPHandler*              mHandler;
+    nsHTTPChannel              *mChannel;
+    nsHTTPHandler              *mHandler;
 };
 
 
@@ -88,51 +85,54 @@ protected:
  */
 class nsHTTPServerListener : public nsHTTPResponseListener
 {
-
 public:
-
-    nsHTTPServerListener (nsHTTPChannel* aConnection, nsHTTPHandler *handler, nsHTTPPipelinedRequest * request, PRBool aDoingProxySSLConnect);
-    virtual ~nsHTTPServerListener();
-
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
+
+    nsHTTPServerListener(nsHTTPChannel *aConnection,
+                         nsHTTPHandler *aHandler,
+                         nsHTTPPipelinedRequest *aRequest,
+                         PRBool aDoingProxySSLConnect);
+    virtual ~nsHTTPServerListener();
 
     virtual nsresult FireSingleOnData(nsIStreamListener *aListener, 
                                       nsISupports *aContext);
     virtual nsresult Abort();
 
-    nsresult Discard304Response(void);
-    nsresult FinishedResponseHeaders ();
+    nsresult Discard304Response();
+    nsresult FinishedResponseHeaders();
 
 protected:
     // nsHTTPResponseListener methods...
     nsresult FireOnHeadersAvailable();
 
-    nsresult ParseStatusLine(nsIInputStream* in, PRUint32 aLength,
+    nsresult ParseStatusLine(nsIInputStream *in,
+                             PRUint32 aLength,
                              PRUint32 *aBytesRead);
 
-    nsresult ParseHTTPHeader(nsIInputStream* in, PRUint32 aLength, 
-                             PRUint32* aBytesRead);
+    nsresult ParseHTTPHeader(nsIInputStream *in,
+                             PRUint32 aLength, 
+                             PRUint32 *aBytesRead);
 
 protected:
     nsCString                   mHeaderBuffer;
-    nsHTTPResponse*             mResponse;
-    PRBool                      mFirstLineParsed;
-    PRBool                      mHeadersDone;
-    PRBool                      mSimpleResponse;
+    nsHTTPResponse             *mResponse;
+    PRPackedBool                mFirstLineParsed;
+    PRPackedBool                mHeadersDone;
+    PRPackedBool                mSimpleResponse;
 
     nsCOMPtr<nsIInputStream>    mDataStream;
     PRUint32                    mBytesReceived; 
     PRInt32                     mBodyBytesReceived;
 
-    PRBool                      mCompressHeaderChecked;
-    PRBool                      mChunkHeaderChecked;
-    PRBool                      mDataReceived;
+    PRPackedBool                mCompressHeaderChecked;
+    PRPackedBool                mChunkHeaderChecked;
+    PRPackedBool                mDataReceived;
     nsCOMPtr<nsISupportsVoid>   mChunkHeaderEOF;
-    nsHTTPPipelinedRequest*     mPipelinedRequest;
+    nsHTTPPipelinedRequest     *mPipelinedRequest;
 
     nsHTTPChunkConvContext      mChunkHeaderCtx;
-    PRBool                      mDoingProxySSLConnect;
+    PRPackedBool                mDoingProxySSLConnect;
 };
 
 
@@ -142,21 +142,20 @@ protected:
 class nsHTTPCacheListener : public nsHTTPResponseListener
 {
 public:
-  nsHTTPCacheListener(nsHTTPChannel* aChannel, nsHTTPHandler *handler);
-  virtual ~nsHTTPCacheListener();
+    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSISTREAMLISTENER
 
-  // nsIStreamObserver methods...
-  NS_DECL_NSISTREAMOBSERVER
+    nsHTTPCacheListener(nsHTTPChannel *aChannel,
+                        nsHTTPHandler *aHandler);
+    virtual ~nsHTTPCacheListener();
 
-  // nsIStreamListener methods...
-  NS_DECL_NSISTREAMLISTENER
+    virtual nsresult FireSingleOnData(nsIStreamListener *aListener, 
+                                      nsISupports *aContext);
+    virtual nsresult Abort();
 
-  virtual nsresult FireSingleOnData(nsIStreamListener *aListener, 
-                                    nsISupports *aContext);
-  virtual nsresult Abort();
 protected:
-  PRInt32                     mBodyBytesReceived;
-  PRInt32                     mContentLength;
+    PRInt32 mBodyBytesReceived;
+    PRInt32 mContentLength;
 };
 
 /*
@@ -165,39 +164,33 @@ protected:
 class nsHTTPFinalListener : public nsIStreamListener
 {
 public:
-    nsHTTPFinalListener (nsHTTPChannel* aChannel, 
-                nsIStreamListener *aListener, nsISupports* aContext);
-
-    virtual ~nsHTTPFinalListener();
-
-    // nsISupport methods...
     NS_DECL_ISUPPORTS
-
-    // nsIStreamObserver methods...
     NS_DECL_NSISTREAMOBSERVER
-
-    // nsIStreamListener methods...
     NS_DECL_NSISTREAMLISTENER
 
-    void FireNotifications ();
-    void Shutdown ();
+    nsHTTPFinalListener(nsHTTPChannel* aChannel, 
+                        nsIStreamListener *aListener,
+                        nsISupports* aContext);
+    virtual ~nsHTTPFinalListener();
 
-    nsIStreamListener* GetListener ()
+    void FireNotifications();
+    void Shutdown();
+
+    nsIStreamListener *GetListener()
     {
         return mListener;
     }
 
 private:
-    nsHTTPChannel*              mChannel;
+    nsHTTPChannel              *mChannel;
     nsCOMPtr<nsISupports>       mContext;
     nsCOMPtr<nsIStreamListener> mListener;
 
-    PRBool  mOnStartFired;
-    PRBool  mOnStopFired;
-    PRBool  mShutdown;
-    PRBool  mBusy;
-    PRBool  mOnStopPending;
+    PRPackedBool mOnStartFired;
+    PRPackedBool mOnStopFired;
+    PRPackedBool mShutdown;
+    PRPackedBool mBusy;
+    PRPackedBool mOnStopPending;
 };
 
-
-#endif /* _nsHTTPResponseListener_h_ */
+#endif
