@@ -39,12 +39,6 @@ DEPTH=..\..
 #//------------------------------------------------------------------------
 !ifdef NO_SECURITY
 DIRS	= freenav
-!else
-!ifdef MOZ_JAVA
-DIRS = nav java
-!else
-DIRS = nav
-!endif
 !endif
 
 
