@@ -583,9 +583,8 @@ void * nsWidget::GetNativeData(PRUint32 aDataType)
     return (void *)mDisplay;
     break;
   case NS_NATIVE_GRAPHIC:
-    // XXX implement this...
     NS_ASSERTION(nsnull != mToolkit, "NULL toolkit, unable to get a GC");
-    return (void *)NS_STATIC_CAST(nsToolkit*,mToolkit)->GetSharedGC(mDisplay, mBaseWindow);
+    return (void *)NS_STATIC_CAST(nsToolkit*,mToolkit)->GetSharedGC();
     break;
   default:
     fprintf(stderr, "nsWidget::GetNativeData(%d) called with crap value.\n",
@@ -707,18 +706,24 @@ NS_IMETHODIMP nsWidget::ScreenToWidget(const nsRect& aOldRect,
 
 NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
 {
+
   if (!mBaseWindow)
     return NS_ERROR_FAILURE;
 
+  /* don't bother setting if it it isnt mapped, duh */
+  if (!mMapped)
+    return NS_OK;
+  
   // Only change cursor if it's changing
   if (aCursor != mCursor) {
-    Cursor newCursor = 0;
+    Cursor newCursor = None;
 
     newCursor = XlibCreateCursor(aCursor);
 
     if (None != newCursor) {
       mCursor = aCursor;
       XDefineCursor(mDisplay, mBaseWindow, newCursor);
+      XFlush(mDisplay);
     }
   }
   return NS_OK;

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim:ts=2:et:sw=2
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -17,52 +18,58 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
+#include "nscore.h" // needed for 'nsnull'
+#include "xlibrgb.h"
 #include "nsToolkit.h"
-#include "nsGUIEvent.h"
-#include "plevent.h"
 #include "nsGCCache.h"
 
 // Static Thread Local Storage index of the toolkit object associated with
 // a given thread...
-
 static PRUintn gToolkitTLSIndex = 0;
 
 nsToolkit::nsToolkit()
 {
   NS_INIT_REFCNT();
   mGC = NULL;
+  mDisplay = xlib_rgb_get_display();
 }
 
 nsToolkit::~nsToolkit()
 {
-  if(mGC)
+  if (mGC)
     mGC->Release();
+
+  // Remove the TLS reference to the toolkit...
+  PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
 }
 
-NS_DEFINE_IID(kIToolkitIID, NS_ITOOLKIT_IID);
-NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
+NS_IMPL_ISUPPORTS1(nsToolkit, nsIToolkit)
 
-void nsToolkit::CreateSharedGC(Display *display, Drawable d)
+void nsToolkit::CreateSharedGC()
 {
   if (mGC)
     return;
-  mGC = new xGC(display, d, 0, NULL); 
+
+  mGC = new xGC(mDisplay, DefaultRootWindow(mDisplay), 0, NULL);
   mGC->AddRef(); // this is for us
 }
 
-xGC *nsToolkit::GetSharedGC(Display *display, Drawable d)
+xGC *nsToolkit::GetSharedGC()
 {
-  if(!mGC)
-    CreateSharedGC(display, d); 
+  if (!mGC)
+    CreateSharedGC();
 
+  mGC->AddRef();
   return mGC;
 }
 
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
+  CreateSharedGC();
+
   return NS_OK;
 }
 
@@ -102,11 +109,11 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
         // nsToolkit destructor...
         //
         PR_SetThreadPrivate(gToolkitTLSIndex, (void*)toolkit);
-    }
+      }
     } else {
       NS_ADDREF(toolkit);
-  }
+    }
     *aResult = toolkit;
   }
-  return NS_OK;
+  return rv;
 }

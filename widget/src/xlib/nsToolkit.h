@@ -28,9 +28,6 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-struct PLEventQueue;
-struct MethodInfo;
-
 /**
  * Wrapper around the thread running the message pump.
  * The toolkit abstraction is necessary because the message pump must
@@ -40,17 +37,17 @@ struct MethodInfo;
 class nsToolkit : public nsIToolkit
 {
 private:
-  void CreateSharedGC(Display *display, Drawable d);
+  Display *mDisplay;
+  void CreateSharedGC();
   xGC *mGC;
 
 public:
   nsToolkit();
-  virtual		~nsToolkit();
+  virtual ~nsToolkit();
   
   NS_DECL_ISUPPORTS
-  NS_IMETHOD            Init(PRThread *aThread);
-  xGC *GetSharedGC(Display *display, Drawable d);
-
+  NS_IMETHOD Init(PRThread *aThread);
+  xGC *GetSharedGC();
 };
 
 #endif

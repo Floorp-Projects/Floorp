@@ -211,6 +211,8 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
 
     mOffscreenSurface = mRenderingSurface;
     NS_ADDREF(mRenderingSurface);
+    /* aWindow->GetNativeData() ref'd the gc */
+    gc->Release();
   }
 
   return CommonInit();
