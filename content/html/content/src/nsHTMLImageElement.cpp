@@ -761,9 +761,10 @@ nsHTMLImageElement::OnStopDecode(imgIRequest *request,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLImageElement::FrameChanged(imgIContainer *container,
-                                               gfxIImageFrame *newframe,
-                                               nsRect * dirtyRect)
+NS_IMETHODIMP
+nsHTMLImageElement::FrameChanged(imgIContainer *container,
+                                 gfxIImageFrame *newframe,
+                                 nsRect * dirtyRect)
 {
   return NS_OK;
 }
@@ -834,8 +835,8 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
 
       // XXX: initialDocumentURI is NULL!
       il->LoadImage(uri, nsnull, documentURI, loadGroup, this, doc,
-                    nsIRequest::LOAD_NORMAL,
-                    nsnull, nsnull, getter_AddRefs(mRequest));
+                    nsIRequest::LOAD_NORMAL, nsnull, nsnull,
+                    getter_AddRefs(mRequest));
     }
   } else {
     nsIImageFrame* imageFrame;
