@@ -296,7 +296,7 @@ if test -z "$PERL"; then
 fi
 
 AC_MSG_CHECKING([for minimum required perl version $PERL_VERSION])
-_perl_version=`$PERL -e 'use Config; print "$Config{version}"; if ($Config{version} >= $PERL_VERSION) { exit(0); } else { exit(1); }' 5>&1`
+_perl_version=`$PERL -e 'use Config; print "$Config{version}"; if ($Config{version} >= $PERL_VERSION) { exit(0); } else { exit(1); }' 1>&5`
 _perl_res=$?
 AC_MSG_RESULT([$_perl_version])
 
