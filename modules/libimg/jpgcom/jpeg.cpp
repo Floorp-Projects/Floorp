@@ -18,7 +18,7 @@
 
 /*
  *	  jpeg.c --- Glue code to Independent JPEG Group decoder library
- *    $Id: jpeg.cpp,v 1.3 1999/04/20 18:51:20 pnunn%netscape.com Exp $
+ *    $Id: jpeg.cpp,v 1.4 1999/07/07 19:22:00 pnunn%netscape.com Exp $
  */
 
 
@@ -70,8 +70,9 @@ typedef enum {
 	JPEG_DECOMPRESS_SEQUENTIAL,           /* Output sequential pixels */
     JPEG_FINAL_PROGRESSIVE_SCAN_OUTPUT,
 	JPEG_DONE,
-    JPEG_SINK_NON_JPEG_TRAILER           /* Some image files have a */
+    JPEG_SINK_NON_JPEG_TRAILER,          /* Some image files have a */
                                          /* non-JPEG trailer */
+    JPEG_ERROR    
 } jstate;
 	
 typedef struct {
@@ -774,10 +775,12 @@ il_jpeg_write(il_container *ic, const unsigned char *buf, int32 len)
 
                 ic->imgdcb->ImgDCBSetupColorspaceConverter(); /* XXXM12N Should check
                                                        return code. */
-
-                js->rows_per_chunk =
-                    JPEG_OUTPUT_CHUNK_SIZE / img_header->widthBytes;
-
+				if(!img_header->widthBytes)
+					return JPEG_ERROR;
+				else
+                    js->rows_per_chunk =
+                                JPEG_OUTPUT_CHUNK_SIZE / img_header->widthBytes;
+				
 				/* FIXME -- Should reset dct_method and dither mode
 				 * for final pass of progressive JPEG
 				 */
