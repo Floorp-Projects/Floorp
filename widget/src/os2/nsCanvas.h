@@ -45,7 +45,6 @@ class nsCanvas : public nsWindow
  protected:
    virtual PRBool OnKey( MPARAM mp1, MPARAM mp2);
    virtual PRBool DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2);
-   virtual PCSZ  WindowClass();
    virtual ULONG WindowStyle();
 };
 

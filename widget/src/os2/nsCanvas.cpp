@@ -84,20 +84,6 @@ PRBool nsCanvas::DispatchMouseEvent( PRUint32 aEventType, MPARAM mp1, MPARAM mp2
    return rc;
 }
 
-// Creation hooks
-static BOOL bRegistered;
-PCSZ nsCanvas::WindowClass()
-{
-   if( !bRegistered)
-   {
-      BOOL rc = WinRegisterClass( 0 /*hab*/, NSCANVASCLASS,
-                                  WinDefWindowProc, 0, 4);
-      NS_ASSERTION(rc, "Couldn't register canvas class");
-      bRegistered = TRUE;
-   }
-
-   return (PCSZ) NSCANVASCLASS;
-}
 
 ULONG nsCanvas::WindowStyle()
 {
