@@ -516,7 +516,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 				//folderInfo->GetImapUnreadPendingMessages(&mNumPendingUnreadMessages);
 
 				PRBool defaultUsed;
-				folderInfo->GetCharacterSet2(&mCharset, &defaultUsed);
+				folderInfo->GetCharacterSet(&mCharset, &defaultUsed);
 				if (defaultUsed)
 					mCharset.AssignWithConversion("");
 				folderInfo->GetCharacterSetOverride(&mCharsetOverride);
