@@ -179,7 +179,9 @@ function Init()
   dayRangeChange(document.getElementById("dayRange"));
 
   // set initial focus
-  document.getElementById("name").focus();
+  var name = document.getElementById("name");
+  name.focus();
+  name.select();
 }
 
 
