@@ -26,6 +26,7 @@ REQUIRES	= xpcom \
 		  string \
 		  layout \
 		  content \
+		  content_xul \
 		  widget \
 		  dom \
 		  view \
@@ -39,7 +40,6 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  gfx \
 		  gfx2 \
-		  raptor \
 		  $(NULL)
 
 CPP_OBJS=\
