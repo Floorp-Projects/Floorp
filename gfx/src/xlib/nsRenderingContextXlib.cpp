@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Peter Hartshorn <peter@igelaus.com.au>
  *   Ken Faulkner <faulkner@igelaus.com.au>
+ *   Tony Tsui <tony@igelaus.com.au>
  */
 
 #include "nsRenderingContextXlib.h"
@@ -1141,8 +1142,7 @@ FoundFont:
       // XXX avoid this test by duplicating code -- erik
       if (prevFont) {
         if (currFont != prevFont) {
-          rawWidth += nsFontMetricsXlib::GetWidth(prevFont, &aString[start],
-                                                  i - start);
+          rawWidth += prevFont->GetWidth(&aString[start], i - start);
           prevFont = currFont;
           start = i;
         }
@@ -1154,8 +1154,8 @@ FoundFont:
     }
 
     if (prevFont) {
-      rawWidth += nsFontMetricsXlib::GetWidth(prevFont, &aString[start],
-                                              i - start);
+      //                                              
+      rawWidth += prevFont->GetWidth(&aString[start], i - start);
     }
 
     aWidth = NSToCoordRound(rawWidth * mP2T);
@@ -1305,16 +1305,15 @@ FoundFont:
 	      x = aX;
 	      y = aY;
               mTMatrix->TransformCoord(&x, &y);
-              nsFontMetricsXlib::DrawString(mRenderingSurface, prevFont, x, y, str, 1);
+        prevFont->DrawString(this, mRenderingSurface, x, y, str, 1);
 	      aX += *aSpacing++;
 	      str++;
 	    }
 	  }
 	  else {
-            nsFontMetricsXlib::DrawString(mRenderingSurface, prevFont, x, y,
-	      &aString[start], i - start);
-            x += nsFontMetricsXlib::GetWidth(prevFont, &aString[start],
-	      i - start);
+      prevFont->DrawString(this, mRenderingSurface, x, y, &aString[start], i - start);
+              x += prevFont->GetWidth(&aString[start], i -start);
+
 	  }
 	  prevFont = currFont;
 	  start = i;
@@ -1334,14 +1333,13 @@ FoundFont:
 	  x = aX;
 	  y = aY;
           mTMatrix->TransformCoord(&x, &y);
-          nsFontMetricsXlib::DrawString(mRenderingSurface, prevFont, x, y, str, 1);
+          prevFont->DrawString(this, mRenderingSurface, x, y, str, 1);
 	  aX += *aSpacing++;
 	  str++;
 	}
       }
       else {
-        nsFontMetricsXlib::DrawString(mRenderingSurface, prevFont, x, y, &aString[start],
-	  i - start);
+        prevFont->DrawString(this, mRenderingSurface, x, y, &aString[start], i - start);
       }
     }
   }
@@ -1575,9 +1573,9 @@ nsRenderingContextXlib::GetBoundingMetrics(const PRUnichar*   aString,
       // XXX avoid this test by duplicating code -- erik
       if (prevFont) {
         if (currFont != prevFont) {
-          nsFontMetricsXlib::GetBoundingMetrics(prevFont, 
-                                               (const PRUnichar*) &aString[start],
-                                               i - start, rawbm);
+          prevFont->GetBoundingMetrics(prevFont,
+                                       (const PRUnichar*) &aString[start],
+                                       i - start, rawbm);
           if (firstTime) {
             firstTime = PR_FALSE;
             aBoundingMetrics = rawbm;
@@ -1596,9 +1594,9 @@ nsRenderingContextXlib::GetBoundingMetrics(const PRUnichar*   aString,
     }
     
     if (prevFont) {
-      nsFontMetricsXlib::GetBoundingMetrics(prevFont, 
-                                           (const PRUnichar*) &aString[start],
-                                           i - start, rawbm);
+      prevFont->GetBoundingMetrics(prevFont, 
+                                   (const PRUnichar*) &aString[start],
+                                   i - start, rawbm);
       if (firstTime) {
         aBoundingMetrics = rawbm;
       }

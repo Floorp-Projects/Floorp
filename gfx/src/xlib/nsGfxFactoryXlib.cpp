@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Peter Hartshorn <peter@igelaus.com.au>
+ *   Tony Tsui <tony@igelaus.com.au>
  */
 
 #include "nsIGenericFactory.h"
@@ -49,7 +50,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlender)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsRegionXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDeviceContextSpecFactoryXlib)
-//NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorXlib)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorXlib)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerXlib)
 
 // our custom constructors
@@ -162,11 +163,11 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/image_manager;1",
     "@mozilla.org/gfx/imagemanager;1",
     nsImageManagerConstructor },
-  //{ "Xlib Font Enumerator",
-    //NS_FONT_ENUMERATOR_CID,
+  { "Xlib Font Enumerator",
+    NS_FONT_ENUMERATOR_CID,
     //    "@mozilla.org/gfx/font_enumerator/xlib;1",
-    //"@mozilla.org/gfx/fontenumerator;1",
-    //nsFontEnumeratorXlibConstructor },
+    "@mozilla.org/gfx/fontenumerator;1",
+      nsFontEnumeratorXlibConstructor },
   { "Xlib Screen Manager",
     NS_SCREENMANAGER_CID,
     //    "@mozilla.org/gfx/screenmanager/xlib;1",
