@@ -673,11 +673,12 @@ nsTableCellMap::Dump(char* aString) const
   printf("***** START TABLE CELL MAP DUMP ***** %p\n", this);
   // output col info
   PRInt32 colCount = mCols.Count();
-	printf ("cols array orig/span-> %p", this);
-	for (PRInt32 colX = 0; colX < colCount; colX++) {
+  printf ("cols array orig/span-> %p", this);
+  for (PRInt32 colX = 0; colX < colCount; colX++) {
     nsColInfo* colInfo = (nsColInfo *)mCols.ElementAt(colX);
-		printf ("%d=%d/%d ", colX, colInfo->mNumCellsOrig, colInfo->mNumCellsSpan);
-	}
+    printf ("%d=%d/%d ", colX, colInfo->mNumCellsOrig, colInfo->mNumCellsSpan);
+  }
+  printf(" cols in cache %d", mTableFrame.GetColCache().Count());
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     cellMap->Dump(nsnull != mBCInfo);
@@ -1631,7 +1632,7 @@ void nsCellMap::ShrinkWithoutRows(nsTableCellMap& aMap,
     nsVoidArray* row = (nsVoidArray *)(mRows.ElementAt(rowX));
     PRInt32 colX;
     for (colX = 0; colX < colCount; colX++) {
-      CellData* data = (CellData *) row->ElementAt(colX);
+      CellData* data = (CellData *) row->SafeElementAt(colX);
       if (data) {
         // Adjust the column counts.
         if (data->IsOrig()) {
@@ -1650,8 +1651,9 @@ void nsCellMap::ShrinkWithoutRows(nsTableCellMap& aMap,
       }
     }
 
+    PRInt32 rowLength = row->Count();
     // Delete our row information.
-    for (colX = 0; colX < colCount; colX++) {
+    for (colX = 0; colX < rowLength; colX++) {
       CellData* data = (CellData *)(row->ElementAt(colX));
       if (data) {
         delete data;
