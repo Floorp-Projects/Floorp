@@ -36,15 +36,21 @@ interface nsIRegistry : nsISupports
     const long ApplicationCustomRegistry = -1;
 
     void open(in string regFile);
-    void openWellKnownRegistry(in long regid);
-    // Deprecated
-    void openDefault();
-    void close();
+    void openWellKnownRegistry(in nsWellKnownRegistry regid);
+
     void flush();
     boolean isOpen();
     
-    string getString(in nsRegistryKey baseKey, in string path);
-    void setString(in nsRegistryKey baseKey, in string path, in string value);
+    nsRegistryKey addKey(in nsRegistryKey baseKey, in wstring keyname);
+    nsRegistryKey getKey(in nsRegistryKey baseKey, in wstring keyname);
+    void removeKey(in nsRegistryKey baseKey, in wstring keyname);
+
+    wstring getString(in nsRegistryKey baseKey, in wstring valname);
+    void setString(in nsRegistryKey baseKey, in wstring valname, in wstring value);
+
+    string getStringUTF8(in nsRegistryKey baseKey, in string path);
+    void setStringUTF8(in nsRegistryKey baseKey, in string path, in string value);
+
     PRInt32 getInt(in nsRegistryKey baseKey, in string path);
     void setInt(in nsRegistryKey baseKey, in string path, in PRInt32 value);
     PRInt64 getLongLong(in nsRegistryKey baseKey, in string path);

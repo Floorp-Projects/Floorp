@@ -45,6 +45,8 @@
 #include "xcDll.h"
 #include "prerror.h"
 #include "prmem.h"
+#include "nsIFile.h"
+//#include "mozreg.h"
 #include "NSReg.h"
 
 #include "prcmon.h"
@@ -468,7 +470,7 @@ nsComponentManagerImpl::PlatformVersionCheck()
     if (NS_FAILED(rv)) return rv;
     
     nsXPIDLCString buf;
-    nsresult err = mRegistry->GetString(xpcomKey, versionValueName, 
+    nsresult err = mRegistry->GetStringUTF8(xpcomKey, versionValueName, 
                                         getter_Copies(buf));
 
     // If there is a version mismatch or no version string, we got an old registry.
@@ -537,7 +539,7 @@ nsComponentManagerImpl::PlatformVersionCheck()
 
         }
 
-        rv = mRegistry->SetString(xpcomKey,versionValueName, NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING);
+        rv = mRegistry->SetStringUTF8(xpcomKey,versionValueName, NS_XPCOM_COMPONENT_MANAGER_VERSION_STRING);
         if(NS_FAILED(rv))
         {
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
@@ -611,18 +613,18 @@ nsComponentManagerImpl::PlatformRegister(const char *cidString,
     if (NS_FAILED(rv)) return (rv);
 
 
-    rv = mRegistry->SetString(IDkey,classNameValueName, className);
+    rv = mRegistry->SetStringUTF8(IDkey,classNameValueName, className);
     if (progID)
     {
-        rv = mRegistry->SetString(IDkey,progIDValueName, progID);        
+        rv = mRegistry->SetStringUTF8(IDkey,progIDValueName, progID);        
     }
-    rv = mRegistry->SetString(IDkey, inprocServerValueName, dll->GetPersistentDescriptorString());
+    rv = mRegistry->SetStringUTF8(IDkey, inprocServerValueName, dll->GetPersistentDescriptorString());
     
     if (progID)
     {
         nsRegistryKey progIDKey;
         rv = mRegistry->AddSubtreeRaw(mClassesKey, progID, &progIDKey);
-        rv = mRegistry->SetString(progIDKey, classIDValueName, cidString);
+        rv = mRegistry->SetStringUTF8(progIDKey, classIDValueName, cidString);
     }
 
     // XXX Gross. LongLongs dont have a serialization format. This makes
@@ -655,7 +657,7 @@ nsComponentManagerImpl::PlatformUnregister(const char *cidString,
     rv = mRegistry->AddSubtreeRaw(mCLSIDKey, cidString, &cidKey);
 
     char *progID = NULL;
-    rv = mRegistry->GetString(cidKey, progIDValueName, &progID);
+    rv = mRegistry->GetStringUTF8(cidKey, progIDValueName, &progID);
     if(NS_SUCCEEDED(rv))
     {
         mRegistry->RemoveSubtreeRaw(mClassesKey, progID);
@@ -703,7 +705,7 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
     if (NS_FAILED(rv)) return rv;
 
     nsXPIDLCString library;
-    rv = mRegistry->GetString(cidKey, inprocServerValueName,
+    rv = mRegistry->GetStringUTF8(cidKey, inprocServerValueName,
                               getter_Copies(library));
     if (NS_FAILED(rv))
     {
@@ -712,7 +714,7 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
     }
 
     nsXPIDLCString componentType;
-    rv = mRegistry->GetString(cidKey, componentTypeValueName, 
+    rv = mRegistry->GetStringUTF8(cidKey, componentTypeValueName, 
                               getter_Copies(componentType));
 
     if (NS_FAILED(rv))
@@ -750,7 +752,7 @@ nsComponentManagerImpl::PlatformProgIDToCLSID(const char *aProgID, nsCID *aClass
     if (NS_FAILED(rv)) return NS_ERROR_FACTORY_NOT_REGISTERED;
 
     char *cidString;
-    rv = mRegistry->GetString(progIDKey, classIDValueName, &cidString);
+    rv = mRegistry->GetStringUTF8(progIDKey, classIDValueName, &cidString);
     if(NS_FAILED(rv)) return rv;
     if (!(aClass->Parse(cidString)))
     {
@@ -778,12 +780,12 @@ nsComponentManagerImpl::PlatformCLSIDToProgID(const nsCID *aClass,
     PR_FREEIF(cidStr);
 
     char* classnameString;
-    rv = mRegistry->GetString(cidKey, classNameValueName, &classnameString);
+    rv = mRegistry->GetStringUTF8(cidKey, classNameValueName, &classnameString);
     if(NS_FAILED(rv)) return rv;
     *aClassName = classnameString;
 
     char* progidString;
-    rv = mRegistry->GetString(cidKey,progIDValueName,&progidString);
+    rv = mRegistry->GetStringUTF8(cidKey,progIDValueName,&progidString);
     if (NS_FAILED(rv)) return rv;
     *aProgID = progidString;
 
@@ -826,7 +828,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
 
         // Create the CID entry
         nsXPIDLCString library;
-        rv = mRegistry->GetString(cidKey, inprocServerValueName,
+        rv = mRegistry->GetStringUTF8(cidKey, inprocServerValueName,
                                   getter_Copies(library));
         if (NS_FAILED(rv)) continue;
         nsCID aClass;
@@ -834,7 +836,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         if (!(aClass.Parse(cidString))) continue;
 
         nsXPIDLCString componentType;
-        if (NS_FAILED(mRegistry->GetString(cidKey, componentTypeValueName,
+        if (NS_FAILED(mRegistry->GetStringUTF8(cidKey, componentTypeValueName,
                                            getter_Copies(componentType))))
             continue;
 
@@ -879,7 +881,7 @@ nsresult nsComponentManagerImpl::PlatformPrePopulateRegistry()
         if (NS_FAILED(rv)) continue;
 
         nsXPIDLCString cidString;
-        rv = mRegistry->GetString(progidKey, classIDValueName,
+        rv = mRegistry->GetStringUTF8(progidKey, classIDValueName,
                                   getter_Copies(cidString));
         if (NS_FAILED(rv)) continue;
 
@@ -1700,7 +1702,7 @@ nsComponentManagerImpl::GetLoaderForType(const char *aType,
         return rv;
     
     char *progID;
-    rv = mRegistry->GetString(loaderKey, progIDValueName, &progID);
+    rv = mRegistry->GetStringUTF8(loaderKey, progIDValueName, &progID);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1733,7 +1735,7 @@ nsComponentManagerImpl::RegisterComponentLoader(const char *aType, const char *a
 
     /* XXX honour aReplace */
     
-    rv = mRegistry->SetString(loaderKey, progIDValueName, aProgID);
+    rv = mRegistry->SetStringUTF8(loaderKey, progIDValueName, aProgID);
 
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "nNCI: registered %s as component loader for %s\n",
@@ -1762,21 +1764,21 @@ nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
         goto out;
     
     if (aClassName) {
-        rv = mRegistry->SetString(IDKey, classNameValueName, aClassName);
+        rv = mRegistry->SetStringUTF8(IDKey, classNameValueName, aClassName);
         if (NS_FAILED(rv))
             goto out;
     }
 
-    rv = mRegistry->SetString(IDKey, inprocServerValueName, aRegistryName);
+    rv = mRegistry->SetStringUTF8(IDKey, inprocServerValueName, aRegistryName);
     if (NS_FAILED(rv))
         goto out;
 
-    rv = mRegistry->SetString(IDKey, componentTypeValueName, aType);
+    rv = mRegistry->SetStringUTF8(IDKey, componentTypeValueName, aType);
     if (NS_FAILED(rv))
         goto out;
 
     if (aProgID) {
-        rv = mRegistry->SetString(IDKey, progIDValueName, aProgID);
+        rv = mRegistry->SetStringUTF8(IDKey, progIDValueName, aProgID);
         if (NS_FAILED(rv))
             goto out;
 
@@ -1784,7 +1786,7 @@ nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
         rv = mRegistry->AddSubtreeRaw(mClassesKey, aProgID, &progIDKey);
         if (NS_FAILED(rv))
             goto out;
-        rv = mRegistry->SetString(progIDKey, classIDValueName, cidString);
+        rv = mRegistry->SetStringUTF8(progIDKey, classIDValueName, cidString);
         if (NS_FAILED(rv))
             goto out;
     }

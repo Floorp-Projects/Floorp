@@ -78,10 +78,10 @@ nsUConverterRegSelf( const char* aFromCharset,                          \
   res = registry -> AddSubtree(nsIRegistry::Common, buff, &key);        \
   if (NS_FAILED(res))                                                   \
     goto done;                                                          \
-  res = registry -> SetString(key, "source", aFromCharset);             \
+  res = registry -> SetStringUTF8(key, "source", aFromCharset);             \
   if (NS_FAILED(res))                                                   \
     goto done;                                                          \
-  res = registry -> SetString(key, "destination", aToCharset);          \
+  res = registry -> SetStringUTF8(key, "destination", aToCharset);          \
   if (NS_FAILED(res))                                                   \
     goto done;                                                          \
   printf("RegSelf %s to %s converter complete\n",                       \

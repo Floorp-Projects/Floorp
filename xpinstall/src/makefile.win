@@ -42,7 +42,6 @@ LCFLAGS =          \
 
 
 LLIBS =                                \
-        $(DIST)\lib\mozreg.lib       \
         $(DIST)\lib\xpcom.lib          \
         $(DIST)\lib\js3250.lib         \
         $(DIST)\lib\jsdombase_s.lib    \
@@ -50,6 +49,7 @@ LLIBS =                                \
 		$(DIST)\lib\zlib.lib           \
         $(DIST)\lib\strres.lib         \
         $(LIBNSPR)                     \
+        $(DIST)\lib\mozreg.lib         \
         $(NULL)
 
 

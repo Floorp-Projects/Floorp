@@ -80,4 +80,4 @@ install:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+        $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib

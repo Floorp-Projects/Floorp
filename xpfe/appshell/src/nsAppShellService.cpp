@@ -320,9 +320,6 @@ nsAppShellService::EnumerateComponents( EnumeratorMemberFunction function ) {
 
     // Clean up.
     if ( registry ) {
-        // Registry was accessed, close it.
-        registry->Close();
-
         // Release enumerator (if necessary).
         NS_IF_RELEASE( components );
 

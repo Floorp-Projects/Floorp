@@ -45,7 +45,7 @@ public:
                    nsString val,
                    PRInt32 *aReturn);
 
-  ~nsWinProfileItem();
+  virtual ~nsWinProfileItem();
 
   /**
    * Completes the install:

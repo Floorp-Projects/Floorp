@@ -59,7 +59,7 @@ NS_IMETHODIMP
 nsLoggingProgressNotifier::BeforeJavascriptEvaluation(const PRUnichar *URL)
 {
     nsSpecialSystemDirectory logFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    logFile += "Install.log";
+    logFile += "install.log";
 
     mLogStream = new nsOutputFileStream(logFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, 0744 );
     if (!mLogStream) 

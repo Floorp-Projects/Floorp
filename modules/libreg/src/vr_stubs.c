@@ -56,10 +56,10 @@
 #define MAC_REG "\pMozilla Registry"
 #define BEOS_REG "/mozilla/registry"
 
-#define DEF_VERREG "/.netscape/registry"
-#define WIN_VERREG "\\nsreg.dat"
-#define MAC_VERREG "\pNetscape Registry"
-#define BEOS_VERREG "/mozilla/registry"
+#define DEF_VERREG "/.mozilla/mozver.dat"
+#define WIN_VERREG "\\mozver.dat"
+#define MAC_VERREG "\pMozilla Versions"
+#define BEOS_VERREG "/mozilla/mozver.dat"
 
 
 /* ------------------------------------------------------------------

@@ -443,12 +443,6 @@ extern "C" void RunInstallOnThread(void *data)
 
     if (scriptBuffer) delete [] scriptBuffer;
 
-    if ( !url.Equals("file:/",PR_FALSE,6) )
-    {
-        // delete the jarfile only if we've downloaded it
-        jarpath.Delete(PR_FALSE);
-    }
-
     softwareUpdate->SetActiveNotifier(0);
     softwareUpdate->InstallJarCallBack();
 }

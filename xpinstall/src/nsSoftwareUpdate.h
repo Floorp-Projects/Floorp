@@ -11,6 +11,8 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "prlock.h"
+//#include "mozreg.h"
+#include "NSReg.h"
 
 class nsInstallInfo;
 
@@ -50,14 +52,14 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         NS_IMETHOD InstallJarCallBack();
         NS_IMETHOD GetMasterNotifier(nsIXPINotifier **notifier);
         NS_IMETHOD SetActiveNotifier(nsIXPINotifier *notifier);
-        NS_IMETHOD StartupTasks();
+        NS_IMETHOD StartupTasks( PRBool* outAutoreg );
 
-        /** SetProgramDirectory() is private for the Install Wizard.
+        /** StubInitialize() is private for the Install Wizard.
          *  The mStubLockout property makes sure this is only called
          *  once, and is also set by the AppShellComponent initialize
          *  so it can't be called during a normal Mozilla run
          */
-        NS_IMETHOD SetProgramDirectory(nsIFileSpec *dir);
+        NS_IMETHOD StubInitialize(nsIFileSpec *dir);
 
         nsSoftwareUpdate();
         virtual ~nsSoftwareUpdate();
@@ -75,6 +77,8 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         PRBool            mStubLockout;
         nsVoidArray       mJarInstallQueue;
         nsTopProgressNotifier   mMasterNotifier;
+
+        HREG              mReg;
 };
 
 

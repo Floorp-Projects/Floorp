@@ -45,11 +45,11 @@ PDBFILE=regExport
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(PROGRAMS)
+install:: $(OBJDIR) $(PROGRAMS)
 	-for %p in ($(PROGRAMS)) do $(MAKE_INSTALL) %p $(DIST)\bin
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 
-$(PROG1): $(OBJDIR) regExport.cpp
+#$(PROG1): $(OBJDIR) regExport.cpp
 

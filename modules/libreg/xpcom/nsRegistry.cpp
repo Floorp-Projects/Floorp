@@ -33,6 +33,8 @@
 #include "nsCOMPtr.h"
 #include "nsILocalFile.h"
 #include "nsIServiceManager.h"
+#include "nsTextFormatter.h"
+
 /* extra locking for the paranoid */
 /* #define EXTRA_THREADSAFE */
 #ifndef EXTRA_THREADSAFE
@@ -73,6 +75,8 @@ protected:
 #endif
     char *mCurRegFile;	// these are to prevent open from opening the registry again
     nsWellKnownRegistry mCurRegID;
+
+    NS_IMETHOD Close();
 }; // nsRegistry
 
 
@@ -482,6 +486,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
     return regerr2nsresult( err );
 }
 
+#if 0
 /*-------------------------- nsRegistry::OpenDefault ---------------------------
 | Open the "default" registry; in the case of this libreg-based implementation |
 | that is done by passing a null file name pointer to NR_RegOpen.              |
@@ -489,6 +494,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
 NS_IMETHODIMP nsRegistry::OpenDefault() {
     return OpenWellKnownRegistry(nsIRegistry::ApplicationRegistry);
 }
+#endif
 
 /*----------------------------- nsRegistry::Close ------------------------------
 | Tests the mReg handle and if non-null, closes the registry via NR_RegClose.  |
@@ -530,11 +536,122 @@ NS_IMETHODIMP nsRegistry::IsOpen( PRBool *result ) {
 }
 
 
+/*--------------------------- nsRegistry::AddKey -------------------------------
+| Add a key into the registry or find an existing one.  This is generally used |
+| instead of GetKey unless it's an error for the key not to exist already      i
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::AddKey( nsRegistryKey baseKey, const PRUnichar *keyname, nsRegistryKey *_retval)
+{
+    if ( !keyname ) 
+        return NS_ERROR_NULL_POINTER;
+
+    nsString name( nsSubsumeStr( NS_CONST_CAST(PRUnichar*,keyname), PR_FALSE ) );
+    char* utf8name = name.ToNewUTF8String();
+    if ( !utf8name )
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = AddSubtree( baseKey, utf8name, _retval );
+
+    Recycle( utf8name );
+    return rv;
+}
+
+/*--------------------------- nsRegistry::GetKey -------------------------------
+| returns the nsRegistryKey associated with a given node in the registry       |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::GetKey(nsRegistryKey baseKey, const PRUnichar *keyname, nsRegistryKey *_retval)
+{
+    if ( !keyname || !_retval ) 
+        return NS_ERROR_NULL_POINTER;
+
+    nsString name( nsSubsumeStr( NS_CONST_CAST(PRUnichar*,keyname), PR_FALSE ) );
+    char* utf8name = name.ToNewUTF8String();
+    if ( !utf8name )
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = GetSubtree( baseKey, utf8name, _retval );
+
+    Recycle( utf8name );
+    return rv;
+}
+
+/*--------------------------- nsRegistry::RemoveKey ----------------------------
+| Delete a key from the registry                                               |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::RemoveKey(nsRegistryKey baseKey, const PRUnichar *keyname)
+{
+    if ( !keyname ) 
+        return NS_ERROR_NULL_POINTER;
+
+    nsString name( nsSubsumeStr( NS_CONST_CAST(PRUnichar*,keyname), PR_FALSE ) );
+    char* utf8name = name.ToNewUTF8String();
+    if ( !utf8name )
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv = RemoveSubtree( baseKey, utf8name );
+
+    Recycle( utf8name );
+    return rv;
+}
+
+NS_IMETHODIMP nsRegistry::GetString(nsRegistryKey baseKey, const PRUnichar *valname, PRUnichar **_retval)
+{
+    nsresult rv = NS_OK;
+
+    // Make sure caller gave us place for result.
+    if ( !valname || !_retval )
+        return NS_ERROR_NULL_POINTER;
+
+    // initialize the return value
+    *_retval = nsnull;
+    char *tmpstr = nsnull;
+
+    nsString name( nsSubsumeStr( NS_CONST_CAST(PRUnichar*,valname), PR_FALSE ) );
+    char* utf8name = name.ToNewUTF8String();
+    if ( !utf8name )
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = GetStringUTF8( baseKey, utf8name, &tmpstr );
+    if (NS_SUCCEEDED(rv))
+    {
+        *_retval = nsTextFormatter::smprintf( L"%s", tmpstr );
+        nsCRT::free(tmpstr);
+        if ( *_retval == nsnull )
+            rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    Recycle( utf8name );
+    return rv;
+}
+
+NS_IMETHODIMP nsRegistry::SetString(nsRegistryKey baseKey, const PRUnichar *valname, const PRUnichar *value)
+{
+    if ( !valname || ! value )
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv = NS_OK;
+
+    nsString name( nsSubsumeStr( NS_CONST_CAST(PRUnichar*,valname), PR_FALSE ) );
+    nsString val( nsSubsumeStr( NS_CONST_CAST(PRUnichar*,value), PR_FALSE ) );
+    char* utf8name = name.ToNewUTF8String();
+    char* utf8val  = val.ToNewUTF8String();
+
+    if ( utf8name && utf8val )
+        rv = SetStringUTF8( baseKey, utf8name, utf8val );
+    else
+        rv = NS_ERROR_OUT_OF_MEMORY;
+
+    if ( utf8name ) Recycle(utf8name);
+    if ( utf8val ) Recycle(utf8val);
+
+    return rv;
+}
+
 /*--------------------------- nsRegistry::GetString ----------------------------
 | First, look for the entry using GetValueInfo.  If found, and it's a string,  |
 | allocate space for it and fetch the value.                                   |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::GetString( nsRegistryKey baseKey, const char *path, char **result ) {
+NS_IMETHODIMP nsRegistry::GetStringUTF8( nsRegistryKey baseKey, const char *path, char **result ) {
     nsresult rv = NS_OK;
     REGERR   err = REGERR_OK;
 
@@ -601,7 +718,7 @@ NS_IMETHODIMP nsRegistry::GetString( nsRegistryKey baseKey, const char *path, ch
 /*--------------------------- nsRegistry::SetString ----------------------------
 | Simply sets the registry contents using NR_RegSetEntryString.                |
 ------------------------------------------------------------------------------*/
-NS_IMETHODIMP nsRegistry::SetString( nsRegistryKey baseKey, const char *path, const char *value ) {
+NS_IMETHODIMP nsRegistry::SetStringUTF8( nsRegistryKey baseKey, const char *path, const char *value ) {
     REGERR err = REGERR_OK;
     // Set the contents.
     PR_Lock(mregLock);

@@ -24,7 +24,6 @@
  */
 
 #include "nscore.h"
-#include "NSReg.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsInstall.h" // for error codes
@@ -347,16 +346,10 @@ PRInt32 ReplaceFileNowOrSchedule(nsFileSpec& replacementFile, nsFileSpec& doomed
 void DeleteScheduledFiles(HREG);
 void ReplaceScheduledFiles(HREG);
 
-void PerformScheduledTasks(void *data)
+void PerformScheduledTasks(HREG reg)
 {
-    HREG   reg;
-
-    if ( REGERR_OK == NR_RegOpen("", &reg) )
-    {
-        DeleteScheduledFiles( reg );
-        ReplaceScheduledFiles( reg );
-        NR_RegClose(reg);
-    }
+    DeleteScheduledFiles( reg );
+    ReplaceScheduledFiles( reg );
 }
 
 
