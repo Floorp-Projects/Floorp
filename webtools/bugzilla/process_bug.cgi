@@ -1262,26 +1262,33 @@ foreach my $id (@idlist) {
         }
     }
 
+    #
+    # Start updating the relevant database entries
+    #
+
     SendSQL("select now()");
     $timestamp = FetchOneColumn();
 
-    delete $::FORM{'work_time'} unless UserInGroup(Param('timetrackinggroup'));
-
-    Bugzilla::Bug::ValidateTime($::FORM{'work_time'}, 'work_time');
-    if ($::FORM{'comment'} || $::FORM{'work_time'}) {
-        if ($::FORM{'work_time'} && 
-            (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/)) {
-            SendSQL("UNLOCK TABLES");
-            ThrowUserError('comment_required');
-        } else {
-            AppendComment($id, Bugzilla->user->login, $::FORM{'comment'},
-                          $::FORM{'commentprivacy'}, $timestamp, $::FORM{'work_time'});
-            if ($::FORM{'work_time'}) {
-                LogActivityEntry($id, "work_time", "", $::FORM{'work_time'},
-                                 $whoid, $timestamp);
+    my $work_time;
+    if (UserInGroup(Param('timetrackinggroup'))) {
+        $work_time = $::FORM{'work_time'};
+        if ($work_time) {
+            if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
+                ThrowUserError('comment_required', undef, "abort");
             }
-            $bug_changed = 1;
+            Bugzilla::Bug::ValidateTime($work_time, 'work_time');
+            # AppendComment (called below) can in theory raise an error,
+            # but because we've already validated work_time here it's
+            # safe to log the entry before adding the comment.
+            LogActivityEntry($id, "work_time", "", $::FORM{'work_time'},
+                             $whoid, $timestamp);
         }
+    }
+
+    if ($::FORM{'comment'} || $work_time) {
+        AppendComment($id, Bugzilla->user->login, $::FORM{'comment'},
+                      $::FORM{'commentprivacy'}, $timestamp, $work_time);
+        $bug_changed = 1;
     }
 
     if (@::legal_keywords) {
