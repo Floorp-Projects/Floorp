@@ -144,10 +144,6 @@ static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
   NODE_SCRIPTABLE_FLAGS |                                                     \
   nsIXPCScriptable::WANT_POSTCREATE
 
-#define DOCUMENT_SCRIPTABLE_FLAGS                                             \
-  NODE_SCRIPTABLE_FLAGS |                                                     \
-  nsIXPCScriptable::WANT_GETPROPERTY
-
 #define ARRAY_SCRIPTABLE_FLAGS                                                \
   DOM_DEFAULT_SCRIPTABLE_FLAGS |                                              \
   nsIXPCScriptable::WANT_GETPROPERTY
@@ -194,7 +190,7 @@ struct nsDOMClassInfoData
 // 1. Class name as it should appear in JavaScript, this name is also
 //    used to find the id of the class in nsDOMClassInfo
 //    (i.e. e<classname>_id)
-// 2. Scriptable helper constructor function
+// 2. Scriptable helper class
 // 3. nsIClassInfo/nsIXPCScriptable flags (i.e. for GetScriptableFlags)
 
 nsDOMClassInfoData sClassInfoData[] = {
@@ -227,7 +223,7 @@ nsDOMClassInfoData sClassInfoData[] = {
 
   // Core classes
   NS_DEFINE_CLASSINFO_DATA(Document, nsDocumentSH,
-                           DOCUMENT_SCRIPTABLE_FLAGS)
+                           NODE_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DocumentType, nsNodeSH,
                            NODE_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(DOMImplementation, nsDOMGenericSH,
@@ -271,7 +267,8 @@ nsDOMClassInfoData sClassInfoData[] = {
 
   // Misc HTML classes
   NS_DEFINE_CLASSINFO_DATA(HTMLDocument, nsHTMLDocumentSH,
-                           DOCUMENT_SCRIPTABLE_FLAGS)
+                           NODE_SCRIPTABLE_FLAGS |
+                           nsIXPCScriptable::WANT_GETPROPERTY)
   NS_DEFINE_CLASSINFO_DATA(HTMLCollection, nsHTMLCollectionSH,
                            ARRAY_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(HTMLOptionCollection,
@@ -431,7 +428,7 @@ nsDOMClassInfoData sClassInfoData[] = {
 
   // XUL classes
   NS_DEFINE_CLASSINFO_DATA(XULDocument, nsDocumentSH,
-                           DOCUMENT_SCRIPTABLE_FLAGS)
+                           NODE_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XULElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XULTreeElement, nsElementSH,
@@ -1273,31 +1270,10 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                                                ::JS_GetStringChars(val)),
                            ::JS_GetStringLength(val));
 
-      return location->SetHref(href);
-    }
+      rv = location->SetHref(href);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    if (str == sTop_id          ||
-        str == sScrollbars_id   ||
-        str == sContent_id      ||
-        str == sSidebar_id      ||
-        str == sPrompter_id     ||
-        str == sMenubar_id      ||
-        str == sToolbar_id      ||
-        str == sLocationbar_id  ||
-        str == sPersonalbar_id  ||
-        str == sStatusbar_id    ||
-        str == sDirectories_id  ||
-        str == sControllers_id  ||
-        str == sLength_id) {
-      // A "replaceable" property is being set, define the property on
-      // obj.
-
-      *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                       ::JS_GetStringLength(str),
-                                       *vp, nsnull, nsnull,
-                                       JSPROP_ENUMERATE);
-
-      return *_retval ? NS_OK : NS_ERROR_FAILURE;
+      return WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp);
     }
   }
 
@@ -1647,28 +1623,54 @@ nsWindowSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
       return NS_OK;
     }
 
-    if (str == sLocation_id) {
-      nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(native));
-      NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
+    if (flags & JSRESOLVE_ASSIGNING) {
+      if (str == sLocation_id) {
+        nsCOMPtr<nsIDOMWindowInternal> window(do_QueryInterface(native));
+        NS_ENSURE_TRUE(window, NS_ERROR_UNEXPECTED);
 
-      nsCOMPtr<nsIDOMLocation> location;
-      rv = window->GetLocation(getter_AddRefs(location));
-      NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<nsIDOMLocation> location;
+        rv = window->GetLocation(getter_AddRefs(location));
+        NS_ENSURE_SUCCESS(rv, rv);
 
-      jsval v;
+        jsval v;
 
-      rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), &v);
-      NS_ENSURE_SUCCESS(rv, rv);
+        rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), &v);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-      if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                 ::JS_GetStringLength(str), v, nsnull,
-                                 nsnull, 0)) {
-        return NS_ERROR_FAILURE;
+        if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                   ::JS_GetStringLength(str), v, nsnull,
+                                   nsnull, 0)) {
+          return NS_ERROR_FAILURE;
+        }
+
+        *objp = obj;
+
+        return NS_OK;
       }
 
-      *objp = obj;
+      if (str == sTop_id          ||
+          str == sScrollbars_id   ||
+          str == sContent_id      ||
+          str == sSidebar_id      ||
+          str == sPrompter_id     ||
+          str == sMenubar_id      ||
+          str == sToolbar_id      ||
+          str == sLocationbar_id  ||
+          str == sPersonalbar_id  ||
+          str == sStatusbar_id    ||
+          str == sDirectories_id  ||
+          str == sControllers_id  ||
+          str == sLength_id) {
+        // A "replaceable" property is being set, define the property on
+        // obj with the value undefined.
 
-      return NS_OK;
+        *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                         ::JS_GetStringLength(str),
+                                         JSVAL_VOID, nsnull, nsnull,
+                                         JSPROP_ENUMERATE);
+
+        return *_retval ? NS_OK : NS_ERROR_FAILURE;
+      }
     }
 
     return nsEventRecieverSH::NewResolve(wrapper, cx, obj, id, flags, objp,
@@ -2123,11 +2125,11 @@ nsNamedArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
     nsCOMPtr<nsISupports> item;
 
-    JSString *jsstr = JSVAL_TO_STRING(id);
+    JSString *str = JSVAL_TO_STRING(id);
 
     nsLiteralString name(NS_REINTERPRET_CAST(const PRUnichar *,
-                                             ::JS_GetStringChars(jsstr)),
-                         ::JS_GetStringLength(jsstr));
+                                             ::JS_GetStringChars(str)),
+                         ::JS_GetStringLength(str));
 
     nsresult rv = GetNamedItem(native, name, getter_AddRefs(item));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2233,14 +2235,33 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, PRUint32 flags,
                          JSObject **objp, PRBool *_retval)
 {
-  if (JSVAL_IS_STRING(id)) {
+  if (flags & JSRESOLVE_ASSIGNING && JSVAL_IS_STRING(id)) {
     JSString *str = JSVAL_TO_STRING(id);
 
     if (str == sLocation_id) {
-      *_retval = ::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
-                                       ::JS_GetStringLength(str),
-                                       JSVAL_VOID, nsnull, nsnull, 
-                                       JSPROP_ENUMERATE);
+      nsCOMPtr<nsISupports> native;
+      wrapper->GetNative(getter_AddRefs(native));
+      NS_ENSURE_TRUE(native, NS_ERROR_UNEXPECTED);
+
+      nsCOMPtr<nsIDOMNSDocument> doc(do_QueryInterface(native));
+      NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+
+      nsCOMPtr<nsIDOMLocation> location;
+
+      nsresult rv = doc->GetLocation(getter_AddRefs(location));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      jsval v;
+
+      rv = WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), &v);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!::JS_DefineUCProperty(cx, obj, ::JS_GetStringChars(str),
+                                 ::JS_GetStringLength(str), v, nsnull,
+                                 nsnull, 0)) {
+        return NS_ERROR_FAILURE;
+      }
+
       *objp = obj;
 
       return NS_OK;
@@ -2250,71 +2271,39 @@ nsDocumentSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   return nsNodeSH::NewResolve(wrapper, cx, obj, id, flags, objp, _retval);
 }
 
-NS_IMETHODIMP
-nsDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
-{
-  if (JSVAL_IS_STRING(id)) {
-    JSString *jsstr = JSVAL_TO_STRING(id);
-
-    if (jsstr == sLocation_id) {
-      nsCOMPtr<nsISupports> native;
-
-      wrapper->GetNative(getter_AddRefs(native));
-      NS_ABORT_IF_FALSE(native, "No native!");
-
-      nsCOMPtr<nsIDOMNSDocument> doc(do_QueryInterface(native));
-      NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
-
-      nsCOMPtr<nsIDOMLocation> l;
-
-      doc->GetLocation(getter_AddRefs(l));
-
-      return WrapNative(cx, ::JS_GetGlobalObject(cx), l,
-                        NS_GET_IID(nsIDOMLocation), vp);
-    }
-  }
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsDocumentSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                           JSObject *obj, jsval id, jsval *vp, PRBool *_retval)
 {
   if (JSVAL_IS_STRING(id)) {
-    JSString *jsstr = JSVAL_TO_STRING(id);
+    JSString *str = JSVAL_TO_STRING(id);
 
-    if (jsstr == sLocation_id) {
+    if (str == sLocation_id) {
       nsCOMPtr<nsISupports> native;
-
       wrapper->GetNative(getter_AddRefs(native));
-      NS_ABORT_IF_FALSE(native, "No native!");
+      NS_ENSURE_TRUE(native, NS_ERROR_UNEXPECTED);
 
-      nsCOMPtr<nsIDocument> doc(do_QueryInterface(native));
+      nsCOMPtr<nsIDOMNSDocument> doc(do_QueryInterface(native));
       NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-      nsCOMPtr<nsIScriptGlobalObject> sgo;
+      nsCOMPtr<nsIDOMLocation> location;
 
-      doc->GetScriptGlobalObject(getter_AddRefs(sgo));
+      nsresult rv = doc->GetLocation(getter_AddRefs(location));
+      NS_ENSURE_SUCCESS(rv, rv);
 
-      nsCOMPtr<nsIDOMWindowInternal> win(do_QueryInterface(sgo));
+      if (location) {
+        JSString *val = ::JS_ValueToString(cx, *vp);
+        NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
 
-      if (win) {
-        nsCOMPtr<nsIDOMLocation> location;
+        nsLiteralString href(NS_REINTERPRET_CAST(const PRUnichar *,
+                                                 ::JS_GetStringChars(val)),
+                             ::JS_GetStringLength(val));
 
-        win->GetLocation(getter_AddRefs(location));
+        nsresult rv = location->SetHref(href);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-        if (location) {
-          JSString *val = ::JS_ValueToString(cx, *vp);
-          NS_ENSURE_TRUE(val, NS_ERROR_UNEXPECTED);
-
-          nsLiteralString href(NS_REINTERPRET_CAST(const PRUnichar *,
-                                                   ::JS_GetStringChars(val)),
-                               ::JS_GetStringLength(val));
-
-          location->SetHref(href);
-        }
+        return WrapNative(cx, obj, location, NS_GET_IID(nsIDOMLocation), vp);
       }
     }
   }
@@ -2339,11 +2328,11 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     nsCOMPtr<nsIHTMLDocument> doc(do_QueryInterface(native));
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
-    JSString *jsstr = JSVAL_TO_STRING(id);
+    JSString *str = JSVAL_TO_STRING(id);
 
     nsLiteralString name(NS_REINTERPRET_CAST(const PRUnichar *,
-                                             ::JS_GetStringChars(jsstr)),
-                         ::JS_GetStringLength(jsstr));
+                                             ::JS_GetStringChars(str)),
+                         ::JS_GetStringLength(str));
 
     nsCOMPtr<nsISupports> result;
 
@@ -2355,7 +2344,7 @@ nsHTMLDocumentSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     }
   }
 
-  return nsDocumentSH::GetProperty(wrapper, cx, obj, id, vp, _retval);
+  return NS_OK;
 }
 
 
@@ -2374,11 +2363,11 @@ nsHTMLFormElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
   nsCOMPtr<nsIForm> form(do_QueryInterface(native));
 
   if (JSVAL_IS_STRING(id)) {
-    JSString *jsstr = JSVAL_TO_STRING(id);
+    JSString *str = JSVAL_TO_STRING(id);
 
     nsLiteralString name(NS_REINTERPRET_CAST(const PRUnichar *,
-                                             ::JS_GetStringChars(jsstr)),
-                         ::JS_GetStringLength(jsstr));
+                                             ::JS_GetStringChars(str)),
+                         ::JS_GetStringLength(str));
 
     nsCOMPtr<nsISupports> result;
 
