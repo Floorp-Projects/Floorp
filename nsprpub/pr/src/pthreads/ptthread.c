@@ -314,10 +314,7 @@ static PRThread* _PR_CreateThread(
         	scope = PR_GLOBAL_THREAD;
 			
         if (PR_GLOBAL_BOUND_THREAD == scope) {
-			/*
-			 * should a Posix feature test be used here?
-			 */
-#ifdef PTHREAD_SCOPE_SYSTEM
+#if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
     		rv = pthread_attr_setscope(&tattr, PTHREAD_SCOPE_SYSTEM);
 			if (rv) {
 				/*
