@@ -36,14 +36,23 @@
 #include "nsIPresShell.h"
 #include "nsINameSpaceManager.h"
 #include "nsIFrame.h"
+#include "nsIDOMElement.h"
+#include "nsIComponentManager.h"
 #include "nsITreeFrame.h"
+#include "nsIDOMRange.h"
+#include "nsIContentIterator.h"
+#include "nsLayoutCID.h"
 #include "nsString.h"
+
+static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
+static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 
 nsIAtom*             nsXULTreeElement::kSelectedAtom;
 nsIAtom*             nsXULTreeElement::kOpenAtom;
 nsIAtom*             nsXULTreeElement::kTreeRowAtom;
 nsIAtom*             nsXULTreeElement::kTreeItemAtom;
 nsIAtom*             nsXULTreeElement::kTreeChildrenAtom;
+nsIAtom*             nsXULTreeElement::kCurrentAtom;
 int                  nsXULTreeElement::gRefCnt = 0;
 
 NS_IMPL_ADDREF_INHERITED(nsXULTreeElement, nsXULAggregateElement);
@@ -79,7 +88,8 @@ nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
     kOpenAtom        = NS_NewAtom("open");
     kTreeRowAtom     = NS_NewAtom("treerow");
     kTreeItemAtom    = NS_NewAtom("treeitem");
-    kTreeChildrenAtom= NS_NewAtom("treeitem");
+    kTreeChildrenAtom= NS_NewAtom("treechildren");
+    kCurrentAtom     = NS_NewAtom("current");
   }
 
   nsresult rv;
@@ -97,6 +107,9 @@ nsXULTreeElement::nsXULTreeElement(nsIDOMXULElement* aOuter)
   if (NS_FAILED(rv)) return;
 
   mSelectedCells = children;
+
+  mCurrentItem = nsnull;
+  mCurrentCell = nsnull;
 }
 
 nsXULTreeElement::~nsXULTreeElement()
@@ -111,6 +124,11 @@ nsXULTreeElement::~nsXULTreeElement()
 
   if (--gRefCnt == 0) {
     NS_IF_RELEASE(kSelectedAtom);
+    NS_IF_RELEASE(kTreeItemAtom);
+    NS_IF_RELEASE(kTreeRowAtom);
+    NS_IF_RELEASE(kTreeChildrenAtom);
+    NS_IF_RELEASE(kOpenAtom);
+    NS_IF_RELEASE(kCurrentAtom);
   }
 }
 
@@ -151,6 +169,8 @@ nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
   // Now add ourselves to the selection by setting our selected attribute.
   AddItemToSelectionInternal(aTreeItem);
 
+  SetCurrentItem(aTreeItem);
+
   FireOnSelectHandler();
 
   return NS_OK;
@@ -176,6 +196,8 @@ nsXULTreeElement::SelectCell(nsIDOMXULElement* aTreeCell)
 
   // Now add ourselves to the selection by setting our selected attribute.
   AddCellToSelectionInternal(aTreeCell);
+
+  SetCurrentCell(aTreeCell);
 
   FireOnSelectHandler();
 
@@ -299,6 +321,8 @@ nsXULTreeElement::ToggleItemSelection(nsIDOMXULElement* aTreeItem)
     RemoveItemFromSelectionInternal(aTreeItem);
   else AddItemToSelectionInternal(aTreeItem);
 
+  SetCurrentItem(aTreeItem);
+
   FireOnSelectHandler();
   return NS_OK;
 }
@@ -312,6 +336,8 @@ nsXULTreeElement::ToggleCellSelection(nsIDOMXULElement* aTreeCell)
     RemoveCellFromSelectionInternal(aTreeCell);
   else AddCellToSelectionInternal(aTreeCell);
 
+  SetCurrentCell(aTreeCell);
+
   FireOnSelectHandler();
 
   return NS_OK;
@@ -321,7 +347,93 @@ nsXULTreeElement::ToggleCellSelection(nsIDOMXULElement* aTreeCell)
 NS_IMETHODIMP
 nsXULTreeElement::SelectItemRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement* aEndItem)
 {
-  // XXX Fill in.
+  nsCOMPtr<nsIDOMXULElement> startItem;
+  if (aStartItem == nsnull) {
+    // Continue the ranged selection based off the current item.
+    startItem = mCurrentItem;
+  }
+  else startItem = aStartItem;
+
+  if (!startItem)
+    startItem = aEndItem;
+
+  // First clear our selection out completely.
+  ClearItemSelectionInternal();
+
+  // Get a range so we can create an iterator
+	nsCOMPtr<nsIDOMRange> range;
+	nsresult result;
+	result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
+						nsIDOMRange::GetIID(), getter_AddRefs(range));
+
+	PRInt32 startIndex = 0;
+	PRInt32 endIndex = 0;
+
+  nsCOMPtr<nsIDOMNode> startParentNode;
+  nsCOMPtr<nsIDOMNode> endParentNode;
+
+  startItem->GetParentNode(getter_AddRefs(startParentNode));
+  aEndItem->GetParentNode(getter_AddRefs(endParentNode));
+
+  nsCOMPtr<nsIContent> startParent = do_QueryInterface(startParentNode);
+  nsCOMPtr<nsIContent> endParent = do_QueryInterface(endParentNode);
+
+  nsCOMPtr<nsIContent> startItemContent = do_QueryInterface(startItem);
+  nsCOMPtr<nsIContent> endItemContent = do_QueryInterface(aEndItem);
+  startParent->IndexOf(startItemContent, startIndex);
+	endParent->IndexOf(endItemContent, endIndex);
+
+	result = range->SetStart(startParentNode, startIndex);
+	result = range->SetEnd(endParentNode, endIndex+1);
+	if (NS_FAILED(result) || 
+      ((startParentNode.get() == endParentNode.get()) && (startIndex == endIndex+1)))
+	{
+		// Ranges need to be increasing, try reversing directions
+		result = range->SetStart(endParentNode, endIndex);
+		result = range->SetEnd(startParentNode, startIndex+1);
+		if (NS_FAILED(result))
+			return NS_ERROR_FAILURE;
+	}
+
+	// Create the iterator
+	nsCOMPtr<nsIContentIterator> iter;
+	result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+																							nsIContentIterator::GetIID(), 
+																							getter_AddRefs(iter));
+	if (NS_FAILED(result))
+    return result;
+
+	// Iterate and select
+	nsAutoString trueString("true", 4);
+	nsCOMPtr<nsIContent> content;
+	nsCOMPtr<nsIAtom> tag;
+
+	iter->Init(range);
+	result = iter->First();
+	while (NS_SUCCEEDED(result) && NS_ENUMERATOR_FALSE == iter->IsDone())
+	{
+		result = iter->CurrentNode(getter_AddRefs(content));
+		if (NS_FAILED(result) || !content)
+			return result; // result;
+
+		// If tag==item, Do selection stuff
+    content->GetTag(*getter_AddRefs(tag));
+    if (tag && tag == kTreeItemAtom)
+    {
+      // Only select if we aren't already selected.
+			content->SetAttribute(kNameSpaceID_None, kSelectedAtom, 
+														trueString, /*aNotify*/ PR_TRUE);
+		}
+
+		result = iter->Next();
+		// XXX Deal with closed nodes here
+		// XXX Also had strangeness where parent of selected subrange was selected even 
+		// though it wasn't in the range.
+	}
+
+  SetCurrentItem(aEndItem);
+  FireOnSelectHandler();
+
   return NS_OK;
 }
 
@@ -335,8 +447,28 @@ nsXULTreeElement::SelectCellRange(nsIDOMXULElement* aStartItem, nsIDOMXULElement
 NS_IMETHODIMP
 nsXULTreeElement::SelectAll()
 {
-  // XXX Select anything that isn't selected.
-  // Write later.
+  nsIDOMXULElement* oldItem = mCurrentItem;
+
+  PRInt32 childCount;
+  nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
+  content->ChildCount(childCount);
+  if (childCount == 0)
+    return NS_OK;
+
+  nsCOMPtr<nsIContent> startContent;
+  content->ChildAt(0, *getter_AddRefs(startContent));
+  nsCOMPtr<nsIContent> endContent;
+  content->ChildAt(childCount-1, *getter_AddRefs(endContent));
+
+  nsCOMPtr<nsIDOMXULElement> startElement = do_QueryInterface(startContent);
+  nsCOMPtr<nsIDOMXULElement> endElement = do_QueryInterface(endContent);
+
+  // Select the whole range.
+  SelectItemRange(startElement, endElement);
+
+  // We shouldn't move the active item.
+  mCurrentItem = oldItem;
+
   return NS_OK;
 }
 
@@ -606,4 +738,37 @@ nsXULTreeElement::IndexOfContent(nsIContent* aRoot,
   // not found
   return NS_ERROR_FAILURE;
 }
+
+NS_IMETHODIMP
+nsXULTreeElement::GetCurrentItem(nsIDOMXULElement** aResult)
+{
+  *aResult = mCurrentItem;
+  NS_IF_ADDREF(mCurrentItem);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::GetCurrentCell(nsIDOMXULElement** aResult)
+{
+  *aResult = mCurrentCell;
+  NS_IF_ADDREF(mCurrentCell);
+  return NS_OK;
+}
+
+void
+nsXULTreeElement::SetCurrentItem(nsIDOMXULElement* aCurrentItem)
+{
+  mCurrentItem = aCurrentItem;
+  nsCOMPtr<nsIContent> current = do_QueryInterface(mCurrentItem);
+  current->SetAttribute(kNameSpaceID_None, kCurrentAtom, "true", PR_TRUE);
+}
+
+void
+nsXULTreeElement::SetCurrentCell(nsIDOMXULElement* aCurrentCell)
+{
+  mCurrentCell = aCurrentCell;
+  nsCOMPtr<nsIContent> current = do_QueryInterface(mCurrentCell);
+  current->SetAttribute(kNameSpaceID_None, kCurrentAtom, "true", PR_TRUE);
+}
+
 

@@ -440,7 +440,7 @@ XULCommandDispatcherGetControllerForCommand(JSContext *cx, JSObject *obj, uintN 
     }
 
     // n.b., this will release nativeRet
-    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, nsIController::GetIID(), cx, obj, rval);
+    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, NS_GET_IID(nsIController), cx, obj, rval);
   }
 
   return JS_TRUE;
@@ -486,7 +486,7 @@ XULCommandDispatcherGetControllers(JSContext *cx, JSObject *obj, uintN argc, jsv
     }
 
     // n.b., this will release nativeRet
-    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, nsIControllers::GetIID(), cx, obj, rval);
+    nsJSUtils::nsConvertXPCObjectToJSVal(nativeRet, NS_GET_IID(nsIControllers), cx, obj, rval);
   }
 
   return JS_TRUE;

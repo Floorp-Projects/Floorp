@@ -161,9 +161,6 @@ protected:
   void OpenMenuInternal(PRBool aActivateFlag);
   void GetMenuChildrenElement(nsIContent** aResult);
 
-  // Called to split the accesskey attribute up based on the specified string.
-  void SplitOnShortcut(nsString& aBeforeString, nsString& aAccessString, nsString& aAfterString);
-
   // Examines the key node and builds the accelerator.
   void BuildAcceleratorText(nsString& aAccelString);
 
@@ -186,7 +183,6 @@ protected:
   nsFrameList mPopupFrames;
   PRPackedBool mIsMenu; // Whether or not we can even have children or not.
   PRPackedBool mMenuOpen;
-  PRPackedBool mHasAnonymousContent;  // Do we have anonymous content frames?
   PRPackedBool mChecked;              // if so, are we checked?
   nsMenuType mType;
 

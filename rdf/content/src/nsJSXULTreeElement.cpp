@@ -51,7 +51,9 @@ static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 //
 enum XULTreeElement_slots {
   XULTREEELEMENT_SELECTEDITEMS = -1,
-  XULTREEELEMENT_SELECTEDCELLS = -2
+  XULTREEELEMENT_SELECTEDCELLS = -2,
+  XULTREEELEMENT_CURRENTITEM = -3,
+  XULTREEELEMENT_CURRENTCELL = -4
 };
 
 /***********************************************************************/
@@ -105,6 +107,44 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNodeList* prop;
         nsresult result = NS_OK;
         result = a->GetSelectedCells(&prop);
+        if (NS_SUCCEEDED(result)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+        break;
+      }
+      case XULTREEELEMENT_CURRENTITEM:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULTREEELEMENT_CURRENTITEM, PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsIDOMXULElement* prop;
+        nsresult result = NS_OK;
+        result = a->GetCurrentItem(&prop);
+        if (NS_SUCCEEDED(result)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+        break;
+      }
+      case XULTREEELEMENT_CURRENTCELL:
+      {
+        PRBool ok = PR_FALSE;
+        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULTREEELEMENT_CURRENTCELL, PR_FALSE, &ok);
+        if (!ok) {
+          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        }
+        nsIDOMXULElement* prop;
+        nsresult result = NS_OK;
+        result = a->GetCurrentCell(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -1080,6 +1120,8 @@ static JSPropertySpec XULTreeElementProperties[] =
 {
   {"selectedItems",    XULTREEELEMENT_SELECTEDITEMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"selectedCells",    XULTREEELEMENT_SELECTEDCELLS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"currentItem",    XULTREEELEMENT_CURRENTITEM,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"currentCell",    XULTREEELEMENT_CURRENTCELL,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

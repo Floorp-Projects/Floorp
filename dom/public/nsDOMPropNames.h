@@ -886,10 +886,12 @@
     "xuldocument.tooltipnode", \
     "xuleditorelement.editorshell", \
     "xulelement.addbroadcastlistener", \
+    "xulelement.blur", \
     "xulelement.classname", \
     "xulelement.controllers", \
     "xulelement.database", \
     "xulelement.docommand", \
+    "xulelement.focus", \
     "xulelement.getelementsbyattribute", \
     "xulelement.id", \
     "xulelement.removebroadcastlistener", \
@@ -907,6 +909,8 @@
     "xultreeelement.selectcellrange", \
     "xultreeelement.selectedcells", \
     "xultreeelement.selecteditems", \
+    "xultreeelement.currentitem", \
+    "xultreeelement.currentcell", \
     "xultreeelement.selectitem", \
     "xultreeelement.selectitemrange", \
     "xultreeelement.togglecellselection", \

@@ -44,6 +44,10 @@ public:
 
   NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells)=0;
 
+  NS_IMETHOD    GetCurrentItem(nsIDOMXULElement** aCurrentItem)=0;
+
+  NS_IMETHOD    GetCurrentCell(nsIDOMXULElement** aCurrentCell)=0;
+
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem)=0;
 
   NS_IMETHOD    SelectCell(nsIDOMXULElement* aTreeCell)=0;
@@ -81,6 +85,8 @@ public:
 #define NS_DECL_IDOMXULTREEELEMENT   \
   NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems);  \
   NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells);  \
+  NS_IMETHOD    GetCurrentItem(nsIDOMXULElement** aCurrentItem);  \
+  NS_IMETHOD    GetCurrentCell(nsIDOMXULElement** aCurrentCell);  \
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem);  \
   NS_IMETHOD    SelectCell(nsIDOMXULElement* aTreeCell);  \
   NS_IMETHOD    ClearItemSelection();  \
@@ -103,6 +109,8 @@ public:
 #define NS_FORWARD_IDOMXULTREEELEMENT(_to)  \
   NS_IMETHOD    GetSelectedItems(nsIDOMNodeList** aSelectedItems) { return _to GetSelectedItems(aSelectedItems); } \
   NS_IMETHOD    GetSelectedCells(nsIDOMNodeList** aSelectedCells) { return _to GetSelectedCells(aSelectedCells); } \
+  NS_IMETHOD    GetCurrentItem(nsIDOMXULElement** aCurrentItem) { return _to GetCurrentItem(aCurrentItem); } \
+  NS_IMETHOD    GetCurrentCell(nsIDOMXULElement** aCurrentCell) { return _to GetCurrentCell(aCurrentCell); } \
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem) { return _to SelectItem(aTreeItem); }  \
   NS_IMETHOD    SelectCell(nsIDOMXULElement* aTreeCell) { return _to SelectCell(aTreeCell); }  \
   NS_IMETHOD    ClearItemSelection() { return _to ClearItemSelection(); }  \

@@ -126,7 +126,6 @@ NS_INTERFACE_MAP_BEGIN(nsMenuFrame)
 nsMenuFrame::nsMenuFrame()
   : mIsMenu(PR_FALSE),
     mMenuOpen(PR_FALSE),
-    mHasAnonymousContent(PR_FALSE),
     mChecked(PR_FALSE),
     mType(eMenuType_Normal),
     mMenuParent(nsnull),
@@ -150,6 +149,13 @@ nsMenuFrame::Init(nsIPresContext*  aPresContext,
   // Set our menu parent.
   nsCOMPtr<nsIMenuParent> menuparent = do_QueryInterface(aParent);
   mMenuParent = menuparent.get();
+
+  // Do the type="checkbox" magic
+  UpdateMenuType();
+
+  nsAutoString accelString;
+  BuildAcceleratorText(accelString);
+  
   return rv;
 }
 
@@ -457,38 +463,24 @@ nsMenuFrame::AttributeChanged(nsIPresContext* aPresContext,
     UpdateMenuType(aPresContext);
   }
 
-  if (mHasAnonymousContent) {
-    if (aAttribute == nsXULAtoms::accesskey ||
-        aAttribute == nsHTMLAtoms::value) {
-      /* update accesskey or value on menu-left */
-      aChild->GetAttribute(kNameSpaceID_None, aAttribute, value);
-      mMenuText->SetAttribute(kNameSpaceID_None, aAttribute, value, PR_TRUE);
-    } else if (aAttribute == nsXULAtoms::acceltext) {
-      /* update content in accel-text */
-      aChild->GetAttribute(kNameSpaceID_None, aAttribute, value);
-      mAccelText->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value,
-                               PR_TRUE);
-    }
+  /* we need to reflow, if these change */
+  if (aAttribute == nsHTMLAtoms::value ||
+      aAttribute == nsXULAtoms::acceltext ||
+      aAttribute == nsHTMLAtoms::type ||
+      aAttribute == nsHTMLAtoms::checked) {
 
-    /* we need to reflow, if these change */
-    if (aAttribute == nsHTMLAtoms::value ||
-        aAttribute == nsXULAtoms::acceltext ||
-        aAttribute == nsHTMLAtoms::type ||
-        aAttribute == nsHTMLAtoms::checked) {
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_FAILED(rv))
+      return rv;
 
-      nsCOMPtr<nsIPresShell> shell;
-      nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
-      if (NS_FAILED(rv))
-        return rv;
+    nsCOMPtr<nsIReflowCommand> reflowCmd;
+    rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
+                                 nsIReflowCommand::StyleChanged);
+    if (NS_FAILED(rv))
+      return rv;
 
-      nsCOMPtr<nsIReflowCommand> reflowCmd;
-      rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
-                                   nsIReflowCommand::StyleChanged);
-      if (NS_FAILED(rv))
-        return rv;
-
-      shell->AppendReflowCommand(reflowCmd);
-    }
+    shell->AppendReflowCommand(reflowCmd);
   }
 
   return NS_OK;
@@ -990,149 +982,9 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
 NS_IMETHODIMP
 nsMenuFrame::CreateAnonymousContent(nsIPresContext* aPresContext, nsISupportsArray& aAnonymousChildren)
 {
-  // Create anonymous children only if the menu has no children or
-  // only has a menuchildren as its child.
-  nsCOMPtr<nsIDOMNode> dummyResult;
-  
-  PRInt32 childCount;
-  mContent->ChildCount(childCount);
-  mHasAnonymousContent = PR_TRUE;
-  for (PRInt32 i = 0; i < childCount; i++) {
-    // XXX Should optimize this to look for a display type of none.
-    // Not sure how to do this.  For now screen out some known tags.
-    nsCOMPtr<nsIContent> childContent;
-    mContent->ChildAt(i, *getter_AddRefs(childContent));
-    nsCOMPtr<nsIAtom> tag;
-    childContent->GetTag(*getter_AddRefs(tag));
-    if (tag.get() != nsXULAtoms::menupopup &&
-      tag.get() != nsXULAtoms::templateAtom &&
-      tag.get() != nsXULAtoms::observes) {
-      mHasAnonymousContent = PR_FALSE;
-      break;
-    }
-  }
-
-  if (!mHasAnonymousContent)
-    return NS_OK;
-
-  nsCOMPtr<nsIDocument> idocument;
-  mContent->GetDocument(*getter_AddRefs(idocument));
-  nsCOMPtr<nsIDOMNSDocument> nsDocument(do_QueryInterface(idocument));
-  nsCOMPtr<nsIDOMDocument> document(do_QueryInterface(idocument));
-
-  nsAutoString xulNamespace("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-  nsAutoString htmlNamespace("http://www.w3.org/TR/REC-html40");
-  nsCOMPtr<nsIAtom> classAtom = dont_AddRef(NS_NewAtom("class"));
-
-  nsCOMPtr<nsIDOMElement> node;
-  nsCOMPtr<nsIContent> content;
-
-  PRBool onMenuBar = PR_FALSE;
-  if (mMenuParent)
-    mMenuParent->IsMenuBar(onMenuBar);
-  
-  /* Create .menu-left (.menubar-left) titledbutton for icon. */
-  nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace,
-                                         getter_AddRefs(node));
-  content = do_QueryInterface(node);
-  content->SetAttribute(kNameSpaceID_None, classAtom,
-                        onMenuBar ? "menubar-left" : "menu-left" , PR_FALSE);
-  aAnonymousChildren.AppendElement(content);
-  
-  /*
-   * Create the .menu-text titledbutton, and propagate crop, accesskey and
-   * value attributes.  If we're a menubar, make the class menubar-text
-   * instead.
-   */
-  nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace,
-                                         getter_AddRefs(node));
-  content = do_QueryInterface(node);
-  content->SetAttribute(kNameSpaceID_None, classAtom, 
-                        onMenuBar ? "menubar-text" : "menu-text", PR_FALSE);
-  nsAutoString accessKey, value, crop;
-
-  mMenuText = content;
-  mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value);
-  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value, PR_FALSE);
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, accessKey);
-  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::accesskey, accessKey,
-                        PR_FALSE);
-  
-  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop);
-  if (crop == "")
-    crop = "right";
-  content->SetAttribute(kNameSpaceID_None, nsXULAtoms::crop, crop, PR_FALSE);
-  // XXX Causes menu items to disappear.
-  // content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "1", PR_FALSE);
-
-  // append now, after we've set all the attributes
-  aAnonymousChildren.AppendElement(content);
-
-  // Do the type="checkbox" magic
-  UpdateMenuType(aPresContext);
-
-  // Create a spring that serves as padding between the text and the
-  // accelerator.
-  if (!onMenuBar) {
-    nsDocument->CreateElementWithNameSpace("spring", xulNamespace, getter_AddRefs(node));
-    content = do_QueryInterface(node);
-    content->SetAttribute(kNameSpaceID_None, classAtom, "menu-spring",
-                          PR_FALSE);
-    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::flex, "100000",
-                          PR_FALSE);
-    aAnonymousChildren.AppendElement(content);
-  
-    // Build the accelerator out of the corresponding key node.
-    nsAutoString accelString;
-    BuildAcceleratorText(accelString);
-    if (accelString != "") {
-      // Create the accelerator (a titledbutton)
-      nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace,
-                                             getter_AddRefs(node));
-      content = do_QueryInterface(node);
-      mAccelText = content;
-      content->SetAttribute(kNameSpaceID_None, classAtom, "menu-accel",
-                            PR_FALSE);
-      content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, accelString,
-                            PR_FALSE);
-      aAnonymousChildren.AppendElement(content);
-
-    }
-
-    // Create the "menu-right" object.  It's a titledbutton.
-    // XXX Maybe we should make one for a .menubar-right class so that the option exists
-    nsDocument->CreateElementWithNameSpace("titledbutton", xulNamespace, getter_AddRefs(node));
-    content = do_QueryInterface(node);
-    content->SetAttribute(kNameSpaceID_None, classAtom, "menu-right", PR_FALSE);
-    aAnonymousChildren.AppendElement(content);
-  }
-
   return NS_OK;
 }
 
-void 
-nsMenuFrame::SplitOnShortcut(nsString& aBeforeString, nsString& aAccessString, nsString& aAfterString)
-{
-  nsString value;
-  nsString accessKey;
-  aBeforeString = value;
-  aAccessString = "";
-  aAfterString = "";
-
-  if (accessKey == "") // Nothing to do. 
-    return;
-
-  // Find the index of the first occurrence of the accessKey
-  PRInt32 indx = value.Find(accessKey, PR_TRUE);
-
-  if (indx == -1) // Wasn't in there. Just return.
-    return;
-
-  // It was in the value string. Split based on the indx.
-  value.Left(aBeforeString, indx);
-  value.Mid(aAccessString, indx, 1);
-  value.Right(aAfterString, value.Length()-indx-1);
-}
 
 void 
 nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
@@ -1227,6 +1079,9 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
     prependPlus = PR_TRUE;
     aAccelString += keyChar;
   }
+
+  if (aAccelString != "")
+    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::acceltext, aAccelString, PR_FALSE);
 }
 
 void

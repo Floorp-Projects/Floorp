@@ -2307,14 +2307,14 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
 
     // Check to see if the CLASS attribute is being set.  If so, we need to rebuild our
     // class list.
-    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && (aName == kClassAtom)) {
+    if ((aNameSpaceID == kNameSpaceID_None) && (aName == kClassAtom)) {
         Attributes()->UpdateClassList(aValue);
     }
 
     // Check to see if the STYLE attribute is being set.  If so, we need to create a new
     // style rule based off the value of this attribute, and we need to let the document
     // know about the StyleRule change.
-    if (mDocument && (aNameSpaceID == kNameSpaceID_None) && (aName == kStyleAtom)) {
+    if ((aNameSpaceID == kNameSpaceID_None) && (aName == kStyleAtom)) {
         nsCOMPtr <nsIURI> docURL;
         mDocument->GetBaseURL(*getter_AddRefs(docURL));
         Attributes()->UpdateStyleRule(docURL, aValue);
@@ -2421,8 +2421,12 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
         }
     }
 
-    if (NS_SUCCEEDED(rv) && aNotify && ElementIsInDocument()) {
-        mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this), aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
+    if (NS_SUCCEEDED(rv) && aNotify) {
+        if (Binding())
+          Binding()->AttributeChanged(aName, aNameSpaceID, PR_FALSE);
+        
+        if (mDocument)
+          mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this), aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
     }
 
     return rv;
@@ -2613,6 +2617,9 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
      
         // Notify document
         if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
+            if (Binding())
+              Binding()->AttributeChanged(aName, aNameSpaceID, PR_TRUE);
+
             mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this),
                                         aNameSpaceID, aName,
                                         NS_STYLE_HINT_UNKNOWN);
@@ -3644,7 +3651,55 @@ nsXULElement::IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode)
   return PR_FALSE;
 }
 
+NS_IMETHODIMP
+nsXULElement::Focus()
+{
+  // Make sure we're focusable.
+  nsCOMPtr<nsIFocusableContent> focusable = do_QueryInterface((nsIStyledContent*)this);
+  if (!focusable)
+    return NS_OK;
+
+  // Obtain a presentation context and then call SetFocus.
+  PRInt32 count = mDocument->GetNumberOfShells();
+  if (count == 0)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+  
+  // Retrieve the context
+  nsCOMPtr<nsIPresContext> aPresContext;
+  shell->GetPresContext(getter_AddRefs(aPresContext));
+
+  // Set focus
+  return SetFocus(aPresContext);
+}
+
+NS_IMETHODIMP
+nsXULElement::Blur()
+{
+  // Make sure we're focusable.
+  nsCOMPtr<nsIFocusableContent> focusable = do_QueryInterface((nsIStyledContent*)this);
+  if (!focusable)
+    return NS_OK;
+
+  // Obtain a presentation context and then call SetFocus.
+  PRInt32 count = mDocument->GetNumberOfShells();
+  if (count == 0)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+  
+  // Retrieve the context
+  nsCOMPtr<nsIPresContext> aPresContext;
+  shell->GetPresContext(getter_AddRefs(aPresContext));
+
+  // Set focus
+  return RemoveFocus(aPresContext);
+}
+
+
 // nsIFocusableContent interface and helpers
+
 NS_IMETHODIMP
 nsXULElement::SetFocus(nsIPresContext* aPresContext)
 {

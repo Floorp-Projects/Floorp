@@ -20,6 +20,7 @@
 #include "nsXMLDocument.h"
 #include "nsHTMLAtoms.h"
 #include "nsSupportsArray.h"
+#include "nsITextContent.h"
 
 #include "nsIXBLBinding.h"
 
@@ -109,6 +110,10 @@ public:
 
   // This method synchronously loads and parses an XBL file.
   NS_IMETHOD FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult);
+
+  // This method walks a binding document and removes any text nodes
+  // that contain only whitespace.
+  NS_IMETHOD StripWhitespaceNodes(nsIContent* aContent);
 
 protected:
   // This URIkey class is used to hash URLs into an XBL binding
@@ -272,9 +277,7 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult)
         if (!(*aResult)) 
           NS_NewISupportsArray(aResult); // This call addrefs the array.
 
-        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(anonymousChild);
-        if (element) // Don't let the extra text frames get generated.
-          (*aResult)->AppendElement(anonymousChild);
+        (*aResult)->AppendElement(anonymousChild);
       }
     }
 
@@ -460,6 +463,42 @@ nsXBLService::FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult)
   // Everything worked, so we can just hand this back now.
   *aResult = doc;
   NS_IF_ADDREF(*aResult);
+
+  // The XML content sink produces a ridiculous # of content nodes.
+  // It generates text nodes even for whitespace.  The following
+  // call walks the generated document tree and trims out these
+  // nodes.
+  nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
+  if (root)
+    StripWhitespaceNodes(root);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsXBLService::StripWhitespaceNodes(nsIContent* aElement)
+{
+  PRInt32 childCount;
+  aElement->ChildCount(childCount);
+  for (PRInt32 i = 0; i < childCount; i++) {
+    nsCOMPtr<nsIContent> child;
+    aElement->ChildAt(i, *getter_AddRefs(child));
+    nsCOMPtr<nsITextContent> text = do_QueryInterface(child);
+    if (text) {
+      nsAutoString result;
+      text->CopyText(result);
+      result.StripWhitespace();
+      if (result == "") {
+        // This node contained nothing but whitespace.
+        // Remove it from the content model.
+        aElement->RemoveChildAt(i, PR_TRUE);
+        i--; // Decrement our count, since we just removed this child.
+        childCount--; // Also decrement our total count.
+      }
+    }
+    else StripWhitespaceNodes(child);
+  }
+
   return NS_OK;
 }
 

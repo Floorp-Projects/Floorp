@@ -13,5 +13,8 @@ interface XULElement : Element {
         void removeBroadcastListener(in DOMString attr, in Element element);
         void doCommand();
 
+		void focus();
+		void blur();
+
         NodeList getElementsByAttribute(in DOMString name, in DOMString value);
 };

@@ -1018,59 +1018,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
                                            nsReflowReason       aReason)
 {
   nsresult rv = NS_OK;
-  
-  PRInt32 count = 0;
-  ComputeTotalRowCount(count, mContent); // XXX This sucks! Needs to be cheap!
-  
-  nsTableFrame* tableFrame;
-  nsTableFrame::GetTableFrame(this, tableFrame);
-  nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
-
-  // Our page size is the # of rows instantiated.
-  PRInt32 pageRowCount;
-  GetRowCount(pageRowCount);
-
-  if (mScrollbar) {
-    PRBool nukeScrollbar=PR_FALSE;
-    nsAutoString value;
-    
-    nsCOMPtr<nsIContent> scrollbarContent;
-    mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
-    
-    if (count < pageRowCount) {
-      // first set the position to 0 so that all visible content
-      // scrolls into view
-      value.Append(0);
-      scrollbarContent->SetAttribute(kNameSpaceID_None,
-                                     nsXULAtoms::curpos,
-                                     value, PR_TRUE);
-      // now force nuking the scrollbar
-      // (otherwise it takes a bunch of reflows to actually make it go away)
-      nukeScrollbar=PR_TRUE;
-    }
-
-    else {
-      scrollbarContent->GetAttribute(kNameSpaceID_None,
-                                     nsXULAtoms::curpos, value);
-    }
-   
-    if (nukeScrollbar || (value == "0" && !mIsFull)) {
-      
-      // clear the scrollbar out of the event state manager so that the
-      // event manager doesn't send events to the destroyed scrollbar frames
-      nsCOMPtr<nsIPresShell> shell;
-      aPresContext->GetShell(getter_AddRefs(shell));
-      ClearFrameRefs(aPresContext, shell, mScrollbar);
-      
-      // Nuke the scrollbar.
-      mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar, nsnull);
-      mScrollbarList.DestroyFrames(aPresContext);
-      mScrollbar = nsnull;
-
-      // Dirty the tree for another reflow.
-      MarkTreeAsDirty(aPresContext, treeFrame);
-    }
-  }
+  ReflowScrollbar(aPresContext);
 
   if ((mOuterFrame == this) && (mRowGroupHeight != NS_UNCONSTRAINEDSIZE) &&
       (mIsFull || mScrollbar)) {
@@ -1082,41 +1030,6 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
       CreateScrollbar(aPresContext);
       createdScrollbar = PR_TRUE;
     }
-
-    // Set the maxpos of the scrollbar.
-    nsCOMPtr<nsIContent> scrollbarContent;
-    mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
-
-    PRInt32 rowCount = count-1;
-    if (rowCount < 0)
-      rowCount = 0;
-
-    // Subtract one from our maxpos if we're a fixed row height.
-    PRInt32 rowSize = treeFrame->GetFixedRowSize();
-    if (rowSize != -1) {
-      rowCount--;
-    }
-
-    nsAutoString maxpos;
-    if (!mIsFull) {
-      // We are not full. This means that we are not allowed to scroll any further. We are
-      // at the max position right now.
-      scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, maxpos);
-    }
-    else {
-
-      if (pageRowCount < 2)
-        pageRowCount = 2;
-
-      rowCount -= (pageRowCount-2);
-
-      char ch[100];
-      sprintf(ch,"%d", rowCount);
-      maxpos = ch;
-    }
-
-    // Make sure our position is accurate.
-    scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, maxpos, PR_FALSE);
 
     // We must be constrained, or a scrollbar makes no sense.
     nsSize    kidMaxElementSize;
@@ -1162,10 +1075,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
   
       MarkTreeAsDirty(aPresContext, (nsTreeFrame*)tableFrame);
     }
-  }
-
-  mRowCount = count;
-  
+  } 
   return rv;
 }
 
@@ -1613,9 +1523,100 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
 void
 nsTreeRowGroupFrame::ReflowScrollbar(nsIPresContext* aPresContext)
 {
+  PRInt32 count = 0;
+  ComputeTotalRowCount(count, mContent); // XXX This sucks! Needs to be cheap!
+  mRowCount = count;
 
+  if (!mScrollbar)
+    return;
+  
+  nsTableFrame* tableFrame;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
 
+  // Our page size is the # of rows instantiated.
+  PRInt32 pageRowCount;
+  GetRowCount(pageRowCount);
 
+  if (mScrollbar) {
+    PRBool nukeScrollbar=PR_FALSE;
+    nsAutoString value;
+    
+    nsCOMPtr<nsIContent> scrollbarContent;
+    mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+    
+    if (count < pageRowCount) {
+      // first set the position to 0 so that all visible content
+      // scrolls into view
+      value.Append(0);
+      scrollbarContent->SetAttribute(kNameSpaceID_None,
+                                     nsXULAtoms::curpos,
+                                     value, PR_TRUE);
+      // now force nuking the scrollbar
+      // (otherwise it takes a bunch of reflows to actually make it go away)
+      nukeScrollbar=PR_TRUE;
+    }
+
+    else {
+      scrollbarContent->GetAttribute(kNameSpaceID_None,
+                                     nsXULAtoms::curpos, value);
+    }
+   
+    if (nukeScrollbar || (value == "0" && !mIsFull)) {
+      
+      // clear the scrollbar out of the event state manager so that the
+      // event manager doesn't send events to the destroyed scrollbar frames
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+      ClearFrameRefs(shell, mScrollbar);
+      
+      // Nuke the scrollbar.
+      mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar, nsnull);
+      mScrollbarList.DestroyFrames(aPresContext);
+      mScrollbar = nsnull;
+
+      // Dirty the tree for another reflow.
+      MarkTreeAsDirty(aPresContext, treeFrame);
+    }
+  }
+
+  if (!mScrollbar)
+    return;
+
+  // Set the maxpos of the scrollbar.
+  nsCOMPtr<nsIContent> scrollbarContent;
+  mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+
+  PRInt32 rowCount = count-1;
+  if (rowCount < 0)
+    rowCount = 0;
+
+  // Subtract one from our maxpos if we're a fixed row height.
+  PRInt32 rowSize = treeFrame->GetFixedRowSize();
+  if (rowSize != -1) {
+    rowCount--;
+  }
+
+  nsAutoString maxpos;
+  if (!mIsFull) {
+    // We are not full. This means that we are not allowed to scroll any further. We are
+    // at the max position right now.
+    scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, maxpos);
+  }
+  else {
+
+    if (pageRowCount < 2)
+      pageRowCount = 2;
+
+    rowCount -= (pageRowCount-2);
+
+    char ch[100];
+    sprintf(ch,"%d", rowCount);
+    maxpos = ch;
+  }
+
+  // Make sure our position is accurate.
+  scrollbarContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::maxpos, maxpos, PR_TRUE);
 }
 
 void nsTreeRowGroupFrame::SetContentChain(nsISupportsArray* aContentChain)

@@ -350,7 +350,7 @@ nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
 {
   nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
                                               aNameSpaceID, aAttribute, aHint);
-  // if the current position changes
+  /*// if the current position changes
   if (       aAttribute == nsXULAtoms::curpos || 
              aAttribute == nsXULAtoms::maxpos || 
              aAttribute == nsXULAtoms::pageincrement ||
@@ -362,6 +362,7 @@ nsScrollbarFrame::AttributeChanged(nsIPresContext* aPresContext,
      if (slider)
         slider->AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
   }
+*/
 
   return rv;
 }

@@ -413,9 +413,6 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext* aPresContext,
     nsAutoString propColWidth(ch);
     flexContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, propColWidth,
                               PR_TRUE); // NOW we send the notification that causes the reflow.
-    
-    // Do a dirty table reflow.
-    //treeFrame->MarkForDirtyReflow(aPresContext);
   }
   return NS_OK;
 }
