@@ -117,7 +117,7 @@ NS_COM void nsDebug::AbortIfFalse(const char* aStr, const char* aExpr,
   InitLog();
 
   char buf[2000];
-  PR_snprintf(buf, sizeof(buf),
+  buf[0] = PR_snprintf(buf, sizeof(buf),
               "AbortIfFalse: %s: '%s', file %s, line %d",
               aStr, aExpr, aFile, aLine);
 
@@ -126,7 +126,7 @@ NS_COM void nsDebug::AbortIfFalse(const char* aStr, const char* aExpr,
   PR_LogFlush();
 
   // And write it out to the stdout
-  printf("%s\n", buf);
+  printf("%s\n", buf + 1);
   fflush(stdout);
 
   // Now exit the application, trying to make the local equivalent of
@@ -138,7 +138,7 @@ NS_COM void nsDebug::AbortIfFalse(const char* aStr, const char* aExpr,
   PR_Abort();
 #endif
 #elif defined(XP_MAC)
-  DebugStr(buf);
+  DebugStr(StringPtr(buf));
   ExitToShell();
 #elif defined(XP_UNIX)
   PR_Abort();
