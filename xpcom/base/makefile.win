@@ -36,8 +36,8 @@ EXPORTS =                  \
         nsDebug.h          \
         nsError.h          \
         nsID.h             \
-	nsIID.h            \
-	nsIPtr.h           \
+        nsIID.h            \
+        nsIPtr.h           \
         nsISupportsUtils.h \
         nsTraceRefcnt.h    \
         nsWeakReference.h  \
@@ -50,9 +50,10 @@ XPIDL_MODULE = xpcom_base
 
 XPIDLSRCS =               \
         .\nsrootidl.idl   \
-	.\nsILeakDetector.idl \
-	.\nsIInterfaceRequestor.idl \
+        .\nsILeakDetector.idl \
+        .\nsIInterfaceRequestor.idl \
         .\nsISupports.idl \
+        .\nsISystemInfo.idl \
         .\nsIWeakReference.idl \
         $(NULL)
 
@@ -81,17 +82,18 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsDebug.obj       \
         .\$(OBJDIR)\nsAllocator.obj   \
         .\$(OBJDIR)\nsCOMPtr.obj      \
-	.\$(OBJDIR)\nsCWeakReference.obj \
+        .\$(OBJDIR)\nsCWeakReference.obj \
         .\$(OBJDIR)\nsID.obj          \
         .\$(OBJDIR)\nsIInterfaceRequestor.obj \
+        .\$(OBJDIR)\nsSystemInfo.obj  \
         .\$(OBJDIR)\nsTraceRefcnt.obj \
         .\$(OBJDIR)\nsWeakReference.obj \
 !ifdef GC_LEAK_DETECTOR
-	.\$(OBJDIR)\nsGarbageCollector.obj \
-	.\$(OBJDIR)\nsLeakDetector.obj \
+        .\$(OBJDIR)\nsGarbageCollector.obj \
+        .\$(OBJDIR)\nsLeakDetector.obj \
 !endif
 !ifdef MOZ_DEBUG
-	.\$(OBJDIR)\pure_api.obj      \
+        .\$(OBJDIR)\pure_api.obj      \
 !endif
         $(NULL)
 
