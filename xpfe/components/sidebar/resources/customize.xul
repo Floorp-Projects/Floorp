@@ -16,6 +16,12 @@
 <box align="vertical" flex="100%" id="main-box">
 
   <html:div class="title">
+    &sidebar.customize.title.label;
+  </html:div>
+
+  <html:hr />
+
+  <html:div class="subtitle">
     &sidebar.customize.current.label;
   </html:div>
 
@@ -28,33 +34,32 @@
       <spring flex="50%"/>
     </box>
 
-    <html:form name="one" >
-      <html:select name="two" id="selectList" size="10" 
-         onclick="selectChange();">
+    <html:form>
+      <html:select id="selectList" size="10" onclick="selectChange();">
       </html:select>
     </html:form>
 
-    <box align="vertical" class="button-group">
-      <spring flex="50%"/>
+    <box align="vertical" class="button-group" flex="100%">
       <titledbutton id="customize-button" onclick="" 
          value="&sidebar.customize.customize.label;" />
       <titledbutton onclick="RemovePanel()"
          value="&sidebar.customize.remove.label;" />
-      <spring flex="50%"/>
     </box>
 
   </box>
 
   <html:hr/>
 
-  <html:div class="title">
+  <html:div class="subtitle">
     &sidebar.customize.additional.label;
   </html:div>
 
   <box align="horizontal"  class="box-group">
 
-      <tree id="other-panels" style="width:15em;height:15em;"
-            datasources="chrome://sidebar/content/sidebar-registry.rdf"
+ <!-- datasources="chrome://sidebar/content/sidebar-registry.rdf"-->
+
+      <tree id="other-panels"
+            datasources="resource:/chrome/sidebar/content/default/sidebar-registry.rdf"
             onclick="selected()"
             ref="NC:SidebarRoot" >
     
@@ -75,33 +80,24 @@
           </rule>
         </template>
 
+        <!-- remove the TREEHEAD when bug 9923 is fixed. -->
         <treehead>
           <treerow>
-            <treecell>&sidebar.customize.name-column.label;</treecell>
+            <treecell/>
           </treerow>
         </treehead>
       </tree>
   
     <box align="vertical" class="button-group">
-      <spring flex="50%"/>
       <titledbutton id="add_button" onclick="AddPanel()"
          value="&sidebar.customize.add.label;"
          disabled="true"/>
       <titledbutton id="preview_button" onclick=""
          value="&sidebar.customize.preview.label;"
          disabled="true"/>
-      <spring flex="50%"/>
     </box>
 
   </box> 
-
-  <html:a href="http://dmoz.org/Computers/Internet/WWW/Web_Portals/Netscape.com/My_Netscape_Network/">
-    &sidebar.customize.more.label;
-  </html:a>
-   |
-  <html:a href="http://my.netscape.com/publish/">
-    &sidebar.customize.create.label;
-  </html:a>
 
   <html:hr/>
 

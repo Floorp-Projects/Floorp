@@ -1,13 +1,11 @@
 <!-- extracted from ./customize.xul -->
 
-<!ENTITY sidebar.customize.current.label        "Current Panels">
-<!ENTITY sidebar.customize.customize.label      "Customize...">
-<!ENTITY sidebar.customize.remove.label         "Remove">
-<!ENTITY sidebar.customize.additional.label     "Select a Panel to Add">
-<!ENTITY sidebar.customize.name-column.label    "Name">
+<!ENTITY sidebar.customize.title.label          "Customize Sidebar">
+<!ENTITY sidebar.customize.current.label        "Panels currently in Sidebar">
+<!ENTITY sidebar.customize.customize.label      "Customize Panel...">
+<!ENTITY sidebar.customize.remove.label         "Remove Panel">
+<!ENTITY sidebar.customize.additional.label     "Add these Panels to your Sidebar">
 <!ENTITY sidebar.customize.add.label            "Add">
 <!ENTITY sidebar.customize.preview.label        "Preview...">
-<!ENTITY sidebar.customize.more.label           "Find more panels">
-<!ENTITY sidebar.customize.create.label         "Create a panel">
 <!ENTITY sidebar.customize.cancel.label         "Cancel">
 <!ENTITY sidebar.customize.save.label           "Save">
