@@ -1,0 +1,5 @@
+nsICapsManager.h
+nsICertPrincipal.h
+nsICodebasePrincipal.h
+nsICodeSourcePrincipal.h
+nsIPrincipal.h
