@@ -28,6 +28,7 @@
 #include "nsIContent.h"
 #include "nsIPref.h"
 #include "nsIObserver.h"
+#include "nsWeakReference.h"
 
 class nsIDocument;
 class nsIScrollableView;
@@ -37,7 +38,8 @@ class nsISelfScrollingFrame;
  * Event listener manager
  */
 
-class nsEventStateManager : public nsIEventStateManager,
+class nsEventStateManager : public nsSupportsWeakReference,
+                            public nsIEventStateManager,
                             public nsIObserver
 {
 

@@ -229,7 +229,7 @@ nsEventStateManager::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
 }
 
 
-NS_IMPL_ISUPPORTS1(nsEventStateManager, nsIEventStateManager)
+NS_IMPL_ISUPPORTS3(nsEventStateManager, nsIEventStateManager, nsIObserver, nsISupportsWeakReference)
 
 NS_IMETHODIMP
 nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext, 
