@@ -232,6 +232,7 @@ public:
 
   NS_IMETHOD SetCardValue(nsIAbCard *card, const char *name, const PRUnichar *value, PRBool notify);
   NS_IMETHOD GetCardValue(nsIAbCard *card, const char *name, PRUnichar **value);
+  NS_IMETHOD AddRowValue(nsIMdbRow *aRow, const nsACString & aColName, const nsAString & aColValue);
 
 	// nsAddrDatabase methods:
 
@@ -277,10 +278,10 @@ protected:
 
 	void YarnToUInt32(struct mdbYarn *yarn, PRUint32 *pResult);
 	void GetCharStringYarn(char* str, struct mdbYarn* strYarn);
-	void GetStringYarn(nsString* str, struct mdbYarn* strYarn);
+	void GetStringYarn(const nsAString & aStr, struct mdbYarn* strYarn);
 	void GetIntYarn(PRUint32 nValue, struct mdbYarn* intYarn);
 	nsresult AddCharStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, const char* str);
-	nsresult AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, nsString* str);
+	nsresult AddStringColumn(nsIMdbRow* aCardRow, mdb_column aInColumn, const nsAString & aStr);
 	nsresult AddIntColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRUint32 nValue);
 	nsresult AddBoolColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRBool bValue);
 	nsresult GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString& str);

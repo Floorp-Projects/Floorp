@@ -77,10 +77,11 @@ private:
   nsIDocShell        *mDocShell;            // weak reference
   nsresult ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const char *aDelim, PRUint32 aDelimLen, nsILocalFile *aLocalFile);
   nsresult ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *aLocalFile);
-  nsresult AppendLDIFForMailList(nsIAbCard *aCard, nsAFlatCString &aResult);
-  nsresult AppendDNForCard(const char *aProperty, nsIAbCard *aCard, nsAFlatCString &aResult);
-  nsresult AppendBasicLDIFForCard(nsIAbCard *aCard, nsAFlatCString &aResult);
-  nsresult AppendProperty(const char *aProperty, const PRUnichar *aValue, nsAFlatCString &aResult);
+  nsresult AppendLDIFForMailList(nsIAbCard *aCard, nsACString &aResult);
+  nsresult AppendDNForCard(const char *aProperty, nsIAbCard *aCard, nsACString &aResult);
+  nsresult AppendBasicLDIFForCard(nsIAbCard *aCard, nsACString &aResult);
+  nsresult AppendProperty(const char *aProperty, const PRUnichar *aValue, nsACString &aResult);
+  nsresult GetOptionalLDIFForCard(nsIAbCard *aCard, nsACString &aResult);
   PRBool IsSafeLDIFString(const PRUnichar *aStr);
 };
 

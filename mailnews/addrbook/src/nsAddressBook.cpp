@@ -72,6 +72,8 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsIFilePicker.h"
 #include "nsIPref.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsVoidArray.h"
 #include "nsIAbCard.h"
 #include "nsIAbMDBCard.h"
@@ -110,7 +112,6 @@ struct ExportAttributesTableStruct
 
 // XXX todo, merge with what's in nsAbLDAPProperties.cpp, so we can
 // use this for LDAP and LDIF export
-// XXX todo what about _AimScreenName, or other generic columns?
 //
 // here's how we're coming up with the ldapPropertyName values
 // if they are specified in RFC 2798, use them
@@ -1595,6 +1596,18 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
               // ldif doesn't export mutliple addresses
             }
           }
+        
+          nsCString optionalLDIF;
+          rv = GetOptionalLDIFForCard(card, optionalLDIF);
+          NS_ENSURE_SUCCESS(rv,rv);
+
+          length = optionalLDIF.Length();
+          if (length) {
+            rv = outputStream->Write(optionalLDIF.get(), length, &writeCount);
+            NS_ENSURE_SUCCESS(rv,rv);
+            if (length != writeCount)
+              return NS_ERROR_FAILURE;
+          }
 
           // write out the linebreak that seperates the cards
           rv = outputStream->Write(LDIF_LINEBREAK, LDIF_LINEBREAK_LEN, &writeCount);
@@ -1614,7 +1627,7 @@ nsAddressBook::ExportDirectoryToLDIF(nsIAbDirectory *aDirectory, nsILocalFile *a
   return NS_OK;
 }
 
-nsresult nsAddressBook::AppendLDIFForMailList(nsIAbCard *aCard, nsAFlatCString &aResult)
+nsresult nsAddressBook::AppendLDIFForMailList(nsIAbCard *aCard, nsACString &aResult)
 {
   nsresult rv;
   nsXPIDLString attrValue;
@@ -1690,7 +1703,7 @@ nsresult nsAddressBook::AppendLDIFForMailList(nsIAbCard *aCard, nsAFlatCString &
   return NS_OK;
 }
 
-nsresult nsAddressBook::AppendDNForCard(const char *aProperty, nsIAbCard *aCard, nsAFlatCString &aResult)
+nsresult nsAddressBook::AppendDNForCard(const char *aProperty, nsIAbCard *aCard, nsACString &aResult)
 {
   nsXPIDLString email;
   nsXPIDLString displayName;
@@ -1719,7 +1732,7 @@ nsresult nsAddressBook::AppendDNForCard(const char *aProperty, nsIAbCard *aCard,
   return rv;
 }
 
-nsresult nsAddressBook::AppendBasicLDIFForCard(nsIAbCard *aCard, nsAFlatCString &aResult)
+nsresult nsAddressBook::AppendBasicLDIFForCard(nsIAbCard *aCard, nsACString &aResult)
 {
   nsresult rv = AppendDNForCard("dn", aCard, aResult);
   NS_ENSURE_SUCCESS(rv,rv);
@@ -1755,7 +1768,7 @@ PRBool nsAddressBook::IsSafeLDIFString(const PRUnichar *aStr)
   return PR_TRUE;
 }
 
-nsresult nsAddressBook::AppendProperty(const char *aProperty, const PRUnichar *aValue, nsAFlatCString &aResult)
+nsresult nsAddressBook::AppendProperty(const char *aProperty, const PRUnichar *aValue, nsACString &aResult)
 {
   NS_ENSURE_ARG_POINTER(aValue);
 
@@ -1776,6 +1789,44 @@ nsresult nsAddressBook::AppendProperty(const char *aProperty, const PRUnichar *a
 
   return NS_OK;
 }
+
+
+nsresult nsAddressBook::GetOptionalLDIFForCard(nsIAbCard *aCard, nsACString &aResult)
+{
+  nsresult rv;
+  nsCOMPtr<nsIAbMDBCard> dbcard = do_QueryInterface(aCard, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  NS_NAMED_LITERAL_CSTRING(kOptionalLDIFExportMapPrefix, "mail.addr_book.export_ldif_map.");
+  PRUint32 i, prefCount, prefixLen=kOptionalLDIFExportMapPrefix.Length();
+  char **prefNames;
+
+  rv = prefBranch->GetChildList(kOptionalLDIFExportMapPrefix.get(), &prefCount, &prefNames);
+  if (NS_SUCCEEDED(rv) && prefCount > 0) {
+    for (i = 0; i < prefCount; i++) {
+      nsXPIDLString genericValue;
+      rv = dbcard->GetStringAttribute(prefNames[i]+prefixLen, getter_Copies(genericValue));
+      if (NS_SUCCEEDED(rv) && !genericValue.IsEmpty()) {
+        nsXPIDLCString mapValue;
+        rv = prefBranch->GetCharPref(prefNames[i], getter_Copies(mapValue));
+        if (NS_SUCCEEDED(rv) && mapValue.Length()) {
+          rv = AppendProperty(mapValue.get(), genericValue.get(), aResult);
+          aResult += LDIF_LINEBREAK;
+        }
+      }
+    }
+    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(prefCount, prefNames);
+  }
+  return NS_OK;
+}
+
 
 CMDLINEHANDLER_IMPL(nsAddressBook,"-addressbook","general.startup.addressbook","chrome://messenger/content/addressbook/addressbook.xul","Start with the addressbook.",NS_ADDRESSBOOKSTARTUPHANDLER_CONTRACTID,"Addressbook Startup Handler",PR_FALSE,"", PR_TRUE)
 

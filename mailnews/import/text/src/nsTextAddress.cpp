@@ -25,6 +25,8 @@
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
 #include "nsReadableUtils.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 static NS_DEFINE_CID(kAbCardPropertyCID, NS_ABCARDPROPERTY_CID);
 
@@ -675,6 +677,9 @@ nsresult nsTextAddress::IsLDIFFile( nsIFileSpec *pSrc, PRBool *pIsLDIF)
 #define IS_SPACE(VAL)                \
     (((((intn)(VAL)) & 0x7f) == ((intn)(VAL))) && isspace((intn)(VAL)) )
 
+// XXX TODO fix me
+// use the NSPR base64 library.  see plbase64.h
+// see bug #145367
 static unsigned char b642nib[0x80] = {
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -699,6 +704,7 @@ static unsigned char b642nib[0x80] = {
  * into components "type" and "value".  if a double colon separates type from
  * value, then value is encoded in base 64, and parse_line un-decodes it
  * (in place) before returning.
+ * in LDIF, non-ASCII data is treated as base64 encoded UTF-8 
  */
 
 nsresult nsTextAddress::str_parse_line(
@@ -1141,6 +1147,34 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
         m_database->AddHomeZipCode(newRow, column.get());
       else if (colType.Equals(MOZ_AB_LDIF_PREFIX "homecountryname"))
         m_database->AddHomeCountry(newRow, column.get());
+      else {
+        // handle all the optional LDIF attributes
+        // like mozillaaimscreenname (mozillaAimScreenName)
+        //
+        // note, all optional LDIF attributes begin with the "mozilla" prefix
+        // see bug #119360.  that's why the import code to handle them
+        // is under the "m" clause.
+        nsresult rv;
+        nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get pref service");
+        if (NS_FAILED(rv))
+          break;
+
+        nsCOMPtr<nsIPrefBranch> prefBranch;
+        rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to get pref branch");
+        if (NS_FAILED(rv))
+          break;
+
+        nsCAutoString prefName;
+        prefName = NS_LITERAL_CSTRING("mail.addr_book.import_ldif_map.") + colType;
+
+        nsXPIDLCString columnName;
+        rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(columnName));
+        if (NS_SUCCEEDED(rv) && columnName.Length()) {
+          m_database->AddRowValue(newRow, columnName, NS_ConvertUTF8toUCS2(column));
+        }
+      }
       break; // 'm'
 
     case 'n':

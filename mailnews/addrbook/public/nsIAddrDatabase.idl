@@ -208,4 +208,18 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
      */
     void setCardValue(in nsIAbCard card, in string name, in wstring value, in boolean notify);
     wstring getCardValue(in nsIAbCard card, in string name);
+
+    /**
+     * used for adding a string attributes to a row.
+     * the string attribute does not have to be a generic attribute
+     * (ex:  _AimScreenName).  used during LDIF and addressbook import.
+     *
+     * @param aRow
+     *        The row we're adding the column to
+     * @param aColName
+     *        The column name  (example: _AimScreenName)
+     * @param aColValue
+     *        The column value (example: jabroni316)
+     */
+    [noscript] void addRowValue(in nsIMdbRow aRow, in ACString aColName, in AString aColValue);
 };

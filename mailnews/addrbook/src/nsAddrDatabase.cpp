@@ -2078,9 +2078,9 @@ void nsAddrDatabase::GetCharStringYarn(char* str, struct mdbYarn* strYarn)
     strYarn->mYarn_Form = 0;
 }
 
-void nsAddrDatabase::GetStringYarn(nsString* str, struct mdbYarn* strYarn)
+void nsAddrDatabase::GetStringYarn(const nsAString & aStr, struct mdbYarn* strYarn)
 {
-    strYarn->mYarn_Buf = ToNewCString(*str);
+    strYarn->mYarn_Buf = ToNewUTF8String(aStr);
     strYarn->mYarn_Size = PL_strlen((const char *) strYarn->mYarn_Buf) + 1;
     strYarn->mYarn_Fill = strYarn->mYarn_Size - 1;
     strYarn->mYarn_Form = 0;     
@@ -2106,12 +2106,12 @@ nsresult nsAddrDatabase::AddCharStringColumn(nsIMdbRow* cardRow, mdb_column inCo
     return (err == NS_OK) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult nsAddrDatabase::AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, nsString* str)
+nsresult nsAddrDatabase::AddStringColumn(nsIMdbRow* aCardRow, mdb_column aInColumn, const nsAString & aStr)
 {
     struct mdbYarn yarn;
 
-    GetStringYarn(str, &yarn);
-    mdb_err err = cardRow->AddColumn(GetEnv(),  inColumn, &yarn);
+    GetStringYarn(aStr, &yarn);
+    mdb_err err = aCardRow->AddColumn(GetEnv(), aInColumn, &yarn);
 
     return (err == NS_OK) ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -3138,6 +3138,16 @@ NS_IMETHODIMP nsAddrDatabase::GetCardFromAttribute(nsIAbDirectory *aDirectory, c
   else
     *aCardResult = nsnull;
   return rv;
+}
+
+NS_IMETHODIMP nsAddrDatabase::AddRowValue(nsIMdbRow *aRow, const nsACString & aColName, const nsAString & aColValue)
+{
+  mdb_token token;
+  GetStore()->StringToToken(GetEnv(), PromiseFlatCString(aColName).get(), &token);
+  
+  nsresult rv = AddStringColumn(aRow, token, aColValue);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAddrDatabase::GetDirectoryName(PRUnichar **name)
