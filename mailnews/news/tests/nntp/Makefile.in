@@ -59,8 +59,8 @@ LIBS = \
 	-ljsdom	\
 	-ljsurl	\
 	-limg	\
-	-lpng	\
-	-ljpeg	\
+	$(PNG_LIBS)     \
+	$(JPEG_LIBS)    \
 	-lgfx$(MOZ_TOOLKIT) 	\
 	-lraptorgfx 	\
 	-lgfxps		\
