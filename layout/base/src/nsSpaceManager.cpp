@@ -158,11 +158,11 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
   nscoord          topOfBand = aBand->mTop;
   nscoord          localY = aY - mY;
   nscoord          height = PR_MIN(aBand->mBottom - aY, aMaxSize.height);
-  nsBandTrapezoid* trapezoid = aBandData.trapezoids;
+  nsBandTrapezoid* trapezoid = aBandData.mTrapezoids;
   nscoord          rightEdge = mX + aMaxSize.width;
 
   // Initialize the band data
-  aBandData.count = 0;
+  aBandData.mCount = 0;
 
   // Skip any rectangles that are to the left of the local coordinate space
   while (aBand->mTop == topOfBand) {
@@ -185,13 +185,13 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
     if (aBand->mLeft > left) {
       // The rect is to the right of our current left coordinate, so we've
       // found some available space
-      if (aBandData.count >= aBandData.size) {
+      if (aBandData.mCount >= aBandData.mSize) {
         // Not enough space in the array of trapezoids
-        aBandData.count += 2 * aBand->Length() + 2;  // estimate the number needed
+        aBandData.mCount += 2 * aBand->Length() + 2;  // estimate the number needed
         return NS_ERROR_FAILURE;
       }
-      trapezoid->state = nsBandTrapezoid::Available;
-      trapezoid->frame = nsnull;
+      trapezoid->mState = nsBandTrapezoid::Available;
+      trapezoid->mFrame = nsnull;
 
       // Assign the trapezoid a rectangular shape. The trapezoid must be in the
       // local coordinate space, so convert the current left coordinate
@@ -199,22 +199,22 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
 
       // Move to the next output rect
       trapezoid++;
-      aBandData.count++;
+      aBandData.mCount++;
     }
 
     // The rect represents unavailable space, so add another trapezoid
-    if (aBandData.count >= aBandData.size) {
+    if (aBandData.mCount >= aBandData.mSize) {
       // Not enough space in the array of trapezoids
-      aBandData.count += 2 * aBand->Length() + 1;  // estimate the number needed
+      aBandData.mCount += 2 * aBand->Length() + 1;  // estimate the number needed
       return NS_ERROR_FAILURE;
     }
     if (1 == aBand->mNumFrames) {
-      trapezoid->state = nsBandTrapezoid::Occupied;
-      trapezoid->frame = aBand->mFrame;
+      trapezoid->mState = nsBandTrapezoid::Occupied;
+      trapezoid->mFrame = aBand->mFrame;
     } else {
       NS_ASSERTION(aBand->mNumFrames > 1, "unexpected frame count");
-      trapezoid->state = nsBandTrapezoid::OccupiedMultiple;
-      trapezoid->frames = aBand->mFrames;
+      trapezoid->mState = nsBandTrapezoid::OccupiedMultiple;
+      trapezoid->mFrames = aBand->mFrames;
     }
 
     nscoord x = aBand->mLeft;
@@ -230,7 +230,7 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
 
     // Move to the next output rect
     trapezoid++;
-    aBandData.count++;
+    aBandData.mCount++;
 
     // Adjust our current x-location within the band
     left = aBand->mRight;
@@ -242,18 +242,18 @@ nsSpaceManager::GetBandAvailableSpace(const BandRect* aBand,
   // No more rects left in the band. If we haven't yet reached the right edge,
   // then all the remaining space is available
   if (left < rightEdge) {
-    if (aBandData.count >= aBandData.size) {
+    if (aBandData.mCount >= aBandData.mSize) {
       // Not enough space in the array of trapezoids
-      aBandData.count++;
+      aBandData.mCount++;
       return NS_ERROR_FAILURE;
     }
-    trapezoid->state = nsBandTrapezoid::Available;
-    trapezoid->frame = nsnull;
+    trapezoid->mState = nsBandTrapezoid::Available;
+    trapezoid->mFrame = nsnull;
 
     // Assign the trapezoid a rectangular shape. The trapezoid must be in the
     // local coordinate space, so convert the current left coordinate
     *trapezoid = nsRect(left - mX, localY, rightEdge - left, height);
-    aBandData.count++;
+    aBandData.mCount++;
   }
 
   return NS_OK;
@@ -264,7 +264,7 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
                             const nsSize& aMaxSize,
                             nsBandData&   aBandData) const
 {
-  NS_PRECONDITION(aBandData.size >= 1, "bad band data");
+  NS_PRECONDITION(aBandData.mSize >= 1, "bad band data");
   nsresult  result = NS_OK;
 
   // Convert the y-offset to world coordinates
@@ -276,25 +276,25 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
   
   if ((NS_COMFALSE == YMost(yMost)) || (y >= yMost)) {
     // All the requested space is available
-    aBandData.count = 1;
-    aBandData.trapezoids[0] = nsRect(0, aYOffset, aMaxSize.width, aMaxSize.height);
-    aBandData.trapezoids[0].state = nsBandTrapezoid::Available;
-    aBandData.trapezoids[0].frame = nsnull;
+    aBandData.mCount = 1;
+    aBandData.mTrapezoids[0] = nsRect(0, aYOffset, aMaxSize.width, aMaxSize.height);
+    aBandData.mTrapezoids[0].mState = nsBandTrapezoid::Available;
+    aBandData.mTrapezoids[0].mFrame = nsnull;
   } else {
     // Find the first band that contains the y-offset or is below the y-offset
     NS_ASSERTION(!mBandList.IsEmpty(), "no bands");
     BandRect* band = mBandList.Head();
 
-    aBandData.count = 0;
+    aBandData.mCount = 0;
     while (nsnull != band) {
       if (band->mTop > y) {
         // The band is below the y-offset. The area between the y-offset and
         // the top of the band is available
-        aBandData.count = 1;
-        aBandData.trapezoids[0] =
+        aBandData.mCount = 1;
+        aBandData.mTrapezoids[0] =
           nsRect(0, aYOffset, aMaxSize.width, PR_MIN(band->mTop - y, aMaxSize.height));
-        aBandData.trapezoids[0].state = nsBandTrapezoid::Available;
-        aBandData.trapezoids[0].frame = nsnull;
+        aBandData.mTrapezoids[0].mState = nsBandTrapezoid::Available;
+        aBandData.mTrapezoids[0].mFrame = nsnull;
         break;
       } else if (y < band->mBottom) {
         // The band contains the y-offset. Return a list of available and
@@ -307,7 +307,7 @@ nsSpaceManager::GetBandData(nscoord       aYOffset,
     }
   }
 
-  NS_POSTCONDITION(aBandData.count > 0, "unexpected band data count");
+  NS_POSTCONDITION(aBandData.mCount > 0, "unexpected band data count");
   return result;
 }
 

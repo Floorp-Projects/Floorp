@@ -246,10 +246,10 @@ nsAreaFrame::Paint(nsIPresContext&      aPresContext,
         PRInt32 i;
         for (i = 0; i < band.GetTrapezoidCount(); i++) {
           const nsBandTrapezoid* trapezoid = band.GetTrapezoid(i);
-          if (nsBandTrapezoid::Available != trapezoid->state) {
+          if (nsBandTrapezoid::Available != trapezoid->mState) {
             nsRect r;
             trapezoid->GetRect(r);
-            if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
+            if (nsBandTrapezoid::OccupiedMultiple == trapezoid->mState) {
               aRenderingContext.SetColor(NS_RGB(0,255,128));
             }
             else {
