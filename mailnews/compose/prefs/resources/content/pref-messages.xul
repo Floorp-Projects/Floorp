@@ -50,7 +50,7 @@
                 </html:legend>
 
 		<html:input pref="true" preftype="bool" prefstring="mail.SpellCheckBeforeSend" id="mail.SpellCheckBeforeSend" type="checkbox"/>
-		<html:label for="bool:mail.SpellCheckBeforeSend">&spellCheck.label;</html:label>
+		<html:label for="mail.SpellCheckBeforeSend">&spellCheck.label;</html:label>
 	</html:fieldset>
 
 	<html:fieldset>
@@ -64,9 +64,9 @@
 		</html:div>
 		
 		<html:div>
-			&wrapOutMsg.label;
-			<html:input pref="true" preftype="int" prefstring="mailnews.wraplength" id="mailnews.wraplength" name="wraplength" type="text" size="10"/>
-			&char.label;
+			<html:label for="mailnews.wraplength">&wrapOutMsg.label;</html:label>
+			<html:input pref="true" preftype="int" prefstring="mailnews.wraplength" id="mailnews.wraplength" name="wraplength" type="text" size="3"/>
+			<html:label for="mailnews.wraplength">&char.label;</html:label>
 		</html:div>
 	</html:fieldset>
 
@@ -76,8 +76,8 @@
 		</html:legend>
 
 		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.strictly_mime" prefindex="false" id="int:mail.strictly_mime0" name="strictly_mime" type="radio"/>
-			<html:label for="mail.strictly_mime1">&asIs.label;</html:label>
+			<html:input pref="true" preftype="bool" prefstring="mail.strictly_mime" prefindex="false" id="mail.strictly_mime0" name="strictly_mime" type="radio"/>
+			<html:label for="mail.strictly_mime0">&asIs.label;</html:label>
 		</html:div>
 
 		<html:div>
@@ -92,12 +92,12 @@
                         <html:div>&emoticonsAndStructs.label;</html:div>
                 </html:legend>
 		<html:div>
-			<html:input pref="true" preftype="bool" prefstring="mail.convert_emoticons" id="bool:mail.convert_emoticons" type="checkbox"/>
-			<html:label for="mail.convert_emoticons">&convertEmoticons.label;&example1.label;&example2.label;&to.label;<html:img src="chrome://messenger/skin/smile.gif"/></html:label>
+			<html:input pref="true" preftype="bool" prefstring="mail.convert_emoticons" id="mail.convert_emoticons" type="checkbox"/>
+			<html:label for="mail.convert_emoticons">&convertEmoticons.label;</html:label><html:label for="mail.convert_emoticons">&example1.label;&example2.label;&to.label;<html:img src="chrome://messenger/skin/smile.gif"/></html:label>
 		</html:div>
 		<html:div>
 			<html:input pref="true" preftype="bool" prefstring="mail.convert_structs" id="mail.convert_structs" type="checkbox"/>
-			<html:label for="mail.convert_structs">&convertStructs.label;&example1.label;&example3.label;&example4.label;&example3.label;&to.label;<html:b>&example4.label;</html:b></html:label>
+			<html:label for="mail.convert_structs">&convertStructs.label;</html:label><html:label for="mail.convert_structs">&example1.label;&example3.label;&example4.label;&example3.label; &to.label; <html:b> &example4.label;</html:b></html:label>
 		</html:div>
 	</html:fieldset>
 
