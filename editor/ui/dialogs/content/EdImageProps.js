@@ -36,7 +36,8 @@ function Startup()
 {
   if (!InitEditorShell())
     return;
-  dump("EditoreditorShell found for Image Properties dialog\n");
+
+  doSetOKCancel(onOK, null);
 
   // Create dialog object to store controls for easy access
 
@@ -328,12 +329,13 @@ function doOverallEnabling()
   
   wasEnableAll                          = canEnableAll;
 
-  btn                                   = document.getElementById("OK");
+  btn                                   = document.getElementById("ok");
   if ( btn )
   {
+    dump("ok button found!\n")
     btn.disabled                        = (!canEnableAll && hasAnyChanged);
   }
-  
+  else dump("ok button not found\n");
   
   fieldset                              = document.getElementById("imagedimensionsFieldset");
   if ( fieldset )
@@ -494,10 +496,8 @@ function onOK()
 {
   if ( !imageType )   {
   dump("alert *** please choose an image of typ gif, jpg or png.\n\n");
-  return;
+  return false;
   }
-
-  else  {
 
   imageElement.setAttribute("src",dialog.srcInput.value);
 
@@ -553,20 +553,17 @@ function onOK()
 
   // handle insertion of new image
 
-  if (insertNew) {
-    dump("src="+imageElement.getAttribute("src")+" alt="+imageElement.getAttribute("alt")+"\n");
-
+  if (insertNew)
+  {
     // 'true' means delete the selection before inserting
 
     editorShell.InsertElement(imageElement, true);
   }
 
-  // dismiss dialog
-
-  window.close();
-
-  }
+  return true;
 }
+
+
 // setDimensions()
 // sets height and width attributes to inserted image
 // Brian King - XML Workshop

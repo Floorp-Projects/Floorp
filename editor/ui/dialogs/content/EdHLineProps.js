@@ -33,6 +33,8 @@ function Startup()
   if (!InitEditorShell())
     return;
 
+  doSetOKCancel(onOK, null);
+
   // Get the selected horizontal line
   hLineElement = editorShell.GetSelectedElement(tagName);
 
@@ -171,11 +173,8 @@ function ValidateData(setAttributes)
 
 function onOK()
 {
-  dump("************* onOK for HLine props\n");
   // Since we only edit existing HLines, 
   //  ValidateData will set the new attributes
   //   so there's nothing else to do
-  if (ValidateData(true)) {
-    window.close();
-  }  
+  return (ValidateData(true));
 }
