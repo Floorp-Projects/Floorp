@@ -238,6 +238,9 @@ public:
   // Computes the hashcode for a buffer with a specified length.
   static PRUint32 BufferHashCode(const char* str, PRUint32 strLen);
 
+  // Computes the hashcode for a buffer with a specified length.
+  static PRUint32 BufferHashCode(const PRUnichar* str, PRUint32 strLen);
+
   // String to longlong
   static PRInt64 atoll(const char *str);
   
