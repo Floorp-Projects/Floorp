@@ -1432,7 +1432,7 @@ nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
   return rv;
 }
 
-nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, PRBool aWindowless, nsPoint * aOrigin)
+nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, nsPoint * aOrigin)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
   NS_ENSURE_ARG_POINTER(aOrigin);
@@ -1442,29 +1442,6 @@ nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, P
   nsPoint origin(0,0);
 
   GetOffsetFromView(aPresContext, origin, &parentWithView);
-
-  // if it's windowless, let's make sure we have our origin set right
-  // it may need to be corrected, like after scrolling
-  if (aWindowless && parentWithView) {
-    nsPoint correction(0,0);
-    nsCOMPtr<nsIViewManager> parentVM;
-    parentWithView->GetViewManager(*getter_AddRefs(parentVM));
-
-    // Walk up all the views and add up their positions. This will give us our
-    // absolute position which is what we want to give the plugin
-    nsIView* theView = parentWithView;
-    while (theView) {
-      nsCOMPtr<nsIViewManager> vm;
-      theView->GetViewManager(*getter_AddRefs(vm));
-      if (vm != parentVM)
-        break;
-
-      theView->GetPosition(&correction.x, &correction.y);
-      origin += correction;
-      
-      theView->GetParent(theView);
-    }  
-  }
 
   float t2p;
   aPresContext->GetTwipsToPixels(&t2p);
@@ -1516,7 +1493,7 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
     return rv;
 
   nsPoint origin;
-  GetWindowOriginInPixels(aPresContext, windowless, &origin);
+  GetWindowOriginInPixels(aPresContext, &origin);
 
   window->x = origin.x;
   window->y = origin.y;

@@ -160,7 +160,7 @@ protected:
 
   nsresult NotifyContentObjectWrapper();
 
-  nsresult GetWindowOriginInPixels(nsIPresContext * aPresContext, PRBool aWindoless, nsPoint* aOrigin);
+  nsresult GetWindowOriginInPixels(nsIPresContext * aPresContext, nsPoint* aOrigin);
 
 private:
   nsPluginInstanceOwner *mInstanceOwner;
