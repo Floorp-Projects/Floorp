@@ -26,15 +26,16 @@ package contains all the discriptions of the local system.
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/%{_prefix}
+mkdir -p $RPM_BUILD_ROOT/var/log/tinderbox2
 
 cd $RPM_BUILD_ROOT/%{_prefix}
 tar zxf %{_sourcedir}/tinderbox2_local_conf.tar.gz
 
 %clean
-#rm -rf $RPM_BUILD_ROOT
+rm -rf $RPM_BUILD_ROOT
 
 
 %files
 %defattr(-,tinderbox,root)
 %{_prefix}/local_conf/*
-
+/var/log/tinderbox2
