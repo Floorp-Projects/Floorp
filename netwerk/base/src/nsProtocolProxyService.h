@@ -56,6 +56,7 @@ protected:
         PRInt32     port;
     };
 
+    PRLock                  *mArrayLock;
     nsVoidArray             mFiltersArray;
 
     PRBool CanUseProxy(nsIURI* aURI);

@@ -24,6 +24,7 @@
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsIProxyAutoConfig.h"
+#include "nsAutoLock.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
@@ -37,17 +38,21 @@ static PRInt32 PR_CALLBACK ProxyPrefsCallback(const char* pref, void* instance)
 }
 
 
-NS_IMPL_ISUPPORTS1(nsProtocolProxyService, nsIProtocolProxyService);
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsProtocolProxyService, nsIProtocolProxyService);
 
 
 nsProtocolProxyService::nsProtocolProxyService():
-    mUseProxy(0)
+    mUseProxy(0),
+    mArrayLock(PR_NewLock())
 {
     NS_INIT_REFCNT();
 }
 
 nsProtocolProxyService::~nsProtocolProxyService()
 {
+    if(mArrayLock)
+        PR_DestroyLock(mArrayLock);
+
     if (mFiltersArray.Count() > 0) 
     {
         mFiltersArray.EnumerateForwards(
@@ -296,6 +301,8 @@ nsProtocolProxyService::AddNoProxyFor(const char* iHost, PRInt32 iPort)
         return NS_ERROR_OUT_OF_MEMORY;
     hp->host = new nsCString(iHost);
     hp->port = iPort;
+    
+    nsAutoLock lock(mArrayLock);
 
     return (mFiltersArray.AppendElement(hp)) ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -305,6 +312,8 @@ nsProtocolProxyService::RemoveNoProxyFor(const char* iHost, PRInt32 iPort)
 {
     if (!iHost)
         return NS_ERROR_NULL_POINTER;
+    
+    nsAutoLock lock(mArrayLock);
 
     if (mFiltersArray.Count()==0)
         return NS_ERROR_FAILURE;
