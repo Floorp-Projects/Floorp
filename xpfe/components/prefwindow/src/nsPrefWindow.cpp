@@ -59,7 +59,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include <ctype.h>
 
 // do a case insensitive string compare
-#define WIDGET_IS_TYPE(macro_widget_string,macro_in_string) ((macro_widget_string).Compare((macro_in_string), PR_TRUE))
+#define WIDGET_IS_TYPE(macro_widget_string,macro_in_string) ((macro_widget_string).Compare((macro_in_string), PR_TRUE) == 0)
 
 // Globals - how many K are we wasting by putting these in every file?
 static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
