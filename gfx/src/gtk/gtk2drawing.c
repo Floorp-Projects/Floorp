@@ -52,8 +52,8 @@
 #define YTHICKNESS(style) (style->ythickness)
 #define WINDOW_IS_MAPPED(window) ((window) && GDK_IS_WINDOW(window) && gdk_window_is_visible(window))
 
-static GtkWidget* gButtonWidget;
 static GtkWidget* gProtoWindow;
+static GtkWidget* gButtonWidget;
 static GtkWidget* gCheckboxWidget;
 static GtkWidget* gRadiobuttonWidget;
 static GtkWidget* gHorizScrollbarWidget;
@@ -77,18 +77,26 @@ moz_gtk_enable_style_props(style_prop_t styleGetProp)
 }
 
 static gint
+ensure_window_widget()
+{
+    if (!gProtoWindow) {
+        gProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
+        gtk_widget_realize(gProtoWindow);
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+static gint
 setup_widget_prototype(GtkWidget* widget)
 {
     static GtkWidget* protoLayout;
-
-    if (!gProtoWindow) {
-        gProtoWindow = gtk_window_new(GTK_WINDOW_POPUP);
+    ensure_window_widget();
+    if (!protoLayout) {
         protoLayout = gtk_fixed_new();
         gtk_container_add(GTK_CONTAINER(gProtoWindow), protoLayout);
     }
 
     gtk_container_add(GTK_CONTAINER(protoLayout), widget);
-    gtk_widget_set_rc_style(widget);
     gtk_widget_realize(widget);
     return MOZ_GTK_SUCCESS;
 }
@@ -155,7 +163,6 @@ ensure_arrow_widget()
         setup_widget_prototype(gDropdownButtonWidget);
         gArrowWidget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
         gtk_container_add(GTK_CONTAINER(gDropdownButtonWidget), gArrowWidget);
-        gtk_widget_set_rc_style(gArrowWidget);
         gtk_widget_realize(gArrowWidget);
     }
     return MOZ_GTK_SUCCESS;
@@ -917,6 +924,23 @@ moz_gtk_tabpanels_paint(GdkDrawable* drawable, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+static gint
+moz_gtk_window_paint(GdkDrawable* drawable, GdkRectangle* rect,
+                     GdkRectangle* cliprect)
+{
+    GtkStyle* style;
+
+    ensure_window_widget();
+    style = gProtoWindow->style;
+
+    TSOffsetStyleGCs(style, rect->x, rect->y);
+    gtk_style_apply_default_background(style, drawable, TRUE,
+                                       GTK_STATE_NORMAL,
+                                       cliprect, rect->x, rect->y,
+                                       rect->width, rect->height);
+    return MOZ_GTK_SUCCESS;
+}
+
 gint
 moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
                           gint* ythickness)
@@ -960,6 +984,7 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
             *ythickness = 1;
         return MOZ_GTK_SUCCESS;
         break;
+    /* These widgets have no borders, since they are not containers. */
     case MOZ_GTK_CHECKBUTTON:
     case MOZ_GTK_RADIOBUTTON:
     case MOZ_GTK_SCROLLBAR_BUTTON:
@@ -968,10 +993,11 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* xthickness,
     case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
     case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
     case MOZ_GTK_GRIPPER:
-    case MOZ_GTK_TOOLTIP:
     case MOZ_GTK_PROGRESS_CHUNK:
     case MOZ_GTK_TAB:
-        /* These widgets have no borders, since they are not containers. */
+    /* These widgets have no borders.*/
+    case MOZ_GTK_TOOLTIP:
+    case MOZ_GTK_WINDOW:
         if (xthickness)
             *xthickness = 0;
         if (ythickness)
@@ -1112,6 +1138,9 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         break;
     case MOZ_GTK_TABPANELS:
         return moz_gtk_tabpanels_paint(drawable, rect, cliprect);
+        break;
+    case MOZ_GTK_WINDOW:
+        return moz_gtk_window_paint(drawable, rect, cliprect);
         break;
     default:
         g_warning("Unknown widget type: %d", widget);

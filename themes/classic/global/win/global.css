@@ -53,6 +53,7 @@ window,
 page,
 dialog,
 wizard { 
+  -moz-appearance: window;
   background-color: -moz-Dialog;
   color: -moz-DialogText;
   font: message-box;
