@@ -63,7 +63,7 @@ Attributes=SELECTED|INVISIBLE
 [Component1]
 Description Short=Navigator
 ; *** LOCALIZE ME BABY ***
-Description Long=Web browser software
+Description Long=for web browsing
 Archive=browser.xpi
 Install Size=<#browser_actualSize>
 Archive Size=<#browser_archiveSize>
@@ -72,7 +72,7 @@ Attributes=SELECTED
 [Component2]
 Description Short=Mail & News
 ; *** LOCALIZE ME BABY ***
-Description Long=Email and Newsgroup software
+Description Long=for reading email and newsgroups
 Archive=mail.xpi
 Install Size=<#mail_actualSize>
 Archive Size=<#mail_archiveSize>
@@ -81,7 +81,7 @@ Attributes=SELECTED
 [Component3]
 Description Short=Chatzilla
 ; *** LOCALIZE ME BABY ***
-Description Long=Chatzilla IRC client
+Description Long=for chatting on Internet Relay Chat(IRC)
 Archive=chatzilla.xpi
 Install Size=<#chatzilla_actualSize>
 Archive Size=<#chatzilla_archiveSize>
@@ -117,7 +117,7 @@ Attributes=SELECTED|INVISIBLE
 [Component7]
 Description Short=Quality Feedback Agent
 ; *** LOCALIZE ME BABY ***
-Description Long=Tool for reporting software crashes to Mozilla
+Description Long=for reporting Mozilla crash information
 Archive=talkback.xpi
 Install Size=<#talkback_actualSize>
 Archive Size=<#talkback_archiveSize>
@@ -126,7 +126,7 @@ Attributes=SELECTED
 [Component8]
 Description Short=Debugger
 ; *** LOCALIZE ME BABY ***
-Description Long=JavaScript Debugger
+Description Long=for debugging JavaScript
 Archive=venkman.xpi
 Install Size=<#venkman_actualSize>
 Archive Size=<#venkman_archiveSize>
