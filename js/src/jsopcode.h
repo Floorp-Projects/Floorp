@@ -61,10 +61,12 @@ typedef enum JSOp {
 #define JOF_INCDEC        0x0300  /* increment or decrement opcode */
 #define JOF_POST          0x0400  /* postorder increment or decrement */
 #define JOF_IMPORT        0x0800  /* import property op */
+#define JOF_FOR2          0x1000  /* new for/in loop bytecodes */
 
 /*
  * Immediate operand getters, setters, and bounds.
  */
+#define JUMP_OFFSET_LEN         2
 #define JUMP_OFFSET_HI(off)     ((jsbytecode)((off) >> 8))
 #define JUMP_OFFSET_LO(off)     ((jsbytecode)(off))
 #define GET_JUMP_OFFSET(pc)     ((int16)(((pc)[1] << 8) | (pc)[2]))
@@ -73,11 +75,12 @@ typedef enum JSOp {
 #define JUMP_OFFSET_MIN         ((int16)0x8000)
 #define JUMP_OFFSET_MAX         ((int16)0x7fff)
 
+#define ATOM_INDEX_LEN          2
 #define ATOM_INDEX_HI(index)    ((jsbytecode)((index) >> 8))
 #define ATOM_INDEX_LO(index)    ((jsbytecode)(index))
 #define GET_ATOM_INDEX(pc)      (((pc)[1] << 8) | (pc)[2])
-#define SET_ATOM_INDEX(pc,ndx)  ((pc)[1] = ATOM_INDEX_HI(ndx),                \
-				 (pc)[2] = ATOM_INDEX_LO(ndx))
+#define SET_ATOM_INDEX(pc,index)((pc)[1] = ATOM_INDEX_HI(index),              \
+				 (pc)[2] = ATOM_INDEX_LO(index))
 #define GET_ATOM(cx,script,pc)  js_GetAtom((cx), &(script)->atomMap,          \
 					   GET_ATOM_INDEX(pc))
 #define ATOM_INDEX_LIMIT_LOG2   16
@@ -104,6 +107,8 @@ struct JSCodeSpec {
     uint32              format;         /* immediate operand format */
 };
 
+extern char             js_in_str[];
+extern char             js_instanceof_str[];
 extern char             js_new_str[];
 extern char             js_delete_str[];
 extern char             js_typeof_str[];
@@ -118,10 +123,11 @@ extern jschar           js_EscapeMap[];
 
 /*
  * Return a GC'ed string containing the chars in str, with any non-printing
- * chars or quotes (' or " as specified by the quote argument) escaped.
+ * chars or quotes (' or " as specified by the quote argument) escaped, and
+ * with the quote character at the beginning and end of the result string.
  */
 extern JSString *
-js_EscapeString(JSContext *cx, JSString *str, jschar quote);
+js_QuoteString(JSContext *cx, JSString *str, jschar quote);
 
 /*
  * JSPrinter operations, for printf style message formatting.  The return
@@ -149,10 +155,10 @@ js_puts(JSPrinter *jp, char *s);
  */
 #include <stdio.h>
 
-extern void
+extern JS_FRIEND_API(void)
 js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp);
 
-extern uintN
+extern JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
 		JSBool lines, FILE *fp);
 #endif /* DEBUG */
@@ -171,11 +177,11 @@ js_DecompileFunction(JSPrinter *jp, JSFunction *fun, JSBool newlines);
 
 /*
  * Find the source expression that resulted in v, and return a new string
- * containing it.  Fall back on v's string conversion if cx lacks sufficient
- * information to tell what source resulted in v.
+ * containing it.  Fall back on v's string conversion if we can't find the
+ * bytecode that generated and pushed v on the operand stack.
  */
 extern JSString *
-js_ValueToSource(JSContext *cx, jsval v);
+js_DecompileValueGenerator(JSContext *cx, jsval v, JSString *fallback);
 
 PR_END_EXTERN_C
 

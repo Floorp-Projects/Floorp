@@ -44,54 +44,58 @@ js_hash_id(const void *key)
     return atom->number;
 }
 
+typedef struct JSScopePrivate {
+    JSContext *context;
+    JSScope *scope;
+} JSScopePrivate;
+
 PR_STATIC_CALLBACK(void *)
 js_alloc_scope_space(void *priv, size_t size)
 {
-    return JS_malloc(priv, size);
+    return JS_malloc(((JSScopePrivate *)priv)->context, size);
 }
 
 PR_STATIC_CALLBACK(void)
 js_free_scope_space(void *priv, void *item)
 {
-    JS_free(priv, item);
+    JS_free(((JSScopePrivate *)priv)->context, item);
 }
 
 PR_STATIC_CALLBACK(PRHashEntry *)
 js_alloc_symbol(void *priv, const void *key)
 {
+    JSScopePrivate *spriv;
     JSContext *cx;
     JSSymbol *sym;
-    JSAtom *atom;
 
-    cx = priv;
-    PR_ASSERT(JS_IS_LOCKED(cx));
+    spriv = priv;
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(spriv->scope));
+    cx = spriv->context;
     sym = JS_malloc(cx, sizeof(JSSymbol));
     if (!sym)
 	return NULL;
     sym->entry.key = key;
-    if (!JSVAL_IS_INT((jsval)key)) {
-	atom = (JSAtom *)key;
-	js_HoldAtom(cx, atom);
-    }
     return &sym->entry;
 }
 
 PR_STATIC_CALLBACK(void)
 js_free_symbol(void *priv, PRHashEntry *he, uintN flag)
 {
+    JSScopePrivate *spriv;
     JSContext *cx;
     JSSymbol *sym, **sp;
-    JSProperty *prop;
+    JSScopeProperty *sprop;
 
-    cx = priv;
-    PR_ASSERT(JS_IS_LOCKED(cx));
+    spriv = priv;
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(spriv->scope));
+    cx = spriv->context;
     sym = (JSSymbol *)he;
-    prop = sym->entry.value;
-    if (prop) {
+    sprop = sym->entry.value;
+    if (sprop) {
 	sym->entry.value = NULL;
-	prop = js_DropProperty(cx, prop);
-	if (prop) {
-	    for (sp = &prop->symbols; *sp; sp = &(*sp)->next) {
+	sprop = js_DropScopeProperty(cx, spriv->scope, sprop);
+	if (sprop) {
+	    for (sp = &sprop->symbols; *sp; sp = &(*sp)->next) {
 		if (*sp == sym) {
 		    *sp = sym->next;
 		    if (!*sp)
@@ -102,11 +106,8 @@ js_free_symbol(void *priv, PRHashEntry *he, uintN flag)
 	}
     }
 
-    if (flag == HT_FREE_ENTRY) {
-	if (!JSVAL_IS_INT(sym_id(sym)))
-	    JS_LOCK_VOID(cx, js_DropAtom(cx, sym_atom(sym)));
+    if (flag == HT_FREE_ENTRY)
 	JS_free(cx, he);
-    }
 }
 
 static PRHashAllocOps hash_scope_alloc_ops = {
@@ -117,7 +118,7 @@ static PRHashAllocOps hash_scope_alloc_ops = {
 /************************************************************************/
 
 PR_STATIC_CALLBACK(JSSymbol *)
-js_hash_scope_lookup(JSContext *cx, JSScope *scope, jsval id, PRHashNumber hash)
+js_hash_scope_lookup(JSContext *cx, JSScope *scope, jsid id, PRHashNumber hash)
 {
     PRHashTable *table = scope->data;
     PRHashEntry **hep;
@@ -128,21 +129,21 @@ js_hash_scope_lookup(JSContext *cx, JSScope *scope, jsval id, PRHashNumber hash)
     return sym;
 }
 
-#define SCOPE_ADD(CLASS_SPECIFIC_CODE)                                        \
+#define SCOPE_ADD(PRIV, CLASS_SPECIFIC_CODE)                                  \
     PR_BEGIN_MACRO                                                            \
 	if (sym) {                                                            \
-	    if (sym->entry.value == prop)                                     \
+	    if (sym->entry.value == sprop)                                    \
 		return sym;                                                   \
 	    if (sym->entry.value)                                             \
-		js_free_symbol(cx, &sym->entry, HT_FREE_VALUE);               \
+		js_free_symbol(PRIV, &sym->entry, HT_FREE_VALUE);             \
 	} else {                                                              \
 	    CLASS_SPECIFIC_CODE                                               \
 	    sym->scope = scope;                                               \
 	    sym->next = NULL;                                                 \
 	}                                                                     \
-	if (prop) {                                                           \
-	    sym->entry.value = js_HoldProperty(cx, prop);                     \
-	    for (sp = &prop->symbols; *sp; sp = &(*sp)->next)                 \
+	if (sprop) {                                                          \
+	    sym->entry.value = js_HoldScopeProperty(cx, scope, sprop);        \
+	    for (sp = &sprop->symbols; *sp; sp = &(*sp)->next)                \
 		;                                                             \
 	    *sp = sym;                                                        \
 	} else {                                                              \
@@ -151,21 +152,23 @@ js_hash_scope_lookup(JSContext *cx, JSScope *scope, jsval id, PRHashNumber hash)
     PR_END_MACRO
 
 PR_STATIC_CALLBACK(JSSymbol *)
-js_hash_scope_add(JSContext *cx, JSScope *scope, jsval id, JSProperty *prop)
+js_hash_scope_add(JSContext *cx, JSScope *scope, jsid id, JSScopeProperty *sprop)
 {
     PRHashTable *table = scope->data;
     const void *key;
     PRHashNumber keyHash;
     PRHashEntry **hep;
     JSSymbol *sym, **sp;
+    JSScopePrivate *priv;
 
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    table->allocPriv = cx;
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
+    priv = table->allocPriv;
+    priv->context = cx;
     key = (const void *)id;
     keyHash = js_hash_id(key);
     hep = PR_HashTableRawLookup(table, keyHash, key);
     sym = (JSSymbol *) *hep;
-    SCOPE_ADD(
+    SCOPE_ADD(priv,
 	sym = (JSSymbol *) PR_HashTableRawAdd(table, hep, keyHash, key, NULL);
 	if (!sym)
 	    return NULL;
@@ -174,26 +177,31 @@ js_hash_scope_add(JSContext *cx, JSScope *scope, jsval id, JSProperty *prop)
 }
 
 PR_STATIC_CALLBACK(JSBool)
-js_hash_scope_remove(JSContext *cx, JSScope *scope, jsval id)
+js_hash_scope_remove(JSContext *cx, JSScope *scope, jsid id)
 {
     PRHashTable *table = scope->data;
+    JSScopePrivate *priv;
 
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    table->allocPriv = cx;
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
+    priv = table->allocPriv;
+    priv->context = cx;
     return PR_HashTableRemove(table, (const void *)id);
 }
 
 /* Forward declaration for use by js_hash_scope_clear(). */
-extern JSScopeOps js_list_scope_ops;
+extern JS_FRIEND_DATA(JSScopeOps) js_list_scope_ops;
 
 PR_STATIC_CALLBACK(void)
 js_hash_scope_clear(JSContext *cx, JSScope *scope)
 {
     PRHashTable *table = scope->data;
+    JSScopePrivate *priv;
 
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    table->allocPriv = cx;
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
+    priv = table->allocPriv;
+    priv->context = cx;
     PR_HashTableDestroy(table);
+    JS_free(cx, priv);
     scope->ops = &js_list_scope_ops;
     scope->data = NULL;
 }
@@ -208,10 +216,11 @@ JSScopeOps js_hash_scope_ops = {
 /************************************************************************/
 
 PR_STATIC_CALLBACK(JSSymbol *)
-js_list_scope_lookup(JSContext *cx, JSScope *scope, jsval id, PRHashNumber hash)
+js_list_scope_lookup(JSContext *cx, JSScope *scope, jsid id, PRHashNumber hash)
 {
     JSSymbol *sym, **sp;
 
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
     for (sp = (JSSymbol **)&scope->data; (sym = *sp) != 0;
 	 sp = (JSSymbol **)&sym->entry.next) {
 	if (sym_id(sym) == id) {
@@ -228,15 +237,16 @@ js_list_scope_lookup(JSContext *cx, JSScope *scope, jsval id, PRHashNumber hash)
 #define HASH_THRESHOLD	5
 
 PR_STATIC_CALLBACK(JSSymbol *)
-js_list_scope_add(JSContext *cx, JSScope *scope, jsval id, JSProperty *prop)
+js_list_scope_add(JSContext *cx, JSScope *scope, jsid id, JSScopeProperty *sprop)
 {
     JSSymbol *list = scope->data;
     uint32 nsyms;
     JSSymbol *sym, *next, **sp;
     PRHashTable *table;
     PRHashEntry **hep;
+    JSScopePrivate priv;
 
-    PR_ASSERT(JS_IS_LOCKED(cx));
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
     nsyms = 0;
     for (sym = list; sym; sym = (JSSymbol *)sym->entry.next) {
 	if (sym_id(sym) == id)
@@ -245,9 +255,13 @@ js_list_scope_add(JSContext *cx, JSScope *scope, jsval id, JSProperty *prop)
     }
 
     if (nsyms >= HASH_THRESHOLD) {
+	JSScopePrivate *priv = JS_malloc(cx, sizeof(JSScopePrivate));
+	if (!priv) return NULL;
+	priv->context = cx;
+	priv->scope = scope;
 	table = PR_NewHashTable(nsyms, js_hash_id,
 			        PR_CompareValues, PR_CompareValues,
-			        &hash_scope_alloc_ops, cx);
+			        &hash_scope_alloc_ops, priv);
 	if (table) {
 	    for (sym = list; sym; sym = next) {
 		/* Save next for loop update, before it changes in lookup. */
@@ -264,12 +278,14 @@ js_list_scope_add(JSContext *cx, JSScope *scope, jsval id, JSProperty *prop)
 	    table->nentries = nsyms;
 	    scope->ops = &js_hash_scope_ops;
 	    scope->data = table;
-	    return scope->ops->add(cx, scope, id, prop);
+	    return scope->ops->add(cx, scope, id, sprop);
 	}
     }
 
-    SCOPE_ADD(
-	sym = (JSSymbol *)js_alloc_symbol(cx, (const void *)id);
+    priv.context = cx;
+    priv.scope = scope;
+    SCOPE_ADD(&priv,
+	sym = (JSSymbol *)js_alloc_symbol(&priv, (const void *)id);
 	if (!sym)
 	    return NULL;
 	/* Don't set keyHash until we know we need it, above. */
@@ -280,16 +296,19 @@ js_list_scope_add(JSContext *cx, JSScope *scope, jsval id, JSProperty *prop)
 }
 
 PR_STATIC_CALLBACK(JSBool)
-js_list_scope_remove(JSContext *cx, JSScope *scope, jsval id)
+js_list_scope_remove(JSContext *cx, JSScope *scope, jsid id)
 {
     JSSymbol *sym, **sp;
+    JSScopePrivate priv;
 
-    PR_ASSERT(JS_IS_LOCKED(cx));
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
     for (sp = (JSSymbol **)&scope->data; (sym = *sp) != 0;
 	 sp = (JSSymbol **)&sym->entry.next) {
 	if (sym_id(sym) == id) {
 	    *sp = (JSSymbol *)sym->entry.next;
-	    js_free_symbol(cx, &sym->entry, HT_FREE_ENTRY);
+	    priv.context = cx;
+	    priv.scope = scope;
+	    js_free_symbol(&priv, &sym->entry, HT_FREE_ENTRY);
 	    return JS_TRUE;
 	}
     }
@@ -300,15 +319,18 @@ PR_STATIC_CALLBACK(void)
 js_list_scope_clear(JSContext *cx, JSScope *scope)
 {
     JSSymbol *sym;
+    JSScopePrivate priv;
 
-    PR_ASSERT(JS_IS_LOCKED(cx));
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
     while ((sym = scope->data) != NULL) {
 	scope->data = sym->entry.next;
-	js_free_symbol(cx, &sym->entry, HT_FREE_ENTRY);
+	priv.context = cx;
+	priv.scope = scope;
+	js_free_symbol(&priv, &sym->entry, HT_FREE_ENTRY);
     }
 }
 
-JSScopeOps js_list_scope_ops = {
+JSScopeOps JS_FRIEND_DATA(js_list_scope_ops) = {
     js_list_scope_lookup,
     js_list_scope_add,
     js_list_scope_remove,
@@ -322,145 +344,70 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
 {
     JSScope *scope, *newscope;
 
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    scope = (JSScope *)obj->map;
+    scope = (JSScope *) obj->map;
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
     if (scope->object == obj)
 	return scope;
-    newscope = js_NewScope(cx, obj->map->clasp, obj);
+    newscope = js_NewScope(cx, 0, scope->map.ops, LOCKED_OBJ_GET_CLASS(obj),
+			   obj);
     if (!newscope)
 	return NULL;
-    obj->map = (JSObjectMap *)js_HoldScope(cx, newscope);
-    js_DropScope(cx, scope);
+    JS_LOCK_SCOPE(cx, newscope);
+    obj->map = js_HoldObjectMap(cx, &newscope->map);
+    scope = (JSScope *) js_DropObjectMap(cx, &scope->map, obj);
+    JS_TRANSFER_SCOPE_LOCK(cx, scope, newscope);
     return newscope;
 }
 
-#if SCOPE_TABLE
-static PR_HashTable *scope_table;
-
-#define entry2scope(he) ((JSScope *)((char *)(he) - offsetof(JSScope, entry)))
-
-PR_STATIC_CALLBACK(PRHashNumber)
-js_scope_hash(const void *key)
-{
-}
-
-PR_STATIC_CALLBACK(int)
-js_scope_compare(const void *v1, const void *v2)
-{
-}
-
-PR_STATIC_CALLBACK(PRHashEntry *)
-js_alloc_scope(void *priv, const void *key)
-{
-    JSScope *scope;
-
-    scope = JS_malloc(priv, sizeof(JSScope));
-    if (!scope)
-	return NULL;
-    return &scope->entry;
-}
-
-PR_STATIC_CALLBACK(void)
-js_free_scope(void *priv, PRHashEntry *he, uintN flag)
-{
-    JSScope *scope;
-
-    scope = entry2scope(he);
-    JS_free(priv, scope);
-}
-
-static PRHashAllocOps scope_table_alloc_ops = {
-    js_alloc_scope_space, js_free_scope_space,
-    js_alloc_scope, js_free_scope
-};
-#endif /* SCOPE_TABLE */
-
 JSScope *
-js_MutateScope(JSContext *cx, JSObject *obj, jsval id,
-	       JSPropertyOp getter, JSPropertyOp setter, uintN flags,
-	       JSProperty **propp)
+js_MutateScope(JSContext *cx, JSObject *obj, jsid id,
+	       JSPropertyOp getter, JSPropertyOp setter, uintN attrs,
+	       JSScopeProperty **propp)
 {
-    PR_ASSERT(JS_IS_LOCKED(cx));
     /* XXX pessimal */
     *propp = NULL;
     return js_GetMutableScope(cx, obj);
 }
 
 JSScope *
-js_NewScope(JSContext *cx, JSClass *clasp, JSObject *obj)
+js_NewScope(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops, JSClass *clasp,
+	    JSObject *obj)
 {
     JSScope *scope;
-#if SCOPE_TABLE
-    PRHashEntry *he, **hep;
 
-    if (scope_table) {
-	scope_table = PR_NewHashTable(INIT_SCOPE_TABLE_SIZE, js_scope_hash,
-				      js_scope_compare, PR_CompareValues,
-				      &scope_table_alloc_ops, cx);
-	if (!scope_table)
-	    return NULL;
-    } else {
-	scope_table->allocPriv = cx;
-    }
-    hep = PR_HashTableRawLookup(scope_table, NULL, NULL);
-    he  = PR_HashTableRawAdd(scope_table, hep, NULL, NULL, hep);
-    if (!he)
-	return NULL;
-    scope = entry2scope(he);
-#else
     scope = JS_malloc(cx, sizeof(JSScope));
     if (!scope)
 	return NULL;
-#endif
-    scope->map.nrefs = 0;
-    scope->map.nslots = 0;
-    if (clasp->flags & JSCLASS_HAS_PRIVATE)
-	scope->map.freeslot = JSSLOT_PRIVATE + 1;
-    else
-	scope->map.freeslot = JSSLOT_START;
-    scope->map.clasp = clasp;
-    scope->map.props = NULL;
+    js_InitObjectMap(&scope->map, nrefs, ops, clasp);
     scope->object = obj;
-    scope->proptail = &scope->map.props;
+    scope->props = NULL;
+    scope->proptail = &scope->props;
     scope->ops = &js_list_scope_ops;
     scope->data = NULL;
+
+#ifdef JS_THREADSAFE
+    js_NewLock(&scope->lock);
+    scope->count = 0;
+#ifdef DEBUG
+    scope->file[0] = scope->file[1] = scope->file[2] = scope->file[3] = NULL;
+    scope->line[0] = scope->line[1] = scope->line[2] = scope->line[3] = 0;
+#endif
+#endif
+
     return scope;
 }
 
 void
 js_DestroyScope(JSContext *cx, JSScope *scope)
 {
-    JSProperty *prop;
-
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    for (prop = scope->map.props; prop; prop = prop->next)
-	prop->object = NULL;
+    JS_LOCK_SCOPE(cx, scope);
     scope->ops->clear(cx, scope);
-#if SCOPE_TABLE
-    PR_HashTableRawRemove(scope_table, scope->entry.value, &scope->entry);
+    JS_UNLOCK_SCOPE(cx, scope);
+#ifdef JS_THREADSAFE
+    PR_ASSERT(scope->count == 0);
+    js_DestroyLock(&scope->lock);
 #endif
     JS_free(cx, scope);
-}
-
-JSScope *
-js_HoldScope(JSContext *cx, JSScope *scope)
-{
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    PR_ASSERT(scope->map.nrefs >= 0);
-    scope->map.nrefs++;
-    return scope;
-}
-
-JSScope *
-js_DropScope(JSContext *cx, JSScope *scope)
-{
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    PR_ASSERT(scope->map.nrefs > 0);
-    if (--scope->map.nrefs == 0) {
-	js_DestroyScope(cx, scope);
-	return NULL;
-    }
-    return scope;
 }
 
 PRHashNumber
@@ -470,7 +417,7 @@ js_HashValue(jsval v)
 }
 
 jsval
-js_IdToValue(jsval id)
+js_IdToValue(jsid id)
 {
     JSAtom *atom;
 
@@ -480,43 +427,39 @@ js_IdToValue(jsval id)
     return ATOM_KEY(atom);
 }
 
-JSProperty *
-js_NewProperty(JSContext *cx, JSScope *scope, jsval id,
-	       JSPropertyOp getter, JSPropertyOp setter, uintN flags)
+JSScopeProperty *
+js_NewScopeProperty(JSContext *cx, JSScope *scope, jsid id,
+		    JSPropertyOp getter, JSPropertyOp setter, uintN attrs)
 {
     uint32 slot;
-    JSProperty *prop;
+    JSScopeProperty *sprop;
 
-    PR_ASSERT(JS_IS_LOCKED(cx));
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
     if (!js_AllocSlot(cx, scope->object, &slot))
 	return NULL;
-    prop = JS_malloc(cx, sizeof(JSProperty));
-    if (!prop) {
+    sprop = JS_malloc(cx, sizeof(JSScopeProperty));
+    if (!sprop) {
 	js_FreeSlot(cx, scope->object, slot);
 	return NULL;
     }
-    prop->nrefs = 0;
-    prop->id = js_IdToValue(id);
-    prop->getter = getter;
-    prop->setter = setter;
-    prop->slot = slot;
-    prop->flags = flags;
-    prop->spare = 0;
-    prop->object = scope->object;
-    prop->symbols = NULL;
-    prop->next = NULL;
-    prop->prevp = scope->proptail;
-    *scope->proptail = prop;
-    scope->proptail = &prop->next;
-    return prop;
+    sprop->nrefs = 0;
+    sprop->id = js_IdToValue(id);
+    sprop->getter = getter;
+    sprop->setter = setter;
+    sprop->slot = slot;
+    sprop->attrs = attrs;
+    sprop->spare = 0;
+    sprop->symbols = NULL;
+    sprop->next = NULL;
+    sprop->prevp = scope->proptail;
+    *scope->proptail = sprop;
+    scope->proptail = &sprop->next;
+    return sprop;
 }
 
 void
-js_DestroyProperty(JSContext *cx, JSProperty *prop)
+js_DestroyScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop)
 {
-    JSObject *obj;
-    JSScope *scope;
-
     /*
      * Test whether obj was finalized before prop's last dereference.
      *
@@ -531,45 +474,44 @@ js_DestroyProperty(JSContext *cx, JSProperty *prop)
      * symbol in obj's scope) goes away before obj is finalized, we must be
      * sure to free prop's slot and unlink it from obj's property list.
      */
-    obj = prop->object;
-    if (obj) {
-	scope = (JSScope *)obj->map;
-	if (scope && scope->object) {
-	    js_FreeSlot(cx, obj, prop->slot);
-	    *prop->prevp = prop->next;
-	    if (prop->next)
-		prop->next->prevp = prop->prevp;
+    if (scope) {
+	PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
+	if (scope->object) {
+	    js_FreeSlot(cx, scope->object, sprop->slot);
+	    *sprop->prevp = sprop->next;
+	    if (sprop->next)
+		sprop->next->prevp = sprop->prevp;
 	    else
-		scope->proptail = prop->prevp;
+		scope->proptail = sprop->prevp;
 	}
     }
 
     /* Purge any cached weak links to prop, then free it. */
-    js_FlushPropertyCacheByProp(cx, prop);
-    JS_free(cx, prop);
+    js_FlushPropertyCacheByProp(cx, (JSProperty *)sprop);
+    JS_free(cx, sprop);
 }
 
-JSProperty *
-js_HoldProperty(JSContext *cx, JSProperty *prop)
+JSScopeProperty *
+js_HoldScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop)
 {
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    if (prop) {
-	PR_ASSERT(prop->nrefs >= 0);
-	prop->nrefs++;
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
+    if (sprop) {
+	PR_ASSERT(sprop->nrefs >= 0);
+	sprop->nrefs++;
     }
-    return prop;
+    return sprop;
 }
 
-JSProperty *
-js_DropProperty(JSContext *cx, JSProperty *prop)
+JSScopeProperty *
+js_DropScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop)
 {
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    if (prop) {
-	PR_ASSERT(prop->nrefs > 0);
-	if (--prop->nrefs == 0) {
-	    js_DestroyProperty(cx, prop);
-	    prop = NULL;
+    PR_ASSERT(JS_IS_SCOPE_LOCKED(scope));
+    if (sprop) {
+	PR_ASSERT(sprop->nrefs > 0);
+	if (--sprop->nrefs == 0) {
+	    js_DestroyScopeProperty(cx, scope, sprop);
+	    sprop = NULL;
 	}
     }
-    return prop;
+    return sprop;
 }

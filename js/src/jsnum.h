@@ -99,13 +99,37 @@ extern JSBool
 js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp);
 
 /*
- * Convert a value to a number, then to an int32 if it fits (discarding any
- * fractional part, but failing with an error if the double is out of range
- * or unordered).
+ * Convert a value or a double to an int32, according to the ECMA rules
+ * for ToInt32.
+ */
+extern JSBool
+js_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip);
+
+extern JSBool
+js_DoubleToECMAInt32(JSContext *cx, jsdouble d, int32 *ip);
+
+/*
+ * Convert a value or a double to a uint32, according to the ECMA rules
+ * for ToUint32.
+ */
+extern JSBool
+js_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip);
+
+extern JSBool
+js_DoubleToECMAUint32(JSContext *cx, jsdouble d, uint32 *ip);
+
+/*
+ * Convert a value to a number, then to an int32 if it fits by rounding to
+ * nearest; but failing with an error report if the double is out of range
+ * or unordered.
  */
 extern JSBool
 js_ValueToInt32(JSContext *cx, jsval v, int32 *ip);
 
+/*
+ * Convert a value to a number, then to a uint16 according to the ECMA rules
+ * for ToUint16.
+ */
 extern JSBool
 js_ValueToUint16(JSContext *cx, jsval v, uint16 *ip);
 

@@ -50,6 +50,7 @@ DEFFILE		= $(DLLNAME).def
 !endif
 
 LLIBS=$(LIBNSPR)
+LCFLAGS= $(LCFLAGS) -DEXPORT_JS_API
 
 #//------------------------------------------------------------------------
 #// 
@@ -69,6 +70,7 @@ OBJS =					\
 	.\$(OBJDIR)\jsfun.obj		\
 	.\$(OBJDIR)\jsgc.obj		\
 	.\$(OBJDIR)\jsinterp.obj	\
+	.\$(OBJDIR)\jslock.obj		\
 	.\$(OBJDIR)\jsmath.obj		\
 	.\$(OBJDIR)\jsnum.obj		\
 	.\$(OBJDIR)\jsobj.obj		\
@@ -79,7 +81,7 @@ OBJS =					\
 	.\$(OBJDIR)\jsscope.obj		\
 	.\$(OBJDIR)\jsscript.obj	\
 	.\$(OBJDIR)\jsstr.obj		\
-	.\$(OBJDIR)\jslock.obj		\
+	.\$(OBJDIR)\jsxdrapi.obj	\
 	$(NULL)
 
 #//------------------------------------------------------------------------

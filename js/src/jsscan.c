@@ -41,7 +41,6 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsconfig.h"
-#include "jsemit.h"
 #include "jsnum.h"
 #include "jsopcode.h"
 #include "jsregexp.h"
@@ -59,44 +58,59 @@ static struct keyword {
     {"case",            TOK_CASE,               JSOP_NOP},
     {"continue",        TOK_CONTINUE,           JSOP_NOP},
     {"default",         TOK_DEFAULT,            JSOP_NOP},
-    {"delete",          TOK_DELETE,             JSOP_NOP},
+    {js_delete_str,     TOK_DELETE,             JSOP_NOP},
     {"do",              TOK_DO,                 JSOP_NOP},
     {"else",            TOK_ELSE,               JSOP_NOP},
     {"export",          TOK_EXPORT,             JSOP_NOP,       JSVERSION_1_2},
-    {"false",           TOK_PRIMARY,            JSOP_FALSE},
+    {js_false_str,      TOK_PRIMARY,            JSOP_FALSE},
     {"for",             TOK_FOR,                JSOP_NOP},
     {"function",        TOK_FUNCTION,           JSOP_NOP},
     {"if",              TOK_IF,                 JSOP_NOP},
-    {"in",              TOK_IN,                 JSOP_NOP},
-    {"new",             TOK_NEW,                JSOP_NEW},
-    {"null",            TOK_PRIMARY,            JSOP_NULL},
+    {js_in_str,         TOK_IN,                 JSOP_IN},
+    {js_new_str,        TOK_NEW,                JSOP_NEW},
+    {js_null_str,       TOK_PRIMARY,            JSOP_NULL},
     {"return",          TOK_RETURN,             JSOP_NOP},
     {"switch",          TOK_SWITCH,             JSOP_NOP},
-    {"this",            TOK_PRIMARY,            JSOP_THIS},
-    {"true",            TOK_PRIMARY,            JSOP_TRUE},
-    {"typeof",          TOK_UNARYOP,            JSOP_TYPEOF},
+    {js_this_str,       TOK_PRIMARY,            JSOP_THIS},
+    {js_true_str,       TOK_PRIMARY,            JSOP_TRUE},
+    {js_typeof_str,     TOK_UNARYOP,            JSOP_TYPEOF},
     {"var",             TOK_VAR,                JSOP_NOP},
-    {"void",            TOK_UNARYOP,            JSOP_VOID},
+    {js_void_str,       TOK_UNARYOP,            JSOP_VOID},
     {"while",           TOK_WHILE,              JSOP_NOP},
     {"with",            TOK_WITH,               JSOP_NOP},
+
+#if JS_HAS_EXCEPTIONS
+    {"try",             TOK_TRY,                JSOP_NOP},
+    {"catch",           TOK_CATCH,              JSOP_NOP},
+    {"finally",         TOK_FINALLY,            JSOP_NOP},
+    {"throw",           TOK_THROW,              JSOP_NOP},
+#else
+    {"try",             TOK_RESERVED,           JSOP_NOP},
+    {"catch",           TOK_RESERVED,           JSOP_NOP},
+    {"finally",         TOK_RESERVED,           JSOP_NOP},
+    {"throw",           TOK_RESERVED,           JSOP_NOP},
+#endif
+
+#if JS_HAS_INSTANCEOF
+    {js_instanceof_str, TOK_INSTANCEOF,         JSOP_INSTANCEOF},
+#else
+    {js_instanceof_str, TOK_RESERVED,           JSOP_NOP},
+#endif
 
 #ifdef RESERVE_JAVA_KEYWORDS
     {"abstract",        TOK_RESERVED,           JSOP_NOP},
     {"boolean",         TOK_RESERVED,           JSOP_NOP},
     {"byte",            TOK_RESERVED,           JSOP_NOP},
-    {"catch",           TOK_RESERVED,           JSOP_NOP},
     {"char",            TOK_RESERVED,           JSOP_NOP},
     {"class",           TOK_RESERVED,           JSOP_NOP},
     {"const",           TOK_RESERVED,           JSOP_NOP},
     {"double",          TOK_RESERVED,           JSOP_NOP},
     {"extends",         TOK_RESERVED,           JSOP_NOP},
     {"final",           TOK_RESERVED,           JSOP_NOP},
-    {"finally",         TOK_RESERVED,           JSOP_NOP},
     {"float",           TOK_RESERVED,           JSOP_NOP},
     {"goto",            TOK_RESERVED,           JSOP_NOP},
     {"implements",      TOK_RESERVED,           JSOP_NOP},
     {"import",          TOK_IMPORT,             JSOP_NOP},
-    {"instanceof",      TOK_RESERVED,           JSOP_NOP},
     {"int",             TOK_RESERVED,           JSOP_NOP},
     {"interface",       TOK_RESERVED,           JSOP_NOP},
     {"long",            TOK_RESERVED,           JSOP_NOP},
@@ -109,10 +123,8 @@ static struct keyword {
     {"static",          TOK_RESERVED,           JSOP_NOP},
     {"super",           TOK_PRIMARY,            JSOP_NOP},
     {"synchronized",    TOK_RESERVED,           JSOP_NOP},
-    {"throw",           TOK_RESERVED,           JSOP_NOP},
     {"throws",          TOK_RESERVED,           JSOP_NOP},
     {"transient",       TOK_RESERVED,           JSOP_NOP},
-    {"try",             TOK_RESERVED,           JSOP_NOP},
     {"volatile",        TOK_RESERVED,           JSOP_NOP},
 #endif
 
@@ -126,7 +138,7 @@ js_InitScanner(JSContext *cx)
     JSAtom *atom;
 
     for (kw = keywords; kw->name; kw++) {
-	atom = js_Atomize(cx, kw->name, strlen(kw->name), 0);
+	atom = js_Atomize(cx, kw->name, strlen(kw->name), ATOM_PINNED);
 	if (!atom)
 	    return JS_FALSE;
 	atom->kwindex = (kw->version <= cx->version) ? kw - keywords : -1;
@@ -180,29 +192,41 @@ js_NewBufferTokenStream(JSContext *cx, const jschar *base, size_t length)
     ts->userbuf.base = (jschar *)base;
     ts->userbuf.limit = (jschar *)base + length;
     ts->userbuf.ptr = (jschar *)base;
+#ifdef JSD_LOWLEVEL_SOURCE
+    ts->jsdc = JSD_JSDContextForJSContext(cx);
+#endif
     return ts;
 }
 
 #ifdef JSFILE
 JS_FRIEND_API(JSTokenStream *)
-js_NewFileTokenStream(JSContext *cx, const char *filename)
+js_NewFileTokenStream(JSContext *cx, const char *filename, FILE *defaultfp)
 {
+    jschar *base;
     JSTokenStream *ts;
     FILE *file;
 
-    ts = js_NewBufferTokenStream(cx, NULL, 0);
+    PR_ARENA_ALLOCATE(base, &cx->tempPool, JS_LINE_LIMIT * sizeof(jschar));
+    if (!base)
+    	return NULL;
+    ts = js_NewBufferTokenStream(cx, base, JS_LINE_LIMIT);
     if (!ts)
 	return NULL;
-    file = fopen(filename, "r");
-    if (!file) {
-	JS_ReportError(cx, "can't open %s: %s", filename, strerror(errno));
-	return NULL;
+    if (!filename || strcmp(filename, "-") == 0) {
+	file = defaultfp;
+    } else {
+	file = fopen(filename, "r");
+	if (!file) {
+	    JS_ReportError(cx, "can't open %s: %s", filename, strerror(errno));
+	    return NULL;
+	}
     }
+    ts->userbuf.ptr = ts->userbuf.limit;
     ts->file = file;
     ts->filename = filename;
     return ts;
 }
-#endif
+#endif /* JSFILE */
 
 JS_FRIEND_API(JSBool)
 js_CloseTokenStream(JSContext *cx, JSTokenStream *ts)
@@ -216,83 +240,166 @@ js_CloseTokenStream(JSContext *cx, JSTokenStream *ts)
 #endif
 }
 
+#ifdef JSD_LOWLEVEL_SOURCE
+static void
+SendSourceToJSDebugger(JSTokenStream *ts, jschar *str, size_t length)
+{
+    if (!ts->jsdsrc) {
+        ts->jsdsrc = JSD_NewSourceText(ts->jsdc,
+                                       ts->filename ? ts->filename : "typein");
+    }
+    if (ts->jsdsrc) {
+        /* here we convert our Unicode into a C string to pass to JSD */
+#define JSD_BUF_SIZE 1024
+        static char* buf = NULL;
+        int remaining = length;
+
+        if (!buf)
+            buf = malloc(JSD_BUF_SIZE);
+        if (buf)
+        {
+            while (remaining && ts->jsdsrc) {
+                int bytes = PR_MIN(remaining, JSD_BUF_SIZE);
+                int i;
+                for (i = 0; i < bytes; i++)
+                    buf[i] = (const char) *(str++);
+                ts->jsdsrc = JSD_AppendSourceText(ts->jsdc,ts->jsdsrc,
+                                                  buf, bytes,
+                                                  JSD_SOURCE_PARTIAL);
+                remaining -= bytes;
+            }
+        }
+    }
+}
+#endif
+
 static int32
 GetChar(JSTokenStream *ts)
 {
-    ptrdiff_t length;
-    jschar *nl;
     int32 c;
+    ptrdiff_t len, olen;
+    jschar *nl;
 
     if (ts->ungetpos != 0) {
 	c = ts->ungetbuf[--ts->ungetpos];
     } else {
-	if (ts->linebuf.ptr >= ts->linebuf.limit) {
+	if (ts->linebuf.ptr == ts->linebuf.limit) {
+	    len = ts->userbuf.limit - ts->userbuf.ptr;
+	    if (len <= 0) {
 #ifdef JSFILE
-	    if (ts->file) {
-		char cbuf[JS_LINE_LIMIT];
-		ptrdiff_t i;
+		/* Fill ts->userbuf so that \r and \r\n convert to \n. */
+		if (ts->file) {
+		    JSBool crflag;
+		    char cbuf[JS_LINE_LIMIT];
+		    jschar *ubuf;
+		    ptrdiff_t i, j;
 
-		if (!fgets(cbuf, JS_LINE_LIMIT, ts->file)) {
-		    ts->flags |= TSF_EOF;
-		    return EOF;
-		}
-		length = strlen(cbuf);
-		for (i = 0; i < length; i++)
-		    ts->linebuf.base[i] = (jschar) cbuf[i];
-	    } else
-#endif
-	    {
-		length = ts->userbuf.limit - ts->userbuf.ptr;
-		if (length <= 0) {
-		    ts->flags |= TSF_EOF;
-		    return EOF;
-		}
-
-		/*
-		 * Any one of \n, \r, or \r\n ends a line (longest match wins).
-		 */
-		for (nl = ts->userbuf.ptr; nl < ts->userbuf.limit; nl++) {
-		    if (*nl == '\n')
-			break;
-		    if (*nl == '\r') {
-			if (nl + 1 < ts->userbuf.limit && nl[1] == '\n')
-			    nl++;
-			break;
+		    crflag = (ts->flags & TSF_CRFLAG) != 0;
+		    if (!fgets(cbuf, JS_LINE_LIMIT - crflag, ts->file)) {
+			ts->flags |= TSF_EOF;
+			return EOF;
 		    }
-		}
-
-		/*
-		 * If there was a line terminator, copy thru it into linebuf.
-		 * Else copy JS_LINE_LIMIT-1 bytes into linebuf.
-		 */
-		if (nl < ts->userbuf.limit)
-		    length = nl - ts->userbuf.ptr + 1;
-		if (length >= JS_LINE_LIMIT)
-		    length = JS_LINE_LIMIT - 1;
-		js_strncpy(ts->linebuf.base, ts->userbuf.ptr, length);
-		ts->userbuf.ptr += length;
-
-		/*
-		 * Make sure linebuf contains \n for EOL (don't do this in
-		 * userbuf because the user's string might be readonly).
-		 */
-		if (nl < ts->userbuf.limit) {
-		    if (*nl == '\r') {
-			if (ts->linebuf.base[length-1] == '\r')
-			    ts->linebuf.base[length-1] = '\n';
-		    } else if (*nl == '\n') {
-			if (nl > ts->userbuf.base &&
-			    nl[-1] == '\r' &&
-			    ts->linebuf.base[length-2] == '\r') {
-			    length--;
-			    PR_ASSERT(ts->linebuf.base[length] == '\n');
-			    ts->linebuf.base[length-1] = '\n';
+		    len = olen = strlen(cbuf);
+		    PR_ASSERT(len > 0);
+		    ubuf = ts->userbuf.base;
+		    i = 0;
+		    if (crflag) {
+			ts->flags &= ~TSF_CRFLAG;
+			if (cbuf[0] != '\n') {
+			    ubuf[i++] = '\n';
+			    len++;
+			    ts->linepos--;
 			}
+		    }
+		    for (j = 0; i < len; i++, j++)
+			ubuf[i] = (jschar) cbuf[j];
+		    ts->userbuf.limit = ubuf + len;
+		    ts->userbuf.ptr = ubuf;
+		} else
+#endif /* JSFILE */
+		{
+		    ts->flags |= TSF_EOF;
+		    return EOF;
+		}
+	    }
+
+#ifdef JSD_LOWLEVEL_SOURCE
+	    if (ts->jsdc)
+		SendSourceToJSDebugger(ts, ts->userbuf.ptr, len);
+#endif
+
+	    /*
+	     * Any one of \n, \r, or \r\n ends a line (longest match wins).
+	     */
+	    for (nl = ts->userbuf.ptr; nl < ts->userbuf.limit; nl++) {
+		if (*nl == '\n')
+		    break;
+		if (*nl == '\r') {
+		    if (nl + 1 < ts->userbuf.limit && nl[1] == '\n')
+			nl++;
+		    break;
+		}
+	    }
+
+	    /*
+	     * If there was a line terminator, copy thru it into linebuf.
+	     * Else copy JS_LINE_LIMIT-1 bytes into linebuf.
+	     */
+	    if (nl < ts->userbuf.limit)
+		len = nl - ts->userbuf.ptr + 1;
+	    if (len >= JS_LINE_LIMIT)
+		len = JS_LINE_LIMIT - 1;
+	    js_strncpy(ts->linebuf.base, ts->userbuf.ptr, len);
+	    ts->userbuf.ptr += len;
+	    olen = len;
+
+	    /*
+	     * Make sure linebuf contains \n for EOL (don't do this in
+	     * userbuf because the user's string might be readonly).
+	     */
+	    if (nl < ts->userbuf.limit) {
+		if (*nl == '\r') {
+		    if (ts->linebuf.base[len-1] == '\r') {
+#ifdef JSFILE
+			/*
+			 * Does the line segment end in \r?  We must check
+			 * for a \n at the front of the next segment before
+			 * storing a \n into linebuf.
+			 */
+			if (nl + 1 == ts->userbuf.limit) {
+			    len--;
+			    ts->flags |= TSF_CRFLAG;
+			} else
+#endif
+			ts->linebuf.base[len-1] = '\n';
+		    }
+		} else if (*nl == '\n') {
+		    if (nl > ts->userbuf.base &&
+			nl[-1] == '\r' &&
+			ts->linebuf.base[len-2] == '\r') {
+			len--;
+			PR_ASSERT(ts->linebuf.base[len] == '\n');
+			ts->linebuf.base[len-1] = '\n';
 		    }
 		}
 	    }
-	    ts->linebuf.limit = ts->linebuf.base + length;
+
+	    /* Reset linebuf based on adjusted segment length. */
+	    ts->linebuf.limit = ts->linebuf.base + len;
 	    ts->linebuf.ptr = ts->linebuf.base;
+
+	    /* Update position of linebuf within physical line in userbuf. */
+	    if (!(ts->flags & TSF_NLFLAG))
+		ts->linepos += ts->linelen;
+	    else
+		ts->linepos = 0;
+	    if (ts->linebuf.limit[-1] == '\n')
+		ts->flags |= TSF_NLFLAG;
+	    else
+		ts->flags &= ~TSF_NLFLAG;
+
+	    /* Update linelen from original segment length. */
+	    ts->linelen = olen;
 	}
 	c = *ts->linebuf.ptr++;
     }
@@ -413,22 +520,20 @@ js_ReportCompileError(JSContext *cx, JSTokenStream *ts, const char *format,
 }
 
 JSTokenType
-js_PeekToken(JSContext *cx, JSTokenStream *ts, JSCodeGenerator *cg)
+js_PeekToken(JSContext *cx, JSTokenStream *ts)
 {
     JSTokenType tt;
 
     tt = ts->pushback.type;
     if (tt == TOK_EOF) {
-	ts->flags |= TSF_LOOKAHEAD;
-	tt = js_GetToken(cx, ts, cg);
-	ts->flags &= ~TSF_LOOKAHEAD;
+	tt = js_GetToken(cx, ts);
 	js_UngetToken(ts);
     }
     return tt;
 }
 
 JSTokenType
-js_PeekTokenSameLine(JSContext *cx, JSTokenStream *ts, JSCodeGenerator *cg)
+js_PeekTokenSameLine(JSContext *cx, JSTokenStream *ts)
 {
     uintN newlines;
     JSTokenType tt;
@@ -436,7 +541,7 @@ js_PeekTokenSameLine(JSContext *cx, JSTokenStream *ts, JSCodeGenerator *cg)
     newlines = ts->flags & TSF_NEWLINES;
     if (!newlines)
 	SCAN_NEWLINES(ts);
-    tt = js_PeekToken(cx, ts, cg);
+    tt = js_PeekToken(cx, ts);
     if (!newlines)
 	HIDE_NEWLINES(ts);
     return tt;
@@ -483,7 +588,7 @@ AddToTokenBuf(JSContext *cx, JSTokenBuf *tb, jschar c)
 }
 
 JSTokenType
-js_GetToken(JSContext *cx, JSTokenStream *ts, JSCodeGenerator *cg)
+js_GetToken(JSContext *cx, JSTokenStream *ts)
 {
     int32 c;
     JSAtom *atom;
@@ -492,30 +597,14 @@ js_GetToken(JSContext *cx, JSTokenStream *ts, JSCodeGenerator *cg)
 #define FINISH_TOKENBUF(tb) if (!AddToTokenBuf(cx, tb, 0)) RETURN(TOK_ERROR)
 #define TOKEN_LENGTH(tb)    ((tb)->ptr - (tb)->base - 1)
 #define RETURN(tt)          { if (tt == TOK_ERROR) ts->flags |= TSF_ERROR;    \
+			      ts->token.pos.end.index = ts->linepos +         \
+				  (ts->linebuf.ptr - ts->linebuf.base) -      \
+				  ts->ungetpos;                               \
 			      return (ts->token.type = tt); }
-
-#define NOTE_NEWLINE() {                                                      \
-    if (cg) {                                                                 \
-	if (ts->flags & TSF_LOOKAHEAD) {                                      \
-	    /* Don't emit newline source notes during lookahead. */           \
-	    ts->newlines++;                                                   \
-	} else {                                                              \
-	    if (js_NewSrcNote(cx, cg, SRC_NEWLINE) < 0)                       \
-		RETURN(TOK_ERROR);                                            \
-	}                                                                     \
-    }                                                                         \
-}
 
     /* If there was a fatal error, keep returning TOK_ERROR. */
     if (ts->flags & TSF_ERROR)
 	return TOK_ERROR;
-
-    /* If done with lookahead, emit source notes for any skipped newlines. */
-    if (!(ts->flags & TSF_LOOKAHEAD) &&
-	ts->newlines != 0 &&
-	!js_FlushNewlines(cx, ts, cg)) {
-	RETURN(TOK_ERROR);
-    }
 
     /* Check for a pushed-back token resulting from mismatching lookahead. */
     if (ts->pushback.type != TOK_EOF) {
@@ -527,14 +616,14 @@ js_GetToken(JSContext *cx, JSTokenStream *ts, JSCodeGenerator *cg)
 retry:
     do {
 	c = GetChar(ts);
-	if (c == '\n') {
-	    NOTE_NEWLINE();
-	    if (ts->flags & TSF_NEWLINES)
-		break;
-	}
+	if (c == '\n' && (ts->flags & TSF_NEWLINES))
+	    break;
     } while (JS_ISSPACE(c));
 
     ts->token.ptr = ts->linebuf.ptr - 1;
+    ts->token.pos.begin.index = ts->linepos + (ts->token.ptr-ts->linebuf.base);
+    ts->token.pos.begin.lineno = ts->token.pos.end.lineno = ts->lineno;
+
     if (c == EOF)
 	RETURN(TOK_EOF);
 
@@ -551,17 +640,18 @@ retry:
 	atom = js_AtomizeChars(cx,
 			       ts->tokenbuf.base,
 			       TOKEN_LENGTH(&ts->tokenbuf),
-			       ATOM_NOHOLD);
+			       0);
 	if (!atom)
 	    RETURN(TOK_ERROR);
 	if (atom->kwindex >= 0) {
 	    struct keyword *kw;
 
 	    kw = &keywords[atom->kwindex];
-	    ts->token.u.op = kw->op;
+	    ts->token.t_op = kw->op;
 	    RETURN(kw->tokentype);
 	}
-	ts->token.u.atom = atom;
+	ts->token.t_op = JSOP_NAME;
+	ts->token.t_atom = atom;
 	RETURN(TOK_NAME);
     }
 
@@ -641,7 +731,7 @@ retry:
 		RETURN(TOK_ERROR);
 	    }
 	}
-	ts->token.u.dval = dval;
+	ts->token.t_dval = dval;
 	RETURN(TOK_NUMBER);
     }
 
@@ -700,8 +790,6 @@ retry:
 			    c = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
 			    SkipChars(ts, 2);
 			}
-		    } else if (c == '\n') {
-			NOTE_NEWLINE();
 		    }
 		    break;
 		}
@@ -713,16 +801,19 @@ retry:
 	atom = js_AtomizeChars(cx,
 			       ts->tokenbuf.base,
 			       TOKEN_LENGTH(&ts->tokenbuf),
-			       ATOM_NOHOLD);
+			       0);
 	if (!atom)
 	    RETURN(TOK_ERROR);
-	ts->token.u.atom = atom;
+	ts->token.pos.end.lineno = ts->lineno;
+	ts->token.t_op = JSOP_STRING;
+	ts->token.t_atom = atom;
 	RETURN(TOK_STRING);
     }
 
     switch (c) {
       case '\n': c = TOK_EOL; break;
       case ';': c = TOK_SEMI; break;
+      case '.': c = TOK_DOT; break;
       case '[': c = TOK_LB; break;
       case ']': c = TOK_RB; break;
       case '{': c = TOK_LC; break;
@@ -732,13 +823,12 @@ retry:
       case ',': c = TOK_COMMA; break;
       case '?': c = TOK_HOOK; break;
       case ':': c = TOK_COLON; break;
-      case '.': c = TOK_DOT; break;
 
       case '|':
 	if (MatchChar(ts, c)) {
 	    c = TOK_OR;
 	} else if (MatchChar(ts, '=')) {
-	    ts->token.u.op = JSOP_BITOR;
+	    ts->token.t_op = JSOP_BITOR;
 	    c = TOK_ASSIGN;
 	} else {
 	    c = TOK_BITOR;
@@ -747,7 +837,7 @@ retry:
 
       case '^':
 	if (MatchChar(ts, '=')) {
-	    ts->token.u.op = JSOP_BITXOR;
+	    ts->token.t_op = JSOP_BITXOR;
 	    c = TOK_ASSIGN;
 	} else {
 	    c = TOK_BITXOR;
@@ -758,7 +848,7 @@ retry:
 	if (MatchChar(ts, c)) {
 	    c = TOK_AND;
 	} else if (MatchChar(ts, '=')) {
-	    ts->token.u.op = JSOP_BITAND;
+	    ts->token.t_op = JSOP_BITAND;
 	    c = TOK_ASSIGN;
 	} else {
 	    c = TOK_BITAND;
@@ -768,13 +858,13 @@ retry:
       case '=':
 	if (MatchChar(ts, c)) {
 #if JS_HAS_TRIPLE_EQOPS
-	    ts->token.u.op = MatchChar(ts, c) ? JSOP_NEW_EQ : cx->jsop_eq;
+	    ts->token.t_op = MatchChar(ts, c) ? JSOP_NEW_EQ : cx->jsop_eq;
 #else
-	    ts->token.u.op = cx->jsop_eq;
+	    ts->token.t_op = cx->jsop_eq;
 #endif
 	    c = TOK_EQOP;
 	} else {
-	    ts->token.u.op = JSOP_NOP;
+	    ts->token.t_op = JSOP_NOP;
 	    c = TOK_ASSIGN;
 	}
 	break;
@@ -782,13 +872,13 @@ retry:
       case '!':
 	if (MatchChar(ts, '=')) {
 #if JS_HAS_TRIPLE_EQOPS
-	    ts->token.u.op = MatchChar(ts, '=') ? JSOP_NEW_NE : cx->jsop_ne;
+	    ts->token.t_op = MatchChar(ts, '=') ? JSOP_NEW_NE : cx->jsop_ne;
 #else
-	    ts->token.u.op = cx->jsop_ne;
+	    ts->token.t_op = cx->jsop_ne;
 #endif
 	    c = TOK_EQOP;
 	} else {
-	    ts->token.u.op = JSOP_NOT;
+	    ts->token.t_op = JSOP_NOT;
 	    c = TOK_UNARYOP;
 	}
 	break;
@@ -804,26 +894,26 @@ retry:
 	    UngetChar(ts, '!');
 	}
 	if (MatchChar(ts, c)) {
-	    ts->token.u.op = JSOP_LSH;
+	    ts->token.t_op = JSOP_LSH;
 	    c = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_SHOP;
 	} else {
-	    ts->token.u.op = MatchChar(ts, '=') ? JSOP_LE : JSOP_LT;
+	    ts->token.t_op = MatchChar(ts, '=') ? JSOP_LE : JSOP_LT;
 	    c = TOK_RELOP;
 	}
 	break;
 
       case '>':
 	if (MatchChar(ts, c)) {
-	    ts->token.u.op = MatchChar(ts, c) ? JSOP_URSH : JSOP_RSH;
+	    ts->token.t_op = MatchChar(ts, c) ? JSOP_URSH : JSOP_RSH;
 	    c = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_SHOP;
 	} else {
-	    ts->token.u.op = MatchChar(ts, '=') ? JSOP_GE : JSOP_GT;
+	    ts->token.t_op = MatchChar(ts, '=') ? JSOP_GE : JSOP_GT;
 	    c = TOK_RELOP;
 	}
 	break;
 
       case '*':
-	ts->token.u.op = JSOP_MUL;
+	ts->token.t_op = JSOP_MUL;
 	c = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_STAR;
 	break;
 
@@ -836,11 +926,9 @@ skipline:
 	    goto retry;
 	}
 	if (MatchChar(ts, '*')) {
-	    while ((c = GetChar(ts)) != EOF
-		&& !(c == '*' && MatchChar(ts, '/'))) {
-		if (c == '\n') {
-		    NOTE_NEWLINE();
-		} else if (c == '/' && MatchChar(ts, '*')) {
+	    while ((c = GetChar(ts)) != EOF &&
+		   !(c == '*' && MatchChar(ts, '/'))) {
+		if (c == '/' && MatchChar(ts, '*')) {
 		    if (MatchChar(ts, '/'))
 			goto retry;
 		    js_ReportCompileError(cx, ts, "nested comment");
@@ -888,6 +976,7 @@ skipline:
 		ts->token.ptr = ts->linebuf.ptr - 1;
 		js_ReportCompileError(cx, ts,
 				      "invalid flag after regular expression");
+		(void) GetChar(ts);
 		RETURN(TOK_ERROR);
 	    }
 	    obj = js_NewRegExpObject(cx,
@@ -896,40 +985,41 @@ skipline:
 				     flags);
 	    if (!obj)
 		RETURN(TOK_ERROR);
-	    atom = js_AtomizeObject(cx, obj, ATOM_NOHOLD);
+	    atom = js_AtomizeObject(cx, obj, 0);
 	    if (!atom)
 		RETURN(TOK_ERROR);
-	    ts->token.u.atom = atom;
+	    ts->token.t_op = JSOP_OBJECT;
+	    ts->token.t_atom = atom;
 	    RETURN(TOK_OBJECT);
 	}
 #endif /* JS_HAS_REGEXPS */
 
-	ts->token.u.op = JSOP_DIV;
+	ts->token.t_op = JSOP_DIV;
 	c = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_DIVOP;
 	break;
 
       case '%':
-	ts->token.u.op = JSOP_MOD;
+	ts->token.t_op = JSOP_MOD;
 	c = MatchChar(ts, '=') ? TOK_ASSIGN : TOK_DIVOP;
 	break;
 
       case '~':
-	ts->token.u.op = JSOP_BITNOT;
+	ts->token.t_op = JSOP_BITNOT;
 	c = TOK_UNARYOP;
 	break;
 
       case '+':
       case '-':
 	if (MatchChar(ts, '=')) {
-	    ts->token.u.op = (c == '+') ? JSOP_ADD : JSOP_SUB;
+	    ts->token.t_op = (c == '+') ? JSOP_ADD : JSOP_SUB;
 	    c = TOK_ASSIGN;
 	} else if (MatchChar(ts, c)) {
 	    c = (c == '+') ? TOK_INC : TOK_DEC;
 	} else if (c == '-') {
-	    ts->token.u.op = JSOP_NEG;
+	    ts->token.t_op = JSOP_NEG;
 	    c = TOK_MINUS;
 	} else {
-	    ts->token.u.op = JSOP_POS;
+	    ts->token.t_op = JSOP_POS;
 	    c = TOK_PLUS;
 	}
 	break;
@@ -956,7 +1046,7 @@ skipline:
 		RETURN(TOK_ERROR);
 	    }
 	}
-	ts->token.u.dval = (jsdouble) n;
+	ts->token.t_dval = (jsdouble) n;
 	if (c == '=')
 	    RETURN(TOK_DEFSHARP);
 	if (c == '#')
@@ -964,9 +1054,9 @@ skipline:
 	goto badchar;
       }
 
+      badchar:
 #endif /* JS_HAS_SHARP_VARS */
 
-      badchar:
       default:
 	js_ReportCompileError(cx, ts, "illegal character");
 	RETURN(TOK_ERROR);
@@ -979,7 +1069,6 @@ skipline:
 #undef FINISH_TOKENBUF
 #undef TOKEN_LENGTH
 #undef RETURN
-#undef NOTE_NEWLINE
 }
 
 void
@@ -992,30 +1081,10 @@ js_UngetToken(JSTokenStream *ts)
 }
 
 JSBool
-js_MatchToken(JSContext *cx, JSTokenStream *ts, JSCodeGenerator *cg,
-		 JSTokenType tt)
+js_MatchToken(JSContext *cx, JSTokenStream *ts, JSTokenType tt)
 {
-    JSTokenType got;
-
-    ts->flags |= TSF_LOOKAHEAD;
-    got = js_GetToken(cx, ts, cg);
-    ts->flags &= ~TSF_LOOKAHEAD;
-    if (got == tt) {
-	if (ts->newlines != 0 && !js_FlushNewlines(cx, ts, cg))
-	    return JS_FALSE;
+    if (js_GetToken(cx, ts) == tt)
 	return JS_TRUE;
-    }
     js_UngetToken(ts);
     return JS_FALSE;
-}
-
-JSBool
-js_FlushNewlines(JSContext *cx, JSTokenStream *ts, JSCodeGenerator *cg)
-{
-    while (ts->newlines != 0) {
-	if (js_NewSrcNote(cx, cg, SRC_NEWLINE) < 0)
-	    return JS_FALSE;
-	ts->newlines--;
-    }
-    return JS_TRUE;
 }

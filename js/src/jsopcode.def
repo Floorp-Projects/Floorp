@@ -15,7 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 /*
  * JavaScript operation bytecodes.
  *
@@ -84,7 +83,7 @@ OPDEF(JSOP_NEG,       34, "neg",        "-",          1,  1,  1, 10,  JOF_BYTE)
 OPDEF(JSOP_NEW,       35, js_new_str,   NULL,         3, -1,  1, 10,  JOF_UINT16)
 OPDEF(JSOP_DELNAME,   36, "delname",    NULL,         3,  0,  1, 10,  JOF_CONST|JOF_NAME|JOF_DEL)
 OPDEF(JSOP_DELPROP,   37, "delprop",    NULL,         3,  1,  1, 10,  JOF_CONST|JOF_PROP|JOF_DEL)
-OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, 10,  JOF_BYTE|JOF_ELEM|JOF_DEL)
+OPDEF(JSOP_DELELEM,   38, "delelem",    NULL,         1,  2,  1, 10,  JOF_BYTE |JOF_ELEM|JOF_DEL)
 OPDEF(JSOP_TYPEOF,    39, js_typeof_str,NULL,         1,  1,  1, 10,  JOF_BYTE)
 OPDEF(JSOP_VOID,      40, js_void_str,  NULL,         1,  1,  1, 10,  JOF_BYTE)
 OPDEF(JSOP_INCNAME,   41, "incname",    NULL,         3,  0,  1, 10,  JOF_CONST|JOF_NAME|JOF_INC)
@@ -165,12 +164,29 @@ OPDEF(JSOP_DEFSHARP,  93, "defsharp",   NULL,         3,  0,  0,  0,  JOF_UINT16
 OPDEF(JSOP_USESHARP,  94, "usesharp",   NULL,         3,  0,  1,  0,  JOF_UINT16)
 
 /* Fast inc/dec ops for args and local vars. */
-OPDEF(JSOP_INCARG,    95, "incarg",     NULL,         3,  0,  1, 10,  JOF_QARG |JOF_INC)
-OPDEF(JSOP_INCVAR,    96, "incvar",     NULL,         3,  0,  1, 10,  JOF_QVAR |JOF_INC)
-OPDEF(JSOP_DECARG,    97, "decarg",     NULL,         3,  0,  1, 10,  JOF_QARG |JOF_DEC)
-OPDEF(JSOP_DECVAR,    98, "decvar",     NULL,         3,  0,  1, 10,  JOF_QVAR |JOF_DEC)
-OPDEF(JSOP_ARGINC,    99, "arginc",     NULL,         3,  0,  1, 10,  JOF_QARG |JOF_INC|JOF_POST)
-OPDEF(JSOP_VARINC,    100,"varinc",     NULL,         3,  0,  1, 10,  JOF_QVAR |JOF_INC|JOF_POST)
-OPDEF(JSOP_ARGDEC,    101,"argdec",     NULL,         3,  0,  1, 10,  JOF_QARG |JOF_DEC|JOF_POST)
-OPDEF(JSOP_VARDEC,    102,"vardec",     NULL,         3,  0,  1, 10,  JOF_QVAR |JOF_DEC|JOF_POST)
+OPDEF(JSOP_INCARG,    95, "incarg",     NULL,         3,  0,  1, 10,  JOF_QARG |JOF_NAME|JOF_INC)
+OPDEF(JSOP_INCVAR,    96, "incvar",     NULL,         3,  0,  1, 10,  JOF_QVAR |JOF_NAME|JOF_INC)
+OPDEF(JSOP_DECARG,    97, "decarg",     NULL,         3,  0,  1, 10,  JOF_QARG |JOF_NAME|JOF_DEC)
+OPDEF(JSOP_DECVAR,    98, "decvar",     NULL,         3,  0,  1, 10,  JOF_QVAR |JOF_NAME|JOF_DEC)
+OPDEF(JSOP_ARGINC,    99, "arginc",     NULL,         3,  0,  1, 10,  JOF_QARG |JOF_NAME|JOF_INC|JOF_POST)
+OPDEF(JSOP_VARINC,    100,"varinc",     NULL,         3,  0,  1, 10,  JOF_QVAR |JOF_NAME|JOF_INC|JOF_POST)
+OPDEF(JSOP_ARGDEC,    101,"argdec",     NULL,         3,  0,  1, 10,  JOF_QARG |JOF_NAME|JOF_DEC|JOF_POST)
+OPDEF(JSOP_VARDEC,    102,"vardec",     NULL,         3,  0,  1, 10,  JOF_QVAR |JOF_NAME|JOF_DEC|JOF_POST)
 
+/* ECMA-compliant for/in ops. */
+OPDEF(JSOP_TOOBJECT,  103,"toobject",   NULL,         1,  1,  1,  0,  JOF_BYTE)
+OPDEF(JSOP_FORNAME2,  104,"forname2",   NULL,         3,  0,  1,  0,  JOF_CONST|JOF_NAME|JOF_SET|JOF_FOR2)
+OPDEF(JSOP_FORPROP2,  105,"forprop2",   NULL,         3,  1,  1,  0,  JOF_CONST|JOF_PROP|JOF_SET|JOF_FOR2)
+OPDEF(JSOP_FORELEM2,  106,"forelem2",   NULL,         1,  2,  1,  0,  JOF_BYTE |JOF_ELEM|JOF_SET|JOF_FOR2)
+OPDEF(JSOP_POP2,      107,"pop2",       NULL,         1,  2,  0,  0,  JOF_BYTE)
+
+/* ECMA-complaint assignment ops. */
+OPDEF(JSOP_BINDNAME,  108,"bindname",   NULL,         3,  0,  1,  0,  JOF_CONST|JOF_NAME)
+OPDEF(JSOP_SETNAME2,  109,"setname2",   NULL,         3,  2,  1,  1,  JOF_CONST|JOF_NAME|JOF_SET)
+
+/* Exception handling ops. */
+OPDEF(JSOP_THROW,     110,"throw",      NULL,         1,  1,  0,  0,  JOF_BYTE)
+
+/* 'in' and 'instanceof' ops. */
+OPDEF(JSOP_IN,        111,js_in_str,    js_in_str,    1,  2,  1,  6,  JOF_BYTE)
+OPDEF(JSOP_INSTANCEOF,112,js_instanceof_str,js_instanceof_str,1,2,1,6,JOF_BYTE)

@@ -51,10 +51,20 @@ char *js_type_str[] = {
     "boolean",
 };
 
+char *js_boolean_str[] = {
+    js_false_str,
+    js_true_str
+};
+
 char   js_Array_str[]             = "Array";
+char   js_Math_str[]              = "Math";
 char   js_Object_str[]            = "Object";
 char   js_anonymous_str[]         = "anonymous";
+char   js_arguments_str[]         = "arguments";
+char   js_arity_str[]             = "arity";
 char   js_assign_str[]            = "assign";
+char   js_callee_str[]            = "callee";
+char   js_caller_str[]            = "caller";
 char   js_class_prototype_str[]   = "prototype";
 char   js_constructor_str[]       = "constructor";
 char   js_count_str[]             = "__count__";
@@ -62,8 +72,10 @@ char   js_eval_str[]              = "eval";
 char   js_index_str[]             = "index";
 char   js_input_str[]             = "input";
 char   js_length_str[]            = "length";
+char   js_name_str[]              = "name";
 char   js_parent_str[]            = "__parent__";
 char   js_proto_str[]             = "__proto__";
+char   js_toSource_str[]          = "toSource";
 char   js_toString_str[]          = "toString";
 char   js_valueOf_str[]           = "valueOf";
 
@@ -135,12 +147,13 @@ js_alloc_atom(void *priv, const void *key)
     atom = malloc(sizeof(JSAtom));
     if (!atom)
 	return NULL;
+#ifdef JS_THREADSAFE
+    state->tablegen++;
+#endif
     atom->entry.key = key;
     atom->entry.value = NULL;
-    atom->nrefs = 0;
     atom->flags = 0;
     atom->kwindex = -1;
-    atom->index = 0;
     atom->number = state->number++;
     return &atom->entry;
 }
@@ -148,11 +161,15 @@ js_alloc_atom(void *priv, const void *key)
 PR_STATIC_CALLBACK(void)
 js_free_atom(void *priv, PRHashEntry *he, uintN flag)
 {
-    if (flag == HT_FREE_ENTRY)
-	free(he);
+    if (flag != HT_FREE_ENTRY)
+	return;
+#ifdef JS_THREADSAFE
+    ((JSAtomState *)priv)->tablegen++;
+#endif
+    free(he);
 }
 
-static PRHashAllocOps atomAllocOps = {
+static PRHashAllocOps atom_alloc_ops = {
     js_alloc_atom_space,    js_free_atom_space,
     js_alloc_atom,          js_free_atom
 };
@@ -164,17 +181,22 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
 {
     uintN i;
 
+    state->runtime = cx->runtime;
     state->number = 0;
     state->table = PR_NewHashTable(JS_ATOM_HASH_SIZE, js_hash_atom_key,
 				   js_compare_atom_keys, js_compare_stub,
-				   &atomAllocOps, state);
+				   &atom_alloc_ops, state);
     if (!state->table) {
 	JS_ReportOutOfMemory(cx);
 	return JS_FALSE;
     }
+#ifdef JS_THREADSAFE
+    js_NewLock(&state->lock);
+    state->tablegen = 0;
+#endif
 
 #define FROB(lval,str) {                                                      \
-    if (!(state->lval = js_Atomize(cx, str, strlen(str), 0))) {               \
+    if (!(state->lval = js_Atomize(cx, str, strlen(str), ATOM_PINNED))) {     \
 	js_FreeAtomState(cx, state);                                          \
 	return JS_FALSE;                                                      \
     }                                                                         \
@@ -189,17 +211,24 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
     FROB(nullAtom,                js_null_str);
 
     FROB(ArrayAtom,               js_Array_str);
+    FROB(MathAtom,                js_Math_str);
     FROB(ObjectAtom,              js_Object_str);
     FROB(anonymousAtom,           js_anonymous_str);
+    FROB(argumentsAtom,           js_arguments_str);
+    FROB(arityAtom,               js_arity_str);
     FROB(assignAtom,              js_assign_str);
+    FROB(calleeAtom,              js_callee_str);
+    FROB(callerAtom,              js_caller_str);
     FROB(classPrototypeAtom,      js_class_prototype_str);
     FROB(constructorAtom,         js_constructor_str);
     FROB(countAtom,               js_count_str);
     FROB(indexAtom,               js_index_str);
     FROB(inputAtom,               js_input_str);
     FROB(lengthAtom,              js_length_str);
+    FROB(nameAtom,                js_name_str);
     FROB(parentAtom,              js_parent_str);
     FROB(protoAtom,               js_proto_str);
+    FROB(toSourceAtom,            js_toSource_str);
     FROB(toStringAtom,            js_toString_str);
     FROB(valueOfAtom,             js_valueOf_str);
 
@@ -208,103 +237,116 @@ js_InitAtomState(JSContext *cx, JSAtomState *state)
     return JS_TRUE;
 }
 
-PR_STATIC_CALLBACK(intN)
-js_atom_key_zapper(PRHashEntry *he, intN i, void *arg)
-{
-    JSAtom *atom;
-
-    atom = (JSAtom *)he;
-    if (atom->nrefs == 0)
-	return HT_ENUMERATE_REMOVE;
-    he->key = NULL;
-    return HT_ENUMERATE_NEXT;
-}
-
 void
 js_FreeAtomState(JSContext *cx, JSAtomState *state)
 {
-    PRHashTable *table;
-
-    js_ForceGC(cx);
-    table = state->table;
-    PR_HashTableEnumerateEntries(table, js_atom_key_zapper, NULL);
-    js_ForceGC(cx);
-    PR_HashTableDestroy(table);
+    state->runtime = NULL;
+    PR_HashTableDestroy(state->table);
     state->table = NULL;
     state->number = 0;
+#ifdef JS_THREADSAFE
+    js_DestroyLock(&state->lock);
+#endif
 }
 
-typedef struct MarkAtomArgs {
+typedef struct MarkArgs {
     JSRuntime       *runtime;
-    JSAtomMarker    mark;
-} MarkAtomArgs;
+    JSGCThingMarker mark;
+} MarkArgs;
 
 PR_STATIC_CALLBACK(intN)
-js_atom_key_marker(PRHashEntry *he, intN i, void *arg)
+js_atom_marker(PRHashEntry *he, intN i, void *arg)
 {
     JSAtom *atom;
     jsval key;
-    MarkAtomArgs *args;
+    MarkArgs *args;
 
     atom = (JSAtom *)he;
-    if (atom->nrefs == 0) {
-	/*
-	 * Unreferenced atom, probably from the scanner atomizing a name,
-	 * number, or string that the parser did not save in an atom map
-	 * (because it was a syntax error, e.g.).
-	 */
-	return HT_ENUMERATE_REMOVE;
-    }
-    key = ATOM_KEY(atom);
-    if (JSVAL_IS_GCTHING(key)) {
-	args = arg;
-	args->mark(args->runtime, JSVAL_TO_GCTHING(key));
+    if (atom->flags & ATOM_PINNED) {
+	atom->flags |= ATOM_MARK;
+	key = ATOM_KEY(atom);
+	if (JSVAL_IS_GCTHING(key)) {
+	    args = arg;
+	    args->mark(args->runtime, JSVAL_TO_GCTHING(key));
+	}
     }
     return HT_ENUMERATE_NEXT;
 }
 
 void
-js_MarkAtomState(JSRuntime *rt, JSAtomMarker mark)
+js_MarkAtomState(JSAtomState *state, JSGCThingMarker mark)
 {
-    PRHashTable *table;
-    MarkAtomArgs args;
+    MarkArgs args;
 
-    table = rt->atomState.table;
-    if (!table)
-	return;
-    args.runtime = rt;
+    args.runtime = state->runtime;
     args.mark = mark;
-    PR_HashTableEnumerateEntries(table, js_atom_key_marker, &args);
+    PR_HashTableEnumerateEntries(state->table, js_atom_marker, &args);
+}
+
+PR_STATIC_CALLBACK(intN)
+js_atom_sweeper(PRHashEntry *he, intN i, void *arg)
+{
+    JSAtom *atom;
+
+    atom = (JSAtom *)he;
+    if (atom->flags & ATOM_MARK) {
+	atom->flags &= ~ATOM_MARK;
+	return HT_ENUMERATE_NEXT;
+    }
+    PR_ASSERT((atom->flags & ATOM_PINNED) == 0);
+    atom->entry.key = NULL;
+    atom->flags = 0;
+    return HT_ENUMERATE_REMOVE;
+}
+
+void
+js_SweepAtomState(JSAtomState *state)
+{
+    PR_HashTableEnumerateEntries(state->table, js_atom_sweeper, NULL);
+}
+
+PR_STATIC_CALLBACK(intN)
+js_atom_unpinner(PRHashEntry *he, intN i, void *arg)
+{
+    JSAtom *atom;
+
+    atom = (JSAtom *)he;
+    atom->flags &= ~ATOM_PINNED;
+    return HT_ENUMERATE_NEXT;
+}
+
+void
+js_UnpinPinnedAtoms(JSAtomState *state)
+{
+    PR_HashTableEnumerateEntries(state->table, js_atom_unpinner, NULL);
 }
 
 static JSAtom *
 js_AtomizeHashedKey(JSContext *cx, jsval key, PRHashNumber keyHash, uintN flags)
 {
+    JSAtomState *state;
     PRHashTable *table;
     PRHashEntry *he, **hep;
     JSAtom *atom;
 
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    table = cx->runtime->atomState.table;
+    state = &cx->runtime->atomState;
+    JS_LOCK(&state->lock,cx);
+    table = state->table;
     hep = PR_HashTableRawLookup(table, keyHash, (void *)key);
     if ((he = *hep) == NULL) {
 	he = PR_HashTableRawAdd(table, hep, keyHash, (void *)key, NULL);
 	if (!he) {
 	    JS_ReportOutOfMemory(cx);
-	    return NULL;
+	    atom = NULL;
+	    goto out;
 	}
     }
 
     atom = (JSAtom *)he;
-#ifdef DEBUG_DUPLICATE_ATOMS
-    hep = PR_HashTableRawLookup(table, keyHash, (void *)key);
-    he = *hep;
-    PR_ASSERT(atom == (JSAtom *)he);
-#endif
-
-    if (flags & ATOM_NOHOLD)
-	return atom;
-    return js_HoldAtom(cx, atom);
+    atom->flags |= flags;
+out:
+    JS_UNLOCK(&state->lock,cx);
+    return atom;
 }
 
 JSAtom *
@@ -345,9 +387,10 @@ JSAtom *
 js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags)
 {
     jsdouble *dp;
-    PRHashTable *table;
     PRHashNumber keyHash;
     jsval key;
+    JSAtomState *state;
+    PRHashTable *table;
     PRHashEntry *he, **hep;
     JSAtom *atom;
 
@@ -360,74 +403,100 @@ js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags)
     *dp = d;
 #endif
 
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    table = cx->runtime->atomState.table;
     keyHash = HASH_DOUBLE(dp);
     key = DOUBLE_TO_JSVAL(dp);
+    state = &cx->runtime->atomState;
+    JS_LOCK(&state->lock,cx);
+    table = state->table;
     hep = PR_HashTableRawLookup(table, keyHash, (void *)key);
     if ((he = *hep) == NULL) {
+#ifdef JS_THREADSAFE
+	uint32 gen = state->tablegen;
+#endif
+	JS_UNLOCK(&state->lock,cx);
 	if (!js_NewDoubleValue(cx, d, &key))
 	    return NULL;
+	JS_LOCK(&state->lock,cx);
+#ifdef JS_THREADSAFE
+	if (state->tablegen != gen) {
+	    hep = PR_HashTableRawLookup(table, keyHash, (void *)key);
+	    if ((he = *hep) != NULL) {
+	    	atom = (JSAtom *)he;
+	    	goto out;
+	    }
+	}
+#endif
 	he = PR_HashTableRawAdd(table, hep, keyHash, (void *)key, NULL);
 	if (!he) {
 	    JS_ReportOutOfMemory(cx);
-	    return NULL;
+	    atom = NULL;
+	    goto out;
 	}
     }
 
     atom = (JSAtom *)he;
-#ifdef DEBUG_DUPLICATE_ATOMS
-    hep = PR_HashTableRawLookup(table, keyHash, (void *)key);
-    he = *hep;
-    PR_ASSERT(atom == (JSAtom *)he);
-#endif
-
-    if (flags & ATOM_NOHOLD)
-	return atom;
-    return js_HoldAtom(cx, atom);
+    atom->flags |= flags;
+out:
+    JS_UNLOCK(&state->lock,cx);
+    return atom;
 }
 
 JSAtom *
 js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 {
-    PRHashTable *table;
     PRHashNumber keyHash;
     jsval key;
+    JSAtomState *state;
+    PRHashTable *table;
     PRHashEntry *he, **hep;
     JSAtom *atom;
 
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    table = cx->runtime->atomState.table;
     keyHash = js_HashString(str);
     key = STRING_TO_JSVAL(str);
+    state = &cx->runtime->atomState;
+    JS_LOCK(&state->lock,cx);
+    table = state->table;
     hep = PR_HashTableRawLookup(table, keyHash, (void *)key);
     if ((he = *hep) == NULL) {
 	if (flags & ATOM_TMPSTR) {
-	    if (flags & ATOM_NOCOPY)
+#ifdef JS_THREADSAFE
+	    uint32 gen = state->tablegen;
+#endif
+	    JS_UNLOCK(&state->lock,cx);
+	    flags &= ~ATOM_TMPSTR;
+	    if (flags & ATOM_NOCOPY) {
+		flags &= ~ATOM_NOCOPY;
 		str = js_NewString(cx, str->chars, str->length, 0);
-	    else
+	    } else {
 		str = js_NewStringCopyN(cx, str->chars, str->length, 0);
+	    }
 	    if (!str)
 		return NULL;
 	    key = STRING_TO_JSVAL(str);
+	    JS_LOCK(&state->lock,cx);
+#ifdef JS_THREADSAFE
+	    if (state->tablegen != gen) {
+		hep = PR_HashTableRawLookup(table, keyHash, (void *)key);
+		if ((he = *hep) != NULL) {
+		    atom = (JSAtom *)he;
+		    goto out;
+		}
+	    }
+#endif
 	}
 	he = PR_HashTableRawAdd(table, hep, keyHash, (void *)key, NULL);
 	if (!he) {
 	    JS_ReportOutOfMemory(cx);
-	    return NULL;
+	    atom = NULL;
+	    goto out;
 	}
     }
 
     atom = (JSAtom *)he;
-#ifdef DEBUG_DUPLICATE_ATOMS
-    hep = PR_HashTableRawLookup(table, keyHash, (void *)key);
-    he = *hep;
-    PR_ASSERT(atom == (JSAtom *)he);
-#endif
-
-    if (flags & ATOM_NOHOLD)
-	return atom;
-    return js_HoldAtom(cx, atom);
+    atom->flags |= flags;
+out:
+    JS_UNLOCK(&state->lock,cx);
+    return atom;
 }
 
 JS_FRIEND_API(JSAtom *)
@@ -503,72 +572,27 @@ js_ValueToStringAtom(JSContext *cx, jsval v)
     return js_AtomizeString(cx, str, 0);
 }
 
-jsatomid
+JSAtomListElement *
 js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al)
 {
-    if (!(atom->flags & ATOM_INDEXED)) {
-	atom->flags |= ATOM_INDEXED;
-	atom->index = (jsatomid) al->count++;
-	ATOM_SET_NEXT(atom, al->list);
-	al->list = js_HoldAtom(cx, atom);
+    JSAtomListElement *ale;
+
+    ATOM_LIST_SEARCH(ale, al, atom);
+    if (!ale) {
+	PR_ARENA_ALLOCATE(ale, &cx->tempPool, sizeof(JSAtomListElement));
+	if (!ale) {
+	    JS_ReportOutOfMemory(cx);
+	    return NULL;
+	}
+	ale->atom = atom;
+	ale->index = (jsatomid) al->count++;
+	ale->next = al->list;
+	al->list = ale;
     }
-    return atom->index;
-}
-
-JSAtom *
-js_HoldAtom(JSContext *cx, JSAtom *atom)
-{
-#ifdef DEBUG_DUPLICATE_ATOMS
-    jsval key;
-    PRHashNumber keyHash;
-    PRHashEntry *he, **hep;
-
-    key = ATOM_KEY(atom);
-    keyHash = js_hash_atom_key((void *)key);
-    hep = PR_HashTableRawLookup(cx->runtime->atomState.table, keyHash,
-				(void*)key);
-    he = *hep;
-    PR_ASSERT(atom == (JSAtom *)he);
-#endif
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    atom->nrefs++;
-    PR_ASSERT(atom->nrefs > 0);
-    return atom;
+    return ale;
 }
 
 JS_FRIEND_API(JSAtom *)
-js_DropAtom(JSContext *cx, JSAtom *atom)
-{
-#ifdef DEBUG_DUPLICATE_ATOMS
-    jsval key;
-    PRHashNumber keyHash;
-    PRHashEntry *he, **hep;
-
-    key = ATOM_KEY(atom);
-    keyHash = js_hash_atom_key((void *)key);
-    hep = PR_HashTableRawLookup(cx->runtime->atomState.table, keyHash,
-				(void*)key);
-    he = *hep;
-    PR_ASSERT(atom == (JSAtom *)he);
-#endif
-    PR_ASSERT(JS_IS_LOCKED(cx));
-    PR_ASSERT(atom->nrefs > 0);
-    if (atom->nrefs <= 0)
-	return NULL;
-    if (--atom->nrefs == 0) {
-	PR_HashTableRemove(cx->runtime->atomState.table, atom->entry.key);
-#ifdef DEBUG_DUPLICATE_ATOMS
-	hep = PR_HashTableRawLookup(cx->runtime->atomState.table, keyHash,
-				    (void *)key);
-	he = *hep;
-	PR_ASSERT(he == NULL);
-#endif
-	atom = NULL;
-    }
-    return atom;
-}
-
-JSAtom *
 js_GetAtom(JSContext *cx, JSAtomMap *map, jsatomid i)
 {
     JSAtom *atom;
@@ -586,11 +610,12 @@ js_GetAtom(JSContext *cx, JSAtomMap *map, jsatomid i)
 JS_FRIEND_API(JSBool)
 js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 {
-    JSAtom *atom, *next, **vector;
+    JSAtom **vector;
+    JSAtomListElement *ale, *next;
     uint32 count;
 
-    atom = al->list;
-    if (!atom) {
+    ale = al->list;
+    if (!ale) {
 	map->vector = NULL;
 	map->length = 0;
 	return JS_TRUE;
@@ -606,11 +631,10 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 	return JS_FALSE;
 
     do {
-        vector[atom->index] = atom;
-	atom->flags &= ~ATOM_INDEXED;
-	next = ATOM_NEXT(atom);
-	ATOM_SET_NEXT(atom, NULL);
-    } while ((atom = next) != NULL);
+        vector[ale->index] = ale->atom;
+	next = ale->next;
+	ale->next = NULL;
+    } while ((ale = next) != NULL);
     al->list = NULL;
     al->count = 0;
 
@@ -622,28 +646,9 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 JS_FRIEND_API(void)
 js_FreeAtomMap(JSContext *cx, JSAtomMap *map)
 {
-    uintN i;
-
     if (map->vector) {
-        for (i = 0; i < map->length; i++)
-	    js_DropAtom(cx, map->vector[i]);
 	free(map->vector);
 	map->vector = NULL;
     }
     map->length = 0;
-}
-
-void
-js_DropUnmappedAtoms(JSContext *cx, JSAtomList *al)
-{
-    JSAtom *atom, *next;
-
-    for (atom = al->list; atom; atom = next) {
-	atom->flags &= ~ATOM_INDEXED;
-	next = ATOM_NEXT(atom);
-	ATOM_SET_NEXT(atom, NULL);
-	js_DropAtom(cx, atom);
-    }
-    al->list = NULL;
-    al->count = 0;
 }

@@ -50,6 +50,7 @@ struct JSRuntime {
     uint32              gcLevel;
     uint32              gcNumber;
     JSBool              gcPoke;
+    JSGCCallback        gcCallback;
 #ifdef JS_GCMETER
     JSGCStats           gcStats;
 #endif
@@ -59,10 +60,10 @@ struct JSRuntime {
 
     /* Random number generator state, used by jsmath.c. */
     JSBool              rngInitialized;
-    int64               rngMultiplier;
-    int64               rngAddend;
-    int64               rngMask;
-    int64               rngSeed;
+    PRInt64               rngMultiplier;
+    PRInt64               rngAddend;
+    PRInt64               rngMask;
+    PRInt64               rngSeed;
     jsdouble            rngDscale;
 
     /* Well-known numbers held for use by this runtime's contexts. */
@@ -73,27 +74,34 @@ struct JSRuntime {
     /* Empty string held for use by this runtime's contexts. */
     JSString            *emptyString;
 
-    /* Weak links to properties, indexed by quickened get/set opcodes. */
-    JSPropertyCache     propertyCache;
-
     /* List of active contexts sharing this runtime. */
     PRCList             contextList;
 
-    /* These are used for debugging and declared in jsdbgapi.h. */
-    void                *interruptHandler;
+    /* These are used for debugging -- see jsprvtd.h and jsdbgapi.h. */
+    JSTrapHandler       interruptHandler;
     void                *interruptHandlerData;
-    void                *newScriptHookProc;
-    void                *newScriptHookProcData;
-    void                *destroyScriptHookProc;
-    void                *destroyScriptHookProcData;
+    JSNewScriptHook     newScriptHook;
+    void                *newScriptHookData;
+    JSDestroyScriptHook destroyScriptHook;
+    void                *destroyScriptHookData;
 
     /* More debugging state, see jsdbgapi.c. */
     PRCList             trapList;
     PRCList             watchPointList;
 
+    /* Weak links to properties, indexed by quickened get/set opcodes. */
+    /* XXX must come after PRCLists or MSVC alignment bug bites empty lists */
+    JSPropertyCache     propertyCache;
+
 #ifdef JS_THREADSAFE
-    /* Hook for js_lock_runtime/js_unlock_runtime/js_is_runtime_locked. */
-    void                *lockData;
+    /* These combine to interlock the GC and new requests. */
+    PRLock              *gcLock;
+    PRCondVar           *gcDone;
+    PRCondVar           *requestDone;
+    uint32              requestCount;
+
+    /* Lock and owning thread pointer for JS_LOCK_RUNTIME. */
+    JSThinLock          rtLock;
 #endif
 };
 
@@ -141,16 +149,17 @@ struct JSContext {
     JSBranchCallback    branchCallback;
     JSErrorReporter     errorReporter;
 
+    /* Client opaque pointer */
+    void                *pvt;
+    
     /* Java environment and JS errors to throw as exceptions. */
     void                *javaEnv;
     void                *savedErrors;
 
-#ifdef NETSCAPE_INTERNAL
-    /* I18n multibyte character scanning and transcoding support. */
-    const char          *charSetName;
-    size_t              charSetNameLength;
-    int                 charSetId;
-    JSCharScanner       charScanner;
+#ifdef JS_THREADSAFE
+    prword              thread;
+    JSPackedBool        gcActive;
+    jsrefcount          requestDepth;
 #endif
 };
 

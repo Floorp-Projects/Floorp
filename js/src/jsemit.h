@@ -30,87 +30,105 @@
 
 PR_BEGIN_EXTERN_C
 
-typedef enum StmtType {
+typedef enum JSStmtType {
     STMT_BLOCK        = 0,      /* compound statement: { s1[;... sN] } */
     STMT_LABEL        = 1,      /* labeled statement:  l: s */
     STMT_IF           = 2,      /* if (then) statement */
     STMT_ELSE         = 3,      /* else statement */
     STMT_SWITCH       = 4,      /* switch statement */
     STMT_WITH         = 5,      /* with statement */
-    STMT_DO_LOOP      = 6,      /* do/while loop statement */
-    STMT_FOR_LOOP     = 7,      /* for loop statement */
-    STMT_FOR_IN_LOOP  = 8,      /* for/in loop statement */
-    STMT_WHILE_LOOP   = 9       /* while loop statement */
-} StmtType;
+    STMT_TRY	      = 6,	/* try statement */
+    STMT_CATCH	      = 7,	/* catch block */
+    STMT_FINALLY      = 8,	/* finally statement */
+    STMT_DO_LOOP      = 9,      /* do/while loop statement */
+    STMT_FOR_LOOP     = 10,     /* for loop statement */
+    STMT_FOR_IN_LOOP  = 11,     /* for/in loop statement */
+    STMT_WHILE_LOOP   = 12      /* while loop statement */
+} JSStmtType;
 
 #define STMT_IS_LOOP(stmt)      ((stmt)->type >= STMT_DO_LOOP)
 
-typedef struct SwitchCase SwitchCase;
-typedef struct StmtInfo   StmtInfo;
+typedef struct JSStmtInfo JSStmtInfo;
 
-struct StmtInfo {
-    StmtType    type;           /* statement type */
-    ptrdiff_t   top;            /* offset of loop top from cg base */
-    ptrdiff_t   update;         /* loop update offset (top if none) */
-    ptrdiff_t   breaks;         /* offset of last break in loop */
-    ptrdiff_t   continues;      /* offset of last continue in loop */
-    JSAtom      *label;         /* label name if type is STMT_LABEL */
-    StmtInfo    *down;          /* info for enclosing statement */
-};
-
-struct SwitchCase {
-    jsval       value;
-    ptrdiff_t   offset;
-    SwitchCase  *next;
+struct JSStmtInfo {
+    JSStmtType      type;           /* statement type */
+    ptrdiff_t       top;            /* offset of loop top from cg base */
+    ptrdiff_t       update;         /* loop update offset (top if none) */
+    ptrdiff_t       breaks;         /* offset of last break in loop */
+    ptrdiff_t       continues;      /* offset of last continue in loop */
+    JSAtom          *label;         /* label name if type is STMT_LABEL */
+    JSStmtInfo      *down;          /* info for enclosing statement */
 };
 
 #define SET_STATEMENT_TOP(stmt, top) \
     ((stmt)->top = (stmt)->update = (stmt)->breaks = (stmt)->continues = (top))
 
+struct JSTreeContext {              /* tree context for semantic checks */
+    uint32          flags;          /* statement state flags, see below */
+    uint32          tryCount;       /* total count of try statements parsed */
+    JSStmtInfo      *topStmt;       /* top of statement info stack */
+};
+
+#define TCF_IN_FUNCTION 0x01        /* parsing inside function body */
+#define TCF_RETURN_EXPR 0x02        /* function has 'return expr;' */
+#define TCF_RETURN_VOID 0x04        /* function has 'return;' */
+
+#define INIT_TREE_CONTEXT(tc) \
+    ((tc)->flags = 0, (tc)->tryCount = 0, (tc)->topStmt = NULL)
+
 struct JSCodeGenerator {
-    PRArenaPool *pool;          /* pool in which to allocate code */
-    jsbytecode  *base;          /* base of JS bytecode vector */
-    jsbytecode  *limit;         /* one byte beyond end of bytecode */
-    jsbytecode  *ptr;           /* pointer to next free bytecode */
-    JSAtomList  atomList;       /* literals indexed for mapping */
-    JSSymbol    *args;          /* list of formal argument symbols */
-    JSSymbol    *vars;          /* list of local variable symbols */
-    ptrdiff_t   lastCodeOffset; /* offset of last non-nop opcode */
-    StmtInfo    *stmtInfo;      /* statement stack for break/continue */
-    intN        stackDepth;     /* current stack depth in basic block */
-    uintN       maxStackDepth;  /* maximum stack depth so far */
-    jssrcnote   *notes;         /* source notes, see below */
-    uintN       noteCount;      /* number of source notes so far */
-    uintN       lastNoteCount;  /* index of last emitted source note */
-    uintN       saveNoteCount;  /* saved index for source note cancellation */
-    ptrdiff_t   lastNoteOffset; /* code offset of last emitted source note */
-    ptrdiff_t   saveNoteOffset; /* saved offset before last cancellable note */
+    void            *codeMark;      /* low watermark in cx->codePool */
+    void            *tempMark;      /* low watermark in cx->tempPool */
+    jsbytecode      *base;          /* base of JS bytecode vector */
+    jsbytecode      *limit;         /* one byte beyond end of bytecode */
+    jsbytecode      *next;          /* pointer to next free bytecode */
+    JSAtomList      atomList;       /* literals indexed for mapping */
+    ptrdiff_t       lastCodeOffset; /* offset of last non-nop opcode */
+    intN            stackDepth;     /* current stack depth in basic block */
+    uintN           maxStackDepth;  /* maximum stack depth so far */
+    jssrcnote       *notes;         /* source notes, see below */
+    uintN           noteCount;      /* number of source notes so far */
+    ptrdiff_t       lastNoteOffset; /* code offset for last source note */
+    const char      *filename;      /* null or weak link to source filename */
+    uintN           firstLine;      /* first line, for js_NewScriptFromCG */
+    uintN           currentLine;    /* line number for tree-based srcnote gen */
+    JSPrincipals    *principals;    /* principals for constant folding eval */
+    JSTreeContext   treeContext;    /* for break/continue code generation */
+    JSTryNote       *tryBase;       /* first exception handling block */
+    JSTryNote       *tryNext;       /* next avail block */
+    JSTryNote       *tryLimit;      /* pointer to one-past-end block */
 };
 
 #define CG_CODE(cg,offset)      ((cg)->base + (offset))
-#define CG_OFFSET(cg)           ((cg)->ptr - (cg)->base)
-#define CG_RESET(cg)            ((cg)->ptr = (cg)->base,                      \
-				 INIT_ATOM_LIST(&(cg)->atomList),             \
-				 (cg)->args = (cg)->vars = NULL,              \
+#define CG_OFFSET(cg)           ((cg)->next - (cg)->base)
+#define CG_RESET(cg)            ((cg)->next = (cg)->base,                     \
+				 ATOM_LIST_INIT(&(cg)->atomList),             \
                                  (cg)->lastCodeOffset = 0,                    \
-				 (cg)->stmtInfo = NULL,                       \
                                  (cg)->stackDepth = (cg)->maxStackDepth = 0,  \
+				 (cg)->currentLine = (cg)->firstLine,         \
+				 INIT_TREE_CONTEXT(&(cg)->treeContext),       \
+				 (cg)->tryNext = (cg)->tryBase,               \
                                  CG_RESET_NOTES(cg))
 #define CG_RESET_NOTES(cg)      ((cg)->notes = NULL, (cg)->noteCount = 0,     \
-                                 (cg)->lastNoteCount = 0,                     \
-				 (cg)->saveNoteCount = 0,                     \
-                                 (cg)->lastNoteOffset = 0,                    \
-                                 (cg)->saveNoteOffset = 0)
+                                 (cg)->lastNoteOffset = 0)
 #define CG_PUSH(cg, newcg)      ((newcg)->atomList = (cg)->atomList)
 #define CG_POP(cg, newcg)       ((cg)->atomList = (newcg)->atomList)
 
 /*
- * Initialize cg to allocate from an arena pool.  Return true on success.
- * Report an exception and return false if the initial code segment can't
- * be allocated.
+ * Initialize cg to allocate bytecode space from cx->codePool, and srcnote
+ * space from cx->tempPool.  Return true on success.  Report an error and
+ * return false if the initial code segment can't be allocated.
  */
 extern JS_FRIEND_API(JSBool)
-js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg, PRArenaPool *pool);
+js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
+		     const char *filename, uintN lineno,
+		     JSPrincipals *principals);
+
+/*
+ * Release cx->codePool and cx->tempPool to marks set by js_InitCodeGenerator.
+ */
+extern JS_FRIEND_API(void)
+js_ResetCodeGenerator(JSContext *cx, JSCodeGenerator *cg);
 
 /*
  * Emit one bytecode.
@@ -132,6 +150,12 @@ js_Emit3(JSContext *cx, JSCodeGenerator *cg, JSOp op, jsbytecode op1,
 	 jsbytecode op2);
 
 /*
+ * Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
+ */
+extern ptrdiff_t
+js_EmitN(JSContext *cx, JSCodeGenerator *cg, JSOp op, size_t extra);
+
+/*
  * Unsafe macro to call js_SetJumpOffset and return false if it does.
  */
 #define CHECK_AND_SET_JUMP_OFFSET(cx,cg,pc,off)                               \
@@ -148,56 +172,53 @@ js_SetJumpOffset(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc,
 		 ptrdiff_t off);
 
 /*
- * Cancel the last bytecode and any immediate operands emitted via cg.
- * You can't Cancel more than once between Emit calls.
+ * Push the C-stack-allocated struct at stmt onto the stmtInfo stack.
  */
 extern void
-js_CancelLastOpcode(JSContext *cx, JSCodeGenerator *cg, uint16 *newlinesp);
-
-/*
- * Update cg's stack depth budget for the opcode located at offset in cg.
- */
-extern void
-js_UpdateDepth(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t offset);
-
-/*
- * Copy code from code generator from starting at fromOffset and running to
- * CG_OFFSET(from) into code generator to, starting at toOffset.
- *
- * NB: this function does not move source notes; the caller must do that.
- */
-extern ptrdiff_t
-js_MoveCode(JSContext *cx,
-            JSCodeGenerator *from, ptrdiff_t fromOffset,
-            JSCodeGenerator *to, ptrdiff_t toOffset);
-
-/*
- * Push the stack-allocated struct at stmt onto the cg->stmtInfo stack.
- */
-extern void
-js_PushStatement(JSCodeGenerator *cg, StmtInfo *stmt, StmtType type,
+js_PushStatement(JSTreeContext *tc, JSStmtInfo *stmt, JSStmtType type,
 		 ptrdiff_t top);
 
 /*
  * Emit a break instruction, recording it for backpatching.
  */
 extern ptrdiff_t
-js_EmitBreak(JSContext *cx, JSCodeGenerator *cg, StmtInfo *stmt,
-	     JSAtom *label);
+js_EmitBreak(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *stmt,
+	     JSAtomListElement *label);
 
 /*
  * Emit a continue instruction, recording it for backpatching.
  */
 extern ptrdiff_t
-js_EmitContinue(JSContext *cx, JSCodeGenerator *cg, StmtInfo *stmt,
-		JSAtom *label);
+js_EmitContinue(JSContext *cx, JSCodeGenerator *cg, JSStmtInfo *stmt,
+		JSAtomListElement *label);
 
 /*
- * Pop cg->stmtInfo.  If the top StmtInfo struct is not stack-allocated, it
+ * Pop tc->topStmt.  If the top JSStmtInfo struct is not stack-allocated, it
  * is up to the caller to free it.
  */
+extern void
+js_PopStatement(JSTreeContext *tc);
+
+/*
+ * Like js_PopStatement(&cg->treeContext), also patch breaks and continues.
+ * May fail if a jump offset overflows.
+ */
 extern JSBool
-js_PopStatement(JSContext *cx, JSCodeGenerator *cg);
+js_PopStatementCG(JSContext *cx, JSCodeGenerator *cg);
+
+/*
+ * Emit code into cg for the tree rooted at pn.
+ */
+extern JSBool
+js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn);
+
+/*
+ * Emit code into cg for the tree rooted at body, then create a persistent
+ * script for fun from cg.
+ */
+extern JSBool
+js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
+		    JSFunction *fun);
 
 /*
  * Source notes generated along with bytecode for decompiling and debugging.
@@ -233,9 +254,9 @@ typedef enum JSSrcNoteType {
     SRC_BREAK2LABEL = 16,       /* JSOP_GOTO for 'break label' with atomid */
     SRC_CONT2LABEL  = 17,       /* JSOP_GOTO for 'continue label' with atomid */
     SRC_SWITCH      = 18,       /* JSOP_*SWITCH with offset to end of switch */
-    SRC_UNUSED19    = 19,       /* unused */
-    SRC_UNUSED20    = 20,       /* unused */
-    SRC_UNUSED21    = 21,       /* unused */
+    SRC_FUNCDEF     = 19,       /* JSOP_NOP for function f() with atomid */
+    SRC_TRY	    = 20,       /* JSOP_NOP for beginning of try{} section */
+    SRC_CATCH       = 21,       /* beginning of catch block (at conditional) */
     SRC_NEWLINE     = 22,       /* bytecode follows a source newline */
     SRC_SETLINE     = 23,       /* a file-absolute source line number note */
     SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
@@ -279,9 +300,9 @@ typedef enum JSSrcNoteType {
 #define SN_2BYTE_OFFSET_FLAG    0x80
 #define SN_2BYTE_OFFSET_MASK    0x7f
 
-extern const char *js_SrcNoteName[];
-extern uint8 js_SrcNoteArity[];
-extern uintN js_SrcNoteLength(jssrcnote *sn);
+extern JS_FRIEND_DATA(const char *) js_SrcNoteName[];
+extern JS_FRIEND_DATA(uint8) js_SrcNoteArity[];
+extern JS_FRIEND_DATA(uintN) js_SrcNoteLength(jssrcnote *sn);
 
 #define SN_LENGTH(sn)           ((js_SrcNoteArity[SN_TYPE(sn)] == 0) ? 1      \
 				 : js_SrcNoteLength(sn))
@@ -308,17 +329,9 @@ js_NewSrcNote3(JSContext *cx, JSCodeGenerator *cg, JSSrcNoteType type,
 	       ptrdiff_t offset1, ptrdiff_t offset2);
 
 /*
- * Increment the delta of the note at cg->notes[index], overflowing into one
- * or more xdelta notes if necessary.
- */
-extern JSBool
-js_BumpSrcNoteDelta(JSContext *cx, JSCodeGenerator *cg, uintN index,
-		    ptrdiff_t incr);
-
-/*
  * Get and set the offset operand identified by which (0 for the first, etc.).
  */
-extern ptrdiff_t
+extern JS_FRIEND_API(ptrdiff_t)
 js_GetSrcNoteOffset(jssrcnote *sn, uintN which);
 
 extern JSBool
@@ -326,19 +339,35 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
 		    uintN which, ptrdiff_t offset);
 
 /*
- * Copy source notes from one code generator to another.  The code annotated
- * by the copied notes must be moved *after* the notes are moved.
- */
-extern JSBool
-js_MoveSrcNotes(JSContext *cx, JSCodeGenerator *from, JSCodeGenerator *to);
-
-/*
- * Finish taking source notes in cx's tempPool by copying them to new stable
- * store allocated via JS_malloc.  Return null on malloc failure, which means
- * this function reported an error.
+ * Finish taking source notes in cx's tempPool by copying them to new
+ * stable store allocated via JS_malloc.  Return null on malloc failure,
+ * which means this function reported an error.
  */
 extern JS_FRIEND_API(jssrcnote *)
 js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg);
+
+/*
+ * Allocate cg->treeContext.tryCount notes (plus one for the end sentinel)
+ * from cx->tempPool and set cg->tryBase/tryNext/tryLimit for exactly tryCount
+ * js_NewTryNote calls.  The storage is freed in one fell swoop by JS_Compile*
+ * API entry points at the end of compilation.
+ */
+extern JSBool
+js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg);
+
+/*
+ * Grab the next trynote slot in cg, filling it in appropriately.
+ */
+extern JS_FRIEND_API(JSTryNote *)
+js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
+	      ptrdiff_t end, ptrdiff_t catch, ptrdiff_t finally);
+
+/*
+ * Finish generating exception information, and copy it to JS_malloc
+ * storage.
+ */
+extern JS_FRIEND_API(JSBool)
+js_FinishTakingTryNotes(JSContext *cx, JSCodeGenerator *cg, JSTryNote **tryp);
 
 PR_END_EXTERN_C
 

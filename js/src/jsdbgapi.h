@@ -27,44 +27,33 @@
 
 PR_BEGIN_EXTERN_C
 
-typedef enum JSTrapStatus {
-    JSTRAP_ERROR,
-    JSTRAP_CONTINUE,
-    JSTRAP_RETURN,
-    JSTRAP_LIMIT
-} JSTrapStatus;
-
-typedef JSTrapStatus
-(*JSTrapHandler)(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
-		 void *closure);
-
 extern void
 js_PatchOpcode(JSContext *cx, JSScript *script, jsbytecode *pc, JSOp op);
 
-PR_EXTERN(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 	   JSTrapHandler handler, void *closure);
 
-PR_EXTERN(JSOp)
+extern JS_PUBLIC_API(JSOp)
 JS_GetTrapOpcode(JSContext *cx, JSScript *script, jsbytecode *pc);
 
-PR_EXTERN(void)
+extern JS_PUBLIC_API(void)
 JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 	     JSTrapHandler *handlerp, void **closurep);
 
-PR_EXTERN(void)
+extern JS_PUBLIC_API(void)
 JS_ClearScriptTraps(JSContext *cx, JSScript *script);
 
-PR_EXTERN(void)
+extern JS_PUBLIC_API(void)
 JS_ClearAllTraps(JSContext *cx);
 
-PR_EXTERN(JSTrapStatus)
+extern JS_PUBLIC_API(JSTrapStatus)
 JS_HandleTrap(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval);
 
-PR_EXTERN(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_SetInterrupt(JSRuntime *rt, JSTrapHandler handler, void *closure);
 
-PR_EXTERN(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_ClearInterrupt(JSRuntime *rt, JSTrapHandler *handlerp, void **closurep);
 
 /************************************************************************/
@@ -73,32 +62,44 @@ typedef JSBool
 (*JSWatchPointHandler)(JSContext *cx, JSObject *obj, jsval id,
 		       jsval old, jsval *newp, void *closure);
 
-PR_EXTERN(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 		 JSWatchPointHandler handler, void *closure);
 
-PR_EXTERN(void)
+extern JS_PUBLIC_API(void)
 JS_ClearWatchPoint(JSContext *cx, JSObject *obj, jsval id,
 		   JSWatchPointHandler *handlerp, void **closurep);
 
-PR_EXTERN(void)
+extern JS_PUBLIC_API(void)
 JS_ClearWatchPointsForObject(JSContext *cx, JSObject *obj);
 
-PR_EXTERN(void)
+extern JS_PUBLIC_API(void)
 JS_ClearAllWatchPoints(JSContext *cx);
+
+#ifdef JS_HAS_OBJ_WATCHPOINT
+/*
+ * Hide these non-API function prototypes by testing whether the internal
+ * header file "jsconfig.h" has been included.
+ */
+extern JSScopeProperty *
+js_FindWatchPoint(JSRuntime *rt, JSObject *obj, jsval userid);
+
+extern JSBool PR_CALLBACK
+js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
+#endif
 
 /************************************************************************/
 
-PR_EXTERN(uintN)
+extern JS_PUBLIC_API(uintN)
 JS_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc);
 
-PR_EXTERN(jsbytecode *)
+extern JS_PUBLIC_API(jsbytecode *)
 JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno);
 
-PR_EXTERN(JSScript *)
+extern JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun);
 
-PR_EXTERN(JSPrincipals *)
+extern JS_PUBLIC_API(JSPrincipals *)
 JS_GetScriptPrincipals(JSContext *cx, JSScript *script);
 
 /*
@@ -108,77 +109,67 @@ JS_GetScriptPrincipals(JSContext *cx, JSScript *script);
  * information from the frames.
  */
 
-PR_EXTERN(JSStackFrame *)
+extern JS_PUBLIC_API(JSStackFrame *)
 JS_FrameIterator(JSContext *cx, JSStackFrame **iteratorp);
 
-PR_EXTERN(JSScript *)
+extern JS_PUBLIC_API(JSScript *)
 JS_GetFrameScript(JSContext *cx, JSStackFrame *fp);
 
-PR_EXTERN(jsbytecode *)
+extern JS_PUBLIC_API(jsbytecode *)
 JS_GetFramePC(JSContext *cx, JSStackFrame *fp);
 
-PR_EXTERN(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_IsNativeFrame(JSContext *cx, JSStackFrame *fp);
 
-PR_EXTERN(void *)
+extern JS_PUBLIC_API(void *)
 JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp);
 
-PR_EXTERN(void)
+extern JS_PUBLIC_API(void)
 JS_SetFrameAnnotation(JSContext *cx, JSStackFrame *fp, void *annotation);
 
-PR_EXTERN(void *)
+extern JS_PUBLIC_API(void *)
 JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp);
 
-PR_EXTERN(JSObject *)
+extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameObject(JSContext *cx, JSStackFrame *fp);
 
-PR_EXTERN(JSObject *)
+extern JS_PUBLIC_API(JSObject *)
 JS_GetFrameThis(JSContext *cx, JSStackFrame *fp);
 
-PR_EXTERN(JSFunction *)
+extern JS_PUBLIC_API(JSFunction *)
 JS_GetFrameFunction(JSContext *cx, JSStackFrame *fp);
 
 /************************************************************************/
 
-PR_EXTERN(const char *)
+extern JS_PUBLIC_API(const char *)
 JS_GetScriptFilename(JSContext *cx, JSScript *script);
 
-PR_EXTERN(uintN)
+extern JS_PUBLIC_API(uintN)
 JS_GetScriptBaseLineNumber(JSContext *cx, JSScript *script);
 
-PR_EXTERN(uintN)
+extern JS_PUBLIC_API(uintN)
 JS_GetScriptLineExtent(JSContext *cx, JSScript *script);
 
 /************************************************************************/
 
-/* called just after script creation */
-typedef void
-(*JSNewScriptHookProc)(
-		JSContext   *cx,
-		const char  *filename,      /* URL this script loads from */
-		uintN       lineno,         /* line where this script starts */
-		JSScript    *script,
-		JSFunction  *fun,
-		void        *callerdata );
+/*
+ * Hook setters for script creation and destruction, see jsprvtd.h for the
+ * typedefs.  These macros provide binary compatibility and newer, shorter
+ * synonyms.
+ */
+#define JS_SetNewScriptHook     JS_SetNewScriptHookProc
+#define JS_SetDestroyScriptHook JS_SetDestroyScriptHookProc
 
-/* called just before script destruction */
-typedef void
-(*JSDestroyScriptHookProc)(
-		JSContext   *cx,
-		JSScript    *script,
-		void        *callerdata );
+extern JS_PUBLIC_API(void)
+JS_SetNewScriptHook(JSRuntime *rt, JSNewScriptHook hook, void *callerdata);
 
-PR_EXTERN(void)
-JS_SetNewScriptHookProc(JSRuntime *rt, JSNewScriptHookProc hookproc,
+extern JS_PUBLIC_API(void)
+JS_SetDestroyScriptHook(JSRuntime *rt, JSDestroyScriptHook hook,
 			void *callerdata);
-
-PR_EXTERN(void)
-JS_SetDestroyScriptHookProc(JSRuntime *rt, JSDestroyScriptHookProc hookproc,
-			    void *callerdata);
 
 /************************************************************************/
 
-PR_EXTERN(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_EvaluateInStackFrame(JSContext *cx, JSStackFrame *fp,
 			const char *bytes, uintN length,
 			const char *filename, uintN lineno,
@@ -207,16 +198,17 @@ typedef struct JSPropertyDescArray {
     JSPropertyDesc  *array;     /* alloc'd by Get, freed by Put */
 } JSPropertyDescArray;
 
-PR_EXTERN(JSProperty *)
-JS_PropertyIterator(JSObject *obj, JSProperty **iteratorp);
+extern JS_PUBLIC_API(JSScopeProperty *)
+JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp);
 
-PR_EXTERN(JSBool)
-JS_GetPropertyDesc(JSContext *cx, JSProperty *prop, JSPropertyDesc *pd);
+extern JS_PUBLIC_API(JSBool)
+JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
+		   JSPropertyDesc *pd);
 
-PR_EXTERN(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_GetPropertyDescArray(JSContext *cx, JSObject *obj, JSPropertyDescArray *pda);
 
-PR_EXTERN(void)
+extern JS_PUBLIC_API(void)
 JS_PutPropertyDescArray(JSContext *cx, JSPropertyDescArray *pda);
 
 PR_END_EXTERN_C

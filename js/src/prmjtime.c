@@ -1,19 +1,5 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
- * http://www.mozilla.org/NPL/
- *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
- *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+/* -*- Mode: C; tab-width: 8 -*-
+ * Copyright © 1996 Netscape Communications Corporation, All Rights Reserved.
  */
 
 /*
@@ -390,7 +376,7 @@ PRMJ_DSTOffset(PRInt64 time)
     PRInt32 diff;
     PRInt64  maxtimet;
     struct tm tm;
-#if defined( XP_PC ) || defined( FREEBSD )
+#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 )
     struct tm *ptm;
 #endif
     PRMJTime prtm;
@@ -409,7 +395,7 @@ PRMJ_DSTOffset(PRInt64 time)
     }
     LL_L2UI(local,time);
     PRMJ_basetime(time,&prtm);
-#if defined( XP_PC ) || defined( FREEBSD )
+#if defined( XP_PC ) || defined( FREEBSD ) || defined ( HPUX9 )
     ptm = localtime(&local);
     if(!ptm){
       return LL_ZERO;
@@ -532,6 +518,22 @@ PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
 {
 #if defined(XP_UNIX) || defined(XP_PC) || defined(XP_MAC)
     struct tm a;
+
+    /* Zero out the tm struct.  Linux, SunOS 4 struct tm has extra members int
+     * tm_gmtoff, char *tm_zone; when tm_zone is garbage, strftime gets
+     * confused and dumps core.  NSPR20 prtime.c attempts to fill these in by
+     * calling mktime on the partially filled struct, but this doesn't seem to
+     * work as well; the result string has "can't get timezone" for ECMA-valid
+     * years.  Might still make sense to use this, but find the range of years
+     * for which valid tz information exists, and map (per ECMA hint) from the
+     * given year into that range.
+     
+     * N.B. This hasn't been tested with anything that actually _uses_
+     * tm_gmtoff; zero might be the wrong thing to set it to if you really need
+     * to format a time.  This fix is for jsdate.c, which only uses
+     * PR_FormatTime to get a string representing the time zone.  */
+    memset(&a, 0, sizeof(struct tm));
+
     a.tm_sec = prtm->tm_sec;
     a.tm_min = prtm->tm_min;
     a.tm_hour = prtm->tm_hour;
@@ -541,20 +543,23 @@ PRMJ_FormatTime(char *buf, int buflen, char *fmt, PRMJTime *prtm)
     a.tm_year = prtm->tm_year - 1900;
     a.tm_yday = prtm->tm_yday;
     a.tm_isdst = prtm->tm_isdst;
-#ifdef SUNOS4
-{
-    time_t now;
-    struct tm *lt;
 
-    now = time((time_t *)0);
-    lt = localtime(&now);
-    if (lt == 0) {
-	PR_snprintf(buf, buflen, "can't get timezone");
-	return 0;
+    /* Even with the above, SunOS 4 seems to detonate if tm_zone and tm_gmtoff
+     * are null.  This doesn't quite work, though - the timezone is off by
+     * tzoff + dst.  (And mktime seems to return -1 for the exact dst
+     * changeover time.)
+
+     * Still not sure if MKLINUX is necessary; this is borrowed from the NSPR20
+     * prtime.c.  I'm leaving it out - My Linux does the right thing without it
+     * (and the wrong thing with it) even though it has the tm_gmtoff, tm_zone
+     * fields.
+     */
+
+#if defined(SUNOS4)
+    if (mktime(&a) == -1) {
+        PR_snprintf(buf, buflen, "can't get timezone");
+        return 0;
     }
-    a.tm_zone = lt->tm_zone;
-    a.tm_gmtoff = lt->tm_gmtoff;
-}
 #endif
     return strftime(buf, buflen, fmt, &a);
 #endif
@@ -844,7 +849,7 @@ PRMJ_localtime(PRInt64 tsecs,PRMJTime *prtm)
 /*	seconds += dstOffset;*/
 
 #endif
-#if defined(XP_PC) || defined(XP_MAC) || defined( FREEBSD )
+#if defined(XP_PC) || defined(XP_MAC) || defined( FREEBSD ) || defined( HPUX9 )
 	lt = *localtime(&seconds);
 #else
 	localtime_r(&seconds,&lt);

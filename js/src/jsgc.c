@@ -43,12 +43,14 @@
 #include "jsapi.h"
 #include "jsatom.h"
 #include "jscntxt.h"
+#include "jsfun.h"
 #include "jsgc.h"
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsscope.h"
+#include "jsscript.h"
 #include "jsstr.h"
 
 /*
@@ -147,29 +149,26 @@ js_FinishGC(JSRuntime *rt)
 }
 
 JSBool
-js_AddRoot(JSContext *cx, void *rp)
+js_AddRoot(JSContext *cx, void *rp, const char *name)
 {
-    if (!PR_HashTableAdd(cx->runtime->gcRootsHash, rp, NULL)) {
-	JS_ReportOutOfMemory(cx);
-	return JS_FALSE;
-    }
-    return JS_TRUE;
-}
+    JSRuntime *rt;
+    JSBool ok;
 
-JSBool
-js_AddNamedRoot(JSContext *cx, void *rp, const char *name)
-{
-    if (!PR_HashTableAdd(cx->runtime->gcRootsHash, rp, (void *)name)) {
+    rt = cx->runtime;
+    JS_LOCK_GC_VOID(rt,
+	ok = (PR_HashTableAdd(rt->gcRootsHash, rp, (void *)name) != NULL));
+    if (!ok)
 	JS_ReportOutOfMemory(cx);
-	return JS_FALSE;
-    }
-    return JS_TRUE;
+    return ok;
 }
 
 JSBool
 js_RemoveRoot(JSContext *cx, void *rp)
 {
-    (void) PR_HashTableRemove(cx->runtime->gcRootsHash, rp);
+    JSRuntime *rt;
+
+    rt = cx->runtime;
+    JS_LOCK_GC_VOID(rt, PR_HashTableRemove(rt->gcRootsHash, rp));
     return JS_TRUE;
 }
 
@@ -187,7 +186,7 @@ js_AllocGCThing(JSContext *cx, uintN flags)
 #endif
 
     rt = cx->runtime;
-    JS_LOCK_RUNTIME(rt);
+    JS_LOCK_GC(rt);
     METER(rt->gcStats.alloc++);
 retry:
     thing = rt->gcFreeList;
@@ -205,14 +204,16 @@ retry:
 	    if (thing)
 		PR_ARENA_RELEASE(&rt->gcArenaPool, thing);
 	    if (!tried_gc) {
+		JS_UNLOCK_GC(rt);
 		js_GC(cx);
 		tried_gc = JS_TRUE;
+		JS_LOCK_GC(rt);
 		METER(rt->gcStats.retry++);
 		goto retry;
 	    }
-	    JS_ReportOutOfMemory(cx);
 	    METER(rt->gcStats.fail++);
-	    JS_UNLOCK_RUNTIME(rt);
+	    JS_UNLOCK_GC(rt);
+	    JS_ReportOutOfMemory(cx);
 	    return NULL;
 	}
     }
@@ -226,7 +227,7 @@ retry:
      */
     thing->next = NULL;
     thing->flagp = NULL;
-    JS_UNLOCK_RUNTIME(rt);
+    JS_UNLOCK_GC(rt);
     return thing;
 }
 
@@ -301,8 +302,8 @@ js_UnlockGCThing(JSContext *cx, void *thing)
 #include <stdlib.h>
 #include "prprf.h"
 
-FILE *js_DumpGCHeap;
-void *js_LiveThingToFind;
+JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
+JS_FRIEND_DATA(void *) js_LiveThingToFind;
 
 typedef struct GCMarkNode GCMarkNode;
 
@@ -318,7 +319,9 @@ gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
 {
     GCMarkNode *next = NULL;
     char *path = NULL;
-	
+    JSObject *obj;
+    JSClass *clasp;
+
     while (prev) {
 	next = prev;
 	prev = prev->prev;
@@ -333,13 +336,15 @@ gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
     fprintf(fp, "%08lx ", (long)thing);
     switch (flags & GCF_TYPEMASK) {
       case GCX_OBJECT:
-	fprintf(fp, "class %s", ((JSObject *)thing)->map->clasp->name);
+	obj = (JSObject *)thing;
+	clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
+	fprintf(fp, "object %s", clasp->name);
 	break;
       case GCX_STRING:
-	fprintf(fp, "bytes %s", JS_GetStringBytes((JSString *)thing));
+	fprintf(fp, "string %s", JS_GetStringBytes((JSString *)thing));
 	break;
       case GCX_DOUBLE:
-	fprintf(fp, "value %g", *(jsdouble *)thing);
+	fprintf(fp, "double %g", *(jsdouble *)thing);
 	break;
       case GCX_DECIMAL:
 	break;
@@ -351,15 +356,16 @@ gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
 static void
 gc_mark_node(JSRuntime *rt, void *thing, GCMarkNode *prev);
 
-#define GC_MARK(_rt, _thing, _name, _prev) {                                  \
-    GCMarkNode _node;                                                         \
-    _node.thing = _thing;                                                     \
-    _node.name  = _name;                                                      \
-    _node.next  = NULL;                                                       \
-    _node.prev  = _prev;                                                      \
-    if (_prev) ((GCMarkNode *)(_prev))->next = &_node;                        \
-    gc_mark_node(_rt, _thing, &_node);                                        \
-}
+#define GC_MARK(_rt, _thing, _name, _prev)                                    \
+    PR_BEGIN_MACRO                                                            \
+	GCMarkNode _node;                                                     \
+	_node.thing = _thing;                                                 \
+	_node.name  = _name;                                                  \
+	_node.next  = NULL;                                                   \
+	_node.prev  = _prev;                                                  \
+	if (_prev) ((GCMarkNode *)(_prev))->next = &_node;                    \
+	gc_mark_node(_rt, _thing, &_node);                                    \
+    PR_END_MACRO
 
 static void
 gc_mark(JSRuntime *rt, void *thing)
@@ -367,22 +373,82 @@ gc_mark(JSRuntime *rt, void *thing)
     GC_MARK(rt, thing, "atom", NULL);
 }
 
+#define GC_MARK_ATOM(rt, atom, prev)     gc_mark_atom(rt, atom, prev)
+#define GC_MARK_SCRIPT(rt, script, prev) gc_mark_script(rt, script, prev)
+
+#else  /* !GC_MARK_DEBUG */
+
+#define GC_MARK(rt, thing, name, prev)   gc_mark(rt, thing)
+#define GC_MARK_ATOM(rt, atom, prev)     gc_mark_atom(rt, atom)
+#define GC_MARK_SCRIPT(rt, script, prev) gc_mark_script(rt, script)
+
 static void
+gc_mark(JSRuntime *rt, void *thing);
+
+#endif /* !GC_MARK_DEBUG */
+
+static void
+gc_mark_atom(JSRuntime *rt, JSAtom *atom
+#ifdef GC_MARK_DEBUG
+  , GCMarkNode *prev
+#endif
+)
+{
+    jsval key;
+
+    if (!atom || atom->flags & ATOM_MARK)
+	return;
+    atom->flags |= ATOM_MARK;
+    key = ATOM_KEY(atom);
+    if (JSVAL_IS_GCTHING(key)) {
+#ifdef GC_MARK_DEBUG
+	char name[32];
+
+	if (JSVAL_IS_STRING(key)) {
+	    PR_snprintf(name, sizeof name, "'%s'",
+			JS_GetStringBytes(JSVAL_TO_STRING(key)));
+	} else {
+	    PR_snprintf(name, sizeof name, "<%x>", key);
+	}
+#endif
+	GC_MARK(rt, JSVAL_TO_GCTHING(key), name, prev);
+    }
+}
+
+static void
+gc_mark_script(JSRuntime *rt, JSScript *script
+#ifdef GC_MARK_DEBUG
+  , GCMarkNode *prev
+#endif
+)
+{
+    JSAtomMap *map;
+    uintN i, length;
+    JSAtom **vector;
+
+    map = &script->atomMap;
+    length = map->length;
+    vector = map->vector;
+    for (i = 0; i < length; i++)
+	GC_MARK_ATOM(rt, vector[i], prev);
+}
+
+static void
+#ifdef GC_MARK_DEBUG
 gc_mark_node(JSRuntime *rt, void *thing, GCMarkNode *prev)
-
-#else  /* GC_MARK_DEBUG */
-
-#define GC_MARK(rt, thing, name, prev)  gc_mark(rt, thing)
-
-static void
+#else
 gc_mark(JSRuntime *rt, void *thing)
-
-#endif /* GC_MARK_DEBUG */
+#endif
 {
     uint8 flags, *flagp;
     JSObject *obj;
     jsval v, *vp, *end;
     JSScope *scope;
+    JSClass *clasp;
+    JSScript *script;
+    JSFunction *fun;
+    JSScopeProperty *sprop;
+    JSSymbol *sym;
 
     if (!thing)
 	return;
@@ -390,7 +456,11 @@ gc_mark(JSRuntime *rt, void *thing)
     if (!flagp)
 	return;
 
+    /* Check for something on the GC freelist to handle recycled stack. */
     flags = *flagp;
+    if (flags == GCF_FINAL)
+	return;
+
 #ifdef GC_MARK_DEBUG
     if (js_LiveThingToFind == thing)
 	gc_dump_thing(thing, flags, prev, stderr);
@@ -411,8 +481,41 @@ gc_mark(JSRuntime *rt, void *thing)
 	obj = thing;
 	vp = obj->slots;
 	if (vp) {
-	    scope = (JSScope *) obj->map;
-	    if (scope->object == obj)
+	    scope = OBJ_IS_NATIVE(obj) ? (JSScope *) obj->map : NULL;
+	    if (scope) {
+		clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
+
+		if (clasp == &js_ScriptClass) {
+		    v = vp[JSSLOT_PRIVATE];
+		    if (!JSVAL_IS_VOID(v)) {
+			script = JSVAL_TO_PRIVATE(v);
+			if (script)
+			    GC_MARK_SCRIPT(rt, script, prev);
+		    }
+		}
+
+		if (clasp == &js_FunctionClass) {
+		    v = vp[JSSLOT_PRIVATE];
+		    if (!JSVAL_IS_VOID(v)) {
+			fun = JSVAL_TO_PRIVATE(v);
+			if (fun) {
+			    if (fun->atom)
+			    	GC_MARK_ATOM(rt, fun->atom, prev);
+			    if (fun->script)
+				GC_MARK_SCRIPT(rt, fun->script, prev);
+			}
+		    }
+		}
+
+		for (sprop = scope->props; sprop; sprop = sprop->next) {
+		    for (sym = sprop->symbols; sym; sym = sym->next) {
+			if (JSVAL_IS_INT(sym_id(sym)))
+			    continue;
+			GC_MARK_ATOM(rt, sym_atom(sym), prev);
+		    }
+		}
+	    }
+	    if (!scope || scope->object == obj)
 		end = vp + obj->map->freeslot;
 	    else
 		end = vp + JS_INITIAL_NSLOTS;
@@ -420,44 +523,48 @@ gc_mark(JSRuntime *rt, void *thing)
 		v = *vp;
 		if (JSVAL_IS_GCTHING(v)) {
 #ifdef GC_MARK_DEBUG
-		    uint32 slot;
-		    JSProperty *prop;
-		    jsval nval;
 		    char name[32];
 
-		    slot = vp - obj->slots;
-		    for (prop = scope->map.props; ; prop = prop->next) {
-			if (!prop) {
-			    switch (slot) {
-			      case JSSLOT_PROTO:
-				strcpy(name, "__proto__");
-				break;
-			      case JSSLOT_PARENT:
-				strcpy(name, "__parent__");
-				break;
-			      case JSSLOT_PRIVATE:
-				strcpy(name, "__private__");
-				break;
-			      default:
-				strcpy(name, "**UNKNOWN SLOT**");
+		    if (scope) {
+			uint32 slot;
+			jsval nval;
+
+			slot = vp - obj->slots;
+			for (sprop = scope->props; ; sprop = sprop->next) {
+			    if (!sprop) {
+				switch (slot) {
+				  case JSSLOT_PROTO:
+				    strcpy(name, "__proto__");
+				    break;
+				  case JSSLOT_PARENT:
+				    strcpy(name, "__parent__");
+				    break;
+				  case JSSLOT_PRIVATE:
+				    strcpy(name, "__private__");
+				    break;
+				  default:
+				    PR_snprintf(name, sizeof name,
+						"**UNKNOWN SLOT %ld**",
+						(long)slot);
+				    break;
+				}
 				break;
 			    }
-			    break;
-			}
-			if (prop->slot == slot) {
-			    nval = prop->symbols
-				   ? js_IdToValue(sym_id(prop->symbols))
-				   : prop->id;
-			    if (JSVAL_IS_INT(nval)) {
-				PR_snprintf(name, sizeof name, "%ld",
-					    (long)JSVAL_TO_INT(nval));
-			    } else if (JSVAL_IS_STRING(nval)) {
-				PR_snprintf(name, sizeof name, "%s",
-					    JS_GetStringBytes(JSVAL_TO_STRING(nval)));
-			    } else {
-				strcpy(name, "**FINALIZED ATOM KEY**");
+			    if (sprop->slot == slot) {
+				nval = sprop->symbols
+				       ? js_IdToValue(sym_id(sprop->symbols))
+				       : sprop->id;
+				if (JSVAL_IS_INT(nval)) {
+				    PR_snprintf(name, sizeof name, "%ld",
+						(long)JSVAL_TO_INT(nval));
+				} else if (JSVAL_IS_STRING(nval)) {
+				    PR_snprintf(name, sizeof name, "%s",
+				      JS_GetStringBytes(JSVAL_TO_STRING(nval)));
+				} else {
+				    strcpy(name, "**FINALIZED ATOM KEY**");
+				}
+				break;
 			    }
-			    break;
 			}
 		    }
 #endif
@@ -479,7 +586,7 @@ gc_hash_root(const void *key)
 }
 
 PR_STATIC_CALLBACK(intN)
-gc_root_enumerator(PRHashEntry *he, intN i, void *arg)
+gc_root_marker(PRHashEntry *he, intN i, void *arg)
 {
     void **rp = (void **)he->key;
 
@@ -488,10 +595,9 @@ gc_root_enumerator(PRHashEntry *he, intN i, void *arg)
     return HT_ENUMERATE_NEXT;
 }
 
-void
+JS_FRIEND_API(void)
 js_ForceGC(JSContext *cx)
 {
-    PR_ASSERT(JS_IS_LOCKED(cx));
     cx->newborn[GCX_OBJECT] = NULL;
     cx->newborn[GCX_STRING] = NULL;
     cx->newborn[GCX_DOUBLE] = NULL;
@@ -505,25 +611,77 @@ js_GC(JSContext *cx)
 {
     JSRuntime *rt;
     JSContext *iter, *acx;
-    PRArena *a, *fa, **ap, **fap;
+    PRArena *a, *ma, *fa, **ap, **fap;
     jsval v, *vp, *sp;
     pruword begin, end;
     JSStackFrame *fp;
+    void *mark;
     uint8 flags, *flagp;
-    JSGCThing *thing, **flp, **oflp;
+    JSGCThing *thing, *final, **flp, **oflp;
     GCFinalizeOp finalizer;
     JSBool a_all_clear, f_all_clear;
 
     rt = cx->runtime;
-    PR_ASSERT(JS_IS_RUNTIME_LOCKED(rt));
+#ifdef JS_THREADSAFE
+    /* Avoid deadlock. */
+    PR_ASSERT(!JS_IS_RUNTIME_LOCKED(rt));
+#endif
+
+    /* Let the API user decide to defer a GC if it wants to. */
+    if (rt->gcCallback && !rt->gcCallback(cx, JSGC_BEGIN))
+	return;
+
+    /* Lock out other GC allocator and collector invocations. */
+    JS_LOCK_GC(rt);
 
     /* Do nothing if no assignment has executed since the last GC. */
     if (!rt->gcPoke) {
 	METER(rt->gcStats.nopoke++);
+	JS_UNLOCK_GC(rt);
 	return;
     }
     rt->gcPoke = JS_FALSE;
     METER(rt->gcStats.poke++);
+
+#ifdef JS_THREADSAFE
+    /* Bump gcLevel and return rather than nest on this context. */
+    if (cx->gcActive) {
+	rt->gcLevel++;
+	METER(if (rt->gcLevel > rt->gcStats.maxlevel)
+		  rt->gcStats.maxlevel = rt->gcLevel);
+	if (rt->gcLevel > 1) {
+	    JS_UNLOCK_GC(rt);
+	    return;
+	}
+    }
+
+    /* If we're in a request, indicate, temporarily, that we're inactive. */
+    if (cx->requestDepth) {
+	rt->requestCount--;
+	JS_NOTIFY_REQUEST_DONE(rt);
+    }
+
+    /* If another thread is already in GC, don't attempt GC; wait instead. */
+    if (rt->gcLevel > 0) {
+	while (rt->gcLevel > 0)
+	    JS_AWAIT_GC_DONE(rt);
+	if (cx->requestDepth)
+	    rt->requestCount++;
+	JS_UNLOCK_GC(rt);
+	return;
+    }
+
+    /* No other thread is in GC, so indicate that we're now in GC. */
+    rt->gcLevel = 1;
+
+    /* Also indicate that GC is active on this context. */
+    cx->gcActive = JS_TRUE;
+
+    /* Wait for all other requests to finish. */
+    while (rt->requestCount > 0)
+	JS_AWAIT_REQUEST_DONE(rt);
+
+#else  /* !JS_THREADSAFE */
 
     /* Bump gcLevel and return rather than nest; the outer gc will restart. */
     rt->gcLevel++;
@@ -532,14 +690,16 @@ js_GC(JSContext *cx)
     if (rt->gcLevel > 1)
 	return;
 
+#endif /* !JS_THREADSAFE */
+
     /* Drop atoms held by the property cache, and clear property weak links. */
     js_FlushPropertyCache(cx);
 restart:
     rt->gcNumber++;
 
     /* Mark phase. */
-    PR_HashTableEnumerateEntries(rt->gcRootsHash, gc_root_enumerator, rt);
-    js_MarkAtomState(rt, gc_mark);
+    PR_HashTableEnumerateEntries(rt->gcRootsHash, gc_root_marker, rt);
+    js_MarkAtomState(&rt->atomState, gc_mark);
     iter = NULL;
     while ((acx = js_ContextIterator(rt, &iter)) != NULL) {
 	fp = acx->fp;
@@ -549,15 +709,15 @@ restart:
 		for (a = acx->stackPool.first.next; a; a = a->next) {
 		    begin = a->base;
 		    end = a->avail;
-#ifndef JS_THREADSAFE
 		    if (PR_UPTRDIFF(sp, begin) < PR_UPTRDIFF(end, begin))
 			end = (pruword)sp;
-#endif
 		    for (vp = (jsval *)begin; vp < (jsval *)end; vp++) {
 			v = *vp;
 			if (JSVAL_IS_GCTHING(v))
 			    GC_MARK(rt, JSVAL_TO_GCTHING(v), "stack", NULL);
 		    }
+		    if (end == (pruword)sp)
+		    	break;
 		}
 	    }
 	    do {
@@ -565,12 +725,14 @@ restart:
 		GC_MARK(rt, fp->thisp, "this", NULL);
 		if (JSVAL_IS_GCTHING(fp->rval))
 		    GC_MARK(rt, JSVAL_TO_GCTHING(fp->rval), "rval", NULL);
-		if (fp->object)
-		    GC_MARK(rt, fp->object, "call object", NULL);
-#if JS_HAS_SHARP_VARS
+		if (fp->callobj)
+		    GC_MARK(rt, fp->callobj, "call object", NULL);
+		if (fp->argsobj)
+		    GC_MARK(rt, fp->argsobj, "arguments object", NULL);
+		if (fp->script)
+		    GC_MARK_SCRIPT(rt, fp->script, NULL);
 		if (fp->sharpArray)
 		    GC_MARK(rt, fp->sharpArray, "sharp array", NULL);
-#endif
 	    } while ((fp = fp->down) != NULL);
 	}
 	GC_MARK(rt, acx->globalObject, "global object", NULL);
@@ -579,7 +741,10 @@ restart:
 	GC_MARK(rt, acx->newborn[GCX_DOUBLE], "newborn double", NULL);
     }
 
-    /* Sweep phase. */
+    /* Sweep phase.  Mark in tempPool for release at label out:. */
+    ma = cx->tempPool.current;
+    mark = PR_ARENA_MARK(&cx->tempPool);
+    js_SweepAtomState(&rt->atomState);
     fa = rt->gcFlagsPool.first.next;
     flagp = (uint8 *)fa->base;
     for (a = rt->gcArenaPool.first.next; a; a = a->next) {
@@ -598,24 +763,44 @@ restart:
 	    if (flags & GCF_MARK) {
 		*flagp &= ~GCF_MARK;
 	    } else if (!(flags & (GCF_LOCKMASK | GCF_FINAL))) {
-		finalizer = gc_finalizers[flags & GCF_TYPEMASK];
-		if (finalizer) {
-		    *flagp |= GCF_FINAL;
-		    finalizer(cx, thing);
-		}
-
-		/*
-		 * Set flags to GCF_FINAL, signifying that thing is free,
-		 * but don't thread thing onto rt->gcFreeList.  We rebuild
-		 * the freelist below while looking for free-able arenas.
-		 */
-		*flagp = GCF_FINAL;
-		PR_ASSERT(rt->gcBytes >= sizeof(JSGCThing)+sizeof(uint8));
+		PR_ARENA_ALLOCATE(final, &cx->tempPool, sizeof(JSGCThing));
+		if (!final)
+		    goto out;
+		final->next = thing;
+		final->flagp = flagp;
+		PR_ASSERT(rt->gcBytes >= sizeof(JSGCThing) + sizeof(uint8));
 		rt->gcBytes -= sizeof(JSGCThing) + sizeof(uint8);
 	    }
 	    flagp++;
 	}
     }
+
+    /* Finalize phase.  Don't hold the GC lock while running finalizers! */
+    JS_UNLOCK_GC(rt);
+    for (final = mark; ; final++) {
+	if ((pruword)final >= ma->avail) {
+	    ma = ma->next;
+	    if (!ma)
+		break;
+	    final = (JSGCThing *)ma->base;
+	}
+	thing = final->next;
+	flagp = final->flagp;
+	flags = *flagp;
+	finalizer = gc_finalizers[flags & GCF_TYPEMASK];
+	if (finalizer) {
+	    *flagp |= GCF_FINAL;
+	    finalizer(cx, thing);
+	}
+
+	/*
+	 * Set flags to GCF_FINAL, signifying that thing is free, but don't
+	 * thread thing onto rt->gcFreeList.  We need the GC lock to rebuild
+	 * the freelist below while also looking for free-able arenas.
+	 */
+	*flagp = GCF_FINAL;
+    }
+    JS_LOCK_GC(rt);
 
     /* Free unused arenas and rebuild the freelist. */
     ap = &rt->gcArenaPool.first.next;
@@ -677,10 +862,22 @@ restart:
     *flp = NULL;
 
 out:
+    PR_ARENA_RELEASE(&cx->tempPool, mark);
     if (rt->gcLevel > 1) {
 	rt->gcLevel = 1;
 	goto restart;
     }
     rt->gcLevel = 0;
     rt->gcLastBytes = rt->gcBytes;
+
+#ifdef JS_THREADSAFE
+    /* If we were invoked during a request, undo the temporary decrement. */
+    if (cx->requestDepth)
+	rt->requestCount++;
+    cx->gcActive = JS_FALSE;
+    JS_NOTIFY_GC_DONE(rt);
+    JS_UNLOCK_GC(rt);
+#endif
+    if (rt->gcCallback)
+	(void) rt->gcCallback(cx, JSGC_END);
 }

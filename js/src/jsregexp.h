@@ -36,8 +36,6 @@ struct JSRegExpStatics {
     JSSubString lastParen;      /* last paren matched (perl $+) */
     JSSubString leftContext;    /* input to left of last match (perl $`) */
     JSSubString rightContext;   /* input to right of last match (perl $') */
-    JSObject    *execWrapper;   /* exec() wrapper function (GC root) */
-    JSObject    *execObject;    /* weak link to this param of /x+/("xyz") */
 };
 
 /*
@@ -88,9 +86,9 @@ js_InitRegExpStatics(JSContext *cx, JSRegExpStatics *res);
 extern void
 js_FreeRegExpStatics(JSContext *cx, JSRegExpStatics *res);
 
-#define JSVAL_IS_REGEXP(v)                                                    \
+#define JSVAL_IS_REGEXP(cx, v)                                                \
     (JSVAL_IS_OBJECT(v) && JSVAL_TO_OBJECT(v) &&                              \
-     JSVAL_TO_OBJECT(v)->map->clasp == &js_RegExpClass)
+     OBJ_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_RegExpClass)
 
 extern JSClass js_RegExpClass;
 
@@ -102,5 +100,8 @@ js_InitRegExpClass(JSContext *cx, JSObject *obj);
  */
 extern JSObject *
 js_NewRegExpObject(JSContext *cx, jschar *chars, size_t length, uintN flags);
+
+extern JSBool
+js_XDRRegExp(JSXDRState *xdr, JSObject **objp);
 
 #endif /* jsregexp_h___ */
