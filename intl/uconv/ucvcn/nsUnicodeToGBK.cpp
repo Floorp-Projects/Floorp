@@ -110,8 +110,8 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(const PRUnichar * aSrc,
                  if ( unicode  == GBKToUnicodeTable[i] )
                    {
                      //this manipulation handles the little endian / big endian issues
-                     left = (PRUint8) ( i / 0x00BF + 0x0081) | 0x80  ;
-                     right = (PRUint8) ( i % 0x00BF+ 0x0040) | 0x80;
+                     left = (PRUint8) ( i / 0x00BF + 0x0081);
+                     right = (PRUint8) ( i % 0x00BF+ 0x0040);
                      pDestDBCode->leftbyte = left;  
                      pDestDBCode->rightbyte = right;  
                    }
@@ -184,11 +184,11 @@ NS_IMETHODIMP nsUnicodeToGBK::FillInfo(PRUint32 *aInfo)
   // valid GBK rows are in 0x81 to 0xFE
   for ( i=0x0081; i<=0x00FF; i++) 
     {
-      // valid GBK columns are in 0x41 to 0xFE
-      for( j=0x0041; j<0x00FF; j++)
+      // valid GBK columns are in 0x40 to 0xFE
+      for( j=0x0040; j<0x00FF; j++)
         {
           // k is index in GBKU.H table
-          k = (i - 0x0081)*(0xFE - 0x0080)+(j-0x0041);    
+          k = (i - 0x0081)*(0xFE - 0x0080)+(j-0x0040);    
           SrcUnicode = GBKToUnicodeTable[k];
           if (( SrcUnicode != 0xFFFF ) && (SrcUnicode != 0xFFFD) )
             {
