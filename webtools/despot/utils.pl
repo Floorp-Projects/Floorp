@@ -55,7 +55,7 @@ sub cryptit {
 
 sub checkpassword {
     my ($plain, $encrypted) = (@_);
-    return $encrypted eq crypt($plain, substr($encrypted, 0, 2));
+    return $encrypted eq crypt($plain, $encrypted);
 }
 
 
