@@ -1763,7 +1763,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
               m_runningUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
               // we dont want to send the flags back in a group
               // GetServerStateParser().ResetFlagInfo(0);
-              if (HandlingMultipleMessages(messageIdString))
+              if (HandlingMultipleMessages(messageIdString) || m_imapAction == nsIImapUrl::nsImapMsgDownloadForOffline)
               {
                 // multiple messages, fetch them all
                 SetProgressString(IMAP_FOLDER_RECEIVING_MESSAGE_OF);
@@ -7158,15 +7158,18 @@ NS_IMETHODIMP nsImapMockChannel::AsyncOpen(nsIStreamListener *listener, nsISuppo
   if (ReadFromLocalCache())
     return NS_OK;
 
+  nsImapAction imapAction;
+  imapUrl->GetImapAction(&imapAction);
   // okay, it's not in the local cache, now check the memory cache...
-
-  rv = OpenCacheEntry();
-
+  // but we can't download for offline use from the memory cache
+  if (imapAction != nsIImapUrl::nsImapMsgDownloadForOffline)
+  {
+    rv = OpenCacheEntry();
+    if (NS_SUCCEEDED(rv))
+      return rv;
+  }
   // if for some reason open cache entry failed then just default to opening an imap connection for the url
-  if (NS_FAILED(rv)) 
-    return ReadFromImapConnection();
-  else
-    return NS_OK;
+  return ReadFromImapConnection();
 }
 
 nsresult nsImapMockChannel::SetupPartExtractorListener(nsIImapUrl * aUrl, nsIStreamListener * aConsumer)
