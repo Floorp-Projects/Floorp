@@ -166,7 +166,6 @@ class nsWindow : public nsBaseWidget,
 
    // PM methods which need to be public (menus, etc)
    ULONG  GetNextID()    { return mNextID++; }
-   USHORT GetNextCmdID() { return mNextCmdID++; }
    void   NS2PM_PARENT( POINTL &ptl);
    void   NS2PM( POINTL &ptl);
    void   NS2PM( RECTL &rcl);
@@ -231,7 +230,6 @@ protected:
    PFNWP     mPrevWndProc;    // previous window procedure
    nsWindow *mParent;         // parent widget
    ULONG     mNextID;         // next child window id
-   USHORT    mNextCmdID;      // next WM_COMMAND id for menus
    PSWP      mSWPs;           // SWPs for deferred window positioning
    ULONG     mlHave, mlUsed;  // description of mSWPs array
    HPOINTER  mPointer;        // current PM pointer
