@@ -266,6 +266,7 @@ sub collect {
                     $init_tab . $tab . $tab . "$super\n" .
                     "$init_tab$tab$tab($constr_params) " .
                     "{};\n");
+
     if (!$c->{"super_has_print"}) {
         $class_decs .= ($init_tab . $tab . 
                          "virtual Formatter& print(Formatter& f) {\n" .
@@ -275,14 +276,17 @@ sub collect {
                          $init_tab . $tab . "}\n");
 
         my $printops_body = &get_printops_body(@types);
-        my $printops_decl = ($printops_body ne "" ? "virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {\n"
-                                                  : "virtual Formatter& printOperands(Formatter& f, const JSValues& /*registers*/) {\n");
+        my $printops_decl =  "virtual Formatter& printOperands(Formatter& f, ";
+        $printops_decl .= ($printops_body ne "" ?
+                           "const JSValues& registers" :
+                           "const JSValues& /*registers*/");
+        $printops_decl .= ") {\n";
 
         $class_decs .= ($init_tab . $tab . 
-                         $printops_decl .
-                         &get_printops_body(@types) .
-                         $init_tab . $tab . $tab . "return f;\n" .
-                         $init_tab . $tab . "}\n");
+                        $printops_decl .
+                        $printops_body .
+                        $init_tab . $tab . $tab . "return f;\n" .
+                        $init_tab . $tab . "}\n");
 
     } else {
         $class_decs .= $init_tab . $tab . 
@@ -395,7 +399,7 @@ sub get_print_body {
 }
 
 sub get_printops_body {
-    # generate the body of the print() function
+    # generate the body of the printOperands() function
     my (@types) = @_;
     my $type;
     my @oplist;
