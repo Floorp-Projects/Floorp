@@ -368,7 +368,7 @@ CERTUTIL_GeneratePrivateKey(KeyType keytype, PK11SlotInfo *slot, int size,
 
     return PK11_GenerateKeyPair(slot, mechanism, params, pubkeyp,
 				PR_TRUE /*isPerm*/, PR_TRUE /*isSensitive*/, 
-				NULL /*wincx*/);
+				&pwdata /*wincx*/);
 }
 
 /*
