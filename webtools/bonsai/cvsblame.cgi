@@ -189,9 +189,6 @@ foreach $mark (split(',',$mark_arg)) {
 #
 &print_top;
 
-# Print Header
-#
-
 # Print link at top for directory browsing
 #
 print q(
@@ -229,7 +226,21 @@ print qq(
    <TABLE BORDER CELLPADDING=10 CELLSPACING=0>
     <TR>
      <TD NOWRAP BGCOLOR="#FAFAFA">
-      <A HREF="cvslog.cgi?file=$filename">Full Change Log</A>
+      <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
+       <TR>
+        <TD>
+         <A HREF="http://lxr.mozilla.org/mozilla/source/$link_path$file_tail">lxr</A>
+        </TD><TD>
+         Browse the source code as hypertext.
+        </TD>
+       </TR><TR>
+        <TD>
+         <A HREF="cvslog.cgi?file=$filename">log</A>&nbsp;
+        </TD><TD>
+         Full change log.
+        </TD>
+       </TR>
+      </TABLE>
      </TD>
     </TR>
    </TABLE>
