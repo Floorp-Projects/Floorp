@@ -1113,8 +1113,8 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetURL(nsIURL*& aURL) const
 {
-  nsIURL* url = mURL;
-  aURL = mURL;
+  const nsIURL* url = mURL;
+  aURL = (nsIURL*)url;
   NS_IF_ADDREF(aURL);
   return NS_OK;
 }
@@ -1231,10 +1231,10 @@ PRBool CSSStyleSheetImpl::ContainsStyleSheet(nsIURL* aURL) const
 
   PRBool result = (*mURL == *aURL);
 
-  nsICSSStyleSheet*  child = mFirstChild;
+  const nsICSSStyleSheet*  child = mFirstChild;
   while ((PR_FALSE == result) && (nsnull != child)) {
     result = child->ContainsStyleSheet(aURL);
-    child = ((CSSStyleSheetImpl*)child)->mNext;
+    child = ((const CSSStyleSheetImpl*)child)->mNext;
   }
   return result;
 }
@@ -1349,10 +1349,10 @@ PRInt32 CSSStyleSheetImpl::StyleSheetCount(void) const
   // consider storing the children in an array.
   PRInt32 count = 0;
   if (mFirstChild.IsNotNull()) {
-    nsICSSStyleSheet* child = mFirstChild;
+    const nsICSSStyleSheet* child = mFirstChild;
     while (nsnull != child) {
       count++;
-      child = ((CSSStyleSheetImpl*)child)->mNext;
+      child = ((const CSSStyleSheetImpl*)child)->mNext;
     }
   }
 
@@ -1366,14 +1366,14 @@ nsresult CSSStyleSheetImpl::GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& a
   // underlying storage mechanism
   aSheet = nsnull;
   if (mFirstChild.IsNotNull()) {
-    nsICSSStyleSheet* child = mFirstChild;
+    const nsICSSStyleSheet* child = mFirstChild;
     while ((nsnull != child) && (0 != aIndex)) {
       --aIndex;
-      child = ((CSSStyleSheetImpl*)child)->mNext;
+      child = ((const CSSStyleSheetImpl*)child)->mNext;
     }
     
-    aSheet = child;
-    NS_IF_ADDREF(child);
+    aSheet = (nsICSSStyleSheet*)child;
+    NS_IF_ADDREF(aSheet);
   }
 
   return NS_OK;
