@@ -89,10 +89,8 @@ nsStaticComponentLoader::GetModuleInfo()
     }
 
     if (! NSGetStaticModuleInfo) {
-        // apparently we're a static build with no static modules
-        // to register. Suspicious, but might be as intended in certain
-        // shared uses (such as by the stand-alone install engine)
-        NS_WARNING("NSGetStaticModuleInfo not initialized -- is this right?");
+        // We're a static build with no static modules to
+        // register. This can happen in shared uses (such as the GRE)
         return NS_OK;
     }
 
@@ -198,6 +196,9 @@ nsStaticComponentLoader::AutoRegisterComponents(PRInt32 when, nsIFile *dir)
     if (mAutoRegistered)
         return NS_OK;
 
+    if (dir)
+        return NS_OK;
+
     nsresult rv;
     if (NS_FAILED(rv = GetModuleInfo()))
         return rv;
@@ -206,6 +207,7 @@ nsStaticComponentLoader::AutoRegisterComponents(PRInt32 when, nsIFile *dir)
 
     PL_DHashTableEnumerate(&mInfoHash, info_RegisterSelf, &data);
 
+    mAutoRegistered = PR_TRUE;
     return NS_OK;
 }
 
