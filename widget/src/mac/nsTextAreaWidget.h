@@ -45,6 +45,8 @@ public:
               nsIToolkit *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull);
 
+  NS_IMETHOD  Show(PRBool aState);
+
 	// nsISupports
 	NS_IMETHOD_(nsrefcnt) AddRef();
 	NS_IMETHOD_(nsrefcnt) Release();

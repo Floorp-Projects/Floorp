@@ -49,6 +49,8 @@ public:
 									nsIToolkit *aToolkit = nsnull,
 									nsWidgetInitData *aInitData = nsnull);
 
+	NS_IMETHOD    	Show(PRBool aState);
+
 	// nsIListBox part
 	NS_IMETHOD SetMultipleSelection(PRBool aMultipleSelections);
 	NS_IMETHOD AddItemAt(nsString &aItem, PRInt32 aPosition);

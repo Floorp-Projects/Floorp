@@ -118,7 +118,7 @@ NS_IMETHODIMP nsListBox::Create(nsIWidget *aParent,
 			SetMultipleSelection(mMultiSelect);
 			::SetControlMinimum(mControl, 0);
 			::SetControlMaximum(mControl, 0);
-			::LSetDrawingMode(true, mListHandle);
+			::LSetDrawingMode(mVisible, mListHandle);
 		}
 		else
   			res = NS_ERROR_FAILURE;
@@ -152,6 +152,26 @@ nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 	}
 
 	return nsWindow::QueryInterface(aIID,aInstancePtr);
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsListBox::Show(PRBool bState)
+{
+	if (! mListHandle)
+		return NS_ERROR_NOT_INITIALIZED;
+
+	if (mVisible == bState)
+		return NS_OK;
+
+  Inherited::Show(bState);
+	StartDraw();
+	::LSetDrawingMode(bState, mListHandle);
+	EndDraw();
+
+  return NS_OK;
 }
 
 #pragma mark -
@@ -420,7 +440,7 @@ nsresult nsListBox::SetSelectedIndices(PRInt32 aIndices[], PRInt32 aSize)
 		::LSetSelect(true, theCell, mListHandle);
 	}
 	::LAutoScroll(mListHandle);
-	::LSetDrawingMode(true, mListHandle);
+	::LSetDrawingMode(mVisible, mListHandle);
 	EndDraw();
 
 	Invalidate(PR_TRUE);
@@ -476,7 +496,7 @@ nsresult nsListBox::Deselect()
 		::LSetSelect(false, theCell, mListHandle);
 		::LNextCell(true, true, &theCell, mListHandle);
 	}
-	::LSetDrawingMode(true, mListHandle);
+	::LSetDrawingMode(mVisible, mListHandle);
 	EndDraw();
 
 	Invalidate(PR_TRUE);
