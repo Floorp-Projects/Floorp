@@ -291,7 +291,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartDocumentLoad(nsIDocumentLoader* loader,
 						 nsIURI* aURL, 
 						 const char* aCommand)
 {
-  char* urlSpec = "";
+  char* urlSpec = (char*) "";
   if (aURL)
     aURL->GetSpec(&urlSpec);
   jstring jURL = env->NewStringUTF(urlSpec);
@@ -317,7 +317,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndDocumentLoad(nsIDocumentLoader* loader,
 #endif
 					       nsIDocumentLoaderObserver* aObserver)
 {
-  char* urlSpec = "";
+  char* urlSpec = (char*) "";
 #ifdef NECKO
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
@@ -353,7 +353,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
 #endif
 					    nsIContentViewer* aViewer)
 {
-  char* urlSpec = "";
+  char* urlSpec = (char*) "";
 #ifdef NECKO
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
@@ -365,7 +365,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStartURLLoad(nsIDocumentLoader* loader,
   jstring jURL = env->NewStringUTF(urlSpec);
   if (!jURL) return NS_ERROR_FAILURE;
 
-  char* contentType = "";
+  char* contentType = (char*) "";
 #ifdef NECKO
   if (channel)
       channel->GetContentType(&contentType);
@@ -400,7 +400,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnProgressURLLoad(nsIDocumentLoader* loader,
 					       PRUint32 aProgress, 
 					       PRUint32 aProgressMax)
 {
-  char* urlSpec = "";
+  char* urlSpec = (char*) "";
 #ifdef NECKO
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
@@ -436,7 +436,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStatusURLLoad(nsIDocumentLoader* loader,
 #endif
 					     nsString& aMsg)
 {
-  char* urlSpec = "";
+  char* urlSpec = (char*) "";
 #ifdef NECKO
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))
@@ -476,7 +476,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnEndURLLoad(nsIDocumentLoader* loader,
 					  PRInt32 aStatus)
 #endif
 {
-  char* urlSpec = "";
+  char* urlSpec = (char*) "";
 #ifdef NECKO
   nsIURI* url = nsnull;
   if (channel && NS_SUCCEEDED(channel->GetURI(&url)))

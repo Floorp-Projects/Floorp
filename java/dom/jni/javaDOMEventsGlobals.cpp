@@ -1835,7 +1835,7 @@ void JavaDOMEventsGlobals::Destroy(JNIEnv *env)
 
 //returns true if specified event "type" exists in the given list of types
 // NOTE: it is assumed that "types" list is enden with NULL
-static jboolean isEventOfType(char **types, nsString type) 
+static jboolean isEventOfType(const char* const* types, nsString type) 
 {
     int i=0;
 
@@ -1865,15 +1865,33 @@ jobject JavaDOMEventsGlobals::CreateEventSubtype(JNIEnv *env,
     // However Mozilla still presents these events as nsUIEvent
     // So we need a cludge to determine proper java class to be created
     
-    static char *uiEventTypes[] = { "resize", "scroll", "focusin", 
-                                   "focusout", "gainselection",
-                                   "loseselection", "activate", NULL};
+    static const char* const uiEventTypes[] = { 
+      "resize", 
+      "scroll", 
+      "focusin", 
+      "focusout", 
+      "gainselection",
+      "loseselection", 
+      "activate", 
+      NULL
+    };
   
-    static char *mouseEventTypes[] = { "click", "mousedown",
-                                      "mouseup", "mouseover",
-                                      "mousemove", "mouseout", NULL};
+    static const char* const mouseEventTypes[] = { 
+      "click", 
+      "mousedown",
+      "mouseup", 
+      "mouseover",
+      "mousemove", 
+      "mouseout", 
+      NULL
+    };
   
-    static char *keyEventTypes[] = { "keypress", "keydown", "keyup", NULL};
+    static const char* const keyEventTypes[] = { 
+      "keypress", 
+      "keydown", 
+      "keyup", 
+      NULL
+    };
 
 
     nsString nsType;
