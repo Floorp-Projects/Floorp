@@ -603,7 +603,10 @@ sub do_express {
     $keycount = @keys;
     $treename = $form{tree};
     $tm = &print_time(time);
-    print "<table border=1 align=center><tr><th colspan=$keycount><a href=showbuilds.cgi?tree=$treename>$tree as of $tm</a></tr>"
+    print "<table border=1 align=center><tr><th colspan=$keycount><a href=showbuilds.cgi?tree=$treename";
+    print "&hours=$form{'hours'}" if $form{'hours'};
+    print "&nocrap=1" if $form{'nocrap'};
+    print ">$tree as of $tm</a></tr>"
           ."<tr>\n";
     for $buildname (@keys ){
         if( $build{$buildname} eq 'success' ){
