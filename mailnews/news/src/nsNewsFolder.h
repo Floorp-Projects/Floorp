@@ -18,31 +18,23 @@
 
 /********************************************************************************************************
  
-   Interface for representing Local Mail folders.
+   Interface for representing News folders.
  
 *********************************************************************************************************/
 
-#ifndef nsMsgLocalMailFolder_h__
-#define nsMsgLocalMailFolder_h__
+#ifndef nsMsgNewsFolder_h__
+#define nsMsgNewsFolder_h__
 
 #include "nsMsgFolder.h" /* include the interface we are going to support */
 #include "nsFileSpec.h"
 #include "nsIDBChangeListener.h"
-#include "nsICopyMessageListener.h"
 #include "nsFileStream.h"
 
-typedef struct {
-	nsOutputFileStream *fileStream;
-	nsIMessage *message;
-	nsMsgKey dstKey;
-} nsLocalMailCopyState;
-
-class nsMsgLocalMailFolder : public nsMsgFolder, public nsIMsgLocalMailFolder,
-							public nsIDBChangeListener, public nsICopyMessageListener
+class nsMsgNewsFolder : public nsMsgFolder, public nsIMsgNewsFolder, public nsIDBChangeListener
 {
 public:
-	nsMsgLocalMailFolder(void);
-	virtual ~nsMsgLocalMailFolder(void);
+	nsMsgNewsFolder(void);
+	virtual ~nsMsgNewsFolder(void);
 
   NS_DECL_ISUPPORTS_INHERITED
 #if 0
@@ -73,7 +65,7 @@ public:
 
   // this override pulls the value from the db
 	NS_IMETHOD GetName(char ** name);   // Name of this folder (as presented to user).
-	NS_IMETHOD GetPrettyName(nsString& prettyName);	// Override of the base, for top-level mail folder
+	NS_IMETHOD GetPrettyName(nsString& prettyName);	// Override of the base, for top-level news folder
 
   NS_IMETHOD BuildFolderURL(char **url);
 
@@ -97,7 +89,7 @@ public:
 
  	NS_IMETHOD DeleteMessage(nsIMessage *message);
 
-	// nsIMsgMailFolder
+	// nsIMsgNewsFolder
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
 
 	//nsIDBChangeListener
@@ -108,12 +100,6 @@ public:
 	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlags, 
                         nsIDBChangeListener * aInstigator);
 	NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator);
-
-	//nsICopyMessageListener
-	NS_IMETHOD BeginCopy(nsIMessage *message);
-	NS_IMETHOD CopyData(nsIInputStream *aIStream, PRInt32 aLength);
-	NS_IMETHOD EndCopy(PRBool copySucceeded);
-
 
 protected:
 	nsresult ParseFolder(nsFileSpec& path);
@@ -138,11 +124,10 @@ protected:
   nsNativeFileSpec mPath;
 	PRUint32  mExpungedBytes;
 	PRBool		mHaveReadNameFromDB;
-	PRBool		mGettingMail;
+	PRBool		mGettingNews;
 	PRBool		mInitialized;
 	nsISupportsArray *mMessages;
-	nsIMsgDatabase* mMailDatabase;
-	nsLocalMailCopyState *mCopyState; //We will only allow one of these at a time
+	nsIMsgDatabase* mNewsDatabase;
 };
 
-#endif // nsMsgLocalMailFolder_h__
+#endif // nsMsgNewsFolder_h__

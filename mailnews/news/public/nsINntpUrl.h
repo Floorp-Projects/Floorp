@@ -24,6 +24,7 @@
 #include "nsIMsgMailNewsUrl.h"
 
 #include "nsISupports.h"
+#include "nsFileSpec.h"
 
 /* include all of our event sink interfaces */
 #include "nsINNTPNewsgroupList.h"
@@ -47,7 +48,10 @@
 class nsINntpUrl : public nsIMsgMailNewsUrl
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_INNTPURL_IID; return iid; }
+    static const nsIID& GetIID() { 
+        static nsIID iid = NS_INNTPURL_IID; 
+        return iid; 
+    }
 
 	/////////////////////////////////////////////////////////////////////////////// 
 	// Getters and Setters for the news specific event sinks to bind to to your url

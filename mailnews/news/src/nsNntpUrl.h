@@ -23,19 +23,11 @@
 #include "nsIUrlListenerManager.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 #include "nsINNTPNewsgroupPost.h"
+#include "nsFileSpec.h"
 
-class nsNntpUrl : public nsINntpUrl, public nsINetlibURL
+class nsNntpUrl : public nsINntpUrl, public nsINetlibURL, public nsIMsgUriUrl
 {
 public:
-	// nsIMsgMailNewsUrl interface
-	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aExitCode);
-	NS_IMETHOD GetUrlState(PRBool * aRunningUrl);
-
-	NS_IMETHOD SetErrorMessage (char * errorMessage);
-	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;  // caller must free using PR_Free
-	NS_IMETHOD RegisterListener (nsIUrlListener * aUrlListener);
-	NS_IMETHOD UnRegisterListener (nsIUrlListener * aUrlListener);
-
 	// nsIURL
     NS_IMETHOD_(PRBool) Equals(const nsIURL *aURL) const;
     NS_IMETHOD GetSpec(const char* *result) const;
@@ -88,8 +80,22 @@ public:
     NS_IMETHOD SetMessageToPost(nsINNTPNewsgroupPost *post);
     NS_IMETHOD GetMessageToPost(nsINNTPNewsgroupPost **post);
 
+	// from nsIMsgMailNewsUrl:
+	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aExitCode);
+	NS_IMETHOD GetUrlState(PRBool * aRunningUrl);
+
+	NS_IMETHOD SetErrorMessage (char * errorMessage);
+	// caller must free using PR_FREE
+	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;
+	NS_IMETHOD RegisterListener (nsIUrlListener * aUrlListener);
+	NS_IMETHOD UnRegisterListener (nsIUrlListener * aUrlListener);
+
+	// from nsIMsgUriUrl
+	NS_IMETHOD GetURI(char ** aURI); 
+
     // nsNntpUrl
     nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup);
+    virtual ~nsNntpUrl();
 
     NS_DECL_ISUPPORTS
 
@@ -97,7 +103,6 @@ public:
     nsresult ParseURL(const nsString& aSpec, const nsIURL* aURL = nsnull);
 
 protected:
-    virtual ~nsNntpUrl();
 
     /* Here's our link to the netlib world.... */
     URL_Struct *m_URL_s;

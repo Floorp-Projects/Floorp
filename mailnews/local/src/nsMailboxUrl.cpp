@@ -304,6 +304,7 @@ nsresult nsMailboxUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 	return NS_OK;
 }
 
+// from nsIMsgUriUrl
 NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
 {
 	// function not implemented yet....

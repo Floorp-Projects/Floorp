@@ -16,24 +16,19 @@
  * Reserved.
  */
 
-#ifndef nsMsgLocalCID_h__
-#define nsMsgLocalCID_h__
+#ifndef nsMsgNewsCID_h__
+#define nsMsgNewsCID_h__
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsIComponentManager.h"
 
-#define  NS_LOCALMAILFOLDERRESOURCE_CID              \
-{ /* e490d22c-cd67-11d2-8cca-0060b0fc14a3 */         \
-	0xe490d22c,										 \
-    0xcd67,                                          \
-    0x11d2,                                          \
-    {0x8c, 0xca, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+#define NS_NEWSFOLDERRESOURCE_CID                    \
+{ /* 4ace448a-f6d4-11d2-880d-004005263078 */         \
+  0x4ace448a, \
+  0xf6d4, \
+  0x11d2, \
+  {0x88, 0x0d, 0x00, 0x40, 0x05, 0x26, 0x30, 0x78} \
 }
 
-#define NS_POP3INCOMINGSERVER_CID									\
-{ /* D2876E51-E62C-11d2-B7FC-00805F05FFA5 */			\
- 0xd2876e51, 0xe62c, 0x11d2,											\
- {0xb7, 0xfc, 0x0, 0x80, 0x5f, 0x5, 0xff, 0xa5 }}
-
-#endif // nsMsgLocal_h__
+#endif // nsMsgNews_h__

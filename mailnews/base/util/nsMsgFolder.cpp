@@ -1527,10 +1527,11 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 {
   nsresult rv;
 
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_sspitzer
   /* examples: */
   /* nsURI2Path(mailbox:/, mailbox:/, ??)->/home/sspitzer/mozillamail */
   /* nsURI2Path(mailbox:/, mailbox://Drafts, ??)->/home/sspitzer/mozillamail/Drafts */
+  /* nsURI2Path(news:/, news:/, ??)->/home/sspitzer/mozillanews */
   printf("nsURI2Path(%s, %s, ??)", rootURI, uriStr);
 #endif
   
@@ -1546,14 +1547,24 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if (uri.Find(rootURI) != 0)     // if doesn't start with rootURI
     return NS_ERROR_FAILURE;
 
-  if (strcmp(rootURI, kNewsMessageRootURI) == 0) {
+  /* sspitzer:  yes, this is inefficent. it may be going away
+   * if not, I'll make it more efficient later. */
+  if ((strcmp(rootURI, kMailboxRootURI) == 0) || 
+           (strcmp(rootURI, kMailboxMessageRootURI) == 0)) {
+    // local mail case
+    rv = nsGetMailboxRoot(pathResult);
+  }
+  else if ((strcmp(rootURI, kNewsMessageRootURI) == 0) || 
+      (strcmp(rootURI, kNewsRootURI) == 0)) {
+    // news case
     rv = nsGetNewsRoot(pathResult);
   }
   else if (strcmp(rootURI, kImapMessageRootURI) == 0) {
+    // imap case
     rv = nsGetImapRoot(pathResult);
   }
   else {
-    rv = nsGetMailboxRoot(pathResult);
+    rv = NS_ERROR_FAILURE; 
   }
 
   if (NS_FAILED(rv)) {
@@ -1606,7 +1617,7 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   if(path.Length() > 0)
 	  pathResult +=path;
 
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_sspitzer
   printf("->%s\n", (const char *)pathResult);
 #endif
   return NS_OK;
@@ -1617,7 +1628,7 @@ nsPath2URI(const char* rootURI, const nsFileSpec& spec, char **uri)
 {
   nsresult rv;
 
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_sspitzer
   /* examples: */
   /* nsPath2URI(mailbox_message:/, /home/sspitzer/mozillamail/Drafts, ??)->mailbox_message://Drafts */
   /* nsPath2URI(news_message:/, /tmp/mozillanews/news.mozilla.org/netscape.public.mozilla.unix, ??)->news_message://news.mozilla.org/netscape.public.mozilla.unix */
@@ -1638,7 +1649,8 @@ nsPath2URI(const char* rootURI, const nsFileSpec& spec, char **uri)
   else if (strcmp(rootURI, kImapMessageRootURI) == 0) {
     rv = nsGetImapRoot(root);
   }
- else {
+  else {
+    // local mail case
     rv = nsGetMailboxRoot(root);
   }    
   if (NS_FAILED(rv)) return rv;
@@ -1687,7 +1699,7 @@ nsPath2URI(const char* rootURI, const nsFileSpec& spec, char **uri)
     uriStr += folderName;
   }
   *uri = uriStr.ToNewCString();
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_sspitzer
   printf("->%s\n", *uri);
 #endif
   return NS_OK;

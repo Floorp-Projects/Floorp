@@ -338,7 +338,32 @@ nsresult nsNntpUrl::GetErrorMessage (char ** errorMessage) const
     return NS_OK;
 }
 
+// from nsIMsgUriUrl
+NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
+{
+#ifdef DEBUG_sspitzer
+    printf("nsNntpUrl::GetURI()\n");
+#endif
+	if (aURI)
+	{
+		const nsFileSpec * filePath = nsnull;
+#if 0
+		GetFilePath(&filePath);
+#endif
+		if (filePath)
+		{
+			char * uri = nsnull;
+			nsFileSpec folder = *filePath;
+			nsBuildNewsMessageURI(folder, nsnull, &uri);
+			*aURI = uri;
+		}
+		else
+			*aURI = nsnull;
 
+	}
+
+	return NS_OK;
+}
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsINntpUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////

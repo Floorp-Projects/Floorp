@@ -265,12 +265,12 @@ nsNewsDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, 
   
   char* msgURI;
   
-  //Need to remove ".nsf".
+  //Need to remove ".msf".  (msf = message summary file)
   nsFileSpec folderPath = path;
   char* leafName = folderPath.GetLeafName();
   nsString folderName(leafName);
   PL_strfree(leafName);
-  if(folderName.Find(".nsf") != -1)
+  if(folderName.Find(".msf") != -1)
 	{
       nsString realFolderName;
       folderName.Left(realFolderName, folderName.Length() - 4);

@@ -231,6 +231,24 @@ class nsIMsgLocalMailFolder : public nsISupports {
 #endif
 };
 
+/* starting interface:    nsIMsgNewsFolder */
+
+/* {3716abe4-f6d4-11d2-86d5-004005263078} */
+#define NS_IMSGNEWSFOLDER_IID_STR "3716abe4-f6d4-11d2-86d5-004005263078"
+#define NS_IMSGNEWSFOLDER_IID \
+  {0x3716abe4, 0xf6d4, 0x11d2, \
+    { 0x86, 0xd5, 0x00, 0x40, 0x05, 0x26, 0x30, 0x78 }}
+
+class nsIMsgNewsFolder : public nsISupports {
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGNEWSFOLDER_IID)
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgNewsFolder *priv);
+#endif
+};
+
 /* starting interface:    nsIMsgImapMailFolder */
 
 /* {FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2} */

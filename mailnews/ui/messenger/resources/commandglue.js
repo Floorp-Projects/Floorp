@@ -71,7 +71,7 @@ function LoadMessage(messageNode)
 function ChangeFolderByDOMNode(folderNode)
 {
   var uri = folderNode.getAttribute('id');
-  dump(uri);
+  dump(uri + "\n");
   ChangeFolderByURI(uri);
 }
 

@@ -27,13 +27,14 @@ class nsIUrlListener;
 class nsNntpService : public nsINntpService
 {
 public:
-	NS_DECL_ISUPPORTS
 	nsNntpService();
+	virtual ~nsNntpService();
+
+	NS_DECL_ISUPPORTS
 
 	NS_IMETHOD RunNewsUrl (const nsString& urlString, nsISupports * aConsumer, 
 						   nsIUrlListener * aUrlListener, nsIURL ** aURL);
-protected:
-	virtual ~nsNntpService();
 };
 
 #endif /* nsNntpService_h___ */
+

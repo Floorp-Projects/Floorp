@@ -8,6 +8,8 @@
 	<!ENTITY totalColumn.label "Total"> 
 	<!ENTITY localMailHost.img "chrome://messenger/skin/localMailHost.gif">
 	<!ENTITY localMailHost.label "Local Mail">
+	<!ENTITY newsHost.img "chrome://messenger/skin/newsHost.gif">
+	<!ENTITY newsHost.label "news.mozilla.org">
 ]>
 
 <window
@@ -31,7 +33,13 @@
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
     <treeitem id="mailbox:/" open="true">
       <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&localMailHost.img;"/>&localMailHost.label;</treecell>
-      </treeitem>
+    </treeitem>
+  </treebody>
+
+  <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
+    <treeitem id="news:/" open="false">
+      <treecell><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&newsHost.img;"/>&newsHost.label;</treecell>
+    </treeitem>
   </treebody>
 </tree>
 </window>

@@ -32,6 +32,7 @@ CPPSRCS= \
 		$(NULL)
 
 EXPORTS = \
+		nsMsgNewsCID.h		\
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \

@@ -37,7 +37,7 @@ static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMailboxUrlCID, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kMailboxParserCID, NS_MAILBOXPARSER_CID);
 static NS_DEFINE_CID(kMailboxServiceCID, NS_MAILBOXSERVICE_CID);
-static NS_DEFINE_CID(kMailNewsLocalResourceCID, NS_MAILNEWSRESOURCE_CID);
+static NS_DEFINE_CID(kLocalMailFolderResourceCID, NS_LOCALMAILFOLDERRESOURCE_CID);
 static NS_DEFINE_CID(kPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kPop3UrlCID, NS_POP3URL_CID);
 static NS_DEFINE_CID(kPop3IncomingServerCID, NS_POP3INCOMINGSERVER_CID);
@@ -173,7 +173,7 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports *aOuter, const nsIID &aII
 		if (NS_FAILED(rv) && popService)
 			delete popService;
 	}
-	else if (mClassID.Equals(kMailNewsLocalResourceCID)) 
+	else if (mClassID.Equals(kLocalMailFolderResourceCID)) 
 	{
 		nsMsgLocalMailFolder * localFolder = new nsMsgLocalMailFolder();
 		if (localFolder)
@@ -263,8 +263,8 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) goto done;
 
   // register our RDF resource factories:
-  rv = compMgr->RegisterComponent(kMailNewsLocalResourceCID,
-                                  "Mail/News Local Resource Factory",
+  rv = compMgr->RegisterComponent(kLocalMailFolderResourceCID,
+                                  "Local Mail Folder Resource Factory",
                                   NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "mailbox",
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) goto done;
@@ -310,7 +310,7 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   rv = compMgr->UnregisterFactory(kMailboxParserCID, path);
   if (NS_FAILED(rv)) goto done;
 
-  rv = compMgr->UnregisterComponent(kMailNewsLocalResourceCID, path);
+  rv = compMgr->UnregisterComponent(kLocalMailFolderResourceCID, path);
   if (NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterComponent(kPop3IncomingServerCID, path);

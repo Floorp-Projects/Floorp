@@ -34,6 +34,7 @@ EXPORTS = \
 	nsNNTPNewsgroupPost.h   \
 	nntpCore.h		\
 	nsNntpService.h		\
+	nsNewsFolder.h		\
 	$(NULL)
 
 CPPSRCS = \
@@ -45,6 +46,7 @@ CPPSRCS = \
 	nsNntpUrl.cpp	\
 	nsNNTPHost.cpp \
 	nsNntpService.cpp \
+	nsNewsFolder.cpp \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS =	\

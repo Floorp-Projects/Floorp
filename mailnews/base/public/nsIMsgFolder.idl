@@ -129,6 +129,10 @@ interface nsIMsgLocalMailFolder : nsISupports {
 
 };
 
+[uuid(3716abe4-f6d4-11d2-86d5-004005263078)]
+interface nsIMsgNewsFolder : nsISupports {
+
+};
 
 [uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]
 interface nsIMsgImapMailFolder : nsISupports {

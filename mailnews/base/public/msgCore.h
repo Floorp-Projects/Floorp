@@ -133,6 +133,7 @@ static const char kMailboxMessageRootURI[] = "mailbox_message:/";
 
 static const char kNewsRootURI[] = "news:/";
 static const char kNewsMessageRootURI[] = "news_message:/";
+
 static const char kImapMessageRootURI[] = "imap_message:/";
 
 extern nsresult
