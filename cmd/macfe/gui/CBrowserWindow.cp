@@ -188,6 +188,7 @@ void CBrowserWindow::FinishCreateSelf(void)
 	//¥¥¥with an XP callback so this code can stay the same...
 	if ( mNavCenterParent ) {
 		mNavCenterParent->NavCenterShelf().SetShelfState ( false );
+		mNavCenterParent->AdSpaceShelf().SetShelfState ( false );	// don't show HTML area by default.
 	} // if there is a navcenter
 			
 	// Delete the Admin Kit co-brand button if a
