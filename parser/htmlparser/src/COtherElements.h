@@ -2415,6 +2415,12 @@ void CElementTable::InitializeElements() {
   CLeafElement::Initialize(         mDfltElements[eHTMLTag_newline],   eHTMLTag_newline);
   CLeafElement::Initialize(         mDfltElements[eHTMLTag_whitespace],eHTMLTag_whitespace);
   CLeafElement::Initialize(         mDfltElements[eHTMLTag_unknown],   eHTMLTag_unknown);
+
+  CElement::Initialize(mDfltElements[eHTMLTag_userdefined], 
+                       eHTMLTag_userdefined, 
+                       CElement::GetEmptyGroup(),
+                       CFlowElement::GetContainedGroups()); // allow userdefined tag to contain anything.
+
   mDfltElements[eHTMLTag_unknown].mIncludeKids=kUnknownKids;
 
 
