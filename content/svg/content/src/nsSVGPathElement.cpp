@@ -109,6 +109,9 @@ NS_IMPL_ADDREF_INHERITED(nsSVGPathElement,nsSVGPathElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGPathElement,nsSVGPathElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGPathElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGPathElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedPathData)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGPathElement)
@@ -183,7 +186,7 @@ nsSVGPathElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return rv;
   }
  
-  *aReturn = NS_STATIC_CAST(nsSVGPathElementBase*, it);
+  *aReturn = it;
 
   return NS_OK; 
 }

@@ -117,6 +117,9 @@ NS_IMPL_ADDREF_INHERITED(nsSVGEllipseElement,nsSVGEllipseElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGEllipseElement,nsSVGEllipseElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGEllipseElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGEllipseElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGEllipseElement)
 NS_INTERFACE_MAP_END_INHERITING(nsSVGEllipseElementBase)
@@ -246,7 +249,7 @@ nsSVGEllipseElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return rv;
   }
 
-  *aReturn = NS_STATIC_CAST(nsSVGEllipseElementBase*, it);
+  *aReturn = it;
 
   return NS_OK;
 }

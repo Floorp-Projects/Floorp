@@ -124,6 +124,9 @@ NS_IMPL_ADDREF_INHERITED(nsSVGTSpanElement,nsSVGTSpanElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGTSpanElement,nsSVGTSpanElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGTSpanElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTSpanElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTextPositioningElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTextContentElement)
@@ -211,7 +214,7 @@ nsSVGTSpanElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return rv;
   }
  
-  *aReturn = NS_STATIC_CAST(nsSVGTSpanElementBase*, it);
+  *aReturn = it;
 
   return NS_OK; 
 }

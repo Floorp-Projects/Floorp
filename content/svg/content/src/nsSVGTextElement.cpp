@@ -130,6 +130,9 @@ NS_IMPL_ADDREF_INHERITED(nsSVGTextElement,nsSVGTextElementBase)
 NS_IMPL_RELEASE_INHERITED(nsSVGTextElement,nsSVGTextElementBase)
 
 NS_INTERFACE_MAP_BEGIN(nsSVGTextElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTextElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTextPositioningElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMSVGTextContentElement)
@@ -217,7 +220,7 @@ nsSVGTextElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
     return rv;
   }
  
-  *aReturn = NS_STATIC_CAST(nsSVGTextElementBase*, it);
+  *aReturn = it;
 
   return NS_OK; 
 }
