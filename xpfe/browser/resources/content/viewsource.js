@@ -1,6 +1,7 @@
 
 var appCore = null;
 
+
 function onLoadViewSource() 
 {
   viewSource(window.arguments[0]);
@@ -10,47 +11,55 @@ function viewSource(url)
 {
   if (!url)
     return false; // throw Components.results.NS_ERROR_FAILURE;
-
   try {
-    appCore = Components.classes["@mozilla.org/appshell/component/browser/instance;1"]
-                        .createInstance(Components.interfaces.nsIBrowserInstance);
-
-    // Initialize browser instance..
-    appCore.setWebShellWindow(window);
-  } catch(ex) {
+    createBrowserInstance();
+    if (appCore == null) {
     // Give up.
     window.close();
     return false;
+    }
+
+    // Initialize browser instance..
+    appCore.setWebShellWindow(window);
   }
 
-  var docShellElement = document.getElementById("content");
-  docShellElement.docShell.viewMode = Components.interfaces.nsIDocShell.viewSource;
+  catch(ex) {
+  }
+
+  var docShellElement = document.getElementById("content-frame");
+  var docShell = docShellElement.docShell;
+  docShell.viewMode = Components.interfaces.nsIDocShell.viewSource;
+  var webNav = docShell.QueryInterface(Components.interfaces.nsIWebNavigation);
 
   try {
-    if ("arguments" in window && window.arguments.length >= 2) {
-      if (window.arguments[1].indexOf('charset=') != -1) {
-        var arrayArgComponents = window.arguments[1].split('=');
-        if (arrayArgComponents) {
-          docShellElement.markupDocumentViewer.defaultCharacterSet = arrayArgComponents[1];
-        } 
+      if (window.arguments && window.arguments[1]) {
+          if (window.arguments[1].indexOf('charset=') != -1) {
+              var arrayArgComponents = window.arguments[1].split('=');
+              if (arrayArgComponents) {
+                appCore.SetDocumentCharset(arrayArgComponents[1]);
+              } 
+          }
       }
-    }
-  } catch(ex) {
+  }
+
+  catch(ex) {
   }
 
   var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
-  docShellElement.webNavigation.loadURI(url, loadFlags);
+  webNav.loadURI(url, loadFlags);
   return true;
+}
+
+function createBrowserInstance()
+{
+  appCore = Components
+    .classes[ "@mozilla.org/appshell/component/browser/instance;1" ]
+    .createInstance( Components.interfaces.nsIBrowserInstance );
 }
 
 function BrowserClose()
 {
   window.close();
-}
-
-function getMarkupDocumentViewer()
-{
-  return document.getElementById("content").markupDocumentViewer;
 }
 
 function BrowserFind()

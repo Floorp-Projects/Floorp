@@ -38,8 +38,12 @@ interface nsIBrowserInstance : nsISupports {
     
     // Infrastructure.
     void init();
-    void getContentDocShell(out nsIDocShell aDocShell);
+	 void getContentDocShell(out nsIDocShell aDocShell);
     void setWebShellWindow( in nsIDOMWindowInternal aWindow );
+    void SetDocumentCharset(in wstring charset);
+    wstring GetDocumentCharset();
+    void SetForcedCharset(in wstring charset);
+    void SetForcedDetector();
       attribute nsIUrlbarHistory urlbarHistory;
       attribute nsIInputStream   postData;
     
