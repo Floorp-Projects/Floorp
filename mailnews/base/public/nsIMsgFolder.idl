@@ -451,8 +451,8 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
                                     in wstring oldValue,
                                     in wstring newValue);
   
-  void NotifyItemAdded(in nsISupports item, in string viewString);
-  void NotifyItemDeleted(in nsISupports item, in string viewString);
+  void NotifyItemAdded(in nsISupports item);
+  void NotifyItemRemoved(in nsISupports item);
 
   void NotifyFolderEvent(in nsIAtom event);
   

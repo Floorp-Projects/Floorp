@@ -930,7 +930,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
     nsCOMPtr <nsIAtom> folderCreateAtom;
     if(NS_SUCCEEDED(rv) && child)
     {
-      NotifyItemAdded(child, "folderView");
+      NotifyItemAdded(child);
       folderCreateAtom = do_GetAtom("FolderCreateCompleted");
       child->NotifyFolderEvent(folderCreateAtom);
     }
@@ -7241,7 +7241,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         if (oldImapFolder)
           oldImapFolder->SetVerifiedAsOnlineFolder(PR_FALSE);
 
-        NotifyItemAdded(child, "folderView");
+        NotifyItemAdded(child);
       }
     }     
     return rv;

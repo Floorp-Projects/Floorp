@@ -976,7 +976,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
     //we need to notify explicitly the flag change because it failed when we did AddSubfolder
     child->OnFlagChange(mFlags);
     child->SetPrettyName(folderName);  //because empty trash will create a new trash folder
-    NotifyItemAdded(child, "folderView");
+    NotifyItemAdded(child);
   }
   return rv;
 }
@@ -1341,7 +1341,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
       {
         SetParent(nsnull);
         parentFolder->PropagateDelete(this, PR_FALSE, msgWindow);
-        parentFolder->NotifyItemAdded(newFolder, "folderView");
+        parentFolder->NotifyItemAdded(newFolder);
       }
       folderRenameAtom = do_GetAtom("RenameCompleted");
       newFolder->NotifyFolderEvent(folderRenameAtom);
@@ -2102,7 +2102,7 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   {
     //notifying the "folder" that was dragged and dropped has been created.
     //no need to do this for its subfolders - isMoveFolder will be true for "folder"
-    NotifyItemAdded(newMsgFolder, "folderView");
+    NotifyItemAdded(newMsgFolder);
     
     nsCOMPtr<nsIMsgFolder> msgParent;
     srcFolder->GetParentMsgFolder(getter_AddRefs(msgParent));

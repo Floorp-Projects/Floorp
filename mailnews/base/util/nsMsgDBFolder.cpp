@@ -865,9 +865,9 @@ nsresult nsMsgDBFolder::OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, PRBool added)
   if(NS_SUCCEEDED(rv) && msgDBHdr)
   {
     if(added)
-      NotifyItemAdded(msgDBHdr, "messageView");
+      NotifyItemAdded(msgDBHdr);
     else
-      NotifyItemDeleted(msgDBHdr, "messageView");
+      NotifyItemRemoved(msgDBHdr);
     UpdateSummaryTotals(PR_TRUE);
   }
   return NS_OK;
@@ -2908,7 +2908,7 @@ NS_IMETHODIMP nsMsgDBFolder::PropagateDelete(nsIMsgFolder *folder, PRBool delete
         {
           //Remove from list of subfolders.
           mSubFolders->RemoveElement(supports);
-          NotifyItemDeleted(supports, "folderView");
+          NotifyItemRemoved(supports);
           break;
         }
         else
@@ -4022,7 +4022,7 @@ nsMsgDBFolder::NotifyPropertyFlagChanged(nsISupports *item, nsIAtom *property,
   return NS_OK;
 }
 
-nsresult nsMsgDBFolder::NotifyItemAdded(nsISupports *item, const char* viewString)
+nsresult nsMsgDBFolder::NotifyItemAdded(nsISupports *item)
 {
   static PRBool notify = PR_TRUE;
 
@@ -4048,7 +4048,7 @@ nsresult nsMsgDBFolder::NotifyItemAdded(nsISupports *item, const char* viewStrin
 
 }
 
-nsresult nsMsgDBFolder::NotifyItemDeleted(nsISupports *item, const char* viewString)
+nsresult nsMsgDBFolder::NotifyItemRemoved(nsISupports *item)
 {
 
   PRInt32 i;

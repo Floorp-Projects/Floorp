@@ -577,7 +577,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname
     SetNewsrcHasChanged(PR_TRUE); // subscribe UI does this - but maybe we got here through auto-subscribe
 
   if(NS_SUCCEEDED(rv) && child)
-    NotifyItemAdded(child, "folderView");
+    NotifyItemAdded(child);
 
   return rv;
 }
