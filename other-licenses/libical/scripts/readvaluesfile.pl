@@ -9,7 +9,8 @@ sub read_values_file {
 
   while(<F>){
     
-    chop; 
+    chomp;
+    chop if($^O eq 'cygwin'); # cygwin perl doesn't chomp dos newlines properly so use chomp
  
     s/#.*$//g;
     s/\"//g;
@@ -65,7 +66,8 @@ sub read_properties_file {
 
   while(<F>){
     
-    chop; 
+    chomp; 
+    chop if($^O eq 'cygwin'); # cygwin perl doesn't chomp dos newlines properly so use chomp
  
     s/#.*$//g;
     s/\"//g;
@@ -96,7 +98,8 @@ sub read_parameters_file {
 
   while(<F>){
     
-    chop; 
+    chomp; 
+    chop if($^O eq 'cygwin'); # cygwin perl doesn't chomp dos newlines properly so use chomp
  
     s/#.*$//g;
     s/\"//g;
