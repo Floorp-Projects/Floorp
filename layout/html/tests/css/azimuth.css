@@ -1,0 +1,46 @@
+/*
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+GOOD { azimuth: 30deg; }
+GOOD { azimuth: -10deg; }
+GOOD { azimuth: +10deg; }
+GOOD { azimuth: 100grad; }
+GOOD { azimuth: 1.570796326794897rad; }
+GOOD { azimuth: left-side; } 
+GOOD { azimuth: far-left; }
+GOOD { azimuth: left; }
+GOOD { azimuth: center-left; }
+GOOD { azimuth: center; }
+GOOD { azimuth: center-right; }
+GOOD { azimuth: right; }
+GOOD { azimuth: far-right; }
+GOOD { azimuth: right-side; }
+GOOD { azimuth: center-left behind; }
+GOOD { azimuth: behind left-side; } 
+GOOD { azimuth: leftwards; }
+GOOD { azimuth: rightwards; }
+GOOD { azimuth: inherit; } 
+BAD { azimuth: very-far-right; }
+BAD { azimuth: 19deg leftwards; }
+BAD { azimuth: left-side behind center; }
+BAD { azimuth: ardvark 1.3749171504rad; }
+BAD { azimuth: left-side inherit behind leftwards; }
+BAD { azimuth: behind right side; }
+BAD { azimuth: align center; }
+BAD { azimuth: -rightwards; }
+BAD { azimuth: rightward; }
+BAD { azimuth: right inherit; } 
