@@ -55,7 +55,7 @@ use Chatbot::Eliza;
 
 $|++;
 
-my $VERSION = "1.30"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.32"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
 my %msgcmds = (
@@ -68,10 +68,7 @@ my %pubcmds = (
                "moon" => \&bot_moon,
                "up" => \&bot_up,
                "trees" => \&bot_tinderbox,
-               "(slashdot|sd|\/\.)" => \&bot_slashdot,
-               "(freshmeat|fm)" => \&bot_freshmeat,,
                "(mozillazine|zine|mz)" => \&bot_mozillazine,
-               "(mozillaorg|mozilla|mo)" => \&bot_mozillaorg,
                "debug" => \&bot_debug,
                "stocks" => \&bot_stocks,
                );
@@ -83,6 +80,19 @@ my %admincmds = (
                  "say" => \&bot_say,
                  "list" => \&bot_list,
                  );
+
+my %rdfcmds = (
+               "(slashdot|sd|\/\.)" => "http://www.slashdot.org/slashdot.rdf",
+               "(mozillaorg|mozilla|mo)" => "http://www.mozilla.org/news.rdf",
+               "(newsbot|nb)" => "http://www.mozilla.org/newsbot/newsbot.rdf",
+               "(xptoolkit|xpfe)" => "http://www.mozilla.org/xpfe/toolkit.rdf",
+               "(freshmeat|fm)" => "http://freshmeat.net/files/freshmeat/fm.rdf",
+               );
+
+my %rdf_title;
+my %rdf_link;
+my %rdf_last;
+my %rdf_items;
 
 @::origargv = @ARGV;
 
@@ -143,20 +153,6 @@ my @greetings =
 	"ciao"
 	);
 
-# leave $slashdot tuned to undef if you don't want slashdot
-# headlines checked every two hours
-
-my $slashdot = "http://slashdot.org/ultramode.txt";
-my @slashdot;
-my $last_slashdot = 0;
-
-# leave $freshmeat tuned to undef if you don't want freshmeat
-# headlines checked every two hours
-
-my $freshmeat = "http://freshmeat.net/files/freshmeat/recentnews.txt";
-my @freshmeat;
-my $last_freshmeat = 0;
-
 # leave $mozillazine undef'd if you don't want mozillazine
 # headlines checked every eight hours
 
@@ -164,10 +160,6 @@ my $mozillazine = "http://www.mozillazine.org/index.html";
 my @mozillazine;
 my $last_mozillazine = 0;
 
-
-my $mozillaorg = "http://www.mozilla.org/news.txt";
-my @mozillaorg;
-my $last_mozillaorg = 0;
 
 
 my $irc = new Net::IRC or confess "$0: duh?";
@@ -197,10 +189,13 @@ $bot->add_handler ('join',   \&on_join);
 $bot->schedule (0, \&tinderbox);
 $bot->schedule (0, \&checksourcechange);
 $bot->schedule (0, \&mozillazine);
-$bot->schedule (0, \&mozillaorg);
-$bot->schedule (0, \&slashdot);
-# $bot->schedule (0, \&freshmeat);
 $bot->schedule (0, \&stocks);
+
+foreach my $i (keys %rdfcmds) {
+    $bot->schedule(0, \&rdfchannel, $rdfcmds{$i});
+    $pubcmds{$i} = $rdfcmds{$i};
+}
+
 
 &debug ("connecting to $server $port as $nick on $channel");
 $irc->start;
@@ -242,7 +237,12 @@ sub do_command {
     my ($hashref, $nick, $cmd, $rest) = (@_);
     foreach my $m (keys %$hashref) {
         if ($cmd =~ m/^$m$/) {
-            &{$hashref->{$m}} ($nick, $cmd, $rest);
+            my $ref = $hashref->{$m};
+            if (ref($ref)) {
+                &{$ref} ($nick, $cmd, $rest);
+            } else {
+                bot_rdfchannel($nick, $cmd, $rest, $ref);
+            }
             return 1;
         }
     }
@@ -416,9 +416,9 @@ sub reportDiffs {
     my ($name, $url, $ref) = (@_);
 
     my $firsttime = 0;
-    if (!exists $::headCache{$name}) {
+    if (!exists $::headCache{$url}) {
         $firsttime = 1;
-        $::headCache{$name} = {};
+        $::headCache{$url} = {};
     }
     my $spacer = " ... ";
     my $outstr = "";
@@ -426,8 +426,8 @@ sub reportDiffs {
         if ($i =~ /^last update/) {
             next;
         }
-        if (!exists $::headCache{$name}->{$i}) {
-            $::headCache{$name}->{$i} = 1;
+        if (!exists $::headCache{$url}->{$i}) {
+            $::headCache{$url}->{$i} = 1;
             if ($outstr eq "") {
                 $outstr = "Just appeared in $name ($url): ";
             } else {
@@ -452,10 +452,7 @@ sub bot_debug
 	my @list;
 	my %last = 
 		(
-		"slashdot" => $last_slashdot,
-		"freshmeat" => $last_freshmeat,
 		"mozillazine" => $last_mozillazine,
-		"mozillaorg" => $last_mozillaorg,
 		"tinderbox" => $last_tree,
 		"moon" => $last_moon,
 		);
@@ -473,17 +470,23 @@ sub bot_debug
 			}
 		}
 
+    foreach (sort(keys %rdf_last)) {
+        push @list, "$_ updated: " . logdate($rdf_last{$_}) . ", " .
+            days($rdf_last{$_});
+    }
+
 	do_headlines ($nick, "Boring Debug Information", \@list);
 	}
 
-sub bot_slashdot {
-    my ($nick, $cmd, $rest) = (@_);
-    do_headlines($nick, "Headlines from Slashdot (http://slashdot.org/)", \@slashdot);
-}
 
-sub bot_freshmeat {
-    my ($nick, $cmd, $rest) = (@_);
-    do_headlines($nick, "Today in freshmeat (http://freshmeat.net/)", \@freshmeat);
+sub bot_rdfchannel {
+    my ($nick, $cmd, $rest, $url) = (@_);
+    if (defined $rdf_title{$url}) {
+        do_headlines($nick, "Items in $rdf_title{$url} ($rdf_link{$url})",
+                     $rdf_items{$url});
+    } else {
+        $bot->privmsg($nick, "Nothing has been found yet at $url");
+    }
 }
 
 
@@ -492,13 +495,6 @@ sub bot_mozillazine{
     do_headlines($nick,
                  "Headlines from mozillaZine (http://www.mozillazine.org/)",
                  \@mozillazine);
-}
-
-sub bot_mozillaorg {
-    my ($nick, $cmd, $rest) = (@_);
-    do_headlines($nick,
-                 "Headlines from mozilla.org (http://www.mozilla.org/)",
-                 \@mozillaorg);
 }
 
 
@@ -815,59 +811,12 @@ sub create_pid_file
     }
 	}
 
-sub slashdot
-{
-	return if (! defined $slashdot);
-	&debug ("fetching slashdot headlines");
-
-    $bot->schedule (60*60 + 30, \&slashdot);
-    my $output = get $slashdot;
-	$last_slashdot = time;
-    return if (! $output);
-    my @sd = split /\n/, $output;
-
-    @slashdot = ();
-
-    foreach my $i (0 .. $#sd)
-    {
-        push @slashdot, $sd[$i+1] if ($sd[$i] eq "%%" && $i != $#sd);
-    }
-	push @slashdot, "last updated: " . &logdate ($last_slashdot);
-
-    reportDiffs("SlashDot", "http://www.slashdot.org/", \@slashdot);
-
-}
-
-sub freshmeat
-{
-	return if (! defined $freshmeat);
-	&debug ("fetching freshmeat headlines");
-
-    $bot->schedule (60*60 + 30, \&freshmeat);
-    my $output = get $freshmeat;
-	$last_freshmeat = time;
-    return if (! $output);
-    my @sd = split /\n/, $output;
-
-    @freshmeat = ();
-
-    foreach my $i (0 .. $#sd)
-    {
-        push @freshmeat, $sd[$i] if ($i % 3 == 0);
-    }
-	push @freshmeat, "last updated: " . &logdate ($last_freshmeat);
-
-    reportDiffs("FreshMeat", "http://freshmeat.net/", \@freshmeat);
-
-}
 
 # fetches headlines from mozillaZine
 #
 # this should be a more general feature, to grab
-# content. if you feel like it, implement a 
-# grabber for slashdot headlines:
-#
-# http://slashdot.org/ultramode.txt
+# content.
+
 
 sub mozillazine
 	{
@@ -896,29 +845,44 @@ sub mozillazine
     reportDiffs("mozillaZine", "http://www.mozillazine.org/", \@mozillazine);
 	}
 
-sub mozillaorg
-{
-	return if (! defined $mozillaorg);
-	&debug ("fetching mozilla.org headlines");
 
-    $bot->schedule (60*60, \&mozillaorg);
-    my $output = get $mozillaorg;
-	$last_mozillaorg = time;
-    return if (! $output);
-    my @m = split /\n/, $output;
 
-    @mozillaorg = ();
+sub rdfchannel {
+    my ($foo, $url) = (@_);
+    debug("fetching rdfchannel $url");
+    $bot->schedule(60*60, \&rdfchannel, $url);
 
-    foreach my $i (@m) {
-        if ($i =~ /^summary:(.*)$/) {
-            push @mozillaorg, $1;
-        }
+    my $output = get $url;
+    $rdf_last{$url} = time();
+    return if (!$output);
+
+    my $channelpart = "";
+    if ($output =~ s@<channel>.*</channel>@@si) {
+        $channelpart = $&;
     }
-	push @mozillaorg, "last updated: " . &logdate ($last_mozillaorg);
+    $output =~ s@<image>.*</image>@@si;
 
-    reportDiffs("mozilla.org", "http://www.mozilla.org/", \@mozillaorg);
+    $rdf_title{$url} = $url;
+    if ($channelpart =~ m@<title>(.+?)</title>@si) {
+        $rdf_title{$url} = trim($1);
+    }
+    $rdf_link{$url} = $url;
+    if ($channelpart =~ m@<link>(.+?)</link>@si) {
+        $rdf_link{$url} = trim($1);
+    }
 
+    my @list;
+    while ($output =~ m@<title>(.+?)</title>@sig) {
+        push(@list, $1);
+    }
+    $rdf_items{$url} = \@list;
+
+
+    reportDiffs($rdf_title{$url}, $rdf_link{$url}, \@list);
 }
+
+    
+
 
 # fetch tinderbox details
 
@@ -1107,4 +1071,11 @@ sub bot_stocks {
             }
         }
     }
+}
+
+sub trim {
+    ($_) = (@_);
+    s/^\s+//g;
+    s/\s+$//g;
+    return $_;
 }
