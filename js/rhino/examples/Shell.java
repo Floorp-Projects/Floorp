@@ -126,7 +126,7 @@ public class Shell extends ScriptableObject {
      * This method must be implemented in all concrete classes
      * extending ScriptableObject.
      *
-     * @see com.netscape.javascript.Scriptable#getClassName
+     * @see org.mozilla.javascript.Scriptable#getClassName
      */
     public String getClassName() {
         return "global";
