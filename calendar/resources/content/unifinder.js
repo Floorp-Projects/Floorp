@@ -46,34 +46,39 @@
 */
 const UnifinderTreeName = "unifinder-search-results-listbox";
 
+var gCalendarEventTreeClicked = false; //set this to true when the calendar event tree is clicked
+                                       //to allow for multiple selection
+
 function calendarUnifinderInit( )
 {
    var unifinderEventSelectionObserver = 
    {
       onSelectionChanged : function( EventSelectionArray )
       {
-         var SearchTree = document.getElementById( "unifinder-search-results-listbox" );
-            
-         SearchTree.setAttribute( "suppressonselect", "true" );
-
-         SearchTree.treeBoxObject.selection.select( -1 );
-         
-         if( EventSelectionArray.length > 0 )
+         if( gCalendarEventTreeClicked === false )
          {
-            for( i = 0; i < EventSelectionArray.length; i++ )
+            var SearchTree = document.getElementById( "unifinder-search-results-listbox" );
+            
+            SearchTree.treeBoxObject.selection.select( -1 );
+            
+            if( EventSelectionArray.length > 0 )
             {
-               var SearchTreeItem = document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id );
-               
-               if( SearchTreeItem )
+               for( i = 0; i < EventSelectionArray.length; i++ )
                {
-                  var Index = SearchTree.contentView.getIndexOfItem( SearchTreeItem );
+                  var SearchTreeItem = document.getElementById( "search-unifinder-treeitem-"+EventSelectionArray[i].id );
                   
-                  SearchTree.treeBoxObject.ensureRowIsVisible( Index );
-      
-                  SearchTree.treeBoxObject.selection.select( Index );
+                  if( SearchTreeItem )
+                  {
+                     var Index = SearchTree.contentView.getIndexOfItem( SearchTreeItem );
+                     
+                     SearchTree.treeBoxObject.ensureRowIsVisible( Index );
+         
+                     SearchTree.treeBoxObject.selection.select( Index );
+                  }
                }
             }
          }
+         gCalendarEventTreeClicked = false;
       }
    }
       
@@ -127,7 +132,7 @@ var unifinderEventDataSourceObserver =
    {
         if( !gICalLib.batchMode )
         {
-            unifinderRefresh();
+           unifinderRefresh();
         }
    },
 
@@ -236,16 +241,42 @@ function getCalendarEventFromEvent( event )
 
 function unifinderClickEvent( event )
 {
-   var tree = document.getElementById( UnifinderTreeName );
-   var ThisEvent = getCalendarEventFromEvent( event );
-   var ArrayOfEvents = new Array( ThisEvent );
+   var ArrayOfEvents = new Array( );
    
+   gCalendarEventTreeClicked = true;
+
+   //get the selected events from the tree
+   var tree = document.getElementById( UnifinderTreeName );
+   var start = new Object();
+   var end = new Object();
+   var numRanges = tree.view.selection.getRangeCount();
+
+   for (var t=0; t<numRanges; t++){
+      tree.view.selection.getRangeAt(t,start,end);
+      for (var v=start.value; v<=end.value; v++){
+         //dump( "\n in unifinder click event, v is "+v );
+         try {
+            var treeitem = tree.treeBoxObject.view.getItemAtIndex( v );
+         }
+         catch( e )
+         {
+            return;
+         }
+         var eventId = treeitem.getAttribute("eventId");
+         ArrayOfEvents.push( gICalLib.fetchEvent( eventId ) );
+      }
+   }
+   /*var tree = document.getElementById( UnifinderTreeName );
+   
+   var ThisEvent = getCalendarEventFromEvent( event );
+   
+   */
    gCalendarWindow.EventSelection.setArrayToSelection( ArrayOfEvents );
 
    if( ArrayOfEvents.length == 1 )
    {
       /*start date is either the next or last occurence, or the start date of the event */
-      var eventStartDate = getNextOrPreviousRecurrence( ThisEvent );
+      var eventStartDate = getNextOrPreviousRecurrence( gICalLib.fetchEvent( eventId ) );
       
       /* you need this in case the current day is not visible. */
       gCalendarWindow.currentView.goToDay( eventStartDate, true);
@@ -310,6 +341,8 @@ function unifinderDeleteCommand( DoNotConfirm )
    }
    else if( SelectedItems.length > 1 )
    {
+      gICalLib.batchMode = true;
+      
       if( !DoNotConfirm )
       {
          if( confirm( "Are you sure you want to delete everything?" ) )
@@ -331,6 +364,8 @@ function unifinderDeleteCommand( DoNotConfirm )
             gICalLib.deleteEvent( ThisItem.id );
          }
       }
+
+      gICalLib.batchMode = false;
    }
 }
 
@@ -469,9 +504,6 @@ function setUnifinderEventTreeItem( treeItem, calendarEvent )
    {
       treeItem.calendarEvent = calendarEvent;
       treeItem.setAttribute( "eventId", calendarEvent.id );
-      treeItem.setAttribute( "onmouseover", "changeToolTipTextForEvent( event )" );
-      treeItem.setAttribute( "ondblclick" , "unifinderDoubleClickEvent(event)" );
-      treeItem.setAttribute( "onclick" , "unifinderClickEvent(event)" );
       treeItem.setAttribute( "calendarevent", "true" );
       treeItem.setAttribute( "id", "search-unifinder-treeitem-"+calendarEvent.id );
 

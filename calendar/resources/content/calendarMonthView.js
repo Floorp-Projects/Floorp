@@ -133,6 +133,7 @@ function MonthView( calendarWindow )
             
             //dump( "\nIn Month view, eventSelectionArray.length is "+EventSelectionArray.length );
             var i = 0;
+            
             for( i = 0; i < EventSelectionArray.length; i++ )
             {
                //dump( "\nin Month view, going to try and get the event boxes with name 'month-view-event-box-"+EventSelectionArray[i].id+"'" );

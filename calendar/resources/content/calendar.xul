@@ -379,7 +379,9 @@
                      <textbox id="unifinder-search-field" onkeypress="unifinderSearchKeyPress( this, event )" flex="1"/>
                   </box>
                </hbox>
-               <tree id="unifinder-search-results-listbox" flex="1" seltype="multiple" enableColumnDrag="false">
+               <tree id="unifinder-search-results-listbox" flex="1" 
+                  onselect="unifinderClickEvent( event )"
+                  seltype="multiple" enableColumnDrag="false">
                <treecols id="unifinder-search-results-tree-cols">
                   <treecol id="unifinder-search-results-tree-col-title"
                       persist="hidden ordinal width" flex="1" 
@@ -401,8 +403,8 @@
                       flex="1" label="&calendar.unifinder.tree.categories.label;"/>
                   </treecols>
        
-                  <treechildren tooltip="savetip" onmousemove="changeToolTipTextForEvent( event )"
-                    onclick="unifinderClickEvent( event )"
+                  <treechildren tooltip="savetip" 
+                    onmousemove="changeToolTipTextForEvent( event )"
                     onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
                     ondragover="return( false );"  
                     ondblclick="unifinderDoubleClickEvent( event )"
