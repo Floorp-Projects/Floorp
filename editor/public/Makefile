@@ -20,7 +20,6 @@ DEPTH=../..
 
 EXPORTS =		\
     nsIEditor.h	\
-    nsEditorInterfaces.h   \
     $(NULL)
 
 MODULE = editor
