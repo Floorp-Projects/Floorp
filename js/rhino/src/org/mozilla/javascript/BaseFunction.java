@@ -332,7 +332,7 @@ public class BaseFunction extends IdScriptable implements Function {
         int i;
         for (i = 0; i < arglen - 1; i++) {
             if (i > 0)
-                funArgs.append(",");
+                funArgs.append(',');
             funArgs.append(ScriptRuntime.toString(args[i]));
         }
         String funBody = arglen == 0 ? "" : ScriptRuntime.toString(args[i]);

@@ -395,7 +395,7 @@ public class ScriptRuntime {
             // cool idiom courtesy Shaver.
             result.append("\\u");
             for (int l = hex.length(); l < 4; l++)
-                result.append("0");
+                result.append('0');
             result.append(hex);
         }
 

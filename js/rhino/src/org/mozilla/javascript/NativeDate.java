@@ -1047,36 +1047,36 @@ public class NativeDate extends IdScriptable {
 
         if (format != FORMATSPEC_TIME) {
             result.append(days[WeekDay(local)]);
-            result.append(" ");
+            result.append(' ');
             result.append(months[MonthFromTime(local)]);
             if (dateStr.length() == 1)
                 result.append(" 0");
             else
-                result.append(" ");
+                result.append(' ');
             result.append(dateStr);
-            result.append(" ");
+            result.append(' ');
         }
 
         if (format != FORMATSPEC_DATE) {
             if (hourStr.length() == 1)
-                result.append("0");
+                result.append('0');
             result.append(hourStr);
             if (minStr.length() == 1)
                 result.append(":0");
             else
-                result.append(":");
+                result.append(':');
             result.append(minStr);
             if (secStr.length() == 1)
                 result.append(":0");
             else
-                result.append(":");
+                result.append(':');
             result.append(secStr);
             if (offset > 0)
                 result.append(" GMT+");
             else
                 result.append(" GMT-");
             for (int i = offsetStr.length(); i < 4; i++)
-                result.append("0");
+                result.append('0');
             result.append(offsetStr);
 
             if (timeZoneFormatter == null)
@@ -1086,17 +1086,17 @@ public class NativeDate extends IdScriptable {
                 result.append(" (");
                 java.util.Date date = new Date((long) t);
                 result.append(timeZoneFormatter.format(date));
-                result.append(")");
+                result.append(')');
             }
             if (format != FORMATSPEC_TIME)
-                result.append(" ");
+                result.append(' ');
         }
 
         if (format != FORMATSPEC_TIME) {
             if (year < 0)
-                result.append("-");
+                result.append('-');
             for (int i = yearStr.length(); i < 4; i++)
-                result.append("0");
+                result.append('0');
             result.append(yearStr);
         }
 
@@ -1230,33 +1230,33 @@ public class NativeDate extends IdScriptable {
         result.append(days[WeekDay(date)]);
         result.append(", ");
         if (dateStr.length() == 1)
-            result.append("0");
+            result.append('0');
         result.append(dateStr);
-        result.append(" ");
+        result.append(' ');
         result.append(months[MonthFromTime(date)]);
         if (year < 0)
             result.append(" -");
         else
-            result.append(" ");
+            result.append(' ');
         int i;
         for (i = yearStr.length(); i < 4; i++)
-            result.append("0");
+            result.append('0');
         result.append(yearStr);
 
         if (hourStr.length() == 1)
             result.append(" 0");
         else
-            result.append(" ");
+            result.append(' ');
         result.append(hourStr);
         if (minStr.length() == 1)
             result.append(":0");
         else
-            result.append(":");
+            result.append(':');
         result.append(minStr);
         if (secStr.length() == 1)
             result.append(":0");
         else
-            result.append(":");
+            result.append(':');
         result.append(secStr);
 
         result.append(" GMT");

@@ -324,7 +324,7 @@ public class NativeFunction extends BaseFunction {
             case TokenStream.LC:
                 if (nextIs(i, TokenStream.EOL))
                     indent += OFFSET;
-                result.append("{");
+                result.append('{');
                 break;
 
             case TokenStream.RC:
@@ -491,7 +491,7 @@ public class NativeFunction extends BaseFunction {
             case TokenStream.SEMI:
                 if (nextIs(i, TokenStream.EOL))
                     // statement termination
-                    result.append(";");
+                    result.append(';');
                 else
                     // separators in FOR
                     result.append("; ");
@@ -565,7 +565,7 @@ public class NativeFunction extends BaseFunction {
             case TokenStream.COLON:
                 if (nextIs(i, TokenStream.EOL))
                     // it's the end of a label
-                    result.append(":");
+                    result.append(':');
                 else
                     // it's the middle part of a ternary
                     result.append(" : ");

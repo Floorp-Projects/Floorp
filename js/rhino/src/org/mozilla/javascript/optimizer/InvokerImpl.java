@@ -141,7 +141,7 @@ public class InvokerImpl extends Invoker {
         StringBuffer params = new StringBuffer(2 + ((types!=null)?(20 *
                                 types.length):0));
             
-        params.append("(");
+        params.append('(');
         if (types != null) {
             for(int i = 0; i < types.length; i++) {
                 Class type = types[i];
@@ -167,37 +167,37 @@ public class InvokerImpl extends Invoker {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Boolean");
                         cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Boolean", 
                                 "booleanValue", "()", "Z");
-                        params.append("Z");
+                        params.append('Z');
                     } else if (type == Integer.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
                         cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number", 
                                 "intValue", "()", "I");
-                        params.append("I");
+                        params.append('I');
                     } else if (type == Short.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
                         cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number", 
                                 "shortValue", "()", "S");
-                        params.append("S");
+                        params.append('S');
                     } else if (type == Character.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Character");
                         cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Character", 
                                 "charValue", "()", "C");
-                        params.append("C");
+                        params.append('C');
                     } else if (type == Double.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
                         cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number", 
                                 "doubleValue", "()", "D");
-                        params.append("D");
+                        params.append('D');
                     } else if (type == Float.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
                         cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number", 
                                 "floatValue", "()", "F");
-                        params.append("F");
+                        params.append('F');
                     } else if (type == Byte.TYPE) {
                         cfw.add(ByteCode.CHECKCAST, "java/lang/Byte");
                         cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Byte", 
                                 "byteValue", "()", "B");
-                        params.append("B");
+                        params.append('B');
                     }
                 } else {
                     String typeName = type.getName().replace('.', '/');
@@ -214,7 +214,7 @@ public class InvokerImpl extends Invoker {
                 }
             }
         }
-        params.append(")");
+        params.append(')');
             
         // Call actual function!
         if (!java.lang.reflect.Modifier.isStatic(method.getModifiers())) {

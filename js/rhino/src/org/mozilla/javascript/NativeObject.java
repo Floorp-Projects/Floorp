@@ -181,7 +181,7 @@ public class NativeObject extends IdScriptable {
                     }
                 }
             }
-            result.append("}");
+            result.append('}');
             return result.toString();
         }
     }

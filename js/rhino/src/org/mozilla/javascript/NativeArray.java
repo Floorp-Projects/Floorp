@@ -454,7 +454,7 @@ public class NativeArray extends IdScriptable {
         String separator;
 
         if (toSource) {
-            result.append("[");
+            result.append('[');
             separator = ", ";
         } else {
             separator = ",";
@@ -476,10 +476,10 @@ public class NativeArray extends IdScriptable {
 
                 if (elem instanceof String) {
                     if (toSource) {
-                        result.append("\"");
+                        result.append('\"');
                         result.append(ScriptRuntime.escapeString
                                       (ScriptRuntime.toString(elem)));
-                        result.append("\"");
+                        result.append('\"');
                     } else {
                         result.append(ScriptRuntime.toString(elem));
                     }
@@ -513,7 +513,7 @@ public class NativeArray extends IdScriptable {
             if (!haslast && i > 0)
                 result.append(", ]");
             else
-                result.append("]");
+                result.append(']');
         }
         return result.toString();
     }

@@ -384,7 +384,7 @@ public class Node implements Cloneable {
         if (Context.printTrees) {
             StringBuffer sb = new StringBuffer(TokenStream.tokenToName(type));
             if (type == TokenStream.TARGET) {
-                sb.append(" ");
+                sb.append(' ');
                 sb.append(hashCode());
             }
             if (datum != null) {
@@ -419,7 +419,7 @@ public class Node implements Cloneable {
                         sb.append(elem.toString());
                         break;
                 }
-                sb.append("]");
+                sb.append(']');
             }
             return sb.toString();
         }
