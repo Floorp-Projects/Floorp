@@ -2283,6 +2283,7 @@ static JSBool
 regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     jsint slot;
+    double lastIndex;
     JSRegExp *re;
 
     if (!JSVAL_IS_INT(id))
@@ -2302,8 +2303,10 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	    *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_FOLD) != 0);
 	    break;
 	  case REGEXP_LAST_INDEX:
-            *vp = INT_TO_JSVAL((jsint) re->lastIndex);
-            break;
+            /* NB: early unlock/return, so we don't deadlock with the GC. */
+            lastIndex = re->lastIndex;
+            JS_UNLOCK_OBJ(cx, obj);
+            return js_NewNumberValue(cx, lastIndex, vp);
 	  case REGEXP_MULTILINE:
 	    *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_MULTILINE) != 0);
 	    break;
