@@ -214,6 +214,9 @@ struct LO_AnchorData_struct {
 
     uint8 flags;            /* Indicates whether to suppress visual feedback */
     double prevalue;	/* <A HREF="http://gagan/PrefetchingThoughts.html" PRE=0.5> */
+#ifdef DOM
+    struct DOM_Node *node;
+#endif
 };
 
 /*
