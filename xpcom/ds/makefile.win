@@ -25,7 +25,6 @@ MODULE = xpcom
 
 EXPORTS =                          \
         nsAVLTree.h                \
-        nsBTree.h                  \
         nsCppSharedAllocator.h     \
         nsCRT.h                    \
         nsDeque.h                  \
@@ -44,7 +43,6 @@ EXPORTS =                          \
         nsIVariant.h               \
         nsInt64.h                  \
         nsQuickSort.h              \
-        nsRBTree.h                 \
         nsStr.h                    \
         nsString.h                 \
         nsString2.h                \
@@ -83,7 +81,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsArena.obj                   \
         .\$(OBJDIR)\nsAtomTable.obj               \
         .\$(OBJDIR)\nsAVLTree.obj                 \
-        .\$(OBJDIR)\nsBTree.obj                   \
         .\$(OBJDIR)\nsBuffer.obj                  \
         .\$(OBJDIR)\nsByteBuffer.obj              \
         .\$(OBJDIR)\nsCRT.obj                     \
@@ -98,7 +95,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsPageMgr.obj                 \
         .\$(OBJDIR)\nsProperties.obj              \
         .\$(OBJDIR)\nsQuickSort.obj               \
-        .\$(OBJDIR)\nsRBTree.obj                  \
         .\$(OBJDIR)\nsSizeOfHandler.obj           \
         .\$(OBJDIR)\nsStr.obj                     \
         .\$(OBJDIR)\nsString.obj                  \
