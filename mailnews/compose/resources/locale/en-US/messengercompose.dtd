@@ -82,10 +82,11 @@
 
 <!-- Format menu items -->
 <!ENTITY formatMenu.label "Format">
-<!ENTITY formatmenu.accesskey "o">
+<!ENTITY formatMenu.accesskey "o">
 
 <!-- Options menu items -->
 <!ENTITY optionsMenu.label "Options">
+<!ENTITY optionsMenu.accesskey "p">
 
 <!ENTITY doNotCompleteAddrCmd.label ".Do Not Complete Address">
 <!ENTITY showMatchingAddrCmd.label ".Show Matching Address">

@@ -94,6 +94,7 @@ Rights Reserved.
 
 <broadcasterset id="broadcasterset">
 	<!-- File Menu -->
+	<broadcaster id="cmd_new" oncommand="goDoCommand('cmd_newMessage')"/>
 	<broadcaster id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
 	<broadcaster id="cmd_attachPage" oncommand="goDoCommand('cmd_attachPage')"/>
 	<broadcaster id="cmd_close" oncommand="goDoCommand('cmd_close')"/>
@@ -103,7 +104,7 @@ Rights Reserved.
 	<broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')"/>
 	<broadcaster id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
 	<broadcaster id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
-	<!--broadcaster id="cmd_quit"/-->
+	<broadcaster id="cmd_quit"/>
 
 	<!-- Edit Menu -->
 	<!--broadcaster id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
@@ -180,6 +181,7 @@ Rights Reserved.
 	<broadcaster id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
 	<broadcaster id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
 	<!-- broadcaster id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/ -->
+	<broadcaster id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
 
   <broadcaster id="Editor:Throbber" busy="false"/>
 </broadcasterset>
@@ -247,7 +249,7 @@ Rights Reserved.
   <menubar>
 	<menu id="menu_File">
     <menupopup id="menu_FilePopup">
-      <menuitem value="&newMessage.label;" accessKey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_newMessage"/>
+      <menuitem value="&newMessage.label;" accessKey="&newMessage.accesskey;" key="key_newMessage" observes="cmd_new"/>
       <menu id="menu_New">
         <menupopup id="menu_NewPopup">
           <menuitem id="menu_newNavigator"/>
@@ -277,7 +279,7 @@ Rights Reserved.
 	</menu>
 
 	<menu id="menu_Edit">
-		<menupopup>
+		<menupopup oncreate="EditorInitEditMenu()">
 			<menuitem id="menu_undo"/>
 			<menuitem id="menu_redo"/>
 			<menuseparator/>
@@ -314,8 +316,10 @@ Rights Reserved.
 				</menupopup>
 			</menu>
 			<menuseparator/>
+			<!--
 			<menuitem value="&pageInfoCmd.label;" disabled="true" accesskey="&pageInfoCmd.accesskey;" cmd="nsCmd:ComposeNYI"/>
 			<menuseparator/>
+			-->
       <menu id = "maileditCharsetMenu" />
 	</menupopup>
     </menu>
@@ -325,7 +329,7 @@ Rights Reserved.
 	<menu id="insertMenu" observes="cmd_insert"/>
 	
 	<!-- menu items come from editorOverlay -->
-	<menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatmenu.accesskey;" observes="cmd_format">
+	<menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatMenu.accesskey;" observes="cmd_format">
     <menupopup id="formatMenuPopup">
   		<menu id="tableMenu"/>
      	<menuseparator/>
@@ -335,12 +339,12 @@ Rights Reserved.
 	</menu>
 	
 
-	<menu value="&optionsMenu.label;">
+	<menu value="&optionsMenu.label;"  accesskey="&optionsMenu.accesskey;">
     <menupopup>	
 		<menuitem value="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
         <menuitem value="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
 		<!--menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" observes="cmd_quoteMessage"/-->	
-		<menuitem value="&editRewrapCmd.label;" oncommand="editorShell.Rewrap(false)"/>
+		<menuitem value="&editRewrapCmd.label;" observes="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
 	  <menuseparator/>
 	    
 	  <menu value="&outputFormatMenu.label;" observes="cmd_outputFormat">
@@ -366,8 +370,8 @@ Rights Reserved.
 		<template> 
 		<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
             <menupopup>
-              <menuitem value="[current selection]" disabled="true"/>
-              <menuseparator/>
+              <!--menuitem value="[current selection]" disabled="true"/-->
+              <!--menuseparator/-->
               <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
 				SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 				BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -413,9 +417,11 @@ Rights Reserved.
         </template>
 		</menu>	    
 
+    <!--
     <menuseparator/>
 		<menuitem value="&addSignatureCmd.label;" disabled="true" oncommand=""/>    	
 		<menuitem value="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/>    	
+    -->
     </menupopup>
 	</menu>
 

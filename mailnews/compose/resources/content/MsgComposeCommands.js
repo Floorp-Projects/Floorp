@@ -182,6 +182,7 @@ var defaultController =
       case "cmd_spelling":
       case "cmd_outputFormat":
 //      case "cmd_quoteMessage":
+      case "cmd_rewrap":
 
         return true;
 
@@ -251,6 +252,8 @@ var defaultController =
         return msgCompose.composeHTML;
 //      case "cmd_quoteMessage":
 //        return mailSession && mailSession.topmostMsgWindow;
+      case "cmd_rewrap":
+        return !msgCompose.composeHTML && !focusedElement;
       
       //Format Menu
       case "cmd_format":
@@ -332,6 +335,7 @@ var defaultController =
       //Options Menu
       case "cmd_selectAddress"      : if (defaultController.isCommandEnabled(command)) SelectAddress();         break;
 //      case "cmd_quoteMessage"       : if (defaultController.isCommandEnabled(command)) QuoteSelectedMessage();  break;
+      case "cmd_rewrap"             : editorShell.Rewrap(false);                                                break;
 
       default: 
 //        dump("##MsgCompose: don't know what to do with command " + command + "!\n");
@@ -450,6 +454,7 @@ function CommandUpdate_MsgCompose()
   goUpdateCommand("cmd_spelling");
   goUpdateCommand("cmd_outputFormat");
 //  goUpdateCommand("cmd_quoteMessage");
+  goUpdateCommand("cmd_rewrap");
   
   } catch(e) {}
 }
