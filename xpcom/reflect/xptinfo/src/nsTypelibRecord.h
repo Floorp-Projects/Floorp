@@ -48,6 +48,10 @@ public:
     nsInterfaceRecord **interfaceRecords;
     nsTypelibRecord *next;
     XPTHeader *header;
+#ifdef XPT_INFO_STATS
+    char *filename;
+    uint32 useCount;
+#endif
 };    
 
 #endif /* nsTypelibRecord_h___ */

@@ -39,16 +39,13 @@ typedef struct XPTCursor        XPTCursor;
 typedef struct XPTHashTable     XPTHashTable;
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoString(XPTCursor *cursor, XPTString **strp);
+XPT_DoString(XPTArena *arena, XPTCursor *cursor, XPTString **strp);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoStringInline(XPTCursor *cursor, XPTString **strp);
+XPT_DoStringInline(XPTArena *arena, XPTCursor *cursor, XPTString **strp);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoCString(XPTCursor *cursor, char **strp);
-
-extern XPT_PUBLIC_API(PRBool)
-XPT_DoIdentifier(XPTCursor *cursor, char **identp);
+XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **strp);
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_DoIID(XPTCursor *cursor, nsID *iidp);
@@ -66,7 +63,7 @@ extern XPT_PUBLIC_API(PRBool)
 XPT_Do8(XPTCursor *cursor, PRUint8 *u8p);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp);
+XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp);
 
 typedef enum {
     XPT_ENCODE,
@@ -83,6 +80,7 @@ struct XPTState {
     PRUint32         data_offset;
     PRUint32         next_cursor[2];
     XPTDatapool      *pool;
+    XPTArena         *arena;
 };
 
 struct XPTDatapool {
@@ -175,26 +173,15 @@ XPT_GetAddrForOffset(XPTCursor *cursor, PRUint32 offset);
     if (already)                                                              \
         return PR_TRUE;                                                       \
 
-/* XXXmccabe currently not used! */
-/* also, XPT_ALLOC isn't defined. */
-#if 0
-#define XPT_PREAMBLE(cursor, addrp, pool, size, new_curs, already,            \
-                     XPTType, localp)                                         \
-  {                                                                           \
-    XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already);              \
-    XPT_ALLOC(addrp, new_curs, XPTType, localp)                               \
-  }
-#endif
-
 #define XPT_PREAMBLE_NO_ALLOC(cursor, addrp, pool, size, new_curs, already)   \
   {                                                                           \
     XPT_PREAMBLE_(cursor, addrp, pool, size, new_curs, already)               \
   }
 
-#define XPT_ERROR_HANDLE(free_it)                                             \
+#define XPT_ERROR_HANDLE(arena, free_it)                                      \
  error:                                                                       \
     if (cursor->state->mode == XPT_DECODE)                                    \
-    XPT_FREEIF(free_it);                                                      \
+    XPT_FREEIF(arena, free_it);                                               \
     return PR_FALSE;
 
 

@@ -38,52 +38,8 @@
 class nsInterfaceInfo : public nsIInterfaceInfo
 {
     NS_DECL_ISUPPORTS
-
-    NS_IMETHOD GetName(char** name); // returns IAllocatator alloc'd copy
-    NS_IMETHOD GetIID(nsIID** iid);  // returns IAllocatator alloc'd copy
-
-    NS_IMETHOD IsScriptable(PRBool* result);
-
-    NS_IMETHOD GetParent(nsIInterfaceInfo** parent);
-
-    // these include counts of parents
-    NS_IMETHOD GetMethodCount(uint16* count);
-    NS_IMETHOD GetConstantCount(uint16* count);
-
-    // These include methods and constants of parents.
-    // There do *not* make copies ***explicit bending of XPCOM rules***
-    NS_IMETHOD GetMethodInfo(uint16 index, const nsXPTMethodInfo** info);
-    NS_IMETHOD GetMethodInfoForName(const char* methodName, uint16 *index,
-                                    const nsXPTMethodInfo** info);
-    NS_IMETHOD GetConstant(uint16 index, const nsXPTConstant** constant);
-
-    // Get the interface information or iid associated with a param of some
-    // method in this interface.
-    NS_IMETHOD GetInfoForParam(uint16 methodIndex, const nsXPTParamInfo* param, 
-                               nsIInterfaceInfo** info);
-    // returns IAllocatator alloc'd copy
-    NS_IMETHOD GetIIDForParam(uint16 methodIndex, const nsXPTParamInfo* param, 
-                              nsIID** iid);
-
-    // These do *not* make copies ***explicit bending of XPCOM rules***
-    NS_IMETHOD GetTypeForParam(uint16 methodIndex, 
-                               const nsXPTParamInfo* param,
-                               uint16 dimension,
-                               nsXPTType* type);
-
-    NS_IMETHOD GetSizeIsArgNumberForParam(uint16 methodIndex, 
-                                          const nsXPTParamInfo* param,
-                                          uint16 dimension,
-                                          uint8* argnum);
-
-    NS_IMETHOD GetLengthIsArgNumberForParam(uint16 methodIndex, 
-                                            const nsXPTParamInfo* param,
-                                            uint16 dimension,
-                                            uint8* argnum);
-
-    NS_IMETHOD GetInterfaceIsArgNumberForParam(uint16 methodIndex, 
-                                               const nsXPTParamInfo* param,
-                                               uint8* argnum);
+    NS_DECL_NSIINTERFACEINFO
+    
 public:
     virtual ~nsInterfaceInfo();
 

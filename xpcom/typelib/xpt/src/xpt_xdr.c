@@ -65,8 +65,10 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, PRUint32 len,
  /* if we're in the data area and we're about to exceed the allocation */     \
  (CURS_POOL_OFFSET(cursor) + (space) > (cursor)->state->pool->allocated ?     \
   /* then grow if we're in ENCODE mode */                                     \
-  (ENCODING(cursor) ? GrowPool((cursor)->state->pool, 0,                      \
-                               CURS_POOL_OFFSET(cursor) + (space))            \
+  (ENCODING(cursor) ? GrowPool((cursor)->state->arena,                        \
+                               (cursor)->state->pool,                         \
+                               (cursor)->state->pool->allocated,              \
+                               0, CURS_POOL_OFFSET(cursor) + (space))         \
    /* and fail if we're in DECODE mode */                                     \
    : (DBG(("can't extend in DECODE")) && PR_FALSE))                           \
   /* otherwise we're OK */                                                    \
@@ -96,28 +98,31 @@ typedef struct XPTHashRecord {
 
 struct XPTHashTable {  /* it's already typedef'ed from before. */
     XPTHashRecord *buckets[XPT_HASHSIZE];
+    XPTArena *arena;
 };
 
 static XPTHashTable *
-XPT_NewHashTable() {
+XPT_NewHashTable(XPTArena *arena) {
     XPTHashTable *table;
-    table = XPT_NEWZAP(XPTHashTable);
+    table = XPT_NEWZAP(arena, XPTHashTable);
+    if (table)
+        table->arena = arena;
     return table;
 }
 
-static void trimrecord(XPTHashRecord *record) {
+static void trimrecord(XPTArena* arena, XPTHashRecord *record) {
     if (record == NULL)
         return;
-    trimrecord(record->next);
-    XPT_DELETE(record);
+    trimrecord(arena, record->next);
+    XPT_DELETE(arena, record);
 }
 
 static void
 XPT_HashTableDestroy(XPTHashTable *table) {
     int i;
     for (i = 0; i < XPT_HASHSIZE; i++)
-        trimrecord(table->buckets[i]);
-    XPT_FREE(table);
+        trimrecord(table->arena, table->buckets[i]);
+    XPT_FREE(table->arena, table);
 }
 
 static void *
@@ -129,7 +134,7 @@ XPT_HashTableAdd(XPTHashTable *table, void *key, void *value) {
     while (*bucketloc != NULL)
         bucketloc = &((*bucketloc)->next);
 
-    bucket = XPT_NEW(XPTHashRecord);
+    bucket = XPT_NEW(table->arena, XPTHashRecord);
     bucket->key = key;
     bucket->value = value;
     bucket->next = NULL;
@@ -152,20 +157,25 @@ XPT_PUBLIC_API(XPTState *)
 XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len)
 {
     XPTState *state;
+    XPTArena *arena;
 
-    state = XPT_NEWZAP(XPTState);
-
-    if (!state)
+    arena = XPT_NewArena(512, sizeof(double), "an XDRState");
+    if (!arena)
         return NULL;
 
+    state = XPT_NEWZAP(arena, XPTState);
+    if (!state)
+        goto err_free_arena;
+
+    state->arena = arena;
     state->mode = mode;
-    state->pool = XPT_NEW(XPTDatapool);
+    state->pool = XPT_NEW(arena, XPTDatapool);
     state->next_cursor[0] = state->next_cursor[1] = 1;
     if (!state->pool)
         goto err_free_state;
 
     state->pool->count = 0;
-    state->pool->offset_map = XPT_NewHashTable();
+    state->pool->offset_map = XPT_NewHashTable(arena);
 
     if (!state->pool->offset_map)
         goto err_free_pool;
@@ -173,7 +183,7 @@ XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len)
         state->pool->data = data;
         state->pool->allocated = len;
     } else {
-        state->pool->data = XPT_MALLOC(XPT_GROW_CHUNK);
+        state->pool->data = XPT_MALLOC(arena, XPT_GROW_CHUNK);
         if (!state->pool->data)
             goto err_free_hash;
         state->pool->allocated = XPT_GROW_CHUNK;
@@ -184,21 +194,28 @@ XPT_NewXDRState(XPTMode mode, char *data, PRUint32 len)
  err_free_hash:
     XPT_HashTableDestroy(state->pool->offset_map);
  err_free_pool:
-    XPT_DELETE(state->pool);
+    XPT_DELETE(arena, state->pool);
  err_free_state:
-    XPT_DELETE(state);
+    XPT_DELETE(arena, state);
+ err_free_arena:
+    if (arena)
+        XPT_DestroyArena(arena);
     return NULL;
 }
 
 XPT_PUBLIC_API(void)
 XPT_DestroyXDRState(XPTState *state)
 {
+    XPTArena *arena = state->arena;
+
     if (state->pool->offset_map)
         XPT_HashTableDestroy(state->pool->offset_map);
     if (state->mode == XPT_ENCODE)
-        XPT_DELETE(state->pool->data);
-    XPT_DELETE(state->pool);
-    XPT_DELETE(state);
+        XPT_DELETE(arena, state->pool->data);
+    XPT_DELETE(arena, state->pool);
+    XPT_DELETE(arena, state);
+    if (arena)
+        XPT_DestroyArena(arena);
 }
 
 XPT_PUBLIC_API(void)
@@ -227,7 +244,8 @@ XPT_DataOffset(XPTState *state, PRUint32 *data_offsetp)
  * behind on required space.
  */
 static PRBool
-GrowPool(XPTDatapool *pool, PRUint32 exact, PRUint32 at_least)
+GrowPool(XPTArena *arena, XPTDatapool *pool, PRUint32 old_size, 
+         PRUint32 exact, PRUint32 at_least)
 {
     PRUint32 total_size;
     char *newdata;
@@ -241,9 +259,14 @@ GrowPool(XPTDatapool *pool, PRUint32 exact, PRUint32 at_least)
             total_size = at_least;
     }
 
-    newdata = realloc(pool->data, total_size);
+    newdata = XPT_MALLOC(arena, total_size);
     if (!newdata)
         return PR_FALSE;
+    if (pool->data) {
+        if (old_size)
+            memcpy(newdata, pool->data, old_size);
+        XPT_FREE(arena, pool->data);
+    }
     pool->data = newdata;
     pool->allocated = total_size;
     return PR_TRUE;
@@ -256,7 +279,8 @@ XPT_SetDataOffset(XPTState *state, PRUint32 data_offset)
    /* make sure we've allocated enough space for the header */
    if (state->mode == XPT_ENCODE &&
        data_offset > state->pool->allocated) {
-       (void)GrowPool(state->pool, data_offset, 0);
+       (void)GrowPool(state->arena, state->pool, state->pool->allocated, 
+                      data_offset, 0);
    }
 }
 
@@ -291,16 +315,16 @@ XPT_SeekTo(XPTCursor *cursor, PRUint32 offset)
 }
 
 XPT_PUBLIC_API(XPTString *)
-XPT_NewString(PRUint16 length, char *bytes)
+XPT_NewString(XPTArena *arena, PRUint16 length, char *bytes)
 {
-    XPTString *str = XPT_NEW(XPTString);
+    XPTString *str = XPT_NEW(arena, XPTString);
     if (!str)
         return NULL;
     str->length = length;
     /* Alloc one extra to store the trailing nul. */
-    str->bytes = XPT_MALLOC(length + 1u);
+    str->bytes = XPT_MALLOC(arena, length + 1u);
     if (!str->bytes) {
-        XPT_DELETE(str);
+        XPT_DELETE(arena, str);
         return NULL;
     }
     memcpy(str->bytes, bytes, length);
@@ -310,23 +334,23 @@ XPT_NewString(PRUint16 length, char *bytes)
 }
 
 XPT_PUBLIC_API(XPTString *)
-XPT_NewStringZ(char *bytes)
+XPT_NewStringZ(XPTArena *arena, char *bytes)
 {
     PRUint32 length = strlen(bytes);
     if (length > 0xffff)
         return NULL;            /* too long */
-    return XPT_NewString((PRUint16)length, bytes);
+    return XPT_NewString(arena, (PRUint16)length, bytes);
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_DoStringInline(XPTCursor *cursor, XPTString **strp)
+XPT_DoStringInline(XPTArena *arena, XPTCursor *cursor, XPTString **strp)
 {
     XPTString *str = *strp;
     XPTMode mode = cursor->state->mode;
     int i;
 
     if (mode == XPT_DECODE) {
-        str = XPT_NEWZAP(XPTString);
+        str = XPT_NEWZAP(arena, XPTString);
         if (!str)
             return PR_FALSE;
         *strp = str;
@@ -336,7 +360,7 @@ XPT_DoStringInline(XPTCursor *cursor, XPTString **strp)
         goto error;
 
     if (mode == XPT_DECODE)
-        if (!(str->bytes = XPT_MALLOC(str->length + 1u)))
+        if (!(str->bytes = XPT_MALLOC(arena, str->length + 1u)))
             goto error;
 
     for (i = 0; i < str->length; i++)
@@ -348,14 +372,14 @@ XPT_DoStringInline(XPTCursor *cursor, XPTString **strp)
 
     return PR_TRUE;
  error_2:
-    XPT_DELETE(str->bytes);
+    XPT_DELETE(arena, str->bytes);
  error:
-    XPT_DELETE(str);
+    XPT_DELETE(arena, str);
     return PR_FALSE;
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_DoString(XPTCursor *cursor, XPTString **strp)
+XPT_DoString(XPTArena *arena, XPTCursor *cursor, XPTString **strp)
 {
     XPTCursor my_cursor;
     XPTString *str = *strp;
@@ -364,11 +388,11 @@ XPT_DoString(XPTCursor *cursor, XPTString **strp)
     XPT_PREAMBLE_NO_ALLOC(cursor, strp, XPT_DATA, str->length + 2, my_cursor,
                           already);
 
-    return XPT_DoStringInline(&my_cursor, strp);
+    return XPT_DoStringInline(arena, &my_cursor, strp);
 }
 
 XPT_PUBLIC_API(PRBool)
-XPT_DoCString(XPTCursor *cursor, char **identp)
+XPT_DoCString(XPTArena *arena, XPTCursor *cursor, char **identp)
 {
     XPTCursor my_cursor;
     char *ident = *identp;
@@ -401,7 +425,7 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
         len = end - start;
         assert(len > 0);
 
-        ident = XPT_MALLOC(len + 1u);
+        ident = XPT_MALLOC(arena, len + 1u);
         if (!ident)
             return PR_FALSE;
 
@@ -433,6 +457,8 @@ XPT_DoCString(XPTCursor *cursor, char **identp)
     return PR_TRUE;
 }
 
+/* XXXjband it bothers me that this is one hashtable instead of two.
+ */
 XPT_PUBLIC_API(PRUint32)
 XPT_GetOffsetForAddr(XPTCursor *cursor, void *addr)
 {

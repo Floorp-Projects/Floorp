@@ -28,48 +28,9 @@
 #ifndef __xpt_struct_h__
 #define __xpt_struct_h__
 
-#include "prtypes.h"
-#include <assert.h>
-#include <stdlib.h>
-
-/*
- * The linkage of XPT API functions differs depending on whether the file is
- * used within the XPT library or not.  Any source file within the XPT
- * library should define EXPORT_XPT_API whereas any client of the library
- * should not.
- */
-#ifdef EXPORT_XPT_API
-#define XPT_PUBLIC_API(t)    PR_IMPLEMENT(t)
-#define XPT_PUBLIC_DATA(t)   PR_IMPLEMENT_DATA(t)
-#else
-#ifdef _WIN32
-#    define XPT_PUBLIC_API(t)    _declspec(dllimport) t
-#    define XPT_PUBLIC_DATA(t)   _declspec(dllimport) t
-#else
-#    define XPT_PUBLIC_API(t)    PR_IMPLEMENT(t)
-#    define XPT_PUBLIC_DATA(t)   t
-#endif
-#endif
-#define XPT_FRIEND_API(t)    XPT_PUBLIC_API(t)
-#define XPT_FRIEND_DATA(t)   XPT_PUBLIC_DATA(t)
+#include "xpt_arena.h"
 
 PR_BEGIN_EXTERN_C
-
-/*
- * Some utility macros.  Defined here in lieu of equivalent NSPR
- * macros, which require NSPR linkage.
- */
-#define XPT_MALLOC(_bytes) (malloc((_bytes)))
-#define XPT_NEW(_struct) ((_struct *) malloc(sizeof(_struct)))
-#define XPT_REALLOC(_ptr, _size) (realloc((_ptr), (_size)))
-#define XPT_CALLOC(_size) (calloc(1, (_size)))
-#define XPT_NEWZAP(_struct) ((_struct*)calloc(1, sizeof(_struct)))
-#define XPT_DELETE(_ptr) { free(_ptr); (_ptr) = NULL; }
-#define XPT_FREEIF(_ptr) if (_ptr) free(_ptr)
-#define XPT_FREE(_ptr) free(_ptr)
-
-#define XPT_ASSERT(_expr) assert(_expr)
-
 
 /*
  * Originally, I was going to have structures that exactly matched the on-disk
@@ -143,10 +104,10 @@ struct XPTHeader {
 #define XPT_MINOR_VERSION 0x00
 
 extern XPT_PUBLIC_API(XPTHeader *)
-XPT_NewHeader(PRUint16 num_interfaces);
+XPT_NewHeader(XPTArena *arena, PRUint16 num_interfaces);
 
 extern XPT_PUBLIC_API(void)
-XPT_FreeHeader(XPTHeader* aHeader);
+XPT_FreeHeader(XPTArena *arena, XPTHeader* aHeader);
 
 /* size of header and annotations */
 extern XPT_PUBLIC_API(PRUint32)
@@ -175,12 +136,14 @@ struct XPTInterfaceDirectoryEntry {
 };
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
+XPT_FillInterfaceDirectoryEntry(XPTArena *arena, 
+                                XPTInterfaceDirectoryEntry *ide,
                                 nsID *iid, char *name, char *name_space,
                                 XPTInterfaceDescriptor *descriptor);
 
 extern XPT_PUBLIC_API(void)
-XPT_DestroyInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry* ide);
+XPT_DestroyInterfaceDirectoryEntry(XPTArena *arena, 
+                                   XPTInterfaceDirectoryEntry* ide);
 
 /*
  * An InterfaceDescriptor is a variable-size record used to describe a 
@@ -227,20 +190,24 @@ XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
                             PRUint16 *indexp);
 
 extern XPT_PUBLIC_API(XPTInterfaceDescriptor *)
-XPT_NewInterfaceDescriptor(PRUint16 parent_interface, PRUint16 num_methods,
+XPT_NewInterfaceDescriptor(XPTArena *arena, 
+                           PRUint16 parent_interface, PRUint16 num_methods,
                            PRUint16 num_constants, PRUint8 flags);
 
 extern XPT_PUBLIC_API(void)
-XPT_FreeInterfaceDescriptor(XPTInterfaceDescriptor* id);
+XPT_FreeInterfaceDescriptor(XPTArena *arena, XPTInterfaceDescriptor* id);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_InterfaceDescriptorAddTypes(XPTInterfaceDescriptor *id, PRUint16 num);
+XPT_InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id, 
+                                PRUint16 num);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, PRUint16 num);
+XPT_InterfaceDescriptorAddMethods(XPTArena *arena, XPTInterfaceDescriptor *id, 
+                                  PRUint16 num);
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_InterfaceDescriptorAddConsts(XPTInterfaceDescriptor *id, PRUint16 num);
+XPT_InterfaceDescriptorAddConsts(XPTArena *arena, XPTInterfaceDescriptor *id, 
+                                 PRUint16 num);
 
 /*
  * This is our special string struct with a length value associated with it,
@@ -252,10 +219,10 @@ struct XPTString {
 };
 
 extern XPT_PUBLIC_API(XPTString *)
-XPT_NewString(PRUint16 length, char *bytes);
+XPT_NewString(XPTArena *arena, PRUint16 length, char *bytes);
 
 extern XPT_PUBLIC_API(XPTString *)
-XPT_NewStringZ(char *bytes);
+XPT_NewStringZ(XPTArena *arena, char *bytes);
 
 /* 
  * A TypeDescriptor is a variable-size record used to identify the type of a 
@@ -406,7 +373,8 @@ struct XPTParamDescriptor {
 */
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_FillParamDescriptor(XPTParamDescriptor *pd, PRUint8 flags,
+XPT_FillParamDescriptor(XPTArena *arena, 
+                        XPTParamDescriptor *pd, PRUint8 flags,
                         XPTTypeDescriptor *type);
 
 /*
@@ -436,7 +404,8 @@ struct XPTMethodDescriptor {
 #define XPT_MD_IS_HIDDEN(flags)     (flags & XPT_MD_HIDDEN)
 
 extern XPT_PUBLIC_API(PRBool)
-XPT_FillMethodDescriptor(XPTMethodDescriptor *meth, PRUint8 flags, char *name,
+XPT_FillMethodDescriptor(XPTArena *arena, 
+                         XPTMethodDescriptor *meth, PRUint8 flags, char *name,
                          PRUint8 num_args);
 
 /*
@@ -472,28 +441,8 @@ struct XPTAnnotation {
 #define XPT_ANN_IS_PRIVATE(flags)       (flags & XPT_ANN_PRIVATE)
 
 extern XPT_PUBLIC_API(XPTAnnotation *)
-XPT_NewAnnotation(PRUint8 flags, XPTString *creator, XPTString *private_data);
-
-/***************************************************************************/
-/* 
-* XXX It's not clear that these should really be exported
-*/
-
-extern XPT_PUBLIC_API(PRUint32)
-XPT_SizeOfTypeDescriptor(XPTTypeDescriptor *td, XPTInterfaceDescriptor *id);
-
-extern XPT_PUBLIC_API(PRUint32)
-XPT_SizeOfMethodDescriptor(XPTMethodDescriptor *md, XPTInterfaceDescriptor *id);
-
-extern XPT_PUBLIC_API(PRUint32)
-XPT_SizeOfConstDescriptor(XPTConstDescriptor *cd, XPTInterfaceDescriptor *id);
-
-extern XPT_PUBLIC_API(PRUint32)
-XPT_SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *id);
-
-extern XPT_PUBLIC_API(PRBool)
-XPT_FillConstDescriptor(XPTConstDescriptor *cd, char *name,
-                        XPTTypeDescriptor type, union XPTConstValue value);
+XPT_NewAnnotation(XPTArena *arena, PRUint8 flags, XPTString *creator, 
+                  XPTString *private_data);
 
 PR_END_EXTERN_C
 

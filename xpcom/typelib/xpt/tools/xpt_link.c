@@ -52,7 +52,7 @@ static int compare_fixElements_by_name(const void *ap, const void *bp);
 static int compare_IIDs(const void *ap, const void *bp);
 PRBool shrink_IDE_array(XPTInterfaceDirectoryEntry *ide, 
                         int element_to_delete, int num_interfaces);
-PRBool update_fix_array(fixElement *fix, int element_to_delete, 
+PRBool update_fix_array(XPTArena *arena, fixElement *fix, int element_to_delete, 
                         int num_interfaces, int replacement); 
 static int get_new_index(const fixElement *fix, int num_elements,
                          int target_file, int target_interface);
@@ -78,6 +78,7 @@ struct fixElement {
 /* Global variables. */
 PRUint16 trueNumberOfInterfaces = 0;
 PRUint16 totalNumberOfInterfaces = 0;
+PRUint16 oldTotalNumberOfInterfaces = 0;
 
 #if defined(XP_MAC) && defined(XPIDL_PLUGIN)
 
@@ -103,6 +104,7 @@ static size_t get_file_length(const char* filename)
 int 
 main(int argc, char **argv)
 {
+    XPTArena *arena;
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
     XPTHeader *header;
@@ -123,7 +125,13 @@ main(int argc, char **argv)
         return 1;
     }
         
-    first_ann = XPT_NewAnnotation(XPT_ANN_LAST, NULL, NULL);
+    arena = XPT_NewArena(1024 * 10, sizeof(double), "main xpt_link arena");
+    if (!arena) {
+        perror("FAILED: XPT_NewArena");
+        return 1;
+    }
+
+    first_ann = XPT_NewAnnotation(arena, XPT_ANN_LAST, NULL, NULL);
 
     for (i=2; i<argc; i++) {
         char *name = argv[i];
@@ -135,9 +143,9 @@ main(int argc, char **argv)
             return 1;
         }
 
-        whole = malloc(flen);
+        whole = XPT_MALLOC(arena, flen);
         if (!whole) {
-            perror("FAILED: malloc for whole");
+            perror("FAILED: XPT_MALLOC for whole");
             return 1;
         }
         
@@ -157,31 +165,51 @@ main(int argc, char **argv)
                 fprintf(stdout, "XPT_MakeCursor failed for %s\n", name);
                 return 1;
             }
-            if (!XPT_DoHeader(cursor, &header)) {
+            if (!XPT_DoHeader(arena, cursor, &header)) {
                 fprintf(stdout,
                         "DoHeader failed for %s.  Is %s a valid .xpt file?\n",
                         name, name);
                 return 1;
             }                                        
             
+            oldTotalNumberOfInterfaces = totalNumberOfInterfaces;
             totalNumberOfInterfaces += header->num_interfaces;
             if (header->num_interfaces > 0) {
                 XPTInterfaceDirectoryEntry *newIDE;
                 fixElement *newFix;
   
                 newIDE = (XPTInterfaceDirectoryEntry *)
-                    XPT_REALLOC(IDE_array, totalNumberOfInterfaces * sizeof(XPTInterfaceDirectoryEntry));
+                    XPT_MALLOC(arena, totalNumberOfInterfaces * 
+                               sizeof(XPTInterfaceDirectoryEntry));
                 if (!newIDE) {
-                    perror("FAILED: XPT_REALLOC of IDE_array");
+                    perror("FAILED: XPT_MALLOC of IDE_array");
                     return 1;
+                }
+
+                if (IDE_array) {
+                    if (oldTotalNumberOfInterfaces)
+                        memcpy(newIDE, IDE_array,
+                               oldTotalNumberOfInterfaces * 
+                               sizeof(XPTInterfaceDirectoryEntry));
+                    XPT_FREE(arena, IDE_array);
                 }
                 IDE_array = newIDE;
 
+
                 newFix = (fixElement *)
-                    XPT_REALLOC(fix_array, totalNumberOfInterfaces * sizeof(fixElement));
+                    XPT_MALLOC(arena, 
+                               totalNumberOfInterfaces * sizeof(fixElement));
                 if (!newFix) {
-                    perror("FAILED: XPT_REALLOC of fix_array");
+                    perror("FAILED: XPT_MALLOC of fix_array");
                     return 1;
+                }
+
+                if (fix_array) {
+                    if (oldTotalNumberOfInterfaces)
+                        memcpy(newFix, fix_array,
+                               oldTotalNumberOfInterfaces * 
+                               sizeof(fixElement));
+                    XPT_FREE(arena, fix_array);
                 }
                 fix_array = newFix;
             
@@ -198,7 +226,7 @@ main(int argc, char **argv)
                     fix_array[k].is_deleted = PR_FALSE;
                     fix_array[k].maps_to_file_num = i-2;
                     fix_array[k].maps_to_interface_num = j+1;
-                    
+
                     k++;
                 }
             }
@@ -214,10 +242,10 @@ main(int argc, char **argv)
                 ann->next = header->annotations;
             }
             
-            XPT_FREEIF(header);
+            XPT_FREEIF(arena, header);
             if (state)
                 XPT_DestroyXDRState(state);
-            free(whole);
+            XPT_FREE(arena, whole);
             flen = 0;            
 
         } else {
@@ -285,7 +313,8 @@ main(int argc, char **argv)
                  * and mapping it to the "replacement" element so we can
                  * update interface indices appropriately later.
                  */
-                update_fix_array(fix_array, i-1, totalNumberOfInterfaces, i);
+                update_fix_array(arena, fix_array, i-1, 
+                                 totalNumberOfInterfaces, i);
                 /* Decrement the true number of interfaces since we just
                  * deleted one. There's more than one way to get out of
                  * this loop.
@@ -308,7 +337,7 @@ main(int argc, char **argv)
                      * and mapping it to the "replacement" element so we can
                      * update interface indices appropriately later.
                      */
-                    update_fix_array(fix_array, i, 
+                    update_fix_array(arena, fix_array, i, 
                                      totalNumberOfInterfaces, i-1);
                     /* Decrement the true number of interfaces since we just
                      * deleted one. There's more than one way to get out of
@@ -441,7 +470,7 @@ main(int argc, char **argv)
         }
     }
 
-    header = XPT_NewHeader((PRUint16)trueNumberOfInterfaces);
+    header = XPT_NewHeader(arena, (PRUint16)trueNumberOfInterfaces);
     header->annotations = first_ann;
     for (i=0; i<trueNumberOfInterfaces; i++) {
         if (!copy_IDE(&IDE_array[i], &header->interface_directory[i])) {
@@ -465,7 +494,7 @@ main(int argc, char **argv)
         return 1;
     }
     
-    if (!XPT_DoHeader(cursor, &header)) {
+    if (!XPT_DoHeader(arena, cursor, &header)) {
         perror("FAILED: error doing Header");
         return 1;
     }
@@ -491,6 +520,8 @@ main(int argc, char **argv)
     if (state)
         XPT_DestroyXDRState(state);
     
+    XPT_DestroyArena(arena);
+
     return 0;        
 }
 
@@ -529,6 +560,7 @@ compare_IDEs_by_name(const void *ap,
                      const void *bp)
 {
     const XPTInterfaceDirectoryEntry *ide1 = ap, *ide2 = bp;
+
     int answer = compare_strings(ide1->name, ide2->name);
     if(!answer)
         answer = compare_pointers(ide1->name, ide2->name);
@@ -579,6 +611,7 @@ compare_fixElements_by_name(const void *ap,
                             const void *bp)
 {
     const fixElement *fix1 = ap, *fix2 = bp;
+
     int answer= compare_strings(fix1->name, fix2->name);
     if(!answer)
         answer = compare_pointers(fix1->name, fix2->name);
@@ -627,7 +660,7 @@ shrink_IDE_array(XPTInterfaceDirectoryEntry *ide, int element_to_delete,
  * the array.
  */
 PRBool 
-update_fix_array(fixElement *fix, int element_to_delete, 
+update_fix_array(XPTArena *arena, fixElement *fix, int element_to_delete, 
                  int num_interfaces, int replacement) 
 {
     fixElement *deleted;
@@ -637,7 +670,7 @@ update_fix_array(fixElement *fix, int element_to_delete,
         return PR_FALSE;
     }
 
-    deleted = XPT_CALLOC(sizeof(fixElement));
+    deleted = XPT_CALLOC(arena, sizeof(fixElement));
     if (!copy_fixElement(&fix[element_to_delete], deleted)) {
         return PR_FALSE;
     }

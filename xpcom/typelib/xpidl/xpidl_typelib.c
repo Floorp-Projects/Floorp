@@ -35,6 +35,7 @@ struct priv_data {
     uint16 ifaces;
     GHashTable *interface_map;
     XPTInterfaceDescriptor *current;
+    XPTArena *arena;
     uint16 next_method;
     uint16 next_const;
     uint16 next_type;   /* used for 'additional_types' for idl arrays */
@@ -44,6 +45,7 @@ struct priv_data {
 #define IFACES(state)     (((struct priv_data *)state->priv)->ifaces)
 #define IFACE_MAP(state)  (((struct priv_data *)state->priv)->interface_map)
 #define CURRENT(state)    (((struct priv_data *)state->priv)->current)
+#define ARENA(state)      (((struct priv_data *)state->priv)->arena)
 #define NEXT_METH(state)  (((struct priv_data *)state->priv)->next_method)
 #define NEXT_CONST(state) (((struct priv_data *)state->priv)->next_const)
 #define NEXT_TYPE(state)  (((struct priv_data *)state->priv)->next_type)
@@ -243,7 +245,7 @@ fill_ide_table(gpointer key, gpointer value, gpointer user_data)
     }
 
     ide = &(HEADER(state)->interface_directory[IFACES(state)]);
-    if (!XPT_FillInterfaceDirectoryEntry(ide, &id, holder->name,
+    if (!XPT_FillInterfaceDirectoryEntry(ARENA(state), ide, &id, holder->name,
                                          holder->name_space, NULL)) {
         IDL_tree_error(state->tree, "INTERNAL: XPT_FillIDE failed for %s\n",
                        holder->full_name);
@@ -353,7 +355,8 @@ typelib_prolog(TreeState *state)
     }
     /* find all interfaces, top-level and referenced by others */
     IDL_tree_walk_in_order(state->tree, find_interfaces, state);
-    HEADER(state) = XPT_NewHeader(IFACES(state));
+    ARENA(state) = XPT_NewArena(1024, sizeof(double), "main xpidl arena");
+    HEADER(state) = XPT_NewHeader(ARENA(state), IFACES(state));
 
     /* fill IDEs from hash table */
     IFACES(state) = 0;
@@ -417,13 +420,14 @@ typelib_epilog(TreeState *state)
         }
 
         HEADER(state)->annotations =
-            XPT_NewAnnotation(XPT_ANN_LAST | XPT_ANN_PRIVATE,
-                              XPT_NewStringZ("xpidl 0.99.9"),
-                              XPT_NewStringZ(annotate_val));
+            XPT_NewAnnotation(ARENA(state), 
+                              XPT_ANN_LAST | XPT_ANN_PRIVATE,
+                              XPT_NewStringZ(ARENA(state), "xpidl 0.99.9"),
+                              XPT_NewStringZ(ARENA(state), annotate_val));
         free(annotate_val);
     } else {
         HEADER(state)->annotations =
-            XPT_NewAnnotation(XPT_ANN_LAST, NULL, NULL);
+            XPT_NewAnnotation(ARENA(state), XPT_ANN_LAST, NULL, NULL);
     }
 
     if (!HEADER(state)->annotations) {
@@ -438,7 +442,7 @@ typelib_epilog(TreeState *state)
         !XPT_MakeCursor(xstate, XPT_HEADER, header_sz, cursor))
         goto destroy_header;
 
-    if (!XPT_DoHeader(cursor, &HEADER(state)))
+    if (!XPT_DoHeader(ARENA(state), cursor, &HEADER(state)))
         goto destroy;
 
     XPT_GetXDRData(xstate, XPT_HEADER, &data, &len);
@@ -450,6 +454,9 @@ typelib_epilog(TreeState *state)
     XPT_DestroyXDRState(xstate);
  destroy_header:
     /* XXX XPT_DestroyHeader(HEADER(state)) */
+
+    XPT_FreeHeader(ARENA(state), HEADER(state));
+    XPT_DestroyArena(ARENA(state));
 
     /* XXX should destroy priv_data here */
 
@@ -508,7 +515,8 @@ typelib_interface(TreeState *state)
         }
     }
 
-    id = XPT_NewInterfaceDescriptor(parent_id, 0, 0, interface_flags);
+    id = XPT_NewInterfaceDescriptor(ARENA(state), parent_id, 0, 0, 
+                                    interface_flags);
     if (!id)
         return FALSE;
 
@@ -647,7 +655,8 @@ fill_td_from_type(TreeState *state, XPTTypeDescriptor *td, IDL_tree type)
                 * than on dimension in the arrays
                 */
                 /* setup the additional_type */                
-                if (!XPT_InterfaceDescriptorAddTypes(CURRENT(state), 1)) {
+                if (!XPT_InterfaceDescriptorAddTypes(ARENA(state), 
+                                                     CURRENT(state), 1)) {
                     g_error("out of memory\n");
                     return FALSE;
                 }
@@ -971,7 +980,7 @@ typelib_attr_accessor(TreeState *state, XPTMethodDescriptor *meth,
 
     methflags |= getter ? XPT_MD_GETTER : XPT_MD_SETTER;
     methflags |= hidden ? XPT_MD_HIDDEN : 0;
-    if (!XPT_FillMethodDescriptor(meth, methflags,
+    if (!XPT_FillMethodDescriptor(ARENA(state), meth, methflags,
                                   ATTR_IDENT(state->tree).str, 1))
         return FALSE;
 
@@ -1002,7 +1011,8 @@ typelib_attr_dcl(TreeState *state)
     if (!verify_attribute_declaration(state->tree))
         return FALSE;
 
-    if (!XPT_InterfaceDescriptorAddMethods(id, (PRUint16) (read_only ? 1 : 2)))
+    if (!XPT_InterfaceDescriptorAddMethods(ARENA(state), id, 
+                                           (PRUint16) (read_only ? 1 : 2)))
         return FALSE;
 
     meth = &id->method_descriptors[NEXT_METH(state)];
@@ -1029,7 +1039,7 @@ typelib_op_dcl(TreeState *state)
     if (!verify_method_declaration(state->tree))
         return FALSE;
 
-    if (!XPT_InterfaceDescriptorAddMethods(id, 1))
+    if (!XPT_InterfaceDescriptorAddMethods(ARENA(state), id, 1))
         return FALSE;
 
     meth = &id->method_descriptors[NEXT_METH(state)];
@@ -1050,7 +1060,8 @@ typelib_op_dcl(TreeState *state)
     fprintf(stdout, "DBG: adding method %s (nargs %d)\n",
             IDL_IDENT(op->ident).str, num_args);
 #endif
-    if (!XPT_FillMethodDescriptor(meth, op_flags, IDL_IDENT(op->ident).str,
+    if (!XPT_FillMethodDescriptor(ARENA(state), meth, op_flags, 
+                                  IDL_IDENT(op->ident).str,
                                   (uint8) num_args))
         return FALSE;
 
@@ -1137,7 +1148,7 @@ typelib_const_dcl(TreeState *state)
         gboolean sign;
 
         id = CURRENT(state);
-        if (!XPT_InterfaceDescriptorAddConsts(id, 1))
+        if (!XPT_InterfaceDescriptorAddConsts(ARENA(state), id, 1))
             return FALSE;
         cd = &id->const_descriptors[NEXT_CONST(state)];
 
@@ -1184,7 +1195,7 @@ typelib_const_dcl(TreeState *state)
     }
 
     id = CURRENT(state);
-    if (!XPT_InterfaceDescriptorAddConsts(id, 1))
+    if (!XPT_InterfaceDescriptorAddConsts(ARENA(state), id, 1))
         return FALSE;
     cd = &id->const_descriptors[NEXT_CONST(state)];
 
@@ -1232,7 +1243,8 @@ typelib_const_dcl(TreeState *state)
         XPT_ASSERT(cd->value.wch);
         break;
       case IDLN_TYPE_STRING:
-        cd->value.string = XPT_NewStringZ(IDL_STRING(dcl->const_exp).value);
+        cd->value.string = XPT_NewStringZ(ARENA(state), 
+                                          IDL_STRING(dcl->const_exp).value);
         if (!cd->value.string)
             return FALSE;
         break;

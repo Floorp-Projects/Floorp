@@ -691,8 +691,9 @@ xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList
 
         LOG_AUTOREG(("  finding interfaces in new file: %s\n", name));
 
-        xptiFile fileRecord = xptiFile(nsInt64(size), nsInt64(date),
-                                       name, aWorkingSet);
+        xptiFile fileRecord;
+        fileRecord = xptiFile(nsInt64(size), nsInt64(date),
+                              name, aWorkingSet);
         nsAllocator::Free(name);
 
         if(xptiFileType::IsXPT(fileRecord.GetName()))
@@ -811,10 +812,10 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
         }    
 
         LOG_AUTOREG(("  finding interfaces in file: %s\n", name));
-
     
-        xptiFile fileRecord = xptiFile(nsInt64(size), nsInt64(date),
-                                       name, aWorkingSet);
+        xptiFile fileRecord;
+        fileRecord = xptiFile(nsInt64(size), nsInt64(date),
+                              name, aWorkingSet);
         nsAllocator::Free(name);
 
 //        printf("* found %s\n", fileRecord.GetName());

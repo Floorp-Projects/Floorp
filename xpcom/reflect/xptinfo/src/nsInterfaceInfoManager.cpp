@@ -59,6 +59,14 @@
 #define TRACE(x)
 #endif
 
+#ifdef XPT_INFO_STATS
+#define RECORD_ACCESSED(_r) \
+    do{++((_r)->useCount); \
+       ++((_r)->typelibRecord->useCount); \
+    }while(0)
+#else
+#define RECORD_ACCESSED(_r) ((void)0)
+#endif
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsInterfaceInfoManager, nsIInterfaceInfoManager)
 
@@ -86,17 +94,22 @@ nsInterfaceInfoManager::FreeInterfaceInfoManager()
 }
 
 nsInterfaceInfoManager::nsInterfaceInfoManager()
-    : typelibRecords(NULL), ctor_succeeded(PR_FALSE)
+    : typelibRecords(NULL), ctor_succeeded(PR_FALSE), arena(NULL)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
-
-    if(NS_SUCCEEDED(this->initInterfaceTables()))
+    
+    this->arena = XPT_NewArena(1024 * 10, sizeof(double), 
+                               "nsInterfaceInfoManager arena");
+    
+    if(this->arena && NS_SUCCEEDED(this->initInterfaceTables()))
         ctor_succeeded = PR_TRUE;
+    
+    XPT_NotifyDoneLoading(this->arena);
 }
 
 static
-XPTHeader *getHeader(const nsFileSpec *fileSpec)
+XPTHeader *getHeader(XPTArena *arena, const nsFileSpec *fileSpec)
 {
     XPTState *state = NULL;
     XPTCursor curs;
@@ -125,27 +138,17 @@ XPTHeader *getHeader(const nsFileSpec *fileSpec)
            	goto out;
        	}
 
-//#ifdef XP_MAC
-        // Mac can lie about the filesize, because it includes the resource fork
-        // (where our CVS information lives). So we'll just believe it if it read
-        // less than flen bytes.
-        
-        // sfraser :I believe this comment is inaccurate; the file size we
-        // get will only ever be the data fork, so it should be accurate.
-//            flen = howMany;
-//#else
         if (PRUint32(howMany) < flen) {
             NS_ERROR("typelib short read");
             goto out;
         }
-//#endif
 
         state = XPT_NewXDRState(XPT_DECODE, whole, flen);
         if (!XPT_MakeCursor(state, XPT_HEADER, 0, cursor)) {
             NS_ERROR("MakeCursor failed\n");
             goto out;
         }
-        if (!XPT_DoHeader(cursor, &header)) {
+        if (!XPT_DoHeader(arena, cursor, &header)) {
             NS_ERROR("DoHeader failed\n");
             goto out;
         }
@@ -163,7 +166,7 @@ XPTHeader *getHeader(const nsFileSpec *fileSpec)
 nsresult
 nsInterfaceInfoManager::indexify_file(const nsFileSpec *fileSpec)
 {
-    XPTHeader *header = getHeader(fileSpec);
+    XPTHeader *header = getHeader(arena, fileSpec);
     if (header == NULL) {
         // XXX glean something more meaningful from getHeader?
         return NS_ERROR_FAILURE;
@@ -175,6 +178,16 @@ nsInterfaceInfoManager::indexify_file(const nsFileSpec *fileSpec)
     if (tlrecord == NULL) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
+
+#ifdef XPT_INFO_STATS
+    const char* filename = fileSpec->GetCString();
+#ifdef WIN32
+    const char* ptr = strrchr(filename, '\\');
+    if(ptr)
+        filename = ++ptr;
+#endif
+    tlrecord->filename = PL_strdup(filename);
+#endif
 
     // add it to the list of typelibs; this->typelibRecords record supplied
     // to constructor becomes the 'next' field in the new nsTypelibRecord.
@@ -222,6 +235,10 @@ nsInterfaceInfoManager::indexify_file(const nsFileSpec *fileSpec)
             // XXX copy these values?
             record->name = current->name;
             record->name_space = current->name_space;
+
+#ifdef XPT_INFO_STATS
+            record->useCount = 0;
+#endif
 
             // add it to the name->interfaceRecord table
             // XXX check that result (PLHashEntry *) isn't NULL
@@ -400,6 +417,10 @@ free_nametable_records(PLHashEntry *he, PRIntn index, void *arg)
 
 nsInterfaceInfoManager::~nsInterfaceInfoManager()
 {
+#ifdef XPT_INFO_STATS
+    DumpStats();
+#endif
+
     nsTypelibRecord::DestroyList(typelibRecords);
     if (nameTable) {
         PL_HashTableEnumerateEntries(nameTable,
@@ -408,6 +429,11 @@ nsInterfaceInfoManager::~nsInterfaceInfoManager()
         PL_HashTableDestroy(nameTable);
     }
     delete IIDTable;
+
+    if (this->arena) {
+        XPT_DumpStats(this->arena);
+        XPT_DestroyArena(this->arena);
+    }
 }
 
 NS_IMETHODIMP
@@ -421,6 +447,7 @@ nsInterfaceInfoManager::GetInfoForIID(const nsIID* iid,
         *info = NULL;
         return NS_ERROR_FAILURE;
     }
+    RECORD_ACCESSED(record);
     
     return record->GetInfo((nsInterfaceInfo **)info);
 }
@@ -435,6 +462,7 @@ nsInterfaceInfoManager::GetInfoForName(const char* name,
         *info = NULL;
         return NS_ERROR_FAILURE;
     }
+    RECORD_ACCESSED(record);
 
     return record->GetInfo((nsInterfaceInfo **)info);
 }
@@ -539,3 +567,150 @@ XPTI_FreeInterfaceInfoManager()
 {
     nsInterfaceInfoManager::FreeInterfaceInfoManager();
 }
+
+/* void autoRegisterInterfaces (); */
+NS_IMETHODIMP nsInterfaceInfoManager::AutoRegisterInterfaces()
+{
+  // XXX this is a nop for this implementation.
+  return NS_OK;
+}
+
+/***************************************************************************/
+
+#ifdef XPT_INFO_STATS
+
+struct RecordStats {
+    uint32 total;
+    uint32 accessed;
+    RecordStats() : total(0), accessed(0) {}
+};
+
+static PRBool print_record_stats(nsHashKey *aKey, void *aData, void* closure)
+{
+    nsInterfaceRecord *record = (nsInterfaceRecord*) aData;
+    RecordStats       *stats  = (RecordStats*) closure;
+
+    if(record->useCount)  {
+        printf("%d, %s, %s\n",
+               record->useCount,
+               record->name,
+               record->typelibRecord->filename);
+    }
+
+    ++stats->total;
+    if (record->useCount)
+        ++stats->accessed;
+
+    return PR_TRUE;
+}        
+
+static PRBool build_file_record_stats(nsHashKey *aKey, void *aData, void* closure)
+{
+    nsInterfaceRecord *record = (nsInterfaceRecord*) aData;
+    
+    if (!record->typelibRecord)
+        return PR_TRUE;
+
+    nsHashtable       *table  = (nsHashtable*) closure;
+    nsStringKey        key(record->typelibRecord->filename);
+    RecordStats       *stats  = (RecordStats*) table->Get(&key);
+
+    if (stats) {
+        ++stats->total;
+        if (record->useCount)
+            ++stats->accessed;
+    }
+
+    return PR_TRUE;
+}
+
+static PRBool print_file_record_stats(nsHashKey *aKey, void *aData, void* closure)
+{
+    RecordStats *stats  = (RecordStats*) aData;
+    char* filename = ((nsStringKey*)aKey)->GetString().ToNewCString();
+    
+    printf("%d, %d, %s\n",
+           stats->accessed,
+           stats->total,
+           filename);
+    nsCRT::free(filename);
+    return PR_TRUE;
+}
+        
+static PRBool accumulate_file_stats(nsHashKey *aKey, void *aData, void* closure)
+{
+    RecordStats *stats  = (RecordStats*) aData;
+    RecordStats *accumulatedStats  = (RecordStats*) closure;
+
+    accumulatedStats->total += stats->total;
+    accumulatedStats->accessed += stats->accessed;
+    return PR_TRUE;
+}
+
+static PRBool destroy_file_record_stats(nsHashKey *aKey, void *aData, void* closure)
+{
+    delete (RecordStats*) aData;
+    return PR_TRUE;
+}
+
+void nsInterfaceInfoManager::DumpStats()
+{
+    RecordStats interfaceRecordStats;
+    RecordStats typelibRecordStats;
+    RecordStats moreTypelibRecordStats;
+    
+    printf("<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>\n");
+    printf("START interface info stats\n");
+
+    printf("\n");
+    printf("Interface infos that were actually used (useCount,name,filename):\n");
+    this->IIDTable->Enumerate(print_record_stats, &interfaceRecordStats);
+    
+    printf("=======================\n");
+    printf("%d of %d interfaces accessed\n",
+           (int) interfaceRecordStats.accessed,
+           (int) interfaceRecordStats.total);
+
+    printf("\n");
+    printf("Interface info files that were actually used:\n");
+    
+    nsHashtable fileTable;
+
+    nsTypelibRecord *typelib = typelibRecords;
+    while (typelib) {
+        ++typelibRecordStats.total;
+        if (typelib->useCount) {
+            ++typelibRecordStats.accessed;
+            printf("%s\n", typelib->filename);
+
+            // populate a hashtable for use below
+            nsStringKey key(typelib->filename);
+            fileTable.Put(&key, new RecordStats());
+        }
+        typelib = typelib->next;
+    }
+    
+    printf("=======================\n");
+    printf("%d of %d interface info files accessed\n",
+           (int) typelibRecordStats.accessed,
+           (int) typelibRecordStats.total);
+
+    printf("\n");
+    printf("for each file (interfaces used, total interfaces, filename):\n");
+    this->IIDTable->Enumerate(build_file_record_stats, &fileTable);
+    fileTable.Enumerate(print_file_record_stats);
+
+    fileTable.Enumerate(accumulate_file_stats, &moreTypelibRecordStats);
+
+    printf("=======================\n");
+    printf("%d of %d interfaces accessed in interface info files accessed\n",
+           (int) moreTypelibRecordStats.accessed,
+           (int) moreTypelibRecordStats.total);
+
+    fileTable.Reset(destroy_file_record_stats);
+
+    printf("\nEND interface info stats\n");
+    printf("<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>\n");
+
+}
+#endif

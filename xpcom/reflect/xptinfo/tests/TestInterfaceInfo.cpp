@@ -62,7 +62,7 @@ int main (int argc, char **argv) {
     fprintf(stderr, "\ngetting info for iid2 from above\n");
     iim->GetInfoForIID(iid2, &info2);
 #ifdef DEBUG
-    ((nsInterfaceInfo *)info2)->print(stderr);
+//    ((nsInterfaceInfo *)info2)->print(stderr);
 #endif
 
     fprintf(stderr, "\ngetting iid for 'nsIInputStream'\n");
@@ -71,20 +71,20 @@ int main (int argc, char **argv) {
     fprintf(stderr, "%s iid %s\n", name3, iid2->ToString());
     iim->GetInfoForIID(iid3, &info3);
 #ifdef DEBUG
-    ((nsInterfaceInfo *)info3)->print(stderr);
+//    ((nsInterfaceInfo *)info3)->print(stderr);
 #endif
 
     fprintf(stderr, "\ngetting info for name 'nsIBidirectionalEnumerator'\n");
     iim->GetInfoForName("nsIBidirectionalEnumerator", &info4);
 #ifdef DEBUG
-    ((nsInterfaceInfo *)info4)->print(stderr);
+//    ((nsInterfaceInfo *)info4)->print(stderr);
 #endif
 
     fprintf(stderr, "\nparams work?\n");
     fprintf(stderr, "\ngetting info for name 'nsIServiceManager'\n");
     iim->GetInfoForName("nsIServiceManager", &info5);
 #ifdef DEBUG
-    ((nsInterfaceInfo *)info5)->print(stderr);
+//    ((nsInterfaceInfo *)info5)->print(stderr);
 #endif
 
     // XXX: nsIServiceManager is no more; what do we test with?

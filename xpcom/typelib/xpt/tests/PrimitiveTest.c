@@ -63,25 +63,28 @@ dump_struct(char *label, struct TestData *str)
 }
 
 PRBool
-XDR(XPTCursor *cursor, struct TestData *str)
+XDR(XPTArena *arena, XPTCursor *cursor, struct TestData *str)
 {
     TRY("Do32", XPT_Do32(cursor, &str->bit32));
     TRY("Do16", XPT_Do16(cursor, &str->bit16));
     TRY("Do8",  XPT_Do8 (cursor, &str->bit8[0]));
     TRY("Do8",  XPT_Do8 (cursor, &str->bit8[1]));
-    TRY("DoCString", XPT_DoCString(cursor, &str->cstr));
-    TRY("DoString", XPT_DoString(cursor, &str->str));
+    TRY("DoCString", XPT_DoCString(arena, cursor, &str->cstr));
+    TRY("DoString", XPT_DoString(arena, cursor, &str->str));
     return 0;
 }
 
 int
 main(int argc, char **argv)
 {
+    XPTArena *arena;
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
     char *header, *data, *whole;
     uint32 hlen, dlen, i;
 
+    TRY("XPT_NewArena", (arena = XPT_NewArena(1024, sizeof(double), "main")));
+    
     TRY("NewState (ENCODE)", (state = XPT_NewXDRState(XPT_ENCODE, NULL, 0)));
 
     XPT_SetDataOffset(state, sizeof input);
@@ -90,7 +93,7 @@ main(int argc, char **argv)
 
     dump_struct("before", &input);
 
-    if (XDR(cursor, &input))
+    if (XDR(arena, cursor, &input))
 	return 1;
 
     fprintf(stderr, "ENCODE successful\n");
@@ -127,11 +130,12 @@ main(int argc, char **argv)
     TRY("MakeCursor", XPT_MakeCursor(state, XPT_HEADER, sizeof input, cursor));
     XPT_SetDataOffset(state, sizeof input);
 
-    if (XDR(cursor, &output))
+    if (XDR(arena, cursor, &output))
 	return 1;
     
     dump_struct("after", &output);
     XPT_DestroyXDRState(state);
+    XPT_DestroyArena(arena);
     free(whole);
 
     return 0;

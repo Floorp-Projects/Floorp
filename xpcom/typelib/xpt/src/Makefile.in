@@ -35,7 +35,7 @@ endif
 
 REQUIRES	= $(MODULE)
 
-CSRCS		= xpt_struct.c xpt_xdr.c
+CSRCS		= xpt_arena.c xpt_struct.c xpt_xdr.c
 HOST_CSRCS	= $(CSRCS)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

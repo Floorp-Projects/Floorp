@@ -879,6 +879,7 @@ sub BuildClientDist()
         _InstallFromManifest(":mozilla:xpcom:proxy:public:MANIFEST",                                    "$distdirectory:xpcom:");
 
         _InstallFromManifest(":mozilla:xpcom:reflect:xptinfo:public:MANIFEST",                  "$distdirectory:xpcom:");
+        _InstallFromManifest(":mozilla:xpcom:reflect:xptinfo:public:MANIFEST_IDL",              "$distdirectory:idl:");
         _InstallFromManifest(":mozilla:xpcom:reflect:xptcall:public:MANIFEST",                  "$distdirectory:xpcom:");
 
         _InstallFromManifest(":mozilla:xpcom:typelib:xpt:public:MANIFEST",                              "$distdirectory:xpcom:");

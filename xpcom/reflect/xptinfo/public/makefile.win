@@ -20,14 +20,18 @@
 # Contributor(s): 
 
 
-
 DEPTH=..\..\..\..
 MODULE	= xpcom
 
+XPIDL_MODULE = xpcom_xpti
+
 EXPORTS = \
-    xptinfo.h                       \
-    nsIInterfaceInfoManager.h       \
-    nsIInterfaceInfo.h              \
-    $(NULL)
+	xptinfo.h                       \
+	$(NULL)
+
+XPIDLSRCS = \
+	.\nsIInterfaceInfo.idl          \
+	.\nsIInterfaceInfoManager.idl   \
+	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -31,12 +31,32 @@ LIBRARY_NAME	= xptinfo
 
 REQUIRES	= xpcom
 
+NEW_XPTINFO=1
+
+ifdef NEW_XPTINFO
+
+CPPSRCS		= \
+		xptiFile.cpp	\
+		xptiInterfaceInfo.cpp	\
+		xptiInterfaceInfoManager.cpp	\
+		xptiManifest.cpp	\
+		xptiMisc.cpp	\
+		xptiTypelibGuts.cpp	\
+		xptiWorkingSet.cpp	\
+		xptiZipItem.cpp	\
+		xptiZipLoader.cpp	\
+		$(NULL)
+
+else
+
 CPPSRCS		= \
 		nsInterfaceInfo.cpp \
 		nsInterfaceInfoManager.cpp \
 		nsTypelibRecord.cpp \
 		nsInterfaceRecord.cpp \
 		$(NULL)
+
+endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1

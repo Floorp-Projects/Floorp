@@ -52,7 +52,7 @@ public:
     // Get an enumeration of all the interfaces
     NS_IMETHOD EnumerateInterfaces(nsIEnumerator** emumerator) = 0;
 
-    // XXX other methods?
+    NS_IMETHOD AutoRegisterInterfaces(void) = 0;
 
 };
 
