@@ -21,6 +21,12 @@
 #   in the graph "a -> b <-> c -> d", b and c are strongly connected, and
 #   they depend on d, so b, c, and d should be grouped together.
 
+my %clustered;
+
+my %deps;
+
+my $makecommand;
+
 if ($^O eq "linux") {
   $makecommand = "make";
 } elsif ($^O eq "MSWin32") {
@@ -75,6 +81,7 @@ while ($#dirs != -1) {
   }
 
 }
+print STDERR "\n";
 
 print "digraph G {\n";
 print "    concentrate=true;\n";
@@ -82,27 +89,85 @@ print "    concentrate=true;\n";
 # figure out the internal nodes, and place them in a cluster
 
 print "    subgraph cluster0 {\n";
-print "        node [style=fill];\n";
+print "        node [style=filled];\n";
 print "        color=blue;\n";
 
 foreach $module (sort { scalar keys %{$deps{$b}} <=> scalar keys %{$deps{$a}} } keys %deps) {
-  print "        $module;\n";
+  foreach $depmod ( keys %deps ) {
+    # only in cluster if they are a child too
+    if ($deps{$depmod}{$module}) {
+      print "        $module;\n";
+      $clustered{$module}++;
+      last;
+    }
+  }
 }
 print "    };\n";
 
-# try to figure out "strongly connected components" by looking for cycles
-# keep a list of all visited modules in %clustered
-#foreach $module (keys %deps) {
-#  next if ($clustered{$module});
-#  
-#}
-
-foreach $module (sort { scalar keys %{$deps{$b}} <=> scalar keys %{$deps{$a}} } keys %deps) {
+foreach $module (sort sortby_deps keys %deps) {
   foreach $req ( sort { $deps{$module}{$b} <=> $deps{$module}{$a} }
                  keys %{ $deps{$module} } ) {
-#    print "    $module -> $req [weight=$deps{$module}{$req}];\n";
-    print "    $module -> $req;\n";
+    print "    $module -> $req [weight=$deps{$module}{$req}];\n";
+#    print "    $module -> $req;\n";
   }
 }
 
 print "}";
+
+
+# we're sorting based on clustering
+# order:
+#   - unclustered, with dependencies
+#   - clustered
+#   - unclustered, with no dependencies
+# However, the last group will probably never come in $a or $b, because we're
+# probably only being called from the keys in $deps
+# We'll keep all the logic here, in case we come up with a better scheme later
+sub sortby_deps() {
+
+  $keys_a = scalar keys %{$deps{$a}};
+  $keys_b = scalar keys %{$deps{$b}};
+  
+  # determine if they are the same or not
+  if ($clustered{$a} && $clustered{$b}) {
+    # both in "clustered" group
+    return $keys_a <=> $keys_b;
+  }
+
+  elsif (!$clustered{$a} && !$clustered{$b}) {
+    # not clustered. Do they both have dependencies or both
+    # have no dependencies?
+
+    if (($keys_a && $keys_b) ||
+        (!$keys_a && !$keys_b)) {
+      # both unclustered, and either both have dependencies,
+      # or both don't have dependencies
+      return $keys_a <=> $keys_b;
+    }
+  }
+
+  # if we get here, then they are in different "groups"
+  if ($clustered{$a}) {
+    # b must be unclustered
+    if ($keys_b) {
+      return 1;
+    } else {
+      return -1;
+    }
+  } elsif ($clustered{$b}) {
+    # a must be unclustered
+    if ($keys_a) {
+      return -1;
+    } else {
+      return 1;
+    }
+  } else {
+    # both are unclustered, so the with-dependencies one comes first
+    if ($keys_a) {
+      return -1;
+    } else {
+      return 1;
+    }
+  }
+  
+}
