@@ -67,7 +67,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     NS_IMETHOD    Back();
     NS_IMETHOD    Forward();
-    NS_IMETHOD    Reload(nsURLReloadType aType);
+    NS_IMETHOD    Reload(PRInt32 aType);
     NS_IMETHOD    Stop();
 
     NS_IMETHOD    WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm);
@@ -133,9 +133,12 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
 
 	// nsISessionHistory methods 
-    NS_IMETHOD GoForward(nsIWebShell * prev);
+    NS_IMETHOD GoForward(nsIWebShell * aPrev);
 
-    NS_IMETHOD GoBack(nsIWebShell * prev);
+    NS_IMETHOD GoBack(nsIWebShell * aPrev);
+#ifndef NECKO
+	NS_IMETHOD Reload(nsIWebShell * aPrev, nsURLReloadType aType);
+#endif  /* NECKO */
 
     NS_IMETHOD canForward(PRBool &aResult);
 
@@ -143,7 +146,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     NS_IMETHOD add(nsIWebShell * aWebShell);
 
-    NS_IMETHOD Goto(PRInt32 aHistoryIndex, nsIWebShell * prev);
+    NS_IMETHOD Goto(PRInt32 aHistoryIndex, nsIWebShell * aPrev, PRBool aIsReloading);
 
     NS_IMETHOD getHistoryLength(PRInt32 & aResult);
 

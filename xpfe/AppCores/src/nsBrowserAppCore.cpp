@@ -329,10 +329,12 @@ nsBrowserAppCore::Back()
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::Reload(nsURLReloadType aType)
+nsBrowserAppCore::Reload(PRInt32  aType)
 {
-	printf("fix me!\n");
-	NS_ASSERTION(0,"fix me!");
+#ifndef  NECKO
+	if (mContentAreaWebShell)
+	   Reload(mContentAreaWebShell, (nsURLReloadType) aType);
+#endif /* NECKO */
 	return NS_OK;
 }   
 
@@ -1171,6 +1173,8 @@ end:
 	//Disable the Stop button
 	setAttribute( mWebShell, "canStop", "disabled", "true" );
 
+	//Enable the reload button
+	setAttribute(mWebShell, "canReload", "disabled", "");
     return NS_OK;
 }
 
@@ -1268,6 +1272,16 @@ nsBrowserAppCore::GoForward(nsIWebShell * aPrev)
 	return NS_OK;
 }
 
+#ifndef NECKO
+NS_IMETHODIMP
+nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsURLReloadType aType)
+{
+
+	if (mSHistory)
+		mSHistory->Reload(aPrev, aType);
+	return NS_OK;
+}
+#endif  /* NECKO */
 
 NS_IMETHODIMP
 nsBrowserAppCore::add(nsIWebShell * aWebShell)
@@ -1279,11 +1293,11 @@ nsBrowserAppCore::add(nsIWebShell * aWebShell)
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev)
+nsBrowserAppCore::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev, PRBool aIsReloading)
 {
    nsresult rv;
    if (mSHistory) 
-     rv = mSHistory->Goto(aGotoIndex, aPrev);
+     rv = mSHistory->Goto(aGotoIndex, aPrev, PR_FALSE);
    return rv;
 }
 
