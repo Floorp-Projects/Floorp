@@ -110,49 +110,24 @@ function OpenBrowserWindow()
   handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
   var startpage = handler.defaultArgs;
   var url = handler.chromeUrlForTask;
-  var taskOverlayAppCore = null;
 
-  try {
- 
-    if ((appCore != null) && (taskOverlayAppCore == null)) {
-       taskOverlayAppCore = appCore;
-    } else {
-       CreateTaskOverlayBrowserInstance(taskOverlayAppCore);
-    }
+  // if and only if the current window is a browser window and it has a document with a character
+  // set, then extract the current charset menu setting from the current document and use it to
+  // initialize the new browser window...
+  if (window && (window.windowtype == "navigator:browser") && window.content && window.content.document)
+  {
+    var DocCharset = window.content.document.characterSet;
+    charsetArg = "charset="+DocCharset;
+    dump("*** Current document charset: " + DocCharset + "\n");
+
+    //we should "inherit" the charset menu setting in a new window
+    window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage, charsetArg);
   }
-    
-  catch (ex) {
-
-    if (taskOverlayAppCore == null) {
-      CreateTaskOverlayBrowserInstance(taskOverlayAppCore);
-    }
-  
+  else // forget about the charset information.
+  {
+    window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage);
   }
-
-  if (taskOverlayAppCore != null) {
-       
-      try 
-      {
-          //let's try to extract the current charset menu setting
-          var DocCharset = taskOverlayAppCore.GetDocumentCharset();
-          charsetArg = "charset="+DocCharset;
-          dump("*** Current document charset: " + DocCharset + "\n");
-
-          //we should "inherit" the charset menu setting in a new window
-          window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage, charsetArg);
-      }
- 
-       catch(ex) 
-       { 
-          dump("*** failed to read document charset \n");
-       }
-
-  } else {
-      //if everythig else fails, forget about the charset
-      window.openDialog(url, "_blank", "chrome,all,dialog=no", startpage);
-  }
-
- }
+}
 
 
 function CycleWindow( inType, inChromeURL )
@@ -454,30 +429,3 @@ function toImport()
 						{importType: "addressbook"});
 }
 
-function CreateTaskOverlayBrowserInstance(taskOverlayAppCore)
-{
-    //Create browser instance
-    try {
-      taskOverlayAppCore = Components
-                  .classes[ "component://netscape/appshell/component/browser/instance" ]
-                    .createInstance( Components.interfaces.nsIBrowserInstance );
-    }
-
-    catch (ex) {
-      dump( "Error creating browser instance\n" );
-      return;
-    }
-
-    // now initialize it
-    try {
-      taskOverlayAppCore.setWebShellWindow(window);
-      if ( window.content ) {
-          dump("Setting content window\n");
-          taskOverlayAppCore.setContentWindow( window.content );
-      }
-    }
-
-    catch(ex) {
-        dump("Failed to create and initialiaze the AppCore...\n");
-    }
-}
