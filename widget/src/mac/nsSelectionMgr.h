@@ -18,14 +18,14 @@
 
 #include "nsISelectionMgr.h"
 
-class stringstream;
+#include <strstream.h>
 
 /**
  * Selection Manager for the Mac.
  * Owns the copied text, listens for selection request events.
  */
 
-class nsSelectionMgr : nsISelectionMgr
+class nsSelectionMgr : public nsISelectionMgr
 {
 public:
   nsSelectionMgr();
@@ -39,6 +39,6 @@ public:
 
 private:
   stringstream* mCopyStream;
-}
+};
 
 nsresult NS_NewSelectionMgr(nsISelectionMgr** aInstancePtrResult);

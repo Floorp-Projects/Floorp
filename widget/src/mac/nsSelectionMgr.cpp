@@ -22,9 +22,10 @@
 #include <string>
 #include <Scrap.h>
 #include <TextEdit.h>
+#include "nscore.h"
 
-NS_IMPL_ADDREF(nsDialog)
-NS_IMPL_RELEASE(nsDialog)
+NS_IMPL_ADDREF(nsSelectionMgr)
+NS_IMPL_RELEASE(nsSelectionMgr)
 
 nsSelectionMgr::nsSelectionMgr()
 {
@@ -35,6 +36,29 @@ nsSelectionMgr::nsSelectionMgr()
 
 nsSelectionMgr::~nsSelectionMgr()
 {
+}
+
+nsresult nsSelectionMgr::QueryInterface(const nsIID& aIID,
+                                        void** aInstancePtrResult)
+{
+  NS_PRECONDITION(aInstancePtrResult, "null pointer");
+  if (!aInstancePtrResult) 
+  {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(nsISupports::IID())) 
+  {
+    *aInstancePtrResult = (void*)(nsISupports*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(nsISelectionMgr::IID())) 
+  {
+    *aInstancePtrResult = (void*)(nsISelectionMgr*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return !NS_OK;
 }
 
 nsresult nsSelectionMgr::GetCopyOStream(ostream** aStream)
