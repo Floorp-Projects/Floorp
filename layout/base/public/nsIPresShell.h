@@ -283,20 +283,45 @@ public:
   /**
    * Get the caret, if it exists. AddRefs it.
    */
-  NS_IMETHOD GetCaret(nsICaret **outCaret) = 0;
+  NS_IMETHOD GetCaret(nsICaret **aOutCaret) = 0;
   
   /**
    * Set the caret as enabled or disabled. An enabled caret will
-   * draw orblink when made visible. A disabled caret will never show up.
+   * draw or blink when made visible. A disabled caret will never show up.
+   * Can be called any time.
+   * @param aEnable PR_TRUE to enable caret.  PR_FALSE to disable.
+   * @return always NS_OK
    */
-  NS_IMETHOD SetCaretEnabled(PRBool inEnable) = 0;
+  NS_IMETHOD SetCaretEnabled(PRBool aInEnable) = 0;
 
   /**
-   * Should the images have borders ect.
-  */
-  NS_IMETHOD SetDisplayNonTextSelection(PRBool inEnable) = 0;
+   * Gets the current state of the caret.
+   * @param aEnabled  [OUT] set to the current caret state, as set by SetCaretEnabled
+   * @return   if aOutEnabled==null, returns NS_ERROR_INVALID_ARG
+   *           else NS_OK
+   */
+  NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled) = 0;
 
-  NS_IMETHOD GetDisplayNonTextSelection(PRBool *inEnable) = 0;
+  /**
+   * Should the images have borders etc.  Actual visual effects are determined
+   * by the frames.  Visual effects may not effect layout, only display.
+   * Takes effect on next repaint, does not force a repaint itself.
+   *
+   * @param aEnabled  if PR_TRUE, visual selection effects are enabled
+   *                  if PR_FALSE visual selection effects are disabled
+   * @return  always NS_OK
+   */
+  NS_IMETHOD SetDisplayNonTextSelection(PRBool aInEnable) = 0;
+
+  /** 
+    * Gets the current state of non text selection effects
+    * @param aEnabled  [OUT] set to the current state of non text selection,
+    *                  as set by SetDisplayNonTextSelection
+    * @return   if aOutEnabled==null, returns NS_ERROR_INVALID_ARG
+    *           else NS_OK
+    */
+  NS_IMETHOD GetDisplayNonTextSelection(PRBool *aOutEnabled) = 0;
+
   // XXX events
   // XXX selection
 
