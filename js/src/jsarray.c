@@ -564,12 +564,8 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
     for (index = 0; index < length; index++) {
 	if (!IndexToId(cx, index, &id))
 	    return JS_FALSE;
-	if (!OBJ_DEFINE_PROPERTY(cx, obj, id, vector[index],
-                                 JS_PropertyStub, JS_PropertyStub,
-                                 JSPROP_ENUMERATE,
-                                 NULL)) {
+	if (!OBJ_SET_PROPERTY(cx, obj, id, &vector[index]))
 	    return JS_FALSE;
-	}
     }
     return JS_TRUE;
 }
@@ -618,29 +614,30 @@ array_reverse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     return JS_TRUE;
 }
 
-typedef struct QSortArgs {
+typedef struct HSortArgs {
     void         *vec;
     size_t       elsize;
     void         *pivot;
     JSComparator cmp;
     void         *arg;
-} QSortArgs;
+} HSortArgs;
 
 static int
 sort_compare(const void *a, const void *b, void *arg);
 
 static void
-js_qsort_r(QSortArgs *qa, int lo, int hi)
+HeapSortHelper(HSortArgs *qa, int lo, int hi)
 {
-    void *pivot, *vec, *arg, *a, *b;
+    void *pivot, *vec, *vec2, *arg, *a, *b;
     size_t elsize;
     JSComparator cmp;
     JSBool fastmove;
-    int i, j, lohi, hilo;
+    int j, hiDiv2;
 
     pivot = qa->pivot;
     vec = qa->vec;
     elsize = qa->elsize;
+    vec2 =  (char *)vec - 2 * elsize;
     cmp = qa->cmp;
     arg = qa->arg;
 
@@ -648,51 +645,51 @@ js_qsort_r(QSortArgs *qa, int lo, int hi)
 #define MEMMOVE(p,q,n) \
     (fastmove ? (void)(*(jsval*)(p) = *(jsval*)(q)) : (void)memmove(p, q, n))
 
-    while (lo < hi) {
-        i = lo;
-        j = hi;
-        a = (char *)vec + i * elsize;
+    if (lo == 1) {
+        j = 2;
+        b = (char *)vec + elsize;
+        if (j < hi && cmp((char *)vec, b, arg) < 0)
+            j++;
+        a = (char *)vec + (hi - 1) * elsize;
+        b = (char *)vec2 + j * elsize;
+        if (cmp(a, b, arg) >= 0)
+            return;
+
         MEMMOVE(pivot, a, elsize);
-        while (i < j) {
-            b = (char *)vec + j * elsize;
-            if (cmp(b, pivot, arg) >= 0) {
-                j--;
-                continue;
-            }
-            MEMMOVE(a, b, elsize);
-            while (cmp(a, pivot, arg) <= 0) {
-                i++;
-                a = (char *)vec + i * elsize;
-                if (i == j)
-                    goto store_pivot;
-            }
-            MEMMOVE(b, a, elsize);
-        }
-        if (i > lo) {
-      store_pivot:
-            MEMMOVE(a, pivot, elsize);
-        }
-        if (i - lo < hi - i) {
-            lohi = i - 1;
-            if (lo < lohi)
-                js_qsort_r(qa, lo, lohi);
-            lo = i + 1;
-        } else {
-            hilo = i + 1;
-            if (hilo < hi)
-                js_qsort_r(qa, hilo, hi);
-            hi = i - 1;
-        }
+        MEMMOVE(a, b, elsize);
+        lo = j;
+    } else {
+        a = (char *)vec2 + lo * elsize;
+        MEMMOVE(pivot, a, elsize);
     }
 
+    hiDiv2 = hi/2;
+    while (lo <= hiDiv2) {
+        j = lo + lo;
+        a = (char *)vec2 + j * elsize;
+        b = (char *)vec + (j - 1) * elsize;
+        if (j < hi && cmp(a, b, arg) < 0)
+            j++;
+        b = (char *)vec2 + j * elsize;
+        if (cmp(pivot, b, arg) >= 0)
+            break;
+
+        a = (char *)vec2 + lo * elsize;
+        MEMMOVE(a, b, elsize);
+        lo = j;
+    }
+
+    a = (char *)vec2 + lo * elsize;
+    MEMMOVE(a, pivot, elsize);
 #undef MEMMOVE
 }
 
 JSBool
-js_qsort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg)
+js_HeapSort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg) 
 {
     void *pivot;
-    QSortArgs qa;
+    HSortArgs qa;
+    int i;
 
     pivot = malloc(elsize);
     if (!pivot)
@@ -702,7 +699,12 @@ js_qsort(void *vec, size_t nel, size_t elsize, JSComparator cmp, void *arg)
     qa.pivot = pivot;
     qa.cmp = cmp;
     qa.arg = arg;
-    js_qsort_r(&qa, 0, (int)(nel - 1));
+
+    for (i = nel/2; i > 0; i--)
+        HeapSortHelper(&qa, i, (int) nel);
+    while (nel > 2)
+        HeapSortHelper(&qa, 1, (int) --nel);
+
     free(pivot);
     return JS_TRUE;
 }
@@ -829,7 +831,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     ca.context = cx;
     ca.fval = fval;
     ca.status = JS_TRUE;
-    if (!js_qsort(vec, (size_t) len, sizeof(jsval), sort_compare, &ca)) {
+    if (!js_HeapSort(vec, (size_t) len, sizeof(jsval), sort_compare, &ca)) {
 	JS_ReportOutOfMemory(cx);
 	ca.status = JS_FALSE;
     }
