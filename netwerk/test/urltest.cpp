@@ -119,6 +119,12 @@ nsresult testURL(const char* i_pURL)
 	return 0;
 }
 
+nsresult NS_AutoregisterComponents()
+{
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+  return rv;
+}
+
 int main(int argc, char **argv)
 {
     nsresult result = NS_OK;
@@ -128,8 +134,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    result = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                              "components");
+    result = NS_AutoregisterComponents();
 	if (NS_FAILED(result)) return result;
 
 	if (PL_strncasecmp(argv[1], "-all", 4) == 0)
@@ -141,4 +146,3 @@ int main(int argc, char **argv)
 
     return result;
 }
-

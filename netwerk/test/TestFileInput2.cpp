@@ -411,6 +411,12 @@ Test(CreateFun create, PRUint32 count,
 
 ////////////////////////////////////////////////////////////////////////////////
 
+nsresult NS_AutoregisterComponents()
+{
+  nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, NULL /* default */);
+  return rv;
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -423,8 +429,7 @@ main(int argc, char* argv[])
     char* inDir = argv[1];
     char* outDir = argv[2];
 
-    rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                          "components");
+    rv = NS_AutoregisterComponents();
     if (NS_FAILED(rv)) return rv;
 
     CreateFun create = FileChannelWorker::Create;
