@@ -40,7 +40,11 @@
 #include <errno.h>
 #ifdef XPU_USE_THREADS
 #include <time.h>
+#ifdef XPU_USE_NSPR
+#include <prthread.h>
+#else
 #include <pthread.h>
+#endif
 #else
 #ifdef __sun
 #include <wait.h>
