@@ -179,12 +179,14 @@ install:: fontEncoding.properties
 endif
 
 ifdef MOZ_ENABLE_GTK2
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
+EXTRA_DSO_LDOPTS += \
+		$(LIBS_DIR) \
 		-lgkgfx \
 		-lgfxshared_s \
 		$(GFX_XINERAMA_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 endif
 
