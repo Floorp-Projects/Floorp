@@ -21,6 +21,7 @@
 import os
 import sys
 
+import unittest
 import test.regrtest # The standard Python test suite.
 
 path = os.path.abspath(os.path.split(sys.argv[0])[0])
@@ -34,9 +35,15 @@ for arg in sys.argv[1:]:
         tests.append(arg)
 tests = tests or test.regrtest.findtests(path, [])
 try:
+    # unittest based tests first - hopefully soon this will be the default!
+    if not sys.argv[1:]:
+        for t in "test_misc".split():
+            m = __import__(t)
+            try:
+                unittest.main(m)
+            except SystemExit:
+                pass
     test.regrtest.main(tests, path)
 finally:
     from xpcom import _xpcom
     _xpcom.NS_ShutdownXPCOM() # To get leak stats and otherwise ensure life is good.
-
-
