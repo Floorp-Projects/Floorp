@@ -125,9 +125,9 @@ fix the problem on your installation.
   option "The bug is resolved or verified" to achieve part of this.
   (bug 130821)
 
-*********************************************
-*** USERS UPGRADING FROM 2.16 OR EARLIER  ***
-*********************************************
+***********************************************
+*** USERS UPGRADING FROM 2.16.1 OR EARLIER  ***
+***********************************************
 
 *** SECURITY ISSUES RESOLVED ***
 
@@ -137,8 +137,78 @@ fix the problem on your installation.
 
 *** Bug fixes of note ***
 
+*********************************************
+*** USERS UPGRADING FROM 2.16 OR EARLIER  ***
+*********************************************
+
+*** SECURITY ISSUES RESOLVED ***
+
+- Apostrophes were not properly handled in email addresses.  This was a
+  regression introduced in 2.16.  It is not known whether this was
+  exploitable.
+  (bug 165221)
+
+See also next major section.
+
+*** Bug fixes of note ***
+
+- The VERSION cookie which allowed the previously entered version of a product
+  to be remembered was not correctly set.  It was only set as a session
+  cookie, and under some circumstances could interfere with other cookies
+  (such as the login information) send at the same time.
+  (bug 160227)
+
+- importxml.pl would fail if the versioncache needed to be updated.
+  (bug 164464)
+
+- Bug changes going through intermediate pages would munge fields with
+  multiple fields, such as CCs.
+  (bug 161203)
+
+- On failure in template->new, Bugzilla will now die rather than futilely
+  attempt to use an error template.
+  (bug 166023)
+
+- Fixed a problem where checksetup had problems converting old installations
+  that didn't have a duplicates table.
+  (bug 151619)
+
+- Fixed a problem that caused taint errors when viewing or editing user
+  preferences with Perl 5.005 and Template 2.08.
+  (bug 160710)
+
+See also next section.
+
+******************************************************
+*** USERS UPGRADING FROM 2.14.3 OR EARLIER, 2.16.0 ***
+******************************************************
+
+*** SECURITY ISSUES RESOLVED ***
+
+- When a new product is added to an installation with 47 groups or more and
+  "usebuggroups" is enabled, the new group will be assigned a groupset bit
+  using Perl math that is not exact beyond 2^48.  This results in the new
+  group being defined with a "bit" that has several bits set.  As users are
+  given access to the new group, those users will also gain access to
+  spurious lower group privileges.  Also, group bits were not always reused
+  when groups were deleted.
+  (bug 167485)
+
+- The email interface had another insecure single parameter system call.  This
+  could potentially allow arbitrary shell commands to be run.  This file is
+  not supported at this time, but as long as we knew about the problem, we
+  couldn't overlook it.
+  (bug 163024)
+
+*** Bug fixes of note ***
+
+- The email interface was broken.  This was a 2.14.3 regression.  This file
+  is not supported at this time, but as long as we knew about the problem, we
+  couldn't overlook it.
+  (bug 160631)
+
 ***********************************************
-*** USERS UPGRADING FROM 2.14.2 OR EARLIER  ***
+*** USERS UPGRADING FROM 2.14.4 OR EARLIER  ***
 ***********************************************
 
 *** SECURITY ISSUES RESOLVED ***
@@ -353,6 +423,32 @@ fix the problem on your installation.
 - QA contacts now receive emails when a new bug is created and
   their only email preference was being added or removed from QA.
   (bug 143091)
+
+***********************************************
+*** USERS UPGRADING FROM 2.14.3 OR EARLIER  ***
+***********************************************
+
+See section above about users upgrading from 2.16.0 or earlier.
+
+***********************************************
+*** USERS UPGRADING FROM 2.14.2 OR EARLIER  ***
+***********************************************
+
+*** SECURITY ISSUES RESOLVED ***
+
+- Basic maintenance on contrib/bug_email.pl and
+  contrib/bugzilla_email_append.pl which also fixes a
+  possible security hole with a misuse of a system() call.
+  These files are not supported at this time, but as long
+  as we knew about the problem, we couldn't overlook it.
+  (bug 154008)
+
+*** Bug fixes of note ***
+
+- The fix for bug 130821 in 2.14.2 broke being able to sort
+  bug lists on more than one field.  buglist.cgi now allows
+  you to sort on more than one field again.
+  (bug 152138)
 
 ***********************************************
 *** USERS UPGRADING FROM 2.14.1 OR EARLIER  ***
