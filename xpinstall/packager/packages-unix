@@ -95,6 +95,7 @@ bin/components/libucvlatin.so
 bin/components/libucvtw.so
 bin/components/libucvtw2.so
 bin/components/libunicharutil.so
+bin/components/liburiloader.so
 bin/components/libwallet.so
 bin/components/libwalletviewers.so
 bin/components/libxpconnect.so
@@ -127,6 +128,7 @@ bin/components/related.xpt
 bin/components/sample.xpt
 bin/components/signonviewer.xpt
 bin/components/unicharutil.xpt
+bin/components/uriloader.xpt
 bin/components/walleteditor.xpt
 bin/components/walletpreview.xpt
 bin/components/widget.xpt
