@@ -2079,7 +2079,12 @@ nsHttpChannel::SetApplyConversion(PRBool value)
 NS_IMETHODIMP
 nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
-    LOG(("nsHttpChannel::OnStartRequest [this=%x request=%x]\n", this, request));
+    // capture the request's status, so our consumers will know ASAP of any
+    // connection failures, etc - bug 93581
+    request->GetStatus(&mStatus);
+
+    LOG(("nsHttpChannel::OnStartRequest [this=%x request=%x status=%x]\n",
+        this, request, mStatus));
 
     if (mTransaction) {
         // grab the security info from the connection object; the transaction
