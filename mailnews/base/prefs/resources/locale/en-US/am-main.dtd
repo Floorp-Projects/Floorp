@@ -5,7 +5,7 @@
 <!ENTITY accountName.label "Account Name:">
 <!ENTITY accountNameDesc.label "The account name is used to identify each account">
 <!ENTITY identityTitle.label "Identity">
-<!ENTITY identityDesc.label "Each account can have its own identity, which is the information that other people see when they read your messages.">
+<!ENTITY identityDesc.label "Each account has an identity, which is the information that other people see when they read your messages.">
 <!ENTITY name.label "Your Name:">
 <!ENTITY email.label "Email Address:">
 <!ENTITY replyTo.label "Reply-to Address:">

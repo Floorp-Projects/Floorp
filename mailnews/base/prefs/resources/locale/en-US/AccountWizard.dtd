@@ -18,7 +18,7 @@
 <!-- Entities for Identity page -->
 
 <!ENTITY identityTitle.label "Identity">
-<!ENTITY identityDesc.label "Each account can have its own identity, which is the information that identifies you to others when they receive your messages.">
+<!ENTITY identityDesc.label "Each account has an identity, which is the information that identifies you to others when they receive your messages.">
 
 <!-- LOCALIZATION NOTE (fullnameDesc.label) : do not translate two of "&quot;" in below line -->
 <!ENTITY fullnameDesc.label "Enter the name you would like to appear in the &quot;From&quot; field of your outgoing messages">
