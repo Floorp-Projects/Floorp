@@ -214,6 +214,7 @@ int main(int argc, char **argv)
         if (NET_PollSockets() == PR_FALSE) urlLoaded = 1;
     }
 
+    pURL->Release();
     pNetlib->Release();
 
     return 0;
