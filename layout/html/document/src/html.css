@@ -202,25 +202,26 @@ q:after {
   content: close-quote;
 }
 
-a[href]:link {
+:link {
   color: blue;
   text-decoration: underline;
   cursor: pointer;
 }
-a[href]:visited {
+:visited {
   color: purple;
   text-decoration: underline;
   cursor: pointer;
 }
-a[href]:focus, a[href]:focus img {
+:link:focus, :visited:focus, :out-of-date:focus,
+:link:focus img, :visited:focus img, :out-of-date:focus img {
   outline: 1px dotted black;
 }
-a[href]:active {
+:link:active, :visited:active, :out-of-date:active {
   color: red;
   text-decoration: underline;
   cursor: pointer;
 }
-a[href]:out-of-date {
+:out-of-date {
   color: lime;
   text-decoration: underline;
   cursor: pointer;
@@ -424,8 +425,9 @@ img[align=left] {
 img[align=right] {
   margin-left: 4px;
 }
-a[href]:link img, a[href]:visited img, a[href]:active img,
-a[href]:out-of-date img, img[usemap], object[usemap] {
+:link img, :visited img, :out-of-date img,
+:link:active img, :visited:active img, :out-of-date:active img,
+img[usemap], object[usemap] {
   border: 2px solid;
   cursor: pointer;
 }
