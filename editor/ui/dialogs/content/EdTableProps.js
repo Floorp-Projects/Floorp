@@ -228,6 +228,11 @@ function Startup()
   lastRowIndex = rowCount-1;
   colCount = editorShell.GetTableColumnCount(TableElement);
   lastColIndex = colCount-1;
+  
+  // If only one cell, disable change-selection widgets
+  dialog.SelectionList.setAttribute("disabled", "true");
+  dialog.PreviousButton.setAttribute("disabled", "true");
+  dialog.NextButton.setAttribute("disabled", "true");
 
   // User can change these via textfields  
   newRowCount = rowCount;
@@ -349,8 +354,10 @@ function InitCellPanel()
         dialog.CellHAlignList.selectedIndex = 4;
         dialog.CellAlignCharInput.value = alignChar;
         break;
-      default:  // left
-        dialog.CellHAlignList.selectedIndex = 0;
+      default:  
+        // Default depends on cell type (TH is "center", TD is "left")
+        dialog.CellHAlignList.selectedIndex = 
+          (globalCellElement.nodeName.toLowerCase() == "th") ? 1 : 0;
         break;
     }
     dialog.CellHAlignCheckbox.checked = AdvancedEditUsed && 
@@ -906,7 +913,12 @@ function ValidateCellData()
     if (hAlign != charStr)
       globalCellElement.removeAttribute(charStr);
   
-    if (hAlign == "left")
+    // Don't write attribute for default case,
+    //  which is "left" for TD, "center" for TH
+    var isTH = globalCellElement.nodeName.toLowerCase() == "th";
+
+    if ((isTH && hAlign ==  "center") ||
+        (!isTH && hAlign == "left"))
     {
       globalCellElement.removeAttribute("align");
     }
