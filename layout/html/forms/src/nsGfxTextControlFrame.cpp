@@ -1898,7 +1898,9 @@ nsEnderKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
     event.message = NS_KEY_DOWN;
     event.flags = NS_EVENT_FLAG_INIT;
     uiEvent->GetKeyCode(&(event.keyCode));
-    uiEvent->GetCharCode(&(event.charCode));
+    /* CharCode is invalid for KEY_DOWN */
+    // uiEvent->GetCharCode(&(event.charCode));
+    event.charCode = 0;
     uiEvent->GetShiftKey(&(event.isShift));
     uiEvent->GetCtrlKey(&(event.isControl));
     uiEvent->GetAltKey(&(event.isAlt));
@@ -1932,7 +1934,9 @@ nsEnderKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
     event.message = NS_KEY_UP;
     event.flags = NS_EVENT_FLAG_INIT;
     uiEvent->GetKeyCode(&(event.keyCode));
-    uiEvent->GetCharCode(&(event.charCode));
+    /* CharCode is invalid for KEY_UP */
+    // uiEvent->GetCharCode(&(event.charCode));
+    event.charCode = 0;
     uiEvent->GetShiftKey(&(event.isShift));
     uiEvent->GetCtrlKey(&(event.isControl));
     uiEvent->GetAltKey(&(event.isAlt));
