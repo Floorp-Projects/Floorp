@@ -300,7 +300,7 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
   nsCOMPtr <nsIEntityConverter> entityConv;
   res = nsComponentManager::CreateInstance(kEntityConverterCID, NULL, 
                                            nsIEntityConverter::GetIID(), getter_AddRefs(entityConv));
-  if(NS_SUCCEEDED(res) && (NULL != entityConv)) {
+  if(NS_SUCCEEDED(res)) {
     PRUnichar *entities = NULL;
     res = entityConv->ConvertToEntities(inString.GetUnicode(), nsIEntityConverter::html40Latin1, &entities);
     if (NS_SUCCEEDED(res) && (NULL != entities)) {
