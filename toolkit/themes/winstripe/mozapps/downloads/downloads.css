@@ -98,3 +98,21 @@ download[state="5"], download[state="6"] {
   border: 1px dotted black;
 }
 
+#folderIcon {
+  width: 16px;
+  height: 16px;  
+}
+
+#folderName {
+  width: 0px;
+}
+
+#saveToFolder {
+  padding: 0px 6px 3px 5px; 
+}
+
+#saveToFolder .toolbarbutton-text {
+  text-align: left;
+  margin-left: 5px !important;
+}
+

@@ -32,11 +32,14 @@
 <!ENTITY cmd.cleanUp.tooltip              "Removes completed, canceled or failed downloads from the list">
 <!ENTITY cmd.cleanUp.accesskey            "a">
 
-<!ENTITY cmd.options.label                "Options">
-<!ENTITY cmd.options.accesskey            "O">
-<!ENTITY cmd.optionsUnix.label            "Preferences">
-<!ENTITY cmd.optionsUnix.accesskey        "n">
+<!ENTITY cmd.change.label                 "Change...">
+<!ENTITY cmd.change.accesskey             "C">
+<!ENTITY cmd.change.tooltip               "Change how and where to save files to">
 
 <!ENTITY closeWhenDone.label              "Close when downloads complete">
 <!ENTITY closeWhenDone.tooltip            "Closes the Downloads window when all files are done downloading">
+
+<!ENTITY filesSavedTo.label               "All files downloaded to:">
+<!ENTITY showFolder.label                 "Show this Folder">
+
 
