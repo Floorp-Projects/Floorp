@@ -408,6 +408,31 @@ static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
   if (!wwatch || !sarg)
     return NS_ERROR_FAILURE;
 
+  // Make sure a profile is selected.
+
+  // We need the native app support object, which we get from
+  // the app shell service.  If this fails, we still proceed.
+  // That's because some platforms don't have a native app
+  // support implementation.  On those platforms, "ensuring a
+  // profile" is moot (because they don't support "-turbo",
+  // basically).  Specifically, because they don't do turbo, they will
+  // *always* have a profile selected.
+  nsCOMPtr<nsIAppShellService> appShell(do_GetService("@mozilla.org/appshell/appShellService;1"));
+  nsCOMPtr <nsICmdLineService> cmdLine(do_GetService("@mozilla.org/appshell/commandLineService;1"));
+  if (appShell && cmdLine)
+  {
+    nsCOMPtr<nsINativeAppSupport> nativeApp;
+    if (NS_SUCCEEDED(appShell->GetNativeAppSupport(getter_AddRefs(nativeApp))))
+    {
+      // Make sure profile has been selected.
+      // At this point, we have to look for failure.  That
+      // handles the case where the user chooses "Exit" on
+      // the profile manager window.
+      if (NS_FAILED(nativeApp->EnsureProfile(cmdLine)))
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+  }
+
   sarg->SetData(aAppArgs.get());
 
   nsCAutoString features("chrome,dialog=no,all");
