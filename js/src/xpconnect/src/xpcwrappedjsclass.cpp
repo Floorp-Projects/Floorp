@@ -82,7 +82,7 @@ static inline void DoPostScriptEvaluated(JSContext* cx, JSExceptionState* state)
 
     nsISupports *supports =
         (JS_GetOptions(cx) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
-        ? NS_STATIC_CAST(nsIScriptContext*, JS_GetContextPrivate(cx))
+        ? NS_STATIC_CAST(nsISupports*, JS_GetContextPrivate(cx))
         : nsnull;
     if(supports)
     {
