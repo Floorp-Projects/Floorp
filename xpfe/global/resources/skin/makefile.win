@@ -102,6 +102,7 @@ install::
 	$(MAKE_INSTALL) search.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) animthrob.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) animthrob_single.gif $(DISTBROWSER)
+  $(MAKE_INSTALL) wizardOverlay.css $(DISTBROWSER)
 	
 clobber::
   rm -f $(DIST)\bin\chrome\global\skin\default\*.*
