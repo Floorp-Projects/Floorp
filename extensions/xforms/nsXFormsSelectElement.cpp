@@ -361,7 +361,10 @@ nsXFormsSelectElement::HandleEvent(nsIDOMEvent *aEvent)
 
   nsAutoString value;
   mElement->GetAttribute(NS_LITERAL_STRING("incremental"), value);
-  PRBool isIncremental = value.EqualsLiteral("true");
+
+  // the default incremental value for a select element is 'true' according
+  // to the spec, so if there is no incremental value, assume true.
+  PRBool isIncremental = !value.EqualsLiteral("false");
 
   if ((isIncremental && type.EqualsLiteral("change")) ||
       (!isIncremental && type.EqualsLiteral("blur"))) {
