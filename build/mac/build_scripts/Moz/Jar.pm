@@ -416,6 +416,8 @@ sub registerChromePackage($$$$$$)
     my($manifest_subdir) = $jar_file;
     $manifest_subdir =~ s/:/\//g;
     
+    if (index($manifest_subdir, "-unix") == -1 && index($manifest_subdir, "-win") == -1) {
+
     my($chrome_entry);
     
     if ($main::options{use_jars}) {
@@ -451,6 +453,7 @@ sub registerChromePackage($$$$$$)
     print(CHROMEFILE "${chrome_entry}\n");
     close(CHROMEFILE) || die "Error: Failed to close $inst_chrome\n";
     print "+++ adding chrome $inst_chrome\n+++\t\t$chrome_entry\n";
+  }
 }
 
 #-------------------------------------------------------------------------------
