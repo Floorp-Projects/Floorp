@@ -240,7 +240,6 @@ public:
   virtual void NormalMessageEndDownload();
   virtual void AbortMessageDownLoad();
   virtual void PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete);
-  virtual void AddXMozillaStatusLine(uint16 flags);	// for XSender auth info
   
   virtual void SetMailboxDiscoveryStatus(EMailboxDiscoverStatus status);
   virtual EMailboxDiscoverStatus GetMailboxDiscoveryStatus();

@@ -2486,6 +2486,7 @@ nsresult nsImapProtocol::BeginMessageDownLoad(
   //total_message_size)); 
   if (content_type)
   {
+    m_fromHeaderSeen = PR_FALSE;
     if (GetServerStateParser().GetDownloadingHeaders())
     {
       m_hdrDownloadCache.StartNewHdr(getter_AddRefs(m_curHdrInfo));
@@ -3119,12 +3120,6 @@ void nsImapProtocol::PipelinedFetchMessageParts(nsCString &uid, nsIMAPMessagePar
   }
 }
 
-void
-nsImapProtocol::AddXMozillaStatusLine(uint16 /* flags */) // flags not use now
-{
-  static char statusLine[] = "X-Mozilla-Status: 0201\r\n";
-  HandleMessageDownLoadLine(statusLine, PR_FALSE);
-}
 
 void
 nsImapProtocol::PostLineDownLoadEvent(msg_line_info *downloadLineDontDelete)
@@ -3242,15 +3237,21 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
     }
   }
   
+  // check if sender obtained via XSENDER server extension matches "From:" field
   const char *xSenderInfo = GetServerStateParser().GetXSenderInfo();
-  
   if (xSenderInfo && *xSenderInfo && !m_fromHeaderSeen)
   {
     if (!PL_strncmp("From: ", localMessageLine, 6))
     {
       m_fromHeaderSeen = PR_TRUE;
       if (PL_strstr(localMessageLine, xSenderInfo) != NULL)
-        AddXMozillaStatusLine(0);
+          // Adding a X-Mozilla-Status line here is not very elegant but it
+          // works.  Another X-Mozilla-Status line is added to the message when
+          // downloading to a local folder; this new line will also contain the
+          // 'authed' flag we are adding here.  (If the message is again
+          // uploaded to the server, this flag is lost.)
+          // 0x0200 == MSG_FLAG_SENDER_AUTHED
+          HandleMessageDownLoadLine("X-Mozilla-Status: 0200\r\n", PR_FALSE);
       GetServerStateParser().FreeXSenderInfo();
     }
   }
