@@ -57,7 +57,7 @@ nsStreamLoader::Init(nsIURI* aURL,
     nsCOMPtr<nsIStreamLoaderObserver> pObserver;
     rv2 = pIProxyObjectManager->GetProxyObject(NS_CURRENT_EVENTQ, 
               NS_GET_IID(nsIStreamLoaderObserver), observer, 
-              PROXY_ASYNC, getter_AddRefs(pObserver));
+              PROXY_ASYNC | PROXY_ALWAYS, getter_AddRefs(pObserver));
     if (NS_FAILED(rv2)) return rv2;
 
     rv = pObserver->OnStreamComplete(this, mContext, rv, 0, nsnull);
