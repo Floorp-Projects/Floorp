@@ -105,117 +105,6 @@ Mozilla::Embedding::ThrowIfFailed(nsresult rv)
 #pragma unmanaged
 
 #define NS_WEBBROWSER_CONTRACTID "@mozilla.org/embedding/browser/nsWebBrowser;1"
-
-bool ResizeEmbedding(HWND hWnd, nsIWebBrowserChrome* chrome);
-nsresult CreateBrowserWindow(HWND hWnd, PRUint32 aChromeFlags,
-                             nsIWebBrowserChrome *aParent,
-                             nsIWebBrowserChrome **aNewWindow);
-nsCOMPtr<nsIWebBrowserChrome> chrome;
-
-void
-InitializeEmbedding()
-{
-  nsresult rv = NS_InitEmbedding(nsnull, nsnull);
-  ThrowIfFailed(rv);
-}
-
-void
-TerminateEmbedding()
-{
-  nsresult rv = NS_TermEmbedding();
-  ThrowIfFailed(rv);
-}
-
-nsresult
-CreateBrowserWindow(HWND hWnd, PRUint32 aChromeFlags,
-                    nsIWebBrowserChrome *aParent,
-                    nsIWebBrowserChrome **aNewWindow)
-{
-  WebBrowserChrome * chrome = new WebBrowserChrome();
-  if (!chrome)
-    return NS_ERROR_FAILURE;
-
-  // the interface to return and one addref, which we assume will be
-  // immediately released
-  CallQueryInterface(NS_STATIC_CAST(nsIWebBrowserChrome*, chrome), aNewWindow);
-  // now an extra addref; the window owns itself (to be released by
-  // WebBrowserChromeUI::Destroy)
-  NS_ADDREF(*aNewWindow);
-
-  chrome->SetChromeFlags(aChromeFlags);
-
-  // Insert the browser
-  nsCOMPtr<nsIWebBrowser> newBrowser;
-  chrome->CreateBrowser(hWnd, -1, -1, -1, -1, getter_AddRefs(newBrowser));
-  if (!newBrowser)
-    return NS_ERROR_FAILURE;
-
-  // Place it where we want it.
-  ResizeEmbedding(hWnd, NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
-
-  // if opened as chrome, it'll be made visible after the chrome has loaded.
-  // otherwise, go ahead and show it now.
-  if (!(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME))
-    ::ShowWindow(hWnd, SW_RESTORE);
-
-  return NS_OK;
-}
-
-nsresult
-OpenWebPage(HWND hWnd, const wchar_t *url)
-{
-  if (!chrome)
-  {
-    nsresult rv = CreateBrowserWindow(hWnd, nsIWebBrowserChrome::CHROME_ALL,
-                                      nsnull, getter_AddRefs(chrome));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  SetWindowLong(hWnd, GWL_USERDATA,
-                (LONG)NS_STATIC_CAST(nsIWebBrowserChrome*, chrome));
-
-  // Start loading a page
-  nsCOMPtr<nsIWebBrowser> newBrowser;
-  chrome->GetWebBrowser(getter_AddRefs(newBrowser));
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
-
-  return webNav->LoadURI(url, nsIWebNavigation::LOAD_FLAGS_NONE, nsnull,
-                         nsnull, nsnull);
-}
-
-bool
-ResizeEmbedding(HWND hWnd, nsIWebBrowserChrome* chrome)
-{
-  if (!chrome)
-  {
-      chrome = (nsIWebBrowserChrome *)GetWindowLong(hWnd, GWL_USERDATA);
-      if (!chrome)
-          return false;
-  }
-
-  nsCOMPtr<nsIEmbeddingSiteWindow> embeddingSite = do_QueryInterface(chrome);
-
-
-  RECT rect;
-  GetClientRect(hWnd, &rect);
-
-  // Make sure the browser is visible and sized
-  nsCOMPtr<nsIWebBrowser> webBrowser;
-  chrome->GetWebBrowser(getter_AddRefs(webBrowser));
-  nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(webBrowser);
-  if (webBrowserAsWin)
-  {
-    webBrowserAsWin->SetPositionAndSize(rect.left,
-                               rect.top,
-                               rect.right - rect.left,
-                               rect.bottom - rect.top,
-                               PR_TRUE);
-    webBrowserAsWin->SetVisibility(PR_TRUE);
-  }
-
-  return true;
-}
-
 //*****************************************************************************
 // WebBrowserChrome::nsISupports
 //*****************************************************************************
@@ -419,14 +308,10 @@ WebBrowserChrome::CreateBrowser(HWND hWnd, PRInt32 aX, PRInt32 aY, PRInt32 aCX,
 
 #pragma managed
 
-Gecko::Gecko(Form *aForm)
-  : mForm(aForm)
-{
-  if (!sIsInitialized) {
-    InitializeEmbedding();
 
-    sIsInitialized = true;
-  }
+Gecko::Gecko()
+  : mChrome(nsnull)
+{
 }
 
 void
@@ -438,21 +323,100 @@ Gecko::TermEmbedding()
 
   sIsInitialized = false;
 
-  TerminateEmbedding();
-}
-
-void
-Gecko::OpenURL(String *url)
-{
-  const wchar_t __pin * pURL = PtrToStringChars(url);
-
-  nsresult rv = OpenWebPage((HWND)mForm->Handle.ToInt32(), pURL);
+  nsresult rv = NS_TermEmbedding();
   ThrowIfFailed(rv);
 }
 
 void
-Gecko::Resize()
+Gecko::OpenURL(String *aUrl)
 {
-  ResizeEmbedding((HWND)mForm->Handle.ToInt32(), NULL);
+  if (!sIsInitialized) {
+    nsresult rv = NS_InitEmbedding(nsnull, nsnull);
+    ThrowIfFailed(rv);
+
+    sIsInitialized = true;
+  }
+
+  const wchar_t __pin * url = PtrToStringChars(aUrl);
+  nsresult rv;
+
+  HWND hWnd = (HWND)Handle.ToPointer();
+
+  if (!mChrome) {
+    CreateBrowserWindow(nsIWebBrowserChrome::CHROME_ALL, nsnull);
+  }
+
+  // Start loading a page
+  nsCOMPtr<nsIWebBrowser> newBrowser;
+  mChrome->GetWebBrowser(getter_AddRefs(newBrowser));
+  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(newBrowser));
+
+  rv = webNav->LoadURI(url, nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull,
+                       nsnull);
+
+  ThrowIfFailed(rv);
+}
+
+void
+Gecko::OnResize(EventArgs *e)
+{
+  if (mChrome) {
+    nsCOMPtr<nsIEmbeddingSiteWindow> embeddingSite =
+      do_QueryInterface(mChrome);
+
+    RECT rect;
+    GetClientRect((HWND)Handle.ToPointer(), &rect);
+
+    // Make sure the browser is visible and sized
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    mChrome->GetWebBrowser(getter_AddRefs(webBrowser));
+    nsCOMPtr<nsIBaseWindow> webBrowserAsWin = do_QueryInterface(webBrowser);
+    if (webBrowserAsWin) {
+      webBrowserAsWin->SetPositionAndSize(rect.left,
+                                          rect.top,
+                                          rect.right - rect.left,
+                                          rect.bottom - rect.top,
+                                          PR_TRUE);
+      webBrowserAsWin->SetVisibility(PR_TRUE);
+    }
+  }
+
+  UserControl::OnResize(e);
+}
+
+void
+Gecko::CreateBrowserWindow(PRUint32 aChromeFlags, nsIWebBrowserChrome *aParent)
+{
+  WebBrowserChrome * chrome = new WebBrowserChrome();
+  if (!chrome) {
+    throw new OutOfMemoryException();
+  }
+
+  mChrome = chrome;
+  NS_ADDREF(mChrome);
+
+  // XXX: Is this really needed?
+  // now an extra addref; the window owns itself (to be released by
+  // WebBrowserChromeUI::Destroy)
+  NS_ADDREF(mChrome);
+
+  chrome->SetChromeFlags(aChromeFlags);
+
+  HWND hWnd = (HWND)Handle.ToPointer();
+
+  // Insert the browser
+  nsCOMPtr<nsIWebBrowser> newBrowser;
+  chrome->CreateBrowser(hWnd, -1, -1, -1, -1, getter_AddRefs(newBrowser));
+  if (!newBrowser) {
+    ThrowIfFailed(NS_ERROR_FAILURE);
+  }
+
+  // Place it where we want it.
+  OnResize(0);
+
+  // if opened as chrome, it'll be made visible after the chrome has loaded.
+  // otherwise, go ahead and show it now.
+  if (!(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME))
+    ::ShowWindow(hWnd, SW_RESTORE);
 }
 

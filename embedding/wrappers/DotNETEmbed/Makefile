@@ -48,7 +48,7 @@ INCLUDES	= \
 		  -I${MOZ_OBJ_DIR}/dist/include/windowwatcher	\
 		  -I${MOZ_OBJ_DIR}/dist/include/xpconnect
 
-DEPS      = DotNETEmbed.h Makefile
+DEPS		= DotNETEmbed.h Makefile
 
 CPP_FILES	=  \
 		  DotNETEmbed.cpp				\
@@ -66,13 +66,10 @@ DotNETEmbed.dll: ${OBJ_FILES} DotNETEmbed.snk ${DEPS}
 	@echo
 	cp DotNETEmbed.dll ${MOZ_OBJ_DIR}/dist/bin
 	cp DotNETEmbed.pdb ${MOZ_OBJ_DIR}/dist/bin
-#	regasm -silent DotNETEmbed.dll
-#	@echo
-#	gacutil.exe -silent -i DotNETEmbed.dll
-#	@echo
-#	@touch vc7/Debug/*
-#	cp DotNETEmbed.dll vc7/Debug
-#	@echo
+	regasm DotNETEmbed.dll
+	@echo
+	gacutil.exe -i DotNETEmbed.dll
+	@echo
 
 DotNETEmbed.obj: DotNETEmbed.cpp umWebChrome.h ${DEPS} 
 	${CXX} ${CXXFLAGS} ${OUTPUT_OPTION} DotNETEmbed.cpp 
