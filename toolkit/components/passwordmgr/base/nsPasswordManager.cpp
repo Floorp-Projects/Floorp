@@ -106,6 +106,7 @@ protected:
   nsCString mHost;
   nsString  mUser;
   nsString  mPassword;
+  PRBool    mDecrypted[2];
 };
 
 NS_IMPL_ISUPPORTS1(nsPasswordManager::PasswordEntry, nsIPassword)
@@ -114,9 +115,11 @@ nsPasswordManager::PasswordEntry::PasswordEntry(const nsACString& aKey,
                                                 SignonDataEntry* aData)
   : mHost(aKey)
 {
+    mDecrypted[0] = mDecrypted[1] = PR_FALSE;
+
   if (aData) {
-    nsPasswordManager::DecryptData(aData->userValue, mUser);
-    nsPasswordManager::DecryptData(aData->passValue, mPassword);
+    mUser.Assign(aData->userValue);
+    mPassword.Assign(aData->passValue);
   }
 }
 
@@ -130,6 +133,11 @@ nsPasswordManager::PasswordEntry::GetHost(nsACString& aHost)
 NS_IMETHODIMP
 nsPasswordManager::PasswordEntry::GetUser(nsAString& aUser)
 {
+  if (!mUser.IsEmpty() && !mDecrypted[0]) {
+    DecryptData(mUser, mUser);
+    mDecrypted[0] = PR_TRUE;
+  }
+
   aUser.Assign(mUser);
   return NS_OK;
 }
@@ -137,6 +145,11 @@ nsPasswordManager::PasswordEntry::GetUser(nsAString& aUser)
 NS_IMETHODIMP
 nsPasswordManager::PasswordEntry::GetPassword(nsAString& aPassword)
 {
+  if (!mPassword.IsEmpty() && !mDecrypted[1]) {
+    DecryptData(mPassword, mPassword);
+    mDecrypted[1] = PR_TRUE;
+  }
+
   aPassword.Assign(mPassword);
   return NS_OK;
 }
