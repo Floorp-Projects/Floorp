@@ -22,7 +22,6 @@
 #    Chris McAfee <mcafee@netscape.com>
 #    Daniel Brooks <db48x@yahoo.com>
 #    Gervase Markham <gerv@gerv.net>
-
 <?xml-stylesheet href="chrome://navigator/skin/pageInfo.css" type="text/css"?>
 
 <!DOCTYPE window [
@@ -43,7 +42,7 @@
   screenX="10" screenY="10"
   persist="screenX screenY width height sizemode">
 
-  <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
