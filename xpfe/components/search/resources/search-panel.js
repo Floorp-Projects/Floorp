@@ -825,6 +825,8 @@ function sidebarOpenURL(listitem)
 
 function OpenSearch(aSearchStr, engineURIs)
 {
+  gPageNumber = 0;
+
   var searchEngineURI = nsPreferences.copyUnicharPref("browser.search.defaultengine", null);
   var defaultSearchURL = nsPreferences.getLocalizedUnicharPref("browser.search.defaulturl", null);
 
