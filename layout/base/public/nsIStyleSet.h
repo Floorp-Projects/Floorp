@@ -86,6 +86,10 @@ public:
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique = PR_FALSE) = 0;
 
+  // Test if style is dependent on content state
+  NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
+                                     nsIContent*     aContent) = 0;
+
   // Create frames for the root content element and its child content
   NS_IMETHOD  ConstructRootFrame(nsIPresContext* aPresContext,
                                  nsIContent*     aDocElement,
@@ -117,8 +121,9 @@ public:
   NS_IMETHOD ContentChanged(nsIPresContext*  aPresContext,
                             nsIContent* aContent,
                             nsISupports* aSubContent) = 0;
-  NS_IMETHOD ContentStateChanged(nsIPresContext* aPresContext, 
-                                 nsIContent* aContent) = 0;
+  NS_IMETHOD ContentStatesChanged(nsIPresContext* aPresContext, 
+                                  nsIContent* aContent1,
+                                  nsIContent* aContent2) = 0;
   NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
                               nsIContent* aChild,
                               nsIAtom* aAttribute,

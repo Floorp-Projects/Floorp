@@ -70,8 +70,9 @@ public:
                             nsIContent* aContent,
                             nsISupports* aSubContent) = 0;
 
-  NS_IMETHOD ContentStateChanged(nsIPresContext* aPresContext, 
-                                 nsIContent* aContent) = 0;
+  NS_IMETHOD ContentStatesChanged(nsIPresContext* aPresContext, 
+                                  nsIContent* aContent1,
+                                  nsIContent* aContent2) = 0;
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aContent,

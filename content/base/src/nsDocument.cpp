@@ -125,8 +125,9 @@ public:
   NS_IMETHOD ContentChanged(nsIDocument *aDocument,
 			                      nsIContent* aContent,
                             nsISupports* aSubContent) { return NS_OK; }
-  NS_IMETHOD ContentStateChanged(nsIDocument* aDocument,
-                                 nsIContent* aContent) { return NS_OK; }
+  NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
+                                  nsIContent* aContent1,
+                                  nsIContent* aContent2) { return NS_OK; }
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
                               nsIAtom*     aAttribute,
@@ -1426,14 +1427,15 @@ nsDocument::ContentChanged(nsIContent* aContent,
 }
 
 NS_IMETHODIMP
-nsDocument::ContentStateChanged(nsIContent* aContent)
+nsDocument::ContentStatesChanged(nsIContent* aContent1,
+                                 nsIContent* aContent2)
 {
   PRInt32 i;
   // Get new value of count for every iteration in case
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->ContentStateChanged(this, aContent);
+    observer->ContentStatesChanged(this, aContent1, aContent2);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {

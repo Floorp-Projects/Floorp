@@ -104,11 +104,19 @@ public:
    * added/removed from the document or the content itself changed 
    * (the other notifications are used for that).
    *
+   * The optional second content node is to allow optimization
+   * of the case where state moves from one node to another
+   * (as is likely for :focus and :hover)
+   *
+   * Either content node may be nsnull, but not both
+   *
    * @param aDocument The document being observed
-   * @param aContent the piece of content that changed
+   * @param aContent1 the piece of content that changed
+   * @param aContent2 optional second piece of content that changed
    */
-  NS_IMETHOD ContentStateChanged(nsIDocument* aDocument,
-                                 nsIContent* aContent) = 0;
+  NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
+                                  nsIContent* aContent1,
+                                  nsIContent* aContent2) = 0;
 
   /**
    * Notification that the content model has changed. This method is called

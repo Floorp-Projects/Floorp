@@ -246,7 +246,7 @@ public:
   NS_IMETHOD EndLoad();
   NS_IMETHOD ContentChanged(nsIContent* aContent,
                             nsISupports* aSubContent);
-  NS_IMETHOD ContentStateChanged(nsIContent* aContent);
+  NS_IMETHOD ContentStatesChanged(nsIContent* aContent1, nsIContent* aContent2);
   NS_IMETHOD AttributeChanged(nsIContent* aChild,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);

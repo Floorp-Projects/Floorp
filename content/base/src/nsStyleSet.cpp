@@ -86,6 +86,9 @@ public:
                                                nsIStyleContext* aParentContext,
                                                PRBool aForceUnique = PR_FALSE);
 
+  NS_IMETHOD  HasStateDependentStyle(nsIPresContext* aPresContext,
+                                     nsIContent*     aContent);
+
   NS_IMETHOD ConstructRootFrame(nsIPresContext* aPresContext,
                                 nsIContent*     aContent,
                                 nsIFrame*&      aFrameSubTree);
@@ -110,8 +113,9 @@ public:
   NS_IMETHOD ContentChanged(nsIPresContext*  aPresContext,
                             nsIContent* aContent,
                             nsISupports* aSubContent);
-  NS_IMETHOD ContentStateChanged(nsIPresContext* aPresContext, 
-                                 nsIContent* aContent);
+  NS_IMETHOD ContentStatesChanged(nsIPresContext* aPresContext, 
+                                  nsIContent* aContent1,
+                                  nsIContent* aContent2);
   NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
                               nsIContent* aChild,
                               nsIAtom* aAttribute,
@@ -716,6 +720,47 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
   return result;
 }
 
+struct StatefulData {
+  StatefulData(nsIPresContext* aPresContext, nsIContent* aContent)
+    : mPresContext(aPresContext),
+      mContent(aContent),
+      mStateful(PR_FALSE)
+  {}
+  nsIPresContext* mPresContext;
+  nsIContent*     mContent;
+  PRBool          mStateful;
+}; 
+
+PRBool SheetHasStatefulStyle(nsISupports* aElement, void *aData)
+{
+  nsIStyleSheet* sheet = (nsIStyleSheet*)aElement;
+  StatefulData* data = (StatefulData*)aData;
+  if (NS_OK == sheet->HasStateDependentStyle(data->mPresContext, data->mContent)) {
+    data->mStateful = PR_TRUE;
+    return PR_FALSE;  // stop iteration
+  }
+  return PR_TRUE; // continue
+}
+
+// Test if style is dependent on content state
+NS_IMETHODIMP
+StyleSetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
+                                     nsIContent*     aContent)
+{
+  StatefulData data(aPresContext, aContent);
+  if (mBackstopSheets) {
+    mBackstopSheets->EnumerateForwards(SheetHasStatefulStyle, &data);
+  }
+  if (mDocSheets && (! data.mStateful)) {
+    mDocSheets->EnumerateForwards(SheetHasStatefulStyle, &data);
+  }
+  if (mOverrideSheets && (! data.mStateful)) {
+    mOverrideSheets->EnumerateForwards(SheetHasStatefulStyle, &data);
+  }
+  return ((data.mStateful) ? NS_OK : NS_COMFALSE);
+}
+
+
 NS_IMETHODIMP StyleSetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
                                                nsIContent*     aDocElement,
                                                nsIFrame*&      aFrameSubTree)
@@ -776,10 +821,11 @@ StyleSetImpl::ContentChanged(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-StyleSetImpl::ContentStateChanged(nsIPresContext* aPresContext, 
-                                  nsIContent* aContent)
+StyleSetImpl::ContentStatesChanged(nsIPresContext* aPresContext, 
+                                   nsIContent* aContent1,
+                                   nsIContent* aContent2)
 {
-  return mFrameConstructor->ContentStateChanged(aPresContext, aContent);
+  return mFrameConstructor->ContentStatesChanged(aPresContext, aContent1, aContent2);
 }
 
 
