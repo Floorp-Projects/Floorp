@@ -71,6 +71,10 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 
+// used to dispatch urls to default protocol handlers
+#include "nsCExternalHandlerService.h"
+#include "nsIExternalProtocolService.h"
+
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -91,6 +95,7 @@ nsDocShell::nsDocShell() :
   mAllowPlugins(PR_TRUE),
   mViewMode(viewNormal),
   mEODForCurrentDocument (PR_FALSE),
+  mUseExternalProtocolHandler (PR_FALSE),
   mParent(nsnull),
   mTreeOwner(nsnull),
   mChromeEventHandler(nsnull)
@@ -1166,6 +1171,10 @@ NS_IMETHODIMP nsDocShell::Create()
    NS_ENSURE_STATE(!mContentViewer);
    mPrefs = do_GetService(NS_PREF_PROGID);
    mGlobalHistory = do_GetService(NS_GLOBALHISTORY_PROGID);
+
+   // i don't want to read this pref in every time we load a url
+   // so read it in once here and be done with it...
+   mPrefs->GetBoolPref("network.protocols.useSystemDefaults", &mUseExternalProtocolHandler);
 
    return NS_OK;
 }
@@ -2574,6 +2583,20 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
    nsISupports* aOwner, nsURILoadCommand aLoadCmd, const char* aWindowTarget, 
    nsIInputStream* aPostData)
 {
+
+  // if the load cmd is a user click....and we are supposed to try using
+  // external default protocol handlers....then try to see if we have one for
+  // this protocol
+  if (mUseExternalProtocolHandler && aLoadCmd == nsIURILoader::viewUserClick)
+  {
+    nsXPIDLCString urlScheme;
+    aURI->GetScheme(getter_Copies(urlScheme));
+    nsCOMPtr<nsIExternalProtocolService> extProtService (do_GetService(NS_EXTERNALPROTOCOLSERVICE_PROGID));
+    PRBool haveHandler = PR_FALSE;
+    extProtService->ExternalProtocolHandlerExists(urlScheme, &haveHandler);
+    if (haveHandler)
+      return extProtService->LoadUrl(aURI);
+  }
    nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_PROGID));
    NS_ENSURE_TRUE(uriLoader, NS_ERROR_FAILURE);
 

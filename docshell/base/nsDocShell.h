@@ -272,6 +272,12 @@ protected:
    // content viewer. 
    PRBool                     mEODForCurrentDocument; 
 
+   // used to keep track of whether user click links should be handle by us
+   // or immediately kicked out to an external application. mscott: eventually
+   // i'm going to try to fold this up into the uriloader where it belongs but i haven't
+   // figured out how to do that yet.
+   PRBool                     mUseExternalProtocolHandler;
+
    /* WEAK REFERENCES BELOW HERE.
    Note these are intentionally not addrefd.  Doing so will create a cycle.
    For that reasons don't use nsCOMPtr.*/
