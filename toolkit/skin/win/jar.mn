@@ -36,6 +36,8 @@ classic.jar:
 +  skin/classic/global/icons/alert-error.gif                   (icons/alert-error.gif)
 +  skin/classic/global/icons/alert-message.gif                 (icons/alert-message.gif)
 +  skin/classic/global/icons/alert-question.gif                (icons/alert-question.gif)
++  skin/classic/global/icons/item-folder.png                   (icons/item-folder.png)
++  skin/classic/global/icons/loading.gif                       (icons/loading.gif)
 +  skin/classic/global/checkbox/cbox-check.gif                 (checkbox/cbox-check.gif)
 +  skin/classic/global/checkbox/cbox-check-dis.gif             (checkbox/cbox-check-dis.gif)
 +  skin/classic/global/radio/radio-check-dis.gif               (radio/radio-check-dis.gif)

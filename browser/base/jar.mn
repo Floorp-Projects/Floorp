@@ -48,7 +48,6 @@ classic.jar:
         skin/classic/browser/newwindow-small.png      (skin/newwindow-small.png)
         skin/classic/browser/search-large.png         (skin/search-large.png)
         skin/classic/browser/go-large.png             (skin/go-large.png)
-        skin/classic/browser/bookmarks.png            (skin/bookmarks.png)
         skin/classic/browser/bookmarks-icons.png      (skin/bookmarks-icons.png)
         skin/classic/browser/dropmarker.png           (skin/dropmarker.png)
         skin/classic/browser/close.png                (skin/close.png)
@@ -57,7 +56,6 @@ classic.jar:
         skin/classic/browser/lock-insecure.gif        (skin/lock-insecure.gif)
         skin/classic/browser/lock-mixed.gif           (skin/lock-mixed.gif)
         skin/classic/browser/lock-secure.gif          (skin/lock-secure.gif)
-        skin/classic/browser/loading.gif              (skin/loading.gif)
         skin/classic/browser/search-bar.png           (skin/search-bar.png)
 
 en-US.jar:
