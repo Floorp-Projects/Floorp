@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslcon.c,v 1.3 2000/06/06 20:32:18 nelsonb%netscape.com Exp $
+ * $Id: sslcon.c,v 1.4 2000/09/12 20:15:42 jgmyers%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -2983,7 +2983,7 @@ ssl2_BeginClientHandshake(sslSocket *ss)
     if (ss->noCache) {
 	sid = NULL;
     } else {
-	sid = ssl_LookupSID(ci->peer, ci->port, ss->peerID, ss->url);
+	sid = ssl_LookupSID(&ci->peer, ci->port, ss->peerID, ss->url);
     }
     if (sid) {
 	/* if we're not doing this SID's protocol any more, drop it. */
@@ -3508,9 +3508,11 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
     if (ss->noCache) {
 	sid = NULL;
     } else if (sdLen) {
-	SSL_TRC(7, ("%d: SSL[%d]: server, lookup client session-id for 0x%08x",
-		    SSL_GETPID(), ss->fd, ci->peer));
-	sid = (*ssl_sid_lookup)(ci->peer, sd, sdLen, ss->dbHandle);
+	SSL_TRC(7, ("%d: SSL[%d]: server, lookup client session-id for 0x%08x%08x%08x%08x",
+		    SSL_GETPID(), ss->fd, ci->peer.pr_s6_addr32[0],
+		    ci->peer.pr_s6_addr32[1], ci->peer.pr_s6_addr32[2],
+		    ci->peer.pr_s6_addr32[3]));
+	sid = (*ssl_sid_lookup)(&ci->peer, sd, sdLen, ss->dbHandle);
     }
     if (sid) {
 	/* Got a good session-id. Short cut! */

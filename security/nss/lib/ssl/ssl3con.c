@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.7 2000/08/08 22:54:02 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.8 2000/09/12 20:15:41 jgmyers%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -2453,7 +2453,7 @@ ssl3_SendClientHello(sslSocket *ss)
      * this lookup is duplicative and wasteful.
      */
     sid = (ss->noCache) ? NULL
-	    : ssl_LookupSID(sec->ci.peer, sec->ci.port, ss->peerID, ss->url);
+	    : ssl_LookupSID(&sec->ci.peer, sec->ci.port, ss->peerID, ss->url);
 
     /* We can't resume based on a different token. If the sid exists,
      * make sure the token that holds the master secret still exists ...
@@ -4590,9 +4590,11 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     }
 
     if (sidBytes.len > 0) {
-	SSL_TRC(7, ("%d: SSL3[%d]: server, lookup client session-id for 0x%08x",
-                    SSL_GETPID(), ss->fd, ci->peer));
-	sid = (*ssl_sid_lookup)(ci->peer, sidBytes.data, sidBytes.len,
+	SSL_TRC(7, ("%d: SSL3[%d]: server, lookup client session-id for 0x%08x%08x%08x%08x",
+                    SSL_GETPID(), ss->fd, ci->peer.pr_s6_addr32[0],
+		    ci->peer.pr_s6_addr32[1], ci->peer.pr_s6_addr32[2],
+		    ci->peer.pr_s6_addr32[3]));
+	sid = (*ssl_sid_lookup)(&ci->peer, sidBytes.data, sidBytes.len,
 	                        ss->dbHandle);
     }
     SECITEM_FreeItem(&sidBytes, PR_FALSE);

@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsocks.c,v 1.1 2000/03/31 19:37:15 relyea%netscape.com Exp $
+ * $Id: sslsocks.c,v 1.2 2000/09/12 20:15:44 jgmyers%netscape.com Exp $
  */
 #include "prtypes.h"
 #include "prnetdb.h"
@@ -810,8 +810,14 @@ ssl_SocksConnect(sslSocket *ss, const PRNetAddr *sa)
 	ss->nextHandshake = 0;
 
 	/* save up who we're really talking to so we can index the cache */
-	ss->peer = sa->inet.ip;
-	ss->port = sa->inet.port;
+	if ((sa->inet.family & 0xff) == PR_AF_INET) {
+	     PR_ConvertIPv4AddrToIPv6(sa->inet.ip, &ss->peer);
+	     ss->port = sa->inet.port;
+	} else {
+	     PORT_Assert(sa->ipv6.family == PR_AF_INET6);
+	     ss->peer = sa->ipv6.ip;
+	     ss->port = sa->ipv6.port;
+	}
     }
     return 0;
 }

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslnonce.c,v 1.2 2000/05/24 19:28:27 nelsonb%netscape.com Exp $
+ * $Id: sslnonce.c,v 1.3 2000/09/12 20:15:43 jgmyers%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -141,7 +141,7 @@ ssl_FreeSID(sslSessionID *sid)
 */
 
 sslSessionID *
-ssl_LookupSID(PRUint32 addr, PRUint16 port, const char *peerID, 
+ssl_LookupSID(const PRIPv6Addr *addr, PRUint16 port, const char *peerID, 
               const char * urlSvrName)
 {
     sslSessionID **sidp;
@@ -174,7 +174,7 @@ ssl_LookupSID(PRUint32 addr, PRUint16 port, const char *peerID,
 	    else
 		ssl_FreeLockedSID(sid);		/* drop ref count, free. */
 
-	} else if ((sid->addr == addr) && /* server IP addr matches */
+	} else if (!memcmp(&sid->addr, addr, sizeof(PRIPv6Addr)) && /* server IP addr matches */
 	           (sid->port == port) && /* server port matches */
 		   /* proxy (peerID) matches */
 		   (((peerID == NULL) && (sid->peerID == NULL)) ||
@@ -208,9 +208,11 @@ static void
 CacheSID(sslSessionID *sid)
 {
     PRUint32  expirationPeriod;
-    SSL_TRC(8, ("SSL: Cache: sid=0x%x cached=%d addr=0x%08x port=0x%04x "
+    SSL_TRC(8, ("SSL: Cache: sid=0x%x cached=%d addr=0x%08x%08x%08x%08x port=0x%04x "
 		"time=%x cached=%d",
-		sid, sid->cached, sid->addr, sid->port, sid->time,
+		sid, sid->cached, sid->addr.pr_s6_addr32[0], 
+		sid->addr.pr_s6_addr32[1], sid->addr.pr_s6_addr32[2],
+		sid->addr.pr_s6_addr32[3],  sid->port, sid->time,
 		sid->cached));
 
     if (sid->cached == in_client_cache)
@@ -262,9 +264,11 @@ UncacheSID(sslSessionID *zap)
 	return;
     }
 
-    SSL_TRC(8,("SSL: Uncache: zap=0x%x cached=%d addr=0x%08x port=0x%04x "
+    SSL_TRC(8,("SSL: Uncache: zap=0x%x cached=%d addr=0x%08x%08x%08x%08x port=0x%04x "
 	       "time=%x cipher=%d",
-	       zap, zap->cached, zap->addr, zap->port, zap->time,
+	       zap, zap->cached, zap->addr.pr_s6_addr32[0],
+	       zap->addr.pr_s6_addr32[1], zap->addr.pr_s6_addr32[2],
+	       zap->addr.pr_s6_addr32[3], zap->port, zap->time,
 	       zap->u.ssl2.cipherType));
     if (zap->version < SSL_LIBRARY_VERSION_3_0) {
 	PRINT_BUF(8, (0, "sessionID:",
