@@ -36,6 +36,7 @@ use vars qw($buffer);
 
 use Bugzilla;
 use Bugzilla::Search;
+use Bugzilla::Constants;
 
 my $cgi = Bugzilla->cgi;
 
@@ -57,7 +58,15 @@ use vars qw($template $vars);
 ConnectToDatabase();
 GetVersionTable();
 
-quietly_check_login();
+# collectstats.pl uses duplicates.cgi to generate the RDF duplicates stats.
+# However, this conflicts with requirelogin if it's enabled; so we make
+# logging-in optional if we are running from the command line.
+if ($::ENV{'GATEWAY_INTERFACE'} eq "cmdline") {
+    Bugzilla->login(LOGIN_OPTIONAL);
+}
+else {
+    Bugzilla->login(LOGIN_NORMAL);
+}
 
 Bugzilla->switch_to_shadow_db();
 
