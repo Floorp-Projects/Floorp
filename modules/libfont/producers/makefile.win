@@ -1,9 +1,0 @@
-IGNORE_MANIFEST=1
-
-# Insert copyright and license here 1996
-
-DIRS = win
-
-DEPTH=..\..\.. 
-
-!include $(DEPTH)\config\rules.mak

@@ -1,3 +1,0 @@
-      interface DocumentFragment : Node {
-        attribute Document       masterDoc;
-      };

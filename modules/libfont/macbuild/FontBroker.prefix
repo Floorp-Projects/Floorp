@@ -1,7 +1,0 @@
-#define MOZILLA_CLIENT 1
-#define MOCHA 1
-#define EDITOR 1
-#define LAYERS 1
-
-#include "IDE_Options.h"
-#include "NSCrossProductDefines.h"

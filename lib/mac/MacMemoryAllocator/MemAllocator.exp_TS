@@ -1,7 +1,0 @@
-# Build MemAllocatorStubsPPCLib
-
-Evaluate % = ("{{SourceFile}}" =~ /(Å:)¨0Å/)
-
-MakeStub "{{SourceFile}}" -o "{{¨0}}MemAllocatorStubsPPCLib" ¶
-	-fragname MemoryAllocator ¶
-	-vercur 400 -verdef 400 -verimp 400
