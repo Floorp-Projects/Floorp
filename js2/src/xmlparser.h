@@ -24,7 +24,7 @@ public:
     char peek()                 { return *p; }
     void unget(uint32 n = 1)    { p -=n; ASSERT(p >= base); }
     bool getEof()               { return (p == end); }
-    bool hasAvailable(uint32 n) { return (end - p) >= n; }
+    bool hasAvailable(uint32 n) { return (uint32)(end - p) >= n; }
     bool match(const char *s, uint32 n)   { return hasAvailable(n) && (strstr(p, s) == p); }
     bool match(const char *s)             { return match(s, strlen(s)); }
 
