@@ -51,6 +51,7 @@ nsFTPChannel::nsFTPChannel()
       mFTPState(nsnull),
       mLock(nsnull),
       mStatus(NS_OK),
+      mCanceled(PR_FALSE),
       mProxyPort(-1),
       mProxyTransparent(PR_FALSE)
 {
@@ -157,8 +158,20 @@ nsFTPChannel::GetStatus(nsresult *status)
 
 NS_IMETHODIMP
 nsFTPChannel::Cancel(nsresult status) {
+
+    PR_LOG(gFTPLog, 
+           PR_LOG_DEBUG, 
+           ("nsFTPChannel::Cancel() called [this=%x, status=%x, mCanceled=%d]\n", 
+            this, status, mCanceled));
+
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsAutoLock lock(mLock);
+    
+    if (mCanceled) 
+        return NS_OK;
+
+    mCanceled = PR_TRUE;
+
     mStatus = status;
     if (mProxyChannel) {
         return mProxyChannel->Cancel(status);
@@ -170,6 +183,10 @@ nsFTPChannel::Cancel(nsresult status) {
 
 NS_IMETHODIMP
 nsFTPChannel::Suspend(void) {
+
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, 
+           ("nsFTPChannel::Suspend() called [this=%x]\n", this));
+
     nsAutoLock lock(mLock);
     if (mProxyChannel) {
         return mProxyChannel->Suspend();
@@ -181,6 +198,10 @@ nsFTPChannel::Suspend(void) {
 
 NS_IMETHODIMP
 nsFTPChannel::Resume(void) {
+
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, 
+           ("nsFTPChannel::Resume() called [this=%x]\n", this));
+
     nsAutoLock lock(mLock);
     if (mProxyChannel) {
         return mProxyChannel->Resume();
@@ -242,14 +263,7 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     mListener = listener;
     mUserContext = ctxt;
 
-    if (mEventSink) {
-        nsCOMPtr<nsIIOService> serv = do_GetService(kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = mEventSink->OnStatus(this, ctxt, NS_NET_STATUS_BEGIN_FTP_TRANSACTION, nsnull);
-        if (NS_FAILED(rv)) return rv;
-    }
-
+    // Add this request to the load group
     if (mLoadGroup) {
         rv = mLoadGroup->AddRequest(this, nsnull);
         if (NS_FAILED(rv)) return rv;
@@ -269,10 +283,9 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     rv = mFTPState->Init(this, mPrompter);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mFTPState->SetStreamListener(this, ctxt);
-    if (NS_FAILED(rv)) return rv;
-
-    return mFTPState->Connect();
+    rv = mFTPState->Connect();
+    
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -379,8 +392,7 @@ nsFTPChannel::SetOwner(nsISupports* aOwner)
 NS_IMETHODIMP
 nsFTPChannel::GetNotificationCallbacks(nsIInterfaceRequestor* *aNotificationCallbacks)
 {
-    *aNotificationCallbacks = mCallbacks.get();
-    NS_IF_ADDREF(*aNotificationCallbacks);
+    NS_IF_ADDREF(*aNotificationCallbacks = mCallbacks);
     return NS_OK;
 }
 
@@ -389,13 +401,15 @@ nsFTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
 {
     mCallbacks = aNotificationCallbacks;
 
+    // FIX these should be proxies!
     if (mCallbacks) {
         (void)mCallbacks->GetInterface(NS_GET_IID(nsIProgressEventSink), 
                                        getter_AddRefs(mEventSink));
 
-
         (void)mCallbacks->GetInterface(NS_GET_IID(nsIPrompt),
                                        getter_AddRefs(mPrompter));
+
+        NS_ASSERTION ( mPrompter, "Channel doesn't have a prompt!!!" );
     }
     return NS_OK;
 }
@@ -425,17 +439,26 @@ NS_IMETHODIMP
 nsFTPChannel::OnStatus(nsIRequest *request, nsISupports *aContext,
                        nsresult aStatus, const PRUnichar* aStatusArg)
 {
+    if (aStatus == NS_NET_STATUS_CONNECTED_TO)
+    {
+        // The state machine needs to know that the data connection
+        // was successfully started so that it can issue data commands
+        // securely.
+        NS_ASSERTION(mFTPState, "ftp state is null.");
+        (void) mFTPState->DataConnectionEstablished();
+    }
+
     if (!mEventSink)
         return NS_OK;
 
-    return mEventSink->OnStatus(this, aContext, aStatus,
+    return mEventSink->OnStatus(this, mUserContext, aStatus,
                                 NS_ConvertASCIItoUCS2(mHost).get());
 }
 
 NS_IMETHODIMP
 nsFTPChannel::OnProgress(nsIRequest *request, nsISupports* aContext,
                                   PRUint32 aProgress, PRUint32 aProgressMax) {
-    return mEventSink ? mEventSink->OnProgress(this, aContext, aProgress, (PRUint32) mContentLength) : NS_OK;
+    return mEventSink ? mEventSink->OnProgress(this, mUserContext, aProgress, (PRUint32) mContentLength) : NS_OK;
 }
 
 
@@ -444,15 +467,15 @@ NS_IMETHODIMP
 nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
                             nsresult aStatus, const PRUnichar* aStatusArg)
 {
+    PR_LOG(gFTPLog, 
+           PR_LOG_DEBUG, 
+           ("nsFTPChannel::OnStopRequest() called [this=%x, request=%x, aStatus=%x]\n", 
+            this, request, aStatus));
+
     nsresult rv = NS_OK;
-    
-    if (mLoadGroup) {
-        rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus, aStatusArg);
-        if (NS_FAILED(rv)) return rv;
-    }
-    
+        
     if (mObserver) {
-        rv = mObserver->OnStopRequest(this, aContext, aStatus, aStatusArg);
+        rv = mObserver->OnStopRequest(this, mUserContext, aStatus, aStatusArg);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -460,19 +483,29 @@ nsFTPChannel::OnStopRequest(nsIRequest *request, nsISupports* aContext,
         rv = mListener->OnStopRequest(this, aContext, aStatus, aStatusArg);
         if (NS_FAILED(rv)) return rv;
     }
+    if (mLoadGroup) {
+        rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus, aStatusArg);
+        if (NS_FAILED(rv)) return rv;
+    }
     return rv;
 }
 
 NS_IMETHODIMP
-nsFTPChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext) {
+nsFTPChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext) 
+{
+    PR_LOG(gFTPLog, 
+           PR_LOG_DEBUG, 
+           ("nsFTPChannel::OnStartRequest() called [this=%x, request=%x]\n", 
+            this, request));
+   
     nsresult rv = NS_OK;
     if (mObserver) {
-        rv = mObserver->OnStartRequest(this, aContext);
+        rv = mObserver->OnStartRequest(this, mUserContext);
         if (NS_FAILED(rv)) return rv;
     }
 
     if (mListener) {
-        rv = mListener->OnStartRequest(this, aContext);
+        rv = mListener->OnStartRequest(this, mUserContext);
         if (NS_FAILED(rv)) return rv;
     }
     return rv;
@@ -484,7 +517,7 @@ NS_IMETHODIMP
 nsFTPChannel::OnDataAvailable(nsIRequest *request, nsISupports* aContext,
                                nsIInputStream *aInputStream, PRUint32 aSourceOffset,
                                PRUint32 aLength) {
-    return mListener->OnDataAvailable(this, aContext, aInputStream, aSourceOffset, aLength);
+    return mListener->OnDataAvailable(this, mUserContext, aInputStream, aSourceOffset, aLength);
 }
 
 // nsIFTPChannel methods

@@ -84,7 +84,7 @@ public:
     nsresult Init(nsIURI* uri);
     
     nsresult SetProxyChannel(nsIChannel *aChannel);
-    
+
 protected:
     nsCOMPtr<nsIURI>                mOriginalURI;
     nsCOMPtr<nsIURI>                mURL;
@@ -111,7 +111,8 @@ protected:
     PRLock*                         mLock;
     nsCOMPtr<nsISupports>           mUserContext;
     nsresult                        mStatus;
-    
+    PRPackedBool                    mCanceled;
+
     nsCOMPtr<nsIChannel>            mProxyChannel; // a proxy channel
     nsCAutoString                   mProxyHost;
     PRInt32                         mProxyPort;

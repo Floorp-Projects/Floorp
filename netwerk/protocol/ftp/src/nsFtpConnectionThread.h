@@ -85,7 +85,9 @@ typedef enum _FTP_STATE {
 
 ///////////////////////
 //// Data channel connection setup states
-    FTP_S_PASV, FTP_R_PASV
+    FTP_WAIT_FOR_DCON,
+    FTP_S_PASV, 
+    FTP_R_PASV
 } FTP_STATE;
 
 // higher level ftp actions
@@ -104,17 +106,13 @@ public:
 
     nsresult Init(nsIFTPChannel *aChannel, nsIPrompt *aPrompter);
 
-    // use this to set an observer.
-    nsresult SetStreamObserver(nsIStreamObserver *aObserver, nsISupports *aContext);
-    
-    // use this to set a listener to receive data related On*() notifications
-    nsresult SetStreamListener(nsIStreamListener *aListener, nsISupports *aContext=nsnull);
-
     // use this to provide a stream to be written to the server.
     nsresult SetWriteStream(nsIInputStream* aInStream, PRUint32 aWriteCount);
 
     nsresult Connect();
 
+    // lets the data forwarder tell us when the the data pipe has been created. 
+    nsresult DataConnectionEstablished();    
 private:
     ///////////////////////////////////
     // BEGIN: STATE METHODS
@@ -154,8 +152,8 @@ private:
     void KillControlConnnection();
     nsresult StopProcessing();
     nsresult EstablishControlConnection();
-    nsresult ControlAsyncWrite(nsCString& command);
-    
+    nsresult SendFTPCommand(nsCString& command, PRBool waitForDataConn = PR_FALSE);
+
     ///////////////////////////////////
     // Private members
 
@@ -163,19 +161,15 @@ private:
     FTP_STATE           mState;             // the current state
     FTP_STATE           mNextState;         // the next state
     PRPackedBool        mKeepRunning;       // thread event loop boolean
-    PRPackedBool        mCanceled;          // indicates channel being canceled.
     PRInt32             mResponseCode;      // the last command response code
     nsCAutoString       mResponseMsg;       // the last command response text
 
         // ****** channel/transport/stream vars 
+    PRPackedBool                    mTryingCachedControl;     // retrying the password
     nsFtpControlConnection*         mControlConnection;// cacheable control connection (owns mCPipe)
     nsCOMPtr<nsITransport>          mDPipe;            // the data transport
     nsCOMPtr<nsIRequest>            mDPipeRequest;
         // ****** consumer vars
-    nsCOMPtr<nsIStreamListener>     mListener;        // the consumer of our read events
-    nsCOMPtr<nsISupports>           mListenerContext; // the context we pass through our read events
-    nsCOMPtr<nsIStreamObserver>     mObserver; // the consumer of our open events
-    nsCOMPtr<nsISupports>           mObserverContext; // the context we pass through our open events
     nsCOMPtr<nsIFTPChannel>         mChannel;         // our owning FTP channel we pass through our events
 
         // ****** connection cache vars
@@ -188,7 +182,6 @@ private:
     nsAutoString        mUsername;      // username
     nsAutoString        mPassword;      // password
     FTP_ACTION          mAction;        // the higher level action (GET/PUT)
-    PRPackedBool        mBin;           // transfer mode (ascii or binary)
     PRPackedBool        mAnonymous;     // try connecting anonymous (default)
     PRPackedBool        mRetryPass;     // retrying the password
     nsresult            mInternalError; // represents internal state errors
@@ -207,13 +200,14 @@ private:
     PRLock                 *mLock;
     nsCOMPtr<nsIInputStream> mWriteStream; // This stream is written to the server.
     PRUint32               mWriteCount;    // The amount of data to write to the server.
-    PRPackedBool           mFireCallbacks; // Fire the listener callbacks.
+    PRPackedBool           mFireCallbacks; // Fire the listener callback.
     PRBool                 mGenerateHTMLContent;
     PRPackedBool           mIPv6Checked;
     nsCOMPtr<nsIPrompt>    mPrompter;
     char                   *mIPv6ServerAddress; // Server IPv6 address; null if server not IPv6
 
     // ***** control read gvars
+    nsresult                mControlStatus;
     PRPackedBool            mControlReadContinue;
     PRPackedBool            mControlReadBrokenLine;
     nsCAutoString           mControlReadCarryOverBuf;

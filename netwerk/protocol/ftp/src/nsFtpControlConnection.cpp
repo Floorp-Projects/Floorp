@@ -26,6 +26,7 @@
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
 #include "nsIStreamProvider.h"
+#include "nsISocketTransport.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -64,7 +65,7 @@ public:
         if (NS_FAILED(rv)) return rv;
 
         if (avail == 0) {
-            NS_STATIC_CAST(nsFtpControlConnection*, aContext)->mSuspendedWrite = 1;
+            NS_STATIC_CAST(nsFtpControlConnection*, (nsIStreamListener*)aContext)->mSuspendedWrite = 1;
             return NS_BASE_STREAM_WOULD_BLOCK;
         }
         PRUint32 bytesWritten;
@@ -83,9 +84,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpStreamProvider,
 // nsFtpControlConnection implementation ...
 //
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsFtpControlConnection, 
+NS_IMPL_THREADSAFE_QUERY_INTERFACE3(nsFtpControlConnection, 
                                     nsIStreamListener, 
-                                    nsIStreamObserver);
+                                    nsIStreamObserver,
+                                    nsIProgressEventSink);
 
 NS_IMPL_THREADSAFE_ADDREF(nsFtpControlConnection);
 nsrefcnt nsFtpControlConnection::Release(void)
@@ -128,6 +130,20 @@ nsFtpControlConnection::~nsFtpControlConnection()
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection destroyed", this));
 }
 
+
+PRBool
+nsFtpControlConnection::IsAlive()
+{
+    if (!mConnected) 
+        return mConnected;
+
+    PRBool isAlive = PR_FALSE;
+    nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mCPipe);
+    if (!sTrans) return PR_FALSE;
+
+    sTrans->IsAlive(0, &isAlive);
+    return isAlive;
+}
 nsresult 
 nsFtpControlConnection::Connect()
 {
@@ -136,6 +152,13 @@ nsFtpControlConnection::Connect()
 
     nsresult rv;
     nsCOMPtr<nsIInputStream> inStream;
+
+#ifdef DOUGT_IS_SICK
+    nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mCPipe);
+    if (!sTrans) return NS_ERROR_FAILURE;
+    rv = sTrans->SetSocketTimeout(25);  
+    if (NS_FAILED(rv)) return rv;
+#endif
 
     rv = NS_NewPipe(getter_AddRefs(inStream),
                     getter_AddRefs(mOutStream),
@@ -155,7 +178,7 @@ nsFtpControlConnection::Connect()
         NS_STATIC_CAST(nsIStreamProvider*, provider))->mInStream = inStream;
 
     rv = mCPipe->AsyncWrite(provider, 
-                            NS_STATIC_CAST(nsISupports*, this),
+                            NS_STATIC_CAST(nsISupports*, (nsIStreamListener*)this),
                             0, -1,
                             nsITransport::DONT_PROXY_STREAM_PROVIDER |
                             nsITransport::DONT_PROXY_STREAM_OBSERVER, 
@@ -217,6 +240,15 @@ nsFtpControlConnection::SetStreamListener(nsIStreamListener *aListener)
 {
     nsAutoLock lock(mLock);
     mListener = aListener;
+    return NS_OK;
+}
+
+
+nsresult 
+nsFtpControlConnection::SetProgressEventSink(nsIProgressEventSink *eventSink)
+{
+    nsAutoLock lock(mLock);
+    mEventSink = eventSink;
     return NS_OK;
 }
 
@@ -284,4 +316,18 @@ nsFtpControlConnection::OnDataAvailable(nsIRequest *request,
 
     return myListener->OnDataAvailable(request, aContext, aInStream,
                                       aOffset,  aCount);
+}
+
+NS_IMETHODIMP 
+nsFtpControlConnection::OnProgress(nsIRequest *request, nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax)
+{
+    // Progress Means Nothing...  At least not for the ftp control connection :-)
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsFtpControlConnection::OnStatus(nsIRequest *request, nsISupports *ctxt, nsresult status, const PRUnichar *statusArg)
+{
+    if (mEventSink)
+        mEventSink->OnStatus(request, ctxt, status, statusArg);
+    return NS_OK;
 }
