@@ -30,16 +30,7 @@ CSRCS		= \
 	mkaccess.c	\
 	$(NULL)
 
-EXPORTS= mkaccess.h httpurl.h httpauth.h cookies.h 
-
-EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
-
-REQUIRES	= netcache network dbm util pref js java fileurl \
-	security layer img httpurl mimetype htmldlgs
-
-ifdef MOZ_SMOOTH_PROGRESS
-REQUIRES	+= progress
-endif
+EXPORTS = mkaccess.h httpurl.h httpauth.h cookies.h 
 
 NO_STATIC_LIB=1
 
