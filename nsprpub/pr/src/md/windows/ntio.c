@@ -820,9 +820,11 @@ _PR_MD_INIT_IO()
 {
     WORD WSAVersion = 0x0101;
     WSADATA WSAData;
+    int err;
     OSVERSIONINFO OSversion;
 
-    WSAStartup(	WSAVersion, &WSAData );
+    err = WSAStartup( WSAVersion, &WSAData );
+    PR_ASSERT(0 == err);
                                                       
     _pr_completion_port = CreateIoCompletionPort(INVALID_HANDLE_VALUE, 
                                                  NULL, 
