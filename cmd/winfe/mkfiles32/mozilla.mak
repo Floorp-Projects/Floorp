@@ -1629,6 +1629,7 @@ $(GENDIR)\config.rc:  $(DEPTH)\modules\libpref\src\init\config.js
 JAVAPARENT_DIR = $(OUTDIR)\plugins
 JAVABIN_DIR = $(OUTDIR)\plugins\nsjvm
 JAVACLS_DIR = $(OUTDIR)\plugins\nsjvm
+XJAVACLS_DIR = $(OUTDIR)\java\classes
 !elseif defined(MOZ_JAVA)
 JAVAPARENT_DIR = $(OUTDIR)\java
 JAVABIN_DIR = $(OUTDIR)\java\bin
@@ -1899,9 +1900,7 @@ install:    \
 !ENDIF
 !endif
 !ENDIF # MOZ_BITS==32 (end of "else" clause)
-!if defined(JAVA_OR_NSJVM)
-	    $(JAVACLS_DIR)\$(JAR_NAME) \
-!endif
+	    $(OUTDIR)\java\classes\ifc11.jar \
 	    $(OUTDIR)\netscape.cfg  \
 !if defined(DEATH_TO_POLICY_FILES)
 	    $(OUTDIR)\$(POLICY) \
@@ -2256,17 +2255,31 @@ $(OUTDIR)\nscnv3230.dll:   $(DIST)\bin\nscnv3230.dll
     @IF EXIST $(DIST)\bin\nscnv3230.dll copy $(DIST)\bin\nscnv3230.dll $(OUTDIR)\nscnv3230.dll
 !endif
 
-# XXX this will copy them all, we really only want the ones that changed
-$(JAVACLS_DIR)\$(JAR_NAME): $(JAVA_DESTPATH)\$(JAR_NAME)
-    @IF NOT EXIST "$(JAVAPARENT_DIR)/$(NULL)" mkdir "$(JAVAPARENT_DIR)"
-    @IF NOT EXIST "$(JAVACLS_DIR)/$(NULL)" mkdir "$(JAVACLS_DIR)"
-!if defined(JAVA_OR_NSJVM)
+$(OUTDIR)\java\classes\ifc11.jar:
+    @IF NOT EXIST "$(JAVAPARENT_DIR)\$(NULL)" mkdir "$(JAVAPARENT_DIR)"
+    @IF NOT EXIST "$(JAVACLS_DIR)\$(NULL)" mkdir "$(JAVACLS_DIR)"
+    @IF NOT EXIST "$(XJAVACLS_DIR)\$(NULL)" mkdir "$(XJAVACLS_DIR)"
+!if defined(MOZ_JAVA)
 !ifdef MOZ_COPY_ALL_JARS
     @copy $(JAVA_DESTPATH)\*.jar "$(JAVACLS_DIR)\"
 !else
     @copy $(JAVA_DESTPATH)\java*.jar "$(JAVACLS_DIR)\"
     @copy $(JAVA_DESTPATH)\ifc*.jar "$(JAVACLS_DIR)\"
     @copy $(JAVA_DESTPATH)\jsj*.jar "$(JAVACLS_DIR)\"
+!endif
+!elseif defined(MOZ_OJI)
+    @copy $(JAVA_DESTPATH)\ifc*.jar "$(XJAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\jsj*.jar "$(XJAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\nsplug*.jar "$(XJAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\nssec*.jar "$(XJAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\ldap*.jar "$(XJAVACLS_DIR)\"
+!ifdef NSJVM
+    @copy $(JAVA_DESTPATH)\java*.jar "$(JAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\jae*.jar "$(JAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\jio*.jar "$(JAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\jsj*.jar "$(JAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\scd*.jar "$(JAVACLS_DIR)\"
+    @copy $(JAVA_DESTPATH)\nav*.jar "$(JAVACLS_DIR)\"
 !endif
 !endif
 

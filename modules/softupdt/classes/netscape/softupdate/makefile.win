@@ -55,3 +55,10 @@ JSRCS=FolderSpec.java \
 CLASSROOT=$(DEPTH)\modules\softupdt\classes 
 
 include <$(DEPTH)\config\rules.mak>
+
+install:: 
+	cd $(JAVA_DESTPATH)
+	@echo +++ building/updating $(NAV_JAR_NAME)
+        -for %i in ($(JSRCS:.java=.class)) do @$(ZIP_PROG) $(ZIP_FLAGS) $(NAV_JAR_NAME) $(PACKAGE:\=/)/%i
+	cd $(MAKEDIR)
+

@@ -33,16 +33,13 @@
 #	sun-java/classsrc/sun/audio/AudioDevice.java
 #	sun-java/classsrc/sun/awt/windows/WToolkit.java
 #
-VERSION_NUMBER		= 40
+VERSION_NUMBER		= 50
 
-ZIP_NAME		= java_$(VERSION_NUMBER)
+# jar for core java classes:
 JAR_NAME		= java$(VERSION_NUMBER).jar
 
-# XXX obsolete
-WIN_ZIP_NAME		= $(ZIP_NAME).win
-MAC_ZIP_NAME		= $(ZIP_NAME).mac
-UNIX_ZIP_NAME		= $(ZIP_NAME).x
-STAND_ALONE_ZIP_NAME	= java_sa.zip
+# jar for navigator-specific java code:
+NAV_JAR_NAME		= nav$(VERSION_NUMBER).jar
 
 ######################################################################
 # Cross-Platform Java Stuff

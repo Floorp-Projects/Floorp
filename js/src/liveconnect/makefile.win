@@ -117,8 +117,8 @@ JNI_GEN=                            \
 !ifdef JAVA_OR_OJI
 MODULE = java
 EXPORTS =				       \
-	_jni/netscape_javascript_JSObject.h    \
-	_jni/netscape_javascript_JSException.h \
+	$(JRI_GEN_DIR)\netscape_javascript_JSObject.h    \
+	$(JRI_GEN_DIR)\netscape_javascript_JSException.h \
 	$(NULL)
 !endif
 
@@ -130,7 +130,7 @@ EXPORTS =				       \
 #//
 #//------------------------------------------------------------------------
 
-LINCS=$(LINCS) -I_jni \
+LINCS=$(LINCS) -I$(JRI_GEN_DIR) \
                -I$(PUBLIC)\js \
                -I$(PUBLIC)\java \
 	$(NULL)
@@ -148,16 +148,6 @@ include <$(DEPTH)/config/rules.mak>
 
 export::  INSTALL_FILES
 
-!ifndef REGENERATE
-
-export:: jsj10.jar
-        $(MAKE_INSTALL) jsj10.jar $(JAVA_DESTPATH)
-#	cd $(JAVA_DESTPATH)
-#	unzip -o jsj10.jar
-#	cd ..\..\js\src\liveconnect
-
-!endif
-
 !ifdef JAVA_OR_OJI
 libs::  $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
@@ -167,7 +157,7 @@ libs::  $(DLL)
 !ifdef REGENERATE
 
 clobber::
-    $(RM_R) _jni 
+    $(RM_R) $(JRI_GEN_DIR)
 
 !endif
 

@@ -93,10 +93,3 @@ else
 $(OBJDIR)/stubs.o:
 endif
 
-ifndef REGENERATE
-
-export:: jsj10.jar
-	$(INSTALL) -m 444 jsj10.jar $(JAVA_DESTPATH)
-	set tmpwd=`pwd`; cd $(JAVA_DESTPATH) ; unzip -o jsj10.jar ; cd $$tempwd 
-
-endif

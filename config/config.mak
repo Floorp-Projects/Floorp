@@ -51,6 +51,10 @@ WINOS=$(WINOS: =)^
 LCFLAGS=$(LCFLAGS) -DSTAND_ALONE_JAVA
 !endif
 
+!ifndef MOZ_JAVA
+MOZ_OJI = 1             # on by default now
+!endif
+
 !ifdef MOZ_JAVA
 MOZ_JAVA_FLAG=-DJAVA
 !ifdef MOZ_OJI
@@ -317,7 +321,8 @@ JAVAC_ZIP=$(MOZ_TOOLS)/lib/javac.zip
 
 ZIP_PROG = $(MOZ_TOOLS)\bin\zip
 UNZIP_PROG = $(MOZ_TOOLS)\bin\unzip
-ZIP_FLAGS = -0 -r -q
+ZIP_COMPR = 9
+ZIP_FLAGS = -$(ZIP_COMPR)r
 
 CFLAGS = $(CFLAGS) -DOS_HAS_DLL
 

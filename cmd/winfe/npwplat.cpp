@@ -78,6 +78,17 @@ NPError wfe_GetPluginsDirectory(CString& csDirname)
     return NPERR_NO_ERROR;
 }
 
+NPError wfe_GetJavaDirectory(CString& csDirname)
+{
+    char ca_default[_MAX_PATH];
+    ::GetModuleFileName(AfxGetApp()->m_hInstance, ca_default, _MAX_PATH);
+    char *cp_lastslash = ::strrchr(ca_default, '\\');
+    *cp_lastslash = NULL;
+    csDirname = ca_default;
+    csDirname += "\\java\\classes";
+    return NPERR_NO_ERROR;
+}
+
 // Fetches the "MIME type" string from the DLL VERSIONINFO structure.
 // "pVersionInfo" is ptr to the VERSIONINFO data, and "pNPMgtBlk" is a handle
 // to a plugin management data structure created during fe_RegisterPlugin().
@@ -565,6 +576,9 @@ void FE_RegisterPlugins()
     // get the main plugins directory and start the process
     wfe_GetPluginsDirectory(csPluginDir);
     fe_RegisterPlugins((LPSTR)(LPCSTR)csPluginDir);
+    CString csJavaDir;
+    wfe_GetJavaDirectory(csJavaDir);
+    JVM_AddToClassPath(csJavaDir);
 }
     
 // saves the current path in the variable passed.  ppPathSave is the
