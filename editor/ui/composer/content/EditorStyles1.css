@@ -1,0 +1,79 @@
+/* This stylesheet is designed to be hacked on, to test the editor with
+   various styles applied.
+*/
+
+h2
+{
+  border:               solid black 1px;
+  background-color:     white;
+}
+
+h3:before
+{
+  content:              "Chapter " counter(chapter) ". ";
+  counter-increment:    chapter;
+  counter-reset:        section;
+}
+
+body
+{
+  background-color:     white;
+}
+
+p
+{
+  background-color:   #CCCCCC;
+}
+
+p:first-letter
+{
+  font-size:            200%;
+  font-weight:          bold;
+  float:                left;
+}
+
+p.note
+{
+  background-color:     pink;
+  padding-top:          10px;
+  padding-bottom:       10px;
+  padding-left:         10px;
+  padding-right:        10px;
+  text-align:           justify;
+}
+
+p.note:before
+{
+  content:              "Note: "
+}
+
+div
+{
+  margin-left:          10pt;
+}
+
+blockquote.poem
+{
+  padding-left:         20pt;
+  border-left:          solid blue 2px;
+}
+
+li:first-child
+{
+  background-color:     yellow;
+}
+
+table#bigtable
+{
+  border:               solid grey 5px;
+}
+
+pre
+{
+  background-color:     white;
+}
+
+ol.roman
+{
+  list-style-type:      lower-roman;
+}
