@@ -111,6 +111,7 @@
             <menupopup>
             </menupopup>
         </menu>
+		<menuseparator />
 		<menuitem value="&charsetMenuMore7.label;" oncommand="window.openDialog('chrome://pref/content/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes')"/>
         </menupopup>
 	</menu>

@@ -52,8 +52,6 @@ function LoadAvailableCharSets()
   var invisible						= new String();
 
 
-	//if (confirm('Load available Charset Decoders ?')) {
-
 		if (availCharsetList) for (i = 0; i < availCharsetList.Count(); i++) {
 			
 			atom = availCharsetList.GetElementAt(i);
@@ -111,8 +109,8 @@ function LoadAvailableCharSets()
 				available_charsets_treeroot.appendChild(item);
 
 				// Select first item
-				if (i == 0) available_charsets.selectItem(item);
-				available_charsets.ensureElementIsVisible(item);
+				if (i == 0) {
+				}
 
 				dump("*** Added Available Charset: " + tit + "\n");
 
@@ -120,7 +118,19 @@ function LoadAvailableCharSets()
 
 		} //for
 
-	//} //confirm
+		//select first item in list box
+
+		item = available_charsets_treeroot.firstChild;
+
+		if (item) try {
+			available_charsets.selectItem(item);
+			available_charsets.ensureElementIsVisible(item);
+		}
+		
+		catch (ex) {
+			dump("Not able to select first avail. charset.\n");
+		}
+
 }
 
 
@@ -207,7 +217,6 @@ function LoadActiveCharSets()
   var active_charsets		   = document.getElementById('active_charsets'); 
   var active_charsets_treeroot = document.getElementById('active_charsets_root'); 
   var visible;
-  //var charsets_pref_string     = new String();
 
   
   try {
@@ -219,8 +228,6 @@ function LoadActiveCharSets()
   }
 
 	
-	//if (confirm('Load active Charset Decoders ?')) {
-
 		if (arrayOfPrefs) for (i = 0; i < arrayOfPrefs.length; i++) {
 
 			str = arrayOfPrefs[i];
@@ -256,10 +263,7 @@ function LoadActiveCharSets()
 			
 			} //atom
 
-			//dump("*** Charset: " + str + "\n");
-			//tit = 'Test';
-			//str = 'Test';
-  
+
 			if (str) if (tit) if (visible) {
 				dump("Adding Active Charset: " + str + " ==> " + tit + "\n");
 
@@ -276,10 +280,6 @@ function LoadActiveCharSets()
 				item.appendChild(row);
 				row.appendChild(cell);
 				active_charsets_treeroot.appendChild(item);
-
-				// Select is only if the caller wants to.
-				active_charsets.selectItem(item);
-				active_charsets.ensureElementIsVisible(item);
 				
 				dump("*** Added Active Charset: " + tit + "\n");
 
@@ -287,11 +287,7 @@ function LoadActiveCharSets()
 
 		} //for
 
-
-		//confirm('intl.charset_menu.static: '+charsets_pref_string+' ...');	
-	//} //confirm
 }
-
 
 
 
@@ -509,7 +505,6 @@ function Save()
 	  {
 		  confirm('exception' + ex);
  		  //prefInt.SetDefaultCharPref("intl.charset_menu.static", "iso-8859-1, iso-2022-jp, shift_jis, euc-jp");
-		  //window.close();
 	  }
 
 } //Save
@@ -526,7 +521,7 @@ function MoveUp() {
       tree.ensureElementIsVisible(selected);
     }
   }
-  //enable_buttons_for_current_panels();
+
   enable_save();
 } //MoveUp
 
@@ -546,7 +541,7 @@ function MoveDown() {
       tree.selectItem(selected);
     }
   }
-  //enable_buttons_for_current_panels();
+
   enable_save();
 } //MoveDown
 
