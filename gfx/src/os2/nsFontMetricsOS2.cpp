@@ -1888,11 +1888,7 @@ nsFontMetricsOS2::InitializeGlobalFonts()
     char* fontptr;
     if( font->metrics.fsType & FM_TYPE_DBCS )
     {
-      if( PL_strcmp( font->metrics.szFamilyname, "GOTHIC" ) == 0 ||
-          PL_strcmp( font->metrics.szFamilyname, "MINCHO" ) == 0 )
-        fontptr = font->metrics.szFacename;
-      else
-        fontptr = font->metrics.szFamilyname;
+      fontptr = font->metrics.szFacename;
       if ((ulSystemCodePage != 1386) &&
           (ulSystemCodePage != 1381) &&
           (ulSystemCodePage != 950)) {
