@@ -1,0 +1,84 @@
+DEPTH		= ../../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= qgeckoembed
+LIBRARY_NAME	= qgeckoembed
+REQUIRES	= xpcom \
+		  string \
+		  docshell \
+		  webshell \
+		  necko \
+		  widget \
+		  dom \
+		  js \
+		  gfx \
+		  layout \
+		  content \
+		  uriloader \
+		  webbrwsr \
+		  shistory \
+		  embed_base \
+		  pref \
+		  windowwatcher \
+		  profdirserviceprovider \
+		  $(NULL)
+
+ifdef ACCESSIBILITY
+REQUIRES        += accessibility
+endif
+
+CPPSRCS		= \
+        $(MOCSRCS) \
+		qgeckoembed.cpp \
+		EmbedWindow.cpp \
+		EmbedProgress.cpp \
+		EmbedContentListener.cpp \
+		EmbedEventListener.cpp \
+		EmbedWindowCreator.cpp \
+		EmbedStream.cpp \
+                qgeckoglobals.cpp
+
+MOCSRCS		= \
+		moc_qgeckoembed.cpp \
+		$(NULL)
+
+# Include config.mk 
+include $(topsrcdir)/config/config.mk
+
+# Force applications to be built non-statically
+# when building the mozcomps meta component
+ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
+BUILD_STATIC_LIBS=
+BUILD_SHARED_LIBS=1
+endif
+
+SHARED_LIBRARY_LIBS= \
+		$(DIST)/lib/libembed_base_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libprofdirserviceprovider_s.$(LIB_SUFFIX) \
+		$(NULL)
+
+EXPORTS		= qgeckoembed.h
+
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
+		$(MOZ_QT_LDFLAGS) \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+ifeq ($(OS_ARCH), SunOS)
+ifndef GNU_CC
+# When using Sun's WorkShop compiler, including
+# /wherever/workshop-5.0/SC5.0/include/CC/std/time.h
+# causes most of these compiles to fail with:
+# line 29: Error: Multiple declaration for std::tm.
+# So, this gets around the problem.
+DEFINES         += -D_TIME_H=1
+endif
+endif
+
+CXXFLAGS        += $(MOZ_QT_CFLAGS) -g02
+CFLAGS          += $(MOZ_QT_CFLAGS) -g02

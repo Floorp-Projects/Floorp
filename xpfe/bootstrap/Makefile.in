@@ -238,7 +238,7 @@ LIBS += $(MOZ_GTK2_LIBS)
 endif
 
 # Add explicit X11 dependency when building against X11 toolkits
-ifneq (,$(filter gtk gtk2 xlib,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter gtk gtk2 qt xlib,$(MOZ_WIDGET_TOOLKIT)))
 LIBS += $(XLDFLAGS) $(XLIBS)
 endif
 

@@ -1,0 +1,116 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#		John C. Griggs <johng@corel.com>
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= widget
+LIBRARY_NAME	= widget_qt
+EXPORT_LIBRARY = 1
+IS_COMPONENT    = 1
+MODULE_NAME	= nsWidgetQtModule
+GRE_MODULE	= 1
+
+REQUIRES	= xpcom \
+		  string \
+		  gfx \
+		  layout \
+		  content \
+		  dom \
+		  appshell \
+		  pref \
+		  uconv \
+          necko \
+		  $(NULL)
+
+CPPSRCS		= \
+		$(MOCSRCS) \
+		nsAppShell.cpp \
+		nsBidiKeyboard.cpp \
+		nsClipboard.cpp \
+		nsCommonWidget.cpp \
+		nsDragService.cpp \
+		nsEventQueueWatcher.cpp \
+		nsLookAndFeel.cpp \
+		nsMime.cpp \
+		nsQtEventDispatcher.cpp \
+		nsSound.cpp \
+		nsToolkit.cpp \
+		nsWidgetFactory.cpp \
+        nsScrollbar.cpp \
+        nsWindow.cpp \
+        nsFilePicker.cpp \
+		$(NULL)
+
+MOCSRCS		= \
+		moc_nsMime.cpp \
+		moc_nsEventQueueWatcher.cpp \
+        moc_nsQtEventDispatcher.cpp \
+        moc_nsScrollbar.cpp \
+		$(NULL)
+
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
+
+EXTRA_DSO_LDOPTS = \
+                $(MOZ_COMPONENT_LIBS) \
+		-lgkgfx \
+                -I$(topsrcdir)/gfx/src/qt \
+		$(MOZ_JS_LIBS) \
+                $(NULL)
+
+EXTRA_DSO_LDOPTS += -L$(DIST)/lib $(MOZ_QT_LDFLAGS) $(MOZ_XLIB_LDFLAGS)
+
+# If not primary toolkit, install in secondary path
+ifneq (qt,$(MOZ_WIDGET_TOOLKIT))
+INACTIVE_COMPONENT = 1
+endif
+
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS	+= $(MOZ_QT_CFLAGS)
+CFLAGS		+= $(MOZ_QT_CFLAGS)
+
+DEFINES		+= -D_IMPL_NS_WIDGET
+
+ifeq ($(OS_ARCH), Linux)
+DEFINES         += -D_BSD_SOURCE
+endif
+ifeq ($(OS_ARCH), SunOS)
+ifndef GNU_CC
+# When using Sun's WorkShop compiler, including
+# /wherever/workshop-5.0/SC5.0/include/CC/std/time.h
+# causes most of these compiles to fail with:
+# line 29: Error: Multiple declaration for std::tm.
+# So, this gets around the problem.
+DEFINES         += -D_TIME_H=1
+endif
+endif
+ 
+LOCAL_INCLUDES	= -I$(srcdir)/../xpwidgets \
+		   -I$(srcdir) \
+		   -I$(topsrcdir)/gfx/src/qt \
+		   $(NULL)
+

@@ -1,0 +1,111 @@
+#
+# The contents of this file are subject to the Netscape Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/NPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation. All
+# Rights Reserved.
+#
+# Contributor(s): 
+#		John C. Griggs <johng@corel.com>
+#               Zack Rusin <zack@kde.org>
+#
+
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		= gfx
+LIBRARY_NAME	= gfx_qt
+EXPORT_LIBRARY = 1
+GRE_MODULE	= 1
+IS_COMPONENT    = 1
+MODULE_NAME	= nsGfxQtModule
+
+REQUIRES	= xpcom \
+		  string \
+		  widget \
+		  view \
+		  uconv \
+		  pref \
+		  util \
+		  js \
+		  mozcomps \
+		  unicharutil \
+		  intl \
+		  locale \
+		  content \
+		  $(NULL)
+
+
+CPPSRCS		= \
+		nsDeviceContextQt.cpp \
+		nsDeviceContextSpecFactoryQt.cpp \
+		nsDeviceContextSpecQt.cpp \
+		nsDrawingSurfaceQt.cpp \
+		nsFontMetricsQt.cpp \
+		nsGfxFactoryQt.cpp \
+		nsImageQt.cpp \
+		nsNativeThemeQt.cpp \
+		nsRegionQt.cpp \
+		nsRenderingContextQt.cpp \
+		nsScreenManagerQt.cpp \
+		nsScreenQt.cpp \
+		$(NULL)
+
+EXTRA_DSO_LIBS	= gkgfx gfxshared_s
+
+include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS	+= $(MOZ_QT_CFLAGS)
+CFLAGS		+= $(MOZ_QT_CFLAGS)
+
+EXTRA_DSO_LDOPTS += \
+		$(LIBS_DIR) \
+		$(EXTRA_DSO_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
+		$(MOZ_JS_LIBS) \
+		$(MOZ_QT_LDFLAGS) \
+		$(NULL)
+
+ifeq ($(OS_ARCH), Linux)
+DEFINES         += -D_BSD_SOURCE
+endif
+ifeq ($(OS_ARCH), SunOS)
+ifndef GNU_CC
+# When using Sun's WorkShop compiler, including
+# /wherever/workshop-5.0/SC5.0/include/CC/std/time.h
+# causes most of these compiles to fail with:
+# line 29: Error: Multiple declaration for std::tm.
+# So, this gets around the problem.
+DEFINES         += -D_TIME_H=1
+endif
+endif
+
+ifdef MOZ_ENABLE_POSTSCRIPT
+DEFINES         += -DUSE_POSTSCRIPT
+endif
+
+ifdef MOZ_ENABLE_XPRINT
+REQUIRES	+= xprintutil
+endif
+
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/. \
+		-I$(srcdir)/.. \
+		-I$(srcdir)/../shared \
+		$(NULL)
+
