@@ -56,7 +56,7 @@ may override scopeInit or fillConstructorProperties methods.
 
 */
 public abstract class IdScriptable extends ScriptableObject
-    implements IdFunction.Master, ScopeInitializer
+    implements IdFunctionMaster, ScopeInitializer
 {
     public boolean has(String name, Scriptable start) {
         if (maxId != 0) {
@@ -249,7 +249,9 @@ public abstract class IdScriptable extends ScriptableObject
      ** value in the permanent cache.
      */
     protected Object getIdValue(int id, Scriptable start) {
-        return cacheIdValue(id, newIdFunction(id));
+        IdFunction f = newIdFunction(id);
+        f.setParentScope(getParentScope());
+        return cacheIdValue(id, f);
     }
 
     /** Set id value. */

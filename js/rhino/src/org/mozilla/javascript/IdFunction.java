@@ -49,26 +49,7 @@ public class IdFunction extends ScriptableObject implements Function
 
     public static final int FUNCTION_AND_CONSTRUCTOR = 2;
 
-    /** Master for id-based functions that knows their properties and how to 
-     ** execute them
-     */
-    public static interface Master {
-        /** 'thisObj' will be null if invoked as constructor, in which case
-         ** instance of Scriptable should be returned */
-        public Object execMethod(int methodId, IdFunction function,
-                                 Context cx, Scriptable scope, 
-                                 Scriptable thisObj, Object[] args)
-            throws JavaScriptException;
-
-        /** Get arity or defined argument count for method with given id. 
-         ** Should return -1 if methodId is not known or can not be used
-         ** with execMethod call */
-        public int methodArity(int methodId);
-
-        public Scriptable getParentScope();
-    }
-    
-    public IdFunction(Master master, String name, int id) {
+    public IdFunction(IdFunctionMaster master, String name, int id) {
         this.master = master;
         this.methodName = name;
         this.methodId = id;
@@ -164,14 +145,6 @@ public class IdFunction extends ScriptableObject implements Function
         return getFunctionPrototype(getParentScope());
     }
 
-    public Scriptable getParentScope() {
-        Scriptable result = super.getParentScope();
-        if (result == null) {
-            result = master.getParentScope();
-        }
-        return result;
-    }
-
     // Copied from NativeFunction
     protected Scriptable getClassPrototype() {
         Object protoVal = immunePrototypeProperty;
@@ -213,7 +186,7 @@ public class IdFunction extends ScriptableObject implements Function
         }
     }
     
-    static RuntimeException onBadMethodId(Master master, int id) {
+    static RuntimeException onBadMethodId(IdFunctionMaster master, int id) {
         // It is program error to call id-like methods for unknown or 
         // non-function id
         return new RuntimeException("BAD FUNCTION ID="+id+" MASTER="+master);
@@ -279,7 +252,7 @@ public class IdFunction extends ScriptableObject implements Function
         ID_NAME      = 3,
         ID_PROTOTYPE = 4;
         
-    protected /*final*/ Master master;
+    protected /*final*/ IdFunctionMaster master;
     protected /*final*/ int methodId;
     
     protected String methodName;

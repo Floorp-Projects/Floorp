@@ -50,7 +50,7 @@ import java.lang.reflect.Method;
  * @author Mike Shaver
  */
 
-public class NativeGlobal implements ScopeInitializer, IdFunction.Master {
+public class NativeGlobal implements ScopeInitializer, IdFunctionMaster {
 
     public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
 
@@ -150,8 +150,6 @@ public class NativeGlobal implements ScopeInitializer, IdFunction.Master {
         }
         return -1;
     }
-
-    public Scriptable getParentScope() { return null; }
 
     private String getMethodName(int methodId) {
         switch (methodId) {
