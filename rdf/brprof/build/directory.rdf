@@ -1,2199 +1,1713 @@
-<r:RDF xmlns:r="http://www.w3.org/TR/WD-rdf-syntax#"
+<RDF xmlns:r="http://www.w3.org/TR/RDF/"
      xmlns:d="http://purl.org/dc/elements/1.0/"  
      xmlns="http://directory.mozilla.org/rdf">
-<Topic r:ID="Top">
+
+
+
+<Topic r:about="Arts/Books">
   <catid>1</catid>
-</Topic>
-<Topic r:ID="Top/Arts">
-  <catid>2</catid>
-  <link r:resource="http://www3.bc.sympatico.ca/PHILLIPSHOTGLASS/GlassPage.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books">
-  <catid>26</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Reviews">
-  <catid>908</catid>
-  <link r:resource="http://www.clark.net/~bell/eibr/book_review.html"/>
-  <link r:resource="http://www.az.com/~drysdam/books/books.htm"/>
-  <link r:resource="http://www.tronco.com/books"/>
-  <link r:resource="http://www.crl.com/~dbrandt/"/>
-  <link r:resource="http://www.indolink.com/Book/index.html"/>
-  <link r:resource="http://www.sfsite.com/fi/index.htm"/>
-  <link r:resource="http://www.sannes.net/chris/library/index.html"/>
-  <link r:resource="http://www.sau.edu/CWIS/Internet/Wild/Refdesk/Howgood/Bookbyte/bkindex.htm"/>
-  <link r:resource="http://www.reed.edu/~karl/postapoc/"/>
-  <link r:resource="http://www.cs.virginia.edu/~jdr8d/books/"/>
-  <link r:resource="http://www.cea.berkeley.edu/~john/book/"/>
-  <link r:resource="http://falcon.cc.ukans.edu/~luce/"/>
-  <link r:resource="http://www.teleport.com/~jaheriot/reviews.htm"/>
-  <link r:resource="http://www.access.digex.net/~cdl/books.html"/>
-  <link r:resource="http://www.mutoscope.com/doras.htm"/>
-  <link r:resource="http://www.teleport.com/~jonno/"/>
-  <link r:resource="http://www.fictiondigest.com"/>
-  <link r:resource="http://www.ideasign.com/crowt/books.htm"/>
-  <link r:resource="http://www.arielbooks.com/"/>
-  <link r:resource="http://www.geocities.com/Athens/Academy/5529/"/>
-  <link r:resource="http://www.theromancereader.com"/>
-  <link r:resource="http://strobe.lights.com/novel/welcome.html"/>
-  <link r:resource="http://www.sleepless.to"/>
-  <link r:resource="http://www.prairienet.org/community/clubs/gpf/reviews.html"/>
-  <link r:resource="http://www.writerswrite.com/journal/"/>
-  <link r:resource="http://web2.airmail.net/thomas3/booklist.htm"/>
-  <link r:resource="http://www.anatomy.usyd.edu.au/danny/book-reviews/"/>
-  <link r:resource="http://colargol.tihlde.hist.no/~dagr/fantasy/fantasy.html"/>
-  <link r:resource="http://www.muohio.edu/~haguecs/bkrvw/BKRVWS.HTM"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Reviews/Magazines_and_Newspapers">
-  <catid>941</catid>
-  <link r:resource="http://www.brightleaf-review.com/"/>
-  <link r:resource="http://www.ala.org/booklist/index.html"/>
-  <link r:resource="http://www.bookpage.com/"/>
-  <link r:resource="http://chicago.digitalcity.com/cafe/books/index.htm"/>
-  <link r:resource="http://www.ala.org/acrl/choice/home.html"/>
-  <link r:resource="http://www.bookwire.com/hmr/"/>
-  <link r:resource="http://www.christianity.net/ct/features/ctbooks.html"/>
-  <link r:resource="http://www.bookwire.com/qbr/qbr.html"/>
-  <link r:resource="http://www.literascape.com/Readers/index.html"/>
-  <link r:resource="http://www.salonmagazine.com/books/sneaks"/>
-  <link r:resource="http://www.scotsman.com/bookreviews"/>
-  <link r:resource="http://www.nytimes.com/auth/login?Tag=/&URL=/books/"/>
-  <link r:resource="http://www.geocities.com/Athens/Acropolis/5710/"/>
-  <link r:resource="http://www.mph.lm.com/pbf.html"/>
-  <link r:resource="http://moshplant.com/prob/prob_covers.html"/>
-  <link r:resource="http://www.raintaxi.com/"/>
-  <link r:resource="http://www.ralphmag.org/"/>
-  <link r:resource="http://www.cs.unca.edu/~davidson/msrrt"/>
-  <link r:resource="http://www.wowwomen.com/tapestry/"/>
-  <link r:resource="http://www.januarymagazine.com/out/reviews.jan"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Reviews/Computer_Books">
-  <catid>942</catid>
-  <link r:resource="http://www.bookwire.com/cbr/"/>
-  <link r:resource="http://www.ercb.com/"/>
-  <link r:resource="http://www.compbookreview.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Science_Fiction">
-  <catid>906</catid>
-  <link r:resource="http://168.150.253.1/~zlensman/lensfaq.html"/>
-  <link r:resource="http://www.baen.com/"/>
-  <link r:resource="http://web.mit.edu/mitsfs/www/homepage.html"/>
-  <link r:resource="http://www.halcyon.com/phaedrus/translist/translist.html"/>
-  <link r:resource="http://lacon3.worldcon.org/"/>
-  <link r:resource="http://www.msen.com/~yorick/srb_taos.html"/>
-  <link r:resource="http://www.randomhouse.com/delrey/"/>
-  <link r:resource="http://sflovers.rutgers.edu/"/>
-  <link r:resource="http://www.skatecity.com/ah/"/>
-  <link r:resource="http://www.tor.com/"/>
-  <link r:resource="http://www.bdd.com/forum/bddforum.cgi/scifi/main.html"/>
-  <link r:resource="http://www.wsfs.org"/>
-  <link r:resource="http://earthspace.net/~esr/sf-words/"/>
-  <link r:resource="http://www.bucconeer.worldcon.org/"/>
-  <link r:resource="http://www.aussiecon3.worldcon.org/"/>
-  <link r:resource="http://world.std.com/~mam/Cracks-and-Shards/"/>
-  <link r:resource="http://www.dcs.gla.ac.uk/SF-Archives/Ansible/"/>
-  <link r:resource="http://www.white-wolf.com/"/>
-  <link r:resource="http://fanac.org/"/>
-  <link r:resource="http://ebbs.english.vt.edu/olp/nyrsf/nyrsf.html"/>
-  <link r:resource="http://www.io.com/~stefanj/82Eridani/index.html"/>
-  <link r:resource="http://www.nor.com.au/users/antisf/index.html"/>
-  <link r:resource="http://www.sfsite.com/isfdb/index.html"/>
-  <link r:resource="http://www.slip.net/~shanly/gallery.html"/>
-  <link r:resource="http://www.locusmag.com/"/>
-  <link r:resource="http://www.nesfa.org/"/>
-  <link r:resource="http://www.atlantic.net/~jcd/"/>
-  <link r:resource="http://www.dragoncon.org/"/>
-  <link r:resource="http://www.scifi.com/sfw/"/>
-  <link r:resource="http://sflovers.rutgers.edu/Web/SFRG/"/>
-  <link r:resource="http://husted.com/hgsf/"/>
-  <link r:resource="http://moonmilk.volcano.org/whorl/"/>
-  <link r:resource="http://cube.ice.net/~kwalsh/callahans.html"/>
-  <link r:resource="http://hugin.imat.com/jordan/"/>
-  <link r:resource="http://www.clark.net/pub/iz/Books/Top100/top100.html"/>
-  <link r:resource="http://www.rahul.net/rootbear/graphics/ringworld/index.html"/>
-  <link r:resource="http://sflovers.rutgers.edu/Web/cons.html"/>
-  <link r:resource="http://www.scifiweekly.com/current/site.html"/>
-  <link r:resource="http://www.nauticom.net/www/babylon/store/store.htm"/>
-  <link r:resource="http://www.lasfs.org"/>
-  <link r:resource="http://www.worldcon.org"/>
-  <link r:resource="http://www.geocities.com/Athens/6477/"/>
-  <link r:resource="http://www.sff.net/bfob/"/>
-  <link r:resource="http://www-personal.umich.edu/~pkretsch/dragon/dragon.htm"/>
-  <link r:resource="http://sunspot.health.org/~nathan/border/borderland.html"/>
-  <link r:resource="http://members.aol.com/kurellian/spint.html"/>
-  <link r:resource="http://www.geocities.com/Area51/Vault/8067/"/>
-  <link r:resource="http://members.aol.com/misuly/bookclub.htm"/>
-  <link r:resource="http://www.magicdragon.com/UltimateSF/SF-Index.html"/>
-  <link r:resource="http://starkloff.com"/>
-  <link r:resource="http://www.delphi.com/sflit/"/>
-  <link r:resource="http://outer-rim.lweb.net"/>
-  <link r:resource="http://www.robotbooks.com/"/>
-  <link r:resource="http://www.fortunecity.com/tattooine/halebopp/162"/>
-  <link r:resource="http://www.eclipse.co.uk/sweetdespise/"/>
-  <link r:resource="http://colargol.tihlde.hist.no/~dagr/fantasy/fantasy.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Science_Fiction/Science">
-  <catid>927</catid>
-  <link r:resource="http://www.astro.cf.ac.uk/groups/relativity/papers/abstracts/miguel94a.html"/>
-  <link r:resource="http://www.algonet.se/~aleph/Trans/Tech/Megascale/dyson_page.html"/>
-  <link r:resource="http://sandbox.xerox.com/nano/"/>
-  <link r:resource="http://www.foresight.org"/>
-  <link r:resource="http://www.talkorigins.org"/>
-  <link r:resource="http://www.diemme.it/~luigi/alma.html"/>
-  <link r:resource="http://www.chaparraltree.com/scison/"/>
-  <link r:resource="http://sparky.mcmaster.ca/People/Faculty/Haykin/books.html"/>
-  <link r:resource="http://www.improb.com"/>
-  <link r:resource="http://www.physics.purdue.edu/~hinson/ftl/FTL_StartingPoint.html"/>
-  <link r:resource="http://www.jps.net/gangale/mars/calendar.htm"/>
-  <link r:resource="http://www.uilondon.org/chernidx.htm"/>
-  <link r:resource="http://nano.xerox.com/nanotech/selfRepNASA.html"/>
-  <link r:resource="http://www.research.ibm.com/quantuminfo/teleportation"/>
-  <link r:resource="http://science.msfc.nasa.gov/newhome/headlines/essd06oct97_1.htm"/>
-  <link r:resource="http://seds.lpl.arizona.edu/nodes/NODEv4n3-10.html"/>
-  <link r:resource="http://seds.lpl.arizona.edu/nineplanets/nineplanets/nineplanets.html"/>
-  <link r:resource="http://www.serve.com/mahood/lazar/lazarmn.htm"/>
-  <link r:resource="http://www.ssc.nasa.gov/~te/hybrid.html"/>
-  <link r:resource="http://www.sff.net/people/Geoffrey.Landis"/>
-  <link r:resource="http://www.thehub.com.au/~mitch/extro/mega.html"/>
-  <link r:resource="http://www.spacefuture.com"/>
-  <link r:resource="http://www.cis.ohio-state.edu/hypertext/faq/usenet-faqs/bygroup/sci/astro/top.html"/>
-  <link r:resource="http://daisy.uwaterloo.ca/~alopez-o/math-faq/mathtext/node26.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Science_Fiction/Authors">
-  <catid>928</catid>
-  <link r:resource="http://www.wavefront.com/~skzb/"/>
-  <link r:resource="http://www.chaparraltree.com/"/>
-  <link r:resource="http://www.cherryh.com/"/>
-  <link r:resource="http://www.cs.duke.edu/~gac/Wolfe/"/>
-  <link r:resource="http://psg.com/~ted/spider/"/>
-  <link r:resource="http://world.std.com/~pduggan/wolfe.html"/>
-  <link r:resource="http://members.xoom.com/Knownspace/"/>
-  <link r:resource="http://www.tardis.ed.ac.uk/~ism/lackey/"/>
-  <link r:resource="http://www.demon.co.uk/review/features/banksint.html"/>
-  <link r:resource="http://www.wenet.net/~lquilter/femsf/authors/leguin/"/>
-  <link r:resource="http://www.cyberus.ca/~cdl/"/>
-  <link r:resource="http://www.gregbear.com"/>
-  <link r:resource="http://www.clark.net/pub/edseiler/WWW/asimov_FAQ.html"/>
-  <link r:resource="http://www.ddb.com/pddb/"/>
-  <link r:resource="http://www.kosmic.org/members/dongle/henry/"/>
-  <link r:resource="http://www.pcc.com/~jay/delany/"/>
-  <link r:resource="http://www.ns.net/~gifford/"/>
-  <link r:resource="http://www.sff.net/people/kathkerr/"/>
-  <link r:resource="http://www.users.interport.net/~regulus/pkd/pkd-int.html"/>
-  <link r:resource="http://www.winternet.com/~joelr/"/>
-  <link r:resource="http://www.dm.net/~mjkramer/"/>
-  <link r:resource="http://www.sff.net/people/tbisson/index.htp"/>
-  <link r:resource="http://www.player.org/pub/flash/people/emma.html"/>
-  <link r:resource="http://www.ddb.com/headcrash/"/>
-  <link r:resource="http://members.xoom.com/eldritchdark/"/>
-  <link r:resource="http://www.sff.net/people/lwe/index.htp"/>
-  <link r:resource="http://www.wordfire.com/"/>
-  <link r:resource="http://www.sfwa.org"/>
-  <link r:resource="http://www.sff.net/people/asaro/"/>
-  <link r:resource="http://www.sff.net/people/roger.allen/index.htp"/>
-  <link r:resource="http://www.teleport.com/~djuru/"/>
-  <link r:resource="http://www.sff.net/people/"/>
-  <link r:resource="http://www.hatrack.com/"/>
-  <link r:resource="http://www.starrigger.net/"/>
-  <link r:resource="http://www.wmin.ac.uk/~fowlerc/patcadigan.html"/>
-  <link r:resource="http://www.sff.net/people/DavidBCoe/index.htp"/>
-  <link r:resource="http://www.sff.net/people/Jack_L_Chalker/"/>
-  <link r:resource="http://www.autopen.com/suzy.mc.shtml"/>
-  <link r:resource="http://www.sff.net/people/Brenda"/>
-  <link r:resource="http://www.nh.ultranet.com/~jimkelly/"/>
-  <link r:resource="http://www.catwriter.com/cdouglas/"/>
-  <link r:resource="http://www.crossover.com/~costik/"/>
-  <link r:resource="http://ebbs.english.vt.edu/exper/kcramer/kc.html"/>
-  <link r:resource="http://www.fred.net/thirteen/"/>
-  <link r:resource="http://www.sff.net/people/doylemacdonald/index.htp"/>
-  <link r:resource="http://www.ibmpcug.co.uk/~owls/index2.html"/>
-  <link r:resource="http://www.whidbey.com/forward/"/>
-  <link r:resource="http://home1.gte.net/mansy/index.htm"/>
-  <link r:resource="http://www.sff.net/people/nankress"/>
-  <link r:resource="http://www.serve.com/Zeddzorander/prophets.htm"/>
-  <link r:resource="http://www.throneworld.com/personal/writing/index.html"/>
-  <link r:resource="http://www.thuntek.net/~scg/s&l.htm"/>
-  <link r:resource="http://www.sff.net/people/jack.haldeman/"/>
-  <link r:resource="http://www.panix.com/~dgh"/>
-  <link r:resource="http://home.earthlink.net/~sashamiller/"/>
-  <link r:resource="http://www.wizard.net/~noire/Lewitt/"/>
-  <link r:resource="http://www.sff.net/people/WMcCarth/"/>
-  <link r:resource="http://www.en.com/users/mcq/"/>
-  <link r:resource="http://www.mindspring.com/~profmike/"/>
-  <link r:resource="http://www.wgbh.org/wgbh/pages/pri/spirit/host.html"/>
-  <link r:resource="http://bentley.uh.edu/philosophy/leiber/jleiber.htm"/>
-  <link r:resource="http://www.panix.com/~bam/"/>
-  <link r:resource="http://www.sff.net/people/Melisa/"/>
-  <link r:resource="http://www.berserker.com/"/>
-  <link r:resource="http://www.hipiers.com/index.html"/>
-  <link r:resource="http://www.para-net.com/~ynavarro"/>
-  <link r:resource="http://www.panix.com/~pnh/"/>
-  <link r:resource="http://members.aol.com/patri10629/"/>
-  <link r:resource="http://www.kenyon.edu/depts/biology/slonc.htm"/>
-  <link r:resource="http://www.mindspring.com/~michaelreaves/index.htm"/>
-  <link r:resource="http://polya.mts.jhu.edu/~reimann/"/>
-  <link r:resource="http://www.sfwriter.com/"/>
-  <link r:resource="http://www.rscs.net/~ms001/mainpage.html"/>
-  <link r:resource="http://www.sff.net/people/sheffield/"/>
-  <link r:resource="http://www.tadwilliams.com"/>
-  <link r:resource="http://www.camulod.com"/>
-  <link r:resource="http://web.clas.ufl.edu/users/ssmith/"/>
-  <link r:resource="http://www.primenet.com/~somtow/"/>
-  <link r:resource="http://www.neverend.com/"/>
-  <link r:resource="http://www.well.com/user/davetrow/"/>
-  <link r:resource="http://www.dendarii.com/"/>
-  <link r:resource="http://www.geocities.com/Area51/Cavern/2871/uwhome.htm"/>
-  <link r:resource="http://www.sff.net/people/R.Weinberg/"/>
-  <link r:resource="http://www.rtis.com/mwells/mwells.htm"/>
-  <link r:resource="http://www.sff.net/people/joe.haldeman/"/>
-  <link r:resource="http://www.thuntek.net/~walter/index.htm"/>
-  <link r:resource="http://www.endicott-studio.com/"/>
-  <link r:resource="http://www.sff.net/people/e.friesner/"/>
-  <link r:resource="http://www.sff.net/people/BenBova/"/>
-  <link r:resource="http://www.sff.net/people/Jim.Morrow/"/>
-  <link r:resource="http://www.sff.net/people/K-Mac/"/>
-  <link r:resource="http://www.sff.net/people/Elizabeth.Moon/"/>
-  <link r:resource="http://www.sff.net/people/Josepha.Sherman/"/>
-  <link r:resource="http://www.sff.net/people/Tad.Williams/"/>
-  <link r:resource="http://www.halcyon.com/eneuman/tad.htm"/>
-  <link r:resource="http://www.wco.com/~guthwulf/"/>
-  <link r:resource="http://vance.hw.nl/"/>
-  <link r:resource="http://www.sff.net/people/Lynn.Abbey/"/>
-  <link r:resource="http://www.clark.net/pub/edseiler/WWW/asimov_home_page.html"/>
-  <link r:resource="http://chaos.ph.utexas.edu/~weeks/misc/sturgeon.html"/>
-  <link r:resource="http://www.WSU.EDU:8080/~amerstu/THS/thshome.html"/>
-  <link r:resource="http://members.tripod.com/~gwillick/sflist.html"/>
-  <link r:resource="http://hugin.imat.com/jordan/"/>
-  <link r:resource="http://www.intranet.ca/~mccon51"/>
-  <link r:resource="http://www.xmission.com/~shpshftr/GC/GC-Home.html"/>
-  <link r:resource="http://www.mindspring.com/~mhhutchins/bishop.htm"/>
-  <link r:resource="http://www.math.ttu.edu/~kesinger/brust/"/>
-  <link r:resource="http://www.ugcs.caltech.edu/~phoenix/brust.html"/>
-  <link r:resource="http://www.scifistation.com/"/>
-  <link r:resource="http://student-www.uchicago.edu/users/kor2/WOT/WOTindex/"/>
-  <link r:resource="http://home.earthlink.net/~panflx/TAD/TAD_Intro.html"/>
-  <link r:resource="http://www.euro.net/mark-space/PhilipJoseFarmer.html"/>
-  <link r:resource="http://hugin.imat.com/waygate/jordan.html"/>
-  <link r:resource="http://www.lankhmar.demon.co.uk/"/>
-  <link r:resource="http://www.geocities.com/Area51/Rampart/9679/"/>
-  <link r:resource="http://www.webcom.com/bsx/lemnet.html"/>
-  <link r:resource="http://www.su.ic.ac.uk/clubsocs/scc/icsf/books/PRIEST/index.html"/>
-  <link r:resource="http://www.player.org/pub/flash/people/will.html"/>
-  <link r:resource="http://www.webleyweb.com/lneil/index.html"/>
-  <link r:resource="http://www.clark.net/pub/kfl/lns/"/>
-  <link r:resource="http://www.sfsite.com/~silverag/turtledove.html"/>
-  <link r:resource="http://www.islandia.is/~maxhjor/"/>
-  <link r:resource="http://www4.ncsu.edu/~mcmesser/bester/"/>
-  <link r:resource="http://www.massmedia.com/~mikeb/jvm/index.html"/>
-  <link r:resource="http://www.ugcs.caltech.edu/~phoenix/vinge/"/>
-  <link r:resource="http://www.euro.net/mark-space/bioJackWomack.html"/>
-  <link r:resource="http://www.tdv.com/html/douglas_a.ssi"/>
-  <link r:resource="http://public.logica.com/~stepneys/sf/books/b/barnes.htm"/>
-  <link r:resource="http://www.wenet.net/~lquilter/femsf/authors/butler.html"/>
-  <link r:resource="http://www.panix.com/~stern/lens/ee_smith.html"/>
-  <link r:resource="http://www.cs.utexas.edu/users/dastuart/fictiondir/authordir/eesmith/"/>
-  <link r:resource="http://www.sfsite.com/scribe/scribe01.htm"/>
-  <link r:resource="http://gate.math2.us.edu.pl/~lucasb"/>
-  <link r:resource="http://members.aol.com/rcampb3422/index.html"/>
-  <link r:resource="http://www.eclipse.co.uk/sweetdespise/"/>
-  <link r:resource="http://www.connectexpress.com/~jon/silvhome.htm"/>
-  <link r:resource="http://www.geocities.com/ResearchTriangle/5431/scifi.html"/>
-  <link r:resource="http://www.onelist.com/subscribe.cgi/AllPeterDavid"/>
-  <link r:resource="http://www.teleport.com/~sengdahl/"/>
-  <link r:resource="http://www.movie-trailers.com/weber/"/>
-  <link r:resource="http://www.msen.com/~yorick/srb_taos.html"/>
-  <link r:resource="http://www.sff.net:80/people/hzachary/index.htp"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Horror">
-  <catid>921</catid>
-  <link r:resource="http://www.geocities.com/bourbonstreet/quarter/6858/index.html"/>
-  <link r:resource="http://members.tripod.com/~snf/minnis.htm"/>
-  <link r:resource="http://www.cljones.com/cl2.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Horror/Stephen_King">
-  <catid>1029</catid>
-  <link r:resource="http://moviething.com/king/"/>
-  <link r:resource="http://www.isisw3.com/sking/"/>
-  <link r:resource="http://come.to/stephenking"/>
-  <link r:resource="http://www.stephenking.net/"/>
-  <link r:resource="http://privat.schlund.de/gilbert/king/home.htm"/>
-  <link r:resource="http://www.geocities.com/Athens/Delphi/4102/"/>
-  <link r:resource="http://www.salonmagazine.com/april97/shining970425.html"/>
-  <link r:resource="http://home5.swipnet.se/~w-55592/gallery.htm"/>
-  <link r:resource="http://www.lisp.com.au/~daviddth/king/king.html"/>
-  <link r:resource="http://www.eddog.com/sk/books.html"/>
-  <link r:resource="http://www.stephenking.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Horror/Dean_Koontz">
-  <catid>1030</catid>
-  <link r:resource="http://www.bdd.com/bin/forums/koontz/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Horror/Peter_Straub">
-  <catid>1031</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Horror/John_Grisham">
-  <catid>1032</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance">
-  <catid>907</catid>
-  <link r:resource="http://www.likesbooks.com"/>
-  <link r:resource="http://www.romfort.org"/>
-  <link r:resource="http://www.geocities.com/Athens/8774/index.htm"/>
-  <link r:resource="http://www.heartrealm.com"/>
-  <link r:resource="http://www.silcom.com/~manatee/utc.html"/>
-  <link r:resource="http://www.romanceweb.com/"/>
-  <link r:resource="http://www.geocities.com/Athens/Forum/8078/home.html"/>
-  <link r:resource="http://www.geocities.com/~romancenovels/"/>
-  <link r:resource="http://come.to/writing"/>
-  <link r:resource="http://www.writepage.com/romance.htm"/>
-  <link r:resource="http://www.theromancereader.com/"/>
-  <link r:resource="http://www.eclectics.com/"/>
-  <link r:resource="http://www.slake.com/"/>
-  <link r:resource="http://www.icgnet.com/romancebooks/index1.htm"/>
-  <link r:resource="http://www.geocities.com/SoHo/Studios/6889/"/>
-  <link r:resource="http://www.geocities.com/Athens/8623/"/>
-  <link r:resource="http://www.theromanceclub.com/"/>
-  <link r:resource="http://www.ingrambook.com/Surf/product_info/category_info/category_files/fr.htm"/>
-  <link r:resource="http://www.personalpassions.com/default.asp"/>
-  <link r:resource="http://www.mindspring.com/~driordan/kiss/"/>
-  <link r:resource="http://members.aol.com/misselise/craigh.htm"/>
-  <link r:resource="http://members.aol.com/sfreditor/index.htm"/>
-  <link r:resource="http://www.netcomuk.co.uk/~louisab/home.htm"/>
-  <link r:resource="http://www.mindspring.com/~jharrison3/Romance.htm"/>
-  <link r:resource="http://www.geocities.com/SoHo/Lofts/5502/"/>
-  <link r:resource="http://www.wire.net.au/~melinda/rf.htm"/>
-  <link r:resource="http://www.geocities.com/SoHo/Gallery/3172/nrhome.html"/>
-  <link r:resource="http://members.tripod.com/~KristinaDaron/"/>
-  <link r:resource="http://www.geocities.com/Paris/Cafe/6680/"/>
-  <link r:resource="http://www.geocities.com/Paris/Cafe/7031/romance.html"/>
-  <link r:resource="http://www.magicnet.net/~zrogers/elise/!index.htm"/>
-  <link r:resource="http://www.geocities.com/Athens/3064/"/>
-  <link r:resource="http://www.geocities.com/Heartland/Ridge/4737/b00sanctuary.html"/>
-  <link r:resource="http://www.geocities.com/SoHo/Lofts/7119/"/>
-  <link r:resource="http://gothicjournal.com/romance/"/>
-  <link r:resource="http://www.passionnook.com/archive.html"/>
-  <link r:resource="http://www.tamoore.com/romance/"/>
-  <link r:resource="http://www.romanticuniverse.com/"/>
-  <link r:resource="http://www.mindspring.com/~warlord1/bookdee.htm"/>
-  <link r:resource="http://www.fortunecity.com/victorian/cezanne/379/"/>
-  <link r:resource="http://www.geocities.com/Heartland/Plains/5828/romancing.html"/>
-  <link r:resource="http://www.romancejournal.com/"/>
-  <link r:resource="http://pages.hotbot.com/family/frenchkiss/book.html"/>
-  <link r:resource="http://www.geocities.com/Heartland/Ridge/4745/"/>
-  <link r:resource="http://pages.ivillage.com/cr/btkuhn"/>
-  <link r:resource="http://home.earthlink.net/~avelyn/"/>
-  <link r:resource="http://www.geocities.com/Paris/Lights/3079/index.html"/>
-  <link r:resource="http://members.tripod.com/~eventmaker/series.html"/>
-  <link r:resource="http://www.intplsrv.net/heirlooms/NovelNook.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Authors">
-  <catid>929</catid>
-  <link r:resource="http://romance-central.com/TerriBrisbin"/>
-  <link r:resource="http://www.sff.net/people/april.Kihlstrom"/>
-  <link r:resource="http://www.delacroix.net"/>
-  <link r:resource="http://www.sff.net/people/shill"/>
-  <link r:resource="http://www.romcom.com/farraday/"/>
-  <link r:resource="http://www3.sympatico.ca/harrington"/>
-  <link r:resource="http://www.debstover.com/"/>
-  <link r:resource="http://www.eclectics.com/lindalewis"/>
-  <link r:resource="http://www.eclectics.com/marilyngrall"/>
-  <link r:resource="http://www.infokart.com/gwynneforster/"/>
-  <link r:resource="http://www.joleigh.com"/>
-  <link r:resource="http://www.eclectics.com/karenwiesner/index.html"/>
-  <link r:resource="http://www.whittierca.com/hawk.htm"/>
-  <link r:resource="http://www.lightst.com/MaryJo/"/>
-  <link r:resource="http://www.sff.net/people/jobeverley/"/>
-  <link r:resource="http://www.vgrant.com/homepage.html"/>
-  <link r:resource="http://members.aol.com/rdkerce/private/main.htm"/>
-  <link r:resource="http://www.judithivory.com/avonladies/"/>
-  <link r:resource="http://www.susanmallery.com"/>
-  <link r:resource="http://romance-central.com/Charles-Boyle/"/>
-  <link r:resource="http://www.geocities.com/Paris/Parc/1755"/>
-  <link r:resource="http://members.aol.com/lissamchls"/>
-  <link r:resource="http://members.home.com/lplumley/"/>
-  <link r:resource="http://members.aol.com/donnafaz"/>
-  <link r:resource="http://www.eclectics.com/peggymoreland"/>
-  <link r:resource="http://www.eclectics.com/marionmarshall"/>
-  <link r:resource="http://www.sff.net/people/romance/"/>
-  <link r:resource="http://www.onr.com/user/bejean/"/>
-  <link r:resource="http://www.geocities.com/Paris/Rue/9116/"/>
-  <link r:resource="http://www.alpine.net/~toombs/"/>
-  <link r:resource="http://www.devoncroix.com/frame3.html"/>
-  <link r:resource="http://www.coredcs.com/~mermaid/mary.html"/>
-  <link r:resource="http://www.shellythacker.com/"/>
-  <link r:resource="http://www.execpc.com/~iwtbp/index.html"/>
-  <link r:resource="http://hickory.engr.utk.edu/~ellis/h_smith.html"/>
-  <link r:resource="http://www.theromanceclub.com/authors/juliaquinn/Default.htm"/>
-  <link r:resource="http://www.eclectics.com/rebecca/index.html"/>
-  <link r:resource="http://members.aol.com/lscomp/index.html"/>
-  <link r:resource="http://www.geralyndawson.com/"/>
-  <link r:resource="http://members.aol.com/skrinard/"/>
-  <link r:resource="http://www.sff.net/people/ValerieTaylor/"/>
-  <link r:resource="http://home1.gte.net/shelinel/index.htm"/>
-  <link r:resource="http://www.freeyellow.com/members2/romancebooks/index.html"/>
-  <link r:resource="http://home.att.net/~CFlynn/home.html"/>
-  <link r:resource="http://www.booktalk.com/HGraham/"/>
-  <link r:resource="http://members.xoom.com/Kinley/"/>
-  <link r:resource="http://members.xoom.com/Sherrilyn/"/>
-  <link r:resource="http://www.temptationauthors.com/"/>
-  <link r:resource="http://www.sff.net/people/mmoon/"/>
-  <link r:resource="http://www.sff.net/people/Bookends/"/>
-  <link r:resource="http://www.krentz-quick.com/"/>
-  <link r:resource="http://members.aol.com/alexismh/"/>
-  <link r:resource="http://www.edithlayton.com/"/>
-  <link r:resource="http://www.geocities.com/Athens/Forum/8078/andersen.html"/>
-  <link r:resource="http://www.booksbyeames.com"/>
-  <link r:resource="http://www.geocities.com/PicketFence/1164/lindsey.html"/>
-  <link r:resource="http://www.geocities.com/Athens/9911/"/>
-  <link r:resource="http://www.eclectics.com/sharianton/index.html"/>
-  <link r:resource="http://www.geocities.com/SoHo/8488/index.html"/>
-  <link r:resource="http://w3.terran.org/pages/stella.cameron/bio.html"/>
-  <link r:resource="http://members.aol.com/laurelodon/"/>
-  <link r:resource="http://members.aol.com/ryanlangan/"/>
-  <link r:resource="http://www.dianehaeger.com/index.html"/>
-  <link r:resource="http://www.dhc.net/~rpreece/author.html"/>
-  <link r:resource="http://www.pobox.com/~lisaarlt"/>
-  <link r:resource="http://www.eclectics.com/victoria/index.html"/>
-  <link r:resource="http://www.geocities.com/Paris/Rue/9471/drew2.html"/>
-  <link r:resource="http://www.tlt.com/authors/splunkett.htm"/>
-  <link r:resource="http://www.eclectics.com/celestehamilton/index.html"/>
-  <link r:resource="http://www.eclectics.com/gaileastwood/index.html"/>
-  <link r:resource="http://www.eclectics.com/lorifoster/index.html"/>
-  <link r:resource="http://www.eclectics.com/annemanning/index.html"/>
-  <link r:resource="http://www.dm.net/~malia/index.htm"/>
-  <link r:resource="http://www.romcom.com/ferguson/index.htm"/>
-  <link r:resource="http://www.fernmichaels.com/"/>
-  <link r:resource="http://members.aol.com/Ssizemore/storm/home.htm"/>
-  <link r:resource="http://www.erols.com/robyna/Index.html"/>
-  <link r:resource="http://www.nettrends.com/debbiemacomber/"/>
-  <link r:resource="http://www.tlt.com/authors/sabe.htm"/>
-  <link r:resource="http://www.geocities.com/Paris/Bistro/6812/"/>
-  <link r:resource="http://www.andreakane.com/"/>
-  <link r:resource="http://www.romanceweb.com/mcgoldrick/index.html"/>
-  <link r:resource="http://www.kentepub.com/"/>
-  <link r:resource="http://www.victoriamalvey.com/"/>
-  <link r:resource="http://www.wdass.net/dmullins/"/>
-  <link r:resource="http://www.tlt.com/authors/cmccarthy.htm"/>
-  <link r:resource="http://www.tlt.com/authors/nbeaumont.htm"/>
-  <link r:resource="http://www.tlt.com/authors/mcanham.htm"/>
-  <link r:resource="http://shell.rmi.net/~jrewing/"/>
-  <link r:resource="http://www.tlt.com/authors/vchancel.htm"/>
-  <link r:resource="http://www.geocities.com/SoHo/Lofts/5507/main.html"/>
-  <link r:resource="http://www.nettrends.com/barbaramcmahon/"/>
-  <link r:resource="http://www.brandewyne.com/"/>
-  <link r:resource="http://www.mirastars.com/maryalice.html"/>
-  <link r:resource="http://www.mindspring.com/~rrmallory/Index.html"/>
-  <link r:resource="http://www.lisajackson.com/"/>
-  <link r:resource="http://home.eznet.net/~patryan/"/>
-  <link r:resource="http://www.geocities.com/Heartland/Acres/8875/desk.htm"/>
-  <link r:resource="http://www.geocities.com/SoHo/Gallery/5260/julgar1.htm"/>
-  <link r:resource="http://www.geocities.com/Paris/Rue/8924/"/>
-  <link r:resource="http://www2.netdoor.com/~dminyard/writing.htm"/>
-  <link r:resource="http://members.aol.com/susanedw2u/"/>
-  <link r:resource="http://www.pertel.com/baker.htm"/>
-  <link r:resource="http://www.robinleehatcher.com/"/>
-  <link r:resource="http://www.parrett.net/~bittner/"/>
-  <link r:resource="http://web.net-link.net/~hharte/"/>
-  <link r:resource="http://www.erols.com/courtni/index.html"/>
-  <link r:resource="http://members.aol.com/hfur/index.html"/>
-  <link r:resource="http://www.cofer-white.com/RozFox/"/>
-  <link r:resource="http://www.mirastars.com/susan/wiggs2.htm"/>
-  <link r:resource="http://www.geocities.com/Hollywood/8283/pveryan.html"/>
-  <link r:resource="http://members.aol.com/evievv/evie.html"/>
-  <link r:resource="http://www.romance-novels.com/kaylaperrin/"/>
-  <link r:resource="http://www.tlt.com/authors/rschone.htm"/>
-  <link r:resource="http://www.catherineanderson.com/"/>
-  <link r:resource="http://www.vickihinze.com/"/>
-  <link r:resource="http://www.geocities.com/SoHo/Coffeehouse/3269/index.html"/>
-  <link r:resource="http://home.earthlink.net/~ralsobrook/"/>
-  <link r:resource="http://www.apayne.com/susanamarillas/"/>
-  <link r:resource="http://www.sff.net/people/asaro/"/>
-  <link r:resource="http://www.voyager.co.nz/~dclair"/>
-  <link r:resource="http://elizabethlowell.writerspace.com/"/>
-  <link r:resource="http://www.tracygrant.org/"/>
-  <link r:resource="http://www.getset.com/hsal/"/>
-  <link r:resource="http://www.theromanceclub.com/authors/eileencharbonneau/"/>
-  <link r:resource="http://www.sff.net/people/DebStover/mort.htm"/>
-  <link r:resource="http://members.aol.com/paulinebj/"/>
-  <link r:resource="http://hometown.aol.com/TX4love/cmcdavid.html"/>
-  <link r:resource="http://www.lindsal.demon.co.uk/townsend/home.htm"/>
-  <link r:resource="http://www.sff.net/people/PGaffney/"/>
-  <link r:resource="http://celt.net/Boru/"/>
-  <link r:resource="http://mcgeefamily.net/emilie/"/>
-  <link r:resource="http://www.geocities.com/Athens/Forum/8078/garlock.html"/>
-  <link r:resource="http://hickory.engr.utk.edu/~ellis/jane.html"/>
-  <link r:resource="http://www.paintedrock.com/authors/garbera.htm"/>
-  <link r:resource="http://www.romanceforum.com/dara.htm"/>
-  <link r:resource="http://home.swbell.net/leharris/"/>
-  <link r:resource="http://caitlondon.7thgate.com/"/>
-  <link r:resource="http://www.deneecody.com/"/>
-  <link r:resource="http://www.nettrends.com/gaylelynds/"/>
-  <link r:resource="http://www.geocities.com/Paris/Parc/1956/"/>
-  <link r:resource="http://www.infokart.com/rochellealers/"/>
-  <link r:resource="http://members.aol.com/bekybarker/index.html"/>
-  <link r:resource="http://www.nettrends.com/sandybishop/"/>
-  <link r:resource="http://members.aol.com/triciabray/"/>
-  <link r:resource="http://members.tripod.com/~ElizabethDelisi/"/>
-  <link r:resource="http://www.infokart.com/dorsey/christine.html"/>
-  <link r:resource="http://caitlondon.com"/>
-  <link r:resource="http://www.kranney.com/"/>
-  <link r:resource="http://www.nettrends.com/merlinelovelace/"/>
-  <link r:resource="http://www.nettrends.com/sallycarleen/"/>
-  <link r:resource="http://www.nettrends.com/jimmcbride/"/>
-  <link r:resource="http://www.nettrends.com/lauraabbot/"/>
-  <link r:resource="http://www.nettrends.com/sharonsala/"/>
-  <link r:resource="http://www.nettrends.com/georginagentry/"/>
-  <link r:resource="http://home.rmi.net/~jrewing/"/>
-  <link r:resource="http://home.att.net/~SandraMarton/"/>
-  <link r:resource="http://www.nettrends.com/carolfinch/"/>
-  <link r:resource="http://www.glsoft.com/donnah/"/>
-  <link r:resource="http://www.romancejournal.com/Goodman/home.htm"/>
-  <link r:resource="http://www.geocities.com/SoHo/Museum/2168/"/>
-  <link r:resource="http://www.tlt.com/authors/fray.htm"/>
-  <link r:resource="http://www.booktalk.com/MerylSawyer/"/>
-  <link r:resource="http://www.weluvromance.com/"/>
-  <link r:resource="http://www.geocities.com/Athens/Forum/8078/eagle.html"/>
-  <link r:resource="http://www.romanceweb.com/kfreiman/"/>
-  <link r:resource="http://www.romcom.com/barbieri/index.htm"/>
-  <link r:resource="http://home.att.net/~sallytylerhayes/"/>
-  <link r:resource="http://www.geocities.com/Athens/6293/auel.html"/>
-  <link r:resource="http://www.geocities.com/SoHo/Square/3524/index.html"/>
-  <link r:resource="http://members.aol.com/aaautin/romance.html"/>
-  <link r:resource="http://www.writepage.com/authors/aylworts.htm"/>
-  <link r:resource="http://www.writepage.com/authors/chappell.htm"/>
-  <link r:resource="http://www.romanceweb.com/jillbarnett/index.html"/>
-  <link r:resource="http://members.aol.com/ESinclair1/index.html"/>
-  <link r:resource="http://rampages.onramp.net/~lkinsale/"/>
-  <link r:resource="http://www.paintedrock.com/authors/mckeever/mckeever.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Events">
-  <catid>940</catid>
-  <link r:resource="http://home.earthlink.net/~elaineklee/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Research">
-  <catid>931</catid>
-  <link r:resource="http://members.tripod.com/~TheHistoricalGazette/"/>
-  <link r:resource="http://www.chinet.com/~laura/html/titles01.html"/>
-  <link r:resource="http://www.refdesk.com/"/>
-  <link r:resource="http://www.paxconsulting.com/dlinks.html"/>
-  <link r:resource="http://www.odinscastle.org/"/>
-  <link r:resource="http://www.dm.net/~snyder/"/>
-  <link r:resource="http://members.aol.com/regencyrdr/regmain.htm"/>
-  <link r:resource="http://www.inficad.com/~jacreding/romlinks.html"/>
-  <link r:resource="http://www.lib.uchicago.edu/~llou/romance.html"/>
-  <link r:resource="http://www.geocities.com/Athens/Acropolis/7517/index.html"/>
-  <link r:resource="http://www.geocities.com/BourbonStreet/2757/"/>
-  <link r:resource="http://www.geocities.com/Athens/Troy/3801/"/>
-  <link r:resource="http://www.tamoore.com/romance/"/>
-  <link r:resource="http://members.tripod.com/~KayaAlder/index.html"/>
-  <link r:resource="http://members.xoom.com/jausten/"/>
-  <link r:resource="http://britannia.com/history/"/>
-  <link r:resource="http://www.data-wales.co.uk/castles1.htm"/>
-  <link r:resource="http://www.fairacre.demon.co.uk/"/>
-  <link r:resource="http://www.victoriana.com/antiques/index.html"/>
-  <link r:resource="http://www.liv.ac.uk/~evansjon/humanities/history/history.html"/>
-  <link r:resource="http://www.moonstonerp.com/"/>
-  <link r:resource="http://members.tripod.com/regencycafe/regencycafeindex.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Webrings">
-  <catid>934</catid>
-  <link r:resource="http://www.geocities.com/SoHo/Square/7066/ring.htm"/>
-  <link r:resource="http://members.xoom.com/Kinley/histrom.htm"/>
-  <link r:resource="http://www.geocities.com/Athens/8774/ring.htm"/>
-  <link r:resource="http://www.geocities.com/Heartland/Meadows/1217/Ring_of_Romance.html"/>
-  <link r:resource="http://www.geocities.com/Wellesley/4256/"/>
-  <link r:resource="http://www.eclectics.com/authorring.html"/>
-  <link r:resource="http://www.heartrealm.com/HeartRing.htm"/>
-  <link r:resource="http://hickory.engr.utk.edu/~ellis/smrw.html"/>
-  <link r:resource="http://www.geocities.com/~romancenovels/ring.htm"/>
-  <link r:resource="http://www.likesbooks.com/aarring.html"/>
-  <link r:resource="http://www.geocities.com/Paris/Bistro/6971/dellbooks.html"/>
-  <link r:resource="http://members.tripod.com/~Kinleymacg/Romread.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Magazines">
-  <catid>937</catid>
-  <link r:resource="http://www.val.net/DarkRomance/"/>
-  <link r:resource="http://www.affairedecoeur.com/"/>
-  <link r:resource="http://www.romcom.com/"/>
-  <link r:resource="http://www.romantictimes.com/"/>
-  <link r:resource="http://www.romanceforum.com"/>
-  <link r:resource="http://romancefiction.com/index.shtml"/>
-  <link r:resource="http://gothicjournal.com/romance/"/>
-  <link r:resource="http://members.aol.com/nppubs/LOVE.html"/>
-  <link r:resource="http://www.romfort.org/rs/Scribe.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Publishers">
-  <catid>935</catid>
-  <link r:resource="http://www.kensingtonbooks.com/index.html"/>
-  <link r:resource="http://www.dorchesterpub.com/"/>
-  <link r:resource="http://www.bdd.com/romance/"/>
-  <link r:resource="http://www.randomhouse.com/BB/"/>
-  <link r:resource="http://www.avonbooks.com/avon/romance.html"/>
-  <link r:resource="http://www.romance.net/connections.html"/>
-  <link r:resource="http://www.harpercollins.com/"/>
-  <link r:resource="http://www.penguinputnam.com/"/>
-  <link r:resource="http://www.simonsays.com/"/>
-  <link r:resource="http://www.readersndex.com/cgi-bin/ReadersNdex/go?&Page=www.ReadersNdex.com/imprint/000002v/imprint.html&Name=Noname&SiteNum=0000000&RtnUrl=www.readersndex.com/home.html"/>
-  <link r:resource="http://www.ponderpublishing.com/"/>
-  <link r:resource="http://www.barbourbooks.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Message_Boards">
-  <catid>938</catid>
-  <link r:resource="http://clubs.yahoo.com/clubs/romancereaderscafe"/>
-  <link r:resource="http://www.insidetheweb.com/mbs.cgi/mb141361"/>
-  <link r:resource="http://forums.delphi.com/m/main.asp?sigdir=paintedrock"/>
-  <link r:resource="http://www.writerspace.com/booksboard/"/>
-  <link r:resource="http://www.terran.org/pages/stella.cameron/bboard.html"/>
-  <link r:resource="http://www.insidetheweb.com/messageboard/mbs.cgi/mb13923"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Organizations">
-  <catid>933</catid>
-  <link r:resource="http://www.rwanational.com/"/>
-  <link r:resource="http://www.wrwdc.com/"/>
-  <link r:resource="http://members.aol.com/wcromance/windy.htm"/>
-  <link r:resource="http://www.geocities.com/Athens/Forum/6043"/>
-  <link r:resource="http://www.tlt.com/authors/drw.htm"/>
-  <link r:resource="http://www.adelaide.net.au/~dyoz/"/>
-  <link r:resource="http://www.win.net/romance/"/>
-  <link r:resource="http://www.connecti.com/~dhinson/sara/index.html"/>
-  <link r:resource="http://www.sff.net/FFP/"/>
-  <link r:resource="http://www.geocities.com/Wellesley/1092/"/>
-  <link r:resource="http://users.arn.net/~aredmon/"/>
-  <link r:resource="http://www.tlt.com/authors/dara.htm"/>
-  <link r:resource="http://www.geocities.com/SoHo/Gallery/7019"/>
-  <link r:resource="http://hickory.engr.utk.edu/~ellis/smrw.html"/>
-  <link r:resource="http://www.rwasd.com/"/>
-  <link r:resource="http://www.geocities.com/SoHo/Coffeehouse/9954/"/>
-  <link r:resource="http://www.webpak.net/~robinlee/FHL/info.html"/>
-  <link r:resource="http://members.tripod.com/RWNZ/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Booksellers">
-  <catid>932</catid>
-  <link r:resource="http://www.hardtofindbooks.com/"/>
-  <link r:resource="http://members.aol.com/swmbooks/lovebooks/lovebooks1.html"/>
-  <link r:resource="http://www.angelfire.com/biz/paperbackbooks/index.html"/>
-  <link r:resource="http://ourworld.compuserve.com/homepages/StrayBks"/>
-  <link r:resource="http://www.audiobooksonline.com"/>
-  <link r:resource="http://www.thebookshelf.com/"/>
-  <link r:resource="http://members.aol.com/CousinSuk/SoN.html"/>
-  <link r:resource="http://www.letstalkbiz.com/frameheart.htm"/>
-  <link r:resource="http://www.novelromance.com/"/>
-  <link r:resource="http://hail.icestorm.com/bookstore/poems/books.html"/>
-  <link r:resource="http://www.1bookstreet.com/1romancestreet/Romance_Home.asp"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Electronic_Publishers">
-  <catid>930</catid>
-  <link r:resource="http://www.newconceptspublishing.com"/>
-  <link r:resource="http://www.dreams-unlimited.com"/>
-  <link r:resource="http://www.hardshell.com"/>
-  <link r:resource="http://www.orpheusromance.com/"/>
-  <link r:resource="http://www.teleport.com/~writers/BOOKS/index.html"/>
-  <link r:resource="http://lionhearted.com/"/>
-  <link r:resource="http://members.tripod.com/~PetalsofLife/petals.html"/>
-  <link r:resource="http://members.tripod.com/~domhan/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Mailing_Lists">
-  <catid>936</catid>
-  <link r:resource="http://www.n2h2.com/KOVACS/CD/2361.html"/>
-  <link r:resource="http://www.dm.net/~jules/romexlist.html"/>
-  <link r:resource="http://www.likesbooks.com/listserv.html"/>
-  <link r:resource="http://w3.terran.org/pages/stella.cameron/maillist.html"/>
-  <link r:resource="http://home1.gte.net/bacoach/ugl/rebels.html"/>
-  <link r:resource="http://www.onelist.com/subscribe.cgi/cata-romance"/>
-  <link r:resource="http://www.mailinglist.net/bsj/"/>
-  <link r:resource="http://www.n2h2.com/KOVACS/CD/2362.html"/>
-  <link r:resource="http://www.onelist.com/subscribe.cgi/Outlander"/>
-  <link r:resource="http://www.ramsaybooks.com/bl/index.html"/>
-  <link r:resource="http://www.wire.net.au/~melinda/biaw/biawlist.htm"/>
-  <link r:resource="http://www.onelist.com/subscribe.cgi/Regency"/>
-  <link r:resource="http://www.onelist.com/subscribe.cgi/evanovich"/>
-  <link r:resource="http://www.onelist.com/viewarchive.cgi?listname=bookonnection"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Romance/Reading_Groups">
-  <catid>939</catid>
-  <link r:resource="http://members.aol.com/castlecelt/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Mystery">
-  <catid>905</catid>
-  <link r:resource="http://www.twbooks.co.uk/"/>
-  <link r:resource="http://home.earthlink.net/~criswell"/>
-  <link r:resource="http://forums.msn.com/reading"/>
-  <link r:resource="http://www.mysteriousbookshop.com/"/>
-  <link r:resource="http://www.swifty.com/cwc/cwchome.htm"/>
-  <link r:resource="http://www.troutworks.com"/>
-  <link r:resource="http://ourworld.compuserve.com/homepages/StrayBks"/>
-  <link r:resource="http://www.ruidomain.com/omdb"/>
-  <link r:resource="http://www.geocities.com/~sherlockian/"/>
-  <link r:resource="http://www.mygale.org/00/polar"/>
-  <link r:resource="http://www.gravematters.com"/>
-  <link r:resource="http://janusbooks.com/"/>
-  <link r:resource="http://www.register.com/femfatal/"/>
-  <link r:resource="http://www.idsonline.com/userweb/cwilson/mystery.htm"/>
-  <link r:resource="http://www.SnoopSisters.com/"/>
-  <link r:resource="http://www.sherylfranklin.com/sherlock.html"/>
-  <link r:resource="http://home.earthlink.net/~dkeene/"/>
-  <link r:resource="http://www.MysteryNet.com/"/>
-  <link r:resource="http://www.bjordan.com"/>
-  <link r:resource="http://www.colba.net/~kvnsmith/thrillingdetective/"/>
-  <link r:resource="http://www.cluelass.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Mystery/Authors">
-  <catid>925</catid>
-  <link r:resource="http://www.rehov.org/sandford/"/>
-  <link r:resource="http://www.evanovich.com/"/>
-  <link r:resource="http://www.suegrafton.com/"/>
-  <link r:resource="http://www.iwillfollow.com/rmb/"/>
-  <link r:resource="http://www.janburke.com/"/>
-  <link r:resource="http://www.mindspring.com/~walter/mystzone.html"/>
-  <link r:resource="http://www.louisville.edu/~jsjuno01/pc.html"/>
-  <link r:resource="http://members.aol.com/ecayres/home.htm"/>
-  <link r:resource="http://www.db.dk/dbaa/jbs/jlb/jlb.htm"/>
-  <link r:resource="http://www.scruz.net/~lmatera/LiaMatera.html"/>
-  <link r:resource="http://www.geocities.com/SoHo/Lofts/4577/"/>
-  <link r:resource="http://www.lindseydavis.co.uk/ldavis/"/>
-  <link r:resource="http://www.catwriter.com/cdouglas/"/>
-  <link r:resource="http://www.cyberzone-inc.net/ws/dmorgan/"/>
-  <link r:resource="http://www.kinkyfriedman.com/"/>
-  <link r:resource="http://members.aol.com/dfurutani/"/>
-  <link r:resource="http://www.gate.net/~jwheeler/index.html"/>
-  <link r:resource="http://www.hooked.net/~lgrant/"/>
-  <link r:resource="http://www.btinternet.com/~alex.keegan1/"/>
-  <link r:resource="http://www.MysteryNet.com/jkellerman/main/"/>
-  <link r:resource="http://users.aol.com/maxineoc/max1.htm"/>
-  <link r:resource="http://www.blanchewhite.com/guard.html"/>
-  <link r:resource="http://www.tamarahayle.com/"/>
-  <link r:resource="http://www.meren.com/"/>
-  <link r:resource="http://www.hevanet.com/prnewman/Levendeur.html"/>
-  <link r:resource="http://www.geocities.com/SoHo/Studios/5447/"/>
-  <link r:resource="http://lit-arts.com/bpaul/"/>
-  <link r:resource="http://www.stabenow.com/"/>
-  <link r:resource="http://www.iwillfollow.com/kjr/"/>
-  <link r:resource="http://www.wenet.net/~saylor/"/>
-  <link r:resource="http://www.interlog.com/~peterob/home.html"/>
-  <link r:resource="http://www.mindworkshop.com/alchemy/fiction.html"/>
-  <link r:resource="http://freenet.vcu.edu/education/literature/Walter_Satterthwait.html"/>
-  <link r:resource="http://www.lydmouth.demon.co.uk/ataylor1.htm"/>
-  <link r:resource="http://members.aol.com/KTrocheck/"/>
-  <link r:resource="http://www.axisinternet.com/cwheat/"/>
-  <link r:resource="http://www.abacus-nw.com/woods/index.html"/>
-  <link r:resource="http://www.mindspring.com/~woolrich/black.htm"/>
-  <link r:resource="http://www.teleport.com/~sengdahl/joegrey/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Mystery/Women_Mystery_Writers">
-  <catid>926</catid>
-  <link r:resource="http://lit-arts.com/sinc_chap1/"/>
-  <link r:resource="http://www.olypen.com/jeanhohn"/>
-  <link r:resource="http://www.saraparetsky.com/"/>
-  <link r:resource="http://www.evanovich.com/"/>
-  <link r:resource="http://www.dalton.org/students/bkyaffe/wwwac/achome.html"/>
-  <link r:resource="http://www.simonsays.com/mhclark/"/>
-  <link r:resource="http://www.geocities.com/Athens/Academy/3330/index.htm"/>
-  <link r:resource="http://www.louisville.edu/~jsjuno01/pc.html"/>
-  <link r:resource="http://www.scruz.net/~lmatera/LiaMatera.html"/>
-  <link r:resource="http://www.tamarahayle.com/biography.htm"/>
-  <link r:resource="http://members.aol.com/SHayter370/index.html"/>
-  <link r:resource="http://www.twbooks.co.uk/authors/wpress.html"/>
-  <link r:resource="http://www.webfic.com/mysthome/introdl.htm"/>
-  <link r:resource="http://www.teleport.com/~sengdahl/joegrey/"/>
-  <link r:resource="http://particiacornwell.com"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Cyberpunk">
-  <catid>903</catid>
-  <link r:resource="http://www.cybergeography.org/atlas/atlas.html"/>
-  <link r:resource="http://www.socio.demon.co.uk/RHAmazon.html"/>
-  <link r:resource="http://burningcity.com/the_play.html"/>
-  <link r:resource="http://www.whatis.com/cyberspa.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Fantasy">
-  <catid>918</catid>
-  <link r:resource="http://members.xoom.com/minas_tirith"/>
-  <link r:resource="http://galaxymall.com/books/merlyn/"/>
-  <link r:resource="http://colargol.tihlde.hist.no/~dagr/fantasy/fantasy.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Fantasy/Booksellers">
-  <catid>1024</catid>
-  <link r:resource="http://www.audiobooksonline.com"/>
-  <link r:resource="http://hail.icestorm.com/bookstore/fb.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Fantasy/Companies">
-  <catid>1025</catid>
-  <link r:resource="http://www.tor.com/tor.html"/>
-  <link r:resource="http://www.randomhouse.com/delray/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Fantasy/Authors">
-  <catid>1026</catid>
-  <link r:resource="http://www.sff.net/people/tamora.pierce/index.htp"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Fantasy/Authors/Terry_Brooks">
-  <catid>1027</catid>
-  <link r:resource="http://homepages.enterprise.net/raven/brooks.html"/>
-  <link r:resource="http://www2.netcom.com/~permalm/shannara.html"/>
-  <link r:resource="http://members.xoom.com/ImranG/"/>
-  <link r:resource="http://www.imagina.com/webpages/skatmandu/tanglebox/"/>
-  <link r:resource="http://www.geocities.com/Area51/Cavern/3192/"/>
-  <link r:resource="http://angelfire.com/tx/SableSorcerer/index.html"/>
-  <link r:resource="http://hem1.passagen.se/josa99/brooks.htm"/>
-  <link r:resource="http://members.aol.com/WrldofFant/brooks.html"/>
-  <link r:resource="http://members.aol.com/ERocha17/erocha17.html"/>
-  <link r:resource="http://members.tripod.com/~AKX/"/>
-  <link r:resource="http://pages.prodigy.com/shannara/"/>
-  <link r:resource="http://www.bookwire.com/BookInfo.Author$279"/>
-  <link r:resource="http://www.csc.calpoly.edu/~rstubble/brooks.html"/>
-  <link r:resource="http://www.execpc.com/~shadowen/"/>
-  <link r:resource="http://www.nations.net/users/druidhistory/home.html"/>
-  <link r:resource="http://www.randomhouse.com/brooks/"/>
-  <link r:resource="http://www.thegrid.net/grandmaster/brooks"/>
-  <link r:resource="http://www.skolan.hassleholm.se/hts/elever/n2bwjugu/shan.htm"/>
-  <link r:resource="http://www.wasatch.com/~rumour/brooks.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Fantasy/Authors/Terry_Brooks/Non-English">
-  <link r:resource="http://hem2.passagen.se/paranor/"/>
-  <link r:resource="http://www.wupper.de/sites/mab/shannara.html"/>
-  <link r:resource="http://www.bokia.se/bok/titlar/bok134.html"/>
-  <link r:resource="http://smlsgi1.u-aizu.ac.jp/~adachi/terrybrooks.html"/>
-  <link r:resource="http://www.heim5.tu-clausthal.de/~marcos/leseTB.html"/>
-  <link r:resource="http://www.sira.it/darklava/mondador/osca359.htm"/>
-  <link r:resource="http://www.citeweb.net/legend/rew/"/>
-  <link r:resource="http://www.jpd.sk/brloh/frames/knihy/fantasy/info/shannara.html"/>
-  <link r:resource="http://www.boeknet.nl/spectrum/uhs/auteurs/terrybrooks/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Fantasy/Authors/Piers_Anthony">
-  <catid>39612</catid>
-  <link r:resource="http://www.hipiers.com"/>
-  <link r:resource="http://members.xoom.com/enipal/index.html"/>
-  <link r:resource="http://www.geocities.com/Area51/Shire/5014"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Children">
-  <catid>904</catid>
-  <link r:resource="http://www.bestkidsbooks.com/"/>
-  <link r:resource="http://www.circletime.com"/>
-  <link r:resource="http://www.armory.com/~web/notes.html"/>
-  <link r:resource="http://www.cbcbooks.org"/>
-  <link r:resource="http://absolute-sway.com/pfp/childrens/"/>
-  <link r:resource="http://www.execpc.com/%7Embr/bookwatch/cbw/"/>
-  <link r:resource="http://edfu.lis.uiuc.edu/puboff/bccb/"/>
-  <link r:resource="http://www.lightlink.com/bigpig/"/>
-  <link r:resource="http://holly.colostate.edu/~sheilas/index.html"/>
-  <link r:resource="http://i-site.on.ca/booknook.html"/>
-  <link r:resource="http://www.angelfire.com/biz/ubah"/>
-  <link r:resource="http://www.pcbassociation.com/index.htm"/>
-  <link r:resource="http://www.threeleaves.com/default.html"/>
-  <link r:resource="http://www.scbwi.org/"/>
-  <link r:resource="http://scholar.lib.vt.edu/ejournals/ALAN/alan-review.html"/>
-  <link r:resource="http://www.users.interport.net/~hdu/"/>
-  <link r:resource="http://www.ucalgary.ca/~dkbrown/"/>
-  <link r:resource="http://www.fogbottom.com/morningwalk.html"/>
-  <link r:resource="http://www.absolute-sway.com/winthrop/"/>
-  <link r:resource="http://absolute-sway.com/pfp/html/childrens.htm"/>
-  <link r:resource="http://personal.cityu.edu.hk/~96469319/little/"/>
-  <link r:resource="http://www.ala.org/BookLinks/"/>
-  <link r:resource="http://www.beyondbasals.com/"/>
-  <link r:resource="http://www.bookwire.com/pw/articles/childrens/all-time-paperbacks.html"/>
-  <link r:resource="http://www.liunet.edu/but08/ajc/ajc.htm"/>
-  <link r:resource="http://www.rcls.org/chil/chilbib.htm"/>
-  <link r:resource="http://www.lib.usm.edu/~degrum/"/>
-  <link r:resource="http://www.scils.rutgers.edu/special/kay/childlit.html"/>
-  <link r:resource="http://www.users.interport.net/~fairrosa/"/>
-  <link r:resource="http://www-dept.usm.edu/~engdept/lrrh/lrrhhome.htm"/>
-  <link r:resource="http://www.siscom.net/~john2101/peter.htm"/>
-  <link r:resource="http://www.csusm.edu/campus_centers/csb/english/"/>
-  <link r:resource="http://www.geocities.com/Athens/3777/ring.html"/>
-  <link r:resource="http://www-dept.usm.edu/~engdept/cinderella/cinderella.html"/>
-  <link r:resource="http://www.uoguelph.ca/englit/ccl/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Children/Children's_Series_Books">
-  <catid>922</catid>
-  <link r:resource="http://www.geocities.com/athens/3777"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Children/Winnie_the_Pooh">
-  <catid>923</catid>
-  <link r:resource="http://www.geocities.com/~tigger-world/"/>
-  <link r:resource="http://chaos.trxinc.com/jmilne/Pooh/"/>
-  <link r:resource="http://www.half-asleep.com/pooh/"/>
-  <link r:resource="http://www.xs4all.nl/~tigger/pooh/"/>
-  <link r:resource="http://www.worldkids.net/pooh/"/>
-  <link r:resource="http://welcome.to/pooh/"/>
-  <link r:resource="http://hey.to/pooh-bear/"/>
-  <link r:resource="http://www.pooh-corner.com/"/>
-  <link r:resource="http://www.rogweb.com/pooh.html"/>
-  <link r:resource="http://teknik.mosesson.educ.goteborg.se/viking-boy/pooh/index.htm"/>
-  <link r:resource="http://www.oh-no.com/pooh.html"/>
-  <link r:resource="http://www.geocities.com/TimesSquare/7626/"/>
-  <link r:resource="http://www.infinet.com/~mimesis/Pooh/index.html"/>
-  <link r:resource="http://www.penguinputnam.com/yreaders/pooh/winnie.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Children/Dr._Seuss">
-  <catid>924</catid>
-  <link r:resource="http://www.afn.org/~afn15301/drseuss.html"/>
-  <link r:resource="http://www.randomhouse.com/seussville/"/>
-  <link r:resource="http://www.primate.wisc.edu/people/hamel/seuss.html"/>
-  <link r:resource="http://users.ntr.net/~dave/grinch/"/>
-  <link r:resource="http://starbellie.com/"/>
-  <link r:resource="http://www.evolve.com/~drseuss/seuss/"/>
-  <link r:resource="http://www.iwaynet.net/~wstocks/fun/seuss.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Computers">
-  <catid>916</catid>
-  <link r:resource="http://www.clbooks.com/"/>
-  <link r:resource="http://www.appletshirts.com/"/>
-  <link r:resource="http://home.swbell.net/marstsp/bookstore.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Gay_and_Lesbian">
-  <catid>920</catid>
-  <link r:resource="http://www.lambdalit.org/lammy/index.htm"/>
-  <link r:resource="http://www.naiadpress.com/"/>
-  <link r:resource="http://www.glinn.com/books/index.htm"/>
-  <link r:resource="http://www.netrax.net/~herstory/index.html"/>
-  <link r:resource="http://www.stonewallinn.com/Contents/KKLetter.html"/>
-  <link r:resource="http://members.aol.com/lambdasf/lamlit.html"/>
-  <link r:resource="http://www.gayliterature.com/biblios.htm"/>
-  <link r:resource="http://www.gaysunshine.com/"/>
-  <link r:resource="http://www.lambdalit.org/lbr/toc.htm"/>
-  <link r:resource="http://www.athenet.net/~lavsalon/"/>
-  <link r:resource="http://www.hglc.org/hglc/review.htm"/>
-  <link r:resource="http://www.planetout.com/"/>
-  <link r:resource="http://www.adlbooks.com/"/>
-  <link r:resource="http://www.sappho.com/poetry/learnmor.htm"/>
-  <link r:resource="http://fog.ccsf.cc.ca.us/~dbrown/index.html"/>
-  <link r:resource="http://www.adlbooks.com/stein.html"/>
-  <link r:resource="http://www.adlbooks.com/wntrsn.html"/>
-  <link r:resource="http://www.lesleanewman.com"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Gay_and_Lesbian/Women's_Sites">
-  <catid>1028</catid>
-  <link r:resource="http://www.netrax.net/~herstory/index.html"/>
-  <link r:resource="http://www.gfriends.com/"/>
-  <link r:resource="http://www.transgenderwarrior.org/bio.html"/>
-  <link r:resource="http://www.gfriends.com/onourbacks/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/Outdoors">
-  <catid>919</catid>
-  <link r:resource="http://www.marketersworld.com/members/ALASKA"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Genres/True_Crime">
-  <catid>39835</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Directories">
-  <catid>909</catid>
-  <link r:resource="http://www.ramsaybooks.com/littera/index.html"/>
-  <link r:resource="http://www.thrall.org/booklove.htm"/>
-  <link r:resource="http://www.english.upenn.edu/~jlynch/Lit/"/>
-  <link r:resource="http://sunsite.unc.edu/ibic/IBIC-homepage.html"/>
-  <link r:resource="http://www.absolute-sway.com/pfp/"/>
-  <link r:resource="http://www.talewins.com/Golden.htm"/>
-  <link r:resource="http://www.talewins.com/Pub.htm"/>
-  <link r:resource="http://thinkers.net"/>
-  <link r:resource="http://www.interactive.net/~smann/books.html"/>
-  <link r:resource="http://www.americadelsur.com/letralia/itin"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors">
-  <catid>910</catid>
-  <link r:resource="http://www.cljones.com/cl2.html"/>
-  <link r:resource="http://www.januarymagazine.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Mystery">
-  <catid>943</catid>
-  <link r:resource="http://www.patriciacornwell.com"/>
-  <link r:resource="http://www3.sympatico.ca/taniah/books/authors.html"/>
-  <link r:resource="http://www.dur.ac.uk/~dcs0mpw/gkc/"/>
-  <link r:resource="http://www.mindworkshop.com/alchemy/fiction.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Mystery/Grafton,_Sue">
-  <catid>952</catid>
-  <link r:resource="http://www.suegrafton.com"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Mystery/Davies,_Linda">
-  <catid>953</catid>
-  <link r:resource="http://www.ex.ac.uk/~RDavies/arian/linda.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Humour">
-  <catid>944</catid>
-  <link r:resource="http://www.randomhouse.com/features/davebarry/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction">
-  <catid>945</catid>
-  <link r:resource="http://home.earthlink.net/~emblem/curt.html"/>
-  <link r:resource="http://www.ibmpcug.co.uk/~owls/homeward.html"/>
-  <link r:resource="http://www.sff.net/people/PSargent/"/>
-  <link r:resource="http://www.talespinner.net"/>
-  <link r:resource="http://www.sfwa.org/members/Ransom/"/>
-  <link r:resource="http://unquietmind.com/quanta/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Burroughs,_Edgar_Rice">
-  <catid>954</catid>
-  <link r:resource="http://www.bolthy.com/erbring/"/>
-  <link r:resource="http://home.att.net/~bruce.bozarth"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Dick,_Philip_K">
-  <catid>955</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Dick,_Philip_K/Essays">
-  <catid>964</catid>
-  <link r:resource="http://www.missouri.edu/~moreview/interviews/dick.html"/>
-  <link r:resource="http://www.writersworld.net/Archives/pkd.htm"/>
-  <link r:resource="http://www.pacificnet.net/~lec/tmithc.html"/>
-  <link r:resource="http://www.spectacle.org/396/scifi/dick.html"/>
-  <link r:resource="http://kzsu.stanford.edu/uwi/br/pkd-essay.html"/>
-  <link r:resource="http://www.webcom.com/~gnosis/pkd.biography.html"/>
-  <link r:resource="http://www.cs.york.ac.uk/~sjh/pkdict.html"/>
-  <link r:resource="http://bot.fringeware.com:80/bio/Philip_K_Dick.1.html"/>
-  <link r:resource="http://www.wsu.edu:8080/~brians/science_fiction/bladerunner.html"/>
-  <link r:resource="http://www.stim.com/Stim-x/0896August/Automedia/pkdick.html"/>
-  <link r:resource="http://www.teleport.com/~swag/pkdick.htm"/>
-  <link r:resource="http://www.lysator.liu.se/lsff/mb-nr27/Do_Androids_Dream_of_Being_Human.html"/>
-  <link r:resource="http://www.21c.worldideas.com/articles/meta/meta1.html"/>
-  <link r:resource="http://members.theglobe.com/damocles1/essays/dickessay.html"/>
-  <link r:resource="http://www.cures-not-wars.org/PKD.html"/>
-  <link r:resource="http://gladstone.uoregon.edu/~sola/Sola/Sola2/Building_the_Lincoln.html"/>
-  <link r:resource="http://mediafilter.org/ZK/Conf/Conf_Email/September.28.1996.18.15.15"/>
-  <link r:resource="http://mediafilter.org/ZK/Conf/Conf_Email/September.28.1996.18.16.30"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Dick,_Philip_K/General_Resources">
-  <catid>965</catid>
-  <link r:resource="http://www.users.interport.net/~regulus/pkd/pkd-int.html"/>
-  <link r:resource="http://jrowse.mtx.net/pkd/pkd.html"/>
-  <link r:resource="http://www.geocities.com/Area51/Corridor/2997/"/>
-  <link r:resource="http://193.73.242.99/ac/pkd.html"/>
-  <link r:resource="http://www.kki.net.pl/gregory/PKD.HTM"/>
-  <link r:resource="http://www.geocities.com/SunsetStrip/4589/pkd.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Vance,_Jack">
-  <catid>956</catid>
-  <link r:resource="http://www.massmedia.com/~mikeb/jvm/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Tam,_Albert">
-  <catid>957</catid>
-  <link r:resource="http://surf.to/albertam"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Adams,_Douglas">
-  <catid>958</catid>
-  <link r:resource="http://www.umd.umich.edu/~nhughes/dna/"/>
-  <link r:resource="http://users.ox.ac.uk/~dougsoc/"/>
-  <link r:resource="http://www.vogon.com/vhi/"/>
-  <link r:resource="http://www.vogon.com/guide/"/>
-  <link r:resource="http://www.douglasadams.com/"/>
-  <link r:resource="http://www.floor42.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Asimov,_Isaac">
-  <catid>959</catid>
-  <link r:resource="http://www.clark.net/pub/edseiler/WWW/asimov_home_page.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Card,_Orson_Scott">
-  <catid>960</catid>
-  <link r:resource="http://www.hatrack.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Crichton,_Michael">
-  <catid>961</catid>
-  <link r:resource="http://members.xoom.com/jmfolcik/crichton.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Goldin,_Stephen">
-  <catid>962</catid>
-  <link r:resource="http://www.sff.net/people/stephen.goldin"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/McCaffrey,_Anne">
-  <catid>963</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/McCaffrey,_Anne/Pern_Information">
-  <catid>966</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/McCaffrey,_Anne/Pern_Information/Pern_Fandom_Links">
-  <catid>967</catid>
-  <link r:resource="http://www.delphi.com/falkenstone/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/McCaffrey,_Anne/Pern_Information/Pern_Fandom_Links/Pern_Fan_Homepages">
-  <catid>968</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Science_Fiction/Kelly,_James">
-  <link r:resource="http://home.earthlink.net/~emblem/book.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Children">
-  <catid>946</catid>
-  <link r:resource="http://members.tripod.com/~alassociation"/>
-  <link r:resource="http://www.eric-carle.com/"/>
-  <link r:resource="http://www.janbrett.com/"/>
-  <link r:resource="http://www.lesleanewman.com"/>
-  <link r:resource="http://www.pilkey.com"/>
-  <link r:resource="http://www.mbnet.mb.ca/~soberman"/>
-  <link r:resource="http://www.compleatbellairs.com"/>
-  <link r:resource="http://www.redwall.org/dave/jacques.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Children/Winthrop,_Elizabeth">
-  <catid>969</catid>
-  <link r:resource="http://www.absolute-sway.com/winthrop/"/>
-  <link r:resource="http://www.chosenforchildren.com/winthrop.html"/>
-  <link r:resource="http://www.absolute-sway.com/winthrop/castle.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Children/Oberman,_Sheldon">
-  <catid>970</catid>
-  <link r:resource="http://www.merlin.mb.ca/~soberman"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Children/Christopher,_John">
-  <catid>971</catid>
-  <link r:resource="http://www.reed.edu/~karl/postapoc/christopher.html"/>
-  <link r:resource="http://www.gnelson.demon.co.uk/tripage/jc.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Fantasy">
-  <catid>947</catid>
-  <link r:resource="http://www.sff.net/people/victoriastrauss/"/>
-  <link r:resource="http://ofb.net/~damien/mckinley/"/>
-  <link r:resource="http://colargol.tihlde.hist.no/~dagr/fantasy/fantasy.html"/>
-  <link r:resource="http://http1.brunel.ac.uk:8080/~casrsjc/kencyr.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Fantasy/Tolkien,_John_Ronald_Reuel">
-  <catid>973</catid>
-  <link r:resource="http://www.tiac.net/users/dangweth"/>
-  <link r:resource="http://www.mi.uib.no/hobbit/"/>
-  <link r:resource="http://where.com/Elendor"/>
-  <link r:resource="http://www.ironcrown.com/"/>
-  <link r:resource="http://www.ludd.luth.se/~bosse/engtbilder.html"/>
-  <link r:resource="http://www.users.cts.com/king/e/erikt/index.html"/>
-  <link r:resource="http://www.lodz.tpsa.pl/bez/Tolkien/"/>
-  <link r:resource="http://autan.enst.fr/~attia/metw/metw.html"/>
-  <link r:resource="http://balrog.joensuu.fi/~jlavi/tolkien/tolkien.html"/>
-  <link r:resource="http://www-leland.stanford.edu/~dkaffine/metw/index.html"/>
-  <link r:resource="http://home.earthlink.net/~emfarrell/mythsoc/mythsoc.html"/>
-  <link r:resource="http://www.together.net/~gandalf/index.htm"/>
-  <link r:resource="http://godzilla.eecs.berkeley.edu/rolozo/"/>
-  <link r:resource="http://www.erols.com/aelfwine/Tolkien/linguistics/resources.html"/>
-  <link r:resource="http://www.spiderwebart.com"/>
-  <link r:resource="http://www.chem.lsu.edu/cbury/ETEP/Default.html"/>
-  <link r:resource="http://www.daimi.aau.dk/~bouvin/tolkienfaq.html"/>
-  <link r:resource="http://shire.ncsa.uiuc.edu/Tolkien/TolkienWorld.html"/>
-  <link r:resource="http://www.xenite.org/index.htm"/>
-  <link r:resource="http://www.tolkiensociety.org/"/>
-  <link r:resource="http://www.ludd.luth.se/~bosse/engtolkien.html"/>
-  <link r:resource="http://www.lysator.liu.se/tolkien-games/"/>
-  <link r:resource="http://babel.uoregon.edu/yamada/fonts/tolkien.html"/>
-  <link r:resource="http://www.fe.msk.ru/~slobin/eglador/welcome.html"/>
-  <link r:resource="http://ftp.sunet.se/pub/pictures/fantasy/Tolkien/TolkiensOxford/"/>
-  <link r:resource="http://members.iol.co.il/veilen"/>
-  <link r:resource="http://www.phys.uni.torun.pl/~jacek/tolkien"/>
-  <link r:resource="http://gollum.usask.ca/tolkien/index.html"/>
-  <link r:resource="http://nightrunner.com/lotrmovie/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Fantasy/Holt,_Tom">
-  <catid>974</catid>
-  <link r:resource="http://www.mdstud.chalmers.se/~md4calle/holt/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Fantasy/Jordan,_Robert">
-  <catid>975</catid>
-  <link r:resource="http://www.wheeloftime.com"/>
-  <link r:resource="http://www.dsv.su.se/~k-j-nore/jordan/rasfwr-j-review.html"/>
-  <link r:resource="http://uts.cc.utexas.edu/~moiraine/jordan/"/>
-  <link r:resource="http://members.aol.com/towerkeys/blacktower.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Fantasy/Norton,_Andre">
-  <catid>976</catid>
-  <link r:resource="http://www.andre-norton.org/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Fantasy/Pratchett,_Terry">
-  <catid>977</catid>
-  <link r:resource="http://www.lspace.org"/>
-  <link r:resource="http://promotips.fsn.net/luggage/index.html"/>
-  <link r:resource="http://www.ukwebdesign.co.uk/discindex.htm"/>
-  <link r:resource="http://www.aquapal.co.uk/dwsearch/"/>
-  <link r:resource="http://www.aquapal.co.uk/discworld/discworld.html"/>
-  <link r:resource="http://members.xoom.com/watchhouse/index.html"/>
-  <link r:resource="http://www.internauts.ca/~bishop/pterry.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Fantasy/Pratchett,_Terry/Discworld">
-  <catid>982</catid>
-  <link r:resource="http://discworld.imaginary.com:5678/"/>
-  <link r:resource="http://www.users.bigpond.com/Hormel"/>
-  <link r:resource="http://www.weirdnes.force9.co.uk/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Fantasy/Lackey,_Mercedes">
-  <catid>978</catid>
-  <link r:resource="http://www.tardis.ed.ac.uk/~ism/lackey/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Fantasy/Rice,_Anne">
-  <catid>979</catid>
-  <link r:resource="http://www.webvoodoo.com/annerice"/>
-  <link r:resource="http://www.annerice.com"/>
-  <link r:resource="http://www.arvlfc.org"/>
-  <link r:resource="http://www.geocities.com/BourbonStreet/2536/"/>
-  <link r:resource="http://www.geocities.com/BourbonStreet/1303/maison.html"/>
-  <link r:resource="http://earthsystems.org/~shay/commotion.html"/>
-  <link r:resource="http://members.tripod.com/~AnneRice/main.html"/>
-  <link r:resource="http://members.tripod.com/~InVinoVeritas/NightIsland.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Fantasy/Smith,_J_M">
-  <catid>980</catid>
-  <link r:resource="http://galaxymall.com/books/merlyn/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Fantasy/Williams,_Tad">
-  <catid>981</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Romance">
-  <catid>948</catid>
-  <link r:resource="http://www.tlt.com/authors/cstjohn.htm"/>
-  <link r:resource="http://members.aol.com/Cobbsouth/index.html"/>
-  <link r:resource="http://www.safeweb.net/~ldwrites"/>
-  <link r:resource="http://members.aol.com/grosvenord/index.html"/>
-  <link r:resource="http://www.uoflife.com/gone.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Spirituality">
-  <catid>949</catid>
-  <link r:resource="http://www.invisiblepath.com"/>
-  <link r:resource="http://freecyb.com"/>
-  <link r:resource="http://www.randomhouse.com/features/chopra/"/>
-  <link r:resource="http://www.dur.ac.uk/~dcs0mpw/gkc"/>
-  <link r:resource="http://www.shrimataji.org/MetaModernEra/"/>
-  <link r:resource="http://www.uoflife.com/press/press.htm"/>
-  <link r:resource="http://server2.powernet.net/~scrnplay/page98.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction">
-  <catid>950</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Austen,_Jane">
-  <catid>984</catid>
-  <link r:resource="http://www.pemberley.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/OBrian,_Patrick">
-  <catid>985</catid>
-  <link r:resource="http://www.swiftsite.com/annap/pob.htm"/>
-  <link r:resource="http://mat.gsia.cmu.edu/POB/"/>
-  <link r:resource="http://www.io.com/gibbonsb/pob/"/>
-  <link r:resource="http://www.geocities.com/Athens/Acropolis/3774/pob-tr.htm"/>
-  <link r:resource="http://www.ptw.com/~stonehvn/POBnovls.htm"/>
-  <link r:resource="http://www.wwnorton.com/pob/pobhome.htm"/>
-  <link r:resource="http://www.swiftsite.com/annap/killick.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Eco,_Umberto">
-  <catid>986</catid>
-  <link r:resource="http://www4.ncsu.edu/eos/users/m/mcmesser/www/eco.html/"/>
-  <link r:resource="http://www.columbia.edu/cu/casaitaliana/ecolinks.htm"/>
-  <link r:resource="http://www.dsc.unibo.it/istituto/people/eco/eco.htm"/>
-  <link r:resource="http://rpg.net/quail/libyrinth/eco/"/>
-  <link r:resource="http://www.geocities.com/CapitolHill/Lobby/5999/index2.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Twain,_Mark">
-  <catid>987</catid>
-  <link r:resource="http://etext.lib.virginia.edu/twain/huckfinn.html"/>
-  <link r:resource="http://home.ican.net/~fjzwick/twain/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Salinger,_J.D.">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Coupland,_Doug">
-  <catid>989</catid>
-  <link r:resource="http://www.geocities.com/SoHo/Gallery/5560"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Marquez,_Gabriel_Garcia">
-  <catid>990</catid>
-  <link r:resource="http://rpg.net/quail/libyrinth/gabo/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Lethem,_Jonathan">
-  <catid>991</catid>
-  <link r:resource="http://www.omnimag.com/archives/chats/ov122696.html"/>
-  <link r:resource="http://www.sfsite.com/~silverag/landscape.html"/>
-  <link r:resource="http://realitybreak.sff.net/archive/lethem.htp"/>
-  <link r:resource="http://www.sfsite.com/~silverag/lethem.html"/>
-  <link r:resource="http://www.bookwire.com/BookInfo.Author%245753"/>
-  <link r:resource="http://www.scifi.com/sfw/issue69/excess.html"/>
-  <link r:resource="http://www.salon1999.com/books/sneaks/1998/03/17review.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Borges,_Jorge_Luis">
-  <catid>992</catid>
-  <link r:resource="http://rpg.net/quail/libyrinth/borges/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Pynchon,_Thomas">
-  <catid>993</catid>
-  <link r:resource="http://rpg.net/quail/libyrinth/pynchon/"/>
-  <link r:resource="http://www.pynchonfiles.com"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Jackson,_Shirley">
-  <catid>994</catid>
-  <link r:resource="http://tornadohills.com/shirley"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Vian,_Boris">
-  <catid>995</catid>
-  <link r:resource="http://www.toadshow.com.au/rob/vian/vian.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Chesterson,_G_K">
-  <catid>996</catid>
-  <link r:resource="http://www.dur.ac.uk/~dcs0mpw/gkc/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Montalbán,__Manuel_Vázquez">
-  <catid>997</catid>
-  <link r:resource="http://www.geocities.com/Athens/Forum/1192"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Wilde,_Oscar">
-  <catid>998</catid>
-  <link r:resource="http://www.jonno.com/oscariana/"/>
-  <link r:resource="http://www.upword.com/wilde"/>
-  <link r:resource="http://www.cc.columbia.edu/acis/bartleby/wilde/index.html"/>
-  <link r:resource="http://www.mcs.net/~jorn/html/wilde.html"/>
-  <link r:resource="http://www.oscarwilde.com/"/>
-  <link r:resource="http://www.bibliomania.com/Fiction/wilde/stories/index.html"/>
-  <link r:resource="http://www.cedarnet.org/owp/"/>
-  <link r:resource="http://www.showgate.com/tots/gross/wildeweb.html"/>
-  <link r:resource="http://www.ucc.ie/celt/wilde.html"/>
-  <link r:resource="http://www.promo.net/pg/_authors/wilde_oscar_.html"/>
-  <link r:resource="http://www.hoboes.com/html/FireBlade/Wilde/"/>
-  <link r:resource="http://www.anomtec.com/oscarwilde/wilde-bio.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Sudham,_Pira">
-  <catid>999</catid>
-  <link r:resource="http://www.bangkok.com/members/pira/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Musil,_Robert">
-  <catid>1000</catid>
-  <link r:resource="http://www.xs4all.nl/~jikje/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Mishima,_Yukio">
-  <catid>1001</catid>
-  <link r:resource="http://users.ox.ac.uk/~chri0454/reviews-7.html"/>
-  <link r:resource="http://www.nabeshima.com/nb/mishima.html"/>
-  <link r:resource="http://www.vill.yamanakako.yamanashi.jp/bungaku/mishima/index-e.html"/>
-  <link r:resource="http://www.poth.demon.co.uk/mishima/mishima.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Camus,_Albert">
-  <catid>1002</catid>
-  <link r:resource="http://www.sccs.swarthmore.edu/~pwillen1/lit/indexa.htm"/>
-  <link r:resource="http://www.rit.edu/~wjh3421/camus.html"/>
-  <link r:resource="http://www.geocities.com/Athens/Aegean/1311/camus.html"/>
-  <link r:resource="http://www.clas.ufl.edu/users/gaycros/Camus.htm"/>
-  <link r:resource="http://members.aol.com/KatharenaE/private/Philo/Camus/camus.html"/>
-  <link r:resource="http://userzweb.lightspeed.net/~tameri/camus.html"/>
-  <link r:resource="http://www.atlantic.net/~gagne/pol/lane.html"/>
-  <link r:resource="http://www.clark.net/pub/samg/camus.html"/>
-  <link r:resource="http://www.tezcat.com/~juanyen/camus.html"/>
-  <link r:resource="http://www.nobel.se/laureates/literature-1957-1-bio.html"/>
-  <link r:resource="http://cityhonors.buffalo.k12.ny.us/city/reference/English/camus.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Wolfe,_Tom">
-  <link r:resource="http://www.tomwolfe.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Carroll,_Jonathan">
-  <link r:resource="http://www.jonathancarroll.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Dumas,_Alexandre">
-  <catid>40613</catid>
-  <link r:resource="http://www.cadytech.com/dumas"/>
-  <link r:resource="http://www.acamedia.fr/dumas/index.htm"/>
-  <link r:resource="http://tornade.ere.umontreal.ca/~leducf/dumas/dumas.html"/>
-  <link r:resource="http://promo.net/pg/_authors/i-_dumas_alexandre_.html"/>
-  <link r:resource="http://home.wxs.nl/~mwalswee/home.htm"/>
-  <link r:resource="http://www.hoboes.com/html/FireBlade/Dumas/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Literary_Fiction/Steinbeck,_John">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Nonfiction">
-  <catid>951</catid>
-  <link r:resource="http://www.palmersguide.com/jamesburke"/>
-  <link r:resource="http://www.talewins.com/Norman.htm"/>
-  <link r:resource="http://www.talewins.com/Earl"/>
-  <link r:resource="http://members.xoom.com/Bentonville/index.htm"/>
-  <link r:resource="http://www.dur.ac.uk/~dcs0mpw/gkc/"/>
-  <link r:resource="http://www.probabilities.net"/>
-  <link r:resource="http://www.silcom.com/~bevjack/"/>
-  <link r:resource="http://www.san.beck.org"/>
-  <link r:resource="http://www.talewins.com/Athletes.htm"/>
-  <link r:resource="http://server2.powernet.net/~scrnplay/page26.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Horror">
-  <catid>40055</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Horror/Koontz,_Dean">
-  <link r:resource="http://www.dkoontz.com"/>
-  <link r:resource="http://www.randomhouse.com/features/koontz/"/>
-  <link r:resource="http://www.call-us.demon.co.uk/dean.html"/>
-  <link r:resource="http://www.hamster.dk/~hem/kingkoo.html"/>
-  <link r:resource="http://www.jps.net/jeicee/koontz/index.html"/>
-  <link r:resource="http://www.spydersempire.com/barry/koontz/index.htm"/>
-  <link r:resource="http://www.bookwire.com/TBR/transcripts.article$2746"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Horror/Poe,_Edgar_Allan">
-  <link r:resource="http://bau2.uibk.ac.at/sg/poe/"/>
-  <link r:resource="http://www.comnet.ca/~forrest/"/>
-  <link r:resource="http://andromeda.rutgers.edu/~ehrlich/poesites.html"/>
-  <link r:resource="http://www.poedecoder.com/"/>
-  <link r:resource="http://www.creative.net/~alang/lit/horror/poe.sht"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Horror/Saul,_John">
-  <link r:resource="http://www.johnsaul.com"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Horror/Barker,_Clive">
-  <link r:resource="http://www.clivebarker.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Horror/Straub,_Peter">
-  <link r:resource="http://www.flat7.demon.co.uk/straub/"/>
-  <link r:resource="http://www.net-site.com/straub/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Horror/McCammon,_Robert_R.">
-  <link r:resource="http://www2.wku.edu/www/lights-out/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Horror/Lovecraft,_H.P.">
-  <link r:resource="http://www.hplovecraft.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Young_Adult">
-  <catid>40049</catid>
-  <link r:resource="http://www.moonsite.co.nz"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Young_Adult/Stine,_R.L.">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Young_Adult/Pike,_Christopher">
-  <link r:resource="http://www.angelfire.com/il/Passages/main.html"/>
-  <link r:resource="http://www.geocities.com/Athens/7887/midnightclub.html"/>
-  <link r:resource="http://www.geocities.com/TheTropics/Shores/1686/frameset.htm"/>
-  <link r:resource="http://www.geocities.com/Hollywood/Set/3051/aboutauthor.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Young_Adult/Smith,_L.J.">
-  <catid>40678</catid>
-  <link r:resource="http://www.angelfire.com/il/MysticalGames/index.html"/>
-  <link r:resource="http://www.geocities.com/~nightworld/"/>
-  <link r:resource="http://www.angelfire.com/ma/EnterAtRisk/CircleUnity.index.html"/>
-  <link r:resource="http://www.geocities.com/Area51/Rampart/5795/index.html"/>
-  <link r:resource="http://members.tripod.com/~christinare/index.html"/>
-  <link r:resource="http://www.angelfire.com/ia/circlesquare/main.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Young_Adult/Lowry,_Lois">
-  <link r:resource="http://www.scils.rutgers.edu/special/kay/lowry.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Young_Adult/Nixon,_Joan_Lowery">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Young_Adult/Cormier,_Robert">
-  <link r:resource="http://www.randomhouse.com/teachersbdd/corm.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Young_Adult/Lewis,_C._S.">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Plural_Genre">
-  <link r:resource="http://www.bartandsue.co.uk/books/index.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/A">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/A/Ambrose,_Stephen">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/A/Amis,_Martin">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/A/Austen,_Jane">
-  <link r:resource="http://www.pemberley.com/janeinfo/janeinfo.html"/>
-  <link r:resource="http://www.hants.gov.uk/austen/"/>
-  <link r:resource="http://www.bibliomania.com/Fiction/Austen/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/A/Alcott,_Louisa_M.">
-  <link r:resource="http://www.bibliomania.com/Fiction/alcott/index.html"/>
-  <link r:resource="http://www.coppersky.com/louisa/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/B">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/B/Brontë,_Charlotte">
-  <link r:resource="http://www.stg.brown.edu/projects/hypertext/landow/victorian/bronte/cbronte/bronteov.html"/>
-  <link r:resource="http://www.lang.nagoya-u.ac.jp/~matsuoka/EG-Charlotte.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/B/Butler,_Samuel">
-  <link r:resource="http://www.bibliomania.com/Fiction/Butler/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/C">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/C/Crichton,_Michael">
-  <link r:resource="http://www.crichton-official.com/"/>
-  <link r:resource="http://www.globalnets.com/crichton/"/>
-  <link r:resource="http://www.randomhouse.com/features/crichton/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/C/Clancy,_Tom">
-  <link r:resource="http://www.geocities.com/Hollywood/Lot/9600/tc/"/>
-  <link r:resource="http://www.penguinputnam.com/clancy/index.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/C/Chopra,_Deepak">
-  <link r:resource="http://www.chopra.com/"/>
-  <link r:resource="http://www.randomhouse.com/features/chopra/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/C/Chaucer,_Geoffrey">
-  <link r:resource="http://www.luminarium.org/medlit/chaucer.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/C/Caroll,_Lewis">
-  <link r:resource="http://www.bibliomania.com/Fiction/Caroll/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/C/Collins,_Wilkie">
-  <link r:resource="http://www.bibliomania.com/Fiction/collins/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/C/Conrad,_Joseph">
-  <link r:resource="http://www.bibliomania.com/Fiction/conrad/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/C/Coolidge,_Susan">
-  <link r:resource="http://www.bibliomania.com/Fiction/coolidge/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/C/Cooper,_James_Fenimore">
-  <link r:resource="http://www.bibliomania.com/Fiction/Fenimore/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/D">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/D/Di_Prima,_Diane">
-  <link r:resource="http://www.louisville.edu/library/uarc/diprima.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/D/Doyle,_Sir_Arthur_Conan">
-  <link r:resource="http://www.bibliomania.com/Fiction/Doyle/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/D/Defoe,_Danial">
-  <link r:resource="http://www.bibliomania.com/Fiction/defoe/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/D/Dickens,_Charles">
-  <link r:resource="http://www.bibliomania.com/Fiction/dickens/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/E">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/E/Ellison,_Harlan">
-  <link r:resource="http://harlanellison.com/ellihome.htm"/>
-  <link r:resource="http://www.teleport.com/~mzuzel/islets.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/E/Eliot,_George">
-  <link r:resource="http://www.bibliomania.com/Fiction/eliot/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/F">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/F/Falkner,_J_Meade">
-  <link r:resource="http://www.bibliomania.com/Fiction/mfalkner/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/G">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/G/Grisham,_John">
-  <link r:resource="http://www.privat.katedral.se/~nv96gabr/grisham.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/G/Gray,_John">
-  <link r:resource="http://www.marsvenus.com/"/>
-  <link r:resource="http://www.mars-venus-institute.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/H">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/H/Huxley,_Aldous">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/H/Haggard,_H._Rider">
-  <link r:resource="http://www.bibliomania.com/Fiction/Haggard/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/H/Hardy,_Thomas">
-  <link r:resource="http://www.bibliomania.com/Fiction/hardy/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/H/Hemingway,_Ernest">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/I">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/J">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/J/Joyce,_James">
-  <link r:resource="http://www.bibliomania.com/Fiction/joyce/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/K">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/K/Koontz,_Dean">
-  <link r:resource="http://www.randomhouse.com/features/koontz/home.html"/>
-  <link r:resource="http://www.call-us.demon.co.uk/dkring.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/K/Kipling,_Rudyard">
-  <link r:resource="http://www.bibliomania.com/Fiction/kipling/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/L">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/L/London,_Jack">
-  <link r:resource="http://www.geocities.com/~jacklondons/"/>
-  <link r:resource="http://sunsite.berkeley.edu/London/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/L/Lewis,_C._S.">
-  <link r:resource="http://cslewis.drzeus.net/"/>
-  <link r:resource="http://www.cslewis.org/"/>
-  <link r:resource="http://members.aol.com/dwalheim/merelewis.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/L/Lawrence,_D.H.">
-  <link r:resource="http://www.bibliomania.com/Fiction/dhl/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/L/Leroux,_Gaston">
-  <link r:resource="http://www.bibliomania.com/Fiction/Leroux/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/M">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/M/Melville,_Herman">
-  <link r:resource="http://www.melville.org/"/>
-  <link r:resource="http://www.iglobal.net/pub/camelot/melville.htm"/>
-  <link r:resource="http://www.bibliomania.com/Fiction/Melville/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/M/Morisson,_Toni">
-  <link r:resource="http://www.cwrl.utexas.edu/~mmaynard/Morrison/home.html"/>
-  <link r:resource="http://www.randomhouse.com/features/morrison/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/M/McCourt,_Frank">
-  <link r:resource="http://www.potpourri.org/bios/bio_frank.html"/>
-  <link r:resource="http://www.unomas.com/featurefrankmccourt.html"/>
-  <link r:resource="http://www.irishtours.com/bigship.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/M/Maugham,_W_Somerset">
-  <link r:resource="http://www.bibliomania.com/Fiction/Maugham/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/N">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/O">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/O/Orwell,_George">
-  <link r:resource="http://www.k-1.com/Orwell/"/>
-  <link r:resource="http://www.levity.com/corduroy/orwell.htm"/>
-  <link r:resource="http://www.resort.com/~prime8/Orwell/"/>
-  <link r:resource="http://www.codoh.com/thoughtcrimes/tcportorw.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/O/Oates,_Stephen_B.">
-  <link r:resource="http://www.c-span.org/mmedia/booknote/oates.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/P">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/P/Poe,_Edgar_Allan">
-  <link r:resource="http://www.student.virginia.edu/~ravens/"/>
-  <link r:resource="http://www.pambytes.com/poe/poe.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/P/Potok,_Chaim">
-  <link r:resource="http://www.dsdelft.nl/~jonathan/potok.htm"/>
-  <link r:resource="http://www.lasierra.edu/~ballen/potok/"/>
-  <link r:resource="http://www.spu.edu/special/potok/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Q">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/R">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/S">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/S/Stevenson,_Robert_Louis">
-  <link r:resource="http://www.bibliomania.com/Fiction/stevensn/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/T">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/T/Twain,_Mark">
-  <link r:resource="http://www.lm.com/~joseph/mtwain.html"/>
-  <link r:resource="http://home.earthlink.net/~chalquist/twain.html"/>
-  <link r:resource="http://www.bibliomania.com/Fiction/MarkTwain/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/T/Tolstoy,_Leo">
-  <link r:resource="http://www.bibliomania.com/Fiction/Tolstoy/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/U">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/V">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/V/Voltaire">
-  <link r:resource="http://www.literature.org/Works/Voltaire/candide/"/>
-  <link r:resource="http://humanities.uchicago.edu/homes/VSA/"/>
-  <link r:resource="http://www.geocities.com/Athens/7308/"/>
-  <link r:resource="http://www.lucidcafe.com/library/95nov/voltaire.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/V/Verne,_Jules">
-  <link r:resource="http://www.bibliomania.com/Fiction/verne/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/W">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/W/Welsh,_Irvine">
-  <link r:resource="http://194.7.253.55/dsifiwelsh.html"/>
-  <link r:resource="http://www.jthin.co.uk/welsh.htm"/>
-  <link r:resource="http://www.canongate.co.uk/catalogue/0862417058"/>
-  <link r:resource="http://www.pulpfiction.com/rave/welsh.html"/>
-  <link r:resource="http://www.hedweb.com/spike/spikeecs.htm"/>
-  <link r:resource="http://www.ucalgary.ca/UofC/students/VOX/Books/welsh1.htm"/>
-  <link r:resource="http://www.web-show.com/Barcelona/Review/ENG/Eng1b4.htm"/>
-  <link r:resource="http://www.bookwire.com/BookInfo.Author$5076.html"/>
-  <link r:resource="http://www.electricfrog.co.uk/rebelinc/e-intro.htm"/>
-  <link r:resource="http://www.demon.co.uk/review/features/welsh.html"/>
-  <link r:resource="http://www.geocities.com/TelevisionCity/4152/welsh.html"/>
-  <link r:resource="http://www.geocities.com/TelevisionCity/4152/train.html"/>
-  <link r:resource="http://www.canongate.co.uk/catalogue/0862416477"/>
-  <link r:resource="http://www.biblio.co.uk/e-tour/welsh.html"/>
-  <link r:resource="http://www.catharton.com/authors/129.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/W/Wilde,_Oscar">
-  <link r:resource="http://www.bibliomania.com/Fiction/wilde/index.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/X">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Y">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Authors/Z">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Publishers">
-  <catid>911</catid>
-  <link r:resource="http://www.bdd.com"/>
-  <link r:resource="http://www.nuwebny.com/pinegrove/"/>
-  <link r:resource="http://www.newportbooks.com"/>
-  <link r:resource="http://www.randomhouse.com/"/>
-  <link r:resource="http://www.publishers.org"/>
-  <link r:resource="http://www.lights.com/publisher/"/>
-  <link r:resource="http://www.reedref.com/bowker/index.html"/>
-  <link r:resource="http://www.randomhouse.com/kids/"/>
-  <link r:resource="http://www.cc.northcoast.com/~scrnplay"/>
-  <link r:resource="http://www.lastparade.com"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts">
-  <catid>912</catid>
-  <link r:resource="http://www.promo.net/pg/index.html"/>
-  <link r:resource="http://www.ipl.org"/>
-  <link r:resource="http://www.promo.net/pg/volunteer.html"/>
-  <link r:resource="http://www.darkzoo.net"/>
-  <link r:resource="http://www.bl.uk/"/>
-  <link r:resource="http://www.columbia.edu/acis/bartleby/"/>
-  <link r:resource="http://www.cs.cmu.edu/books.html"/>
-  <link r:resource="http://etext.lib.virginia.edu/modeng/modeng0.browse.html"/>
-  <link r:resource="http://husted.com/hgsf/"/>
-  <link r:resource="http://members.xoom.com/letralia/ed_let"/>
-  <link r:resource="http://galaxymall.com/books/merlyn/"/>
-  <link r:resource="http://members.tripod.com/~dglen/society.htm"/>
-  <link r:resource="http://www.hti.umich.edu"/>
-  <link r:resource="http://www.t0.or.at/~thomash/tsa/"/>
-  <link r:resource="http://www.umdl.umich.edu/moa/"/>
-  <link r:resource="http://home.rol3.com/~u0344727/"/>
-  <link r:resource="http://www.americadelsur.com/letralia/ed_let"/>
-  <link r:resource="http://www.freeyellow.com/members4/azlibros/"/>
-  <link r:resource="http://www.ipl.org/reading/books/"/>
-  <link r:resource="http://ccel.wheaton.edu/"/>
-  <link r:resource="http://umgweb.com/indexnov.html"/>
-  <link r:resource="http://www.talewins.com/Browzer/Short"/>
-  <link r:resource="http://idt.net/~jcamacho/hu.htm"/>
-  <link r:resource="http://sunsite.berkeley.edu/"/>
-  <link r:resource="http://www.paper.backs.com/"/>
-  <link r:resource="http://clicnet.swarthmore.edu/rire/index.html"/>
-  <link r:resource="http://members.aol.com/wedgedee"/>
-  <link r:resource="http://cedric.cnam.fr/ABU/"/>
-  <link r:resource="http://www.bibliomania.com/"/>
-  <link r:resource="http://www.cpm.ll.ehime-u.ac.jp/AkamacHomePage/Akamac.html"/>
-  <link r:resource="http://www.petalsoflife.com"/>
-  <link r:resource="http://sunsite.berkeley.edu/alex/"/>
-  <link r:resource="http://www.books-on-line.com/"/>
-  <link r:resource="http://humanities.uchicago.edu/ARTFL/ARTFL.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg">
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/A">
-  <catid>40123</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/B">
-  <catid>40124</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/C">
-  <catid>40125</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/D">
-  <catid>40126</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/E">
-  <catid>40127</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/F">
-  <catid>40128</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/G">
-  <catid>40129</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/H">
-  <catid>40130</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/I">
-  <catid>40131</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/J">
-  <catid>40132</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/K">
-  <catid>40133</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/L">
-  <catid>40134</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/M">
-  <catid>40135</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/N">
-  <catid>40136</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/O">
-  <catid>40137</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/P">
-  <catid>40138</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/Q">
-  <catid>40139</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/R">
-  <catid>40140</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/S">
-  <catid>40141</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/T">
-  <catid>40142</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/U">
-  <catid>40143</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/V">
-  <catid>40144</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/W">
-  <catid>40145</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/X">
-  <catid>40146</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/Y">
-  <catid>40147</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Electronic_Texts/Project_Gutenberg/Z">
-  <catid>40148</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian">
-  <catid>913</catid>
-  <link r:resource="http://etext.lib.virginia.edu/rbs/rbs-abpc.html"/>
-  <link r:resource="http://www2.gol.com/users/steve/f_books.htm"/>
-  <link r:resource="http://www.tcd.ie/kells.html"/>
-  <link r:resource="http://www.ramsaybooks.com/littera/"/>
-  <link r:resource="http://www.dogeared.com/"/>
-  <link r:resource="http://www.princeton.edu/~ferguson/rbms.html"/>
-  <link r:resource="http://www.lucasbooks.com/parts.html"/>
-  <link r:resource="http://www.bibliomag.com/"/>
-  <link r:resource="http://poe.acc.virginia.edu/~oldbooks/rbs/"/>
-  <link r:resource="http://www.sas.ac.uk/ces/default/Libraries/contents.htm"/>
-  <link r:resource="http://prod.library.utoronto.ca/hbic/english.htm"/>
-  <link r:resource="http://www.chez.com/scriptmania"/>
-  <link r:resource="http://m5.vi.ri.cmu.edu/antique/"/>
-  <link r:resource="http://home.earthlink.net/~criswell/authors/agraphs.htm"/>
-  <link r:resource="http://www.Book-Sales-in-America.com/index.html"/>
-  <link r:resource="http://web.nypl.org/research/chss/spe/rbk/rare.html"/>
-  <link r:resource="http://www.xs4all.nl/~knops/index3.html"/>
-  <link r:resource="http://utl2.library.utoronto.ca/www/fisher/index.htm"/>
-  <link r:resource="http://www.clique.co.uk/"/>
-  <link r:resource="http://www.tiac.com/users/gods/really.htm"/>
-  <link r:resource="http://www.abbookman.com"/>
-  <link r:resource="http://www.co.broward.fl.us/lii03500.htm"/>
-  <link r:resource="http://www.nal.vam.ac.uk/pubs/lowecons.html"/>
-  <link r:resource="http://pages.infinit.net/mflibra1"/>
-  <link r:resource="http://lcweb.loc.gov/loc/legacy/"/>
-  <link r:resource="http://www.greatsite.com/engbibhis/index2.html"/>
-  <link r:resource="http://www.greatsite.com/timeline/index2.html"/>
-  <link r:resource="http://chalkboard.hypermart.net/newbie1.htm"/>
-  <link r:resource="http://communication.ucsd.edu/bjones/Books/booktext.html"/>
-  <link r:resource="http://www.imultimedia.pt/museuvirtpress/ing/index_i.html"/>
-  <link r:resource="http://books.interdart.co.uk/books/"/>
-  <link r:resource="http://www.scotbooksmag.demon.co.uk/"/>
-  <link r:resource="http://ebbs.english.vt.edu/gravell/"/>
-  <link r:resource="http://www.english.upenn.edu/~prhb/"/>
-  <link r:resource="http://lcweb.loc.gov/loc/cfbook/"/>
-  <link r:resource="http://www.rosenbach.org/"/>
-  <link r:resource="http://www.mun.ca/alciato/"/>
-  <link r:resource="http://www.lib.byu.edu/~aldine/"/>
-  <link r:resource="http://www.nypl.org/research/chss/grd/resguides/bookhist.html"/>
-  <link r:resource="http://www.mtbs.com/bkhist1.html"/>
-  <link r:resource="http://www.slip.net/~graphion/type.html"/>
-  <link r:resource="http://www.jillmorgan.com/sig.htm"/>
-  <link r:resource="http://www.abebooks.com/homeBase.htm"/>
-  <link r:resource="http://www.antiqbook.com/"/>
-  <link r:resource="http://members.aol.com/bookhuntpr"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Book_Arts">
-  <catid>1003</catid>
-  <link r:resource="http://www.bookbinding.net/"/>
-  <link r:resource="http://www.cbbag.ca/"/>
-  <link r:resource="http://www.xs4all.nl/~knops/knops.htm"/>
-  <link r:resource="http://www.geocities.com/SoHo/Lofts/2123/index.html"/>
-  <link r:resource="http://www.cs.uiowa.edu/~jones/book/"/>
-  <link r:resource="http://palimpsest.stanford.edu/don/don.html"/>
-  <link r:resource="http://www.dartmouth.edu/~preserve/tofc.html"/>
-  <link r:resource="http://www.collectorsguide.com/fa/fa010.shtml"/>
-  <link r:resource="http://karamelik.eastlib.ufl.edu/index.html"/>
-  <link r:resource="http://www.lucasbooks.com/part10.html"/>
-  <link r:resource="http://sul-server-2.stanford.edu/"/>
-  <link r:resource="http://loki.stockton.edu/~kinsellt/litresources/binding/latin13/intro.html"/>
-  <link r:resource="http://www.lava.net/gigabooks/bindinfo.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Mailing_Lists">
-  <catid>1004</catid>
-  <link r:resource="http://www.auldbooks.com/rare-books/"/>
-  <link r:resource="http://www.clique.co.uk/groups.htm"/>
-  <link r:resource="http://www.ramsaybooks.com/bookscanada/"/>
-  <link r:resource="http://www.auldbooks.com/biblio/"/>
-  <link r:resource="http://www.library.utoronto.ca/~bsc/bibsoc.htm"/>
-  <link r:resource="http://www.abebooks.com/home/BOOJUM/"/>
-  <link r:resource="http://www.bibliofind.com/mailinglists.html"/>
-  <link r:resource="http://www.indiana.edu/~sharp/sharp-l.html"/>
-  <link r:resource="http://www.peacelist.com"/>
-  <link r:resource="http://palimpsest.stanford.edu/byform/mailing-lists/bookarts/"/>
-  <link r:resource="http://palimpsest.stanford.edu/byform/mailing-lists/exlibris/"/>
-  <link r:resource="http://www.ramsaybooks.com/littera/lists.html"/>
-  <link r:resource="http://www.limes.skriptoriet.se/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Associations">
-  <catid>1005</catid>
-  <link r:resource="http://www.anzaab.com.au/~anzaab/"/>
-  <link r:resource="http://www.abaa-booknet.com"/>
-  <link r:resource="http://www.rarebooks.org"/>
-  <link r:resource="http://www.lila-ilab.org/ilab/index.html"/>
-  <link r:resource="http://www.antiquare.de/"/>
-  <link r:resource="http://www.ntc.be/CLAM/"/>
-  <link r:resource="http://www.antikvar.dk/"/>
-  <link r:resource="http://w3.iprolink.ch/vebuku/"/>
-  <link r:resource="http://www.franceantiq.fr/slam/"/>
-  <link r:resource="http://www.antiquarian.com/aba/"/>
-  <link r:resource="http://www.dada.it/alai/"/>
-  <link r:resource="http://www.svaf.se/"/>
-  <link r:resource="http://www.nvva.nl/"/>
-  <link r:resource="http://www.indiana.edu:80/~sharp/"/>
-  <link r:resource="http://www.archivists.org/"/>
-  <link r:resource="http://www.ukc.ac.uk/secl/bibsoc/"/>
-  <link r:resource="http://www.rmaba.com/"/>
-  <link r:resource="http://www.uq.edu.au/~enctiffi/bsanz.htm"/>
-  <link r:resource="http://utl2.library.utoronto.ca/~bsc/index.htm"/>
-  <link r:resource="http://www.lucasbooks.com/regional.html"/>
-  <link r:resource="http://wally.rit.edu/cary/apha.html"/>
-  <link r:resource="http://english.byu.edu/cronin/ala.htm"/>
-  <link r:resource="http://www.abac.ca"/>
-  <link r:resource="http://www.gaba.net"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Booksellers">
-  <catid>1006</catid>
-  <link r:resource="http://www.abebooks.com/home/jtf"/>
-  <link r:resource="http://www.colophonbooks.com"/>
-  <link r:resource="http://www.almarkco.com"/>
-  <link r:resource="http://www.medianet.ca/atlantic/augustin/Augustin.htm"/>
-  <link r:resource="http://members.tripod.com/~CAROLSBOOKS/home.html"/>
-  <link r:resource="http://www.telusplanet.net/public/dabooks"/>
-  <link r:resource="http://www.richnet.net/ljbooks"/>
-  <link r:resource="http://www.ramsaybooks.com"/>
-  <link r:resource="http://www.dacapo.com.au"/>
-  <link r:resource="http://www.erols.com/agvent"/>
-  <link r:resource="http://www.joslinhall.com"/>
-  <link r:resource="http://members.aol.com/quartobks/4to.htm"/>
-  <link r:resource="http://home.earthlink.net/~criswell"/>
-  <link r:resource="http://www.bibliocity.com/search/dw"/>
-  <link r:resource="http://www.brunnet.net/bagbooks"/>
-  <link r:resource="http://xerxesbooks.com/"/>
-  <link r:resource="http://www.rereadables.com/"/>
-  <link r:resource="http://www.clark.net/pub/wilsey/"/>
-  <link r:resource="http://WWW.netrax.net/~rarebook/"/>
-  <link r:resource="http://www.greatsite.com/"/>
-  <link r:resource="http://www.pncl.co.uk/hirst/BOOKS.html"/>
-  <link r:resource="http://www.powells.com"/>
-  <link r:resource="http://www.denismcd.com/"/>
-  <link r:resource="http://www.anybook.com"/>
-  <link r:resource="http://www.djmcadam.com/index.htm"/>
-  <link r:resource="http://prbm.com"/>
-  <link r:resource="http://chalkboard.hypermart.net"/>
-  <link r:resource="http://www.abebooks.com/home/jjayj/"/>
-  <link r:resource="http://www.abebooks.com/home/ALYBOOKS/home.html"/>
-  <link r:resource="http://www.abebooks.com/home/blacklion"/>
-  <link r:resource="http://www.afineprint.com"/>
-  <link r:resource="http://www.iac.net/~signbook/"/>
-  <link r:resource="http://home.swbell.net/oldsalt/index.html"/>
-  <link r:resource="http://www.gaba.net"/>
-  <link r:resource="http://ourworld.compuserve.com/Homepages/UTurszynski"/>
-  <link r:resource="http://www2.shore.net/~gerard/"/>
-  <link r:resource="http://www.abebooks.com/home/RBBOOKS/"/>
-  <link r:resource="http://www.escape.ca/~greenfld/"/>
-  <link r:resource="http://www.webcom.com/abcbooks"/>
-  <link r:resource="http://web.idirect.com/~booktrak/hoff/"/>
-  <link r:resource="http://members.aol.com/mottebks/"/>
-  <link r:resource="http://www.abebooks.com/home/VOLUME1BOOKS/"/>
-  <link r:resource="http://www.abebooks.com/home/yarrow"/>
-  <link r:resource="http://www.tiac.net/users/dpascale/"/>
-  <link r:resource="http://home.att.net/~inkco/"/>
-  <link r:resource="http://janusbooks.com/"/>
-  <link r:resource="http://www.jillmorgan.com/"/>
-  <link r:resource="http://www.cybertours.com/~dawnhillfr/bookpage.htm"/>
-  <link r:resource="http://www.phenomenal-books.com/"/>
-  <link r:resource="http://www.oakknoll.com/"/>
-  <link r:resource="http://www.lucasbooks.com"/>
-  <link r:resource="http://www.bookgarden.com/"/>
-  <link r:resource="http://www.tiac.net/biz/bluemoon/"/>
-  <link r:resource="http://www.aroundthekitchen.com"/>
-  <link r:resource="http://www.clarkes.co.za"/>
-  <link r:resource="http://www.isis-books.nl"/>
-  <link r:resource="http://www.pangeanet.it/marini"/>
-  <link r:resource="http://www.bibliofind.com/"/>
-  <link r:resource="http://moesbooks.com/"/>
-  <link r:resource="http://www.xs4all.nl/~scrinium"/>
-  <link r:resource="http://WWW.SECONDSTORYBOOKS.COM/"/>
-  <link r:resource="http://ourworld.compuserve.com/homepages/StrayBks"/>
-  <link r:resource="http://www.rarebook.com/website/home.html"/>
-  <link r:resource="http://www.qis.net/~emattson/"/>
-  <link r:resource="http://www.bookfinders.co.uk/bookfinders/"/>
-  <link r:resource="http://www.goodfriendsbookco.com"/>
-  <link r:resource="http://www.gate.net/~ravenous/book/bookone.htm"/>
-  <link r:resource="http://www.rarebooks.ch/"/>
-  <link r:resource="http://www.erasmushaus.ch/"/>
-  <link r:resource="http://www.beran.ch/"/>
-  <link r:resource="http://www.ruetz.ch/"/>
-  <link r:resource="http://gastronomica.rarebooks.ch/"/>
-  <link r:resource="http://www.abebooks.com/home/DRASH3"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Booksellers/Asian_Arts">
-  <catid>1013</catid>
-  <link r:resource="http://rareorientbooks.com"/>
-  <link r:resource="http://www.paragonbook.com"/>
-  <link r:resource="http://www.hanshan.com"/>
-  <link r:resource="http://www.asiabooks.gil.com.au"/>
-  <link r:resource="http://www.arslibri.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Booksellers/Modern_First_Editions">
-  <catid>1014</catid>
-  <link r:resource="http://ourworld.compuserve.com/homepages/StrayBks"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Booksellers/Vintage_Paperbacks">
-  <catid>1015</catid>
-  <link r:resource="http://www.dimeboxbooks.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Booksellers/Early_Printed_Books">
-  <catid>1016</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Booksellers/Art">
-  <catid>1017</catid>
-  <link r:resource="http://www.artextbooks.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Booksellers/Juvenile">
-  <catid>1018</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Booksellers/Indices">
-  <catid>1019</catid>
-  <link r:resource="http://www.livre-rare-book.com/anninter/annuaire.html"/>
-  <link r:resource="http://www.ramsaybooks.com/bookstore/dealinks.html"/>
-  <link r:resource="http://www.clique.co.uk/bibfind.htm"/>
-  <link r:resource="http://www.bookwire.com/index/Antiquarian-Booksellers.html"/>
-  <link r:resource="http://www.connectotel.com/books/wwwbs.html"/>
-  <link r:resource="http://kbc.com/html/booklist/whitepgs.htm"/>
-  <link r:resource="http://www.abaa-booknet.com/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Searchable_Databases">
-  <catid>1007</catid>
-  <link r:resource="http://www.abebooks.com"/>
-  <link r:resource="http://www.bibliocity.com"/>
-  <link r:resource="http://www.bibliofind.com"/>
-  <link r:resource="http://www.zvab.com/"/>
-  <link r:resource="http://www.interloc.com"/>
-  <link r:resource="http://www.mxbf.com"/>
-  <link r:resource="http://www.galaxidion.com/"/>
-  <link r:resource="http://www.antiqbook.nl/database/index.html"/>
-  <link r:resource="http://www.virtual.bookshop.com/htbin/catalog"/>
-  <link r:resource="http://www.rarebooks.ch/"/>
-  <link r:resource="http://www.freeyellow.com/members4/azlibros/"/>
-  <link r:resource="http://www.addall.com/Used"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Bibliography">
-  <catid>1008</catid>
-  <link r:resource="http://cres1.lancs.ac.uk/~esarie/farnol/biblio.htm"/>
-  <link r:resource="http://wsrv.clas.virginia.edu/~sjr3a/Bibliography.html"/>
-  <link r:resource="http://www.library.mcgill.ca/rarebook/bibcanho.htm"/>
-  <link r:resource="http://etext.lib.virginia.edu/bsuva/sb/index.html"/>
-  <link r:resource="http://www.tlcdelivers.com/tlc/crs/rare0170.htm"/>
-  <link r:resource="http://www.library.ubc.ca/edlib/egoffbib/"/>
-  <link r:resource="http://www2.gol.com/users/steve/f_maig.htm"/>
-  <link r:resource="http://www2.gol.com/users/steve/hearn/hearn.htm"/>
-  <link r:resource="http://www2.gol.com/users/steve/kir/beckebib.htm"/>
-  <link r:resource="http://www.massmedia.com/~mikeb/bramah/books.html"/>
-  <link r:resource="http://www.math.technion.ac.il/~rl/JulesVerne/biblio/"/>
-  <link r:resource="http://ourworld.compuserve.com/homepages/Patchen/BIBLIO.HTM"/>
-  <link r:resource="http://alexia.lis.uiuc.edu/~roberts/barnes/bibliography.htm"/>
-  <link r:resource="http://www.lucasbooks.com/pioneer.html"/>
-  <link r:resource="http://www.cla.sc.edu/engl/bsa/"/>
-  <link r:resource="http://www.lucasbooks.com/part6.html"/>
-  <link r:resource="http://www.geschiedenis.com/wo2/engels/indexeng.htm"/>
-  <link r:resource="http://spice.mhv.net/~KATEL/"/>
-  <link r:resource="http://shakti.trincoll.edu/~helton/army.html"/>
-  <link r:resource="http://www.erols.com/jreb/regiment.html"/>
-  <link r:resource="http://www.saint.org/books.htm"/>
-  <link r:resource="http://www.lib.sfu.ca/proj/aldus.htm"/>
-  <link r:resource="http://www.pemberley.com/janeinfo/janeinfo.html"/>
-  <link r:resource="http://www.LewisCarroll.org/carroll.html"/>
-  <link r:resource="http://www.ozemail.com.au/~drgrigg/wc/wcbiblio.html"/>
-  <link r:resource="http://lessing.tile.net/"/>
-  <link r:resource="http://books.interdart.co.uk/reasons/bibliogs/gh_bib.htm"/>
-  <link r:resource="http://www.niles.com/"/>
-  <link r:resource="http://cbsr26.ucr.edu/index.html"/>
-  <link r:resource="http://books.interdart.co.uk/reasons/bibliogs/jbp_bib.htm"/>
-  <link r:resource="http://darkwing.uoregon.edu/~rbear/"/>
-  <link r:resource="http://books.interdart.co.uk/reasons/bibliogs/dw_bib.htm"/>
-  <link r:resource="http://books.interdart.co.uk/reasons/bibliogs/pgw_bib.htm"/>
-  <link r:resource="http://books.interdart.co.uk/reasons/bibliogs/dy_bib.htm"/>
-  <link r:resource="http://www.trussel.com/hf/howfast.htm"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Auctions">
-  <catid>1009</catid>
-  <link r:resource="http://www.kistner.de/english/index.htm"/>
-  <link r:resource="http://194.158.30.144/"/>
-  <link r:resource="http://www.abaa-booknet.com/usa/swann/"/>
-  <link r:resource="http://www.swaen.com/"/>
-  <link r:resource="http://www.pacificbook.com/"/>
-  <link r:resource="http://www.zubal.com/"/>
-  <link r:resource="http://listings.ebay.com/aw/listings/list/category266/index.html"/>
-  <link r:resource="http://www.kanebooks.com/kane1.html"/>
-  <link r:resource="http://members.aol.com/MarkB45375/mark.htm"/>
-  <link r:resource="http://www.uauction.com"/>
-  <link r:resource="http://www.northerbys.com"/>
-  <link r:resource="http://www.antiques-world.com"/>
-  <link r:resource="http://www.popula.com"/>
-  <link r:resource="http://www.liveauctiononline.com"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Glossaries">
-  <catid>1010</catid>
-  <link r:resource="http://palimpsest.stanford.edu/don/don.html"/>
-  <link r:resource="http://www.clark.net/pub/wilsey/glossary.html"/>
-  <link r:resource="http://home.att.net/~inkco/terminol.htm"/>
-  <link r:resource="http://home.att.net/~inkco/grading.htm"/>
-  <link r:resource="http://www.lucasbooks.com/parts.html"/>
-  <link r:resource="http://www.slip.net/~graphion/gloss.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Judaica_and_the_Holocaust">
-  <catid>1011</catid>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Antiquarian/Exhibitions">
-  <catid>1012</catid>
-  <link r:resource="http://www.konbib.nl/kb/100hoogte/menu-tours-en.html"/>
-  <link r:resource="http://www.liv.ac.uk/~gpcollis/bookart.htm"/>
-  <link r:resource="http://www.lib.udel.edu/ud/spec/exhibits/color/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Literature">
-  <catid>914</catid>
-  <link r:resource="http://www.thrall.org/redislit.htm"/>
-  <link r:resource="http://www.mcsr.olemiss.edu/~egjbp/faulkner/faulkner.html"/>
-  <link r:resource="http://www.freedomsnest.com"/>
-  <link r:resource="http://www.waterboro.lib.me.us/books.htm"/>
-  <link r:resource="http://www.ozemail.com.au/~waldrenm/"/>
-  <link r:resource="http://www.promo.net/pg/"/>
-  <link r:resource="http://www.geocities.com/Athens/Delphi/7433"/>
-  <link r:resource="http://www.luc.edu/libraries/banned/"/>
-  <link r:resource="http://www.freeyellow.com/members4/azlibros/index.html"/>
-  <link r:resource="http://www.americadelsur.com/letralia/"/>
-  <link r:resource="http://perso.infonie.fr/lca"/>
-  <link r:resource="http://www.mygale.org/04/valle"/>
-  <link r:resource="http://www.petersistibet.com/"/>
-  <link r:resource="http://paper.backs.com"/>
-  <link r:resource="http://home.swbell.net/marstsp/bookstore.html"/>
-  <link r:resource="http://members.xoom.com/barwasser"/>
-  <link r:resource="http://members.xoom.com/Spyce/library.html"/>
-  <link r:resource="http://www.heartofoak.com/"/>
-  <link r:resource="http://djust.hypermart.net/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Literature/Poetry">
-  <catid>1020</catid>
-  <link r:resource="http://redfrog.norconnect.no/~poems/"/>
-  <link r:resource="http://www.cc.emory.edu/ENGLISH/LostPoets/"/>
-  <link r:resource="http://www.writing.co.uk"/>
-  <link r:resource="http://www.carrollsweb.com/haijin"/>
-  <link r:resource="http://members.spree.com/paulisinsori/"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Literature/Poetry/Contemporary">
-  <catid>1021</catid>
-  <link r:resource="http://www.geocities.com/SoHo/Cafe/4438/PoetStry.html"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Reading_Groups">
-  <catid>915</catid>
-  <link r:resource="http://members.tripod.com/~simplemail"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Spirituality">
-  <catid>917</catid>
-  <link r:resource="http://www.audiobooksonline.com"/>
-  <link r:resource="http://www.y-dat.co.il"/>
-  <link r:resource="http://cheraglibrary.org/"/>
-  <link r:resource="http://www.sol.com.au/kor/"/>
-  <link r:resource="http://www.sahaja.org/SeekersGuide/"/>
-  <link r:resource="http://www.metamodernera.com/"/>
-  <link r:resource="http://www.divine.org/testament"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Spirituality/Psychic_books">
-  <catid>1022</catid>
-  <link r:resource="http://www.psychic.co.nz"/>
-</Topic>
-<Topic r:ID="Top/Arts/Books/Spirituality/Self-Help_and_Personal_Growth_books">
-  <catid>1023</catid>
-  <link r:resource="http://www.invisiblepath.com"/>
-</Topic>
-</r:RDF>
+  <narrow r:resource="http://www.amazon.com"/>
+  <narrow r:resource="http://dir.yahoo.com/Arts/Humanities/Literature/"/>
+  <narrow r:resource="http://www.cnn.com/books/"/>
+</Topic>
+
+<Topic r:about="Arts/Music">
+   <catid>2</catid>
+   <narrow r:resource="http://www.ubl.com"/>
+   <narrow r:resource="http://dir.yahoo.com/Entertainment/Music/"/>
+   <narrow r:resource="http://www.cnn.com/SHOWBIZ/Music/"/>
+</Topic>
+
+<Topic r:about="Arts/Television">
+   <catid>3</catid>
+   <narrow r:resource="http://dir.yahoo.com/News_and_Media/Television/"/>
+   <narrow r:resource="http://www.ultimatetv.com/"/>
+   <narrow r:resource="http://www.gist.com/"/
+   <narrow r:resource="http://www.cnn.com/SHOWBIZ/TV/"/>
+</Topic>
+
+<Topic r:about="Arts/Writing">
+    <catid>4</catid>
+    <narrow r:resource="http://dir.yahoo.com/Social_Science/Communications/Writing/"/>
+    <narrow r:resource="http://www.writers-bbs.com/"/>
+</Topic>
+
+<Topic r:about="Arts/Animation">
+    <catid>5</catid>
+    <narrow r:resource="http://www.awn.com/"/>
+    <narrow r:resource="http://www.hotwired.com/animation/"/>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Animation/"/>
+</Topic>
+
+<Topic r:about="Arts/Anime">
+    <catid>6</catid>
+    <narrow r:resource="http://events.yahoo.com/Net_Events/Entertainment/Comics_and_Animation/Anime/"/>
+    <narrow r:resource="http://dir.yahoo.com/Entertainment/Comics_and_Animation/Animation/Anime/"/>
+</Topic>
+
+<Topic r:about="Arts/Bodyart">
+    <catid>7</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Body_Art/"/>
+    <narrow r:resource="http://www.BME.FreeQ.com/"/>
+    <narrow r:resource="http://www.piercinglinks.com/"/>
+</Topic>
+
+<Topic r:about="http://dmoz.org/Arts/Bonsai_and_Suiseki/">
+    <catid>8</catid>
+    <narrow r:resource="http://www.bonsaiweb.com"/>
+    <narrow r:resource="http://dir.yahoo.com/Recreation/Home_and_Garden/Gardening/Bonsai/"/>
+</Topic>
+
+<Topic r:about="Arts/Comics">
+    <catid>9</catid>
+    <narrow r:resource="http://dir.yahoo.com/Entertainment/Comics_and_Animation/"/>
+    <narrow r:resource="http://comics.com"/>
+</Topic>
+
+<Topic r:about="Arts/Dance">
+    <catid>10</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Performing_Arts/Dance/"/>
+</Topic>
+
+<Topic r:about="Arts/Muppets">
+    <catid>11</catid>
+    <narrow r:resource="http://dir.yahoo.com/Entertainment/Movies_and_Film/Genres/Children/Muppets/"/
+    <narrow r:resource="http://www.muppets.com"/>
+</Topic>
+
+<Topic r:about="Arts/Movies">
+    <catid>12</catid>
+    <narrow r:resource="http://movies.yahoo.com"/>
+    <narrow r:resource="http://movies.go.com/"/>
+</Topic>
+
+<Topic r:about="Arts/Poetry">
+    <catid>13</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Humanities/Literature/Poetry/"/>
+    <narrow r:resource="http://www.poetry.com"/>
+</Topic>
+
+<Topic r:about="Arts/Theatre">
+    <catid>14</catid>
+    <narrow r:resource="http://www.playbill.com/"/>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Performing_Arts/Theater/"/>
+</Topic>
+
+<Topic r:about="Arts/Photography">
+    <catid>15</catid>
+    <narrow r:resource="http://www.ipix.com"/>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Photography/"/>
+</Topic>
+
+<Topic r:about="Arts/Design">
+    <catid>16</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Design_Arts/"/>
+</Topic>
+
+<Topic r:about="Arts/Radio">
+     <catid>17</catid>
+     <narrow r:resource="http://www.designarchitecture.com"/>
+</Topic>
+
+<Topic r:about="Arts/Publishing">
+    <catid>18</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Publishing/"/>
+    <narrow r:resource="http://www.gutenberg.net/"/>
+</Topic>
+
+<Topic r:about="Arts/Asian_Arts">
+    <catid>19</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Cultures_and_Groups/Asian/"/>
+</Topic>
+
+<Topic r:about="Arts/Architecture">
+   <catid>20</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Design_Arts/Architecture/"/>
+</Topic>
+
+<Topic r:about="Arts/Comedy">
+    <catid>21</catid>
+    <narrow r:resource="http://dir.yahoo.com/Entertainment/Humor__Jokes__and_Fun/"/>
+</Topic>
+
+
+<Topic r:about="Arts/Museums">
+    <catid>22</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Museums__Galleries__and_Centers/"/>
+</Topic>
+
+<Topic r:about="Arts/Art_History">
+    <catid>23</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Art_History/"/>
+</Topic>
+
+
+<Topic r:about="Arts/Sculpture">
+    <catid>24</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Sculpture/"/>
+</Topic>
+
+
+<Topic r:about="Arts/Ceramics">
+    <catid>25</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Ceramics/"/>
+</Topic>
+
+<Topic r:about="Arts/Video">
+    <catid>26</catid>
+    <narrow r:resource="http://dir.yahoo.com/Arts/Visual_Arts/Video_Art/"/>
+</Topic>
+
+
+
+<Topic r:about="Business/Consulting">
+    <catid>127</catid>
+    <narrow r:resource="http://www.ac.com"/>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Corporate_Services/Consulting/Management_Consulting/"/>
+</Topic>
+
+<Topic r:about="Business/Marketing">
+    <catid>128</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Marketing/"/>
+    <narrow r:resource="http://www.marketingsource.com"/>
+</Topic>
+
+
+<Topic r:about="Business/Jobs">
+<catid>129</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Employment/"/>
+</Topic>
+
+<Topic r:about="Business/Insurance">
+    <catid>130</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Finance_and_Investment/Insurance/"/>
+    <narrow r:resource="http://www.insure.com/"/>
+</Topic>
+
+
+<Topic r:about="Business/Investing">
+    <catid>132</catid>
+    <narrow r:resource="http://dmoz.org/Business/Investing/"/>
+    <narrow r:resource="http://www.sec.gov"/>
+    <narrow r:resource="http://www.etrade.com"/>
+    <narrow r:resource="http://quote.yahoo.com"/>
+    <narrow r:resource="http://www.tradersresource.com/"/>
+</Topic>
+
+<Topic r:about="Business/Advertising">
+    <catid>133</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Marketing/Advertising/"/>
+</Topic>
+
+<Topic r:about="Business/Management">
+    <catid>134</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Management_Science/"/>
+</Topic>
+
+<Topic r:about="Business/Classifieds">
+    <catid>135</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Classifieds/"/>
+</Topic>
+
+<Topic r:about="Business/Venture_Capital">
+    <catid>136</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Finance_and_Investment/Financing/Corporate_Financing/Venture_Capital/"/>
+</Topic>
+
+<Topic r:about="Business/Accounting">
+    <catid>137</catid>
+    <narrow r:resource="http://dir.yahoo.com/Social_Science/Economics/Accounting_and_Auditing/"/>
+</Topic>
+
+<Topic r:about="Business/Manufacturing">
+    <catid>138</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Manufacturing/"/>
+</Topic>
+
+<Topic r:about="Business/Training_and_Schools">
+    <catid>139</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Education/"/>
+</Topic>
+
+<Topic r:about="Business/International_Business_and_Trade">
+    <catid>140</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/International_Economy/"/>
+</Topic>
+
+<Topic r:about="Business/Human_Resources">
+    <catid>141</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Companies/Corporate_Services/Human_Resources/"/>
+</Topic>
+
+<Topic r:about="Business/Real_Estate">
+    <catid>142</catid>
+    <narrow r:resource="http://dir.yahoo.com/Business_and_Economy/Real_Estate/"/>
+</Topic>
+
+
+
+<Topic r:about="Computers/Hacking">
+    <catid>201 </catid>
+</Topic>
+
+<Topic r:about="Computers/Graphics">
+    <catid>202</catid>
+</Topic>
+
+<Topic r:about="Computers/CD_ROM">
+    <catid>203 </catid>
+</Topic>
+
+<Topic r:about="Computers/Internet">
+    <catid>204</catid>
+</Topic>
+
+<Topic r:about="Computers/Security">
+    <catid>205</catid>
+</Topic>
+
+<Topic r:about="Computers/Software">
+    <catid>206</catid>
+</Topic>
+
+<Topic r:about="Computers/Hardware">
+    <catid>207</catid>
+</Topic>
+
+<Topic r:about="Computers/Operating_Systems">
+    <catid>208</catid>
+</Topic>
+
+<Topic r:about="Computers/Benchmarking">
+    <catid>209</catid>
+</Topic>
+
+<Topic r:about="Computers/CAD">
+    <catid>210</catid>
+</Topic>
+
+<Topic r:about="Computers/Algorithms">
+    <catid>211</catid>
+</Topic>
+
+<Topic r:about="Computers/Databases">
+    <catid>212</catid>
+</Topic>
+
+<Topic r:about="Computers/Data_Communications">
+    <catid>213</catid>
+</Topic>
+
+<Topic r:about="Computers/DSP">
+    <catid>214</catid>
+</Topic>
+
+<Topic r:about="Computers/Emulators">
+    <catid>215</catid>
+</Topic>
+
+<Topic r:about="Computers/Fonts">
+    <catid>216</catid>
+</Topic>
+
+<Topic r:about="Computers/Groupware">
+    <catid>216</catid>
+</Topic>
+
+<Topic r:about="Computers/Home_Automation">
+    <catid>217</catid>
+</Topic>
+
+<Topic r:about="Computers/Human_Factors">
+    <catid>218</catid>
+</Topic>
+
+<Topic r:about="Computers/Multimedia">
+    <catid>219</catid>
+</Topic>
+
+<Topic r:about="Computers/Programming">
+    <catid>220</catid>
+</Topic>
+
+<Topic r:about="Computers/Robotics">
+    <catid>221</catid>
+</Topic>
+
+<Topic r:about="Computers/Systems">
+    <catid>222</catid>
+</Topic>
+
+<Topic r:about="Computers/Desktop_Publishing">
+    <catid>223</catid>
+</Topic>
+
+<Topic r:about="Computers/Supercomputing">
+    <catid>224</catid>
+</Topic>
+
+<Topic r:about="Computers/Jobs">
+    <catid>225</catid>
+</Topic>
+
+<Topic r:about="Computers/Parallel_Computing">
+    <catid>226</catid>
+</Topic>
+
+<Topic r:about="Computers/Bulletin_Board_Systems">
+    <catid>227</catid>
+</Topic>
+
+<Topic r:about="Computers/Consultants">
+    <catid>228</catid>
+</Topic>
+
+<Topic r:about="Computers/Vendors">
+    <catid>229</catid>
+</Topic>
+
+<Topic r:about="Computers/Mobile_Computing">
+    <catid>230</catid>
+</Topic>
+
+<Topic r:about="Computers/Companies">
+    <catid>231</catid>
+</Topic>
+
+<Topic r:about="Computers/Learning">
+    <catid>232</catid>
+</Topic>
+
+<Topic r:about="Computers/News">
+    <catid>233</catid>
+</Topic>
+
+<Topic r:about="Computers/Organizations">
+    <catid>234</catid>
+</Topic>
+
+<Topic r:about="Computers/Intranets">
+    <catid>235</catid>
+</Topic>
+
+<Topic r:about="Computers/Artificial_Intelligence">
+    <catid>236</catid>
+</Topic>
+
+
+
+<Topic r:about="Games/MUDs">
+    <catid>301</catid>
+</Topic>
+
+<Topic r:about="Games/Conventions">
+    <catid>302</catid>
+</Topic>
+
+<Topic r:about="Games/Gambling">
+    <catid>303</catid>
+</Topic>
+
+<Topic r:about="Games/Women-in-Gaming">
+    <catid>304</catid>
+</Topic>
+
+<Topic r:about="Games/Video_Games">
+    <catid>305</catid>
+</Topic>
+
+<Topic r:about="Games/Play_by_Mail">
+    <catid>306</catid>
+</Topic>
+
+<Topic r:about="Games/Corewar">
+    <catid>307</catid>
+</Topic>
+
+<Topic r:about="Games/Game_Design">
+    <catid>308</catid>
+</Topic>
+
+<Topic r:about="Games/Miniatures">
+    <catid>309</catid>
+</Topic>
+
+<Topic r:about="Games/Netrek">
+    <catid>310</catid>
+</Topic>
+
+<Topic r:about="Games/Pinball">
+    <catid>311</catid>
+</Topic>
+
+<Topic r:about="Games/Trading_Cards">
+    <catid>312</catid>
+</Topic>
+
+<Topic r:about="Games/Puzzles">
+    <catid>313</catid>
+</Topic>
+
+<Topic r:about="Games/Crossword_Puzzles">
+    <catid>314</catid>
+</Topic>
+
+<Topic r:about="Games/Webgames">
+    <catid>315</catid>
+</Topic>
+
+<Topic r:about="Games/IRC">
+    <catid>316</catid>
+</Topic>
+
+<Topic r:about="Games/Game_Creation_Systems">
+    <catid>317</catid>
+</Topic>
+
+<Topic r:about="Games/Fantasy_Sports">
+    <catid>318</catid>
+</Topic>
+
+<Topic r:about="Games/Miscellaneous_Games">
+    <catid>319</catid>
+</Topic>
+
+<Topic r:about="Games/Glass_Bead_Games">
+    <catid>320</catid>
+</Topic>
+
+<Topic r:about="Games/Rogue-like">
+    <catid>321</catid>
+</Topic>
+
+<Topic r:about="Games/Board_Games">
+    <catid>322</catid>
+</Topic>
+
+<Topic r:about="Games/Card_Games">
+    <catid>323</catid>
+</Topic>
+
+<Topic r:about="Games/Role-Playing_Games">
+    <catid>324</catid>
+</Topic>
+
+
+<Topic r:about="Health/Emergency_Services">
+    <catid>401</catid>
+</Topic>
+
+<Topic r:about="Health/Fitness">
+    <catid>402</catid>
+</Topic>
+
+<Topic r:about="Health/Pharmacy">
+    <catid>403</catid>
+</Topic>
+
+<Topic r:about="Health/Alternative">
+    <catid>404</catid>
+</Topic>
+
+<Topic r:about="Health/Life_Extension">
+    <catid>405</catid>
+</Topic>
+
+<Topic r:about="Health/Medicine">
+    <catid>406</catid>
+</Topic>
+
+<Topic r:about="Health/Dentistry">
+    <catid>407</catid>
+</Topic>
+
+<Topic r:about="Health/Nursing">
+    <catid>408</catid>
+</Topic>
+
+<Topic r:about="Health/Nutrition">
+    <catid>409</catid>
+</Topic>
+
+<Topic r:about="Health/Vision">
+    <catid>410</catid>
+</Topic>
+
+<Topic r:about="Health/Services">
+    <catid>411</catid>
+</Topic>
+
+<Topic r:about="Health/Beauty">
+    <catid>412</catid>
+</Topic>
+
+<Topic r:about="Health/Substance_Abuse">
+    <catid>413</catid>
+</Topic>
+
+<Topic r:about="Health/Patient_Education">
+    <catid>414</catid>
+</Topic>
+
+<Topic r:about="Health/Womens_Health">
+    <catid>415</catid>
+</Topic>
+
+<Topic r:about="Health/Children">
+    <catid>416</catid>
+</Topic>
+
+<Topic r:about="Health/Conditions">
+    <catid>417</catid>
+</Topic>
+
+<Topic r:about="Health/Occupational_Health_and_Safety">
+    <catid>418</catid>
+</Topic>
+
+<Topic r:about="Health/Mental_Health">
+    <catid>419</catid>
+</Topic>
+
+<Topic r:about="Health/Aging">
+    <catid>420</catid>
+</Topic>
+
+<Topic r:about="Health/Healthcare_Industry">
+    <catid>421</catid>
+</Topic>
+
+<Topic r:about="Health/Products">
+    <catid>422</catid>
+</Topic>
+
+<Topic r:about="Health/Publications">
+    <catid>423</catid>
+</Topic>
+
+<Topic r:about="Health/Education">
+    <catid>424</catid>
+</Topic>
+
+<Topic r:about="Health/Men's_Health">
+    <catid>425</catid>
+</Topic>
+
+<Topic r:about="Health/Consumer_Support_Groups">
+    <catid>426</catid>
+</Topic>
+
+<Topic r:about="Health/Disabilities">
+    <catid>427</catid>
+</Topic>
+
+<Topic r:about="Health/Organizations">
+    <catid>428</catid>
+</Topic>
+
+<Topic r:about="Health/Chat,_Discussion,_ICQ">
+    <catid>429</catid>
+</Topic>
+
+<Topic r:about="Health/References_and_Resources">
+    <catid>430</catid>
+</Topic>
+
+<Topic r:about="Health/Conditions_and_Diseases">
+    <catid>431</catid>
+</Topic>
+
+
+<Topic r:about="Home/Consumers">
+    <catid>432</catid>
+</Topic>
+
+<Topic r:about="Home/Houses">
+    <catid>433</catid>
+</Topic>
+
+<Topic r:about="Home/Homeowners_Associations">
+    <catid>434</catid>
+</Topic>
+
+<Topic r:about="Home/Financial_Planning">
+    <catid>435</catid>
+</Topic>
+
+<Topic r:about="Home/Kids">
+    <catid>436</catid>
+</Topic>
+
+<Topic r:about="Home/Rural">
+    <catid>437</catid>
+</Topic>
+
+<Topic r:about="Home/Gardens">
+    <catid>438</catid>
+</Topic>
+
+<Topic r:about="Home/Homemaking">
+    <catid>439</catid>
+</Topic>
+
+<Topic r:about="Home/Tax_Preparation">
+    <catid>440</catid>
+</Topic>
+
+<Topic r:about="Home/Recipes">
+    <catid>441</catid>
+</Topic>
+
+<Topic r:about="Home/Entertainment">
+    <catid>442</catid>
+</Topic>
+
+
+
+<Topic r:about="News/Internet">
+    <catid>501</catid>
+</Topic>
+
+<Topic r:about="News/Online">
+    <catid>502</catid>
+</Topic>
+
+<Topic r:about="News/Media">
+    <catid>503</catid>
+</Topic>
+
+<Topic r:about="News/Newspapers">
+    <catid>504</catid>
+</Topic>
+
+<Topic r:about="News/Colleges_and_Universities">
+    <catid>505</catid>
+</Topic>
+
+<Topic r:about="News/Magazines">
+    <catid>506</catid>
+</Topic>
+
+<Topic r:about="News/News_Indexes">
+    <catid>507</catid>
+</Topic>
+
+<Topic r:about="News/Weather">
+    <catid>508</catid>
+</Topic>
+
+<Topic r:about="News/Filters">
+    <catid>509</catid>
+</Topic>
+
+<Topic r:about="News/Columnists">
+    <catid>510</catid>
+</Topic>
+
+<Topic r:about="News/Regional">
+    <catid>511</catid>
+</Topic>
+
+<Topic r:about="News/Services">
+    <catid>512</catid>
+</Topic>
+
+<Topic r:about="News/Tech_News">
+    <catid>513</catid>
+</Topic>
+
+
+<Topic r:about="Recreation/Food">
+    <catid>601</catid>
+</Topic>
+
+<Topic r:about="Recreation/Outdoors">
+    <catid>602</catid>
+</Topic>
+
+<Topic r:about="Recreation/Antiques">
+    <catid>603</catid>
+</Topic>
+
+<Topic r:about="Recreation/Aquaria">
+    <catid>604</catid>
+</Topic>
+
+<Topic r:about="Recreation/Theme_Parks">
+    <catid>605</catid>
+</Topic>
+
+<Topic r:about="Recreation/Autos">
+    <catid>606</catid>
+</Topic>
+
+<Topic r:about="Recreation/Aviation">
+    <catid>607</catid>
+</Topic>
+
+<Topic r:about="Recreation/Birdwatching">
+    <catid>608</catid>
+</Topic>
+
+<Topic r:about="Recreation/Boating">
+    <catid>609</catid>
+</Topic>
+
+<Topic r:about="Recreation/Climbing">
+    <catid>610</catid>
+</Topic>
+
+<Topic r:about="Recreation/Collecting">
+    <catid>611</catid>
+</Topic>
+
+<Topic r:about="Recreation/Crafts">
+    <catid>612</catid>
+</Topic>
+
+<Topic r:about="Recreation/Drugs">
+    <catid>613</catid>
+</Topic>
+
+<Topic r:about="Recreation/Guns">
+    <catid>614</catid>
+</Topic>
+
+<Topic r:about="Recreation/Humor">
+    <catid>615</catid>
+</Topic>
+
+<Topic r:about="Recreation/Kites">
+    <catid>616</catid>
+</Topic>
+
+<Topic r:about="Recreation/Knives">
+    <catid>617</catid>
+</Topic>
+
+<Topic r:about="Recreation/Models">
+    <catid>618</catid>
+</Topic>
+
+<Topic r:about="Recreation/Motorcycles">
+    <catid>619</catid>
+</Topic>
+
+<Topic r:about="Recreation/Nudism">
+    <catid>620</catid>
+</Topic>
+
+<Topic r:about="Recreation/Pets">
+    <catid>621</catid>
+</Topic>
+
+<Topic r:about="Recreation/Ponds">
+    <catid>622</catid>
+</Topic>
+
+<Topic r:about="Recreation/Scouting">
+    <catid>623</catid>
+</Topic>
+
+<Topic r:about="Recreation/Travel">
+    <catid>624</catid>
+</Topic>
+
+<Topic r:about="Recreation/Zoological">
+    <catid>625</catid>
+</Topic>
+
+<Topic r:about="Recreation/Smoking">
+    <catid>626</catid>
+</Topic>
+
+<Topic r:about="Recreation/Hot_Air_Ballooning">
+    <catid>627</catid>
+</Topic>
+
+<Topic r:about="Recreation/Acrobatics">
+    <catid>628</catid>
+</Topic>
+
+<Topic r:about="Recreation/Amateur_Radio">
+    <catid>629</catid>
+</Topic>
+
+<Topic r:about="Recreation/Trains_and_Railroads">
+    <catid>630</catid>
+</Topic>
+
+
+<Topic r:about="Reference/Education">
+    <catid>701</catid>
+</Topic>
+
+<Topic r:about="Reference/Libraries">
+    <catid>702</catid>
+</Topic>
+
+<Topic r:about="Reference/Maps">
+    <catid>703</catid>
+</Topic>
+
+<Topic r:about="Reference/Archives">
+    <catid>704</catid>
+</Topic>
+
+<Topic r:about="Reference/Lexicon">
+    <catid>705</catid>
+</Topic>
+
+<Topic r:about="Reference/Dictionaries">
+    <catid>706</catid>
+</Topic>
+
+<Topic r:about="Reference/Style_Guides">
+    <catid>707</catid>
+</Topic>
+
+<Topic r:about="Reference/Directories">
+    <catid>708</catid>
+</Topic>
+
+<Topic r:about="Reference/Encyclopedia">
+    <catid>709</catid>
+</Topic>
+
+<Topic r:about="Reference/Quotations">
+    <catid>710</catid>
+</Topic>
+
+<Topic r:about="Reference/Thesauri">
+    <catid>711</catid>
+</Topic>
+
+<Topic r:about="Reference/Bibliography">
+    <catid>712</catid>
+</Topic>
+
+<Topic r:about="Reference/Knowledge_Management">
+    <catid>713</catid>
+</Topic>
+
+<Topic r:about="Reference/Handbooks">
+    <catid>714</catid>
+</Topic>
+
+<Topic r:about="Reference/Parliamentary_Procedure">
+    <catid>715</catid>
+</Topic>
+
+
+
+
+<Topic r:about="Science/Psychology">
+    <catid>801</catid>
+</Topic>
+
+<Topic r:about="Science/Pyrotechnics">
+    <catid>802</catid>
+</Topic>
+
+<Topic r:about="Science/Aeronautics">
+    <catid>803</catid>
+</Topic>
+
+<Topic r:about="Science/Agriculture">
+    <catid> 804</catid>
+</Topic>
+
+<Topic r:about="Science/Archaeology">
+    <catid> 805</catid>
+</Topic>
+
+<Topic r:about="Science/Astronomy">
+    <catid>806</catid>
+</Topic>
+
+<Topic r:about="Science/Futurism">
+    <catid>807</catid>
+</Topic>
+
+<Topic r:about="Science/Ecology">
+    <catid>808</catid>
+</Topic>
+
+<Topic r:about="Science/Evolution">
+    <catid>809</catid>
+</Topic>
+
+<Topic r:about="Science/Paleontology">
+    <catid>810</catid>
+</Topic>
+
+<Topic r:about="Science/Regional">
+    <catid>811</catid>
+</Topic>
+
+<Topic r:about="Science/Chemistry">
+    <catid>812</catid>
+</Topic>
+
+<Topic r:about="Science/Cognitive_Science">
+    <catid>813</catid>
+</Topic>
+
+<Topic r:about="Science/Cryonics">
+    <catid>814</catid>
+</Topic>
+
+<Topic r:about="Science/Cryptography">
+    <catid>815</catid>
+</Topic>
+
+<Topic r:about="Science/Economics">
+    <catid>816</catid>
+</Topic>
+
+<Topic r:about="Science/Electronics">
+    <catid>817</catid>
+</Topic>
+
+<Topic r:about="Science/Energy">
+    <catid>818</catid>
+</Topic>
+
+<Topic r:about="Science/Engineering">
+    <catid>819</catid>
+</Topic>
+
+<Topic r:about="Science/Environment">
+    <catid>820</catid>
+</Topic>
+
+<Topic r:about="Science/Math">
+    <catid>821</catid>
+</Topic>
+
+<Topic r:about="Science/Geology">
+    <catid>822</catid>
+</Topic>
+
+<Topic r:about="Science/Meteorology">
+    <catid>823</catid>
+</Topic>
+
+<Topic r:about="Science/Navigation">
+    <catid>824</catid>
+</Topic>
+
+<Topic r:about="Science/Language_and_Linguistics">
+    <catid>825</catid>
+</Topic>
+
+<Topic r:about="Science/Logic">
+    <catid>826</catid>
+</Topic>
+
+<Topic r:about="Science/Materials">
+    <catid>827</catid>
+</Topic>
+
+<Topic r:about="Science/Laboratory_Medicine">
+    <catid>828</catid>
+</Topic>
+
+<Topic r:about="Science/Military">
+    <catid>829</catid>
+</Topic>
+
+<Topic r:about="Science/Optics">
+    <catid>830</catid>
+</Topic>
+
+<Topic r:about="Science/Physics">
+    <catid>831</catid>
+</Topic>
+
+<Topic r:about="Science/Polymers">
+    <catid>832</catid>
+</Topic>
+
+<Topic r:about="Science/Skeptics">
+    <catid>833</catid>
+</Topic>
+
+<Topic r:about="Science/Space">
+    <catid>834</catid>
+</Topic>
+
+<Topic r:about="Science/Statistics">
+    <catid>835</catid>
+</Topic>
+
+<Topic r:about="Science/Biology">
+    <catid> 836</catid>
+</Topic>
+
+<Topic r:about="Science/Physiology">
+    <catid>837</catid>
+</Topic>
+
+<Topic r:about="Science/Software">
+    <catid>838</catid>
+</Topic>
+
+<Topic r:about="Science/Geomatics">
+    <catid>839</catid>
+</Topic>
+
+<Topic r:about="Science/Ethnology">
+    <catid>840</catid>
+</Topic>
+
+<Topic r:about="Science/Molecular_Biology">
+    <catid>841</catid>
+</Topic>
+
+<Topic r:about="Science/Immunology">
+    <catid>842</catid>
+</Topic>
+
+<Topic r:about="Science/Food_Science">
+    <catid>843</catid>
+</Topic>
+
+<Topic r:about="Science/Forensic">
+    <catid>844</catid>
+</Topic>
+
+<Topic r:about="Science/FAQs">
+    <catid>845</catid>
+</Topic>
+
+<Topic r:about="Science/Sociology">
+    <catid>846</catid>
+</Topic>
+
+<Topic r:about="Science/Biochemistry">
+    <catid>847</catid>
+</Topic>
+
+<Topic r:about="Science/Anomalies">
+    <catid>848</catid>
+</Topic>
+
+<Topic r:about="Science/Cryptozoology">
+    <catid>849</catid>
+</Topic>
+
+<Topic r:about="Science/Acoustics,_Noise_and_Vibration">
+    <catid>850</catid>
+</Topic>
+
+<Topic r:about="Science/Oceanography">
+    <catid>851</catid>
+</Topic>
+
+<Topic r:about="Science/Nanotechnology">
+    <catid>852</catid>
+</Topic>
+
+<Topic r:about="Science/Crystallography">
+    <catid>853</catid>
+</Topic>
+
+<Topic r:about="Science/About_Science">
+    <catid>854</catid>
+</Topic>
+
+<Topic r:about="Science/Instruments_and_Supplies">
+    <catid>855</catid>
+</Topic>
+
+<Topic r:about="Science/Political_Science">
+    <catid>856 </catid>
+</Topic>
+
+<Topic r:about="Science/Academia_and_Society">
+    <catid>857</catid>
+</Topic>
+
+<Topic r:about="Science/About_Science_in_other_languages">
+    <catid>858</catid>
+</Topic>
+
+<Topic r:about="Science/Journals_and_Magazines">
+    <catid>859</catid>
+</Topic>
+
+<Topic r:about="Science/Museums">
+    <catid>860</catid>
+</Topic>
+
+<Topic r:about="Science/Physical_Sciences">
+    <catid>861</catid>
+</Topic>
+
+<Topic r:about="Science/Fluid_Mechanics_and_Dynamics">
+    <catid>862</catid>
+</Topic>
+
+<Topic r:about="Science/Science-Technology_Policy">
+    <catid>863</catid>
+</Topic>
+
+
+<Topic r:about="Shopping/Autos">
+    <catid>901</catid>
+</Topic>
+
+<Topic r:about="Shopping/Clothing">
+    <catid>902</catid>
+</Topic>
+
+<Topic r:about="Shopping/Directories">
+    <catid>903</catid>
+</Topic>
+
+<Topic r:about="Shopping/Online_Auctions">
+    <catid>904</catid>
+</Topic>
+
+<Topic r:about="Shopping/Books">
+    <catid>905</catid>
+</Topic>
+
+<Topic r:about="Shopping/Miscellaneous">
+    <catid>906</catid>
+</Topic>
+
+<Topic r:about="Shopping/Gifts">
+    <catid>907</catid>
+</Topic>
+
+<Topic r:about="Shopping/Music">
+    <catid>908</catid>
+</Topic>
+
+<Topic r:about="Shopping/Jewelry">
+    <catid>909</catid>
+</Topic>
+
+<Topic r:about="Shopping/Online_Malls">
+    <catid>910</catid>
+</Topic>
+
+<Topic r:about="Shopping/Crafts">
+    <catid>911</catid>
+</Topic>
+
+<Topic r:about="Shopping/Home_and_Garden">
+    <catid>912</catid>
+</Topic>
+
+<Topic r:about="Shopping/International">
+    <catid>913</catid>
+</Topic>
+
+<Topic r:about="Shopping/Pets">
+    <catid>914</catid>
+</Topic>
+
+<Topic r:about="Shopping/Health_and_Beauty">
+    <catid>915</catid>
+</Topic>
+
+<Topic r:about="Shopping/Computers">
+    <catid>916</catid>
+</Topic>
+
+<Topic r:about="Shopping/Food">
+    <catid>917</catid>
+</Topic>
+
+<Topic r:about="Shopping/Home_Electronics">
+    <catid>918</catid>
+</Topic>
+
+<Topic r:about="Shopping/Children">
+    <catid>919</catid>
+</Topic>
+
+<Topic r:about="Shopping/Antiques_and_Collectables">
+    <catid>920</catid>
+</Topic>
+
+<Topic r:about="Shopping/Art_Galleries">
+    <catid>921</catid>
+</Topic>
+
+<Topic r:about="Shopping/Office_Supplies">
+    <catid>922</catid>
+</Topic>
+
+<Topic r:about="Shopping/Sporting_Goods">
+    <catid>923</catid>
+</Topic>
+
+<Topic r:about="Shopping/Party_Supplies">
+    <catid>924</catid>
+</Topic>
+
+<Topic r:about="Shopping/Housewares">
+    <catid>925</catid>
+</Topic>
+
+<Topic r:about="Shopping/Flowers">
+    <catid>926</catid>
+</Topic>
+
+<Topic r:about="Shopping/Videos">
+    <catid>927</catid>
+</Topic>
+
+<Topic r:about="Shopping/Hardware_-_Home_Improvement">
+    <catid>928</catid>
+</Topic>
+
+<Topic r:about="Shopping/General_Merchandise">
+    <catid>929</catid>
+</Topic>
+
+
+<Topic r:about="Society/Activism">
+    <catid>1001</catid>
+</Topic>
+
+<Topic r:about="Society/Heraldry">
+    <catid>1002</catid>
+</Topic>
+
+<Topic r:about="Society/Subcultures">
+    <catid>1003</catid>
+</Topic>
+
+<Topic r:about="Society/Death">
+    <catid>1004</catid>
+</Topic>
+
+<Topic r:about="Society/Future">
+    <catid>1005</catid>
+</Topic>
+
+<Topic r:about="Society/Genealogy">
+    <catid>1006</catid>
+</Topic>
+
+<Topic r:about="Society/History">
+    <catid>1007</catid>
+</Topic>
+
+<Topic r:about="Society/Men">
+    <catid>1008</catid>
+</Topic>
+
+<Topic r:about="Society/Transgendered">
+    <catid>1009</catid>
+</Topic>
+
+<Topic r:about="Society/Advice">
+    <catid>1010</catid>
+</Topic>
+
+<Topic r:about="Society/Military">
+    <catid>1011</catid>
+</Topic>
+
+<Topic r:about="Society/People">
+    <catid>1012</catid>
+</Topic>
+
+<Topic r:about="Society/Religion">
+    <catid>1013</catid>
+</Topic>
+
+<Topic r:about="Society/Human_Rights">
+    <catid>1014</catid>
+</Topic>
+
+<Topic r:about="Society/Support_Groups">
+    <catid>1015</catid>
+</Topic>
+
+<Topic r:about="Society/Women">
+    <catid>1016</catid>
+</Topic>
+
+<Topic r:about="Society/Law">
+    <catid>1017</catid>
+</Topic>
+
+<Topic r:about="Society/Paranormal">
+    <catid>1018</catid>
+</Topic>
+
+<Topic r:about="Society/Issues">
+    <catid>1019</catid>
+</Topic>
+
+<Topic r:about="Society/Politics">
+    <catid>1020</catid>
+</Topic>
+
+<Topic r:about="Society/Holidays">
+    <catid>1021</catid>
+</Topic>
+
+<Topic r:about="Society/Sexuality">
+    <catid>1022</catid>
+</Topic>
+
+<Topic r:about="Society/Relationships">
+    <catid>1022</catid>
+</Topic>
+
+<Topic r:about="Society/Disabled">
+    <catid>1023</catid>
+</Topic>
+
+<Topic r:about="Society/Gay,_Lesbian,_and_Bisexual">
+    <catid>1024</catid>
+</Topic>
+
+<Topic r:about="Society/Organizations">
+    <catid>1025</catid>
+</Topic>
+
+<Topic r:about="Society/Ethnicity">
+    <catid>1026</catid>
+</Topic>
+
+<Topic r:about="Society/Indigenous_People">
+    <catid>1027</catid>
+</Topic>
+
+<Topic r:about="Society/Government">
+    <catid>1028</catid>
+</Topic>
+
+<Topic r:about="Society/Philosophy">
+    <catid>1029</catid>
+</Topic>
+
+<Topic r:about="Society/Lifestyle_Choices">
+    <catid>1030</catid>
+</Topic>
+
+<Topic r:about="Society/Seniors">
+    <catid>1031</catid>
+</Topic>
+
+<Topic r:about="Society/Urban_Legends">
+    <catid>1032</catid>
+</Topic>
+
+
+<Topic r:about="Sports/Marching">
+    <catid>2001</catid>
+</Topic>
+
+<Topic r:about="Sports/Auto_Racing">
+    <catid>2002</catid>
+</Topic>
+
+<Topic r:about="Sports/Bicycling">
+    <catid>2003</catid>
+</Topic>
+
+<Topic r:about="Sports/Equestrian">
+    <catid>2004</catid>
+</Topic>
+
+<Topic r:about="Sports/Hunting">
+    <catid>2005</catid>
+</Topic>
+
+<Topic r:about="Sports/Juggling">
+    <catid>2006</catid>
+</Topic>
+
+<Topic r:about="Sports/Martial_Arts">
+    <catid>2007</catid>
+</Topic>
+
+<Topic r:about="Sports/Motorcycle_Racing">
+    <catid>2008</catid>
+</Topic>
+
+<Topic r:about="Sports/Scuba_Diving">
+    <catid>2009</catid>
+</Topic>
+
+<Topic r:about="Sports/Skiing">
+    <catid>2010</catid>
+</Topic>
+
+<Topic r:about="Sports/Snowboarding">
+    <catid>2011</catid>
+</Topic>
+
+<Topic r:about="Sports/Skydiving">
+    <catid>2012</catid>
+</Topic>
+
+<Topic r:about="Sports/Archery">
+    <catid>2013</catid>
+</Topic>
+
+<Topic r:about="Sports/Baseball">
+    <catid>2014</catid>
+</Topic>
+
+<Topic r:about="Sports/Basketball">
+    <catid>2015</catid>
+</Topic>
+
+<Topic r:about="Sports/Billiards">
+    <catid>2016</catid>
+</Topic>
+
+<Topic r:about="Sports/Boxing">
+    <catid>2017</catid>
+</Topic>
+
+<Topic r:about="Sports/Cricket">
+    <catid>2018</catid>
+</Topic>
+
+<Topic r:about="Sports/Fencing">
+    <catid>2019</catid>
+</Topic>
+
+<Topic r:about="Sports/Football">
+    <catid>2020</catid>
+</Topic>
+
+<Topic r:about="Sports/Golf">
+    <catid>2021</catid>
+</Topic>
+
+<Topic r:about="Sports/Hockey">
+    <catid>2022</catid>
+</Topic>
+
+<Topic r:about="Sports/Bowling">
+    <catid>2023</catid>
+</Topic>
+
+<Topic r:about="Sports/Officiating">
+    <catid>2024</catid>
+</Topic>
+
+<Topic r:about="Sports/Olympics">
+    <catid>2025</catid>
+</Topic>
+
+<Topic r:about="Sports/Paintball">
+    <catid>2026</catid>
+</Topic>
+
+<Topic r:about="Sports/Pro_Wrestling">
+    <catid>2027</catid>
+</Topic>
+
+<Topic r:about="Sports/Rodeo">
+    <catid>2028</catid>
+</Topic>
+
+<Topic r:about="Sports/Rowing">
+    <catid>2029</catid>
+</Topic>
+
+<Topic r:about="Sports/Rugby">
+    <catid>2030</catid>
+</Topic>
+
+<Topic r:about="Sports/Inline_Skating">
+    <catid>2031</catid>
+</Topic>
+
+<Topic r:about="Sports/Snowmobiles">
+    <catid>2032</catid>
+</Topic>
+
+<Topic r:about="Sports/Soccer">
+    <catid>2033</catid>
+</Topic>
+
+<Topic r:about="Sports/Softball">
+    <catid>2034</catid>
+</Topic>
+
+<Topic r:about="Sports/Swimming">
+    <catid>2035</catid>
+</Topic>
+
+<Topic r:about="Sports/Table_Soccer">
+    <catid>2036</catid>
+</Topic>
+
+<Topic r:about="Sports/Table_Tennis">
+    <catid>2037</catid>
+</Topic>
+
+<Topic r:about="Sports/Tennis">
+    <catid>2038</catid>
+</Topic>
+
+<Topic r:about="Sports/Triathalon">
+    <catid>2039</catid>
+</Topic>
+
+<Topic r:about="Sports/Volleyball">
+    <catid>2040</catid>
+</Topic>
+
+<Topic r:about="Sports/Water_Skiing">
+    <catid>2041</catid>
+</Topic>
+
+<Topic r:about="Sports/Windsurfing">
+    <catid>2042</catid>
+</Topic>
+
+<Topic r:about="Sports/Horse_Racing">
+    <catid>2043</catid>
+</Topic>
+
+<Topic r:about="Sports/Wrestling">
+    <catid>2044</catid>
+</Topic>
+
+<Topic r:about="Sports/Unicycling">
+    <catid>2045</catid>
+</Topic>
+
+<Topic r:about="Sports/Running">
+    <catid>2046</catid>
+</Topic>
+
+<Topic r:about="Sports/Bocce">
+    <catid>2047</catid>
+</Topic>
+
+<Topic r:about="Sports/Kitesailing">
+    <catid>2048</catid>
+</Topic>
+
+<Topic r:about="Sports/Track_and_Field">
+    <catid>>2049</catid>
+</Topic>
+
+<Topic r:about="Sports/Personal_Watercraft">
+    <catid>>2050</catid>
+</Topic>
+
+<Topic r:about="Sports/Skateboarding">
+    <catid>>2051</catid>
+</Topic>
+
+<Topic r:about="Sports/Sailing">
+    <catid>>2052</catid>
+</Topic>
+
+<Topic r:about="Sports/Shooting">
+    <catid>>2053</catid>
+</Topic>
+
+<Topic r:about="Sports/Wakeboarding">
+    <catid>>2054</catid>
+</Topic>
+
+<Topic r:about="Sports/Highland_Games">
+    <catid>>2055</catid>
+</Topic>
+
+<Topic r:about="Sports/Merchandise">
+    <catid>>2056</catid>
+</Topic>
+
+<Topic r:about="Sports/Walking">
+    <catid>>2057</catid>
+</Topic>
+
+<Topic r:about="Sports/Cheerleading">
+    <catid>>2058</catid>
+</Topic>
+
+<Topic r:about="Sports/Gambling">
+    <catid>>2059</catid>
+</Topic>
+
+<Topic r:about="Sports/Canoe_and_Kayaking">
+    <catid>>2060</catid>
+</Topic>
+
+<Topic r:about="Sports/Skating">
+    <catid>>2061</catid>
+</Topic>
+
+<Topic r:about="Sports/Surfing">
+    <catid>>2062</catid>
+</Topic>
+
+<Topic r:about="Sports/Lacrosse">
+    <catid>>2063</catid>
+</Topic>
+
+<Topic r:about="Sports/Fishing">
+    <catid>>2064</catid>
+</Topic>
+
+<Topic r:about="Sports/Orienteering">
+    <catid>>2065</catid>
+</Topic>
+
+<Topic r:about="Sports/Gymnastics">
+    <catid>>2066</catid>
+</Topic>
+
+<Topic r:about="Sports/Croquet">
+    <catid>>2067</catid>
+</Topic>
+
+<Topic r:about="Sports/Skibob">
+    <catid>>2068</catid>
+</Topic>
+
+<Topic r:about="Sports/Ultimate_Frisbee">
+    <catid>>2069</catid>
+</Topic>
+
+<Topic r:about="Sports/Frisbee">
+    <catid>>2070</catid>
+</Topic>
+
+<Topic r:about="Sports/Fantasy">
+    <catid>>2071 </catid>
+</Topic>
+
+<Topic r:about="Sports/College_and_University">
+    <catid>>2072</catid>
+</Topic>
+
+<Topic r:about="Sports/Flying_Discs">
+    <catid>>2073</catid>
+</Topic>
+
+<Topic r:about="Sports/News">
+    <catid>>2074</catid>
+</Topic>
+
+<Topic r:about="Sports/Curling">
+    <catid>>2075</catid>
+</Topic>
+
+<Topic r:about="Sports/Training">
+    <catid>>2076</catid>
+</Topic>
+
+
+
+</RDF>
