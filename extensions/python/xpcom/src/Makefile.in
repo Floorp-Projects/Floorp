@@ -37,13 +37,10 @@
 # The main PyXPCOM C++ tree
 
 DEPTH=../../../..
+
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
-PYTHON_INCLUDES = @MOZ_PYTHON_INCLUDES@
-PYTHON_LIBS = @MOZ_PYTHON_LIBS@
-PYTHON_DEBUG_SUFFIX = @MOZ_PYTHON_DEBUG_SUFFIX@
-PYTHON_DLL_SUFFIX = @MOZ_PYTHON_DLL_SUFFIX@
 
 DIRS = loader $(NULL)
 
@@ -102,3 +99,4 @@ endif
 
 clobber::
 	rm -f *.ilk *.pdb
+
