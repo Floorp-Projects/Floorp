@@ -28,7 +28,7 @@ function openNewTabWith(href, linkNode, event, securityCheck, postData)
   var wintype = document.firstChild.getAttribute('windowtype');
   var originCharset;
   if (wintype == "navigator:browser") {
-    originCharset = window._content.document.characterSet;
+    originCharset = window.content.document.characterSet;
   }
 
   // open link in new tab
@@ -52,7 +52,7 @@ function openNewWindowWith(href, linkNode, securityCheck, postData)
   var charsetArg = null;
   var wintype = document.firstChild.getAttribute('windowtype');
   if (wintype == "navigator:browser")
-    charsetArg = "charset=" + window._content.document.characterSet;
+    charsetArg = "charset=" + window.content.document.characterSet;
 
   var referrer = getReferrer(document);
   window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", href, charsetArg, referrer, postData);
@@ -173,7 +173,7 @@ function saveDocument(aDocument, aSkipPrompt)
   if (aDocument) 
     saveInternal(aDocument.location.href, aDocument, false, aSkipPrompt);
   else
-    saveInternal(_content.location.href, null, false, aSkipPrompt);
+    saveInternal(content.location.href, null, false, aSkipPrompt);
 }
 
 function saveInternal(aURL, aDocument, 
@@ -894,7 +894,7 @@ function getCharsetforSave(aDocument)
   if (document.commandDispatcher.focusedWindow)
     return document.commandDispatcher.focusedWindow.document.characterSet;
 
-  return  window._content.document.characterSet;
+  return  window.content.document.characterSet;
   return false;
 }
 
