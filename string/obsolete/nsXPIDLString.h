@@ -20,6 +20,16 @@
  * Contributor(s): 
  */
 
+/* nsXPIDLString.h --- an `|auto_ptr|' for character buffers, this functionality will be replaced
+    by the new shared-buffer string (see bug #53065)
+ */
+
+
+
+
+#ifndef nsXPIDLString_h__
+#define nsXPIDLString_h__
+
 /*
 
   A set of string wrapper classes that ease transition to use of XPIDL
@@ -76,9 +86,6 @@
   be done using the [shared] attribute in XPIDL).
 
  */
-
-#ifndef nsXPIDLString_h__
-#define nsXPIDLString_h__
 
 #include "nscore.h"
 #include "nsCom.h"

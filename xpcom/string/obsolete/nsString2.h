@@ -22,7 +22,14 @@
  *   Scott Collins <scc@mozilla.org>
  */
 
+/* nsString2.h --- rickg's original strings of 2-byte chars, |nsString| and |nsAutoString|;
+    these classes will be replaced by the new shared-buffer string (see bug #53065)
+ */
 
+
+
+#ifndef _nsString_
+#define _nsString_
 
 /***********************************************************************
   MODULE NOTES:
@@ -36,9 +43,6 @@
     3. Much smarter autostrings
     4. Subsumable strings
  ***********************************************************************/
-
-#ifndef _nsString_
-#define _nsString_
 
 #include "prtypes.h"
 #include "nscore.h"

@@ -24,6 +24,12 @@
  *   Scott Collins <scc@mozilla.org>
  */
   
+#include "nsStr.h"
+#include "bufferRoutines.h"
+#include <stdio.h>  //only used for printf
+#include "nsCRT.h"
+#include "nsDeque.h"
+ 
 /******************************************************************************************
   MODULE NOTES:
 
@@ -36,12 +42,6 @@
 
 *******************************************************************************************/
 
-#include "nsStr.h"
-#include "bufferRoutines.h"
-#include <stdio.h>  //only used for printf
-#include "nsCRT.h"
-#include "nsDeque.h"
- 
 //static const char* kCallFindChar =  "For better performance, call FindChar() for targets whose length==1.";
 //static const char* kCallRFindChar = "For better performance, call RFindChar() for targets whose length==1.";
 
