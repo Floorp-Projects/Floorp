@@ -121,7 +121,7 @@ static PRBool IsLinkNode(nsIDOMNode *aNode)
     nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
     if (anchor)
     {
-      nsString tmpText;
+      nsAutoString tmpText;
       if (NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
         return PR_TRUE;
     }
@@ -136,7 +136,7 @@ static PRBool IsNamedAnchorNode(nsIDOMNode *aNode)
     nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(aNode);
     if (anchor)
     {
-      nsString tmpText;
+      nsAutoString tmpText;
       if (NS_SUCCEEDED(anchor->GetName(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
         return PR_TRUE;
     }
@@ -1030,7 +1030,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertText(const nsString& aStringToInsert)
   nsresult result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
   if (!selection) return NS_ERROR_NULL_POINTER;
-  nsString resultString;
+  nsAutoString resultString;
   PlaceholderTxn *placeholderTxn=nsnull;
   nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertText);
   ruleInfo.placeTxn = &placeholderTxn;
@@ -1444,8 +1444,8 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
       printf("SetCaretAfterElement: Parent node: ");
       wprintf(name.GetUnicode());
       printf(" Offset: %d\n\nHTML:\n", offsetInParent+1);
-      nsString Format("text/html");
-      nsString ContentsAs;
+      nsAutoString Format("text/html");
+      nsAutoString ContentsAs;
       OutputToString(ContentsAs, Format, 2);
       wprintf(ContentsAs.GetUnicode());
       }
@@ -2345,7 +2345,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
       // TODO: This should probably be in the RULES code or 
       //       preference based for "should we add the nbsp"
       nsCOMPtr<nsIDOMText>newTextNode;
-      nsString space;
+      nsAutoString space;
       // Set contents to the &nbsp character by concatanating the char code
       space += nbsp;
       // If we fail here, we return NS_OK anyway, since we have an OK cell node
@@ -2792,7 +2792,7 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 
   // Get the current style for this body element:
   nsAutoString styleName ("style");
-  nsString styleValue;
+  nsAutoString styleValue;
   res = bodyElement->GetAttribute(styleName, styleValue);
   if (NS_FAILED(res)) return res;
 
@@ -3573,7 +3573,7 @@ void nsHTMLEditor::IsTextPropertySetByContent(nsIDOMNode     *aNode,
     element = do_QueryInterface(parent);
     if (element)
     {
-      nsString tag;
+      nsAutoString tag;
       element->GetTagName(tag);
       if (propName.EqualsIgnoreCase(tag))
       {
@@ -4491,7 +4491,7 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
         {
           // Check if node is text and has more than just a &nbsp
           nsCOMPtr<nsIDOMCharacterData>textNode = do_QueryInterface(node);
-          nsString text;
+          nsAutoString text;
           char nbspStr[2] = {nbsp, 0};
           if (textNode && textNode->GetData(text))
           {

@@ -55,7 +55,7 @@ NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                                   nsWeakPtr           aPresShellWeak)
 {
 #if 0 //def DEBUG_cmanske
-      nsString text;
+      nsAutoString text;
       aElement->GetData(text);
       printf("InsertTextTxn: Offset to insert at = %d. Text of the node to insert into:\n", aOffset);
       wprintf(text.GetUnicode());
