@@ -107,7 +107,6 @@ select {
   -moz-user-select: none;
   -moz-user-focus: normal;
   -moz-box-sizing: border-box;
-  line-height:1em ! important; /* fix for bug 82626 */
 }
 
 select[size] {
