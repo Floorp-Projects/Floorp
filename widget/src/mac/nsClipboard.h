@@ -62,6 +62,9 @@ protected:
   // helper to check if the data is really there
   PRBool CheckIfFlavorPresent ( ResType inMacFlavor ) ;
 
+  // actually places data on the clipboard
+  nsresult PutOnClipboard ( ResType inFlavor, const void* inData, short inLen ) ;
+
 }; // nsClipboard
 
 #endif // nsClipboard_h__

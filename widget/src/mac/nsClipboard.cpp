@@ -43,9 +43,11 @@
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
 #include "nsPrimitiveHelpers.h"
+#include "nsIImage.h"
 #include "nsMemory.h"
 
 #include <Scrap.h>
+
 
 
 //
@@ -119,48 +121,63 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
       // find MacOS flavor
       ResType macOSFlavor = theMapper.MapMimeTypeToMacOSType(flavorStr);
     
-      // get data. This takes converters into account.
+      // get data. This takes converters into account. Different things happen for
+      // different flavors, so do some special processing.
       void* data = nsnull;
       PRUint32 dataSize = 0;
-      nsCOMPtr<nsISupports> genericDataWrapper;
-      errCode = mTransferable->GetTransferData ( flavorStr, getter_AddRefs(genericDataWrapper), &dataSize );
-      nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataSize );
-#ifdef NS_DEBUG
-        if ( NS_FAILED(errCode) ) printf("nsClipboard:: Error getting data from transferable\n");
-#endif
-      
-      // stash on clipboard
-#if TARGET_CARBON
-      ScrapRef scrap;
-      ::GetCurrentScrap(&scrap);
-      ::PutScrapFlavor(scrap, macOSFlavor, 0L/*???*/, dataSize, data);
-#else
-      long numBytes = ::PutScrap ( dataSize, macOSFlavor, data );
-      if ( numBytes != noErr )
-        errCode = NS_ERROR_FAILURE;
-#endif
-        
-      // if the flavor was unicode, then we also need to put it on as 'TEXT' after
-      // doing the conversion to the platform charset.
       if ( strcmp(flavorStr,kUnicodeMime) == 0 ) {
-        char* plainTextData = nsnull;
-        PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, data);
-        PRInt32 plainTextLen = 0;
-        nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, dataSize / 2, &plainTextData, &plainTextLen );
-        if ( plainTextData ) {
-#if TARGET_CARBON
-          ScrapRef scrap;
-          ::GetCurrentScrap(&scrap);
-          ::PutScrapFlavor( scrap, 'TEXT', 0L/*???*/, plainTextLen, plainTextData );
-#else
-          long numTextBytes = ::PutScrap ( plainTextLen, 'TEXT', plainTextData );
-          if ( numTextBytes != noErr )
-            errCode = NS_ERROR_FAILURE;
-#endif
-          nsMemory::Free ( plainTextData ); 
-        }      
+        // we have unicode, put it on first as unicode
+        nsCOMPtr<nsISupports> genericDataWrapper;
+        errCode = mTransferable->GetTransferData ( flavorStr, getter_AddRefs(genericDataWrapper), &dataSize );
+        nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataSize );
+        errCode = PutOnClipboard ( macOSFlavor, data, dataSize );
+        if ( NS_SUCCEEDED(errCode) ) {
+          // we also need to put it on as 'TEXT' after doing the conversion to the platform charset.
+          char* plainTextData = nsnull;
+          PRUnichar* castedUnicode = NS_REINTERPRET_CAST(PRUnichar*, data);
+          PRInt32 plainTextLen = 0;
+          nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText ( castedUnicode, dataSize / 2, &plainTextData, &plainTextLen );
+          if ( plainTextData ) {
+            errCode = PutOnClipboard ( 'TEXT', plainTextData, plainTextLen );
+            nsMemory::Free ( plainTextData ); 
+          }
+        }
       } // if unicode
-        
+      else if ( strcmp(flavorStr, kPNGImageMime) == 0 || strcmp(flavorStr, kJPEGImageMime) == 0 ||
+                  strcmp(flavorStr, kGIFImageMime) == 0 ) {
+        // we have an image, which is in the transferable as an nsIImage. Convert it
+        // to PICT and put those bits on the clipboard. Don't put the pointer itself on
+        // the clipboard.
+#if NOT_YET_IMPLEMENTED      
+        nsCOMPtr<nsISupports> imageSupports;
+        errCode = mTransferable->GetTransferData ( flavorStr, getter_AddRefs(imageSupports), &dataSize );
+        nsCOMPtr<nsIImage> image ( do_QueryInterface(imageSupports) );
+        if ( image ) {
+          PixMap* pm = NS_REINTERPRET_CAST(PixMap*, image->GetBitInfo());          
+          if ( pm ) {
+          
+            // create a GWorld, clear it out
+            
+            // blit pixmap into GWorld, code from sfraser
+            
+            errCode = PutOnClipboard ( 'PICT', data, dataSize );
+          
+          
+          }
+        }
+        else
+          NS_WARNING ( "Image isn't an nsIImage in transferable" );
+#endif      
+      }
+      else {
+        // we don't know what we have. let's just assume it's unicode but doesn't need to be
+        // translated to TEXT.
+        nsCOMPtr<nsISupports> genericDataWrapper;
+        errCode = mTransferable->GetTransferData ( flavorStr, getter_AddRefs(genericDataWrapper), &dataSize );
+        nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataSize );
+        errCode = PutOnClipboard ( macOSFlavor, data, dataSize );
+      }
+              
       nsMemory::Free ( data );
     }
   } // foreach flavor in transferable
@@ -170,21 +187,39 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
   short mappingLen = 0;
   const char* mapping = theMapper.ExportMapping(&mappingLen);
   if ( mapping && mappingLen ) {
-#if TARGET_CARBON
-    ScrapRef scrap;
-    ::GetCurrentScrap(&scrap);
-    ::PutScrapFlavor(scrap, nsMimeMapperMac::MappingFlavor(), 0L/*???*/, mappingLen, mapping);
-#else
-    long numBytes = ::PutScrap ( mappingLen, nsMimeMapperMac::MappingFlavor(), mapping );
-    if ( numBytes != noErr )
-      errCode = NS_ERROR_FAILURE;
-#endif
+    errCode = PutOnClipboard ( nsMimeMapperMac::MappingFlavor(), mapping, mappingLen );
     nsCRT::free ( NS_CONST_CAST(char*, mapping) );
   }
   
   return errCode;
   
 } // SetNativeClipboardData
+
+
+//
+// PutOnClipboard
+//
+// Actually does the work of placing the data on the native clipboard 
+// in the given flavor
+//
+nsresult
+nsClipboard :: PutOnClipboard ( ResType inFlavor, const void* inData, short inLen )
+{
+  nsresult errCode = NS_OK;
+  
+#if TARGET_CARBON
+  ScrapRef scrap;
+  ::GetCurrentScrap(&scrap);
+  ::PutScrapFlavor( scrap, inFlavor, kScrapFlavorMaskNone, inLen, inData );
+#else
+  long numBytes = ::PutScrap ( inLen, inFlavor, inData );
+  if ( numBytes != noErr )
+    errCode = NS_ERROR_FAILURE;
+#endif
+
+  return errCode;
+  
+} // PutOnClipboard
 
 
 //
@@ -263,18 +298,28 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
         } // if looking for text/unicode   
       } // else we try one last ditch effort to find our data
       
-      if ( dataFound ) {       
-        // the DOM only wants LF, so convert from MacOS line endings to DOM line
-        // endings.
-        nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &clipboardData, &dataSize );
+      if ( dataFound ) {
+        if ( strcmp(flavorStr, kPNGImageMime) == 0 || strcmp(flavorStr, kJPEGImageMime) == 0 ||
+               strcmp(flavorStr, kGIFImageMime) == 0 ) {
+          // someone asked for an image, so we have to convert from PICT to the desired
+          // image format
+          
+          #ifdef DEBUG
+          printf ( "----------- IMAGE REQUESTED ----------" );
+          #endif
+               
+        } // if image requested
+        else {
+          // Assume that we have some form of textual data. The DOM only wants LF, so convert
+          // from MacOS line endings to DOM line endings.
+          nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &clipboardData, &dataSize );
+          
+          // put it into the transferable
+          nsCOMPtr<nsISupports> genericDataWrapper;
+          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, clipboardData, dataSize, getter_AddRefs(genericDataWrapper) );        
+          errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
+        }
         
-        // put it into the transferable
-        nsCOMPtr<nsISupports> genericDataWrapper;
-        nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, clipboardData, dataSize, getter_AddRefs(genericDataWrapper) );        
-        errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
-#ifdef NS_DEBUG
-          if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
-#endif
         nsMemory::Free ( clipboardData );
         
         // we found one, get out of this loop!
@@ -290,7 +335,9 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
 //
 // GetDataOffClipboard
 //
-// 
+// Actually does the work of retrieving the data from the native clipboard 
+// with the given MacOS flavor
+//
 nsresult
 nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt32* outDataSize )
 {
