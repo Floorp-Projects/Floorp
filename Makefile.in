@@ -67,6 +67,7 @@ DIRS +=				\
   lib/libpwcac			\
   network			\
   htmlparser			\
+  expat             \
   gfx				\
   dom				\
   view				\
