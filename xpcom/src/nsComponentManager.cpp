@@ -603,17 +603,15 @@ nsComponentManagerImpl::PlatformFind(const nsCID &aCID, nsFactoryEntry* *result)
     PRTime lastModTime = LL_ZERO;
     PRUint32 fileSize = 0;
 
-    char buf[MAXREGNAMELEN];
-    uint32 len = sizeof(buf);
-    err = NR_RegGetEntryString(hreg, cidKey, "InprocServer", buf, len);
+    char library[MAXREGNAMELEN];
+    uint32 len = sizeof(library);
+    err = NR_RegGetEntryString(hreg, cidKey, "InprocServer", library, len);
     if (err != REGERR_OK)
     {
         // Registry inconsistent. No File name for CLSID.
         NR_RegClose(hreg);
         return NS_ERROR_FAILURE;
     }
-
-    char *library = buf;
 
     // XXX Gross. LongLongs dont have a serialization format. This makes
     // XXX the registry non-xp. Someone beat on the nspr people to get
@@ -808,7 +806,7 @@ nsComponentManagerImpl::LoadFactory(nsFactoryEntry *aEntry,
                    ("nsComponentManager: Library load unsuccessful."));
             
             char errorMsg[1024] = "Cannot get error from nspr. Not enough memory.";
-            if (PR_GetErrorTextLength() < sizeof(errorMsg))
+            if (PR_GetErrorTextLength() < (int) sizeof(errorMsg))
                 PR_GetErrorText(errorMsg);
             PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                    ("nsComponentManager: Load(%s) FAILED with error:%s", aEntry->dll->GetFullPath(), errorMsg));
@@ -1864,7 +1862,7 @@ nsComponentManagerImpl::SelfRegisterDll(nsDll *dll)
     {
         // Cannot load. Probably not a dll.
         char errorMsg[1024] = "Cannot get error from nspr. Not enough memory.";
-        if (PR_GetErrorTextLength() < sizeof(errorMsg))
+        if (PR_GetErrorTextLength() < (int) sizeof(errorMsg))
             PR_GetErrorText(errorMsg);
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: SelfRegisterDll(%s) Load FAILED with error:%s", dll->GetFullPath(), errorMsg));
