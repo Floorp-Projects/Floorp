@@ -43,7 +43,7 @@ override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DEXPORT_XPC_API -DDEBUG
+DEFINES		+= -DEXPORT_XPC_API
 
 INCLUDES	+= -I$(srcdir)/../..
 
