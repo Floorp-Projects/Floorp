@@ -162,7 +162,6 @@ nsJaDetector::nsJaDetector()
 }
 //==========================================================
 class nsXPCOMDetectorBase : 
-      public nsPSMDetectorBase , // 
       public nsICharsetDetector // Implement the interface 
 {
 public:
@@ -172,8 +171,12 @@ public:
   NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, PRBool* oDontFeedMe);
   NS_IMETHOD Done();
 
+  virtual PRBool HandleData(const char* aBuf, PRUint32 aLen) = 0;
+  virtual void   DataEnd() = 0;
+ 
 protected:
   virtual void Report(const char* charset);
+  virtual PRBool IsDone() = 0;
 
 private:
   nsICharsetDetectionObserver* mObserver;
@@ -205,13 +208,12 @@ NS_IMETHODIMP nsXPCOMDetectorBase::DoIt(
   const char* aBuf, PRUint32 aLen, PRBool* oDontFeedMe)
 {
   NS_ASSERTION(mObserver != nsnull , "have not init yet");
-  NS_ASSERTION(mDone == PR_FALSE , "don't call DoIt if we return PR_TRUE in oDon");
 
   if((nsnull == aBuf) || (nsnull == oDontFeedMe))
      return NS_ERROR_ILLEGAL_VALUE;
 
   this->HandleData(aBuf, aLen);
-  *oDontFeedMe = mDone;
+  *oDontFeedMe = this->IsDone();
   return NS_OK;
 }
 //----------------------------------------------------------
@@ -227,7 +229,6 @@ void nsXPCOMDetectorBase::Report(const char* charset)
 }
 //==========================================================
 class nsXPCOMStringDetectorBase : 
-      public nsPSMDetectorBase , // 
       public nsIStringCharsetDetector // Implement the interface 
 {
 public:
@@ -236,8 +237,11 @@ public:
     NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, 
                    const char** oCharset, 
                    nsDetectionConfident &oConfident);
+  virtual PRBool HandleData(const char* aBuf, PRUint32 aLen) = 0;
+  virtual void   DataEnd() = 0;
 protected:
   virtual void Report(const char* charset);
+  virtual PRBool IsDone() = 0;
 private:
   const char* mResult;
 };
@@ -264,7 +268,7 @@ NS_IMETHODIMP nsXPCOMStringDetectorBase::DoIt(const char* aBuf, PRUint32 aLen,
 
   if( nsnull == mResult) {
      // If we have no result and detector is done - answer no match
-     if(mDone) 
+     if(this->IsDone()) 
      {
         *oCharset = nsnull;
         oConfident = eNoAnswerMatch;
@@ -291,6 +295,12 @@ class nsXPCOMJaDetector :
   public:
     nsXPCOMJaDetector();
     virtual ~nsXPCOMJaDetector();
+    virtual PRBool HandleData(const char* aBuf, PRUint32 aLen) 
+                      { return nsJaDetector::HandleData(aBuf, aLen); };
+    virtual void   DataEnd() 
+                      { nsJaDetector::DataEnd(); };
+  protected:
+    virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
 NS_IMPL_ADDREF(nsXPCOMJaDetector)
@@ -338,6 +348,12 @@ class nsXPCOMJaStringDetector :
   public:
     nsXPCOMJaStringDetector();
     virtual ~nsXPCOMJaStringDetector();
+    virtual PRBool HandleData(const char* aBuf, PRUint32 aLen) 
+                      { return nsJaDetector::HandleData(aBuf, aLen); };
+    virtual void   DataEnd() 
+                      { nsJaDetector::DataEnd(); };
+  protected:
+    virtual PRBool IsDone() { return mDone; }
 };
 //----------------------------------------------------------
 NS_IMPL_ISUPPORTS(nsXPCOMJaStringDetector, nsIStringCharsetDetector::GetIID())
