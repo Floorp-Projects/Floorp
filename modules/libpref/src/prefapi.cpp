@@ -1527,7 +1527,7 @@ PREF_GetDefaultRectPref(const char *pref_name, int16 *left, int16 *top, int16 *r
 	PrefResult result = PREF_GetDefaultCharPref(pref_name, (char *)&rectstr, &iLen);
 	
 	if (result == PREF_NOERROR) {
-		sscanf(rectstr, "%d,%d,%d,%d", left, top, right, bottom);
+		sscanf(rectstr, "%hd,%hd,%hd,%hd", left, top, right, bottom);
 	}
 	return result;
 }
