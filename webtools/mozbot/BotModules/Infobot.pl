@@ -30,7 +30,7 @@ sub use {
     print "            $0 -d ../factoids-are > are.fact\n";
     print "\n";
     print "          $0 -i dbname\n";
-    print "          prints out an ascii flat file of the database listed.\n";
+    print "          imports an ascii flat file into the database listed.\n";
     print "          dbname should be the basename of the db, e.g.\n";
     print "            $0 -i ../factoids-is < chemicals.fact\n";
     print "            $0 -i ../factoids-is < is.fact\n";
