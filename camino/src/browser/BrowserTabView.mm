@@ -333,7 +333,6 @@
 {
   NSPoint         localPoint      = [self convertPoint: [sender draggingLocation] fromView: nil];
   NSTabViewItem*  overTabViewItem = [self tabViewItemAtPoint: localPoint];
-  BOOL            overContentArea = NSPointInRect(localPoint, [self contentRect]);
 
   if (overTabViewItem)
     return NSDragOperationNone;	// the tab will handle it
@@ -346,7 +345,6 @@
 {  
   NSPoint         localPoint      = [self convertPoint: [sender draggingLocation] fromView: nil];
   NSTabViewItem*  overTabViewItem = [self tabViewItemAtPoint: localPoint];
-  BOOL            overContentArea = NSPointInRect(localPoint, [self contentRect]);
 
   if (overTabViewItem)
     return NSDragOperationNone;	// the tab will handle it

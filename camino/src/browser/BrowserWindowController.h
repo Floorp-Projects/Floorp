@@ -142,14 +142,12 @@ typedef enum
 
   BOOL mInitialized;
 
-  BookmarkViewController*       mBookmarkViewController;
-
   NSString* mPendingURL;
   NSString* mPendingReferrer;
   BOOL mPendingActivate;
   BOOL mPendingAllowPopups;
   
-  BrowserWrapper* mBrowserView;
+  BrowserWrapper*               mBrowserView;   // browser wrapper of frontmost tab
 
   BOOL mMoveReentrant;
   BOOL mClosingWindow;
@@ -250,7 +248,7 @@ typedef enum
 - (void)addBookmarkExtended: (BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle;
 - (IBAction)manageBookmarks: (id)aSender;
 - (IBAction)manageHistory: (id)aSender;
-- (IBAction)toggleSidebar:(id)aSender;
+
 - (BOOL)bookmarkManagerIsVisible;
 - (BOOL)singleBookmarkIsSelected;
 
@@ -359,8 +357,6 @@ typedef enum
 // Accessor for the bm data source
 - (BookmarkViewController *)bookmarkViewController;
 
-- (void)toggleBookmarkManager:(id)sender;
-- (void)ensureBrowserVisible:(id)sender;
 - (NSString*)savedTitle;
 - (void)setSavedTitle:(NSString *)aTitle;
 

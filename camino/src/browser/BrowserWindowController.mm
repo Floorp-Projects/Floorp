@@ -35,6 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#import <AddressBook/AddressBook.h>
+#import "ABAddressBook+Utils.h"
+
 #import "NSString+Utils.h"
 
 #import "BrowserWindowController.h"
@@ -95,35 +98,31 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsIFocusController.h"
 
-#include <QuickTime/QuickTime.h>
-#include <AppKit/NSPasteboard.h>
-#import <AddressBook/AddressBook.h>
-#import "ABAddressBook+Utils.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 
-static NSString *BrowserToolbarIdentifier	= @"Browser Window Toolbar";
-static NSString *BackToolbarItemIdentifier	= @"Back Toolbar Item";
-static NSString *ForwardToolbarItemIdentifier	= @"Forward Toolbar Item";
-static NSString *ReloadToolbarItemIdentifier	= @"Reload Toolbar Item";
-static NSString *StopToolbarItemIdentifier	= @"Stop Toolbar Item";
-static NSString *HomeToolbarItemIdentifier	= @"Home Toolbar Item";
-static NSString *LocationToolbarItemIdentifier	= @"Location Toolbar Item";
-static NSString *SidebarToolbarItemIdentifier	= @"Sidebar Toolbar Item";
-static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
-static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
-static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
-static NSString *ViewSourceToolbarItemIdentifier = @"View Source Toolbar Item";
-static NSString *BookmarkToolbarItemIdentifier = @"Bookmark Toolbar Item";
-static NSString *TextBiggerToolbarItemIdentifier = @"Text Bigger Toolbar Item";
-static NSString *TextSmallerToolbarItemIdentifier = @"Text Smaller Toolbar Item";
-static NSString *NewTabToolbarItemIdentifier = @"New Tab Toolbar Item";
-static NSString *CloseTabToolbarItemIdentifier = @"Close Tab Toolbar Item";
-static NSString *SendURLToolbarItemIdentifier = @"Send URL Toolbar Item";
-static NSString *DLManagerToolbarItemIdentifier = @"Download Manager Toolbar Item";
+static NSString* const BrowserToolbarIdentifier	        = @"Browser Window Toolbar";
+static NSString* const BackToolbarItemIdentifier	      = @"Back Toolbar Item";
+static NSString* const ForwardToolbarItemIdentifier	    = @"Forward Toolbar Item";
+static NSString* const ReloadToolbarItemIdentifier	    = @"Reload Toolbar Item";
+static NSString* const StopToolbarItemIdentifier	      = @"Stop Toolbar Item";
+static NSString* const HomeToolbarItemIdentifier	      = @"Home Toolbar Item";
+static NSString* const LocationToolbarItemIdentifier	  = @"Location Toolbar Item";
+static NSString* const BookmarksToolbarItemIdentifier	  = @"Sidebar Toolbar Item";    // note legacy name
+static NSString* const PrintToolbarItemIdentifier	      = @"Print Toolbar Item";
+static NSString* const ThrobberToolbarItemIdentifier    = @"Throbber Toolbar Item";
+static NSString* const SearchToolbarItemIdentifier      = @"Search Toolbar Item";
+static NSString* const ViewSourceToolbarItemIdentifier  = @"View Source Toolbar Item";
+static NSString* const BookmarkToolbarItemIdentifier    = @"Bookmark Toolbar Item";
+static NSString* const TextBiggerToolbarItemIdentifier  = @"Text Bigger Toolbar Item";
+static NSString* const TextSmallerToolbarItemIdentifier = @"Text Smaller Toolbar Item";
+static NSString* const NewTabToolbarItemIdentifier      = @"New Tab Toolbar Item";
+static NSString* const CloseTabToolbarItemIdentifier    = @"Close Tab Toolbar Item";
+static NSString* const SendURLToolbarItemIdentifier     = @"Send URL Toolbar Item";
+static NSString* const DLManagerToolbarItemIdentifier   = @"Download Manager Toolbar Item";
 
 
-static NSString *NavigatorWindowFrameSaveName = @"NavigatorWindow";
+static NSString* const NavigatorWindowFrameSaveName = @"NavigatorWindow";
 
 // Cached toolbar defaults read in from a plist. If null, we'll use
 // hardcoded defaults.
@@ -349,7 +348,6 @@ enum BWCOpenDest {
 - (BrowserTabViewItem*)openNewTab:(BOOL)aLoadInBG;
 
 - (void)setupToolbar;
-- (void)ensureBookmarkViewController;
 - (NSString*)getContextMenuNodeDocumentURL;
 - (void)loadSourceOfURL:(NSString*)urlStr;
 - (void)transformFormatString:(NSMutableString*)inFormat domain:(NSString*)inDomain search:(NSString*)inSearch;
@@ -359,9 +357,12 @@ enum BWCOpenDest {
 - (void)performSearch:(SearchTextField *)inSearchField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG;
 - (void)goToLocationFromToolbarURLField:(AutoCompleteTextField *)inURLField inView:(BWCOpenDest)inDest inBackground:(BOOL)inLoadInBG;
 
+- (BookmarkViewController*)bookmarkViewControllerForCurrentTab;
+
 // create back/forward session history menus on toolbar button
 - (IBAction)backMenu:(id)inSender;
 - (IBAction)forwardMenu:(id)inSender;
+
 @end
 
 @implementation BrowserWindowController
@@ -501,12 +502,6 @@ enum BWCOpenDest {
   // Tell the BrowserTabView the window is closed
   [mTabBrowser windowClosed];
   
-  // if the bookmark manager is visible when we close the window, all hell
-  // breaks loose in the autorelease pool and when we try to show another
-  // window. Honestly, I don't know why, but the easy fix is to simply
-  // ensure that the browser is visible when we close.
-  [self ensureBrowserVisible:self];
-  
   // we have to manually enable/disable the bookmarks menu items, because we
   // turn autoenabling off for that menu
   [[NSApp delegate] adjustBookmarksMenuItemsEnabling:NO];
@@ -562,8 +557,6 @@ enum BWCOpenDest {
   [self stopThrobber];
   [mThrobberImages release];
   [mURLFieldEditor release];
-
-  [mBookmarkViewController release];
 
   [super dealloc];
 }
@@ -813,7 +806,7 @@ enum BWCOpenDest {
 - (void)toolbarWillAddItem:(NSNotification *)notification
 {
   NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
-  if ( [[item itemIdentifier] isEqual:SidebarToolbarItemIdentifier] )
+  if ( [[item itemIdentifier] isEqual:BookmarksToolbarItemIdentifier] )
     mSidebarToolbarItem = item;
   else if ( [[item itemIdentifier] isEqual:BookmarkToolbarItemIdentifier] )
     mBookmarkToolbarItem = item;
@@ -838,7 +831,7 @@ enum BWCOpenDest {
 - (void)toolbarDidRemoveItem:(NSNotification *)notification
 {
   NSToolbarItem* item = [[notification userInfo] objectForKey:@"item"];
-  if ( [[item itemIdentifier] isEqual:SidebarToolbarItemIdentifier] )
+  if ( [[item itemIdentifier] isEqual:BookmarksToolbarItemIdentifier] )
     mSidebarToolbarItem = nil;
   else if ( [[item itemIdentifier] isEqual:ThrobberToolbarItemIdentifier] )
     [self stopThrobber];
@@ -860,7 +853,7 @@ enum BWCOpenDest {
                                         StopToolbarItemIdentifier,
                                         HomeToolbarItemIdentifier,
                                         LocationToolbarItemIdentifier,
-                                        SidebarToolbarItemIdentifier,
+                                        BookmarksToolbarItemIdentifier,
                                         ThrobberToolbarItemIdentifier,
                                         SearchToolbarItemIdentifier,
                                         PrintToolbarItemIdentifier,
@@ -907,7 +900,7 @@ enum BWCOpenDest {
                                         StopToolbarItemIdentifier,
                                         LocationToolbarItemIdentifier,
                                         SearchToolbarItemIdentifier,
-                                        SidebarToolbarItemIdentifier,
+                                        BookmarksToolbarItemIdentifier,
                                         nil] );
 }
 
@@ -1018,13 +1011,13 @@ enum BWCOpenDest {
     [toolbarItem setTarget:self];
     [toolbarItem setAction:@selector(home:)];
   }
-  else if ([itemIdent isEqual:SidebarToolbarItemIdentifier]) {
+  else if ([itemIdent isEqual:BookmarksToolbarItemIdentifier]) {
     [toolbarItem setLabel:NSLocalizedString(@"ToggleBookmarks", @"Manage Bookmarks label")];
     [toolbarItem setPaletteLabel:NSLocalizedString(@"Manage Bookmarks", @"Manage Bookmarks palette")];
     [toolbarItem setToolTip:NSLocalizedString(@"BookmarkMgrToolTip", @"Show or hide all bookmarks")];
     [toolbarItem setImage:[NSImage imageNamed:@"manager"]];
     [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector(toggleSidebar:)];
+    [toolbarItem setAction:@selector(manageBookmarks:)];
   }
   else if ( [itemIdent isEqual:SearchToolbarItemIdentifier] ) {
     NSMenuItem *menuFormRep = [[[NSMenuItem alloc] init] autorelease];
@@ -1156,11 +1149,7 @@ enum BWCOpenDest {
   if (action == @selector(back:)) {
     // if the bookmark manager is showing, we enable the back button so that
     // they can click back to return to the webpage they were viewing.
-    BOOL enable = NO;
-    if ( [mContentView isBookmarkManagerVisible] )
-      enable = YES;
-    else
-      enable = [[mBrowserView getBrowserView] canGoBack];
+    BOOL enable = [[mBrowserView getBrowserView] canGoBack];
 
     // we have to handle all the enabling/disabling ourselves because this
     // toolbar button is a view item. Note the return value is ignored.
@@ -1194,16 +1183,9 @@ enum BWCOpenDest {
     return ![MainController isBlankURL:curURL];
   }
   else if (action == @selector(viewSource:))
-    return ![mContentView isBookmarkManagerVisible];
+    return ![self bookmarkManagerIsVisible];
   else
     return YES;
-}
-
-- (void)ensureBookmarkViewController
-{
-  if (!mBookmarkViewController) {
-    mBookmarkViewController = [[BookmarkViewController alloc] initWithBrowserWindowController:self];
-  }
 }
 
 #pragma mark -
@@ -1213,7 +1195,6 @@ enum BWCOpenDest {
 
 - (void)loadingStarted
 {
-  [self ensureBrowserVisible:mBrowserView];
 }
 
 - (void)loadingDone:(BOOL)activateContent
@@ -1337,6 +1318,14 @@ enum BWCOpenDest {
 }
 
 #pragma mark -
+
+- (BookmarkViewController*)bookmarkViewControllerForCurrentTab
+{
+  id viewProvider = [mBrowserView contentViewProviderForURL:@"about:bookmarks"];
+  if ([viewProvider isKindOfClass:[BookmarkViewController class]])
+    return (BookmarkViewController*)viewProvider;
+  return nil;
+}
 
 - (void)performAppropriateLocationAction
 {
@@ -1464,13 +1453,11 @@ enum BWCOpenDest {
 //
 // - manageBookmarks:
 //
-// Toggle the bookmark manager in all cases. This is what users
-// expect to happen. When the manager is displayed, retain the 
-// last selected collection, regardless of what it is.
+// Load the bookmarks in the frontmost tab or window.
 //
 -(IBAction)manageBookmarks: (id)aSender
 {
-  [self toggleBookmarkManager: self];
+  [self loadURL:@"about:bookmarks" referrer:nil activate:YES allowPopups:YES];
 }
 
 //
@@ -1491,10 +1478,7 @@ enum BWCOpenDest {
 //
 -(IBAction)manageHistory: (id)aSender
 {
-  if ( ![mContentView isBookmarkManagerVisible] )
-    [self toggleBookmarkManager: self];
-
-  [mBookmarkViewController selectContainer:kHistoryContainerIndex];
+  [self loadURL:@"about:history" referrer:nil activate:YES allowPopups:YES];
 }
 
 - (IBAction)goToLocationFromToolbarURLField:(id)sender
@@ -1816,21 +1800,25 @@ enum BWCOpenDest {
 
 - (void)addBookmarkExtended:(BOOL)aIsFolder URL:(NSString*)aURL title:(NSString*)aTitle
 {
-  // why doesn't this talk to the data source?
-  [self ensureBookmarkViewController];
-  [mBookmarkViewController ensureBookmarks];
-  [mBookmarkViewController addItem: self isFolder: aIsFolder URL:aURL title:aTitle];
+  // XXX this should be changed so that we don't need a BookmarksViewController
+  BookmarkViewController* bookmarksController = [self bookmarkViewControllerForCurrentTab];
+  [bookmarksController ensureBookmarks];
+  [bookmarksController addItem: self isFolder: aIsFolder URL:aURL title:aTitle];
 }
 
 - (BOOL)bookmarkManagerIsVisible
 {
-  return [mContentView isBookmarkManagerVisible];
+  NSString* currentURL = [[[self getBrowserWrapper] getCurrentURLSpec] lowercaseString];
+  return [currentURL isEqualToString:@"about:bookmarks"] || [currentURL isEqualToString:@"about:history"];
 }
 
 - (BOOL)singleBookmarkIsSelected
 {
-  if (![mContentView isBookmarkManagerVisible]) return NO;
-  return ([mBookmarkViewController numberOfSelectedRows] == 1);
+  if (![self bookmarkManagerIsVisible])
+    return NO;
+
+  BookmarkViewController* bookmarksController = [self bookmarkViewControllerForCurrentTab];
+  return ([bookmarksController numberOfSelectedRows] == 1);
 }
 
 - (IBAction)bookmarkPage: (id)aSender
@@ -1967,10 +1955,6 @@ enum BWCOpenDest {
 //
 - (IBAction)backMenu:(id)inSender
 {
-  // do nothing on click-hold if the bm manager is visible
-  if ( [mContentView isBookmarkManagerVisible] )
-    return;
-
   NSMenu* popupMenu = [[[NSMenu alloc] init] autorelease];
   [popupMenu addItemWithTitle:@"" action:NULL keyEquivalent:@""];  // dummy first item
 
@@ -1991,12 +1975,7 @@ enum BWCOpenDest {
 
 - (IBAction)back:(id)aSender
 {
-  // if the bookmark manager is visible, hitting the back button will restore
-  // the browser views, not actually go back.
-  if ( [mContentView isBookmarkManagerVisible] )
-    [self toggleBookmarkManager:self];
-  else
-    [[mBrowserView getBrowserView] goBack];
+  [[mBrowserView getBrowserView] goBack];
 }
 
 - (IBAction)forward:(id)aSender
@@ -2065,12 +2044,6 @@ enum BWCOpenDest {
   NSString* frameURL = [self getContextMenuNodeDocumentURL];
   if ([frameURL length] > 0)
     [self loadURL:frameURL referrer:nil activate:YES allowPopups:NO];
-}
-
-
-- (IBAction)toggleSidebar:(id)aSender
-{
-  [self toggleBookmarkManager:self];
 }
 
 // map command-left arrow to 'back'
@@ -2181,10 +2154,6 @@ enum BWCOpenDest {
 
 - (void)createNewTab:(ENewTabContents)contents;
 {
-    // ensureBrowserVisible needs to be called prior to createNewTabItem or the new view won't draw
-    // if the bookmarks manager was visible.
-    [self ensureBrowserVisible:self];
-    
     BrowserTabViewItem* newTab  = [self createNewTabItem];
     BrowserWrapper*     newView = [newTab view];
     
@@ -2423,10 +2392,6 @@ enum BWCOpenDest {
 //
 - (BrowserTabViewItem*)openNewTab:(BOOL)aLoadInBG;
 {
-  // ensureBrowserVisible needs to be called prior to createNewTabItem or the new view won't draw
-  // if the bookmarks manager was visible.
-  [self ensureBrowserVisible:self];
-
   BrowserTabViewItem* newTab  = [self createNewTabItem];
 
   
@@ -2467,11 +2432,6 @@ enum BWCOpenDest {
 
 - (void)openURLArray:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting allowPopups:(BOOL)inAllowPopups
 {
-  // ensure the content area is visible. We can't rely on normal url loading
-  // to do this because for the new tabs we create below, they won't be connected
-  // to their controller until much later, so the call to ensure visibility fails.
-  [self ensureBrowserVisible:self];
-
   int curNumTabs	= [mTabBrowser numberOfTabViewItems];
   int numItems 		= (int)[urlArray count];
   
@@ -2517,6 +2477,11 @@ enum BWCOpenDest {
   BrowserTabViewItem* newTab = [BrowserTabView makeNewTabItem];
   BrowserWrapper* newView = [[BrowserWrapper alloc] initWithTab:newTab inWindow:[self window]];
 
+  // register the bookmarks as a custom view
+  BookmarkViewController* bmController = [[[BookmarkViewController alloc] initWithBrowserWindowController:self] autorelease];
+  [newView registerContentViewProvider:bmController forURL:@"about:bookmarks"];
+  [newView registerContentViewProvider:bmController forURL:@"about:history"];
+  
   // size the new browser view properly up-front, so that if the
   // page is scrolled to a relative anchor, we don't mess with the
   // scroll position by resizing it later
@@ -2556,9 +2521,9 @@ enum BWCOpenDest {
 
 - (void)getInfo:(id)sender
 {
-  [self ensureBookmarkViewController];
-  [mBookmarkViewController ensureBookmarks];
-  [mBookmarkViewController showBookmarkInfo:sender];
+  BookmarkViewController* bookmarksController = [self bookmarkViewControllerForCurrentTab];
+  [bookmarksController ensureBookmarks];
+  [bookmarksController showBookmarkInfo:sender];
 }
 
 - (BOOL)canGetInfo
@@ -3124,7 +3089,6 @@ enum BWCOpenDest {
 }
 
 
-
 - (void) focusChangedFrom:(NSResponder*) oldResponder to:(NSResponder*) newResponder
 {
   BOOL oldResponderIsGecko = [self isResponderGeckoView:oldResponder];
@@ -3140,10 +3104,10 @@ enum BWCOpenDest {
   return mProxyIcon;
 }
 
+// XXX this is only used to show bm after an import
 - (BookmarkViewController *)bookmarkViewController
 {
-  [self ensureBookmarkViewController];
-  return mBookmarkViewController;
+  return [self bookmarkViewControllerForCurrentTab];
 }
 
 - (id)windowWillReturnFieldEditor:(NSWindow *)aWindow toObject:(id)anObject
@@ -3173,67 +3137,6 @@ enum BWCOpenDest {
 - (NSString*)currentCharset
 {
   return [mBrowserView currentCharset];
-}
-
-
-//
-// -toggleBookmarkManager
-//
-// switch between a gecko content view and the in-window bookmark manager.
-// This changes the current focus and forces it into the content area.
-//
-- (void)toggleBookmarkManager:(id)sender
-{
-  // lazily init the setup of the view's controller
-  [self ensureBookmarkViewController];
-  
-  // deactivate any gecko view that might think it has focus
-  if ([self isResponderGeckoView:[[self window] firstResponder]]) {
-    // inform the tab view that it will be hidden so that it can perform any necessary cleanup
-    [mTabBrowser setVisible:NO];
-    [mBrowserView setBrowserActive:NO];
-  }
-  
-  // swap out between content and bookmarks.
-  [mContentView setBookmarkManagerView:[mBookmarkViewController bookmarksEditingView]];
-  [mContentView toggleBookmarkManager:sender];
-    
-  // if we're now showing the bm manager, force it to have focus,
-  // otherwise give focus back to gecko.
-  if ( [mContentView isBookmarkManagerVisible] ) {
-    // cancel all pending loads. safari does this, i think we should too
-    [self stopAllPendingLoads];
-    
-    // save window title
-    [self setSavedTitle:[[self window] title]];
-    [[self window] setTitle:NSLocalizedString(@"Bookmark Manager",@"Bookmark Manager")];
-    [mBookmarkViewController selectLastContainer];
-
-    // set focus to appropriate area of bm manager
-    [mBookmarkViewController focus];
-  }
-  else {
-    [[self window] setTitle:[self savedTitle]];
-    [mBrowserView setBrowserActive:YES];
-    // inform the tab view that it will be visible, so that it can adjust to any changes that occurred
-    // when it was out of the hierarchy
-    [mTabBrowser setVisible:YES];
-  }
-
-  // we have to manually update the bookmarks menu items, because we
-  // turn autoenabling off for that menu
-  [[NSApp delegate] adjustBookmarksMenuItemsEnabling:[[self window] isMainWindow]];
-}
-
-//
-// - ensureBrowserVisible:
-//
-// Make sure that the browser is showing, not the bookmarks manager
-//
-- (void)ensureBrowserVisible:(id)sender
-{
-  if ( [mContentView isBookmarkManagerVisible] )
-    [self toggleBookmarkManager:self];
 }
 
 //
@@ -3315,6 +3218,9 @@ enum BWCOpenDest {
 #define QUICKTIME_THROBBER 0
 
 #if QUICKTIME_THROBBER
+
+#include <QuickTime/QuickTime.h>
+
 static Boolean movieControllerFilter(MovieController mc, short action, void *params, long refCon)
 {
     if (action == mcActionMovieClick || action == mcActionMouseDown) {
@@ -3361,7 +3267,6 @@ static Boolean movieControllerFilter(MovieController mc, short action, void *par
                                         0);
         }
     }
-#else
 #endif
 }
 

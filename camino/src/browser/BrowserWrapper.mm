@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #import "NSString+Utils.h"
+#import "NSView+Utils.h"
 
 #import "PreferenceManager.h"
 #import "BrowserWrapper.h"
@@ -91,6 +92,9 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)updateOfflineStatus;
 
+- (NSView*)contentProviderViewForURL:(NSString*)inURL;
+- (void)checkForCustomViewOnLoad:(NSString*)inURL;
+
 @end
 
 #pragma mark -
@@ -116,11 +120,11 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   if ((self = [super initWithFrame: frameRect]))
   {
     mWindow = window;
-    
+
+    // We retain the browser view so that we can rip it out for custom view support    
     mBrowserView = [[CHBrowserView alloc] initWithFrame:[self bounds] andWindow:window];
-    [self addSubview: mBrowserView];  // takes ownership
-    [mBrowserView release];
-    
+    [self addSubview:mBrowserView];
+
     [mBrowserView setContainer:self];
     [mBrowserView addListener:self];
 
@@ -171,6 +175,9 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
   
   NS_IF_RELEASE(mBlockedSites);
   
+  [mBrowserView release];
+  [mContentViewProviders release];
+
   [super dealloc];
 }
 
@@ -355,6 +362,49 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 #pragma mark -
 
+// custom view support
+
+- (void)registerContentViewProvider:(id<ContentViewProvider>)inProvider forURL:(NSString*)inURL
+{
+  if (!mContentViewProviders)
+    mContentViewProviders = [[NSMutableDictionary alloc] init];
+    
+  NSString* lowercaseURL = [inURL lowercaseString];
+  [mContentViewProviders setObject:inProvider forKey:lowercaseURL];
+}
+
+- (void)unregisterContentViewProviderForURL:(NSString*)inURL
+{
+  [mContentViewProviders removeObjectForKey:[inURL lowercaseString]];
+}
+
+- (id)contentViewProviderForURL:(NSString*)inURL
+{
+  return [mContentViewProviders objectForKey:[inURL lowercaseString]];
+}
+
+- (NSView*)contentProviderViewForURL:(NSString*)inURL
+{
+  id<ContentViewProvider> provider = [mContentViewProviders objectForKey:[inURL lowercaseString]];
+  return [provider provideContentViewForURL:inURL];   // ok with nil provider
+}
+
+- (void)checkForCustomViewOnLoad:(NSString*)inURL
+{
+  NSView* newView = [self contentProviderViewForURL:inURL];
+  if (newView)
+  {
+    [self swapFirstSubview:newView];
+  }
+  else
+  {
+    // put the browser view back
+    [self swapFirstSubview:mBrowserView];
+  }
+}
+
+#pragma mark -
+
 - (void)onLoadingStarted 
 {
   [mDefaultStatusString autorelease];
@@ -452,6 +502,8 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
     [self updateSiteIconImage:nil withURI:faviconURI];
   
   [mDelegate updateLocationFields:urlSpec ignoreTyping:NO];
+
+  [self checkForCustomViewOnLoad:urlSpec];
 }
 
 - (void)onStatusChange:(NSString*)aStatusString

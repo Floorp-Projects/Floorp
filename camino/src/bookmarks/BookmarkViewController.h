@@ -44,7 +44,7 @@
 #import <Cocoa/Cocoa.h>
 
 #import "BookmarksClient.h"
-
+#import "BrowserWrapper.h"    // for ContentViewProvider
 
 @class ExtendedTableView;
 @class ExtendedOutlineView;
@@ -58,7 +58,7 @@
 
 @class SearchTextField;
 
-@interface BookmarkViewController : NSObject
+@interface BookmarkViewController : NSObject<ContentViewProvider>
 {
   IBOutlet NSView*          mBookmarksEditingView;
 

@@ -75,7 +75,7 @@
                 mFilterView = NSView; 
                 mGoMenu = NSMenu; 
                 mServersSubmenu = NSMenu; 
-                mToggleSidebarMenuItem = NSMenuItem; 
+                mShowAllBookmarksMenuItem = NSMenuItem; 
             }; 
             SUPERCLASS = NSObject; 
         }, 

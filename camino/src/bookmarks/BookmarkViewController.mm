@@ -160,6 +160,9 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
 
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 
+  // make sure its dealloc is called to unregister from notifications.
+  [mHistoryOutlineViewDelegate release];
+  
   [mCachedHref release];
   [mExpandedStatus release];
   [mActiveRootCollection release];
@@ -426,6 +429,8 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     cleanedTitle = urlString;
   [textField setStringValue: cleanedTitle];
 
+  // XXX this is all rather ugly; why does it have to talk to the BWC? We should make
+  // the add dialog window have its own controller.
   [mBrowserWindowController cacheBookmarkVC: self];
 
   // Show/hide the bookmark all tabs checkbox as appropriate.
@@ -1704,6 +1709,21 @@ static const int kDisabledQuicksearchPopupItemTag = 9999;
     return kMinContainerSplitWidth;  // minimum size of collections pane
 
   return proposedCoord;
+}
+
+
+#pragma mark -
+
+// ContentViewProvider protocol
+
+- (NSView*)provideContentViewForURL:(NSString*)inURL
+{
+  if ([[inURL lowercaseString] isEqualToString:@"about:history"])
+    [self selectContainer:kHistoryContainerIndex];
+  else
+    [self selectContainer:kBookmarkMenuContainerIndex];
+
+  return mBookmarksEditingView;
 }
 
 @end

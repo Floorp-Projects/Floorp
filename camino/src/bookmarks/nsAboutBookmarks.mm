@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,11 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,30 +35,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Cocoa/Cocoa.h>
+#include "nsAboutBookmarks.h"
 
-@class BookmarkToolbar;
-@class BrowserTabView;
-@class BrowserTabBarView;
+#include "nsIIOService.h"
+#include "nsIServiceManager.h"
+#include "nsIStringStream.h"
+#include "nsNetUtil.h"
 
-@interface BrowserContentView : NSView
+NS_IMPL_ISUPPORTS1(nsAboutBookmarks, nsIAboutModule)
+
+// XXX get localized page title
+
+static const char kBlankPage[] = "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">"
+"<html><head><title>Bookmarks</title></head><body></body></html>";
+
+NS_IMETHODIMP
+nsAboutBookmarks::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
-  IBOutlet BookmarkToolbar  *mBookmarksToolbar;
-  IBOutlet NSView           *mBrowserContainerView;   // manages tabs and web content
-  IBOutlet NSView           *mStatusBar;
+    nsresult rv;
+    nsIChannel* channel;
+
+    nsCOMPtr<nsIInputStream> in;
+    rv = NS_NewCStringInputStream(getter_AddRefs(in), nsDependentCString(kBlankPage));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NS_NewInputStreamChannel(&channel, aURI, in,
+                                  NS_LITERAL_CSTRING("text/html"));
+    if (NS_FAILED(rv)) return rv;
+
+    *result = channel;
+    return rv;
 }
 
-@end
-
-@interface BrowserContainerView : NSView
+NS_METHOD
+nsAboutBookmarks::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-  IBOutlet BrowserTabView *mTabView;
-  IBOutlet BrowserTabBarView *mTabBarView;
+    nsAboutBookmarks* about = new nsAboutBookmarks();
+    if (about == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(about);
+    nsresult rv = about->QueryInterface(aIID, aResult);
+    NS_RELEASE(about);
+    return rv;
 }
 
-@end
-
-@interface BookmarkManagerView : NSView
-{
-}
-@end

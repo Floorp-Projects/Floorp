@@ -89,8 +89,6 @@ const int kMenuTruncationChars = 60;
 {
   if ( (self = [super initWithFrame:frameRect]) )
   {
-    const float kCloseButtonWidth = 16.0;       // width of spinner/close button to right of text
-    
     mTabViewItem = tabViewItem;
 
     mLabelCell = [[TruncatingTextAndImageCell alloc] init];

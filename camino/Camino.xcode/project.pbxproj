@@ -933,6 +933,48 @@
 //0F2
 //0F3
 //0F4
+		0F13A30D07D7F3930034B176 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = nsAboutBookmarks.h;
+			path = src/bookmarks/nsAboutBookmarks.h;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F13A30E07D7F3930034B176 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.objcpp;
+			name = nsAboutBookmarks.mm;
+			path = src/bookmarks/nsAboutBookmarks.mm;
+			refType = 2;
+			sourceTree = SOURCE_ROOT;
+		};
+		0F13A30F07D7F3930034B176 = {
+			fileRef = 0F13A30D07D7F3930034B176;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F13A31007D7F3930034B176 = {
+			fileRef = 0F13A30E07D7F3930034B176;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F13A31107D7F3930034B176 = {
+			fileRef = 0F13A30D07D7F3930034B176;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		0F13A31207D7F3930034B176 = {
+			fileRef = 0F13A30E07D7F3930034B176;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		0F66E4A807D6D8D500444E2A = {
 			fileRef = 0FCCE56707D6D7DA006DD3D1;
 			isa = PBXBuildFile;
@@ -2343,6 +2385,7 @@
 				0FBC0ED50798F96100E8E0E2,
 				0FBC0ED60798F96100E8E0E2,
 				0FBC0EE30798FA2700E8E0E2,
+				0F13A30F07D7F3930034B176,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3466,6 +3509,7 @@
 				0FBC0EDA0798F9A000E8E0E2,
 				0FBC0EDD0798F9B400E8E0E2,
 				0FBC0EE00798FA1900E8E0E2,
+				0F13A31007D7F3930034B176,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6215,6 +6259,7 @@
 				0FBC0ED70798F96100E8E0E2,
 				0FBC0ED80798F96100E8E0E2,
 				0FBC0EE40798FA2700E8E0E2,
+				0F13A31107D7F3930034B176,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -7338,6 +7383,7 @@
 				0FBC0EDB0798F9A000E8E0E2,
 				0FBC0EDE0798F9B400E8E0E2,
 				0FBC0EE10798FA1900E8E0E2,
+				0F13A31207D7F3930034B176,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -14046,6 +14092,8 @@
 		};
 		F5A3669402CCFAF601DC3354 = {
 			children = (
+				0F13A30D07D7F3930034B176,
+				0F13A30E07D7F3930034B176,
 				3FB2BADF0545EB30002B9691,
 				3FB2BAE00545EB30002B9691,
 				3FB2BA940545EA80002B9691,

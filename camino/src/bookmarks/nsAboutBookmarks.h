@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,11 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Portions created by the Initial Developer are Copyright (C) 2005
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Simon Fraser <sfraser@netscape.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,30 +35,33 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import <Cocoa/Cocoa.h>
+#ifndef nsAboutBookmarks_h__
+#define nsAboutBookmarks_h__
 
-@class BookmarkToolbar;
-@class BrowserTabView;
-@class BrowserTabBarView;
+#include "nsIAboutModule.h"
 
-@interface BrowserContentView : NSView
+class nsAboutBookmarks : public nsIAboutModule 
 {
-  IBOutlet BookmarkToolbar  *mBookmarksToolbar;
-  IBOutlet NSView           *mBrowserContainerView;   // manages tabs and web content
-  IBOutlet NSView           *mStatusBar;
+public:
+    NS_DECL_ISUPPORTS
+
+    NS_DECL_NSIABOUTMODULE
+
+                      nsAboutBookmarks() {}
+    virtual           ~nsAboutBookmarks() {}
+
+    static NS_METHOD  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+
+protected:
+
+};
+
+#define NS_ABOUT_BOOKMARKS_MODULE_CID                 \
+{ /* AF110FA0-8C4D-11D9-83C4-00 03 93 D7 25 4A */     \
+    0xAF110FA0,                                       \
+    0x8C4D,                                           \
+    0x11D9,                                           \
+    { 0x83, 0xC4, 0x00, 0x03, 0x93, 0xD7, 0x25, 0x4A} \
 }
 
-@end
-
-@interface BrowserContainerView : NSView
-{
-  IBOutlet BrowserTabView *mTabView;
-  IBOutlet BrowserTabBarView *mTabBarView;
-}
-
-@end
-
-@interface BookmarkManagerView : NSView
-{
-}
-@end
+#endif // nsAboutBookmarks_h__

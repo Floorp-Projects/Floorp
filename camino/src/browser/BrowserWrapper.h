@@ -44,8 +44,10 @@
 
 class nsISupportsArray;
 
+// 
 // The BrowserWrapper communicates with the UI via this delegate.
 // The delegate will be nil for background tabs.
+// 
 @protocol BrowserUIDelegate
 
 - (void)loadingStarted;
@@ -69,11 +71,37 @@ class nsISupportsArray;
 @end
 
 
+// 
+// ContentViewProvider
+// 
+// This is used to allow clients (the browser window controller) to cause certain
+// URLs to replace the browser view witih a custom view (like bookmarks).
+// 
+@protocol ContentViewProvider
+
+- (NSView*)provideContentViewForURL:(NSString*)inURL;
+
+@end
+
+
+// 
+// BrowserWrapper
+// 
+// This is a container view for the browser content area that can be
+// nested inside of tab view items. It's mostly agnostic about its
+// container, communicating with it via a BrowserUIDelegate delegate
+// (although some of the code assumes that the [window delegate] implements
+// particular methods).
+// 
+// ContentViewProviders can be registered, and they can replace the content
+// view with one of their own (this is used for bookmarks).
+// 
+
 @interface BrowserWrapper : NSView <CHBrowserListener, CHBrowserContainer>
 {
   NSWindow*                 mWindow;           // the window we are or will be in (never nil)
   
-  // XXX the BrowserWrapper really shouldn;t know anything about the tab that it's in
+  // XXX the BrowserWrapper really shouldn't know anything about the tab that it's in
   NSTabViewItem*            mTabItem;
 
   NSImage*                  mSiteIconImage;    // current proxy icon image, which may be a site icon (favicon).
@@ -90,9 +118,9 @@ class nsISupportsArray;
   NSString*                 mTabTitle;
     // array of sites that have blocked popups. If nil, no sites are blocked. Cleared
     // after each new page.
-  nsISupportsArray*         mBlockedSites;     // STRONG
+  nsISupportsArray*         mBlockedSites;    // STRONG
 
-  CHBrowserView*            mBrowserView;
+  CHBrowserView*            mBrowserView;     // retained
   NSString*                 mDefaultStatusString;
   NSString*                 mLoadingStatusString;
   ToolTip*                  mToolTip;
@@ -100,6 +128,8 @@ class nsISupportsArray;
   double                    mProgress;
   
   id<BrowserUIDelegate>     mDelegate;      // not retained
+  
+  NSMutableDictionary*      mContentViewProviders;   // ContentViewProviders keyed by the url that shows them
   
   BOOL mIsBusy;
   BOOL mOffline;
@@ -153,6 +183,11 @@ class nsISupportsArray;
 - (NSWindow*)getNativeWindow;
 - (NSMenu*)getContextMenu;
 - (void)getTitle:(NSString **)outTitle andHref:(NSString**)outHrefString;
+
+// Custom view embedding
+- (void)registerContentViewProvider:(id<ContentViewProvider>)inProvider forURL:(NSString*)inURL;
+- (void)unregisterContentViewProviderForURL:(NSString*)inURL;
+- (id)contentViewProviderForURL:(NSString*)inURL;
 
 // CHBrowserListener messages
 - (void)onLoadingStarted;
