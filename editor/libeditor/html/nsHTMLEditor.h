@@ -600,7 +600,7 @@ protected:
                                              const nsAReadableString & aCharset,
                                              const nsAReadableString & aContextStr,
                                              const nsAReadableString & aInfoStr);
-  nsresult   StripFormattingNodes(nsIDOMNode *aNode);
+  nsresult   StripFormattingNodes(nsIDOMNode *aNode, PRBool aOnlyList = PR_FALSE);
   nsresult   CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
                                         const nsAReadableString & aInputString,
                                         const nsAReadableString & aContextStr,

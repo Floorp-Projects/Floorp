@@ -274,22 +274,6 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
 {
   if (!mRules) return NS_ERROR_NOT_INITIALIZED;
 
-/* all this is unneeded: parser handles this for us
-
-  // First, make sure there are no return chars in the document.
-  // Bad things happen if you insert returns (instead of dom newlines, \n)
-  // into an editor document.
-  nsAutoString inputString (aInputString);  // hope this does copy-on-write
-
-  // Windows linebreaks: Map CRLF to LF:
-  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r\n").get(),
-                               NS_LITERAL_STRING("\n").get());
- 
-  // Mac linebreaks: Map any remaining CR to LF:
-  inputString.ReplaceSubstring(NS_LITERAL_STRING("\r").get(),
-                               NS_LITERAL_STRING("\n").get());
-*/
-
   // force IME commit; set up rules sniffing and batching
   ForceCompositionEnd();
   nsAutoEditBatch beginBatching(this);
@@ -613,7 +597,7 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
 }
 
 nsresult
-nsHTMLEditor::StripFormattingNodes(nsIDOMNode *aNode)
+nsHTMLEditor::StripFormattingNodes(nsIDOMNode *aNode, PRBool aListOnly)
 {
   NS_ENSURE_TRUE(aNode, NS_ERROR_NULL_POINTER);
 
@@ -625,7 +609,8 @@ nsHTMLEditor::StripFormattingNodes(nsIDOMNode *aNode)
     aNode->GetParentNode(getter_AddRefs(parent));
     if (parent)
     {
-      res = parent->RemoveChild(aNode, getter_AddRefs(ignored));
+      if (!aListOnly || nsHTMLEditUtils::IsList(parent))
+        res = parent->RemoveChild(aNode, getter_AddRefs(ignored));
       return res;
     }
   }
@@ -639,7 +624,7 @@ nsHTMLEditor::StripFormattingNodes(nsIDOMNode *aNode)
     {
       nsCOMPtr<nsIDOMNode> tmp;
       child->GetPreviousSibling(getter_AddRefs(tmp));
-      res = StripFormattingNodes(child);
+      res = StripFormattingNodes(child, aListOnly);
       NS_ENSURE_SUCCESS(res, res);
       child = tmp;
     }
@@ -1727,7 +1712,10 @@ nsresult nsHTMLEditor::CreateDOMFragmentFromPaste(nsIDOMNSRange *aNSRange,
     // no longer have fragmentAsNode in tree
     contextDepth--;
   }
-  
+ 
+  res = StripFormattingNodes(contextAsNode, PR_TRUE);
+  NS_ENSURE_SUCCESS(res, res);
+ 
   // get the infoString contents
   nsAutoString numstr1, numstr2;
   if (aInfoStr.Length())
@@ -1928,9 +1916,10 @@ nsHTMLEditor::ScanForListAndTableStructure( PRBool aEnd,
       else structureNode = GetTableParent(pNode);
       if (structureNode == aListOrTable)
       {
-        if (pNode == originalNode)
-          break;  // we are starting right off with a list item of the list
-        *outReplaceNode = pNode;
+        if (bList)
+          *outReplaceNode = structureNode;
+        else
+          *outReplaceNode = pNode;
         break;
       }
     }

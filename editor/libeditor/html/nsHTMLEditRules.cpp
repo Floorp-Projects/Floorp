@@ -6684,19 +6684,10 @@ nsHTMLEditRules::CheckInterlinePosition(nsISelection *aSelection)
     return NS_OK;
   }
   
-  // are we between to <br>s?  If so we want to stick to the second one.
+  // are we after a <br>?  If so we want to stick to whatever is after <br>.
   mHTMLEditor->GetPriorHTMLNode(selNode, selOffset, address_of(node), PR_TRUE);
   if (node && nsTextEditUtils::IsBreak(node))
-  {
-    nsCOMPtr<nsIDOMNode> nextNode;
-    mHTMLEditor->GetNextHTMLNode(selNode, selOffset, address_of(nextNode), PR_TRUE);
-    if (nextNode && nsTextEditUtils::IsBreak(nextNode))
-    {
-      // selection between two br's.  make it stick to second
-      // so that it will be on blank line.   
       selPriv->SetInterlinePosition(PR_TRUE);
-    }
-  }
   return NS_OK;
 }
 
@@ -6771,13 +6762,9 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
     nearBlock = mHTMLEditor->GetBlockNodeParent(nearNode);
     if (block == nearBlock)
     {
-      if (nearNode && nsTextEditUtils::IsBreak(nearNode)
-          && !nsTextEditUtils::IsMozBR(nearNode))
-      {
-        PRBool bIsLast;
-        res = mHTMLEditor->IsLastEditableChild(nearNode, &bIsLast);
-        if (NS_FAILED(res)) return res;
-        if (bIsLast)
+      if (nearNode && nsTextEditUtils::IsBreak(nearNode) )
+      {   
+        if (!IsVisBreak(nearNode))
         {
           // need to insert special moz BR. Why?  Because if we don't
           // the user will see no new line for the break.  Also, things
@@ -6794,30 +6781,9 @@ nsHTMLEditRules::AdjustSelection(nsISelection *aSelection, nsIEditor::EDirection
         }
         else
         {
-          // ok, the br inst the last child.  
-          // the br might be right in front of a new block (ie,:
-          // <body> text<br> <ol><li>list item</li></ol></body>  )
-          // in this case we also need moz-br.
           nsCOMPtr<nsIDOMNode> nextNode;
-          res = mHTMLEditor->GetNextHTMLNode(nearNode, address_of(nextNode));
-          if (NS_FAILED(res)) return res;
-          res = mHTMLEditor->GetNextHTMLSibling(nearNode, address_of(nextNode));
-          if (NS_FAILED(res)) return res;
-          if (nextNode && IsBlockNode(nextNode))
-          {
-            // need to insert special moz BR. Why?  Because if we don't
-            // the user will see no new line for the break.  
-            nsCOMPtr<nsIDOMNode> brNode;
-            res = CreateMozBR(selNode, selOffset, address_of(brNode));
-            if (NS_FAILED(res)) return res;
-            res = nsEditor::GetNodeLocation(brNode, address_of(selNode), &selOffset);
-            if (NS_FAILED(res)) return res;
-            // selection stays *before* moz-br, sticking to it
-            selPriv->SetInterlinePosition(PR_TRUE);
-            res = aSelection->Collapse(selNode,selOffset);
-            if (NS_FAILED(res)) return res;
-          }
-          else if (nextNode && nsTextEditUtils::IsMozBR(nextNode))
+          mHTMLEditor->GetNextHTMLNode(nearNode, address_of(nextNode), PR_TRUE);
+          if (nextNode && nsTextEditUtils::IsMozBR(nextNode))
           {
             // selection between br and mozbr.  make it stick to mozbr
             // so that it will be on blank line.   
@@ -6883,6 +6849,8 @@ nsHTMLEditRules::IsVisBreak(nsIDOMNode *aNode)
   mHTMLEditor->GetNextHTMLNode(aNode, address_of(nextNode), PR_TRUE); 
   if (!nextNode) 
     return PR_FALSE;  // this break is trailer in block, it's not visible
+  if (IsBlockNode(nextNode))
+    return PR_FALSE; // break is right before a block, it's not visible
   return PR_TRUE;
 }
 
