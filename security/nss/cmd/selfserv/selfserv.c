@@ -381,11 +381,11 @@ printSecurityInfo(PRFileDesc *fd)
 	char * sp = CERT_NameToAscii(&cert->subject);
         if (sp) {
 	    FPRINTF(stderr, "selfserv: subject DN: %s\n", sp);
-	    PR_Free(sp);
+	    PORT_Free(sp);
 	}
         if (ip) {
 	    FPRINTF(stderr, "selfserv: issuer  DN: %s\n", ip);
-	    PR_Free(ip);
+	    PORT_Free(ip);
 	}
 	CERT_DestroyCertificate(cert);
 	cert = NULL;

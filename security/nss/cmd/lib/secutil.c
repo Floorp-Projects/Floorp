@@ -1719,10 +1719,11 @@ SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 void
 SECU_PrintName(FILE *out, CERTName *name, char *msg, int level)
 {
+    char *nameStr;
     char *str;
     SECItem my;
 
-    str = CERT_NameToAscii(name);
+    str = nameStr = CERT_NameToAscii(name);
     if (!str) 
     	str = "!Invalid AVA!";
     my.data = (unsigned char *)str;
@@ -1734,7 +1735,7 @@ SECU_PrintName(FILE *out, CERTName *name, char *msg, int level)
     fprintf(out, str);
     secu_Newline(out);
 #endif
-    PORT_Free(str);
+    PORT_Free(nameStr);
 }
 
 void
