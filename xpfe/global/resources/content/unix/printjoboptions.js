@@ -255,7 +255,7 @@ function createPaperArray()
 //---------------------------------------------------
 function createPaperSizeList(selectedInx)
 {
-  gStringBundle = srGetStrBundle("chrome://communicator/locale/printPageSetup.properties");
+  gStringBundle = srGetStrBundle("chrome://global/locale/printPageSetup.properties");
 
   var selectElement = new paperListElement(dialog.paperList);
   selectElement.clearPaperList();
@@ -366,7 +366,7 @@ function createPlexArray()
 //---------------------------------------------------
 function createPlexNameList(selectedInx)
 {
-  gStringBundle = srGetStrBundle("chrome://communicator/locale/printPageSetup.properties");
+  gStringBundle = srGetStrBundle("chrome://global/locale/printPageSetup.properties");
 
   var selectElement = new plexListElement(dialog.plexList);
   selectElement.clearPlexList();

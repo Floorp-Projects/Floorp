@@ -302,7 +302,7 @@ nsPrintOptions::ShowPrintSetupDialog(nsIPrintSettings *aPS)
      wwatch->GetActiveWindow(getter_AddRefs(active));           nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
 
      nsCOMPtr<nsIDOMWindow> newWindow;
-     rv = wwatch->OpenWindow(parent, "chrome://communicator/content/printPageSetup.xul",
+     rv = wwatch->OpenWindow(parent, "chrome://global/content/printPageSetup.xul",
                    "_blank", "chrome,modal,centerscreen", array,
                    getter_AddRefs(newWindow));
    }
