@@ -920,11 +920,12 @@ nsHttpChannel::InitCacheEntry()
     // XXX blow away any existing cache meta data
 
     // The no-store directive within the 'Cache-Control:' header indicates
-    // that we should not store the response in a persistent cache
+    // that we should not store the response in the cache.
     val = mResponseHead->PeekHeader(nsHttp::Cache_Control);
     if (val && PL_strcasestr(val, "no-store")) {
-        mLoadFlags |= INHIBIT_PERSISTENT_CACHING;
-        LOG(("Inhibiting persistent caching because of \"%s\"\n", val));
+        LOG(("Inhibiting caching because of \"%s\"\n", val));
+        CloseCacheEntry(NS_ERROR_ABORT);
+        return NS_OK;
     }
 
     // Store secure data in memory only
