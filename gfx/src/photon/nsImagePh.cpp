@@ -163,8 +163,10 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
   mImage.size.w        = mWidth;
   mImage.size.h        = mHeight;
   mImage.palette_tag   = 0; // REVISIT - A CRC value for PhRelay ???
+#ifdef PHOTON1_ONLY
   mImage.xscale        = 1; // scaling is integral only
   mImage.yscale        = 1;
+#endif
   mImage.format        = 0; // not used
   mImage.flags         = 0;
   mImage.ghost_bpl     = 0;
@@ -485,8 +487,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     /* Try to dump the image to a BMP file */
     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 Dump image to BMP\n"));
 
-     unsigned char *ptr;
-     ptr = mImage.image;  
+     char *ptr;
+     ptr = (char *) mImage.image;  
  
      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 Dump image info w,h,d=(%d,%d,%d) mColorMap=<%p> \n",
 	   mWidth, mHeight, mDepth, mColorMap));

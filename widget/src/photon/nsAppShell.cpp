@@ -106,7 +106,7 @@ EventQueueTokenQueue::~EventQueueTokenQueue()
   // are referenced by things that leak, so this assertion goes off a lot.)
   if (mHead)
   {
-    int err=PtAppRemoveFd(NULL,mHead->mQueue->GetEventQueueSelectFD());
+    int err=PtAppRemoveFd(NULL,mHead->mToken);
     if (err==-1)
     {
 	  printf ("nsAppShell::~EventQueueTokenQueue Run Error calling PtAppRemoveFd\n");

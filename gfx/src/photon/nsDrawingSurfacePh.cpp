@@ -138,7 +138,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
   PhDim_t    dim;
   short      bytes_per_pixel = 3;
 
-  image = PR_CALLOC( sizeof(PhImage_t) );
+  image = (PhImage_t  *) PR_CALLOC( sizeof(PhImage_t) );
   if (image == NULL)
   {
 	abort();
@@ -293,7 +293,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
 	abort();
   }
 
-  mPixmap = PR_CALLOC(sizeof(PhImage_t) );
+  mPixmap = (PhImage_t  *) PR_CALLOC(sizeof(PhImage_t) );
   if (mPixmap == NULL)
   {
     NS_ASSERTION(NULL, "nsDrawingSurfacePh::Init can't CALLOC pixmap, out of memory");
