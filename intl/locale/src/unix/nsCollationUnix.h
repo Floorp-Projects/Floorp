@@ -27,6 +27,11 @@
 
 class nsCollationUnix : public nsICollation {
 
+protected:
+  nsCollation   *mCollation;
+  nsString      mLocale; //should be nsCString when available
+  nsString      mCharset;
+
 public: 
   NS_DECL_ISUPPORTS
     
@@ -60,9 +65,6 @@ public:
   nsCollationUnix();
 
   virtual ~nsCollationUnix(); 
-
-protected:
-  nsCollation   *mCollation;
 };
 
 #endif  /* nsCollationUnix_h__ */
