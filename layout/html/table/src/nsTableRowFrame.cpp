@@ -177,6 +177,16 @@ nsTableRowFrame::AppendFrames(nsIPresContext& aPresContext,
     }
   }
 
+  // See if any implicit column frames need to be created as a result of
+  // adding the new rows
+  PRBool  createdColFrames;
+  tableFrame->EnsureColumns(aPresContext, createdColFrames);
+  if (createdColFrames) {
+    // We need to rebuild the column cache
+    // XXX It would be nice if this could be done incrementally
+    tableFrame->InvalidateColumnCache();
+  }
+
   // Reflow the new frames. They're already marked dirty, so generate a reflow
   // command that tells us to reflow our dirty child frames
   nsIReflowCommand* reflowCmd;
@@ -1265,7 +1275,6 @@ NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
     // If any column widths have to change due to this, rebalance column widths.
     // XXX need to calculate this, but for now just do it
     aReflowState.tableFrame->InvalidateColumnWidths();  
-    aReflowState.tableFrame->InvalidateColumnCache();  
     break;
   }
 

@@ -1170,7 +1170,7 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext& aPresContext,
                                    nsIFrame*       aFrameList)
 {
   // Get the table frame
-  nsTableFrame* tableFrame = nsnull;
+  nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
 
   // Append the frames
@@ -1186,6 +1186,16 @@ nsTableRowGroupFrame::AppendFrames(nsIPresContext& aPresContext,
     // add them to the cell map
     for (nsIFrame* rowFrame = aFrameList; rowFrame; rowFrame->GetNextSibling(&rowFrame)) {
       DidAppendRow((nsTableRowFrame*)rowFrame);
+    }
+
+    // See if any implicit column frames need to be created as a result of
+    // adding the new rows
+    PRBool  createdColFrames;
+    tableFrame->EnsureColumns(aPresContext, createdColFrames);
+    if (createdColFrames) {
+      // We need to rebuild the column cache
+      // XXX It would be nice if this could be done incrementally
+      tableFrame->InvalidateColumnCache();
     }
 
     // Reflow the new frames. They're already marked dirty, so generate a reflow
