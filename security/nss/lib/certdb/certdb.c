@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.27 2002/04/12 19:05:04 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.28 2002/04/22 19:08:44 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -2028,17 +2028,11 @@ CERT_ImportCerts(CERTCertDBHandle *certdb, SECCertUsage usage,
     
 	/* decode all of the certs into the temporary DB */
 	for ( i = 0, fcerts= 0; i < ncerts; i++) {
-	    if ( keepCerts ) {
-		certs[fcerts] = CERT_DecodeDERCertificate(derCerts[i], 
-		                                          PR_FALSE,
-		                                          NULL);
-	    } else {
-		certs[fcerts] = CERT_NewTempCertificate(certdb,
+	    certs[fcerts] = CERT_NewTempCertificate(certdb,
 		                                        derCerts[i],
 		                                        NULL,
 		                                        PR_FALSE,
 		                                        PR_TRUE);
-	    }
 	    if (certs[fcerts]) fcerts++;
 	}
 

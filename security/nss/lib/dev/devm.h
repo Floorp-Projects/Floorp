@@ -35,7 +35,7 @@
 #define DEVM_H
 
 #ifdef DEBUG
-static const char DEVM_CVS_ID[] = "@(#) $RCSfile: devm.h,v $ $Revision: 1.7 $ $Date: 2002/04/19 16:14:06 $ $Name:  $";
+static const char DEVM_CVS_ID[] = "@(#) $RCSfile: devm.h,v $ $Revision: 1.8 $ $Date: 2002/04/22 19:08:54 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -134,6 +134,12 @@ nssToken_IsLoginRequired
   NSSToken *token
 );
 
+NSS_EXTERN void
+nssToken_Remove
+(
+  NSSToken *token
+);
+
 NSS_EXTERN nssCryptokiObject *
 nssCryptokiObject_Create
 (
@@ -153,6 +159,12 @@ nssTokenObjectCache_Create
 
 NSS_EXTERN void
 nssTokenObjectCache_Destroy
+(
+  nssTokenObjectCache *cache
+);
+
+NSS_EXTERN void
+nssTokenObjectCache_Clear
 (
   nssTokenObjectCache *cache
 );
