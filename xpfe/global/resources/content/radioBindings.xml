@@ -23,12 +23,13 @@
         <getter>
         <![CDATA[
           var groupElements = this.getElementsByAttribute( "group", this.id );
-          for( var i = 0; i < groupElements.length; i++ )
-            {
-              if( groupElements[i].checked || 
-                  groupElements[i].getAttribute( "checked" ) == "true" )
-                return groupElements[i];
+          for( var i = 0; i < groupElements.length; i++ ) {
+            if( groupElements[i].checked || 
+                groupElements[i].getAttribute( "checked" ) == "true" ) {
+              return groupElements[i];
             }
+          }
+          return null;
         ]]>
         </getter>
         <setter>
@@ -60,17 +61,17 @@
         <body>
         <![CDATA[
           var radios = this.getElementsByTagName("radio");
+          var index;
           for (var i = 0; i < radios.length; i++ ) {
             if (radios[i] != this.selectedItem) 
               continue;
             if (aNextFlag) {
-              var index = i + 1 < radios.length ? i + 1 : 0;
+              index = i + 1 < radios.length ? i + 1 : 0;
               this.selectedItem = radios[index];
               break;
             }
-            else {
-              
-              var index = i - 1 >= 0 ? i - 1 : radios.length - 1;
+            else {              
+              index = i - 1 >= 0 ? i - 1 : radios.length - 1;
               this.selectedItem = radios[index];
               break;
             }
