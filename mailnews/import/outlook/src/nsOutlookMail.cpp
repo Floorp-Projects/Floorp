@@ -1025,12 +1025,12 @@ nsresult nsOutlookMail::CreateList( const PRUnichar * pName,
   // If no name provided then we're done.
   if (!pName || !(*pName))
     return NS_OK;
-
+  
   nsresult rv = NS_ERROR_FAILURE;
   // Make sure we have db to work with.
   if (!pDb)
     return rv;
-
+  
   nsCOMPtr <nsIMdbRow> newListRow;
   rv = pDb->GetNewListRow(getter_AddRefs(newListRow));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1038,92 +1038,90 @@ nsresult nsOutlookMail::CreateList( const PRUnichar * pName,
   column.AssignWithConversion(pName);
   rv = pDb->AddListName(newListRow, column.get());
   NS_ENSURE_SUCCESS(rv, rv);
-
-    HRESULT             hr;
-    LPSPropValue aValue = NULL ;
-    ULONG aValueCount = 0 ;
-
-    LPSPropTagArray properties = NULL ;
-    m_mapi.MAPIAllocateBuffer(CbNewSPropTagArray(1),
-                       (void **)&properties) ;
-    properties->cValues = 1;
-    properties->aulPropTag [0] = m_mapi.GetEmailPropertyTag(pUserList, 0x8054);
-    hr = pUserList->GetProps(properties, 0, &aValueCount, &aValue) ;
-
-    SBinaryArray *sa=(SBinaryArray *)&aValue->Value.bin;
-
-    LPENTRYID    lpEid;
-    ULONG        cbEid;
-    PRInt32        idx;
-    LPMESSAGE        lpMsg;
-    nsCString        type;
-    LPSPropValue    pVal;
-    nsString        subject;
-    PRUint32 total;
+  
+  HRESULT             hr;
+  LPSPropValue aValue = NULL ;
+  ULONG aValueCount = 0 ;
+  
+  LPSPropTagArray properties = NULL ;
+  m_mapi.MAPIAllocateBuffer(CbNewSPropTagArray(1),
+    (void **)&properties) ;
+  properties->cValues = 1;
+  properties->aulPropTag [0] = m_mapi.GetEmailPropertyTag(pUserList, 0x8054);
+  hr = pUserList->GetProps(properties, 0, &aValueCount, &aValue) ;
+  
+  SBinaryArray *sa=(SBinaryArray *)&aValue->Value.bin;
+  if (!sa || !sa->lpbin)
+    return NS_ERROR_NULL_POINTER;
+  
+  LPENTRYID    lpEid;
+  ULONG        cbEid;
+  PRInt32        idx;
+  LPMESSAGE        lpMsg;
+  nsCString        type;
+  LPSPropValue    pVal;
+  nsString        subject;
+  PRUint32 total;
+  
+  
+  total=sa->cValues;
+  for (idx = 0;idx < sa->cValues ;idx++)
+  {
+    lpEid= (LPENTRYID) sa->lpbin[idx].lpb;
+    cbEid = sa->lpbin[idx].cb;
     
-
-    total=sa->cValues;
-    for (idx=0;idx<sa->cValues ;idx++)
+    
+    if (!m_mapi.OpenEntry(cbEid, lpEid, (LPUNKNOWN *) &lpMsg))
     {
-        lpEid= (LPENTRYID) sa->lpbin[idx].lpb;
-        cbEid = sa->lpbin[idx].cb;
-
-
-        if (!m_mapi.OpenEntry(cbEid, lpEid, (LPUNKNOWN *) &lpMsg))
-        {
-            
-            IMPORT_LOG1( "*** Error opening messages in mailbox: %S\n", pName);
-            return( NS_ERROR_FAILURE);
-        }
-        {
-            {
-                // This is a contact, add it to the address book!
-                subject.Truncate( 0);
-                pVal = m_mapi.GetMapiProperty( lpMsg, PR_SUBJECT);
-                if (pVal)
-                    m_mapi.GetStringFromProp( pVal, subject);
-                
-                    nsCOMPtr <nsIMdbRow> newRow;
-                    nsCOMPtr <nsIMdbRow> oldRow;
-                    pDb->GetNewRow( getter_AddRefs(newRow));
-                    if (newRow) {
-                        if (BuildCard( subject.get(), pDb, newRow, lpMsg, pFieldMap)) 
-                        {
-                            nsCOMPtr <nsIAbCard> userCard;
-                            nsCOMPtr <nsIAbCard> newCard;
-                            userCard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-                            pDb->InitCardFromRow(userCard,newRow);
-                            
-                            //add card to db
-                            PRBool bl=PR_FALSE;
-                            pDb->FindRowByCard(userCard,getter_AddRefs(oldRow));
-                            if (oldRow)
-                            {
-                                newRow = oldRow;
-                            }
-                            else
-                            {
-                                pDb->AddCardRowToDB( newRow);
-                            }
-                            
-                            //add card list
-                            pDb->AddListCardColumnsToRow(userCard,
-                                              newListRow,idx+1,
-                                              getter_AddRefs(newCard),PR_TRUE);
-
-                            
-                        }
-                    }
-
-
-            }
-        }
+      
+      IMPORT_LOG1( "*** Error opening messages in mailbox: %S\n", pName);
+      return( NS_ERROR_FAILURE);
     }
+    // This is a contact, add it to the address book!
+    subject.Truncate( 0);
+    pVal = m_mapi.GetMapiProperty( lpMsg, PR_SUBJECT);
+    if (pVal)
+      m_mapi.GetStringFromProp( pVal, subject);
+    
+    nsCOMPtr <nsIMdbRow> newRow;
+    nsCOMPtr <nsIMdbRow> oldRow;
+    pDb->GetNewRow( getter_AddRefs(newRow));
+    if (newRow) {
+      if (BuildCard( subject.get(), pDb, newRow, lpMsg, pFieldMap)) 
+      {
+        nsCOMPtr <nsIAbCard> userCard;
+        nsCOMPtr <nsIAbCard> newCard;
+        userCard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        pDb->InitCardFromRow(userCard,newRow);
+        
+        //add card to db
+        PRBool bl=PR_FALSE;
+        pDb->FindRowByCard(userCard,getter_AddRefs(oldRow));
+        if (oldRow)
+        {
+          newRow = oldRow;
+        }
+        else
+        {
+          pDb->AddCardRowToDB( newRow);
+        }
+        
+        //add card list
+        pDb->AddListCardColumnsToRow(userCard,
+          newListRow,idx+1,
+          getter_AddRefs(newCard),PR_TRUE);
+        
+        
+      }
+    }
+    
+    
+  }
   
   rv = pDb->AddCardRowToDB(newListRow);
   NS_ENSURE_SUCCESS(rv, rv);
-
+  
   rv = pDb->SetListAddressTotal(newListRow, total);
   rv = pDb->AddListDirNode(newListRow);
   return rv;
