@@ -318,7 +318,7 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     // a URL spec from the components.
     char portBuffer[10];
     if (-1 != mPort) {
-      sprintf(portBuffer, ":%d", mPort);
+      PR_snprintf(portBuffer, 10, ":%d", mPort);
     }
     else {
       portBuffer[0] = '\0';
@@ -326,10 +326,8 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
 
     PRInt32 plen = PL_strlen(mProtocol) + PL_strlen(mHost) + PL_strlen(portBuffer) + PL_strlen(mFile) + 4;
     mSpec = (char *) PR_Malloc(plen + 1);
-    sprintf(mSpec, "%s://%s%s%s", mProtocol,
-            mHost ? mHost : "",
-            portBuffer, mFile);
-
+    PR_snprintf(mSpec, plen, "%s://%s%s%s", 
+                mProtocol, ((nsnull != mHost) ? mHost : ""), portBuffer, mFile);
   } else {
     // absolute spec
     mSpec = PL_strdup(cSpec);
