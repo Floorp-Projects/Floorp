@@ -24,12 +24,11 @@
 [scriptable, uuid(a6cf90be-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMCSSStyleDeclaration : nsISupports
 {
-
            attribute DOMString        cssText;
                                         // raises(DOMException) on setting
 
   DOMString          getPropertyValue(in DOMString propertyName);
-  nsIDOMCSSValue           getPropertyCSSValue(in DOMString propertyName);
+  nsIDOMCSSValue     getPropertyCSSValue(in DOMString propertyName);
   DOMString          removeProperty(in DOMString propertyName)
                                         raises(DOMException);
   DOMString          getPropertyPriority(in DOMString propertyName);
@@ -37,9 +36,9 @@ interface nsIDOMCSSStyleDeclaration : nsISupports
                                  in DOMString value, 
                                  in DOMString priority)
                                         raises(DOMException);
+
   readonly attribute unsigned long    length;
   DOMString          item(in unsigned long index);
+
   readonly attribute nsIDOMCSSRule          parentRule;
-
 };
-

@@ -24,13 +24,12 @@
 [scriptable, uuid(a6cf90c2-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMCSSStyleSheet : nsIDOMStyleSheet
 {
+  readonly attribute nsIDOMCSSRule     ownerRule;
+  readonly attribute nsIDOMCSSRuleList cssRules;
 
-  readonly attribute nsIDOMCSSRule          ownerRule;
-  readonly attribute nsIDOMCSSRuleList      cssRules;
   unsigned long      insertRule(in DOMString rule, 
                                 in unsigned long index)
                                         raises(DOMException);
   void               deleteRule(in unsigned long index)
                                         raises(DOMException);
 };
-

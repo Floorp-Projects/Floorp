@@ -24,8 +24,6 @@
 [scriptable, uuid(39f76c23-45b2-428a-9240-a981e5abf148)]
 interface nsIDOMDocumentCSS : nsIDOMDocumentStyle
 {
-
   nsIDOMCSSStyleDeclaration getOverrideStyle(in nsIDOMElement elt, 
                                        in DOMString pseudoElt);
 };
-

@@ -24,13 +24,11 @@
 [scriptable, uuid(a6cf9080-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMStyleSheet : nsISupports
 {
-
   readonly attribute DOMString        type;
            attribute boolean          disabled;
-  readonly attribute nsIDOMNode             ownerNode;
-  readonly attribute nsIDOMStyleSheet       parentStyleSheet;
+  readonly attribute nsIDOMNode       ownerNode;
+  readonly attribute nsIDOMStyleSheet parentStyleSheet;
   readonly attribute DOMString        href;
   readonly attribute DOMString        title;
-  readonly attribute nsIDOMMediaList        media;
+  readonly attribute nsIDOMMediaList  media;
 };
-

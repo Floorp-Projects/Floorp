@@ -24,9 +24,7 @@
 [scriptable, uuid(31adb439-0055-402d-9b1d-d5ca94f3f55b)]
 interface nsIDOMCounter : nsISupports
 {
-
   readonly attribute DOMString        identifier;
   readonly attribute DOMString        listStyle;
   readonly attribute DOMString        separator;
 };
-
