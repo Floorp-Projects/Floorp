@@ -453,6 +453,15 @@ endif # non-gnu compilers
 endif # IS_COMPONENT
 endif # HP-UX
 
+ifeq ($(OS_ARCH),AIX)
+ifdef IS_COMPONENT
+ifneq ($(HAS_EXTRAEXPORTS),1)
+MKSHLIB += -bE:$(MOZILLA_DIR)/build/unix/aix.exp -bnoexpall
+MKCSHLIB += -bE:$(MOZILLA_DIR)/build/unix/aix.exp -bnoexpall
+endif # HAS_EXTRAEXPORTS
+endif # IS_COMPONENT
+endif # AIX
+
 ifeq ($(USE_TVFS),1)
 IFLAGS1 = -rb
 IFLAGS2 = -rb
