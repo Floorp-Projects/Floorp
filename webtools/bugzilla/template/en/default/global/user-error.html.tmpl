@@ -309,11 +309,11 @@
 
   [% ELSIF error == "empty_group_description" %]
     [% title = "The group description can not be empty" %]
-    You must enter a description for the new group.
+    You must enter a description for the group.
 
   [% ELSIF error == "empty_group_name" %]
     [% title = "The group name can not be empty" %]
-    You must enter a name for the new group.
+    You must enter a name for the group.
   
   [% ELSIF error == "entry_access_denied" %]
     [% title = "Permission Denied" %]
@@ -401,6 +401,11 @@
   [% ELSIF error == "group_not_specified" %]
     [% title = "Group not specified" %]
     No group was specified.
+
+  [% ELSIF error == "system_group_not_deletable" %]
+    [% title = "System Groups not deletable" %]
+    <em>[% name FILTER html %]</em> is a system group.
+    This group cannot be deleted.
 
   [% ELSIF error == "group_unknown" %]
     [% title = "Unknown Group" %]

@@ -26,7 +26,7 @@
   # group_id: number. The group ID.
   # name: string. The name of the group. [grantor]
   # description: string. The description of the group.
-  # rexp: string. The regular expression for the users of the group.
+  # regexp: string. The regular expression for the users of the group.
   # isactive: boolean int. Shows if the group is still active.
   # isbuggroup: boolean int. Is 1 if this is a bug group.
   # groups: array with group objects having the properties:
@@ -83,8 +83,8 @@
     <tr>
       <th>User Regexp:</th>
       <td>
-        <input type="hidden" name="oldrexp" value="[% rexp FILTER html %]">
-        <input type="text" name="rexp" size="40" value="[% rexp FILTER html %]">
+        <input type="hidden" name="oldregexp" value="[% regexp FILTER html %]">
+        <input type="text" name="regexp" size="40" value="[% regexp FILTER html %]">
       </td>
     </tr>
 
