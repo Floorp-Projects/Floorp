@@ -38,5 +38,6 @@ interface nsIAddressBook : nsISupports {
     void PrintCard();
     void PrintAddressbook();
     void SetWebShellWindow(in nsIDOMWindow win);
+	void ImportAddressBook();
 };
 

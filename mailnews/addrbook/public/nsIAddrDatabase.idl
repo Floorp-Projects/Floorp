@@ -23,6 +23,8 @@
 
 [ptr] native nsIMdbTableRowCursor(nsIMdbTableRowCursor);
 [ptr] native nsIMdbEnv(nsIMdbEnv);
+[ptr] native nsIMdbRow(nsIMdbRow);
+[ptr] native nsString(nsString);
 
 %{C++
 #include "mdb.h"
@@ -66,5 +68,43 @@ interface nsIAddrDatabase : nsIAddrDBAnnouncer {
 	void AddAnonymousAttributesFromCard(in nsIAbCard card);
 	void RemoveAnonymousAttributesFromCard(in nsIAbCard card);
 	void EditAnonymousAttributesFromCard(in nsIAbCard card);
-	
+
+	[noscript] void GetNewRow(out nsIMdbRow newRow);
+	[noscript] void AddCardRowToDB(in nsIMdbRow newRow);
+	[noscript] void AddFirstName(in nsIMdbRow row, in nsString value);
+	[noscript] void AddLastName(in nsIMdbRow row, in nsString value);
+	[noscript] void AddDisplayName(in nsIMdbRow row, in nsString value);
+	[noscript] void AddNickName(in nsIMdbRow row, in nsString value);
+	[noscript] void AddPrimaryEmail(in nsIMdbRow row, in nsString value);
+	[noscript] void Add2ndEmail(in nsIMdbRow row, in nsString value);
+	[noscript] void AddWorkPhone(in nsIMdbRow row, in nsString value);
+	[noscript] void AddHomePhone(in nsIMdbRow row, in nsString value);
+	[noscript] void AddFaxNumber(in nsIMdbRow row, in nsString value);
+	[noscript] void AddPagerNumber(in nsIMdbRow row, in nsString value);
+	[noscript] void AddCellularNumber(in nsIMdbRow row, in nsString value);
+	[noscript] void AddHomeAddress(in nsIMdbRow row, in nsString value);
+	[noscript] void AddHomeAddress2(in nsIMdbRow row, in nsString value);
+	[noscript] void AddHomeCity(in nsIMdbRow row, in nsString value);
+	[noscript] void AddHomeState(in nsIMdbRow row, in nsString value);
+	[noscript] void AddHomeZipCode(in nsIMdbRow row, in nsString value);
+	[noscript] void AddHomeCountry(in nsIMdbRow row, in nsString value);
+	[noscript] void AddWorkAddress(in nsIMdbRow row, in nsString value);
+	[noscript] void AddWorkAddress2(in nsIMdbRow row, in nsString value);
+	[noscript] void AddWorkCity(in nsIMdbRow row, in nsString value);
+	[noscript] void AddWorkState(in nsIMdbRow row, in nsString value);
+	[noscript] void AddWorkZipCode(in nsIMdbRow row, in nsString value);
+	[noscript] void AddWorkCountry(in nsIMdbRow row, in nsString value);
+	[noscript] void AddJobTitle(in nsIMdbRow row, in nsString value);
+	[noscript] void AddDepartment(in nsIMdbRow row, in nsString value);
+	[noscript] void AddCompany(in nsIMdbRow row, in nsString value);
+	[noscript] void AddWebPage1(in nsIMdbRow row, in nsString value);
+	[noscript] void AddWebPage2(in nsIMdbRow row, in nsString value);
+	[noscript] void AddBirthYear(in nsIMdbRow row, in nsString value);
+	[noscript] void AddBirthMonth(in nsIMdbRow row, in nsString value);
+	[noscript] void AddBirthDay(in nsIMdbRow row, in nsString value);
+	[noscript] void AddCustom1(in nsIMdbRow row, in nsString value);
+	[noscript] void AddCustom2(in nsIMdbRow row, in nsString value);
+	[noscript] void AddCustom3(in nsIMdbRow row, in nsString value);
+	[noscript] void AddCustom4(in nsIMdbRow row, in nsString value);
+	[noscript] void AddNotes(in nsIMdbRow row, in nsString value);
 };

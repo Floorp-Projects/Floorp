@@ -217,13 +217,13 @@ NS_IMETHODIMP nsAbDirectory::GetMailingList(nsIEnumerator **mailingList)
 	return rv;
 }
 
-NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const char *dirName)
+NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const char *dirName, const char *fileName)
 {
 	if (!dirName)
 		return NS_ERROR_NULL_POINTER;
 
 	DIR_Server * server = nsnull;
-	nsresult rv = DIR_AddNewAddressBook(dirName, &server);
+	nsresult rv = DIR_AddNewAddressBook(dirName, fileName, &server);
 
 	nsCOMPtr<nsIAbDirectory> newDir;
 	char *uri = PR_smprintf("%s%s", kDirectoryDataSourceRoot, server->fileName);
@@ -236,9 +236,9 @@ NS_IMETHODIMP nsAbDirectory::CreateNewDirectory(const char *dirName)
 			newDir->SetDirName(server->description);
 			newDir->SetServer(server);
 
-			nsCOMPtr<nsISupports> dirSupports(do_QueryInterface(newDir, &rv));
+//			nsCOMPtr<nsISupports> dirSupports(do_QueryInterface(newDir, &rv));
 
-			if (NS_SUCCEEDED(rv))
+//			if (NS_SUCCEEDED(rv))
 				NotifyItemAdded(newDir);
 			return rv;
 		}
@@ -317,6 +317,76 @@ NS_IMETHODIMP nsAbDirectory::DeleteCards(nsISupportsArray *cards)
 	return rv;
 }
 
+nsresult nsAbDirectory::DeleteDirectoryCards(nsIAbDirectory* directory, DIR_Server *server)
+{
+	nsresult rv = NS_OK;
+	nsFileSpec* dbPath = nsnull;
+	nsCOMPtr<nsIAddrDatabase> database;
+
+
+	NS_WITH_SERVICE(nsIAddrBookSession, abSession, kAddrBookSessionCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+		abSession->GetUserProfileDirectory(&dbPath);
+	
+	if (dbPath)
+	{
+		(*dbPath) += server->fileName;
+
+		// close file before delete it
+		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
+
+		if (NS_SUCCEEDED(rv) && addrDBFactory)
+			rv = addrDBFactory->Open(dbPath, PR_FALSE, getter_AddRefs(database), PR_TRUE);
+	}
+
+	/* delete cards */
+	nsCOMPtr<nsISupportsArray> cardArray;
+	nsCOMPtr<nsIEnumerator> cardChild;
+
+	NS_NewISupportsArray(getter_AddRefs(cardArray));
+	rv = directory->GetChildCards(getter_AddRefs(cardChild));
+
+	if (NS_SUCCEEDED(rv) && cardChild)
+	{
+		nsCOMPtr<nsISupports> item;
+		rv = cardChild->First();
+		if (NS_SUCCEEDED(rv))
+		{
+			do 
+			{
+				cardChild->CurrentItem(getter_AddRefs(item));
+				if (item)
+				{
+					nsCOMPtr<nsIAbCard> card;
+					card = do_QueryInterface(item, &rv);
+					if (card)
+					{
+						cardArray->AppendElement(card);
+					}
+				}
+				rv = cardChild->Next();
+			} while (NS_SUCCEEDED(rv));
+
+			if (database)
+			{
+				PRUint32 cardCount;
+				rv = cardArray->Count(&cardCount);
+				if (NS_FAILED(rv)) return rv;
+				for(PRUint32 i = 0; i < cardCount; i++)
+				{
+					nsISupports* cardSupports = cardArray->ElementAt(i);
+					nsIAbCard* card = (nsIAbCard*)cardSupports;
+					if (card)
+					{
+						database->DeleteCard(card, PR_TRUE);
+					}
+				}
+			}
+		}
+	}
+	return rv;
+}
+
 NS_IMETHODIMP nsAbDirectory::DeleteDirectories(nsISupportsArray *dierctories)
 {
 	nsresult rv = NS_ERROR_FAILURE;
@@ -336,6 +406,8 @@ NS_IMETHODIMP nsAbDirectory::DeleteDirectories(nsISupportsArray *dierctories)
 			rv = directory->GetServer(&server);
 			if (server)
 			{
+				DeleteDirectoryCards(directory, server);
+
 				DIR_DeleteServerFromList(server);
 
 				rv = mSubDirectories->RemoveElement(directory);

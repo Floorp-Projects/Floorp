@@ -926,182 +926,290 @@ nsresult nsAddrDatabase::AddAttributeColumnsToRow(nsIAbCard *card, nsIMdbRow *ca
 		char* pStr = nsnull;
 		card->GetFirstName(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_FirstNameColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddFirstName(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetLastName(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_LastNameColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddLastName(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetDisplayName(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_DisplayNameColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddDisplayName(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetNickName(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_NickNameColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddNickName(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetPrimaryEmail(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_PriEmailColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddPrimaryEmail(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetSecondEmail(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_2ndEmailColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			Add2ndEmail(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetWorkPhone(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_WorkPhoneColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddWorkPhone(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetHomePhone(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_HomePhoneColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddHomePhone(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetFaxNumber(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_FaxColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddFaxNumber(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetPagerNumber(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_PagerColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddPagerNumber(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetCellularNumber(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_CellularColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddCellularNumber(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetHomeAddress(&pStr);
 		if (pStr)
-			AddStringColumn(cardRow, m_HomeAddressColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddHomeAddress(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetHomeAddress2(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_HomeAddress2ColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddHomeAddress2(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetHomeCity(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_HomeCityColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddHomeCity(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetHomeState(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_HomeStateColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddHomeState(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetHomeZipCode(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_HomeZipCodeColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddHomeZipCode(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetHomeCountry(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_HomeCountryColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddHomeCountry(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetWorkAddress(&pStr);  
 		if (pStr)
-			AddStringColumn(cardRow, m_WorkAddressColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddWorkAddress(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetWorkAddress2(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_WorkAddress2ColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddWorkAddress2(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetWorkCity(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_WorkCityColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddWorkCity(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetWorkState(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_WorkStateColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddWorkState(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetWorkZipCode(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_WorkZipCodeColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddWorkZipCode(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetWorkCountry(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_WorkCountryColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddWorkCountry(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetJobTitle(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_JobTitleColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddJobTitle(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetDepartment(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_DepartmentColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddDepartment(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetCompany(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_CompanyColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddCompany(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetWebPage1(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_WebPage1ColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddWebPage1(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetWebPage2(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_WebPage2ColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddWebPage2(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetBirthYear(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_BirthYearColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddBirthYear(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetBirthMonth(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_BirthMonthColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddBirthMonth(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetBirthDay(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_BirthDayColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddBirthDay(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetCustom1(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_Custom1ColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddCustom1(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetCustom2(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_Custom2ColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddCustom2(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetCustom3(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_Custom3ColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddCustom3(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetCustom4(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_Custom4ColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddCustom4(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 
 		card->GetNotes(&pStr); 
 		if (pStr)
-			AddStringColumn(cardRow, m_NotesColumnToken, pStr);
+		{
+			nsString nameStr(pStr);
+			AddNotes(cardRow, &nameStr);
+		}
 		PR_FREEIF(pStr);
 	}
 	return NS_OK;
@@ -1115,7 +1223,7 @@ NS_IMETHODIMP nsAddrDatabase::CreateNewCardAndAddToDB(nsIAbCard *newCard, PRBool
 	if (!newCard || !m_mdbPabTable)
 		return NS_ERROR_NULL_POINTER;
 
-	err  = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &cardRow);
+	err  = GetNewRow(&cardRow);
 
 	if (NS_SUCCEEDED(err) && cardRow)
 	{
@@ -1180,10 +1288,10 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 			nsIMdbRow	*anonymousRow = nsnull;
 			if (code == AB_NotifyInserted)
 			{
-				err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
+				err  = GetNewRow(&anonymousRow);
 				if (NS_SUCCEEDED(err) && anonymousRow)
 				{
-					AddStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
+					AddCharStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
 				}
 			}
@@ -1192,7 +1300,7 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 				struct mdbYarn yarn;
 				mdbOid rowOid;
 
-				GetStringYarn(pValueStr, &yarn);
+				GetCharStringYarn(pValueStr, &yarn);
 				err = GetStore()->FindRow(GetEnv(), m_CardRowScopeToken, anonymousColumnToken,
 										&yarn, &rowOid, &anonymousRow);
 				if (NS_SUCCEEDED(err) && anonymousRow)
@@ -1203,7 +1311,7 @@ nsresult nsAddrDatabase::DoStringAnonymousTransaction
 				err = FindAttributeRow(m_mdbAnonymousTable, anonymousColumnToken, &anonymousRow);
 				if (NS_SUCCEEDED(err) && anonymousRow)
 				{
-					AddStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
+					AddCharStringColumn(anonymousRow, anonymousColumnToken, pValueStr);
 					err = m_mdbAnonymousTable->AddRow(GetEnv(), anonymousRow);
 					return NS_OK;
 				} 
@@ -1233,7 +1341,7 @@ nsresult nsAddrDatabase::DoIntAnonymousTransaction
 			nsIMdbRow	*anonymousRow = nsnull;
 			if (code == AB_NotifyInserted)
 			{
-				err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
+				err  = GetNewRow(&anonymousRow);
 				if (NS_SUCCEEDED(err) && anonymousRow)
 				{
 					AddIntColumn(anonymousRow, anonymousColumnToken, value);
@@ -1293,7 +1401,7 @@ nsresult nsAddrDatabase::DoBoolAnonymousTransaction
 			nsIMdbRow	*anonymousRow = nsnull;
 			if (code == AB_NotifyInserted)
 			{
-				err = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &anonymousRow);			
+				err  = GetNewRow(&anonymousRow);
 				if (NS_SUCCEEDED(err) && anonymousRow)
 				{
 					AddIntColumn(anonymousRow, anonymousColumnToken, nBoolValue);
@@ -1469,13 +1577,38 @@ NS_IMETHODIMP nsAddrDatabase::ContainsCard(nsIAbCard *card, PRBool *hasCard)
 	return err;
 }
 
-void nsAddrDatabase::GetStringYarn(char* str, struct mdbYarn* strYarn)
+NS_IMETHODIMP nsAddrDatabase::GetNewRow(nsIMdbRow * *newRow)
+{
+	nsresult err = NS_OK;
+	nsIMdbRow *row = nsnull;
+	err  = GetStore()->NewRow(GetEnv(), m_CardRowScopeToken, &row);
+	*newRow = row;
+	return err;
+}
+
+NS_IMETHODIMP nsAddrDatabase::AddCardRowToDB(nsIMdbRow *newRow)
+{
+	if (m_mdbPabTable)
+		return m_mdbPabTable->AddRow(GetEnv(), newRow);
+	else
+		return NS_ERROR_FAILURE;
+}
+ 
+void nsAddrDatabase::GetCharStringYarn(char* str, struct mdbYarn* strYarn)
 {
 	strYarn->mYarn_Grow = NULL;
 	strYarn->mYarn_Buf = str;
 	strYarn->mYarn_Size = PL_strlen((const char *) strYarn->mYarn_Buf) + 1;
 	strYarn->mYarn_Fill = strYarn->mYarn_Size - 1;
 	strYarn->mYarn_Form = 0;
+}
+
+void nsAddrDatabase::GetStringYarn(nsString* str, struct mdbYarn* strYarn)
+{
+	strYarn->mYarn_Buf = str->ToNewCString();
+	strYarn->mYarn_Size = PL_strlen((const char *) strYarn->mYarn_Buf) + 1;
+	strYarn->mYarn_Fill = strYarn->mYarn_Size - 1;
+	strYarn->mYarn_Form = 0;	 
 }
 
 void nsAddrDatabase::GetIntYarn(PRUint32 nValue, struct mdbYarn* intYarn)
@@ -1489,7 +1622,17 @@ void nsAddrDatabase::GetIntYarn(PRUint32 nValue, struct mdbYarn* intYarn)
 	intYarn->mYarn_Fill = PL_strlen((const char *) intYarn->mYarn_Buf);
 }
 
-mdb_err nsAddrDatabase::AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str)
+mdb_err nsAddrDatabase::AddCharStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str)
+{
+	struct mdbYarn yarn;
+
+	GetCharStringYarn(str, &yarn);
+	mdb_err err = cardRow->AddColumn(GetEnv(),  inColumn, &yarn);
+
+	return err;
+}
+
+mdb_err nsAddrDatabase::AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, nsString* str)
 {
 	struct mdbYarn yarn;
 
@@ -1726,8 +1869,8 @@ NS_IMETHODIMP nsAddrDatabase::GetAnonymousStringAttribute(const char *attrname, 
 
 			if (NS_SUCCEEDED(err) && cardRow)
 			{
-				GetStringColumn(cardRow, anonymousColumnToken, tempString);
-				if (tempString.Length())
+				err = GetStringColumn(cardRow, anonymousColumnToken, tempString);
+				if (NS_SUCCEEDED(err) && tempString.Length())
 				{
 					tempCString = tempString.ToNewCString();
 					*value = PL_strdup(tempCString);
@@ -1816,288 +1959,288 @@ nsresult nsAddrDatabase::GetCardFromDB(nsIAbCard *newCard, nsIMdbRow* cardRow)
     nsAutoString tempString;
 	char *tempCString = nsnull;
 
-	GetStringColumn(cardRow, m_FirstNameColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_FirstNameColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetFirstName(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_LastNameColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_LastNameColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetLastName(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_DisplayNameColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_DisplayNameColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetDisplayName(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_NickNameColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_NickNameColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetNickName(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_PriEmailColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_PriEmailColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetPrimaryEmail(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_2ndEmailColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_2ndEmailColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetSecondEmail(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_WorkPhoneColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_WorkPhoneColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetWorkPhone(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_HomePhoneColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_HomePhoneColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetHomePhone(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_FaxColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_FaxColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetFaxNumber(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_PagerColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_PagerColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetPagerNumber(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_CellularColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_CellularColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetCellularNumber(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_HomeAddressColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_HomeAddressColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetHomeAddress(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_HomeAddress2ColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_HomeAddress2ColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetHomeAddress2(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_HomeCityColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_HomeCityColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetHomeCity(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_HomeStateColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_HomeStateColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetHomeState(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_HomeZipCodeColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_HomeZipCodeColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetHomeZipCode(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_HomeCountryColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_HomeCountryColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetHomeCountry(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_WorkAddressColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_WorkAddressColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetWorkAddress(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_WorkAddress2ColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_WorkAddress2ColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetWorkAddress2(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_WorkCityColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_WorkCityColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetWorkCity(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_WorkStateColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_WorkStateColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetWorkState(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_WorkZipCodeColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_WorkZipCodeColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetWorkZipCode(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_WorkCountryColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_WorkCountryColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetWorkCountry(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_JobTitleColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_JobTitleColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetJobTitle(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_DepartmentColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_DepartmentColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetDepartment(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_CompanyColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_CompanyColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetCompany(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_WebPage1ColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_WebPage1ColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetWebPage1(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_WebPage2ColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_WebPage2ColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetWebPage2(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_BirthYearColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_BirthYearColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetBirthYear(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_BirthMonthColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_BirthMonthColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetBirthMonth(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_BirthDayColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_BirthDayColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetBirthDay(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_Custom1ColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_Custom1ColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetCustom1(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_Custom2ColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_Custom2ColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetCustom2(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_Custom3ColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_Custom3ColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetCustom3(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_Custom4ColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_Custom4ColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetCustom4(tempCString);
 		delete [] tempCString;
 	}
 
-	GetStringColumn(cardRow, m_NotesColumnToken, tempString);
-	if (tempString.Length())
+	err = GetStringColumn(cardRow, m_NotesColumnToken, tempString);
+	if (NS_SUCCEEDED(err) && tempString.Length())
 	{
 		tempCString = tempString.ToNewCString();
 		newCard->SetNotes(tempCString);

@@ -403,20 +403,29 @@ nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir)
 	return NS_OK;
 }
 
-nsresult DIR_AddNewAddressBook(const char *name, DIR_Server** pServer)
+nsresult DIR_AddNewAddressBook(const char *dirName, const char *fileName, DIR_Server** pServer)
 {
 	DIR_Server * server = (DIR_Server *) PR_Malloc(sizeof(DIR_Server));
 	DIR_InitServerWithType (server, PABDirectory);
-	PRInt32 count = dir_ServerList->Count();
-	server->description = PL_strdup(name);
-	server->position = count + 1;
+	if (!dir_ServerList)
+		DIR_GetDirServers();
+	if (dir_ServerList)
+	{
+		PRInt32 count = dir_ServerList->Count();
+		server->description = PL_strdup(dirName);
+		server->position = count + 1;
 
-	DIR_SetFileName(&server->fileName, kMainPersonalAddressBook);
+		if (fileName)
+			server->fileName = PL_strdup(fileName);
+		else
+			DIR_SetFileName(&server->fileName, kMainPersonalAddressBook);
 
-	dir_ServerList->AppendElement(server);
-    DIR_SavePrefsForOneServer(server); 
-	*pServer = server;
-	return NS_OK;
+		dir_ServerList->AppendElement(server);
+		DIR_SavePrefsForOneServer(server); 
+		*pServer = server;
+		return NS_OK;
+	}
+	return NS_ERROR_FAILURE;
 }
 
 nsresult DIR_DecrementServerRefCount (DIR_Server *server)
@@ -2401,7 +2410,8 @@ nsresult DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** id
 					idName = AB_pstrtok_r(nil,", ",&marker);
 					if (idName)
 					{
-						if (DIR_AttributeNameToId(server, idName, &idArray[numAdded]) >= 0)
+						status = DIR_AttributeNameToId(server, idName, &idArray[numAdded]);
+						if (NS_SUCCEEDED(status))
 							numAdded++;
 					}
 					else

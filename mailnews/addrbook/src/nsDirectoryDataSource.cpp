@@ -603,25 +603,8 @@ nsresult nsAbDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsIS
 		nsString tempStr = name;
 		nsAutoCString nameStr(tempStr);
 
-		rv = directory->CreateNewDirectory(nameStr);
+		rv = directory->CreateNewDirectory(nameStr, nsnull);
 	}
-/*
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsISupportsArray> dirArray;
-	NS_NewISupportsArray(getter_AddRefs(dirArray));
-	PRUint32 itemCount;
-	rv = arguments->Count(&itemCount);
-	for(PRUint32 item = 0; item < itemCount; item++)
-	{
-		nsCOMPtr<nsISupports> supports = getter_AddRefs(arguments->ElementAt(item));
-		nsCOMPtr<nsIAbDirectory> newDir(do_QueryInterface(supports));
-		if (newDir)
-		{
-			nsCOMPtr<nsISupports> dirSupports(do_QueryInterface(newDir));
-			OnItemAdded(directory, dirSupports);
-		}
-	}
-*/
 	return rv;
 }
 

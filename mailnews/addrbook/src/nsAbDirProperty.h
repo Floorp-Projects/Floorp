@@ -62,7 +62,7 @@ public:
 	NS_IMETHOD HasCard(nsIAbCard *cards, PRBool *hasCard) { return NS_OK; }
 	NS_IMETHOD HasDirectory(nsIAbDirectory *dir, PRBool *hasDir) { return NS_OK; }
 	NS_IMETHOD GetMailingList(nsIEnumerator **mailingList) { return NS_OK; }
-	NS_IMETHOD CreateNewDirectory(const char *dirName) { return NS_OK; }
+	NS_IMETHOD CreateNewDirectory(const char *dirName, const char *fileName) { return NS_OK; }
 
 protected:
 

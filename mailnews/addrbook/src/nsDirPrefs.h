@@ -232,7 +232,7 @@ nsVoidArray* DIR_GetDirectories();
 nsresult DIR_GetDirServers();
 nsresult DIR_ShutDown(void);  /* FEs should call this when the app is shutting down. It frees all DIR_Servers regardless of ref count values! */
 
-nsresult DIR_AddNewAddressBook(const char *name, DIR_Server** pServer);
+nsresult DIR_AddNewAddressBook(const char *dirName, const char *fileName, DIR_Server** pServer);
 nsresult DIR_ContainsServer(DIR_Server* pServer, PRBool *hasDir);
 
 nsresult DIR_DecrementServerRefCount (DIR_Server *);

@@ -103,6 +103,117 @@ public:
 	NS_IMETHOD RemoveAnonymousAttributesFromCard(nsIAbCard *card);
 	NS_IMETHOD EditAnonymousAttributesFromCard(nsIAbCard *card);
 
+	NS_IMETHOD GetNewRow(nsIMdbRow * *newRow); 
+	NS_IMETHOD AddCardRowToDB(nsIMdbRow *newRow);
+
+	NS_IMETHOD AddFirstName(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_FirstNameColumnToken, value); }
+
+	NS_IMETHOD AddLastName(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_LastNameColumnToken, value); }
+
+	NS_IMETHOD AddDisplayName(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_DisplayNameColumnToken, value); }
+
+	NS_IMETHOD AddNickName(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_NickNameColumnToken, value); }
+
+	NS_IMETHOD AddPrimaryEmail(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_PriEmailColumnToken, value); }
+
+	NS_IMETHOD Add2ndEmail(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_2ndEmailColumnToken, value); }
+
+	NS_IMETHOD AddWorkPhone(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_WorkPhoneColumnToken, value); }
+
+	NS_IMETHOD AddHomePhone(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_HomePhoneColumnToken, value); }
+
+	NS_IMETHOD AddFaxNumber(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_FaxColumnToken, value); }
+
+	NS_IMETHOD AddPagerNumber(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_PagerColumnToken, value); }
+
+	NS_IMETHOD AddCellularNumber(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_CellularColumnToken, value); }
+
+	NS_IMETHOD AddHomeAddress(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_HomeAddressColumnToken, value); }
+
+	NS_IMETHOD AddHomeAddress2(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_HomeAddress2ColumnToken, value); }
+
+	NS_IMETHOD AddHomeCity(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_HomeCityColumnToken, value); }
+
+	NS_IMETHOD AddHomeState(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_HomeStateColumnToken, value); }
+
+	NS_IMETHOD AddHomeZipCode(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_HomeZipCodeColumnToken, value); }
+
+	NS_IMETHOD AddHomeCountry(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_HomeCountryColumnToken, value); }
+
+	NS_IMETHOD AddWorkAddress(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_WorkAddressColumnToken, value); }
+
+	NS_IMETHOD AddWorkAddress2(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_WorkAddress2ColumnToken, value); }
+
+	NS_IMETHOD AddWorkCity(nsIMdbRow * row, nsString * value) 
+	{ return AddStringColumn(row, m_WorkCityColumnToken, value); }
+
+	NS_IMETHOD AddWorkState(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_WorkStateColumnToken, value); }
+
+	NS_IMETHOD AddWorkZipCode(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_WorkZipCodeColumnToken, value); }
+
+	NS_IMETHOD AddWorkCountry(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_WorkCountryColumnToken, value); }
+
+	NS_IMETHOD AddJobTitle(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_JobTitleColumnToken, value); }
+
+	NS_IMETHOD AddDepartment(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_DepartmentColumnToken, value); }
+
+	NS_IMETHOD AddCompany(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_CompanyColumnToken, value); }
+
+	NS_IMETHOD AddWebPage1(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_WebPage1ColumnToken, value); }
+
+	NS_IMETHOD AddWebPage2(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_WebPage2ColumnToken, value); }
+
+	NS_IMETHOD AddBirthYear(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_BirthYearColumnToken, value); }
+
+	NS_IMETHOD AddBirthMonth(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_BirthMonthColumnToken, value); }
+
+	NS_IMETHOD AddBirthDay(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_BirthDayColumnToken, value); }
+
+	NS_IMETHOD AddCustom1(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_Custom1ColumnToken, value); }
+
+	NS_IMETHOD AddCustom2(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_Custom2ColumnToken, value); }
+
+	NS_IMETHOD AddCustom3(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_Custom3ColumnToken, value); }
+
+	NS_IMETHOD AddCustom4(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_Custom4ColumnToken, value); }
+
+	NS_IMETHOD AddNotes(nsIMdbRow * row, nsString * value)
+	{ return AddStringColumn(row, m_NotesColumnToken, value); }
+
 	//////////////////////////////////////////////////////////////////////////////
 	// nsAddrDatabase methods:
 
@@ -140,9 +251,11 @@ protected:
 
 
 	void YarnToUInt32(struct mdbYarn *yarn, PRUint32 *pResult);
-	void GetStringYarn(char* str, struct mdbYarn* strYarn);
+	void GetCharStringYarn(char* str, struct mdbYarn* strYarn);
+	void GetStringYarn(nsString* str, struct mdbYarn* strYarn);
 	void GetIntYarn(PRUint32 nValue, struct mdbYarn* intYarn);
-	mdb_err AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str);
+	mdb_err AddCharStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, char* str);
+	mdb_err AddStringColumn(nsIMdbRow* cardRow, mdb_column inColumn, nsString* str);
 	mdb_err AddIntColumn(nsIMdbRow* cardRow, mdb_column inColumn, PRUint32 nValue);
 	nsresult GetStringColumn(nsIMdbRow *cardRow, mdb_token outToken, nsString& str);
 	nsresult GetIntColumn(nsIMdbRow *cardRow, mdb_token outToken, 
