@@ -28,6 +28,7 @@ CPPSRCS=				\
 	nsGenericElement.cpp		\
 	nsGenericHTMLElement.cpp	\
 	nsGenericDOMHTMLCollection.cpp	\
+	GenericElementCollection.cpp    \
 	nsHTMLAnchorElement.cpp		\
 	nsHTMLAppletElement.cpp		\
 	nsHTMLAreaElement.cpp		\
@@ -97,6 +98,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsGenericElement.obj		\
 	.\$(OBJDIR)\nsGenericHTMLElement.obj		\
 	.\$(OBJDIR)\nsGenericDOMHTMLCollection.obj	\
+	.\$(OBJDIR)\GenericElementCollection.obj    \
 	.\$(OBJDIR)\nsHTMLAnchorElement.obj		\
 	.\$(OBJDIR)\nsHTMLAppletElement.obj		\
 	.\$(OBJDIR)\nsHTMLAreaElement.obj		\
