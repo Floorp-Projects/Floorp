@@ -313,37 +313,21 @@ void nsXIFConverter::EndCSSRule()
 }
 
 
-void nsXIFConverter::BeginCSSSelector()
+void nsXIFConverter::BeginCSSSelectors()
 {
   BeginStartTag(mSelector);
 }
 
-void nsXIFConverter::EndCSSSelector()
+void nsXIFConverter::EndCSSSelectors()
 {
   FinishStartTag(mSelector,PR_TRUE);
 }
 
 
 
-void nsXIFConverter::AddCSSTag(const nsString& aTag)
+void nsXIFConverter::AddCSSSelectors(const nsString& aSelectors)
 {
-  AddAttribute(nsString("tag"),aTag);
-}
-
-
-void nsXIFConverter::AddCSSID(const nsString& aTag)
-{
-  AddAttribute(nsString("id"),aTag);
-}
-
-void nsXIFConverter::AddCSSClass(const nsString& aTag)
-{
-  AddAttribute(nsString("class"),aTag);
-}
-
-void nsXIFConverter::AddCSSPsuedoClass(const nsString& aTag)
-{
-  AddAttribute(nsString("pseudo_class"),aTag);
+  AddAttribute(nsString("selectors"),aSelectors);
 }
 
 
