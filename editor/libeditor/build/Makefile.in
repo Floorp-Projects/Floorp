@@ -40,17 +40,16 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS)    \
 		$(MOZ_JS_LIBS)           \
 		$(NULL)
-REQUIRES        = xpcom \
-                  string \
-                  dom \
-                  layout \
-                  content \
-                  txmgr \
-                  htmlparser \
-                  necko \
-                  appshell \
-                  xuldoc \
-                  $(NULL)
+REQUIRES	= xpcom \
+		  string \
+		  dom \
+		  layout \
+		  content \
+		  txmgr \
+		  htmlparser \
+		  appshell \
+		  xuldoc \
+		  $(NULL)
 
 ifdef MOZ_PLAINTEXT_EDITOR_ONLY
 # We're only building the Core PlainText Editor Source so just include

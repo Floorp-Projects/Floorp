@@ -175,7 +175,7 @@ PRUint32 AtomKey_base::HashCode(void) const
 #endif
     nsAutoString myStr;
     mAtom->ToString(myStr);
-    myStr.ToUpperCase();
+    ToUpperCase(myStr);
     return nsCRT::HashCode(myStr.get());
   }
 }

@@ -38,6 +38,7 @@
 #include "nsEditorShellMouseListener.h"
 #include "nsEditorShell.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
@@ -183,7 +184,7 @@ PRBool ElementIsType(nsIDOMElement *aElement, const nsAReadableString& aTag)
       {
         nsAutoString tag;
         atom->ToString(tag);
-        tag.ToLowerCase();
+        ToLowerCase(tag);
         if (tag.Equals(aTag))
           return PR_TRUE;
       }

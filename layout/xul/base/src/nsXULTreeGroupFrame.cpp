@@ -53,6 +53,7 @@
 #include "nsXULTreeOuterGroupFrame.h"
 #include "nsIDocument.h"
 #include "nsIBindingManager.h"
+#include "nsUnicharUtils.h"
 
 
 //
@@ -762,7 +763,7 @@ nsXULTreeGroupFrame::AttributeChanged(nsIPresContext* aPresContext, nsIContent* 
   else if ( aAttribute == nsXULAtoms::ddDropOn ) {
     nsAutoString attribute;
     aChild->GetAttr ( kNameSpaceID_None, aAttribute, attribute );
-    attribute.ToLowerCase();
+    ToLowerCase(attribute);
     mDropOnContainer = attribute.Equals(NS_LITERAL_STRING("true"));
   }
   else

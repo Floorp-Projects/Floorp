@@ -39,6 +39,7 @@
 #include "nsCSSKeywords.h"
 #include "nsString.h"
 #include "nsStaticNameTable.h"
+#include "nsReadableUtils.h"
 
 // define an array of all CSS keywords
 #define CSS_KEY(_name,_id) #_name,
@@ -63,7 +64,7 @@ nsCSSKeywords::AddRefTable(void)
       for (PRInt32 index = 0; index < eCSSKeyword_COUNT; ++index) {
         nsCAutoString temp1(kCSSRawKeywords[index]);
         nsCAutoString temp2(kCSSRawKeywords[index]);
-        temp1.ToLowerCase();
+        ToLowerCase(temp1);
         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
         NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in table");
       }

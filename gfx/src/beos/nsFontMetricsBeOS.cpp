@@ -432,7 +432,7 @@ nsFontMetricsBeOS::FamilyExists(const nsString& aName)
  
   nsCAutoString name; 
   name.AssignWithConversion(aName.get()); 
-  name.ToLowerCase(); 
+  ToLowerCase(name); 
   PRBool  isthere = PR_FALSE; 
  
   char* cStr = ToNewCString(name); 

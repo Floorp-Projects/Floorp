@@ -98,6 +98,8 @@
 #include "nsEscape.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
+#include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 // XXX misnamed header file, but oh well
 #include "nsHTMLTokens.h"
@@ -1179,7 +1181,7 @@ nsXMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   type.StripWhitespace();
 
   mStyleElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::media, media);
-  media.ToLowerCase();
+  ToLowerCase(media);
 
   nsAutoString  mimeType;
   nsAutoString  params;
@@ -1290,7 +1292,7 @@ nsXMLContentSink::ProcessMETATag()
     nsAutoString result;
     mMetaElement->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
     if (result.Length() > 0) {
-      header.ToLowerCase();
+      ToLowerCase(header);
       nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
       rv=ProcessHeaderData(fieldAtom,result,mMetaElement); 
     }//if (result.Length() > 0) 
@@ -1349,7 +1351,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
       title.CompressWhitespace();
 
       nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("media"), media);
-      media.ToLowerCase();
+      ToLowerCase(media);
 
       nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("alternate"), alternate);
 

@@ -593,7 +593,7 @@ int CStringTester::TestLogical(){
   NS_ASSERTION(temp8.Equals(aaaa),kEqualsError);
   
   stringtype temp10(temp8);
-  temp10.ToUpperCase();
+  ToUpperCase(temp10);
   NS_ASSERTION(temp8.Equals(temp10,PR_TRUE),kEqualsError);
   NS_ASSERTION(temp8.Equals("AAAA",PR_TRUE),kEqualsError);
 
@@ -1290,8 +1290,8 @@ int CStringTester::TestLexomorphic(){
 
     //and hey, why not do a few lexo-morphic tests...
   nsString s0(pbuf);
-  s0.ToUpperCase();
-  s0.ToLowerCase();
+  ToUpperCase(s0);
+  ToLowerCase(s0);
   s0.StripChars("l");
   s0.StripChars("\n");
   s0.StripChar(250);
@@ -1343,14 +1343,14 @@ int CStringTester::TestLexomorphic(){
   NS_ASSERTION(s0=="heobick abc 123 xyz","ReplaceChar error");
 
   s0=pbuf;
-  s0.ToUpperCase();
-  s0.ToLowerCase();
+  ToUpperCase(s0);
+  ToLowerCase(s0);
   s0.Append("\n\n\n \r \r \r \t \t \t");
   s0.StripWhitespace();
 
   nsCAutoString s1("\n\r hello \n\n\n\r\r\r\t rick \t\t ");
-  s1.ToUpperCase();
-  s1.ToLowerCase();
+  ToUpperCase(s1);
+  ToLowerCase(s1);
   s1.StripChars("o");
   s1.Trim(" ",PR_TRUE,PR_TRUE);
   s1.CompressWhitespace();
@@ -1359,10 +1359,10 @@ int CStringTester::TestLexomorphic(){
   s1.ReplaceChar('h','w');
   NS_ASSERTION(s1=="well rick","Compress Error");
 
-  s1.ToUpperCase();
+  ToUpperCase(s1);
   NS_ASSERTION(s1=="WELL RICK","Compress Error");
 
-  s1.ToLowerCase();
+  ToLowerCase(s1);
   s1.Append("\n\n\n \r \r \r \t \t \t");
   s1.StripWhitespace();
   NS_ASSERTION(s1=="wellrick","Compress Error");

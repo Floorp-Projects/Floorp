@@ -480,7 +480,7 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
   rv = element->GetTagName(tagName);
   if (NS_FAILED(rv)) return rv;
 
-  tagName.ToLowerCase();
+  ToLowerCase(tagName);
   nsCOMPtr<nsIAtom> tagAtom = getter_AddRefs(NS_NewAtom(tagName));
   if (!tagAtom) return NS_ERROR_NULL_POINTER;
 
@@ -566,7 +566,7 @@ nsHTMLEditor::NodeIsBlockStatic(nsIDOMNode *aNode, PRBool *aIsBlock)
     result = element->GetTagName(tagName);
     if (NS_SUCCEEDED(result))
     {
-      tagName.ToLowerCase();
+      ToLowerCase(tagName);
       nsIAtom *tagAtom = NS_NewAtom(tagName);
       if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
 
@@ -1858,7 +1858,7 @@ nsHTMLEditor::InsertNodeAtPoint(nsIDOMNode *aNode,
   nsresult res = NS_OK;
   nsAutoString tagName;
   aNode->GetNodeName(tagName);
-  tagName.ToLowerCase();
+  ToLowerCase(tagName);
   nsCOMPtr<nsIDOMNode> parent = *ioParent;
   nsCOMPtr<nsIDOMNode> topChild = *ioParent;
   nsCOMPtr<nsIDOMNode> tmp;
@@ -1968,7 +1968,7 @@ NS_IMETHODIMP
 nsHTMLEditor::SetParagraphFormat(const nsAReadableString& aParagraphFormat)
 {
   nsAutoString tag; tag.Assign(aParagraphFormat);
-  tag.ToLowerCase();
+  ToLowerCase(tag);
   if (tag.Equals(NS_LITERAL_STRING("dd")) || tag.Equals(NS_LITERAL_STRING("dt")))
     return MakeDefinitionItem(tag);
   else
@@ -2558,7 +2558,7 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsAReadableString& aTagName, nsI
   }
    
   nsAutoString TagName(aTagName);
-  TagName.ToLowerCase();
+  ToLowerCase(TagName);
   PRBool getLink = IsLinkTag(TagName);
   PRBool getNamedAnchor = IsNamedAnchorTag(TagName);
   if ( getLink || getNamedAnchor)
@@ -2663,7 +2663,7 @@ nsHTMLEditor::GetSelectedElement(const nsAReadableString& aTagName, nsIDOMElemen
 
   nsAutoString domTagName;
   nsAutoString TagName(aTagName);
-  TagName.ToLowerCase();
+  ToLowerCase(TagName);
   // Empty string indicates we should match any element tag
   PRBool anyTag = (TagName.IsEmpty());
   PRBool isLinkTag = IsLinkTag(TagName);
@@ -2695,7 +2695,7 @@ nsHTMLEditor::GetSelectedElement(const nsAReadableString& aTagName, nsIDOMElemen
     if (selectedNode)
     {
       selectedNode->GetNodeName(domTagName);
-      domTagName.ToLowerCase();
+      ToLowerCase(domTagName);
 
       // Test for appropriate node type requested
       if (anyTag || (TagName == domTagName) ||
@@ -2831,13 +2831,13 @@ nsHTMLEditor::GetSelectedElement(const nsAReadableString& aTagName, nsIDOMElemen
                 }
 
                 selectedElement->GetNodeName(domTagName);
-                domTagName.ToLowerCase();
+                ToLowerCase(domTagName);
 
                 if (anyTag)
                 {
                   // Get name of first selected element
                   selectedElement->GetTagName(TagName);
-                  TagName.ToLowerCase();
+                  ToLowerCase(TagName);
                   anyTag = PR_FALSE;
                 }
 
@@ -2897,7 +2897,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAReadableString& aTagName, nsIDO
     return NS_ERROR_NULL_POINTER;
     
   nsAutoString TagName(aTagName);
-  TagName.ToLowerCase();
+  ToLowerCase(TagName);
   nsAutoString realTagName;
 
   if (IsLinkTag(TagName) || IsNamedAnchorTag(TagName))
@@ -3389,7 +3389,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
       {
         nsAutoString tagName;
         node->GetNodeName(tagName);
-        tagName.ToLowerCase();
+        ToLowerCase(tagName);
 
         // See if it's an image or an embed
         if (tagName.Equals(NS_LITERAL_STRING("img")) || tagName.Equals(NS_LITERAL_STRING("embed")))

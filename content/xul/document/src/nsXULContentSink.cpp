@@ -96,6 +96,7 @@
 #include "nsWeakPtr.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsXULElement.h"
 #include "prlog.h"
 #include "prmem.h"
@@ -960,7 +961,7 @@ XULContentSinkImpl::AddProcessingInstruction(const nsIParserNode& aNode)
         nsAutoString media;
         nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("media"), media);
 
-        media.ToLowerCase();
+        ToLowerCase(media);
 
         nsAutoString alternate;
         nsParserUtils::GetQuotedAttributeValue(text, NS_LITERAL_STRING("alternate"), alternate);

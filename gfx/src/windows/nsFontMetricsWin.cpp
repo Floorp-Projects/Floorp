@@ -58,6 +58,7 @@
 #include "plhash.h"
 #include "prprf.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #define NOT_SETUP 0x33
 static PRBool gIsWIN95OR98 = NOT_SETUP;
@@ -1101,7 +1102,7 @@ GetEncoding(const char* aFontName, nsString& aValue)
   name.AppendWithConversion(aFontName);
   name.Append(NS_LITERAL_STRING(".ttf"));
   name.StripWhitespace();
-  name.ToLowerCase();
+  ToLowerCase(name);
 
   // if we have not init the property yet, init it right now.
   if (! gFontEncodingProperties)
@@ -2640,7 +2641,7 @@ nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
   // keeping multiple font weights entries when the font name varies 
   // only by case.
   nsAutoString low(*aName);
-  low.ToLowerCase();
+  ToLowerCase(low);
 
    // See if the font weight has already been computed.
   nsFontWeightEntry searchEntry;
@@ -2794,7 +2795,7 @@ nsFontMetricsWin::FindLocalFont(HDC aDC, PRUnichar aChar)
 
     nsString* name = mFonts.StringAt(mFontsIndex++);
     nsAutoString low(*name);
-    low.ToLowerCase();
+    ToLowerCase(low);
     nsString* winName = (nsString*) PL_HashTableLookup(gFamilyNames, &low);
     if (!winName) {
       winName = name;
@@ -2978,7 +2979,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   metrics->mFonts.AppendString(aFamily);
   if (aGeneric) {
     metrics->mGeneric.Assign(aFamily);
-    metrics->mGeneric.ToLowerCase();
+    ToLowerCase(metrics->mGeneric);
     return PR_FALSE; // stop
   }
   ++metrics->mGenericIndex;
@@ -4518,7 +4519,7 @@ nsFontMetricsWinA::FindLocalFont(HDC aDC, PRUnichar aChar)
     }
     nsString* name = mFonts.StringAt(mFontsIndex++);
     nsAutoString low(*name);
-    low.ToLowerCase();
+    ToLowerCase(low);
     nsString* winName = (nsString*)PL_HashTableLookup(gFamilyNames, &low);
     if (!winName) {
       winName = name;

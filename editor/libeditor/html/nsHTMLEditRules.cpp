@@ -737,7 +737,7 @@ nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
         nsAutoString typeAttrName(NS_LITERAL_STRING("align"));
         nsAutoString typeAttrVal;
         res = elem->GetAttribute(typeAttrName, typeAttrVal);
-        typeAttrVal.ToLowerCase();
+        ToLowerCase(typeAttrVal);
         if (NS_SUCCEEDED(res) && typeAttrVal.Length())
         {
           if (typeAttrVal.Equals(NS_LITERAL_STRING("center")))
@@ -922,7 +922,7 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAWritableString &outFormat)
         {
           nsAutoString tag;
           nsEditor::GetTagString(block,tag);
-          tag.ToLowerCase();
+          ToLowerCase(tag);
           format = tag;
         }
         else
@@ -939,7 +939,7 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAWritableString &outFormat)
     {
       nsAutoString tag;
       nsEditor::GetTagString(curNode,tag);
-      tag.ToLowerCase();
+      ToLowerCase(tag);
       format = tag;
     }
     else if (nsIEditProperty::p == atom.get()           ||
@@ -2274,7 +2274,7 @@ nsHTMLEditRules::MoveNodeSmart(nsIDOMNode *aSource, nsIDOMNode *aDest, PRInt32 *
   nsresult res;
   res = mHTMLEditor->GetTagString(aSource, tag);
   if (NS_FAILED(res)) return res;
-  tag.ToLowerCase();
+  ToLowerCase(tag);
   // check if this node can go into the destination node
   if (mHTMLEditor->CanContainTag(aDest, tag))
   {
@@ -2502,7 +2502,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
     {
       nsAutoString existingListStr;
       res = mHTMLEditor->GetTagString(curNode, existingListStr);
-      existingListStr.ToLowerCase();
+      ToLowerCase(existingListStr);
       // do we have a curList already?
       if (curList && !nsHTMLEditUtils::IsDescendantOf(curNode, curList))
       {
@@ -2533,7 +2533,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
     {
       nsAutoString existingListStr;
       res = mHTMLEditor->GetTagString(curParent, existingListStr);
-      existingListStr.ToLowerCase();
+      ToLowerCase(existingListStr);
       if ( existingListStr != *aListType )
       {
         // list item is in wrong type of list.  
@@ -2778,7 +2778,7 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
       curBlock->GetParentNode(getter_AddRefs(curBlockPar));
       nsAutoString curBlockTag;
       nsEditor::GetTagString(curBlock, curBlockTag);
-      curBlockTag.ToLowerCase();
+      ToLowerCase(curBlockTag);
       if ((curBlockTag.Equals(NS_LITERAL_STRING("pre"))) || 
           (curBlockTag.Equals(NS_LITERAL_STRING("p")))   ||
           (curBlockTag.Equals(NS_LITERAL_STRING("h1")))  ||
@@ -3006,7 +3006,7 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
       {
         nsAutoString listTag;
         nsEditor::GetTagString(curParent,listTag);
-        listTag.ToLowerCase();
+        ToLowerCase(listTag);
         // create a new nested list of correct type
         res = SplitAsNeeded(&listTag, address_of(curParent), &offset);
         if (NS_FAILED(res)) return res;
@@ -3047,7 +3047,7 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
         {
           nsAutoString listTag;
           nsEditor::GetTagString(curParent,listTag);
-          listTag.ToLowerCase();
+          ToLowerCase(listTag);
           // create a new nested list of correct type
           res = SplitAsNeeded(&listTag, address_of(curParent), &offset);
           if (NS_FAILED(res)) return res;
@@ -5613,7 +5613,7 @@ nsHTMLEditRules::RemoveBlockStyle(nsISupportsArray *arrayOfNodes)
     if (NS_FAILED(res)) return res;
     nsAutoString curNodeTag, curBlockTag;
     nsEditor::GetTagString(curNode, curNodeTag);
-    curNodeTag.ToLowerCase();
+    ToLowerCase(curNodeTag);
  
     // if curNode is a address, p, header, address, or pre, remove it 
     if ((curNodeTag.Equals(NS_LITERAL_STRING("pre"))) || 
@@ -5685,7 +5685,7 @@ nsHTMLEditRules::RemoveBlockStyle(nsISupportsArray *arrayOfNodes)
       }
       curBlock = mHTMLEditor->GetBlockNodeParent(curNode);
       nsEditor::GetTagString(curBlock, curBlockTag);
-      curBlockTag.ToLowerCase();
+      ToLowerCase(curBlockTag);
       if ((curBlockTag.Equals(NS_LITERAL_STRING("pre"))) || 
           (curBlockTag.Equals(NS_LITERAL_STRING("p")))   ||
           (curBlockTag.Equals(NS_LITERAL_STRING("h1")))  ||
@@ -5755,7 +5755,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
     if (NS_FAILED(res)) return res;
     nsAutoString curNodeTag;
     nsEditor::GetTagString(curNode, curNodeTag);
-    curNodeTag.ToLowerCase();
+    ToLowerCase(curNodeTag);
  
     // is it already the right kind of block?
     if (curNodeTag == *aBlockTag)

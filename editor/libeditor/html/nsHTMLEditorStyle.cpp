@@ -376,7 +376,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
   nsCOMPtr<nsIDOMNode> tmp;
   nsAutoString tag;
   aProperty->ToString(tag);
-  tag.ToLowerCase();
+  ToLowerCase(tag);
   
   // dont need to do anything if property already set on node
   PRBool bHasProp;

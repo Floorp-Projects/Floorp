@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "TxString.h"
+#include "nsUnicharUtils.h"
 #ifdef TX_EXE
 #include <iostream.h>
 #endif
@@ -714,7 +715,7 @@ const UNICODE_CHAR* String::toUnicode() const
 //
 void String::toLowerCase()
 {
-  ptrNSString->ToLowerCase();
+  ToLowerCase(*ptrNSString);
 }
 
 //
@@ -722,7 +723,7 @@ void String::toLowerCase()
 //
 void String::toUpperCase()
 {
-  ptrNSString->ToUpperCase();
+  ToUpperCase(*ptrNSString);
 }
 
 //

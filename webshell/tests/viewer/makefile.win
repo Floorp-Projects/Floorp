@@ -93,6 +93,7 @@ LLIBS=                         \
  $(DIST)\lib\raptorwidget_s.lib     \
 # $(DIST)\lib\widgetsupport_s.lib \
  $(DIST)\lib\DebugRobot.lib     \
+ $(DIST)\lib\unicharutil_s.lib     \
  $(DIST)\lib\xpcom.lib        \
  $(DIST)\lib\js32$(VERSION_NUMBER).lib \
  $(LIBNSPR)                     \

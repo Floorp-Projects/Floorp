@@ -59,6 +59,7 @@
 #include "EditTxn.h"
 #include "nsIPref.h"
 #include "nsISupportsArray.h"
+#include "nsUnicharUtils.h"
 
 // for IBMBIDI
 #include "nsIPresShell.h"
@@ -1064,7 +1065,7 @@ nsTextEditRules::WillOutputText(nsISelection *aSelection,
   *aHandled = PR_FALSE;
 
   nsAutoString outputFormat(*aOutputFormat);
-  outputFormat.ToLowerCase();
+  ToLowerCase(outputFormat);
   if (outputFormat.Equals(NS_LITERAL_STRING("text/plain")))
   { // only use these rules for plain text output
     if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)

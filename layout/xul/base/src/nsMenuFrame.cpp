@@ -81,6 +81,7 @@
 #include "nsIScrollableView.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsIStringBundle.h"
 #include "nsGUIEvent.h"
 #include "nsIEventListenerManager.h"
@@ -1451,11 +1452,11 @@ nsMenuFrame::BuildAcceleratorText()
     keyElement->GetAttr(kNameSpaceID_None, nsXULAtoms::key, accelString);
 
     if (!accelString.IsEmpty()) {
-      accelString.ToUpperCase();
+      ToUpperCase(accelString);
     } else {
       nsAutoString keyCode;
       keyElement->GetAttr(kNameSpaceID_None, nsXULAtoms::keycode, keyCode);
-      keyCode.ToUpperCase();
+      ToUpperCase(keyCode);
 
       nsresult rv;
       nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));

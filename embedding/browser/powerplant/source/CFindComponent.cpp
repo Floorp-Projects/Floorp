@@ -82,7 +82,7 @@ CFindComponent::Find(const nsString& searchString,
 
 	nsAutoString		matchString(searchString);
 	if (!caseSensitive)
-		matchString.ToLowerCase();
+		ToLowerCase(matchString);
 
   didFind = FALSE;
   nsresult	rv = NS_OK;
@@ -140,7 +140,7 @@ CFindComponent::Find(const nsString& searchString,
               return rv;
   
           if (!caseSensitive)
-              str.ToLowerCase();
+              ToLowerCase(str);
           
           PRInt32 foundOffset = FindInString(str, matchString, selOffset, searchBackwards, wordBreaker);
           selOffset = -1;			// reset for next block

@@ -57,6 +57,7 @@
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIAtom.h"
 #include "nsVoidArray.h"

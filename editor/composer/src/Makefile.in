@@ -56,6 +56,7 @@ REQUIRES        = xpcom \
                   mimetype \
                   imglib2 \
                   gfx2 \
+                  unicharutil \
                   $(NULL)
 
 CPPSRCS  = \

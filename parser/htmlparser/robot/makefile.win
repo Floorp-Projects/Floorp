@@ -33,11 +33,13 @@ REQUIRES	= xpcom \
 		  necko \
 		  docshell \
 		  uriloader \
+		  unicharutil \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
 
 LLIBS=				\
+ $(DIST)\lib\unicharutil_s.lib	\
  $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)			\
 !ifndef NECKO

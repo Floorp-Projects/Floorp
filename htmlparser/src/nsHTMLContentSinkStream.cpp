@@ -442,9 +442,9 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode)
         continue;
 
       if (mLowerCaseTags == PR_TRUE)
-        key.ToLowerCase();
+        ToLowerCase(key);
       else
-        key.ToUpperCase();
+        ToUpperCase(key);
 
       EnsureBufferSize(key.Length() + 1);
       key.ToCString(mBuffer,mBufferSize);
@@ -661,9 +661,9 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   }
 
   if (mLowerCaseTags == PR_TRUE)
-    tagName.ToLowerCase();
+    ToLowerCase(tagName);
   else
-    tagName.ToUpperCase();
+    ToUpperCase(tagName);
 
 #ifdef DEBUG_prettyprint
   if (isDirty)
@@ -777,9 +777,9 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
     tagName.AssignWithConversion(nsHTMLTags::GetStringValue(tag));
   }
   if (mLowerCaseTags == PR_TRUE)
-    tagName.ToLowerCase();
+    ToLowerCase(tagName);
 //  else
-//    tagName.ToUpperCase();
+//    ToUpperCase(tagName);
 
   if (IndentChildren(tag))
     mIndent--;

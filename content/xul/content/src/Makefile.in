@@ -43,7 +43,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  locale \
 		  lwbrk \
-		  pref \
 		  xuldoc \
 		  xultmpl \
 		  webshell \

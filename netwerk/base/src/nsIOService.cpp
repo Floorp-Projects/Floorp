@@ -415,7 +415,7 @@ nsIOService::GetProtocolHandler(const char* scheme, nsIProtocolHandler* *result)
 
     nsCAutoString contractID(NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX);
     contractID += scheme;
-    contractID.ToLowerCase();
+    ToLowerCase(contractID);
 
     rv = CallGetService(contractID.get(), result);
     if (NS_FAILED(rv)) 

@@ -42,6 +42,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  layout_xul \
 		  necko \
+		  unicharutil \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

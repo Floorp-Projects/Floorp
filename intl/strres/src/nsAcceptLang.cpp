@@ -45,6 +45,7 @@
 #include "nsID.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsIStringBundle.h"
 #include "nsAcceptLang.h"
 
@@ -102,7 +103,7 @@ nsAcceptLang::GetAcceptLangFromLocale(const PRUnichar *aLocale, PRUnichar **_ret
   NS_NAMED_LITERAL_STRING(sAccept, ".accept");
   NS_NAMED_LITERAL_STRING(sTrue, "true");
 
-  lc_tmp.ToLowerCase();
+  ToLowerCase(lc_tmp);
   lc_tmp.Append(sAccept);
   if (NS_OK == (res = bundle->GetStringFromName(lc_tmp.get(), &ptrv))) {
     if (sTrue.Equals(ptrv)) {

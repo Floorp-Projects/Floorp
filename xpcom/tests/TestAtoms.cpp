@@ -37,6 +37,7 @@
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "prprf.h"
 #include "prtime.h"
 #include <stdio.h>
@@ -66,7 +67,7 @@ int main(int argc, char** argv)
     nsAutoString sb;
     sb.AssignWithConversion(buf);
     strings[count++] = ToNewUnicode(sb);
-    sb.ToUpperCase();
+    ToUpperCase(sb);
     strings[count++] = ToNewUnicode(sb);
   }
   PRTime end0 = PR_Now();

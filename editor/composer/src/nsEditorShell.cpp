@@ -67,6 +67,7 @@
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #include "nsIDocumentViewer.h"
 #include "nsIPresShell.h"
@@ -857,7 +858,7 @@ nsEditorShell::SetEditorType(const PRUnichar *editorType)
     return NS_ERROR_ALREADY_INITIALIZED;
     
   nsAutoString  theType(editorType);
-  theType.ToLowerCase();
+  ToLowerCase(theType);
 
   PRBool textMail = theType.Equals(NS_LITERAL_STRING("textmail"));
   mMailCompose = textMail || theType.Equals(NS_LITERAL_STRING("htmlmail"));
@@ -1179,7 +1180,7 @@ nsEditorShell::RemoveTextProperty(const PRUnichar *prop, const PRUnichar *attr)
   nsAutoString  allStr(prop);
   nsAutoString  aAttr(attr);
   
-  allStr.ToLowerCase();
+  ToLowerCase(allStr);
   PRBool    doingAll = (allStr.Equals(NS_LITERAL_STRING("all")));
   nsresult  err = NS_OK;
 
@@ -4907,7 +4908,7 @@ nsEditorShell::HandleMouseClickOnElement(nsIDOMElement *aElement, PRInt32 aClick
 #if DEBUG_cmanske
   nsAutoString TagName;
   aElement->GetTagName(TagName);
-  TagName.ToLowerCase();
+  ToLowerCase(TagName);
   printf("***** Element clicked on: %s, x=%d, y=%d\n",
          NS_LossyConvertUCS2toASCII(TagName).get(), x, y);
 #endif

@@ -1125,7 +1125,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 
   nsCAutoString name;
   name.AssignWithConversion(aFamily.get());
-  name.ToLowerCase();
+  ToLowerCase(name);
   nsFontMetricsGTK* metrics = (nsFontMetricsGTK*) aData;
   metrics->mFonts.AppendCString(name);
   metrics->mFontIsGeneric.AppendElement((void*) aGeneric);
@@ -3747,7 +3747,7 @@ nsFontMetricsGTK::FamilyExists(const nsString& aName)
 
   nsCAutoString name;
   name.AssignWithConversion(aName.get());
-  name.ToLowerCase();
+  ToLowerCase(name);
   nsFontFamily* family = FindFamily(&name);
   if (family && family->mNodes.Count()) {
     return NS_OK;

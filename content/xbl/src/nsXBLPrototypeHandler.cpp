@@ -1031,9 +1031,9 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
   if (!(*aCharCode).IsEmpty()) {
     nsAutoString charCode(*aCharCode);
     if ((mKeyMask & cShift) != 0)
-      charCode.ToUpperCase();
+      ToUpperCase(charCode);
     else
-      charCode.ToLowerCase();
+      ToLowerCase(charCode);
 
     // We have a charcode.
     mMisc = 1;

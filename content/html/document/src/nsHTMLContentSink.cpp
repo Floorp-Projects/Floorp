@@ -38,6 +38,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
+#include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsXPIDLString.h"
 #include "nsIHTMLContentSink.h"
 #include "nsIInterfaceRequestor.h"
@@ -757,7 +759,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
     // Get upper-cased key
     const nsAReadableString& key = aNode.GetKeyAt(i);
     k.Assign(key);
-    k.ToLowerCase();
+    ToLowerCase(k);
 
     nsCOMPtr<nsIAtom>  keyAtom(dont_AddRef(NS_NewAtom(k)));
     nsHTMLValue value;
@@ -824,7 +826,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   if (aNodeType == eHTMLTag_userdefined) {
     nsAutoString tmp;
     tmp.Append(aNode.GetText());
-    tmp.ToLowerCase();
+    ToLowerCase(tmp);
 
     rv = mNodeInfoManager->GetNodeInfo(tmp, nsnull, kNameSpaceID_None,
                                        *getter_AddRefs(nodeInfo));
@@ -4347,7 +4349,7 @@ HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& 
           else if (attr.EqualsIgnoreCase("media")) {
             if (0 == media.Length()) {
               media = value;
-              media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
+              ToLowerCase(media); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
             }
           }
         }
@@ -4615,7 +4617,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
             nsAutoString result;
             it->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::content, result);
             if (result.Length() > 0) {
-              header.ToLowerCase();
+              ToLowerCase(header);
               nsCOMPtr<nsIAtom> fieldAtom(dont_AddRef(NS_NewAtom(header)));
               rv=ProcessHeaderData(fieldAtom,result,it); 
             }//if (result.Length() > 0) 
@@ -5196,7 +5198,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
       element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
       element->GetAttr(kNameSpaceID_HTML, nsHTMLAtoms::media, media);
-      media.ToLowerCase(); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
+      ToLowerCase(media); // HTML4.0 spec is inconsistent, make it case INSENSITIVE
 
       nsAutoString mimeType;
       nsAutoString params;

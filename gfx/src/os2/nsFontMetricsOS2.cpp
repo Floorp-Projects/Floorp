@@ -918,7 +918,7 @@ nsFontMetricsOS2::FindLocalFont( HPS aPS )
     }
     nsString* name = mFonts.StringAt(mFontsIndex++);
     nsAutoString low(*name);
-    low.ToLowerCase();
+    ToLowerCase(low);
     nsString* winName = (nsString*) PL_HashTableLookup(gFamilyNames, &low);
     if (!winName) {
       winName = name;
@@ -1073,7 +1073,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
   metrics->mFontIsGeneric.AppendElement((void*) aGeneric);
   if (aGeneric) {
     metrics->mGeneric.Assign(aFamily);
-    metrics->mGeneric.ToLowerCase();
+    ToLowerCase(metrics->mGeneric);
     return PR_FALSE; // stop
   }
 

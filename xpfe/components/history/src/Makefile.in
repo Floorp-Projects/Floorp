@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  necko \
 		  intl \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= nsGlobalHistory.cpp  \

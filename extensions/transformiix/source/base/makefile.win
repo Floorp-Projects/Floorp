@@ -22,6 +22,7 @@
 DEPTH=..\..\..\..
 REQUIRES	= string \
 		  xpcom \
+		  unicharutil \
 		  $(NULL)
 
 include <$(DEPTH)/config/config.mak>

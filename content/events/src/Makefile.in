@@ -44,6 +44,7 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  view \
 		  necko \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \

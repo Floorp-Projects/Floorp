@@ -49,6 +49,7 @@
 #include "nsHTMLEntities.h"
 #include "CParserContext.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 /************************************************************************
   And now for the main class -- nsHTMLTokenizer...
@@ -974,7 +975,7 @@ nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,n
   nsresult result=NS_OK;
   nsAutoString theBufCopy;
   aScanner.Peek(theBufCopy, 20);
-  theBufCopy.ToUpperCase();
+  ToUpperCase(theBufCopy);
   PRInt32 theIndex=theBufCopy.Find("DOCTYPE");
   nsTokenAllocator* theAllocator=this->GetTokenAllocator();
   

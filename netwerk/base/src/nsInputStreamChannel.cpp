@@ -99,7 +99,8 @@ nsInputStreamIO::Init(const char* name, nsIInputStream* input,
                            PR_TRUE,
                            semicolon ? (semicolon-constContentType) + 1: PL_strlen(constContentType), // capacity 
                            semicolon ? (semicolon-constContentType) : PL_strlen(constContentType)); 
-        nsCAutoString(cbd).ToLowerCase(); 
+        nsCAutoString str(cbd);
+        ToLowerCase(str);
     } 
     mContentLength = contentLength;
     return NS_OK;

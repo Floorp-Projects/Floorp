@@ -42,6 +42,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsICharsetAlias.h"
 #include "nsIRegistry.h"
 #include "nsIServiceManager.h"
@@ -173,7 +174,7 @@ nsresult nsCharsetConverterManager::GetBundleValue(nsIStringBundle * aBundle,
   res = ((nsIAtom *) aName)->ToString(key);
   if (NS_FAILED(res)) return res;
 
-  key.ToLowerCase(); // we lowercase the main comparison key
+  ToLowerCase(key); // we lowercase the main comparison key
   if (!aProp.IsEmpty()) key.Append(aProp.get()); // yes, this param may be NULL
 
   res = aBundle->GetStringFromName(key.get(), aResult);

@@ -51,6 +51,7 @@
 #include "nsTextFragment.h"
 #include "nsString.h"
 #include "prprf.h"
+#include "nsUnicharUtils.h"
 
 typedef struct {
   nsString mPrefix;
@@ -420,7 +421,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   PRInt32 namespaceID, elementNamespaceID;
   content->GetNameSpaceID(elementNamespaceID);
   if (elementNamespaceID == kNameSpaceID_HTML)
-    tagLocalName.ToLowerCase(); // XXX We shouldn't need this hack
+    ToLowerCase(tagLocalName); // XXX We shouldn't need this hack
     
   PRInt32 index, count;
   nsAutoString nameStr, prefixStr, uriStr, valueStr;
@@ -558,7 +559,7 @@ nsXMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   PRInt32 namespaceID;
   content->GetNameSpaceID(namespaceID);
   if (namespaceID == kNameSpaceID_HTML)
-    tagLocalName.ToLowerCase(); // XXX We shouldn't need this hack
+    ToLowerCase(tagLocalName); // XXX We shouldn't need this hack
 
   ConfirmPrefix(tagPrefix, tagNamespaceURI);
 

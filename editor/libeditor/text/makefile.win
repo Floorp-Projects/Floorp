@@ -37,6 +37,7 @@ REQUIRES        = xpcom \
                   lwbrk \
                   gfx \
                   widget \
+                  unicharutil \
                   $(NULL)
 
 CPP_OBJS =                                         \
