@@ -84,6 +84,12 @@ LDFLAGS += /HEAP:0x40000
 
 include $(topsrcdir)/config/config.mk
 
+# Force applications to be built non-statically
+# when building the mozcomps meta component
+ifneq (,$(filter mozcomps,$(MOZ_META_COMPONENTS)))
+BUILD_STATIC_LIBS=
+BUILD_SHARED_LIBS=1
+endif
 
 ifdef BUILD_STATIC_LIBS
 

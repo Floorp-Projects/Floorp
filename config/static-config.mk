@@ -59,15 +59,7 @@ STATIC_EXTRA_LIBS	+= \
 		$(MNG_LIBS) \
 		$(JPEG_LIBS) \
 		$(ZLIB_LIBS) \
-		$(MOZ_GDK_PIXBUF_LIBS) \
-		$(MOZ_XPRINT_LDFLAGS) \
 		$(NULL)
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),xlib)
-STATIC_EXTRA_LIBS	+= \
-		$(MOZ_XIE_LIBS) \
-		$(NULL)
-endif
 
 ifdef MOZ_PSM
 STATIC_EXTRA_LIBS	+= \
@@ -85,16 +77,26 @@ ifdef MOZ_SVG
 STATIC_EXTRA_LIBS	+= $(MOZ_LIBART_LIBS)
 endif
 
-ifneq  (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2)$(MOZ_ENABLE_XLIB))
-STATIC_EXTRA_LIBS	+= $(XLDFLAGS) $(XT_LIBS)
-endif
-
 ifdef MOZ_ENABLE_XINERAMA
 STATIC_EXTRA_LIBS	+= $(MOZ_XINERAMA_LIBS)
 endif
 
 ifdef MOZ_CALENDAR
 STATIC_EXTRA_LIBS	+= $(call EXPAND_MOZLIBNAME,mozicalss mozical)
+endif
+
+ifneq  (,$(MOZ_ENABLE_GTK)$(MOZ_ENABLE_GTK2)$(MOZ_ENABLE_XLIB))
+STATIC_EXTRA_LIBS	+= $(XLDFLAGS) $(XT_LIBS)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),xlib)
+STATIC_EXTRA_LIBS	+= \
+		$(MOZ_XIE_LIBS) \
+		$(NULL)
+endif
+
+ifdef MOZ_ENABLE_XPRINT
+STATIC_EXTRA_LIBS	+= $(MOZ_XPRINT_LDFLAGS)
 endif
 
 # Component Makefile always brings in this.

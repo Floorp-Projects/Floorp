@@ -31,6 +31,7 @@ MODULE		= staticmod
 LIBRARY_NAME	= staticmod
 SHORT_LIBNAME	= statcmod
 endif
+
 IS_COMPONENT	= 1
 
 include $(topsrcdir)/config/config.mk
@@ -44,11 +45,27 @@ endif
 
 LOCAL_INCLUDES	= -I$(srcdir)
 
+#
+# _COMPONENT_BASE is the base name of the meta component library
+# that we are building in the current pass of this makefile
+#
+# mozcomps is a special name used to specify that we want to link all
+# of the non-meta components into this special meta component
+#
 ifdef _COMPONENT_BASE
+ifeq ($(_COMPONENT_BASE),mozcomps)
+_FINAL_COMPONENT_NAMES := $(shell cat $(FINAL_LINK_COMP_NAMES))
+_FINAL_COMPONENT_LIBS := $(shell cat $(FINAL_LINK_COMPS))
+_FINAL_LINK_LIBS := $(shell cat $(FINAL_LINK_LIBS))
+_META_COMPONENT_NAMES := _FINAL_COMPONENT_NAMES
+_META_COMPONENT_LIBS := _FINAL_COMPONENT_LIBS
+_META_DEP_LIBS := _FINAL_LINK_LIBS
+else
 _META_COMPONENT_NAMES := MOZ_META_COMPONENTS_$(_COMPONENT_BASE)
 _META_COMPONENT_LIBS := MOZ_META_COMPONENTS_$(_COMPONENT_BASE)_comps
 _META_DEP_LIBS := MOZ_META_COMPONENTS_$(_COMPONENT_BASE)_libs
-endif
+endif # mozcomps
+endif # _COMPONENT_BASE
 
 ifdef MOZ_STATIC_COMPONENTS
 SHARED_LIBRARY_LIBS = \
@@ -56,10 +73,16 @@ SHARED_LIBRARY_LIBS = \
 endif
 
 ifdef _COMPONENT_BASE
+ifneq ($(_COMPONENT_BASE),mozcomps)
 SHARED_LIBRARY_LIBS = $(foreach m,$($(_META_COMPONENT_LIBS)), $(DIST)/lib/components/$(LIB_PREFIX)$(m).$(LIB_SUFFIX))
-SHARED_LIBRARY_LIBS += $(foreach m,$($(_META_DEP_LIBS)), $(DIST)/lib/$(LIB_PREFIX)$(m).$(LIB_SUFFIX))
+EXTRA_DSO_LDOPTS += $(foreach m,$($(_META_DEP_LIBS)), $(DIST)/lib/$(LIB_PREFIX)$(m).$(LIB_SUFFIX))
+endif
 endif
 
+#
+# Create each meta component by calling this makefile recursively
+# and forcing it to built a shared library meta component library
+#
 ifndef NO_RECURSE
 libs clean distclean clobber realclean clobber_all::
 	set -e; \
@@ -68,8 +91,16 @@ libs clean distclean clobber realclean clobber_all::
 	done
 endif
 
+ifeq ($(LIBRARY_NAME),meta_mozcomps)
+include $(topsrcdir)/config/static-config.mk
+EXTRA_DSO_LIBS	= $(STATIC_EXTRA_DSO_LIBS)
+endif
 
 include $(topsrcdir)/config/rules.mk
+
+ifeq ($(LIBRARY_NAME),meta_mozcomps)
+include $(topsrcdir)/config/static-rules.mk
+endif
 
 ifdef MOZ_STATIC_COMPONENTS
 EXTRA_DSO_LDOPTS += \
@@ -85,23 +116,44 @@ ifdef MOZ_META_COMPONENTS
 # Force XPCOM_TRANSLATE_NSGM_ENTRY_POINT to be defined so the macros
 # in nsIGenericFactory.h will come out in the wash.
 DEFINES += -DMETA_MODULE=\"$(LIBRARY_NAME)\" -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT
+
 ifeq ($(LIBRARY_NAME),meta_mail)
 EXTRA_DSO_LDOPTS += \
-	$(DIST)/lib/$(LIB_PREFIX)gkgfx.$(LIB_SUFFIX) \
-	$(DIST)/lib/$(LIB_PREFIX)rdfutil_s.$(LIB_SUFFIX) \
+	$(LIBS_DIR) \
+	$(call EXPAND_MOZLIBNAME,xpcom_compat gkgfx rdfutil_s) \
+	$(MOZ_UNICHARUTIL_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
-endif
+endif # meta_mail
+
 ifeq ($(LIBRARY_NAME),meta_crypto)
 EXTRA_DSO_LDOPTS += \
 	$(MOZ_JS_LIBS) \
 	$(NSS_LIBS) \
-	$(NULL)
-endif
-EXTRA_DSO_LDOPTS += \
 	$(MOZ_UNICHARUTIL_LIBS) \
 	$(MOZ_COMPONENT_LIBS) \
 	$(NULL)
+endif # meta_crypto
+
+ifeq ($(LIBRARY_NAME),meta_mozcomps)
+
+# We don't want to link mozcomps against NSS if not necessary
+ifneq (,$(findstring crypto,$(MOZ_META_COMPONENTS)))
+STATIC_EXTRA_LIBS := $(filter-out $(NSS_LIBS),$(STATIC_EXTRA_LIBS))
 endif
+
+EXTRA_DSO_LDOPTS += \
+	$(LIBS_DIR) \
+	$(STATIC_EXTRA_DSO_LIBS) \
+	$(STATIC_EXTRA_LIBS) \
+	$(MOZ_JS_LIBS) \
+	$(MOZ_UNICHARUTIL_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(TK_LIBS) \
+	$(NULL)
+endif # meta_mozcomps
+
+endif # MOZ_META_COMPONENTS
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS	+= ole32.lib shell32.lib
