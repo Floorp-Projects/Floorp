@@ -364,7 +364,9 @@ nsPopupSetFrame::ShowPopup(nsIContent* aElementContent, nsIContent* aPopupConten
 
   // determine if this menu is a context menu and flag it
   nsIFrame* activeChild = entry->mPopupFrame;
-  nsCOMPtr<nsIMenuParent> childPopup ( do_QueryInterface(activeChild) );
+  nsIMenuParent* childPopup = nsnull;
+  if (activeChild)
+    CallQueryInterface(activeChild, &childPopup);
   if ( childPopup && aPopupType == NS_LITERAL_STRING("context") )
     childPopup->SetIsContextMenu(PR_TRUE);
 
@@ -438,7 +440,9 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
 
     // register the rollup listeners, etc, but not if we're a tooltip
     nsIFrame* activeChild = aEntry->mPopupFrame;
-    nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(activeChild);
+    nsIMenuParent* childPopup = nsnull;
+    if (activeChild)
+      CallQueryInterface(activeChild, &childPopup);
     if (aEntry->mPopupType != NS_LITERAL_STRING("tooltip"))
       UpdateDismissalListener(childPopup);
     
@@ -462,7 +466,9 @@ nsPopupSetFrame::OpenPopup(nsPopupFrameList* aEntry, PRBool aActivateFlag)
     }
     
     // Remove any keyboard navigators
-    nsCOMPtr<nsIMenuParent> childPopup = do_QueryInterface(aEntry->mPopupFrame);
+    nsIMenuParent* childPopup = nsnull;
+    if (aEntry->mPopupFrame)
+      CallQueryInterface(aEntry->mPopupFrame, &childPopup);
     if (childPopup)
       childPopup->RemoveKeyboardNavigator();
 

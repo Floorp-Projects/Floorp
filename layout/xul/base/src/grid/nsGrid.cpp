@@ -292,8 +292,8 @@ nsGrid::FindRowsAndColumns(nsIBox** aRows, nsIBox** aColumns)
        nsIFrame* scrolledFrame = nsnull;
        scrollFrame->GetScrolledFrame(nsnull, scrolledFrame);
        NS_ASSERTION(scrolledFrame,"Error no scroll frame!!");
-       nsCOMPtr<nsIBox> b = do_QueryInterface(scrolledFrame);
-       child = b;
+       if (NS_FAILED(CallQueryInterface(scrolledFrame, &child)))
+         child = nsnull;
     }
 
     nsCOMPtr<nsIBoxLayout> layout;
@@ -1463,7 +1463,8 @@ nsGrid::GetScrolledBox(nsIBox* aChild)
          nsIFrame* scrolledFrame = nsnull;
          scrollFrame->GetScrolledFrame(nsnull, scrolledFrame);
          NS_ASSERTION(scrolledFrame,"Error no scroll frame!!");
-         nsCOMPtr<nsIBox> box = do_QueryInterface(scrolledFrame);
+         nsIBox *box = nsnull;
+         CallQueryInterface(scrolledFrame, &box);
          return box;
       }
 

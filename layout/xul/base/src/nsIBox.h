@@ -42,6 +42,9 @@
   nsBoxFrame is a frame that can lay its children out either vertically or horizontally.
   It lays them out according to a min max or preferred size.
  
+  nsIBox is implemented on frames and thus should not be refcounted.
+  Eventually it should not inherit from nsISupports.
+
 **/
 
 #ifndef nsIBox_h___

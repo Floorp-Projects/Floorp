@@ -170,8 +170,7 @@ nsMenuFrame::SetParent(const nsIFrame* aParent)
   nsIFrame* currFrame = (nsIFrame*)aParent;
   while (!mMenuParent && currFrame) {
     // Set our menu parent.
-    nsCOMPtr<nsIMenuParent> menuparent(do_QueryInterface(currFrame));
-    mMenuParent = menuparent.get();
+    CallQueryInterface(currFrame, &mMenuParent);
 
     currFrame->GetParent(&currFrame);
   }
@@ -193,8 +192,7 @@ nsMenuFrame::Init(nsIPresContext*  aPresContext,
   nsIFrame* currFrame = aParent;
   while (!mMenuParent && currFrame) {
     // Set our menu parent.
-    nsCOMPtr<nsIMenuParent> menuparent(do_QueryInterface(currFrame));
-    mMenuParent = menuparent.get();
+    CallQueryInterface(currFrame, &mMenuParent);
 
     currFrame->GetParent(&currFrame);
   }
@@ -289,7 +287,8 @@ nsMenuFrame::SetInitialChildList(nsIPresContext* aPresContext,
     // the popup frame list.
     nsIFrame* frame = frames.FirstChild();
     while (frame) {
-      nsCOMPtr<nsIMenuParent> menuPar(do_QueryInterface(frame));
+      nsIMenuParent *menuPar;
+      CallQueryInterface(frame, &menuPar);
       if (menuPar) {
         // Remove this frame from the list and place it in the other list.
         frames.RemoveFrame(frame);
@@ -849,7 +848,8 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
 
       ActivateMenu(PR_TRUE);
 
-      nsCOMPtr<nsIMenuParent> childPopup(do_QueryInterface(frame));
+      nsIMenuParent *childPopup = nsnull;
+      CallQueryInterface(frame, &childPopup);
       UpdateDismissalListener(childPopup);
 
       OnCreated();
@@ -1931,9 +1931,10 @@ nsMenuFrame::InsertFrames(nsIPresContext* aPresContext,
   nsCOMPtr<nsIAtom> tag;
   nsresult          rv;
 
-  nsCOMPtr<nsIMenuParent> menuPar(do_QueryInterface(aFrameList));
-  if (menuPar) {
-    nsCOMPtr<nsIBox> menupopup(do_QueryInterface(aFrameList));
+  nsIMenuParent *menuPar;
+  if (aFrameList && NS_SUCCEEDED(CallQueryInterface(aFrameList, &menuPar))) {
+    nsIBox *menupopup;
+    CallQueryInterface(aFrameList, &menupopup);
     NS_ASSERTION(menupopup,"Popup is not a box!!!");
     menupopup->SetParentBox(this);
     mPopupFrames.InsertFrames(nsnull, nsnull, aFrameList);
@@ -1960,9 +1961,10 @@ nsMenuFrame::AppendFrames(nsIPresContext* aPresContext,
   nsCOMPtr<nsIAtom> tag;
   nsresult          rv;
 
-  nsCOMPtr<nsIMenuParent> menuPar(do_QueryInterface(aFrameList));
-  if (menuPar) {
-    nsCOMPtr<nsIBox> menupopup(do_QueryInterface(aFrameList));
+  nsIMenuParent *menuPar;
+  if (aFrameList && NS_SUCCEEDED(CallQueryInterface(aFrameList, &menuPar))) {
+    nsIBox *menupopup;
+    CallQueryInterface(aFrameList, &menupopup);
     NS_ASSERTION(menupopup,"Popup is not a box!!!");
     menupopup->SetParentBox(this);
 
@@ -2137,7 +2139,8 @@ nsMenuFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& a
         frame = mPopupFrames.FirstChild();
       }
       
-      nsCOMPtr<nsIBox> box(do_QueryInterface(frame));
+      nsIBox *box;
+      CallQueryInterface(frame, &box);
       nsCalculatedBoxInfo childInfo(frame);
       box->GetBoxInfo(aPresContext, aReflowState, childInfo);
       GetRedefinedMinPrefMax(aPresContext, this, childInfo);

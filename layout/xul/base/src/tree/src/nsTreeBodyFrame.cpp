@@ -3376,7 +3376,8 @@ nsTreeBodyFrame::EnsureColumns()
     if (!colsFrame)
       return;
 
-    nsCOMPtr<nsIBox> colsBox(do_QueryInterface(colsFrame));
+    nsIBox* colsBox;
+    CallQueryInterface(colsFrame, &colsBox);
     nsIBox* colBox = nsnull;
     colsBox->GetChildBox(&colBox);
     nsTreeColumn* currCol = nsnull;
