@@ -60,12 +60,12 @@
 #else
 #  include <stdio.h>
 #  include <stdlib.h>
-#endif
+#endif /* HAVE_CONFIG_H */
 
 #define ENABLE_GRAYSCALE
 
 #define G_LITTLE_ENDIAN 1
-#define G_BIG_ENDIAN 2
+#define G_BIG_ENDIAN    2
 
 /* include this before so that we can get endian definitions if
    they are there... */
@@ -109,14 +109,18 @@ typedef enum {
 } ByteOrder;
 
 
-typedef struct _XlibRgbInfo   XlibRgbInfo;
+typedef void (*XlibRgbConvFunc) (XlibRgbHandle *handle,
+                                 XImage *image,
+                                 int ax, int ay,
+                                 int width, int height,
+                                 unsigned char *buf, int rowstride,
+                                 int x_align, int y_align,
+                                 XlibRgbCmap *cmap);
 
-typedef void (*XlibRgbConvFunc) (XImage *image,
-				 int ax, int ay,
-				 int width, int height,
-				 unsigned char *buf, int rowstride,
-				 int x_align, int y_align,
-				 XlibRgbCmap *cmap);
+#define IMAGE_WIDTH 256
+#define STAGE_ROWSTRIDE (IMAGE_WIDTH * 3)
+#define IMAGE_HEIGHT 64
+#define N_IMAGES 6
 
 /* Some of these fields should go, as they're not being used at all.
    Globals should generally migrate into here - it's very likely that
@@ -124,7 +128,7 @@ typedef void (*XlibRgbConvFunc) (XImage *image,
    (i.e. some but not all windows have privately installed
    colormaps). */
 
-struct _XlibRgbInfo
+typedef struct _XlibRgbHandle
 {
   Display          *display;
   Screen           *screen;
@@ -178,26 +182,40 @@ struct _XlibRgbInfo
 
   XlibRgbConvFunc conv_indexed;
   XlibRgbConvFunc conv_indexed_d;
+
+  /* misc */
+  Bool            xlib_rgb_install_cmap; /* default: FALSE */
+  Bool            xlib_rgb_verbose;      /* default: FALSE */
+  XImage         *static_image[N_IMAGES];
+  int             static_image_idx;
+
+  uint32         *DM_565;
+
+  unsigned char  *colorcube;
+  unsigned char  *colorcube_d;
+ 
+  int             xlib_rgb_min_colors;
+
+  /* image tiling code... */
+  Bool            disallow_image_tiling; /* default: FALSE */
+
+  int             horiz_idx;
+  int             horiz_y;
+  int             vert_idx;
+  int             vert_x;
+  int             tile_idx;
+  int             tile_x;
+  int             tile_y1;
+  int             tile_y2;
+
+#ifdef VERBOSE
+  int            sincelast;
+#endif /* VERBOSE */
 };
 
-static Bool xlib_rgb_install_cmap = FALSE;
-static int xlib_rgb_min_colors = 5 * 5 * 5;
-static Bool xlib_rgb_verbose = FALSE;
-
-#define IMAGE_WIDTH 256
-#define STAGE_ROWSTRIDE (IMAGE_WIDTH * 3)
-#define IMAGE_HEIGHT 64
-#define N_IMAGES 6
-
-static XlibRgbInfo *image_info = NULL;
-static XImage *static_image[N_IMAGES];
-static int static_image_idx;
-
-static unsigned char *colorcube;
-static unsigned char *colorcube_d;
 
 unsigned long
-xlib_get_prec_from_mask(unsigned long val)
+xxlib_get_prec_from_mask(XlibRgbHandle *handle, unsigned long val)
 {
   unsigned long retval = 0;
   unsigned int cur_bit = 0;
@@ -213,7 +231,7 @@ xlib_get_prec_from_mask(unsigned long val)
 }
 
 unsigned long
-xlib_get_shift_from_mask(unsigned long val)
+xxlib_get_shift_from_mask(XlibRgbHandle *handle, unsigned long val)
 {
   unsigned long cur_bit = 0;
   /* walk through the number, looking for the first 1 */
@@ -228,7 +246,7 @@ xlib_get_shift_from_mask(unsigned long val)
 
 
 static int
-xlib_rgb_cmap_fail (const char *msg, Colormap cmap, unsigned long *pixels)
+xxlib_rgb_cmap_fail (XlibRgbHandle *handle, const char *msg, Colormap cmap, unsigned long *pixels)
 {
   unsigned long free_pixels[256];
   int n_free;
@@ -243,60 +261,60 @@ xlib_rgb_cmap_fail (const char *msg, Colormap cmap, unsigned long *pixels)
       free_pixels[n_free++] = pixels[i];
   
   if (n_free)
-    XFreeColors(image_info->display,
-		cmap,
-		free_pixels,
-		n_free,
-		0);
+    XFreeColors(handle->display,
+                cmap,
+                free_pixels,
+                n_free,
+                0);
   return 0;
 }
 
 static void
-xlib_rgb_make_colorcube (unsigned long *pixels, int nr, int ng, int nb)
+xxlib_rgb_make_colorcube (XlibRgbHandle *handle, unsigned long *pixels, int nr, int ng, int nb)
 {
   unsigned char rt[16], gt[16], bt[16];
   int i;
 
-  colorcube = malloc(sizeof(unsigned char) * 4096);
-  memset(colorcube, 0, (sizeof(unsigned char) * 4096));
+  handle->colorcube = malloc(sizeof(unsigned char) * 4096);
+  memset(handle->colorcube, 0, (sizeof(unsigned char) * 4096));
   for (i = 0; i < 16; i++)
-    {
-      rt[i] = ng * nb * ((i * 17 * (nr - 1) + 128) >> 8);
-      gt[i] = nb * ((i * 17 * (ng - 1) + 128) >> 8);
-      bt[i] = ((i * 17 * (nb - 1) + 128) >> 8);
-    }
+  {
+    rt[i] = ng * nb * ((i * 17 * (nr - 1) + 128) >> 8);
+    gt[i] = nb * ((i * 17 * (ng - 1) + 128) >> 8);
+    bt[i] = ((i * 17 * (nb - 1) + 128) >> 8);
+  }
 
   for (i = 0; i < 4096; i++)
-    {
-      colorcube[i] = pixels[rt[i >> 8] + gt[(i >> 4) & 0x0f] + bt[i & 0x0f]];
+  {
+    handle->colorcube[i] = pixels[rt[i >> 8] + gt[(i >> 4) & 0x0f] + bt[i & 0x0f]];
 #ifdef VERBOSE
-      printf ("%03x %02x %x %x %x\n", i, colorcube[i], rt[i >> 8], gt[(i >> 4) & 0x0f], bt[i & 0x0f]);
+    printf ("%03x %02x %x %x %x\n", i, handle->colorcube[i], rt[i >> 8], gt[(i >> 4) & 0x0f], bt[i & 0x0f]);
 #endif
-    }
+  }
 }
 
 /* this is the colorcube suitable for dithering */
 static void
-xlib_rgb_make_colorcube_d (unsigned long *pixels, int nr, int ng, int nb)
+xxlib_rgb_make_colorcube_d (XlibRgbHandle *handle, unsigned long *pixels, int nr, int ng, int nb)
 {
   int r, g, b;
   int i;
 
-  colorcube_d = malloc(sizeof(unsigned char) * 512);
-  memset(colorcube_d, 0, (sizeof(unsigned char) * 512));
+  handle->colorcube_d = malloc(sizeof(unsigned char) * 512);
+  memset(handle->colorcube_d, 0, (sizeof(unsigned char) * 512));
   for (i = 0; i < 512; i++)
-    {
-      r = MIN (nr - 1, i >> 6);
-      g = MIN (ng - 1, (i >> 3) & 7);
-      b = MIN (nb - 1, i & 7);
-      colorcube_d[i] = pixels[(r * ng + g) * nb + b];
-    }
+  {
+    r = MIN (nr - 1, i >> 6);
+    g = MIN (ng - 1, (i >> 3) & 7);
+    b = MIN (nb - 1, i & 7);
+    handle->colorcube_d[i] = pixels[(r * ng + g) * nb + b];
+  }
 }
 
 /* Try installing a color cube of the specified size.
    Make the colorcube and return TRUE on success */
 static int
-xlib_rgb_try_colormap (int nr, int ng, int nb)
+xxlib_rgb_try_colormap (XlibRgbHandle *handle, int nr, int ng, int nb)
 {
   int r, g, b;
   int ri, gi, bi;
@@ -313,124 +331,125 @@ xlib_rgb_try_colormap (int nr, int ng, int nb)
   int idx;
   int best[256];
 
-  if (nr * ng * nb < xlib_rgb_min_colors)
+  if (nr * ng * nb < handle->xlib_rgb_min_colors)
     return FALSE;
 
-  if (image_info->cmap_alloced) {
-    cmap = image_info->cmap;
-    visual = image_info->x_visual_info;
+  if (handle->cmap_alloced) {
+    cmap = handle->cmap;
+    visual = handle->x_visual_info;
   }
   else {
-    cmap = image_info->default_colormap;
-    visual = image_info->x_visual_info;
+    cmap = handle->default_colormap;
+    visual = handle->x_visual_info;
   }
   colors_needed = nr * ng * nb;
   for (i = 0; i < 256; i++)
-    {
-      best[i] = 192;
-      pixels[i] = 256;
-    }
+  {
+    best[i] = 192;
+    pixels[i] = 256;
+  }
 
 #ifndef GAMMA
-  if (!xlib_rgb_install_cmap) {
+  if (!handle->xlib_rgb_install_cmap) {
     /* go out and get the colors for this colormap. */
     colors = malloc(sizeof(XColor) * visual->colormap_size);
     for (i=0; i < visual->colormap_size; i++){
       colors[i].pixel = i;
     }
-    XQueryColors (image_info->display,
-		  cmap,
-		  colors, visual->colormap_size);
+    XQueryColors (handle->display,
+                  cmap,
+                  colors, visual->colormap_size);
     /* find color cube colors that are already present */
     for (i = 0; i < MIN (256, visual->colormap_size); i++)
+    {
+      r = colors[i].red >> 8;
+      g = colors[i].green >> 8;
+      b = colors[i].blue >> 8;
+      ri = (r * (nr - 1) + 128) >> 8;
+      gi = (g * (ng - 1) + 128) >> 8;
+      bi = (b * (nb - 1) + 128) >> 8;
+      r0 = ri * 255 / (nr - 1);
+      g0 = gi * 255 / (ng - 1);
+      b0 = bi * 255 / (nb - 1);
+      idx = ((ri * nr) + gi) * nb + bi;
+      d2 = (r - r0) * (r - r0) + (g - g0) * (g - g0) + (b - b0) * (b - b0);
+      if (d2 < best[idx]) 
       {
-	r = colors[i].red >> 8;
-	g = colors[i].green >> 8;
-	b = colors[i].blue >> 8;
-	ri = (r * (nr - 1) + 128) >> 8;
-	gi = (g * (ng - 1) + 128) >> 8;
-	bi = (b * (nb - 1) + 128) >> 8;
-	r0 = ri * 255 / (nr - 1);
-	g0 = gi * 255 / (ng - 1);
-	b0 = bi * 255 / (nb - 1);
-	idx = ((ri * nr) + gi) * nb + bi;
-	d2 = (r - r0) * (r - r0) + (g - g0) * (g - g0) + (b - b0) * (b - b0);
-	if (d2 < best[idx]) {
-	  if (pixels[idx] < 256)
-	    XFreeColors(image_info->display,
-			cmap,
-			pixels + idx,
-			1, 0);
-	  else
-	    colors_needed--;
-	  color.pixel = colors[i].pixel;
-	  color.red = colors[i].red;
-	  color.green = colors[i].green;
-	  color.blue = colors[i].blue;
-	  color.flags = 0;
-	  if (!XAllocColor(image_info->display, cmap, &color))
-	    return xlib_rgb_cmap_fail ("error allocating system color\n",
-				      cmap, pixels);
-	  pixels[idx] = color.pixel; /* which is almost certainly i */
-	  best[idx] = d2;
-	}
+        if (pixels[idx] < 256)
+        XFreeColors(handle->display,
+                    cmap,
+                    pixels + idx,
+                    1, 0);
+        else
+          colors_needed--;
+        color.pixel = colors[i].pixel;
+        color.red = colors[i].red;
+        color.green = colors[i].green;
+        color.blue = colors[i].blue;
+        color.flags = 0;
+        if (!XAllocColor(handle->display, cmap, &color))
+          return xxlib_rgb_cmap_fail (handle, "error allocating system color\n",
+        cmap, pixels);
+        pixels[idx] = color.pixel; /* which is almost certainly i */
+        best[idx] = d2;
       }
+    }
   }
 
-#endif
+#endif /* !GAMMA */
 
   if (colors_needed)
+  {
+    if (!XAllocColorCells(handle->display, cmap, 0, NULL, 0, junk, colors_needed))
     {
-      if (!XAllocColorCells(image_info->display, cmap, 0, NULL, 0, junk, colors_needed))
-	{
-	  char tmp_str[80];
-	  
-	  sprintf (tmp_str,
-		   "%d %d %d colormap failed (in XAllocColorCells)\n",
-		   nr, ng, nb);
-	  return xlib_rgb_cmap_fail (tmp_str, cmap, pixels);
-	}
-      XFreeColors(image_info->display, cmap, junk, (int)colors_needed, 0);
+      char tmp_str[80];
+      
+      sprintf (tmp_str,
+               "%d %d %d colormap failed (in XAllocColorCells)\n",
+               nr, ng, nb);
+      return xxlib_rgb_cmap_fail (handle, tmp_str, cmap, pixels);
     }
+    XFreeColors(handle->display, cmap, junk, (int)colors_needed, 0);
+  }
 
   for (r = 0, i = 0; r < nr; r++)
     for (g = 0; g < ng; g++)
       for (b = 0; b < nb; b++, i++)
-	{
-	  if (pixels[i] == 256)
-	    {
-	      color.red = r * 65535 / (nr - 1);
-	      color.green = g * 65535 / (ng - 1);
-	      color.blue = b * 65535 / (nb - 1);
+      {
+        if (pixels[i] == 256)
+          {
+            color.red = r * 65535 / (nr - 1);
+            color.green = g * 65535 / (ng - 1);
+            color.blue = b * 65535 / (nb - 1);
 
 #ifdef GAMMA
-	      color.red = 65535 * pow (color.red / 65535.0, 0.5);
-	      color.green = 65535 * pow (color.green / 65535.0, 0.5);
-	      color.blue = 65535 * pow (color.blue / 65535.0, 0.5);
-#endif
+            color.red = 65535 * pow (color.red / 65535.0, 0.5);
+            color.green = 65535 * pow (color.green / 65535.0, 0.5);
+            color.blue = 65535 * pow (color.blue / 65535.0, 0.5);
+#endif /* GAMMA */
 
-	      /* This should be a raw XAllocColor call */
-	      if (!XAllocColor(image_info->display, cmap, &color))
-		{
-		  char tmp_str[80];
+            /* This should be a raw XAllocColor call */
+            if (!XAllocColor(handle->display, cmap, &color))
+            {
+              char tmp_str[80];
 
-		  sprintf (tmp_str, "%d %d %d colormap failed\n",
-			   nr, ng, nb);
-		  return xlib_rgb_cmap_fail (tmp_str,
-					    cmap, pixels);
-		}
-	      pixels[i] = color.pixel;
-	    }
+              sprintf (tmp_str, "%d %d %d colormap failed\n",
+                       nr, ng, nb);
+              return xxlib_rgb_cmap_fail (handle, tmp_str,
+                                          cmap, pixels);
+            }
+            pixels[i] = color.pixel;
+          }
 #ifdef VERBOSE
-	  printf ("%d: %lx\n", i, pixels[i]);
-#endif
-	}
+          printf ("%d: %lx\n", i, pixels[i]);
+#endif /* VERBOSE */
+        }
 
-  image_info->nred_shades = nr;
-  image_info->ngreen_shades = ng;
-  image_info->nblue_shades = nb;
-  xlib_rgb_make_colorcube (pixels, nr, ng, nb);
-  xlib_rgb_make_colorcube_d (pixels, nr, ng, nb);
+  handle->nred_shades = nr;
+  handle->ngreen_shades = ng;
+  handle->nblue_shades = nb;
+  xxlib_rgb_make_colorcube (handle, pixels, nr, ng, nb);
+  xxlib_rgb_make_colorcube_d (handle, pixels, nr, ng, nb);
   if (colors)
     free(colors);
   return TRUE;
@@ -438,9 +457,10 @@ xlib_rgb_try_colormap (int nr, int ng, int nb)
 
 /* Return TRUE on success. */
 static Bool
-xlib_rgb_do_colormaps (void)
+xxlib_rgb_do_colormaps (XlibRgbHandle *handle)
 {
-  static const int sizes[][3] = {
+  static const int sizes[][3] = 
+  {
     /*    { 6, 7, 6 }, */
     { 6, 6, 6 }, 
     { 6, 6, 5 }, 
@@ -456,60 +476,60 @@ xlib_rgb_do_colormaps (void)
   int i;
   
   for (i = 0; i < n_sizes; i++)
-    if (xlib_rgb_try_colormap (sizes[i][0], sizes[i][1], sizes[i][2]))
+    if (xxlib_rgb_try_colormap (handle, sizes[i][0], sizes[i][1], sizes[i][2]))
       return TRUE;
   return FALSE;
 }
 
 /* Make a 2 x 2 x 2 colorcube */
 static void
-xlib_rgb_colorcube_222 (void)
+xxlib_rgb_colorcube_222 (XlibRgbHandle *handle)
 {
   int i;
   XColor color;
   Colormap cmap;
 
-  if (image_info->cmap_alloced)
-    cmap = image_info->cmap;
+  if (handle->cmap_alloced)
+    cmap = handle->cmap;
   else
-    cmap = image_info->default_colormap;
+    cmap = handle->default_colormap;
 
-  colorcube_d = malloc(sizeof(unsigned char) * 512);
+  handle->colorcube_d = malloc(sizeof(unsigned char) * 512);
 
   for (i = 0; i < 8; i++)
-    {
-      color.red = ((i & 4) >> 2) * 65535;
-      color.green = ((i & 2) >> 1) * 65535;
-      color.blue = (i & 1) * 65535;
-      XAllocColor (image_info->display, cmap, &color);
-      colorcube_d[((i & 4) << 4) | ((i & 2) << 2) | (i & 1)] = color.pixel;
-    }
+  {
+    color.red = ((i & 4) >> 2) * 65535;
+    color.green = ((i & 2) >> 1) * 65535;
+    color.blue = (i & 1) * 65535;
+    XAllocColor (handle->display, cmap, &color);
+    handle->colorcube_d[((i & 4) << 4) | ((i & 2) << 2) | (i & 1)] = color.pixel;
+  }
 }
 
 void
-xlib_rgb_set_verbose (Bool verbose)
+xxlib_rgb_set_verbose (XlibRgbHandle *handle, Bool verbose)
 {
-  xlib_rgb_verbose = verbose;
+  handle->xlib_rgb_verbose = verbose;
 }
 
 void
-xlib_rgb_set_install (Bool install)
+xxlib_rgb_set_install (XlibRgbHandle *handle, Bool install)
 {
-  xlib_rgb_install_cmap = install;
+  handle->xlib_rgb_install_cmap = install;
 }
 
 void
-xlib_rgb_set_min_colors (int min_colors)
+xxlib_rgb_set_min_colors (XlibRgbHandle *handle, int min_colors)
 {
-  xlib_rgb_min_colors = min_colors;
+  handle->xlib_rgb_min_colors = min_colors;
 }
 
 /* Return a "score" based on the following criteria (in hex):
 
    x000 is the quality - 1 is 1bpp, 2 is 4bpp,
                          4 is 8bpp,
-			 7 is 15bpp truecolor, 8 is 16bpp truecolor,
-			 9 is 24bpp truecolor.
+                         7 is 15bpp truecolor, 8 is 16bpp truecolor,
+                         9 is 24bpp truecolor.
    0x00 is the speed - 1 is the normal case,
                        2 means faster than normal
    00x0 gets a point for being the system visual
@@ -521,7 +541,7 @@ xlib_rgb_set_min_colors (int min_colors)
 */
 
 static uint32
-xlib_rgb_score_visual (XVisualInfo *visual)
+xxlib_rgb_score_visual (XlibRgbHandle *handle, XVisualInfo *visual)
 {
   uint32 quality, speed, pseudo, sys;
   static const char* visual_names[] =
@@ -534,73 +554,72 @@ xlib_rgb_score_visual (XVisualInfo *visual)
     "direct color",
   };
   
-  
   quality = 0;
   speed = 1;
   sys = 0;
   if (visual->class == TrueColor ||
       visual->class == DirectColor)
+  {
+    if (visual->depth == 24)
     {
-      if (visual->depth == 24)
-	{
-	  quality = 9;
-	  /* Should test for MSB visual here, and set speed if so. */
-	}
-      else if (visual->depth == 16)
-	quality = 8;
-      else if (visual->depth == 15)
-	quality = 7;
-      else if (visual->depth == 8)
-	quality = 4;
+      quality = 9;
+      /* Should test for MSB visual here, and set speed if so. */
     }
-  else if (visual->class == PseudoColor ||
-	   visual->class == StaticColor)
+    else if (visual->depth == 16)
+      quality = 8;
+    else if (visual->depth == 15)
+      quality = 7;
+    else if (visual->depth == 8)
+      quality = 4;
+    }
+    else if (visual->class == PseudoColor ||
+           visual->class == StaticColor)
     {
       if (visual->depth == 8)
-	quality = 4;
+        quality = 4;
       else if (visual->depth == 4)
-	quality = 2;
+        quality = 2;
       else if (visual->depth == 1)
-	quality = 1;
+        quality = 1;
     }
   else if (visual->class == StaticGray
 #ifdef ENABLE_GRAYSCALE
-	   || visual->class == GrayScale
-#endif
-	   )
+           || visual->class == GrayScale
+#endif /* ENABLE_GRAYSCALE */
+           )
     {
       if (visual->depth == 8)
-	quality = 4;
+        quality = 4;
       else if (visual->depth == 4)
-	quality = 2;
+        quality = 2;
       else if (visual->depth == 1)
-	quality = 1;
+        quality = 1;
     }
 
   if (quality == 0)
     return 0;
 
-  sys = (visual->visualid == image_info->default_visualid->visualid);
+  sys = (visual->visualid == handle->default_visualid->visualid);
   
   pseudo = (visual->class == PseudoColor || visual->class == TrueColor);
 
 #ifdef DEBUG
-  if (xlib_rgb_verbose)
+  if (handle->xlib_rgb_verbose)
     printf ("Visual 0x%x, type = %s, depth = %d, %ld:%ld:%ld%s; score=%x\n",
-	    (int)visual->visualid,
-	    visual_names[visual->class],
-	    visual->depth,
-	    visual->red_mask,
-	    visual->green_mask,
-	    visual->blue_mask,
-	    sys ? " (system)" : "",
-	    (quality << 12) | (speed << 8) | (sys << 4) | pseudo);
-#endif
+            (int)visual->visualid,
+            visual_names[visual->class],
+            visual->depth,
+            visual->red_mask,
+            visual->green_mask,
+            visual->blue_mask,
+            sys ? " (system)" : "",
+            (quality << 12) | (speed << 8) | (sys << 4) | pseudo);
+#endif /* DEBUG */
   return (quality << 12) | (speed << 8) | (sys << 4) | pseudo;
 }
 
 static void
-xlib_rgb_choose_visual (void)
+xxlib_rgb_choose_visual (XlibRgbHandle *handle)
 {
   XVisualInfo *visuals;
   XVisualInfo *visual;
@@ -612,44 +631,44 @@ xlib_rgb_choose_visual (void)
   int cur_visual = 1;
   int i;
   
-  template.screen = image_info->screen_num;
-  visuals = XGetVisualInfo(image_info->display, VisualScreenMask,
-			   &template, &num_visuals);
+  template.screen = handle->screen_num;
+  visuals = XGetVisualInfo(handle->display, VisualScreenMask,
+                           &template, &num_visuals);
   
   best_visual = visuals;
-  best_score = xlib_rgb_score_visual (best_visual);
+  best_score = xxlib_rgb_score_visual (handle, best_visual);
 
   for (i = cur_visual; i < num_visuals; i++)
+  {
+    visual = &visuals[i];
+    score = xxlib_rgb_score_visual (handle, visual);
+    if (score > best_score)
     {
-      visual = &visuals[i];
-      score = xlib_rgb_score_visual  (visual);
-      if (score > best_score)
-	{
-	  best_score = score;
-	  best_visual = visual;
-	}
+      best_score = score;
+      best_visual = visual;
     }
+  }
   /* make a copy of the visual so that we can free
-     the allocated visual list above. */
+   * the allocated visual list above. */
   final_visual = malloc(sizeof(XVisualInfo));
   memcpy(final_visual, best_visual, sizeof(XVisualInfo));
-  image_info->x_visual_info = final_visual;
+  handle->x_visual_info = final_visual;
   XFree(visuals);
   /* set up the shift and the precision for the red, green and blue.
      this only applies to cool visuals like true color and direct color. */
-  if (image_info->x_visual_info->class == TrueColor ||
-      image_info->x_visual_info->class == DirectColor) {
-    image_info->red_shift = xlib_get_shift_from_mask(image_info->x_visual_info->red_mask);
-    image_info->red_prec = xlib_get_prec_from_mask(image_info->x_visual_info->red_mask);
-    image_info->green_shift = xlib_get_shift_from_mask(image_info->x_visual_info->green_mask);
-    image_info->green_prec = xlib_get_prec_from_mask(image_info->x_visual_info->green_mask);
-    image_info->blue_shift = xlib_get_shift_from_mask(image_info->x_visual_info->blue_mask);
-    image_info->blue_prec = xlib_get_prec_from_mask(image_info->x_visual_info->blue_mask);
+  if (handle->x_visual_info->class == TrueColor ||
+      handle->x_visual_info->class == DirectColor) {
+    handle->red_shift   = xxlib_get_shift_from_mask(handle, handle->x_visual_info->red_mask);
+    handle->red_prec    = xxlib_get_prec_from_mask(handle, handle->x_visual_info->red_mask);
+    handle->green_shift = xxlib_get_shift_from_mask(handle, handle->x_visual_info->green_mask);
+    handle->green_prec  = xxlib_get_prec_from_mask(handle, handle->x_visual_info->green_mask);
+    handle->blue_shift  = xxlib_get_shift_from_mask(handle, handle->x_visual_info->blue_mask);
+    handle->blue_prec   = xxlib_get_prec_from_mask(handle, handle->x_visual_info->blue_mask);
   }
 }
 
 static void
-xlib_rgb_choose_visual_for_xprint (int aDepth)
+xxlib_rgb_choose_visual_for_xprint (XlibRgbHandle *handle, int aDepth)
 {
   XVisualInfo *visuals;
   XVisualInfo *visual;
@@ -665,20 +684,20 @@ xlib_rgb_choose_visual_for_xprint (int aDepth)
   Status ret_stat;
   Visual      *root_visual;
 
-  ret_stat = XGetWindowAttributes(image_info->display, 
-			XRootWindow(image_info->display, image_info->screen_num),
-			&win_att);
+  ret_stat = XGetWindowAttributes(handle->display, 
+                                  XRootWindow(handle->display, handle->screen_num),
+                                  &win_att);
   root_visual = win_att.visual;
-  template.screen = image_info->screen_num;
+  template.screen = handle->screen_num;
   template.depth  = aDepth;
-  visuals = XGetVisualInfo(image_info->display, 
+  visuals = XGetVisualInfo(handle->display, 
                            VisualScreenMask | ((aDepth!=-1)?(VisualDepthMask):(0)),
-			   &template, &num_visuals);
+                           &template, &num_visuals);
  
   /* depth not found ? try again - without it... */
   if (!visuals && aDepth!=-1)
   {
-    xlib_rgb_choose_visual_for_xprint(-1);
+    xxlib_rgb_choose_visual_for_xprint(handle, -1);
     return;
   }
   
@@ -696,25 +715,25 @@ xlib_rgb_choose_visual_for_xprint (int aDepth)
      the allocated visual list above. */
   final_visual = malloc(sizeof(XVisualInfo));
   memcpy(final_visual, best_visual, sizeof(XVisualInfo));
-  image_info->x_visual_info = final_visual;
+  handle->x_visual_info = final_visual;
   XFree(visuals);
   /* set up the shift and the precision for the red, green and blue.
      this only applies to cool visuals like true color and direct color. */
-  if (image_info->x_visual_info->class == TrueColor ||
-      image_info->x_visual_info->class == DirectColor) {
-    image_info->red_shift = xlib_get_shift_from_mask(image_info->x_visual_info->red_mask);
-    image_info->red_prec = xlib_get_prec_from_mask(image_info->x_visual_info->red_mask);
-    image_info->green_shift = xlib_get_shift_from_mask(image_info->x_visual_info->green_mask);
-    image_info->green_prec = xlib_get_prec_from_mask(image_info->x_visual_info->green_mask);
-    image_info->blue_shift = xlib_get_shift_from_mask(image_info->x_visual_info->blue_mask);
-    image_info->blue_prec = xlib_get_prec_from_mask(image_info->x_visual_info->blue_mask);
+  if (handle->x_visual_info->class == TrueColor ||
+      handle->x_visual_info->class == DirectColor) {
+    handle->red_shift   = xxlib_get_shift_from_mask(handle, handle->x_visual_info->red_mask);
+    handle->red_prec    = xxlib_get_prec_from_mask(handle, handle->x_visual_info->red_mask);
+    handle->green_shift = xxlib_get_shift_from_mask(handle, handle->x_visual_info->green_mask);
+    handle->green_prec  = xxlib_get_prec_from_mask(handle, handle->x_visual_info->green_mask);
+    handle->blue_shift  = xxlib_get_shift_from_mask(handle, handle->x_visual_info->blue_mask);
+    handle->blue_prec   = xxlib_get_prec_from_mask(handle, handle->x_visual_info->blue_mask);
   }
 }
 
-static void xlib_rgb_select_conv (XImage *image, ByteOrder byte_order);
+static void xxlib_rgb_select_conv (XlibRgbHandle *handle, XImage *image, ByteOrder byte_order);
 
 static void
-xlib_rgb_set_gray_cmap (Colormap cmap)
+xxlib_rgb_set_gray_cmap (XlibRgbHandle *handle, Colormap cmap)
 {
   int i;
   XColor color;
@@ -723,339 +742,347 @@ xlib_rgb_set_gray_cmap (Colormap cmap)
   int r, g, b, gray;
 
   for (i = 0; i < 256; i++)
-    {
-      color.pixel = i;
-      color.red = i * 257;
-      color.green = i * 257;
-      color.blue = i * 257;
-      status = XAllocColor(image_info->display, cmap, &color);
-      pixels[i] = color.pixel;
+  {
+    color.pixel = i;
+    color.red   = i * 257;
+    color.green = i * 257;
+    color.blue  = i * 257;
+    status = XAllocColor(handle->display, cmap, &color);
+    pixels[i] = color.pixel;
 #ifdef VERBOSE
-      printf ("allocating pixel %d, %x %x %x, result %d\n",
-	       color.pixel, color.red, color.green, color.blue, status);
-#endif
-    }
+    printf ("allocating pixel %d, %x %x %x, result %d\n",
+            color.pixel, color.red, color.green, color.blue, status);
+#endif /* VERBOSE */
+  }
 
   /* Now, we make fake colorcubes - we ultimately just use the pseudocolor
      methods. */
 
-  colorcube = malloc(sizeof(unsigned char) * 4096);
+  handle->colorcube = malloc(sizeof(unsigned char) * 4096);
 
   for (i = 0; i < 4096; i++)
-    {
-      r = (i >> 4) & 0xf0;
-      r = r | r >> 4;
-      g = i & 0xf0;
-      g = g | g >> 4;
-      b = (i << 4 & 0xf0);
-      b = b | b >> 4;
-      gray = (g + ((r + b) >> 1)) >> 1;
-      colorcube[i] = pixels[gray];
-    }
-}
-
-static Bool xlib_rgb_initialized  = FALSE;
-static Bool disallow_image_tiling = FALSE;
-
-void
-xlib_rgb_detach (void)
-{
-  if (xlib_rgb_initialized)
   {
-    int i;
-
-    for( i = 0 ; i < N_IMAGES ; i++ )
-    {
-      XDestroyImage(static_image[i]);
-      static_image[i] = NULL;
-    }
-    
-    if( image_info->cmap_alloced )
-    {
-      XFreeColormap(image_info->display, image_info->cmap);
-    }
-  
-    if( image_info->own_gc )
-      XFreeGC(image_info->display, image_info->own_gc);
-  
-    free(image_info);
-    image_info = NULL;
-    
-    /* reset to default... */
-    disallow_image_tiling = FALSE;
-  
-    /* done... */
-    xlib_rgb_initialized = FALSE;
-  }  
+    r = (i >> 4) & 0xf0;
+    r = r | r >> 4;
+    g = i & 0xf0;
+    g = g | g >> 4;
+    b = (i << 4 & 0xf0);
+    b = b | b >> 4;
+    gray = (g + ((r + b) >> 1)) >> 1;
+    handle->colorcube[i] = pixels[gray];
+  }
 }
 
 void
-xlib_rgb_init (Display *display, Screen *screen)
-{
-  int prefDepth = -1;            /* let the function do the visual scoring */
-  xlib_rgb_init_with_depth(display, screen, prefDepth);
-}
-
-void
-xlib_rgb_init_with_depth (Display *display, Screen *screen, int prefDepth)
+xxlib_rgb_destroy_handle (XlibRgbHandle *handle)
 {
   int i;
-  static const int byte_order[1] = { 1 };
 
-  if (xlib_rgb_initialized)
+  for( i = 0 ; i < N_IMAGES ; i++ )
   {
-    return;
+    if (handle->static_image[i])
+      XDestroyImage(handle->static_image[i]);
   }
+  
+  if (handle->cmap_alloced)
+  {
+    XFreeColormap(handle->display, handle->cmap);
+  }
+  
+  if (handle->own_gc)
+    XFreeGC(handle->display, handle->own_gc);
+  
+  if (handle->colorcube)
+    free(handle->colorcube);
 
-  xlib_rgb_initialized = TRUE;
+  if (handle->colorcube_d)
+    free(handle->colorcube_d);
+  
+  if (handle->DM_565)
+    free(handle->DM_565);
+  
+  if (handle->stage_buf)
+    free(handle->stage_buf);
+            
+  /* done... */
+  free(handle); 
+}
+
+XlibRgbHandle *
+xxlib_rgb_create_handle (Display *display, Screen *screen)
+{
+  int prefDepth = -1; /* let the function do the visual scoring */
+  return xxlib_rgb_create_handle_with_depth(display, screen, prefDepth);
+}
+
+XlibRgbHandle *
+xxlib_rgb_create_handle_with_depth (Display *display, Screen *screen, int prefDepth)
+{
+  XlibRgbHandle *handle = NULL;
+  int i;
+  static const int byte_order[1] = { 1 };
 
   /* check endian sanity */
 #if G_BYTE_ORDER == G_BIG_ENDIAN
   if (((char *)byte_order)[0] == 1) {
-    printf ("xlib_rgb_init: compiled for big endian, but this is a little endian machine.\n\n");
-    exit(EXIT_FAILURE);
+    fprintf (stderr, "xxlib_rgb_create_handle_with_depth: "
+             "compiled for big endian, but this is a little endian machine.\n\n");
+    abort();
   }
 #else
   if (((char *)byte_order)[0] != 1) {
-    printf ("xlib_rgb_init: compiled for little endian, but this is a big endian machine.\n\n");
-    exit(EXIT_FAILURE);
+    fprintf (stderr, "xxlib_rgb_create_handle_with_depth: "
+             "compiled for little endian, but this is a big endian machine.\n\n");
+    abort();
   }
-#endif
+#endif /* G_BYTE_ORDER == G_BIG_ENDIAN */
 
-  if (image_info == NULL)
-    {
-      image_info = malloc(sizeof(XlibRgbInfo));
-      memset(image_info, 0, sizeof(XlibRgbInfo));
-
-      image_info->display = display;
-      image_info->screen = screen;
-      image_info->screen_num = XScreenNumberOfScreen(screen);
-      image_info->x_visual_info = NULL;
-      image_info->cmap = 0;
-      image_info->default_visualid = DefaultVisual(display, image_info->screen_num);
-      image_info->default_colormap = DefaultColormap(display, image_info->screen_num);
-
-      image_info->color_pixels = NULL;
-      image_info->gray_pixels = NULL;
-      image_info->reserved_pixels = NULL;
-
-      image_info->nred_shades = 6;
-      image_info->ngreen_shades = 6;
-      image_info->nblue_shades = 4;
-      image_info->ngray_shades = 24;
-      image_info->nreserved = 0;
-
-      image_info->bpp = 0;
-      image_info->cmap_alloced = FALSE;
-      image_info->gamma_val = 1.0;
-
-      image_info->stage_buf = NULL;
-
-      image_info->own_gc = 0;
+    
+    handle = malloc(sizeof(XlibRgbHandle));
+    
+    if(!handle)
+      return NULL;
       
-      image_info->red_shift = 0;
-      image_info->red_prec = 0;
-      image_info->green_shift = 0;
-      image_info->green_prec = 0;
-      image_info->blue_shift = 0;
-      image_info->blue_prec = 0;
+    memset(handle, 0, sizeof(XlibRgbHandle));
 
-      if (prefDepth != -1)
-        xlib_rgb_choose_visual_for_xprint (prefDepth);
-      else
-        xlib_rgb_choose_visual ();
+    handle->display = display;
+    handle->screen = screen;
+    handle->screen_num = XScreenNumberOfScreen(screen);
+    handle->x_visual_info = NULL;
+    handle->cmap = 0;
+    handle->default_visualid = XDefaultVisual(display, handle->screen_num);
+    handle->default_colormap = XDefaultColormap(display, handle->screen_num);
 
-      if ((image_info->x_visual_info->class == PseudoColor ||
-	   image_info->x_visual_info->class == StaticColor) &&
-	  image_info->x_visual_info->depth < 8 &&
-	  image_info->x_visual_info->depth >= 3)
-	{
-	  image_info->cmap = image_info->default_colormap;
-	  xlib_rgb_colorcube_222 ();
-	}
-      else if (image_info->x_visual_info->class == PseudoColor)
-	{
-	  if (xlib_rgb_install_cmap ||
-	      image_info->x_visual_info->visualid != image_info->default_visualid->visualid)
-	    {
-	      image_info->cmap = XCreateColormap(image_info->display,
-						 RootWindow(image_info->display, image_info->screen_num),
-						 image_info->x_visual_info->visual,
-						 AllocNone);
-	      image_info->cmap_alloced = TRUE;
-	    }
-	  if (!xlib_rgb_do_colormaps ())
-	    {
-	      image_info->cmap = XCreateColormap(image_info->display,
-						 RootWindow(image_info->display, image_info->screen_num),
-						 image_info->x_visual_info->visual,
-						 AllocNone);
-	      image_info->cmap_alloced = TRUE;
-	      xlib_rgb_do_colormaps ();
-	    }
-	  if (xlib_rgb_verbose)
-	    printf ("color cube: %d x %d x %d\n",
-		    image_info->nred_shades,
-		    image_info->ngreen_shades,
-		    image_info->nblue_shades);
+    handle->color_pixels = NULL;
+    handle->gray_pixels = NULL;
+    handle->reserved_pixels = NULL;
 
-	  if (!image_info->cmap_alloced)
-	      image_info->cmap = image_info->default_colormap;
-	}
-#ifdef ENABLE_GRAYSCALE
-      else if (image_info->x_visual_info->class == GrayScale)
-	{
-	  image_info->cmap = XCreateColormap(image_info->display,
-					     RootWindow(image_info->display, image_info->screen_num),
-					     image_info->x_visual_info->visual,
-					     AllocNone);
-	  xlib_rgb_set_gray_cmap (image_info->cmap);
-	  image_info->cmap_alloced = TRUE;
-     	}
-#endif
-      else
-	{
-	  /* Always install colormap in direct color. */
-	  if (image_info->x_visual_info->class != DirectColor && 
-	      image_info->x_visual_info->visualid == image_info->default_visualid->visualid)
-	    image_info->cmap = image_info->default_colormap;
-	  else
-	    {
-	      image_info->cmap = XCreateColormap(image_info->display,
-						 RootWindow(image_info->display, image_info->screen_num),
-						 image_info->x_visual_info->visual,
-						 AllocNone);
-	      image_info->cmap_alloced = TRUE;
-	    }
-	}
+    handle->nred_shades = 6;
+    handle->ngreen_shades = 6;
+    handle->nblue_shades = 4;
+    handle->ngray_shades = 24;
+    handle->nreserved = 0;
 
-      image_info->bitmap = (image_info->x_visual_info->depth == 1);
+    handle->bpp = 0;
+    handle->cmap_alloced = FALSE;
+    handle->gamma_val = 1.0;
 
-      for (i = 0; i < N_IMAGES; i++) {
-	if (image_info->bitmap) {
-	  /* Use malloc() instead of g_malloc since X will free() this mem */
-	  static_image[i] = XCreateImage(image_info->display,
-					 image_info->x_visual_info->visual,
-					 1,
-					 XYBitmap,
-					 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT,
-					 8,
-					 0);
-	  static_image[i]->data = malloc(IMAGE_WIDTH * IMAGE_HEIGHT >> 3);
-	  static_image[i]->bitmap_bit_order = MSBFirst;
-	  static_image[i]->byte_order = MSBFirst;
-	}
-	else {
-	  static_image[i] = XCreateImage(image_info->display,
-					 image_info->x_visual_info->visual,
-					 (unsigned int)image_info->x_visual_info->depth,
-					 ZPixmap,
-					 0, 0,
-					 IMAGE_WIDTH,
-					 IMAGE_HEIGHT,
-					 32, 0);
-	  /* remove this when we are using shared memory.. */
-	  static_image[i]->data = malloc((size_t)IMAGE_WIDTH * IMAGE_HEIGHT * image_info->x_visual_info->depth);
-	  static_image[i]->bitmap_bit_order = MSBFirst;
-	  static_image[i]->byte_order = MSBFirst;
-	}
-      }
-      /* ok, so apparently, image_info->bpp is actually
-	 BYTES per pixel.  What fun! */
-      switch (static_image[0]->bits_per_pixel) {
-      case 1:
-      case 8:
-	image_info->bpp = 1;
-	break;
-      case 16:
-	image_info->bpp = 2;
-	break;
-      case 24:
-	image_info->bpp = 3;
-	break;
-      case 32:
-	image_info->bpp = 4;
-	break;
-      }
-      xlib_rgb_select_conv (static_image[0], MSB_FIRST);
+    handle->stage_buf = NULL;
+
+    handle->own_gc = 0;
+    
+    handle->red_shift = 0;
+    handle->red_prec = 0;
+    handle->green_shift = 0;
+    handle->green_prec = 0;
+    handle->blue_shift = 0;
+    handle->blue_prec = 0;
+
+    handle->xlib_rgb_min_colors = 5 * 5 * 5;
+
+    handle->horiz_y = IMAGE_HEIGHT;
+    handle->vert_x  = IMAGE_WIDTH;
+    handle->tile_x  = IMAGE_WIDTH;
+    handle->tile_y1 = IMAGE_HEIGHT;
+    handle->tile_y2 = IMAGE_HEIGHT;
+
+    if (prefDepth != -1)
+      xxlib_rgb_choose_visual_for_xprint (handle, prefDepth);
+    else
+      xxlib_rgb_choose_visual (handle);
+
+    if ((handle->x_visual_info->class == PseudoColor ||
+         handle->x_visual_info->class == StaticColor) &&
+        handle->x_visual_info->depth < 8 &&
+        handle->x_visual_info->depth >= 3)
+    {
+      handle->cmap = handle->default_colormap;
+      xxlib_rgb_colorcube_222 (handle);
     }
+    else if (handle->x_visual_info->class == PseudoColor)
+    {
+      if (handle->xlib_rgb_install_cmap ||
+          handle->x_visual_info->visualid != handle->default_visualid->visualid)
+      {
+        handle->cmap = XCreateColormap(handle->display,
+                                       XRootWindow(handle->display, handle->screen_num),
+                                       handle->x_visual_info->visual,
+                                       AllocNone);
+        handle->cmap_alloced = TRUE;
+      }
+      if (!xxlib_rgb_do_colormaps (handle))
+      {
+        handle->cmap = XCreateColormap(handle->display,
+                                       XRootWindow(handle->display, handle->screen_num),
+                                       handle->x_visual_info->visual,
+                                       AllocNone);
+        handle->cmap_alloced = TRUE;
+        xxlib_rgb_do_colormaps (handle);
+      }
+      if (handle->xlib_rgb_verbose)
+        printf ("color cube: %d x %d x %d\n",
+                handle->nred_shades,
+                handle->ngreen_shades,
+                handle->nblue_shades);
+
+      if (!handle->cmap_alloced)
+        handle->cmap = handle->default_colormap;
+     }
+#ifdef ENABLE_GRAYSCALE
+    else if (handle->x_visual_info->class == GrayScale)
+    {
+      handle->cmap = XCreateColormap(handle->display,
+                                     XRootWindow(handle->display, handle->screen_num),
+                                     handle->x_visual_info->visual,
+                                     AllocNone);
+      xxlib_rgb_set_gray_cmap (handle, handle->cmap);
+      handle->cmap_alloced = TRUE;
+    }
+#endif /* ENABLE_GRAYSCALE */
+    else
+    {
+      /* Always install colormap in direct color. */
+      if (handle->x_visual_info->class != DirectColor && 
+          handle->x_visual_info->visualid == handle->default_visualid->visualid)
+        handle->cmap = handle->default_colormap;
+      else
+        {
+          handle->cmap = XCreateColormap(handle->display,
+                                             XRootWindow(handle->display, handle->screen_num),
+                                             handle->x_visual_info->visual,
+                                             AllocNone);
+          handle->cmap_alloced = TRUE;
+        }
+    }
+
+    handle->bitmap = (handle->x_visual_info->depth == 1);
+
+    for (i = 0; i < N_IMAGES; i++) {
+      if (handle->bitmap) {
+        /* Use malloc() instead of g_malloc since X will free() this mem */
+        handle->static_image[i] = XCreateImage(handle->display,
+                                       handle->x_visual_info->visual,
+                                       1,
+                                       XYBitmap,
+                                       0, 0, IMAGE_WIDTH, IMAGE_HEIGHT,
+                                       8,
+                                       0);
+        handle->static_image[i]->data = malloc(IMAGE_WIDTH * IMAGE_HEIGHT >> 3);
+        handle->static_image[i]->bitmap_bit_order = MSBFirst;
+        handle->static_image[i]->byte_order = MSBFirst;
+      }
+      else {
+        handle->static_image[i] = XCreateImage(handle->display,
+                                       handle->x_visual_info->visual,
+                                       (unsigned int)handle->x_visual_info->depth,
+                                       ZPixmap,
+                                       0, 0,
+                                       IMAGE_WIDTH,
+                                       IMAGE_HEIGHT,
+                                       32, 0);
+        /* remove this when we are using shared memory.. */
+        handle->static_image[i]->data = malloc((size_t)IMAGE_WIDTH * IMAGE_HEIGHT * handle->x_visual_info->depth);
+        handle->static_image[i]->bitmap_bit_order = MSBFirst;
+        handle->static_image[i]->byte_order = MSBFirst;
+      }
+    }
+    /* ok, so apparently, handle->bpp is actually
+       BYTES per pixel.  What fun! */
+    switch (handle->static_image[0]->bits_per_pixel) {
+    case 1:
+    case 8:
+      handle->bpp = 1;
+      break;
+    case 16:
+      handle->bpp = 2;
+      break;
+    case 24:
+      handle->bpp = 3;
+      break;
+    case 32:
+      handle->bpp = 4;
+      break;
+    }
+    xxlib_rgb_select_conv (handle, handle->static_image[0], MSB_FIRST);
+    
+    return handle;
 }
 
 /* convert an rgb value into an X pixel code */
 unsigned long
-xlib_rgb_xpixel_from_rgb (uint32 rgb)
+xxlib_rgb_xpixel_from_rgb (XlibRgbHandle *handle, uint32 rgb)
 {
   unsigned long pixel = 0;
 
-  if (image_info->bitmap)
+  if (handle->bitmap)
     {
       return ((rgb & 0xff0000) >> 16) +
-	((rgb & 0xff00) >> 7) +
-	(rgb & 0xff) > 510;
+        ((rgb & 0xff00) >> 7) +
+        (rgb & 0xff) > 510;
     }
-  else if (image_info->x_visual_info->class == PseudoColor)
-    pixel = colorcube[((rgb & 0xf00000) >> 12) |
-		     ((rgb & 0xf000) >> 8) |
-		     ((rgb & 0xf0) >> 4)];
-  else if (image_info->x_visual_info->depth < 8 &&
-	   image_info->x_visual_info->class == StaticColor)
+  else if (handle->x_visual_info->class == PseudoColor)
+    pixel = handle->colorcube[((rgb & 0xf00000) >> 12) |
+                     ((rgb & 0xf000) >> 8) |
+                     ((rgb & 0xf0) >> 4)];
+  else if (handle->x_visual_info->depth < 8 &&
+           handle->x_visual_info->class == StaticColor)
     {
-      pixel = colorcube_d[((rgb & 0x800000) >> 17) |
-			 ((rgb & 0x8000) >> 12) |
-			 ((rgb & 0x80) >> 7)];
+      pixel = handle->colorcube_d[((rgb & 0x800000) >> 17) |
+                         ((rgb & 0x8000) >> 12) |
+                         ((rgb & 0x80) >> 7)];
     }
-  else if (image_info->x_visual_info->class == TrueColor ||
-	   image_info->x_visual_info->class == DirectColor)
+  else if (handle->x_visual_info->class == TrueColor ||
+           handle->x_visual_info->class == DirectColor)
     {
 #ifdef VERBOSE
       printf ("shift, prec: r %d %d g %d %d b %d %d\n",
-	      image_info->red_shift,
-	      image_info->red_prec,
-	      image_info->green_shift,
-	      image_info->green_prec,
-	      image_info->blue_shift,
-	      image_info->blue_prec);
+              handle->red_shift,
+              handle->red_prec,
+              handle->green_shift,
+              handle->green_prec,
+              handle->blue_shift,
+              handle->blue_prec);
 #endif
 
       pixel = (((((rgb & 0xff0000) >> 16) >>
-		 (8 - image_info->red_prec)) <<
-		image_info->red_shift) +
-	       ((((rgb & 0xff00) >> 8)  >>
-		 (8 - image_info->green_prec)) <<
-		image_info->green_shift) +
-	       (((rgb & 0xff) >>
-		 (8 - image_info->blue_prec)) <<
-		image_info->blue_shift));
+                 (8 - handle->red_prec)) <<
+                handle->red_shift) +
+               ((((rgb & 0xff00) >> 8)  >>
+                 (8 - handle->green_prec)) <<
+                handle->green_shift) +
+               (((rgb & 0xff) >>
+                 (8 - handle->blue_prec)) <<
+                handle->blue_shift));
     }
-  else if (image_info->x_visual_info->class == StaticGray ||
-	   image_info->x_visual_info->class == GrayScale)
+  else if (handle->x_visual_info->class == StaticGray ||
+           handle->x_visual_info->class == GrayScale)
     {
       int gray = ((rgb & 0xff0000) >> 16) +
-	((rgb & 0xff00) >> 7) +
-	(rgb & 0xff);
+        ((rgb & 0xff00) >> 7) +
+        (rgb & 0xff);
 
-      return gray >> (10 - image_info->x_visual_info->depth);
+      return gray >> (10 - handle->x_visual_info->depth);
     }
 
   return pixel;
 }
 
 void
-xlib_rgb_gc_set_foreground (GC gc, uint32 rgb)
+xxlib_rgb_gc_set_foreground (XlibRgbHandle *handle, GC gc, uint32 rgb)
 {
   unsigned long color;
 
-  color = xlib_rgb_xpixel_from_rgb (rgb);
-  XSetForeground(image_info->display, gc, color);
+  color = xxlib_rgb_xpixel_from_rgb (handle, rgb);
+  XSetForeground(handle->display, gc, color);
 }
 
 void
-xlib_rgb_gc_set_background (GC gc, uint32 rgb)
+xxlib_rgb_gc_set_background (XlibRgbHandle *handle, GC gc, uint32 rgb)
 {
   unsigned long color;
 
-  color = xlib_rgb_xpixel_from_rgb (rgb);
-  XSetBackground(image_info->display, gc, color);
+  color = xxlib_rgb_xpixel_from_rgb (handle, rgb);
+  XSetBackground(handle->display, gc, color);
 }
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -1064,10 +1091,10 @@ xlib_rgb_gc_set_background (GC gc, uint32 rgb)
 
 #ifdef HAIRY_CONVERT_8
 static void
-xlib_rgb_convert_8 (XImage *image,
-		   int ax, int ay, int width, int height,
-		   unsigned char *buf, int rowstride,
-		   int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_8 (XlibRgbHandle *handle, XImage *image,
+                   int ax, int ay, int width, int height,
+                   unsigned char *buf, int rowstride,
+                   int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -1083,66 +1110,66 @@ xlib_rgb_convert_8 (XImage *image,
       bp2 = bptr;
       obptr = obuf;
       if (((unsigned long)obuf | (unsigned long) bp2) & 3)
-	{
-	  for (x = 0; x < width; x++)
-	    {
-	      r = *bp2++;
-	      g = *bp2++;
-	      b = *bp2++;
-	      obptr[0] = colorcube[((r & 0xf0) << 4) |
-				  (g & 0xf0) |
-				  (b >> 4)];
-	      obptr++;
-	    }
-	}
+        {
+          for (x = 0; x < width; x++)
+            {
+              r = *bp2++;
+              g = *bp2++;
+              b = *bp2++;
+              obptr[0] = handle->colorcube[((r & 0xf0) << 4) |
+                                  (g & 0xf0) |
+                                  (b >> 4)];
+              obptr++;
+            }
+        }
       else
-	{
-	  for (x = 0; x < width - 3; x += 4)
-	    {
-	      uint32 r1b0g0r0;
-	      uint32 g2r2b1g1;
-	      uint32 b3g3r3b2;
+        {
+          for (x = 0; x < width - 3; x += 4)
+            {
+              uint32 r1b0g0r0;
+              uint32 g2r2b1g1;
+              uint32 b3g3r3b2;
 
-	      r1b0g0r0 = ((uint32 *)bp2)[0];
-	      g2r2b1g1 = ((uint32 *)bp2)[1];
-	      b3g3r3b2 = ((uint32 *)bp2)[2];
-	      ((uint32 *)obptr)[0] =
-		colorcube[((r1b0g0r0 & 0xf0) << 4) | 
-			 ((r1b0g0r0 & 0xf000) >> 8) |
-			 ((r1b0g0r0 & 0xf00000) >> 20)] |
-		(colorcube[((r1b0g0r0 & 0xf0000000) >> 20) |
-			  (g2r2b1g1 & 0xf0) |
-			  ((g2r2b1g1 & 0xf000) >> 12)] << 8) |
-		(colorcube[((g2r2b1g1 & 0xf00000) >> 12) |
-			  ((g2r2b1g1 & 0xf0000000) >> 24) |
-			  ((b3g3r3b2 & 0xf0) >> 4)] << 16) |
-		(colorcube[((b3g3r3b2 & 0xf000) >> 4) |
-			  ((b3g3r3b2 & 0xf00000) >> 16) |
-			  (b3g3r3b2 >> 28)] << 24);
-	      bp2 += 12;
-	      obptr += 4;
-	    }
-	  for (; x < width; x++)
-	    {
-	      r = *bp2++;
-	      g = *bp2++;
-	      b = *bp2++;
-	      obptr[0] = colorcube[((r & 0xf0) << 4) |
-				  (g & 0xf0) |
-				  (b >> 4)];
-	      obptr++;
-	    }
-	}
+              r1b0g0r0 = ((uint32 *)bp2)[0];
+              g2r2b1g1 = ((uint32 *)bp2)[1];
+              b3g3r3b2 = ((uint32 *)bp2)[2];
+              ((uint32 *)obptr)[0] =
+                handle->colorcube[((r1b0g0r0 & 0xf0) << 4) | 
+                         ((r1b0g0r0 & 0xf000) >> 8) |
+                         ((r1b0g0r0 & 0xf00000) >> 20)] |
+                (handle->colorcube[((r1b0g0r0 & 0xf0000000) >> 20) |
+                          (g2r2b1g1 & 0xf0) |
+                          ((g2r2b1g1 & 0xf000) >> 12)] << 8) |
+                (handle->colorcube[((g2r2b1g1 & 0xf00000) >> 12) |
+                          ((g2r2b1g1 & 0xf0000000) >> 24) |
+                          ((b3g3r3b2 & 0xf0) >> 4)] << 16) |
+                (handle->colorcube[((b3g3r3b2 & 0xf000) >> 4) |
+                          ((b3g3r3b2 & 0xf00000) >> 16) |
+                          (b3g3r3b2 >> 28)] << 24);
+              bp2 += 12;
+              obptr += 4;
+            }
+          for (; x < width; x++)
+            {
+              r = *bp2++;
+              g = *bp2++;
+              b = *bp2++;
+              obptr[0] = handle->colorcube[((r & 0xf0) << 4) |
+                                  (g & 0xf0) |
+                                  (b >> 4)];
+              obptr++;
+            }
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 #else
 static void
-xlib_rgb_convert_8 (XImage *image,
-		   int ax, int ay, int width, int height,
-		   unsigned char *buf, int rowstride,
-		   int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_8 (XlibRgbHandle *handle, XImage *image,
+                   int ax, int ay, int width, int height,
+                   unsigned char *buf, int rowstride,
+                   int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -1158,15 +1185,15 @@ xlib_rgb_convert_8 (XImage *image,
       bp2 = bptr;
       obptr = obuf;
       for (x = 0; x < width; x++)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  obptr[0] = colorcube[((r & 0xf0) << 4) |
-			      (g & 0xf0) |
-			      (b >> 4)];
-	  obptr++;
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          obptr[0] = handle->colorcube[((r & 0xf0) << 4) |
+                              (g & 0xf0) |
+                              (b >> 4)];
+          obptr++;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
@@ -1331,33 +1358,32 @@ static const unsigned char DM[8][8] =
 };
 #endif
 
-static uint32 *DM_565 = NULL;
 
 static void
-xlib_rgb_preprocess_dm_565 (void)
+xxlib_rgb_preprocess_dm_565 (XlibRgbHandle *handle)
 {
   int i;
   uint32 dith;
 
-  if (DM_565 == NULL)
+  if (handle->DM_565 == NULL)
     {
-      DM_565 = malloc(sizeof(uint32) * DM_WIDTH * DM_HEIGHT);
+      handle->DM_565 = malloc(sizeof(uint32) * DM_WIDTH * DM_HEIGHT);
       for (i = 0; i < DM_WIDTH * DM_HEIGHT; i++)
-	{
-	  dith = DM[0][i] >> 3;
-	  DM_565[i] = (dith << 20) | dith | (((7 - dith) >> 1) << 10);
+        {
+          dith = DM[0][i] >> 3;
+          handle->DM_565[i] = (dith << 20) | dith | (((7 - dith) >> 1) << 10);
 #ifdef VERBOSE
-	  printf ("%i %x %x\n", i, dith, DM_565[i]);
+          printf ("%i %x %x\n", i, dith, handle->DM_565[i]);
 #endif
-	}
+        }
     }
 }
 
 static void
-xlib_rgb_convert_8_d666 (XImage *image,
-			int ax, int ay, int width, int height,
-			unsigned char *buf, int rowstride,
-			int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_8_d666 (XlibRgbHandle *handle, XImage *image,
+                        int ax, int ay, int width, int height,
+                        unsigned char *buf, int rowstride,
+                        int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -1376,28 +1402,28 @@ xlib_rgb_convert_8_d666 (XImage *image,
       bp2 = bptr;
       obptr = obuf;
       for (x = 0; x < width; x++)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  dith = (dmp[(x_align + x) & (DM_WIDTH - 1)] << 2) | 7;
-	  r = ((r * 5) + dith) >> 8;
-	  g = ((g * 5) + (262 - dith)) >> 8;
-	  b = ((b * 5) + dith) >> 8;
-	  obptr[0] = colorcube_d[(r << 6) | (g << 3) | b];
-	  obptr++;
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          dith = (dmp[(x_align + x) & (DM_WIDTH - 1)] << 2) | 7;
+          r = ((r * 5) + dith) >> 8;
+          g = ((g * 5) + (262 - dith)) >> 8;
+          b = ((b * 5) + dith) >> 8;
+          obptr[0] = handle->colorcube_d[(r << 6) | (g << 3) | b];
+          obptr++;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_8_d (XImage *image,
-		     int ax, int ay, int width, int height,
-		     unsigned char *buf, int rowstride,
-		     int x_align, int y_align,
-		     XlibRgbCmap *cmap)
+xxlib_rgb_convert_8_d (XlibRgbHandle *handle, XImage *image,
+                     int ax, int ay, int width, int height,
+                     unsigned char *buf, int rowstride,
+                     int x_align, int y_align,
+                     XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -1410,9 +1436,9 @@ xlib_rgb_convert_8_d (XImage *image,
 
   bptr = buf;
   bpl = image->bytes_per_line;
-  rs = image_info->nred_shades - 1;
-  gs = image_info->ngreen_shades - 1;
-  bs = image_info->nblue_shades - 1;
+  rs = handle->nred_shades - 1;
+  gs = handle->ngreen_shades - 1;
+  bs = handle->nblue_shades - 1;
   obuf = ((unsigned char *)image->data) + ay * bpl + ax;
   for (y = 0; y < height; y++)
     {
@@ -1420,27 +1446,27 @@ xlib_rgb_convert_8_d (XImage *image,
       bp2 = bptr;
       obptr = obuf;
       for (x = 0; x < width; x++)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  dith = (dmp[(x_align + x) & (DM_WIDTH - 1)] << 2) | 7;
-	  r = ((r * rs) + dith) >> 8;
-	  g = ((g * gs) + (262 - dith)) >> 8;
-	  b = ((b * bs) + dith) >> 8;
-	  obptr[0] = colorcube_d[(r << 6) | (g << 3) | b];
-	  obptr++;
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          dith = (dmp[(x_align + x) & (DM_WIDTH - 1)] << 2) | 7;
+          r = ((r * rs) + dith) >> 8;
+          g = ((g * gs) + (262 - dith)) >> 8;
+          b = ((b * bs) + dith) >> 8;
+          obptr[0] = handle->colorcube_d[(r << 6) | (g << 3) | b];
+          obptr++;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_8_indexed (XImage *image,
-			   int ax, int ay, int width, int height,
-			   unsigned char *buf, int rowstride,
-			   int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_8_indexed (XlibRgbHandle *handle, XImage *image,
+                           int ax, int ay, int width, int height,
+                           unsigned char *buf, int rowstride,
+                           int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -1458,21 +1484,21 @@ xlib_rgb_convert_8_indexed (XImage *image,
       bp2 = bptr;
       obptr = obuf;
       for (x = 0; x < width; x++)
-	{
-	  c = *bp2++;
-	  obptr[0] = lut[c];
-	  obptr++;
-	}
+        {
+          c = *bp2++;
+          obptr[0] = lut[c];
+          obptr++;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_gray8 (XImage *image,
-		       int ax, int ay, int width, int height,
-		       unsigned char *buf, int rowstride,
-		       int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_gray8 (XlibRgbHandle *handle, XImage *image,
+                       int ax, int ay, int width, int height,
+                       unsigned char *buf, int rowstride,
+                       int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -1488,23 +1514,23 @@ xlib_rgb_convert_gray8 (XImage *image,
       bp2 = bptr;
       obptr = obuf;
       for (x = 0; x < width; x++)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  obptr[0] = (g + ((b + r) >> 1)) >> 1;
-	  obptr++;
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          obptr[0] = (g + ((b + r) >> 1)) >> 1;
+          obptr++;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_gray8_gray (XImage *image,
-			    int ax, int ay, int width, int height,
-			    unsigned char *buf, int rowstride,
-			    int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_gray8_gray (XlibRgbHandle *handle, XImage *image,
+                            int ax, int ay, int width, int height,
+                            unsigned char *buf, int rowstride,
+                            int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int y;
   int bpl;
@@ -1527,19 +1553,19 @@ xlib_rgb_convert_gray8_gray (XImage *image,
 #endif
 
 #ifdef HAIRY_CONVERT_565
-/* Render a 24-bit RGB image in buf into the GdkImage, without dithering.
+/* Render a 24-bit RGB image in buf into the XImage, without dithering.
    This assumes native byte ordering - what should really be done is to
-   check whether static_image->byte_order is consistent with the _ENDIAN
-   config flag, and if not, use a different function.
+   check whether handle->static_image->byte_order is consistent with 
+   the _ENDIAN config flag, and if not, use a different function.
 
    This one is even faster than the one below - its inner loop loads 3
    words (i.e. 4 24-bit pixels), does a lot of shifting and masking,
    then writes 2 words. */
 static void
-xlib_rgb_convert_565 (XImage *image,
-		     int ax, int ay, int width, int height,
-		     unsigned char *buf, int rowstride,
-		     int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_565 (XlibRgbHandle *handle, XImage *image,
+                     int ax, int ay, int width, int height,
+                     unsigned char *buf, int rowstride,
+                     int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf, *obptr;
@@ -1555,66 +1581,66 @@ xlib_rgb_convert_565 (XImage *image,
       bp2 = bptr;
       obptr = obuf;
       if (((unsigned long)obuf | (unsigned long) bp2) & 3)
-	{
-	  for (x = 0; x < width; x++)
-	    {
-	      r = *bp2++;
-	      g = *bp2++;
-	      b = *bp2++;
-	      ((uint16 *)obptr)[0] = ((r & 0xf8) << 8) |
-		((g & 0xfc) << 3) |
-		(b >> 3);
-	      obptr += 2;
-	    }
-	}
+        {
+          for (x = 0; x < width; x++)
+            {
+              r = *bp2++;
+              g = *bp2++;
+              b = *bp2++;
+              ((uint16 *)obptr)[0] = ((r & 0xf8) << 8) |
+                ((g & 0xfc) << 3) |
+                (b >> 3);
+              obptr += 2;
+            }
+        }
       else
-	{
-	  for (x = 0; x < width - 3; x += 4)
-	    {
-	      uint32 r1b0g0r0;
-	      uint32 g2r2b1g1;
-	      uint32 b3g3r3b2;
+        {
+          for (x = 0; x < width - 3; x += 4)
+            {
+              uint32 r1b0g0r0;
+              uint32 g2r2b1g1;
+              uint32 b3g3r3b2;
 
-	      r1b0g0r0 = ((uint32 *)bp2)[0];
-	      g2r2b1g1 = ((uint32 *)bp2)[1];
-	      b3g3r3b2 = ((uint32 *)bp2)[2];
-	      ((uint32 *)obptr)[0] =
-		((r1b0g0r0 & 0xf8) << 8) |
-		((r1b0g0r0 & 0xfc00) >> 5) |
-		((r1b0g0r0 & 0xf80000) >> 19) |
-		(r1b0g0r0 & 0xf8000000) |
-		((g2r2b1g1 & 0xfc) << 19) |
-		((g2r2b1g1 & 0xf800) << 5);
-	      ((uint32 *)obptr)[1] =
-		((g2r2b1g1 & 0xf80000) >> 8) |
-		((g2r2b1g1 & 0xfc000000) >> 21) |
-		((b3g3r3b2 & 0xf8) >> 3) |
-		((b3g3r3b2 & 0xf800) << 16) |
-		((b3g3r3b2 & 0xfc0000) << 3) |
-		((b3g3r3b2 & 0xf8000000) >> 11);
-	      bp2 += 12;
-	      obptr += 8;
-	    }
-	  for (; x < width; x++)
-	    {
-	      r = *bp2++;
-	      g = *bp2++;
-	      b = *bp2++;
-	      ((uint16 *)obptr)[0] = ((r & 0xf8) << 8) |
-		((g & 0xfc) << 3) |
-		(b >> 3);
-	      obptr += 2;
-	    }
-	}
+              r1b0g0r0 = ((uint32 *)bp2)[0];
+              g2r2b1g1 = ((uint32 *)bp2)[1];
+              b3g3r3b2 = ((uint32 *)bp2)[2];
+              ((uint32 *)obptr)[0] =
+                ((r1b0g0r0 & 0xf8) << 8) |
+                ((r1b0g0r0 & 0xfc00) >> 5) |
+                ((r1b0g0r0 & 0xf80000) >> 19) |
+                (r1b0g0r0 & 0xf8000000) |
+                ((g2r2b1g1 & 0xfc) << 19) |
+                ((g2r2b1g1 & 0xf800) << 5);
+              ((uint32 *)obptr)[1] =
+                ((g2r2b1g1 & 0xf80000) >> 8) |
+                ((g2r2b1g1 & 0xfc000000) >> 21) |
+                ((b3g3r3b2 & 0xf8) >> 3) |
+                ((b3g3r3b2 & 0xf800) << 16) |
+                ((b3g3r3b2 & 0xfc0000) << 3) |
+                ((b3g3r3b2 & 0xf8000000) >> 11);
+              bp2 += 12;
+              obptr += 8;
+            }
+          for (; x < width; x++)
+            {
+              r = *bp2++;
+              g = *bp2++;
+              b = *bp2++;
+              ((uint16 *)obptr)[0] = ((r & 0xf8) << 8) |
+                ((g & 0xfc) << 3) |
+                (b >> 3);
+              obptr += 2;
+            }
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 #else
-/* Render a 24-bit RGB image in buf into the GdkImage, without dithering.
+/* Render a 24-bit RGB image in buf into the XImage, without dithering.
    This assumes native byte ordering - what should really be done is to
-   check whether static_image->byte_order is consistent with the _ENDIAN
-   config flag, and if not, use a different function.
+   check whether handle->static_image->byte_order is consistent with the
+    _ENDIAN config flag, and if not, use a different function.
 
    This routine is faster than the one included with Gtk 1.0 for a number
    of reasons:
@@ -1633,10 +1659,10 @@ xlib_rgb_convert_565 (XImage *image,
    shifting and masking, then writes 2 words.
 */
 static void
-xlib_rgb_convert_565 (XImage *image,
-		     int ax, int ay, int width, int height,
-		     unsigned char *buf, int rowstride,
-		     int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_565 (XlibRgbHandle *handle, XImage *image,
+                     int ax, int ay, int width, int height,
+                     unsigned char *buf, int rowstride,
+                     int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf;
@@ -1651,14 +1677,14 @@ xlib_rgb_convert_565 (XImage *image,
     {
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  ((unsigned short *)obuf)[x] = ((r & 0xf8) << 8) |
-	    ((g & 0xfc) << 3) |
-	    (b >> 3);
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          ((unsigned short *)obuf)[x] = ((r & 0xf8) << 8) |
+            ((g & 0xfc) << 3) |
+            (b >> 3);
+        }
       bptr += rowstride;
       obuf += bpl;
     }
@@ -1667,10 +1693,10 @@ xlib_rgb_convert_565 (XImage *image,
 
 #ifdef HAIRY_CONVERT_565
 static void
-xlib_rgb_convert_565_gray (XImage *image,
-			  int ax, int ay, int width, int height,
-			  unsigned char *buf, int rowstride,
-			  int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_565_gray (XlibRgbHandle *handle, XImage *image,
+                          int ax, int ay, int width, int height,
+                          unsigned char *buf, int rowstride,
+                          int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf, *obptr;
@@ -1686,59 +1712,59 @@ xlib_rgb_convert_565_gray (XImage *image,
       bp2 = bptr;
       obptr = obuf;
       if (((unsigned long)obuf | (unsigned long) bp2) & 3)
-	{
-	  for (x = 0; x < width; x++)
-	    {
-	      g = *bp2++;
-	      ((uint16 *)obptr)[0] = ((g & 0xf8) << 8) |
-		((g & 0xfc) << 3) |
-		(g >> 3);
-	      obptr += 2;
-	    }
-	}
+        {
+          for (x = 0; x < width; x++)
+            {
+              g = *bp2++;
+              ((uint16 *)obptr)[0] = ((g & 0xf8) << 8) |
+                ((g & 0xfc) << 3) |
+                (g >> 3);
+              obptr += 2;
+            }
+        }
       else
-	{
-	  for (x = 0; x < width - 3; x += 4)
-	    {
-	      uint32 g3g2g1g0;
+        {
+          for (x = 0; x < width - 3; x += 4)
+            {
+              uint32 g3g2g1g0;
 
-	      g3g2g1g0 = ((uint32 *)bp2)[0];
-	      ((uint32 *)obptr)[0] =
-		((g3g2g1g0 & 0xf8) << 8) |
-		((g3g2g1g0 & 0xfc) << 3) |
-		((g3g2g1g0 & 0xf8) >> 3) |
-		(g3g2g1g0 & 0xf800) << 16 |
-		((g3g2g1g0 & 0xfc00) << 11) |
-		((g3g2g1g0 & 0xf800) << 5);
-	      ((uint32 *)obptr)[1] =
-		((g3g2g1g0 & 0xf80000) >> 8) |
-		((g3g2g1g0 & 0xfc0000) >> 13) |
-		((g3g2g1g0 & 0xf80000) >> 19) |
-		(g3g2g1g0 & 0xf8000000) |
-		((g3g2g1g0 & 0xfc000000) >> 5) |
-		((g3g2g1g0 & 0xf8000000) >> 11);
-	      bp2 += 4;
-	      obptr += 8;
-	    }
-	  for (; x < width; x++)
-	    {
-	      g = *bp2++;
-	      ((uint16 *)obptr)[0] = ((g & 0xf8) << 8) |
-		((g & 0xfc) << 3) |
-		(g >> 3);
-	      obptr += 2;
-	    }
-	}
+              g3g2g1g0 = ((uint32 *)bp2)[0];
+              ((uint32 *)obptr)[0] =
+                ((g3g2g1g0 & 0xf8) << 8) |
+                ((g3g2g1g0 & 0xfc) << 3) |
+                ((g3g2g1g0 & 0xf8) >> 3) |
+                (g3g2g1g0 & 0xf800) << 16 |
+                ((g3g2g1g0 & 0xfc00) << 11) |
+                ((g3g2g1g0 & 0xf800) << 5);
+              ((uint32 *)obptr)[1] =
+                ((g3g2g1g0 & 0xf80000) >> 8) |
+                ((g3g2g1g0 & 0xfc0000) >> 13) |
+                ((g3g2g1g0 & 0xf80000) >> 19) |
+                (g3g2g1g0 & 0xf8000000) |
+                ((g3g2g1g0 & 0xfc000000) >> 5) |
+                ((g3g2g1g0 & 0xf8000000) >> 11);
+              bp2 += 4;
+              obptr += 8;
+            }
+          for (; x < width; x++)
+            {
+              g = *bp2++;
+              ((uint16 *)obptr)[0] = ((g & 0xf8) << 8) |
+                ((g & 0xfc) << 3) |
+                (g >> 3);
+              obptr += 2;
+            }
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 #else
 static void
-xlib_rgb_convert_565_gray (XImage *image,
-			  int ax, int ay, int width, int height,
-			  unsigned char *buf, int rowstride,
-			  int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_565_gray (XlibRgbHandle *handle, XImage *image,
+                          int ax, int ay, int width, int height,
+                          unsigned char *buf, int rowstride,
+                          int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf;
@@ -1753,12 +1779,12 @@ xlib_rgb_convert_565_gray (XImage *image,
     {
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  g = *bp2++;
-	  ((uint16 *)obuf)[x] = ((g & 0xf8) << 8) |
-	    ((g & 0xfc) << 3) |
-	    (g >> 3);
-	}
+        {
+          g = *bp2++;
+          ((uint16 *)obuf)[x] = ((g & 0xf8) << 8) |
+            ((g & 0xfc) << 3) |
+            (g >> 3);
+        }
       bptr += rowstride;
       obuf += bpl;
     }
@@ -1766,10 +1792,10 @@ xlib_rgb_convert_565_gray (XImage *image,
 #endif
 
 static void
-xlib_rgb_convert_565_br (XImage *image,
-			 int ax, int ay, int width, int height,
-			 unsigned char *buf, int rowstride,
-			 int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_565_br (XlibRgbHandle *handle, XImage *image,
+                         int ax, int ay, int width, int height,
+                         unsigned char *buf, int rowstride,
+                         int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf;
@@ -1784,18 +1810,18 @@ xlib_rgb_convert_565_br (XImage *image,
     {
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  /* final word is:
-	     g4 g3 g2 b7 b6 b5 b4 b3  r7 r6 r5 r4 r3 g7 g6 g5
-	   */
-	  ((unsigned short *)obuf)[x] = (r & 0xf8) |
-	    ((g & 0xe0) >> 5) |
-	    ((g & 0x1c) << 11) |
-	    ((b & 0xf8) << 5);
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          /* final word is:
+             g4 g3 g2 b7 b6 b5 b4 b3  r7 r6 r5 r4 r3 g7 g6 g5
+           */
+          ((unsigned short *)obuf)[x] = (r & 0xf8) |
+            ((g & 0xe0) >> 5) |
+            ((g & 0x1c) << 11) |
+            ((b & 0xf8) << 5);
+        }
       bptr += rowstride;
       obuf += bpl;
     }
@@ -1805,10 +1831,10 @@ xlib_rgb_convert_565_br (XImage *image,
    in this mode. */
 #ifdef HAIRY_CONVERT_565
 static void
-xlib_rgb_convert_565_d (XImage *image,
-		     int ax, int ay, int width, int height,
-		     unsigned char *buf, int rowstride,
-		     int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_565_d (XlibRgbHandle *handle, XImage *image,
+                     int ax, int ay, int width, int height,
+                     unsigned char *buf, int rowstride,
+                     int x_align, int y_align, XlibRgbCmap *cmap)
 {
   /* Now this is what I'd call some highly tuned code! */
   int x, y;
@@ -1824,113 +1850,113 @@ xlib_rgb_convert_565_d (XImage *image,
   obuf = ((unsigned char *)image->data) + ay * bpl + ax * 2;
   for (y = y_align; y < height; y++)
     {
-      uint32 *dmp = DM_565 + ((y & (DM_HEIGHT - 1)) << DM_WIDTH_SHIFT);
+      uint32 *dmp = handle->DM_565 + ((y & (DM_HEIGHT - 1)) << DM_WIDTH_SHIFT);
       bp2 = bptr;
       obptr = obuf;
       if (((unsigned long)obuf | (unsigned long) bp2) & 3)
-	{
-	  for (x = x_align; x < width; x++)
-	    {
-	      int32 rgb = *bp2++ << 20;
-	      rgb += *bp2++ << 10;
-	      rgb += *bp2++;
-	      rgb += dmp[x & (DM_WIDTH - 1)];
-	      rgb += 0x10040100
-		- ((rgb & 0x1e0001e0) >> 5)
-		- ((rgb & 0x00070000) >> 6);
+        {
+          for (x = x_align; x < width; x++)
+            {
+              int32 rgb = *bp2++ << 20;
+              rgb += *bp2++ << 10;
+              rgb += *bp2++;
+              rgb += dmp[x & (DM_WIDTH - 1)];
+              rgb += 0x10040100
+                - ((rgb & 0x1e0001e0) >> 5)
+                - ((rgb & 0x00070000) >> 6);
 
-	      ((unsigned short *)obptr)[0] =
-		((rgb & 0x0f800000) >> 12) |
-		((rgb & 0x0003f000) >> 7) |
-		((rgb & 0x000000f8) >> 3);
-	      obptr += 2;
-	    }
-	}
+              ((unsigned short *)obptr)[0] =
+                ((rgb & 0x0f800000) >> 12) |
+                ((rgb & 0x0003f000) >> 7) |
+                ((rgb & 0x000000f8) >> 3);
+              obptr += 2;
+            }
+        }
       else
-	{
-	  for (x = x_align; x < width - 3; x += 4)
-	    {
-	      uint32 r1b0g0r0;
-	      uint32 g2r2b1g1;
-	      uint32 b3g3r3b2;
-	      uint32 rgb02, rgb13;
+        {
+          for (x = x_align; x < width - 3; x += 4)
+            {
+              uint32 r1b0g0r0;
+              uint32 g2r2b1g1;
+              uint32 b3g3r3b2;
+              uint32 rgb02, rgb13;
 
-	      r1b0g0r0 = ((uint32 *)bp2)[0];
-	      g2r2b1g1 = ((uint32 *)bp2)[1];
-	      b3g3r3b2 = ((uint32 *)bp2)[2];
-	      rgb02 =
-		((r1b0g0r0 & 0xff) << 20) +
-		((r1b0g0r0 & 0xff00) << 2) +
-		((r1b0g0r0 & 0xff0000) >> 16) +
-		dmp[x & (DM_WIDTH - 1)];
-	      rgb02 += 0x10040100
-		- ((rgb02 & 0x1e0001e0) >> 5)
-		- ((rgb02 & 0x00070000) >> 6);
-	      rgb13 =
-		((r1b0g0r0 & 0xff000000) >> 4) +
-		((g2r2b1g1 & 0xff) << 10) +
-		((g2r2b1g1 & 0xff00) >> 8) +
-		dmp[(x + 1) & (DM_WIDTH - 1)];
-	      rgb13 += 0x10040100
-		- ((rgb13 & 0x1e0001e0) >> 5)
-		- ((rgb13 & 0x00070000) >> 6);
-	      ((uint32 *)obptr)[0] =
-		((rgb02 & 0x0f800000) >> 12) |
-		((rgb02 & 0x0003f000) >> 7) |
-		((rgb02 & 0x000000f8) >> 3) |
-		((rgb13 & 0x0f800000) << 4) |
-		((rgb13 & 0x0003f000) << 9) |
-		((rgb13 & 0x000000f8) << 13);
-	      rgb02 =
-		((g2r2b1g1 & 0xff0000) << 4) +
-		((g2r2b1g1 & 0xff000000) >> 14) +
-		(b3g3r3b2 & 0xff) +
-		dmp[(x + 2) & (DM_WIDTH - 1)];
-	      rgb02 += 0x10040100
-		- ((rgb02 & 0x1e0001e0) >> 5)
-		- ((rgb02 & 0x00070000) >> 6);
-	      rgb13 =
-		((b3g3r3b2 & 0xff00) << 12) +
-		((b3g3r3b2 & 0xff0000) >> 6) +
-		((b3g3r3b2 & 0xff000000) >> 24) +
-		dmp[(x + 3) & (DM_WIDTH - 1)];
-	      rgb13 += 0x10040100
-		- ((rgb13 & 0x1e0001e0) >> 5)
-		- ((rgb13 & 0x00070000) >> 6);
-	      ((uint32 *)obptr)[1] =
-		((rgb02 & 0x0f800000) >> 12) |
-		((rgb02 & 0x0003f000) >> 7) |
-		((rgb02 & 0x000000f8) >> 3) |
-		((rgb13 & 0x0f800000) << 4) |
-		((rgb13 & 0x0003f000) << 9) |
-		((rgb13 & 0x000000f8) << 13);
-	      bp2 += 12;
-	      obptr += 8;
-	    }
-	  for (; x < width; x++)
-	    {
-	      int32 rgb = *bp2++ << 20;
-	      rgb += *bp2++ << 10;
-	      rgb += *bp2++;
-	      rgb += dmp[x & (DM_WIDTH - 1)];
-	      rgb += 0x10040100
-		- ((rgb & 0x1e0001e0) >> 5)
-		- ((rgb & 0x00070000) >> 6);
+              r1b0g0r0 = ((uint32 *)bp2)[0];
+              g2r2b1g1 = ((uint32 *)bp2)[1];
+              b3g3r3b2 = ((uint32 *)bp2)[2];
+              rgb02 =
+                ((r1b0g0r0 & 0xff) << 20) +
+                ((r1b0g0r0 & 0xff00) << 2) +
+                ((r1b0g0r0 & 0xff0000) >> 16) +
+                dmp[x & (DM_WIDTH - 1)];
+              rgb02 += 0x10040100
+                - ((rgb02 & 0x1e0001e0) >> 5)
+                - ((rgb02 & 0x00070000) >> 6);
+              rgb13 =
+                ((r1b0g0r0 & 0xff000000) >> 4) +
+                ((g2r2b1g1 & 0xff) << 10) +
+                ((g2r2b1g1 & 0xff00) >> 8) +
+                dmp[(x + 1) & (DM_WIDTH - 1)];
+              rgb13 += 0x10040100
+                - ((rgb13 & 0x1e0001e0) >> 5)
+                - ((rgb13 & 0x00070000) >> 6);
+              ((uint32 *)obptr)[0] =
+                ((rgb02 & 0x0f800000) >> 12) |
+                ((rgb02 & 0x0003f000) >> 7) |
+                ((rgb02 & 0x000000f8) >> 3) |
+                ((rgb13 & 0x0f800000) << 4) |
+                ((rgb13 & 0x0003f000) << 9) |
+                ((rgb13 & 0x000000f8) << 13);
+              rgb02 =
+                ((g2r2b1g1 & 0xff0000) << 4) +
+                ((g2r2b1g1 & 0xff000000) >> 14) +
+                (b3g3r3b2 & 0xff) +
+                dmp[(x + 2) & (DM_WIDTH - 1)];
+              rgb02 += 0x10040100
+                - ((rgb02 & 0x1e0001e0) >> 5)
+                - ((rgb02 & 0x00070000) >> 6);
+              rgb13 =
+                ((b3g3r3b2 & 0xff00) << 12) +
+                ((b3g3r3b2 & 0xff0000) >> 6) +
+                ((b3g3r3b2 & 0xff000000) >> 24) +
+                dmp[(x + 3) & (DM_WIDTH - 1)];
+              rgb13 += 0x10040100
+                - ((rgb13 & 0x1e0001e0) >> 5)
+                - ((rgb13 & 0x00070000) >> 6);
+              ((uint32 *)obptr)[1] =
+                ((rgb02 & 0x0f800000) >> 12) |
+                ((rgb02 & 0x0003f000) >> 7) |
+                ((rgb02 & 0x000000f8) >> 3) |
+                ((rgb13 & 0x0f800000) << 4) |
+                ((rgb13 & 0x0003f000) << 9) |
+                ((rgb13 & 0x000000f8) << 13);
+              bp2 += 12;
+              obptr += 8;
+            }
+          for (; x < width; x++)
+            {
+              int32 rgb = *bp2++ << 20;
+              rgb += *bp2++ << 10;
+              rgb += *bp2++;
+              rgb += dmp[x & (DM_WIDTH - 1)];
+              rgb += 0x10040100
+                - ((rgb & 0x1e0001e0) >> 5)
+                - ((rgb & 0x00070000) >> 6);
 
-	      ((unsigned short *)obptr)[0] =
-		((rgb & 0x0f800000) >> 12) |
-		((rgb & 0x0003f000) >> 7) |
-		((rgb & 0x000000f8) >> 3);
-	      obptr += 2;
-	    }
-	}
+              ((unsigned short *)obptr)[0] =
+                ((rgb & 0x0f800000) >> 12) |
+                ((rgb & 0x0003f000) >> 7) |
+                ((rgb & 0x000000f8) >> 3);
+              obptr += 2;
+            }
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 #else
 static void
-xlib_rgb_convert_565_d (XImage *image,
+xxlib_rgb_convert_565_d (XlibRgbHandle *handle, XImage *image,
                        int ax, int ay, int width, int height,
                        unsigned char *buf, int rowstride,
                        int x_align, int y_align, XlibRgbCmap *cmap)
@@ -1949,7 +1975,7 @@ xlib_rgb_convert_565_d (XImage *image,
 
   for (y = y_align; y < height; y++)
     {
-      uint32 *dmp = DM_565 + ((y & (DM_HEIGHT - 1)) << DM_WIDTH_SHIFT);
+      uint32 *dmp = handle->DM_565 + ((y & (DM_HEIGHT - 1)) << DM_WIDTH_SHIFT);
       unsigned char *bp2 = bptr;
 
       for (x = x_align; x < width; x++)
@@ -1957,7 +1983,7 @@ xlib_rgb_convert_565_d (XImage *image,
           int32 rgb = *bp2++ << 20;
           rgb += *bp2++ << 10;
           rgb += *bp2++;
-	  rgb += dmp[x & (DM_WIDTH - 1)];
+          rgb += dmp[x & (DM_WIDTH - 1)];
           rgb += 0x10040100
             - ((rgb & 0x1e0001e0) >> 5)
             - ((rgb & 0x00070000) >> 6);
@@ -1975,10 +2001,10 @@ xlib_rgb_convert_565_d (XImage *image,
 #endif
 
 static void
-xlib_rgb_convert_555 (XImage *image,
-		     int ax, int ay, int width, int height,
-		     unsigned char *buf, int rowstride,
-		     int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_555 (XlibRgbHandle *handle, XImage *image,
+                     int ax, int ay, int width, int height,
+                     unsigned char *buf, int rowstride,
+                     int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf;
@@ -1993,24 +2019,24 @@ xlib_rgb_convert_555 (XImage *image,
     {
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  ((unsigned short *)obuf)[x] = ((r & 0xf8) << 7) |
-	    ((g & 0xf8) << 2) |
-	    (b >> 3);
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          ((unsigned short *)obuf)[x] = ((r & 0xf8) << 7) |
+            ((g & 0xf8) << 2) |
+            (b >> 3);
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_555_br (XImage *image,
-			int ax, int ay, int width, int height,
-			unsigned char *buf, int rowstride,
-			int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_555_br (XlibRgbHandle *handle, XImage *image,
+                        int ax, int ay, int width, int height,
+                        unsigned char *buf, int rowstride,
+                        int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf;
@@ -2025,28 +2051,28 @@ xlib_rgb_convert_555_br (XImage *image,
     {
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  /* final word is:
-	     g5 g4 g3 b7 b6 b5 b4 b3  0 r7 r6 r5 r4 r3 g7 g6
-	   */
-	  ((unsigned short *)obuf)[x] = ((r & 0xf8) >> 1) |
-	    ((g & 0xc0) >> 6) |
-	    ((g & 0x18) << 10) |
-	    ((b & 0xf8) << 5);
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          /* final word is:
+             g5 g4 g3 b7 b6 b5 b4 b3  0 r7 r6 r5 r4 r3 g7 g6
+           */
+          ((unsigned short *)obuf)[x] = ((r & 0xf8) >> 1) |
+            ((g & 0xc0) >> 6) |
+            ((g & 0x18) << 10) |
+            ((b & 0xf8) << 5);
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_888_msb (XImage *image,
-			 int ax, int ay, int width, int height,
-			 unsigned char *buf, int rowstride,
-			 int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_888_msb (XlibRgbHandle *handle, XImage *image,
+                         int ax, int ay, int width, int height,
+                         unsigned char *buf, int rowstride,
+                         int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int y;
   unsigned char *obuf;
@@ -2071,10 +2097,10 @@ xlib_rgb_convert_888_msb (XImage *image,
 
 #ifdef HAIRY_CONVERT_888
 static void
-xlib_rgb_convert_888_lsb (XImage *image,
-			  int ax, int ay, int width, int height,
-			  unsigned char *buf, int rowstride,
-			  int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_888_lsb (XlibRgbHandle *handle, XImage *image,
+                          int ax, int ay, int width, int height,
+                          unsigned char *buf, int rowstride,
+                          int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf, *obptr;
@@ -2090,65 +2116,65 @@ xlib_rgb_convert_888_lsb (XImage *image,
       bp2 = bptr;
       obptr = obuf;
       if (((unsigned long)obuf | (unsigned long) bp2) & 3)
-	{
-	  for (x = 0; x < width; x++)
-	    {
-	      r = bp2[0];
-	      g = bp2[1];
-	      b = bp2[2];
-	      *obptr++ = b;
-	      *obptr++ = g;
-	      *obptr++ = r;
-	      bp2 += 3;
-	    }
-	}
+        {
+          for (x = 0; x < width; x++)
+            {
+              r = bp2[0];
+              g = bp2[1];
+              b = bp2[2];
+              *obptr++ = b;
+              *obptr++ = g;
+              *obptr++ = r;
+              bp2 += 3;
+            }
+        }
       else
-	{
-	  for (x = 0; x < width - 3; x += 4)
-	    {
-	      uint32 r1b0g0r0;
-	      uint32 g2r2b1g1;
-	      uint32 b3g3r3b2;
+        {
+          for (x = 0; x < width - 3; x += 4)
+            {
+              uint32 r1b0g0r0;
+              uint32 g2r2b1g1;
+              uint32 b3g3r3b2;
 
-	      r1b0g0r0 = ((uint32 *)bp2)[0];
-	      g2r2b1g1 = ((uint32 *)bp2)[1];
-	      b3g3r3b2 = ((uint32 *)bp2)[2];
-	      ((uint32 *)obptr)[0] =
-		(r1b0g0r0 & 0xff00) |
-		((r1b0g0r0 & 0xff0000) >> 16) |
-		(((g2r2b1g1 & 0xff00) | (r1b0g0r0 & 0xff)) << 16);
-	      ((uint32 *)obptr)[1] =
-		(g2r2b1g1 & 0xff0000ff) |
-		((r1b0g0r0 & 0xff000000) >> 16) |
-		((b3g3r3b2 & 0xff) << 16);
-	      ((uint32 *)obptr)[2] =
-		(((g2r2b1g1 & 0xff0000) | (b3g3r3b2 & 0xff000000)) >> 16) |
-		((b3g3r3b2 & 0xff00) << 16) |
-		((b3g3r3b2 & 0xff0000));
-	      bp2 += 12;
-	      obptr += 12;
-	    }
-	  for (; x < width; x++)
-	    {
-	      r = bp2[0];
-	      g = bp2[1];
-	      b = bp2[2];
-	      *obptr++ = b;
-	      *obptr++ = g;
-	      *obptr++ = r;
-	      bp2 += 3;
-	    }
-	}
+              r1b0g0r0 = ((uint32 *)bp2)[0];
+              g2r2b1g1 = ((uint32 *)bp2)[1];
+              b3g3r3b2 = ((uint32 *)bp2)[2];
+              ((uint32 *)obptr)[0] =
+                (r1b0g0r0 & 0xff00) |
+                ((r1b0g0r0 & 0xff0000) >> 16) |
+                (((g2r2b1g1 & 0xff00) | (r1b0g0r0 & 0xff)) << 16);
+              ((uint32 *)obptr)[1] =
+                (g2r2b1g1 & 0xff0000ff) |
+                ((r1b0g0r0 & 0xff000000) >> 16) |
+                ((b3g3r3b2 & 0xff) << 16);
+              ((uint32 *)obptr)[2] =
+                (((g2r2b1g1 & 0xff0000) | (b3g3r3b2 & 0xff000000)) >> 16) |
+                ((b3g3r3b2 & 0xff00) << 16) |
+                ((b3g3r3b2 & 0xff0000));
+              bp2 += 12;
+              obptr += 12;
+            }
+          for (; x < width; x++)
+            {
+              r = bp2[0];
+              g = bp2[1];
+              b = bp2[2];
+              *obptr++ = b;
+              *obptr++ = g;
+              *obptr++ = r;
+              bp2 += 3;
+            }
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 #else
 static void
-xlib_rgb_convert_888_lsb (XImage *image,
-			 int ax, int ay, int width, int height,
-			 unsigned char *buf, int rowstride,
-			 int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_888_lsb (XlibRgbHandle *handle, XImage *image,
+                         int ax, int ay, int width, int height,
+                         unsigned char *buf, int rowstride,
+                         int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf;
@@ -2163,15 +2189,15 @@ xlib_rgb_convert_888_lsb (XImage *image,
     {
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = bp2[0];
-	  g = bp2[1];
-	  b = bp2[2];
-	  obuf[x * 3] = b;
-	  obuf[x * 3 + 1] = g;
-	  obuf[x * 3 + 2] = r;
-	  bp2 += 3;
-	}
+        {
+          r = bp2[0];
+          g = bp2[1];
+          b = bp2[2];
+          obuf[x * 3] = b;
+          obuf[x * 3 + 1] = g;
+          obuf[x * 3 + 2] = r;
+          bp2 += 3;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
@@ -2181,10 +2207,10 @@ xlib_rgb_convert_888_lsb (XImage *image,
 /* convert 24-bit packed to 32-bit unpacked */
 /* todo: optimize this */
 static void
-xlib_rgb_convert_0888 (XImage *image,
-		      int ax, int ay, int width, int height,
-		      unsigned char *buf, int rowstride,
-		      int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_0888 (XlibRgbHandle *handle, XImage *image,
+                      int ax, int ay, int width, int height,
+                      unsigned char *buf, int rowstride,
+                      int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf;
@@ -2199,23 +2225,23 @@ xlib_rgb_convert_0888 (XImage *image,
     {
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = bp2[0];
-	  g = bp2[1];
-	  b = bp2[2];
-	  ((uint32 *)obuf)[x] = (r << 16) | (g << 8) | b;
-	  bp2 += 3;
-	}
+        {
+          r = bp2[0];
+          g = bp2[1];
+          b = bp2[2];
+          ((uint32 *)obuf)[x] = (r << 16) | (g << 8) | b;
+          bp2 += 3;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_0888_br (XImage *image,
-			 int ax, int ay, int width, int height,
-			 unsigned char *buf, int rowstride,
-			 int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_0888_br (XlibRgbHandle *handle, XImage *image,
+                         int ax, int ay, int width, int height,
+                         unsigned char *buf, int rowstride,
+                         int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf;
@@ -2230,23 +2256,23 @@ xlib_rgb_convert_0888_br (XImage *image,
     {
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = bp2[0];
-	  g = bp2[1];
-	  b = bp2[2];
-	  ((uint32 *)obuf)[x] = (b << 24) | (g << 16) | (r << 8);
-	  bp2 += 3;
-	}
+        {
+          r = bp2[0];
+          g = bp2[1];
+          b = bp2[2];
+          ((uint32 *)obuf)[x] = (b << 24) | (g << 16) | (r << 8);
+          bp2 += 3;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_8880_br (XImage *image,
-			 int ax, int ay, int width, int height,
-			 unsigned char *buf, int rowstride,
-			 int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_8880_br (XlibRgbHandle *handle, XImage *image,
+                         int ax, int ay, int width, int height,
+                         unsigned char *buf, int rowstride,
+                         int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf;
@@ -2261,13 +2287,13 @@ xlib_rgb_convert_8880_br (XImage *image,
     {
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = bp2[0];
-	  g = bp2[1];
-	  b = bp2[2];
-	  ((uint32 *)obuf)[x] = (b << 16) | (g << 8) | r;
-	  bp2 += 3;
-	}
+        {
+          r = bp2[0];
+          g = bp2[1];
+          b = bp2[2];
+          ((uint32 *)obuf)[x] = (b << 16) | (g << 8) | r;
+          bp2 += 3;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
@@ -2276,11 +2302,11 @@ xlib_rgb_convert_8880_br (XImage *image,
 /* Generic truecolor/directcolor conversion function. Slow, but these
    are oddball modes. */
 static void
-xlib_rgb_convert_truecolor_lsb (XImage *image,
-			       int ax, int ay, int width, int height,
-			       unsigned char *buf, int rowstride,
-			       int x_align, int y_align,
-			       XlibRgbCmap *cmap)
+xxlib_rgb_convert_truecolor_lsb (XlibRgbHandle *handle, XImage *image,
+                               int ax, int ay, int width, int height,
+                               unsigned char *buf, int rowstride,
+                               int x_align, int y_align,
+                               XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf, *obptr;
@@ -2294,13 +2320,13 @@ xlib_rgb_convert_truecolor_lsb (XImage *image,
   uint32 pixel;
   int i;
 
-  r_right = 8 - image_info->red_prec;
-  r_left = image_info->red_shift;
-  g_right = 8 - image_info->green_prec;
-  g_left = image_info->green_shift;
-  b_right = 8 - image_info->blue_prec;
-  b_left = image_info->blue_shift;
-  bpp = image_info->bpp;
+  r_right = 8 - handle->red_prec;
+  r_left = handle->red_shift;
+  g_right = 8 - handle->green_prec;
+  g_left = handle->green_shift;
+  b_right = 8 - handle->blue_prec;
+  b_left = handle->blue_shift;
+  bpp = handle->bpp;
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + ax * bpp;
@@ -2309,31 +2335,31 @@ xlib_rgb_convert_truecolor_lsb (XImage *image,
       obptr = obuf;
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = bp2[0];
-	  g = bp2[1];
-	  b = bp2[2];
-	  pixel = ((r >> r_right) << r_left) |
-	    ((g >> g_right) << g_left) |
-	    ((b >> b_right) << b_left);
-	  for (i = 0; i < bpp; i++)
-	    {
-	      *obptr++ = pixel & 0xff;
-	      pixel >>= 8;
-	    }
-	  bp2 += 3;
-	}
+        {
+          r = bp2[0];
+          g = bp2[1];
+          b = bp2[2];
+          pixel = ((r >> r_right) << r_left) |
+            ((g >> g_right) << g_left) |
+            ((b >> b_right) << b_left);
+          for (i = 0; i < bpp; i++)
+            {
+              *obptr++ = pixel & 0xff;
+              pixel >>= 8;
+            }
+          bp2 += 3;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_truecolor_lsb_d (XImage *image,
-				 int ax, int ay, int width, int height,
-				 unsigned char *buf, int rowstride,
-				 int x_align, int y_align,
-				 XlibRgbCmap *cmap)
+xxlib_rgb_convert_truecolor_lsb_d (XlibRgbHandle *handle, XImage *image,
+                                 int ax, int ay, int width, int height,
+                                 unsigned char *buf, int rowstride,
+                                 int x_align, int y_align,
+                                 XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf, *obptr;
@@ -2350,16 +2376,16 @@ xlib_rgb_convert_truecolor_lsb_d (XImage *image,
   int r1, g1, b1;
   const unsigned char *dmp;
 
-  r_right = 8 - image_info->red_prec;
-  r_left = image_info->red_shift;
-  r_prec = image_info->red_prec;
-  g_right = 8 - image_info->green_prec;
-  g_left = image_info->green_shift;
-  g_prec = image_info->green_prec;
-  b_right = 8 - image_info->blue_prec;
-  b_left = image_info->blue_shift;
-  b_prec = image_info->blue_prec;
-  bpp = image_info->bpp;
+  r_right = 8 - handle->red_prec;
+  r_left = handle->red_shift;
+  r_prec = handle->red_prec;
+  g_right = 8 - handle->green_prec;
+  g_left = handle->green_shift;
+  g_prec = handle->green_prec;
+  b_right = 8 - handle->blue_prec;
+  b_left = handle->blue_shift;
+  b_prec = handle->blue_prec;
+  bpp = handle->bpp;
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + ax * bpp;
@@ -2369,35 +2395,35 @@ xlib_rgb_convert_truecolor_lsb_d (XImage *image,
       obptr = obuf;
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = bp2[0];
-	  g = bp2[1];
-	  b = bp2[2];
-	  dith = dmp[(x_align + x) & (DM_WIDTH - 1)] << 2;
-	  r1 = r + (dith >> r_prec);
-	  g1 = g + ((252 - dith) >> g_prec);
-	  b1 = b + (dith >> b_prec);
-	  pixel = (((r1 - (r1 >> r_prec)) >> r_right) << r_left) |
-	    (((g1 - (g1 >> g_prec)) >> g_right) << g_left) |
-	    (((b1 - (b1 >> b_prec)) >> b_right) << b_left);
-	  for (i = 0; i < bpp; i++)
-	    {
-	      *obptr++ = pixel & 0xff;
-	      pixel >>= 8;
-	    }
-	  bp2 += 3;
-	}
+        {
+          r = bp2[0];
+          g = bp2[1];
+          b = bp2[2];
+          dith = dmp[(x_align + x) & (DM_WIDTH - 1)] << 2;
+          r1 = r + (dith >> r_prec);
+          g1 = g + ((252 - dith) >> g_prec);
+          b1 = b + (dith >> b_prec);
+          pixel = (((r1 - (r1 >> r_prec)) >> r_right) << r_left) |
+            (((g1 - (g1 >> g_prec)) >> g_right) << g_left) |
+            (((b1 - (b1 >> b_prec)) >> b_right) << b_left);
+          for (i = 0; i < bpp; i++)
+            {
+              *obptr++ = pixel & 0xff;
+              pixel >>= 8;
+            }
+          bp2 += 3;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_truecolor_msb (XImage *image,
-			       int ax, int ay, int width, int height,
-			       unsigned char *buf, int rowstride,
-			       int x_align, int y_align,
-			       XlibRgbCmap *cmap)
+xxlib_rgb_convert_truecolor_msb (XlibRgbHandle *handle, XImage *image,
+                               int ax, int ay, int width, int height,
+                               unsigned char *buf, int rowstride,
+                               int x_align, int y_align,
+                               XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf, *obptr;
@@ -2411,13 +2437,13 @@ xlib_rgb_convert_truecolor_msb (XImage *image,
   uint32 pixel;
   int shift, shift_init;
 
-  r_right = 8 - image_info->red_prec;
-  r_left = image_info->red_shift;
-  g_right = 8 - image_info->green_prec;
-  g_left = image_info->green_shift;
-  b_right = 8 - image_info->blue_prec;
-  b_left = image_info->blue_shift;
-  bpp = image_info->bpp;
+  r_right = 8 - handle->red_prec;
+  r_left = handle->red_shift;
+  g_right = 8 - handle->green_prec;
+  g_left = handle->green_shift;
+  b_right = 8 - handle->blue_prec;
+  b_left = handle->blue_shift;
+  bpp = handle->bpp;
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + ax * bpp;
@@ -2427,30 +2453,30 @@ xlib_rgb_convert_truecolor_msb (XImage *image,
       obptr = obuf;
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = bp2[0];
-	  g = bp2[1];
-	  b = bp2[2];
-	  pixel = ((r >> r_right) << r_left) |
-	    ((g >> g_right) << g_left) |
-	    ((b >> b_right) << b_left);
-	  for (shift = shift_init; shift >= 0; shift -= 8)
-	    {
-	      *obptr++ = (pixel >> shift) & 0xff;
-	    }
-	  bp2 += 3;
-	}
+        {
+          r = bp2[0];
+          g = bp2[1];
+          b = bp2[2];
+          pixel = ((r >> r_right) << r_left) |
+            ((g >> g_right) << g_left) |
+            ((b >> b_right) << b_left);
+          for (shift = shift_init; shift >= 0; shift -= 8)
+            {
+              *obptr++ = (pixel >> shift) & 0xff;
+            }
+          bp2 += 3;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_truecolor_msb_d (XImage *image,
-				 int ax, int ay, int width, int height,
-				 unsigned char *buf, int rowstride,
-				 int x_align, int y_align,
-				 XlibRgbCmap *cmap)
+xxlib_rgb_convert_truecolor_msb_d (XlibRgbHandle *handle, XImage *image,
+                                 int ax, int ay, int width, int height,
+                                 unsigned char *buf, int rowstride,
+                                 int x_align, int y_align,
+                                 XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *obuf, *obptr;
@@ -2467,16 +2493,16 @@ xlib_rgb_convert_truecolor_msb_d (XImage *image,
   int r1, g1, b1;
   const unsigned char *dmp;
 
-  r_right = 8 - image_info->red_prec;
-  r_left = image_info->red_shift;
-  r_prec = image_info->red_prec;
-  g_right = 8 - image_info->green_prec;
-  g_left = image_info->green_shift;
-  g_prec = image_info->green_prec;
-  b_right = 8 - image_info->blue_prec;
-  b_left = image_info->blue_shift;
-  b_prec = image_info->blue_prec;
-  bpp = image_info->bpp;
+  r_right = 8 - handle->red_prec;
+  r_left = handle->red_shift;
+  r_prec = handle->red_prec;
+  g_right = 8 - handle->green_prec;
+  g_left = handle->green_shift;
+  g_prec = handle->green_prec;
+  b_right = 8 - handle->blue_prec;
+  b_left = handle->blue_shift;
+  b_prec = handle->blue_prec;
+  bpp = handle->bpp;
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + ax * bpp;
@@ -2487,23 +2513,23 @@ xlib_rgb_convert_truecolor_msb_d (XImage *image,
       obptr = obuf;
       bp2 = bptr;
       for (x = 0; x < width; x++)
-	{
-	  r = bp2[0];
-	  g = bp2[1];
-	  b = bp2[2];
-	  dith = dmp[(x_align + x) & (DM_WIDTH - 1)] << 2;
-	  r1 = r + (dith >> r_prec);
-	  g1 = g + ((252 - dith) >> g_prec);
-	  b1 = b + (dith >> b_prec);
-	  pixel = (((r1 - (r1 >> r_prec)) >> r_right) << r_left) |
-	    (((g1 - (g1 >> g_prec)) >> g_right) << g_left) |
-	    (((b1 - (b1 >> b_prec)) >> b_right) << b_left);
-	  for (shift = shift_init; shift >= 0; shift -= 8)
-	    {
-	      *obptr++ = (pixel >> shift) & 0xff;
-	    }
-	  bp2 += 3;
-	}
+        {
+          r = bp2[0];
+          g = bp2[1];
+          b = bp2[2];
+          dith = dmp[(x_align + x) & (DM_WIDTH - 1)] << 2;
+          r1 = r + (dith >> r_prec);
+          g1 = g + ((252 - dith) >> g_prec);
+          b1 = b + (dith >> b_prec);
+          pixel = (((r1 - (r1 >> r_prec)) >> r_right) << r_left) |
+            (((g1 - (g1 >> g_prec)) >> g_right) << g_left) |
+            (((b1 - (b1 >> b_prec)) >> b_right) << b_left);
+          for (shift = shift_init; shift >= 0; shift -= 8)
+            {
+              *obptr++ = (pixel >> shift) & 0xff;
+            }
+          bp2 += 3;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
@@ -2511,11 +2537,11 @@ xlib_rgb_convert_truecolor_msb_d (XImage *image,
 
 /* This actually works for depths from 3 to 7 */
 static void
-xlib_rgb_convert_4 (XImage *image,
-		   int ax, int ay, int width, int height,
-		   unsigned char *buf, int rowstride,
-		   int x_align, int y_align,
-		   XlibRgbCmap *cmap)
+xxlib_rgb_convert_4 (XlibRgbHandle *handle, XImage *image,
+                   int ax, int ay, int width, int height,
+                   unsigned char *buf, int rowstride,
+                   int x_align, int y_align,
+                   XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -2534,16 +2560,16 @@ xlib_rgb_convert_4 (XImage *image,
       bp2 = bptr;
       obptr = obuf;
       for (x = 0; x < width; x += 1)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  dith = (dmp[(x_align + x) & (DM_WIDTH - 1)] << 2) | 3;
-	  obptr[0] = colorcube_d[(((r + dith) & 0x100) >> 2) |
-				(((g + 258 - dith) & 0x100) >> 5) |
-				(((b + dith) & 0x100) >> 8)];
-	  obptr++;
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          dith = (dmp[(x_align + x) & (DM_WIDTH - 1)] << 2) | 3;
+          obptr[0] = handle->colorcube_d[(((r + dith) & 0x100) >> 2) |
+                                (((g + 258 - dith) & 0x100) >> 5) |
+                                (((b + dith) & 0x100) >> 8)];
+          obptr++;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
@@ -2551,10 +2577,10 @@ xlib_rgb_convert_4 (XImage *image,
 
 /* This actually works for depths from 3 to 7 */
 static void
-xlib_rgb_convert_gray4 (XImage *image,
-		       int ax, int ay, int width, int height,
-		       unsigned char *buf, int rowstride,
-		       int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_gray4 (XlibRgbHandle *handle, XImage *image,
+                       int ax, int ay, int width, int height,
+                       unsigned char *buf, int rowstride,
+                       int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -2566,29 +2592,29 @@ xlib_rgb_convert_gray4 (XImage *image,
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + ax;
-  shift = 9 - image_info->x_visual_info->depth;
+  shift = 9 - handle->x_visual_info->depth;
   for (y = 0; y < height; y++)
     {
       bp2 = bptr;
       obptr = obuf;
       for (x = 0; x < width; x++)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  obptr[0] = (g + ((b + r) >> 1)) >> shift;
-	  obptr++;
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          obptr[0] = (g + ((b + r) >> 1)) >> shift;
+          obptr++;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_gray4_pack (XImage *image,
-			    int ax, int ay, int width, int height,
-			    unsigned char *buf, int rowstride,
-			    int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_gray4_pack (XlibRgbHandle *handle, XImage *image,
+                            int ax, int ay, int width, int height,
+                            unsigned char *buf, int rowstride,
+                            int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -2602,32 +2628,32 @@ xlib_rgb_convert_gray4_pack (XImage *image,
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + (ax >> 1);
-  shift = 9 - image_info->x_visual_info->depth;
+  shift = 9 - handle->x_visual_info->depth;
   for (y = 0; y < height; y++)
     {
       bp2 = bptr;
       obptr = obuf;
       for (x = 0; x < width; x += 2)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  pix0 = (g + ((b + r) >> 1)) >> shift;
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  pix1 = (g + ((b + r) >> 1)) >> shift;
-	  obptr[0] = (pix0 << 4) | pix1;
-	  obptr++;
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          pix0 = (g + ((b + r) >> 1)) >> shift;
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          pix1 = (g + ((b + r) >> 1)) >> shift;
+          obptr[0] = (pix0 << 4) | pix1;
+          obptr++;
+        }
       if (width & 1)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  pix0 = (g + ((b + r) >> 1)) >> shift;
-	  obptr[0] = (pix0 << 4);
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          pix0 = (g + ((b + r) >> 1)) >> shift;
+          obptr[0] = (pix0 << 4);
+        }
       bptr += rowstride;
       obuf += bpl;
     }
@@ -2635,10 +2661,10 @@ xlib_rgb_convert_gray4_pack (XImage *image,
 
 /* This actually works for depths from 3 to 7 */
 static void
-xlib_rgb_convert_gray4_d (XImage *image,
-		       int ax, int ay, int width, int height,
-		       unsigned char *buf, int rowstride,
-		       int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_gray4_d (XlibRgbHandle *handle, XImage *image,
+                       int ax, int ay, int width, int height,
+                       unsigned char *buf, int rowstride,
+                       int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -2652,7 +2678,7 @@ xlib_rgb_convert_gray4_d (XImage *image,
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + ax;
-  prec = image_info->x_visual_info->depth;
+  prec = handle->x_visual_info->depth;
   right = 8 - prec;
   for (y = 0; y < height; y++)
     {
@@ -2660,25 +2686,25 @@ xlib_rgb_convert_gray4_d (XImage *image,
       obptr = obuf;
       dmp = DM[(y_align + y) & (DM_HEIGHT - 1)];
       for (x = 0; x < width; x++)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  gray = (g + ((b + r) >> 1)) >> 1;
-	  gray += (dmp[(x_align + x) & (DM_WIDTH - 1)] << 2) >> prec;
-	  obptr[0] = (gray - (gray >> prec)) >> right;
-	  obptr++;
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          gray = (g + ((b + r) >> 1)) >> 1;
+          gray += (dmp[(x_align + x) & (DM_WIDTH - 1)] << 2) >> prec;
+          obptr[0] = (gray - (gray >> prec)) >> right;
+          obptr++;
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_gray4_d_pack (XImage *image,
-			      int ax, int ay, int width, int height,
-			      unsigned char *buf, int rowstride,
-			      int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_gray4_d_pack (XlibRgbHandle *handle, XImage *image,
+                              int ax, int ay, int width, int height,
+                              unsigned char *buf, int rowstride,
+                              int x_align, int y_align, XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -2694,7 +2720,7 @@ xlib_rgb_convert_gray4_d_pack (XImage *image,
   bptr = buf;
   bpl = image->bytes_per_line;
   obuf = ((unsigned char *)image->data) + ay * bpl + (ax >> 1);
-  prec = image_info->x_visual_info->depth;
+  prec = handle->x_visual_info->depth;
   right = 8 - prec;
   for (y = 0; y < height; y++)
     {
@@ -2702,43 +2728,43 @@ xlib_rgb_convert_gray4_d_pack (XImage *image,
       obptr = obuf;
       dmp = DM[(y_align + y) & (DM_HEIGHT - 1)];
       for (x = 0; x < width; x += 2)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  gray = (g + ((b + r) >> 1)) >> 1;
-	  gray += (dmp[(x_align + x) & (DM_WIDTH - 1)] << 2) >> prec;
-	  pix0 = (gray - (gray >> prec)) >> right;
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  gray = (g + ((b + r) >> 1)) >> 1;
-	  gray += (dmp[(x_align + x + 1) & (DM_WIDTH - 1)] << 2) >> prec;
-	  pix1 = (gray - (gray >> prec)) >> right;
-	  obptr[0] = (pix0 << 4) | pix1;
-	  obptr++;
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          gray = (g + ((b + r) >> 1)) >> 1;
+          gray += (dmp[(x_align + x) & (DM_WIDTH - 1)] << 2) >> prec;
+          pix0 = (gray - (gray >> prec)) >> right;
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          gray = (g + ((b + r) >> 1)) >> 1;
+          gray += (dmp[(x_align + x + 1) & (DM_WIDTH - 1)] << 2) >> prec;
+          pix1 = (gray - (gray >> prec)) >> right;
+          obptr[0] = (pix0 << 4) | pix1;
+          obptr++;
+        }
       if (width & 1)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  gray = (g + ((b + r) >> 1)) >> 1;
-	  gray += (dmp[(x_align + x + 1) & (DM_WIDTH - 1)] << 2) >> prec;
-	  pix0 = (gray - (gray >> prec)) >> right;
-	  obptr[0] = (pix0 << 4);
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          gray = (g + ((b + r) >> 1)) >> 1;
+          gray += (dmp[(x_align + x + 1) & (DM_WIDTH - 1)] << 2) >> prec;
+          pix0 = (gray - (gray >> prec)) >> right;
+          obptr[0] = (pix0 << 4);
+        }
       bptr += rowstride;
       obuf += bpl;
     }
 }
 
 static void
-xlib_rgb_convert_1 (XImage *image,
-		   int ax, int ay, int width, int height,
-		   unsigned char *buf, int rowstride,
-		   int x_align, int y_align,
-		   XlibRgbCmap *cmap)
+xxlib_rgb_convert_1 (XlibRgbHandle *handle, XImage *image,
+                   int ax, int ay, int width, int height,
+                   unsigned char *buf, int rowstride,
+                   int x_align, int y_align,
+                   XlibRgbCmap *cmap)
 {
   int x, y;
   int bpl;
@@ -2759,20 +2785,20 @@ xlib_rgb_convert_1 (XImage *image,
       bp2 = bptr;
       obptr = obuf;
       for (x = 0; x < width; x++)
-	{
-	  r = *bp2++;
-	  g = *bp2++;
-	  b = *bp2++;
-	  dith = (dmp[(x_align + x) & (DM_WIDTH - 1)] << 4) | 4;
-	  byte += byte + (r + g + g + b + dith > 1020);
-	  if ((x & 7) == 7)
-	    {
-	      obptr[0] = byte;
-	      obptr++;
-	    }
-	}
+        {
+          r = *bp2++;
+          g = *bp2++;
+          b = *bp2++;
+          dith = (dmp[(x_align + x) & (DM_WIDTH - 1)] << 4) | 4;
+          byte += byte + (r + g + g + b + dith > 1020);
+          if ((x & 7) == 7)
+            {
+              obptr[0] = byte;
+              obptr++;
+            }
+        }
       if (x & 7)
-	obptr[0] = byte << (8 - (x & 7));
+        obptr[0] = byte << (8 - (x & 7));
       bptr += rowstride;
       obuf += bpl;
     }
@@ -2780,34 +2806,34 @@ xlib_rgb_convert_1 (XImage *image,
 
 /* Returns a pointer to the stage buffer. */
 static unsigned char *
-xlib_rgb_ensure_stage (void)
+xxlib_rgb_ensure_stage (XlibRgbHandle *handle)
 {
-  if (image_info->stage_buf == NULL)
-    image_info->stage_buf = malloc (IMAGE_HEIGHT * STAGE_ROWSTRIDE);
-  return image_info->stage_buf;
+  if (handle->stage_buf == NULL)
+    handle->stage_buf = malloc (IMAGE_HEIGHT * STAGE_ROWSTRIDE);
+  return handle->stage_buf;
 }
 
 /* This is slow. Speed me up, please. */
 static void
-xlib_rgb_32_to_stage (unsigned char *buf, int rowstride, int width, int height)
+xxlib_rgb_32_to_stage (XlibRgbHandle *handle, unsigned char *buf, int rowstride, int width, int height)
 {
   int x, y;
   unsigned char *pi_start, *po_start;
   unsigned char *pi, *po;
 
   pi_start = buf;
-  po_start = xlib_rgb_ensure_stage ();
+  po_start = xxlib_rgb_ensure_stage (handle);
   for (y = 0; y < height; y++)
     {
       pi = pi_start;
       po = po_start;
       for (x = 0; x < width; x++)
-	{
-	  *po++ = *pi++;
-	  *po++ = *pi++;
-	  *po++ = *pi++;
-	  pi++;
-	}
+        {
+          *po++ = *pi++;
+          *po++ = *pi++;
+          *po++ = *pi++;
+          pi++;
+        }
       pi_start += rowstride;
       po_start += STAGE_ROWSTRIDE;
     }
@@ -2816,36 +2842,36 @@ xlib_rgb_32_to_stage (unsigned char *buf, int rowstride, int width, int height)
 /* Generic 32bit RGB conversion function - convert to 24bit packed, then
    go from there. */
 static void
-xlib_rgb_convert_32_generic (XImage *image,
-			    int ax, int ay, int width, int height,
-			    unsigned char *buf, int rowstride,
-			    int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_32_generic (XlibRgbHandle *handle, XImage *image,
+                            int ax, int ay, int width, int height,
+                            unsigned char *buf, int rowstride,
+                            int x_align, int y_align, XlibRgbCmap *cmap)
 {
-  xlib_rgb_32_to_stage (buf, rowstride, width, height);
+  xxlib_rgb_32_to_stage (handle, buf, rowstride, width, height);
 
-  (*image_info->conv) (image, ax, ay, width, height,
-		       image_info->stage_buf, STAGE_ROWSTRIDE,
-		       x_align, y_align, cmap);
+  (*handle->conv) (handle, image, ax, ay, width, height,
+                       handle->stage_buf, STAGE_ROWSTRIDE,
+                       x_align, y_align, cmap);
 }
 
 /* Generic 32bit RGB conversion function - convert to 24bit packed, then
    go from there. */
 static void
-xlib_rgb_convert_32_generic_d (XImage *image,
-			      int ax, int ay, int width, int height,
-			      unsigned char *buf, int rowstride,
-			      int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_32_generic_d (XlibRgbHandle *handle, XImage *image,
+                              int ax, int ay, int width, int height,
+                              unsigned char *buf, int rowstride,
+                              int x_align, int y_align, XlibRgbCmap *cmap)
 {
-  xlib_rgb_32_to_stage (buf, rowstride, width, height);
+  xxlib_rgb_32_to_stage (handle, buf, rowstride, width, height);
 
-  (*image_info->conv_d) (image, ax, ay, width, height,
-			 image_info->stage_buf, STAGE_ROWSTRIDE,
-			 x_align, y_align, cmap);
+  (*handle->conv_d) (handle, image, ax, ay, width, height,
+                         handle->stage_buf, STAGE_ROWSTRIDE,
+                         x_align, y_align, cmap);
 }
 
 /* This is slow. Speed me up, please. */
 static void
-xlib_rgb_gray_to_stage (unsigned char *buf, int rowstride, int width, int height)
+xxlib_rgb_gray_to_stage (XlibRgbHandle *handle, unsigned char *buf, int rowstride, int width, int height)
 {
   int x, y;
   unsigned char *pi_start, *po_start;
@@ -2853,18 +2879,18 @@ xlib_rgb_gray_to_stage (unsigned char *buf, int rowstride, int width, int height
   unsigned char gray;
 
   pi_start = buf;
-  po_start = xlib_rgb_ensure_stage ();
+  po_start = xxlib_rgb_ensure_stage (handle);
   for (y = 0; y < height; y++)
     {
       pi = pi_start;
       po = po_start;
       for (x = 0; x < width; x++)
-	{
-	  gray = *pi++;
-	  *po++ = gray;
-	  *po++ = gray;
-	  *po++ = gray;
-	}
+        {
+          gray = *pi++;
+          *po++ = gray;
+          *po++ = gray;
+          *po++ = gray;
+        }
       pi_start += rowstride;
       po_start += STAGE_ROWSTRIDE;
     }
@@ -2873,60 +2899,60 @@ xlib_rgb_gray_to_stage (unsigned char *buf, int rowstride, int width, int height
 /* Generic gray conversion function - convert to 24bit packed, then go
    from there. */
 static void
-xlib_rgb_convert_gray_generic (XImage *image,
-			      int ax, int ay, int width, int height,
-			      unsigned char *buf, int rowstride,
-			      int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_gray_generic (XlibRgbHandle *handle, XImage *image,
+                              int ax, int ay, int width, int height,
+                              unsigned char *buf, int rowstride,
+                              int x_align, int y_align, XlibRgbCmap *cmap)
 {
-  xlib_rgb_gray_to_stage (buf, rowstride, width, height);
+  xxlib_rgb_gray_to_stage (handle, buf, rowstride, width, height);
 
-  (*image_info->conv) (image, ax, ay, width, height,
-		       image_info->stage_buf, STAGE_ROWSTRIDE,
-		       x_align, y_align, cmap);
+  (*handle->conv) (handle, image, ax, ay, width, height,
+                       handle->stage_buf, STAGE_ROWSTRIDE,
+                       x_align, y_align, cmap);
 }
 
 static void
-xlib_rgb_convert_gray_generic_d (XImage *image,
-				int ax, int ay, int width, int height,
-				unsigned char *buf, int rowstride,
-				int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_gray_generic_d (XlibRgbHandle *handle, XImage *image,
+                                int ax, int ay, int width, int height,
+                                unsigned char *buf, int rowstride,
+                                int x_align, int y_align, XlibRgbCmap *cmap)
 {
-  xlib_rgb_gray_to_stage (buf, rowstride, width, height);
+  xxlib_rgb_gray_to_stage (handle, buf, rowstride, width, height);
 
-  (*image_info->conv_d) (image, ax, ay, width, height,
-			 image_info->stage_buf, STAGE_ROWSTRIDE,
-			 x_align, y_align, cmap);
+  (*handle->conv_d) (handle, image, ax, ay, width, height,
+                         handle->stage_buf, STAGE_ROWSTRIDE,
+                         x_align, y_align, cmap);
 }
 
 /* Render grayscale using indexed method. */
 static void
-xlib_rgb_convert_gray_cmap (XImage *image,
-			   int ax, int ay, int width, int height,
-			   unsigned char *buf, int rowstride,
-			   int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_gray_cmap (XlibRgbHandle *handle, XImage *image,
+                           int ax, int ay, int width, int height,
+                           unsigned char *buf, int rowstride,
+                           int x_align, int y_align, XlibRgbCmap *cmap)
 {
-  (*image_info->conv_indexed) (image, ax, ay, width, height,
-			       buf, rowstride,
-			       x_align, y_align, image_info->gray_cmap);
+  (*handle->conv_indexed) (handle, image, ax, ay, width, height,
+                               buf, rowstride,
+                               x_align, y_align, handle->gray_cmap);
 }
 
 #if 0
 static void
-xlib_rgb_convert_gray_cmap_d (XImage *image,
-				int ax, int ay, int width, int height,
-				unsigned char *buf, int rowstride,
-				int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_gray_cmap_d (XlibRgbHandle *handle, XImage *image,
+                                int ax, int ay, int width, int height,
+                                unsigned char *buf, int rowstride,
+                                int x_align, int y_align, XlibRgbCmap *cmap)
 {
-  (*image_info->conv_indexed_d) (image, ax, ay, width, height,
-				 buf, rowstride,
-				 x_align, y_align, image_info->gray_cmap);
+  (*handle->conv_indexed_d) (handle, image, ax, ay, width, height,
+                                 buf, rowstride,
+                                 x_align, y_align, handle->gray_cmap);
 }
 #endif
 
 /* This is slow. Speed me up, please. */
 static void
-xlib_rgb_indexed_to_stage (unsigned char *buf, int rowstride, int width, int height,
-			  XlibRgbCmap *cmap)
+xxlib_rgb_indexed_to_stage (XlibRgbHandle *handle, unsigned char *buf, int rowstride, int width, int height,
+                          XlibRgbCmap *cmap)
 {
   int x, y;
   unsigned char *pi_start, *po_start;
@@ -2934,18 +2960,18 @@ xlib_rgb_indexed_to_stage (unsigned char *buf, int rowstride, int width, int hei
   int rgb;
 
   pi_start = buf;
-  po_start = xlib_rgb_ensure_stage ();
+  po_start = xxlib_rgb_ensure_stage (handle);
   for (y = 0; y < height; y++)
     {
       pi = pi_start;
       po = po_start;
       for (x = 0; x < width; x++)
-	{
-	  rgb = cmap->colors[*pi++];
-	  *po++ = rgb >> 16;
-	  *po++ = (rgb >> 8) & 0xff;
-	  *po++ = rgb & 0xff;
-	}
+        {
+          rgb = cmap->colors[*pi++];
+          *po++ = rgb >> 16;
+          *po++ = (rgb >> 8) & 0xff;
+          *po++ = rgb & 0xff;
+        }
       pi_start += rowstride;
       po_start += STAGE_ROWSTRIDE;
     }
@@ -2954,36 +2980,36 @@ xlib_rgb_indexed_to_stage (unsigned char *buf, int rowstride, int width, int hei
 /* Generic gray conversion function - convert to 24bit packed, then go
    from there. */
 static void
-xlib_rgb_convert_indexed_generic (XImage *image,
-				 int ax, int ay, int width, int height,
-				 unsigned char *buf, int rowstride,
-				 int x_align, int y_align, XlibRgbCmap *cmap)
+xxlib_rgb_convert_indexed_generic (XlibRgbHandle *handle, XImage *image,
+                                 int ax, int ay, int width, int height,
+                                 unsigned char *buf, int rowstride,
+                                 int x_align, int y_align, XlibRgbCmap *cmap)
 {
-  xlib_rgb_indexed_to_stage (buf, rowstride, width, height, cmap);
+  xxlib_rgb_indexed_to_stage (handle, buf, rowstride, width, height, cmap);
 
-  (*image_info->conv) (image, ax, ay, width, height,
-		       image_info->stage_buf, STAGE_ROWSTRIDE,
-		       x_align, y_align, cmap);
+  (*handle->conv) (handle, image, ax, ay, width, height,
+                       handle->stage_buf, STAGE_ROWSTRIDE,
+                       x_align, y_align, cmap);
 }
 
 static void
-xlib_rgb_convert_indexed_generic_d (XImage *image,
-				   int ax, int ay, int width, int height,
-				   unsigned char *buf, int rowstride,
-				   int x_align, int y_align,
-				   XlibRgbCmap *cmap)
+xxlib_rgb_convert_indexed_generic_d (XlibRgbHandle *handle, XImage *image,
+                                   int ax, int ay, int width, int height,
+                                   unsigned char *buf, int rowstride,
+                                   int x_align, int y_align,
+                                   XlibRgbCmap *cmap)
 {
-  xlib_rgb_indexed_to_stage (buf, rowstride, width, height, cmap);
+  xxlib_rgb_indexed_to_stage (handle, buf, rowstride, width, height, cmap);
 
-  (*image_info->conv_d) (image, ax, ay, width, height,
-			 image_info->stage_buf, STAGE_ROWSTRIDE,
-			 x_align, y_align, cmap);
+  (*handle->conv_d) (handle, image, ax, ay, width, height,
+                         handle->stage_buf, STAGE_ROWSTRIDE,
+                         x_align, y_align, cmap);
 }
 
 /* Select a conversion function based on the visual and a
    representative image. */
 static void
-xlib_rgb_select_conv (XImage *image, ByteOrder byte_order)
+xxlib_rgb_select_conv (XlibRgbHandle *handle, XImage *image, ByteOrder byte_order)
 {
   int depth, byterev;
   int vtype; /* visual type */
@@ -2995,12 +3021,12 @@ xlib_rgb_select_conv (XImage *image, ByteOrder byte_order)
   XlibRgbConvFunc conv_indexed, conv_indexed_d;
   Bool mask_rgb, mask_bgr;
 
-  depth = image_info->x_visual_info->depth;
+  depth = handle->x_visual_info->depth;
   bpp = image->bits_per_pixel;
-  if (xlib_rgb_verbose)
+  if (handle->xlib_rgb_verbose)
     printf ("Chose visual 0x%x, image bpp=%d, %s first\n",
-	    (int)image_info->x_visual_info->visual->visualid,
-	    bpp, byte_order == LSB_FIRST ? "lsb" : "msb");
+            (int)handle->x_visual_info->visual->visualid,
+            bpp, byte_order == LSB_FIRST ? "lsb" : "msb");
 
 #if G_BYTE_ORDER == G_BIG_ENDIAN
   byterev = (byte_order == LSB_FIRST);
@@ -3008,276 +3034,266 @@ xlib_rgb_select_conv (XImage *image, ByteOrder byte_order)
   byterev = (byte_order == MSB_FIRST);
 #endif
 
-  vtype = image_info->x_visual_info->class;
+  vtype = handle->x_visual_info->class;
   if (vtype == DirectColor)
     vtype = TrueColor;
 
-  red_mask = image_info->x_visual_info->red_mask;
-  green_mask = image_info->x_visual_info->green_mask;
-  blue_mask = image_info->x_visual_info->blue_mask;
+  red_mask = handle->x_visual_info->red_mask;
+  green_mask = handle->x_visual_info->green_mask;
+  blue_mask = handle->x_visual_info->blue_mask;
 
   mask_rgb = red_mask == 0xff0000 && green_mask == 0xff00 && blue_mask == 0xff;
   mask_bgr = red_mask == 0xff && green_mask == 0xff00 && blue_mask == 0xff0000;
 
-  conv = NULL;
+  conv   = NULL;
   conv_d = NULL;
 
-  conv_32 = xlib_rgb_convert_32_generic;
-  conv_32_d = xlib_rgb_convert_32_generic_d;
+  conv_32     = xxlib_rgb_convert_32_generic;
+  conv_32_d   = xxlib_rgb_convert_32_generic_d;
 
-  conv_gray = xlib_rgb_convert_gray_generic;
-  conv_gray_d = xlib_rgb_convert_gray_generic_d;
+  conv_gray   = xxlib_rgb_convert_gray_generic;
+  conv_gray_d = xxlib_rgb_convert_gray_generic_d;
 
-  conv_indexed = xlib_rgb_convert_indexed_generic;
-  conv_indexed_d = xlib_rgb_convert_indexed_generic_d;
+  conv_indexed   = xxlib_rgb_convert_indexed_generic;
+  conv_indexed_d = xxlib_rgb_convert_indexed_generic_d;
 
-  image_info->dith_default = FALSE;
+  handle->dith_default = FALSE;
 
-  if (image_info->bitmap)
-    conv = xlib_rgb_convert_1;
+  if (handle->bitmap)
+    conv = xxlib_rgb_convert_1;
   else if (bpp == 16 && depth == 16 && !byterev &&
       red_mask == 0xf800 && green_mask == 0x7e0 && blue_mask == 0x1f)
     {
-      conv = xlib_rgb_convert_565;
-      conv_d = xlib_rgb_convert_565_d;
-      conv_gray = xlib_rgb_convert_565_gray;
-      xlib_rgb_preprocess_dm_565 ();
+      conv = xxlib_rgb_convert_565;
+      conv_d = xxlib_rgb_convert_565_d;
+      conv_gray = xxlib_rgb_convert_565_gray;
+      xxlib_rgb_preprocess_dm_565 (handle);
     }
   else if (bpp == 16 && depth == 16 &&
-	   vtype == TrueColor&& byterev &&
+           vtype == TrueColor&& byterev &&
       red_mask == 0xf800 && green_mask == 0x7e0 && blue_mask == 0x1f)
-    conv = xlib_rgb_convert_565_br;
+    conv = xxlib_rgb_convert_565_br;
 
   else if (bpp == 16 && depth == 15 &&
-	   vtype == TrueColor && !byterev &&
+           vtype == TrueColor && !byterev &&
       red_mask == 0x7c00 && green_mask == 0x3e0 && blue_mask == 0x1f)
-    conv = xlib_rgb_convert_555;
+    conv = xxlib_rgb_convert_555;
 
   else if (bpp == 16 && depth == 15 &&
-	   vtype == TrueColor && byterev &&
+           vtype == TrueColor && byterev &&
       red_mask == 0x7c00 && green_mask == 0x3e0 && blue_mask == 0x1f)
-    conv = xlib_rgb_convert_555_br;
+    conv = xxlib_rgb_convert_555_br;
 
   /* I'm not 100% sure about the 24bpp tests - but testing will show*/
   else if (bpp == 24 && depth == 24 && vtype == TrueColor &&
-	   ((mask_rgb && byte_order == LSB_FIRST) ||
-	    (mask_bgr && byte_order == MSB_FIRST)))
-    conv = xlib_rgb_convert_888_lsb;
+           ((mask_rgb && byte_order == LSB_FIRST) ||
+            (mask_bgr && byte_order == MSB_FIRST)))
+    conv = xxlib_rgb_convert_888_lsb;
   else if (bpp == 24 && depth == 24 && vtype == TrueColor &&
-	   ((mask_rgb && byte_order == MSB_FIRST) ||
-	    (mask_bgr && byte_order == LSB_FIRST)))
-    conv = xlib_rgb_convert_888_msb;
+           ((mask_rgb && byte_order == MSB_FIRST) ||
+            (mask_bgr && byte_order == LSB_FIRST)))
+    conv = xxlib_rgb_convert_888_msb;
 #if G_BYTE_ORDER == G_BIG_ENDIAN
   else if (bpp == 32 && depth == 24 && vtype == TrueColor &&
-	   (mask_rgb && byte_order == LSB_FIRST))
-    conv = xlib_rgb_convert_0888_br;
+           (mask_rgb && byte_order == LSB_FIRST))
+    conv = xxlib_rgb_convert_0888_br;
   else if (bpp == 32 && depth == 24 && vtype == TrueColor &&
-	   (mask_rgb && byte_order == MSB_FIRST))
-    conv = xlib_rgb_convert_0888;
+           (mask_rgb && byte_order == MSB_FIRST))
+    conv = xxlib_rgb_convert_0888;
   else if (bpp == 32 && depth == 24 && vtype == TrueColor &&
-	   (mask_bgr && byte_order == MSB_FIRST))
-    conv = xlib_rgb_convert_8880_br;
+           (mask_bgr && byte_order == MSB_FIRST))
+    conv = xxlib_rgb_convert_8880_br;
 #else
   else if (bpp == 32 && depth == 24 && vtype == TrueColor &&
-	   (mask_rgb && byte_order == MSB_FIRST))
-    conv = xlib_rgb_convert_0888_br;
+           (mask_rgb && byte_order == MSB_FIRST))
+    conv = xxlib_rgb_convert_0888_br;
   else if (bpp == 32 && (depth == 32 || depth == 24) && vtype == TrueColor &&
-	   (mask_rgb && byte_order == LSB_FIRST))
-    conv = xlib_rgb_convert_0888;
+           (mask_rgb && byte_order == LSB_FIRST))
+    conv = xxlib_rgb_convert_0888;
   else if (bpp == 32 && depth == 24 && vtype == TrueColor &&
-	   (mask_bgr && byte_order == LSB_FIRST))
-    conv = xlib_rgb_convert_8880_br;
+           (mask_bgr && byte_order == LSB_FIRST))
+    conv = xxlib_rgb_convert_8880_br;
 #endif
 
   else if (vtype == TrueColor && byte_order == LSB_FIRST)
     {
-      conv = xlib_rgb_convert_truecolor_lsb;
-      conv_d = xlib_rgb_convert_truecolor_lsb_d;
+      conv = xxlib_rgb_convert_truecolor_lsb;
+      conv_d = xxlib_rgb_convert_truecolor_lsb_d;
     }
   else if (vtype == TrueColor && byte_order == MSB_FIRST)
     {
-      conv = xlib_rgb_convert_truecolor_msb;
-      conv_d = xlib_rgb_convert_truecolor_msb_d;
+      conv = xxlib_rgb_convert_truecolor_msb;
+      conv_d = xxlib_rgb_convert_truecolor_msb_d;
     }
   else if (bpp == 8 && depth == 8 && (vtype == PseudoColor
 #ifdef ENABLE_GRAYSCALE
-				      || vtype == GrayScale
+                                      || vtype == GrayScale
 #endif
-				      ))
+                                      ))
     {
-      image_info->dith_default = TRUE;
-      conv = xlib_rgb_convert_8;
+      handle->dith_default = TRUE;
+      conv = xxlib_rgb_convert_8;
       if (vtype != GrayScale)
-	{
-	  if (image_info->nred_shades == 6 &&
-	      image_info->ngreen_shades == 6 &&
-	      image_info->nblue_shades == 6)
-	    conv_d = xlib_rgb_convert_8_d666;
-	  else
-	    conv_d = xlib_rgb_convert_8_d;
-	}
-      conv_indexed = xlib_rgb_convert_8_indexed;
-      conv_gray = xlib_rgb_convert_gray_cmap;
+        {
+          if (handle->nred_shades == 6 &&
+              handle->ngreen_shades == 6 &&
+              handle->nblue_shades == 6)
+            conv_d = xxlib_rgb_convert_8_d666;
+          else
+            conv_d = xxlib_rgb_convert_8_d;
+        }
+      conv_indexed = xxlib_rgb_convert_8_indexed;
+      conv_gray = xxlib_rgb_convert_gray_cmap;
     }
   else if (bpp == 8 && depth == 8 && (vtype == StaticGray
 #ifdef not_ENABLE_GRAYSCALE
-				      || vtype == GrayScale
+                                      || vtype == GrayScale
 #endif
-				      ))
+                                      ))
     {
-      conv = xlib_rgb_convert_gray8;
-      conv_gray = xlib_rgb_convert_gray8_gray;
+      conv = xxlib_rgb_convert_gray8;
+      conv_gray = xxlib_rgb_convert_gray8_gray;
     }
   else if (bpp == 8 && depth < 8 && depth >= 2 &&
-	   (vtype == StaticGray
-	    || vtype == GrayScale))
+           (vtype == StaticGray
+            || vtype == GrayScale))
     {
-      conv = xlib_rgb_convert_gray4;
-      conv_d = xlib_rgb_convert_gray4_d;
+      conv = xxlib_rgb_convert_gray4;
+      conv_d = xxlib_rgb_convert_gray4_d;
     }
   else if (bpp == 8 && depth < 8 && depth >= 3)
     {
-      conv = xlib_rgb_convert_4;
+      conv = xxlib_rgb_convert_4;
     }
   else if (bpp == 4 && depth <= 4 && depth >= 2 &&
-	   (vtype == StaticGray
-	    || vtype == GrayScale))
+           (vtype == StaticGray
+            || vtype == GrayScale))
     {
-      conv = xlib_rgb_convert_gray4_pack;
-      conv_d = xlib_rgb_convert_gray4_d_pack;
+      conv = xxlib_rgb_convert_gray4_pack;
+      conv_d = xxlib_rgb_convert_gray4_d_pack;
     }
 
   if (conv_d == NULL)
     conv_d = conv;
 
-  image_info->conv = conv;
-  image_info->conv_d = conv_d;
+  handle->conv = conv;
+  handle->conv_d = conv_d;
 
-  image_info->conv_32 = conv_32;
-  image_info->conv_32_d = conv_32_d;
+  handle->conv_32 = conv_32;
+  handle->conv_32_d = conv_32_d;
 
-  image_info->conv_gray = conv_gray;
-  image_info->conv_gray_d = conv_gray_d;
+  handle->conv_gray = conv_gray;
+  handle->conv_gray_d = conv_gray_d;
 
-  image_info->conv_indexed = conv_indexed;
-  image_info->conv_indexed_d = conv_indexed_d;
+  handle->conv_indexed = conv_indexed;
+  handle->conv_indexed_d = conv_indexed_d;
 }
 
-static int horiz_idx;
-static int horiz_y = IMAGE_HEIGHT;
-static int vert_idx;
-static int vert_x = IMAGE_WIDTH;
-static int tile_idx;
-static int tile_x = IMAGE_WIDTH;
-static int tile_y1 = IMAGE_HEIGHT;
-static int tile_y2 = IMAGE_HEIGHT;
+/* Defining NO_FLUSH can cause inconsistent screen updates when 
+ * images are put via MIT-SHM extension, but is useful
+ * for performance evaluation.
+ * NO_FLUSH is safe with plain XPutImage()...
+ */
 
-#ifdef VERBOSE
-static int sincelast;
-#endif
-
-/* Defining NO_FLUSH can cause inconsistent screen updates, but is useful
-   for performance evaluation. */
-
-#undef NO_FLUSH
+#define NO_FLUSH
 
 static int
-xlib_rgb_alloc_scratch_image (void)
+xxlib_rgb_alloc_scratch_image (XlibRgbHandle *handle)
 {
-  if (static_image_idx == N_IMAGES)
-    {
+  if (handle->static_image_idx == N_IMAGES)
+  {
 #ifndef NO_FLUSH
-      XFlush(image_info->display);
-#endif
+    XFlush(handle->display);
 #ifdef VERBOSE
-      printf ("flush, %d puts since last flush\n", sincelast);
-      sincelast = 0;
-#endif
-      static_image_idx = 0;
-      horiz_y = IMAGE_HEIGHT;
-      vert_x = IMAGE_WIDTH;
-      tile_x = IMAGE_WIDTH;
-      tile_y1 = tile_y2 = IMAGE_HEIGHT;
-    }
-  return static_image_idx++;
+    printf ("flush, %d puts since last flush\n", sincelast);
+    sincelast = 0;
+#endif /* VERBOSE */
+#endif /* NO_FLUSH */
+    handle->static_image_idx = 0;
+    handle->horiz_y = IMAGE_HEIGHT;
+    handle->vert_x  = IMAGE_WIDTH;
+    handle->tile_x  = IMAGE_WIDTH;
+    handle->tile_y1 = handle->tile_y2 = IMAGE_HEIGHT;
+  }
+  return handle->static_image_idx++;
 }
 
 static XImage *
-xlib_rgb_alloc_scratch (int width, int height, int *ax, int *ay)
+xxlib_rgb_alloc_scratch (XlibRgbHandle *handle, int width, int height, int *ax, int *ay)
 {
   XImage *image;
   int idx;
 
   if (width >= (IMAGE_WIDTH >> 1))
+  {
+    if (height >= (IMAGE_HEIGHT >> 1))
     {
-      if (height >= (IMAGE_HEIGHT >> 1))
-	{
-	  idx = xlib_rgb_alloc_scratch_image ();
-	  *ax = 0;
-	  *ay = 0;
-	}
-      else
-	{
-	  if (height + horiz_y > IMAGE_HEIGHT)
-	    {
-	      horiz_idx = xlib_rgb_alloc_scratch_image ();
-	      horiz_y = 0;
-	    }
-	  idx = horiz_idx;
-	  *ax = 0;
-	  *ay = horiz_y;
-	  horiz_y += height;
-	}
+      idx = xxlib_rgb_alloc_scratch_image (handle);
+      *ax = 0;
+      *ay = 0;
     }
+    else
+    {
+      if (height + handle->horiz_y > IMAGE_HEIGHT)
+      {
+        handle->horiz_idx = xxlib_rgb_alloc_scratch_image (handle);
+        handle->horiz_y = 0;
+      }
+      idx = handle->horiz_idx;
+      *ax = 0;
+      *ay = handle->horiz_y;
+      handle->horiz_y += height;
+    }
+  }
   else
+  {
+    if (height >= (IMAGE_HEIGHT >> 1))
     {
-      if (height >= (IMAGE_HEIGHT >> 1))
-	{
-	  if (width + vert_x > IMAGE_WIDTH)
-	    {
-	      vert_idx = xlib_rgb_alloc_scratch_image ();
-	      vert_x = 0;
-	    }
-	  idx = vert_idx;
-	  *ax = vert_x;
-	  *ay = 0;
-	  /* using 3 and -4 would be slightly more efficient on 32-bit machines
-	     with > 1bpp displays */
-	  vert_x += (width + 7) & -8;
-	}
-      else
-	{
-	  if (width + tile_x > IMAGE_WIDTH)
-	    {
-	      tile_y1 = tile_y2;
-	      tile_x = 0;
-	    }
-	  if (height + tile_y1 > IMAGE_HEIGHT)
-	    {
-	      tile_idx = xlib_rgb_alloc_scratch_image ();
-	      tile_x = 0;
-	      tile_y1 = 0;
-	      tile_y2 = 0;
-	    }
-	  if (height + tile_y1 > tile_y2)
-	    tile_y2 = height + tile_y1;
-	  idx = tile_idx;
-	  *ax = tile_x;
-	  *ay = tile_y1;
-	  tile_x += (width + 7) & -8;
-	}
+      if (width + handle->vert_x > IMAGE_WIDTH)
+      {
+        handle->vert_idx = xxlib_rgb_alloc_scratch_image (handle);
+        handle->vert_x = 0;
+      }
+      idx = handle->vert_idx;
+      *ax = handle->vert_x;
+      *ay = 0;
+      /* using 3 and -4 would be slightly more efficient on 32-bit machines
+         with > 1bpp displays */
+      handle->vert_x += (width + 7) & -8;
     }
-  image = static_image[idx];
+    else
+    {
+      if (width + handle->tile_x > IMAGE_WIDTH)
+      {
+        handle->tile_y1 = handle->tile_y2;
+        handle->tile_x = 0;
+      }
+      if (height + handle->tile_y1 > IMAGE_HEIGHT)
+      {
+        handle->tile_idx = xxlib_rgb_alloc_scratch_image (handle);
+        handle->tile_x = 0;
+        handle->tile_y1 = 0;
+        handle->tile_y2 = 0;
+      }
+      if (height + handle->tile_y1 > handle->tile_y2)
+        handle->tile_y2 = height + handle->tile_y1;
+      idx = handle->tile_idx;
+      *ax = handle->tile_x;
+      *ay = handle->tile_y1;
+      handle->tile_x += (width + 7) & -8;
+    }
+  }
+  image = handle->static_image[idx];
 #ifdef VERBOSE
   printf ("index %d, x %d, y %d (%d x %d)\n", idx, *ax, *ay, width, height);
   sincelast++;
-#endif
+#endif /* VERBOSE */
   return image;
 }
 
 
 static int 
-xlib_get_bits_per_pixel (int depth)
+xxlib_get_bits_per_pixel (XlibRgbHandle *handle, int depth)
 {
   if (depth <= 4)
       return 4;
@@ -3288,10 +3304,10 @@ xlib_get_bits_per_pixel (int depth)
   return 32;
 }
 
-/* allow or disallow "image tiling" in xlib_draw_rgb_image_core()... */
-void xlib_disallow_image_tiling (Bool disallow_it)
+/* allow or disallow "image tiling" in xxlib_draw_rgb_image_core()... */
+void xxlib_disallow_image_tiling (XlibRgbHandle *handle, Bool disallow_it)
 {
-  disallow_image_tiling = disallow_it;
+  handle->disallow_image_tiling = disallow_it;
 }
 
 /* Use optimized code... */   
@@ -3304,37 +3320,38 @@ void xlib_disallow_image_tiling (Bool disallow_it)
 #define XLIB_STATIC_IMAGE_BUFFER_SIZE (256 * 128 * (32/4))   
 
 static void
-xlib_draw_rgb_image_core (Drawable drawable,
-                          GC gc,
-                          int x,
-                          int y,
-                          int width,
-                          int height,
-                          unsigned char *buf,
-                          int pixstride,
-                          int rowstride,
-                          XlibRgbConvFunc conv,
-                          XlibRgbCmap *cmap,
-                          int xdith,
-                          int ydith)
+xxlib_draw_rgb_image_core (XlibRgbHandle *handle, 
+                           Drawable drawable,
+                           GC gc,
+                           int x,
+                           int y,
+                           int width,
+                           int height,
+                           unsigned char *buf,
+                           int pixstride,
+                           int rowstride,
+                           XlibRgbConvFunc conv,
+                           XlibRgbCmap *cmap,
+                           int xdith,
+                           int ydith)
 {
-  if (image_info->bitmap)
+  if (handle->bitmap)
   {
-    if (image_info->own_gc == None)
+    if (handle->own_gc == None)
     {
       XColor color;
 
-      image_info->own_gc = XCreateGC(image_info->display,
-                               drawable,
-                               0, NULL);
-      color.pixel = XWhitePixel(image_info->display,
-                                image_info->screen_num);
-      XSetForeground(image_info->display, image_info->own_gc, color.pixel);
-      color.pixel = XBlackPixel(image_info->display,
-                                image_info->screen_num);
-      XSetBackground(image_info->display, image_info->own_gc, color.pixel);
+      handle->own_gc = XCreateGC(handle->display,
+                                 drawable,
+                                 0, NULL);
+      color.pixel = XWhitePixel(handle->display,
+                                handle->screen_num);
+      XSetForeground(handle->display, handle->own_gc, color.pixel);
+      color.pixel = XBlackPixel(handle->display,
+                                handle->screen_num);
+      XSetBackground(handle->display, handle->own_gc, color.pixel);
     }
-    gc = image_info->own_gc;
+    gc = handle->own_gc;
   }
 
   /* guess what's more worse - six malloc()s or one XFlush() ?
@@ -3359,7 +3376,7 @@ xlib_draw_rgb_image_core (Drawable drawable,
    * That's why this "tiling" stuff can be turned-off here (see 
    * xlib_disallow_image_tiling() above)...
    */
-  if(!disallow_image_tiling)
+  if(!handle->disallow_image_tiling)
   {
     int ay, ax;
     int xs0, ys0;
@@ -3375,13 +3392,13 @@ xlib_draw_rgb_image_core (Drawable drawable,
         width1 = MIN (width - ax, IMAGE_WIDTH);
         buf_ptr = buf + ay * rowstride + ax * pixstride;
 
-        image = xlib_rgb_alloc_scratch (width1, height1, &xs0, &ys0);
+        image = xxlib_rgb_alloc_scratch (handle, width1, height1, &xs0, &ys0);
 
-        conv (image, xs0, ys0, width1, height1, buf_ptr, rowstride,
+        conv (handle, image, xs0, ys0, width1, height1, buf_ptr, rowstride,
               x + ax + xdith, y + ay + ydith, cmap);
 
 #ifndef DONT_ACTUALLY_DRAW
-        XPutImage(image_info->display, drawable, gc, image,
+        XPutImage(handle->display, drawable, gc, image,
                   xs0, ys0, x + ax, y + ay, (unsigned int)width1, (unsigned int)height1);
 #endif
       }
@@ -3414,7 +3431,7 @@ xlib_draw_rgb_image_core (Drawable drawable,
     /* fill the XImage structure... */
     memset(&ximage, 0, sizeof(ximage));
     
-    if (image_info->bitmap) 
+    if (handle->bitmap) 
     {
       format = XYBitmap;
       depth  = 1;
@@ -3423,21 +3440,21 @@ xlib_draw_rgb_image_core (Drawable drawable,
     else 
     {
       format = ZPixmap;
-      depth  = image_info->x_visual_info->depth;
+      depth  = handle->x_visual_info->depth;
       xpad   = 32;
     }
 
     ximage.width            = width;
     ximage.height           = height;
     ximage.format           = format;
-    ximage.byte_order       = XImageByteOrder(image_info->display);
-    ximage.bitmap_unit      = XBitmapUnit(image_info->display);
-    ximage.bitmap_bit_order = XBitmapBitOrder(image_info->display);
-    ximage.red_mask         = image_info->x_visual_info->visual->red_mask;
-    ximage.green_mask       = image_info->x_visual_info->visual->green_mask;
-    ximage.blue_mask        = image_info->x_visual_info->visual->blue_mask;
+    ximage.byte_order       = XImageByteOrder(handle->display);
+    ximage.bitmap_unit      = XBitmapUnit(handle->display);
+    ximage.bitmap_bit_order = XBitmapBitOrder(handle->display);
+    ximage.red_mask         = handle->x_visual_info->visual->red_mask;
+    ximage.green_mask       = handle->x_visual_info->visual->green_mask;
+    ximage.blue_mask        = handle->x_visual_info->visual->blue_mask;
     if (format == ZPixmap) 
-      ximage.bits_per_pixel = xlib_get_bits_per_pixel(depth);
+      ximage.bits_per_pixel = xxlib_get_bits_per_pixel(handle, depth);
     ximage.xoffset          = 0;
     ximage.bitmap_pad       = xpad;
     ximage.depth            = depth;
@@ -3472,11 +3489,11 @@ xlib_draw_rgb_image_core (Drawable drawable,
       ximage.data = static_buffer; 
     }
 
-    conv(&ximage, 0, 0, width, height, buf, rowstride,
-         0, 0, cmap);
+    conv (handle, &ximage, 0, 0, width, height, buf, rowstride,
+          0, 0, cmap);
 
 #ifndef DONT_ACTUALLY_DRAW
-    XPutImage(image_info->display, drawable, gc, &ximage,
+    XPutImage(handle->display, drawable, gc, &ximage,
     0, 0, x, y, (unsigned int)width, (unsigned int)height);
 #endif
 
@@ -3489,10 +3506,10 @@ xlib_draw_rgb_image_core (Drawable drawable,
   {
     XImage *image;
     
-    if (image_info->bitmap) 
+    if (handle->bitmap) 
     {
-      image = XCreateImage(image_info->display,
-                           image_info->x_visual_info->visual,
+      image = XCreateImage(handle->display,
+                           handle->x_visual_info->visual,
                            1,
                            XYBitmap,
                            0, 0, width, height,
@@ -3500,9 +3517,9 @@ xlib_draw_rgb_image_core (Drawable drawable,
     }
     else 
     {
-      image = XCreateImage(image_info->display,
-                           image_info->x_visual_info->visual,
-                           (unsigned int)image_info->x_visual_info->depth,
+      image = XCreateImage(handle->display,
+                           handle->x_visual_info->visual,
+                           (unsigned int)handle->x_visual_info->depth,
                            ZPixmap,
                            0, 0, width, height,
                            32, 0);
@@ -3513,11 +3530,11 @@ xlib_draw_rgb_image_core (Drawable drawable,
     image->bitmap_bit_order = MSBFirst;
     image->byte_order       = MSBFirst;      
 
-    conv(image, 0, 0, width, height, buf, rowstride,
-         0, 0, cmap);
+    conv( handle, image, 0, 0, width, height, buf, rowstride,
+          0, 0, cmap);
 
 #ifndef DONT_ACTUALLY_DRAW
-    XPutImage(image_info->display, drawable, gc, image,
+    XPutImage(handle->display, drawable, gc, image,
     0, 0, x, y, (unsigned int)width, (unsigned int)height);
 #endif
 
@@ -3526,6 +3543,274 @@ xlib_draw_rgb_image_core (Drawable drawable,
 #endif /* XLIB_USE_FAST_BUT_UGLY_CODE */  
 }
 
+
+void
+xxlib_draw_rgb_image (XlibRgbHandle *handle, Drawable drawable,
+                     GC gc,
+                     int x,
+                     int y,
+                     int width,
+                     int height,
+                     XlibRgbDither dith,
+                     unsigned char *rgb_buf,
+                     int rowstride)
+{
+  if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
+                                      !handle->dith_default))
+    xxlib_draw_rgb_image_core (handle, drawable, gc, x, y, width, height,
+                              rgb_buf, 3, rowstride, handle->conv, NULL,
+                              0, 0);
+  else
+    xxlib_draw_rgb_image_core (handle, drawable, gc, x, y, width, height,
+                              rgb_buf, 3, rowstride, handle->conv_d, NULL,
+                              0, 0);
+}
+
+void
+xxlib_draw_rgb_image_dithalign (XlibRgbHandle *handle, Drawable drawable,
+                              GC gc,
+                              int x,
+                              int y,
+                              int width,
+                              int height,
+                              XlibRgbDither dith,
+                              unsigned char *rgb_buf,
+                              int rowstride,
+                              int xdith,
+                              int ydith)
+{
+  if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
+                                       !handle->dith_default))
+    xxlib_draw_rgb_image_core (handle, drawable, gc, x, y, width, height,
+                              rgb_buf, 3, rowstride, handle->conv, NULL,
+                              xdith, ydith);
+  else
+    xxlib_draw_rgb_image_core (handle, drawable, gc, x, y, width, height,
+                               rgb_buf, 3, rowstride, handle->conv_d, NULL,
+                               xdith, ydith);
+}
+
+void
+xxlib_draw_rgb_32_image (XlibRgbHandle *handle, Drawable drawable,
+                        GC gc,
+                        int x,
+                        int y,
+                        int width,
+                        int height,
+                        XlibRgbDither dith,
+                        unsigned char *buf,
+                        int rowstride)
+{
+  if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
+                                       !handle->dith_default))
+    xxlib_draw_rgb_image_core (handle, drawable, gc, x, y, width, height,
+                               buf, 4, rowstride,
+                               handle->conv_32, NULL, 0, 0);
+  else
+    xxlib_draw_rgb_image_core (handle, drawable, gc, x, y, width, height,
+                               buf, 4, rowstride,
+                               handle->conv_32_d, NULL, 0, 0);
+}
+
+static void
+xxlib_rgb_make_gray_cmap (XlibRgbHandle *handle)
+{
+  uint32 rgb[256];
+  int i;
+
+  for (i = 0; i < 256; i++)
+    rgb[i] = (i << 16)  | (i << 8) | i;
+  handle->gray_cmap = xxlib_rgb_cmap_new (handle, rgb, 256);
+}
+
+void
+xxlib_draw_gray_image (XlibRgbHandle *handle, Drawable drawable,
+                      GC gc,
+                      int x,
+                      int y,
+                      int width,
+                      int height,
+                      XlibRgbDither dith,
+                      unsigned char *buf,
+                      int rowstride)
+{
+  if (handle->bpp == 1 &&
+      handle->gray_cmap == NULL &&
+      (handle->x_visual_info->class == PseudoColor ||
+       handle->x_visual_info->class == GrayScale))
+    xxlib_rgb_make_gray_cmap (handle);
+  
+  if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
+                                      !handle->dith_default))
+    xxlib_draw_rgb_image_core (handle, drawable, gc, x, y, width, height,
+                              buf, 1, rowstride,
+                              handle->conv_gray, NULL, 0, 0);
+  else
+    xxlib_draw_rgb_image_core (handle, drawable, gc, x, y, width, height,
+                              buf, 1, rowstride,
+                              handle->conv_gray_d, NULL, 0, 0);
+}
+
+XlibRgbCmap *
+xxlib_rgb_cmap_new (XlibRgbHandle *handle, uint32 *colors, int n_colors)
+{
+  XlibRgbCmap *cmap;
+  int i, j;
+  uint32 rgb;
+
+  if (n_colors < 0)
+    return NULL;
+  if (n_colors > 256)
+    return NULL;
+  cmap = malloc(sizeof(XlibRgbCmap));
+  memcpy (cmap->colors, colors, n_colors * sizeof(uint32));
+  if (handle->bpp == 1 &&
+      (handle->x_visual_info->class == PseudoColor ||
+       handle->x_visual_info->class == GrayScale))
+    for (i = 0; i < n_colors; i++)
+      {
+        rgb = colors[i];
+        j = ((rgb & 0xf00000) >> 12) |
+                   ((rgb & 0xf000) >> 8) |
+                   ((rgb & 0xf0) >> 4);
+#ifdef VERBOSE
+        printf ("%d %x %x %d\n", i, j, handle->colorcube[j]);
+#endif
+        cmap->lut[i] = handle->colorcube[j];
+      }
+  return cmap;
+}
+
+void
+xxlib_rgb_cmap_free (XlibRgbHandle *handle, XlibRgbCmap *cmap)
+{
+  free (cmap);
+}
+
+void
+xxlib_draw_indexed_image (XlibRgbHandle *handle, Drawable drawable,
+                        GC gc,
+                        int x,
+                        int y,
+                        int width,
+                        int height,
+                        XlibRgbDither dith,
+                        unsigned char *buf,
+                        int rowstride,
+                        XlibRgbCmap *cmap)
+{
+  if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
+                                       !handle->dith_default))
+    xxlib_draw_rgb_image_core (handle, drawable, gc, x, y, width, height,
+                               buf, 1, rowstride,
+                               handle->conv_indexed, cmap, 0, 0);
+  else
+    xxlib_draw_rgb_image_core (handle, drawable, gc, x, y, width, height,
+                               buf, 1, rowstride,
+                               handle->conv_indexed_d, cmap, 0, 0);
+}
+
+Bool
+xxlib_rgb_ditherable (XlibRgbHandle *handle)
+{
+  return (handle->conv != handle->conv_d);
+}
+
+Colormap
+xxlib_rgb_get_cmap (XlibRgbHandle *handle)
+{
+  /* xxlib_rgb_init (); */
+  return (handle)?(handle->cmap):(NULL);
+}
+
+Visual *
+xxlib_rgb_get_visual (XlibRgbHandle *handle)
+{
+  /* xxlib_rgb_init (); */
+  return (handle)?(handle->x_visual_info->visual):(NULL);
+}
+
+XVisualInfo *
+xxlib_rgb_get_visual_info (XlibRgbHandle *handle)
+{
+  /* xxlib_rgb_init (); */
+  return (handle)?(handle->x_visual_info):(NULL);
+}
+
+int
+xxlib_rgb_get_depth (XlibRgbHandle *handle)
+{
+  XVisualInfo *v = xxlib_rgb_get_visual_info(handle);
+
+  return (v)?(v->depth):(0);
+}
+
+Display *
+xxlib_rgb_get_display (XlibRgbHandle *handle)
+{ 
+  return (handle)?(handle->display):(NULL);
+}
+
+Screen *
+xxlib_rgb_get_screen (XlibRgbHandle *handle)
+{
+  return (handle)?(handle->screen):(NULL);
+}
+
+#ifdef XLIBRGB_ENABLE_OBSOLETE_API
+
+static XlibRgbHandle *static_handle = NULL;
+
+void
+xlib_rgb_init (Display *display, Screen *screen)
+{
+  if(!static_handle)
+    static_handle = xxlib_rgb_create_handle(display, screen);
+    
+  if(!static_handle)
+    abort();
+}
+
+void
+xlib_rgb_init_with_depth (Display *display, Screen *screen, int prefDepth)
+{
+  if(!static_handle)
+    static_handle = xxlib_rgb_create_handle_with_depth(display, screen, prefDepth);
+
+  if(!static_handle)
+    abort();
+}
+
+void
+xlib_rgb_detach (void)
+{
+  xxlib_rgb_destroy_handle(static_handle);
+  static_handle = NULL;  
+}
+
+void 
+xlib_disallow_image_tiling (Bool disallow_it)
+{
+  xxlib_disallow_image_tiling (static_handle, disallow_it);
+}
+
+unsigned long
+xlib_rgb_xpixel_from_rgb (uint32 rgb)
+{
+  return xxlib_rgb_xpixel_from_rgb(static_handle, rgb);
+}
+
+void
+xlib_rgb_gc_set_foreground (GC gc, uint32 rgb)
+{
+  xxlib_rgb_gc_set_foreground (static_handle, gc, rgb);
+}
+
+void
+xlib_rgb_gc_set_background (GC gc, uint32 rgb)
+{
+  xxlib_rgb_gc_set_background (static_handle, gc, rgb);
+}
 
 void
 xlib_draw_rgb_image (Drawable drawable,
@@ -3538,224 +3823,203 @@ xlib_draw_rgb_image (Drawable drawable,
                      unsigned char *rgb_buf,
                      int rowstride)
 {
-  if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
-				      !image_info->dith_default))
-    xlib_draw_rgb_image_core (drawable, gc, x, y, width, height,
-			      rgb_buf, 3, rowstride, image_info->conv, NULL,
-			      0, 0);
-  else
-    xlib_draw_rgb_image_core (drawable, gc, x, y, width, height,
-			      rgb_buf, 3, rowstride, image_info->conv_d, NULL,
-			      0, 0);
-}
+  xxlib_draw_rgb_image (static_handle, 
+                        drawable,
+                        gc,
+                        x,
+                        y,
+                        width,
+                        height,
+                        dith,
+                        rgb_buf,
+                        rowstride);
+}                     
 
 void
 xlib_draw_rgb_image_dithalign (Drawable drawable,
-			      GC gc,
-			      int x,
-			      int y,
-			      int width,
-			      int height,
-			      XlibRgbDither dith,
-			      unsigned char *rgb_buf,
-			      int rowstride,
-			      int xdith,
-			      int ydith)
+                               GC gc,
+                               int x,
+                               int y,
+                               int width,
+                               int height,
+                               XlibRgbDither dith,
+                               unsigned char *rgb_buf,
+                               int rowstride,
+                               int xdith,
+                               int ydith)
 {
-  if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
-				       !image_info->dith_default))
-    xlib_draw_rgb_image_core (drawable, gc, x, y, width, height,
-			      rgb_buf, 3, rowstride, image_info->conv, NULL,
-			      xdith, ydith);
-  else
-    xlib_draw_rgb_image_core (drawable, gc, x, y, width, height,
-			      rgb_buf, 3, rowstride, image_info->conv_d, NULL,
-			      xdith, ydith);
+  xxlib_draw_rgb_image_dithalign (static_handle,
+                               drawable,
+                               gc,
+                               x,
+                               y,
+                               width,
+                               height,
+                               dith,
+                               rgb_buf,
+                               rowstride,
+                               xdith,
+                               ydith);
 }
 
 void
 xlib_draw_rgb_32_image (Drawable drawable,
-			GC gc,
-			int x,
-			int y,
-			int width,
-			int height,
-			XlibRgbDither dith,
-			unsigned char *buf,
-			int rowstride)
+                        GC gc,
+                        int x,
+                        int y,
+                        int width,
+                        int height,
+                        XlibRgbDither dith,
+                        unsigned char *buf,
+                        int rowstride)
 {
-  if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
-				       !image_info->dith_default))
-    xlib_draw_rgb_image_core (drawable, gc, x, y, width, height,
-			      buf, 4, rowstride,
-			      image_info->conv_32, NULL, 0, 0);
-  else
-    xlib_draw_rgb_image_core (drawable, gc, x, y, width, height,
-			      buf, 4, rowstride,
-			      image_info->conv_32_d, NULL, 0, 0);
-}
-
-static void
-xlib_rgb_make_gray_cmap (XlibRgbInfo *info)
-{
-  uint32 rgb[256];
-  int i;
-
-  for (i = 0; i < 256; i++)
-    rgb[i] = (i << 16)  | (i << 8) | i;
-  info->gray_cmap = xlib_rgb_cmap_new (rgb, 256);
+  xxlib_draw_rgb_32_image (static_handle,
+                        drawable,
+                        gc,
+                        x,
+                        y,
+                        width,
+                        height,
+                        dith,
+                        buf,
+                        rowstride);
 }
 
 void
 xlib_draw_gray_image (Drawable drawable,
-		      GC gc,
-		      int x,
-		      int y,
-		      int width,
-		      int height,
-		      XlibRgbDither dith,
-		      unsigned char *buf,
-		      int rowstride)
+                      GC gc,
+                      int x,
+                      int y,
+                      int width,
+                      int height,
+                      XlibRgbDither dith,
+                      unsigned char *buf,
+                      int rowstride)
 {
-  if (image_info->bpp == 1 &&
-      image_info->gray_cmap == NULL &&
-      (image_info->x_visual_info->class == PseudoColor ||
-       image_info->x_visual_info->class == GrayScale))
-    xlib_rgb_make_gray_cmap (image_info);
-  
-  if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
-				      !image_info->dith_default))
-    xlib_draw_rgb_image_core (drawable, gc, x, y, width, height,
-			      buf, 1, rowstride,
-			      image_info->conv_gray, NULL, 0, 0);
-  else
-    xlib_draw_rgb_image_core (drawable, gc, x, y, width, height,
-			      buf, 1, rowstride,
-			      image_info->conv_gray_d, NULL, 0, 0);
+  xxlib_draw_gray_image (static_handle,
+                      drawable,
+                      gc,
+                      x,
+                      y,
+                      width,
+                      height,
+                      dith,
+                      buf,
+                      rowstride);
 }
 
 XlibRgbCmap *
 xlib_rgb_cmap_new (uint32 *colors, int n_colors)
 {
-  XlibRgbCmap *cmap;
-  int i, j;
-  uint32 rgb;
-
-  if (n_colors < 0)
-    return NULL;
-  if (n_colors > 256)
-    return NULL;
-  cmap = malloc(sizeof(XlibRgbCmap));
-  memcpy (cmap->colors, colors, n_colors * sizeof(uint32));
-  if (image_info->bpp == 1 &&
-      (image_info->x_visual_info->class == PseudoColor ||
-       image_info->x_visual_info->class == GrayScale))
-    for (i = 0; i < n_colors; i++)
-      {
-	rgb = colors[i];
-	j = ((rgb & 0xf00000) >> 12) |
-		   ((rgb & 0xf000) >> 8) |
-		   ((rgb & 0xf0) >> 4);
-#ifdef VERBOSE
-	printf ("%d %x %x %d\n", i, j, colorcube[j]);
-#endif
-	cmap->lut[i] = colorcube[j];
-      }
-  return cmap;
+  return xxlib_rgb_cmap_new (static_handle, colors, n_colors);
 }
 
 void
 xlib_rgb_cmap_free (XlibRgbCmap *cmap)
 {
-  free (cmap);
+  xxlib_rgb_cmap_free (static_handle, cmap);
 }
 
 void
 xlib_draw_indexed_image (Drawable drawable,
-			GC gc,
-			int x,
-			int y,
-			int width,
-			int height,
-			XlibRgbDither dith,
-			unsigned char *buf,
-			int rowstride,
-			XlibRgbCmap *cmap)
+                         GC gc,
+                         int x,
+                         int y,
+                         int width,
+                         int height,
+                         XlibRgbDither dith,
+                         unsigned char *buf,
+                         int rowstride,
+                         XlibRgbCmap *cmap)
 {
-  if (dith == XLIB_RGB_DITHER_NONE || (dith == XLIB_RGB_DITHER_NORMAL &&
-				       !image_info->dith_default))
-    xlib_draw_rgb_image_core (drawable, gc, x, y, width, height,
-			      buf, 1, rowstride,
-			      image_info->conv_indexed, cmap, 0, 0);
-  else
-    xlib_draw_rgb_image_core (drawable, gc, x, y, width, height,
-			      buf, 1, rowstride,
-			      image_info->conv_indexed_d, cmap, 0, 0);
+  xxlib_draw_indexed_image (static_handle, 
+                         drawable,
+                         gc,
+                         x,
+                         y,
+                         width,
+                         height,
+                         dith,
+                         buf,
+                         rowstride,
+                         cmap);
 }
 
+/* Below are some functions which are primarily useful for debugging
+   and experimentation. */
 Bool
 xlib_rgb_ditherable (void)
 {
-  return (image_info->conv != image_info->conv_d);
+  return xxlib_rgb_ditherable (static_handle);
+}
+
+void
+xlib_rgb_set_verbose (Bool verbose)
+{
+  xxlib_rgb_set_verbose (static_handle, verbose);
+}
+
+/* experimental colormap stuff */
+void
+xlib_rgb_set_install (Bool install)
+{
+  xxlib_rgb_set_install (static_handle, install);
+}
+
+void
+xlib_rgb_set_min_colors (int min_colors)
+{
+  xxlib_rgb_set_min_colors (static_handle, min_colors);
 }
 
 Colormap
 xlib_rgb_get_cmap (void)
 {
-  /* xlib_rgb_init (); */
-  if (image_info)
-    return image_info->cmap;
-  else
-    return 0;
+  return xxlib_rgb_get_cmap (static_handle);
 }
 
 Visual *
 xlib_rgb_get_visual (void)
 {
-  /* xlib_rgb_init (); */
-  if (image_info)
-    return image_info->x_visual_info->visual;
-  else
-    return 0;
+  return xxlib_rgb_get_visual (static_handle);
 }
 
 XVisualInfo *
 xlib_rgb_get_visual_info (void)
 {
-  /* xlib_rgb_init (); */
-  if (image_info)
-    return image_info->x_visual_info;
-  else
-    return 0;
+  return xxlib_rgb_get_visual_info (static_handle);
 }
 
 int
 xlib_rgb_get_depth (void)
 {
-  XVisualInfo * v = xlib_rgb_get_visual_info();
-
-  if (v)
-  {
-    return v->depth;
-  }
-
-  return 0;
+  return xxlib_rgb_get_depth (static_handle);
 }
 
 Display *
 xlib_rgb_get_display (void)
 {
-  if (image_info)
-    return image_info->display;
-  
-  return NULL;
+  return xxlib_rgb_get_display (static_handle);
 }
 
 Screen *
 xlib_rgb_get_screen (void)
 {
-  if (image_info)
-    return image_info->screen;
-  
-  return NULL;
+  return xxlib_rgb_get_screen (static_handle);
 }
+
+unsigned long
+xlib_get_prec_from_mask(unsigned long arg)
+{
+  return xxlib_get_prec_from_mask (static_handle, arg);
+}
+
+unsigned long
+xlib_get_shift_from_mask(unsigned long arg)
+{
+  return xxlib_get_shift_from_mask (static_handle, arg);
+}
+
+#endif /* XLIBRGB_ENABLE_OBSOLETE_API */
+
+

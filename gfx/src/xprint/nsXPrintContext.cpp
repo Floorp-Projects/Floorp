@@ -134,8 +134,8 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
     mPDisplay  = (Display *)XOpenDisplay(nsnull);
     mScreen = XDefaultScreenOfDisplay(mPDisplay);
     mScreenNumber = XScreenNumberOfScreen(mScreen);
-    xlib_disallow_image_tiling(TRUE);
     xlib_rgb_init_with_depth(mPDisplay, mScreen, prefDepth);
+    xlib_disallow_image_tiling(TRUE);
 
     SetupWindow(0, 0, 1200, 1200);
     mPrintResolution = 91 /* or 301 - intentionally forcing scaling */;
@@ -152,8 +152,8 @@ nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
     
     mScreen = XpGetScreenOfContext(mPDisplay, mPContext);
     mScreenNumber = XScreenNumberOfScreen(mScreen);
-    xlib_disallow_image_tiling(TRUE);
     xlib_rgb_init_with_depth(mPDisplay, mScreen, prefDepth);
+    xlib_disallow_image_tiling(TRUE);
 
     XpGetPageDimensions(mPDisplay, mPContext, &width, &height, &rect);
     SetupWindow(rect.x, rect.y, rect.width, rect.height);
@@ -780,7 +780,7 @@ nsXPrintContext::DrawImageBits(xGC *xgc,
 
   Pixmap alpha_pixmap  = None;
   GC     image_gc;
-  
+
   // Create gc clip-mask on demand
   if( alphaBits != nsnull )
   {

@@ -75,21 +75,160 @@ typedef unsigned int uint32;
 typedef int int32;
 typedef unsigned short uint16;
 typedef short int16;
-#endif
+#endif /* USE_MOZILLA_TYPES */
 
 typedef struct _XlibRgbCmap XlibRgbCmap;
+typedef struct _XlibRgbHandle XlibRgbHandle;
 
 struct _XlibRgbCmap {
   unsigned int colors[256];
   unsigned char lut[256]; /* for 8-bit modes */
 };
 
+
+typedef enum
+{
+  XLIB_RGB_DITHER_NONE,
+  XLIB_RGB_DITHER_NORMAL,
+  XLIB_RGB_DITHER_MAX
+} XlibRgbDither;
+
+XlibRgbHandle *
+xxlib_rgb_create_handle (Display *display, Screen *screen);
+
+XlibRgbHandle *
+xxlib_rgb_create_handle_with_depth (Display *display, Screen *screen, int prefDepth);
+
+void
+xxlib_rgb_destroy_handle (XlibRgbHandle *handle);
+
+void 
+xxlib_disallow_image_tiling (XlibRgbHandle *handle, Bool disallow_it);
+
+unsigned long
+xxlib_rgb_xpixel_from_rgb (XlibRgbHandle *handle, uint32 rgb);
+
+void
+xxlib_rgb_gc_set_foreground (XlibRgbHandle *handle, GC gc, uint32 rgb);
+
+void
+xxlib_rgb_gc_set_background (XlibRgbHandle *handle, GC gc, uint32 rgb);
+
+void
+xxlib_draw_rgb_image (XlibRgbHandle *handle, Drawable drawable,
+                      GC gc,
+                      int x,
+                      int y,
+                      int width,
+                      int height,
+                      XlibRgbDither dith,
+                      unsigned char *rgb_buf,
+                      int rowstride);
+
+void
+xxlib_draw_rgb_image_dithalign (XlibRgbHandle *handle, Drawable drawable,
+                                GC gc,
+                                int x,
+                                int y,
+                                int width,
+                                int height,
+                                XlibRgbDither dith,
+                                unsigned char *rgb_buf,
+                                int rowstride,
+                                int xdith,
+                                int ydith);
+
+void
+xxlib_draw_rgb_32_image (XlibRgbHandle *handle, Drawable drawable,
+                         GC gc,
+                         int x,
+                         int y,
+                         int width,
+                         int height,
+                         XlibRgbDither dith,
+                         unsigned char *buf,
+                         int rowstride);
+
+void
+xxlib_draw_gray_image (XlibRgbHandle *handle, Drawable drawable,
+                       GC gc,
+                       int x,
+                       int y,
+                       int width,
+                       int height,
+                       XlibRgbDither dith,
+                       unsigned char *buf,
+                       int rowstride);
+
+XlibRgbCmap *
+xxlib_rgb_cmap_new (XlibRgbHandle *handle, uint32 *colors, int n_colors);
+
+void
+xxlib_rgb_cmap_free (XlibRgbHandle *handle, XlibRgbCmap *cmap);
+
+void
+xxlib_draw_indexed_image (XlibRgbHandle *handle, Drawable drawable,
+                          GC gc,
+                          int x,
+                          int y,
+                          int width,
+                          int height,
+                          XlibRgbDither dith,
+                          unsigned char *buf,
+                          int rowstride,
+                          XlibRgbCmap *cmap);
+
+/* Below are some functions which are primarily useful for debugging
+   and experimentation. */
+Bool
+xxlib_rgb_ditherable (XlibRgbHandle *handle);
+
+void
+xxlib_rgb_set_verbose (XlibRgbHandle *handle, Bool verbose);
+
+/* experimental colormap stuff */
+void
+xxlib_rgb_set_install (XlibRgbHandle *handle, Bool install);
+
+void
+xxlib_rgb_set_min_colors (XlibRgbHandle *handle, int min_colors);
+
+Colormap
+xxlib_rgb_get_cmap (XlibRgbHandle *handle);
+
+Visual *
+xxlib_rgb_get_visual (XlibRgbHandle *handle);
+
+XVisualInfo *
+xxlib_rgb_get_visual_info (XlibRgbHandle *handle);
+
+int
+xxlib_rgb_get_depth (XlibRgbHandle *handle);
+
+Display *
+xxlib_rgb_get_display (XlibRgbHandle *handle);
+
+Screen *
+xxlib_rgb_get_screen (XlibRgbHandle *handle);
+
+unsigned long
+xxlib_get_prec_from_mask(XlibRgbHandle *handle, unsigned long);
+
+unsigned long
+xxlib_get_shift_from_mask(XlibRgbHandle *handle, unsigned long);
+
+#define XLIBRGB_ENABLE_OBSOLETE_API 1
+
+#ifdef XLIBRGB_ENABLE_OBSOLETE_API
 void
 xlib_rgb_init (Display *display, Screen *screen);
+
 void
 xlib_rgb_init_with_depth (Display *display, Screen *screen, int prefDepth);
+
 void
 xlib_rgb_detach (void);
+
 void 
 xlib_disallow_image_tiling (Bool disallow_it);
 
@@ -102,58 +241,51 @@ xlib_rgb_gc_set_foreground (GC gc, uint32 rgb);
 void
 xlib_rgb_gc_set_background (GC gc, uint32 rgb);
 
-typedef enum
-{
-  XLIB_RGB_DITHER_NONE,
-  XLIB_RGB_DITHER_NORMAL,
-  XLIB_RGB_DITHER_MAX
-} XlibRgbDither;
-
 void
 xlib_draw_rgb_image (Drawable drawable,
-		     GC gc,
-		     int x,
-		     int y,
-		     int width,
-		     int height,
-		     XlibRgbDither dith,
-		     unsigned char *rgb_buf,
-		     int rowstride);
+                     GC gc,
+                     int x,
+                     int y,
+                     int width,
+                     int height,
+                     XlibRgbDither dith,
+                     unsigned char *rgb_buf,
+                     int rowstride);
 
 void
 xlib_draw_rgb_image_dithalign (Drawable drawable,
-			       GC gc,
-			       int x,
-			       int y,
-			       int width,
-			       int height,
-			       XlibRgbDither dith,
-			       unsigned char *rgb_buf,
-			       int rowstride,
-			       int xdith,
-			       int ydith);
+                               GC gc,
+                               int x,
+                               int y,
+                               int width,
+                               int height,
+                               XlibRgbDither dith,
+                               unsigned char *rgb_buf,
+                               int rowstride,
+                               int xdith,
+                               int ydith);
 
 void
 xlib_draw_rgb_32_image (Drawable drawable,
-			GC gc,
-			int x,
-			int y,
-			int width,
-			int height,
-			XlibRgbDither dith,
-			unsigned char *buf,
-			int rowstride);
+                        GC gc,
+                        int x,
+                        int y,
+                        int width,
+                        int height,
+                        XlibRgbDither dith,
+                        unsigned char *buf,
+                        int rowstride);
 
 void
 xlib_draw_gray_image (Drawable drawable,
-		      GC gc,
-		      int x,
-		      int y,
-		      int width,
-		      int height,
-		      XlibRgbDither dith,
-		      unsigned char *buf,
-		      int rowstride);
+                      GC gc,
+                      int x,
+                      int y,
+                      int width,
+                      int height,
+                      XlibRgbDither dith,
+                      unsigned char *buf,
+                      int rowstride);
 
 XlibRgbCmap *
 xlib_rgb_cmap_new (uint32 *colors, int n_colors);
@@ -211,6 +343,8 @@ xlib_get_prec_from_mask(unsigned long);
 
 unsigned long
 xlib_get_shift_from_mask(unsigned long);
+
+#endif /* XLIBRGB_ENABLE_OBSOLETE_API */
 
 #ifdef __cplusplus
 }
