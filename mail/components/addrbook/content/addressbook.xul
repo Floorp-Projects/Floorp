@@ -139,6 +139,10 @@
   <label id="TOOLTIP-tooltipText" class="tooltip-label" flex="1"/>
 </popup>
 
+<popup id="toolbar-context-menu">
+  <menuitem oncommand="CustomizeMailToolbar('ab-toolbox');" id="CustomizeMailToolbar" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
+</popup>
+
 <toolbox id="ab-toolbox" class="toolbox-top" mode="icons">
   <toolbar type="menubar" id="addrbook-toolbar-menubar" class="chromeclass-menubar" customizable="true"
      defaultset="menubar-items" mode="icons">
@@ -390,6 +394,7 @@
            toolbarname="Mail" 
            fullscreentoolbar="true" mode="full"
            customizable="true"
+           context="toolbar-context-menu"
            defaultset="button-newcard,button-newlist,space,button-editcard,button-newmessage,button-newim,button-delete,spring,throbber-box">
    </toolbar>
    <toolbarset id="customToolbars" context="toolbar-context-menu"/>
