@@ -139,10 +139,15 @@ function UpdateBookmarksLastVisitedDate(event)
 	{
 		try
 		{
+
+      var wnd = document.commandDispatcher.focusedWindow;
+      if (window == wnd) wnd = window.content;
+      var docCharset = wnd.document.characterSet;
+
 			// if the URL is bookmarked, update its "Last Visited" date
 			var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
 			if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
-			if (bmks)	bmks.UpdateBookmarkLastVisitedDate(window.content.location.href);
+			if (bmks)	bmks.UpdateBookmarkLastVisitedDate(window.content.location.href, docCharset);
 		}
 		catch(ex)
 		{
@@ -879,12 +884,17 @@ function RevealSearchPanel()
   function BrowserAddBookmark(url,title)
   {
     var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
+    var wnd = document.commandDispatcher.focusedWindow;
+    if (window == wnd) wnd = window.content;
+    var docCharset = wnd.document.characterSet;
+
     bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
     if ((title == null) || (title == ""))
     {
     	title = url;
     }
-    bmks.AddBookmark(url, title, bmks.BOOKMARK_DEFAULT_TYPE);
+    bmks.AddBookmark(url, title, bmks.BOOKMARK_DEFAULT_TYPE, docCharset);
+    dump("BrowserAddBookmark: " + docCharset + "\n");
   }
 
 // Set up a lame hack to avoid opening two bookmarks.

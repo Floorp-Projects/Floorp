@@ -85,6 +85,8 @@ enum eParserDocType {
 typedef enum {
    kCharsetUninitialized = 0,
    kCharsetFromWeakDocTypeDefault,
+   kCharsetFromCache,
+   kCharsetFromBookmarks,
    kCharsetFromUserDefault ,
    kCharsetFromDocTypeDefault,
    kCharsetFromParentFrame,

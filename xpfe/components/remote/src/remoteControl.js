@@ -99,7 +99,7 @@ var browserRemoteControl = {
         if ( !aURL ) return(false);
         if ( aTitle )
         {
-            bookmarkService.AddBookmark(aURL, aTitle, bookmarkService.BOOKMARK_DEFAULT_TYPE );
+            bookmarkService.AddBookmark(aURL, aTitle, bookmarkService.BOOKMARK_DEFAULT_TYPE, null );
         }
         else
         {
