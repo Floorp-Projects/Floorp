@@ -2106,7 +2106,7 @@ static void
 SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
                const nsCSSFont& aFontData, PRUint8 aGenericFontID,
                nscoord aMinFontSize, PRBool aUseDocumentFonts,
-               PRBool aChromeOverride, nsStyleFont* aFont, PRBool aZoom)
+               PRBool aChromeOverride, nsStyleFont* aFont)
 {
   // walk up the contexts until a context with the desired generic font
   nsAutoVoidArray contextPath;
@@ -2130,6 +2130,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
   aPresContext->GetDefaultFont(aGenericFontID, &defaultFont);
   nsStyleFont parentFont(*defaultFont);
   PRInt32 i = contextPath.Count() - 1;
+  PRBool zoom = PR_TRUE;
   if (higherContext) {
     nsIStyleContext* context = (nsIStyleContext*)contextPath[i];
     nsStyleFont* tmpFont = (nsStyleFont*)context->GetStyleData(eStyleStruct_Font);
@@ -2137,6 +2138,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     parentFont.mFont = tmpFont->mFont;
     parentFont.mSize = tmpFont->mSize;
     --i;
+    zoom = PR_FALSE;
   }
   aFont->mFlags = parentFont.mFlags;
   aFont->mFont = parentFont.mFont;
@@ -2174,7 +2176,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
 
     SetFont(aPresContext, context, aMinFontSize,
             aUseDocumentFonts, aChromeOverride, PR_TRUE,
-            fontData, *defaultFont, &parentFont, aFont, aZoom, dummy);
+            fontData, *defaultFont, &parentFont, aFont, zoom, dummy);
 
     // XXX Not sure if we need to do this here
     // If we have a post-resolve callback, handle that now.
@@ -2184,6 +2186,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
     parentFont.mFlags = aFont->mFlags;
     parentFont.mFont = aFont->mFont;
     parentFont.mSize = aFont->mSize;
+    zoom = PR_FALSE;
   }
 
   // Finish off by applying our own rules. In this case, aFontData
@@ -2191,7 +2194,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsIStyleContext* aContext,
   // can just compute the delta from the parent.
   SetFont(aPresContext, aContext, aMinFontSize,
           aUseDocumentFonts, aChromeOverride, PR_TRUE,
-          aFontData, *defaultFont, &parentFont, aFont, aZoom, dummy);
+          aFontData, *defaultFont, &parentFont, aFont, zoom, dummy);
 }
 
 const nsStyleStruct* 
@@ -2306,7 +2309,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
     inherited = PR_TRUE;
     SetGenericFont(mPresContext, aContext, fontData,
                    generic, minimumFontSize, useDocumentFonts,
-                   chromeOverride, font, zoom);
+                   chromeOverride, font);
   }
   // Set our generic font's bit to inform our descendants
   font->mFlags &= ~NS_STYLE_FONT_FACE_MASK;
