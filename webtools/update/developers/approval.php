@@ -66,7 +66,7 @@ if ($type=="T") {
             $approval_result = process_approval($type, $file, "approve");
         }
     } else {
-        if ($testos and $testbuild) {
+        if ($testos and $testbuild and $comments) {
             $approval_result = process_approval($type, $file, "deny");
         }
 
@@ -78,7 +78,7 @@ if ($type=="T") {
             $approval_result = process_approval($type, $file, "approve");
         }
     } else {
-        if ($testos and $testbuild) {
+        if ($testos and $testbuild and $comments) {
             $approval_result = process_approval($type, $file, "deny");    
         }
     }
@@ -189,7 +189,9 @@ if ($type=="E") {
   echo"</TD></TR>\n";
 
   echo"<TR><TD COLSPAN=4 style=\"font-size: 8pt\">\n";
-  echo"Approve? <input name=\"approval_$i\" type=\"radio\" value=\"YES\"> Deny? <input name=\"approval_$i\" type=\"radio\" value=\"NO\"> No Action? <input name=\"approval_$i\" type=\"radio\" checked=\"checked\" VALUE=\"noaction\">\n";
+  echo"<input name=\"approval_$i\" type=\"radio\" value=\"YES\">Approve&nbsp;&nbsp;";
+  echo"<input name=\"approval_$i\" type=\"radio\" value=\"NO\">Deny&nbsp;&nbsp;";
+  echo"<input name=\"approval_$i\" type=\"radio\" checked=\"checked\" VALUE=\"noaction\">No Action?\n";
   echo"</TD></TR>\n";
  }
 
