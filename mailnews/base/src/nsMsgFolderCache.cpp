@@ -209,6 +209,8 @@ nsresult nsMsgFolderCache::InitExistingDB()
 				rowCursor->Release();
 			}
 		}
+    else
+      err = NS_ERROR_FAILURE;
 	}
 	return err;
 }
@@ -372,6 +374,14 @@ NS_IMETHODIMP nsMsgFolderCache::Init(nsIFileSpec *dbFileSpec)
 			PRBool exists = m_dbFileSpec.Exists();
 			// ### evil cast until MDB supports file streams.
 			rv = OpenMDB((const char *) m_dbFileSpec, exists);
+      // if this fails and panacea.dat exists, try blowing away the db and recreating it
+      if (!NS_SUCCEEDED(rv) && exists)
+      {
+	      if (m_mdbStore)
+		      m_mdbStore->Release();
+        m_dbFileSpec.Delete(PR_FALSE);
+  			rv = OpenMDB((const char *) m_dbFileSpec, PR_FALSE);
+      }
 		}
 	}
 	return rv;
