@@ -27,6 +27,7 @@ CPPSRCS = \
 	nsWalletFactory.cpp		\
 	nsWalletService.cpp		\
 	wallet.cpp			\
+	singsign.cpp			\
 	$(NULL)
 
 MODULE=wallet
