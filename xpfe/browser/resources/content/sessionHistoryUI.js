@@ -200,7 +200,7 @@ function addToUrlbarHistory()
        }
 
        while(elements.hasMoreElements()) {
-          entry = elements.getNext();
+          var entry = elements.getNext();
           if (!entry) continue;
 
           index ++;
