@@ -1,7 +1,7 @@
 /*
  * jcinit.c
  *
- * Copyright (C) 1991-1995, Thomas G. Lane.
+ * Copyright (C) 1991-1997, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -16,7 +16,6 @@
  */
 
 #define JPEG_INTERNALS
-#include "xp_core.h"/*defines of int32 ect*/
 #include "jinclude.h"
 #include "jpeglib.h"
 
@@ -27,7 +26,7 @@
  * which modules will be used and give them appropriate initialization calls.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_compress_master (j_compress_ptr cinfo)
 {
   /* Initialize master control (includes parameter checking/processing) */
@@ -57,7 +56,7 @@ jinit_compress_master (j_compress_ptr cinfo)
 
   /* Need a full-image coefficient buffer in any multi-pass mode. */
   jinit_c_coef_controller(cinfo,
-			  (boolean)(cinfo->num_scans > 1 || cinfo->optimize_coding));
+		(boolean) (cinfo->num_scans > 1 || cinfo->optimize_coding));
   jinit_c_main_controller(cinfo, FALSE /* never need full buffer here */);
 
   jinit_marker_writer(cinfo);

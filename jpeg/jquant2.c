@@ -1,7 +1,7 @@
 /*
  * jquant2.c
  *
- * Copyright (C) 1991-1995, Thomas G. Lane.
+ * Copyright (C) 1991-1996, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -220,7 +220,7 @@ typedef my_cquantizer * my_cquantize_ptr;
  * NULL pointer).
  */
 
-METHODDEF void
+METHODDEF(void)
 prescan_quantize (j_decompress_ptr cinfo, JSAMPARRAY input_buf,
 		  JSAMPARRAY output_buf, int num_rows)
 {
@@ -269,7 +269,7 @@ typedef struct {
 typedef box * boxptr;
 
 
-LOCAL boxptr
+LOCAL(boxptr)
 find_biggest_color_pop (boxptr boxlist, int numboxes)
 /* Find the splittable box with the largest color population */
 /* Returns NULL if no splittable boxes remain */
@@ -289,7 +289,7 @@ find_biggest_color_pop (boxptr boxlist, int numboxes)
 }
 
 
-LOCAL boxptr
+LOCAL(boxptr)
 find_biggest_volume (boxptr boxlist, int numboxes)
 /* Find the splittable box with the largest (scaled) volume */
 /* Returns NULL if no splittable boxes remain */
@@ -309,7 +309,7 @@ find_biggest_volume (boxptr boxlist, int numboxes)
 }
 
 
-LOCAL void
+LOCAL(void)
 update_box (j_decompress_ptr cinfo, boxptr boxp)
 /* Shrink the min/max bounds of a box to enclose only nonzero elements, */
 /* and recompute its volume and population */
@@ -420,7 +420,7 @@ update_box (j_decompress_ptr cinfo, boxptr boxp)
 }
 
 
-LOCAL int
+LOCAL(int)
 median_cut (j_decompress_ptr cinfo, boxptr boxlist, int numboxes,
 	    int desired_colors)
 /* Repeatedly select and split the largest box until we have enough boxes */
@@ -495,7 +495,7 @@ median_cut (j_decompress_ptr cinfo, boxptr boxlist, int numboxes,
 }
 
 
-LOCAL void
+LOCAL(void)
 compute_color (j_decompress_ptr cinfo, boxptr boxp, int icolor)
 /* Compute representative color for a box, put it in colormap[icolor] */
 {
@@ -535,7 +535,7 @@ compute_color (j_decompress_ptr cinfo, boxptr boxp, int icolor)
 }
 
 
-LOCAL void
+LOCAL(void)
 select_colors (j_decompress_ptr cinfo, int desired_colors)
 /* Master routine for color selection */
 {
@@ -642,7 +642,7 @@ select_colors (j_decompress_ptr cinfo, int desired_colors)
  * inner-loop variables.
  */
 
-LOCAL int
+LOCAL(int)
 find_nearby_colors (j_decompress_ptr cinfo, int minc0, int minc1, int minc2,
 		    JSAMPLE colorlist[])
 /* Locate the colormap entries close enough to an update box to be candidates
@@ -771,7 +771,7 @@ find_nearby_colors (j_decompress_ptr cinfo, int minc0, int minc1, int minc2,
 }
 
 
-LOCAL void
+LOCAL(void)
 find_best_colors (j_decompress_ptr cinfo, int minc0, int minc1, int minc2,
 		  int numcolors, JSAMPLE colorlist[], JSAMPLE bestcolor[])
 /* Find the closest colormap entry for each cell in the update box,
@@ -851,7 +851,7 @@ find_best_colors (j_decompress_ptr cinfo, int minc0, int minc1, int minc2,
 }
 
 
-LOCAL void
+LOCAL(void)
 fill_inverse_cmap (j_decompress_ptr cinfo, int c0, int c1, int c2)
 /* Fill the inverse-colormap entries in the update box that contains */
 /* histogram cell c0/c1/c2.  (Only that one cell MUST be filled, but */
@@ -911,7 +911,7 @@ fill_inverse_cmap (j_decompress_ptr cinfo, int c0, int c1, int c2)
  * Map some rows of pixels to the output colormapped representation.
  */
 
-METHODDEF void
+METHODDEF(void)
 pass2_no_dither (j_decompress_ptr cinfo,
 		 JSAMPARRAY input_buf, JSAMPARRAY output_buf, int num_rows)
 /* This version performs no dithering */
@@ -945,7 +945,7 @@ pass2_no_dither (j_decompress_ptr cinfo,
 }
 
 
-METHODDEF void
+METHODDEF(void)
 pass2_fs_dither (j_decompress_ptr cinfo,
 		 JSAMPARRAY input_buf, JSAMPARRAY output_buf, int num_rows)
 /* This version performs Floyd-Steinberg dithering */
@@ -1104,7 +1104,7 @@ pass2_fs_dither (j_decompress_ptr cinfo,
  * to Aaron Giles for this idea.
  */
 
-LOCAL void
+LOCAL(void)
 init_error_limit (j_decompress_ptr cinfo)
 /* Allocate and fill in the error_limiter table */
 {
@@ -1139,7 +1139,7 @@ init_error_limit (j_decompress_ptr cinfo)
  * Finish up at the end of each pass.
  */
 
-METHODDEF void
+METHODDEF(void)
 finish_pass1 (j_decompress_ptr cinfo)
 {
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
@@ -1152,7 +1152,7 @@ finish_pass1 (j_decompress_ptr cinfo)
 }
 
 
-METHODDEF void
+METHODDEF(void)
 finish_pass2 (j_decompress_ptr cinfo)
 {
   /* no work */
@@ -1163,7 +1163,7 @@ finish_pass2 (j_decompress_ptr cinfo)
  * Initialize for each processing pass.
  */
 
-METHODDEF void
+METHODDEF(void)
 start_pass_2_quant (j_decompress_ptr cinfo, boolean is_pre_scan)
 {
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
@@ -1226,7 +1226,7 @@ start_pass_2_quant (j_decompress_ptr cinfo, boolean is_pre_scan)
  * Switch to a new external colormap between output passes.
  */
 
-METHODDEF void
+METHODDEF(void)
 new_color_map_2_quant (j_decompress_ptr cinfo)
 {
   my_cquantize_ptr cquantize = (my_cquantize_ptr) cinfo->cquantize;
@@ -1240,7 +1240,7 @@ new_color_map_2_quant (j_decompress_ptr cinfo)
  * Module initialization routine for 2-pass color quantization.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_2pass_quantizer (j_decompress_ptr cinfo)
 {
   my_cquantize_ptr cquantize;

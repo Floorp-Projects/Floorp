@@ -1,25 +1,36 @@
-/* jconfig.h.  Generated automatically by configure.  */
-/* jconfig.auto --- source file edited by configure script */
-/* see jconfig.doc for explanations */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
 
-#ifdef __MWERKS__ /* macintosh */
-      #error should be including jconfig-mac-cw.h!
-#endif
+/*
+ * jconfig.h to configure the IJG JPEG library for the Mozilla/Netscape
+ * environment.  Note that there are also Mozilla mods in jmorecfg.h.
+ */
 
-#ifdef _WINDOWS /* windows */
-      #error should be including jwinfig.h!
-#endif
+#include "xp_core.h"            /* get XP_ symbols */
+#include "jri.h"                /* get JRI_PUBLIC_API macro */
 
-#ifdef XP_OS2 /* os2 */
-      #error should be including jos2fig.h!
-#endif
 
+/* We assume an ANSI C or C++ compilation environment */
 #define HAVE_PROTOTYPES 
 #define HAVE_UNSIGNED_CHAR 
 #define HAVE_UNSIGNED_SHORT 
-#undef void
-#undef const
-#define CHAR_IS_UNSIGNED 
+/* #define void char */
+/* #define const */
 #define HAVE_STDDEF_H 
 #define HAVE_STDLIB_H 
 #undef NEED_BSD_STRINGS
@@ -29,17 +40,41 @@
 /* Define this if you get warnings about undefined structures. */
 #undef INCOMPLETE_TYPES_BROKEN
 
+/* With this setting, the IJG code will work regardless of whether
+ * type "char" is signed or unsigned.
+ */
+#undef CHAR_IS_UNSIGNED
+
+
+/* defines that need not be visible to callers of the IJG library */
+
 #ifdef JPEG_INTERNALS
 
+/* If right shift of "long" quantities is unsigned on your machine,
+ * you'll have to define this.  Fortunately few people should need it.
+ */
 #undef RIGHT_SHIFT_IS_UNSIGNED
 
-#define INLINE __inline
-/* These are for configuring the JPEG memory manager. */
-#undef DEFAULT_MAX_MEM
-#undef NO_MKTEMP
+#ifdef XP_WIN                   /* MS Windows */
+
+/* In case we are using a compiler that only has 16-bit size_t: */
+#define MAX_ALLOC_CHUNK 65520L	/* Maximum request to malloc() */
+
+#endif /* XP_WIN */
+
+#ifdef XP_MAC                   /* Macintosh */
+
+#define ALIGN_TYPE long         /* for sane memory alignment */
+#define NO_GETENV               /* we do have the function, but it's dead */
+
+#endif /* XP_MAC */
 
 #endif /* JPEG_INTERNALS */
 
+
+/* these defines are not interesting for building just the IJG library,
+ * but we leave 'em here anyway.
+ */
 #ifdef JPEG_CJPEG_DJPEG
 
 #define BMP_SUPPORTED		/* BMP image file format */
@@ -51,8 +86,6 @@
 #undef TWO_FILE_COMMANDLINE
 #undef NEED_SIGNAL_CATCHER
 #undef DONT_USE_B_MODE
-
-/* Define this if you want percent-done progress reports from cjpeg/djpeg. */
 #undef PROGRESS_REPORT
 
 #endif /* JPEG_CJPEG_DJPEG */

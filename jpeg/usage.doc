@@ -57,7 +57,7 @@ or
 This syntax works on all systems, so it is useful for scripts.
 
 The currently supported image file formats are: PPM (PBMPLUS color format),
-PGM (PBMPLUS gray-scale format), BMP, GIF, Targa, and RLE (Utah Raster Toolkit
+PGM (PBMPLUS gray-scale format), BMP, Targa, and RLE (Utah Raster Toolkit
 format).  (RLE is supported only if the URT library is available.)
 cjpeg recognizes the input image format automatically, with the exception
 of some Targa-format files.  You have to tell djpeg which format to generate.
@@ -67,7 +67,7 @@ less widely used JPEG-based file formats, but we don't support them.
 
 All switch names may be abbreviated; for example, -grayscale may be written
 -gray or -gr.  Most of the "basic" switches can be abbreviated to as little as
-one letter.  Upper and lower case are equivalent (-GIF is the same as -gif).
+one letter.  Upper and lower case are equivalent (-BMP is the same as -bmp).
 British spellings are also accepted (e.g., -greyscale), though for brevity
 these are not mentioned below.
 
@@ -82,8 +82,8 @@ The basic command line switches for cjpeg are:
 
 	-grayscale	Create monochrome JPEG file from color input.
 			Be sure to use this switch when compressing a grayscale
-			GIF file, because cjpeg isn't bright enough to notice
-			whether a GIF file uses only shades of gray.  By
+			BMP file, because cjpeg isn't bright enough to notice
+			whether a BMP file uses only shades of gray.  By
 			saying -grayscale, you'll get a smaller JPEG file that
 			takes less time to process.
 
@@ -177,16 +177,19 @@ restart markers occupy extra space.  We recommend -restart 1 for images that
 will be transmitted across unreliable networks such as Usenet.
 
 The -smooth option filters the input to eliminate fine-scale noise.  This is
-often useful when converting GIF files to JPEG: a moderate smoothing factor of
-10 to 50 gets rid of dithering patterns in the input file, resulting in a
-smaller JPEG file and a better-looking image.  Too large a smoothing factor
-will visibly blur the image, however.
+often useful when converting dithered images to JPEG: a moderate smoothing
+factor of 10 to 50 gets rid of dithering patterns in the input file, resulting
+in a smaller JPEG file and a better-looking image.  Too large a smoothing
+factor will visibly blur the image, however.
 
 Switches for wizards:
 
-	-baseline	Force a baseline JPEG file to be generated.  This
-			clamps quantization values to 8 bits even at low
-			quality settings.
+	-baseline	Force baseline-compatible quantization tables to be
+			generated.  This clamps quantization values to 8 bits
+			even at low quality settings.  (This switch is poorly
+			named, since it does not ensure that the output is
+			actually baseline JPEG.  For example, you can use
+			-baseline and -progressive together.)
 
 	-qtables file	Use the quantization tables given in the specified
 			text file.
@@ -329,6 +332,10 @@ quality settings to make very small JPEG files; the percentage improvement
 is often a lot more than it is on larger files.  (At present, -optimize
 mode is always selected when generating progressive JPEG files.)
 
+GIF input files are no longer supported, to avoid the Unisys LZW patent.
+Use a Unisys-licensed program if you need to read a GIF file.  (Conversion
+of GIF files to JPEG is usually a bad idea anyway.)
+
 
 HINTS FOR DJPEG
 
@@ -353,6 +360,9 @@ Two-pass color quantization requires a good deal of memory; on MS-DOS machines
 it may run out of memory even with -maxmemory 0.  In that case you can still
 decompress, with some loss of image quality, by specifying -onepass for
 one-pass quantization.
+
+To avoid the Unisys LZW patent, djpeg produces uncompressed GIF files.  These
+are larger than they should be, but are readable by standard GIF decoders.
 
 
 HINTS FOR BOTH PROGRAMS
@@ -390,27 +400,104 @@ and do not need you to specify -maxmemory.
 
 JPEGTRAN
 
-jpegtran translates JPEG files from one variant of JPEG to another, for
-example from baseline JPEG to progressive JPEG or vice versa.  The
-transformation is lossless: no image degradation occurs, which would not
-be true if you used djpeg followed by cjpeg.  However, you cannot alter
-the image quality, because that would not be a lossless operation.
+jpegtran performs various useful transformations of JPEG files.
+It can translate the coded representation from one variant of JPEG to another,
+for example from baseline JPEG to progressive JPEG or vice versa.  It can also
+perform some rearrangements of the image data, for example turning an image
+from landscape to portrait format by rotation.
 
-jpegtran operates similarly to cjpeg, except that it reads a JPEG file
-and writes another JPEG file.
+jpegtran works by rearranging the compressed data (DCT coefficients), without
+ever fully decoding the image.  Therefore, its transformations are lossless:
+there is no image degradation at all, which would not be true if you used
+djpeg followed by cjpeg to accomplish the same conversion.  But by the same
+token, jpegtran cannot perform lossy operations such as changing the image
+quality.
 
+jpegtran uses a command line syntax similar to cjpeg or djpeg.
+On Unix-like systems, you say:
+	jpegtran [switches] [inputfile] >outputfile
+On most non-Unix systems, you say:
+	jpegtran [switches] inputfile outputfile
+where both the input and output files are JPEG files.
+
+To specify the coded JPEG representation used in the output file,
 jpegtran accepts a subset of the switches recognized by cjpeg:
+	-optimize	Perform optimization of entropy encoding parameters.
+	-progressive	Create progressive JPEG file.
+	-restart N	Emit a JPEG restart marker every N MCU rows, or every
+			N MCU blocks if "B" is attached to the number.
+	-scans file	Use the scan script given in the specified text file.
+See the previous discussion of cjpeg for more details about these switches.
+If you specify none of these switches, you get a plain baseline-JPEG output
+file.  The quality setting and so forth are determined by the input file.
+
+The image can be losslessly transformed by giving one of these switches:
+	-flip horizontal	Mirror image horizontally (left-right).
+	-flip vertical		Mirror image vertically (top-bottom).
+	-rotate 90		Rotate image 90 degrees clockwise.
+	-rotate 180		Rotate image 180 degrees.
+	-rotate 270		Rotate image 270 degrees clockwise (or 90 ccw).
+	-transpose		Transpose image (across UL-to-LR axis).
+	-transverse		Transverse transpose (across UR-to-LL axis).
+
+The transpose transformation has no restrictions regarding image dimensions.
+The other transformations operate rather oddly if the image dimensions are not
+a multiple of the iMCU size (usually 8 or 16 pixels), because they can only
+transform complete blocks of DCT coefficient data in the desired way.
+
+jpegtran's default behavior when transforming an odd-size image is designed
+to preserve exact reversibility and mathematical consistency of the
+transformation set.  As stated, transpose is able to flip the entire image
+area.  Horizontal mirroring leaves any partial iMCU column at the right edge
+untouched, but is able to flip all rows of the image.  Similarly, vertical
+mirroring leaves any partial iMCU row at the bottom edge untouched, but is
+able to flip all columns.  The other transforms can be built up as sequences
+of transpose and flip operations; for consistency, their actions on edge
+pixels are defined to be the same as the end result of the corresponding
+transpose-and-flip sequence.
+
+For practical use, you may prefer to discard any untransformable edge pixels
+rather than having a strange-looking strip along the right and/or bottom edges
+of a transformed image.  To do this, add the -trim switch:
+	-trim		Drop non-transformable edge blocks.
+Obviously, a transformation with -trim is not reversible, so strictly speaking
+jpegtran with this switch is not lossless.  Also, the expected mathematical
+equivalences between the transformations no longer hold.  For example,
+"-rot 270 -trim" trims only the bottom edge, but "-rot 90 -trim" followed by
+"-rot 180 -trim" trims both edges.
+
+Another not-strictly-lossless transformation switch is:
+	-grayscale	Force grayscale output.
+This option discards the chrominance channels if the input image is YCbCr
+(ie, a standard color JPEG), resulting in a grayscale JPEG file.  The
+luminance channel is preserved exactly, so this is a better method of reducing
+to grayscale than decompression, conversion, and recompression.  This switch
+is particularly handy for fixing a monochrome picture that was mistakenly
+encoded as a color JPEG.  (In such a case, the space savings from getting rid
+of the near-empty chroma channels won't be large; but the decoding time for
+a grayscale JPEG is substantially less than that for a color JPEG.)
+
+jpegtran also recognizes these switches that control what to do with "extra"
+markers, such as comment blocks:
+	-copy none	Copy no extra markers from source file.  This setting
+			suppresses all comments and other excess baggage
+			present in the source file.
+	-copy comments	Copy only comment markers.  This setting copies
+			comments from the source file, but discards
+			any other inessential data. 
+	-copy all	Copy all extra markers.  This setting preserves
+			miscellaneous markers found in the source file, such
+			as JFIF thumbnails and Photoshop settings.  In some
+			files these extra markers can be sizable.
+The default behavior is -copy comments.  (Note: in IJG releases v6 and v6a,
+jpegtran always did the equivalent of -copy none.)
+
+Additional switches recognized by jpegtran are:
 	-outfile filename
-	-optimize
-	-progressive
-	-restart N
-	-scans file
 	-maxmemory N
 	-verbose
 	-debug
-See the previous discussion of cjpeg for details about these switches.
-
-If you specify no switches, you get a plain baseline-JPEG output file.
+These work the same as in cjpeg or djpeg.
 
 
 THE COMMENT UTILITIES
@@ -454,7 +541,7 @@ where both input and output file names must be given explicitly.
 wrjpgcom understands three switches:
 	-replace		 Delete any existing COM blocks from the file.
 	-comment "Comment text"	 Supply new COM text on command line.
-        -cfile name		 Read text for new COM block from named file.
+	-cfile name		 Read text for new COM block from named file.
 (Switch names can be abbreviated.)  If you have only one line of comment text
 to add, you can provide it on the command line with -comment.  The comment
 text must be surrounded with quotes so that it is treated as a single

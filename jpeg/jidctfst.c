@@ -1,7 +1,7 @@
 /*
  * jidctfst.c
  *
- * Copyright (C) 1994-1996, Thomas G. Lane.
+ * Copyright (C) 1994-1998, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -31,7 +31,6 @@
  * precise the scaled value, so this implementation does worse with high-
  * quality-setting files than with low-quality ones.
  */
-
 
 #define JPEG_INTERNALS
 #include "jinclude.h"
@@ -162,24 +161,24 @@
 #endif
 
 #ifdef XP_WIN32
-__inline GLOBAL void
+__inline GLOBAL(void)
 jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JCOEFPTR coef_block,
 		 JSAMPARRAY output_buf, JDIMENSION output_col);
-__inline GLOBAL void
+__inline GLOBAL(void)
 jpeg_idct_ifast_orig (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JCOEFPTR coef_block,
 		 JSAMPARRAY output_buf, JDIMENSION output_col);
 #endif
 
-GLOBAL void
+GLOBAL(void)
 jpeg_idct_ifast(j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JCOEFPTR coef_block,
 		 JSAMPARRAY output_buf, JDIMENSION output_col);
 
 
 #ifdef XP_WIN32
-GLOBAL void 
+GLOBAL(void)
 jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JCOEFPTR coef_block,
 		 JSAMPARRAY output_buf, JDIMENSION output_col)
@@ -195,7 +194,7 @@ else
  * Perform dequantization and inverse DCT on one block of coefficients.
  */
 
-GLOBAL void
+GLOBAL (void)
 jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JCOEFPTR coef_block,
 		 JSAMPARRAY output_buf, JDIMENSION output_col)
@@ -205,11 +204,11 @@ jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
   DCTELEM z5, z10, z11, z12, z13;
   JCOEFPTR inptr;
   IFAST_MULT_TYPE * quantptr;
-  int16 * wsptr;
+  int * wsptr;
   JSAMPROW outptr;
   JSAMPLE *range_limit = IDCT_range_limit(cinfo);
   int ctr;
-  int16 workspace[DCTSIZE2];	/* buffers data between passes */
+  int workspace[DCTSIZE2];	/* buffers data between passes */
   SHIFT_TEMPS			/* for DESCALE */
   ISHIFT_TEMPS			/* for IDESCALE */
 
@@ -228,9 +227,10 @@ jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
      * column DCT calculations can be simplified this way.
      */
     
-    if ((inptr[DCTSIZE*1] | inptr[DCTSIZE*2] | inptr[DCTSIZE*3] |
-	 inptr[DCTSIZE*4] | inptr[DCTSIZE*5] | inptr[DCTSIZE*6] |
-	 inptr[DCTSIZE*7]) == 0) {
+    if (inptr[DCTSIZE*1] == 0 && inptr[DCTSIZE*2] == 0 &&
+	inptr[DCTSIZE*3] == 0 && inptr[DCTSIZE*4] == 0 &&
+	inptr[DCTSIZE*5] == 0 && inptr[DCTSIZE*6] == 0 &&
+	inptr[DCTSIZE*7] == 0) {
       /* AC terms all zero */
       int dcval = (int) DEQUANTIZE(inptr[DCTSIZE*0], quantptr[DCTSIZE*0]);
 
@@ -320,8 +320,8 @@ jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
      */
     
 #ifndef NO_ZERO_ROW_TEST
-    if ((wsptr[1] | wsptr[2] | wsptr[3] | wsptr[4] | wsptr[5] | wsptr[6] |
-	 wsptr[7]) == 0) {
+    if (wsptr[1] == 0 && wsptr[2] == 0 && wsptr[3] == 0 && wsptr[4] == 0 &&
+	wsptr[5] == 0 && wsptr[6] == 0 && wsptr[7] == 0) {
       /* AC terms all zero */
       JSAMPLE dcval = range_limit[IDESCALE(wsptr[0], PASS1_BITS+3)
 				  & RANGE_MASK];
@@ -394,12 +394,13 @@ jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
     wsptr += DCTSIZE;		/* advance pointer to next row */
   }
 }
+
 #endif
 
 #ifdef XP_WIN32
 
 
-_inline GLOBAL void
+_inline GLOBAL(void)
 jpeg_idct_ifast_orig (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JCOEFPTR coef_block,
 		 JSAMPARRAY output_buf, JDIMENSION output_col)
@@ -608,7 +609,7 @@ jpeg_idct_ifast_orig (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	static	  __int64 const_0x0080	= 0x0080008000800080;
 
 
-__inline GLOBAL void
+__inline GLOBAL(void)
 jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 		 JCOEFPTR inptr,
 		 JSAMPARRAY outptr, JDIMENSION output_col)
@@ -1646,6 +1647,4 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 }
 #endif
 
-
 #endif /* DCT_IFAST_SUPPORTED */
-

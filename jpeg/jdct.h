@@ -1,7 +1,7 @@
 /*
  * jdct.h
  *
- * Copyright (C) 1994, Thomas G. Lane.
+ * Copyright (C) 1994-1996, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -94,26 +94,26 @@ typedef FAST_FLOAT FLOAT_MULT_TYPE; /* preferred floating type */
 
 /* Extern declarations for the forward and inverse DCT routines. */
 
-EXTERN void jpeg_fdct_islow JPP((DCTELEM * data));
-EXTERN void jpeg_fdct_ifast JPP((DCTELEM * data));
-EXTERN void jpeg_fdct_float JPP((FAST_FLOAT * data));
+EXTERN(void) jpeg_fdct_islow JPP((DCTELEM * data));
+EXTERN(void) jpeg_fdct_ifast JPP((DCTELEM * data));
+EXTERN(void) jpeg_fdct_float JPP((FAST_FLOAT * data));
 
-EXTERN void jpeg_idct_islow
+EXTERN(void) jpeg_idct_islow
     JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
-EXTERN void jpeg_idct_ifast
+EXTERN(void) jpeg_idct_ifast
     JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
-EXTERN void jpeg_idct_float
+EXTERN(void) jpeg_idct_float
     JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
-EXTERN void jpeg_idct_4x4
+EXTERN(void) jpeg_idct_4x4
     JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
-EXTERN void jpeg_idct_2x2
+EXTERN(void) jpeg_idct_2x2
     JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
-EXTERN void jpeg_idct_1x1
+EXTERN(void) jpeg_idct_1x1
     JPP((j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	 JCOEFPTR coef_block, JSAMPARRAY output_buf, JDIMENSION output_col));
 

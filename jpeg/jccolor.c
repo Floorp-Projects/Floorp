@@ -1,7 +1,7 @@
 /*
  * jccolor.c
  *
- * Copyright (C) 1991-1994, Thomas G. Lane.
+ * Copyright (C) 1991-1996, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -9,7 +9,6 @@
  */
 
 #define JPEG_INTERNALS
-#include "xp_core.h"/*defines of int32 ect*/
 #include "jinclude.h"
 #include "jpeglib.h"
 
@@ -20,7 +19,7 @@ typedef struct {
   struct jpeg_color_converter pub; /* public fields */
 
   /* Private state for RGB->YCC conversion */
-  int32 * rgb_ycc_tab;		/* => table for RGB to YCbCr conversion */
+  INT32 * rgb_ycc_tab;		/* => table for RGB to YCbCr conversion */
 } my_color_converter;
 
 typedef my_color_converter * my_cconvert_ptr;
@@ -57,9 +56,9 @@ typedef my_color_converter * my_cconvert_ptr;
  */
 
 #define SCALEBITS	16	/* speediest right-shift on some machines */
-#define CBCR_OFFSET	((int32) CENTERJSAMPLE << SCALEBITS)
-#define ONE_HALF	((int32) 1 << (SCALEBITS-1))
-#define FIX(x)		((int32) ((x) * (1L<<SCALEBITS) + 0.5))
+#define CBCR_OFFSET	((INT32) CENTERJSAMPLE << SCALEBITS)
+#define ONE_HALF	((INT32) 1 << (SCALEBITS-1))
+#define FIX(x)		((INT32) ((x) * (1L<<SCALEBITS) + 0.5))
 
 /* We allocate one big table and divide it up into eight parts, instead of
  * doing eight alloc_small requests.  This lets us use a single table base
@@ -83,17 +82,17 @@ typedef my_color_converter * my_cconvert_ptr;
  * Initialize for RGB->YCC colorspace conversion.
  */
 
-METHODDEF void
+METHODDEF(void)
 rgb_ycc_start (j_compress_ptr cinfo)
 {
   my_cconvert_ptr cconvert = (my_cconvert_ptr) cinfo->cconvert;
-  int32 * rgb_ycc_tab;
-  int32 i;
+  INT32 * rgb_ycc_tab;
+  INT32 i;
 
   /* Allocate and fill in the conversion tables. */
-  cconvert->rgb_ycc_tab = rgb_ycc_tab = (int32 *)
+  cconvert->rgb_ycc_tab = rgb_ycc_tab = (INT32 *)
     (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-				(TABLE_SIZE * SIZEOF(int32)));
+				(TABLE_SIZE * SIZEOF(INT32)));
 
   for (i = 0; i <= MAXJSAMPLE; i++) {
     rgb_ycc_tab[i+R_Y_OFF] = FIX(0.29900) * i;
@@ -127,14 +126,14 @@ rgb_ycc_start (j_compress_ptr cinfo)
  * offset required on that side.
  */
 
-METHODDEF void
+METHODDEF(void)
 rgb_ycc_convert (j_compress_ptr cinfo,
 		 JSAMPARRAY input_buf, JSAMPIMAGE output_buf,
 		 JDIMENSION output_row, int num_rows)
 {
   my_cconvert_ptr cconvert = (my_cconvert_ptr) cinfo->cconvert;
-  register int16 r, g, b;
-  register int32 * ctab = cconvert->rgb_ycc_tab;
+  register int r, g, b;
+  register INT32 * ctab = cconvert->rgb_ycc_tab;
   register JSAMPROW inptr;
   register JSAMPROW outptr0, outptr1, outptr2;
   register JDIMENSION col;
@@ -183,14 +182,14 @@ rgb_ycc_convert (j_compress_ptr cinfo,
  * We assume rgb_ycc_start has been called (we only use the Y tables).
  */
 
-METHODDEF void
+METHODDEF(void)
 rgb_gray_convert (j_compress_ptr cinfo,
 		  JSAMPARRAY input_buf, JSAMPIMAGE output_buf,
 		  JDIMENSION output_row, int num_rows)
 {
   my_cconvert_ptr cconvert = (my_cconvert_ptr) cinfo->cconvert;
-  register int16 r, g, b;
-  register int32 * ctab = cconvert->rgb_ycc_tab;
+  register int r, g, b;
+  register INT32 * ctab = cconvert->rgb_ycc_tab;
   register JSAMPROW inptr;
   register JSAMPROW outptr;
   register JDIMENSION col;
@@ -222,14 +221,14 @@ rgb_gray_convert (j_compress_ptr cinfo,
  * We assume rgb_ycc_start has been called.
  */
 
-METHODDEF void
+METHODDEF(void)
 cmyk_ycck_convert (j_compress_ptr cinfo,
 		   JSAMPARRAY input_buf, JSAMPIMAGE output_buf,
 		   JDIMENSION output_row, int num_rows)
 {
   my_cconvert_ptr cconvert = (my_cconvert_ptr) cinfo->cconvert;
-  register int16 r, g, b;
-  register int32 * ctab = cconvert->rgb_ycc_tab;
+  register int r, g, b;
+  register INT32 * ctab = cconvert->rgb_ycc_tab;
   register JSAMPROW inptr;
   register JSAMPROW outptr0, outptr1, outptr2, outptr3;
   register JDIMENSION col;
@@ -277,7 +276,7 @@ cmyk_ycck_convert (j_compress_ptr cinfo,
  * The source can be either plain grayscale or YCbCr (since Y == gray).
  */
 
-METHODDEF void
+METHODDEF(void)
 grayscale_convert (j_compress_ptr cinfo,
 		   JSAMPARRAY input_buf, JSAMPIMAGE output_buf,
 		   JDIMENSION output_row, int num_rows)
@@ -286,7 +285,7 @@ grayscale_convert (j_compress_ptr cinfo,
   register JSAMPROW outptr;
   register JDIMENSION col;
   JDIMENSION num_cols = cinfo->image_width;
-  int16 instride = cinfo->input_components;
+  int instride = cinfo->input_components;
 
   while (--num_rows >= 0) {
     inptr = *input_buf++;
@@ -306,7 +305,7 @@ grayscale_convert (j_compress_ptr cinfo,
  * We assume input_components == num_components.
  */
 
-METHODDEF void
+METHODDEF(void)
 null_convert (j_compress_ptr cinfo,
 	      JSAMPARRAY input_buf, JSAMPIMAGE output_buf,
 	      JDIMENSION output_row, int num_rows)
@@ -314,8 +313,8 @@ null_convert (j_compress_ptr cinfo,
   register JSAMPROW inptr;
   register JSAMPROW outptr;
   register JDIMENSION col;
-  register int16 ci;
-  int16 nc = cinfo->num_components;
+  register int ci;
+  int nc = cinfo->num_components;
   JDIMENSION num_cols = cinfo->image_width;
 
   while (--num_rows >= 0) {
@@ -338,7 +337,7 @@ null_convert (j_compress_ptr cinfo,
  * Empty method for start_pass.
  */
 
-METHODDEF void
+METHODDEF(void)
 null_method (j_compress_ptr cinfo)
 {
   /* no work needed */
@@ -349,7 +348,7 @@ null_method (j_compress_ptr cinfo)
  * Module initialization routine for input colorspace conversion.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_color_converter (j_compress_ptr cinfo)
 {
   my_cconvert_ptr cconvert;

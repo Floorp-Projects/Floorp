@@ -1,8 +1,8 @@
 The Independent JPEG Group's JPEG software
 ==========================================
 
-README for release 6 of 2-Aug-95
-================================
+README for release 6b of 27-Mar-1998
+====================================
 
 This distribution contains the sixth public release of the Independent JPEG
 Group's free JPEG software.  You are welcome to redistribute this software and
@@ -13,9 +13,10 @@ larger programs) should contact IJG at jpeg-info@uunet.uu.net to be added to
 our electronic mailing list.  Mailing list members are notified of updates
 and have a chance to participate in technical discussions, etc.
 
-This software is the work of Tom Lane, Philip Gladstone, Luis Ortiz, Jim
-Boucher, Lee Crocker, Julian Minguillon, George Phillips, Davide Rossi,
-Ge' Weijers, and other members of the Independent JPEG Group.
+This software is the work of Tom Lane, Philip Gladstone, Jim Boucher,
+Lee Crocker, Julian Minguillon, Luis Ortiz, George Phillips, Davide Rossi,
+Guido Vollbeding, Ge' Weijers, and other members of the Independent JPEG
+Group.
 
 IJG is not affiliated with the official ISO JPEG standards committee.
 
@@ -126,7 +127,7 @@ with respect to this software, its quality, accuracy, merchantability, or
 fitness for a particular purpose.  This software is provided "AS IS", and you,
 its user, assume the entire risk as to its quality and accuracy.
 
-This software is copyright (C) 1991, 1992, 1993, 1994, 1995, Thomas G. Lane.
+This software is copyright (C) 1991-1998, Thomas G. Lane.
 All Rights Reserved except as specified below.
 
 Permission is hereby granted to use, copy, modify, and distribute this
@@ -166,8 +167,11 @@ ansi2knr.c for full details.)  However, since ansi2knr.c is not needed as part
 of any program generated from the IJG code, this does not limit you more than
 the foregoing paragraphs do.
 
-The configuration script "configure" was produced with GNU Autoconf.  It
-is copyright by the Free Software Foundation but is freely distributable.
+The Unix configuration script "configure" was produced with GNU Autoconf.
+It is copyright by the Free Software Foundation but is freely distributable.
+The same holds for its supporting scripts (config.guess, config.sub,
+ltconfig, ltmain.sh).  Another support script, install-sh, is copyright
+by M.I.T. but is also freely distributable.
 
 It appears that the arithmetic coding option of the JPEG spec is covered by
 patents owned by IBM, AT&T, and Mitsubishi.  Hence arithmetic coding cannot
@@ -178,13 +182,12 @@ Huffman mode, it is unlikely that very many implementations will support it.)
 So far as we are aware, there are no patent restrictions on the remaining
 code.
 
-WARNING: Unisys has begun to enforce their patent on LZW compression against
-GIF encoders and decoders.  You will need a license from Unisys to use the
-included rdgif.c or wrgif.c files in a commercial or shareware application.
-At this time, Unisys is not enforcing their patent against freeware, so
-distribution of this package remains legal.  However, we intend to remove
-GIF support from the IJG package as soon as a suitable replacement format
-becomes reasonably popular.
+The IJG distribution formerly included code to read and write GIF files.
+To avoid entanglement with the Unisys LZW patent, GIF reading support has
+been removed altogether, and the GIF writer has been simplified to produce
+"uncompressed GIFs".  This technique does not use the LZW algorithm; the
+resulting GIF files are larger than usual, but are readable by all standard
+GIF decoders.
 
 We are required to state that
     "The Graphics Interchange Format(c) is the Copyright property of
@@ -203,21 +206,21 @@ The best short technical introduction to the JPEG compression algorithm is
 	Communications of the ACM, April 1991 (vol. 34 no. 4), pp. 30-44.
 (Adjacent articles in that issue discuss MPEG motion picture compression,
 applications of JPEG, and related topics.)  If you don't have the CACM issue
-handy, a PostScript file containing a revised version of Wallace's article
-is available at ftp.uu.net, graphics/jpeg/wallace.ps.gz.  The file (actually
+handy, a PostScript file containing a revised version of Wallace's article is
+available at ftp://ftp.uu.net/graphics/jpeg/wallace.ps.gz.  The file (actually
 a preprint for an article that appeared in IEEE Trans. Consumer Electronics)
 omits the sample images that appeared in CACM, but it includes corrections
-and some added material.  Note: the Wallace article is copyright ACM and
-IEEE, and it may not be used for commercial purposes.
+and some added material.  Note: the Wallace article is copyright ACM and IEEE,
+and it may not be used for commercial purposes.
 
 A somewhat less technical, more leisurely introduction to JPEG can be found in
-"The Data Compression Book" by Mark Nelson, published by M&T Books (Redwood
-City, CA), 1991, ISBN 1-55851-216-0.  This book provides good explanations and
-example C code for a multitude of compression methods including JPEG.  It is
-an excellent source if you are comfortable reading C code but don't know much
-about data compression in general.  The book's JPEG sample code is far from
-industrial-strength, but when you are ready to look at a full implementation,
-you've got one here...
+"The Data Compression Book" by Mark Nelson and Jean-loup Gailly, published by
+M&T Books (New York), 2nd ed. 1996, ISBN 1-55851-434-1.  This book provides
+good explanations and example C code for a multitude of compression methods
+including JPEG.  It is an excellent source if you are comfortable reading C
+code but don't know much about data compression in general.  The book's JPEG
+sample code is far from industrial-strength, but when you are ready to look
+at a full implementation, you've got one here...
 
 The best full description of JPEG is the textbook "JPEG Still Image Data
 Compression Standard" by William B. Pennebaker and Joan L. Mitchell, published
@@ -227,23 +230,24 @@ and draft DIS 10918-2).  This is by far the most complete exposition of JPEG
 in existence, and we highly recommend it.
 
 The JPEG standard itself is not available electronically; you must order a
-paper copy through ISO.  (Unless you feel a need to own a certified official
-copy, we recommend buying the Pennebaker and Mitchell book instead; it's much
-cheaper and includes a great deal of useful explanatory material.)  In the US,
-copies of the standard may be ordered from ANSI Sales at (212) 642-4900, or
-from Global Engineering Documents at (800) 854-7179.  (ANSI doesn't take
-credit card orders, but Global does.)  It's not cheap: as of 1992, ANSI was
-charging $95 for Part 1 and $47 for Part 2, plus 7% shipping/handling.  The
-standard is divided into two parts, Part 1 being the actual specification,
-while Part 2 covers compliance testing methods.  Part 1 is titled "Digital
-Compression and Coding of Continuous-tone Still Images, Part 1: Requirements
-and guidelines" and has document number ISO/IEC IS 10918-1.  Part 2 is titled
-"Digital Compression and Coding of Continuous-tone Still Images, Part 2:
-Compliance testing" and has document number ISO/IEC IS 10918-2.
+paper copy through ISO or ITU.  (Unless you feel a need to own a certified
+official copy, we recommend buying the Pennebaker and Mitchell book instead;
+it's much cheaper and includes a great deal of useful explanatory material.)
+In the USA, copies of the standard may be ordered from ANSI Sales at (212)
+642-4900, or from Global Engineering Documents at (800) 854-7179.  (ANSI
+doesn't take credit card orders, but Global does.)  It's not cheap: as of
+1992, ANSI was charging $95 for Part 1 and $47 for Part 2, plus 7%
+shipping/handling.  The standard is divided into two parts, Part 1 being the
+actual specification, while Part 2 covers compliance testing methods.  Part 1
+is titled "Digital Compression and Coding of Continuous-tone Still Images,
+Part 1: Requirements and guidelines" and has document numbers ISO/IEC IS
+10918-1, ITU-T T.81.  Part 2 is titled "Digital Compression and Coding of
+Continuous-tone Still Images, Part 2: Compliance testing" and has document
+numbers ISO/IEC IS 10918-2, ITU-T T.83.
 
-Extensions to the original JPEG standard are defined in Part 3, a new ISO
-document.  Part 3 is undergoing ISO balloting and is expected to be approved
-by the end of 1995.  IJG currently does not support any Part 3 extensions.
+Some extensions to the original JPEG standard are defined in JPEG Part 3,
+a newer ISO standard numbered ISO/IEC IS 10918-3 and ITU-T T.84.  IJG
+currently does not support any Part 3 extensions.
 
 The JPEG standard does not specify all details of an interchangeable file
 format.  For the omitted details we follow the "JFIF" conventions, revision
@@ -253,24 +257,22 @@ format.  For the omitted details we follow the "JFIF" conventions, revision
 	1778 McCarthy Blvd.
 	Milpitas, CA 95035
 	phone (408) 944-6300,  fax (408) 944-6314
-A PostScript version of this document is available at ftp.uu.net, file
-graphics/jpeg/jfif.ps.gz.  It can also be obtained by e-mail from the C-Cube
-mail server, netlib@c3.pla.ca.us.  Send the message "send jfif_ps from jpeg"
-to the server to obtain the JFIF document; send the message "help" if you have
-trouble.
+A PostScript version of this document is available by FTP at
+ftp://ftp.uu.net/graphics/jpeg/jfif.ps.gz.  There is also a plain text
+version at ftp://ftp.uu.net/graphics/jpeg/jfif.txt.gz, but it is missing
+the figures.
 
-The TIFF 6.0 file format specification can be obtained by FTP from sgi.com
-(192.48.153.1), file graphics/tiff/TIFF6.ps.Z; or you can order a printed
-copy from Aldus Corp. at (206) 628-6593.  The JPEG incorporation scheme
+The TIFF 6.0 file format specification can be obtained by FTP from
+ftp://ftp.sgi.com/graphics/tiff/TIFF6.ps.gz.  The JPEG incorporation scheme
 found in the TIFF 6.0 spec of 3-June-92 has a number of serious problems.
 IJG does not recommend use of the TIFF 6.0 design (TIFF Compression tag 6).
 Instead, we recommend the JPEG design proposed by TIFF Technical Note #2
-(Compression tag 7).  Copies of this Note can be obtained from sgi.com or
-from ftp.uu.net:/graphics/jpeg/.  It is expected that the next revision of
-the TIFF spec will replace the 6.0 JPEG design with the Note's design.
+(Compression tag 7).  Copies of this Note can be obtained from ftp.sgi.com or
+from ftp://ftp.uu.net/graphics/jpeg/.  It is expected that the next revision
+of the TIFF spec will replace the 6.0 JPEG design with the Note's design.
 Although IJG's own code does not support TIFF/JPEG, the free libtiff library
 uses our library to implement TIFF/JPEG per the Note.  libtiff is available
-from sgi.com:/graphics/tiff/.
+from ftp://ftp.sgi.com/graphics/tiff/.
 
 
 ARCHIVE LOCATIONS
@@ -279,28 +281,27 @@ ARCHIVE LOCATIONS
 The "official" archive site for this software is ftp.uu.net (Internet
 address 192.48.96.9).  The most recent released version can always be found
 there in directory graphics/jpeg.  This particular version will be archived
-as graphics/jpeg/jpegsrc.v6.tar.gz.  If you are on the Internet, you
-can retrieve files from ftp.uu.net by standard anonymous FTP.  If you don't
-have FTP access, UUNET's archives are also available via UUCP; contact
+as ftp://ftp.uu.net/graphics/jpeg/jpegsrc.v6b.tar.gz.  If you don't have
+direct Internet access, UUNET's archives are also available via UUCP; contact
 help@uunet.uu.net for information on retrieving files that way.
 
-Numerous Internet sites maintain copies of the UUNET files; in particular,
-you can probably find a copy at any site that archives comp.sources.misc
-submissions.  However, only ftp.uu.net is guaranteed to have the latest
-official version.
+Numerous Internet sites maintain copies of the UUNET files.  However, only
+ftp.uu.net is guaranteed to have the latest official version.
 
 You can also obtain this software in DOS-compatible "zip" archive format from
-the SimTel archives (ftp.coast.net:/SimTel/msdos/graphics/), or on CompuServe
-in the GRAPHSUPPORT forum (GO GRAPHSUP), library 12 "JPEG Tools".  Again,
-these versions may sometimes lag behind the ftp.uu.net release.
+the SimTel archives (ftp://ftp.simtel.net/pub/simtelnet/msdos/graphics/), or
+on CompuServe in the Graphics Support forum (GO CIS:GRAPHSUP), library 12
+"JPEG Tools".  Again, these versions may sometimes lag behind the ftp.uu.net
+release.
 
 The JPEG FAQ (Frequently Asked Questions) article is a useful source of
 general information about JPEG.  It is updated constantly and therefore is
 not included in this distribution.  The FAQ is posted every two weeks to
-Usenet newsgroups comp.graphics, news.answers, and other groups.  You can
-always obtain the latest version from the news.answers archive at
-rtfm.mit.edu.  By FTP, fetch /pub/usenet/news.answers/jpeg-faq/part1 and
-.../part2.  If you don't have FTP, send e-mail to mail-server@rtfm.mit.edu
+Usenet newsgroups comp.graphics.misc, news.answers, and other groups.
+It is available on the World Wide Web at http://www.faqs.org/faqs/jpeg-faq/
+and other news.answers archive sites, including the official news.answers
+archive at rtfm.mit.edu: ftp://rtfm.mit.edu/pub/usenet/news.answers/jpeg-faq/.
+If you don't have Web or FTP access, send e-mail to mail-server@rtfm.mit.edu
 with body
 	send usenet/news.answers/jpeg-faq/part1
 	send usenet/news.answers/jpeg-faq/part2
@@ -315,21 +316,20 @@ some of the more popular free and shareware viewers, and tells where to
 obtain them on Internet.
 
 If you are on a Unix machine, we highly recommend Jef Poskanzer's free
-PBMPLUS image software, which provides many useful operations on PPM-format
-image files.  In particular, it can convert PPM images to and from a wide
-range of other formats.  You can obtain this package by FTP from ftp.x.org
-(contrib/pbmplus*.tar.Z) or ftp.ee.lbl.gov (pbmplus*.tar.Z).  There is also
-a newer update of this package called NETPBM, available from
-wuarchive.wustl.edu under directory /graphics/graphics/packages/NetPBM/.
-Unfortunately PBMPLUS/NETPBM is not nearly as portable as the IJG software
-is; you are likely to have difficulty making it work on any non-Unix machine.
+PBMPLUS software, which provides many useful operations on PPM-format image
+files.  In particular, it can convert PPM images to and from a wide range of
+other formats, thus making cjpeg/djpeg considerably more useful.  The latest
+version is distributed by the NetPBM group, and is available from numerous
+sites, notably ftp://wuarchive.wustl.edu/graphics/graphics/packages/NetPBM/.
+Unfortunately PBMPLUS/NETPBM is not nearly as portable as the IJG software is;
+you are likely to have difficulty making it work on any non-Unix machine.
 
 A different free JPEG implementation, written by the PVRG group at Stanford,
-is available from havefun.stanford.edu in directory pub/jpeg.  This program
+is available from ftp://havefun.stanford.edu/pub/jpeg/.  This program
 is designed for research and experimentation rather than production use;
 it is slower, harder to use, and less portable than the IJG code, but it
 is easier to read and modify.  Also, the PVRG code supports lossless JPEG,
-which we do not.
+which we do not.  (On the other hand, it doesn't do progressive JPEG.)
 
 
 FILE FORMAT WARS
@@ -370,14 +370,16 @@ use a proprietary file format!
 TO DO
 =====
 
+The major thrust for v7 will probably be improvement of visual quality.
+The current method for scaling the quantization tables is known not to be
+very good at low Q values.  We also intend to investigate block boundary
+smoothing, "poor man's variable quantization", and other means of improving
+quality-vs-file-size performance without sacrificing compatibility.
+
 In future versions, we are considering supporting some of the upcoming JPEG
 Part 3 extensions --- principally, variable quantization and the SPIFF file
 format.
 
-Tuning the software for better behavior at low quality/high compression
-settings is also of interest.  The current method for scaling the
-quantization tables is known not to be very good at low Q values.
-
-As always, speeding things up is high on our priority list.
+As always, speeding things up is of great interest.
 
 Please send bug reports, offers of help, etc. to jpeg-info@uunet.uu.net.

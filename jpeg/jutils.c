@@ -1,7 +1,7 @@
 /*
  * jutils.c
  *
- * Copyright (C) 1991-1995, Thomas G. Lane.
+ * Copyright (C) 1991-1996, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -21,6 +21,8 @@
  * of a DCT block read in natural order (left to right, top to bottom).
  */
 
+#if 0				/* This table is not actually needed in v6a */
+
 const int jpeg_zigzag_order[DCTSIZE2] = {
    0,  1,  5,  6, 14, 15, 27, 28,
    2,  4,  7, 13, 16, 26, 29, 42,
@@ -31,6 +33,8 @@ const int jpeg_zigzag_order[DCTSIZE2] = {
   21, 34, 37, 47, 50, 56, 59, 61,
   35, 36, 48, 49, 57, 58, 62, 63
 };
+
+#endif
 
 /*
  * jpeg_natural_order[i] is the natural-order position of the i'th element
@@ -64,7 +68,7 @@ const int jpeg_natural_order[DCTSIZE2+16] = {
  * Arithmetic utilities
  */
 
-GLOBAL long
+GLOBAL(long)
 jdiv_round_up (long a, long b)
 /* Compute a/b rounded up to next integer, ie, ceil(a/b) */
 /* Assumes a >= 0, b > 0 */
@@ -73,7 +77,7 @@ jdiv_round_up (long a, long b)
 }
 
 
-GLOBAL long
+GLOBAL(long)
 jround_up (long a, long b)
 /* Compute a rounded up to next multiple of b, ie, ceil(a/b)*b */
 /* Assumes a >= 0, b > 0 */
@@ -103,7 +107,7 @@ jround_up (long a, long b)
 #endif
 
 
-GLOBAL void
+GLOBAL(void)
 jcopy_sample_rows (JSAMPARRAY input_array, int source_row,
 		   JSAMPARRAY output_array, int dest_row,
 		   int num_rows, JDIMENSION num_cols)
@@ -137,7 +141,7 @@ jcopy_sample_rows (JSAMPARRAY input_array, int source_row,
 }
 
 
-GLOBAL void
+GLOBAL(void)
 jcopy_block_row (JBLOCKROW input_row, JBLOCKROW output_row,
 		 JDIMENSION num_blocks)
 /* Copy a row of coefficient blocks from one place to another. */
@@ -157,7 +161,7 @@ jcopy_block_row (JBLOCKROW input_row, JBLOCKROW output_row,
 }
 
 
-GLOBAL void
+GLOBAL(void)
 jzero_far (void FAR * target, size_t bytestozero)
 /* Zero out a chunk of FAR memory. */
 /* This might be sample-array data, block-array data, or alloc_large data. */

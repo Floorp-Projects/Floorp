@@ -1,7 +1,7 @@
 /*
  * jdinput.c
  *
- * Copyright (C) 1991-1995, Thomas G. Lane.
+ * Copyright (C) 1991-1997, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -28,14 +28,14 @@ typedef my_input_controller * my_inputctl_ptr;
 
 
 /* Forward declarations */
-METHODDEF int consume_markers JPP((j_decompress_ptr cinfo));
+METHODDEF(int) consume_markers JPP((j_decompress_ptr cinfo));
 
 
 /*
  * Routines to calculate various quantities related to the size of the image.
  */
 
-LOCAL void
+LOCAL(void)
 initial_setup (j_decompress_ptr cinfo)
 /* Called once, when first SOS marker is reached */
 {
@@ -117,7 +117,7 @@ initial_setup (j_decompress_ptr cinfo)
 }
 
 
-LOCAL void
+LOCAL(void)
 per_scan_setup (j_decompress_ptr cinfo)
 /* Do computations that are needed before processing a JPEG scan */
 /* cinfo->comps_in_scan and cinfo->cur_comp_info[] were set from SOS marker */
@@ -216,7 +216,7 @@ per_scan_setup (j_decompress_ptr cinfo)
  * not at the current Q-table slots.
  */
 
-LOCAL void
+LOCAL(void)
 latch_quant_tables (j_decompress_ptr cinfo)
 {
   int ci, qtblno;
@@ -250,7 +250,7 @@ latch_quant_tables (j_decompress_ptr cinfo)
  * Subsequent calls come from consume_markers, below.
  */
 
-METHODDEF void
+METHODDEF(void)
 start_input_pass (j_decompress_ptr cinfo)
 {
   per_scan_setup(cinfo);
@@ -267,7 +267,7 @@ start_input_pass (j_decompress_ptr cinfo)
  * the expected data of the scan.
  */
 
-METHODDEF void
+METHODDEF(void)
 finish_input_pass (j_decompress_ptr cinfo)
 {
   cinfo->inputctl->consume_input = consume_markers;
@@ -284,7 +284,7 @@ finish_input_pass (j_decompress_ptr cinfo)
  * we are reading a compressed data segment or inter-segment markers.
  */
 
-METHODDEF int
+METHODDEF(int)
 consume_markers (j_decompress_ptr cinfo)
 {
   my_inputctl_ptr inputctl = (my_inputctl_ptr) cinfo->inputctl;
@@ -301,7 +301,7 @@ consume_markers (j_decompress_ptr cinfo)
       initial_setup(cinfo);
       inputctl->inheaders = FALSE;
       /* Note: start_input_pass must be called by jdmaster.c
-       * before any more input can be consumed.  jdapi.c is
+       * before any more input can be consumed.  jdapimin.c is
        * responsible for enforcing this sequencing.
        */
     } else {			/* 2nd or later SOS marker */
@@ -335,7 +335,7 @@ consume_markers (j_decompress_ptr cinfo)
  * Reset state to begin a fresh datastream.
  */
 
-METHODDEF void
+METHODDEF(void)
 reset_input_controller (j_decompress_ptr cinfo)
 {
   my_inputctl_ptr inputctl = (my_inputctl_ptr) cinfo->inputctl;
@@ -357,7 +357,7 @@ reset_input_controller (j_decompress_ptr cinfo)
  * This is called only once, when the decompression object is created.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_input_controller (j_decompress_ptr cinfo)
 {
   my_inputctl_ptr inputctl;

@@ -1,7 +1,7 @@
 /*
  * jdpostct.c
  *
- * Copyright (C) 1994-1995, Thomas G. Lane.
+ * Copyright (C) 1994-1996, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -43,20 +43,20 @@ typedef my_post_controller * my_post_ptr;
 
 
 /* Forward declarations */
-METHODDEF void post_process_1pass
+METHODDEF(void) post_process_1pass
 	JPP((j_decompress_ptr cinfo,
 	     JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
 	     JDIMENSION in_row_groups_avail,
 	     JSAMPARRAY output_buf, JDIMENSION *out_row_ctr,
 	     JDIMENSION out_rows_avail));
 #ifdef QUANT_2PASS_SUPPORTED
-METHODDEF void post_process_prepass
+METHODDEF(void) post_process_prepass
 	JPP((j_decompress_ptr cinfo,
 	     JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
 	     JDIMENSION in_row_groups_avail,
 	     JSAMPARRAY output_buf, JDIMENSION *out_row_ctr,
 	     JDIMENSION out_rows_avail));
-METHODDEF void post_process_2pass
+METHODDEF(void) post_process_2pass
 	JPP((j_decompress_ptr cinfo,
 	     JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
 	     JDIMENSION in_row_groups_avail,
@@ -69,7 +69,7 @@ METHODDEF void post_process_2pass
  * Initialize for a processing pass.
  */
 
-METHODDEF void
+METHODDEF(void)
 start_pass_dpost (j_decompress_ptr cinfo, J_BUF_MODE pass_mode)
 {
   my_post_ptr post = (my_post_ptr) cinfo->post;
@@ -122,7 +122,7 @@ start_pass_dpost (j_decompress_ptr cinfo, J_BUF_MODE pass_mode)
  * This is used for color precision reduction as well as one-pass quantization.
  */
 
-METHODDEF void
+METHODDEF(void)
 post_process_1pass (j_decompress_ptr cinfo,
 		    JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
 		    JDIMENSION in_row_groups_avail,
@@ -154,7 +154,7 @@ post_process_1pass (j_decompress_ptr cinfo,
  * Process some data in the first pass of 2-pass quantization.
  */
 
-METHODDEF void
+METHODDEF(void)
 post_process_prepass (j_decompress_ptr cinfo,
 		      JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
 		      JDIMENSION in_row_groups_avail,
@@ -198,7 +198,7 @@ post_process_prepass (j_decompress_ptr cinfo,
  * Process some data in the second pass of 2-pass quantization.
  */
 
-METHODDEF void
+METHODDEF(void)
 post_process_2pass (j_decompress_ptr cinfo,
 		    JSAMPIMAGE input_buf, JDIMENSION *in_row_group_ctr,
 		    JDIMENSION in_row_groups_avail,
@@ -246,7 +246,7 @@ post_process_2pass (j_decompress_ptr cinfo,
  * Initialize postprocessing controller.
  */
 
-GLOBAL void
+GLOBAL(void)
 jinit_d_post_controller (j_decompress_ptr cinfo, boolean need_full_buffer)
 {
   my_post_ptr post;

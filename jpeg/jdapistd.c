@@ -1,7 +1,7 @@
 /*
  * jdapistd.c
  *
- * Copyright (C) 1994-1995, Thomas G. Lane.
+ * Copyright (C) 1994-1996, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -20,7 +20,7 @@
 
 
 /* Forward declarations */
-LOCAL boolean output_pass_setup JPP((j_decompress_ptr cinfo));
+LOCAL(boolean) output_pass_setup JPP((j_decompress_ptr cinfo));
 
 
 /*
@@ -34,7 +34,7 @@ LOCAL boolean output_pass_setup JPP((j_decompress_ptr cinfo));
  * a suspending data source is used.
  */
 
-GLOBAL JRI_PUBLIC_API(boolean)
+GLOBAL(boolean)
 jpeg_start_decompress (j_decompress_ptr cinfo)
 {
   if (cinfo->global_state == DSTATE_READY) {
@@ -91,7 +91,7 @@ jpeg_start_decompress (j_decompress_ptr cinfo)
  *       If suspended, returns FALSE and sets global_state = DSTATE_PRESCAN.
  */
 
-LOCAL boolean
+LOCAL(boolean)
 output_pass_setup (j_decompress_ptr cinfo)
 {
   if (cinfo->global_state != DSTATE_PRESCAN) {
@@ -148,7 +148,7 @@ output_pass_setup (j_decompress_ptr cinfo)
  * an oversize buffer (max_lines > scanlines remaining) is not an error.
  */
 
-GLOBAL JRI_PUBLIC_API(JDIMENSION)
+GLOBAL(JDIMENSION)
 jpeg_read_scanlines (j_decompress_ptr cinfo, JSAMPARRAY scanlines,
 		     JDIMENSION max_lines)
 {
@@ -181,7 +181,7 @@ jpeg_read_scanlines (j_decompress_ptr cinfo, JSAMPARRAY scanlines,
  * Processes exactly one iMCU row per call, unless suspended.
  */
 
-GLOBAL JDIMENSION
+GLOBAL(JDIMENSION)
 jpeg_read_raw_data (j_decompress_ptr cinfo, JSAMPIMAGE data,
 		    JDIMENSION max_lines)
 {
@@ -224,7 +224,7 @@ jpeg_read_raw_data (j_decompress_ptr cinfo, JSAMPIMAGE data,
  * Initialize for an output pass in buffered-image mode.
  */
 
-GLOBAL JRI_PUBLIC_API(boolean)
+GLOBAL(boolean)
 jpeg_start_output (j_decompress_ptr cinfo, int scan_number)
 {
   if (cinfo->global_state != DSTATE_BUFIMAGE &&
@@ -249,7 +249,7 @@ jpeg_start_output (j_decompress_ptr cinfo, int scan_number)
  * a suspending data source is used.
  */
 
-GLOBAL JRI_PUBLIC_API(boolean)
+GLOBAL(boolean)
 jpeg_finish_output (j_decompress_ptr cinfo)
 {
   if ((cinfo->global_state == DSTATE_SCANNING ||

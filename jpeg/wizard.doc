@@ -137,14 +137,18 @@ JPEG SOF marker, with the first component being numbered 0.  (Note that these
 indexes are not the "component ID" codes assigned to the components, just
 positional indexes.)
 
-If the progression parameters Ss,Se,Ah,Al are omitted, the values 0,63,0,0
-are used, producing a sequential JPEG file.  cjpeg automatically determines
-whether the script represents a progressive or sequential file, by observing
-whether Ss and Se values other than 0 and 63 appear.  (The -progressive
-switch is unnecessary and is ignored when -scans appears.)  When specifying
-progression parameters, the user must follow the JPEG restrictions on
-progression parameters.  (cjpeg checks that the spec's requirements are
-obeyed.)
+The progression parameters for each scan are:
+	Ss	Zigzag index of first coefficient included in scan
+	Se	Zigzag index of last coefficient included in scan
+	Ah	Zero for first scan of a coefficient, else Al of prior scan
+	Al	Successive approximation low bit position for scan
+If the progression parameters are omitted, the values 0,63,0,0 are used,
+producing a sequential JPEG file.  cjpeg automatically determines whether
+the script represents a progressive or sequential file, by observing whether
+Ss and Se values other than 0 and 63 appear.  (The -progressive switch is
+not needed to specify this; in fact, it is ignored when -scans appears.)
+The scan script must meet the JPEG restrictions on progression sequences.
+(cjpeg checks that the spec's requirements are obeyed.)
 
 Scan script files are free format, in that arbitrary whitespace can appear
 between numbers and around punctuation.  Also, comments can be included: a

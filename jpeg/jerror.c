@@ -1,7 +1,7 @@
 /*
  * jerror.c
  *
- * Copyright (C) 1991-1994, Thomas G. Lane.
+ * Copyright (C) 1991-1998, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -10,7 +10,19 @@
  * stderr is the right thing to do.  Many applications will want to replace
  * some or all of these routines.
  *
+ * If you define USE_WINDOWS_MESSAGEBOX in jconfig.h or in the makefile,
+ * you get a Windows-specific hack to display error messages in a dialog box.
+ * It ain't much, but it beats dropping error messages into the bit bucket,
+ * which is what happens to output to stderr under most Windows C compilers.
+ *
  * These routines are used by both the compression and decompression code.
+ */
+
+/*
+ * This file has been modified for the Mozilla/Netscape environment.
+ * Modifications are distributed under the Netscape Public License and are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 
 /* this is not a core library module, so it doesn't define JPEG_INTERNALS */
@@ -19,13 +31,19 @@
 #include "jversion.h"
 #include "jerror.h"
 
+/* Mozilla addition */
+#if defined(DEBUG) && defined(__MWERKS__)
+#       include "xp_trace.h"
+#endif
+
+#ifdef USE_WINDOWS_MESSAGEBOX
+#include <windows.h>
+#endif
+
 #ifndef EXIT_FAILURE		/* define exit() codes if not provided */
 #define EXIT_FAILURE  1
 #endif
 
-#if defined(DEBUG) && defined(__MWERKS__)
-#       include "xp_trace.h"
-#endif
 
 /*
  * Create the message string table.
@@ -60,7 +78,7 @@ const char * const jpeg_std_message_table[] = {
  * or jpeg_destroy) at some point.
  */
 
-METHODDEF void
+METHODDEF(void)
 error_exit (j_common_ptr cinfo)
 {
   /* Always display the message */
@@ -69,10 +87,14 @@ error_exit (j_common_ptr cinfo)
   /* Let the memory manager delete any temp files before we die */
   jpeg_destroy(cinfo);
 
-#if !defined(_WINDOWS) || defined(_WIN32)
+/* Mozilla mod: in some Windows environments, the exit() function doesn't
+ * even exist, so don't compile a reference to it.  Heaven help you if
+ * you fail to provide a replacement error_exit function, because the
+ * IJG library will NOT handle control returning from error_exit!
+ */
+
+#ifndef XP_WIN
   exit(EXIT_FAILURE);
-#else
-  /* XXX */
 #endif
 }
 
@@ -81,26 +103,28 @@ error_exit (j_common_ptr cinfo)
  * Actual output of an error or trace message.
  * Applications may override this method to send JPEG messages somewhere
  * other than stderr.
+ *
+ * On Windows, printing to stderr is generally completely useless,
+ * so we provide optional code to produce an error-dialog popup.
+ * Most Windows applications will still prefer to override this routine,
+ * but if they don't, it'll do something at least marginally useful.
+ *
+ * NOTE: to use the library in an environment that doesn't support the
+ * C stdio library, you may have to delete the call to fprintf() entirely,
+ * not just not use this routine.
  */
 
-METHODDEF void
+METHODDEF(void)
 output_message (j_common_ptr cinfo)
 {
-#ifdef DEBUG
   char buffer[JMSG_LENGTH_MAX];
+
   /* Create the message */
   (*cinfo->err->format_message) (cinfo, buffer);
 
- /* Send it to stderr, adding a newline */
+  /* Mozilla mod: send JPEG library messages to XP_TRACE */
 
-#if defined(_WINDOWS) && !defined(_WIN32)
-  printf("%s\n", buffer); 
-#elif __MWERKS__ 
-  XP_TRACE(("%s\n", buffer)); 
-#else
-  fprintf(stderr, "%s\n", buffer); 
-#endif 
-#endif 
+ /* XP_TRACE(("JPEG library: %s", buffer));*/
 }
 
 
@@ -115,10 +139,9 @@ output_message (j_common_ptr cinfo)
  * or change the policy about which messages to display.
  */
 
-METHODDEF void
+METHODDEF(void)
 emit_message (j_common_ptr cinfo, int msg_level)
 {
-#ifdef DEBUG
   struct jpeg_error_mgr * err = cinfo->err;
 
   if (msg_level < 0) {
@@ -126,20 +149,15 @@ emit_message (j_common_ptr cinfo, int msg_level)
      * the policy implemented here is to show only the first warning,
      * unless trace_level >= 3.
      */
-#ifndef __MWERKS__ /* Mark Lanett is a pinhead. */
     if (err->num_warnings == 0 || err->trace_level >= 3)
-#endif
       (*err->output_message) (cinfo);
     /* Always count warnings in num_warnings. */
     err->num_warnings++;
   } else {
     /* It's a trace message.  Show it if trace_level >= msg_level. */
-#ifndef __MWERKS__ /* Mark Lanett is a pinhead. */
     if (err->trace_level >= msg_level)
-#endif
       (*err->output_message) (cinfo);
   }
-#endif
 }
 
 
@@ -150,7 +168,7 @@ emit_message (j_common_ptr cinfo, int msg_level)
  * Few applications should need to override this method.
  */
 
-METHODDEF void
+METHODDEF(void)
 format_message (j_common_ptr cinfo, char * buffer)
 {
   struct jpeg_error_mgr * err = cinfo->err;
@@ -205,7 +223,7 @@ format_message (j_common_ptr cinfo, char * buffer)
  * this method if it has additional error processing state.
  */
 
-METHODDEF void
+METHODDEF(void)
 reset_error_mgr (j_common_ptr cinfo)
 {
   cinfo->err->num_warnings = 0;
@@ -224,7 +242,7 @@ reset_error_mgr (j_common_ptr cinfo)
  * after which the application may override some of the methods.
  */
 
-GLOBAL JRI_PUBLIC_API(struct jpeg_error_mgr *)
+GLOBAL(struct jpeg_error_mgr *)
 jpeg_std_error (struct jpeg_error_mgr * err)
 {
   err->error_exit = error_exit;
