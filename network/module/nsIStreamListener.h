@@ -43,8 +43,8 @@ class nsIInputStream;
  * Over time this interface will provide the same functionality as the 
  * IBindStatusCallback interface in the MS INET-SDK...
  */
-struct nsIStreamListener : public nsISupports 
-{
+class nsIStreamListener : public nsISupports {
+public:
     /**
      * Return information regarding the current URL load.<BR>
      * 
