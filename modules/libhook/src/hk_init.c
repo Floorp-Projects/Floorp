@@ -363,11 +363,13 @@ HK_Init(void)
 			return 0;
 		}
 
+                JS_BeginRequest(j_context);
 		hook_obj = JS_DefineObject(j_context, j_object,
 			"HookConfig",
 			&autoconf_class,
 			NULL,
 			JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_PERMANENT);
+                JS_EndRequest(j_context);
 	}
 	if (hook_obj == NULL)
 	{

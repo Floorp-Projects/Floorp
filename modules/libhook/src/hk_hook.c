@@ -70,11 +70,14 @@ hk_IsUnknownTagHook(void *extra)
 		return 0;
 	}
 
+        JS_BeginRequest(j_context);
 	if ((JS_GetProperty(j_context, HookObject, hook_func, &tmp_val))&&
 		(JS_TypeOfValue(j_context, tmp_val) == JSTYPE_FUNCTION))
 	{
+        	JS_EndRequest(j_context);
 		return 1;
 	}
+        JS_EndRequest(j_context);
 
 	return 0;
 }
@@ -128,12 +131,14 @@ HK_CallHook(int32 hook_id, void *extra, int32 window_id,
 		return 0;
 	}
 
+        JS_BeginRequest(j_context);
 	/*
 	 * Check that there is a function to call.
 	 */
 	if ((!JS_GetProperty(j_context, HookObject, hook_func, &tmp_val))||
 		(JS_TypeOfValue(j_context, tmp_val) != JSTYPE_FUNCTION))
 	{
+                JS_EndRequest(j_context);
 		return 0;
 	}
 
@@ -143,6 +148,7 @@ HK_CallHook(int32 hook_id, void *extra, int32 window_id,
 	str = JS_NewStringCopyZ(j_context, hook_str);
 	if (str == NULL)
 	{
+                JS_EndRequest(j_context);
 		return 0;
 	}
 	argv[0] = STRING_TO_JSVAL(str);
@@ -150,6 +156,7 @@ HK_CallHook(int32 hook_id, void *extra, int32 window_id,
 	if (!JS_CallFunctionName(j_context, HookObject,	hook_func, 2, argv,
 							 &tmp_val))
 	{
+                JS_EndRequest(j_context);
 		return 0;
 	}
 
@@ -162,16 +169,19 @@ HK_CallHook(int32 hook_id, void *extra, int32 window_id,
 		str = JS_ValueToString(j_context, tmp_val);
 		if (str == NULL)
 		{
+                	JS_EndRequest(j_context);
 			return 0;
 		}
 		result_str = JS_GetStringBytes(str);
 		return_str = XP_STRDUP(result_str);
 		if (return_str == NULL)
 		{
+                	JS_EndRequest(j_context);
 			return 0;
 		}
 		*hook_ret = return_str;
 	}
+      	JS_EndRequest(j_context);
 
 	return 1;
 }
