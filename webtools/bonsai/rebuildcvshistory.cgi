@@ -267,6 +267,8 @@ foreach my $Dir (@Dirs) {
           ProcessOneFile($dir);
      } elsif (-d $dir) {
           ProcessDirectory($dir);
+     } elsif (!-r $dir) {
+          print "$Dir: not readable, skipping...\n";
      } else {
           print "$Dir: not a file or directory, skipping...\n";
      }
