@@ -432,15 +432,11 @@ MoveChildrenTo(nsIPresContext* aPresContext,
                nsIFrame* aNewParent,
                nsIFrame* aFrameList)
 {
-  // when reparenting a frame, it would seem to be critical to also reparent any views associated with the frame
-  // I haven't found a case where this is required yet, but if we ever see a bug where the frame and
-  // view models are out of synch, particularly after a "special" block-in-inline situation is encountered,
-  // the following 3 lines of code would fix it.
-  /*
+  // when reparenting a frame, it is critical to also reparent any views associated with the frame.
   nsIFrame *oldParent;
   aFrameList->GetParent(&oldParent);
   nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, aFrameList, oldParent, aNewParent);
-  */
+
   while (aFrameList) {
     aFrameList->SetParent(aNewParent);
     aFrameList->GetNextSibling(&aFrameList);
