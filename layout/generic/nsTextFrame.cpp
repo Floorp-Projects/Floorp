@@ -2178,7 +2178,9 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       if (aPos->mDirection == eDirPrevious){
         keepSearching = PR_TRUE;
         tx.Init(this, mContent, aPos->mStartOffset);
-        if (tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
+
+        if (tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE) &&
+          (aPos->mStartOffset - contentLen >= mContentOffset) ){
           if ((aPos->mEatingWS && !isWhitespace) || !aPos->mEatingWS){
             aPos->mContentOffset = aPos->mStartOffset - contentLen;
             //check for whitespace next.
@@ -2188,11 +2190,11 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
               aPos->mEatingWS = PR_FALSE;//if no real word then
             }
             else{
-              aPos->mEatingWS = !isWhitespace;//nowhite space, just eat chars.
               while (isWhitespace && tx.GetPrevWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
                 aPos->mContentOffset -= contentLen;
                 aPos->mEatingWS = PR_TRUE;
               }
+              aPos->mEatingWS = !isWhitespace;//nowhite space, just eat chars.
               keepSearching = aPos->mContentOffset <= mContentOffset;
               if (!isWhitespace){
                 if (!keepSearching)
@@ -2215,33 +2217,31 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
         printf("Next- Start=%d aPos->mEatingWS=%s\n", aPos->mStartOffset, aPos->mEatingWS ? "TRUE" : "FALSE");
 #endif
 
-        if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
+        if (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE) &&
+          (aPos->mStartOffset + contentLen <= (mContentLength + mContentOffset))){
 
 #ifdef DEBUGWORDJUMP
           printf("GetNextWord return non null, wordLen%d, contentLen%d isWhitespace=%s\n", 
                  wordLen, contentLen, isWhitespace ? "WS" : "NOT WS");
 #endif
-
           if ((aPos->mEatingWS && isWhitespace) || !aPos->mEatingWS){
             aPos->mContentOffset = aPos->mStartOffset + contentLen;
             //check for whitespace next.
             keepSearching = PR_TRUE;
-            isWhitespace = PR_TRUE;
-            while (tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE) && isWhitespace){
+            aPos->mEatingWS = PR_TRUE;
+            while (!isWhitespace && tx.GetNextWord(PR_FALSE, wordLen, contentLen, isWhitespace, PR_FALSE)){
 #ifdef DEBUGWORDJUMP
               printf("2-GetNextWord return non null, wordLen%d, contentLen%d isWhitespace=%s\n", 
                      wordLen, contentLen, isWhitespace ? "WS" : "NOT WS");
 #endif
               aPos->mContentOffset += contentLen;
               keepSearching = PR_FALSE;
-              isWhitespace = PR_FALSE;
             }
           }
           else if (aPos->mEatingWS)
             aPos->mContentOffset = mContentOffset;
-
+          found = isWhitespace;
           if (!isWhitespace){
-            found = PR_TRUE;
             aPos->mEatingWS = PR_FALSE;
           }
           else if (!keepSearching) //we have found the "whole" word so just looking for WS
@@ -2254,7 +2254,11 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       printf("aEatingWS = %s\n" , aPos->mEatingWS ? "TRUE" : "FALSE");
 #endif
       if (!found || (aPos->mContentOffset > (mContentOffset + mContentLength)) || (aPos->mContentOffset < mContentOffset))
+      {
+        aPos->mContentOffset = PR_MIN(aPos->mContentOffset, mContentOffset + mContentLength);
+        aPos->mContentOffset = PR_MAX(aPos->mContentOffset, mContentOffset);
         result = nsFrame::PeekOffset(aPos);
+      }
       else 
         aPos->mResultContent = mContent;
     }

@@ -2186,6 +2186,9 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
           aPos->mPreferLeft = (PRBool)!(aPos->mPreferLeft);//drift to other side
           aPos->mAmount = eSelectNoAmount;
         }
+        else if (aPos->mEatingWS)//done finding what we wanted
+          return NS_OK;
+
       }
       nsCOMPtr<nsIBidirectionalEnumerator> frameTraversal;
       result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal),LEAF,this);
