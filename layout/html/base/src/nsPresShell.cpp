@@ -7345,7 +7345,9 @@ void ReflowCountMgr::DoGrandHTMLTotals()
 //------------------------------------
 void ReflowCountMgr::DisplayTotals(const char * aStr)
 {
+#ifdef DEBUG_rods
   printf("%s\n", aStr?aStr:"No name");
+#endif
   if (mDumpFrameCounts) {
     DoGrandTotals();
   }
