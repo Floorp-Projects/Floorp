@@ -795,19 +795,20 @@ nsresult MSGCramMD5(const char *text, PRInt32 text_len, const char *key, PRInt32
    */
   HASHContextStr      *context;
   PRUint32 resultLen;
+
   rv = verifier->HashBegin(nsISignatureVerifier::MD5, &context); /* init context for 1st pass */
   rv = verifier->HashUpdate(context, innerPad, 64);      /* start with inner pad */
   rv = verifier->HashUpdate(context, text, text_len); /* then text of datagram */
-  rv = verifier->HashEnd(context, &presult, &resultLen, DIGEST_LENGTH);          /* finish up 1st pass */
+  rv = verifier->HashEnd(context, &presult, &resultLen, DIGEST_LENGTH -1);          /* finish up 1st pass */
   /*
    * perform outer MD5
    */
   verifier->HashBegin(nsISignatureVerifier::MD5, &context);  /* init context for 2nd pass */
   rv = verifier->HashUpdate(context, outerPad, 64);     /* start with outer pad */
   rv = verifier->HashUpdate(context, (const char *) result, 16);     /* then results of 1st hash */
-  rv = verifier->HashEnd(context, &presult, &resultLen, DIGEST_LENGTH);  /* finish up 2nd pass */
+  rv = verifier->HashEnd(context, &presult, &resultLen, DIGEST_LENGTH - 1);  /* finish up 2nd pass */
   strncpy((char *) digest, (const char *) result, DIGEST_LENGTH);
-  digest[DIGEST_LENGTH] = '\0';
+  digest[DIGEST_LENGTH - 1] = '\0';
   return rv;
 
 }
