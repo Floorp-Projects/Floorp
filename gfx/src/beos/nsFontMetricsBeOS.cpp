@@ -627,11 +627,14 @@ static nsresult EnumFonts(const char * aLangGroup, const char* aGeneric, PRUint3
     uint32 flags; 
     if (get_font_family(i, &family, &flags) == B_OK) 
     {
-      if (family && FontMatchesGenericType(family, flags, aGeneric, aLangGroup)
-         && MatchesLangGroup(family,  aLangGroup)) 
+      if (family &&
+          (!aLangGroup ||
+           FontMatchesGenericType(family, flags, aGeneric, aLangGroup) &&
+           MatchesLangGroup(family,  aLangGroup))) 
       {
         font_name.AssignWithConversion(family); 
-        array[j] = ToNewUnicode(font_name); 
+        if (!(array[j] = ToNewUnicode(font_name)))
+          break; 
         ++j;
       }
     } 
