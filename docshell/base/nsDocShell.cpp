@@ -396,6 +396,9 @@ ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
     case nsIDocShellLoadInfo::loadRefresh:
         loadType = LOAD_REFRESH;
         break;
+    case nsIDocShellLoadInfo::loadBypassHistory:
+        loadType = LOAD_BYPASS_HISTORY;
+        break;
     }
 
     return loadType;
@@ -436,6 +439,9 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType)
     case LOAD_REFRESH:
         docShellLoadType = nsIDocShellLoadInfo::loadRefresh;
         break;
+    case LOAD_BYPASS_HISTORY:
+        docShellLoadType = nsIDocShellLoadInfo::loadBypassHistory;
+        break;
     }
 
     return docShellLoadType;
@@ -456,7 +462,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
     PRBool inheritOwner = PR_FALSE;
     nsCOMPtr<nsISHEntry> shEntry;
     nsXPIDLCString target;
-    PRUint32 loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);
+    PRUint32 loadType = MAKE_LOAD_TYPE(LOAD_NORMAL, aLoadFlags);    
 
     NS_ENSURE_ARG(aURI);
 
@@ -466,38 +472,8 @@ nsDocShell::LoadURI(nsIURI * aURI,
 
         nsDocShellInfoLoadType lt = nsIDocShellLoadInfo::loadNormal;
         aLoadInfo->GetLoadType(&lt);
-        switch (lt) {
-        case nsIDocShellLoadInfo::loadNormal:
-            loadType = LOAD_NORMAL;
-            break;
-        case nsIDocShellLoadInfo::loadNormalReplace:
-            loadType = LOAD_NORMAL_REPLACE;
-            break;
-        case nsIDocShellLoadInfo::loadHistory:
-            loadType = LOAD_HISTORY;
-            break;
-        case nsIDocShellLoadInfo::loadReloadNormal:
-            loadType = LOAD_RELOAD_NORMAL;
-            break;
-        case nsIDocShellLoadInfo::loadReloadCharsetChange:
-            loadType = LOAD_RELOAD_CHARSET_CHANGE;
-            break;
-        case nsIDocShellLoadInfo::loadReloadBypassCache:
-            loadType = LOAD_RELOAD_BYPASS_CACHE;
-            break;
-        case nsIDocShellLoadInfo::loadReloadBypassProxy:
-            loadType = LOAD_RELOAD_BYPASS_PROXY;
-            break;
-        case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
-            loadType = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
-            break;
-        case nsIDocShellLoadInfo::loadLink:
-            loadType = LOAD_LINK;
-            break;
-        case nsIDocShellLoadInfo::loadRefresh:
-            loadType = LOAD_REFRESH;
-            break;
-        }
+        // Get the appropriate loadType from nsIDocShellLoadInfo type
+        loadType = ConvertDocShellLoadInfoToLoadType(lt);
 
         aLoadInfo->GetOwner(getter_AddRefs(owner));
         aLoadInfo->GetInheritOwner(&inheritOwner);
@@ -628,42 +604,12 @@ nsDocShell::LoadStream(nsIInputStream * aStream, nsIURI * aURI,
             return rv;
     }
 
-    LoadType loadType = LOAD_NORMAL;
+    PRUint32 loadType = LOAD_NORMAL;
     if (aLoadInfo) {
         nsDocShellInfoLoadType lt = nsIDocShellLoadInfo::loadNormal;
         (void) aLoadInfo->GetLoadType(&lt);
-        switch (lt) {
-        case nsIDocShellLoadInfo::loadNormal:
-            loadType = LOAD_NORMAL;
-            break;
-        case nsIDocShellLoadInfo::loadNormalReplace:
-            loadType = LOAD_NORMAL_REPLACE;
-            break;
-        case nsIDocShellLoadInfo::loadHistory:
-            loadType = LOAD_HISTORY;
-            break;
-        case nsIDocShellLoadInfo::loadReloadNormal:
-            loadType = LOAD_RELOAD_NORMAL;
-            break;
-        case nsIDocShellLoadInfo::loadReloadCharsetChange:
-            loadType = LOAD_RELOAD_CHARSET_CHANGE;
-            break;
-        case nsIDocShellLoadInfo::loadReloadBypassCache:
-            loadType = LOAD_RELOAD_BYPASS_CACHE;
-            break;
-        case nsIDocShellLoadInfo::loadReloadBypassProxy:
-            loadType = LOAD_RELOAD_BYPASS_PROXY;
-            break;
-        case nsIDocShellLoadInfo::loadReloadBypassProxyAndCache:
-            loadType = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
-            break;
-        case nsIDocShellLoadInfo::loadLink:
-            loadType = LOAD_LINK;
-            break;
-        case nsIDocShellLoadInfo::loadRefresh:
-            loadType = LOAD_REFRESH;
-            break;
-        }
+        // Get the appropriate LoadType from nsIDocShellLoadInfo type
+        loadType = ConvertDocShellLoadInfoToLoadType(lt);
     }
 
     NS_ENSURE_SUCCESS(Stop(nsIWebNavigation::STOP_NETWORK), NS_ERROR_FAILURE);
@@ -4370,6 +4316,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     //
     rv = Stop(nsIWebNavigation::STOP_NETWORK);
     if (NS_FAILED(rv)) return rv;
+    
 
     mLoadType = aLoadType;
     
@@ -5007,7 +4954,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
       }
     }  // mSessionHistory
     // Determine if this type of load should update history
-    if (aLoadType & LOAD_FLAGS_BYPASS_HISTORY ||
+    if (aLoadType == LOAD_BYPASS_HISTORY ||
         aLoadType & LOAD_CMD_RELOAD || aLoadType & LOAD_CMD_HISTORY ||
         (mCurrentURI && NS_SUCCEEDED(mCurrentURI->Equals(aURI, &equalUri))
          && equalUri && !inputStream)) {
