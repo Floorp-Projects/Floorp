@@ -50,11 +50,20 @@ NS_IMPL_ADDREF(nsKeygenFormProcessor);
 NS_IMPL_RELEASE(nsKeygenFormProcessor); 
 NS_IMPL_QUERY_INTERFACE(nsKeygenFormProcessor, kFormProcessorIID); 
 
+MOZ_DECL_CTOR_COUNTER(nsKeygenFormProcessor);
+
 nsKeygenFormProcessor::nsKeygenFormProcessor() 
 { 
    NS_INIT_REFCNT(); 
    getPSMComponent(&mPSM);
+   MOZ_COUNT_CTOR(nsKeygenFormProcessor);
 } 
+
+nsKeygenFormProcessor::~nsKeygenFormProcessor()
+{
+  MOZ_COUNT_DTOR(nsKeygenFormProcessor);
+  NS_IF_RELEASE(mPSM);
+}
 
 char *
 nsKeygenFormProcessor::ChooseToken(PCMT_CONTROL control, 
