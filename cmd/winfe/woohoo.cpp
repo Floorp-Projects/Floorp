@@ -1077,6 +1077,28 @@ BOOL CNetscapeApp::ProcessCommandLineDDE(char *pszDDECommand)
 
 			// trim the string, and open the file
             *pEnd = '\0';
+
+            // Strip off profile name.  Alternative is to verify that this profile is
+            // the one running, but we won't go that far.
+            if( IsRuntimeSwitch( "-P", pOpen, FALSE ) ) {
+                // extract the quoted profile name..the format is -P"jonm@netscape.com"
+                CString csCommandLine = pOpen;
+                int iFirstQuote = csCommandLine.Find("-P\"");
+                if( iFirstQuote != -1 ){
+                    iFirstQuote += 2;
+                    csCommandLine = csCommandLine.Mid(iFirstQuote+1);
+                    int iLastQuote = csCommandLine.Find('\"');
+                    if( iLastQuote == -1 ){
+                        // No last quote -- remove first quote from command line
+                        strcpy( (pOpen+iFirstQuote), (pOpen+iFirstQuote+1));
+                    } else {
+                        // Remove the extracted string from command line
+                        strcpy( (pOpen+iFirstQuote), (pOpen+iFirstQuote+iLastQuote+2));
+                    }
+                    IsRuntimeSwitch("-P",pOpen,TRUE);  // now remove the -P from the command line
+                }
+            }
+
             strUrl = pOpen;
         }
         else
@@ -1099,40 +1121,47 @@ BOOL CNetscapeApp::ProcessCommandLineDDE(char *pszDDECommand)
                     break;
                 }
                 default: {
-            		//  Open it in a new window.
-            		//  Use the first window as the provider of the context.
-            		URL_Struct *pUrl = NET_CreateURLStruct(strUrl, NET_DONT_RELOAD);
-            		if(m_pFrameList && m_pFrameList->GetMainContext())
-            		{
-            			if (bTranslate)
-            			{
-            			MWContext *pContext = m_pFrameList->GetMainContext()->GetContext();
-            			CFE_CreateNewDocWindow(pContext, pUrl);
-            			}
-            			else
-            			{
-            				CFrameGlue * pFrame =
-            				CFrameGlue::GetLastActiveFrame(MWContextBrowser);
-            				if (pFrame != NULL && pFrame->GetMainContext() && 
-            					pFrame->GetMainContext()->GetContext() &&
-            					!pFrame->GetMainContext()->GetContext()->restricted_target)
-            				{
-            					CAbstractCX * pCX = pFrame->GetMainContext();
-            					if (pCX != NULL)
-            					{
-            						pCX->NormalGetUrl(strUrl);
-            					}  /* end if */
-            				}  /* end if */
-            				else
-            				{
-            					CFE_CreateNewDocWindow(NULL, pUrl);
-            				}  /* end else */
-            			}  /* end else */
-            		}
-            		else
-            		{
-            			CFE_CreateNewDocWindow(NULL, pUrl);
-            		}
+                    // Test whether we've still got a (potential) url (wasn't just -P"profile").
+                    if ( strUrl.IsEmpty() ) {
+                        // Launch new (empty) browser window.
+                        int32 iStartupMode = STARTUP_BROWSER;
+                        LaunchComponentWindow(iStartupMode,"");
+                    } else {
+                		//  Open it in a new window.
+                		//  Use the first window as the provider of the context.
+                		URL_Struct *pUrl = NET_CreateURLStruct(strUrl, NET_DONT_RELOAD);
+                		if(m_pFrameList && m_pFrameList->GetMainContext())
+                		{
+                			if (bTranslate)
+                			{
+                			MWContext *pContext = m_pFrameList->GetMainContext()->GetContext();
+                			CFE_CreateNewDocWindow(pContext, pUrl);
+                			}
+                			else
+                			{
+                				CFrameGlue * pFrame =
+                				CFrameGlue::GetLastActiveFrame(MWContextBrowser);
+                				if (pFrame != NULL && pFrame->GetMainContext() && 
+                					pFrame->GetMainContext()->GetContext() &&
+                					!pFrame->GetMainContext()->GetContext()->restricted_target)
+                				{
+                					CAbstractCX * pCX = pFrame->GetMainContext();
+                					if (pCX != NULL)
+                					{
+                						pCX->NormalGetUrl(strUrl);
+                					}  /* end if */
+                				}  /* end if */
+                				else
+                				{
+                					CFE_CreateNewDocWindow(NULL, pUrl);
+                				}  /* end else */
+                			}  /* end else */
+                		}
+                		else
+                		{
+                			CFE_CreateNewDocWindow(NULL, pUrl);
+                		}
+                    }
                     break;
                 }
             }
