@@ -346,6 +346,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             if (!mCurrentFocus && gLastFocusedContent)// must send it to the element that is loosing focus. since SendFocusBlur wont be called
               gLastFocusedContent->HandleDOMEvent(gLastFocusedPresContext, &blurevent, nsnull, NS_EVENT_FLAG_INIT, &blurstatus);
               
+
             if (commandDispatcher) {
               commandDispatcher->SetSuppressFocus(PR_FALSE);
             }
@@ -358,11 +359,17 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         if (globalObject) {
           nsIContent* currentFocus = mCurrentFocus;
           mCurrentFocus = nsnull;
-          if(gLastFocusedDocument != mDocument)
+          if(gLastFocusedDocument != mDocument) {
             mDocument->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
+            if (currentFocus && currentFocus != gLastFocusedContent)
+              currentFocus->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status);
+          }
           
           globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, &status); 
           mCurrentFocus = currentFocus;
+          NS_IF_RELEASE(gLastFocusedContent);
+          gLastFocusedContent = mCurrentFocus;
+          NS_IF_ADDREF(gLastFocusedContent);
         }
 
         
