@@ -83,7 +83,7 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, const char *urlStr
             char buffer[256];
             PR_snprintf(buffer,
                         sizeof(buffer),
-                        "menubar=no,height=%d,width=%d",
+                        "menubar=no,height=%d,width=%d,modal",
                         height,
                         width );
 
