@@ -38,7 +38,7 @@
 
 #include "xpcprivate.h"
 
-NS_IMPL_QUERY_INTERFACE2(nsXPCWrappedNative, nsIXPConnectWrappedNative, nsIXPConnectJSObjectHolder)
+NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsXPCWrappedNative, nsIXPConnectWrappedNative, nsIXPConnectJSObjectHolder)
 
 // do chained ref counting
 
@@ -575,7 +575,7 @@ nsXPCWrappedNative::DebugDump(PRInt16 depth)
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS1(nsXPCJSObjectHolder, nsIXPConnectJSObjectHolder)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCJSObjectHolder, nsIXPConnectJSObjectHolder)
 
 NS_IMETHODIMP
 nsXPCJSObjectHolder::GetJSObject(JSObject** aJSObj)

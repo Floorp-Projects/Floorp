@@ -132,7 +132,7 @@ XPCJSStackFrame::~XPCJSStackFrame()
         NS_RELEASE(mCaller);
 }
 
-NS_IMPL_ISUPPORTS1(XPCJSStackFrame, nsIJSStackFrameLocation)
+NS_IMPL_THREADSAFE_ISUPPORTS1(XPCJSStackFrame, nsIJSStackFrameLocation)
 
 XPCJSStackFrame*
 XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp)

@@ -60,9 +60,7 @@ XPCNativeMemberDescriptor::XPCNativeMemberDescriptor()
 
 extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPCWrappedNativeClass)
-NS_IMPL_THREADSAFE_RELEASE(nsXPCWrappedNativeClass)
-NS_IMPL_QUERY_INTERFACE1(nsXPCWrappedNativeClass, nsIXPCWrappedNativeClass)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedNativeClass, nsIXPCWrappedNativeClass)
 
 #define SET_ERROR_CODE(_y) if(pErr) *pErr = _y
 

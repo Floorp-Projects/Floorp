@@ -99,7 +99,7 @@ nsXPCException::IterateNSResults(nsresult* rv,
 
 /***************************************************************************/
 
-NS_IMPL_ISUPPORTS1(nsXPCException, nsIXPCException)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCException, nsIXPCException)
 
 nsXPCException::nsXPCException()
     : mMessage(nsnull),
@@ -363,7 +363,7 @@ nsXPCException::NewException(const char *aMessage,
 // Code for converting JSErrorReports to nsIXPCException with (optionally)
 // attached nsIJSErrorReport.
 
-NS_IMPL_ISUPPORTS1(xpcJSErrorReport, nsIJSErrorReport)
+NS_IMPL_THREADSAFE_ISUPPORTS1(xpcJSErrorReport, nsIJSErrorReport)
 
 xpcJSErrorReport::xpcJSErrorReport()
     :   mMessage(nsnull),

@@ -38,9 +38,7 @@
 
 #include "xpcprivate.h"
 
-NS_IMPL_THREADSAFE_ADDREF(nsXPConnect)
-NS_IMPL_THREADSAFE_RELEASE(nsXPConnect)
-NS_IMPL_QUERY_INTERFACE1(nsXPConnect, nsIXPConnect)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPConnect,nsIXPConnect)
 
 nsXPConnect* nsXPConnect::gSelf = nsnull;
 

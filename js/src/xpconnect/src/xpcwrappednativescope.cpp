@@ -39,7 +39,7 @@
 
 nsXPCWrappedNativeScope* nsXPCWrappedNativeScope::gScopes = nsnull;
 
-NS_IMPL_ISUPPORTS1(nsXPCWrappedNativeScope, nsIXPCWrappedNativeScope)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedNativeScope, nsIXPCWrappedNativeScope)
 
 nsXPCWrappedNativeScope::nsXPCWrappedNativeScope(XPCContext* xpcc,
                                                  nsXPCComponents* comp)

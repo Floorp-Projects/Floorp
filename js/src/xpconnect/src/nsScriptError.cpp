@@ -27,8 +27,6 @@
 
 #include "xpcprivate.h"
 
-// NS_IMPL_THREADSAFE_ISUPPORTS(nsScriptError, NS_GET_IID(nsIScriptError));
-
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError);
 
 nsScriptError::nsScriptError() 
