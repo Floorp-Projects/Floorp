@@ -21,6 +21,7 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Colin Phillips <colinp@oeone.com>
+ *                 Karl Guertin <grayrest@grayrest.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -404,7 +405,7 @@ function selectEventInUnifinder( calendarEvent )
    }
 
    document.getElementById( "delete_command" ).removeAttribute( "disabled" );
-
+   
    document.getElementById( "modify_command" ).removeAttribute( "disabled" );
 }
 
@@ -786,11 +787,14 @@ CalendarWindow.prototype.goToToday = function( )
 *   Go to the next period in the current view
 */
 
-CalendarWindow.prototype.goToNext = function()
+CalendarWindow.prototype.goToNext = function( value )
 {
    this.clearSelectedEvent( );
-
-   this.currentView.goToNext();
+   if(value){
+      this.currentView.goToNext( value );
+   }else{
+      this.currentView.goToNext();
+   }
 }
 
 
@@ -799,11 +803,14 @@ CalendarWindow.prototype.goToNext = function()
 *   Go to the previous period in the current view
 */
 
-CalendarWindow.prototype.goToPrevious = function()
+CalendarWindow.prototype.goToPrevious = function( value )
 {   
    this.clearSelectedEvent( );
-
-   this.currentView.goToPrevious( );
+   if(value){
+      this.currentView.goToPrevious( value );
+   }else{
+      this.currentView.goToPrevious( );
+   }
 }
 
 
@@ -1014,9 +1021,12 @@ CalendarWindow.prototype.compareNumbers = function (a, b) {
    return a - b
 }
 
-
-
-
+/** PUBLIC
+*   The resize handler, used to set the size of the views so they fit the screen.
+*/
+ window.onresize = CalendarWindow.prototype.doResize = function(){
+     gCalendarWindow.currentView.refresh();
+}
 
 
 
@@ -1066,6 +1076,9 @@ CalendarView.prototype.refresh = function( ShowEvent )
    this.refreshDisplay( ShowEvent )
    
    this.refreshEvents()
+
+   if(this.calendarWindow.currentView.doResize)
+      this.calendarWindow.currentView.doResize();
 }
 
    

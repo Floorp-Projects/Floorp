@@ -23,6 +23,7 @@
    -                 Mike Potter <mikep@oeone.com>
    -                 Colin Phillips <colinp@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
+   -                 Karl Guertin <grayrest@grayrest.com> 
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -79,8 +80,7 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    height="700px"
    width="830px"
-   persist="screenX screenY width height sizemode"
-   context="context-menu"> 
+   persist="screenX screenY width height sizemode"> 
  
 <broadcasterset>
   <broadcaster id="delete_command" disabled="false"/>
@@ -108,33 +108,26 @@
 <script type="application/x-javascript" src="chrome://calendar/content/calendar.js"/>
 <script type="application/x-javascript" src="chrome://calendar/content/calendarEvent.js"/>
 
-
 <!-- Pop up menus -->
-
-<popupset id="aTooltipSet"/>
 
 <popup id="savetip"/>
 
-<popupset>
- <popup id="context-menu">
+<popup id="context-menu">
    <menuitem label="&calendar.newevent.button.label;" oncommand="newEventCommand()"/>
-   <menuitem label="Edit Event" observes="modify_command" oncommand="unifinderModifyCommand()"/>
-   <menuitem label="Delete Event" observes="delete_command" oncommand="unifinderRemoveCommand()"/>
+   <menuitem label="&calendar.tools.modify.tooltip;" observes="modify_command" oncommand="unifinderModifyCommand()"/>
+   <menuitem label="&calendar.tools.delete.tooltip;" observes="delete_command" oncommand="unifinderRemoveCommand()"/>
    <menuseparator/>
-   <menuitem label="Go To Today" oncommand="gCalendarWindow.goToToday()"/>
+   <menuitem label="&calendar.gototoday.button.tooltip;" oncommand="gCalendarWindow.goToToday()"/>
    <menuseparator/>
    <menuitem label="&calendar.dayview.button.label;" oncommand="gCalendarWindow.switchToDayView()"/>
    <menuitem label="&calendar.weekview.button.label;" oncommand="gCalendarWindow.switchToWeekView()"/>
    <menuitem label="&calendar.monthview.button.label;" oncommand="gCalendarWindow.switchToMonthView()"/>
    <menuseparator/>
-   <menuitem label="Reload" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
- </popup>
- 
-</popupset>
+   <menuitem label="&context.menu.toggleBackground;" oncommand="MonthView.toggleBackground()"/>
+   <menuitem label="&context.menu.reload;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
+</popup>
 
-<popupset>
- <popup  id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
-</popupset>
+<popup id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
 
 <commandset id="commands"/>
 
@@ -164,36 +157,32 @@
    </toolbar>
 </toolbox>
 
-<popupset>
-   <popup id="savetip" style="background-color: #FFFFC0;">
-      <label id="popuptooltiptext" value=" "/>
-   </popup>
-</popupset>
+		<popupset>
+		<popup id="savetip" style="background-color: #FFFFC0;">
+			<label id="popuptooltiptext" value=" "/>
+		</popup>
+		</popupset>
 
 <!-- V I S I B L E  C O N T E N T  -->
 
-<vbox id="calendar-top-box" flex="1">
-  
-  <!-- Calendar Controls-->
- 
-	<hbox id="calendar-content-box" flex="1">
+   <vbox id="calendar-top-box" flex="1">
+     
+     <!-- Calendar Controls-->
+    
+   	<hbox id="calendar-content-box" flex="1">
 
       
-		<!-- UNIFINDER OVERLAY  -->
- 
-		<unifinder id="calendar-unifinder-overlay" menu-popup="unifinder-options-menu" flex="1"/>
+   		<!-- UNIFINDER OVERLAY  -->
     
-		<splitter id="unifinder-splitter" collapse="before" persist="state hidden collapsed"
-           class="chromeclass-extrachrome sidebar-splitter"
-           orient="horizontal">
-       <grippy class="sidebar-splitter-grippy"/>
-      </splitter>
-
-
-   
-		<!-- Begin Day/Month/Week Deck -->
-		<box flex="1" pack="center" align="center">
-         <deck id="calendar-deck" selectedIndex="0">
+   		<unifinder id="calendar-unifinder-overlay" menu-popup="unifinder-options-menu" flex="1"/>
+       
+   		<splitter id="unifinder-splitter" collapse="before" persist="state hidden collapsed"
+              class="chromeclass-extrachrome sidebar-splitter"
+              orient="horizontal">
+          <grippy class="sidebar-splitter-grippy"/>
+         </splitter>
+   		<!-- Begin Day/Month/Week Deck -->
+         <deck id="calendar-deck" selectedIndex="0" flex="1" context="context-menu">
    				 
    			 <!-- Calendar Month View -->
    			    
@@ -216,8 +205,8 @@
    			 <!-- End: Calendar Day View -->
    						 
    		</deck>  <!-- End: Day/Month/Week Deck -->
-		</box>
             
+      
       </hbox> <!-- End: box with unifinder on left, calendar on right -->
   </vbox>
 

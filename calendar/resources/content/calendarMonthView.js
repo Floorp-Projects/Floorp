@@ -20,6 +20,7 @@
  *
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
+ *                 Karl Guertin <grayrest@grayrest.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -377,14 +378,36 @@ MonthView.prototype.refreshDisplay = function( ShowEvent )
 { 
    // set the month/year in the header
    
-   var newMonth = this.calendarWindow.getSelectedDate().getMonth();
-   var newYear = this.calendarWindow.getSelectedDate().getFullYear();
-
-   var monthName = this.calendarWindow.dateFormater.getMonthName( newMonth );
+   var selectedDate = this.calendarWindow.getSelectedDate();
+   var newMonth = selectedDate.getMonth();
+   var newYear =  selectedDate.getFullYear();
+   var titleMonthArray = new Array();
+   var titleYearArray = new Array();
+   var toDebug = "";
+   for (var i=-2; i < 3; i++){
+      titleMonthArray[i] = newMonth + i;
+      titleMonthArray[i] = (titleMonthArray[i] >= 0)? titleMonthArray[i] % 12 : titleMonthArray[i] + 12;
+      try{
+	 titleMonthArray[i] = this.calendarWindow.dateFormater.getMonthName( titleMonthArray[i] );
+	 var idName = i + "-month-title";
+	 document.getElementById( idName ).setAttribute( "value" , titleMonthArray[i] );
+      }catch(errorObj){
+	 alert(toDebug);
+	 alert(errorObj);
+      }
+   }
+   for (var i = -1; i < 2; i++){
+      titleYearArray[i] = newYear + i;
+      try{
+	 var idName = i + "-year-title";
+	 document.getElementById( idName ).setAttribute( "value" , titleYearArray[i] );
+      }catch(errorObj){
+	 alert(errorObj);
+      }
+	 
+   }
    
-   var monthTextItem = document.getElementById( "month-title-text" );
    
-   monthTextItem.setAttribute( "value" , monthName + " " + newYear );  
    
    // Write in all the day numbers and create the dayBoxItemByDateArray, see notes above
    
@@ -554,33 +577,39 @@ MonthView.prototype.getNewEventDate = function( )
 
 /** PUBLIC
 *
-*   Go to the next month.
+*   Moves goMonths months in the future, goes to next month if no argument.
 */
 
-MonthView.prototype.goToNext = function()
+MonthView.prototype.goToNext = function( goMonths )
 {  
-   var nextMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() + 1, 1 );
-   
-   this.adjustNewMonth( nextMonth );  
-   
-   // move to new date
-   
-   this.goToDay( nextMonth );
+   if(goMonths){
+      var nextMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() + goMonths, 1 );
+      this.adjustNewMonth( nextMonth );  
+      this.goToDay( nextMonth );
+   }else{
+      var nextMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() + 1, 1 );
+      this.adjustNewMonth( nextMonth );  
+      this.goToDay( nextMonth );
+   }
 }
 
 
 /** PUBLIC
 *
-*   Go to the previous month.
+*   Goes goMonths months into the past, goes to the previous month if no argument.
 */
 
-MonthView.prototype.goToPrevious = function()
+MonthView.prototype.goToPrevious = function( goMonths )
 {
-   var prevMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() - 1, 1 );
-   
-   this.adjustNewMonth( prevMonth );  
-   
-   this.goToDay( prevMonth );
+   if(goMonths){
+      var prevMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() - goMonths, 1 );
+      this.adjustNewMonth( prevMonth );  
+      this.goToDay( prevMonth );
+   }else{
+      var prevMonth = new Date(  this.calendarWindow.selectedDate.getFullYear(),  this.calendarWindow.selectedDate.getMonth() - 1, 1 );
+      this.adjustNewMonth( prevMonth );  
+      this.goToDay( prevMonth );
+   }
    
 }
 
@@ -775,4 +804,50 @@ MonthView.prototype.getVisibleEvent = function( calendarEvent )
    else
       return null;
 
+}
+
+/*Just calls setCalendarSize, it's here so it can be implemented on the other two views without difficulty.*/
+MonthView.prototype.doResize = function(){
+   MonthView.setCalendarSize(MonthView.getViewHeight());
+}
+
+/*Takes in a height, sets the calendar's container box to that height, the grid expands and contracts to fit it.*/
+MonthView.setCalendarSize = function( height ){
+    var offset = document.defaultView.getComputedStyle(document.getElementById("month-controls-box"), "").getPropertyValue("height");
+    offset = offset.substring(0,offset.length-2);
+    height = (height-offset)+"px";
+    document.getElementById( "month-content-box" ).setAttribute( "height", height );
+} 
+
+/*returns the height of the current view in pixels*/ 
+MonthView.getViewHeight = function( ){
+    toReturn = document.defaultView.getComputedStyle(document.getElementById("calendar-top-box"), "").getPropertyValue("height");
+    toReturn = toReturn.substring(0, toReturn.length-2); //strip off the px at the end
+    return toReturn;
+}
+
+/*Creates a background attribute on month-grid-box and all the month-day-box classes, 
+  if one exists it flips the value between true and false*/
+MonthView.toggleBackground = function( ){
+    var vboxen = document.getElementsByTagName("vbox");
+    //do the outer grid box
+    if(document.getElementById("month-grid-box").getAttribute("background")){
+	if(document.getElementById("month-grid-box").getAttribute("background") == "true"){
+	    document.getElementById("month-grid-box").setAttribute("background", "false");
+	}else{
+	    document.getElementById("month-grid-box").setAttribute("background", "true");
+	}
+    }else{
+	document.getElementById("month-grid-box").setAttribute("background", "true");
+    }
+    //do all the month-day-boxes
+    for(var i = 0; i < vboxen.length; i++){
+	if(vboxen[i].className == "month-day-box-class" || vboxen[i].className == "month-day-box-class weekend" || vboxen[i].className == "month-day-box-class weekend saturday"){
+	    if(vboxen[i].getAttribute("background")){
+		vboxen[i].setAttribute("background", vboxen[i].getAttribute("background") == "true" ? "false" : "true");
+	    }else{
+		vboxen[i].setAttribute("background","true");
+	    }
+	}
+    }
 }

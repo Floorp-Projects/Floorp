@@ -43,7 +43,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://calendar/locale/calendarOverlay.dtd" >
 
-<!-- This is the overlay that addes "Calendar" to the (global) task menu. -->
+<!-- This is the overlay that addes "Calendar" to the (global) task menu and to the component bar icons on the status bar. -->
 
 <overlay id="CalendarTaskMenuID"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
