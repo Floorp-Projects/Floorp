@@ -71,6 +71,8 @@ protected:
 	void			ClearPrevIdArray();
   void      SavePreSearchInfo();
   void      ClearPreSearchInfo();
+  void      UpdateCachedFlag(PRUint32 aFlag, PRUint32 *extraFlag);
+  void      UpdatePreSearchFlagInfo(nsMsgViewIndex index, PRUint32 extraFlag);
   virtual nsresult RemoveByIndex(nsMsgViewIndex index);
   nsMsgViewIndex GetInsertInfoForNewHdr(nsIMsgDBHdr *newHdr, nsMsgViewIndex threadIndex, PRInt32 targetLevel);
 
