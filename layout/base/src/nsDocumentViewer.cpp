@@ -995,6 +995,25 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
           (*aStyleSet)->AppendBackstopStyleSheet(sheet);
         }
       }
+
+      // Now handle the user sheets.
+      nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
+      PRInt32 shellType;
+      docShell->GetItemType(&shellType);
+      PRBool isChrome = (shellType == nsIDocShellTreeItem::typeChrome);
+      sheets = nsnull;
+      chromeRegistry->GetUserSheets(isChrome, getter_AddRefs(sheets));
+      if(sheets){
+        nsCOMPtr<nsICSSStyleSheet> sheet;
+        PRUint32 count;
+        sheets->Count(&count);
+        for(PRUint32 i=0; i<count; i++) {
+          sheets->GetElementAt(i, getter_AddRefs(sheet));
+          // XXX For now, append as backstop until we figure out something
+          // better to do.
+          (*aStyleSet)->AppendBackstopStyleSheet(sheet);
+        }
+      }
     }
 
     if (mUAStyleSheet) {

@@ -472,11 +472,17 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
       // This must always be the last line of profile initialization!
 
       nsCAutoString userSheetURL;
-      rv = GetUserSheetURL(userSheetURL);
+      rv = GetUserSheetURL(PR_TRUE, userSheetURL);
       if (NS_FAILED(rv)) return rv;
       if(!userSheetURL.IsEmpty()) {
-        (void)LoadStyleSheet(getter_AddRefs(mUserSheet), userSheetURL);
+        (void)LoadStyleSheet(getter_AddRefs(mUserChromeSheet), userSheetURL);
         // it's ok to not have a user.css file
+      }
+      rv = GetUserSheetURL(PR_FALSE, userSheetURL);
+      if (NS_FAILED(rv)) return rv;
+      if(!userSheetURL.IsEmpty()) {
+        (void)LoadStyleSheet(getter_AddRefs(mUserContentSheet), userSheetURL);
+        // it's ok not to have a userContent.css or userChrome.css file
       }
     }
     else if (!mInstallInitialized) {
@@ -2256,7 +2262,7 @@ nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
     if (NS_FAILED(rv)) return rv;
   }
 
-  if(mScrollbarSheet || mUserSheet)
+  if(mScrollbarSheet)
   {
     rv = NS_NewISupportsArray(aResult);
     if (NS_FAILED(rv)) return rv;
@@ -2264,9 +2270,26 @@ nsChromeRegistry::GetBackstopSheets(nsISupportsArray **aResult)
       rv = (*aResult)->AppendElement(mScrollbarSheet) ? NS_OK : NS_ERROR_FAILURE;
       if (NS_FAILED(rv)) return rv;
     }  
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetUserSheets(PRBool aIsChrome, nsISupportsArray **aResult)
+{
+  nsresult rv;
+  
+  if((aIsChrome && mUserChromeSheet) || (!aIsChrome && mUserContentSheet))
+  {
+    rv = NS_NewISupportsArray(aResult);
+    if (NS_FAILED(rv)) return rv;
+    if(aIsChrome && mUserChromeSheet) {
+      rv = (*aResult)->AppendElement(mUserChromeSheet) ? NS_OK : NS_ERROR_FAILURE;
+      if (NS_FAILED(rv)) return rv;
+    }  
    
-    if(mUserSheet) {
-      rv = (*aResult)->AppendElement(mUserSheet) ? NS_OK : NS_ERROR_FAILURE;
+    if(!aIsChrome && mUserContentSheet) {
+      rv = (*aResult)->AppendElement(mUserContentSheet) ? NS_OK : NS_ERROR_FAILURE;
       if (NS_FAILED(rv)) return rv;
     }
   }
@@ -2305,12 +2328,14 @@ nsresult nsChromeRegistry::LoadStyleSheetWithURL(nsIURI* aURL, nsICSSStyleSheet*
   return NS_OK;
 }
 
-nsresult nsChromeRegistry::GetUserSheetURL(nsCString & aURL)
+nsresult nsChromeRegistry::GetUserSheetURL(PRBool aIsChrome, nsCString & aURL)
 {
   aURL = mProfileRoot;
-  aURL.Append("user.css");
-  return NS_OK;
+  if (aIsChrome)
+    aURL.Append("userChrome.css");
+  else aURL.Append("userContent.css");
 
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsChromeRegistry::AllowScriptsForSkin(nsIURI* aChromeURI, PRBool *aResult)
