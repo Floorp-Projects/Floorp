@@ -1275,6 +1275,15 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
    return result;
 }
 
+NS_IMETHODIMP GlobalWindowImpl::GetLength(PRUint32* aLength)
+{
+   nsCOMPtr<nsIDOMWindowCollection> frames;
+   if (NS_SUCCEEDED(GetFrames(getter_AddRefs(frames))) && frames) {
+      return frames->GetLength(aLength);
+   }
+   return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP GlobalWindowImpl::Dump(const nsString& aStr)
 {
    char *cstr = aStr.ToNewUTF8String();

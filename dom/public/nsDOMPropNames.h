@@ -954,6 +954,7 @@
     "window.home", \
     "window.innerheight", \
     "window.innerwidth", \
+    "window.length", \
     "window.locationbar", \
     "window.menubar", \
     "window.moveby", \

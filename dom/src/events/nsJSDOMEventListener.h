@@ -42,7 +42,8 @@ public:
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 
   //nsIScriptEventListener interface
-  virtual nsresult CheckIfEqual(nsIScriptEventListener *aListener);
+  NS_IMETHOD CheckIfEqual(nsIScriptEventListener *aListener, PRBool* aResult);
+  NS_IMETHOD GetInternals(void** aTarget, void** aHandler);
 
 protected:
   nsCOMPtr<nsIScriptContext> mContext;
