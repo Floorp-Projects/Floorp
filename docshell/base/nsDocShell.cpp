@@ -6322,4 +6322,3 @@ nsDocShell::InterfaceRequestorProxy::GetInterface(const nsIID & aIID, void **aSi
     *aSink = nsnull;
     return NS_NOINTERFACE;
 }
-
