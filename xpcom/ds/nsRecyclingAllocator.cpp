@@ -374,10 +374,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsRecyclingAllocatorImpl, nsIMemory, nsIRecyclingA
 NS_IMETHODIMP_(void *)
 nsRecyclingAllocatorImpl::Alloc(PRSize size)
 {
-    if (size < 0)
-        return NULL;
-    else
-        return nsRecyclingAllocatorImpl::Malloc(size, PR_FALSE);
+    return nsRecyclingAllocatorImpl::Malloc(size, PR_FALSE);
 }
 
 NS_IMETHODIMP_(void *)
@@ -396,12 +393,6 @@ nsRecyclingAllocatorImpl::Free(void *ptr)
 NS_IMETHODIMP
 nsRecyclingAllocatorImpl::Init(size_t nbuckets, size_t recycleAfter, const char *id)
 {
-    // normalize input
-    if (nbuckets < 0)
-        nbuckets = 0;
-    if (recycleAfter < 0)
-        recycleAfter = 0;
-
     return nsRecyclingAllocator::Init((PRUint32) nbuckets, (PRUint32) recycleAfter, id);
 }
 
