@@ -16,6 +16,19 @@
 # Reserved.
 #
 
+#
+# This script will generate a single Makefile from a Makefile.in using
+# the config.status script.
+#
+# The config.status script is generated the first time you run 
+# ./configure.
+#
+#
+# Usage: update-makefile.sh
+#
+# Send comments, improvements, bugs to ramiro@netscape.com
+# 
+
 # Make sure a Makefile.in exists
 if [ ! -f Makefile.in ]
 then
@@ -59,9 +72,9 @@ cd $depth
 
 # Make sure config.status exists
 if [ -f config.status ]
-else
-	CONFIG_FILES=$makefile ./config.status
 then
+	CONFIG_FILES=$makefile ./config.status
+else
 	echo
 	echo "There ain't no 'config.status' over here: $pwd"
 	echo
