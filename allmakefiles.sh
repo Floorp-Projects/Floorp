@@ -418,6 +418,10 @@ xpfe/components/history/Makefile
 xpfe/components/history/src/Makefile
 xpfe/components/history/public/Makefile
 xpfe/components/history/resources/Makefile
+xpfe/components/related/Makefile
+xpfe/components/related/src/Makefile
+xpfe/components/related/public/Makefile
+xpfe/components/related/resources/Makefile
 xpfe/components/xfer/Makefile
 xpfe/components/xfer/public/Makefile
 xpfe/components/xfer/src/Makefile
