@@ -81,7 +81,7 @@ nsPlatformCharset::~nsPlatformCharset()
 NS_IMETHODIMP
 nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAString& oResult)
 {
-  if (selector == kPlatformCharsetSel_4xBookmarkFile) {
+  if ((selector == kPlatformCharsetSel_4xBookmarkFile) || (selector == kPlatformCharsetSel_4xPrefsJS)) {
     if ((mCharset.Find("IBM850", IGNORE_CASE) != -1) || (mCharset.Find("IBM437", IGNORE_CASE) != -1)) 
       oResult.Assign(NS_LITERAL_STRING("ISO-8859-1"));
     else if (mCharset.Find("IBM852", IGNORE_CASE) != -1)
