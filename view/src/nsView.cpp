@@ -217,10 +217,10 @@ nsView* nsView::GetViewFor(nsIWidget* aWidget)
   return nsnull;
 }
 
-NS_IMETHODIMP nsView::Init(nsIViewManager* aManager,
-                             const nsRect &aBounds,
-                             const nsIView *aParent,
-                             nsViewVisibility aVisibilityFlag)
+nsresult nsIView::Init(nsIViewManager* aManager,
+                       const nsRect &aBounds,
+                       const nsIView *aParent,
+                       nsViewVisibility aVisibilityFlag)
 {
   //printf(" \n callback=%d data=%d", aWidgetCreateCallback, aCallbackData);
   NS_PRECONDITION(nsnull != aManager, "null ptr");
@@ -233,31 +233,21 @@ NS_IMETHODIMP nsView::Init(nsIViewManager* aManager,
   // we don't hold a reference to the view manager
   mViewManager = NS_STATIC_CAST(nsViewManager*, aManager);
 
-  SetPosition(aBounds.x, aBounds.y);
+  nsView* v = NS_STATIC_CAST(nsView*, this);
+  v->SetPosition(aBounds.x, aBounds.y);
   nsRect dim(0, 0, aBounds.width, aBounds.height);
+  v->SetDimensions(dim, PR_FALSE);
+  v->SetVisibility(aVisibilityFlag);
 
-  SetDimensions(dim, PR_FALSE);
-
-  //temporarily set it...
-  SetParent(NS_CONST_CAST(nsView*, NS_STATIC_CAST(const nsView*, aParent)));
-
-  SetVisibility(aVisibilityFlag);
-
-  // XXX Don't clear this or we hork the scrolling view when creating the clip
-  // view's widget. It needs to stay set and later the view manager will reset it
-  // when the view is inserted into the view hierarchy...
-#if 0
-  //clear this again...
-  SetParent(nsnull);
-#endif
-
+  // We shouldn't set the parent here. It should be set when we put this view
+  // into the view hierarchy.
+  v->SetParent(NS_STATIC_CAST(nsView*, NS_CONST_CAST(nsIView*, aParent)));
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::Destroy()
+void nsIView::Destroy()
 {
   delete this;
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsView::Paint(nsIRenderingContext& rc, const nsRect& rect,
@@ -292,18 +282,6 @@ NS_IMETHODIMP nsView::Paint(nsIRenderingContext& rc, const nsIRegion& region,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// XXX Start Temporary fix for Bug #19416
-NS_IMETHODIMP nsView::IgnoreSetPosition(PRBool aShouldIgnore)
-{
-  mShouldIgnoreSetPosition = aShouldIgnore;
-  // resync here
-  if (!mShouldIgnoreSetPosition) {
-    SetPosition(mPosX, mPosY);
-  }
-  return NS_OK;
-}
-// XXX End Temporary fix for Bug #19416
-
 void nsView::SetPosition(nscoord aX, nscoord aY)
 {
   mDimBounds.x += aX - mPosX;
@@ -311,12 +289,9 @@ void nsView::SetPosition(nscoord aX, nscoord aY)
   mPosX = aX;
   mPosY = aY;
 
-  // XXX Start Temporary fix for Bug #19416
-  if (mShouldIgnoreSetPosition) {
-    return;
-  }
+  NS_ASSERTION(GetParent() || (aX == 0 && aY == 0),
+               "Don't try to move the root widget to something non-zero");
 
-  // XXX End Temporary fix for Bug #19416
   ResetWidgetPosition(PR_TRUE);
 }
 
@@ -345,18 +320,18 @@ void nsView::ResetWidgetPosition(PRBool aRecurse) {
 
     nsIDeviceContext  *dx;
     float             scale;
-    nsIWidget         *pwidget = nsnull;
-    nscoord           parx = 0, pary = 0;
   
     mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(scale);
     NS_RELEASE(dx);
 
-    GetOffsetFromWidget(&parx, &pary, pwidget);
-    NS_IF_RELEASE(pwidget);
+    nsPoint offset(0, 0);
+    if (GetParent()) {
+      GetParent()->GetNearestWidget(&offset);
+    }
 
-    mWindow->Move(NSTwipsToIntPixels((mDimBounds.x + parx), scale),
-                  NSTwipsToIntPixels((mDimBounds.y + pary), scale));
+    mWindow->Move(NSTwipsToIntPixels((mDimBounds.x + offset.x), scale),
+                  NSTwipsToIntPixels((mDimBounds.y + offset.y), scale));
   } else if (aRecurse) {
     // reposition any widgets under this view
     for (nsView* v = GetFirstChild(); v; v = v->GetNextSibling()) {
@@ -376,40 +351,6 @@ NS_IMETHODIMP nsView::SynchWidgetSizePosition()
     mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(t2p);
     NS_RELEASE(dx);
-#if 0
-    /* You would think that doing a move and resize all in one operation would
-     * be faster but its not. Something is really broken here. So I'm comenting 
-     * this out for now 
-     */
-    // if we moved and resized do it all in one shot
-    if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED && mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED)
-    {
-
-      nscoord parx = 0, pary = 0;
-      nsIWidget         *pwidget = nsnull;
-
-      GetOffsetFromWidget(&parx, &pary, pwidget);
-      NS_IF_RELEASE(pwidget);
-
-      PRInt32 x = NSTwipsToIntPixels(mDimBounds.x + parx, t2p);
-      PRInt32 y = NSTwipsToIntPixels(mDimBounds.y + pary, t2p);
-      PRInt32 width = NSTwipsToIntPixels(mDimBounds.width, t2p);
-      PRInt32 height = NSTwipsToIntPixels(mDimBounds.height, t2p);
-
-      nsRect bounds;
-      mWindow->GetBounds(bounds);
-      if (bounds.x == x && bounds.y == y ) 
-         mVFlags &= ~NS_VIEW_FLAG_WIDGET_MOVED;
-      else if (bounds.width == width && bounds.height == bounds.height)
-         mVFlags &= ~NS_VIEW_FLAG_WIDGET_RESIZED;
-      else {
-         mWindow->Resize(x,y,width,height, PR_TRUE);
-         mVFlags &= ~NS_VIEW_FLAG_WIDGET_RESIZED;
-         mVFlags &= ~NS_VIEW_FLAG_WIDGET_MOVED;
-         return NS_OK;
-      }
-    } 
-#endif
     // if we just resized do it
     if (mVFlags & NS_VIEW_FLAG_WIDGET_RESIZED) 
     {
@@ -421,9 +362,6 @@ NS_IMETHODIMP nsView::SynchWidgetSizePosition()
       mWindow->GetBounds(bounds);
 
       if (bounds.width != width || bounds.height != bounds.height) {
-#ifdef DEBUG_evaughan
-        printf("%d) Resize(%d,%d)\n", this, width, height);
-#endif
         mWindow->Resize(width,height, PR_TRUE);
       }
 
@@ -432,22 +370,16 @@ NS_IMETHODIMP nsView::SynchWidgetSizePosition()
     
     if (mVFlags & NS_VIEW_FLAG_WIDGET_MOVED) {
       // if we just moved do it.
-      nscoord parx = 0, pary = 0;
-      nsIWidget         *pwidget = nsnull;
+      nsPoint offset;
+      GetParent()->GetNearestWidget(&offset);
 
-      GetOffsetFromWidget(&parx, &pary, pwidget);
-      NS_IF_RELEASE(pwidget);
-
-      PRInt32 x = NSTwipsToIntPixels(mDimBounds.x + parx, t2p);
-      PRInt32 y = NSTwipsToIntPixels(mDimBounds.y + pary, t2p);
+      PRInt32 x = NSTwipsToIntPixels(mDimBounds.x + offset.x, t2p);
+      PRInt32 y = NSTwipsToIntPixels(mDimBounds.y + offset.y, t2p);
 
       nsRect bounds;
       mWindow->GetBounds(bounds);
       
       if (bounds.x != x || bounds.y != y) {
-#ifdef DEBUG_evaughan
-         printf("%d) Move(%d,%d)\n", this, x, y);
-#endif
          mWindow->Move(x,y);
       }
 
@@ -488,18 +420,18 @@ void nsView::SetDimensions(const nsRect& aRect, PRBool aPaint)
 
     nsIDeviceContext  *dx;
     float             t2p;
-    nsIWidget         *pwidget = nsnull;
-    nscoord           parx = 0, pary = 0;
   
     mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(t2p);
 
-    GetOffsetFromWidget(&parx, &pary, pwidget);
-    NS_IF_RELEASE(pwidget);
-    
     if (needToMoveWidget) {
-      mWindow->Move(NSTwipsToIntPixels((mDimBounds.x + parx), t2p),
-                    NSTwipsToIntPixels((mDimBounds.y + pary), t2p));
+      NS_ASSERTION(GetParent(), "Don't try to move the root widget, dude");
+
+      nsPoint offset;
+      GetParent()->GetNearestWidget(&offset);
+    
+      mWindow->Move(NSTwipsToIntPixels((mDimBounds.x + offset.x), t2p),
+                    NSTwipsToIntPixels((mDimBounds.y + offset.y), t2p));
     }
     mWindow->Resize(NSTwipsToIntPixels(mDimBounds.width, t2p), NSTwipsToIntPixels(mDimBounds.height, t2p),
                     aPaint);
@@ -606,12 +538,6 @@ NS_IMETHODIMP nsView::SetOpacity(float opacity)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::HasTransparency(PRBool &aTransparent) const
-{
-  aTransparent = (mVFlags & NS_VIEW_FLAG_TRANSPARENT) ? PR_TRUE : PR_FALSE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsView::SetContentTransparency(PRBool aTransparent)
 {
   if (aTransparent == PR_TRUE)
@@ -622,13 +548,7 @@ NS_IMETHODIMP nsView::SetContentTransparency(PRBool aTransparent)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::SetClientData(void *aData)
-{
-  mClientData = aData;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
+nsresult nsIView::CreateWidget(const nsIID &aWindowIID,
                                    nsWidgetInitData *aWidgetInitData,
                                    nsNativeWidget aNative,
                                    PRBool aEnableDragDrop,
@@ -646,7 +566,8 @@ NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
 
   trect *= scale;
 
-  if (NS_OK == LoadWidget(aWindowIID))
+  nsView* v = NS_STATIC_CAST(nsView*, this);
+  if (NS_OK == v->LoadWidget(aWindowIID))
   {
     PRBool usewidgets;
 
@@ -673,11 +594,10 @@ NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
           GetParent()->GetViewManager() != mViewManager)
           initData.mListenForResizes = PR_TRUE;
 
-        nsIWidget *parent;
-        GetOffsetFromWidget(nsnull, nsnull, parent);
-
-        mWindow->Create(parent, trect, ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
-        NS_IF_RELEASE(parent);
+        nsIWidget* parentWidget = GetParent() ? GetParent()->GetNearestWidget(nsnull)
+          : nsnull;
+        mWindow->Create(parentWidget, trect,
+                        ::HandleEvent, dx, nsnull, nsnull, aWidgetInitData);
       }
       if (aEnableDragDrop) {
         mWindow->EnableDragDrop(PR_TRUE);
@@ -691,7 +611,7 @@ NS_IMETHODIMP nsView::CreateWidget(const nsIID &aWindowIID,
   //make sure visibility state is accurate
   
   if (aResetVisibility) {
-    SetVisibility(GetVisibility());
+    v->SetVisibility(GetVisibility());
   }
 
   NS_RELEASE(dx);
@@ -740,7 +660,7 @@ nsresult nsView::LoadWidget(const nsCID &aClassIID)
 }
 
 #ifdef DEBUG
-NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
+void nsIView::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -767,66 +687,48 @@ NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
   nsRect brect = GetBounds();
   fprintf(out, "{%d,%d,%d,%d}",
           brect.x, brect.y, brect.width, brect.height);
-  if (IsZPlaceholderView()) {
+  const nsView* v = NS_STATIC_CAST(const nsView*, this);
+  if (v->IsZPlaceholderView()) {
     fprintf(out, " z-placeholder(%p)",
             (void*)NS_STATIC_CAST(const nsZPlaceholderView*, this)->GetReparentedView());
   }
-  if (mZParent) {
-    fprintf(out, " zparent=%p", (void*)mZParent);
+  if (v->GetZParent()) {
+    fprintf(out, " zparent=%p", (void*)v->GetZParent());
   }
-  PRBool  hasTransparency;
-  HasTransparency(hasTransparency);
   fprintf(out, " z=%d vis=%d opc=%1.3f tran=%d clientData=%p <\n",
-          mZIndex, mVis, mOpacity, hasTransparency, mClientData);
+          mZIndex, mVis, mOpacity, IsTransparent(), mClientData);
   for (nsView* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
     NS_ASSERTION(kid->GetParent() == this, "incorrect parent");
     kid->List(out, aIndent + 1);
   }
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   fputs(">\n", out);
-  
-  return NS_OK;
 }
 #endif // DEBUG
 
-NS_IMETHODIMP nsView::GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget)
+nsIWidget* nsIView::GetNearestWidget(nsPoint* aOffset)
 {
-  nsView   *ancestor = GetParent();
-  aWidget = nsnull;
-  
-  if (aDx) *aDx = 0;
-  if (aDy) *aDy = 0;
-  while (ancestor)
-  {
-    aWidget = ancestor->GetWidget();
-    if (aWidget) {
-      NS_ADDREF(aWidget);
-      // the widget's (0,0) is at the top left of the view's bounds, NOT its position
-      if (aDx && aDy)
-      {
-        nsRect r;
-        ancestor->GetDimensions(r);
-        *aDx -= r.x;
-        *aDy -= r.y;
-      }
-      return NS_OK;
+  nsPoint pt(0, 0);
+  nsView* v;
+  for (v = NS_STATIC_CAST(nsView*, this);
+       v && !v->HasWidget(); v = v->GetParent()) {
+    pt += v->GetPosition();
+  }
+  if (!v) {
+    if (aOffset) {
+      *aOffset = pt;
     }
-
-    if (aDx && aDy)
-    {
-      ancestor->ConvertToParentCoords(aDx, aDy);
-    }
-
-    ancestor = ancestor->GetParent();
+    return NS_STATIC_CAST(nsView*, this)->GetViewManager()->GetWidget();
   }
 
-  if (nsnull == aWidget) {
-    // The root view doesn't have a widget
-    // but maybe the view manager does.
-    GetViewManager()->GetWidget(&aWidget);
+  // pt is now the offset from v's origin to this's origin
+  // The widget's origin is the top left corner of v's bounds, which may
+  // not coincide with v's origin
+  if (aOffset) {
+    nsRect vBounds = v->GetBounds();
+    *aOffset = pt + v->GetPosition() -  nsPoint(vBounds.x, vBounds.y);
   }
-
-  return NS_OK;
+  return v->GetWidget();
 }
 
 nsresult nsView::GetDirtyRegion(nsIRegion*& aRegion)
@@ -842,7 +744,7 @@ nsresult nsView::GetDirtyRegion(nsIRegion*& aRegion)
   return NS_OK;
 }
 
-PRBool nsView::IsRoot() const
+PRBool nsIView::IsRoot() const
 {
   NS_ASSERTION(mViewManager != nsnull," View manager is null in nsView::IsRoot()");
   return mViewManager->GetRootView() == this;

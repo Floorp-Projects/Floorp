@@ -4072,13 +4072,6 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
       InitializeSelectFrame(aPresShell, aPresContext, aState, listFrame, scrolledFrame, aContent, comboboxFrame,
                            listStyle, PR_FALSE, PR_FALSE, PR_TRUE);
       newFrame = listFrame;
-      // XXX Temporary for Bug 19416
-      {
-        nsIView* lstView = scrolledFrame->GetView();
-        if (lstView) {
-          lstView->IgnoreSetPosition(PR_TRUE);
-        }
-      }
 
         // Set flag so the events go to the listFrame not child frames.
         // XXX: We should replace this with a real widget manager similar

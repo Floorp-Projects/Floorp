@@ -559,14 +559,13 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
     return;
 
   // Find the widget associated with the popup's document
-  nsCOMPtr<nsIWidget> popupDocumentWidget;
+  nsIWidget* popupDocumentWidget = nsnull;
   nsIViewManager* viewManager = inPopupShell->GetViewManager();
   if ( viewManager ) {  
     nsIView* rootView;
     viewManager->GetRootView(rootView);
-    nscoord wOffsetX, wOffsetY;
     if ( rootView )
-      rootView->GetOffsetFromWidget(&wOffsetX, &wOffsetY, *getter_AddRefs(popupDocumentWidget));
+      popupDocumentWidget = rootView->GetNearestWidget(nsnull);
   }
   NS_WARN_IF_FALSE(popupDocumentWidget, "ACK, BAD WIDGET");
   
@@ -610,8 +609,7 @@ nsMenuPopupFrame::AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopupD
             nsIView* rootViewTarget;
             viewManagerTarget->GetRootView(rootViewTarget);
             if ( rootViewTarget ) {
-              nscoord unusedX, unusedY;
-              rootViewTarget->GetOffsetFromWidget(&unusedX, &unusedY, *getter_AddRefs(targetDocumentWidget));
+              targetDocumentWidget = rootViewTarget->GetNearestWidget(nsnull);
             }
           }
         }

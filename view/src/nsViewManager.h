@@ -202,6 +202,7 @@ public:
 
   NS_IMETHOD GetWidgetForView(nsIView *aView, nsIWidget **aWidget);
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
+  nsIWidget* GetWidget() { return mRootWindow; }
   NS_IMETHOD ForceUpdate();
  
   NS_IMETHOD IsCachingWidgetChanges(PRBool* aCaching);

@@ -1703,17 +1703,8 @@ nsComboboxControlFrame::ShowDropDown(PRBool aDoDropDown)
   }
 
   if (!mDroppedDown && aDoDropDown) {
-    // XXX Temporary for Bug 19416
-    nsIView* lstView = mDropdownFrame->GetView();
-    if (lstView) {
-      lstView->IgnoreSetPosition(PR_FALSE);
-    }
     if (mListControlFrame) {
       mListControlFrame->SyncViewWithFrame(mPresContext);
-    }
-    // XXX Temporary for Bug 19416
-    if (lstView) {
-      lstView->IgnoreSetPosition(PR_TRUE);
     }
     ToggleList(mPresContext);
     return NS_OK;

@@ -3013,11 +3013,8 @@ NS_IMETHODIMP nsViewManager::SetViewZIndex(nsIView *aView, PRBool aAutoZIndex, P
 NS_IMETHODIMP nsViewManager::SetViewContentTransparency(nsIView *aView, PRBool aTransparent)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
-  PRBool trans;
 
-  view->HasTransparency(trans);
-
-  if (trans != aTransparent) {
+  if (view->IsTransparent() != aTransparent) {
     view->SetContentTransparency(aTransparent);
 
     if (IsViewInserted(view)) {
@@ -3502,10 +3499,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       bounds.y -= aOriginY;
 
       if (aEventProcessing || aView->GetOpacity() > 0.0f) {
-        PRBool transparent;
-        aView->HasTransparency(transparent);
         PRUint32 flags = VIEW_RENDERED;
-        if (transparent)
+        if (aView->IsTransparent())
           flags |= VIEW_TRANSPARENT;
         retval = AddToDisplayList(aView, aResult, bounds, irect, flags,
                                   aX - aOriginX, aY - aOriginY,
@@ -3744,9 +3739,7 @@ nsRect nsViewManager::OptimizeTranslucentRegions(
       r.UnionRect(r, element->mBounds);
       // the bounds of a non-transparent element are added to the opaque
       // region
-      PRBool transparent;
-      element->mView->HasTransparency(transparent);
-      if (!transparent && aOpaqueRegion) {
+      if (!element->mView->IsTransparent() && aOpaqueRegion) {
         aOpaqueRegion->Or(*aOpaqueRegion, element->mBounds);
       }
     }

@@ -133,16 +133,19 @@ public:
    * @param aManager view manager that "owns" the view. The view does NOT
    *        hold a reference to the view manager
    * @param aBounds initial bounds for view
+   *        XXX We should eliminate this parameter; you can set the bounds after Init
    * @param aParent intended parent for view. this is not actually set in the
    *        nsIView through this method. it is only used by the initialization
    *        code to walk up the view tree, if necessary, to find resources.
+   *        XXX We should eliminate this parameter!
    * @param aVisibilityFlag initial visibility state of view
+   *        XXX We should eliminate this parameter; you can set it after Init
    * @result The result of the initialization, NS_OK if no errors
    */
-  NS_IMETHOD  Init(nsIViewManager* aManager,
-						       const nsRect &aBounds,
-                   const nsIView *aParent,
-        					 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow) = 0;
+  nsresult Init(nsIViewManager* aManager,
+                const nsRect &aBounds,
+                const nsIView *aParent,
+                nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   /**
    * Destroy the view.
@@ -154,7 +157,7 @@ public:
    * SetRootView(NULL) if the view is the root view and calling RemoveChild()
    * otherwise.
    */
-  NS_IMETHOD  Destroy() = 0;
+  void Destroy();
 
   /**
    * Get the view manager which "owns" the view.
@@ -173,7 +176,6 @@ public:
    * @param y out parameter for y position
    */
   nsPoint GetPosition() const {
-     // this assertion should go away once we're confident that it's not needed
     NS_ASSERTION(!IsRoot() || (mPosX == 0 && mPosY == 0),
                  "root views should always have explicit position of (0,0)");
     return nsPoint(mPosX, mPosY);
@@ -186,12 +188,7 @@ public:
    * if the view has content above or to the left of its origin.
    * @param aBounds out parameter for bounds
    */
-  nsRect GetBounds() const {
-    // this assertion should go away once we're confident that it's not needed
-    NS_ASSERTION(!IsRoot() || (mDimBounds.x == 0 && mDimBounds.y == 0),
-                 "root views should always have explicit position of (0,0)");
-    return mDimBounds;
-  }
+  nsRect GetBounds() const { return mDimBounds; }
 
   /**
    * Called to query the visibility state of a view.
@@ -249,6 +246,14 @@ public:
   float GetOpacity() const { return mOpacity; }
 
   /**
+   * Used to ask a view if it has any areas within its bounding box
+   * that are transparent. This is not the same as opacity - opacity can
+   * be set externally, transparency is a quality of the view itself.
+   * @result Returns PR_TRUE if there are transparent areas, PR_FALSE otherwise.
+   */
+  PRBool IsTransparent() const { return (mVFlags & NS_VIEW_FLAG_TRANSPARENT) != 0; }
+
+  /**
    * Indicate that this view is always painted onto a uniform field of pixels. Thus,
    * even if the view is transparent, it may still be bitblit scrollable because
    * the background that shines through does not vary with position.
@@ -269,7 +274,7 @@ public:
    * Set the view's link to client owned data.
    * @param aData - data to associate with view. nsnull to disassociate
    */
-  NS_IMETHOD  SetClientData(void *aData) = 0;
+  void SetClientData(void *aData) { mClientData = aData; }
 
   /**
    * Query the view for it's link to client owned data.
@@ -279,16 +284,18 @@ public:
 
   /**
    * Get the nearest widget in this view or a parent of this view and
-   * the offset from the view that contains the widget to this view
-   * @param aDx out parameter for x offset
-   * @param aDy out parameter for y offset
-   * @return widget (if there is one) closest to view
+   * the offset from the widget's origin to this view's origin
+   * @param aOffset the offset from this view's origin to the widget's origin
+   * @return the widget closest to this view; can be null because some view trees
+   * don't have widgets at all (e.g., printing), but if any view in the view tree
+   * has a widget, then it's safe to assume this will not return null
+   * XXX Remove this 'virtual' when gfx+widget are merged into gklayout;
+   * Mac widget depends on this method, which is BOGUS!
    */
-  NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget) = 0;
+  virtual nsIWidget* GetNearestWidget(nsPoint* aOffset);
 
   /**
-   * Create a widget to associate with this view. This is a helper
-   * function for SetWidget.
+   * Create a widget to associate with this view.
    * @param aWindowIID IID for Widget type that this view
    *        should have associated with it. if nsull, then no
    *        width will be created for this view
@@ -302,12 +309,12 @@ public:
    *        assistive technology like screen readers.
    * @return error status
    */
-  NS_IMETHOD CreateWidget(const nsIID &aWindowIID,
-                          nsWidgetInitData *aWidgetInitData = nsnull,
-        					        nsNativeWidget aNative = nsnull,
-                          PRBool aEnableDragDrop = PR_TRUE,
-                          PRBool aResetVisibility = PR_TRUE,
-                          nsContentType aWindowType = eContentTypeInherit) = 0;
+  nsresult CreateWidget(const nsIID &aWindowIID,
+                        nsWidgetInitData *aWidgetInitData = nsnull,
+                        nsNativeWidget aNative = nsnull,
+                        PRBool aEnableDragDrop = PR_TRUE,
+                        PRBool aResetVisibility = PR_TRUE,
+                        nsContentType aWindowType = eContentTypeInherit);
 
   /**
    * In 4.0, the "cutout" nature of a view is queryable.
@@ -323,22 +330,20 @@ public:
    */
   PRBool HasWidget() const { return mWindow != nsnull; }
 
-  // XXX Temporary for Bug #19416
-  NS_IMETHOD IgnoreSetPosition(PRBool aShouldIgnore) = 0;
-
 #ifdef DEBUG
   /**
    * Output debug info to FILE
    * @param out output file handle
    * @param aIndent indentation depth
+   * NOTE: virtual so that debugging tools not linked into gklayout can access it
    */
-  NS_IMETHOD  List(FILE* out, PRInt32 aIndent = 0) const = 0;
+  virtual void List(FILE* out, PRInt32 aIndent = 0) const;
 #endif // DEBUG
 
   /**
    * @result true iff this is the root view for its view manager
    */
-  virtual PRBool IsRoot() const = 0;
+  PRBool IsRoot() const;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
@@ -357,6 +362,8 @@ protected:
   nsRect            mDimBounds; // relative to parent
   float             mOpacity;
   PRUint32          mVFlags;
+
+  virtual ~nsIView() {}
 };
 
 #endif
