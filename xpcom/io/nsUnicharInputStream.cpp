@@ -21,6 +21,8 @@
  *   IBM Corp.
  */
 
+#ifndef XPCOM_STANDALONE
+
 #define NS_IMPL_IDS
 #include "nsIUnicharInputStream.h"
 #include "nsIByteBuffer.h"
@@ -322,3 +324,4 @@ NS_NewConverterStream(nsIUnicharInputStream** aInstancePtrResult,
   return it->QueryInterface(NS_GET_IID(nsIUnicharInputStream), 
                             (void **) aInstancePtrResult);
 }
+#endif /* XPCOM_STANDALONE */

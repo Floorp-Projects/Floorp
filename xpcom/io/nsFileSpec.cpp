@@ -34,9 +34,11 @@
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #define NS_IMPL_IDS
+#ifndef XPCOM_STANDALONE
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeDecoder.h"
+#endif /* XPCOM_STANDALONE */
 
 #include <string.h>
 #include <stdio.h>
@@ -827,7 +829,9 @@ nsFilePath nsFilePath::operator +(const char* inRelativeUnixPath) const
 //                                nsFileSpec implementation
 //========================================================================================
 
+#ifndef XPCOM_STANDALONE
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+#endif /* XPCOM_STANDALONE */
 
 #ifndef XP_MAC
 //----------------------------------------------------------------------------------------
@@ -1149,6 +1153,7 @@ PRBool nsFileSpec::IsChildOf(nsFileSpec &possibleParent)
 void nsFileSpec::GetFileSystemCharset(nsString & fileSystemCharset)
 //----------------------------------------------------------------------------------------
 {
+#ifndef XPCOM_STANDALONE
   // From mozilla/widget/src/windows/nsFileWidget.cpp
 
   static nsAutoString aCharset;
@@ -1164,6 +1169,7 @@ void nsFileSpec::GetFileSystemCharset(nsString & fileSystemCharset)
 		  aCharset.AssignWithConversion("ISO-8859-1");
   }
   fileSystemCharset = aCharset;
+#endif /* XPCOM_STANDALONE */
 }
 
 
@@ -1171,11 +1177,13 @@ void nsFileSpec::GetFileSystemCharset(nsString & fileSystemCharset)
 PRUnichar * nsFileSpec::ConvertFromFileSystemCharset(const char *inString)
 //----------------------------------------------------------------------------------------
 {
+  nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+  PRUnichar *outString = nsnull;
+#ifndef XPCOM_STANDALONE
   // From mozilla/widget/src/windows/nsFileWidget.cpp
 
   nsIUnicodeDecoder *aUnicodeDecoder = nsnull;
-  PRUnichar *outString = nsnull;
-  nsresult rv = NS_OK;
+  rv = NS_OK;
 
   // get file system charset and create a unicode encoder
   nsAutoString fileSystemCharset;
@@ -1203,6 +1211,7 @@ PRUnichar * nsFileSpec::ConvertFromFileSystemCharset(const char *inString)
     }
   }
   NS_IF_RELEASE(aUnicodeDecoder);
+#endif /* XPCOM_STANDALONE */
 
   return NS_SUCCEEDED(rv) ? outString : nsnull;
 }

@@ -49,9 +49,11 @@
 #include "nsInt64.h"
 
 #include "nsQuickSort.h"
+#ifndef XPCOM_STANDALONE
 #include "nsIZipReader.h"
-#include "nsIInputStream.h"
 #include "nsIPref.h"
+#endif /* XPCOM_STANDALONE */
+#include "nsIInputStream.h"
 
 #include "nsAutoLock.h"
 
@@ -583,11 +585,13 @@ public:
                        xptiWorkingSet* aWorkingSet);
 
 private:    
+#ifndef XPCOM_STANDALONE
     static XPTHeader* 
     ReadXPTFileFromOpenZip(nsIZipReader * zip,
                            nsIZipEntry* entry,
                            const char* entryName,
                            xptiWorkingSet* aWorkingSet);
+#endif /* XPCOM_STANDALONE */
 };
 
 /***************************************************************************/

@@ -32,6 +32,7 @@ xptiZipLoader::EnumerateZipEntries(nsILocalFile* file,
                                    xptiEntrySink* sink,
                                    xptiWorkingSet* aWorkingSet)
 {
+#ifndef XPCOM_STANDALONE
     NS_ASSERTION(file, "loser!");
     NS_ASSERTION(sink, "loser!");
     NS_ASSERTION(aWorkingSet, "loser!");
@@ -96,6 +97,9 @@ xptiZipLoader::EnumerateZipEntries(nsILocalFile* file,
     } while(1);
 
     return PR_TRUE;
+#else
+    return PR_FALSE;
+#endif /* XPCOM_STANDALONE */
 }
 
 // static
@@ -104,6 +108,7 @@ xptiZipLoader::ReadXPTFileFromZip(nsILocalFile* file,
                                   const char* entryName,
                                   xptiWorkingSet* aWorkingSet)
 {
+#ifndef XPCOM_STANDALONE
     nsCOMPtr<nsIZipReader> zip = 
                 do_CreateInstance(g_ZipReaderProgID);
     if(!zip)
@@ -130,8 +135,12 @@ xptiZipLoader::ReadXPTFileFromZip(nsILocalFile* file,
     }
 
     return ReadXPTFileFromOpenZip(zip, entry, entryName, aWorkingSet);
+#else
+    return nsnull;
+#endif /* XPCOM_STANDALONE */
 }
 
+#ifndef XPCOM_STANDALONE
 // static
 XPTHeader* 
 xptiZipLoader::ReadXPTFileFromOpenZip(nsIZipReader* zip,
@@ -219,6 +228,7 @@ xptiZipLoader::ReadXPTFileFromOpenZip(nsIZipReader* zip,
         delete [] whole;
     return header;
 }
+#endif /* XPCOM_STANDALONE */
 
 
 

@@ -20,12 +20,14 @@
  * Contributor(s): 
  */
 #include "nsIServiceManager.h"
+#ifndef XPCOM_STANDALONE
 #include "nsIPlatformCharset.h"
 #include "nsICharsetConverterManager.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
+#endif /* XPCOM_STANDALONE */
 
 /* nsFileSpec stuff. put here untill it got obsoleted */
 #include "nsFileSpec.h"
@@ -57,8 +59,10 @@ private:
      NS_IMETHOD PrepareEncoder();
      NS_IMETHOD PrepareDecoder();
      nsAutoString mFSCharset;
+#ifndef XPCOM_STANDALONE
      nsCOMPtr<nsIUnicodeEncoder> mEncoder;
      nsCOMPtr<nsIUnicodeDecoder> mDecoder;
+#endif /* XPCOM_STANDALONE */
 };
 
 
@@ -117,13 +121,17 @@ nsFSStringConversion gConverter;
 
 nsFSStringConversion::nsFSStringConversion()
 {
+#ifndef XPCOM_STANDALONE
    mEncoder = nsnull;
    mDecoder = nsnull;
+#endif /* XPCOM_STANDALONE */
 }
 NS_IMETHODIMP 
 nsFSStringConversion::PrepareFSCharset()
 {
-   nsresult res = NS_OK;
+   nsresult res = NS_ERROR_NOT_IMPLEMENTED;
+#ifndef XPCOM_STANDALONE
+   res = NS_OK;
    if(mFSCharset.Length() == 0)
    { 
      // lazy eval of the file system charset
@@ -133,12 +141,15 @@ nsFSStringConversion::PrepareFSCharset()
         res = pcharset->GetCharset(kPlatformCharsetSel_FileName, mFSCharset);
      } 
    }
+#endif /* XPCOM_STANDALONE */
    return res;
 }
 NS_IMETHODIMP 
 nsFSStringConversion::PrepareEncoder()
 {
-   nsresult res = NS_OK;
+   nsresult res = NS_ERROR_NOT_IMPLEMENTED;
+#ifndef XPCOM_STANDALONE
+   res = NS_OK;
    if(! mEncoder)
    {
        res = PrepareFSCharset();
@@ -153,12 +164,15 @@ nsFSStringConversion::PrepareEncoder()
                    "cannot find the unicode encoder");
        }
    }
+#endif /* XPCOM_STANDALONE */
    return res;
 }
 NS_IMETHODIMP 
 nsFSStringConversion::PrepareDecoder()
 {
-   nsresult res = NS_OK;
+   nsresult res = NS_ERROR_NOT_IMPLEMENTED;
+#ifndef XPCOM_STANDALONE
+   res = NS_OK;
    if(! mDecoder)
    {
        res = PrepareFSCharset();
@@ -173,12 +187,15 @@ nsFSStringConversion::PrepareDecoder()
                    "cannot find the unicode decoder");
        }
    }
+#endif /* XPCOM_STANDALONE */
    return res;
 }
 NS_IMETHODIMP 
 nsFSStringConversion::UCSToNewFS( const PRUnichar* aIn, char** aOut)
 {
-   nsresult res = PrepareEncoder();
+   nsresult res = NS_ERROR_NOT_IMPLEMENTED;
+#ifndef XPCOM_STANDALONE
+   res = PrepareEncoder();
    if(NS_SUCCEEDED(res)) 
    {
         PRInt32 inLength = nsCRT::strlen(aIn);
@@ -199,12 +216,15 @@ nsFSStringConversion::UCSToNewFS( const PRUnichar* aIn, char** aOut)
            }
         }
    }
+#endif /* XPCOM_STANDALONE */
    return res;
 }
 NS_IMETHODIMP 
 nsFSStringConversion::FSToNewUCS( const char* aIn, PRUnichar** aOut)
 {
-   nsresult res = PrepareDecoder();
+   nsresult res = NS_ERROR_NOT_IMPLEMENTED;
+#ifndef XPCOM_STANDALONE
+   res = PrepareDecoder();
    if(NS_SUCCEEDED(res)) 
    {
         PRInt32 inLength = nsCRT::strlen(aIn);
@@ -225,6 +245,7 @@ nsFSStringConversion::FSToNewUCS( const char* aIn, PRUnichar** aOut)
            }
         }
    }
+#endif /* XPCOM_STANDALONE */
    return res;
 }
 
