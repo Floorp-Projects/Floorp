@@ -135,10 +135,12 @@ class nsWindow : public nsBaseWidget,
    NS_IMETHOD              Paint( nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect);
 
+#if 0 // Handled by XP code now
    // Tooltips
    NS_IMETHOD SetTooltips( PRUint32 aNumberOfTips, nsRect *aTooltipAreas[]);   
    NS_IMETHOD RemoveTooltips();
    NS_IMETHOD UpdateTooltips( nsRect* aNewTips[]);
+#endif
 
    // Get a HWND or a HPS.
    virtual void  *GetNativeData( PRUint32 aDataType);
