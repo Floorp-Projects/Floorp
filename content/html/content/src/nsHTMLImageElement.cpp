@@ -28,16 +28,19 @@
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIJSScriptObject.h"
+#include "nsIJSNativeInitializer.h"
 
 // XXX nav attrs: suppress
 
 static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
+static NS_DEFINE_IID(kIJSNativeInitializerIID, NS_IJSNATIVEINITIALIZER_IID);
 
 class nsHTMLImageElement : public nsIDOMHTMLImageElement,
-                            public nsIScriptObjectOwner,
-                            public nsIDOMEventReceiver,
-                            public nsIHTMLContent,
-                           public nsIJSScriptObject
+                           public nsIScriptObjectOwner,
+                           public nsIDOMEventReceiver,
+                           public nsIHTMLContent,
+                           public nsIJSScriptObject,
+                           public nsIJSNativeInitializer
 {
 public:
   nsHTMLImageElement(nsIAtom* aTag);
@@ -105,6 +108,9 @@ public:
   virtual PRBool    Convert(JSContext *aContext, jsval aID);
   virtual void      Finalize(JSContext *aContext);
 
+  // nsIJSNativeInitializer
+  NS_IMETHOD        Initialize(JSContext* aContext, PRUint32 argc, jsval *argv);
+
 protected:
   nsGenericHTMLLeafElement mInner;
 };
@@ -153,6 +159,12 @@ nsHTMLImageElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     mRefCnt++;
     return NS_OK;
   }
+  if (aIID.Equals(kIJSNativeInitializerIID)) {
+    nsIJSNativeInitializer* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    AddRef();
+    return NS_OK;
+  }                                                             
   return NS_NOINTERFACE;
 }
 
@@ -349,6 +361,12 @@ void
 nsHTMLImageElement::Finalize(JSContext *aContext)
 {
   mInner.Finalize(aContext);
+}
+
+NS_IMETHODIMP    
+nsHTMLImageElement::Initialize(JSContext* aContext, PRUint32 argc, jsval *argv)
+{
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -35,6 +35,9 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIFocusableContent.h"
 #include "nsIEventStateManager.h"
+#include "nsGenericDOMHTMLCollection.h"
+#include "nsIJSScriptObject.h"
+#include "nsISelectElement.h"
 
 // Notify/query select frame for selectedIndex
 #include "nsIDocument.h"
@@ -47,33 +50,51 @@ static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFormIID, NS_IFORM_IID);
+static NS_DEFINE_IID(kISelectElementIID, NS_ISELECTELEMENT_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID); 
 static NS_DEFINE_IID(kIFocusableContentIID, NS_IFOCUSABLECONTENT_IID);
 
 class nsHTMLSelectElement;
 
 // nsOptionList
-class nsOptionList : public nsIDOMHTMLCollection, public nsIScriptObjectOwner {
+class nsOptionList : public nsGenericDOMHTMLCollection, 
+                     public nsIJSScriptObject
+{
 public:
-  nsOptionList();
-  nsOptionList(nsIDOMHTMLCollection* aCollection);
+  nsOptionList(nsHTMLSelectElement* aSelect);
   virtual ~nsOptionList();
 
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-  NS_IMETHOD ResetScriptObject();
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIDOMHTMLCollection interface
   NS_DECL_IDOMHTMLCOLLECTION
-  
-  nsVoidArray& GetElements() { return mElements; }
+
+  // nsIJSScriptObject interface
+  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, 
+                                jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, 
+                                   jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, 
+                                jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, 
+                                jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext);
+  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, jsval aID);
+  virtual void      Finalize(JSContext *aContext);
+
+  void AddOption(nsIContent* aOption);
+  void RemoveOption(nsIContent* aOption);
+
   void Clear();
+  void DropReference();
+
+  void GetOptions();
 
 private:
-  nsVoidArray  mElements;
-  void*        mScriptObject;
+  nsVoidArray mElements;
+  PRBool mDirty;
+  nsHTMLSelectElement* mSelect;
 };
 
 class nsHTMLSelectElement : public nsIDOMHTMLSelectElement,
@@ -81,7 +102,8 @@ class nsHTMLSelectElement : public nsIDOMHTMLSelectElement,
                             public nsIDOMEventReceiver,
                             public nsIHTMLContent,
                             public nsIFormControl,
-                            public nsIFocusableContent
+                            public nsIFocusableContent,
+                            public nsISelectElement
 {
 public:
   nsHTMLSelectElement(nsIAtom* aTag);
@@ -144,6 +166,10 @@ public:
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
 
+  // nsISelectElement
+  NS_IMETHOD AddOption(nsIContent* aContent);
+  NS_IMETHOD RemoveOption(nsIContent* aContent);
+
 protected:
   nsGenericHTMLContainerElement mInner;
   nsIWidget*    mWidget; // XXX this needs to go away when FindFrameWithContent is efficient
@@ -187,7 +213,11 @@ nsHTMLSelectElement::~nsHTMLSelectElement()
     mForm->RemoveElement(this, PR_FALSE); 
     NS_RELEASE(mForm);
   }
-  NS_IF_RELEASE(mOptions);
+  if (nsnull != mOptions) {
+    mOptions->Clear();
+    mOptions->DropReference();
+    NS_RELEASE(mOptions);
+  }
 }
 
 // ISupports
@@ -210,6 +240,11 @@ nsHTMLSelectElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   else if (aIID.Equals(kIFocusableContentIID)) {
     *aInstancePtr = (void*)(nsIFocusableContent*) this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else if (aIID.Equals(kISelectElementIID)) {
+    *aInstancePtr = (void*)(nsISelectElement*) this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -248,15 +283,55 @@ nsHTMLSelectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement, nsIDOMHTMLElement* aBefore)
 {
-  // XXX write me
-  return NS_OK;
+  nsresult result;
+  nsIDOMNode* ret;
+
+  if (nsnull != aBefore) {
+    result = mInner.AppendChild(aElement, &ret);
+    NS_IF_RELEASE(ret);
+  }
+  else {
+    // Just in case we're not the parent, get the parent of the reference
+    // element
+    nsIDOMNode* parent;
+    
+    result = aBefore->GetParentNode(&parent);
+    if (NS_SUCCEEDED(result) && (nsnull != parent)) {
+      result = parent->InsertBefore(aElement, aBefore, &ret);
+      NS_IF_RELEASE(ret);
+      NS_RELEASE(parent);
+    }
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP 
 nsHTMLSelectElement::Remove(PRInt32 aIndex) 
 {
-  // XXX write me
-  return NS_OK;
+  nsresult result = NS_OK;
+  nsIDOMNode* option;
+
+  if (nsnull == mOptions) {
+    Init();
+  }
+
+  result = mOptions->Item(aIndex, &option);
+  if (NS_SUCCEEDED(result) && (nsnull != option)) {
+    nsIDOMNode* parent;
+
+    result = option->GetParentNode(&parent);
+    if (NS_SUCCEEDED(result) && (nsnull != parent)) {
+      nsIDOMNode* ret;
+      parent->RemoveChild(option, &ret);
+      NS_IF_RELEASE(ret);
+      NS_RELEASE(parent);
+    }
+
+    NS_RELEASE(option);
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP
@@ -277,7 +352,7 @@ nsHTMLSelectElement::GetForm(nsIDOMHTMLFormElement** aForm)
 NS_IMETHODIMP
 nsHTMLSelectElement::GetOptions(nsIDOMHTMLCollection** aValue)
 {
-  if (!mOptions) {
+  if (nsnull == mOptions) {
     Init();
   }
   NS_ADDREF(mOptions);
@@ -308,12 +383,44 @@ NS_IMETHODIMP
 nsHTMLSelectElement::GetLength(PRUint32* aLength)
 {
   if (nsnull != mOptions) {
-    return mOptions->GetLength(aLength);
+    Init();
   }
-  else {
-    *aLength = 0;
-    return NS_OK;
+  
+  return mOptions->GetLength(aLength);
+}
+
+static PRBool
+FindDefaultSelected(nsIContent* aContent, PRInt32* aSelectedIndex)
+{
+  PRInt32 numChildren;
+  aContent->ChildCount(numChildren);
+  nsIContent* child = nsnull;
+  PRBool selected = PR_FALSE;
+
+  nsIDOMHTMLOptionElement* option = nsnull;
+  for (int i = 0; i < numChildren; i++) {
+    aContent->ChildAt(i, child);
+    if (nsnull != child) {
+      nsresult result = child->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
+      if ((NS_OK == result) && option) {
+        option->GetDefaultSelected(&selected); // DefaultSelected == HTML Selected
+        NS_RELEASE(option);
+        if (selected) {
+          NS_RELEASE(child);
+          break;
+        }
+        else {
+          *aSelectedIndex++;
+        }
+      } else if ((selected = FindDefaultSelected(child, aSelectedIndex)) ==  PR_TRUE) {
+        NS_RELEASE(child);
+        break;
+      }
+      NS_RELEASE(child);
+    }
   }
+ 
+  return selected;
 }
 
 //NS_IMPL_INT_ATTR(nsHTMLSelectElement, SelectedIndex, selectedindex)
@@ -344,7 +451,8 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
         nsIDOMNode* node = nsnull;
         if ((NS_OK == options->Item(i, &node)) && node) {
           nsIDOMHTMLOptionElement* option = nsnull;
-          if (NS_OK == node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option)) {
+          if (NS_OK == node->QueryInterface(kIDOMHTMLOptionElementIID, (void**
+)&option)) {
             PRBool selected;
             option->GetDefaultSelected(&selected); // DefaultSelected == HTML Selected
             NS_RELEASE(option);
@@ -360,6 +468,7 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
       NS_RELEASE(options);
     }
   }
+
   return NS_OK;
 }
 
@@ -424,6 +533,26 @@ nsHTMLSelectElement::RemoveFocus(nsIPresContext* aPresContext)
 {
   // XXX Should focus only this presContext
   Blur();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLSelectElement::AddOption(nsIContent* aContent)
+{
+  if (nsnull != mOptions) {
+    mOptions->AddOption(aContent);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
+{
+  if (nsnull != mOptions) {
+    mOptions->RemoveOption(aContent);
+  }
+
   return NS_OK;
 }
 
@@ -557,6 +686,20 @@ nsHTMLSelectElement::SetForm(nsIDOMHTMLFormElement* aForm)
   return result;
 }
 
+NS_IMETHODIMP
+nsHTMLSelectElement::Init()
+{
+  if (nsnull == mOptions) {
+    mOptions = new nsOptionList(this);
+    NS_ADDREF(mOptions);
+  }
+
+  return NS_OK;
+}
+
+// nsOptionList implementation
+// XXX this was modified form nsHTMLFormElement.cpp. We need a base class implementation
+
 static
 void GetOptionsRecurse(nsIContent* aContent, nsVoidArray& aOptions)
 {
@@ -578,121 +721,69 @@ void GetOptionsRecurse(nsIContent* aContent, nsVoidArray& aOptions)
   }
 }
 
-NS_IMETHODIMP
-nsHTMLSelectElement::Init()
+void 
+nsOptionList::GetOptions()
 {
-  if (mOptions) {
-    mOptions->Clear();
-    NS_RELEASE(mOptions);
-  }
-  mOptions = new nsOptionList();
-  NS_ADDREF(mOptions);
-  GetOptionsRecurse(this, mOptions->GetElements());
-
-  return NS_OK;
+  Clear();
+  GetOptionsRecurse(mSelect, mElements);
+  mDirty = PR_FALSE;
 }
 
-// nsOptionList implementation
-// XXX this was modified form nsHTMLFormElement.cpp. We need a base class implementation
-
-nsOptionList::nsOptionList() 
+nsOptionList::nsOptionList(nsHTMLSelectElement* aSelect) 
 {
-  mRefCnt = 0;
-  mScriptObject = nsnull;
-}
-
-nsOptionList::nsOptionList(nsIDOMHTMLCollection* aCollection) 
-{
-  mRefCnt = 0;
-  mScriptObject = nsnull;
-  if (aCollection) {
-    PRUint32 length = 0;
-    aCollection->GetLength(&length);
-    nsIDOMNode* node;
-    for (PRUint32 elemX = 0; elemX < length; elemX++) {
-      nsresult result = aCollection->Item(elemX, &node); // this assumes an ADDREF
-      if ((NS_OK == result) && node) {
-        nsIDOMHTMLOptionElement* option = nsnull;
-        result = node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
-        if ((NS_OK == result) && option) {
-          mElements.AppendElement(node); // keep the node ref count
-          NS_RELEASE(option);
-        }
-      }
-    }
-  }
+  mDirty = PR_TRUE;
+  // Do not maintain a reference counted reference. When
+  // the select goes away, it will let us know.
+  mSelect = aSelect;
 }
 
 nsOptionList::~nsOptionList()
 {
-  Clear();
+  DropReference();
 }
 
-
-nsresult nsOptionList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+void
+nsOptionList::DropReference()
 {
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
-  static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-  if (aIID.Equals(kIDOMHTMLCollectionIID)) {
-    *aInstancePtr = (void*)(nsIDOMHTMLCollection*)this;
-    AddRef();
+  // Drop our (non ref-counted) reference
+  mSelect = nsnull;
+}
+
+NS_IMPL_ADDREF_INHERITED(nsOptionList, nsGenericDOMHTMLCollection)
+NS_IMPL_RELEASE_INHERITED(nsOptionList, nsGenericDOMHTMLCollection)
+
+nsresult
+nsOptionList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (aIID.Equals(kIJSScriptObjectIID)) {
+    *aInstancePtr = (void*)(nsIJSScriptObject*) this;
+    NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIScriptObjectOwnerIID)) {
-    *aInstancePtr = (void*)(nsIScriptObjectOwner*)this;
-    AddRef();
-    return NS_OK;
+  else {
+    return nsGenericDOMHTMLCollection::QueryInterface(aIID, aInstancePtr);
   }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMHTMLCollection*)this;
-    AddRef();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(nsOptionList)
-NS_IMPL_RELEASE(nsOptionList)
-
-
-nsresult nsOptionList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptHTMLCollection(aContext, (nsISupports *)(nsIDOMHTMLCollection *)this, nsnull, (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-  return res;
-}
-
-NS_IMETHODIMP
-nsOptionList::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-nsresult nsOptionList::ResetScriptObject()
-{
-  mScriptObject = nsnull;
-  return NS_OK;
 }
 
 // nsIDOMHTMLCollection interface
+
 NS_IMETHODIMP    
 nsOptionList::GetLength(PRUint32* aLength)
 {
-  *aLength = mElements.Count();
+  if (mDirty && (nsnull != mSelect)) {
+    GetOptions();
+  }
+  *aLength = (PRUint32)mElements.Count();
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsOptionList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
+  if (mDirty && (nsnull != mSelect)) {
+    GetOptions();
+  }
   PRUint32 length = 0;
   GetLength(&length);
   if (aIndex >= length) {
@@ -707,6 +798,9 @@ nsOptionList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 NS_IMETHODIMP 
 nsOptionList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
 {
+  if (mDirty && (nsnull != mSelect)) {
+    GetOptions();
+  }
   PRUint32 count = mElements.Count();
   nsresult result = NS_OK;
 
@@ -733,6 +827,140 @@ nsOptionList::NamedItem(const nsString& aName, nsIDOMNode** aReturn)
   }
   
   return result;
+}
+
+void 
+nsOptionList::AddOption(nsIContent* aOption)
+{
+  // Just mark ourselves as dirty. The next time someone
+  // makes a call that requires us to look at the elements
+  // list, we'll recompute it.
+  mDirty = PR_TRUE;
+}
+
+void 
+nsOptionList::RemoveOption(nsIContent* aOption)
+{
+  nsIDOMHTMLOptionElement* option;
+
+  if ((nsnull != aOption) &&
+      NS_SUCCEEDED(aOption->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option))) {
+    if (mElements.RemoveElement(option)) {
+      nsresult result;
+      NS_RELEASE2(option, result);
+    }
+    NS_RELEASE(option);
+  }
+}
+
+PRBool    
+nsOptionList::AddProperty(JSContext *aContext, 
+                          jsval aID, 
+                          jsval *aVp)
+{
+  return PR_TRUE;
+}
+ 
+PRBool    
+nsOptionList::DeleteProperty(JSContext *aContext, 
+                             jsval aID, 
+                             jsval *aVp)
+{
+  return PR_TRUE;
+}
+ 
+PRBool    
+nsOptionList::GetProperty(JSContext *aContext, 
+                          jsval aID, 
+                          jsval *aVp)
+{
+  return PR_TRUE;
+}
+
+PRBool    
+nsOptionList::SetProperty(JSContext *aContext, 
+                          jsval aID, 
+                          jsval *aVp)
+{
+  // XXX How about some error reporting and error
+  // propogation in this method???
+
+  if (JSVAL_IS_INT(aID) && (nsnull != mSelect)) {
+    PRInt32 index = JSVAL_TO_INT(aID);
+    nsresult result;
+
+    // Update the options list
+    if (mDirty) {
+      GetOptions();
+    }
+    
+    PRInt32 length = mElements.Count();
+
+    // If the index is within range
+    if ((index > 0) && (index <= length)) {
+
+      // if the value is null, remove this option
+      if (JSVAL_IS_NULL(*aVp)) {
+        mSelect->Remove(index);
+      }
+      else {
+        JSObject* jsobj = JSVAL_TO_OBJECT(*aVp); 
+        JSClass* jsclass = JS_GetClass(aContext, jsobj);
+        if ((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE)) {
+          nsISupports *supports = (nsISupports *)JS_GetPrivate(aContext, jsobj);
+          nsIDOMNode* option; 
+          nsIDOMNode* parent;
+          nsIDOMNode* refChild;
+          nsIDOMNode* ret;
+
+          if (NS_OK == supports->QueryInterface(kIDOMNodeIID, (void **)&option)) {
+            if (index == length) {
+              result = mSelect->AppendChild(option, &ret);
+              NS_IF_RELEASE(ret);
+            }
+            else {
+              refChild = (nsIDOMNode*)mElements.ElementAt(index);
+              if (nsnull != refChild) {
+                result = refChild->GetParentNode(&parent);
+                if (NS_SUCCEEDED(result) && (nsnull != parent)) {
+                  
+                  result = parent->ReplaceChild(option, refChild, &ret);
+                  NS_IF_RELEASE(ret);
+                  NS_RELEASE(parent);
+                }
+              }            
+            }
+            NS_RELEASE(option);
+          }
+        }
+      }
+    }
+  }
+
+  return PR_TRUE;
+}
+
+PRBool    
+nsOptionList::EnumerateProperty(JSContext *aContext)
+{
+  return PR_TRUE;
+}
+
+PRBool    
+nsOptionList::Resolve(JSContext *aContext, jsval aID)
+{
+  return PR_TRUE;
+}
+
+PRBool    
+nsOptionList::Convert(JSContext *aContext, jsval aID)
+{
+  return PR_TRUE;
+}
+
+void      
+nsOptionList::Finalize(JSContext *aContext)
+{
 }
 
 void
