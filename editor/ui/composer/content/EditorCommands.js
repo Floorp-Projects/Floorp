@@ -62,6 +62,18 @@ function EditorOnLoad() {
     return;
 }
   
+function TextEditorOnLoad() {
+    // See if argument was passed.
+    if ( window.arguments && window.arguments[0] ) {
+        // Opened via window.openDialog with URL as argument.    
+        // Put argument where EditorStartup expects it.
+        document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
+    }
+    // Continue with normal startup.
+    EditorStartup( 'text', document.getElementById("content-frame"));
+    return;
+}
+  
 function EditorStartup(editorType, editorElement)
 {
   dump("Doing Editor Startup...\n");
