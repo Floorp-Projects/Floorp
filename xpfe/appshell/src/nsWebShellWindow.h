@@ -25,12 +25,12 @@
 #include "nsGUIEvent.h"
 #include "nsIWebShell.h"  
 #include "nsIDocumentLoaderObserver.h"
+#include "nsIDocumentObserver.h"
 #include "nsVoidArray.h"
 
 // can't use forward class decl's because of template bugs on Solaris 
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
-#include "nsIXULCommand.h"
 
 #include "nsCOMPtr.h"
 
@@ -46,9 +46,12 @@ class nsIDOMElement;
 class nsIStreamObserver;
 class nsIDocument;
 
+class nsIContent;
+
 class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIWebShellContainer,
-                         public nsIDocumentLoaderObserver
+                         public nsIDocumentLoaderObserver,
+                         public nsIDocumentObserver
 {
 public:
   nsWebShellWindow();
@@ -99,6 +102,55 @@ public:
   NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer);
   NS_IMETHOD OnConnectionsComplete();
 
+  // nsIDocumentObserver
+  NS_IMETHOD BeginUpdate(nsIDocument *aDocument);
+  NS_IMETHOD EndUpdate(nsIDocument *aDocument);
+  NS_IMETHOD BeginLoad(nsIDocument *aDocument);
+  NS_IMETHOD EndLoad(nsIDocument *aDocument);
+  NS_IMETHOD BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell);
+  NS_IMETHOD EndReflow(nsIDocument *aDocument, nsIPresShell* aShell);
+  NS_IMETHOD ContentChanged(nsIDocument *aDocument,
+                            nsIContent* aContent,
+                            nsISupports* aSubContent);
+  NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
+                              nsIContent*  aContent,
+                              nsIAtom*     aAttribute,
+                              PRInt32      aHint);
+  NS_IMETHOD ContentAppended(nsIDocument *aDocument,
+                             nsIContent* aContainer,
+                             PRInt32     aNewIndexInContainer);
+  NS_IMETHOD ContentInserted(nsIDocument *aDocument,
+                             nsIContent* aContainer,
+                             nsIContent* aChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
+                             nsIContent* aContainer,
+                             nsIContent* aOldChild,
+                             nsIContent* aNewChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
+                            nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer);
+  NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
+                             nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
+                               nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
+                                            nsIStyleSheet* aStyleSheet,
+                                            PRBool aDisabled);
+  NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint);
+  NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule);
+  NS_IMETHOD StyleRuleRemoved(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule);
+  NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
+
 protected:
   void ExecuteJavaScriptString(nsString& aJavaScript);
 
@@ -109,6 +161,7 @@ protected:
   nsCOMPtr<nsIDOMNode>     FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
   nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsString & aWebShellName);
   nsCOMPtr<nsIDOMNode>     GetParentNodeFromDOMDoc(nsIDOMDocument * aDOMDoc);
+  NS_IMETHOD               CreateMenu(nsIMenuBar * aMenuBar, nsIDOMNode * aMenuNode, nsString & aMenuName);
 
   nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
   void                     ExecuteStartupCode();
@@ -121,9 +174,6 @@ protected:
   nsIWidget*              mWindow;
   nsIWebShell*            mWebShell;
   nsIWidgetController*    mController;
-  nsIDOMCharacterData*    mStatusText;
-  nsIDOMHTMLInputElement* mURLBarText;
-  nsIDOMHTMLImageElement* mThrobber;
 
   nsVoidArray mMenuDelegates;
 };

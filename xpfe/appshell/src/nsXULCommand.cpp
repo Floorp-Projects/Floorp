@@ -17,10 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsIDOMNode.h"
-#include "nsIDOMEvent.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLButtonElement.h"
+#include "nsIMenuItem.h"
 
 // FOr JS Execution
 #include "nsIScriptContextOwner.h"
@@ -29,39 +26,30 @@
 
 #include "nsXULCommand.h"
 
-#define DEBUGCMDS 0
+#define DEBUG_MENUSDEL 1
 //----------------------------------------------------------------------
 
 // Class IID's
-static NS_DEFINE_IID(kXULCommandCID,           NS_XULCOMMAND_CID);
 
 // IID's
-static NS_DEFINE_IID(kIXULCommandIID,          NS_IXULCOMMAND_IID);
-static NS_DEFINE_IID(kIFactoryIID,             NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIDOMNodeIID,             NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDOMMouseListenerIID,    NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIDOMKeyListenerIID,      NS_IDOMKEYLISTENER_IID);
-static NS_DEFINE_IID(kIDOMEventReceiverIID,    NS_IDOMEVENTRECEIVER_IID);
-static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
-static NS_DEFINE_IID(kIDOMHTMLButtonElement,   NS_IDOMHTMLBUTTONELEMENT_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID,  NS_ISCRIPTCONTEXTOWNER_IID);
+static NS_DEFINE_IID(kIXULCommandIID,          NS_IXULCOMMAND_IID);
 
 //----------------------------------------------------------------------
 
 nsXULCommand::nsXULCommand()
 {
   NS_INIT_REFCNT();
-  mIsEnabled = PR_FALSE;
+  mMenuItem  = nsnull;
+
 }
 
 //----------------------------------------------------------------------
 nsXULCommand::~nsXULCommand()
 {
-  while (mSrcWidgets.Count() > 0) {
-    nsCOMPtr<nsIDOMNode> node = dont_AddRef(NS_STATIC_CAST(nsIDOMNode*,mSrcWidgets.ElementAt(0)));
-    mSrcWidgets.RemoveElementAt(0);
-  }
+  NS_IF_RELEASE(mMenuItem);
 }
 
 
@@ -77,106 +65,60 @@ nsXULCommand::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
+
+  if (aIID.Equals(kIMenuListenerIID)) {
+    *aInstancePtr = (void*)(nsIMenuListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kIXULCommandIID)) {
     *aInstancePtr = (void*)(nsIXULCommand*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDOMMouseListenerIID)) {
-    NS_ADDREF_THIS(); // Increase reference count for caller
-    *aInstancePtr = (void *)((nsIDOMMouseListener*)this);
-    return NS_OK;
-  }
-  if (aIID.Equals(kIDOMKeyListenerIID)) {
-    NS_ADDREF_THIS(); // Increase reference count for caller
-    *aInstancePtr = (void *)((nsIDOMKeyListener*)this);
-    return NS_OK;
-  }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIXULCommand*)this;
+    *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  return rv;
+  return NS_ERROR_NO_INTERFACE;
 }
 
 
-// XUL UI Objects
 //----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::SetName(const nsString &aName)
+NS_IMETHODIMP nsXULCommand::GetDOMElement(nsIDOMElement ** aDOMElement)
 {
-  mName = aName;
+  *aDOMElement = mDOMElement;
   return NS_OK;
-}
 
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::GetName(nsString &aName) const
-{
-  aName = mName;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::AddUINode(nsIDOMNode * aNode)
-{
-  NS_PRECONDITION(nsnull != aNode, "adding event listener to null node");
-
-  nsCOMPtr<nsIDOMEventReceiver> receiver ( aNode );
-  if ( receiver ) {
-    receiver->AddEventListener((nsIDOMMouseListener*)this, kIDOMMouseListenerIID);
-    receiver->AddEventListener((nsIDOMKeyListener*)this, kIDOMKeyListenerIID);
-    mSrcWidgets.AppendElement(aNode);
-    NS_ADDREF(aNode);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
-}
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::RemoveUINode(nsIDOMNode * aCmd)
-{
-  PRInt32 index = mSrcWidgets.IndexOf(aCmd);
-  if (index > 0) {
-    mSrcWidgets.RemoveElementAt(index);
-  }
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::SetEnabled(PRBool aIsEnabled)
-{
-  mIsEnabled = aIsEnabled;
-  PRInt32 i, n = mSrcWidgets.Count();
-  for (i = 0; i < n; i++) {
-    nsCOMPtr<nsIDOMNode> node = dont_AddRef(NS_STATIC_CAST(nsIDOMNode*,mSrcWidgets.ElementAt(i)));
-    nsCOMPtr<nsIDOMHTMLInputElement> input ( do_QueryInterface(node) );
-    //*** rewrite this part to set an attribute on a nsIDOMElement
-    if ( input ) {
-      input->SetDisabled(aIsEnabled);
-    } else {
-      nsCOMPtr<nsIDOMHTMLButtonElement> btn ( do_QueryInterface(node) );
-      if ( btn )
-        btn->SetDisabled(!aIsEnabled);
-    }
-    //***
-  }
-  
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::GetEnabled(PRBool & aIsEnabled)
-{
-  //*** rewrite this part to get an attribute on a nsIDOMElement
-  aIsEnabled = mIsEnabled;
-  return NS_OK;
 }
 
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXULCommand::SetCommand(const nsString & aStrCmd)
 {
   mCommandStr = aStrCmd;
+  return NS_OK;
+}
+
+
+//----------------------------------------------------------------------
+NS_IMETHODIMP nsXULCommand::SetMenuItem(nsIMenuItem * aMenuItem)
+{
+  mMenuItem = aMenuItem;
+  NS_ADDREF(mMenuItem);
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+NS_IMETHODIMP nsXULCommand::AttributeHasBeenSet(const nsString & aAttr)
+{
+  nsAutoString value;
+  mDOMElement->GetAttribute(aAttr, value);
+  if (DEBUG_MENUSDEL) printf("New value is [%s]=[%s]\n", aAttr.ToNewCString(), value.ToNewCString());
+  if (aAttr.Equals("disabled")) {
+    mMenuItem->SetEnabled((PRBool)(!value.Equals("true")));
+  }
   return NS_OK;
 }
 
@@ -187,7 +129,7 @@ NS_IMETHODIMP nsXULCommand::DoCommand()
   mWebShell->GetName( &name);
   nsAutoString str(name);
 
-  if (DEBUGCMDS) printf("DoCommand -  mWebShell is [%s] 0x%x\n", str.ToNewCString(), mWebShell);
+  if (DEBUG_MENUSDEL) printf("DoCommand -  mWebShell is [%s] 0x%x\n", str.ToNewCString(), mWebShell);
   return ExecuteJavaScriptString(mWebShell, mCommandStr);
 }
 
@@ -227,125 +169,16 @@ NS_IMETHODIMP nsXULCommand::ExecuteJavaScriptString(nsIWebShell* aWebShell, nsSt
       PRBool isUndefined = PR_FALSE;
       nsString rVal("xxx");
       scriptContext->EvaluateString(aJavaScript, url, 0, rVal, &isUndefined);
-      if (DEBUGCMDS) printf("EvaluateString - %d [%s]\n", isUndefined, rVal.ToNewCString());
+      if (DEBUG_MENUSDEL) printf("EvaluateString - %d [%s]\n", isUndefined, rVal.ToNewCString());
     }
 
   }
   return status;
 }
 
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::SetTooltip(const nsString &aTip)
-{
-  mTooltip = aTip;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::GetTooltip(nsString &aTip) const
-{
-  aTip = mTooltip;
-  return NS_OK;
-}
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::SetDescription(const nsString &aDescription)
-{
-  mDescription = aDescription;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::GetDescription(nsString &aDescription) const
-{
-  aDescription = mDescription;
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-//-- nsIDOMMouseListener
-//-----------------------------------------------------------------
-
-//-----------------------------------------------------------------
-nsresult nsXULCommand::ProcessEvent(nsIDOMEvent* aEvent)
-{
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-nsresult nsXULCommand::MouseUp(nsIDOMEvent* aMouseEvent)
-{
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-nsresult nsXULCommand::MouseDown(nsIDOMEvent* aMouseEvent)
-{
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-nsresult nsXULCommand::MouseClick(nsIDOMEvent* aMouseEvent)
-{
-  if (DEBUGCMDS) printf("Executing [%s]\n", mCommandStr.ToNewCString());
-  if (mIsEnabled) {
-    DoCommand();
-  }
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-nsresult nsXULCommand::MouseDblClick(nsIDOMEvent* aMouseEvent)
-{
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-nsresult nsXULCommand::MouseOver(nsIDOMEvent* aMouseEvent)
-{
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-nsresult nsXULCommand::MouseOut(nsIDOMEvent* aMouseEvent)
-{
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-//-----------------------------------------------------------------
-// nsIDOMKeyListener 
-//-----------------------------------------------------------------
-nsresult nsXULCommand::KeyDown(nsIDOMEvent* aKeyEvent)
-{
-  PRUint32 type;
-  aKeyEvent->GetKeyCode(&type);
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-nsresult nsXULCommand::KeyUp(nsIDOMEvent* aKeyEvent)
-{
-  PRUint32 type;
-  aKeyEvent->GetKeyCode(&type);
-  if (nsIDOMEvent::VK_RETURN != type) {
-    return NS_OK;
-  }
-  nsCOMPtr<nsIDOMHTMLInputElement> input ( do_QueryInterface(mDOMElement) );
-  if ( input ) {
-    nsAutoString value;
-    input->GetValue(value);
-    //printf("Value [%s]\n", value.ToNewCString());
-    mWebShell->LoadURL(value);
-  }
-  return NS_OK;
-}
-
-//-----------------------------------------------------------------
-nsresult nsXULCommand::KeyPress(nsIDOMEvent* aKeyEvent)
-{
-  return NS_OK;
-}
-  
+/////////////////////////////////////////////////////////////////////////
+// nsIMenuListener Method(s)
+/////////////////////////////////////////////////////////////////////////
 
 nsEventStatus nsXULCommand::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
@@ -353,135 +186,3 @@ nsEventStatus nsXULCommand::MenuSelected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eConsumeNoDefault;
 }
 
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-// Factory code for creating nsXULCommand's
-
-class nsXULCommandFactory : public nsIFactory
-{
-public:
-  nsXULCommandFactory();
-  virtual ~nsXULCommandFactory();
-
-  // nsISupports methods
-  NS_IMETHOD QueryInterface(const nsIID &aIID, void **aResult);
-  NS_IMETHOD_(nsrefcnt) AddRef(void);
-  NS_IMETHOD_(nsrefcnt) Release(void);
-
-  // nsIFactory methods
-  NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                            const nsIID &aIID,
-                            void **aResult);
-
-  NS_IMETHOD LockFactory(PRBool aLock);
-
-private:
-  nsrefcnt  mRefCnt;
-};
-
-
-nsXULCommandFactory::nsXULCommandFactory()
-{
-  mRefCnt = 0;
-}
-
-nsXULCommandFactory::~nsXULCommandFactory()
-{
-  NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-}
-
-nsresult
-nsXULCommandFactory::QueryInterface(const nsIID &aIID, void **aResult)
-{
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aResult = NULL;
-
-  if (aIID.Equals(kISupportsIID)) {
-    *aResult = (void *)(nsISupports*)this;
-  } else if (aIID.Equals(kIFactoryIID)) {
-    *aResult = (void *)(nsIFactory*)this;
-  }
-
-  if (*aResult == NULL) {
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF_THIS();  // Increase reference count for caller
-  return NS_OK;
-}
-
-nsrefcnt
-nsXULCommandFactory::AddRef()
-{
-  return ++mRefCnt;
-}
-
-nsrefcnt
-nsXULCommandFactory::Release()
-{
-  if (--mRefCnt == 0) {
-    delete this;
-    return 0; // Don't access mRefCnt after deleting!
-  }
-  return mRefCnt;
-}
-
-nsresult
-nsXULCommandFactory::CreateInstance(nsISupports *aOuter,
-                                  const nsIID &aIID,
-                                  void **aResult)
-{
-  nsresult rv;
-  nsXULCommand *inst;
-
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = NULL;
-  if (nsnull != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    goto done;
-  }
-
-  NS_NEWXPCOM(inst, nsXULCommand);
-  if (inst == NULL) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
-
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-done:
-  return rv;
-}
-
-nsresult
-nsXULCommandFactory::LockFactory(PRBool aLock)
-{
-  // Not implemented in simplest case.
-  return NS_OK;
-}
-
-extern "C" nsresult
-NS_NewXULCommandFactory(nsIFactory** aFactory)
-{
-  nsresult rv = NS_OK;
-  nsIFactory* inst = new nsXULCommandFactory();
-  if (nsnull == inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    NS_ADDREF(inst);
-  }
-  *aFactory = inst;
-  return rv;
-}
