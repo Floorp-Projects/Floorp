@@ -142,6 +142,8 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     char *serverTypeProgID =
       PR_smprintf("component://netscape/messenger/server&type=%s", serverType);
     
+    PR_FREEIF(serverType);
+    
     nsIMsgIncomingServer *server;
     rv = nsComponentManager::CreateInstance(serverTypeProgID,
                                             nsnull,
