@@ -1211,6 +1211,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
           }
   
         } else {
+          // XXX Don't assume default. Only use what is in 'quotes' property
           contentString = '\"';
         }
       }
@@ -4695,12 +4696,14 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    isFixedPositioned = PR_FALSE;
   PRBool    isFloating = PR_FALSE;
+  PRBool    isRelativePositioned = PR_FALSE;
   PRBool    canBePositioned = PR_TRUE;
   PRBool    frameHasBeenInitialized = PR_FALSE;
   nsIFrame* newFrame = nsnull;  // the frame we construct
   PRBool    isReplaced = PR_FALSE;
   PRBool    addToHashTable = PR_TRUE;
   PRBool    isFloaterContainer = PR_FALSE;
+  PRBool    isPositionedContainingBlock = PR_FALSE;
   nsresult  rv = NS_OK;
 
   if (nsLayoutAtoms::textTagName == aTag) {
@@ -4732,8 +4735,13 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
       else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
         isFixedPositioned = PR_TRUE;
       }
-      else if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-        isFloating = PR_TRUE;
+      else {
+        if (NS_STYLE_FLOAT_NONE != display->mFloats) {
+          isFloating = PR_TRUE;
+        }
+        if (NS_STYLE_POSITION_RELATIVE == position->mPosition) {
+          isRelativePositioned = PR_TRUE;
+        }
       }
 
       // Create a frame based on the tag
@@ -4849,6 +4857,9 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
 
         // A form frame is a block frame therefore it can contain floaters
         isFloaterContainer = PR_TRUE;
+
+        // See if it's a containing block for absolutely positioned elements
+        isPositionedContainingBlock = isAbsolutelyPositioned || isFixedPositioned || isRelativePositioned;
       }
       else if (nsHTMLAtoms::frameset == aTag) {
         if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
@@ -4930,7 +4941,24 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
       // Process the child content if requested
       nsFrameItems childItems;
       if (processChildren) {
-        if (isFloaterContainer) {
+        if (isPositionedContainingBlock) {
+          // The area frame becomes a container for child frames that are
+          // absolutely positioned
+          nsFrameConstructorSaveState absoluteSaveState;
+          aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
+          
+          // Process the child frames
+          rv = ProcessChildren(aPresShell, aPresContext, aState, aContent, newFrame,
+                               PR_TRUE, childItems, PR_FALSE);
+          
+          // Set the frame's absolute list if there were any absolutely positioned children
+          if (aState.mAbsoluteItems.childList) {
+            newFrame->SetInitialChildList(aPresContext,
+                                          nsLayoutAtoms::absoluteList,
+                                          aState.mAbsoluteItems.childList);
+          }
+        }
+        else if (isFloaterContainer) {
           // If the frame can contain floaters, then push a floater
           // containing block
           PRBool haveFirstLetterStyle, haveFirstLineStyle;

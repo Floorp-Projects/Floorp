@@ -31,11 +31,6 @@ class nsSpaceManager;
 struct nsStyleDisplay;
 struct nsStylePosition;
 
-/**
- * Child list name indices
- * @see #GetAdditionalChildListName()
- */
-#define NS_AREA_FRAME_ABSOLUTE_LIST_INDEX   (NS_BLOCK_FRAME_LAST_LIST_INDEX + 1)
 
 /**
  * The area frame has an additional named child list:
@@ -49,38 +44,6 @@ public:
   friend nsresult NS_NewAreaFrame(nsIPresShell* aPresShell, nsIFrame** aResult, PRUint32 aFlags);
   
   // nsIFrame
-  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
-
-  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
-                          nsIPresShell&   aPresShell,
-                          nsIAtom*        aListName,
-                          nsIFrame*       aPrevFrame,
-                          nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
-                         nsIPresShell&   aPresShell,
-                         nsIAtom*        aListName,
-                         nsIFrame*       aOldFrame);
-
-  NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
-                                        nsIAtom** aListName) const;
-
-  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
-                        nsIAtom*        aListName,
-                        nsIFrame**      aFirstChild) const;
-
-  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus);
-
-  NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
 
   /**
    * Get the "type" of the frame
@@ -97,8 +60,6 @@ public:
 protected:
   nsAreaFrame();
 
-private:
-  nsAbsoluteContainingBlock mAbsoluteContainer;
 };
 
 #endif /* nsAreaFrame_h___ */

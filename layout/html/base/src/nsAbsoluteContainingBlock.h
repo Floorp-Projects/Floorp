@@ -100,6 +100,8 @@ public:
   void DestroyFrames(nsIFrame*       aDelegatingFrame,
                      nsIPresContext* aPresContext);
 
+  PRBool  HasAbsoluteFrames() {return mAbsoluteFrames.NotEmpty();}
+
 protected:
   nsresult ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
                                nsIPresContext*          aPresContext,

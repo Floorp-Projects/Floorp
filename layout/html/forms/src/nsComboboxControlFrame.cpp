@@ -2348,7 +2348,7 @@ nsComboboxControlFrame::GetAdditionalChildListName(PRInt32   aIndex,
    // of the combox's children because it would take up space, when it is suppose to
    // be floating above the display.
   NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
-  if (aIndex <= NS_AREA_FRAME_ABSOLUTE_LIST_INDEX) {
+  if (aIndex <= NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX) {
     return nsAreaFrame::GetAdditionalChildListName(aIndex, aListName);
   }
   

@@ -24,6 +24,7 @@
 
 #include "nsHTMLContainerFrame.h"
 #include "nsHTMLParts.h"
+#include "nsAbsoluteContainingBlock.h"
 
 class nsBlockReflowState;
 class nsBulletFrame;
@@ -35,9 +36,10 @@ class nsFirstLineFrame;
  * Child list name indices
  * @see #GetAdditionalChildListName()
  */
-#define NS_BLOCK_FRAME_FLOATER_LIST_INDEX 0
-#define NS_BLOCK_FRAME_BULLET_LIST_INDEX  1
-#define NS_BLOCK_FRAME_LAST_LIST_INDEX    NS_BLOCK_FRAME_BULLET_LIST_INDEX
+#define NS_BLOCK_FRAME_FLOATER_LIST_INDEX   0
+#define NS_BLOCK_FRAME_BULLET_LIST_INDEX    1
+#define NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX  2
+#define NS_BLOCK_FRAME_LAST_LIST_INDEX      NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX
 
 /**
  * Additional frame-state bits. There are more of these bits
@@ -54,7 +56,13 @@ class nsFirstLineFrame;
 
 extern const nsIID kBlockFrameCID;
 
-// Base class for block and inline frames
+/*
+ * Base class for block and inline frames.
+ * The block frame has an additional named child list:
+ * - "Absolute-list" which contains the absolutely positioned frames
+ *
+ * @see nsLayoutAtoms::absoluteList
+ */ 
 class nsBlockFrame : public nsBlockFrameSuper
 {
 public:
@@ -429,6 +437,10 @@ protected:
   nsBulletFrame* mBullet;
 
   friend class nsBlockReflowState;
+
+private:
+  nsAbsoluteContainingBlock mAbsoluteContainer;
+
 };
 
 #endif /* nsBlockFrame_h___ */

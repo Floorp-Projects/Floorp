@@ -328,7 +328,7 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
       CalculateChildBounds(aPresContext, aChildBounds);
     }
 
-  } else {
+  } else if (mAbsoluteFrames.NotEmpty()) {
     // Peek at the next frame in the reflow path
     nsIFrame* nextFrame;
     aReflowState.reflowCommand->GetNext(nextFrame, PR_FALSE);
