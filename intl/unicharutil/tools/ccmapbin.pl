@@ -385,20 +385,37 @@ sub print_ccmap
 # BE order) have to be treated differently based on the
 # the endianness as well.
 
-  # For BMP-only CCMap, 16BE CCMap is identical to LE CCMaps.
-  my @fmts = $is_ext ? ("LE", "16BE", "32BE", "64BE") : ("LE", "32BE", "64BE") ;
+# For BMP-only CCMap, 16BE CCMap is identical to LE CCMaps.
+# With non-BMP characters present, to avoid the misalignment on 64bit
+# machines, we have to store the ccmap flag (indicating whether the map 
+# is extended or not)and the BMP map size in two 32bit integers instead of
+# two 16bit integers (bug 225340)
+  my @fmts = $is_ext ? ("64LE", "LE", "16BE", "32BE", "64BE") : ("LE", "32BE", "64BE") ;
   foreach my $fmt (@fmts)
   { 
+
+    my($offset) = 0;
     for ($fmt) {
+      /64LE/ and do {
+        @idxlist = (0, 1, 2, 3);
+        @int16toint32 = (1, 0, 3, 2);
+        print OUT "#if (defined(IS_LITTLE_ENDIAN) && ALU_SIZE == 64)\n" .
+		          "// Precompiled CCMap for Little Endian(64bit)\n"; 
+        printf OUT "/* EXTFLG */ 0x%04X,0x0000,0x%04X,0x0000,\n", 
+	               $ccmap_p->[0], $ccmap_p->[1];
+        last;
+	  };
       /LE/ and do {
         @idxlist = (0, 1, 2, 3);
         @int16toint32 = (1, 0, 3, 2);
         print OUT $is_ext ? 
-                  "#if defined(IS_LITTLE_ENDIAN)\n" . 
-                  "// Precompiled CCMap for Little Endian(16/32/64bit) \n" :
+                  "#elif defined(IS_LITTLE_ENDIAN)\n" . 
+                  "// Precompiled CCMap for Little Endian(16/32bit) \n" :
                   "#if (defined(IS_LITTLE_ENDIAN) || ALU_SIZE == 16)\n" . 
                   "// Precompiled CCMap for Little Endian(16/32/64bit)\n" .
                   "// and Big Endian(16bit)\n";
+        printf OUT "/* EXTFLG */ 0x%04X,0x%04X,\n", 
+	               $ccmap_p->[0], $ccmap_p->[1];
         last;
       };
       /16BE/ and do {
@@ -406,6 +423,8 @@ sub print_ccmap
         @int16toint32 = (0, 1, 2, 3);
         print OUT "#elif (ALU_SIZE == 16)\n" .
                   "// Precompiled CCMap for Big Endian(16bit)\n";
+        printf OUT "/* EXTFLG */ 0x%04X,0x%04X,\n", 
+	               $ccmap_p->[0], $ccmap_p->[1];
         last;
       };
       /32BE/ and do {
@@ -413,6 +432,8 @@ sub print_ccmap
         @int16toint32 = (0, 1, 2, 3);
         print OUT "#elif (ALU_SIZE == 32)\n" .
                   "// Precompiled CCMap for  Big Endian(32bit)\n";
+        printf OUT "/* EXTFLG */ 0x%04X,0x%04X,\n", 
+	               $ccmap_p->[0], $ccmap_p->[1];
         last;
       };
       /64BE/ and do {
@@ -420,18 +441,16 @@ sub print_ccmap
         @int16toint32 = (0, 1, 2, 3);
         print OUT "#elif (ALU_SIZE == 64)\n" .
                   "// Precompiled CCMap for Big Endian(64bit)\n";
+        printf OUT "/* EXTFLG */ 0x0000,0x%04X,0x0000,0x%04X,\n", 
+		           $ccmap_p->[0], $ccmap_p->[1];
         last;
       };
     }
 
-    my($offset) = 0;
-    if ($is_ext) {
-      printf OUT "/* EXTFLG */ 0x%04X,0x%04X,\n", $ccmap_p->[0], $ccmap_p->[1];
-      $offset = 2; 
-    }
+    $offset = $is_ext ? 2 : 0; 
 
     while ($offset < @$ccmap_p)  {
-      printf OUT "/* %06x */ ", $offset - ($is_ext ? 2 : 0); 
+      printf OUT "/* %06x */ ", $offset - ($is_ext ? 2 : 0);
       for my $i (0 .. 3) {
         for my $j (defined($pg_flags_p->{$offset}) ? 
                    ($pg_flags_p->{$offset} > 0 ? @idxlist : @int16toint32)  : (0,1,2,3)) {

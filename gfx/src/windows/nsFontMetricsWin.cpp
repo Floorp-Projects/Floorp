@@ -170,9 +170,10 @@ static PRUint16 gIgnorableCCMapExtRaw[] = {
 #include "ignorable.x-ccmap"
 };
 
-// It's a pre-compiled extended ccmap so that the pointer
-// has to point at the 3rd element.
-static PRUint16 *gIgnorableCCMapExt = gIgnorableCCMapExtRaw + 2;
+// It's a pre-compiled extended ccmap so that the first CCMAP_EXTRA
+// (2 on 16/32bit machines, 4 on 64bit machines)
+// elements are used to store the ccmap flag and the size of the BMP map.
+static PRUint16 *gIgnorableCCMapExt = gIgnorableCCMapExtRaw + CCMAP_EXTRA;
 
 static nsCharsetInfo gCharsetInfo[eCharset_COUNT] =
 {
