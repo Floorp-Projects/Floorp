@@ -1018,6 +1018,7 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
   if (aNodeType == eHTMLTag_form) {
     if (aForm) {
       // the form was already created
+      NS_ADDREF(aForm);
       return aForm;
     }
     nsGenericHTMLElement* result = NS_NewHTMLFormElement(aNodeInfo);
