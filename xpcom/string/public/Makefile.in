@@ -39,7 +39,6 @@ EXPORTS		=				\
 		nsAWritableString.h		\
 		nsReadableUtils.h		\
 		nsSharedBufferList.h		\
-		nsSharedString.h		\
 		nsSlidingString.h		\
 		nsFragmentedString.h		\
 		nsPrintfCString.h		\
