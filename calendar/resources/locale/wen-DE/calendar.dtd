@@ -38,7 +38,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!-- General -->
-<!ENTITY calendar.file.default.name  "My Calendar" >
+<!ENTITY calendar.file.default.name  "Moja protyka" >
 
 <!-- Alarm -->
 <!ENTITY alarm.units.minutes  "Mjeńšin" >
@@ -83,7 +83,7 @@
 <!ENTITY newevent.invite.label       "Přeprosyć" >
 <!ENTITY newevent.email.label        "Emailowy alarm do" >
 <!ENTITY newevent.beforealarm.label  "prjedy hač podawk so započina" >
-<!ENTITY newevent.beforealarmends.label  "before the event ends" >
+<!ENTITY newevent.beforealarmends.label  "prjedy hač podawk so kónči" >
 <!ENTITY newevent.repeat.label       "Wospjetować kóžde" >
 <!ENTITY newevent.until.label        "hač" >
 <!ENTITY newevent.forever.label      "Na přeco" >
@@ -114,19 +114,19 @@
 
 <!ENTITY newevent.advanced.repeat.dayofmonth.label "x. dźeń měsaca">          
 <!ENTITY newevent.advanced.repeat.dayofweek.label "4. wutoru měsaca">          
-<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Poslednju wutoru měsaca">          
-<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">          
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Poslednju wutoru měsaca">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " měsaca">
 
-<!ENTITY newevent.advanced.repeat.onthe.label "On the ">                   
-<!ENTITY newevent.advanced.repeat.last.label "Last ">          
-<!ENTITY newevent.advanced.repeat.first.label "First"> 
-<!ENTITY newevent.advanced.repeat.second.label "Second"> 
-<!ENTITY newevent.advanced.repeat.third.label "Third"> 
-<!ENTITY newevent.advanced.repeat.fourth.label "Fourth"> 
-<!ENTITY newevent.advanced.repeat.first.extension "st"> 
-<!ENTITY newevent.advanced.repeat.second.extension "nd"> 
-<!ENTITY newevent.advanced.repeat.third.extension "rd"> 
-<!ENTITY newevent.advanced.repeat.nth.extension "th"> 
+<!ENTITY newevent.advanced.repeat.onthe.label "dnja">                   
+<!ENTITY newevent.advanced.repeat.last.label "posledni ">          
+<!ENTITY newevent.advanced.repeat.first.label "prěni"> 
+<!ENTITY newevent.advanced.repeat.second.label "druhi"> 
+<!ENTITY newevent.advanced.repeat.third.label "třeći"> 
+<!ENTITY newevent.advanced.repeat.fourth.label "štwórty"> 
+<!ENTITY newevent.advanced.repeat.first.extension "."> 
+<!ENTITY newevent.advanced.repeat.second.extension "."> 
+<!ENTITY newevent.advanced.repeat.third.extension "."> 
+<!ENTITY newevent.advanced.repeat.nth.extension "."> 
 
 <!ENTITY newevent.choosefile.label "Dataju wubrać">
 <!ENTITY newevent.removeselectedfile.label "Wubranu dataju wotstronić">
@@ -142,10 +142,10 @@
 <!ENTITY newtodo.status.label "Status">
 <!ENTITY newtodo.beforealarm.label  "before the task starts" >
 <!ENTITY newtodo.beforealarmends.label  "before the task is due" >
-<!ENTITY newtodo.newtodo.tab.label "Task" >
-<!ENTITY newtodo.status.longlabel "Task Status">
-<!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
-<!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
+<!ENTITY newtodo.newtodo.tab.label "Nadawk" >
+<!ENTITY newtodo.status.longlabel "Status nadawka">
+<!ENTITY newtodo.duetime.warning    "Waš startowy čas je po wašim kónčnym času.">
+<!ENTITY newtodo.duedate.warning    "Waš startowy datum je po wašim kónčnym datumje.">
 
 <!ENTITY calendar.confirm.deleteevent "Sće wy wěsty, zo chceće podawk z sćěhowacym titlom wotstronić?" >        
 <!ENTITY calendar.confirm.deleteuntitledevent "Sće wy wěsty, zo chceće tutón podawk bjez titla wotstronić?" >
@@ -175,19 +175,19 @@
 <!ENTITY calendar.flat.topbar.gototoday        "Dźi k dźensnišemu" >
 <!ENTITY calendar.flat.topbar.choosedate       "Dźi k datumje" >
 <!ENTITY calendar.flat.topbar.dayview          "Dnjowy wid" >
-<!ENTITY calendar.dayview.accesskey            "d" >
+<!ENTITY calendar.dayview.accesskey            "D" >
 <!ENTITY calendar.flat.topbar.weekview         "Tydźenski wid" >
-<!ENTITY calendar.weekview.accesskey           "w" >
+<!ENTITY calendar.weekview.accesskey           "T" >
 <!ENTITY calendar.flat.topbar.monthview        "Mesačny wid" >
-<!ENTITY calendar.monthview.accesskey          "m" >
-<!ENTITY calendar.flat.topbar.multiweekview   "Multiweek" >
-<!ENTITY calendar.multiweekview.accesskey     "u" >
+<!ENTITY calendar.monthview.accesskey          "M" >
+<!ENTITY calendar.flat.topbar.multiweekview   "Multitydźeń" >
+<!ENTITY calendar.multiweekview.accesskey     "l" >
 
 <!ENTITY calendar.tools.delete.tooltip         "Podawk wotstronić" >
 <!ENTITY calendar.tools.modify.tooltip         "Podawk změnić" >
 
 <!ENTITY calendar.newtask.button.tooltip          "Nowy nadawk załožić" >
-<!ENTITY calendar.newevent.button.tooltip         "Nowy podawk w Calendar załožić" >
+<!ENTITY calendar.newevent.button.tooltip         "Nowy podawk w Protyce załožić" >
 <!ENTITY calendar.delete.button.tooltip           "Wubrany podawk wotstronić" >
 <!ENTITY calendar.edit.button.tooltip             "Wubrany podawk wobdźěłać" >
 
@@ -221,7 +221,7 @@
 <!ENTITY calendar.unifinder.tree.categories.label    "Kategorije">
 <!ENTITY calendar.unifinder.tree.location.label    "Městno">
 <!ENTITY calendar.unifinder.tree.status.label    "Status">
-<!ENTITY calendar.unifinder.tree.filename.label    "Calendar Name">
+<!ENTITY calendar.unifinder.tree.filename.label    "Mjeno protyki">
 
 <!ENTITY calendar.gototoday.button.tooltip        "Dźi k dźensnišemu" >
 <!ENTITY calendar.choosedate.button.tooltip       "Wubjerće cilowy datum" >
@@ -229,7 +229,7 @@
 <!ENTITY calendar.dayview.button.tooltip          "K dnjowemu widej" >
 <!ENTITY calendar.weekview.button.tooltip         "K tydźenskemu widej" >
 <!ENTITY calendar.monthview.button.tooltip        "K měsačnemu widej" >
-<!ENTITY calendar.multiweekview.button.tooltip        "Switch to multiweek view" >
+<!ENTITY calendar.multiweekview.button.tooltip        "K multitydźenjowemu widej hić" >
 
 <!ENTITY calendar.nextday.button.tooltip        "Přichodny dźeń" >
 <!ENTITY calendar.prevday.button.tooltip        "Předchadny dźeń" >
@@ -249,9 +249,9 @@
 <!ENTITY calendar.dayview.button.label          "Dnjowy wid" >
 <!ENTITY calendar.weekview.button.label         "Tydźenski wid" >
 <!ENTITY calendar.monthview.button.label        "Měsačny wid" >
-<!ENTITY calendar.multiweekview.button.label        "Multiweek" >
+<!ENTITY calendar.multiweekview.button.label        "Multitydźeń" >
 <!ENTITY calendar.onlyworkday.checkbox.label    "Jenož póndźela-pjatka" >
-<!ENTITY calendar.displaytodos.checkbox.label   "Tasks in View" >
+<!ENTITY calendar.displaytodos.checkbox.label   "Nadawki we widźe" >
 
 <!ENTITY calendar.menu.options.modify       "Wobdźěłać" >
 <!ENTITY calendar.menu.options.remove       "Wotstronić" >
@@ -262,13 +262,13 @@
 
 <!ENTITY calendar.search.options.searchfor			" wobsahuja">
 
-<!ENTITY calendar.menu.numberofweeks.label     "Number of Weeks" >
-<!ENTITY calendar.menu.numberofweeks.1      "1 Week" >
-<!ENTITY calendar.menu.numberofweeks.2      "2 Weeks" >
-<!ENTITY calendar.menu.numberofweeks.3      "3 Weeks" >
-<!ENTITY calendar.menu.numberofweeks.4      "4 Weeks" >
-<!ENTITY calendar.menu.numberofweeks.5      "5 Weeks" >
-<!ENTITY calendar.menu.numberofweeks.6      "6 Weeks" >
+<!ENTITY calendar.menu.numberofweeks.label     "Ličba njedźelow" >
+<!ENTITY calendar.menu.numberofweeks.1      "1 tydźeń" >
+<!ENTITY calendar.menu.numberofweeks.2      "2 njedźeli" >
+<!ENTITY calendar.menu.numberofweeks.3      "3 njedźele" >
+<!ENTITY calendar.menu.numberofweeks.4      "4 njedźele" >
+<!ENTITY calendar.menu.numberofweeks.5      "5 njedźelow" >
+<!ENTITY calendar.menu.numberofweeks.6      "6 njedźelow" >
 
 <!-- Month View Entities -->
 <!ENTITY calendar.monthview.column.1.name "NJE">
@@ -284,7 +284,7 @@
 <!ENTITY statusText.label            "Dokument: Dočitany">
 
 <!-- Window Title -->
-<!ENTITY window.title            "Mozilla Calendar">
+<!ENTITY window.title            "Mozilla Protyka">
 
 <!-- Context Menu -->
 <!ENTITY calendar.context.newevent.label              "Nowy podawk">
@@ -315,7 +315,7 @@
 <!ENTITY calendar.context.weekview.accesskey          "t">
 <!ENTITY calendar.context.monthview.label             "K měsačnemu widej">
 <!ENTITY calendar.context.monthview.accesskey         "m">
-<!ENTITY calendar.context.multiweekview.label        "Switch To Multiweek View">
+<!ENTITY calendar.context.multiweekview.label        "K multitydźenjowemu widej hić">
 <!ENTITY calendar.context.multiweekview.accesskey    "u">
 <!ENTITY calendar.context.reload.label                "Znowa">
 <!ENTITY calendar.context.reload.accesskey            "n">
@@ -339,7 +339,7 @@
 <!ENTITY calendar.context.publish.label                "Cyłu protyku publikować">
 
 <!-- About Dialog -->
-<!ENTITY calendar.about.title "Wo Mozilla Calendar">
+<!ENTITY calendar.about.title "Wo Mozilla-Protyce">
 <!ENTITY calendar.about.tab   "Wo">
 
 <!ENTITY throbber.tooltip "K startowej stronje Mozille hić">
@@ -363,12 +363,13 @@
 <!ENTITY calendar.server.dialog.password.label      "Tajne hesło">
 <!ENTITY calendar.server.dialog.publish.label       "Změny awtomatisce publikować? Za nazdalne protyki budźe to nowu wersiju sćahnyć, prjedy hač podawk přidaće, wobdźěłaće abo wotstroniće. Budźe so potom waša akcija wuwjesć a nowa dataja na server pósłać.">
 <!ENTITY calendar.server.dialog.location.label      "Městno (opciske)">
-<!ENTITY calendar.server.dialog.color.label      "Barba">
+<!ENTITY calendar.server.dialog.local.location.label "Městno lokalneje dataje">
 <!ENTITY calendar.server.dialog.browse.label        "Za lokalnej dataju pytać...">
 <!ENTITY calendar.local.calendar.dialog.help.label  "Móžeće, jelizo chceće, datajowu adresu podać, hdźež so dyrbi protyka załožić.">
 <!ENTITY calendar.server.dialog.help.label          "Móžeće šćežku lokalneje dataje abo nazdaleneje dataje kaž http://www.mozilla.org/projects/calendar/caldata/CanadaHolidays.ics zapisać">
+
 <!-- Calendar Coloring -->
-<!ENTITY calendar.server.dialog.color.label "Color">
+<!ENTITY calendar.server.dialog.color.label "Barba">
 
 <!ENTITY calendar.local.calendar.dialog.optional.label "Sćěhowace pólka su opciske a wužiwaja so za publikowanje protyki na nazdalnu adresu.">
 
@@ -380,13 +381,12 @@
 <!ENTITY calendar.publish.password.label            "Tajne hesło">
 <!ENTITY calendar.publish.username.description      "(Opciske) Wužiwarske mjeno za słanje na tutón server.">
 <!ENTITY calendar.publish.password.description      "(Opciske) Tajne hesło za słanje na tutón server.">
-<!ENTITY calendar.publish.publish.button      "Publish">
-<!ENTITY calendar.publish.close.button      "Close">
+<!ENTITY calendar.publish.publish.button      "Publikować">
+<!ENTITY calendar.publish.close.button      "Začinić">
 
 <!ENTITY calendar.publish.example.url.description   "Něšto kaž http://www.myserver.com/webdav/test.ics">
 
 <!ENTITY allDayEvents.label "Wšě dnjowe podawki">
-
 
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importować: Podawki z lokalneje dataje do wobstejaceje protyki importować.">
@@ -401,34 +401,11 @@
 <!ENTITY calendar.importdupes.adddupes.label "Duplikaty přidać">
 <!ENTITY calendar.importdupes.prompt.label "Za kóždy so prašeć">
 
-<!ENTITY calendar.context.multiweekview.accesskey    "u">
-<!ENTITY calendar.context.multiweekview.label        "K multitydźenjowemu widej hić">
-<!ENTITY calendar.displaytodos.checkbox.label   "Nadawki we widźe" >
-<!ENTITY calendar.flat.topbar.multiweekview   "Multitydźeń" >
-<!ENTITY calendar.menu.numberofweeks.1      "1 tydźeń" >
-<!ENTITY calendar.menu.numberofweeks.2      "2 njedźeli" >
-<!ENTITY calendar.menu.numberofweeks.3      "3 njedźele" >
-<!ENTITY calendar.menu.numberofweeks.4      "4 njedźele" >
-<!ENTITY calendar.menu.numberofweeks.5      "5 njedźelow" >
-<!ENTITY calendar.menu.numberofweeks.6      "6 njedźelow" >
-<!ENTITY calendar.menu.numberofweeks.label     "Ličba njedźelow" >
-<!ENTITY calendar.multiweekview.button.label        "Multitydźeń" >
-<!ENTITY calendar.multiweekview.button.tooltip        "K multitydźenjowemu widej hić" >
-<!ENTITY week.short "W">
-<!ENTITY calendar.server.dialog.local.location.label "Městno lokalneje dataje">
-<!ENTITY calendar.dayview.accesskey            "D" >
-<!ENTITY calendar.weekview.accesskey            "T" >
-<!ENTITY calendar.multiweekview.accesskey            "l" >
-<!ENTITY calendar.monthview.accesskey            "M" >
-<!ENTITY calendar.unifinder.tree.filename.label    "Mjeno protyki">
 
 <!-- Calendar Printing -->
-<!ENTITY calendar.print.window.title "Print A Calendar">
-<!ENTITY calendar.print.selectoptions.label "Select your options below, and use OK to print">
-<!ENTITY calendar.print.selectviews.label "Select View to Print">
-<!ENTITY calendar.print.listselected.label "List Selected Events">
-<!ENTITY calendar.print.onlyitemsstatus.label "Print only items with this status:">
-<!ENTITY calendar.print.onlyitemscategory.label "Print only items with this category:">
-
-
-
+<!ENTITY calendar.print.window.title "Protyku ćišćeć">
+<!ENTITY calendar.print.selectoptions.label "Wubjerće deleka swoje opcije a wužijće W porjadku za ćišćenje">
+<!ENTITY calendar.print.selectviews.label "Wid za ćišćenje wubrać">
+<!ENTITY calendar.print.listselected.label "Wubrane podawki listować">
+<!ENTITY calendar.print.onlyitemsstatus.label "Jenož pozicije z tutym statusom ćišćeć:">
+<!ENTITY calendar.print.onlyitemscategory.label "Jenož pozicije z tutej kategoriju ćišćeć:">
