@@ -532,20 +532,19 @@ PRBool nsObjectFrame::IsSupportedImage(nsIContent* aContent)
   return NS_SUCCEEDED(rv) && supported;
 }
 
-void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
+PRBool nsObjectFrame::IsSupportedDocument(nsIContent* aContent)
 {
-  *aDoc = PR_FALSE;
   nsresult rv;
   
   if(aContent == nsnull)
-    return;
+    return PR_FALSE;
 
   nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return;
+  if (NS_FAILED(rv)) return PR_FALSE;
 
   nsAutoString type;
   rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::type, type);
-  if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (type.Length() > 0)) 
+  if (rv == NS_CONTENT_ATTR_HAS_VALUE && !type.IsEmpty()) 
   {
     nsXPIDLCString value;
     char * buf = ToNewCString(type);
@@ -557,40 +556,38 @@ void nsObjectFrame::IsSupportedDocument(nsIContent* aContent, PRBool* aDoc)
     if (NS_SUCCEEDED(rv) && 
         !value.IsEmpty() &&
         !value.Equals("@mozilla.org/content/plugin/document-loader-factory;1"))
-      *aDoc = PR_TRUE;
-    return;
+      return PR_TRUE;
+    return PR_FALSE;
   }
 
   // if we don't have a TYPE= try getting the mime-type via the DATA= url
   nsAutoString data;
   rv = aContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::data, data);
-  if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0)) 
+  if (rv == NS_CONTENT_ATTR_HAS_VALUE && !data.IsEmpty()) 
   {
     nsCOMPtr<nsIURI> uri;
     nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
     rv = NS_NewURI(getter_AddRefs(uri), data, nsnull, baseURI);
-    if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) return PR_FALSE;
 
     nsCOMPtr<nsIMIMEService> mimeService = do_GetService(NS_MIMESERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) return PR_FALSE;
     
-    char * contentType = nsnull;
-    rv = mimeService->GetTypeFromURI(uri, &contentType);
-    if (NS_FAILED(rv)) {
-      if (contentType)
-        nsMemory::Free(contentType);
-      return;
-    }
+    nsXPIDLCString contentType;
+    rv = mimeService->GetTypeFromURI(uri, getter_Copies(contentType));
+    if (NS_FAILED(rv))
+      return PR_FALSE;
 
     nsXPIDLCString value;
     rv = catman->GetCategoryEntry("Gecko-Content-Viewers",contentType, getter_Copies(value));
 
     if (NS_SUCCEEDED(rv) && !value.IsEmpty())
-      *aDoc = PR_TRUE;
+      return PR_TRUE;
 
-    if (contentType)
-      nsMemory::Free(contentType);
+    return PR_FALSE;
   }
+
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP nsObjectFrame::SetInitialChildList(nsIPresContext* aPresContext,
@@ -615,8 +612,6 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
 
   if(rv != NS_OK)
     return rv;
-
-  mPresContext = aPresContext; // weak ref
 
   //Ideally this should move to Reflow when the stream starts to come
   if (IsSupportedImage(aContent))
@@ -667,8 +662,7 @@ nsObjectFrame::Init(nsIPresContext*  aPresContext,
 
   // for now, we should try to do the same for "document" types and create
   // and IFrame-like sub-frame
-  PRBool bDoc = PR_FALSE;
-  IsSupportedDocument(aContent, &bDoc);
+  PRBool bDoc = IsSupportedDocument(aContent);
 
   if(bDoc)
   {
@@ -1236,7 +1230,7 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext* aPresContext,
   
   aPresContext->GetTwipsToPixels(&t2p);
 
-  SetFullURL(aURI);
+  mFullURL = aURI;
 
   // we need to recalculate this now that we have access to the nsPluginInstanceOwner
   // and its size info (as set in the tag)
@@ -1432,16 +1426,13 @@ nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
   return rv;
 }
 
-nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, PRBool aWindowless, nsPoint * aOrigin)
+nsPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
-  NS_ENSURE_ARG_POINTER(aOrigin);
-
-  nsresult rv = NS_OK;
   nsIView * parentWithView;
   nsPoint origin(0,0);
 
-  GetOffsetFromView(aPresContext, origin, &parentWithView);
+  nsIPresContext *presContext = GetPresContext();
+  GetOffsetFromView(presContext, origin, &parentWithView);
 
   // if it's windowless, let's make sure we have our origin set right
   // it may need to be corrected, like after scrolling
@@ -1461,11 +1452,11 @@ nsresult nsObjectFrame::GetWindowOriginInPixels(nsIPresContext * aPresContext, P
   }
 
   float t2p;
-  aPresContext->GetTwipsToPixels(&t2p);
-  aOrigin->x = NSTwipsToIntPixels(origin.x, t2p);
-  aOrigin->y = NSTwipsToIntPixels(origin.y, t2p);
+  presContext()->GetTwipsToPixels(&t2p);
+  origin.x = NSTwipsToIntPixels(origin.x, t2p);
+  origin.y = NSTwipsToIntPixels(origin.y, t2p);
 
-  return rv;
+  return origin;
 }
 
 NS_IMETHODIMP
@@ -1512,8 +1503,7 @@ nsObjectFrame::DidReflow(nsIPresContext*           aPresContext,
   if(windowless)
     return rv;
 
-  nsPoint origin;
-  GetWindowOriginInPixels(aPresContext, windowless, &origin);
+  nsPoint origin = GetWindowOriginInPixels(windowless);
 
   window->x = origin.x;
   window->y = origin.y;
@@ -1588,7 +1578,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
     nsIObjectFrame* objectFrame = nsnull;
     CallQueryInterface(frame,&objectFrame);
     if (!objectFrame)
-      GetNextObjectFrame(aPresContext,frame,&objectFrame);
+      objectFrame = GetNextObjectFrame(aPresContext,frame);
     NS_ENSURE_TRUE(objectFrame,NS_ERROR_FAILURE);
 
     // finally we can get our plugin instance
@@ -1824,7 +1814,7 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
                     
                   // next, get our plugin's rect so we can intersect it with the visible rect so we
                   // can tell the plugin where and how much to paint
-                  GetWindowOriginInPixels(aPresContext, window->type, &origin);
+                  origin = GetWindowOriginInPixels(window->type);
                   nsRect winlessRect = nsRect(origin, nsSize(window->width, window->height));
                   winlessRect.IntersectRect(winlessRect, visibleRect);
 
@@ -1910,20 +1900,6 @@ nsObjectFrame::HandleEvent(nsIPresContext* aPresContext,
 	return rv;
 }
 
-nsresult
-nsObjectFrame::SetFullURL(nsIURI* aURL)
-{
-  mFullURL = aURL;
-  return NS_OK;
-}
-
-nsresult nsObjectFrame::GetFullURL(nsIURI*& aFullURL)
-{
-  aFullURL = mFullURL;
-  NS_IF_ADDREF(aFullURL);
-  return NS_OK;
-}
-
 nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
 {
   aPluginInstance = nsnull;
@@ -1934,24 +1910,28 @@ nsresult nsObjectFrame::GetPluginInstance(nsIPluginInstance*& aPluginInstance)
     return mInstanceOwner->GetInstance(aPluginInstance);
 }
 
-nsresult
+void
 nsObjectFrame::NotifyContentObjectWrapper()
 {
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
-  NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
+  if (!doc)
+    return;
 
   nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
-  NS_ENSURE_TRUE(sgo, NS_ERROR_UNEXPECTED);
+  if (!sgo)
+    return;
 
   nsCOMPtr<nsIScriptContext> scx;
   sgo->GetContext(getter_AddRefs(scx));
-  NS_ENSURE_TRUE(scx, NS_ERROR_UNEXPECTED);
+  if (!scx)
+    return;
 
   JSContext *cx = (JSContext *)scx->GetNativeContext();
 
-  nsresult rv = NS_OK;
+  nsresult rv;
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return;
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper;
   xpc->GetWrappedNativeOfNativeObject(cx, ::JS_GetGlobalObject(cx), mContent,
@@ -1960,12 +1940,12 @@ nsObjectFrame::NotifyContentObjectWrapper()
 
   if (!wrapper) {
     // Nothing to do here if there's no wrapper for mContent
-
-    return NS_OK;
+    return;
   }
 
   nsCOMPtr<nsIClassInfo> ci(do_QueryInterface(mContent));
-  NS_ENSURE_TRUE(ci, NS_ERROR_UNEXPECTED);
+  if (!ci)
+    return;
 
   nsCOMPtr<nsISupports> s;
   ci->GetHelperForLanguage(nsIProgrammingLanguage::JAVASCRIPT,
@@ -1975,43 +1955,42 @@ nsObjectFrame::NotifyContentObjectWrapper()
 
   if (!helper) {
     // There's nothing we can do if there's no helper
-
-    return NS_OK;
+    return;
   }
 
   JSObject *obj = nsnull;
   rv = wrapper->GetJSObject(&obj);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+    return;
 
   // Abuse the scriptable helper to trigger prototype setup for the
   // wrapper for mContent so that this plugin becomes part of the DOM
   // object.
-  return helper->PostCreate(wrapper, cx, obj);
+  helper->PostCreate(wrapper, cx, obj);
 }
 
-nsresult
+/* static */ nsIObjectFrame*
 nsObjectFrame::GetNextObjectFrame(nsIPresContext* aPresContext,
-                                  nsIFrame* aRoot,
-                                  nsIObjectFrame** outFrame)
+                                  nsIFrame* aRoot)
 {
-  NS_ENSURE_ARG_POINTER(outFrame);
-
   nsIFrame* child = aRoot->GetFirstChild(nsnull);
 
   while (child) {
-    *outFrame = nsnull;
-    CallQueryInterface(child, outFrame);
-    if (nsnull != *outFrame) {
+    nsIObjectFrame* outFrame = nsnull;
+    CallQueryInterface(child, &outFrame);
+    if (outFrame) {
       nsCOMPtr<nsIPluginInstance> pi;
-      (*outFrame)->GetPluginInstance(*getter_AddRefs(pi));  // make sure we have a REAL plugin
-      if (pi) return NS_OK;
+      outFrame->GetPluginInstance(*getter_AddRefs(pi));  // make sure we have a REAL plugin
+      if (pi) return outFrame;
     }
 
-    GetNextObjectFrame(aPresContext, child, outFrame);
+    outFrame = GetNextObjectFrame(aPresContext, child);
+    if (outFrame)
+      return outFrame;
     child = child->GetNextSibling();
   }
 
-  return NS_ERROR_FAILURE;
+  return nsnull;
 }
 
 nsresult
@@ -2309,7 +2288,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
     // content's base URL?
     baseURL = doc->GetBaseURI();  // gets the document's url
   } else {
-    mOwner->GetFullURL(*getter_AddRefs(baseURL)); // gets the plugin's content url
+    baseURL = mOwner->GetFullURL(); // gets the plugin's content url
   }
 
   // Create an absolute URL
@@ -2849,7 +2828,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetMayScript(PRBool *result)
 
 // Little helper function to resolve relative URL in
 // |value| for certain inputs of |name|
-void nsObjectFrame::FixUpURLS(const nsString &name, nsString &value)
+void nsObjectFrame::FixUpURLS(const nsString &name, nsAString &value)
 {
   if (name.EqualsIgnoreCase("PLUGINURL") ||
       name.EqualsIgnoreCase("PLUGINSPAGE")) {        
@@ -3096,24 +3075,25 @@ inline void InitializeEventRecord(EventRecord* event) { ::OSEventAvail(0, event)
 
 void nsPluginInstanceOwner::GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord* origEvent, EventRecord& aMacEvent)
 {
+  nsIPresContext* presContext = mOwner ? mOwner->GetPresContext() : nsnull;
   InitializeEventRecord(&aMacEvent);
   switch (anEvent.message)
   {
     case NS_FOCUS_EVENT_START:   // this is the same as NS_FOCUS_CONTENT
         aMacEvent.what = nsPluginEventType_GetFocusEvent;
-        if (mOwner && mOwner->mPresContext) {
+        if (presContext) {
             nsIContent* content = mOwner->GetContent();
             if (content)
-                content->SetFocus(mOwner->mPresContext);
+                content->SetFocus(presContext);
         }
         break;
 
     case NS_BLUR_CONTENT:
         aMacEvent.what = nsPluginEventType_LoseFocusEvent;
-        if (mOwner && mOwner->mPresContext) {
+        if (presContext) {
             nsIContent* content = mOwner->GetContent();
             if (content)
-                content->RemoveFocus(mOwner->mPresContext);
+                content->RemoveFocus(presContext);
         }
         break;
 
