@@ -305,22 +305,30 @@ nsTreeFrame::Reflow(nsIPresContext&          aPresContext,
 							      const nsHTMLReflowState& aReflowState,
 							      nsReflowStatus&          aStatus)
 {
+  nsresult rv = NS_OK;
+
   mSlatedForReflow = PR_FALSE;
   
-  nsRect rect;
-  GetRect(rect);
-  if (rect.width != aReflowState.mComputedWidth && aReflowState.reason == eReflowReason_Resize) {
-    // We're doing a resize and changing the width of the table. All rows must
-    // reflow. Reset our generation.
-    SetUseGeneration(PR_FALSE);
-  }
+  if (!mSuppressReflow) {
+    nsRect rect;
+    GetRect(rect);
+    if (rect.width != aReflowState.mComputedWidth && aReflowState.reason == eReflowReason_Resize) {
+      // We're doing a resize and changing the width of the table. All rows must
+      // reflow. Reset our generation.
+      SetUseGeneration(PR_FALSE);
+    }
   
-  if (UseGeneration()) {
-    ++mGeneration;
+    if (UseGeneration()) {
+      ++mGeneration;
+    }
+
+    rv = nsTableFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  }
+  else
+  {
+    aStatus = NS_FRAME_COMPLETE;
   }
 
-  nsresult rv = nsTableFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-  
   if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) 
     aDesiredSize.width = aReflowState.mComputedWidth + 
        aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
@@ -342,31 +350,35 @@ nsTreeFrame::DidReflow(nsIPresContext&   aPresContext,
                         nsDidReflowStatus aStatus)
 {
   nsresult rv = nsTableFrame::DidReflow(aPresContext, aStatus);
-  if (mNeedsDirtyReflow) {
-    mNeedsDirtyReflow = PR_FALSE;
-    InvalidateCellMap();
-    InvalidateColumnCache();
-    InvalidateFirstPassCache();
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext.GetShell(getter_AddRefs(shell));
-    nsFrameState      frameState;
-    nsIFrame*         tableParentFrame;
-    nsIReflowCommand* reflowCmd;
-   
-    // Mark the table frame as dirty
-    GetFrameState(&frameState);
-    frameState |= NS_FRAME_IS_DIRTY;
-    SetFrameState(frameState);
+  return rv;
+}
 
-    // Target the reflow comamnd at its parent frame
-    GetParent(&tableParentFrame);
-    rv = NS_NewHTMLReflowCommand(&reflowCmd, tableParentFrame,
-                               nsIReflowCommand::ReflowDirty);
-    if (NS_SUCCEEDED(rv)) {
-      // Add the reflow command
-      rv = shell->AppendReflowCommand(reflowCmd);
-      NS_RELEASE(reflowCmd);
-    }
+NS_IMETHODIMP
+nsTreeFrame::MarkForDirtyReflow(nsIPresContext& aPresContext)
+{
+  mSuppressReflow = PR_FALSE;
+  InvalidateCellMap();
+  InvalidateColumnCache();
+  InvalidateFirstPassCache();
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext.GetShell(getter_AddRefs(shell));
+  nsFrameState      frameState;
+  nsIFrame*         tableParentFrame;
+  nsIReflowCommand* reflowCmd;
+ 
+  // Mark the table frame as dirty
+  GetFrameState(&frameState);
+  frameState |= NS_FRAME_IS_DIRTY;
+  SetFrameState(frameState);
+
+  // Target the reflow comamnd at its parent frame
+  GetParent(&tableParentFrame);
+  nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, tableParentFrame,
+                                        nsIReflowCommand::ReflowDirty);
+  if (NS_SUCCEEDED(rv)) {
+    // Add the reflow command
+    rv = shell->AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
   }
   return rv;
 }
@@ -388,35 +400,6 @@ nsTreeFrame::Init(nsIPresContext&  aPresContext,
   target->AddEventListener("mousedown", mTwistyListener, PR_TRUE); 
 	
   return rv;
-}
-
-NS_IMETHODIMP
-nsTreeFrame::AnnotateColumns()
-{
-  // Iterate over the column frames and set proportional width attributes on all flexible
-  // columns.
-  PRInt32 columnCount = GetColCount();
-  for (PRInt32 i = 0; i < columnCount; i++) {
-    nsTableColFrame* result = GetColFrame(i);
-    nsCOMPtr<nsIContent> colContent;
-    result->GetContent(getter_AddRefs(colContent));
-    nsCOMPtr<nsIAtom> fixedAtom = dont_AddRef(NS_NewAtom("fixed"));
-    if (colContent) {
-      nsAutoString fixedValue;
-      colContent->GetAttribute(kNameSpaceID_None, fixedAtom, fixedValue);
-      if (fixedValue != "true") {
-        // We are a proportional column and should be annotated with our current
-        // width.
-        PRInt32 colWidth = GetColumnWidth(i);
-        char ch[100];
-        sprintf(ch,"%d*", colWidth);
-        nsAutoString propColWidth(ch);
-        colContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, propColWidth,
-                                 PR_FALSE); // Suppress a notification.
-      }
-    }
-  }
-  return NS_OK;
 }
 
 PRBool
