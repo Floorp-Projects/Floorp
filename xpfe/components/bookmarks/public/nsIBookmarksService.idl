@@ -31,9 +31,13 @@
 [scriptable, uuid(a82e9300-e4af-11d2-8fdf-0008c70adc7b)]
 interface nsIBookmarksService : nsISupports
 {
+    const unsigned long	BOOKMARK_DEFAULT_TYPE   = 0;
+    const unsigned long	BOOKMARK_SEARCH_TYPE    = 1;
+    const unsigned long	BOOKMARK_FIND_TYPE      = 2;
+
     void	ReadBookmarks();
     boolean	IsBookmarked(in string aURI);
-    void	AddBookmark(in string aURI, in wstring aTitle);
+    void	AddBookmark(in string aURI, in wstring aTitle, in long bmType);
     void	UpdateBookmarkLastVisitedDate(in string aURL);
     string	FindShortcut(in wstring aName);
 };

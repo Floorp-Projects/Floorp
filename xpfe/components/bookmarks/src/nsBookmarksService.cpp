@@ -2747,7 +2747,7 @@ NS_IMPL_QUERY_INTERFACE6(nsBookmarksService,
 
 
 NS_IMETHODIMP
-nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitle)
+nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitle, PRInt32 bmType)
 {
 	// XXX Constructing a parser object to do this is bad.
 	// We need to factor AddBookmark() into its own little
@@ -2768,10 +2768,12 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	// figure out where to add the new bookmark
 	nsCOMPtr<nsIRDFResource>	bookmarkType = kNC_NewBookmarkFolder;
 
-	// hack: route "internetsearch:" URLs if necessary
-	if (!nsCRT::strncmp(aURI, "internetsearch:", 15))
+	switch(bmType)
 	{
+		case	BOOKMARK_SEARCH_TYPE:
+		case	BOOKMARK_FIND_TYPE:
 		bookmarkType = kNC_NewSearchFolder;
+		break;
 	}
 
 	nsCOMPtr<nsIRDFResource>	newBookmarkFolder;
