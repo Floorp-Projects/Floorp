@@ -144,7 +144,7 @@
 <!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "タイムゾーン">
 <!ENTITY pref.calendar.timezone.caption "タイムゾーン">
-<!ENTITY pref.calendar.timezone.description "Timezone ID is (continent or ocean)/(largest city in legal timezone region).">
+<!ENTITY pref.calendar.timezone.description "タイムゾーン ID は、(大陸または、海洋)/(法定タイムゾーン地域の最大都市) です。">
 <!ENTITY pref.defaultzone.label     "標準のタイムゾーン:" >
 
 <!ENTITY pref.timezone.Africa.Abidjan "アフリカ/アビジャン" >
