@@ -19,7 +19,8 @@
 msgcompose.xul
 msgcomposecommands.js
 messengercompose.css
-msgcomposeBody.html
+defaultTextBody.html
+defaultHtmlBody.html
 send.gif
 quote.gif
 address.gif

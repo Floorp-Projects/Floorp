@@ -32,7 +32,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/msgcompose.xul \
 	$(srcdir)/MsgComposeCommands.js \
 	$(srcdir)/messengercompose.css \
-	$(srcdir)/msgcomposebody.html \
+	$(srcdir)/defaultTextBody.html \
+	$(srcdir)/defaultHtmlBody.html \
 	$(srcdir)/send.gif \
 	$(srcdir)/quote.gif \
 	$(srcdir)/address.gif \
