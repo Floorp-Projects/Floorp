@@ -1006,7 +1006,7 @@ static char * gTop100List[] = {
    "http://www.hotfiles.com",
    "http://www.chathouse.com",
    "http://www.looksmart.com",
-   "http://www.iamginegames.com",
+   "http://www.imaginegames.com",
    "http://www.macaddict.com",
    "http://www.rsac.org",
    "http://www.apple.com",
