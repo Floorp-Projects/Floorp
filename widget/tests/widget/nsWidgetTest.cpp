@@ -191,7 +191,7 @@ char * eval(PRInt32 aVal) {
   if (!aVal) {
     gOverallStatus++;
   }
-  return aVal? "PASSED":"FAILED";
+  return (char *) (aVal? "PASSED":"FAILED");
 }
 
 char * eval(PRUint32 aVal) {
@@ -199,7 +199,7 @@ char * eval(PRUint32 aVal) {
     gOverallStatus++;
   }
 
-  return aVal ? "PASSED":"FAILED";
+  return (char *) (aVal ? "PASSED":"FAILED");
 }
 
 #if 0
