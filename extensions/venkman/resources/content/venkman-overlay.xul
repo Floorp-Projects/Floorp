@@ -44,7 +44,7 @@
   Declare XMl entites that this file refers to in venkman-overlay.dtd.
  -->
 
-<!DOCTYPE window SYSTEM "chrome://venkman/locale/venkman-overlay.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://venkman/locale/venkman-overlay.dtd" >
 
 <overlay id="venkmanTaskMenuID"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

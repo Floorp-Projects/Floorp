@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/chatzillaOverlay.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://chatzilla/locale/chatzillaOverlay.dtd" >
 
 <!-- This is the overlay that addes "Chatzilla" to the (global) task menu. -->
 

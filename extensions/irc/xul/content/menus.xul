@@ -36,7 +36,7 @@
    -
    -->
 
-<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/chatzilla.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://chatzilla/locale/chatzilla.dtd" >
 
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 
