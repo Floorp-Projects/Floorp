@@ -55,6 +55,8 @@
 #include "nsIWindowWatcher.h"
 #include "nsIStringBundle.h"
 #include "nsCRT.h"
+#include "nsIWindowMediator.h"
+#include "nsIPromptService.h"
 
 /* Outstanding issues/todo:
  * 1. Implement pause/resume.
@@ -659,9 +661,19 @@ nsDownloadManager::Open(nsIDOMWindow* aParent)
   // if this fails, it fails -- continue.
   AssertProgressInfo();
   
+  //check for an existing manager window and focus it
+  nsresult rv;
+  nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // if the window's already open, do nothing (focusing it would be annoying)
+  nsCOMPtr<nsIDOMWindowInternal> recentWindow;
+  wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(), getter_AddRefs(recentWindow));
+  if (recentWindow)
+    return NS_OK;
+
   // if we ever have the capability to display the UI of third party dl managers,
   // we'll open their UI here instead.
-  nsresult rv;
   nsCOMPtr<nsIWindowWatcher> ww = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -1025,9 +1037,8 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
     mDownloadState = FAILED;
     nsCAutoString path;
     nsresult rv = mTarget->GetNativePath(path);
-    if (NS_FAILED(rv)) return rv;
-
-    mDownloadManager->DownloadEnded(path.get(), aMessage);
+    if (NS_SUCCEEDED(rv))
+      mDownloadManager->DownloadEnded(path.get(), aMessage);
   }
 
   if (mListener)
@@ -1042,6 +1053,31 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
 
   if (mDialogListener)
     mDialogListener->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
+  else {
+    // Need to display error alert ourselves, if an error occurred.
+    if (NS_FAILED(aStatus)) {
+      // Get title for alert.
+      nsXPIDLString title;
+      nsresult rv;
+      nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
+      nsCOMPtr<nsIStringBundle> bundle;
+      if (bundleService)
+        rv = bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(bundle));
+      if (bundle)
+        bundle->GetStringFromName(NS_LITERAL_STRING("alertTitle").get(), getter_Copies(title));    
+
+      // Get Download Manager window, to be parent of alert.
+      nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
+      nsCOMPtr<nsIDOMWindowInternal> dmWindow;
+      if (wm)
+        wm->GetMostRecentWindow(NS_LITERAL_STRING("Download:Manager").get(), getter_AddRefs(dmWindow));
+
+      // Show alert.
+      nsCOMPtr<nsIPromptService> prompter(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+      if (prompter)
+        prompter->Alert(dmWindow, title, aMessage);
+    }
+  }
 
   return NS_OK;
 }
@@ -1070,6 +1106,9 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
   if (aStateFlags & STATE_STOP) {
     if (mDownloadState == DOWNLOADING || mDownloadState == NOTSTARTED) {
       mDownloadState = FINISHED;
+      // Files less than 1Kb shouldn't show up as 0Kb.
+      if (mMaxBytes==0)
+        mMaxBytes = 1;
       mCurrBytes = mMaxBytes;
       mPercentComplete = 100;
 
