@@ -634,6 +634,8 @@ sub MakeResouceAliases()
 	
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
 	BuildFolderResourceAliases(":mozilla:xpfe:browser:src:", 							"$samples_dir");
+	BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:", 						"$samples_dir");
+	MakeAlias(":mozilla:xpfe:browser:samples:sampleimages:", 							"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:",							"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
 	MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
