@@ -1715,6 +1715,13 @@ struct PRFilePrivate {
 #if !defined(XP_UNIX)   /* BugZilla: 4090 */
     PRBool  appendMode;                             
 #endif
+#ifdef _PR_STRICT_ADDR_LEN
+    PRUint16 af;        /* If the platform requires passing the exact
+                         * length of the sockaddr structure for the
+                         * address family of the socket to socket
+                         * functions like accept(), we need to save
+                         * the address family of the socket. */
+#endif
     _MDFileDesc md;
 };
 

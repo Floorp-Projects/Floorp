@@ -1628,6 +1628,18 @@ static PRFileDesc* pt_Accept(
 
     if (pt_TestAbort()) return newfd;
 
+#ifdef _PR_STRICT_ADDR_LEN
+    if (addr)
+    {
+        /*
+         * Set addr->raw.family just so that we can use the
+         * PR_NETADDR_SIZE macro.
+         */
+        addr->raw.family = fd->secret->af;
+        addr_len = PR_NETADDR_SIZE(addr);
+    }
+#endif
+
     osfd = accept(fd->secret->md.osfd, (struct sockaddr*)addr, &addr_len);
     syserrno = errno;
 
@@ -3417,6 +3429,9 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
         fd = pt_SetMethods(osfd, ftype, PR_FALSE, PR_FALSE);
         if (fd == NULL) close(osfd);
     }
+#ifdef _PR_STRICT_ADDR_LEN
+    if (fd != NULL) fd->secret->af = domain;
+#endif
 #if defined(_PR_INET6_PROBE) || !defined(_PR_INET6)
 	if (fd != NULL) {
 		/*
@@ -4369,6 +4384,9 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportTCPSocket(PRInt32 osfd)
     if (!_pr_initialized) _PR_ImplicitInitialization();
     fd = pt_SetMethods(osfd, PR_DESC_SOCKET_TCP, PR_FALSE, PR_TRUE);
     if (NULL == fd) close(osfd);
+#ifdef _PR_STRICT_ADDR_LEN
+    if (NULL != fd) fd->secret->af = PF_INET;
+#endif
     return fd;
 }  /* PR_ImportTCPSocket */
 
