@@ -330,5 +330,7 @@ void nsHTTreeDataModel::NotifyError(nsIImageRequest *aImageRequest,
 nsHierarchicalDataItem* nsHTTreeDataModel::CreateDataItemWithContentNode(nsIContent* pContent)
 {
 	nsHTTreeItem* pItem = new nsHTTreeItem(pContent, this);
+
+	// Register our item as an event listener on the DOM node.
 	return pItem;
 }

@@ -306,6 +306,7 @@ void nsTreeView::HandleMouseUp(nsGUIEvent* aEvent)
 		  // The background of the tree view, the trigger for a node,
 		  // or the text in a specific column.
 		  PRUint32 row, column;
+		  nsHitLocation type;
 		  DetermineHitLocation(mCachedMovePoint, row, column, type);
 
 		  // If the user boinked the trigger, then we need to open or close the node.
