@@ -1,0 +1,153 @@
+/* -*- Mode: C; c-basic-offset: 2 -*- */
+
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Ben Goodger <ben@netscape.com>
+ *   Josh Soref <timeless@mac.com>
+ *   Tim Taylor <tim@tool-man.org>
+ *   Eric Hodel <drbrain@segment7.net>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+/**
+ * Link toolbar items
+ **/
+
+#link-top
+{
+  list-style-image    : url("chrome://navigator/skin/top.gif");
+}
+
+#link-top[disabled="true"],
+#link-top[disabled="true"]:hover,
+#link-top[disabled="true"]:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/top-disabled.gif");
+}
+
+#link-top:hover,
+#link-top:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/top-hover.gif");
+}
+
+#link-up
+{
+  list-style-image    : url("chrome://navigator/skin/up.gif");
+}
+
+#link-up[disabled="true"],
+#link-up[disabled="true"]:hover,
+#link-up[disabled="true"]:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/up-disabled.gif");
+}
+
+#link-up:hover,
+#link-up:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/up-hover.gif");
+}
+
+#link-first
+{
+  list-style-image    : url("chrome://navigator/skin/first.gif");
+}
+
+#link-first[disabled="true"],
+#link-first[disabled="true"]:hover,
+#link-first[disabled="true"]:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/first-disabled.gif");
+}
+
+#link-first:hover,
+#link-first:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/first-hover.gif");
+}
+
+#link-prev
+{
+  list-style-image    : url("chrome://navigator/skin/previous.gif");
+}
+
+#link-prev[disabled="true"],
+#link-prev[disabled="true"]:hover,
+#link-prev[disabled="true"]:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/previous-disabled.gif");
+}
+
+#link-prev:hover,
+#link-prev:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/previous-hover.gif");
+}
+
+#link-next
+{
+  list-style-image    : url("chrome://navigator/skin/next.gif");
+}
+
+#link-next[disabled="true"],
+#link-next[disabled="true"]:hover,
+#link-next[disabled="true"]:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/next-disabled.gif");
+}
+
+#link-next:hover,
+#link-next:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/next-hover.gif");
+}
+
+#link-last
+{
+  list-style-image    : url("chrome://navigator/skin/last.gif");
+}
+
+#link-last[disabled="true"],
+#link-last[disabled="true"]:hover,
+#link-last[disabled="true"]:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/last-disabled.gif");
+}
+
+#link-last:hover,
+#link-last:hover:active
+{
+  list-style-image    : url("chrome://navigator/skin/last-hover.gif");
+}
