@@ -36,10 +36,7 @@ sub GotURI {
      my $self = shift;
      my ($event, $uri, $output, $stock) = @_;
      $self->debug($output);
-     my $message = '';
-     if ($event->{'channel'} ne '') {
-         $message .= "$event->{'from'}: ";
-     }
+     my $message = "$event->{'from'}: ";
      # The data currently listed in this format are: ticker symbol, last price, date, time, change, open price, daily high, daily low, and volume.
      #  -- http://help.yahoo.com/help/us/fin/quote/quote-05.html
      my @stockValues = split(',', $output);

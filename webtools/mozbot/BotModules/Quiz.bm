@@ -97,11 +97,7 @@ sub Told {
     } elsif ($message =~ /^\s*status[?\s]*$/osi) {
         my $questions = @{$self->{'questions'}};
         my $quizzes = keys %{$self->{'currentQuestion'}};
-        my $prefix = '';
-        if ($event->{'channel'} ne '') {
-            $prefix = "$event->{'from'}: ";
-        }
-        $self->say($event, $prefix."I have $questions questions and am running $quizzes quizzes.", 1); # XXX 1 quizzes
+        $self->say($event, "$event->{'from'}: I have $questions questions and am running $quizzes quizzes.", 1); # XXX 1 quizzes
     } elsif (not $self->DoQuizCheck($event, $message, 1)) {
         return $self->SUPER::Told(@_);
     }
