@@ -709,69 +709,6 @@
         listBox.scrollByLines(rows);
       ]]>
       </handler>
-
-      <!-- If there is no modifier key, we select on mousedown, not
-           click, so that drags work correctly. -->
-      <handler event="mousedown">
-      <![CDATA[
-        var targetItem = event.target;
-        if (targetItem.localName == "listitem" && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
-          if (!targetItem.selected) {
-            parentNode.selectItem(targetItem);
-          }
-          parentNode.currentItem = targetItem;
-        }
-      ]]>
-      </handler>
-
-      <!-- On a click (up+down on the same item), deselect everything
-           except this item. -->
-      <handler event="click">
-      <![CDATA[
-        if (event.button != 0) return;
-        var targetItem = event.target;
-        if (targetItem.localName == "listitem") {
-          if (parentNode.selType != "multiple") {
-            parentNode.selectItem(targetItem);
-          }
-          else if (event.ctrlKey || event.metaKey) {
-            parentNode.toggleItemSelection(targetItem);
-            parentNode.currentItem = targetItem;
-          }
-          else if (event.shiftKey) {
-            parentNode.selectItemRange(null, targetItem);
-            parentNode.currentItem = targetItem;
-          }
-          else {
-            /* We want to deselect all the selected items except what was
-               clicked, UNLESS it was a right-click.  We have to do this
-               in click rather than mousedown so that you can drag a
-               selected group of items */
-            
-            var selectedItems = parentNode.selectedItems;
-            var didSuppressSelect = false;
-            var i = 0;
-            while (i < selectedItems.length) {
-              if (selectedItems[i] != targetItem) {
-                if (!didSuppressSelect) {
-                  parentNode._suppressOnSelect = true;
-                  didSuppressSelect = true;
-                }
-                parentNode.removeItemFromSelection(selectedItems[i]);
-              }
-              else
-                i++;
-            }
-            if (didSuppressSelect)
-              parentNode._suppressOnSelect = false;
-          }
-        }
-        else {
-          if (parentNode.selType != "multiple" || (!event.ctrlKey && !event.shiftKey && !event.metaKey))
-            parentNode.clearSelection();
-        }
-      ]]>
-      </handler>
     </handlers>
   </binding>
   
@@ -846,6 +783,62 @@
         ]]></getter>
       </property>
     </implementation>
+    <handlers>
+      <!-- If there is no modifier key, we select on mousedown, not
+           click, so that drags work correctly. -->
+      <handler event="mousedown">
+      <![CDATA[
+        if (!event.ctrlKey && !event.shiftKey && !event.metaKey) {
+          if (!this.selected) {
+            parentNode.selectItem(this);
+          }
+          parentNode.currentItem = this;
+        }
+      ]]>
+      </handler>
+
+      <!-- On a click (up+down on the same item), deselect everything
+           except this item. -->
+      <handler event="click">
+      <![CDATA[
+        if (event.button != 0) return;
+        if (parentNode.selType != "multiple") {
+          parentNode.selectItem(this);
+        }
+        else if (event.ctrlKey || event.metaKey) {
+          parentNode.toggleItemSelection(this);
+          parentNode.currentItem = this;
+        }
+        else if (event.shiftKey) {
+          parentNode.selectItemRange(null, this);
+          parentNode.currentItem = this;
+        }
+        else {
+          /* We want to deselect all the selected items except what was
+            clicked, UNLESS it was a right-click.  We have to do this
+            in click rather than mousedown so that you can drag a
+            selected group of items */
+
+          var selectedItems = parentNode.selectedItems;
+          var didSuppressSelect = false;
+          var i = 0;
+          while (i < selectedItems.length) {
+            if (selectedItems[i] != this) {
+              if (!didSuppressSelect) {
+                parentNode._suppressOnSelect = true;
+                didSuppressSelect = true;
+              }
+              parentNode.removeItemFromSelection(selectedItems[i]);
+            }
+            else
+              i++;
+          }
+          if (didSuppressSelect)
+            parentNode._suppressOnSelect = false;
+        }
+      ]]>
+      </handler>
+    </handlers>
   </binding>
 
   <binding id="listitem-iconic"
