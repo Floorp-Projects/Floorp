@@ -111,8 +111,7 @@ sub run_shell_command {
   my $dirs_cvs_cmd = "cvs co $dirs_string";
   run_shell_command($dirs_cvs_cmd);
   
-  exit 1;
-  
+
   # Try a build.
   my $base = get_system_cwd();
 
