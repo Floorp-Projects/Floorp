@@ -56,6 +56,11 @@ typedef enum {
   nsLoadRefresh
 } nsLoadType;
 
+typedef enum {
+	nsWebShellChrome,
+	nsWebShellContent
+} nsWebShellType;
+
 // Container for web shell's
 class nsIWebShellContainer : public nsISupports {
 public:
@@ -224,6 +229,11 @@ public:
    */
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult) = 0;
 
+	/**
+	 * Get the root WebShell and allow the content/chrome sandbox to be crossed
+	 */
+	NS_IMETHOD GetRootWebShellEvenIfChrome(nsIWebShell*& aResult) = 0;
+
   /**
    * Set the parent WebShell.
    */
@@ -233,6 +243,11 @@ public:
    * Return the parent WebShell.
    */
   NS_IMETHOD GetParent(nsIWebShell*& aParent) = 0;
+
+	/**
+	 * Get the parent WebShell and allow the content/chrome sandbox to be crossed
+	 */
+	NS_IMETHOD GetParentEvenIfChrome(nsIWebShell*& aParent) = 0;
 
   /**
    * Return the current number of WebShells which are immediate children 
@@ -265,6 +280,17 @@ public:
    */
   NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult) = 0;
+
+	/**
+	 * Set the type of the webshell to be content or chrome.
+   */
+	NS_IMETHOD SetWebShellType(nsWebShellType aWebShellType) = 0;
+
+	/**
+	 * Get the type of the webshell. Indicates whether the webshell is content or chrome.
+	 */
+	NS_IMETHOD GetWebShellType(nsWebShellType& aWebShellType) = 0;
+
   //
   // Document load api's
   //
