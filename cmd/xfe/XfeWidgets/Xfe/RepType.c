@@ -276,6 +276,20 @@ XfeRegisterToolBarSelectionPolicy()
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
+XfeRegisterToolBarIndicatorLocation()
+{
+    static String names[] = 
+    { 
+		"indicator_location_none",
+		"indicator_location_beginning",
+		"indicator_location_end",
+		"indicator_location_middle"
+    };
+	
+    XmRepTypeRegister(XmRToolBarIndicatorLocation,names,NULL,XtNumber(names));
+}
+/*----------------------------------------------------------------------*/
+/* extern */ void
 XfeRegisterChromeChildType()
 {
     static String names[] = 
@@ -311,6 +325,7 @@ XfeRegisterRepresentationTypes()
 	XfeRegisterPaneDragModeType();
 	XfeRegisterPaneSashType();
 	XfeRegisterRulesType();
+	XfeRegisterToolBarIndicatorLocation();
 	XfeRegisterToolBarSelectionPolicy();
 	XfeRegisterToolScrollArrowPlacement();
 

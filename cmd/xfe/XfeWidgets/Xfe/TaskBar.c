@@ -264,7 +264,7 @@ _XFE_WIDGET_CLASS_RECORD(taskbar,TaskBar) =
 		LayoutChildren,							/* layout_children		*/
 		NULL,									/* draw_background		*/
 		XfeInheritDrawShadow,					/* draw_shadow			*/
-		NULL,									/* draw_components		*/
+		XfeInheritDrawComponents,				/* draw_components		*/
 		NULL,									/* extension          	*/
     },
 
@@ -288,6 +288,8 @@ _XFE_WIDGET_CLASS_RECORD(taskbar,TaskBar) =
 
     /* XfeToolBar Part */
     {
+		XfeInheritDrawRaiseBorder,				/* draw_raise_border	*/
+		XfeInheritLayoutIndicator,				/* layout_indicator		*/
 		NULL,									/* extension          	*/
     },
 
@@ -477,6 +479,9 @@ static void
 LayoutComponents(Widget w)
 {
     XfeTaskBarPart *	tp = _XfeTaskBarPart(w);
+
+	/* Invoke layout_indicator method */
+    _XfeToolBarLayoutIndicator(w);
 
 	/* Make sure our one and only component alive and kicking */
 	if (!_XfeIsAlive(tp->action_button))

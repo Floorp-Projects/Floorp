@@ -41,7 +41,9 @@ extern "C" {
 /*----------------------------------------------------------------------*/
 typedef struct
 {
-	XtPointer		extension;					/* Extension			*/ 
+    XfeExposeProc			draw_raise_border;	/* draw_raise_border	*/
+    XtWidgetProc			layout_indicator;	/* layout_indicator		*/
+	XtPointer				extension;			/* Extension			*/ 
 } XfeToolBarClassPart;
 
 /*----------------------------------------------------------------------*/
@@ -96,6 +98,7 @@ typedef struct _XfeToolBarPart
 
 	/* Indicator resources */
     int					indicator_position;		/* Indicator Position	*/
+	unsigned char		indicator_location;		/* Indicator Location	*/
 
 	/* Geometry resources */
 	Boolean				child_use_pref_width;	/* Child use pref width	*/
@@ -118,6 +121,7 @@ typedef struct _XfeToolBarPart
 	Cardinal			num_managed;			/* Num managed widgets	*/
 	Cardinal			num_components;			/* Num components		*/
 	Widget				indicator;				/* Indicator			*/
+	Widget				indicator_target;		/* Indicator target		*/
 
 } XfeToolBarPart;
 
@@ -166,6 +170,21 @@ typedef struct _XfeToolBarConstraintRec
 /*																		*/
 /*----------------------------------------------------------------------*/
 #define _XfeToolBarPart(w) &(((XfeToolBarWidget) w) -> xfe_tool_bar)
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* XfeToolBar Method invocation functions								*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+extern void
+_XfeToolBarDrawRaiseBorder		(Widget			w,
+								 XEvent *		event,
+								 Region			region,
+								 XRectangle *	clip_rect);
+/*----------------------------------------------------------------------*/
+extern void
+_XfeToolBarLayoutIndicator		(Widget			w);
+/*----------------------------------------------------------------------*/
 
 #ifdef __cplusplus								/* end C++				*/
 }

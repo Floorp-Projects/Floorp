@@ -60,6 +60,7 @@ extern void			XfeRegisterPaneChildType			(void);
 extern void			XfeRegisterPaneDragModeType			(void);
 extern void			XfeRegisterPaneSashType				(void);
 extern void			XfeRegisterRulesType				(void);
+extern void			XfeRegisterToolBarIndicatorLocation	(void);
 extern void			XfeRegisterToolBarSelectionPolicy	(void);
 extern void			XfeRegisterToolScrollArrowPlacement	(void);
 /*----------------------------------------------------------------------*/

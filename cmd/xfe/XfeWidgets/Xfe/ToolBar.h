@@ -49,6 +49,20 @@ enum
 
 /*----------------------------------------------------------------------*/
 /*																		*/
+/* XmRToolBarIndicatorLocation											*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+enum
+{
+	XmINDICATOR_LOCATION_NONE,
+	XmINDICATOR_LOCATION_BEGINNING,
+	XmINDICATOR_LOCATION_END,
+	XmINDICATOR_LOCATION_MIDDLE
+};
+/*----------------------------------------------------------------------*/
+
+/*----------------------------------------------------------------------*/
+/*																		*/
 /* XmINDICATOR_DONT_SHOW - for XmNindicatorPosition to hide indicator.	*/
 /*																		*/
 /*----------------------------------------------------------------------*/
@@ -103,6 +117,12 @@ XfeToolBarSetActiveButton		(Widget		w,
 extern Boolean
 XfeToolBarSetSelectedButton		(Widget		w,
 								 Widget		button);
+/*----------------------------------------------------------------------*/
+extern unsigned char
+XfeToolBarXYToIndicatorLocation	(Widget		w,
+								 Widget		item,
+								 int		x,
+								 int		y);
 /*----------------------------------------------------------------------*/
 
 #ifdef __cplusplus								/* end C++				*/

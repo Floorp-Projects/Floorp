@@ -143,6 +143,7 @@ typedef int	XfeBitGravityType;
 #define XfeInheritLayoutArrow				((XtWidgetProc)			_XtInherit)
 #define XfeInheritLayoutChildren			((XtWidgetProc)			_XtInherit)
 #define XfeInheritLayoutComponents			((XtWidgetProc)			_XtInherit)
+#define XfeInheritLayoutIndicator			((XtWidgetProc)			_XtInherit)
 #define XfeInheritLayoutPixmap				((XtWidgetProc)			_XtInherit)
 #define XfeInheritLayoutString				((XtWidgetProc)			_XtInherit)
 #define XfeInheritLayoutTitle				((XtWidgetProc)			_XtInherit)
