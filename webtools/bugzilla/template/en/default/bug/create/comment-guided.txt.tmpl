@@ -31,11 +31,12 @@ Build Identifier: [%+ form.buildid %]
 
 [%+ IF form.reproducible != "Choose one..." -%]
 Reproducible: [%+ form.reproducible %]
-[% END -%]
+[% END %]
 
-[%# I can't make TT check for "1.\n2.\n3." so this is not conditional. -%]
+[% IF !(form.reproduce_steps.match('^1\.\s+2\.\s+3\.\s+$') || form.reproduce_steps.match('^\s+$')) %]
 Steps to Reproduce:
 [%+ form.reproduce_steps %]
+[% END %]
 
 [% IF form.actual_results -%]
 Actual Results:  
