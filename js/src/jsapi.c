@@ -3058,7 +3058,7 @@ JS_ReportErrorFlagsAndNumberUC(JSContext *cx, uintN flags,
 JS_PUBLIC_API(void)
 JS_ReportOutOfMemory(JSContext *cx)
 {
-    JS_ReportError(cx, "out of memory");
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_OUT_OF_MEMORY);
 }
 
 JS_PUBLIC_API(JSErrorReporter)
