@@ -1933,7 +1933,13 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
 
   nsString& docTypeStr=aToken->GetStringValueXXX();
   mLineNumber += (docTypeStr).CountChar(kNewLine);
-  docTypeStr.Trim("<!>");
+  
+  PRInt32 len=docTypeStr.Length();
+  PRInt32 pos=docTypeStr.RFindChar(kGreaterThan);
+  if(pos>-1) {
+    docTypeStr.Cut(pos,len-pos);// First remove '>' from the end.
+  }
+  docTypeStr.Cut(0,2); // Now remove "<!" from the begining
 
   nsCParserNode* theNode=CreateNode();
   if(theNode) {
