@@ -770,10 +770,8 @@ endif
 ifeq ($(OS_ARCH),NetBSD)
 
 # Work around linker semantics that will never find our own libutil on 1.3.x
-ifeq ($(shell uname -r | cut -f2 -d.),3)
 FOOL_GMAKE	= $(EXPORT_LDFLAGS:$(DIST)/lib/lib%.a=-l%)
 DSO_EX_LIBS	= $(FOOL_GMAKE:-lutil=$(DIST)/lib/libutil.a)
-endif
 
 ifdef LIBRUNPATH
 OS_LIBS		+= -R$(LIBRUNPATH)
