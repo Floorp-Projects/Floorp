@@ -1,5 +1,3 @@
-
-
 <!ENTITY  changeAction.title                        "Change Action">
 
 <!ENTITY  whenDownloading.label                     "When downloading files of type:">
@@ -12,3 +10,4 @@
 <!ENTITY  customAppPath.label                       "Click 'Change ...' to choose an application.">
 <!ENTITY  saveToDisk.label                          "Save to Disk">
 
+<!ENTITY  changeAppWindowTitle.label                "Choose Application...">

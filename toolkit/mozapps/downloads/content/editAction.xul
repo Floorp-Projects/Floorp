@@ -75,7 +75,7 @@
         <hbox align="center" class="biggerIndent">
           <textbox id="customAppPath" readonly="true" flex="1"/>
           <button id="changeApp" oncommand="changeApp();"
-                  label="&changeApp.label;" accesskey="&changeApp.accesskey;"/>
+                  label="&changeApp.label;" filepickertitle="&changeAppWindowTitle.label;" accesskey="&changeApp.accesskey;"/>
         </hbox>
         <separator class="thin"/>
         <radio id="saveToDisk" value="save" label="&saveToDisk.label;"/>
