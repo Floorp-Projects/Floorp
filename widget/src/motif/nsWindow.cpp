@@ -770,7 +770,7 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
   mBounds.height = aHeight;
   UpdateVisibilityFlag();
   UpdateDisplay();
-  XtVaSetValues(mWidget, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+  XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 }
 
     
