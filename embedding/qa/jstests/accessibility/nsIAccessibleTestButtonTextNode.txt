@@ -83,10 +83,10 @@ function executeTestCase()
 
        if (name == " Submit ")   col3[1] = "PASS"; else col3[1] = "FAIL";
        if (role == "42")         col3[2] = "PASS"; else col3[2] = "FAIL";
-       if (state == "3145792")   col3[3] = "PASS"; else col3[3] = "FAIL";
+       if (state == "2097216")   col3[3] = "PASS"; else col3[3] = "FAIL";
        if (newvalue.search("NS_ERROR_NOT_IMPLEMENTED"))
                                  col3[4] = "PASS"; else col3[4] = "FAIL";
-
+alert(col3[4]);
        res += "<table border cols=2 width='75%'>";
 
        for(i=0; i<=4; i++)
