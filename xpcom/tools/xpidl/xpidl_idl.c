@@ -12,6 +12,10 @@ nodeHandler *nodeDispatch[TREESTATE_NUM] = { NULL };
 static gboolean
 process_tree_pass1(TreeState *state)
 {
+    nodeHandler handler;
+
+    if ((handler = nodeDispatch[state->mode][0]))
+	return handler(state);
     return TRUE;
 }
 
@@ -23,6 +27,15 @@ node_is_error(TreeState *state)
     return FALSE;
 }
 
+void
+xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
+{
+    IDL_tree iter = p;
+    for (; iter; iter = IDL_LIST(iter).next)
+	if (!foreach(IDL_LIST(iter).data, user_data))
+	    return;
+}
+
 /*
  * The bulk of the generation happens here.
  */
@@ -31,9 +44,16 @@ process_node(TreeState *state)
 {
     char *name = NULL;
     nodeHandler *handlerp = nodeDispatch[state->mode], handler;
+    gint type;
     assert(state->tree);
 
-    if (handlerp && (handler = handlerp[IDL_NODE_TYPE(state->tree)]))
+    type = IDL_NODE_TYPE(state->tree);
+
+    /*
+     * type == 0 shouldn't ever happen for real, so we use that slot for
+     * pass-1 processing
+     */
+    if (type && handlerp && (handler = handlerp[type]))
 	return handler(state);
     return TRUE;
 }

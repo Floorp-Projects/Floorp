@@ -1,25 +1,109 @@
 #include "xpidl.h"
 
+/* is this type output in the form "<foo> *"? */
+#define STARRED_TYPE(type) ( ((type) == IDLN_TYPE_STRING ||		      \
+			      (type) == IDLN_TYPE_WIDE_STRING ||	      \
+			      (type) == IDLN_IDENT) )
+
 static gboolean
 ident(TreeState *state)
 {
     printf("%s", IDL_IDENT(state->tree).str);
     return TRUE;
 }
+static gboolean
+add_interface_ref_maybe(IDL_tree p, gpointer user_data)
+{
+    GHashTable *hash = (GHashTable *)user_data;
+    if (IDL_NODE_TYPE(p) == IDLN_IDENT &&
+	!g_hash_table_lookup(hash, IDL_IDENT(p).str))
+	g_hash_table_insert(hash, IDL_IDENT(p).str, "FOUND");
+}
+
+static gboolean
+find_interface_refs(IDL_tree p, gpointer user_data)
+{
+    IDL_tree node;
+    switch(IDL_NODE_TYPE(p)) {
+      case IDLN_ATTR_DCL:
+	node = IDL_ATTR_DCL(p).param_type_spec;
+	break;
+      case IDLN_OP_DCL:
+	/*
+	IDL_tree_walk_in_order(IDL_OP_DCL(p).parameter_dcls, generate_includes,
+			       user_data);
+	*/
+	node = IDL_OP_DCL(p).op_type_spec;
+	break;
+      case IDLN_PARAM_DCL:
+	node = IDL_PARAM_DCL(p).param_type_spec;
+	break;
+      case IDLN_INTERFACE:
+	node = IDL_INTERFACE(p).inheritance_spec;
+	if (node)
+	    xpidl_list_foreach(node, add_interface_ref_maybe, user_data);
+	node = NULL;
+	break;
+      default:
+	node = NULL;
+    }
+    if (node && IDL_NODE_TYPE(node) == IDLN_IDENT)
+	add_interface_ref_maybe(node, user_data);
+    return TRUE;
+}
+
+static void
+write_header(gpointer key, gpointer value, gpointer user_data)
+{
+    char *ident = (char *)key;
+    TreeState *state = (TreeState *)user_data;
+    fprintf(state->file, "#include \"%s.h\" /* interface %s */\n",
+	    ident, ident);
+}
+
+static gboolean
+pass_1(TreeState *state)
+{
+    GHashTable *hash = g_hash_table_new(g_str_hash, g_str_equal);
+    if (!hash)
+	return FALSE;
+    fputs("#include \"nscore.h\"\n", state->file);
+    IDL_tree_walk_in_order(state->tree, find_interface_refs, hash);
+    g_hash_table_foreach(hash, write_header, state);
+    g_hash_table_destroy(hash);
+    return TRUE;
+}
 
 static gboolean
 interface(TreeState *state)
 {
+    IDL_tree iface = state->tree, iter;
+
     char *className =
-	IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS(IDL_INTERFACE(state->tree).ident), "_", 0);
-    fprintf(state->file, "/* starting interface %s */\n",
+	IDL_ns_ident_to_qstring(IDL_IDENT_TO_NS(IDL_INTERFACE(iface).ident),
+				"_", 0);
+    fprintf(state->file, "\n/* starting interface %s */\n",
 	    className);
 
-    fprintf(state->file, "class %s {\n", className);
+    fputs("class ", state->file);
+    state->tree = IDL_INTERFACE(iface).ident;
+    if (!ident(state))
+	return FALSE;
 
-    state->tree = IDL_INTERFACE(state->tree).body;
+    if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
+	fputs(" : ", state->file);
+	for (; iter; iter = IDL_LIST(iter).next) {
+	    state->tree = IDL_LIST(iter).data;
+	    fputs("public ", state->file);
+	    if (!ident(state))
+		return FALSE;
+	    if (IDL_LIST(iter).next)
+		fputs(", ", state->file);
+	}
+    }
+    fputs(" {\n", state->file);
+    state->tree = IDL_INTERFACE(iface).body;
 
-    free(className);
     if (!process_node(state))
 	return FALSE;
 
@@ -75,12 +159,10 @@ xpcom_type(TreeState *state)
 	fputs("PRUint16", state->file);	/* wchar_t? */
 	break;
       case IDLN_TYPE_WIDE_STRING:
-	/*
-	 * XXX should these be different types?
-	 * XXX maybe char * for STRING and nsString * for WIDE_STRING?
-	 */
+	fputs("PRUnichar *", state->file);
+	break;
       case IDLN_TYPE_STRING:
-	fputs("nsString *", state->file);
+	fputs("char *", state->file);
 	break;
       case IDLN_TYPE_BOOLEAN:
 	fputs("PRBool", state->file);
@@ -215,9 +297,7 @@ attr_accessor(TreeState *state, gboolean getter)
 	    return FALSE;
 	state->tree = orig;
 	fprintf(state->file, "%s%sa%c%s);\n",
-		(ATTR_TYPE(orig) == IDLN_TYPE_STRING ||
-		 ATTR_TYPE(orig) == IDLN_IDENT ||
-		 ATTR_TYPE(orig) == IDLN_WIDE_STRING) ? "" : " ",
+		(STARRED_TYPE(ATTR_TYPE(orig)) ? "" : " "),
 		getter ? "*" : "",
 		toupper(attrname[0]), attrname + 1);
     }
@@ -232,7 +312,7 @@ attr_dcl(TreeState *state)
     fprintf(state->file, "\n  /* %sattribute ",
 	    ro ? "readonly " : "");
     state->tree = IDL_ATTR_DCL(state->tree).param_type_spec;
-    if (state->tree && !process_node(state))
+    if (state->tree && !type(state))
 	return FALSE;
     fputs(" ", state->file);
     state->tree = IDL_ATTR_DCL(orig).simple_declarations;
@@ -256,12 +336,16 @@ xpcom_param(TreeState *state)
 {
     IDL_tree param = state->tree;
     state->tree = IDL_PARAM_DCL(param).param_type_spec;
+
+    /* in params that are pointers should be const */
+    if (STARRED_TYPE(IDL_NODE_TYPE(state->tree)) &&
+	IDL_PARAM_DCL(param).attr == IDL_PARAM_IN)
+	fputs("const ", state->file);
+
     if (!xpcom_type(state))
 	return FALSE;
     fprintf(state->file, "%s%s",
-	    (IDL_NODE_TYPE(state->tree) == IDLN_TYPE_STRING ||
-	     IDL_NODE_TYPE(state->tree) == IDLN_TYPE_WIDE_STRING ||
-	     IDL_NODE_TYPE(state->tree) == IDLN_IDENT) ? "" : " ",
+	    STARRED_TYPE(IDL_NODE_TYPE(state->tree))  ? "" : " ",
 	    IDL_PARAM_DCL(param).attr == IDL_PARAM_IN ? "" : "*");
     fprintf(state->file, "%s",
 	    IDL_IDENT(IDL_PARAM_DCL(param).simple_declarator).str);
@@ -303,7 +387,7 @@ op_dcl(TreeState *state)
 }
 
 nodeHandler headerDispatch[] = {
-  NULL,            /* IDLN_NONE */
+  pass_1,          /* IDLN_NONE */
   NULL,            /* IDLN_ANY */
   list,            /* IDLN_LIST */
   NULL,            /* IDLN_GENTREE */
