@@ -830,7 +830,7 @@ NS_IMETHODIMP mozXMLTerminal::Poll(void)
 
 // Handle callback from LineTerm when new input/output needs to be displayed
 NS_IMETHODIMP mozXMLTerminal::Observe(nsISupports *aSubject,
-                                  const PRUnichar *aTopic,
+                                  const char *aTopic,
                                   const PRUnichar *someData)
 {
   nsCOMPtr<mozILineTermAux> lineTermAux = do_QueryInterface(aSubject);

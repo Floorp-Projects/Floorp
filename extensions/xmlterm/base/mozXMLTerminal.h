@@ -30,7 +30,7 @@
 #include "nsString.h"
 #include "nsIGenericFactory.h"
 #include "nsIWebProgressListener.h"
-
+#include "nsIObserver.h"
 #include "mozXMLT.h"
 
 #include "mozILineTerm.h"
@@ -60,7 +60,7 @@ class mozXMLTerminal : public mozIXMLTerminal,
   NS_DECL_MOZIXMLTERMINAL
 
   // nsIObserver interface
-  NS_IMETHOD Observe(nsISupports *aSubject, const PRUnichar *aTopic,
+  NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic,
                      const PRUnichar *someData);
 
   // Others
