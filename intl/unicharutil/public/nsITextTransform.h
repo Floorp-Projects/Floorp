@@ -20,6 +20,7 @@
 
 
 #include "nsISupports.h"
+#include "nsString.h"
 #include "nscore.h"
 
 // {CCD4D371-CCDC-11d2-B3B1-00805F8A6670}
@@ -27,12 +28,12 @@
 { 0xccd4d371, 0xccdc, 0x11d2, \
     { 0xb3, 0xb1, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } };
 
+#define NS_TEXTTRANSFORM_PROGID_BASE "component://netscape/intl/texttransform?type="
 
 class nsITextTransform : public nsISupports {
 
 public: 
 
-  // Convert one Unicode character into upper case
   NS_IMETHOD Change( nsString& aText, nsString& aResult) = 0;
 
 };

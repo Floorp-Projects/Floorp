@@ -20,6 +20,7 @@
 
 
 #include "nsISupports.h"
+#include "nsString.h"
 #include "nscore.h"
 
 // {CCD4D372-CCDC-11d2-B3B1-00805F8A6670}
