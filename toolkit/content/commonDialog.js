@@ -201,16 +201,47 @@ function commonDialogOnLoad()
     document.documentElement.getButton("extra2").disabled = true;
 
     setTimeout(commonDialogReenableButtons, delayInterval);
+    
+    document.documentElement.addEventListener("blur", commonDialogBlur, false);
+    document.documentElement.addEventListener("focus", commonDialogFocus, false);
   }
 
   getAttention();
 }
 
+var gDelayExpired = false;
+var gBlurred = false;
+
+function commonDialogBlur()
+{
+  gBlurred = true;
+  document.documentElement.getButton("accept").disabled = true;
+  document.documentElement.getButton("extra1").disabled = true;
+  document.documentElement.getButton("extra2").disabled = true;
+}
+
+function commonDialogFocus()
+{
+  gBlurred = false;
+  // When refocusing the window, don't enable the buttons unless the countdown
+  // delay has expired. 
+  if (gDelayExpired) {
+    var script = "document.documentElement.getButton('accept').disabled = false; ";
+    script += "document.documentElement.getButton('extra1').disabled = false; ";
+    script += "document.documentElement.getButton('extra2').disabled = false;";
+    setTimeout(script, 250);
+  }
+}
+
 function commonDialogReenableButtons()
 {
-  document.documentElement.getButton("accept").disabled = false;
-  document.documentElement.getButton("extra1").disabled = false;
-  document.documentElement.getButton("extra2").disabled = false;
+  // Don't automatically enable the buttons if we're not in the foreground
+  if (!gBlurred) {
+    document.documentElement.getButton("accept").disabled = false;
+    document.documentElement.getButton("extra1").disabled = false;
+    document.documentElement.getButton("extra2").disabled = false;
+  }
+  gDelayExpired = true;
 }
 
 function initTextbox(aName, aLabelIndex, aValueIndex, aAlwaysLabel)
