@@ -43,11 +43,32 @@ interface nsIX509CertValidity : nsISupports {
 
 [scriptable, uuid(f0980f60-ee3d-11d4-998b-00b0d02354a0)]
 interface nsIX509Cert : nsISupports {
+
   /*
    * attributes for certs
    */
   readonly attribute wstring commonName;
 
   readonly attribute nsIX509CertValidity validity;
+
+  /*
+   * enums for certs
+   */
+  const unsigned long UNKNOWN_CERT =      0;
+  const unsigned long CA_CERT      = 1 << 0;
+  const unsigned long USER_CERT    = 1 << 1;
+  const unsigned long EMAIL_CERT   = 1 << 2;
+  const unsigned long SERVER_CERT  = 1 << 3;
+
+  const unsigned long UNTRUSTED       =      0;
+  const unsigned long TRUSTED_SSL     = 1 << 0;
+  const unsigned long TRUSTED_EMAIL   = 1 << 1;
+  const unsigned long TRUSTED_OBJSIGN = 1 << 2;
+  
+  /*
+   * accessors for certs
+   */
+  [noscript] unsigned long getRawDER(out charPtr result);
+
 };
 

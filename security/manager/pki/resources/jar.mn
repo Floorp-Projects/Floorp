@@ -7,6 +7,8 @@ pippki.jar:
     content/pippki/SSLPrefs.xul              (content/SSLPrefs.xul)
     content/pippki/newserver.js              (content/newserver.js)
     content/pippki/newserver.xul             (content/newserver.xul)
+    content/pippki/downloadcert.js           (content/downloadcert.js)
+    content/pippki/downloadcert.xul          (content/downloadcert.xul)
     content/pippki/pippki.js                 (content/pippki.js)
     content/pippki/domainMismatch.xul        (content/domainMismatch.xul)
     content/pippki/domainMismatch.js         (content/domainMismatch.js)

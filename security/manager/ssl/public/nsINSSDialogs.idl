@@ -21,6 +21,7 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIX509Cert.idl"
 
 interface nsIInterfaceRequestor;
 
@@ -91,6 +92,24 @@ interface nsISecurityWarningDialogs : nsISupports
    * confirmPostToInsecureFromSecure
    */
   boolean confirmPostToInsecureFromSecure(in nsIInterfaceRequestor ctx);
+};
+
+/**
+ * nsICertificateDialogs
+ * Provides UI for certificate-related dialogs.
+ */
+[scriptable, uuid(a03ca940-09be-11d5-ac5d-000064657374)]
+interface nsICertificateDialogs : nsISupports
+{
+  /**
+   * downloadCACert
+   *   UI shown when a user is asked to download a new CA cert.  Provides
+   *   user with ability to choose trust settings for the cert.
+   */
+  void downloadCACert(in nsIInterfaceRequestor ctx, 
+                      in nsIX509Cert cert,
+                      out unsigned long trust,
+                      out boolean canceled);
 };
 
 /**

@@ -29,7 +29,7 @@
 #include "nsCOMPtr.h"
 #include "nsISecurityManagerComponent.h"
 #include "nsISignatureVerifier.h"
-#include "nsIContentHandler.h"
+#include "nsIURIContentListener.h"
 #include "nsIEntropyCollector.h"
 #include "nsString.h"
 #include "nsIStringBundle.h"
@@ -49,6 +49,10 @@
   {0xd4b49dd6, 0x1dd1, 0x11b2, \
     { 0xb6, 0xfe, 0xb1, 0x4c, 0xfa, 0xf6, 0x9c, 0xbd }}
 
+#define NS_CERTCONTENTLISTEN_CID {0xc94f4a30, 0x64d7, 0x11d4, {0x99, 0x60, 0x00, 0xb0, 0xd0, 0x23, 0x54, 0xa0}}
+#define NS_CERTCONTENTLISTEN_CONTRACTID "@mozilla.org/security/certdownload;1"
+
+
 class NS_NO_VTABLE nsINSSComponent : public nsISupports {
  public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_INSSCOMPONENT_IID)
@@ -66,7 +70,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
 // Implementation of the PSM component interface.
 class nsNSSComponent : public nsISecurityManagerComponent,
-                       public nsIContentHandler,
                        public nsISignatureVerifier,
                        public nsIEntropyCollector,
                        public nsINSSComponent
@@ -79,7 +82,6 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISECURITYMANAGERCOMPONENT
-  NS_DECL_NSICONTENTHANDLER
   NS_DECL_NSISIGNATUREVERIFIER
   NS_DECL_NSIENTROPYCOLLECTOR
 
@@ -99,9 +101,28 @@ private:
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
   char * GetPK11String(const PRUnichar *name, PRUint32 len);
+  nsresult RegisterCertContentListener();
 
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
+  nsCOMPtr<nsIURIContentListener> mCertContentListener;
   static PRBool mNSSInitialized;
+};
+
+//--------------------------------------------
+// Now we need a content listener to register 
+//--------------------------------------------
+
+class CertContentListener : public nsIURIContentListener {
+public:
+  CertContentListener();
+  virtual ~CertContentListener();
+  nsresult init();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIURICONTENTLISTENER
+private:
+  nsCOMPtr<nsISupports> mLoadCookie;
+  nsCOMPtr<nsIURIContentListener> mParentContentListener;
 };
 
 #endif // _nsNSSComponent_h_
