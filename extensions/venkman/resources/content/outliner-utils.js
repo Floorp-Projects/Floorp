@@ -448,8 +448,8 @@ TreeOViewRecord.prototype.resort =
 function tovr_resort (leafSort)
 {
     if (!("childData" in this) || this.childData.length < 1 ||
-        this.childData[0].sortCompare != tovr_sortcmp ||
-        !("sortColumn" in this._share) || this._share.sortDirection == 0)
+        (this.childData[0].sortCompare == tovr_sortcmp &&
+         !("sortColumn" in this._share) || this._share.sortDirection == 0))
     {
         /* if we have no children, or we have the default sort compare and no
          * sort flags, then just exit */
@@ -461,7 +461,8 @@ function tovr_resort (leafSort)
     for (var i = 0; i < this.childData.length; ++i)
     {
         this.childData[i].childIndex = i;
-        if ("isContainerOpen" in this && this.childData[i].isContainerOpen)
+        if ("isContainerOpen" in this.childData[i] &&
+            this.childData[i].isContainerOpen)
             this.childData[i].resort(true);
         else
             this.childData[i].sortIsInvalid = true;
@@ -837,8 +838,8 @@ TORootRecord.prototype.resort =
 function torr_resort ()
 {
     if (!("childData" in this) || this.childData.length < 1 ||
-        this.childData[0].sortCompare != tovr_sortcmp ||
-        !("sortColumn" in this._share) || this._share.sortDirection == 0)
+        (this.childData[0].sortCompare == tovr_sortcmp &&
+         !("sortColumn" in this._share) || this._share.sortDirection == 0))
     {
         /* if we have no children, or we have the default sort compare but we're
          * missing a sort flag, then just exit */
