@@ -64,7 +64,7 @@ XFE_NavCenterFrame::XFE_NavCenterFrame(Widget toplevel,
 
   // create the bookmark view
   XFE_View *view = new XFE_NavCenterView(this, getChromeParent(), 
-                                         NULL, m_context);
+                                         (XFE_View *)NULL, m_context);
   setView(view);
   setMenubar(menu_bar_spec);
 
