@@ -329,8 +329,11 @@ function doEnabling()
 {
   // We disable Ok button when there's no href text only if inserting a new link
   var enable = insertNew ? (TrimString(gDialog.hrefInput.value).length > 0) : true;
+  
+  // anon. content, so can't use SetElementEnabledById here
+  var dialogNode = document.getElementById("linkDlg");
+  dialogNode.getButton("accept").disabled = !enable;
 
-  SetElementEnabledById( "ok", enable);
   SetElementEnabledById( "AdvancedEditButton1", enable);
 }
 
