@@ -17,6 +17,7 @@
  */
 
 pref("mail.showMessengerPerformance", false);
+pref("sidebar.messenger.open", true);
 
 // Added by mwelch 97 Feb
 pref("news.show_pretty_names",              false);
