@@ -282,6 +282,11 @@ int get_source(sym_file* symbols, UInt32 codeOffset, char fileName[256], UInt32*
 					UInt32 closestCodeDelta = 0xFFFFFFFF;
 					UInt32 currentFileOffset, currentCodeOffset = moduleEntry.mte_res_offset, currentCodeDelta;
 					for (UInt32 j = moduleEntry.mte_csnte_idx_1; j <= moduleEntry.mte_csnte_idx_2; j++) {
+						// only consider offsets less than the actual code offset, so we'll be sure
+						// to match the nearest line before the code offset. this could probably be
+						// a termination condition as well.
+						if (currentCodeOffset > codeOffset)
+							break;
 						ContainedStatementsTableEntry statementEntry;
 						if (getContainedStatementTableEntry(symbols, j, &statementEntry)) {
 							switch (statementEntry.csnte_file.change) {
@@ -293,11 +298,13 @@ int get_source(sym_file* symbols, UInt32 codeOffset, char fileName[256], UInt32*
 							default:
 								currentFileOffset += statementEntry.csnte.file_delta;
 								currentCodeOffset = moduleEntry.mte_res_offset + statementEntry.csnte.mte_offset;
-								currentCodeDelta = delta(currentCodeOffset, codeOffset);
-								if (currentCodeDelta < closestCodeDelta) {
-									closestFileOffset = currentFileOffset;
-									closestCodeOffset = currentCodeOffset;
-									closestCodeDelta = currentCodeDelta;
+								if (currentCodeOffset <= codeOffset) {
+									currentCodeDelta = delta(currentCodeOffset, codeOffset);
+									if (currentCodeDelta < closestCodeDelta) {
+										closestFileOffset = currentFileOffset;
+										closestCodeOffset = currentCodeOffset;
+										closestCodeDelta = currentCodeDelta;
+									}
 								}
 								break;
 							}
