@@ -22,8 +22,13 @@
 #include <Script.h>
 #include "prmem.h"
 #include "prmon.h"
+#include "nsIComponentManager.h"
+#include "nsLocaleCID.h"
+#include "nsIMacLocale.h"
 
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
+static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
+static NS_DEFINE_IID(kIMacLocaleIID, NS_MACLOCALE_CID);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +129,6 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
   }
 
   // locale -> script code + charset name
-  // TODO: get this via nsILocale
   m_scriptcode = 0; //smRoman
   mCharset.SetString("ISO-8859-1"); //TODO: should be "MacRoman"
   if (locale != nsnull) {
@@ -134,8 +138,18 @@ nsresult nsCollationMac::Initialize(nsILocale* locale)
     if (NS_FAILED(res)) {
       return res;
     }
-    //TODO: GetPlatformLocale() to get a script code when it's ready.
+
     //TODO: Get a charset name from a script code.
+    nsIMacLocale* macLocale;
+    short scriptcode, langcode;
+    res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, (void**)&macLocale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    if (NS_SUCCEEDED(res = macLocale->GetPlatformLocale(&aCategory, &scriptcode, &langcode))) {
+      m_scriptcode = scriptcode;
+    }
+    macLocale->Release();
   }
 
   // Initialize a mapping table for the script code.

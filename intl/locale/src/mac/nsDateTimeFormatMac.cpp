@@ -24,11 +24,18 @@
 #include <DateTimeUtils.h>
 #include <Script.h>
 #include <TextUtils.h>
+#include "nsIComponentManager.h"
+#include "nsLocaleCID.h"
+#include "nsIMacLocale.h"
+
+static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
+static NS_DEFINE_IID(kMacLocaleFactoryCID, NS_MACLOCALEFACTORY_CID);
+static NS_DEFINE_IID(kIMacLocaleIID, NS_MACLOCALE_CID);
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Intl1Hndl GetItl1Resource(long scriptcode)
+static Intl1Hndl GetItl1Resource(short scriptcode)
 {
 	// get itlb from currenty system script
 	ItlbRecord **ItlbRecordHandle;
@@ -57,7 +64,7 @@ static Intl1Hndl GetItl1Resource(long scriptcode)
 	return Itl1RecordHandle;
 }
 
-static Intl0Hndl GetItl0Resource(long scriptcode)
+static Intl0Hndl GetItl0Resource(short scriptcode)
 {
 	// get itlb from currenty system script
 	ItlbRecord **ItlbRecordHandle;
@@ -188,7 +195,6 @@ static void AbbrevWeekdayString(DateTimeRec &dateTime, Str255 weekdayString, Int
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 NS_IMPL_ISUPPORTS(nsDateTimeFormatMac, kIDateTimeFormatIID);
 
@@ -212,7 +218,7 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
   DateTimeRec macDateTime;
   Str255 timeString, dateString;
   int32 dateTime;	
-  long scriptcode = 0;	//TODO: need to get this from locale
+  short scriptcode = smSystemScript;
   nsString aCharset("ISO-8859-1");	//TODO: should be "MacRoman", need to get this from locale
   nsresult res;
 
@@ -221,6 +227,8 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
     stringOut.SetString("");
     return NS_OK;
   }
+
+  stringOut.SetString(asctime(tmTime));	// set the default string, in case for API/conversion errors
   
   // convert struct tm to input format of mac toolbox call
   NS_ASSERTION(tmTime->tm_year >= 0, "tm is not set correctly");
@@ -258,8 +266,15 @@ nsresult nsDateTimeFormatMac::FormatTMTime(nsILocale* locale,
     if (NS_FAILED(res)) {
       return res;
     }
-    //TODO: GetPlatformLocale() to get a script code when it's ready.
     //TODO: Get a charset name from a script code.
+    nsIMacLocale* macLocale;
+    short langcode;
+    res = nsComponentManager::CreateInstance(kMacLocaleFactoryCID, NULL, kIMacLocaleIID, (void**)&macLocale);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    res = macLocale->GetPlatformLocale(&aCategory, &scriptcode, &langcode);
+    macLocale->Release();
   }
 
   Handle itl1Handle = (Handle) GetItl1Resource(scriptcode);
