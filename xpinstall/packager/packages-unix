@@ -16,6 +16,7 @@ bin/libplc4.so
 bin/libplds4.so
 bin/libxpcom.so
 bin/libxpistub.so
+bin/libzlib.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
 
@@ -23,7 +24,6 @@ bin/components/libjar50.so
 bin/mozilla
 bin/mozilla-bin
 bin/libdocshell.so
-bin/splash.xpm
 bin/icons/*
 bin/libgtksuperwin.so
 bin/libjpeg.so
@@ -32,10 +32,10 @@ bin/libmsgbaseutil.so
 bin/libraptorgfx.so
 bin/libraptorplugin.so
 bin/libraptorwebwidget.so
-bin/libzlib.so
 bin/run-mozilla.sh
 bin/regExport
 bin/regxpcom
+bin/splash.xpm
 
 bin/components/appshell.xpt
 bin/components/bookmarks.xpt
@@ -112,7 +112,7 @@ bin/components/mozxfer.xpt
 bin/components/libnecko.so
 bin/components/libnecko2.so
 bin/components/necko.xpt
-bin/components/nkcache.xpt
+bin/components/necko_cache.xpt
 bin/components/necko_strconv.xpt
 bin/components/necko_about.xpt
 bin/components/necko_data.xpt
@@ -129,7 +129,6 @@ bin/components/xpinstall.xpt
 bin/components/oji.xpt
 bin/components/pref.xpt
 bin/components/proxyObjInst.xpt
-bin/components/psmglue.so
 bin/components/psmglue.xpt
 bin/components/rdf.xpt
 bin/components/related.xpt
@@ -150,7 +149,8 @@ bin/components/xpconnect.xpt
 bin/components/chrome.xpt
 bin/components/docshell.xpt
 bin/components/jsurl.xpt
-bin/components/layout.xpt
+bin/components/layout_base.xpt
+bin/components/layout_xul.xpt
 bin/components/libjsloader.so
 bin/components/libnsprefm.so
 bin/components/libregviewer.so
@@ -224,8 +224,6 @@ bin/res/ua.css
 ;debug menus reference samples dir - remove for actual releases:
 bin/res/samples/*
 
-; this is only there if you build the irc client
-; bin/irc/*
 
 [mail]
 bin/components/addrbook.xpt
@@ -260,8 +258,6 @@ bin/components/absync.xpt
 bin/chrome/packages/messenger/*
 bin/defaults/pref/mailnews.js
 
-; this doesn't seem to be in the tree. -blizzard
-;bin/help/mailhelp/*
 
 [chatzilla]
 bin/components/chatzilla-service.js
