@@ -43,14 +43,14 @@
 #define _PR_SI_ARCHITECTURE "x86"
 #elif defined(__alpha__)
 #define _PR_SI_ARCHITECTURE "alpha"
+#elif defined(__amd64__)
+#define _PR_SI_ARCHITECTURE "amd64"
 #elif defined(__m68k__)
 #define _PR_SI_ARCHITECTURE "m68k"
 #elif defined(__powerpc__)
 #define _PR_SI_ARCHITECTURE "powerpc"
 #elif defined(__sparc__)
 #define _PR_SI_ARCHITECTURE "sparc"
-#elif defined(__arm32__)
-#define _PR_SI_ARCHITECTURE "arm32"
 #endif
 
 #define PR_DLL_SUFFIX		".so.1.0"
@@ -71,6 +71,12 @@
 #define _PR_HAVE_SYSV_SEMAPHORES
 #define PR_HAVE_SYSV_NAMED_SHARED_MEMORY
 
+#define _PR_INET6
+#define _PR_HAVE_INET_NTOP
+#define _PR_HAVE_GETHOSTBYNAME2
+#define _PR_HAVE_GETADDRINFO
+#define _PR_INET6_PROBE
+
 #define USE_SETJMP
 
 #ifndef _PR_PTHREADS
@@ -80,19 +86,14 @@
 
 #define CONTEXT(_th) ((_th)->md.context)
 
-#if defined(__i386__) || defined(__sparc__) || defined(__m68k__) || defined(__powerpc__)
+#if defined(__i386__) || defined(__sparc__) || defined(__m68k__)
 #define JB_SP_INDEX 2
+#elif defined(__powerpc__)
+#define JB_SP_INDEX 1
 #elif defined(__alpha__)
 #define JB_SP_INDEX 34
-#elif defined(__arm32__)
-/*
- * On the arm32, the jmpbuf regs underwent a name change after OpenBSD 1.3.
- */
-#ifdef JMPBUF_REG_R13
-#define JB_SP_INDEX JMPBUF_REG_R13
-#else
-#define JB_SP_INDEX _JB_REG_R13
-#endif
+#elif defined(__amd64__)
+#define JB_SP_INDEX 6
 #else
 #error "Need to define SP index in jmp_buf here"
 #endif
