@@ -22,6 +22,9 @@ Rights Reserved.
 <!ENTITY readMsgsLink.label           "Read messages"> 
 <!ENTITY composeMsgLink.label         "Compose a new message"> 
 
+<!ENTITY newsSectionHdr.label         "Newsgroups"> 
+<!ENTITY subscribeNewsLink.label      "Subscribe to newsgroups"> 
+
 <!ENTITY accountsSectionHdr.label     "Accounts"> 
 <!ENTITY settingsLink.label           "View settings for this account"> 
 <!ENTITY newAcctLink.label            "Create a new account"> 

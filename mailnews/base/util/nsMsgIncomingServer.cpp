@@ -74,7 +74,8 @@ nsMsgIncomingServer::nsMsgIncomingServer():
     m_prefs(0),
     m_serverBusy(PR_FALSE),
     m_rootFolder(0),
-    m_canHaveFilters(PR_FALSE)
+    m_canHaveFilters(PR_FALSE),
+    m_displayStartupPage(PR_TRUE)
 {
   NS_INIT_REFCNT();
 }
@@ -210,6 +211,15 @@ nsMsgIncomingServer::GetCanBeDefaultServer(PRBool *canBeDefaultServer)
 {
     // derived class should override if they need to do this.
     *canBeDefaultServer = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
+{
+    // derived class should override if they need to do this.
+    NS_ENSURE_ARG_POINTER(canSearchMessages);
+    *canSearchMessages = PR_FALSE;
     return NS_OK;
 }
 
@@ -1173,6 +1183,21 @@ NS_IMETHODIMP nsMsgIncomingServer::SetRetentionSettings(nsIMsgRetentionSettings 
 {
   m_retentionSettings = settings;
   return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsMsgIncomingServer::GetDisplayStartupPage(PRBool *displayStartupPage)
+{
+    NS_ENSURE_ARG_POINTER(displayStartupPage);
+    *displayStartupPage = m_displayStartupPage;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::SetDisplayStartupPage(PRBool displayStartupPage)
+{
+    m_displayStartupPage = displayStartupPage;
+    return NS_OK;
 }
 
 #define BASE_MSGS_URL       "chrome://messenger/locale/messenger.properties"

@@ -193,6 +193,14 @@ function ChangeFolderByURI(uri, isThreaded, sortID, sortDirection, viewType)
         ShowAccountCentral(); 
 	return;
   }
+  else
+  {
+    if (msgfolder.server.displayStartupPage)
+    {
+      gDisplayStartupPage = true;
+      msgfolder.server.displayStartupPage = false;
+    } 
+  }
 
   // If the user clicks on msgfolder, time to display thread pane and message pane.
   // Hide AccountCentral page
@@ -799,6 +807,11 @@ function FolderPaneSelectionChange()
         if (!gAccountCentralLoaded)
             ClearMessagePane();
 
+        if (gDisplayStartupPage)
+        {
+            loadStartPage(); 
+            gDisplayStartupPage = false;
+        }
 }
 
 function ClearThreadPane()

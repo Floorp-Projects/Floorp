@@ -46,6 +46,7 @@ public:
     NS_IMETHOD PerformBiff();
     NS_IMETHOD GetDownloadMessagesAtStartup(PRBool *getMessages);
     NS_IMETHOD GetCanBeDefaultServer(PRBool *canBeDefaultServer);
+    NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
 private:
 
     static nsresult setSubFolderFlag(nsIFolder *aRootFolder,

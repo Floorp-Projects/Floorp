@@ -548,6 +548,14 @@ nsPop3Service::GetCanGetMessages(PRBool *aCanGetMessages)
 }  
 
 NS_IMETHODIMP
+nsPop3Service::GetShowComposeMsgLink(PRBool *showComposeMsgLink)
+{
+    NS_ENSURE_ARG_POINTER(showComposeMsgLink);
+    *showComposeMsgLink = PR_TRUE;
+    return NS_OK;
+}  
+
+NS_IMETHODIMP
 nsPop3Service::GetDefaultServerPort(PRBool isSecure, PRInt32 *aPort)
 {
     return GetDefaultPort(aPort);

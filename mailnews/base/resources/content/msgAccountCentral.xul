@@ -60,67 +60,85 @@ Rights Reserved.
         <text class="label" id="AccountCentralTitle"/>
       </row>
       <separator/>
+
       <row id="EmailHeader" class="acctCentralTitleRow">
         <box class="acctCentralRowTitleBox">
           <html>&emailSectionHdr.label;</html> 
         </box>
       </row>
-      <separator class="thin"/>
+      <separator id="EmailHeader.separator" class="thin"/>
       <row id="ReadMessages" class="acctCentralRow">
         <box> 
           <text class="acctCentralText acctCentralLinkText" value="&readMsgsLink.label;" onclick="ReadMessages();"/> 
         </box>
       </row>
-      <separator class="thin"/>
+      <separator id="ReadMessages.separator" class="thin"/>
       <row id="ComposeMessage" class="acctCentralRow">
         <box> 
           <text class="acctCentralText acctCentralLinkText" value="&composeMsgLink.label;" onclick="ComposeAMessage();"/> 
         </box> 
       </row>
+      <separator id="ComposeMessage.separator" class="thin"/>
 
-      <separator/>
-      <separator/>
-      <separator/>
+      <row id="NewsHeader" class="acctCentralTitleRow">
+        <box class="acctCentralRowTitleBox">
+          <html>&newsSectionHdr.label;</html> 
+        </box>
+      </row>
+      <separator id="NewsHeader.separator" class="thin"/>
+      <row id="SubscribeNewsgroups" class="acctCentralRow">
+        <box> 
+          <text class="acctCentralText acctCentralLinkText" value="&subscribeNewsLink.label;" onclick="SubscribeNewsgroups();"/> 
+        </box> 
+      </row>
+      <separator id="SubscribeNewsgroups.separator" class="thin"/>
+
+      <separator id="MessagesSection.separator1"/>
+      <separator id="MessagesSection.separator2"/>
+      <separator id="MessagesSection.separator3"/>
 
       <row id="AccountsHeader" class="acctCentralTitleRow">
         <box class="acctCentralRowTitleBox">
           <html>&accountsSectionHdr.label;</html> 
         </box>
       </row>
-      <separator class="thin"/>
+      <separator id="AccountsHeader.separator" class="thin"/>
       <row id="AccountSettings" class="acctCentralRow">
         <box> 
           <text class="acctCentralText acctCentralLinkText" value="&settingsLink.label;" onclick="ViewSettings();"/> 
         </box> 
       </row>
-      <separator class="thin"/>
+      <separator id="AccountSettings.separator" class="thin"/>
       <row id="CreateAccount" class="acctCentralRow">
         <box> 
           <text class="acctCentralText acctCentralLinkText" value="&newAcctLink.label;" onclick="CreateNewAccount();"/> 
         </box> 
       </row>
+      <separator id="CreateAccount.separator" class="thin"/>
 
-      <separator/>
-      <separator/>
-      <separator/>
+      <separator id="AccountsSection.separator1"/>
+      <separator id="AccountsSection.separator2"/>
+      <separator id="AccountsSection.separator3"/>
 
       <row id="AdvancedFeaturesHeader" class="acctCentralTitleRow">
         <box class="acctCentralRowTitleBox">
           <html>&advFeaturesSectionHdr.label;</html> 
         </box> 
       </row>
-      <separator class="thin"/>
+      <separator id="AdvancedFeaturesHeader.separator" class="thin"/>
       <row id="SearchMessages" class="acctCentralRow">
         <box> 
           <text class="acctCentralText acctCentralLinkText" value="&searchMsgsLink.label;" onclick="SearchMessages();"/> 
         </box> 
       </row>
-      <separator class="thin"/>
+      <separator id="SearchMessages.separator" class="thin"/>
       <row id="CreateFilters" class="acctCentralRow">
         <box> 
           <text class="acctCentralText acctCentralLinkText" value="&filtersLink.label;" onclick="CreateMsgFilters();"/> 
         </box> 
       </row>
+      <separator id="CreateFilters.separator" class="thin"/>
+
     </rows>
   </grid>
 </window>

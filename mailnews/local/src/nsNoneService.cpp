@@ -199,3 +199,12 @@ nsNoneService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
     *aDefaultPort = -1;
     return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsNoneService::GetShowComposeMsgLink(PRBool *showComposeMsgLink)
+{
+    NS_ENSURE_ARG_POINTER(showComposeMsgLink);
+    *showComposeMsgLink = PR_FALSE;    
+    return NS_OK;
+}
+

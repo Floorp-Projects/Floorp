@@ -2634,3 +2634,11 @@ nsImapIncomingServer::GetCanBeDefaultServer(PRBool *canBeDefaultServer)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImapIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
+{
+    NS_ENSURE_ARG_POINTER(canSearchMessages);
+    *canSearchMessages = PR_TRUE;
+    return NS_OK;
+}
+

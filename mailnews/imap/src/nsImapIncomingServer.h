@@ -63,6 +63,7 @@ public:
 	NS_IMETHOD CloseCachedConnections();
     NS_IMETHOD GetConstructedPrettyName(PRUnichar **retval);
         NS_IMETHOD GetCanBeDefaultServer(PRBool *canBeDefaultServer);
+        NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
 
 protected:
 	nsresult GetFolder(const char* name, nsIMsgFolder** pFolder);

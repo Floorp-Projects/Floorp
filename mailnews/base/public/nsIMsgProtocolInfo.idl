@@ -98,5 +98,10 @@ interface nsIMsgProtocolInfo : nsISupports
      * do biff by default?
      */
     readonly attribute boolean defaultDoBiff;
+
+    /**
+     * do we need to show compose message link in the AccountCentral page ? 
+     */
+    readonly attribute boolean showComposeMsgLink;
 };
 

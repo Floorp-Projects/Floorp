@@ -1394,3 +1394,11 @@ nsNntpIncomingServer::ForgetPassword()
     return return_rv;
 }
 
+NS_IMETHODIMP
+nsNntpIncomingServer::GetCanSearchMessages(PRBool *canSearchMessages)
+{
+    NS_ENSURE_ARG_POINTER(canSearchMessages);
+    *canSearchMessages = PR_TRUE;
+    return NS_OK;
+}
+

@@ -85,6 +85,9 @@ protected:
 
   // member variable for canHaveFilters
   PRBool m_canHaveFilters;
+
+  // member variable for to check if we need display startup page
+  PRBool m_displayStartupPage;
 };
 
 #endif // nsMsgIncomingServer_h__

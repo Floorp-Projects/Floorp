@@ -207,6 +207,12 @@ interface nsIMsgIncomingServer : nsISupports {
 
   /* check if this server can be a default server */
   readonly attribute boolean canBeDefaultServer;
+
+  /* check if this server allows search operations */
+  readonly attribute boolean canSearchMessages;
+
+  /* display startup page once per account per session */
+  attribute boolean displayStartupPage;
 };
 
 %{C++

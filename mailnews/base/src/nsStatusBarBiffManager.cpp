@@ -103,7 +103,7 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
 
     // if we got new mail, attempt to play a sound.
     // if we fail along the way, don't return.
-    // we still need to update the UI.
+    // we still need to update the UI.    
     if (newBiffFlag == nsIMsgFolder::nsMsgBiffState_NewMail) {
       nsCOMPtr<nsIPref> pref = do_GetService(NS_PREF_CONTRACTID);
       if (pref) {
@@ -135,7 +135,13 @@ nsresult nsStatusBarBiffManager::PerformStatusBarBiff(PRUint32 newBiffFlag)
               }
             }
 
-            if (NS_SUCCEEDED(rv) && soundURL) {
+            nsXPIDLCString soundURLSpec;
+            if (soundURL)
+              rv = soundURL->GetSpec(getter_Copies(soundURLSpec));
+            else
+              rv = NS_ERROR_FAILURE;
+
+            if (NS_SUCCEEDED(rv) && nsCRT::strlen(soundURLSpec.get())) {
               sound->Play(soundURL);
             }
             else {

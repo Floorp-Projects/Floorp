@@ -1459,6 +1459,14 @@ nsNntpService::GetCanGetMessages(PRBool *aCanGetMessages)
 }  
 
 NS_IMETHODIMP
+nsNntpService::GetShowComposeMsgLink(PRBool *showComposeMsgLink)
+{
+    NS_ENSURE_ARG_POINTER(showComposeMsgLink);
+    *showComposeMsgLink = PR_FALSE;
+    return NS_OK;
+}  
+
+NS_IMETHODIMP
 nsNntpService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAndFoldersPrefsToServer)
 {
 	NS_ENSURE_ARG_POINTER(aDefaultCopiesAndFoldersPrefsToServer);

@@ -51,7 +51,8 @@ function OnInit()
             acctType = messengerBundle.getString("mailAcctType");
 
         // Get the account name
-        acctName = GetSelectedMsgFolderName();
+        var msgFolder = GetSelectedMsgFolder();
+        acctName = msgFolder.prettyName;
 
         title = messengerBundle.getString("acctCentralTitleFormat")
                          .replace(/%brandName%/, brandName)
@@ -61,19 +62,94 @@ function OnInit()
         titleElement.setAttribute("value", title);
 
         // Display and collapse items presented to the user based on account type
-        ArrangeAccountCentralItems(serverType);
+        var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + serverType];
+        protocolInfo = protocolInfo.getService(Components.interfaces.nsIMsgProtocolInfo);
+        ArrangeAccountCentralItems(selectedServer, protocolInfo, msgFolder);
     }
     catch(ex) {
         dump("Error -> " + ex + "\n");
     }
 }
  
-function ArrangeAccountCentralItems(serverType)
+// Show items in the AccountCentral page depending on the capabilities
+// of the given account
+function ArrangeAccountCentralItems(server, protocolInfo, msgFolder)
 {
-    if (serverType == "nntp")
-        ShowOnlyNewsItems();
-    else
-        ShowOnlyMailItems();
+    try {
+        /***** Email header and items : Begin *****/
+
+        // Read Messages
+        var canGetMessages = protocolInfo.canGetMessages;
+        SetItemDisplay("ReadMessages", canGetMessages);
+    
+        // Compose Messages link
+        var showComposeMsgLink = protocolInfo.showComposeMsgLink;
+        SetItemDisplay("ComposeMessage", showComposeMsgLink);
+    
+        var displayEmailHeader = canGetMessages || showComposeMsgLink;
+        // Display Email header, only if any of the items are displayed
+        SetItemDisplay("EmailHeader", displayEmailHeader);
+    
+        /***** Email header and items : End *****/
+
+        /***** News header and items : Begin *****/
+
+        // Subscribe to Newsgroups 
+        var canSubscribe = (msgFolder.canSubscribe) && !(protocolInfo.canGetMessages);
+        SetItemDisplay("SubscribeNewsgroups", canSubscribe);
+    
+        // Display News header, only if any of the items are displayed
+        SetItemDisplay("NewsHeader", canSubscribe);
+    
+        /***** News header and items : End *****/
+   
+        // If neither of above sections exist, collapse section separators
+        if (!(canSubscribe || displayEmailHeader)) { 
+            CollapseSectionSeparators("MessagesSection.separator", false);
+        } 
+
+        /***** Advanced Features header and items : Begin *****/
+
+        // Search Messages
+        var canSearchMessages = server.canSearchMessages;
+        SetItemDisplay("SearchMessages", canSearchMessages);
+    
+        // Create Filters
+        var canHaveFilters = server.canHaveFilters;
+        SetItemDisplay("CreateFilters", canHaveFilters);
+    
+        var displayAdvFeatures = canSearchMessages || canHaveFilters;
+        // Display Adv Features header, only if any of the items are displayed
+        SetItemDisplay("AdvancedFeaturesHeader", displayAdvFeatures);
+    
+        /***** Advanced Featuers header and items : End *****/
+    }
+    catch (ex) {
+        dump("Error is setting AccountCentral Items : " + ex + "\n");
+    }
+}
+
+// Collapse the item if the item feature is not supported 
+function SetItemDisplay(elemId, displayThisItem)
+{
+    if (!displayThisItem) {
+        var elem = document.getElementById(elemId); 
+        elem.setAttribute("collapsed", true);
+
+        var separatorId = elemId + ".separator";
+        var elemSeparator = document.getElementById(separatorId); 
+        elemSeparator.setAttribute("collapsed", true);
+    }
+}
+
+// Collapse section separators  
+function CollapseSectionSeparators(separatorBaseId)
+{
+    for (var i=1; i <= 3; i++) {
+        var separatorId = separatorBaseId + i;
+        var separator = document.getElementById(separatorId);   
+        separator.setAttribute("collapsed", true);
+    }
 }
 
 // From the current folder tree, return the selected server
@@ -84,40 +160,12 @@ function GetSelectedServer()
     return server;
 }
 
-// From the current folder tree, return the name of the folder selected
-function GetSelectedMsgFolderName()
+// From the current folder tree, return the selected folder
+function GetSelectedMsgFolder()
 {
     var folderURI = window.parent.GetSelectedFolderURI();
     var msgFolder = window.parent.GetMsgFolderFromURI(folderURI);
-    return msgFolder.prettyName;
-}
-
-// Base AccountCentral page has items pertained to both mail and news. 
-// For news, we collapse all unwanted mail items and display all news items
-function ShowOnlyNewsItems()
-{
-    try {
-        document.getElementById("ReadMessages").setAttribute("collapsed", "true");
-        document.getElementById("CreateFilters").setAttribute("collapsed", "true");
-    }
-    catch(ex) {
-        dump("Error -> " + ex + "\n");
-    } 
-    
-}
-
-// Base AccountCentral page has items pertained to both mail and news. 
-// For mail, we collapse all unwanted news items and display all mail items
-function ShowOnlyMailItems()
-{
-
-    try {
-        document.getElementById("ReadMessages").removeAttribute("collapsed");
-        document.getElementById("CreateFilters").removeAttribute("collapsed");
-    }
-    catch(ex) {
-        dump("Error -> " + ex + "\n");
-    } 
+    return msgFolder;
 }
 
 // Open Inbox for selected server.
@@ -160,4 +208,10 @@ function SearchMessages()
 function CreateMsgFilters()
 {
     window.parent.MsgFilters();
+} 
+
+// Open Subscribe dialog
+function SubscribeNewsgroups()
+{
+    window.parent.MsgSubscribe();
 } 

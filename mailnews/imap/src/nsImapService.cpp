@@ -3061,6 +3061,14 @@ nsImapService::GetCanGetMessages(PRBool *aCanGetMessages)
 }        
 
 NS_IMETHODIMP
+nsImapService::GetShowComposeMsgLink(PRBool *showComposeMsgLink)
+{
+    NS_ENSURE_ARG_POINTER(showComposeMsgLink);
+    *showComposeMsgLink = PR_TRUE;
+    return NS_OK;
+}        
+
+NS_IMETHODIMP
 nsImapService::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aDefaultCopiesAndFoldersPrefsToServer)
 {
     NS_ENSURE_ARG_POINTER(aDefaultCopiesAndFoldersPrefsToServer);

@@ -52,6 +52,7 @@ var gStartFolderUri = null;
 var gHaveLoadedMessage;
 
 var gBatching = false;
+var gDisplayStartupPage = false;
 
 
 

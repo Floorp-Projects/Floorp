@@ -642,3 +642,11 @@ nsMovemailService::GetDefaultServerPort(PRBool isSecure, PRInt32 *aDefaultPort)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMovemailService::GetShowComposeMsgLink(PRBool *showComposeMsgLink)
+{
+    NS_ENSURE_ARG_POINTER(showComposeMsgLink);
+    *showComposeMsgLink = PR_TRUE;
+    return NS_OK;
+}
+
