@@ -43,6 +43,7 @@
 #include "nsISaveAsCharset.h"
 #include "nsHankakuToZenkakuCID.h"
 #include "nsXPIDLString.h"
+#include "nsString.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
@@ -723,12 +724,14 @@ nsMsgI18NGetAcceptLanguage(void)
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
   if (nsnull != prefs && NS_SUCCEEDED(res))
   {
-    nsXPIDLCString prefValue;
+    nsXPIDLString prefValue;
 
     nsCRT::memset(lang, 0, sizeof(lang));
-    res = prefs->CopyCharPref("intl.accept_languages", getter_Copies(prefValue));
+    res = prefs->GetLocalizedUnicharPref("intl.accept_languages", getter_Copies(prefValue));
 	  if (NS_SUCCEEDED(res) && prefValue) 
-      PL_strncpy(lang, (const char *) prefValue, sizeof(lang));
+    {
+      PL_strncpy(lang, NS_ConvertUCS2toUTF8(prefValue), sizeof(lang));
+    }
 	  else 
 		  PL_strcpy(lang, "en");
   }
