@@ -77,7 +77,7 @@ static PRUint32 wexp1[] = {
 static char teng2[] = 
  "()((reasonab(l)e) line  break. .01123=45x48.";
 
-static PRUint32 exp2[] = {
+static PRUint32 lexp2[] = {
   2,12,15,17,18,22,23,24,30,31,37,38,
 };
 static PRUint32 wexp2[] = {
@@ -272,7 +272,7 @@ PRBool TestLineBreaker()
 
          cout << "Test 5 - {First,Next}ForwardBreak():\n";
          if(TestASCIILB(lb, teng2, sizeof(teng2)/sizeof(char), 
-                   exp2, sizeof(exp2)/sizeof(PRUint32)) )
+                   lexp2, sizeof(lexp2)/sizeof(PRUint32)) )
          {
            cout << "Test 5 Passed\n\n";
          } else {
