@@ -82,18 +82,6 @@ nsHTMLReflowState::GetContainingBlockContentWidth(const nsReflowState* aParentRS
   return width;
 }
 
-static inline PRBool
-IsReplaced(nsIAtom* aTag)
-{
-  return (nsHTMLAtoms::img == aTag) ||
-    (nsHTMLAtoms::applet == aTag) ||
-    (nsHTMLAtoms::object == aTag) ||
-    (nsHTMLAtoms::input == aTag) ||
-    (nsHTMLAtoms::select == aTag) ||
-    (nsHTMLAtoms::textarea == aTag) ||
-    (nsHTMLAtoms::iframe == aTag);
-}
-
 // XXX there is no CLEAN way to detect the "replaced" attribute (yet)
 void
 nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
@@ -155,7 +143,10 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
     }
   }
 
-  if (IsReplaced(tag)) {
+  // See if the frame is replaced
+  nsFrameState  frameState;
+  frame->GetFrameState(&frameState);
+  if (frameState & NS_FRAME_REPLACED_ELEMENT) {
     frameType = NS_FRAME_REPLACED(frameType);
   }
   NS_IF_RELEASE(tag);
