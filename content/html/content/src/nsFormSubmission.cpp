@@ -47,7 +47,8 @@ static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsLinebreakConverter.h"
 #include "nsICharsetConverterManager.h"
@@ -682,10 +683,11 @@ nsFSMultipartFormData::nsFSMultipartFormData(const nsAString& aCharset,
 {
   // XXX I can't *believe* we have a pref for this.  ifdef, anyone?
   mBackwardsCompatibleSubmit = PR_FALSE;
-  nsCOMPtr<nsIPref> prefService(do_GetService(NS_PREF_CONTRACTID));
-  if (prefService)
-    prefService->GetBoolPref("browser.forms.submit.backwards_compatible",
-                             &mBackwardsCompatibleSubmit);
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch) {
+    prefBranch->GetBoolPref("browser.forms.submit.backwards_compatible",
+                            &mBackwardsCompatibleSubmit);
+  }
 }
 
 nsresult

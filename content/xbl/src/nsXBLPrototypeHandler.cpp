@@ -65,7 +65,8 @@
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsIDOMWindowInternal.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -195,12 +196,10 @@ nsXBLPrototypeHandler::InitAccessKeys()
 #endif
 
   // Get the menu access key value from prefs, overriding the default:
-  nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv) && prefs)
-  {
-    prefs->GetIntPref("ui.key.menuAccessKey", &kMenuAccessKey);
-    prefs->GetIntPref("ui.key.accelKey", &kAccelKey);
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch) {
+    prefBranch->GetIntPref("ui.key.menuAccessKey", &kMenuAccessKey);
+    prefBranch->GetIntPref("ui.key.accelKey", &kAccelKey);
   }
 }
 

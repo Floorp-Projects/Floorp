@@ -81,7 +81,9 @@
 #include "nsIViewManager.h"
 #include "nsIView.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsIPrefLocalizedString.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
 #include "nsIWebShell.h"
@@ -2358,9 +2360,16 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
     webShell = do_QueryInterface(mContainer);
     if (webShell)
     {
-      nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
-      if (prefs)
-        prefs->GetLocalizedUnicharPref("intl.charset.default", getter_Copies(defCharset));
+      nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+      if (prefBranch) {
+        nsCOMPtr<nsIPrefLocalizedString> prefLocalString;
+        prefBranch->GetComplexValue("intl.charset.default",
+                                    NS_GET_IID(nsIPrefLocalizedString),
+                                    getter_AddRefs(prefLocalString));
+        if (prefLocalString) {
+          prefLocalString->GetData(getter_Copies(defCharset));
+        }
+      }
     }
 
     if (!defCharset.IsEmpty())

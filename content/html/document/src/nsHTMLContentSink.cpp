@@ -128,7 +128,8 @@
 #include "nsISelectElement.h"
 #include "nsITextAreaElement.h"
 
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
@@ -2477,18 +2478,17 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     mFlags |= NS_SINK_FLAG_SCRIPT_ENABLED;
   }
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
 
-  mNotifyOnTimer = PR_TRUE;
-  if (prefs) {
-    PRBool result = mNotifyOnTimer;
-    prefs->GetBoolPref("content.notify.ontimer", &result);
-    mNotifyOnTimer = result;
+  PRBool notifyPref = PR_TRUE;
+  if (prefBranch) {
+    prefBranch->GetBoolPref("content.notify.ontimer", &notifyPref);
   }
+  mNotifyOnTimer = notifyPref;
 
   mBackoffCount = -1; // never
-  if (prefs) {
-    prefs->GetIntPref("content.notify.backoffcount", &mBackoffCount);
+  if (prefBranch) {
+    prefBranch->GetIntPref("content.notify.backoffcount", &mBackoffCount);
   }
 
   // The mNotificationInterval has a dramatic effect on how long it
@@ -2499,8 +2499,8 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // it starts to impact page load performance.
   // see bugzilla bug 72138 for more info.
   mNotificationInterval = 120000;
-  if (prefs) {
-    prefs->GetIntPref("content.notify.interval", &mNotificationInterval);
+  if (prefBranch) {
+    prefBranch->GetIntPref("content.notify.interval", &mNotificationInterval);
   }
 
   // The mMaxTokenProcessingTime controls how long we stay away from
@@ -2524,11 +2524,13 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // 3/4 second default for switching
   mDynamicIntervalSwitchThreshold = 750000;
 
-  if (prefs) {
-    prefs->GetBoolPref("content.interrupt.parsing", &enableInterruptParsing);
-    prefs->GetIntPref("content.max.tokenizing.time", &mMaxTokenProcessingTime);
-    prefs->GetIntPref("content.switch.threshold",
-                      &mDynamicIntervalSwitchThreshold);
+  if (prefBranch) {
+    prefBranch->GetBoolPref("content.interrupt.parsing",
+                            &enableInterruptParsing);
+    prefBranch->GetIntPref("content.max.tokenizing.time",
+                           &mMaxTokenProcessingTime);
+    prefBranch->GetIntPref("content.switch.threshold",
+                           &mDynamicIntervalSwitchThreshold);
   }
 
   if (enableInterruptParsing) {
@@ -2538,8 +2540,8 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   // Changed from 8192 to greatly improve page loading performance on
   // large pages.  See bugzilla bug 77540.
   mMaxTextRun = 8191;
-  if (prefs) {
-    prefs->GetIntPref("content.maxtextrun", &mMaxTextRun);
+  if (prefBranch) {
+    prefBranch->GetIntPref("content.maxtextrun", &mMaxTextRun);
   }
 
   nsCOMPtr<nsIHTMLContentContainer> htmlContainer(do_QueryInterface(aDoc));

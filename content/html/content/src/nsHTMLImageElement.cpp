@@ -67,7 +67,8 @@
 #include "nsGUIEvent.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMWindow.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 #include "imgIContainer.h"
 #include "imgILoader.h"
@@ -80,8 +81,6 @@
 
 #include "nsIJSContextStack.h"
 #include "nsIView.h"
-
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 // XXX nav attrs: suppress
 
@@ -853,10 +852,10 @@ nsHTMLImageElement::SetSrc(const nsAString& aSrc)
    * prevent setting image.src by exiting early
    */
 
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-  if (prefs) {
+  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefBranch) {
     PRBool disableImageSrcSet = PR_FALSE;
-    prefs->GetBoolPref("dom.disable_image_src_set", &disableImageSrcSet);
+    prefBranch->GetBoolPref("dom.disable_image_src_set", &disableImageSrcSet);
 
     if (disableImageSrcSet && !nsContentUtils::IsCallerChrome()) {
       return NS_OK;
