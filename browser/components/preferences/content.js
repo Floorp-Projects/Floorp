@@ -102,7 +102,7 @@ var gContentPane = {
     var enableImages = document.getElementById("enableImages");
     if (enableImages.checked) {
       var enableRestricted = document.getElementById("enableRestricted");
-      return enableRestricted.checked ? 1 : 0;
+      return enableRestricted.checked ? 3 : 1;
     }
     return 2;
   },
@@ -112,13 +112,13 @@ var gContentPane = {
     var pref = document.getElementById("permissions.default.image");
     var enableRestricted = document.getElementById("enableRestricted");    
     enableRestricted.disabled = pref.value == 2;
-    return (pref.value == 0 || pref.value == 1);
+    return (pref.value == 1 || pref.value == 3);
   },
   
   readEnableRestrictedPref: function ()
   {
     var pref = document.getElementById("permissions.default.image");
-    return (pref.value == 1);
+    return (pref.value == 3);
   },
   
   _exceptionsParams: {
