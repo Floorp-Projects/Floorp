@@ -57,5 +57,6 @@ interface nsIMessenger : nsISupports {
     void Undo();
     void Redo();
 	void SendUnsentMessages();
+	void SetDocumentCharset(in wstring characterSet);
 };
 
