@@ -60,6 +60,7 @@ catch (ex)
   var throbberElement = null;
   var stopButton = null;
   var stopMenu = null;
+  var stopContext = null;
   var locationFld = null;
   var backButton	= null;
   var forwardButton = null;
@@ -286,6 +287,8 @@ nsXULBrowserWindow.prototype =
       stopButton = document.getElementById("stop-button");
     if(!stopMenu)
       stopMenu = document.getElementById("menuitem-stop");
+    if(!stopContext)
+      stopContext = document.getElementById("context-stop");
 
     if (state & Components.interfaces.nsIWebProgressListener.flag_start) {
       if(state & Components.interfaces.nsIWebProgressListener.flag_is_network) {
@@ -298,6 +301,7 @@ nsXULBrowserWindow.prototype =
         // XXX: These need to be based on window activity...    
         stopButton.setAttribute("disabled", false);
         stopMenu.setAttribute("disabled", false);
+        stopContext.setAttribute("disabled", false);
 
         // Initialize the progress stuff...
         statusMeter.setAttribute("mode","undetermined");
@@ -336,6 +340,7 @@ nsXULBrowserWindow.prototype =
         // XXX: These need to be based on window activity...
         stopButton.setAttribute("disabled", true);
         stopMenu.setAttribute("disabled", true);
+        stopContext.setAttribute("disabled", true);
 
         EnableBusyCursor(false);
       }
