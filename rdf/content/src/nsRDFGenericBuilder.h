@@ -70,8 +70,8 @@ public:
     NS_IMETHOD FindTemplateForResource(nsIRDFResource *aNode, nsIContent **theTemplate);
     NS_IMETHOD IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aRule, PRBool *matchingRuleFound);
     NS_IMETHOD PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIContent *aTemplate,
-                    nsIContent *treeCell, nsIContent* aElement, nsIRDFResource* aProperty,
-                    nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
+                    nsIContent *treeCell, nsIContent* aElement, PRBool isUnique,
+                    nsIRDFResource* aProperty, nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
     NS_IMETHOD CreateWidgetItem(nsIContent* aElement, nsIRDFResource* aProperty,
 				nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
 

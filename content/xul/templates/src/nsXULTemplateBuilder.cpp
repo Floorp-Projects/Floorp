@@ -912,7 +912,7 @@ RDFGenericBuilderImpl::FindTemplateForResource(nsIRDFResource *aNode, nsIContent
 
 NS_IMETHODIMP
 RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIContent *aTemplate,
-		nsIContent *treeChildren, nsIContent* aElement, nsIRDFResource* aProperty,
+		nsIContent *treeChildren, nsIContent* aElement, PRBool isUnique, nsIRDFResource* aProperty,
 		nsIRDFResource* aValue, PRInt32 aNaturalOrderPos)
 {
 	PRInt32		count;
@@ -939,6 +939,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 				if (idValue.EqualsIgnoreCase("..."))
 				{
 					isContainmentElement = PR_TRUE;
+					isUnique=PR_FALSE;
 				}
 			}
 		}
@@ -947,7 +948,13 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 		if (NS_SUCCEEDED(rv = aTemplateKid->GetTag(*getter_AddRefs(tag))))
 		{
 			nsCOMPtr<nsIContent>	treeGrandchild;
-			if (isContainmentElement == PR_TRUE)
+			if (isUnique == PR_TRUE)
+			{
+				if (NS_FAILED(rv = EnsureElementHasGenericChild(treeChildren,
+					nameSpaceID, tag, getter_AddRefs(treeGrandchild))))
+					continue;
+			}
+			else if (isContainmentElement == PR_TRUE)
 			{
 				if (NS_FAILED(rv = CreateElement(nameSpaceID,
 					tag, aValue, getter_AddRefs(treeGrandchild))))
@@ -1154,7 +1161,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 					if (numTemplateKids > 0)
 					{
 						rv = PopulateWidgetItemSubtree(aTemplateRoot, aTemplateKid, treeGrandchild,
-							aElement, aProperty, aValue, aNaturalOrderPos);
+							aElement, isUnique, aProperty, aValue, aNaturalOrderPos);
 					}
 				}
 
@@ -1244,8 +1251,8 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement, nsIRDFResource *aP
 				}
 			}
 		}
-		rv = PopulateWidgetItemSubtree(aTemplate, aTemplate, children,
-				aElement, aProperty, aValue, aNaturalOrderPos);
+		rv = PopulateWidgetItemSubtree(aTemplate, aTemplate, children, aElement,
+				PR_TRUE, aProperty, aValue, aNaturalOrderPos);
 	}
 	else
 	{
