@@ -61,16 +61,16 @@ OS_CFLAGS		= $(PLATFORM_FLAGS) $(DSO_FLAGS) $(PORT_FLAGS) $(MOVEMAIL_FLAGS)
 ######################################################################
 
 ifeq ($(OS_RELEASE),5.0)
-CC			= /bin/cc
-CCC			= /bin/cc++
+CCC			= cc++
 else
-CC			= /usr/bin/cc
-CCC			= /usr/bin/c++
+CCC			= c++
 endif
+
+CC			= cc
+AR			= libtool -static -o $@
 
 EMACS			= /usr/bin/true
 PERL			= /usr/bin/true
-AR              = /bin/libtool -static -o $@
 RANLIB			= /usr/bin/true
 
 # Comment out MKSHLIB to build only static libraries.
