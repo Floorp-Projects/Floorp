@@ -141,16 +141,23 @@ function localeSwitching(winType, baseDirectory, providerName)
 function localeTo(baseDirectory, localeName)
 {
   dump("\n ** Enter localeTo() ** \n");
-  localeSwitching("global", baseDirectory, localeName);
-  localeSwitching("navigator", baseDirectory, localeName);
-  localeSwitching("sidebar", baseDirectory, localeName);
-  localeSwitching("messenger", baseDirectory, localeName);
-  localeSwitching("messengercompose", baseDirectory, localeName);
-  localeSwitching("editor", baseDirectory, localeName);
-  localeSwitching("addressbook", baseDirectory, localeName);
-  localeSwitching("pref", baseDirectory, localeName);
-  localeSwitching("bookmarks", baseDirectory, localeName);
-  localeSwitching("history", baseDirectory, localeName);
-  localeSwitching("related", baseDirectory, localeName);
+
+  localeSwitching("addressbook", baseDirectory, localeName); 
+  localeSwitching("bookmarks", baseDirectory, localeName); 
+  localeSwitching("directory", baseDirectory, localeName); 
+  localeSwitching("editor", baseDirectory, localeName); 
+  localeSwitching("global", baseDirectory, localeName); 
+  localeSwitching("history", baseDirectory, localeName); 
+  localeSwitching("messenger", baseDirectory, localeName); 
+  localeSwitching("messengercompose", baseDirectory, localeName); 
+  localeSwitching("navigator", baseDirectory, localeName); 
+  localeSwitching("pref", baseDirectory, localeName); 
+  localeSwitching("profile", baseDirectory, localeName); 
+  localeSwitching("regviewer", baseDirectory, localeName); 
+  localeSwitching("related", baseDirectory, localeName); 
+  localeSwitching("sidebar", baseDirectory, localeName); 
+  localeSwitching("wallet", baseDirectory, localeName); 
+  localeSwitching("xpinstall", baseDirectory, localeName); 
+  
   dump("\n ** Leave localeTo() ** \n");
 }
