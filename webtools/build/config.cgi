@@ -30,7 +30,7 @@ $field_separator = '<<fs>>';
 $configure_in    = 'configure-mirror/mozilla/configure.in';
 $chrome_color    = '#F0A000';
 $CVSROOT         = ':pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot';
-#$ENV{PATH}       = "$ENV{PATH}:/usr/bin/ccs"; # for m4
+$ENV{PATH}       = "$ENV{PATH}:/opt/cvs-tools/bin"; # for cvs
 
 
 if ($query->param()) {
