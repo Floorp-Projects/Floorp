@@ -328,6 +328,7 @@ nsSVGGraphicElement::IsAttributeMapped(const nsIAtom* name) const
   static const MappedAttributeEntry* const map[] = {
     sFillStrokeMap,
     sGraphicsMap,
+    sColorMap
   };
   
   return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||

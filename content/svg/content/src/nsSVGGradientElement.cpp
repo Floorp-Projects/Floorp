@@ -76,6 +76,9 @@ public:
   // nsISVGContent specializations:
   virtual void ParentChainChanged();
 
+  // nsIStyledContent
+  NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
+
 protected:
   
   // nsIDOMSVGGradientElement values
@@ -233,6 +236,21 @@ void nsSVGGradientElement::ParentChainChanged()
   // Also, gradient child elements (stops) don't have any length
   // properties, so no need to recurse into children here.
 }  
+
+//----------------------------------------------------------------------
+// nsIStyledContent methods
+
+NS_IMETHODIMP_(PRBool)
+nsSVGGradientElement::IsAttributeMapped(const nsIAtom* name) const
+{
+  static const MappedAttributeEntry* const map[] = {
+    sGradientStopMap,
+    sColorMap
+  };
+  
+  return FindAttributeDependence(name, map, NS_ARRAY_LENGTH(map)) ||
+    nsSVGGradientElementBase::IsAttributeMapped(name);
+}
 
 //---------------------Linear Gradients------------------------
 

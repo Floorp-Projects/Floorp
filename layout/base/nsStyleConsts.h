@@ -191,6 +191,7 @@
 #define NS_COLOR_MOZ_HYPERLINKTEXT              -1
 #define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -2
 #define NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT        -3
+#define NS_COLOR_CURRENTCOLOR                   -4
 
 // See nsStyleBackground
 #define NS_STYLE_BG_COLOR_TRANSPARENT           0x01

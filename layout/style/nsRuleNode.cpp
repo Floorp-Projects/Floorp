@@ -310,7 +310,8 @@ static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
 }
 
 static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor, 
-                       nsPresContext* aPresContext, nscolor& aResult, PRBool& aInherited)
+                       nsPresContext* aPresContext, nsStyleContext *aContext,
+                       nscolor& aResult, PRBool& aInherited)
 {
   PRBool  result = PR_FALSE;
   nsCSSUnit unit = aValue.GetUnit();
@@ -348,10 +349,17 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
         case NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT:
           aResult = aPresContext->DefaultActiveLinkColor();
           break;
+        case NS_COLOR_CURRENTCOLOR:
+          // The data computed from this can't be shared in the rule tree 
+          // because they could be used on a node with a different color
+          aInherited = PR_TRUE;
+          aResult = aContext->GetStyleColor()->mColor;
+          break;
         default:
           NS_NOTREACHED("Should never have an unknown negative colorID.");
           break;
       }
+      result = PR_TRUE;
     }
   }
   else if (eCSSUnit_Inherit == unit) {
@@ -2928,8 +2936,16 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct,
     parentColor = color;
 
   // color: color, string, inherit
-  SetColor(colorData.mColor, parentColor->mColor, mPresContext, color->mColor, 
-           inherited);
+  // Special case for currentColor.  According to CSS3, setting color to 'currentColor'
+  // should behave as if it is inherited
+  if (colorData.mColor.GetUnit() == eCSSUnit_Integer && 
+      colorData.mColor.GetIntValue() == NS_COLOR_CURRENTCOLOR) {
+    color->mColor = parentColor->mColor;
+    inherited = PR_TRUE;
+  } else {
+    SetColor(colorData.mColor, parentColor->mColor, mPresContext, aContext, color->mColor, 
+             inherited);
+  }
 
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
@@ -2983,7 +2999,7 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct,
     inherited = PR_TRUE;
   }
   else if (SetColor(colorData.mBackColor, parentBG->mBackgroundColor, 
-                    mPresContext, bg->mBackgroundColor, inherited)) {
+                    mPresContext, aContext, bg->mBackgroundColor, inherited)) {
     bg->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
   }
   else if (eCSSUnit_Enumerated == colorData.mBackColor.GetUnit()) {
@@ -3264,7 +3280,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
         border->EnsureBorderColors();
         border->ClearBorderColors(side);
         while (list) {
-          if (SetColor(list->mValue, unused, mPresContext, borderColor, inherited))
+          if (SetColor(list->mValue, unused, mPresContext, aContext, borderColor, inherited))
             border->AppendBorderColor(side, borderColor, PR_FALSE);
           else if (eCSSUnit_Enumerated == list->mValue.GetUnit() &&
                    NS_STYLE_COLOR_TRANSPARENT == list->mValue.GetIntValue())
@@ -3304,7 +3320,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct,
           border->SetBorderToForeground(side);
         }
       }
-      else if (SetColor(value, unused, mPresContext, borderColor, inherited)) {
+      else if (SetColor(value, unused, mPresContext, aContext, borderColor, inherited)) {
         border->SetBorderColor(side, borderColor);
       }
       else if (eCSSUnit_Enumerated == value.GetUnit()) {
@@ -3469,7 +3485,7 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct,
     else
       outline->SetOutlineInvert();
   }
-  else if (SetColor(marginData.mOutlineColor, unused, mPresContext, outlineColor, inherited))
+  else if (SetColor(marginData.mOutlineColor, unused, mPresContext, aContext, outlineColor, inherited))
     outline->SetOutlineColor(outlineColor);
   else if (eCSSUnit_Enumerated == marginData.mOutlineColor.GetUnit())
     outline->SetOutlineInvert();
@@ -4339,7 +4355,8 @@ nsRuleNode::ComputeColumnData(nsStyleStruct* aStartStruct,
 #ifdef MOZ_SVG
 static void
 SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
-            nsPresContext* aPresContext, nsStyleSVGPaint& aResult, PRBool& aInherited)
+            nsPresContext* aPresContext, nsStyleContext *aContext, 
+            nsStyleSVGPaint& aResult, PRBool& aInherited)
 {
   if (aValue.GetUnit() == eCSSUnit_Inherit) {
     aResult = parentPaint;
@@ -4350,7 +4367,7 @@ SetSVGPaint(const nsCSSValue& aValue, const nsStyleSVGPaint& parentPaint,
     aResult.mType = eStyleSVGPaintType_Server;
     aResult.mPaint.mPaintServer = aValue.GetURLValue();
     NS_IF_ADDREF(aResult.mPaint.mPaintServer);
-  } else if (SetColor(aValue, parentPaint.mPaint.mColor, aPresContext, aResult.mPaint.mColor, aInherited)) {
+  } else if (SetColor(aValue, parentPaint.mPaint.mColor, aPresContext, aContext, aResult.mPaint.mColor, aInherited)) {
     aResult.mType = eStyleSVGPaintType_Color;
   } else {
     // XXX Check for "currentColor"
@@ -4433,7 +4450,7 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
     parentSVG = svg;
 
   // fill: 
-  SetSVGPaint(SVGData.mFill, parentSVG->mFill, mPresContext, svg->mFill, inherited);
+  SetSVGPaint(SVGData.mFill, parentSVG->mFill, mPresContext, aContext, svg->mFill, inherited);
 
   // fill-opacity:
   SetSVGOpacity(SVGData.mFillOpacity, parentSVG->mFillOpacity, svg->mFillOpacity, inherited);
@@ -4478,7 +4495,7 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   }
 
   // stop-color: 
-  SetSVGPaint(SVGData.mStopColor, parentSVG->mStopColor, mPresContext, svg->mStopColor, inherited);
+  SetSVGPaint(SVGData.mStopColor, parentSVG->mStopColor, mPresContext, aContext, svg->mStopColor, inherited);
 
   // stop-opacity:
   SetSVGOpacity(SVGData.mStopOpacity, parentSVG->mStopOpacity, svg->mStopOpacity, inherited);
@@ -4505,7 +4522,7 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct,
   }
 
   // stroke: 
-  SetSVGPaint(SVGData.mStroke, parentSVG->mStroke, mPresContext, svg->mStroke, inherited);
+  SetSVGPaint(SVGData.mStroke, parentSVG->mStroke, mPresContext, aContext, svg->mStroke, inherited);
 
   // stroke-dasharray: <dasharray>, none, inherit
   nsCSSValueList *list = SVGData.mStrokeDasharray;
