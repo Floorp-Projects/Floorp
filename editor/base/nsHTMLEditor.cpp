@@ -27,6 +27,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h" 
+#include "nsIDOMUIEvent.h"
 #include "nsIDOMKeyListener.h" 
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMSelection.h"
@@ -432,6 +433,183 @@ void nsHTMLEditor::InitRules()
 #pragma mark -
 #endif
 
+NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMUIEvent* aKeyEvent)
+{
+  PRUint32 keyCode, character;
+  PRBool   isShift, ctrlKey, altKey, metaKey;
+  nsresult res;
+  
+  if (!aKeyEvent) return NS_ERROR_NULL_POINTER;
+
+  if (NS_SUCCEEDED(aKeyEvent->GetKeyCode(&keyCode)) && 
+      NS_SUCCEEDED(aKeyEvent->GetShiftKey(&isShift)) &&
+      NS_SUCCEEDED(aKeyEvent->GetCtrlKey(&ctrlKey)) &&
+      NS_SUCCEEDED(aKeyEvent->GetAltKey(&altKey)) &&
+      NS_SUCCEEDED(aKeyEvent->GetMetaKey(&metaKey)))
+  {
+    // this royally blows: because tabs come in from keyDowns instead
+    // of keyPress, and because GetCharCode refuses to work for keyDown
+    // i have to play games.
+    if (keyCode == nsIDOMUIEvent::VK_TAB) character = '\t';
+    else aKeyEvent->GetCharCode(&character);
+    
+    if (keyCode == nsIDOMUIEvent::VK_TAB && !(mFlags&eEditorPlaintextBit))
+    {
+      PRBool bHandled = PR_FALSE;
+      res = TabInTable(isShift, &bHandled);
+      if (NS_FAILED(res)) return res;
+      if (bHandled) return res;
+    }
+    else if (keyCode == nsIDOMUIEvent::VK_RETURN)
+    {
+      if (isShift && !(mFlags&eEditorPlaintextBit))
+        return InsertBR();  // only inserts a br node
+      else 
+        return InsertBreak();  // uses rules to figure out what to insert
+    }
+      
+    nsAutoString key(character);
+    return InsertText(key);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
+{
+  if (!outHandled) return NS_ERROR_NULL_POINTER;
+  *outHandled = PR_FALSE;
+  // find selection start
+  nsCOMPtr<nsIDOMSelection> selection;
+
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 selOffset;
+  res = GetStartNodeAndOffset(selection, &parent, &selOffset);
+  if (NS_FAILED(res)) return res;
+  if (!parent) return res;
+  nsCOMPtr<nsIDOMNode> selNode = GetChildAt(parent, selOffset);
+  if (!selNode) selNode = parent;
+  
+  // is it in a table block of some kind?
+  nsCOMPtr<nsIDOMNode> block;
+  if (IsBlockNode(selNode)) block = selNode;
+  else block = GetBlockNodeParent(selNode);
+  if (!block) return res;
+  
+  nsAutoString tagName;
+  GetTagString(block,tagName);
+  tagName.ToLowerCase();
+  if (tagName == "table" || tagName == "tr" || 
+      tagName == "td"    || tagName == "th" ||
+      tagName == "thead" || tagName == "tfoot" ||
+      tagName == "tbody" || tagName == "caption")
+  {
+    // find enclosing table
+    nsCOMPtr<nsIDOMNode> tbl;
+    if (tagName == "table") tbl = block;
+    else
+    {
+      nsCOMPtr<nsIDOMNode> tmp, node = block;
+      do
+      {
+        GetTagString(node,tagName);
+        tagName.ToLowerCase();
+        if (tagName == "table")
+        {
+          tbl = node;
+          break;
+        }
+        tmp = GetBlockNodeParent(node);
+        node= tmp;
+      } while (node);
+    }
+    if (!tbl) return res;
+    // advance to next cell
+    // first create an iterator over the table
+    nsCOMPtr<nsIContentIterator> iter;
+    res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                                nsIContentIterator::GetIID(), 
+                                                getter_AddRefs(iter));
+    if (NS_FAILED(res)) return res;
+    if (!iter) return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIContent> cTbl = do_QueryInterface(tbl);
+    nsCOMPtr<nsIContent> cBlock = do_QueryInterface(block);
+    res = iter->Init(cTbl);
+    if (NS_FAILED(res)) return res;
+    // position iter at block
+    res = iter->PositionAt(cBlock);
+    if (NS_FAILED(res)) return res;
+    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsIContent> cNode;
+    do
+    {
+      if (inIsShift) res = iter->Prev();
+      else res = iter->Next();
+      if (NS_FAILED(res)) return res;
+      res = iter->CurrentNode(getter_AddRefs(cNode));
+      if (NS_FAILED(res)) return res;
+      node = do_QueryInterface(cNode);
+      GetTagString(node,tagName);
+      tagName.ToLowerCase();
+      if (tagName == "td")
+      {
+        selection->Collapse(node, 0);
+        *outHandled = PR_TRUE;
+        return NS_OK;
+      }
+    } while (iter->IsDone() == NS_COMFALSE);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLEditor::InsertBR()
+{
+  PRBool bCollapsed;
+  nsCOMPtr<nsIDOMSelection> selection;
+
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  res = selection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  if (!bCollapsed)
+  {
+    res = DeleteSelection(nsIEditor::eDoNothing);
+    if (NS_FAILED(res)) return res;
+  }
+  nsCOMPtr<nsIDOMNode> selNode;
+  PRInt32 selOffset;
+  res = GetStartNodeAndOffset(selection, &selNode, &selOffset);
+  if (NS_FAILED(res)) return res;
+  
+  // now we need to insert a br.  unfortunately, we may have to split a text node to do it.
+  nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(selNode);
+  nsAutoString brType("br");
+  nsCOMPtr<nsIDOMNode> brNode;
+  if (nodeAsText)  
+  {
+    // split the text node
+    nsCOMPtr<nsIDOMNode> tmp;
+    PRInt32 offset;
+    res = SplitNode(selNode, selOffset, getter_AddRefs(tmp));
+    if (NS_FAILED(res)) return res;
+    res = GetNodeLocation(selNode, &tmp, &offset);
+    if (NS_FAILED(res)) return res;
+    // create br
+    res = CreateNode(brType, tmp, offset, getter_AddRefs(brNode));
+    if (NS_FAILED(res)) return res;
+    // position selection in righthand text node
+    res = selection->Collapse(selNode, 0);
+    if (NS_FAILED(res)) return res;
+  }
+  else
+  {
+    res = CreateNode(brType, selNode, selOffset, getter_AddRefs(brNode));
+    if (NS_FAILED(res)) return res;
+  }
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty, 
                                             const nsString *aAttribute,

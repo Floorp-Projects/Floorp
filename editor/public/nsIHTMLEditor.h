@@ -33,6 +33,7 @@ class nsStringArray;
 class nsIAtom;
 class nsIDOMNode;
 class nsIDOMElement;
+class nsIDOMUIEvent;
 
 
 class nsIHTMLEditor : public nsISupports
@@ -122,6 +123,13 @@ public:
 
 
   /* ------------ HTML content methods -------------- */
+
+  /** 
+   * EditorKeyPress consumes a keyevent.
+   * @param aKeyEvent    key event to consume
+   */
+  NS_IMETHOD EditorKeyPress(nsIDOMUIEvent* aKeyEvent)=0;
+
 
   /**
    * Insert a break into the content model.<br>
