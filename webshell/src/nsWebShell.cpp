@@ -3025,9 +3025,6 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
     rv = NS_OK;
   }
 
-  // Do a repaint
-  Repaint(PR_TRUE);
-
   return rv;
 }
 
