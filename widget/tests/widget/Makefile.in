@@ -35,7 +35,6 @@ TOOLKIT_CXXFLAGS := \
 CPPSRCS = \
 	main.cpp	 \
 	nsWidgetTest.cpp \
-	$(DEPTH)/webshell/tests/viewer/nsStubs.cpp \
 	$(NULL)
 
 ifndef NECKO
