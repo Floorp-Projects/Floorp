@@ -119,6 +119,8 @@ BRFrame::InlineReflow(nsLineLayout& aLineLayout,
   }
   aMetrics.height = 0;
   aMetrics.width = 0;
+  aMetrics.ascent = 0;
+  aMetrics.descent = 0;
   aLineLayout.SetBRFrame(this);
 
   // Return our inline reflow status
