@@ -35,7 +35,7 @@
     (%heading (2 :semantics) "Objects")
     (deftag none)
     (deftag ok)
-    (deftag future)
+    (deftag inaccessible)
     (deftag uninitialised)
     
     (deftype object (union undefined null boolean float64 string namespace compound-attribute class method-closure prototype instance package global))
@@ -43,10 +43,9 @@
     (deftype dynamic-object (union prototype dynamic-instance global))
     
     (deftype object-opt (union object (tag none)))
-    (deftype object-fut (union object (tag future)))
-    (deftype object-fut-opt (union object (tag future none)))
-    (deftype object-uninit (union object (tag uninitialised)))
-    (deftype object-uninit-fut (union object (tag uninitialised future)))
+    (deftype object-i (union object (tag inaccessible)))
+    (deftype object-i-opt (union object (tag inaccessible none)))
+    (deftype object-u (union object (tag uninitialised)))
     
     
     (%heading (3 :semantics) "Undefined")
@@ -93,7 +92,6 @@
       (namespaces (list-set namespace))
       (explicit boolean)
       (dynamic boolean)
-      (compile boolean)
       (member-mod member-modifier)
       (override-mod override-modifier)
       (prototype boolean)
@@ -160,7 +158,8 @@
     
     
     (%heading (3 :semantics) "Class Instances")
-    (deftype instance (union fixed-instance dynamic-instance))
+    (deftype instance (union non-alias-instance alias-instance))
+    (deftype non-alias-instance (union fixed-instance dynamic-instance))
     
     (defrecord fixed-instance
       (type class)
@@ -179,10 +178,19 @@
       (slots (list-set slot) :var)
       (dynamic-properties (list-set dynamic-property) :var))
     
+    (defrecord alias-instance
+      (original non-alias-instance)
+      (env environment))
+    
+    (defrecord open-instance
+      (instantiate (-> (environment) non-alias-instance))
+      (cache (union non-alias-instance (tag none)) :var))
+    
+    
     (%heading (4 :semantics) "Slots")
     (defrecord slot
       (id instance-variable)
-      (value object-uninit :var))
+      (value object-u :var))
     
     
     (%heading (3 :semantics) "Packages")
@@ -235,18 +243,28 @@
     (deftype obj-or-ref-optional-limit (union obj-or-ref limited-obj-or-ref))
     
     
-    (%heading (2 :semantics) "Signatures")
+    (%heading (2 :semantics) "Function Support")
+    (deftag normal)
+    (deftag get)
+    (deftag set)
+    (deftype function-kind (tag normal get set operator))
+    
     (deftuple signature
-      (required-positional (vector class))
-      (optional-positional (vector class))
+      (required-positional (vector parameter))
+      (optional-positional (vector parameter))
       (optional-named (list-set named-parameter))
-      (rest class-opt)
+      (rest (union parameter (tag none)))
       (rest-allows-names boolean)
       (return-type class))
     
-    (deftuple named-parameter
-      (name string)
+    (deftuple parameter
+      (local-name string-opt)
       (type class))
+    
+    (deftuple named-parameter
+      (local-name string-opt)
+      (type class)
+      (name string))
     
     
     (%heading (2 :semantics) "Argument Lists")
@@ -318,8 +336,8 @@
       (static-read-bindings (list-set static-binding) :var)
       (static-write-bindings (list-set static-binding) :var)
       (plurality plurality)
-      (this object-fut-opt)
-      (this-from-prototype boolean))
+      (this object-i-opt)
+      (prototype boolean))
     
     (defrecord block-frame
       (static-read-bindings (list-set static-binding) :var)
@@ -340,25 +358,32 @@
       (content instance-member))
     
     (deftag forbidden)
-    (deftype static-member (union (tag forbidden) variable hoisted-var static-method accessor))
+    (deftype static-member (union (tag forbidden) variable hoisted-var constructor-method accessor))
     (deftype static-member-opt (union static-member (tag none)))
     
+    (defrecord future-type
+      (eval-type (-> () class)))
+    
+    (defrecord future-value
+      (eval-value (-> () object)))
+    
+    (deftype variable-type (union class (tag inaccessible) future-type))
+    (deftype variable-value (union object (tag inaccessible uninitialised) open-instance future-value))
     (defrecord variable
-      (type class :opt-const)
-      (value object-uninit-fut :var)
+      (type variable-type :var)
+      (value variable-value :var)
       (immutable boolean))
     
     (defrecord hoisted-var
-      (value object :var))
+      (value (union object open-instance) :var)
+      (has-function-initialiser boolean :var))
     
-    (defrecord static-method
-      (type signature)
-      (code instance)  ;Method code
-      (modifier (tag static constructor)))
+    (defrecord constructor-method
+      (code instance))  ;Constructor code
     
     (defrecord accessor
       (type class)
-      (code instance)) ;Getter or setter function code
+      (code (union instance open-instance))) ;Getter or setter function code
     
     
     (deftype instance-member (union instance-variable instance-method instance-accessor))
@@ -371,8 +396,8 @@
       (final boolean))
     
     (defrecord instance-method
-      (type signature)
       (code (union instance (tag abstract)))  ;Method code
+      (signature signature)
       (final boolean))
     
     (defrecord instance-accessor
@@ -399,6 +424,11 @@
     
     
     (%heading (2 :semantics) "Object Utilities")
+    (define (resolve-alias (o instance)) non-alias-instance
+      (case o
+        (:narrow non-alias-instance (return o))
+        (:narrow alias-instance (return (& original o)))))
+    
     (%heading (3 :semantics) (:global object-type nil))
     (%text :comment (:global-call object-type o) " returns an " (:type object) " " (:local o) :apostrophe "s most specific type.")
     (define (object-type (o object)) class
@@ -416,7 +446,7 @@
         (:select class (return class-class))
         (:select method-closure (return function-class))
         (:select prototype (return prototype-class))
-        (:narrow instance (return (& type o)))
+        (:narrow instance (return (& type (resolve-alias o))))
         (:select (union package global) (return package-class))))
     
     (%heading (3 :semantics) (:global has-type nil))
@@ -526,7 +556,7 @@
         (cond
          ((= a b attribute) (return a))
          ((in b namespace :narrow-both)
-          (return (new compound-attribute (list-set a b) false false false none none false false)))
+          (return (new compound-attribute (list-set a b) false false none none false false)))
          (nil
           (return (set-field b namespaces (set+ (& namespaces b) (list-set a)))))))
        ((in b namespace :narrow-both)
@@ -540,7 +570,6 @@
                        (set+ (& namespaces a) (& namespaces b))
                        (or (& explicit a) (& explicit b))
                        (or (& dynamic a) (& dynamic b))
-                       (or (& compile a) (& compile b))
                        (if (not-in (& member-mod a) (tag none)) (& member-mod a) (& member-mod b))
                        (if (not-in (& override-mod a) (tag none)) (& override-mod a) (& override-mod b))
                        (or (& prototype a) (& prototype b))
@@ -551,8 +580,8 @@
            " even if it was a simple namespace, " (:tag true) ", or " (:tag none) ".")
     (define (to-compound-attribute (a attribute-opt-not-false)) compound-attribute
       (case a
-        (:select (tag none true) (return (new compound-attribute (list-set-of namespace) false false false none none false false)))
-        (:narrow namespace (return (new compound-attribute (list-set a) false false false none none false false)))
+        (:select (tag none true) (return (new compound-attribute (list-set-of namespace) false false none none false false)))
+        (:narrow namespace (return (new compound-attribute (list-set a) false false none none false false)))
         (:narrow compound-attribute (return a))))
     
     
@@ -647,7 +676,7 @@
     (define (find-slot (o object) (id instance-variable)) slot
       (assert (in o instance :narrow-true) (:local o) " must be an " (:type instance) ";")
       (const matching-slots (list-set slot)
-        (map (& slots o) s s (= (& id s) id instance-variable)))
+        (map (& slots (resolve-alias o)) s s (= (& id s) id instance-variable)))
       (return (unique-elt-of matching-slots)))
     
     
@@ -765,22 +794,12 @@
         (rwhen (and (in regional-frame global :narrow-true)
                     (some (& dynamic-properties regional-frame) dp (= (& name dp) id string)))
           (throw definition-error))
-        (const v hoisted-var (new hoisted-var undefined))
+        (const v hoisted-var (new hoisted-var undefined false))
         (add-static-bindings regional-frame read-write (list-set (new static-binding qname v false))))
        ((some existing-bindings b (not-in (& content b) hoisted-var))
         (throw definition-error))
        (nil
         (// "A hoisted binding of the same " (:character-literal "var") " already exists, so there is no need to create another one."))))
-    
-    
-    (define (instantiate-block-frame (template block-frame :unused)) block-frame
-      (todo))
-    
-    #|
-    (%text :comment (:global-call copy-bindings bindings) " returns a fresh copy of the given " (:local bindings) ".")
-    (define (copy-bindings (bindings (list-set binding))) (list-set binding)
-      (todo))
-    |#
     
     
     (%heading (3 :semantics) "Adding Instance Definitions")
@@ -870,6 +889,66 @@
       (return (new override-status-pair read-status write-status)))
     
     
+    (%heading (3 :semantics) "Instantiation")
+    
+    (define (instantiate-open-instance (oi open-instance) (env environment)) instance
+      (const cache (union fixed-instance dynamic-instance (tag none)) (& cache oi))
+      (cond
+       ((in cache (tag none) :narrow-false)
+        (const i non-alias-instance ((& instantiate oi) env))
+        (var reuse boolean)
+        (/* "At the implementation" :apostrophe "s discretion, either " (:local reuse) :nbsp :assign-10 :nbsp (:tag true) ", or "
+            (:local reuse) :nbsp :assign-10 :nbsp (:tag false) ". An implementation may make different choices at different times. "
+            "The intent here is to allow implementations the freedom to reuse a closure object rather than create a new closure each "
+            "time a particular " (:type open-instance) " is instantiated if the implementation notices that the resulting closures would be "
+            "behaviorally indistinguishable from each other.")
+        (<- reuse true)
+        (*/)
+        (when reuse
+          (&= cache oi i))
+        (return i))
+       (nil
+        (return (new alias-instance cache env)))))
+    
+    
+    (define (instantiate-member (m static-member) (env environment)) static-member
+      (case m
+        (:narrow (tag forbidden) (return m))
+        (:narrow variable
+          (var value variable-value (& value m))
+          (when (in value open-instance :narrow-true)
+            (<- value (instantiate-open-instance value env) :end-narrow))
+          (return (new variable (& type m) value (& immutable m))))
+        (:narrow hoisted-var
+          (var value (union object open-instance) (& value m))
+          (when (in value open-instance :narrow-true)
+            (<- value (instantiate-open-instance value env) :end-narrow))
+          (return (new hoisted-var value (& has-function-initialiser m))))
+        (:narrow constructor-method (return m))
+        (:narrow accessor
+          (var code (union instance open-instance) (& code m))
+          (when (in code open-instance :narrow-true)
+            (<- code (instantiate-open-instance code env) :end-narrow))
+          (return (new accessor (& type m) code)))))
+    
+    
+    (deftuple member-instantiation
+      (plural-member static-member)
+      (singular-member static-member))
+    
+    (define (instantiate-frame (plural-frame (union function-frame block-frame)) (singular-frame (union function-frame block-frame)) (env environment))
+            void
+      (const plural-members (list-set static-member)
+        (map (set+ (& static-read-bindings plural-frame) (& static-write-bindings plural-frame)) b (& content b)))
+      (const member-instantiations (list-set member-instantiation)
+        (map plural-members m (new member-instantiation m (instantiate-member m env))))
+      (function (instantiate-binding (b static-binding)) static-binding
+        (const mi member-instantiation (unique-elt-of member-instantiations mi (= (& plural-member mi) (& content b) static-member)))
+        (return (new static-binding (& qname b) (& singular-member mi) (& explicit b))))
+      (&= static-read-bindings singular-frame (map (& static-read-bindings plural-frame) b (instantiate-binding b)))
+      (&= static-write-bindings singular-frame (map (& static-write-bindings plural-frame) b (instantiate-binding b))))
+    
+    
     
     (%heading (3 :semantics) "Environmental Lookup")
     
@@ -878,10 +957,10 @@
            " to be defined by either an instance member of a class or a "
            (:character-literal "prototype") " function. If " (:local allow-prototype-this) " is " (:tag false) ", allow " (:character-literal "this")
            " to be defined only by an instance member of a class.")
-    (define (find-this (env environment) (allow-prototype-this boolean)) object-fut-opt
+    (define (find-this (env environment) (allow-prototype-this boolean)) object-i-opt
       (for-each env frame
         (when (and (in frame function-frame :narrow-true) (not-in (& this frame) (tag none)))
-          (when (or allow-prototype-this (not (& this-from-prototype frame)))
+          (when (or allow-prototype-this (not (& prototype frame)))
             (return (& this frame)))))
       (return none))
     
@@ -925,7 +1004,7 @@
     (%heading (3 :semantics) "Property Lookup")
     
     (deftag property-lookup)
-    (deftuple lexical-lookup (this object-fut-opt))
+    (deftuple lexical-lookup (this object-i-opt))
     (deftype lookup-kind (union (tag property-lookup) lexical-lookup))
     
     
@@ -1036,7 +1115,7 @@
             (return (read-dynamic-property container multiname kind phase))
             (return (read-static-member m phase))))
         (:narrow class
-          (var this (union object (tag future none generic)))
+          (var this (union object (tag inaccessible none generic)))
           (case kind
             (:select (tag property-lookup)
               (<- this generic))
@@ -1047,7 +1126,7 @@
             (return (read-static-member m2 phase)))
           (case this
             (:select (tag none) (throw property-access-error))
-            (:select (tag future) (throw uninitialised-error))
+            (:select (tag inaccessible) (throw compile-expression-error))
             (:select (tag generic)
               (todo))
             (:narrow object (return (read-instance-member this (object-type this) m2 phase)))))
@@ -1070,7 +1149,7 @@
         (:narrow instance-variable
           (rwhen (and (in phase (tag compile)) (not (& immutable m)))
             (throw compile-expression-error))
-          (const v object-uninit (& value (find-slot this m)))
+          (const v object-u (& value (find-slot this m)))
           (rwhen (in v (tag uninitialised) :narrow-false)
             (throw uninitialised-error))
           (return v))
@@ -1080,7 +1159,7 @@
           (const code (union instance (tag abstract)) (& code m))
           (case code
             (:narrow instance
-              (return ((& call code) this (new argument-list (vector-of object) (list-set-of named-argument)) (& env code) phase)))
+              (return ((& call (resolve-alias code)) this (new argument-list (vector-of object) (list-set-of named-argument)) (& env code) phase)))
             (:select (tag abstract)
               (throw property-access-error))))))
     
@@ -1090,11 +1169,20 @@
         (:select (tag none) (return none))
         (:select (tag forbidden) (throw property-access-error))
         (:narrow variable (return (read-variable m phase)))
-        (:narrow hoisted-var (return (& value m)))
-        (:narrow static-method (return (& code m)))
+        (:narrow hoisted-var
+          (rwhen (in phase (tag compile))
+            (throw compile-expression-error))
+          (const value (union object open-instance) (& value m))
+          (assert (not-in value open-instance :narrow-true) "Note that " (:local value) " can be an " (:type open-instance) " only during the " (:tag compile)
+                  " phase, which was ruled out above.")
+          (return value))
+        (:narrow constructor-method (return (& code m)))
         (:narrow accessor
-          (const code instance (& code m))
-          (return ((& call code) null (new argument-list (vector-of object) (list-set-of named-argument)) (& env code) phase)))))
+          (const code (union instance open-instance) (& code m))
+          (rwhen (in code open-instance :narrow-false)
+            (assert (in phase (tag compile)) "Note that an " (:type open-instance) " can only be found when " (:assertion) ".")
+            (throw compile-expression-error))
+          (return ((& call (resolve-alias code)) null (new argument-list (vector-of object) (list-set-of named-argument)) (& env code) phase)))))
     
     
     (define (read-dynamic-property (container dynamic-object) (multiname multiname) (kind lookup-kind) (phase phase))
@@ -1119,10 +1207,26 @@
     (define (read-variable (v variable) (phase phase)) object
       (rwhen (and (in phase (tag compile)) (not (& immutable v)))
         (throw compile-expression-error))
-      (const value object-uninit-fut (& value v))
-      (rwhen (in value (tag uninitialised future) :narrow-false)
-        (throw uninitialised-error))
-      (return value))
+      (const value variable-value (& value v))
+      (case value
+        (:narrow object (return value))
+        (:select (tag inaccessible)
+          (if (in phase (tag compile))
+            (throw compile-expression-error)
+            (throw uninitialised-error)))
+        (:select (tag uninitialised)
+          (throw uninitialised-error))
+        (:select open-instance
+          (assert (in phase (tag compile)) "Note that an uninstantiated function can only be found when " (:assertion) ".")
+          (throw compile-expression-error))
+        (:narrow future-value
+          (assert (in phase (tag compile)) "Note that " (:assertion) " because all futures are resolved by the end of the compilation phase.")
+          (&= value v inaccessible)
+          (const type class (get-variable-type v phase))
+          (const new-value object ((& eval-value value)))
+          (const coerced-value object (assignment-conversion new-value type))
+          (&= value v coerced-value)
+          (return new-value))))
     
     
     (%heading (3 :semantics) "Writing a Property")
@@ -1138,7 +1242,7 @@
             (return (write-dynamic-property container multiname create-if-missing new-value phase))
             (return (write-static-member m new-value phase))))
         (:narrow class
-          (var this object-fut-opt)
+          (var this object-i-opt)
           (case kind
             (:select (tag property-lookup)
               (<- this none))
@@ -1150,8 +1254,8 @@
             (return (write-static-member m2 new-value phase)))
            ((in this (tag none) :narrow-false)
             (throw property-access-error))
-           ((in this (tag future) :narrow-false)
-            (throw uninitialised-error))
+           ((in this (tag inaccessible) :narrow-false)
+            (throw compile-expression-error))
            (nil (return (write-instance-member this (object-type this) m2 new-value phase)))))
         (:narrow prototype
           (return (write-dynamic-property container multiname create-if-missing new-value phase)))
@@ -1189,7 +1293,7 @@
           (const code (union instance (tag abstract)) (& code m))
           (case code
             (:narrow instance
-              (exec ((& call code) this (new argument-list (vector coerced-value) (list-set-of named-argument)) (& env code) phase)))
+              (exec ((& call (resolve-alias code)) this (new argument-list (vector coerced-value) (list-set-of named-argument)) (& env code) phase)))
             (:select (tag abstract)
               (throw property-access-error)))
           (return ok))))
@@ -1198,7 +1302,7 @@
     (define (write-static-member (m static-member-opt) (new-value object) (phase (tag run))) (tag none ok)
       (case m
         (:select (tag none) (return none))
-        (:select (union (tag forbidden) static-method) (throw property-access-error))
+        (:select (union (tag forbidden) constructor-method) (throw property-access-error))
         (:narrow variable
           (write-variable m new-value phase)
           (return ok))
@@ -1207,8 +1311,9 @@
           (return ok))
         (:narrow accessor
           (const coerced-value object (assignment-conversion new-value (& type m)))
-          (const code instance (& code m))
-          (exec ((& call code) null (new argument-list (vector coerced-value) (list-set-of named-argument)) (& env code) phase))
+          (const code (union instance open-instance) (& code m))
+          (assert (not-in code open-instance :narrow-true) "Note that all instances are resolved for the " (:tag run) " phase, so " (:assertion) ".")
+          (exec ((& call (resolve-alias code)) null (new argument-list (vector coerced-value) (list-set-of named-argument)) (& env code) phase))
           (return ok))))
     
     
@@ -1237,11 +1342,26 @@
       (return ok))
     
     
-    (define (write-variable (v variable) (new-value object) (phase (tag run) :unused)) void
-      (const type class (&opt type v))
-      (rwhen (in (& value v) (tag future))
-        (throw uninitialised-error))
-      (rwhen (and (& immutable v) (not-in (& value v) (tag uninitialised)))
+    (define (get-variable-type (v variable) (phase phase)) class
+      (const type variable-type (& type v))
+      (case type
+        (:narrow class (return type))
+        (:select (tag inaccessible)
+          (assert (in phase (tag compile)) "Note that this can only happen when " (:assertion)
+                  " because the compilation phase ensures that all types are valid, so invalid types will not occur during the run phase.")
+          (throw compile-expression-error))
+        (:narrow future-type
+          (assert (in phase (tag compile)) "Note that " (:assertion) " because all futures are resolved by the end of the compilation phase.")
+          (&= type v inaccessible)
+          (const new-type class ((& eval-type type)))
+          (&= type v new-type)
+          (return new-type))))
+    
+    
+    (define (write-variable (v variable) (new-value object) (phase (tag run))) void
+      (const type class (get-variable-type v phase))
+      (rwhen (or (in (& value v) (tag inaccessible))
+                 (and (& immutable v) (not-in (& value v) (tag uninitialised))))
         (throw property-access-error))
       (const coerced-value object (assignment-conversion new-value type))
       (&= value v coerced-value))
@@ -1255,6 +1375,12 @@
     (define (delete-qualified-property (o object :unused) (name string :unused) (ns namespace :unused)
                                        (kind lookup-kind :unused) (phase (tag run) :unused)) boolean
       (todo))
+    
+    
+    
+    (%heading (2 :semantics) "Invocation")
+    (define (bad-invoke (this object :unused) (args argument-list :unused) (runtime-env environment :unused) (phase phase :unused)) object
+      (throw property-access-error))
     
     
     
@@ -1429,10 +1555,10 @@
          (rwhen (in (find-this env true) (tag none))
            (throw syntax-error)))
         ((eval env (phase :unused))
-         (const this object-fut-opt (find-this env true))
+         (const this object-i-opt (find-this env true))
          (assert (not-in this (tag none) :narrow-true) "Note that " (:action validate) " ensured that " (:local this) " cannot be " (:tag none) " at this point.")
-         (rwhen (in this (tag future) :narrow-false)
-           (throw uninitialised-error))
+         (rwhen (in this (tag inaccessible) :narrow-false)
+           (throw compile-expression-error))
          (return this)))
       (production :primary-expression ($regular-expression) primary-expression-regular-expression
         ((validate (cxt :unused) (env :unused)))
@@ -1546,10 +1672,10 @@
          (rwhen (or (in (get-enclosing-class env) (tag none)) (in (find-this env false) (tag none)))
            (throw syntax-error)))
         ((eval env (phase :unused))
-         (const this object-fut-opt (find-this env false))
+         (const this object-i-opt (find-this env false))
          (assert (not-in this (tag none) :narrow-true) "Note that " (:action validate) " ensured that " (:local this) " cannot be " (:tag none) " at this point.")
-         (rwhen (in this (tag future) :narrow-false)
-           (throw uninitialised-error))
+         (rwhen (in this (tag inaccessible) :narrow-false)
+           (throw compile-expression-error))
          (const limit class-opt (get-enclosing-class env))
          (assert (not-in limit (tag none) :narrow-true) "Note that " (:action validate) " ensured that " (:local limit) " cannot be " (:tag none) " at this point.")
          (return (new limited-obj-or-ref this limit))))
@@ -1873,7 +1999,7 @@
            (:select namespace (return "namespace"))
            (:select compound-attribute (return "attribute"))
            (:select (union class method-closure) (return "function"))
-           (:narrow instance (return (& typeof-string a))))))
+           (:narrow instance (return (& typeof-string (resolve-alias a)))))))
       (production :unary-expression (++ :postfix-expression-or-super) unary-expression-increment
         ((validate cxt env) ((validate :postfix-expression-or-super) cxt env))
         ((eval env phase)
@@ -2647,7 +2773,12 @@
          (exec ((validate :directives) cxt (cons frame env) jt pl none)))
         ((eval env d)
          (const compile-frame block-frame (compile-frame :block 0))
-         (const runtime-frame block-frame (instantiate-block-frame compile-frame))
+         (var runtime-frame block-frame)
+         (case (& plurality compile-frame)
+           (:select (tag singular) (<- runtime-frame compile-frame))
+           (:select (tag plural)
+             (<- runtime-frame (new block-frame (list-set-of static-binding) (list-set-of static-binding) singular))
+             (instantiate-frame compile-frame runtime-frame (cons runtime-frame env))))
          (return ((eval :directives) (cons runtime-frame env) d)))
         ((eval-using-frame env frame d)
          (return ((eval :directives) (cons frame env) d)))))
@@ -2936,16 +3067,20 @@
          (return cxt))
         ((eval env d) (return ((eval :variable-definition) env d))))
       (production (:annotatable-directive :omega_2) ((:function-definition :omega_2)) annotatable-directive-function-definition
-        ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
-        ((eval (env :unused) (d :unused)) (todo)))
+        ((validate cxt env pl attr)
+         ((validate :function-definition) cxt env pl attr)
+         (return cxt))
+        ((eval (env :unused) d) (return d)))
       (production (:annotatable-directive :omega_2) (:class-definition) annotatable-directive-class-definition
         ((validate cxt env pl attr)
          ((validate :class-definition) cxt env pl attr)
          (return cxt))
         ((eval env d) (return ((eval :class-definition) env d))))
       (production (:annotatable-directive :omega_2) (:namespace-definition (:semicolon :omega_2)) annotatable-directive-namespace-definition
-        ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
-        ((eval (env :unused) (d :unused)) (todo)))
+        ((validate cxt env pl attr)
+         ((validate :namespace-definition) cxt env pl attr)
+         (return cxt))
+        ((eval (env :unused) d) (return d)))
       ;(production (:annotatable-directive :omega_2) ((:interface-definition :omega_2)) annotatable-directive-interface-definition
       ;  ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
       ;  ((eval (env :unused) (d :unused)) (todo)))
@@ -2953,7 +3088,10 @@
         ((validate (cxt :unused) (env :unused) (pl :unused) (attr :unused)) (todo))
         ((eval (env :unused) (d :unused)) (todo)))
       (production (:annotatable-directive :omega_2) (:use-directive (:semicolon :omega_2)) annotatable-directive-use-directive
-        ((validate cxt env (pl :unused) attr) (if (in attr (tag none true)) (return ((validate :use-directive) cxt env)) (throw syntax-error)))
+        ((validate cxt env (pl :unused) attr)
+         (if (in attr (tag none true))
+           (return ((validate :use-directive) cxt env))
+           (throw syntax-error)))
         ((eval (env :unused) d) (return d))))
     
     
@@ -3032,10 +3170,10 @@
     (rule :nonexpression-attribute ((validate (-> (environment) void)) (eval (-> (environment phase) attribute)))
       (production :nonexpression-attribute (abstract) nonexpression-attribute-abstract
         ((validate (env :unused)))
-        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false false abstract none false false))))
+        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false abstract none false false))))
       (production :nonexpression-attribute (final) nonexpression-attribute-final
         ((validate (env :unused)))
-        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false false final none false false))))
+        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false final none false false))))
       (production :nonexpression-attribute (private) nonexpression-attribute-private
         ((validate env)
          (rwhen (in (get-enclosing-class env) (tag none))
@@ -3046,7 +3184,7 @@
          (return (& private-namespace c))))
       (production :nonexpression-attribute (static) nonexpression-attribute-static
         ((validate (env :unused)))
-        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false false static none false false)))))
+        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false static none false false)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -3205,10 +3343,8 @@
          ((eval :variable-binding) env immutable))))
     
     (deftag hoisted)
-    (deftag static-compiled)
-    (deftag static-run)
-    (deftag instance-run)
-    (rule (:variable-binding :beta) ((kind (writable-cell (tag hoisted static-compiled static-run instance-run))) (multiname (writable-cell multiname))
+    (deftag instance)
+    (rule (:variable-binding :beta) ((kind (writable-cell (tag hoisted static instance))) (multiname (writable-cell multiname))
                                      (validate (-> (context environment attribute-opt-not-false boolean) void))
                                      (eval (-> (environment boolean) void)))
       (production (:variable-binding :beta) ((:typed-identifier :beta) (:variable-initialisation :beta)) variable-binding-full
@@ -3225,36 +3361,47 @@
            (define-hoisted-var env name))
           (nil
            (const a compound-attribute (to-compound-attribute attr))
-           (var member-mod member-modifier (& member-mod a))
-           (rwhen (or (& dynamic a) (& prototype a) (and (& compile a) (not immutable)))
+           (rwhen (or (& dynamic a) (& prototype a))
              (throw definition-error))
+           (var member-mod member-modifier (& member-mod a))
            (if (in (nth env 0) class)
              (when (in member-mod (tag none))
-               (<- member-mod (if (& compile a) static final)))
+               (<- member-mod final))
              (rwhen (not-in member-mod (tag none))
                (throw definition-error)))
            (case member-mod
              (:select (tag none static)
-               (const v variable (new variable :uninit future immutable))
+               (function (eval-type) class
+                 (const type class-opt ((eval :typed-identifier) env))
+                 (rwhen (in type (tag none) :narrow-false)
+                   (return object-class))
+                 (return type))
+               (function (eval-initialiser) object
+                 (const value object-opt ((eval :variable-initialisation) env compile))
+                 (rwhen (in value (tag none) :narrow-false)
+                   (throw compile-expression-error))
+                 (return value))
+               (var initial-value variable-value inaccessible)
+               (when immutable
+                 (<- initial-value (new future-value eval-initialiser)))
+               (const v variable (new variable (new future-type eval-type) initial-value immutable))
                (const multiname multiname (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write v))
                (action<- (multiname :variable-binding 0) multiname)
                (function (deferred-static-validate) void
-                 (var t class-opt ((eval :typed-identifier) env))
-                 (when (in t (tag none))
-                   (<- t object-class))
-                 (&const= type v (assert-not-in t (tag none))))
-               (cond
-                ((& compile a)
-                 (deferred-static-validate)
-                 (const value object-opt ((eval :variable-initialisation) env compile))
-                 (rwhen (in value (tag none) :narrow-false)
-                   (throw definition-error))
-                 (const coerced-value object (assignment-conversion value (&opt type v)))
-                 (&= value v coerced-value)
-                 (action<- (kind :variable-binding 0) static-compiled))
-                (nil
-                 (<- deferred-validators (append deferred-validators (vector deferred-static-validate)))
-                 (action<- (kind :variable-binding 0) static-run))))
+                 (const type class (get-variable-type v compile))
+                 (const value variable-value (& value v))
+                 (when (in value future-value :narrow-true)
+                   (&= value v inaccessible)
+                   (catch ((const new-value object ((& eval-value value)))
+                           (const coerced-value object (assignment-conversion new-value type))
+                           (&= value v coerced-value))
+                     (x)
+                     (rwhen (not-in x (tag compile-expression-error))
+                       (throw x))
+                     (// "If a " (:tag compile-expression-error) " occurred, then the initialiser is not a compile-time constant expression. "
+                         "In this case, ignore the error and leave the value of the variable " (:tag inaccessible) " until it is defined at run time."))))
+               (<- deferred-validators (append deferred-validators (vector deferred-static-validate)))
+               (action<- (kind :variable-binding 0) static))
              (:narrow (tag abstract virtual final)
                (const c class (assert-in (nth env 0) class))
                (function (eval-initial-value) object-opt
@@ -3288,7 +3435,7 @@
                      (<- t object-class))))
                  (&const= type m (assert-not-in t (tag none))))
                (<- deferred-validators (append deferred-validators (vector deferred-instance-validate)))
-               (action<- (kind :variable-binding 0) instance-run))
+               (action<- (kind :variable-binding 0) instance))
              (:select (tag constructor operator)
                (throw definition-error))))))
         ((eval env immutable)
@@ -3297,22 +3444,22 @@
              (const value object-opt ((eval :variable-initialisation) env run))
              (when (not-in value (tag none) :narrow-true)
                (lexical-write env (multiname :variable-binding 0) value false run)))
-           (:select (tag static-compiled))
-           (:select (tag static-run)
+           (:select (tag static)
              (const local-frame frame (nth env 0))
              (const members (list-set static-member) (map (& static-write-bindings local-frame) b (& content b) (set-in (& qname b) (multiname :variable-binding 0))))
              (// "Note that the " (:local members) " set consists of exactly one " (:type variable) " element because " (:local local-frame)
                  " was constructed with that " (:type variable) " inside " (:action validate) ".")
              (const v variable (assert-in (unique-elt-of members) variable))
-             (const value object-opt ((eval :variable-initialisation) env compile))
-             (const t class (&opt type v))
-             (var coerced-value object-uninit)
-             (cond
-              ((not-in value (tag none) :narrow-true) (<- coerced-value (assignment-conversion value t)))
-              (immutable (<- coerced-value uninitialised))
-              (nil (<- coerced-value (assignment-conversion undefined t))))
-             (&= value v coerced-value))
-           (:select (tag instance-run))))))
+             (when (in (& value v) (tag inaccessible))
+               (const value object-opt ((eval :variable-initialisation) env run))
+               (const type class (get-variable-type v run))
+               (var coerced-value object-u)
+               (cond
+                ((not-in value (tag none) :narrow-true) (<- coerced-value (assignment-conversion value type)))
+                (immutable (<- coerced-value uninitialised))
+                (nil (<- coerced-value (assignment-conversion undefined type))))
+               (&= value v coerced-value)))
+           (:select (tag instance))))))
     
     (rule (:variable-initialisation :beta) ((has-initialiser boolean) (validate (-> (context environment) void)) (eval (-> (environment phase) object-opt)))
       (production (:variable-initialisation :beta) () variable-initialisation-none
@@ -3394,18 +3541,105 @@
     
     
     (%heading 2 "Function Definition")
-    (production (:function-definition :omega_2) (:function-declaration :block) function-definition-definition)
-    (production (:function-definition :omega_2) (:function-declaration (:semicolon :omega_2)) function-definition-declaration)
-    ;***** Clear break and continue inside validate
+    (rule (:function-definition :omega_2) ((signature (writable-cell signature)) (validate (-> (context environment plurality attribute-opt-not-false) void)))
+      (production (:function-definition :omega_2) (function :function-name :function-signature :block) function-definition-definition
+        ((validate cxt env pl attr)
+         ((validate :function-signature) cxt env)
+         (const name string (name :function-name))
+         (const kind function-kind (kind :function-name))
+         (const a compound-attribute (to-compound-attribute attr))
+         (rwhen (& dynamic a)
+           (throw definition-error))
+         (const unchecked boolean (and (not (& strict cxt)) (not-in (nth env 0) class) (in kind (tag normal)) (unchecked :function-signature)))
+         (const prototype boolean (or unchecked (& prototype a)))
+         (var member-mod member-modifier (& member-mod a))
+         (if (in (nth env 0) class)
+           (when (in member-mod (tag none))
+             (<- member-mod virtual))
+           (rwhen (not-in member-mod (tag none))
+             (throw definition-error)))
+         (rwhen (and prototype (or (not-in kind (tag normal)) (in member-mod (tag constructor))))
+           (throw definition-error))
+         (var compile-this (tag none inaccessible) none)
+         (when (or prototype (in member-mod (tag constructor abstract virtual final)))
+           (<- compile-this inaccessible))
+         (const compile-frame function-frame (new function-frame (list-set-of static-binding) (list-set-of static-binding) plural compile-this prototype))
+         (const compile-env environment (cons compile-frame env))
+         ((collect-arguments :function-signature) compile-frame unchecked)
+         ((validate-using-frame :block) cxt compile-env (new jump-targets (list-set-of label) (list-set-of label)) plural compile-frame)
+         (cond
+          ((and unchecked (in (nth env 0) (union global function-frame)) (in attr (tag none)))
+           (const v hoisted-var (new hoisted-var undefined true))
+           (define-hoisted-var env name)
+           (todo))
+          (nil
+           (case member-mod
+             (:select (tag none static)
+               (function (call (this object) (args argument-list) (runtime-env environment) (phase phase)) object
+                 (rwhen (in phase (tag compile))
+                   (throw compile-expression-error))
+                 (var runtime-this object-opt)
+                 (case compile-this
+                   (:select (tag none) (<- runtime-this none))
+                   (:select (tag inaccessible)
+                     (<- runtime-this this)
+                     (const g (union package global) (get-package-or-global-frame runtime-env))
+                     (when (and prototype (in runtime-this (tag null undefined)) (in g global :narrow-true))
+                       (<- runtime-this g))))
+                 (const runtime-frame function-frame
+                   (new function-frame (list-set-of static-binding) (list-set-of static-binding) singular runtime-this prototype))
+                 (instantiate-frame compile-frame runtime-frame (cons runtime-frame runtime-env))
+                 ((assign-arguments :function-signature) runtime-frame unchecked args)
+                 (catch ((exec ((eval-using-frame :block) runtime-env runtime-frame undefined))
+                         (return undefined))
+                   (x) (if (in x returned-value :narrow-true)
+                         (return (& value x))
+                         (throw x))))
+               (function (construct (this object) (args argument-list) (runtime-env environment) (phase phase)) object
+                 (todo))
+               (var f (union instance open-instance))
+               (cond
+                ((in kind (tag get set operator))
+                 (todo))
+                (prototype
+                 (todo))
+                (nil
+                 (function (instantiate (runtime-env environment)) non-alias-instance
+                   (return (new fixed-instance function-class call bad-invoke env "Function" (list-set-of slot))))
+                 (<- f (new open-instance instantiate none))))
+               (when (in pl (tag singular))
+                 (<- f (instantiate-open-instance (assert-in f open-instance) env)))
+               (const v variable (new variable function-class f true))
+               (exec (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write v)))
+             (:narrow (tag abstract virtual final)
+               (todo))
+             (:select (tag constructor operator)
+               (todo))))))))
+    ;(production (:function-definition :omega_2) (function :function-name :function-signature (:semicolon :omega_2)) function-definition-declaration)
     
-    (production :function-declaration (function :function-name :function-signature) function-declaration-signature-and-body)
+    (rule :function-name ((kind function-kind) (name string))
+      (production :function-name (:identifier) function-name-function
+        (kind normal)
+        (name (name :identifier)))
+      (production :function-name (get :no-line-break :identifier) function-name-getter
+        (kind get)
+        (name (name :identifier)))
+      (production :function-name (set :no-line-break :identifier) function-name-setter
+        (kind set)
+        (name (name :identifier)))
+      (production :function-name ($string) function-name-string
+        (kind operator)
+        (name (value $string))))
+    (%print-actions ("Validation" kind name signature validate))
     
-    (production :function-name (:identifier) function-name-function)
-    (production :function-name (get :no-line-break :identifier) function-name-getter)
-    (production :function-name (set :no-line-break :identifier) function-name-setter)
-    (production :function-name ($string) function-name-string)
     
-    (production :function-signature (:parameter-signature :result-signature) function-signature-parameter-and-result-signatures)
+    (rule :function-signature ((unchecked boolean) (validate (-> (context environment) void))
+                               (collect-arguments (-> (function-frame boolean) void)) (assign-arguments (-> (function-frame boolean argument-list) void)))
+      (production :function-signature (:parameter-signature :result-signature) function-signature-parameter-and-result-signatures
+        (unchecked false)
+        ((validate cxt env) (todo))
+        ((collect-arguments frame unchecked) (todo))
+        ((assign-arguments frame unchecked args) (todo))))
     
     (production :parameter-signature (\( :parameters \)) parameter-signature-parameters)
     
@@ -3449,6 +3683,7 @@
     (production :result-signature () result-signature-none)
     (production :result-signature (\: (:type-expression allow-in)) result-signature-colon-and-type-expression)
     ;(production :result-signature ((:- {) (:type-expression allow-in)) result-signature-type-expression)
+    (%print-actions ("Validation" unchecked validate collect-arguments) ("Evaluation" assign-arguments eval))
     
     
     (%heading 2 "Class Definition")
@@ -3460,7 +3695,7 @@
            (throw syntax-error))
          (const superclass class ((validate :inheritance) cxt env))
          (var a compound-attribute (to-compound-attribute attr))
-         (rwhen (or (not (& complete superclass)) (& final superclass) (& compile a))
+         (rwhen (or (not (& complete superclass)) (& final superclass))
            (throw definition-error))
          (function (call (this object :unused) (args argument-list :unused) (phase phase :unused)) object
            (todo))
@@ -3472,8 +3707,12 @@
          (var final boolean)
          (case (& member-mod a)
            (:select (tag none) (<- final false))
+           (:select (tag static)
+             (rwhen (not-in (nth env 0) class)
+               (throw definition-error))
+             (<- final false))
            (:select (tag final) (<- final true))
-           (:select (tag static constructor operator abstract virtual) (throw definition-error)))
+           (:select (tag constructor operator abstract virtual) (throw definition-error)))
          (const private-namespace namespace (new namespace "private"))
          (const dynamic boolean (or (& dynamic a) (& dynamic superclass)))
          (const c class (new class (list-set-of static-binding) (list-set-of static-binding) (list-set-of instance-binding) (list-set-of instance-binding)
@@ -3502,21 +3741,34 @@
     (%print-actions ("Validation" class validate) ("Evaluation" eval))
     
     
-    #|
-    (%heading 2 "Interface Definition")
-    (production (:interface-definition :omega_2) (interface :identifier :extends-list :block) interface-definition-definition)
-    (production (:interface-definition :omega_2) (interface :identifier (:semicolon :omega_2)) interface-definition-declaration)
+    ;(%heading 2 "Interface Definition")
+    ;(production (:interface-definition :omega_2) (interface :identifier :extends-list :block) interface-definition-definition)
+    ;(production (:interface-definition :omega_2) (interface :identifier (:semicolon :omega_2)) interface-definition-declaration)
     ;***** Clear break and continue inside validate
     
-    (production :extends-list () extends-list-none)
-    (production :extends-list (extends :type-expression-list) extends-list-one)
+    ;(production :extends-list () extends-list-none)
+    ;(production :extends-list (extends :type-expression-list) extends-list-one)
     
-    (production :type-expression-list ((:type-expression allow-in)) type-expression-list-one)
-    (production :type-expression-list (:type-expression-list \, (:type-expression allow-in)) type-expression-list-more)|#
+    ;(production :type-expression-list ((:type-expression allow-in)) type-expression-list-one)
+    ;(production :type-expression-list (:type-expression-list \, (:type-expression allow-in)) type-expression-list-more)
     
     
     (%heading 2 "Namespace Definition")
-    (production :namespace-definition (namespace :identifier) namespace-definition-normal)
+    (rule :namespace-definition ((validate (-> (context environment plurality attribute-opt-not-false) void)))
+      (production :namespace-definition (namespace :identifier) namespace-definition-normal
+        ((validate (cxt :unused) env pl attr)
+         (rwhen (not-in pl (tag singular))
+           (throw syntax-error))
+         (var a compound-attribute (to-compound-attribute attr))
+         (rwhen (or (& dynamic a) (& prototype a))
+           (throw definition-error))
+         (rwhen (not (or (in (& member-mod a) (tag none)) (and (in (& member-mod a) (tag static)) (in (nth env 0) class))))
+           (throw definition-error))
+         (const name string (name :identifier))
+         (const ns namespace (new namespace name))
+         (const v variable (new variable namespace-class ns true))
+         (exec (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write v)))))
+    (%print-actions ("Validation" validate))
     
     
     (%heading 2 "Package Definition")
@@ -3599,7 +3851,9 @@
       (case a
         (:select (union undefined null boolean float64 string namespace compound-attribute prototype package global) (throw bad-value-error))
         (:narrow class (return ((& call a) this args phase)))
-        (:narrow instance (return ((& call a) this args (& env a) phase)))
+        (:narrow instance
+          (// "Note that " (:global resolve-alias) " is not called when getting the " (:label instance env) " field.")
+          (return ((& call (resolve-alias a)) this args (& env a) phase)))
         (:narrow method-closure
           (const code (union (tag abstract) instance) (& code (& method a)))
           (case code
@@ -3610,7 +3864,9 @@
       (case a
         (:select (union undefined null boolean float64 string namespace compound-attribute method-closure prototype package global) (throw bad-value-error))
         (:narrow class (return ((& construct a) this args phase)))
-        (:narrow instance (return ((& construct a) this args (& env a) phase)))))
+        (:narrow instance
+          (// "Note that " (:global resolve-alias) " is not called when getting the " (:label instance env) " field.")
+          (return ((& construct (resolve-alias a)) this args (& env a) phase)))))
     
     (define (bracket-read-object (this object :unused) (a object) (args argument-list) (phase phase)) object
       (rwhen (or (/= (length (& positional args)) 1) (nonempty (& named args)))
@@ -3719,10 +3975,16 @@
                 (:select (union undefined null) (return false))
                 (:select (union boolean float64 string) (return (equal-objects ap b phase)))))))))
     
-    (define (strict-equal-objects (a object) (b object) (phase phase :unused)) object
-      (if (and (in a float64 :narrow-true) (in b float64 :narrow-true))
-        (return (= (float64-compare a b) equal order))
-        (return (= a b object))))
+    (define (strict-equal-objects (a object) (b object) (phase phase)) object
+      (cond
+       ((in a alias-instance :narrow-true)
+        (return (strict-equal-objects (& original a) b phase)))
+       ((in b alias-instance :narrow-true)
+        (return (strict-equal-objects a (& original b) phase)))
+       ((and (in a float64 :narrow-true) (in b float64 :narrow-true))
+        (return (= (float64-compare a b) equal order)))
+       (nil
+        (return (= a b object)))))
     
     
     (define (shift-left-objects (a object) (b object) (phase phase)) object
