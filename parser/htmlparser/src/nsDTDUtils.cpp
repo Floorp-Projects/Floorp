@@ -1575,6 +1575,13 @@ nsObserverEntry::Notify(nsIParserNode* aNode,
             if (NS_FAILED(result)) {
               break;
             }
+
+            if (result == NS_HTMLPARSER_VALID_META_CHARSET) {
+              // Inform the parser that this meta tag contained a valid
+              // charset. See bug 272815
+              aParser->SetDocumentCharset(charset, kCharsetFromMetaTag);
+              result = NS_OK;
+            }
           }
         } 
       } 
