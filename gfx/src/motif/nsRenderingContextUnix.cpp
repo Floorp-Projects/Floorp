@@ -528,7 +528,7 @@ nscolor nsRenderingContextUnix :: GetColor() const
 void nsRenderingContextUnix :: SetFont(const nsFont& aFont)
 {
   NS_IF_RELEASE(mFontMetrics);
-  mFontMetrics = mFontCache->GetMetricsFor(aFont);
+  mFontCache->GetMetricsFor(aFont, mFontMetrics);
 
   if (mFontMetrics)
   {  
