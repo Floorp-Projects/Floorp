@@ -26,13 +26,28 @@
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"
 #include "nsCOMPtr.h"
+#include <FixMath.h>
 
-//#define USE_ATSUI_HACK
+#define USE_ATSUI_HACK
 
 #ifdef USE_ATSUI_HACK
+#define USE_ATSUI_HACK_FOR_NONASCII
 #include <ATSUnicode.h>
 #include <FixMath.h>
 #include <Gestalt.h>
+static Boolean IsATSUIAvailable();
+static OSErr SetATSUIFont(nsIFontMetrics& inFontMetrics, nscolor aColor, nsIDeviceContext* aContext, ATSUStyle theStyle);
+static Boolean IsAllASCII(PRUnichar* str, PRUint32 len);
+static Boolean IsAllASCII(PRUnichar* str, PRUint32 len)
+{
+	for(PRUint32 i=0; i < len; i++)
+	{
+		if(str[i] & 0xFF80)
+			return FALSE;
+	}
+	return TRUE;
+}
+
 #endif
 
 
@@ -1381,15 +1396,76 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 
 NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
 {
-	nsString nsStr;
-	nsStr.SetString(aString, aLength);
-	char* cStr = nsStr.ToNewCString();
-	ConvertLatin1ToMacRoman ( cStr );
-  GetWidth(cStr, aLength, aWidth);
-	delete[] cStr;
-  if (nsnull != aFontID)
-    *aFontID = 0;
-  return NS_OK;
+#ifdef USE_ATSUI_HACK
+#ifdef USE_ATSUI_HACK_FOR_NONASCII
+   	if (IsATSUIAvailable() && (! IsAllASCII(aString, aLength)))
+#else
+   	if (IsATSUIAvailable())
+#endif
+  	{ 
+		StartDraw();
+
+		// set native font and attributes
+		SetPortTextState();
+
+		// measure text
+			ATSUTextLayout 	txLayout = nil;
+			ATSUStyle				theStyle;
+			OSErr						err;
+			
+			err = ATSUCreateStyle(&theStyle);
+			NS_ASSERTION((noErr == err), "ATSUCreateStyle failed");
+
+		  if (mGS->mFontMetrics)
+		  {
+				// set native font and attributes
+		    nsFont *font;
+		    mGS->mFontMetrics->GetFont(font);
+				//nsFontMetricsMac::SetFont(*font, mContext);	// this is unnecessary
+
+
+		    err = SetATSUIFont(*mGS->mFontMetrics, mGS->mColor, mContext, theStyle);
+	  		NS_ASSERTION((noErr == err), "setATSUIFont failed");
+				
+			}
+
+
+		UniCharCount			runLengths = aLength;
+	  err = ATSUCreateTextLayoutWithTextPtr(	(ConstUniCharArrayPtr)aString, 0, aLength, aLength,
+												1, &runLengths, &theStyle,
+												&txLayout);
+
+		NS_ASSERTION((noErr == err), "ATSUCreateTextLayoutWithTextPtr failed");
+		err = ATSUSetTransientFontMatching(txLayout, true);
+		NS_ASSERTION((noErr == err), "ATSUSetTransientFontMatching failed");
+
+		ATSUTextMeasurement iAfter;
+		err = ATSUMeasureText( txLayout, 0, aLength, NULL, &iAfter, NULL, NULL );	
+			
+		NS_ASSERTION((noErr == err), "ATSUDrawText failed");
+		err =   ATSUDisposeTextLayout(txLayout);
+		NS_ASSERTION((noErr == err), "ATSUDisposeTextLayout failed");
+		err =   ATSUDisposeStyle(theStyle);
+		NS_ASSERTION((noErr == err), "ATSUDisposeStyle failed");
+
+
+		
+		aWidth = NSToCoordRound(Fix2Long(iAfter) * mP2T);
+		EndDraw();
+	}
+	else
+#endif //USE_ATSUI_HACK
+	{	
+		nsString nsStr;
+		nsStr.SetString(aString, aLength);
+		char* cStr = nsStr.ToNewCString();
+		ConvertLatin1ToMacRoman ( cStr );
+ 		GetWidth(cStr, aLength, aWidth);
+		delete[] cStr;
+ 		if (nsnull != aFontID)
+ 		   *aFontID = 0;
+    }
+ 	return NS_OK;
 }
 
 //------------------------------------------------------------------------
@@ -1521,7 +1597,7 @@ static OSErr AtsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
 
 static OSErr AtsuSetSize(ATSUStyle theStyle, Fixed size)
 {
-	ATSUAttributeTag 		theTag;
+	ATSUAttributeTag  		theTag;
 	ByteCount				theValueSize;
 	ATSUAttributeValuePtr 	theValue;
 
@@ -1549,11 +1625,10 @@ static OSErr AtsuSetColor(ATSUStyle theStyle, RGBColor color)
 
 static OSErr SetStyleSize (nsIFontMetrics& inFontMetrics, nsIDeviceContext* aContext, ATSUStyle theStyle)
 {
-	float  dev2app;
-	aContext->GetDevUnitsToAppUnits(dev2app);
-	nsFont		*aFont;
-	inFontMetrics.GetFont(aFont);
-	return AtsuSetSize(theStyle, FloatToFixed((float(aFont->size) / dev2app)));
+    TextStyle		textStyle;
+	nsFontMetricsMac::GetNativeTextStyle(inFontMetrics, *aContext, textStyle);
+
+	return AtsuSetSize(theStyle, Long2Fix(textStyle.tsSize));
 }
 
 
@@ -1618,7 +1693,11 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUi
                                          const nscoord* aSpacing)
 {
 #ifdef USE_ATSUI_HACK
-   if (IsATSUIAvailable())
+#ifdef USE_ATSUI_HACK_FOR_NONASCII
+   	if (IsATSUIAvailable() && (! IsAllASCII(aString, aLength)))
+#else
+   	if (IsATSUIAvailable())
+#endif
    { 
 
 			StartDraw();
