@@ -41,6 +41,7 @@ REQUIRES	= xpcom \
 		  layout \
 		  dom \
 		  pref \
+		  nkcache \
 		  intl \
 		  $(NULL)
 
