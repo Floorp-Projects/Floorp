@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifneq ($(MOZ_WIDGET_TOOLKIT),os2)
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 DIRS		= unix
 endif
 
