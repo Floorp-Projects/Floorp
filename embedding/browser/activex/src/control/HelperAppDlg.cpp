@@ -504,20 +504,6 @@ CHelperAppLauncherDlg::PromptForSaveToFile(nsISupports *aWindowContext, const PR
     return NS_ERROR_FAILURE;
 }
 
-/* void showProgressDialog (in nsIHelperAppLauncher aLauncher, in nsISupports aContext); */
-NS_IMETHODIMP
-CHelperAppLauncherDlg::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupports *aContext)
-{
-    // TODO this method isn't called.
-
-//    ProgressDlg *dlg = new ProgressDlg;
-//    nsCOMPtr<nsIWebProgressListener> listener = dlg;
-//    dlg->Show(aLauncher, NULL);
-//    aLauncher->SetWebProgressListener(listener);
-    return NS_OK;
-}
-
-
 //*****************************************************************************
 // CHelperAppLauncherDlgFactory
 //*****************************************************************************   

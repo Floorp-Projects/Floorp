@@ -346,8 +346,3 @@ NS_IMETHODIMP CHelperAppLauncherDialog::PromptForSaveToFile(nsISupports *aWindow
         return NS_ERROR_ABORT;
 }
 
-/* void showProgressDialog (in nsIHelperAppLauncher aLauncher, in nsISupports aContext); */
-NS_IMETHODIMP CHelperAppLauncherDialog::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupports *aContext)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
