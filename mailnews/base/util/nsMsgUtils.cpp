@@ -718,6 +718,18 @@ GetOrCreateFolder(const nsACString &aURI, nsIUrlListener *aListener)
       }
     }
   }
+  else {
+    // if the folder exists, we should set the junk flag on it
+    // which is what the listener will do
+    if (aListener) {
+      rv = aListener->OnStartRunningUrl(nsnull);
+      NS_ENSURE_SUCCESS(rv,rv);
+      
+      rv = aListener->OnStopRunningUrl(nsnull, NS_OK);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+  }
+
   return NS_OK;
 }
 
