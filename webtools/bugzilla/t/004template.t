@@ -38,7 +38,8 @@ use CGI qw(-no_debug);
 
 use File::Spec 0.82;
 use Template;
-use Test::More tests => ( scalar(@referenced_files) + $num_actual_files * 2 );
+use Test::More tests => ( scalar(@referenced_files) * scalar(@languages)
+                        + $num_actual_files * 2 );
 
 # Capture the TESTOUT from Test::More or Test::Builder for printing errors.
 # This will handle verbosity for us automatically.
