@@ -42,8 +42,7 @@
   
   .button-toolbar:hover, .button-toolbar:hover:active
     {
-	  color				  : #0000FF;
-  	  text-decoration	  : underline;  
+      color               : #0000FF;
     }
   
 
