@@ -135,7 +135,9 @@ map_os32()
     case `uname -s` in
         SunOS)
             S_REL=`uname -r | sed -e "s/^[^\.]*\.//g"`
-            if [ "$S_REL" -lt 8 ] ; then
+            if [ `uname -p` = "i386" ] ; then
+                MAPPED_OS=Solaris8_x86
+            elif [ "$S_REL" -lt 8 ] ; then
                 MAPPED_OS=Solaris2.6
             else
                 MAPPED_OS=Solaris8_forte6
@@ -247,8 +249,7 @@ nssqa_main()
   
 TEST_LEVEL=0
 
-while [ $TEST_LEVEL -lt 2 ] ; do # temporarily disable backward 
-                                 # compatibility testing
+while [ $TEST_LEVEL -lt 2 ] ; do 
     export TEST_LEVEL
     unset BUILD_OPT;export BUILD_OPT;Debug "BUILD_OPT $BUILD_OPT"
     unset USE_64;export USE_64;Debug "USE_64 $USE_64"
