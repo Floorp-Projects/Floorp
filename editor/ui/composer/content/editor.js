@@ -439,6 +439,8 @@ function onParagraphFormatChange(paraMenuList, commandID)
 {
   var commandNode = document.getElementById(commandID);
   var state = commandNode.getAttribute("state");
+  var menuList = document.getElementById("ParagraphSelect");
+  if (!menuList) return;
 
   dump("Updating font face with " + state + "\n");
   
@@ -450,7 +452,7 @@ function onParagraphFormatChange(paraMenuList, commandID)
   {
     //Selection is the "mixed" ( > 1 style) state
     paraMenuList.selectedItem = null;
-    paraMenuList.setAttribute("value",GetString('MixedFormats'));
+    paraMenuList.setAttribute("value",GetString('Mixed'));
   }
   else
   {
@@ -488,7 +490,7 @@ function onFontFaceChange(fontFaceMenuList, commandID)
   {
     //Selection is the "mixed" ( > 1 style) state
     fontFaceMenuList.selectedItem = null;
-    fontFaceMenuList.setAttribute("value",GetString('MixedFormats'));
+    fontFaceMenuList.setAttribute("value",GetString('Mixed'));
   }
   else
   {
@@ -915,32 +917,6 @@ function EditorToggleParagraphMarks()
   }
 }
 
-function SetBackColorString(xulElementID)
-{
-  var xulElement = document.getElementById(xulElementID);
-  if (xulElement)
-  {
-    var textVal;
-    var selectedCountObj = new Object();
-    var tagNameObj = new Object();
-    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, selectedCountObj);  
-
-    if (tagNameObj.value == "table")
-      textVal = GetString("TableBackColor");
-    else if (tagNameObj.value == "td")
-      textVal = GetString("CellBackColor");
-    else
-      textVal = GetString("PageBackColor");
-
-    xulElement.setAttribute("value",textVal);
-  }
-}
-
-function InitBackColorPopup()
-{
-  SetBackColorString("BackColorCaption"); 
-}
-
 function EditorInitEditMenu()
 {
   var DelStr = GetString(gIsMac ? "Clear" : "Delete");
@@ -981,6 +957,9 @@ function EditorInitFormatMenu()
   // Set the string for the background color menu item
   SetBackColorString("backgroundColorMenu"); 
 
+  // Set strings and enable for the [Object] Properties item
+  // Note that we directly do the enabling instead of
+  //  using goSetCommandEnabled since we already have the menuitem
   var menuItem = document.getElementById("objectProperties");
   if (menuItem)
   {
@@ -992,23 +971,23 @@ function EditorInitFormatMenu()
       menuItem.removeAttribute("disabled");
       switch (element.nodeName)
       {
-        case 'IMG':
+        case 'img':
           objStr = GetString("Image");
           break;
-        case 'HR':
+        case 'hr':
           objStr = GetString("HLine");
           break;
-        case 'TABLE':
+        case 'table':
           objStr = GetString("Table");
           break;
-        case 'TD':
+        case 'td':
           objStr = GetString("TableCell");
           break;
-        case 'A':
-          if(element.href)
-            objStr = GetString("Link");
-          else if (element.name)
+        case 'a':
+          if (element.name)
             objStr = GetString("NamedAnchor");
+          else if(element.href)
+            objStr = GetString("Link");
           break;
       }
       menuStr = menuStr.replace(/%obj%/,objStr);        
@@ -1023,6 +1002,32 @@ function EditorInitFormatMenu()
     }
     menuItem.setAttribute("value", menuStr);
   }
+}
+
+function SetBackColorString(xulElementID)
+{
+  var xulElement = document.getElementById(xulElementID);
+  if (xulElement)
+  {
+    var textVal;
+    var selectedCountObj = new Object();
+    var tagNameObj = new Object();
+    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, selectedCountObj);  
+
+    if (tagNameObj.value == "table")
+      textVal = GetString("TableBackColor");
+    else if (tagNameObj.value == "td")
+      textVal = GetString("CellBackColor");
+    else
+      textVal = GetString("PageBackColor");
+
+    xulElement.setAttribute("value",textVal);
+  }
+}
+
+function InitBackColorPopup()
+{
+  SetBackColorString("BackColorCaption"); 
 }
 
 function EditorInitToolbars()
@@ -1452,3 +1457,158 @@ function GetPrefsService()
 	  dump("failed to get prefs service!\n");
   }
 }
+
+// Command Updating Strategy:
+//   Don't update on on selection change, only when menu is displayed,
+//   with this "oncreate" hander:
+function EditorInitTableMenu()
+{
+  // Change text on the "Join..." item depending if we
+  //   are joining selected cells or just cell to right
+  // TODO: What to do about normal selection that crosses
+  //       table border? Try to figure out all cells
+  //       included in the selection?
+  var menuText;
+
+  // Use "Join selected cells if there's more than 1 cell selected
+  var tagNameObj = new Object;
+  var countObj = new Object;
+  if (window.editorShell.GetSelectedOrParentTableElement(tagNameObj, countObj) && countObj.value > 1)
+    menuText = GetString("JoinSelectedCells");
+  else
+    menuText = GetString("JoinCellToRight");
+
+  document.getElementById("menu_tableJoinCells").setAttribute("value",menuText);
+
+  // Set platform-specific hints for how to select cells
+  if (gIsWin) osKey = "XulKeyWin";
+  if (gIsMac) osKey = "XulKeyMac";
+  if (gIsUNIX) osKey = "XulKeyUnix";
+
+  var DragStr = GetString(osKey)+GetString("Drag");
+  var ClickStr = GetString(osKey)+GetString("Click");
+  var DelStr = GetString(gIsMac ? "Clear" : "Del");
+
+  document.getElementById("menu_DeleteCell").setAttribute("acceltext",ClickStr);
+  document.getElementById("menu_SelectRow").setAttribute("acceltext",DragStr);
+  document.getElementById("menu_SelectColumn").setAttribute("acceltext",DragStr);
+  document.getElementById("menu_SelectAllCells").setAttribute("acceltext",DragStr);
+  // And add "Del" or "Clear"
+  document.getElementById("menu_DeleteCellContents").setAttribute("acceltext",DelStr);
+
+  // Set enable states for all table commands
+  goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));
+}
+
+function goUpdateTableMenuItems(commandset)
+{
+  var enabled = false; 
+
+  var enabledIfTable = false;
+  if (window.editorShell && window.editorShell.documentEditable)
+  {
+    var selectedCountObj = new Object();
+    var tagNameObj = new Object();
+    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, selectedCountObj);  
+    if (element)
+    {
+      // Value when we need to have a selected table or inside a table
+      enabledIfTable = true;  
+
+      // All others require being inside a cell or selected cell
+      enabled = (tagNameObj.value == "td");
+    }
+  }
+
+  // Loop through command nodes
+  for (var i = 0; i < commandset.childNodes.length; i++)
+  {
+    var commandID = commandset.childNodes[i].getAttribute("id");
+    if (commandID)
+    {
+      if (commandID == "cmd_InsertTable" ||
+          commandID == "cmd_tableJoinCells" ||
+          commandID == "cmd_tableSplitCell")
+      {
+        // Call the update method in the command class
+        goUpdateCommand(commandID);
+      } 
+      // Directly set with the values calculated here
+      else if (commandID == "cmd_DeleteTable" ||
+               commandID == "cmd_NormalizeTable")
+      {
+        goSetCommandEnabled(commandID, enabledIfTable);
+      } else {
+        goSetCommandEnabled(commandID, enabled);
+      }
+    }
+  }
+}
+
+//-----------------------------------------------------------------------------------
+// Helpers for inserting and editing tables:
+
+function IsInTable()
+{
+  return (window.editorShell && window.editorShell.documentEditable &&
+          null != window.editorShell.GetElementOrParentByTagName("table", null));
+}
+
+function IsInTableCell()
+{
+  return (window.editorShell && window.editorShell.documentEditable &&
+          null != window.editorShell.GetElementOrParentByTagName("td", null));
+}
+
+function IsSelectionInOneCell()
+{
+  var selection = window.editorShell.editorSelection;
+
+  if (selection && selection.rangeCount == 1)
+  {
+    // We have a "normal" single-range selection
+    if (!selection.isCollapsed &&
+       selection.anchorNode != selection.focusNode)
+    {
+      // Check if both nodes are within the same cell
+      var anchorCell = window.editorShell.GetElementOrParentByTagName("td", selection.anchorNode);
+      var focusCell = window.editorShell.GetElementOrParentByTagName("td", selection.focusNode);
+      return (focusCell != null && anchorCell != null && (focusCell == anchorCell));
+    }
+    // Collapsed selection or anchor == focus (thus must be in 1 cell)
+    return true;
+  }
+  return false;
+}
+
+// Call this with insertAllowed = true to allow inserting if not in existing table,
+//   else use false to do nothing if not in a table
+function EditorInsertOrEditTable(insertAllowed)
+{
+  if (IsInTable()) {
+    // Edit properties of existing table
+    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
+    window.content.focus();
+  } else if(insertAllowed) {
+    EditorInsertTable();
+  }
+}
+
+function EditorInsertTable()
+{
+dump("EditorInsertTable\n");
+  // Insert a new table
+  window.openDialog("chrome://editor/content/EdInsertTable.xul", "_blank", "chrome,close,titlebar,modal", "");
+  window.content.focus();
+}
+
+function EditorTableCellProperties()
+{
+  var cell = editorShell.GetElementOrParentByTagName("td", null);
+  if (cell) {
+    // Start Table Properties dialog on the "Cell" panel
+    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
+    window.content.focus();
+  }
+}
+

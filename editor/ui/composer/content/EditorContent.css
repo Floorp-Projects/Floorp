@@ -53,11 +53,3 @@ table[border="0"] * td, table[border="0"] * th {
   border: 1px dotted red;
 }
 
-/* For ease in caret placement, 
-   have a minimum cell width 
-   BUG - DOESN'T WORK!
-   Note: Setting "width" works
-*/
-td, th {
-  min-width: 10px;
-}
