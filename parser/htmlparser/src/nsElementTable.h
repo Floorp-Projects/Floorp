@@ -80,6 +80,9 @@ static const int kAllTags       = 0xffffff;
 extern void InitializeElementTable(void);
 extern void DeleteElementTable(void);
 
+typedef PRBool (*ContainFunc)(eHTMLTags aTag,nsDTDContext &aContext);
+
+
 /**
  * We're asking the question: is aTest a member of bitset. 
  *
@@ -146,7 +149,7 @@ struct nsHTMLElement {
                     } 
                     return PR_FALSE;
                   }
-
+  
   inline  PRBool  IsTableElement(void) {  //return yes if it's a table or child of a table...
                     PRBool result=PR_FALSE;
 
@@ -169,8 +172,10 @@ struct nsHTMLElement {
                     return result;
                   }
 
+
   static  int     GetSynonymousGroups(eHTMLTags aTag);
 
+  static  PRInt32 GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag);
 
   TagList*        GetSynonymousTags(void) const {return mSynonymousTags;}
   TagList*        GetRootTags(void) const {return mRootNodes;}
@@ -198,7 +203,9 @@ struct nsHTMLElement {
   PRBool          IsExcludableParent(eHTMLTags aParent) const;
   PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch);
   PRBool          ShouldVerifyHierarchy(eHTMLTags achildTag);
- 
+
+  PRBool          CanBeContained(eHTMLTags aParentTag,nsDTDContext &aContext); //default version
+
   static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild);
   static  PRBool  IsContainer(eHTMLTags aTag) ;
   static  PRBool  IsResidualStyleTag(eHTMLTags aTag) ;
@@ -229,6 +236,7 @@ struct nsHTMLElement {
   TagList*        mSpecialParents;    //These are the special tags that contain this tag (directly)
   TagList*        mSpecialKids;       //These are the extra things you can contain
   eHTMLTags       mSkipTarget;        //If set, then we skip all content until this tag is seen
+  ContainFunc     mCanBeContained;
 }; 
 
 extern nsHTMLElement* gHTMLElements;

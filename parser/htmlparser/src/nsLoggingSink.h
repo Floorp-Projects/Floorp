@@ -30,6 +30,16 @@ public:
   nsLoggingSink();
   virtual ~nsLoggingSink();
 
+  void SetProxySink(nsIHTMLContentSink *aSink) {
+    mSink=aSink;    
+  }
+
+  void ReleaseProxySink() {
+    NS_IF_RELEASE(mSink);
+    mSink=0;
+  }
+
+
   // nsISupports
   NS_DECL_ISUPPORTS
 
@@ -69,7 +79,7 @@ public:
   NS_IMETHOD EndContext(PRInt32 aPosition);
 
   // nsILoggingSink
-  NS_IMETHOD SetOutputStream(ostream& aStream);
+  NS_IMETHOD SetOutputStream(PRFileDesc *aStream,PRBool autoDelete=PR_FALSE);
 
   nsresult OpenNode(const char* aKind, const nsIParserNode& aNode);
   nsresult CloseNode(const char* aKind);
@@ -79,8 +89,10 @@ public:
   PRBool WillWriteAttributes(const nsIParserNode& aNode);
 
 protected:
-	ostream*	mOutput;
-	int				mLevel;
+  PRFileDesc          *mOutput;
+	int				          mLevel;
+  nsIHTMLContentSink  *mSink;
+  PRBool              mAutoDeleteOutput;
 };
 
 #endif

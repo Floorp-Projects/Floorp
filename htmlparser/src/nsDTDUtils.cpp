@@ -355,6 +355,7 @@ eHTMLTags nsEntryStack::Last() const {
   Now define the dtdcontext class
  ***************************************************************/
 
+
 CNodeRecycler   *nsDTDContext::gNodeRecycler=0;
 
 /**
@@ -1294,13 +1295,47 @@ CToken* nsTokenAllocator::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag
   return result;
 }
 
+#define DEBUG_TRACK_NODES
+#ifdef DEBUG_TRACK_NODES 
+
+static nsCParserNode* gAllNodes[100];
+static nsCParserNode* gLooseNodes[100];
+
+static int gAllNodeCount=0;
+static int gLooseNodeCount=0;
+
+int FindNode(nsCParserNode *aNode) {
+  int theIndex=0;
+  for(theIndex=0;theIndex<gAllNodeCount;theIndex++) {
+    if(gAllNodes[theIndex]==aNode) {
+      return theIndex;
+    }
+  }
+  return -1;
+}
+
+void AddNode(nsCParserNode *aNode) {
+  if(-1==FindNode(aNode)) {
+    gAllNodes[gAllNodeCount++]=aNode;
+  }
+  else {
+    int x=10; //you tried to recycle a node twice!
+  }
+}
+
+void RemoveNode(nsCParserNode *aNode) {
+  int theIndex=FindNode(aNode);
+  if(-1<theIndex) {
+    gAllNodes[theIndex]=gAllNodes[--gAllNodeCount];
+  }
+}
+
+#endif 
+
 CNodeRecycler::CNodeRecycler(): mSharedNodes(0) {
 
   MOZ_COUNT_CTOR(CNodeRecycler);
 
-#ifdef NS_DEBUG
-  gNodeCount=0;
-#endif
 }
 
 CNodeRecycler::~CNodeRecycler() {
@@ -1309,18 +1344,19 @@ CNodeRecycler::~CNodeRecycler() {
 
   nsCParserNode* theNode=0;
 
-#ifdef NS_DEBUG
-#if 1
-  PRInt32 count=gNodeCount-mSharedNodes.GetSize();
-  if(count) {
-    printf("%i of %i nodes leaked!\n",count,gNodeCount);
-  }
-#endif
-#endif
-
   while((theNode=(nsCParserNode*)mSharedNodes.Pop())){
+#ifdef  DEBUG_TRACK_NODES
+    RemoveNode(theNode);
+#endif
     delete theNode;
   }
+
+#ifdef DEBUG_TRACK_NODES
+  if(0<gAllNodeCount) {
+    printf("%i nodes leaked!\n",gAllNodeCount);
+  }
+#endif
+
 }
 
 void CNodeRecycler::RecycleNode(nsCParserNode* aNode) {
@@ -1339,17 +1375,24 @@ void CNodeRecycler::RecycleNode(nsCParserNode* aNode) {
 
 nsCParserNode* CNodeRecycler::CreateNode(void) {
 
+#ifdef DEBUG_TRACK_NODES
+#if 0
+  if(gAllNodeCount!=mSharedNodes.GetSize()) {
+    int x=10; //this is very BAD!
+  }
+#endif
+#endif
+
   nsCParserNode* result=0;
   if(0<mSharedNodes.GetSize()) {
     result=(nsCParserNode*)mSharedNodes.Pop();
   }
   else{
     result=new nsCParserNode();
-#ifdef NS_DEBUG
-#if 1
-    gNodeCount++;
+#ifdef DEBUG_TRACK_NODES
+    AddNode(result);
 #endif
-#endif
+
   }
   return result;
 }

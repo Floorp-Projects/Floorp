@@ -40,7 +40,7 @@
 #include "prtypes.h"  //this is here for debug reasons...
 #include "prio.h"
 #include "plstr.h"
-#include "prstrm.h"
+#include "prprf.h"
 #include <time.h>
 #include "prmem.h"
 #include "nsQuickSort.h"
@@ -413,8 +413,6 @@ void CDTDDebug::DumpVectorRecord(void)
 		if (statisticFile) {
 
       PRInt32 i;
-      PRofstream ps;
-      ps.attach(statisticFile);
 
       // oh what the heck, sort it again
       if (mVectorCount) {
@@ -423,27 +421,25 @@ void CDTDDebug::DumpVectorRecord(void)
 
       // cute little header
       sprintf(vector_string,"Context vector occurrence results. Processed %d unique vectors.\r\n\r\n", mVectorCount);
-      ps << vector_string;
-
-      ps << "Invalid context vector summary (see " CONTEXT_VECTOR_STAT ") for mapping.\r\n";
-      ps << VECTOR_TABLE_HEADER;
+      PR_fprintf(statisticFile, "%s", vector_string);
+      PR_fprintf(statisticFile, "%s", "Invalid context vector summary (see " CONTEXT_VECTOR_STAT ") for mapping.\r\n");
+      PR_fprintf(statisticFile, "%s", VECTOR_TABLE_HEADER);
 
       // dump out the bad vectors encountered
       for (i = 0; i < mVectorCount; i++) {
         if (!mVectorInfoArray[i]->good_vector) {
           MakeVectorString(vector_string, mVectorInfoArray[i]);
-          ps << vector_string;
+          PR_fprintf(statisticFile, "%s", vector_string);
         }
       }
 
-      ps << "\r\n\r\nValid context vector summary\r\n";
-      ps << VECTOR_TABLE_HEADER;
-
+      PR_fprintf(statisticFile, "%s", "\r\n\r\nValid context vector summary\r\n");
+      PR_fprintf(statisticFile, "%s", VECTOR_TABLE_HEADER);
       // take a big vector table dump (good vectors)
       for (i = 0; i < mVectorCount; i++) {
         if (mVectorInfoArray[i]->good_vector) {
           MakeVectorString(vector_string, mVectorInfoArray[i]);
-          ps << vector_string;
+          PR_fprintf(statisticFile, "%s", vector_string);
         }
           // free em up.  they mean nothing to me now (I'm such a user)
 
@@ -533,30 +529,21 @@ PRBool CDTDDebug::Verify(nsIDTD * aDTD,  nsIParser * aParser, int aContextStackP
 
          // check to see if we already recorded an instance of this particular
          // bad vector.  
-         if (!DebugRecord(path, aURLRef, filename))
-         {
+         if (!DebugRecord(path, aURLRef, filename)) {
             // save file to directory indicated by bad context vector
             PRFileDesc * debugFile = PR_Open(filename,PR_CREATE_FILE|PR_RDWR,0);
             // if we were able to open the debug file, then
             // write the true URL at the top of the file.
             if (debugFile) {
-               // dump the html source into the newly created file.
 
-               /******************************************************
-                * RICKG, DO WE REALLY NEED A FILE DESCRIPTOR HERE?   *
-                ******************************************************/
+              // dump the html source into the newly created file.
+              
+              //ADD CODE: 
+              // Get the tokenizer, then walk it's list of tokens and ask each 
+              // to dump itself to the given filedecr.
 
-               PRofstream ps;
-               ps.attach(debugFile);
-               if (theParser) {
-                 // XXX Hack Remove file descriptors 
-                 nsFileSpec fileSpec(filename);
-                 nsOutputFileStream out(fileSpec);
-                 theParser->DebugDumpSource(out);
-                  //theParser->DebugDumpSource(ps);
-               }
-               PR_Close(debugFile);
             }
+            PR_Close(debugFile);
          }
       }
    }

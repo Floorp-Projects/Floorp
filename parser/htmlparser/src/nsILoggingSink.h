@@ -24,7 +24,7 @@
 
 #include "nsIHTMLContentSink.h"
 #include "nsString.h"
-#include <iostream.h>
+#include "prprf.h"
 
 // IID for nsILoggingSink
 #define NS_ILOGGING_SINK_IID \
@@ -32,7 +32,7 @@
 
 class nsILoggingSink : public nsIHTMLContentSink {
 public:
-  NS_IMETHOD SetOutputStream(ostream& aStream) =0;
+  NS_IMETHOD SetOutputStream(PRFileDesc *aStream,PRBool autoDelete=PR_FALSE) =0;
 };
 
 extern "C" nsresult NS_NewHTMLLoggingSink(nsIContentSink** aInstancePtrResult);
