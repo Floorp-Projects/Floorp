@@ -77,10 +77,11 @@ stub_pass_1(TreeState *state)
         fprintf(state->file,
                 "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM %s.idl\n */\n"
                 "#include \"jsapi.h\"\n"
-                "#include \"nsISupports.h\"\n"
-                "#include \"nsIXPConnect.h\"\n",
-                state->basename);
-
+                "#include \"%s.h\"\n"
+                "\n"
+                "static char XXXnsresult2string_fmt[] = \"XPCOM error %%#x\";\n"
+                "#define XXXnsresult2string(res) XXXnsresult2string_fmt, res\n",
+                state->basename, g_basename(state->basename));
         state->priv = NULL;
     } else {
         struct stub_private *priv = state->priv;
@@ -116,10 +117,8 @@ stub_attr_dcl(TreeState *state)
 /* XXXbe */ extern gboolean xpcom_param(TreeState *state);
 
 static char
-js_convert_arguments_format(IDL_tree param)
+js_convert_arguments_format(IDL_tree type)
 {
-    IDL_tree type = IDL_PARAM_DCL(param).param_type_spec;
-
     switch (IDL_NODE_TYPE(type)) {
       case IDLN_TYPE_INTEGER: {
         gboolean sign = IDL_TYPE_INTEGER(type).f_signed;
@@ -146,6 +145,57 @@ js_convert_arguments_format(IDL_tree param)
       default:
         return '*'; /* XXXbe */
     }
+}
+
+static gboolean
+emit_convert_result(TreeState *state, const char *from, const char *to,
+                    const char *extra)
+{
+    switch (IDL_NODE_TYPE(state->tree)) {
+      case IDLN_TYPE_INTEGER:
+        fprintf(state->file,
+                "%s  if (!JS_NewNumberValue(cx, (jsdouble) %s, %s))\n"
+                "%s    return JS_FALSE;\n",
+                extra, from, to,
+                extra);
+        break;
+      case IDLN_TYPE_STRING:
+        /* XXXbe must free 'from' using priv's nsIAllocator iff not weak! */
+        fprintf(state->file,
+                "%s  JSString *str = JS_NewStringCopyZ(cx, %s);\n"
+                "%s  if (!str)\n"
+                "%s    return JS_FALSE;\n"
+                "%s  *%s = STRING_TO_JSVAL(str);\n",
+                extra, from,
+                extra,
+                extra,
+                extra, to);
+        break;
+      case IDLN_TYPE_BOOLEAN:
+        fprintf(state->file,
+                "%s  *%s = BOOLEAN_TO_JSVAL(%s);\n",
+                extra, to, from);
+        break;
+      case IDLN_IDENT:
+        if (IDL_NODE_UP(state->tree) &&
+            IDL_NODE_TYPE(IDL_NODE_UP(state->tree)) == IDLN_NATIVE) {
+            /* XXXbe issue warning, method should have been noscript? */
+            fprintf(state->file,
+                    "%s  *%s = JSVAL_NULL;\n",
+                    extra, to);
+            break;
+        }
+        fprintf(state->file,
+                "%s  *%s = OBJECT_TO_JSVAL(%s::GetJSObject(cx, %s));\n"
+                "%s  NS_RELEASE(%s);\n",
+                extra, to, IDL_IDENT(state->tree).str, from,
+                extra, from);
+        break;
+      default:
+        assert(0); /* XXXbe */
+        break;
+    }
+    return TRUE;
 }
 
 static gboolean
@@ -193,7 +243,8 @@ stub_op_dcl(TreeState *state)
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
         param = IDL_LIST(iter).data;
         assert(param);
-        fputc(js_convert_arguments_format(param), state->file);
+        fputc(js_convert_arguments_format(IDL_PARAM_DCL(param).param_type_spec),
+              state->file);
     }
     fputc('\"', state->file);
     for (iter = op->parameter_dcls; iter; iter = IDL_LIST(iter).next) {
@@ -228,51 +279,12 @@ stub_op_dcl(TreeState *state)
               "  }\n",
               state->file);
 
-        switch (IDL_NODE_TYPE(state->tree)) {
-          case IDLN_TYPE_INTEGER:
-            fputs("  if (!JS_NewNumberValue(cx, (jsdouble) retval, rval))\n"
-                  "    return JS_FALSE;\n",
-                  state->file);
-            break;
-          case IDLN_TYPE_STRING:
-            /* XXXbe leak retval here after XPCOM-compliant out-param return? */
-            fputs("  JSString *str = JS_NewStringCopyZ(cx, retval);\n"
-                  "  if (!str)\n"
-                  "    return JS_FALSE;\n"
-                  "  *rval = STRING_TO_JSVAL(str);\n",
-                  state->file);
-            break;
-          case IDLN_TYPE_BOOLEAN:
-            fputs("  *rval = BOOLEAN_TO_JSVAL(retval);\n", state->file);
-            break;
-          case IDLN_IDENT:
-            if (IDL_NODE_UP(state->tree) &&
-                IDL_NODE_TYPE(IDL_NODE_UP(state->tree)) == IDLN_NATIVE) {
-                /* XXXbe issue warning, method should have been noscript? */
-                fputs("  *rval = JSVAL_NULL;\n", state->file);
-                break;
-            }
-            fprintf(state->file,
-                    "  *rval = OBJECT_TO_JSVAL(%s_GetJSObject(cx, retval));\n",
-                    IDL_IDENT(state->tree).str);
-            break;
-          default:
-            assert(0); /* XXXbe */
-            break;
-        }
+        if (!emit_convert_result(state, "retval", "rval", ""))
+            return FALSE;
     }
     fputs("  return JS_TRUE;\n"
           "}\n",
           state->file);
-    return TRUE;
-}
-
-static gboolean
-stub_forward_dcl(TreeState *state)
-{
-    fprintf(state->file,
-            "\n#include \"%s.h\"\n",
-            IDL_IDENT(IDL_FORWARD_DCL(state->tree).ident).str);
     return TRUE;
 }
 
@@ -317,15 +329,22 @@ emit_property_op(TreeState *state, const char *className, char which)
             return FALSE;
         fprintf(state->file, " %s;\n", id);
         if (which == 'S') {
-            fputs("// XXXbe subr and call ConvertArgument, but for vp\n",
-                  state->file);
+            fprintf(state->file,
+                    "    if (!JS_ConvertArguments(cx, 1, vp, \"%c\", &%s))\n"
+                    "      return JS_FALSE;\n",
+                    js_convert_arguments_format(state->tree), id);
         }
         fprintf(state->file,
                 "    result = priv->%cet%c%s(%s%s);\n",
                 which, toupper(*id), id + 1, (which == 'G') ? "&" : "", id);
+
+        fputs("    if (NS_FAILED(result))\n"
+              "      goto bad;\n",
+              state->file);
+
         if (which == 'G') {
-            fputs("// XXXbe subr and call rval computation, but for vp\n",
-                  state->file);
+            if (!emit_convert_result(state, id, "vp", "  "))
+                return FALSE;
         }
         fputs(  "    break;\n",
                 state->file);
@@ -333,6 +352,9 @@ emit_property_op(TreeState *state, const char *className, char which)
 
     fputs(  "  }\n"
             "  return JS_TRUE;\n"
+            "bad:\n"
+            "  JS_ReportError(cx, XXXnsresult2string(result));\n"
+            "  return JS_FALSE;\n"
             "}\n",
             state->file);
     return TRUE;
@@ -347,7 +369,6 @@ stub_interface(TreeState *state)
     gboolean ok;
 
     className = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
-    fprintf(state->file, "\n#include \"%s.h\"\n", className);
 
     priv = xpidl_malloc(sizeof *priv);
     memset(priv, 0, sizeof *priv);
@@ -429,9 +450,9 @@ stub_interface(TreeState *state)
                 "  %s *priv = (%s *)JS_GetPrivate(cx, obj);\n"
                 "  if (!priv)\n"
                 "    return;\n"
-                "  JSObject *proto = JS_GetPrototype(cx, obj);\n"
-                "  if (proto)\n"
-                "    (void) JS_DeleteElement(cx, proto, (jsint)priv >> 1);\n"
+                "  JSObject *globj = JS_GetGlobalObject(cx);\n"
+                "  if (globj)\n"
+                "    (void) JS_DeleteElement(cx, globj, (jsint)priv >> 1);\n"
                 "  NS_RELEASE(priv);\n"
                 "}\n",
                 className, className, className);
@@ -467,13 +488,15 @@ stub_interface(TreeState *state)
               state->file);
         fprintf(state->file, "%s_Finalize\n};\n", className);
 
-        /* Emit a InitJSClass function. */
+        /* Emit a InitJSClass static method. */
         fprintf(state->file,
-                "\nextern JSObject *\n"
-                "%s_InitJSClass(JSContext *cx, JSObject *obj, JSObject *parent_proto)\n"
+                "\nJSObject *\n"
+                "%s::InitJSClass(JSContext *cx)\n"
                 "{\n"
-                "  JSObject *proto = JS_InitClass(cx, obj, parent_proto,\n"
-                "                                 &%s_class, %s_ctor, 0,\n",
+                "  JSObject *globj = JS_GetGlobalObject(cx);\n"
+                "  if (!globj)\n"
+                "    return 0;\n"
+                "  JSObject *proto = JS_InitClass(cx, globj, 0, &%s_class, %s_ctor, 0,\n",
                 className, className, className);
         fputs(  "                                 ",
                 state->file);
@@ -500,13 +523,15 @@ stub_interface(TreeState *state)
                 "}\n",
                 state->file);
 
-        /* Emit a GetJSObject function. */
+        /* Emit a GetJSObject static method. */
         fprintf(state->file,
-                "\nextern JSObject *\n"
-                "%s_GetJSObject(JSContext *cx, %s *priv)\n"
+                "\nJSObject *\n"
+                "%s::GetJSObject(JSContext *cx, %s *priv)\n"
                 "{\n"
-                "  jsval v;\n"
-                "  if (!JS_LookupElement(cx, proto, (jsint)priv >> 1, &v))\n"
+                "  JSObject *globj = JS_GetGlobalObject(cx);\n"
+                "  if (!globj)\n"
+                "    return 0;\n"
+                "  if (!JS_LookupElement(cx, globj, (jsint)priv >> 1, &v))\n"
                 "    return 0;\n"
                 "  if (JSVAL_IS_VOID(v)) {\n"
                 "    JSObject *obj = JS_NewObject(cx, &foo_class, 0, 0);\n"
@@ -514,7 +539,7 @@ stub_interface(TreeState *state)
                 "      return 0;\n"
                 "    NS_ADDREF(priv);\n"
                 "    v = PRIVATE_TO_JSVAL(obj);\n"
-                "    if (!JS_DefineElement(cx, proto, (jsint)priv >> 1, v, 0, 0,\n"
+                "    if (!JS_DefineElement(cx, globj, (jsint)priv >> 1, v, 0, 0,\n"
                 "                          JSPROP_READONLY | JSPROP_PERMANENT)) {\n"
                 "      return 0;\n"
                 "    }\n"
@@ -540,7 +565,6 @@ xpidl_stub_dispatch(void)
         table[IDLN_LIST] = stub_list;
         table[IDLN_ATTR_DCL] = stub_attr_dcl;
         table[IDLN_OP_DCL] = stub_op_dcl;
-        table[IDLN_FORWARD_DCL] = stub_forward_dcl;
         table[IDLN_TYPE_ENUM] = stub_type_enum;
         table[IDLN_INTERFACE] = stub_interface;
     }
