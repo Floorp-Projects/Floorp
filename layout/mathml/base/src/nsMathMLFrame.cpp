@@ -23,6 +23,20 @@
 #include "nsMathMLFrame.h"
 #include "nsMathMLChar.h"
 
+// used to map attributes into CSS rules
+#include "nsIDocument.h"
+#include "nsIStyleSet.h"
+#include "nsIStyleSheet.h"
+#include "nsICSSStyleSheet.h"
+#include "nsIDOMCSSStyleSheet.h"
+#include "nsICSSRule.h"
+#include "nsICSSStyleRule.h"
+#include "nsNetUtil.h"
+#include "nsIURI.h"
+#include "nsContentCID.h"
+static NS_DEFINE_CID(kCSSStyleSheetCID, NS_CSS_STYLESHEET_CID);
+
+
 NS_IMPL_QUERY_INTERFACE1(nsMathMLFrame, nsIMathMLFrame)
 
 NS_IMETHODIMP
@@ -371,6 +385,11 @@ nsMathMLFrame::ParseNumericValue(nsString&   aString,
     number.Append(c);
   }
 
+  // on exit, also return a nicer string version of the value in case
+  // the caller wants it (e.g., this removes whitespace before units)
+  aString.Assign(number);
+  aString.Append(unit);
+
   // Convert number to floating point
   PRInt32 errorCode;
   float floatValue = number.ToFloat(&errorCode);
@@ -497,4 +516,173 @@ nsMathMLFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
   }
 
   return PR_FALSE;
+}
+
+// ================
+// Utils to map attributes into CSS rules (work-around to bug 69409 which
+// is not scheduled to be fixed anytime soon)
+//
+
+static const PRInt32 kMathMLversion1 = 1;
+static const PRInt32 kMathMLversion2 = 2;
+
+struct
+nsCSSMapping {
+  PRInt32        compatibility;
+  const nsIAtom* attrAtom;
+  const char*    cssProperty;
+};
+
+static void
+GetMathMLAttributeStyleSheet(nsIDocument*    aDocument,
+                             nsIStyleSheet** aSheet)
+{
+  static const char kTitle[] = "Internal MathML/CSS Attribute Style Sheet";
+  *aSheet = nsnull;
+
+  // first, look if the attribute stylesheet is already there
+  nsAutoString title;
+  PRInt32 count;
+  aDocument->GetNumberOfStyleSheets(&count);
+  for (PRInt32 i = 0; i < count; ++i) {
+    nsCOMPtr<nsIStyleSheet> sheet;
+    aDocument->GetStyleSheetAt(i, getter_AddRefs(sheet));
+    nsCOMPtr<nsICSSStyleSheet> cssSheet(do_QueryInterface(sheet));
+    if (cssSheet) {
+      cssSheet->GetTitle(title);
+      if (title.EqualsIgnoreCase(kTitle)) {
+        *aSheet = sheet;
+        NS_IF_ADDREF(*aSheet);
+        return;
+      }
+    }
+  }
+
+  // then, create a new one if it isn't yet there
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), "about:internal-mathml-attribute-stylesheet");
+  if (!uri)
+    return;
+  nsCOMPtr<nsICSSStyleSheet> cssSheet(do_CreateInstance(kCSSStyleSheetCID));
+  if (!cssSheet)
+    return;
+  cssSheet->Init(uri);
+  cssSheet->SetTitle(NS_ConvertASCIItoUCS2(kTitle));
+  cssSheet->SetDefaultNameSpaceID(nsMathMLAtoms::nameSpaceID);
+  nsCOMPtr<nsIStyleSheet> sheet(do_QueryInterface(cssSheet));
+
+  // insert the stylesheet into the document without notifying observers
+  // (discovered that it will actually be inserted at position 1 since style
+  // sheets are internally arrayed between a nsIHTMLStyleSheet attribute sheet
+  // at the beginning and a nsIHTMLCSSStyleSheet inline sheet at the end...)
+  aDocument->InsertStyleSheetAt(sheet, 0, PR_FALSE);
+  *aSheet = sheet;
+  NS_ADDREF(*aSheet);
+}
+
+/* static */ void
+nsMathMLFrame::MapAttributesIntoCSS(nsIPresContext* aPresContext,
+                                    nsIContent*     aContent)
+{
+  // normal case, quick return if there are no attributes
+  PRInt32 attrCount;
+  aContent->GetAttrCount(attrCount);
+  if (!attrCount)
+    return;
+
+  // need to initialize here -- i.e., after registering nsMathMLAtoms
+  static const nsCSSMapping
+  kCSSMappingTable[] = {
+    {kMathMLversion2, nsMathMLAtoms::mathcolor_,      "color:"},
+    {kMathMLversion1, nsMathMLAtoms::color_,          "color:"},
+    {kMathMLversion2, nsMathMLAtoms::mathsize_,       "font-size:"},
+    {kMathMLversion1, nsMathMLAtoms::fontsize_,       "font-size:"},
+    {kMathMLversion1, nsMathMLAtoms::fontfamily_,     "font-family:"},
+    {kMathMLversion2, nsMathMLAtoms::mathbackground_, "background-color:"},
+    {kMathMLversion1, nsMathMLAtoms::background_,     "background-color:"},
+    {0, nsnull, nsnull}
+  };
+
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIStyleSheet> sheet;
+  nsCOMPtr<nsICSSStyleSheet> cssSheet;
+  nsCOMPtr<nsIDOMCSSStyleSheet> domSheet;
+
+  PRInt32 nameSpaceID;
+  nsCOMPtr<nsIAtom> attrAtom;
+  nsCOMPtr<nsIAtom> prefix;
+  for (PRInt32 i = 0; i < attrCount; ++i) {
+    aContent->GetAttrNameAt(i, nameSpaceID, *getter_AddRefs(attrAtom), *getter_AddRefs(prefix));
+
+    // lookup the equivalent CSS property
+    const nsCSSMapping* map = kCSSMappingTable;
+    while (map->attrAtom && map->attrAtom != attrAtom)
+      ++map;
+    if (!map->attrAtom)
+      continue;
+    nsAutoString cssProperty(NS_ConvertASCIItoUCS2(map->cssProperty));
+
+    nsAutoString attrValue;
+    aContent->GetAttr(nameSpaceID, attrAtom, attrValue);
+    if (attrValue.IsEmpty())
+      continue;
+
+    const PRUnichar* attrName;
+    attrAtom->GetUnicode(&attrName);
+
+    // don't add rules that are already in mathml.css
+    // (this will also clean up whitespace before units - see bug 125303)
+    if (attrAtom == nsMathMLAtoms::fontsize_ || attrAtom == nsMathMLAtoms::mathsize_) {
+      nsCSSValue cssValue;
+      nsAutoString numericValue(attrValue);
+      if (!nsMathMLFrame::ParseNumericValue(numericValue, cssValue))
+        continue;
+      // on exit, ParseNumericValue also returns a nicer string
+      // in which the whitespace before the unit is cleaned up 
+      cssProperty.Append(numericValue);
+    }
+    else
+      cssProperty.Append(attrValue);
+
+    // make a style rule that maps to the equivalent CSS property
+    nsAutoString cssRule;
+    cssRule.Assign(NS_LITERAL_STRING("[")  + nsDependentString(attrName) +
+                   NS_LITERAL_STRING("='") + attrValue + NS_LITERAL_STRING("']{"));
+    cssRule.Append(cssProperty + NS_LITERAL_STRING("}"));
+
+    if (!sheet) {
+      // first time... we do this to defer the lookup up to the
+      // point where we encounter attributes that actually matter
+      aContent->GetDocument(*getter_AddRefs(doc));
+      if (!doc) 
+        return;
+      GetMathMLAttributeStyleSheet(doc, getter_AddRefs(sheet));
+      if (!sheet)
+        return;
+      // by construction, these cannot be null at this point
+      cssSheet = do_QueryInterface(sheet);
+      domSheet = do_QueryInterface(sheet);
+      NS_ASSERTION(cssSheet && domSheet, "unexpected null pointers");
+      // we will keep the sheet orphan as we populate it. This way,
+      // observers of the dcoument won't be notified and we avoid any troubles
+      // that may come from reconstructing the frame tree. Our rules only need
+      // a re-resolve of style data and a reflow, not a reconstruct-all...
+      sheet->SetOwningDocument(nsnull);
+    }
+
+    // insert the rule (note: when the sheet has @namespace and friends,
+    // insert after them, e.g., at the end, otherwise it won't work)
+    PRInt32 pos = 0;
+    if (map->compatibility == kMathMLversion2) {
+      // MathML 2, insert at the end to give it precedence
+      cssSheet->StyleRuleCount(pos);
+    }
+    //XXX possibly check for duplicate, but might be faster to just insert
+    PRUint32 index;
+    domSheet->InsertRule(cssRule, pos, &index);
+  }
+  // restore the sheet to its owner
+  if (sheet) {
+    sheet->SetOwningDocument(doc);
+  }
 }

@@ -20,16 +20,16 @@
  */
 
 
-/*******************************************************/
-/* namespace for MathML elements                       */
-/*******************************************************/
+/**************************************************************************/
+/* namespace for MathML elements                                          */
+/**************************************************************************/
 
-@namespace url(http://www.w3.org/1998/Math/MathML); 
+@namespace url(http://www.w3.org/1998/Math/MathML);
 
 
-/*******************************************************/
-/* <math> - outermost math element                     */
-/*******************************************************/
+/**************************************************************************/
+/* <math> - outermost math element                                        */
+/**************************************************************************/
 
 math {
   display: inline;
@@ -37,84 +37,188 @@ math {
   font-style: normal;
   font-family: CMSY10, Symbol, Times, Lucida Sans Unicode, MT Extra, Math1, Math2, Math3, Math4, Math5, serif;
 }
-
 math[mode="inline"], math[display="inline"] {
   display: inline;
 }
-
 math[mode="display"], math[display="block"] {
   display: block;
   text-align: -moz-center;
 }
-
 :-moz-math-inline {
   display: inline;
 }
 
-/*******************************************************/
-/* attributes common to all tags                       */
-/*******************************************************/
+/**************************************************************************/
+/* style switching during frame construction 
+   these rules need to be here so that the other rules listed with
+   fontstyle, mathsize, etc, can override them
+/**************************************************************************/
 
+/* change of style depending on the context of <mi> */
+[-moz-math-font-style="italic"] {
+  font-style: italic; /* if the textual content consists of a single character */
+}
+[-moz-math-font-style="normal"] {
+  font-style: normal; /* if the textual content consists of multiple characters */
+}
+/* change of size induced by changing the scriptlevel */
+[-moz-math-font-size="+1"] {
+  font-size: 71%;
+}
+[-moz-math-font-size="+2"] {
+  font-size: 50%;
+}
+[-moz-math-font-size="+3"] {
+  font-size: 36%;
+}
+[-moz-math-font-size="+4"] {
+  font-size: 25%;
+}
+[-moz-math-font-size="+5"] {
+  font-size: 18%;
+}
+[-moz-math-font-size="scriptminsize"] {
+  font-size: 8pt;
+}
+[-moz-math-font-size="-1"] {
+  font-size: 141%;
+}
+[-moz-math-font-size="-2"] {
+  font-size: 200%;
+}
+[-moz-math-font-size="-3"] {
+  font-size: 283%;
+}
+[-moz-math-font-size="-4"] {
+  font-size: 400%;
+}
+[-moz-math-font-size="-5"] {
+  font-size: 566%;
+}
+
+/**************************************************************************/
+/* attributes common to all tags                                          */
+/**************************************************************************/
+
+/* deprecated attributes from MathML 1.0 */
+
+/* fontstyle */
 [fontstyle="normal"] {
   font-style: normal;
 }
-
 [fontstyle="italic"] {
   font-style: italic;
 }
-
+/* fontweight */
 [fontweight="normal"] {
   font-weight: normal;
 }
-
 [fontweight="bold"] {
   font-weight: bold;
 }
-
+/* fontsize */
 [fontsize="xx-small"] {
   font-size: xx-small;
 }
-
 [fontsize="x-small"] {
   font-size: x-small;
 }
-
-[fontsize="small"], [fontsize="smaller"] {
+[fontsize="small"] {
+  font-size: small;
+}
+[fontsize="smaller"] {
   font-size: smaller;
 }
-
 [fontsize="medium"] {
   font-size: medium;
 }
-
 [fontsize="large"] {
   font-size: large;
 }
-
 [fontsize="larger"] {
   font-size: larger;
 }
-
 [fontsize="x-large"] {
   font-size: x-large;
 }
-
 [fontsize="xx-large"] {
   font-size: xx-large;
 }
 
-/*******************************************************/
-/* tags with generated content                         */
-/*******************************************************/
+/* attributes from MathML 2.0 */
+
+/* These ones are handled in the back-end:
+   mathcolor (replaces 'color'):
+     #rgb | #rrggbb | html-color-name
+   mathbackground (replaces 'background'):
+     #rgb | #rrggbb | html-color-name
+*/
+/* mathsize (replaces 'fontsize'):
+     small, big, number v-unit (a numeric value is handled in the back-end) */
+[mathsize="small"] {
+  font-size: small;
+}
+[mathsize="big"] {
+  font-size: large;
+}
+/* mathvariant (replaces 'fontstyle' & 'fontweight' & 'fontslant'; it
+   requires using the 'font' shorthand so as to reset everything first):
+     normal | bold | italic | bold-italic | double-struck | bold-fraktur | script |
+     bold-script | fraktur | sans-serif | bold-sans-serif | sans-serif-italic |
+     sans-serif-bold-italic | monospace
+
+   Note: the 'font' shorthand must specify at least two properties, size & family
+   font: [ <font-style> || <font-variant> || <font-weight> ]? 
+         <font-size> [ / <line-height> ]?
+         <font-family>
+
+   XXX bugs 46622 & 114365: need -moz-math-serif, etc, to only lookup math fonts
+*/
+[mathvariant="normal"] {
+  font: normal serif;
+}
+[mathvariant="bold"] {
+  font: bold normal serif;
+}
+[mathvariant="italic"] { 
+  font: italic normal serif;
+}
+[mathvariant="bold-italic"] {
+  font: bold italic normal serif;
+}
+/* bug 114365
+[mathvariant="double-struck"]
+[mathvariant="bold-fraktur"]
+[mathvariant="script"]
+[mathvariant="bold-script"]
+[mathvariant="fraktur"]
+*/
+[mathvariant="sans-serif"] {
+  font: normal sans-serif;
+}
+[mathvariant="bold-sans-serif"] {
+  font: bold normal sans-serif;
+}
+[mathvariant="sans-serif-italic"] {
+  font: italic normal sans-serif;
+}
+[mathvariant="sans-serif-bold-italic"] {
+  font: bold italic normal sans-serif;
+}
+[mathvariant="monospace"] {
+  font: normal monospace;
+}
+
+/**************************************************************************/
+/* tags with generated content                                            */
+/**************************************************************************/
 
 ms {
   display: inline;
 }
-
 ms:before {
   content: open-quote;
 }
-
 ms:after {
   content: close-quote;
 }
@@ -133,9 +237,9 @@ merror {
   background-color: lightyellow;
 }
 
-/*******************************************************/
-/* mtable and its related tags                         */
-/*******************************************************/
+/**************************************************************************/
+/* mtable and its related tags                                            */
+/**************************************************************************/
 
 mtable {
   display: table;
@@ -201,7 +305,7 @@ mtd[rowalign="axis"] {
    will set the internal attributes depending on the cell's position.
    These rules are hard-coded, the comments indicate what would be
    desirable if the style data could be changed on the fly to pick
-   the values that users may set with the attributes of <mtable> */ 
+   the values that users may set with the attributes of <mtable> */
 mtd {
   padding-right: 0.4em;  /* half of columnspacing[colindex] */
   padding-left: 0.4em;   /* half of columnspacing[colindex-1] */
@@ -264,58 +368,6 @@ mtd[-moz-math-columnline="dashed"] {
   border-left: dashed thin;
 }
 
-/*******************************************************/
-/* style switching during frame construction           */
-/*******************************************************/
-
-/* change of style depending on the context of <mi> */
-
-mi {
-  font-style: italic;
-}
-mi[-moz-math-font-style="italic"] {
-  font-style: italic;  /* if the textual content consists of a single character */
-}
-mi[-moz-math-font-style="normal"] {
-  font-style: normal; /* if the textual content consists of multiple characters */
-}
-
-
-/* change of size induced by changing the scriptlevel */
-
-[-moz-math-font-size="+1"] {
-  font-size: 71%;
-}
-[-moz-math-font-size="+2"] {
-  font-size: 50%;
-}
-[-moz-math-font-size="+3"] {
-  font-size: 36%;
-}
-[-moz-math-font-size="+4"] {
-  font-size: 25%;
-}
-[-moz-math-font-size="+5"] {
-  font-size: 18%;
-}
-[-moz-math-font-size="scriptminsize"] {
-  font-size: 8pt;
-}
-[-moz-math-font-size="-1"] {
-  font-size: 141%;
-}
-[-moz-math-font-size="-2"] {
-  font-size: 200%;
-}
-[-moz-math-font-size="-3"] {
-  font-size: 283%;
-}
-[-moz-math-font-size="-4"] {
-  font-size: 400%;
-}
-[-moz-math-font-size="-5"] {
-  font-size: 566%;
-}
 
 /**************************************************************************/
 /* Style used for stretchy symbols *must* be normal to avoid misaligments */
@@ -323,15 +375,15 @@ mi[-moz-math-font-style="normal"] {
    provided by the mathfont-family property in the mathfont.properties file
    or the value of the user's pref("font.mathfont-family", "...").
 
-   Authors can make elements on a document to be stretched with different 
+   Authors can make elements on a document to be stretched with different
    fonts, e.g.,
 
    To request the use of TeX fonts, you can do:
    <mo myfonts="tex">...</mo> with the associated CSS declaration
-   mo[myfonts="tex"]:-moz-math-font-style-stretchy { 
+   mo[myfonts="tex"]:-moz-math-font-style-stretchy {
      font-family: CMSY10, CMEX10;
    }
- 
+
    To request the use of Mathematica fonts, you can do:
    <mo myfonts="mathematica">...</mo> with the associated CSS declaration
    mo[myfonts="mathematica"]:-moz-math-font-style-stretchy {
@@ -347,154 +399,5 @@ mi[-moz-math-font-style="normal"] {
   font-family: serif;
 /*  background-color: #3C6; */
 }
-
 :-moz-math-font-style-anonymous {
 }
-
-
-
-
-
-/**************************************************************************/
-/* ALL THESE ARE USED FOR DEMO AND DEBUGGING PURPOSES ONLY                */
-/* They may go away at any time                                           */
-/**************************************************************************/
-
-
-[background="yellow"] {
-   background-color: yellow;
-}
-
-/*
-maction:hover  { 
-  outline: thick solid black;
-  border: 1px dotted black;
-}
-*/
-
-maction {
-  background-color: yellow;
-/*  border: 1px solid black; */
-}
-
-maction[actiontype="restyle#background"] {
-  background-color: #3C6;
-  border: 1px dotted red;
-}
-
-maction[actiontype="restyle#zoom"] {
-  font-size: 40pt;
-}
-
-/*
-mmultiscripts {
-   background-color: yellow;
-}
-*/
-
-/*
-mtext {
-   color: purple;
-   border: 1px solid purple;
-}
-*/
-
-/*
-mstyle {
-   background-color: yellow;
-   border: 1px solid black;
-}
-*/
-
-ms {
-   color: blue;
-/*
-   background-color: yellow;
-   border: 1px solid black;
-*/
-}
-
-/*
-mpadded {
-  background-color: yellow;
-  border: 1px solid black;
-}
-*/
-
-/*
-mspace {
-}
-*/
-
-/*
-msqrt, mroot {
-  border: 1px dotted red;
-  background-color: green;
-}
-*/
-
-/*
-mrow {
-  border: 1px solid black;
-  font-style: italic;
-}
-*/
-
-/*
-mphantom {
-}
-*/
-
-/*
-mfrac {
-  background-color: blue;
-  font-size: smaller;
-  border: 1px dotted black;
-}
-*/
-
-/*
-msub, msup {
-  background-color: yellow;
-  border: 1px dotted black;
-  font-size: small;
-}
-*/
-
-/*
-mclip {
-  color: red;
-  font-style: normal;
-  border: 1px dashed green;
-  background-color: yellow;
-}
-*/
-
-/*
-mn {
-  border: 1px solid black;
-}
-*/
-
-mi {
-  color: red; 
-/*  font-style: normal; */
-/*  border: 1px dashed green; */
-/*  background-color: yellow; */
-}
-
-/*
-mo {
-  font-family: CMEX10, Math1, Math3, Math4;
-  font-style: normal;
-  border: 1px solid black;
-  background-color: lightyellow;
-}
-*/
-
-/*
-munder, mover, munderover {
-  background-color: yellow;
-  border: 1px solid black;
-}
-*/

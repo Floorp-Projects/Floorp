@@ -835,6 +835,8 @@ nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
   // XXX the best fix is to skip these in nsTextFrame
   CompressWhitespace(aContent);
 
+  MapAttributesIntoCSS(aPresContext, aContent);
+
   // let the base class do its Init()
   return nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 

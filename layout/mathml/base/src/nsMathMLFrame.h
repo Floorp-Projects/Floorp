@@ -420,6 +420,12 @@ public:
                 nsIFontMetrics*      aFontMetrics,
                 nscoord&             aAxisHeight);
 
+  // ================
+  // helper to map attributes into CSS rules (work-around to bug 69409 which
+  // is not scheduled to be fixed anytime soon)
+  static void
+  MapAttributesIntoCSS(nsIPresContext* aPresContext,
+                       nsIContent*     aContent);
 
 protected:
   // information about the presentation policy of the frame
