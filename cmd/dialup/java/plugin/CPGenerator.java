@@ -41,6 +41,9 @@ public class CPGenerator
 	public static final int			ABORT = -1;
 	
 	public static final String		FEATURE_STRING = "Features";
+	public static final String		SUPPORT_NUMBER_STRING = "SupportNumber";
+	public static final String		DISPLAY_NAME_STRING = "DisplayName";
+	
 	public static final int			FEATURE_COUNT = 8;
 	public static final boolean		DEBUG = true;
 	
@@ -210,13 +213,12 @@ public class CPGenerator
 		String          inputFileName = getConfigFilePath( ispData );
 		String          outputFileName = inputFileName + ".r";
 		
-		//Trace.TRACE( "inputFileName: " + inputFileName );
-		//Trace.TRACE( "outputFileName: " + outputFileName );
+		Trace.TRACE( "inputFileName: " + inputFileName );
+		Trace.TRACE( "outputFileName: " + outputFileName );
 		
 		File            inputFile = new File( inputFileName );
 		File            outputFile = new File( outputFileName );
 		
-	
 		try
 		{
 			NameValueSet		nvSet = ispData.getDynamicData( index );
@@ -242,13 +244,24 @@ public class CPGenerator
 	{
 		NameValueSet		nvSet = getISPData( ispName );
 		
-		
 		if ( nvSet != null )
 		{
 			//Trace.TRACE( "have nvSet" );
-			String		ispDisplayName = new String ( nvSet.getValue( "DisplayName" ) );
+			String		ispDisplayName = new String ( nvSet.getValue( DISPLAY_NAME_STRING ) );
 			//Trace.TRACE( "ispDisplayName: " + ispDisplayName );
 			return ispDisplayName;
+		}
+		return null;
+	}
+	
+	public static String getISPSupportPhoneNumber( String ispName )
+	{
+		NameValueSet		nvSet = getISPData( ispName );
+		
+		if ( nvSet != null )
+		{
+			String		ispSupportNumber = new String ( nvSet.getValue( SUPPORT_NUMBER_STRING ) );
+			return ispSupportNumber;
 		}
 		return null;
 	}
@@ -259,18 +272,27 @@ public class CPGenerator
 
 		if ( ispData == null )
 		{
-			//Trace.TRACE( "isp not found: " + isp );
+			Trace.TRACE( "isp not found: " + ispName );
 			return null;
 		}
 			
 		int		size = ispData.getDynamicDataSize();
 			
-		//Trace.TRACE( "size: " + size );
+		Trace.TRACE( "size: " + size );
 			
 		if ( size < popIndex )
 			return null;
 		
-		NameValueSet		nvSet = ispData.getDynamicData( popIndex );
+		NameValueSet		nvSet = null;
+		
+		if ( popIndex != -1 )
+			nvSet = ispData.getDynamicData( popIndex );
+		else
+			nvSet = ispData.getDynamicData();
+		
+		if ( nvSet == null )
+			return new String( "" );
+			
 		String				phoneNum = nvSet.getValue( "phone" );
 		
 		return phoneNum;
@@ -447,7 +469,7 @@ public class CPGenerator
 							if ( criterionFile.exists() )
 							{
 	                            NameValueSet    criterionSet = new NameValueSet( criterionFile );
-								criterionSet.printNameValueSet();
+								//criterionSet.printNameValueSet();
 							
 								for ( int i = 0; i < inSets.size(); i++ )
 								{
@@ -480,11 +502,11 @@ public class CPGenerator
 										if ( fileName.lastIndexOf( '.' ) != -1 )
 											fileName = fileName.substring( 0, fileName.lastIndexOf( '.' ) );
 										
-										Trace.TRACE( "fileName: " + fileName );
-										Trace.TRACE( "fileStub: " + fileStub );
+										//Trace.TRACE( "fileName: " + fileName );
+										//Trace.TRACE( "fileStub: " + fileStub );
 										if ( fileName.compareTo( fileStub ) == 0 )
 										{
-											Trace.TRACE( "executing name-value replacement" );
+											//Trace.TRACE( "executing name-value replacement" );
 											executeNameValueReplacement( nvSet, templateFile, outputFile );
 											BufferedReader bufSubInputReader = new BufferedReader( new FileReader( outputFile ) );
 											executeConstraintReplacement( inSets, templateFilePath, ispHTMLPath, bufSubInputReader, bufferedOutputWriter );
@@ -658,14 +680,14 @@ public class CPGenerator
 	private static void parseFeatureSet( NameValueSet ispSet, NameValueSet featureMapping )
 	{
 		String      featureList = ispSet.getValue( FEATURE_STRING );
-		Trace.TRACE( "features: " + featureList );
+		//Trace.TRACE( "features: " + featureList );
 
 		for ( int i = 1; i <= FEATURE_COUNT; i++ )
 		{
 		    String      featureName = "feature" + i;
 			String      featureMappedName = featureMapping.getValue( featureName );
 			
-			Trace.TRACE( featureName + " mapped to " + featureMappedName );
+			//Trace.TRACE( featureName + " mapped to " + featureMappedName );
 			
 			// * featureMappedName will be something like "hosting" or "freetime"
             if (    featureMappedName != null &&
@@ -673,12 +695,12 @@ public class CPGenerator
                     featureMappedName.compareTo( "" ) != 0 &&
                     featureList.indexOf( featureMappedName ) != -1 )
             {
-				Trace.TRACE( "showing " +  featureName );
+				//Trace.TRACE( "showing " +  featureName );
 				ispSet.setValue( featureName, "SHOW" );
 			}
             else
             {
-				Trace.TRACE( "hiding " + featureName );
+				//Trace.TRACE( "hiding " + featureName );
 				ispSet.setValue( featureName, "HIDE" );
 			}
 		}
@@ -790,7 +812,7 @@ public class CPGenerator
 		for ( int count = 0; count < files.length; count++ )
 		{
 			String		file = files[ count ];
-			Trace.TRACE( "file: " + file );
+			//Trace.TRACE( "file: " + file );
 			
 			if ( file.startsWith( "plan" ) && file.endsWith( ".cfg" ) )
 			{
@@ -801,7 +823,7 @@ public class CPGenerator
 				if ( configFile.exists() && configFile.canRead() )
 				{
 					nvSet = new NameValueSet( configFile );
-					nvSet.printNameValueSet();
+					//nvSet.printNameValueSet();
 					returnSets.addElement( nvSet );
 				}
 			}
@@ -818,7 +840,7 @@ public class CPGenerator
 			if ( ispData == null )
 				return false;
 
-			ispData.printISPDynamicData();
+			//ispData.printISPDynamicData();
 			
 			String		configPath = getConfigPath( ispData );
 			//Trace.TRACE( "configPath: " + configPath );
