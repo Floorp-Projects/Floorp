@@ -59,7 +59,10 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   mRenderingSurface->display =  XtDisplay((Widget)aWindow->GetNativeData(NS_NATIVE_WIDGET));
   mRenderingSurface->drawable = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
   mRenderingSurface->gc       = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
-  
+
+  ((nsDeviceContextUnix *)aContext)->SetDrawingSurface(mRenderingSurface);
+  ((nsDeviceContextUnix *)aContext)->InstallColormap();
+
 #if 0
   mFontCache = mContext->GetFontCache();
 #endif 
