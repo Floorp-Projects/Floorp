@@ -1616,7 +1616,7 @@ public class Codegen extends Interpreter {
         astore(variableObjectLocal);
         
         Vector fns = (Vector) tree.getProp(Node.FUNCTION_PROP);
-        if (fns != null) {
+        if (inFunction && fns != null) {
             for (int i=0; i < fns.size(); i++) {
                 FunctionNode fn = (FunctionNode) fns.elementAt(i);
                 if (fn.getFunctionType() == FunctionNode.FUNCTION_STATEMENT) {
