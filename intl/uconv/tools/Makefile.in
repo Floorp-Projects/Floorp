@@ -30,7 +30,7 @@ CSRCS		= \
 		umaptable.c \
 		$(NULL)
 
-SIMPLE_PROGRAMS	= $(CSRCS:.c=)
+SIMPLE_PROGRAMS	= $(CSRCS:.c=$(BIN_SUFFIX))
 
 include $(topsrcdir)/config/rules.mk
 
