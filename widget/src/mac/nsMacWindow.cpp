@@ -100,9 +100,7 @@ SetDragActionBasedOnModifiers ( nsIDragService* inDragService, short inModifiers
 				action = nsIDragService::DRAGDROP_ACTION_COPY;
 		}
 
-		// I think we only need to set this when it's not "none"
-		if ( action != nsIDragService::DRAGDROP_ACTION_NONE )
-			dragSession->SetDragAction ( action );		
+    dragSession->SetDragAction ( action );		
 	}
 
 } // SetDragActionBasedOnModifiers

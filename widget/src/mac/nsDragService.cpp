@@ -847,3 +847,34 @@ nsDragService :: EndDragSession ( )
 }
 
 
+//
+// SetDragAction
+//
+// Override to set the cursor to the appropriate feedback when the
+// drag action changes based on modifier keys
+//
+NS_IMETHODIMP
+nsDragService :: SetDragAction ( PRUint32 anAction ) 
+{
+  const PRInt32 kCopyCursorID = 144;
+  const PRInt32 kLinkCursorID = 145;
+  
+  // don't do the work if it's the same.
+  if ( anAction == mDragAction )
+    return;
+    
+  CursHandle newCursor = nsnull;  
+  if ( anAction == DRAGDROP_ACTION_COPY )
+    newCursor = ::GetCursor ( kCopyCursorID );
+  else if ( anAction == DRAGDROP_ACTION_LINK )
+    newCursor = ::GetCursor ( kLinkCursorID );
+  if ( newCursor ) {
+    ::HLock((Handle)newCursor);
+    ::SetCursor ( *newCursor );
+    ::HUnlock((Handle)newCursor);
+  }
+  else
+    ::InitCursor();
+ 
+  return nsBaseDragService::SetDragAction(anAction);
+}
