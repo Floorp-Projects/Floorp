@@ -40,7 +40,7 @@ $ENV{'MAILADDRESS'} = Param('maintainer');
 # use Carp;                       # for confess
 
 # Contains the version string for the current running Bonsai
-$::param{'version'} = '1.3';
+$::param{'version'} = '1.3.9';
 
 
 
