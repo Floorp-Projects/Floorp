@@ -72,7 +72,50 @@ nsresult nsMsgDBView::ReverseThreads()
 
 nsresult nsMsgDBView::ReverseSort()
 {
-    printf("XXX same sort type (but not threaded), just different sort order.  just reverse it\n");
+    PRUint32 num = GetSize();
+
+    // go up half the array swapping values
+    for (PRUint32 i = 0; i < (num / 2); i++) {
+
+        // swap flags
+        PRUint32 end = num - i - 1;
+        PRUint32 tempFlags = m_flags.GetAt(i);
+        m_flags.SetAt(i, m_flags.GetAt(i));
+        m_flags.SetAt(end, tempFlags);
+
+        // swap keys
+        nsMsgKey tempKey = m_keys.GetAt(i);
+        m_keys.SetAt(i, m_keys.GetAt(end));
+        m_keys.SetAt(end, tempKey);
+
+        // no need to swap elements in m_levels, 
+        // since we won't call ReverseSort() if we
+        // are in threaded mode, so m_levels are all the same.
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBView::PopulateView()
+{
+    PRUint32 i;
+    for (i=0;i<10;i++) {
+        m_keys.InsertAt(i,i*100+1);
+        m_flags.InsertAt(i,i);
+        //m_levels.InsertAt(i,i%2);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDBView::DumpView()
+{
+    PRUint32 i;
+    PRUint32 num = GetSize();
+    printf("#:  (key,flag)\n");
+    for (i = 0; i < num; i++) {
+        printf("%d:  (%d,%d)\n",i,m_keys.GetAt(i),m_flags.GetAt(i));
+    }
+    printf("\n");
     return NS_OK;
 }
 
@@ -124,10 +167,10 @@ nsresult nsMsgDBView::ExpandAll()
 
 nsresult nsMsgDBView::ExpandByIndex(nsMsgViewIndex index, PRUint32 *pNumExpanded)
 {
-	int				numListed;
+	int				numListed = 0;
 	char			flags = m_flags[index];
 	nsMsgKey		firstIdInThread, startMsg = nsMsgKey_None;
-	nsresult			rv;
+	nsresult		rv = NS_OK;
 	nsMsgViewIndex	firstInsertIndex = index + 1;
 	nsMsgViewIndex	insertIndex = firstInsertIndex;
 	uint32			numExpanded = 0;
@@ -139,7 +182,7 @@ nsresult nsMsgDBView::ExpandByIndex(nsMsgViewIndex index, PRUint32 *pNumExpanded
 	NS_ASSERTION(flags & MSG_FLAG_ELIDED, "can't expand an already expanded thread");
 	flags &= ~MSG_FLAG_ELIDED;
 
-	if ((int) index > m_keys.GetSize())
+	if ((PRUint32) index > m_keys.GetSize())
 		return NS_MSG_MESSAGE_NOT_FOUND;
 
 	firstIdInThread = m_keys[index];
@@ -155,11 +198,11 @@ nsresult nsMsgDBView::ExpandByIndex(nsMsgViewIndex index, PRUint32 *pNumExpanded
 	do
 	{
 		const int listChunk = 200;
+#ifdef ON_BRANCH_YET
 		nsMsgKey	listIDs[listChunk];
 		char		listFlags[listChunk];
 		char		listLevels[listChunk];
 
-#ifdef ON_BRANCH_YET
 		if (m_viewFlags & kUnreadOnly)
 		{
 			if (flags & MSG_FLAG_READ)

@@ -8,7 +8,6 @@ function createView()
     dump("dbview = " + dbview + "\n");
 }
 
-
 function sortDateAscending()
 {
     dbview.sort(nsMsgViewSortType.byDate,nsMsgViewSortOrder.ascending);
@@ -27,4 +26,14 @@ function sortThreadedAscending()
 function sortThreadedDescending()
 {
     dbview.sort(nsMsgViewSortType.byThread,nsMsgViewSortOrder.descending);
+}
+
+function dumpView()
+{   
+    dbview.dumpView();
+}
+
+function populateView()
+{
+    dbview.populateView();
 }

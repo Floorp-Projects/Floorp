@@ -7,6 +7,9 @@
 
 <box orient="vertical">
   <button class="dialog" value="create view" onclick="createView()"/>
+  <button class="dialog" value="populate view" onclick="populateView()"/>
+  <button class="dialog" value="dump view" onclick="dumpView()"/>
+
   <button class="dialog" value="sort date ascending" onclick="sortDateAscending()"/>
   <button class="dialog" value="sort date decending" onclick="sortDateDescending()"/>
   <button class="dialog" value="sort thread ascending" onclick="sortThreadedAscending()"/>

@@ -144,4 +144,10 @@ interface nsIMsgDBView : nsISupports
     void addKeys(out nsMsgKey pKeys, out long pFlags, in string pLevels, in nsMsgViewSortTypeValue sortType, in long numKeysToAdd);
 
     void sort(in nsMsgViewSortTypeValue sortType, in nsMsgViewSortOrderValue sortOrder);
+
+    /**
+     * temporary, so I can test from my js
+     */
+    void populateView();
+    void dumpView();
 };
