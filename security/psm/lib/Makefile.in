@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= protocol client
+DIRS		= protocol client nlslayer
 
 include $(topsrcdir)/config/rules.mk
 
