@@ -1144,8 +1144,10 @@ function serv_privmsg (e)
 CIRCServer.prototype.onCTCP = 
 function serv_ctcp (e)
 {
-    var ary = e.meat.match (/^\x01(\S+) ?(.*)?\x01$/i);
+    var ary = e.meat.match (/^\x01(\S+) ?(.*)\x01$/i);
 
+    dd (ary);
+    
     if (ary == null)
         return false;
 
