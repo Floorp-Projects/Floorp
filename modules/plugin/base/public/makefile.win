@@ -17,49 +17,50 @@
 
 
 
-DEPTH	= ..\..\..\..
+DEPTH   = ..\..\..\..
 
-MODULE	= plugin
+MODULE  = plugin
 
-EXPORTS	=				      \
-	nsIEventHandler.h		      \
-	nsIFileUtilities.h		      \
-	nsIMalloc.h                           \
-	nsIPlugin.h			      \
-	nsIPluginInstance.h		      \
-	nsIPluginInstancePeer.h	              \
-	nsIPluginInstancePeer2.h              \
-	nsIPluginManager2.h		      \
-	nsIPluginTagInfo.h		      \
-	nsIPluginTagInfo2.h		      \
-	nsIWindowlessPlugInstPeer.h           \
-	nsIPluginStreamListener.h             \
-	nsIPluginStreamListener2.h            \
-	nsIPluginStreamInfo.h                 \
-	nsplugin.h			      \
-	nsplugindefs.h		 	      \
-	nsICookieStorage.h		      \
-	nsPIPluginHost.h
+EXPORTS =                     \
+    nsIEventHandler.h             \
+    nsIFileUtilities.h            \
+    nsIMalloc.h                           \
+    nsIPlugin.h               \
+    nsIPluginInstance.h           \
+    nsIPluginInstancePeer.h               \
+    nsIPluginInstancePeer2.h              \
+    nsIPluginManager2.h           \
+    nsIPluginTagInfo.h            \
+    nsIPluginTagInfo2.h           \
+    nsIWindowlessPlugInstPeer.h           \
+    nsIPluginStreamListener.h             \
+    nsIPluginStreamListener2.h            \
+    nsIPluginStreamInfo.h                 \
+    nsplugin.h                \
+    nsplugindefs.h                \
+    nsICookieStorage.h            \
+    nsPIPluginHost.h              \
+    nsPluginLogging.h
 
 # DEPRECATED -- remove before we ship 5.0
 EXPORTS = $(EXPORTS)                          \
-	nsIPluginStream.h		      \
-	nsIPluginStreamPeer.h		      \
-	nsIPluginStreamPeer2.h		      \
-	nsISeekablePluginStreamPeer.h	      \
-        nsILiveConnectPlugin.h		      \
-	nsILiveConnectPlugInstPeer.h          \
-        nsIJRILiveConnectPlugin.h	      \
-	nsIJRILiveConnectPlugInstPeer.h       \
+    nsIPluginStream.h             \
+    nsIPluginStreamPeer.h             \
+    nsIPluginStreamPeer2.h            \
+    nsISeekablePluginStreamPeer.h         \
+        nsILiveConnectPlugin.h            \
+    nsILiveConnectPlugInstPeer.h          \
+        nsIJRILiveConnectPlugin.h         \
+    nsIJRILiveConnectPlugInstPeer.h       \
         nsIPluginInputStream.h                \
         nsIPluginInputStream2.h
 
-XPIDLSRCS = 				      \
-	.\nsIScriptablePlugin.idl             \
-	.\nsIHTTPHeaderListener.idl           \
-	.\nsIPluginManager.idl                \
-	.\nsIPluginViewer.idl                 \
-	$(NULL)
+XPIDLSRCS =                       \
+    .\nsIScriptablePlugin.idl             \
+    .\nsIHTTPHeaderListener.idl           \
+    .\nsIPluginManager.idl                \
+    .\nsIPluginViewer.idl                 \
+    $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
 

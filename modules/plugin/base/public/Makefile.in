@@ -54,6 +54,7 @@ EXPORTS		= \
 		nsplugindefs.h \
 		nsICookieStorage.h \
 		nsPIPluginHost.h \
+		nsPluginLogging.h
 		$(NULL)
 
 # DEPRECATED -- remove before we ship 5.0
