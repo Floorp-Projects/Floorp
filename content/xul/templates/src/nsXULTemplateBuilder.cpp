@@ -203,9 +203,15 @@ nsXULTemplateBuilder::Init()
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS2(nsXULTemplateBuilder,
-                   nsIXULTemplateBuilder,
-                   nsIRDFObserver)
+NS_IMPL_ADDREF(nsXULTemplateBuilder)
+NS_IMPL_RELEASE(nsXULTemplateBuilder)
+
+NS_INTERFACE_MAP_BEGIN(nsXULTemplateBuilder)
+  NS_INTERFACE_MAP_ENTRY(nsIXULTemplateBuilder)
+  NS_INTERFACE_MAP_ENTRY(nsIRDFObserver)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXULTemplateBuilder)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XULTemplateBuilder)
+NS_INTERFACE_MAP_END
 
 //----------------------------------------------------------------------
 //
