@@ -26,7 +26,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = md
+# DIRS = md
 
 LIBRARY_NAME=xpconnect
 MODULE=xpconnect
