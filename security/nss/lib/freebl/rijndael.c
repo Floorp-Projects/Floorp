@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rijndael.c,v 1.9 2001/10/30 22:11:49 ian.mcgreer%sun.com Exp $
+ * $Id: rijndael.c,v 1.10 2001/12/12 04:14:48 jpierre%netscape.com Exp $
  */
 
 #include "prinit.h"
@@ -752,7 +752,7 @@ rijndael_encryptBlock(AESContext *cx,
     return SECFailure;
 #ifdef rijndael_large_blocks_fixed
     unsigned int j, r, Nb;
-    unsigned int c2, c3;
+    unsigned int c2=0, c3=0;
     PRUint32 *roundkeyw;
     PRUint8 clone[RIJNDAEL_MAX_STATE_SIZE];
     Nb = cx->Nb;
@@ -794,7 +794,7 @@ rijndael_decryptBlock(AESContext *cx,
     return SECFailure;
 #ifdef rijndael_large_blocks_fixed
     int j, r, Nb;
-    int c2, c3;
+    int c2=0, c3=0;
     PRUint32 *roundkeyw;
     PRUint8 clone[RIJNDAEL_MAX_STATE_SIZE];
     Nb = cx->Nb;
