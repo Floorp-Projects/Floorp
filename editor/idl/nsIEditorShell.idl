@@ -36,6 +36,9 @@ interface nsIEditorShell : nsISupports
   readonly attribute wstring           contentsAsText;
   readonly attribute wstring           contentsAsHTML;
 
+  readonly attribute wstring           selectionAsHTML;
+  readonly attribute wstring           selectionAsText;
+
   readonly attribute nsIDOMDocument    editorDocument;
   readonly attribute nsIDOMSelection   editorSelection;
   
