@@ -16,7 +16,6 @@
  * Reserved.
  */
 #include "nsPlaceholderFrame.h"
-#include "nsCSSLayout.h"
 #include "nsLineLayout.h"
 #include "nsHTMLIIDs.h"
 

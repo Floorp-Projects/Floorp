@@ -26,7 +26,6 @@
 #include "nsIViewManager.h"
 #include "nsBodyFrame.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsCSSLayout.h"
 #include "nsHTMLIIDs.h"
 
 #include "nsBodyFrame.h"
@@ -481,17 +480,15 @@ nsScrollOuterFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Get style size and determine how much area is available for the
   // child (the scroll inner frame) to layout into.
-  nsSize maxSize, styleSize;
-  PRIntn sf = nsCSSLayout::GetStyleSize(&aPresContext, aReflowState,
-                                        styleSize);
-  if (NS_SIZE_HAS_WIDTH & sf) {
-    maxSize.width = styleSize.width - lr;
+  nsSize maxSize;
+  if (aReflowState.HaveConstrainedWidth()) {
+    maxSize.width = aReflowState.minWidth - lr;
   }
   else {
     maxSize.width = aReflowState.maxSize.width;
   }
-  if (NS_SIZE_HAS_HEIGHT & sf) {
-    maxSize.height = styleSize.height - tb;
+  if (aReflowState.HaveConstrainedHeight()) {
+    maxSize.height = aReflowState.minHeight - tb;
   }
   else {
     maxSize.height = NS_UNCONSTRAINEDSIZE;
@@ -515,14 +512,14 @@ nsScrollOuterFrame::Reflow(nsIPresContext&          aPresContext,
 
   // The scroll outer frame either shrink wraps around it's single
   // child OR uses the style width/height.
-  if (NS_SIZE_HAS_WIDTH & sf) {
-    aDesiredSize.width = styleSize.width;
+  if (aReflowState.HaveConstrainedWidth()) {
+    aDesiredSize.width = aReflowState.minWidth;
   }
   else {
     aDesiredSize.width += lr;
   }
-  if (NS_SIZE_HAS_HEIGHT & sf) {
-    aDesiredSize.height = styleSize.height;
+  if (aReflowState.HaveConstrainedHeight()) {
+    aDesiredSize.height = aReflowState.minHeight;
   }
   else {
     aDesiredSize.height += tb;

@@ -18,7 +18,6 @@
  */
 #include "nsHTMLParts.h"
 #include "nsLeafFrame.h"
-#include "nsCSSLayout.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsWidgetsCID.h"
@@ -301,16 +300,14 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
                               nsHTMLReflowMetrics& aMetrics)
 {
   // Determine our size stylistically
-  nsSize styleSize;
-  PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, styleSize);
   PRBool haveWidth = PR_FALSE;
   PRBool haveHeight = PR_FALSE;
-  if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
-    aMetrics.width = styleSize.width;
+  if (aReflowState.HaveConstrainedWidth()) {
+    aMetrics.width = aReflowState.minWidth;
     haveWidth = PR_TRUE;
   }
-  if (0 != (ss & NS_SIZE_HAS_HEIGHT)) {
-    aMetrics.height = styleSize.height;
+  if (aReflowState.HaveConstrainedHeight()) {
+    aMetrics.height = aReflowState.minHeight;
     haveHeight = PR_TRUE;
   }
 

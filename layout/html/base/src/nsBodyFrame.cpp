@@ -34,7 +34,6 @@
 #include "nsIWebShell.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLParts.h"
-#include "nsCSSLayout.h"
 
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
@@ -530,11 +529,8 @@ nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
 
   // Apply style size if present; XXX note the inner value (style-size -
   // border+padding) should be given to the child as a max-size
-  nsSize styleSize;
-  PRIntn ss =
-    nsCSSLayout::GetStyleSize(&aPresContext, aReflowState, styleSize);
-  if (NS_SIZE_HAS_WIDTH & ss) {
-    width = styleSize.width + aBorderPadding.left + aBorderPadding.right;
+  if (aReflowState.HaveConstrainedWidth()) {
+    width = aReflowState.minWidth + aBorderPadding.left + aBorderPadding.right;
   }
   else {
     if ((0 == (NS_BODY_SHRINK_WRAP & mFlags)) &&
@@ -543,8 +539,9 @@ nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
       width = PR_MAX(aMetrics.width, aMaxSize.width);
     }
   }
-  if (NS_SIZE_HAS_HEIGHT & ss) {
-    height = styleSize.height + aBorderPadding.top + aBorderPadding.bottom;
+  if (aReflowState.HaveConstrainedHeight()) {
+    height = aReflowState.minHeight +
+      aBorderPadding.top + aBorderPadding.bottom;
   }
   else {
     // aBorderPadding.top is already reflected in the

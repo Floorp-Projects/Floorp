@@ -30,7 +30,6 @@
 #include "nsIHTMLAttributes.h"
 #include "nsStyleConsts.h"
 #include "nsCSSRendering.h"
-#include "nsCSSLayout.h"
 #include "nsIDOMHTMLHRElement.h"
 
 static NS_DEFINE_IID(kIDOMHTMLHRElementIID, NS_IDOMHTMLHRELEMENT_IID);
@@ -224,10 +223,8 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
   // otherwise tables behave badly. This makes sense they are springy.
   if (nsnull != aDesiredSize.maxElementSize) {
     nscoord onePixel = NSIntPixelsToTwips(1, aPresContext.GetPixelsToTwips());
-    nsSize size; 
-    PRIntn ss = nsCSSLayout::GetStyleSize(&aPresContext, aReflowState, size);
-    if (NS_SIZE_HAS_WIDTH & ss) {
-      aDesiredSize.maxElementSize->width = size.width;
+    if (aReflowState.HaveConstrainedWidth()) {
+      aDesiredSize.maxElementSize->width = aReflowState.minWidth;
       aDesiredSize.maxElementSize->height = onePixel;
     }
     else {
@@ -245,10 +242,8 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsHTMLReflowMetrics& aDesiredSize)
 {
-  nsSize size;
-  PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, size);
-  if (NS_SIZE_HAS_WIDTH & ss) {
-    aDesiredSize.width = size.width;
+  if (aReflowState.HaveConstrainedWidth()) {
+    aDesiredSize.width = aReflowState.minWidth;
   }
   else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.width) {
