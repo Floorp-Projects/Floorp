@@ -172,10 +172,10 @@ function onAccept()
       SetDocumentTitle(gNewTitle);
     
     if (gAuthorWasEdited)
-      SetMetaElementContent(gAuthorElement, gAuthor, gInsertNewAuthor);
+      SetMetaElementContent(gAuthorElement, gAuthor, gInsertNewAuthor, false);
 
     if (gDescWasEdited)
-      SetMetaElementContent(gDescriptionElement, gDescription, gInsertNewDescription);
+      SetMetaElementContent(gDescriptionElement, gDescription, gInsertNewDescription, false);
 
     editor.endTransaction();
 

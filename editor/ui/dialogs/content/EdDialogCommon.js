@@ -634,7 +634,7 @@ function CreateHTTPEquivElement(name)
 // Change "content" attribute on a META element,
 //   or delete entire element it if content is empty
 // This uses undoable editor transactions
-function SetMetaElementContent(metaElement, content, insertNew)
+function SetMetaElementContent(metaElement, content, insertNew, prepend)
 {
   if (metaElement)
   {
@@ -650,7 +650,10 @@ function SetMetaElementContent(metaElement, content, insertNew)
         if (insertNew)
         {
           metaElement.setAttribute("content", content);
-          AppendHeadElement(metaElement);
+          if (prepend)
+            PrependHeadElement(metaElement);
+          else
+            AppendHeadElement(metaElement);
         }
         else
           editor.setAttribute(metaElement, "content", content);
@@ -668,6 +671,20 @@ function GetHeadElement()
   } catch (e) {}
 
   return null;
+}
+
+function PrependHeadElement(element)
+{
+  var head = GetHeadElement();
+  if (head)
+  {
+    var editor = GetCurrentEditor();
+    try {
+      // Use editor's undoable transaction
+      // Last param "true" says "don't change the selection"
+      editor.insertNode(element, head, 0, true);
+    } catch (e) {}
+  }
 }
 
 function AppendHeadElement(element)

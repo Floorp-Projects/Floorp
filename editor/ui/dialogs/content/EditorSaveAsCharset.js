@@ -106,7 +106,7 @@ function onAccept()
   if(gCharsetWasChanged) 
   {
      try {
-       SetMetaElementContent(gContenttypeElement, "text/html; charset=" + gCharset, gInsertNewContentType);     
+       SetMetaElementContent(gContenttypeElement, "text/html; charset=" + gCharset, gInsertNewContentType, true);     
       editor.documentCharacterSet = gCharset;
     } catch (e) {}
   }
