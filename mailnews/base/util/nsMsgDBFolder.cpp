@@ -442,4 +442,6 @@ nsMsgDBFolder::MarkAllMessagesRead(void)
 	if(NS_SUCCEEDED(rv))
 		return mDatabase->MarkAllRead(nsnull);
 
+	return rv;
 }
+
