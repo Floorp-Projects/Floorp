@@ -35,18 +35,18 @@ Rights Reserved.
 			<box class="header-splitter" align="horizontal" flex="1">
 				<box class="header-part1" align="vertical" flex="1">
 					<box id="SubjectBox" class="headerBox" align="horizontal" collapsed="true">
-              <text class="headerdisplayname" value="&subjectField.label;"/>
-              <html class="headerValue subjectvalue" id="SubjectValue" flex="1">*</html>
+                       <text class="headerdisplayname" value="&subjectField.label;" popup="allHeadersPopup"/>
+                       <html class="headerValue subjectvalue" id="SubjectValue" flex="1">*</html>
 					</box>
 		      
 					<box id="FromBox" class="headerBox" align="horizontal" collapsed="true">
-              <text class="headerdisplayname" value="&fromField.label;"/>
-              <html class="headerValue" id="FromValue" flex="1"></html>
+                      <text class="headerdisplayname" value="&fromField.label;" popup="allHeadersPopup"/>
+                      <html class="headerValue" id="FromValue" flex="1"></html>
 					</box>
 
 					<box id = "DateBox" class="headerBox" align="horizontal" collapsed="true">
-               <text class="headerdisplayname" value="&dateField.label;"/>
-							<html class="headerValue" id="DateValue" flex="1">*</html>
+                        <text class="headerdisplayname" value="&dateField.label;" popup="allHeadersPopup"/>
+						<html class="headerValue" id="DateValue" flex="1">*</html>
 					</box>
 				</box>
 
@@ -69,7 +69,7 @@ Rights Reserved.
 		<toolbar id="headerPart2" hide="true">
 			<box class="header-part2" align="vertical" flex="1">
 				<box id="ToBox" class="headerBox" align="horizontal" collapsed="true">
-            <text class="headerdisplayname" value="&toField.label;"/>
+            <text class="headerdisplayname" value="&toField.label;" popup="allHeadersPopup"/>
             <html class="headervalue" id="ToValueShort" flex="1">
             <button class="showMoreAddressesButton" id="ToValueToggleIcon" 
                 oncommand="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
@@ -82,7 +82,7 @@ Rights Reserved.
 				</box>
 
 			    <box id="CcBox" class="headerBox" align="horizontal" collapsed="true">
-            <text class="headerdisplayname" value="&ccField.label;"/>
+            <text class="headerdisplayname" value="&ccField.label;" popup="allHeadersPopup"/>
               <html class="headervalue" id="CcValueShort" flex="1">
               <button class="showMoreAddressesButton" id="CcValueToggleIcon" 
                 oncommand="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
@@ -95,7 +95,7 @@ Rights Reserved.
 				  </box>
 
         	<box id="NewsgroupBox" class="headerBox" align="horizontal" collapsed="true">
-            <text class="headerdisplayname" value="&newsgroupsField.label;"/>
+            <text class="headerdisplayname" value="&newsgroupsField.label;" popup="allHeadersPopup"/>
             <html class="headervalue" id="NewsgroupValue" flex="1">*</html>
 				  </box>
 			</box>
@@ -104,7 +104,7 @@ Rights Reserved.
     <toolbar id="headerPart3" hide="true">
       <box class="header-part3" align="vertical" flex="1">
         <box id="UserAgentBox" class="headerBox" align="horizontal" collapsed="true">
-          <text class="headerdisplayname" value="&userAgentField.label;"/>
+          <text class="headerdisplayname" value="&userAgentField.label;" popup="allHeadersPopup"/>
           <html class="headervalue" id="UserAgentValue" flex="1">*</html>
         </box>
       </box>

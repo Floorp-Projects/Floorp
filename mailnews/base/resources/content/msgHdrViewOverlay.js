@@ -37,6 +37,10 @@ var abAddressCollectorProgID	 = "component://netscape/addressbook/services/addre
 
 var msgPaneData;
 var currentHeaderData = {};
+// gGeneratedViewAllHeaderInfo --> we clear this every time we start to display a new message.
+// the view all header popup will set it when we first generate a view of all the headers. this is 
+// just so it won't try to regenerate all the information every time the user clicks on the popup.
+var gGeneratedViewAllHeaderInfo = false; 
 var gNumAddressesToShow = 3;
 var gShowUserAgent = false;
 
@@ -105,6 +109,7 @@ var messageHeaderSink = {
     onStartHeaders: function()
     {
       ClearCurrentHeaders();
+      gGeneratedViewAllHeaderInfo = false;
       ClearAttachmentMenu();
     },
 
@@ -143,9 +148,12 @@ var messageHeaderSink = {
 
       // for consistancy sake, let's force all header names to be lower case so
       // we don't have to worry about looking for: Cc and CC, etc.
-      headerName = headerName.toLowerCase();
-      currentHeaderData[headerName] = headerValue;
-      if (headerName == "from")
+      lowerCaseHeaderName = headerName.toLowerCase();
+      var foo = new Object;
+      foo.headerValue = headerValue;
+      foo.headerName = headerName;
+      currentHeaderData[lowerCaseHeaderName] = foo;
+      if (lowerCaseHeaderName == "from")
       {
         if (headerValue && abAddressCollector)
           abAddressCollector.collectUnicodeAddress(headerValue);  
@@ -429,15 +437,45 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
 
 function UpdateMessageHeaders()
 {
-  hdrViewSetNodeWithBox(msgPaneData.SubjectBox, msgPaneData.SubjectValue, currentHeaderData["subject"]);
-  OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData["from"], false, "", ""); 
-  hdrViewSetNodeWithBox(msgPaneData.DateBox, msgPaneData.DateValue, currentHeaderData["date"]); 
-  OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, currentHeaderData["to"], true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon );
-  OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData["cc"], true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
-  hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData["newsgroups"]); 
+  if (currentHeaderData["subject"])
+     hdrViewSetNodeWithBox(msgPaneData.SubjectBox, msgPaneData.SubjectValue, currentHeaderData["subject"].headerValue);
+  else
+     hdrViewSetNodeWithBox(msgPaneData.SubjectBox, msgPaneData.SubjectValue, "");
+
+  if (currentHeaderData["from"])
+    OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData["from"].headerValue, false, "", ""); 
+  else
+    OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, "", false, "", ""); 
+
+  if (currentHeaderData["date"])
+    hdrViewSetNodeWithBox(msgPaneData.DateBox, msgPaneData.DateValue, currentHeaderData["date"].headerValue); 
+  else
+    hdrViewSetNodeWithBox(msgPaneData.DateBox, msgPaneData.DateValue, ""); 
+  
+  if (currentHeaderData["to"])
+    OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, currentHeaderData["to"].headerValue, true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon );
+  else
+    OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, "", true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon );
+
+  if (currentHeaderData["cc"])
+    OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData["cc"].headerValue, true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
+  else
+    OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, "", true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon );
+  
+  if (currentHeaderData["newsgroups"])
+    hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData["newsgroups"].headerValue); 
+  else
+    hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, ""); 
+
 
   if (gShowUserAgent)
-    hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, currentHeaderData["user-agent"]);
+  { 
+    if (currentHeaderData["user-agent"])
+      hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, currentHeaderData["user-agent"].headerValue);
+    else
+      hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, "");
+
+  }
   FinishEmailProcessing();
 }
 
@@ -511,6 +549,72 @@ function ToggleLongShortAddresses(shortDivID, longDivID)
      nodeToReset.childNodes[index].setAttribute("value", tempValue);
      index++;
    }
+}
+
+// the on create handler for the view all headers popup...
+function fillAllHeadersPopup(node)
+{
+  // don't bother re-filling the popup if we've already done it for the
+  // currently displayed message....
+  if (gGeneratedViewAllHeaderInfo == true)
+    return true; 
+
+  var containerBox = document.getElementById('allHeadersPopupContainer');
+  
+  // clear out the old popup date if there is any...
+    while ( containerBox.childNodes.length ) 
+        containerBox.removeChild(containerBox.childNodes[0]); 
+
+  containerBox.setAttribute("class", "header-part1");
+  containerBox.setAttribute("align", "vertical");
+  containerBox.setAttribute("flex", "1");
+
+  for (header in currentHeaderData)
+  {
+    var innerBox = document.createElement('box');
+    innerBox.setAttribute("class", "headerBox");
+    innerBox.setAttribute("align", "horizontal");
+    innerBox.setAttribute("autostretch", "never");
+
+    // for each header, create a header value and header name then assign those values...
+	var newHeaderTitle  = document.createElement('text');
+    newHeaderTitle.setAttribute("class", "headerdisplayname");
+	newHeaderTitle.setAttribute("value", currentHeaderData[header].headerName + ':');
+	innerBox.appendChild(newHeaderTitle);
+
+    var newHeaderValue = document.createElement('html');
+    // make sure we are properly resized...
+    newHeaderValue.setAttribute("width", window.innerWidth*.65);
+    newHeaderValue.setAttribute("class", "headerValue");
+    ProcessHeaderValue(innerBox, newHeaderValue, currentHeaderData[header]);
+
+    innerBox.appendChild(newHeaderValue);
+    containerBox.appendChild(innerBox);
+  }
+
+  gGeneratedViewAllHeaderInfo = true; // don't try to regenerate this information for the currently displayed message
+
+  return true;
+}
+
+function ProcessHeaderValue(containingBox, containerNode, header)
+{
+    // in the simplest case, we'll just create a text node for the header
+    // and append it to the container Node. for certain headers, we might want to do 
+    // extra processing....
+    
+    var headerName = header.headerName;
+    headerName = headerName.toLowerCase();
+//    if (headerName == "cc" || headerName == "from" || headerName == "to")
+//    {
+//      OutputEmailAddresses(containingBox, containerNode, header.headerValue, "", "", "")
+//      return;
+//    }
+    
+    var textNode = document.createTextNode(header.headerValue);
+    if (headerName == "subject")
+        containerNode.setAttribute("class", "subjectvalue headerValue");
+    containerNode.appendChild(textNode);
 }
 
 ///////////////////////////////////////////////////////////////
