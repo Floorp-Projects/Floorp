@@ -452,6 +452,10 @@ DEFINES		+= -DOJI
 JAVA_OR_OJI	= 1
 endif
 
+ifdef JAVA_OR_OJI
+MOZ_SMARTUPDATE = 1
+endif
+
 ifndef NO_MOCHA
 DEFINES		+= -DMOCHA
 endif
