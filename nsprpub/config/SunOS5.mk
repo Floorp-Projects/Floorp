@@ -54,6 +54,7 @@ endif
 ifdef NS_USE_GCC
 CC			= gcc -Wall
 CCC			= g++ -Wall
+ASFLAGS			+= -Wa,-P
 COMPILER_TAG		= _gcc
 ifdef NO_MDUPDATE
 OS_CFLAGS		= $(NOMD_OS_CFLAGS)
