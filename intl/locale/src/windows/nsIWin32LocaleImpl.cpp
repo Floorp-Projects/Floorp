@@ -101,9 +101,8 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "CZ", SUBLANG_DEFAULT},
 		{"",0}}
 	},
-	{ "da", LANG_DUTCH, { 
-		{ "DK", SUBLANG_DUTCH },
-		{ "BE", SUBLANG_DUTCH_BELGIAN },
+	{ "da", LANG_DANISH, { 
+		{ "DK", SUBLANG_DEFAULT },
 		{ "",0}}
 	},
 	{ "de", LANG_GERMAN, {
@@ -243,7 +242,8 @@ iso_map iso_list[LENGTH_MAPPING_LIST] =
 		{ "", 0}}
 	},
 	{"nl",	LANG_DUTCH, {
-		{"NL", SUBLANG_DEFAULT },
+		{"NL", SUBLANG_DUTCH },
+		{"BE", SUBLANG_DUTCH_BELGIAN },
 		{ "", 0}}
 	},
 	{"no",	LANG_NORWEGIAN, {
