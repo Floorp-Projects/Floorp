@@ -600,7 +600,7 @@ PRBool PR_CALLBACK RealizeDefaultContent(nsHashKey* aKey, void* aData, void* aCl
     
     if (insCount == 0) {
       nsCOMPtr<nsIContent> defContent;
-      currPoint->GetDefaultContent(getter_AddRefs(defContent));
+      currPoint->GetDefaultContentTemplate(getter_AddRefs(defContent));
       if (defContent) {
         // We need to take this template and use it to realize the
         // actual default content (through cloning).
@@ -743,8 +743,6 @@ nsXBLBinding::GenerateAnonymousContent()
       clonedContent = do_QueryInterface(clonedNode);
       SetAnonymousContent(clonedContent);
 
-      mPrototypeBinding->SetInitialAttributes(mBoundElement, mContent);
-
       if (hasInsertionPoints) {
         // Now check and see if we have a single insertion point 
         // or multiple insertion points.
@@ -847,6 +845,8 @@ nsXBLBinding::GenerateAnonymousContent()
         mInsertionPointTable->Enumerate(RealizeDefaultContent, &data);
       }
     }
+
+    mPrototypeBinding->SetInitialAttributes(mBoundElement, mContent);
   }
 
   // Always check the content element for potential attributes.

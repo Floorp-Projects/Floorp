@@ -43,9 +43,7 @@
         </xul:hbox>
         <xul:hbox class="radio-text-container" flex="1" align="center">
           <xul:image class="radio-icon" inherits="src,disabled"/>
-          <xul:html class="radio-text" inherits="value=label,accesskey,crop,disabled" flex="1">
-            <children/>
-          </xul:html>
+          <xul:html class="radio-text" inherits="value=label,accesskey,crop,disabled" flex="1"/>
         </xul:hbox>          
       </xul:hbox>
     </content>
@@ -60,9 +58,7 @@
           </xul:hbox>
         </xul:hbox>
         <xul:image class="checkbox-icon" inherits="src,disabled"/>
-        <xul:html class="checkbox-text" inherits="value=label,accesskey,crop,disabled" flex="1">
-          <children/>
-        </xul:html>
+        <xul:html class="checkbox-text" inherits="value=label,accesskey,crop,disabled" flex="1"/>
       </xul:hbox>
     </content>
   </binding>

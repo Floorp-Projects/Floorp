@@ -641,7 +641,7 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceI
     xblAttr->GetElement(getter_AddRefs(element));
 
     nsCOMPtr<nsIContent> realElement;
-    LocateInstance(content, aAnonymousContent, element, getter_AddRefs(realElement));
+    LocateInstance(aChangedElement, content, aAnonymousContent, element, getter_AddRefs(realElement));
 
     xblAttr->GetDstAttribute(getter_AddRefs(dstAttr));
 
@@ -737,7 +737,7 @@ PRBool PR_CALLBACK InstantiateInsertionPoint(nsHashKey* aKey, void* aData, void*
   binding->GetAnonymousContent(getter_AddRefs(instanceRoot));
   nsCOMPtr<nsIContent> templRoot;
   proto->GetImmediateChild(nsXBLPrototypeBinding::kContentAtom, getter_AddRefs(templRoot));
-  proto->LocateInstance(templRoot, instanceRoot, content, getter_AddRefs(realContent));
+  proto->LocateInstance(nsnull, templRoot, instanceRoot, content, getter_AddRefs(realContent));
   if (!realContent)
     binding->GetBoundElement(getter_AddRefs(realContent));
 
@@ -806,7 +806,7 @@ nsXBLPrototypeBinding::GetInsertionPoint(nsIContent* aBoundElement, nsIContent* 
       entry->GetDefaultContent(aDefaultContent); // Addref happens here.
       nsCOMPtr<nsIContent> templContent;
       GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
-      LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
+      LocateInstance(nsnull, templContent, aCopyRoot, content, getter_AddRefs(realContent));
     }
     else {
       // We got nothin'.  Bail.
@@ -844,7 +844,7 @@ nsXBLPrototypeBinding::GetSingleInsertionPoint(nsIContent* aBoundElement,
         entry->GetDefaultContent(aDefaultContent); // Addref happens here.
         nsCOMPtr<nsIContent> templContent;
         GetImmediateChild(kContentAtom, getter_AddRefs(templContent));
-        LocateInstance(templContent, aCopyRoot, content, getter_AddRefs(realContent));
+        LocateInstance(nsnull, templContent, aCopyRoot, content, getter_AddRefs(realContent));
       }
       else {
         // The only insertion point specified was actually a filtered insertion point.
@@ -964,29 +964,93 @@ nsXBLPrototypeBinding::ConstructHandlers()
 }
 
 void
-nsXBLPrototypeBinding::LocateInstance(nsIContent* aTemplRoot, nsIContent* aCopyRoot, 
+nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement, nsIContent* aTemplRoot, nsIContent* aCopyRoot, 
                                       nsIContent* aTemplChild, nsIContent** aCopyResult)
 {
   // XXX We will get in trouble if the binding instantiation deviates from the template
   // in the prototype.
-  if (aTemplChild == aTemplRoot) {
+  if (aTemplChild == aTemplRoot || !aTemplChild) {
     *aCopyResult = nsnull;
     return;
   }
 
   nsCOMPtr<nsIContent> templParent;
   nsCOMPtr<nsIContent> copyParent;
-
+  nsCOMPtr<nsIContent> childPoint;
   aTemplChild->GetParent(*getter_AddRefs(templParent));
-    
+  
+  if (aBoundElement) {
+    nsCOMPtr<nsIAtom> tag;
+    templParent->GetTag(*getter_AddRefs(tag));
+    if (tag == kChildrenAtom) {
+      childPoint = templParent;
+      childPoint->GetParent(*getter_AddRefs(templParent));
+    }
+  }
+
+  if (!templParent)
+    return;
+
   if (templParent.get() == aTemplRoot)
     copyParent = aCopyRoot;
   else
-    LocateInstance(aTemplRoot, aCopyRoot, templParent, getter_AddRefs(copyParent));
+    LocateInstance(aBoundElement, aTemplRoot, aCopyRoot, templParent, getter_AddRefs(copyParent));
   
-  PRInt32 index;
-  templParent->IndexOf(aTemplChild, index);
-  copyParent->ChildAt(index, *aCopyResult); // Addref happens here.
+  if (childPoint && aBoundElement) {
+    // First we have to locate this insertion point and use its index and its
+    // count to detemine our precise position within the template.
+    nsCOMPtr<nsIDocument> doc;
+    aBoundElement->GetDocument(*getter_AddRefs(doc));
+    nsCOMPtr<nsIBindingManager> bm;
+    doc->GetBindingManager(getter_AddRefs(bm));
+    nsCOMPtr<nsIXBLBinding> binding;
+    bm->GetBinding(aBoundElement, getter_AddRefs(binding));
+    
+    nsCOMPtr<nsIXBLBinding> currBinding = binding;
+    while (currBinding) {
+      nsCOMPtr<nsIContent> anonContent;
+      currBinding->GetAnonymousContent(getter_AddRefs(anonContent));
+      if (anonContent)
+        break;
+      nsCOMPtr<nsIXBLBinding> tempBinding = currBinding;
+      tempBinding->GetBaseBinding(getter_AddRefs(currBinding));
+    }
+
+    nsCOMPtr<nsISupportsArray> points;
+    currBinding->GetInsertionPointsFor(copyParent, getter_AddRefs(points));
+    nsCOMPtr<nsIXBLInsertionPoint> insertionPoint;
+    PRUint32 count;
+    points->Count(&count);
+    for (PRUint32 i = 0; i < count; i++) {
+      // Next we have to find the real insertion point for this proto insertion
+      // point.  If it does not contain any default content, then we should 
+      // return null, since the content is not in the clone.
+      nsCOMPtr<nsIXBLInsertionPoint> currPoint = getter_AddRefs((nsIXBLInsertionPoint*)points->ElementAt(i));
+      nsCOMPtr<nsIContent> defContent;
+      currPoint->GetDefaultContentTemplate(getter_AddRefs(defContent));
+      if (defContent == childPoint) {
+        // Now check to see if we even built default content at this
+        // insertion point.
+        currPoint->GetDefaultContent(getter_AddRefs(defContent));
+        if (defContent) {
+          // Find out the index of the template element within the <children> elt.
+          PRInt32 index;
+          childPoint->IndexOf(aTemplChild, index);
+          
+          // Now we just have to find the corresponding elt underneath the cloned
+          // default content.
+          defContent->ChildAt(index, *aCopyResult);
+        } 
+        break;
+      }
+    }
+  }
+  else if (copyParent)
+  {
+    PRInt32 index;
+    templParent->IndexOf(aTemplChild, index);
+    copyParent->ChildAt(index, *aCopyResult); // Addref happens here.
+  }
 }
 
 struct nsXBLAttrChangeData
@@ -1039,7 +1103,8 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
       curr->GetElement(getter_AddRefs(element));
 
       nsCOMPtr<nsIContent> realElement;
-      changeData->mProto->LocateInstance(content, changeData->mContent, element, getter_AddRefs(realElement));
+      changeData->mProto->LocateInstance(changeData->mBoundElement,
+                                         content, changeData->mContent, element, getter_AddRefs(realElement));
       if (realElement) {
         realElement->SetAttribute(kNameSpaceID_None, dst, value, PR_FALSE);
         nsCOMPtr<nsIAtom> tag;
@@ -1240,7 +1305,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
           nsISupportsKey key(atom);
           mInsertionPointTable->Put(&key, xblIns);
           
-          token = nsCRT::strtok( newStr, ", ", &newStr );
+          token = nsCRT::strtok( newStr, "| ", &newStr );
         }
 
         nsMemory::Free(str);
@@ -1267,8 +1332,14 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
       // in situations where no content ends up being placed at the insertion point.
       PRInt32 defaultCount;
       child->ChildCount(defaultCount);
-      if (defaultCount > 0)
+      if (defaultCount > 0) {
+        // Annotate the insertion point with our default content.
         xblIns->SetDefaultContent(child);
+
+        // Reconnect back to our parent for access later.  This makes "inherits" easier
+        // to work with on default content.
+        child->SetParent(parent);
+      }
     }
   }
 }

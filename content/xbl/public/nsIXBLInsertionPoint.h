@@ -42,6 +42,9 @@ public:
   NS_IMETHOD SetDefaultContent(nsIContent* aDefaultContent)=0;
   NS_IMETHOD GetDefaultContent(nsIContent** aDefaultContent)=0;
 
+  NS_IMETHOD SetDefaultContentTemplate(nsIContent* aDefaultContent)=0;
+  NS_IMETHOD GetDefaultContentTemplate(nsIContent** aDefaultContent)=0;
+
   NS_IMETHOD AddChild(nsIContent* aChildElement)=0;
   NS_IMETHOD InsertChildAt(PRInt32 aIndex, nsIContent* aChildElement)=0;
   NS_IMETHOD RemoveChild(nsIContent* aChildElement)=0;

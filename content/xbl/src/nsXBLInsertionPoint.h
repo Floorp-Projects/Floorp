@@ -43,6 +43,9 @@ public:
   NS_IMETHOD SetDefaultContent(nsIContent* aDefaultContent);
   NS_IMETHOD GetDefaultContent(nsIContent** aDefaultContent);
 
+  NS_IMETHOD SetDefaultContentTemplate(nsIContent* aDefaultContent);
+  NS_IMETHOD GetDefaultContentTemplate(nsIContent** aDefaultContent);
+
   NS_IMETHOD AddChild(nsIContent* aChildElement);
   NS_IMETHOD InsertChildAt(PRInt32 aIndex, nsIContent* aChildElement);
   NS_IMETHOD RemoveChild(nsIContent* aChildElement);
@@ -57,7 +60,9 @@ protected:
   nsIContent* mParentElement;            // This ref is weak.  The parent of the <children> element.
   PRInt32 mIndex;                        // The index of this insertion point. -1 is a pseudo-point.
   nsCOMPtr<nsISupportsArray> mElements;  // An array of elements present at the insertion point.
-  nsCOMPtr<nsIContent> mDefaultContent;           // The default content at this insertion point.
+  nsCOMPtr<nsIContent> mDefaultContentTemplate ;           // The template default content that will be cloned if
+                                                           // the insertion point is empty.
+  nsCOMPtr<nsIContent> mDefaultContent;  // The cloned default content obtained by cloning mDefaultContentTemplate.
 };
 
 extern nsresult

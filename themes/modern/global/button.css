@@ -47,9 +47,12 @@ button {
   padding: 3px 2px 3px 2px;
 }
 
-.button-text-mid,
-.button-icon-mid {
+.button-text-mid {
+  margin-left: 3px;
   margin-right: 3px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  text-align: center;
 }
 
   /* .......... focused state .......... */
@@ -122,48 +125,48 @@ button[open="true"] {
   color: #FFFFFF;
 }
   
-button:hover:active > .button-box-left > .button-left-top,
+button:hover:active > .box-inherit > .button-box-left > .button-left-top,
 button[open="true"] > .button-box-left > .button-left-top {
   background-image: url("chrome://global/skin/button/btn-act-lft-top.gif");
 }
 
-button:hover:active > .button-box-left > .button-left-mid,
-button[open="true"] > .button-box-left > .button-left-mid {
+button:hover:active > .box-inherit > .button-box-left > .button-left-mid,
+button[open="true"] > .box-inherit > .button-box-left > .button-left-mid {
   background-image: url("chrome://global/skin/button/btn-act-lft-mid.gif");
 }
 
-button:hover:active > .button-box-left > .button-left-btm,
-button[open="true"] > .button-box-left > .button-left-btm {
+button:hover:active > .box-inherit > .button-box-left > .button-left-btm,
+button[open="true"] > .box-inherit > .button-box-left > .button-left-btm {
   background-image: url("chrome://global/skin/button/btn-act-lft-btm.gif");
 }
 
-button:hover:active > .button-stack > .button-box-mid,
-button[open="true"] > .button-stack > .button-box-mid {
+button:hover:active > .box-inherit > .button-stack > .button-box-mid,
+button[open="true"] > .box-inherit > .button-stack > .button-box-mid {
   background-color: #90A1B3;
 }
   
-button:hover:active > .button-stack > .button-box-mid > .button-mid-top,
-button[open="true"] > .button-stack > .button-box-mid > .button-mid-top {
+button:hover:active > .box-inherit > .button-stack > .button-box-mid > .button-mid-top,
+button[open="true"] > .box-inherit > .button-stack > .button-box-mid > .button-mid-top {
   background-image: url("chrome://global/skin/button/btn-act-mid-top.gif");
 }
 
-button:hover:active > .button-stack > .button-box-mid > .button-mid-btm,
-button[open="true"] > .button-stack > .button-box-mid > .button-mid-btm {
+button:hover:active > .box-inherit > .button-stack > .button-box-mid > .button-mid-btm,
+button[open="true"] > .box-inherit > .button-stack > .button-box-mid > .button-mid-btm {
   background-image: url("chrome://global/skin/button/btn-act-mid-btm.gif");
 }
 
-button:hover:active > .button-box-right > .button-right-top,
-button[open="true"] > .button-box-right > .button-right-top {
+button:hover:active > .box-inherit > .button-box-right > .button-right-top,
+button[open="true"] > .box-inherit > .button-box-right > .button-right-top {
   background-image: url("chrome://global/skin/button/btn-act-rit-top.gif");
 }
 
-button:hover:active > .button-box-right > .button-right-mid,
-button[open="true"] > .button-box-right > .button-right-mid {
+button:hover:active > .box-inherit > .button-box-right > .button-right-mid,
+button[open="true"] > .box-inherit > .button-box-right > .button-right-mid {
   background-image: url("chrome://global/skin/button/btn-act-rit-mid.gif");
 }
 
-button:hover:active > .button-box-right > .button-right-btm,
-button[open="true"] > .button-box-right > .button-right-btm {
+button:hover:active > .box-inherit > .button-box-right > .button-right-btm,
+button[open="true"] > .box-inherit > .button-box-right > .button-right-btm {
   background-image: url("chrome://global/skin/button/btn-act-rit-btm.gif");
 }
 
@@ -174,47 +177,47 @@ button[disabled="true"]:hover:active {
   color: #8C99AB;
 }
 
-button:hover:active > .button-box-left > .button-left-top[disabled="true"],
+button:hover:active > .box-inherit > .button-box-left > .button-left-top[disabled="true"],
 .button-left-top[disabled="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-lft-top.gif");
 }
 
-button:hover:active > .button-box-left > .button-left-mid[disabled="true"],
+button:hover:active > .box-inherit > .button-box-left > .button-left-mid[disabled="true"],
 .button-left-mid[disabled="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-lft-mid.gif");
 }
 
-button:hover:active > .button-box-left > .button-left-btm[disabled="true"],
+button:hover:active > .box-inherit > .button-box-left > .button-left-btm[disabled="true"],
 .button-left-btm[disabled="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-lft-btm.gif");
 }
 
-button:hover:active > .button-stack > .button-box-mid[disabled="true"],
+button:hover:active > .box-inherit > .button-stack > .button-box-mid[disabled="true"],
 .button-box-mid[disabled="true"] {
   background-color: #B7BFCB;
 }
   
-button:hover:active > .button-stack > .button-box-mid > .button-mid-top[disabled="true"],
+button:hover:active > .box-inherit > .button-stack > .button-box-mid > .button-mid-top[disabled="true"],
 .button-mid-top[disabled="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-mid-top.gif");
 }
 
-button:hover:active > .button-stack > .button-box-mid > .button-mid-btm[disabled="true"],
+button:hover:active > .box-inherit > .button-stack > .button-box-mid > .button-mid-btm[disabled="true"],
 .button-mid-btm[disabled="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-mid-btm.gif");
 }
 
-button:hover:active > .button-box-right > .button-right-top[disabled="true"],
+button:hover:active > .box-inherit > .button-box-right > .button-right-top[disabled="true"],
 .button-right-top[disabled="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-rit-top.gif");
 }
 
-button:hover:active > .button-box-right > .button-right-mid[disabled="true"],
+button:hover:active > .box-inherit > .button-box-right > .button-right-mid[disabled="true"],
 .button-right-mid[disabled="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-rit-mid.gif");
 }
 
-button:hover:active > .button-box-right > .button-right-btm[disabled="true"],
+button:hover:active > .box-inherit > .button-box-right > .button-right-btm[disabled="true"],
 .button-right-btm[disabled="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-rit-btm.gif");
 }
@@ -273,35 +276,35 @@ button[default="true"] {
 
   /* .......... default active state .......... */
 
-:hover:active > .button-box-left > .button-left-top[default="true"] {
+:hover:active > .box-inherit > .button-box-left > .button-left-top[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-lft-top.gif");
 }
 
-:hover:active > .button-box-left > .button-left-mid[default="true"] {
+:hover:active > .box-inherit > .button-box-left > .button-left-mid[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-lft-mid.gif");
 }
 
-:hover:active > .button-box-left > .button-left-btm[default="true"] {
+:hover:active > .box-inherit > .button-box-left > .button-left-btm[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-lft-btm.gif");
 }
 
-:hover:active > .button-stack > .button-box-mid > .button-mid-top[default="true"] {
+:hover:active > .box-inherit > .button-stack > .button-box-mid > .button-mid-top[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-mid-top.gif");
 }
 
-:hover:active > .button-stack > .button-box-mid > .button-mid-btm[default="true"] {
+:hover:active > .box-inherit > .button-stack > .button-box-mid > .button-mid-btm[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-mid-btm.gif");
 }
 
-:hover:active > .button-box-right > .button-right-top[default="true"] {
+:hover:active > .box-inherit > .button-box-right > .button-right-top[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-rit-top.gif");
 }
 
-:hover:active > .button-box-right > .button-right-mid[default="true"] {
+:hover:active > .box-inherit > .button-box-right > .button-right-mid[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-rit-mid.gif");
 }
 
-:hover:active > .button-box-right > .button-right-btm[default="true"] {
+:hover:active > .box-inherit > .button-box-right > .button-right-btm[default="true"] {
   background-image: url("chrome://global/skin/button/btn-def-act-rit-btm.gif");
 }
   
@@ -312,7 +315,7 @@ button[default="true"][disabled="true"] {
   margin-bottom: 3px;
 }
 
-:hover:active > .button-box-left > .button-left-top[disabled="true"][default="true"],
+:hover:active > .box-inherit > .button-box-left > .button-left-top[disabled="true"][default="true"],
 .button-left-top[disabled="true"][default="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-lft-top.gif");
   height: 9px;
@@ -322,29 +325,29 @@ button[default="true"][disabled="true"] {
   width: 6px;
 }
 
-:hover:active > .button-box-left > .button-left-mid[disabled="true"][default="true"],
+:hover:active > .box-inherit > .button-box-left > .button-left-mid[disabled="true"][default="true"],
 .button-left-mid[disabled="true"][default="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-lft-mid.gif");
 }
 
-:hover:active > .button-box-left > .button-left-btm[disabled="true"][default="true"],
+:hover:active > .box-inherit > .button-box-left > .button-left-btm[disabled="true"][default="true"],
 .button-left-btm[disabled="true"][default="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-lft-btm.gif");
   height: 8px;
 }
 
-:hover:active > .button-stack > .button-box-mid[disabled="true"][default="true"],
+:hover:active > .box-inherit > .button-stack > .button-box-mid[disabled="true"][default="true"],
 .button-box-mid[disabled="true"][default="true"] {
   background-color: #B7BFCB;
 }
 
-:hover:active > .button-stack > .button-box-mid > .button-mid-top[disabled="true"][default="true"],
+:hover:active > .box-inherit > .button-stack > .button-box-mid > .button-mid-top[disabled="true"][default="true"],
 .button-mid-top[disabled="true"][default="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-mid-top.gif");
   height: 9px;
 }
 
-:hover:active > .button-stack > .button-box-mid > .button-mid-btm[disabled="true"][default="true"],
+:hover:active > .box-inherit > .button-stack > .button-box-mid > .button-mid-btm[disabled="true"][default="true"],
 .button-mid-btm[disabled="true"][default="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-mid-btm.gif");
   height: 8px;
@@ -354,18 +357,18 @@ button[default="true"][disabled="true"] {
   width: 6px;
 }
 
-:hover:active > .button-box-right > .button-right-top[disabled="true"][default="true"],
+:hover:active > .box-inherit > .button-box-right > .button-right-top[disabled="true"][default="true"],
 .button-right-top[disabled="true"][default="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-rit-top.gif");
   height: 9px;
 }
 
-:hover:active > .button-box-right > .button-right-mid[disabled="true"][default="true"],
+:hover:active > .box-inherit > .button-box-right > .button-right-mid[disabled="true"][default="true"],
 .button-right-mid[disabled="true"][default="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-rit-mid.gif");
 }
 
-:hover:active > .button-box-right > .button-right-btm[disabled="true"][default="true"],
+:hover:active > .box-inherit > .button-box-right > .button-right-btm[disabled="true"][default="true"],
 .button-right-btm[disabled="true"][default="true"] {
   background-image: url("chrome://global/skin/button/btn-dis-rit-btm.gif");
   height: 8px;

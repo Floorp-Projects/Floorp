@@ -32,7 +32,7 @@ nsXBLInsertionPoint::nsXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aI
   NS_INIT_REFCNT();
   mParentElement = aParentElement;
   mIndex = aIndex;
-  mDefaultContent = aDefaultContent;
+  mDefaultContentTemplate = aDefaultContent;
 }
 
 nsXBLInsertionPoint::~nsXBLInsertionPoint()
@@ -70,6 +70,22 @@ nsXBLInsertionPoint::GetDefaultContent(nsIContent** aDefaultContent)
   NS_IF_ADDREF(*aDefaultContent);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsXBLInsertionPoint::SetDefaultContentTemplate(nsIContent* aDefaultContent)
+{
+  mDefaultContentTemplate = aDefaultContent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXBLInsertionPoint::GetDefaultContentTemplate(nsIContent** aDefaultContent)
+{
+  *aDefaultContent = mDefaultContentTemplate;
+  NS_IF_ADDREF(*aDefaultContent);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsXBLInsertionPoint::AddChild(nsIContent* aChildElement)

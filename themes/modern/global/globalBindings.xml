@@ -26,33 +26,36 @@
 
   <binding id="button" extends="chrome://global/content/bindings/button.xml#button-base">
     <content>
-      <xul:vbox class="button-box-left" inherits="default,disabled">
-        <xul:spring class="button-left-top" inherits="default,disabled"/>
-        <xul:spring class="button-left-mid" inherits="default,disabled" flex="1"/>
-        <xul:spring class="button-left-btm" inherits="default,disabled"/>
-      </xul:vbox>
-      
-      <xul:stack class="button-stack" flex="1">
-        <xul:vbox class="button-box-mid" inherits="default,disabled">
-           <xul:spring class="button-mid-top" inherits="default,disabled"/>
-           <xul:spring class="button-mid-mid" inherits="default,disabled" flex="1"/>
-           <xul:spring class="button-mid-btm" inherits="default,disabled"/>
+      <children includes="observes|template|menupopup|tooltip"/>
+      <xul:box class="box-inherit" orient="horizontal" flex="1">
+        <xul:vbox class="button-box-left" inherits="default,disabled">
+          <xul:spring class="button-left-top" inherits="default,disabled"/>
+          <xul:spring class="button-left-mid" inherits="default,disabled" flex="1"/>
+          <xul:spring class="button-left-btm" inherits="default,disabled"/>
         </xul:vbox>
+      
+        <xul:stack class="box-inherit button-stack" flex="1">
+          <xul:vbox class="button-box-mid" inherits="default,disabled">
+             <xul:spring class="button-mid-top" inherits="default,disabled"/>
+             <xul:spring class="button-mid-mid" inherits="default,disabled" flex="1"/>
+             <xul:spring class="button-mid-btm" inherits="default,disabled"/>
+          </xul:vbox>
 
-        <xul:hbox class="button-text-box" align="center" pack="center">
-          <xul:image class="button-icon-mid" inherits="src"/>
-          <xul:text class="button-text-mid" inherits="default,value=label,crop,accesskey"/>
-          <children/>
-        </xul:hbox>
-      </xul:stack>
+          <xul:hbox inherits="orient,align,pack,dir" class="box-inherit button-text-box" align="center" pack="center">
+            <children>
+              <xul:image class="button-icon-mid" inherits="src=image"/>
+              <xul:label class="button-text-mid" flex="1"
+                         inherits="default,value=label,crop,accesskey"/>
+            </children>
+          </xul:hbox>
+        </xul:stack>
       
-      <xul:vbox class="button-box-right" inherits="default,disabled">
-        <xul:spring class="button-right-top" inherits="default,disabled"/>
-        <xul:spring class="button-right-mid" inherits="default,disabled" flex="1"/>
-        <xul:spring class="button-right-btm" inherits="default,disabled"/>
-      </xul:vbox>
-      
-      <children includes="menupopup"/>
+        <xul:vbox class="button-box-right" inherits="default,disabled">
+          <xul:spring class="button-right-top" inherits="default,disabled"/>
+          <xul:spring class="button-right-mid" inherits="default,disabled" flex="1"/>
+          <xul:spring class="button-right-btm" inherits="default,disabled"/>
+        </xul:vbox>
+      </xul:box>
     </content>
 
     <resources>
