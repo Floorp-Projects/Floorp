@@ -95,10 +95,8 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
     nsCOMPtr<nsIScreen> screen;
     sm->GetPrimaryScreen ( getter_AddRefs(screen) );
     if ( screen ) {
-      PRInt32 width, height, depth;
-      screen->GetAvailWidth ( &width );
-      screen->GetAvailHeight ( &height );
-      screen->GetPixelDepth ( &depth );
+      PRInt32 x, y, width, height, depth;
+      screen->GetAvailRect ( &x, &y, &width, &height );
       mWidthFloat = float(width);
       mHeightFloat = float(height);
       mDepth = NS_STATIC_CAST ( PRUint32, depth );
@@ -388,7 +386,9 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextGTK::GetClientRect(nsRect &aRect)
+
+
+NS_IMETHODIMP nsDeviceContextGTK::GetRect(nsRect &aRect)
 {
   PRInt32 width, height;
   nsresult rv;
@@ -398,6 +398,13 @@ NS_IMETHODIMP nsDeviceContextGTK::GetClientRect(nsRect &aRect)
   aRect.width = width;
   aRect.height = height;
   return rv;
+}
+
+
+NS_IMETHODIMP nsDeviceContextGTK::GetClientRect(nsRect &aRect)
+{
+//XXX do we know if the client rect should ever differ from the screen rect?
+  return GetRect ( aRect );
 }
 
 NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDevice,

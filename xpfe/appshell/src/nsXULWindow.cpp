@@ -530,12 +530,8 @@ NS_IMETHODIMP nsXULWindow::Center(nsIXULWindow *aRelative, PRBool aScreen, PRBoo
   if (NS_FAILED(result))
     return result;
 
-  if (aScreen) {
-    screen->GetAvailLeft(&left);
-    screen->GetAvailTop(&top);
-    screen->GetAvailWidth(&width);
-    screen->GetAvailHeight(&height);
-  }
+  if (aScreen)
+    screen->GetAvailRect(&left, &top, &width, &height);
 
   GetSize(&ourWidth, &ourHeight);
   SetPosition(left+(width-ourWidth)/2, top+(height-ourHeight)/(aAlert?3:2));

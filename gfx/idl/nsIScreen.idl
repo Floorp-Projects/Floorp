@@ -25,15 +25,11 @@
 [scriptable, uuid(f728830e-1dd1-11b2-9598-fb9f414f2465)]
 interface nsIScreen : nsISupports
 {
-  readonly attribute long width;
-  readonly attribute long height;
-  readonly attribute long pixelDepth;
-  readonly attribute long colorDepth;
-  readonly attribute long availWidth;
-  readonly attribute long availHeight;
-  readonly attribute long availLeft;
-  readonly attribute long availTop;
+  void GetRect ( out long left, out long top, out long width, out long height );
+  void GetAvailRect ( out long left, out long top, out long width, out long height );
   
+  readonly attribute long pixelDepth;
+  readonly attribute long colorDepth;  
 };
 
 

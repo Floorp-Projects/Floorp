@@ -87,19 +87,16 @@ ScreenImpl::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 NS_IMETHODIMP
 ScreenImpl::GetTop(PRInt32* aTop)
 {
-/*
- *** for now...
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext() );
+	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
 	if ( context )
 	{
-		PRInt32 left;
-		context->GetDeviceTopLeft( *aTop, left );
+		nsRect rect;
+		context->GetRect( rect );
 		float devUnits;
 		context->GetDevUnitsToAppUnits(devUnits);
-		*aTop = NSToIntRound(float(*aTop) / devUnits );
+		*aTop = NSToIntRound(float(rect.y) / devUnits );
 		return NS_OK;
 	}
- */
   *aTop = -1;
   return NS_ERROR_FAILURE;
 }
@@ -108,19 +105,16 @@ ScreenImpl::GetTop(PRInt32* aTop)
 NS_IMETHODIMP
 ScreenImpl::GetLeft(PRInt32* aLeft)
 {
-/*
- *** for now...
-	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext() );
+	nsCOMPtr<nsIDeviceContext> context ( getter_AddRefs(GetDeviceContext()) );
 	if ( context )
 	{
-		PRInt32 top;
-		context->GetDeficeTopLeft( top, *aLeft );
+		nsRect rect;
+		context->GetRect( rect );
 		float devUnits;
 		context->GetDevUnitsToAppUnits(devUnits);
-		*aLeft = NSToIntRound(float(*aLeft) / devUnits );
+		*aLeft = NSToIntRound(float(rect.x) / devUnits );
 		return NS_OK;
 	}
- */
   *aLeft = -1;
   return NS_ERROR_FAILURE;
 }

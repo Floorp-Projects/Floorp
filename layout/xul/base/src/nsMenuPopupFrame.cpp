@@ -537,28 +537,27 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     AdjustPositionForAnchorAlign ( &xpos, &ypos, parentRect, aPopupAnchor, aPopupAlign, &readjustAboveBelow );    
   }
   
+  // Compute info about the screen dimensions. Because of multiple monitor systems,
+  // the left or top sides of the screen may be in negative space (main monitor is on the
+  // right, etc). We need to be sure to do the right thing.
   nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(scriptGlobalObject));
   nsCOMPtr<nsIDOMScreen> screen;
   window->GetScreen(getter_AddRefs(screen));
-  PRInt32 screenWidth;
-  PRInt32 screenHeight;
+  PRInt32 screenWidth = 0, screenHeight = 0;
+  PRInt32 screenLeft = 0, screenTop = 0;
+  PRInt32 screenRight = 0, screenBottom = 0;
   if ( mMenuCanOverlapOSBar ) {
+    screen->GetLeft(&screenLeft);
+    screen->GetTop(&screenTop);
     screen->GetWidth(&screenWidth);
     screen->GetHeight(&screenHeight);
   }
   else {
+    screen->GetAvailLeft(&screenLeft);
+    screen->GetAvailTop(&screenTop); 
     screen->GetAvailWidth(&screenWidth);
     screen->GetAvailHeight(&screenHeight);
   }
-  
-  // Compute info about the screen dimensions. Because of multiple monitor systems,
-  // the left or top sides of the screen may be in negative space (main monitor is on the
-  // right, etc). We need to be sure to do the right thing.
-  PRInt32 screenLeft;
-  PRInt32 screenTop;
-  screen->GetAvailLeft(&screenLeft);
-  screen->GetAvailTop(&screenTop); 
-  PRInt32 screenRight, screenBottom;
   screenRight = screenLeft + screenWidth;
   screenBottom = screenTop + screenHeight;
   
