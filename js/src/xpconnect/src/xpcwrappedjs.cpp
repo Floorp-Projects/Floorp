@@ -160,7 +160,7 @@ nsXPCWrappedJS::GetNewOrUsedWrapper(XPCContext* xpcc,
             // just a root wrapper
             nsXPCWrappedJSClass* rootClazz;
             rootClazz = nsXPCWrappedJSClass::GetNewOrUsedClass(
-                                                    xpcc, nsCOMTypeInfo<nsISupports>::GetIID());
+                                                xpcc, NS_GET_IID(nsISupports));
             if(!rootClazz)
                 goto return_wrapper;
 
@@ -261,7 +261,7 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
 nsXPCWrappedJS*
 nsXPCWrappedJS::Find(REFNSIID aIID)
 {
-    if(aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+    if(aIID.Equals(NS_GET_IID(nsISupports)))
         return mRoot;
 
     nsXPCWrappedJS* cur = mRoot;

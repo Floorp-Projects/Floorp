@@ -91,11 +91,14 @@ nsXPCWrappedNative::JSObjectFinalized(JSContext *cx, JSObject *obj)
     Release();
 }
 
+#define SET_ERROR_CODE(_y) if(pErr) *pErr = _y
+
 // static
 nsXPCWrappedNative*
 nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
                                        nsISupports* aObj,
-                                       REFNSIID aIID)
+                                       REFNSIID aIID,
+                                       nsresult* pErr)
 {
     Native2WrappedNativeMap* map;
     nsISupports* rootObj = nsnull;
@@ -107,6 +110,8 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
     NS_PRECONDITION(xpcc, "bad param");
     NS_PRECONDITION(aObj, "bad param");
 
+    SET_ERROR_CODE(NS_ERROR_FAILURE);
+
     map = xpcc->GetWrappedNativeMap();
     if(!map)
     {
@@ -116,7 +121,8 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
 
     // always find the native root
 
-    if(NS_FAILED(aObj->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&rootObj)))
+    if(NS_FAILED(aObj->QueryInterface(NS_GET_IID(nsISupports), 
+                                      (void**)&rootObj)))
         goto return_wrapper;
 
     // look for the root wrapper
@@ -148,12 +154,13 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
        NS_OK != sm->CanCreateWrapper(xpcc->GetJSContext(), aIID, realObj))
     {
         // the security manager vetoed. It should have set an exception.
+        SET_ERROR_CODE(NS_ERROR_XPC_SECURITY_MANAGER_VETO);
         goto return_wrapper;
     }
 
     // need to make a wrapper
 
-    clazz = nsXPCWrappedNativeClass::GetNewOrUsedClass(xpcc, aIID);
+    clazz = nsXPCWrappedNativeClass::GetNewOrUsedClass(xpcc, aIID, pErr);
     if(!clazz)
         goto return_wrapper;
 
@@ -181,7 +188,7 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
             // just a root wrapper
             nsXPCWrappedNativeClass* rootClazz;
             rootClazz = nsXPCWrappedNativeClass::GetNewOrUsedClass(
-                                                    xpcc, nsCOMTypeInfo<nsISupports>::GetIID());
+                                  xpcc, NS_GET_IID(nsISupports), pErr);
             if(!rootClazz)
                 goto return_wrapper;
 
@@ -230,6 +237,9 @@ return_wrapper:
         NS_RELEASE(realObj);
     if(clazz)
         NS_RELEASE(clazz);
+    
+    if(wrapper)
+        SET_ERROR_CODE(NS_OK);
     return wrapper;
 }
 
@@ -354,7 +364,7 @@ nsXPCWrappedNative::~nsXPCWrappedNative()
 nsXPCWrappedNative*
 nsXPCWrappedNative::Find(REFNSIID aIID)
 {
-    if(aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+    if(aIID.Equals(NS_GET_IID(nsISupports)))
         return mRoot;
 
     nsXPCWrappedNative* cur = mRoot;

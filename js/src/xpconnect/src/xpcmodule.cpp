@@ -34,9 +34,7 @@
 
 /* Module level methods. */
 
-#include "nsCOMPtr.h"
 #include "xpcprivate.h"
-#include "nsIModule.h"
 
 /***************************************************************************/
 

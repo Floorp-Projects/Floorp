@@ -75,6 +75,9 @@ XPC_MSG_DEF(NS_ERROR_XPC_CANT_CONVERT_OBJECT_TO_ARRAY   , "Can not convert JavaS
 XPC_MSG_DEF(NS_ERROR_XPC_NOT_ENOUGH_ELEMENTS_IN_ARRAY   , "JavaScript Array does not have as many elements as indicated by size argument")
 XPC_MSG_DEF(NS_ERROR_XPC_CANT_GET_ARRAY_INFO            , "Can not find array information")
 XPC_MSG_DEF(NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING     , "JavaScript String does not have as many characters as indicated by size argument")
+XPC_MSG_DEF(NS_ERROR_XPC_SECURITY_MANAGER_VETO          , "Security Manager vetoed action")
+XPC_MSG_DEF(NS_ERROR_XPC_INTERFACE_NOT_SCRIPTABLE       , "Failed to build a wrapper because the interface that was not declared [scriptable]")
+XPC_MSG_DEF(NS_ERROR_XPC_INTERFACE_NOT_FROM_NSISUPPORTS , "Failed to build a wrapper because the interface does not inherit from nsISupports")
 
 /* common global codes (from nsError.h) */
 

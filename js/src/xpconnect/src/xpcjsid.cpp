@@ -640,7 +640,7 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
             // the security manager vetoed. It should have set an exception.
             nsAllocator::Free(cid);
             *rval = JSVAL_NULL;
-            *retval = JS_TRUE;
+            *retval = JS_FALSE;
             return NS_OK;
         }
     }
@@ -841,7 +841,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
             // the security manager vetoed. It should have set an exception.
             nsAllocator::Free(cid);
             *rval = JSVAL_NULL;
-            *retval = JS_TRUE;
+            *retval = JS_FALSE;
             return NS_OK;
         }
     }

@@ -53,6 +53,8 @@
 #include "nsIXPCScriptable.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsIJSRuntimeService.h"
+#include "nsCOMPtr.h"
+#include "nsIModule.h"
 #include "xptcall.h"
 #include "jsapi.h"
 #include "jshash.h"
@@ -167,7 +169,7 @@ public:
     static nsIInterfaceInfoManager* GetInterfaceInfoManager(nsXPConnect* xpc = nsnull);
     static XPCContext*  GetContext(JSContext* cx, nsXPConnect* xpc = nsnull);
     static XPCJSThrower* GetJSThrower(nsXPConnect* xpc = nsnull);
-    static JSBool IsISupportsDescendent(nsIInterfaceInfo* info);
+    static JSBool IsISupportsDescendant(nsIInterfaceInfo* info);
     static nsIJSContextStack* GetContextStack(nsXPConnect* xpc = nsnull);
 
     JSContext2XPCContextMap* GetContextMap() {return mContextMap;}
@@ -623,7 +625,8 @@ class nsXPCWrappedNativeClass : public nsIXPCWrappedNativeClass
     NS_IMETHOD DebugDump(int depth);
 public:
     static nsXPCWrappedNativeClass* GetNewOrUsedClass(XPCContext* xpcc,
-                                                      REFNSIID aIID);
+                                                      REFNSIID aIID,
+                                                      nsresult* pErr);
 
     REFNSIID GetIID() const {return mIID;}
     const char* GetInterfaceName();
@@ -784,7 +787,8 @@ class nsXPCWrappedNative : public nsIXPConnectWrappedNative
 public:
     static nsXPCWrappedNative* GetNewOrUsedWrapper(XPCContext* xpcc,
                                                    nsISupports* aObj,
-                                                   REFNSIID aIID);
+                                                   REFNSIID aIID,
+                                                   nsresult* pErr);
     nsISupports* GetNative() const {return mObj;}
     JSObject* GetJSObject() const {return mJSObj;}
     nsXPCWrappedNativeClass* GetClass() const {return mClass;}

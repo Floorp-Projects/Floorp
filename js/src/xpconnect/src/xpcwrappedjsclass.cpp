@@ -69,7 +69,7 @@ nsXPCWrappedJSClass::GetNewOrUsedClass(XPCContext* xpcc,
             nsIInterfaceInfo* info;
             if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
             {
-                if(nsXPConnect::IsISupportsDescendent(info))
+                if(nsXPConnect::IsISupportsDescendant(info))
                 {
                     clazz = new nsXPCWrappedJSClass(xpcc, aIID, info);
                     if(!clazz->mDescriptors)
@@ -294,7 +294,8 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
 JSObject*
 nsXPCWrappedJSClass::GetRootJSObject(JSObject* aJSObj)
 {
-    JSObject* result = CallQueryInterfaceOnJSObject(aJSObj, nsCOMTypeInfo<nsISupports>::GetIID());
+    JSObject* result = CallQueryInterfaceOnJSObject(aJSObj, 
+                                                    NS_GET_IID(nsISupports));
     return result ? result : aJSObj;
 }
 

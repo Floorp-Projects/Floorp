@@ -197,6 +197,11 @@ void
 XPCJSThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
 {
     JSBool success = JS_FALSE;
+
+    /* no need to set an expection if the security manager already has */
+    if(rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO && JS_IsExceptionPending(cx))
+        return;
+
     nsIXPCException* e = nsXPCException::NewException(sz, rv, nsnull, nsnull);
 
     if(e)
