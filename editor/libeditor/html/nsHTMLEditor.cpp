@@ -2140,10 +2140,6 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
   // Set default values for new elements
   if (TagName.Equals("hr"))
   {
-    // TODO: Get the text of the selection and build a suggested Name
-    //  Replace spaces with "_" 
-  } else if (TagName.Equals("hr"))
-  {
     // Hard coded defaults in case there's no prefs
     nsAutoString align("center");
     nsAutoString width("100%");
@@ -2262,9 +2258,6 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
   // For most elements, set caret after inserting
   PRBool setCaretAfterElement = PR_TRUE;
 
-  nsCOMPtr<nsIDOMNode> parentSelectedNode;
-  PRInt32 splitPointOffset;
-
   nsCOMPtr<nsIDOMSelection>selection;
   res = nsEditor::GetSelection(getter_AddRefs(selection));
   if (!NS_SUCCEEDED(res) || !selection)
@@ -2314,103 +2307,65 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection)
     }
   }
   
-  res = DeleteSelectionAndPrepareToCreateNode(parentSelectedNode, splitPointOffset);
-  if (NS_SUCCEEDED(res))
+  nsCOMPtr<nsIDOMNode> parentSelectedNode;
+  PRInt32 splitPointOffset;
+  PRInt32 offsetOfSelectedNode;
+  res = selection->GetAnchorNode(getter_AddRefs(parentSelectedNode));
+  if (NS_SUCCEEDED(res) && NS_SUCCEEDED(selection->GetAnchorOffset(&splitPointOffset)) && parentSelectedNode)
   {
-    nsCOMPtr<nsIDOMNode> newNode = do_QueryInterface(aElement);
-    PRBool isInline;
-    res = IsNodeInline(newNode, isInline);
-    if( NS_SUCCEEDED(res) && isInline)
-    {
-      // The simple case of an inline node
-      // This will split any inline nodes at the caret
-      //   and insert between them
-      res = InsertNode(aElement, parentSelectedNode, splitPointOffset);
-    } else {
-      // Inserting a BLOCK element
-      // Get the first block parent of the paragraph/container
-      //  which we can split to create insert location
-      // (Current parent may already be a suitable block to split)
-      nsCOMPtr<nsIDOMNode> parentNodeOfInsert = parentSelectedNode;
-      nsCOMPtr<nsIDOMNode> topNodeToSplit = parentSelectedNode;
-      nsCOMPtr<nsIDOMElement> bodyElement;
-      // We need to find the offset at each level we will split
-      //  to use when we insert the new element
-      PRInt32 offsetToInsertAt = splitPointOffset;
-
-      res = nsEditor::GetBodyElement(getter_AddRefs(bodyElement));
-      
-      if (NS_SUCCEEDED(res) && bodyElement && 
-          // If text node is direct child of body, we can't insert a block node
-          (parentSelectedNode != bodyElement))
-      {
-        nsCOMPtr<nsIDOMNode> bodyNode = do_QueryInterface(bodyElement);
-        isInline = PR_TRUE;
-        while (isInline)
-        {
-          // Get parent of the top node to split
-          res = topNodeToSplit->GetParentNode(getter_AddRefs(parentNodeOfInsert));
-          // If Inline, we loop around to get the next parent level
-          if (NS_SUCCEEDED(res) && parentNodeOfInsert &&
-              NS_SUCCEEDED(IsNodeInline(topNodeToSplit, isInline)) &&
-              NS_SUCCEEDED(GetChildOffset(topNodeToSplit, parentNodeOfInsert, offsetToInsertAt)))
-          {          
 #ifdef DEBUG_cmanske
-          nsAutoString nodeName;
-          topNodeToSplit->GetNodeName(nodeName);
-          printf("Top Node to split: ");
-          wprintf(nodeName.GetUnicode());
-
-          parentNodeOfInsert->GetNodeName(nodeName);
-          printf(" Parent of this node: ");
-          wprintf(nodeName.GetUnicode());
-          printf("\n");
-#endif
-
-            // The new offset to insert at is just after the topmost node we will split
-            offsetToInsertAt++;
-          } else {
-            // Major failure if we get here
-            return NS_ERROR_FAILURE;
-          }
-        }
-        if (bodyNode != topNodeToSplit)
-        {
-          // We have the node to split and its parent.
-          // TODO: Implement "CanContainElement" to be sure 
-          //    we are allowed to insert aElement under parentNodeOfInsert
-          //    If we can't we should call special methods for various combintations
-//              if (!CanContain(aElement, parentNodeOfInsert)
-//                return NS_ERROR_FAILURE;
- 
-         // Split nodes from the selection parent ("bottom node") and all intervening parents
-          //   up to the topmost node, which may be = to bottom node)
-          //   (This redistribute children as each level is split.)
-          res = SplitNodeDeep(topNodeToSplit, parentSelectedNode, splitPointOffset);
-          if (NS_SUCCEEDED(res))
-          {
-            //Insert the block element between the 2 "topmost" containers
-            res = InsertNode(aElement, parentNodeOfInsert, offsetToInsertAt);
-            
-            // Check for special case of inserting a table
-            PRBool caretIsSet;
-            res = SetCaretInTableCell(aElement, &caretIsSet);
-            if (NS_SUCCEEDED(res) && caretIsSet)
-              setCaretAfterElement = PR_FALSE;
-          }
-         } else {
-          // If here, we must have an inline node directly under the body
-          //   so we can't insert a block tag
-          // TODO: Take each inline node resulting from DeleteSelectionAndPrepareToCreateNode
-          //   and insert them each into a default paragraph.
-          //   Then insert new block node between them.
-          return NS_ERROR_FAILURE;
-        }
-      }
+    {
+    nsAutoString name;
+    parentSelectedNode->GetNodeName(name);
+    printf("parentSelectedNode: ");
+    wprintf(name.GetUnicode());
+    printf("\n");
     }
+#endif
+    nsAutoString tagName;
+    aElement->GetNodeName(tagName);
+    tagName.ToLowerCase();
+    nsCOMPtr<nsIDOMNode> parent = parentSelectedNode;
+    nsCOMPtr<nsIDOMNode> topChild = parentSelectedNode;
+    nsCOMPtr<nsIDOMNode> tmp;
+    PRInt32 offset = offsetOfSelectedNode;
+    
+    while (!CanContainTag(parent, tagName))
+    {
+      // If the current parent is a root (body or table cell)
+      // then go no further - we can't insert
+      nsAutoString parentTagName;
+      parent->GetNodeName(parentTagName);
+      PRBool isRoot;
+      res = IsRootTag(parentTagName, isRoot);
+      if (!NS_SUCCEEDED(res) || isRoot)
+        return NS_ERROR_FAILURE;
+      // Get the next parent
+      parent->GetParentNode(getter_AddRefs(tmp));
+      if (!tmp)
+        return NS_ERROR_FAILURE;
+      topChild = parent;
+      parent = tmp;
+    }
+  
+    // we need to split up to the child of parent
+    res = SplitNodeDeep(topChild, parentSelectedNode, splitPointOffset);
+    if (NS_FAILED(res))
+      return res;
+    // topChild already went to the right on the split
+    // so we don't need to add one to offset when figuring
+    // out where to plop list
+    offset = GetIndexOf(parent,topChild);  
+
+    // Now we can finally insert the new node
+    res = InsertNode(aElement, parent, offset);
+    
+    // Set caret after element, but check for special case 
+    //  of inserting table-related elements: set in first cell instead
+    if (!SetCaretInTableCell(aElement))
+      res = SetCaretAfterElement(aElement);
+
   }
-  if (setCaretAfterElement && NS_SUCCEEDED(res))
-    SetCaretAfterElement(aElement);
   return res;
 }
 
@@ -2579,21 +2534,21 @@ nsHTMLEditor::SelectElement(nsIDOMElement* aElement)
   return res;
 }
 
-NS_IMETHODIMP
-nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement, PRBool* caretIsSet)
+PRBool
+nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement)
 {
-  nsresult res = NS_ERROR_NULL_POINTER;
-  if (caretIsSet)
-    *caretIsSet = PR_FALSE;
+  PRBool caretIsSet = PR_FALSE;
+
   if (aElement && IsElementInBody(aElement))
   {
-    res = NS_OK;
+    nsresult res = NS_OK;
     nsAutoString tagName;
     aElement->GetNodeName(tagName);
     tagName.ToLowerCase();
-    if (tagName == "td" || tagName == "tr" || 
-        tagName == "th" || tagName == "td" ||
-        tagName == "caption")
+    if (tagName == "table" || tagName == "tr" || 
+        tagName == "td"    || tagName == "th" ||
+        tagName == "thead" || tagName == "tfoot" ||
+        tagName == "tbody" || tagName == "caption")
     {
       nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
       nsCOMPtr<nsIDOMNode> parent;
@@ -2642,12 +2597,12 @@ nsHTMLEditor::SetCaretInTableCell(nsIDOMElement* aElement, PRBool* caretIsSet)
       if (NS_SUCCEEDED(res) && selection)
       {
         res = selection->Collapse(parent, offset);
-        if (NS_SUCCEEDED(res) && caretIsSet)
-          *caretIsSet = PR_TRUE;
+        if (NS_SUCCEEDED(res))
+          caretIsSet = PR_TRUE;
       }
     }
   }
-  return res;
+  return caretIsSet;
 }            
 
 NS_IMETHODIMP
@@ -2675,8 +2630,6 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
       {
         PRInt32 offsetInParent;
         res = GetChildOffset(aElement, parent, offsetInParent);
-        // New collapsed selection will be just after the new element
-        offsetInParent++;
         if (NS_SUCCEEDED(res))
         {
           // Collapse selection to just after desired element,

@@ -157,23 +157,31 @@ function onOK()
       // Append the link text as the last child node 
       //   of the anchor node
       dump("Creating text node\n");
-      textNode = editorShell.editorDocument.createTextNode(dialog.linkTextInput.value);
+      newText = TrimString(dialog.linkTextInput.value);
+      if (newText.length == 0) {
+        ShowInputErrorMessage("You must enter some text for this link.");
+        dialog.linkTextInput.focus();
+        return;
+      }
+      textNode = editorShell.editorDocument.createTextNode(newText);
       if (textNode) {
         anchorElement.appendChild(textNode);
       }
       dump("Inserting\n");
       editorShell.InsertElement(anchorElement, false);
     } else if (insertLinkAroundSelection) {
+      // Text was supplied by the selection,
+      //  so insert a link node as parent of this text
       dump("Setting link around selected text\n");
       editorShell.InsertLinkAroundSelection(anchorElement);
     }
     editorShell.EndBatchChanges();
   } else if (!insertNew) {
     // We already had a link, but empty HREF means remove it
-    // TODO: IMPLEMENT REMOVE LINK
-    
+    editorShell.RemoveTextProperty("a", "");
   }
-
+  // Note: if HREF is empty and we were inserting a new link, do nothing
+  
   window.close();
 }
 

@@ -158,18 +158,18 @@ public:
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection);
   NS_IMETHOD SaveHLineSettings(nsIDOMElement* aElement);
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
-  PRBool     IsElementInBody(nsIDOMElement* aElement);
   NS_IMETHOD SelectElement(nsIDOMElement* aElement);
-  NS_IMETHOD SetCaretInTableCell(nsIDOMElement* aElement, PRBool* caretIsSet);
   NS_IMETHOD SetCaretAfterElement(nsIDOMElement* aElement);
+  // Return TRUE if aElement is a table-related elemet and caret was set
+  PRBool     SetCaretInTableCell(nsIDOMElement* aElement);
+  PRBool     IsElementInBody(nsIDOMElement* aElement);
 
 // MHTML helper methods
   NS_IMETHOD GetEmbeddedObjects(nsISupportsArray** aNodeList);
 
 // Table Editing (implemented in EditTable.cpp)
   NS_IMETHOD CreateTxnForInsertTable(const nsIDOMElement *aTableNode, InsertTableTxn ** aTxn);
-  NS_IMETHOD GetColIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex);
-  NS_IMETHOD GetRowIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex);
+  NS_IMETHOD GetCellIndexes(nsIDOMNode *aCellNode, PRInt32 &aColIndex, PRInt32 &aRowIndex);
   NS_IMETHOD GetFirstCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aFirstCellNode);
   NS_IMETHOD GetNextCellInColumn(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aNextCellNode);
   NS_IMETHOD GetFirstCellInRow(nsIDOMNode *aCurrentCellNode, nsIDOMNode* &aCellNode);

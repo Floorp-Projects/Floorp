@@ -120,10 +120,11 @@ NS_IMETHODIMP nsHTMLEditor::JoinTableCells(PRBool aCellToRight)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsHTMLEditor::GetColIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex)
+NS_IMETHODIMP nsHTMLEditor::GetCellIndexes(nsIDOMNode *aCellNode, PRInt32 &aColIndex, PRInt32 &aRowIndex)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
-  aCellIndex=0; // initialize out param
+  aColIndex=0; // initialize out params
+  aRowIndex=0;
   result = NS_ERROR_FAILURE;        // we return an error unless we get the index
   nsISupports *layoutObject=nsnull; // frames are not ref counted, so don't use an nsCOMPtr
 
@@ -135,15 +136,12 @@ NS_IMETHODIMP nsHTMLEditor::GetColIndexForCell(nsIDOMNode *aCellNode, PRInt32 &a
     result = layoutObject->QueryInterface(nsITableCellLayout::GetIID(), (void**)(&cellLayoutObject));
     if ((NS_SUCCEEDED(result)) && (nsnull!=cellLayoutObject))
     { // get the index
-      result = cellLayoutObject->GetColIndex(aCellIndex);
+      result = cellLayoutObject->GetColIndex(aColIndex);
+      if (NS_SUCCEEDED(result))
+        result = cellLayoutObject->GetRowIndex(aRowIndex);
     }
   }
   return result;
-}
-
-NS_IMETHODIMP nsHTMLEditor::GetRowIndexForCell(nsIDOMNode *aCellNode, PRInt32 &aCellIndex)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

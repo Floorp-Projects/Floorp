@@ -148,7 +148,7 @@
 <!ENTITY colorMagentaCmd.label "Magenta">
 
 <!ENTITY backgroundColorMenu.label "Background Color">
-<!ENTITY removeAllStylesCmd.label "Remove All Style(s)">
+<!ENTITY removeAllStylesCmd.label "Remove All Styles">
 <!ENTITY removeLinksCmd.label "Remove Link(s)">
 
 <!ENTITY headingMenu.label "Heading">
