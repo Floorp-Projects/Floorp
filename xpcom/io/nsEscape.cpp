@@ -385,11 +385,11 @@ NS_COM PRBool NS_EscapeURL(const char *part,
       //
       // And, we will not escape non-ascii characters if requested.
       // On special request we will also escape the colon even when
-      // not covered by the matrix
-
+      // not covered by the matrix.
+      // ignoreAscii is not honored for control characters (C0 and DEL)
       if ((NO_NEED_ESC(c) || (c == HEX_ESCAPE && !forced)
                           || (c > 0x7f && ignoreNonAscii)
-                          || (c < 0x80 && ignoreAscii))
+                          || (c > 0x1f && c < 0x7f && ignoreAscii))
           && !(c == ':' && colon))
       {
         if (writing)
@@ -436,6 +436,7 @@ NS_COM PRBool NS_UnescapeURL(const char *str, PRInt32 len, PRInt16 flags, nsACSt
 
     PRBool ignoreNonAscii = (flags & esc_OnlyASCII);
     PRBool writing = (flags & esc_AlwaysCopy);
+    PRBool excludeControl = (flags & esc_ExcludeControl); 
 
     static const char hexChars[] = "0123456789ABCDEFabcdef";
 
@@ -447,7 +448,9 @@ NS_COM PRBool NS_UnescapeURL(const char *str, PRInt32 len, PRInt16 flags, nsACSt
         if (*p == HEX_ESCAPE && i < len-2) {
             unsigned char *p1 = ((unsigned char *) p) + 1;
             unsigned char *p2 = ((unsigned char *) p) + 2;
-            if (ISHEX(*p1) && ISHEX(*p2) && !(ignoreNonAscii && *p1 >= '8')) {
+            if (ISHEX(*p1) && ISHEX(*p2) && !(ignoreNonAscii && *p1 >= '8') &&
+                !(excludeControl && 
+                  (*p1 < '2' || (*p1 == '7' && (*p2 == 'f' || *p2 == 'F'))))) {
                 //printf("- p1=%c p2=%c\n", *p1, *p2);
                 writing = PR_TRUE;
                 if (p > last) {
