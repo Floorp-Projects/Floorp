@@ -536,6 +536,8 @@ function tovr_remchild (index)
     
     var fpDelta = -this.childData[index].visualFootprint;
     var changeStart = this.childData[index].calculateVisualRow();
+    this.childData[index].childIndex = -1;
+    delete this.childData[index].parentRecord;
     arrayRemoveAt (this.childData, index);
     this.invalidateCache();
     this.onVisualFootprintChanged (changeStart, fpDelta);
