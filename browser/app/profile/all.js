@@ -46,7 +46,7 @@ pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&q=");
 
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
-pref("general.useragent.misc", "rv:1.4a");
+pref("general.useragent.misc", "rv:1.4b");
 pref("general.useragent.vendor", "Mozilla Firebird");
 pref("general.useragent.vendorSub", "0.6");
 
@@ -160,11 +160,7 @@ pref("view_source.wrap_long_lines", false);
 
 // gfx widgets
 pref("nglayout.widget.mode", 2);
-pref("nglayout.widget.gfxscrollbars", true);
 pref("nglayout.initialpaint.delay", 250);
-
-// css2 hover pref
-pref("nglayout.events.showHierarchicalHover", false);
 
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
