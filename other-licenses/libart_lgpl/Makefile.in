@@ -108,7 +108,7 @@ GEN_ART_CONFIG = gen_art_config$(BIN_SUFFIX)
 SIMPLE_PROGRAMS = $(GEN_ART_CONFIG)
 endif
 
-art_config.h: $(GEN_ART_CONFIG)
+art_config.h: $(GEN_ART_CONFIG) Makefile Makefile.in
 	./$(GEN_ART_CONFIG) > art_config.h
 
 ifdef ENABLE_TESTS
