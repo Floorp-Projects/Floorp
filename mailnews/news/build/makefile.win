@@ -95,6 +95,7 @@ LINCS=$(LINCS) -I,							\
 			   -I$(PUBLIC)\xpcom			\
 			   -I$(PUBLIC)\js				\
 			   -I$(PUBLIC)\mailnews			\
+			   -I$(PUBLIC)\security			\
 			   -I$(PUBLIC)\news				\
 			   -I$(PUBLIC)\pref				\
 			   -I$(PUBLIC)\raptor			\
