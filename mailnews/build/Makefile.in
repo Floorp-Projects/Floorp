@@ -44,42 +44,42 @@ MODULE_NAME	= nsMsgMailModule
 REQUIRES	= xpcom \
 		  xpcom_obsolete \
 		  xpobsolete \
-          addrbook \
+          	  addrbook \
 		  appcomps \
 		  appshell \
-          bayesflt \
+                  bayesflt \
 		  content \
 		  dom \
 		  docshell \
 		  editor \
 		  gfx \
 		  intl \
-    	  locale \
+	     	  locale \
 		  layout \
-          lwbrk \
+        	  lwbrk \
 		  mailnews \
-          mailview \
-          msglocal \
+	          mailview \
+	          msglocal \
 		  msgcompose \
 		  msgbaseutil \
-          msgbase  \
+	          msgbase  \
 		  msgnews \
 		  msgimap \
 		  msgdb \
-          msgmdn \
+        	  msgmdn \
 		  mime \
-          mimeemitter \
+	          mimeemitter \
 		  mork \
 		  necko \
-          nkcache \
+        	  nkcache \
 		  pref \
 		  rdf \
-          rdfutil \
+	          rdfutil \
 		  string \
 		  txmgr \
 		  widget \
 		  webbrwsr \
-          uconv \
+        	  uconv \
 		  uriloader \
 		  $(NULL)
 
@@ -90,31 +90,28 @@ REQUIRES	+= mozldap \
 DEFINES		+= -DMOZ_LDAP_XPCOM
 endif
 
-ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS = msgbsutl
-else
-EXTRA_DSO_LIBS = msgbaseutil
-endif
-
 EXTRA_DSO_LIBS += rdfutil_s
 
 CPPSRCS		= nsMailModule.cpp
 
 SHARED_LIBRARY_LIBS = \
+	        $(DIST)/lib/$(LIB_PREFIX)msgbsutl_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)msgbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)msgsearch_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)msglocal_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)msgcompose_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)msgdb_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)msgimap_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)addrbook_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)msgnews_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)mime_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)emitterutil_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)bayesflt_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)mailview_s.$(LIB_SUFFIX) \
-        $(DIST)/lib/$(LIB_PREFIX)msgmdn_s.$(LIB_SUFFIX) \
-		$(NULL)
+        	$(DIST)/lib/$(LIB_PREFIX)msglocal_s.$(LIB_SUFFIX) \
+	        $(DIST)/lib/$(LIB_PREFIX)msgcompose_s.$(LIB_SUFFIX) \
+	        $(DIST)/lib/$(LIB_PREFIX)msgdb_s.$(LIB_SUFFIX) \
+	        $(DIST)/lib/$(LIB_PREFIX)msgimap_s.$(LIB_SUFFIX) \
+	        $(DIST)/lib/$(LIB_PREFIX)addrbook_s.$(LIB_SUFFIX) \
+	        $(DIST)/lib/$(LIB_PREFIX)msgnews_s.$(LIB_SUFFIX) \
+	        $(DIST)/lib/$(LIB_PREFIX)mime_s.$(LIB_SUFFIX) \
+	        $(DIST)/lib/$(LIB_PREFIX)emitterutil_s.$(LIB_SUFFIX) \
+	        $(DIST)/lib/$(LIB_PREFIX)bayesflt_s.$(LIB_SUFFIX) \
+	        $(DIST)/lib/$(LIB_PREFIX)mailview_s.$(LIB_SUFFIX) \
+                $(DIST)/lib/$(LIB_PREFIX)msgmdn_s.$(LIB_SUFFIX) \
+                $(DIST)/lib/$(LIB_PREFIX)vcard_s.$(LIB_SUFFIX) \
+                $(DIST)/lib/$(LIB_PREFIX)mimecthglue_s.$(LIB_SUFFIX) \
+                $(NULL)
 
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR)	\
