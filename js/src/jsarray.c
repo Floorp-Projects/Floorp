@@ -797,6 +797,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsuint len, newlen, i;
     jsval *vec;
     jsid id;
+    size_t nbytes;
 
     /*
      * Optimize the default compare function case if all of obj's elements
@@ -821,7 +822,17 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	return JS_FALSE;
     if (len == 0)
         return JS_TRUE;
-    vec = (jsval *) JS_malloc(cx, (size_t) len * sizeof(jsval));
+
+    /*
+     * Test for size_t overflow, which could lead to indexing beyond the end
+     * of the malloc'd vector.
+     */
+    nbytes = len * sizeof(jsval);
+    if (nbytes != (double) len * sizeof(jsval)) {
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
+    }
+    vec = (jsval *) JS_malloc(cx, nbytes);
     if (!vec)
 	return JS_FALSE;
 
