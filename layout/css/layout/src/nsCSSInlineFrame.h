@@ -107,7 +107,7 @@ protected:
   nsIFrame* PullOneChild(nsCSSInlineFrame* aNextInFlow,
                          nsIFrame*         aLastChild);
 
-  nsInlineReflowStatus ReflowUnmapped(nsCSSInlineReflowState& aState);
+  nsresult CreateNewFrames(nsCSSLineLayout& aState);
 
   nsresult MaybeCreateNextInFlow(nsCSSInlineReflowState& aState,
                                  nsIFrame*               aFrame);

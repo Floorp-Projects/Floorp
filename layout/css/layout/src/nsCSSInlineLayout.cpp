@@ -127,7 +127,7 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
   if (!ComputeMaxSize(aFrame, margin, maxSize)) {
     NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
                  ("nsCSSInlineLayout::ReflowAndPlaceFrame: break-before"));
-    return NS_INLINE_REFLOW_LINE_BREAK_BEFORE;
+    return NS_INLINE_LINE_BREAK_BEFORE(0);/* XXX indicate never-reflowed? */
   }
 
   // Get reflow reason set correctly. It's possible that we created a
@@ -157,13 +157,14 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
   PRBool isAware;
   aFrame->WillReflow(*mLineLayout.mPresContext);
   rs = ReflowFrame(aFrame, metrics, reflowState, isAware);
-  if (IS_REFLOW_ERROR(rs)) {
+  if (NS_IS_REFLOW_ERROR(rs)) {
     return rs;
   }
-  if (NS_INLINE_REFLOW_BREAK_BEFORE == (rs & NS_INLINE_REFLOW_REFLOW_MASK)) {
+  if (NS_INLINE_IS_BREAK_BEFORE(rs)) {
     return rs;
   }
 
+  // XXX the 0,0 part of this is hack: get rid of it
   if (!isAware && ((0 != metrics.width) || (0 != metrics.height))) {
     mLineLayout.SetSkipLeadingWhiteSpace(PR_FALSE);
   }
@@ -176,7 +177,10 @@ nsCSSInlineLayout::ReflowAndPlaceFrame(nsIFrame* aFrame)
       NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
                    ("nsCSSInlineLayout::ReflowAndPlaceFrame: !fit size=%d,%d",
                     metrics.width, metrics.height));
-      return NS_INLINE_REFLOW_LINE_BREAK_BEFORE;
+
+      // XXX if the child requested a break and we need to break too...
+
+      return NS_INLINE_LINE_BREAK_BEFORE(0);
     }
   }
 
@@ -210,7 +214,7 @@ nsCSSInlineLayout::ComputeMaxSize(nsIFrame* aFrame,
       // XXX Make sure child is dirty for next time
       aFrame->WillReflow(*mLineLayout.mPresContext);
       NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-                   ("CSSLineLayout::ComputeMaxSize: !fit"));
+         ("nsCSSInlineLayout::ComputeMaxSize: !fit"));
       return PR_FALSE;
     }
   }
@@ -246,7 +250,6 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
     aMetrics.height = r.height;
     aMetrics.ascent = r.height;
     aMetrics.descent = 0;
-    rv = NS_FRAME_REFLOW_STATUS_2_INLINE_REFLOW_STATUS(rv);
     aInlineAware = PR_FALSE;
   }
   else if (NS_OK == aKidFrame->QueryInterface(kIInlineReflowIID,
@@ -256,7 +259,6 @@ nsCSSInlineLayout::ReflowFrame(nsIFrame*            aKidFrame,
   }
   else {
     aKidFrame->Reflow(mLineLayout.mPresContext, aMetrics, aReflowState, rv);
-    rv = NS_FRAME_REFLOW_STATUS_2_INLINE_REFLOW_STATUS(rv);
     aInlineAware = PR_FALSE;
   }
 

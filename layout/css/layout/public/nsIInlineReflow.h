@@ -52,46 +52,49 @@ public:
  * then some sort of catastrophic error has occured (e.g. out of memory).
  * If the return value is non-negative then the macros below can be
  * used to interpret it.
+ *
+ * This is an extension of the nsReflowStatus value; it's bits are used
+ * in addition the bits that we add.
  */
-typedef nsresult nsInlineReflowStatus;
+typedef nsReflowStatus nsInlineReflowStatus;
 
-// The low 3 bits of the nsInlineReflowStatus indicate what happened
-// to the child during it's reflow.
-#define NS_INLINE_REFLOW_COMPLETE     0             // note: not a bit!
-#define NS_INLINE_REFLOW_NOT_COMPLETE 1         
-#define NS_INLINE_REFLOW_BREAK_AFTER  2
-#define NS_INLINE_REFLOW_BREAK_BEFORE 3
-#define NS_INLINE_REFLOW_REFLOW_MASK  0x3
+// This bit is set, when a break is requested. This bit is orthogonal
+// to the nsIFrame::nsReflowStatus completion bits.
+#define NS_INLINE_BREAK             0x0100
 
-// The inline reflow status may need to indicate that the next-in-flow
-// must be reflowed. This bit is or'd in in that case.
-#define NS_INLINE_REFLOW_NEXT_IN_FLOW 0x4
+#define NS_INLINE_IS_BREAK(_status) \
+  (0 != ((_status) & NS_INLINE_BREAK))
 
-// When a break is indicated (break-before/break-after) the type of
-// break requested is indicate in bits 4-7.
-#define NS_INLINE_REFLOW_BREAK_MASK   0xF0
-#define NS_INLINE_REFLOW_GET_BREAK_TYPE(_status) (((_status) >> 4) & 0xF)
-#define NS_INLINE_REFLOW_MAKE_BREAK_TYPE(_type)  ((_type) << 4)
+// When a break is requested, this bit when set indicates that the
+// break should occur after the frame just reflowed; when the bit is
+// clear the break should occur before the frame just reflowed.
+#define NS_INLINE_BREAK_SIDE        0x0200      // 0 = before, !0 = after
+#define NS_INLINE_BREAK_BEFORE      0x0000
+#define NS_INLINE_BREAK_AFTER       NS_INLINE_BREAK_SIDE
 
-// This macro maps an nsIFrame nsReflowStatus value into an
-// nsInlineReflowStatus value.
-#define NS_FRAME_REFLOW_STATUS_2_INLINE_REFLOW_STATUS(_status) \
-  (((_status) & 0x1) | (((_status) & NS_FRAME_REFLOW_NEXTINFLOW) << 2))
+#define NS_INLINE_IS_BREAK_AFTER(_status) \
+  (0 != ((_status) & NS_INLINE_BREAK_SIDE))
 
-// Convenience macro's
-#define NS_INLINE_REFLOW_LINE_BREAK_BEFORE      \
-  (NS_INLINE_REFLOW_BREAK_BEFORE |              \
-   NS_INLINE_REFLOW_MAKE_BREAK_TYPE(NS_STYLE_CLEAR_LINE))
+#define NS_INLINE_IS_BREAK_BEFORE(_status) \
+  (NS_INLINE_BREAK == ((_status) & (NS_INLINE_BREAK|NS_INLINE_BREAK_SIDE)))
 
-#define NS_INLINE_REFLOW_LINE_BREAK_AFTER       \
-  (NS_INLINE_REFLOW_BREAK_AFTER |               \
-   NS_INLINE_REFLOW_MAKE_BREAK_TYPE(NS_STYLE_CLEAR_LINE))
+// The type of break requested can be found in these bits.
+#define NS_INLINE_BREAK_TYPE_MASK   0xF000
 
-// This macro tests to see if an nsInlineReflowStatus is an error value
-// or just a regular return value
-#define NS_INLINE_REFLOW_ERROR(_status) (PRInt32(_status) < 0)
+#define NS_INLINE_GET_BREAK_TYPE(_status) (((_status) >> 12) & 0xF)
 
-// XXX Need a better home for this
-#define IS_REFLOW_ERROR(_status) (PRInt32(_status) < 0)
+#define NS_INLINE_MAKE_BREAK_TYPE(_type)  ((_type) << 12)
+
+// Convenience macro's: Take a completion status and add to it
+// the desire to have a line-break before.
+#define NS_INLINE_LINE_BREAK_BEFORE(_completionStatus)                  \
+  ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_BEFORE |     \
+   NS_INLINE_MAKE_BREAK_TYPE(NS_STYLE_CLEAR_LINE))
+
+// Convenience macro's: Take a completion status and add to it
+// the desire to have a line-break after.
+#define NS_INLINE_LINE_BREAK_AFTER(_completionStatus)                   \
+  ((_completionStatus) | NS_INLINE_BREAK | NS_INLINE_BREAK_AFTER |      \
+   NS_INLINE_MAKE_BREAK_TYPE(NS_STYLE_CLEAR_LINE))
 
 #endif /* nsIInlineReflow_h___ */
