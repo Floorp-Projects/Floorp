@@ -479,7 +479,7 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
     return PR_TRUE;
 
   NS_ADDREF(win);
-  nsKeyEvent keyDownEvent(NS_KEY_DOWN, p);
+  nsKeyEvent keyDownEvent(NS_KEY_DOWN, win);
   InitKeyEvent(event, keyDownEvent);
   win->OnKey(keyDownEvent);
 
@@ -488,7 +488,7 @@ gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
   //  character code.  Note we have to check for modifier keys, since
   // gtk returns a character value for them
   //
-  nsKeyEvent keyPressEvent(NS_KEY_PRESS, p);
+  nsKeyEvent keyPressEvent(NS_KEY_PRESS, win);
   InitKeyPressEvent(event, keyPressEvent);
   win->OnKey(keyPressEvent);
 
