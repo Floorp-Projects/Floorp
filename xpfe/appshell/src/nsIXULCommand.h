@@ -25,7 +25,7 @@
 #include "nsIMenuListener.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 class nsIDOMNode;
 class nsIFactory;
 class nsIMenuItem;
@@ -76,7 +76,7 @@ public:
 
   NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement) = 0;
   NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement) = 0;
-  NS_IMETHOD SetWebShell(nsIWebShell * aWebShell) = 0;
+  NS_IMETHOD SetDocShell(nsIDocShell * aDocShell) = 0;
 };
 
 
