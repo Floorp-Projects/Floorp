@@ -28,7 +28,6 @@ EXPORTS = \
 	nsIFontSizeIterator.h \
 	nsIFontNameIterator.h \
 	nsIFontRetrieverService.h \
-	nsIFileChooser.h \
 	nsIFileListTransferable.h \
 	nsIMenuBar.h	\
 	nsIMenu.h		\

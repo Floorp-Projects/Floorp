@@ -43,4 +43,3 @@ nsIContentConnector.h
 nsIKeyBindMgr.h
 nsStringUtil.h
 nsIContextMenu.h
-nsIFileChooser.h
