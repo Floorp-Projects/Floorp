@@ -28,6 +28,7 @@
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *   Daniel Glazman <glazman@netscape.com>
  *   Neil Deakin <neil@mozdevgroup.com>
+ *   Masayuki Nakano <masayuki@d-toybox.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -71,6 +72,7 @@
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
 #include "nsCompatibility.h"
+#include "nsCSSColorUtils.h"
 
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
@@ -963,9 +965,22 @@ public:
   char *      CurrentTextCStrPtr();
   PRUint32    CurrentLength();
   nsTextFrame::TextPaintStyle & CurrentStyle();
-  nscolor     CurrentForeGroundColor();
-  PRBool      CurrentBackGroundColor(nscolor &aColor, PRBool *aIsTransparent);
   PRBool      IsBeforeOrAfter();
+
+  /**
+   * Get foreground color, background color, whether the background is transparent,
+   * and whether the current range is the normal selection.
+   *
+   * @param aForeColor [out] returns the foreground color of the current range.
+   * @param aBackColor [out] returns the background color of the current range.
+   *                         Note that this value is undefined if aBackIsTransparent
+   *                         is true or if @return is false.
+   * @param aBackIsTransparent [out] returns whether the background is transparent.
+   *                                 If true, the background is transparent.
+   *                                 Otherwise, it isn't so.
+   * @return whether the current range is a normal selection.
+   */
+  PRBool GetSelectionColors(nscolor *aForeColor, nscolor *aBackColor, PRBool *aBackIsTransparent);
 private:
   union {
     PRUnichar *mUniStr;
@@ -1202,54 +1217,69 @@ DrawSelectionIterator::CurrentStyle()
   return mOldStyle;
 }
 
-nscolor
-DrawSelectionIterator::CurrentForeGroundColor()
-{
-  nscolor foreColor;
-  PRBool colorSet = PR_FALSE;
-  
-  if (!mTypes)
-  {
-    if (mCurrentIdx == (PRUint32)mDetails->mStart)
-    {
-      foreColor = mOldStyle.mSelectionTextColor;
-      colorSet = PR_TRUE;
-    }
-  }
-  else if (mTypes[mCurrentIdx] & nsISelectionController::SELECTION_NORMAL)//Find color based on mTypes[mCurrentIdx];
-  {
-    foreColor = mOldStyle.mSelectionTextColor;
-    colorSet = PR_TRUE;
-  }
-
-  if (colorSet && (foreColor != NS_DONT_CHANGE_COLOR)) {
-    if (mSelectionPseudoStyle)
-      return mSelectionPseudoFGcolor;
-    else
-      return foreColor;
-  }
-  return mOldStyle.mColor->mColor;
-}
-
 PRBool
-DrawSelectionIterator::CurrentBackGroundColor(nscolor &aColor, PRBool *aIsTransparent)
-{ 
-  //Find color based on mTypes[mCurrentIdx];
-  *aIsTransparent = PR_FALSE;
-  if (mTypes? (mTypes[mCurrentIdx] & nsISelectionController::SELECTION_NORMAL): (mCurrentIdx == (PRUint32)mDetails->mStart)) {
-    aColor = mOldStyle.mSelectionBGColor;
-    if (mSelectionPseudoStyle) {
-      aColor = mSelectionPseudoBGcolor;
-      *aIsTransparent = mSelectionPseudoBGIsTransparent;
-    }
-    if (mSelectionStatus==nsISelectionController::SELECTION_ATTENTION)
-      aColor = mAttentionColor;
-    else if (mSelectionStatus != nsISelectionController::SELECTION_ON)
-      aColor = mDisabledColor;
+DrawSelectionIterator::GetSelectionColors(nscolor *aForeColor,
+                                          nscolor *aBackColor,
+                                          PRBool  *aBackIsTransparent)
+{
+  *aBackIsTransparent = PR_FALSE;
+  PRBool isSelection =
+    (mTypes && (mTypes[mCurrentIdx] & nsISelectionController::SELECTION_NORMAL)) ||
+    (!mTypes && mCurrentIdx == (PRUint32)mDetails->mStart);
+  if (!isSelection) {
+    *aForeColor = mOldStyle.mColor->mColor;
+    return PR_FALSE;
+  }
+
+  PRBool dontChangeTextColor = mOldStyle.mSelectionTextColor == NS_DONT_CHANGE_COLOR;
+
+  // If the selection text color is NS_DONT_CHANGE_COLOR,
+  // we don't accept the ::selection pseudo element.
+  if (!dontChangeTextColor &&
+      mSelectionPseudoStyle &&
+      mSelectionStatus == nsISelectionController::SELECTION_ON) {
+    *aForeColor = mSelectionPseudoFGcolor;
+    *aBackColor = mSelectionPseudoBGcolor;
+    *aBackIsTransparent = mSelectionPseudoBGIsTransparent;
     return PR_TRUE;
   }
 
-  return PR_FALSE;
+  if (dontChangeTextColor)
+    *aForeColor = mOldStyle.mColor->mColor;
+  else
+    *aForeColor = mOldStyle.mSelectionTextColor;
+
+  if (mSelectionStatus == nsISelectionController::SELECTION_ATTENTION)
+    *aBackColor = mAttentionColor;
+  else if (mSelectionStatus != nsISelectionController::SELECTION_ON)
+    *aBackColor = mDisabledColor;
+  else
+    *aBackColor = mOldStyle.mSelectionBGColor;
+
+  // We don't support selection color exchanging when selection text color is
+  // NS_DONT_CHANGE_COLOR. Because the text color should not be background color.
+  if (dontChangeTextColor) {
+    *aForeColor = EnsureDifferentColors(*aForeColor, *aBackColor);
+    return PR_TRUE;
+  }
+
+  // Note: We assume that the combination of the background color and text color
+  // of selection is sufficient contrast. Because if it isn't, user cannot read
+  // the selection text.
+
+  // If the combination of the selection text color and the original text color
+  // are sufficient contrast, probably these background colors are not alike.
+  // Therefore, we should not exchange selection colors.
+  if (NS_LUMINOSITY_DIFFERENCE(*aForeColor, mOldStyle.mColor->mColor) >=
+      NS_SUFFICIENT_LUMINOSITY_DIFFERENCE)
+    return PR_TRUE;
+
+  // Otherwise, if those colors are similar, those background colors may be similar.
+  // Therefore, we should exchange the colors.
+  nscolor tmpColor = *aForeColor;
+  *aForeColor = *aBackColor;
+  *aBackColor = tmpColor;
+  return PR_TRUE;
 }
 
 PRBool
@@ -2499,10 +2529,11 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
           PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
           PRUint32   currentlength= iter.CurrentLength();
           //TextStyle &currentStyle = iter.CurrentStyle();
-          nscolor    currentFGColor = iter.CurrentForeGroundColor();
-          nscolor    currentBKColor;
+          nscolor    currentFGColor, currentBKColor;
           PRBool     isCurrentBKColorTransparent;
-
+          PRBool     isSelection = iter.GetSelectionColors(&currentFGColor,
+                                                           &currentBKColor,
+                                                           &isCurrentBKColorTransparent);
 #ifdef IBMBIDI
           if (currentlength > 0
             && NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
@@ -2514,13 +2545,12 @@ nsTextFrame::PaintUnicodeText(nsPresContext* aPresContext,
           if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
           {
 #endif
-            if (iter.CurrentBackGroundColor(currentBKColor, &isCurrentBKColorTransparent) && !isPaginated)
+            if (isSelection && !isPaginated)
             {//DRAW RECT HERE!!!
               if (!isCurrentBKColorTransparent) {
                 aRenderingContext.SetColor(currentBKColor);
                 aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
               }
-              currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
             }
           }
           else
@@ -3168,21 +3198,22 @@ nsTextFrame::PaintTextSlowly(nsPresContext* aPresContext,
           PRUnichar *currenttext  = iter.CurrentTextUnicharPtr();
           PRUint32   currentlength= iter.CurrentLength();
           //TextStyle &currentStyle = iter.CurrentStyle();
-          nscolor    currentFGColor = iter.CurrentForeGroundColor();
-          nscolor    currentBKColor;
+          nscolor    currentFGColor, currentBKColor;
           PRBool     isCurrentBKColorTransparent;
+          PRBool     isSelection = iter.GetSelectionColors(&currentFGColor,
+                                                           &currentBKColor,
+                                                           &isCurrentBKColorTransparent);
           PRBool     isEndOfFrame = iter.IsLast();
           GetTextDimensions(aRenderingContext, aTextStyle, currenttext,
                             (PRInt32)currentlength, isEndOfFrame, &newDimensions);
           if (newDimensions.width)
           {
-            if (iter.CurrentBackGroundColor(currentBKColor, &isCurrentBKColorTransparent))
+            if (isSelection)
             {//DRAW RECT HERE!!!
               if (!isCurrentBKColorTransparent) {
                 aRenderingContext.SetColor(currentBKColor);
                 aRenderingContext.FillRect(currentX, dy, newDimensions.width, mRect.height);
               }
-              currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
             }
           }
 
@@ -3397,19 +3428,19 @@ nsTextFrame::PaintAsciiText(nsPresContext* aPresContext,
             char *currenttext  = iter.CurrentTextCStrPtr();
             PRUint32   currentlength= iter.CurrentLength();
             //TextStyle &currentStyle = iter.CurrentStyle();
-            nscolor    currentFGColor = iter.CurrentForeGroundColor();
-            nscolor    currentBKColor;
+            nscolor    currentFGColor, currentBKColor;
             PRBool     isCurrentBKColorTransparent;
-
+            PRBool     isSelection = iter.GetSelectionColors(&currentFGColor,
+                                                             &currentBKColor,
+                                                             &isCurrentBKColorTransparent);
             if (NS_SUCCEEDED(aRenderingContext.GetWidth(currenttext, currentlength,newWidth)))//ADJUST FOR CHAR SPACING
             {
-              if (iter.CurrentBackGroundColor(currentBKColor, &isCurrentBKColorTransparent) && !isPaginated)
+              if (isSelection && !isPaginated)
               {//DRAW RECT HERE!!!
                 if (!isCurrentBKColorTransparent) {
                   aRenderingContext.SetColor(currentBKColor);
                   aRenderingContext.FillRect(currentX, dy, newWidth, mRect.height);
                 }
-                currentFGColor = EnsureDifferentColors(currentFGColor, currentBKColor);
               }
             }
             else

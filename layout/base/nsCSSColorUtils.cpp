@@ -41,9 +41,9 @@
 // Weird color computing code stolen from winfe which was stolen
 // from the xfe which was written originally by Eric Bina. So there.
 
-#define RED_LUMINOSITY        30
-#define GREEN_LUMINOSITY      59
-#define BLUE_LUMINOSITY       11
+#define RED_LUMINOSITY        299
+#define GREEN_LUMINOSITY      587
+#define BLUE_LUMINOSITY       114
 #define INTENSITY_FACTOR      25
 #define LIGHT_FACTOR          0
 #define LUMINOSITY_FACTOR     75
@@ -179,13 +179,17 @@ int NS_GetBrightness(PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
 
   PRUint8 intensity = (aRed + aGreen + aBlue) / 3;
 
-  PRUint8 luminosity =
-    ((RED_LUMINOSITY * aRed) / 100) +
-    ((GREEN_LUMINOSITY * aGreen) / 100) +
-    ((BLUE_LUMINOSITY * aBlue) / 100);
+  PRUint8 luminosity = NS_GetLuminosity(NS_RGB(aRed, aGreen, aBlue)) / 1000;
  
   return ((intensity * INTENSITY_FACTOR) +
           (luminosity * LUMINOSITY_FACTOR)) / 100;
+}
+
+PRUint32 NS_GetLuminosity(nscolor aColor)
+{
+  return (NS_GET_R(aColor) * RED_LUMINOSITY +
+          NS_GET_G(aColor) * GREEN_LUMINOSITY +
+          NS_GET_B(aColor) * BLUE_LUMINOSITY);
 }
 
 // Function to convert RGB color space into the HSV colorspace
