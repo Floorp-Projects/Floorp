@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIPrintSettings.idl"
 
 %{ C++
 #include "nsMargin.h"
@@ -133,7 +134,6 @@ interface nsIPrintOptions : nsISupports
    */
   void WritePrefs();
 
-
   /**
    * Data Members
    */
@@ -163,6 +163,7 @@ interface nsIPrintOptions : nsISupports
   attribute boolean isCancelled;
   attribute boolean PrintSilent;	/* print without putting up the dialog */
 
+  attribute nsIPrintSettings printSettings;
 
   /* Additional XP Related */
   attribute boolean printReversed;
