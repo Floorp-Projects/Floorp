@@ -18,8 +18,8 @@
  */
 
 #include "nsBrowserInstance.h"
-
-#include "nsIAppShellComponentImpl.h"
+// Use this trick temporarily, to minimize delta to nsBrowserAppCore.cpp.
+#define nsBrowserAppCore nsBrowserInstance
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
@@ -104,13 +104,8 @@ static PRLogModuleInfo* gTimerLog = nsnull;
 #endif /* DEBUG || FORCE_PR_LOG */
 #endif
 
-#ifdef DEBUG
-static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
-#else
-#define APP_DEBUG 0
-#endif
-
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
+
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
@@ -134,10 +129,17 @@ static NS_DEFINE_IID(kIGlobalHistoryIID,       NS_IGLOBALHISTORY_IID);
 static NS_DEFINE_IID(kISessionHistoryIID,       NS_ISESSION_HISTORY_IID);
 static NS_DEFINE_IID(kIWebShellIID,              NS_IWEB_SHELL_IID);
 
+#ifdef DEBUG                                                           
+static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
+#else                                                                  
+#define APP_DEBUG 0                                                    
+#endif                                                                 
+
 #define FILE_PROTOCOL "file://"
 
 static nsresult
 FindNamedXULElement(nsIWebShell * aShell, const char *aId, nsCOMPtr<nsIDOMElement> * aResult );
+
 
 static nsresult setAttribute( nsIWebShell *shell,
                               const char *id,
@@ -147,8 +149,8 @@ static nsresult setAttribute( nsIWebShell *shell,
 // nsBrowserAppCore
 /////////////////////////////////////////////////////////////////////////
 
-nsBrowserInstance::nsBrowserInstance() {
-
+nsBrowserAppCore::nsBrowserAppCore()
+{
   mToolbarWindow        = nsnull;
   mToolbarScriptContext = nsnull;
   mContentWindow        = nsnull;
@@ -158,21 +160,22 @@ nsBrowserInstance::nsBrowserInstance() {
   mContentAreaWebShell  = nsnull;
   mSHistory             = nsnull;
   mIsViewSource         = PR_FALSE;
-
   NS_INIT_REFCNT();
+
 }
 
-nsBrowserInstance::~nsBrowserInstance() {
+nsBrowserAppCore::~nsBrowserAppCore()
+{
   NS_IF_RELEASE(mSHistory);
 }
 
 
-NS_IMPL_ADDREF( nsBrowserInstance )
-NS_IMPL_RELEASE( nsBrowserInstance )
+NS_IMPL_ADDREF(nsBrowserInstance)
+NS_IMPL_RELEASE(nsBrowserInstance)
 
 
 NS_IMETHODIMP 
-nsBrowserInstance::QueryInterface(REFNSIID aIID,void** aInstancePtr)
+nsBrowserAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 {
   if (aInstancePtr == NULL) {
     return NS_ERROR_NULL_POINTER;
@@ -187,14 +190,14 @@ nsBrowserInstance::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     return NS_OK;
   }
 
-  if ( aIID.Equals( nsIDocumentLoaderObserver::GetIID() ) ) {
+  if (aIID.Equals(nsIDocumentLoaderObserver::GetIID())) {
     nsIDocumentLoaderObserver *self = this;
     *aInstancePtr = self;
     self->AddRef();
     return NS_OK;
   }
 
-  if ( aIID.Equals( nsIObserver::GetIID() ) ) {
+  if (aIID.Equals( nsIObserver::GetIID())) {
     nsIObserver *self = this;  
     *aInstancePtr = self;
     self->AddRef();
@@ -211,6 +214,7 @@ nsBrowserInstance::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   return NS_ERROR_NO_INTERFACE;
 }
 
+static
 nsIPresShell*
 GetPresShellFor(nsIWebShell* aWebShell)
 {
@@ -237,48 +241,57 @@ GetPresShellFor(nsIWebShell* aWebShell)
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::Init() {
-    nsresult rv = NS_OK;
+nsBrowserAppCore::Init()
+{
+  nsresult rv = NS_OK;
 
-    // Create session history.
-    rv = nsComponentManager::CreateInstance( kCSessionHistoryCID,
-                                             nsnull,
-                                             kISessionHistoryIID,
-                                             (void **)&mSHistory );
+  // Create session history.
+  rv = nsComponentManager::CreateInstance( kCSessionHistoryCID,
+                                           nsnull,
+                                           kISessionHistoryIID,
+                                           (void **)&mSHistory );
 
-    if ( NS_SUCCEEDED( rv ) ) {
-        // Add this object of observer of various events.
-        BeginObserving();
-    }
-    
-    return rv;
+  if ( NS_SUCCEEDED( rv ) ) {
+      // Add this object of observer of various events.
+      BeginObserving();
+  }
+  
+  return rv;
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::SetDocumentCharset(const PRUnichar *aCharset) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
-    if (!globalObj) {
-        return NS_ERROR_FAILURE;
-    }
-    
-    nsIWebShell * webShell;
-    globalObj->GetWebShell(&webShell);
-    if (nsnull != webShell) {
-        webShell->SetDefaultCharacterSet( aCharset );
-        NS_RELEASE(webShell);
-    }
-    
-    return NS_OK;
+nsBrowserAppCore::SetDocumentCharset(const PRUnichar *aCharset)
+{
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIWebShell * webShell;
+  globalObj->GetWebShell(&webShell);
+  if (nsnull != webShell) {
+    webShell->SetDefaultCharacterSet( aCharset );
+
+    NS_RELEASE(webShell);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::Back() {
+nsBrowserAppCore::Back()
+{
   GoBack(mContentAreaWebShell);
 	return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::Reload(nsLoadFlags flags) {
+#ifdef NECKO
+nsBrowserAppCore::Reload(nsLoadFlags flags)
+#else
+nsBrowserAppCore::Reload(PRInt32  aType)
+#endif
+{
 #ifdef  NECKO
 	if (mContentAreaWebShell)
 	   Reload(mContentAreaWebShell, flags);
@@ -290,7 +303,8 @@ nsBrowserInstance::Reload(nsLoadFlags flags) {
 }   
 
 NS_IMETHODIMP
-nsBrowserInstance::Forward() {
+nsBrowserAppCore::Forward()
+{
   GoForward(mContentAreaWebShell);
 	return NS_OK;
 }
@@ -298,7 +312,8 @@ nsBrowserInstance::Forward() {
 
 
 NS_IMETHODIMP    
-nsBrowserInstance::Stop() {
+nsBrowserAppCore::Stop()
+{
   mContentAreaWebShell->Stop();
   setAttribute( mWebShell, "Browser:Throbber", "busy", "false" );
 	return NS_OK;
@@ -321,7 +336,8 @@ nsresult ProfileDirectory(nsFileSpec& dirSpec) {
 
 
 NS_IMETHODIMP
-nsBrowserInstance::GotoHistoryIndex(PRInt32 aIndex) {
+nsBrowserAppCore::GotoHistoryIndex(PRInt32 aIndex)
+{
     printf("In nsBrowserAppCOre::gotoHistoryIndex\n");
     Goto(aIndex, mContentAreaWebShell, PR_FALSE);
 	return NS_OK;
@@ -329,8 +345,8 @@ nsBrowserInstance::GotoHistoryIndex(PRInt32 aIndex) {
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::BackButtonPopup() {
-
+nsBrowserAppCore::BackButtonPopup()
+{
  // Get handle to the "backbuttonpopup" element
   nsCOMPtr<nsIDOMElement>   backPopupElement;
   nsresult rv = FindNamedXULElement(mWebShell, "backbuttonpopup", &backPopupElement);
@@ -345,37 +361,29 @@ nsBrowserInstance::BackButtonPopup() {
     return NS_ERROR_FAILURE;
   }
 
-  nsString  name;
-  backPopupNode->GetNodeName(name);
-  if (APP_DEBUG) printf("Popup Node name = %s\n", name.ToNewCString());
-
-  
   //get handle to the Menu item under popup
   nsCOMPtr<nsIDOMNode>   menu;
   backPopupNode->GetFirstChild(getter_AddRefs(menu));
   if (!menu) {
-	   printf("Call to GetFirstChild failed\n");
+	 printf("nsBrowserAppCore::BackButtonPopup Call to GetFirstChild failed\n");
      return NS_ERROR_FAILURE;
   }
   
-
-  menu->GetNodeName(name);
-  if (APP_DEBUG) printf("First child name = %s\n", name.ToNewCString());
   PRBool hasChildren=PR_FALSE;
 
   // Check if menu has children. If so, remove them.
-  menu->HasChildNodes(&hasChildren);
-  if (hasChildren) {
-	  ClearHistoryPopup(menu);
+  rv = menu->HasChildNodes(&hasChildren);
+  if (NS_SUCCEEDED(rv) && hasChildren) {
+	  rv = ClearHistoryPopup(menu);
+	  if (!NS_SUCCEEDED(rv))
+		  printf("nsBrowserAppCore::BackButtonPopup ERROR While removing old history menu items\n");
   }    // hasChildren
   else {
-	 if (APP_DEBUG) printf("Menu has no children\n");
-  }
-	 
-             
+	 if (APP_DEBUG) printf("nsBrowserAppCore::BackButtonPopup Menu has no children\n");
+  }             
       /* Now build the popup list */
   if (!mSHistory) {
-	  printf("mSHistory is null\n");
+	  printf("nsBrowserAppCore::BackButtonPopup mSHistory is null\n");
      return NS_ERROR_FAILURE;
   }
 
@@ -394,8 +402,9 @@ nsBrowserInstance::BackButtonPopup() {
       nsAutoString  histURL(url);
       mSHistory->GetTitleForIndex(j, &title);
       nsAutoString  histTitle(title);
-      if (APP_DEBUG) printf("URL = %s, TITLE = %s\n", histURL.ToNewCString(), histTitle.ToNewCString());
-      CreateMenuItem(menu, j, url);
+      rv = CreateMenuItem(menu, j, url);
+	  if (!NS_SUCCEEDED(rv)) 
+		  printf("nsBrowserAppCore:;BackButtonpopup ERROR while creating menu item\n");
      } 
 
   return NS_OK;
@@ -404,76 +413,80 @@ nsBrowserInstance::BackButtonPopup() {
 
 
 
-NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
+NS_IMETHODIMP nsBrowserAppCore::CreateMenuItem(
   nsIDOMNode *    aParentMenu,
   PRInt32      aIndex,
   const PRUnichar *  aName)
 {
-   if (APP_DEBUG) printf("In CreateMenuItem\n");
+  if (APP_DEBUG) printf("In CreateMenuItem\n");
   nsresult rv=NS_OK;  
   nsCOMPtr<nsIDOMDocument>  doc;
 
-  aParentMenu->GetOwnerDocument(getter_AddRefs(doc));
+  rv = aParentMenu->GetOwnerDocument(getter_AddRefs(doc));
   if (!NS_SUCCEEDED(rv)) {
-	  printf("&&&& Error Getting handle to the document &&&&\n");
+	  printf("nsBrowserAppCore::CreateMenuItem ERROR Getting handle to the document\n");
 	  return NS_ERROR_FAILURE;
   }
   nsString menuitemName(aName);
-
   
   // Create nsMenuItem
   nsCOMPtr<nsIDOMElement>  menuItemElement;
   nsString  tagName("menuitem");
   rv = doc->CreateElement(tagName, getter_AddRefs(menuItemElement));
-
   if (!NS_SUCCEEDED(rv)) {
-	  printf("***** Error creating the menu item element *****\n");
+	  printf("nsBrowserAppCore::CreateMenuItem ERROR creating the menu item element\n");
 	  return NS_ERROR_FAILURE;
   }
 
-  // Make a DOMNode out of it
-  nsCOMPtr<nsIDOMNode>  menuItemNode = do_QueryInterface(menuItemElement);
+  //Set the label for the menu item
+  nsString menuitemlabel(aName);
+  if (APP_DEBUG) printf("nsBrowserAppCore::CreateMenuItem Setting menu name to %s\n", menuitemlabel.ToNewCString());
+  rv = menuItemElement->SetAttribute(nsString("value"), menuitemlabel);
+  if (!NS_SUCCEEDED(rv)) {
+	  printf("nsBrowserAppCore::CreateMenuItem ERROR Setting node value for menu item ****\n");
+	  return NS_ERROR_FAILURE;
+  }
 
+  //Set the onaction attribute
+  nsString menuitemCmd("gotoHistoryIndex(");
+  menuitemCmd.Append(aIndex);
+  menuitemCmd += ")";  
+  if (APP_DEBUG) printf("nsBrowserAppCore::CreateMenuItem Setting action handler to %s\n", menuitemCmd.ToNewCString());
+  nsString attrName("oncommand");
+  rv = menuItemElement->SetAttribute(attrName, menuitemCmd);
+  if (!NS_SUCCEEDED(rv)) {
+	  printf("nsBrowserAppCore::CreateMenuItem ERROR setting onaction handler\n");
+	  return NS_ERROR_FAILURE;
+  }
+  
+  
+  // Set the hist attribute to true
+  rv = menuItemElement->SetAttribute(nsString("ishist"), nsString("true"));
+  if (!NS_SUCCEEDED(rv)) {
+	  printf("nsBrowserAppCore::CreateMenuItem ERROR setting ishist handler\n");
+	  return NS_ERROR_FAILURE;
+  }
+
+    // Make a DOMNode out of it
+  nsCOMPtr<nsIDOMNode>  menuItemNode = do_QueryInterface(menuItemElement);
   if (!menuItemNode) {
-	  printf("***** Error converting DOMElement to DOMNode *****\n");
+	  printf("nsBrowserAppCore::CreateMenuItem ERROR converting DOMElement to DOMNode *****\n");
 	  return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIDOMNode> resultNode;
   // Make nsMenuItem a child of nsMenu
   rv = aParentMenu->AppendChild(menuItemNode, getter_AddRefs(resultNode));
-
+  
   if (!NS_SUCCEEDED(rv)) 
   {
-       printf(" **** Error appending menuitem to menu *****\n");
+       printf("nsBrowserAppCore::CreateMenuItem ERROR appending menuitem to menu *****\n");
 	   return NS_ERROR_FAILURE;
   }
+  else
+	 if (APP_DEBUG) printf("nsBrowserAppCore::CreateMenuItem Successfully appended menu item to parent\n");
 
-  //Set the label for the menu item
-  nsString menuitemlabel(aName);
-  if (APP_DEBUG) printf("Setting menu name to %s\n", menuitemlabel.ToNewCString());
-  rv = menuItemElement->SetAttribute(nsString("value"), menuitemlabel);
-  if (!NS_SUCCEEDED(rv))
-	  printf("**** Error Setting node value for menu item ****\n");
 
-  //Set the onaction attribute
-  nsString menuitemCmd("gotoHistoryIndex(");
-  menuitemCmd.Append(aIndex);
-  menuitemCmd += ")";  
-  const char * actionhandler = menuitemCmd.ToNewCString();
-
-  if (APP_DEBUG) printf("Setting action handler to %s\n", menuitemCmd.ToNewCString());
-  nsString attrName("onaction");
-  rv = menuItemElement->SetAttribute(attrName, menuitemCmd);
-  if (!NS_SUCCEEDED(rv))
-	  printf("ERROR setting onaction handler\n");
-  
-  
-  // Set the hist attribute to true
-  rv = menuItemElement->SetAttribute(nsString("ishist"), nsString("true"));
-  if (!NS_SUCCEEDED(rv))
-	  printf("ERROR setting ishist handler\n");
-  
 
   return NS_OK;
 }
@@ -481,11 +494,9 @@ NS_IMETHODIMP nsBrowserInstance::CreateMenuItem(
 
 
 NS_IMETHODIMP
-nsBrowserInstance::ForwardButtonPopup() {
+nsBrowserAppCore::ForwardButtonPopup()
+{
 
-
-     printf("Inside ForwardButtonPopup\n");
-	 
   if (APP_DEBUG) printf("In BrowserAppCore::Forwardbuttonpopup\n");
 
  // Get handle to the "forwardbuttonpopup" element
@@ -494,47 +505,43 @@ nsBrowserInstance::ForwardButtonPopup() {
 
   if (!NS_SUCCEEDED(rv) ||  !forwardPopupElement)
   {
-	 printf("Couldn't get handle to forwardPopupElement\n");
+	 printf("nsBrowserAppCore::ForwardButtonPopup Couldn't get handle to forwardPopupElement\n");
      return NS_ERROR_FAILURE;
   }
 
   // Make a nsIDOMNode out of it
   nsCOMPtr<nsIDOMNode> forwardPopupNode(do_QueryInterface(forwardPopupElement)); 
   if (!forwardPopupNode) {
-	  printf("Couldn't make a node out of forwardpopupelement\n");
+	  printf("nsBrowserAppCore::ForwardButtonPopup Couldn't make a node out of forwardpopupelement\n");
     return NS_ERROR_FAILURE;
   }
-
-  nsString  name;
-  forwardPopupNode->GetNodeName(name);
-  if (APP_DEBUG) printf("Popup Node name = %s\n", name.ToNewCString());
-
   
   //get handle to the Menu item under popup
   nsCOMPtr<nsIDOMNode>   menu;
-  forwardPopupNode->GetFirstChild(getter_AddRefs(menu));
-  if (!menu) {
-	  printf("Call to GetFirstChild failed\n");
+  rv = forwardPopupNode->GetFirstChild(getter_AddRefs(menu));
+  if (!NS_SUCCEEDED(rv) || !menu) {
+	  printf("nsBrowserAppCore::ForwardButtonPopup Call to GetFirstChild failed\n");
      return NS_ERROR_FAILURE;
   }
   
-  menu->GetNodeName(name);
-  if (APP_DEBUG) printf("First child name = %s\n", name.ToNewCString());
   PRBool hasChildren=PR_FALSE;
 
   // Check if menu has children. If so, remove them.
   menu->HasChildNodes(&hasChildren);
   if (hasChildren) {
 	  // Remove all old entries 
-	  ClearHistoryPopup(menu);
+	  rv = ClearHistoryPopup(menu);
+	  if (!NS_SUCCEEDED(rv)) {
+		  printf("nsBrowserAppCore::ForwardMenuPopup Error while clearing old history entries\n");
+	  }
   }    // hasChildren
   else {
-	  if (APP_DEBUG) printf("Menu has no children\n");
+	  if (APP_DEBUG) printf("nsBrowserAppCore::ForwardButtonPopup Menu has no children\n");
   }	 
              
       /* Now build the popup list */
   if (!mSHistory) {
-	  printf("mSHistory is null\n");
+	  printf("nsBrowserAppCore::ForwardButtonPopup mSHistory is null\n");
      return NS_ERROR_FAILURE;
   }
   PRInt32 indix=0, i=0, length=0;
@@ -555,9 +562,10 @@ nsBrowserInstance::ForwardButtonPopup() {
       mSHistory->GetURLForIndex(j, &url);
       nsAutoString  histURL(url);
       mSHistory->GetTitleForIndex(j, &title);
-      nsAutoString  histTitle(title);
-      if (APP_DEBUG) printf("URL = %s, TITLE = %s\n", histURL.ToNewCString(), histTitle.ToNewCString());
-      CreateMenuItem(menu, j, url);
+      nsAutoString  histTitle(title);      
+      rv = CreateMenuItem(menu, j, url);
+	  if (!NS_SUCCEEDED(rv)) 
+		  printf("nsBrowserAppCore::ForwardbuttonPopup, Error while creating history menu items\n");
   } 
 	 return NS_OK;
 
@@ -565,11 +573,11 @@ nsBrowserInstance::ForwardButtonPopup() {
 
 
 NS_IMETHODIMP
-nsBrowserInstance::UpdateGoMenu()
+nsBrowserAppCore::UpdateGoMenu()
 {
 
-  printf("inside Updategomenu\n");
- // Get handle to the "backbuttonpopup" element
+
+  // Get handle to the "main-toolbox" element
   nsCOMPtr<nsIDOMElement>   mainToolboxElement;
   nsresult rv = FindNamedXULElement(mWebShell, "main-toolbox", &mainToolboxElement);
 
@@ -579,42 +587,33 @@ nsBrowserInstance::UpdateGoMenu()
      return NS_ERROR_FAILURE;
   }
   else {
-	  if (APP_DEBUG) printf("Got handle to the main-toolbox element\n");
+	  if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu Got handle to the main-toolbox element\n");
 	
   }
   nsCOMPtr<nsIDOMNode> mainToolboxNode(do_QueryInterface(mainToolboxElement)); 
   if (!mainToolboxNode) {
+    if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu Couldn't get element out of node\n");
     return NS_ERROR_FAILURE;
   }
-  nsString  name;
-  mainToolboxElement->GetAttribute(nsAutoString("value"), name);
-  if (APP_DEBUG) printf("Main Toolbox Node lable = %s\n", name.ToNewCString());
 
-
-
-
-   //get handle to the menubar item under popup
+  //get handle to the menubar item under main-toolbox
   nsCOMPtr<nsIDOMNode>   menubar;
-  mainToolboxNode->GetFirstChild(getter_AddRefs(menubar));
-  if (!menubar) {
-     printf("Call to get menubar failed\n");
+  rv = mainToolboxNode->GetFirstChild(getter_AddRefs(menubar));
+  if (!NS_SUCCEEDED(rv) || !menubar) {
+     printf("nsBrowserAppCore::UpdateGoMenu Call to get menubar failed\n");
      return NS_ERROR_FAILURE;
   }
   nsCOMPtr<nsIDOMElement> menubarElement(do_QueryInterface(menubar));
   if (!menubarElement) {
-	printf("Could n't get DOMElement out of DOMNode for menubar\n");
+	printf("nsBrowserAppCore::UpdateGoMenu Could n't get DOMElement out of DOMNode for menubar\n");
 	return NS_ERROR_FAILURE;
   }
-  nsString fcName;
-  menubarElement->GetAttribute(nsAutoString("value"), fcName);
-  if (APP_DEBUG) printf("Main Toolbox's first child name  = %s\n", fcName.ToNewCString());
 
-  nsCOMPtr<nsIDOMNode> goMenuNode;
-    // get handle to the go menu under toolbar
+   nsCOMPtr<nsIDOMNode> goMenuNode;
    PRBool hasChildren=PR_FALSE;
   // Check if toolbar has children.
-  menubar->HasChildNodes(&hasChildren);
-  if (hasChildren) {	
+  rv = menubar->HasChildNodes(&hasChildren);
+  if (NS_SUCCEEDED(rv) && hasChildren) {	
      nsIDOMNodeList *   childList=nsnull;
 
      //Get handle to the children list
@@ -627,17 +626,21 @@ nsBrowserInstance::UpdateGoMenu()
         for (PRInt32 i=0; i<ccount; i++) {
             nsIDOMNode * child=nsnull;
             rv = childList->Item(i, &child);
+			if (!NS_SUCCEEDED(rv) || !child) {
+               if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu Couldn't get child %d from menu bar\n", i);
+			   return NS_ERROR_FAILURE;
+			}
 			// Get element out of the node
 			nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
 			if (!childElement) {
-				printf("Could n't get DOMElement out of DOMNode for child\n");
+				printf("nsBrowserAppCore::UpdateGoMenu Could n't get DOMElement out of DOMNode for child\n");
 				return NS_ERROR_FAILURE;
 			}
 			nsString nodelabel;
             rv = childElement->GetAttribute(nsAutoString("value"), nodelabel);
-			if (APP_DEBUG) printf("Node Name for menu = %s\n", nodelabel.ToNewCString());
+			if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu Node Name for menu = %s\n", nodelabel.ToNewCString());
 			if (!NS_SUCCEEDED(rv)) {
-				printf("Couldn't get node name\n");
+				printf("nsBrowserAppCore::UpdateGoMenu Couldn't get node name\n");
 				return NS_ERROR_FAILURE;
 			}
 			nsString nodeid;
@@ -646,41 +649,44 @@ nsBrowserInstance::UpdateGoMenu()
 				goMenuNode = child;
 				break;
 			}
+			NS_RELEASE(child);
         } //(for)	
      }   // if (childList)
 	 NS_RELEASE(childList);
   }    // hasChildren
   else {
-	  if (APP_DEBUG) printf("Menubar has no children\n");
+	  if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu Menubar has no children\n");
+	  return NS_ERROR_FAILURE;
   }
 
   if (!goMenuNode) {
-     printf("Couldn't find Go Menu. returning\n");
+     printf("nsBrowserAppCore::UpdateGoMenu Couldn't find Go Menu. returning\n");
 	 return NS_ERROR_FAILURE;
  
   }
 
     //get handle to the menupopup under gomenu
   nsCOMPtr<nsIDOMNode>   menuPopup;
-  goMenuNode->GetFirstChild(getter_AddRefs(menuPopup));
-  if (!menuPopup) {
-	  printf("Call to get menupopup under go menu failed\n");
+  rv = goMenuNode->GetFirstChild(getter_AddRefs(menuPopup));
+  if (!NS_SUCCEEDED(rv) || !menuPopup) {
+	  printf("nsBrowserAppCore::UpdateGoMenu Call to get menupopup under go menu failed\n");
      return NS_ERROR_FAILURE;
   }
-    nsCOMPtr<nsIDOMElement> menuPopupElement(do_QueryInterface(menuPopup));
+  nsCOMPtr<nsIDOMElement> menuPopupElement(do_QueryInterface(menuPopup));
   if (!menuPopupElement) {
-	printf("Could n't get DOMElement out of DOMNode for menuPopup\n");
+	printf("nsBrowserAppCore::UpdateGoMenu Could n't get DOMElement out of DOMNode for menuPopup\n");
 	return NS_ERROR_FAILURE;
   }
-			nsString nodelabel;
-            rv = menuPopupElement->GetAttribute(nsAutoString("value"), nodelabel);
-	if (APP_DEBUG) printf("Node Name for menu popup = %s\n", nodelabel.ToNewCString());
+
   // Clear all history children under Go menu
-  ClearHistoryPopup(menuPopup);
+  rv = ClearHistoryPopup(menuPopup);
+  if (!NS_SUCCEEDED(rv)) {
+	  printf("nsBrowserAppCore::UpdateGoMenu Error while clearing old history list\n");
+  }
 
   /* Now build the history list */
   if (!mSHistory) {
-	  printf("mSHistory is null\n");
+     printf("nsBrowserAppCore::updateGoMenu mSHistory is null\n");
      return NS_ERROR_FAILURE;
   }
   
@@ -699,8 +705,11 @@ nsBrowserInstance::UpdateGoMenu()
       nsAutoString  histURL(url);
       mSHistory->GetTitleForIndex(j, &title);
       nsAutoString  histTitle(title);
-      if (APP_DEBUG) printf("URL = %s, TITLE = %s\n", histURL.ToNewCString(), histTitle.ToNewCString());
-      CreateMenuItem(goMenuNode, j, url);
+      if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu URL = %s, TITLE = %s\n", histURL.ToNewCString(), histTitle.ToNewCString());
+      rv = CreateMenuItem(menuPopup, j, title);
+	  if (!NS_SUCCEEDED(rv)) {
+        printf("nsBrowserAppCore::UpdateGoMenu Error while creating history mene item\n");
+	  }
      }
   return NS_OK;
 
@@ -709,7 +718,7 @@ nsBrowserInstance::UpdateGoMenu()
 
 
 NS_IMETHODIMP
-nsBrowserInstance::ClearHistoryPopup(nsIDOMNode * aParent)
+nsBrowserAppCore::ClearHistoryPopup(nsIDOMNode * aParent)
 {
 
 	 nsresult rv;
@@ -727,41 +736,41 @@ nsBrowserInstance::ClearHistoryPopup(nsIDOMNode * aParent)
         for (PRInt32 i=0; i<ccount; i++) {
             nsIDOMNode * child=nsnull;
             rv = childList->Item(i, &child);
+			if (!NS_SUCCEEDED(rv) ||  !child) {
+				printf("nsBrowserAppCore::ClearHistoryPopup, Could not get child\n");
+				return NS_ERROR_FAILURE;
+			}
 			// Get element out of the node
 			nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
 			if (!childElement) {
-				printf("Could n't get DOMElement out of DOMNode for child\n");
+				printf("nsBrowserAppCore::ClearHistorypopup Could n't get DOMElement out of DOMNode for child\n");
 				return NS_ERROR_FAILURE;
 			}
 			nsString  attrname("ishist");
 			nsString  attrvalue;
-			childElement->GetAttribute(attrname, attrvalue);
-			if (attrvalue == "true") {
+			rv = childElement->GetAttribute(attrname, attrvalue);
+			if (NS_SUCCEEDED(rv) && attrvalue == "true") {
 				// It is a history menu item. Remove it
-                nsIDOMNode * ret=nsnull;
-			    if (NS_SUCCEEDED(rv) && child) {
-             rv = menu->RemoveChild(child, &ret);
-			       if (NS_SUCCEEDED(rv)) {
-				       if (ret) {
-				           if (APP_DEBUG) printf("Child %x removed from the popuplist \n", child);
-			             //Child was removed. release it.
-                   //  NS_IF_RELEASE(child);
-					     }
-				       else {
-					       printf("Child %x was not removed from popuplist\n", child);
-					     }
-				     }
-			       else
-				     {
-				        printf("Child %x was not removed from popuplist\n", child);
-                return NS_ERROR_FAILURE;
-				     }
-				  } 
-				  NS_IF_RELEASE(ret);
-			}  // atrrvalue == true	
-			NS_RELEASE(child);
-    } //(for)	
-  }   // if (childList)
+                nsIDOMNode * ret=nsnull;			    
+                rv = menu->RemoveChild(child, &ret);
+			    if (NS_SUCCEEDED(rv)) {
+				   if (ret) {
+				      if (APP_DEBUG) printf("nsBrowserAppCore::ClearHistoryPopup Child %x removed from the popuplist \n", (unsigned int) child);			          
+					  NS_IF_RELEASE(child);					  
+				   }
+				   else {
+				      printf("nsBrowserAppCore::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child);
+				   }
+				}  // NS_SUCCEEDED(rv)
+			    else
+				{
+				   printf("nsBrowserAppCore::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child);
+                   return NS_ERROR_FAILURE;
+				}				  
+			    NS_IF_RELEASE(ret);
+			}  // atrrvalue == true			 
+		} //(for)	
+	 }   // if (childList)
 	 NS_RELEASE(childList);
 	 return NS_OK;
 }
@@ -771,13 +780,8 @@ PRInt32
 newWind(char* urlName)
 {
   nsresult rv;
-  
-  char *  urlstr=nsnull;
-  char *   progname = nsnull;
-  char *   width=nsnull, *height=nsnull;
-  char *  iconic_state=nsnull;
+  char *  urlstr=urlName;
 
-  urlstr = urlName;
 
   /*
    * Create the Application Shell instance...
@@ -841,7 +845,8 @@ static void DOMWindowToWebShellWindow(
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::WalletEditor(nsIDOMWindow* aWin) {
+nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
+{
     // (code adapted from nsToolkitCore::ShowModal. yeesh.)
     nsresult           rv;
     nsIAppShellService *appShell;
@@ -893,7 +898,8 @@ nsBrowserInstance::WalletEditor(nsIDOMWindow* aWin) {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::SignonViewer(nsIDOMWindow* aWin) {
+nsBrowserAppCore::SignonViewer(nsIDOMWindow* aWin)
+{
     // (code adapted from nsToolkitCore::ShowModal. yeesh.)
     nsresult           rv;
     nsIAppShellService *appShell;
@@ -944,7 +950,8 @@ nsBrowserInstance::SignonViewer(nsIDOMWindow* aWin) {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::CookieViewer(nsIDOMWindow* aWin) {
+nsBrowserAppCore::CookieViewer(nsIDOMWindow* aWin)
+{
     // (code adapted from nsToolkitCore::ShowModal. yeesh.)
     nsresult           rv;
     nsIAppShellService *appShell;
@@ -997,7 +1004,8 @@ nsBrowserInstance::CookieViewer(nsIDOMWindow* aWin) {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm) {
+nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
+{
   NS_PRECONDITION(aForm != nsnull, "null ptr");
   if (! aForm)
     return NS_ERROR_NULL_POINTER;
@@ -1077,7 +1085,8 @@ nsBrowserInstance::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm) {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::WalletChangePassword() {
+nsBrowserAppCore::WalletChangePassword()
+{
   nsIWalletService *walletservice;
   nsresult res;
   res = nsServiceManager::GetService(kWalletServiceCID,
@@ -1093,7 +1102,8 @@ nsBrowserInstance::WalletChangePassword() {
 #include "nsIDOMHTMLDocument.h"
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 NS_IMETHODIMP    
-nsBrowserInstance::WalletQuickFillin(nsIDOMWindow* aWin) {
+nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow* aWin)
+{
   NS_PRECONDITION(aWin != nsnull, "null ptr");
   if (! aWin)
     return NS_ERROR_NULL_POINTER;
@@ -1113,45 +1123,47 @@ nsBrowserInstance::WalletQuickFillin(nsIDOMWindow* aWin) {
                                      kIWalletServiceIID,
                                      (nsISupports **)&walletservice);
   if ((NS_OK == res) && (nsnull != walletservice)) {
-      res = walletservice->WALLET_Prefill(shell, PR_TRUE);
-      nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
-      return NS_OK;
+    res = walletservice->WALLET_Prefill(shell, PR_TRUE);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
+    return NS_OK;
   } else {
-      return res;
+    return res;
   }
-}
-  
-NS_IMETHODIMP    
-nsBrowserInstance::WalletRequestToCapture(nsIDOMWindow* aWin) {
-    NS_PRECONDITION(aWin != nsnull, "null ptr");
-    if (! aWin)
-      return NS_ERROR_NULL_POINTER;
-  
-    nsIPresShell* shell;
-    shell = nsnull;
-    nsCOMPtr<nsIWebShell> webcontent; 
-  
-    nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
-    scriptGlobalObject = do_QueryInterface(aWin); 
-    scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
-  
-    shell = GetPresShellFor(webcontent);
-    nsIWalletService *walletservice;
-    nsresult res;
-    res = nsServiceManager::GetService(kWalletServiceCID,
-                                       kIWalletServiceIID,
-                                       (nsISupports **)&walletservice);
-    if ((NS_OK == res) && (nsnull != walletservice)) {
-      res = walletservice->WALLET_RequestToCapture(shell);
-      nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
-      return NS_OK;
-    } else {
-      return res;
-    }
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::WalletSamples() {
+nsBrowserAppCore::WalletRequestToCapture(nsIDOMWindow* aWin)
+{
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (! aWin)
+    return NS_ERROR_NULL_POINTER;
+
+  nsIPresShell* shell;
+  shell = nsnull;
+  nsCOMPtr<nsIWebShell> webcontent; 
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
+  scriptGlobalObject = do_QueryInterface(aWin); 
+  scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
+
+  shell = GetPresShellFor(webcontent);
+  nsIWalletService *walletservice;
+  nsresult res;
+  res = nsServiceManager::GetService(kWalletServiceCID,
+                                     kIWalletServiceIID,
+                                     (nsISupports **)&walletservice);
+  if ((NS_OK == res) && (nsnull != walletservice)) {
+    res = walletservice->WALLET_RequestToCapture(shell);
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
+    return NS_OK;
+  } else {
+    return res;
+  }
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::WalletSamples()
+{
   /* bring up the samples in a new window */
   mContentAreaWebShell->LoadURL(nsString(WALLET_SAMPLES_URL).GetUnicode(), nsnull, nsnull);
   return NS_OK;
@@ -1159,35 +1171,38 @@ nsBrowserInstance::WalletSamples() {
 
 #else
 NS_IMETHODIMP
-nsBrowserInstance::WalletEditor() {
+nsBrowserAppCore::WalletEditor() {
   return NS_OK;
 }
 NS_IMETHODIMP    
-nsBrowserInstance::WalletSamples() {
+nsBrowserAppCore::WalletSamples() {
   return NS_OK;
 }
 NS_IMETHODIMP
-nsBrowserInstance::WalletChangePassword() {
+nsBrowserAppCore::WalletChangePassword() {
   return NS_OK;
 }
 NS_IMETHODIMP
-nsBrowserInstance::WalletQuickFillin(nsIDOMWindow*) {
+nsBrowserAppCore::WalletRequestToCapture(nsIDOMWindow*) {
   return NS_OK;
 }
 NS_IMETHODIMP
-nsBrowserInstance::WalletSafeFillin(nsIDOMWindow*, nsIDOMWindow*) {
+nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow*) {
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow*, nsIDOMWindow*) {
   return NS_OK;
 }
 #endif
 
 NS_IMETHODIMP    
-nsBrowserInstance::LoadUrl(const PRUnichar * aUrl) {
+nsBrowserAppCore::LoadUrl(const PRUnichar *aUrl)
+{
   nsresult rv = NS_OK;
 
   /* Ask nsWebShell to load the URl */
-  PRBool isViewSource;
-  GetIsViewSource( &isViewSource );
-  if ( isViewSource ) {
+  if ( mIsViewSource ) {
     // Viewing source, load with "view-source" command.
     rv = mContentAreaWebShell->LoadURL( aUrl, "view-source", nsnull, PR_FALSE );
   } else {
@@ -1199,11 +1214,13 @@ nsBrowserInstance::LoadUrl(const PRUnichar * aUrl) {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::LoadInitialPage(void) {
+nsBrowserAppCore::LoadInitialPage(void)
+{
   static PRBool cmdLineURLUsed = PR_FALSE;
   char * urlstr = nsnull;
   nsresult rv;
   nsICmdLineService * cmdLineArgs;
+
   
   // Examine content URL.
   if ( mContentAreaWebShell ) {
@@ -1268,10 +1285,9 @@ nsBrowserInstance::LoadInitialPage(void) {
   // Load the default page mentioned in the xul file.
     nsString value;
     argsElement->GetAttribute(nsString("value"), value);
-    if ((value.ToNewCString()) != "") {
-        if (APP_DEBUG) printf("Got args value from xul file to be %s\n", value.ToNewCString());
-    rv = LoadUrl( value.GetUnicode() );
-    return rv;
+    if (value.Length()) {
+        rv = LoadUrl(value.GetUnicode());
+        return rv;
     }
 
     if (APP_DEBUG) printf("Quitting LoadInitialPage\n");
@@ -1280,7 +1296,7 @@ nsBrowserInstance::LoadInitialPage(void) {
 
 static
 nsIScriptContext *    
-getScriptContext(nsIDOMWindow * aWin) {
+GetScriptContext(nsIDOMWindow * aWin) {
   nsIScriptContext * scriptContext = nsnull;
   if (nsnull != aWin) {
     nsIDOMDocument * domDoc;
@@ -1302,7 +1318,8 @@ getScriptContext(nsIDOMWindow * aWin) {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::SetToolbarWindow(nsIDOMWindow* aWin) {
+nsBrowserAppCore::SetToolbarWindow(nsIDOMWindow* aWin)
+{
   NS_PRECONDITION(aWin != nsnull, "null ptr");
   if (! aWin)
     return NS_ERROR_NULL_POINTER;
@@ -1311,14 +1328,14 @@ nsBrowserInstance::SetToolbarWindow(nsIDOMWindow* aWin) {
   // NS_ADDREF(aWin);			 WE DO NOT OWN THIS
   
   // we do not own the script context, so don't addref it
-  nsCOMPtr<nsIScriptContext>	scriptContext = getter_AddRefs( getScriptContext(aWin) );
+  nsCOMPtr<nsIScriptContext>	scriptContext = getter_AddRefs(GetScriptContext(aWin));
   mToolbarScriptContext = scriptContext;
 
 	return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
+nsBrowserAppCore::SetContentWindow(nsIDOMWindow* aWin)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
   if (! aWin)
@@ -1329,7 +1346,7 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
 
 
   // we do not own the script context, so don't addref it
-  nsCOMPtr<nsIScriptContext>	scriptContext = getter_AddRefs( getScriptContext(aWin) );
+  nsCOMPtr<nsIScriptContext>	scriptContext = getter_AddRefs(GetScriptContext(aWin));
   mContentScriptContext = scriptContext;
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(mContentWindow) );
@@ -1355,12 +1372,13 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
   }
 
   return NS_OK;
+
 }
 
 
 
 NS_IMETHODIMP    
-nsBrowserInstance::SetWebShellWindow(nsIDOMWindow* aWin)
+nsBrowserAppCore::SetWebShellWindow(nsIDOMWindow* aWin)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
   if (! aWin)
@@ -1465,7 +1483,7 @@ static nsresult setAttribute( nsIWebShell *shell,
 // nsIDocumentLoaderObserver methods
 
 NS_IMETHODIMP
-nsBrowserInstance::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, const char* aCommand)
+nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, const char* aCommand)
 {
   NS_PRECONDITION(aLoader != nsnull, "null ptr");
   if (! aLoader)
@@ -1523,6 +1541,38 @@ nsBrowserInstance::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL,
 
   //Disable the reload button
   setAttribute(mWebShell, "canReload", "disabled", "true");
+    
+  //Set the "at-work" protocol icon.
+
+  char* scheme;
+  aURL->GetScheme(&scheme);
+  
+  nsIFileSpec* chrome = NS_LocateFileOrDirectory( nsSpecialFileSpec::App_ChromeDirectory);
+  
+  if (chrome)
+  {
+      chrome->AppendRelativeUnixPath("netwerk/content/default/");
+      chrome->AppendRelativeUnixPath(scheme);
+      PRBool exists;
+      chrome->Exists(&exists);
+
+      if (exists)
+      {
+          nsAutoString iconURIString;
+  
+          iconURIString.SetString("chrome://netwerk/content/default/");
+          iconURIString.Append(scheme);
+          iconURIString.Append("/working.gif");
+
+          setAttribute(mWebShell, "Browser:ProtocolIcon", "uri", iconURIString);
+      }
+      else
+      {
+        setAttribute(mWebShell, "Browser:ProtocolIcon", "uri", "");
+      }
+
+      NS_RELEASE(chrome);
+  }
 
   return NS_OK;
 }
@@ -1530,10 +1580,10 @@ nsBrowserInstance::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL,
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus,
+nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* channel, nsresult aStatus,
 									nsIDocumentLoaderObserver * aObserver)
 #else
-nsBrowserInstance::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PRInt32 aStatus,
+nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, PRInt32 aStatus,
 									nsIDocumentLoaderObserver * aObserver)
 #endif
 {
@@ -1604,7 +1654,7 @@ done:
 	if (aStatus == NS_OK)
       setAttribute( mWebShell, "urlbar", "value", url);  
 
-	    /* To satisfy a request from the QA group */
+	/* To satisfy a request from the QA group */
 	if (aStatus == NS_OK) {
       fprintf(stdout, "Document %s loaded successfully\n", url);
       fflush(stdout);
@@ -1646,11 +1696,47 @@ end:
     //Disable the Stop button
   setAttribute( mWebShell, "canStop", "disabled", "true" );
 
-	//Enable the reload button
-	setAttribute(mWebShell, "canReload", "disabled", "");
+  //Enable the reload button
+  setAttribute(mWebShell, "canReload", "disabled", "");
 
+  //Set the protocol icon.
+
+  char* scheme;
+  aUrl->GetScheme(&scheme);
+  
+  nsIFileSpec* chrome = NS_LocateFileOrDirectory( nsSpecialFileSpec::App_ChromeDirectory);
+  
+  if (chrome)
+  {
+      chrome->AppendRelativeUnixPath("netwerk/content/default/");
+      chrome->AppendRelativeUnixPath(scheme);
+      PRBool exists;
+      chrome->Exists(&exists);
+  
+      if (exists)
+      {
+        char* scheme;
+        aUrl->GetScheme(&scheme);
+        nsAutoString iconURIString;
+
+        iconURIString.SetString("chrome://netwerk/content/default/");
+        iconURIString.Append(scheme);
+        if (NS_SUCCEEDED(aStatus))
+            iconURIString.Append("/successful.gif");
+        else
+            iconURIString.Append("/failure.gif");
+
+        setAttribute(mWebShell, "Browser:ProtocolIcon", "uri", iconURIString);
+      }
+      else
+      {
+        setAttribute(mWebShell, "Browser:ProtocolIcon", "uri", "");
+      }
+
+    NS_RELEASE(chrome);
+  }
 	//Update the go menu with history entries. Not ready yet
-	//UpdateGoMenu();
+	UpdateGoMenu();
 #ifdef NECKO
   nsCRT::free(url);
 #endif
@@ -1659,12 +1745,12 @@ end:
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserInstance::HandleUnknownContentType(nsIDocumentLoader* loader, 
+nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader, 
                                            nsIChannel* channel,
                                            const char *aContentType,
                                            const char *aCommand )
 #else
-nsBrowserInstance::HandleUnknownContentType(nsIDocumentLoader* loader, 
+nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader, 
                                            nsIURI *aURL,
                                            const char *aContentType,
                                            const char *aCommand )
@@ -1714,11 +1800,11 @@ nsBrowserInstance::HandleUnknownContentType(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserInstance::OnStartURLLoad(nsIDocumentLoader* loader, 
+nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 
                                  nsIChannel* channel,
                                  nsIContentViewer* aViewer)
 #else
-nsBrowserInstance::OnStartURLLoad(nsIDocumentLoader* loader, 
+nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 
                                  nsIURI* aURL, const char* aContentType,
                                  nsIContentViewer* aViewer)
 #endif
@@ -1729,17 +1815,16 @@ nsBrowserInstance::OnStartURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserInstance::OnProgressURLLoad(nsIDocumentLoader* loader, 
+nsBrowserAppCore::OnProgressURLLoad(nsIDocumentLoader* loader, 
                                     nsIChannel* channel, PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
 #else
-nsBrowserInstance::OnProgressURLLoad(nsIDocumentLoader* loader, 
+nsBrowserAppCore::OnProgressURLLoad(nsIDocumentLoader* loader, 
                                     nsIURI* aURL, PRUint32 aProgress, 
                                     PRUint32 aProgressMax)
 #endif
 {
   nsresult rv = NS_OK;
-  PRUint32 progress = aProgressMax ? ( aProgress * 100 ) / aProgressMax : 0;
 #ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
@@ -1758,10 +1843,10 @@ nsBrowserInstance::OnProgressURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserInstance::OnStatusURLLoad(nsIDocumentLoader* loader, 
+nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIChannel* channel, nsString& aMsg)
 #else
-nsBrowserInstance::OnStatusURLLoad(nsIDocumentLoader* loader, 
+nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIURI* aURL, nsString& aMsg)
 #endif
 {
@@ -1772,10 +1857,10 @@ nsBrowserInstance::OnStatusURLLoad(nsIDocumentLoader* loader,
 
 NS_IMETHODIMP
 #ifdef NECKO
-nsBrowserInstance::OnEndURLLoad(nsIDocumentLoader* loader, 
+nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader, 
                                nsIChannel* channel, nsresult aStatus)
 #else
-nsBrowserInstance::OnEndURLLoad(nsIDocumentLoader* loader, 
+nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader, 
                                nsIURI* aURL, PRInt32 aStatus)
 #endif
 {
@@ -1789,7 +1874,7 @@ nsBrowserInstance::OnEndURLLoad(nsIDocumentLoader* loader,
 
 
 NS_IMETHODIMP    
-nsBrowserInstance::GoBack(nsIWebShell * aPrev)
+nsBrowserAppCore::GoBack(nsIWebShell * aPrev)
 {
   if (mSHistory) {
     mSHistory->GoBack(aPrev);
@@ -1798,7 +1883,7 @@ nsBrowserInstance::GoBack(nsIWebShell * aPrev)
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::GoForward(nsIWebShell * aPrev)
+nsBrowserAppCore::GoForward(nsIWebShell * aPrev)
 {
   if (mSHistory) {
     mSHistory->GoForward(aPrev);
@@ -1808,9 +1893,9 @@ nsBrowserInstance::GoForward(nsIWebShell * aPrev)
 
 NS_IMETHODIMP
 #ifndef NECKO
-nsBrowserInstance::Reload(nsIWebShell * aPrev, nsURLReloadType aType)
+nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsURLReloadType aType)
 #else
-nsBrowserInstance::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
+nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
 #endif // NECKO
 {
 
@@ -1820,7 +1905,7 @@ nsBrowserInstance::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::add(nsIWebShell * aWebShell)
+nsBrowserAppCore::add(nsIWebShell * aWebShell)
 {
    nsresult rv;
    if (mSHistory) 
@@ -1829,7 +1914,7 @@ nsBrowserInstance::add(nsIWebShell * aWebShell)
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev, PRBool aIsReloading)
+nsBrowserAppCore::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev, PRBool aIsReloading)
 {
    nsresult rv;
    if (mSHistory) 
@@ -1839,27 +1924,27 @@ nsBrowserInstance::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev, PRBool aIsReloa
 
 
 NS_IMETHODIMP
-nsBrowserInstance::SetLoadingFlag(PRBool aFlag)
+nsBrowserAppCore::SetLoadingFlag(PRBool aFlag)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsBrowserInstance::GetLoadingFlag(PRBool &aFlag)
+nsBrowserAppCore::GetLoadingFlag(PRBool &aFlag)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::SetLoadingHistoryEntry(nsHistoryEntry *  aHistoryEntry)
+nsBrowserAppCore::SetLoadingHistoryEntry(nsHistoryEntry *  aHistoryEntry)
 {
   return NS_OK;
 }
 
 
 NS_IMETHODIMP
-nsBrowserInstance::canForward(PRBool & aResult)
+nsBrowserAppCore::canForward(PRBool & aResult)
 {
    PRBool result;
 
@@ -1871,7 +1956,7 @@ nsBrowserInstance::canForward(PRBool & aResult)
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::canBack(PRBool & aResult)
+nsBrowserAppCore::canBack(PRBool & aResult)
 {
    PRBool result;
 
@@ -1883,7 +1968,7 @@ nsBrowserInstance::canBack(PRBool & aResult)
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::getHistoryLength(PRInt32 & aResult)
+nsBrowserAppCore::getHistoryLength(PRInt32 & aResult)
 {
    PRInt32 result;
    if (mSHistory)
@@ -1895,7 +1980,7 @@ nsBrowserInstance::getHistoryLength(PRInt32 & aResult)
 
 
 NS_IMETHODIMP
-nsBrowserInstance::getCurrentIndex(PRInt32 & aResult)
+nsBrowserAppCore::getCurrentIndex(PRInt32 & aResult)
 {
    PRInt32 result;
 
@@ -1908,7 +1993,7 @@ nsBrowserInstance::getCurrentIndex(PRInt32 & aResult)
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::GetURLForIndex(PRInt32 aIndex, const PRUnichar** aURL)
+nsBrowserAppCore::GetURLForIndex(PRInt32 aIndex, const PRUnichar** aURL)
 {
 
    if (mSHistory)
@@ -1917,7 +2002,7 @@ nsBrowserInstance::GetURLForIndex(PRInt32 aIndex, const PRUnichar** aURL)
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::SetURLForIndex(PRInt32 aIndex, const PRUnichar* aURL)
+nsBrowserAppCore::SetURLForIndex(PRInt32 aIndex, const PRUnichar* aURL)
 {
    if (mSHistory)
       mSHistory->SetURLForIndex(aIndex, aURL);
@@ -1925,7 +2010,7 @@ nsBrowserInstance::SetURLForIndex(PRInt32 aIndex, const PRUnichar* aURL)
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::GetTitleForIndex(PRInt32 aIndex, const PRUnichar** aTitle)
+nsBrowserAppCore::GetTitleForIndex(PRInt32 aIndex, const PRUnichar** aTitle)
 {
 
    if (mSHistory)
@@ -1934,7 +2019,7 @@ nsBrowserInstance::GetTitleForIndex(PRInt32 aIndex, const PRUnichar** aTitle)
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::SetTitleForIndex(PRInt32 aIndex, const PRUnichar* aTitle)
+nsBrowserAppCore::SetTitleForIndex(PRInt32 aIndex, const PRUnichar* aTitle)
 {
    if (mSHistory)
       mSHistory->SetTitleForIndex(aIndex, aTitle);
@@ -1951,7 +2036,8 @@ cloneHistory(nsISessionHistory * aSessionHistory) {
 ////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP    
-nsBrowserInstance::NewWindow() {  
+nsBrowserAppCore::NewWindow()
+{  
   nsresult rv;
   
   char * urlstr = nsnull;
@@ -2004,7 +2090,7 @@ nsBrowserInstance::NewWindow() {
 }
 
 //----------------------------------------------------------------------------------------
-NS_IMETHODIMP nsBrowserInstance::OpenWindow()
+NS_IMETHODIMP nsBrowserAppCore::OpenWindow()
 //----------------------------------------------------------------------------------------
 {  
   nsCOMPtr<nsIFileSpecWithUI> fileSpec(getter_AddRefs(NS_CreateFileSpecWithUI()));
@@ -2025,17 +2111,18 @@ NS_IMETHODIMP nsBrowserInstance::OpenWindow()
   nsCRT::free(urlString);
   ExecuteScript( mToolbarScriptContext, buffer );
   return rv;
-} // nsBrowserInstance::OpenWindow
-
+} // nsBrowserAppCore::OpenWindow
 
 NS_IMETHODIMP    
-nsBrowserInstance::PrintPreview() { 
+nsBrowserAppCore::PrintPreview()
+{ 
 
   return NS_OK;
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::Copy() { 
+nsBrowserAppCore::Copy()
+{ 
   nsIPresShell * presShell = GetPresShellFor(mContentAreaWebShell);
   if (nsnull != presShell) {
     presShell->DoCopy();
@@ -2045,7 +2132,8 @@ nsBrowserInstance::Copy() {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::Print() {  
+nsBrowserAppCore::Print()
+{  
   if (nsnull != mContentAreaWebShell) {
     nsIContentViewer *viewer = nsnull;
 
@@ -2060,7 +2148,8 @@ nsBrowserInstance::Print() {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::Close() { 
+nsBrowserAppCore::Close()
+{ 
   EndObserving();
 
   // Undo other stuff we did in SetContentWindow.
@@ -2079,7 +2168,8 @@ nsBrowserInstance::Close() {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::Exit() {  
+nsBrowserAppCore::Exit()
+{  
   nsIAppShellService* appShell = nsnull;
 
   /*
@@ -2096,7 +2186,8 @@ nsBrowserInstance::Exit() {
 }
 
 void
-nsBrowserInstance::InitializeSearch( nsIFindComponent *finder ) {
+nsBrowserAppCore::InitializeSearch( nsIFindComponent *finder )
+{
     nsresult rv = NS_OK;
 
     if ( finder && !mSearchContext ) {
@@ -2112,7 +2203,8 @@ nsBrowserInstance::InitializeSearch( nsIFindComponent *finder ) {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::Find() {
+nsBrowserAppCore::Find()
+{
     nsresult rv = NS_OK;
     PRBool   found = PR_FALSE;
     
@@ -2143,7 +2235,8 @@ nsBrowserInstance::Find() {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::FindNext() {
+nsBrowserAppCore::FindNext()
+{
     nsresult rv = NS_OK;
     PRBool   found = PR_FALSE;
 
@@ -2174,7 +2267,7 @@ nsBrowserInstance::FindNext() {
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::ExecuteScript(nsIScriptContext * aContext, const nsString& aScript)
+nsBrowserAppCore::ExecuteScript(nsIScriptContext * aContext, const nsString& aScript)
 {
   if (nsnull != aContext) {
     const char* url = "";
@@ -2191,7 +2284,7 @@ nsBrowserInstance::ExecuteScript(nsIScriptContext * aContext, const nsString& aS
 
 
 NS_IMETHODIMP    
-nsBrowserInstance::DoDialog()
+nsBrowserAppCore::DoDialog()
 {
   // (adapted from nsToolkitCore)
   nsresult           rv;
@@ -2277,7 +2370,7 @@ FindNamedXULElement(nsIWebShell * aShell,
 static const char *prefix = "component://netscape/appshell/component/browser/window";
 
 void
-nsBrowserInstance::BeginObserving() {
+nsBrowserAppCore::BeginObserving() {
     // Get observer service.
     nsIObserverService *svc = 0;
     nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
@@ -2299,7 +2392,7 @@ nsBrowserInstance::BeginObserving() {
 }
 
 void
-nsBrowserInstance::EndObserving() {
+nsBrowserAppCore::EndObserving() {
     // Get observer service.
     nsIObserverService *svc = 0;
     nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
@@ -2321,7 +2414,7 @@ nsBrowserInstance::EndObserving() {
 }
 
 NS_IMETHODIMP
-nsBrowserInstance::Observe( nsISupports *aSubject,
+nsBrowserAppCore::Observe( nsISupports *aSubject,
                            const PRUnichar *aTopic,
                            const PRUnichar *someData ) {
     nsresult rv = NS_OK;
@@ -2553,5 +2646,6 @@ NSGetFactory( nsISupports *aServiceMgr,
             rv = NS_ERROR_NULL_POINTER;
         }
     }
+
     return rv;
 }

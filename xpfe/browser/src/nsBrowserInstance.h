@@ -20,6 +20,8 @@
 
 #include "nsIBrowserInstance.h"
 
+#include "nsIAppShellComponentImpl.h"
+
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -156,6 +158,8 @@ class nsBrowserInstance : public nsIBrowserInstance,
     nsISessionHistory*  mSHistory;			           // this is a service
 
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
+
+    nsInstanceCounter   mInstanceCounter;
 #ifdef DEBUG_warren
     PRIntervalTime      mLoadStartTime;
 #endif
