@@ -167,6 +167,9 @@ public:
   HBITMAP             mTempB1,mTempB2;
   HDC                 mSrcDC,mDstDC;
 
+  PRInt32             mSRowBytes;
+  PRInt32             mDRowBytes;
+
   PRInt32             mSaveLS;
   PRInt32             mSaveNumLines;
   PRInt32             mSaveNumBytes;
