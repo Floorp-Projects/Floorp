@@ -560,32 +560,32 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCDocumentLoader, NS_DOCUMENTLOADER_CID);
 
 class nsDocumentLoaderFactory : public nsIFactory
-{   
-public:   
+{
+public:
     nsDocumentLoaderFactory();
 
     NS_DECL_ISUPPORTS
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
+    // nsIFactory methods
+    NS_IMETHOD CreateInstance(nsISupports *aOuter,
+                              const nsIID &aIID,
+                              void **aResult);
 
-    NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_IMETHOD LockFactory(PRBool aLock);
 
 
 protected:
-    virtual ~nsDocumentLoaderFactory();   
-};   
+    virtual ~nsDocumentLoaderFactory();
+};
 
 nsDocumentLoaderFactory::nsDocumentLoaderFactory()
-{   
+{
     NS_INIT_REFCNT();
-}   
+}
 
-nsDocumentLoaderFactory::~nsDocumentLoaderFactory()   
-{   
-}   
+nsDocumentLoaderFactory::~nsDocumentLoaderFactory()
+{
+}
 
 /*
  * Implementation of ISupports methods...
@@ -594,17 +594,17 @@ NS_IMPL_ISUPPORTS(nsDocumentLoaderFactory,kIFactoryIID);
 
 
 NS_IMETHODIMP
-nsDocumentLoaderFactory::CreateInstance(nsISupports* aOuter,  
-                                        const nsIID& aIID,  
-                                        void** aResult)  
-{  
+nsDocumentLoaderFactory::CreateInstance(nsISupports* aOuter,
+                                        const nsIID& aIID,
+                                        void** aResult)
+{
     nsresult rv;
     nsDocLoaderImpl* inst;
 
-    if (nsnull == aResult) {  
+    if (nsnull == aResult) {
         rv = NS_ERROR_NULL_POINTER;
         goto done;
-    }  
+    }
     *aResult = nsnull;
 
     if (nsnull != aOuter) {
@@ -613,10 +613,10 @@ nsDocumentLoaderFactory::CreateInstance(nsISupports* aOuter,
     }
 
     inst = new nsDocLoaderImpl();
-    if (nsnull == inst) {  
+    if (nsnull == inst) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto done;
-    }  
+    }
 
     NS_ADDREF(inst);    // RefCount = 1
     rv = inst->QueryInterface(aIID, aResult);
@@ -624,17 +624,17 @@ nsDocumentLoaderFactory::CreateInstance(nsISupports* aOuter,
 
 done:
     return rv;
-}  
+}
 
 NS_IMETHODIMP
-nsDocumentLoaderFactory::LockFactory(PRBool aLock)  
-{  
-  // Not implemented in simplest case.  
-  return NS_OK;
-}  
+nsDocumentLoaderFactory::LockFactory(PRBool aLock)
+{
+    // Not implemented in simplest case.
+    return NS_OK;
+}
 
-
-extern "C" NS_WEB nsresult NS_NewDocumentLoaderFactory(nsIFactory** aFactory)
+extern "C" NS_WEB nsresult
+NS_NewDocumentLoaderFactory(nsIFactory** aFactory)
 {
     if (nsnull == aFactory) {
         return NS_ERROR_NULL_POINTER;
