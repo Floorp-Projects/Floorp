@@ -470,24 +470,6 @@ nsEditor::Commit(PRBool aCtrlKey)
 
 //BEGIN nsEditor Private methods
 
-
-nsresult
-nsEditor::GetCurrentNode(nsIDOMNode ** aNode)
-{
-  if (!aNode)
-    return NS_ERROR_NULL_POINTER;
-  if (!mDoc)
-    return NS_ERROR_NULL_POINTER;
-  /* If no node set, get first text node */
-  nsCOMPtr<nsIDOMElement> docNode;
-
-  if (NS_SUCCEEDED(mDoc->GetDocumentElement(getter_AddRefs(docNode))))
-  {
-    return docNode->QueryInterface(kIDOMNodeIID,(void **) aNode);
-  }
-  return NS_ERROR_FAILURE;
-}
-
 nsresult
 nsEditor::GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDOMNode **aResult)
 {

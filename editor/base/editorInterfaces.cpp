@@ -42,6 +42,7 @@ NS_IMPL_RELEASE(nsEditorKeyListener)
 
 nsEditorKeyListener::nsEditorKeyListener() 
 {
+  NS_INIT_REFCNT();
 }
 
 
@@ -338,6 +339,7 @@ NS_IMPL_RELEASE(nsEditorMouseListener)
 
 nsEditorMouseListener::nsEditorMouseListener() 
 {
+  NS_INIT_REFCNT();
 }
 
 

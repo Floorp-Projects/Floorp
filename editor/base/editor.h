@@ -147,17 +147,13 @@ public:
 
 /*BEGIN private methods used by the implementations of the above functions*/
 
-  /** GetCurrentNode ADDREFFS and will get the current node from selection.
-   *  now it simply returns the first node in the dom
-   *  @param nsIDOMNode **aNode is the return location of the dom node
-   */
-  nsresult GetCurrentNode(nsIDOMNode ** aNode);
-
   /** GetFirstTextNode ADDREFFS and will get the next available text node from the passed
    *  in node parameter it can also return NS_ERROR_FAILURE if no text nodes are available
    *  now it simply returns the first node in the dom
    *  @param nsIDOMNode *aNode is the node to start looking from
    *  @param nsIDOMNode **aRetNode is the return location of the text dom node
+   *
+   * NOTE: this method will probably be removed.
    */
   nsresult GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode);
 
