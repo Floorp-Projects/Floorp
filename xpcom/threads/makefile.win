@@ -29,18 +29,18 @@ MODULE = xpcom_threads
 
 EXPORTS =                      \
         nsAutoLock.h           \
-        nsIEventQueue.h        \
-        nsIEventQueueService.h \
         plevent.h              \
         $(NULL)			
 
 NO_XPT_GEN=1
 XPIDL_MODULE = xpcom_thread
 
-XPIDLSRCS =                 \
-        .\nsIThread.idl     \
-        .\nsIThreadPool.idl \
-        .\nsIRunnable.idl   \
+XPIDLSRCS =                        \
+        .\nsIEventQueue.idl        \
+        .\nsIEventQueueService.idl \
+        .\nsIThread.idl            \
+        .\nsIThreadPool.idl        \
+        .\nsIRunnable.idl          \
         $(NULL)
 
 ################################################################################

@@ -1,0 +1,94 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):  David Hyatt <hyatt@netscape.com>
+ *                  Suresh Duddi <dp@netscape.com>
+ *                  Doug Turner <dougt@netscape.com>
+ *                  Judson Valeski <valeski@netscape.com>
+ *                  Dan Matejka <danm@netscape.com>
+ *                  Ray Whitmer <rayw@netscape.com>
+ *                  Dan Mosedale <dmose@mozilla.org>
+ */
+
+#include "nsISupports.idl"
+
+%{C++
+#include "prthread.h"
+#include "plevent.h"
+
+// {13D86C61-00A9-11d3-9F2A-00400553EEF0}
+#define NS_EVENTQUEUE_CID \
+{ 0x13d86c61, 0xa9, 0x11d3, { 0x9f, 0x2a, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
+
+#define NS_EVENTQUEUE_CONTRACTID "@mozilla.org/event-queue;1"
+#define NS_EVENTQUEUE_CLASSNAME "Event Queue"
+
+%}
+
+// some forward decls
+//
+[ptr] native PLEventQueuePtr(PLEventQueue);
+[ptr] native PLEventPtr(PLEvent);
+[ptr] native PRThreadPtr(PRThread);
+native PRStatus(PRStatus);
+[ref] native PRBoolRef(PRBool);
+native PLHandleEventProc(PLHandleEventProc);
+native PLDestroyEventProc(PLDestroyEventProc);
+
+[scriptable, uuid(176AFB41-00A4-11d3-9F2A-00400553EEF0)]
+interface nsIEventQueue : nsISupports
+{
+    [noscript] void initEvent(in PLEventPtr aEvent, 
+                              in voidPtr owner, 
+                              in PLHandleEventProc handler, 
+                              in PLDestroyEventProc destructor);
+    
+    [notxpcom] PRStatus postEvent(in PLEventPtr aEvent);
+    [noscript] void postSynchronousEvent(in PLEventPtr aEvent, 
+                                         out voidPtr aResult);
+	
+    void processPendingEvents();
+    void eventLoop();
+    
+    [noscript] void eventAvailable(in PRBoolRef aResult);
+    [noscript] PLEventPtr getEvent();
+    [noscript] void handleEvent(in PLEventPtr aEvent);
+    [noscript] PLEventPtr waitForEvent();
+
+    [notxpcom] PRInt32 getEventQueueSelectFD();
+
+    void init(in boolean aNative);
+    [noscript] void initFromPRThread(in PRThreadPtr thread, 
+                                     in boolean aNative);
+    [noscript] void initFromPLQueue(in PLEventQueuePtr aQueue);
+
+    void enterMonitor();
+    void exitMonitor();
+
+    [noscript] void revokeEvents(in voidPtr owner);
+    [noscript] PLEventQueuePtr getPLEventQueue();
+
+    boolean isQueueOnCurrentThread();
+    boolean isQueueNative();
+
+    // effectively kill the queue. warning: the queue is allowed to delete
+    // itself any time after this.
+    void stopAcceptingEvents();
+};
+

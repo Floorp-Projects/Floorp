@@ -34,41 +34,8 @@ public:
 
   // nsISupports interface...
     NS_DECL_ISUPPORTS
-
   // nsIEventQueue interface...
-    NS_IMETHOD InitEvent(PLEvent* aEvent, void* owner, 
-                         PLHandleEventProc handler,
-                         PLDestroyEventProc destructor);
-    
-    NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent);
-    NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent, void** aResult);
-
-    NS_IMETHOD ProcessPendingEvents();
-    NS_IMETHOD EventLoop();
-
-    NS_IMETHOD EventAvailable(PRBool& aResult);
-    NS_IMETHOD GetEvent(PLEvent** aResult);
-    NS_IMETHOD HandleEvent(PLEvent* aEvent);
-    
-    NS_IMETHOD WaitForEvent(PLEvent** aResult);
-
-    NS_IMETHOD_(PRInt32) GetEventQueueSelectFD();
-
-    NS_IMETHOD Init(PRBool aNative);
-    NS_IMETHOD InitFromPRThread(PRThread* thread, PRBool aNative);
-    NS_IMETHOD InitFromPLQueue(PLEventQueue* aQueue);
-
-    NS_IMETHOD EnterMonitor();
-    NS_IMETHOD ExitMonitor();
-
-    NS_IMETHOD RevokeEvents(void* owner);
-
-    NS_IMETHOD GetPLEventQueue(PLEventQueue** aEventQueue);
-    
-    NS_IMETHOD IsQueueOnCurrentThread(PRBool *aResult);
-    NS_IMETHOD IsQueueNative(PRBool *aResult);
-
-    NS_IMETHOD StopAcceptingEvents();
+    NS_DECL_NSIEVENTQUEUE
 
     // Helpers
     static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
