@@ -404,7 +404,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
     fputs("null pres shell\n", stdout);
   }
 
-  if (mPostExit && (0 == mQueuedLoadURLs)) {
+  if (mPostExit && (0 == mQueuedLoadURLs) && (0==mPendingURLs.Count())) {
     QueueExit();
   }
 
