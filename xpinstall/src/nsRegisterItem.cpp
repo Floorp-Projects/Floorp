@@ -143,6 +143,7 @@ PRInt32 nsRegisterItem::Complete()
         {
             // we got one... construct a reference to the magic file
             nsCOMPtr<nsIFile> tmp;
+            PRBool bExists = PR_FALSE;
             rv = progDir->Clone(getter_AddRefs(tmp));
             if (NS_SUCCEEDED(rv))
                 startupFile = do_QueryInterface(tmp, &rv);
@@ -152,13 +153,19 @@ PRInt32 nsRegisterItem::Complete()
                 rv = startupFile->Append("chrome");
                 if (NS_SUCCEEDED(rv))
                 {
-                    rv = startupFile->Append("installed-chrome.txt");
+                    rv = startupFile->Exists(&bExists);
+                    if (NS_SUCCEEDED(rv) && !bExists)
+                        rv = startupFile->Create(nsIFile::DIRECTORY_TYPE, 0755);
                     if (NS_SUCCEEDED(rv))
                     {
-                        rv = startupFile->OpenNSPRFileDesc(
-                                        PR_CREATE_FILE | PR_WRONLY,
-                                        0744,
-                                        &fd);
+                        rv = startupFile->Append("installed-chrome.txt");
+                        if (NS_SUCCEEDED(rv))
+                        {
+                            rv = startupFile->OpenNSPRFileDesc(
+                                            PR_CREATE_FILE | PR_WRONLY,
+                                            0744,
+                                            &fd);
+                        }
                     }
                 }
             }
