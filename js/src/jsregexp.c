@@ -1229,94 +1229,12 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     re->nrefs = 1;
     re->parenCount = state.parenCount;
     re->flags = flags;
-    re->lastIndex = 0;
     re->source = str;
-#ifdef JS_THREADSAFE
-    re->owningThread = 0;
-    re->lastIndexes = NULL;
-#endif
-
     re->ren = ren;
 
 out:
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return re;
-}
-
-#ifdef JS_THREADSAFE
-typedef struct LastIndexEntry {
-    JSDHashEntryHdr     hdr;
-    jsword              thread;
-    jsdouble            index;
-} LastIndexEntry;
-#endif
-
-/*
- * NB: Get and SetLastIndex must be called with re's owning object locked.
- */
-static jsdouble
-GetLastIndex(JSContext *cx, JSRegExp *re)
-{
-#ifdef JS_THREADSAFE
-    /*
-     * If no thread has set a lastIndex property yet, return re->lastIndex,
-     * which must be 0.  But if another thread owns re, then re->lastIndexes
-     * must have been created by SetLastIndex, even though cx->thread may not
-     * be mapped by re->lastIndexes yet (in which case, we return 0).
-     */
-    if (!re->owningThread) {
-        JS_ASSERT(re->lastIndex == 0);
-    } else if (cx->thread != re->owningThread) {
-        LastIndexEntry *entry = (LastIndexEntry *)
-            JS_DHashTableOperate(re->lastIndexes, (const void *) cx->thread,
-                                 JS_DHASH_LOOKUP);
-        if (JS_DHASH_ENTRY_IS_BUSY(&entry->hdr))
-            return entry->index;
-        return 0;
-    }
-#endif
-    return re->lastIndex;
-}
-
-static JSBool
-SetLastIndex(JSContext *cx, JSRegExp *re, jsdouble lastIndex)
-{
-#ifdef JS_THREADSAFE
-    if (!re->owningThread) {
-        /*
-         * Claim ownership and fall through to the final "update re->lastIndex
-         * and return" clause.  Recall that re's object must be locked (and we
-         * know re has an object, else why would its lastIndex member be set).
-         */
-        re->owningThread = cx->thread;
-    } else if (cx->thread != re->owningThread) {
-        LastIndexEntry *entry;
-
-        /* Bootstrap re->lastIndexes, interlocked by re's object lock. */
-        if (!re->lastIndexes) {
-            re->lastIndexes = JS_NewDHashTable(JS_DHashGetStubOps(), NULL,
-                                               sizeof(LastIndexEntry),
-                                               JS_DHASH_MIN_SIZE);
-            if (!re->lastIndexes)
-                goto boom;
-        }
-
-        /* Find or create a mapping from cx->thread to its own last index. */
-        entry = (LastIndexEntry *)
-            JS_DHashTableOperate(re->lastIndexes, (const void *) cx->thread,
-                                 JS_DHASH_ADD);
-        if (!entry) {
-      boom:
-            JS_ReportOutOfMemory(cx);
-            return JS_FALSE;
-        }
-        entry->thread = cx->thread;
-        entry->index = lastIndex;
-        return JS_TRUE;
-    }
-#endif
-    re->lastIndex = lastIndex;
-    return JS_TRUE;
 }
 
 JSRegExp *
@@ -1395,10 +1313,6 @@ js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 {
     if (JS_ATOMIC_DECREMENT(&re->nrefs) == 0) {
         freeRENtree(cx, re->ren, NULL);
-#ifdef JS_THREADSAFE
-        if (re->lastIndexes)
-            JS_DHashTableDestroy(re->lastIndexes);
-#endif
         JS_free(cx, re);
     }
 }
@@ -2389,12 +2303,14 @@ static JSBool
 regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     jsint slot;
-    jsdouble lastIndex;
     JSRegExp *re;
 
     if (!JSVAL_IS_INT(id))
 	return JS_TRUE;
     slot = JSVAL_TO_INT(id);
+    if (slot == REGEXP_LAST_INDEX)
+        return JS_GetReservedSlot(cx, obj, 0, vp);
+
     JS_LOCK_OBJ(cx, obj);
     re = (JSRegExp *) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
     if (re) {
@@ -2408,11 +2324,6 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	  case REGEXP_IGNORE_CASE:
 	    *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_FOLD) != 0);
 	    break;
-	  case REGEXP_LAST_INDEX:
-            /* NB: early unlock/return, so we don't deadlock with the GC. */
-            lastIndex = GetLastIndex(cx, re);
-            JS_UNLOCK_OBJ(cx, obj);
-            return js_NewNumberValue(cx, lastIndex, vp);
 	  case REGEXP_MULTILINE:
 	    *vp = BOOLEAN_TO_JSVAL((re->flags & JSREG_MULTILINE) != 0);
 	    break;
@@ -2427,22 +2338,18 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
     JSBool ok;
     jsint slot;
-    JSRegExp *re;
-    jsdouble d;
+    jsdouble lastIndex;
 
     ok = JS_TRUE;
     if (!JSVAL_IS_INT(id))
 	return ok;
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX) {
-        if (!js_ValueToNumber(cx, *vp, &d))
+        if (!js_ValueToNumber(cx, *vp, &lastIndex))
             return JS_FALSE;
-        d = js_DoubleToInteger(d);
-        JS_LOCK_OBJ(cx, obj);
-        re = (JSRegExp *) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
-        if (re)
-            ok = SetLastIndex(cx, re, d);
-        JS_UNLOCK_OBJ(cx, obj);
+        lastIndex = js_DoubleToInteger(lastIndex);
+        ok = js_NewNumberValue(cx, lastIndex, vp) &&
+             JS_SetReservedSlot(cx, obj, 0, *vp);
     }
     return ok;
 }
@@ -2651,7 +2558,8 @@ regexp_xdrObject(JSXDRState *xdr, JSObject **objp)
 	re = js_NewRegExp(xdr->cx, NULL, source, flags, JS_FALSE);
 	if (!re)
 	    return JS_FALSE;
-	if (!JS_SetPrivate(xdr->cx, *objp, re)) {
+	if (!JS_SetPrivate(xdr->cx, *objp, re) ||
+            !js_SetLastIndex(xdr->cx, *objp, 0)) {
 	    js_DestroyRegExp(xdr->cx, re);
 	    return JS_FALSE;
 	}
@@ -2676,7 +2584,7 @@ regexp_mark(JSContext *cx, JSObject *obj, void *arg)
 
 JSClass js_RegExpClass = {
     js_RegExp_str,
-    JSCLASS_HAS_PRIVATE,
+    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(1),
     JS_PropertyStub,  JS_PropertyStub,  regexp_getProperty, regexp_setProperty,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,     regexp_finalize,
     NULL,             NULL,             regexp_call,        NULL,
@@ -2798,7 +2706,7 @@ madeit:
 	return JS_FALSE;
     JS_LOCK_OBJ(cx, obj);
     oldre = (JSRegExp *) JS_GetPrivate(cx, obj);
-    ok = JS_SetPrivate(cx, obj, re);
+    ok = JS_SetPrivate(cx, obj, re) && js_SetLastIndex(cx, obj, 0);
     JS_UNLOCK_OBJ(cx, obj);
     if (!ok) {
 	js_DestroyRegExp(cx, re);
@@ -2820,9 +2728,9 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     JSString *str;
     size_t i;
 
-    ok = JS_FALSE;
-    if (!JS_InstanceOf(cx, obj, &js_RegExpClass, argv))
-	return ok;
+    ok = JS_InstanceOf(cx, obj, &js_RegExpClass, argv);
+    if (!ok)
+	return JS_FALSE;
     JS_LOCK_OBJ(cx, obj);
     re = (JSRegExp *) JS_GetPrivate(cx, obj);
     if (!re) {
@@ -2832,8 +2740,14 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 
     /* NB: we must reach out: after this paragraph, in order to drop re. */
     HOLD_REGEXP(cx, re);
-    lastIndex = (re->flags & JSREG_GLOB) ? GetLastIndex(cx, re) : 0;
+    if (re->flags & JSREG_GLOB) {
+        ok = js_GetLastIndex(cx, obj, &lastIndex);
+    } else {
+        lastIndex = 0;
+    }
     JS_UNLOCK_OBJ(cx, obj);
+    if (!ok)
+        goto out;
 
     /* Now that obj is unlocked, it's safe to (potentially) grab the GC lock. */
     if (argc == 0) {
@@ -2845,6 +2759,7 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 				 (re->flags & JSREG_GLOB) ? "g" : "",
 				 (re->flags & JSREG_FOLD) ? "i" : "",
 				 (re->flags & JSREG_MULTILINE) ? "m" : "");
+            ok = JS_FALSE;
             goto out;
 	}
     } else {
@@ -2855,17 +2770,13 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     }
 
     if (lastIndex < 0 || JSSTRING_LENGTH(str) < lastIndex) {
-        JS_LOCK_OBJ(cx, obj);
-        ok = SetLastIndex(cx, re, 0);
-        JS_UNLOCK_OBJ(cx, obj);
+        ok = js_SetLastIndex(cx, obj, 0);
         *rval = JSVAL_NULL;
     } else {
         i = (size_t) lastIndex;
         ok = js_ExecuteRegExp(cx, re, str, &i, test, rval);
-        JS_LOCK_OBJ(cx, obj);
         if (ok && (re->flags & JSREG_GLOB))
-            ok = SetLastIndex(cx, re, (*rval == JSVAL_NULL) ? 0 : i);
-        JS_UNLOCK_OBJ(cx, obj);
+            ok = js_SetLastIndex(cx, obj, (*rval == JSVAL_NULL) ? 0 : i);
     }
 
 out:
@@ -2969,7 +2880,7 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
     if (!re)
 	return NULL;
     obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL);
-    if (!obj || !JS_SetPrivate(cx, obj, re)) {
+    if (!obj || !JS_SetPrivate(cx, obj, re) || !js_SetLastIndex(cx, obj, 0)) {
 	js_DestroyRegExp(cx, re);
 	return NULL;
     }
@@ -2987,12 +2898,30 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent)
     if (!clone)
         return NULL;
     re = JS_GetPrivate(cx, obj);
-    if (!JS_SetPrivate(cx, clone, re)) {
-        cx->newborn[GCX_OBJECT] = NULL;                                       \
+    if (!JS_SetPrivate(cx, clone, re) || !js_SetLastIndex(cx, clone, 0)) {
+        cx->newborn[GCX_OBJECT] = NULL;
         return NULL;
     }
     HOLD_REGEXP(cx, re);
     return clone;
+}
+
+JSBool
+js_GetLastIndex(JSContext *cx, JSObject *obj, jsdouble *lastIndex)
+{
+    jsval v;
+
+    return JS_GetReservedSlot(cx, obj, 0, &v) &&
+           js_ValueToNumber(cx, v, lastIndex);
+}
+
+JSBool
+js_SetLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex)
+{
+    jsval v;
+
+    return js_NewNumberValue(cx, lastIndex, &v) &&
+           JS_SetReservedSlot(cx, obj, 0, v);
 }
 
 #endif /* JS_HAS_REGEXPS */
