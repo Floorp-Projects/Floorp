@@ -1327,6 +1327,7 @@ if ($^O !~ /MSWin32/i) {
         fixPerms('*', $<, $webservergid, 027);
         fixPerms('Bugzilla', $<, $webservergid, 027, 1);
         fixPerms($templatedir, $<, $webservergid, 027, 1);
+        fixPerms('images', $<, $webservergid, 027, 1);
         fixPerms('css', $<, $webservergid, 027, 1);
         fixPerms('js', $<, $webservergid, 027, 1);
         chmod 0644, 'globals.pl';
@@ -1352,6 +1353,7 @@ if ($^O !~ /MSWin32/i) {
         fixPerms('*', $<, $gid, 022);
         fixPerms('Bugzilla', $<, $gid, 022, 1);
         fixPerms($templatedir, $<, $gid, 022, 1);
+        fixPerms('images', $<, $gid, 022, 1);
         fixPerms('css', $<, $gid, 022, 1);
         fixPerms('js', $<, $gid, 022, 1);
         
