@@ -107,11 +107,13 @@ void nsFileSpecHelpers::UnixToNative(nsSimpleCharString& ioPath)
 
 	src = (char*)ioPath;
 		
-	// Convert '/' to '\'.
-	while (*++src)
-    {
-        if (*src == '/')
-            *src = '\\';
+    if (*src) {
+	    // Convert '/' to '\'.
+	    while (*++src)
+        {
+            if (*src == '/')
+                *src = '\\';
+        }
     }
 } // nsFileSpecHelpers::UnixToNative
 
