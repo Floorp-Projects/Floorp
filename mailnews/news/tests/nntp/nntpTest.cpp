@@ -193,7 +193,7 @@ public:
 	nsresult OnRunURL();
 	nsresult OnExit(); 
 protected:
-    nsIEventQueue *m_eventQueue;
+    nsCOMPtr <nsIEventQueue> m_eventQueue;
 	char m_urlSpec[200];	// "sockstub://hostname:port" it does not include the command specific data...
 	char m_urlString[500];	// string representing the current url being run. Includes host AND command specific data.
 	char m_userData[250];	// generic string buffer for storing the current user entered data...
@@ -202,9 +202,9 @@ protected:
 	PRUint32	m_port;
 	char		m_host[200];		
 
-	nsINntpUrl * m_url; 
+	nsCOMPtr <nsINntpUrl> m_url; 
 	nsNNTPProtocol * m_nntpProtocol; // running protocol instance
-	nsITransport * m_transport; // a handle on the current transport object being used with the protocol binding...
+	nsCOMPtr <nsITransport> m_transport; // a handle on the current transport object being used with the protocol binding...
 
 	PRBool		m_runningURL;
 	PRBool		m_runTestHarness;
@@ -226,12 +226,12 @@ nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService,
 	m_runTestHarness = PR_TRUE;
 	m_runningURL = PR_FALSE;
     m_eventQueue = queue;
-		NS_IF_ADDREF(queue);
+	NS_IF_ADDREF(queue);
 	
 	InitializeTestDriver(); // prompts user for initialization information...
 	
 	// create a transport socket...
-	pNetService->CreateSocketTransport(&m_transport, m_port, m_host);
+	pNetService->CreateSocketTransport(getter_AddRefs(m_transport), m_port, m_host);
 	m_nntpProtocol = nsnull; // we can't create it until we have a url...
 }
 
@@ -268,13 +268,8 @@ nsNntpTestDriver::InitializeProtocol(const char * urlString)
 
 nsNntpTestDriver::~nsNntpTestDriver()
 {
-	NS_IF_RELEASE(m_eventQueue);
-
 	if (m_url)
 		m_url->UnRegisterListener(this);
-
-	NS_IF_RELEASE(m_url);
-	NS_IF_RELEASE(m_transport);
 
 	if (m_nntpProtocol) delete m_nntpProtocol;
 }
@@ -628,6 +623,7 @@ nsNntpTestDriver::OnPostMessage()
         post->SetSubject(subject);
 
         // fake out these headers so that it's a valid post
+		// todo: get this from the the account manager
         post->SetFrom("userid@somewhere.com");
     }
     
@@ -683,8 +679,8 @@ nsresult nsNntpTestDriver::OnGetGroup()
 	else
 		m_url->SetSpec(m_urlString); // reset spec
 
-	nsINNTPNewsgroup *newsgroup = nsnull;
-    rv = NS_NewNewsgroup(&newsgroup, nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */, nsnull /* host*/, 1 /* depth */);
+	nsCOMPtr<nsINNTPNewsgroup> newsgroup;
+    rv = NS_NewNewsgroup(getter_AddRefs(newsgroup), nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */, nsnull /* host*/, 1 /* depth */);
                
     if (NS_SUCCEEDED(rv)) {
         newsgroup->SetName(m_userData);
@@ -693,7 +689,6 @@ nsresult nsNntpTestDriver::OnGetGroup()
 		return rv;
 	}
 
-    
     m_url->SetNewsgroup(newsgroup);
 
     if (NS_SUCCEEDED(rv)) {
@@ -702,7 +697,6 @@ nsresult nsNntpTestDriver::OnGetGroup()
 		rv = m_nntpProtocol->LoadURL(m_url, nsnull /* displayStream */);
 	} // if user provided the data...
 
-    // release newsgroup?
 	return rv;
 }
 
@@ -744,30 +738,45 @@ nsresult nsNntpTestDriver::SetupUrl(char *groupname)
 		rv = m_url->SetSpec(m_urlString); // reset spec
     
     // before we re-load, assume it is a group command and configure our nntpurl correctly...
-    nsINNTPHost * host = nsnull;
-    nsINNTPNewsgroup * group = nsnull;
-    nsINNTPNewsgroupList * list = nsnull;
-    rv = m_url->GetNntpHost(&host);
-    if (host) {
-        rv = host->FindGroup(groupname, &group);
+    nsCOMPtr <nsINNTPHost> host;
+    nsCOMPtr <nsINNTPNewsgroup> group;
+    nsCOMPtr <nsINNTPNewsgroupList> list;
+    rv = m_url->GetNntpHost(getter_AddRefs(host));
+    if (NS_SUCCEEDED(rv) && host) {
+        rv = host->FindGroup(groupname, getter_AddRefs(group));
         
-        if (group) {
-            group->GetNewsgroupList(&list);
+        if (NS_SUCCEEDED(rv) && group) {
+            group->GetNewsgroupList(getter_AddRefs(list));
         }
-#ifdef DEBUG_sspitzer
         else {
-            printf("group is null\n");
-        }
+#ifdef DEBUG_sspitzer
+            printf("failed to find group %s\n",groupname);
 #endif
+			return rv;
+        }
+
         rv = m_url->SetNewsgroup(group);
+		if (NS_FAILED(rv)) {
+#ifdef DEBUG_sspitzer
+			printf("setnewsgroup failed\n");
+#endif
+			return rv;
+		}
         rv = m_url->SetNewsgroupList(list);
-        NS_IF_RELEASE(group);
-        NS_IF_RELEASE(list);
-        NS_IF_RELEASE(host);
+		if (NS_FAILED(rv)) {
+#ifdef DEBUG_sspitzer
+			printf("setnewsgrouplist failed\n");
+#endif
+			return rv;
+		}
     }
     else {
-        // return error?
+#ifdef DEBUG_sspitzer
+		printf("failed to get nntp host\n");
+#endif
+		return rv;
     }
+
 	return rv;
     
 } // if user provided the data...
