@@ -120,6 +120,9 @@ protected:
   static int HandleUnknownEncoding(void *encodingHandlerData,
     const XML_Char *name,
     XML_Encoding *info);
+  static void HandleStartDoctypeDecl(void *userData,
+    const XML_Char *doctypeName);
+  static void HandleEndDoctypeDecl(void *userData);
 
   XML_Parser mExpatParser;
 	PRUint32 mBytesParsed;
