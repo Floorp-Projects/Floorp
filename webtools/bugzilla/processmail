@@ -37,7 +37,6 @@ use RelationSet;
 # Shut up misguided -w warnings about "used only once".
 sub processmail_sillyness {
     my $zz;
-    $zz = $::db;
     $zz = $::unconfirmedstate;
 }
 
@@ -761,9 +760,6 @@ sub NewProcessOnePerson ($$$$$$$$$$$$) {
 # Code starts here
 
 ConnectToDatabase();
-# Set Taint mode for the SQL
-$::db->{Taint} = 1;
-# ^^^ Taint mode is still a work in progress...
 GetVersionTable();
 
 if (open(FID, "<data/nomail")) {
