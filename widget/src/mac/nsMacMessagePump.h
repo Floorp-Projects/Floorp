@@ -38,6 +38,9 @@
 #ifndef nsMacMessagePump_h__
 #define nsMacMessagePump_h__
 
+
+#include <Retrace.h>
+
 #include <Events.h>
 #include "prtypes.h"
 #include "nsIEventQueueService.h"
@@ -45,6 +48,52 @@
 class nsToolkit;
 class nsMacMessageSink;
 class nsMacTSMMessagePump;
+
+
+//
+// class WatchTask
+//
+// A nice little class that installs/removes a VBL to set the cursor to
+// the watch if we're away from the event loop for a while. Will also
+// animate the watch cursor.
+//
+class WatchTask
+{
+public:
+  WatchTask ( ) ;
+  ~WatchTask ( ) ;
+
+    // call from the main event loop
+  void EventLoopReached ( ) ;
+  
+    // turn off when we know we're going into an area where it's ok
+    // that WNE is not called (eg, the menu code)
+  void Suspend ( ) { mSuspended = PR_TRUE; };
+  void Resume ( ) { mSuspended = PR_FALSE; };
+  
+private:
+
+  enum { 
+    kRepeatInterval = 10,       // check every 1/6 of a second if we should show watch (10/60)
+    kTicksToShowWatch = 45,     // show watch if haven't seen WNE for 3/4 second (45/60)
+    kStepsInAnimation = 12
+  };
+  
+    // the VBL task
+  static pascal void DoWatchTask(WatchTask* theTaskPtr) ;
+  
+  VBLTask mTask;            // this must be first!!
+  long mChecksum;           // 'mozz' to validate we have real data at interrupt time (not needed?)
+  void* mSelf;              // so we can get back to |this| from the static routine
+  long mTicks;              // last time the event loop was hit
+  PRPackedBool mBusy;       // are we currently spinning the cursor?
+  PRPackedBool mSuspended;  // set if we've temporarily suspended operation
+  PRPackedBool mInstallSucceeded;     // did we succeed in installing the task? (used in dtor)
+  short mAnimation;         // stage of animation
+  
+  
+};
+
 
 //================================================
 
@@ -72,7 +121,7 @@ public:
 	void			StartRunning() {mRunning = PR_TRUE;}
 	void			StopRunning() {mRunning = PR_FALSE;}
 
-private:
+private:  
 
 	void 			DoMouseDown(EventRecord &anEvent);
 	void			DoMouseUp(EventRecord &anEvent);
@@ -97,9 +146,8 @@ private:
 public:
 	static void SetWindowlessMenuEventHandler(nsWindowlessMenuEventHandler func)
 									{gWindowlessMenuEventHandler = func;}
+									
 };
-
-
 
 
 
