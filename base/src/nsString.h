@@ -54,9 +54,9 @@ nsString();
 
 /**
  * This constructor accepts an isolatin string
- * @param   anISOLatin1 is a ptr to a 1-byte cstr
+ * @param   an ascii is a ptr to a 1-byte cstr
  */
-nsString(const char* anISOLatin1);
+nsString(const char* aCString);
 
 /**
  * This is our copy constructor 
@@ -184,10 +184,10 @@ nsString operator+(const nsString& aString);
 
 /**
  * create a new string by adding this to the given buffer.
- * @param   anISOLatin1 is a ptr to cstring to be added to this
+ * @param   aCString is a ptr to cstring to be added to this
  * @return  newly created string
  */
-nsString operator+(const char* anISOLatin1);
+nsString operator+(const char* aCString);
 
 /**
  * create a new string by adding this to the given char.
@@ -237,8 +237,9 @@ void ToUpperCase(nsString& aString) const;
 nsString* ToNewString() const;
 
 /**
- * Creates an ISOLatin1 clone of this string
- * @return  ptr to new isolatin1 string
+ * Creates an ascii clone of this string
+ * NOTE: This string is allocated with new; YOU MUST deallocate with delete[]!
+ * @return  ptr to new c-String string
  */
 char* ToNewCString() const;
 
@@ -283,7 +284,7 @@ PRInt32 ToInteger(PRInt32* aErrorCode,PRInt32 aRadix=10) const;
 
 /**
  * assign given PRUnichar* to this string
- * @param   anISOLatin1: buffer to be assigned to this 
+ * @param   aStr: buffer to be assigned to this 
  * @param   alength is the length of the given str (or -1)
             if you want me to determine its length
  * @return  this
@@ -292,12 +293,12 @@ nsString& SetString(const PRUnichar* aStr,PRInt32 aLength=-1);
 
 /**
  * assign given char* to this string
- * @param   anISOLatin1: buffer to be assigned to this 
+ * @param   aCString: buffer to be assigned to this 
  * @param   alength is the length of the given str (or -1)
             if you want me to determine its length
  * @return  this
  */
-nsString& SetString(const char* anISOLatin1,PRInt32 aLength=-1);
+nsString& SetString(const char* aCString,PRInt32 aLength=-1);
 
 /**
  * assign given string to this one
@@ -308,10 +309,10 @@ nsString& operator=(const nsString& aString);
 
 /**
  * assign given char* to this string
- * @param   anISOLatin1: buffer to be assigned to this 
+ * @param   aCString: buffer to be assigned to this 
  * @return  this
  */
-nsString& operator=(const char* anISOLatin1);
+nsString& operator=(const char* aCString);
 
 /**
  * assign given char to this string
@@ -343,10 +344,10 @@ nsString& operator+=(const nsString& aString);
 
 /**
  * append given buffer to this string
- * @param   anISOLatin1: buffer to be appended to this
+ * @param   aCString: buffer to be appended to this
  * @return  this
  */
-nsString& operator+=(const char* anISOLatin1);
+nsString& operator+=(const char* aCString);
 
 /**
  * append given buffer to this string
@@ -378,7 +379,7 @@ nsString& Append(const nsString& aString,PRInt32 aLength=-1);
             if you want me to determine its length
  * @return  this
  */
-nsString& Append(const char* anISOLatin1,PRInt32 aLength=-1);
+nsString& Append(const char* aCString,PRInt32 aLength=-1);
 
 /**
  * append given string to this string
@@ -606,7 +607,7 @@ PRInt32 RFindCharInSet(nsString& aString,PRInt32 anOffset=0) const;
  * @param   aIgnoreCase tells us whether or not to do caseless compare
  * @return  offset in string, or -1 (kNotFound)
  */
-PRInt32 RFind(const char* anISOLatin1,PRBool aIgnoreCase=PR_FALSE) const;
+PRInt32 RFind(const char* aCString,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 RFind(const nsString& aString,PRBool aIgnoreCase=PR_FALSE) const;
 
@@ -666,7 +667,7 @@ PRBool  operator<(const PRUnichar* aString) const;
  * @return  TRUE or FALSE
  */
 PRBool  operator>(const nsString &S) const;
-PRBool  operator>(const char *anISOLatin1) const;
+PRBool  operator>(const char *aCString) const;
 PRBool  operator>(const PRUnichar* aString) const;
 
 /**
@@ -675,7 +676,7 @@ PRBool  operator>(const PRUnichar* aString) const;
  * @return  TRUE or FALSE
  */
 PRBool  operator<=(const nsString &S) const;
-PRBool  operator<=(const char *anISOLatin1) const;
+PRBool  operator<=(const char *aCString) const;
 PRBool  operator<=(const PRUnichar* aString) const;
 
 /**
@@ -684,7 +685,7 @@ PRBool  operator<=(const PRUnichar* aString) const;
  * @return  TRUE or FALSE
  */
 PRBool  operator>=(const nsString &S) const;
-PRBool  operator>=(const char *anISOLatin1) const;
+PRBool  operator>=(const char* aCString) const;
 PRBool  operator>=(const PRUnichar* aString) const;
 
 /**
@@ -764,12 +765,12 @@ public:
                 nsAutoString(const nsString& other);
                 nsAutoString(const nsAutoString& other);
                 nsAutoString(PRUnichar aChar);
-                nsAutoString(const char* isolatin1);
+                nsAutoString(const char* aCString);
                 nsAutoString(const PRUnichar* us, PRInt32 uslen = -1);
   virtual       ~nsAutoString();
 
   nsAutoString& operator=(const nsString& aString) {nsString::operator=(aString); return *this;}
-  nsAutoString& operator=(const char* anISOLatin1) {nsString::operator=(anISOLatin1); return *this;}
+  nsAutoString& operator=(const char* aCString) {nsString::operator=(aCString); return *this;}
   nsAutoString& operator=(char aChar) {nsString::operator=(aChar); return *this;}
   nsAutoString& operator=(const PRUnichar* aBuffer) {nsString::operator=(aBuffer); return *this;}
   nsAutoString& operator=(PRUnichar aChar) {nsString::operator=(aChar); return *this;}
