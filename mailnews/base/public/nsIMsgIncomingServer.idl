@@ -82,7 +82,7 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute string password;
 
   /* prompt the user for a password */
-  string getPasswordWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow);
+  string getPasswordWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow, out boolean okayValue);
 
   /* forget the password in memory and in single signon database */
   void forgetPassword();

@@ -1404,12 +1404,14 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
     PRUnichar *passwordText = nsnull;
     nsXPIDLCString hostName;
     nsXPIDLCString userName;
+    PRBool okayValue;
 
     GetHostName(getter_Copies(hostName));
     GetUsername(getter_Copies(userName));
 
     passwordText = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
-    nsresult rv =  GetPasswordWithUI(passwordText, passwordTitle, aMsgWindow, aPassword);
+    nsresult rv =  GetPasswordWithUI(passwordText, passwordTitle, aMsgWindow,
+                                     &okayValue, aPassword);
     nsTextFormatter::smprintf_free(passwordText);
     nsCRT::free(passwordTemplate);
     nsCRT::free(passwordTitle);

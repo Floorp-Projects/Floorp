@@ -510,7 +510,7 @@ void nsPop3Protocol::SetUsername(const char* name)
 	}
 }
 
-nsresult nsPop3Protocol::GetPassword(char ** aPassword)
+nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
 {
 	nsresult rv = NS_OK;
     nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_pop3Server);
@@ -571,7 +571,7 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
         mStringService->GetStringByID(POP3_ENTER_PASSWORD_PROMPT_TITLE, &passwordTitle);
 
         rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle,
-                                        aMsgWindow, aPassword);
+                                        aMsgWindow, okayValue, aPassword);
         nsCRT::free(passwordTitle);
         nsTextFormatter::smprintf_free(passwordPromptString);
 
@@ -970,9 +970,18 @@ PRInt32 nsPop3Protocol::SendPassword()
     if (!m_pop3ConData->command_succeeded)
         return(Error(POP3_USERNAME_FAILURE));
     nsXPIDLCString password;
-	nsresult rv = GetPassword(getter_Copies(password));
-    if (NS_FAILED(rv) || !password || !(* (const char *) password))
+    PRBool okayValue = PR_TRUE;
+	nsresult rv = GetPassword(getter_Copies(password), &okayValue);
+    if (NS_SUCCEEDED(rv) && !okayValue)
+    {
+    // user has canceled the password prompt
+        m_pop3ConData->next_state = POP3_ERROR_DONE;
+        return NS_ERROR_ABORT;
+    }
+    else if (NS_FAILED(rv) || !password || !(* (const char *) password))
+    {
         return Error(POP3_PASSWORD_UNDEFINED);
+    }
 
     nsCAutoString cmd;
 
@@ -2181,11 +2190,7 @@ nsPop3Protocol::TopResponse(nsIInputStream* inputStream, PRUint32 length)
            Note that the progress bar will not be accurate in this case.
            Oops. #### */
         PRBool prefBool = PR_FALSE;
-
-#if 0
-        m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
         m_pop3ConData->truncating_cur_msg = PR_FALSE;
-#endif
 
 		PRUnichar * statusTemplate = nsnull;
     mStringService->GetStringByID(POP3_SERVER_DOES_NOT_SUPPORT_THE_TOP_COMMAND, &statusTemplate);
@@ -2420,7 +2425,8 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                prompt the user for a password; just tell him we don't
                know whether he has new mail. */
 			nsXPIDLCString password;
-			GetPassword(getter_Copies(password));
+            PRBool okayValue;
+			GetPassword(getter_Copies(password), &okayValue);
 			const char * pwd = (const char *) password;
             if ((m_pop3ConData->only_check_for_new_mail /* ||
                  MSG_Biff_Master_NikiCallingGetNewMail() */) && 

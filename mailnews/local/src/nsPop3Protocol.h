@@ -255,7 +255,7 @@ public:
     const char* GetUsername() { return m_username.GetBuffer(); };
     void SetUsername(const char* name);
 
-    nsresult GetPassword(char ** aPassword);
+    nsresult GetPassword(char ** aPassword, PRBool *okayValue);
 
 	NS_IMETHOD OnStopRequest(nsIChannel * aChannel, nsISupports * aContext, nsresult aStatus, const PRUnichar* aMsg);
 

@@ -599,11 +599,13 @@ NS_IMETHODIMP
 nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
                                        PRUnichar *aPromptTitle, 
                                        nsIMsgWindow* aMsgWindow,
+                                       PRBool *okayValue,
                                        char **aPassword) 
 {
     nsresult rv = NS_OK;
 
     NS_ENSURE_ARG_POINTER(aPassword);
+    NS_ENSURE_ARG_POINTER(okayValue);
 
     if (m_password.IsEmpty()) {
         nsCOMPtr<nsINetPrompt> dialog;
@@ -635,14 +637,13 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 		if (NS_SUCCEEDED(rv) && dialog)
 		{
             nsXPIDLString uniPassword;
-			PRBool okayValue = PR_TRUE;
 			nsXPIDLCString serverUri;
 			rv = GetServerURI(getter_Copies(serverUri));
 			if (NS_FAILED(rv)) return rv;
-			rv = dialog->PromptPassword(serverUri, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniPassword), &okayValue);
+			rv = dialog->PromptPassword(serverUri, PR_FALSE, aPromptTitle, aPromptMessage, getter_Copies(uniPassword), okayValue);
             		if (NS_FAILED(rv)) return rv;
 				
-			if (!okayValue) // if the user pressed cancel, just return NULL;
+			if (!*okayValue) // if the user pressed cancel, just return NULL;
 			{
 				*aPassword = nsnull;
 				return rv;
