@@ -46,6 +46,9 @@ nsXInstaller::ParseConfig()
     nsINIParser *parser = NULL; 
 
     XI_ERR_BAIL(InitContext());
+    err = gCtx->LoadResources();
+    if (err != OK)
+        return err;
 
     parser = new nsINIParser( CONFIG_INI );
     if (!parser)
@@ -126,7 +129,8 @@ nsXInstaller::RunWizard(int argc, char **argv)
     if (mTitle)
         gtk_window_set_title(GTK_WINDOW(gCtx->window), mTitle);
     else
-        gtk_window_set_title(GTK_WINDOW(gCtx->window), DEFAULT_TITLE);
+        gtk_window_set_title(GTK_WINDOW(gCtx->window),
+            gCtx->Res("DEFAULT_TITLE"));
     gtk_widget_show(gCtx->window);
 
     // create and display the logo and cancel button
@@ -209,7 +213,7 @@ nsXInstaller::DrawCancelButton(GtkWidget *aLogoVBox)
     int err = OK;
     GtkWidget *hbox;
 
-    gCtx->cancel = gtk_button_new_with_label(CANCEL);
+    gCtx->cancel = gtk_button_new_with_label(gCtx->Res("CANCEL"));
     hbox = gtk_hbox_new(FALSE, 10);
     gtk_box_pack_start(GTK_BOX(hbox), gCtx->cancel, TRUE, TRUE, 15);
     gtk_box_pack_end(GTK_BOX(aLogoVBox), hbox, FALSE, TRUE, 10);
@@ -234,8 +238,8 @@ nsXInstaller::DrawNavButtons()
 
     gCtx->next = gtk_button_new();  
     gCtx->back = gtk_button_new(); 
-    gCtx->nextLabel = gtk_label_new(NEXT);
-    gCtx->backLabel = gtk_label_new(BACK);
+    gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));
+    gCtx->backLabel = gtk_label_new(gCtx->Res("BACK"));
     XI_VERIFY(gCtx->next);
     XI_VERIFY(gCtx->back);
     gtk_widget_show(gCtx->next);
@@ -326,3 +330,64 @@ main(int argc, char **argv)
 	_exit(err);
 }
 
+/*------------------------------------------------------------------*
+ *   Default Error Handler
+ *------------------------------------------------------------------*/
+int 
+ErrorHandler(int aErr)
+{
+    GtkWidget *okButton, *label, *dialog;
+    char msg[256];
+    char errStr[16];
+    
+    sprintf(errStr, "%d", aErr); 
+    if (!IsErrFatal(aErr))
+        sprintf(msg, gCtx->Res("ERROR"), aErr, gCtx->Res(errStr));
+    else
+        sprintf(msg, gCtx->Res("FATAL_ERROR"), aErr, gCtx->Res(errStr));
+    
+    dialog = gtk_dialog_new();
+    okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
+    label = gtk_label_new(msg);
+
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->action_area), 
+                      okButton);
+    gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
+                       GTK_SIGNAL_FUNC(ErrDlgOK), (void*)aErr);
+
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(dialog)->vbox), label);
+    
+    gtk_widget_show_all(dialog);
+
+    return aErr;
+}
+
+void
+ErrDlgOK(GtkWidget *aWidget, gpointer aData)
+{
+    int err = (int) aData;
+    
+    gtk_widget_destroy(aWidget);
+    if (IsErrFatal(err))
+        exit(err);
+}
+
+int
+IsErrFatal(int aErr)
+{
+    int bFatal = TRUE;
+
+    /* non-fatal errors */
+    switch (aErr)
+    {
+        case -620:
+        case -621:
+        case -624:
+        case -625:
+            bFatal = FALSE;
+        default:
+            break; 
+    }
+
+    return bFatal;
+}

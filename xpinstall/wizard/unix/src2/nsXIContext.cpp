@@ -24,6 +24,8 @@
 
 #include "nsXIContext.h"
 
+#define __EOT__ "EndOfTable"
+
 nsXIContext::nsXIContext()
 {
     me = NULL;
@@ -53,11 +55,15 @@ nsXIContext::nsXIContext()
     nextID = 0;
     bMoving = FALSE;
     bDone = FALSE;
+
+    reslist = NULL;
 }
 
 nsXIContext::~nsXIContext()
 {
     // NOTE: don't try to delete "me" cause I control thee
+
+    ReleaseResources();
 
     XI_IF_DELETE(ldlg);
     XI_IF_DELETE(wdlg);
@@ -109,3 +115,143 @@ nsXIContext::itoa(int n)
 	
 	return s;
 }
+
+#define MAX_KEY_SIZE 64
+#define FIRST_ERR -601
+#define LAST_ERR  -625
+int
+nsXIContext::LoadResources()
+{
+    int err = OK;
+    nsINIParser *parser = new nsINIParser(RES_FILE);    
+    kvpair *currkv = NULL;
+    char currkey[MAX_KEY_SIZE];
+    int len, i;
+
+    if (!parser)
+        return E_MEM;
+
+    char *strkeys[] = 
+    {
+        "NEXT",
+        "BACK",
+        "CANCEL",
+        "ACCEPT",
+        "DECLINE",
+        "INSTALL",
+        "DEFAULT_TITLE",
+        "DEST_DIR",
+        "BROWSE",
+        "SELECT_DIR",
+        "DOESNT_EXIST",
+        "YES_LABEL",
+        "NO_LABEL",
+        "OK_LABEL",
+        "DELETE_LABEL",
+        "CANCEL_LABEL",
+        "ERROR",
+        "FATAL_ERROR",
+        "DESCRIPTION",
+        "DOWNLOADING",
+        "DLRATE",
+        "PREPARING",
+        "EXTRACTING",
+        "INSTALLING_XPI",
+        "PROCESSING_FILE",
+        "COMPLETED",
+
+        __EOT__
+    };
+
+    /* read in UI strings */
+    currkv = (kvpair *) malloc(sizeof(kvpair));
+    reslist = currkv;
+    for (i = 0; strcmp(strkeys[i], __EOT__) != 0; i++)
+    {
+        err = parser->GetStringAlloc(RES_SECT, strkeys[i], 
+                                    &(currkv->val), &len);
+        if (err != OK)
+            goto BAIL;
+
+        currkv->key = strdup(strkeys[i]);
+        currkv->next = (kvpair *) malloc(sizeof(kvpair));
+        currkv = currkv->next;
+
+        if (i > 1024) /* inf loop prevention paranoia */
+            break;
+    }
+    currkv->next = NULL; /* seal off list */
+
+    /* read in err strings */
+    for (i = FIRST_ERR; i >= LAST_ERR; i--)
+    {
+        sprintf(currkey, "%d", i);
+        err = parser->GetStringAlloc(RES_SECT, currkey, &(currkv->val), &len);
+        if (err != OK)
+            goto BAIL;
+        
+        currkv->key = strdup(currkey);
+        if (i == LAST_ERR)
+            break;
+        currkv->next = (kvpair *) malloc(sizeof(kvpair));
+        currkv = currkv->next;
+    }
+    currkv->next = NULL; /* seal off list */
+
+BAIL:
+    if (err != OK)
+    {
+        fprintf(stderr, "FATAL ERROR: Failed to load resources!");
+    }
+    XI_IF_DELETE(parser);
+    return err;
+}
+
+int 
+nsXIContext::ReleaseResources()
+{
+    int err = OK;
+    kvpair *currkv = NULL, *delkv = NULL;
+    
+    /* empty list -- should never really happen */
+    if (!reslist) 
+        return E_PARAM;
+    
+    currkv = reslist;
+    while (currkv)
+    {
+        XI_IF_FREE(currkv->key);
+        XI_IF_FREE(currkv->val);
+        delkv = currkv;
+        currkv = currkv->next;
+        XI_IF_FREE(delkv);
+    }
+
+    return err;
+}
+
+char *
+nsXIContext::Res(char *aKey)
+{
+    char *val = NULL;
+    kvpair *currkv = NULL;
+
+    /* param check */
+    if (!aKey || !reslist)
+        return NULL;
+
+    /* search through linked list */
+    currkv = reslist;
+    while (currkv)
+    {
+        if (strcmp(aKey, currkv->key) == 0)
+        {
+            val = currkv->val;
+            break;
+        }
+        currkv = currkv->next;
+    } 
+
+    return val;
+}
+

@@ -31,6 +31,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <netdb.h>
+#include <ctype.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -98,26 +99,30 @@ public:
         E_GETSOCKNAME       = -818, /* getsockname() failed */
         E_READ_MORE         =  819, /* more to read from this socket */
         E_LOCL_INIT         = -820, /* local file open/init failed */
-        E_TIMEOUT           = -821  /* select() timed out */
+        E_TIMEOUT           = -821, /* select() timed out */
+        E_INVALID_ADDR      = -822  /* couldn't parse address/port */
     };
 
 private:
     int         IssueCmd(char *aCmd, char *aResp, int aRespSize, int aFd);
 
 /*--------------------------------------------------------------------* 
- *  Platform-specific Impls 
+ *  "Raw" transport primitives
  *--------------------------------------------------------------------*/
-    int         RawConnect(char *aHost, int aPort, int *aFd); /* cli init */
-    int         RawListen(char *aHost, int aPort, int *aFd);  /* srv init */
+    int         RawConnect(char *aHost, int aPort, int *aFd);   /* cli init */
+    int         RawDataInit(char *aHost, int aPort, int *aFd);  /* srv init1 */
+    int         RawDataConnect(int aDataFd, int *aConnFd);      /* srv init2 */
     int         RawClose(int aFd);
     int         RawSend(unsigned char *aBuf, int *aBufSize, int aFd);
     int         RawRecv(unsigned char *aBuf, int *aBufSize, int aFd);
+    int         RawParseAddr(char *aBuf, char **aHost, int *aPort);
 
     char        *mHost;
     int         mState;
     int         mCntlFd;
     int         mDataFd;
     int         mEOFFound;
+    int         mPassive;
 };
 
 #ifndef NULL

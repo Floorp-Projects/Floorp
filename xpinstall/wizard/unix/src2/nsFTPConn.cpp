@@ -41,7 +41,8 @@ nsFTPConn::nsFTPConn(char *aHost) :
     mState(CLOSED),
     mCntlFd(-1),
     mDataFd(-1),
-    mEOFFound(FALSE)
+    mEOFFound(FALSE),
+    mPassive(FALSE)
 {
 }
 
@@ -109,8 +110,6 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aOvWrite,
     int err = OK, connfd = 0, wrote = 0, totBytesRd = 0;
     char cmd[CMD_BUF_SIZE], resp[RESP_BUF_SIZE];
     int fileSize = 0, respBufSize = RESP_BUF_SIZE;
-    socklen_t clilen;
-    struct sockaddr cliaddr;
     FILE *loclfd = NULL;
 
     if (!aSrvPath || !aLoclPath)
@@ -125,9 +124,8 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aOvWrite,
 
     mState = GETTING;
 
-    // XXX rename to RawDataInit()
     /* initialize data connection */
-    ERR_CHECK(RawListen(mHost, DATA_PORT, &mDataFd));
+    ERR_CHECK(RawDataInit(mHost, DATA_PORT, &mDataFd));
 
     /* issue SIZE command on control connection */
     sprintf(cmd, "SIZE %s\r\n", aSrvPath);
@@ -143,15 +141,8 @@ nsFTPConn::Get(char *aSrvPath, char *aLoclPath, int aType, int aOvWrite,
     sprintf(cmd, "RETR %s\r\n", aSrvPath);
     ERR_CHECK(IssueCmd(cmd, resp, RESP_BUF_SIZE, mCntlFd));
 
-    // XXX move this to RawDataConnect()
     /* get file contents on data connection */
-    clilen = sizeof(cliaddr);
-    connfd = accept(mDataFd, (struct sockaddr *) &cliaddr, &clilen);
-    if (connfd < 0)
-    {
-        err = E_ACCEPT;
-        goto BAIL;
-    }
+    ERR_CHECK(RawDataConnect(mDataFd, &connfd));
 
     /* initialize locl file */
     if (!(loclfd = fopen(aLoclPath, aType==BINARY ? "wb" : "w")) ||
@@ -193,7 +184,8 @@ BAIL:
     /* kill data connection if it exists */
     if (mDataFd > 0)
     {
-        RawClose(mDataFd);
+        if (!mPassive) /* for passive mDataFd==connfd so don't close twice! */
+            RawClose(mDataFd);
         mDataFd = -1;
     }
     if (connfd > 0)
@@ -206,6 +198,7 @@ BAIL:
     }
 
     mState = OPEN;
+    mPassive = FALSE;
 
     return err;
 }
@@ -307,6 +300,9 @@ BAIL:
     return err;
 }
 
+/*---------------------------------------------------------------------------*
+ *   "Raw" transport primitives (port below here)
+ *---------------------------------------------------------------------------*/
 int
 nsFTPConn::RawConnect(char *aHost, int aPort, int *aFd)
 {
@@ -346,23 +342,41 @@ nsFTPConn::RawConnect(char *aHost, int aPort, int *aFd)
 }
 
 int
-nsFTPConn::RawListen(char *aHost, int aPort, int *aFd)
+nsFTPConn::RawDataInit(char *aHost, int aPort, int *aFd)
 {
     int err = OK;
     struct sockaddr_in servaddr;
     socklen_t salen;
     int listenfd = 0;
     char cmd[CMD_BUF_SIZE], resp[RESP_BUF_SIZE];
-    
+    char *srvhost = NULL; 
+    int srvport = 0;
+
     /* param check */
     if (!aHost || !aFd)
         return E_PARAM;
 
-    // XXX TODO: handle PASV mode
-    // XXX       * issue PASV command
-    // XXX       * if passive command returns an error use active mode
-    // XXX       * else connect to supplied port
+    /* issue PASV command */
+    sprintf(cmd, "PASV\r\n");
+    err = IssueCmd(cmd, resp, RESP_BUF_SIZE, mCntlFd);
+    if (err != OK)
+    {
+        err = OK;
+        goto ACTIVE; /* failover to active mode */
+    }
+       
+    mPassive = TRUE;
 
+    ERR_CHECK(RawParseAddr(resp, &srvhost, &srvport));
+    ERR_CHECK(RawConnect(srvhost, srvport, &mDataFd));
+
+    if (srvhost) 
+        free(srvhost);
+    srvhost = NULL;
+
+    return err;
+
+ACTIVE:
     /* init data socket making it listen */
     listenfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -394,6 +408,35 @@ nsFTPConn::RawListen(char *aHost, int aPort, int *aFd)
     *aFd = listenfd;
 
 BAIL:
+    if (mPassive && err != OK)
+        mPassive = FALSE;
+
+    return err;
+}
+
+int
+nsFTPConn::RawDataConnect(int aDataFd, int *aConnFd)
+{
+    int err = OK;
+    struct sockaddr cliaddr;
+    socklen_t clilen;
+    int connfd = 0;
+
+    if (!aConnFd)
+        return E_PARAM;
+
+    if (mPassive)
+    {
+        *aConnFd = aDataFd;
+        return OK;
+    }
+
+    clilen = sizeof(cliaddr);
+    connfd = accept(aDataFd, (struct sockaddr *) &cliaddr, &clilen);
+    if (connfd < 0)
+        err = E_ACCEPT;
+
+    *aConnFd = connfd;
     return err;
 }
 
@@ -538,6 +581,43 @@ nsFTPConn::RawRecv(unsigned char *aBuf, int *aBufSize, int aFd)
         }
     }
     *aBufSize = bytesrd;
+    return err;
+}
+
+int
+nsFTPConn::RawParseAddr(char *aBuf, char **aHost, int *aPort)
+{
+    int err = OK;
+    char *c;
+    int addr[6];
+
+    /* param check */
+    if (!aBuf || !aHost || !aPort)
+        return E_PARAM;
+
+    c = aBuf + strlen("227 "); /* pass by return code */
+    while (!isdigit((int)(*c)))
+    {
+        if (*c == '\0')
+            return E_INVALID_ADDR;
+        c++;
+    }
+
+    if (sscanf(c, "%d,%d,%d,%d,%d,%d", 
+        &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5]) != 6)
+        return E_INVALID_ADDR;
+
+    *aHost = (char *)malloc(strlen("XXX.XXX.XXX.XXX"));
+    sprintf(*aHost, "%d.%d.%d.%d", addr[0], addr[1], addr[2], addr[3]);
+
+    *aPort = ((addr[4] & 0xFF) << 8) | (addr[5] & 0xFF);
+
+#ifdef DEBUG
+    printf("%s %d: PASV response: %d,%d,%d,%d,%d,%d\n", __FILE__, __LINE__,
+            addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+    printf("%s %d: Host = %s\tPort = %d\n", __FILE__, __LINE__, *aHost, *aPort);
+#endif
+    
     return err;
 }
 

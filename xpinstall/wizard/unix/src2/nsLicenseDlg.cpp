@@ -148,7 +148,7 @@ nsLicenseDlg::Show(int aDirection)
         licenseContents = GetLicenseContents();
         if (!licenseContents)
         {
-            err = E_EMPTY_LICENSE;
+            err = ErrorHandler(E_EMPTY_LICENSE);
             goto BAIL;
         }
 
@@ -196,8 +196,8 @@ nsLicenseDlg::Show(int aDirection)
     // always change the button titles to Accept/Decline
     gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
     gtk_container_remove(GTK_CONTAINER(gCtx->back), gCtx->backLabel);
-    gCtx->acceptLabel = gtk_label_new(ACCEPT);
-    gCtx->declineLabel = gtk_label_new(DECLINE);
+    gCtx->acceptLabel = gtk_label_new(gCtx->Res("ACCEPT"));
+    gCtx->declineLabel = gtk_label_new(gCtx->Res("DECLINE"));
     gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->acceptLabel);
     gtk_container_add(GTK_CONTAINER(gCtx->back), gCtx->declineLabel);
     gtk_widget_show(gCtx->acceptLabel);

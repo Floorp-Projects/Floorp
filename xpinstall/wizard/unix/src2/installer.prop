@@ -1,0 +1,64 @@
+
+[String Resources]
+
+;------------------------------------------------------------------------------
+;   UI strings
+;------------------------------------------------------------------------------
+
+NEXT=Next >
+BACK=< Back
+CANCEL=Cancel
+ACCEPT=Accept
+DECLINE=Decline
+INSTALL=Install
+DEFAULT_TITLE=Mozilla Installer
+DEST_DIR=Destination Directory
+BROWSE=Change...
+SELECT_DIR=Select a directory
+DOESNT_EXIST=Directory %s doesn't exist.  Create it?
+YES_LABEL=Yes
+NO_LABEL=No
+OK_LABEL=OK
+DELETE_LABEL=Delete
+CANCEL_LABEL=Cancel
+ERROR=Error [%d]: %s
+FATAL_ERROR=Fatal error [%d]: %s
+DESCRIPTION=Description
+DOWNLOADING=Downloading %s [%d/%d]
+DLRATE= at %d K/sec...
+PREPARING=Preparing %s...
+EXTRACTING=Extracting %s...
+INSTALLING_XPI=Installing %s...
+PROCESSING_FILE=Processing file %d of %d...
+COMPLETED=Installation has completed.
+
+;------------------------------------------------------------------------------
+;   Error strings
+;------------------------------------------------------------------------------
+
+-601=Out of memory
+-602=Invalid param
+-603=Invalid member variable
+-604=Invalid pointer
+-605=Parse key has no value
+-606=Failed to read readme
+-607=Failed to read license
+-608=Out of bounds in Component/Setup Type list
+-609=Mismatched ref counts
+-610=No components in the INI file
+-611=No setup types in the INI file
+-612=URL at this index already exists
+-613=Couldn't create the directory
+-614=FTP URL malformed
+-615=Download failed
+-616=Extraction of XPCOM failed
+-617=Failed to fork a process
+-618=Couldn't open xpistub library
+-619=Couldn't get symbol in library
+-620=A xpistub call failed
+-621=An installer module (.xpi) failed to install
+-622=Copy of an installer module (.xpi) failed
+-623=Destination directory doesn't exist
+-624=Can't make destination directory.  Please try another directory.
+-625=A previous installation exists.
+

@@ -394,7 +394,7 @@ nsSetupTypeDlg::Show(int aDirection)
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
 			20, 20);
-        frame = gtk_frame_new(DEST_DIR);
+        frame = gtk_frame_new(gCtx->Res("DEST_DIR"));
         gtk_table_attach_defaults(GTK_TABLE(destTable), frame, 0, 2, 0, 1);
         gtk_widget_show(frame);
 
@@ -408,7 +408,7 @@ nsSetupTypeDlg::Show(int aDirection)
         gtk_widget_show(sFolder);
         gtk_table_attach_defaults(GTK_TABLE(destTable), sFolder, 0, 1, 0, 1);
 
-        sBrowseBtn = gtk_button_new_with_label(BROWSE);
+        sBrowseBtn = gtk_button_new_with_label(gCtx->Res("BROWSE"));
         gtk_widget_show(sBrowseBtn);
         gtk_table_attach(GTK_TABLE(destTable), sBrowseBtn, 1, 2, 0, 1,
             static_cast<GtkAttachOptions>(GTK_EXPAND | GTK_FILL),
@@ -436,8 +436,8 @@ nsSetupTypeDlg::Show(int aDirection)
         // change the button titles back to Back/Next
         gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->acceptLabel);
         gtk_container_remove(GTK_CONTAINER(gCtx->back), gCtx->declineLabel);
-        gCtx->nextLabel = gtk_label_new(NEXT);
-        gCtx->backLabel = gtk_label_new(BACK);
+        gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));
+        gCtx->backLabel = gtk_label_new(gCtx->Res("BACK"));
         gtk_widget_show(gCtx->nextLabel);
         gtk_widget_show(gCtx->backLabel);
         gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
@@ -452,7 +452,7 @@ nsSetupTypeDlg::Show(int aDirection)
     {
         DUMP("Back from Install to Setup Type");
         gtk_container_remove(GTK_CONTAINER(gCtx->next), gCtx->installLabel);
-        gCtx->nextLabel = gtk_label_new(NEXT);
+        gCtx->nextLabel = gtk_label_new(gCtx->Res("NEXT"));
         gtk_container_add(GTK_CONTAINER(gCtx->next), gCtx->nextLabel);
         gtk_widget_show(gCtx->nextLabel);
         gtk_widget_show(gCtx->next);
@@ -615,7 +615,7 @@ nsSetupTypeDlg::SelectFolder(GtkWidget *aWidget, gpointer aData)
     GtkWidget *fileSel = NULL;
     char *selDir = gCtx->opt->mDestination;
 
-    fileSel = gtk_file_selection_new(SELECT_DIR);
+    fileSel = gtk_file_selection_new(gCtx->Res("SELECT_DIR"));
     gtk_file_selection_set_filename(GTK_FILE_SELECTION(fileSel), selDir);
     gtk_signal_connect(GTK_OBJECT(GTK_FILE_SELECTION(fileSel)->ok_button),
                        "clicked", (GtkSignalFunc) SelectFolderOK, fileSel);
@@ -682,12 +682,12 @@ nsSetupTypeDlg::VerifyDestination()
         return OK;
 
     // destination doesn't exist so ask user if we should create it
-    sprintf(message, DOESNT_EXIST, gCtx->opt->mDestination);
+    sprintf(message, gCtx->Res("DOESNT_EXIST"), gCtx->opt->mDestination);
 
     sCreateDestDlg = gtk_dialog_new();
     label = gtk_label_new(message);
-    yesButton = gtk_button_new_with_label(YES_LABEL);
-    noButton = gtk_button_new_with_label(NO_LABEL);
+    yesButton = gtk_button_new_with_label(gCtx->Res("YES_LABEL"));
+    noButton = gtk_button_new_with_label(gCtx->Res("NO_LABEL"));
 
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sCreateDestDlg)->action_area),
                       yesButton);
@@ -772,8 +772,8 @@ nsSetupTypeDlg::DeleteOldInst()
         // throw up delete dialog 
         sDelInstDlg = gtk_dialog_new();
 
-        deleteBtn = gtk_button_new_with_label(DELETE_LABEL);
-        cancelBtn = gtk_button_new_with_label(CANCEL_LABEL);
+        deleteBtn = gtk_button_new_with_label(gCtx->Res("DELETE_LABEL"));
+        cancelBtn = gtk_button_new_with_label(gCtx->Res("CANCEL_LABEL"));
 
         gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sDelInstDlg)->action_area), 
             deleteBtn);
