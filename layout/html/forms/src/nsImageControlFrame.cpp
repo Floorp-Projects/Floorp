@@ -78,6 +78,10 @@ public:
     return MakeFrameName("ImageControl", aResult);
   }
 
+  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+                       nsPoint&        aPoint,
+                       PRInt32&        aCursor);
+
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
@@ -346,6 +350,14 @@ nsImageControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   return PR_TRUE;
 }
 
+NS_IMETHODIMP
+nsImageControlFrame::GetCursor(nsIPresContext& aPresContext,
+                               nsPoint&        aPoint,
+                               PRInt32&        aCursor)
+{
+  aCursor = NS_STYLE_CURSOR_POINTER;
+  return NS_OK;
+}
 
 void
 nsImageControlFrame::MouseClicked(nsIPresContext* aPresContext) 
