@@ -163,7 +163,9 @@ nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewContentIterator(nsIContentIterator** aInstancePtrResult)
 {
   nsContentIterator * iter = new nsContentIterator();
-  return iter->QueryInterface(nsIContentIterator::GetIID(), (void**) aInstancePtrResult);
+  if (iter)
+    return iter->QueryInterface(nsIContentIterator::GetIID(), (void**) aInstancePtrResult);
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -779,7 +781,9 @@ nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult);
 nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aInstancePtrResult)
 {
   nsContentIterator * iter = new nsContentSubtreeIterator();
-  return iter->QueryInterface(nsIContentIterator::GetIID(), (void**) aInstancePtrResult);
+  if (iter)
+    return iter->QueryInterface(nsIContentIterator::GetIID(), (void**) aInstancePtrResult);
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 
