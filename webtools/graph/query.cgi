@@ -82,9 +82,18 @@ sub show_graph {
   print "<title>$TBOX $TESTNAME</title><br>\n";
 
   my $neg_autoscale = !$AUTOSCALE;
-  print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$neg_autoscale&days=$DAYS&units=$UNITS\">autoscale</a><br>\n";
+  if($AUTOSCALE) {
+	print "Y-axis: (<b>zoom</b>|";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$neg_autoscale&days=$DAYS&units=$UNITS\">100%</a>";
+	print ")";
+  } else {
+	print "Y-axis: (";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$neg_autoscale&days=$DAYS&units=$UNITS\">zoom</a>";
+	print "|<b>100%</b>)";
+  }
 
-
+  print "<br>\n";
+  
   # graph
   print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS\" alt=\"$TBOX $TESTNAME graph\">";
 }
