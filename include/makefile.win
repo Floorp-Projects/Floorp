@@ -50,8 +50,6 @@ DEPTH = ..
 #INSTALL_DIR=$(XPDIST)\include
 EXPORTS = \
 		minicom.h \
-		npapi.h \
-		npupp.h \
                 platform.h \
                 xp_core.h \
                 xp_file.h \
