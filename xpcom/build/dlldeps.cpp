@@ -59,6 +59,7 @@
 #include "nsLinebreakConverter.h"
 #include "nsIBinaryInputStream.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIByteArrayInputStream.h"
 #ifdef DEBUG
 #include "pure.h"
 #endif
@@ -134,4 +135,5 @@ void XXXNeverCalled()
     nsLinebreakConverter::ConvertStringLineBreaks(foo, 
     nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
     NS_NewLocalFile(NULL, NULL);
+    NS_NewByteArrayInputStream (NULL, NULL, 0);
 }
