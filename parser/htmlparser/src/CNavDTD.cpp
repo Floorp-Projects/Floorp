@@ -42,7 +42,6 @@
 #include "nsViewSourceHTML.h"
 #include "nsParserNode.h"
 #include "nsHTMLEntities.h"
-#include "stopwatch.h"
 
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
@@ -87,12 +86,12 @@ static eHTMLTags gWhitespaceTags[]={
 
 #ifdef MOZ_PERF_METRICS
 #  define START_TIMER()                    \
-    if(mParser) mParser->mParseTime.Start(PR_FALSE); \
-    if(mParser) mParser->mDTDTime.Start(PR_FALSE); 
+    if(mParser) MOZ_TIMER_START(mParser->mParseTime); \
+    if(mParser) MOZ_TIMER_START(mParser->mDTDTime); 
 
 #  define STOP_TIMER()                     \
-    if(mParser) mParser->mParseTime.Stop(); \
-    if(mParser) mParser->mDTDTime.Stop(); 
+    if(mParser) MOZ_TIMER_STOP(mParser->mParseTime); \
+    if(mParser) MOZ_TIMER_STOP(mParser->mDTDTime); 
 
 #else
 #  define STOP_TIMER() 
@@ -413,7 +412,7 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
   mParseMode=aParseMode;
 
   if((aNotifySink) && (aSink)) {
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
     STOP_TIMER();
 
     if(aSink && (!mSink)) {
@@ -421,7 +420,7 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsString
     }
     result = aSink->WillBuildModel();
 
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillBuildModel(), this=%p\n", this));
     START_TIMER();
 
     nsAutoString theTagName("html");
@@ -510,7 +509,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
             } 
           }
         } 
-        RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
+        MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
         STOP_TIMER();
 
 #ifdef  RICKG_DEBUG
@@ -544,7 +543,7 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
         result=aSink->DidBuildModel(0); 
 #endif
 
-        RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
+        MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidBuildModel(), this=%p\n", this));
         START_TIMER();
 
         if(mDTDDebug) { 
@@ -757,13 +756,13 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
     case eHTMLTag_xmp:
       //grab the skipped content and dump it out as text...
       {        
-        RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
+        MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
         STOP_TIMER()
         const nsString& theText=aNode.GetSkippedContent();
         if(0<theText.Length()) {
           CViewSourceHTML::WriteText(theText,*mSink,PR_TRUE,PR_FALSE);
         }
-        RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
+        MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
         START_TIMER()
       }
       break;
@@ -1029,7 +1028,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
     result=CollectSkippedContent(aNode,theAttrCount); 
   } 
   
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::WillHandleStartTag(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillHandleStartTag(), this=%p\n", this));
   STOP_TIMER()
 
   if(mParser) {
@@ -1045,7 +1044,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
                              charsetValue,charsetSource);
   }
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::WillHandleStartTag(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillHandleStartTag(), this=%p\n", this));
   START_TIMER()
 
   if(NS_SUCCEEDED(result)) {
@@ -1257,13 +1256,13 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
         case eHTMLTag_area:
 
-          RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::HandleStartToken(), this=%p\n", this));
+          MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleStartToken(), this=%p\n", this));
           STOP_TIMER();
           
           if (mHasOpenMap && mSink)
             result=mSink->AddLeaf(*theNode);
           
-          RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::HandleStartToken(), this=%p\n", this));
+          MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleStartToken(), this=%p\n", this));
           START_TIMER();
 
           break;
@@ -1529,13 +1528,13 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
     PRInt32  theBadTokenCount   = mBodyContext->TokenCountAt(theBadContentIndex);
 
     if(theBadTokenCount > 0) {
-      RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));     
+      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));     
       STOP_TIMER()
       // Pause the main context and switch to the new context.
       eHTMLTags theParentTag=mBodyContext->TagAt(theBadContentIndex);
 
       mSink->BeginContext(theBadContentIndex);
-      RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));
+      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));
       START_TIMER()
 
       nsDTDContext temp;
@@ -1580,11 +1579,11 @@ nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
       for(PRInt32 k=0; k<(theTagCount - theTopIndex); k++)
         mBodyContext->Push(temp.Pop());
 
-      RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));     
+      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));     
       STOP_TIMER()      
       // Terminate the new context and switch back to the main context
       mSink->EndContext(theBadContentIndex);
-      RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));
+      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleSavedTokensAbove(), this=%p\n", this));
       START_TIMER()
     }
     return result;
@@ -1642,12 +1641,12 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
     WriteTokenToLog(aToken);
   #endif
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::HandleCommentToken(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleCommentToken(), this=%p\n", this));
   STOP_TIMER();
 
   nsresult result=(mSink) ? mSink->AddComment(aNode) : NS_OK;  
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::HandleCommentToken(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleCommentToken(), this=%p\n", this));
   START_TIMER();
 
   return result;
@@ -1719,12 +1718,12 @@ nsresult CNavDTD::HandleProcessingInstructionToken(CToken* aToken){
     WriteTokenToLog(aToken);
   #endif
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::HandleProcessingInstructionToken(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleProcessingInstructionToken(), this=%p\n", this));
   STOP_TIMER();
 
   nsresult result=(mSink) ? mSink->AddProcessingInstruction(aNode) : NS_OK; 
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::HandleProcessingInstructionToken(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleProcessingInstructionToken(), this=%p\n", this));
   START_TIMER();
 
   return result;
@@ -1752,12 +1751,12 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   docTypeStr.Trim("<!>");
   nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
   STOP_TIMER();
   
   result = (mSink)? mSink->AddDocTypeDecl(theNode,mParseMode):NS_OK;
   
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleDocTypeDeclToken(), this=%p\n", this));
   START_TIMER();
 
   return result;
@@ -2268,12 +2267,12 @@ nsresult CNavDTD::CloseTransientStyles(eHTMLTags aChildTag){
 nsresult CNavDTD::OpenHTML(const nsIParserNode& aNode){
   NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::OpenHTML(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenHTML(), this=%p\n", this));
   STOP_TIMER();
 
   nsresult result=(mSink) ? mSink->OpenHTML(aNode) : NS_OK; 
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::OpenHTML(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenHTML(), this=%p\n", this));
   START_TIMER();
 
   mBodyContext->Push((eHTMLTags)aNode.GetNodeType());
@@ -2292,12 +2291,12 @@ nsresult CNavDTD::OpenHTML(const nsIParserNode& aNode){
 nsresult CNavDTD::CloseHTML(const nsIParserNode& aNode){
   NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::CloseHTML(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseHTML(), this=%p\n", this));
   STOP_TIMER();
 
   nsresult result=(mSink) ? mSink->CloseHTML(aNode) : NS_OK; 
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::CloseHTML(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseHTML(), this=%p\n", this));
   START_TIMER();
 
   mBodyContext->Pop();
@@ -2317,14 +2316,14 @@ nsresult CNavDTD::OpenHead(const nsIParserNode& aNode){
   //mBodyContext->Push(eHTMLTag_head);
   nsresult result=NS_OK;
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::OpenHead(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenHead(), this=%p\n", this));
   STOP_TIMER();
 
   if(!mHasOpenHead++) {
     result=(mSink) ? mSink->OpenHead(aNode) : NS_OK;
   }
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::OpenHead(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenHead(), this=%p\n", this));
   START_TIMER();
 
   return result;
@@ -2343,12 +2342,12 @@ nsresult CNavDTD::CloseHead(const nsIParserNode& aNode){
   if(mHasOpenHead) {
     if(0==--mHasOpenHead){
 
-      RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::CloseHead(), this=%p\n", this));
+      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseHead(), this=%p\n", this));
       STOP_TIMER();
 
       result=(mSink) ? mSink->CloseHead(aNode) : NS_OK; 
 
-      RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::CloseHead(), this=%p\n", this));
+      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseHead(), this=%p\n", this));
       START_TIMER();
 
     }
@@ -2389,12 +2388,12 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
 
   if(NS_OK==result) {
 
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::OpenBody(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenBody(), this=%p\n", this));
     STOP_TIMER();
 
     result=(mSink) ? mSink->OpenBody(aNode) : NS_OK; 
 
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::OpenBody(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenBody(), this=%p\n", this));
     START_TIMER();
 
     if(!theBodyIsOpen) {
@@ -2417,12 +2416,12 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
 nsresult CNavDTD::CloseBody(const nsIParserNode& aNode){
   NS_PRECONDITION(mBodyContext->GetCount() >= 0, kInvalidTagStackPos);
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::CloseBody(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseBody(), this=%p\n", this));
   STOP_TIMER();
 
   nsresult result=(mSink) ? mSink->CloseBody(aNode) : NS_OK; 
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::CloseBody(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseBody(), this=%p\n", this));
   START_TIMER();
 
   mBodyContext->Pop();
@@ -2441,12 +2440,12 @@ nsresult CNavDTD::OpenForm(const nsIParserNode& aNode){
   if(mHasOpenForm)
     CloseForm(aNode);
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::OpenForm(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenForm(), this=%p\n", this));
   STOP_TIMER();
 
   nsresult result=(mSink) ? mSink->OpenForm(aNode) : NS_OK; 
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::OpenForm(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenForm(), this=%p\n", this));
   START_TIMER();
 
   if(NS_OK==result)
@@ -2468,12 +2467,12 @@ nsresult CNavDTD::CloseForm(const nsIParserNode& aNode){
   if(mHasOpenForm) {
     mHasOpenForm=PR_FALSE;
 
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
     STOP_TIMER();
 
     result=(mSink) ? mSink->CloseForm(aNode) : NS_OK; 
 
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
     START_TIMER();
 
   }
@@ -2492,12 +2491,12 @@ nsresult CNavDTD::OpenMap(const nsIParserNode& aNode){
   if(mHasOpenMap)
     CloseMap(aNode);
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::OpenMap(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenMap(), this=%p\n", this));
   STOP_TIMER();
 
   nsresult result=(mSink) ? mSink->OpenMap(aNode) : NS_OK; 
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::OpenMap(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenMap(), this=%p\n", this));
   START_TIMER();
 
   if(NS_OK==result) {
@@ -2521,12 +2520,12 @@ nsresult CNavDTD::CloseMap(const nsIParserNode& aNode){
   if(mHasOpenMap) {
     mHasOpenMap=PR_FALSE;
 
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::CloseMap(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseMap(), this=%p\n", this));
     STOP_TIMER();
 
     result=(mSink) ? mSink->CloseMap(aNode) : NS_OK; 
 
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::CloseMap(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseMap(), this=%p\n", this));
     START_TIMER();
 
     mBodyContext->Pop();
@@ -2547,12 +2546,12 @@ nsresult CNavDTD::OpenFrameset(const nsIParserNode& aNode){
 
   mHadFrameset=PR_TRUE;
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::OpenFrameset(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenFrameset(), this=%p\n", this));
   STOP_TIMER();
 
   nsresult result=(mSink) ? mSink->OpenFrameset(aNode) : NS_OK; 
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::OpenFrameset(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenFrameset(), this=%p\n", this));
   START_TIMER();
 
   mBodyContext->Push((eHTMLTags)aNode.GetNodeType());
@@ -2571,12 +2570,12 @@ nsresult CNavDTD::OpenFrameset(const nsIParserNode& aNode){
 nsresult CNavDTD::CloseFrameset(const nsIParserNode& aNode){
   NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::CloseFrameset(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseFrameset(), this=%p\n", this));
   STOP_TIMER();
 
   nsresult result=(mSink) ? mSink->CloseFrameset(aNode) : NS_OK; 
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::CloseFrameset(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseFrameset(), this=%p\n", this));
   START_TIMER();
 
   mBodyContext->Pop();
@@ -2659,12 +2658,12 @@ CNavDTD::OpenContainer(const nsIParserNode& aNode,PRBool aClosedByStartTag){
 
     default:
 
-      RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::OpenContainer(), this=%p\n", this));
+      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::OpenContainer(), this=%p\n", this));
       STOP_TIMER();
 
       result=(mSink) ? mSink->OpenContainer(aNode) : NS_OK; 
 
-      RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::OpenContainer(), this=%p\n", this));
+      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::OpenContainer(), this=%p\n", this));
       START_TIMER();
 
       mBodyContext->Push((eHTMLTags)aNode.GetNodeType());
@@ -2731,12 +2730,12 @@ CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,PRBool aClosed
     case eHTMLTag_title:
     default:
 
-      RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::CloseContainer(), this=%p\n", this));
+      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseContainer(), this=%p\n", this));
       STOP_TIMER();
 
       result=(mSink) ? mSink->CloseContainer(aNode) : NS_OK; 
 
-      RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::CloseContainer(), this=%p\n", this));
+      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseContainer(), this=%p\n", this));
       START_TIMER();
 
       mBodyContext->Pop();
@@ -2861,12 +2860,12 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
     eHTMLTags theTag=(eHTMLTags)aNode.GetNodeType();
     OpenTransientStyles(theTag); 
 
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
     STOP_TIMER();
     
     result=mSink->AddLeaf(aNode);
 
-    RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
     START_TIMER();
     
     if(NS_SUCCEEDED(result)) {
@@ -2886,7 +2885,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
                 theToken=mTokenizer->PopToken();
                 theNode->Init(theToken,mLineNumber,0);
 
-                RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
+                MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
                 STOP_TIMER();
               
                 result=mSink->AddLeaf(*theNode);
@@ -2898,7 +2897,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
                   else delete theToken;
                 }
                 
-                RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
+                MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
                 START_TIMER();
                 thePrevTag=theTag;
               }
@@ -2909,7 +2908,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
                 theToken=mTokenizer->PopToken();
                 theNode->Init(theToken,mLineNumber);
 
-                RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
+                MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
                 STOP_TIMER();
               
                 result=mSink->AddLeaf(*theNode);
@@ -2921,7 +2920,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
                   else delete theToken;
                 }
               
-                RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
+                MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
                 START_TIMER();
               }
               else done=PR_TRUE;
@@ -2973,10 +2972,10 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode& aNode){
         nsString* theStr=(nsString*)&theString;
         theStr->CompressWhitespace();
 
-        RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
+        MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
         STOP_TIMER()
         mSink->SetTitle(theString);
-        RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
+        MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::AddHeadLeaf(), this=%p\n", this));
         START_TIMER()
 
       }
@@ -3123,12 +3122,12 @@ nsITokenizer* CNavDTD::GetTokenizer(void) {
  */
 nsresult CNavDTD::WillResumeParse(void){
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::WillResumeParse(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillResumeParse(), this=%p\n", this));
   STOP_TIMER();
 
   nsresult result=(mSink) ? mSink->WillResume() : NS_OK; 
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::WillResumeParse(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillResumeParse(), this=%p\n", this));
   START_TIMER();
 
   return result;
@@ -3142,12 +3141,12 @@ nsresult CNavDTD::WillResumeParse(void){
  */
 nsresult CNavDTD::WillInterruptParse(void){
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::WillInterruptParse(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillInterruptParse(), this=%p\n", this));
   STOP_TIMER();
 
   nsresult result=(mSink) ? mSink->WillInterrupt() : NS_OK; 
 
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::WillInterruptParse(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillInterruptParse(), this=%p\n", this));
   START_TIMER();
 
   return result;

@@ -34,7 +34,7 @@
 // Uncomment and re-build to use the Mac Instrumentation SDK on a Mac.
 // #define MOZ_TIMER_USE_MAC_ISDK
 
-// Uncomment and re-build to use the 
+// Uncomment and re-build to use Quantify on Windows
 // #define MOZ_TIMER_USE_QUANTIFY
 
 // Timer macros for the Mac
@@ -43,9 +43,9 @@
 #ifdef MOZ_TIMER_USE_MAC_ISDK
 
 #include "InstrumentationHelpers.h"
-
-#  define MOZ_TIMER_CREATE(name, msg)    \
-  static InstTraceClassRef name = 0;  StInstrumentationLog __traceLog((msg), name)
+#  define MOZ_TIMER_DECLARE(name)  
+#  define MOZ_TIMER_CREATE(name)   \
+  static InstTraceClassRef name = 0;  StInstrumentationLog __traceLog("Creating name..."), name)
 
 #  define MOZ_TIMER_RESET(name, msg)
 #  define MOZ_TIMER_START(name, msg)
@@ -76,20 +76,22 @@
 #ifdef MOZ_TIMER_USE_QUANTIFY
 
 #include "pure.h"
+#  define MOZ_TIMER_DECLARE(name)
+#  define MOZ_TIMER_CREATE(name)
+#  define MOZ_TIMER_RESET(name)  \
+  QuantifyClearData()
 
-#  define MOZ_TIMER_CREATE(name, msg)
-#  define MOZ_TIMER_RESET(name, msg)  \
-  QuantifyClearData(); printf msg
-
-#  define MOZ_TIMER_START(name, msg)  \
-  QuantifyStartRecordingData(); printf msg
+#  define MOZ_TIMER_START(name)  \
+  QuantifyStartRecordingData()
   
-#  define MOZ_TIMER_STOP(name, msg) \
-  QuantifyStopRecordingData(); printf msg
+#  define MOZ_TIMER_STOP(name) \
+  QuantifyStopRecordingData()
 
-#  define MOZ_TIMER_SAVE(name, msg)
-#  define MOZ_TIMER_RESTORE(name, msg)  
+#  define MOZ_TIMER_SAVE(name)
+#  define MOZ_TIMER_RESTORE(name)
 
+#  define MOZ_TIMER_PRINT(name)
+ 
 #  define MOZ_TIMER_LOG(msg)    \ 
 do {                            \
   char* str = __mysprintf msg;  \
@@ -119,23 +121,29 @@ do {                            \
 
 #ifdef MOZ_TIMER_USE_STOPWATCH
 
-#  define MOZ_TIMER_CREATE(name, msg)    \
+#  define MOZ_TIMER_DECLARE(name)  \
+  Stopwatch name;
+
+#  define MOZ_TIMER_CREATE(name)    \
   static Stopwatch __sw_name;  nsStackBasedTimer name(&__sw_name)
 
-#  define MOZ_TIMER_RESET(name, msg)  \
-  name.Reset(); printf msg
+#  define MOZ_TIMER_RESET(name)  \
+  name.Reset();
 
-#  define MOZ_TIMER_START(name, msg)  \
-  name.Start(PR_FALSE); printf msg
-  
-#  define MOZ_TIMER_STOP(name, msg) \
-  name.Stop(); printf msg
+#  define MOZ_TIMER_START(name)  \
+  name.Start(PR_FALSE);
 
-#  define MOZ_TIMER_SAVE(name, msg) \
-  name.SaveState(); printf msg
+#  define MOZ_TIMER_STOP(name) \
+  name.Stop();
 
-#  define MOZ_TIMER_RESTORE(name, msg)  \
-  name.RestoreState(); printf msg
+#  define MOZ_TIMER_SAVE(name) \
+  name.SaveState();
+
+#  define MOZ_TIMER_RESTORE(name)  \
+  name.RestoreState();
+
+#  define MOZ_TIMER_PRINT(name)   \
+  name.Print();
 
 #  define MOZ_TIMER_LOG(msg)  \
   printf msg
@@ -148,13 +156,15 @@ do {                            \
 #endif // MOZ_TIMER_USE_STOPWATCH
 
 #else
-#  define MOZ_TIMER_CREATE(name, msg)
-#  define MOZ_TIMER_RESET(name, msg)
-#  define MOZ_TIMER_START(name, msg)
-#  define MOZ_TIMER_STOP(name, msg)
-#  define MOZ_TIMER_SAVE(name, msg)
-#  define MOZ_TIMER_RESTORE(name, msg)
-#  define MOZ_TIMER_LOG(name, msg)
+#  define MOZ_TIMER_DECLARE(name)
+#  define MOZ_TIMER_CREATE(name)
+#  define MOZ_TIMER_RESET(name)
+#  define MOZ_TIMER_START(name)
+#  define MOZ_TIMER_STOP(name)
+#  define MOZ_TIMER_SAVE(name)
+#  define MOZ_TIMER_RESTORE(name)
+#  define MOZ_TIMER_PRINT(name)
+#  define MOZ_TIMER_LOG(msg)
 #  define MOZ_TIMER_DEBUGLOG(msg)
 #  define MOZ_TIMER_MACISDK_LOGDATA(msg, data)
 #endif  // MOZ_PERF_METRICS

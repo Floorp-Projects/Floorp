@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 
+#ifdef __NSSTACKBASEDTIMER_H
+#define __NSSTACKBASEDTIMER_H
 #include "stopwatch.h"
 
 class nsStackBasedTimer {
@@ -35,4 +37,5 @@ public:
   
 private:
   Stopwatch* sw;
-}
+};
+#endif  // __NSSTACKBASEDTIMER_H

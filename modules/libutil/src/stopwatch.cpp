@@ -223,9 +223,9 @@ void Stopwatch::Print(void) {
    realt -= min * 60;
    int  sec   = int(realt);
 #ifdef MOZ_PERF_METRICS
-   RAPTOR_STOPWATCH_TRACE(("Real time %d:%d:%d, CP time %.3f", hours, min, sec, CpuTime()));
+   RAPTOR_STOPWATCH_TRACE(("Real time %d:%d:%d, CP time %.3f\n", hours, min, sec, CpuTime()));
 #else
-   printf("Real time %d:%d:%d, CP time %.3f", hours, min, sec, CpuTime());
+   printf("Real time %d:%d:%d, CP time %.3f\n", hours, min, sec, CpuTime());
 #endif
 }
 

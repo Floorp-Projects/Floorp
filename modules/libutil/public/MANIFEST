@@ -4,3 +4,5 @@
 
 xp_obs.h
 stopwatch.h
+nsTimer.h
+nsStackBasedTimer.h

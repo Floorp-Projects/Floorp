@@ -31,7 +31,10 @@ XPIDLSRCS =                         \
         .\nsITimeRecorder.idl		\
         $(NULL)
 
-EXPORTS=xp_obs.h stopwatch.h
+EXPORTS=xp_obs.h \
+        stopwatch.h \
+		nsTimer.h \
+		nsStackBasedTimer.h
 
 
 !include $(DEPTH)\config\rules.mak

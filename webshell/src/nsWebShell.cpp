@@ -69,7 +69,7 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
-#include "stopwatch.h"
+#include "nsTimer.h"
 
 #include "nsILocaleService.h"
 static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
@@ -492,9 +492,7 @@ protected:
   // if there is no mWindow, this will keep track of the bounds  --dwc0001
   nsRect  mBounds;
 
-#ifdef MOZ_PERF_METRICS
-  Stopwatch mTotalTime;
-#endif
+  MOZ_TIMER_DECLARE(mTotalTime);
 
 #ifdef DETECT_WEBSHELL_LEAKS
 private:
@@ -2075,13 +2073,14 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
      nsresult rv = NS_OK;
      rv = aUri->GetSpec(&url);
      if (NS_SUCCEEDED(rv)) {
-       RAPTOR_STOPWATCH_TRACE(("*** Timing layout processes on url: '%s', webshell: %p\n", url, this));
+       MOZ_TIMER_LOG(("*** Timing layout processes on url: '%s', webshell: %p\n", url, this));
        delete [] url;
      }
   }
-
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Reset and start: nsWebShell::DoLoadURL(), this=%p\n", this));
-  NS_RESET_AND_START_STOPWATCH(mTotalTime)
+  
+  MOZ_TIMER_DEBUGLOG(("Reset and start: nsWebShell::DoLoadURL(), this=%p\n", this));
+  MOZ_TIMER_RESET(mTotalTime);
+  MOZ_TIMER_START(mTotalTime);
 #endif
 
  /* WebShell was primarily passing the buck when it came to streamObserver.
@@ -3320,11 +3319,10 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
                               nsIDocumentLoaderObserver * aWebShell)
 {
 #ifdef MOZ_PERF_METRICS
-  RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: nsWebShell::OnEndDocumentLoad(), this=%p\n", this));
-  NS_STOP_STOPWATCH(mTotalTime)
-  RAPTOR_STOPWATCH_TRACE(("Total (Layout + Page Load) Time (webshell=%p): ", this));
-  mTotalTime.Print();
-  RAPTOR_STOPWATCH_TRACE(("\n"));
+  MOZ_TIMER_DEBUGLOG(("Stop: nsWebShell::OnEndDocumentLoad(), this=%p\n", this));
+  MOZ_TIMER_STOP(mTotalTime);
+  MOZ_TIMER_LOG(("Total (Layout + Page Load) Time (webshell=%p): ", this));
+  MOZ_TIMER_PRINT(mTotalTime);
 #endif
 
   nsresult rv = NS_ERROR_FAILURE;
