@@ -78,28 +78,28 @@ public:
     return rv;
   }
  
-  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
-                          const nsAReadableString& aValue, PRBool aNotify) {
+  NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                     const nsAReadableString& aValue, PRBool aNotify) {
     nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNameSpaceID, aName,
                                                     aValue, aNotify);
     UpdateStyleSheet(aNotify);
     return rv;
   }
-  NS_IMETHOD SetAttribute(nsINodeInfo* aNodeInfo,
-                          const nsAReadableString& aValue, PRBool aNotify) {
+  NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
+                     PRBool aNotify) {
     nsresult rv = nsGenericHTMLLeafElement::SetAttr(aNodeInfo, aValue,
                                                     aNotify);
 
-    // nsGenericHTMLLeafElement::SetAttribute(nsINodeInfo* aNodeInfo,
-    //                                        const nsAReadableString& aValue,
-    //                                        PRBool aNotify)
+    // nsGenericHTMLLeafElement::SetAttr(nsINodeInfo* aNodeInfo,
+    //                                   const nsAReadableString& aValue,
+    //                                   PRBool aNotify)
     //
     // calls
     //
-    // nsHTMLLinkElement::SetAttribute(PRInt32 aNameSpaceID,
-    //                                 nsIAtom* aName,
-    //                                 const nsAReadableString& aValue,
-    //                                 PRBool aNotify)
+    // nsHTMLLinkElement::SetAttr(PRInt32 aNameSpaceID,
+    //                            nsIAtom* aName,
+    //                            const nsAReadableString& aValue,
+    //                            PRBool aNotify)
     //
     // which ends up calling UpdateStyleSheet so we don't call UpdateStyleSheet
     // here ourselves.
