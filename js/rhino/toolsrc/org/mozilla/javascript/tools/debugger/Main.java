@@ -46,7 +46,6 @@ import java.util.StringTokenizer;
 
 import org.mozilla.javascript.*;
 import org.mozilla.javascript.debug.*;
-import org.mozilla.javascript.tools.shell.Main;
 import org.mozilla.javascript.tools.shell.ConsoleTextArea;
 import java.util.*;
 import java.io.*;
@@ -91,7 +90,7 @@ class MessageDialogWrapper {
 
 class EvalTextArea extends JTextArea implements KeyListener,
 DocumentListener {
-    JSDebugger db;
+    Main db;
     private java.util.Vector history;
     private int historyIndex = -1;
     private int outputMark = 0;
@@ -101,7 +100,7 @@ DocumentListener {
 	super.select(start, end);
     }
 
-    public EvalTextArea(JSDebugger db) {
+    public EvalTextArea(Main db) {
         super();
 	this.db = db;
         history = new java.util.Vector();
@@ -266,7 +265,7 @@ implements ActionListener {
 	evalTextArea.setEnabled(b);
     }
 
-    public EvalWindow(String name, JSDebugger db) {
+    public EvalWindow(String name, Main db) {
         super(name, true, false, true, true);
         evalTextArea = new EvalTextArea(db);
 	evalTextArea.setRows(24);
@@ -596,7 +595,7 @@ class FindFunction extends JDialog implements ActionListener {
   private String value = null;
   private JList list;
     Hashtable functionMap;
-  JSDebugger db;
+  Main db;
   JButton setButton;
   JButton refreshButton;
   JButton cancelButton;
@@ -628,7 +627,7 @@ class FindFunction extends JDialog implements ActionListener {
 		return;
 	    }
 	    setVisible(false);
-	    JSDebugger.SourceEntry sourceEntry = (JSDebugger.SourceEntry)functionMap.get(value);
+	    Main.SourceEntry sourceEntry = (Main.SourceEntry)functionMap.get(value);
 	    DebuggableScript script = sourceEntry.fnOrScript;
 	    if(script != null) {
 		String sourceName = script.getSourceName();
@@ -667,7 +666,7 @@ class FindFunction extends JDialog implements ActionListener {
 	}
     };
 
-    FindFunction(JSDebugger db, Hashtable functionMap,
+    FindFunction(Main db, Hashtable functionMap,
 		 String title,
 		 String labelText) {
 	super(db, title, true);
@@ -855,7 +854,7 @@ class FileHeader extends JPanel implements MouseListener {
 
 class FileWindow extends JInternalFrame implements ActionListener {
 
-    JSDebugger db;
+    Main db;
     FileTextArea textArea;
     FileHeader fileHeader;
     JScrollPane p;
@@ -950,7 +949,7 @@ class FileWindow extends JInternalFrame implements ActionListener {
 	}
     }
 
-    FileWindow(JSDebugger db, String fileName, String text) {
+    FileWindow(Main db, String fileName, String text) {
 	super(new File(fileName).getName(), true, true, true, true);
 	this.db = db;
 	breakpoints = (Hashtable)db.breakpointsMap.get(fileName);
@@ -1022,10 +1021,10 @@ class FileWindow extends JInternalFrame implements ActionListener {
 };
 
 class MyTableModel extends AbstractTableModel {
-    JSDebugger db;
+    Main db;
     Vector expressions;
     Vector values;
-    MyTableModel(JSDebugger db) {
+    MyTableModel(Main db) {
 	this.db = db;
 	expressions = new Vector();
 	values = new Vector();
@@ -1109,7 +1108,7 @@ class MyTableModel extends AbstractTableModel {
 
 class Evaluator extends JTable {
     MyTableModel tableModel;
-    Evaluator(JSDebugger db) {
+    Evaluator(Main db) {
 	super(new MyTableModel(db));
 	tableModel = (MyTableModel)getModel();
     }
@@ -1166,9 +1165,9 @@ class ContextWindow extends JPanel implements ActionListener {
     Evaluator evaluator;
     EvalTextArea cmdLine;
     JSplitPane split;
-    JSDebugger db;
+    Main db;
     boolean enabled;
-    ContextWindow(JSDebugger db) {
+    ContextWindow(Main db) {
 	super();
 	this.db = db;
 	enabled = false;
@@ -1285,7 +1284,7 @@ class ContextWindow extends JPanel implements ActionListener {
 	split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
 			       p1, p2);
 	split.setOneTouchExpandable(true);
-	JSDebugger.setResizeWeight(split, 0.5);
+	Main.setResizeWeight(split, 0.5);
 	setLayout(new BorderLayout());
 	add(split, BorderLayout.CENTER);
 
@@ -1295,7 +1294,7 @@ class ContextWindow extends JPanel implements ActionListener {
 	final JPanel finalP2 = p2;
 	final JSplitPane finalSplit = split;
 	final JPanel finalThis = this;
-	final JSDebugger finalDb = db;
+	final Main finalDb = db;
 
 	ComponentListener clistener = new ComponentListener() {
 		boolean t1Docked = true;
@@ -1520,13 +1519,13 @@ class ContextWindow extends JPanel implements ActionListener {
 
 class CreateFileWindow implements Runnable {
 
-    JSDebugger db;
+    Main db;
     String url;
     String text;
     int line;
     boolean activate;
 
-    CreateFileWindow(JSDebugger db,
+    CreateFileWindow(Main db,
 		     String url, String text, int line) {
 	this.db = db;
 	this.url = url;
@@ -1535,7 +1534,7 @@ class CreateFileWindow implements Runnable {
 	this.activate = true;
     }
 
-    CreateFileWindow(JSDebugger db,
+    CreateFileWindow(Main db,
 		     String url, String text, int line, boolean activate) {
 	this.db = db;
 	this.url = url;
@@ -1576,19 +1575,19 @@ class CreateFileWindow implements Runnable {
 
 class SetFilePosition implements Runnable {
 
-    JSDebugger db;
+    Main db;
     FileWindow w;
     int line;
     boolean activate;
 
-    SetFilePosition(JSDebugger db, FileWindow w, int line) {
+    SetFilePosition(Main db, FileWindow w, int line) {
 	this.db = db; 
 	this.w = w; 
 	this.line = line; 
 	activate = true;
     }
 
-    SetFilePosition(JSDebugger db, FileWindow w, int line, boolean activate) {
+    SetFilePosition(Main db, FileWindow w, int line, boolean activate) {
 	this.db = db; 
 	this.w = w; 
 	this.line = line; 
@@ -1643,10 +1642,10 @@ class SetFileText implements Runnable {
 }
 
 class UpdateContext implements Runnable {
-    JSDebugger db;
+    Main db;
     Context cx;
     DebuggableEngine engine;
-    UpdateContext(JSDebugger db, Context cx) {
+    UpdateContext(Main db, Context cx) {
 	this.db = db;
 	this.cx = cx;
 	this.engine = cx.getDebuggableEngine();
@@ -1694,7 +1693,7 @@ class Menubar extends JMenuBar implements ActionListener {
 	return getMenu(2);
     }
 
-    Menubar(JSDebugger db) {
+    Menubar(Main db) {
 	super();
 	this.db = db;
 	String[] fileItems  = {"Open...", "Run...", "", "Exit"};
@@ -1850,15 +1849,15 @@ class Menubar extends JMenuBar implements ActionListener {
 	item.addActionListener(this);
     }
 
-    JSDebugger db;
+    Main db;
     JMenu windowMenu;
     JCheckBoxMenuItem breakOnExceptions;
 };
 
 class EnterInterrupt implements Runnable {
-    JSDebugger db;
+    Main db;
     Context cx;
-    EnterInterrupt(JSDebugger db, Context cx) {
+    EnterInterrupt(Main db, Context cx) {
 	this.db = db;
 	this.cx = cx;
     }
@@ -1883,8 +1882,8 @@ class EnterInterrupt implements Runnable {
 };
 
 class ExitInterrupt implements Runnable {
-    JSDebugger db;
-    ExitInterrupt(JSDebugger db) {
+    Main db;
+    ExitInterrupt(Main db) {
 	this.db = db;
     }
     public void run() {
@@ -1910,8 +1909,8 @@ class ExitInterrupt implements Runnable {
 class OpenFile implements Runnable {
     Scriptable scope;
     String fileName;
-    JSDebugger db;
-    OpenFile(JSDebugger db, Scriptable scope, String fileName) {
+    Main db;
+    OpenFile(Main db, Scriptable scope, String fileName) {
 	this.scope = scope;
 	this.fileName = fileName;
 	this.db = db;
@@ -1942,8 +1941,8 @@ class OpenFile implements Runnable {
 class LoadFile implements Runnable {
     Scriptable scope;
     String fileName;
-    JSDebugger db;
-    LoadFile(JSDebugger db, Scriptable scope, String fileName) {
+    Main db;
+    LoadFile(Main db, Scriptable scope, String fileName) {
 	this.scope = scope;
 	this.fileName = fileName;
 	this.db = db;
@@ -2004,7 +2003,7 @@ class ContextHelper {
 }
 
 
-public class JSDebugger extends JFrame implements Debugger, ContextListener {
+public class Main extends JFrame implements Debugger, ContextListener {
 
     /* ContextListener interface */
 
@@ -2269,7 +2268,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	split1 = new JSplitPane(JSplitPane.VERTICAL_SPLIT, desk,
 					  context);
 	split1.setOneTouchExpandable(true);
-	JSDebugger.setResizeWeight(split1, 0.66);
+	Main.setResizeWeight(split1, 0.66);
 	contentPane.add(split1, BorderLayout.CENTER);
 	statusBar = new JLabel();
 	statusBar.setText("Thread: ");
@@ -2298,7 +2297,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
                     }
                 };
         dlg.addChoosableFileFilter(filter);
-	final JSDebugger self = this;
+	final Main self = this;
 	addWindowListener(new WindowAdapter() {
 		public void windowClosing(WindowEvent e) {
 		    self.Exit();
@@ -3074,7 +3073,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
     // public interface
     //
 
-    public JSDebugger(String title) {
+    public Main(String title) {
 	super(title);
 	init();
     }
@@ -3133,7 +3132,7 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
     public static void main(String[] args) {
 	try {
 	    mainThread = Thread.currentThread();
-	    final JSDebugger sdb = new JSDebugger("Rhino JavaScript Debugger");
+	    final Main sdb = new Main("Rhino JavaScript Debugger");
 	    swingInvoke(new Runnable() {
 		    public void run() {
 			sdb.pack();
@@ -3152,10 +3151,10 @@ public class JSDebugger extends JFrame implements Debugger, ContextListener {
 	    Context.addContextListener(sdb);
 	    sdb.setScopeProvider(new ScopeProvider() {
 		    public Scriptable getScope() {
-			return Main.getScope();
+			return org.mozilla.javascript.tools.shell.Main.getScope();
 		    }
 		});
-	    Main.exec(args);
+	    org.mozilla.javascript.tools.shell.Main.exec(args);
 	} catch(Exception exc) {
 	    exc.printStackTrace();
 	}
