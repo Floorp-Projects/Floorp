@@ -49,6 +49,7 @@
 #include "nsIAddrBookSession.h"
 #include "nsAbQueryStringToExpression.h"
 #include "nsAbUtils.h"
+#include "nsIProxyObjectManager.h"
 
 #include "prlog.h"
 #include "prthread.h"
@@ -998,10 +999,16 @@ NS_IMETHODIMP nsAbOutlookDirectory::StartSearch(void)
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     retCode = arguments->SetQuerySubDirectories(PR_TRUE) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
-    nsCOMPtr<nsIAbDirectoryQueryResultListener> queryListener ;
-    
-    queryListener = new nsAbDirSearchListener(this) ;
-    return DoQuery(arguments, queryListener, -1, 0, &mSearchContext) ;
+    nsCOMPtr<nsIAbDirectoryQueryResultListener> proxyListener;
+
+    retCode = NS_GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                     NS_GET_IID(nsIAbDirectoryQueryResultListener),
+                     NS_STATIC_CAST(nsIAbDirectoryQueryResultListener *, new nsAbDirSearchListener(this)),
+                     PROXY_SYNC | PROXY_ALWAYS,
+                     getter_AddRefs(proxyListener));
+    NS_ENSURE_SUCCESS(retCode, retCode) ;
+
+    return DoQuery(arguments, proxyListener, -1, 0, &mSearchContext) ;
 }
 
 NS_IMETHODIMP nsAbOutlookDirectory::StopSearch(void) 
@@ -1105,14 +1112,19 @@ nsresult nsAbOutlookDirectory::GetChildCards(nsISupportsArray **aCards,
     nsCAutoString entryId ;
     nsCAutoString uriName ;
     nsCOMPtr<nsIRDFResource> resource ;
-
+    nsCOMPtr <nsIAbCard> childCard;
+        
     for (ULONG card = 0 ; card < cardEntries.mNbEntries ; ++ card) {
         cardEntries.mEntries [card].ToString(entryId) ;
         buildAbWinUri(kOutlookCardScheme, mAbWinType, uriName) ;
         uriName.Append(entryId) ;
-        retCode = gRDFService->GetResource(uriName.get(), getter_AddRefs(resource)) ;
+        childCard = do_CreateInstance(NS_ABOUTLOOKCARD_CONTRACTID, &retCode);
         NS_ENSURE_SUCCESS(retCode, retCode) ;
-        cards->AppendElement(resource) ;
+        resource = do_QueryInterface(childCard, &retCode) ;
+        NS_ENSURE_SUCCESS(retCode, retCode) ;
+        retCode = resource->Init(uriName.get()) ;
+        NS_ENSURE_SUCCESS(retCode, retCode) ;
+        cards->AppendElement(childCard) ;
     }
     *aCards = cards ;
     NS_ADDREF(*aCards) ;
@@ -1291,10 +1303,11 @@ nsresult nsAbOutlookDirectory::CreateCard(nsIAbCard *aData, nsIAbCard **aNewCard
     uri.Append(entryString) ;
     nsCOMPtr<nsIRDFResource> resource ;
     
-    retCode = gRDFService->GetResource(uri.get(), getter_AddRefs(resource)) ;
+    nsCOMPtr<nsIAbCard> newCard = do_CreateInstance(NS_ABOUTLOOKCARD_CONTRACTID, &retCode);
     NS_ENSURE_SUCCESS(retCode, retCode) ;
-    nsCOMPtr<nsIAbCard> newCard(do_QueryInterface(resource, &retCode)) ;
-    
+    resource = do_QueryInterface(newCard, &retCode) ;
+    NS_ENSURE_SUCCESS(retCode, retCode) ;
+    retCode = resource->Init(uri.get()) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     if (!didCopy) {
         retCode = newCard->Copy(aData) ;
