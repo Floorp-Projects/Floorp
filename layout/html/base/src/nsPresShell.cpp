@@ -2242,11 +2242,12 @@ nsresult PresShell::SetPrefLinkRules(void)
           ///////////////////////////////////////////////////////////////
           // - links: '*:link, *:link:active {color: #RRGGBB [!important];}'
           ColorToString(linkColor,strColor);
+          NS_NAMED_LITERAL_STRING(notImportantStr, ";} ");
+          NS_NAMED_LITERAL_STRING(importantStr, " !important;} ");
+          nsAString& ruleClose = useDocColors ? notImportantStr : importantStr;
           result = sheet->InsertRule(NS_LITERAL_STRING("*:link, *:link:active {color:") +
                                      strColor +
-                                     ( useDocColors ?
-                                       NS_LITERAL_STRING(";} ") :
-                                       NS_LITERAL_STRING(" !important;} ") ),
+                                     ruleClose,
                                      0,&index);
           NS_ENSURE_SUCCESS(result, result);
             
@@ -2256,9 +2257,7 @@ nsresult PresShell::SetPrefLinkRules(void)
           // insert the rule
           result = sheet->InsertRule(NS_LITERAL_STRING("*:visited, *:visited:active {color:") +
                                      strColor +
-                                     ( useDocColors ?
-                                       NS_LITERAL_STRING(";} ") :
-                                       NS_LITERAL_STRING(" !important;} ") ),
+                                     ruleClose,
                                      0,&index);
         }
 
