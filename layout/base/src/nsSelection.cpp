@@ -3054,7 +3054,7 @@ nsSelection::GetLimiter(nsIContent **aLimiterContent)
 {
   if (!aLimiterContent) return NS_ERROR_NULL_POINTER;
   *aLimiterContent = mLimiter;
-  NS_IFADDREF(*aLimiterContent);
+  NS_IF_ADDREF(*aLimiterContent);
 
   return NS_OK;
 }
