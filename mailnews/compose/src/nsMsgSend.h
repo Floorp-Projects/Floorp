@@ -134,7 +134,7 @@
 #include "nsMsgMessageFlags.h"
 #include "MsgCompGlue.h"
 #include "nsIMsgSend.h"
-#include "nsIUrl.h"
+#include "nsIURL.h"
 #include "nsMsgAttachmentHandler.h"
 
 //
