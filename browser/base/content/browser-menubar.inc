@@ -311,7 +311,7 @@
                   ondragenter="nsDragAndDrop.dragEnter(event, BookmarksMenuDNDObserver); event.preventBubble()"
                   ondragexit="nsDragAndDrop.dragExit(event, BookmarksMenuDNDObserver); event.preventBubble()"
                   ondragover="nsDragAndDrop.dragOver(event, BookmarksMenuDNDObserver); event.preventBubble()">
-              <menupopup contextmenu='bookmarks-context-menu'>
+              <menupopup id="menu_BookmarksPopup" contextmenu='bookmarks-context-menu'>
                 <menuitem key="addBookmarkAsKb"
                           label="&addCurPageAsCmd.label;"
                           accesskey="&addCurPageAsCmd.accesskey;"
