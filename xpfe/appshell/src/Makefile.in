@@ -38,6 +38,8 @@ CPPSRCS= \
   nsAppShellNameSet.cpp \
 	nsFileLocations.cpp     \
 	nsGlobalHistory.cpp	\
+	nsDefaultHelper.cpp \
+	nsNetSupportDialog.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
