@@ -452,13 +452,11 @@ nsDocLoaderImpl::CreateContentViewer(const char *aCommand,
         return rv;
     }
 
-    nsCOMPtr<nsIContentViewerContainer> container(do_QueryInterface(aContainer));
-
     // Now create an instance of the content viewer
     rv = factory->CreateInstance(aCommand, 
                                  channel, mLoadGroup,
                                  aContentType,
-                                 container,
+                                 aContainer,
                                  aExtraInfo, aDocListenerResult,
                                  aDocViewerResult);
     NS_RELEASE(factory);
