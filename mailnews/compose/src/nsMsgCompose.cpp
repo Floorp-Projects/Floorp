@@ -662,7 +662,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
       if (NS_SUCCEEDED(rv) && NULL != bodyText)
       {
 		    msgBody = bodyText;
-        nsAllocator::Free(bodyText);
+        nsMemory::Free(bodyText);
 
 		    // Convert body to mail charset not to utf-8 (because we don't manipulate body text)
 		    char *outCString = NULL;

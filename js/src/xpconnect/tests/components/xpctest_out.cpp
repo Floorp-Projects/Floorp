@@ -174,7 +174,7 @@ NS_IMETHODIMP xpcTestOut :: GetString(PRUnichar **ws){
 
 	if(!stringProperty)
 		return NS_ERROR_NULL_POINTER;
-    *ws = (PRUnichar *) nsAllocator::Clone(stringProperty, 
+    *ws = (PRUnichar *) nsMemory::Clone(stringProperty, 
 					sizeof(char) *(strlen(stringProperty)+1));
 	return **ws? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 

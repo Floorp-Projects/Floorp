@@ -59,7 +59,7 @@ public:
 	~StDeallocator()
 	{
 		if (mMemory)
-        nsAllocator::Free(mMemory);
+        nsMemory::Free(mMemory);
 	 }
 private:
 	void* mMemory;
@@ -165,10 +165,10 @@ class CacheMetaData {
 
     ~CacheMetaData() {
     		if( mTag )
-    			nsAllocator::Free( mTag );
+    			nsMemory::Free( mTag );
     			
         if (mOpaqueBytes)
-            nsAllocator::Free(mOpaqueBytes);
+            nsMemory::Free(mOpaqueBytes);
         delete mNext;
     }
 
@@ -176,14 +176,14 @@ protected:
     nsresult Set(PRUint32 aLength, const char* aOpaqueBytes) {
         char* newOpaqueBytes = 0;
         if (aOpaqueBytes) {
-            newOpaqueBytes = (char*)nsAllocator::Alloc(aLength);
+            newOpaqueBytes = (char*)nsMemory::Alloc(aLength);
             if (!newOpaqueBytes)
                 return NS_ERROR_OUT_OF_MEMORY;
             memcpy(newOpaqueBytes, aOpaqueBytes, aLength);
         }
         
         if (mOpaqueBytes)
-            nsAllocator::Free(mOpaqueBytes);
+            nsMemory::Free(mOpaqueBytes);
 
         mOpaqueBytes = newOpaqueBytes;
         mLength = aLength;
@@ -193,7 +193,7 @@ protected:
     nsresult Get(PRUint32 *aLength, char* *aOpaqueBytes) {
         char *copyOpaqueBytes = 0;
         if (mOpaqueBytes) {
-            copyOpaqueBytes = (char*)nsAllocator::Alloc(mLength);
+            copyOpaqueBytes = (char*)nsMemory::Alloc(mLength);
             if (!copyOpaqueBytes)
                 return NS_ERROR_OUT_OF_MEMORY;
             memcpy(copyOpaqueBytes, mOpaqueBytes, mLength);
@@ -460,7 +460,7 @@ nsCachedNetData::Deserialize(PRBool aDeserializeFlags)
 #if 0
     nsCString metaDataCStr(metaData, metaDataLength);
     if (metaData)
-        nsAllocator::Free(metaData);
+        nsMemory::Free(metaData);
 
     nsCOMPtr<nsISupports> stringStreamSupports;
     rv = NS_NewCStringInputStream(getter_AddRefs(stringStreamSupports), metaDataCStr);
@@ -589,14 +589,14 @@ nsCachedNetData::GetSecondaryKey(PRUint32 *aLength, char **aSecondaryKey)
     secondaryKey++;
     
     if (keyLength) {
-        char* copy = (char*)nsAllocator::Alloc(keyLength);
+        char* copy = (char*)nsMemory::Alloc(keyLength);
         if (!copy)
             return NS_ERROR_OUT_OF_MEMORY;
         memcpy(copy, secondaryKey, keyLength);
         *aSecondaryKey = copy;
     }
 
-    nsAllocator::Free(key);
+    nsMemory::Free(key);
     *aLength = keyLength;
     return NS_OK;
 }
@@ -825,16 +825,16 @@ nsCachedNetData::Commit(void)
 
     inputStream->Available(&serializedDataLength);
 
-    serializedData = (char*)nsAllocator::Alloc(serializedDataLength);
+    serializedData = (char*)nsMemory::Alloc(serializedDataLength);
     if (!serializedData) goto error;
     inputStream->Read(serializedData, serializedDataLength, &bytesRead);
     if (NS_FAILED(rv)) {
-        nsAllocator::Free(serializedData);
+        nsMemory::Free(serializedData);
         goto error;
     }
 
     rv = record->SetMetaData(serializedDataLength, serializedData);
-    nsAllocator::Free(serializedData);
+    nsMemory::Free(serializedData);
     return rv;
 
  error:

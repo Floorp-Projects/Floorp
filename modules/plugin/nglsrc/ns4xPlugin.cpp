@@ -27,7 +27,7 @@
 #include "ns4xPlugin.h"
 #include "ns4xPluginInstance.h"
 #include "nsIServiceManager.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsIPluginStreamListener.h"
 #include "nsPluginsDir.h"
 
@@ -43,7 +43,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 NPNetscapeFuncs ns4xPlugin::CALLBACKS;
 nsIPluginManager *  ns4xPlugin::mPluginManager;
-nsIAllocator *         ns4xPlugin::mMalloc;
+nsIMemory *         ns4xPlugin::mMalloc;
 
 void
 ns4xPlugin::CheckClassInitialized(void)
@@ -104,8 +104,8 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID); 
-static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
-static NS_DEFINE_IID(kIAllocatorIID, NS_IALLOCATOR_IID);
+static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
+static NS_DEFINE_IID(kIMemoryIID, NS_IMEMORY_IID);
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
 ////////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, NP_PLUGINSHUTDOWN aShutdown, ns
 		serviceMgr->GetService(kPluginManagerCID, kIPluginManagerIID, (nsISupports**)&mPluginManager);
 
 	if (nsnull == mMalloc)
-		serviceMgr->GetService(kAllocatorCID, kIAllocatorIID, (nsISupports**)&mMalloc);
+		serviceMgr->GetService(kMemoryCID, kIMemoryIID, (nsISupports**)&mMalloc);
 }
 
 

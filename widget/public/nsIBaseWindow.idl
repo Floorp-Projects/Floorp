@@ -29,7 +29,7 @@
 #include "nsIWidget.h"
 %}
 
-typedef voidStar nativeWindow;
+typedef voidPtr nativeWindow;
 
 /**
  * The nsIBaseWindow describes a generic window and basic operations that 

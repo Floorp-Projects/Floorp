@@ -165,7 +165,7 @@ nsDataChannel::ParseData() {
 
     PRUint32 dataLen = PL_strlen(dataBuffer);
     PRUint32 wrote;
-    writeData *dataToWrite = (writeData*)nsAllocator::Alloc(sizeof(writeData));
+    writeData *dataToWrite = (writeData*)nsMemory::Alloc(sizeof(writeData));
     if (!dataToWrite) return NS_ERROR_OUT_OF_MEMORY;
 
     if (lBase64) {
@@ -188,7 +188,7 @@ nsDataChannel::ParseData() {
 
         rv = bufOutStream->WriteSegments(nsReadData, dataToWrite, dataToWrite->dataLen, &wrote);
 
-        nsAllocator::Free(decodedData);
+        nsMemory::Free(decodedData);
     } else {
         dataToWrite->dataLen = dataLen;
         dataToWrite->data = dataBuffer;
@@ -205,8 +205,8 @@ nsDataChannel::ParseData() {
 
     *comma = ',';
 
-    nsAllocator::Free(dataToWrite);
-    if (cleanup) nsAllocator::Free(dataBuffer);
+    nsMemory::Free(dataToWrite);
+    if (cleanup) nsMemory::Free(dataBuffer);
     return NS_OK;
 }
 

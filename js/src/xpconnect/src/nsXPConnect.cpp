@@ -389,7 +389,7 @@ nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
     if(NS_SUCCEEDED(oldest->GetIID(&iid)))
     {
         retval = iid->Equals(NS_GET_IID(nsISupports));
-        nsAllocator::Free(iid);
+        nsMemory::Free(iid);
     }
     return retval;
 }

@@ -1,4 +1,4 @@
-
+!
 /*************************************************************************************
  *  
  * MODULES NOTES:
@@ -23,7 +23,7 @@
 
 #include "nsIAtom.h"
 #include "nscore.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include <string.h>
 
 #if 0

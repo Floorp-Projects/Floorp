@@ -515,7 +515,7 @@ nsresult nsHTTPResponse::GetMaxAge(PRUint32* aMaxAge, PRBool* aMaxAgeIsPresent)
         return NS_OK;
 
     nsCAutoString header(cacheControlHeader);
-    nsAllocator::Free(cacheControlHeader);
+    nsMemory::Free(cacheControlHeader);
     
     PRInt32 offset;
     offset = header.Find("max-age=", PR_TRUE);
@@ -552,7 +552,7 @@ PRBool nsHTTPResponse::IsStale(PRBool aUseHeuristicExpiration)
     GetHeader(nsHTTPAtoms::Cache_Control, &cacheControlHeader);
     if (cacheControlHeader) {
         nsCAutoString header(cacheControlHeader);
-        nsAllocator::Free(cacheControlHeader);
+        nsMemory::Free(cacheControlHeader);
         if (header.Find("no-cache", PR_TRUE) != kNotFound)
             return PR_TRUE;
     }

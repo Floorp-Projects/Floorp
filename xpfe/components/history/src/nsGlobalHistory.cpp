@@ -945,7 +945,7 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
         if (NS_FAILED(rv)) return rv;
 
         len = PL_strlen(buf);
-        value = nsAllocator::Alloc(len + 1);
+        value = nsMemory::Alloc(len + 1);
         if (! value)
           return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1798,7 +1798,7 @@ nsGlobalHistory::NotifyChange(nsIRDFResource* aSource,
 
 nsGlobalHistory::URLEnumerator::~URLEnumerator()
 {
-  nsAllocator::Free(mSelectValue);
+  nsMemory::Free(mSelectValue);
 }
 
 PRBool

@@ -4050,7 +4050,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                     uri = baseURI;
                 } else {
                     rv = NS_NewURI(getter_AddRefs(uri), uriAttrib, baseURI);
-                    nsAllocator::Free(uriAttrib);
+                    nsMemory::Free(uriAttrib);
                 }
 
                 if (NS_SUCCEEDED(rv)) {

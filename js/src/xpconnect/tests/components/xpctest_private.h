@@ -40,7 +40,7 @@
 
 #include "nsISupports.h"
 #include "nsIFactory.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIXPConnect.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"

@@ -68,7 +68,7 @@ interface nsIMsgSearchSession :  nsISupports {
        custom header dialog if custom headers are not supported */
     [noscript] boolean ScopeUsesCustomHeaders(in nsMsgSearchScopeValue scope,
                                    /* could be a folder or server based on scope */
-                                   in voidStar selection,
+                                   in voidPtr selection,
                                    in boolean forFilters);
 
     /* use this to determine if your attribute is a string attrib */
@@ -80,11 +80,11 @@ interface nsIMsgSearchSession :  nsISupports {
     void Search(in nsIMsgWindow aWindow);
     void InterruptSearch();
     
-    [noscript] readonly attribute voidStar searchParam;
+    [noscript] readonly attribute voidPtr searchParam;
     readonly attribute nsMsgSearchType searchType;
     
     [noscript] nsMsgSearchType SetSearchParam(in nsMsgSearchType type,
-                                              in voidStar param);
+                                              in voidPtr param);
 
 	[noscript] void AddResultElement(in nsMsgResultElement element);
 

@@ -45,6 +45,6 @@ interface nsIPSMSocketInfo : nsISupports {
     readonly attribute cmSocketStar     socketPtr;
     readonly attribute nsFileDescStar   fileDescPtr;
     
-    void getPickledStatus(out charStar pickledStatus);
+    void getPickledStatus(out charPtr pickledStatus);
 };
 

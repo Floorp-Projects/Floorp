@@ -25,7 +25,7 @@
 #include "nsCachedNetData.h"
 
 #include "nsQuickSort.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIEnumerator.h"
 #include "prtime.h"
 #include "prinrval.h"
@@ -43,9 +43,9 @@ nsReplacementPolicy::nsReplacementPolicy()
 nsReplacementPolicy::~nsReplacementPolicy()
 {
     if (mRankedEntries)
-        nsAllocator::Free(mRankedEntries);
+        nsMemory::Free(mRankedEntries);
     if (mMapRecordIdToEntry)
-        nsAllocator::Free(mMapRecordIdToEntry);
+        nsMemory::Free(mMapRecordIdToEntry);
     delete mCaches;
 }
 
@@ -62,7 +62,7 @@ nsReplacementPolicy::Init(PRUint32 aMaxCacheEntries)
     // Hash array length must be power-of-two
     mHashArrayLength = (1 << PR_CeilingLog2(aMaxCacheEntries)) >> 3;
     size_t numBytes = mHashArrayLength * sizeof(*mMapRecordIdToEntry);
-    mMapRecordIdToEntry = (nsCachedNetData**)nsAllocator::Alloc(numBytes);
+    mMapRecordIdToEntry = (nsCachedNetData**)nsMemory::Alloc(numBytes);
     if (!mMapRecordIdToEntry)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -484,7 +484,7 @@ nsReplacementPolicy::AssociateCacheEntryWithRecord(nsINetDataCacheRecord *aRecor
         nsCachedNetData** newRankedEntriesArray; 
         PRUint32 numBytes = sizeof(nsCachedNetData*) * newCapacity;
         newRankedEntriesArray = 
-            (nsCachedNetData**)nsAllocator::Realloc(mRankedEntries, numBytes);
+            (nsCachedNetData**)nsMemory::Realloc(mRankedEntries, numBytes);
         if (!newRankedEntriesArray)
             return NS_ERROR_OUT_OF_MEMORY;
         

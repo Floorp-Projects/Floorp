@@ -606,7 +606,7 @@ EnumerateFamily(PLHashEntry* he, PRIntn i, void* arg)
 
   if (!str) {
     for (j = j - 1; j >= 0; j--) {
-      nsAllocator::Free(array[j]);
+      nsMemory::Free(array[j]);
     }
     info->mIndex = 0;
     return HT_ENUMERATE_STOP;
@@ -658,7 +658,7 @@ nsFontEnumeratorPh::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
 
   if (gFamilies)
   {
-    PRUnichar** array = (PRUnichar**) nsAllocator::Alloc(gFamilies->nentries * sizeof(PRUnichar*));
+    PRUnichar** array = (PRUnichar**) nsMemory::Alloc(gFamilies->nentries * sizeof(PRUnichar*));
     if (!array)
     {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -668,7 +668,7 @@ nsFontEnumeratorPh::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
     PL_HashTableEnumerateEntries(gFamilies, EnumerateFamily, &info);
     if (!info.mIndex)
     {
-      nsAllocator::Free(array);
+      nsMemory::Free(array);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 

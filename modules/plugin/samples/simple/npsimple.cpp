@@ -712,14 +712,14 @@ SimplePluginInstance::SimplePluginInstance(void)
     gPluginObjectCount++;
 
     static const char text[] = "Hello World!";
-    fText = (char*) nsAllocator::Clone(text, sizeof(text));
+    fText = (char*) nsMemory::Clone(text, sizeof(text));
 }
 
 SimplePluginInstance::~SimplePluginInstance(void)
 {
     gPluginObjectCount--;
     if(fText)
-        nsAllocator::Free(fText);
+        nsMemory::Free(fText);
     PlatformDestroy(); // Perform platform specific cleanup
 }
 
@@ -890,7 +890,7 @@ NS_IMETHODIMP SimplePluginInstance::GetText(char * *aText)
         *aText = NULL;
         return NS_OK;        
     }
-    char* ptr = *aText = (char*) nsAllocator::Clone(fText, strlen(fText)+1);
+    char* ptr = *aText = (char*) nsMemory::Clone(fText, strlen(fText)+1);
     return ptr ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 NS_IMETHODIMP SimplePluginInstance::SetText(const char * aText)
@@ -901,13 +901,13 @@ NS_IMETHODIMP SimplePluginInstance::SetText(const char * aText)
 
     if(fText)
     {
-        nsAllocator::Free(fText);
+        nsMemory::Free(fText);
         fText = NULL;
     }
 
     if(aText)
     {
-        fText = (char*) nsAllocator::Clone(aText, strlen(aText)+1);
+        fText = (char*) nsMemory::Clone(aText, strlen(aText)+1);
         if(!fText)
             return NS_ERROR_OUT_OF_MEMORY;
 

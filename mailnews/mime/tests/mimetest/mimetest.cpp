@@ -42,7 +42,7 @@
 #include "nsIPref.h"
 #include "nsICharsetConverterManager.h"
 #include "prprf.h"
-#include "nsIAllocator.h" // for the CID
+#include "nsIMemory.h" // for the CID
 #include "msgCore.h"
 #include "nsIIOService.h"
 #include "nsMimeEmitterCID.h"

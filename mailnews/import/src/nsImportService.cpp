@@ -32,7 +32,7 @@
 #include "nsString.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIEnumerator.h"
 #include "nsIImportModule.h"
 #include "nsIImportService.h"
@@ -686,7 +686,7 @@ void nsImportModuleList::ClearList( void)
 			m_pList[i] = nsnull;
 		}
 		m_count = 0;
-		nsAllocator::Free( m_pList);
+		nsMemory::Free( m_pList);
 		m_pList = nsnull;
 		m_alloc = 0;
 	}

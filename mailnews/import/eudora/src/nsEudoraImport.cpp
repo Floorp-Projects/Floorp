@@ -32,7 +32,7 @@
 #include "nsIImportService.h"
 #include "nsIComponentManager.h"
 #include "nsEudoraImport.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsIImportService.h"
 #include "nsIImportMail.h"
 #include "nsIImportMailboxDescriptor.h"

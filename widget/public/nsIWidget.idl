@@ -82,7 +82,7 @@ typedef long nsCursor;
  * including native window system types and api's. This is necessary
  * to ensure cross-platform code.
  */
-typedef voidStar nsNativeWidget;
+typedef voidPtr nsNativeWidget;
 
 
 %{ C++
@@ -192,7 +192,7 @@ interface nsIWidget : nsISupports
   /**
    * Get some kind of native data
    */
-  voidStar getNativeData(in PRUint32 aDataType);
+  voidPtr getNativeData(in PRUint32 aDataType);
 
   /**
    * Move this widget.
@@ -491,7 +491,7 @@ interface nsIWidget : nsISupports
    * Accessor functions to get and set the client data associated with the
    * widget.
    */
-  attribute voidStar clientData;
+  attribute voidPtr clientData;
 
   /**
    * Return an nsEnumerator over the children of this widget.

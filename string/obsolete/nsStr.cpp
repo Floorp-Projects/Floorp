@@ -664,7 +664,7 @@ PRBool nsStr::Alloc(nsStr& aDest,PRUint32 aCount) {
 
   aDest.mCapacity=theNewCapacity++;
   PRUint32 theSize=(theNewCapacity<<aDest.mCharSize);
-  aDest.mStr = (char*)nsAllocator::Alloc(theSize);
+  aDest.mStr = (char*)nsMemory::Alloc(theSize);
 
   if(aDest.mStr) {
     aDest.mOwnsBuffer=1;
@@ -677,7 +677,7 @@ PRBool nsStr::Alloc(nsStr& aDest,PRUint32 aCount) {
 PRBool nsStr::Free(nsStr& aDest){
   if(aDest.mStr){
     if(aDest.mOwnsBuffer){
-      nsAllocator::Free(aDest.mStr);
+      nsMemory::Free(aDest.mStr);
     }
     aDest.mStr=0;
     aDest.mOwnsBuffer=0;

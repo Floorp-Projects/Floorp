@@ -494,7 +494,7 @@ nsXPCWrappedNative::GetIID(nsIID** iid)
 {
     NS_PRECONDITION(iid, "bad param");
 
-    *iid = (nsIID*) nsAllocator::Clone(&GetIID(), sizeof(nsIID));
+    *iid = (nsIID*) nsMemory::Clone(&GetIID(), sizeof(nsIID));
     return *iid ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 

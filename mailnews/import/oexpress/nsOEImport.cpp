@@ -33,7 +33,7 @@
 #include "nsIServiceManager.h"
 #include "nsIImportService.h"
 #include "nsOEImport.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsOEScanBoxes.h"
 #include "nsIImportService.h"
 #include "nsIImportMail.h"

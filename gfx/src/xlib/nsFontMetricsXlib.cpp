@@ -2300,7 +2300,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
     nsAutoString name;
     if (value) {
       name.AssignWithConversion(value);
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
       FindFamily(search, &name);
     }
@@ -2308,7 +2308,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
       gPref->CopyDefaultCharPref(aName, &value);
       if (value) {
         name.AssignWithConversion(value);
-        nsAllocator::Free(value);
+        nsMemory::Free(value);
         value = nsnull;
         FindFamily(search, &name);
       }
@@ -2339,7 +2339,7 @@ nsFontMetricsXlib::FindGenericFont(nsFontSearch* aSearch)
     gPref->CopyCharPref("font.default", &value);
     if (value) {
       prefix.AppendWithConversion(value);
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
     }
     else {
@@ -2358,7 +2358,7 @@ nsFontMetricsXlib::FindGenericFont(nsFontSearch* aSearch)
     nsAutoString str;
     if (value) {
       str.AssignWithConversion(value);
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
       FindFamily(aSearch, &str);
       if (aSearch->mFont) {
@@ -2369,7 +2369,7 @@ nsFontMetricsXlib::FindGenericFont(nsFontSearch* aSearch)
     gPref->CopyDefaultCharPref(name, &value);
     if (value) {
       str.AssignWithConversion(value);
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
       FindFamily(aSearch, &str);
       if (aSearch->mFont) {

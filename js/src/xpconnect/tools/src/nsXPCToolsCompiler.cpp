@@ -155,6 +155,6 @@ NS_IMETHODIMP nsXPCToolsCompiler::CompileFile(nsILocalFile *aFile, PRBool strict
     JS_SetOptions(cx, oldoptions);
         
     if(path)
-        nsAllocator::Free(path);
+        nsMemory::Free(path);
     return NS_OK;
 }

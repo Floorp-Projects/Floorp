@@ -29,7 +29,7 @@ native int(int);
 [ptr] native nsIEventQueue(nsIEventQueue);
 [ptr] native UndefinednsIWidget(nsIWidget);
 [ref] native PRBoolRef(PRBool);
-[ref] native voidStarRef(void *);
+[ref] native voidPtrRef(void *);
 
 %{ C++
 #include "nsIEventQueue.h"
@@ -95,13 +95,13 @@ interface nsIAppShell : nsISupports
   * After event dispatch execute app specific code
   */
   
-  void GetNativeEvent(in PRBoolRef aRealEvent, in voidStarRef aEvent);
+  void GetNativeEvent(in PRBoolRef aRealEvent, in voidPtrRef aEvent);
 
  /**
   * After event dispatch execute app specific code
   */
   
-  void DispatchNativeEvent(in PRBool aRealEvent, in voidStar aEvent);
+  void DispatchNativeEvent(in PRBool aRealEvent, in voidPtr aEvent);
 
  /**
   * After event dispatch execute app specific code

@@ -107,7 +107,7 @@ nsJSID::GetName(char * *aName)
     if(!NameIsSet())
         SetNameToNoString();
     NS_ASSERTION(mName, "name not set");
-    *aName = (char*) nsAllocator::Clone(mName, strlen(mName)+1);
+    *aName = (char*) nsMemory::Clone(mName, strlen(mName)+1);
     return *aName ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -123,7 +123,7 @@ nsJSID::GetNumber(char * *aNumber)
             mNumber = gNoString;
     }
 
-    *aNumber = (char*) nsAllocator::Clone(mNumber, strlen(mNumber)+1);
+    *aNumber = (char*) nsMemory::Clone(mNumber, strlen(mNumber)+1);
     return *aNumber ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -133,7 +133,7 @@ nsJSID::GetId(nsID* *aId)
     if(!aId)
         return NS_ERROR_NULL_POINTER;
 
-    *aId = (nsID*) nsAllocator::Clone(&mID, sizeof(nsID));
+    *aId = (nsID*) nsMemory::Clone(&mID, sizeof(nsID));
     return *aId ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
@@ -162,7 +162,7 @@ nsJSID::Equals(nsIJSID *other, PRBool *_retval)
     if(NS_SUCCEEDED(other->GetId(&otherID)))
     {
         *_retval = mID.Equals(*otherID);
-        nsAllocator::Free(otherID);
+        nsMemory::Free(otherID);
     }
     return NS_OK;
 }
@@ -216,7 +216,7 @@ nsJSID::ToString(char **_retval)
                 return NS_OK;
             }
             else
-                nsAllocator::Free(str);
+                nsMemory::Free(str);
         }
     }
     return GetNumber(_retval);
@@ -314,7 +314,7 @@ nsJSIID::ResolveName()
             if(NS_SUCCEEDED(iim->GetNameForIID(mDetails.GetID(), &name)) && name)
             {
                 mDetails.SetName(name);
-                nsAllocator::Free(name);
+                nsMemory::Free(name);
             }
             NS_RELEASE(iim);
         }
@@ -358,7 +358,7 @@ nsJSIID::NewID(const char* str)
                    NS_SUCCEEDED(iinfo->GetIID(&pid)) && pid)
                 {
                     success = idObj->mDetails.InitWithName(*pid, str);
-                    nsAllocator::Free(pid);
+                    nsMemory::Free(pid);
                 }
                 NS_RELEASE(iim);
             }
@@ -417,7 +417,7 @@ nsJSIID::HasInstance(JSContext *cx, JSObject *obj,
                 if(NS_SUCCEEDED(cur->GetIID(&iid)))
                 {
                     JSBool found = mDetails.GetID()->Equals(*iid);
-                    nsAllocator::Free(iid);
+                    nsMemory::Free(iid);
                     if(found)
                     {
                         *bp = JS_TRUE;
@@ -639,7 +639,7 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
         if(sm && NS_OK != sm->CanCreateInstance(cx, *cid))
         {
             // the security manager vetoed. It should have set an exception.
-            nsAllocator::Free(cid);
+            nsMemory::Free(cid);
             *rval = JSVAL_NULL;
             *retval = JS_FALSE;
             return NS_OK;
@@ -661,7 +661,7 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
             return NS_OK;
         }
         iid = *piid;
-        nsAllocator::Free(piid);
+        nsMemory::Free(piid);
     }
     else
         iid = NS_GET_IID(nsISupports);
@@ -672,7 +672,7 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
     rv = nsComponentManager::CreateInstance(*cid, nsnull, iid, 
                                             (void**) getter_AddRefs(inst));
     NS_ASSERTION(NS_FAILED(rv) || inst, "component manager returned success, but instance is null!");
-    nsAllocator::Free(cid);
+    nsMemory::Free(cid);
 
     if(NS_FAILED(rv) || !inst)
     {
@@ -801,7 +801,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
         if(sm && NS_OK != sm->CanGetService(cx, *cid))
         {
             // the security manager vetoed. It should have set an exception.
-            nsAllocator::Free(cid);
+            nsMemory::Free(cid);
             *rval = JSVAL_NULL;
             *retval = JS_FALSE;
             return NS_OK;
@@ -818,13 +818,13 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
            !(iidobj = JSVAL_TO_OBJECT(val)) ||
            !(piid = xpc_JSObjectToID(cx, iidobj)))
         {
-            nsAllocator::Free(cid);
+            nsMemory::Free(cid);
             ThrowException(NS_ERROR_XPC_BAD_IID, cx);
             *retval = JS_FALSE;
             return NS_OK;
         }
         iid = *piid;
-        nsAllocator::Free(piid);
+        nsMemory::Free(piid);
     }
     else
         iid = NS_GET_IID(nsISupports);
@@ -833,7 +833,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
 
     nsCOMPtr<nsISupports> srvc;
     rv = nsServiceManager::GetService(*cid, iid, getter_AddRefs(srvc), nsnull);
-    nsAllocator::Free(cid);
+    nsMemory::Free(cid);
     NS_ASSERTION(NS_FAILED(rv) || srvc, "service manager returned success, but service is null!");
     if(NS_FAILED(rv) || !srvc)
     {

@@ -227,7 +227,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
     folder->GetFlags((PRUint32 *)&flags);
 
     folder->SetParent(this);
-  nsAllocator::Free(uriStr);
+  nsMemory::Free(uriStr);
 
   flags |= MSG_FOLDER_FLAG_MAIL;
 

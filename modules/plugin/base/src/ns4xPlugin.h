@@ -56,7 +56,7 @@ typedef NS_CALLBACK_(NPError, NP_MAIN) (NPNetscapeFuncs* nCallbacks, NPPluginFun
 #endif
 
 class nsIServiceManager;
-class nsIAllocator;
+class nsIMemory;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -247,7 +247,7 @@ protected:
   static NPNetscapeFuncs CALLBACKS;
 
   static nsIPluginManager   *mPluginManager;
-  static nsIAllocator       *mMalloc;
+  static nsIMemory          *mMalloc;
 };
 
 #endif // ns4xPlugin_h__

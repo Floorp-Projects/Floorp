@@ -37,7 +37,7 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIComponentManager.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIFile.h"
@@ -110,7 +110,7 @@ class nsDirEnumerator : public nsISimpleEnumerator
             if (mDir == nsnull)    // not a directory?
                 return NS_ERROR_FAILURE;
 
-            nsAllocator::Free(filepath);
+            nsMemory::Free(filepath);
         
             mParent          = parent;    
             return NS_OK;
@@ -239,7 +239,7 @@ nsLocalFile::Clone(nsIFile **file)
     nsCOMPtr<nsILocalFile> localFile;
 
     rv = NS_NewLocalFile(aFilePath, getter_AddRefs(localFile));
-    nsAllocator::Free(aFilePath);
+    nsMemory::Free(aFilePath);
     
     if (NS_SUCCEEDED(rv) && localFile)
     {
@@ -271,7 +271,7 @@ nsLocalFile::InitWithPath(const char *filePath)
            if (NS_FAILED(rv)) 
               return NS_ERROR_FILE_INVALID_PATH; 
         }
-        nativeFilePath = (char*) nsAllocator::Clone( filePath, strlen(filePath)+1 );
+        nativeFilePath = (char*) nsMemory::Clone( filePath, strlen(filePath)+1 );
     }
     
     if (nativeFilePath == nsnull)
@@ -284,7 +284,7 @@ nsLocalFile::InitWithPath(const char *filePath)
         temp[len] = '\0';
 
     mPath.Assign(nativeFilePath);
-    nsAllocator::Free( nativeFilePath );
+    nsMemory::Free( nativeFilePath );
     return NS_OK;
 }
 
@@ -434,7 +434,7 @@ nsLocalFile::GetLeafName(char **aLeafName)
     else
         leaf++;
 
-    *aLeafName = (char*)nsAllocator::Clone(leaf, strlen(leaf) + 1);
+    *aLeafName = (char*)nsMemory::Clone(leaf, strlen(leaf) + 1);
     return NS_OK;
 }
 
@@ -463,7 +463,7 @@ NS_IMETHODIMP
 nsLocalFile::GetPath(char **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = (char*)nsAllocator::Clone((const char*)mPath, strlen(mPath) + 1);
+    *_retval = (char*)nsMemory::Clone((const char*)mPath, strlen(mPath) + 1);
     return NS_OK;
 }
 
@@ -485,7 +485,7 @@ nsLocalFile::CopyMove(nsIFile *newParentDir, const char *newName, PRBool move)
     char* inFilePath;
     newParentDir->GetTarget(&inFilePath);  
     nsCString newPath = inFilePath;
-    nsAllocator::Free(inFilePath);
+    nsMemory::Free(inFilePath);
 
     PRUint32 lastc = strlen(newPath) - 1;
 
@@ -555,7 +555,7 @@ nsLocalFile::Spawn(const char **args, PRUint32 count)
     rv = PR_CreateProcessDetached(mPath, my_argv, NULL, NULL);
 
      // free up our argv
-     nsAllocator::Free(my_argv);
+     nsMemory::Free(my_argv);
 
      if (PR_SUCCESS == rv)
          return NS_OK;
@@ -928,8 +928,8 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
     if (strcmp(inFilePath, filePath) == 0)
         *_retval = PR_TRUE;
     
-    nsAllocator::Free(inFilePath);
-    nsAllocator::Free(filePath);
+    nsMemory::Free(inFilePath);
+    nsMemory::Free(filePath);
 
     return NS_OK;
 }
@@ -961,8 +961,8 @@ nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
 
     }
         
-    nsAllocator::Free(inFilePath);
-    nsAllocator::Free(myFilePath);
+    nsMemory::Free(inFilePath);
+    nsMemory::Free(myFilePath);
 
     return NS_OK;
 }
@@ -972,7 +972,7 @@ nsLocalFile::GetTarget(char **_retval)
 {   
     NS_ENSURE_ARG_POINTER(_retval);
     VALIDATE_STAT_CACHE();
-    *_retval = (char*)nsAllocator::Clone((char*)mPath, strlen(mPath) + 1);
+    *_retval = (char*)nsMemory::Clone((char*)mPath, strlen(mPath) + 1);
     return NS_OK;
 }
 

@@ -32,7 +32,7 @@
 #include "stdio.h"
 
 #include "nsSample.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -82,12 +82,12 @@ nsSampleImpl::GetValue(char** aValue)
          * On the other hand, if we create a new copy of the data for our
          * client, and it turns out that client is implemented in JavaScript,
          * there would be no way to free the buffer.  The solution to the 
-         * buffer ownership problem is the nsAllocator singleton.  Any buffer
-         * returned by an XPCOM method should be allocated by the nsAllocator.
+         * buffer ownership problem is the nsMemory singleton.  Any buffer
+         * returned by an XPCOM method should be allocated by the nsMemory.
          * This convention lets things like JavaScript reflection do their
          * job, and simplifies the way C++ clients deal with returned buffers.
          */
-        *aValue = (char*) nsAllocator::Alloc(PL_strlen(mValue) + 1);
+        *aValue = (char*) nsMemory::Alloc(PL_strlen(mValue) + 1);
         if (! *aValue)
             return NS_ERROR_NULL_POINTER;
 

@@ -39,7 +39,7 @@ Notes to self:
 #include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsPrimitiveHelpers.h"
  
 #include "nsIFileSpec.h"
@@ -198,7 +198,7 @@ DataStruct::WriteCache(nsISupports* aData, PRUint32 aDataLen)
     if ( buff ) {
       PRUint32 ignored;
       outStr->Write(NS_REINTERPRET_CAST(char*, buff), aDataLen, &ignored);
-      nsAllocator::Free(buff);
+      nsMemory::Free(buff);
       return NS_OK;
     }
   }
@@ -222,7 +222,7 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
     cacheFile->GetFileSize(&fileSize);
 
     // create new memory for the large clipboard data
-    char * data = (char *)nsAllocator::Alloc(fileSize);
+    char * data = (char *)nsMemory::Alloc(fileSize);
     if ( !data )
       return NS_ERROR_OUT_OF_MEMORY;
       
@@ -240,7 +240,7 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
 
     // delete the buffer because we got an error
     // and zero the return params
-    nsAllocator::Free(data);
+    nsMemory::Free(data);
     *aData    = nsnull;
     *aDataLen = 0;
   }

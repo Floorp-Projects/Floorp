@@ -71,7 +71,7 @@ static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
 			messageResource->QueryInterface(NS_GET_IID(nsIMessage), (void**)message);
 		}
 	}
-	nsAllocator::Free(uri);
+	nsMemory::Free(uri);
 
 	return rv;
 }

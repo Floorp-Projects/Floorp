@@ -98,7 +98,7 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 
 NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
 
-#include "nsIAllocator.h" // for the CID
+#include "nsIMemory.h" // for the CID
 
 static nsresult
 SetupRegistry(void)
@@ -120,12 +120,12 @@ SetupRegistry(void)
     nsComponentManager::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
     // xpcom
-    static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
+    static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
     static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
     nsComponentManager::RegisterComponent(kEventQueueServiceCID,     NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kEventQueueCID,            NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kGenericFactoryCID,        NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kAllocatorCID,             NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kMemoryCID,                NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
 
     return NS_OK;
 }

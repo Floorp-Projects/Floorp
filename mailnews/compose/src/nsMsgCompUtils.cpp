@@ -1568,7 +1568,7 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
 	}
     if (NULL != utf8Str)
     {
-      nsAllocator::Free(utf8Str);
+      nsMemory::Free(utf8Str);
     }
    
 	  /* ... and then put backslashes before special characters (RFC 822 tells us
@@ -1951,7 +1951,7 @@ nsMsgGetExtensionFromFileURL(nsString aUrl)
 
 ERROR_OUT:
   if (url)
-	nsAllocator::Free(url);
+	nsMemory::Free(url);
   return nsnull;
 }
 

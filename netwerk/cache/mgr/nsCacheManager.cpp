@@ -290,7 +290,7 @@ nsCacheManager::NoteDormant(nsCachedNetData* aEntry)
     nsStringKey hashTableKey(nsCString(key, keyLength));
     deletedEntry = (nsCachedNetData*)gCacheManager->mActiveCacheRecords->Remove(&hashTableKey);
 //  NS_ASSERTION(deletedEntry == aEntry, "Hash table inconsistency");
-	  nsAllocator::Free( key );
+    nsMemory::Free( key );
     return NS_OK;
 }
 

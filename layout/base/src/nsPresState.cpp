@@ -68,7 +68,7 @@ nsPresState::GetStateProperty(const nsString& aName, nsString& aResult)
     PRUnichar* data;
     str->GetData(&data);
     aResult = data;
-    nsAllocator::Free(data);
+    nsMemory::Free(data);
   } else {
     aResult.SetLength(0);
   }
@@ -90,7 +90,7 @@ nsPresState::SetStateProperty(const nsString& aName, const nsString& aValue)
 
   PRUnichar* val = aValue.ToNewUnicode();
   supportsStr->SetData(val);
-  nsAllocator::Free(val);
+  nsMemory::Free(val);
   mPropertyTable->Put(&key, supportsStr);
   return NS_OK;
 }

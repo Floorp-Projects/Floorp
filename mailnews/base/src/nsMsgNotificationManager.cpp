@@ -28,7 +28,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
 #include "MailNewsTypes.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsXPIDLString.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -293,7 +293,7 @@ nsresult nsMsgNotificationManager::AddNewMailNotification(nsIMsgFolder *folder)
 	if(NS_SUCCEEDED(rv) && folderDescription)
 	{
 		sourceString = folderDescription;
-		nsAllocator::Free(folderDescription);
+		nsMemory::Free(folderDescription);
 	}
 	rv = rdfService->GetLiteral(sourceString.GetUnicode(), getter_AddRefs(source));
 	if(NS_SUCCEEDED(rv))
@@ -417,6 +417,6 @@ nsresult nsMsgNotificationManager::BuildNewMailURI(nsIMsgFolder *folder, nsCAuto
 
 	newMailURI = "newmail:";
 	newMailURI += folderURI;
-	nsAllocator::Free(folderURI);
+	nsMemory::Free(folderURI);
 	return NS_OK;
 }

@@ -43,7 +43,7 @@
 #include "nsMimeTypes.h"
 #include "nsIPref.h"
 #include "prprf.h"
-#include "nsIAllocator.h" // for the CID
+#include "nsIMemory.h" // for the CID
 #include "nsURLFetcher.h"
 
 #include "nsIIOService.h"
@@ -107,12 +107,12 @@ SetupRegistry(void)
   // netlib
   
   // xpcom
-  static NS_DEFINE_CID(kAllocatorCID,  NS_ALLOCATOR_CID);
+  static NS_DEFINE_CID(kMemoryCID,  NS_MEMORY_CID);
   static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kEventQueueCID,        NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kGenericFactoryCID,    NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kAllocatorCID,         NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kMemoryCID,            NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
 
   // prefs
   nsComponentManager::RegisterComponent(kPrefCID,              NULL, NULL, PREF_DLL,  PR_FALSE, PR_FALSE);

@@ -984,7 +984,7 @@ nsRDFDOMDataSource::createLiteral(nsString& str, nsIRDFNode **aResult)
   PRUnichar* uniStr = str.ToNewUnicode();
   rv = getRDFService()->GetLiteral(uniStr,
                                    getter_AddRefs(literal));
-  nsAllocator::Free(uniStr);
+  nsMemory::Free(uniStr);
     
   *aResult = literal;
   NS_IF_ADDREF(*aResult);

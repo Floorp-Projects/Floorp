@@ -2779,7 +2779,7 @@ void nsEditorShell::GetBundleString(const nsString& name, nsString &outString)
     else
       outString.SetLength(0);
     
-    nsAllocator::Free(ptrv);
+    nsMemory::Free(ptrv);
   }
   else
   {
@@ -4439,7 +4439,7 @@ nsEditorShell::GetDictionaryList(PRUnichar ***aDictionaryList, PRUint32 *aCount)
       // If there are no dictionaries, return an array containing
       // one element and a count of one.
 
-      tmpPtr = (PRUnichar **)nsAllocator::Alloc(sizeof(PRUnichar *));
+      tmpPtr = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *));
 
       if (!tmpPtr)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -4451,7 +4451,7 @@ nsEditorShell::GetDictionaryList(PRUnichar ***aDictionaryList, PRUint32 *aCount)
       return NS_OK;
     }
 
-    tmpPtr = (PRUnichar **)nsAllocator::Alloc(sizeof(PRUnichar *) * dictList.Count());
+    tmpPtr = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * dictList.Count());
 
     if (!tmpPtr)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -4744,7 +4744,7 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
         mCantEditReason = eCantEditMimeType;
       }
   
-      nsAllocator::Free(contentType);
+      nsMemory::Free(contentType);
     }
   }
   

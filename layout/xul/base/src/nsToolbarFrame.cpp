@@ -380,7 +380,7 @@ nsToolbarFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIContent* a
     aChild->GetAttribute ( kNameSpaceID_None, aAttribute, attribute );
     char* iHateNSString = attribute.ToNewCString();
     mXDropLoc = atoi( iHateNSString );
-    nsAllocator::Free ( iHateNSString );
+    nsMemory::Free ( iHateNSString );
   }
   else
     rv = nsBoxFrame::AttributeChanged ( aPresContext, aChild, aNameSpaceID, aAttribute, aHint );

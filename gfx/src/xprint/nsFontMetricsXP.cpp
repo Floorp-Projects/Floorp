@@ -1523,7 +1523,7 @@ nsFontXPSubstitute::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
         }
         p++;
       }
-      nsAllocator::Free(conv);
+      nsMemory::Free(conv);
       conv = nsnull;
       return i;
     }
@@ -2626,7 +2626,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
     nsAutoString name;
     if (value) {
       name.AssignWithConversion(value);
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
       FindFamily(search, &name);
     }
@@ -2634,7 +2634,7 @@ PrefEnumCallback(const char* aName, void* aClosure)
       gPref->CopyDefaultCharPref(aName, &value);
       if (value) {
         name.AssignWithConversion(value);
-        nsAllocator::Free(value);
+        nsMemory::Free(value);
         value = nsnull;
         FindFamily(search, &name);
       }
@@ -2665,7 +2665,7 @@ nsFontMetricsXP::FindGenericFont(nsFontSearch* aSearch)
     gPref->CopyCharPref("font.default", &value);
     if (value) {
       prefix.AppendWithConversion(value);
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
     }
     else {
@@ -2684,7 +2684,7 @@ nsFontMetricsXP::FindGenericFont(nsFontSearch* aSearch)
     nsAutoString str;
     if (value) {
       str.AssignWithConversion(value);
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
       FindFamily(aSearch, &str);
       if (aSearch->mFont) {
@@ -2695,7 +2695,7 @@ nsFontMetricsXP::FindGenericFont(nsFontSearch* aSearch)
     gPref->CopyDefaultCharPref(name, &value);
     if (value) {
       str.AssignWithConversion(value);
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
       FindFamily(aSearch, &str);
       if (aSearch->mFont) {
@@ -2848,7 +2848,7 @@ EnumerateFamily(PLHashEntry* he, PRIntn i, void* arg)
   PRUnichar* str = ((nsString*) he->key)->ToNewUnicode();
   if (!str) {
     for (j = j - 1; j >= 0; j--) {
-      nsAllocator::Free(array[j]);
+      nsMemory::Free(array[j]);
     }
     info->mIndex = 0;
     return HT_ENUMERATE_STOP;
@@ -2893,14 +2893,14 @@ nsFontEnumeratorXP::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
   }
 
   PRUnichar** array = (PRUnichar**)
-    nsAllocator::Alloc(gFamilies->nentries * sizeof(PRUnichar*));
+    nsMemory::Alloc(gFamilies->nentries * sizeof(PRUnichar*));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   EnumerateFamilyInfo info = { array, 0 };
   PL_HashTableEnumerateEntries(gFamilies, EnumerateFamily, &info);
   if (!info.mIndex) {
-    nsAllocator::Free(array);
+    nsMemory::Free(array);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

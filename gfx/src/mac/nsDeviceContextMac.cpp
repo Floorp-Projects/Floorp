@@ -1007,7 +1007,7 @@ EnumerateFamily(nsHashKey *aKey, void *aData, void* closure)
   PRUnichar* str = (((FontNameKey*)aKey)->mString).ToNewUnicode();
   if (!str) {
     for (j = j - 1; j >= 0; j--) {
-      nsAllocator::Free(array[j]);
+      nsMemory::Free(array[j]);
     }
     info->mIndex = 0;
     return PR_FALSE;
@@ -1041,7 +1041,7 @@ nsFontEnumeratorMac::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
 	}
 	PRInt32 items = list->Count();
   PRUnichar** array = (PRUnichar**)
-    nsAllocator::Alloc(items * sizeof(PRUnichar*));
+    nsMemory::Alloc(items * sizeof(PRUnichar*));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1049,7 +1049,7 @@ nsFontEnumeratorMac::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
   list->Enumerate ( EnumerateFamily, &info);
   NS_ASSERTION( items == info.mIndex, "didn't get all the fonts");
   if (!info.mIndex) {
-    nsAllocator::Free(array);
+    nsMemory::Free(array);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -1076,7 +1076,7 @@ EnumerateFont(nsHashKey *aKey, void *aData, void* closure)
 	  PRUnichar* str = (((FontNameKey*)aKey)->mString).ToNewUnicode();
 	  if (!str) {
 	    for (j = j - 1; j >= 0; j--) {
-	      nsAllocator::Free(array[j]);
+	      nsMemory::Free(array[j]);
 	    }
 	    info->mIndex = 0;
 	    return PR_FALSE;
@@ -1119,7 +1119,7 @@ nsFontEnumeratorMac::EnumerateFonts(const char* aLangGroup,
 	}
 	PRInt32 items = list->Count();
   PRUnichar** array = (PRUnichar**)
-    nsAllocator::Alloc(items * sizeof(PRUnichar*));
+    nsMemory::Alloc(items * sizeof(PRUnichar*));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1132,7 +1132,7 @@ nsFontEnumeratorMac::EnumerateFonts(const char* aLangGroup,
   EnumerateFontInfo info = { array, 0 , 0, gUtil->MapLangGroupToScriptCode(aLangGroup) ,gUtil->MapGenericFontNameType(GenName) };
   list->Enumerate ( EnumerateFont, &info);
   if (!info.mIndex) {
-    nsAllocator::Free(array);
+    nsMemory::Free(array);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

@@ -78,7 +78,7 @@ NS_IMETHODIMP nsBasicStreamGenerator::GetByte(PRUint32 offset, PRUint8 *retval) 
       return rv;
     }
     mPassword = aPassword;
-    nsAllocator::Free(aPassword);
+    nsMemory::Free(aPassword);
     mState = 0;
   }
 

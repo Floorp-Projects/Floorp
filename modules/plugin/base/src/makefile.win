@@ -66,6 +66,7 @@ LINCS = \
 LCFLAGS = \
         $(LCFLAGS) \
         -D_IMPL_NS_PLUGIN \
+        -GX \
         $(NULL)
 
 !ifdef NU_CACHE

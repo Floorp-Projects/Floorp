@@ -1021,7 +1021,7 @@ nsSanePluginInstance::GetZoomLineStyle(char ** aZoomLineStyle)
     if (!*aZoomLineStyle)
         return NS_ERROR_NULL_POINTER;
 
-    *aZoomLineStyle = (char*) nsAllocator::Alloc(MAX_LINE_ATTRIBUTE_LENGTH);
+    *aZoomLineStyle = (char*) nsMemory::Alloc(MAX_LINE_ATTRIBUTE_LENGTH);
     if (! *aZoomLineStyle)
         return NS_ERROR_OUT_OF_MEMORY;
     
@@ -1070,7 +1070,7 @@ nsSanePluginInstance::GetZoomCapStyle(char ** aZoomCapStyle)
     if (!*aZoomCapStyle)
         return NS_ERROR_NULL_POINTER;
 
-    *aZoomCapStyle = (char*) nsAllocator::Alloc(MAX_LINE_ATTRIBUTE_LENGTH);
+    *aZoomCapStyle = (char*) nsMemory::Alloc(MAX_LINE_ATTRIBUTE_LENGTH);
     if (! *aZoomCapStyle)
         return NS_ERROR_OUT_OF_MEMORY;
     
@@ -1124,7 +1124,7 @@ nsSanePluginInstance::GetZoomJoinStyle(char ** aZoomJoinStyle)
     if (!*aZoomJoinStyle)
         return NS_ERROR_NULL_POINTER;
 
-    *aZoomJoinStyle = (char*) nsAllocator::Alloc(MAX_LINE_ATTRIBUTE_LENGTH);
+    *aZoomJoinStyle = (char*) nsMemory::Alloc(MAX_LINE_ATTRIBUTE_LENGTH);
     if (! *aZoomJoinStyle)
         return NS_ERROR_OUT_OF_MEMORY;
     
@@ -1292,7 +1292,7 @@ nsSanePluginInstance::GetMethod(char ** aMethod)
     if (!aMethod)
         return NS_ERROR_NULL_POINTER;
 
-    *aMethod = (char*) nsAllocator::Alloc(8);
+    *aMethod = (char*) nsMemory::Alloc(8);
     if (!*aMethod)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1379,7 +1379,7 @@ nsSanePluginInstance::GetDeviceOptions(char ** aDeviceOptions)
 
     // allocate string to contain data to return to caller
     string_size = ((optdesc->size - 1) * MAX_OPT_SIZE) + 1;
-    *aDeviceOptions = (char*) nsAllocator::Alloc(string_size);
+    *aDeviceOptions = (char*) nsMemory::Alloc(string_size);
 
     // initialize options string
     for (int n=0; n<string_size; n++)
@@ -1584,7 +1584,7 @@ nsSanePluginInstance::GetActiveDevice(char ** aActiveDevice)
     if (!mSaneDevice)
         return NS_OK;
     
-    *aActiveDevice = (char*) nsAllocator::Alloc(PL_strlen(mSaneDevice) + 1);
+    *aActiveDevice = (char*) nsMemory::Alloc(PL_strlen(mSaneDevice) + 1);
     PL_strcpy(*aActiveDevice, mSaneDevice);
     
     return NS_OK;
@@ -1680,7 +1680,7 @@ nsSanePluginInstance::GetImageParameters(char ** aImageParameters)
     }
 
 #define MAX_PARAM_LEN 256
-    *aImageParameters = (char *) nsAllocator::Alloc(MAX_PARAM_LEN);
+    *aImageParameters = (char *) nsMemory::Alloc(MAX_PARAM_LEN);
     if (!*aImageParameters)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1763,7 +1763,7 @@ nsSanePluginInstance::GetAvailableDevices(char ** aAvailableDevices)
 
     // allocate return string
 #define MAX_DEVICE_SIZE 256
-    *aAvailableDevices = (char*) nsAllocator::Alloc(num * MAX_DEVICE_SIZE);
+    *aAvailableDevices = (char*) nsMemory::Alloc(num * MAX_DEVICE_SIZE);
     if (!*aAvailableDevices)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1956,7 +1956,7 @@ nsSanePluginInstance::GetState(char ** aState)
         return NS_ERROR_NULL_POINTER;
     }
 
-    *aState = (char*) nsAllocator::Alloc(5);
+    *aState = (char*) nsMemory::Alloc(5);
     if (!*aState) {
         NS_ERROR("Unable to allocate State string!\n");
         return NS_ERROR_OUT_OF_MEMORY;

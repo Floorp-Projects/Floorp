@@ -1224,7 +1224,7 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
                           initial.GetUnicode(), &uniResult, &b);
    aReturn = uniResult;
    if(uniResult)
-      nsAllocator::Free(uniResult);
+      nsMemory::Free(uniResult);
    if(NS_FAILED(ret) || !b)
       {
       // XXX Need to check return value and return null if the
@@ -1767,7 +1767,7 @@ NS_IMETHODIMP GlobalWindowImpl::Escape(const nsString& aStr, nsString& aReturn)
       return result;
 
    // Allocate a buffer of the maximum length
-   char* dest = (char*)nsAllocator::Alloc(maxByteLen+1);
+   char* dest = (char*)nsMemory::Alloc(maxByteLen+1);
    PRInt32 destLen2, destLen = maxByteLen;
    if(!dest)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1776,7 +1776,7 @@ NS_IMETHODIMP GlobalWindowImpl::Escape(const nsString& aStr, nsString& aReturn)
    result = encoder->Convert(src, &srcLen, dest, &destLen);
    if(NS_FAILED(result)) 
       {
-      nsAllocator::Free(dest);
+      nsMemory::Free(dest);
       return result;
       }
 
@@ -1789,8 +1789,8 @@ NS_IMETHODIMP GlobalWindowImpl::Escape(const nsString& aStr, nsString& aReturn)
    char* outBuf = nsEscape(dest, nsEscapeMask(url_XAlphas | url_XPAlphas | url_Path)); 
    aReturn.AssignWithConversion(outBuf);
 
-   nsAllocator::Free(outBuf);
-   nsAllocator::Free(dest);
+   nsMemory::Free(outBuf);
+   nsMemory::Free(dest);
 
    return result;
 }
@@ -1840,30 +1840,30 @@ NS_IMETHODIMP GlobalWindowImpl::Unescape(const nsString& aStr, nsString& aReturn
    result = decoder->GetMaxLength(src, srcLen, &maxLength);
    if(NS_FAILED(result))
       {
-      nsAllocator::Free(src);
+      nsMemory::Free(src);
       return result;
       }
 
    // Allocate a buffer of the maximum length
-   PRUnichar* dest = (PRUnichar*)nsAllocator::Alloc(sizeof(PRUnichar)*maxLength);
+   PRUnichar* dest = (PRUnichar*)nsMemory::Alloc(sizeof(PRUnichar)*maxLength);
    PRInt32 destLen = maxLength;
    if(!dest)
       {
-      nsAllocator::Free(src);
+      nsMemory::Free(src);
       return NS_ERROR_OUT_OF_MEMORY;
       }
 
    // Convert from character set to unicode
    result = decoder->Convert(src, &srcLen, dest, &destLen);
-   nsAllocator::Free(src);
+   nsMemory::Free(src);
    if(NS_FAILED(result))
       {
-      nsAllocator::Free(dest);
+      nsMemory::Free(dest);
       return result;
       }
 
    aReturn.Assign(dest, destLen);
-   nsAllocator::Free(dest);
+   nsMemory::Free(dest);
 
    return NS_OK;
 }

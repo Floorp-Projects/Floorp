@@ -23,7 +23,7 @@
 
 #include "prsystem.h"
 #include "nsSystemInfo.h"
-#include "nsAllocator.h"
+#include "nsMemory.h"
 
 nsSystemInfo::nsSystemInfo()
 {
@@ -41,11 +41,11 @@ NS_IMETHODIMP                                                   \
 nsSystemInfo::Get##name(char **_retval)                         \
 {                                                               \
     NS_ENSURE_ARG_POINTER(_retval);                             \
-    char *buf = (char *)nsAllocator::Alloc(256);                \
+    char *buf = (char *)nsMemory::Alloc(256);                   \
     if (!buf)                                                   \
 	return NS_ERROR_OUT_OF_MEMORY;                          \
     if (PR_GetSystemInfo((cmd), buf, 256) == PR_FAILURE) {      \
-	nsAllocator::Free(buf);                                 \
+	nsMemory::Free(buf);                                    \
 	return NS_ERROR_FAILURE;                                \
     }                                                           \
     *_retval = buf;                                             \

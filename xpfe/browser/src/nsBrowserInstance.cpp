@@ -2062,7 +2062,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
             if ( NS_FAILED(rv) ) return rv;
 
             *aDefaultArgs =  NS_ConvertASCIItoUCS2(url).ToNewUnicode();
-            nsAllocator::Free(urlString);
+            nsMemory::Free(urlString);
             return rv;
         }
     }

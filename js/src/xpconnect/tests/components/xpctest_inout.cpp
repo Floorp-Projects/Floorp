@@ -115,10 +115,10 @@ NS_IMETHODIMP xpcTestInOut :: EchoPRUint32_2(PRUint32 ii, PRUint32 *io){
 NS_IMETHODIMP xpcTestInOut :: EchoPRUint64(PRUint64 ii, PRUint64 *io){ 
 	return NS_OK; 
 };
-NS_IMETHODIMP xpcTestInOut :: EchoVoidStar(void * vsi, void * *vso){ 
+NS_IMETHODIMP xpcTestInOut :: EchoVoidPtr(void * vsi, void * *vso){ 
 	return NS_OK; 
 };
-NS_IMETHODIMP xpcTestInOut :: EchoCharStar(char * csi, char * *cso){ 
+NS_IMETHODIMP xpcTestInOut :: EchoCharPtr(char * csi, char * *cso){ 
 	return NS_OK; 
 };
 /*

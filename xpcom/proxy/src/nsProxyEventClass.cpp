@@ -30,7 +30,7 @@
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
 
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsHashtable.h"
 
 #include "nsAutoLock.h"
@@ -118,7 +118,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
                 if(NS_SUCCEEDED(oldest->GetIID(&iid))) 
                 {
                     isISupportsDescendent = iid->Equals(NS_GET_IID(nsISupports));
-                    nsAllocator::Free(iid);
+                    nsMemory::Free(iid);
                 }
                 
                 NS_VERIFY(isISupportsDescendent,"!isISupportsDescendent");
@@ -334,7 +334,7 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
         if(NS_SUCCEEDED(current->GetIID(&iid)) && iid)
         {
             PRBool found = aIID.Equals(*iid);
-            nsAllocator::Free(iid);
+            nsMemory::Free(iid);
             if(found)
             {
                 *aInstancePtr = (void*) self;

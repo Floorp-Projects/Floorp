@@ -236,7 +236,7 @@ nsXPCComponents_Interfaces::FillCache(JSContext *cx, JSObject *obj,
             char *interface_name;
             Interface->GetName(&interface_name);
             RealizeInterface(cx, obj, interface_name, wrapper, arbitrary);
-            nsAllocator::Free(interface_name);
+            nsMemory::Free(interface_name);
             NS_RELEASE(Interface);
         }
         else
@@ -474,7 +474,7 @@ nsXPCComponents_Classes::FillCache(JSContext *cx, JSObject *obj,
                 if(NS_SUCCEEDED(ClassNameHolder->GetData(&class_name)))
                 {
                     RealizeClass(cx, obj, class_name, wrapper, arbitrary);
-                    nsAllocator::Free(class_name);
+                    nsMemory::Free(class_name);
                 }
                 NS_RELEASE(ClassNameHolder);
             }
@@ -716,7 +716,7 @@ nsXPCComponents_ClassesByID::FillCache(JSContext *cx, JSObject *obj,
                                     arbitrary, JS_TRUE);
                        delete [] class_name;
                     }
-                    nsAllocator::Free(class_id);
+                    nsMemory::Free(class_id);
                 }
                 NS_RELEASE(ClassIDHolder);
             }
@@ -762,13 +762,13 @@ IsCanonicalFormOfRegisteredCLSID(const char* str)
     if(NS_FAILED(rv))
         return PR_FALSE;
 
-    char* copy = (char*)nsAllocator::Clone(str, (strlen(str)+1)*sizeof(char));
+    char* copy = (char*)nsMemory::Clone(str, (strlen(str)+1)*sizeof(char));
     if(!copy)
         return PR_FALSE;
 
     nsID id;
     PRBool idIsOK = id.Parse(copy);
-    nsAllocator::Free(copy);
+    nsMemory::Free(copy);
     if(!idIsOK)
         return PR_FALSE;
 
@@ -1356,7 +1356,7 @@ nsXPCConstructor::nsXPCConstructor(nsIJSCID* aClassID,
     NS_IF_ADDREF(mClassID = aClassID);
     NS_IF_ADDREF(mInterfaceID = aInterfaceID);
     mInitializer = aInitializer ? 
-        (char*) nsAllocator::Clone(aInitializer, strlen(aInitializer)+1) :
+        (char*) nsMemory::Clone(aInitializer, strlen(aInitializer)+1) :
         nsnull;
 }
 
@@ -1365,7 +1365,7 @@ nsXPCConstructor::~nsXPCConstructor()
     NS_IF_RELEASE(mClassID);
     NS_IF_RELEASE(mInterfaceID);
     if(mInitializer) 
-        nsAllocator::Free(mInitializer);
+        nsMemory::Free(mInitializer);
 }
 
 /* readonly attribute nsIJSCID classID; */

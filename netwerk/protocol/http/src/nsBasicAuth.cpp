@@ -61,7 +61,7 @@ nsBasicAuth::Authenticate(nsIURI* i_URI, const char *protocol,
     if (iPass) {
         cPass.AssignWithConversion(iPass);
     }
-    char* tempBuff = (char *)nsAllocator::Alloc(cUser.Length() + 
+    char* tempBuff = (char *)nsMemory::Alloc(cUser.Length() + 
                                                 iPass ? (cPass.Length() + 2) 
                                                       : 1);
     if (!tempBuff)
@@ -74,14 +74,14 @@ nsBasicAuth::Authenticate(nsIURI* i_URI, const char *protocol,
 
     char *base64Buff = PL_Base64Encode(tempBuff, 0, nsnull); 
     if (!base64Buff) {
-        nsAllocator::Free(tempBuff);
+        nsMemory::Free(tempBuff);
         return NS_ERROR_FAILURE; // ??
     }
     nsCAutoString authString("Basic "); // , 6 + strlen(base64Buff));
     authString.Append(base64Buff);
     *oResult = authString.ToNewCString();
     PR_Free(base64Buff);
-    nsAllocator::Free(tempBuff);
+    nsMemory::Free(tempBuff);
     return NS_OK;
 }
 

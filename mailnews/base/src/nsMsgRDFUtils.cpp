@@ -23,7 +23,7 @@
 #include "nsIServiceManager.h"
 #include "prprf.h"
 #include "nsCOMPtr.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
  
 
@@ -40,8 +40,8 @@ peqWithParameter(nsIRDFResource *r1, nsIRDFResource *r2, const char *parameter)
 
 	r2nsStr.AssignWithConversion(r2Str);
 	r1nsStr.AssignWithConversion(r1Str);
-	nsAllocator::Free(r2Str);
-	nsAllocator::Free(r1Str);
+	nsMemory::Free(r2Str);
+	nsMemory::Free(r1Str);
 
 	//Look to see if there are any parameters
 	PRInt32 paramStart = r2nsStr.FindChar('?');
@@ -138,7 +138,7 @@ nsresult createNode(const char* charstr, nsIRDFNode **node, nsIRDFService *rdfSe
 		*node = value;
 		NS_IF_ADDREF(*node);
 	}
-	nsAllocator::Free(ucharstr);
+	nsMemory::Free(ucharstr);
   }
   return rv;
 }

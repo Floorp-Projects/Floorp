@@ -2378,14 +2378,14 @@ nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName)
       }
     }
     if (found) {
-      nsAllocator::Free(*aName);
+      nsMemory::Free(*aName);
       *aName = nsnull;
       return nsnull;
     }
     PRUnichar name[LF_FACESIZE] = { 0 };
     PRUnichar format[] = { '%', 's', 0 };
     PRUint32 n = nsTextFormatter::snprintf(name, LF_FACESIZE, format, *aName);
-    nsAllocator::Free(*aName);
+    nsMemory::Free(*aName);
     *aName = nsnull;
     if (n && (n != (PRUint32) -1)) {
       nsAutoString  fontName(name);
@@ -2541,7 +2541,7 @@ HDC   dc1 = NULL;
     gPref->CopyUnicharPref("font.default", &value);
     if (value) {
       mDefaultFont = value;
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
     }
     else {
@@ -2583,7 +2583,7 @@ HDC   dc1 = NULL;
     gPref->CopyUnicharPref(name.GetBuffer(), &value);
     if (value) {
       mUserDefined = value;
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
       mIsUserDefined = 1;
     }
@@ -3882,14 +3882,14 @@ nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName)
       }
     }
     if (found) {
-      nsAllocator::Free(*aName);
+      nsMemory::Free(*aName);
       *aName = nsnull;
       return nsnull;
     }
     PRUnichar name[LF_FACESIZE] = { 0 };
     PRUnichar format[] = { '%', 's', 0 };
     PRUint32 n = nsTextFormatter::snprintf(name, LF_FACESIZE, format, *aName);
-    nsAllocator::Free(*aName);
+    nsMemory::Free(*aName);
     *aName = nsnull;
     if (n && (n != (PRUint32) -1)) {
       nsAutoString fontName(name);
@@ -4082,7 +4082,7 @@ nsFontEnumeratorWin::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
   }
 
   PRUnichar** array = (PRUnichar**)
-    nsAllocator::Alloc(nsFontMetricsWin::gGlobalFontsCount * sizeof(PRUnichar*));
+    nsMemory::Alloc(nsFontMetricsWin::gGlobalFontsCount * sizeof(PRUnichar*));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -4090,9 +4090,9 @@ nsFontEnumeratorWin::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
     PRUnichar* str = nsFontMetricsWin::gGlobalFonts[i].name->ToNewUnicode();
     if (!str) {
       for (i = i - 1; i >= 0; i--) {
-        nsAllocator::Free(array[i]);
+        nsMemory::Free(array[i]);
       }
-      nsAllocator::Free(array);
+      nsMemory::Free(array);
       return NS_ERROR_OUT_OF_MEMORY;
     }
     array[i] = str;
@@ -4222,7 +4222,7 @@ nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
   }
 
   PRUnichar** array = (PRUnichar**)
-    nsAllocator::Alloc(nsFontMetricsWin::gGlobalFontsCount * sizeof(PRUnichar*));
+    nsMemory::Alloc(nsFontMetricsWin::gGlobalFontsCount * sizeof(PRUnichar*));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -4235,9 +4235,9 @@ nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
       PRUnichar* str = nsFontMetricsWin::gGlobalFonts[i].name->ToNewUnicode();
       if (!str) {
         for (j = j - 1; j >= 0; j--) {
-          nsAllocator::Free(array[j]);
+          nsMemory::Free(array[j]);
         }
-        nsAllocator::Free(array);
+        nsMemory::Free(array);
         return NS_ERROR_OUT_OF_MEMORY;
       }
       array[j] = str;

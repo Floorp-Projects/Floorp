@@ -121,7 +121,7 @@ MangleKeywordIntoHTTPURL(const char *aSpec, const char *aHTTPURL) {
         query = unescaped;
     }
 
-    nsAllocator::Free(unescaped);
+    nsMemory::Free(unescaped);
 
     query.Trim(" "); // pull leading/trailing spaces.
 
@@ -129,7 +129,7 @@ MangleKeywordIntoHTTPURL(const char *aSpec, const char *aHTTPURL) {
     char * encQuery = nsEscape(query.GetBuffer(), url_Path);
     if (!encQuery) return nsnull;
     query = encQuery;
-    nsAllocator::Free(encQuery);
+    nsMemory::Free(encQuery);
 
     // prepend the query with the keyword url
     // XXX this url should come from somewhere else
@@ -173,7 +173,7 @@ nsKeywordProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
 
     // now we have an HTTP url, give the user an HTTP channel
     rv = serv->NewChannel(httpSpec, nsnull, result);
-    nsAllocator::Free(httpSpec);
+    nsMemory::Free(httpSpec);
     return rv;
 
 }

@@ -157,7 +157,7 @@ nsHTMLContentSinkStream::Initialize(nsIOutputStream* aOutStream,
 nsHTMLContentSinkStream::~nsHTMLContentSinkStream()
 {
     if (mBuffer)
-      nsAllocator::Free(mBuffer);
+      nsMemory::Free(mBuffer);
 }
 
 /**

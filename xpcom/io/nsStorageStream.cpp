@@ -84,7 +84,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsStorageStream,
 
 NS_IMETHODIMP
 nsStorageStream::Init(PRUint32 segmentSize, PRUint32 maxSize,
-                      nsIAllocator *segmentAllocator)
+                      nsIMemory *segmentAllocator)
 {
     mSegmentedBuffer = new nsSegmentedBuffer();
     if (!mSegmentedBuffer)

@@ -97,7 +97,7 @@ static int PR_CALLBACK folderChanged(const char *pref, void *closure)
 		return rv;
 		
 	rv = NS_NewLocalFile( path, getter_AddRefs(cacheFolder));
-	nsAllocator::Free( path );
+	nsMemory::Free( path );
 	
 	return ( (nsNetDiskCache*)closure )->SetDiskCacheFolder( cacheFolder );	
 }
@@ -673,7 +673,7 @@ nsNetDiskCache::SetSizeEntry(void)
   InfoSize = sizeof mNumEntries ;
   InfoSize += sizeof mStorageInUse ;
   
-  void* pInfo = nsAllocator::Alloc(InfoSize*sizeof(char)) ;
+  void* pInfo = nsMemory::Alloc(InfoSize*sizeof(char)) ;
   if(!pInfo) 
     return NS_ERROR_OUT_OF_MEMORY ;
   

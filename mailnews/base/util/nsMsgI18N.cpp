@@ -604,7 +604,7 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
     res = entityConv->ConvertToEntities(inString.GetUnicode(), nsIEntityConverter::html40Latin1, &entities);
     if (NS_SUCCEEDED(res) && (NULL != entities)) {
       outString->Assign(entities);
-      nsAllocator::Free(entities);
+      nsMemory::Free(entities);
      }
    }
  

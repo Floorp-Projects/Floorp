@@ -116,7 +116,7 @@ nsSaveAsCharset::Convert(const PRUnichar *inString, char **_retval)
     if(NS_SUCCEEDED(rv)) {
       if (NULL == entity) return NS_ERROR_OUT_OF_MEMORY;
       rv = DoCharsetConversion(entity, _retval);
-      nsAllocator::Free(entity);
+      nsMemory::Free(entity);
     }
   }
   else {
@@ -275,7 +275,7 @@ nsSaveAsCharset::DoConversionFallBack(PRUnichar inCharacter, char *outString, PR
         return NS_ERROR_OUT_OF_MEMORY;
       }
       PL_strcpy(outString, entity);
-      nsAllocator::Free(entity);
+      nsMemory::Free(entity);
       return rv;
     }
   }

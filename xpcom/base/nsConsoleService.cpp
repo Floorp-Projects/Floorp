@@ -26,7 +26,7 @@
 
 /* Threadsafe. */
 
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIServiceManager.h"
 #include "nsProxyObjectManager.h"
 
@@ -50,7 +50,7 @@ nsConsoleService::nsConsoleService()
     rv = nsSupportsArray::Create(NULL, NS_GET_IID(nsISupportsArray),
                                  (void**)&mListeners);
     mMessages = (nsIConsoleMessage **)
-        nsAllocator::Alloc(mBufferSize * sizeof(nsIConsoleMessage *));
+        nsMemory::Alloc(mBufferSize * sizeof(nsIConsoleMessage *));
 
     mLock = PR_NewLock();
 
@@ -83,7 +83,7 @@ nsConsoleService::~nsConsoleService()
     }
 #endif
 
-    nsAllocator::Free(mMessages);
+    nsMemory::Free(mMessages);
     if (mLock)
         PR_DestroyLock(mLock);
 }
@@ -190,7 +190,7 @@ nsConsoleService::GetMessageArray(nsIConsoleMessage ***messages, PRUint32 *count
          * array object when called from script.
          */
         messageArray = (nsIConsoleMessage **)
-            nsAllocator::Alloc(sizeof (nsIConsoleMessage *));
+            nsMemory::Alloc(sizeof (nsIConsoleMessage *));
         *messageArray = nsnull;
         *messages = messageArray;
         *count = 0;
@@ -200,8 +200,8 @@ nsConsoleService::GetMessageArray(nsIConsoleMessage ***messages, PRUint32 *count
 
     PRUint32 resultSize = mFull ? mBufferSize : mCurrent;
     messageArray =
-        (nsIConsoleMessage **)nsAllocator::Alloc((sizeof (nsIConsoleMessage *))
-                                                 * resultSize);
+        (nsIConsoleMessage **)nsMemory::Alloc((sizeof (nsIConsoleMessage *))
+                                              * resultSize);
 
     if (messageArray == nsnull) {
         *messages = nsnull;

@@ -22,7 +22,7 @@
 #include "nsMemCache.h"
 #include "nsMemCacheRecord.h"
 #include "nsMemCacheChannel.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsStorageStream.h"
 
 static NS_DEFINE_IID(kINetDataCacheRecord, NS_INETDATACACHERECORD_IID);
@@ -47,7 +47,7 @@ NS_IMETHODIMP
 nsMemCacheRecord::GetKey(PRUint32 *aLength, char **aResult)
 {
     NS_ENSURE_ARG(aResult);
-    *aResult = (char *)nsAllocator::Alloc(mKeyLength);
+    *aResult = (char *)nsMemory::Alloc(mKeyLength);
     if (!*aResult)
         return NS_ERROR_OUT_OF_MEMORY;
     memcpy(*aResult, mKey, mKeyLength);
@@ -92,7 +92,7 @@ nsMemCacheRecord::GetMetaData(PRUint32 *aLength, char **aResult)
 
     *aResult = 0;
     if (mMetaDataLength) {
-        *aResult = (char*)nsAllocator::Alloc(mMetaDataLength);
+        *aResult = (char*)nsMemory::Alloc(mMetaDataLength);
         if (!*aResult)
             return NS_ERROR_OUT_OF_MEMORY;
         memcpy(*aResult, mMetaData, mMetaDataLength);

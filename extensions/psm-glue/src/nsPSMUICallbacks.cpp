@@ -325,7 +325,7 @@ char * PromptUserCallback(void *arg, char *prompt, int isPasswd)
 
 void ApplicationFreeCallback(char *userInput)
 {
-    nsAllocator::Free(userInput);
+    nsMemory::Free(userInput);
 }
 
 char * FilePathPromptCallback(void *arg, char *prompt, char *fileRegEx, CMUint32 shouldFileExist)

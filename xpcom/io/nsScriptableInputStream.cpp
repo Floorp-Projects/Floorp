@@ -21,7 +21,7 @@
  */
 
 #include "nsScriptableInputStream.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 NS_IMPL_ISUPPORTS2(nsScriptableInputStream, nsIBaseStream, nsIScriptableInputStream);
 
@@ -58,13 +58,13 @@ nsScriptableInputStream::Read(PRUint32 aCount, char **_retval) {
     if (NS_FAILED(rv)) return rv;
 
     count = PR_MIN(count, aCount);
-    buffer = (char*)nsAllocator::Alloc(count+1); // make room for '\0'
+    buffer = (char*)nsMemory::Alloc(count+1); // make room for '\0'
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 amtRead = 0;
     rv = mInputStream->Read(buffer, count, &amtRead);
     if (NS_FAILED(rv)) {
-        nsAllocator::Free(buffer);
+        nsMemory::Free(buffer);
         return rv;
     }
 

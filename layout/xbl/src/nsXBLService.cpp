@@ -178,7 +178,7 @@ nsXBLService::nsXBLService(void)
 static PRBool PR_CALLBACK DeleteClasses(nsHashKey* aKey, void* aValue, void* closure)
 {
   JSClass* c = (JSClass*)aValue;
-  nsAllocator::Free(c->name);
+  nsMemory::Free(c->name);
   delete c;
   return PR_TRUE;
 }

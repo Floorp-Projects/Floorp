@@ -23,7 +23,7 @@
 #define NS_IMPL_IDS
 
 #include "prmem.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsIServiceManager.h"
 #include "nsID.h"
 #include "nsString.h"

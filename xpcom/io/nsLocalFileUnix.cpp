@@ -45,7 +45,7 @@
 
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsLocalFileUnix.h"
@@ -270,7 +270,7 @@ nsLocalFile::InitWithPath(const char *filePath)
     NS_ENSURE_ARG(filePath);
     
     int   len  = strlen(filePath);
-    char* name = (char*) nsAllocator::Clone( filePath, len+1 );
+    char* name = (char*) nsMemory::Clone( filePath, len+1 );
     if (name[len-1] == '/') {
         if (len != 1)
             name[len-1] = '\0';
@@ -278,7 +278,7 @@ nsLocalFile::InitWithPath(const char *filePath)
     
     mPath = name;
     
-    nsAllocator::Free(name);
+    nsMemory::Free(name);
     
     InvalidateCache();
     return NS_OK;
@@ -450,7 +450,7 @@ nsLocalFile::AppendRelativePath(const char *fragment)
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
     }
 
-    char * newPath = (char *)nsAllocator::Alloc(strlen(mPath) +
+    char * newPath = (char *)nsMemory::Alloc(strlen(mPath) +
                                                 strlen(fragment) + 2);
     if (!newPath)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -459,7 +459,7 @@ nsLocalFile::AppendRelativePath(const char *fragment)
     strcat(newPath, fragment);
     mPath = newPath;
     InvalidateCache();
-    nsAllocator::Free(newPath);
+    nsMemory::Free(newPath);
     return NS_OK;
 }
 
@@ -526,7 +526,7 @@ nsLocalFile::SetLeafName(const char *aLeafName)
     char *leafName;
     if (NS_FAILED(rv = GetLeafNameRaw((const char**)&leafName)))
 	return rv;
-    char* newPath = (char *)nsAllocator::Alloc(strlen(mPath) +
+    char* newPath = (char *)nsMemory::Alloc(strlen(mPath) +
                                                strlen(aLeafName) + 2);
     *leafName = 0;
     
@@ -535,7 +535,7 @@ nsLocalFile::SetLeafName(const char *aLeafName)
     strcat(newPath, aLeafName);
     mPath = newPath;
     InvalidateCache();
-    nsAllocator::Free(newPath);
+    nsMemory::Free(newPath);
     return NS_OK;
 }
 
@@ -618,11 +618,11 @@ nsLocalFile::CopyTo(nsIFile *newParent, const char *newName)
 
         // this is the full path to the dir of the new file
         newPath = tmpChar;
-        nsAllocator::Free(tmpChar);
+        nsMemory::Free(tmpChar);
 
         // create the final name
         char *newPathName;
-        newPathName = (char *)nsAllocator::Alloc(strlen(newPath) + strlen(leafName) + 2);
+        newPathName = (char *)nsMemory::Alloc(strlen(newPath) + strlen(leafName) + 2);
         if (!newPathName)
             return NS_ERROR_OUT_OF_MEMORY;
         
@@ -636,7 +636,7 @@ nsLocalFile::CopyTo(nsIFile *newParent, const char *newName)
 
         nsXPIDLCString newPathNameAuto;
         newPathNameAuto = newPathName;
-        nsAllocator::Free(newPathName);
+        nsMemory::Free(newPathName);
 
         // actually create the file.
 
@@ -1231,7 +1231,7 @@ nsLocalFile::GetTarget(char **_retval)
 
     PRInt32 hi, lo;
     mLL_L2II(targetSize64, hi, lo);
-    char *target = (char *)nsAllocator::Alloc(lo);
+    char *target = (char *)nsMemory::Alloc(lo);
     if (!target)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1240,7 +1240,7 @@ nsLocalFile::GetTarget(char **_retval)
         *_retval = target;
         return NS_OK;
     }
-    nsAllocator::Free(target);
+    nsMemory::Free(target);
     return NSRESULT_FOR_ERRNO();
 }
 

@@ -43,7 +43,7 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsIGenericFactory.h"
 #include "nsIWebShellWindow.h"
 
@@ -94,7 +94,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
-static NS_DEFINE_CID(kAllocatorCID,  NS_ALLOCATOR_CID);
+static NS_DEFINE_CID(kMemoryCID,  NS_MEMORY_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_IID(kICharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -266,7 +266,7 @@ SetupRegistry(void)
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kEventQueueCID,        NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kGenericFactoryCID,    NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kAllocatorCID,         NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kMemoryCID,            NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
   
   // prefs
   nsComponentManager::RegisterComponent(kPrefCID,              NULL, NULL, PREF_DLL,  PR_FALSE, PR_FALSE);

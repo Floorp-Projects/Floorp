@@ -37,7 +37,7 @@
 #include "nsINNTPArticleList.h"
 #include "nsIOutputStream.h"
 #include "nsFileStream.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsIPipe.h"
 #include "nsCOMPtr.h"
 

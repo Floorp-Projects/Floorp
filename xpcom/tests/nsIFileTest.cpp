@@ -3,7 +3,7 @@
 #include "stdio.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsXPIDLString.h"
 
 void Passed();

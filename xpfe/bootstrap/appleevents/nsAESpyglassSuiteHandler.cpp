@@ -22,7 +22,7 @@
  */
 
 
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 #include "nsAESpyglassSuiteHandler.h"
 #include "nsCommandLineServiceMac.h"
@@ -108,7 +108,7 @@ void AESpyglassSuiteHandler::HandleOpenURLEvent(AppleEvent *appleEvent, AppleEve
 	
 	
 	long		dataSize = directParameter.GetDataSize();
-	char*	urlString = (char *)nsAllocator::Alloc(dataSize + 1);
+	char*	urlString = (char *)nsMemory::Alloc(dataSize + 1);
 	ThrowIfNil(urlString);
 	
 	directParameter.GetCString(urlString, dataSize);
@@ -116,7 +116,7 @@ void AESpyglassSuiteHandler::HandleOpenURLEvent(AppleEvent *appleEvent, AppleEve
 	nsMacCommandLine&  cmdLine = nsMacCommandLine::GetMacCommandLine();
 	cmdLine.DispatchURLToNewBrowser(urlString);
 	
-	nsAllocator::Free(urlString);	
+	nsMemory::Free(urlString);	
 }
 
 

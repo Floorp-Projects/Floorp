@@ -126,14 +126,14 @@ NS_ScriptErrorReporter(JSContext *cx,
             rv = errorObject->Init(report->ucmessage, newFileUni,
                                    report->uclinebuf, report->lineno,
                                    column, report->flags, category);
-            nsAllocator::Free((void *)newFileUni);
+            nsMemory::Free((void *)newFileUni);
           } else if (message) {
             nsAutoString messageUni;
             messageUni.AssignWithConversion(message);
             const PRUnichar *newMessageUni = messageUni.ToNewUnicode();
             rv = errorObject->Init(newMessageUni, nsnull, nsnull,
                                    0, 0, 0, category);
-            nsAllocator::Free((void *)newMessageUni);
+            nsMemory::Free((void *)newMessageUni);
           }
       
           if (NS_SUCCEEDED(rv))
@@ -161,7 +161,7 @@ NS_ScriptErrorReporter(JSContext *cx,
   char *errorStr = error.ToNewCString();
   if (errorStr) {
     fprintf(stderr, "%s\n", errorStr);
-    nsAllocator::Free(errorStr);
+    nsMemory::Free(errorStr);
   }
 
 #ifdef PR_LOGGING

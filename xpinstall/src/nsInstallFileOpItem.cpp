@@ -1263,14 +1263,14 @@ nsInstallFileOpItem::NativeFileOpMacAliasComplete()
   if (err != noErr) 
   {
     if (aliasLeaf)
-      nsAllocator::Free(aliasLeaf);
+      nsMemory::Free(aliasLeaf);
     return err;
   }
   c2pstr(aliasLeaf);
   FSMakeFSSpec(fsAliasParent.vRefNum, aliasDirID, (unsigned char *) aliasLeaf, &fsAlias);
   p2cstr((unsigned char *)aliasLeaf);
   if (aliasLeaf)
-    nsAllocator::Free(aliasLeaf);
+    nsMemory::Free(aliasLeaf);
   
   err = NewAliasMinimal( &fsSource, &aliasH );
   if (err != noErr)  // bubble up Alias Manager error

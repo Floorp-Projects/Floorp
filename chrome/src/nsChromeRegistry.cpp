@@ -727,7 +727,7 @@ NS_IMETHODIMP nsChromeRegistry::GetStyleSheets(nsIURI *aChromeURL, nsISupportsAr
       url->GetSpec(&str);
       LoadStyleSheet(getter_AddRefs(sheet), str);
       (*aResult)->AppendElement(sheet);
-      nsAllocator::Free(str);
+      nsMemory::Free(str);
     }
     sheets->HasMoreElements(&hasMore);
   }
@@ -763,7 +763,7 @@ NS_IMETHODIMP nsChromeRegistry::GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOve
       NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
       return rv;
   }
-  nsAllocator::Free(lookup);
+  nsMemory::Free(lookup);
 
   nsCOMPtr<nsISimpleEnumerator> installArcs;
   nsCOMPtr<nsISimpleEnumerator> profileArcs;
@@ -1227,7 +1227,7 @@ NS_IMETHODIMP nsChromeRegistry::UpdateDynamicDataSource(nsIRDFDataSource *aDataS
     }
     arcs->HasMoreElements(&moreElements);
   }
-  nsAllocator::Free(value);
+  nsMemory::Free(value);
 
   return NS_OK;
 }

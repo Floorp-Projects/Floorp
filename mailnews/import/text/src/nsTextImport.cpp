@@ -32,7 +32,7 @@
 #include "nsIImportService.h"
 #include "nsIComponentManager.h"
 #include "nsTextImport.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsIImportGeneric.h"
 #include "nsIImportAddressBooks.h"
 #include "nsIImportABDescriptor.h"

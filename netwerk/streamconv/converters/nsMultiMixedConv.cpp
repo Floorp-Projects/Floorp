@@ -21,7 +21,7 @@
  */
 
 #include "nsMultiMixedConv.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "plstr.h"
 #include "nsIHTTPChannel.h"
 #include "nsIAtom.h"
@@ -65,7 +65,7 @@ nsMultiMixedConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *
     return NS_OK;
 }
 
-#define ERR_OUT { nsAllocator::Free(buffer); return rv; }
+#define ERR_OUT { nsMemory::Free(buffer); return rv; }
 
 // nsIStreamListener implementation
 NS_IMETHODIMP
@@ -77,7 +77,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
 
     NS_ASSERTION(channel, "multimixed converter needs a channel");
 
-    buffer = (char*)nsAllocator::Alloc(bufLen);
+    buffer = (char*)nsMemory::Alloc(bufLen);
     if (!buffer) ERR_OUT
 
     rv = inStr->Read(buffer, bufLen, &read);
@@ -86,16 +86,16 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
 
     if (mBufLen) {
 		// incorporate any buffered data into the parsing
-        char *tmp = (char*)nsAllocator::Alloc(mBufLen + bufLen);
+        char *tmp = (char*)nsMemory::Alloc(mBufLen + bufLen);
 		if (!tmp) {
-			nsAllocator::Free(buffer);
+			nsMemory::Free(buffer);
 			return NS_ERROR_OUT_OF_MEMORY;
 		}
         nsCRT::memcpy(tmp, mBuffer, mBufLen);
-        nsAllocator::Free(mBuffer);
+        nsMemory::Free(mBuffer);
         mBuffer = nsnull;
         nsCRT::memcpy(tmp+mBufLen, buffer, bufLen);
-        nsAllocator::Free(buffer);
+        nsMemory::Free(buffer);
         buffer = tmp;
         bufLen += mBufLen;
         mBufLen = 0;
@@ -122,7 +122,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
 			// This was the last delimiter so we can stop processing
             bufLen = token - cursor;
             rv = SendData(cursor, bufLen);
-            nsAllocator::Free(buffer);
+            nsMemory::Free(buffer);
             buffer = nsnull;
             bufLen = 0;
             return SendStop();
@@ -196,7 +196,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
         if (NS_FAILED(rv)) ERR_OUT
     }
 
-    nsAllocator::Free(buffer);
+    nsMemory::Free(buffer);
 
     return rv;
 }
@@ -260,7 +260,7 @@ nsMultiMixedConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
             if (mBufLen > 0) {
                 rv = SendData(mBuffer, mBufLen);
                 if (NS_FAILED(rv)) return rv;
-                nsAllocator::Free(mBuffer);
+                nsMemory::Free(mBuffer);
                 mBuffer = nsnull;
                 mBufLen = 0;
             }
@@ -277,7 +277,7 @@ nsMultiMixedConv::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
     if (mBufLen > 0 && mBuffer)
     {
         SendData(mBuffer, mBufLen);
-        nsAllocator::Free(mBuffer);
+        nsMemory::Free(mBuffer);
         mBuffer = nsnull;
         mBufLen = 0;
         rv = SendStop ();
@@ -333,7 +333,7 @@ nsresult
 nsMultiMixedConv::BufferData(char *aData, PRUint32 aLen) {
     NS_ASSERTION(!mBuffer, "trying to over-write buffer");
 
-    char *buffer = (char*)nsAllocator::Alloc(aLen);
+    char *buffer = (char*)nsMemory::Alloc(aLen);
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
     nsCRT::memcpy(buffer, aData, aLen);
@@ -403,7 +403,7 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
     // headers after a token to delineate a new part. This is required. If
     // the server's not sending those headers, the server's broken.
 	NS_ASSERTION(mPartChannel, "our channel went away :-(");
-    char *tmp = (char*)nsAllocator::Alloc(aLen); // byteArray stream owns this mem
+    char *tmp = (char*)nsMemory::Alloc(aLen); // byteArray stream owns this mem
     if (!tmp) return NS_ERROR_OUT_OF_MEMORY;
     
     nsCRT::memcpy(tmp, aBuffer, aLen);
@@ -412,7 +412,7 @@ nsMultiMixedConv::SendData(char *aBuffer, PRUint32 aLen) {
     
     rv = NS_NewByteArrayInputStream(getter_AddRefs(byteArrayStream), tmp, aLen);
     if (NS_FAILED(rv)) {
-        nsAllocator::Free(tmp);
+        nsMemory::Free(tmp);
         return rv;
     }
 

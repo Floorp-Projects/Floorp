@@ -48,7 +48,7 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIAtom.h"
 #include "nsIComponentManager.h"
 #include "nsIRDFDataSource.h"
@@ -629,7 +629,7 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
             char buf[128];
             char* progID = buf;
             if (len >= PRInt32(sizeof buf))
-                progID = (char *)nsAllocator::Alloc(len + 1);
+                progID = (char *)nsMemory::Alloc(len + 1);
 
             if (progID == nsnull)
                 return NS_ERROR_OUT_OF_MEMORY;
@@ -1082,7 +1082,7 @@ RDFServiceImpl::GetDataSource(const char* aURI, nsIRDFDataSource** aDataSource)
         char buf[64];
         char* progID = buf, *p;
         if (progIDStr.Length() >= PRInt32(sizeof buf))
-            progID = (char *)nsAllocator::Alloc(progIDStr.Length() + 1);
+            progID = (char *)nsMemory::Alloc(progIDStr.Length() + 1);
 
         if (progID == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -1228,7 +1228,7 @@ RDFServiceImpl::UnregisterLiteral(nsIRDFLiteral* aLiteral)
         return NS_OK;
 
 #ifndef REUSE_LITERAL_VALUE_AS_KEY
-    nsAllocator::Free((void*) (*hep)->key);
+    nsMemory::Free((void*) (*hep)->key);
 #endif
 
     // N.B. that we _don't_ release the literal: we only held a weak

@@ -719,7 +719,7 @@ nsresult nsDBFolderInfo::SetPropertyWithToken(mdb_token aProperty, nsString *pro
 	if (m_mdbRow)
 	{
 		nsresult err = m_mdbRow->AddColumn(m_mdb->GetEnv(), aProperty, m_mdb->nsStringToYarn(&yarn, propertyStr));
-		nsAllocator::Free((char *)yarn.mYarn_Buf);	// won't need this when we have nsCString
+		nsMemory::Free((char *)yarn.mYarn_Buf);	// won't need this when we have nsCString
 		return err;
 	}
 	else

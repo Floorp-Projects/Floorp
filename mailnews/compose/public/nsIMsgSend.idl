@@ -166,7 +166,7 @@ interface nsIMsgSend : nsISupports
                               in PRUint32                     attachment1_body_length,
                               [const] in nsMsgAttachmentData  attachments,
                               [const] in nsMsgAttachedFile    preloaded_attachments,
-                              in voidStar                     relatedPart,
+                              in voidPtr                      relatedPart,
                               [array, size_is(listeners)]
                               in nsIMsgSendListener           aListenerArray,
                               in unsigned long                listeners);

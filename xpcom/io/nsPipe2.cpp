@@ -103,7 +103,7 @@ public:
 
     // nsIPipe methods:
     NS_IMETHOD Initialize(PRUint32 segmentSize, PRUint32 maxSize, 
-                          nsIPipeObserver *observer, nsIAllocator *segmentAllocator) {
+                          nsIPipeObserver *observer, nsIMemory *segmentAllocator) {
         nsresult rv;
         rv = mBuffer.Init(segmentSize, maxSize, segmentAllocator);
         if (NS_FAILED(rv)) return rv;
@@ -799,7 +799,7 @@ nsPipe::nsPipeOutputStream::SetNonBlocking(PRBool aNonBlocking)
 #ifdef PAGE_MANAGER
 static NS_DEFINE_CID(kPageManagerCID, NS_PAGEMANAGER_CID);
 #endif
-static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 
 NS_COM nsresult
 NS_NewPipe(nsIBufferInputStream* *inStrResult,
@@ -811,7 +811,7 @@ NS_NewPipe(nsIBufferInputStream* *inStrResult,
     nsresult rv;
     NS_ASSERTION(segmentSize > 0, "need to supply segmentSize for buffer");
     NS_ASSERTION(maxSize > 0, "need to supply maxSize for buffer");
-    const nsCID* cid = &kAllocatorCID;
+    const nsCID* cid = &kMemoryCID;
 #ifdef PAGE_MANAGER
     // Take the page manager out altogether because some unices don't
     // know how to reserve VM -- only preallocate it which takes up a lot 
@@ -824,7 +824,7 @@ NS_NewPipe(nsIBufferInputStream* *inStrResult,
     }
 #endif
 #endif
-    NS_WITH_SERVICE(nsIAllocator, alloc, *cid, &rv);
+    NS_WITH_SERVICE(nsIMemory, alloc, *cid, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsPipe* pipe = new nsPipe();

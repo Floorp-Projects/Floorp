@@ -177,7 +177,7 @@ nsTimeBomb::LoadUpdateURL()
     nsresult rv = GetTimebombURL(&url);
     if (NS_FAILED(rv)) return rv;
     rv = DisplayURI(url, PR_FALSE);
-    nsAllocator::Free(url);
+    nsMemory::Free(url);
     return rv;
 }
 
@@ -358,7 +358,7 @@ nsTimeBomb::GetTimebombURL(char* *url)
     nsresult rv = mPrefs->CopyCharPref("timebomb.timebombURL", &string);
     if (NS_SUCCEEDED(rv))
     {
-        *url = (char*)nsAllocator::Clone(string, (strlen(string)+1)*sizeof(char));
+        *url = (char*)nsMemory::Clone(string, (strlen(string)+1)*sizeof(char));
         
         PL_strfree(string);
 
@@ -368,7 +368,7 @@ nsTimeBomb::GetTimebombURL(char* *url)
     }
    
     string = "http://www.mozilla.org/projects/seamonkey/";
-    *url = (char*)nsAllocator::Clone(string, (strlen(string)+1)*sizeof(char));
+    *url = (char*)nsMemory::Clone(string, (strlen(string)+1)*sizeof(char));
     
     if(!*url)
         return NS_ERROR_OUT_OF_MEMORY;

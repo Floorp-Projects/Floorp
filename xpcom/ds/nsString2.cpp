@@ -719,7 +719,7 @@ nsString* nsString::ToNewString() const {
  * @return  ptr to new ascii string
  */
 char* nsString::ToNewCString() const {
-  char* result = NS_STATIC_CAST(char*, nsAllocator::Alloc(mLength + 1));
+  char* result = NS_STATIC_CAST(char*, nsMemory::Alloc(mLength + 1));
   if (result) {
     CBufDescriptor desc(result, PR_TRUE, mLength + 1, 0);
     nsCAutoString temp(desc);

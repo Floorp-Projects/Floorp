@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -150,15 +150,15 @@ nsXMLMIMEDataSource::AddMapping(const char* mimeType,
 NS_IMETHODIMP
 nsXMLMIMEDataSource::Add( nsIMIMEInfo* aMapper )
 {
-		if ( !aMapper )
-			return NS_ERROR_NULL_POINTER;
+    if ( !aMapper )
+        return NS_ERROR_NULL_POINTER;
 			
     nsresult rv = NS_OK;
     
-		nsXPIDLCString mimeType;
-		rv = aMapper->GetMIMEType( getter_Copies( mimeType ) );
-		if ( NS_FAILED( rv ) )
-			return rv;
+    nsXPIDLCString mimeType;
+    rv = aMapper->GetMIMEType( getter_Copies( mimeType ) );
+    if ( NS_FAILED( rv ) )
+        return rv;
     // First remove any existing mapping.
     rv = Remove(mimeType);
     if (NS_FAILED(rv)) return rv;
@@ -174,19 +174,19 @@ nsXMLMIMEDataSource::Add( nsIMIMEInfo* aMapper )
 
     // Finally add an extension mapping.
     char** extensions;
-		PRUint32 count;
-		rv = aMapper->GetFileExtensions(& count, &extensions );
-		if ( NS_FAILED ( rv ) )
-			return rv;
-		for ( PRUint32 i = 0; i<count; i++ )
-		{
-		 	key = extensions[i];
-		  oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, aMapper);
-      NS_ASSERTION(!oldInfo, "file extension mappings should have been cleaned up in the RemoveMapping call");
-      NS_ADDREF(aMapper);
-			nsAllocator::Free( extensions[i] );
-		}
-   	nsAllocator::Free( extensions ); 
+    PRUint32 count;
+    rv = aMapper->GetFileExtensions(& count, &extensions );
+    if ( NS_FAILED ( rv ) )
+        return rv;
+    for ( PRUint32 i = 0; i<count; i++ )
+    {
+        key = extensions[i];
+        oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, aMapper);
+        NS_ASSERTION(!oldInfo, "file extension mappings should have been cleaned up in the RemoveMapping call");
+        NS_ADDREF(aMapper);
+        nsMemory::Free( extensions[i] );
+    }
+    nsMemory::Free( extensions ); 
    
     return NS_OK;
 }
@@ -334,10 +334,10 @@ nsXMLMIMEDataSource::Serialize() {
 		buffer+= kDescription;
 		buffer+="=\"";
 		nsString temp( unidata );
-		nsAllocator::Free( unidata );
+		nsMemory::Free( unidata );
 		char* utf8 = temp.ToNewUTF8String();
 		buffer+=utf8;
-		nsAllocator::Free( utf8 );
+		nsMemory::Free( utf8 );
 		buffer+="\" ";
 		
 		rv = info->GetMIMEType( getter_Copies( cdata ) );
@@ -359,12 +359,12 @@ nsXMLMIMEDataSource::Serialize() {
 		{
 			buffer+=extensions[i];
 			buffer+=",";
-			nsAllocator::Free( extensions[i] );
+			nsMemory::Free( extensions[i] );
 		}
 		buffer+=extensions[count-1];
 		buffer+="\" ";
-		nsAllocator::Free( extensions[count-1] );
-		nsAllocator::Free( extensions );
+		nsMemory::Free( extensions[count-1] );
+		nsMemory::Free( extensions );
 			
 		PRUint32 macData;
 		char macBuffer[8];
@@ -672,7 +672,7 @@ public:
  ~StDeallocator() 
  { 
   if (mMemory) 
-        nsAllocator::Free(mMemory); 
+        nsMemory::Free(mMemory); 
   } 
 private: 
  void* mMemory; 

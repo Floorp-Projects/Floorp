@@ -21,7 +21,7 @@
  */
 
 #include "nsFTPDirListingConv.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "plstr.h"
 #include "prlog.h"
 #include "nsIHTTPChannel.h"
@@ -155,7 +155,7 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
     char *unescData = convertedData.ToNewCString();
     nsUnescape(unescData);
     printf("::OnData() sending the following %d bytes...\n\n%s\n\n", convertedData.Length(), unescData);
-    nsAllocator::Free(unescData);
+    nsMemory::Free(unescData);
 #endif // DEBUG_valeski
 
     // send the converted data out.
@@ -256,7 +256,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     rv = inStr->Available(&streamLen);
     if (NS_FAILED(rv)) return rv;
 
-    char *buffer = (char*)nsAllocator::Alloc(streamLen + 1);
+    char *buffer = (char*)nsMemory::Alloc(streamLen + 1);
     rv = inStr->Read(buffer, streamLen, &read);
     if (NS_FAILED(rv)) return rv;
 
@@ -269,7 +269,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         // we have data left over from a previous OnDataAvailable() call.
         // combine the buffers so we don't lose any data.
         mBuffer.Append(buffer);
-        nsAllocator::Free(buffer);
+        nsMemory::Free(buffer);
         buffer = mBuffer.ToNewCString();
         mBuffer.Truncate();
     }
@@ -295,7 +295,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         indexFormat.Append("300: ");
         indexFormat.Append(spec);
         indexFormat.Append(LF);
-        nsAllocator::Free(spec);
+        nsMemory::Free(spec);
         // END 300:
 
         // build up the column heading; 200:
@@ -315,7 +315,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     char *unescData = indexFormat.ToNewCString();
     nsUnescape(unescData);
     printf("::OnData() sending the following %d bytes...\n\n%s\n\n", indexFormat.Length(), unescData);
-    nsAllocator::Free(unescData);
+    nsMemory::Free(unescData);
 #endif // DEBUG_valeski
 
     // if there's any data left over, buffer it.
@@ -325,7 +325,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
             PL_strlen(line), line) );
     }
 
-    nsAllocator::Free(buffer);
+    nsMemory::Free(buffer);
 
     // send the converted data out.
     nsCOMPtr<nsIInputStream> inputData;
@@ -668,14 +668,14 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
             }
         escName = nsEscape(aLine, url_Path);
         aEntry->mName = escName;
-        nsAllocator::Free(escName);
+        nsMemory::Free(escName);
 	
 		return NS_OK;
     }
 
     escName = nsEscape(ptr+1, url_Path);
     aEntry->mName = escName;
-    nsAllocator::Free(escName);
+    nsMemory::Free(escName);
 
 	// parse size
 	if(ptr > aLine+15) {
@@ -798,7 +798,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         {
             escName = nsEscape(line, url_Path);
             thisEntry->mName = escName;
-            nsAllocator::Free(escName);
+            nsMemory::Free(escName);
 
             if (thisEntry->mName.Last() == '/') {
                 thisEntry->mType = Dir;
@@ -812,7 +812,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         {
             escName = nsEscape(line, url_Path);
             thisEntry->mName = escName;
-            nsAllocator::Free(escName);
+            nsMemory::Free(escName);
             break; // END CMS
         }
         case NT:
@@ -842,14 +842,14 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
                 escName = nsEscape(line, url_Path);
                 thisEntry->mName = escName;
 			}
-            nsAllocator::Free(escName);
+            nsMemory::Free(escName);
             break; // END NT
         }
         default:
         {
             escName = nsEscape(line, url_Path);
             thisEntry->mName = escName;
-            nsAllocator::Free(escName);
+            nsMemory::Free(escName);
             break; // END default (catches GENERIC, DCTS)
         }
 
@@ -883,7 +883,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         char *escapedDate = nsEscape(theDate.GetBuffer(), url_Path);
 
         aString.Append(escapedDate);
-        nsAllocator::Free(escapedDate);
+        nsMemory::Free(escapedDate);
         aString.Append(' ');
 
 

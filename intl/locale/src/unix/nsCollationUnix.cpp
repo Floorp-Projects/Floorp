@@ -124,7 +124,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
     nsString aLocale;
     aLocale = aLocaleUnichar;
     if (NULL != aLocaleUnichar) {
-      nsAllocator::Free(aLocaleUnichar);
+      nsMemory::Free(aLocaleUnichar);
     }
 
     // keep the same behavior as 4.x as well as avoiding Linux collation key problem
@@ -147,7 +147,7 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
       res = platformCharset->GetDefaultCharsetForLocale(aLocale.GetUnicode(), &mappedCharset);
       if (NS_SUCCEEDED(res) && mappedCharset) {
         mCharset = mappedCharset;
-        nsAllocator::Free(mappedCharset);
+        nsMemory::Free(mappedCharset);
       }
     }
   }

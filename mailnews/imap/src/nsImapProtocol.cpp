@@ -2302,7 +2302,7 @@ void nsImapProtocol::SelectMailbox(const char *mailboxName)
   commandBuffer.Append(escapedName);
   commandBuffer.Append("\"" CRLF);
 
-  nsAllocator::Free(escapedName);
+  nsMemory::Free(escapedName);
     nsresult res;       
     res = SendData(commandBuffer.GetBuffer());
     if (NS_FAILED(res)) return;
@@ -2624,7 +2624,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
               
       nsresult rv = SendData(protocolString);
       
-    nsAllocator::Free(cCommandStr);
+    nsMemory::Free(cCommandStr);
         if (NS_SUCCEEDED(rv))
             ParseIMAPandCheckForNewMail(protocolString);
       PR_Free(protocolString);
@@ -4583,7 +4583,7 @@ done:
     rv = fileSpec->IsStreamOpen(&isOpen);
     if (NS_SUCCEEDED(rv) && isOpen)
         fileSpec->CloseStream();
-    nsAllocator::Free(escapedName);
+    nsMemory::Free(escapedName);
 }
 
 //caller must free using PR_Free
@@ -4677,7 +4677,7 @@ void nsImapProtocol::OnRefreshACLForFolder(const char *mailboxName)
   command.Append(escapedName);
   command.Append("\"" CRLF);
             
-    nsAllocator::Free(escapedName);
+    nsMemory::Free(escapedName);
             
     nsresult rv = SendData(command.GetBuffer());
     if (NS_SUCCEEDED(rv))
@@ -4846,7 +4846,7 @@ void nsImapProtocol::GetMyRightsForFolder(const char *mailboxName)
   command.Append(escapedName);
   command.Append("\"" CRLF);
             
-    nsAllocator::Free(escapedName);
+    nsMemory::Free(escapedName);
             
     nsresult rv = SendData(command.GetBuffer());
     if (NS_SUCCEEDED(rv))
@@ -4864,7 +4864,7 @@ void nsImapProtocol::OnStatusForFolder(const char *mailboxName)
   command.Append(escapedName);
   command.Append("\" (UIDNEXT MESSAGES UNSEEN)" CRLF);
             
-    nsAllocator::Free(escapedName);
+    nsMemory::Free(escapedName);
             
     nsresult rv = SendData(command.GetBuffer());
     if (NS_SUCCEEDED(rv))
@@ -5659,7 +5659,7 @@ void nsImapProtocol::CreateMailbox(const char *mailboxName)
   command += escapedName;
   command += "\""CRLF;
                
-    nsAllocator::Free(escapedName);
+    nsMemory::Free(escapedName);
 
   nsresult rv = SendData(command.GetBuffer());
     if(NS_SUCCEEDED(rv))
@@ -5677,7 +5677,7 @@ void nsImapProtocol::DeleteMailbox(const char *mailboxName)
     command += " delete \"";
     command += escapedName;
     command += "\"" CRLF;
-    nsAllocator::Free(escapedName);
+    nsMemory::Free(escapedName);
     
     nsresult rv = SendData(command.GetBuffer());
     if (NS_SUCCEEDED(rv))
@@ -5699,8 +5699,8 @@ void nsImapProtocol::RenameMailbox(const char *existingName,
     command += "\" \"";
     command += escapedNewName;
     command += "\"" CRLF;
-    nsAllocator::Free(escapedExistingName);
-    nsAllocator::Free(escapedNewName);
+    nsMemory::Free(escapedExistingName);
+    nsMemory::Free(escapedNewName);
             
     nsresult rv = SendData(command.GetBuffer());
     if (NS_SUCCEEDED(rv))
@@ -5745,7 +5745,7 @@ void nsImapProtocol::Lsub(const char *mailboxPattern, PRBool addDirectoryIfNeces
 //            GetServerCommandTag(),                  // command tag
 //            escapedPattern);
             
-  nsAllocator::Free(escapedPattern);
+  nsMemory::Free(escapedPattern);
   PR_FREEIF(boxnameWithOnlineDirectory);
 
   nsresult rv = SendData(command.GetBuffer());
@@ -5778,7 +5778,7 @@ void nsImapProtocol::List(const char *mailboxPattern, PRBool addDirectoryIfNeces
 //            GetServerCommandTag(),                  // command tag
 //            escapedPattern);
             
-    nsAllocator::Free(escapedPattern);
+    nsMemory::Free(escapedPattern);
   PR_FREEIF(boxnameWithOnlineDirectory);
 
   nsresult rv = SendData(command.GetBuffer());  
@@ -5798,7 +5798,7 @@ void nsImapProtocol::Subscribe(const char *mailboxName)
   command += " subscribe \"";
   command += escapedName;
   command += "\""CRLF;
-    nsAllocator::Free(escapedName);
+    nsMemory::Free(escapedName);
 
   nsresult rv = SendData(command.GetBuffer());  
     if (NS_SUCCEEDED(rv))
@@ -5816,7 +5816,7 @@ void nsImapProtocol::Unsubscribe(const char *mailboxName)
   command += " unsubscribe \"";
   command += escapedName;
   command += "\""CRLF;
-    nsAllocator::Free(escapedName);
+    nsMemory::Free(escapedName);
 
   nsresult rv = SendData(command.GetBuffer());  
     if (NS_SUCCEEDED(rv))
@@ -5866,7 +5866,7 @@ void nsImapProtocol::Copy(const char * messageList,
   if (NS_SUCCEEDED(rv))
         ParseIMAPandCheckForNewMail(protocolString.GetBuffer());
         
-  nsAllocator::Free(escapedDestination);
+  nsMemory::Free(escapedDestination);
 }
 
 void nsImapProtocol::NthLevelChildList(const char* onlineMailboxPrefix,

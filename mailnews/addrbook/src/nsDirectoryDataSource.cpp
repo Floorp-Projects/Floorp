@@ -537,7 +537,7 @@ nsresult nsAbDirectoryDataSource::createDirectoryUriNode(nsIAbDirectory *directo
   if (NS_FAILED(rv)) return rv;
   nsString nameString; nameString.AssignWithConversion(uri);
   createNode(nameString, target);
-  nsAllocator::Free(uri);
+  nsMemory::Free(uri);
   return NS_OK;
 }
 
@@ -645,7 +645,7 @@ nsresult nsAbDirectoryDataSource::DoNewDirectory(nsIAbDirectory *directory, nsIS
 		literal->GetValue(&name);
 
 		rv = directory->CreateNewDirectory(name, nsnull, PR_FALSE /* migrating */);
-		nsAllocator::Free(name);
+		nsMemory::Free(name);
 	}
 	return rv;
 }

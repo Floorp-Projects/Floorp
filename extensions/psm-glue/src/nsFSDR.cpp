@@ -23,7 +23,7 @@
 
 #include "stdlib.h"
 #include "plstr.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIServiceManager.h"
 
 #include "nsISecretDecoderRing.h"
@@ -826,7 +826,7 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
                data, dataLen, result, &cLen);
     if (status != CMTSuccess) { rv = NS_ERROR_FAILURE; goto loser; } /* XXX */
 
-    /* Copy returned data to nsAllocator buffer ? */
+    /* Copy returned data to nsMemory buffer ? */
     *_retval = cLen;
 
 loser:
@@ -859,7 +859,7 @@ Decrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
     status = CMT_SDRDecrypt(control, (void *)0, data, dataLen, result, &len);
     if (status != CMTSuccess) { rv = NS_ERROR_FAILURE; goto loser; } /* Promote? */
 
-    /* Copy returned data to nsAllocator buffer ? */
+    /* Copy returned data to nsMemory buffer ? */
     *_retval = len;
 
 loser:
@@ -908,7 +908,7 @@ EncryptString(const char *text, char **_retval)
     rv = encode(encrypted, eLen, _retval);
 
 loser:
-    if (encrypted) nsAllocator::Free(encrypted);
+    if (encrypted) nsMemory::Free(encrypted);
 
     return rv;
 }
@@ -958,7 +958,7 @@ DecryptString(const char *crypt, char **_retval)
     if (rv != NS_OK) goto loser;
 
     // Convert to NUL-terminated string
-    r = (char *)nsAllocator::Alloc(decryptedLen+1);
+    r = (char *)nsMemory::Alloc(decryptedLen+1);
     if (!r) { rv = NS_ERROR_OUT_OF_MEMORY; goto loser; }
 
     memcpy(r, decrypted, decryptedLen);
@@ -968,9 +968,9 @@ DecryptString(const char *crypt, char **_retval)
     r = 0;
 
 loser:
-    if (r) nsAllocator::Free(r);
-    if (decrypted) nsAllocator::Free(decrypted);
-    if (decoded) nsAllocator::Free(decoded);
+    if (r) nsMemory::Free(r);
+    if (decrypted) nsMemory::Free(decrypted);
+    if (decoded) nsMemory::Free(decoded);
  
     return rv;
 }
@@ -1036,7 +1036,7 @@ encode(const unsigned char *data, PRInt32 dataLen, char **_retval)
     char *r = 0;
 
     // Allocate space for encoded string (with NUL)
-    r = (char *)nsAllocator::Alloc(dataLen+1);
+    r = (char *)nsMemory::Alloc(dataLen+1);
     if (!r) { rv = NS_ERROR_OUT_OF_MEMORY; goto loser; }
 
     memcpy(r, data, dataLen);
@@ -1046,7 +1046,7 @@ encode(const unsigned char *data, PRInt32 dataLen, char **_retval)
     r = 0;
 
 loser:
-    if (r) nsAllocator::Free(r);
+    if (r) nsMemory::Free(r);
 
     return rv;
 }
@@ -1060,7 +1060,7 @@ decode(const char *data, unsigned char **result, PRInt32 * _retval)
 
     // Allocate space for decoded string (missing NUL)
     rLen = PL_strlen(data);
-    r = (unsigned char *)nsAllocator::Alloc(rLen);
+    r = (unsigned char *)nsMemory::Alloc(rLen);
     if (!r) { rv = NS_ERROR_OUT_OF_MEMORY; goto loser; }
 
     memcpy(r, data, rLen);
@@ -1070,7 +1070,7 @@ decode(const char *data, unsigned char **result, PRInt32 * _retval)
     *_retval = rLen;
 
 loser:
-    if (r) nsAllocator::Free(r);
+    if (r) nsMemory::Free(r);
 
     return rv;
 }

@@ -185,7 +185,7 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection 
   char *selStr = str.ToNewCString();
   fprintf(stderr, "SELECTION: %s, %p, %p [%s]\n", reasons[reason], doc, aSel,
           selStr);
-  nsAllocator::Free(selStr);
+  nsMemory::Free(selStr);
 #endif
   return NS_OK;
 }

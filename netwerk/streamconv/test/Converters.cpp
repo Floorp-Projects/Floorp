@@ -29,7 +29,7 @@ TestConverter::Convert(nsIInputStream *aFromStream,
     nsString to(aToType);
     char *toMIME = to.ToNewCString();
     char toChar = *toMIME;
-    nsAllocator::Free(toMIME);
+    nsMemory::Free(toMIME);
 
     for (PRUint32 i = 0; i < read; i++) 
         buf[i] = toChar;

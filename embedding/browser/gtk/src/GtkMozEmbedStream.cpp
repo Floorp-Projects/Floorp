@@ -20,7 +20,7 @@
  */
 
 #include "GtkMozEmbedStream.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 // nsIInputStream interface
 
@@ -42,7 +42,7 @@ GtkMozEmbedStream::GtkMozEmbedStream()
 GtkMozEmbedStream::~GtkMozEmbedStream()
 {
   if (mBuffer)
-    nsAllocator::Free(mBuffer);
+    nsMemory::Free(mBuffer);
 }
 
 NS_IMETHODIMP GtkMozEmbedStream::Available(PRUint32 *_retval)
@@ -94,7 +94,7 @@ NS_IMETHODIMP GtkMozEmbedStream::Read(char * aBuf, PRUint32 aCount, PRUint32 *_r
 NS_IMETHODIMP GtkMozEmbedStream::Close(void)
 {
   if (mBuffer)
-    nsAllocator::Free(mBuffer);
+    nsMemory::Free(mBuffer);
   mLength = 0;
   mBufLen = 0;
   return NS_OK;
@@ -109,7 +109,7 @@ NS_METHOD GtkMozEmbedStream::Append(const char *aData, PRUint32 aLen)
   // first time
   if (!mBuffer)
   {
-    mBuffer = (char *)nsAllocator::Alloc(mLength);
+    mBuffer = (char *)nsMemory::Alloc(mLength);
     mBufLen = mLength;
     if (!mBuffer)
     {
@@ -126,12 +126,12 @@ NS_METHOD GtkMozEmbedStream::Append(const char *aData, PRUint32 aLen)
     if (mLength > mBufLen)
     {
       char *newBuffer;
-      newBuffer = (char *)nsAllocator::Realloc(mBuffer, mLength);
+      newBuffer = (char *)nsMemory::Realloc(mBuffer, mLength);
       if (!newBuffer)
       {
 	mLength = 0;
 	mBufLen = 0;
-	nsAllocator::Free(mBuffer);
+	nsMemory::Free(mBuffer);
 	mBuffer = NULL;
 	return NS_ERROR_OUT_OF_MEMORY;
       }

@@ -30,7 +30,7 @@
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
 #include "nsAutoLock.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIStringBundle.h"
 
 #include "nsMsgFolder.h"
@@ -892,7 +892,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgF
 
 			// case-insensitive compare is probably LCD across OS filesystems
 			PRBool equal = (folderURI && nsCRT::strcasecmp(folderURI, uri)==0);
-			nsAllocator::Free(folderURI);
+			nsMemory::Free(folderURI);
 			if (equal)
 			{
 				*child = folder;

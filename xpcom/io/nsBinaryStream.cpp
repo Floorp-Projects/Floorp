@@ -34,7 +34,7 @@
  * @See nsIBinaryOutputStream
  */
 #include "nsBinaryStream.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include <string.h>
 
 // Swap macros, used to convert to/from canonical (big-endian) format
@@ -333,7 +333,7 @@ nsBinaryInputStream::ReadBytes(char* *aString, PRUint32 aLength)
     PRUint32 bytesRead;
     char* s;
 
-    s = (char*)nsAllocator::Alloc(aLength);
+    s = (char*)nsMemory::Alloc(aLength);
     if (!s)
         return NS_ERROR_OUT_OF_MEMORY;
 

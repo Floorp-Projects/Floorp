@@ -20,7 +20,7 @@
  */
 
 #include "nsByteArrayInputStream.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsByteArrayInputStream, nsIInputStream, nsIBaseStream, nsIByteArrayInputStream)
 
@@ -33,7 +33,7 @@ nsByteArrayInputStream::nsByteArrayInputStream (char *buffer, PRUint32 bytes)
 nsByteArrayInputStream::~nsByteArrayInputStream ()
 {
     if (_buffer != NULL)
-        nsAllocator::Free (_buffer);
+        nsMemory::Free (_buffer);
 }
 
 NS_IMETHODIMP
@@ -80,7 +80,7 @@ nsByteArrayInputStream::Close ()
 {
     if (_buffer != NULL)
     {
-        nsAllocator::Free (_buffer);
+        nsMemory::Free (_buffer);
         _buffer = NULL;
         _nbytes = 0;
     }

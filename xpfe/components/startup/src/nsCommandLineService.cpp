@@ -241,7 +241,7 @@ nsCmdLineService::~nsCmdLineService()
   while ( curr ) {
     char* str = NS_REINTERPRET_CAST(char*, mArgList[curr-1]);
     if ( str )
-      nsAllocator::Free(str);
+      nsMemory::Free(str);
     --curr;
   }
   
@@ -249,7 +249,7 @@ nsCmdLineService::~nsCmdLineService()
   while ( curr ) {
     char* str = NS_REINTERPRET_CAST(char*, mArgValueList[curr-1]);
     if ( str )
-      nsAllocator::Free(str);
+      nsMemory::Free(str);
     --curr;
   }
 }

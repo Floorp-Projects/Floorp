@@ -30,7 +30,7 @@
 #include "nsPersistentProperties.h"
 #include "nsScriptableInputStream.h"
 
-#include "nsAllocator.h"
+#include "nsMemoryImpl.h"
 #include "nsArena.h"
 #include "nsByteBuffer.h"
 #ifdef PAGE_MANAGER
@@ -77,7 +77,7 @@
 #endif /* XPCOM_STANDALONE */
 
 // base
-static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
+static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_CID(kConsoleServiceCID, NS_CONSOLESERVICE_CID);
 // ds
 static NS_DEFINE_CID(kArenaCID, NS_ARENA_CID);
@@ -244,7 +244,7 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
             char* path;
             binDirectory->GetPath(&path);
             nsFileSpec spec(path);
-            nsAllocator::Free(path);
+            nsMemory::Free(path);
             
             nsSpecialSystemDirectory::Set(nsSpecialSystemDirectory::Moz_BinDirectory, &spec);
             
@@ -260,6 +260,10 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
         
         nsComponentManagerImpl::gComponentManager = compMgr;
     }
+
+    nsCOMPtr<nsIMemory> memory = getter_AddRefs(nsMemory::GetGlobalMemoryService());
+    rv = servMgr->RegisterService(kMemoryCID, memory);
+    if (NS_FAILED(rv)) return rv;
     
     rv = servMgr->RegisterService(kComponentManagerCID, NS_STATIC_CAST(nsIComponentManager*, compMgr));
     if (NS_FAILED(rv)) return rv;
@@ -303,10 +307,10 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
     if (NS_FAILED(rv)) return rv;
 #endif
 
-    rv = RegisterGenericFactory(compMgr, kAllocatorCID,
-                                NS_ALLOCATOR_CLASSNAME,
-                                NS_ALLOCATOR_PROGID,
-                                nsAllocatorImpl::Create);
+    rv = RegisterGenericFactory(compMgr, kMemoryCID,
+                                NS_MEMORY_CLASSNAME,
+                                NS_MEMORY_PROGID,
+                                nsMemoryImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
     rv = RegisterGenericFactory(compMgr, kArenaCID,
@@ -639,7 +643,7 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 #endif
 
     NS_PurgeAtomTable();
-    nsAllocator::Shutdown();
+    nsMemoryImpl::Shutdown();
     nsThread::Shutdown();
 
 #ifdef DEBUG

@@ -2577,9 +2577,9 @@ NS_IMETHODIMP nsDocShell::KeywordURIFixup(const PRUnichar* aStringURI,
                {
                keywordSpec.Append(escapedUTF8Spec);
                NS_NewURI(aURI, keywordSpec.GetBuffer(), nsnull);
-               nsAllocator::Free(escapedUTF8Spec);
+               nsMemory::Free(escapedUTF8Spec);
                } // escapedUTF8Spec
-            nsAllocator::Free(utf8Spec);
+            nsMemory::Free(utf8Spec);
             } // utf8Spec
          } // keyword 
       } // FindChar
@@ -2948,7 +2948,7 @@ void nsDocShell::OnNewURI(nsIURI *aURI, nsIChannel *aChannel, loadType aLoadType
             uri = baseURI;
         } else {
             NS_NewURI(getter_AddRefs(uri), uriAttrib, baseURI);
-            nsAllocator::Free(uriAttrib);
+            nsMemory::Free(uriAttrib);
         }
 
         RefreshURI (uri, millis, PR_FALSE);

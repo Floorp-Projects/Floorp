@@ -162,7 +162,7 @@ nsPrimitiveHelpers :: ConvertUnicodeToPlatformPlainText ( PRUnichar* inUnicode, 
   // the conversion.
   encoder->GetMaxLength(inUnicode, inUnicodeLen, outPlainTextLen);
   if ( *outPlainTextLen ) {
-    *outPlainTextData = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(*outPlainTextLen + sizeof(char)));
+    *outPlainTextData = NS_REINTERPRET_CAST(char*, nsMemory::Alloc(*outPlainTextLen + sizeof(char)));
     if ( *outPlainTextData ) {
       rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
       rv = encoder->Convert(inUnicode, &inUnicodeLen, *outPlainTextData, outPlainTextLen);
@@ -215,7 +215,7 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
   // the conversion. 
   decoder->GetMaxLength(inText, inTextLen, outUnicodeLen);   // |outUnicodeLen| is number of chars
   if ( *outUnicodeLen ) {
-    *outUnicode = NS_REINTERPRET_CAST(PRUnichar*, nsAllocator::Alloc((*outUnicodeLen + 1) * sizeof(PRUnichar)));
+    *outUnicode = NS_REINTERPRET_CAST(PRUnichar*, nsMemory::Alloc((*outUnicodeLen + 1) * sizeof(PRUnichar)));
     if ( *outUnicode ) {
       rv = decoder->Convert(inText, &inTextLen, *outUnicode, outUnicodeLen);
       (*outUnicode)[*outUnicodeLen] = '\0';                   // null terminate. Convert() doesn't do it for us
@@ -240,7 +240,7 @@ nsPrimitiveHelpers :: ConvertPlatformPlainTextToUnicode ( const char* inText, PR
 // be reallocated regardless (disposing the old buffer is taken care of internally, see
 // the note below).
 //
-// NOTE: this assumes that it can use nsAllocator to dispose of the old buffer.
+// NOTE: this assumes that it can use nsMemory to dispose of the old buffer.
 //
 nsresult
 nsLinebreakHelpers :: ConvertPlatformToDOMLinebreaks ( const char* inFlavor, void** ioData, 
@@ -260,7 +260,7 @@ nsLinebreakHelpers :: ConvertPlatformToDOMLinebreaks ( const char* inFlavor, voi
                                                               *ioLengthInBytes, ioLengthInBytes );
     if ( NS_SUCCEEDED(retVal) ) {
       if ( buffAsChars != oldBuffer )             // check if buffer was reallocated
-        nsAllocator::Free ( oldBuffer );
+        nsMemory::Free ( oldBuffer );
       *ioData = buffAsChars;
     }
   }
@@ -276,7 +276,7 @@ nsLinebreakHelpers :: ConvertPlatformToDOMLinebreaks ( const char* inFlavor, voi
                                                                      *ioLengthInBytes / sizeof(PRUnichar), &newLengthInChars );
     if ( NS_SUCCEEDED(retVal) ) {
       if ( buffAsUnichar != oldBuffer )           // check if buffer was reallocated
-        nsAllocator::Free ( oldBuffer );
+        nsMemory::Free ( oldBuffer );
       *ioData = buffAsUnichar;
       *ioLengthInBytes = newLengthInChars * sizeof(PRUnichar);
     }

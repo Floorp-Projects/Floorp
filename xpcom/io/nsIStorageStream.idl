@@ -22,7 +22,6 @@
 #include "nsISupports.idl"
 #include "nsrootidl.idl"
 
-interface nsIAllocator;
 interface nsIInputStream;
 interface nsIOutputStream;
 

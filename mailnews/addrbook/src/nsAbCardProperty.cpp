@@ -388,7 +388,7 @@ NS_IMETHODIMP nsAbCardProperty::SetCardValue(const char *attrname, const PRUnich
 		nsAutoString cardValue(value);
 		char* valueStr = cardValue.ToNewCString();
 		rv = SetAnonymousStringAttribute(attrname, valueStr);
-		nsAllocator::Free(valueStr);
+		nsMemory::Free(valueStr);
 	}
 	return rv;
 }
@@ -1270,8 +1270,8 @@ static const char *kAbPrintUrlFormat = "addbook:printone?email=%s&folder=%s";
 
 	*aPrintCardUrl = PR_smprintf(kAbPrintUrlFormat, emailCharStr, dirCharStr);
 
-	nsAllocator::Free(emailCharStr);
-	nsAllocator::Free(dirCharStr);
+	nsMemory::Free(emailCharStr);
+	nsMemory::Free(dirCharStr);
 
 	PR_FREEIF(dirName);
 	PR_FREEIF(email);

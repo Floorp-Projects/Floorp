@@ -57,7 +57,7 @@ nsDOMViewerObject::SetTargetLiteral(nsIRDFResource *aProperty,
   PRUnichar* uniStr = str.ToNewUnicode();
   nsCOMPtr<nsIRDFLiteral> literal;
   rv = rdf->GetLiteral(uniStr, getter_AddRefs(literal));
-  nsAllocator::Free(uniStr);
+  nsMemory::Free(uniStr);
 
   SetTarget(aProperty, literal);
   return NS_OK;

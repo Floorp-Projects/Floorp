@@ -43,7 +43,7 @@
 
 #include "nsRepository.h"
 #include "nsIServiceManager.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIEventQueueService.h"
 #include "nsIThread.h"
 
@@ -582,7 +582,7 @@ AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTC
 
                         if( !currentType.IsPointer() || 
                             currentType.TagPart() != nsXPTType::T_IID ||
-                            !(iid = (nsIID*) nsAllocator::Clone(params[arg_num].val.p, sizeof(nsIID))))
+                            !(iid = (nsIID*) nsMemory::Clone(params[arg_num].val.p, sizeof(nsIID))))
                         {
                             // This is really bad that we are here.  
                             rv = NS_ERROR_PROXY_INVALID_IN_PARAMETER;
@@ -607,7 +607,7 @@ AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTC
                         printf("             could not find an IID for a parameter: %d\n", (i) );
                         printf("**************************************************\n");
 
-                        nsAllocator::Free((void*)interfaceName);
+                        nsMemory::Free((void*)interfaceName);
 #endif /* DEBUG */
 
 
@@ -657,7 +657,7 @@ AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTC
 
                         if (NS_SUCCEEDED( rv ) && iid && iid->Equals(NS_GET_IID(nsIAtom)))
                         {
-                            nsAllocator::Free((void*)iid);
+                            nsMemory::Free((void*)iid);
                             NS_RELEASE(manager);
                             NS_RELEASE(eventQ);
                             continue;
@@ -676,7 +676,7 @@ AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTC
                         NS_RELEASE(eventQ);
                     }
 
-                    nsAllocator::Free((void*)iid);
+                    nsMemory::Free((void*)iid);
                     NS_RELEASE(manager);
 
                     if (NS_FAILED(rv))

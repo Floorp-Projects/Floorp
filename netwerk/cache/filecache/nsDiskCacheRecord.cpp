@@ -31,7 +31,7 @@
 #include "nsIServiceManager.h"
 #include "nsIProtocolHandler.h"
 #include "nsIIOService.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 #include "plstr.h"
 #include "prprf.h"
@@ -82,7 +82,7 @@ nsDiskCacheRecord::Init(const char* key, PRUint32 length, PRInt32 ID)
 {
   // copy key
   mKeyLength = length ;
-  mKey = NS_STATIC_CAST(char*, nsAllocator::Alloc(mKeyLength*sizeof(char))) ;
+  mKey = NS_STATIC_CAST(char*, nsMemory::Alloc(mKeyLength*sizeof(char))) ;
   if(!mKey) 
     return NS_ERROR_OUT_OF_MEMORY ;
 
@@ -116,11 +116,11 @@ nsDiskCacheRecord::Init(const char* key, PRUint32 length, PRInt32 ID)
 nsDiskCacheRecord::~nsDiskCacheRecord()
 {
   if(mKey)
-    nsAllocator::Free(mKey) ;
+    nsMemory::Free(mKey) ;
   if(mMetaData)
-    nsAllocator::Free(mMetaData) ;
+    nsMemory::Free(mMetaData) ;
   if(mInfo) 
-    nsAllocator::Free(mInfo) ;
+    nsMemory::Free(mInfo) ;
 
   NS_IF_RELEASE(mDiskCache);
 }
@@ -141,7 +141,7 @@ nsDiskCacheRecord::GetKey(PRUint32 *length, char** _retval)
     return NS_ERROR_NULL_POINTER ;
 
   *length = mKeyLength ;
-  *_retval = NS_STATIC_CAST(char*, nsAllocator::Alloc(mKeyLength*sizeof(char))) ;
+  *_retval = NS_STATIC_CAST(char*, nsMemory::Alloc(mKeyLength*sizeof(char))) ;
   if(!*_retval)
     return NS_ERROR_OUT_OF_MEMORY ;
 
@@ -170,7 +170,7 @@ nsDiskCacheRecord::GetMetaData(PRUint32 *length, char **_retval)
   *length = mMetaDataLength ;
 
   if(mMetaDataLength) {
-    *_retval = NS_STATIC_CAST(char*, nsAllocator::Alloc(mMetaDataLength*sizeof(char))) ;
+    *_retval = NS_STATIC_CAST(char*, nsMemory::Alloc(mMetaDataLength*sizeof(char))) ;
     if(!*_retval)
       return NS_ERROR_OUT_OF_MEMORY ;
 
@@ -186,8 +186,8 @@ nsDiskCacheRecord::SetMetaData(PRUint32 length, const char* data)
   // set the mMetaData
   mMetaDataLength = length ;
   if(mMetaData)
-    nsAllocator::Free(mMetaData) ;
-  mMetaData = NS_STATIC_CAST(char*, nsAllocator::Alloc(mMetaDataLength*sizeof(char))) ;
+    nsMemory::Free(mMetaData) ;
+  mMetaData = NS_STATIC_CAST(char*, nsMemory::Alloc(mMetaDataLength*sizeof(char))) ;
   if(!mMetaData) {
     return NS_ERROR_OUT_OF_MEMORY ;
   }
@@ -316,7 +316,7 @@ nsresult
 nsDiskCacheRecord::GenInfo() 
 {
   if(mInfo)
-    nsAllocator::Free(mInfo) ;
+    nsMemory::Free(mInfo) ;
 
   char* file_url=nsnull ;
   PRUint32 name_len ;
@@ -332,7 +332,7 @@ nsDiskCacheRecord::GenInfo()
   mInfoSize += sizeof(PRUint32) ;    // filename length
   mInfoSize += name_len ;            // filename 
 
-  void* newInfo = nsAllocator::Alloc(mInfoSize*sizeof(char)) ;
+  void* newInfo = nsMemory::Alloc(mInfoSize*sizeof(char)) ;
   if(!newInfo) {
     return NS_ERROR_OUT_OF_MEMORY ;
   }
@@ -370,7 +370,7 @@ nsDiskCacheRecord::GenInfo()
   memcpy(cur_ptr, file_url, name_len) ;
   cur_ptr += name_len ;
 
-  nsAllocator::Free(file_url);
+  nsMemory::Free(file_url);
 
   PR_ASSERT(cur_ptr == NS_STATIC_CAST(char*, newInfo) + mInfoSize);
   mInfo = newInfo ;
@@ -388,16 +388,16 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
 {
   // reset everything
   if(mInfo) {
-    nsAllocator::Free(mInfo) ;
+    nsMemory::Free(mInfo) ;
     mInfo = nsnull ;
   }
 
   if(mKey) {
-    nsAllocator::Free(mKey) ;
+    nsMemory::Free(mKey) ;
     mKey = nsnull ;
   }
   if(mMetaData) {
-    nsAllocator::Free(mMetaData) ;
+    nsMemory::Free(mMetaData) ;
     mMetaData = nsnull ;
   }
 
@@ -423,7 +423,7 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
   cur_ptr += sizeof(PRUint32) ;
 
   // set mKey
-  mKey = NS_STATIC_CAST(char*, nsAllocator::Alloc(mKeyLength*sizeof(char))) ;
+  mKey = NS_STATIC_CAST(char*, nsMemory::Alloc(mKeyLength*sizeof(char))) ;
   if(!mKey) 
     return NS_ERROR_OUT_OF_MEMORY ;
   
@@ -439,7 +439,7 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
   cur_ptr += sizeof(PRUint32) ;
 
   // set mMetaData
-  mMetaData = NS_STATIC_CAST(char*, nsAllocator::Alloc(mMetaDataLength*sizeof(char))) ;
+  mMetaData = NS_STATIC_CAST(char*, nsMemory::Alloc(mMetaDataLength*sizeof(char))) ;
   if(!mMetaData) 
     return NS_ERROR_OUT_OF_MEMORY ;
   
@@ -451,7 +451,7 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
   cur_ptr += sizeof(PRUint32) ;
 
   // get mFile native name
-  file_url = NS_STATIC_CAST(char*, nsAllocator::Alloc(name_len*sizeof(char))) ;
+  file_url = NS_STATIC_CAST(char*, nsMemory::Alloc(name_len*sizeof(char))) ;
   if(!file_url) 
     return NS_ERROR_OUT_OF_MEMORY ;
   
@@ -479,7 +479,7 @@ nsDiskCacheRecord::RetrieveInfo(void* aInfo, PRUint32 aInfoLength)
   		file->InitWithPath(file_url) ;
   }
 
-  nsAllocator::Free(file_url);
+  nsMemory::Free(file_url);
 
   return NS_OK ;
 }

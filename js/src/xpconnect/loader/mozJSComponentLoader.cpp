@@ -38,7 +38,7 @@
 #include "nsIJSContextStack.h"
 #include "nsIXPConnect.h"
 #include "nsCRT.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIRegistry.h"
 #include "nsXPIDLString.h"
 #include "nsIObserverService.h"
@@ -88,7 +88,7 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
             *c = '\n';
 #endif
     fputs(bytes, stderr);
-    nsAllocator::Free(bytes);
+    nsMemory::Free(bytes);
     return JS_TRUE;
 }
 
@@ -245,7 +245,7 @@ Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
         rv = errorObject->Init(rep->ucmessage, newFileUni, rep->uclinebuf,
                                rep->lineno, column, rep->flags,
                                "component javascript");
-        nsAllocator::Free((void *)newFileUni);
+        nsMemory::Free((void *)newFileUni);
         if (NS_SUCCEEDED(rv)) {
             rv = consoleService->LogMessage(errorObject);
             if (NS_SUCCEEDED(rv)) {
@@ -456,7 +456,7 @@ mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
 
     rv = mRegistry->AddSubtreeRaw(mXPCOMKey, eRegistryLocation, &key);
     if (registryLocation != eRegistryLocation)
-	nsAllocator::Free(eRegistryLocation);
+	nsMemory::Free(eRegistryLocation);
 
     if (NS_FAILED(rv))
         return rv;
@@ -504,7 +504,7 @@ mozJSComponentLoader::RemoveRegistryInfo(const char *registryLocation)
     rv = mRegistry->RemoveSubtree(mXPCOMKey, eRegistryLocation);
  	
     if (registryLocation != eRegistryLocation)
-	    nsAllocator::Free(eRegistryLocation);
+	    nsMemory::Free(eRegistryLocation);
 
     return rv;
 }
@@ -533,7 +533,7 @@ mozJSComponentLoader::HasChanged(const char *registryLocation,
     nsRegistryKey key;
     int r = NS_FAILED(mRegistry->GetSubtreeRaw(mXPCOMKey, eRegistryLocation, &key));
     if (registryLocation != eRegistryLocation)
-	nsAllocator::Free(eRegistryLocation);
+	nsMemory::Free(eRegistryLocation);
     if (r)
         return PR_TRUE;
 

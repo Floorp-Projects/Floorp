@@ -506,7 +506,7 @@ nsComponentManagerImpl::PlatformInit(void)
     mComponentsOffset = strlen(componentDescriptor);
         
     if (componentDescriptor)
-        nsAllocator::Free(componentDescriptor);
+        nsMemory::Free(componentDescriptor);
 
 
 
@@ -730,7 +730,7 @@ nsComponentManagerImpl::PlatformUnregister(const char *cidString,
     }
 
     if (eLibrary != aLibrary)
-    nsAllocator::Free(eLibrary);
+    nsMemory::Free(eLibrary);
 
     return rv;
 }
@@ -1293,7 +1293,7 @@ MakeRegistryName(const char *aDllName, const char *prefix, char **regName)
     PRUint32 len = nsCRT::strlen(prefix);
 
     PRUint32 registryNameLen = nsCRT::strlen(aDllName) + len;
-    registryName = (char *)nsAllocator::Alloc(registryNameLen + 1);
+    registryName = (char *)nsMemory::Alloc(registryNameLen + 1);
     
     // from here on it, we want len sans terminating NUL
 
@@ -1354,7 +1354,7 @@ nsComponentManagerImpl::RegistryLocationForSpec(nsIFile *aSpec,
     }
 
     if (persistentDescriptor)
-        nsAllocator::Free(persistentDescriptor);
+        nsMemory::Free(persistentDescriptor);
         
     return rv;
 
@@ -1772,7 +1772,7 @@ nsComponentManagerImpl::AddComponentToRegistry(const nsCID &aClass,
     // XXX if failed, undo registry adds or set invalid bit?  How?
     nsCRT::free(cidString);
     if (eRegistryName != aRegistryName)
-    nsAllocator::Free(eRegistryName);
+    nsMemory::Free(eRegistryName);
     return rv;
 }
 

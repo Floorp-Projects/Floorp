@@ -163,7 +163,7 @@ nsPresContext::GetFontPreferences()
     mPrefs->CopyCharPref("font.default", &value);
     if (value) {
       mDefaultFont.name.AssignWithConversion(value);
-      nsAllocator::Free(value);
+      nsMemory::Free(value);
       value = nsnull;
     }
     if (mLanguage) {
@@ -205,7 +205,7 @@ nsPresContext::GetFontPreferences()
         mDefaultFixedFont.size = NSFloatPixelsToTwips((float) fixedSize, p2t);
       }
       if (unit != defaultUnit) {
-        nsAllocator::Free(unit);
+        nsMemory::Free(unit);
         unit = nsnull;
       }
     }

@@ -1646,7 +1646,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     else if (image)
       image->SetSrc(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
 
-    nsAllocator::Free(domSaveArray[i].url);
+    nsMemory::Free(domSaveArray[i].url);
   }
 
   PR_FREEIF(domSaveArray);

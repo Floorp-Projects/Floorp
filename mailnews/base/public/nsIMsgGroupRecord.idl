@@ -26,10 +26,10 @@
 [scriptable, uuid(4ed03c60-b256-11d2-b7f0-00805f05ffa5)]
 interface nsIMsgGroupRecord : nsISupports {
 
-    /* making this a voidStar is really ugly, but it's a quick
+    /* making this a voidPtr is really ugly, but it's a quick
      * solution right now
      */
-    [noscript] void Init(in voidStar parent,
+    [noscript] void Init(in voidPtr parent,
                          in string partname,
                          in long long time,
                          in long uniqueid,

@@ -21,7 +21,7 @@
  */
 
 #include "nsHTTPChunkConv.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "plstr.h"
 #include "prlog.h"
 #include "nsIChannel.h"
@@ -54,7 +54,7 @@ nsHTTPChunkConv::~nsHTTPChunkConv ()
     NS_IF_RELEASE(mListener);
 
     if (mChunkBuffer != NULL)
-        nsAllocator::Free (mChunkBuffer);
+        nsMemory::Free (mChunkBuffer);
 }
 
 NS_IMETHODIMP
@@ -77,8 +77,8 @@ nsHTTPChunkConv::AsyncConvertData (
     else
         mMode = DO_CHUNKING;
 
-    nsAllocator::Free (fromStr);
-    nsAllocator::Free (  toStr);
+    nsMemory::Free (fromStr);
+    nsMemory::Free (  toStr);
 
     // hook ourself up with the receiving listener. 
     mListener = aListener;
@@ -129,7 +129,7 @@ nsHTTPChunkConv::OnDataAvailable (
 
     if (mMode == DO_CHUNKING)
     {
-        mChunkBuffer = (char * )nsAllocator::Alloc (streamLen + 20);
+        mChunkBuffer = (char * )nsMemory::Alloc (streamLen + 20);
         mChunkBufferPos = sprintf (mChunkBuffer, "%x%c%c", streamLen, '\r', '\n');
 
         rv = iStr -> Read (&mChunkBuffer[mChunkBufferPos], streamLen, &rl);
@@ -176,7 +176,7 @@ nsHTTPChunkConv::OnDataAvailable (
                     
                     if (mChunkBuffer != NULL)
                     {
-                        nsAllocator::Free (mChunkBuffer);
+                        nsMemory::Free (mChunkBuffer);
                         mChunkBuffer = NULL;
                     }
 
@@ -222,7 +222,7 @@ nsHTTPChunkConv::OnDataAvailable (
                     
                         if (mChunkBuffer != NULL)
                         {
-                            nsAllocator::Free (mChunkBuffer);
+                            nsMemory::Free (mChunkBuffer);
                             mChunkBuffer = NULL;
                         }
                     }
@@ -267,7 +267,7 @@ nsHTTPChunkConv::OnDataAvailable (
                     {
                         if (mChunkBufferLength > 0)
                         {
-                            mChunkBuffer = (char * )nsAllocator::Alloc (mChunkBufferLength + 1);
+                            mChunkBuffer = (char * )nsMemory::Alloc (mChunkBufferLength + 1);
                             mState = CHUNK_STATE_DATA;
                         }
                         else

@@ -153,7 +153,7 @@ NS_IMETHODIMP nsAbDirectory::OnListEntryChange
 		nsCOMPtr<nsIRDFResource> res;
 		rv = rdf->GetResource(listURI, getter_AddRefs(res));
 		if(listURI)
-			nsAllocator::Free(listURI);
+			nsMemory::Free(listURI);
 		if (NS_SUCCEEDED(rv))
 		{
 			nsCOMPtr<nsIAbDirectory> listDir = do_QueryInterface(res);
@@ -413,7 +413,7 @@ NS_IMETHODIMP nsAbDirectory::AddChildCards(const char *uriName, nsIAbCard **chil
 			return rv;
 		}
 	}
-	nsAllocator::Free(uriStr);
+	nsMemory::Free(uriStr);
 
 	*childCard = personCard;
 	NS_ADDREF(*childCard);
@@ -585,7 +585,7 @@ NS_IMETHODIMP nsAbDirectory::DeleteDirectory(nsIAbDirectory *directory)
 			if (NS_SUCCEEDED(rv))
 			{
 				rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(database));				
-				nsAllocator::Free(uri);
+				nsMemory::Free(uri);
 
 				if (NS_SUCCEEDED(rv))
 					rv = database->DeleteMailList(directory, PR_TRUE);
@@ -640,7 +640,7 @@ NS_IMETHODIMP nsAbDirectory::HasDirectory(nsIAbDirectory *dir, PRBool *hasDir)
 		if (NS_SUCCEEDED(rv))
 		{
 			rv = addresBook->GetAbDatabaseFromURI(uri, getter_AddRefs(database));				
-			nsAllocator::Free(uri);
+			nsMemory::Free(uri);
 		}
 		if(NS_SUCCEEDED(rv) && database)
 		{

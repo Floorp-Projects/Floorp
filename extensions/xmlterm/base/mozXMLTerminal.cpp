@@ -780,7 +780,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
 
   char* temCStr = flavor.ToNewCString();
   XMLT_LOG(mozXMLTerminal::Paste,20,("flavour=%s\n", temCStr));
-  nsAllocator::Free(temCStr);
+  nsMemory::Free(temCStr);
 
   if (flavor.EqualsWithConversion(kHTMLMime) || flavor.EqualsWithConversion(kUnicodeMime)) {
     nsCOMPtr<nsISupportsWString> textDataObj ( do_QueryInterface(genericDataObj) );
@@ -791,7 +791,7 @@ NS_IMETHODIMP mozXMLTerminal::Paste()
       result = SendTextAux(pasteString);
     }
   }
-  nsAllocator::Free(bestFlavor);
+  nsMemory::Free(bestFlavor);
 
   return NS_OK;
 }

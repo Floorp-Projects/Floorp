@@ -30,13 +30,13 @@
 #include <new.h>
 
 #include "jni.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 
 // Warning:  this forces all C++ allocation to go through Navigator's memory allocation
 // Routines. As such, static constructors that use operator new may not work. This can
 // be fixed if we delay static construction (see the call to __InitCode__() in npmac.cpp).
 
-extern nsIAllocator* theMemoryAllocator;
+extern nsIMemory* theMemoryAllocator;
 
 void* operator new(size_t size)
 {

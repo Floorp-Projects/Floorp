@@ -38,7 +38,7 @@
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "nsIPipe.h"
 #include "nsMimeStringResources.h"
 #include "nsIPref.h"
@@ -608,12 +608,12 @@ NS_IMETHODIMP nsStreamConverter::GetContentType(char **aOutputContentType)
 	if (!aOutputContentType)
 		return NS_ERROR_NULL_POINTER;
 
-	// since this method passes a string through an IDL file we need to use nsAllocator to allocate it 
+	// since this method passes a string through an IDL file we need to use nsMemory to allocate it 
 	// and not nsCRT::strdup!
 	if (nsCRT::strcasecmp(mOutputFormat, "raw") == 0)
-		*aOutputContentType = (char *) nsAllocator::Clone(UNKNOWN_CONTENT_TYPE, nsCRT::strlen(UNKNOWN_CONTENT_TYPE) + 1);
+		*aOutputContentType = (char *) nsMemory::Clone(UNKNOWN_CONTENT_TYPE, nsCRT::strlen(UNKNOWN_CONTENT_TYPE) + 1);
 	else
-		*aOutputContentType = (char *) nsAllocator::Clone(mOutputFormat, nsCRT::strlen(mOutputFormat) + 1);
+		*aOutputContentType = (char *) nsMemory::Clone(mOutputFormat, nsCRT::strlen(mOutputFormat) + 1);
 	return NS_OK;
 }
 

@@ -26,7 +26,7 @@
 #include "plstr.h"
 #include "nscore.h"
 
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "bsIConnection.h"
 
 #include "bsapi.h"
@@ -281,12 +281,12 @@ bsConnection::ReadData(PRUint32 timeout, char **aData)
     else
         if (c == 0)
         {
-            *aData = (char*) nsAllocator::Alloc(1);
+            *aData = (char*) nsMemory::Alloc(1);
             **aData = '\00';
         }
         else
         {
-            *aData = (char*) nsAllocator::Alloc(PL_strlen(data) + 1);
+            *aData = (char*) nsMemory::Alloc(PL_strlen(data) + 1);
             if (! *aData)
                 return NS_ERROR_OUT_OF_MEMORY;
  

@@ -862,7 +862,7 @@ nsMsgSearchValidityTable::GetAvailableAttributes(PRUint32 *length,
     }
 
     nsMsgSearchAttribValue *array = (nsMsgSearchAttribValue*)
-        nsAllocator::Alloc(sizeof(nsMsgSearchAttribValue) * totalAttributes);
+        nsMemory::Alloc(sizeof(nsMsgSearchAttribValue) * totalAttributes);
     NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
     
     PRUint32 numStored=0;
@@ -895,7 +895,7 @@ nsMsgSearchValidityTable::GetAvailableOperators(nsMsgSearchAttribValue aAttribut
     }
 
     nsMsgSearchOpValue *array = (nsMsgSearchOpValue*)
-        nsAllocator::Alloc(sizeof(nsMsgSearchOpValue) * totalOperators);
+        nsMemory::Alloc(sizeof(nsMsgSearchOpValue) * totalOperators);
     NS_ENSURE_TRUE(array, NS_ERROR_OUT_OF_MEMORY);
     
     PRUint32 numStored = 0;

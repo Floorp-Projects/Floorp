@@ -37,7 +37,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsObjectFrame.h"
 #include "nsCOMPtr.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 #include "xptinfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIPluginInstance.h"
@@ -337,7 +337,7 @@ nsHTMLEmbedElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, 
               retval = PR_TRUE;
           }
         }
-        nsAllocator::Free(iid);        
+        nsMemory::Free(iid);        
         return retval;
       }
     }

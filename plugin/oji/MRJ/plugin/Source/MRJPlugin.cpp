@@ -35,7 +35,7 @@
 #include "EmbeddedFramePluginInstance.h"
 
 #include "nsIServiceManager.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsRepository.h"
 #include "nsIJVMManager.h"
 #include "nsIJVMPluginTagInfo.h"
@@ -55,7 +55,7 @@ extern nsIPluginManager* thePluginManager;		// now in badaptor.cpp.
 extern nsIPlugin* thePlugin;
 
 nsIPluginManager2* thePluginManager2 = NULL;
-nsIAllocator* theMemoryAllocator = NULL;		// should also be provided by badaptor.cpp.
+nsIMemory* theMemoryAllocator = NULL;		// should also be provided by badaptor.cpp.
 
 FSSpec thePluginSpec;
 short thePluginRefnum = -1;
@@ -84,7 +84,7 @@ nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const ch
 
 		// Our global operator new wants to use nsIMalloc to do all of its allocation.
 		// This should be available from the Service Manager.
-		if (theServiceManager->GetService(kAllocatorCID, NS_GET_IID(nsIAllocator), (nsISupports**)&theMemoryAllocator) != NS_OK)
+		if (theServiceManager->GetService(kAllocatorCID, NS_GET_IID(nsIMemory), (nsISupports**)&theMemoryAllocator) != NS_OK)
 			return NS_ERROR_FAILURE;
 	}
 

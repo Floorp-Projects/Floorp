@@ -53,7 +53,7 @@ interface nsIBufferOutputStream : nsIOutputStream
     readonly attribute nsIBuffer Buffer;
 
     [noscript] unsigned long WriteSegments(in nsReadSegmentFun reader,
-                                           in voidStar closure,
+                                           in voidPtr closure,
                                            in unsigned long count);
 
     /**

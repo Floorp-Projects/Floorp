@@ -662,7 +662,7 @@ char* nsCString::ToNewCString() const {
  * @return  ptr to new ascii string
  */
 PRUnichar* nsCString::ToNewUnicode() const {
-  PRUnichar* result = NS_STATIC_CAST(PRUnichar*, nsAllocator::Alloc(sizeof(PRUnichar) * (mLength + 1)));
+  PRUnichar* result = NS_STATIC_CAST(PRUnichar*, nsMemory::Alloc(sizeof(PRUnichar) * (mLength + 1)));
   if (result) {
     CBufDescriptor desc(result, PR_TRUE, mLength + 1, 0);
     nsAutoString temp(desc);

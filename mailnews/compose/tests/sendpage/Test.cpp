@@ -27,7 +27,7 @@
 #include "prmem.h"
 #include "nsIComponentManager.h" 
 #include "nsIPref.h"
-#include "nsIAllocator.h"
+#include "nsIMemory.h"
 #include "nsIEventQueueService.h"
 #include "nsMsgCompCID.h"
 #include "nsIGenericFactory.h"
@@ -63,7 +63,7 @@
 /////////////////////////////////////////////////////////////////////////////////
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kAllocatorCID,  NS_ALLOCATOR_CID);
+static NS_DEFINE_CID(kMemoryCID,  NS_MEMORY_CID);
 static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
@@ -279,7 +279,7 @@ SetupRegistry(void)
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kEventQueueCID,        NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kGenericFactoryCID,    NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kAllocatorCID,         NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponent(kMemoryCID,            NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
 
   // prefs
   nsComponentManager::RegisterComponent(kPrefCID,              NULL, NULL, PREF_DLL,  PR_FALSE, PR_FALSE);

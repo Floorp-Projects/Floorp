@@ -87,7 +87,7 @@ nsFtpConnectionThread::~nsFtpConnectionThread() {
     mURL->GetSpec(getter_Copies(spec));
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("~nsFtpConnectionThread() for %s", (const char*)spec));
     if (mLock) PR_DestroyLock(mLock);
-    if (mIPv6ServerAddress) nsAllocator::Free(mIPv6ServerAddress);
+    if (mIPv6ServerAddress) nsMemory::Free(mIPv6ServerAddress);
 }
 
 nsresult
@@ -237,7 +237,7 @@ nsFtpConnectionThread::Process() {
                     if (*tmpBuffer)
                         carryOverBuf = tmpBuffer;
 
-                    if (cleanup) nsAllocator::Free(cleanup);
+                    if (cleanup) nsMemory::Free(cleanup);
 
                     // see if this was the last line
                     if (lastLine) {
@@ -1174,7 +1174,7 @@ nsFtpConnectionThread::R_mdtm() {
         ts.tm_min  = (timeStr[10] - '0') * 10 + (timeStr[11] - '0');
         ts.tm_sec  = (timeStr[12] - '0') * 10 + (timeStr[13] - '0');
         ts.tm_usec = 0;
-        nsAllocator::Free(timeStr);
+        nsMemory::Free(timeStr);
         mLastModified = PR_ImplodeTime(&ts);
     }
 
@@ -1331,7 +1331,7 @@ nsFtpConnectionThread::S_pasv() {
             PRNetAddr addr;
             if (PR_StringToNetAddr(mIPv6ServerAddress, &addr) != PR_SUCCESS ||
                 PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped)) {
-                nsAllocator::Free(mIPv6ServerAddress);
+                nsMemory::Free(mIPv6ServerAddress);
                 mIPv6ServerAddress = 0;
             }
             PR_ASSERT(!mIPv6ServerAddress || addr.raw.family == PR_AF_INET6);
@@ -1419,7 +1419,7 @@ nsFtpConnectionThread::R_pasv() {
         host.AppendInt(h3);
     }
 
-    nsAllocator::Free(response);
+    nsMemory::Free(response);
 
     // now we know where to connect our data channel
     rv = mSTS->CreateTransport(mIPv6ServerAddress ? mIPv6ServerAddress : host.GetBuffer(),
@@ -1809,7 +1809,7 @@ nsFtpConnectionThread::StopProcessing() {
     mDPipe = 0;
     mIPv6Checked = PR_FALSE;
     if (mIPv6ServerAddress) {
-        nsAllocator::Free(mIPv6ServerAddress);
+        nsMemory::Free(mIPv6ServerAddress);
         mIPv6ServerAddress = 0;
     }
 

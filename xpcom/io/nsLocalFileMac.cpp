@@ -25,7 +25,7 @@
 
 
 #include "nsCOMPtr.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 #include "nsLocalFileMac.h"
 
@@ -835,9 +835,9 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 	{
 		case eInitWithPath:
 		{
-			filePath = (char *)nsAllocator::Clone(mWorkingPath, strlen(mWorkingPath)+1);
+			filePath = (char *)nsMemory::Clone(mWorkingPath, strlen(mWorkingPath)+1);
 			err = ResolvePathAndSpec(filePath, nsnull, PR_FALSE, &mResolvedSpec);
-			nsAllocator::Free(filePath);
+			nsMemory::Free(filePath);
 			break;
 		}
 		
@@ -845,9 +845,9 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 		{
 			if (strlen(mAppendedPath))
 			{	// We've got an FSSpec and an appended path so pass 'em both to ResolvePathAndSpec
-				filePath = (char *)nsAllocator::Clone(mAppendedPath, strlen(mAppendedPath)+1);
+				filePath = (char *)nsMemory::Clone(mAppendedPath, strlen(mAppendedPath)+1);
 				err = ResolvePathAndSpec(filePath, &mSpec, PR_FALSE, &mResolvedSpec);
-				nsAllocator::Free(filePath);
+				nsMemory::Free(filePath);
 			}
 			else
 			{
@@ -913,7 +913,7 @@ nsLocalFile::Clone(nsIFile **file)
 			char *path;
 			GetPath(&path);
 			rv = localFile->InitWithPath(path);
-			nsAllocator::Free(path);
+			nsMemory::Free(path);
 			break;
 		
 		case eInitWithFSSpec:
@@ -925,7 +925,7 @@ nsLocalFile::Clone(nsIFile **file)
 			char *appendedPath;
 			GetAppendedPath(&appendedPath);
 			rv = localFileMac->SetAppendedPath(appendedPath);
-			nsAllocator::Free(appendedPath);
+			nsMemory::Free(appendedPath);
 			break;
 			
 		default:
@@ -1066,9 +1066,9 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 	{
 		case eInitWithPath:
 		{
-			filePath = (char *)nsAllocator::Clone(mWorkingPath, strlen(mWorkingPath)+1);
+			filePath = (char *)nsMemory::Clone(mWorkingPath, strlen(mWorkingPath)+1);
 			err = ResolvePathAndSpec(filePath, nsnull, PR_TRUE, &mResolvedSpec);
-			nsAllocator::Free(filePath);
+			nsMemory::Free(filePath);
 			break;
 		}
 		
@@ -1076,9 +1076,9 @@ nsLocalFile::Create(PRUint32 type, PRUint32 attributes)
 		{
 			if (strlen(mAppendedPath))
 			{	// We've got an FSSpec and an appended path so pass 'em both to ResolvePathAndSpec
-				filePath = (char *)nsAllocator::Clone(mAppendedPath, strlen(mAppendedPath)+1);
+				filePath = (char *)nsMemory::Clone(mAppendedPath, strlen(mAppendedPath)+1);
 				err = ResolvePathAndSpec(filePath, &mSpec, PR_TRUE, &mResolvedSpec);
-				nsAllocator::Free(filePath);
+				nsMemory::Free(filePath);
 			}
 			else
 			{
@@ -1184,7 +1184,7 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 			else
 				leaf++;
 
-			*aLeafName = (char*) nsAllocator::Clone(leaf, strlen(leaf)+1);
+			*aLeafName = (char*) nsMemory::Clone(leaf, strlen(leaf)+1);
 			break;
 		
 		case eInitWithFSSpec:
@@ -1203,14 +1203,14 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 				else
 					leaf++;
 
-				*aLeafName = (char*) nsAllocator::Clone(leaf, strlen(leaf)+1);
+				*aLeafName = (char*) nsMemory::Clone(leaf, strlen(leaf)+1);
 			}
 			else
 			{
 				// We don't have an appended path so grab the leaf name from the FSSpec
 				// Convert the Pascal string to a C string				
 				PRInt32 len = mSpec.name[0];
-				char* leafName = (char *)nsAllocator::Alloc(len + 1);
+				char* leafName = (char *)nsMemory::Alloc(len + 1);
 				if (!leafName) return NS_ERROR_OUT_OF_MEMORY;				
 				::BlockMoveData(&mSpec.name[1], leafName, len);
 				leafName[len] = '\0';
@@ -1281,7 +1281,7 @@ nsLocalFile::GetPath(char **_retval)
 	switch (mInitType)
 	{
 		case eInitWithPath:
-			*_retval = (char*) nsAllocator::Clone(mWorkingPath, strlen(mWorkingPath)+1);
+			*_retval = (char*) nsMemory::Clone(mWorkingPath, strlen(mWorkingPath)+1);
 			if (!*_retval)
 				return NS_ERROR_OUT_OF_MEMORY;
 			break;
@@ -1295,7 +1295,7 @@ nsLocalFile::GetPath(char **_retval)
 			if (!fullPathHandle)
 				return NS_ERROR_OUT_OF_MEMORY;
 			
-			char* fullPath = (char *)nsAllocator::Alloc(fullPathLen + 1);
+			char* fullPath = (char *)nsMemory::Alloc(fullPathLen + 1);
 			if (!fullPath)
 				return NS_ERROR_OUT_OF_MEMORY;
 			
@@ -1764,7 +1764,7 @@ nsLocalFile::GetParent(nsIFile * *aParent)
 				localFileMac->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);
 			}
 			bail:
-				nsAllocator::Free(appendedPath);
+				nsMemory::Free(appendedPath);
 			break;
 		}
 			
@@ -1924,8 +1924,8 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 	if (strcmp(inFilePath, filePath) == 0)
 		*_retval = PR_TRUE;
 	
-	nsAllocator::Free(inFilePath);
-	nsAllocator::Free(filePath);
+	nsMemory::Free(inFilePath);
+	nsMemory::Free(filePath);
 
 	return NS_OK;
 }
@@ -1997,7 +1997,7 @@ nsLocalFile::GetTarget(char **_retval)
 		return NS_ERROR_FILE_INVALID_PATH;
 	}
 		
-	*_retval = (char*) nsAllocator::Clone( mResolvedPath, strlen(mResolvedPath)+1 );
+	*_retval = (char*) nsMemory::Clone( mResolvedPath, strlen(mResolvedPath)+1 );
 	return NS_OK;
 }
 
@@ -2439,7 +2439,7 @@ NS_IMETHODIMP nsLocalFile::SetAppendedPath(const char *aPath)
 NS_IMETHODIMP nsLocalFile::GetAppendedPath(char **_retval)
 {
 	NS_ENSURE_ARG_POINTER(_retval);
-	*_retval = (char*) nsAllocator::Clone(mAppendedPath, strlen(mAppendedPath)+1);
+	*_retval = (char*) nsMemory::Clone(mAppendedPath, strlen(mAppendedPath)+1);
 	return NS_OK;
 }
 

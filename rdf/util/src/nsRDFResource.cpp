@@ -104,7 +104,7 @@ nsRDFResource::Init(const char* aURI)
     if (! aURI)
         return NS_ERROR_NULL_POINTER;
 
-    if (! (mURI = (char *)nsAllocator::Alloc(nsCRT::strlen(aURI) + 1)))
+    if (! (mURI = (char *)nsMemory::Alloc(nsCRT::strlen(aURI) + 1)))
         return NS_ERROR_OUT_OF_MEMORY;
 
     PL_strcpy(mURI, aURI);

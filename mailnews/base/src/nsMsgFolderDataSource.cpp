@@ -1494,7 +1494,7 @@ nsresult nsMsgFolderDataSource::DoFolderAssert(nsIMsgFolder *folder, nsIRDFResou
 			if(NS_SUCCEEDED(rv))
 			{
 				rv = folder->SetCharset(value);
-				nsAllocator::Free(value);
+				nsMemory::Free(value);
 			}
 		}
 		else

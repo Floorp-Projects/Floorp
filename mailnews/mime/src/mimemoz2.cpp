@@ -483,7 +483,7 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
     mimeEmitterAddAttachmentField(opt, HEADER_X_MOZILLA_PART_URL, spec);
 
 	  if (spec)
-		  nsAllocator::Free(spec);
+		  nsMemory::Free(spec);
 
     if ( (opt->format_out == nsMimeOutput::nsMimeMessageQuoting) || 
          (opt->format_out == nsMimeOutput::nsMimeMessageBodyQuoting) || 

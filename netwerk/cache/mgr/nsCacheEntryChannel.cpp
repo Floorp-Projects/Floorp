@@ -28,7 +28,7 @@
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
 #include "nsIStreamListener.h"
-#include "nsIAllocator.h"
+#include "nsMemory.h"
 
 nsCacheEntryChannel::nsCacheEntryChannel(
         nsCachedNetData* aCacheEntry, 
@@ -216,7 +216,7 @@ nsCacheEntryChannel::GetURI(nsIURI * *aURI)
     if (NS_FAILED(rv)) return rv;
     
     rv = serv->NewURI(spec, nsnull, aURI);
-    nsAllocator::Free(spec);
+    nsMemory::Free(spec);
     return rv;
 }
 
