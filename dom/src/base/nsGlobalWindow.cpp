@@ -100,10 +100,10 @@
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
 
-// XXX An unfortunate dependency exists here.
+// XXX An unfortunate dependency exists here (two for XUL, one for XBL).
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
-
+#include "nsIBindingManager.h"
 
 // CIDs
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -437,6 +437,16 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
     }
     aEvent->flags = aFlags;
     aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
+
+    // Execute bindingdetached handlers before we tear ourselves
+    // down.
+    if (aEvent->message == NS_PAGE_UNLOAD && mDocument) {
+      nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+      nsCOMPtr<nsIBindingManager> bindingManager;
+      doc->GetBindingManager(getter_AddRefs(bindingManager));
+      if (bindingManager)
+        bindingManager->ExecuteDetachedHandlers();
+    }
   }
 
   // Capturing stage
