@@ -85,8 +85,10 @@ interface nsIProtocolHandler : nsISupports
      *                         null, then UTF-8 encoding is assumed (i.e.,
      *                         no charset transformation from aSpec).
      * @param aBaseURI       - if null, aSpec must specify an absolute URI.
-     *                         otherwise, aSpec will be resolved relative
-     *                         to aBaseURI.
+     *                         otherwise, aSpec may be resolved relative
+     *                         to aBaseURI, depending on the protocol. 
+     *                         If the protocol has no concept of relative 
+     *                         URI aBaseURI will simply be ignored.
      */
     nsIURI newURI(in AUTF8String aSpec,
                   in string aOriginCharset,

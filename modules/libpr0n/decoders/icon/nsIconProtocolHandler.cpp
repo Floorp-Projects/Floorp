@@ -76,8 +76,6 @@ NS_IMETHODIMP nsIconProtocolHandler::NewURI(const nsACString &aSpec,
                                             nsIURI *aBaseURI,
                                             nsIURI **result) 
 {
-  // no concept of a relative icon url
-  NS_ASSERTION(!aBaseURI, "base url passed into icon protocol handler");
   
   nsCOMPtr<nsIURI> uri;
   NS_NEWXPCOM(uri, nsMozIconURI);
