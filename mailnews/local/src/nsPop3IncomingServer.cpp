@@ -76,6 +76,8 @@ nsPop3IncomingServer::nsPop3IncomingServer()
         initializeStrings();
 
     }
+
+	m_canHaveFilters = PR_TRUE;
 }
 
 nsPop3IncomingServer::~nsPop3IncomingServer()

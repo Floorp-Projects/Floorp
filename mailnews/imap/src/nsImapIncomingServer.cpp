@@ -102,6 +102,7 @@ nsImapIncomingServer::nsImapIncomingServer()
 	m_redirectedLogonRetries = 0;
 	mDoingSubscribeDialog = PR_FALSE;
 	mDoingLsub = PR_FALSE;
+	m_canHaveFilters = PR_TRUE;
 }
 
 nsImapIncomingServer::~nsImapIncomingServer()

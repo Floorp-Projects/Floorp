@@ -71,7 +71,8 @@ MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer)
 nsMsgIncomingServer::nsMsgIncomingServer():
     m_prefs(0),
     m_serverBusy(PR_FALSE),
-    m_rootFolder(0)
+    m_rootFolder(0),
+    m_canHaveFilters(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -182,6 +183,22 @@ nsMsgIncomingServer::GetDownloadMessagesAtStartup(PRBool *getMessagesAtStartup)
 {
     // derived class should override if they need to do this.
     *getMessagesAtStartup = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetCanHaveFilters(PRBool *canHaveFilters)
+{
+    // derived class should override if they need to do this.
+    *canHaveFilters = m_canHaveFilters;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::SetCanHaveFilters(PRBool canHaveFilters)
+{
+    // derived class should override if they need to do this.
+    m_canHaveFilters = canHaveFilters;
     return NS_OK;
 }
 

@@ -83,6 +83,9 @@ protected:
   nsCOMPtr<nsIMsgFilterList> mFilterList;
   // pref callback to clear the user prefs
   static void clearPrefEnum(const char  *aPref, void *aClosure);
+
+  // member variable for canHaveFilters
+  PRBool m_canHaveFilters;
 };
 
 #endif // nsMsgIncomingServer_h__

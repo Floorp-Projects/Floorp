@@ -189,6 +189,9 @@ interface nsIMsgIncomingServer : nsISupports {
   /* Get Messages at startup */
   readonly attribute boolean downloadMessagesAtStartup; 
 
+  /* check to this if the server supports filters */
+  attribute boolean canHaveFilters;
+
   /**
    * can this server be removed from the account manager?  for
    * instance, local mail is not removable, but an imported folder is 

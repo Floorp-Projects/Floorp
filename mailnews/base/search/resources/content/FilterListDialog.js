@@ -26,16 +26,18 @@ var deleteButton;
 var nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 
 var gBundle;
-
-function getBundle()
-{
-    if (!gBundle) gBundle = srGetStrBundle("chrome://messenger/locale/search.properties");
-    return gBundle;
-}
+var gCommonDialogsService; 
 
 function onLoad()
 {
     rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
+
+    gCommonDialogsService 
+         = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
+    gCommonDialogsService 
+        = gCommonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
+
+    gBundle = srGetStrBundle("chrome://messenger/locale/filter.properties");
 
     editButton = document.getElementById("editButton");
     deleteButton = document.getElementById("deleteButton");
@@ -43,20 +45,21 @@ function onLoad()
     doSetOKCancel(onOk, null);
     
     updateButtons();
-    
-    var firstItem;
-    var args = window.arguments;
-    if (args && args[0])
-        firstItem = args[0].initialServerUri;
-    
-    else {
-        var serverMenu = document.getElementById("serverMenu");
-        var menuitems = serverMenu.getElementsByTagName("menuitem");
-        firstItem = menuitems[1].id;
+
+    // get the selected server if it can have filters.    
+    var firstItem = getSelectedServerForFilters();
+
+    // if the selected server cannot have filters, get the default server
+    // if the default server cannot have filters, check all accounts
+    // and get a server that can have filters.
+    if (!firstItem)
+        firstItem = getServerThatCanHaveFilters();
+
+    if (firstItem) {
+        selectServer(firstItem);
     }
-    
-    selectServer(firstItem);
-	moveToAlertPosition();
+
+    moveToAlertPosition();
 }
 
 function onOk()
@@ -238,4 +241,86 @@ function updateButtons()
         deleteButton.setAttribute("disabled", "true");
     }                      
 }
+
+/**
+  * get the selected server if it can have filters
+  */
+function getSelectedServerForFilters()
+{
+    var firstItem = null;
+    var args = window.arguments;
+    var selectedFolder = args[0].folder;
+
+    if (args && args[0] && selectedFolder)
+    {
+        var msgFolder = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
+        try 
+        {
+            var rootFolder = msgFolder.rootFolder;
+            if (rootFolder.isServer) 
+            {
+                var server = rootFolder.server;
+
+                if (server.canHaveFilters)
+                {
+                    firstItem = rootFolder.URI;
+                }
+            }
+        }
+        catch (ex) 
+        {
+            //dump("**** exception: "+ex+"\n");
+            //dump("**** !!!!!!! NOT A VALID msgfolder\n");
+        }
+    }
+
+    return firstItem;
+}
+
+/** if the selected server cannot have filters, get the default server
+  * if the default server cannot have filters, check all accounts
+  * and get a server that can have filters.
+  */
+function getServerThatCanHaveFilters()
+{
+    var firstItem = null;
+
+    var accountManager 
+        = Components.classes["@mozilla.org/messenger/account-manager;1"].
+            getService(Components.interfaces.nsIMsgAccountManager);
+
+    var defaultAccount = accountManager.defaultAccount;
+    var defaultIncomingServer = defaultAccount.incomingServer;
+	
+    // check to see if default server can have filters
+    if (defaultIncomingServer.canHaveFilters) {
+        firstItem = defaultIncomingServer.serverURI;
+    }
+    // if it cannot, check all accounts to find a server 
+    // that can have filters
+    else
+    {
+        var allServers = accountManager.allServers;
+        var numServers = allServers.Count();
+        var index = 0;
+        for (index = 0; index < numServers; index++)
+        {
+            var currentServer 
+            = allServers.GetElementAt(index).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
+
+            if (currentServer.canHaveFilters)
+            {
+                firstItem = currentServer.serverURI;
+                break;
+            }
+        }
+    }
+
+    return firstItem;
+}
+
+function onFilterDoubleClick(event)
+{
+    onEditFilter();
+}                                                                                                                                                                                                                                                                                                                                                                                                                 
 

@@ -75,6 +75,7 @@ Rights Reserved.
           <html>&filterHeader.label;</html>
           <tree id="filterTree" class="inset" flex="1"
                 onselect="onFilterSelect(event);"
+                ondblclick="onFilterDoubleClick(event);"
                 datasources="rdf:msgfilters rdf:msgaccountmanager "
                 containment="http://home.netscape.com/NC-rdf#child">
 

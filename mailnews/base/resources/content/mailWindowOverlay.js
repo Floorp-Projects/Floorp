@@ -750,7 +750,8 @@ function MsgSearchMessages() {
 }
 
 function MsgFilters() {
-    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome,resizable");
+    var preselectedFolder = GetFirstSelectedMsgFolder();
+    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome,resizable", { folder: preselectedFolder });
 }
 
 function MsgViewAllHeaders() 
