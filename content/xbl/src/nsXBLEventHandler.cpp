@@ -334,52 +334,16 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
   onEvent += aEventName;
   nsCOMPtr<nsIAtom> onEventAtom = getter_AddRefs(NS_NewAtom(onEvent));
 
-  nsCOMPtr<nsIScriptEventHandlerOwner> handlerOwner = do_QueryInterface(mHandlerElement);
-  
   void* handler = nsnull;
-  if (handlerOwner)
-    handlerOwner->GetCompiledEventHandler(onEventAtom, &handler);
+  
+  // Compile the event handler.
+  nsAutoString handlerText;
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kValueAtom, handlerText);
+  if (handlerText.IsEmpty())
+    return NS_OK; // For whatever reason, they didn't give us anything to do.
 
-  if (!handler) {
-    // We've never compiled the event handler before.  Let's get it
-    // compiled.
-    nsAutoString handlerText;
-    mHandlerElement->GetAttribute(kNameSpaceID_None, kValueAtom, handlerText);
-    if (handlerText.IsEmpty())
-      return NS_OK; // For whatever reason, they didn't give us anything to do.
-
-    nsCOMPtr<nsIDocument> document;
-    mHandlerElement->GetDocument(*getter_AddRefs(document));
-
-    // Ensure that a global object has been made for the XBL document.
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    document->GetScriptGlobalObject(getter_AddRefs(globalObject));
-    if (!globalObject) {
-      NS_NewScriptGlobalObject(getter_AddRefs(globalObject));
-      document->SetScriptGlobalObject(globalObject);
-    }
-
-    // Ensure that we have a script context for the XBL document.
-    nsCOMPtr<nsIScriptContext> context;
-    globalObject->GetContext(getter_AddRefs(context));
-    if (!context) {
-      NS_CreateScriptContext(globalObject, getter_AddRefs(context));
-      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(document);
-      globalObject->SetNewDocument(domDoc); // Ensures document is set.
-    }
-
-    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(mHandlerElement);
-    void* scriptObject;
-    owner->GetScriptObject(context, &scriptObject);
-
-    if (handlerOwner)
-      handlerOwner->CompileEventHandler(context, scriptObject, onEventAtom, handlerText, &handler);
-    else context->CompileEventHandler(scriptObject, onEventAtom, handlerText,
-                                      PR_TRUE, &handler);
-  }
-
-  // Now that the handler has been compiled, let's bind it to the 
-  // element in question.
+  
+  // Compile the handler and bind it to the element.
   nsCOMPtr<nsIDocument> boundDocument;
   mBoundElement->GetDocument(*getter_AddRefs(boundDocument));
   nsCOMPtr<nsIScriptGlobalObject> boundGlobal;
@@ -392,6 +356,9 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
   void* scriptObject;
   owner->GetScriptObject(boundContext, &scriptObject);
   
+  boundContext->CompileEventHandler(scriptObject, onEventAtom, handlerText,
+                               PR_TRUE, &handler);
+
   // Temporarily bind it to the bound element
   boundContext->BindCompiledEventHandler(scriptObject, onEventAtom, handler);
 
