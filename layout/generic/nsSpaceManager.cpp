@@ -133,7 +133,7 @@ nsSpaceManager::~nsSpaceManager()
 
   NS_ASSERTION(!mSavedStates, "states remaining on state stack");
 
-  while (mSavedStates){
+  while (mSavedStates && mSavedStates != &mAutoState){
     SpaceManagerState *state = mSavedStates;
     mSavedStates = state->mNext;
     delete state;
@@ -979,7 +979,13 @@ nsSpaceManager::PushState()
   // Allowing mFloatDamage to accumulate the damage incurred during both
   // reflows ensures that nothing gets missed.
 
-  SpaceManagerState *state = new SpaceManagerState;
+  SpaceManagerState *state;
+
+  if(mSavedStates) {
+    state = new SpaceManagerState;
+  } else {
+    state = &mAutoState;
+  }
 
   NS_ASSERTION(state, "PushState() failed!");
 
@@ -994,6 +1000,8 @@ nsSpaceManager::PushState()
 
   if (mFrameInfoMap) {
     state->mLastFrame = mFrameInfoMap->mFrame;
+  } else {
+    state->mLastFrame = nsnull;
   }
 
   // Now that we've saved our state, add it to mSavedStates.
@@ -1038,11 +1046,14 @@ nsSpaceManager::PopState()
   mLowestTop = mSavedStates->mLowestTop;
 
   // Now that we've restored our state, pop the topmost
-  // state and delete it.
+  // state and delete it.  Make sure not to delete the mAutoState element
+  // as it is embeded in this class
 
   SpaceManagerState *state = mSavedStates;
   mSavedStates = mSavedStates->mNext;
-  delete state;
+  if(state != &mAutoState) {
+    delete state;
+  }
 }
 
 nscoord
