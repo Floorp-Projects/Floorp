@@ -230,7 +230,7 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
 
    var eventBox = null;
 
-   while ( eventBoxList.item(0) ) {
+   while ( eventBoxList.item(0) )
    {
       eventBox = eventBoxList[ 0 ];
       eventBox.parentNode.removeChild( eventBox );
