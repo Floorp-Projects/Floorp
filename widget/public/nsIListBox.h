@@ -32,6 +32,11 @@
  */
 
 struct nsListBoxInitData : public nsWidgetInitData {
+  nsListBoxInitData()
+    : mMultiSelect(PR_FALSE)
+  {
+  }
+
   PRBool mMultiSelect;
 };
 

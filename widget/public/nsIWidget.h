@@ -116,7 +116,13 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
  */
 
 struct nsWidgetInitData {
-  PRPackedBool  clipChildren;  // when painting exclude area occupied by child windows
+  nsWidgetInitData()
+    : clipChildren(PR_FALSE)
+  {
+  }
+
+  // when painting exclude area occupied by child windows
+  PRPackedBool  clipChildren;
 };
 
 /**

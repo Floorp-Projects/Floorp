@@ -38,6 +38,11 @@ enum nsLabelAlignment {
   }; 
 
 struct nsLabelInitData : public nsWidgetInitData {
+  nsLabelInitData()
+    : mAlignment(eAlign_Left)
+  {
+  }
+
   nsLabelAlignment mAlignment;
 };
 
