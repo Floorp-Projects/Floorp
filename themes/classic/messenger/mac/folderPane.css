@@ -162,12 +162,6 @@ outlinerbody:-moz-outliner-cell-text(folderNameCol, noSelect-true) {
   min-width: 10px;
 }
 
-/* using tree-cell-folderpane-icon to isolate this rule to the folderpane
-   and prevent such crawls on the threadpane */   
-treeitem[empty="true"] > treerow > .tree-cell-folderpane-icon > .tree-cell-twisty {               
-  visibility            : hidden;
-}      
-
 .tree-folder-checkbox {
   list-style-image: none;
 }

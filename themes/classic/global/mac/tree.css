@@ -184,6 +184,10 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
  list-style-image: url("chrome://global/skin/twisty-closed-active.gif");
 }
 
+treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
+  visibility: hidden;
+}    
+
 /* tree header with sort direction indicators */
 .sortDirectionIndicator[sortDirection="ascending"]  > .treecell-header-box > .tree-header-sortdirection {
   list-style-image: url("chrome://global/skin/sortAscending.gif");

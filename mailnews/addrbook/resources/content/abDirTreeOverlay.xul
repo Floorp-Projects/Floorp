@@ -32,7 +32,6 @@ Rights Reserved.
       ref="moz-abdirectory://"
       datasources="rdf:addressdirectory"
       containment="http://home.netscape.com/NC-rdf#child"
-      ignore="http://home.netscape.com/NC-rdf#CardChild"
       onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
       onblur="goOnEvent(this,'blur')"
       allownegativeassertions="false"
@@ -48,7 +47,7 @@ Rights Reserved.
           IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"
                                         persist="sortColumn sortKey sortDirection">
           <treerow>
-            <treecell indent="true" class="treecell-indent" label="rdf:http://home.netscape.com/NC-rdf#DirName"
+            <treecell indent="true" class="treecell-indent ab-directory-icon" label="rdf:http://home.netscape.com/NC-rdf#DirName"
                      IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"/>
           </treerow>
         </treeitem>

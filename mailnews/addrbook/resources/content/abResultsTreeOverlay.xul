@@ -17,6 +17,10 @@ The Initial Developer of the Original Code is Netscape
 Communications Corporation. Portions created by Netscape are
  Copyright (C) 1998-1999 Netscape Communications Corporation. All
 Rights Reserved.
+
+Contributor(s):
+Alexis Ledoux <alexis.ledoux@ireland.sun.com>
+Seth Spitzer <sspitzer@netscape.com>
 --> 
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abResultsTreeOverlay.dtd">
@@ -49,10 +53,10 @@ Rights Reserved.
         <treechildren flex="1">
           <treeitem uri="...">
             <treerow id="AbRows">
-                <treecell class="treecell-iconic cardicon" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-                <treecell label="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail"/>
-                <treecell label="rdf:http://home.netscape.com/NC-rdf#WorkPhone"/>
-                <treecell label="rdf:http://home.netscape.com/NC-rdf#Company"/>
+                <treecell colid="NameColumn" class="treecell-indent ab-results-icon" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                <treecell colid="EmailColumn" label="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail"/>
+                <treecell colid="WorkPhoneColumn" label="rdf:http://home.netscape.com/NC-rdf#WorkPhone"/>
+                <treecell colid="OrganizationColumn" label="rdf:http://home.netscape.com/NC-rdf#Company"/>
             </treerow>
           </treeitem>
         </treechildren>

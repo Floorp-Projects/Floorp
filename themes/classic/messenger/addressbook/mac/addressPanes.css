@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
+ *   Joe Hewitt <hewitt@netscape.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  */
 
 /* ===== addressPanes.css ================================================
@@ -29,19 +30,21 @@
 
 /* ::::: directory pane icons ::::: */
 
-.abDirectory treeitem > treerow > treecell > .tree-icon {
+.ab-directory-icon {
   list-style-image: url("chrome://messenger/skin/addressbook/myaddrbk.gif");
+  margin-right: 1px;
+  margin-left: 1px;
 }
 
-.abDirectory treeitem[empty="true"] > treerow > treecell > .tree-cell-twisty {               
-  list-style-image: none !important;                                            
-  padding-left: 12px;                                                           
+.ab-directory-icon[IsMailList="true"] {
+  list-style-image: url("chrome://messenger/skin/addressbook/list.gif");
+  margin-right: 1px;
+  margin-left: 1px;
 }
 
 /* ::::: result pane icons ::::: */
 
-.abResults treeitem > treerow > treecell.cardicon {
-  list-style-image: url("chrome://messenger/skin/addressbook/person.gif");
-  height: 14px;
-  min-height: 14px;
+.ab-results-icon {
+  list-style-image: url("chrome://messenger/skin/abcard.gif");
+  margin-right: 1px;
 }
