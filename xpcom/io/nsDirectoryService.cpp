@@ -302,6 +302,7 @@ nsIAtom*  nsDirectoryService::sDocumentsDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sInternetSearchDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sHomeDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sDefaultDownloadDirectory = nsnull;
+nsIAtom*  nsDirectoryService::sUserLibDirectory = nsnull;
 #elif defined (XP_WIN) 
 nsIAtom*  nsDirectoryService::sSystemDirectory = nsnull;
 nsIAtom*  nsDirectoryService::sWindowsDirectory = nsnull;
@@ -400,6 +401,7 @@ nsDirectoryService::Init()
     nsDirectoryService::sInternetSearchDirectory    = NS_NewAtom(NS_MAC_INTERNET_SEARCH_DIR);
     nsDirectoryService::sHomeDirectory              = NS_NewAtom(NS_MAC_HOME_DIR);
     nsDirectoryService::sDefaultDownloadDirectory   = NS_NewAtom(NS_MAC_DEFAULT_DOWNLOAD_DIR);
+    nsDirectoryService::sUserLibDirectory           = NS_NewAtom(NS_MAC_USER_LIB_DIR);
 #elif defined (XP_WIN) 
     nsDirectoryService::sSystemDirectory            = NS_NewAtom(NS_OS_SYSTEM_DIR);
     nsDirectoryService::sWindowsDirectory           = NS_NewAtom(NS_WIN_WINDOWS_DIR);
@@ -479,6 +481,7 @@ nsDirectoryService::~nsDirectoryService()
      NS_IF_RELEASE(nsDirectoryService::sDocumentsDirectory);
      NS_IF_RELEASE(nsDirectoryService::sInternetSearchDirectory);
      NS_IF_RELEASE(nsDirectoryService::sHomeDirectory);
+     NS_IF_RELEASE(nsDirectoryService::sUserLibDirectory);
 #elif defined (XP_WIN)
      NS_IF_RELEASE(nsDirectoryService::sSystemDirectory);
      NS_IF_RELEASE(nsDirectoryService::sWindowsDirectory);
@@ -816,6 +819,11 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     else if (inAtom == nsDirectoryService::sDefaultDownloadDirectory)
     {
         nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_DefaultDownloadDirectory); 
+        rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
+    }
+    else if (inAtom == nsDirectoryService::sUserLibDirectory)
+    {
+        nsSpecialSystemDirectory fileSpec(nsSpecialSystemDirectory::Mac_UserLibDirectory); 
         rv = NS_FileSpecToIFile(&fileSpec, getter_AddRefs(localFile));  
     }   
 #elif defined (XP_WIN)

@@ -65,6 +65,7 @@
     #define NS_MAC_INTERNET_SEARCH_DIR          "ISrch"
     #define NS_MAC_HOME_DIR                     "Home"
     #define NS_MAC_DEFAULT_DOWNLOAD_DIR         "DfltDwnld"
+    #define NS_MAC_USER_LIB_DIR                 "ULibDir"   // Only available under OS X
 #elif defined (XP_WIN)
     #define NS_WIN_WINDOWS_DIR                  "WinD"
     #define NS_WIN_HOME_DIR                     "Home"

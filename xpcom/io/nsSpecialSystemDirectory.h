@@ -70,6 +70,7 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
         ,   Mac_DocumentsDirectory    =   111
         ,   Mac_InternetSearchDirectory    =   112
         ,   Mac_DefaultDownloadDirectory   =   113
+        ,   Mac_UserLibDirectory      =   114
         
         ,   Win_SystemDirectory       =   201
         ,   Win_WindowsDirectory      =   202

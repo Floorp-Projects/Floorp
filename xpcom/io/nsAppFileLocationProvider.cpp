@@ -35,6 +35,7 @@
 #include <Folders.h>
 #include <Script.h>
 #include <Processes.h>
+#include <Gestalt.h>
 #include "nsILocalFileMac.h"
 #endif
 #if defined(XP_OS2)
@@ -254,7 +255,11 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
 #if defined(XP_MAC)
     NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    rv = directoryService->Get(NS_MAC_DOCUMENTS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
+    OSErr   err;
+    long    response;
+    err = ::Gestalt(gestaltSystemVersion, &response);
+    const char *prop = (!err && response >= 0x00001000) ? NS_MAC_USER_LIB_DIR : NS_MAC_DOCUMENTS_DIR;
+    rv = directoryService->Get(prop, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;   
 #elif defined(XP_OS2)
     NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);

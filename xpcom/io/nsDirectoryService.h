@@ -82,6 +82,7 @@ private:
     static nsIAtom *sInternetSearchDirectory;
     static nsIAtom *sHomeDirectory;
     static nsIAtom *sDefaultDownloadDirectory;
+    static nsIAtom *sUserLibDirectory;
 #elif defined (XP_WIN) 
     static nsIAtom *sSystemDirectory;
     static nsIAtom *sWindowsDirectory;
