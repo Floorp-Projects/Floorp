@@ -739,7 +739,7 @@ struct nsFontStretch
   PRUint16           mSizesCount;
 
   char*              mScalable;
-  nsFontGTK*         mScaledFonts;
+  nsFontGTK**        mScaledFonts;
   PRUint16           mScaledFontsAlloc;
   PRUint16           mScaledFontsCount;
 };
@@ -1393,42 +1393,60 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   }
 
   if (scalable) {
-    begin = aStretch->mScaledFonts;
-    end = &aStretch->mScaledFonts[aStretch->mScaledFontsCount];
-    for (s = begin; s < end; s++) {
-      if (s->mSize == desiredSize) {
+    nsFontGTK* closestBitmapSize = s;
+    nsFontGTK** beginScaled = aStretch->mScaledFonts;
+    nsFontGTK** endScaled =
+      &aStretch->mScaledFonts[aStretch->mScaledFontsCount];
+    nsFontGTK** p;
+    for (p = beginScaled; p < endScaled; p++) {
+      if ((*p)->mSize == desiredSize) {
         break;
       }
     }
-    if (s == end) {
-      if (aStretch->mScaledFontsCount == aStretch->mScaledFontsAlloc) {
-        int newSize = 2 *
-          (aStretch->mScaledFontsAlloc ? aStretch->mScaledFontsAlloc : 1);
-        nsFontGTK* newPointer = new nsFontGTK[newSize];
-        if (newPointer) {
-          for (int i = aStretch->mScaledFontsAlloc - 1; i >= 0; i--) {
-            newPointer[i] = aStretch->mScaledFonts[i];
+    if (p == endScaled) {
+      s = new nsFontGTK;
+      if (s) {
+        s->mName = PR_smprintf(aStretch->mScalable, desiredSize);
+        if (!s->mName) {
+          delete s;
+          return;
+        }
+        s->mSize = desiredSize;
+        s->mCharSetInfo = aCharSet->mInfo;
+        s->LoadFont(aCharSet, m);
+        if (s->mFont) {
+          if (aStretch->mScaledFontsCount == aStretch->mScaledFontsAlloc) {
+            int newSize = 2 *
+              (aStretch->mScaledFontsAlloc ? aStretch->mScaledFontsAlloc : 1);
+            nsFontGTK** newPointer = (nsFontGTK**)
+              PR_Realloc(aStretch->mScaledFonts, newSize * sizeof(nsFontGTK*));
+            if (newPointer) {
+              aStretch->mScaledFontsAlloc = newSize;
+              aStretch->mScaledFonts = newPointer;
+            }
+            else {
+              delete s;
+              return;
+            }
           }
-          aStretch->mScaledFontsAlloc = newSize;
-          delete [] aStretch->mScaledFonts;
-          aStretch->mScaledFonts = newPointer;
+          aStretch->mScaledFonts[aStretch->mScaledFontsCount++] = s;
+        }
+        else {
+          delete s;
+          s = nsnull;
+        }
+      }
+      if (!s) {
+        if (closestBitmapSize) {
+          s = closestBitmapSize;
         }
         else {
           return;
         }
       }
-      s = &aStretch->mScaledFonts[aStretch->mScaledFontsCount++];
-      s->mName = PR_smprintf(aStretch->mScalable, desiredSize);
-      if (!s->mName) {
-        return;
-      }
-      s->mSize = desiredSize;
-      s->mBaselineAdjust = 0;
-      s->mCharSetInfo = aCharSet->mInfo;
-      s->LoadFont(aCharSet, m);
-      if (!s->mFont) {
-        return;
-      }
+    }
+    else {
+      s = *p;
     }
   }
 
