@@ -1,0 +1,108 @@
+<?xml version="1.0"?> 
+
+<!-- The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+
+Contributor(s): ______________________________________. -->
+
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+
+<window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
+	    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		align="vertical"> 
+
+
+ <toolbox>
+   <xpmenubar chromeclass="menubar">
+	  <xpmenu>
+	    <html:div><html:u>F</html:u>ile</html:div>
+		<xpmenuchildren> 
+		<xpmenu> 
+		  <html:div><html:u>N</html:u>ew </html:div> 
+	   <spring flex="100%"/> 
+	   <html:div>Ctrl+N</html:div> 
+	  </xpmenu> 
+	  <xpmenu> 
+		  <html:div><html:u>O</html:u>pen...</html:div> 
+	   <spring flex="100%"/> 
+	   <html:div>Ctrl+O</html:div> 
+	  </xpmenu> 
+	  <xpmenu> 
+		  <html:div><html:u>C</html:u>lose</html:div> 
+	   <spring flex="100%"/> 
+	  </xpmenu> 
+	  <xpmenu> 
+		  <html:div><html:u>S</html:u>ave</html:div> 
+	   <spring flex="100%"/> 
+	   <html:div>Ctrl+S</html:div> 
+	  </xpmenu> 
+	  <xpmenu> 
+		  <html:div>S<html:u>a</html:u>ve as...</html:div> 
+	   <spring flex="100%"/> 
+	  </xpmenu> 
+	  <xpmenu> 
+		  <html:div><html:u>Q</html:u>uit</html:div> 
+	   <spring flex="100%"/> 
+	   <html:div>Ctrl+Q</html:div> 
+	  </xpmenu> 
+	  </xpmenuchildren> 
+  
+	  </xpmenu>
+	  <xpmenu>
+	    <html:div><html:u>E</html:u>dit</html:div>
+	  </xpmenu>
+	  <xpmenu>
+	    <html:div><html:u>V</html:u>iew</html:div>
+	  </xpmenu>
+	  <xpmenu>
+	    <html:div><html:u>S</html:u>earch</html:div>
+	  </xpmenu>
+	  <xpmenu>
+	    <html:div><html:u>G</html:u>o</html:div>
+	  </xpmenu>
+	  <xpmenu>
+	    <html:div><html:u>B</html:u>ookmarks</html:div>
+	  </xpmenu>
+	  <xpmenu>
+	    <html:div><html:u>T</html:u>asks</html:div>
+	  </xpmenu>
+	  <xpmenu>
+	    <html:div><html:u>D</html:u>ebug</html:div>
+	  </xpmenu>
+	  <xpmenu>
+	    <html:div><html:u>Q</html:u>A</html:div>
+	  </xpmenu>
+	  <spring flex="100%"/>
+    </xpmenubar>
+  </toolbox>
+
+<html:select size="1">
+      <html:option>item 1</html:option>
+      <html:option>item 2</html:option>
+      <html:option selected="true">item 3</html:option>
+      <html:option>item 4</html:option>
+      <html:option>item 5</html:option>
+</html:select>
+
+<!--  <html:iframe style="height: 300px" src="http://www.mozillazine.org/"/>
+-->
+
+
+</window>
