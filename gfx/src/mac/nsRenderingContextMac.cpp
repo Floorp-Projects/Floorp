@@ -712,7 +712,9 @@ NS_IMETHODIMP nsRenderingContextMac::SetClipRegion(const nsIRegion& aRegion, nsC
  */
 NS_IMETHODIMP nsRenderingContextMac::CopyClipRegion(nsIRegion &aRegion)
 {
-  return NS_ERROR_FAILURE;
+	nsRegionMac* macRegion = (nsRegionMac*)&aRegion;
+	macRegion->SetNativeRegion(mGS->mClipRegion);
+	return NS_OK;
 }
 
 //------------------------------------------------------------------------
