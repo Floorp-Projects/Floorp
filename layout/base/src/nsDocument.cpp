@@ -331,6 +331,28 @@ PRBool nsDocument::RemoveObserver(nsIDocumentObserver* aObserver)
   return mObservers.RemoveElement(aObserver);
 }
 
+NS_IMETHODIMP
+nsDocument::BeginLoad()
+{
+  PRInt32 i, count = mObservers.Count();
+  for (i = 0; i < count; i++) {
+    nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
+    observer->BeginLoad();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::EndLoad()
+{
+  PRInt32 i, count = mObservers.Count();
+  for (i = 0; i < count; i++) {
+    nsIDocumentObserver* observer = (nsIDocumentObserver*) mObservers[i];
+    observer->EndLoad();
+  }
+  return NS_OK;
+}
+
 void nsDocument::ContentChanged(nsIContent* aContent,
                                 nsISupports* aSubContent)
 {
@@ -735,13 +757,4 @@ void nsDocument::GetSelectionText(nsString & aText) {
 
   PRBool inRange = PR_FALSE;
   TraverseTree(aText, mRootContent, startPnt->GetContent(), endPnt->GetContent(), inRange);
-}
-
-
-NS_LAYOUT nsresult
-NS_NewSelection(nsISelection** aInstancePtrResult)
-{
-  static NS_DEFINE_IID(kISelectionIID, NS_ISELECTION_IID);
-  nsSelection * sel = new nsSelection();
-  return sel->QueryInterface(kISelectionIID, (void**) aInstancePtrResult);
 }
