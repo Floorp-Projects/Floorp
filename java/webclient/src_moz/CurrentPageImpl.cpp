@@ -97,20 +97,37 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
   nsresult rv;
   
   NS_WITH_SERVICE(nsIFindComponent, findComponent, NS_IFINDCOMPONENT_PROGID, &rv);
-  if (NS_FAILED(rv))  {
+  if (NS_FAILED(rv) || nsnull == findComponent)  {
         initContext->initFailCode = kFindComponentError;
         ::util_ThrowExceptionToJava(env, "Exception: can't access FindComponent Service");
         return;
   }
 
-  nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor(do_QueryInterface(initContext->docShell));
   nsCOMPtr<nsIDOMWindow> domWindow;
-  rv = interfaceRequestor->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
-  if (NS_FAILED(rv))  {
-      initContext->initFailCode = kGetDOMWindowError;
-      ::util_ThrowExceptionToJava(env, "Exception: cant get DOMWindow from DocShell");
-      return;
+  if (initContext->docShell != nsnull) {
+      nsCOMPtr<nsIInterfaceRequestor> interfaceRequestor(do_QueryInterface(initContext->docShell));
+
+      if (interfaceRequestor != nsnull) {
+          rv = interfaceRequestor->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
+          if (NS_FAILED(rv) || nsnull == domWindow)  {
+              initContext->initFailCode = kGetDOMWindowError;
+              ::util_ThrowExceptionToJava(env, "Exception: cant get DOMWindow from DocShell");
+              return;
+          }
+      }
+      else
+          {
+              initContext->initFailCode = kFindComponentError;
+              ::util_ThrowExceptionToJava(env, "Exception: cant get InterfaceRequestor from DocShell");
+              return;
+          }
   }
+  else
+      {
+          initContext->initFailCode = kFindComponentError;
+          ::util_ThrowExceptionToJava(env, "Exception: DocShell is not initialized");
+          return;
+      }
 
   nsCOMPtr<nsISupports> searchContext;
   rv = findComponent->CreateContext(domWindow, nsnull, getter_AddRefs(searchContext));
