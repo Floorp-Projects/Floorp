@@ -20,49 +20,6 @@ IGNORE_MANIFEST=1
 
 include <$(DEPTH)\config\config.mak>
 
-
-LIBRARY_NAME=nntpTest
-MODULE= mailnews
-REQUIRES=xpcom js nspr netlib
-
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
-
 DIRS = nntp newsParser
 
-CPPSRCS=    \
-			nsNNTPCategoryContainerStub.cpp	\
-			nsNNTPHostStub.cpp				\
-			nsNNTPNewsgroupListStub.cpp		\
-			nsNNTPNewsgroupStub.cpp			\
-			$(NULL)
-
-CPP_OBJS=   .\$(OBJDIR)\nsNNTPCategoryContainerStub.obj	  \
-			.\$(OBJDIR)\nsNNTPHostStub.obj					\
-			.\$(OBJDIR)\nsNNTPNewsgroupListStub.obj			\
-			.\$(OBJDIR)\nsNNTPNewsgroupStub.obj			\
-			$(NULL)
-
-
-EXPORTS=	\
-            $(NULL)
-
-LINCS=-I$(PUBLIC)\xpcom				\
-	  -I$(PUBLIC)\mailnews			\
-	  -I$(PUBLIC)\raptor			\
-	  -I$(PUBLIC)\netlib			\
-	  -I$(PUBLIC)\security			\
-	  -I$(PUBLIC)\rdf				\
-	  $(NULL)
-
-LCFLAGS = \
-        $(LCFLAGS) \
-        $(DEFINES) \
-        $(NULL)
-
 include <$(DEPTH)\config\rules.mak>
-
-libs:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib

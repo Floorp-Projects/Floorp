@@ -46,6 +46,7 @@
 #include "nsIComponentManager.h"
 #include "nsString.h"
 #include "nsNNTPNewsgroupPost.h"
+#include "nsNNTPNewsgroup.h"
 
 #include "nntpCore.h"
 #include "nsNNTPProtocol.h"
@@ -60,10 +61,15 @@
 #include "nsXPComCIID.h"
 #include "nsIUrlListener.h"
 
+#include "nsIPref.h"
+#include "nsIFileLocator.h"
+
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
 #define XPCOM_DLL  "xpcom32.dll"
 #define NEWS_DLL	"msgnews.dll"
+#define PREF_DLL   "xppref32.dll"
+#define APPSHELL_DLL "nsappshell.dll"
 #else
 #ifdef XP_MAC
 #include "nsMacRepository.h"
@@ -71,6 +77,8 @@
 #define NETLIB_DLL "libnetlib.so"
 #define XPCOM_DLL  "libxpcom.so"
 #define NEWS_DLL   "libmsgnews.so"
+#define PREF_DLL   "libpref.so"
+#define APPSHELL_DLL "libnsappshell.so"
 #endif
 #endif
 
@@ -82,11 +90,15 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_IID(kFileLocatorCID, NS_FILELOCATOR_CID);
+
+
 /////////////////////////////////////////////////////////////////////////////////
 // Define default values to be used to drive the test
 /////////////////////////////////////////////////////////////////////////////////
 
-#define DEFAULT_HOST	"zia.mcom.com"
+#define DEFAULT_HOST	"news.mozilla.org"
 #define DEFAULT_PORT	NEWS_PORT		/* we get this value from nntpCore.h */
 #define DEFAULT_URL_TYPE  "news://"	/* do NOT change this value until netlib re-write is done...*/
 
@@ -187,6 +199,7 @@ public:
 	nsresult OnSearch();
 	nsresult OnReadNewsRC();
     nsresult OnPostMessage();
+	nsresult OnRunURL();
 	nsresult OnExit(); 
 protected:
     PLEventQueue *m_eventQueue;
@@ -415,6 +428,9 @@ nsresult nsNntpTestDriver::ReadAndDispatchCommand()
     case 7:
         status = OnPostMessage();
         break;
+	case 8:
+		status = OnRunURL();
+		break;
 	default:
 		status = OnExit();
 		break;
@@ -434,6 +450,7 @@ nsresult nsNntpTestDriver::ListCommands()
 	printf("5) Perform Search. \n");
 	printf("6) Read NewsRC file. \n");
     printf("7) Post a message. \n");
+	printf("8) Run a news URL. \n");
 	printf("9) Exit the test application. \n");
 	return NS_OK;
 }
@@ -504,8 +521,8 @@ nsresult nsNntpTestDriver::OnListArticle()
 	// first, prompt the user for the name of the group to fetch
 	// prime article number with a default value...
 	m_userData[0] = '\0';
-	PL_strcpy(m_userData, "35D8A048.3C0F0C7A@zia.mcom.com");
-	rv = PromptForUserDataAndBuildUrl("Article Number to Fetch: ");
+	PL_strcpy(m_userData, "37099AC5.8D0EB52@netscape.com");
+	rv = PromptForUserDataAndBuildUrl("Article Number to Fetch (note, the default only lives on news.mozilla.org): ");
 	// no prompt for url data....just append a '*' to the url data and run it...
 	m_urlString[0] = '\0';
 	PL_strcpy(m_urlString, m_urlSpec);
@@ -574,11 +591,15 @@ nsNntpTestDriver::OnPostMessage()
     
     rv = PromptForUserDataAndBuildUrl("Subject: ");
     subject = PL_strdup(m_userData);
-    printf("Enter your message below. End with a blank line.\n");
+    printf("Enter your message below. End with a line with a dot (.)\n");
     rv = PromptForUserDataAndBuildUrl("");
     int messagelen = 0;
     message = NULL;
     while (m_userData[0]) {
+		if (m_userData[0] == '.') {
+			break;
+		}
+
         int linelen = PL_strlen(m_userData);
         char *newMessage = (char *)PR_Malloc(linelen+messagelen+2);
         messagelen = linelen+messagelen+2;
@@ -618,6 +639,29 @@ nsNntpTestDriver::OnPostMessage()
 	return rv;
 }
 
+nsresult
+nsNntpTestDriver::OnRunURL()
+{
+    nsresult rv = NS_OK;
+
+    rv = PromptForUserDataAndBuildUrl("URL (be careful...): ");
+    sprintf(m_urlString, "%s",m_userData);
+    
+	if (m_protocolInitialized == PR_FALSE) {
+		rv = InitializeProtocol(m_urlString);
+        if (NS_FAILED(rv) || (m_url == nsnull)) {
+            return rv;
+        }
+    }
+	else
+		m_url->SetSpec(m_urlString); // reset spec
+
+    printf("Running %s\n", m_urlString);
+    rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */);
+
+	return rv;
+}
+
 nsresult nsNntpTestDriver::OnGetGroup()
 {
 	nsresult rv = NS_OK;
@@ -638,6 +682,19 @@ nsresult nsNntpTestDriver::OnGetGroup()
     }
 	else
 		m_url->SetSpec(m_urlString); // reset spec
+
+	nsINNTPNewsgroup *newsgroup = nsnull;
+    rv = NS_NewNewsgroup(&newsgroup, nsnull /* line */, nsnull /* set */, PR_FALSE /* subscribed */, nsnull /* host*/, 1 /* depth */);
+               
+    if (NS_SUCCEEDED(rv)) {
+        newsgroup->SetName(m_userData);
+    }
+	else {
+		return rv;
+	}
+
+    
+    m_url->SetNewsgroup(newsgroup);
 
     if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
@@ -693,9 +750,15 @@ nsresult nsNntpTestDriver::SetupUrl(char *groupname)
     if (host)
         {
 			rv = host->FindGroup(groupname, &group);
-			if (group)
+
+			if (group) {
 				group->GetNewsgroupList(&list);
-            
+			}
+#ifdef DEBUG_sspitzer
+			else {
+				printf("group is null\n");
+			}
+#endif
 			rv = m_url->SetNewsgroup(group);
 			rv = m_url->SetNewsgroupList(list);
 			NS_IF_RELEASE(group);
@@ -721,6 +784,16 @@ int main()
     nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kNntpUrlCID, NULL, NULL, NEWS_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+	// make sure prefs get initialized and loaded..
+	// mscott - this is just a bad bad bad hack right now until prefs
+	// has the ability to take nsnull as a parameter. Once that happens,
+	// prefs will do the work of figuring out which prefs file to load...
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &result); 
+    if (NS_FAILED(result) || prefs == nsnull) {
+        exit(result);
+    }
 
 	// Create the Event Queue for this thread...
     nsIEventQueueService* pEventQService;
