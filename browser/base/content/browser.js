@@ -371,7 +371,7 @@ function Startup()
     elt = _content;
   }
   
-  setTimeout(delayedStartup, 0, elt);
+  setTimeout(delayedStartup, 200, elt);
 }
 
 function delayedStartup(aElt)
