@@ -151,7 +151,8 @@ var historyDNDObserver = {
         var currentIndex = gHistoryTree.currentIndex;
         if (isContainer(gHistoryTree, currentIndex))
             return false;
-        var url = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "URL");
+        var builder = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+        var url = builder.getResourceAtIndex(currentIndex).Value;
         var title = gHistoryTree.treeBoxObject.view.getCellText(currentIndex, "Name");
 
         var htmlString = "<A HREF='" + url + "'>" + title + "</A>";
