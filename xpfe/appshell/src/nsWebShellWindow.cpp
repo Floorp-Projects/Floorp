@@ -21,6 +21,7 @@
 #include "nsWebShellWindow.h"
 
 #include "nsLayoutCID.h"
+#include "nsIDocumentLoader.h"
 
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
@@ -98,6 +99,8 @@ static NS_DEFINE_IID(kContextMenuCID,      NS_CONTEXTMENU_CID);
 static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
+static NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
+static NS_DEFINE_CID(kLayoutDocumentLoaderFactoryCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
@@ -942,32 +945,33 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   nsresult rv = NS_OK;
 
   // Find out if we're a menu.
-  nsCOMPtr<nsIDOMNodeList> menuNodes;
-  if (NS_FAILED(rv = aPopupContent->GetElementsByTagName("menu", getter_AddRefs(menuNodes)))) {
-    NS_ERROR("Error occurred looking for nodes.");
-    return rv;
-  }
-
-  // We got something.
-  PRUint32 length;
-  menuNodes->GetLength(&length);
-  if (length > 0) {
-    nsCOMPtr<nsIDOMNode> menuItem;
-    menuNodes->Item(0, getter_AddRefs(menuItem));
-    if (menuItem) {
-      
-      // XXX Need to distinguish between popup menus and context menus?
-      DoContextMenu(
-        nsnull,
-        menuItem, 
-        mWindow,
-        aXPos,
-        aYPos);
-  
-    }
+  nsCOMPtr<nsIContent> popupContent = do_QueryInterface(aPopupContent);
+  PRInt32 childCount;
+  popupContent->ChildCount(childCount);
+  if (childCount == 0)
     return NS_OK;
+
+  nsCOMPtr<nsIContent> rootContent;
+  if (NS_FAILED(popupContent->ChildAt(0, *getter_AddRefs(rootContent))))
+    return NS_OK; // Doesn't matter. Don't report it.
+
+  nsCOMPtr<nsIDOMElement> rootElement = do_QueryInterface(rootContent);
+  
+  nsString tagName;
+  if (NS_FAILED(rootElement->GetTagName(tagName))) 
+    return NS_OK; // It's ok. Really.
+
+  if (tagName == "menu") {
+      
+    // XXX Need to distinguish between popup menus and context menus?
+    DoContextMenu(nsnull, rootElement, mWindow, aXPos, aYPos);
+
+    return NS_OK; // Yes yes. It's ok.
   }
   
+  if (tagName != "window")
+    return NS_OK; // I promise. It really is ok. Stop whining.
+
   // Handle the arbitrary popup XUL case.
   
   // (1) Create a top-level chromeless window. The size of the window can be specified
@@ -1008,7 +1012,6 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   if (parentDocument == nsnull)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> popupContent = do_QueryInterface(aPopupContent);
   nsCOMPtr<nsIDocument> popupDocument;
   if (NS_FAILED(rv = parentDocument->CreatePopupDocument(popupContent, getter_AddRefs(popupDocument)))) {
     NS_ERROR("Unable to create the child popup document.");
@@ -1020,25 +1023,31 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   // about their documents
   // (4) Create a document viewer 
   nsCOMPtr<nsIContentViewer> documentViewer;
-  
-  // (5) Set a UA stylesheet on the doc viewer
-  
-  // (6) Bind the document viewer to the new document we made in (3)
-  
-  // (7) QI the WebShell from (1) to an nsIContentViewerContainer and feed it to the document 
-  // viewer
+  nsCOMPtr<nsIDocumentLoaderFactory> docFactory;
+  if (NS_FAILED(rv = nsComponentManager::CreateInstance(kLayoutDocumentLoaderFactoryCID, nsnull, 
+                                          kIDocumentLoaderFactoryIID,
+                                          (void**)getter_AddRefs(docFactory)))) {
+    NS_ERROR("Unable to instantiate layout's doc loader factory.");
+    return rv;
+  }
   nsCOMPtr<nsIContentViewerContainer> cvContainer = do_QueryInterface(newShell);
+  docFactory->CreateInstanceForDocument(cvContainer,
+                                        popupDocument,
+                                        "view",
+                                        getter_AddRefs(documentViewer));
+
+  // (5) Feed the webshell to the document viewer
   
-  // (8) Tell the content viewer container to embed the content viewer.
+  // (6) Tell the content viewer container to embed the content viewer.
   //     (This step causes everything to be set up for an initial flow.)
   
-  // (9) Hook up a blur handler to the window that will cause it to close.
+  // (7) Hook up a blur handler to the window that will cause it to close.
 
-  // (10) Show the window, and give the window the focus.
+  // (8) Show the window, and give the window the focus.
 
-  // (11) Return the new popup object.
+  // (9) Return the new popup object.
   
-  // (12) Perform cleanup
+  // (10) Perform cleanup
 
   return rv;
 }
