@@ -37,7 +37,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.17 $
+ *  npupp.h $Revision: 3.18 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -1228,22 +1228,23 @@ typedef int32_t (* NP_LOADDS NPN_IntFromIdentifierUPP)(NPIdentifier identifier);
 typedef UniversalProcPtr NPN_CreateObjectUPP;
 enum {
 	uppNPN_CreateObjectProcInfo = kThinkCStackBased
-		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPClass*)))
+		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
+		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPClass*)))
 		| RESULT_SIZE(SIZE_CODE(sizeof(NPObject*)))
 };
 
 #define NewNPN_CreateObjectProc(FUNC)		\
 		(NPN_CreateObjectUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_CreateObjectProcInfo, GetCurrentArchitecture())
-#define CallNPN_CreateObjectProc(FUNC, ARG1)		\
-		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_CreateObjectProcInfo, (ARG1))	
+#define CallNPN_CreateObjectProc(FUNC, ARG1, ARG2)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_CreateObjectProcInfo, (ARG1), (ARG2))	
 
 #else
 
-typedef NPObject* (* NP_LOADDS NPN_CreateObjectUPP)(NPClass *aClass);
+typedef NPObject* (* NP_LOADDS NPN_CreateObjectUPP)(NPP npp, NPClass *aClass);
 #define NewNPN_CreateObjectProc(FUNC)		\
 		((NPN_CreateObjectUPP) (FUNC))
-#define CallNPN_CreateObjectProc(FUNC, ARG1)		\
-		(*(FUNC))((ARG1))
+#define CallNPN_CreateObjectProc(FUNC, ARG1, ARG2)		\
+		(*(FUNC))((ARG1), (ARG2))
 
 #endif
 
@@ -1306,26 +1307,27 @@ typedef void (* NP_LOADDS NPN_ReleaseObjectUPP)(NPObject *obj);
 typedef UniversalProcPtr NPN_CallUPP;
 enum {
 	uppNPN_CallProcInfo = kThinkCStackBased
-		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPObject*)))
-		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPIdentifier)))
-		| STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(const NPVariant*)))
-		| STACK_ROUTINE_PARAMETER(4, SIZE_CODE(sizeof(uint32_t)))
-		| STACK_ROUTINE_PARAMETER(5, SIZE_CODE(sizeof(NPVariant*)))
+		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
+		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPObject*)))
+		| STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(NPIdentifier)))
+		| STACK_ROUTINE_PARAMETER(4, SIZE_CODE(sizeof(const NPVariant*)))
+		| STACK_ROUTINE_PARAMETER(5, SIZE_CODE(sizeof(uint32_t)))
+		| STACK_ROUTINE_PARAMETER(6, SIZE_CODE(sizeof(NPVariant*)))
 		| RESULT_SIZE(SIZE_CODE(sizeof(bool)))
 };
 
 #define NewNPN_CallProc(FUNC)		\
 		(NPN_CallUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_CallProcInfo, GetCurrentArchitecture())
-#define CallNPN_CallProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5)		\
-		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_CallProcInfo, (ARG1), (ARG2), (ARG3), (ARG4), (ARG5))
+#define CallNPN_CallProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_CallProcInfo, (ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6))
 
 #else
 
-typedef bool (* NP_LOADDS NPN_CallUPP)(NPObject* obj, NPIdentifier methodName, const NPVariant *args, uint32_t argCount, NPVariant *result);
+typedef bool (* NP_LOADDS NPN_CallUPP)(NPP npp, NPObject* obj, NPIdentifier methodName, const NPVariant *args, uint32_t argCount, NPVariant *result);
 #define NewNPN_CallProc(FUNC)		\
 		((NPN_CallUPP) (FUNC))
-#define CallNPN_CallProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5)		\
-		(*(FUNC))((ARG1), (ARG2), (ARG3), (ARG4), (ARG5))
+#define CallNPN_CallProc(FUNC, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)		\
+		(*(FUNC))((ARG1), (ARG2), (ARG3), (ARG4), (ARG5), (ARG6))
 
 #endif
 
@@ -1365,24 +1367,25 @@ typedef bool (* NP_LOADDS NPN_EvaluateUPP)(NPP npp, NPObject *obj, NPString *scr
 typedef UniversalProcPtr NPN_GetPropertyUPP;
 enum {
 	uppNPN_GetPropertyProcInfo = kThinkCStackBased
-		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPObject*)))
-		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPIdentifier)))
-		| STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(NPVariant*)))
+		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
+		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPObject*)))
+		| STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(NPIdentifier)))
+		| STACK_ROUTINE_PARAMETER(4, SIZE_CODE(sizeof(NPVariant*)))
 		| RESULT_SIZE(SIZE_CODE(sizeof(bool)))
 };
 
 #define NewNPN_GetPropertyProc(FUNC)		\
 		(NPN_GetPropertyUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_GetPropertyProcInfo, GetCurrentArchitecture())
-#define CallNPN_GetPropertyProc(FUNC, ARG1, ARG2, ARG3)		\
-		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_GetPropertyProcInfo, (ARG1), (ARG2), (ARG3))
+#define CallNPN_GetPropertyProc(FUNC, ARG1, ARG2, ARG3, ARG4)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_GetPropertyProcInfo, (ARG1), (ARG2), (ARG3), (ARG4))
 
 #else
 
-typedef bool (* NP_LOADDS NPN_GetPropertyUPP)(NPObject *obj, NPIdentifier propertyName, NPVariant *result);
+typedef bool (* NP_LOADDS NPN_GetPropertyUPP)(NPP npp, NPObject *obj, NPIdentifier propertyName, NPVariant *result);
 #define NewNPN_GetPropertyProc(FUNC)		\
 		((NPN_GetPropertyUPP) (FUNC))
-#define CallNPN_GetPropertyProc(FUNC, ARG1, ARG2, ARG3)		\
-		(*(FUNC))((ARG1), (ARG2), (ARG3))
+#define CallNPN_GetPropertyProc(FUNC, ARG1, ARG2, ARG3, ARG4)		\
+		(*(FUNC))((ARG1), (ARG2), (ARG3), (ARG4))
 
 #endif
 
@@ -1393,24 +1396,25 @@ typedef bool (* NP_LOADDS NPN_GetPropertyUPP)(NPObject *obj, NPIdentifier proper
 typedef UniversalProcPtr NPN_SetPropertyUPP;
 enum {
 	uppNPN_SetPropertyProcInfo = kThinkCStackBased
-		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPObject*)))
-		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPIdentifier)))
-		| STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(const NPVariant*)))
+		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
+		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPObject*)))
+		| STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(NPIdentifier)))
+		| STACK_ROUTINE_PARAMETER(4, SIZE_CODE(sizeof(const NPVariant*)))
 		| RESULT_SIZE(SIZE_CODE(sizeof(bool)))
 };
 
 #define NewNPN_SetPropertyProc(FUNC)		\
 		(NPN_SetPropertyUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_SetPropertyProcInfo, GetCurrentArchitecture())
-#define CallNPN_SetPropertyProc(FUNC, ARG1, ARG2, ARG3)		\
-		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_SetPropertyProcInfo, (ARG1), (ARG2), (ARG3))	
+#define CallNPN_SetPropertyProc(FUNC, ARG1, ARG2, ARG3, ARG4)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_SetPropertyProcInfo, (ARG1), (ARG2), (ARG3), (ARG4))
 
 #else
 
-typedef bool (* NP_LOADDS NPN_SetPropertyUPP)(NPObject *obj, NPIdentifier propertyName, const NPVariant *value);
+typedef bool (* NP_LOADDS NPN_SetPropertyUPP)(NPP npp, NPObject *obj, NPIdentifier propertyName, const NPVariant *value);
 #define NewNPN_SetPropertyProc(FUNC)		\
 		((NPN_SetPropertyUPP) (FUNC))
-#define CallNPN_SetPropertyProc(FUNC, ARG1, ARG2, ARG3)		\
-		(*(FUNC))((ARG1), (ARG2), (ARG3))
+#define CallNPN_SetPropertyProc(FUNC, ARG1, ARG2, ARG3, ARG4)		\
+		(*(FUNC))((ARG1), (ARG2), (ARG3), (ARG4))
 
 #endif
 
@@ -1421,23 +1425,80 @@ typedef bool (* NP_LOADDS NPN_SetPropertyUPP)(NPObject *obj, NPIdentifier proper
 typedef UniversalProcPtr NPN_RemovePropertyUPP;
 enum {
 	uppNPN_RemovePropertyProcInfo = kThinkCStackBased
-		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPObject*)))
-		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPIdentifier)))
+		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
+		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPObject*)))
+		| STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(NPIdentifier)))
 		| RESULT_SIZE(SIZE_CODE(sizeof(bool)))
 };
 
 #define NewNPN_RemovePropertyProc(FUNC)		\
 		(NPN_RemovePropertyUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_RemovePropertyProcInfo, GetCurrentArchitecture())
-#define CallNPN_RemovePropertyProc(FUNC, ARG1, ARG2)		\
-		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_RemovePropertyProcInfo, (ARG1), (ARG2))
+#define CallNPN_RemovePropertyProc(FUNC, ARG1, ARG2, ARG3)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_RemovePropertyProcInfo, (ARG1), (ARG2), (ARG3))
 
 #else
 
-typedef bool (* NP_LOADDS NPN_RemovePropertyUPP)(NPObject *obj, NPIdentifier propertyName);
+typedef bool (* NP_LOADDS NPN_RemovePropertyUPP)(NPP npp, NPObject *obj, NPIdentifier propertyName);
 #define NewNPN_RemovePropertyProc(FUNC)		\
 		((NPN_RemovePropertyUPP) (FUNC))
-#define CallNPN_RemovePropertyProc(FUNC, ARG1, ARG2)		\
-		(*(FUNC))((ARG1), (ARG2))
+#define CallNPN_RemovePropertyProc(FUNC, ARG1, ARG2, ARG3)		\
+		(*(FUNC))((ARG1), (ARG2), (ARG3))
+
+#endif
+
+/* NPN_HasProperty */
+
+#if _NPUPP_USE_UPP_
+
+typedef UniversalProcPtr NPN_HasPropertyUPP;
+enum {
+	uppNPN_HasPropertyProcInfo = kThinkCStackBased
+		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
+		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPObject*)))
+		| STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(NPIdentifier)))
+		| RESULT_SIZE(SIZE_CODE(sizeof(bool)))
+};
+
+#define NewNPN_HasPropertyProc(FUNC)		\
+		(NPN_HasPropertyUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_HasPropertyProcInfo, GetCurrentArchitecture())
+#define CallNPN_HasPropertyProc(FUNC, ARG1, ARG2, ARG3)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_HasPropertyProcInfo, (ARG1), (ARG2), (ARG3))
+
+#else
+
+typedef bool (* NP_LOADDS NPN_HasPropertyUPP)(NPP npp, NPObject *obj, NPIdentifier propertyName);
+#define NewNPN_HasPropertyProc(FUNC)		\
+		((NPN_HasPropertyUPP) (FUNC))
+#define CallNPN_HasPropertyProc(FUNC, ARG1, ARG2, ARG3)		\
+		(*(FUNC))((ARG1), (ARG2), (ARG3))
+
+#endif
+
+/* NPN_HasMethod */
+
+#if _NPUPP_USE_UPP_
+
+typedef UniversalProcPtr NPN_HasMethodUPP;
+enum {
+	uppNPN_HasMethodProcInfo = kThinkCStackBased
+		| STACK_ROUTINE_PARAMETER(1, SIZE_CODE(sizeof(NPP)))
+		| STACK_ROUTINE_PARAMETER(2, SIZE_CODE(sizeof(NPObject*)))
+		| STACK_ROUTINE_PARAMETER(3, SIZE_CODE(sizeof(NPIdentifier)))
+		| RESULT_SIZE(SIZE_CODE(sizeof(bool)))
+};
+
+#define NewNPN_HasMethodProc(FUNC)		\
+		(NPN_HasMethodUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_HasMethodProcInfo, GetCurrentArchitecture())
+#define CallNPN_HasMethodProc(FUNC, ARG1, ARG2, ARG3)		\
+		(jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_HasMethodProcInfo, (ARG1), (ARG2), (ARG3))
+
+#else
+
+typedef bool (* NP_LOADDS NPN_HasMethodUPP)(NPP npp, NPObject *obj, NPIdentifier propertyName);
+#define NewNPN_HasMethodProc(FUNC)		\
+		((NPN_HasMethodUPP) (FUNC))
+#define CallNPN_HasMethodProc(FUNC, ARG1, ARG2, ARG3)		\
+		(*(FUNC))((ARG1), (ARG2), (ARG3))
 
 #endif
 
@@ -1564,6 +1625,8 @@ typedef struct _NPNetscapeFuncs {
     NPN_GetPropertyUPP getproperty;
     NPN_SetPropertyUPP setproperty;
     NPN_RemovePropertyUPP removeproperty;
+    NPN_HasPropertyUPP hasproperty;
+    NPN_HasMethodUPP hasmethod;
     NPN_ReleaseVariantValueUPP releasevariantvalue;
     NPN_SetExceptionUPP setexception;
 } NPNetscapeFuncs;

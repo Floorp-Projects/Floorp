@@ -274,7 +274,7 @@ int32_t NPN_IntFromIdentifier(NPIdentifier identifier);
     The NPVariant *result argument of these functions (where
     applicable) should be released using NPN_ReleaseVariantValue().
 */
-typedef NPObject *(*NPAllocateFunctionPtr)();
+typedef NPObject *(*NPAllocateFunctionPtr)(NPP npp);
 typedef void (*NPDeallocateFunctionPtr)(NPObject *npobj);
 typedef void (*NPInvalidateFunctionPtr)(NPObject *npobj);
 typedef bool (*NPHasMethodFunctionPtr)(NPObject *npobj, NPIdentifier name);
@@ -286,7 +286,8 @@ typedef bool (*NPGetPropertyFunctionPtr)(NPObject *npobj, NPIdentifier name,
                                          NPVariant *result);
 typedef bool (*NPSetPropertyFunctionPtr)(NPObject *npobj, NPIdentifier name,
                                          const NPVariant *value);
-typedef bool (*NPRemovePropertyFunctionPtr)(NPObject *npobj, NPIdentifier name);
+typedef bool (*NPRemovePropertyFunctionPtr)(NPObject *npobj,
+                                            NPIdentifier name);
 
 /*
     NPObjects returned by create, retain, invoke, and getProperty pass
@@ -336,7 +337,7 @@ struct NPObject {
     returned. This method will initialize the referenceCount member of
     the NPObject to 1.
 */
-NPObject *NPN_CreateObject(NPClass *aClass);
+NPObject *NPN_CreateObject(NPP npp, NPClass *aClass);
 
 /*
     Increment the NPObject's reference count.
@@ -362,17 +363,17 @@ void NPN_ReleaseObject(NPObject *npobj);
     on which the plugin was initialized.
 */
 
-bool NPN_Call(NPObject *npobj, NPIdentifier methodName,
+bool NPN_Call(NPP npp, NPObject *npobj, NPIdentifier methodName,
               const NPVariant *args, uint32_t argCount, NPVariant *result);
 bool NPN_Evaluate(NPP npp, NPObject *npobj, NPString *script,
                   NPVariant *result);
-bool NPN_GetProperty(NPObject *npobj, NPIdentifier propertyName,
+bool NPN_GetProperty(NPP npp, NPObject *npobj, NPIdentifier propertyName,
                      NPVariant *result);
-bool NPN_SetProperty(NPObject *npobj, NPIdentifier propertyName,
+bool NPN_SetProperty(NPP npp, NPObject *npobj, NPIdentifier propertyName,
                      const NPVariant *value);
-bool NPN_RemoveProperty(NPObject *npobj, NPIdentifier propertyName);
-bool NPN_HasProperty(NPObject *npobj, NPIdentifier propertyName);
-bool NPN_HasMethod(NPObject *npobj, NPIdentifier methodName);
+bool NPN_RemoveProperty(NPP npp, NPObject *npobj, NPIdentifier propertyName);
+bool NPN_HasProperty(NPP npp, NPObject *npobj, NPIdentifier propertyName);
+bool NPN_HasMethod(NPP npp, NPObject *npobj, NPIdentifier methodName);
 
 /*
     NPN_SetException may be called to trigger a script exception upon
