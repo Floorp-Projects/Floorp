@@ -42,6 +42,7 @@ class nsNSSDialogs
   public nsISecurityWarningDialogs,
   public nsICertificateDialogs,
   public nsIClientAuthDialogs,
+  public nsICertPickDialogs,
   public nsITokenDialogs,
   public nsIDOMCryptoDialogs,
   public nsIGeneratingKeypairInfoDialogs
@@ -54,6 +55,7 @@ public:
   NS_DECL_NSISECURITYWARNINGDIALOGS
   NS_DECL_NSICERTIFICATEDIALOGS
   NS_DECL_NSICLIENTAUTHDIALOGS
+  NS_DECL_NSICERTPICKDIALOGS
   NS_DECL_NSITOKENDIALOGS
   NS_DECL_NSIDOMCRYPTODIALOGS
   NS_DECL_NSIGENERATINGKEYPAIRINFODIALOGS

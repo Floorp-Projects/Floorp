@@ -84,6 +84,11 @@
 <!ENTITY clientAuthAsk.message2 "Choose a certificate to present as identification:">
 <!ENTITY clientAuthAsk.message3 "Details of selected certificate:">
 
+<!-- Strings for the cert picker dialog -->
+<!ENTITY certPicker.defaultTitle "Select A Certificate">
+<!ENTITY certPicker.defaultInfo  "Please select the certificate you wish you use.">
+<!ENTITY certPicker.detailsLabel "Details of selected certificate:">
+
 <!ENTITY pkcs12.setpassword.title  "Choose a Certificate Backup Password">
 <!ENTITY pkcs12.setpassword.message  "The certificate backup password you set here protects the backup file that you are about to create.  You must set this password to proceed with the backup.">
 <!ENTITY pkcs12.setpassword.label1 "Certificate backup password:">

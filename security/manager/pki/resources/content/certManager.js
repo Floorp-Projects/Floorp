@@ -42,7 +42,7 @@ var certdb;
 
 var caOutlinerView;
 var serverOutlinerView;
-//var emailOutlinerView;
+var emailOutlinerView;
 var userOutlinerView;
 
 function LoadCerts()
@@ -61,13 +61,11 @@ function LoadCerts()
   document.getElementById('server-outliner')
    .outlinerBoxObject.view = serverOutlinerView;
 
-/*
   emailOutlinerView = Components.classes[nsCertOutliner]
                        .createInstance(nsICertOutliner);
   emailOutlinerView.loadCerts(nsIX509Cert.EMAIL_CERT);
   document.getElementById('email-outliner')
    .outlinerBoxObject.view = emailOutlinerView; 
-*/
 
   userOutlinerView = Components.classes[nsCertOutliner]
                       .createInstance(nsICertOutliner);
@@ -90,7 +88,7 @@ function ReloadCerts()
 {
   caOutlinerView.loadCerts(nsIX509Cert.CA_CERT);
   serverOutlinerView.loadCerts(nsIX509Cert.SERVER_CERT);
-  //emailOutlinerView.loadCerts(nsIX509Cert.EMAIL_CERT);
+  emailOutlinerView.loadCerts(nsIX509Cert.EMAIL_CERT);
   userOutlinerView.loadCerts(nsIX509Cert.USER_CERT);
 }
 
@@ -100,6 +98,8 @@ function getSelectedTab()
   var selTabID = selTab.getAttribute('id');
   if (selTabID == 'mine_tab') {
     key = "?my_certs";
+  } else if (selTabID == "others_tab") {
+    key = "?others_certs";
   } else if (selTabID == "websites_tab") {
     key = "?web_certs";
   } else if (selTabID == "ca_tab") {
@@ -120,17 +120,15 @@ function getSelectedCerts()
 {
   var ca_tab = document.getElementById("ca_tab");
   var mine_tab = document.getElementById("mine_tab");
-  //var others_tab = document.getElementById("others_tab");
+  var others_tab = document.getElementById("others_tab");
   var websites_tab = document.getElementById("websites_tab");
   var items = null;
   if (ca_tab.selected) {
     items = caOutlinerView.selection;
   } else if (mine_tab.selected) {
     items = userOutlinerView.selection;
-/*
   } else if (others_tab.selected) {
     items = emailOutlinerView.selection;
-*/
   } else if (websites_tab.selected) {
     items = serverOutlinerView.selection;
   }
@@ -150,10 +148,8 @@ function getSelectedCerts()
           cert = caOutlinerView.getCert(j);
         } else if (mine_tab.selected) {
           cert = userOutlinerView.getCert(j);
-/*
         } else if (others_tab.selected) {
           cert = emailOutlinerView.getCert(j);
-*/
         } else if (websites_tab.selected) {
           cert = serverOutlinerView.getCert(j);
         }
@@ -229,6 +225,21 @@ function websites_enableButtons()
   var enableEditButton=document.getElementById('websites_editButton');
   enableEditButton.setAttribute("disabled",toggle);
   var enableDeleteButton=document.getElementById('websites_deleteButton');
+  enableDeleteButton.setAttribute("disabled",toggle);
+}
+
+function email_enableButtons()
+{
+  var items = emailOutlinerView.selection;
+  var toggle="false";
+  if (items.getRangeCount() == 0) {
+    toggle="true";
+  }
+  var enableViewButton=document.getElementById('email_viewButton');
+  enableViewButton.setAttribute("disabled",toggle);
+  var enableEditButton=document.getElementById('email_editButton');
+  enableEditButton.setAttribute("disabled",toggle);
+  var enableDeleteButton=document.getElementById('email_deleteButton');
   enableDeleteButton.setAttribute("disabled",toggle);
 }
 
@@ -311,6 +322,10 @@ function deleteCerts()
   else if (selTabID == "ca_tab") 
   {
     params.SetString(1,bundle.GetStringFromName("deleteCaCertFlag"));
+  }
+  else if (selTabID == "others_tab") 
+  {
+    params.SetString(1,bundle.GetStringFromName("deleteEmailCertFlag"));
   }
   else
   {

@@ -74,6 +74,7 @@
 <!ENTITY certmgr.purpose "Purpose">
 <!ENTITY certmgr.issued "Issued On">
 <!ENTITY certmgr.expires "Expires On">
+<!ENTITY certmgr.email "E-Mail Address">
 
 <!ENTITY certmgr.help.label "Help">
 <!ENTITY certmgr.ok.label "OK">

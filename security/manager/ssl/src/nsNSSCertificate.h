@@ -43,6 +43,7 @@
 #include "prtypes.h"
 #include "cert.h"
 #include "secitem.h"
+#include "nsString.h"
 
 class nsINSSComponent;
 
@@ -61,6 +62,7 @@ public:
   nsresult MarkForPermDeletion();
   nsresult SetCertType(PRUint32 aCertType);
   nsresult GetCertType(PRUint32 *aCertType);
+  nsresult FormatUIStrings(const nsAutoString &nickname, nsAutoString &nickWithSerial, nsAutoString &details);
 
 private:
   CERTCertificate *mCert;

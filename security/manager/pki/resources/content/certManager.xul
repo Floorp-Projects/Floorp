@@ -26,9 +26,7 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <?xul-overlay href="chrome://pippki/content/MineOverlay.xul"?>
-<!-- XXX
-<?xul-overlay href="chrome://pippki/content/othercertsOverlay.xul"?>
--->
+<?xul-overlay href="chrome://pippki/content/OthersOverlay.xul"?>
 <?xul-overlay href="chrome://pippki/content/WebSitesOverlay.xul"?>
 <?xul-overlay href="chrome://pippki/content/CAOverlay.xul"?>
 
@@ -52,17 +50,13 @@
         <tabbox flex="1" orient="vertical">
           <tabs id="certMgrTabbox" orient="horizontal">
             <tab id="mine_tab" label="&certmgr.tab.mine;"/>
-<!--
             <tab id="others_tab" label="&certmgr.tab.others;"/>
--->
             <tab id="websites_tab" label="&certmgr.tab.websites;"/>
             <tab id="ca_tab" label="&certmgr.tab.ca;" selected="true"/>
           </tabs>
           <tabpanels flex="1">
             <vbox id="myCerts" flex="1"/>
-<!--
             <vbox id="othersCerts" flex="1"/>
--->
             <vbox id="webCerts" flex="1"/>
             <vbox id="CACerts" flex="1"/>
           </tabpanels>

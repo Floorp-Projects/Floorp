@@ -54,6 +54,9 @@ XPIDLSRCS = \
     nsISSLStatus.idl \
     nsICertOutliner.idl \
     nsIKeygenThread.idl \
+    nsICMSSecureMessage.idl \
+    nsICMS.idl \
+    nsIUserCertPicker.idl \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

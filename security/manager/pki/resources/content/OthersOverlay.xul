@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corp..
+   - Portions created by the Initial Developer are Copyright (C) 2001
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s): Kai Engert <kaie@netscape.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
+
+<overlay id="WebSitesOverlay" 
+         xmlns:html="http://www.w3.org/1999/xhtml" 
+         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+         xmlns:cert="http://netscape.com/rdf-cert#" 
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <vbox id="othersCerts">
+    <html>&certmgr.others;</html>
+    <separator class="thin"/>
+    <outliner id="email-outliner" multiple="true"
+              onselect="email_enableButtons()" flex="1">
+      <outlinercol id="certcol" label="&certmgr.certname;" primary="true" 
+                   class="outlinercol-header outlinercell-inset-header" 
+                   flex="1"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="emailcol" label="&certmgr.email;"
+                   class="outlinercol-header outlinercell-inset-header" 
+                   flex="1"/>
+      <splitter class="tree-splitter"/>
+      <outlinercol id="tokencol" label="&certmgr.tokenname;"
+                   class="outlinercol-header outlinercell-inset-header" 
+                   flex="1"/>
+<!--      <outlinercol id="certdbkeycol" collapsed="true" flex="1"/> -->
+      <outlinerbody flex="1" ondblclick="viewCerts();"/>
+    </outliner>
+    <hbox>
+      <button id="email_viewButton" class="normal" 
+              label="&certmgr.view.label;"
+              disabled="true" oncommand="viewCerts();"/>
+      <button id="email_editButton" class="normal" 
+              label="&certmgr.edit.label;"
+              disabled="true" oncommand="editCerts();"/>
+<!-- future - import a DER cert?
+      <button id="email_addButton" class="normal" 
+              label="&certmgr.add.label;"
+              oncommand="addCerts();"/>
+-->
+      <button id="email_deleteButton" class="normal" 
+              label="&certmgr.delete.label;"
+              disabled="true" oncommand="deleteCerts();"/>
+    </hbox>
+  </vbox>
+</overlay>
