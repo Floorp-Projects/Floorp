@@ -19,7 +19,7 @@
 #ifndef nsMIMEService_h___
 #define nsMIMEService_h___
 
-#include "nsIMIMEService.h"
+#include "nsIMimeService.h"
 
 class nsMIMEService : public nsIMIMEService
 {
