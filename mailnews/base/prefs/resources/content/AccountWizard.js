@@ -215,8 +215,10 @@ function PageDataToAccountData(pageData, accountData)
         dump("not setting username/password/rememberpassword/etc\n");
     } else {
         server.username = pageData.login.username.value;
-        server.password = pageData.login.password.value;
-        server.rememberPassword = pageData.login.rememberPassword.value;
+        if (pageData.login.password)
+            server.password = pageData.login.password.value;
+        if (pageData.login.rememberPassword)
+            server.rememberPassword = pageData.login.rememberPassword.value;
         smtp.hostname = pageData.server.smtphostname.value;
     }
     
