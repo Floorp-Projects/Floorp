@@ -60,15 +60,18 @@
  * UNIX includes
  *----------------------------------------------------------------------------*/
 #ifdef XP_UNIX
-//#include <X11/Xlib.h>
-//#include <X11/Intrinsic.h>
-//#include <X11/StringDefs.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkprivate.h>
 #include <gtk/gtk.h>
 #include <gdksuperwin.h>
 #include <gtkmozbox.h>
 #endif /* XP_UNIX */
+
+#ifdef XP_UNIX
+
+gboolean draw (GtkWidget *widget, GdkEventExpose *event, gpointer data);
+
+#endif
 
 
 /*******************************************************************************
@@ -105,6 +108,7 @@ typedef struct _PlatformInstance
     Window 		       window;
     GtkWidget         *moz_box;
     GdkSuperWin       *superwin;
+    GtkWidget         *label;
     Display *		   display;
     uint32 		       x, y;
     uint32 		       width, height;
@@ -310,6 +314,10 @@ public:
     PRInt16         PlatformHandleEvent(nsPluginEvent* event);
 
     void SetMode(nsPluginMode mode) { fMode = mode; }
+
+#ifdef XP_UNIX
+    NS_IMETHOD Repaint(void);
+#endif
 
 #if defined(XP_PC) && !defined(XP_OS2)
     static LRESULT CALLBACK 
@@ -713,6 +721,13 @@ SimplePluginInstance::SimplePluginInstance(void)
 
     static const char text[] = "Hello World!";
     fText = (char*) nsMemory::Clone(text, sizeof(text));
+
+#ifdef XP_UNIX
+    fPlatform.moz_box = nsnull;
+    fPlatform.superwin = nsnull;
+    fPlatform.label = nsnull;
+#endif
+
 }
 
 SimplePluginInstance::~SimplePluginInstance(void)
@@ -916,6 +931,11 @@ NS_IMETHODIMP SimplePluginInstance::SetText(const char * aText)
             InvalidateRect( fPlatform.fhWnd, NULL, TRUE );
             UpdateWindow( fPlatform.fhWnd );
         }
+#endif
+
+#ifdef XP_UNIX
+        // force a redraw
+        Repaint();
 #endif
 
     }
@@ -1161,18 +1181,33 @@ SimplePluginInstance::PlatformSetWindow(nsPluginWindow* window)
 #ifdef NS_DEBUG
     printf("SimplePluginInstance::PlatformSetWindow\n");
 #endif
+
     if (window == NULL || window->window == NULL)
         return NS_ERROR_NULL_POINTER;
-
+    if ( fPlatform.superwin == (GdkSuperWin *)window->window )
+        return NS_OK;
+    
     fPlatform.superwin = (GdkSuperWin *)window->window;
+
+    // a little cleanup
+    if (fPlatform.label)
+        gtk_widget_destroy(fPlatform.label);
+    if (fPlatform.moz_box)
+        gtk_widget_destroy(fPlatform.moz_box);
+
+    // create a containing mozbox and a label to put in it
     fPlatform.moz_box = gtk_mozbox_new(fPlatform.superwin->bin_window);
+    fPlatform.label = gtk_label_new(fText);
+    gtk_container_add(GTK_CONTAINER(fPlatform.moz_box), fPlatform.label);
 
-    GtkWidget *button;
+    // grow the label to fit the entire mozbox
+    gtk_widget_set_usize(fPlatform.label, window->width, window->height);
 
-    button = gtk_button_new_with_label("Hello World");
-    gtk_container_add(GTK_CONTAINER(fPlatform.moz_box), button);
+    // connect to expose events
+    gtk_signal_connect (GTK_OBJECT(fPlatform.label), "expose_event",
+                        GTK_SIGNAL_FUNC(draw), this);
 
-    gtk_widget_show(button);
+    gtk_widget_show(fPlatform.label);
     gtk_widget_show(fPlatform.moz_box);
 
     return NS_OK;
@@ -1189,6 +1224,34 @@ SimplePluginInstance::PlatformHandleEvent(nsPluginEvent* event)
 {
     /* UNIX Plugins do not use HandleEvent */
     return 0;
+}
+
+NS_IMETHODIMP
+SimplePluginInstance::Repaint(void)
+{
+#ifdef DEBUG
+    printf("SimplePluginInstance::Repaint()\n");
+#endif
+    
+    if ( !fPlatform.moz_box || !fPlatform.label )
+        return NS_ERROR_FAILURE;
+
+    // Set the label text
+    gtk_label_set_text(GTK_LABEL(fPlatform.label), fText);
+
+    // show the new label
+    gtk_widget_show(fPlatform.label);
+    gtk_widget_show(fPlatform.moz_box);
+
+    return NS_OK;
+}
+
+gboolean draw (GtkWidget *widget, GdkEventExpose *event, gpointer data)
+{
+    SimplePluginInstance * pthis = (SimplePluginInstance *)data;
+
+    pthis->Repaint();
+    return TRUE;
 }
 
 /*------------------------------------------------------------------------------
