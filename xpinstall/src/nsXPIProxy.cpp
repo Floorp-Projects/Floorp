@@ -24,9 +24,12 @@
 
 #include "nsXPIProxy.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMPluginArray.h"
+#include "nsIServiceManager.h"
+#include "nsIObserverService.h"
 
 nsXPIProxy::nsXPIProxy()
 {
@@ -61,4 +64,14 @@ nsXPIProxy::RefreshPlugins(nsISupports *aWindow)
 
     rv = plugins->Refresh(PR_TRUE);
     return rv;
+}
+
+NS_IMETHODIMP
+nsXPIProxy::NotifyRestartNeeded()
+{
+    nsCOMPtr<nsIObserverService> obs(do_GetService(NS_OBSERVERSERVICE_CONTRACTID));
+    if (obs)
+        obs->Notify( nsnull, NS_LITERAL_STRING("xpinstall-restart").get(), nsnull );
+
+    return NS_OK;
 }
