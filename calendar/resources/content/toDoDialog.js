@@ -1212,25 +1212,35 @@ function updateAdvancedRepeatDayOfMonth()
 
    var weekNumber = getWeekNumberOfMonth();
    
-   document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", document.getElementById( "onthe-text" ).getAttribute( "value" )+dayNumber+dayExtension+document.getElementById( "ofthemonth-text" ).getAttribute( "value" ) );
+   var calStrings = document.getElementById("bundle_calendar");
+
+   var weekNumberText = getWeekNumberText( weekNumber );
+   var dayOfWeekText = getDayOfWeek( dayNumber );
+   var ofTheMonthText = document.getElementById( "ofthemonth-text" ).getAttribute( "value" );
+   var lastText = document.getElementById( "last-text" ).getAttribute( "value" );
+   var onTheText = document.getElementById( "onthe-text" ).getAttribute( "value" );
+   var dayNumberWithOrdinal = dayNumber + dayExtension;
+   var repeatSentence = calStrings.getFormattedString( "weekDayMonthLabel", [onTheText, dayNumberWithOrdinal, ofTheMonthText] );
+
+   document.getElementById( "advanced-repeat-dayofmonth" ).setAttribute( "label", repeatSentence );
    
    if( weekNumber == 4 && isLastDayOfWeekOfMonth() )
    {
-      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+document.getElementById( "ofthemonth-text" ).getAttribute( "value" ) );
+      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [weekNumberText, dayOfWeekText, ofTheMonthText] ) );
 
       document.getElementById( "advanced-repeat-dayofweek-last" ).removeAttribute( "collapsed" );
 
-      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", document.getElementById( "last-text" ).getAttribute( "value" )+getDayOfWeek( dayNumber )+document.getElementById( "ofthemonth-text" ).getAttribute( "value" ) );
+      document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [lastText, dayOfWeekText, ofTheMonthText] ) );
    }
    else if( weekNumber == 4 && !isLastDayOfWeekOfMonth() )
    {
-      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+document.getElementById( "ofthemonth-text" ).getAttribute( "value" ) );
+      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [weekNumberText, dayOfWeekText, ofTheMonthText] ) );
 
       document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "collapsed", "true" );
    }
    else
    {
-      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", getWeekNumberText( weekNumber )+" "+getDayOfWeek( dayNumber )+document.getElementById( "ofthemonth-text" ).getAttribute( "value" ) );
+      document.getElementById( "advanced-repeat-dayofweek" ).setAttribute( "label", calStrings.getFormattedString( "weekDayMonthLabel", [weekNumberText, dayOfWeekText, ofTheMonthText] ) );
 
       document.getElementById( "advanced-repeat-dayofweek-last" ).setAttribute( "collapsed", "true" );
    }
@@ -1302,20 +1312,16 @@ function isAlreadyException( dateObj )
 
 function getDayExtension( dayNumber )
 {
-   switch( dayNumber )
+   var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
+
+   if ( dayNumber >= 1 && dayNumber <= 31 )
    {
-      case 1:
-      case 21:
-      case 31:
-         return( "st" );
-      case 2:
-      case 22:
-         return( "nd" );
-      case 3:
-      case 23:
-         return( "rd" );
-      default:
-         return( "th" );
+      return( dateStringBundle.GetStringFromName( "ordinal.suffix."+dayNumber ) );
+   }
+   else
+   {
+      dump("ERROR: Invalid day number: " + dayNumber);
+      return ( false );
    }
 }
 
@@ -1422,22 +1428,19 @@ function addAttachment( attachmentToAdd )
 
 function getWeekNumberText( weekNumber )
 {
-   switch( weekNumber )
+   var dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
+   if ( weekNumber >= 1 && weekNumber <= 4 )
    {
-   case 1:
-      return( "First" );
-   case 2:
-      return( "Second" );
-   case 3:
-      return( "Third" );
-   case 4:
-      return( "Fourth" );
-   case 5:
-      return( "Last" );
-   default:
+      return( dateStringBundle.GetStringFromName( "ordinal.name."+weekNumber) );
+   }
+   else if( weekNumber == 5 ) 
+   {
+       return( dateStringBundle.GetStringFromName( "ordinal.name.last" ) );
+   }
+   else
+   {
       return( false );
    }
-
 }
 
 var launch = true;
@@ -1460,8 +1463,8 @@ function loadURL()
       UrlToGoTo = "http://"+UrlToGoTo;
 
    //launch the browser to that URL
-   launchBrowser(UrlToGoTo);
-   
+   launchBrowser( UrlToGoTo );
+
    launch = true;
 }
 
@@ -1686,6 +1689,4 @@ function percentCompleteCommand()
      
    updateCompletedItemEnabled();
 }
-
-
 

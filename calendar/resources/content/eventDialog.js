@@ -1499,7 +1499,7 @@ function loadURL()
       UrlToGoTo = "http://"+UrlToGoTo;
 
    //launch the browser to that URL
-   launchBrowser( UrlToGoTo ) ;
+   launchBrowser( UrlToGoTo );
 
    launch = true;
 }
