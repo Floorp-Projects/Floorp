@@ -85,5 +85,21 @@ public:
   NS_IMETHOD GetAccValue(nsAWritableString &_retval);
 };
 
+class nsXULRadioButtonAccessible : public nsRadioButtonAccessible
+{
+
+public:
+  nsXULRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetAccParent(nsIAccessible **_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval);
+};
+
+class nsXULRadioGroupAccessible : public nsFormControlAccessible
+{
+public:
+  nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+};
+
 #endif  
 

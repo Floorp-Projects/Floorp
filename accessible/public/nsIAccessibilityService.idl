@@ -55,6 +55,8 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createXULColorPickerTileAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULGroupboxAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULImageAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULRadioButtonAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULRadioGroupAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULTextAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULMenubarAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULMenupopupAccessible(in nsIDOMNode aNode);

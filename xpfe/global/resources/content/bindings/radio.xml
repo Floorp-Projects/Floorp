@@ -9,7 +9,16 @@
       <stylesheet src="chrome://global/skin/radio.css"/>
     </resources>
 
-    <implementation implements="nsIDOMXULSelectControlElement">
+    <implementation implements="nsIDOMXULSelectControlElement, nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULRadioGroupAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
+
       <property name="value" onset="this.setAttribute('value',val); return val;"
                              onget="return this.getAttribute('value');"/>
       <property name="disabled">
@@ -46,7 +55,7 @@
         </getter>
         <setter>
         <![CDATA[
-          if (this.getAttribute("focused") == "true") 
+          if (this.getAttribute("focused") == "true")
             val.setAttribute("focused", "true");
 
           val.setAttribute("selected", "true");
@@ -63,6 +72,10 @@
           var event = document.createEvent("Events");
           event.initEvent("select", false, true);
           this.dispatchEvent(event);
+
+          var myEvent = document.createEvent("Events");
+          myEvent.initEvent("RadioStateChange", true, true);
+          this.selectedItem.dispatchEvent(myEvent);
 
           return val;
         ]]>
@@ -267,7 +280,7 @@
       <stylesheet src="chrome://global/skin/radio.css"/>
     </resources>
  
-    <implementation>
+    <implementation implements="nsIDOMXULSelectControlItemElement, nsIAccessibleProvider">
       <constructor>
         <![CDATA[
           var parent = this.radioGroup;
@@ -285,6 +298,14 @@
           }
         ]]>
       </destructor>
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return (accService? accService.createXULRadioButtonAccessible(this): null);
+          ]]>
+        </getter>
+      </property>
       <property name="selected" readonly="true">
         <getter>
           <![CDATA[

@@ -305,3 +305,76 @@ NS_IMETHODIMP nsXULProgressMeterAccessible::GetAccValue(nsAWritableString& _retv
   _retval.Append(NS_LITERAL_STRING("%"));
   return NS_OK;
 }
+
+/**
+  * XUL Radio Button
+  */
+
+/** Constructor */
+nsXULRadioButtonAccessible::nsXULRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsRadioButtonAccessible(aNode, aShell)
+{ 
+}
+
+/** Our only action is to click */
+NS_IMETHODIMP nsXULRadioButtonAccessible::AccDoAction(PRUint8 index)
+{
+  if (index == eAction_Click) {
+    nsCOMPtr<nsIDOMXULSelectControlItemElement> radioButton(do_QueryInterface(mDOMNode));
+    if (radioButton) {
+        radioButton->DoCommand();
+        return NS_OK;
+    }
+  }
+  return NS_ERROR_INVALID_ARG;
+}
+
+/** We are Focusable and can be Checked and focused */
+NS_IMETHODIMP nsXULRadioButtonAccessible::GetAccState(PRUint32 *_retval)
+{
+  nsFormControlAccessible::GetAccState(_retval);
+  PRBool selected = PR_FALSE;   // Radio buttons can be selected
+
+  nsCOMPtr<nsIDOMXULSelectControlItemElement> radioButton(do_QueryInterface(mDOMNode));
+  if (radioButton) 
+    radioButton->GetSelected(&selected);
+
+  if (selected) 
+    *_retval |= STATE_CHECKED;
+
+  return NS_OK;
+}
+
+/**
+  * This gets the parent of the RadioGroup (our grandparent) and sets it 
+  *  as our parent, for future calls. 
+  */
+NS_IMETHODIMP nsXULRadioButtonAccessible::GetAccParent(nsIAccessible **  aAccParent)
+{
+  if (! mParent) {
+    nsCOMPtr<nsIAccessible> tempParent;
+    nsAccessible::GetAccParent(getter_AddRefs(tempParent));
+    if (tempParent)
+      tempParent->GetAccParent(getter_AddRefs(mParent));
+  }
+  NS_ASSERTION(mParent,"Whoa! This RadioButtonAcc doesn't have a parent! Better find out why.");
+  *aAccParent = mParent;
+  NS_ADDREF(*aAccParent);
+  return NS_OK;
+}
+
+/**
+  * XUL Radio Group
+  *   The Radio Group proxies for the Radio Buttons themselves. The Group gets
+  *   focus whereas the Buttons do not. So we only have an accessible object for
+  *   this for the purpose of getting the proper RadioButton. Need this here to 
+  *   avoid circular reference problems when navigating the accessible tree and
+  *   for getting to the radiobuttons.
+  */
+
+/** Constructor */
+nsXULRadioGroupAccessible::nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsFormControlAccessible(aNode, aShell)
+{ 
+}
+
