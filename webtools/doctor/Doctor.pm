@@ -67,9 +67,9 @@ sub system_capture {
   my ($rv, $output, $errors);
 
   # Back up the original STDOUT and STDERR so we can restore them later.
-  open my $oldout, ">&STDOUT"     or die "Can't back up STDOUT to \$oldout: $!";
-  open OLDERR,     ">&", \*STDERR or die "Can't back up STDERR to OLDERR: $!";
-  use vars qw( $OLDERR ); # suppress "used only once" warnings
+  open(OLDOUT, ">&STDOUT") or die "Can't back up STDOUT to OLDOUT: $!";
+  open(OLDERR, ">&STDERR") or die "Can't back up STDERR to OLDERR: $!";
+  use vars qw( $OLDOUT $OLDERR ); # suppress "used only once" warnings
 
   # Close and reopen STDOUT and STDERR to in-memory files, which are just
   # scalars that take output and append it to their value.
@@ -81,17 +81,17 @@ sub system_capture {
   #open STDERR, ">", \$errors or die "Can't open STDERR to errors var: $!";
   my $outtmpfile = tempfile();
   my $errtmpfile = tempfile();
-  open STDOUT, ">&", $outtmpfile or die "Can't dupe STDOUT to output cache: $!";
-  open STDERR, ">&", $errtmpfile or die "Can't dupe STDERR to errors cache: $!";
+  open(STDOUT, ">$outtmpfile") or die "Can't dupe STDOUT to output cache: $!";
+  open(STDERR, ">$errtmpfile") or die "Can't dupe STDERR to errors cache: $!";
 
   # Run the command.
   $rv = system($command, @args);
 
   # Restore original STDOUT and STDERR.
-  close STDOUT;
-  close STDERR;
-  open STDOUT, ">&", $oldout or die "Can't restore STDOUT from \$oldout: $!";
-  open STDERR, ">&OLDERR"    or die "Can't restore STDERR from OLDERR: $!";
+  close(STDOUT);
+  close(STDERR);
+  open(STDOUT, ">&OLDOUT") or die "Can't restore STDOUT from OLDOUT: $!";
+  open(STDERR, ">&OLDERR") or die "Can't restore STDERR from OLDERR: $!";
 
   # Grab output and errors from the caches.
   # XXX None of this would be necessary if in-memory files was working.
