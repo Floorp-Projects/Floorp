@@ -825,7 +825,7 @@ void nsImapProtocol::ProcessCurrentURL()
 }
 #endif
 
-void nsImapProtocol::ParseIMAPandCheckForNewMail(char* commandString)
+void nsImapProtocol::ParseIMAPandCheckForNewMail(const char* commandString)
 {
     if (commandString)
         GetServerStateParser().ParseIMAPServerResponse(commandString);
@@ -1831,7 +1831,7 @@ void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePa
 	}
 
 	// Run the single, pipelined fetch command
-	if ((parts->GetNumParts() > 0) && !DeathSignalReceived() && !GetPseudoInterrupted() && stringToFetch)
+	if ((parts->GetNumParts() > 0) && !DeathSignalReceived() && !GetPseudoInterrupted() && stringToFetch.GetBuffer())
 	{
 	    IncrementCommandTagNumber();
 
@@ -1839,11 +1839,10 @@ void nsImapProtocol::PipelinedFetchMessageParts(const char *uid, nsIMAPMessagePa
 		commandString.Append(" UID fetch ");
 		commandString.Append(uid, 10);
 		commandString.Append(" (");
-		commandString.Append(stringToFetch);
+		commandString.Append(stringToFetch.GetBuffer());
 		commandString.Append(")" CRLF);
 		int ioStatus = SendData(commandString.GetBuffer());
 		ParseIMAPandCheckForNewMail(commandString.GetBuffer());
-		PR_Free(stringToFetch);
 	}
 }
 
@@ -2120,8 +2119,8 @@ void nsImapProtocol::PipelinedFetchMessageParts(nsString2 &uid, nsIMAPMessagePar
 	// assumes no chunking
 
 	// build up a string to fetch
-	nsString2 stringToFetch;
-	nsString2 what;
+	nsString2 stringToFetch(eOneByte, 0);
+	nsString2 what(eOneByte, 0);
 
 	int32 currentPartNum = 0;
 	while ((parts->GetNumParts() > currentPartNum) && !DeathSignalReceived())
@@ -2166,13 +2165,13 @@ void nsImapProtocol::PipelinedFetchMessageParts(nsString2 &uid, nsIMAPMessagePar
 	}
 
 	// Run the single, pipelined fetch command
-	if ((parts->GetNumParts() > 0) && !DeathSignalReceived() && !GetPseudoInterrupted() && stringToFetch)
+	if ((parts->GetNumParts() > 0) && !DeathSignalReceived() && !GetPseudoInterrupted() && stringToFetch.GetBuffer())
 	{
 	    IncrementCommandTagNumber();
 
 		char *commandString = PR_smprintf("%s UID fetch %s (%s)%s",
                                           GetServerCommandTag(), uid,
-                                          stringToFetch, CRLF);
+                                          stringToFetch.GetBuffer(), CRLF);
 
 		if (commandString)
 		{
@@ -2182,8 +2181,6 @@ void nsImapProtocol::PipelinedFetchMessageParts(nsString2 &uid, nsIMAPMessagePar
 		}
 		else
 			HandleMemoryFailure();
-
-		PR_Free(stringToFetch);
 	}
 }
 

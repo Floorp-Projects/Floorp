@@ -314,7 +314,8 @@ private:
 
     virtual void ProcessCurrentURL();
 	void EstablishServerConnection();
-    virtual void ParseIMAPandCheckForNewMail(char* commandString = nsnull);
+    virtual void ParseIMAPandCheckForNewMail(const char* commandString =
+                                             nsnull);
 
 	// biff
 	void	PeriodicBiff();

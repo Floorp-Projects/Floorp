@@ -452,7 +452,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 			charIndex++;
 	}
 	
-	if (closeQuoteFound && returnString)
+	if (closeQuoteFound)
 	{
 		returnString.SetCharAt(0, charIndex);
 		//if ((charIndex == 0) && skipToEnd)	// it's an empty string.  Why skip to end?
