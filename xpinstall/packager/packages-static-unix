@@ -56,6 +56,7 @@ bin/res/cmessage.txt
 
 bin/components/bookmarks.xpt
 bin/components/directory.xpt
+bin/components/downloadmanager.xpt
 bin/components/history.xpt
 bin/components/timebomb.xpt
 bin/components/related.xpt
@@ -159,6 +160,7 @@ bin/components/nsHelperAppDlg.js
 bin/components/helperAppDlg.xpt
 bin/components/nsProgressDialog.js
 bin/components/progressDlg.xpt
+bin/components/nsDownloadProgressListener.js
 bin/components/transformiix.xpt
 
 bin/chrome/help.jar

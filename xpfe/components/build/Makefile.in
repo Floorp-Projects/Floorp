@@ -63,6 +63,7 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)directory_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)downloadmanager_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)appcompintl_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)related_s.$(LIB_SUFFIX) \
@@ -75,6 +76,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../autocomplete/src  \
 	-I$(srcdir)/../bookmarks/src     \
 	-I$(srcdir)/../directory         \
+	-I$(srcdir)/../download-manager/src \
 	-I$(srcdir)/../history/src       \
 	-I$(srcdir)/../related/src       \
 	-I$(srcdir)/../search/src        \

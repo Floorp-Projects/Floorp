@@ -275,6 +275,9 @@ sub InstallComponentFiles()
     # update notifications
     InstallResources(":mozilla:xpfe:components:updates:src:MANIFEST",                      "$components_dir");
 
+    # download manager
+    InstallResources(":mozilla:xpfe:components:download-manager:src:MANIFEST_COMPONENTS",  "$components_dir");
+
     # embedding UI
     InstallResources(":mozilla:embedding:components:ui:helperAppDlg:MANIFEST",             "$components_dir");
     InstallResources(":mozilla:embedding:components:ui:progressDlg:MANIFEST",              "$components_dir");
@@ -529,6 +532,8 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:xpfe:communicator:resources:content:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:components:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:components:bookmarks:resources:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:components:download-manager:resources:jar.mn", $chrome_dir, \%jars);
+    CreateJarFromManifest(":mozilla:xpfe:components:download-manager:resources:locale:en-US:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:components:prefwindow:resources:content:mac:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:unix:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:xpfe:components:prefwindow:resources:locale:en-US:win:jar.mn", $chrome_dir, \%jars);
@@ -972,6 +977,8 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:xpfe:components:regviewer:MANIFEST_IDL",     "$distdirectory:idl:");
     # autocomplete
     InstallFromManifest(":mozilla:xpfe:components:autocomplete:public:MANIFEST_IDL", "$distdirectory:idl:");
+    # download manager
+    InstallFromManifest(":mozilla:xpfe:components:download-manager:public:MANIFEST_IDL", "$distdirectory:idl:");
 
     # XPAPPS
     InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",                  "$distdirectory:xpfe:");
@@ -1315,6 +1322,7 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:xpfe:components:timebomb:macbuild:timebombIDL.xml",   "tmbm");
     BuildIDLProject(":mozilla:xpfe:components:urlbarhistory:macbuild:urlbarhistoryIDL.xml", "urlbarhistory");
     BuildIDLProject(":mozilla:xpfe:components:autocomplete:macbuild:AutoCompleteIDL.xml", "autocomplete");
+    BuildIDLProject(":mozilla:xpfe:components:download-manager:macbuild:DownloadManagerIDL.xml", "download-manager");
 
     BuildIDLProject(":mozilla:xpfe:appshell:macbuild:appshellIDL.xml",              "appshell");
     
@@ -2047,6 +2055,7 @@ sub BuildXPAppProjects()
 
     # Components
     BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.xml", "FindComponent$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:xpfe:components:download-manager:macbuild:DownloadManager.xml", "DownloadManager$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:xfer:macbuild:xfer.xml",  "xfer$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:regviewer:RegViewer.xml", "RegViewer$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:xpfe:components:shistory:macbuild:shistory.xml", "shistory$D.$S", 1, $main::ALIAS_SYM_FILES, 1);

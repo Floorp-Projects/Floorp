@@ -33,6 +33,7 @@ DIRS= \
     regviewer \
     related \
     xfer \
+    download-manager \
     shistory \
     timebomb \
     console \
