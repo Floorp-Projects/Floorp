@@ -577,6 +577,10 @@ CERT_DecodeAVAValue(SECItem *derAVAValue)
 	    convertUCS2toUTF8 = PR_TRUE;
 	    theTemplate = SEC_BMPStringTemplate;
 	    break;
+	case SEC_ASN1_UTF8_STRING:
+	    /* No conversion needed ! */
+	    theTemplate = SEC_UTF8StringTemplate;
+	    break;
 	default:
 	    return NULL;
     }
