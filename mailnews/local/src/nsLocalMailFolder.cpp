@@ -607,7 +607,6 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
           if (rv == NS_MSG_FOLDER_BUSY)
           {
             mDatabase->RemoveListener(this);  //we need to null out the db so that parsing gets kicked off again.
-            mAddListener = PR_FALSE;
             mDatabase = nsnull;
             ThrowAlertMsg("parsingFolderFailed", aMsgWindow);
           }
