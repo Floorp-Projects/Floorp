@@ -32,14 +32,7 @@ EXPORT_RESOURCE_SKIN = \
 		$(NULL)
 
 EXPORT_RESOURCE_IMAGES = \
-		$(srcdir)/images/checker.gif \
-		$(srcdir)/images/circletool.gif \
-		$(srcdir)/images/contrast.gif \
-		$(srcdir)/images/pointertool.gif \
-		$(srcdir)/images/polygontool.gif \
-		$(srcdir)/images/rectangletool.gif \
-		$(srcdir)/images/zoomin.gif \
-		$(srcdir)/images/zoomout.gif \
+		$(srcdir)/images/Map_checker.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
