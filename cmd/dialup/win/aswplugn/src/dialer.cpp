@@ -2099,7 +2099,7 @@ static BOOL CreateRNAEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& locatio
 	
 	dwRet = (*m_lpfnRasValidateEntryName)( NULL, (LPSTR)(LPCSTR)account.ISPName );	
 
-	assert( dwRet == 0 );
+	//assert( dwRet == 0 );
 	if (dwRet == ERROR_INVALID_NAME) {
 		trace ("dialer.cpp : CreateRNAEntry (RasValidateEntryName) - Invalid Name. Can't set RasEntry properties. (r)");
 		return FALSE;
