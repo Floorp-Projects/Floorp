@@ -511,7 +511,7 @@
      *rtf-definitions*)))
 
 #|
-(setq s (html-parser:file->string "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:index.html"))
+(setq s (html-parser:file->string "Alemana:Users:waldemar:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:index.html"))
 (setq p (html-parser::simple-parser s))
 
 (depict-rtf-to-local-file
@@ -521,18 +521,18 @@
      (emit-html-file markup-stream p))
  *rtf-definitions*)
 
-(translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:index.html" "HTML-To-RTF/Test.rtf" "Test")
-(translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:introduction:notation.html"
+(translate-html-to-rtf "Alemana:Users:waldemar:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:index.html" "HTML-To-RTF/Test.rtf" "Test")
+(translate-html-to-rtf "Alemana:Users:waldemar:Mozilla:Docs:mozilla-org:html:js:language:js20:introduction:notation.html"
                        "HTML-To-RTF/Notation.rtf" "Notation")
-(translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:es4:core:expressions.html"
+(translate-html-to-rtf "Alemana:Users:waldemar:Mozilla:Docs:mozilla-org:html:js:language:es4:core:expressions.html"
                        "HTML-To-RTF/Expressions.rtf" "Expressions")
-(translate-html-to-rtf "Huit:Mozilla:Moz:mozilla:js2:semantics:HTML-To-RTF:Expressions.html"
+(translate-html-to-rtf "Alemana:Users:waldemar:Mozilla:Moz:mozilla:js2:semantics:HTML-To-RTF:Expressions.html"
                        "HTML-To-RTF/Expressions.rtf" "Expressions")
 
-(translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:stages.html"
+(translate-html-to-rtf "Alemana:Users:waldemar:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:stages.html"
                        "HTML-To-RTF/Stages.rtf" "Stages")
-(translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:es4:core:expressions.html"
+(translate-html-to-rtf "Alemana:Users:waldemar:Mozilla:Docs:mozilla-org:html:js:language:es4:core:expressions.html"
                        "HTML-To-RTF/Expressions.rtf" "Expressions")
-(translate-html-to-rtf "Huit:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:notation.html"
+(translate-html-to-rtf "Alemana:Users:waldemar:Mozilla:Docs:mozilla-org:html:js:language:js20:formal:notation.html"
                        "HTML-To-RTF/FormalNotation.rtf" "Formal Notation")
 |#
