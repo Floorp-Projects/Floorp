@@ -6298,8 +6298,87 @@ nsIMAPMailboxInfo::~nsIMAPMailboxInfo()
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-// The following is the implementation of nsImapMockChannel
+// The following is the implementation of nsImapMockChannel and an intermediary 
+// imap steam listener. The stream listener is used to make a clean binding between the
+// imap mock channel and the memory cache channel (if we are reading from the cache)
 //////////////////////////////////////////////////////////////////////////////////////////////
+
+// WARNING: the cache stream listener is intended to be accessed from the UI thread!
+// it will NOT create another proxy for the stream listener that gets passed in...
+class nsImapCacheStreamListener : public nsIStreamListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSISTREAMLISTENER
+
+  nsImapCacheStreamListener ();
+  virtual ~nsImapCacheStreamListener();
+
+  nsresult Init(nsIStreamListener * aStreamListener, nsIChannel * aMockChannelToUse);
+protected:
+  nsCOMPtr<nsIChannel> mChannelToUse;
+  nsCOMPtr<nsIStreamListener> mListener;
+};
+
+NS_IMPL_ADDREF(nsImapCacheStreamListener);
+NS_IMPL_RELEASE(nsImapCacheStreamListener);
+
+NS_INTERFACE_MAP_BEGIN(nsImapCacheStreamListener)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+NS_INTERFACE_MAP_END
+
+nsImapCacheStreamListener::nsImapCacheStreamListener()
+{
+  NS_INIT_ISUPPORTS();
+}
+
+nsImapCacheStreamListener::~nsImapCacheStreamListener()
+{}
+
+nsresult nsImapCacheStreamListener::Init(nsIStreamListener * aStreamListener, nsIChannel * aMockChannelToUse)
+{
+  NS_ENSURE_ARG(aStreamListener);
+  NS_ENSURE_ARG(aMockChannelToUse);
+
+  mChannelToUse = aMockChannelToUse;
+  mListener = aStreamListener;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapCacheStreamListener::OnStartRequest(nsIChannel * aChannel, nsISupports * aCtxt)
+{
+  nsCOMPtr <nsILoadGroup> loadGroup;
+  mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
+  if (loadGroup)
+    loadGroup->AddChannel(mChannelToUse, nsnull /* context isupports */);
+  return mListener->OnStartRequest(mChannelToUse, aCtxt);
+}
+
+NS_IMETHODIMP
+nsImapCacheStreamListener::OnStopRequest(nsIChannel * aChannel, nsISupports * aCtxt, nsresult aStatus, const PRUnichar* aMsg)
+{
+  nsresult rv = mListener->OnStopRequest(mChannelToUse, aCtxt, aStatus, aMsg);
+  nsCOMPtr <nsILoadGroup> loadGroup;
+  mChannelToUse->GetLoadGroup(getter_AddRefs(loadGroup));
+  if (loadGroup)
+			loadGroup->RemoveChannel(mChannelToUse, nsnull, aStatus, nsnull);
+
+  mListener = nsnull;
+  mChannelToUse = nsnull;
+  return rv;
+}
+
+NS_IMETHODIMP
+nsImapCacheStreamListener::OnDataAvailable(nsIChannel * aChannel, nsISupports * aCtxt, nsIInputStream * aInStream, PRUint32 aSourceOffset, PRUint32 aCount)
+{
+  return mListener->OnDataAvailable(mChannelToUse, aCtxt, aInStream, aSourceOffset, aCount);
+}
+
 NS_IMPL_ISUPPORTS2(nsImapMockChannel, nsIImapMockChannel, nsIChannel)
 
 nsImapMockChannel::nsImapMockChannel()
@@ -6481,12 +6560,20 @@ NS_IMETHODIMP nsImapMockChannel::AsyncRead(PRUint32 startPosition, PRInt32 readC
       mOwningRefToUrl = PR_TRUE;
       imapUrl->SetMockChannel(nsnull);
 
-      rv = cacheChannel->AsyncRead(startPosition, readCount, m_channelContext, m_channelListener);
+      // if we are going to read from the cache, then create a mock stream listener class and use it
+      nsImapCacheStreamListener * cacheListener = new nsImapCacheStreamListener();
+      NS_ADDREF(cacheListener);
+      cacheListener->Init(m_channelListener, NS_STATIC_CAST(nsIChannel *, this));
+      rv = cacheChannel->AsyncRead(startPosition, readCount, m_channelContext, cacheListener);
+      NS_RELEASE(cacheListener);
+
       if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
         return rv;
     }    
   }
 
+  // okay, add the mock channel to the load group..
+  imapUrl->AddChannelToLoadGroup();
   // loading the url consists of asking the server to add the url to it's imap event queue....
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = mailnewsUrl->GetServer(getter_AddRefs(server));

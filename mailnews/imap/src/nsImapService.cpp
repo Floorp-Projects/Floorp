@@ -292,7 +292,6 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
       msgurl->SetMsgWindow(aMsgWindow);
       // whenever we are displaying a message, we want to add it to the memory cache..
       msgurl->SetAddToMemoryCache(PR_TRUE);
-		  imapUrl->AddChannelToLoadGroup();
       rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
                         aURL, aDisplayConsumer, msgKey, PR_TRUE);
     }
