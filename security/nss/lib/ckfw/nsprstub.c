@@ -39,7 +39,7 @@
  * SW FORTEZZA to link with some low level security functions without dragging
  * in NSPR.
  *
- * $Id: nsprstub.c,v 1.2 2000/09/11 23:27:56 relyea%netscape.com Exp $
+ * $Id: nsprstub.c,v 1.3 2002/05/01 00:06:29 wtc%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -200,7 +200,7 @@ PORT_ArenaUnmark(PLArenaPool *arena, void *mark)
 }
 
 char *
-PORT_ArenaStrdup(PLArenaPool *arena,char *str) {
+PORT_ArenaStrdup(PLArenaPool *arena,const char *str) {
     int len = PORT_Strlen(str)+1;
     char *newstr;
 

@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.13 2002/04/04 00:11:48 nelsonb%netscape.com Exp $
+ * $Id: secport.c,v 1.14 2002/05/01 00:06:39 wtc%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -157,6 +157,19 @@ PORT_ZFree(void *ptr, size_t len)
 	memset(ptr, 0, len);
 	PR_Free(ptr);
     }
+}
+
+char *
+PORT_Strdup(const char *str)
+{
+    size_t len = PORT_Strlen(str)+1;
+    char *newstr;
+
+    newstr = (char *)PORT_Alloc(len);
+    if (newstr) {
+        PORT_Memcpy(newstr, str, len);
+    }
+    return newstr;
 }
 
 void
@@ -446,7 +459,7 @@ PORT_ArenaUnmark(PLArenaPool *arena, void *mark)
 }
 
 char *
-PORT_ArenaStrdup(PLArenaPool *arena, char *str) {
+PORT_ArenaStrdup(PLArenaPool *arena, const char *str) {
     int len = PORT_Strlen(str)+1;
     char *newstr;
 
