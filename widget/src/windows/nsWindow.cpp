@@ -604,7 +604,7 @@ NS_IMETHODIMP nsWindow::DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus
   debug_DumpEvent(stdout,
                   event->widget,
                   event,
-                  "something",
+                  nsCAutoString("something"),
                   (PRInt32) mWnd);
 #endif // NS_DEBUG
 
