@@ -117,7 +117,6 @@ _newJSDContext(JSRuntime*         jsrt,
 #endif
 
     JS_INIT_CLIST(&jsdc->threadsStates);
-    JS_INIT_CLIST(&jsdc->scripts);
     JS_INIT_CLIST(&jsdc->sources);
     JS_INIT_CLIST(&jsdc->removedSources);
 
@@ -127,6 +126,9 @@ _newJSDContext(JSRuntime*         jsrt,
         goto label_newJSDContext_failure;
 
     if( ! jsd_InitObjectManager(jsdc) )
+        goto label_newJSDContext_failure;
+
+    if( ! jsd_InitScriptManager(jsdc) )
         goto label_newJSDContext_failure;
 
     jsdc->dumbContext = JS_NewContext(jsdc->jsrt, 256);
@@ -237,7 +239,7 @@ jsd_DebuggerOff(JSDContext* jsdc)
 
     /* clean up */
     JSD_LockScriptSubsystem(jsdc);
-    jsd_DestroyAllJSDScripts(jsdc);
+    jsd_DestroyScriptManager(jsdc);
     JSD_UnlockScriptSubsystem(jsdc);
     jsd_DestroyAllSources(jsdc);
     
@@ -275,6 +277,22 @@ void*
 jsd_GetContextPrivate(JSDContext* jsdc)
 {
     return jsdc->data;
+}
+
+void
+jsd_ClearAllProfileData(JSDContext* jsdc)
+{
+    JSDScript *current;
+    
+    JSD_LOCK_SCRIPTS(jsdc);
+    current = (JSDScript *)jsdc->scripts.next;
+    while (current != (JSDScript *)&jsdc->scripts)
+    {
+        jsd_ClearScriptProfileData(jsdc, current);
+        current = (JSDScript *)current->links.next;
+    }
+
+    JSD_UNLOCK_SCRIPTS(jsdc);
 }
 
 JSDContext*

@@ -85,6 +85,7 @@ JS_BEGIN_EXTERN_C
 #include "jsscope.h"
 #include "jsdbgapi.h"
 #include "jsd_lock.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -111,13 +112,21 @@ JS_BEGIN_EXTERN_C
 #undef  CLEAR_BIT_FLAG
 #define CLEAR_BIT_FLAG(f,b) ((f)&=(~(b)))
 
+#define JSD_IS_DEBUG_ENABLED(jsdc,jsdscript)                                   \
+        (!(((jsdc->flags & JSD_DEBUG_WHEN_SET) ? 1 : 0)  ^                     \
+           ((jsdscript->flags & JSD_SCRIPT_DEBUG_BIT) ?  1 : 0)))
+#define JSD_IS_PROFILE_ENABLED(jsdc,jsdscript)                                 \
+        ((jsdc->flags & JSD_COLLECT_PROFILE_DATA) &&                           \
+         (!(((jsdc->flags & JSD_PROFILE_WHEN_SET) ? 1 : 0) ^                   \
+            ((jsdscript->flags & JSD_SCRIPT_PROFILE_BIT) ? 1 : 0))))
+
 
 /***************************************************************************/
 /* These are not exposed in jsdebug.h - typedef here for consistency */
 
 typedef struct JSDExecHook          JSDExecHook;
 typedef struct JSDAtom              JSDAtom;
-
+typedef struct JSDProfileData       JSDProfileData;
 /***************************************************************************/
 /* Our structures */
 
@@ -154,6 +163,7 @@ struct JSDContext
     JSD_UserCallbacks       userCallbacks;
     void*                   user;
     JSCList                 scripts;
+    JSHashTable*            scriptsTable;
     JSCList                 sources;
     JSCList                 removedSources;
     uintN                   sourceAlterCount;
@@ -183,11 +193,26 @@ struct JSDScript
     uintN       lineExtent; /* we cache this */
     JSCList     hooks;      /* JSCList of JSDExecHooks for this script */
     char*       url;
+    uint32      flags;
     void*       data;
+
+    JSDProfileData  *profileData;
+
 #ifdef LIVEWIRE
     LWDBGApp*    app;
     LWDBGScript* lwscript;
 #endif
+};
+
+struct JSDProfileData
+{
+    int64    lastCallStart;
+    uintN    callCount;
+    uintN    recurseDepth;
+    uintN    maxRecurseDepth;
+    jsdouble minExecutionTime;
+    jsdouble maxExecutionTime;
+    jsdouble totalExecutionTime;
 };
 
 struct JSDSourceText
@@ -327,6 +352,9 @@ jsd_SetContextPrivate(JSDContext* jsdc, void *data);
 extern void*
 jsd_GetContextPrivate(JSDContext* jsdc);
 
+extern void
+jsd_ClearAllProfileData(JSDContext* jsdc);
+
 extern JSBool
 jsd_SetErrorReporter(JSDContext*       jsdc,
                      JSD_ErrorReporter reporter,
@@ -344,12 +372,42 @@ jsd_DebugErrorHook(JSContext *cx, const char *message,
 /***************************************************************************/
 /* Script functions */
 
+extern JSBool
+jsd_InitScriptManager(JSDContext *jsdc);
+
 extern void
-jsd_DestroyAllJSDScripts(JSDContext* jsdc);
+jsd_DestroyScriptManager(JSDContext* jsdc);
 
 extern JSDScript*
 jsd_FindJSDScript(JSDContext*  jsdc,
                   JSScript     *script);
+
+extern JSDProfileData*
+jsd_GetScriptProfileData(JSDContext* jsdc, JSDScript *script);
+
+extern uint32
+jsd_GetScriptFlags(JSDContext *jsdc, JSDScript *script);
+
+extern void
+jsd_SetScriptFlags(JSDContext *jsdc, JSDScript *script, uint32 flags);
+
+extern uintN
+jsd_GetScriptCallCount(JSDContext* jsdc, JSDScript *script);
+
+extern  uintN
+jsd_GetScriptMaxRecurseDepth(JSDContext* jsdc, JSDScript *script);
+
+extern jsdouble
+jsd_GetScriptMinExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+extern jsdouble
+jsd_GetScriptMaxExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+extern jsdouble
+jsd_GetScriptTotalExecutionTime(JSDContext* jsdc, JSDScript *script);
+
+extern void
+jsd_ClearScriptProfileData(JSDContext* jsdc, JSDScript *script);
 
 extern JSScript *
 jsd_GetJSScript (JSDContext *jsdc, JSDScript *script);
