@@ -702,18 +702,15 @@ nsStyleList::nsStyleList(const nsStyleList& aSource)
 
 nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
 {
-  if (mListStylePosition == aOther.mListStylePosition)
-    if (mListStyleImage == aOther.mListStyleImage)
-      if (mListStyleType == aOther.mListStyleType) {
-        if (mImageRegion == aOther.mImageRegion)
-          return NS_STYLE_HINT_NONE;
-        if (mImageRegion.width == aOther.mImageRegion.width &&
-            mImageRegion.height == aOther.mImageRegion.height)
-          return NS_STYLE_HINT_VISUAL;
-        return NS_STYLE_HINT_REFLOW;
-      }
-      return NS_STYLE_HINT_REFLOW;
-    return NS_STYLE_HINT_REFLOW;
+  if (mListStylePosition == aOther.mListStylePosition &&
+      mListStyleImage == aOther.mListStyleImage &&
+      mListStyleType == aOther.mListStyleType) {
+    if (mImageRegion == aOther.mImageRegion)
+      return NS_STYLE_HINT_NONE;
+    if (mImageRegion.width == aOther.mImageRegion.width &&
+        mImageRegion.height == aOther.mImageRegion.height)
+      return NS_STYLE_HINT_VISUAL;
+  }
   return NS_STYLE_HINT_REFLOW;
 }
 
