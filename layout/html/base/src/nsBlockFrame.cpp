@@ -4674,6 +4674,11 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       if (0 == --line->mChildCount) {
         *linep = next;
         line->mNext = nsnull;
+        // Invalidate the space taken up by the line.
+        // XXX We need to do this if we're removing a frame as a result of
+        // a call to RemoveFrame(), but we may not need to do this in all
+        // cases...
+        Invalidate(line->mCombinedArea);
         delete line;
         line = next;
       }
