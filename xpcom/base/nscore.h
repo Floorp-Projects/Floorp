@@ -205,7 +205,7 @@ typedef PRUint32 nsresult;
 #define HAVE_CPP_TYPENAME
 
   /* waiting to find out if OS/2 VisualAge participates in autoconf */
-#if defined(XP_OS2_VACPP) || defined(AIX) || (defined(IRIX) && !defined(__GNUC__))
+#if defined(XP_OS2_VACPP) || defined(AIX_XLC_364) || (defined(IRIX) && !defined(__GNUC__))
   #undef HAVE_CPP_TYPENAME
 #endif
 

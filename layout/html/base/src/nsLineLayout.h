@@ -381,7 +381,7 @@ protected:
   PerFrameData* mFrameFreeList;
   PRInt32 mInitialFramesFreed;
 
-#if defined(AIX) || defined(XP_OS2_VACPP)
+#if defined(AIX_XLC_364) || defined(XP_OS2_VACPP)
 public:
 #endif
   struct PerSpanData {
@@ -419,7 +419,7 @@ public:
       mLastFrame = pfd;
     }
   };
-#if defined(AIX) || defined(XP_OS2_VACPP)
+#if defined(AIX_XLC_364) || defined(XP_OS2_VACPP)
 protected:
 #endif
   PerSpanData mSpanDataBuf[NS_LINELAYOUT_NUM_SPANS];

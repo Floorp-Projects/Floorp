@@ -18,7 +18,7 @@
 
 #include <X11/Xlib.h>
 #ifdef HAVE_X11_XKBLIB_H
-#   if defined (__digital__) && defined (__unix__)
+#   if (defined (__digital__) && defined (__unix__)) || defined(_AIX) || defined(__hpux)
 #   define explicit Explicit
 #   include <X11/XKBlib.h>
 #   undef explicit
