@@ -1061,13 +1061,6 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
   // password. We don't want to handle this kind of form at this
   // point.
   //
-  // BENOIT: We keep the first text field and password field we find
-  // Shouldn't we keep the text field which is just
-  // preceding the password field instead? There's maybe better chance
-  // that the text field preceding the password field is the username
-  // field in the case of a form where's there's multiple text
-  // field...
-  //
   nsCOMPtr<nsIDOMHTMLCollection> elements;
   nsresult rv = inFormElement->GetElements(getter_AddRefs(elements));
   if (NS_FAILED(rv) || !elements) 
@@ -1095,10 +1088,8 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
     bool isText = (type.IsEmpty() || type.Equals(NS_LITERAL_STRING("text"), nsCaseInsensitiveStringComparator()));
     bool isPassword = type.Equals(NS_LITERAL_STRING("password"), nsCaseInsensitiveStringComparator());
     inputElement->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-    if ( autocomplete.EqualsIgnoreCase("off") )
-      isPassword = false;
 
-    if(!isText && !isPassword)
+    if((!isText && !isPassword) || autocomplete.EqualsIgnoreCase("off"))
       continue;
 
     //
@@ -1112,7 +1103,10 @@ FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInput
       return NS_OK;
     }
     
-    if(isText && !*outUsername) {
+    // Keep taking text fields until we have a password, so that
+    // username is the field before password.
+    if(isText && !*outPassword) {
+      if (*outUsername) NS_RELEASE(*outUsername);
       *outUsername = inputElement;
       NS_ADDREF(*outUsername);
     }
