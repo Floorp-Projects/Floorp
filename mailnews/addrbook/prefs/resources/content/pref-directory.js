@@ -127,13 +127,14 @@ function LoadDirectories(popup)
       gPrefInt = null;
     }
   }
+  if (!gAvailDirectories) {
   try {
-    arrayOfDirectories = gPrefInt.getChildList("ldap_2.servers", prefCount);
+    arrayOfDirectories = gLDAPPrefsService.getServerList(gPrefInt, prefCount);
   }
   catch (ex) {
     arrayOfDirectories = null;
   }
-  if (arrayOfDirectories && !gAvailDirectories) {
+  if (arrayOfDirectories) {
     gAvailDirectories = new Array();
     for (var i = 0; i < prefCount.value; i++)
     {
@@ -264,7 +265,7 @@ function LoadDirectories(popup)
         catch (ex) {
           description = "";
         } 
-	  }
+      }
       if ((directoryServer != "") && (description != ""))
       {
         directoriesList.label = description;
@@ -281,7 +282,8 @@ function LoadDirectories(popup)
         directoriesList.value = null;
         gPrefInt.setCharPref("ldap_2.autoComplete.directoryServer", "");
       }
-	}
+    }
+  }
   }
 }
 

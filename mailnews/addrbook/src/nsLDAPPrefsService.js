@@ -49,7 +49,7 @@ function nsLDAPPrefsService() {
   /* generate the list of directory servers from preferences */
   var prefCount = {value:0};
   try {
-    arrayOfDirectories = gPrefInt.getChildList("ldap_2.servers", prefCount);
+    arrayOfDirectories = this.getServerList(gPrefInt, prefCount);
   }
   catch (ex) {
     arrayOfDirectories = null;
@@ -105,6 +105,52 @@ function (iid) {
         throw Components.results.NS_ERROR_NO_INTERFACE;
 
     return this;
+}
+
+const prefRoot = "ldap_2.servers";
+const parent = "ldap_2.servers.";
+
+nsLDAPPrefsService.prototype.getServerList = 
+function (prefBranch, aCount) {
+  var prefCount = {value:0};
+  
+  // get all the preferences with prefix ldap_2.servers
+  var directoriesList = prefBranch.getChildList(prefRoot, prefCount);
+  
+  var childList = new Array();
+  var count = 0;
+  if (directoriesList) {
+    directoriesList.sort();
+    var prefixLen;
+    // lastDirectory contains the last entry that is added to the 
+    // array childList.
+    var lastDirectory = "";
+
+    // only add toplevel prefnames to the list,
+    // i.e. add ldap_2.servers.<server-name> 
+    // but not ldap_2.servers.<server-name>.foo
+    for(i=0; i<prefCount.value; i++) {
+      // Assign the prefix ldap_2.servers.<server-name> to directoriesList
+      prefixLen = directoriesList[i].indexOf(".", parent.length);
+      if (prefixLen != -1) {
+        directoriesList[i] = directoriesList[i].substr(0, prefixLen);
+        if (directoriesList[i] != lastDirectory) {
+          // add the entry to childList 
+          // only if it is not added yet
+          lastDirectory = directoriesList[i];
+          childList[count] = directoriesList[i];
+          count++;
+        }
+      }
+    }
+  }
+
+  if (!count)
+  // no preferences with the prefix ldap_2.servers
+    throw Components.results.NS_ERROR_FAILURE;
+
+  aCount.value = count;
+  return childList;
 }
 
 /* migrate 4.x ldap prefs to mozilla format. 

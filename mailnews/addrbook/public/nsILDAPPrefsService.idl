@@ -26,6 +26,7 @@
 #include "nsISupports.idl"
 #include "nsILDAPURL.idl"
 #include "nsILDAPService.idl"
+#include "nsIPrefBranch.idl"
 
 /**
  * this service implements migrating ldap prefs from 4.x format
@@ -42,4 +43,20 @@ interface nsILDAPPrefsService: nsISupports {
      * to mozilla format (ldap_2.servers.directoryServer)
      */
     void migrate();
+
+    /**
+      * This will create an array with entries 
+      * "ldap_2.servers.<server-name>"
+      * Each entry in the array is unique. 
+      * 
+      * @param aPrefBranch  prefBranch object.
+      * @param aCount       Receives the number of elements in the array.
+      * @param aChildArray  Receives the array with "ldap_2.servers.<server-name>".
+      * 
+      * @return  NS_OK The preference list was successfully retrieved.
+      * @return  Other The preference(s) do not exist or an error occurred.
+      */
+     void getServerList(in nsIPrefBranch aPrefBranch, 
+                        out unsigned long aCount,
+                        [array, size_is(aCount), retval] out string aChildArray);
 };
