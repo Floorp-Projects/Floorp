@@ -111,7 +111,8 @@ MBool ElementExpr::matches(Node* node, Node* context, ContextState* cs) {
         //-- compare namespaces
         String nsURI;
         // use context to get namespace for testing against
-        cs->getNameSpaceURIFromPrefix(this->prefix, nsURI);
+        if (prefix.length())
+            cs->getNameSpaceURIFromPrefix(prefix, nsURI);
 
         String nsURI2;
         String prefix2;
