@@ -4993,7 +4993,7 @@ nsXULPrototypeElement::Deserialize(nsIObjectInputStream* aStream,
 
     // Read Node Info
     PRUint32 number;
-    rv |= aStream->Read32(&number);
+    rv = aStream->Read32(&number);
     mNodeInfo = do_QueryElementAt(aNodeInfos, number);
     if (!mNodeInfo)
         return NS_ERROR_UNEXPECTED;
@@ -5531,7 +5531,7 @@ nsXULPrototypeText::Deserialize(nsIObjectInputStream* aStream,
 
     // Write basic prototype data
     PRUnichar* str = nsnull;
-    rv |= aStream->ReadWStringZ(&str);
+    rv = aStream->ReadWStringZ(&str);
     mValue.Adopt(str);
     
     return rv;
