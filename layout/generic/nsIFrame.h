@@ -695,7 +695,10 @@ public:
    * Child frames are linked together in a singly-linked list
    */
   nsIFrame* GetNextSibling() const { return mNextSibling; }
-  void SetNextSibling(nsIFrame* aNextSibling) { mNextSibling = aNextSibling; }
+  void SetNextSibling(nsIFrame* aNextSibling) {
+    NS_ASSERTION(this != aNextSibling, "Creating a circular frame list, this is very bad."); 
+    mNextSibling = aNextSibling;
+  }
 
   /**
    * Paint is responsible for painting the frame. The aWhichLayer
