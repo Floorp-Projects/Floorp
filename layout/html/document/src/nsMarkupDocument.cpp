@@ -51,10 +51,11 @@ nsMarkupDocument::~nsMarkupDocument()
 extern NS_LAYOUT nsresult
   NS_NewPresShell(nsIPresShell** aInstancePtrResult);
 
-nsresult nsMarkupDocument::CreateShell(nsIPresContext* aContext,
-                                       nsIViewManager* aViewManager,
-                                       nsIStyleSet* aStyleSet,
-                                       nsIPresShell** aInstancePtrResult)
+NS_IMETHODIMP
+nsMarkupDocument::CreateShell(nsIPresContext* aContext,
+                              nsIViewManager* aViewManager,
+                              nsIStyleSet* aStyleSet,
+                              nsIPresShell** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {

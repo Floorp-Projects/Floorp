@@ -54,10 +54,10 @@ public:
   virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
   
   // XXX Temp hack: moved from nsDocument
-  virtual nsresult CreateShell(nsIPresContext* aContext,
-                               nsIViewManager* aViewManager,
-                               nsIStyleSet* aStyleSet,
-                               nsIPresShell** aInstancePtrResult);
+  NS_IMETHOD CreateShell(nsIPresContext* aContext,
+                         nsIViewManager* aViewManager,
+                         nsIStyleSet* aStyleSet,
+                         nsIPresShell** aInstancePtrResult);
 
 protected:
   virtual void CSSSelectorsToXIF(nsXIFConverter& aConverter, nsICSSStyleRule& aRule);
