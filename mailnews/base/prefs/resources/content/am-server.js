@@ -83,8 +83,7 @@ function onPreInit(account, accountValues)
   catch (ex) { }
   if (hideButton)
     document.getElementById("server.advancedbutton").setAttribute("hidden", "true");  
-  else 
-    document.getElementById("server.advancedbutton").removeAttribute("hidden");  
+  // otherwise let hideShowControls decide
 }
 
 function initServerType()
