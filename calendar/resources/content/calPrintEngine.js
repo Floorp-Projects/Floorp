@@ -365,6 +365,7 @@ function printDayView(currentDate) {
   mydateshow+=ArrayOfDayNames[currentDate.getDay()];
   mydateshow+=", ";
   mydateshow+=monthNames[currentDate.getMonth()]+" "+currentDate.getDate()+" "+currentDate.getFullYear();
+  gHtmlDocument.write("<table>");
   gHtmlDocument.write("<tr ><td colspan=2 align=center style='font-size:26px;font-weight:bold;border-bottom:1px solid black;'>");
   gHtmlDocument.write(mydateshow);
   gHtmlDocument.write("</td></tr>");
