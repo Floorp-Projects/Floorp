@@ -22,6 +22,7 @@
 #include "nsIComponentManager.h"
 #include "nsAppShellCIDs.h"
 #include "nsICmdLineService.h"
+#include "nsIFileLocator.h"
 #include "nsIGlobalHistory.h"
 
 /* extern the factory entry points for each component... */
@@ -36,6 +37,7 @@ static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kCmdLineServiceCID,  NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 static NS_DEFINE_IID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
+static NS_DEFINE_IID(kFileLocatorCID,     NS_FILELOCATOR_CID);
 static NS_DEFINE_IID(kGlobalHistoryCID, NS_GLOBALHISTORY_CID);
 
 /*
@@ -46,6 +48,7 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
 {
     nsComponentManager::RegisterComponent(kAppShellServiceCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kCmdLineServiceCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kProtocolHelperCID,  NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kXPConnectFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kGlobalHistoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
@@ -60,6 +63,7 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
 {
     nsComponentManager::UnregisterFactory(kAppShellServiceCID, path);
     nsComponentManager::UnregisterFactory(kCmdLineServiceCID,  path);
+    nsComponentManager::UnregisterFactory(kFileLocatorCID,  path);
     nsComponentManager::UnregisterFactory(kProtocolHelperCID,  path);
     nsComponentManager::UnregisterFactory(kXPConnectFactoryCID, path);
     nsComponentManager::UnregisterFactory(kGlobalHistoryCID, path);
@@ -99,6 +103,9 @@ NSGetFactory(nsISupports* serviceMgr,
   }
   else if (aClass.Equals(kCmdLineServiceCID)) {
     rv = NS_NewCmdLineServiceFactory(aFactory);
+  }
+  else if (aClass.Equals(kFileLocatorCID)) {
+    rv = NS_NewFileLocatorFactory(aFactory);
   }
   else if (aClass.Equals(kXPConnectFactoryCID)) {
     rv = NS_NewXPConnectFactoryFactory(aFactory);
