@@ -32,6 +32,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIBox.h"
 #include "nsISpaceManager.h"
+class nsBoxFrameImpl;
 
 class nsHTMLReflowCommand;
 
@@ -61,6 +62,7 @@ public:
   // nsIBox methods
   NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
   NS_IMETHOD Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& aIncrementalChild);
+ // NS_IMETHOD IsDebug(PRBool& aIsDebug);
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
 
@@ -111,7 +113,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-
+  virtual ~nsBoxFrame();
 protected:
     nsBoxFrame(PRUint32 aFlags = 0);
 
@@ -153,10 +155,7 @@ protected:
 
 private: 
   
-    // XXX for the moment we can only handle 100 children.
-    // Should use a dynamic array.
-    nsCOMPtr<nsISpaceManager> mSpaceManager; // We own this [OWNER].
-    PRUint32 mFlags;
+    nsBoxFrameImpl* mImpl;
 
 }; // class nsBoxFrame
 

@@ -789,7 +789,7 @@ nsGfxScrollFrame::ReflowScrollArea(   nsIPresContext&          aPresContext,
                               scrollAreaSize);
 
 
-      // reflow the scroll area
+      // -------- flow the scroll area -----------
       nsSize      scrollAreaReflowSize(scrollAreaSize.width, scrollAreaSize.height);
 
       PRBool resized = PR_FALSE;
@@ -801,93 +801,118 @@ nsGfxScrollFrame::ReflowScrollArea(   nsIPresContext&          aPresContext,
 
       // make sure we take into account any children outside our bounds
       CalculateChildTotalSize(mScrollAreaFrame, scrollAreaDesiredSize);
-  
-      // if we are shrink wrapping the height. 
-      if (NS_INTRINSICSIZE == scrollAreaSize.height) {
-            // the view port become the size that child requested.
-            scrollAreaSize.height = scrollAreaDesiredSize.height;
 
-            // if we were auto and have a vertical scrollbar remove it because we
-            // can have whatever size we wanted.
-            if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
-              RemoveVerticalScrollbar(sbSize, scrollAreaSize);
-            }
-      } else {
-        // if we are not shrink wrapping
 
-        // if we have 'auto' scrollbars
-        if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
-          // get the ara frame is the scrollarea
-          nsSize size;
-          GetScrolledContentSize(size);
+      // its possible that we will have to do this twice. Its a special case
+      // when a the scrollarea is exactly the same height as its content but
+      // the contents width is greater. We will need a horizontal scrollbar
+      // but the size of the scrollbar will cause the scrollarea to be shorter
+      // than the content. So we will need a vertical scrollbar. But that could
+      // require us to squeeze the content. So we would have to reflow. Basically
+      // we have to start over. Thats why this loop is here.
+      for (int i=0; i < 1; i++) {
 
-          PRBool  mustReflow = PR_FALSE;
+        // if we are shrink wrapping the height. 
+        if (NS_INTRINSICSIZE == scrollAreaSize.height) {
+              // the view port become the size that child requested.
+              scrollAreaSize.height = scrollAreaDesiredSize.height;
 
-          // There are two cases to consider
-            if (size.height <= scrollAreaSize.height) {
-              if (mHasVerticalScrollbar) {
-                // We left room for the vertical scrollbar, but it's not needed;
-                // remove it.
+              // if we were auto and have a vertical scrollbar remove it because we
+              // can have whatever size we wanted.
+              if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
                 RemoveVerticalScrollbar(sbSize, scrollAreaSize);
-                mustReflow = PR_TRUE;
               }
-            } else {
-              if (!mHasVerticalScrollbar) {
-                // We didn't leave room for the vertical scrollbar, but it turns
-                // out we needed it
-                AddVerticalScrollbar(sbSize, scrollAreaSize);
-                mustReflow = PR_TRUE;
-                aVscrollbarNeedsReflow = PR_TRUE;
-              }
-          }
-
-          // Go ahead and reflow the child a second time if we added or removed the scrollbar
-          if (mustReflow) {
-            nsSize          scrollAreaReflowSize(scrollAreaSize.width, scrollAreaSize.height);
-
-            PRBool resized = PR_FALSE;
-
-            ReflowFrame(aPresContext, scrollAreaDesiredSize, aReflowState, aStatus, mScrollAreaFrame, 
-                            scrollAreaReflowSize,
-                            scrollAreaReflowSize,
-                            resized,
-                            aIncrementalChild);
-          
-            CalculateChildTotalSize(mScrollAreaFrame, scrollAreaDesiredSize);
-
-            //scrollAreaSize.height = scrollAreaDesiredSize.height;
-          }
-        }
-      }
-      
-
-      // if we are shrink wrapping the scroll area height becomes whatever the child wanted
-        if (NS_INTRINSICSIZE == scrollAreaSize.width) {
-           scrollAreaSize.width = scrollAreaDesiredSize.width;
-
-           // if we have auto scrollbars the remove the horizontal scrollbar
-           if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
-               RemoveHorizontalScrollbar(sbSize, scrollAreaSize);
-        }
         } else {
-          // if scrollbars are auto
-          if ((NS_STYLE_OVERFLOW_SCROLL != aReflowState.mStyleDisplay->mOverflow))
-          {
+          // if we are not shrink wrapping
+
+          // if we have 'auto' scrollbars
+          if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
             // get the ara frame is the scrollarea
             nsSize size;
             GetScrolledContentSize(size);
 
-            // if the child is wider that the scroll area
-            // and we don't have a scrollbar add one.
-            if (size.width > scrollAreaSize.width) {         
-                 AddHorizontalScrollbar(sbSize, scrollAreaSize);
-            } else {
-                // if the area is smaller or equal to and we have a scrollbar then
-                // remove it.
-                RemoveHorizontalScrollbar(sbSize, scrollAreaSize);
+            PRBool  mustReflow = PR_FALSE;
+
+            // There are two cases to consider
+              if (size.height <= scrollAreaSize.height) {
+                if (mHasVerticalScrollbar) {
+                  // We left room for the vertical scrollbar, but it's not needed;
+                  // remove it.
+                  RemoveVerticalScrollbar(sbSize, scrollAreaSize);
+                  mustReflow = PR_TRUE;
+                }
+              } else {
+                if (!mHasVerticalScrollbar) {
+                  // We didn't leave room for the vertical scrollbar, but it turns
+                  // out we needed it
+                  AddVerticalScrollbar(sbSize, scrollAreaSize);
+                  mustReflow = PR_TRUE;
+                  aVscrollbarNeedsReflow = PR_TRUE;
+                }
+            }
+
+            // Go ahead and reflow the child a second time if we added or removed the scrollbar
+            if (mustReflow) {
+              nsSize          scrollAreaReflowSize(scrollAreaSize.width, scrollAreaSize.height);
+
+              PRBool resized = PR_FALSE;
+
+              ReflowFrame(aPresContext, scrollAreaDesiredSize, aReflowState, aStatus, mScrollAreaFrame, 
+                              scrollAreaReflowSize,
+                              scrollAreaReflowSize,
+                              resized,
+                              aIncrementalChild);
+          
+              CalculateChildTotalSize(mScrollAreaFrame, scrollAreaDesiredSize);
+
+              //scrollAreaSize.height = scrollAreaDesiredSize.height;
             }
           }
+        }
+      
+
+        // if we are shrink wrapping the scroll area height becomes whatever the child wanted
+          if (NS_INTRINSICSIZE == scrollAreaSize.width) {
+             scrollAreaSize.width = scrollAreaDesiredSize.width;
+
+             // if we have auto scrollbars the remove the horizontal scrollbar
+             if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
+                 RemoveHorizontalScrollbar(sbSize, scrollAreaSize);
+             }
+          } else {
+            // if scrollbars are auto
+            if ((NS_STYLE_OVERFLOW_SCROLL != aReflowState.mStyleDisplay->mOverflow))
+            {
+              // get the ara frame is the scrollarea
+              nsSize size;
+              GetScrolledContentSize(size);
+
+              // if the child is wider that the scroll area
+              // and we don't have a scrollbar add one.
+              if (size.width > scrollAreaSize.width) { 
+
+                if (!mHasHorizontalScrollbar) {
+                     AddHorizontalScrollbar(sbSize, scrollAreaSize);
+
+                     // if we added a horizonal scrollbar and we did not have a vertical
+                     // there is a chance that by adding the horizonal scrollbar we will
+                     // suddenly need a vertical scrollbar. Is a special case but its 
+                     // important.
+                     if (!mHasVerticalScrollbar && size.height > scrollAreaSize.height - sbSize.height)
+                        continue;
+                }
+              } else {
+                  // if the area is smaller or equal to and we have a scrollbar then
+                  // remove it.
+                  RemoveHorizontalScrollbar(sbSize, scrollAreaSize);
+              }
+            }
+        }
+
+        // always break out of the loop. Only continue if another scrollbar was added.
+        break;
       }
+
 
       // if the scroll area changed size
       if (oldScrollAreaSize != scrollAreaSize)
@@ -1115,35 +1140,38 @@ nsGfxScrollFrame::AttributeChanged(nsIDocument *aDocument,
                               nsIAtom*     aAttribute,
                               PRInt32      aHint) 
 {
-   nsCOMPtr<nsIContent> vcontent;
-   nsCOMPtr<nsIContent> hcontent;
-
-   mHScrollbarFrame->GetContent(getter_AddRefs(hcontent));
-   mVScrollbarFrame->GetContent(getter_AddRefs(vcontent));
-
-   if (hcontent.get() == aContent  || vcontent.get() == aContent)
+   if (mHScrollbarFrame && mVScrollbarFrame)
    {
-      nscoord x = 0;
-      nscoord y = 0;
+     nsCOMPtr<nsIContent> vcontent;
+     nsCOMPtr<nsIContent> hcontent;
 
-      nsString value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == hcontent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value))
-      {
-         PRInt32 error;
+     mHScrollbarFrame->GetContent(getter_AddRefs(hcontent));
+     mVScrollbarFrame->GetContent(getter_AddRefs(vcontent));
 
-         // convert it to an integer
-         x = value.ToInteger(&error);
-      }
+     if (hcontent.get() == aContent  || vcontent.get() == aContent)
+     {
+        nscoord x = 0;
+        nscoord y = 0;
 
-      if (NS_CONTENT_ATTR_HAS_VALUE == vcontent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value))
-      {
-         PRInt32 error;
+        nsString value;
+        if (NS_CONTENT_ATTR_HAS_VALUE == hcontent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value))
+        {
+           PRInt32 error;
 
-         // convert it to an integer
-         y = value.ToInteger(&error);
-      }
+           // convert it to an integer
+           x = value.ToInteger(&error);
+        }
 
-      ScrollbarChanged(x*mOnePixel, y*mOnePixel);
+        if (NS_CONTENT_ATTR_HAS_VALUE == vcontent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value))
+        {
+           PRInt32 error;
+
+           // convert it to an integer
+           y = value.ToInteger(&error);
+        }
+
+        ScrollbarChanged(x*mOnePixel, y*mOnePixel);
+     }
    }
 
    return NS_OK;
@@ -1154,8 +1182,8 @@ void
 nsGfxScrollFrame::ScrollbarChanged(nscoord aX, nscoord aY)
 {
   nsIScrollableView* scrollable = GetScrollableView();
-  scrollable->ScrollTo(aX,aY, PR_TRUE);
-  printf("scrolling to: %d, %d\n", aX, aY);
+  scrollable->ScrollTo(aX,aY, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+ // printf("scrolling to: %d, %d\n", aX, aY);
 }
 
 NS_IMETHODIMP

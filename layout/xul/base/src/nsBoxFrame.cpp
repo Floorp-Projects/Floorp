@@ -43,6 +43,35 @@
 #define CONSTANT float(0.0)
 #define DEBUG_REFLOW 0
 #define DEBUG_REDRAW 0
+#define DEBUG_SPRING_SIZE 8
+#define DEBUG_BORDER_SIZE 2
+#define COIL_SIZE 8
+
+class nsBoxFrameImpl
+{
+public:
+
+  void DrawHorizontalSpring( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord size, nscoord springSize);
+  void DrawVerticalSpring( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord size, nscoord springSize);
+  void DrawKnob( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord springSize);
+  void AddInDebugInset( nsIPresContext& aPresContext, PRBool aIsHorizontal, nsMargin& inset);
+
+    // XXX for the moment we can only handle 100 children.
+    // Should use a dynamic array.
+    nsCOMPtr<nsISpaceManager> mSpaceManager; // We own this [OWNER].
+    PRUint32 mFlags;
+
+  //  PRBool mIsDebug;
+};
+
+/*
+NS_IMETHODIMP
+nsBoxFrame::IsDebug(PRBool& aIsDebug)
+{
+  aIsDebug = mImpl->mIsDebug;
+  return NS_OK;
+}
+*/
 
 nsresult
 NS_NewBoxFrame ( nsIFrame** aNewFrame, PRUint32 aFlags )
@@ -62,9 +91,17 @@ NS_NewBoxFrame ( nsIFrame** aNewFrame, PRUint32 aFlags )
 
 nsBoxFrame::nsBoxFrame(PRUint32 aFlags)
 {
+  mImpl = new nsBoxFrameImpl();
+
   // if not otherwise specified boxes by default are horizontal.
   mHorizontal = PR_TRUE;
-  mFlags = aFlags;
+  mImpl->mFlags = aFlags;
+ // mImpl->mIsDebug = PR_FALSE;
+}
+
+nsBoxFrame::~nsBoxFrame()
+{
+  delete mImpl;
 }
 
 /**
@@ -88,12 +125,10 @@ nsBoxFrame::Init(nsIPresContext&  aPresContext,
     mHorizontal = PR_TRUE;
 
   nsSpaceManager* spaceManager = new nsSpaceManager(this);
-  mSpaceManager = spaceManager;
+  mImpl->mSpaceManager = spaceManager;
 
   return rv;
 }
-
-
 
 /** 
  * Looks at the given frame and sees if its redefined preferred, min, or max sizes
@@ -253,18 +288,39 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
 {
 
 #if DEBUG_REFLOW
-  if (NS_BLOCK_DOCUMENT_ROOT & mFlags) 
+  if (NS_BLOCK_DOCUMENT_ROOT & mImpl->mFlags) 
     printf("---------------- Begin Reflow ---------------\n");
 #endif
 
+  /*
+  // see if we are debug
+    mImpl->mIsDebug = PR_FALSE;
+    nsString value;
+
+    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::debug, value))
+    {
+      mImpl->mIsDebug = PR_TRUE;
+    } else {
+      // if our parent is debug we are too
+      nsIFrame* parent = nsnull;
+      GetParent(&parent);
+      if (parent) {
+        nsIBox* ibox;
+        if (NS_SUCCEEDED(parent->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox) {
+           ibox->IsDebug(mImpl->mIsDebug); 
+        }
+      }
+    } 
+    */
+
   // If we have a space manager, then set it in the reflow state
-  if (mSpaceManager) {
+  if (mImpl->mSpaceManager) {
     // Modify the reflow state and set the space manager
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
-    reflowState.mSpaceManager = mSpaceManager;
+    reflowState.mSpaceManager = mImpl->mSpaceManager;
 
     // Clear the spacemanager's regions.
-    mSpaceManager->ClearRegions();
+    mImpl->mSpaceManager->ClearRegions();
   }
 
   //--------------------------------------------------------------------
@@ -328,6 +384,8 @@ printf("\n");
   nsMargin inset(0,0,0,0);
   GetInset(inset);
 
+  mImpl->AddInDebugInset(aPresContext, mHorizontal, inset);
+
   rect.Deflate(inset);
 
   //-----------------------------------------------------------------------------------
@@ -357,16 +415,17 @@ printf("\n");
   //------------------------- Add our border and insets in ----------------------------
   //-----------------------------------------------------------------------------------
 
+  rect.Inflate(inset);
+
   if (aReflowState.mComputedWidth != NS_INTRINSICSIZE && rect.width < aReflowState.mComputedWidth)
     rect.width = aReflowState.mComputedWidth;
  
   if (aReflowState.mComputedHeight != NS_INTRINSICSIZE && rect.height < aReflowState.mComputedHeight)
     rect.height = aReflowState.mComputedHeight;
  
-  // the rect might have gotten bigger so recalc ourSize
-  rect.Inflate(inset);
   rect.Inflate(aReflowState.mComputedBorderPadding);
 
+  // the rect might have gotten bigger so recalc ourSize
   aDesiredSize.width = rect.width;
   aDesiredSize.height = rect.height;
 
@@ -380,9 +439,33 @@ printf("\n");
   damageArea.height = aDesiredSize.height;
   damageArea.width = aDesiredSize.width;
 
- // if ((NS_BLOCK_DOCUMENT_ROOT & mFlags) && !damageArea.IsEmpty()) {
- //   Invalidate(damageArea);
- // }
+  /*
+   if ((NS_BLOCK_DOCUMENT_ROOT & mImpl->mFlags)) {
+     printf("----- Reflow --------\n");
+     char* type;
+     switch(aReflowState.reason) {
+     case eReflowReason_Incremental:
+        type = "incremental";
+        break;
+     case eReflowReason_Initial:
+        type = "initial";
+        break;
+     case eReflowReason_Resize:
+        type = "resize";
+        break;
+     case eReflowReason_StyleChange:
+        type = "style change";
+        break;
+     default:
+        type = "unknown";
+        break;
+     }
+
+     printf("type=%s\n", type);
+     printf("calculated: width=%d, height=%d\n", aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+     printf("desired: width=%d, height=%d\n", aDesiredSize.width, aDesiredSize.height);
+   }
+   */
 #if 0
 ListTag(stdout); printf(": reflow done\n");
 #endif
@@ -623,12 +706,13 @@ nsBoxFrame::ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCal
 
 
 /*
-void CollapseChildren(nsIFrame* frame)
+void 
+nsBoxFrameImpl::CollapseChildren(nsIFrame* frame)
 {
-  nsIFrame* childFrame = mFrames.FirstChild(); 
   nscoord count = 0;
-  while (nsnull != childFrame) 
+  while (nsnull != frame) 
   {
+    nsRect rect(0,0,0,0);
     childFrame->SetRect(nsRect(0,0,0,0));
     // make the view really small as well
     nsIView* view = nsnull;
@@ -644,6 +728,7 @@ void CollapseChildren(nsIFrame* frame)
   }
 }
 */
+
 
 /**
  * Given the boxes rect. Set the x,y locations of all its children. Taking into account
@@ -739,7 +824,6 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
                      nsString& aReason)
 {
       aStatus = NS_FRAME_COMPLETE;
-
       nsReflowReason reason = aReflowState.reason;
       PRBool shouldReflow = PR_TRUE;
 
@@ -1322,7 +1406,9 @@ nsBoxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aR
   // can place around us. Toolbars use it to place extra control like grippies around things.
   nsMargin inset(0,0,0,0);
   GetInset(inset);
-  
+
+  mImpl->AddInDebugInset(aPresContext, mHorizontal, inset);
+
   nsSize in(inset.left+inset.right,inset.top+inset.bottom);
   aSize.minSize += in;
   aSize.prefSize += in;
@@ -1406,11 +1492,68 @@ nsBoxFrame :: Paint ( nsIPresContext& aPresContext,
   // if we are visible then tell our superclass to paint
   nsresult r = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        aWhichLayer);
+/*
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+
+    if (mImpl->mIsDebug) {
+      
+            const nsStyleSpacing* spacing;
+        nsresult rv = GetStyleData(eStyleStruct_Spacing,
+                       (const nsStyleStruct*&) spacing);
+
+        nsMargin border(0,0,0,0);
+        spacing->GetBorderPadding(border);
+  
+        float p2t;
+        aPresContext.GetScaledPixelsToTwips(&p2t);
+        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+        nscolor color;
+        if (mHorizontal) {
+          color = NS_RGB(0,0,255);
+        } else {
+          color = NS_RGB(255,0,0);
+        }
+        nscoord springSize = NSIntPixelsToTwips(DEBUG_SPRING_SIZE, p2t);
+        nscoord borderSize = NSIntPixelsToTwips(DEBUG_BORDER_SIZE, p2t);
+
+        aRenderingContext.SetColor(color);
+
+        int x = border.left;
+        int y = border.right;
+        aRenderingContext.FillRect(mRect.width - border.right - borderSize, 
+                                   border.top, 
+                                   borderSize, mRect.height - border.bottom - border.top);
+        aRenderingContext.FillRect(border.left, mRect.height - border.bottom - borderSize, mRect.width - border.left - border.right, borderSize);
+
+        if (mHorizontal) {
+
+          aRenderingContext.FillRect(border.left, border.top, mRect.width - border.left - border.right, springSize);
+          aRenderingContext.FillRect(border.left, border.right, borderSize, mRect.height - border.top - border.bottom);
+  
+          for (int i=0; i < mSpringCount; i++) {
+                nsSize& size = mSprings[i].calculatedSize;
+                mImpl->DrawHorizontalSpring(aPresContext, aRenderingContext, x, y, size.width, springSize);
+                x += size.width;
+          }
+
+        } else {
+          aRenderingContext.FillRect(border.left, border.right, springSize, mRect.height - border.top - border.bottom);
+          aRenderingContext.FillRect(border.left, border.top, mRect.width - border.left - border.right, borderSize);
+
+          for (int i=0; i < mSpringCount; i++) {
+                nsSize& size = mSprings[i].calculatedSize;
+                mImpl->DrawVerticalSpring(aPresContext, aRenderingContext, x, y, size.height, springSize);
+                y += size.height;
+          }
+        }
+    }
+  }
+  */
 
    // paint the draw area
   /*
 #if DEBUG_REDRAW
-  if (NS_BLOCK_DOCUMENT_ROOT & mFlags)  {
+  if (NS_BLOCK_DOCUMENT_ROOT & mImpl->mFlags)  {
      PRBool result = PR_FALSE;
      nsRect rect(0,0,0,0);
      aRenderingContext.GetClipRect(rect, result);
@@ -1422,8 +1565,121 @@ nsBoxFrame :: Paint ( nsIPresContext& aPresContext,
 #endif
 */
   return r;
+  }
+
+void 
+nsBoxFrameImpl::DrawHorizontalSpring( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord size, nscoord springSize)
+{
+        float p2t;
+        aPresContext.GetScaledPixelsToTwips(&p2t);
+        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+     // if we do draw the coils
+        int distance = 0;
+        int center = 0;
+        int offset = 0;
+        int coilSize = COIL_SIZE*onePixel;
+        int halfSpring = springSize/2;
+
+        distance = size;
+        center = y + halfSpring;
+        offset = x;
+
+        int coils = distance/coilSize;
+
+        int halfCoilSize = coilSize/2;
+
+        for (int i=0; i < coils; i++)
+        {
+               //aRenderingContext.SetColor(NS_RGB(0,0,0));
+               aRenderingContext.SetColor(NS_RGB(255,255,255));
+               aRenderingContext.DrawLine(offset, center+halfSpring, offset+halfCoilSize, center-halfSpring);
+               //aRenderingContext.SetColor(NS_RGB(255,255,255));
+               aRenderingContext.DrawLine(offset+halfCoilSize, center-halfSpring, offset+coilSize, center+halfSpring);
+
+               offset += coilSize;
+        }
+
+        aRenderingContext.SetColor(NS_RGB(255,255,255));
+        aRenderingContext.FillRect(x + size - springSize/2, y, springSize/2, springSize);
+        aRenderingContext.FillRect(x, y, springSize/2, springSize);
+
+        //DrawKnob(aPresContext, aRenderingContext, x + size - springSize, y, springSize);
+    }
+
+void 
+nsBoxFrameImpl::DrawVerticalSpring( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord size, nscoord springSize)
+{
+        float p2t;
+        aPresContext.GetScaledPixelsToTwips(&p2t);
+        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+       // if we do draw the coils
+        int distance = 0;
+        int center = 0;
+        int offset = 0;
+        int coilSize = COIL_SIZE*onePixel;
+        int halfSpring = springSize/2;
+
+        distance = size;
+        center = x + halfSpring;
+        offset = y;
+
+        int coils = distance/coilSize;
+
+        int halfCoilSize = coilSize/2;
+
+        for (int i=0; i < coils; i++)
+        {
+           aRenderingContext.SetColor(NS_RGB(255,255,255));
+           //aRenderingContext.SetColor(NS_RGB(0,0,0));
+           aRenderingContext.DrawLine(center+halfSpring, offset, center-halfSpring, offset+halfCoilSize);
+           //aRenderingContext.SetColor(NS_RGB(255,255,255));
+           aRenderingContext.DrawLine(center-halfSpring, offset+halfCoilSize, center+halfSpring, offset+coilSize);
+
+           offset += coilSize;
+        }
+
+       // DrawKnob(aPresContext, aRenderingContext, x, y + size - springSize, springSize);
+        aRenderingContext.SetColor(NS_RGB(255,255,255));
+        aRenderingContext.FillRect(x, y, springSize, springSize/2);
+        aRenderingContext.FillRect(x, y + size - springSize/2, springSize, springSize/2);
+    }
+
+void
+nsBoxFrameImpl::DrawKnob( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord springSize)
+{
+        float p2t;
+        aPresContext.GetScaledPixelsToTwips(&p2t);
+        nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+       //aRenderingContext.SetColor(NS_RGB(0,0,0));
+      // aRenderingContext.FillRect(x - 1*onePixel ,y - 1*onePixel, springSize, springSize);
+
+       aRenderingContext.SetColor(NS_RGB(255,255,255));
+       aRenderingContext.FillRect(x,y, springSize,springSize);
 }
-  
+
+void
+nsBoxFrameImpl::AddInDebugInset( nsIPresContext& aPresContext, PRBool aIsHorizontal, nsMargin& inset)
+{
+  /*
+  if (mIsDebug) {
+     float p2t;
+     aPresContext.GetScaledPixelsToTwips(&p2t);
+     nscoord spring = NSIntPixelsToTwips(DEBUG_SPRING_SIZE, p2t);
+     nscoord border = NSIntPixelsToTwips(DEBUG_BORDER_SIZE, p2t);
+
+     if (!aIsHorizontal)
+        inset.left += spring;
+     else
+        inset.top += spring;
+
+     inset.right += border;
+     inset.bottom += border;
+  }
+  */
+}
 
 NS_IMETHODIMP nsBoxFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {           
