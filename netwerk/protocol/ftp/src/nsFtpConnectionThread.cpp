@@ -2135,6 +2135,10 @@ nsFtpState::StopProcessing() {
     mPrompter = 0;
     mChannel = 0;
 
+#ifdef MOZ_NEW_CACHE
+    mCacheEntry = 0;
+#endif
+
     return NS_OK;
 }
 
