@@ -330,11 +330,9 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
                                     const nsReflowState& aReflowState,
                                     nsReflowStatus& aStatus)
 {
-  if (PR_TRUE==gsDebug) 
-    printf ("***table outer frame reflow \t\t%p\n", this);
   if (PR_TRUE==gsDebug)
-    printf("nsTableOuterFrame::Reflow : maxSize=%d,%d\n",
-           aReflowState.maxSize.width, aReflowState.maxSize.height);
+    printf("%p: nsTableOuterFrame::Reflow : maxSize=%d,%d\n",
+           this, aReflowState.maxSize.width, aReflowState.maxSize.height);
 
 #ifdef NS_DEBUG
   // replace with a check that does not assume linear placement of children
@@ -479,13 +477,13 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext* aPresContext,
   if (gsDebug==PR_TRUE) 
   {
     if (nsnull!=aDesiredSize.maxElementSize)
-      printf("Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
-              NS_FRAME_IS_COMPLETE(aStatus)? "Complete" : "Not Complete",
+      printf("%p: Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
+              this, NS_FRAME_IS_COMPLETE(aStatus)? "Complete" : "Not Complete",
               aDesiredSize.width, aDesiredSize.height, 
               aDesiredSize.maxElementSize->width, aDesiredSize.maxElementSize->height);
     else
-      printf("Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
-              NS_FRAME_IS_COMPLETE(aStatus)? "Complete" : "Not Complete",
+      printf("%p: Outer frame Reflow complete, returning %s with aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
+              this, NS_FRAME_IS_COMPLETE(aStatus)? "Complete" : "Not Complete",
               aDesiredSize.width, aDesiredSize.height);
   }
 

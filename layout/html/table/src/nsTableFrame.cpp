@@ -49,7 +49,7 @@
 static PRBool gsDebug = PR_FALSE;
 static PRBool gsDebugCLD = PR_FALSE;
 static PRBool gsTiming = PR_FALSE;
-static PRBool gsDebugMBP = PR_FALSE;
+static PRBool gsDebugNT = PR_FALSE;
 //#define NOISY
 //#define NOISY_FLOW
 //#ifdef NOISY_STYLE
@@ -57,7 +57,7 @@ static PRBool gsDebugMBP = PR_FALSE;
 static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebugCLD = PR_FALSE;
 static const PRBool gsTiming = PR_FALSE;
-static const PRBool gsDebugMBP = PR_FALSE;
+static const PRBool gsDebugNT = PR_FALSE;
 #endif
 
 #ifndef max
@@ -66,6 +66,8 @@ static const PRBool gsDebugMBP = PR_FALSE;
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
+
+const nsIID kTableFrameCID = NS_TABLEFRAME_CID;
 
 /* ----------- CellData ---------- */
 
@@ -1149,7 +1151,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   NS_ASSERTION(nsnull==mPrevInFlow, "illegal call, cannot call pass 1 on a continuing frame.");
   NS_ASSERTION(nsnull != mContent, "null content");
 
-  if (PR_TRUE==gsDebug) printf("nsTableFrame::ResizeReflow Pass1 for %p: maxSize=%d,%d\n",
+  if (PR_TRUE==gsDebugNT) printf("%p nsTableFrame::ResizeReflow Pass1: maxSize=%d,%d\n",
                                this, aReflowState.maxSize.width, aReflowState.maxSize.height);
   nsReflowStatus result = NS_FRAME_COMPLETE;
 
@@ -1227,9 +1229,9 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
       result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
       // Place the child since some of it's content fit in us.
-      if (gsDebug) {
-        printf ("reflow of row group returned desired=%d,%d, max-element=%d,%d\n",
-                kidSize.width, kidSize.height, kidMaxSize.width, kidMaxSize.height);
+      if (PR_TRUE==gsDebugNT) {
+        printf ("%p: reflow of row group returned desired=%d,%d, max-element=%d,%d\n",
+                this, kidSize.width, kidSize.height, kidMaxSize.width, kidMaxSize.height);
       }
       PRInt32 yCoord = y;
       if (NS_UNCONSTRAINEDSIZE!=yCoord)
@@ -1289,6 +1291,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
     if (gsDebug) printf("INNER: set last content offset to %d\n", GetLastContentOffset()); //@@@
   }
 
+  aDesiredSize.width = kidSize.width;
   mFirstPassValid = PR_TRUE;
 
   return result;
@@ -1305,8 +1308,8 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
   NS_PRECONDITION(aReflowState.frame == this, "bad reflow state");
   NS_PRECONDITION(aReflowState.parentReflowState->frame == mGeometricParent,
                   "bad parent reflow state");
-  if (gsDebug==PR_TRUE)
-    printf("nsTableFrame::ResizeReflow Pass2 %p: maxSize=%d,%d\n",
+  if (PR_TRUE==gsDebugNT)
+    printf("%p nsTableFrame::ResizeReflow Pass2: maxSize=%d,%d\n",
            this, aReflowState.maxSize.width, aReflowState.maxSize.height);
 
   nsReflowStatus result = NS_FRAME_COMPLETE;
@@ -1394,15 +1397,15 @@ nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
   // shrink wrap rows to height of tallest cell in that row
   ShrinkWrapChildren(aPresContext, aDesiredSize, aDesiredSize.maxElementSize);
 
-  if (gsDebug==PR_TRUE) 
+  if (gsDebugNT==PR_TRUE) 
   {
     if (nsnull!=aDesiredSize.maxElementSize)
-      printf("Inner table reflow complete, returning aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
-              aDesiredSize.width, aDesiredSize.height, 
+      printf("%p: Inner table reflow complete, returning aDesiredSize = %d,%d and aMaxElementSize=%d,%d\n",
+              this, aDesiredSize.width, aDesiredSize.height, 
               aDesiredSize.maxElementSize->width, aDesiredSize.maxElementSize->height);
     else
-      printf("Inner table reflow complete, returning aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
-              aDesiredSize.width, aDesiredSize.height);
+      printf("%p: Inner table reflow complete, returning aDesiredSize = %d,%d and NSNULL aMaxElementSize\n",
+              this, aDesiredSize.width, aDesiredSize.height);
   }
 
   // SEC: assign our real width and height based on this reflow step and return
@@ -1520,9 +1523,9 @@ void nsTableFrame::PlaceChild(nsIPresContext*    aPresContext,
  * @return  true if we successfully reflowed all the mapped children and false
  *            otherwise, e.g. we pushed children to the next in flow
  */
-PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
+PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
                                            InnerTableReflowState& aState,
-                                           nsSize*              aMaxElementSize)
+                                           nsSize*                aMaxElementSize)
 {
 #ifdef NS_DEBUG
   VerifyLastIsComplete();
@@ -1592,7 +1595,8 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
                                    eReflowReason_Resize);
       kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
-
+      if (nsnull!=desiredSize.maxElementSize)
+        desiredSize.maxElementSize->width = desiredSize.width;
       // Did the child fit?
       if ((kidFrame != mFirstChild) && (desiredSize.height > kidAvailSize.height))
       {
@@ -2162,17 +2166,19 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
       maxWidth = 0;
   }
 
-  if (gsDebug) printf ("  maxWidth=%d from aMaxSize=%d,%d\n", maxWidth, aMaxSize.width, aMaxSize.height);
+  if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT) 
+    printf ("%p: maxWidth=%d from aMaxSize=%d,%d\n", 
+            this, maxWidth, aMaxSize.width, aMaxSize.height);
 
   // based on the compatibility mode, create a table layout strategy
   if (nsnull==mTableLayoutStrategy)
   { // TODO:  build a different strategy based on the compatibility mode
-    mTableLayoutStrategy = new BasicTableLayoutStrategy(this);
+    mTableLayoutStrategy = new BasicTableLayoutStrategy(this, numCols);
   }
   mTableLayoutStrategy->BalanceColumnWidths(aPresContext, mStyleContext,
-                                            aReflowState,
-                                            maxWidth, numCols,
-                                            totalFixedWidth, minTableWidth, maxTableWidth,
+                                            aReflowState, maxWidth,
+                                            totalFixedWidth, 
+                                            minTableWidth, maxTableWidth,
                                             aMaxElementSize);
 
 }
@@ -2193,7 +2199,8 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
   for (PRInt32 i = 0; i<numCols; i++)
   {
     tableWidth += mColumnWidths[i];
-    if (gsDebug==PR_TRUE) printf (" += %d ", mColumnWidths[i]);
+    if (gsDebug==PR_TRUE) 
+      printf (" += %d ", mColumnWidths[i]);
   }
 
   // Compute the insets (sum of border and padding)
@@ -2207,10 +2214,10 @@ void nsTableFrame::SetTableWidth(nsIPresContext* aPresContext)
   tableWidth += (leftInset + rightInset);
   nsRect tableSize = mRect;
   tableSize.width = tableWidth;
-  if (gsDebug==PR_TRUE)
+  if (PR_TRUE==gsDebug  ||  PR_TRUE==gsDebugNT)
   {
-    printf ("setting table rect to %d, %d after adding insets %d, %d\n", 
-            tableSize.width, tableSize.height, rightInset, leftInset);
+    printf ("%p: setting table rect to %d, %d after adding insets %d, %d\n", 
+            this, tableSize.width, tableSize.height, rightInset, leftInset);
   }
   SetRect(tableSize);
 }
@@ -3066,6 +3073,21 @@ void nsTableFrame::GetColumnsByType(const nsStyleUnit aType,
 }
 
 
+NS_METHOD
+nsTableFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kTableFrameCID)) {
+    *aInstancePtr = (void*) (this);
+    return NS_OK;
+  }
+  return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+
 /* ---------- static methods ---------- */
 
 nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
@@ -3087,6 +3109,7 @@ nsresult nsTableFrame::NewFrame(nsIFrame** aInstancePtrResult,
 /* helper method for getting the width of the table's containing block */
 nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
 {
+//STEVES_WAY is out of synch, because it doesn't handle nested table case.
 #ifdef STEVES_WAY // from BasicTableLayoutStrategy::TableIsAutoWidth()
   // get the parent's width (available only from parent frames that claim they can provide it)
   // note that we start with our parent's parent (the outer table frame's parent)
@@ -3125,15 +3148,94 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsReflowState& aReflowState)
   // Walk up the reflow state chain until we find a block
   // frame. Our width is computed relative to there.
   const nsReflowState* rs = &aReflowState;
-  while (nsnull != rs) {
+  nsIFrame *childFrame=nsnull;
+  nsIFrame *grandchildFrame=nsnull;
+  nsIFrame *greatgrandchildFrame=nsnull;
+  while (nsnull != rs) 
+  {
+    // if it's a block, use its max width
     nsIFrame* block = nsnull;
     rs->frame->QueryInterface(kBlockFrameCID, (void**) &block);
-    if (nsnull != block) {
-      // We found the nearest containing block which defines what
-      // a percentage size is relative to. Use the width that it
-      // will reflow to as the basis for computing our width.
-      parentWidth = rs->maxSize.width;
+    if (nsnull != block) 
+    { // we found a block, see if it's really a table cell (which means we're a nested table)
+      PRBool skipThisBlock=PR_FALSE;
+      if (PR_TRUE==((nsContainerFrame*)block)->IsPseudoFrame())
+      {
+        const nsReflowState* parentRS = rs->parentReflowState;
+        if (nsnull!=parentRS)
+        {
+          parentRS = parentRS->parentReflowState;
+          if (nsnull!=parentRS)
+          {
+            nsIFrame* cell = nsnull;
+            parentRS->frame->QueryInterface(kTableCellFrameCID, (void**) &cell);
+            if (nsnull != cell) {
+              if (PR_TRUE==gsDebugNT)
+                printf("%p: found a block pframe %p in a cell, skipping it.\n", aReflowState.frame, block);
+              skipThisBlock = PR_TRUE;
+            }
+          }
+        }
+      }
+      // at this point, we know we have a block.  If we're sure it's not a table cell pframe,
+      // then we can use it
+      if (PR_FALSE==skipThisBlock)
+      {
+        parentWidth = rs->maxSize.width;
+        if (PR_TRUE==gsDebugNT)
+          printf("%p: found a block frame %p, returning width %d\n", 
+                 aReflowState.frame, block, parentWidth);
+        break;
+      }
+    }
+    // or if it's another table (we're nested) use its computed width
+    nsIFrame* table = nsnull;
+    rs->frame->QueryInterface(kTableFrameCID, (void**) &table);
+    if (nsnull != table) {
+      /* We found the nearest containing table (actually, the inner table).  
+         This defines what our percentage size is relative to. Use its desired width 
+         as the basis for computing our width.
+       */
+      // Compute and subtract out the insets (sum of border and padding) for the table
+      nsMargin borderPadding;
+      const nsStyleSpacing* spacing;
+      table->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+      nsSize tableSize;
+      table->GetSize(tableSize);
+      parentWidth = tableSize.width;
+      spacing->CalcBorderPaddingFor(rs->frame, borderPadding);
+      parentWidth -= (borderPadding.right + borderPadding.left);
+      // same for the row group
+      childFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+      spacing->CalcBorderPaddingFor(childFrame, borderPadding);
+      parentWidth -= (borderPadding.right + borderPadding.left);
+      // same for the row
+      grandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+      spacing->CalcBorderPaddingFor(grandchildFrame, borderPadding);
+      parentWidth -= (borderPadding.right + borderPadding.left);
+      // same for the cell
+      greatgrandchildFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+      spacing->CalcBorderPaddingFor(greatgrandchildFrame, borderPadding);
+      parentWidth -= (borderPadding.right + borderPadding.left);
+
+      if (PR_TRUE==gsDebugNT)
+        printf("%p: found a table frame %p, returning parentWidth %d from frame width %d\n", 
+               aReflowState.frame, table, parentWidth, tableSize.width);
       break;
+    }
+
+    if (nsnull==childFrame)
+      childFrame = rs->frame;
+    else if (nsnull==grandchildFrame)
+    {
+      grandchildFrame = childFrame;
+      childFrame = rs->frame;
+    }
+    else
+    {
+      greatgrandchildFrame = grandchildFrame;
+      grandchildFrame = childFrame;
+      childFrame = rs->frame;
     }
     rs = rs->parentReflowState;
   }
@@ -3163,6 +3265,8 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
     const nsStylePosition* tablePosition;
     parent->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)tablePosition));
     // end REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
+    nsMargin borderPadding;
+    const nsStyleSpacing* spacing;
     switch (tablePosition->mWidth.GetUnit()) {
     case eStyleUnit_Auto:         // specified auto width
     case eStyleUnit_Proportional: // illegal for table, so ignored
@@ -3174,16 +3278,28 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
       break;
 
     case eStyleUnit_Coord:
+      // XXX: subtract out this table frame's borderpadding?
       aSpecifiedTableWidth = tablePosition->mWidth.GetCoordValue();
+      aReflowState.frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+      spacing->CalcBorderPaddingFor(aReflowState.frame, borderPadding);
+      aSpecifiedTableWidth -= (borderPadding.right + borderPadding.left);
       result = PR_FALSE;
       break;
 
     case eStyleUnit_Percent:
       // set aSpecifiedTableWidth to be the given percent of the parent.
+      // first, get the effective parent width (parent width - insets)
       nscoord parentWidth = nsTableFrame::GetTableContainerWidth(aReflowState);
+      aReflowState.frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct *&)spacing);
+      spacing->CalcBorderPaddingFor(aReflowState.frame, borderPadding);
+      parentWidth -= (borderPadding.right + borderPadding.left);
+
+      // then set aSpecifiedTableWidth to the given percent of the computed parent width
       float percent = tablePosition->mWidth.GetPercentValue();
       aSpecifiedTableWidth = (PRInt32)(parentWidth*percent);
-      if (PR_TRUE==gsDebug) printf("  ** aSpecifiedTableWidth = %d\n", aSpecifiedTableWidth);
+      if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT) 
+        printf("%p: TableIsAutoWidth setting aSpecifiedTableWidth = %d with parentWidth = %d and percent = %f\n", 
+               aTableFrame, aSpecifiedTableWidth, parentWidth, percent);
       result = PR_FALSE;
       break;
     }

@@ -114,8 +114,7 @@ public:
 
   static void GetTableBorder(nsIHTMLContent* aContent,
                              nsIStyleContext* aContext,
-                             nsIPresContext* aPresContext,
-                             PRBool aForCell);
+                             nsIPresContext* aPresContext);
 
 protected:
   /** destructor 

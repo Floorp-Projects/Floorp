@@ -36,7 +36,6 @@ public:
     * @param aTableStyle      the resolved style for the table
     * @param aReflowState     the reflow state for the calling table frame
     * @param aMaxWidth        the width constraint
-    * @param aNumCols         the number of columns
     * @param aTotalFixedWidth [OUT] the computed fixed width of the table
     * @param aMinTableWidth   [OUT] the computed min width of the table
     * @param aMinTableWidth   [OUT] the computed max width of the table
@@ -46,7 +45,6 @@ public:
                                      nsIStyleContext *aTableStyle,
                                      const nsReflowState& aReflowState,
                                      nscoord aMaxWidth, 
-                                     PRInt32 aNumCols,
                                      nscoord &aTotalFixedWidth,
                                      nscoord &aMinTableWidth,
                                      nscoord &aMaxTableWidth,

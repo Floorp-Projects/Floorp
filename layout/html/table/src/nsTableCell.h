@@ -126,6 +126,9 @@ public:
   virtual void SetColIndex (int aColIndex);
 
 protected:
+
+  virtual void Init();
+
   virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
                                           nsHTMLValue& aValue,
                                           nsString& aResult) const;

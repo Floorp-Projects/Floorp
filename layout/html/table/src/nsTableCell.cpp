@@ -25,6 +25,13 @@
 #include "nsHTMLAtoms.h"
 #include "nsIPtr.h"
 
+// hack, remove when hack in nsTableCol constructor is removed
+static PRInt32 HACKcounter=0;
+static nsIAtom *HACKattribute=nsnull;
+#include "prprf.h"  // remove when nsTableCol constructor hack is removed
+// end hack code
+
+
 NS_DEF_PTR(nsIStyleContext);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -46,6 +53,7 @@ nsTableCell::nsTableCell(nsIAtom* aTag)
   mColIndex(0)
 {
   mImplicit = PR_FALSE;
+  Init();
 }
 
 nsTableCell::nsTableCell(PRBool aImplicit)
@@ -56,6 +64,7 @@ nsTableCell::nsTableCell(PRBool aImplicit)
   mColIndex(0)
 {
   mImplicit = aImplicit;
+  Init();
 }
 
 // nsTableContent checks aTag
@@ -69,6 +78,22 @@ nsTableCell::nsTableCell (nsIAtom* aTag, int aRowSpan, int aColSpan)
   NS_ASSERTION(0<aRowSpan, "bad row span");
   NS_ASSERTION(0<aColSpan, "bad col span");
   mImplicit = PR_FALSE;
+  Init();
+}
+
+void nsTableCell::Init()
+{
+  /* begin hack */
+  // temporary hack to get around style sheet optimization that folds all
+  // col style context into one, unless there is a unique HTML attribute set
+  char out[40];
+  PR_snprintf(out, 40, "%d", HACKcounter);
+  const nsString value(out);
+  if (nsnull==HACKattribute)
+    HACKattribute = NS_NewAtom("Steve's unbelievable hack attribute");
+  SetAttribute(HACKattribute, value);
+  HACKcounter++;
+  /* end hack */
 }
 
 nsTableCell::~nsTableCell()
@@ -330,8 +355,6 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     nscoord twips = nscoord(p2t * value.GetPixelValue());
     pos->mHeight.SetCoordValue(twips);
   }
-
-
 }
 
 nsContentAttr

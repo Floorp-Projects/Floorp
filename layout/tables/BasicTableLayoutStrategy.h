@@ -51,7 +51,11 @@ class BasicTableLayoutStrategy : public nsITableLayoutStrategy
 {
 public:
 
-  BasicTableLayoutStrategy(nsTableFrame *aFrame);
+  /** Public constructor.
+    * @paran aFrame           the table frame for which this delegate will do layout
+    * @param aNumCols         the total number of columns in the table    
+    */
+  BasicTableLayoutStrategy(nsTableFrame *aFrame, PRInt32 aNumCols);
 
   ~BasicTableLayoutStrategy();
 
@@ -59,7 +63,6 @@ public:
                                      nsIStyleContext *aTableStyle,
                                      const nsReflowState& aReflowState,
                                      nscoord aMaxWidth, 
-                                     nscoord aNumCols,
                                      nscoord &aTotalFixedWidth,
                                      nscoord &aMinTableWidth,
                                      nscoord &aMaxTableWidth,
@@ -71,7 +74,6 @@ public:
     *
     * @param aPresContext     the presentation context
     * @param aMaxWidth        the maximum width of the table
-    * @param aNumCols         the total number of columns in the table
     * @param aTableStyle      the resolved style for the table
     * @param aTotalFixedWidth out param, the sum of the fixed width columns
     * @param aMinTableWidth   out param, the min possible table width
@@ -83,7 +85,6 @@ public:
     */
   virtual PRBool AssignFixedColumnWidths(nsIPresContext* aPresContext, 
                                          nscoord   aMaxWidth, 
-                                         nscoord   aNumCols, 
                                          nscoord & aTotalFixedWidth,
                                          nscoord & aMinTableWidth, 
                                          nscoord & aMaxTableWidth);
@@ -171,6 +172,8 @@ public:
 
 protected:
   nsTableFrame * mTableFrame;
+  PRInt32        mCols;
+  PRInt32        mNumCols;
 
 };
 

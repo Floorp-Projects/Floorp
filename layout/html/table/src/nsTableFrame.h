@@ -36,6 +36,12 @@ struct InnerTableReflowState;
 struct nsStylePosition;
 struct nsStyleSpacing;
 
+/* ff1d2780-06d6-11d2-8f37-006008159b0c */
+#define NS_TABLEFRAME_CID \
+ {0xff1d2780, 0x06d6, 0x11d2, {0x8f, 0x37, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x0c}}
+
+extern const nsIID kTableFrameCID;
+
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
   * Used as a pseudo-frame within nsTableOuterFrame, 
   * it may also be used stand-alone as the top-level frame.
@@ -62,6 +68,9 @@ public:
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
                            nsIFrame*   aParent);
+
+  // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   /** helper method for getting the width of the table's containing block */
   static nscoord GetTableContainerWidth(const nsReflowState& aState);

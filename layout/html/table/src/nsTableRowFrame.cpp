@@ -33,6 +33,8 @@
 
 NS_DEF_PTR(nsIStyleContext);
 
+const nsIID kTableRowFrameCID = NS_TABLEROWFRAME_CID;
+
 #ifdef NS_DEBUG
 static PRBool gsDebug1 = PR_FALSE;
 static PRBool gsDebug2 = PR_FALSE;
@@ -429,7 +431,9 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     aState.x = kidMargin.left;
     PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
     for (PRInt32 colIndex=0; colIndex<cellColIndex; colIndex++)
-          aState.x += aState.tableFrame->GetColumnWidth(colIndex);
+    {
+      aState.x += aState.tableFrame->GetColumnWidth(colIndex);
+    }
     // Place the child after taking into account it's margin and attributes
     nscoord specifiedHeight = 0;
     nscoord cellHeight = desiredSize.height;
@@ -450,9 +454,20 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     }
     if (specifiedHeight>cellHeight)
       cellHeight = specifiedHeight;
-    nsRect kidRect (aState.x, kidMargin.top, desiredSize.width, cellHeight);
+
+    nscoord cellWidth = desiredSize.width;
+    // begin special Nav4 compatibility code
+    if (0==cellWidth)
+    {
+      cellWidth = aState.tableFrame->GetColumnWidth(cellColIndex);
+    }
+    // end special Nav4 compatibility code
+
+    nsRect kidRect (aState.x, kidMargin.top, cellWidth, cellHeight);
+
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize,
                kidMaxElementSize);
+
     if (kidMargin.bottom < 0) 
     {
       aState.prevMaxNegBottomMargin = -kidMargin.bottom;
@@ -1193,6 +1208,19 @@ nsresult nsTableRowFrame::NewFrame( nsIFrame** aInstancePtrResult,
   return NS_OK;
 }
 
+NS_METHOD
+nsTableRowFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kTableRowFrameCID)) {
+    *aInstancePtr = (void*) (this);
+    return NS_OK;
+  }
+  return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
+}
 
 // For Debugging ONLY
 NS_METHOD nsTableRowFrame::MoveTo(nscoord aX, nscoord aY)

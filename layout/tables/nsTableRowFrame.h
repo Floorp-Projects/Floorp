@@ -25,6 +25,12 @@ class  nsTableFrame;
 class  nsTableCellFrame;
 struct RowReflowState;
 
+/* e8417220-070b-11d2-8f37-006008159b0c */
+#define NS_TABLEROWFRAME_CID \
+ {0xe8417220, 0x070b, 0x11d2, {0x8f, 0x37, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x0c}}
+
+extern const nsIID kTableRowFrameCID;
+
 /**
  * nsTableRowFrame is the frame that maps table rows 
  * (HTML tag TR). This class cannot be reused
@@ -53,6 +59,9 @@ public:
   static nsresult NewFrame(nsIFrame** aInstancePtrResult,
                            nsIContent* aContent,
                            nsIFrame*   aParent);
+
+  // nsISupports
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext&      aPresContext,
