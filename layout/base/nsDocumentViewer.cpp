@@ -4449,6 +4449,12 @@ nsresult rv;
           mPrt->mPrintVM->SetRootView(mPrt->mPrintView);
           mPrt->mPrintPS->Init(mDocument,mPrt->mPrintPC,mPrt->mPrintVM,mPrt->mPrintSS);
 
+          // Compatability mode must be set in the mPrintPC or the document
+          // will be printed in "Standard" mode even if it was a "Quirks" doc
+          nsCompatibility mode;
+          mPresContext->GetCompatibilityMode(&mode);
+          mPrt->mPrintPC->SetCompatibilityMode(mode);
+
           mPrt->mPrintPS->InitialReflow(width,height);
 
 #ifdef DEBUG_dcone
