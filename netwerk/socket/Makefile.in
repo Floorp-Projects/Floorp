@@ -26,11 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= base ssl
-
-ifdef ENABLE_TESTS
-DIRS            += tests
-endif
+DIRS		= base
 
 include $(topsrcdir)/config/rules.mk
 
