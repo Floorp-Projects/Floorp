@@ -17,7 +17,7 @@
   <RDF:Description about="urn:mozilla:package:transformiix"
         chrome:displayName="Transformiix"
         chrome:author="Peter Van der Beken"
-        chrome:name="Transformiix">
+        chrome:name="transformiix">
   </RDF:Description>
 
   <!-- locale information -->
