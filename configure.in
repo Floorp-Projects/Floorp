@@ -156,6 +156,10 @@ alpha*-*-osf*)
         DSO_CFLAGS=
     fi ;;
 
+*-bsdi*)
+    DSO_CFLAGS=''
+    ;;
+
 *-freebsd*)
     if test `test -x /usr/bin/objformat && /usr/bin/objformat || echo aout` = "elf"; then
         DLL_SUFFIX="so"
