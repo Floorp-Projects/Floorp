@@ -24,6 +24,9 @@
 #ifdef WIN32
 #include <windows.h>
 #endif
+#ifdef OS2
+#include <os2.h>
+#endif
 
 #define NSPIPE2
 
@@ -291,9 +294,18 @@ main(int argc, char* argv[])
 #ifdef XP_MAC
     /* Mac stuff is missing here! */
 #else
+#ifdef XP_OS2
+    QMSG qmsg;
+
+    if (WinGetMsg(0, &qmsg, 0, 0, 0))
+      WinDispatchMsg(0, &qmsg);
+    else
+      gKeepRunning = FALSE;
+#else
     PLEvent *gEvent;
     rv = gEventQ->GetEvent(&gEvent);
     rv = gEventQ->HandleEvent(gEvent);
+#endif
 #endif
 #endif
   }

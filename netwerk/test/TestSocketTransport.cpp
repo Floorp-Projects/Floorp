@@ -25,6 +25,9 @@
 //#define USE_TIMERS  // Only use nsITimer on Windows (for now...)
 #include <windows.h>
 #endif
+#ifdef XP_OS2
+#include <os2.h>
+#endif
 
 #include "nspr.h"
 #ifdef XP_MAC
@@ -91,6 +94,13 @@ void Pump_PLEvents(nsIEventQueueService * eventQService)
     } else {
       gKeepRunning = FALSE;
     }
+#elif defined(XP_OS2)
+    QMSG qmsg;
+
+    if (WinGetMsg(0, &qmsg, 0, 0, 0))
+      WinDispatchMsg(0, &qmsg);
+    else
+      gKeepRunning = FALSE;
 #else
     nsresult rv;  
     PLEvent *gEvent;

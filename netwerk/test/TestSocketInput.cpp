@@ -24,6 +24,9 @@
 #ifdef WIN32
 #include <windows.h>
 #endif
+#ifdef XP_OS2
+#include <os2.h>
+#endif
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
@@ -181,10 +184,20 @@ main(int argc, char* argv[])
 #else
 #ifdef XP_MAC
     /* Mac stuff is missing here! */
+
+#else
+#ifdef XP_OS2
+    QMSG qmsg;
+
+    if (WinGetMsg(0, &qmsg, 0, 0, 0))
+      WinDispatchMsg(0, &qmsg);
+    else
+      gKeepRunning = FALSE;
 #else
     PLEvent *gEvent;
     rv = eventQ->GetEvent(&gEvent);
     rv = eventQ->HandleEvent(gEvent);
+#endif
 #endif
 #endif
   }

@@ -31,7 +31,7 @@
 #include <OSUtils.h>
 #include <OpenTransport.h>
 #include <OpenTptInternet.h>
-#elif defined (XP_PC)
+#elif defined (XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #include <Winsock2.h>
 #endif
@@ -89,7 +89,7 @@ protected:
 #endif /* TARGET_CARBON */
 #endif /* XP_MAC */
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
     PRUint32   AllocMsgID(void);
     void       FreeMsgID(PRUint32 msgID);
 

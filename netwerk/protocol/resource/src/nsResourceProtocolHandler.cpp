@@ -32,7 +32,7 @@
 #include "prenv.h"
 #include "nsSpecialSystemDirectory.h"
 
-#ifdef XP_PC
+#if defined (XP_PC) && !defined (XP_OS2)
 #include <windows.h>
 static HINSTANCE g_hInst = NULL;
 #endif

@@ -41,7 +41,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 // Platform specific defines and includes
 ////////////////////////////////////////////////////////////////////////////////
 // PC
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
 #define WM_DNS_SHUTDOWN         (WM_USER + 200)
 #endif /* XP_PC */
 
@@ -110,7 +110,7 @@ protected:
     nsInetHostInfo              mInetHostInfo;
 #endif
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
     friend static LRESULT CALLBACK nsDNSEventProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HANDLE                      mLookupHandle;
     PRUint32                    mMsgID;
@@ -163,7 +163,7 @@ nsDNSLookup::nsDNSLookup(nsISupports * clientContext, const char * hostName, nsI
     PL_strcpy(mHostName, hostName);
     mContext  = clientContext;
     mListener = listener;
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
     mMsgID    = 0;
 #endif
 
@@ -288,7 +288,7 @@ nsDNSLookup::InitiateDNSLookup(void)
         rv = NS_ERROR_UNEXPECTED;
 #endif /* XP_MAC */
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
     mMsgID = nsDNSService::gService->AllocMsgID();
     if (mMsgID == 0)
         return NS_ERROR_UNEXPECTED;
@@ -354,7 +354,7 @@ pascal void  nsDnsServiceNotifierRoutine(void * contextPtr, OTEventCode code, OT
 }
 #endif /* XP_MAC */
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
 
 static LRESULT CALLBACK
 nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -448,7 +448,7 @@ nsDNSService::nsDNSService()
 #endif /* TARGET_CARBON */
 #endif /* defined(XP_MAC) */
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
 	int i;
 	for (i=0; i<4; i++)
 		mMsgIDBitVector[i] = 0;
@@ -589,7 +589,7 @@ nsDNSService::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
 nsresult
 nsDNSService::InitDNSThread(void)
 {
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
     WNDCLASS    wc;
     char *      windowClass = "Mozilla:DNSWindowClass";
 
@@ -624,7 +624,7 @@ nsDNSService::InitDNSThread(void)
 }
 
 
-#if defined(XP_PC)
+#if defined(XP_PC)  && !defined(XP_OS2)
 
 PRUint32
 nsDNSService::AllocMsgID(void)
@@ -676,7 +676,7 @@ nsDNSService::Run(void)
 {
     nsresult            rv = NS_OK;
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
     MSG msg;
     
     InitDNSThread();
@@ -836,7 +836,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
     // save on outstanding lookup queue
     PR_Lock(mThreadLock);
     mCompletionQueue.AppendElement(lookup);
@@ -848,7 +848,7 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     // initiate async lookup
     rv = lookup->InitiateDNSLookup();
     if (rv != NS_OK) {
-#if defined(XP_PC)
+#if defined(XP_PC) && !defined(XP_OS2)
         PR_Lock(mThreadLock);
         mCompletionQueue.RemoveElement(lookup);
         PR_Unlock(mThreadLock);
@@ -886,7 +886,7 @@ nsDNSService::Shutdown()
 //        mThread = nsnull;
     }
 
-#elif defined(XP_PC)
+#elif defined(XP_PC) && !defined(XP_OS2)
     SendMessage(mDNSWindow, WM_DNS_SHUTDOWN, 0, 0);
     if (mThread) {
         rv = mThread->Join();
