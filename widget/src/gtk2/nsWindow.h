@@ -273,7 +273,7 @@ private:
     void               GetToplevelWidget(GtkWidget **aWidget);
     void               GetContainerWindow(nsWindow  **aWindow);
     void              *SetupPluginPort(void);
-    nsresult           SetWindowIcon(nsCString &aPath);
+    nsresult           SetWindowIconList(const nsCStringArray &aIconList);
     void               SetDefaultIcon(void);
 
     GtkWidget          *mShell;
