@@ -382,7 +382,13 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsWebShell::SetupNewViewer(nsIContentViewer* aViewer)
 {
+   NS_ENSURE_SUCCESS(FireUnloadEvent(), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(nsDocShell::SetupNewViewer(aViewer), NS_ERROR_FAILURE);
+
+   // Set mFiredUnloadEvent = PR_FALSE so that the unload handler for the
+   // *new* document will fire.
+   mFiredUnloadEvent = PR_FALSE;
+
     // If the history state has been set by session history,
     // set it on the pres shell now that we have a content
     // viewer.
@@ -886,11 +892,6 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
    if(loader == mDocLoader)
       {
-      //fire unload event to old doc
-      rv = FireUnloadEvent();
-      //reset mFiredUnloadEvent for the new doc
-      mFiredUnloadEvent = PR_FALSE;
-
       nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
 
       if(!mDocLoaderObserver && mParent)
