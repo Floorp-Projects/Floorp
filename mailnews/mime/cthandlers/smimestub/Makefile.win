@@ -48,7 +48,7 @@ REQUIRES = \
 #	          $(NULL)
 
 
-DEFINES= -DEBUG_rhp -D_IMPL_NS_HTML 
+DEFINES= -D_IMPL_NS_HTML 
 
 #//------------------------------------------------------------------------
 #// 
