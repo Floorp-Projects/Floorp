@@ -37,8 +37,8 @@ EXPORTS = \
 	nsIJavaDOM.h 
 
 LINCS= \
-	-I..\..\..\jdk\include \
-	-I..\..\..\jdk\include\win32
+	-I$(JAVAHOME)\include \
+	-I$(JAVAHOME)\include\win32
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = javadom
@@ -50,9 +50,8 @@ LCFLAGS = \
  $(NULL)
 
 LLIBS=	\
-	..\..\..\jdk\lib\jvm.lib \
+	$(JAVAHOME)\lib\jvm.lib \
 	$(DIST)\lib\xpcom.lib \
-	$(DIST)\lib\raptorgfxwin.lib \
 	$(DIST)\lib\img32$(VERSION_NUMBER).lib \
 	$(DIST)\lib\util.lib \
 	$(DIST)\lib\plc3.lib \

@@ -85,7 +85,6 @@ LCFLAGS = \
 # These are the libraries we need to link with to create the dll
 LLIBS= \
  $(DIST)\lib\xpcom.lib \
- $(DIST)\lib\raptorgfxwin.lib \
  $(DIST)\lib\img32$(VERSION_NUMBER).lib \
  $(DIST)\lib\util.lib \
  $(DIST)\lib\plc3.lib \

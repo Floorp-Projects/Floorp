@@ -23,8 +23,8 @@ Inc. All Rights Reserved.
 
 class nsISupports;
 class nsIDOMNode;
-class PRLogModuleInfo;
-class PRLock;
+struct PRLogModuleInfo;
+struct PRLock;
 
 class JavaDOMGlobals {
 

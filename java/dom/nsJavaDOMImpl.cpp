@@ -640,7 +640,7 @@ static char* strip_whitespace(const PRUnichar* input, int length)
     if ((pc == ' ' || pc == '\n' || pc == '\t') &&
 	(c == ' ' || c == '\n' || c == '\t'))
       continue;
-    *op++ = c;
+    *op++ = (char)c;
     pc = c;
   }
   *op++ = 0;
