@@ -335,10 +335,10 @@ nsBlockFrame::VerifyTree() const
     return rv;
   }
   rv = VerifyLines(PR_TRUE);
-#else
-  rv = NS_OK;
-#endif
   return rv;
+#else
+  return NS_OK;
+#endif
 }
 
 #ifdef NS_DEBUG
