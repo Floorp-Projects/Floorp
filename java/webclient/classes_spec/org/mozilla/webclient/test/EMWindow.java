@@ -57,7 +57,7 @@ import java.io.FileInputStream;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.28 2001/05/08 20:54:12 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.29 2001/05/08 21:57:53 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -94,6 +94,7 @@ private UniversalDialog           uniDialog = null;
     private HistoryActionListener historyActionListener = null;
     private Menu                bookmarksMenu;
     private Label          statusLabel;
+    private Label          urlStatusLabel;
     private String currentURL;
 
   private Document       currentDocument = null;
@@ -233,10 +234,18 @@ private UniversalDialog           uniDialog = null;
         statusPanel = new Panel();
         statusPanel.setLayout(new BorderLayout());
 
-        // create and add the statusLabel
+        // create and add the statusLabel and the urlStatusLabel
         statusLabel = new Label("", Label.LEFT);
         statusLabel.setBackground(Color.lightGray);
-        statusPanel.add(statusLabel, BorderLayout.CENTER);
+        urlStatusLabel = new Label("", Label.LEFT);
+        urlStatusLabel.setBackground(Color.lightGray);
+
+        Panel tPanel = new Panel();
+        tPanel.setLayout(new BorderLayout());
+        tPanel.add(statusLabel, BorderLayout.NORTH);
+        tPanel.add(urlStatusLabel, BorderLayout.SOUTH);
+        
+        statusPanel.add(tPanel, BorderLayout.CENTER);
 
 		// Create the browser
         try {
@@ -663,6 +672,7 @@ public void eventDispatched(WebclientEvent event)
             forwardMenuItem.setEnabled(history.canForward());
             populateHistoryMenu();
             statusLabel.setText("Done.");
+            urlStatusLabel.setText("");
             currentDocument = currentPage.getDOM();
             // add the new document to the domViewer
             if (null != currentDocument && null != domViewer) {
@@ -677,6 +687,14 @@ public void eventDispatched(WebclientEvent event)
         case ((int) DocumentLoadEvent.STATUS_URL_LOAD_EVENT_MASK):
             status = "Status: " + (String) event.getEventData();
             statusLabel.setText(status);
+            break;
+        case ((int) DocumentLoadEvent.START_URL_LOAD_EVENT_MASK):
+            status = (String) event.getEventData();
+            urlStatusLabel.setText("startURL: " + status);
+            break;
+        case ((int) DocumentLoadEvent.END_URL_LOAD_EVENT_MASK):
+            status = (String) event.getEventData();
+            urlStatusLabel.setText(" endURL: " + status);
             break;
         }
     }

@@ -177,8 +177,9 @@ void JNICALL addMouseEventDataToProperties(nsIDOMEvent *aMouseEvent);
  */ 
 
 nsresult JNICALL doStartDocumentLoad(const PRUnichar *documentName);
-  //nsresult JNICALL doStartUrlLoad(const PRUnichar *documentName);
 nsresult JNICALL doEndDocumentLoad(nsIWebProgress *aWebProgress);
+nsresult JNICALL doStartURLLoad(const PRUnichar *documentName);
+nsresult JNICALL doEndURLLoad(const PRUnichar *documentName);
 
 static  nsresult JNICALL takeActionOnNode(nsCOMPtr<nsIDOMNode> curNode, 
                                           void *yourObject);

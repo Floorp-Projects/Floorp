@@ -413,11 +413,15 @@ NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress,
     nsXPIDLString name;
     nsCOMPtr<nsIDOMWindow> domWin;
     nsresult rv;
-    
+
+    if (NS_FAILED(rv = aRequest->GetName(getter_Copies(name)))) {
+        return rv;
+    }
+
+    // 
+    // document states
+    //
     if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_DOCUMENT)) {
-        if (NS_FAILED(rv = aRequest->GetName(getter_Copies(name)))) {
-            return rv;
-        }
         if (NS_FAILED(rv =aWebProgress->GetDOMWindow(getter_AddRefs(domWin)))||
             !domWin) {
             return rv;
@@ -428,6 +432,15 @@ NS_IMETHODIMP CBrowserContainer::OnStateChange(nsIWebProgress *aWebProgress,
     }
     if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_DOCUMENT)) {
         doEndDocumentLoad(aWebProgress);
+    }
+    //
+    // request states
+    //
+    if ((aStateFlags & STATE_START) && (aStateFlags & STATE_IS_REQUEST)) {
+        doStartURLLoad(name.get());
+    }
+    if ((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_REQUEST)) {
+        doEndURLLoad(name.get());
     }
     if (aStateFlags & STATE_REDIRECTING) {
         printf("debug: edburns: STATE_REDIRECTING\n");
@@ -645,6 +658,72 @@ CBrowserContainer::doEndDocumentLoad(nsIWebProgress *aWebProgress)
 
 	return NS_OK; 
 } 
+
+nsresult JNICALL
+CBrowserContainer::doStartURLLoad(const PRUnichar *aDocumentName)
+{
+	//NOTE: This appears to get fired once for each individual item on a page.
+    if (!mDocTarget) {
+        return NS_OK;
+    }
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 4, 
+               ("CBrowserContainer: OnStartURLLoad\n"));
+    }
+#endif
+    nsAutoString nameAutoStr(aDocumentName);
+    jstring nameJStr = ::util_NewString(env, (const jchar *) 
+                                             nameAutoStr.GetUnicode(), 
+                                             nameAutoStr.Length());
+    
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
+                         DocumentLoader_maskValues[START_URL_LOAD_EVENT_MASK], 
+                         nameJStr);
+
+    if (nameJStr) {
+        ::util_DeleteString(mInitContext->env, nameJStr);
+    }
+    
+	return NS_OK; 
+}
+
+nsresult JNICALL
+CBrowserContainer::doEndURLLoad(const PRUnichar *aDocumentName)
+{
+	//NOTE: This appears to get fired once for each individual item on a page.
+    if (!mDocTarget) {
+        return NS_OK;
+    }
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+
+#if DEBUG_RAPTOR_CANVAS
+    if (prLogModuleInfo) {
+        PR_LOG(prLogModuleInfo, 4, 
+               ("CBrowserContainer: OnStartURLLoad\n"));
+    }
+#endif
+    nsAutoString nameAutoStr(aDocumentName);
+    jstring nameJStr = ::util_NewString(env, (const jchar *) 
+                                             nameAutoStr.GetUnicode(), 
+                                             nameAutoStr.Length());
+    
+    util_SendEventToJava(mInitContext->env, 
+                         mInitContext->nativeEventThread, mDocTarget, 
+                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
+                         DocumentLoader_maskValues[END_URL_LOAD_EVENT_MASK], 
+                         nameJStr);
+
+    if (nameJStr) {
+        ::util_DeleteString(mInitContext->env, nameJStr);
+    }
+    
+	return NS_OK; 
+}
 
 
 
@@ -1018,24 +1097,6 @@ NS_IMETHODIMP
 CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, 
                                   nsIRequest* aRequest)
 { 
-	//NOTE: This appears to get fired once for each individual item on a page.
-    if (!mDocTarget) {
-        return NS_OK;
-    }
-#if DEBUG_RAPTOR_CANVAS
-    if (prLogModuleInfo) {
-        PR_LOG(prLogModuleInfo, 4, 
-               ("CBrowserContainer: OnStartURLLoad\n"));
-    }
-#endif
-
-    util_SendEventToJava(mInitContext->env, 
-                         mInitContext->nativeEventThread, mDocTarget, 
-                         DOCUMENT_LOAD_LISTENER_CLASSNAME,
-                         DocumentLoader_maskValues[START_URL_LOAD_EVENT_MASK], 
-                         nsnull);
-    
-	return NS_OK; 
 } 
 
 NS_IMETHODIMP
