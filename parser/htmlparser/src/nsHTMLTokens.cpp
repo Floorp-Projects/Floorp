@@ -520,6 +520,8 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
  //target endtag, or the start of another comment. 
 
   static nsAutoString theWhitespace2("\b\t ");
+  static nsAutoString theTerminals("\"\'<");
+
   PRInt32 termStrLen=aTerminalString.Length();
   while((!done) && (NS_OK==result)) { 
     result=aScanner.GetChar(aChar); 
@@ -543,6 +545,13 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
         result=aScanner.ReadUntil(temp,kGreaterThan,PR_TRUE); 
       } 
     } 
+    else if((NS_OK==result) && ((kQuote==aChar) || kApostrophe==aChar)) {
+      static nsAutoString theEndings("\n\"\'");
+      temp += aChar;
+      result=aScanner.ReadUntil(temp,theEndings,PR_TRUE,PR_FALSE);
+      result=aScanner.GetChar(aChar);
+      if(result==NS_OK) temp += aChar; // consume the character that stopped the scan
+    }
     else if(0<=theWhitespace2.BinarySearch(aChar)) { 
       static CWhitespaceToken theWS; 
       result=theWS.Consume(aChar,aScanner); 
@@ -552,7 +561,7 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
     } 
     else { 
       temp+=aChar; 
-      result=aScanner.ReadUntil(temp,kLessThan,PR_FALSE); 
+      result=aScanner.ReadUntil(temp,theTerminals,PR_TRUE,PR_FALSE); 
     } 
     temp.Right(theRight,termStrLen+10); //first, get a wad of chars from the temp string
     rpos=theRight.RFind('<');   //now scan for the '<'
@@ -1202,6 +1211,14 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
                     else if(kGreaterThan==aChar){      
                       result=aScanner.PutBack(aChar);
                     }
+                    else if(kAmpersand==aChar) {
+                      mTextValue=aChar;
+                      result=aScanner.GetChar(aChar);
+                      if(NS_OK==result) {
+                        mTextValue += aChar;
+                        result=CEntityToken::ConsumeEntity(aChar,mTextValue,aScanner);
+                      }
+                    }
                     else {
                       mTextValue=aChar;       //it's an alphanum attribute...
                       result=ConsumeAttributeValueText(aChar,mTextValue,aScanner);
@@ -1400,18 +1417,23 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,nsScanner&
   PRUnichar theChar=0;
   PRInt32 result=aScanner.Peek(theChar);
   if(NS_OK==result) {
-    if(kLeftBrace==theChar) {
+    if(kLeftBrace==aChar) {
       //you're consuming a script entity...
-      static nsAutoString terminals("}>");
-      result=aScanner.ReadUntil(aString,terminals,PR_FALSE,PR_FALSE);
+      PRInt32 rightBraceCount = 0;
+      PRInt32 leftBraceCount  = 1;
+      while(leftBraceCount!=rightBraceCount) {
+        result=aScanner.GetChar(aChar);
+        if(NS_OK!=result) return result;
+        aString += aChar;
+        if(aChar==kRightBrace)
+          rightBraceCount++;
+        else if(aChar==kLeftBrace)
+          leftBraceCount++;
+      }
+      result=aScanner.ReadUntil(aString,kSemicolon,PR_FALSE);
       if(NS_OK==result) {
-        result=aScanner.Peek(theChar);
-        if(NS_OK==result) {
-          if(kRightBrace==theChar) {
-            aString+=kRightBrace;   //append rightbrace, and...
-            result=aScanner.GetChar(theChar);//yank the closing right-brace
-          }
-        }
+        result=aScanner.GetChar(aChar); // This character should be a semicolon
+        if(NS_OK==result) aString += aChar;
       }
     } //if
     else {
