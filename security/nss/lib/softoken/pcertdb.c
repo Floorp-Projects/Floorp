@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.25 2002/07/02 15:11:27 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.26 2002/07/10 01:04:10 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -2894,6 +2894,9 @@ RemovePermSubjectNode(NSSLOWCERTCertificate *cert)
 	    /* if the subject had an email record, then delete it too */
 	    DeleteDBSMimeEntry(cert->dbhandle, entry->emailAddr);
 	}
+	if ( entry->nickname ) {
+	    DeleteDBNicknameEntry(cert->dbhandle, entry->nickname);
+	}
 	
 	DeleteDBSubjectEntry(cert->dbhandle, &cert->derSubject);
     }
@@ -3225,7 +3228,7 @@ AddCertToPermDB(NSSLOWCERTCertDBHandle *handle, NSSLOWCERTCertificate *cert,
 
     subjectEntry = ReadDBSubjectEntry(handle, &cert->derSubject);
 	
-    if ( subjectEntry ) {
+    if ( subjectEntry && subjectEntry->nickname ) {
 	donnentry = PR_FALSE;
 	nickname = subjectEntry->nickname;
     }
@@ -3905,13 +3908,6 @@ DeletePermCert(NSSLOWCERTCertificate *cert)
     rv = DeleteDBCertEntry(cert->dbhandle, &cert->certKey);
     if ( rv != SECSuccess ) {
 	ret = SECFailure;
-    }
-    
-    if ( cert->nickname ) {
-	rv = DeleteDBNicknameEntry(cert->dbhandle, cert->nickname);
-	if ( rv != SECSuccess ) {
-	    ret = SECFailure;
-	}
     }
     
     rv = RemovePermSubjectNode(cert);
