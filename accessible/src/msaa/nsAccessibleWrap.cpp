@@ -628,13 +628,21 @@ STDMETHODIMP nsAccessibleWrap::put_accValue(
 STDMETHODIMP
 nsAccessibleWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
 {
-  *ppv = NULL;
+  /**
+   * To get an ISimpleDOMNode, ISimpleDOMDocument or ISimpleDOMText
+   * from an IAccessible you have to use IServiceProvider like this:
+   * --------------------------------------------------------------
+   * ISimpleDOMDocument *pAccDoc = NULL;
+   * IServiceProvider *pServProv = NULL;
+   * pAcc->QueryInterface(IID_IServiceProvider, (void**)&pServProv);
+   * if (pServProv) {
+   *   const GUID unused;
+   *   pServProv->QueryService(unused, IID_ISimpleDOMDocument, (void**)&pAccDoc);
+   *   pServProv->Release();
+   * }
+   */
 
-  if (iid == IID_ISimpleDOMNode) {
-    return nsAccessNodeWrap::QueryInterface(iid, ppv);
-  }
-    
-  return E_NOINTERFACE;
+  return QueryInterface(iid, ppv);
 }
 
 
