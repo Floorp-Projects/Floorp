@@ -714,7 +714,8 @@ CERT_SaveSMimeProfile(CERTCertificate *cert, SECItem *emailProfile,
     cc = c->object.cryptoContext;
     if (cc != NULL) {
 	stanProfile = nssCryptoContext_FindSMIMEProfileForCertificate(cc, c);
-	if (stanProfile && stanProfile->profileData) {
+	if (stanProfile) {
+	    PORT_Assert(stanProfile->profileData);
 	    SECITEM_FROM_NSSITEM(&oldprof, stanProfile->profileData);
 	    oldProfile = &oldprof;
 	}
