@@ -690,7 +690,7 @@ txXPathNodeUtils::getXSLTId(const txXPathNode& aNode,
 {
     if (aNode.isDocument()) {
         CopyASCIItoUTF16(nsPrintfCString(kFmtSize, gPrintfFmt,
-                         aNode.mDocument), aResult);
+                                         aNode.mDocument), aResult);
 
         return NS_OK;
     }
