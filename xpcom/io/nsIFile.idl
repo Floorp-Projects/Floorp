@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -28,6 +28,7 @@
 // may think they are. Welcome to reality.
 
 #include "nsISupports.idl"
+interface nsISimpleEnumerator;
 
 [scriptable, uuid(c8c0a080-0868-11d3-915f-d9d889d48e3c)]
 interface nsIFile : nsISupports
@@ -51,19 +52,19 @@ interface nsIFile : nsISupports
      *  error will be returned if a non-terminal is a file 
      *  (NS_ERROR_FILE_INVALID_PATH).  
      *
-     *  @param relativePath       
-     *         A unix style string which is intented to be a relative 
-     *         path of the nsIFile.  Starting and trailing '/' will 
-     *         be ignored.  If this path is not a unix style path, an 
-     *         error will be returned (NS_ERROR_FILE_UNRECONGNIZED_PATH).
+     *  @param relativePath    
+     *      A unix style string which is intented to be a relative 
+     *      path of the nsIFile.  Starting and trailing '/' will 
+     *      be ignored.  If this path is not a unix style path, an 
+     *      error will be returned (NS_ERROR_FILE_UNRECONGNIZED_PATH).
      */
 
-      void appendPath([const] in string relativePath);
+    void appendPath([const] in string relativePath);
 
       /**
-       * Normalize the pathName (e.g. removing .. and . components on Unix).
-       */
-      void normalize();
+    * Normalize the pathName (e.g. removing .. and . components on Unix).
+    */
+    void normalize();
 
     /**
      *  create
@@ -74,25 +75,25 @@ interface nsIFile : nsISupports
      *  exists create() will return NS_ERROR_FILE_ALREADY_EXISTS.
      * 
      *   @param type
-     *          This specifies the type of file system object
-     *          to be made.  The only two types at this time
-     *          are file and directory which are defined above.
-     *          If the type is unrecongnized, we will return an
-     *          error (NS_ERROR_FILE_UNKNOWN_TYPE).
+     *       This specifies the type of file system object
+     *       to be made.  The only two types at this time
+     *       are file and directory which are defined above.
+     *       If the type is unrecongnized, we will return an
+     *       error (NS_ERROR_FILE_UNKNOWN_TYPE).
      *
      *   @param permissions
-     *          This unix style octal permissions.  This may
-     *          be ignored on systems that do not need to do
-     *          permissions.
+     *       This unix style octal permissions.  This may
+     *       be ignored on systems that do not need to do
+     *       permissions.
      */
   
-      void create(in unsigned long type, in unsigned long permissions);
+    void create(in unsigned long type, in unsigned long permissions);
 
 
     /**
      *   Accessor to the leaf name of the file itself. 
      */
-      readonly attribute string leafName;
+    readonly attribute string leafName;
     
     /**
      *  copyTo
@@ -105,19 +106,19 @@ interface nsIFile : nsISupports
      *  copyTo will NOT resolve aliases/shortcuts during the copy.
      *
      *   @param newParentDir
-     *          This param is the destination directory. If the 
-     *          newParentDir is nsnull, copyTo() will simply  
-     *          rename the file. If the newParentDir is not 
-     *          null and does not exists, an error will be 
-     *          returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
+     *       This param is the destination directory. If the 
+     *       newParentDir is nsnull, copyTo() will simply  
+     *       rename the file. If the newParentDir is not 
+     *       null and does not exists, an error will be 
+     *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
      *
      *   @param newName
-     *          This param allows you to specify a new name
-     *          for the file to be copied.  This can be nsnull.
+     *       This param allows you to specify a new name
+     *       for the file to be copied.  This can be nsnull.
      *
      */
 
-      void copyTo(in nsIFile newParentDir, [const] in string newName);
+    void copyTo(in nsIFile newParentDir, [const] in string newName);
      
     /**
      *  copyToFollowingLinks
@@ -126,7 +127,7 @@ interface nsIFile : nsISupports
      *  the name implies, follows symbolic links.
      */
 
-      void copyToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
+    void copyToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
     
     /**
      *  moveTo
@@ -141,18 +142,18 @@ interface nsIFile : nsISupports
      *  volumes.
      *
      *   @param newParentDir
-     *          This param is the destination directory. If the 
-     *          newParentDir is nsnull, moveTo() will simply  
-     *          rename the file. If the newParentDir is not 
-     *          null and does not exists, an error will be 
-     *          returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
+     *       This param is the destination directory. If the 
+     *       newParentDir is nsnull, moveTo() will simply  
+     *       rename the file. If the newParentDir is not 
+     *       null and does not exists, an error will be 
+     *       returned (NS_ERROR_FILE_DESTINATION_NOT_DIR)
      *
      *   @param newName
-     *          This param allows you to specify a new name
-     *          for the file to be moved.  This can be nsnull.
+     *       This param allows you to specify a new name
+     *       for the file to be moved.  This can be nsnull.
      *
      */
-       void moveTo(in nsIFile newParentDir, [const] in string newName);
+    void moveTo(in nsIFile newParentDir, [const] in string newName);
 
     /**
      *  moveToFollowingLinks
@@ -161,14 +162,14 @@ interface nsIFile : nsISupports
      *  the name implies, follows symbolic links.
      */
       
-       void moveToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
+    void moveToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
     
     /**
      *  This will try to execute this file.  It will not block for
      *  execution.  'args' will be passed through on the command line
      *  if the OS supports that.
      */
-       void spawn([const] in string args);
+    void spawn([const] in string args);
     
     /**
      *  This will try to delete this file.  The 'recursive' flag
@@ -176,25 +177,25 @@ interface nsIFile : nsISupports
      *
      *  This will not resolve any symlinks.
      */
-       void delete(in boolean recursive);
+    void delete(in boolean recursive);
 
     /**
      * Truncate the file to the given length.
      */
-       void truncate(in unsigned long length);
+    void truncate(in unsigned long length);
 
     /**
      *  Attributes of nsIFile.
      */
     
-       attribute unsigned long permissions;
-       attribute unsigned long permissionsOfLink;
+    attribute unsigned long permissions;
+    attribute unsigned long permissionsOfLink;
     
-       attribute PRInt64 lastModificationDate;
-       attribute PRInt64 lastModificationDateOfLink;
+    attribute PRInt64 lastModificationDate;
+    attribute PRInt64 lastModificationDateOfLink;
     
-       attribute PRInt64 fileSize;
-       readonly attribute PRInt64 fileSizeOfLink;
+    attribute PRInt64 fileSize;
+    readonly attribute PRInt64 fileSizeOfLink;
     
     /**
      *  target & path
@@ -217,53 +218,68 @@ interface nsIFile : nsISupports
      *      Find out what the nsIFile points at.
      */
 
-       readonly attribute string target;
-       readonly attribute string path;
+    readonly attribute string target;
+    readonly attribute string path;
     
 
     /**
      * Parent will be nsnull when this is at the top of the volume.
      */
-       readonly attribute nsIFile parent;
+    readonly attribute nsIFile parent;
     
-       boolean exists();
-       boolean isWritable();
-       boolean isReadable();
-       boolean isExecutable();
-       boolean isHidden();
-       boolean isDirectory();
-       boolean isFile();
-       boolean isSymlink();
+    boolean exists();
+    boolean isWritable();
+    boolean isReadable();
+    boolean isExecutable();
+    boolean isHidden();
+    boolean isDirectory();
+    boolean isFile();
+    boolean isSymlink();
     /**
      * Not a regular file, not a directory, not a symlink.
      */
-       boolean isSpecial(); 
+    boolean isSpecial(); 
     
     /**
      *  Will determine if the inFile equals this.
      */
-       boolean equals(in nsIFile inFile);
+    boolean equals(in nsIFile inFile);
     
     /**
      * Will determine the file is a descendant of the parameter inFile.
      * If |recur| is true, it will descend subdirectories looking for 
      */
-       boolean isContainedIn(in nsIFile inFile, in boolean recur);
+    boolean isContainedIn(in nsIFile inFile, in boolean recur);
+
+
+    /**
+     * Returns an enumeration of the elements in a directory. Each
+     * element in the enumeration is an nsIFile. 
+     *
+     *   @return NS_ERROR_FILE_NOT_DIRECTORY if the current nsIFile does
+     *           not specify a directory.
+     */ 
+    readonly attribute nsISimpleEnumerator children;
 };
 
 %{C++
 #define NS_FILE_PROGID "component://netscape/file"
 #define NS_FILE_CLASSNAME "File Specification"
 
-#define NS_ERROR_FILE_UNRECOGNIZED_PATH        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
+#define NS_ERROR_FILE_UNRECOGNIZED_PATH     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
 #define NS_ERROR_FILE_UNRESOLVABLE_SYMLINK      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 2)
-#define NS_ERROR_FILE_EXECUTION_FAILED          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 3)
-#define NS_ERROR_FILE_UNKNOWN_TYPE              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 4)
-#define NS_ERROR_FILE_DESTINATION_NOT_DIR       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 5)
+#define NS_ERROR_FILE_EXECUTION_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 3)
+#define NS_ERROR_FILE_UNKNOWN_TYPE        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 4)
+#define NS_ERROR_FILE_DESTINATION_NOT_DIR    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 5)
 #define NS_ERROR_FILE_TARGET_DOES_NOT_EXIST     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 6)
-#define NS_ERROR_FILE_COPY_OR_MOVE_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 7)
-#define NS_ERROR_FILE_ALREADY_EXISTS            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 8)
-#define NS_ERROR_FILE_INVALID_PATH              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 9)
-#define NS_ERROR_FILE_DISK_FULL                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 10)
-#define NS_ERROR_FILE_CORRUPTED                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 11)
+#define NS_ERROR_FILE_COPY_OR_MOVE_FAILED    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 7)
+#define NS_ERROR_FILE_ALREADY_EXISTS         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 8)
+#define NS_ERROR_FILE_INVALID_PATH        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 9)
+#define NS_ERROR_FILE_DISK_FULL           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 10)
+#define NS_ERROR_FILE_CORRUPTED           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 11)
+
+//PR_NOT_DIRECTORY_ERROR
+#define NS_ERROR_FILE_NOT_DIRECTORY           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 12)
+
+
 %}
