@@ -49,6 +49,7 @@ class nsIParser;
 class nsIDOMNode;
 class nsXIFConverter;
 class nsINameSpaceManager;
+class nsIDOMDocumentFragment;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -269,6 +270,10 @@ extern NS_LAYOUT nsresult
 
 extern NS_LAYOUT nsresult
    NS_NewImageDocument(nsIDocument** aInstancePtrResult);
+
+extern NS_LAYOUT nsresult
+   NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
+                          nsIDocument* aOwnerDocument);
 
 // Note: The buffer passed into NewPostData(...) becomes owned by the IPostData
 //       instance and is freed when the instance is destroyed...

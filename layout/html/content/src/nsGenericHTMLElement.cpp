@@ -2171,24 +2171,38 @@ nsGenericHTMLContainerElement::InsertBefore(nsIDOMNode* aNewChild,
     res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
     NS_ASSERTION(NS_OK == res, "New child must be an nsIContent");
     if (NS_OK == res) {
-      if (nsnull == aRefChild) {
-        // Append the new child to the end
-        SetDocumentInChildrenOf(newContent, mDocument);
-        res = AppendChildTo(newContent, PR_TRUE);
-      }
-      else {
-        // Get the index of where to insert the new child
-        nsIContent* refContent = nsnull;
-        res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
-        NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
-        if (NS_OK == res) {
-          PRInt32 pos;
-          IndexOf(refContent, pos);
-          if (pos >= 0) {
-            SetDocumentInChildrenOf(newContent, mDocument);
-            res = InsertChildAt(newContent, pos, PR_TRUE);
+      nsIContent* oldParent;
+      res = newContent->GetParent(oldParent);
+      if (NS_OK == res) {
+        // Remove the element from the old parent if one exists
+        if (nsnull != oldParent) {
+          PRInt32 index;
+          oldParent->IndexOf(newContent, index);
+          if (-1 != index) {
+            oldParent->RemoveChildAt(index, PR_TRUE);
           }
-          NS_RELEASE(refContent);
+          NS_RELEASE(oldParent);
+        }
+
+        if (nsnull == aRefChild) {
+          // Append the new child to the end
+          SetDocumentInChildrenOf(newContent, mDocument);
+          res = AppendChildTo(newContent, PR_TRUE);
+        }
+        else {
+          // Get the index of where to insert the new child
+          nsIContent* refContent = nsnull;
+          res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
+          NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
+          if (NS_OK == res) {
+            PRInt32 pos;
+            IndexOf(refContent, pos);
+            if (pos >= 0) {
+              SetDocumentInChildrenOf(newContent, mDocument);
+              res = InsertChildAt(newContent, pos, PR_TRUE);
+            }
+            NS_RELEASE(refContent);
+          }
         }
       }
       NS_RELEASE(newContent);
@@ -2271,8 +2285,22 @@ nsGenericHTMLContainerElement::ReplaceChild(nsIDOMNode* aNewChild,
           NS_RELEASE(docFrag);
         }
         else {
-          SetDocumentInChildrenOf(newContent, mDocument);
-          res = ReplaceChildAt(newContent, pos, PR_TRUE);
+          nsIContent* oldParent;
+          res = newContent->GetParent(oldParent);
+          if (NS_OK == res) {
+            // Remove the element from the old parent if one exists
+            if (nsnull != oldParent) {
+              PRInt32 index;
+              oldParent->IndexOf(newContent, index);
+              if (-1 != index) {
+                oldParent->RemoveChildAt(index, PR_TRUE);
+              }
+              NS_RELEASE(oldParent);
+            }
+
+            SetDocumentInChildrenOf(newContent, mDocument);
+            res = ReplaceChildAt(newContent, pos, PR_TRUE);
+          }
         }
         NS_RELEASE(newContent);
       }
