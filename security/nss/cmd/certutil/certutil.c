@@ -2612,6 +2612,7 @@ main(int argc, char **argv)
 		     outFile ? outFile : PR_STDOUT);
 	if (rv) 
 	    return -1;
+	privkey->wincx = &pwdata;
     }
 
     /*
