@@ -24,8 +24,7 @@
     Chris McAfee <mcafee@netscape.com>
 -->
 
-<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
-
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://navigator/locale/pageInfo.dtd">
@@ -36,55 +35,58 @@
   titlemodifier="&mainWindow.titlemodifier;" 
   titlepreface="&mainWindow.preface;"
   titlemenuseparator ="&mainWindow.titlemodifierseperator;"  
-	windowtype="Browser:page-info"
-	onload="onLoadPageInfo()"
-	align="vertical" class="dialog"
-	width="400" height="320"
-	screenX="10" screenY="10"
-	persist="screenX screenY width height sizemode"> 
+  windowtype="Browser:page-info"
+  onload="onLoadPageInfo()"
+  align="vertical" class="dialog"
+  width="400" height="450"
+  screenX="10" screenY="10"
+  persist="screenX screenY width height sizemode">
 
-  <script src="chrome://navigator/content/pageInfo.js"></script>
+  <script type="text/javascript" src="chrome://navigator/content/pageInfo.js"/>
 
   <broadcasterset id="broadcasterset"/>
 
-	<commands id="commands">
-		<commandset id="globalEditMenuItems"/>
-		<commandset id="selectEditMenuItems"/>
-		<commandset id="undoEditMenuItems"/>
-		<commandset id="clipboardEditMenuItems"/>
-	</commands>
+  <commands id="commands">
+    <commandset id="globalEditMenuItems"/>
+    <commandset id="selectEditMenuItems"/>
+    <commandset id="undoEditMenuItems"/>
+    <commandset id="clipboardEditMenuItems"/>
+  </commands>
 
   <!-- keys are appended from the overlay -->
   <keyset id="keyset"/>
 
   <box id="cont" orient="vertical" flex="1">
-  
-    <text class="header label" value="&pageInfo.description;"/>
-    <box class="inset" orient="vertical" id="documentinfo">
-      <grid>
-        <columns> 
-          <column flex="1"/>
-          <column flex="3"/>
-        </columns>
-        
-        <rows>
-          <row>
-            <text class="label" value="&pageInfo.pageTitle;"/>        <text class="label" id="titletext" value=""/>
-          </row>
-          <row>
-            <text class="label" value="&pageInfo.URL;"/>              <text class="label" id="urltext" value=""/>
-          </row>
-          <row>
-            <text class="label" value="&pageInfo.lastModified;"/>     <text class="label" id="lastmodifiedtext" value=""/>
-          </row>
 
-        </rows>  
-      </grid>
+    <box orient="vertical">
+      <text class="header label" value="&pageInfo.description;"/>
+      <box class="inset" orient="vertical" id="documentinfo">
+        <grid>
+          <columns> 
+            <column/>
+            <column flex="1"/>
+          </columns>
+          <rows>
+            <row>
+              <text class="label" value="&pageInfo.pageTitle;"/>
+              <text class="label" id="titletext" value=""/>
+            </row>
+            <row>
+              <text class="label" value="&pageInfo.URL;"/>
+              <text class="label" id="urltext" value=""/>
+            </row>
+            <row>
+              <text class="label" value="&pageInfo.lastModified;"/>
+              <text class="label" id="lastmodifiedtext" value=""/>
+            </row>
+          </rows>  
+        </grid>
+      </box>
     </box>
-    
-    <box id="formtreecontainer" flex="1" orient="vertical" collapsed="true">
-    <text class="header label" value="&pageInfo.formHeader;"/>
-      <tree id="forms_tree" class="inset" flex="1">
+
+    <box id="formTreeContainer" flex="1" orient="vertical" collapsed="true">
+      <text class="header label" value="&pageInfo.formHeader;"/>
+      <tree id="formTree" class="inset" flex="1">
         <treecolgroup>
           <treecol flex="2"/>
           <splitter class="tree-splitter"/>
@@ -96,51 +98,43 @@
           <treerow>
             <treecell value="&pageInfo.formAction;" class="treecell-header treecell-inset-header"/>
             <treecell value="&pageInfo.formMethod;" class="treecell-header treecell-inset-header"/>
-            <treecell value="&pageInfo.formName;"   class="treecell-header treecell-inset-header"/>            
+            <treecell value="&pageInfo.formName;"   class="treecell-header treecell-inset-header"/>
           </treerow>
         </treehead>
-        <treechildren id="formchildren" flex="1">
-        </treechildren>
+        <treechildren id="formChildren" flex="1"/>
       </tree>
-      
     </box>
-
-    <box id="image_items" orient="vertical" flex="1" collapsed="true">
-	    <box id="imagetreecontainer" flex="1" orient="vertical">
-	    <text class="header label" value="&pageInfo.imageHeader;"/>
-	      <tree id="images_tree" class="inset" onselect="onImageSelect()" flex="1">
-	        <treecolgroup>
-	          <treecol flex="8"/>
-	          <splitter class="tree-splitter"/>
-	          <treecol flex="2"/>
-	          <splitter class="tree-splitter"/>
-	          <treecol flex="2"/>
-	          <splitter class="tree-splitter"/>
-	          <treecol flex="4"/>
-	        </treecolgroup>
-	        <treehead>
-	          <treerow>
-	            <treecell value="&pageInfo.imageURL;"     class="treecell-header treecell-inset-header"/>
-	            <treecell value="&pageInfo.imageWidth;"   class="treecell-header treecell-inset-header"/>
-	            <treecell value="&pageInfo.imageHeight;"  class="treecell-header treecell-inset-header"/>            
-	            <treecell value="&pageInfo.imageAltText;" class="treecell-header treecell-inset-header"/>            
-	          </treerow>
-	        </treehead>        
-	        <treechildren id="imageschildren" flex="1">
-	        </treechildren>
-	      </tree>
-	    </box>
-
-      <splitter orient="vertical" collapse="after">
-        <spring flex="1"/>
-        <grippy/>
-        <spring flex="1"/>
-      </splitter>
+ 
+    <splitter id="formImageSplitter" hidden="true"/>
       
-	    <box id="imagepreviewcontainer">
-	      <iframe id="image_frame" class="inset" src="about:blank" flex="1"/>
-	    </box>
+    <box id="imageTreeContainer" flex="1" orient="vertical" collapsed="true">
+      <text class="header label" value="&pageInfo.imageHeader;"/>
+      <tree id="imageTree" class="inset" onselect="onImageSelect()" flex="1">
+        <treecolgroup>
+          <treecol flex="7"/>
+          <splitter class="tree-splitter"/>
+          <treecol flex="2"/>
+          <splitter class="tree-splitter"/>
+          <treecol flex="2"/>
+          <splitter class="tree-splitter"/>
+          <treecol flex="4"/>
+        </treecolgroup>
+        <treehead>
+          <treerow>
+            <treecell value="&pageInfo.imageURL;"     class="treecell-header treecell-inset-header"/>
+            <treecell value="&pageInfo.imageWidth;"   class="treecell-header treecell-inset-header"/>
+            <treecell value="&pageInfo.imageHeight;"  class="treecell-header treecell-inset-header"/>
+            <treecell value="&pageInfo.imageAltText;" class="treecell-header treecell-inset-header"/>
+          </treerow>
+        </treehead>        
+        <treechildren id="imagesChildren" flex="1"/>
+      </tree>
+ 
+      <splitter collapse="after" id="imageSplitter"/>
+      
+      <box id="imagePreviewContainer" flex="1">
+        <iframe id="imageFrame" class="inset" src="about:blank" flex="1"/>
+      </box>
     </box>
   </box>
-  
 </window>
