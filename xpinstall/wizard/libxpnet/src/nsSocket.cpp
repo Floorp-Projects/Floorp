@@ -563,7 +563,7 @@ main(int argc, char **argv)
     DUMP(("nsSocket::Open returned: %d\n", rv));
 
     // prepare http request str
-    sprintf(buf, "GET %s HTTP/1.1\r\n\r\n", argv[3]);
+    sprintf(buf, "GET %s HTTP/1.0\r\n\r\n", argv[3]);
     bufSize = strlen(buf) + 1; // add 1 for NULL termination
 
     // make request
