@@ -27,6 +27,11 @@
 * But with it, Rhino was giving an error "Inappropriate array length"
 * and SpiderMonkey was exiting without giving any error or return value -
 *
+* Comments on the Rhino code by igor@icesoft.no:
+*
+* jsSet_length requires that the new length value should be an instance
+* of Number. But according to Ecma 15.4.5.1, item 12-13, an error should
+* be thrown only if ToUint32(length_value) != ToNumber(length_value)
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
