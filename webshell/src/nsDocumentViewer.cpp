@@ -49,6 +49,12 @@
 
 #include "nsIURL.h"
 
+#ifdef NS_DEBUG
+#undef NOISY_VIEWER
+#else
+#undef NOISY_VIEWER
+#endif
+
 class DocumentViewerImpl : public nsIDocumentViewer
 {
 public:
@@ -231,7 +237,7 @@ DocumentViewerImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
 
     NS_PRECONDITION(nsnull == mDocument, "Viewer is already bound to a document!");
 
-#ifdef NS_DEBUG
+#ifdef NOISY_VIEWER
     printf("DocumentViewerImpl::BindToDocument\n");
 #endif
 
