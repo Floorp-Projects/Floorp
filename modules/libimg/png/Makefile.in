@@ -50,6 +50,7 @@ REQUIRES	= util
 
 ifndef MOZ_NATIVE_ZLIB
 REQUIRES	+= zlib
+EXTRA_DSO_LDOPTS = -L$(DIST)/bin -lzlib
 endif
 
 LOCAL_INCLUDES	= -I$(srcdir)
