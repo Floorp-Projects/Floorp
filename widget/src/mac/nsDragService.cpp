@@ -172,8 +172,7 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
   // coordinates.
   //
   
-	nsRect	aRect(0,0,0,0);
-	aFrame->GetRect(aRect);
+  nsRect rect = aFrame->GetRect();
 
   // Find offset from our view
 	nsIView *containingView = nsnull;
@@ -208,8 +207,8 @@ nsDragService::ComputeGlobalRectFromFrame ( nsIDOMNode* aDOMNode, Rect & outScre
     // stash it all in a mac rect
 		outScreenRect.left = screenOffset.x;
 		outScreenRect.top = screenOffset.y;
-    outScreenRect.right = outScreenRect.left + NSTwipsToIntPixels(aRect.width, t2p);
-    outScreenRect.bottom = outScreenRect.top + NSTwipsToIntPixels(aRect.height, t2p);
+    outScreenRect.right = outScreenRect.left + NSTwipsToIntPixels(rect.width, t2p);
+    outScreenRect.bottom = outScreenRect.top + NSTwipsToIntPixels(rect.height, t2p);
             
 		haveRectFlag = PR_TRUE;
 	}

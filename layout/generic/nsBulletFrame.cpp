@@ -407,8 +407,7 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal,
   // value attribute. Note: we do this with our parent's content
   // because our parent is the list-item.
   nsHTMLValue value;
-  nsCOMPtr<nsIContent> parentContent;
-  mParent->GetContent(getter_AddRefs(parentContent));
+  nsIContent* parentContent = mParent->GetContent();
   if (parentContent) {
     nsCOMPtr<nsIHTMLContent> hc = do_QueryInterface(parentContent);
     if (hc) {

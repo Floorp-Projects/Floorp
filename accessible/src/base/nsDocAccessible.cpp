@@ -93,10 +93,9 @@ nsDocAccessible::nsDocAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell)
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
   if (shell) {
     shell->GetDocument(getter_AddRefs(mDocument));
-    nsCOMPtr<nsIViewManager> vm;
-    shell->GetViewManager(getter_AddRefs(vm));
-    nsCOMPtr<nsIWidget> widget;
+    nsIViewManager* vm = shell->GetViewManager();
     if (vm) {
+      nsCOMPtr<nsIWidget> widget;
       vm->GetWidget(getter_AddRefs(widget));
       if (widget) {
         mWnd = widget->GetNativeData(NS_NATIVE_WINDOW);
@@ -417,8 +416,6 @@ void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
   *aRelativeFrame = GetFrame();
 
   nsCOMPtr<nsIDocument> document(mDocument);
-  nsRect viewBounds;
-  nsCOMPtr<nsIViewManager> vm;
   nsCOMPtr<nsIDocument> parentDoc;
 
   while (document) {
@@ -427,24 +424,25 @@ void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
     if (!presShell) {
       return;
     }
-    presShell->GetViewManager(getter_AddRefs(vm));
+    nsIViewManager* vm = presShell->GetViewManager();
 
     nsIScrollableView* scrollableView = nsnull;
     if (vm)
       vm->GetRootScrollableView(&scrollableView);
 
+    nsRect viewBounds(0, 0, 0, 0);
     if (scrollableView) {
       const nsIView *view = nsnull;
       scrollableView->GetClipView(&view);
       if (view) {
-        view->GetBounds(viewBounds);
+        viewBounds = view->GetBounds();
       }
     }
     else {
       nsIView *view;
       vm->GetRootView(view);
       if (view) {
-        view->GetBounds(viewBounds);
+        viewBounds = view->GetBounds();
       }
     }
 
@@ -666,10 +664,9 @@ void nsDocAccessible::ScrollTimerCallback(nsITimer *aTimer, void *aClosure)
 
 void nsDocAccessible::AddScrollListener(nsIPresShell *aPresShell)
 {
-  nsCOMPtr<nsIViewManager> vm;
-
+  nsIViewManager* vm = nsnull;
   if (aPresShell)
-    aPresShell->GetViewManager(getter_AddRefs(vm));
+    vm = aPresShell->GetViewManager();
 
   nsIScrollableView* scrollableView = nsnull;
   if (vm)
@@ -681,10 +678,9 @@ void nsDocAccessible::AddScrollListener(nsIPresShell *aPresShell)
 
 void nsDocAccessible::RemoveScrollListener(nsIPresShell *aPresShell)
 {
-  nsCOMPtr<nsIViewManager> vm;
-
+  nsIViewManager* vm = nsnull;
   if (aPresShell)
-    aPresShell->GetViewManager(getter_AddRefs(vm));
+    vm = aPresShell->GetViewManager();
 
   nsIScrollableView* scrollableView = nsnull;
   if (vm)

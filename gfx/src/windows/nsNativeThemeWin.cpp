@@ -307,9 +307,7 @@ static void GetPrimaryPresShell(nsIFrame* aFrame, nsIPresShell** aResult)
   if (!aFrame)
     return;
  
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  nsIDocument* doc = content->GetDocument();
+  nsIDocument* doc = aFrame->GetContent()->GetDocument();
   if (doc)
     doc->GetShellAt(0, aResult); // Addref happens here.
 }
@@ -329,9 +327,7 @@ static PRInt32 GetContentState(nsIFrame* aFrame)
   nsCOMPtr<nsIEventStateManager> esm;
   context->GetEventStateManager(getter_AddRefs(esm));
   PRInt32 flags = 0;
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  esm->GetContentState(content, flags);
+  esm->GetContentState(aFrame->GetContent(), flags);
   return flags;
 }
 
@@ -339,10 +335,8 @@ static PRBool CheckBooleanAttr(nsIFrame* aFrame, nsIAtom* aAtom)
 {
   if (!aFrame)
     return PR_FALSE;
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
   nsAutoString attr;
-  nsresult res = content->GetAttr(kNameSpaceID_None, aAtom, attr);
+  nsresult res = aFrame->GetContent()->GetAttr(kNameSpaceID_None, aAtom, attr);
   if (res == NS_CONTENT_ATTR_NO_VALUE ||
       (res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()))
     return PR_TRUE; // This handles the HTML case (an attr with no value is like a true val)
@@ -356,10 +350,8 @@ GetAttribute(nsIFrame* aFrame, nsIAtom* inAttribute, nsCString& outValue)
   if (!aFrame)
     return PR_FALSE;
   
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
   nsAutoString attr;
-  nsresult res = content->GetAttr(kNameSpaceID_None, inAttribute, attr);
+  nsresult res = aFrame->GetContent()->GetAttr(kNameSpaceID_None, inAttribute, attr);
   outValue = NS_LossyConvertUCS2toASCII(attr).get();
   return ( res != NS_CONTENT_ATTR_NO_VALUE &&
          !(res != NS_CONTENT_ATTR_NOT_THERE && attr.IsEmpty()));
@@ -379,10 +371,8 @@ PRBool nsNativeThemeWin::IsChecked(nsIFrame* aFrame)
 {
   if (!aFrame)
     return NS_OK;
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
   nsAutoString checked;
-  nsresult res = content->GetAttr(kNameSpaceID_None, mCheckedAtom, checked);
+  nsresult res = aFrame->GetContent()->GetAttr(kNameSpaceID_None, mCheckedAtom, checked);
   if (res == NS_CONTENT_ATTR_NO_VALUE)
     return PR_TRUE; // XXXdwh Can the HTML form control's checked property differ
                     // from the checked attribute?  If so, will need an IsContentofType
@@ -455,10 +445,9 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       else {
         // For XUL checkboxes and radio buttons, the state of the parent
         // determines our state.
-        nsCOMPtr<nsIContent> content;
-        aFrame->GetContent(getter_AddRefs(content));
+        nsIContent* content = aFrame->GetContent();
         if (content->IsContentOfType(nsIContent::eXUL))
-          aFrame->GetParent(&aFrame);
+          aFrame = aFrame->GetParent();
         else {
           // Attempt a QI.
           nsCOMPtr<nsIDOMHTMLInputElement> inputElt(do_QueryInterface(content));
@@ -726,11 +715,9 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
     case NS_THEME_DROPDOWN_BUTTON: {
       aPart = CBP_DROPMARKER;
 
-      nsCOMPtr<nsIContent> content;
-      aFrame->GetContent(getter_AddRefs(content));
+      nsIContent* content = aFrame->GetContent();
 
-      nsIFrame* parentFrame;
-      aFrame->GetParent(&parentFrame);
+      nsIFrame* parentFrame = aFrame->GetParent();
       nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(parentFrame));
       if (menuFrame || (content && content->IsContentOfType(nsIContent::eHTML)) )
          // XUL menu lists and HTML selects get state from parent         
@@ -813,11 +800,8 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
 
   // Draw focus rectangles for XP HTML checkboxes and radio buttons
   // XXX it'd be nice to draw these outside of the frame
-  if (aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO) {
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
-
-    if (content->IsContentOfType(nsIContent::eHTML)) {
+  if ((aWidgetType == NS_THEME_CHECKBOX || aWidgetType == NS_THEME_RADIO)
+      && aFrame->GetContent()->IsContentOfType(nsIContent::eHTML)) {
       PRInt32 contentState ;
       contentState = GetContentState(aFrame);  
             
@@ -830,7 +814,6 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
         ::DrawFocusRect(hdc, &widgetRect);
         ::SetTextColor(hdc, oldColor);
       }
-    }
   }
   return NS_OK;
 }
@@ -887,8 +870,7 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
     aResult->left = 0;
 
   if (aFrame && aWidgetType == NS_THEME_TEXTFIELD) {
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
+    nsIContent* content = aFrame->GetContent();
     if (content && content->IsContentOfType(nsIContent::eHTML)) {
       // We need to pad textfields by 1 pixel, since the caret will draw
       // flush against the edge by default if we don't.
@@ -1066,9 +1048,7 @@ nsNativeThemeWin::ThemeChanged()
 PRBool nsNativeThemeWin::IsWidgetStyled(nsIPresContext* aPresContext, nsIFrame* aFrame, PRUint8 aWidgetType) 
 {  
   if (aFrame && (aWidgetType == NS_THEME_BUTTON || aWidgetType == NS_THEME_TEXTFIELD)) {
-    nsCOMPtr<nsIContent> content;
-    aFrame->GetContent(getter_AddRefs(content));
-    if (content->IsContentOfType(nsIContent::eHTML)) {
+    if (aFrame->GetContent()->IsContentOfType(nsIContent::eHTML)) {
       
       // Get default CSS style values for widget
       // (these need to match the values in forms.css)
@@ -1281,8 +1261,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext,
       break;
     case NS_THEME_TEXTFIELD: {
       (*aResult).top = (*aResult).bottom = 2;
-      nsCOMPtr<nsIContent> content;
-      aFrame->GetContent(getter_AddRefs(content));
+      nsIContent* content = aFrame->GetContent();
       if (content && content->IsContentOfType(nsIContent::eHTML))
         // HTML text-fields need extra padding
         (*aResult).left = (*aResult).right = 3;
@@ -1295,12 +1274,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext,
       (*aResult).top = 1;      
       (*aResult).left = 1;
       (*aResult).bottom = 1;
-      nsIFrame* hasSibling = nsnull;
-      aFrame->GetNextSibling(&hasSibling);
-      if (hasSibling)
-        (*aResult).right = 3;      
-      else
-        (*aResult).right = 1;
+      (*aResult).right = aFrame->GetNextSibling() ? 3 : 1;
       break;
     }    
     case NS_THEME_TOOLTIP:
@@ -1418,9 +1392,7 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           const nsStyleUserInterface *uiData = aFrame->GetStyleUserInterface();
           // The down state is flat if the button is focusable
           if (uiData->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL) {
-            nsCOMPtr<nsIContent> content;
-            aFrame->GetContent(getter_AddRefs(content));
-            if (!content->IsContentOfType(nsIContent::eHTML))
+            if (!aFrame->GetContent()->IsContentOfType(nsIContent::eHTML))
               aState |= DFCS_FLAT;
             aFocused = PR_TRUE;
           }
@@ -1439,15 +1411,14 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       PRInt32 contentState ;
       PRBool isDisabled = PR_FALSE;
       aFocused = PR_FALSE;
-      nsCOMPtr<nsIContent> content;
 
       aPart = DFC_BUTTON;
       aState = (aWidgetType == NS_THEME_CHECKBOX) ? DFCS_BUTTONCHECK : DFCS_BUTTONRADIO;
-      aFrame->GetContent(getter_AddRefs(content));
+      nsIContent* content = aFrame->GetContent();
            
       if (content->IsContentOfType(nsIContent::eXUL)) {
         // XUL
-        aFrame->GetParent(&aFrame);
+        aFrame = aFrame->GetParent();
         if (aWidgetType == NS_THEME_CHECKBOX) {
           if (IsChecked(aFrame))
             aState |= DFCS_CHECKED;
@@ -1508,11 +1479,8 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       aPart = DFC_SCROLL;
       aState = DFCS_SCROLLCOMBOBOX;
       
-      nsCOMPtr<nsIContent> content;
-      aFrame->GetContent(getter_AddRefs(content));
-
-      nsIFrame* parentFrame;
-      aFrame->GetParent(&parentFrame);
+      nsIContent* content = aFrame->GetContent();
+      nsIFrame* parentFrame = aFrame->GetParent();
       nsCOMPtr<nsIMenuFrame> menuFrame(do_QueryInterface(parentFrame));
       if (menuFrame || (content && content->IsContentOfType(nsIContent::eHTML)) )
          // XUL menu lists and HTML selects get state from parent         
@@ -1757,11 +1725,10 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
       // Draw inset edge
       ::DrawEdge(hdc, &widgetRect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
 
-      nsCOMPtr<nsIContent> content;
-      aFrame->GetContent(getter_AddRefs(content));     
-        
       // Fill in background
-      if (IsDisabled(aFrame) || (content->IsContentOfType(nsIContent::eXUL) && IsReadOnly(aFrame)))
+      if (IsDisabled(aFrame) ||
+          (aFrame->GetContent()->IsContentOfType(nsIContent::eXUL) &&
+           IsReadOnly(aFrame)))
         ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_BTNFACE+1));
       else
         ::FillRect(hdc, &widgetRect, (HBRUSH) (COLOR_WINDOW+1));
@@ -1797,9 +1764,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
     }
     // Draw 3D inset statusbar panel
     case NS_THEME_STATUSBAR_PANEL: {
-      nsIFrame* hasSibling = nsnull;
-      aFrame->GetNextSibling(&hasSibling);
-      if (hasSibling)
+      if (aFrame->GetNextSibling())
         widgetRect.right -= 2; // space between sibling status panels
 
       ::DrawEdge(hdc, &widgetRect, BDR_SUNKENOUTER, BF_RECT | BF_MIDDLE);

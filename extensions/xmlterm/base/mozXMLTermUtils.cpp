@@ -156,9 +156,8 @@ mozXMLTermUtils::GetPresContextScrollableView(nsIPresContext* aPresContext,
   if (NS_FAILED(result) || !presShell)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIViewManager> viewManager;
-  result = presShell->GetViewManager(getter_AddRefs(viewManager));
-  if (NS_FAILED(result) || !viewManager)
+  nsIViewManager* viewManager = presShell->GetViewManager();
+  if (!viewManager)
     return NS_ERROR_FAILURE;
 
   return viewManager->GetRootScrollableView(aScrollableView);
@@ -183,14 +182,8 @@ mozXMLTermUtils::GetPresContextDeviceContext(nsIPresContext* aPresContext,
 
   *aDeviceContext = nsnull;
 
-  nsCOMPtr<nsIPresShell> presShell;
-  result = aPresContext->GetShell(getter_AddRefs(presShell));
-  if (NS_FAILED(result) || !presShell)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIViewManager> viewManager;
-  result = presShell->GetViewManager(getter_AddRefs(viewManager));
-  if (NS_FAILED(result) || !viewManager)
+  nsIViewManager* viewManager = aPresContext->GetViewManager();
+  if (!viewManager)
     return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDeviceContext> deviceContext;

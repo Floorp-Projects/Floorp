@@ -82,16 +82,6 @@ public:
       						 const nsRect &aBounds,
                    const nsIView *aParent,
       						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
-  NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr) const;
-  NS_IMETHOD  GetPosition(nscoord *x, nscoord *y) const;
-  NS_IMETHOD  GetBounds(nsRect &aBounds) const;
-  NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const;
-  NS_IMETHOD  GetZIndex(PRBool &aAuto, PRInt32 &aZIndex, PRBool &aTopMost) const;
-  NS_IMETHOD  GetFloating(PRBool &aFloatingView) const;
-  NS_IMETHOD  GetParent(nsIView *&aParent) const;
-  NS_IMETHOD  GetFirstChild(nsIView* &aChild) const;
-  NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const;
-  NS_IMETHOD  GetOpacity(float &aOpacity) const;
   /**
    * Used to ask a view if it has any areas within its bounding box
    * that are transparent. This is not the same as opacity - opacity can
@@ -100,7 +90,6 @@ public:
    */
   NS_IMETHOD  HasTransparency(PRBool &aTransparent) const;
   NS_IMETHOD  SetClientData(void *aData);
-  NS_IMETHOD  GetClientData(void *&aData) const;
   NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget);
   NS_IMETHOD  CreateWidget(const nsIID &aWindowIID,
                            nsWidgetInitData *aWidgetInitData = nsnull,
@@ -108,8 +97,6 @@ public:
                            PRBool aEnableDragDrop = PR_TRUE,
                            PRBool aResetVisibility = PR_TRUE,
                            nsContentType aContentType = eContentTypeInherit);
-  NS_IMETHOD  GetWidget(nsIWidget *&aWidget) const;
-  NS_IMETHOD  HasWidget(PRBool *aHasWidget) const;
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   NS_IMETHOD  Destroy();
@@ -290,26 +277,6 @@ public:
   nsRect GetDimensions() const { nsRect r = mDimBounds; r.MoveBy(-mPosX, -mPosY); return r; }
   // These are defined exactly the same in nsIView, but for now they have to be redeclared
   // here because of stupid C++ method hiding rules
-  PRBool GetFloating() const { return (mVFlags & NS_VIEW_FLAG_FLOATING) != 0; }
-  float GetOpacity() const { return mOpacity; }
-  void* GetClientData() const { return mClientData; }
-  nsViewVisibility GetVisibility() const { return mVis; }
-  nsRect GetBounds() const {
-    // this assertion should go away once we're confident that it's not needed
-    NS_ASSERTION(!IsRoot() || (mDimBounds.x == 0 && mDimBounds.y == 0),
-                 "root views should always have explicit position of (0,0)");
-    return mDimBounds;
-  }
-  nsPoint GetPosition() const {
-     // this assertion should go away once we're confident that it's not needed
-    NS_ASSERTION(!IsRoot() || (mPosX == 0 && mPosY == 0),
-                 "root views should always have explicit position of (0,0)");
-    return nsPoint(mPosX, mPosY);
-  }
-  nsIWidget* GetWidget() const { return mWindow; }
-  PRBool HasWidget() const { return mWindow != nsnull; }
-
-  nsView* GetChild(PRInt32 aIndex) const;
 
   void InsertChild(nsView *aChild, nsView *aSibling);
   void RemoveChild(nsView *aChild);

@@ -2228,10 +2228,10 @@ void
 nsTypeAheadFind::RemoveDocListeners()
 {
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
-  nsCOMPtr<nsIViewManager> vm;
+  nsIViewManager* vm = nsnull;
 
   if (presShell) {
-    presShell->GetViewManager(getter_AddRefs(vm));
+    vm = presShell->GetViewManager();
   }
 
   nsIScrollableView* scrollableView = nsnull;
@@ -2265,8 +2265,7 @@ nsTypeAheadFind::AttachDocListeners(nsIPresShell *aPresShell)
     return;
   }
 
-  nsCOMPtr<nsIViewManager> vm;
-  aPresShell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = aPresShell->GetViewManager();
   if (!vm) {
     return;
   }
@@ -2634,8 +2633,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   // Set up the variables we need, return true if we can't get at them all
   const PRUint16 kMinPixels  = 12;
 
-  nsCOMPtr<nsIViewManager> viewManager;
-  aPresShell->GetViewManager(getter_AddRefs(viewManager));
+  nsIViewManager* viewManager = aPresShell->GetViewManager();
   if (!viewManager) {
     return PR_TRUE;
   }
@@ -2644,7 +2642,6 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   // We don't use the more accurate AccGetBounds, because that is
   // more expensive and the STATE_OFFSCREEN flag that this is used
   // for only needs to be a rough indicator
-  nsRect relFrameRect;
   nsIView *containingView = nsnull;
   nsPoint frameOffset;
   float p2t;
@@ -2652,7 +2649,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   nsRectVisibility rectVisibility = nsRectVisibility_kAboveViewport;
 
   if (!aGetTopVisibleLeaf) {
-    frame->GetRect(relFrameRect);
+    nsRect relFrameRect = frame->GetRect();
     frame->GetOffsetFromView(aPresContext, frameOffset, &containingView);
     if (!containingView) {
       // no view -- not visible
@@ -2697,7 +2694,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
       return PR_FALSE;
     }
 
-    frame->GetRect(relFrameRect);
+    nsRect relFrameRect = frame->GetRect();
     frame->GetOffsetFromView(aPresContext, frameOffset, &containingView);
     if (containingView) {
       relFrameRect.x = frameOffset.x;
@@ -2710,10 +2707,8 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   }
 
   if (frame) {
-    nsCOMPtr<nsIContent> firstVisibleContent;
-    frame->GetContent(getter_AddRefs(firstVisibleContent));
     nsCOMPtr<nsIDOMNode> firstVisibleNode =
-      do_QueryInterface(firstVisibleContent);
+      do_QueryInterface(frame->GetContent());
 
     if (firstVisibleNode) {
       (*aFirstVisibleRange)->SelectNode(firstVisibleNode);

@@ -106,10 +106,8 @@ inLayoutUtils::GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell)
 already_AddRefed<nsIRenderingContext>
 inLayoutUtils::GetRenderingContextFor(nsIPresShell* aShell)
 {
-  nsCOMPtr<nsIViewManager> viewman;
-  aShell->GetViewManager(getter_AddRefs(viewman));
   nsCOMPtr<nsIWidget> widget;
-  viewman->GetWidget(getter_AddRefs(widget));
+  aShell->GetViewManager()->GetWidget(getter_AddRefs(widget));
   return widget->GetRenderingContext(); // AddRefs
 }
 
@@ -150,20 +148,16 @@ inLayoutUtils::GetClientOrigin(nsIPresContext* aPresContext,
   aFrame->GetOffsetFromView(aPresContext, result, &view);
   nsIView* rootView = nsnull;
   if (view) {
-      nsCOMPtr<nsIViewManager> viewManager;
-      view->GetViewManager(*getter_AddRefs(viewManager));
+      nsIViewManager* viewManager = view->GetViewManager();
       NS_ASSERTION(viewManager, "View must have a viewmanager");
       viewManager->GetRootView(rootView);
   }
   while (view) {
-    nscoord x, y;
-    view->GetPosition(&x, &y);
-    result.x += x;
-    result.y += y;
+    result += view->GetPosition();
     if (view == rootView) {
       break;
     }
-    view->GetParent(view);
+    view = view->GetParent();
   }
   return result;
 }
@@ -190,28 +184,27 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
       
       if (presContext) {
         nsIFrame* frame = nsnull;
-        nsresult rv = presShell->GetPrimaryFrameFor(content, &frame);
+        presShell->GetPrimaryFrameFor(content, &frame);
         
         PRInt32 offsetX = 0;
         PRInt32 offsetY = 0;
-        nsCOMPtr<nsIWidget> widget;
+        nsIWidget* widget = nsnull;
         
         while (frame) {
           // Look for a widget so we can get screen coordinates
-          nsIView* view = frame->GetViewExternal(presContext);
+          nsIView* view = frame->GetViewExternal();
           if (view) {
-            rv = view->GetWidget(*getter_AddRefs(widget));
+            widget = view->GetWidget();
             if (widget)
               break;
           }
           
           // No widget yet, so count up the coordinates of the frame 
-          nsPoint origin;
-          frame->GetOrigin(origin);
+          nsPoint origin = frame->GetPosition();
           offsetX += origin.x;
           offsetY += origin.y;
       
-          frame->GetParent(&frame);
+          frame = frame->GetParent();
         }
         
         if (widget) {

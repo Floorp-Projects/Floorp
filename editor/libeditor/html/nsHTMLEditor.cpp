@@ -6011,30 +6011,21 @@ nsHTMLEditor::GetElementOrigin(nsIDOMElement * aElement, PRInt32 & aX, PRInt32 &
 
 
   if (nsHTMLEditUtils::IsHR(aElement)) {
-    nsIFrame* childFrame;
-    //frame->FirstChild(pcontext, nsnull, &childFrame);
-    frame->GetNextSibling(&childFrame);
-    frame = childFrame;
+    frame = frame->GetNextSibling();
   }
   PRInt32 offsetX = 0, offsetY = 0;
-  nsCOMPtr<nsIWidget> widget;
-  nsresult rv;
   while (frame) {
     // Look for a widget so we can get screen coordinates
-    nsIView* view = frame->GetViewExternal(pcontext);
-    if (view) {
-      rv = view->GetWidget(*getter_AddRefs(widget));
-      if (widget)
-        break;
-    }
+    nsIView* view = frame->GetViewExternal();
+    if (view && view->HasWidget())
+      break;
     
     // No widget yet, so count up the coordinates of the frame 
-    nsPoint origin;
-    frame->GetOrigin(origin);
+    nsPoint origin = frame->GetPosition();
     offsetX += origin.x;
     offsetY += origin.y;
 
-    frame->GetParent(&frame);
+    frame = frame->GetParent();
   }
 
   aX = NSTwipsToIntPixels(offsetX , t2p);

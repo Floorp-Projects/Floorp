@@ -3009,7 +3009,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     rootFrame->WillReflow(mPresContext);
     nsContainerFrame::PositionFrameView(mPresContext, rootFrame);
     rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
-    rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
+    rootFrame->SetSize(nsSize(desiredSize.width, desiredSize.height));
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
 
     nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, rootFrame->GetView(),

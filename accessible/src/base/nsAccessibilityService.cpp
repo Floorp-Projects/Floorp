@@ -217,8 +217,7 @@ nsAccessibilityService::GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIW
 {
   NS_ASSERTION(aFrame,"Error -- 1st argument (aFrame) is null!!");
   *aRealFrame = NS_STATIC_CAST(nsIFrame*, aFrame);
-  nsCOMPtr<nsIContent> content;
-  (*aRealFrame)->GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIContent> content = (*aRealFrame)->GetContent();
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
   if (!content || !node)
     return NS_ERROR_FAILURE;

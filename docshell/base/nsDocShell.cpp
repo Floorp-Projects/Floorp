@@ -1564,9 +1564,7 @@ nsDocShell::SetZoom(float zoom)
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
     // get the view manager
-    nsCOMPtr<nsIViewManager> vm;
-    NS_ENSURE_SUCCESS(presShell->GetViewManager(getter_AddRefs(vm)),
-                      NS_ERROR_FAILURE);
+    nsIViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
     // get the root scrollable view
@@ -1891,8 +1889,7 @@ PrintDocTree(nsIDocShellTreeNode * aParentNode, int aLevel)
   nsCOMPtr<nsIDOMWindowInternal> domwin(do_QueryInterface(sgo));
 
   nsCOMPtr<nsIWidget> widget;
-  nsCOMPtr<nsIViewManager> vm;
-  presShell->GetViewManager(getter_AddRefs(vm));
+  nsIViewManager* vm = presShell->GetViewManager();
   if (vm) {
     vm->GetWidget(getter_AddRefs(widget));
   }
@@ -3150,12 +3147,7 @@ nsDocShell::Repaint(PRBool aForce)
     docViewer->GetPresContext(getter_AddRefs(context));
     NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIPresShell> shell;
-    context->GetShell(getter_AddRefs(shell));
-    NS_ENSURE_TRUE(shell, NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIViewManager> viewManager;
-    shell->GetViewManager(getter_AddRefs(viewManager));
+    nsIViewManager* viewManager = context->GetViewManager();
     NS_ENSURE_TRUE(viewManager, NS_ERROR_FAILURE);
 
     // what about aForce ?
@@ -3226,9 +3218,7 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
     NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
     // get the view manager
-    nsCOMPtr<nsIViewManager> vm;
-    NS_ENSURE_SUCCESS(presShell->GetViewManager(getter_AddRefs(vm)),
-                      NS_ERROR_FAILURE);
+    nsIViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
     // get the root view
@@ -3237,9 +3227,7 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
     // if our root view is hidden, we are not visible
-    nsViewVisibility vis;
-    NS_ENSURE_SUCCESS(view->GetVisibility(vis), NS_ERROR_FAILURE);
-    if (vis == nsViewVisibility_kHide) {
+    if (view->GetVisibility() == nsViewVisibility_kHide) {
         *aVisibility = PR_FALSE;
         return NS_OK;
     }
@@ -3271,14 +3259,9 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
 
         nsIFrame* frame;
         pPresShell->GetPrimaryFrameFor(shellContent, &frame);
-        if (frame) {
-            nsCOMPtr<nsIPresContext> pc;
-            pPresShell->GetPresContext(getter_AddRefs(pc));
-
-            if (!frame->AreAncestorViewsVisible(pc)) {
-                *aVisibility = PR_FALSE;
-                return NS_OK;
-            }
+        if (frame && !frame->AreAncestorViewsVisible()) {
+            *aVisibility = PR_FALSE;
+            return NS_OK;
         }
 
         treeItem = parentItem;
@@ -4785,8 +4768,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             docviewer->GetPresShell(getter_AddRefs(shell));
 
             if (shell) {
-                nsCOMPtr<nsIViewManager> vm;
-                shell->GetViewManager(getter_AddRefs(vm));
+                nsIViewManager* vm = shell->GetViewManager();
 
                 if (vm) {
                     vm->GetDefaultBackgroundColor(&bgcolor);
@@ -4863,8 +4845,7 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             docviewer->GetPresShell(getter_AddRefs(shell));
 
             if (shell) {
-                nsCOMPtr<nsIViewManager> vm;
-                shell->GetViewManager(getter_AddRefs(vm));
+                nsIViewManager* vm = shell->GetViewManager();
 
                 if (vm) {
                     vm->SetDefaultBackgroundColor(bgcolor);
@@ -6710,11 +6691,7 @@ nsDocShell::GetRootScrollableView(nsIScrollableView ** aOutScrollView)
     NS_ENSURE_SUCCESS(GetPresShell(getter_AddRefs(shell)), NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(shell, NS_ERROR_NULL_POINTER);
 
-    nsCOMPtr<nsIViewManager> viewManager;
-    NS_ENSURE_SUCCESS(shell->GetViewManager(getter_AddRefs(viewManager)),
-                      NS_ERROR_FAILURE);
-
-    NS_ENSURE_SUCCESS(viewManager->GetRootScrollableView(aOutScrollView),
+    NS_ENSURE_SUCCESS(shell->GetViewManager()->GetRootScrollableView(aOutScrollView),
                       NS_ERROR_FAILURE);
 
     if (*aOutScrollView == nsnull) {
@@ -6906,21 +6883,16 @@ nsDocShell::SetCanvasHasFocus(PRBool aCanvasHasFocus)
 
   nsIFrame* frame;
   presShell->GetPrimaryFrameFor(rootContent, &frame);
-  if (frame != nsnull) {
-    frame->GetParent(&frame);
-    if (frame != nsnull) {
+  if (frame) {
+    frame = frame->GetParent();
+    if (frame) {
       nsICanvasFrame* canvasFrame;
       if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsICanvasFrame), (void**)&canvasFrame))) {
         canvasFrame->SetHasFocus(aCanvasHasFocus);
 
-        nsCOMPtr<nsIPresContext> presContext;
-        GetPresContext(getter_AddRefs(presContext));
-        
-        nsIView* canvasView = frame->GetViewExternal(presContext);
+        nsIView* canvasView = frame->GetViewExternal();
 
-        nsCOMPtr<nsIViewManager> viewManager;
-        canvasView->GetViewManager(*getter_AddRefs(viewManager));
-        viewManager->UpdateView(canvasView, NS_VMREFRESH_NO_SYNC);
+        canvasView->GetViewManager()->UpdateView(canvasView, NS_VMREFRESH_NO_SYNC);
 
         return NS_OK;
       }

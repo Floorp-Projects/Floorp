@@ -991,8 +991,7 @@ NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetValue(nsAString& _retval)
   frame->FirstChild(context, nsnull, &frame);
   frame->FirstChild(context, nsnull, &frame);
 
-  nsCOMPtr<nsIContent> content;
-  frame->GetContent(getter_AddRefs(content));
+  nsIContent* content = frame->GetContent();
 
   if (!content) 
     return NS_ERROR_FAILURE;
@@ -1024,7 +1023,7 @@ void nsHTMLComboboxTextFieldAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame*
   frame->FirstChild(context, nsnull, aBoundingFrame);
   frame->FirstChild(context, nsnull, &frame);
 
-  frame->GetRect(aBounds);
+  aBounds = frame->GetRect();
 }
 
 /** Return our cached parent */
@@ -1104,14 +1103,12 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::DoAction(PRUint8 aIndex)
     return NS_ERROR_FAILURE;
 
   frame->FirstChild(context, nsnull, &frame);
-  frame->GetNextSibling(&frame);
-
-  nsCOMPtr<nsIContent> content;
-  frame->GetContent(getter_AddRefs(content));
+  frame = frame->GetNextSibling();
 
   // We only have one action, click. Any other index is meaningless(wrong)
   if (aIndex == eAction_Click) {
-    nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(content));
+    nsCOMPtr<nsIDOMHTMLInputElement>
+      element(do_QueryInterface(frame->GetContent()));
     if (element)
     {
        element->Click();
@@ -1167,10 +1164,7 @@ void nsHTMLComboboxButtonAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** a
     return;
 
   frame->FirstChild(context, nsnull, &frame); // first frame is for the textfield
-
-  frame->GetNextSibling(&frame);  // sibling frame is for the button
-
-  frame->GetRect(aBounds);
+  aBounds = frame->GetNextSibling()->GetRect();  // sibling frame is for the button
 }
 
 /** We are a button. */
@@ -1335,9 +1329,6 @@ void nsHTMLComboboxListAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aBo
     return;
   }
 
-  frame->GetParent(aBoundingFrame);
-  frame->GetParent(&frame);
-
-  frame->GetRect(aBounds);
+  *aBoundingFrame = frame->GetParent();
+  aBounds = (*aBoundingFrame)->GetRect();
 }
-

@@ -444,8 +444,7 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
   if (!shell) 
     return PR_FALSE;
 
-  nsCOMPtr<nsIViewManager> viewManager;
-  shell->GetViewManager(getter_AddRefs(viewManager));
+  nsIViewManager* viewManager = shell->GetViewManager();
   if (!viewManager)
     return PR_FALSE;
 
@@ -473,10 +472,9 @@ PRBool nsAccessible::IsPartiallyVisible(PRBool *aIsOffscreen)
   // We don't use the more accurate GetBoundsRect, because that is more expensive 
   // and the STATE_OFFSCREEN flag that this is used for only needs to be a rough indicator
 
-  nsRect relFrameRect;
+  nsRect relFrameRect = frame->GetRect();
   nsPoint frameOffset;
-  frame->GetRect(relFrameRect);
-  nsIView *containingView = frame->GetViewExternal(presContext);
+  nsIView *containingView = frame->GetViewExternal();
   if (!containingView) {
     frame->GetOffsetFromView(presContext, frameOffset, &containingView);
     if (!containingView)
@@ -665,23 +663,22 @@ void nsAccessible::GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFram
   if (aPresContext) {
     PRInt32 offsetX = 0;
     PRInt32 offsetY = 0;
-    nsCOMPtr<nsIWidget> widget;
+    nsIWidget* widget = nsnull;
     
     while (aFrame) {
       // Look for a widget so we can get screen coordinates
-      nsIView* view = aFrame->GetViewExternal(aPresContext);
-      nsPoint origin;
+      nsIView* view = aFrame->GetViewExternal();
       if (view) {
-        view->GetWidget(*getter_AddRefs(widget));
+        widget = view->GetWidget();
         if (widget)
           break;
       }
       // No widget yet, so count up the coordinates of the frame 
-      aFrame->GetOrigin(origin);
+      nsPoint origin = aFrame->GetPosition();
       offsetX += origin.x;
       offsetY += origin.y;
   
-      aFrame->GetParent(&aFrame);
+      aFrame = aFrame->GetParent();
     }
     
     if (widget) {
@@ -755,20 +752,19 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
     if (!IsCorrectFrameType(ancestorFrame, nsAccessibilityAtoms::inlineFrame) &&
         !IsCorrectFrameType(ancestorFrame, nsAccessibilityAtoms::textFrame))
       break;
-    ancestorFrame->GetParent(&ancestorFrame); 
+    ancestorFrame = ancestorFrame->GetParent();
   }
 
   nsIFrame *iterFrame = firstFrame;
   nsCOMPtr<nsIContent> firstContent(do_QueryInterface(mDOMNode));
-  nsCOMPtr<nsIContent> iterContent(firstContent);
+  nsIContent* iterContent = firstContent;
   PRInt32 depth = 0;
 
   // Look only at frames below this depth, or at this depth (if we're still on the content node we started with)
   while (iterContent == firstContent || depth > 0) {
     // Coordinates will come back relative to parent frame
     nsIFrame *parentFrame = iterFrame;
-    nsRect currFrameBounds;
-    iterFrame->GetRect(currFrameBounds);
+    nsRect currFrameBounds = iterFrame->GetRect();
    
     // We just want the width and height - only get relative coordinates if we're not already
     // at the bounding frame
@@ -776,13 +772,9 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
 
     // Make this frame's bounds relative to common parent frame
     while (parentFrame && parentFrame != *aBoundingFrame) {
-      nsRect parentFrameBounds;
-      parentFrame->GetRect(parentFrameBounds);
       // Add this frame's bounds to our total rectangle
-      currFrameBounds.x += parentFrameBounds.x;
-      currFrameBounds.y += parentFrameBounds.y;
-
-      parentFrame->GetParent(&parentFrame);
+      currFrameBounds += parentFrame->GetPosition();
+      parentFrame = parentFrame->GetParent();
     }
 
     // Add this frame's bounds to total
@@ -805,10 +797,10 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
       while (iterFrame) {
         iterFrame->GetNextInFlow(&iterNextFrame);
         if (!iterNextFrame)
-          iterFrame->GetNextSibling(&iterNextFrame);
+          iterNextFrame = iterFrame->GetNextSibling();
         if (iterNextFrame || --depth < 0) 
           break;
-        iterFrame->GetParent(&iterFrame);
+        iterFrame = iterFrame->GetParent();
       }
     }
 
@@ -818,7 +810,7 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
       break;
     iterContent = nsnull;
     if (depth == 0)
-      iterFrame->GetContent(getter_AddRefs(iterContent));
+      iterContent = iterFrame->GetContent();
   }
 }
 
@@ -1493,8 +1485,7 @@ nsresult nsAccessible::GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *
   nsIFrame *firstTextFrame = nsnull;
   FindTextFrame(index, presContext, childFrame, &firstTextFrame, frame);
   if (firstTextFrame) {
-    firstTextFrame->GetContent(getter_AddRefs(content));
-    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(content));
+    nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(firstTextFrame->GetContent()));
     NS_IF_ADDREF(*aBlockNode = domNode);
     return NS_OK;
   }
@@ -1513,8 +1504,7 @@ nsIFrame* nsAccessible::GetParentBlockFrame(nsIFrame *aFrame)
   nsCOMPtr<nsIAtom> frameType;
   frame->GetFrameType(getter_AddRefs(frameType));
   while (frame && frameType != nsAccessibilityAtoms::blockFrame) {
-    nsIFrame* parentFrame = nsnull;
-    frame->GetParent(&parentFrame);
+    nsIFrame* parentFrame = frame->GetParent();
     if (parentFrame)
       parentFrame->GetFrameType(getter_AddRefs(frameType));
     frame = parentFrame;
@@ -1553,8 +1543,7 @@ PRBool nsAccessible::FindTextFrame(PRInt32 &index, nsIPresContext *aPresContext,
   }
   else {
     if (frameType == nsAccessibilityAtoms::textFrame) {
-      nsRect frameRect;
-      aCurFrame->GetRect(frameRect);
+      nsRect frameRect = aCurFrame->GetRect();
       // skip the empty frame
       if (! frameRect.IsEmpty()) {
         if (index == 0)
@@ -1570,8 +1559,7 @@ PRBool nsAccessible::FindTextFrame(PRInt32 &index, nsIPresContext *aPresContext,
       return PR_TRUE;
   }
 
-  nsIFrame* siblingFrame = nsnull;
-  aCurFrame->GetNextSibling(&siblingFrame);
+  nsIFrame* siblingFrame = aCurFrame->GetNextSibling();
   return FindTextFrame(index, aPresContext, siblingFrame, aFirstTextFrame, aTextFrame);
 }
 #endif //MOZ_ACCESSIBILITY_ATK

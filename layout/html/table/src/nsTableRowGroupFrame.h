@@ -362,7 +362,7 @@ public:
   virtual nsIFrame* GetFirstFrame() { return mFrames.FirstChild(); };
   virtual nsIFrame* GetLastFrame() { return mFrames.LastChild(); };
   virtual void GetNextFrame(nsIFrame*  aFrame, 
-                            nsIFrame** aResult) { aFrame->GetNextSibling(aResult); };
+                            nsIFrame** aResult) { *aResult = aFrame->GetNextSibling(); };
   PRBool IsRepeatable() const;
   void   SetRepeatable(PRBool aRepeatable);
   PRBool HasStyleHeight() const;
