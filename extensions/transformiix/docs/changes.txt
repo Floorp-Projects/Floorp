@@ -1,8 +1,19 @@
 TransforMiiX (TM)
 (C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
+Build 20000722
+
+-- Fixed leading + trailing whitspace when printing comments
+   - reported by Jeff Bailey
+
+-- Fixed bug in ExprLexer caused by a previous patch
+   - The prevToken was being set to NULL, in cases when
+     it shouldn't have been
+   - discovered when looking for an error reported by
+     Bernhard Zwischenbrugger
 
 Build 20000618
+
 -- Added changes from Olivier Gerardin for improved
    handling of template parameters
 
