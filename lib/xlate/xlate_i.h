@@ -21,24 +21,6 @@
 #include "xp.h"
 #include "xlate.h"
 
-#define N_FONTS 8
-
-typedef struct {
-    short llx, lly, urx, ury;
-} PS_BBox;
-
-typedef struct {
-	short wx, wy;
-	PS_BBox charBBox;
-} PS_CharInfo;
-
-typedef struct {
-    char *name;
-    PS_BBox fontBBox;
-    short upos, uthick;
-    PS_CharInfo chars[256];
-} PS_FontInfo;
-
 #define MAKE_FE_FUNCS_PREFIX(f) TXFE_##f
 #define MAKE_FE_FUNCS_EXTERN
 #include "mk_cx_fn.h"
