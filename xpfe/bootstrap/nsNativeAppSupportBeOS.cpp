@@ -36,11 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef XPCOM_GLUE
 #include "nsStringSupport.h"
-#else
-#include "nsString.h"
-#endif
 
 #include "nsNativeAppSupportBase.h"
 #include "nsIObserver.h"
