@@ -239,19 +239,15 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIRequest *request, nsISuppor
 NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest *request, nsISupports *aCtxt, 
                                                 nsresult aStatus)
 {
-  nsresult rv = NS_OK;
-  
-  if (ProcessCanceledCase(request))
-    return NS_OK;
-
   if ( m_targetStreamListener)
   {
-    m_targetStreamListener->OnStopRequest(request, aCtxt, aStatus);
+    nsCOMPtr<nsIStreamListener> listener(m_targetStreamListener);
+
+    m_targetStreamListener = 0;
+    listener->OnStopRequest(request, aCtxt, aStatus);
   }
 
-  m_targetStreamListener = 0;
-
-  return rv;
+  return NS_OK;
 }
 
 nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * aCtxt)
