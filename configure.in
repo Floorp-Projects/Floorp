@@ -702,6 +702,10 @@ case "$host" in
     HOST_NSPR_MDCPUCFG='\"md/_osf1.cfg\"'
     ;;
 
+*cygwin*)
+    HOST_NSPR_MDCPUCFG='\"md/_winnt.cfg\"'
+    ;;
+
 esac
 
 dnl ========================================================
