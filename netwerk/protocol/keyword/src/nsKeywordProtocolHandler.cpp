@@ -17,14 +17,14 @@
  */
 
 #include "nsKeywordProtocolHandler.h"
-#include "nsIURL.h"
+#include "nsIURI.h"
 #include "nsIIOService.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsEscape.h"
 
-static NS_DEFINE_CID(kStdURICID,     NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,35 +88,32 @@ nsKeywordProtocolHandler::MakeAbsolute(const char* aSpec,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsKeywordProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
-                               nsIURI **result) {
-    nsresult rv;
-
+// digests a spec _without_ the preceeding "keyword:" scheme.
+static char *
+MangleKeywordIntoHTTPURL(const char *aSpec) {
     // build up a request to the keyword server.
     nsCAutoString query;
 
     // pull out the "go" action word, or '?', if any
     char one = aSpec[10], two = aSpec[11];
     if ( ((one == '?') && (two == ' ')) ) {      // "? blah"
-        query = aSpec+11;
+        query = aSpec+2;
     } else if ( (one == 'g' || one == 'G')       //
                             &&                   //
                 (two == 'o' || two == 'O')       // "g[G]o[O] blah"
                             &&                   //
                      (aSpec[12] == ' ') ) {      //
 
-        query = aSpec+11;
+        query = aSpec+3;
     } else {
-        // we need to skip over the original "keyword:" scheme in the string.
-        query = aSpec+8;
+        query = aSpec;
     }
 
     query.Trim(" "); // pull leading/trailing spaces.
 
     // encode
     char * encQuery = nsEscape(query.GetBuffer(), url_Path);
-    if (!encQuery) return NS_ERROR_OUT_OF_MEMORY;
+    if (!encQuery) return nsnull;
     query = encQuery;
     nsAllocator::Free(encQuery);
 
@@ -124,19 +121,22 @@ nsKeywordProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     // XXX this url should come from somewhere else
     query.Insert("http://keyword.netscape.com/keyword/", 0);
 
-    nsIURI* url;
+    return query.ToNewCString();
+}
 
-    rv = nsComponentManager::CreateInstance(kStdURICID, nsnull,
-                                            NS_GET_IID(nsIURI),
-                                            (void**)&url);
+// digests a spec of the form "keyword:blah"
+NS_IMETHODIMP
+nsKeywordProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
+                               nsIURI **result) {
+    nsresult rv;
+    nsIURI* uri;
+
+    rv = nsComponentManager::CreateInstance(kSimpleURICID, nsnull, NS_GET_IID(nsIURI), (void**)&uri);
     if (NS_FAILED(rv)) return rv;
-    rv = url->SetSpec(query.GetBuffer());
+    rv = uri->SetSpec((char*)aSpec);
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-
-    *result = url;
+    *result = uri;
     return rv;
 }
 
@@ -145,10 +145,25 @@ nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
                                    nsILoadGroup *aGroup,
                                    nsIEventSinkGetter* eventSinkGetter,
                                    nsIChannel* *result) {
-    // the keyword handler simply munges the spec during
-    // uri creation, and creates an HTTP url.
-    NS_ASSERTION(0, "someone's trying to create a new keyword channel");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+    char *path = nsnull;
+    rv = uri->GetPath(&path);
+    if (NS_FAILED(rv)) return rv;
+
+    char *httpSpec = MangleKeywordIntoHTTPURL(path);
+    nsAllocator::Free(path);
+    if (!httpSpec) return NS_ERROR_OUT_OF_MEMORY;
+
+    rv = uri->SetSpec(httpSpec);
+    nsAllocator::Free(httpSpec);
+    if (NS_FAILED(rv)) return rv;
+
+    // now we have an HTTP url, give the user an HTTP channel
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return serv->NewChannelFromURI(verb, uri, aGroup, eventSinkGetter, result);    
 }
 
 ////////////////////////////////////////////////////////////////////////////////
