@@ -78,6 +78,7 @@ nsEventStateManager::nsEventStateManager()
   mDocument = nsnull;
   mPresContext = nsnull;
   mCurrentTabIndex = 0;
+  mLastWindowToHaveFocus = nsnull;
   NS_INIT_REFCNT();
 }
 
@@ -95,6 +96,8 @@ nsEventStateManager::~nsEventStateManager()
   NS_IF_RELEASE(mCurrentFocus);
 
   NS_IF_RELEASE(mDocument);
+
+  NS_IF_RELEASE(mLastWindowToHaveFocus);
 }
 
 NS_IMPL_ADDREF(nsEventStateManager)
@@ -370,9 +373,13 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
           
           PRBool focusChangeFailed = PR_TRUE;
           if (focusable) {
-            nsCOMPtr<nsIContent> content = do_QueryInterface(focusable);
-            if (ChangeFocus(content, PR_TRUE))
+            if (current != mCurrentFocus) {
+              nsCOMPtr<nsIContent> content = do_QueryInterface(focusable);
+              if (ChangeFocus(content, PR_TRUE))
+                focusChangeFailed = PR_FALSE;
+            } else {
               focusChangeFailed = PR_FALSE;
+            }
           }
 
           if (focusChangeFailed) {
@@ -1405,6 +1412,58 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
     if (NS_OK == ec) {
       mCurrentTabIndex = val;
     }
+
+    // Check to see if the mCurrentTarget has a view with a widget
+    // i.e TextField or TextArea, if so, don't set the focus on their window
+    PRBool shouldSetFocusOnWindow = PR_TRUE;
+    if (nsnull != mCurrentTarget) {
+      nsIView * view = nsnull;
+      mCurrentTarget->GetView(&view);
+      if (view != nsnull) {
+        nsIWidget *window = nsnull;
+        view->GetWidget(window);
+        if (window != nsnull) { // addrefs
+          shouldSetFocusOnWindow = PR_FALSE;
+          NS_RELEASE(window);
+        }
+      }
+    }
+
+    // Find the window that this frame is in and
+    // make sure it has focus
+    // XXX Note: mLastWindowToHaveFocus this does not track when ANY focus
+    // event comes through, the only place this gets set is here
+    // so some windows may get multiple focus events
+    // For example, if you clicked in the window (generates focus event)
+    // then click on a gfx control (generates another focus event)
+    if (shouldSetFocusOnWindow && nsnull != mCurrentTarget) {
+      nsIFrame * parentFrame;
+      mCurrentTarget->GetParentWithView(&parentFrame);
+      if (nsnull != parentFrame) {
+        nsIView * pView;
+        parentFrame->GetView(&pView);
+        if (nsnull != pView) {
+          nsIWidget *window = nsnull;
+
+          nsIView *ancestor = pView;
+          while (nsnull != ancestor) {
+            ancestor->GetWidget(window); // addrefs
+            if (nsnull != window) {
+              if (window != mLastWindowToHaveFocus) {
+                window->SetFocus();
+                NS_IF_RELEASE(mLastWindowToHaveFocus);
+                mLastWindowToHaveFocus = window;
+              } else {
+                NS_IF_RELEASE(window);
+              }
+	            break;
+	          }
+	          ancestor->GetParent(ancestor);
+          }
+        }
+      }
+    }
+
   }
 
   return NS_OK;

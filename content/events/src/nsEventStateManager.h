@@ -97,7 +97,8 @@ protected:
   nsIContent* mDragOverContent;
   nsIContent* mCurrentFocus;
   PRInt32 mCurrentTabIndex;
- 
+  nsIWidget * mLastWindowToHaveFocus; // last native window to get focus via the evs
+
   nsIPresContext* mPresContext;      // Not refcnted
   nsIDocument* mDocument;            // [OWNER], but doesn't need to be.
 };
