@@ -19,13 +19,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DOMHelper.cpp,v 1.4 2000/08/26 04:20:14 Peter.VanderBeken%pandora.be Exp $
+ * $Id: DOMHelper.cpp,v 1.5 2000/08/27 05:58:59 kvisco%ziplink.net Exp $
  */
 
 /**
  * A class used to overcome DOM 1.0 deficiencies
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.4 $ $Date: 2000/08/26 04:20:14 $
+ * @version $Revision: 1.5 $ $Date: 2000/08/27 05:58:59 $
 **/
 
 #include "DOMHelper.h"
@@ -167,7 +167,12 @@ void DOMHelper::continueIndexing(Node* node) {
     MITREObjectWrapper* wrapper = 0;
 
     //-- get indexing information
-    Document* doc = node->getOwnerDocument();
+    Document* doc = 0;
+    if (node->getNodeType() == Node::DOCUMENT_NODE)
+        doc = (Document*)node;
+    else
+        doc = node->getOwnerDocument();
+
     ListIterator* iter = indexes.iterator();
     IndexState* idxState = 0;
     while (iter->hasNext()) {
