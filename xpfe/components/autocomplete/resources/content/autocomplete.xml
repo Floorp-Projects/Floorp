@@ -18,10 +18,10 @@
           <xul:image class="autocomplete-icon" allowevents="true"/>
         </children>
 
-        <xul:hbox class="textbox-input-box" flex="1">
+        <xul:hbox class="textbox-input-box" flex="1" inherits="tooltiptext=inputtooltiptext">
           <html:input anonid="input" class="autocomplete-textbox textbox-input"
                       flex="1" allowevents="true"
-                      inherits="onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
+                      inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction"/>
         </xul:hbox>
       </xul:hbox>
                           
