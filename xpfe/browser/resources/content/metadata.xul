@@ -1,0 +1,193 @@
+<?xml version="1.0"?> 
+
+<!--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is this file as it was released on
+   - January 3, 2001.
+   - 
+   - The Initial Developer of the Original Code is Jonas Sicking.
+   - Portions created by Jonas Sicking are Copyright (C) 2000
+   - Jonas Sicking.  All Rights Reserved.
+   - 
+   - Contributor(s):
+   -   Jonas Sicking <sicking@bigfoot.com> (Original Author)
+   - 
+   - Alternatively, the contents of this file may be used under the
+   - terms of the GNU General Public License Version 2 or later (the
+   - "GPL"), in which case the provisions of the GPL are applicable 
+   - instead of those above.  If you wish to allow use of your 
+   - version of this file only under the terms of the GPL and not to
+   - allow others to use your version of this file under the MPL,
+   - indicate your decision by deleting the provisions above and
+   - replace them with the notice and other provisions required by
+   - the GPL.  If you do not delete the provisions above, a recipient
+   - may use your version of this file under either the MPL or the
+   - GPL.
+  -->
+
+<?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window [
+  <!ENTITY % metadataDTD SYSTEM "chrome://navigator/locale/metadata.dtd" >
+  %metadataDTD;
+]>
+ 
+<window id="metadata"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        label="&caption.label;"
+        onload="onLoad()"
+        class="dialog"
+        align="vertical"
+        persist="screenX screenY"
+        screenX="24" screenY="24">
+
+  <script language="javascript" src="chrome://navigator/content/metadata.js"/>
+
+  <stringbundle src="chrome://navigator/locale/metadata.properties" id="bundle_metadata"/>
+
+  <titledbox id="sec-document">
+    <label><text value="&sec-document.label;"/></label>
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row id="document-url">
+          <text value="&document-url.label;" />
+          <text id="document-url-text" class="link" onclick="openLink(this)" value="" />
+        </row>
+        <row id="document-title">
+          <text value="&document-title.label;"/>
+          <text id="document-title-text" value=""/>
+        </row>
+      </rows>
+    </grid>
+  </titledbox>
+  <titledbox id="sec-link">
+    <label><text value="&sec-link.label;"/></label>
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row id="link-url">
+          <text value="&link-url.label;"/>
+          <text id="link-url-text" value="" class="link" onclick="openLink(this)"/>
+        </row>
+        <row id="link-target">
+          <text value="&link-target.label;"/>
+          <text id="link-target-text" value=""/>
+        </row>
+        <row id="link-type">
+          <text value="&link-type.label;"/>
+          <text id="link-type-text" value=""/>
+        </row>
+        <row id="link-lang">
+          <text value="&link-lang.label;"/>
+          <text id="link-lang-text" value=""/>
+        </row>
+        <row id="link-rel">
+          <text value="&link-rel.label;"/>
+          <text id="link-rel-text" value=""/>
+        </row>
+        <row id="link-rev">
+          <text value="&link-rev.label;"/>
+          <text id="link-rev-text" value=""/>
+        </row>
+      </rows>
+    </grid>
+  </titledbox>
+  <titledbox id="sec-image">
+    <label><text value="&sec-image.label;"/></label>
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row id="image-url">
+          <text value="&image-url.label;"/>
+          <text id="image-url-text" value="" class="link" onclick="openLink(this)"/>
+        </row>
+        <row id="image-desc">
+          <text value="&image-desc.label;"/>
+          <text id="image-desc-text" value="" class="link" onclick="openLink(this)"/>
+        </row>
+      </rows>
+    </grid>
+  </titledbox>
+  <titledbox id="sec-insdel">
+    <label><text value="&sec-insdel.label;"/></label>
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row id="insdel-cite">
+          <text value="&insdel-cite.label;"/>
+          <text id="insdel-cite-text" value="" class="link" onclick="openLink(this)"/>
+        </row>
+        <row id="insdel-date">
+          <text value="&insdel-date.label;"/>
+          <text id="insdel-date-text" value=""/>
+        </row>
+      </rows>
+    </grid>
+  </titledbox>
+  <titledbox id="sec-quote">
+    <label><text value="&sec-quote.label;"/></label>
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row id="quote-cite">
+          <text value="&quote-cite.label;"/>
+          <text id="quote-cite-text" value="" class="link" onclick="openLink(this)"/>
+        </row>
+      </rows>
+    </grid>
+  </titledbox>
+  <titledbox id="sec-misc">
+    <label><text value="&sec-misc.label;"/></label>
+    <grid>
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row id="misc-lang">
+          <text value="&misc-lang.label;"/>
+          <text id="misc-lang-text" value=""/>
+        </row>
+        <row id="misc-title">
+          <text value="&misc-title.label;"/>
+          <html id="misc-title-text"/>
+        </row>
+        <row id="misc-tblsummary">
+          <text value="&misc-tblsummary.label;"/>
+          <text id="misc-tblsummary-text" value=""/>
+        </row>
+      </rows>
+    </grid>
+  </titledbox>
+
+  <spring flex="1"/>
+
+ </window>

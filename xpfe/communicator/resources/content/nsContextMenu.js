@@ -72,6 +72,7 @@ nsContextMenu.prototype = {
         this.initMiscItems();
         this.initSaveItems();
         this.initClipboardItems();
+        this.initMetadataItems();
     },
     initOpenItems : function () {
         // Remove open/edit link if not applicable.
@@ -174,6 +175,11 @@ nsContextMenu.prototype = {
 
         // Copy image location depends on whether we're on an image.
         this.showItem( "context-copyimage", this.onImage );
+    },
+    initMetadataItems : function () {
+        // Show unless in directory listing.
+        // Metadata for directory listings could ofcource be added if wanted
+        this.setItemAttr( "context-metadata", "disabled", this.inDirList ? "true" : null );
     },
     // Set various context menu attributes based on the state of the world.
     setTarget : function ( node ) {
@@ -422,6 +428,14 @@ nsContextMenu.prototype = {
     // Generate image URL and put it on the clipboard.
     copyImage : function () {
         this.copyToClipboard( this.imageURL );
+    },
+
+    // Open Metadata window for node
+    showMetadata : function () {
+        window.openDialog(  "chrome://navigator/content/metadata.xul",
+                            "_blank",
+                            "scrollbars,resizable,chrome,dialog=no",
+                            this.target);
     },
 
     ///////////////
