@@ -28,7 +28,11 @@ F19OFF=FRAMESZ-(10*SZREG)
 
 #define SENTINEL_ENTRY(nn)         /* defined in cpp file, not here */
 
+#ifdef __GNUC__
+#define STUB_ENTRY(nn)    MAKE_STUB(nn, Stub/**/nn/**/__14nsXPTCStubBase)
+#else
 #define STUB_ENTRY(nn)    MAKE_STUB(nn, Stub/**/nn/**/__14nsXPTCStubBaseGv)
+#endif
 
 #define MAKE_STUB(nn, name)					\
 NESTED(name, FRAMESZ, ra);					\

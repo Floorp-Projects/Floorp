@@ -73,25 +73,40 @@ NESTED(_XPTC_InvokeByIndex, FRAMESZ, ra)
 	REG_L	a0, A0OFF(sp)	# a0 - that
 	REG_L	a1, A1OFF(sp)	# a1 - methodIndex
 
+#ifdef __GNUC__
+	# t1 = methodIndex * 8
+	# (use shift instead of mult)
+	sll	t1, a1, 3
+#else
 	# t1 = methodIndex * 12
 	# (use shift and subtract trick instead of mult)
  	sll	t1, a1, 2
 	subu	t1, t1, a1
 	sll	t1, t1, 2
+#endif
 
 	# calculate the function we need to jump to,
 	# which must then be saved in t9
 	lw	t9, 0(a0)
 	addu	t9, t9, t1
+#ifdef __GNUC__
+	lw      t9, 12(t9)      # t9 = *(that+t1+12)
+#else
 	li	t2, 20
 	addu	t9, t9, t2
 	lw	t9, 0(t9)	# t9 = *(that+t1+20)	
+#endif
 
 	# calculate the proper "this" pointer for the
 	# function that they asked for
 	lw	t0, 0(a0)
 	addu	t0, t1
+#ifdef __GNUC__
+	lh      t0, 8(t0)
+#else
 	lw	t0, 12(t0)
+#endif
+	
 	addu	a0, a0, t0
 
 	# get register save area from invoke_copy_to_stack
