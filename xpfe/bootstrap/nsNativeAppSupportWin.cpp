@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -120,9 +120,9 @@ struct Mutex {
           mHandle( 0 ),
           mState( -1 ) {
         mHandle = CreateMutex( 0, FALSE, mName.get() );
-        #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
         printf( "CreateMutex error = 0x%08X\n", (int)GetLastError() );
-        #endif
+#endif
     }
     ~Mutex() {
         if ( mHandle ) {
@@ -130,22 +130,22 @@ struct Mutex {
             Unlock();
 
             BOOL rc = CloseHandle( mHandle );
-            #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
             if ( !rc ) {
                 printf( "CloseHandle error = 0x%08X\n", (int)GetLastError() );
             }
-            #endif
+#endif
         }
     }
     BOOL Lock( DWORD timeout ) {
         if ( mHandle ) {
-            #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
             printf( "Waiting (%d msec) for DDE mutex...\n", (int)timeout );
-            #endif
+#endif
             mState = WaitForSingleObject( mHandle, timeout );
-            #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
             printf( "...wait complete, result = 0x%08X\n", (int)mState );
-            #endif
+#endif
             return mState == WAIT_OBJECT_0;
         } else {
             return FALSE;
@@ -153,9 +153,9 @@ struct Mutex {
     }
     void Unlock() {
         if ( mHandle && mState == WAIT_OBJECT_0 ) {
-            #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
             printf( "Releasing DDE mutex\n" );
-            #endif
+#endif
             ReleaseMutex( mHandle );
             mState = -1;
         }
@@ -282,6 +282,7 @@ private:
     static nsresult OpenWindow( const char *urlstr, const char *args );
     static nsresult OpenBrowserWindow( const char *args );                   
     static nsresult ReParent( nsISupports *window, HWND newParent );
+    static nsresult HandleArbitraryStartup(nsICmdLineService *args);
     static int   mConversations;
     enum {
         topicOpenURL,
@@ -662,9 +663,9 @@ struct MessageWindow {
                                                     0 ) ),      // create struct
                         NS_ERROR_FAILURE );
 
-        #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
         printf( "Message window = 0x%08X\n", (int)mHandle );
-        #endif
+#endif
 
         return NS_OK;
     }
@@ -681,9 +682,9 @@ struct MessageWindow {
         if ( msg == WM_COPYDATA ) {
             // This is an incoming request.
             COPYDATASTRUCT *cds = (COPYDATASTRUCT*)lp;
-            #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
             printf( "Incoming request: %s\n", (const char*)cds->lpData );
-            #endif
+#endif
             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)cds->lpData );
         }
         return TRUE;
@@ -803,9 +804,9 @@ nsNativeAppSupportWin::StartDDE() {
     // Next step is to register a DDE service.
     NS_ENSURE_TRUE( DdeNameService( mInstance, mApplication, 0, DNS_REGISTER ), NS_ERROR_FAILURE );
 
-    #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
     printf( "DDE server started\n" );
-    #endif
+#endif
 
     return NS_OK;
 }
@@ -926,7 +927,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                                               ULONG dwData1,    // transaction-specific data
                                               ULONG dwData2 ) { // transaction-specific data
 
-    #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
     printf( "DDE: uType  =%s\n",      uTypeDesc( uType ).get() );
     printf( "     uFmt   =%u\n",      (unsigned)uFmt );
     printf( "     hconv  =%08x\n",    (int)hconv );
@@ -935,7 +936,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
     printf( "     hdata  =%08x\n",    (int)hdata );
     printf( "     dwData1=%08x\n",    (int)dwData1 );
     printf( "     dwData2=%08x\n",    (int)dwData2 );
-    #endif
+#endif
 
     HDDEDATA result = 0;
     if ( uType & XCLASS_BOOL ) {
@@ -960,9 +961,9 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                     nsCString url = ParseDDEArg( hsz2, 0 );
                     // Make it look like command line args.
                     url.Insert( "mozilla -url ", 0 );
-                    #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
                     printf( "Handling dde XTYP_REQUEST request: [%s]...\n", url.get() );
-                    #endif
+#endif
                     // Now handle it.
                     HandleRequest( LPBYTE( url.get() ) );
                     // Return pseudo window ID.
@@ -1015,9 +1016,9 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
             // Prove that we received the request.
             DWORD bytes;
             LPBYTE request = DdeAccessData( hdata, &bytes );
-            #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
             printf( "Handling dde request: [%s]...\n", (char*)request );
-            #endif
+#endif
             HandleRequest( request );
             result = (HDDEDATA)DDE_FACK;
         } else {
@@ -1025,9 +1026,9 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
         }
     } else if ( uType & XCLASS_NOTIFICATION ) {
     }
-    #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
     printf( "DDE result=%d (0x%08X)\n", (int)result, (int)result );
-    #endif
+#endif
     return result;
 }
 
@@ -1110,74 +1111,81 @@ HDDEDATA nsNativeAppSupportWin::CreateDDEData( DWORD value ) {
 void
 nsNativeAppSupportWin::HandleRequest( LPBYTE request ) {
     // Parse command line.
-    nsCOMPtr<nsICmdLineService> args;
-    nsresult rv = GetCmdLineArgs( request, getter_AddRefs( args ) );
-    if ( NS_SUCCEEDED( rv ) ) {
-        nsXPIDLCString arg;
-        if (NS_SUCCEEDED(args->GetURLToLoad(getter_Copies(arg) ) ) &&
-            (const char*)arg ) {
-            // Launch browser.
-            #if MOZ_DEBUG_DDE
-            printf( "Launching browser on url [%s]...\n", (const char*)arg );
-            #endif
-            (void)OpenBrowserWindow( arg );
-        }
-        else if (NS_SUCCEEDED(args->GetCmdLineValue("-chrome", getter_Copies(arg))) &&
-                 (const char*)arg ) {
-            // Launch chrome.
-            #if MOZ_DEBUG_DDE
-            printf( "Launching chrome url [%s]...\n", (const char*)arg );
-            #endif
-            (void)OpenWindow( arg, "" );
-        }
-        else if (NS_SUCCEEDED(args->GetCmdLineValue("-edit", getter_Copies(arg))) &&
-                 (const char*)arg ) {
-            // Launch composer.
-            #if MOZ_DEBUG_DDE
-            printf( "Launching editor on url [%s]...\n", arg );
-            #endif
-            (void)OpenWindow( "chrome://editor/content/", arg );
-        } else if ( NS_SUCCEEDED( args->GetCmdLineValue( "-mail", getter_Copies(arg))) &&
-                    (const char*)arg ) {
-            // Launch composer.
-            #if MOZ_DEBUG_DDE
-            printf( "Launching mail...\n" );
-            #endif
-            (void)OpenWindow( "chrome://messenger/content/", "" );
-        } else if ( NS_SUCCEEDED( args->GetCmdLineValue( "-kill", getter_Copies(arg))) &&
-                    (const char*)arg ) {
-            // Turn off server mode.
-            nsCOMPtr<nsIAppShellService> appShell = do_GetService( "@mozilla.org/appshell/appShellService;1" );
-            nsCOMPtr<nsINativeAppSupport> native;
-            if ( appShell &&
-                 NS_SUCCEEDED( appShell->GetNativeAppSupport( getter_AddRefs( native ) ) ) &&
-                 native ) {
-                native->SetIsServerMode( PR_FALSE );
-                // This closes app if there are no top-level windows.
-                appShell->UnregisterTopLevelWindow( 0 );
-            }
-        } else {
-            #if MOZ_DEBUG_DDE
-            printf( "Unknown request [%s]\n", (char*) request );
-            #endif
-            // if all else fails, open a browser window
-            const char * const contractID = "@mozilla.org/commandlinehandler/general-startup;1?type=browser";
-            nsCOMPtr<nsICmdLineHandler> handler(do_GetService(contractID, &rv));
-
-            nsXPIDLString defaultArgs;
-            if (handler) {
-                handler->GetDefaultArgs(getter_Copies(defaultArgs));
-            }
-
-            if (defaultArgs) {
-                nsCString url;
-                url.AssignWithConversion( defaultArgs );
-                OpenBrowserWindow((const char*)url);
-            } else {
-                OpenBrowserWindow("about:blank");
-            }
-        }
     
+    nsCOMPtr<nsICmdLineService> args;
+    nsresult rv;
+
+    rv = GetCmdLineArgs( request, getter_AddRefs( args ) );
+    if (NS_FAILED(rv)) return;
+
+    // first see if there is a url
+    nsXPIDLCString arg;
+    rv = args->GetURLToLoad(getter_Copies(arg));
+    if (NS_SUCCEEDED(rv) && (const char*)arg ) {
+      // Launch browser.
+#if MOZ_DEBUG_DDE
+      printf( "Launching browser on url [%s]...\n", (const char*)arg );
+#endif
+      (void)OpenBrowserWindow( arg );
+      return;
+    }
+
+
+    // ok, let's try the -chrome argument
+    rv = args->GetCmdLineValue("-chrome", getter_Copies(arg));
+    if (NS_SUCCEEDED(rv) && (const char*)arg ) {
+      // Launch chrome.
+#if MOZ_DEBUG_DDE
+      printf( "Launching chrome url [%s]...\n", (const char*)arg );
+#endif
+      (void)OpenWindow( arg, "" );
+      return;
+    }
+
+    // try using the command line service to get the url
+    rv = HandleArbitraryStartup(args);
+    if (NS_SUCCEEDED(rv))
+      return;
+
+    // try for the "-kill" argument, to shut down the server
+    rv = args->GetCmdLineValue( "-kill", getter_Copies(arg));
+    if ( NS_SUCCEEDED(rv) && (const char*)arg ) {
+      // Turn off server mode.
+      nsCOMPtr<nsIAppShellService> appShell =
+        do_GetService( "@mozilla.org/appshell/appShellService;1", &rv);
+      if (NS_FAILED(rv)) return;
+      
+      nsCOMPtr<nsINativeAppSupport> native;
+      rv = appShell->GetNativeAppSupport( getter_AddRefs( native ));
+      if (NS_SUCCEEDED(rv)) {
+        native->SetIsServerMode( PR_FALSE );
+        // This closes app if there are no top-level windows.
+        appShell->UnregisterTopLevelWindow( 0 );
+      }
+
+      return;
+    }
+
+    // ok, no idea what the param is. 
+#if MOZ_DEBUG_DDE
+    printf( "Unknown request [%s]\n", (char*) request );
+#endif
+    // if all else fails, open a browser window
+    const char * const contractID =
+      "@mozilla.org/commandlinehandler/general-startup;1?type=browser";
+    nsCOMPtr<nsICmdLineHandler> handler = do_GetService(contractID, &rv);
+    if (NS_FAILED(rv)) return;
+      
+    nsXPIDLString defaultArgs;
+    rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
+    if (NS_FAILED(rv) || !defaultArgs) return;
+      
+    if (defaultArgs) {
+      nsCAutoString url;
+      url.AssignWithConversion( defaultArgs );
+      OpenBrowserWindow((const char*)url);
+    } else {
+      OpenBrowserWindow("about:blank");
     }
 }
 
@@ -1195,7 +1203,7 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
     int between, quoted, bSlashCount;
     int argc;
     char *p;
-    nsCString arg;
+    nsCAutoString arg;
     // We loop if we've not finished the second pass through.
     while ( 1 ) {
         // Initialize if required.
@@ -1323,9 +1331,9 @@ nsNativeAppSupportWin::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
                                              NS_GET_IID( nsICmdLineService ),
                                              (void**)aResult );
     if ( NS_FAILED( rv ) || NS_FAILED( ( rv = (*aResult)->Initialize( argc, argv ) ) ) ) {
-        #if MOZ_DEBUG_DDE
+#if MOZ_DEBUG_DDE
         printf( "Error creating command line service = 0x%08X (argc=%d, argv=0x%08X)\n", (int)rv, (int)argc, (void*)argv );
-        #endif
+#endif
     }
 
     // Cleanup.
@@ -1588,5 +1596,27 @@ nsNativeAppSupportWin::StartServerMode() {
     ReParent( newWindow, (HWND)MessageWindow() );
 
     return NS_OK;
+}
+
+
+// go through the command line arguments, and try to load
+// a handler for one, until we succeed
+nsresult
+nsNativeAppSupportWin::HandleArbitraryStartup(nsICmdLineService *args)
+{
+    nsresult rv;
+    
+    nsCOMPtr<nsICmdLineHandler> handler;
+
+    // see if there is a handler
+    rv = args->GetHandlerForParam(nsnull, getter_AddRefs(handler));
+    if (NS_FAILED(rv)) return rv;
+    
+    // ok, from here on out, failures really are fatal
+    nsXPIDLCString url;
+    rv = handler->GetChromeUrlForTask(getter_Copies(url));
+    if (NS_FAILED(rv)) return rv;
+
+    return OpenWindow(url, "");
 }
 
