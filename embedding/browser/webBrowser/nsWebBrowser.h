@@ -47,9 +47,12 @@
 #include "nsIWebBrowserSetup.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebBrowserFocus.h"
+#include "nsIWebBrowserFind.h"
 
 #include "nsVoidArray.h"
 #include "nsWeakPtr.h"
+
+class nsWebBrowserFindImpl;
 
 class nsWebBrowserInitInfo
 {
@@ -86,7 +89,8 @@ class nsWebBrowser : public nsIWebBrowser,
                      public nsITextScroll, 
                      public nsIInterfaceRequestor,
                      public nsIWebBrowserPersist,
-                     public nsIWebBrowserFocus
+                     public nsIWebBrowserFocus,
+                     public nsIWebBrowserFind
 {
 friend class nsDocShellTreeOwner;
 friend class nsWBURIContentListener;
@@ -105,6 +109,8 @@ public:
     NS_DECL_NSIWEBBROWSERSETUP
     NS_DECL_NSIWEBBROWSERPERSIST
     NS_DECL_NSIWEBBROWSERFOCUS
+    NS_DECL_NSIWEBBROWSERFIND
+    
 protected:
     virtual ~nsWebBrowser();
     NS_IMETHOD InternalDestroy();
@@ -115,6 +121,7 @@ protected:
     NS_IMETHOD GetPrimaryContentWindow(nsIDOMWindowInternal **aDomWindow);
     NS_IMETHOD BindListener(nsISupports *aListener, const nsIID& aIID);
     NS_IMETHOD UnBindListener(nsISupports *aListener, const nsIID& aIID);
+    NS_IMETHOD EnsureFindImpl();
 
     static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
@@ -134,6 +141,7 @@ protected:
    nativeWindow               mParentNativeWindow;
    nsIWebBrowserPersistProgress *mProgressListener;
    nsCOMPtr<nsIWebProgress>   mWebProgress;
+   nsWebBrowserFindImpl*      mFindImpl;
 
    //Weak Reference interfaces...
    nsIWidget*                 mParentWidget;

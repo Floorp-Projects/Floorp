@@ -41,6 +41,7 @@ XPIDLSRCS	= \
 		nsITooltipListener.idl		\
 		nsIWebBrowserPersist.idl		\
 		nsIWebBrowserFocus.idl		\
+		nsIWebBrowserFind.idl       \
 		$(NULL)
 
 CPPSRCS		= \
@@ -50,6 +51,7 @@ CPPSRCS		= \
 		nsCommandHandler.cpp		\
 		nsWebBrowserPersist.cpp		\
 		nsDOMWalker.cpp			\
+		nsWebBrowserFind.cpp    \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

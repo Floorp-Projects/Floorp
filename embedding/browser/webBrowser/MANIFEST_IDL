@@ -27,4 +27,4 @@ nsIWebBrowserSetup.idl
 nsIWebBrowserPersist.idl
 nsIWebBrowserFocus.idl
 nsIWebBrowserSiteWindow.idl
-
+nsIWebBrowserFind.idl
