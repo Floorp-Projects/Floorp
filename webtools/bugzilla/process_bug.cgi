@@ -361,14 +361,20 @@ sub CheckCanChangeField {
             }
         }
     }
-    
+
     # Return true if they haven't changed this field at all.
     if ($oldvalue eq $newvalue) {
         return 1;
     }    
     elsif (trim($oldvalue) eq trim($newvalue)) {
         return 1;
+    # numeric fields need to be compared using == 
+    } elsif (($field eq "estimated_time" || $field eq "remaining_time") &&
+             $oldvalue == $newvalue) {
+        return 1;
     }
+        
+    
     
     # A resolution change is always accompanied by a status change. So, we 
     # always OK resolution changes; if they really can't do this, we will 
@@ -1150,6 +1156,7 @@ foreach my $id (@idlist) {
         }
         $i++;
     }
+
     $oldhash{'product'} = get_product_name($oldhash{'product_id'});
     if (!CanEditProductId($oldhash{'product_id'})) {
         ThrowUserError("product_edit_denied",
