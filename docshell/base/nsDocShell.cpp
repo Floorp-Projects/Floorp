@@ -5475,6 +5475,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     nsCOMPtr<nsISupports> cacheKey;
     nsCOMPtr<nsISupports> cacheToken;
     PRPackedBool expired = PR_FALSE;
+    nsXPIDLCString val;
     if (aChannel) {
         nsCOMPtr<nsICachingChannel>
             cacheChannel(do_QueryInterface(aChannel));
@@ -5490,6 +5491,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
         if (httpChannel) {
             httpChannel->GetUploadStream(getter_AddRefs(inputStream));
             httpChannel->GetReferrer(getter_AddRefs(referrerURI));
+            httpChannel->GetResponseHeader("Cache-Control", getter_Copies(val));
         }
     }
 
@@ -5504,10 +5506,11 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     /* If cache got a 'no-store', ask SH not to store
      * HistoryLayoutState. By default, SH will set this
      * flag to PR_TRUE and save HistoryLayoutState.
-     */
-    if (!cacheToken)
+     */    
+    if (PL_strcasestr(val, "no-store")) {
         entry->SetSaveLayoutStateFlag(PR_FALSE);
-    else {
+    }
+    if (cacheToken) {
         // Check if the page has expired from cache 
         nsCOMPtr<nsICacheEntryDescriptor> cacheEntryDesc(do_QueryInterface(cacheToken));
         if (cacheEntryDesc) {        
