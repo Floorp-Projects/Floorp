@@ -496,7 +496,7 @@
             {
               var separator = document.createElement("menuseparator");
               popup.appendChild(separator);
-              var menuitem = document.createElement("menuitem");
+              menuitem = document.createElement("menuitem");
               menuitem.setAttribute("label", menuItemStrings[customizePos]);
               menuitem.setAttribute("value", menuItemIds[customizePos]);
               popup.appendChild(menuitem);
