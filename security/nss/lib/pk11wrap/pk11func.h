@@ -304,7 +304,7 @@ SECStatus PK11_WrapSymKey(CK_MECHANISM_TYPE type, SECItem *params,
  * operation or the  flags and making the key permanent at the same time.
  * If the key is moved to the same slot, operation and flags values are 
  * currently ignored */
-PK11SymKey *PK11_MoveKey(PK11SlotInfo *slot, CK_ATTRIBUTE_TYPE operation, 
+PK11SymKey *PK11_MoveSymKey(PK11SlotInfo *slot, CK_ATTRIBUTE_TYPE operation, 
 			CK_FLAGS flags, PRBool  perm, PK11SymKey *symKey);
 /*
  * derive a new key from the base key.
