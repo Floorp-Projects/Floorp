@@ -48,7 +48,9 @@ static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 nsWalletlibService::nsWalletlibService()
 {
   NS_INIT_REFCNT();
-  Init();
+  ++mRefCnt; // Stabilization that can't accidentally |Release()| me
+    Init();
+  --mRefCnt;
 }
 
 nsWalletlibService::~nsWalletlibService()
