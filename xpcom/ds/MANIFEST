@@ -1,5 +1,4 @@
 nsAVLTree.h
-nsBTree.h
 nsCppSharedAllocator.h
 nsCRT.h
 nsDeque.h
@@ -18,7 +17,6 @@ nsIUnicharBuffer.h
 nsIVariant.h
 nsInt64.h
 nsQuickSort.h
-nsRBTree.h
 nsStr.h
 nsString.h
 nsString2.h

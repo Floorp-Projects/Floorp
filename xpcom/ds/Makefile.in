@@ -42,7 +42,6 @@ CPPSRCS =				\
 	nsArena.cpp                   \
 	nsAtomTable.cpp               \
 	nsAVLTree.cpp                 \
-	nsBTree.cpp                   \
 	nsBuffer.cpp                  \
 	nsByteBuffer.cpp              \
 	nsCRT.cpp                     \
@@ -57,7 +56,6 @@ CPPSRCS =				\
 	nsPageMgr.cpp                 \
 	nsProperties.cpp              \
 	nsQuickSort.cpp               \
-	nsRBTree.cpp                  \
 	nsSizeOfHandler.cpp           \
 	nsStr.cpp                     \
 	nsString.cpp                  \
@@ -73,7 +71,6 @@ CPPSRCS =				\
 
 EXPORTS = \
 	nsAVLTree.h                \
-	nsBTree.h                  \
 	nsCppSharedAllocator.h		 \
 	nsCRT.h                    \
 	nsDeque.h                  \
@@ -92,7 +89,6 @@ EXPORTS = \
 	nsIVariant.h               \
 	nsInt64.h                  \
 	nsQuickSort.h              \
-	nsRBTree.h                 \
 	nsStr.h                    \
 	nsString.h                 \
 	nsString2.h                \
