@@ -48,14 +48,14 @@
               <text value="Border Color"/>
               <hbox autostretch="never">
                 <colorpicker id="cprElBorderColor" type="button"
-                  pref="true" preftype="color" prefstring="inspector.blink.border-color" prefattribute="color"/>
+                  preftype="color" prefstring="inspector.blink.border-color" prefattribute="color"/>
               </hbox>
             </row>
             <row autostretch="never">
               <text value="Border Width"/>
               <hbox autostretch="never">
                 <textbox id="txfElBorderWidth" style="width: 4em"
-                  pref="true" preftype="int" prefstring="inspector.blink.border-width" prefattribute="value"/>
+                  preftype="int" prefstring="inspector.blink.border-width" prefattribute="value"/>
                 <text value="(px)"/>
               </hbox>
             </row>
@@ -63,7 +63,7 @@
               <text value="Blink Duration"/>
               <hbox autostretch="never">
                 <textbox id="txfElDuration" style="width: 4em"
-                  pref="true" preftype="int" prefstring="inspector.blink.duration" prefattribute="value"/>
+                  preftype="int" prefstring="inspector.blink.duration" prefattribute="value"/>
                 <text value="(s)"/>
               </hbox>
             </row>
@@ -71,7 +71,7 @@
               <text value="Blink Speed"/>
               <hbox autostretch="never">
                 <textbox id="txfElSpeed" style="width: 4em"
-                  pref="true" preftype="int" prefstring="inspector.blink.speed" prefattribute="value"/>
+                  preftype="int" prefstring="inspector.blink.speed" prefattribute="value"/>
                 <text value="(ms)"/>
                </hbox>
             </row>
@@ -79,7 +79,7 @@
         </grid>
         <hbox autostretch="never">
           <checkbox id="cbElOn" label="Blink Selected Element"
-              pref="true" preftype="bool" prefstring="inspector.blink.on" prefattribute="checked"/>
+              preftype="bool" prefstring="inspector.blink.on" prefattribute="checked"/>
         </hbox>
       </vbox>
     </groupbox>
@@ -98,7 +98,7 @@
     
     <vbox>
       <checkbox id="cbxNavIntegration" label="Add contextual menus to Navigator"
-                pref="true" preftype="bool" prefstring="inspector.hooks.navigator" prefattribute="checked"/>
+                preftype="bool" prefstring="inspector.hooks.navigator" prefattribute="checked"/>
     </vbox>
   </vbox>
 </page>

@@ -31,11 +31,8 @@
 %prefImagesDTD;
 ]>
 
-<window xmlns:html="http://www.w3.org/1999/xhtml" id="imagesWindow"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="init();">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="init();">
           
   <script type="application/x-javascript" src="chrome://cookie/content/cookieOverlay.js"/>
 
@@ -77,58 +74,54 @@
 
   <hbox class="box-smallheader" id="imagesHeader" title="&lHeader;"/>
 
-  <groupbox orient="vertical" id="imagesArea">
+  <groupbox id="imagesArea">
     <caption label="&imageBlocking.label;"/>
 
-    <html>&imageDetails;</html>
+    <description>&imageDetails;</description>
 
-    <radiogroup id="networkImageBehaviour" orient="vertical" autostretch="never"
-                pref="true" preftype="int" prefstring="network.image.imageBehavior"
-                prefattribute="value">
-      <radio group="networkImageBehaviour" value="2" label="&disableImages.label;"
+    <radiogroup id="networkImageBehaviour"
+                prefstring="network.image.imageBehavior">
+      <radio value="2" label="&disableImages.label;"
              accesskey="&disableImages.accesskey;"
              oncommand="setWarnAboutImagesEnabled(false);"/>
-      <radio group="networkImageBehaviour" value="1" label="&accOrgImagesRadio.label;"
+      <radio value="1" label="&accOrgImagesRadio.label;"
              accesskey="&accOrgImagesRadio.accesskey;"
              id="accOrgImages" observes="haveImageBlocking"
              oncommand="setWarnAboutImagesEnabled(true);"/>
-      <radio group="networkImageBehaviour" value="0" label="&accAllImagesRadio.label;"
+      <radio value="0" label="&accAllImagesRadio.label;"
              accesskey="&accAllImagesRadio.accesskey;"
              oncommand="setWarnAboutImagesEnabled(true);"/>
     </radiogroup>
 
     <separator observes="haveImageBlocking"/>
 
-    <hbox autostretch="never">
+    <hbox align="start">
       <checkbox id="networkImageWarnAboutImages" label="&warnAboutImages.label;"
                 accesskey="&warnAboutImages.accesskey;" observes="haveImageBlocking"
-                pref="true" preftype="bool" prefattribute="checked"
                 prefstring="network.image.warnAboutImages"/>
     </hbox>
 
     <separator observes="haveImageBlocking"/>
 
     <hbox pack="end">
-      <button class="dialog" id="viewImages" label="&viewImages.label;"
+      <button id="viewImages" label="&viewImages.label;"
               accesskey="&viewImages.accesskey;" oncommand="viewImages();"
               observes="haveImageBlocking"
-              pref="true" preftype="bool"
-              prefstring="pref.advanced.images.disable_button.view_image" prefattribute="disabled"/>
+              prefstring="pref.advanced.images.disable_button.view_image"/>
     </hbox>
 
   </groupbox>
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&animLoopingTitle.label;"/>
-    <radiogroup id="imageLooping" orient="vertical" autostretch="never"
-                pref="true" preftype="string" prefstring="image.animation_mode"
-                prefattribute="value">
-        <radio group="imageLooping" value="normal" label="&animLoopAsSpecified.label;"
+    <radiogroup id="imageLooping"
+                preftype="string" prefstring="image.animation_mode">
+        <radio value="normal" label="&animLoopAsSpecified.label;"
                accesskey="&animLoopAsSpecified.accesskey;"/>
-        <radio group="imageLooping" value="once" label="&animLoopOnce.label;"
+        <radio value="once" label="&animLoopOnce.label;"
                accesskey="&animLoopOnce.accesskey;"/>
-        <radio group="imageLooping" value="none" label="&animLoopNever.label;"
+        <radio value="none" label="&animLoopNever.label;"
                accesskey="&animLoopNever.accesskey;"/>
     </radiogroup>
   </groupbox>
 
-</window>
+</page>

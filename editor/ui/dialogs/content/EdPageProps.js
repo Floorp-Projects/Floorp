@@ -42,7 +42,6 @@ function Startup()
   gDialog.TitleInput       = document.getElementById("TitleInput");
   gDialog.AuthorInput      = document.getElementById("AuthorInput");
   gDialog.DescriptionInput = document.getElementById("DescriptionInput");
-  doSetOKCancel(onOK, onCancel);
   
   // Default string for new page is set from DTD string in XUL,
   //   so set only if not new doc URL
@@ -131,7 +130,7 @@ function ValidateData()
   return true;
 }
 
-function onOK()
+function onAccept()
 {
   if (ValidateData())
   {

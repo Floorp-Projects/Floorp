@@ -30,10 +30,8 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorListProperties.dtd">
 <window class="dialog" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
-    onunload="onCancel()"
-    orient="vertical">
+    onunload="onCancel()">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -44,7 +42,7 @@
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
-  <groupbox orient="vertical" flex="1"><caption label="&ListType.label;"/>
+  <groupbox flex="1"><caption label="&ListType.label;"/>
     <menulist id="ListType" oncommand="SelectListType()">
       <menupopup>
         <menuitem label="&none.value;"/>
@@ -53,9 +51,9 @@
         <menuitem label="&definitionList.value;"/>
       </menupopup>
     </menulist>
-    <radiogroup id="RadioGroup" orient="vertical" index="0" persist="index">
-      <radio group="RadioGroup" id="ChangeAll"      label="&changeEntireListRadio.label;"/>
-      <radio group="RadioGroup" id="ChangeSelected" label="&changeSelectedRadio.label;"/>
+    <radiogroup id="RadioGroup" index="0" persist="index">
+      <radio id="ChangeAll"      label="&changeEntireListRadio.label;"/>
+      <radio id="ChangeSelected" label="&changeSelectedRadio.label;"/>
     </radiogroup>
   </groupbox>
   <spacer class="spacer"/>
@@ -63,15 +61,15 @@
   <!-- message text and list items are set in JS 
        text value should be identical to string with id=BulletStyle in editor.properties 
   -->
-  <groupbox orient="vertical" flex="1"><caption id="BulletStyleLabel" label="&bulletStyle.label;"/>
+  <groupbox flex="1"><caption id="BulletStyleLabel" label="&bulletStyle.label;"/>
     <menulist class="MinWidth10em" id="BulletStyle" oncommand="SelectBulletStyle()"/>
     <spacer class="spacer"/>
     <hbox>
-      <text class="label" id="StartingNumberLabel" value="&startingNumber.label;"/>
+      <label id="StartingNumberLabel" value="&startingNumber.label;"/>
       <textbox class="narrow" id="StartingNumber" oninput="forceInteger(this.id)"/>
       <spacer/>
     </hbox>
-    <html id="StartExample" class="wrap" flex="1" style="width: 1em">&startingHelp.label;</html>
+    <description id="StartExample" class="wrap" flex="1" style="width: 1em">&startingHelp.label;</description>
   </groupbox>
   <!-- from EdDialogOverlay -->
   <vbox id="AdvancedEdit"/>

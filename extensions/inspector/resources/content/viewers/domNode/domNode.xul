@@ -9,8 +9,7 @@
 <?xml-stylesheet href="chrome://inspector/skin/viewers/domNode/domNode.css"?>
 
 <page id="winNodeDefault"
-      orient="vertical" style="padding: 10px"
-      xmlns:html="http://www.w3.org/1999/xhtml"
+      style="padding: 10px"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <!--============================= SCRIPTS ============================= -->
@@ -43,25 +42,25 @@
         </columns>
         <rows>
           <row>
-            <text value="Node Name:" class="label"/>
+            <label value="Node Name:" />
             <textbox id="tx_nodeName" readonly="true"/>
           </row>
           <row>
-            <text value="Namespace URI:" class="label"/>
+            <label value="Namespace URI:" />
             <textbox id="tx_namespace" readonly="true"/>
           </row>
           <row>
-            <text value="Node Type:" class="label"/>
+            <label value="Node Type:" />
             <textbox id="tx_nodeType" readonly="true"/>
           </row>
           <row>
-            <text value="Node Value:" class="label"/>
+            <text value="Node Value:" />
             <textbox id="tx_nodeValue" readonly="true"/>
           </row>
         </rows>
       </grid>
     
-      <tree id="trAttributes" class="tree-editable inset"
+      <tree id="trAttributes" class="tree-editable"
         flex="1" context="ppAttrContext"
         datasources="rdf:null"
         onafteredit="viewer.cmdSetSelectedAttributeValue(event.editingItem, event.newValue)">

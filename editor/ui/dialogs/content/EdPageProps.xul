@@ -25,54 +25,49 @@
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPageProperties.dtd">
 
-<window class="dialog" title="&windowTitle.label;"
-    xmlns:html="http://www.w3.org/1999/xhtml"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    onload="Startup()"
-    onunload="onCancel()"
-    orient="vertical">
+<dialog title="&windowTitle.label;"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="Startup();"
+        ondialogaccept="return onAccept();"
+        ondialogcancel="return onCancel();">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdPageProps.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
-  <keyset id="dialogKeys"/>
   <grid>
     <columns><column flex="1"/><column flex="2"/></columns>
     <rows>
       <row>
-        <text class="label" value="&location.label;"/>
-        <text class="label" value="&locationNewPage.label;" id="PageLocation"/>
+        <label value="&location.label;"/>
+        <label value="&locationNewPage.label;" id="PageLocation"/>
       </row>
       <row>
-        <text class="label" value="&lastModified.label;" align="left"/>
-        <text class="label" id="PageModDate" align="left"/>
+        <label value="&lastModified.label;"/>
+        <label id="PageModDate"/>
       </row>
       <spacer class="spacer"/>
       <row align="center">
-        <text class="label" value="&titleInput.label;"/>
+        <label value="&titleInput.label;"/>
         <textbox class="MinWidth20em" id="TitleInput" oninput="TextboxChanged(this.id)"/>
       </row>
       <row align="center">
-        <text class="label" value="&authorInput.label;"/>
+        <label value="&authorInput.label;"/>
         <textbox class="MinWidth20em" id="AuthorInput" oninput="TextboxChanged(this.id)"/>
       </row>
       <row align="center">
-        <text class="label" value="&descriptionInput.label;"/>
+        <label value="&descriptionInput.label;"/>
         <textbox class="MinWidth20em" id="DescriptionInput" oninput="TextboxChanged(this.id)"/>
       </row>
     </rows>
   </grid>
   <spacer class="bigspacer"/>
-  <html class="wrap" flex="1">&EditHEADSource.label;</html>
+  <description class="wrap" flex="1">&EditHEADSource.label;</description>
   <separator class="groove"/>
-  <hbox id="okCancelButtonsRight"/> 
-</window>
+</dialog>

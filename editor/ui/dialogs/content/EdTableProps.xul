@@ -31,12 +31,10 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorTableProperties.dtd">
 
-<window class="dialog" title="&tableWindow.title;"
-    xmlns:html="http://www.w3.org/1999/xhtml"
+<window title="&tableWindow.title;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
-    onunload="onCancel()"
-    orient="vertical">
+    onunload="onCancel()">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -53,7 +51,7 @@
       <tab id="TableTab" oncommand="SelectTableTab()" label="&tableTab.label;"/>
       <tab id="CellTab" oncommand="SelectCellTab()" label="&cellTab.label;"/>
     </tabs>
-    <tabpanels orient="vertical" id="TabPanels">
+    <tabpanels id="TabPanels">
 
       <!-- TABLE PANEL -->
       <vbox id="TablePanel">
@@ -62,11 +60,11 @@
             <columns><column/><column/></columns>
             <rows>
               <row align="center">
-                <text class="label" value="&tableRows.label;"/>
+                <label value="&tableRows.label;"/>
                 <textbox class="narrow" id="TableRowsInput" oninput="forceInteger(this.id);"/>
               </row>
               <row align="center">
-                <text class="label" value="&tableColumns.label;"/>
+                <label value="&tableColumns.label;"/>
                 <textbox class="narrow" id="TableColumnsInput" oninput="forceInteger(this.id);"/>
               </row>
             </rows>
@@ -76,38 +74,38 @@
             <columns><column/><column/><column flex="1"/></columns>
             <rows>
               <row align="center">
-                <text class="label" value="&tableWidth.label;"/>
+                <label value="&tableWidth.label;"/>
                 <textbox class="narrow" id="TableWidthInput" oninput="forceInteger(this.id);"/>
                 <menulist id="TableWidthUnits"/>
               </row>
             </rows>
           </grid>
         </groupbox>
-        <groupbox orient="vertical"><caption align="left" label="&tableBorderSpacing.label;"/>
+        <groupbox><caption label="&tableBorderSpacing.label;"/>
         <grid>
           <columns><column/><column/><column/></columns>
           <rows>
             <row align="center">
-              <text class="label" value="&tableBorderWidth.label;"/>
+              <label value="&tableBorderWidth.label;"/>
               <textbox class="narrow" id="BorderWidthInput" oninput="forceInteger(this.id);"/>
-              <text class="label" align="left" value="&pixels.label;"/>
+              <label align="left" value="&pixels.label;"/>
             </row>
             <row align="center">
-              <text class="label" value="&tableSpacing.label;"/>
+              <label value="&tableSpacing.label;"/>
               <textbox class="narrow" id="SpacingInput" oninput="forceInteger(this.id);"/>
-              <text class="label" value="&tablePxBetwCells.label;"/>
+              <label value="&tablePxBetwCells.label;"/>
             </row>
             <row align="center">
-              <text class="label" value="&tablePadding.label;"/>
+              <label value="&tablePadding.label;"/>
               <textbox class="narrow" id="PaddingInput" oninput="forceInteger(this.id);"/>
-              <text class="label" value="&tablePxBetwBrdrCellContent.label;"/>
+              <label value="&tablePxBetwBrdrCellContent.label;"/>
             </row>
           </rows>
         </grid>
         </groupbox>
         <!-- Table Alignment and Caption -->
         <hbox flex="1" align="center">
-          <text class="label" value="&tableAlignment.label;"/>
+          <label value="&tableAlignment.label;"/>
           <menulist id="TableAlignList">
             <menupopup>
               <menuitem label="&AlignLeft.label;"   value="left"/>
@@ -116,7 +114,7 @@
             </menupopup>
           </menulist>
           <spacer class="spacer"/>
-          <text class="label" value="&tableCaption.label;"/>
+          <label value="&tableCaption.label;"/>
           <menulist id="TableCaptionList">
             <menupopup>
               <menuitem label="&tableCaptionNone.label;"  value=""/>
@@ -127,15 +125,15 @@
         </hbox>
         <separator class="groove"/>
         <hbox align="center">
-          <text class="label" value="&backgroundColor.label;"/>
+          <label value="&backgroundColor.label;"/>
           <button class="color-button" oncommand="GetColorAndUpdate('tableBackgroundCW');">
             <spacer id="tableBackgroundCW" class="color-well"/>
           </button>
           <spacer class="spacer"/>
-          <text class="label" id="TableInheritColor" value="&tableInheritColor.label;" collapsed="true"/>
+          <label id="TableInheritColor" value="&tableInheritColor.label;" collapsed="true"/>
         </hbox>
         <separator class="groove"/>
-        <hbox flex="1" autostretch="never">
+        <hbox flex="1" align="center">
           <spacer flex="1"/>
           <!-- From EdDialogOvlerlay.xul -->
           <button id="AdvancedEditButton"/>
@@ -163,13 +161,13 @@
           </vbox>
           <spacer class="bigspacer"/>
           <vbox flex="1">
-            <text class="label" value="&applyBeforeChange1.label;"/>
-            <text class="label" value="&applyBeforeChange2.label;"/>
+            <label value="&applyBeforeChange1.label;"/>
+            <label value="&applyBeforeChange2.label;"/>
           </vbox>
         </groupbox>
-        <hbox autostretch="never">
+        <hbox align="center">
           <!-- cell size groupbox -->
-          <groupbox><caption align="left" label="&size.label;"/>
+          <groupbox><caption label="&size.label;"/>
             <grid>
               <columns><column/><column/><column flex="1"/></columns>
               <rows>
@@ -244,11 +242,11 @@
             <spacer id="cellBackgroundCW" class="color-well"/>
           </button>
           <spacer class="spacer"/>
-          <text class="label" id="CellInheritColor" value="&cellInheritColor.label;" collapsed="true"/>
+          <label id="CellInheritColor" value="&cellInheritColor.label;" collapsed="true"/>
         </hbox>
         <separator class="groove"/>
-        <hbox autostretch="never">
-          <html  class="wrap" flex="1" style="width: 1em">&cellUseCheckboxHelp.label;</html>
+        <hbox align="center">
+          <description class="wrap" flex="1" style="width: 1em">&cellUseCheckboxHelp.label;</description>
           <!-- From EdDialogOvlerlay.xul -->
           <button id="AdvancedEditButton2"/>
         </hbox>

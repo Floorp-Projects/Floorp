@@ -25,8 +25,7 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
 <overlay id="editorOverlay"
-        xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://editor/content/editorOverlay.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/ComposerCommands.js"/>
@@ -729,10 +728,10 @@
   <stack id="ColorButtons" align="center">
     <observes element="cmd_fontColor"       attribute="state" onbroadcast="onFontColorChange()"/>
     <observes element="cmd_backgroundColor" attribute="state" onbroadcast="onBackgroundColorChange()"/>
-    <text class="color-button" id="BackgroundColorButton"
+    <label class="color-button" id="BackgroundColorButton"
           onclick="EditorSelectColor('', event);"
           tooltip="aTooltip"   tooltiptext="&BackgroundColorButton.tooltip;"/>
-    <text class="color-button" id="TextColorButton"
+    <label class="color-button" id="TextColorButton"
           onclick="EditorSelectColor('Text', event);"
           tooltip="aTooltip"   tooltiptext="&TextColorButton.tooltip;"/>
   </stack>

@@ -9,8 +9,6 @@
 
 <window id="winEvalExpr" class="dialog" 
         title="Evaluate Expression"
-        orient="vertical"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <script type="application/x-javascript" src="chrome://inspector/content/viewers/jsObject/evalExprDialog.js"/>
@@ -27,7 +25,7 @@
   </keyset>
 
   <vbox style="width: 350px;">
-    <html>Enter a javascript expression.  The variable "target" is the object that is currently selected.  Any value that you return will be displayed in the Javascript Object Viewer.</html>
+    <description>Enter a javascript expression.  The variable "target" is the object that is currently selected.  Any value that you return will be displayed in the Javascript Object Viewer.</description>
     
     <textbox id="txfExprInput" value=""/>
     

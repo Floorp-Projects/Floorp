@@ -34,10 +34,8 @@
 
 <window class="dialog" title="&windowTitle.label;"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   xmlns:html="http://www.w3.org/1999/xhtml"
    onload = "Startup()"
-   onunload="onCancel()"
-   orient="vertical">
+   onunload="onCancel()">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -48,17 +46,17 @@
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet"/>
-  <html flex="1">&instructions.label;</html>
-  <radiogroup id="SepRadioGroup" orient="vertical" persist="index character" index="0" character="">
-    <radio group="SepRadioGroup" id="comma"   label="&commaRadio.label;" oncommand="SelectCharacter('0');"/>
+  <description flex="1">&instructions.label;</description>
+  <radiogroup id="SepRadioGroup" persist="index character" index="0" character="">
+    <radio id="comma" label="&commaRadio.label;" oncommand="SelectCharacter('0');"/>
     <vbox>
-      <radio group="SepRadioGroup" id="space" label="&spaceRadio.label;" oncommand="SelectCharacter('1');"/>
+      <radio id="space" label="&spaceRadio.label;" oncommand="SelectCharacter('1');"/>
       <checkbox id="CollapseSpaces" label="&collapseSpaces.label;"
-        style="margin-left:2em" checked="true" persist="checked"
-        tooltip="aTooltip" tooltiptext="&collapseSpaces.tooltip;"/>
+                style="margin-left:2em" checked="true" persist="checked"
+                tooltip="aTooltip" tooltiptext="&collapseSpaces.tooltip;"/>
     </vbox>
     <hbox align="center">
-      <radio group="SepRadioGroup" id="other" label="&otherRadio.label;" oncommand="SelectCharacter('2');"/>
+      <radio id="other" label="&otherRadio.label;" oncommand="SelectCharacter('2');"/>
       <textbox class="narrow" id="SepCharacterInput" oninput="InputSepCharacter()"/>
     </hbox>
   </radiogroup> 

@@ -32,10 +32,8 @@
 
 <window class="dialog" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
-    onunload="onCancel()"
-    orient="vertical" flex="1">
+    onunload="onCancel()">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -46,17 +44,17 @@
   <broadcaster id="args" value=""/>
   <keyset id="dialogKeys"/>
 
-  <text class="label" id="srcMessage" value="&sourceEditField.label;"/>
+  <label id="srcMessage" value="&sourceEditField.label;"/>
   <vbox flex="1" style="width: 30em; height: 20em;">
     <textbox id="srcInput" multiline="true" rows="1" style="width: 1em" flex="1"/>
   </vbox>
   <!-- Will this accept the embedded HTML tags? -->
   <hbox>
     <spacer class="bigspacer"/>
-    <text value="&example.label;"/>
-    <text class="bold" value="&exampleOpenTag.label;"/>
-    <text class="bold italic" value="&exampleText.label;"/>
-    <text class="bold" value="&exampleCloseTag.label;"/>
+    <label value="&example.label;"/>
+    <label class="bold" value="&exampleOpenTag.label;"/>
+    <label class="bold italic" value="&exampleText.label;"/>
+    <label class="bold" value="&exampleCloseTag.label;"/>
   </hbox>
   <spacer class="spacer"/>
   <separator class="groove"/>

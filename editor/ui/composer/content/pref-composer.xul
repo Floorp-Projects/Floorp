@@ -28,9 +28,7 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/pref-composer.dtd" >
 
-<page xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      orient="vertical" 
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://editor/content/pref-composer.xul');">
 
   <script type="application/x-javascript">
@@ -45,36 +43,30 @@
   <hbox class="box-smallheader" title="&lHeader;"/>
 
   <!-- Recent files menu -->
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&recentFiles.title;"/>
     <hbox align="center">
-      <text value="&documentsInMenu;"/>
+      <label value="&documentsInMenu;"/>
       <textbox
         id="recentFiles"
         name="recent string" 
-        type="text" 
         size="3" 
         value="10" 
-        pref="true" 
         preftype="int" 
         prefstring="editor.history.url_maximum"
-        prefattribute="value"
       />
     </hbox>
   </groupbox>
 
 <!-- HTML formatting on output -->
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&savingFiles.title;"/>
     <spacer class="spacer"/>
-    <radiogroup orient="vertical" align="start"
+    <radiogroup
       id            = "preserveFormatting"
-      pref          = "true"
       preftype      = "bool"
-      prefstring    = "editor.prettyprint"
-      prefattribute = "value">
+      prefstring    = "editor.prettyprint">
       <radio 
-        group      = "preserveFormatting"
         value       = "false"
         label      = "&preserveExistingFormatting;" 
         accesskey  = "&preserveExistingFormatting.accesskey;"
@@ -82,7 +74,6 @@
         tooltiptext= "&preserveExistingFormatting.tooltip;"
       />
       <radio 
-        group      = "preserveFormatting" 
         value       = "true"
         label      = "&reformat.label;" 
         accesskey  = "&reformat.accesskey;"
@@ -92,86 +83,69 @@
     </radiogroup>
   </groupbox>
   
-  <groupbox orient="vertical" align="start">
+  <groupbox align="start">
     <caption label="&tableEditing.label;"/>
     <checkbox 
       label     = "&maintainTableStructure.label;"
       id        = "maintainTableStructure" 
       accesskey = "&maintainStructure.accesskey;"
       tooltip   = "aTooltip" tooltiptext="&maintainTableStructure.tooltip;"
-      pref      = "true"
-      preftype  = "bool"
       prefstring= "editor.table.maintain_structure"
-      prefattribute="checked"
     />
     <separator class = "thin"/>
     <hbox align="start">
-      <text class="label"
-        value="&pressingTheDeleteKey.label;" 
+      <label value="&pressingTheDeleteKey.label;" 
         tooltip = "aTooltip" tooltiptext="&pressingTheDeleteKey.tooltip;"
-        for="tableDeleteKey" 
+        control="tableDeleteKey" 
       />
-      <radiogroup orient="vertical" align="start"
+      <radiogroup
           id       = "tableDeleteKey"
-          pref     = "true"
-          preftype = "int"
-          prefstring="editor.table.delete_key"
-          prefattribute="value">
-        <radio group="tableDeleteKey" value="0" label="&deleteCell.label;" accesskey="&deleteCell.accesskey;"/>
-        <radio group="tableDeleteKey" value="1" label="&deleteContent.label;" accesskey="&deleteContent.accesskey;" />
+          prefstring="editor.table.delete_key">
+        <radio value="0" label="&deleteCell.label;" accesskey="&deleteCell.accesskey;"/>
+        <radio value="1" label="&deleteContent.label;" accesskey="&deleteContent.accesskey;" />
       </radiogroup>
     </hbox>
   </groupbox>
 
 <!-- Take out Auto-Save; not supported at this time
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&saving;"/>
     <hbox align="center">
       <checkbox 
         label      = "&AutoSaveCheck;"
         id         = "shouldAutoSave"
-        pref       = "true" 
-        preftype   = "bool" 
         prefstring = "editor.auto_save"
         name       = "autosave" 
-        prefattribute="checked"
       />
       <textbox
         id="autoSaveAmount"
         name="time" 
-        type="text" 
         size="3" 
         value="5" 
-        pref="true" 
         preftype="int" 
         prefstring="editor.auto_save_delay"
-        prefattribute="value"
       />
-      <text value="&minText;" />
+      <label value="&minText;" />
     </hbox>
   </groupbox>
 -->
 
 <!-- External Editors are not supported at this time
-    <groupbox orient="vertical">
+    <groupbox>
       <caption label="&exterLegend.label;"/> 
     <hbox>
       <checkbox 
         name  = "htmlSourceEditorCheckbox"
         label = "&htmlSource;"
-        pref       = "true" 
         preftype   = "int" 
         prefindex  = "0" 
         prefstring = "editor.use_html_editor"
       />
       <textbox
         name = "&chooseButton.label;"
-        pref       = "true" 
         preftype   = "string" 
-        prefstring = "editor.html_editor"
       />
       <button 
-        class = "dialog" 
         name  = ""
         label = "&chooseButton.label;"
       />
@@ -181,7 +155,6 @@
       <checkbox 
         name  = "htmlImageEditorCheckbox" 
         label = "&imageeditor;"
-        pref       = "true" 
         preftype   = "int" 
         prefindex  = "0" 
         prefstring ="editor.use_image_editor"
@@ -189,8 +162,6 @@
 
       <textbox
         name="chooseButton.label" 
-        pref       = "true" 
-        preftype   = "string" 
         prefstring = "editor.image_editor"
       />
       <button label="&chooseButton.label;" />

@@ -27,11 +27,8 @@
 %prefContentDTD;
 ]>
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        onload="parent.initPanel('chrome://content-packs/content/pref-contentpacks.xul');"
-        orient="vertical">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://content-packs/content/pref-contentpacks.xul');">
 
   <stringbundle id="bundle_contentPack"
                 src="chrome://content-packs/locale/contentpacks.properties"/>
@@ -119,16 +116,16 @@
   ]]>
   </script>
 
-  <box class="box-smallheader" title="&lHeader;"/>
+  <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <html>&contentIntro.label;</html>
+  <description>&contentIntro.label;</description>
   <separator class="thin"/>
-  <html>&installedContentPacks.label;</html>
+  <description>&installedContentPacks.label;</description>
   
-  <tree class="inset" id="contentPackTree" flex="1" rows="5" 
+  <tree id="contentPackTree" flex="1" rows="5" 
         ref="urn:mozilla:locale:root" datasources="rdf:chrome"
         sortResource="http://www.mozilla.org/rdf/chrome#name"
-        pref="true" preftype="localizedstring" prefstring="general.useragent.contentlocale" 
+        preftype="localizedstring" prefstring="general.useragent.contentlocale" 
         prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
         multiple="false" onselect="SelectContentPack();"
         sortDirection="ascending">
@@ -158,6 +155,5 @@
             accesskey="&downloadContentPacks.accesskey;" 
             oncommand="DownloadRegionPacks()"/>
   </hbox>
-
-</window>
+</page>
 

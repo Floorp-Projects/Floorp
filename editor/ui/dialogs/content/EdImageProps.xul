@@ -26,7 +26,6 @@
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?> 
@@ -35,39 +34,34 @@
 
 
 <!-- dialog containing a control requiring initial setup -->
-<window class="dialog" title="&windowTitle.label;"
+<dialog title="&windowTitle.label;"
     xmlns ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
-    onunload="onCancel()"
-    orient="vertical"
-    id="imagedialog"
-    >
+    buttons="accept,cancel,help"
+    ondialogaccept="return onAccept();"
+    ondialogcancel="return onCancel();"
+    ondialoghelp="return doHelpButton();">
   
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdImageProps.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
-  <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
 
-  <groupbox orient="vertical">
+  <groupbox>
     <caption label="&locationBox.label;"/>
     <!--/////// Src URL and ALT Text //////-->
-    <text class = "label" 
-      for   = "srcInput"
+    <label control   = "srcInput"
       value = "&locationEditField.label;"
       tooltip="aTooltip" tooltiptext="&locationEditField.tooltip;"
       />
     <textbox
       id         = "srcInput" 
       oninput    = "ChangeImageSrc()"
-      style      = "min-width : 20em"
-      flex       = "1"/>
+      style      = "min-width : 20em"/>
     <hbox>
       <checkbox 
         id  = "MakeRelativeCheckbox"
@@ -78,24 +72,20 @@
     </hbox>
     <spacer class="spacer"/>
     <hbox>
-      <text class = "label"
-        id      = "altTextLabel" 
-        for     = "altTextInput"
+      <label id      = "altTextLabel" 
+        control     = "altTextInput"
         tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
         value   = "&altTextEditField.label;"/>
       <textbox
         id     ="altTextInput"
         style  = "min-width : 20em"
-        tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
-        flex       = "1"/>
+        tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"/>
     </hbox>
     <spacer class="spacer"/>
   </groupbox>
   <spacer class="spacer"/>
   <hbox align="center"> 
-    <button 
-      class   = "dialog" 
-      id      = "MoreFewerButton" 
+    <button id      = "MoreFewerButton" 
       oncommand = "onMoreFewer()" 
       tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
       persist = "more"/>
@@ -104,21 +94,21 @@
       <caption label="&previewBox.label;"/>
       <hbox id="preview-image-box" align="center">
         <spacer flex="1"/>
-        <html id="preview-image-holder"/>
+        <description id="preview-image-holder"/>
         <spacer flex="1"/>
       </hbox>
       <vbox id="PreviewSize" collapsed="true">
         <spacer flex="1"/>
-        <text class="label" value="&actualSize.label;"/>
+        <label value="&actualSize.label;"/>
         <hbox>
-          <text class="label" value="&widthEditField.label;"/>
+          <label value="&widthEditField.label;"/>
           <spacer flex="1"/>
-          <text id="PreviewWidth" class="label"/>
+          <label id="PreviewWidth"/>
         </hbox>
         <hbox>
-          <text class="label" value="&heightEditField.label;"/>
+          <label value="&heightEditField.label;"/>
           <spacer flex="1"/>
-          <text id="PreviewHeight" class="label"/>
+          <label id="PreviewHeight"/>
         </hbox>
         <spacer flex="1"/>
       </vbox>
@@ -130,18 +120,16 @@
     <hbox>
       <vbox>
         <!-- //////// Image Dimensions //////// -->
-        <groupbox orient="vertical" flex="1">
+        <groupbox flex="1">
           <caption id="dimensionsLabel" label="&dimensionsBox.label;"/>
           <hbox>
-            <radiogroup id="imgSizeGroup" orient="vertical">
+            <radiogroup id="imgSizeGroup">
               <radio
-                group   = "imgSizeGroup"
                 id      = "actualSizeRadio" 
                 label   = "&actualSizeRadio.label;"
                 tooltip = "aTooltip" tooltiptext="&actualSizeRadio.tooltip;"
                 oncommand = "SetActualSize()"/>
               <radio
-                group   = "imgSizeGroup"
                 id      = "customSizeRadio" 
                 label   = "&customSizeRadio.label;"
                 tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
@@ -163,9 +151,8 @@
             <rows>
               <!--//////  IMAGE WIDTH  //////-->
               <row align="center">
-                <text class = "label" 
-                  id    = "widthLabel"
-                  for   = "widthInput"
+                <label id    = "widthLabel"
+                  control   = "widthInput"
                   value = "&widthEditField.label;" />
                 <textbox
                   id       = "widthInput" 
@@ -177,9 +164,8 @@
               </row>
               <!--////// IMAGE HEIGHT //////-->
               <row align="center">
-                <text class = "label" 
-                  id    = "heightLabel"
-                  for   = "heightInput"
+                <label id    = "heightLabel"
+                  control   = "heightInput"
                   value = "&heightEditField.label;" />
                 <textbox
                   id       = "heightInput" 
@@ -194,13 +180,12 @@
           <spacer flex="1"/>
         </groupbox>
         <!--////// IMAGE MAP BUTTONS //////-->
-        <groupbox orient="vertical" flex="1">
+        <groupbox flex="1">
            <caption id="imagemapLabel" label="&imagemapBox.label;"/>
            <hbox flex="1" equalsize="always">
 
 <!-- Hide Image Map Editor. Not ready for prime time yet
             <button
-              class   = "dialog"
               id      = "editImageMap"
               oncommand = "editImageMap()"
               tooltip = "aTooltip" tooltiptext="&editImageMapButton.tooltip;"
@@ -208,11 +193,9 @@
               flex    = "1"/>
 -->
             <button
-              class   = "dialog"
               id      = "removeImageMap"
               oncommand = "removeImageMap()"
-              label   = "&removeImageMapButton.label;"
-              flex    = "1"/>
+              label   = "&removeImageMapButton.label;"/>
             <spacer flex="1"/><!-- remove when we restore Image Map Editor -->
             </hbox>
           <spacer class="spacer"/>
@@ -222,7 +205,7 @@
       <!-- Bottom Right Region -->
       <vbox flex="1">
         <!--//////// Alignment ////////-->
-        <groupbox flex="1" orient="vertical">
+        <groupbox flex="1">
           <caption id="alignLabel" label="&alignment.label;"/>
           <spacer class="spacer"/>
           <menulist id="alignTypeSelect" class="align-menu">
@@ -244,43 +227,40 @@
             <columns><column/><column/><column/></columns>
             <rows>
               <row align="center">
-                <text 
-                  class = "label align-right" 
+                <label 
+                  class = "align-right" 
                   id    = "leftrightLabel"
                   value = "&leftRightEditField.label;"/>
                 <textbox
                   class     = "narrow"
                   id        = "imageleftrightInput" 
                   oninput   = "forceInteger(this.id)"/>
-                <text 
-                  class = "label" 
+                <label 
                   id    = "leftrighttypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>
               <row align="center">
-                <text 
-                  class = "label align-right" 
+                <label 
+                  class = "align-right" 
                   id    = "topbottomLabel"
                   value = "&topBottomEditField.label;"/>
                 <textbox
                   class     = "narrow"
                   id        = "imagetopbottomInput" 
                   oninput   = "forceInteger(this.id)"/>
-                <text
-                  class = "label" 
+                <label
                   id    = "topbottomtypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>
               <row align="center">
-                <text class = "label align-right" 
+                <label class = "align-right" 
                   id    = "borderLabel"
                   value = "&borderEditField.label;"/>
                 <textbox
                   class     = "narrow"
                   id        = "border" 
                   oninput   = "forceInteger(this.id)"/>
-                <text 
-                  class = "label" 
+                <label 
                   id    = "bordertypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>
@@ -292,6 +272,4 @@
   </vbox> <!-- END OF MORE/FEWER SECTION -->
   <!-- from EdDialogOverlay -->
   <vbox id="AdvancedEdit"/>
-  <!-- from global dialogOverlay -->
-  <hbox id="okCancelHelpButtonsRight"/> 
-</window>
+</dialog>

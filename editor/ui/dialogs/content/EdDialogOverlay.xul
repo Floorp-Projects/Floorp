@@ -25,7 +25,6 @@
   -->
 
 <overlay id="EdDialogOverlay"
-     xmlns:html="http://www.w3.org/1999/xhtml"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <vbox id="AdvancedEdit"  flex="1">
@@ -44,7 +43,6 @@
 -->
 <button
   id        = "AdvancedEditButton"
-  class     = "dialog"
   oncommand = "onAdvancedEdit();"
   label     = "&AdvancedEditButton.label;"
   tooltip   = "aTooltip" 
@@ -52,7 +50,6 @@
 
 <button 
   id        = "AdvancedEditButton2" 
-  class     = "dialog" 
   oncommand = "onAdvancedEdit()" 
   label     = "&AdvancedEditButton.label;"
   tooltip   = "aTooltip"
@@ -60,7 +57,6 @@
 
 <button 
   id        = "ChooseFile" 
-  class     = "dialog" 
   oncommand = "chooseFile()"
   label     = "&chooseButton.label;"/>
 

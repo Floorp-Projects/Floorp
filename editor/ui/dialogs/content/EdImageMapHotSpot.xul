@@ -31,10 +31,8 @@
 
 <window class="dialog" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     onload = "Startup()"
     onunload="onCancel()"
-    orient="vertical"
   >
 
   <!-- Methods common to all editor dialogs -->
@@ -46,14 +44,14 @@
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
 
-  <groupbox orient="vertical" flex="1">
+  <groupbox flex="1">
     <caption id="titleInput" label="&link.label;"/>
 
     <grid>
       <columns><column/><column/><column/></columns>
       <rows>
         <row>
-          <text class="label" for="urlInput" value="&urlFieldset.label;" align="right"/>
+          <label control="urlInput" value="&urlFieldset.label;"/>
 
           <textbox id="urlInput" class="MinWidth20em" value="http://"/>
 
@@ -61,7 +59,7 @@
         </row>
       
         <row>
-          <text class="label" for="altInput" value="&altFieldset.label;" align="right"/>
+          <label control="altInput" value="&altFieldset.label;"/>
 
           <textbox class="MinWidth20em" id="altInput"/>
         </row>
@@ -69,18 +67,18 @@
     </grid>
   </groupbox>
 
-  <groupbox orient="vertical" flex="1">
+  <groupbox flex="1">
     <caption id="targetLabel" label="&targetFieldset.label;"/>
     <grid>
       <columns><column/><column/><column/></columns>
       <rows>
         <row>
-          <text class="label" for="targetInput" value="&target.label;" align="right" />
+          <label control="targetInput" value="&target.label;"/>
         </row>
         <row>
           <textbox class="MinWidth20em" id="targetInput"/>
 
-          <text class="label" id="commonLabel" value="&commonFieldset.label;"/>
+          <label id="commonLabel" value="&commonFieldset.label;"/>
 
           <menulist id="commonInput" oncommand="changeTarget()">
             <menupopup align="center">

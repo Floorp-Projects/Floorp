@@ -29,12 +29,9 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EdColorPicker.dtd">
 <window class="dialog"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    buttonpack="end"
     onload = "Startup()"
     onunload="onCancel()"
-    orient="vertical"
     >
 
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -47,10 +44,10 @@
 
   <keyset id="dialogKeys"/>
   <hbox id="TableOrCellGroup" align="center" collapsed="true">
-    <text value="&background.label;"/>
+    <label value="&background.label;"/>
     <radiogroup id="1" orient="horizontal">
-      <radio group="1" id="TableRadio" label="&table.label;"/>
-      <radio group="1" id="CellRadio"  label="&cell.label;"/>
+      <radio id="TableRadio" label="&table.label;"/>
+      <radio id="CellRadio"  label="&cell.label;"/>
   </radiogroup>
   </hbox>
   <colorpicker id="ColorPicker" palettename="standard" 
@@ -61,7 +58,7 @@
     onselect="SelectColor();"/>
 <!-- Web palette is not implemented???
   <hbox align="center">
-    <text class="label" value="&palette.label;"/>
+    <label value="&palette.label;"/>
     <radio id="StandardPalette" label="&standardPalette.label;" oncommand="ChangePalette('standard')"/>
     <radio id="WebPalette" label="&webPalette.label;" oncommand="ChangePalette('web')"/>
   </hbox>
@@ -74,9 +71,9 @@
                   persist="LastTextColor LastBackgroundColor"/>
       <label value="&lastPickedColor.label;" flex="1" style="text-align: center;"/>
     </button>
-    <text class="label" value="&setColor1.label;"/>
-    <text class="label" value="&setColor2.label;"/>
-    <text class="label" value="&setColorExample.label;"/>
+    <label value="&setColor1.label;"/>
+    <label value="&setColor2.label;"/>
+    <label value="&setColorExample.label;"/>
     <hbox align="center" flex="1=">
       <textbox id="ColorInput" style="width: 8em" oninput="SetColorSwatch(); SetDefaultToOk();"/>
       <spacer flex="1"/>

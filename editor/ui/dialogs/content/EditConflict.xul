@@ -32,10 +32,8 @@
 
 <window class="dialog" title="&windowTitle.label;"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   xmlns:html="http://www.w3.org/1999/xhtml"
    onload = "Startup()"
-   onunload="PreventCancel()"
-   orient="vertical">
+   onunload="PreventCancel()">
 
   <!-- Methods common to all editor dialogs -->
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -46,20 +44,20 @@
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
   
-  <text class="label" value ="&conflictWarning.label;"/>
+  <label value ="&conflictWarning.label;"/>
   <spacer class="bigspacer"/>
-  <text class="label" value ="&conflictResolve.label;"/>
+  <label value ="&conflictResolve.label;"/>
   <spacer class="bigspacer"/>
   <hbox flex="1">
     <spacer class="bigspacer"/>
     <button label="&keepCurrentPageButton.label;"
-            flex="1" oncommand="KeepCurrentPage()"/>
+            oncommand="KeepCurrentPage()"/>
     <spacer class="bigspacer"/>
   </hbox>
   <hbox flex="1">
     <spacer class="bigspacer"/>
     <button label="&useOtherPageButton.label;"
-            flex="1" oncommand="UseOtherPage()"/>
+            oncommand="UseOtherPage()"/>
     <spacer class="bigspacer"/>
   </hbox>
 

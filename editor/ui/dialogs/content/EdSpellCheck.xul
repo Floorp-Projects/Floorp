@@ -28,11 +28,9 @@
 
 <!-- dialog containing a control requiring initial setup -->
 <window class="dialog" title="&windowTitle.label;"
-    xmlns:html="http://www.w3.org/1999/xhtml"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
-    onunload = "onClose()"
-    orient="vertical">
+    onunload = "onClose()">
 
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
@@ -55,12 +53,12 @@
     </columns>
     <rows>
       <row align="center">
-        <text class="label" id="MisspelledWordLabel" value="&misspelledWord.label;"/>
-        <text class="label bold" id="MisspelledWord" crop="right"/>
+        <label id="MisspelledWordLabel" value="&misspelledWord.label;"/>
+        <label class="bold" id="MisspelledWord"/>
         <spacer/>
       </row>
       <row align="center">
-        <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
+        <label id="ReplaceWordLabel" value="&wordEditField.label;"/>
         <hbox align="center" flex="1">
           <textbox id="ReplaceWordInput" oninput="ChangeReplaceWord()"/>
           <button id="CheckWord" oncommand="CheckWord()" label="&checkwordButton.label;"/>
@@ -68,7 +66,7 @@
       </row>
     </rows>
   </grid>
-  <text class="label" id="SuggestedListLabel" value="&suggestions.label;"/>
+  <label id="SuggestedListLabel" value="&suggestions.label;"/>
   <grid>
     <columns><column/><column/></columns>
     <rows>
@@ -94,7 +92,7 @@
             </rows> 
           </grid>
           <spacer flex="1"/>
-          <text class="label" value="&userDictionary.label;"/>
+          <label value="&userDictionary.label;"/>
           <hbox flex="1" align="start">
             <button class="spell-check" id="AddToDictionary" oncommand="AddToDictionary()" label="&addToUserDictionaryButton.label;" />
             <button class="spell-check" id="EditDictionary"  oncommand="EditDictionary()" label="&editUserDictionaryButton.label;"   />
@@ -102,11 +100,11 @@
         </vbox>
       </row>
       <row>
-        <text class="label" value ="&languagePopup.label;"/>
+        <label value ="&languagePopup.label;"/>
         <spacer/>
       </row>
       <row>
-        <menulist id="LanguageMenulist" class="small-margin" oncommand="SelectLanguage()">
+        <menulist id="LanguageMenulist" oncommand="SelectLanguage()">
           <menupopup>
             <menuitem value="more-cmd" label="&moreDictionaries.label;"/>
             <menuseparator/>

@@ -25,18 +25,18 @@
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorLinkProperties.dtd">
 
-<window class="dialog" title="&windowTitle.label;"
+<dialog title="&windowTitle.label;"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   xmlns:html="http://www.w3.org/1999/xhtml"
+   buttons="accept,cancel,help"
    onload = "Startup()"
-   onunload="onCancel()"
-   orient="vertical" >
+   ondialogaccept="return onAccept();"
+   ondialogcancel="return onCancel();"
+   ondialoghelp="return doHelpButton();">
 
   <script type="application/x-javascript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script type="application/x-javascript" src="chrome://editor/content/EdLinkProps.js"/>
@@ -45,17 +45,16 @@
 
   <broadcaster id="args" value=""/>
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
-  <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
 
   <vbox style="min-width: 20em">
-    <groupbox orient="vertical"><caption id="linkTextCaption"/>
-      <text class="label" id="linkTextMessage"/> 
+    <groupbox><caption id="linkTextCaption"/>
+      <label id="linkTextMessage"/> 
 	    <textbox id="linkTextInput" flex="1"/>
     </groupbox>
 
-    <groupbox orient="vertical"><caption label="&LinkURLBox.label;"/>
-      <text class="label" value="&LinkURLEditField.label;"/>
+    <groupbox><caption label="&LinkURLBox.label;"/>
+      <label value="&LinkURLEditField.label;"/>
       <textbox id="hrefInput" flex="1" style="min-width: 18em" oninput="ChangeLocation()"/>
       <hbox align="center">
         <!-- from EdDialogOverlay.xul 'for' identifies the textfield to get URL from -->
@@ -63,7 +62,7 @@
         <spacer flex="1"/>
         <button id="ChooseFile"/>
       </hbox>
-      <html class="wrap" flex="1" id="RemoveLinkMsg" style="margin-bottom: 7px">&RemoveLinkMsg.label;</html>
+      <description class="wrap" flex="1" id="RemoveLinkMsg" style="margin-bottom: 7px">&RemoveLinkMsg.label;</description>
       <spacer class="smallspacer"/>
       <hbox align="start">
         <button id="MoreFewerButton" oncommand="onMoreFewer()" persist="more"/>
@@ -71,21 +70,19 @@
       <spacer class="spacer"/>
       <vbox id="MoreSection">
         <spacer class="spacer"/>
-        <text class="label" value="&NamedAnchorMsg.label;"/>
+        <label value="&NamedAnchorMsg.label;"/>
         <tree rows="4" class="list" id="NamedAnchorList" onselect="SelectNamedAnchor()">
           <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
         <spacer class="spacer"/>
-        <text class="label" value="&HeadingMsg.label;"/>
+        <label value="&HeadingMsg.label;"/>
         <tree rows="4" class="list" id="HeadingsList" onselect="SelectHeading()">
           <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
-        <text class="label" flex="1" value="&HeadingMsg2.label;"/>
+        <label value="&HeadingMsg2.label;"/>
       </vbox>
     </groupbox>
   </vbox>
   <!-- from EdDialogOverlay -->
   <vbox id="AdvancedEdit"/>
-  <!-- from global dialogOverlay -->
-  <hbox id="okCancelHelpButtonsRight"/> 
-</window>
+</dialog>
