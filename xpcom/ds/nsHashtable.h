@@ -41,6 +41,8 @@
 #include "prlock.h"
 #include "nscore.h"
 #include "nsString.h"
+#include "nsISupportsBase.h"
+#include "nsTraceRefcnt.h"
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;

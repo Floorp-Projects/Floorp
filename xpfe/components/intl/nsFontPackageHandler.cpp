@@ -54,6 +54,7 @@
 #include "nsIWindowMediator.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIStringBundle.h"
+#include "nsUnicharUtils.h"
 
 //==============================================================================
 /* Implementation file */

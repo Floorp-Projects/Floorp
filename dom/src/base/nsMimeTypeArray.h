@@ -41,7 +41,7 @@
 
 #include "nsIDOMMimeTypeArray.h"
 #include "nsIDOMMimeType.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 
 class nsIDOMNavigator;

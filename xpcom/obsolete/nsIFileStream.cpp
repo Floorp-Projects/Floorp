@@ -693,7 +693,7 @@ nsresult NS_NewTypicalOutputFileStream(
 }
 
 //----------------------------------------------------------------------------------------
-NS_COM nsresult NS_NewIOFileStream(
+NS_COM_OBSOLETE nsresult NS_NewIOFileStream(
     nsISupports** aResult,
     const nsFileSpec& inFile,
     PRInt32 nsprMode /*default = (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE)*/,

@@ -37,6 +37,7 @@
 #ifndef nsIFileStream_h___
 #define nsIFileStream_h___
 
+#include "xpcomobsolete.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsISeekableStream.h"
@@ -145,7 +146,7 @@ nsresult NS_NewTypicalOutputFileStream(
     // Factory method to get an nsOutputStream to a file - most common case.
 
 //----------------------------------------------------------------------------------------
-extern "C" NS_COM nsresult NS_NewIOFileStream(
+extern "C" NS_COM_OBSOLETE nsresult NS_NewIOFileStream(
     nsISupports** aStreamResult, // will implement all the above interfaces
     const nsFileSpec& inFile,
     PRInt32 nsprMode,

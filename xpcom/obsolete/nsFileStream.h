@@ -97,7 +97,8 @@
 #ifndef _FILESTREAM_H_
 #define _FILESTREAM_H_
 
-#include "nscore.h"
+#include "xpcomobsolete.h"
+#include "nsStringFwd.h"
 
 #ifdef XP_MAC
 #include "pprio.h" // To get PR_ImportFile
@@ -110,7 +111,6 @@
 
 // Defined elsewhere
 class nsFileSpec;
-class nsString;
 class nsIInputStream;
 class nsIOutputStream;
 class nsIFileSpec;
@@ -173,7 +173,7 @@ using std::ostream;
 //=========================== End Compiler-specific macros ===============================
 
 //========================================================================================
-class NS_COM nsInputStream
+class NS_COM_OBSOLETE nsInputStream
 // This is a convenience class, for use on the STACK ("new" junkies: get detoxed first).
 // Given a COM-style stream, this allows you to use the >> operators.  It also acquires and
 // reference counts its stream.
@@ -242,7 +242,7 @@ protected:
 typedef nsInputStream nsBasicInStream; // historic support for this name
 
 //========================================================================================
-class NS_COM nsOutputStream
+class NS_COM_OBSOLETE nsOutputStream
 // This is a convenience class, for use on the STACK ("new" junkies, get detoxed first).
 // Given a COM-style stream, this allows you to use the << operators.  It also acquires and
 // reference counts its stream.
@@ -305,7 +305,7 @@ protected:
 typedef nsOutputStream nsBasicOutStream; // Historic support for this name
 
 //========================================================================================
-class NS_COM nsErrorProne
+class NS_COM_OBSOLETE nsErrorProne
 // Common (virtual) base class for remembering errors on demand
 //========================================================================================
 {
@@ -329,7 +329,7 @@ protected:
 }; // class nsErrorProne
 
 //========================================================================================
-class NS_COM nsFileClient
+class NS_COM_OBSOLETE nsFileClient
 // Because COM does not allow us to write functions which return a boolean value etc,
 // this class is here to take care of the tedious "declare variable then call with
 // the address of the variable" chores.
@@ -374,7 +374,7 @@ protected:
 }; // class nsFileClient
 
 //========================================================================================
-class NS_COM nsRandomAccessStoreClient
+class NS_COM_OBSOLETE nsRandomAccessStoreClient
 // Because COM does not allow us to write functions which return a boolean value etc,
 // this class is here to take care of the tedious "declare variable then call with
 // the address of the variable" chores.
@@ -438,7 +438,7 @@ protected:
 }; // class nsRandomAccessStoreClient
 
 //========================================================================================
-class NS_COM nsRandomAccessInputStream
+class NS_COM_OBSOLETE nsRandomAccessInputStream
 // Please read the comments at the top of this file
 //========================================================================================
 :	public nsRandomAccessStoreClient
@@ -487,7 +487,7 @@ private:
 }; // class nsRandomAccessInputStream
 
 //========================================================================================
-class NS_COM nsInputStringStream
+class NS_COM_OBSOLETE nsInputStringStream
 //========================================================================================
 : public nsRandomAccessInputStream
 {
@@ -512,7 +512,7 @@ private:
 }; // class nsInputStringStream
 
 //========================================================================================
-class NS_COM nsInputFileStream
+class NS_COM_OBSOLETE nsInputFileStream
 // Please read the comments at the top of this file
 //========================================================================================
 :	public nsRandomAccessInputStream
@@ -563,7 +563,7 @@ protected:
 }; // class nsInputFileStream
 
 //========================================================================================
-class NS_COM nsRandomAccessOutputStream
+class NS_COM_OBSOLETE nsRandomAccessOutputStream
 // Please read the comments at the top of this file
 //========================================================================================
 :	public nsRandomAccessStoreClient
@@ -611,7 +611,7 @@ private:
 }; // class nsRandomAccessOutputStream
 
 //========================================================================================
-class NS_COM nsOutputFileStream
+class NS_COM_OBSOLETE nsOutputFileStream
 // Please read the comments at the top of this file
 //========================================================================================
 :	public nsRandomAccessOutputStream
@@ -680,7 +680,7 @@ protected:
 
 
 //========================================================================================
-class NS_COM nsIOFileStream
+class NS_COM_OBSOLETE nsIOFileStream
 // Please read the comments at the top of this file
 //========================================================================================
 :	public nsInputFileStream
@@ -769,7 +769,7 @@ protected:
 //        Manipulators
 //========================================================================================
 
-NS_COM nsOutputStream&     nsEndl(nsOutputStream& os); // outputs and FLUSHES.
+NS_COM_OBSOLETE nsOutputStream&     nsEndl(nsOutputStream& os); // outputs and FLUSHES.
 
 //========================================================================================
 #endif /* _FILESTREAM_H_ */

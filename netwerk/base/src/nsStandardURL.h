@@ -169,26 +169,26 @@ private:
     char    *AppendToSubstring(PRUint32 pos, PRInt32 len, const char *tail, PRInt32 tailLen = -1);
 
     // dependent substring helpers
-    const nsDependentSingleFragmentCSubstring Segment(PRUint32 pos, PRInt32 len); // see below
-    const nsDependentSingleFragmentCSubstring Segment(const URLSegment &s) { return Segment(s.mPos, s.mLen); }
+    const nsDependentCSubstring Segment(PRUint32 pos, PRInt32 len); // see below
+    const nsDependentCSubstring Segment(const URLSegment &s) { return Segment(s.mPos, s.mLen); }
 
     // dependent substring getters
-    const nsDependentSingleFragmentCSubstring Prepath();  // see below
-    const nsDependentSingleFragmentCSubstring Scheme()    { return Segment(mScheme); }
-    const nsDependentSingleFragmentCSubstring Userpass(PRBool includeDelim = PR_FALSE); // see below
-    const nsDependentSingleFragmentCSubstring Username()  { return Segment(mUsername); }
-    const nsDependentSingleFragmentCSubstring Password()  { return Segment(mPassword); }
-    const nsDependentSingleFragmentCSubstring Hostport(); // see below
-    const nsDependentSingleFragmentCSubstring Host();     // see below
-    const nsDependentSingleFragmentCSubstring Path()      { return Segment(mPath); }
-    const nsDependentSingleFragmentCSubstring Filepath()  { return Segment(mFilepath); }
-    const nsDependentSingleFragmentCSubstring Directory() { return Segment(mDirectory); }
-    const nsDependentSingleFragmentCSubstring Filename(); // see below
-    const nsDependentSingleFragmentCSubstring Basename()  { return Segment(mBasename); }
-    const nsDependentSingleFragmentCSubstring Extension() { return Segment(mExtension); }
-    const nsDependentSingleFragmentCSubstring Param()     { return Segment(mParam); }
-    const nsDependentSingleFragmentCSubstring Query()     { return Segment(mQuery); }
-    const nsDependentSingleFragmentCSubstring Ref()       { return Segment(mRef); }
+    const nsDependentCSubstring Prepath();  // see below
+    const nsDependentCSubstring Scheme()    { return Segment(mScheme); }
+    const nsDependentCSubstring Userpass(PRBool includeDelim = PR_FALSE); // see below
+    const nsDependentCSubstring Username()  { return Segment(mUsername); }
+    const nsDependentCSubstring Password()  { return Segment(mPassword); }
+    const nsDependentCSubstring Hostport(); // see below
+    const nsDependentCSubstring Host();     // see below
+    const nsDependentCSubstring Path()      { return Segment(mPath); }
+    const nsDependentCSubstring Filepath()  { return Segment(mFilepath); }
+    const nsDependentCSubstring Directory() { return Segment(mDirectory); }
+    const nsDependentCSubstring Filename(); // see below
+    const nsDependentCSubstring Basename()  { return Segment(mBasename); }
+    const nsDependentCSubstring Extension() { return Segment(mExtension); }
+    const nsDependentCSubstring Param()     { return Segment(mParam); }
+    const nsDependentCSubstring Query()     { return Segment(mQuery); }
+    const nsDependentCSubstring Ref()       { return Segment(mRef); }
 
     // shift the URLSegments to the right by diff
     void ShiftFromAuthority(PRInt32 diff) { mAuthority.mPos += diff; ShiftFromUsername(diff); }
@@ -248,7 +248,7 @@ private:
     // global objects.  don't use COMPtr as its destructor will cause a
     // coredump if we leak it.
     static nsIIDNService               *gIDNService;
-    static nsICharsetConverterManager *gCharsetMgr;
+    static nsICharsetConverterManager  *gCharsetMgr;
     static PRBool                       gInitialized;
     static PRBool                       gEscapeUTF8;
 };
@@ -265,7 +265,7 @@ private:
 // Dependent substring getters
 //-----------------------------------------------------------------------------
 
-inline const nsDependentSingleFragmentCSubstring
+inline const nsDependentCSubstring
 nsStandardURL::Segment(PRUint32 pos, PRInt32 len)
 {
     if (len < 0) {
@@ -275,7 +275,7 @@ nsStandardURL::Segment(PRUint32 pos, PRInt32 len)
     return Substring(mSpec, pos, PRUint32(len));
 }
 
-inline const nsDependentSingleFragmentCSubstring
+inline const nsDependentCSubstring
 nsStandardURL::Prepath()
 {
     PRUint32 len = 0;
@@ -284,7 +284,7 @@ nsStandardURL::Prepath()
     return Substring(mSpec, 0, len);
 }
 
-inline const nsDependentSingleFragmentCSubstring
+inline const nsDependentCSubstring
 nsStandardURL::Userpass(int includeDelim)
 {
     PRUint32 pos=0, len=0;
@@ -300,7 +300,7 @@ nsStandardURL::Userpass(int includeDelim)
     return Substring(mSpec, pos, len);
 }
 
-inline const nsDependentSingleFragmentCSubstring
+inline const nsDependentCSubstring
 nsStandardURL::Hostport()
 {
     PRUint32 pos=0, len=0;
@@ -311,7 +311,7 @@ nsStandardURL::Hostport()
     return Substring(mSpec, pos, len);
 }
 
-inline const nsDependentSingleFragmentCSubstring
+inline const nsDependentCSubstring
 nsStandardURL::Host()
 {
     PRUint32 pos=0, len=0;
@@ -326,7 +326,7 @@ nsStandardURL::Host()
     return Substring(mSpec, pos, len);
 }
 
-inline const nsDependentSingleFragmentCSubstring
+inline const nsDependentCSubstring
 nsStandardURL::Filename()
 {
     PRUint32 pos=0, len=0;

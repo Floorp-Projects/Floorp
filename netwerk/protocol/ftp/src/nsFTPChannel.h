@@ -141,7 +141,7 @@ protected:
 
     nsFtpState*                     mFTPState;   
 
-    nsSharableCString               mHost;
+    nsCString                       mHost;
     PRLock*                         mLock;
     nsCOMPtr<nsISupports>           mUserContext;
     nsresult                        mStatus;

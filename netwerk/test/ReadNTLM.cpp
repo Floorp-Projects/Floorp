@@ -39,7 +39,6 @@
 #include <stdio.h>
 #include "plbase64.h"
 #include "nsString.h"
-#include "nsString2.h"
 #include "nsNativeCharsetUtils.h"
 #include "nsReadableUtils.h"
 #include "prmem.h"

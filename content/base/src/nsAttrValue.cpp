@@ -224,7 +224,7 @@ nsAttrValue::ToString(nsAString& aResult) const
   }
 }
 
-const nsDependentSingleFragmentSubstring
+const nsDependentSubstring
 nsAttrValue::GetStringValue() const
 {
   NS_PRECONDITION(GetType() == eString,

@@ -5044,9 +5044,9 @@ dnl =
 dnl = Cleanup section for misc ordering snafus
 dnl =
 if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC"; then
-    XPCOM_GLUE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX)'
+    XPCOM_GLUE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX)'
 else
-    XPCOM_GLUE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcomglue -lstring_s -lstring_obsolete_s'
+    XPCOM_GLUE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcomglue -lstring_s'
 fi
 
 dnl ========================================================

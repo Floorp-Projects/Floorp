@@ -35,6 +35,7 @@
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLLinkElement.h"
 #include "nsNetUtil.h"
+#include "nsUnicharUtils.h"
 
 //*****************************************************************************
 // class nsContextMenuInfo

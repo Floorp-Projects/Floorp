@@ -132,7 +132,8 @@ void
 ToLowerCase( nsString& aString )
   {
     ConvertToLowerCase converter;
-    converter.write(aString.mUStr, aString.mLength);
+    PRUnichar* start;
+    converter.write(aString.BeginWriting(start), aString.Length());
   }
 
 class CopyToLowerCase
@@ -215,7 +216,8 @@ void
 ToUpperCase( nsString& aString )
   {
     ConvertToUpperCase converter;
-    converter.write(aString.mUStr, aString.mLength);
+    PRUnichar* start;
+    converter.write(aString.BeginWriting(start), aString.Length());
   }
 
 class CopyToUpperCase

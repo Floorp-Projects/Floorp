@@ -61,9 +61,9 @@ class txParsedURL
 public:
     void init(const nsAFlatString& aSpec);
     void resolve(const txParsedURL& aRef, txParsedURL& aDest);
-    const nsDependentConcatenation getFile() const
+    void getFile(nsString& aResult) const
     {
-        return mPath + mName;
+        aResult = mPath + mName;
     }
     nsString mPath, mName, mRef;
 };

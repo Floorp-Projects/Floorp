@@ -47,6 +47,7 @@ EXPORTS = \
 		nsHTMLTagList.h             \
 		nsHTMLTags.h                \
 		nsHTMLTokens.h              \
+		nsScannerString.h           \
 		nsParserError.h             \
 		nsParserCIID.h              \
 		nsToken.h                   \

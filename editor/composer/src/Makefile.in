@@ -36,6 +36,7 @@ PACKAGE_FILE = composer.pkg
 
 REQUIRES	= xpcom \
 		  string \
+		  unicharutil \
 		  dom \
 		  js \
 		  layout \

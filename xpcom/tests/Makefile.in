@@ -57,6 +57,8 @@ CPPSRCS		= \
 		TestXPIDLString.cpp \
 		TestDeque.cpp \
 		TestAutoPtr.cpp \
+		TestMinStringAPI.cpp \
+		TestStrings.cpp \
 		$(NULL)
 
 #CPPSRCS		+= TimerTest.cpp

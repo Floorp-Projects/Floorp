@@ -851,9 +851,25 @@ NS_GetFrozenFunctions(XPCOMFunctions *functions, const char* libraryPath)
     GET_FUNC(unregisterExitRoutine, UnregisterXPCOMExitRoutineFunc, "NS_UnregisterXPCOMExitRoutine");
 
     // these functions were added post 1.4 (need to check size of |functions|)
-    if (functions->size >= sizeof(XPCOMFunctions)) {
+    if (functions->size > offsetof(XPCOMFunctions, getTraceRefcnt)) {
         GET_FUNC(getDebug,          GetDebugFunc,                   "NS_GetDebug");
         GET_FUNC(getTraceRefcnt,    GetTraceRefcntFunc,             "NS_GetTraceRefcnt");
+    }
+
+    // these functions were added post 1.6 (need to check size of |functions|)
+    if (functions->size > offsetof(XPCOMFunctions, cstringCopy)) {
+        GET_FUNC(stringContainerInit,    StringContainerInitFunc,        "NS_StringContainerInit");
+        GET_FUNC(stringContainerFinish,  StringContainerFinishFunc,      "NS_StringContainerFinish");
+        GET_FUNC(stringGetData,          StringGetDataFunc,              "NS_StringGetData");
+        GET_FUNC(stringSetData,          StringSetDataFunc,              "NS_StringSetData");
+        GET_FUNC(stringSetDataRange,     StringSetDataRangeFunc,         "NS_StringSetDataRange");
+        GET_FUNC(stringCopy,             StringCopyFunc,                 "NS_StringCopy");
+        GET_FUNC(cstringContainerInit,   CStringContainerInitFunc,       "NS_CStringContainerInit");
+        GET_FUNC(cstringContainerFinish, CStringContainerFinishFunc,     "NS_CStringContainerFinish");
+        GET_FUNC(cstringGetData,         CStringGetDataFunc,             "NS_CStringGetData");
+        GET_FUNC(cstringSetData,         CStringSetDataFunc,             "NS_CStringSetData");
+        GET_FUNC(cstringSetDataRange,    CStringSetDataRangeFunc,        "NS_CStringSetDataRange");
+        GET_FUNC(cstringCopy,            CStringCopyFunc,                "NS_CStringCopy");
     }
 
     rv = NS_OK;

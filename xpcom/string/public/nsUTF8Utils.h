@@ -412,4 +412,41 @@ class CalculateUTF8Size
       size_t mSize;
   };
 
+/**
+ * A character sink that performs a |reinterpret_cast| style conversion
+ * between character types.
+ */
+template <class FromCharT, class ToCharT>
+class LossyConvertEncoding
+  {
+    public:
+      typedef FromCharT value_type;
+ 
+      typedef FromCharT input_type;
+      typedef ToCharT   output_type;
+
+      typedef typename nsCharTraits<FromCharT>::unsigned_char_type unsigned_input_type;
+
+    public:
+      LossyConvertEncoding( output_type* aDestination ) : mDestination(aDestination) { }
+
+      PRUint32
+      write( const input_type* aSource, PRUint32 aSourceLength )
+        {
+          const input_type* done_writing = aSource + aSourceLength;
+          while ( aSource < done_writing )
+            *mDestination++ = (output_type)(unsigned_input_type)(*aSource++);  // use old-style cast to mimic old |ns[C]String| behavior
+          return aSourceLength;
+        }
+
+      void
+      write_terminator()
+        {
+          *mDestination = output_type(0);
+        }
+
+    private:
+      output_type* mDestination;
+  };
+
 #endif /* !defined(nsUTF8Utils_h_) */

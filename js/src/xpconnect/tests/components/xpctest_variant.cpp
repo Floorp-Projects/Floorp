@@ -41,6 +41,7 @@
 /* implement nsITestVariant for testing. */
 
 #include "xpctest_private.h"
+#include "nsString.h"
 
 class nsTestVariant : public nsITestVariant
 {

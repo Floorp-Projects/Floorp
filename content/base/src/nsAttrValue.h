@@ -73,7 +73,7 @@ public:
 
   // Methods to get value. These methods do not convert so only use them
   // to retrieve the datatype that this nsAttrValue has.
-  const nsDependentSingleFragmentSubstring GetStringValue() const;
+  const nsDependentSubstring GetStringValue() const;
   const nsHTMLValue* GetHTMLValue() const;
   nsIAtom* GetAtomValue() const;
 

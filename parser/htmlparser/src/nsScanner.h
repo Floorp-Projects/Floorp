@@ -57,19 +57,8 @@
 #include "nsIParser.h"
 #include "prtypes.h"
 #include "nsIUnicodeDecoder.h"
-#include "nsSlidingString.h"
+#include "nsScannerString.h"
 #include "nsIInputStream.h"
-
-class nsScannerString : public nsSlidingString {
-  public: 
-    nsScannerString(PRUnichar* aStorageStart, 
-                    PRUnichar* aDataEnd, 
-                    PRUnichar* aStorageEnd);
-
-    virtual void UngetReadable(const nsAString& aReadable, const nsReadingIterator<PRUnichar>& aCurrentPosition) { InsertReadable(aReadable,aCurrentPosition); }
-    virtual void ReplaceCharacter(nsReadingIterator<PRUnichar>& aPosition,
-                                  PRUnichar aChar);
-};
 
 class nsReadEndCondition {
 public:
@@ -208,17 +197,14 @@ class nsScanner {
        */
       nsresult GetIdentifier(nsString& aString,PRBool allowPunct=PR_FALSE);
       nsresult ReadIdentifier(nsString& aString,PRBool allowPunct=PR_FALSE);
-      nsresult ReadIdentifier(nsReadingIterator<PRUnichar>& aStart,
-                              nsReadingIterator<PRUnichar>& aEnd,
+      nsresult ReadIdentifier(nsScannerIterator& aStart,
+                              nsScannerIterator& aEnd,
                               PRBool allowPunct=PR_FALSE);
       nsresult ReadNumber(nsString& aString,PRInt32 aBase);
-      nsresult ReadNumber(nsReadingIterator<PRUnichar>& aStart, 
-                          nsReadingIterator<PRUnichar>& aEnd,
-                          PRInt32 aBase);
       nsresult ReadWhitespace(nsString& aString, 
                               PRInt32& aNewlinesSkipped);
-      nsresult ReadWhitespace(nsReadingIterator<PRUnichar>& aStart, 
-                              nsReadingIterator<PRUnichar>& aEnd,
+      nsresult ReadWhitespace(nsScannerIterator& aStart, 
+                              nsScannerIterator& aEnd,
                               PRInt32& aNewlinesSkipped);
 
       /**
@@ -248,8 +234,8 @@ class nsScanner {
                          const nsReadEndCondition& aEndCondition, 
                          PRBool addTerminal);
 
-      nsresult ReadUntil(nsReadingIterator<PRUnichar>& aStart,
-                         nsReadingIterator<PRUnichar>& aEnd,
+      nsresult ReadUntil(nsScannerIterator& aStart,
+                         nsScannerIterator& aEnd,
                          const nsReadEndCondition& aEndCondition, 
                          PRBool addTerminal);
 
@@ -348,13 +334,13 @@ class nsScanner {
        */
       nsresult SetDocumentCharset(const nsACString& aCharset, PRInt32 aSource);
 
-      void BindSubstring(nsSlidingSubstring& aSubstring, const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd);
-      void CurrentPosition(nsReadingIterator<PRUnichar>& aPosition);
-      void EndReading(nsReadingIterator<PRUnichar>& aPosition);
-      void SetPosition(nsReadingIterator<PRUnichar>& aPosition,
+      void BindSubstring(nsScannerSubstring& aSubstring, const nsScannerIterator& aStart, const nsScannerIterator& aEnd);
+      void CurrentPosition(nsScannerIterator& aPosition);
+      void EndReading(nsScannerIterator& aPosition);
+      void SetPosition(nsScannerIterator& aPosition,
                        PRBool aTruncate = PR_FALSE,
                        PRBool aReverse = PR_FALSE);
-      void ReplaceCharacter(nsReadingIterator<PRUnichar>& aPosition,
+      void ReplaceCharacter(nsScannerIterator& aPosition,
                             PRUnichar aChar);
 
       /**
@@ -379,15 +365,15 @@ class nsScanner {
        */
       nsresult FillBuffer(void);
 
-      void AppendToBuffer(PRUnichar* aStorageStart, 
-                          PRUnichar* aDataEnd, 
-                          PRUnichar* aStorageEnd);
+      void AppendToBuffer(nsScannerString::Buffer*);
+      void AppendToBuffer(const nsAString& aStr) { AppendToBuffer(nsScannerString::AllocBufferFromString(aStr)); }
+      void AppendASCIItoBuffer(const char* aData, PRUint32 aLen);
 
       nsCOMPtr<nsIInputStream>     mInputStream;
       nsScannerString*             mSlidingBuffer;
-      nsReadingIterator<PRUnichar> mCurrentPosition; // The position we will next read from in the scanner buffer
-      nsReadingIterator<PRUnichar> mMarkPosition;    // The position last marked (we may rewind to here)
-      nsReadingIterator<PRUnichar> mEndPosition;     // The current end of the scanner buffer
+      nsScannerIterator            mCurrentPosition; // The position we will next read from in the scanner buffer
+      nsScannerIterator            mMarkPosition;    // The position last marked (we may rewind to here)
+      nsScannerIterator            mEndPosition;     // The current end of the scanner buffer
       nsString        mFilename;
       PRUint32        mCountRemaining; // The number of bytes still to be read
                                        // from the scanner buffer

@@ -1874,9 +1874,11 @@ jsdStackFrame::Eval (const nsAString &bytes, const char *fileName,
     if (bytes.IsEmpty())
         return NS_ERROR_INVALID_ARG;
 
-    const nsSharedBufferHandle<PRUnichar> *h = bytes.GetSharedBufferHandle();
-    const jschar *char_bytes = NS_REINTERPRET_CAST(const jschar *,
-                                                   h->DataStart());
+    // get pointer to buffer contained in |bytes|
+    nsAString::const_iterator h;
+    bytes.BeginReading(h);
+    const jschar *char_bytes = NS_REINTERPRET_CAST(const jschar *, h.get());
+
     JSExceptionState *estate = 0;
     jsval jv;
 

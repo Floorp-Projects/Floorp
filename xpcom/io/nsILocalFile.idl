@@ -29,7 +29,6 @@
 #include "prio.h"
 #include "prlink.h"
 #include <stdio.h>
-#include "nsAString.h"
 %}
 
 [ptr] native PRFileDescStar(PRFileDesc);

@@ -54,7 +54,7 @@
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsAString.h"
-#include "nsSharableString.h"
+#include "nsString.h"
 #include "nsITimer.h"
 #include "nsIAutoCompleteSession.h"
 
@@ -219,7 +219,7 @@ protected:
                               nsIAutoCompleteResults* aResults);
   void AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExclude* aExclude);
   void AutoCompleteGetExcludeInfo(const nsAString& aURL, AutocompleteExclude* aExclude);
-  nsSharableString AutoCompletePrefilter(const nsAString& aSearchString);
+  nsString AutoCompletePrefilter(const nsAString& aSearchString);
   PRBool AutoCompleteCompare(nsAString& aHistoryURL, 
                              const nsAString& aUserURL,
                              AutocompleteExclude* aExclude);

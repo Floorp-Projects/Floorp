@@ -257,13 +257,13 @@ nsEmbedChromeRegistry::ProcessChromeLine(const char* aBuffer, PRInt32 aLength)
     }
     NS_ASSERTION(tokenCount == 4, "Unexpected tokens in line");
 
-    nsDependentSingleFragmentCSubstring
+    nsDependentCSubstring
         chromeType(tokens[0].tokenStart, tokens[0].tokenEnd);
-    nsDependentSingleFragmentCSubstring
+    nsDependentCSubstring
         chromeProfile(tokens[1].tokenStart, tokens[1].tokenEnd);
-    nsDependentSingleFragmentCSubstring
+    nsDependentCSubstring
         chromeLocType(tokens[2].tokenStart, tokens[2].tokenEnd);
-    nsDependentSingleFragmentCSubstring
+    nsDependentCSubstring
         chromeLocation(tokens[3].tokenStart, tokens[3].tokenEnd);
     
     RegisterChrome(chromeType, chromeProfile, chromeLocType, chromeLocation);

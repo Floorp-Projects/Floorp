@@ -55,7 +55,7 @@ REQUIRES = \
 ifdef XPC_IDISPATCH_SUPPORT
 REQUIRES += \
 	caps \
-	embedstring \
+	string \
 	$(NULL)
 endif
 XPIFILE         = mozactivex.xpi
@@ -189,14 +189,10 @@ LIBS = \
 # LiveConnect links to XPCOM glue
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 EXTRA_DSO_LDOPTS += \
-    $(DIST)/lib/$(LIB_PREFIX)embedstring_s.$(LIB_SUFFIX) \
     $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
     $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)
 LIBS += \
-    $(DIST)/lib/$(LIB_PREFIX)embedstring_s.$(LIB_SUFFIX) \
     $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX) \
     $(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX)
 endif
 

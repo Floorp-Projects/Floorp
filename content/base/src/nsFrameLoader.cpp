@@ -58,6 +58,7 @@
 #include "nsIBaseWindow.h"
 #include "nsIWebShell.h"
 #include "nsContentUtils.h"
+#include "nsUnicharUtils.h"
 
 #include "nsIScriptSecurityManager.h"
 

@@ -104,9 +104,8 @@ public:
   PRPackedBool mLoading;             // Are we still waiting for a load to complete?
   PRPackedBool mWasPending;          // Processed immediately or pending
   PRPackedBool mIsInline;            // Is the script inline or loaded?
-  //  nsSharableString mScriptText;  // Holds script for loaded scripts
-  nsString mScriptText;
-  const char* mJSVersion;      // We don't own this string
+  nsString mScriptText;              // Holds script for loaded scripts
+  const char* mJSVersion;            // We don't own this string
   nsCOMPtr<nsIURI> mURI;
   PRInt32 mLineNo;
 };
@@ -816,10 +815,10 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
 
       rv = unicodeDecoder->GetMaxLength(string, stringLen, &unicodeLength);
       if (NS_SUCCEEDED(rv)) {
-        typedef nsSharedBufferHandle<PRUnichar>* HandlePtr;
-        typedef nsAString* StrPtr;
-        HandlePtr handle = NS_AllocateContiguousHandleWithData(HandlePtr(0), NS_STATIC_CAST(PRUint32, unicodeLength+1), StrPtr(0));
-        PRUnichar *ustr = (PRUnichar *)handle->DataStart();
+        nsString tempStr;
+        tempStr.SetLength(unicodeLength);
+        PRUnichar *ustr;
+        tempStr.BeginWriting(ustr);
         
         PRInt32 consumedLength = 0;
         PRInt32 originalLength = stringLen;
@@ -842,8 +841,7 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
           convertedLength += unicodeLength;
           unicodeLength = bufferLength - convertedLength;
         } while (NS_FAILED(rv) && (originalLength > consumedLength) && (bufferLength > convertedLength));
-        handle->DataEnd(handle->DataStart() + convertedLength);
-        nsSharableString tempStr(handle);
+        tempStr.SetLength(convertedLength);
         request->mScriptText = tempStr;
       }
     }

@@ -43,7 +43,7 @@
 #include "nsFileSpec.h"
 
 //========================================================================================
-class NS_COM nsFileSpecImpl
+class NS_COM_OBSOLETE nsFileSpecImpl
 //========================================================================================
 	: public nsIFileSpec
 {
@@ -81,7 +81,7 @@ private:
 }; // class nsFileSpecImpl
 
 //========================================================================================
-class NS_COM nsDirectoryIteratorImpl
+class NS_COM_OBSOLETE nsDirectoryIteratorImpl
 //========================================================================================
 	: public nsIDirectoryIterator
 {

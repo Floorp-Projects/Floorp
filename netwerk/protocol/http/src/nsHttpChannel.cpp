@@ -46,6 +46,7 @@
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsAutoPtr.h"
 #include "plstr.h"
 #include "prprf.h"

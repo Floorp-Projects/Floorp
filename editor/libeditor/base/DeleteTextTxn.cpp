@@ -51,7 +51,6 @@ DeleteTextTxn::DeleteTextTxn()
 ,mElement()
 ,mOffset(0)
 ,mNumCharsToDelete(0)
-,mDeletedText(0)
 ,mRangeUpdater(nsnull)
 {
 }

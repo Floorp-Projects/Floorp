@@ -79,7 +79,7 @@ TX_CompileStylesheetPath(const txParsedURL& aURL, txStylesheet** aResult)
     *aResult = nsnull;
     nsAutoString errMsg, filePath;
 
-    filePath = aURL.getFile();
+    aURL.getFile(filePath);
     PR_LOG(txLog::xslt, PR_LOG_ALWAYS,
            ("TX_CompileStylesheetPath: %s\n",
             NS_LossyConvertUCS2toASCII(filePath).get()));

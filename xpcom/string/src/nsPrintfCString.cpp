@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -40,75 +41,43 @@
 #include "prprf.h"
 
 
+// though these classes define a fixed buffer, they do not set the F_FIXED
+// flag.  this is because they are not intended to be modified after they have
+// been constructed.  we could change this but it would require adding a new
+// class to the hierarchy, one that both this class and nsCAutoString would
+// inherit from.  for now, we populate the fixed buffer, and then let the
+// nsCString code treat the buffer as if it were a dependent buffer.
+
 nsPrintfCString::nsPrintfCString( const char_type* format, ... )
-    : mStart(mLocalBuffer),
-      mLength(0)
+  : string_type(mLocalBuffer, 0, F_TERMINATED)
   {
     va_list ap;
 
-    size_t logical_capacity = kLocalBufferSize;
-    size_t physical_capacity = logical_capacity + 1;
+    size_type logical_capacity = kLocalBufferSize;
+    size_type physical_capacity = logical_capacity + 1;
 
     va_start(ap, format);
-    mLength = PR_vsnprintf(mStart, physical_capacity, format, ap);
+    mLength = PR_vsnprintf(mData, physical_capacity, format, ap);
     va_end(ap);
   }
 
-nsPrintfCString::nsPrintfCString( size_t n, const char_type* format, ... )
-    : mStart(mLocalBuffer),
-      mLength(0)
+nsPrintfCString::nsPrintfCString( size_type n, const char_type* format, ... )
+  : string_type(mLocalBuffer, 0, F_TERMINATED)
   {
     va_list ap;
 
       // make sure there's at least |n| space
-    size_t logical_capacity = kLocalBufferSize;
+    size_type logical_capacity = kLocalBufferSize;
     if ( n > logical_capacity )
       {
-        char_type* nonlocal_buffer = new char_type[n];
-
-          // if we got something, use it
-        if ( nonlocal_buffer )
-          {
-            mStart = nonlocal_buffer;
-            logical_capacity = n;
-          }
-        // else, it's the error case ... we'll use what space we have
-        //  (since we can't throw)
+        SetCapacity(n);
+        if (Capacity() < n)
+          return; // out of memory !!
+        logical_capacity = n;
       }
-    size_t physical_capacity = logical_capacity + 1;
+    size_type physical_capacity = logical_capacity + 1;
 
     va_start(ap, format);
-    mLength = PR_vsnprintf(mStart, physical_capacity, format, ap);
+    mLength = PR_vsnprintf(mData, physical_capacity, format, ap);
     va_end(ap);
   }
-
-nsPrintfCString::~nsPrintfCString()
-  {
-    if ( mStart != mLocalBuffer )
-      delete [] mStart;
-  }
-
-PRUint32
-nsPrintfCString::Length() const
-  {
-    return mLength;
-  }
-
-const nsPrintfCString::char_type*
-nsPrintfCString::GetReadableFragment( const_fragment_type& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
-  {
-    switch ( aRequest )
-      {
-        case kFirstFragment:
-        case kLastFragment:
-        case kFragmentAt:
-          aFragment.mEnd = (aFragment.mStart = mStart) + mLength;
-          return mStart + aOffset;
-
-        case kPrevFragment:
-        case kNextFragment:
-          default:
-          return 0;
-      }
-  }
-

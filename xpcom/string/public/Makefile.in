@@ -1,3 +1,4 @@
+# vim:set ts=8 sw=8 sts=8 noet:
 # 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -30,37 +31,40 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= string
 
-SDK_HEADERS =  \
-		nsAlgorithm.h			\
-		nsAString.h			\
-		nsBufferHandle.h		\
-		nsCharTraits.h			\
-		nsStringDefines.h		\
-		nsStringFragment.h		\
-		nsStringFwd.h			\
-		nsStringIterator.h		\
-		nsStringIteratorUtils.h		\
-		nsStringTraits.h		\
-		$(NULL)
-
 EXPORTS		=				\
-		nsAFlatString.h			\
-		nsASingleFragmentString.h	\
-		nsAStringGenerator.h		\
-		nsBufferHandleUtils.h		\
-		nsDependentConcatenation.h	\
+		nsAString.h			\
+		nsAlgorithm.h			\
+		nsCharTraits.h			\
 		nsDependentString.h		\
 		nsDependentSubstring.h		\
-		nsFragmentedString.h		\
 		nsLiteralString.h		\
+		nsObsoleteAString.h		\
 		nsPrintfCString.h		\
 		nsPromiseFlatString.h		\
 		nsReadableUtils.h		\
-		nsSharableString.h		\
-		nsSharedBufferList.h		\
-		nsSlidingString.h		\
+		nsString.h			\
+		nsStringFwd.h			\
+		nsStringIterator.h		\
+		nsSubstring.h			\
+		nsSubstringTuple.h		\
+		nsTAString.h			\
+		nsTDependentString.h		\
+		nsTDependentSubstring.h		\
+		nsTObsoleteAString.h		\
+		nsTPromiseFlatString.h		\
+		nsTString.h			\
+		nsTSubstring.h			\
+		nsTSubstringTuple.h		\
 		nsUTF8Utils.h			\
 		nsXPIDLString.h			\
+		string-template-def-unichar.h	\
+		string-template-def-char.h	\
+		string-template-undef.h		\
 		$(NULL)			
+
+SDK_HEADERS	=				\
+		nsStringAPI.h			\
+		nsEmbedString.h			\
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

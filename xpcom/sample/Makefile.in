@@ -40,7 +40,6 @@ DEFINES		+= -DXPCOM_GLUE
 
 
 REQUIRES	= string \
-		  embedstring \
 		  xpcom \
 		  $(NULL)
 
@@ -64,13 +63,11 @@ EXTRA_COMPONENTS = nsSample.js
 # separate libraries linked in.
 EXTRA_DSO_LDOPTS = \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)embedstring.$(LIB_SUFFIX) \
 		$(NSPR_LIBS) \
 		$(NULL)
 
 LIBS            = \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)embedstring.$(LIB_SUFFIX) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

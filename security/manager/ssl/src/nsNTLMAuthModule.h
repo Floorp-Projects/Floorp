@@ -39,7 +39,7 @@
 #define nsNTLMAuthModule_h__
 
 #include "nsIAuthModule.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 class nsNTLMAuthModule : public nsIAuthModule
 {

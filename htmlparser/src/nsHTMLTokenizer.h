@@ -94,7 +94,7 @@ protected:
 
   nsresult ScanDocStructure(PRBool aIsFinalChunk);
 
-  virtual void PreserveToken(CStartToken* aStartToken, nsScanner& aScanner, nsReadingIterator<PRUnichar> aOrigin);
+  virtual void PreserveToken(CStartToken* aStartToken, nsScanner& aScanner, nsScannerIterator aOrigin);
 
   static void AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,nsTokenAllocator* aTokenAllocator);
 

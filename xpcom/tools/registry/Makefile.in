@@ -31,10 +31,9 @@ CPPSRCS		= regxpcom.cpp
 
 DEFINES		+= -DXPCOM_GLUE 
 
-REQUIRES	= string \
-		  embedstring \
+REQUIRES	= \
+		  string \
 		  $(NULL)
-
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../../build \
@@ -44,7 +43,6 @@ SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
 LIBS            = \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
-		$(DIST)/lib/$(LIB_PREFIX)embedstring.$(LIB_SUFFIX) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

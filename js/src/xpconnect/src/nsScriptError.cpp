@@ -47,13 +47,13 @@
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsScriptError, nsIConsoleMessage, nsIScriptError)
 
 nsScriptError::nsScriptError()
-    :  mMessage(nsnull),
-       mSourceName(nsnull),
+    :  mMessage(),
+       mSourceName(),
        mLineNumber(0),
-       mSourceLine(nsnull),
+       mSourceLine(),
        mColumnNumber(0),
        mFlags(0),
-       mCategory(nsnull)
+       mCategory()
 {
 }
 

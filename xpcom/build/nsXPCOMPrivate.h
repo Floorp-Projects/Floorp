@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,6 +41,10 @@
 
 #include "nscore.h"
 #include "nsXPCOM.h"
+
+class nsStringContainer;
+class nsCStringContainer;
+
 /**
  * Private Method to register an exit routine.  This method
  * allows you to setup a callback that will be called from 
@@ -71,20 +76,35 @@ NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine);
 
 
 // PUBLIC
-typedef nsresult (PR_CALLBACK *InitFunc)(nsIServiceManager* *result, nsIFile* binDirectory, nsIDirectoryServiceProvider* appFileLocationProvider);
-typedef nsresult (PR_CALLBACK *ShutdownFunc)(nsIServiceManager* servMgr);
-typedef nsresult (PR_CALLBACK *GetServiceManagerFunc)(nsIServiceManager* *result);
-typedef nsresult (PR_CALLBACK *GetComponentManagerFunc)(nsIComponentManager* *result);
-typedef nsresult (PR_CALLBACK *GetComponentRegistrarFunc)(nsIComponentRegistrar* *result);
-typedef nsresult (PR_CALLBACK *GetMemoryManagerFunc)(nsIMemory* *result);
-typedef nsresult (PR_CALLBACK *NewLocalFileFunc)(const nsAString &path, PRBool followLinks, nsILocalFile* *result);
-typedef nsresult (PR_CALLBACK *NewNativeLocalFileFunc)(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
+typedef nsresult (* InitFunc)(nsIServiceManager* *result, nsIFile* binDirectory, nsIDirectoryServiceProvider* appFileLocationProvider);
+typedef nsresult (* ShutdownFunc)(nsIServiceManager* servMgr);
+typedef nsresult (* GetServiceManagerFunc)(nsIServiceManager* *result);
+typedef nsresult (* GetComponentManagerFunc)(nsIComponentManager* *result);
+typedef nsresult (* GetComponentRegistrarFunc)(nsIComponentRegistrar* *result);
+typedef nsresult (* GetMemoryManagerFunc)(nsIMemory* *result);
+typedef nsresult (* NewLocalFileFunc)(const nsAString &path, PRBool followLinks, nsILocalFile* *result);
+typedef nsresult (* NewNativeLocalFileFunc)(const nsACString &path, PRBool followLinks, nsILocalFile* *result);
 
-typedef nsresult (PR_CALLBACK *GetDebugFunc)(nsIDebug* *result);
-typedef nsresult (PR_CALLBACK *GetTraceRefcntFunc)(nsITraceRefcnt* *result);
+typedef nsresult (* GetDebugFunc)(nsIDebug* *result);
+typedef nsresult (* GetTraceRefcntFunc)(nsITraceRefcnt* *result);
+
+typedef PRBool           (* StringContainerInitFunc)(nsStringContainer&);
+typedef void             (* StringContainerFinishFunc)(nsStringContainer&);
+typedef PRUint32         (* StringGetDataFunc)(const nsAString&, const PRUnichar**, PRBool*);
+typedef void             (* StringSetDataFunc)(nsAString&, const PRUnichar*, PRUint32);
+typedef void             (* StringSetDataRangeFunc)(nsAString&, PRUint32, PRUint32, const PRUnichar*, PRUint32);
+typedef void             (* StringCopyFunc)(nsAString &, const nsAString &);
+
+typedef PRBool           (* CStringContainerInitFunc)(nsCStringContainer&);
+typedef void             (* CStringContainerFinishFunc)(nsCStringContainer&);
+typedef PRUint32         (* CStringGetDataFunc)(const nsACString&, const char**, PRBool*);
+typedef void             (* CStringSetDataFunc)(nsACString&, const char*, PRUint32);
+typedef void             (* CStringSetDataRangeFunc)(nsACString&, PRUint32, PRUint32, const char*, PRUint32);
+typedef void             (* CStringCopyFunc)(nsACString &, const nsACString &);
+
 // PRIVATE
-typedef nsresult (PR_CALLBACK *RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
-typedef nsresult (PR_CALLBACK *UnregisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine);
+typedef nsresult (* RegisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine, PRUint32 priority);
+typedef nsresult (* UnregisterXPCOMExitRoutineFunc)(XPCOMExitRoutine exitRoutine);
 
 typedef struct XPCOMFunctions{
     PRUint32 version;
@@ -105,7 +125,21 @@ typedef struct XPCOMFunctions{
     // Added Post 1.4
     GetDebugFunc getDebug;
     GetTraceRefcntFunc getTraceRefcnt;
-    
+
+    // Added Post 1.6
+    StringContainerInitFunc stringContainerInit;
+    StringContainerFinishFunc stringContainerFinish;
+    StringGetDataFunc stringGetData;
+    StringSetDataFunc stringSetData;
+    StringSetDataRangeFunc stringSetDataRange;
+    StringCopyFunc stringCopy;
+    CStringContainerInitFunc cstringContainerInit;
+    CStringContainerFinishFunc cstringContainerFinish;
+    CStringGetDataFunc cstringGetData;
+    CStringSetDataFunc cstringSetData;
+    CStringSetDataRangeFunc cstringSetDataRange;
+    CStringCopyFunc cstringCopy;
+
 } XPCOMFunctions;
 
 typedef nsresult (PR_CALLBACK *GetFrozenFunctionsFunc)(XPCOMFunctions *entryPoints, const char* libraryPath);

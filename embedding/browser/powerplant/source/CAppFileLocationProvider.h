@@ -24,7 +24,7 @@
 
 #include "nsIDirectoryService.h"
 #include "nsILocalFile.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 class nsIFile;
 

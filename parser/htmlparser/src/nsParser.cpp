@@ -2403,7 +2403,7 @@ NS_PRECONDITION((eOnStart == mParserContext->mStreamListenerState ||
 
     if(eInvalidDetect==theContext->mAutoDetectStatus) { 
       if(theContext->mScanner) { 
-        nsReadingIterator<PRUnichar> iter;
+        nsScannerIterator iter;
         theContext->mScanner->EndReading(iter);
         theContext->mScanner->SetPosition(iter, PR_TRUE);
       } 

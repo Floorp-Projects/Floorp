@@ -26,32 +26,56 @@
 #ifndef nsStringFwd_h___
 #define nsStringFwd_h___
 
-#ifndef nsStringDefines_h___
-#include "nsStringDefines.h"
+#ifndef nscore_h___
+#include "nscore.h"
 #endif
 
 
   /**
-   * @see nsAString.h
+   * double-byte (PRUnichar) string types
    */
 
 class nsAString;
-class nsACString;
-
-
-  /**
-   * @see nsAFlatString.h
-   */
-
-class nsAFlatString;
-class nsAFlatCString;
-
-
-  /**
-   * @see nsDependentString.h
-   */
-
+class nsObsoleteAString;
+class nsSubstring;
+class nsSubstringTuple;
+class nsString;
+class nsAutoString;
 class nsDependentString;
-class nsDependentCString;
+class nsDependentSubstring;
+class nsPromiseFlatString;
+class nsStringComparator;
+class nsDefaultStringComparator;
+class nsXPIDLString;
 
+
+  /**
+   * single-byte (char) string types
+   */
+
+class nsACString;
+class nsObsoleteACString;
+class nsCSubstring;
+class nsCSubstringTuple;
+class nsCString;
+class nsCAutoString;
+class nsDependentCString;
+class nsDependentCSubstring;
+class nsPromiseFlatCString;
+class nsCStringComparator;
+class nsDefaultCStringComparator;
+class nsXPIDLCString;
+
+
+  /**
+   * typedefs for backwards compatibility
+   */
+
+typedef nsString              nsAFlatString;
+typedef nsSubstring           nsASingleFragmentString;
+
+typedef nsCString             nsAFlatCString;
+typedef nsCSubstring          nsASingleFragmentCString;
+
+  
 #endif /* !defined(nsStringFwd_h___) */

@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=4 sw=4 et cindent: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -55,9 +56,9 @@ void GlueShutdownMemory();
 nsresult GlueStartupDebug();
 void GlueShutdownDebug();
 
-static PRLibrary *xpcomLib = nsnull;
-static XPCOMFunctions *xpcomFunctions = nsnull;
-static nsIMemory* xpcomMemory = nsnull;
+static PRLibrary *xpcomLib;
+static XPCOMFunctions xpcomFunctions;
+static PRBool xpcomGlueInit;
 
 extern "C"
 nsresult XPCOMGlueStartup(const char* xpcomFile)
@@ -66,72 +67,80 @@ nsresult XPCOMGlueStartup(const char* xpcomFile)
     return NS_OK;
 #else
     nsresult rv;
-    PRLibSpec libSpec;
+    GetFrozenFunctionsFunc function;
 
-    libSpec.type = PR_LibSpec_Pathname;
-    if (!xpcomFile)
-        libSpec.value.pathname = XPCOM_DLL;
-    else
-        libSpec.value.pathname = xpcomFile;
-           
-    xpcomLib = PR_LoadLibraryWithFlags(libSpec, PR_LD_LAZY|PR_LD_GLOBAL);
-    if (!xpcomLib)
-        return NS_ERROR_FAILURE;
-    
-    GetFrozenFunctionsFunc function = 
-        (GetFrozenFunctionsFunc)PR_FindSymbol(xpcomLib, "NS_GetFrozenFunctions");
-    
-    if (!function) {
-        PR_UnloadLibrary(xpcomLib);
-        xpcomLib = nsnull;
-        return NS_ERROR_FAILURE;
+    xpcomFunctions.version = XPCOM_GLUE_VERSION;
+    xpcomFunctions.size    = sizeof(XPCOMFunctions);
+
+    //
+    // if xpcomFile == ".", then we assume xpcom is already loaded, and we'll
+    // use NSPR to find NS_GetFrozenFunctions from the list of already loaded
+    // libraries.
+    //
+    // otherwise, we try to load xpcom and then look for NS_GetFrozenFunctions.
+    // if xpcomFile == NULL, then we try to load xpcom by name w/o a fully
+    // qualified path.
+    //
+
+    if (xpcomFile && (xpcomFile[0] == '.' && xpcomFile[1] == '\0')) {
+        function = (GetFrozenFunctionsFunc)PR_FindSymbolAndLibrary("NS_GetFrozenFunctions", &xpcomLib);
+        if (!function)
+            return NS_ERROR_FAILURE;
+
+        char *libPath = PR_GetLibraryFilePathname(XPCOM_DLL, (PRFuncPtr) function);
+
+        if (!libPath)
+            rv = NS_ERROR_FAILURE;
+        else {
+            rv = (*function)(&xpcomFunctions, libPath);
+            PR_Free(libPath);
+        }
+    }
+    else {
+        PRLibSpec libSpec;
+
+        libSpec.type = PR_LibSpec_Pathname;
+        if (!xpcomFile)
+            libSpec.value.pathname = XPCOM_DLL;
+        else
+            libSpec.value.pathname = xpcomFile;
+
+        xpcomLib = PR_LoadLibraryWithFlags(libSpec, PR_LD_LAZY|PR_LD_GLOBAL);
+        if (!xpcomLib)
+            return NS_ERROR_FAILURE;
+
+        function = (GetFrozenFunctionsFunc) PR_FindSymbol(xpcomLib, "NS_GetFrozenFunctions");
+
+        if (!function)
+            rv = NS_ERROR_FAILURE;
+        else
+            rv = (*function)(&xpcomFunctions, libSpec.value.pathname);
     }
 
-    xpcomFunctions = (XPCOMFunctions*) calloc(1, sizeof(XPCOMFunctions));
-    if (!xpcomFunctions){
-        PR_UnloadLibrary(xpcomLib);
-        xpcomLib = nsnull;
-        return NS_ERROR_FAILURE;
-    }   
+    if (NS_FAILED(rv))
+        goto bail;
 
-    xpcomFunctions->version = XPCOM_GLUE_VERSION;
-    xpcomFunctions->size    = sizeof(XPCOMFunctions);
-
-    rv = (*function)(xpcomFunctions, libSpec.value.pathname);
-    if (NS_FAILED(rv)) {
-        free(xpcomFunctions);
-        xpcomFunctions = nsnull;  
-        PR_UnloadLibrary(xpcomLib);
-        xpcomLib = nsnull;
-        return NS_ERROR_FAILURE;
-    }
+    xpcomGlueInit = PR_TRUE;
 
     rv = GlueStartupDebug();
-
-    if (NS_FAILED(rv)) {
-        free(xpcomFunctions);
-        xpcomFunctions = nsnull;  
-        PR_UnloadLibrary(xpcomLib);
-        xpcomLib = nsnull;
-        return NS_ERROR_FAILURE;
-    }
+    if (NS_FAILED(rv))
+        goto bail;
 
     // startup the nsMemory
     rv = GlueStartupMemory();
-
     if (NS_FAILED(rv)) {
         GlueShutdownDebug();
-
-        free(xpcomFunctions);
-        xpcomFunctions = nsnull;  
-        PR_UnloadLibrary(xpcomLib);
-        xpcomLib = nsnull;
-        return NS_ERROR_FAILURE;
+        goto bail;
     }
 
     GRE_AddGREToEnvironment();
+    return NS_OK;
 
-    return rv;
+bail:
+    PR_UnloadLibrary(xpcomLib);
+    xpcomLib = nsnull;
+    xpcomGlueInit = PR_FALSE;
+    return NS_ERROR_FAILURE;
 #endif
 }
 
@@ -141,10 +150,6 @@ nsresult XPCOMGlueShutdown()
 #ifdef XPCOM_GLUE_NO_DYNAMIC_LOADING
     return NS_OK;
 #else
-    if (xpcomFunctions) {
-        free ((void*)xpcomFunctions);
-        xpcomFunctions = nsnull;
-    }
 
     GlueShutdownMemory();
 
@@ -155,6 +160,7 @@ nsresult XPCOMGlueShutdown()
         xpcomLib = nsnull;
     }
     
+    xpcomGlueInit = PR_FALSE;
     return NS_OK;
 #endif
 }
@@ -165,98 +171,190 @@ NS_InitXPCOM2(nsIServiceManager* *result,
               nsIFile* binDirectory,
               nsIDirectoryServiceProvider* appFileLocationProvider)
 {
-    if (!xpcomFunctions)
+    if (!xpcomGlueInit)
         return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions->init(result, binDirectory, appFileLocationProvider);
+    return xpcomFunctions.init(result, binDirectory, appFileLocationProvider);
 }
 
 extern "C" NS_COM nsresult
 NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 {
-    if (!xpcomFunctions)
+    if (!xpcomGlueInit)
         return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions->shutdown(servMgr);
+    return xpcomFunctions.shutdown(servMgr);
 }
 
 extern "C" NS_COM nsresult
 NS_GetServiceManager(nsIServiceManager* *result)
 {
-    if (!xpcomFunctions)
+    if (!xpcomGlueInit)
         return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions->getServiceManager(result);
+    return xpcomFunctions.getServiceManager(result);
 }
 
 extern "C" NS_COM nsresult
 NS_GetComponentManager(nsIComponentManager* *result)
 {
-    if (!xpcomFunctions)
+    if (!xpcomGlueInit)
         return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions->getComponentManager(result);
+    return xpcomFunctions.getComponentManager(result);
 }
 
 extern "C" NS_COM nsresult
 NS_GetComponentRegistrar(nsIComponentRegistrar* *result)
 {
-    if (!xpcomFunctions)
+    if (!xpcomGlueInit)
         return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions->getComponentRegistrar(result);
+    return xpcomFunctions.getComponentRegistrar(result);
 }
 
 extern "C" NS_COM nsresult
 NS_GetMemoryManager(nsIMemory* *result)
 {
-    if (!xpcomFunctions)
+    if (!xpcomGlueInit)
         return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions->getMemoryManager(result);
+    return xpcomFunctions.getMemoryManager(result);
 }
 
 extern "C" NS_COM nsresult
 NS_NewLocalFile(const nsAString &path, PRBool followLinks, nsILocalFile* *result)
 {
-    if (!xpcomFunctions)
+    if (!xpcomGlueInit)
         return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions->newLocalFile(path, followLinks, result);
+    return xpcomFunctions.newLocalFile(path, followLinks, result);
 }
 
 extern "C" NS_COM nsresult
 NS_NewNativeLocalFile(const nsACString &path, PRBool followLinks, nsILocalFile* *result)
 {
-    if (!xpcomFunctions)
+    if (!xpcomGlueInit)
         return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions->newNativeLocalFile(path, followLinks, result);
+    return xpcomFunctions.newNativeLocalFile(path, followLinks, result);
 }
 
 extern "C" NS_COM nsresult
 NS_RegisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine, PRUint32 priority)
 {
-  if (!xpcomFunctions)
+  if (!xpcomGlueInit)
       return NS_ERROR_NOT_INITIALIZED;
-  return xpcomFunctions->registerExitRoutine(exitRoutine, priority);
+  return xpcomFunctions.registerExitRoutine(exitRoutine, priority);
 }
 
 extern "C" NS_COM nsresult
 NS_UnregisterXPCOMExitRoutine(XPCOMExitRoutine exitRoutine)
 {
-    if (!xpcomFunctions)
+    if (!xpcomGlueInit)
         return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions->unregisterExitRoutine(exitRoutine);
+    return xpcomFunctions.unregisterExitRoutine(exitRoutine);
 }
 
 extern "C" NS_COM nsresult
 NS_GetDebug(nsIDebug* *result)
 {
-    if (!xpcomFunctions)
+    if (!xpcomGlueInit)
         return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions->getDebug(result);
+    return xpcomFunctions.getDebug(result);
 }
 
 
 extern "C" NS_COM nsresult
 NS_GetTraceRefcnt(nsITraceRefcnt* *result)
 {
-    if (!xpcomFunctions)
+    if (!xpcomGlueInit)
         return NS_ERROR_NOT_INITIALIZED;
-    return xpcomFunctions->getTraceRefcnt(result);
+    return xpcomFunctions.getTraceRefcnt(result);
+}
+
+
+extern "C" NS_COM PRBool
+NS_StringContainerInit(nsStringContainer &aStr)
+{
+    if (!xpcomGlueInit)
+        return PR_FALSE;
+    return xpcomFunctions.stringContainerInit(aStr);
+}
+
+extern "C" NS_COM void
+NS_StringContainerFinish(nsStringContainer &aStr)
+{
+    if (xpcomGlueInit)
+        xpcomFunctions.stringContainerFinish(aStr);
+}
+
+extern "C" NS_COM PRUint32
+NS_StringGetData(const nsAString &aStr, const PRUnichar **aBuf, PRBool *aTerm)
+{
+    if (!xpcomGlueInit)
+        return 0;
+    return xpcomFunctions.stringGetData(aStr, aBuf, aTerm);
+}
+
+extern "C" NS_COM void
+NS_StringSetData(nsAString &aStr, const PRUnichar *aBuf, PRUint32 aCount)
+{
+    if (xpcomGlueInit)
+        xpcomFunctions.stringSetData(aStr, aBuf, aCount);
+}
+
+extern "C" NS_COM void
+NS_StringSetDataRange(nsAString &aStr, PRUint32 aCutStart, PRUint32 aCutLength,
+                      const PRUnichar *aBuf, PRUint32 aCount)
+{
+    if (xpcomGlueInit)
+        xpcomFunctions.stringSetDataRange(aStr, aCutStart, aCutLength, aBuf, aCount);
+}
+
+extern "C" NS_COM void
+NS_StringCopy(nsAString &aDest, const nsAString &aSrc)
+{
+    if (xpcomGlueInit)
+        xpcomFunctions.stringCopy(aDest, aSrc);
+}
+
+
+extern "C" NS_COM PRBool
+NS_CStringContainerInit(nsCStringContainer &aStr)
+{
+    if (!xpcomGlueInit)
+        return PR_FALSE;
+    return xpcomFunctions.cstringContainerInit(aStr);
+}
+
+extern "C" NS_COM void
+NS_CStringContainerFinish(nsCStringContainer &aStr)
+{
+    if (xpcomGlueInit)
+        xpcomFunctions.cstringContainerFinish(aStr);
+}
+
+extern "C" NS_COM PRUint32
+NS_CStringGetData(const nsACString &aStr, const char **aBuf, PRBool *aTerm)
+{
+    if (!xpcomGlueInit)
+        return 0;
+    return xpcomFunctions.cstringGetData(aStr, aBuf, aTerm);
+}
+
+extern "C" NS_COM void
+NS_CStringSetData(nsACString &aStr, const char *aBuf, PRUint32 aCount)
+{
+    if (xpcomGlueInit)
+        xpcomFunctions.cstringSetData(aStr, aBuf, aCount);
+}
+
+extern "C" NS_COM void
+NS_CStringSetDataRange(nsACString &aStr, PRUint32 aCutStart, PRUint32 aCutLength,
+                       const char *aBuf, PRUint32 aCount)
+{
+    if (xpcomGlueInit)
+        xpcomFunctions.cstringSetDataRange(aStr, aCutStart, aCutLength, aBuf, aCount);
+}
+
+extern "C" NS_COM void
+NS_CStringCopy(nsACString &aDest, const nsACString &aSrc)
+{
+    if (xpcomGlueInit)
+        xpcomFunctions.cstringCopy(aDest, aSrc);
 }
 
 #endif // #ifndef  XPCOM_GLUE_NO_DYNAMIC_LOADING

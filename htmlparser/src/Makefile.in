@@ -59,6 +59,7 @@ EXTRA_DSO_LIBS	+= mozutil_s
 endif
 
 CPPSRCS = \
+		nsScannerString.cpp \
 		nsDTDUtils.cpp      \
 		nsHTMLTokenizer.cpp \
 		nsElementTable.cpp  \

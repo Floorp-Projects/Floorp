@@ -934,7 +934,7 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner,
   mInternalState = NS_OK; // Resume in case we're blocked.
   XML_UnblockParser(mExpatParser);
 
-  nsReadingIterator<PRUnichar> start, end;
+  nsScannerIterator start, end;
   aScanner.CurrentPosition(start);
   aScanner.EndReading(end);
   

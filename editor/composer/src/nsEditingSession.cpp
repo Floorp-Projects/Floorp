@@ -93,7 +93,6 @@
 nsEditingSession::nsEditingSession()
 : mDoneSetup(PR_FALSE)
 , mCanCreateEditor(PR_FALSE)
-, mEditorType(nsnull)
 , mEditorFlags(0)
 , mEditorStatus(eEditorOK)
 , mBaseCommandControllerId(0)
