@@ -180,6 +180,22 @@ build_dist:
 	set DIST_DIRS=1
 	nmake -f makefile.win all
 
+install:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
+	set DIST_DIRS=1
+	set LAYOUT_DIRS=1
+	set CLIENT_DIRS=1
+	nmake -f makefile.win install
+
+export:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
+	nmake -f makefile.win export
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
+	set DIST_DIRS=1
+	set LAYOUT_DIRS=1
+	set CLIENT_DIRS=1
+	nmake -f makefile.win export
+
 clobber_dist:
 	@cd $(MOZ_SRC)\mozilla\.
 	set DIST_DIRS=1
