@@ -70,7 +70,13 @@ protected:
     static nscolor sButtonInnerDarkBorder;
 
     static void InitColors();
-    inline void InitWidget();
+    void InitWidget() {
+        mWidget = gtk_invisible_new();
+        gtk_object_ref(GTK_OBJECT(mWidget));
+        gtk_object_sink(GTK_OBJECT(mWidget));
+        gtk_widget_ensure_style(mWidget);
+        mStyle = gtk_widget_get_style(mWidget);
+    }
 };
 
 #endif
