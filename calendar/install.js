@@ -6,22 +6,34 @@ const name        = "MozillaCalendar";
 const version     = "0.8";
 const addLocales   = new Array("cs-CZ", "cy-GB", "de-AT", "es-ES", "fr-FR", "hu-HU", "ja-JP", "lt-LT", "nl-NL", "pl-PL", "pt-BR", "sk-SK", "sl-SI", "sv-SE", "wen-DE");
 
-initInstall(displayName, name, version);
+var err = initInstall(displayName, name, version);
+
+logComment("initInstall returned: " + err);
 
 calendarDir = getFolder("Chrome","calendar");
 
+logComment("calendarDir is: " + calendarDir);
+
 setPackageFolder(calendarDir);
 
-addDirectory( "resources" );
+err = addDirectory( "resources" );
 
-addDirectory("", "bin/components", getFolder( "Components" ), "" );
+logComment("addDirectory() for resources returned: " + err);
 
-addDirectory( "", "", "icons", getFolder( "Chrome", "icons" ), "", true );
+err = addDirectory("", "bin/components", getFolder( "Components" ), "" );
 
-addFile( "Calendar Chrome",
+logComment("addDirectory() for components returned: " + err);
+
+err = addDirectory( "", "", "icons", getFolder( "Chrome", "icons" ), "", true );
+
+logComment("addDirectory() for icons returned: " + err);
+
+err = addFile( "Calendar Chrome",
          "bin/chrome/calendar.jar", // jar source folder 
          getFolder("Chrome"),        // target folder
          "");
+
+logComment("addFile() for calendar.jar returned: " + err);
 
 var err = getLastError();
 
