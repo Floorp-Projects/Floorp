@@ -237,7 +237,7 @@ protected:
   void FocusElementButNotDocument(nsIContent *aElement);
 
   // Return the location of the caret
-  nsresult GetDocSelectionLocation(nsIContent **startContent, nsIContent **endContent, nsIFrame **startFrame, PRUint32 *startOffset);
+  NS_IMETHOD GetDocSelectionLocation(nsIContent **startContent, nsIContent **endContent, nsIFrame **startFrame, PRUint32 *startOffset);
 
   void GetSelection ( nsIFrame* inFrame, nsPresContext* inPresContext, nsIFrameSelection** outSelection ) ;
 
