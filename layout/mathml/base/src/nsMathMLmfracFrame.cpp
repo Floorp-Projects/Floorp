@@ -37,8 +37,6 @@
 #include "nsIFontMetrics.h"
 #include "nsStyleUtil.h"
 
-#include "nsMathMLAtoms.h"
-#include "nsMathMLParts.h"
 #include "nsMathMLmfracFrame.h"
 
 //
@@ -125,15 +123,16 @@ nsMathMLmfracFrame::Paint(nsIPresContext&      aPresContext,
                           nsFramePaintLayer    aWhichLayer)
 {
   nsresult rv = NS_OK;
-
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
-    return rv;
-  }
   
   /////////////
   // paint the numerator and denominator
   rv = nsMathMLContainerFrame::Paint(aPresContext, aRenderingContext, 
                                      aDirtyRect, aWhichLayer);
+
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
+    return rv;
+  }
+
   ////////////
   // paint the fraction line
   if (NS_SUCCEEDED(rv) && 0 < mLineThickness) {

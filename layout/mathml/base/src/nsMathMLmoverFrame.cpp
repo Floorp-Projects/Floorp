@@ -37,8 +37,6 @@
 #include "nsIFontMetrics.h"
 #include "nsStyleUtil.h"
 
-#include "nsMathMLAtoms.h"
-#include "nsMathMLParts.h"
 #include "nsMathMLmoverFrame.h"
 
 //
