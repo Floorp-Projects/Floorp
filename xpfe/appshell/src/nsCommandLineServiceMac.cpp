@@ -72,7 +72,7 @@
 #include "plstr.h"
 #include "prenv.h"
 #ifdef XP_MAC
-#include "pprio.h"	// PR_Init_Log
+#include "pprio.h"  // PR_Init_Log
 #endif
 
 #include "nsAppShellCIDs.h"
@@ -337,64 +337,67 @@ OSErr nsMacCommandLine::HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileT
 nsresult nsMacCommandLine::OpenWindow(const char *chrome, const PRUnichar *url)
 //----------------------------------------------------------------------------------------
 {
-	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
-	nsCOMPtr<nsISupportsString> urlWrapper(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
-	if (!wwatch || !urlWrapper)
-		return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  nsCOMPtr<nsISupportsString> urlWrapper(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  if (!wwatch || !urlWrapper)
+    return NS_ERROR_FAILURE;
 
-	urlWrapper->SetData(nsDependentString(url));
+  urlWrapper->SetData(nsDependentString(url));
 
-	nsCOMPtr<nsIDOMWindow> newWindow;
-	nsresult rv;
-	rv = wwatch->OpenWindow(0, chrome, "_blank",
-	             "chrome,dialog=no,all", urlWrapper,
-	             getter_AddRefs(newWindow));
+  nsCOMPtr<nsIDOMWindow> newWindow;
+  nsresult rv;
+  rv = wwatch->OpenWindow(0, chrome, "_blank",
+               "chrome,dialog=no,all", urlWrapper,
+               getter_AddRefs(newWindow));
 
-	return rv;
+  return rv;
 }
 
 //----------------------------------------------------------------------------------------
 OSErr nsMacCommandLine::DispatchURLToNewBrowser(const char* url)
 //----------------------------------------------------------------------------------------
 {
-	OSErr err = errAEEventNotHandled;
-	if (mStartedUp)
-	{
-		nsresult rv;
-		rv = OpenWindow("chrome://navigator/content", NS_ConvertASCIItoUCS2(url).get());
-		if (NS_FAILED(rv))
-			return err;
+  OSErr err = errAEEventNotHandled;
+  if (mStartedUp)
+  {
+    nsresult rv;
+    rv = OpenWindow("chrome://navigator/content", NS_ConvertASCIItoUCS2(url).get());
+    if (NS_FAILED(rv))
+      return err;
         err = noErr;  // we handled it
-	}
-	else
-		err = AddToCommandLine(url);
-	
-	return err;
+  }
+  else {
+    err = AddToCommandLine("-url");
+    if (err == noErr)
+      err = AddToCommandLine(url);
+  }
+  
+  return err;
 }
 
 //----------------------------------------------------------------------------------------
 OSErr nsMacCommandLine::Quit(TAskSave askSave)
 //----------------------------------------------------------------------------------------
 {
-	nsresult rv;
-	
-	nsCOMPtr<nsICloseAllWindows> closer =
-	         do_CreateInstance("@mozilla.org/appshell/closeallwindows;1", &rv);
-	if (NS_FAILED(rv))
-		return errAEEventNotHandled;
+  nsresult rv;
+  
+  nsCOMPtr<nsICloseAllWindows> closer =
+           do_CreateInstance("@mozilla.org/appshell/closeallwindows;1", &rv);
+  if (NS_FAILED(rv))
+    return errAEEventNotHandled;
 
     PRBool doQuit;
     rv = closer->CloseAll(askSave != eSaveNo, &doQuit);
     if (NS_FAILED(rv) || !doQuit)
         return errAEEventNotHandled;
-        	
-	nsCOMPtr<nsIAppShellService> appShellService = 
-	         do_GetService(kAppShellServiceCID, &rv);
-	if (NS_FAILED(rv))
-		return errAEEventNotHandled;
-	
-	(void)appShellService->Quit(nsIAppShellService::eAttemptQuit);
-	return noErr;
+          
+  nsCOMPtr<nsIAppShellService> appShellService = 
+           do_GetService(kAppShellServiceCID, &rv);
+  if (NS_FAILED(rv))
+    return errAEEventNotHandled;
+  
+  (void)appShellService->Quit(nsIAppShellService::eAttemptQuit);
+  return noErr;
 }
 
 
