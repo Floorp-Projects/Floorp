@@ -127,4 +127,8 @@
 
 #define MSG_FOLDER_FLAG_IMAP_NOINFERIORS 0x4000000 /* this imap folder cannot have children :-( */
 
+#define MSG_FOLDER_FLAG_OFFLINE 0x8000000 /* this folder configured for offline use */
+
+#define MSG_FOLDER_FLAG_OFFLINEEVENTS 0x10000000 /* this folder has offline events to play back */
+
 #endif
