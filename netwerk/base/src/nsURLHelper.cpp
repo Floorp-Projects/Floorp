@@ -383,7 +383,7 @@ net_ResolveRelativePath(const nsACString &relativePath,
 
 	if ( !path.IsEmpty() ) {
 		PRUnichar last = path.Last();
-		needsDelim = !(last == '/' || last == '\\' );
+		needsDelim = !(last == '/');
 	}
 
     nsACString::const_iterator beg, end;
@@ -403,18 +403,20 @@ net_ResolveRelativePath(const nsACString &relativePath,
             stop = PR_TRUE;
             // fall through...
           case '/':
-          case '\\':
             // delimiter found
             if (name.Equals("..")) {
                 // pop path
                 // If we already have the delim at end, then
                 //  skip over that when searching for next one to the left
                 PRInt32 offset = path.Length() - (needsDelim ? 1 : 2);
+                // First check for errors
+                if (offset < 0 ) 
+                    return NS_ERROR_MALFORMED_URI;
                 PRInt32 pos = path.RFind("/", PR_FALSE, offset);
-                if (pos > 0)
+                if (pos >= 0)
                     path.Truncate(pos + 1);
                 else
-                    return NS_ERROR_MALFORMED_URI;
+                    path.Truncate();
             }
             else if (name.Equals(".") || name.Equals("")) {
                 // do nothing
