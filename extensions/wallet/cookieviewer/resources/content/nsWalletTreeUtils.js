@@ -54,7 +54,7 @@ function bubbleSort(columnPosition, ascending, children)
   var keys = [];
   for (var x=0; x<n; x++){
     var keyCell = a[x].firstChild.childNodes[columnPosition];
-    keys[x] = keyCell.getAttribute('value');
+    keys[x] = keyCell.getAttribute('label');
   }
 
   for (var i = 0; i < m; i++) {
@@ -92,11 +92,11 @@ function bubbleSort(columnPosition, ascending, children)
           keys[i] = value_winner;
           keys[winner] = value_i;
         } else {
-          value_i = cell.getAttribute('value');
-          value_winner = nextCell.getAttribute('value');
+          value_i = cell.getAttribute('label');
+          value_winner = nextCell.getAttribute('label');
         }
-        cell.setAttribute('value', value_winner);
-        nextCell.setAttribute('value', value_i);
+        cell.setAttribute('label', value_winner);
+        nextCell.setAttribute('label', value_i);
         cell = cell.nextSibling;
         nextCell = nextCell.nextSibling;
         position++;
