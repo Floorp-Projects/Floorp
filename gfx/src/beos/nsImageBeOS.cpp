@@ -192,7 +192,7 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	
 	if (view && view->LockLooper()) {
 		// Only use B_OP_ALPHA when there is an alpha channel present, as it is much slower
-		if (nsnull != mAlphaBits) {
+		if (0 != mAlphaDepth) {
 			view->SetDrawingMode(B_OP_ALPHA);
 			view->DrawBitmapAsync(mImage, BRect(aSX, aSY, aSX + aSWidth - 1, aSY + aSHeight - 1),
 				BRect(aDX, aDY, aDX + aDWidth - 1, aDY + aDHeight - 1));
@@ -228,7 +228,7 @@ NS_IMETHODIMP nsImageBeOS::Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	
 	if (view && view->LockLooper()) {
 		// Only use B_OP_ALPHA when there is an alpha channel present, as it is much slower
-		if (nsnull != mAlphaBits) {
+		if (0 != mAlphaDepth) {
 			view->SetDrawingMode(B_OP_ALPHA);
 			view->DrawBitmapAsync(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
 				BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
@@ -258,7 +258,7 @@ void nsImageBeOS::DrawNoLock(BView *aView, PRInt32 aX, PRInt32 aY, PRInt32 aWidt
 	aHeight = PR_MIN(aHeight, mHeight);
 	
 	if (aView) {
-		if (nsnull != mAlphaBits) {
+		if (0 != mAlphaDepth) {
 			aView->SetDrawingMode(B_OP_ALPHA);
 			aView->DrawBitmapAsync(mImage, BRect(0, 0, aWidth - 1, aHeight - 1),
 				BRect(aX, aY, aX + aWidth - 1, aY + aHeight - 1));
