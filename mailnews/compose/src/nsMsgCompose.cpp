@@ -98,14 +98,6 @@ nsMsgCompose::~nsMsgCompose()
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgCompose, nsCOMTypeInfo<nsMsgCompose>::GetIID());
 
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-// RICHIEHACK:
-// THIS WILL ALL GO AWAY WHEN THE EDITOR API's WORK THE WAY WE WANT THEM
-// TO WORK
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-
 //
 // Once we are here, convert the data which we know to be UTF-8 to UTF-16
 // for insertion into the editor
@@ -117,18 +109,12 @@ ConvertAndLoadComposeWindow(nsIEditorShell *aEditor, nsString aBuf, PRBool aQuot
 {
   nsresult            res;
   nsString            inputCharset("UTF-8"); 
-  nsString            outputCharset("UTF-16"); 
   nsIUnicodeDecoder   *decoder = nsnull;
-  nsIUnicodeEncoder   *encoder = nsnull;
   PRInt32             unicharLength = 0;
-  PRInt32             outputLength;
-  PRUnichar           *unicharString = nsnull;
   PRUnichar           *unicodeInputString = nsnull;   // Unicode version of input
-
   char                *inputString = nsnull;          // original string...
   PRInt32             inputStringLength;      
 
-  // RICHIE - after this gets into the tree and tested, I think this changes...
   // If this is text compose, just insert what we have into the editor
   if (!aHTMLEditor)
   {
@@ -159,13 +145,14 @@ ConvertAndLoadComposeWindow(nsIEditorShell *aEditor, nsString aBuf, PRBool aQuot
 
   // Get the maximum output length and create the output buffer...
   res = decoder->GetMaxLength(inputString, inputStringLength, &unicharLength); 
-  unicodeInputString = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
+  unicodeInputString = (PRUnichar *) PR_Malloc((unicharLength + 1) * sizeof(PRUnichar));
   if (!unicodeInputString)
   {
     PR_FREEIF(inputString);
     return NS_ERROR_FAILURE;
   }
 
+  nsCRT::memset(unicodeInputString, 0, ((unicharLength + 1) * sizeof(PRUnichar)));
   res = decoder->Convert(inputString, &inputStringLength, unicodeInputString, &unicharLength); 
   if (NS_FAILED(res))
   {
@@ -173,63 +160,22 @@ ConvertAndLoadComposeWindow(nsIEditorShell *aEditor, nsString aBuf, PRBool aQuot
     PR_FREEIF(unicodeInputString);
     return NS_ERROR_FAILURE;
   }
- 
-  // Now get the UTF-16 encoder...
-  outputLength = unicharLength;
-  ccm->GetUnicodeEncoder(&outputCharset, &encoder); 
-  if (!encoder)
-  {
-    PR_FREEIF(inputString);
-    PR_FREEIF(unicodeInputString);
-    return NS_ERROR_FAILURE;
-  }
- 
-  // Find the buffer size and allocate an output buffer...
-  res = encoder->GetMaxLength(unicodeInputString, outputLength, &unicharLength); 
-  unicharString = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
-  if (!unicharString)
-  {
-    PR_FREEIF(inputString);
-    PR_FREEIF(unicodeInputString);
-    return NS_ERROR_FAILURE;
-  }
- 
-  nsCRT::memset(unicharString, 0, unicharLength * sizeof(PRUnichar));
 
-  // Do the UTF-16 conversion...
-  res = encoder->Convert(unicodeInputString, &outputLength, (char *)unicharString, &unicharLength); 
-  if (NS_FAILED(res))
-  {
-    PR_FREEIF(inputString);
-    PR_FREEIF(unicodeInputString);
-    PR_FREEIF(unicharString);
-    return NS_ERROR_FAILURE;
-  }
-
-  // Finally, insert it into the editor the correct way!
+  // Now, insert it into the editor the correct way!
   if (aQuoted)
-    aEditor->InsertAsQuotation(unicharString);
+    aEditor->InsertAsQuotation(unicodeInputString);
   else
   {
     if (aHTMLEditor)
-      aEditor->InsertSource(unicharString);
+      aEditor->InsertSource(unicodeInputString);
     else
-      aEditor->InsertText(unicharString);
+      aEditor->InsertText(unicodeInputString);
   }
 
   PR_FREEIF(inputString);
   PR_FREEIF(unicodeInputString);
-  PR_FREEIF(unicharString);
   return NS_OK;
 }
-
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
-// END OF RICHIEHACK:
-// THIS WILL ALL GO AWAY WHEN THE EDITOR API's WORK THE WAY WE WANT THEM
-// TO WORK
-////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////
 
 nsresult 
 nsMsgCompose::SetQuotingToFollow(PRBool aVal)
