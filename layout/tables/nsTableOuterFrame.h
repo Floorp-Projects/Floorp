@@ -358,6 +358,7 @@ private:
 
   nsSize    mMaxElementSize;
   nscoord   mInnerTableMaximumWidth;
+  nscoord   mPriorAvailWidth;
 
 #ifdef DEBUG_TABLE_REFLOW_TIMING
 public:

@@ -653,40 +653,22 @@ PRInt32 nsTableCellFrame::GetColSpan()
   return colSpan;
 }
 
-
+#define PROBABLY_TOO_LARGE 1000000
 static
 void DebugCheckChildSize(nsIFrame*            aChild, 
                          nsHTMLReflowMetrics& aMet, 
                          nsSize&              aAvailSize,
                          PRBool               aIsPass2Reflow)
 {
-
-/* approved for commenting out by rickg
-  if (aMet.width > aAvailSize.width) {
-    nsAutoString tmp;
-    aChild->GetFrameName(tmp);
-    printf("WARNING: cell ");
-    fputs(tmp, stdout);
-    printf(" content has desired width %d given avail width %d\n",
-            aMet.width, aAvailSize.width);
-  }
-*/
   if (aIsPass2Reflow) {
-    if ((aMet.width < 0) || (aMet.width > 60000)) {
+    if ((aMet.width < 0) || (aMet.width > PROBABLY_TOO_LARGE)) {
       printf("WARNING: cell content %p has large width %d \n", aChild, aMet.width);
-    }
-    if ((aMet.height < 0) || (aMet.height > 60000)) {
-      printf("WARNING: cell content %p has large height %d \n", aChild, aMet.height);
     }
   }
   if (aMet.maxElementSize) {
     nscoord tmp = aMet.maxElementSize->width;
-    if ((tmp < 0) || (tmp > 60000)) {
+    if ((tmp < 0) || (tmp > PROBABLY_TOO_LARGE)) {
       printf("WARNING: cell content %p has large max element width %d \n", aChild, tmp);
-    }
-    tmp = aMet.maxElementSize->height;
-    if ((tmp < 0) || (tmp > 60000)) {
-      printf("WARNING: cell content %p has large max element height %d \n", aChild, tmp);
     }
   }
 }

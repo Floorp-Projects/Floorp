@@ -139,10 +139,10 @@ protected:
                                     PRInt32&          aLimitType,
                                     float             aPixelToTwips);
 
-  nscoord AssignPctColumnWidths(const nsHTMLReflowState aReflowState,
-                                nscoord                 aBasis,
-                                PRBool                  aTableIsAutoWidth,
-                                float                   aPixelToTwips);
+  nscoord AssignPctColumnWidths(const nsHTMLReflowState& aReflowState,
+                                nscoord                  aBasis,
+                                PRBool                   aTableIsAutoWidth,
+                                float                    aPixelToTwips);
 
   void ReduceOverSpecifiedPctCols(nscoord aExcess);
 

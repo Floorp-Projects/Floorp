@@ -1069,12 +1069,29 @@ BasicTableLayoutStrategy::ReduceOverSpecifiedPctCols(nscoord aExcess)
   }
 }
 
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+nscoord WrapupAssignPctColumnWidths(nsTableFrame*            aTableFrame,
+                                    const nsHTMLReflowState& aReflowState,
+                                    nscoord                  aValue) 
+{
+  nsTableFrame::DebugTimePctCols(*aTableFrame, (nsHTMLReflowState&)aReflowState, PR_FALSE);
+  return aValue;
+}
+#else
+inline nscoord WrapupAssignPctColumnWidths(nsTableFrame*            aTableFrame,
+                                           const nsHTMLReflowState& aReflowState,
+                                           nscoord                  aValue) 
+{
+  return aValue;
+}
+#endif
+
 // Determine percentage col widths for each col frame
 nscoord 
-BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowState,
-                                                nscoord                 aBasisIn,
-                                                PRBool                  aTableIsAutoWidth,
-                                                float                   aPixelToTwips)
+BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflowState,
+                                                nscoord                  aBasisIn,
+                                                PRBool                   aTableIsAutoWidth,
+                                                float                    aPixelToTwips)
 {
 #ifdef DEBUG_TABLE_REFLOW_TIMING
   nsTableFrame::DebugTimePctCols(*mTableFrame, (nsHTMLReflowState&)aReflowState, PR_TRUE);
@@ -1088,7 +1105,8 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
   nscoord basis; // basis to use for percentage based calculations
   if (!aTableIsAutoWidth) {
     if (NS_UNCONSTRAINEDSIZE == aBasisIn) {
-      return 0; // don't do the calculations on unconstrained basis
+      // don't do the calculations on unconstrained basis
+      return WrapupAssignPctColumnWidths(mTableFrame, aReflowState, 0); 
     }
     basis = aBasisIn;
   }
@@ -1179,11 +1197,11 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
     delete [] rawPctValues; // destroy the raw pct values
     // If there are no pct cells or cols, there is nothing to do.
     if ((0 == numPerCols) || (0.0f == perTotal)) {
-      return 0;
+      return WrapupAssignPctColumnWidths(mTableFrame, aReflowState, 0); 
     }
     // If there is only one col and it is % based, it won't affect anything
     if ((1 == numCols) && (numCols == numPerCols)) {
-      return 0;
+      return WrapupAssignPctColumnWidths(mTableFrame, aReflowState, 0); 
     }
 
     // compute a basis considering total percentages and the desired width of everything else
@@ -1379,10 +1397,7 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState aReflowS
     ReduceOverSpecifiedPctCols(NSToCoordRound(((float)(colPctTotal - 100)) * 0.01f * (float)basis));
   }
 
-#ifdef DEBUG_TABLE_REFLOW_TIMING
-  nsTableFrame::DebugTimePctCols(*mTableFrame, (nsHTMLReflowState&)aReflowState, PR_FALSE);
-#endif
-  return basis;
+  return WrapupAssignPctColumnWidths(mTableFrame, aReflowState, basis); 
 }
 
 nscoord BasicTableLayoutStrategy::GetTableMinWidth() const
