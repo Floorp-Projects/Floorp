@@ -21,8 +21,17 @@
  */
 
 import com.compilercompany.ecmascript.*;
-import sun.tools.util.CommandLine;
 import java.io.*;
+
+/**
+ * Dummy command line parsing class.
+ * Probably shouldn't use sun.tools.util.CommandLine.
+ */
+class CommandLine {
+    static String[] parse(String[] args) throws IOException {
+        return args;
+    }
+}
 
 /*
  * The main driver.
