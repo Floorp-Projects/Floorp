@@ -27,6 +27,13 @@
 #include "plstr.h"
 #include "nsCRT.h"
 #include "nsMimeStringResources.h"
+#include "nsFileSpec.h"
+#include "nsFileStream.h"
+
+//
+// External Defines...
+//
+extern nsFileSpec *nsMsgCreateTempFileSpec(char *tFileName);
 
 /* See mimepbuf.h for a description of the mission of this file.
 
@@ -66,8 +73,10 @@ struct MimePartBufferData
   PRInt32     part_buffer_fp;				/* Active length. */
   PRInt32     part_buffer_size;			/* How big it is. */
 
-  char *file_buffer_name;			/* The name of a temp file used when we run out of room in the part_buffer. */
-  PRFileDesc *file_stream;			/* A stream to it. */
+	nsFileSpec          *file_buffer_spec;		/* The nsFileSpec of a temp file used when we
+								                               run out of room in the head_buffer. */
+	nsInputFileStream   *input_file_stream;		/* A stream to it. */
+	nsOutputFileStream  *output_file_stream;	/* A stream to it. */
 };
 
 MimePartBufferData *
@@ -86,10 +95,18 @@ MimePartBufferClose (MimePartBufferData *data)
   NS_ASSERTION(data, "MimePartBufferClose: no data");
   if (!data) return;
 
-  if (data->file_stream)
-	{
-	  PR_Close(data->file_stream);
-	  data->file_stream = 0;
+	if (data->input_file_stream) 
+  {
+		data->input_file_stream->close();
+    delete data->input_file_stream;
+    data->input_file_stream = nsnull;
+	}
+
+  if (data->output_file_stream) 
+  {
+		data->output_file_stream->close();
+    delete data->output_file_stream;
+    data->output_file_stream = nsnull;
 	}
 }
 
@@ -103,17 +120,25 @@ MimePartBufferReset (MimePartBufferData *data)
   PR_FREEIF(data->part_buffer);
   data->part_buffer_fp = 0;
 
-  if (data->file_stream)
-	{
-	  PR_Close(data->file_stream);
-	  data->file_stream = 0;
+	if (data->input_file_stream) 
+  {
+		data->input_file_stream->close();
+    delete data->input_file_stream;
+    data->input_file_stream = nsnull;
 	}
 
-  if (data->file_buffer_name)
-	{
-	  PR_Delete(data->file_buffer_name);
-	  PR_Free(data->file_buffer_name);
-	  data->file_buffer_name = 0;
+  if (data->output_file_stream) 
+  {
+		data->output_file_stream->close();
+    delete data->output_file_stream;
+    data->output_file_stream = nsnull;
+	}
+
+	if (data->file_buffer_spec) 
+  {
+    data->file_buffer_spec->Delete(PR_FALSE);
+    delete data->file_buffer_spec;
+    data->file_buffer_spec = nsnull;
 	}
 }
 
@@ -142,7 +167,7 @@ MimePartBufferWrite (MimePartBufferData *data,
 	 memory buffer.
    */
   if (!data->part_buffer &&
-	  !data->file_buffer_name)
+	    !data->file_buffer_spec)
 	{
 	  int target_size = TARGET_MEMORY_BUFFER_SIZE;
 	  while (target_size > 0)
@@ -163,18 +188,20 @@ MimePartBufferWrite (MimePartBufferData *data,
 
   /* Ok, if at this point we still don't have either kind of buffer, try and
 	 make a file buffer. */
-  if (!data->part_buffer && !data->file_buffer_name)
+  if (!data->part_buffer && !data->file_buffer_spec)
 	{
-	  data->file_buffer_name = GetOSTempFile("nsma");
-	  if (!data->file_buffer_name) return MIME_OUT_OF_MEMORY;
+    data->file_buffer_spec = nsMsgCreateTempFileSpec("nsma");
+		if (!data->file_buffer_spec) 
+      return MIME_OUT_OF_MEMORY;
 
-	  data->file_stream = PR_Open(data->file_buffer_name, PR_RDWR | PR_CREATE_FILE, 493);
-	  if (!data->file_stream)
-		return MIME_UNABLE_TO_OPEN_TMP_FILE;
+    data->output_file_stream = new nsOutputFileStream(*(data->file_buffer_spec));
+		if (!data->output_file_stream) 
+    {
+			return MIME_UNABLE_TO_OPEN_TMP_FILE;
+		}
   }
 
-  NS_ASSERTION(data->part_buffer || data->file_stream, "no part_buffer or file_stream");
-
+  NS_ASSERTION(data->part_buffer || data->output_file_stream, "no part_buffer or file_stream");
 
   /* If this buf will fit in the memory buffer, put it there.
    */
@@ -191,22 +218,25 @@ MimePartBufferWrite (MimePartBufferData *data,
 	{
 	  /* If the file isn't open yet, open it, and dump the memory buffer
 		 to it. */
-	  if (!data->file_stream)
+	  if (!data->output_file_stream)
 		{
-		  if (!data->file_buffer_name)
-			data->file_buffer_name = GetOSTempFile("nsma");
-		  if (!data->file_buffer_name) return MIME_OUT_OF_MEMORY;
+		  if (!data->file_buffer_spec)
+  			data->file_buffer_spec = nsMsgCreateTempFileSpec("nsma");
+		  if (!data->file_buffer_spec) 
+        return MIME_OUT_OF_MEMORY;
 
-		  data->file_stream = PR_Open(data->file_buffer_name, PR_RDWR | PR_CREATE_FILE, 493);
-		  if (!data->file_stream)
-			return MIME_UNABLE_TO_OPEN_TMP_FILE;
+      data->output_file_stream = new nsOutputFileStream(*(data->file_buffer_spec));
+		  if (!data->output_file_stream) 
+      {
+			  return MIME_UNABLE_TO_OPEN_TMP_FILE;
+		  }
 
 		  if (data->part_buffer && data->part_buffer_fp)
 			{
-			  status = PR_Write (data->file_stream,
-						data->part_buffer,
-						data->part_buffer_fp);
-			  if (status < 0) return status;
+			  status = data->output_file_stream->write(data->part_buffer,
+                                      					 data->part_buffer_fp);
+			  if (status < data->part_buffer_fp) 
+          return MIME_OUT_OF_MEMORY;
 			}
 
 		  PR_FREEIF(data->part_buffer);
@@ -215,8 +245,9 @@ MimePartBufferWrite (MimePartBufferData *data,
 		}
 
 	  /* Dump this buf to the file. */
-	  status = PR_Write (data->file_stream, buf, size);
-	  if (status < 0) return status;
+	  status = data->output_file_stream->write (buf, size);
+	  if (status < size) 
+      return MIME_OUT_OF_MEMORY;
 	}
 
   return 0;
@@ -234,13 +265,10 @@ MimePartBufferRead (MimePartBufferData *data,
 
   if (data->part_buffer)
 	{
-	  /* Read it out of memory.
-	   */
-	  NS_ASSERTION(!data->file_buffer_name && !data->file_stream, "no file_buffer_name or file_stream");
-
+	  // Read it out of memory.
 	  status = read_fn(data->part_buffer, data->part_buffer_fp, closure);
 	}
-  else if (data->file_buffer_name)
+  else if (data->file_buffer_spec)
 	{
 	  /* Read it off disk.
 	   */
@@ -248,25 +276,28 @@ MimePartBufferRead (MimePartBufferData *data,
 	  PRInt32 buf_size = DISK_BUFFER_SIZE;
 
 	  NS_ASSERTION(data->part_buffer_size == 0 && data->part_buffer_fp == 0, "buffer size is not null");
-	  NS_ASSERTION(!data->file_stream, "have a filestream when we shouldn't");
-	  NS_ASSERTION(data->file_buffer_name, "no file buffer name");
-	  if (!data->file_buffer_name) return -1;
+	  NS_ASSERTION(data->file_buffer_spec, "no file buffer name");
+	  if (!data->file_buffer_spec) 
+      return -1;
 
 	  buf = (char *) PR_MALLOC(buf_size);
-	  if (!buf) return MIME_OUT_OF_MEMORY;
+	  if (!buf) 
+      return MIME_OUT_OF_MEMORY;
 
-	  if (data->file_stream)
-		PR_Close(data->file_stream);
-	  data->file_stream = PR_Open(data->file_buffer_name, PR_RDONLY, 0);
-	  if (!data->file_stream)
-		{
-		  PR_Free(buf);
-		  return MIME_UNABLE_TO_OPEN_TMP_FILE;
+    // First, close the output file to open the input file!
+    if (data->output_file_stream)
+  		data->output_file_stream->close();
+
+		data->input_file_stream = new nsInputFileStream(*(data->file_buffer_spec));
+		if (!data->input_file_stream) 
+    {
+			PR_Free(buf);
+			return MIME_UNABLE_TO_OPEN_TMP_FILE;
 		}
 
-	  while(1)
+    while(1)
 		{
-		  PRInt32 rstatus = PR_Read(data->file_stream, buf, buf_size - 1);
+		  PRInt32 rstatus = data->input_file_stream->read(buf, buf_size - 1);
 		  if (rstatus <= 0)
 			{
 			  status = rstatus;

@@ -26,6 +26,9 @@
 #include "mimemult.h"
 #include "plhash.h"
 #include "prio.h"
+#include "nsFileSpec.h"
+#include "nsFileStream.h"
+
 
 /* The MimeMultipartRelated class implements the multipart/related MIME 
    container, which allows `sibling' sub-parts to refer to each other.
@@ -51,9 +54,10 @@ struct MimeMultipartRelated {
 	PRInt32 head_buffer_fp;		/* Active length. */
 	PRInt32 head_buffer_size;		/* How big it is. */
 	
-	char *file_buffer_name;		/* The name of a temp file used when we
-								   run out of room in the head_buffer. */
-	PRFileDesc *file_stream;		/* A stream to it. */
+	nsFileSpec          *file_buffer_spec;		/* The nsFileSpec of a temp file used when we
+								                               run out of room in the head_buffer. */
+	nsInputFileStream   *input_file_stream;		/* A stream to it. */
+	nsOutputFileStream  *output_file_stream;	/* A stream to it. */
 
 	MimeHeaders* buffered_hdrs;	/* The headers of the 'head' part. */
 
