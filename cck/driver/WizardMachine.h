@@ -73,7 +73,6 @@ public:
 	CString GetGlobalOptions(CString theName);
 	void BuildWidget(WIDGET* aWidget, CString iniSection, CString iniFile, int pageBaseIndex, BOOL readValue);
 //	void BuildHelpWidget(WIDGET* aWidget, CString iniSection, CString iniFile, int pageBaseIndex);
-	void GenerateList(CString action, WIDGET* targetWidget, CString ext);
 	void HelpWiz();
 // Overrides
 	// ClassWizard generated virtual function overrides

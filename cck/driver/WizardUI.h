@@ -82,6 +82,7 @@ public:
 	BOOL SetDescription(WIDGET *w);
 	void SortWidgetsForTabOrder();
 	void EnableWidget(WIDGET *curWidget);
+	void UpdateScreenWidget(WIDGET *curWidget);
 	void CreateControls();
 	void DisplayControls();
 	void UpdateGlobals();

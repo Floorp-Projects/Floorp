@@ -330,6 +330,33 @@ BOOL CInterpret::OpenBrowser(const char *url)
 
 	return retflag;
 }
+
+void CInterpret::GenerateList(CString action, WIDGET* curWidget, CString parentDirPath)
+{
+	CFileFind fileList;
+	BOOL dirFound = fileList.FindFile(parentDirPath);
+	CString tmpFile;
+	int i = 0;
+
+	while (dirFound)
+	{
+	    dirFound = fileList.FindNextFile();
+		tmpFile  = fileList.GetFileName();
+
+		if (action == "GenerateFileList" && !fileList.IsDirectory() ||
+		    action == "GenerateDirList" && fileList.IsDirectory() && 
+			 !(tmpFile == "." || tmpFile == "..")) 
+		{
+			curWidget->options.value[i] = new char[tmpFile.GetLength()+1];
+			strcpy(curWidget->options.value[i], (char *)(LPCTSTR) tmpFile);
+			i++;
+		}
+	}
+	curWidget->numOfOptions = i;
+
+	fileList.Close();
+}
+
 CString CInterpret::replaceVars(CString str, char *listval)
 {
 	char *theStr = (char *) (LPCTSTR) str;
@@ -752,7 +779,8 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					}
 					// Delete the global var now...
 				}	
-				else if (strcmp(pcmd, "GenerateFileList") == 0 || strcmp(pcmd, "GenerateDirList") == 0)
+				else if (strcmp(pcmd, "GenerateFileList") == 0 || 
+						 strcmp(pcmd, "GenerateDirList") == 0)
 				{
 					char *p2 = strchr(parms, ',');
 
@@ -769,7 +797,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (w)
 					{
 						CString p2path = replaceVars(p2,NULL);
-						theApp.GenerateList(pcmd, w, p2path);
+						GenerateList(pcmd, w, p2path);
 					}
 				}
 				else if (strcmp(pcmd, "BrowseFile") == 0)

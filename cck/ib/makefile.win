@@ -34,10 +34,11 @@ OBJS=					\
 	.\$(OBJDIR)\comp.obj	\
 	$(NULL)
 
+#		-I$(DEPTH)\xpinstall\wizard\windows\setup \
+
 LINCS=  $(LINCS) \
 		-I..\include \
 		-I$(DIST)\$(OBJDIR)\include \
-		-I$(DEPTH)\xpinstall\wizard\windows\setup \
 		$(NULL)
 
 MAKE_OBJ_TYPE = DLL

@@ -2,7 +2,7 @@
 #include <Winbase.h>
 #include <direct.h>
 #include "globals.h"
-#include "ifuncns.h"
+#include "comp.h"
 #include "ib.h"
 
 #define MAX_SIZE 1024
@@ -22,6 +22,9 @@ CString nscpxpiPath;
 char buffer[50000];
 XPI	xpiList[100];
 int xpiLen = -1;
+
+COMPONENT SelectedComponents[100];
+int		numComponents;
 
 int findXPI(CString xpiname, CString filename)
 {
@@ -252,6 +255,20 @@ int interpret(char *cmd)
 
 	return TRUE;
 }
+
+void init_components()
+{
+	int i;
+	WIDGET *w = findWidget("SelectedComponents");
+	BuildComponentList(SelectedComponents, &numComponents);
+
+	// Turn off components that aren't selected
+	for (i=0; i<numComponents; i++)
+		if (strstr(SelectedComponents[i].name, w->value) == NULL)
+			SelectedComponents[i].selected = FALSE;
+
+}
+
 extern "C" __declspec(dllexport)
 int StartIB(CString parms, WIDGET *curWidget)
 {
@@ -271,6 +288,8 @@ int StartIB(CString parms, WIDGET *curWidget)
 		nscpxpiPath = workspacePath + "\\NSCPXPI";
 	else
 		nscpxpiPath = rootPath + "NSCPXPI";
+
+	init_components();
 
 	_mkdir((char *)(LPCTSTR) cdPath);
 	_mkdir((char *)(LPCTSTR) tempPath);
