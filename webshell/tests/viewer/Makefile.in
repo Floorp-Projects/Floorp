@@ -38,7 +38,7 @@ TOOLKIT_CPPSRCS = \
 	nsGTKMain.cpp \
 	nsGTKMenu.cpp
 
-TOOLKIT_CFLAGS = $(TK_GTK_CFLAGS)
+TOOLKIT_CFLAGS += $(TK_GTK_CFLAGS)
 TOOLKIT_LIBS   = $(TK_GTK_LIBS)
 else
 ifneq (,$(filter motif,$(MOZ_TOOLKIT)))
@@ -50,7 +50,7 @@ TOOLKIT_CPPSRCS = \
 	nsMotifMenu.cpp \
 	nsUnixMain.cpp
 
-TOOLKIT_CFLAGS = $(TK_MOTIF_CFLAGS)
+TOOLKIT_CFLAGS += $(TK_MOTIF_CFLAGS)
 TOOLKIT_LIBS   = $(TK_MOTIF_LIBS)
 endif
 endif
