@@ -50,7 +50,6 @@ const PRInt32 kAlignJustText  = 0;
 const PRInt32 kAlignJustImage = 1;
 const PRInt32 kAlignBoth      = 2;
 
-
 //---------------------------------------------------------------
 static nsEventStatus PR_CALLBACK
 HandleImageButtonEvent(nsGUIEvent *aEvent)
@@ -141,7 +140,7 @@ NS_METHOD nsImageButton::Create(nsIWidget *aParent,
                                 nsWidgetInitData *aInitData)
 {
   return ChildWindow::Create(aParent, aRect,
-     nsnull != aHandleEventFunction ? aHandleEventFunction: HandleImageButtonEvent,
+     nsnull != aHandleEventFunction ? aHandleEventFunction:HandleImageButtonEvent,
      aContext, aAppShell, aToolkit, aInitData);
 }
 
@@ -559,6 +558,7 @@ nsEventStatus nsImageButton::HandleEvent(nsGUIEvent *aEvent)
           rect.y = ((nsPaintEvent *)aEvent)->rect->y;
           rect.width = ((nsPaintEvent *)aEvent)->rect->width;
           rect.height = ((nsPaintEvent *)aEvent)->rect->height;
+
           aEvent->widget->GetBounds(rect);
           rect.x = 0;
           rect.y = 0;
