@@ -27,6 +27,7 @@ const kRowMax = 4;
 const kWindowWidth = 600;
 const kWindowHeight = 400;
 const kAnimateIncrement = 50;
+const kAnimateSteps = kWindowHeight / kAnimateIncrement;
 
 var gToolboxDocument = null;
 var gToolbox = null;
@@ -48,13 +49,13 @@ function onLoad()
   repositionDialog();
   window.outerWidth = kWindowWidth;
   window.outerHeight = 0;
-  slideOpen();
+  slideOpen(0);
 }
 
 function onAccept(aEvent)
 {
   document.getElementById("main-box").collapsed = true;
-  slideClosed();
+  slideClosed(0);
 }
 
 function initDialog()
@@ -86,21 +87,21 @@ function closeDialog()
   window.close();
 }
 
-function slideOpen()
+function slideOpen(aStep)
 {
-  if (window.outerHeight <= kWindowHeight) {
+  if (aStep < kAnimateSteps) {
     window.outerHeight += kAnimateIncrement;
-    setTimeout(slideOpen, 20);
+    setTimeout(slideOpen, 20, ++aStep);
   } else {
     initDialog();
   }
 }
 
-function slideClosed()
+function slideClosed(aStep)
 {
-  if (window.outerHeight >= 10) {
+  if (aStep < kAnimateSteps) {
     window.outerHeight -= kAnimateIncrement;
-    setTimeout(slideClosed, 10);
+    setTimeout(slideClosed, 10, ++aStep);
   } else {
     closeDialog();
   }
@@ -294,15 +295,12 @@ function getCurrentItemIds()
   for (var i = 0; i < gToolbox.childNodes.length; ++i) {
     var toolbar = gToolbox.childNodes[i];
     if (isCustomizableToolbar(toolbar)) {
-      var currentSet = toolbar.getAttribute("currentset");
-      if (currentSet == "__empty")
-        continue;
-      else if (!currentSet)
-        currentSet = toolbar.getAttribute("defaultset");
-      
-      var ids = currentSet.split(",");
-      for (var k = 0; k < ids.length; ++k)
-        currentItems[ids[k]] = 1;
+      var child = toolbar.firstChild;
+      while (child) {
+        if (isToolbarItem(child))
+          currentItems[child.id] = 1;
+        child = child.nextSibling;
+      }
     }
   }
   return currentItems;
@@ -315,8 +313,8 @@ function buildPalette()
 {
   // Empty the palette first.
   var paletteBox = document.getElementById("palette-box");
-  while (paletteBox.firstChild)
-    paletteBox.removeChild(paletteBox.firstChild);
+  while (paletteBox.lastChild)
+    paletteBox.removeChild(paletteBox.lastChild);
 
   var currentRow = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "hbox");
@@ -571,12 +569,12 @@ function restoreDefaultSet()
     }
   }
   
-  // Now re-wrap the items on the toolbar.
-  wrapToolbarItems();
-  
   // Now rebuild the palette.
   buildPalette();
-  
+
+  // Now re-wrap the items on the toolbar.
+  wrapToolbarItems();
+
   repositionDialog();
   gToolboxChanged = true;
 }
