@@ -60,12 +60,10 @@ interface nsIMimeMiscStatus : nsISupports{
 // set the headers in bulk.
 
 [scriptable, uuid(756DBE17-B59A-11d3-98A9-001083010E9B)] 
-interface nsIMsgHeaderSink : nsISupports{
-	void handleHeader(in string aHeaderName, in wstring aHeaderValue, in boolean dontCollectAddress);
+interface nsIMsgHeaderSink : nsISupports {
 
-	// make a sandwhich around header processing.....
-	void onStartHeaders();
-	void onEndHeaders();
+    void processHeaders([array, size_is(count)] in string aHeaderNames, [array, size_is(count)] in wstring aHeaderValues,
+	                    in unsigned long count, in boolean dontCollectAddress);
 	void handleAttachment(in string contentType, in string url, in wstring displayName, in string
                           uri, in boolean aNotDownloaded);
     void onEndAllAttachments();

@@ -61,6 +61,7 @@
 
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID,    NS_DATETIMEFORMAT_CID);
+#define VIEW_ALL_HEADERS 2
 
 /*
  * nsMimeHtmlEmitter definitions....
@@ -164,7 +165,7 @@ NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
     mFirstHeaders = PR_FALSE;
  
   PRBool bFromNewsgroups = PR_FALSE;
-  for (PRInt32 j=0; j<mHeaderArray->Count(); j++)
+  for (PRInt32 j=0; j < mHeaderArray->Count(); j++)
   {
     headerInfoType *headerInfo = (headerInfoType *)mHeaderArray->ElementAt(j);
     if (!(headerInfo && headerInfo->name && *headerInfo->name))
@@ -181,51 +182,62 @@ NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
   nsCOMPtr<nsIMsgHeaderSink> headerSink; 
   nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
 
+  PRInt32 viewMode = 0;
+  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  if (prefs)
+    rv = prefs->GetIntPref("mail.show_headers", &viewMode);
+
   if (headerSink)
-    headerSink->OnStartHeaders();
-
-  // We are going to iterate over all the known headers,
-  // and broadcast them to the header sink. However, we need to 
-  // convert our UTF-8 header values into unicode before 
-  // broadcasting them....
-
-  for (PRInt32 i=0; i<mHeaderArray->Count(); i++)
   {
-    headerInfoType *headerInfo = (headerInfoType *)mHeaderArray->ElementAt(i);
-    if ( (!headerInfo) || (!headerInfo->name) || (!(*headerInfo->name)) ||
-      (!headerInfo->value) || (!(*headerInfo->value)))
-      continue;
+    // turn our headers into 2 parallel arrays which we'll pass into JS
+    const char ** headerNames = (const char **) PR_MALLOC(sizeof(const char *) * mHeaderArray->Count());
+    PRUnichar ** headerValues = (PRUnichar **) PR_MALLOC(sizeof(PRUnichar *) * mHeaderArray->Count());
 
-    if (headerSink)
+    if (!headerNames || !headerValues) return NS_ERROR_FAILURE;
+
+    PRUint32 numHeadersAdded = 0;
+    for (PRInt32 i=0; i<mHeaderArray->Count(); i++)
     {
-      char buffer[128];
+      headerInfoType * headerInfo = (headerInfoType *) mHeaderArray->ElementAt(i);
+      if ( (!headerInfo) || (!headerInfo->name) || (!(*headerInfo->name)) || (!headerInfo->value) || (!(*headerInfo->value)))
+        continue;
+
       const char * headerValue = headerInfo->value;
 
-      if (nsCRT::strcasecmp("Date", headerInfo->name) == 0)
-      {
-        nsXPIDLString formattedDate;
-        nsresult rv = GenerateDateString(headerInfo->value, getter_Copies(formattedDate));
-        if (NS_SUCCEEDED(rv))
-          headerSink->HandleHeader(headerInfo->name, formattedDate, bFromNewsgroups);
-        // let's try some fancy date formatting...
-        PRExplodedTime explode;
-        PRTime dateTime;
-        PR_ParseTimeString(headerInfo->value, PR_FALSE, &dateTime);
+      headerNames[numHeadersAdded] = headerInfo->name;
 
-        PR_ExplodeTime( dateTime, PR_LocalTimeParameters, &explode);
-        PR_FormatTime(buffer, sizeof(buffer), "%m/%d/%Y %I:%M %p", &explode);
-        headerValue = buffer;
-      }
+      if (nsCRT::strcasecmp("Date", headerInfo->name) == 0)
+        nsresult rv = GenerateDateString(headerInfo->value, &headerValues[numHeadersAdded]);
       else
       {
-        if (NS_SUCCEEDED(rv))
-          headerSink->HandleHeader(headerInfo->name, NS_ConvertUTF8toUCS2(headerValue).get(), bFromNewsgroups);
-      }
-    }
-  }
+        // optimization: if we aren't in view all header view mode, we only show a small set of the total # of headers.
+        // don't waste time sending those out to the UI since the UI is going to ignore them. 
+        if (viewMode != VIEW_ALL_HEADERS) 
+        {
+          if (nsCRT::strcasecmp("to", headerInfo->name) && nsCRT::strcasecmp("from", headerInfo->name) &&
+              nsCRT::strcasecmp("cc", headerInfo->name) && nsCRT::strcasecmp("newsgroups", headerInfo->name) &&
+              nsCRT::strcasecmp("bcc", headerInfo->name) && nsCRT::strcasecmp("followup-to", headerInfo->name) &&
+              nsCRT::strcasecmp("reply-to", headerInfo->name) && nsCRT::strcasecmp("subject", headerInfo->name) &&
+              nsCRT::strcasecmp("user-agent", headerInfo->name))
+                continue;
+        }
 
-  if (headerSink)
-    headerSink->OnEndHeaders();
+        headerValues[numHeadersAdded] = nsCRT::strdup(NS_ConvertUTF8toUCS2(headerValue).get());
+      }
+
+      numHeadersAdded++;
+    }
+
+    headerSink->ProcessHeaders(headerNames, (const PRUnichar **) headerValues, numHeadersAdded, bFromNewsgroups);
+    for (i = 0; i < numHeadersAdded; i++)
+      nsCRT::free(headerValues[i]);
+
+    PR_FREEIF(headerNames);
+    PR_FREEIF(headerValues);
+
+    // free unicode strings. 
+  } // if header Sink
+
   return NS_OK;
 }
 

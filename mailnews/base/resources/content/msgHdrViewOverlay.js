@@ -49,14 +49,6 @@ var gSaveLabel;
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
 
-// All these variables are introduced to keep track of insertion and deletion of the toggle button either
-// as the first node in the list of emails or the last node.
-var numOfEmailsInEnumerator;
-
-// var used to determine whether to show the toggle button at the
-// beginning or at the end of a list of emails in to/cc fields.
-var gNumOfEmailsToShowToggleButtonInFront = 15;
-
 // For every possible "view" in the message pane, you need to define the header names you want to
 // see in that view. In addition, include information describing how you want that header field to be
 // presented. i.e. if it's an email address field, if you want a toggle inserted on the node in case
@@ -249,38 +241,41 @@ var messageHeaderSink = {
         ShowEditMessageButton();
     },
 
-    handleHeader: function(headerName, headerValue, dontCollectAddress) 
+    processHeaders: function(headerNames, headerValues, numHeaders, dontCollectAddress)
     {
-      // WARNING: if you are modifying this function, make sure you do not do *ANY*
-      // dom manipulations which would trigger a reflow. This method gets called 
-      // for every rfc822 header in the message being displayed. If you introduce a reflow
-      // you'll be introducing a reflow for every time we are told about a header. And msgs have
-      // a lot of headers. Don't do it =)....Move your code into OnEndHeaders which is only called
-      // once per message view.
+      this.onStartHeaders(); 
 
-      // for consistancy sake, let's force all header names to be lower case so
-      // we don't have to worry about looking for: Cc and CC, etc.
-      var lowerCaseHeaderName = headerName.toLowerCase();
-      var foo = new Object;
-      foo.headerValue = headerValue;
-      foo.headerName = headerName;
-
-      // some times, you can have multiple To or cc lines....in this case, we want to APPEND 
-      // these headers into one. 
-      if ( (lowerCaseHeaderName == 'to' || lowerCaseHeaderName == 'cc') && ( lowerCaseHeaderName in currentHeaderData))
+      var index = 0; 
+      // process each header
+      while (index < numHeaders)
       {
-        currentHeaderData[lowerCaseHeaderName].headerValue = currentHeaderData[lowerCaseHeaderName].headerValue + ',' + foo.headerValue;
-      }
-      else
-       currentHeaderData[lowerCaseHeaderName] = foo;
+        // for consistancy sake, let's force all header names to be lower case so
+        // we don't have to worry about looking for: Cc and CC, etc.
+        var lowerCaseHeaderName = headerNames[index].toLowerCase();
+        
+        var foo = new Object;        
+        foo.headerValue = headerValues[index];
+        foo.headerName = headerNames[index];
 
-      if (lowerCaseHeaderName == "from")
-      {
-        if (headerValue && abAddressCollector && 
-		    ((gCollectIncoming && !dontCollectAddress) || (gCollectNewsgroup && dontCollectAddress)))
-          abAddressCollector.collectUnicodeAddress(headerValue);  
+        // some times, you can have multiple To or cc lines....in this case, we want to APPEND 
+        // these headers into one. 
+        if ( (lowerCaseHeaderName == 'to' || lowerCaseHeaderName == 'cc') && ( lowerCaseHeaderName in currentHeaderData))
+        {
+          currentHeaderData[lowerCaseHeaderName].headerValue = currentHeaderData[lowerCaseHeaderName].headerValue + ',' + foo.headerValue;
+        }
+        else
+         currentHeaderData[lowerCaseHeaderName] = foo;
+
+        if (lowerCaseHeaderName == "from")
+        {
+          if (foo.headerValue && abAddressCollector && ((gCollectIncoming && !dontCollectAddress) || (gCollectNewsgroup && dontCollectAddress)))
+           abAddressCollector.collectUnicodeAddress(foo.headerValue);  
+        }
+       
+        index++;
       }
- 
+
+      this.onEndHeaders();
     },
 
     handleAttachment: function(contentType, url, displayName, uri, notDownloaded) 
@@ -365,7 +360,9 @@ function showHeaderView(headerTable)
   {
     headerEntry = headerTable[index];
     if (headerEntry.valid)
+    {
       headerEntry.enclosingBox.removeAttribute('collapsed');
+    }
     else // if the entry is invalid, always make sure it's collapsed
       headerEntry.enclosingBox.setAttribute('collapsed', true);
   }
@@ -563,18 +560,6 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
 
   if (msgHeaderParser)
   {
-    // Count the number of email addresses being inserted into each header
-    // The headers could be "to", "cc", "from"
-    var myEnum = msgHeaderParser.ParseHeadersWithEnumerator(emailAddresses);
-    myEnum = myEnum.QueryInterface(Components.interfaces.nsISimpleEnumerator);
-
-    numOfEmailsInEnumerator = 0;
-    while (myEnum.hasMoreElements())
-    {
-        myEnum.getNext();
-        numOfEmailsInEnumerator++;
-    }
-
     var enumerator = msgHeaderParser.ParseHeadersWithEnumerator(emailAddresses);
     enumerator = enumerator.QueryInterface(Components.interfaces.nsISimpleEnumerator);
     var numAddressesParsed = 0;
