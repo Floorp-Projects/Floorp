@@ -83,5 +83,9 @@ interface nsIWebBrowser : nsISupports
 	*/
 	void removeListener(in nsIWebBrowserListener listener, in long cookie);
 
+	/*
+		The current docShell that is loaded at the root.  This will change as 
+		different pages are loaded.
+	*/
 	readonly attribute nsIDocShell docShell;
 };
