@@ -54,22 +54,14 @@
 				  <html:td>
 				  
 	  			<html:select class="FontSize" id="size" pref="true" preftype="int">
-  					<html:option value="&font8.option;" >&font8.option;</html:option>
-					<html:option value="&font9.option;" >&font9.option;</html:option>
-					<html:option value="&font10.option;" >&font10.option;</html:option>
-					<html:option value="&font11.option;" >&font11.option;</html:option>
-					<html:option value="&font12.option;" >&font12.option;</html:option>
-					<html:option value="&font14.option;" >&font14.option;</html:option>
-					<html:option value="&font16.option;" >&font16.option;</html:option>
-					<html:option value="&font18.option;" >&font18.option;</html:option>
-					<html:option value="&font20.option;" >&font20.option;</html:option>
-					<html:option value="&font22.option;" >&font22.option;</html:option>
-					<html:option value="&font24.option;" >&font24.option;</html:option>
-					<html:option value="&font26.option;" >&font26.option;</html:option>
-					<html:option value="&font28.option;" >&font28.option;</html:option>
-					<html:option value="&font36.option;" >&font36.option;</html:option>
-					<html:option value="&font48.option;" >&font48.option;</html:option>
-					<html:option value="&font72.option;" >&font72.option;</html:option> 
+					<html:option value="12" >12</html:option>
+					<html:option value="13" >13</html:option>
+					<html:option value="14" >14</html:option>
+					<html:option value="15" >15</html:option>
+					<html:option value="16" >16</html:option>
+					<html:option value="18" >18</html:option>
+					<html:option value="20" >20</html:option>
+					<html:option value="24" >24</html:option>
      				</html:select> 
 				  </html:td>
 		   </html:tr>
@@ -117,22 +109,14 @@
 	            <html:td>&fixedFont.Select;</html:td>
 				  <html:td>
 	  			<html:select class="FontSize" id="sizeFixed" pref="true" preftype="int">
-  					<html:option value="&font8.option;" >&font8.option;</html:option>
-					<html:option value="&font9.option;" >&font9.option;</html:option>
-					<html:option value="&font10.option;" >&font10.option;</html:option>
-					<html:option value="&font11.option;" >&font11.option;</html:option>
-					<html:option value="&font12.option;" >&font12.option;</html:option>
-					<html:option value="&font14.option;" >&font14.option;</html:option>
-					<html:option value="&font16.option;" >&font16.option;</html:option>
-					<html:option value="&font18.option;" >&font18.option;</html:option>
-					<html:option value="&font20.option;" >&font20.option;</html:option>
-					<html:option value="&font22.option;" >&font22.option;</html:option>
-					<html:option value="&font24.option;" >&font24.option;</html:option>
-					<html:option value="&font26.option;" >&font26.option;</html:option>
-					<html:option value="&font28.option;" >&font28.option;</html:option>
-					<html:option value="&font36.option;" >&font36.option;</html:option>
-					<html:option value="&font48.option;" >&font48.option;</html:option>
-					<html:option value="&font72.option;" >&font72.option;</html:option> 
+					<html:option value="12" >12</html:option>
+					<html:option value="13" >13</html:option>
+					<html:option value="14" >14</html:option>
+					<html:option value="15" >15</html:option>
+					<html:option value="16" >16</html:option>
+					<html:option value="18" >18</html:option>
+					<html:option value="20" >20</html:option>
+					<html:option value="24" >24</html:option>
      				</html:select> 
 				  </html:td>
 			  </html:tr> 
