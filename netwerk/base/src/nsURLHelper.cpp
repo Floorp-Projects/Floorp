@@ -48,61 +48,6 @@
 #include <windows.h> // ::IsDBCSLeadByte need
 #endif
 
-#if 0
-/* extracts first number from a string and assumes that this is the port number*/
-PRInt32 
-ExtractPortFrom(const nsACString &src)
-{
-    // search for digits up to a slash or the string ends
-    const nsPromiseFlatCString flat( PromiseFlatCString(src) );
-    const char* port = flat.get();
-
-    PRInt32 returnValue = -1;
-
-    // skip leading white space
-    while (nsCRT::IsAsciiSpace(*port))
-        port++;
-
-    char c;
-    while ((c = *port++) != '\0') {
-        // stop if slash or ? or # reached
-        if (c == '/' || c == '?' || c == '#')
-            break;
-        else if (!nsCRT::IsAsciiDigit(c))
-            return returnValue;
-    }
-    return (0 < PR_sscanf(flat.get(), "%d", &returnValue)) ? returnValue : -1;
-}
-#endif
-
-/* extract string from other string */
-nsresult 
-ExtractString(char* i_Src, char* *o_Dest, PRUint32 length)
-{
-    NS_PRECONDITION( (nsnull != i_Src), "Extract called on empty string!");
-    CRTFREEIF(*o_Dest);
-    *o_Dest = PL_strndup(i_Src, length);
-    return (*o_Dest ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
-}
-
-/* duplicate string */
-nsresult 
-DupString(char* *o_Dest, const char* i_Src)
-{
-    if (!o_Dest)
-        return NS_ERROR_NULL_POINTER;
-    if (i_Src)
-    {
-        *o_Dest = nsCRT::strdup(i_Src);
-        return (*o_Dest == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    else
-    {
-        *o_Dest = nsnull;
-        return NS_OK;
-    }
-}
-
 // Replace all /./ with a / while resolving relative URLs
 // But only till #? 
 void 
