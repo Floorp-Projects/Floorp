@@ -40,6 +40,7 @@
 #include "nsStyleUtil.h"
 
 #include "nsMathMLmunderoverFrame.h"
+#include "nsMathMLmsubsupFrame.h"
 
 //
 // <munderover> -- attach an underscript-overscript pair to a base - implementation
@@ -79,6 +80,9 @@ nsMathMLmunderoverFrame::Init(nsIPresContext*  aPresContext,
 
   mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
 
+#if defined(NS_DEBUG) && defined(SHOW_BOUNDING_BOX)
+  mPresentationData.flags |= NS_MATHML_SHOW_BOUNDING_METRICS;
+#endif
   return rv;
 }
 
@@ -218,21 +222,40 @@ nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
   but increments scriptlevel by 1 only when accent is "false".
   */
 
-  PRInt32 incrementScriptLevel;
-
-  if (underscriptMathMLFrame) {
-    incrementScriptLevel = NS_MATHML_IS_ACCENTUNDER(mPresentationData.flags)? 0 : 1;
-    underscriptMathMLFrame->UpdatePresentationData(incrementScriptLevel, PR_FALSE, PR_FALSE);
-    underscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, incrementScriptLevel, PR_FALSE, PR_FALSE);
-  }
-  
+  /*
+     The TeXBook treats 'over' like a superscript, so p.141 or Rule 13a
+     say it shouldn't be compressed. However, The TeXBook says
+     that math accents and \overline change uncramped styles to their
+     cramped counterparts.
+  */
   if (overscriptMathMLFrame) 
   {
-    incrementScriptLevel = NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)? 0 : 1;
-    overscriptMathMLFrame->UpdatePresentationData(incrementScriptLevel, PR_FALSE, PR_FALSE);
-    overscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, incrementScriptLevel, PR_FALSE, PR_FALSE);
+    PRInt32 increment = NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)
+                      ? 0 : 1;
+    PRUint32 compress = NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)
+                      ? NS_MATHML_COMPRESSED : 0;
+    overscriptMathMLFrame->UpdatePresentationData(increment,
+      ~NS_MATHML_DISPLAYSTYLE | compress,
+       NS_MATHML_DISPLAYSTYLE | compress);
+    overscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, -1, increment,
+      ~NS_MATHML_DISPLAYSTYLE | compress,
+       NS_MATHML_DISPLAYSTYLE | compress);
   }
-  
+
+  /*
+     The TeXBook treats 'under' like a subscript, so p.141 or Rule 13a 
+     say it should be compressed
+  */
+  if (underscriptMathMLFrame) {
+    PRInt32 increment = NS_MATHML_IS_ACCENTUNDER(mPresentationData.flags)? 0 : 1;
+    underscriptMathMLFrame->UpdatePresentationData(increment,
+      ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
+       NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
+    underscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, -1, increment,
+      ~NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED,
+       NS_MATHML_DISPLAYSTYLE | NS_MATHML_COMPRESSED);
+  }
+
   // switch the style of the underscript and the overscript
   InsertScriptLevelStyleContext(aPresContext);
 
@@ -248,15 +271,16 @@ The REC says:
    the accent and accentunder attributes are ignored. This is often
    used for limits on symbols such as &sum;.
 
-TODO:
+i.e.,:
  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
   // place like subscript-superscript pair
  }
  else {
-  // place like accentunder-accent pair
+  // place like underscript-overscript pair
  }
 */
+
 
 NS_IMETHODIMP
 nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
@@ -265,6 +289,16 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
                                nsHTMLReflowMetrics& aDesiredSize)
 {
   nsresult rv = NS_OK;
+
+  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
+       !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
+    // place like sub-superscript pair
+    return nsMathMLmsubsupFrame::PlaceSubSupScript(aPresContext,
+                                                   aRenderingContext,
+                                                   aPlaceOrigin,
+                                                   aDesiredSize,
+                                                   this);
+  }
 
   ////////////////////////////////////
   // Get the children's desired sizes
@@ -298,8 +332,7 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
       }
       count++;
     }
-    rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+    childFrame->GetNextSibling(&childFrame);
   }
   if ((3 != count) || !baseFrame || !underFrame || !overFrame) {
 #ifdef NS_DEBUG
@@ -333,7 +366,7 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
 
   if (!NS_MATHML_IS_ACCENTUNDER(mPresentationData.flags)) {
     // Rule 13a, App. G, TeXbook
-//    GetItalicCorrectionFromChild (baseFrame, italicCorrection);
+    GetItalicCorrection (bmBase, italicCorrection);
     nscoord bigOpSpacing2, bigOpSpacing4, bigOpSpacing5, dummy; 
     GetBigOpSpacings (fm, 
                       dummy, bigOpSpacing2, 
@@ -353,13 +386,13 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   // empty under?
   if (0 == (bmUnder.ascent + bmUnder.descent)) underDelta1 = 0;
 
-  nscoord aCorrection = 0;
+  nscoord correction = 0;
   nscoord overDelta1 = 0; // gap between base and overscript
   nscoord overDelta2 = 0; // extra space above overscript
 
   if (!NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)) {    
     // Rule 13a, App. G, TeXbook
-//    GetItalicCorrectionFromChild (baseFrame, aCorrection);
+    GetItalicCorrection (bmBase, italicCorrection);
     nscoord bigOpSpacing1, bigOpSpacing3, bigOpSpacing5, dummy; 
     GetBigOpSpacings (fm, 
                       bigOpSpacing1, dummy, 
@@ -376,13 +409,11 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   }
   else {
     // Rule 13, App. G, TeXbook
-    GetSkewCorrectionFromChild (aPresContext, baseFrame, aCorrection);
-#if 0
-    // XXX tune these
-    overDelta1 = PR_MIN(bmOver.ascent,xHeight);
-    overDelta2 = 0;
-#endif
+    GetSkewCorrectionFromChild (aPresContext, baseFrame, correction);
     overDelta1 = ruleThickness;
+    if (bmBase.ascent < xHeight) { 
+      overDelta1 += xHeight - bmBase.ascent;
+    }
     overDelta2 = ruleThickness;
   }
   // empty over?
@@ -393,17 +424,19 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   mBoundingMetrics.descent = 
     bmBase.descent + underDelta1 + bmUnder.ascent + bmUnder.descent;
   mBoundingMetrics.width = 
-    PR_MAX(bmBase.width/2,PR_MAX((bmUnder.width + italicCorrection/2)/2,(bmOver.width - aCorrection/2)/2)) +
-    PR_MAX(bmBase.width/2,PR_MAX((bmUnder.width - italicCorrection/2)/2,(bmOver.width + aCorrection/2)/2));
+    PR_MAX(bmBase.width/2,PR_MAX((bmUnder.width + italicCorrection/2)/2,(bmOver.width - correction/2)/2)) +
+    PR_MAX(bmBase.width/2,PR_MAX((bmUnder.width - italicCorrection/2)/2,(bmOver.width + correction/2)/2));
 
   nscoord dxBase = (mBoundingMetrics.width - bmBase.width) / 2;
-  nscoord dxOver = (mBoundingMetrics.width - (bmOver.width - aCorrection/2)) / 2;
+  nscoord dxOver = (mBoundingMetrics.width - (bmOver.width - correction/2)) / 2;
   nscoord dxUnder = (mBoundingMetrics.width - (bmUnder.width + italicCorrection/2)) / 2;
 
   aDesiredSize.ascent = 
-    mBoundingMetrics.ascent + overDelta2;
+    PR_MAX(mBoundingMetrics.ascent + overDelta2,
+           overSize.ascent + bmOver.descent + overDelta1 + bmBase.ascent);
   aDesiredSize.descent = 
-    mBoundingMetrics.descent + underDelta2;
+    PR_MAX(mBoundingMetrics.descent + underDelta2,
+           bmBase.descent + underDelta1 + bmUnder.ascent + underSize.descent);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.width = mBoundingMetrics.width;
 

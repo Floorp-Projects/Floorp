@@ -117,18 +117,22 @@ public:
   SetPresentationData(const nsPresentationData& aPresentationData);
 
   NS_IMETHOD
-  UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
-                         PRBool  aDisplayStyle,
-                         PRBool  aCompressed);
+  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
+                         PRUint32 aFlagsValues,
+                         PRUint32 aFlagsToUpdate);
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(PRInt32 aIndex, 
-                                    PRInt32 aScriptLevelIncrement,
-                                    PRBool  aDisplayStyle,
-                                    PRBool  aCompressed);
+  UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
+                                    PRInt32  aLastIndex,
+                                    PRInt32  aScriptLevelIncrement,
+                                    PRUint32 aFlagsValues,
+                                    PRUint32 aFlagsToUpdate);
 
   // nsHTMLContainerFrame methods
  
+  NS_IMETHOD
+  GetFrameType(nsIAtom** aType) const;
+
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
@@ -288,6 +292,17 @@ public:
   ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
                        nsString&   aString,
                        nsCSSValue& aCSSValue);
+
+  // estimate of the italic correction
+  static void
+  GetItalicCorrection(nsBoundingMetrics& aBoundingMetrics,
+                      nscoord&           aItalicCorrection)
+  {
+    aItalicCorrection = aBoundingMetrics.rightBearing - aBoundingMetrics.width;
+    if (0 > aItalicCorrection) {
+      aItalicCorrection = 0;
+    }
+  }
 
   // helper methods for getting sup/subdrop's from a child
   static void 

@@ -40,6 +40,7 @@
 #include "nsStyleUtil.h"
 
 #include "nsMathMLmoverFrame.h"
+#include "nsMathMLmsupFrame.h"
 
 //
 // <mover> -- attach an overscript to a base - implementation
@@ -186,18 +187,27 @@ XXX The winner is the outermost in conflicting settings like these:
     }
   }
 
-  //The REC says:
-  /*
-  Within overscript, <mover> always sets displaystyle to "false", 
-  but increments scriptlevel by 1 only when accent is "false".
+  /* The REC says:
+     Within overscript, <mover> always sets displaystyle to "false", 
+     but increments scriptlevel by 1 only when accent is "false".
   */
-
-  PRInt32 incrementScriptLevel;
-
+  /*
+     The TeXBook treats 'over' like a superscript, so p.141 or Rule 13a
+     say it shouldn't be compressed. However, The TeXBook says
+     that math accents and \overline change uncramped styles to their
+     cramped counterparts.
+  */
   if (overscriptMathMLFrame) {
-    incrementScriptLevel = NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)? 0 : 1;
-    overscriptMathMLFrame->UpdatePresentationData(incrementScriptLevel, PR_FALSE, PR_FALSE);
-    overscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, incrementScriptLevel, PR_FALSE, PR_FALSE);
+    PRInt32 increment = NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)
+                      ? 0 : 1;
+    PRUint32 compress = NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)
+                      ? NS_MATHML_COMPRESSED : 0;
+    overscriptMathMLFrame->UpdatePresentationData(increment,
+      ~NS_MATHML_DISPLAYSTYLE | compress,
+       NS_MATHML_DISPLAYSTYLE | compress);
+    overscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, -1, increment,
+      ~NS_MATHML_DISPLAYSTYLE | compress,
+       NS_MATHML_DISPLAYSTYLE | compress);
   }
 
   // switch the style of the overscript
@@ -214,13 +224,13 @@ The REC says:
   position. In this case, the accent attribute is ignored. This is
   often used for limits on symbols such as &sum;. 
 
-TODO:
+i.e.:
  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
   // place like superscript
  }
  else {
-  // place like accent 
+  // place like overscript 
  }
 */
 
@@ -231,6 +241,16 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
                           nsHTMLReflowMetrics& aDesiredSize)
 { 
   nsresult rv = NS_OK;
+  
+  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
+      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
+    // place like superscript
+    return nsMathMLmsupFrame::PlaceSuperScript(aPresContext,
+                                               aRenderingContext,
+                                               aPlaceOrigin,
+                                               aDesiredSize,
+                                               this);
+  }
 
   ////////////////////////////////////
   // Get the children's desired sizes
@@ -257,12 +277,11 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
       }
       count++;
     }    
-    rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
+    childFrame->GetNextSibling(&childFrame);
   }
   if ((2 != count) || !baseFrame || !overFrame) {
 #ifdef NS_DEBUG
-    printf("mover: invalid markup");
+    printf("mover: invalid markup\n");
 #endif
     // report an error, encourage people to get their markups in order
     return ReflowError(aPresContext, aRenderingContext, aDesiredSize);
@@ -291,7 +310,7 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   nscoord delta2 = 0; // extra space above overscript
   if (!NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)) {    
     // Rule 13a, App. G, TeXbook
-//    GetItalicCorrectionFromChild (baseFrame, correction);
+    GetItalicCorrection (bmBase, correction);
     nscoord bigOpSpacing1, bigOpSpacing3, bigOpSpacing5, dummy; 
     GetBigOpSpacings (fm, 
                       bigOpSpacing1, dummy, 
@@ -309,29 +328,46 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   else {
     // Rule 12, App. G, TeXbook
     GetSkewCorrectionFromChild (aPresContext, baseFrame, correction);
-#if 0
-    delta1 = -PR_MIN(bmBase.ascent, xHeight);
-#endif
-    // We don't follow Rule 12 here since TeX has some implicit 
-    // assumptions in the computation of delta1.
-    // Should we use Rule 9 like \overline does?
-    delta1 = ruleThickness;
+    // We are going to modify this rule to make it more general.
+    // The idea behind Rule 12 in the TeXBook is to keep the accent
+    // as close to the base as possible, while ensuring that the
+    // distance between the *baseline* of the accent char and 
+    // the *baseline* of the base is atleast x-height. 
+    // The idea is that for normal use, we would like all the accents
+    // on a line to line up atleast x-height above the baseline 
+    // if possible. 
+    // When the ascent of the base is >= x-height, 
+    // the baseline of the accent char is placed just above the base
+    // (specifically, the baseline of the accent char is placed 
+    // above the baseline of the base by the ascent of the base).
+    // For ease of implementation, 
+    // this assumes that the font-designer designs accents 
+    // in such a way that the bottom of the accent is atleast x-height
+    // above its baseline, otherwise there will be collisions
+    // with the base. Also there should be proper padding between
+    // the bottom of the accent char and its baseline.
+    // The above rule may not be obvious from a first
+    // reading of rule 12 in the TeXBook !!!
+    // The mathml <mover> tag can use accent chars that
+    // do not follow this convention. So we modify TeX's rule 
+    // so that TeX's rule gets subsumed for accents that follow 
+    // TeX's convention,
+    // while also allowing accents that do not follow the convention :
+    // we try to keep the *bottom* of the accent char atleast x-height 
+    // from the baseline of the base char. we also slap on an extra
+    // padding between the accent and base chars.
+    delta1 = ruleThickness; // we have atleast the padding
+    if (bmBase.ascent < xHeight) { 
+      // also ensure atleast x-height above the baseline of the base
+      delta1 += xHeight - bmBase.ascent;
+    }
     delta2 = ruleThickness;
   }
   // empty over?
   if (0 == (bmOver.ascent + bmOver.descent)) delta1 = 0;
 
   mBoundingMetrics.ascent = 
-      bmOver.ascent + bmOver.descent + delta1 + bmBase.ascent;
-
-#if 0
-  // Rule 12 (cont.)
-  if (NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)) {
-    // delta1 is -ve for an accent
-    // hence as per Rule 12, App. G, TeXbook, we should ...
-    mBoundingMetrics.ascent = PR_MAX(mBoundingMetrics.ascent, bmBase.ascent);
-  }
-#endif
+    bmOver.ascent + bmOver.descent + delta1 + bmBase.ascent;
 
   mBoundingMetrics.descent = bmBase.descent;
   if (NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)) {
@@ -344,7 +380,9 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   }
 
   aDesiredSize.descent = baseSize.descent;
-  aDesiredSize.ascent = mBoundingMetrics.ascent + delta2;
+  aDesiredSize.ascent = 
+    PR_MAX(mBoundingMetrics.ascent + delta2,
+           overSize.ascent + bmOver.descent + delta1 + bmBase.ascent);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
   aDesiredSize.width = mBoundingMetrics.width;
 
@@ -361,7 +399,8 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
     dxOver = correction/2 + (mBoundingMetrics.width - bmOver.width)/2;
   }
 
-  dyOver = aDesiredSize.ascent - mBoundingMetrics.ascent + bmOver.ascent - overSize.ascent;
+  dyOver = aDesiredSize.ascent - 
+    mBoundingMetrics.ascent + bmOver.ascent - overSize.ascent;
 
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;
@@ -379,3 +418,34 @@ nsMathMLmoverFrame::Place(nsIPresContext*      aPresContext,
   }
   return NS_OK;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

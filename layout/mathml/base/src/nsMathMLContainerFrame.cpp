@@ -191,7 +191,7 @@ nsMathMLContainerFrame::GetRuleThickness(nsIRenderingContext& aRenderingContext,
     // fall-back to the other version
     GetRuleThickness(aFontMetrics, aRuleThickness);
   }
- 
+
 #if 0
   nscoord oldRuleThickness;
   GetRuleThickness(aFontMetrics, oldRuleThickness);
@@ -902,42 +902,58 @@ nsMathMLContainerFrame::SetPresentationData(const nsPresentationData& aPresentat
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
-                                               PRBool  aDisplayStyle,
-                                               PRBool  aCompressed)
+nsMathMLContainerFrame::UpdatePresentationData(PRInt32  aScriptLevelIncrement,
+                                               PRUint32 aFlagsValues,
+                                               PRUint32 aFlagsToUpdate)
 {
   mPresentationData.scriptLevel += aScriptLevelIncrement;
-  if (aDisplayStyle)
-    mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-  else
-    mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
-  if (aCompressed) {
-    // 'compressed' means 'prime' style in App. G, TeXbook
-    // (the flag retains its value once it is set)
-    mPresentationData.flags |= NS_MATHML_COMPRESSED;
+  // update flags that are relevant to this call
+  if (NS_MATHML_IS_DISPLAYSTYLE(aFlagsToUpdate)) {
+    // updating the displaystyle flag is allowed
+    if (NS_MATHML_IS_DISPLAYSTYLE(aFlagsValues)) {
+      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+    }
+    else {
+      mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
+    }
+  }
+  if (NS_MATHML_IS_COMPRESSED(aFlagsToUpdate)) {
+    // updating the compression flag is allowed
+    if (NS_MATHML_IS_COMPRESSED(aFlagsValues)) {
+      // 'compressed' means 'prime' style in App. G, TeXbook
+      mPresentationData.flags |= NS_MATHML_COMPRESSED;
+    }
+    // no else. the flag is sticky. it retains its value once it is set
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex, 
-                                                          PRInt32 aScriptLevelIncrement,
-                                                          PRBool  aDisplayStyle,
-                                                          PRBool  aCompressed)
+nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(PRInt32  aFirstIndex,
+                                                          PRInt32  aLastIndex,
+                                                          PRInt32  aScriptLevelIncrement,
+                                                          PRUint32 aFlagsValues,
+                                                          PRUint32 aFlagsToUpdate)
 {
+  PRInt32 index = 0;
   nsIFrame* childFrame = mFrames.FirstChild();
-  while (nsnull != childFrame) {
-    if (!IsOnlyWhitespace(childFrame)) {
-      if (0 >= aIndex--) {
-        nsIMathMLFrame* aMathMLFrame = nsnull;
-        nsresult rv = childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
-        if (NS_SUCCEEDED(rv) && nsnull != aMathMLFrame) {
+  while (childFrame) {
+    if (!IsOnlyWhitespace(childFrame)) {    
+      if ((index >= aFirstIndex) &&
+          ((aLastIndex <= 0) || ((aLastIndex > 0) && (index <= aLastIndex)))) {
+        nsIMathMLFrame* mathMLFrame = nsnull;
+        nsresult rv = childFrame->QueryInterface(
+          NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+        if (NS_SUCCEEDED(rv) && mathMLFrame) {
           // update
-      	  aMathMLFrame->UpdatePresentationData(aScriptLevelIncrement, aDisplayStyle, aCompressed);
+      	  mathMLFrame->UpdatePresentationData(
+      	    aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
           // propagate down the subtrees
-          aMathMLFrame->UpdatePresentationDataFromChildAt(0, aScriptLevelIncrement, aDisplayStyle, aCompressed);
+          mathMLFrame->UpdatePresentationDataFromChildAt(0, -1,
+            aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
       	}
       }
+      index++;
     }
     childFrame->GetNextSibling(&childFrame);
   }
@@ -1403,7 +1419,7 @@ printf("\n");
                           aFrame)->ReflowChild(childFrame, 
                                                aPresContext, childDesiredSize,
                                                childReflowState, aStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+      //NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
       if (NS_FAILED(rv)) return rv;
 
       // origins are used as placeholders to store the child's ascent and descent.
@@ -1563,7 +1579,7 @@ printf("\n");
                                          childFrame, availSize);
       rv = ReflowChild(childFrame, aPresContext, childDesiredSize,
                        childReflowState, childStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
+      //NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
       if (NS_FAILED(rv)) return rv;
 
       // At this stage, the origin points of the children have no use, so we will use the
@@ -1639,63 +1655,194 @@ printf("\n");
   return NS_OK;
 }
 
+// For MathML, the 'type' will be used to determine the spacing between frames
+// Subclasses can override this method to return a 'type' that will give
+// them a particular spacing
+NS_IMETHODIMP
+nsMathMLContainerFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  // see if this is an embellished operator (mapped to 'Op' in TeX)
+  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
+    *aType = nsMathMLAtoms::operatorMathMLFrame;
+  }
+  else {
+    nsCOMPtr<nsIAtom> tag;
+    mContent->GetTag(*getter_AddRefs(tag));
+    // see if this a token element (mapped to 'Ord'in TeX)
+    if (tag.get() == nsMathMLAtoms::mi_ ||
+        tag.get() == nsMathMLAtoms::mn_ ||
+        tag.get() == nsMathMLAtoms::ms_ ||
+        tag.get() == nsMathMLAtoms::mtext_) {
+      *aType = nsMathMLAtoms::ordinaryMathMLFrame;
+    }
+    else { 
+      // everything else is a schematta element (mapped to 'Inner' in TeX)
+      *aType = nsMathMLAtoms::schemataMathMLFrame;
+    }
+  }
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+enum nsMathMLFrameTypeEnum {
+  eMathMLFrameType_UNKNOWN = -1,
+  eMathMLFrameType_Ordinary,
+  eMathMLFrameType_Operator,
+  eMathMLFrameType_Punctuation,
+  eMathMLFrameType_Inner
+};
+
+// see spacing table in Chapter 18, TeXBook (p.170)
+static PRInt32 interFrameSpacingTable[4][4] =
+{
+  // in units of muspace.
+  // upper half of the byte is set if the
+  // spacing is not to be used for scriptlevel > 0
+  /*          Ord   Op    Punc  Inner */
+  /*Ord  */  {0x00, 0x00, 0x00, 0x11},
+  /*Op   */  {0x00, 0x00, 0x00, 0x00},
+  /*Punc */  {0x11, 0x00, 0x11, 0x11},
+  /*Inner*/  {0x11, 0x00, 0x11, 0x11}
+};
+
+static nscoord
+GetInterFrameSpacing(PRInt32  aScriptLevel, 
+                     nsIAtom* aFirstFrameType, 
+                     nsIAtom* aSecondFrameType)
+{
+  nsMathMLFrameTypeEnum firstType = eMathMLFrameType_UNKNOWN;
+  nsMathMLFrameTypeEnum secondType = eMathMLFrameType_UNKNOWN;
+
+  // do the mapping for the first frame
+  if (aFirstFrameType == nsMathMLAtoms::ordinaryMathMLFrame)
+    firstType = eMathMLFrameType_Ordinary;
+  else if (aFirstFrameType == nsMathMLAtoms::operatorMathMLFrame)
+    firstType = eMathMLFrameType_Operator;
+  else if (aFirstFrameType == nsMathMLAtoms::schemataMathMLFrame)
+    firstType = eMathMLFrameType_Inner;
+
+  // do the mapping for the second frame
+  if (aSecondFrameType == nsMathMLAtoms::ordinaryMathMLFrame)
+    secondType = eMathMLFrameType_Ordinary;
+  else if (aSecondFrameType == nsMathMLAtoms::operatorMathMLFrame)
+    secondType = eMathMLFrameType_Operator;
+  else if (aSecondFrameType == nsMathMLAtoms::operatorMathMLFrame)
+    secondType = eMathMLFrameType_Inner;
+ 
+  // return 0 if there is a frame that we know nothing about
+  if (firstType == eMathMLFrameType_UNKNOWN || 
+      secondType == eMathMLFrameType_UNKNOWN) {
+    return 0;
+  } 
+
+  PRInt32 space = interFrameSpacingTable[firstType][secondType];
+  if (aScriptLevel > 0 && (space & 0xF0)) {
+    // spacing is disabled
+    return 0;
+  }
+  else {
+    return (space & 0x0F);
+  }
+}
+
 NS_IMETHODIMP
 nsMathMLContainerFrame::Place(nsIPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               PRBool               aPlaceOrigin,
                               nsHTMLReflowMetrics& aDesiredSize)
 {
+  nsresult rv = NS_OK;
+
+  // these are needed in case this frame is empty (i.e., we don't enter the loop)
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = aDesiredSize.descent = 0;
   mBoundingMetrics.Clear();
- 
-  PRInt32 count = 0; 
-  nsBoundingMetrics bm;
-  nsHTMLReflowMetrics childSize(nsnull);
+
+  // cache away thinspace
+  nsStyleFont font;
+  mStyleContext->GetStyle(eStyleStruct_Font, font);
+  nscoord thinSpace = NSToCoordRound(float(font.mFont.size)*float(3) / float(18));
+
+  PRInt32 count = 0;
+  nsHTMLReflowMetrics childSize (nsnull);
+  nsBoundingMetrics bmChild;
+  nscoord italicCorrection = 0;
+  nsCOMPtr<nsIAtom> prevFrameType;
+
   nsIFrame* childFrame = mFrames.FirstChild();
   while (childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
-      GetReflowAndBoundingMetricsFor(childFrame, childSize, bm);
-
-      aDesiredSize.width += childSize.width;
-      if (aDesiredSize.descent < childSize.descent)
-        aDesiredSize.descent = childSize.descent;
-      if (aDesiredSize.ascent < childSize.ascent)
+      nsCOMPtr<nsIAtom> childFrameType;
+      childFrame->GetFrameType(getter_AddRefs(childFrameType));
+      GetReflowAndBoundingMetricsFor(childFrame, childSize, bmChild);
+      if (0 == count) {
         aDesiredSize.ascent = childSize.ascent;
-
-      // Compute and cache our bounding metrics
-      if (0 == count)   
-        mBoundingMetrics  = bm;
-      else
-        mBoundingMetrics += bm;
-
-      count++;
+        aDesiredSize.descent = childSize.descent;
+        mBoundingMetrics = bmChild;
+      }
+      else {
+        if (aDesiredSize.descent < childSize.descent)
+          aDesiredSize.descent = childSize.descent;
+        if (aDesiredSize.ascent < childSize.ascent)
+          aDesiredSize.ascent = childSize.ascent;
+        // add inter frame spacing
+        nscoord space = GetInterFrameSpacing(mPresentationData.scriptLevel,
+          prevFrameType, childFrameType);
+        mBoundingMetrics.width += space * thinSpace;
+        // add the child size
+        mBoundingMetrics += bmChild;
+      }
+      prevFrameType = childFrameType;
+      // add the italic correction at the end (including the last child).
+      // this gives a nice gap between math and non-math frames, and still
+      // gives the same math inter-spacing in case this frame connects to
+      // another math frame
+      GetItalicCorrection(bmChild, italicCorrection);
+      mBoundingMetrics.width += italicCorrection;
     }
+    count++;
     childFrame->GetNextSibling(&childFrame);
   }
+  aDesiredSize.width = mBoundingMetrics.width;
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
-  aDesiredSize.mBoundingMetrics = mBoundingMetrics;
+
+  mReference.x = 0;
+  mReference.y = aDesiredSize.ascent;
+
+  //////////////////
+  // Place Children
 
   if (aPlaceOrigin) {
-    nsRect rect;
-    nscoord dy, dx = 0;
+    count = 0;
+    nscoord dx = 0, dy = 0;
+    italicCorrection = 0;
     childFrame = mFrames.FirstChild();
     while (childFrame) {
-      childFrame->GetRect(rect);
-      childSize.width = rect.width;
-      childSize.height = rect.height;
-
-      // Place and size the child
-      dy = aDesiredSize.ascent - rect.y;
-      FinishReflowChild(childFrame, aPresContext, childSize, dx, dy, 0);
-
-      dx += rect.width;
+      if (!IsOnlyWhitespace(childFrame)) {
+        nsCOMPtr<nsIAtom> childFrameType;
+        childFrame->GetFrameType(getter_AddRefs(childFrameType));
+        GetReflowAndBoundingMetricsFor(childFrame, childSize, bmChild);
+	dy = aDesiredSize.ascent - childSize.ascent;
+	if (0 < count) {
+          // add inter frame spacing
+          nscoord space = GetInterFrameSpacing(mPresentationData.scriptLevel, 
+            prevFrameType, childFrameType);
+          dx += space * thinSpace;
+        }
+        prevFrameType = childFrameType;
+        FinishReflowChild(childFrame, aPresContext, childSize, dx, dy, 0);
+        // add child size
+        dx += bmChild.width;
+        // add italic correction
+        GetItalicCorrection(bmChild, italicCorrection);
+        dx += italicCorrection;
+      }
+      count++;
       childFrame->GetNextSibling(&childFrame);
     }
   }
 
-  mReference.x = 0;
-  mReference.y = aDesiredSize.ascent;
   return NS_OK;
 }
 
