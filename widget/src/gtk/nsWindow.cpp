@@ -3175,6 +3175,43 @@ nsWindow::InitDragEvent (nsMouseEvent &aEvent)
   aEvent.isMeta = PR_FALSE; // GTK+ doesn't support the meta key
 }
 
+// This will update the drag action based on the information in the
+// drag context.  Gtk gets this from a combination of the key settings
+// and what the source is offering.
+
+void
+nsWindow::UpdateDragStatus(nsMouseEvent   &aEvent,
+                           GdkDragContext *aDragContext,
+                           nsIDragService *aDragService)
+{
+  // default is to do nothing
+  int action = nsIDragService::DRAGDROP_ACTION_NONE;
+  
+  // set the default just in case nothing matches below
+  if (aDragContext->actions & GDK_ACTION_DEFAULT) {
+    action = nsIDragService::DRAGDROP_ACTION_MOVE;
+  }
+
+  // first check to see if move is set
+  if (aDragContext->actions & GDK_ACTION_MOVE)
+    action = nsIDragService::DRAGDROP_ACTION_MOVE;
+
+  // then fall to the others
+  else if (aDragContext->actions & GDK_ACTION_LINK)
+    action = nsIDragService::DRAGDROP_ACTION_LINK;
+ 
+  // copy is ctrl
+  else if (aDragContext->actions & GDK_ACTION_COPY)
+    action = nsIDragService::DRAGDROP_ACTION_COPY;
+
+  // update the drag information
+  nsCOMPtr<nsIDragSession> session;
+  aDragService->GetCurrentSession(getter_AddRefs(session));
+
+  if (session)
+    session->SetDragAction(action);
+}
+
 /* static */
 gint
 nsWindow::DragMotionSignal (GtkWidget *      aWidget,
@@ -3253,6 +3290,9 @@ gint nsWindow::OnDragMotionSignal      (GtkWidget *      aWidget,
   nsMouseEvent event;
 
   InitDragEvent(event);
+
+  // now that we have initialized the event update our drag status
+  UpdateDragStatus(event, aDragContext, dragService);
 
   event.message = NS_DRAGDROP_OVER;
   event.eventStructType = NS_DRAGDROP_EVENT;
@@ -3390,6 +3430,9 @@ nsWindow::OnDragDropSignal        (GtkWidget        *aWidget,
   nsMouseEvent event;
 
   InitDragEvent(event);
+
+  // now that we have initialized the event update our drag status
+  UpdateDragStatus(event, aDragContext, dragService);
 
   event.message = NS_DRAGDROP_OVER;
   event.eventStructType = NS_DRAGDROP_EVENT;

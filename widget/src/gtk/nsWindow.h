@@ -22,13 +22,13 @@
 #ifndef nsWindow_h__
 #define nsWindow_h__
 
-
-
 #include "nsISupports.h"
 
 #include "nsWidget.h"
 
 #include "nsString.h"
+
+#include "nsIDragService.h"
 
 #include "gtkmozarea.h"
 #include "gdksuperwin.h"
@@ -234,6 +234,9 @@ protected:
   static nsWindow  *mLastLeaveWindow;
 
   void   InitDragEvent(nsMouseEvent &aEvent);
+  void   UpdateDragStatus(nsMouseEvent &aEvent,
+                          GdkDragContext *aDragContext,
+                          nsIDragService *aDragService);
 
   // DragBegin not needed ?
   // always returns TRUE
