@@ -1469,7 +1469,7 @@ void nsWindow_Refresh_Callback(XtPointer call_data)
 {
   nsWindow* widgetWindow = (nsWindow*)call_data;
   nsRect bounds;
-  widgetWindow->GetResizeRect(&bounds); 
+  widgetWindow->GetResizeRect(&bounds);
 
   nsSizeEvent event;
   event.message = NS_SIZE;
@@ -1477,14 +1477,14 @@ void nsWindow_Refresh_Callback(XtPointer call_data)
   event.time    = 0; //TBD
   event.windowSize = &bounds;
 
-//  widgetWindow->SetBounds(bounds); 
-//  widgetWindow->OnResize(event);
+  widgetWindow->SetBounds(bounds);
+  widgetWindow->OnResize(event);
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
   pevent.widget = widgetWindow;
   pevent.time = 0;
   pevent.rect = (nsRect *)&bounds;
-//  widgetWindow->OnPaint(pevent);
+  widgetWindow->OnPaint(pevent);
 
   XtAppAddTimeOut(widgetWindow->mAppContext, 50, (XtTimerCallbackProc)nsWindow_ResetResize_Callback, widgetWindow);
 }
@@ -1519,9 +1519,9 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
       nsWindow_Refresh_Callback(win);
     }
     else {
-       // XXX: KLUDGE: Do actual resize later. This lets most 
-       // of the resize events come through before actually 
-       // resizing. This is only needed for main (shell) 
+       // XXX: KLUDGE: Do actual resize later. This lets most
+       // of the resize events come through before actually
+       // resizing. This is only needed for main (shell)
        // windows. This should be replaced with code that actually
        // Compresses the event queue.
       XtAppAddTimeOut(win->mAppContext, 250, (XtTimerCallbackProc)nsWindow_Refresh_Callback, win);
@@ -1529,7 +1529,7 @@ extern "C" void nsWindow_ResizeWidget(Widget w)
   }
 }
 
-NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar) 
+NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 {
   return NS_ERROR_FAILURE;
 }
@@ -1553,31 +1553,6 @@ NS_METHOD nsWindow::SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight)
   return NS_OK;
 }
 
-/**
- * 
- *
- **/
-NS_METHOD nsWindow::GetClientBounds(nsRect &aRect)
-{
-  return GetBounds(aRect);
-}
-
-/**
- * Calculates the border width and height  
- **/
-NS_METHOD nsWindow::GetBorderSize(PRInt32 &aWidth, PRInt32 &aHeight)
-{
-  nsRect rectWin;
-  nsRect rectClient;
-  GetBounds(rectWin);
-  GetClientBounds(rectClient);
-
-  aWidth  = rectWin.width - rectClient.width;
-  aHeight = rectWin.height - rectClient.height;
-
-  return NS_OK;
-}
-
 NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
 {
   //XXX:Implement this.
@@ -1587,5 +1562,6 @@ NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
 NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
 {
   //XXX:Implement this.
+  printf("nsWindow::CaptureMouse called\n");
   return NS_OK;
 }
