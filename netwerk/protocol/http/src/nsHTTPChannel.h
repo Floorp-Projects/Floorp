@@ -40,6 +40,7 @@
 #include "nsIStreamListener.h"
 #include "nsIStreamObserver.h"
 #include "nsICachedNetData.h"
+#include "nsIProxy.h"
 
 class nsHTTPRequest;
 class nsHTTPResponse;
@@ -61,7 +62,8 @@ DupString(char* *o_Dest, const char* i_Src);
 */
 class nsHTTPChannel : public nsIHTTPChannel,
                       public nsIInterfaceRequestor,
-                      public nsIProgressEventSink
+                      public nsIProgressEventSink,
+                      public nsIProxy
 {
 
 public:
@@ -82,6 +84,7 @@ public:
     NS_DECL_NSIHTTPCHANNEL
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
+    NS_DECL_NSIPROXY
 
     // nsHTTPChannel methods:
     nsresult            Authenticate(const char *iChallenge,
