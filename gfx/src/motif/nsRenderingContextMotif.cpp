@@ -301,19 +301,22 @@ NS_IMETHODIMP nsRenderingContextMotif :: PushState(void)
   GraphicsState * state = new GraphicsState();
 
   // Push into this state object, add to vector
-  state->mMatrix = mTMatrix;
+  if(state) {
+    state->mMatrix = mTMatrix;
 
-  mStateCache->AppendElement(state);
+    mStateCache->AppendElement(state);
 
-  if (nsnull == mTMatrix)
-    mTMatrix = new nsTransform2D();
-  else
-    mTMatrix = new nsTransform2D(mTMatrix);
+    if (nsnull == mTMatrix)
+      mTMatrix = new nsTransform2D();
+    else
+      mTMatrix = new nsTransform2D(mTMatrix);
 
-  PRBool clipState;
-  GetClipRect(state->mLocalClip, clipState);
+    PRBool clipState;
+    GetClipRect(state->mLocalClip, clipState);
 
-  state->mClipRegion = mRegion;
+    state->mClipRegion = mRegion;
+  }
+  else state = NS_ERROR_OUT_OF_MEMORY;
 
   if (nsnull != state->mClipRegion) {
     mRegion = ::XCreateRegion();
@@ -843,20 +846,23 @@ NS_IMETHODIMP nsRenderingContextMotif :: CreateDrawingSurface(nsRect *aBounds, P
 
   nsDrawingSurfaceMotif * surface = new nsDrawingSurfaceMotif();
 
-  surface->drawable = p ;
-  surface->display  = mRenderingSurface->display;
-  surface->gc       = mRenderingSurface->gc;
-  surface->visual   = mRenderingSurface->visual;
-  surface->depth    = mRenderingSurface->depth;
+  if(surface) {
+    surface->drawable = p ;
+    surface->display  = mRenderingSurface->display;
+    surface->gc       = mRenderingSurface->gc;
+    surface->visual   = mRenderingSurface->visual;
+    surface->depth    = mRenderingSurface->depth;
 
 #ifdef MITSHM
 
-  surface->shmInfo = mRenderingSurface->shmInfo;
-  surface->shmImage = mRenderingSurface->shmImage;
-  mRenderingSurface->shmInfo.shmaddr = nsnull;
-  mRenderingSurface->shmImage = nsnull;
+    surface->shmInfo = mRenderingSurface->shmInfo;
+    surface->shmImage = mRenderingSurface->shmImage;
+    mRenderingSurface->shmInfo.shmaddr = nsnull;
+    mRenderingSurface->shmImage = nsnull;
 
 #endif
+  }
+  else surface = NS_ERROR_OUT_OF_MEMORY;
 
   aSurface = (nsDrawingSurface)surface;
 
