@@ -1,0 +1,95 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+
+<!DOCTYPE window>
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoad()"
+        title="Open Location"
+        width="420"
+        height="190"> 
+
+    <html:script language="javascript" src="openLocation.js">
+    </html:script>
+    
+    <broadcaster id="args" value=""/>
+    
+    <!--
+    <box align="vertical">
+        <box align="horizontal">  
+            Enter the World Wide Web location (URL) you would like to open.  Use
+            the Choose File... button to select a local file:
+        </box>
+        <box align="horizontal">
+            <box align="horizontal" flex="100">
+                <html:input id="dialog.input"/>
+            </box>
+            <box align="horizontal">
+                <html:button onclick="choose()">Choose File...</html:button>
+            </box>
+        </box>
+        <box align="horizontal" flex="100">
+            <box flex="100">
+                <html:input id="dialog.newWindow" type="checkbox"/>Open in new window
+            </box>
+            <box>
+                <html:button onclick="open()">Open</html:button>
+            </box>
+            <box>
+                <html:button onclick="cancel()">Cancel</html:button>
+            </box>
+            <box>
+                <html:button onclick="help()" disabled="">Help</html:button>
+            </box>
+        </box>
+    </box>
+    -->
+	<html:center>
+	<html:p/>
+    <html:table width="400" cellspacing="5">
+        <html:tr>
+            <html:td>
+                Enter the World Wide Web location (URL) you would like to open.  Use
+                the Choose File... button to select a local file:
+            </html:td>
+        </html:tr>
+        <html:tr>
+			<html:td>
+				<html:table cellspacing="5">
+					<html:tr>
+						<html:td width="275">
+							<html:input id="dialog.input" style="width:275;" onkeyup="onTyping(event.which)"/>
+						</html:td>
+						<html:td width="100">
+							<html:button onclick="choose()">Choose File...</html:button>
+						</html:td>
+					</html:tr>
+				</html:table>
+			</html:td>
+        </html:tr>
+        <html:tr>
+			<html:td>
+				<html:table cellspacing="5">
+					<html:tr>
+						<html:td width="165">
+							<html:input id="dialog.newWindow" type="checkbox"/>Open in new window
+						</html:td>
+						<html:td width="70">
+							<html:button id="dialog.ok" onclick="open()" disabled="">Open</html:button>
+						</html:td>
+						<html:td width="70">
+							<html:button id="dialog.cancel" onclick="cancel()" disabled="">Cancel</html:button>
+						</html:td>
+						<html:td width="70">
+							<html:button id="dialog.help" onclick="help()" disabled="">Help</html:button>
+						</html:td>
+					</html:tr>
+				</html:table>
+			</html:td>
+        </html:tr>
+    </html:table>
+	<html:p/>
+	</html:center>
+
+</window>
