@@ -20,7 +20,7 @@
 
 <menupopup id="taskPopup">
   <menuitem
-        position="7"
+        position="3"
         label="&ircCmd.label;"
         accesskey="&ircCmd.accesskey;"
         key="key_irc"
