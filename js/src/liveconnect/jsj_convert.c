@@ -791,9 +791,13 @@ jsj_ConvertJavaObjectToJSValue(JSContext *cx, JNIEnv *jEnv,
 #else
         js_obj = jsj_UnwrapJSObjectWrapper(jEnv, java_obj);
 #endif
+		/* NULL is actually a valid value. It means 'null'.
+
         JS_ASSERT(js_obj);
         if (!js_obj)
             goto error;
+		*/
+
         *vp = OBJECT_TO_JSVAL(js_obj);
         goto done;
      }
