@@ -982,6 +982,10 @@ pk11_FindCertAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	attr = pk11_NewTokenAttribute(type, item->data, item->len, PR_TRUE);
 	SECITEM_FreeItem(item,PR_TRUE);
 	return attr;
+    case CKA_NETSCAPE_EMAIL:
+	return cert->emailAddr ? pk11_NewTokenAttribute(type, cert->emailAddr,
+				PORT_Strlen(cert->emailAddr)+1, PR_FALSE) :
+					(PK11Attribute *) &pk11_StaticNullAttr;
     default:
 	break;
     }
