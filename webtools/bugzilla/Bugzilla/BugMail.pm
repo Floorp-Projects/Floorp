@@ -705,6 +705,9 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     # This routine should really get passed a userid
     # This rederives groups as a side effect
     my $user = Bugzilla::User->new_from_login($person);
+    if (!$user) { # person doesn't exist, probably changed email
+      return;
+    }
     my $userid = $user->id;
 
     $seen{$person} = 1;
