@@ -29,13 +29,13 @@
  *   -- Fixed bug in parse method so that we make sure we check for
  *      axis identifier wild cards, such as ancestor::*
  *
- * $Id: ExprLexer.cpp,v 1.10 2001/01/12 20:06:31 axel%pike.org Exp $
+ * $Id: ExprLexer.cpp,v 1.11 2001/01/22 09:36:15 kvisco%ziplink.net Exp $
  */
 
 /**
  * Lexical analyzer for XPath expressions
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.10 $ $Date: 2001/01/12 20:06:31 $
+ * @version $Revision: 1.11 $ $Date: 2001/01/22 09:36:15 $
 **/
 
 #include "ExprLexer.h"
@@ -367,9 +367,6 @@ MBool ExprLexer::matchDelimiter(UNICODE_CHAR ch) {
         case VERT_BAR:
             tokenType = Token::UNION_OP;
             break;
-        case ASTERIX:
-            tokenType = Token::WILD_CARD;
-            break;
         case AT_SIGN:
             tokenType = Token::AT_SIGN;
             break;
@@ -669,7 +666,8 @@ void ExprLexer::parse(const String& pattern) {
                         case Token::NULL_TOKEN:
                         case Token::L_PAREN:
                         case Token::L_BRACKET:
-                            matchDelimiter(ch);
+                            tokenBuffer.append(ch);
+                            //matchDelimiter(ch);
                             break;
                         default:
                             if ( isOperatorToken(prevToken) ) {
