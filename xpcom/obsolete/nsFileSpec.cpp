@@ -943,39 +943,32 @@ void nsFileSpec::operator = (const nsPersistentFileDescriptor& inDescriptor)
 
     nsCAutoString data;
     inDescriptor.GetData(data);
-    
-#if defined(XP_MAC)
+
+#if defined (XP_MAC) || defined(XP_MACOSX)
+    // Decode descriptor into a Handle (which is actually an AliasHandle)
     char* decodedData = PL_Base64Decode(data.get(), data.Length(), nsnull);
-    // Cast to an alias record and resolve.
-    AliasHandle aliasH = nsnull;
-    mError = NS_FILE_RESULT(PtrToHand(decodedData, &(Handle)aliasH, (data.Length() * 3) / 4));
+    Handle aliasH = nsnull;
+    mError = NS_FILE_RESULT(::PtrToHand(decodedData, &aliasH, (data.Length() * 3) / 4));
     PR_Free(decodedData);
     if (NS_FAILED(mError))
         return; // not enough memory?
+#endif
 
+#if defined(XP_MAC)
     Boolean changed;
-    mError = NS_FILE_RESULT(::ResolveAlias(nsnull, aliasH, &mSpec, &changed));
+    mError = NS_FILE_RESULT(::ResolveAlias(nsnull, (AliasHandle)aliasH, &mSpec, &changed));
     DisposeHandle((Handle) aliasH);
     mPath.SetToEmpty();
 #elif defined(XP_MACOSX)
-    char* decodedData = PL_Base64Decode(data.get(), data.Length(), nsnull);
-    // Cast to an alias record and resolve.
-    AliasHandle aliasH = nsnull;
-    mError = NS_FILE_RESULT(::PtrToHand(decodedData, &(Handle)aliasH, (data.Length() * 3) / 4));
-    PR_Free(decodedData);
-    if (NS_FAILED(mError))
-        return; // not enough memory?
-
     Boolean changed;
     FSRef fileRef;
-    mError = NS_FILE_RESULT(::FSResolveAlias(nsnull, aliasH, &fileRef, &changed));
-    ::DisposeHandle((Handle) aliasH);
+    mError = NS_FILE_RESULT(::FSResolveAlias(nsnull, (AliasHandle)aliasH, &fileRef, &changed));
+    ::DisposeHandle(aliasH);
 
     UInt8 pathBuf[PATH_MAX];
     mError = NS_FILE_RESULT(::FSRefMakePath(&fileRef, pathBuf, PATH_MAX));
     if (NS_FAILED(mError))
       return;
-    
     mPath = (const char*)pathBuf;
 #else
     mPath = data.get();
