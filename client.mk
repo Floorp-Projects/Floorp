@@ -305,7 +305,7 @@ CONFIG_STATUS_DEPS := \
 #   $(TOPSRCDIR) will set @srcdir@ to "."; otherwise, it is set to the full
 #   path of $(TOPSRCDIR).
 ifeq ($(TOPSRCDIR),$(OBJDIR))
-  CONFIGURE := configure
+  CONFIGURE := ./configure
 else
   CONFIGURE := $(TOPSRCDIR)/configure
 endif
