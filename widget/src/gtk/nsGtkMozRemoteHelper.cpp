@@ -20,6 +20,7 @@
  */
 
 #include <X11/Xatom.h> // for XA_STRING
+#include <stdlib.h>
 #include "nsGtkMozRemoteHelper.h"
 #include "nsCRT.h"
 #include "nsIAppShellService.h"
