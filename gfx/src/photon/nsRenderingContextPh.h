@@ -182,7 +182,7 @@ protected:
   PhGC_t             *mholdGC;
   nscolor            mCurrentColor;
   nsLineStyle        mCurrentLineStyle;
-  nsTransform2D      *mTMatrix;		// transform that all the graphics drawn here will obey
+  //nsTransform2D      *mTMatrix;		// transform that all the graphics drawn here will obey
   nsIFontMetrics     *mFontMetrics;
   nsDrawingSurfacePh *mOffscreenSurface;
   nsDrawingSurfacePh *mSurface;

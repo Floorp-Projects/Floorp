@@ -25,6 +25,7 @@
 #include "nsFontMetricsPh.h"
 #include "nsPhGfxLog.h"
 #include "nsHashtable.h"
+#include "nsIPref.h"
 
 #include <errno.h>
 
@@ -36,7 +37,12 @@ static PLHashTable* gFamilies = nsnull;
 static nsHashtable* gFontMetricsCache = nsnull;
 static int gFontMetricsCacheCount = 0;
 
+static nsCString **gFontNames = nsnull;
+static FontDetails *gFontDetails = nsnull;
+static int gnFonts = 0;
+
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsFontMetricsPh :: nsFontMetricsPh()
 {
@@ -76,76 +82,98 @@ FreeFontMetricsCache(nsHashKey* aKey, void* aData, void* aClosure)
 {
   FontQueryInfo * node = (FontQueryInfo*) aData;
 
-  delete node;
+  //delete node;
+  /* Use free() rather since we use calloc() in ::Init to alloc the node.  */
+  if (node)
+	free (node);
 
   return PR_TRUE;
 }
 
 static void FreeGlobals()
 {
-	if (gFontMetricsCache)
-	{
+	if (gFontMetricsCache) {
 		gFontMetricsCache->Reset(FreeFontMetricsCache, nsnull);
 		delete gFontMetricsCache;
 		gFontMetricsCache = nsnull;
 		gFontMetricsCacheCount = 0;
-
 	}
 }
   
-nsFontMetricsPh :: ~nsFontMetricsPh()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::~nsFontMetricsPh Destructor called\n"));
-
-  if (nsnull != mFont)
-  {
-    delete mFont;
-    mFont = nsnull;
-  }
-
-  	mDeviceContext = nsnull;
-
-//  	gFontMetricsCacheCount--;
-//  	if (gFontMetricsCacheCount == 0)
-//  		FreeGlobals();
+nsFontMetricsPh :: ~nsFontMetricsPh( ) {
+	if( nsnull != mFont ) {
+		delete mFont;
+		mFont = nsnull;
+	}
+	mDeviceContext = nsnull;
+	if (mFontHandle)
+		free (mFontHandle);
+	FreeGlobals();
 }
 
 
-NS_IMPL_ISUPPORTS1(nsFontMetricsPh, nsIFontMetrics)
+NS_IMPL_ISUPPORTS1( nsFontMetricsPh, nsIFontMetrics )
 
-NS_IMETHODIMP
-nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
-                          nsIDeviceContext* aContext )
-{
-  NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
+NS_IMETHODIMP nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup, nsIDeviceContext* aContext ) {
 
-  nsAutoString  firstFace;
-  char          *str = nsnull;
-  nsresult      result;  	
-  nsresult      ret_code = NS_ERROR_FAILURE;
-  int           MAX_FONTDETAIL = 50;
-  FontDetails   fDetails[MAX_FONTDETAIL];
-  int           fontcount;
-  int           index;
-  PhRect_t      extent;
+NS_ASSERTION(!(nsnull == aContext), "attempt to init fontmetrics with null device context");
+
+	nsAutoString  firstFace;
+	char          *str = nsnull;
+	nsresult      result;  	
+	nsresult      ret_code = NS_ERROR_FAILURE;
+	int           MAX_FONTDETAIL = 50;
+	FontDetails   fDetails[MAX_FONTDETAIL];
+	int           fontcount;
+	int           index;
+	PhRect_t      extent;
 
 
 	result = aContext->FirstExistingFont(aFont, firstFace);
 
 	str = firstFace.ToNewCString();
 
-	if (NS_OK != result)
-	{
+#if 0
+	/* ALAIN:What is this for? it does not serve any purpose.  */
+	/* Commented out and see where things break.  */
+	if( NS_OK != result ) {
 		aFont.GetFirstFamily(firstFace);
 		char *str = nsnull;
 		str = firstFace.ToNewCString();
 		delete [] str;
 	}
+#endif
 
-	if (!str || !str[0])
-	{
-		delete [] str;
+	if( !str || !str[0] ) {
+		//delete [] str;
+		free (str);
 		str = strdup("serif");
+	}
+
+	const PRUnichar *uc;
+	aLangGroup->GetUnicode( &uc );
+	nsString language( uc );
+	char *cstring = language.ToNewCString();
+
+	char prop[256];
+	sprintf( prop, "font.name.%s.%s", str, cstring );
+
+	/* Free cstring.  */
+	if (cstring)
+		//delete [] cstring;
+		free (cstring);
+
+	char *font_default = NULL;
+	nsresult res = NS_ERROR_FAILURE;
+	NS_WITH_SERVICE( nsIPref, prefs, kPrefCID, &res );
+	if( res == NS_OK ) {
+		prefs->CopyCharPref( prop, &font_default );
+		if( font_default ) {
+			//delete [] str;	
+			free (str);
+			/* font_default was allocated. in CopyCharPref. */
+			str = font_default;
+		}
 	}
 
 	mFont = new nsFont(aFont);
@@ -159,13 +187,9 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 	mDeviceContext->GetCanonicalPixelScale(scale);
 	mDeviceContext->GetTextZoom(textZoom);
 
-	//PRInt32 sizePoints2 = NSToIntRound(app2dev * textZoom * mFont->size);
 	app2twip *= (app2dev * textZoom);
 	PRInt32 sizePoints = NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip * 0.90));
   
-	//printf("FONTSIZE: %f, %f, %f, %f, %d, %d (%d)\n", app2dev, app2twip, scale, textZoom, \
-	//	mFont->size, sizePoints, sizePoints2);
-
 	char NSFontName[64];	/* Local buffer to keep the fontname in */
 	char NSFontSuffix[5];
 	char NSFullFontName[MAX_FONT_TAG];
@@ -183,28 +207,20 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 	if(aFont.style & NS_FONT_STYLE_OBLIQUE)
 		uiFlags |= PF_STYLE_ANTIALIAS;
 
-	if(PfGenerateFontName((const uchar_t *)str, uiFlags, sizePoints, (uchar_t *)NSFullFontName) == NULL)
-	{
-		NS_WARNING("nsFontMetricsPh::Init Name generate failed");
-		if (PfGenerateFontName((const uchar_t *)"Courier 10 Pitch BT", uiFlags, sizePoints, (uchar_t *)NSFullFontName) == NULL)
-		{
-  		  NS_ASSERTION(0,"nsFontMetricsPh::Init Name generate failed for default font\n");
-		  printf(" nsFontMetricsPh::Init Name generate failed for default font:  %s, %d, %d\n", str, uiFlags, sizePoints);
- 		}
-	}
+	if( PfGenerateFontName( (const uchar_t *)str, uiFlags, sizePoints, (uchar_t *)NSFullFontName ) == NULL ) {
+		PfGenerateFontName( (const uchar_t *)"Courier 10 Pitch BT", uiFlags, sizePoints, (uchar_t *)NSFullFontName );
+		}
 
 	/* Once the Photon Font String is built get the attributes */
 	FontQueryInfo *node;
-	int ret;
 
-	if (!gFontMetricsCacheCount)
-		InitGlobals();
+	if( !gFontMetricsCacheCount )
+		InitGlobals( );
 
 	//nsStringKey key((char *)(NSFullFontName));
 	nsCStringKey key((char *)(NSFullFontName));
 	node = (FontQueryInfo *) gFontMetricsCache->Get(&key);
-	if (!node)
-	{
+	if( !node ) {
 		node = (FontQueryInfo *)calloc(sizeof(FontQueryInfo), 1);
 		PfQueryFont(NSFullFontName, node);
 		gFontMetricsCache->Put(&key, node);
@@ -240,27 +256,25 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 	mUnderlineSize = onePixel; // XXX this is a guess
 	mUnderlineOffset = -NSToCoordRound((float)node->descender * dev2app * 0.30f); // 30% of descent
 
-	mFontHandle = strdup(NSFullFontName); /* memory leak */
+	if (mFontHandle)
+		free (mFontHandle);
+	mFontHandle = strdup(NSFullFontName);
 
-	delete [] str;
+	//delete [] str;
+	free (str);
 	return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFontMetricsPh :: Destroy()
-{
+NS_IMETHODIMP nsFontMetricsPh :: Destroy( ) {
   mDeviceContext = nsnull;
   return NS_OK;
-}
+	}
 
-static void
-apGenericFamilyToFont(const nsString& aGenericFamily,
-                       nsIDeviceContext* aDC,
-                       nsString& aFontFace)
-{
+static void apGenericFamilyToFont( const nsString& aGenericFamily, nsIDeviceContext* aDC, nsString& aFontFace ) {
   char *str = aGenericFamily.ToNewCString();
-  delete [] str;
-}
+  //delete [] str;
+  free (str);
+	}
 
 struct FontEnumData
 {
@@ -273,208 +287,149 @@ struct FontEnumData
   char* mFaceName;
 };
 
-static PRBool
-FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
-{
+static PRBool FontEnumCallback( const nsString& aFamily, PRBool aGeneric, void *aData ) {
   return PR_TRUE;
-}
+	}
 
-void
-nsFontMetricsPh::RealizeFont()
-{
-}
+void nsFontMetricsPh::RealizeFont() {
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh :: GetXHeight(nscoord& aResult)
-{
+NS_IMETHODIMP nsFontMetricsPh :: GetXHeight( nscoord& aResult ) {
   aResult = mXHeight;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh :: GetSuperscriptOffset(nscoord& aResult)
-{
+NS_IMETHODIMP nsFontMetricsPh :: GetSuperscriptOffset( nscoord& aResult ) {
   aResult = mSuperscriptOffset;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh :: GetSubscriptOffset(nscoord& aResult)
-{
+NS_IMETHODIMP nsFontMetricsPh :: GetSubscriptOffset( nscoord& aResult ) {
   aResult = mSubscriptOffset;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh :: GetStrikeout(nscoord& aOffset, nscoord& aSize)
-{
+NS_IMETHODIMP nsFontMetricsPh :: GetStrikeout( nscoord& aOffset, nscoord& aSize ) {
   aOffset = mStrikeoutOffset;
   aSize = mStrikeoutSize;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh :: GetUnderline(nscoord& aOffset, nscoord& aSize)
-{
+NS_IMETHODIMP nsFontMetricsPh :: GetUnderline( nscoord& aOffset, nscoord& aSize ) {
   aOffset = mUnderlineOffset;
   aSize = mUnderlineSize;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh :: GetHeight(nscoord &aHeight)
-{
+NS_IMETHODIMP nsFontMetricsPh :: GetHeight( nscoord &aHeight ) {
   aHeight = mHeight;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh ::GetNormalLineHeight(nscoord &aHeight)
-{
+NS_IMETHODIMP nsFontMetricsPh ::GetNormalLineHeight( nscoord &aHeight ) {
   aHeight = mEmHeight + mLeading;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh :: GetLeading(nscoord &aLeading)
-{
+NS_IMETHODIMP nsFontMetricsPh :: GetLeading( nscoord &aLeading ) {
   aLeading = mLeading;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP  nsFontMetricsPh::GetEmHeight(nscoord &aHeight)
-{
+NS_IMETHODIMP nsFontMetricsPh::GetEmHeight( nscoord &aHeight ) {
   aHeight = mEmHeight;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP  nsFontMetricsPh::GetEmAscent(nscoord &aAscent)
-{
+NS_IMETHODIMP  nsFontMetricsPh::GetEmAscent( nscoord &aAscent ) {
   aAscent = mEmAscent;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP  nsFontMetricsPh::GetEmDescent(nscoord &aDescent)
-{
+NS_IMETHODIMP  nsFontMetricsPh::GetEmDescent( nscoord &aDescent ) {
   aDescent = mEmDescent;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP  nsFontMetricsPh::GetMaxHeight(nscoord &aHeight)
-{
+NS_IMETHODIMP  nsFontMetricsPh::GetMaxHeight( nscoord &aHeight ) {
   aHeight = mMaxHeight;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh :: GetMaxAscent(nscoord &aAscent)
-{
+NS_IMETHODIMP nsFontMetricsPh :: GetMaxAscent( nscoord &aAscent ) {
   aAscent = mMaxAscent;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh :: GetMaxDescent(nscoord &aDescent)
-{
+NS_IMETHODIMP nsFontMetricsPh :: GetMaxDescent( nscoord &aDescent ) {
   aDescent = mMaxDescent;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh :: GetMaxAdvance(nscoord &aAdvance)
-{
+NS_IMETHODIMP nsFontMetricsPh :: GetMaxAdvance( nscoord &aAdvance ) {
   aAdvance = mMaxAdvance;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh :: GetFont(const nsFont *&aFont)
-{
+NS_IMETHODIMP nsFontMetricsPh :: GetFont(const nsFont *&aFont) {
   aFont = mFont;
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP  nsFontMetricsPh::GetLangGroup(nsIAtom** aLangGroup)
-{
-  if (!aLangGroup) {
-    return NS_ERROR_NULL_POINTER;
-  }
+NS_IMETHODIMP  nsFontMetricsPh::GetLangGroup(nsIAtom** aLangGroup) {
+  if( !aLangGroup ) return NS_ERROR_NULL_POINTER;
 
   *aLangGroup = mLangGroup;
   NS_IF_ADDREF(*aLangGroup);
 
   return NS_OK;
-}
+	}
 
-NS_IMETHODIMP
-nsFontMetricsPh::GetFontHandle(nsFontHandle &aHandle)
-{
+NS_IMETHODIMP nsFontMetricsPh::GetFontHandle(nsFontHandle &aHandle) {
   aHandle = (nsFontHandle) mFontHandle;
   return NS_OK;
-}
+	}
 
-nsresult
-nsFontMetricsPh::GetSpaceWidth(nscoord &aSpaceWidth)
-{
+nsresult nsFontMetricsPh::GetSpaceWidth(nscoord &aSpaceWidth) {
   aSpaceWidth = mSpaceWidth;
   return NS_OK;
-}
+	}
 
-struct nsFontFamily
-{
+struct nsFontFamily {
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
-
   PLHashTable* mCharSets;
-};
+	};
 
 
 // The Font Enumerator
-
-nsFontEnumeratorPh::nsFontEnumeratorPh()
-{
+nsFontEnumeratorPh::nsFontEnumeratorPh() {
   NS_INIT_REFCNT();
-}
+	}
 
 NS_IMPL_ISUPPORTS(nsFontEnumeratorPh, NS_GET_IID(nsIFontEnumerator));
 
 static int gInitializedFontEnumerator = 0;
-static PLHashNumber HashKey(const void* aString)
-{
+static PLHashNumber HashKey(const void* aString) {
   const nsString* key = (const nsString*) aString;
-  return (PLHashNumber)
-    nsCRT::HashCode(key->GetUnicode());
-    //nsCRT::HashCode(key->GetUnicode(), key->Length());
-}
+  return (PLHashNumber) nsCRT::HashCode(key->GetUnicode());
+	}
 
-static PRIntn
-CompareKeys(const void* aStr1, const void* aStr2)
-{
-  return nsCRT::strcmp(((const nsString*) aStr1)->GetUnicode(),
-    ((const nsString*) aStr2)->GetUnicode()) == 0;
-}
+static PRIntn CompareKeys( const void* aStr1, const void* aStr2 ) {
+  return nsCRT::strcmp(((const nsString*) aStr1)->GetUnicode(), ((const nsString*) aStr2)->GetUnicode()) == 0;
+	}
 
-static int
-InitializeFontEnumerator(void)
-{
+static int InitializeFontEnumerator( void ) {
   gInitializedFontEnumerator = 1;
-
-  if (!gGotAllFontNames)
-  {
-    gGotAllFontNames = 1;
-  }
-
+  if( !gGotAllFontNames ) gGotAllFontNames = 1;
   return 1;
-}
+	}
 
-typedef struct EnumerateFamilyInfo
-{
+typedef struct EnumerateFamilyInfo {
   PRUnichar** mArray;
   int         mIndex;
-} EnumerateFamilyInfo;
+	} EnumerateFamilyInfo;
 
-static PRIntn
-EnumerateFamily(PLHashEntry* he, PRIntn i, void* arg)
-{
+static PRIntn EnumerateFamily( PLHashEntry* he, PRIntn i, void* arg ) {
   EnumerateFamilyInfo* info = (EnumerateFamilyInfo*) arg;
   PRUnichar** array = info->mArray;
   int j = info->mIndex;
@@ -492,108 +447,111 @@ EnumerateFamily(PLHashEntry* he, PRIntn i, void* arg)
   info->mIndex++;
 
   return HT_ENUMERATE_NEXT;
-}
+	}
 
-static int
-CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
-{
+static int CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure) {
   const PRUnichar* str1 = *((const PRUnichar**) aArg1);
   const PRUnichar* str2 = *((const PRUnichar**) aArg2);
 
   // XXX add nsICollation stuff
 
   return nsCRT::strcmp(str1, str2);
-}
+	}
 
-NS_IMETHODIMP
-nsFontEnumeratorPh::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
-{
+NS_IMETHODIMP nsFontEnumeratorPh::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult) {
+  if( aCount ) *aCount = 0;
+  else return NS_ERROR_NULL_POINTER;
+  if( aResult ) *aResult = nsnull;
+	else return NS_ERROR_NULL_POINTER;
 
-  if (aCount) {
-    *aCount = 0;
-  }
-  else {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aResult) {
-    *aResult = nsnull;
-  }
-  else {
-    return NS_ERROR_NULL_POINTER;
-  }
+  if( !gInitializedFontEnumerator && !InitializeFontEnumerator( ) ) return NS_ERROR_FAILURE;
 
-  if (!gInitializedFontEnumerator) {
-    if (!InitializeFontEnumerator()) {
-      return NS_ERROR_FAILURE;
-    }
-  }
-
-
-  if (gFamilies)
-  {
+  if( gFamilies ) {
     PRUnichar** array = (PRUnichar**) nsMemory::Alloc(gFamilies->nentries * sizeof(PRUnichar*));
-    if (!array)
-    {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+    if( !array ) return NS_ERROR_OUT_OF_MEMORY;
 
     EnumerateFamilyInfo info = { array, 0 };
     PL_HashTableEnumerateEntries(gFamilies, EnumerateFamily, &info);
-    if (!info.mIndex)
-    {
+    if( !info.mIndex ) {
       nsMemory::Free(array);
       return NS_ERROR_OUT_OF_MEMORY;
-    }
+    	}
 
     NS_QuickSort(array, gFamilies->nentries, sizeof(PRUnichar*),
     CompareFontNames, nsnull);
 
     *aCount = gFamilies->nentries;
     *aResult = array;
-
-
     return NS_OK;
-  }
-  else
+  	}
+  else return NS_ERROR_FAILURE;
+	}
+
+NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult ) {
+  if( !aLangGroup || !aGeneric ) return NS_ERROR_NULL_POINTER;
+
+  if( aCount ) *aCount = 0;
+  else return NS_ERROR_NULL_POINTER;
+
+  if( aResult ) *aResult = nsnull;
+	else return NS_ERROR_NULL_POINTER;
+
+  //if( !strcmp(aLangGroup, "x-unicode") || !strcmp(aLangGroup, "x-user-def") ) return EnumerateAllFonts( aCount, aResult );
+
+  if( !gInitializedFontEnumerator && !InitializeFontEnumerator( ) ) return NS_ERROR_FAILURE;
+  
+  int i;
+  if(!gFontDetails)
   {
-    return NS_ERROR_FAILURE;
-  }
-}
-
-NS_IMETHODIMP
-nsFontEnumeratorPh::EnumerateFonts(const char* aLangGroup,
-  const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
-{
-  if ((!aLangGroup) || (!aGeneric)) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aCount) {
-    *aCount = 0;
-  }
-  else {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aResult) {
-    *aResult = nsnull;
-  }
-  else {
-    return NS_ERROR_NULL_POINTER;
+    gnFonts = PfQueryFonts(-1, PHFONT_ALL_FONTS, NULL, 0);
+	if(gnFonts>0)
+	{
+		gFontDetails = new FontDetails[gnFonts];
+		if(gFontDetails)
+		{
+		  gFontNames = (nsCString**) nsMemory::Alloc(gnFonts * sizeof(nsCString*));
+		  PfQueryFonts(-1, PHFONT_ALL_FONTS, gFontDetails, gnFonts);
+		  for(i=0;i<gnFonts;i++)
+			gFontNames[i] = new nsCString(gFontDetails[i].stem);
+		}
+			
+	}
   }
 
-  if ((!strcmp(aLangGroup, "x-unicode")) ||
-      (!strcmp(aLangGroup, "x-user-def"))) {
-    return EnumerateAllFonts(aCount, aResult);
+  if(gFontDetails)
+  {
+	PRUnichar** array = (PRUnichar**) nsMemory::Alloc(gnFonts * sizeof(PRUnichar*));
+    if(!array)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+	int nCount = 0;
+    for(i=0;i<gnFonts;i++)
+	{
+	  nsCString str(aGeneric);
+	  if(str == "monospace")
+	  {
+		if(!gFontDetails[i].losize && !gFontDetails[i].hisize
+			&& (gFontDetails[i].flags | PHFONT_INFO_FIXED) == gFontDetails[i].flags)
+		{
+			array[nCount++] = gFontNames[i]->ToNewUnicode();
+		}
+	  }
+      else
+	  {
+		if((gFontDetails[i].flags | PHFONT_INFO_PROP) == gFontDetails[i].flags)
+		{
+			array[nCount++] = gFontNames[i]->ToNewUnicode();
+		}
+      }
+	}
+    *aCount = nCount;
+    *aResult = array;
+	return NS_OK;
   }
 
-  if (!gInitializedFontEnumerator) {
-    if (!InitializeFontEnumerator()) {
-      return NS_ERROR_FAILURE;
-    }
-  }
 
-  // XXX still need to implement aLangGroup and aGeneric
-  return EnumerateAllFonts(aCount, aResult);
-}
+  return EnumerateAllFonts( aCount, aResult );
+	}
 
 NS_IMETHODIMP
 nsFontEnumeratorPh::HaveFontFor(const char* aLangGroup, PRBool* aResult)

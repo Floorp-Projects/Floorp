@@ -37,10 +37,14 @@ public:
   //NS_IMETHOD GetPrintContext(PpPrintContext_t *&aPrintContext) const;
   PpPrintContext_t *GetPrintContext();
 
+  void SetPrintContext(PpPrintContext_t *pc);
+
 protected:
   virtual ~nsDeviceContextSpecPh();
 
   PpPrintContext_t *mPC;
+
+  int mIsQuite;
 };
 
 #endif

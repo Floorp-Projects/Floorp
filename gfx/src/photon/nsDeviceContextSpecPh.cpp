@@ -30,12 +30,15 @@ nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
 	NS_INIT_REFCNT();
 	mPC = nsnull;
+	mIsQuite = PR_FALSE;
 }
 
 nsDeviceContextSpecPh :: ~nsDeviceContextSpecPh()
 {
-	if (mPC)
-		PpPrintReleasePC(mPC);
+	if(!mIsQuite)
+		if (mPC)
+			PpPrintReleasePC(mPC);
+
 }
 
 static NS_DEFINE_IID(kDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
@@ -49,17 +52,21 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(PRBool aQuiet)
 	int action;
 	nsresult rv = NS_OK;
 
-	if (!mPC)
-		mPC = PpCreatePC();
-
 	if (aQuiet)
 	{
 		// no dialogs
-		PpLoadDefaultPrinter(mPC);
+		if(mPC)
+			PpPrintReleasePC(mPC);
+		mIsQuite = PR_TRUE;
+		mPC = nsnull;
+		printf("Print: quiet\n");
 	}
 	else
 	{
-#if 1
+		if(!mPC)
+			mPC = PpCreatePC();
+
+		PtSetParentWidget(NULL);
 		action = PtPrintSelection(NULL, NULL, NULL, mPC, (Pt_PRINTSEL_DFLT_LOOK));
 		switch (action)
 		{
@@ -71,16 +78,6 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(PRBool aQuiet)
 				rv = NS_ERROR_FAILURE;
 				break;
 		}
-#else
-		// do native print options
-		nsIPrintOptions *printOptions = new nsPrintOptionsPh((void *)mPC);
-		if ((nsPrintOptionsPh *)printOptions->ShowNativeDialog() != NS_OK)
-		{
-			// cancel
-			rv =  NS_ERROR_FAILURE;
-		}
-		delete printOptions;
-#endif
 	}
 
   	return rv;
@@ -91,3 +88,14 @@ PpPrintContext_t *nsDeviceContextSpecPh :: GetPrintContext()
 {
   return (mPC);
 }
+
+void nsDeviceContextSpecPh :: SetPrintContext(PpPrintContext_t* pc)
+{
+	if(mPC)
+	{
+		PpPrintReleasePC(mPC);
+	}
+
+	mPC = pc; 
+}
+

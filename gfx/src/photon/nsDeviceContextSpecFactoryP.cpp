@@ -24,6 +24,9 @@
 #include "nsDeviceContextSpecPh.h"
 #include "nsGfxCIID.h"
 #include "plstr.h"
+#include "nsIServiceManager.h"
+
+#include "nsIPrintOptions.h"
 
 #include <Pt.h>
 #include "nsPhGfxLog.h"
@@ -37,9 +40,10 @@ nsDeviceContextSpecFactoryPh :: ~nsDeviceContextSpecFactoryPh()
 {
 }
 
-static NS_DEFINE_IID(kDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
 static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
 static NS_DEFINE_IID(kDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+static NS_DEFINE_IID(kDeviceContextSpecFactoryIID, NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID);
 
 NS_IMPL_QUERY_INTERFACE(nsDeviceContextSpecFactoryPh, kDeviceContextSpecFactoryIID)
 NS_IMPL_ADDREF(nsDeviceContextSpecFactoryPh)
@@ -53,16 +57,17 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: Init(void)
 //XXX this method needs to do what the API says...
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget *aWidget,
-                                                                       nsIDeviceContextSpec *&aNewSpec,
-                                                                       PRBool aQuiet)
+																	nsIDeviceContextSpec *&aNewSpec,
+																	PRBool aQuiet)
 {
-	nsresult  		  		rv = NS_ERROR_FAILURE;
-	nsIDeviceContextSpec  	*devSpec = nsnull;
+	NS_ENSURE_ARG_POINTER(aWidget);
 
-	if (aOldSpec)
-		devSpec = aOldSpec;
-	else
-		nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
+	nsresult  rv = NS_ERROR_FAILURE;
+	NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+
+	nsIDeviceContextSpec  *devSpec = nsnull;
+
+	nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devSpec);
 
 	if (devSpec != nsnull)
 	{

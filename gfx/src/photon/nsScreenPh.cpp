@@ -25,168 +25,64 @@
 #include <Pt.h>
 #include "nsPhGfxLog.h"
 
-nsScreenPh :: nsScreenPh (  )
-{
+nsScreenPh :: nsScreenPh ( ) {
   nsresult    		res = NS_ERROR_FAILURE;
   PhSysInfo_t       SysInfo;
   PhRect_t          rect;
   char              *p = NULL;
-  int               inp_grp = 0;
+  int               inp_grp;
   PhRid_t           rid;
   PhRegion_t        region;
   
   NS_INIT_REFCNT();
 
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsScreenPh::nsScreenPh Constructor called this=<%p>\n", this));
+	/* Initialize the data members */
+	/* Get the Screen Size and Depth*/
+	p = getenv("PHIG");
+	if( p ) inp_grp = atoi(p);
+	else inp_grp = 1;
 
+	PhQueryRids( 0, 0, inp_grp, Ph_INPUTGROUP_REGION, 0, 0, 0, &rid, 1 );
+	PhRegionQuery( rid, &region, &rect, NULL, 0 );
+	inp_grp = region.input_group;
+	PhWindowQueryVisible( Ph_QUERY_INPUT_GROUP | Ph_QUERY_EXACT, 0, inp_grp, &rect );
+	mWidth  = rect.lr.x - rect.ul.x + 1;
+	mHeight = rect.lr.y - rect.ul.y + 1;  
 
-  // nothing else to do. I guess we could cache a bunch of information
-  // here, but we want to ask the device at runtime in case anything
-  // has changed.
+	/* Get the System Info for the RID */
+	if( PhQuerySystemInfo(rid, NULL, &SysInfo ) ) {
+		/* Make sure the "color_bits" field is valid */
+		if( SysInfo.gfx.valid_fields & Ph_GFX_COLOR_BITS ) mPixelDepth = SysInfo.gfx.color_bits;
+		}
+	}
 
-  /* Initialize the data members */
-  /* Get the Screen Size and Depth*/
-   p = getenv("PHIG");
-   if (p)
-   {
-     inp_grp = atoi(p);
-
-     PhQueryRids( 0, 0, inp_grp, Ph_INPUTGROUP_REGION, 0, 0, 0, &rid, 1 );
-     PhRegionQuery( rid, &region, &rect, NULL, 0 );
-     inp_grp = region.input_group;
-     PhWindowQueryVisible( Ph_QUERY_INPUT_GROUP | Ph_QUERY_EXACT, 0, inp_grp, &rect );
-     mWidth  = rect.lr.x - rect.ul.x + 1;
-     mHeight = rect.lr.y - rect.ul.y + 1;  
-
-     /* Get the System Info for the RID */
-     if (!PhQuerySystemInfo(rid, NULL, &SysInfo))
-     {
-       PR_LOG(PhGfxLog, PR_LOG_ERROR,("nsScreenPh::nsScreenPh with aWidget: Error getting SystemInfo\n"));
-     }
-     else
-     {
-       /* Make sure the "color_bits" field is valid */
-       if (SysInfo.gfx.valid_fields & Ph_GFX_COLOR_BITS)
-       {
-        mPixelDepth = SysInfo.gfx.color_bits;
-       }
-     }	
-  }
-  else
-  {
-    printf("nsScreenPh::nsScreenPh The PHIG environment variable must be set, try setting it to 1\n");  
-  }
-}
-
-nsScreenPh :: ~nsScreenPh()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsScreenPh::~nsScreenPh Destructor called this=<%p>\n", this));
-
-  // nothing to see here.
-}
-
+nsScreenPh :: ~nsScreenPh( ) { }
 
 // addref, release, QI
 NS_IMPL_ISUPPORTS(nsScreenPh, NS_GET_IID(nsIScreen))
 
-#if 0
-NS_IMETHODIMP 
-nsScreenPh :: GetWidth(PRInt32 *aWidth)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsScreenPh::GetWidth Constructor called this=<%p>\n", this));
-
-  *aWidth = mWidth;
-  return NS_OK;
-
-} // GetWidth
+NS_IMETHODIMP nsScreenPh :: GetPixelDepth( PRInt32 *aPixelDepth ) {
+	*aPixelDepth = mPixelDepth;
+	return NS_OK;
+	} // GetPixelDepth
 
 
-NS_IMETHODIMP 
-nsScreenPh :: GetHeight(PRInt32 *aHeight)
-{
-  *aHeight = mHeight;
-  return NS_OK;
-
-} // GetHeight
-
-#endif
-
-NS_IMETHODIMP 
-nsScreenPh :: GetPixelDepth(PRInt32 *aPixelDepth)
-{
-  *aPixelDepth = mPixelDepth;
-  return NS_OK;
-
-} // GetPixelDepth
-
-
-NS_IMETHODIMP 
-nsScreenPh :: GetColorDepth(PRInt32 *aColorDepth)
-{
+NS_IMETHODIMP nsScreenPh :: GetColorDepth( PRInt32 *aColorDepth ) {
   return GetPixelDepth ( aColorDepth );
+	}
 
-} // GetColorDepth
-
-
-#if 0
-NS_IMETHODIMP 
-nsScreenPh :: GetAvailWidth(PRInt32 *aAvailWidth)
-{
-  return GetWidth(aAvailWidth);
-
-} // GetAvailWidth
-#endif
-
-#if 0
-NS_IMETHODIMP 
-nsScreenPh :: GetAvailHeight(PRInt32 *aAvailHeight)
-{
-  return GetHeight(aAvailHeight);
-
-} // GetAvailHeight
-
-
-NS_IMETHODIMP 
-nsScreenPh :: GetAvailLeft(PRInt32 *aAvailLeft)
-{
-  *aAvailLeft = 0;
-  return NS_OK;
-
-} // GetAvailLeft
-
-
-
-NS_IMETHODIMP 
-nsScreenPh :: GetAvailTop(PRInt32 *aAvailTop)
-{
-  *aAvailTop = 0;
-  return NS_OK;
-
-} // GetAvailTop
-
-#endif
-
-NS_IMETHODIMP
-nsScreenPh :: GetRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
-{
+NS_IMETHODIMP nsScreenPh :: GetRect( PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight ) {
   *outTop = 0;
   *outLeft = 0;
   *outWidth = mWidth;
   *outHeight = mHeight;
-
   return NS_OK;
-  
-} // GetRect
+	}
 
-
-NS_IMETHODIMP
-nsScreenPh :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
-{
+NS_IMETHODIMP nsScreenPh :: GetAvailRect( PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight ) {
   *outTop = 0;
   *outLeft = 0;
   *outWidth = mWidth;
   *outHeight = mHeight;
-
   return NS_OK;
-  
-} // GetAvailRect
+	}
