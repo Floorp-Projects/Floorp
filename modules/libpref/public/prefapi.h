@@ -60,7 +60,11 @@ typedef int PROFILE_ERROR;
 /* Error numbers between -100 and -999 are reserved for individual stores */
 /* Error numbers less than -1000 are reserved for the profile manager */
 
+/* IMPORTANT:  if you add error codes to this, make sure you update convertRes() in
+ * nsPref.cpp, otherwise the error won't get turned into the right nsresult value
+ */
 typedef enum {
+	PREF_DEFAULT_VALUE_NOT_INITIALIZED	    = -13,
     PREF_BAD_PASSWORD			    = -12,
     PREF_CANT_DELETE_NET_PROFILE    = -11,
     PREF_NETPROFILE_DIR_EXISTS      = -10,

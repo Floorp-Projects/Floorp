@@ -128,10 +128,14 @@ static nsresult _convertRes(int res)
         case PREF_TYPE_CHANGE_ERR:
         case PREF_ERROR:
         case PREF_BAD_LOCKFILE:
+	case PREF_DEFAULT_VALUE_NOT_INITIALIZED:
             return NS_ERROR_UNEXPECTED;
         case PREF_VALUECHANGED:
             return NS_PREF_VALUE_CHANGED;
     }
+
+    NS_ASSERTION((res >= PREF_DEFAULT_VALUE_NOT_INITIALIZED) && (res <= PREF_PROFILE_UPGRADE), "you added a new error code to prefapi.h and didn't update _convertRes");
+
     return NS_OK;
 }
 

@@ -66,6 +66,9 @@
 #include "xp_str.h"
 #include "nsQuickSort.h"
 
+#define BOGUS_DEFAULT_INT_PREF_VALUE (-5632)
+#define BOGUS_DEFAULT_BOOL_PREF_VALUE (-2)
+
 typedef union
 {
 	char*		stringVal;
@@ -1294,7 +1297,12 @@ PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool ge
 	if (pref && (pref->flags & PREF_INT))
 	{
 		if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
-			*return_int = pref->defaultPref.intVal;
+                {
+                        *return_int = pref->defaultPref.intVal;
+                        //check to see if we even had a default
+                        if(*return_int == ((PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE))
+                                return PREF_DEFAULT_VALUE_NOT_INITIALIZED;
+                }
 		else
 			*return_int = pref->userPref.intVal;
 		result = PREF_OK;
@@ -1314,7 +1322,12 @@ PrefResult pref_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool
 	if (pref && (pref->flags & PREF_BOOL))
 	{
 		if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
-			*return_value = pref->defaultPref.boolVal;
+                {
+                        *return_value = pref->defaultPref.boolVal;
+                        //check to see if we even had a default
+                        if(*return_value == ((PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE))
+                                return PREF_DEFAULT_VALUE_NOT_INITIALIZED;
+                }
 		else
 			*return_value = pref->userPref.boolVal;
 		result = PREF_OK;
@@ -1794,11 +1807,11 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
     		return PREF_OUT_OF_MEMORY;
     	pref->flags = type;
 		if (pref->flags & PREF_BOOL)
-			pref->defaultPref.boolVal = (PRBool) -2;
+			pref->defaultPref.boolVal = (PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE;
 		/* ugly hack -- define it to a default that no pref will ever default to
 		   this should really get fixed right by some out of band data */
 		if (pref->flags & PREF_INT)
-			pref->defaultPref.intVal = (PRInt32) -5632;
+			pref->defaultPref.intVal = (PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE;
     	PR_HashTableAdd(gHashTable, PL_strdup(key), pref);
     }
     else if ((((PrefType)(pref->flags)) & PREF_VALUETYPE_MASK) != (type & PREF_VALUETYPE_MASK))
