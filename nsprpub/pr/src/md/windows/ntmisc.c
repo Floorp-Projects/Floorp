@@ -84,18 +84,12 @@ PRIntn _PR_MD_PUT_ENV(const char *name)
 PR_IMPLEMENT(PRTime)
 PR_Now(void)
 {
-    PRInt64 s, ms, ms2us, s2us;
-    struct timeb b;
+    PRTime prt;
+    FILETIME ft;
 
-    ftime(&b);
-    LL_I2L(ms2us, PR_USEC_PER_MSEC);
-    LL_I2L(s2us, PR_USEC_PER_SEC);
-    LL_I2L(s, b.time);
-    LL_I2L(ms, b.millitm);
-    LL_MUL(ms, ms, ms2us);
-    LL_MUL(s, s, s2us);
-    LL_ADD(s, s, ms);
-    return s;       
+    GetSystemTimeAsFileTime(&ft);
+    _PR_FileTimeToPRTime(&ft, &prt);
+    return prt;       
 }
 
 /*

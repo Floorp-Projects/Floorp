@@ -451,6 +451,9 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 #define _MD_INTERVAL_PER_MILLISEC()       (_PR_MD_INTERVAL_PER_SEC() / 1000)
 #define _MD_INTERVAL_PER_MICROSEC()       (_PR_MD_INTERVAL_PER_SEC() / 1000000)
 
+/* --- Time --- */
+extern void _PR_FileTimeToPRTime(const FILETIME *filetime, PRTime *prtm);
+
 /* --- Native-Thread Specific Definitions ------------------------------- */
 
 extern BOOL _pr_use_static_tls;
