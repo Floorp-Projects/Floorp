@@ -93,8 +93,7 @@ CPPSRCS		= \
 		nsMUTF7ToUnicode.cpp \
 		nsUCS2BEToUnicode.cpp \
 		nsUCS2LEToUnicode.cpp \
-		nsUCS4BEToUnicode.cpp \
-		nsUCS4LEToUnicode.cpp \
+		nsUTF32ToUnicode.cpp \
 		nsT61ToUnicode.cpp \
 		nsUserDefinedToUnicode.cpp \
 		nsUnicodeToUEscape.cpp \
@@ -155,8 +154,7 @@ CPPSRCS		= \
 		nsUnicodeToMUTF7.cpp \
 		nsUnicodeToUCS2BE.cpp \
 		nsUnicodeToUCS2LE.cpp \
-		nsUnicodeToUCS4BE.cpp \
-		nsUnicodeToUCS4LE.cpp \
+		nsUnicodeToUTF32.cpp \
 		nsUnicodeToT61.cpp \
 		nsUnicodeToUserDefined.cpp \
 		nsUnicodeToSymbol.cpp \

@@ -1,4 +1,6 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -19,7 +21,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Jungshik Shin <jshin@mailaps.org>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,35 +38,92 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsUCS4BEToUnicode_h___
-#define nsUCS4BEToUnicode_h___
-
-#include "nsUCSupport.h"
+#ifndef nsUTF32ToUnicode_h___
+#define nsUTF32ToUnicode_h___
 
 //----------------------------------------------------------------------
-// Class nsUCS4BEToUnicode [declaration]
+// Class nsUTF32ToUnicode [declaration]  
 
 /**
- * A character set converter from UCS4BE to Unicode.
- *
- * @created         18/Mar/1998
+ * A character set converter from UTF32 to Unicode.
+ * The base class for UTF32BE/UTF32LE to Unicode converters.
+ * @created         08/Dec/2002
+ * @author  Jungshik Shin
  */
-class nsUCS4BEToUnicode : public nsTableDecoderSupport
+
+class nsUTF32ToUnicode : public nsBasicDecoderSupport
 {
+
 public:
 
   /**
    * Class constructor.
    */
-  nsUCS4BEToUnicode();
+  nsUTF32ToUnicode();
 
 protected:
 
+  // the number of additional bytes to read to complete an incomplete UTF-32 4byte seq.
+  PRUint16 mState;  
+  // buffer for an incomplete UTF-32 sequence. 
+  PRUint8  mBufferInc[4];
+
   //--------------------------------------------------------------------
-  // Subclassing of nsDecoderSupport class [declaration]
+  // Subclassing of nsBasicDecoderSupport class [declaration]
 
   NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
+                          PRInt32 * aDestLength);
+
+  NS_IMETHOD Reset();
+
 };
 
-#endif /* nsUCS4BEToUnicode_h___ */
+//----------------------------------------------------------------------
+// Class nsUTF32BEToUnicode [declaration]  
+
+/**
+ * A character set converter from UTF32BE to Unicode.
+ * A subclass of UTF32ToUnicode.
+ * @created         08/Dec/2002
+ * @author  Jungshik Shin
+ */
+
+class nsUTF32BEToUnicode : public nsUTF32ToUnicode
+{
+public:
+
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsBasicDecoderSupport class [declaration]
+
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength, 
+                     PRUnichar * aDest, PRInt32 * aDestLength);
+
+
+};
+
+//----------------------------------------------------------------------
+// Class nsUTF32LEToUnicode [declaration]  
+
+/**
+ * A character set converter from UTF32LE to Unicode.
+ * A subclass of UTF32ToUnicode.
+ * @created         08/Dec/2002
+ * @author  Jungshik Shin
+ */
+
+class nsUTF32LEToUnicode : public nsUTF32ToUnicode
+{
+public:
+
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsBasicDecoderSupport class [declaration]
+
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength, 
+                     PRUnichar * aDest, PRInt32 * aDestLength);
+
+};
+
+#endif /* nsUTF32ToUnicode_h___ */
+

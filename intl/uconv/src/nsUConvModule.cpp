@@ -126,8 +126,7 @@
 #include "nsVPSToUnicode.h"
 #include "nsUTF7ToUnicode.h"
 #include "nsMUTF7ToUnicode.h"
-#include "nsUCS4BEToUnicode.h"
-#include "nsUCS4LEToUnicode.h"
+#include "nsUTF32ToUnicode.h"
 #include "nsUCS2BEToUnicode.h"
 #include "nsUCS2LEToUnicode.h"
 #include "nsT61ToUnicode.h"
@@ -180,8 +179,7 @@
 #include "nsUnicodeToMUTF7.h"
 #include "nsUnicodeToUCS2BE.h"
 #include "nsUnicodeToUCS2LE.h"
-#include "nsUnicodeToUCS4BE.h"
-#include "nsUnicodeToUCS4LE.h"
+#include "nsUnicodeToUTF32.h"
 #include "nsUnicodeToT61.h"
 #include "nsUnicodeToUserDefined.h"
 #include "nsUnicodeToSymbol.h"
@@ -437,8 +435,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF7ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMUTF7ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF16BEToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF16LEToUnicode);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUCS4BEToUnicode);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUCS4LEToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF32BEToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF32LEToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUEscape);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUEscapeToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF7);
@@ -446,8 +444,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMUTF7);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF16BE);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF16LE);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF16);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUCS4BE);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUCS4LE);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF32BE);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToUTF32LE);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToLangBoxArabic8);
 
 // ucvibm
@@ -958,12 +956,12 @@ static const nsModuleComponentInfo components[] =
   { 
     DECODER_NAME_BASE "UTF-32BE" , NS_UTF32BETOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "UTF-32BE",
-    nsUCS4BEToUnicodeConstructor ,
+    nsUTF32BEToUnicodeConstructor ,
   },
   { 
     DECODER_NAME_BASE "UTF-32LE" , NS_UTF32LETOUNICODE_CID, 
     NS_UNICODEDECODER_CONTRACTID_BASE "UTF-32LE",
-    nsUCS4LEToUnicodeConstructor ,
+    nsUTF32LEToUnicodeConstructor ,
   },
   { 
     DECODER_NAME_BASE "T.61-8bit" , NS_T61TOUNICODE_CID, 
@@ -1258,12 +1256,12 @@ static const nsModuleComponentInfo components[] =
   { 
     ENCODER_NAME_BASE "UTF-32BE" , NS_UNICODETOUTF32BE_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "UTF-32BE",
-    nsUnicodeToUCS4BEConstructor, 
+    nsUnicodeToUTF32BEConstructor, 
   },
   { 
     ENCODER_NAME_BASE "UTF-32LE" , NS_UNICODETOUTF32LE_CID, 
     NS_UNICODEENCODER_CONTRACTID_BASE "UTF-32LE",
-    nsUnicodeToUCS4LEConstructor, 
+    nsUnicodeToUTF32LEConstructor, 
   },
     { 
     ENCODER_NAME_BASE "T.61-8bit" , NS_UNICODETOT61_CID, 
