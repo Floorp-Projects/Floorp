@@ -52,6 +52,7 @@
 #ifdef XP_WIN32
 #include <windows.h>
 #include <stdlib.h>
+#include <mbstring.h>
 #elif defined(XP_OS2)
 #define INCL_DOS
 #include <os2.h>
@@ -131,13 +132,14 @@ GRE_GetCurrentProcessDirectory(char* buffer)
     *buffer = '\0';
 
 #ifdef XP_WIN
-    if ( ::GetModuleFileName(0, buffer, MAXPATHLEN) ) {
-        // chop of the executable name by finding the rightmost backslash
-        char* lastSlash = PL_strrchr(buffer, '\\');
-        if (lastSlash) {
-            *(lastSlash) = '\0';
-            return PR_TRUE;
-        }
+    DWORD bufLength = ::GetModuleFileName(0, buffer, MAXPATHLEN);
+    if (bufLength == 0 || bufLength >= MAXPATHLEN)
+        return PR_FALSE;
+    // chop of the executable name by finding the rightmost backslash
+    unsigned char* lastSlash = _mbsrchr((unsigned char*) buffer, '\\');
+    if (lastSlash) {
+        *(lastSlash) = '\0';
+        return PR_TRUE;
     }
 
 #elif defined(XP_MACOSX)
