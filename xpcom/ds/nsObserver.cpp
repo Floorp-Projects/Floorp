@@ -33,7 +33,7 @@ static NS_DEFINE_IID(kObserverCID, NS_OBSERVER_CID);
 // nsObserver Implementation
 
 
-NS_IMPL_AGGREGATED(nsObserver);
+NS_IMPL_AGGREGATED(nsObserver)
 
 NS_COM nsresult NS_NewObserver(nsIObserver** anObserver, nsISupports* outer)
 {
