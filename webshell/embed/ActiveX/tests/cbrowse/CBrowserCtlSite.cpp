@@ -15,7 +15,7 @@ CBrowserCtlSite::CBrowserCtlSite()
 	m_bUseCustomDropTarget = FALSE;
 }
 
-void _InsertMenuItem(HMENU hmenu, int nPos, int nID, const TCHAR *szItemText)
+static void _InsertMenuItem(HMENU hmenu, int nPos, int nID, const TCHAR *szItemText)
 {
 	MENUITEMINFO mii;
 	memset(&mii, 0, sizeof(mii));
@@ -28,7 +28,7 @@ void _InsertMenuItem(HMENU hmenu, int nPos, int nID, const TCHAR *szItemText)
 	InsertMenuItem(hmenu, nPos, TRUE, &mii);
 }
 
-void _InsertMenuSeperator(HMENU hmenu, int nPos)
+static void _InsertMenuSeperator(HMENU hmenu, int nPos)
 {
 	MENUITEMINFO mii;
 	memset(&mii, 0, sizeof(mii));
