@@ -1953,7 +1953,7 @@ nsRange::CreateContextualFragment(const nsAReadableString& aFragment,
       PRUnichar* str = nsnull;
       str = tagStack->Pop();
       while (str) {
-        delete[] str;
+        nsCRT::free(str);
         str = tagStack->Pop();
       }
       
@@ -2034,7 +2034,7 @@ nsRange::IsValidFragment(const nsAReadableString& aFragment, PRBool* aReturn)
       PRUnichar* str = nsnull;
       str = tagStack->Pop();
       while (str) {
-        delete[] str;
+        nsCRT::free(str);
         str = tagStack->Pop();
       }
       
