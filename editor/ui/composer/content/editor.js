@@ -85,6 +85,17 @@ function EditorOnLoad()
         document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
     }
 
+    // get default character set if provided
+    if ("arguments" in window && window.arguments.length > 1 && window.arguments[1]) {
+      if (window.arguments[1].indexOf("charset=") != -1) {
+        var arrayArgComponents = window.arguments[1].split("=");
+        if (arrayArgComponents) {
+          // Put argument where EditorStartup expects it.
+          document.getElementById( "args" ).setAttribute("charset", arrayArgComponents[1]);
+        }
+      }
+    }
+
     WebCompose = true;
     window.tryToClose = EditorCanClose;
 
@@ -230,6 +241,8 @@ function EditorStartup(editorType, editorElement)
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
+  var charset = document.getElementById("args").getAttribute("charset");
+  if (charset) editorShell.SetDocumentCharacterSet(charset);
   editorShell.LoadUrl(url);
 }
 
