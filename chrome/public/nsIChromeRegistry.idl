@@ -92,6 +92,8 @@ interface nsIChromeRegistry : nsISupports
  // Special additional APIs for locales only.
   void selectLocaleForProfile(in wstring localeName, in wstring profilePath);
   wstring getSelectedLocale(in wstring packageName);
+  /* runtimeProvider == true: don't assert the runtime change */
+  void setRuntimeProvider(in boolean runtimeProvider); 
 
   /* Installation APIs */
   void installSkin(in string baseURL, in boolean useProfile, in boolean allowScripts);

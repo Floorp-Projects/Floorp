@@ -547,6 +547,7 @@ pref("intl.charsetmenu.browser.cache.size", 5);
 pref("intl.charset.detector",               "chrome://navigator/locale/navigator.properties");
 pref("intl.charset.default",                "chrome://navigator-platform/locale/navigator.properties");
 pref("intl.content.langcode",               "chrome://communicator-region/locale/region.properties");
+pref("intl.locale.matchOS",                 false);
 pref("font.language.group",                 "chrome://navigator/locale/navigator.properties");
 
 // -- folders (Mac: these are binary aliases.)
