@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -33,21 +33,21 @@ class nsDSURIContentListener : public nsIURIContentListener
 {
 friend class nsDocShell;
 public:
-   NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
 
-   NS_DECL_NSIURICONTENTLISTENER
-
-protected:
-   nsDSURIContentListener();
-   virtual ~nsDSURIContentListener();
-
-   void DocShell(nsDocShell* aDocShell);
-   nsDocShell* DocShell();
+    NS_DECL_NSIURICONTENTLISTENER
 
 protected:
-   nsDocShell*                      mDocShell;
+    nsDSURIContentListener();
+    virtual ~nsDSURIContentListener();
 
-   nsIURIContentListener*           mParentContentListener;  // Weak Reference
+    void DocShell(nsDocShell* aDocShell);
+    nsDocShell* DocShell();
+
+protected:
+    nsDocShell*                      mDocShell;
+
+    nsIURIContentListener*           mParentContentListener;  // Weak Reference
 };
 
 #endif /* nsDSURIContentListener_h__ */
