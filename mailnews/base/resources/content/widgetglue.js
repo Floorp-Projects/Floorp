@@ -355,8 +355,8 @@ function MsgRenameFolder()
             {
                 var dialog = window.openDialog(
                     "chrome://messenger/content/newFolderNameDialog.xul",
-                    "",
-                    "chrome",
+                    "newFolder",
+                    "chrome,modal",
                     {title:"Rename Folder",
                               okCallback:RenameFolder});
             }
