@@ -108,37 +108,40 @@ interface nsIMsgCompose : nsISupports {
                  in nsIMsgIdentity identity);
 
 	/* ... */
-    void CloseWindow();
+  void CloseWindow();
     
-    /*
-    	AttachmentPrettyName will return only the leafName if the it's a file URL.
-    	It will also convert the filename to the right character set.
-    	This UI utility function should probably go into it's own class
-    */
-    wstring AttachmentPrettyName(in wstring url);
+  /*
+    AttachmentPrettyName will return only the leafName if the it's a file URL.
+    It will also convert the filename to the right character set.
+    This UI utility function should probably go into it's own class
+  */
+  wstring AttachmentPrettyName(in wstring url);
     
 	/*
-		...
+		CheckAndPopulateRecipients will perform several task:
+		  1) if populateMailList is true, it will populate mailing presents in the compose field
+		  2) if returnNoHTMLRecipients is true, build a list of non HTML recipient
+		  3) return the lowest common format prefered by recipients (unknow, plaintext or html)
 	*/
-	wstring CheckAndPopulateRecipients(in boolean populateMailList, in boolean returnNoHTMLRecipients);
+	unsigned long CheckAndPopulateRecipients(in boolean populateMailList, in boolean returnNonHTMLRecipients, out wstring nonHTMLRecipients);
 
-    /* GetNoHtmlNewsgroups: if null is passed as recipient, the function will automatically
-        looks for newsgroups stored in compose fields 
-    */
-    wstring GetNoHtmlNewsgroups(in wstring newsgroups);
-    
-    /* bodyConvertible: The level of "convertibility" to plaintext
-     * @return a value from nsIMsgCompConvertible.
-    */
-    long bodyConvertible();
+  /* GetNoHtmlNewsgroups: if null is passed as recipient, the function will automatically
+      looks for newsgroups stored in compose fields 
+  */
+  wstring GetNoHtmlNewsgroups(in wstring newsgroups);
+  
+  /* bodyConvertible: The level of "convertibility" to plaintext
+   * @return a value from nsIMsgCompConvertible.
+  */
+  long bodyConvertible();
 
-    /* SetSignature: will replace the curr.
-    */
-    void SetSignature(in nsIMsgIdentity identity);
+  /* SetSignature: will replace the curr.
+  */
+  void SetSignature(in nsIMsgIdentity identity);
 
-    /* ResetNodeEventHandlers: Temporary API to go around bug 26528. THis API will be removed when bug 26528 is fixed.
-    */
-    void ResetNodeEventHandlers(in nsIDOMNode node);
+  /* ResetNodeEventHandlers: Temporary API to go around bug 26528. THis API will be removed when bug 26528 is fixed.
+  */
+  void ResetNodeEventHandlers(in nsIDOMNode node);
 
 	/* ... */
 	attribute nsIEditorShell editor;

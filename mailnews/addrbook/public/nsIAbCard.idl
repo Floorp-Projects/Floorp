@@ -30,7 +30,7 @@ interface nsIAddrDatabase;
 #include "nsVoidArray.h"
 %}
 
-[uuid(97448252-F189-11d4-A422-001083003D0C)]
+[scriptable, uuid(97448252-F189-11d4-A422-001083003D0C)]
 interface nsIAbPreferMailFormat { 
     const unsigned long unknown   = 0; 
     const unsigned long plaintext = 1; 

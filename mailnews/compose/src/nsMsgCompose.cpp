@@ -2392,19 +2392,22 @@ nsresult nsMsgCompose::GetMailListAddresses(nsString& name, nsISupportsArray* ma
 }
 
 
-nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBool returnNoHTMLRecipients, PRUnichar **_retval)
+NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBool returnNonHTMLRecipients, PRUnichar **nonHTMLRecipients, PRUint32 *_retval)
 {
 	#define MAX_OF_RECIPIENT_ARRAY		3
 
-  if (!populateMailList && (!returnNoHTMLRecipients || !_retval))
+  if (returnNonHTMLRecipients && !nonHTMLRecipients || !_retval)
     return NS_ERROR_INVALID_ARG;
 
   nsresult rv = NS_OK;
-  if (_retval)
-    *_retval = nsnull;
   PRInt32 i;
   PRInt32 j;
   PRInt32 k;
+
+  if (nonHTMLRecipients)
+    *nonHTMLRecipients = nsnull;
+  if (_retval)
+    *_retval = nsIAbPreferMailFormat::unknown;
 
   /* First, build an array with original recipients */
   nsCOMPtr<nsISupportsArray> recipientsList[MAX_OF_RECIPIENT_ARRAY];
@@ -2589,16 +2592,10 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
                     }
                     else
                     {
-                      PRUint32 preferFormat = nsIAbPreferMailFormat::unknown;
-                      rv = existingCard->GetPreferMailFormat(&preferFormat);
+                      newRecipient->mPreferFormat = nsIAbPreferMailFormat::unknown;
+                      rv = existingCard->GetPreferMailFormat(&newRecipient->mPreferFormat);
                       if (NS_SUCCEEDED(rv))
-                      {
-                        if (preferFormat == nsIAbPreferMailFormat::html)  
-                          newRecipient->mAcceptHtml = PR_TRUE;
-                        else
-                          newRecipient->mAcceptHtml = PR_FALSE;
-                        newRecipient->mProcessed = PR_TRUE;
-                      }
+                        recipient->mProcessed = PR_TRUE;
                     }
                     rv = recipientsList[i]->InsertElementAt(newRecipient, j + 1);
                     NS_RELEASE(newRecipient);
@@ -2620,16 +2617,10 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
    			    rv = abDataBase->GetCardForEmailAddress(abDirectory, emailStr, getter_AddRefs(existingCard));
     			  if (NS_SUCCEEDED(rv) && existingCard)
             {
-              PRUint32 preferFormat;
-              rv = existingCard->GetPreferMailFormat(&preferFormat);
+              recipient->mPreferFormat = nsIAbPreferMailFormat::unknown;
+              rv = existingCard->GetPreferMailFormat(&recipient->mPreferFormat);
               if (NS_SUCCEEDED(rv))
-              {
-                if (preferFormat == nsIAbPreferMailFormat::html)
-                  recipient->mAcceptHtml = PR_TRUE;
-                else
-                  recipient->mAcceptHtml = PR_FALSE;
-               recipient->mProcessed = PR_TRUE;
-              }
+                recipient->mProcessed = PR_TRUE;
             }
             else
               stillNeedToSearch = PR_TRUE;
@@ -2643,10 +2634,26 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
     }
   }
 
-  /* Finally return the list of non HTML recipient if requested and/or rebuilt the recipient field*/
+  /* Finally return the list of non HTML recipient if requested and/or rebuilt the recipient field.
+     Also, check for domain preference when preferFormat is unknown
+  */
     nsAutoString recipientsStr;
     nsAutoString nonHtmlRecipientsStr;
+    nsAutoString plaintextDomains;
+    nsAutoString htmlDomains;
+    nsAutoString domain;
+    
+    nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+    if (prefs)
+    {
+      nsXPIDLString str;
+		  prefs->CopyUnicharPref("mailnews.plaintext_domains", getter_Copies(str));
+		  plaintextDomains = str;
+		  prefs->CopyUnicharPref("mailnews.html_domains", getter_Copies(str));
+		  htmlDomains = str;
+		}
 
+    *_retval = -1;
     for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
     {
       recipientsStr.SetLength(0);
@@ -2656,7 +2663,41 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
       {
         nsMsgRecipient* recipient = NS_STATIC_CAST(nsMsgRecipient*, recipientsList[i]->ElementAt(j));
         if (recipient)
-        {
+        {          
+          /* if we don't have a prefer format for a recipient, check the domain in case we have a format defined for it */
+          if (recipient->mPreferFormat == nsIAbPreferMailFormat::unknown &&
+              (plaintextDomains.Length() || htmlDomains.Length()))
+          {
+            PRInt32 atPos = recipient->mEmail.FindChar('@');
+            if (atPos >= 0)
+            {
+              recipient->mEmail.Right(domain, recipient->mEmail.Length() - atPos - 1);
+              if (plaintextDomains.Find(domain, PR_TRUE) >= 0)
+                recipient->mPreferFormat = nsIAbPreferMailFormat::plaintext;
+              else
+                if (htmlDomains.Find(domain, PR_TRUE) >= 0)
+                  recipient->mPreferFormat = nsIAbPreferMailFormat::html;
+            }
+          }
+
+          /* setup return value */
+          switch (recipient->mPreferFormat)
+          {
+            case nsIAbPreferMailFormat::html :
+              if (*_retval == -1)
+                *_retval = nsIAbPreferMailFormat::html;
+              break;
+
+            case nsIAbPreferMailFormat::plaintext :
+              if (*_retval == -1 || *_retval == nsIAbPreferMailFormat::html)
+                *_retval = nsIAbPreferMailFormat::plaintext;
+              break;
+
+            default :
+              *_retval = nsIAbPreferMailFormat::unknown;
+              break;
+          }
+ 
           if (populateMailList)
           {
             if (! recipientsStr.IsEmpty())
@@ -2664,7 +2705,7 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
             recipientsStr.Append(recipient->mAddress);
           }
 
-          if (returnNoHTMLRecipients && !recipient->mAcceptHtml)
+          if (returnNonHTMLRecipients && recipient->mPreferFormat != nsIAbPreferMailFormat::html)
           {
             if (! nonHtmlRecipientsStr.IsEmpty())
               nonHtmlRecipientsStr.AppendWithConversion(',');
@@ -2688,8 +2729,8 @@ nsresult nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, PRBoo
       }
   }
 
-  if (returnNoHTMLRecipients)
-    *_retval = nonHtmlRecipientsStr.ToNewUnicode();
+  if (returnNonHTMLRecipients)
+    *nonHTMLRecipients = nonHtmlRecipientsStr.ToNewUnicode();
 
 	return rv;
 }
@@ -3183,16 +3224,16 @@ NS_INTERFACE_MAP_BEGIN(nsMsgRecipient)
 NS_INTERFACE_MAP_END
 
 nsMsgRecipient::nsMsgRecipient() :
-  mAcceptHtml(PR_FALSE),
+  mPreferFormat(nsIAbPreferMailFormat::unknown),
   mProcessed(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
 }
  
-nsMsgRecipient::nsMsgRecipient(nsString fullAddress, nsString email, PRBool acceptHtml, PRBool processed) :
+nsMsgRecipient::nsMsgRecipient(nsString fullAddress, nsString email, PRUint32 preferFormat, PRBool processed) :
   mAddress(fullAddress),
   mEmail(email),
-  mAcceptHtml(acceptHtml),
+  mPreferFormat(preferFormat),
   mProcessed(processed)
 {
     NS_INIT_ISUPPORTS();

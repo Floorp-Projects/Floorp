@@ -23,6 +23,7 @@ var msgCompSendFormat = Components.interfaces.nsIMsgCompSendFormat;
 var msgCompConvertible = Components.interfaces.nsIMsgCompConvertible;
 var msgCompType = Components.interfaces.nsIMsgCompType;
 var msgCompFormat = Components.interfaces.nsIMsgCompFormat;
+var abPreferMailFormat = Components.interfaces.nsIAbPreferMailFormat;
 
 var accountManagerContractID   = "@mozilla.org/messenger/account-manager;1";
 var accountManager = Components.classes[accountManagerContractID].getService(Components.interfaces.nsIMsgAccountManager);
@@ -1614,7 +1615,7 @@ function DetermineHTMLAction(convertible)
     if (! msgCompose.composeHTML)
     {
         try {
-            msgCompose.CheckAndPopulateRecipients(true, false);
+            msgCompose.CheckAndPopulateRecipients(true, false, null);
         } catch(ex) {}
         return msgCompSendFormat.PlainText;
     }
@@ -1623,18 +1624,20 @@ function DetermineHTMLAction(convertible)
     {
         //Well, before we ask, see if we can figure out what to do for ourselves
         
-        var noHtmlRecipients;
+        var noHtmlRecipients = new String("");
         var noHtmlnewsgroups;
+        var preferFormat;
 
         //Check the address book for the HTML property for each recipient
         try {
-            noHtmlRecipients = msgCompose.CheckAndPopulateRecipients(true, true);
+            preferFormat = msgCompose.CheckAndPopulateRecipients(true, true, noHtmlRecipients);
         } catch(ex)
         {
             var msgCompFields = msgCompose.compFields;
             noHtmlRecipients = msgCompFields.GetTo() + "," + msgCompFields.GetCc() + "," + msgCompFields.GetBcc();
+            preferFormat = abPreferMailFormat.unknown;
         }
-        dump("DetermineHTMLAction: noHtmlRecipients are " + noHtmlRecipients + "\n");
+        dump("DetermineHTMLAction: preferFormat = " + preferFormat + ", noHtmlRecipients are " + noHtmlRecipients + "\n");
 
         //Check newsgroups now...
         try {
@@ -1651,15 +1654,22 @@ function DetermineHTMLAction(convertible)
             
             if (noHtmlnewsgroups == "")
             {
-                //See if a preference has been set to tell us what to do. Note that we do not honor that
-                //preference for newsgroups. Only for e-mail addresses.
-                var action = prefs.GetIntPref("mail.default_html_action");
-                switch (action)
+                switch (preferFormat)
                 {
-                    case msgCompSendFormat.PlainText    :
-                    case msgCompSendFormat.HTML         :
-                    case msgCompSendFormat.Both         :
-                        return action;
+                  case abPreferMailFormat.plaintext :
+                    return msgCompSendFormat.PlainText;
+                  
+                  default :
+                    //See if a preference has been set to tell us what to do. Note that we do not honor that
+                    //preference for newsgroups. Only for e-mail addresses.
+                    var action = prefs.GetIntPref("mail.default_html_action");
+                    switch (action)
+                    {
+                        case msgCompSendFormat.PlainText    :
+                        case msgCompSendFormat.HTML         :
+                        case msgCompSendFormat.Both         :
+                            return action;
+                    }
                 }
             }
             return msgCompSendFormat.AskUser;
@@ -1670,7 +1680,7 @@ function DetermineHTMLAction(convertible)
 	  else
 	  {
 		  try {
-			  msgCompose.CheckAndPopulateRecipients(true, false);
+			  msgCompose.CheckAndPopulateRecipients(true, false, null);
 		  } catch(ex) {}
 	  }
 

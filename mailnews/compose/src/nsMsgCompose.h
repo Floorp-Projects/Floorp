@@ -35,6 +35,7 @@
 #include "nsIMimeHeaders.h"
 #include "nsIBaseWindow.h"
 #include "nsIAbDirectory.h"
+#include "nsIAbCard.h"
 
 // Forward declares
 class QuotingOutputStreamListener;
@@ -246,15 +247,16 @@ class nsMsgRecipient : public nsISupports
 {
 public:
   nsMsgRecipient();
-  nsMsgRecipient(nsString fullAddress, nsString email, PRBool acceptHtml = PR_FALSE, PRBool processed = PR_FALSE);
+  nsMsgRecipient(nsString fullAddress, nsString email, PRUint32 preferFormat = nsIAbPreferMailFormat::unknown,
+                 PRBool processed = PR_FALSE);
 	virtual ~nsMsgRecipient();
 
   NS_DECL_ISUPPORTS
   
 public:
-  nsString mAddress;  /* full email address (name + email) */
-  nsString mEmail;    /* email address only */
-  PRBool mAcceptHtml;
+  nsString mAddress;      /* full email address (name + email) */
+  nsString mEmail;        /* email address only */
+  PRUint32 mPreferFormat; /* nsIAbPreferMailFormat:: unknown, plaintext or html */
   PRBool mProcessed;
 };
 
