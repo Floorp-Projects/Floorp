@@ -80,7 +80,7 @@ public final class JSSProvider extends java.security.Provider {
         // SecureRandom
         /////////////////////////////////////////////////////////////
         put("SecureRandom.pkcs11prng",
-            "org.mozilla.jss.provider.PKCS11SecureRandom");
+            "org.mozilla.jss.provider.java.security.JSSSecureRandomSpi");
 
         /////////////////////////////////////////////////////////////
         // KeyPairGenerator
