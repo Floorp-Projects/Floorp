@@ -51,7 +51,7 @@
 <!ENTITY filesaveascharset.accesskey "h">
 <!ENTITY previewCmd.label "Browse Page">
 <!ENTITY filepreview.accesskey "b">
-<!ENTITY sendPageCmd.label "Send Page">
+<!ENTITY sendPageCmd.label "Send Page...">
 <!ENTITY sendPage.accesskey "g">
 <!ENTITY printSetupCmd.label "Page Setup...">
 <!ENTITY fileprintsetup.accesskey "u">
