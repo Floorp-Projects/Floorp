@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= layout
 LIBRARY_NAME	= gfx_os2
+IS_COMPONENT	= 1
 
 CPPSRCS		= \
 		libprint.cpp \
@@ -43,6 +44,8 @@ CPPSRCS		= \
 		nsScreenOS2.cpp          \
 		nsScreenManagerOS2.cpp          \
 		nsGfxFactoryOS2.cpp \
+		nsPrintOptionsOS2.cpp \
+		nsGfxDefs.cpp \
 		$(NULL)
 
 RES_FILE	= $(srcdir)/libprint.res
