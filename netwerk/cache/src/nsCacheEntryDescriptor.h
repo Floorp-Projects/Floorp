@@ -51,6 +51,7 @@ public:
             ((char*)qp - offsetof(nsCacheEntryDescriptor, mListLink));
     }
 
+    nsCacheEntry * CacheEntry(void) { return mCacheEntry; }
     
 protected:
     

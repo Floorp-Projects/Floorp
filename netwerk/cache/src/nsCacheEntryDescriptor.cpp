@@ -21,6 +21,7 @@
  *    Gordon Sheridan, 22-February-2001
  */
 
+#include "nsCacheService.h"
 #include "nsCacheEntryDescriptor.h"
 #include "nsCacheEntry.h"
 #include "nsReadableUtils.h"
@@ -37,7 +38,8 @@ nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
 
 nsCacheEntryDescriptor::~nsCacheEntryDescriptor()
 {
-  /* destructor code */
+    // tell nsCacheService we're going away
+    nsCacheService::GlobalInstance()->CloseDescriptor(this);
 }
 
 
@@ -79,7 +81,7 @@ nsCacheEntryDescriptor::GetKey(char ** result)
         
     if (FindCharInReadable(':', start, end)) {
         ++start;  // advance past clientID ':' delimiter
-        *result = ToNewCString( Substring(*key, start, end));
+        *result = ToNewCString( Substring(start, end));
         if (!*result) rv = NS_ERROR_OUT_OF_MEMORY;
     } else {
         NS_ASSERTION(PR_FALSE, "FindCharInRead failed to find ':'");
@@ -141,6 +143,22 @@ NS_IMETHODIMP nsCacheEntryDescriptor::IsStreamBased(PRBool *streamBased)
     *streamBased = mCacheEntry->IsStreamData();  //** which name is better?
     return NS_OK;
 }
+
+
+NS_IMETHODIMP nsCacheEntryDescriptor::GetDataSize(PRUint32 *aDataSize)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP nsCacheEntryDescriptor::SetDataSize(PRUint32 aDataSize)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsCacheEntryDescriptor::GetTransport(nsITransport * *aTransport)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 /* attribute nsISupports cacheElement; */
 NS_IMETHODIMP
