@@ -201,7 +201,9 @@ enum nsPluginInstanceVariable {
     nsPluginInstanceVariable_WindowlessBool          = 3,
     nsPluginInstanceVariable_TransparentBool         = 4,
     nsPluginInstanceVariable_DoCacheBool             = 5,
-    nsPluginInstanceVariable_CallSetWindowAfterDestroyBool = 6
+    nsPluginInstanceVariable_CallSetWindowAfterDestroyBool = 6,
+    nsPluginInstanceVariable_ScriptableInstance      = 10,
+    nsPluginInstanceVariable_ScriptableIID           = 11
 };
 
 ////////////////////////////////////////////////////////////////////////////////
