@@ -144,6 +144,7 @@ static void ListCRLNames (CERTCertDBHandle *certHandle, int crlType, PRBool dele
                 if (acrl)
                 {
                     SEC_DeletePermCRL(acrl);
+                    SEC_DestroyCrl(acrl);
                 }
             }
             crlNode = crlNode->next;
@@ -177,6 +178,7 @@ static SECStatus DeleteCRL (CERTCertDBHandle *certHandle, char *name, int type)
 	return SECFailure;
     }
     rv = SEC_DeletePermCRL (crl);
+    SEC_DestroyCrl(crl);
     if (rv != SECSuccess) {
 	SECU_PrintError
 		(progName, "fail to delete the issuer %s's CRL from the perm database (reason: %s)",
