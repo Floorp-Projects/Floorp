@@ -192,21 +192,31 @@ nsImageDocument::StartDocumentLoad(nsIURL* aURL,
   mDocumentURL = aURL;
   NS_IF_ADDREF(aURL);
 
-  // Create style attribute style sheet
-  nsresult rv;
-  rv = NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL, this);
-  if (NS_OK != rv) {
-    return rv;
+  if (nsnull != mAttrStyleSheet) {
+    mAttrStyleSheet->SetOwningDocument(nsnull);
+    NS_RELEASE(mAttrStyleSheet);
   }
-  AddStyleSheet(mStyleAttrStyleSheet);
+  if (nsnull != mStyleAttrStyleSheet) {
+    mStyleAttrStyleSheet->SetOwningDocument(nsnull);
+    NS_RELEASE(mStyleAttrStyleSheet);
+  }
+
+  nsresult rv;
 
   // Create html attribute style sheet
   rv = NS_NewHTMLStyleSheet(&mAttrStyleSheet, aURL, this);
-  if (NS_OK != rv) {
+  if (NS_FAILED(rv)) {
     return rv;
   }
-  AddStyleSheet(mAttrStyleSheet);
+  AddStyleSheet(mAttrStyleSheet); // tell the world about our new style sheet
 
+  // Create style attribute style sheet
+  rv = NS_NewHTMLCSSStyleSheet(&mStyleAttrStyleSheet, aURL, this);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  AddStyleSheet(mStyleAttrStyleSheet); // tell the world about our new style sheet
+  
   // Create synthetic document
   rv = CreateSyntheticDocument();
   if (NS_OK != rv) {
