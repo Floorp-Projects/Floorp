@@ -289,10 +289,11 @@ BASIC_LIBS_2	= \
 		  $(NULL)
 
 ifdef MOZ_MAIL_NEWS
+ifdef MOZ_SECURITY
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libns_mime.a \
 		  $(NULL)
-
+endif
 BASIC_LIBS_2	+= \
 		  $(DIST)/lib/libldap.a \
 		  $(NULL)
