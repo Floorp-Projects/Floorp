@@ -129,6 +129,7 @@ enum JS2Op {
     eBranchFalse,       // <branch displacement:s32> XXX save space with short and long versions instead ?
     eBranchTrue,        // <branch displacement:s32>
     eBranch,            // <branch displacement:s32>
+    eBreak,             // <branch displacement:s32> <blockCount:u16>
     eNew,               // <argCount:u16>
     eCall,              // <argCount:u16>
     eTypeof,

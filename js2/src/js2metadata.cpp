@@ -161,8 +161,10 @@ namespace MetaData {
                     b->compileFrame = new BlockFrame();
                     bCon->saveFrame(b->compileFrame);   // stash this frame so it doesn't get gc'd before eval pass.
                     env->addFrame(b->compileFrame);
+                    targetList.push_back(p);
                     ValidateStmtList(cxt, env, pl, b->statements);
                     env->removeTopFrame();
+                    targetList.pop_back();
                 }
                 break;
             case StmtNode::label:
@@ -171,8 +173,8 @@ namespace MetaData {
                     l->labelID = bCon->getLabel();
     /*
         A labelled statement catches contained, named, 'breaks' but simply adds itself as a label for
-        contained iteration statements. (i.e. you can 'break' out of a labelled statement, but not 'continue'
-        one, however the statement label becomes a 'continuable' label for all contained iteration statements.
+        contained iteration statements. (i.e. one can 'break' out of a labelled statement, but not 'continue'
+        one, however the statement label becomes a 'continuable' label for all contained iteration statements.)
     */
                     // Make sure there is no existing break target with the same name
                     for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
@@ -259,8 +261,9 @@ namespace MetaData {
             case StmtNode::Break:
                 {
                     GoStmtNode *g = checked_cast<GoStmtNode *>(p);
-                    bool found = false;
-                    for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); (si != end); si++) {
+                    g->blockCount = 0;
+                    g->tgtID = -1;
+                    for (TargetListReverseIterator si = targetList.rbegin(), end = targetList.rend(); (g->tgtID == -1) && (si != end); si++) {
                         if (g->name) {
                             // Make sure the name is on the targetList as a viable break target...
                             // (only label statements can introduce names)
@@ -268,7 +271,6 @@ namespace MetaData {
                                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
                                 if (l->name == *g->name) {
                                     g->tgtID = l->labelID;
-                                    found = true;
                                     break;
                                 }
                             }
@@ -276,6 +278,9 @@ namespace MetaData {
                         else {
                             // anything at all will do
                             switch ((*si)->getKind()) {
+                            case StmtNode::block:
+                                g->blockCount++;
+                                break;
                             case StmtNode::label:
                                 {
                                     LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
@@ -303,26 +308,25 @@ namespace MetaData {
                                 }
                                 break;
                             }
-                            found = true;
                             break;
                         }
                     }
-                    if (!found) 
+                    if (g->tgtID == -1) 
                         reportError(Exception::syntaxError, "No such break target available", p->pos);
                 }
                 break;
             case StmtNode::Continue:
                 {
                     GoStmtNode *g = checked_cast<GoStmtNode *>(p);
-                    bool found = false;
-                    for (TargetListIterator si = targetList.begin(), end = targetList.end(); (si != end); si++) {
+                    g->blockCount = 0;
+                    g->tgtID = -1;
+                    for (TargetListIterator si = targetList.begin(), end = targetList.end(); (g->tgtID == -1) && (si != end); si++) {
                         if (g->name) {
                             // Make sure the name is on the targetList as a viable continue target...
                             if ((*si)->getKind() == StmtNode::label) {
                                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(*si);
                                 if (l->name == *g->name) {
                                     g->tgtID = l->labelID;
-                                    found = true;
                                     break;
                                 }
                             }
@@ -330,6 +334,9 @@ namespace MetaData {
                         else {
                             // only some non-label statements will do
                             switch ((*si)->getKind()) {
+                            case StmtNode::block:
+                                g->blockCount++;
+                                break;
                             case StmtNode::While:
                             case StmtNode::DoWhile:
                                 {
@@ -344,11 +351,10 @@ namespace MetaData {
                                     g->tgtID = f->continueLabelID;
                                 }
                             }
-                            found = true;
                             break;
                         }
                     }
-                    if (!found) 
+                    if (g->tgtID == -1) 
                         reportError(Exception::syntaxError, "No such break target available", p->pos);
                 }
                 break;
@@ -742,7 +748,8 @@ namespace MetaData {
         case StmtNode::Continue:
             {
                 GoStmtNode *g = checked_cast<GoStmtNode *>(p);
-                bCon->emitBranch(eBranch, g->tgtID, p->pos);
+                bCon->emitBranch(eBreak, g->tgtID, p->pos);
+//                bCon->
             }
             break;
         case StmtNode::ForIn:

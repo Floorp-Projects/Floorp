@@ -647,6 +647,7 @@ namespace JavaScript {
         void print(PrettyPrinter &f, bool noSemi) const;
 #ifdef EPIMETHEUS
         MetaData::LabelID tgtID;
+        uint32 blockCount;
 #endif    
     };
 

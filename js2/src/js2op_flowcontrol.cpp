@@ -64,6 +64,17 @@
         }
         break;
 
+    case eBreak:
+        {
+            int32 offset = BytecodeContainer::getOffset(pc);
+            pc += sizeof(int32);
+            uint32 blockCount = BytecodeContainer::getShort(pc);
+            pc += sizeof(short);
+            //
+            pc += offset;
+        }
+        break;
+
     case ePop:
         {
             pop();

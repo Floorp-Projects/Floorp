@@ -430,7 +430,7 @@ namespace MetaData {
 
 #ifdef DEBUG
 
-    enum { BRANCH_OFFSET = 1, STR_PTR, TYPE_PTR, NAME_INDEX, FRAME_INDEX, BRANCH_PAIR, U16, FLOAT64 };
+    enum { BRANCH_OFFSET = 1, STR_PTR, TYPE_PTR, NAME_INDEX, FRAME_INDEX, BRANCH_PAIR, U16, FLOAT64, BREAK_OFFSET_AND_COUNT };
     struct {
         JS2Op op;
         char *name;
@@ -520,6 +520,7 @@ namespace MetaData {
         { eBranchFalse,  "BranchFalse", BRANCH_OFFSET },       // <branch displacement:s32> XXX save space with short and long versions instead ?
         { eBranchTrue,  "BranchTrue", BRANCH_OFFSET },        // <branch displacement:s32>
         { eBranch,  "Branch", BRANCH_OFFSET },            // <branch displacement:s32>
+        { eBreak,  "Break", BREAK_OFFSET_AND_COUNT },            // <branch displacement:s32> <blockCount:u16>
         { eNew,  "New", U16 },               // <argCount:u16>
         { eCall,  "Call", U16 },              // <argCount:u16>
         { eTypeof,  "Typeof", 0 },
@@ -571,6 +572,15 @@ namespace MetaData {
                 int32 offset = BytecodeContainer::getOffset(pc);
                 stdOut << " " << offset << " --> " << (pc - start) + offset;
                 pc += sizeof(int32);
+            }
+            break;
+        case BREAK_OFFSET_AND_COUNT:
+            {
+                int32 offset = BytecodeContainer::getOffset(pc);
+                stdOut << " " << offset << " --> " << (pc - start) + offset;
+                pc += sizeof(int32);
+                printFormat(stdOut, " (%d)", BytecodeContainer::getShort(pc));
+                pc += sizeof(short);
             }
             break;
         case TYPE_PTR:
@@ -744,6 +754,7 @@ namespace MetaData {
 
         case eReturnVoid:
         case eBranch:
+        case eBreak:
             return 0;
 
         case eVoid:         // remove top item, push undefined
