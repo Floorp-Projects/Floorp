@@ -1,5 +1,3 @@
-
-
 package grendel.addressbook;
 
 import java.awt.*;
