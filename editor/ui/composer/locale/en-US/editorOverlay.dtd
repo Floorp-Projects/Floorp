@@ -277,7 +277,7 @@
 <!ENTITY fontFixedWidth.label "Fixed Width">
 <!ENTITY fontfixedwidth.accesskey "x">
 <!ENTITY formatfontfixed.keybinding "t">
-<!ENTITY fontHelveticaFont.label "Arial, Helvetica">
+<!ENTITY fontHelveticaFont.label "Helvetica, Arial">
 <!ENTITY fonthelvetica.accesskey "l">
 <!ENTITY fontTimes.label "Times">
 <!ENTITY fonttimes.accesskey "t">
