@@ -14,7 +14,7 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2003 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributors:
@@ -22,6 +22,7 @@
  *   sspitzer@netscape.com
  *   racham@netscape.com
  *   hwaara@chello.se
+ *   bienvenu@nventure.com
  */
 
 var gRedirectorType = "";
@@ -235,6 +236,16 @@ function setupMailOnServerUI()
    var checked = document.getElementById("pop3.leaveMessagesOnServer").checked;
    var locked = getAccountValueIsLocked(document.getElementById("pop3.leaveMessagesOnServer"));
    document.getElementById("pop3.deleteMailLeftOnServer").disabled = locked || !checked ;
+   setupAgeMsgOnServerUI();
+}
+
+function setupAgeMsgOnServerUI()
+{ 
+   var leaveMsgsChecked = document.getElementById("pop3.leaveMessagesOnServer").checked;
+   var checked = document.getElementById("pop3.deleteByAgeFromServer").checked;
+   var locked = getAccountValueIsLocked(document.getElementById("pop3.deleteByAgeFromServer"));
+   document.getElementById("pop3.deleteByAgeFromServer").disabled = locked || !leaveMsgsChecked;
+   document.getElementById("pop3.numDaysToLeaveOnServer").disabled = locked || !checked || !leaveMsgsChecked;
 }
 
 function setupFixedUI()

@@ -44,6 +44,8 @@ interface nsIPop3IncomingServer : nsISupports {
   attribute boolean authLogin;
   attribute boolean dotFix;
   attribute unsigned long pop3CapabilityFlags;
+  attribute boolean deleteByAgeFromServer;
+  attribute long numDaysToLeaveOnServer;
 };
 
 

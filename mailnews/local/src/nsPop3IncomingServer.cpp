@@ -97,6 +97,15 @@ NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
                         DotFix,
                         "dot_fix")
 
+NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
+                        DeleteByAgeFromServer,
+                        "delete_by_age_from_server")
+
+NS_IMPL_SERVERPREF_INT(nsPop3IncomingServer,
+                        NumDaysToLeaveOnServer,
+                        "num_days_to_leave_on_server")
+
+
 nsresult 
 nsPop3IncomingServer::GetPop3CapabilityFlags(PRUint32 *flags)
 {

@@ -25,6 +25,8 @@
 <!ENTITY leaveOnServer.label "Leave messages on server">
 <!ENTITY deleteOnServer.label "Delete messages on server when they are deleted or moved from Inbox">
 <!ENTITY downloadOnBiff.label "Automatically download new messages">
+<!ENTITY deleteByAgeFromServer.label "Delete messages on server after">
+<!ENTITY daysEnd.label "days">
 <!ENTITY hostname.label "Server Hostname">
 <!ENTITY username.label "Your Login Name">
 <!-- LOCALIZATION NOTE (popServerTitle.label) : do not translate "POP" in below line -->

@@ -164,18 +164,17 @@ enum Pop3StatesEnum {
 #define DELETE_CHAR	'd'			/* If we want to delete this item. */
 #define TOO_BIG		'b'			/* item left on server because it was too big */
 
-typedef struct Pop3AllocedString { /* Need this silliness as a place to
-                                      keep the strings that are allocated
-                                      for the keys in the hash table. ### */
-    char* str;
-    struct Pop3AllocedString* next;
-} Pop3AllocedString;
+typedef struct Pop3UidlEntry { /* information about this message */
+    char* uidl;
+    char  status; // KEEP=='k', DELETE='d' TOO_BIG='b'
+    PRInt32 dateReceived; // time message received, used for aging
+} Pop3UidlEntry;
 
 typedef struct Pop3UidlHost {
     char* host;
     char* user;
     PLHashTable * hash;
-    Pop3AllocedString* strings;
+    Pop3UidlEntry* uidlEntries;
     struct Pop3UidlHost* next;
 } Pop3UidlHost;
 

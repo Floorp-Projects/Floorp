@@ -17,11 +17,12 @@ March 31, 1998.
 
 The Initial Developer of the Original Code is Netscape
 Communications Corporation. Portions created by Netscape are
- Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ Copyright (C) 1998-2003 Netscape Communications Corporation. All
 Rights Reserved.
 
 Contributors:
   Håkan Waara <hwaara@chello.se>
+  bienvenu@nventure.com
 
 -->
 
@@ -140,6 +141,17 @@ Contributors:
               hidable="true" hidefor="imap,nntp,movemail"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.delete_mail_left_on_server"/>
+  <hbox align="center">
+    <checkbox wsm_persist="true" id="pop3.deleteByAgeFromServer" class="indent"
+              label="&deleteByAgeFromServer.label;" oncommand="setupAgeMsgOnServerUI();"
+              hidable="true" hidefor="imap,nntp,movemail"
+              prefattribute="value"
+              prefstring="mail.server.%serverkey%.delete_by_age_from_server"/>
+    <textbox wsm_persist="true" id="pop3.numDaysToLeaveOnServer" size="3" 
+             preftype="int"
+             prefstring="mail.server.%serverkey%.num_days_to_leave_on_server"/>
+    <label id="daysEnd" control="pop3.numDaysToLeaveOnServer" value="&daysEnd.label;"/>
+  </hbox>
   </vbox>
   <!-- IMAP -->
   <hbox iscontrolcontainer="true" align="center" id="imap.deleteModel.box">
