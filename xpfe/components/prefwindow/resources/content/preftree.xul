@@ -208,6 +208,11 @@
           </treerow>
         </treeitem>
         
+        <treeitem>
+          <treerow>
+            <treecell indent="true" url="chrome://pref/content/pref-mousewheel.xul" value="&mousewheel.label;"/>
+          </treerow>
+        </treeitem>
       </treechildren>
     </treeitem>
   </treechildren>
@@ -216,7 +221,6 @@
       <treerow>       
         <treecell indent="true" url="chrome://pref/content/pref-debug.xul" value="&debug.label;"/> 
       </treerow>
-
     </treeitem>
 
 </tree>
