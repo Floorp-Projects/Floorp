@@ -39,7 +39,7 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
   persist="screenX screenY"
   screenX="24" screenY="24">
 
-  <script language="JavaScript" src="chrome://global/content/printdialog.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/printdialog.js"/>
 
   <grid>
     <columns><column/><column flex="1"/></columns>

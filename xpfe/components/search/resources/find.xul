@@ -9,7 +9,7 @@
 	      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<script src="chrome://communicator/content/search/find.js"></script>
+	<script type="application/x-javascript" src="chrome://communicator/content/search/find.js"/>
 
   <box autostretch="never" halign="left">
     <text class="label" value="&search1.label;"/>

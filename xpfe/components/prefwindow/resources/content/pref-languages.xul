@@ -30,10 +30,10 @@
   title="&languages.customize.window.title;" 
   onload="Init();" orient="vertical">
 
-  <script type="text/javascript" src="chrome://communicator/content/pref/pref-languages.js"/>
-  <script type="text/javascript" src="chrome://global/content/strres.js"/>
-  <script type="text/javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
-  <script type="text/javascript">
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-languages.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["intlAcceptLanguages", "DefaultCharsetList"];
   ]]>

@@ -11,7 +11,7 @@
         style="min-width: 29em; min-height: 8.5em; -moz-user-focus: ignore;"
         class="dialog"> 
     
-  <script language="JavaScript" src="chrome://global/content/commonDialog.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/commonDialog.js"/>
     
   <keyset id="keyset"/>
 

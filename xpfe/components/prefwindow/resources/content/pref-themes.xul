@@ -35,9 +35,9 @@
         onload="Startup()"
         orient="vertical">
 
-  <script language="JavaScript" src="chrome://global/content/strres.js"></script>
-  <script language="JavaScript" src="chrome://communicator/content/pref/pref-themes.js"></script>
-  <script language="JavaScript" src="chrome://global/content/nsJSComponentManager.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-themes.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
         
   <box class="box-smallheader" title="&lHeader;"/>
 

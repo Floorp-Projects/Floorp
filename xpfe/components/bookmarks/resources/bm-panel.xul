@@ -1,0 +1,110 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public
+  License Version 1.1 (the "License"); you may not use this file
+  except in compliance with the License. You may obtain a copy of
+  the License at http://www.mozilla.org/NPL/
+ 
+  Software distributed under the License is distributed on an "AS
+  IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  implied. See the License for the specific language governing
+  rights and limitations under the License.
+ 
+  The Original Code is mozilla.org code.
+ 
+  The Initial Developer of the Original Code is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation. All
+  Rights Reserved.
+ 
+  Contributor(s): 
+
+-->
+
+<!--
+// XXX - WARNING - XXX
+// This file is being reimplemented for Mozilla 0.8. Do NOT make modifications
+// to this file without consulting ben@netscape.com first. 
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css" type="text/css"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/bookmarks/bookmarks.dtd">
+
+<window
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  ondraggesture="return TopLevelDrag(event);"
+  align="vertical">
+
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bm-panel.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks-temp.js" />
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksDD-temp.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTreeUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+
+<popupset>
+  <popup id="contextual" oncreate="return fillContextMenu('contextual', 'bookmarksTree');" context="">
+	  <menu />
+  </popup>
+</popupset>
+
+    <tree id="bookmarksTree" class="bookmarks-panel-tree" context="contextual" ref="NC:BookmarksRoot"
+      flex="1" multiple="true" flags="dont-test-empty"
+      ondragover="return DragOverTree(event);"
+      ondraggesture="event.preventBubble(); return BeginDragTree(event);"
+      ondragdrop="return DropOnTree(event);"
+      datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" 
+      onclick="event.preventBubble(); return clicked(event, event.target.parentNode.parentNode)">
+
+      <template>
+        <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+          <treechildren flex="1">
+            <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+              <treerow>
+                <treecell>
+                  <treeindentation/><separator flex="100%" align="center" class="groove" />
+                </treecell>
+              </treerow>
+            </treeitem>  		
+          </treechildren>
+        </rule>
+
+        <rule>
+          <treechildren flex="1">
+            <treeitem uri="..." persist="open" class="bookmark-item"
+              web:status="rdf:http://home.netscape.com/WEB-rdf#status"
+              rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+              loading="rdf:http://home.netscape.com/NC-rdf#loading">
+              <treerow>
+                <treecell class="treecell-indent"
+                  value="rdf:http://home.netscape.com/NC-rdf#Name"
+                  src="rdf:http://home.netscape.com/NC-rdf#Icon"
+                  web:status="rdf:http://home.netscape.com/WEB-rdf#status"
+                  rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+                  loading="rdf:http://home.netscape.com/NC-rdf#loading" />
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </rule>
+      </template>
+
+  <treecolgroup id="theColumns">
+      <treecol flex="1" id="NameColumn" sortSeparators="true"
+               resource="http://home.netscape.com/NC-rdf#Name"/>
+  </treecolgroup>
+
+  <treehead>
+    <treerow id="headRow">
+      <treecell class="treecell-header treecell-header-sidebarpanel sortDirectionIndicator" 
+                value="&tree.header.name.label;" 
+                onclick="return TriStateColumnSort('NameColumn');" observes="NameColumn" />
+    </treerow>
+  </treehead>
+  </tree>
+</window>

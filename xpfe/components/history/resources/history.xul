@@ -42,9 +42,9 @@
         orient="vertical"
         windowtype="history:manager">
 
-  <script src="chrome://communicator/content/history/history.js"/>
-  <script src="chrome://global/content/strres.js"/>
-  <script src="chrome://global/content/globalOverlay.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/history/history.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
   <stringbundle id="historyBundle"
                 src="chrome://communicator/locale/history/history.properties"/>

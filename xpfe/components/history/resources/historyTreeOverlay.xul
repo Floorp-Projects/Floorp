@@ -31,13 +31,13 @@
          xmlns:web="http://home.netscape.com/WEB-rdf#"
          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 
-  <script src="chrome://global/content/nsDragAndDrop.js"/>
-  <script src="chrome://global/content/nsTransferable.js"/>
-  <script src="chrome://global/content/nsJSComponentManager.js"/>
-  <script src="chrome://global/content/nsJSSupportsUtils.js"/>
-  <script src="chrome://global/content/nsTreeController.js"/>
-  <script src="chrome://global/content/nsTreeUtils.js"/>
-  <script src="chrome://global/content/treePopups.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTreeController.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTreeUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/treePopups.js"/>
 
 <tree id="historyTree" ref="NC:HistoryByDate" context="contextual"
       datasources="rdf:history"

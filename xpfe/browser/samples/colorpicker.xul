@@ -33,14 +33,14 @@
   style="width:200px"
   >
 
-<html:script>
+<script>
   function doSomethingUseful(cp)
   {
     var color = cp.color;
     document.getElementById("input").value = color;
     document.getElementById("mydiv").style.backgroundColor = color;
   }
-</html:script>
+</script>
 
 <colorpicker id="cp" onclick="doSomethingUseful(this);" style="background-color: #CCCCCC;"/>
 <html:p/>
@@ -51,7 +51,7 @@
 
 <html:hr/>
 
-<html:script>
+<script>
   function setColorWell(menu)
   {
     // Debug tree walking.
@@ -89,7 +89,7 @@
     var color = colorPicker.getAttribute('color');
     colorWell.style.backgroundColor = color;
   }
-</html:script>
+</script>
 
 <!-- ColorPicker #1 -->
 <box id="box1">

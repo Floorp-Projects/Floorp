@@ -48,25 +48,25 @@
   <!-- The order of loading of these script files is IMPORTANT -->
 
   <!-- Shared Libraries -->
-  <script src="chrome://global/content/nsTreeUtils.js"></script>
-  <script src="chrome://global/content/strres.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/nsTreeUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
   <!-- XXX - This should SO become an XBL widget -->
-  <script src="chrome://global/content/globalOverlay.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
   
   <!-- Shared Bookmarks Utility Library -->
-  <script src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"></script>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
   <!-- Tree-based Bookmarks UI Utility Library -->
-  <script src="chrome://communicator/content/bookmarks/bookmarksTree.js"></script>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksTree.js"/>
   <!-- Bookmarks Window -->
-  <script src="chrome://communicator/content/bookmarks/bookmarks.js"></script>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarks.js"/>
 
   <!-- Bookmarks Window Drag & Drop -->
-  <script src="chrome://global/content/nsJSComponentManager.js"></script>
-  <script src="chrome://global/content/nsJSSupportsUtils.js"></script>
-  <script src="chrome://global/content/nsDragAndDrop.js"></script>
-  <script src="chrome://global/content/nsTransferable.js"></script>
-  <script src="chrome://communicator/content/bookmarks/bookmarksDD.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
 
   <commands id="commands"/>
   

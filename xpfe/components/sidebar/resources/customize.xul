@@ -37,7 +37,7 @@
   width="450" height="400"
   persist="screenX screenY width height">
 
-  <script language="JavaScript"
+  <script type="application/x-javascript"
     src="chrome://communicator/content/sidebar/customize.js"/>
 
   <keyset id="keyset"/>

@@ -7,7 +7,7 @@
 	align="horizontal"
 	onload="onWindowLoad()"> 
 
-	<html:script>
+	<script>
 	function onWindowLoad() {
 		verifyControls();
 	}
@@ -30,7 +30,7 @@
 		window.document.getElementById("ShowSite").setAttribute("sitemode", "hideSiteTwo");
 		verifyControls();
 	}
-	</html:script>
+	</script>
 
 	<broadcaster id="ShowSite" sitemode="hideSiteTwo" />
 	<observes element="ShowSite" attribute="sitemode" />

@@ -31,7 +31,7 @@ Contributor(s): ______________________________________. -->
   onload="selectDialogOnLoad()"
   class="dialog">
 
-  <script language="JavaScript" src="chrome://global/content/selectDialog.js" />
+  <script type="application/x-javascript" src="chrome://global/content/selectDialog.js" />
   <keyset id="keyset"/>
   <box align="vertical" style="width: 24em;margin: 5px;">
     <text id="info.txt" class="label"/>

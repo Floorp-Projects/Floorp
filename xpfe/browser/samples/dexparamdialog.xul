@@ -10,7 +10,7 @@
     title = "Things to do"
     height = "200" width = "300">
 
-  <html:script>
+  <script>
     <![CDATA[
     var debug = true;
     // Initialize controls from parameters sent through the URL
@@ -184,7 +184,7 @@
       dump("----------------------------------------------\n");
     }
     ]]>
-  </html:script>
+  </script>
 
   <html:table>
     <html:tr>

@@ -7,7 +7,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="Startup()" title="Mozilla"> 
 
-  <html:script>
+  <script>
   function Startup()
   {
     dump("Doing Startup...\n");
@@ -325,7 +325,7 @@
   }
 
 
-  </html:script>
+  </script>
 
   <broadcaster id="canGoBack"/>
   <broadcaster id="canGoForward"/>
@@ -598,7 +598,7 @@
 
   </box>
  
-  <html:script>
+  <script>
         var bindCount = 0;
         function onStatus() {
             var status = document.getElementById("Browser:Status");
@@ -711,7 +711,7 @@
             dump( "meter mode=" + meter.getAttribute("mode") + "\n" );
             dump( "meter value=" + meter.getAttribute("value") + "\n" );
         }
-    </html:script>
+    </script>
 
   <box align="horizontal" id="status-bar">
  

@@ -24,7 +24,7 @@
         <broadcaster id="data.output" value=""/>
     </data>
 
-    <html:script>
+    <script>
         /*
             The variables "data" and "dialog", by convention, are generic
             JS Objects with properties corresponding to corresponding
@@ -94,7 +94,7 @@
             // Close the window.
             data.execute.setAttribute( "command", "close" );
         }
-    </html:script>
+    </script>
 
     <html:table style="width:100%;">
         <html:tr>

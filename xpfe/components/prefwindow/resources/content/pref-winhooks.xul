@@ -41,7 +41,7 @@
         onload="parent.initPanel('chrome://communicator/content/pref/pref-winhooks.xul');"
         orient="vertical">
 
-<script type="text/javascript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/pref/pref-winhooks.js"/>
     
     <box class="box-smallheader" title="&title.label;"/>
 

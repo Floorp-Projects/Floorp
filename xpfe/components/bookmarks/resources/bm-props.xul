@@ -41,8 +41,8 @@
         class="dialog" orient="vertical">
  
 <stringbundle id="bundle_bookmark" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
-<script type="text/javascript" src="chrome://global/content/globalOverlay.js"/>
-<script type="text/javascript" src="chrome://communicator/content/bookmarks/bm-props.js"/>
+<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+<script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bm-props.js"/>
 
 <keyset id="keyset"/>  
   

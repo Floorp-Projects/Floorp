@@ -16,7 +16,7 @@
         <broadcaster id="data.execute" command=""/>
     </data>
 
-    <html:script>
+    <script>
         var data;
         var dialog;
 
@@ -72,7 +72,7 @@
             data.execute.setAttribute("command","close");
         }
 
-    </html:script>
+    </script>
 
     <html:table style="width:100%;">
         <html:tr>

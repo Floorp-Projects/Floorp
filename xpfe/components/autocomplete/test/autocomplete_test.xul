@@ -14,7 +14,7 @@
         onload="Initialize();"
         >
         
-<html:script language="JavaScript">
+<script type="application/x-javascript">
 
 var AutoCompleteSession = {
     onStartLookup: function(value, prevResult, listener)
@@ -119,7 +119,7 @@ function Initialize()
     myAutoComplete.autoCompleteSession = AutoCompleteSession;
 }
 
-</html:script>
+</script>
 
 <!--autocomplete id="test" timeout="300" /-->
 

@@ -42,7 +42,7 @@ Contributor(s):
         style="width: 36em;"
         onunload="onUnload()">
 
-    <script src="chrome://global/content/downloadProgress.js"></script>
+    <script type="application/x-javascript" src="chrome://global/content/downloadProgress.js"/>
 
     <!-- This is non-visible content that simply adds translatable string
          into the document so that it is accessible to JS code. 

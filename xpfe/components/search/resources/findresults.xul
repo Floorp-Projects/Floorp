@@ -9,7 +9,7 @@
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<html:script src="chrome://communicator/content/search/shared.js" />
+	<script type="application/x-javascript" src="chrome://communicator/content/search/shared.js" />
 
 	<tree id="findresultstree" flex="100%" datasources="rdf:bookmarks rdf:history rdf:localsearch"
 		onclick="if (event.detail == 2) return OpenURL(event, event.target.parentNode.parentNode);">

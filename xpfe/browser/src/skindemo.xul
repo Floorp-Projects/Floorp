@@ -6,7 +6,7 @@
 <window xmlns:html="http://www.w3.org/1999/xhtml"
   		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script>
+<script>
 function applySkin(url)
 {
    dump("Retrieving data source.\n");
@@ -35,7 +35,7 @@ function applySkin(url)
 
    dump("Done. Open a new window to see the chrome.\n");
 }
-</html:script>
+</script>
 
 <html:button onclick="applySkin('navigator-mozillazine0.css')">
   Click to switch to MozillaZine skin.
