@@ -91,6 +91,15 @@ proc ConnectToDatabase {} {
     }
 }
 
+proc DisconnectFromDatabase {} {
+    global mysqlhandle
+    if {[info exists mysqlhandle]} {
+        mysqlclose $mysqlhandle
+        unset mysqlhandle
+    }
+}
+
+
 proc SendSQL { str } {
 # puts $str
     global mysqlhandle errorInfo

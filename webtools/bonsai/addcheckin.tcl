@@ -116,7 +116,7 @@ if {![info exists forcetreeid]} {
     
     ConnectToDatabase
     AddToDatabase $appendjunk $plainlog
-    
+    DisconnectFromDatabase
 }
 Unlock
 
