@@ -1292,10 +1292,10 @@ XULContentSinkImpl::GetXULIDAttribute(const nsIParserNode& aNode,
         nsAutoString id = aNode.GetValueAt(i);
         nsRDFParserUtils::StripAndConvert(id);
 
-        nsAutoString uri;
+        nsCAutoString uri;
         nsRDFContentUtils::MakeElementURI(mDocument, id, uri);
 
-        return gRDFService->GetUnicodeResource(uri.GetUnicode(), aResource);
+        return gRDFService->GetResource(uri, aResource);
     }
 
     // Otherwise, we couldn't find anything, so just gensym one...

@@ -484,7 +484,7 @@ Contributor(s): ______________________________________. -->
 						   datasources="rdf:bookmarks rdf:files rdf:find" id="NC:BookmarksRoot">
 
 	<template>
-		<rule iscontainer="true">
+		<rule iscontainer="true" isempty="false">
 			<menu uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name"/>
 		</rule>
 		<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
@@ -499,7 +499,18 @@ Contributor(s): ______________________________________. -->
 		<menuitem name="&manBookmarksCmd.label;" onclick="BrowserEditBookmarks();"/>
 		<separator/>
 	</menu>
-	 <menu name="&tasksMenu.label;" onclick="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" id="NC:WindowMediatorRoot" open="true" >
+	 <menu name="&tasksMenu.label;" onclick="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot" >
+      <template>
+		<rule iscontainer="true" isempty="false">
+			<menu uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name"/>
+		</rule>
+		<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+			<separator uri="..." />
+		</rule>
+		<rule>
+			<menuitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name"/>
+		</rule>
+      </template>
       <menuitem name="&navigatorCmd.label;" onclick="BrowserReload();"/>
       <menuitem name="&messengerCmd.label;" onclick="OpenMessenger();" />
       <menuitem name="&editorCmd.label;"    onclick="OpenEditor();" />

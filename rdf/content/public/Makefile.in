@@ -29,7 +29,6 @@ EXPORTS =				\
 	nsIDOMNodeObserver.h		\
 	nsIDOMXULDocument.h		\
 	nsIDOMXULElement.h		\
-	nsIDOMXULTreeElement.h		\
 	nsIRDFContentModelBuilder.h	\
 	nsIRDFDocument.h		\
 	nsIXULSortService.h		\

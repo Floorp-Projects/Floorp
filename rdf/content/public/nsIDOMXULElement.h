@@ -28,6 +28,7 @@
 class nsIController;
 class nsIDOMElement;
 class nsIDOMCSSStyleDeclaration;
+class nsIRDFCompositeDataSource;
 class nsIRDFResource;
 class nsIDOMNodeList;
 
@@ -39,11 +40,6 @@ class nsIDOMXULElement : public nsIDOMElement {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULELEMENT_IID; return iid; }
 
-  NS_IMETHOD    GetResource(nsIRDFResource** aResource)=0;
-
-  NS_IMETHOD    GetController(nsIController** aController)=0;
-  NS_IMETHOD    SetController(nsIController* aController)=0;
-
   NS_IMETHOD    GetId(nsString& aId)=0;
   NS_IMETHOD    SetId(const nsString& aId)=0;
 
@@ -51,6 +47,14 @@ public:
   NS_IMETHOD    SetClassName(const nsString& aClassName)=0;
 
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle)=0;
+
+  NS_IMETHOD    GetDatabase(nsIRDFCompositeDataSource** aDatabase)=0;
+  NS_IMETHOD    SetDatabase(nsIRDFCompositeDataSource* aDatabase)=0;
+
+  NS_IMETHOD    GetResource(nsIRDFResource** aResource)=0;
+
+  NS_IMETHOD    GetController(nsIController** aController)=0;
+  NS_IMETHOD    SetController(nsIController* aController)=0;
 
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement)=0;
 
@@ -63,14 +67,16 @@ public:
 
 
 #define NS_DECL_IDOMXULELEMENT   \
-  NS_IMETHOD    GetResource(nsIRDFResource** aResource);  \
-  NS_IMETHOD    GetController(nsIController** aController);  \
-  NS_IMETHOD    SetController(nsIController* aController);  \
   NS_IMETHOD    GetId(nsString& aId);  \
   NS_IMETHOD    SetId(const nsString& aId);  \
   NS_IMETHOD    GetClassName(nsString& aClassName);  \
   NS_IMETHOD    SetClassName(const nsString& aClassName);  \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle);  \
+  NS_IMETHOD    GetDatabase(nsIRDFCompositeDataSource** aDatabase);  \
+  NS_IMETHOD    SetDatabase(nsIRDFCompositeDataSource* aDatabase);  \
+  NS_IMETHOD    GetResource(nsIRDFResource** aResource);  \
+  NS_IMETHOD    GetController(nsIController** aController);  \
+  NS_IMETHOD    SetController(nsIController* aController);  \
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement);  \
   NS_IMETHOD    DoCommand();  \
@@ -79,14 +85,16 @@ public:
 
 
 #define NS_FORWARD_IDOMXULELEMENT(_to)  \
-  NS_IMETHOD    GetResource(nsIRDFResource** aResource) { return _to GetResource(aResource); } \
-  NS_IMETHOD    GetController(nsIController** aController) { return _to GetController(aController); } \
-  NS_IMETHOD    SetController(nsIController* aController) { return _to SetController(aController); } \
   NS_IMETHOD    GetId(nsString& aId) { return _to GetId(aId); } \
   NS_IMETHOD    SetId(const nsString& aId) { return _to SetId(aId); } \
   NS_IMETHOD    GetClassName(nsString& aClassName) { return _to GetClassName(aClassName); } \
   NS_IMETHOD    SetClassName(const nsString& aClassName) { return _to SetClassName(aClassName); } \
   NS_IMETHOD    GetStyle(nsIDOMCSSStyleDeclaration** aStyle) { return _to GetStyle(aStyle); } \
+  NS_IMETHOD    GetDatabase(nsIRDFCompositeDataSource** aDatabase) { return _to GetDatabase(aDatabase); } \
+  NS_IMETHOD    SetDatabase(nsIRDFCompositeDataSource* aDatabase) { return _to SetDatabase(aDatabase); } \
+  NS_IMETHOD    GetResource(nsIRDFResource** aResource) { return _to GetResource(aResource); } \
+  NS_IMETHOD    GetController(nsIController** aController) { return _to GetController(aController); } \
+  NS_IMETHOD    SetController(nsIController* aController) { return _to SetController(aController); } \
   NS_IMETHOD    AddBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to AddBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    RemoveBroadcastListener(const nsString& aAttr, nsIDOMElement* aElement) { return _to RemoveBroadcastListener(aAttr, aElement); }  \
   NS_IMETHOD    DoCommand() { return _to DoCommand(); }  \

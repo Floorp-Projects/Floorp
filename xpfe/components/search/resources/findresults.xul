@@ -28,17 +28,20 @@
 		<treecol id="DescriptionColumn" rdf:resource="http://home.netscape.com/NC-rdf#Description"/>
 
 		<template>
-			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treechildren" subcontainment="treechildren">
+			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+                                <treechildren>
 				<treeitem uri="...">
 					<treerow>
 						<treecell>
 							<html:hr width="75%" align="center" size="1" />
 						</treecell>
 					</treerow>
-				</treeitem>  		
+				</treeitem>  	
+                                </treechildren>	
 			</rule>
 
-			<rule rootcontainment="treechildren" subcontainment="treechildren">
+			<rule>
+                                <treechildren>
 				<treeitem uri="...">
 					<treerow>
 						<treecell>
@@ -56,6 +59,7 @@
 						</treecell>
 					</treerow>
 				</treeitem>
+                                </treechildren>
 			</rule>
 		</template>
 

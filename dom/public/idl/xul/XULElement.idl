@@ -2,16 +2,16 @@ interface XULElement : Element {
 
 /* IID: { 0x574ed81, 0xc088, 0x11d2, \
   { 0x96, 0xed, 0x0, 0x10, 0x4b, 0x7b, 0x7d, 0xeb } } */
-    readonly attribute xpidl nsIRDFResource resource;
-	attribute xpidl nsIController controller;
+                 attribute DOMString                       id;
+                 attribute DOMString                       className;
+        readonly attribute CSSStyleDeclaration             style;
+                 attribute xpidl nsIRDFCompositeDataSource database;
+        readonly attribute xpidl nsIRDFResource            resource;
+                 attribute xpidl nsIController             controller;
 
-	attribute  DOMString            id;
-    attribute  DOMString            className;
-	readonly attribute CSSStyleDeclaration style;
+        void addBroadcastListener(in DOMString attr, in Element element);
+        void removeBroadcastListener(in DOMString attr, in Element element);
+        void doCommand();
 
-    void addBroadcastListener(in DOMString attr, in Element element);
-    void removeBroadcastListener(in DOMString attr, in Element element);
-	void doCommand();
-
-	NodeList getElementsByAttribute(in DOMString name, in DOMString value);
+        NodeList getElementsByAttribute(in DOMString name, in DOMString value);
 };

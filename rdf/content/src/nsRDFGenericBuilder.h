@@ -51,6 +51,8 @@ public:
     RDFGenericBuilderImpl();
     virtual ~RDFGenericBuilderImpl();
 
+    nsresult Init();
+
     // nsISupports interface
     NS_DECL_ISUPPORTS
 
@@ -91,30 +93,42 @@ public:
     // nsIDOMElementObserver interface
     NS_DECL_IDOMELEMENTOBSERVER
 
+    // nsITimerCallback interface
+    virtual void Notify(nsITimer* aTimer);
+
     // Implementation methods
     nsresult
-    SetAllAttributesOnElement(nsIContent *aParentNode, nsIContent *aNode, nsIRDFResource *res);
-    
-    nsresult
-    FindTemplateForResource(nsIRDFResource *aNode, nsIContent **theTemplate);
+    FindTemplate(nsIContent* aElement,
+                 nsIRDFResource* aProperty,
+                 nsIRDFResource* aChild,
+                 nsIContent **theTemplate);
 
     nsresult
-    IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aRule, PRBool *matchingRuleFound);
+    IsTemplateRuleMatch(nsIContent* aElement,
+                        nsIRDFResource* aProperty,
+                        nsIRDFResource* aChild,
+                        nsIContent *aRule,
+                        PRBool *isMatch);
 
     PRBool
     IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAtom);
 
     nsresult
+    GetSubstitutionText(nsIRDFResource* aResource,
+                        const nsString& aSubstitution,
+                        nsString& aResult);
+
+    nsresult
     BuildContentFromTemplate(nsIContent *aTemplateNode,
                              nsIContent *aRealNode,
                              PRBool aIsUnique,
-                             nsIRDFResource* aValue,
+                             nsIRDFResource* aChild,
                              PRInt32 aNaturalOrderPos);
 
     nsresult
     CreateWidgetItem(nsIContent* aElement,
                      nsIRDFResource* aProperty,
-                     nsIRDFResource* aValue,
+                     nsIRDFResource* aChild,
                      PRInt32 aNaturalOrderPos);
 
     enum eUpdateAction { eSet, eClear };
@@ -127,6 +141,11 @@ public:
                              nsIRDFNode* aValue);
 
     nsresult
+    RemoveWidgetItem(nsIContent* aElement,
+                     nsIRDFResource* aProperty,
+                     nsIRDFResource* aValue);
+
+    nsresult
     CreateContainerContents(nsIContent* aElement, nsIRDFResource* aResource);
 
     nsresult
@@ -137,27 +156,6 @@ public:
                                  PRInt32 aNameSpaceID,
                                  nsIAtom* aTag,
                                  nsIContent** aResult);
-
-    virtual nsresult
-    AddWidgetItem(nsIContent* aWidgetElement,
-                  nsIRDFResource* aProperty,
-                  nsIRDFResource* aValue, 
-                  PRInt32 naturalOrderPos) = 0;
-
-    virtual nsresult
-    RemoveWidgetItem(nsIContent* aWidgetElement,
-                     nsIRDFResource* aProperty,
-                     nsIRDFResource* aValue) = 0;
-
-    virtual nsresult
-    SetWidgetAttribute(nsIContent* aWidgetElement,
-                       nsIRDFResource* aProperty,
-                       nsIRDFNode* aValue) = 0;
-
-    virtual nsresult
-    UnsetWidgetAttribute(nsIContent* aWidgetElement,
-                         nsIRDFResource* aProperty,
-                         nsIRDFNode* aValue) = 0;
 
     virtual PRBool
     IsContainmentProperty(nsIContent* aElement, nsIRDFResource* aProperty);
@@ -178,11 +176,8 @@ public:
     IsElementInWidget(nsIContent* aElement);
    
     PRBool
-    IsItemOrFolder(nsIContent* aElement);
+    IsResourceElement(nsIContent* aElement);
  
-    PRBool
-    IsWidgetInsertionRootElement(nsIContent* aElement);
-
     nsresult
     GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource);
 
@@ -198,20 +193,8 @@ public:
     CloseWidgetItem(nsIContent* aElement);
 
     virtual nsresult
-    GetRootWidgetAtom(nsIAtom** aResult) = 0;
-
-    virtual nsresult
-    GetWidgetItemAtom(nsIAtom** aResult) = 0;
-
-    virtual nsresult
-    GetWidgetFolderAtom(nsIAtom** aResult) = 0;
-
-    virtual nsresult
-    GetInsertionRootAtom(nsIAtom** aResult) = 0;
-
-    virtual nsresult
-    GetItemAtomThatContainsTheChildren(nsIAtom** aResult) = 0;
-    // Well, you come up with a better name.
+    RemoveAndRebuildGeneratedChildren(nsIContent* aElement);
+    
 
 protected:
     nsIRDFDocument*            mDocument;
@@ -219,9 +202,6 @@ protected:
     nsIContent*                mRoot;
 
     nsITimer			*mTimer;
-
-    virtual void
-    Notify(nsITimer *timer) = 0;
 
     // pseudo-constants
     static nsrefcnt gRefCnt;
@@ -232,6 +212,7 @@ protected:
     static nsIAtom* kContainerAtom;
     static nsIAtom* kLazyContentAtom;
     static nsIAtom* kIsContainerAtom;
+    static nsIAtom* kIsEmptyAtom;
     static nsIAtom* kXULContentsGeneratedAtom;
     static nsIAtom* kTemplateContentsGeneratedAtom;
     static nsIAtom* kContainerContentsGeneratedAtom;
@@ -244,9 +225,8 @@ protected:
     static nsIAtom* kContainmentAtom;
     static nsIAtom* kIgnoreAtom;
     static nsIAtom* kRefAtom;
+    static nsIAtom* kValueAtom;
 
-    static nsIAtom* kSubcontainmentAtom;
-    static nsIAtom* kRootcontainmentAtom;
     static nsIAtom* kTemplateAtom;
     static nsIAtom* kRuleAtom;
     static nsIAtom* kTextAtom;

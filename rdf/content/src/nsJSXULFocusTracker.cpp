@@ -57,7 +57,7 @@ enum XULFocusTracker_slots {
 PR_STATIC_CALLBACK(JSBool)
 GetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMXULFocusTracker *a = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
+  nsIDOMXULFocusTracker *a = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -67,7 +67,7 @@ GetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
-    PRBool ok;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
@@ -108,7 +108,7 @@ GetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 PR_STATIC_CALLBACK(JSBool)
 SetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMXULFocusTracker *a = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
+  nsIDOMXULFocusTracker *a = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -118,7 +118,7 @@ SetXULFocusTrackerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   if (JSVAL_IS_INT(id)) {
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsIScriptSecurityManager *secMan;
-    PRBool ok;
+    PRBool ok = PR_FALSE;
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
       return JS_FALSE;
     }
@@ -190,7 +190,7 @@ ResolveXULFocusTracker(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 XULFocusTrackerAddFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
+  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -246,7 +246,7 @@ XULFocusTrackerAddFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval 
 PR_STATIC_CALLBACK(JSBool)
 XULFocusTrackerRemoveFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
+  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIDOMElementPtr b0;
 
   *rval = JSVAL_NULL;
@@ -302,7 +302,7 @@ XULFocusTrackerRemoveFocusListener(JSContext *cx, JSObject *obj, uintN argc, jsv
 PR_STATIC_CALLBACK(JSBool)
 XULFocusTrackerFocusChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
+  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
 
   *rval = JSVAL_NULL;
 
@@ -349,7 +349,7 @@ XULFocusTrackerFocusChanged(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 PR_STATIC_CALLBACK(JSBool)
 XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
+  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIController* nativeRet;
 
   *rval = JSVAL_NULL;
@@ -398,7 +398,7 @@ XULFocusTrackerGetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 PR_STATIC_CALLBACK(JSBool)
 XULFocusTrackerSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)JS_GetPrivate(cx, obj);
+  nsIDOMXULFocusTracker *nativeThis = (nsIDOMXULFocusTracker*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsIControllerPtr b0;
 
   *rval = JSVAL_NULL;
@@ -425,7 +425,7 @@ XULFocusTrackerSetController(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
 
   if (argc >= 1) {
 
-    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&b0,
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToXPCObject((nsISupports**) &b0,
                                            kIControllerIID, cx, argv[0])) {
       return JS_FALSE;
     }

@@ -51,11 +51,8 @@ NS_DEF_PTR(nsIDOMNodeList);
 //
 enum XULDocument_slots {
   XULDOCUMENT_POPUPELEMENT = -1,
-
   XULDOCUMENT_TOOLTIPELEMENT = -2,
-
   XULDOCUMENT_FOCUS = -3
-
 };
 
 /***********************************************************************/
@@ -67,86 +64,45 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMXULDocument *a = (nsIDOMXULDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
 
-
-
   // If there's no private data, this must be the prototype, so ignore
-
   if (nsnull == a) {
-
     return JS_TRUE;
-
   }
 
-
-
   if (JSVAL_IS_INT(id)) {
-
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-
     nsIScriptSecurityManager *secMan;
-
     PRBool ok = PR_FALSE;
-
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
-
       return JS_FALSE;
-
     }
-
     switch(JSVAL_TO_INT(id)) {
-
       case XULDOCUMENT_POPUPELEMENT:
-
       {
-
         secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupelement", &ok);
-
         if (!ok) {
-
           //Need to throw error here
-
           return JS_FALSE;
-
         }
-
         nsIDOMElement* prop;
-
         if (NS_OK == a->GetPopupElement(&prop)) {
-
           // get the js object
-
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
-
         }
-
         else {
-
           return JS_FALSE;
-
         }
-
         break;
-
       }
-
       case XULDOCUMENT_TOOLTIPELEMENT:
-
       {
-
         secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipelement", &ok);
-
         if (!ok) {
-
           //Need to throw error here
-
           return JS_FALSE;
-
         }
-
         nsIDOMElement* prop;
-
         if (NS_OK == a->GetTooltipElement(&prop)) {
-
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -193,100 +149,52 @@ SetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMXULDocument *a = (nsIDOMXULDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
 
-
-
   // If there's no private data, this must be the prototype, so ignore
-
   if (nsnull == a) {
-
     return JS_TRUE;
-
   }
 
-
-
   if (JSVAL_IS_INT(id)) {
-
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
-
     nsIScriptSecurityManager *secMan;
-
     PRBool ok = PR_FALSE;
-
     if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
-
       return JS_FALSE;
-
     }
-
     switch(JSVAL_TO_INT(id)) {
-
       case XULDOCUMENT_POPUPELEMENT:
-
       {
-
         secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.popupelement", &ok);
-
         if (!ok) {
-
           //Need to throw error here
-
           return JS_FALSE;
-
         }
-
         nsIDOMElement* prop;
-
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-
                                                 kIElementIID, "Element",
-
                                                 cx, *vp)) {
-
           return JS_FALSE;
-
         }
-
       
-
         a->SetPopupElement(prop);
-
         NS_IF_RELEASE(prop);
-
         break;
-
       }
-
       case XULDOCUMENT_TOOLTIPELEMENT:
-
       {
-
         secMan->CheckScriptAccess(scriptCX, obj, "xuldocument.tooltipelement", &ok);
-
         if (!ok) {
-
           //Need to throw error here
-
           return JS_FALSE;
-
         }
-
         nsIDOMElement* prop;
-
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
-
                                                 kIElementIID, "Element",
-
                                                 cx, *vp)) {
-
           return JS_FALSE;
-
         }
-
       
-
         a->SetTooltipElement(prop);
-
         NS_IF_RELEASE(prop);
         break;
       }
@@ -340,8 +248,6 @@ PR_STATIC_CALLBACK(JSBool)
 XULDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULDocument *nativeThis = (nsIDOMXULDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
-
-  JSBool rBool = JS_FALSE;
   nsIDOMElement* nativeRet;
   nsAutoString b0;
 
@@ -393,8 +299,6 @@ PR_STATIC_CALLBACK(JSBool)
 XULDocumentGetElementsByAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMXULDocument *nativeThis = (nsIDOMXULDocument*)nsJSUtils::nsGetNativeThis(cx, obj);
-
-  JSBool rBool = JS_FALSE;
   nsIDOMNodeList* nativeRet;
   nsAutoString b0;
   nsAutoString b1;
@@ -466,9 +370,7 @@ JSClass XULDocumentClass = {
 static JSPropertySpec XULDocumentProperties[] =
 {
   {"popupElement",    XULDOCUMENT_POPUPELEMENT,    JSPROP_ENUMERATE},
-
   {"tooltipElement",    XULDOCUMENT_TOOLTIPELEMENT,    JSPROP_ENUMERATE},
-
   {"focus",    XULDOCUMENT_FOCUS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };

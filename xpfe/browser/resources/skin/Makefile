@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,29 +13,27 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
+DEPTH		= ../../../..
+topsrcdir	= /export/waterson/seamonkey-merge/mozilla
+VPATH		= /export/waterson/seamonkey-merge/mozilla/xpfe/browser/resources/skin
+srcdir		= /export/waterson/seamonkey-merge/mozilla/xpfe/browser/resources/skin
 
-MODULE=rdf
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
 
-DEPTH=..\..\..
-
-EXPORTS	= \
-        nsIDOMElementObserver.h         \
-        nsIDOMNodeObserver.h            \
-        nsIDOMXULDocument.h             \
-        nsIDOMXULElement.h              \
-        nsIRDFContentModelBuilder.h     \
-        nsIRDFDocument.h                \
-        nsIXULSortService.h		\
-	nsIXULParentDocument.h		\
-	nsIXULChildDocument.h		\
-	nsIXULDocumentInfo.h		\
-	nsIXULPopupListener.h \
-	nsIDOMXULFocusTracker.h \
-	nsIXULFocusTracker.h \
-	nsIStreamLoadableDocument.h  \
-	nsIXULKeyListener.h  \
+EXPORT_RESOURCE_CONTENT = \
+	$(srcdir)/alertl.gif \
+	$(srcdir)/errorl.gif \
+	$(srcdir)/messagel.gif \
+	$(srcdir)/navigator.css \
+	$(srcdir)/questionl.gif \
+	$(srcdir)/contentframe.css \
+	$(srcdir)/animthrob.gif \
+	$(srcdir)/animthrob_single.gif \
 	$(NULL)
 
-include <$(DEPTH)/config/rules.mak>
+install:: 
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/skin/default
 

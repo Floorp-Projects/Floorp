@@ -82,7 +82,6 @@
 #include "nsIRDFService.h"
 #include "rdf.h"
 
-#include "nsIDOMXULTreeElement.h"
 #include "nsIDOMXULElement.h"
 
 #include "nsILocale.h"
@@ -112,7 +111,6 @@ static NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,        NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFLiteralIID,         NS_IRDFLITERAL_IID);
 
-static NS_DEFINE_IID(kIDomXulTreeElementIID,  NS_IDOMXULTREEELEMENT_IID);
 static NS_DEFINE_IID(kIDomXulElementIID,      NS_IDOMXULELEMENT_IID);
 
 static NS_DEFINE_CID(kCollationFactoryCID,    NS_COLLATIONFACTORY_CID);
@@ -1292,7 +1290,7 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 	if (NS_FAILED(rv = FindTreeElement(container, getter_AddRefs(treeNode))))	return(rv);
 
 	// get composite db for tree
-	nsCOMPtr<nsIDOMXULTreeElement> domXulTree;
+	nsCOMPtr<nsIDOMXULElement> domXulTree;
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = nsnull;
 
@@ -1300,7 +1298,7 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 	// that we're sure that we'll hold a reference to it (and actually
 	// release that reference when the stack frame goes away).
 	nsCOMPtr<nsIRDFCompositeDataSource> cds;
-	rv = treeNode->QueryInterface(kIDomXulTreeElementIID, getter_AddRefs(domXulTree));
+	rv = treeNode->QueryInterface(kIDomXulElementIID, getter_AddRefs(domXulTree));
 	if (NS_SUCCEEDED(rv))
 	{
 		if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(getter_AddRefs(cds))))
@@ -1488,7 +1486,7 @@ XULSortServiceImpl::DoSort(nsIDOMNode* node, const nsString& sortResource,
 	// get composite db for tree
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = nsnull;
-	nsCOMPtr<nsIDOMXULTreeElement>	domXulTree = do_QueryInterface(treeNode);
+	nsCOMPtr<nsIDOMXULElement>	domXulTree = do_QueryInterface(treeNode);
 	if (!domXulTree)	return(NS_ERROR_FAILURE);
 	nsCOMPtr<nsIRDFCompositeDataSource> cds;
 	if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(getter_AddRefs(cds))))

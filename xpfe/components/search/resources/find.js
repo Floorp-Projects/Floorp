@@ -45,13 +45,7 @@ function doFind()
 	// load find URL into results pane
 	var resultsTree = parent.frames[1].document.getElementById("findresultstree");
 	if (!resultsTree)	return(false);
-	x = resultsTree.childNodes.length;
-	if (x < 1)		return(false);
-	// XXX shouldn't assume that treebody is the last child node in the tree!
-	resultsTree.childNodes[x-1].setAttribute("id", url);
-
-//	resultsTree.childNodes[x-1].setAttribute("open", "true");
-
+        tree.setAttribute("ref", url);
 	dump("doFind done.\n");
 
 	return(true);

@@ -79,7 +79,6 @@
 #include "nsIStyledContent.h"
 #include "nsIStyleRule.h"
 #include "nsIURL.h"
-#include "nsXULTreeElement.h"
 #include "rdfutil.h"
 #include "prlog.h"
 #include "rdf.h"
@@ -317,8 +316,8 @@ private:
     PRBool                 mContentsMustBeGenerated;
     nsVoidArray*		   mBroadcastListeners; // [WEAK]
     nsIDOMXULElement*      mBroadcaster;        // [OWNER]
-    nsXULElement*          mInnerXULElement;    // [OWNER]
     nsIController*         mController;         // [OWNER]
+    nsCOMPtr<nsIRDFCompositeDataSource> mDatabase; // [OWNER]
 };
 
 
@@ -397,7 +396,6 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mContentsMustBeGenerated(PR_FALSE),
       mBroadcastListeners(nsnull),
       mBroadcaster(nsnull),
-      mInnerXULElement(nsnull),
       mController(nsnull)
 {
     NS_INIT_REFCNT();
@@ -514,8 +512,6 @@ RDFElementImpl::~RDFElementImpl()
             ++entry;
         }
     }
-
-    delete mInnerXULElement;
 }
 
 
@@ -575,16 +571,6 @@ RDFElementImpl::QueryInterface(REFNSIID iid, void** result)
     }
     else if (iid.Equals(kIJSScriptObjectIID)) {
         *result = NS_STATIC_CAST(nsIJSScriptObject*, this);
-    }
-    else if (iid.Equals(nsIDOMXULTreeElement::GetIID()) &&
-             (mNameSpaceID == kNameSpaceID_XUL) &&
-             (mTag == kTreeAtom)) {
-        if (! mInnerXULElement) {
-            if ((mInnerXULElement = new nsXULTreeElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return mInnerXULElement->QueryInterface(iid, result);
     }
     else {
         *result = nsnull;
@@ -1275,16 +1261,8 @@ RDFElementImpl::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject
     if (! mScriptObject) {
         nsIScriptGlobalObject *global = aContext->GetGlobalObject();
 
-        nsresult (*fn)(nsIScriptContext* aContext, nsISupports* aSupports, nsISupports* aParent, void** aReturn);
+        rv = NS_NewScriptXULElement(aContext, (nsIDOMXULElement*) this, global, (void**) &mScriptObject);
 
-        if (mTag == kTreeAtom) {
-            fn = NS_NewScriptXULTreeElement;
-        }
-        else {
-            fn = NS_NewScriptXULElement;
-        }
-
-        rv = fn(aContext, (nsIDOMXULElement*) this, global, (void**) &mScriptObject);
         NS_RELEASE(global);
 
         // Ensure that a reference exists to this element
@@ -2531,6 +2509,36 @@ RDFElementImpl::GetResource(nsIRDFResource** aResource)
     *aResource = nsnull;
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+RDFElementImpl::GetDatabase(nsIRDFCompositeDataSource** aDatabase)
+{
+    NS_PRECONDITION(aDatabase != nsnull, "null ptr");
+    if (! aDatabase)
+        return NS_ERROR_NULL_POINTER;
+
+    *aDatabase = mDatabase;
+    NS_IF_ADDREF(*aDatabase);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+RDFElementImpl::SetDatabase(nsIRDFCompositeDataSource* aDatabase)
+{
+    // XXX maybe someday you'll be allowed to change it.
+    NS_PRECONDITION(mDatabase == nsnull, "already initialized");
+    if (mDatabase)
+        return NS_ERROR_ALREADY_INITIALIZED;
+
+    mDatabase = aDatabase;
+
+    // XXX reconstruct the entire tree now!
+
+    return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods

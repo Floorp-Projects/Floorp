@@ -347,18 +347,20 @@ Contributor(s): ______________________________________. -->
      onclick="return opener.BookmarkPopupSingleClick(window,event.target.parentNode.parentNode);" flex="100%">
   
     <template>
-      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator"
-         rootcontainment="treechildren" subcontainment="treechildren">
+      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+        <treechildren>
 	<treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
 	  <treerow>
 	    <treecell>
 	      <html:hr width="75%" align="center" size="1" />
 	    </treecell>
 	  </treerow>
-	</treeitem>  		
+	</treeitem>  	
+        </treechildren>	
       </rule>
   
-      <rule rootcontainment="treechildren" subcontainment="treechildren">
+      <rule>
+        <treechildren>
 	<treeitem uri="..." type="rdf:http://home.netscape.com/NC-rdf#type">
 	  <treerow>
 	    <treecell>
@@ -368,13 +370,12 @@ Contributor(s): ______________________________________. -->
 	    </treecell>
 	  </treerow>
 	</treeitem>
+        </treechildren>
       </rule>
     </template>
   
     <treecol id="NameColumn" 
        rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  
-    <treechildren id="cascade:treechildren" ref="" open="true" />
   </tree>
  </window>
 </popup>

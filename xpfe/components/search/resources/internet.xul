@@ -34,11 +34,12 @@
 
 	<box align="horizontal" style="height: 85%; width: 100%;" flex="100%" >
 		<spring align="horizontal" flex="100%" />
-		<tree align="horizontal" id="searchengines" border="1" style="height: 90%;" flex="100%" datasources="rdf:internetsearch" >
+		<tree align="horizontal" id="searchengines" border="1" style="height: 90%;" flex="100%" datasources="rdf:internetsearch" ref="NC:SearchEngineRoot">
 			<treecol id="CheckboxColumn" />
 			<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" sortActive="true" sortDirection="ascending" />
 
-			<template rootcontainment="treechildren" subcontainment="treechildren">
+			<template>
+                                <treechildren>
 				<treeitem uri="...">
 					<treerow>
 						<treecell treeallowevents="true">
@@ -49,6 +50,7 @@
 						</treecell>
 					</treerow>
 				</treeitem>
+                                </treechildren>
 			</template>
 
 			<treehead>
@@ -63,8 +65,6 @@
 					</treecell>
 				</treerow>
 			</treehead>
-
-			<treechildren id="NC:SearchEngineRoot" open="true" />
 		</tree>
 		<spring align="horizontal" flex="100%" />
 	</box>

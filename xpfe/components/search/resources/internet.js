@@ -58,10 +58,7 @@ function doSearch()
 	// load find URL into results pane
 	var resultsTree = parent.frames[1].document.getElementById("internetresultstree");
 	if (!resultsTree)	return(false);
-	x = resultsTree.childNodes.length;
-	if (x < 1)		return(false);
-	// XXX shouldn't assume that treebody is the last child node in the tree!
-	resultsTree.childNodes[x-1].setAttribute("id", searchURL);
+        tree.setAttribute("ref", searchURL);
 
 	// enable "Save Search" button
 	var searchButton = document.getElementById("SaveSearch");
@@ -103,10 +100,7 @@ function saveSearch()
 {
 	var resultsTree = parent.frames[1].document.getElementById("internetresultstree");
 	if (!resultsTree)	return(false);
-	x = resultsTree.childNodes.length;
-	if (x < 1)		return(false);
-	// XXX shouldn't assume that treebody is the last child node in the tree!
-	var searchURL = resultsTree.childNodes[x-1].getAttribute("id");
+	var searchURL = tree.getAttribute("ref");
 	if (!searchURL)		return(false);
 
 	dump("Bookmark search URL: " + searchURL + "\n");

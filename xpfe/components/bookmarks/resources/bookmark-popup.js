@@ -25,7 +25,7 @@ function BookmarkPopupFillTree(popup,node) {
   }
 
   var uri = node.getAttribute('id');
-  var treechildren = document.getElementById('cascade:treechildren');
+  var treechildren = document.getElementById('bmpopuptree');
   treechildren.setAttribute('ref', uri);
   gBookmarkPopup = popup;
 }

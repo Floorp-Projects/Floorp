@@ -2746,6 +2746,17 @@ XULDocumentImpl::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn
 
     nsresult rv;
 
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
+      char* tagCStr = aTagName.ToNewCString();
+
+      PR_LOG(gXULLog, PR_LOG_DEBUG,
+             ("xul[CreateElement] %s", tagCStr));
+
+      delete[] tagCStr;
+    }
+#endif
+
     nsCOMPtr<nsIAtom> name;
     PRInt32 nameSpaceID;
 
@@ -2925,6 +2936,19 @@ XULDocumentImpl::CreateElementWithNameSpace(const nsString& aTagName,
 
     nsresult rv;
 
+#ifdef PR_LOGGING
+    if (PR_LOG_TEST(gXULLog, PR_LOG_DEBUG)) {
+      char* namespaceCStr = aNameSpace.ToNewCString();
+      char* tagCStr = aTagName.ToNewCString();
+
+      PR_LOG(gXULLog, PR_LOG_DEBUG,
+             ("xul[CreateElementWithNameSpace] [%s]:%s", namespaceCStr, tagCStr));
+
+      delete[] tagCStr;
+      delete[] namespaceCStr;
+    }
+#endif
+
     nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(aTagName.GetUnicode()));
     if (! name)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -3005,12 +3029,12 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
 
     nsresult rv;
 
-    nsAutoString uri;
+    nsCAutoString uri;
     rv = nsRDFContentUtils::MakeElementURI(this, aId, uri);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), getter_AddRefs(resource)))) {
+    if (NS_FAILED(rv = gRDFService->GetResource(uri, getter_AddRefs(resource)))) {
         NS_ERROR("unable to get resource");
         return rv;
     }
@@ -3209,15 +3233,14 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
     nsCOMPtr<nsIDOMElement> domRoot = do_QueryInterface(aPopupElement);
     domRoot->GetAttribute("id", idValue);
 
-    nsAutoString uri;
+    nsCAutoString uri;
     rv = nsRDFContentUtils::MakeElementURI(this, idValue, uri);
     if (NS_FAILED(rv)) return rv;
 
     // Use the absolute URL to retrieve a resource from the RDF
     // service that corresponds to the root content.
     nsCOMPtr<nsIRDFResource> rootResource;
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri.GetUnicode(), 
-                                                       getter_AddRefs(rootResource)))) {
+    if (NS_FAILED(rv = gRDFService->GetResource(uri, getter_AddRefs(rootResource)))) {
       NS_ERROR("Uh-oh. Couldn't obtain the resource for the popup doc root.");
       return rv;
     }

@@ -109,9 +109,7 @@ static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID,  NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
-static NS_DEFINE_CID(kRDFTreeBuilderCID,          NS_RDFTREEBUILDER_CID);
-static NS_DEFINE_CID(kRDFMenuBuilderCID,          NS_RDFMENUBUILDER_CID);
-static NS_DEFINE_CID(kRDFToolbarBuilderCID,       NS_RDFTOOLBARBUILDER_CID);
+static NS_DEFINE_CID(kXULTemplateBuilderCID,      NS_XULTEMPLATEBUILDER_CID);
 static NS_DEFINE_CID(kXULDocumentCID,             NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULDocumentInfoCID,         NS_XULDOCUMENTINFO_CID);
 static NS_DEFINE_CID(kXULKeyListenerCID,          NS_XULKEYLISTENER_CID);
@@ -317,8 +315,8 @@ public:
                              nsIRDFResource* aProperty,
                              nsIRDFNode* aValue);
 
-    nsresult CreateBuilder(const nsCID& aBuilderCID, nsIContent* aElement,
-                           const nsString& aDataSources);
+    nsresult CreateTemplateBuilder(nsIContent* aElement,
+                                   const nsString& aDataSources);
 
     nsresult
     GetRDFResourceFromXULElement(nsIDOMNode* aNode, nsIRDFResource** aResult);
@@ -430,7 +428,7 @@ RDFXULBuilderImpl::Init()
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register RDF namespace");
         if (NS_FAILED(rv)) return rv;
 
-        kLazyContentAtom            = NS_NewAtom("lazycontent");
+        kLazyContentAtom          = NS_NewAtom("lazycontent");
         kDataSourcesAtom          = NS_NewAtom("datasources");
         kIdAtom                   = NS_NewAtom("id");
         kInstanceOfAtom           = NS_NewAtom("instanceof");
@@ -1669,63 +1667,6 @@ RDFXULBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName
         return NS_OK;
     }
 
-    if ((nameSpaceID == kNameSpaceID_None) && (nameAtom.get() == kRefAtom)) {
-        // They're changing the RDF 'ref=' of the element. Do some
-        // trickery so that any generic builders that are referring to
-        // this element will reconstruct the contents of the
-        // element. Blow away _all_ of the children, and re-annotate
-        // the node s.t. children will be reconstructed properly.
-        PRInt32 count;
-        rv = element->ChildCount(count);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element's child count");
-        if (NS_FAILED(rv)) return rv;
-
-        while (--count >= 0) {
-            nsCOMPtr<nsIContent> child;
-            rv = element->ChildAt(count, *getter_AddRefs(child));
-            if (NS_FAILED(rv)) return rv;
-
-            rv = element->RemoveChildAt(count, PR_TRUE);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
-
-            if (! IsXULElement(child)) {
-                // If it's _not_ a XUL element, then we want to blow
-                // it and all of its kids out of the XUL document's
-                // resource-to-element map.
-                rv = child->SetDocument(nsnull, PR_TRUE);
-                if (NS_FAILED(rv)) return rv;
-            }
-        }
-
-        // Clear the contents-generated attribute so that the next time we
-        // come back, we'll regenerate the kids we just killed.
-        rv = element->UnsetAttribute(kNameSpaceID_None,
-                                     kTemplateContentsGeneratedAtom,
-                                     PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = element->UnsetAttribute(kNameSpaceID_None,
-                                     kContainerContentsGeneratedAtom,
-                                     PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
-
-        // This is a _total_ hack to make sure that any XUL we blow away
-        // gets rebuilt.
-        rv = element->UnsetAttribute(kNameSpaceID_None,
-                                     kXULContentsGeneratedAtom,
-                                     PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = element->SetAttribute(kNameSpaceID_RDF,
-                                   kLazyContentAtom,
-                                   "true",
-                                   PR_FALSE);
-        if (NS_FAILED(rv)) return rv;
-
-        // Fall through and change the property "normally" now.
-    }
-
-
     // If we get here, it's a vanilla property that we need to go into
     // the RDF graph to update. So, build an RDF resource from the
     // property name...
@@ -2643,15 +2584,7 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
                                   kDataSourcesAtom,
                                   dataSources)) {
 
-            nsCID builderCID;
-            if (aTagName == kTreeAtom)
-                builderCID = kRDFTreeBuilderCID;
-            else if (aTagName == kMenuAtom || aTagName == kMenuBarAtom)
-                builderCID = kRDFMenuBuilderCID;
-            else if (aTagName == kToolbarAtom)
-                builderCID = kRDFToolbarBuilderCID;
-
-            rv = CreateBuilder(builderCID, element, dataSources);
+            rv = CreateTemplateBuilder(element, dataSources);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add datasources");
         }
     }
@@ -2928,20 +2861,19 @@ RDFXULBuilderImpl::RemoveAttribute(nsIContent* aElement,
 }
 
 nsresult
-RDFXULBuilderImpl::CreateBuilder(const nsCID& aBuilderCID, nsIContent* aElement,
-                                 const nsString& aDataSources)
+RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
+                                         const nsString& aDataSources)
 {
     nsresult rv;
 
     // construct a new builder
     nsCOMPtr<nsIRDFContentModelBuilder> builder;
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(aBuilderCID,
-                                                    nsnull,
-                                                    kIRDFContentModelBuilderIID,
-                                                    (void**) getter_AddRefs(builder)))) {
-        NS_ERROR("unable to create tree content model builder");
-        return rv;
-    }
+    rv = nsComponentManager::CreateInstance(kXULTemplateBuilderCID,
+                                            nsnull,
+                                            kIRDFContentModelBuilderIID,
+                                            (void**) getter_AddRefs(builder));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create tree content model builder");
+    if (NS_FAILED(rv)) return rv;
 
     if (NS_FAILED(rv = builder->SetRootContent(aElement))) {
         NS_ERROR("unable to set builder's root content element");
@@ -2981,6 +2913,14 @@ RDFXULBuilderImpl::CreateBuilder(const nsCID& aBuilderCID, nsIContent* aElement,
     //
     PRInt32 first = 0;
 
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(mDocument);
+    if (! document)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIURI> docURL = dont_AddRef( document->GetDocumentURL() );
+    if (! docURL)
+        return NS_ERROR_UNEXPECTED;
+
     while(1) {
         while (first < aDataSources.Length() && nsString::IsSpace(aDataSources.CharAt(first)))
             ++first;
@@ -2995,6 +2935,9 @@ RDFXULBuilderImpl::CreateBuilder(const nsCID& aBuilderCID, nsIContent* aElement,
         nsAutoString uri;
         aDataSources.Mid(uri, first, last - first);
         first = last + 1;
+
+        rv = rdf_MakeAbsoluteURI(docURL, uri);
+        if (NS_FAILED(rv)) return rv;
 
         nsCOMPtr<nsIRDFDataSource> ds;
 

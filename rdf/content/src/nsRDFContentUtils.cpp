@@ -71,8 +71,6 @@ static NS_DEFINE_IID(kILocaleIID, NS_ILOCALE_IID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 static NS_DEFINE_CID(kDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
-
-
 nsresult
 nsRDFContentUtils::AttachTextNode(nsIContent* parent, nsIRDFNode* value)
 {
@@ -142,11 +140,9 @@ nsRDFContentUtils::FindChildByTag(nsIContent* aElement,
 
 
 nsresult
-nsRDFContentUtils::FindChildByTagAndResource(nsIContent* aElement,
-                                             PRInt32 aNameSpaceID,
-                                             nsIAtom* aTag,
-                                             nsIRDFResource* aResource,
-                                             nsIContent** aResult)
+nsRDFContentUtils::FindChildByResource(nsIContent* aElement,
+                                       nsIRDFResource* aResource,
+                                       nsIContent** aResult)
 {
     nsresult rv;
 
@@ -159,28 +155,12 @@ nsRDFContentUtils::FindChildByTagAndResource(nsIContent* aElement,
         if (NS_FAILED(rv = aElement->ChildAt(i, *getter_AddRefs(kid))))
             return rv; // XXX fatal
 
-        // Make sure it's a <xul:treecell>
-        PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = kid->GetNameSpaceID(nameSpaceID)))
-            return rv; // XXX fatal
-
-        if (nameSpaceID != aNameSpaceID)
-            continue; // wrong namespace
-
-        nsCOMPtr<nsIAtom> tag;
-        if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(tag))))
-            return rv; // XXX fatal
-
-        if (tag.get() != aTag)
-            continue; // wrong tag
-
         // Now get the resource ID from the RDF:ID attribute. We do it
         // via the content model, because you're never sure who
         // might've added this stuff in...
         nsCOMPtr<nsIRDFResource> resource;
         rv = GetElementResource(kid, getter_AddRefs(resource));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "severe error retrieving resource");
-        if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) continue;
 
         if (resource.get() != aResource)
             continue; // not the resource we want
@@ -221,14 +201,18 @@ nsRDFContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
     if (! doc)
         return NS_ERROR_FAILURE;
 
-    nsAutoString uri;
+    char buf[256];
+    nsCAutoString uri;
+    nsStr::Initialize(uri, buf, sizeof(buf) - 1, 0, eOneByte, PR_FALSE);
+    buf[0] = 0;
+
     rv = nsRDFContentUtils::MakeElementURI(doc, id, uri);
     if (NS_FAILED(rv)) return rv;
 
     NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = rdf->GetUnicodeResource(uri.GetUnicode(), aResult);
+    rv = rdf->GetResource(uri, aResult);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create resource");
     if (NS_FAILED(rv)) return rv;
 
@@ -452,7 +436,7 @@ nsRDFContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpac
 
 
 nsresult
-nsRDFContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aElementID, nsString& aURI)
+nsRDFContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aElementID, nsCString& aURI)
 {
     // Convert an element's ID to a URI that can be used to refer to
     // the element in the XUL graph.
@@ -477,11 +461,12 @@ nsRDFContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aEleme
         if (! spec)
             return NS_ERROR_FAILURE;
 
-        aURI = spec;    // copied by nsString, right
+        aURI = spec;
+
 #ifdef NECKO
         nsCRT::free(spec);
 #endif
-        if (aElementID.First() != PRUnichar('#')) {
+        if (aElementID.First() != '#') {
             aURI += '#';
         }
         aURI += aElementID;
