@@ -222,14 +222,15 @@ if (open(FID, "<data/nomail")) {
 
 my $regenerate = 0;
 
-if (($#ARGV >= 1) && ($ARGV[0] eq "regenerate")) {
+if ($ARGV[0] eq "regenerate") {
     $regenerate = 1;
-    $#ARGV = -1;
+    shift @ARGV;
     SendSQL("select bug_id from bugs order by bug_id");
     my @row;
     while (@row = FetchSQLData()) {
         push @ARGV, $row[0];
     }
+    print "$#ARGV bugs to be regenerated.\n";
 }
 
 foreach my $i (@ARGV) {
