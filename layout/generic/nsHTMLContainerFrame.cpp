@@ -296,6 +296,88 @@ nsHTMLContainerFrame::ReparentFrameView(nsIPresContext* aPresContext,
 }
 
 nsresult
+nsHTMLContainerFrame::ReparentFrameViewList(nsIPresContext* aPresContext,
+                                            nsIFrame*       aChildFrameList,
+                                            nsIFrame*       aOldParentFrame,
+                                            nsIFrame*       aNewParentFrame)
+{
+  NS_PRECONDITION(aChildFrameList, "null child frame list");
+  NS_PRECONDITION(aOldParentFrame, "null old parent frame pointer");
+  NS_PRECONDITION(aNewParentFrame, "null new parent frame pointer");
+  NS_PRECONDITION(aOldParentFrame != aNewParentFrame, "same old and new parent frame");
+
+  nsIView*  oldParentView;
+  nsIView*  newParentView;
+  
+  // See if either the old parent frame or the new parent frame have a view
+  aOldParentFrame->GetView(aPresContext, &oldParentView);
+  aNewParentFrame->GetView(aPresContext, &newParentView);
+
+  if (!oldParentView && !newParentView) {
+    // Walk up both the old parent frame and the new parent frame nodes
+    // stopping when we either find a common parent or views for one
+    // or both of the frames.
+    //
+    // This works well in the common case where we push/pull and the old parent
+    // frame and the new parent frame are part of the same flow. They will
+    // typically be the same distance (height wise) from the
+    do {
+      aOldParentFrame->GetParent(&aOldParentFrame);
+      aNewParentFrame->GetParent(&aNewParentFrame);
+      
+      // We should never walk all the way to the root frame without finding
+      // a view
+      NS_ASSERTION(aOldParentFrame && aNewParentFrame, "didn't find view");
+
+      // See if we reached a common parent
+      if (aOldParentFrame == aNewParentFrame) {
+        break;
+      }
+
+      // Get the views
+      aOldParentFrame->GetView(aPresContext, &oldParentView);
+      aNewParentFrame->GetView(aPresContext, &newParentView);
+    } while (!(oldParentView || newParentView));
+  }
+
+
+  // See if we found a common parent frame
+  if (aOldParentFrame == aNewParentFrame) {
+    // We found a common parent and there are no views between the old parent
+    // and the common parent or the new parent frame and the common parent.
+    // Because neither the old parent frame nor the new parent frame have views,
+    // then any child views don't need reparenting
+    return NS_OK;
+  }
+
+  // We found views for one or both of the parent frames before we found a
+  // common parent
+  NS_ASSERTION(oldParentView || newParentView, "internal error");
+  if (!oldParentView) {
+    oldParentView = GetClosestViewFor(aPresContext, aOldParentFrame);
+  }
+  if (!newParentView) {
+    newParentView = GetClosestViewFor(aPresContext, aNewParentFrame);
+  }
+  
+  // See if the old parent frame and the new parent frame are in the
+  // same view sub-hierarchy. If they are then we don't have to do
+  // anything
+  if (oldParentView != newParentView) {
+    nsCOMPtr<nsIViewManager>  viewManager;
+    oldParentView->GetViewManager(*getter_AddRefs(viewManager));
+
+    // They're not so we need to reparent any child views
+    for (nsIFrame* f = aChildFrameList; f; f->GetNextSibling(&f)) {
+      ReparentFrameViewTo(aPresContext, f, viewManager, newParentView,
+                          oldParentView);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
 nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
                                          nsIFrame* aFrame,
                                          nsIStyleContext* aStyleContext,

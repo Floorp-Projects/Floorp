@@ -73,6 +73,11 @@ public:
                                     nsIFrame*       aChildFrame,
                                     nsIFrame*       aOldParentFrame,
                                     nsIFrame*       aNewParentFrame);
+  
+  static nsresult ReparentFrameViewList(nsIPresContext* aPresContext,
+                                        nsIFrame*       aChildFrameList,
+                                        nsIFrame*       aOldParentFrame,
+                                        nsIFrame*       aNewParentFrame);
 
 protected:
   virtual PRIntn GetSkipSides() const = 0;
