@@ -486,7 +486,7 @@ NS_IMETHODIMP
 nsResChannel::GetContentType(char * *aContentType)
 {
     if (mResolvedChannel)
-        mResolvedChannel->GetContentType(aContentType);
+        return mResolvedChannel->GetContentType(aContentType);
     return NS_ERROR_FAILURE;
 }
 
@@ -494,7 +494,7 @@ NS_IMETHODIMP
 nsResChannel::GetContentLength(PRInt32 *aContentLength)
 {
     if (mResolvedChannel)
-        mResolvedChannel->GetContentLength(aContentLength);
+        return mResolvedChannel->GetContentLength(aContentLength);
     return NS_ERROR_FAILURE;
 }
 
