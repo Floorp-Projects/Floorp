@@ -60,8 +60,6 @@
 
 NS_IMPL_ISUPPORTS1(nsRenderingContextGTK, nsIRenderingContext)
 
-static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
   gdk.x = ns.x; \
@@ -476,6 +474,41 @@ nsClipCombine_to_string(nsClipCombine aCombine)
 }
 #endif // TRACE_SET_CLIP
 
+void
+nsRenderingContextGTK::CreateClipRegion()
+{
+  // We have 3 cases to deal with:
+  //  1 - There is no mClipRegion -> Create one
+  //  2 - There is an mClipRegion shared w/ stack -> Duplicate and unshare
+  //  3 - There is an mClipRegion and its not shared -> return
+
+  if (mClipRegion) {
+    PRUint32 cnt = mStateCache.Count();
+
+    if (cnt > 0) {
+      nsGraphicsState *state;
+      state = (nsGraphicsState *)mStateCache.ElementAt(cnt - 1);
+
+      if (state->mClipRegion == mClipRegion) {
+        mClipRegion = new nsRegionGTK;
+        if (mClipRegion) {
+          mClipRegion->SetTo(*state->mClipRegion);
+        }
+      }
+    }
+  } else {
+
+    PRUint32 w, h;
+    mSurface->GetSize(&w, &h);
+
+    mClipRegion = new nsRegionGTK;
+    if (mClipRegion) {
+      mClipRegion->Init();
+      mClipRegion->SetTo(0, 0, w, h);
+    }
+  }
+}
+
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
                                                  nsClipCombine aCombine)
 {
@@ -489,23 +522,6 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
 void nsRenderingContextGTK::SetClipRectInPixels(const nsRect& aRect,
                                                 nsClipCombine aCombine)
 {
-  PRUint32 cnt = mStateCache.Count();
-  nsGraphicsState *state = nsnull;
-
-  if (cnt > 0) {
-    state = (nsGraphicsState *)mStateCache.ElementAt(cnt - 1);
-  }
-
-  if (state) {
-    if (state->mClipRegion) {
-      if (state->mClipRegion == mClipRegion) {
-        nsCOMPtr<nsIRegion> tmpRgn;
-        GetClipRegion(getter_AddRefs(tmpRgn));
-        mClipRegion = tmpRgn;
-      }
-    }
-  }
-
   CreateClipRegion();
 
 #ifdef TRACE_SET_CLIP
@@ -592,24 +608,6 @@ void nsRenderingContextGTK::UpdateGC()
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
                                                    nsClipCombine aCombine)
 {
-
-  PRUint32 cnt = mStateCache.Count();
-  nsGraphicsState *state = nsnull;
-
-  if (cnt > 0) {
-    state = (nsGraphicsState *)mStateCache.ElementAt(cnt - 1);
-  }
-
-  if (state) {
-    if (state->mClipRegion) {
-      if (state->mClipRegion == mClipRegion) {
-        nsCOMPtr<nsIRegion> tmpRgn;
-        GetClipRegion(getter_AddRefs(tmpRgn));
-        mClipRegion = tmpRgn;
-      }
-    }
-  }
-
   CreateClipRegion();
 
   switch(aCombine)
@@ -655,8 +653,8 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
       (*aRegion)->SetTo(*mClipRegion);
       rv = NS_OK;
     } else {
-      nsCOMPtr<nsIRegion> newRegion = do_CreateInstance(kRegionCID, &rv);
-      if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIRegion> newRegion = new nsRegionGTK;
+      if (newRegion) {
         newRegion->Init();
         newRegion->SetTo(*mClipRegion);
         NS_ADDREF(*aRegion = newRegion);
