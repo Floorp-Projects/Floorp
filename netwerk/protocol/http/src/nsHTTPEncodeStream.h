@@ -48,11 +48,16 @@ public:
     nsresult GetData(char* buf, PRUint32 bufLen, PRUint32 *readCount);
     nsresult PushBack(nsString& data);
 
+    nsresult ReadNext(char *, PRUint32, PRUint32 *);
+
 protected:
     nsCOMPtr<nsIInputStream>    mInput;
     PRUint32                    mFlags;
     nsString                    mPushBackBuffer;
     PRBool                      mLastLineComplete;
+    char                       *mBuf;       // ReadSegments buffer
+    PRUint32                    mBufCursor; // index into mBuf of unread data
+    PRUint32                    mBufUnread; // amount of unread data in buffer
 };
 
 #endif
