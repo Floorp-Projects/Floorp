@@ -29,10 +29,12 @@ NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEnvURI,"http://schemas.xmlsoap.org/soa
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEncodingURI,"http://schemas.xmlsoap.org/soap/encoding/");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEnvPrefix,"SOAP-ENV");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kSOAPEncodingPrefix,"SOAP-ENC");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSIURI,"http://www.w3.org/1999/XMLSchema-instance");
-NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSDURI,"http://www.w3.org/1999/XMLSchema");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSURI,"http://www.w3.org/2001/XMLSchema");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSIURI,"http://www.w3.org/2001/XMLSchema-instance");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSDURI,"http://www.w3.org/2001/XMLSchema-datatypes");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSIPrefix,"xsi");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSITypeAttribute,"type");
+NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSPrefix,"xs");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kXSDPrefix,"xsd");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kEncodingStyleAttribute,"encodingStyle");
 NS_NAMED_LITERAL_STRING(nsSOAPUtils::kActorAttribute,"actor");

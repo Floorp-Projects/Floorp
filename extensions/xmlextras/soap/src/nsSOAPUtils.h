@@ -66,8 +66,10 @@ public:
   static nsDependentString kSOAPEncodingURI;
   static nsDependentString kSOAPEnvPrefix;
   static nsDependentString kSOAPEncodingPrefix;
+  static nsDependentString kXSURI;
   static nsDependentString kXSIURI;
   static nsDependentString kXSDURI;
+  static nsDependentString kXSPrefix;
   static nsDependentString kXSIPrefix;
   static nsDependentString kXSITypeAttribute;
   static nsDependentString kXSDPrefix;

@@ -48,9 +48,6 @@ NS_NAMED_LITERAL_STRING(kZero,"0");
 
 NS_NAMED_LITERAL_STRING(kEmpty,"");
 
-NS_NAMED_LITERAL_STRING(kSchemaNamespaceURI,"http://www.w3.org/2001/XMLSchema");
-NS_NAMED_LITERAL_STRING(kSchemaDatatypesNamespaceURI,"http://www.w3.org/2001/XMLSchema-datatypes");
-NS_NAMED_LITERAL_STRING(kSchemaTypeAttribute,"type");
 NS_NAMED_LITERAL_STRING(kSOAPArrayTypeAttribute,"arrayType");
 
 NS_NAMED_LITERAL_STRING(kAnyTypeSchemaType, "anyType");
@@ -146,10 +143,10 @@ DECLARE_ENCODER(UnsignedByte)
 #define REGISTER_ENCODER(name) \
 {\
   ns##name##Encoder *handler = new ns##name##Encoder();\
-  SetEncoder(kSchemaNamespaceURI, k##name##SchemaType, handler); \
-  SetEncoder(kSchemaDatatypesNamespaceURI, k##name##SchemaType, handler); \
-  SetDecoder(kSchemaNamespaceURI, k##name##SchemaType, handler); \
-  SetDecoder(kSchemaDatatypesNamespaceURI, k##name##SchemaType, handler); \
+  SetEncoder(nsSOAPUtils::kXSURI, k##name##SchemaType, handler); \
+  SetEncoder(nsSOAPUtils::kXSDURI, k##name##SchemaType, handler); \
+  SetDecoder(nsSOAPUtils::kXSURI, k##name##SchemaType, handler); \
+  SetDecoder(nsSOAPUtils::kXSDURI, k##name##SchemaType, handler); \
 }
 
 nsDefaultSOAPEncoder::nsDefaultSOAPEncoder(): nsSOAPEncoding(nsSOAPUtils::kSOAPEncodingURI, nsnull, nsnull) 
@@ -259,7 +256,7 @@ NS_IMETHODIMP nsDefaultEncoder::Encode(nsISOAPEncoding* aEncoding,
     else {
       schemaType.Assign(kAnySimpleTypeSchemaType);
     }
-    nsresult rc = aEncoding->GetEncoder(kSchemaDatatypesNamespaceURI, schemaType, getter_AddRefs(encoder));
+    nsresult rc = aEncoding->GetEncoder(nsSOAPUtils::kXSDURI, schemaType, getter_AddRefs(encoder));
     if (NS_FAILED(rc)) return rc;
   }
   if (encoder) {
@@ -293,7 +290,7 @@ NS_IMETHODIMP nsAnyTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
     }
   }
   PRUint16 typevalue;
-  nativeSchemaURI.Assign(kSchemaDatatypesNamespaceURI);
+  nativeSchemaURI.Assign(nsSOAPUtils::kXSDURI);
   aSource->GetDataType(&typevalue);
   switch(typevalue) {
     case nsIDataType::VTYPE_INT8:
@@ -395,7 +392,7 @@ NS_IMETHODIMP nsAnyTypeEncoder::Encode(nsISOAPEncoding* aEncoding,
         if (NS_FAILED(rc)) return rc;
         type.Append(nsSOAPUtils::kQualifiedSeparator);
         type.Append(nativeSchemaType);
-        rc = (*aReturnValue)->SetAttributeNS(kSchemaDatatypesNamespaceURI, kSchemaTypeAttribute, type);
+        rc = (*aReturnValue)->SetAttributeNS(nsSOAPUtils::kXSIURI, nsSOAPUtils::kXSITypeAttribute, type);
       }
       return rc;
     }
@@ -476,7 +473,7 @@ NS_IMETHODIMP nsArrayEncoder::Encode(nsISOAPEncoding* aEncoding,
 #define DO_SIMPLE_ARRAY(XPType, SOAPType, Format, Source) \
       {\
         nsAutoString value;\
-        rc = nsSOAPUtils::MakeNamespacePrefixFixed(*aReturnValue, kSchemaNamespaceURI, value);\
+        rc = nsSOAPUtils::MakeNamespacePrefixFixed(*aReturnValue, nsSOAPUtils::kXSURI, value);\
         if (NS_FAILED(rc)) return rc;\
         value.Append(nsSOAPUtils::kQualifiedSeparator);\
         value.Append(k##SOAPType##SchemaType);\
@@ -953,7 +950,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
     nsresult rc = aEncoding->GetSchemaCollection(getter_AddRefs(collection));
     if (NS_FAILED(rc)) return rc;
     nsAutoString explicittype;
-    rc = aSource->GetAttributeNS(kSchemaDatatypesNamespaceURI, kSchemaTypeAttribute, explicittype);
+    rc = aSource->GetAttributeNS(nsSOAPUtils::kXSIURI, nsSOAPUtils::kXSITypeAttribute, explicittype);
     if (NS_FAILED(rc)) return rc;
     nsAutoString ns;
     nsAutoString name;
@@ -982,7 +979,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
           rc = collection->GetType(ns, name, getter_AddRefs(type));
 	}
 	else {
-          rc = collection->GetType(kSchemaDatatypesNamespaceURI, name, getter_AddRefs(type));
+          rc = collection->GetType(nsSOAPUtils::kXSDURI, name, getter_AddRefs(type));
 	}
         if (NS_FAILED(rc)) return rc;
       }
@@ -1028,7 +1025,7 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
     else {
       schemaType.Assign(kAnySimpleTypeSchemaType);
     }
-    nsresult rc = aEncoding->GetDecoder(kSchemaDatatypesNamespaceURI, schemaType, getter_AddRefs(decoder));
+    nsresult rc = aEncoding->GetDecoder(nsSOAPUtils::kXSDURI, schemaType, getter_AddRefs(decoder));
     if (NS_FAILED(rc)) return rc;
   }
   if (decoder) {
@@ -1125,8 +1122,8 @@ NS_IMETHODIMP nsArrayEncoder::Decode(nsISOAPEncoding* aEncoding,
       if (NS_FAILED(rc)) return rc;
     }
   }
-  if (ns.Equals(kSchemaNamespaceURI)
-    || ns.Equals(kSchemaDatatypesNamespaceURI)) {
+  if (ns.Equals(nsSOAPUtils::kXSURI)
+    || ns.Equals(nsSOAPUtils::kXSDURI)) {
     if (name.Equals(kStringSchemaType)) {
     }
     else if (name.Equals(kBooleanSchemaType)) {

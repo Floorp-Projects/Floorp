@@ -175,7 +175,7 @@ NS_IMETHODIMP nsSOAPMessage::GetTargetObjectURI(nsAString & aTargetObjectURI)
   return NS_OK;
 }
 
-NS_NAMED_LITERAL_STRING(kEmptySOAPDocStr, "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/1999/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/1999/XMLSchema\"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body></SOAP-ENV:Body></SOAP-ENV:Envelope>");
+NS_NAMED_LITERAL_STRING(kEmptySOAPDocStr, "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENC=\"http://schemas.xmlsoap.org/soap/encoding/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema-datatypes\"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body></SOAP-ENV:Body></SOAP-ENV:Envelope>");
 
 /* void encode (in AString aMethodName, in AString aTargetObjectURI, in PRUint32 aHeaderBlockCount, [array, size_is (aHeaderBlockCount)] in nsISOAPHeaderBlock aHeaderBlocks, in PRUint32 aParameterCount, [array, size_is (aParameterCount)] in nsISOAPParameter aParameters); */
 NS_IMETHODIMP nsSOAPMessage::Encode(const nsAString & aMethodName, const nsAString & aTargetObjectURI, PRUint32 aHeaderBlockCount, nsISOAPHeaderBlock **aHeaderBlocks, PRUint32 aParameterCount, nsISOAPParameter **aParameters)
