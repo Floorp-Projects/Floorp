@@ -464,10 +464,7 @@ sub who_menu {
   my $treeflag;
 
   $qr = "${rel_path}../registry/who.cgi?email=$who"
-       ."&t0=". &url_encode("What did $who check into the source tree")
-       ."&u0=". &url_encode( &query_ref2($td,$mindate,$maxdate,$who))
-       ."&t1=". &url_encode("What has $who been checking in in the last day")
-       ."&u1=". &url_encode( &query_ref2($td,$mindate,$maxdate,$who));
+      . "&d=$td->{cvs_module}|$td->{cvs_branch}|$td->{cvs_root}|$mindate|$maxdate";
 
   return "<a href='$qr' onclick=\"return js_who_menu("
         ."$td->{num},'$who',event,$mindate,$maxdate);\">";
@@ -527,17 +524,16 @@ sub print_javascript {
     }
 
     function js_who_menu(tree,n,d,mindate,maxdate) {
-      var who_link = "${rel_path}../registry/who.cgi?email=" + escape(n)
-                   + "&t0=" + escape("Last check-in")
-                   + "&u0=" + escape(js_qr(tree,mindate,maxdate,n))
-                   + "&t1=" + escape("Check-ins within 24 hours")
-                   + "&u1=" + escape(js_qr24(tree,n));
+      var who_link = "http://cvs-mirror.mozilla.org/webtools/registry/who.cgi"
+                   + "?email=" + escape(n)
+                   + "&d=$cvs_module|$cvs_branch|$cvs_root|" + mindate + "|" + maxdate;
 
       var version = parseInt(navigator.appVersion);
       if (version < 4 || version >= 5) {
         document.location = who_link;
         return false;
       }
+
       var l = document.layers['popup'];
       l.src = who_link;
       l.top = d.target.y - 6;

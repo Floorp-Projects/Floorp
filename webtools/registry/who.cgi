@@ -22,17 +22,13 @@ $|=1;
 
 $rawname= $form{"email"};
 $email = $rawname;
-if ($email !~ '@') {
-    $email =~ s/%/@/;
-}
+
+$email =~ s/%/@/ if $email !~ '@';
 $username = $email;
 $username =~ s/@.*$//;
 $hostname = $email;
 $hostname =~ s/^.*@//;
-if ($hostname eq $email) {
-    $hostname = "netscape.com";
-}
-
+$hostname = "netscape.com" if $hostname eq $email;
 
 $full_name = $email;
 $enc_full_name = $email;    #this should be url encoded
@@ -48,46 +44,50 @@ print "<SPACER TYPE=VERTICAL SIZE=5>\n";
 
 &load_extra_data;
 
-
-$i = 0;
-while( $i < @extra_text ){
-    $t = $extra_text[$i];    
-    if( $u = $extra_url[$i] ){
-        
-        print("<dt><a href=$u>$t</a>\n");
-    }
-    else {
-        print("<dt>$t\n");
-    }
-    $i++;
+for ($ii=0; $ii < @extra_text; $ii++) {
+  $text = $extra_text[$ii];    
+  if ($url = $extra_url[$ii]) {
+    print "<dt><a href=$url>$text</a>\n";
+  }
+  else {
+    print "<dt>$text\n";
+  }
 }
 
-if( @extra_text ){
-    print("<hr>\n");
-}
+#print "<hr>\n" if @extra_text;
 
-print "
+print qq(
+<dt><A HREF='../bonsai/cvsquery.cgi?module=all&branch=&dir=&file=&who=$rawname&sortby=Date&hours=2&date=week'>
+    Check-ins within 7 days</A>
 <dt><A HREF='mailto:$username\@$hostname'>
-  Send Mail</A>
-
-
-
-<dt><A HREF='../bonsai/cvsquery.cgi?module=all&branch=&dir=&file=&who=$rawname&sortby=Date&hours=2&date=week&mindate=&maxdate='>
-  Check-ins within 7 days</A>
-
+    Send Mail</A>
 </table>
-
-";
+);
 
 sub load_extra_data {
-    local( $i, $u, $t );
+  my $ii, $url, $text;
 
-    $i = 0;
-    while( ($u = $form{"u${i}"}) ne "" || $form{"t${i}"} ne "" ) {
-        $t = $form{"t${i}"};
-        if( $t eq "" ) {$t = $u };
-        $extra_url[$i] = $u;
-        $extra_text[$i] = $t;
-        $i++;
-    }
+  $ii = 0;
+  for ($ii=0;
+       ($url = $form{"u$ii"}) ne '' || $form{"t$ii"} ne '';
+       $ii++) {
+    $text = $form{"t$ii"};
+    $text = $url if $url_text eq '';
+    $extra_url[$ii] = $url;
+    $extra_text[$ii] = $text;
+  }
+
+  # Adding the following for tinderbox
+  if (($last_checkin_data = $form{d}) ne '') {
+    my ($module,$branch,$root,$mindate,$maxdate) = split /\|/, $last_checkin_data;
+
+    $extra_url[++$ii] = "../bonsai/cvsquery.cgi?module=$module"
+                      . "&branch=$branch&cvsroot=$root&date=explicit"
+                      . "&mindate=$mindate&maxdate=$maxdate&who=$email";
+    $extra_text[$ii] = "Last check-in";
+
+    $extra_url[++$ii] = "../bonsai/cvsquery.cgi?module=$module"
+                      . "&branch=$branch&cvsroot=$root&date=day&who=$email";
+    $extra_text[$ii] = "Check-ins within 24 hours";
+  }
 }
