@@ -93,4 +93,4 @@ BuildDist();
 
 BuildProjects();
 
-print "Build NGLayout complete\n";
+print "Build complete\n";
