@@ -461,44 +461,6 @@
 	  </listitem>
 	  <listitem>
 	    <para>
-	      <emphasis>Email Notification</emphasis>: You may choose
-	      from one of three options:
-	      <orderedlist>
-		<listitem>
-		  <para>
-		    All qualifying bugs except those which I change:
-		    The user will be notified of any change to any bug
-		    for which she is the reporter, assignee, QA
-		    Contact, CC recipient, or "watcher".
-		  </para>
-		</listitem>
-		<listitem>
-		  <para>
-		    Only those bugs which I am listed on the CC line:
-		    The user will not be notified of changes to bugs
-		    where she is the assignee, reporter, or QA
-		    Contact, but will receive them if she is on the CC
-		    list.
-		    <note>
-		      <para>
-			She will still receive whining cron emails if
-			you set up the "whinemail" feature.
-		      </para>
-		    </note>
-		  </para>
-		</listitem>
-		<listitem>
-		  <para>
-		    <emphasis>All Qualifying Bugs</emphasis>: This
-		    user is a glutton for punishment. If her name is
-		    in the reporter, QA Contact, CC, assignee, or is a
-		    "watcher", she will get email updates regarding
-		    the bug.
-		  </para>
-		</listitem>
-	      </orderedlist>
-</para>
-	    <para>
 	      <emphasis>Disable Text</emphasis>: If you type anything
 	      in this box, including just a space, the user account is
 	      disabled from making any changes to bugs via the web
