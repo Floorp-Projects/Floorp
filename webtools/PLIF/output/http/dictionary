@@ -35,7 +35,7 @@ TemplateToolkit
     [%- ELSIF content < 60*60*24*6        -%] [%- value = content / (60*60*24)          -%] [%- value.sprintf('%.0f') -%] days
     [%- ELSIF content < 60*60*24*8        -%] [%- value = 1                             -%] [%- value.sprintf('%.0f') -%] week
     [%- ELSIF content < 60*60*24*13       -%] [%- value = content / (60*60*24)          -%] [%- value.sprintf('%.0f') -%] days
-    [%- ELSIF content < 60*60*24*15       -%]                                                                             a fortnight
+    [%- ELSIF content < 60*60*24*15       -%]                                                                           a fortnight
     [%- ELSIF content < 60*60*24*7*4      -%] [%- value = content / (60*60*24*7)        -%] [%- value.sprintf('%.0f') -%] weeks
     [%- ELSIF content < 60*60*24*7*5      -%] [%- value = 1                             -%] [%- value.sprintf('%.0f') -%] month
     [%- ELSIF content < 60*60*24*7*8      -%] [%- value = content / (60*60*24*7)        -%] [%- value.sprintf('%.0f') -%] weeks
@@ -44,7 +44,7 @@ TemplateToolkit
     [%- ELSIF content < 60*60*24*365*95   -%] [%- value = content / (60*60*24*365*10)   -%] [%- value.sprintf('%.0f') -%] decades
     [%- ELSIF content < 60*60*24*365*995  -%] [%- value = content / (60*60*24*365*100)  -%] [%- value.sprintf('%.0f') -%] centuries
     [%- ELSIF content < 60*60*24*365*9995 -%] [%- value = content / (60*60*24*365*1000) -%] [%- value.sprintf('%.0f') -%] millennia
-    [%- ELSE -%]                                                                                            [%- content -%] seconds
+    [%- ELSE -%]                                                                                          [%- content -%] seconds
   [%- END -%]    
   [%- CASE DEFAULT -%] [%- content -%]
 [%- END -%]
