@@ -73,9 +73,9 @@
 
 <!--  -->
 <bindings id="xulTimePicker"
- xmlns="http://www.mozilla.org/xbl"
- xmlns:xbl="http://www.mozilla.org/xbl"
- xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <!-- <script> doesn't work, maybe bug 58757 -->
   <script type="application/x-javascript"
@@ -107,17 +107,15 @@
           node that interferes with navigation to interior nodes.] -->
     <content id="content">
       <xul:hbox flex="1" id="hbox" class="timepicker-box-class">
-	<xul:textbox xbl:inherits="disabled" class="timepicker-text-class"
-         id="textbox"
-         onkeypress="if (event.keyCode == 13) this.kTimePicker.parseTextBoxTime(true);"
-	 onblur="this.parentNode.parentNode.kTimePicker.parseTextBoxTime(true);"/>
-	<xul:menu id="button" xbl:inherits="disabled"
-	 class="timepicker-button-class">
- 	  <xul:menupopup popupanchor="bottomright" popupalign="topright"
-           onpopupshowing="onPopup(this)">
+        <xul:menulist editable="true" sizetopopup="false" style="width:7em"
+                      id="timepicker-text"
+                      class="timepicker-text-class"
+                      xbl:inherits="disabled">
+          <xul:menupopup popupalign="topright" popupanchor="bottomright"
+                         onpopupshowing="onPopup(this)">
             <xul:timepicker-grids />
-	  </xul:menupopup>
-	</xul:menu>
+          </xul:menupopup>
+        </xul:menulist>
       </xul:hbox>
     </content>
 
@@ -134,26 +132,25 @@
 
       <constructor><![CDATA[
 	var hbox = document.getAnonymousNodes(this)[0];
-	//document.getAnonymousElementByAttribute(this, "id", "textbox");
 	this.kTextBox = hbox.childNodes[0];
 	this.kTextBox.kTimePicker = this; // enable call back to method in Moz1.7
-	//document.getAnonymousElementByAttribute(this, "id", "button");
-	this.kButton = hbox.childNodes[1];
-
 	this.kFormatter = new DateFormater();
 
 	// whether currently disabled
 	this.mDisabled = this.getAttribute("disabled") ? true : false;
 
 	var val = this.getAttribute("value");
-	if (val) update(new Date(val), false);
-	else     update(new Date(),    false);
+        if (val)
+          this.update(new Date(val), false);
+        else
+          this.update(new Date(),    false);
 
 	// Make the function a member of the picker 
 	// so that 'this' will be the picker
         this.kCallback = null;
 	val = this.getAttribute("onchange");
-	if (val) this.kCallback = function() { eval( val ) };
+        if (val)
+          this.kCallback = function() { eval( val ) };
       ]]></constructor>
 
       <method name="update">
@@ -195,10 +192,8 @@
 	  this.mDisabled = aDisabled;
 	  if (this.mDisabled) {
 	    this.kTextBox.setAttribute( "disabled", "true" );
-	    this.kButton.setAttribute( "disabled", "true" );
 	  } else {
 	    this.kTextBox.removeAttribute( "disabled" );
-	    this.kButton.removeAttribute( "disabled" );
 	  }
 	]]></body>
       </method>
@@ -217,6 +212,9 @@
 
     <handlers>
       <handler event="bindingattached" action="this.initialize();"/>
+      <handler event="blur" phase="capturing"><![CDATA[
+        this.parseTextBoxTime(true);
+      ]]></handler>
     </handlers>
 
   </binding>
@@ -488,7 +486,7 @@
 
 	<!-- One  Minute Grid -->
 
-	<vbox id="oe-time-picker-one-minute-grid-box" flex="1" collapsed="true">
+	<vbox id="oe-time-picker-one-minute-grid-box" flex="1" hidden="true">
 
 	  <grid id="oe-time-picker-one-minute-grid" flex="1">
 	    <columns>
@@ -995,11 +993,11 @@
 	  var oneMinuteBox = this.getDescendantElementById(oneMinuteBoxId);
 
 	  if (view == this.kMINUTE_VIEW_ONE) {
-	    fiveMinuteBox.setAttribute( "collapsed", true );
-	    oneMinuteBox.setAttribute( "collapsed", false );
+	    fiveMinuteBox.setAttribute( "hidden", true );
+	    oneMinuteBox.setAttribute( "hidden", false );
 	  } else {
-	    fiveMinuteBox.setAttribute( "collapsed", false );
-	    oneMinuteBox.setAttribute( "collapsed", true );
+	    fiveMinuteBox.setAttribute( "hidden", false );
+	    oneMinuteBox.setAttribute( "hidden", true );
 	  }
 	]]></body>
       </method>

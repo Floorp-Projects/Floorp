@@ -64,13 +64,13 @@
 */
 -->
 <bindings id="xulDatePicker"
-    xmlns="http://www.mozilla.org/xbl"
-    xmlns:xbl="http://www.mozilla.org/xbl"
-    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xbl="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
     <!-- this doesn't work, maybe bug 58757 -->
     <xul:script xul:type="application/x-javascript" 
-     xul:src="chrome://calendar/content/dateUtils.js"/>
+                xul:src="chrome://calendar/content/dateUtils.js"/>
 
     <binding id="datepicker" extends="xul:box" xbl:inherits="value,onchange">
         <!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
@@ -95,21 +95,18 @@
          [this comment is outside the <content> so it won't become a
           node that interferes with navigation to interior nodes.] -->
         <content id="content">
-        <xul:hbox flex="1" id="hbox" class="datepicker-box-class">
-            <xul:textbox id="textbox" class="datepicker-text-class"
-                xbl:inherits="disabled"
-                onkeypress="if (event.keyCode == 13) this.kDatePicker.parseTextBoxDate(true);"
-                onblur="this.parentNode.parentNode.kDatePicker.parseTextBoxDate(true);"/>
-
-            <xul:menu class="datepicker-button-class"
-                xbl:inherits="disabled">
-                <xul:menupopup popupanchor="bottomright" popupalign="topright" 
-                    onpopupshowing="onPopup()">
+          <xul:hbox flex="1" id="hbox" class="datepicker-box-class">
+            <xul:menulist editable="true" sizetopopup="false" style="width:11em"
+                          id="datepicker-text"
+                          class="datepicker-text-class"
+                          onkeypress="if (event.keyCode == 13) this.kDatePicker.parseTextBoxDate(true);"
+                          xbl:inherits="disabled">
+                <xul:menupopup popupanchor="bottomright" popupalign="topright"
+                               onpopupshowing="onPopup()">
                     <xul:minimonth onchange="this.kDatePicker.clickDate(this); "/>
                 </xul:menupopup>
-            </xul:menu>
-
-        </xul:hbox>
+            </xul:menulist>
+          </xul:hbox>
         </content>
 
         <!-- ::::::::::::::::: INTERFACE ::::::::::::::::::::::::: -->
@@ -125,17 +122,10 @@
 
         <constructor>
             <![CDATA[
-                //var hbox = document.getAnonymousElementByAttribute(this,"id","hbox");
                 var hbox = document.getAnonymousNodes(this)[0];
                 this.kTextBox = hbox.childNodes[0];
                 this.kTextBox.kDatePicker = this; // enable call back to method in Moz1.7
-                // Fails:
-                //  this.kTextBoxInput = document.getAnonymousNodes(this.kTextBox).childNodes[0].childNodes[0];
-                //  this.kTextBoxInput.kDatePicker = this;
-                //document.getAnonymousElementByAttribute(this, "id", "button");
-                this.kButton = hbox.childNodes[1];
-                this.kPopup = kButton.childNodes[0];
-                this.kMinimonth = this.kPopup.childNodes[0];
+                this.kMinimonth = this.kTextBox.menupopup.childNodes[0];
                 this.kMinimonth.kDatePicker = this; // enable call back to method in Moz1.6
                 this.kFormatter = new DateFormater();
 
@@ -151,7 +141,8 @@
                 }
                 this.kCallback = null;
                 val = this.getAttribute("onchange");
-                if (val) this.kCallback = function() { eval(val); };
+                if (val)
+                    this.kCallback = function() { eval(val); };
             ]]>
         </constructor>
 
@@ -160,8 +151,8 @@
             <parameter name="refresh"/>
             <body><![CDATA[
                 if (aValue == null) {  // invalid date, revert to previous date
-                // set textBox.value property, not attribute
-                this.kTextBox.value = this.formatDate(this.mValue);
+                    // set textBox.value property, not attribute
+                    this.kTextBox.value = this.formatDate(this.mValue);
                 } else {
                     this.mValue = aValue;
                     this.kTextBox.value = this.formatDate(this.mValue);
@@ -195,8 +186,7 @@
 
         <method name="onPopup">
             <body><![CDATA[
-                var cal = this.kPopup.childNodes[0];
-                cal.update( this.mValue );
+                this.kMinimonth.update( this.mValue );
             ]]></body>
         </method>
 
@@ -221,6 +211,10 @@
         <!-- ::::::::::::::::: HANDLERS ::::::::::::::::::::::::: -->
         <handlers>
             <handler event="bindingattached" action="this.initialize();"/>
+
+            <handler event="blur" phase="capturing"><![CDATA[
+              this.parseTextBoxDate(true);
+            ]]></handler>
         </handlers>
 
     </binding>
