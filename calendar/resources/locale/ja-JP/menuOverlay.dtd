@@ -56,7 +56,7 @@
 <!ENTITY calendar.new.server.key                "L">
 <!ENTITY calendar.new.server.accesskey          "l">
 
-<!ENTITY calendar.open.file.label "Open Calendar File…">
+<!ENTITY calendar.open.file.label               "カレンダーファイルを開く…">
 <!ENTITY calendar.open.file.key                 "O">
 <!ENTITY calendar.open.file.accesskey "O">
 
@@ -97,7 +97,7 @@
 <!ENTITY calendar.subscribe.label               "別のカレンダーを購読...">
 <!ENTITY calendar.subscribe.accesskey           "R">
 
-<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.label            "リモートカレンダーを再読み込み">
 <!ENTITY calendar.reloadserver.key              "R">
 <!ENTITY calendar.reloadserver.accesskey        "R">
 
@@ -183,8 +183,8 @@
 <!ENTITY aboutCmd.accesskey                     "A">
 
 <!-- Mac OS X "Window" menu items -->
-<!ENTITY windowMenu.label                       "Window">
-<!ENTITY minimizeWindow.label                   "Minimize">
-<!ENTITY zoomWindow.label                       "Zoom">
+<!ENTITY windowMenu.label                       "ウィンドウ">
+<!ENTITY minimizeWindow.label                   "最小化">
+<!ENTITY zoomWindow.label                       "ズーム">
 <!ENTITY minimizeWindow.key                     "M">
-<!ENTITY bringAllToFront.label                  "Bring All to Front">
+<!ENTITY bringAllToFront.label                  "すべてを前面に移動">

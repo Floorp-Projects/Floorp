@@ -156,7 +156,7 @@
 <!ENTITY newtodo.duedate.warning    "開始日付が期日後です。">
 <!ENTITY newtodo.repeatstart.warning "開始日付が周期設定に必要です。">
 
-<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
+<!ENTITY calendar.confirm.deleteallevents  "選択イベントすべてを削除しますか？" >
 <!ENTITY calendar.confirm.deleteevent "このタイトルのイベントを削除しますか: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "タイトルなしのイベントを削除しますか？" >
 
@@ -224,10 +224,10 @@
 <!ENTITY calendar.events.filter.month.label "翌月のイベント">
 <!ENTITY calendar.events.filter.future.label "すべてのこれからのイベント">
 <!ENTITY calendar.events.filter.current.label "今、選択中の日">
-<!ENTITY calendar.events.filter.next7Days.label "Events in the Next 7 Days">
-<!ENTITY calendar.events.filter.next14Days.label "Events in the Next 14 Days">
-<!ENTITY calendar.events.filter.next31Days.label "Events in the Next 31 Days">
-<!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
+<!ENTITY calendar.events.filter.next7Days.label "次の 7 日間のイベント">
+<!ENTITY calendar.events.filter.next14Days.label "次の 14 日間のイベント">
+<!ENTITY calendar.events.filter.next31Days.label "次の 31 日間のイベント">
+<!ENTITY calendar.events.filter.thisCalendarMonth.label "このカレンダー月のイベント">
 
 <!ENTITY calendar.unifinder.tree.done.label          "完了">
 <!ENTITY calendar.unifinder.tree.priority.label      "優先度">
@@ -284,10 +284,10 @@
 <!ENTITY calendar.subscribe.button.label           "購読" >
 <!ENTITY calendar.publish.button.label             "公開" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "ローカルの再読み込み" >
+<!ENTITY calendar.localreload.button.tooltip  "すべてのローカルカレンダーの再読み込み" >
+<!ENTITY calendar.remotereload.button.label   "再読み込み" >
+<!ENTITY calendar.remotereload.button.tooltip   "すべてのリモートカレンダーの読み込み" >
 
 <!ENTITY calendar.dayview.button.label          "デー" >
 <!ENTITY calendar.weekview.button.label         "ウィーク" >
@@ -427,8 +427,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "New Calendar File">
-<!ENTITY calendar.server.dialog.title.open          "Open Calendar File">
+<!ENTITY calendar.server.dialog.title.new           "新しいカレンダーファイル">
+<!ENTITY calendar.server.dialog.title.open          "カレンダーファイルを開く">
 <!ENTITY calendar.server.dialog.title.edit          "カレンダーを編集">
 <!ENTITY calendar.server.dialog.name.label          "名前">
 <!ENTITY calendar.server.dialog.publish.label       "自動的に変更を公開しますか？サーバにある新しいカレンダーをダウンロードして、追加や編集、イベント削除を行い、その新しいファイルをアップロードします。">
