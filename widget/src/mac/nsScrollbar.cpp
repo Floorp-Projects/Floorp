@@ -397,19 +397,34 @@ PRBool nsScrollbar::OnPaint(nsPaintEvent & aEvent)
 NS_IMETHODIMP nsScrollbar::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  
-   if(nsnull!=mWindowRegion)
-  	::DisposeRgn(mWindowRegion);
+  if((mBounds.width != aWidth) || (mBounds.height != aHeight))
+  {
+    // Set the mMacPortRelativeRegion
+    ::SetRectRgn (
+	  mMacPortRelativeRegion,
+	  (**mMacPortRelativeRegion).rgnBBox.left, // Keep original left
+	  (**mMacPortRelativeRegion).rgnBBox.top,  // Keep original top
+	  (**mMacPortRelativeRegion).rgnBBox.left + aWidth,    // Set new width
+	  (**mMacPortRelativeRegion).rgnBBox.top + aHeight ); // Set new height
+	  
+	// Set mBounds
+    mBounds.width  = aWidth;
+    mBounds.height = aHeight;
+	  
+	// Set mWindowRegion
+    if(nsnull!=mWindowRegion)
+  	  ::DisposeRgn(mWindowRegion);
+  	  
 	mWindowRegion = NewRgn();
 	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);		 
- 
+  }
+  
   if (aRepaint){
   	//UpdateVisibilityFlag();
   	//UpdateDisplay();
   	Invalidate(PR_TRUE);
   	}
+
   return(NS_OK);
 }
 
@@ -428,14 +443,36 @@ NS_IMETHODIMP nsScrollbar::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRU
 {
 nsSizeEvent 	event;
 
+  if((aX != mBounds.x) || (aY != mBounds.y) || (aWidth != mBounds.width) || (aHeight != mBounds.height)){
+    // Set the mMacPortRelativeRegion
+    if(nsnull!=mMacPortRelativeRegion)
+  	  ::DisposeRgn(mMacPortRelativeRegion);
+	mMacPortRelativeRegion = NewRgn();
+	nsPoint point(aX,aY);
+	LocalToWindowCoordinate(point);
+	SetRectRgn (
+	  mMacPortRelativeRegion,
+	  point.x,
+	  point.y,
+	  point.x + aWidth,
+	  point.y + aHeight );
+	
+	mMacPortRelativeX = aX;
+	mMacPortRelativeY = aY;
+	
+	// Set mBounds
   mBounds.x      = aX;
   mBounds.y      = aY;
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
-  if(nsnull!=mWindowRegion)
-  	::DisposeRgn(mWindowRegion);
+  
+    
+    // Set the Mac mWindowRegion
+    if(nsnull!=mWindowRegion)
+  	  ::DisposeRgn(mWindowRegion);
 	mWindowRegion = NewRgn();
 	SetRectRgn(mWindowRegion,mBounds.x,mBounds.y,mBounds.x+mBounds.width,mBounds.y+mBounds.height);
+  } 
 
   if (aRepaint){
   	//UpdateVisibilityFlag();
