@@ -255,8 +255,13 @@ NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
 
   SetVisibility(aVisibilityFlag);
 
+  // XXX Don't clear this or we hork the scrolling view when creating the clip
+  // view's widget. It needs to stay set and later the view manager will reset it
+  // when the view is inserted into the view hierarchy...
+#if 0
   //clear this again...
   SetParent(nsnull);
+#endif
 
   return NS_OK;
 }
