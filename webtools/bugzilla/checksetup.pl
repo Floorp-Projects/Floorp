@@ -4222,7 +4222,7 @@ if ($sth->rows == 0) {
         $dbh->do(
           q{INSERT INTO profiles (login_name, realname, cryptpassword, 
                                   disabledtext, refreshed_when)
-            VALUES (?, ?, ?, ?, ?, ?)},
+            VALUES (?, ?, ?, ?, ?)},
             undef, $login, $realname, $cryptedpassword, 
             '', '1900-01-01 00:00:00');
     }
