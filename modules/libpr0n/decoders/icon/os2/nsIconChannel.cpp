@@ -46,6 +46,7 @@
 #define INCL_DEV
 #define INCL_GPI
 #include <os2.h>
+#include <stdlib.h> // for getenv
 
 // From Windows
 #define SHGFI_ICON               0x0001
