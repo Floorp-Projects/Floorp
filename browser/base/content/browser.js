@@ -2016,13 +2016,17 @@ var personalToolbarDNDObserver = {
       if (navigator.platform != "Win32" && target.localName != "toolbarbutton")
         return;
 
+      // bail if dragging from the empty area of the bookmarks toolbar
+      if (target.localName == "hbox")
+        return
+
       // a drag start is fired when leaving an open toolbarbutton(type=menu) 
       // (see bug 143031)
       if (this.isContainer(target) && 
           target.getAttribute("group") != "true") {
         if (this.isPlatformNotSupported) 
           return;
-        if (!aEvent.shiftKey && !aEvent.altKey)
+        if (!aEvent.shiftKey && !aEvent.altKey && !aEvent.ctrlKey)
           return;
         // menus open on mouse down
         target.firstChild.hidePopup();
@@ -2091,7 +2095,7 @@ var personalToolbarDNDObserver = {
       //target = { parent: "NC:PersonalToolbarFolder", index: 1 };
     } else {
       var orientation = bt.getBTOrientation(aEvent);
-      var selTarget   = bt.getBTTarget(aEvent.originalTarget, orientation);
+      var selTarget   = bt.getBTTarget(target, orientation);
     }
 
     const kDSIID      = Components.interfaces.nsIDragService;
@@ -2100,8 +2104,8 @@ var personalToolbarDNDObserver = {
     // hide the 'open in tab' menuseparator because bookmarks
     // can be inserted after it if they are dropped after the last bookmark
     // a more comprehensive fix would be in the menupopup template builder
-    var menuTarget = target.localName == "toolbarbutton" ||
-                     target.localName == "menu"          && 
+    var menuTarget = (target.localName == "toolbarbutton" ||
+                      target.localName == "menu")         && 
                      orientation == BookmarksUtils.DROP_ON?
                      target.lastChild:target.parentNode;
     if (menuTarget.hasChildNodes() &&

@@ -1206,7 +1206,8 @@ var BookmarksUtils = {
       if (!aSelection.isValid[i])
         continue;
       if (!BookmarksUtils.isChildOfContainer(aSelection.item[i], aTarget.parent) ||
-          aAction == "move" && aSelection.parent[i] == aTarget.parent)
+          aAction == "move" && aSelection.parent[i] == aTarget.parent            ||
+          aSelection.isContainer[i])
         isValid[i] = true;
     }
     return isValid;
@@ -1243,7 +1244,7 @@ var BookmarksUtils = {
   },
 
   /////////////////////////////////////////////////////////////////////////////
-  // Returns true is the selection can be insert in aFolderURI
+  // Returns true if aSelection can be inserted in aFolder
   isValidTargetContainer: function (aFolder, aSelection)
   {
 
