@@ -906,6 +906,7 @@ nsBrowserWindow::DoTreeView()
       // doesn't refcount the document in which it lives, so you'll
       // need to keep a pointer to *both* the document and the
       // content.
+	  mTreeView->SetContentRoot(root);
       NS_RELEASE(root);
     }
     NS_RELEASE(doc); // i.e., unless you've refcounted "doc", root dies _now_
