@@ -857,7 +857,14 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
   NS_ADDREF(aContentViewer);
 
   // check to see if we have a window to embed into --dwc0001
-  if(mWindow) {
+  /* Note we also need to check for the presence of a native widget. If the
+     webshell is hidden before it's embedded, which can happen in an onload
+     handler, the native widget is destroyed before this code is run.  This
+     appears to be mostly harmless except on Windows, where the subsequent
+     attempt to create a child window without a parent is met with disdain
+     by the OS. It's handy, then, that GetNativeData on Windows returns
+     null in this case. */
+  if(mWindow && mWindow->GetNativeData(NS_NATIVE_WIDGET)) {
     mWindow->GetClientBounds(bounds);
     bounds.x = bounds.y = 0;
     rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET),
