@@ -128,7 +128,7 @@
             <children/>
           </xul:outlinerchildren>
         </xul:hbox>
-        <xul:scrollbar orient="vertical" class="outliner-scrollbar"/>
+        <xul:scrollbar orient="vertical" class="outliner-scrollbar" collapsed="true"/>
       </xul:outlinerrows>
     </content>
 
@@ -533,10 +533,29 @@
           ]]>
       </handler>
 
-     </handlers>
+    </handlers>
 
-   </binding>
- 
+  </binding>
+
+  <binding id="select-outlinerrows">
+    <handlers>
+      <handler event="underflow">
+        <![CDATA[
+          this.childNodes[1].collapsed = true;
+          event.preventBubble();
+        ]]>
+      </handler>
+      <handler event="overflow">
+        <![CDATA[
+          this.childNodes[1].collapsed = false;
+          event.preventBubble();
+        ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+<!-- select size=1 -->
+
   <binding id="select" extends="xul:menu">
     <implementation>
       <property name="selectElement" readonly="true"
