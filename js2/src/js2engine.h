@@ -81,6 +81,7 @@ enum JS2Op {
     eNewObject,         // <argCount:u16>
 
     eThrow,
+    eTry,
 
     eLexicalRead,       // <multiname index:u16>
     eLexicalWrite,      // <multiname index:u16>
@@ -111,6 +112,9 @@ enum JS2Op {
     ePopv,
     ePop,
     eDup,
+    eCallFinally,       // <branch displacement:s32>
+    eReturnFinally,
+    eHandler,
 
     eLexicalPostInc,    // <multiname index:u16>
     eLexicalPostDec,    // <multiname index:u16>

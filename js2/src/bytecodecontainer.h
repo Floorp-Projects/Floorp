@@ -80,7 +80,7 @@ public:
     uint32 mLocation;
 };
 
-
+#define NotALabel (-1)
 
 class Multiname;
 class Frame;

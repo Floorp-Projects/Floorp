@@ -723,8 +723,98 @@ namespace MetaData {
             }
             break;
         case StmtNode::Try:
+/*
+            try {   //  [catch,finally] handler labels are pushed on try stack
+                    <tryblock>
+                }   //  catch handler label is popped off try stack
+                jsr finally
+                jump-->finished                 
+
+            finally:        // finally handler label popped off
+                {           // a throw from in here goes to the 'next' handler
+                }
+                rts
+
+            finallyInvoker:              <---
+                push exception              |
+                jsr finally                 |--- the handler labels 
+                throw exception             | 
+                                            |
+            catchLabel:                  <---
+
+                    the incoming exception is on the top of the stack at this point
+
+                catch (exception) { // catch handler label popped off
+                        // any throw from in here must jump to the finallyInvoker
+                        // (i.e. not the catch handler!)
+
+                    Of the many catch clauses specified, only the one whose exception variable type
+                    matches the type of the incoming exception is executed...
+
+                    dup
+                    push type of exception-variable
+                    is
+                    jumpfalse-->next catch
+                    
+                    setlocalvar exception-variable
+                    pop
+                    <catch body>
+
+
+                }
+                // 'normal' fall thru from catch
+                jsr finally
+                jump finished
+
+            finished:
+*/
             {
                 TryStmtNode *t = checked_cast<TryStmtNode *>(p);
+                BytecodeContainer::LabelID catchClauseLabel;
+                BytecodeContainer::LabelID finallyInvokerLabel;
+                BytecodeContainer::LabelID t_finallyLabel;
+                bCon->emitOp(eTry, p->pos);
+                if (t->finally) {
+                    finallyInvokerLabel = bCon->getLabel();
+                    bCon->addFixup(finallyInvokerLabel);            
+                    t_finallyLabel = bCon->getLabel(); 
+                }
+                else {
+                    finallyInvokerLabel = NotALabel;
+                    bCon->addOffset(NotALabel);
+                    t_finallyLabel = NotALabel;
+                }
+                if (t->catches) {
+                    catchClauseLabel = bCon->getLabel();
+                    bCon->addFixup(catchClauseLabel);            
+                }
+                else {
+                    catchClauseLabel = NotALabel;
+                    bCon->addOffset(NotALabel);
+                }
+                BytecodeContainer::LabelID finishedLabel = bCon->getLabel();
+                EvalStmt(env, phase, t->stmt);
+
+                if (t->finally) {
+                    bCon->emitBranch(eCallFinally, t_finallyLabel, p->pos);
+                    bCon->emitBranch(eBranch, finishedLabel, p->pos);
+
+                    bCon->setLabel(t_finallyLabel);
+                    bCon->emitOp(eHandler, p->pos);
+                    EvalStmt(env, phase, t->finally);
+                    bCon->emitOp(eReturnFinally, p->pos);
+
+                    bCon->setLabel(finallyInvokerLabel);
+                    // the exception object is on the top of the stack already
+                    bCon->emitBranch(eCallFinally, t_finallyLabel, p->pos);
+                    bCon->emitOp(eThrow, p->pos);
+
+                }
+                else {
+                    bCon->emitBranch(eBranch, finishedLabel, p->pos);
+                }
+
+
 /*
                 ValidateStmt(cxt, env, t->stmt);
                 if (t->finally)
