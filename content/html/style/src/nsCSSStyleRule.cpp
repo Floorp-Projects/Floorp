@@ -539,22 +539,31 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           family.StripChars("\"");
           family.StripWhitespace();
 
-          font->mFont.name = family;
+          if (family.EqualsIgnoreCase("monospace")) {
+            font->mFont = font->mFixedFont;
+          }
+          else {
+            font->mFont.name = family;
+            font->mFixedFont.name = family;
+          }
         }
 
         // font-style: enum
         if (ourFont->mStyle.GetUnit() == eCSSUnit_Enumerated) {
           font->mFont.style = ourFont->mStyle.GetIntValue();
+          font->mFixedFont.style = ourFont->mStyle.GetIntValue();
         }
 
         // font-variant: enum
         if (ourFont->mVariant.GetUnit() == eCSSUnit_Enumerated) {
           font->mFont.variant = ourFont->mVariant.GetIntValue();
+          font->mFixedFont.variant = ourFont->mVariant.GetIntValue();
         }
 
         // font-weight: abs, enum
         if (ourFont->mWeight.GetUnit() == eCSSUnit_Integer) {
-          font->mFont.style = ourFont->mWeight.GetIntValue();
+          font->mFont.weight = ourFont->mWeight.GetIntValue();
+          font->mFixedFont.weight = ourFont->mWeight.GetIntValue();
         }
         else if (ourFont->mWeight.GetUnit() == eCSSUnit_Enumerated) {
           PRInt32 value = ourFont->mWeight.GetIntValue();
@@ -562,10 +571,12 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
             case NS_STYLE_FONT_WEIGHT_NORMAL:
             case NS_STYLE_FONT_WEIGHT_BOLD:
               font->mFont.weight = value;
+              font->mFixedFont.weight = value;
               break;
             case NS_STYLE_FONT_WEIGHT_BOLDER:
             case NS_STYLE_FONT_WEIGHT_LIGHTER:
               font->mFont.weight = (parentFont->mFont.weight + value);
+              font->mFixedFont.weight = (parentFont->mFont.weight + value);
               break;
           }
         }
@@ -573,20 +584,22 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
         // font-size: enum, length, percent
         if (ourFont->mSize.GetUnit() == eCSSUnit_Enumerated) {
           static float kFontScale[7] = {
-            0.5f,                 // xx-small
-            0.666667f,            // x-small
-            0.833333f,            // small
-            1.0f,                 // medium
-            1.5f,                 // large
-            1.5f * 1.5f,          // x-large
-            1.5f * 1.5f * 1.5f,   // xx-large
+            0.6874999f,   // xx-small == font size=1
+            0.85f,        // x-small  == font size=2
+            1.0f,         // small    == font size=3
+            1.175f,       // medium   == font size=4
+            1.5f,         // large    == font size=5
+            2.0f,         // x-large  == font size=6
+            3.0f          // xx-large == font size=7
           };
           PRInt32 value = ourFont->mSize.GetIntValue();
 
           const nsFont& normal = aPresContext->GetDefaultFont();  // use normal font or body font??
+          const nsFont& normalFixed = aPresContext->GetDefaultFixedFont();  // use normal font or body font??
           if ((NS_STYLE_FONT_SIZE_XXSMALL <= value) && 
               (value <= NS_STYLE_FONT_SIZE_XXLARGE)) {
             font->mFont.size = (nscoord)((float)normal.size * kFontScale[value]);
+            font->mFixedFont.size = (nscoord)((float)normalFixed.size * kFontScale[value]);
           }
           else if (NS_STYLE_FONT_SIZE_LARGER == value) {
             PRInt32 index;
@@ -595,6 +608,7 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
               if (parentFont->mFont.size < (nscoord)((float)normal.size * kFontScale[index]))
                 break;
             font->mFont.size = (nscoord)((float)normal.size * kFontScale[index]);
+            font->mFixedFont.size = (nscoord)((float)normalFixed.size * kFontScale[index]);
           }
           else if (NS_STYLE_FONT_SIZE_SMALLER == value) {
             PRInt32 index;
@@ -603,13 +617,16 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
               if (parentFont->mFont.size > (nscoord)((float)normal.size * kFontScale[index]))
                 break;
             font->mFont.size = (nscoord)((float)normal.size * kFontScale[index]);
+            font->mFixedFont.size = (nscoord)((float)normal.size * kFontScale[index]);
           }
         }
         else if (ourFont->mSize.IsLengthUnit()) {
           font->mFont.size = CalcLength(ourFont->mSize, parentFont, aPresContext);
+          font->mFixedFont.size = CalcLength(ourFont->mSize, parentFont, aPresContext);
         }
         else if (ourFont->mSize.GetUnit() == eCSSUnit_Percent) {
           font->mFont.size = (nscoord)((float)(parentFont->mFont.size) * ourFont->mSize.GetPercentValue());
+          font->mFixedFont.size = (nscoord)((float)(parentFont->mFont.size) * ourFont->mSize.GetPercentValue());
         }
 
         NS_IF_RELEASE(parentContext);
