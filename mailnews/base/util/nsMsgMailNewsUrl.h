@@ -64,8 +64,9 @@ protected:
 	nsCOMPtr<nsILoadGroup> m_loadGroup;
 
 	char		*m_errorMessage;
-	PRBool		m_runningUrl;
-	PRBool		m_updatingFolder;
+	PRBool	m_runningUrl;
+	PRBool	m_updatingFolder;
+  PRBool  m_addContentToCache;
 
 	// manager of all of current url listeners....
 	nsCOMPtr<nsIUrlListenerManager> m_urlListeners;

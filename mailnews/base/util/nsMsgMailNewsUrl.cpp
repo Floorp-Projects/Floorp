@@ -42,9 +42,10 @@ nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 	m_errorMessage = nsnull;
 	m_runningUrl = PR_FALSE;
 	m_updatingFolder = PR_FALSE;
+  m_addContentToCache = PR_FALSE;
 
-	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsCOMTypeInfo<nsIUrlListenerManager>::GetIID(), (void **) getter_AddRefs(m_urlListeners));
-	nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURL>::GetIID(), (void **) getter_AddRefs(m_baseURL));
+	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, NS_GET_IID(nsIUrlListenerManager), (void **) getter_AddRefs(m_urlListeners));
+	nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, NS_GET_IID(nsIURL), (void **) getter_AddRefs(m_baseURL));
 }
  
 nsMsgMailNewsUrl::~nsMsgMailNewsUrl()
@@ -55,45 +56,12 @@ nsMsgMailNewsUrl::~nsMsgMailNewsUrl()
 NS_IMPL_ADDREF(nsMsgMailNewsUrl);
 NS_IMPL_RELEASE(nsMsgMailNewsUrl);
 
-nsresult nsMsgMailNewsUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    if (aIID.Equals(nsCOMTypeInfo<nsIURI>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIURI*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-	if (aIID.Equals(nsCOMTypeInfo<nsIURL>::GetIID())) {
-        *aInstancePtr = (void*) ((nsIURL*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-	if (aIID.Equals(nsCOMTypeInfo<nsIMsgMailNewsUrl>::GetIID()))
-	{
-		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl*) this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
- 
-	if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
-	{
-		*aInstancePtr = (void *) ((nsIMsgMailNewsUrl*) this);
-		NS_ADDREF_THIS();
-		return NS_OK;
-	}
-#if defined(NS_DEBUG)
-    /*
-     * Check for the debug-only interface indicating thread-safety
-     */
-    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
-    if (aIID.Equals(kIsThreadsafeIID)) {
-        return NS_OK;
-    }
-#endif
-    return NS_NOINTERFACE;
-}
+NS_INTERFACE_MAP_BEGIN(nsMsgMailNewsUrl)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIMsgMailNewsUrl)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgMailNewsUrl)
+   NS_INTERFACE_MAP_ENTRY(nsIURL)
+   NS_INTERFACE_MAP_ENTRY(nsIURI)
+NS_INTERFACE_MAP_END
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsIMsgMailNewsUrl specific support
@@ -288,8 +256,7 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetLoadGroup(nsILoadGroup **aLoadGroup)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetUpdatingFolder(PRBool *aResult)
 {
-	if (!aResult)
-		return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG(aResult);
 	*aResult = m_updatingFolder;
 	return NS_OK;
 }
@@ -300,6 +267,18 @@ NS_IMETHODIMP nsMsgMailNewsUrl::SetUpdatingFolder(PRBool updatingFolder)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgMailNewsUrl::GetAddToMemoryCache(PRBool *aAddToCache)
+{
+  NS_ENSURE_ARG(aAddToCache); 
+	*aAddToCache = m_addContentToCache;
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgMailNewsUrl::SetAddToMemoryCache(PRBool aAddToCache)
+{
+	m_addContentToCache = aAddToCache;
+	return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsIMsgMailNewsUrl specific support
