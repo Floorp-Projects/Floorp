@@ -430,7 +430,11 @@
         <parameter name="aElt"/>
         <body>
           <![CDATA[
-            var iconURL = this.buildFavIconString(aURI);
+            var iconURL;
+            if (this.contentDocument instanceof ImageDocument)
+              iconURL = this.currentURI.spec;
+            else
+              iconURL = this.buildFavIconString(aURI);
             if (!this.isFavIconKnownMissing(iconURL))
               aElt.setAttribute(aAttr, iconURL);
           ]]>
