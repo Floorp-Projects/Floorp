@@ -40,6 +40,7 @@ CPPSRCS		= \
 		ns4xPluginInstance.cpp \
 		nsPluginDocLoaderFactory.cpp \
 		nsPluginHostImpl.cpp \
+		nsPluginProxyImpl.cpp \
 		nsPluginModule.cpp \
 		nsPluginInstancePeer.cpp \
 		nsPluginViewer.cpp \
