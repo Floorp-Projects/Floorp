@@ -1,4 +1,4 @@
-#!gmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -13,6 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
@@ -24,16 +25,17 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= unicharutil
 
 EXPORTS		= \
-	nsICaseConversion.h \
-	nsIOrderIdFormater.h \
-	nsITextTransform.h \
-	nsIUGenCategory.h \
-	nsIUGenDetailCategory.h \
-	nsUnicharUtilCIID.h \
-	nsHankakuToZenkakuCID.h \
-	nsArabicBasicLToPFormBVCID.h \
-		  $(NULL)
+		nsICaseConversion.h \
+		nsIOrderIdFormater.h \
+		nsITextTransform.h \
+		nsIUGenCategory.h \
+		nsIUGenDetailCategory.h \
+		nsUnicharUtilCIID.h \
+		nsHankakuToZenkakuCID.h \
+		nsArabicBasicLToPFormBVCID.h \
+		$(NULL)
 
-EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
+EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 
 include $(topsrcdir)/config/rules.mk
+

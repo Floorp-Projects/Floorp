@@ -1,4 +1,4 @@
-#!gmake
+#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -13,6 +13,7 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
@@ -25,44 +26,39 @@ MODULE		= uconv
 LIBRARY_NAME	= uconv
 IS_COMPONENT	= 1
 
-CSRCS		=  \
-                  ugen.c \
-                  uscan.c \
-                  umap.c \
-		  $(NULL)
+REQUIRES	= libxpcom
+
+CSRCS		= \
+		ugen.c \
+		uscan.c \
+		umap.c \
+		$(NULL)
 
 CPPSRCS		= \
-                  nsCharsetConverterManager.cpp \
-                  nsUnicodeDecodeUtil.cpp \
-                  nsUnicodeDecodeHelper.cpp \
-                  nsUnicodeEncodeHelper.cpp \
-                  nsUNIXCharset.cpp \
-                  nsCharsetAliasImp.cpp \
-                  nsUConvDll.cpp \
-                  nsURLProperties.cpp \
-                  nsMappingCache.cpp \
-		  $(NULL)
-
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
-CFLAGS		+= -DUSE_NSREG -D__STDC__
-
-REQUIRES	= $(MODULE) libxpcom 
-
-EXTRA_DSO_LDOPTS =\
-		-L$(DIST)/lib -lneckoutil_s \
+		nsCharsetConverterManager.cpp \
+		nsUnicodeDecodeUtil.cpp \
+		nsUnicodeDecodeHelper.cpp \
+		nsUnicodeEncodeHelper.cpp \
+		nsUNIXCharset.cpp \
+		nsCharsetAliasImp.cpp \
+		nsUConvDll.cpp \
+		nsURLProperties.cpp \
+		nsMappingCache.cpp \
 		$(NULL)
+
+EXPORT_RESOURCE	= \
+		$(srcdir)/unixcharset.properties \
+		$(srcdir)/charsetalias.properties \
+		$(NULL)
+
+EXTRA_DSO_LDOPTS = -L$(DIST)/lib -lneckoutil_s
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES        += -I$(srcdir)/../ucvlatin \
-                   -I$(srcdir)/../ucvja
+CFLAGS		+= -DUSE_NSREG -D__STDC__
 
-
-EXPORT_RESOURCE = \
-	$(srcdir)/unixcharset.properties \
-	$(srcdir)/charsetalias.properties \
-        $(NULL)
+INCLUDES	+= -I$(srcdir)/../ucvlatin -I$(srcdir)/../ucvja
 
 install::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
+
