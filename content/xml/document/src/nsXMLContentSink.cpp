@@ -932,6 +932,8 @@ nsXMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsI
   nsresult rv=NS_OK;
   // XXX necko isn't going to process headers coming in from the parser          
   //NS_WARNING("need to fix how necko adds mime headers (in HTMLContentSink::ProcessMETATag)");
+
+  mDocument->SetHeaderData(aHeader, aValue);
   
   // see if we have a refresh "header".
   if (aHeader == nsHTMLAtoms::refresh) {
@@ -1035,7 +1037,12 @@ nsXMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
   if(aChannel) {
     nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aChannel));
     if (httpchannel) {
-      const char *const headers[]={"link","default-style",0}; // add more http headers if you need
+      const char *const headers[] = {
+        "link",
+        "default-style",
+        "content-style-type",
+        // add more http headers if you need
+        0};
       const char *const *name=headers;
       nsCAutoString tmp;
 

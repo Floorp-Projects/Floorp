@@ -4503,7 +4503,12 @@ HTMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
   if(aChannel) {
     nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aChannel));
     if (httpchannel) {
-      const char *const headers[]={"link","default-style",0}; // add more http headers if you need
+      const char *const headers[] = {
+        "link",
+        "default-style",
+        "content-style-type",
+         // add more http headers if you need
+        0};
       const char *const *name=headers;
       nsCAutoString tmp;
 
