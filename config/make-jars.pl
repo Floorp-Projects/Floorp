@@ -325,7 +325,7 @@ sub EnsureFileInDir
         }
         unlink $destPath;       # in case we had a symlink on unix
         if ($preproc) {
-            if (system("$^X $preprocessor $defines < $file > $destPath") != 0) {
+            if (system("$^X $preprocessor $defines $file > $destPath") != 0) {
                 die "Preprocessing of $file failed: $!";
             }
         } else {
