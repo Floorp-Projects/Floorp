@@ -429,6 +429,8 @@ NS_NET PRUint32 SchemeTypeFor(const char* i_scheme)
         return nsIURI::MAILTO;
     else if (0 == PL_strcasecmp("news", i_scheme))
         return nsIURI::NEWS;
+    else if (0 == PL_strcasecmp("ldap", i_scheme))
+        return nsIURI::LDAP;
     else
         return nsIURI::UNKNOWN;
 }
