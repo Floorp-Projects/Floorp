@@ -680,13 +680,13 @@ nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
                                  nsSize& aSize)
 {
   if (aReflowState.HaveFixedContentWidth()) {
-    aSize.width = aReflowState.minWidth;
+    aSize.width = aReflowState.computedWidth;
   }
   else {
     aSize.width = CSS_NOTSET;
   }
   if (aReflowState.HaveFixedContentHeight()) {
-    aSize.height = aReflowState.minHeight;
+    aSize.height = aReflowState.computedHeight;
   }
   else {
     aSize.height = CSS_NOTSET;

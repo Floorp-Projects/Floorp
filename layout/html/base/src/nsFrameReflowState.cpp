@@ -24,6 +24,24 @@
 #include "nsIContent.h"
 #include "nsHTMLAtoms.h"
 
+PRBool
+nsHTMLReflowState::HaveFixedContentWidth() const
+{
+  const nsStylePosition* pos;
+  frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
+  // What about 'inherit'?
+  return eStyleUnit_Auto != pos->mWidth.GetUnit();
+}
+
+PRBool
+nsHTMLReflowState::HaveFixedContentHeight() const
+{
+  const nsStylePosition* pos;
+  frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
+  // What about 'inherit'?
+  return eStyleUnit_Auto != pos->mHeight.GetUnit();
+}
+
 const nsHTMLReflowState*
 nsHTMLReflowState::GetContainingBlockReflowState(const nsReflowState* aParentRS)
 {
@@ -54,36 +72,7 @@ nsHTMLReflowState::GetContainingBlockContentWidth(const nsReflowState* aParentRS
   const nsHTMLReflowState* rs =
     GetContainingBlockReflowState(aParentRS);
   if (nsnull != rs) {
-    return ((nsHTMLReflowState*)aParentRS)->GetContentWidth();/* XXX cast */
-  }
-  return width;
-}
-
-nscoord
-nsHTMLReflowState::GetContentWidth() const
-{
-  nscoord width = 0;
-  if (HaveFixedContentWidth()) {
-    width = minWidth;
-  }
-  else if (NS_UNCONSTRAINEDSIZE != maxSize.width) {
-    width = maxSize.width;
-    if (nsnull != frame) {
-      // Subtract out the border and padding values because the
-      // percentage is to be computed relative to the content
-      // width, not the outer width.
-      const nsStyleSpacing* spacing;
-      nsresult rv;
-      rv = frame->GetStyleData(eStyleStruct_Spacing,
-                               (const nsStyleStruct*&) spacing);
-      if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
-        nsMargin borderPadding;
-        ComputeBorderPaddingFor(frame,
-                                parentReflowState,
-                                borderPadding);
-        width -= borderPadding.left + borderPadding.right;
-      }
-    }
+    return ((nsHTMLReflowState*)aParentRS)->computedWidth;/* XXX cast */
   }
   return width;
 }
@@ -182,16 +171,16 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
 void
 nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
 {
-  // Determine whether the values are constrained or unconstrained
-  // by looking at the maxSize
-  widthConstraint = NS_UNCONSTRAINEDSIZE == maxSize.width ?
-                      eHTMLFrameConstraint_Unconstrained :
-                      eHTMLFrameConstraint_Constrained;
-  heightConstraint = NS_UNCONSTRAINEDSIZE == maxSize.height ?
-                      eHTMLFrameConstraint_Unconstrained :
-                      eHTMLFrameConstraint_Constrained;
-  minWidth = 0;
-  minHeight = 0;
+  const nsStylePosition* pos;
+  nsresult result = frame->GetStyleData(eStyleStruct_Position,
+                                        (const nsStyleStruct*&)pos);
+
+  // Initialize the computed values to default values
+  // XXX Use specified values as defaults
+  computedWidth = 0;
+  computedLeftMargin = computedRightMargin = 0;
+  computedHeight = 0;
+  computedTopMargin = computedBottomMargin = 0;
 
   mLineHeight = CalcLineHeight(aPresContext, frame);
 
@@ -203,12 +192,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
 
   case eCSSFrameType_Inline:
     if (mLineHeight >= 0) {
-#if 0
-      minHeight = maxSize.height = mLineHeight;
-#else
-      minHeight = mLineHeight;
-#endif
-      heightConstraint = eHTMLFrameConstraint_FixedContent;
+      computedHeight = mLineHeight;
     }
     return;
 
@@ -217,9 +201,6 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   }
 
   // Look for stylistic constraints on the width/height
-  const nsStylePosition* pos;
-  nsresult result = frame->GetStyleData(eStyleStruct_Position,
-                                        (const nsStyleStruct*&)pos);
   if (NS_OK == result) {
     nscoord containingBlockWidth, containingBlockHeight;
     nscoord width = -1, height = -1;
@@ -245,7 +226,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       }
       else {
         if (eStyleUnit_Percent == widthUnit) {
-          containingBlockWidth = cbrs->GetContentWidth();
+          containingBlockWidth = cbrs->computedWidth;
         }
         if (eStyleUnit_Percent == heightUnit) {
           if (NS_UNCONSTRAINEDSIZE == cbrs->maxSize.height) {
@@ -269,8 +250,16 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       width = nscoord(pos->mWidth.GetPercentValue() * containingBlockWidth);
       break;
     case eStyleUnit_Auto:
-      // XXX See section 10.3 of the css2 spec and then write this code!
-      break;
+      {
+        // XXX See section 10.3 of the css2 spec and then write this code!
+        nsMargin  margin;
+        nsMargin  borderPadding;
+        ComputeMarginFor(frame, parentReflowState, margin);
+        ComputeBorderPaddingFor(frame, parentReflowState, borderPadding);
+        width = maxSize.width - margin.left - margin.right - borderPadding.left -
+          borderPadding.right;
+        break;
+      }
     }
     switch (heightUnit) {
     case eStyleUnit_Coord:
@@ -285,16 +274,10 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     }
 
     if (width > 0) {
-      // XXX If the size constraint is a fixed content width then we also
-      // need to set the max width as well, but then we bust tables...
-      minWidth = width;
-      widthConstraint = eHTMLFrameConstraint_FixedContent;
+      computedWidth = width;
     }
     if (height > 0) {
-      // XXX If the size constraint is a fixed content width then we also
-      // need to set the max height as well...
-      minHeight = height;
-      heightConstraint = eHTMLFrameConstraint_FixedContent;
+      computedHeight = height;
     }
   }
 
@@ -378,7 +361,7 @@ nsHTMLReflowState::ComputeHorizontalValue(const nsHTMLReflowState& aRS,
 {
   aResult = 0;
   if (eStyleUnit_Percent == aUnit) {
-    nscoord width = aRS.GetContentWidth();
+    nscoord width = aRS.computedWidth;
     float pct = aCoord.GetPercentValue();
     aResult = NSToCoordFloor(width * pct);
   }
@@ -393,7 +376,7 @@ nsHTMLReflowState::ComputeVerticalValue(const nsHTMLReflowState& aRS,
   aResult = 0;
   if (eStyleUnit_Percent == aUnit) {
     // XXX temporary!
-    nscoord width = aRS.GetContentWidth();
+    nscoord width = aRS.computedWidth;
     float pct = aCoord.GetPercentValue();
     aResult = NSToCoordFloor(width * pct);
   }

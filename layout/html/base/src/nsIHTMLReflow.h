@@ -73,33 +73,6 @@ struct nsHTMLReflowMetrics : nsReflowMetrics {
 //----------------------------------------------------------------------
 
 /**
- * The type of size constraint that applies to a particular
- * dimension.  For the fixed and fixed content cases the min/max
- * width/height in the reflow state structure is ignored and you
- * should use the max size value when reflowing the frame.
- *
- * @see nsHTMLReflowState
- */
-enum nsHTMLFrameConstraint {
-  // Choose whatever frame size you want (there is no stylistic limitation
-  // on the size of the frame)
-  eHTMLFrameConstraint_Unconstrained,
-
-  // Choose a frame size between the min and max sizes
-  eHTMLFrameConstraint_Constrained,
-
-  // Frame size is fixed. The nsReflowState::maxSize.width value
-  // determines the fixed width.
-  eHTMLFrameConstraint_Fixed,
-
-  // Content size is fixed. The nsReflowState::maxSize.width value
-  // determines the fixed width.
-  eHTMLFrameConstraint_FixedContent
-};
-
-//----------------------------------------------------------------------
-
-/**
  * CSS Frame type. Included as part of the reflow state.
  *
  * @see nsHTMLReflowState
@@ -149,6 +122,9 @@ enum nsCSSFrameType {
 
 //----------------------------------------------------------------------
 
+#define NS_INTRINSICSIZE  0
+#define NS_AUTOHEIGHT     0
+
 /**
  * HTML version of the reflow state.
  *
@@ -157,30 +133,50 @@ enum nsCSSFrameType {
 struct nsHTMLReflowState : nsReflowState {
   // The type of frame, from css's perspective. This value is
   // initialized by the Init method below.
-  nsCSSFrameType        frameType;
+  nsCSSFrameType   frameType;
 
-  nsISpaceManager*      spaceManager;
+  nsISpaceManager* spaceManager;
 
   // LineLayout object (only for inline reflow; set to NULL otherwise)
-  nsLineLayout*         lineLayout;
+  nsLineLayout*    lineLayout;
 
-  // Constraint that applies to width dimension
-  nsHTMLFrameConstraint widthConstraint;
-  nscoord               minWidth;
+  // Computed width and margins. The computed width specifies the frame's
+  // content width, and it does not apply to inline non-replaced elements
+  //
+  // For replaced inline frames, a value of NS_INTRINSICSIZE means you should
+  // use your intrinsic width as the computed width
+  //
+  // For block-level frames, the computed width is based on the width of the
+  // containing block and the margin/border/padding areas and the min/max
+  // width
+  nscoord          computedWidth; 
+  nscoord          computedLeftMargin, computedRightMargin; 
 
-  // Constraint that applies to height dimension
-  nsHTMLFrameConstraint heightConstraint;
-  nscoord               minHeight;
+  // Computed height and margins. The computed height specifies the frame's
+  // content height, and it does not apply to inline non-replaced elements
+  //
+  // For replaced inline frames, a value of NS_INTRINSICSIZE means you should
+  // use your intrinsic height as the computed height
+  //
+  // For non-replaced block-level frames in the flow and floated, a value of
+  // NS_AUTOHEIGHT means you choose a height to shrink wrap around the normal
+  // flow child frames. The height must be within the limit of the min/max
+  // height if there is such a limit
+  //
+  // For replaced block-level frames, a value of NS_INTRINSICSIZE
+  // means you use your intrinsic height as the computed height
+  nscoord          computedHeight;
+  nscoord          computedTopMargin, computedBottomMargin;
 
   // Run-in frame made available for reflow
-  nsBlockFrame*         mRunInFrame;
+  nsBlockFrame*    mRunInFrame;
 
   // Compact margin available space
-  nscoord               mCompactMarginWidth;
+  nscoord          mCompactMarginWidth;
 
   // The line-height for the frame. If the frame has no specific
   // line-height value then this field will be "-1".
-  nscoord               mLineHeight;
+  nscoord          mLineHeight;
 
   // Constructs an initial reflow state (no parent reflow state) for a
   // non-incremental reflow command. Sets reflowType to eReflowType_Block
@@ -229,19 +225,12 @@ struct nsHTMLReflowState : nsReflowState {
                     const nsSize&            aMaxSize,
                     nsReflowReason           aReflowReason);
 
-  PRBool HaveFixedContentWidth() const {
-    return eHTMLFrameConstraint_FixedContent == widthConstraint;
-  }
-
-  PRBool HaveFixedContentHeight() const {
-    return eHTMLFrameConstraint_FixedContent == heightConstraint;
-  }
-
   /**
-   * Return the width of the content area based on this reflow state's
-   * state.
+   * Returns PR_TRUE if the specified width or height has an value other
+   * than 'auto'
    */
-  nscoord GetContentWidth() const;
+  PRBool HaveFixedContentWidth() const;
+  PRBool HaveFixedContentHeight() const;
 
   /**
    * Get the containing block reflow state, starting from a frames

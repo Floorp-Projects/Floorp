@@ -449,11 +449,11 @@ nsLabelFrame::Reflow(nsIPresContext& aPresContext,
   }
 
   // if we are constrained and the child is smaller, use the constrained values
-  if (aReflowState.HaveFixedContentWidth() && (aDesiredSize.width < aReflowState.minWidth)) {
-    aDesiredSize.width = aReflowState.minWidth;
+  if (aReflowState.HaveFixedContentWidth() && (aDesiredSize.width < aReflowState.computedWidth)) {
+    aDesiredSize.width = aReflowState.computedWidth;
   }
-  if (aReflowState.HaveFixedContentHeight() && (aDesiredSize.height < aReflowState.minHeight)) {
-    aDesiredSize.height = aReflowState.minHeight;
+  if (aReflowState.HaveFixedContentHeight() && (aDesiredSize.height < aReflowState.computedHeight)) {
+    aDesiredSize.height = aReflowState.computedHeight;
   }
 
   aDesiredSize.ascent  = aDesiredSize.height;

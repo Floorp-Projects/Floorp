@@ -276,7 +276,7 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
                      legendMargin.left + legendMargin.right;
   nscoord verTaken = padding.top + borderPadding.bottom + legendMargin.top + legendMargin.bottom;
   if (aReflowState.HaveFixedContentWidth()) {
-    availSize.width = aReflowState.minWidth;
+    availSize.width = aReflowState.computedWidth;
   }
   else {
     if (NS_UNCONSTRAINEDSIZE != availSize.width)
@@ -356,8 +356,8 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   nscoord contentWidth = contentSize.width + borderPadding.left + borderPadding.right;
 
   aDesiredSize.width = (legendWidth > contentWidth) ? legendWidth : contentWidth;
-  if (aReflowState.HaveFixedContentWidth() && (aReflowState.minWidth > aDesiredSize.width)) {
-    aDesiredSize.width = aReflowState.minWidth;
+  if (aReflowState.HaveFixedContentWidth() && (aReflowState.computedWidth > aDesiredSize.width)) {
+    aDesiredSize.width = aReflowState.computedWidth;
   }
 
   // Place the legend 
@@ -419,8 +419,8 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
   aDesiredSize.height  = contentTopOffset + contentSize.height + borderPadding.bottom;
   if (mInline) // XXX parents don't yet ...... 
     aDesiredSize.height += margin.bottom;
-  if (aReflowState.HaveFixedContentHeight() && (aReflowState.minHeight > aDesiredSize.height)) {
-    aDesiredSize.height = aReflowState.minHeight;
+  if (aReflowState.HaveFixedContentHeight() && (aReflowState.computedHeight > aDesiredSize.height)) {
+    aDesiredSize.height = aReflowState.computedHeight;
   }
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;

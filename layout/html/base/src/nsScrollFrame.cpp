@@ -292,66 +292,30 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   dc->GetScrollBarDimensions(sbWidth, sbHeight);
   NS_RELEASE(dc);
 
-  //@ Make me a subroutine...
-
   // Compute the scroll area size. This is the area inside of our border edge
   // and inside of any vertical and horizontal scrollbars
   nsSize scrollAreaSize;
-  if ((eHTMLFrameConstraint_Fixed == aReflowState.widthConstraint) ||
-      (eHTMLFrameConstraint_FixedContent == aReflowState.widthConstraint)) {
-    // The reflow state width reflects space for the content area only, so don't
-    // subtract for borders...
-    scrollAreaSize.width = aReflowState.minWidth;
-
-    if (eHTMLFrameConstraint_Fixed == aReflowState.widthConstraint) {
-      scrollAreaSize.width -= border.left + border.right;
-      scrollAreaSize.width -= NSToCoordRound(sbWidth);
-    }
-  }
-  else {
-    // Use the max width in the reflow state
-    scrollAreaSize.width = aReflowState.maxSize.width;
-    if (NS_UNCONSTRAINEDSIZE != scrollAreaSize.width) {
-      // The width is constrained so subtract for borders
-      scrollAreaSize.width -= border.left + border.right;
-
-      // Subtract for the width of the vertical scrollbar. We always do this
-      // regardless of whether scrollbars are auto or always visible
-      scrollAreaSize.width -= NSToCoordRound(sbWidth);
-    }
-  }
-
-  if ((eHTMLFrameConstraint_Fixed == aReflowState.heightConstraint) ||
-      (eHTMLFrameConstraint_FixedContent == aReflowState.heightConstraint)) {
-    // The reflow state height reflects space for the content area only, so don't
-    // subtract for borders...
-    scrollAreaSize.height = aReflowState.minHeight;
-
-    if (eHTMLFrameConstraint_Fixed == aReflowState.heightConstraint) {
-      scrollAreaSize.height -= border.top + border.bottom;
-
-      // If scrollbars are always visible then subtract for the
-      // height of the horizontal scrollbar
-      if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {
-        scrollAreaSize.height -= NSToCoordRound(sbHeight);
-      }
-    }
-  }
-  else {
-    // Use the max height in the reflow state
+  scrollAreaSize.width = aReflowState.computedWidth;
+  // Subtract for the width of the vertical scrollbar. We always do this
+  // regardless of whether scrollbars are auto or always visible
+  scrollAreaSize.width -= NSToCoordRound(sbWidth);
+  if (NS_AUTOHEIGHT == aReflowState.computedHeight) {
+    // We have an 'auto' height and so we should shrink wrap around the
+    // scrolled frame. Let the scrolled frame be as high as the available
+    // height
     scrollAreaSize.height = aReflowState.maxSize.height;
-    if (NS_UNCONSTRAINEDSIZE != scrollAreaSize.height) {
-      // The height is constrained so subtract for borders
-      scrollAreaSize.height -= border.top + border.bottom;
+    scrollAreaSize.height -= border.top + border.bottom;
 
-      // If scrollbars are always visible then subtract for the
-      // height of the horizontal scrollbar
-      if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {
-        scrollAreaSize.height -= NSToCoordRound(sbHeight);
-      }
-    }
+    // XXX Check for min/max limits...
+  } else {
+    // We have a fixed height so use the computed height
+    scrollAreaSize.height = aReflowState.computedHeight;
   }
-  //@ Make me a subroutine...
+  // If scrollbars are always visible then subtract for the height of the
+  // horizontal scrollbar
+  if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {
+    scrollAreaSize.height -= NSToCoordRound(sbHeight);
+  }
 
   // Reflow the child and get its desired size. Let it be as high as it
   // wants
@@ -363,10 +327,9 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   ReflowChild(mFirstChild, aPresContext, kidDesiredSize, kidReflowState, aStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
-  // Make sure the scrolled frame fills the entire scroll area along a
-  // fixed dimension
-  if ((eHTMLFrameConstraint_Fixed == aReflowState.heightConstraint) ||
-      (eHTMLFrameConstraint_FixedContent == aReflowState.heightConstraint)) {
+  // Make sure the height of the scrolled frame fills the entire scroll area,
+  // unless we're shrink wrapping
+  if (NS_AUTOHEIGHT != aReflowState.computedHeight) {
     if (kidDesiredSize.height < scrollAreaSize.height) {
       kidDesiredSize.height = scrollAreaSize.height;
 
@@ -389,11 +352,9 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
       }
     }
   }
-  if ((eHTMLFrameConstraint_Fixed == aReflowState.widthConstraint) ||
-      (eHTMLFrameConstraint_FixedContent == aReflowState.widthConstraint)) {
-    if (kidDesiredSize.width < scrollAreaSize.width) {
-      kidDesiredSize.width = scrollAreaSize.width;
-    }
+  // Make sure the width of the scrolled frame fills the entire scroll area
+  if (kidDesiredSize.width < scrollAreaSize.width) {
+    kidDesiredSize.width = scrollAreaSize.width;
   }
 
   // Place and size the child.
@@ -415,21 +376,16 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   }
 #endif
 
-  // Compute our desired size. If our size was fixed then use the fixed size;
-  // otherwise, shrink wrap around the scrolled frame
-  if ((eHTMLFrameConstraint_Fixed == aReflowState.widthConstraint) ||
-      (eHTMLFrameConstraint_FixedContent == aReflowState.widthConstraint)) {
-    aDesiredSize.width = scrollAreaSize.width;
-  } else {
-    aDesiredSize.width = kidDesiredSize.width;
-  }
+  // Compute our desired size
+  aDesiredSize.width = scrollAreaSize.width;
   aDesiredSize.width += border.left + border.right + NSToCoordRound(sbWidth);
-
-  if ((eHTMLFrameConstraint_Fixed == aReflowState.heightConstraint) ||
-      (eHTMLFrameConstraint_FixedContent == aReflowState.heightConstraint)) {
-    aDesiredSize.height = scrollAreaSize.height;
-  } else {
+  
+  // For the height if we're shrink wrapping then use the child's desired size;
+  // otherwise, use the scroll area size
+  if (NS_AUTOHEIGHT == aReflowState.computedHeight) {
     aDesiredSize.height = kidDesiredSize.height;
+  } else {
+    aDesiredSize.height = scrollAreaSize.height;
   }
   aDesiredSize.height += border.top + border.bottom;
   // XXX This should really be "if we have a visible horizontal scrollbar"...

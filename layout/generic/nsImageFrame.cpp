@@ -232,8 +232,8 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
     if (aReflowState.HaveFixedContentWidth() &&
         aReflowState.HaveFixedContentHeight()) {
       // The image is fully constrained. Use the constraints directly.
-      aDesiredSize.width = aReflowState.minWidth;
-      aDesiredSize.height = aReflowState.minHeight;
+      aDesiredSize.width = aReflowState.computedWidth;
+      aDesiredSize.height = aReflowState.computedHeight;
     }
     else {
       // The image is partially constrained. Preserve aspect ratio of
@@ -256,16 +256,16 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
           if (aReflowState.HaveFixedContentWidth()) {
             // We have a width, and an auto height. Compute height
             // from width.
-            aDesiredSize.width = aReflowState.minWidth;
+            aDesiredSize.width = aReflowState.computedWidth;
             aDesiredSize.height = (nscoord)
-              NSToIntRound(aReflowState.minWidth * imageHeight / imageWidth);
+              NSToIntRound(aReflowState.computedWidth * imageHeight / imageWidth);
           }
           else {
             // We have a height and an auto width. Compute width from
             // height.
-            aDesiredSize.height = aReflowState.minHeight;
+            aDesiredSize.height = aReflowState.computedHeight;
             aDesiredSize.width = (nscoord)
-              NSToIntRound(aReflowState.minHeight * imageWidth / imageHeight);
+              NSToIntRound(aReflowState.computedHeight * imageWidth / imageHeight);
           }
         }
         else {

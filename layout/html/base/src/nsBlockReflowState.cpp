@@ -329,12 +329,13 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
 
   nscoord lr = mBorderPadding.left + mBorderPadding.right;
   mY = mBorderPadding.top;
-  if (eHTMLFrameConstraint_FixedContent == widthConstraint) {
+
+  if (HaveFixedContentWidth()) {
     // The CSS2 spec says that the width attribute defines the width
     // of the "content area" which does not include the border
     // padding. So we add those back in.
-    mBorderArea.width = minWidth + lr;
-    mContentArea.width = minWidth;
+    mBorderArea.width = computedWidth + lr;
+    mContentArea.width = computedWidth;
   }
   else {
     if (mUnconstrainedWidth) {
@@ -346,6 +347,7 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
       mContentArea.width = maxSize.width - lr;
     }
   }
+
   mBorderArea.height = maxSize.height;
   mContentArea.height = maxSize.height;
   mBottomEdge = maxSize.height;
@@ -692,10 +694,8 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
                                 nsHTMLReflowMetrics& aMetrics)
 {
   // XXX handle floater problems this way...
-  PRBool isFixedWidth =
-    eHTMLFrameConstraint_FixedContent == aState.widthConstraint;
-  PRBool isFixedHeight =
-    eHTMLFrameConstraint_FixedContent == aState.heightConstraint;
+  PRBool isFixedWidth = aState.HaveFixedContentWidth();
+  PRBool isFixedHeight = NS_AUTOHEIGHT != aState.computedHeight;
 
 #if 0
   if (NS_BODY_SHRINK_WRAP & mFlags) {
@@ -707,8 +707,8 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
   // Compute final width
   if (isFixedWidth) {
     // Use style defined width
-    aMetrics.width = aState.mBorderPadding.left +
-      aState.minWidth + aState.mBorderPadding.right;
+    aMetrics.width = aState.mBorderPadding.left + aState.computedWidth +
+      aState.mBorderPadding.right;
   }
   else {
     nscoord computedWidth = aState.mKidXMost + aState.mBorderPadding.right;
@@ -745,8 +745,8 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
   // Compute final height
   if (isFixedHeight) {
     // Use style defined height
-    aMetrics.height = aState.mBorderPadding.top +
-      aState.minHeight + aState.mBorderPadding.bottom;
+    aMetrics.height = aState.mBorderPadding.top + aState.computedHeight +
+      aState.mBorderPadding.bottom;
   }
   else {
     // Shrink wrap our height around our contents.
@@ -773,8 +773,12 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
   // Special check for zero sized content: If our content is zero
   // sized then we collapse into nothingness.
   PRBool emptyFrame = PR_FALSE;
-  if ((eHTMLFrameConstraint_Unconstrained == aState.widthConstraint) &&
-      (eHTMLFrameConstraint_Unconstrained == aState.heightConstraint) &&
+  // We need to check the specified width and see if it's 'auto'
+  const nsStylePosition* position;
+  aState.frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&) position);
+  PRIntn specifiedWidthUnit = position->mWidth.GetUnit();
+  if ((eStyleUnit_Auto == specifiedWidthUnit) &&
+      (NS_AUTOHEIGHT == aState.computedHeight) &&
       ((0 == aState.mKidXMost - aState.mBorderPadding.left) &&
        (0 == aState.mY - aState.mBorderPadding.top))) {
     aMetrics.width = 0;
@@ -3473,7 +3477,7 @@ nsBaseIBFrame::ReflowFloater(nsIPresContext& aPresContext,
   if (aFloaterReflowState.HaveFixedContentWidth()) {
     // When the floater has a contrained width, give it just enough
     // space for its styled width plus its borders and paddings.
-    kidAvailSize.width = aFloaterReflowState.minWidth + bp.left + bp.right;
+    kidAvailSize.width = aFloaterReflowState.computedWidth + bp.left + bp.right;
   }
   else {
     // CSS2 section 10.3.5: Floating non-replaced elements with an
@@ -3493,7 +3497,7 @@ nsBaseIBFrame::ReflowFloater(nsIPresContext& aPresContext,
 
   // Compute the available height for the floater
   if (aFloaterReflowState.HaveFixedContentHeight()) {
-    kidAvailSize.height = aFloaterReflowState.minHeight + bp.top + bp.bottom;
+    kidAvailSize.height = aFloaterReflowState.computedHeight + bp.top + bp.bottom;
   }
   else {
     kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
