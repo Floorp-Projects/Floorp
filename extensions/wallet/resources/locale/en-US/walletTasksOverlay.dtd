@@ -8,12 +8,12 @@
 <!ENTITY walletQuickFillCmd.accesskey "q">
 <!ENTITY walletRequestToCaptureCmd.label "Save Form Data">
 <!ENTITY walletRequestToCaptureCmd.accesskey "S">
-<!ENTITY walletContentsCmd.label "View Stored Form Data">
-<!ENTITY walletContentsCmd.accesskey "v">
-<!ENTITY walletSitesCmd.label "View Sites">
-<!ENTITY walletSitesCmd.accesskey "w">
-<!ENTITY walletDisplaySignonsCmd.label "View Stored Passwords">
-<!ENTITY walletDisplaySignonsCmd.accesskey "v">
+<!ENTITY walletContentsCmd.label "Manage Stored Form Data">
+<!ENTITY walletContentsCmd.accesskey "M">
+<!ENTITY walletSitesCmd.label "Manage Sites">
+<!ENTITY walletSitesCmd.accesskey "S">
+<!ENTITY walletDisplaySignonsCmd.label "Manage Stored Passwords">
+<!ENTITY walletDisplaySignonsCmd.accesskey "M">
 <!ENTITY walletInterviewCmd.label "Interview">
 <!ENTITY walletInterviewCmd.accesskey "i">
 <!ENTITY walletSamplesCmd.label "Demonstration">

@@ -1,13 +1,13 @@
-<!ENTITY cookieDisplayCookiesCmd.label "View Stored Cookies">
-<!ENTITY cookieDisplayCookiesCmd.accesskey "v">
+<!ENTITY cookieDisplayCookiesCmd.label "Manage Stored Cookies">
+<!ENTITY cookieDisplayCookiesCmd.accesskey "m">
 <!ENTITY cookieAllowCookiesCmd.label "Unblock Cookies from this Site">
 <!ENTITY cookieAllowCookiesCmd.accesskey "u">
 <!ENTITY cookieAllowCookiesMsg.label "Cookies from this site will not be blocked">
 <!ENTITY cookieBlockCookiesCmd.label "Block Cookies from this Site">
 <!ENTITY cookieBlockCookiesCmd.accesskey "b">
 <!ENTITY cookieBlockCookiesMsg.label "Cookies from this site will always be rejected">
-<!ENTITY cookieDisplayImagesCmd.label "View Sites that can/cannot Display Images">
-<!ENTITY cookieDisplayImagesCmd.accesskey "v">
+<!ENTITY cookieDisplayImagesCmd.label "Manage Image Permissions">
+<!ENTITY cookieDisplayImagesCmd.accesskey "m">
 <!ENTITY cookieAllowImagesCmd.label "Unblock Images from this Site">
 <!ENTITY cookieAllowImagesCmd.accesskey "u">
 <!ENTITY cookieAllowImagesMsg.label "Images from this site will always be downloaded">
