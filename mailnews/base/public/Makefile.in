@@ -22,9 +22,14 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+IDLSRCS = \
+		nsIMsgHost.idl \
+		$(NULL)
+
 EXPORTS = \
 		msgCore.h \
 		nsIMsgRFC822Parser.h \
+		nsIMsgHost.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
