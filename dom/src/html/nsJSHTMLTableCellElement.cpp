@@ -307,6 +307,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetCellIndex(prop);
@@ -397,6 +398,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetColSpan(prop);
@@ -435,6 +437,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetNoWrap(prop);
@@ -453,6 +456,7 @@ SetHTMLTableCellElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetRowSpan(prop);

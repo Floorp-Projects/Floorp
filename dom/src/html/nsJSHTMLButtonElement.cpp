@@ -216,6 +216,7 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           PRBool prop;
           if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
             rv = NS_ERROR_DOM_NOT_BOOLEAN_ERR;
+            break;
           }
       
           rv = a->SetDisabled(prop);
@@ -246,6 +247,7 @@ SetHTMLButtonElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetTabIndex(prop);

@@ -219,6 +219,7 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetTop(prop);
@@ -237,6 +238,7 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetLeft(prop);
@@ -303,6 +305,7 @@ SetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           }
           else {
             rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+            break;
           }
       
           rv = a->SetZIndex(prop);
