@@ -41,6 +41,7 @@
 #include "nsISupportsArray.h"
 #include "nsITextScroll.h"
 #include "nsIWidget.h"
+
 #include "nsIWebBrowser.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebProgress.h"
@@ -60,9 +61,9 @@ public:
 
 
 class nsWebBrowser : public nsIWebBrowser,
-                     public nsIDocShellTreeItem,
                      public nsIWebNavigation,
-                     public nsIWebProgress, 
+                     public nsIWebProgress,
+                     public nsIDocShellTreeItem,
                      public nsIBaseWindow,
                      public nsIScrollable, 
                      public nsITextScroll, 
@@ -71,26 +72,26 @@ class nsWebBrowser : public nsIWebBrowser,
 friend class nsDocShellTreeOwner;
 friend class nsWBURIContentListener;
 public:
-   nsWebBrowser();
+    nsWebBrowser();
 
-   NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
 
-   NS_DECL_NSIBASEWINDOW
-   NS_DECL_NSIDOCSHELLTREEITEM
-   NS_DECL_NSIINTERFACEREQUESTOR
-   NS_DECL_NSISCROLLABLE   
-   NS_DECL_NSITEXTSCROLL
-   NS_DECL_NSIWEBBROWSER
-   NS_DECL_NSIWEBNAVIGATION
-   NS_DECL_NSIWEBPROGRESS
+    NS_DECL_NSIBASEWINDOW
+    NS_DECL_NSIDOCSHELLTREEITEM
+    NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSISCROLLABLE   
+    NS_DECL_NSITEXTSCROLL
+    NS_DECL_NSIWEBBROWSER
+    NS_DECL_NSIWEBNAVIGATION
+    NS_DECL_NSIWEBPROGRESS
 
 protected:
-   virtual ~nsWebBrowser();
-   NS_IMETHOD InternalDestroy();
+    virtual ~nsWebBrowser();
+    NS_IMETHOD InternalDestroy();
 
-   NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
-   NS_IMETHOD EnsureDocShellTreeOwner();
-   NS_IMETHOD EnsureContentListener();
+    NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
+    NS_IMETHOD EnsureDocShellTreeOwner();
+    NS_IMETHOD EnsureContentListener();
 
 protected:
    nsDocShellTreeOwner*       mDocShellTreeOwner;

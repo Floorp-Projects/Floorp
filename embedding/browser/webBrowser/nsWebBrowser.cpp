@@ -80,6 +80,7 @@ NS_IMETHODIMP nsWebBrowser::InternalDestroy()
    return NS_OK;
 }
 
+
 //*****************************************************************************
 // nsWebBrowser::nsISupports
 //*****************************************************************************   
@@ -88,15 +89,15 @@ NS_IMPL_ADDREF(nsWebBrowser)
 NS_IMPL_RELEASE(nsWebBrowser)
 
 NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
-     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowser)
-     NS_INTERFACE_MAP_ENTRY(nsIWebBrowser)
-     NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
-     NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
-     NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
-     NS_INTERFACE_MAP_ENTRY(nsIScrollable)
-     NS_INTERFACE_MAP_ENTRY(nsITextScroll)
-     NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
-     NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebBrowser)
+    NS_INTERFACE_MAP_ENTRY(nsIWebBrowser)
+    NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
+    NS_INTERFACE_MAP_ENTRY(nsIWebProgress)
+    NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+    NS_INTERFACE_MAP_ENTRY(nsIScrollable)
+    NS_INTERFACE_MAP_ENTRY(nsITextScroll)
+    NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeItem)
+    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
 
 ///*****************************************************************************
@@ -231,9 +232,9 @@ NS_IMETHODIMP nsWebBrowser::GetItemType(PRInt32* aItemType)
 
 NS_IMETHODIMP nsWebBrowser::SetItemType(PRInt32 aItemType)
 {
-   NS_ENSURE_TRUE((aItemType == typeContentWrapper || aItemType == typeChromeWrapper), NS_ERROR_FAILURE);
-   mContentType = aItemType;
-   return NS_OK;
+    NS_ENSURE_TRUE((aItemType == typeContentWrapper || aItemType == typeChromeWrapper), NS_ERROR_FAILURE);
+    mContentType = aItemType;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetParent(nsIDocShellTreeItem** aParent)
@@ -594,7 +595,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
 
    delete mInitInfo;
    mInitInfo = nsnull;
-   
+
    return NS_OK; 
 }
 
@@ -1059,3 +1060,6 @@ NS_IMETHODIMP nsWebBrowser::EnsureContentListener()
    
    return NS_OK;
 }
+
+
+
