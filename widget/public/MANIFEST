@@ -44,5 +44,4 @@ nsIPopUpMenu.h
 nsIImageButton.h
 nsIImageButtonListener.h
 nsIContentConnector.h
-nsISelectionMgr.h
 nsIKeyBindMgr.h
