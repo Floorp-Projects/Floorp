@@ -1386,7 +1386,10 @@ XmLStringDraw(Widget w,
 	else if (alignment == XmALIGNMENT_CENTER ||
 		alignment == XmALIGNMENT_TOP ||
 		alignment == XmALIGNMENT_BOTTOM)
-		strAlignment = XmALIGNMENT_CENTER;
+        if (width <= rect->width - 4)
+            strAlignment = XmALIGNMENT_CENTER;
+        else
+            strAlignment = XmALIGNMENT_BEGINNING;
 	else
 		strAlignment = XmALIGNMENT_END;
 	/* XmStringDraw clipping doesnt work in all cases
