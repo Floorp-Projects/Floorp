@@ -2666,6 +2666,80 @@ nsWindow::LoseNonXEmbedPluginFocus()
 }
 
 
+gint
+nsWindow::ConvertBorderStyles(nsBorderStyle aStyle)
+{
+    gint w = 0;
+
+    if (aStyle == eBorderStyle_default)
+        return -1;
+
+    if (aStyle & eBorderStyle_all)
+        w |= GDK_DECOR_ALL;
+    if (aStyle & eBorderStyle_border)
+        w |= GDK_DECOR_BORDER;
+    if (aStyle & eBorderStyle_resizeh)
+        w |= GDK_DECOR_RESIZEH;
+    if (aStyle & eBorderStyle_title)
+        w |= GDK_DECOR_TITLE;
+    if (aStyle & eBorderStyle_menu)
+        w |= GDK_DECOR_MENU;
+    if (aStyle & eBorderStyle_minimize)
+        w |= GDK_DECOR_MINIMIZE;
+    if (aStyle & eBorderStyle_maximize)
+        w |= GDK_DECOR_MAXIMIZE;
+    if (aStyle & eBorderStyle_close) {
+#ifdef DEBUG
+        printf("we don't handle eBorderStyle_close yet... please fix me\n");
+#endif /* DEBUG */
+    }
+
+    return w;
+}
+
+NS_IMETHODIMP
+nsWindow::HideWindowChrome(PRBool aShouldHide)
+{
+    if (!mShell) {
+        // Pass the request to the toplevel window
+        GtkWidget *topWidget = nsnull;
+        GetToplevelWidget(&topWidget);
+        nsWindow *topWindow = get_window_for_gtk_widget(topWidget);
+        return topWindow->HideWindowChrome(aShouldHide);
+    }
+
+    // Sawfish, metacity, and presumably other window managers get
+    // confused if we change the window decorations while the window
+    // is visible.
+#if GTK_CHECK_VERSION(2,2,0)
+    if (aShouldHide) 
+        gdk_window_fullscreen (mShell->window);
+    else 
+        gdk_window_unfullscreen (mShell->window);
+#else
+    gdk_window_hide(mShell->window);
+
+    gint wmd;
+    if (aShouldHide)
+        wmd = 0;
+    else
+        wmd = ConvertBorderStyles(mBorderStyle);
+
+    gdk_window_set_decorations(mShell->window, (GdkWMDecoration) wmd);
+
+    gdk_window_show(mShell->window);
+#endif
+
+    // For some window managers, adding or removing window decorations
+    // requires unmapping and remapping our toplevel window.  Go ahead
+    // and flush the queue here so that we don't end up with a BadWindow
+    // error later when this happens (when the persistence timer fires
+    // and GetWindowPos is called)
+    XSync(GDK_DISPLAY(), False);
+
+    return NS_OK;
+}
+
 PRBool
 check_for_rollup(GdkWindow *aWindow, gdouble aMouseX, gdouble aMouseY,
                  PRBool aIsWheel)
