@@ -1002,6 +1002,10 @@ MenuHelpersX::DispatchCommandTo(nsIWeakReference* aWebShellWeakRef,
   event.eventStructType = NS_MOUSE_EVENT;
   event.message = NS_XUL_COMMAND;
 
+  // FIXME: Should probably figure out how to init this with the actual
+  // pressed keys, but this is a big old edge case anyway. -dwh
+  event.isShift = event.isControl = event.isAlt = event.isMeta = PR_FALSE;
+
   // See if we have a command element.  If so, we execute on the
   // command instead of on our content element.
   nsAutoString command;
