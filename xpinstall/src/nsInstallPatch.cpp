@@ -353,6 +353,7 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 	char 		*tmpurl		= NULL;
 	char 		*realfile	= PL_strdup(nsNSPRPath(sourceFile)); // needs to be sourceFile!!!
 	nsFileSpec  *outFileSpec = new nsFileSpec;
+    nsFileSpec  *tempSrcFile = new nsFileSpec;
     
     if (!outFileSpec) {
         status = GDIFF_ERR_MEM;
@@ -385,19 +386,35 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 			status = GDIFF_ERR_ACCESS;
 		}
 
-#ifdef WIN32
 
-        /* unbind Win32 images */
-        if ( dd->bWin32BoundImage && status == GDIFF_OK )
+        // in case we need to unbind Win32 images OR encode Mac file
+        if (( dd->bWin32BoundImage || dd->bMacAppleSingle) && (status == GDIFF_OK ))
         {
-            // create a tmp file, so we can unbind win32 images
-            nsSpecialSystemDirectory tempWinFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-            nsString srcName = sourceFile.GetLeafName();
-            tempWinFile.SetLeafName(srcName);
-            tempWinFile.MakeUnique();
+            // make an unique tmp file  (FILENAME-src.EXT)
+            *tempSrcFile = sourceFile;
+            nsString tmpName = "-src";
+		    nsString tmpFileName = sourceFile.GetLeafName();
 
-            // unbind images
-            char *tmpFile = PL_strdup(nsNSPRPath(tempWinFile));
+            PRInt32 i;
+		    if ((i = tmpFileName.RFindChar('.')) > 0)
+		    {
+                nsString ext;
+                nsString fName;
+                tmpFileName.Right(ext, (tmpFileName.Length() - i) );        
+                tmpFileName.Left(fName, (tmpFileName.Length() - (tmpFileName.Length() - i)));
+                tmpFileName = fName + tmpName + ext;
+
+            } else {
+                tmpFileName += tmpName;
+            }
+        
+
+		    tempSrcFile->SetLeafName(tmpFileName);
+		    tempSrcFile->MakeUnique();
+
+#ifdef WIN32
+            // unbind Win32 images
+            char *tmpFile = PL_strdup(nsNSPRPath(*tempSrcFile));
             if (su_unbind(realfile, tmpFile))
             {
                 PL_strfree(realfile);
@@ -408,23 +425,11 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
                 status = GDIFF_ERR_MEM;
             }
             PL_strfree(tmpFile);
-        }
 #endif
-
 #ifdef XP_MAC
-
-		if ( dd->bMacAppleSingle && status == GDIFF_OK ) 
-		{
-           // create a tmp file, so that we can AppleSingle the src file
-           nsSpecialSystemDirectory tempMacFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
-           nsString srcName = sourceFile.GetLeafName();
-           tempMacFile.SetLeafName(srcName);
-           tempMacFile.MakeUnique();
-           
-           // Encode! 
 		   // Encode src file, and put into temp file
 		   FSSpec sourceSpec = sourceFile.GetFSSpec();
-		   FSSpec tempSpec   = tempMacFile.GetFSSpec();
+		   FSSpec tempSpec   = tempSrcFile->GetFSSpec();
 		    
 			status = PAS_EncodeFile(&sourceSpec, &tempSpec);   
 				
@@ -432,12 +437,10 @@ nsInstallPatch::NativePatch(const nsFileSpec &sourceFile, const nsFileSpec &patc
 			{
 				// set
                 PL_strfree(realfile);
-				realfile = PL_strdup(nsNSPRPath(tempMacFile));
+				realfile = PL_strdup(nsNSPRPath(*tempSrcFile));
 			}
-		}
-#endif 
-
-
+#endif
+        }
 
 		if (status != NS_OK)
 			goto cleanup;
@@ -569,6 +572,11 @@ cleanup:
         PL_strfree(realfile);
     }
     
+    if ((tempSrcFile != nsnull) && (tempSrcFile->Exists()) )
+    {
+        tempSrcFile->Delete(PR_FALSE);
+    }
+
 	/* lets map any GDIFF error to nice SU errors */
 
 	switch (status)
@@ -1095,6 +1103,7 @@ XP_Bool su_unbind(char* oldfile, char* newfile)
 
 
         /* read and validate the MZ header */
+
         nRead = fread( &mz, 1, sizeof(mz), fh );
         if ( nRead != sizeof(mz) || mz.e_magic != IMAGE_DOS_SIGNATURE )
             goto bail;
