@@ -115,7 +115,7 @@ nsresult ConvertToUnicode(const nsString& aCharset,
     res = ccm->GetUnicodeDecoder(&convCharset, &decoder);
     if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
       PRInt32 srcLen = PL_strlen(inCString);
-      res = decoder->Length(inCString, 0, srcLen, &unicharLength);
+      res = decoder->GetMaxLength(inCString, srcLen, &unicharLength);
       // allocale an output buffer
       unichars = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
       if (unichars != nsnull) {
