@@ -81,10 +81,9 @@
     (deftag static)
     (deftag constructor)
     (deftag operator)
-    (deftag abstract)
     (deftag virtual)
     (deftag final)
-    (deftype member-modifier (tag none static constructor operator abstract virtual final))
+    (deftype member-modifier (tag none static constructor operator virtual final))
     
     (deftype override-modifier (tag none true false undefined))
     
@@ -396,13 +395,13 @@
       (final boolean))
     
     (defrecord instance-method
-      (code (union instance (tag abstract)))  ;Method code
+      (code instance)  ;Method code
       (signature signature)
       (final boolean))
     
     (defrecord instance-accessor
       (type class :opt-const)
-      (code (union instance (tag abstract)))  ;Getter or setter function code
+      (code instance)  ;Getter or setter function code
       (final boolean))
     
     
@@ -1156,12 +1155,8 @@
         (:narrow instance-method
           (return (new method-closure this m)))
         (:narrow instance-accessor
-          (const code (union instance (tag abstract)) (& code m))
-          (case code
-            (:narrow instance
-              (return ((& call (resolve-alias code)) this (new argument-list (vector-of object) (list-set-of named-argument)) (& env code) phase)))
-            (:select (tag abstract)
-              (throw property-access-error))))))
+          (const code instance (& code m))
+          (return ((& call (resolve-alias code)) this (new argument-list (vector-of object) (list-set-of named-argument)) (& env code) phase)))))
     
     
     (define (read-static-member (m static-member-opt) (phase phase)) object-opt
@@ -1290,12 +1285,8 @@
           (throw property-access-error))
         (:narrow instance-accessor
           (const coerced-value object (assignment-conversion new-value (&opt type m)))
-          (const code (union instance (tag abstract)) (& code m))
-          (case code
-            (:narrow instance
-              (exec ((& call (resolve-alias code)) this (new argument-list (vector coerced-value) (list-set-of named-argument)) (& env code) phase)))
-            (:select (tag abstract)
-              (throw property-access-error)))
+          (const code instance (& code m))
+          (exec ((& call (resolve-alias code)) this (new argument-list (vector coerced-value) (list-set-of named-argument)) (& env code) phase))
           (return ok))))
     
     
@@ -3168,9 +3159,6 @@
     
     
     (rule :nonexpression-attribute ((validate (-> (environment) void)) (eval (-> (environment phase) attribute)))
-      (production :nonexpression-attribute (abstract) nonexpression-attribute-abstract
-        ((validate (env :unused)))
-        ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false abstract none false false))))
       (production :nonexpression-attribute (final) nonexpression-attribute-final
         ((validate (env :unused)))
         ((eval (env :unused) (phase :unused)) (return (new compound-attribute (list-set-of namespace) false false final none false false))))
@@ -3402,16 +3390,12 @@
                          "In this case, ignore the error and leave the value of the variable " (:tag inaccessible) " until it is defined at run time."))))
                (<- deferred-validators (append deferred-validators (vector deferred-static-validate)))
                (action<- (kind :variable-binding 0) static))
-             (:narrow (tag abstract virtual final)
+             (:narrow (tag virtual final)
                (const c class (assert-in (nth env 0) class))
                (function (eval-initial-value) object-opt
                  (return ((eval :variable-initialisation) env run)))
                (var m (union instance-variable instance-accessor))
                (case member-mod
-                 (:select (tag abstract)
-                   (rwhen (has-initialiser :variable-initialisation)
-                     (throw syntax-error))
-                   (<- m (new instance-accessor :uninit abstract false)))
                  (:select (tag virtual)
                    (<- m (new instance-variable :uninit eval-initial-value immutable false)))
                  (:select (tag final)
@@ -3461,13 +3445,11 @@
                (&= value v coerced-value)))
            (:select (tag instance))))))
     
-    (rule (:variable-initialisation :beta) ((has-initialiser boolean) (validate (-> (context environment) void)) (eval (-> (environment phase) object-opt)))
+    (rule (:variable-initialisation :beta) ((validate (-> (context environment) void)) (eval (-> (environment phase) object-opt)))
       (production (:variable-initialisation :beta) () variable-initialisation-none
-        (has-initialiser false)
         ((validate (cxt :unused) (env :unused)))
         ((eval (env :unused) (phase :unused)) (return none)))
       (production (:variable-initialisation :beta) (= (:variable-initialiser :beta)) variable-initialisation-variable-initialiser
-        (has-initialiser true)
         ((validate cxt env) ((validate :variable-initialiser) cxt env))
         ((eval env phase) (return ((eval :variable-initialiser) env phase)))))
     
@@ -3497,7 +3479,7 @@
         ((validate cxt env) ((validate :type-expression) cxt env))
         ((eval env) (return ((eval :type-expression) env)))))
     ;(production (:typed-identifier :beta) ((:type-expression :beta) :identifier) typed-identifier-type-and-identifier)
-    (%print-actions ("Validation" name type-present immutable kind multiname has-initialiser validate) ("Evaluation" eval))
+    (%print-actions ("Validation" name type-present immutable kind multiname validate) ("Evaluation" eval))
     
     
     (%heading 2 "Simple Variable Definition")
@@ -3561,7 +3543,7 @@
          (rwhen (and prototype (or (not-in kind (tag normal)) (in member-mod (tag constructor))))
            (throw definition-error))
          (var compile-this (tag none inaccessible) none)
-         (when (or prototype (in member-mod (tag constructor abstract virtual final)))
+         (when (or prototype (in member-mod (tag constructor virtual final)))
            (<- compile-this inaccessible))
          (const compile-frame function-frame (new function-frame (list-set-of static-binding) (list-set-of static-binding) plural compile-this prototype))
          (const compile-env environment (cons compile-frame env))
@@ -3611,7 +3593,7 @@
                  (<- f (instantiate-open-instance (assert-in f open-instance) env)))
                (const v variable (new variable function-class f true))
                (exec (define-static-member env name (& namespaces a) (& override-mod a) (& explicit a) read-write v)))
-             (:narrow (tag abstract virtual final)
+             (:narrow (tag virtual final)
                (todo))
              (:select (tag constructor operator)
                (todo))))))))
@@ -3712,7 +3694,7 @@
                (throw definition-error))
              (<- final false))
            (:select (tag final) (<- final true))
-           (:select (tag constructor operator abstract virtual) (throw definition-error)))
+           (:select (tag constructor operator virtual) (throw definition-error)))
          (const private-namespace namespace (new namespace "private"))
          (const dynamic boolean (or (& dynamic a) (& dynamic superclass)))
          (const c class (new class (list-set-of static-binding) (list-set-of static-binding) (list-set-of instance-binding) (list-set-of instance-binding)
@@ -3855,10 +3837,8 @@
           (// "Note that " (:global resolve-alias) " is not called when getting the " (:label instance env) " field.")
           (return ((& call (resolve-alias a)) this args (& env a) phase)))
         (:narrow method-closure
-          (const code (union (tag abstract) instance) (& code (& method a)))
-          (case code
-            (:narrow instance (return (call-object (& this a) code args phase)))
-            (:select (tag abstract) (throw property-access-error))))))
+          (const code instance (& code (& method a)))
+          (return (call-object (& this a) code args phase)))))
     
     (define (construct-object (this object) (a object) (args argument-list) (phase phase)) object
       (case a
