@@ -33,7 +33,9 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\base\src -I..\style\src -I$(PUBLIC)\dom
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
+  -I..\base\src -I..\style\src \
+  -I..\..\base\src
 
 LLIBS=				\
  $(DIST)\lib\raptorhtmlbase_s.lib	\
