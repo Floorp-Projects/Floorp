@@ -28,8 +28,5 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= composer dialogs
 
-CHROME_DIR=editor
-CHROME_TYPE=content locale skin
-
 include $(topsrcdir)/config/rules.mk
 

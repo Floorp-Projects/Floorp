@@ -43,7 +43,8 @@ CHROME_L10N = \
 	.\wizardManager.properties \
 	.\wizardOverlay.dtd \
 	.\about.dtd \
-  .\languageNames.properties \
+	.\languageNames.properties \
+	.\manifest.rdf \
 	$(NULL)
   
 include <$(DEPTH)\config\rules.mak>

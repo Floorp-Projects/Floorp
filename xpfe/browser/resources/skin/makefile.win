@@ -42,6 +42,7 @@ CHROME_SKIN = \
 	.\search.gif \
 	.\stop.gif \
 	.\n-box-persbar.gif \
+	.\manifest.rdf \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

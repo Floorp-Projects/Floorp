@@ -37,6 +37,7 @@ CHROME_L10N = \
 		viewSource.dtd \
 		NetSupportConfirmCheckYN.dtd \
 		navigator.properties \
+		manifest.rdf \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

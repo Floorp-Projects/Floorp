@@ -66,6 +66,7 @@ CHROME_CONTENT= \
 	.\wizardOverlay.js \
 	.\wizardOverlay.xul \
 	.\treePopups.js \
+	.\manifest.rdf \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

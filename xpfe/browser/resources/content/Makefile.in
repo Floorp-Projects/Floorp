@@ -43,6 +43,7 @@ CHROME_CONTENT = \
 	viewSource.xul \
 	NetSupportConfirmYN.xul \
 	NetSupportConfirmCheckYN.xul \
+	manifest.rdf \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

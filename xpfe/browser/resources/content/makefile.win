@@ -38,6 +38,7 @@ CHROME_CONTENT = \
 	.\NetSupportConfirmCheckYN.xul \
 	.\tooltip.js \
 	.\nsContextMenu.js \
+	.\manifest.rdf \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

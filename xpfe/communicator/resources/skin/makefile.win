@@ -23,7 +23,6 @@ DEPTH=..\..\..\..
 
 CHROME_DIR=communicator
 CHROME_SKIN_DIR=skin
-
 CHROME_TYPE=skin
 
 CHROME_SKIN= \
@@ -36,6 +35,7 @@ CHROME_SKIN= \
 	.\splitter.css \
 	.\toolbar.css \
 	.\navbar-endbox.gif \
+	.\manifest.rdf \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
