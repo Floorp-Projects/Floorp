@@ -292,10 +292,6 @@ protected:
                            nsIMsgCopyServiceListener* listener);
     nsresult CopyStreamMessage(nsIMessage* message, nsIMsgFolder* dstFolder,
                                PRBool isMove);
-	// used for multiple messages
-	nsresult CopyStreamMessages(nsMsgKeyArray *keys,
-                                    nsIMsgFolder* dstFolder,
-                                    PRBool isMove);
     nsresult InitCopyState(nsISupports* srcSupport, 
                            nsISupportsArray* messages,
                            PRBool isMove,

@@ -3252,30 +3252,20 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
         nsCOMTypeInfo<nsImapMoveCopyMsgTxn>::GetIID(), 
         getter_AddRefs(m_copyState->m_undoMsgTxn) );
     
-	PRUint32 numMessages;
-
-	rv = messages->Count(&numMessages);
-	if (NS_SUCCEEDED(rv) && numMessages > 1)
+	nsCOMPtr<nsISupports> msgSupport;
+	msgSupport = getter_AddRefs(messages->ElementAt(0));
+	if (msgSupport)
 	{
-		CopyStreamMessages(&srcKeyArray, this, isMove);
+		nsCOMPtr<nsIMessage> aMessage;
+		aMessage = do_QueryInterface(msgSupport, &rv);
+		if (NS_SUCCEEDED(rv))
+			CopyStreamMessage(aMessage, this, isMove);
+		else
+			ClearCopyState(rv);
 	}
 	else
 	{
-		nsCOMPtr<nsISupports> msgSupport;
-		msgSupport = getter_AddRefs(messages->ElementAt(0));
-		if (msgSupport)
-		{
-			nsCOMPtr<nsIMessage> aMessage;
-			aMessage = do_QueryInterface(msgSupport, &rv);
-			if (NS_SUCCEEDED(rv))
-				CopyStreamMessage(aMessage, this, isMove);
-			else
-				ClearCopyState(rv);
-		}
-		else
-		{
-			rv = NS_ERROR_FAILURE;
-		}
+		rv = NS_ERROR_FAILURE;
 	}
     return rv;
 }
@@ -3479,47 +3469,6 @@ nsImapMailFolder::CopyStreamMessage(nsIMessage* message,
 	}
     return rv;
 }
-
-nsresult 
-nsImapMailFolder::CopyStreamMessages(nsMsgKeyArray *keys,
-                                    nsIMsgFolder* dstFolder, // should be this
-                                    PRBool isMove)
-{
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    if (!m_copyState) return rv;
-
-    nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener;
-
-    rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID,
-               NULL, nsICopyMessageStreamListener::GetIID(),
-			   getter_AddRefs(copyStreamListener)); 
-	if(NS_FAILED(rv))
-		return rv;
-
-    nsCOMPtr<nsICopyMessageListener>
-        copyListener(do_QueryInterface(dstFolder, &rv));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIMsgFolder>
-        srcFolder(do_QueryInterface(m_copyState->m_srcSupport, &rv));
-    if (NS_FAILED(rv)) return rv;
-    rv = copyStreamListener->Init(srcFolder, copyListener, nsnull);
-    if (NS_FAILED(rv)) return rv;
-       
-    if (NS_SUCCEEDED(rv) && m_copyState->m_msgService)
-    {
-        nsIURI * url = nsnull;
-		nsCOMPtr<nsIStreamListener>
-            streamListener(do_QueryInterface(copyStreamListener, &rv));
-		if(NS_FAILED(rv) || !streamListener)
-			return NS_ERROR_NO_INTERFACE;
-
-        rv = m_copyState->m_msgService->CopyMessages(keys, srcFolder, streamListener,
-                                                     isMove, nsnull, &url);
-	}
-    return rv;
-}
-
 
 nsImapMailCopyState::nsImapMailCopyState() : m_msgService(nsnull),
     m_isMove(PR_FALSE), m_selectedState(PR_FALSE), m_curIndex(0),
