@@ -2295,27 +2295,30 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
     nsIImageControlFrame* imageControlFrame = nsnull;
     if (formControlFrame) {
       CallQueryInterface(formControlFrame, &imageControlFrame);
-      if (imageControlFrame) {
-        imageControlFrame->GetClickedX(&clickedX);
-        imageControlFrame->GetClickedY(&clickedY);
+    }
+    
+    nsAutoString xVal;
+    nsAutoString yVal;
+    
+    if (imageControlFrame) {
+      imageControlFrame->GetClickedX(&clickedX);
+      imageControlFrame->GetClickedY(&clickedY);
 
-        // Convert the values to strings for submission
-        nsAutoString xVal, yVal;
-        xVal.AppendInt(clickedX);
-        yVal.AppendInt(clickedY);
-
-        if (!name.IsEmpty()) {
-          aFormSubmission->AddNameValuePair(this,
-                                            name + NS_LITERAL_STRING(".x"), xVal);
-          aFormSubmission->AddNameValuePair(this,
-                                            name + NS_LITERAL_STRING(".y"), yVal);
-        } else {
-          // If the Image Element has no name, simply return x and y
-          // to Nav and IE compatability.
-          aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("x"), xVal);
-          aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("y"), yVal);
-        }
-      }
+      // Convert the values to strings for submission
+      xVal.AppendInt(clickedX);
+      yVal.AppendInt(clickedY);
+    }
+    
+    if (!name.IsEmpty()) {
+      aFormSubmission->AddNameValuePair(this,
+                                        name + NS_LITERAL_STRING(".x"), xVal);
+      aFormSubmission->AddNameValuePair(this,
+                                        name + NS_LITERAL_STRING(".y"), yVal);
+    } else {
+      // If the Image Element has no name, simply return x and y
+      // to Nav and IE compatability.
+      aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("x"), xVal);
+      aFormSubmission->AddNameValuePair(this, NS_LITERAL_STRING("y"), yVal);
     }
   }
 
