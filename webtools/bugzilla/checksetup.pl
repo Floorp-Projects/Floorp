@@ -350,9 +350,13 @@ LocalVar('webservergroup', '
 # This is the group your web server runs on.
 # If you have a windows box, ignore this setting.
 # If you do not wish for checksetup to adjust the permissions of anything,
-# set this to "".
+# set this to "". If you do set this to "", then your Bugzilla installation
+# will be _VERY_ insecure, because some files will be world readable/writable,
+# and so anyone who can get local access to your machine can do whatever they
+# want. You should only have this set to "" if this is a testing installation
+# and you cannot set this up any other way. YOU HAVE BEEN WARNED.
 # If you set this to anything besides "", you will need to run checksetup.pl
-# as root.
+# as root, or as a user who is a member of the specified group.
 $webservergroup = "nobody";
 ');
 
@@ -525,8 +529,9 @@ my @my_priorities = @{*{$main::{'priorities'}}{ARRAY}};
 my @my_platforms = @{*{$main::{'platforms'}}{ARRAY}};
 my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
-if ($my_webservergroup && ($< != 0)) { # zach: if not root, yell at them, bug 87398 
-    print <<EOF;
+if ($my_webservergroup) {
+    if ($< != 0) { # zach: if not root, yell at them, bug 87398 
+        print <<EOF;
 
 Warning: you have entered a value for the "webservergroup" parameter
 in localconfig, but you are not running this script as root.
@@ -538,6 +543,30 @@ see below are caused by this.
 
 EOF
     }
+} else {
+    # Theres no webservergroup, this is very very very very bad.
+    # However, if we're being run on windows, then this option doesn't
+    # really make sense. Doesn't make it any more secure either, though,
+    # but don't print the message, since they can't do anything about it.
+    if ($^O !~ /MSWin32/i) {
+        print <<EOF;
+
+********************************************************************************
+WARNING! You have not entered a value for the "webservergroup" parameter
+in localconfig. This means that certain files and directories which need
+to be editable by both you and the webserver must be world writable, and
+other files (including the localconfig file which stores your databasa
+password) must be world readable. This means that _anyone_ who can obtain
+local access to this machine can do whatever they want to your Bugzilla
+installation, and is probably also able to run arbitary Perl as the user the
+webserver runs as.
+
+You really, really, really need to change this setting.
+********************************************************************************
+
+EOF
+    }
+}
 
 ###########################################################################
 # Global Utility Library
