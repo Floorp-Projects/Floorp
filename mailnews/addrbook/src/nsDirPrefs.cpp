@@ -1109,20 +1109,7 @@ PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, PRInt32
 		 */
 		if (server->prefName)
 		{
-			char *name = PR_smprintf("%s.position", server->prefName);
-
-			if (name != nsnull)
-			{
-				/* We can't just delete default servers, we can only mark them
-				 * as "deleted" by setting their position to 0.  Since there
-				 * doesn't seem to be a way to figure out if a server is a
-				 * default server we must set the position of all deleted
-				 * servers to 0.
-				 */
-       			DIR_ClearPrefBranch(server->prefName);
-				pPref->SetIntPref(name, 0);
-				PR_smprintf_free(name);
-			}
+			DIR_ClearPrefBranch(server->prefName);
 		}
 
 		/* If the server is in the server list, remove it.
