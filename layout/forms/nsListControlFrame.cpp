@@ -2895,7 +2895,6 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
       mButtonDown = PR_FALSE;
       CaptureMouseEvents(mPresContext, PR_FALSE);
       SetContentSelected(mSelectedIndex, PR_FALSE);
-      mSelectedIndex = kNothingSelected;
       return NS_OK;
     }
   }
