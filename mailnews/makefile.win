@@ -17,6 +17,6 @@
 
 DEPTH=..
 
-DIRS=public base db local news imap compose mime addrbook import
+DIRS=public base db local news imap compose mime addrbook
 
 include <$(DEPTH)\config\rules.mak>
