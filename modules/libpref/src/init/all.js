@@ -556,8 +556,10 @@ pref("network.standard-url.encode-utf8", false);
 // Idle timeout for ftp control connections - 5 minute default
 pref("network.ftp.idleConnectionTimeout", 300);
 
-// directory listing format - constants are defined in nsIDirectoryListing.idl
-// Do not set this to 0...
+// directory listing format
+// 2: HTML
+// 3: XUL directory viewer
+// all other values are treated like 2
 pref("network.dir.format", 2);
 
 // enables the prefetch service (i.e., prefetching of <link rel="next"> URLs).
