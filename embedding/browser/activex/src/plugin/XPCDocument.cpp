@@ -42,6 +42,7 @@
 #include <mshtml.h>
 
 #include "XPConnect.h"
+#include "XPCBrowser.h"
 #include "LegacyPlugin.h"
 
 #include "npapi.h"
@@ -61,12 +62,12 @@
  */
 
 // Note: corresponds to the window.navigator property in the IE DOM
-class Navigator :
+class IENavigator :
     public CComObjectRootEx<CComSingleThreadModel>,
     public IDispatchImpl<IOmNavigator, &IID_IOmNavigator, &LIBID_MSHTML>
 {
 public:
-BEGIN_COM_MAP(Navigator)
+BEGIN_COM_MAP(IENavigator)
     COM_INTERFACE_ENTRY(IDispatch)
     COM_INTERFACE_ENTRY(IOmNavigator)
     COM_INTERFACE_ENTRY_BREAK(IWebBrowser)
@@ -204,20 +205,20 @@ END_COM_MAP()
 
 
 // Note: Corresponds to the window object in the IE DOM
-class HTMLWindow :
+class IEWindow :
     public CComObjectRootEx<CComSingleThreadModel>,
     public IDispatchImpl<IHTMLWindow2, &IID_IHTMLWindow2, &LIBID_MSHTML>
 {
 public:
     PluginInstanceData *mData;
-    CComObject<Navigator> *mNavigator;
+    CComObject<IENavigator> *mNavigator;
 
-    HTMLWindow() : mNavigator(NULL)
+    IEWindow() : mNavigator(NULL)
     {
     }
 
 protected:
-    virtual ~HTMLWindow()
+    virtual ~IEWindow()
     {
         if (mNavigator)
         {
@@ -227,7 +228,7 @@ protected:
 
 public:
     
-BEGIN_COM_MAP(HTMLWindow)
+BEGIN_COM_MAP(IEWindow)
     COM_INTERFACE_ENTRY(IDispatch)
     COM_INTERFACE_ENTRY(IHTMLWindow2)
     COM_INTERFACE_ENTRY(IHTMLFramesCollection2)
@@ -358,7 +359,7 @@ END_COM_MAP()
     {
         if (!mNavigator)
         {
-            CComObject<Navigator>::CreateInstance(&mNavigator);
+            CComObject<IENavigator>::CreateInstance(&mNavigator);
             if (!mNavigator)
             {
                 return E_UNEXPECTED;
@@ -696,23 +697,30 @@ END_COM_MAP()
 };
 
 // Note: Corresponds to the document object in the IE DOM
-class HTMLDocument :
+class IEDocument :
     public CComObjectRootEx<CComSingleThreadModel>,
     public IDispatchImpl<IHTMLDocument2, &IID_IHTMLDocument2, &LIBID_MSHTML>,
     public IServiceProvider
 {
 public:
     PluginInstanceData *mData;
-    CComObject<HTMLWindow> *mWindow;
 
-    HTMLDocument() :
-        mWindow(NULL)
+    CComObject<IEWindow> *mWindow;
+    CComObject<IEBrowser> *mBrowser;
+
+    IEDocument() :
+        mWindow(NULL),
+        mBrowser(NULL)
     {
         xpc_AddRef();
     }
 
-    virtual ~HTMLDocument()
+    virtual ~IEDocument()
     {
+        if (mBrowser)
+        {
+            mBrowser->Release();
+        }
         if (mWindow)
         {
             mWindow->Release();
@@ -720,7 +728,7 @@ public:
         xpc_Release();
     }
 
-BEGIN_COM_MAP(HTMLDocument)
+BEGIN_COM_MAP(IEDocument)
     COM_INTERFACE_ENTRY(IDispatch)
     COM_INTERFACE_ENTRY(IHTMLDocument)
     COM_INTERFACE_ENTRY(IHTMLDocument2)
@@ -737,18 +745,21 @@ END_COM_MAP()
         /* [out] */ void **ppvObject)
     {
 #ifdef DEBUG
-        ATLTRACE(_T("HTMLDocument::QueryService\n"));
-        if (IsEqualIID(riid, __uuidof(IWebBrowser)))
-        {
-            ATLTRACE(_T("  IWebBrowser\n"));
-        }
-        else if (IsEqualIID(riid, __uuidof(IWebBrowser2)))
-        {
-            ATLTRACE(_T("  IWebBrowser2\n"));
-        }
-        else if (IsEqualIID(riid, __uuidof(IWebBrowserApp)))
+        ATLTRACE(_T("IEDocument::QueryService\n"));
+        if (IsEqualIID(riid, __uuidof(IWebBrowser)) ||
+            IsEqualIID(riid, __uuidof(IWebBrowser2)) ||
+            IsEqualIID(riid, __uuidof(IWebBrowserApp)))
         {
             ATLTRACE(_T("  IWebBrowserApp\n"));
+            if (!mBrowser)
+            {
+                CComObject<IEBrowser>::CreateInstance(&mBrowser);
+                mBrowser->AddRef();
+            }
+            if (mBrowser)
+            {
+                return mBrowser->QueryInterface(riid, ppvObject);
+            }
         }
         else if (IsEqualIID(riid, __uuidof(IHTMLWindow2)))
         {
@@ -1418,7 +1429,7 @@ END_COM_MAP()
     {
         if (!mWindow)
         {
-            CComObject<HTMLWindow>::CreateInstance(&mWindow);
+            CComObject<IEWindow>::CreateInstance(&mWindow);
             if (!mWindow)
             {
                 return E_UNEXPECTED;
@@ -1475,8 +1486,8 @@ END_COM_MAP()
 
 HRESULT xpc_GetServiceProvider(PluginInstanceData *pData, IServiceProvider **pSP)
 {
-    CComObject<HTMLDocument> *pDoc = NULL;
-    CComObject<HTMLDocument>::CreateInstance(&pDoc);
+    CComObject<IEDocument> *pDoc = NULL;
+    CComObject<IEDocument>::CreateInstance(&pDoc);
     pDoc->mData = pData;
     return pDoc->QueryInterface(_uuidof(IServiceProvider), (void **) pSP);
 }

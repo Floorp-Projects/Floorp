@@ -43,6 +43,7 @@ REQUIRES = \
     widget \
     gfx \
     js \
+    pref \
     $(NULL)
 XPIFILE         = mozactivex.xpi
 
@@ -135,12 +136,13 @@ CPPSRCS = \
     StdAfx.cpp             \
     LegacyPlugin.cpp       \
     MozActiveX.cpp         \
+    PrefObserver.cpp       \
     npwin.cpp              \
     $(_CONTROL_CPPSRCS)    \
     $(NULL)
 
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-CPPSRCS += XPConnect.cpp XPCDocument.cpp
+CPPSRCS += XPConnect.cpp XPCDocument.cpp XPCBrowser.cpp
 endif
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
