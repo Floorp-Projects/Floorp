@@ -1306,7 +1306,7 @@ void nsFrame::Invalidate(const nsRect& aDamageRect) const
     nsIViewPtr  view;
   
     GetOffsetFromView(offset, view.AssignRef());
-    NS_ASSERTION(nsnull != view, "no view");
+    NS_ASSERTION(view.IsNotNull(), "no view");
     rect += offset;
     viewManager = view->GetViewManager();
     viewManager->UpdateView(view, rect, 0);
