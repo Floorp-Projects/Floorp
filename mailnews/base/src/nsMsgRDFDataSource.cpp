@@ -24,7 +24,6 @@
 #include "nsMsgRDFUtils.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsMsgRDFDataSource::nsMsgRDFDataSource():
     mRDFService(nsnull)
@@ -68,10 +67,10 @@ nsMsgRDFDataSource::QueryInterface(const nsIID& iid, void **result)
   // because otherwise gcc/egcs complains about an ambiguous nsISupports
   void *res=nsnull;
   
-  if (iid.Equals(nsIRDFDataSource::GetIID()) ||
-      iid.Equals(kISupportsIID))
+  if (iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()) ||
+      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
       res = NS_STATIC_CAST(nsIRDFDataSource*, this);
-  else if(iid.Equals(nsIShutdownListener::GetIID()))
+  else if(iid.Equals(nsCOMTypeInfo<nsIShutdownListener>::GetIID()))
       res = NS_STATIC_CAST(nsIShutdownListener*, this);
 
   if (res) {
@@ -269,7 +268,7 @@ nsMsgRDFDataSource::getRDFService()
         nsresult rv;
         
         rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsIRDFService::GetIID(),
+                                          nsCOMTypeInfo<nsIRDFService>::GetIID(),
                                           (nsISupports**) &mRDFService,
                                           this);
         if (NS_FAILED(rv)) return nsnull;

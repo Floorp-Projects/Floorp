@@ -32,8 +32,6 @@
 #define VIEW_SHOW_UNREAD 0x4
 #define VIEW_SHOW_WATCHED 0x8
 
-static NS_DEFINE_IID(gISupportsIID, NS_ISUPPORTS_IID);
-
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 
@@ -78,15 +76,15 @@ nsMessageViewDataSource::QueryInterface(REFNSIID iid, void** result)
     return NS_ERROR_NULL_POINTER;
 
   *result = nsnull;
-  if (iid.Equals(nsIRDFCompositeDataSource::GetIID()) ||
-    iid.Equals(nsIRDFDataSource::GetIID()) ||
-      iid.Equals(gISupportsIID))
+  if (iid.Equals(nsCOMTypeInfo<nsIRDFCompositeDataSource>::GetIID()) ||
+    iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()) ||
+	iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
   {
     *result = NS_STATIC_CAST(nsIRDFCompositeDataSource*, this);
     NS_ADDREF(this);
     return NS_OK;
   }
-	else if(iid.Equals(nsIMessageView::GetIID()))
+	else if(iid.Equals(nsCOMTypeInfo<nsIMessageView>::GetIID()))
 	{
     *result = NS_STATIC_CAST(nsIMessageView*, this);
     NS_ADDREF(this);
@@ -130,7 +128,7 @@ nsMessageViewDataSource::Init()
 
   nsresult rv;
 	rv = nsServiceManager::GetService(kRDFServiceCID,
-                               nsIRDFService::GetIID(),
+                               nsCOMTypeInfo<nsIRDFService>::GetIID(),
                                (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
   if (NS_FAILED(rv)) return rv;
   
@@ -243,7 +241,7 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 		if(NS_SUCCEEDED(rv))
 			return rv;
 	}
-	else if (mShowThreads && NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message))))
+	else if (mShowThreads && NS_SUCCEEDED(source->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
 	{
 		if(property == kNC_MessageChild)
 		{
@@ -375,7 +373,7 @@ NS_IMETHODIMP nsMessageViewDataSource::ArcLabelsOut(nsIRDFResource* source,
 {
 	
 	nsCOMPtr<nsIMessage> message;
-	if(mShowThreads && NS_SUCCEEDED(source->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message))))
+	if(mShowThreads && NS_SUCCEEDED(source->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
 	{
 		nsresult rv;
 		nsCOMPtr<nsISupportsArray> arcs;
@@ -603,7 +601,7 @@ NS_IMETHODIMP nsMessageViewDataSource::SetShowThreads(PRBool showThreads)
 //////////////////////////   nsMessageViewMessageEnumerator //////////////////
 
 
-NS_IMPL_ISUPPORTS(nsMessageViewMessageEnumerator, nsIEnumerator::GetIID())
+NS_IMPL_ISUPPORTS(nsMessageViewMessageEnumerator, nsCOMTypeInfo<nsIEnumerator>::GetIID())
 
 nsMessageViewMessageEnumerator::nsMessageViewMessageEnumerator(nsIEnumerator *srcEnumerator,
 															   PRUint32 showStatus)
@@ -734,7 +732,7 @@ nsresult nsMessageViewMessageEnumerator::MeetsCriteria(nsIMessage *message, PRBo
 //////////////////////////   nsMessageViewThreadEnumerator //////////////////
 
 
-NS_IMPL_ISUPPORTS(nsMessageViewThreadEnumerator, nsIEnumerator::GetIID())
+NS_IMPL_ISUPPORTS(nsMessageViewThreadEnumerator, nsCOMTypeInfo<nsIEnumerator>::GetIID())
 
 nsMessageViewThreadEnumerator::nsMessageViewThreadEnumerator(nsIEnumerator *threads,
 															 nsIMsgFolder *srcFolder)

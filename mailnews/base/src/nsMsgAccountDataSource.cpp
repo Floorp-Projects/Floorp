@@ -68,7 +68,7 @@ protected:
 
   static inline nsresult getAccount(nsIRDFResource *resource,
                                     nsIMsgAccount* *account)
-    {  return resource->QueryInterface(nsIMsgAccount::GetIID(),
+    {  return resource->QueryInterface(nsCOMTypeInfo<nsIMsgAccount>::GetIID(),
                                        (void **)account); }
   
   static nsIRDFResource* kNC_Child;

@@ -25,7 +25,7 @@
 #include "nsMsgBaseCID.h"
 #include "nsCOMPtr.h"
 
-NS_IMPL_ISUPPORTS(nsMsgMailSession, nsIMsgMailSession::GetIID());
+NS_IMPL_ISUPPORTS(nsMsgMailSession, nsCOMTypeInfo<nsIMsgMailSession>::GetIID());
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 //static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
@@ -43,7 +43,7 @@ nsMsgMailSession::nsMsgMailSession():
 
     rv = nsComponentManager::CreateInstance(kMsgAccountManagerCID,
                                             NULL,
-                                            nsIMsgAccountManager::GetIID(),
+                                            nsCOMTypeInfo<nsIMsgAccountManager>::GetIID(),
                                             (void **)&m_accountManager);
     if (NS_SUCCEEDED(rv))
       m_accountManager->LoadAccounts();

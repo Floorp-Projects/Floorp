@@ -47,11 +47,11 @@ NS_IMETHODIMP nsCopyMessageStreamListener::QueryInterface(REFNSIID aIID, void** 
 {
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
-	if (aIID.Equals(nsIStreamListener::GetIID()) || aIID.Equals(kISupportsIID))
+	if (aIID.Equals(nsCOMTypeInfo<nsIStreamListener>::GetIID()) || aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIStreamListener*, this);
 	}              
-	else if(aIID.Equals(nsICopyMessageStreamListener::GetIID()))
+	else if(aIID.Equals(nsCOMTypeInfo<nsICopyMessageStreamListener>::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsICopyMessageStreamListener*, this);
 	}
@@ -89,7 +89,7 @@ static nsresult GetMessage(nsIURI *aURL, nsIMessage **message)
 		nsCOMPtr<nsIRDFResource> messageResource;
 		if(NS_SUCCEEDED(rdfService->GetResource(uri, getter_AddRefs(messageResource))))
 		{
-			messageResource->QueryInterface(nsIMessage::GetIID(), (void**)message);
+			messageResource->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), (void**)message);
 		}
 	}
 	delete[] uri;

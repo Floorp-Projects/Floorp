@@ -45,7 +45,7 @@ nsUrlListenerManager::~nsUrlListenerManager()
 	delete m_listeners;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, nsIUrlListenerManager::GetIID());
+NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, nsCOMTypeInfo<nsIUrlListenerManager>::GetIID());
 
 nsresult nsUrlListenerManager::RegisterListener(nsIUrlListener * aUrlListener)
 {

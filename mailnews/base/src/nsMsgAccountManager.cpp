@@ -235,7 +235,7 @@ nsMsgAccountManager::CreateAccountWithKey(nsIMsgIncomingServer *server,
 
   rv = nsComponentManager::CreateInstance(kMsgAccountCID,
                                           nsnull,
-                                          nsIMsgAccount::GetIID(),
+                                          nsCOMTypeInfo<nsIMsgAccount>::GetIID(),
                                           (void **)getter_AddRefs(account));
 
   if (NS_SUCCEEDED(rv)) {
@@ -663,7 +663,7 @@ nsMsgAccountManager::LoadAccounts()
   // get the prefs service
   if (!m_prefs) {
     rv = nsServiceManager::GetService(kPrefServiceCID,
-                                      nsIPref::GetIID(),
+                                      nsCOMTypeInfo<nsIPref>::GetIID(),
                                       (nsISupports**)&m_prefs);
     if (NS_FAILED(rv)) return rv;
   }
@@ -740,7 +740,7 @@ nsMsgAccountManager::LoadAccount(nsString& accountKey)
   nsresult rv;
   rv = nsComponentManager::CreateInstance(kMsgAccountCID,
                                           nsnull,
-                                          nsIMsgAccount::GetIID(),
+                                          nsCOMTypeInfo<nsIMsgAccount>::GetIID(),
                                           (void **)&account);
 #ifdef DEBUG_alecf
   if (NS_FAILED(rv)) printf("Could not create an account\n");
@@ -763,12 +763,12 @@ nsMsgAccountManager::upgradePrefs()
 
     rv = nsComponentManager::CreateInstance(kMsgAccountCID,
                                             nsnull,
-                                            nsIMsgAccount::GetIID(),
+                                            nsCOMTypeInfo<nsIMsgAccount>::GetIID(),
                                             (void **)&account);
     
     rv = nsComponentManager::CreateInstance(kMsgIdentityCID,
                                             nsnull,
-                                            nsIMsgIdentity::GetIID(),
+                                            nsCOMTypeInfo<nsIMsgIdentity>::GetIID(),
                                             (void **)&identity);
 
     const char* serverProgID;
@@ -791,7 +791,7 @@ nsMsgAccountManager::upgradePrefs()
 
     rv = nsComponentManager::CreateInstance(serverProgID,
                                             nsnull,
-                                            nsIMsgIncomingServer::GetIID(),
+                                            nsCOMTypeInfo<nsIMsgIncomingServer>::GetIID(),
                                             (void **)&server);
     account->SetKey("account1");
     server->SetKey("server1");
@@ -1117,7 +1117,7 @@ nsMsgAccountManager::findServersForIdentity(nsHashKey *key,
     if (!thisSupports) continue;
     
     nsIMsgIdentity *thisIdentity;
-    rv = thisSupports->QueryInterface(nsIMsgIdentity::GetIID(),
+    rv = thisSupports->QueryInterface(nsCOMTypeInfo<nsIMsgIdentity>::GetIID(),
                                       (void **)&thisIdentity);
     NS_RELEASE(thisSupports);
     if (NS_SUCCEEDED(rv)) {

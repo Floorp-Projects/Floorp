@@ -41,10 +41,6 @@
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsIRDFResource* nsMsgFolderDataSource::kNC_Child = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_MessageChild = nsnull;
@@ -108,7 +104,7 @@ nsresult nsMsgFolderDataSource::Init()
       return NS_ERROR_ALREADY_INITIALIZED;
 
   nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                             nsIRDFService::GetIID(),
+                                             nsCOMTypeInfo<nsIRDFService>::GetIID(),
                                              (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
 
   PR_ASSERT(NS_SUCCEEDED(rv));
@@ -153,7 +149,7 @@ nsMsgFolderDataSource::QueryInterface(REFNSIID iid, void** result)
     return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if(iid.Equals(nsIFolderListener::GetIID()))
+	if(iid.Equals(nsCOMTypeInfo<nsIFolderListener>::GetIID()))
 	{
 		*result = NS_STATIC_CAST(nsIFolderListener*, this);
 		NS_ADDREF(this);
@@ -546,10 +542,10 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemAdded(nsIFolder *parentFolder, nsISup
 	nsCOMPtr<nsIMsgFolder> folder;
 	nsCOMPtr<nsIRDFResource> parentResource;
 
-	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(parentResource))))
+	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), getter_AddRefs(parentResource))))
 	{
 		//If we are adding a message
-		if(NS_SUCCEEDED(item->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message))))
+		if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
@@ -559,7 +555,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemAdded(nsIFolder *parentFolder, nsISup
 			}
 		}
 		//If we are adding a folder
-		else if(NS_SUCCEEDED(item->QueryInterface(nsIMsgFolder::GetIID(), getter_AddRefs(folder))))
+		else if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMsgFolder>::GetIID(), getter_AddRefs(folder))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
@@ -579,10 +575,10 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemRemoved(nsIFolder *parentFolder, nsIS
 	nsCOMPtr<nsIMsgFolder> folder;
 	nsCOMPtr<nsIRDFResource> parentResource;
 
-	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(parentResource))))
+	if(NS_SUCCEEDED(parentFolder->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), getter_AddRefs(parentResource))))
 	{
 		//If we are removing a message
-		if(NS_SUCCEEDED(item->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message))))
+		if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), getter_AddRefs(message))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
@@ -592,7 +588,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::OnItemRemoved(nsIFolder *parentFolder, nsIS
 			}
 		}
 		//If we are removing a folder
-		else if(NS_SUCCEEDED(item->QueryInterface(nsIMsgFolder::GetIID(), getter_AddRefs(folder))))
+		else if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIMsgFolder>::GetIID(), getter_AddRefs(folder))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
@@ -847,7 +843,7 @@ nsMsgFolderDataSource::createFolderChildNode(nsIMsgFolder *folder,
     nsCOMPtr<nsISupports> firstFolder;
     rv = subFolders->CurrentItem(getter_AddRefs(firstFolder));
     if (NS_SUCCEEDED(rv)) {
-      firstFolder->QueryInterface(nsIRDFResource::GetIID(), (void**)target);
+      firstFolder->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), (void**)target);
     }
   }
   return NS_FAILED(rv) ? NS_RDF_NO_VALUE : rv;
@@ -866,7 +862,7 @@ nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
       nsCOMPtr<nsISupports> firstMessage;
       rv = messages->CurrentItem(getter_AddRefs(firstMessage));
       if (NS_SUCCEEDED(rv)) {
-		rv = firstMessage->QueryInterface(nsIRDFNode::GetIID(), (void**)target);
+		rv = firstMessage->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**)target);
       }
     }
   }

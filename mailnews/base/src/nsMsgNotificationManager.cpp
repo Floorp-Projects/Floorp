@@ -103,11 +103,11 @@ nsMsgNotificationManager::QueryInterface(REFNSIID iid, void** result)
 	{
 		*result = NS_STATIC_CAST(nsISupports*, this);
 	}
-	else if(iid.Equals(nsIFolderListener::GetIID()))
+	else if(iid.Equals(nsCOMTypeInfo<nsIFolderListener>::GetIID()))
 	{
 		*result = NS_STATIC_CAST(nsIFolderListener*, this);
 	}
-	else if(iid.Equals(nsIRDFDataSource::GetIID()))
+	else if(iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()))
 	{
 		*result = mInMemoryDataSource;
 	}
@@ -140,7 +140,7 @@ nsresult nsMsgNotificationManager::Init()
 
 	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID, 
                                           this, 
-                                          nsIRDFDataSource::GetIID(), 
+                                          nsCOMTypeInfo<nsIRDFDataSource>::GetIID(), 
                                           getter_AddRefs(mInMemoryDataSource));
 
 	if(NS_FAILED(rv))

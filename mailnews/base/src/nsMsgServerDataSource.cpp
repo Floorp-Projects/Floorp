@@ -57,7 +57,7 @@ protected:
 
   static inline nsresult getServer(nsIRDFResource *resource,
                                    nsIMsgIncomingServer **server)
-        { return resource->QueryInterface(nsIMsgIncomingServer::GetIID(),
+        { return resource->QueryInterface(nsCOMTypeInfo<nsIMsgIncomingServer>::GetIID(),
                                           (void **)server); }
 
   

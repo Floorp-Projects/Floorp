@@ -70,7 +70,7 @@ protected:
 
   static inline nsresult getIdentity(nsIRDFResource *resource,
                                      nsIMsgIdentity **identity)
-        { return resource->QueryInterface(nsIMsgIdentity::GetIID(),
+        { return resource->QueryInterface(nsCOMTypeInfo<nsIMsgIdentity>::GetIID(),
                                           (void **)identity); }
 
   

@@ -34,7 +34,7 @@ public:
   
 };
 
-NS_IMPL_ISUPPORTS(nsMessengerBootstrap, nsIAppShellComponent::GetIID())
+NS_IMPL_ISUPPORTS(nsMessengerBootstrap, nsCOMTypeInfo<nsIAppShellComponent>::GetIID())
 
 nsMessengerBootstrap::nsMessengerBootstrap()
 {

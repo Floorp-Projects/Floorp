@@ -84,11 +84,6 @@ static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID); 
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 class nsMessenger : public nsIMessenger
 {
   
@@ -170,7 +165,7 @@ static nsresult ConvertDOMListToResourceArray(nsIDOMNodeList *nodeList, nsISuppo
 		if(NS_FAILED(nodeList->Item(i, &node)))
 			return rv;
 
-		if(NS_SUCCEEDED(rv = node->QueryInterface(nsIDOMXULElement::GetIID(), (void**)&xulElement)))
+		if(NS_SUCCEEDED(rv = node->QueryInterface(nsCOMTypeInfo<nsIDOMXULElement>::GetIID(), (void**)&xulElement)))
 		{
 			if(NS_SUCCEEDED(rv = xulElement->GetResource(&resource)))
 			{
@@ -214,12 +209,12 @@ static nsresult AddView(nsIRDFCompositeDataSource *database, nsIMessageView **me
 			//add the datasource
 		//return the view as an nsIMessageView
 	nsIRDFCompositeDataSource *viewCompositeDataSource;
-	if(NS_SUCCEEDED(view->QueryInterface(nsIRDFCompositeDataSource::GetIID(), (void**)&viewCompositeDataSource)))
+	if(NS_SUCCEEDED(view->QueryInterface(nsCOMTypeInfo<nsIRDFCompositeDataSource>::GetIID(), (void**)&viewCompositeDataSource)))
 	{
 		viewCompositeDataSource->AddDataSource(datasource);
 		NS_IF_RELEASE(viewCompositeDataSource);
 	}
-	rv = view->QueryInterface(nsIMessageView::GetIID(), (void**)messageView);
+	rv = view->QueryInterface(nsCOMTypeInfo<nsIMessageView>::GetIID(), (void**)messageView);
 
 	NS_IF_RELEASE(view);
 	NS_IF_RELEASE(datasource);
@@ -249,7 +244,7 @@ nsMessenger::~nsMessenger()
 //
 // nsISupports
 //
-NS_IMPL_ISUPPORTS(nsMessenger, nsIMessenger::GetIID())
+NS_IMPL_ISUPPORTS(nsMessenger, nsCOMTypeInfo<nsIMessenger>::GetIID())
 
 //
 // nsIMsgAppCore
@@ -411,7 +406,7 @@ void nsMessenger::InitializeFolderRoot()
     if (NS_SUCCEEDED(rv))
     {
       rv = compMgr->CreateInstance(kTransactionManagerCID, nsnull, 
-                                   nsITransactionManager::GetIID(),
+                                   nsCOMTypeInfo<nsITransactionManager>::GetIID(),
                                    getter_AddRefs(mTxnMgr));
       if (NS_SUCCEEDED(rv))
         mTxnMgr->SetMaxTransactionCount(-1);
@@ -635,7 +630,7 @@ nsMessenger::CopyMessages(nsIRDFCompositeDataSource *database, nsIDOMXULElement 
 		firstMessage->GetValue(&uri);
 		nsCOMPtr<nsICopyMessageStreamListener> copyStreamListener; 
 		rv = nsComponentManager::CreateInstance(kCopyMessageStreamListenerCID, NULL,
-												nsICopyMessageStreamListener::GetIID(),
+												nsCOMTypeInfo<nsICopyMessageStreamListener>::GetIID(),
 												getter_AddRefs(copyStreamListener)); 
 		if(NS_FAILED(rv))
 			return rv;
@@ -687,7 +682,7 @@ nsMessenger::GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
     {
         rv = aEnumerator->CurrentItem(&aItem);
         if (rv != NS_OK) break;
-        rv = aItem->QueryInterface(nsIMessage::GetIID(), (void**)aSupport);
+        rv = aItem->QueryInterface(nsCOMTypeInfo<nsIMessage>::GetIID(), (void**)aSupport);
         aItem->Release();
         if (rv == NS_OK && *aSupport) break;
         rv = aEnumerator->Next();
@@ -944,7 +939,7 @@ public:
   NS_IMETHOD OnStopSending(nsresult aStatus, const PRUnichar *aMsg, PRUint32 aTotalTried, PRUint32 aSuccessful);
 };
 
-NS_IMPL_ISUPPORTS(SendLaterListener, nsIMsgSendLaterListener::GetIID());
+NS_IMPL_ISUPPORTS(SendLaterListener, nsCOMTypeInfo<nsIMsgSendLaterListener>::GetIID());
 
 SendLaterListener::SendLaterListener()
 {
@@ -991,7 +986,7 @@ nsMessenger::SendUnsentMessages()
 {
 	nsresult rv;
 	nsCOMPtr<nsIMsgSendLater> pMsgSendLater; 
-	rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL,nsIMsgSendLater::GetIID(),
+	rv = nsComponentManager::CreateInstance(kMsgSendLaterCID, NULL,nsCOMTypeInfo<nsIMsgSendLater>::GetIID(),
 																					(void **)getter_AddRefs(pMsgSendLater)); 
 	if (NS_SUCCEEDED(rv) && pMsgSendLater) 
 	{ 

@@ -149,7 +149,7 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = nsComponentManager::CreateInstance(serverTypeProgID,
                                             nsnull,
-                                            nsIMsgIncomingServer::GetIID(),
+                                            nsCOMTypeInfo<nsIMsgIncomingServer>::GetIID(),
                                             getter_AddRefs(server));
     PR_FREEIF(serverTypeProgID);
     
@@ -247,7 +247,7 @@ nsMsgAccount::SetKey(char *accountKey)
   // need the prefs service to do anything
   if (!m_prefs)
     rv = nsServiceManager::GetService(kPrefServiceCID,
-                                      nsIPref::GetIID(),
+                                      nsCOMTypeInfo<nsIPref>::GetIID(),
                                       (nsISupports**)&m_prefs);
   if (NS_FAILED(rv)) return rv;
 
@@ -274,7 +274,7 @@ nsMsgAccount::SetKey(char *accountKey)
   nsIMsgIdentity *identity = nsnull;
   rv = nsComponentManager::CreateInstance(kMsgIdentityCID,
                                           nsnull,
-                                          nsIMsgIdentity::GetIID(),
+                                          nsCOMTypeInfo<nsIMsgIdentity>::GetIID(),
                                           (void **)&identity);
 
   if (NS_SUCCEEDED(rv))

@@ -39,13 +39,6 @@ static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kLocaleFactoryCID,			NS_LOCALEFACTORY_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID,		NS_DATETIMEFORMAT_CID);
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
-//There's no GetIID for this.
-static NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 
 nsIRDFResource* nsMsgMessageDataSource::kNC_Subject;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Sender;
@@ -106,7 +99,7 @@ nsresult nsMsgMessageDataSource::Init()
 
 
     nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                             nsIRDFService::GetIID(),
+                                             nsCOMTypeInfo<nsIRDFService>::GetIID(),
                                              (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
 
 	if(NS_FAILED(rv))
@@ -115,7 +108,7 @@ nsresult nsMsgMessageDataSource::Init()
 	mRDFService->RegisterDataSource(this, PR_FALSE);
 	rv = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
                                           NULL, 
-                                          nsIMsgHeaderParser::GetIID(), 
+                                          nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(), 
                                           (void **) &mHeaderParser);
 
 	if(NS_FAILED(rv))
@@ -134,7 +127,7 @@ nsresult nsMsgMessageDataSource::Init()
 		return rv;
 
 	rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
-		kIDateTimeFormatIID, getter_AddRefs(mDateTimeFormat));				
+		nsCOMTypeInfo<nsIDateTimeFormat>::GetIID(), getter_AddRefs(mDateTimeFormat));				
 		
 	if(NS_FAILED(rv))
 		return rv;
@@ -169,7 +162,7 @@ nsMsgMessageDataSource::QueryInterface(REFNSIID iid, void** result)
 		return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if(iid.Equals(nsIFolderListener::GetIID()))
+	if(iid.Equals(nsCOMTypeInfo<nsIFolderListener>::GetIID()))
 	{
 		*result = NS_STATIC_CAST(nsIFolderListener*, this);
 		NS_ADDREF(this);
