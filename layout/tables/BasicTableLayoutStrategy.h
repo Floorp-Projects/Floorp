@@ -134,13 +134,13 @@ protected:
     * @param aPixelToTwips- the number of twips in a pixel.
     * @return             - true if all of aCellWidth was allocated, false otherwise
     */
-  PRBool ComputeNonPctColspanWidths(PRInt32           aWidthIndex,
-                                    nsTableCellFrame* aCellFrame,
-                                    PRInt32           aCellWidth,
-                                    PRInt32           aColIndex,
-                                    PRInt32           aColSpan,
-                                    PRInt32&          aLimitType,
-                                    float             aPixelToTwips);
+  PRBool ComputeNonPctColspanWidths(PRInt32                 aWidthIndex,
+                                    const nsTableCellFrame* aCellFrame,
+                                    PRInt32                 aCellWidth,
+                                    PRInt32                 aColIndex,
+                                    PRInt32                 aColSpan,
+                                    PRInt32&                aLimitType,
+                                    float                   aPixelToTwips);
 
   /**
     * Determine percentage col widths for each col frame
@@ -161,17 +161,6 @@ protected:
     * @param aExcess - reduction amount
     */
   void ReduceOverSpecifiedPctCols(nscoord aExcess);
-
-  /** 
-    * Sort rows by rising colspans, in order to treat the inner colspans first
-    * the result will be returned in the aRowIndices array.
-    * @param aRowIndices - array with indices of those rows which have colspans starting in the corresponding column
-    * @param aColSpans   - array with the correspong colspan values
-    * @param aIndex      - number of valid entries in the arrays
-    */
-  void RowSort(PRInt32* aRowIndices, 
-               PRInt32* aColSpans,
-               PRInt32 aIndex);
 
   /**
     * calculate totals by width type. The logic here is kept in synch with 
