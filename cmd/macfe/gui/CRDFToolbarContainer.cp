@@ -20,46 +20,41 @@
 #include "CRDFToolbar.h"
 
 
+const ClassIDT CRDFToolbarContainer::class_ID;
+
+
 
 CRDFToolbarContainer::CRDFToolbarContainer( LStream* inStream )
-		: CDragBarContainer(inStream),
-//			_ht_root( HT_NewToolbarPane(CreateNotificationStruct()) )
-			_ht_root( NULL )
+		: CDragBarContainer(inStream)
 	{
+		/*
+			We don't want to actually create the toolbar |HT_Pane| until everything else exists,
+			i.e., after we've done everything needed in |FinishCreateSelf()|.
+		*/
+	}
+
+
+void
+CRDFToolbarContainer::FinishCreateSelf()
+	{
+		CDragBarContainer::FinishCreateSelf();
+		
+			// Everything we need to create the |HT_Pane| now exists...
+		_ht_root = auto_ptr<_HT_PaneStruct>(HT_NewToolbarPane(CreateNotificationStruct()));
 		HT_SetPaneFEData(_ht_root.get(), this);
 	}
 
 
 void
-CRDFToolbarContainer :: FinishCreateSelf ( )
-{
-	CDragBarContainer::FinishCreateSelf();
-	
-	// defer creation of the toolbar pane until everything is created because
-	// we need to have the dock around when we pull in the toolbars
-	_ht_root = auto_ptr<_HT_PaneStruct>(HT_NewToolbarPane(CreateNotificationStruct()));
-	
-} // FinishCreateSelf
-
-
-//
-// BuildToolbarsPresentAtStartup
-//
-// Nothing for now.
-void
-CRDFToolbarContainer :: BuildToolbarsPresentAtStartup ( )
-{
-
-
-
-} // BuildToolbarsPresentAtStartup
+CRDFToolbarContainer::BuildToolbarsPresentAtStartup()
+	{
+	}
 
 
 void 
-CRDFToolbarContainer :: RestorePlace(LStream *inPlace)
-{
-
-} // RestorePlace
+CRDFToolbarContainer::RestorePlace( LStream *inPlace )
+ {
+ }
 
 
 void

@@ -41,10 +41,7 @@ class CRDFToolbarContainer
 	{
 		public:
 
-			enum
-				{
-					class_ID = 'RTCt'
-				};
+			static const ClassIDT class_ID = 'RTCt';
 
 			CRDFToolbarContainer( LStream* );
 			// virtual ~CRDFToolbarContainer(); -- already virtual from bases, |auto_ptr| member means no destructor needed
@@ -59,8 +56,8 @@ class CRDFToolbarContainer
 			virtual void HandleNotification( HT_Notification, HT_Resource, HT_Event, void*, uint32 );
 
 				// overriding the appropriate methods of |CDragBarContainer|
-			virtual void BuildToolbarsPresentAtStartup ( ) ;
-			virtual void RestorePlace(LStream *inPlace);
+			virtual void BuildToolbarsPresentAtStartup() ;
+			virtual void RestorePlace( LStream* );
 			virtual void FinishCreateSelf();
 
 		private:
