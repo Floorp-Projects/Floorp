@@ -454,7 +454,7 @@ CHyperTreeFlexTable :: RedrawRow ( HT_Resource inNode )
 {
 	TableIndexT row = URDFUtilities::HTRowToPPRow(HT_GetNodeIndex(HT_GetView(inNode), inNode));
 	STableCell left ( row, 1 );
-	STableCell right ( row, LArray::index_Last );
+	STableCell right ( row, mTableHeader->CountColumns() );
 
 	RefreshCellRange( left, right );
 
@@ -517,16 +517,7 @@ CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect& inL
 	CHyperTreeHeader* header = dynamic_cast<CHyperTreeHeader*>(mTableHeader);
 	Assert_(header != NULL);
 	CHyperTreeHeader::ColumnInfo info = header->GetColumnInfo(inCell.col - 1);
-	
-	// setup the text color based on if this cell is in the sorted column. Note that while
-	// HT has the concept of a different fg color for sorted columns, AM does not. 
-	if ( inCell.col == header->GetSortedColumn(columnPane) )
-		URDFUtilities::SetupForegroundTextColor ( TopNode(), gNavCenter->sortColumnFGColor, 
-													kThemeListViewTextColor );
-	else
-		URDFUtilities::SetupForegroundTextColor ( TopNode(), gNavCenter->viewFGColor, 
-													kThemeListViewTextColor );
-	
+		
 	// Get cell data
 	HT_Resource node = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inCell.row) );
 	if (node) {
@@ -579,6 +570,16 @@ CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect& inL
 						str = intStr;
 						break;
 				}
+				
+				// setup the text color based on if this cell is in the sorted column. Note that while
+				// HT has the concept of a different fg color for sorted columns, AM does not. 
+				StColorPenState saved;
+				if ( inCell.col == header->GetSortedColumn(columnPane) )
+					URDFUtilities::SetupForegroundTextColor ( TopNode(), gNavCenter->sortColumnFGColor, 
+																kThemeListViewTextColor );
+				else
+					URDFUtilities::SetupForegroundTextColor ( TopNode(), gNavCenter->viewFGColor, 
+																kThemeListViewTextColor );
 				DrawTextString(str, &mTextFontInfo, 0, localRect);
 			}
 		} // else a normal item
