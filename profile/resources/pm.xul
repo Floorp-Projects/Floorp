@@ -9,7 +9,6 @@
 
 <html:script>
 var profileCore = "";
-var profileList = "";
 var selected    = null;
 
 function CreateProfile()
@@ -156,6 +155,7 @@ function showSelection(node)
 function loadElements()
 {
 	dump("hacked onload handler adds elements to tree widget\n");
+	var profileList = "";
 
 	profileCore = XPAppCoresManager.Find("ProfileCore");
 	if (!profileCore)
