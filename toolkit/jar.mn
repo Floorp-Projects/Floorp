@@ -4,8 +4,12 @@ toolkit.jar:
 +        content/global/xul.css                             (content/xul.css)
 +        content/global/nsContextMenu.js                    (content/nsContextMenu.js)
 +        content/global/widgets/toolbar.xml                 (content/widgets/toolbar.xml)
++        content/global/findDialog.xul                      (content/findDialog.xul)
++        content/global/findDialog.js                       (content/findDialog.js)
          content/global/nsBrowserStatusHandler.js           (content/nsBrowserStatusHandler.js)
          content/global/nsBrowserContentListener.js         (content/nsBrowserContentListener.js)
          content/global/charset.js                          (content/charset.js)
 en-US.jar:
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)
++        locale/en-US/global/findDialog.dtd                 (locale/findDialog.dtd)
++        locale/en-US/global/findDialog.properties          (locale/findDialog.properties)
