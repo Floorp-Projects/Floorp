@@ -387,7 +387,8 @@ public class Codegen extends Interpreter {
         this.classFilesVector = classFiles;
         Context cx = Context.getCurrentContext();
         itsSourceFile = null;
-        if (cx.isGeneratingDebug())
+        // default is to generate debug info
+        if (!cx.isGeneratingDebugChanged() || cx.isGeneratingDebug())
             itsSourceFile = (String) tree.getProp(Node.SOURCENAME_PROP);
         version = cx.getLanguageVersion();
         optLevel = cx.getOptimizationLevel();
@@ -1552,7 +1553,8 @@ public class Codegen extends Interpreter {
         }
         
         
-        if (cx.isGeneratingDebug()) {
+        // default is to generate debug info
+        if (!cx.isGeneratingDebugChanged() || cx.isGeneratingDebug()) {
             debugVars = new OptVariableTable();
             debugVars.addLocal(debugVariableName);
             OptLocalVariable lv = (OptLocalVariable) debugVars.getVariable(debugVariableName);

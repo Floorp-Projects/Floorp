@@ -126,7 +126,10 @@ public class Interpreter extends LabelTable {
             regExpLiterals = generateRegExpLiterals(cx, scope, regexps);
         
         VariableTable varTable = (VariableTable)tree.getProp(Node.VARS_PROP);
-        generateICodeFromTree(tree, varTable, cx.isGeneratingDebug(), securityDomain);
+        // The default is not to generate debug information
+        boolean activationNeeded = cx.isGeneratingDebugChanged() && 
+                                   cx.isGeneratingDebug();
+        generateICodeFromTree(tree, varTable, activationNeeded, securityDomain);
         itsData.itsNestedFunctions = itsNestedFunctions;
         itsData.itsRegExpLiterals = regExpLiterals;
         if (printICode) dumpICode(itsData);
@@ -172,7 +175,8 @@ public class Interpreter extends LabelTable {
 
         VariableTable varTable = theFunction.getVariableTable();
         boolean needsActivation = theFunction.requiresActivation() ||
-                                  cx.isGeneratingDebug();
+                                  (cx.isGeneratingDebugChanged() && 
+                                   cx.isGeneratingDebug());
         generateICodeFromTree(theFunction.getLastChild(), 
                               varTable, needsActivation,
                               securityDomain);

@@ -1205,6 +1205,7 @@ public final class Context {
      * @since 1.3
      */
     public void setGeneratingDebug(boolean generatingDebug) {
+        generatingDebugChanged = true;
         if (generatingDebug)
             setOptimizationLevel(0);
         this.generatingDebug = generatingDebug;
@@ -1901,6 +1902,10 @@ public final class Context {
             throw new SecurityException(msg);
         }
     }
+
+    public boolean isGeneratingDebugChanged() {
+        return generatingDebugChanged;
+    }
     
     static final boolean useJSObject = false;
 
@@ -1927,6 +1932,7 @@ public final class Context {
     private RegExpProxy regExpProxy;
     private Locale locale;
     private boolean generatingDebug;
+    private boolean generatingDebugChanged;
     private boolean generatingSource=true;
     private boolean compileFunctionsWithDynamicScopeFlag;
     private int optimizationLevel;
