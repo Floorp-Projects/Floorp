@@ -36,33 +36,33 @@
 PRUnichar
 nsRDFParserUtils::EntityToUnicode(const char* buf)
 {
-    if ((buf[0] == 'g' || buf[0] == 'G') &&
-        (buf[1] == 't' || buf[1] == 'T') &&
+    if ((buf[0] == 'g') &&
+        (buf[1] == 't') &&
         (buf[2] == '\0'))
         return PRUnichar('>');
 
-    if ((buf[0] == 'l' || buf[0] == 'L') &&
-        (buf[1] == 't' || buf[1] == 'T') &&
+    if ((buf[0] == 'l') &&
+        (buf[1] == 't') &&
         (buf[2] == '\0'))
         return PRUnichar('<');
 
-    if ((buf[0] == 'a' || buf[0] == 'A') &&
-        (buf[1] == 'm' || buf[1] == 'M') &&
-        (buf[2] == 'p' || buf[2] == 'P') &&
+    if ((buf[0] == 'a') &&
+        (buf[1] == 'm') &&
+        (buf[2] == 'p') &&
         (buf[3] == '\0'))
         return PRUnichar('&');
 
-    if ((buf[0] == 'a' || buf[0] == 'A') &&
-        (buf[1] == 'p' || buf[1] == 'P') &&
-        (buf[2] == 'o' || buf[2] == 'O') &&
-        (buf[3] == 's' || buf[3] == 'S') &&
+    if ((buf[0] == 'a') &&
+        (buf[1] == 'p') &&
+        (buf[2] == 'o') &&
+        (buf[3] == 's') &&
         (buf[4] == '\0'))
         return PRUnichar('\'');
 
-    if ((buf[0] == 'q' || buf[0] == 'Q') &&
-        (buf[1] == 'u' || buf[1] == 'U') &&
-        (buf[2] == 'o' || buf[2] == 'O') &&
-        (buf[3] == 't' || buf[3] == 'T') &&
+    if ((buf[0] == 'q') &&
+        (buf[1] == 'u') &&
+        (buf[2] == 'o') &&
+        (buf[3] == 't') &&
         (buf[4] == '\0'))
         return PRUnichar('"');
 
