@@ -31,17 +31,9 @@ INCLUDES += -I../public -I$(PUBLIC)/raptor -I$(PUBLIC)/xpcom -I$(PUBLIC)/dom -I$
 DEFINES = -D_IMPL_NS_WEB
 
 CPPSRCS=				\
+ nsDocumentViewer.cpp			\
  nsDocLoader.cpp			\
- nsContentViewer.cpp			\
- nsWebWidget.cpp			\
- nsLinkHandler.cpp			\
- $(NULL)
-
-CPP_OBJS=				\
- ./$(OBJDIR)/nsDocLoader.o		\
- ./$(OBJDIR)/nsContentViewer.o		\
- ./$(OBJDIR)/nsWebWidget.o		\
- ./$(OBJDIR)/nsLinkHandler.o		\
+ nsWebShell.cpp				\
  $(NULL)
 
 include $(DEPTH)/config/config.mk
