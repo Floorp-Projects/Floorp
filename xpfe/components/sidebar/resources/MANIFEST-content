@@ -6,10 +6,10 @@ dummy-flash.rdf
 flash-registry.rdf
 flash.js
 flash.xul
-panels-local.rdf
-panels-remote.rdf
 preview.css
 preview.js
 preview.xul
+sidebar-registry.rdf
+sidebar.rdf
 sidebarOverlay.js
 sidebarOverlay.xul
