@@ -199,9 +199,17 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
         PRUint32 remoteContentPolicy = kNoRemoteContentPolicy;
         msgHdr->GetUint32Property("remoteContentPolicy", &remoteContentPolicy); 
 
+        // get the folder and the server from the msghdr
+        // an error trying to get the folder shouldn't make us quit...
+        nsCOMPtr<nsIRssIncomingServer> rssServer;
+        nsCOMPtr<nsIMsgFolder> folder;
+        rv = msgHdr->GetFolder(getter_AddRefs(folder));
+        if (NS_SUCCEEDED(rv))
+        {
         nsCOMPtr<nsIMsgIncomingServer> server;
-        mailnewsUrl->GetServer(getter_AddRefs(server));
-        nsCOMPtr<nsIRssIncomingServer> rssServer = do_QueryInterface(server);
+          folder->GetServer(getter_AddRefs(server));
+          rssServer = do_QueryInterface(server);
+        }
         
         // Case #1 and #2: special case RSS. Allow urls that are RSS feeds to show remote image (Bug #250246)
         // Honor the message specific remote content policy
