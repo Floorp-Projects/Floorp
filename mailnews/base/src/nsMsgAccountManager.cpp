@@ -66,10 +66,20 @@ static NS_DEFINE_CID(kMsgBiffManagerCID, NS_MSGBIFFMANAGER_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
+#define IMAP_SCHEMA "imap:/"
+#define IMAP_SCHEMA_LENGTH 6
+#define MAILBOX_SCHEMA "mailbox:/"
+#define MAILBOX_SCHEMA_LENGTH 9
+
+#define POP_4X_MAIL_TYPE 0
+#define IMAP_4X_MAIL_TYPE 1
+#define MOVEMAIL_4X_MAIL_TYPE 2
+
 #define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
 /* TODO:  do we want to clear these after migration? */
 #define PREF_NEWS_DIRECTORY "news.directory"
 #define PREF_MAIL_DIRECTORY "mail.directory"
+#define PREF_PREMIGRATION_MAIL_DIRECTORY "premigration.mail.directory"
 #define PREF_IMAP_DIRECTORY "mail.imap.root_dir"
 
 #define PREF_MAIL_ROOT_NNTP 	"mail.root.nntp"
@@ -123,13 +133,17 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
     IDENTITY->MACRO_SETTER("");	\
   }\
   else {	\
-    macro_rv = Convert4XUri(); \
+    char *converted_uri = nsnull; \
+    macro_rv = Convert4XUri((const char *)macro_oldStr, &converted_uri); \
     if (NS_FAILED(macro_rv)) { \
+      printf("FAIL: %s -> %s\n",(const char *)macro_oldStr,""); \
       IDENTITY->MACRO_SETTER("");	\
     } \
     else { \
-      IDENTITY->MACRO_SETTER(NS_CONST_CAST(char*,(const char*)macro_oldStr));	\
+      printf("PASS: %s -> %s\n",(const char *)macro_oldStr,converted_uri); \
+      IDENTITY->MACRO_SETTER(converted_uri); \
     } \
+    PR_FREEIF(converted_uri); \
   }	\
 }
 
@@ -226,6 +240,7 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 // TODO:  this needs to be put into a string bundle
 #define LOCAL_MAIL_FAKE_HOST_NAME "Local Mail"
+#define LOCAL_MAIL_FAKE_USER_NAME "nobody"
 
 // use this to search for all servers with the given hostname/iid and
 // put them in "servers"
@@ -371,12 +386,14 @@ private:
   nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostname, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir);
   nsresult MigrateOldNntpPrefs(nsIMsgIncomingServer *server, const char *hostname, nsFileSpec &newsrcfile);
   nsresult SetServerRootPref(const char *pref_name, nsFileSpec & dir);
+
+  nsresult ProceedWithMigration(PRInt32 oldMailType);
   
   static char *getUniqueKey(const char* prefix, nsHashtable *hashTable);
   static char *getUniqueAccountKey(const char* prefix,
                                    nsISupportsArray *accounts);
 
-  nsresult Convert4XUri();
+  nsresult Convert4XUri(const char *old_uri, char **new_uri);
   
   nsresult getPrefService();
   nsIPref *m_prefs;
@@ -730,7 +747,8 @@ nsMsgAccountManager::GetDefaultAccount(nsIMsgAccount * *aDefaultAccount)
     m_accounts->Count(&count);
     printf("There are %d accounts\n", count);
 #endif
-    
+    if (count == 0) return NS_ERROR_FAILURE;
+
     nsCOMPtr<nsISupports> element;
     rv = m_accounts->GetElementAt(0, getter_AddRefs(element));
 
@@ -1133,6 +1151,48 @@ nsMsgAccountManager::findAccountByKey(nsISupports* element, void *aData)
     return PR_TRUE;
 }
 
+nsresult
+nsMsgAccountManager::ProceedWithMigration(PRInt32 oldMailType)
+{
+  char *prefvalue = nsnull;
+  nsresult rv = NS_OK;
+  
+  if (oldMailType == POP_4X_MAIL_TYPE) {
+    // if they were using pop, "mail.pop_name" must have been set
+    // otherwise, they don't really have anything to migrate
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &prefvalue);
+    if (NS_SUCCEEDED(rv)) {
+	    if (!prefvalue || (PL_strlen(prefvalue) == 0)) {
+	      rv = NS_ERROR_FAILURE;
+	    }
+    }
+  }
+  else if (oldMailType == IMAP_4X_MAIL_TYPE) {
+    // if they were using imap, "network.hosts.imap_servers" must have been set
+    // otherwise, they don't really have anything to migrate
+    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER, &prefvalue);
+    if (NS_SUCCEEDED(rv)) {
+	    if (!prefvalue || (PL_strlen(prefvalue) == 0)) {
+	      rv = NS_ERROR_FAILURE;
+	    }
+    }
+  }
+  else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
+    printf("sorry, migration of movemail not supported yet.\n");
+    NS_ASSERTION(0, "movemail migration not supported yet.");
+    rv = NS_ERROR_UNEXPECTED;
+  }
+  else {
+#ifdef DEBUG_ACCOUNTMANAGER
+    printf("Unrecognized server type %d\n", oldMailType);
+#endif
+    rv = NS_ERROR_UNEXPECTED;
+  }
+
+  PR_FREEIF(prefvalue);
+  return rv;
+}
+
 NS_IMETHODIMP
 nsMsgAccountManager::UpgradePrefs()
 {
@@ -1150,6 +1210,25 @@ nsMsgAccountManager::UpgradePrefs()
         return rv;
     }
 
+    // because mail.server_type defaults to 0 (pop) it will look the user
+    // has something to migrate, even with an empty prefs.js file
+    // ProceedWithMigration will check if there is something to migrate
+    // if not, NS_FAILED(rv) will be true, and we'll return.
+    // this plays nicely with msgMail3PaneWindow.js, which will launch the
+    // Account Manager if UpgradePrefs() fails.
+    rv = ProceedWithMigration(oldMailType);
+    if (NS_FAILED(rv)) {
+#ifdef DEBUG_ACCOUNTMANAGER
+	printf("FAIL:  don't proceed with migration.\n");
+#endif
+	return rv;
+    }
+#ifdef DEBUG_ACCOUNTMANAGER
+    else {
+        printf("PASS:  proceed with migration.\n");
+    }
+#endif 
+
     // create a dummy identity, for migration only
     nsCOMPtr<nsIMsgIdentity> identity;
     rv = createKeyedIdentity("migration", getter_AddRefs(identity));
@@ -1158,11 +1237,11 @@ nsMsgAccountManager::UpgradePrefs()
     rv = MigrateIdentity(identity);
     if (NS_FAILED(rv)) return rv;    
     
-    if ( oldMailType == 0) {      // POP
+    if ( oldMailType == POP_4X_MAIL_TYPE) {  
       rv = MigratePopAccounts(identity);
       if (NS_FAILED(rv)) return rv;
 	}
-    else if (oldMailType == 1) {  // IMAP
+    else if (oldMailType == IMAP_4X_MAIL_TYPE) {
       rv = MigrateImapAccounts(identity);
       if (NS_FAILED(rv)) return rv;
       
@@ -1171,6 +1250,11 @@ nsMsgAccountManager::UpgradePrefs()
       rv = MigrateLocalMailAccounts(identity);
       if (NS_FAILED(rv)) return rv;
 	}
+    else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
+      printf("sorry, migration of movemail not supported yet.\n");
+      NS_ASSERTION(0, "movemail migration not supported yet.");
+      return NS_ERROR_UNEXPECTED;
+    }
     else {
 #ifdef DEBUG_ACCOUNTMANAGER
       printf("Unrecognized server type %d\n", oldMailType);
@@ -1223,7 +1307,7 @@ nsMsgAccountManager::SetNewsCcAndFccValues(nsIMsgIdentity *identity)
     MIGRATE_SIMPLE_STR_PREF(PREF_4X_NEWS_IMAP_SENTMAIL_PATH,identity,SetFccFolder)
   }
   else {
-    MIGRATE_SIMPLE_STR_PREF(PREF_4X_NEWS_DEFAULT_CC,identity,SetFccFolder)
+    MIGRATE_SIMPLE_STR_PREF(PREF_4X_NEWS_DEFAULT_FCC,identity,SetFccFolder)
   }
   CONVERT_4X_URI(identity,GetFccFolder,SetFccFolder)
 
@@ -1246,30 +1330,120 @@ nsMsgAccountManager::SetMailCcAndFccValues(nsIMsgIdentity *identity)
     MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_IMAP_SENTMAIL_PATH,identity,SetFccFolder)
   }
   else {
-    MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_CC,identity,SetFccFolder)
+    MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_DEFAULT_FCC,identity,SetFccFolder)
   }
   CONVERT_4X_URI(identity,GetFccFolder,SetFccFolder)
     
   return NS_OK;
 }
 
+// caller will free the memory
 nsresult
-nsMsgAccountManager::Convert4XUri()
+nsMsgAccountManager::Convert4XUri(const char *old_uri, char **new_uri)
 {
-#if 0
-  char buf[1024];
-  sprintf(buf,"mailbox:/home/seth/nsmail/Templates");
-  
-  if (PL_strncasecmp("mailbox:/",buf,PL_strlen("mailbox:/")) == 0) {
-    printf("turn mailbox:/foobar into mailbox:/nobody@Local Mail/(foobar - mail.directory\n");
+  nsresult rv;
+  *new_uri = nsnull;
+
+  if (!old_uri) {
+    return NS_ERROR_NULL_POINTER;
   }
-  else if (PL_strncasecmp("imap:/",buf,PL_strlen("imap:/")) == 0) {
-    printf("turn IMAP:/foo into imap:/foo\n");
+ 
+  // if the old_uri is "", don't attempt any conversion
+  if (PL_strlen(old_uri) == 0) {
+	*new_uri = PR_smprintf("");
+        return NS_OK;
+  }
+
+#ifdef DEBUG_ACCOUNTMANAGER
+  printf("old 4.x folder uri = >%s<\n", old_uri);
+#endif
+
+  if (PL_strncasecmp(IMAP_SCHEMA,old_uri,IMAP_SCHEMA_LENGTH) == 0) {
+    // 4.x IMAP uri's began with "IMAP:/".  we need that to be "imap:/"
+#ifdef DEBUG_ACCOUNTMANAGER
+    printf("new_uri = %s%s\n",IMAP_SCHEMA,old_uri + IMAP_SCHEMA_LENGTH);
+#endif
+    *new_uri = PR_smprintf("%s%s",IMAP_SCHEMA,old_uri + IMAP_SCHEMA_LENGTH);
+    return NS_OK;
+  }
+
+  char *usernameAtHostname = nsnull;
+  char *mail_directory_value = nsnull;
+  rv = m_prefs->CopyCharPref(PREF_PREMIGRATION_MAIL_DIRECTORY, &mail_directory_value);
+  if (NS_FAILED(rv) || !mail_directory_value || (PL_strlen(mail_directory_value) == 0)) {
+#ifdef DEBUG_ACCOUNTMANAGER
+    printf("%s was not set, attempting to use %s instead.\n",PREF_PREMIGRATION_MAIL_DIRECTORY,PREF_MAIL_DIRECTORY);
+#endif
+    PR_FREEIF(mail_directory_value);
+
+    rv = m_prefs->CopyCharPref(PREF_MAIL_DIRECTORY, &mail_directory_value);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!mail_directory_value || (PL_strlen(mail_directory_value) == 0)) {
+      NS_ASSERTION(0,"failed to get a base value for the mail.directory");
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
+  PRInt32 oldMailType;
+  rv = m_prefs->GetIntPref(PREF_4X_MAIL_SERVER_TYPE, &oldMailType);
+  if (NS_FAILED(rv)) return rv;
+
+  if (oldMailType == POP_4X_MAIL_TYPE) {
+    char *pop_username = nsnull;
+    char *pop_hostname = nsnull;
+
+    rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &pop_username);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_POP_SERVER, &pop_hostname);
+    if (NS_FAILED(rv)) return rv;
+
+    usernameAtHostname = PR_smprintf("%s@%s",pop_username, pop_hostname);
+
+    PR_FREEIF(pop_username);
+    PR_FREEIF(pop_hostname);
+  }
+  else if (oldMailType == IMAP_4X_MAIL_TYPE) {
+    usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME,LOCAL_MAIL_FAKE_HOST_NAME);
+  }
+  else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
+    printf("sorry, movemail migration not supported yet.\n");
+    NS_ASSERTION(0, "movemail migration not supported yet.");
+    return NS_ERROR_FAILURE;
   }
   else {
-    printf("turn foobar into mailbox:/nobody@Local Mail/(foobar - mail.directory)\n");
-  }
+#ifdef DEBUG_ACCOUNTMANAGER
+    printf("Unrecognized server type %d\n", oldMailType);
 #endif
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (PL_strncasecmp(MAILBOX_SCHEMA,old_uri,MAILBOX_SCHEMA_LENGTH) == 0) {
+#ifdef DEBUG_ACCOUNTMANAGER
+    printf("turn %s into %s/%s/(%s - %s)\n",old_uri,MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH,mail_directory_value);
+#endif
+    // the extra -1 is because in 4.x, we had this:
+    // mailbox:<PATH> instead of mailbox:/<PATH>
+    *new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname,old_uri + MAILBOX_SCHEMA_LENGTH + PL_strlen(mail_directory_value) -1);
+  }
+  else {
+#ifdef DEBUG_ACCOUNTMANAGER
+    printf("turn %s into %s/%s/(%s - %s)\n",old_uri,MAILBOX_SCHEMA,usernameAtHostname,old_uri,mail_directory_value);
+#endif
+    *new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname,old_uri + PL_strlen(mail_directory_value));
+  }
+
+  if (!*new_uri) {
+#ifdef DEBUG_ACCOUNTMANAGER
+    printf("failed to convert 4.x uri: %s\n", old_uri);
+#endif
+    NS_ASSERTION(0,"uri conversion code not complete");
+    return NS_ERROR_FAILURE;
+  }
+
+  PR_FREEIF(usernameAtHostname);
+  PR_FREEIF(mail_directory_value);
 
   return NS_OK;
 }
@@ -1302,8 +1476,8 @@ nsMsgAccountManager::MigrateLocalMailAccounts(nsIMsgIdentity *identity)
   rv = SetMailCcAndFccValues(copied_identity);
   if (NS_FAILED(rv)) return rv;
     
-  // the server needs a username, but we never plan to use it.
-  server->SetUsername("nobody");
+  // the server needs a username
+  server->SetUsername(LOCAL_MAIL_FAKE_USER_NAME);
 
   // hook them together
   account->SetIncomingServer(server);
