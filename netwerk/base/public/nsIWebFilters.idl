@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -20,39 +20,33 @@
  * Contributor(s): 
  */
 
- /** 
-    The nsIProxyAutoConfig interface is used for setting arbitrary proxy
-    configurations based on the specified URL. 
-
-    Note this interface wraps (at least in a the implementation) the older
-    hacks of proxy auto config. 
-
-    - Gagan Saksena 04/23/00 
+/**
+* The nsIWebFilters is a simple interface for determining if the specified
+* uri is allowed to load or not. 
+*   - Gagan Saksena 05/04/00 
 */
-
 #include "nsISupports.idl"
 
 interface nsIURI;
 
-[scriptable, uuid(26fae72a-1dd2-11b2-9dd9-cb3e0c2c79ba)]
-interface nsIProxyAutoConfig : nsISupports
+[scriptable, uuid(ee9d42f2-1dd1-11b2-b909-b34b63e205e8)]
+interface nsIWebFilters : nsISupports
 {
     /**
-    * Get the proxy for the specified host 
+    * allowLoading the specified uri.
     */
-    void ProxyForURL(in nsIURI uri, out string host, out long port);
+    boolean allowLoading(in nsIURI uri);
 };
 
 %{C++
-#define NS_PROXY_AUTO_CONFIG_CID                  \
-{ /* 63ac8c66-1dd2-11b2-b070-84d00d3eaece */         \
-    0x63ac8c66,                                      \
+#define NS_WEBFILTERS_CID                  \
+{ /* 4677ea1e-1dd2-11b2-8654-e836efb6995c */         \
+    0x4677ea1e,                                      \
     0x1dd2,                                          \
     0x11b2,                                          \
-    {0xb0, 0x70, 0x84, 0xd0, 0x0d, 0x3e, 0xae, 0xce} \
+    {0x86, 0x54, 0xe8, 0x36, 0xef, 0xb6, 0x99, 0x5c} \
 }
 
-#define NS_PROXY_AUTO_CONFIG_PROGID \
-    "component://mozilla/network/proxy_autoconfig" 
+#define NS_WEBFILTERS_PROGID "component://mozilla/network/filters" 
 
 %}
