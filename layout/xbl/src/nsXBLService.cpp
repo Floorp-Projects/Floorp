@@ -30,6 +30,7 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
+#include "nsIHTTPChannel.h"
 #include "nsXPIDLString.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
@@ -54,6 +55,65 @@ static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kXMLDocumentCID,             NS_XMLDOCUMENT_CID);
 static NS_DEFINE_CID(kParserCID,                  NS_PARSER_IID); // XXX What's up with this???
 static NS_DEFINE_CID(kChromeRegistryCID,          NS_CHROMEREGISTRY_CID);
+
+// nsXBLStreamListener, a helper class used for 
+// asynchronous parsing of URLs
+/* Header file */
+class nsXBLStreamListener : public nsIStreamListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSISTREAMOBSERVER
+
+  nsXBLStreamListener(nsIStreamListener* aInner);
+  virtual ~nsXBLStreamListener();
+  /* additional members */
+  nsCOMPtr<nsIStreamListener> mInner;
+};
+
+/* Implementation file */
+NS_IMPL_ISUPPORTS2(nsXBLStreamListener, nsIStreamListener, nsIStreamObserver)
+
+nsXBLStreamListener::nsXBLStreamListener(nsIStreamListener* aInner)
+{
+  NS_INIT_ISUPPORTS();
+  /* member initializers and constructor code */
+  mInner = aInner;
+}
+
+nsXBLStreamListener::~nsXBLStreamListener()
+{
+  /* destructor code */
+}
+
+/* void onDataAvailable (in nsIChannel channel, in nsISupports ctxt, in nsIInputStream inStr, in unsigned long sourceOffset, in unsigned long count); */
+NS_IMETHODIMP
+nsXBLStreamListener::OnDataAvailable(nsIChannel* aChannel, nsISupports* aCtxt, nsIInputStream* aInStr, 
+                                     PRUint32 aSourceOffset, PRUint32 aCount)
+{
+  if (mInner)
+    return mInner->OnDataAvailable(aChannel, aCtxt, aInStr, aSourceOffset, aCount);
+  return NS_ERROR_FAILURE;
+}
+
+/* void onStartRequest (in nsIChannel channel, in nsISupports ctxt); */
+NS_IMETHODIMP
+nsXBLStreamListener::OnStartRequest(nsIChannel* aChannel, nsISupports* aCtxt)
+{
+  if (mInner)
+    return mInner->OnStartRequest(aChannel, aCtxt);
+  return NS_ERROR_FAILURE;
+}
+
+/* void onStopRequest (in nsIChannel channel, in nsISupports ctxt, in nsresult status, in wstring statusArg); */
+NS_IMETHODIMP 
+nsXBLStreamListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aCtxt, nsresult aStatus, const PRUnichar* aStatusArg)
+{
+  if (mInner)
+    return mInner->OnStopRequest(aChannel, aCtxt, aStatus, aStatusArg);
+  return NS_ERROR_FAILURE;
+}
 
 // nsProxyStream 
 // A helper class used for synchronous parsing of URLs.
@@ -250,7 +310,6 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aA
   nsCOMPtr<nsIXBLBinding> newBinding;
   nsCAutoString url; url.AssignWithConversion(aURL);
   if (NS_FAILED(rv = GetBinding(url, getter_AddRefs(newBinding)))) {
-    NS_ERROR("Failed loading an XBL document for content node.");
     return rv;
   }
 
@@ -258,7 +317,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL, PRBool aA
     nsCAutoString str = "Failed to locate XBL binding. XBL is now using id instead of name to reference bindings. Make sure you have switched over.  The invalid binding name is: ";
     str.AppendWithConversion(aURL);
     NS_ERROR(str);
-    return NS_ERROR_FAILURE;
+    return NS_OK;
   }
 
   if (aAugmentFlag) {
@@ -604,6 +663,15 @@ nsXBLService::FetchBindingDocument(nsIURI* aURI, nsIDocument** aResult)
                                                nsnull, nsnull, getter_AddRefs(listener)))) {
     NS_ERROR("Failure to init XBL doc prior to load.");
     return rv;
+  }
+
+  nsCOMPtr<nsIHTTPChannel> http(do_QueryInterface(channel));
+  if (http) {
+    // Need to be asynchronous
+    nsXBLStreamListener* xblListener = new nsXBLStreamListener(listener);
+    NS_ADDREF(xblListener);
+    http->AsyncRead(xblListener, nsnull);
+    return NS_OK;
   }
 
   // Now do a blocking synchronous parse of the file.

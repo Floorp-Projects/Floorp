@@ -7482,7 +7482,9 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
         return rv;
 
       // Load the bindings.
-      xblService->LoadBindings(aContent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
+      rv = xblService->LoadBindings(aContent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
+      if (NS_FAILED(rv))
+        return NS_OK;
 
       nsCOMPtr<nsIAtom> baseTag;
       PRInt32 nameSpaceID;
