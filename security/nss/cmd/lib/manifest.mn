@@ -46,6 +46,7 @@ CSRCS		= secutil.c \
 		secpwd.c    \
 		derprint.c \
 		secerror.c \
+		seccnames.c \
 		ffs.c \
 		$(NULL)
 
