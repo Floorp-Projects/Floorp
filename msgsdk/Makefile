@@ -276,8 +276,8 @@ JAVA_EXAMPLES:
 	cp java/protocol/examples/example1/ReadMe.txt $(JAVABUILDDIR)/examples/example1
 	cp java/protocol/examples/example2/*.java $(JAVABUILDDIR)/examples/MIME/example2
 	cp java/protocol/examples/example2/ReadMe.txt $(JAVABUILDDIR)/examples/MIME/example2
-	cp java/protocol/MIME/testapp/Prasad/*.java $(JAVABUILDDIR)/examples/MIME/example3
-	cp java/protocol/MIME/testapp/Prasad/ReadMe.txt $(JAVABUILDDIR)/examples/MIME/example3
+	cp java/protocol/MIME/testapp/*.java $(JAVABUILDDIR)/examples/MIME/example3
+	cp java/protocol/MIME/testapp/ReadMe.txt $(JAVABUILDDIR)/examples/MIME/example3
 	cp java/protocol/MIME/examples/msg_extern_body/*.java $(JAVABUILDDIR)/examples/MIME/example4
 	cp java/protocol/MIME/examples/msg_extern_body/ReadMe.txt $(JAVABUILDDIR)/examples/MIME/example4
 	cp java/protocol/MIME/examples/multi_part/*.java $(JAVABUILDDIR)/examples/MIME/example5
