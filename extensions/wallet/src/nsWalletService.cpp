@@ -193,7 +193,7 @@ void nsWalletlibService::Init()
   nsresult rv = nsServiceManager::GetService
     (NS_OBSERVERSERVICE_PROGID, NS_GET_IID(nsIObserverService), (nsISupports**)&svc );
   if ( NS_SUCCEEDED( rv ) && svc ) {
-    nsString  topic(NS_FORMSUBMIT_SUBJECT);
+    nsString  topic; topic.AssignWithConversion(NS_FORMSUBMIT_SUBJECT);
     rv = svc->AddObserver( this, topic.GetUnicode());
     nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
   }
@@ -299,10 +299,10 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
             if (nsnull != elementNode) {
               nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
               if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
-                nsAutoString type("");
+                nsAutoString type;
                 rv = inputElement->GetType(type);
                 if (NS_SUCCEEDED(rv)) {
-                  if (type.Compare("password", PR_TRUE) == 0) {
+                  if (type.CompareWithConversion("password", PR_TRUE) == 0) {
                     passwordCount++;
                   }
                 }
@@ -319,11 +319,11 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* ch
             if (nsnull != elementNode) {
               nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
               if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
-                nsAutoString type("");
+                nsAutoString type;
                 rv = inputElement->GetType(type);
                 if (NS_SUCCEEDED(rv)) {
-                  if ((type.IsEmpty()) || (type.Compare("text", PR_TRUE) == 0) ||
-                    (type.Compare("password", PR_TRUE) == 0)) {
+                  if ((type.IsEmpty()) || (type.CompareWithConversion("text", PR_TRUE) == 0) ||
+                    (type.CompareWithConversion("password", PR_TRUE) == 0)) {
                     nsAutoString field;
                     rv = inputElement->GetName(field);
                     if (NS_SUCCEEDED(rv)) {

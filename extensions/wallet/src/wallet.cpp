@@ -472,7 +472,7 @@ enum PlacementType {DUP_IGNORE, DUP_OVERWRITE, DUP_BEFORE, DUP_AFTER, AT_END};
 
 class wallet_MapElement {
 public:
-  wallet_MapElement() : item1(""), item2(""), itemList(nsnull) {}
+  wallet_MapElement() : itemList(nsnull) {}
   nsAutoString  item1;
   nsAutoString  item2;
   nsVoidArray * itemList;
@@ -480,7 +480,7 @@ public:
 
 class wallet_Sublist {
 public:
-  wallet_Sublist() : item("") {}
+  wallet_Sublist() {}
   nsAutoString item;
 };
 
@@ -673,7 +673,7 @@ wallet_DumpStopwatch() {
 PUBLIC PRUnichar *
 Wallet_Localize(char* genericString) {
   nsresult ret;
-  nsAutoString v("");
+  nsAutoString v;
 
   /* create a URL for the string resource file */
   nsIIOService* pNetService = nsnull;
@@ -733,7 +733,7 @@ Wallet_Localize(char* genericString) {
   nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
 
   /* localize the given string */
-  nsAutoString   strtmp(genericString);
+  nsAutoString   strtmp; strtmp.AssignWithConversion(genericString);
   const PRUnichar *ptrtmp = strtmp.GetUnicode();
   PRUnichar *ptrv = nsnull;
   ret = bundle->GetStringFromName(ptrtmp, &ptrv);
@@ -1621,7 +1621,7 @@ Wallet_KeySize() {
     if (wallet_IsOldKeyFormat()) {
       return ((count == 0) ? 0 : 1);
     }
-    nsAutoString temp(buffer);
+    nsAutoString temp; temp.AssignWithConversion(buffer);
     PRInt32 start = 0;
     for (PRInt32 i=0; i<5; i++) { /* skip over the five lines of the header */
       start = temp.FindChar('\n', PR_FALSE, start);
@@ -1689,7 +1689,7 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
         || strm.eof()) {
       strm.close();
       Wallet_InitKeySet(PR_FALSE);
-      key = nsAutoString("");
+      key.SetLength(0);
       keyCancel = PR_FALSE;
       return PR_FALSE;
     }
@@ -1699,7 +1699,7 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
         || strm.eof()) {
       strm.close();
       Wallet_InitKeySet(PR_FALSE);
-      key = nsAutoString("");
+      key.SetLength(0);
       keyCancel = PR_FALSE;
       return PR_FALSE;
     }
@@ -1714,7 +1714,7 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
     return PR_TRUE;
   } else {
     Wallet_InitKeySet(PR_FALSE);
-    key = nsAutoString("");
+    key.SetLength(0);
     keyCancel = PR_FALSE;
     return PR_FALSE;
   }
@@ -1739,7 +1739,7 @@ wallet_WriteKeyFile(PRBool useDefaultKey) {
 
   nsOutputFileStream strm2(dirSpec + keyFileName);
   if (!strm2.is_open()) {
-    key = nsAutoString("");
+    key.SetLength(0);
     keyCancel = PR_TRUE;
     return PR_FALSE;
   }
@@ -1814,7 +1814,7 @@ Wallet_SetKey(PRBool isNewkey) {
     }
     if ((Wallet_KeySize() == 0) && !isNewkey) { /* prev-established key is default key */
       useDefaultKey = PR_TRUE;
-      newkey = nsAutoString("~");
+      newkey.AssignWithConversion("~");
     } else { /* ask the user for his key */
       if (isNewkey) { /* user is changing his password */
         for (;;) {
@@ -1854,7 +1854,7 @@ Wallet_SetKey(PRBool isNewkey) {
     if ((Wallet_KeySize() < 0) || isNewkey ){
       /* no key file existed before or using is changing the key */
       useDefaultKey = PR_TRUE;
-      newkey = nsAutoString("~"); /* use zero-length key */
+      newkey.AssignWithConversion("~"); /* use zero-length key */
     }
   }
   Wallet_InitKeySet(PR_TRUE);
@@ -1895,7 +1895,7 @@ wallet_GetLine(nsInputFileStream strm, nsAutoString& line, PRBool obscure,
     nsKeyType saveCount = 0, nsKeyType *readCount = 0, PRBool inHeader = PR_FALSE) {
 
   /* read the line */
-  line = "";
+  line.SetLength(0);
   PRUnichar c;
   for (;;) {
     if (inHeader) {
@@ -1932,7 +1932,7 @@ wallet_GetHeader(nsInputFileStream strm, nsKeyType& saveCount, nsKeyType& readCo
   if (NS_FAILED(wallet_GetLine(strm, format, PR_FALSE, 0, 0, PR_TRUE))) {
     return;
   }
-  if (!format.Equals(HEADER_VERSION_1)) {
+  if (!format.EqualsWithConversion(HEADER_VERSION_1)) {
     /* something's wrong */
     return;
   }
@@ -1987,18 +1987,21 @@ void
 wallet_PutHeader(nsOutputFileStream strm, nsKeyType saveCount, nsKeyType writeCount){
 
   /* format revision number */
-  wallet_PutLine(strm, nsAutoString(HEADER_VERSION_1), PR_FALSE, 0, 0, PR_TRUE);
+  {
+    nsAutoString temp1;
+    temp1.AssignWithConversion(HEADER_VERSION_1);
+    wallet_PutLine(strm, temp1, PR_FALSE, 0, 0, PR_TRUE);
+  }
 
   /* saveCount */
   nsAutoString buffer;
-  buffer = "";
-  buffer.Append(PRInt32(saveCount),10);
+  buffer.AppendWithConversion(PRInt32(saveCount),10);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
 
   /* writeCount */
-  buffer = "";
-  buffer.Append(PRInt32(writeCount),10);
+  buffer.SetLength(0);
+  buffer.AppendWithConversion(PRInt32(writeCount),10);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
 
@@ -2056,7 +2059,7 @@ wallet_WriteToFile(const char * filename, nsVoidArray* list, PRBool obscure) {
         wallet_PutLine(strm, (*ptr1).item, obscure, saveCountW, &writeCount);
       }
     }
-    wallet_PutLine(strm, "", obscure, saveCountW, &writeCount);
+    wallet_PutLine(strm, nsAutoString(), obscure, saveCountW, &writeCount);
   }
 
   /* close the stream */
@@ -2151,7 +2154,7 @@ wallet_ReadFromFile
       nsAutoString dummy2;
       for (;;) {
         /* get next item for sublist */
-        item3 = "";
+        item3.SetLength(0);
         if (NS_FAILED(wallet_GetLine(strm, item3, obscure, saveCountW, &readCount))) {
           /* end of file reached */
           wallet_WriteToList(item1, dummy2, itemList, list, placement);
@@ -2221,7 +2224,7 @@ wallet_ReadFromURLFieldToSchemaFile
     if (!itemList) {
       break;
     }
-    nsAutoString dummyString = nsAutoString("");
+    nsAutoString dummyString;
     wallet_WriteToList(item, dummyString, itemList, list, placement);
 
     for (;;) {
@@ -2267,20 +2270,20 @@ wallet_ReadFromURLFieldToSchemaFile
  
 nsAutoString
 wallet_GetHostFile(nsIURI * url) {
-  nsAutoString urlName("");
+  nsAutoString urlName;
   char* host;
   nsresult rv = url->GetHost(&host);
   if (NS_FAILED(rv)) {
-    return nsAutoString("");
+    return nsAutoString();
   }
-  urlName.Append(host);
+  urlName.AppendWithConversion(host);
   nsCRT::free(host);
   char* file;
   rv = url->GetPath(&file);
   if (NS_FAILED(rv)) {
-    return nsAutoString("");
+    return nsAutoString();
   }
-  urlName.Append(file);
+  urlName.AppendWithConversion(file);
   nsCRT::free(file);
   return urlName;
 }
@@ -2322,14 +2325,14 @@ PRInt32 FieldToValue(
       if (wallet_ReadFromList(schema, dummy2, itemList2, wallet_SchemaConcat_list)) {
         /* concatenation rules exist, generate value as a concatenation */
         wallet_Sublist * ptr1;
-        value = nsAutoString("");
+        value.SetLength(0);
         nsAutoString value2;
         PRInt32 count = LIST_COUNT(itemList2);
         for (PRInt32 i=0; i<count; i++) {
           ptr1 = NS_STATIC_CAST(wallet_Sublist*, itemList2->ElementAt(i));
           if (wallet_ReadFromList(ptr1->item, value2, dummy, wallet_SchemaToValue_list)) {
             if (value.Length()>0) {
-              value += " ";
+              value.AppendWithConversion(" ");
             }
             value += value2;
           }
@@ -2346,7 +2349,7 @@ PRInt32 FieldToValue(
     PRInt32 index2 = index;
 
     nsAutoString temp = wallet_GetHostFile(wallet_lastUrl);
-    temp.Append(":");
+    temp.AppendWithConversion(":");
     temp.Append(field);
 
     if (wallet_ReadFromList(temp, value, itemList, wallet_SchemaToValue_list, index2)) {
@@ -2416,11 +2419,11 @@ wallet_GetPrefills(
   if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
     nsAutoString type;
     result = inputElement->GetType(type);
-    if ((NS_SUCCEEDED(result)) && ((type.IsEmpty()) || (type.Compare("text", PR_TRUE) == 0))) {
+    if ((NS_SUCCEEDED(result)) && ((type.IsEmpty()) || (type.CompareWithConversion("text", PR_TRUE) == 0))) {
       nsAutoString field;
       result = inputElement->GetName(field);
       if (NS_SUCCEEDED(result)) {
-        nsAutoString schema("");
+        nsAutoString schema;
         nsAutoString value;
         nsVoidArray* itemList;
 
@@ -2428,7 +2431,7 @@ wallet_GetPrefills(
         nsIDOMElement * element;
         result = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
         if ((NS_SUCCEEDED(result)) && (nsnull != element)) {
-          nsAutoString vcard("VCARD_NAME");
+          nsAutoString vcard; vcard.AssignWithConversion("VCARD_NAME");
           result = element->GetAttribute(vcard, schema);
           NS_RELEASE(element);
         }
@@ -2469,7 +2472,7 @@ wallet_GetPrefills(
     nsAutoString field;
     result = selectElement->GetName(field);
     if (NS_SUCCEEDED(result)) {
-      nsAutoString schema("");
+      nsAutoString schema;
       nsAutoString value;
       nsVoidArray* itemList;
       if (FieldToValue(field, schema, value, itemList, index) == 0) {
@@ -2761,7 +2764,7 @@ wallet_FetchFromNetCenter() {
     return;
   }
   buffer.StripWhitespace();
-  if (buffer.Equals(version)) {
+  if (buffer.EqualsWithConversion(version)) {
     /* This is an optimization but we are skipping it for now.  If the user's tables
      * become corrupt but his version number indicates that he is up to date, there
      * would be no obvious way for him to restore the tables.  If we did the optimization
@@ -3043,7 +3046,7 @@ PUBLIC void
 WLLT_GetPrefillListForViewer(nsAutoString& aPrefillList)
 {
   wallet_PrefillElement * ptr;
-  nsAutoString buffer = "";
+  nsAutoString buffer;
   PRUnichar * schema;
   PRUnichar * value;
   PRInt32 count = LIST_COUNT(wallet_list);
@@ -3052,7 +3055,7 @@ WLLT_GetPrefillListForViewer(nsAutoString& aPrefillList)
     schema = ptr->schema->ToNewUnicode();
     value = ptr->value->ToNewUnicode();
     buffer += BREAK;
-    buffer.Append(ptr->count,10);
+    buffer.AppendWithConversion(ptr->count,10);
     buffer += BREAK;
     buffer += schema;
     buffer += BREAK;
@@ -3093,7 +3096,10 @@ Wallet_SignonViewerReturn (nsAutoString results) {
     nsAutoString gone;
 
     /* step through all nopreviews and delete those that are in the sequence */
-    gone = SI_FindValueInArgs(results, nsAutoString("|goneP|"));
+    {
+      nsAutoString temp1; temp1.AssignWithConversion("|goneP|");
+      gone = SI_FindValueInArgs(results, temp1);
+    }
     PRInt32 count = LIST_COUNT(wallet_URL_list);
     while (count>0) {
       count--;
@@ -3108,7 +3114,10 @@ Wallet_SignonViewerReturn (nsAutoString results) {
     }
 
     /* step through all nocaptures and delete those that are in the sequence */
-    gone = SI_FindValueInArgs(results, nsAutoString("|goneC|"));
+    {
+      nsAutoString temp2; temp2.AssignWithConversion("|goneC|");
+      gone = SI_FindValueInArgs(results, temp2);
+    }
     PRInt32 count2 = LIST_COUNT(wallet_URL_list);
     while (count2>0) {
       count2--;
@@ -3129,7 +3138,7 @@ Wallet_SignonViewerReturn (nsAutoString results) {
  */
 PRIVATE PRBool
 wallet_OKToCapture(char* urlName) {
-  nsAutoString url = nsAutoString(urlName);
+  nsAutoString url; url.AssignWithConversion(urlName);
 
   /* exit if pref is not set */
   if (!wallet_GetFormsCapturingPref() || !wallet_GetEnabledPref()) {
@@ -3139,7 +3148,7 @@ wallet_OKToCapture(char* urlName) {
   /* see if this url is already on list of url's for which we don't want to capture */
   wallet_InitializeURLList();
   nsVoidArray* dummy;
-  nsAutoString value = nsAutoString("nn");
+  nsAutoString value; value.AssignWithConversion("nn");
   if (wallet_ReadFromList(url, value, dummy, wallet_URL_list)) {
     if (value.CharAt(NO_CAPTURE) == 'y') {
       return PR_FALSE;
@@ -3232,7 +3241,7 @@ wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsAutoS
     PRInt32 lastIndex = index;
 
     nsAutoString concat_param = wallet_GetHostFile(wallet_lastUrl);
-    concat_param.Append(":");
+    concat_param.AppendWithConversion(":");
     concat_param.Append(field);
 
     while(wallet_ReadFromList(concat_param, oldValue, dummy, wallet_SchemaToValue_list, index)) {
@@ -3257,14 +3266,14 @@ wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsAutoS
       lastIndex = index;
 
       concat_param = wallet_GetHostFile(wallet_lastUrl);
-      concat_param.Append(":");
+      concat_param.AppendWithConversion(":");
       concat_param.Append(field);
     }
 
     /* this is a new value so store it */
     dummy = 0;
     nsAutoString hostFileField = wallet_GetHostFile(wallet_lastUrl);
-    hostFileField.Append(":");
+    hostFileField.AppendWithConversion(":");
     hostFileField.Append(field);
 
     wallet_WriteToList(hostFileField, value, dummy, wallet_SchemaToValue_list);
@@ -3282,7 +3291,7 @@ wallet_Capture(nsIDocument* doc, nsAutoString field, nsAutoString value, nsAutoS
 PUBLIC void
 WLLT_GetNopreviewListForViewer(nsAutoString& aNopreviewList)
 {
-  nsAutoString buffer = "";
+  nsAutoString buffer;
   int nopreviewNum = 0;
   wallet_MapElement *url;
 
@@ -3292,11 +3301,11 @@ WLLT_GetNopreviewListForViewer(nsAutoString& aNopreviewList)
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2.CharAt(NO_PREVIEW) == 'y') {
       buffer += BREAK;
-      buffer += "<OPTION value=";
-      buffer.Append(nopreviewNum, 10);
-      buffer += ">";
+      buffer.AppendWithConversion("<OPTION value=");
+      buffer.AppendWithConversion(nopreviewNum, 10);
+      buffer.AppendWithConversion(">");
       buffer += url->item1;
-      buffer += "</OPTION>\n";
+      buffer.AppendWithConversion("</OPTION>\n");
       nopreviewNum++;
     }
   }
@@ -3306,7 +3315,7 @@ WLLT_GetNopreviewListForViewer(nsAutoString& aNopreviewList)
 PUBLIC void
 WLLT_GetNocaptureListForViewer(nsAutoString& aNocaptureList)
 {
-  nsAutoString buffer = "";
+  nsAutoString buffer;
   int nocaptureNum = 0;
   wallet_MapElement *url;
 
@@ -3316,11 +3325,11 @@ WLLT_GetNocaptureListForViewer(nsAutoString& aNocaptureList)
     url = NS_STATIC_CAST(wallet_MapElement*, wallet_URL_list->ElementAt(i));
     if (url->item2.CharAt(NO_CAPTURE) == 'y') {
       buffer += BREAK;
-      buffer += "<OPTION value=";
-      buffer.Append(nocaptureNum, 10);
-      buffer += ">";
+      buffer.AppendWithConversion("<OPTION value=");
+      buffer.AppendWithConversion(nocaptureNum, 10);
+      buffer.AppendWithConversion(">");
       buffer += url->item1;
-      buffer += "</OPTION>\n";
+      buffer.AppendWithConversion("</OPTION>\n");
       nocaptureNum++;
     }
   }
@@ -3353,7 +3362,7 @@ WLLT_PostEdit(nsAutoString walletList) {
   tail = temp;
 
   /* return if OK button was not pressed */
-  if (!head.Equals("OK")) {
+  if (!head.EqualsWithConversion("OK")) {
     return;
   }
 
@@ -3426,16 +3435,16 @@ WLLT_PrefillReturn(nsAutoString results) {
   nsAutoString next;
 
   /* get values that are in environment variables */
-  fillins = SI_FindValueInArgs(results, nsAutoString("|fillins|"));
-  listAsAscii = SI_FindValueInArgs(results, nsAutoString("|list|"));
-  skip = SI_FindValueInArgs(results, nsAutoString("|skip|"));
-  urlName = SI_FindValueInArgs(results, nsAutoString("|url|"));
+  fillins = SI_FindValueInArgs(results, NS_ConvertToString("|fillins|"));
+  listAsAscii = SI_FindValueInArgs(results, NS_ConvertToString("|list|"));
+  skip = SI_FindValueInArgs(results, NS_ConvertToString("|skip|"));
+  urlName = SI_FindValueInArgs(results, NS_ConvertToString("|url|"));
 
   /* add url to url list if user doesn't want to preview this page in the future */
-  if (nsAutoString(skip).Equals("true")) {
+  if (nsAutoString(skip).EqualsWithConversion("true")) {
     nsAutoString url = nsAutoString(urlName);
     nsVoidArray* dummy;
-    nsAutoString value = nsAutoString("nn");
+    nsAutoString value; value.AssignWithConversion("nn");
     wallet_ReadFromList(url, value, dummy, wallet_URL_list);
     value.SetCharAt('y', NO_PREVIEW);
     wallet_WriteToList(url, value, dummy, wallet_URL_list, DUP_OVERWRITE);
@@ -3543,7 +3552,7 @@ WLLT_PrefillReturn(nsAutoString results) {
  */
 PUBLIC nsresult
 WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
-  nsAutoString urlName = nsAutoString("");
+  nsAutoString urlName;
 
   /* create list of elements that can be prefilled */
   nsVoidArray *wallet_PrefillElement_list=new nsVoidArray();
@@ -3668,7 +3677,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
   if (!quick) {
     wallet_InitializeURLList();
     nsVoidArray* dummy;
-    nsAutoString value = nsAutoString("nn");
+    nsAutoString value; value.AssignWithConversion("nn");
     if (urlName.Length() != 0) {
       wallet_ReadFromList(urlName, value, dummy, wallet_URL_list);
       noPreview = (value.CharAt(NO_PREVIEW) == 'y');
@@ -3760,7 +3769,7 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
                         nsAutoString type;
                         result = inputElement->GetType(type);
                         if ((NS_SUCCEEDED(result)) &&
-                            (type.IsEmpty() || (type.Compare("text", PR_TRUE) == 0))) {
+                            (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE) == 0))) {
                           nsAutoString field;
                           result = inputElement->GetName(field);
                           if (NS_SUCCEEDED(result)) {
@@ -3769,11 +3778,11 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
                             if (NS_SUCCEEDED(result)) {
 
                               /* get schema name from vcard attribute if it exists */
-                              nsAutoString vcardValue("");
+                              nsAutoString vcardValue;
                               nsIDOMElement * element;
                               result = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
                               if ((NS_SUCCEEDED(result)) && (nsnull != element)) {
-                                nsAutoString vcardName("VCARD_NAME");
+                                nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
                                 result = element->GetAttribute(vcardName, vcardValue);
                                 NS_RELEASE(element);
                               }
@@ -3805,7 +3814,7 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
 /* should move this to an include file */
 class si_SignonDataStruct {
 public:
-  si_SignonDataStruct() : name(""), value(""), isPassword(PR_FALSE) {}
+  si_SignonDataStruct() : isPassword(PR_FALSE) {}
   nsAutoString name;
   nsAutoString value;
   PRBool isPassword;
@@ -3872,12 +3881,12 @@ WLLT_OnSubmit(nsIContent* currentForm) {
             if (nsnull != elementNode) {
               nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
               if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
-                nsAutoString type("");
+                nsAutoString type;
                 rv = inputElement->GetType(type);
                 if (NS_SUCCEEDED(rv)) {
 
-                  PRBool isText = (type.IsEmpty() || (type.Compare("text", PR_TRUE)==0));
-                  PRBool isPassword = (type.Compare("password", PR_TRUE)==0);
+                  PRBool isText = (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE)==0));
+                  PRBool isPassword = (type.CompareWithConversion("password", PR_TRUE)==0);
 #ifndef AutoCapture
                   if (isText) {
                     fieldcount++;
@@ -3981,7 +3990,7 @@ WLLT_OnSubmit(nsIContent* currentForm) {
                   nsAutoString type;
                   rv = inputElement->GetType(type);
                   if ((NS_SUCCEEDED(rv)) &&
-                      (type.IsEmpty() || (type.Compare("text", PR_TRUE) == 0))) {
+                      (type.IsEmpty() || (type.CompareWithConversion("text", PR_TRUE) == 0))) {
                     nsAutoString field;
                     rv = inputElement->GetName(field);
                     if (NS_SUCCEEDED(rv)) {
@@ -3990,11 +3999,11 @@ WLLT_OnSubmit(nsIContent* currentForm) {
                       if (NS_SUCCEEDED(rv)) {
 
                         /* get schema name from vcard attribute if it exists */
-                        nsAutoString vcardValue("");
+                        nsAutoString vcardValue;
                         nsIDOMElement * element;
                         rv = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
                         if ((NS_SUCCEEDED(rv)) && (nsnull != element)) {
-                          nsAutoString vcardName("VCARD_NAME");
+                          nsAutoString vcardName; vcardName.AssignWithConversion("VCARD_NAME");
                           rv = element->GetAttribute(vcardName, vcardValue);
                           NS_RELEASE(element);
                         }
