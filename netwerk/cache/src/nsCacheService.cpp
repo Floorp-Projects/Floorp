@@ -726,7 +726,7 @@ nsCacheService::CreateMemoryDevice()
 
 nsresult
 nsCacheService::CreateRequest(nsCacheSession *   session,
-                              const char *       clientKey,
+                              const nsACString & clientKey,
                               nsCacheAccessMode  accessRequested,
                               PRBool             blockingMode,
                               nsICacheListener * listener,
@@ -849,7 +849,7 @@ nsCacheService::ProcessRequest(nsCacheRequest *           request,
 
 nsresult
 nsCacheService::OpenCacheEntry(nsCacheSession *           session,
-                               const char *               key,
+                               const nsACString &         key,
                                nsCacheAccessMode          accessRequested,
                                PRBool                     blockingMode,
                                nsICacheListener *         listener,

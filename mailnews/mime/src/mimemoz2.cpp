@@ -1154,7 +1154,7 @@ mime_image_begin(const char *image_url, const char *content_type,
           // we may need to convert the image_url into just a part url - in any case,
           // it has to be the same as what imglib will be asking imap for later
           // on so that we'll find this in the memory cache.
-          rv = memCacheSession->OpenCacheEntry(image_url, nsICache::ACCESS_READ_WRITE, nsICache::BLOCKING, getter_AddRefs(entry));
+          rv = memCacheSession->OpenCacheEntry(nsDependentCString(image_url), nsICache::ACCESS_READ_WRITE, nsICache::BLOCKING, getter_AddRefs(entry));
           nsCacheAccessMode access;
           if (entry)
           {

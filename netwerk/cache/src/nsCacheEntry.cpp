@@ -305,9 +305,8 @@ nsCacheEntryInfo::GetDeviceID(char ** deviceID)
 
 
 NS_IMETHODIMP
-nsCacheEntryInfo::GetKey(char ** key)
+nsCacheEntryInfo::GetKey(nsACString &key)
 {
-    NS_ENSURE_ARG_POINTER(key);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
     return ClientKeyFromCacheKey(*mCacheEntry->Key(), key);

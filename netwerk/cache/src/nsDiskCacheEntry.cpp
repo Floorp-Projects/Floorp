@@ -177,9 +177,8 @@ NS_IMETHODIMP nsDiskCacheEntryInfo::GetDeviceID(char ** deviceID)
 }
 
 
-NS_IMETHODIMP nsDiskCacheEntryInfo::GetKey(char ** clientKey)
+NS_IMETHODIMP nsDiskCacheEntryInfo::GetKey(nsACString &clientKey)
 {
-    NS_ENSURE_ARG_POINTER(clientKey);
     return ClientKeyFromCacheKey(nsDependentCString(mDiskEntry->mKeyStart), clientKey);
 }
 

@@ -194,7 +194,7 @@ PRBool imgCache::Put(nsIURI *aKey, imgRequest *request, nsICacheEntryDescriptor 
 
   nsCOMPtr<nsICacheEntryDescriptor> entry;
 
-  rv = ses->OpenCacheEntry(spec.get(), nsICache::ACCESS_WRITE, nsICache::BLOCKING, getter_AddRefs(entry));
+  rv = ses->OpenCacheEntry(spec, nsICache::ACCESS_WRITE, nsICache::BLOCKING, getter_AddRefs(entry));
 
   if (NS_FAILED(rv) || !entry)
     return PR_FALSE;
@@ -244,7 +244,7 @@ PRBool imgCache::Get(nsIURI *aKey, PRBool *aHasExpired, imgRequest **aRequest, n
 
   nsCOMPtr<nsICacheEntryDescriptor> entry;
 
-  rv = ses->OpenCacheEntry(spec.get(), nsICache::ACCESS_READ, nsICache::BLOCKING, getter_AddRefs(entry));
+  rv = ses->OpenCacheEntry(spec, nsICache::ACCESS_READ, nsICache::BLOCKING, getter_AddRefs(entry));
 
   if (NS_FAILED(rv) || !entry)
     return PR_FALSE;
@@ -306,7 +306,7 @@ PRBool imgCache::Remove(nsIURI *aKey)
 
   nsCOMPtr<nsICacheEntryDescriptor> entry;
 
-  rv = ses->OpenCacheEntry(spec.get(), nsICache::ACCESS_READ, nsICache::BLOCKING, getter_AddRefs(entry));
+  rv = ses->OpenCacheEntry(spec, nsICache::ACCESS_READ, nsICache::BLOCKING, getter_AddRefs(entry));
 
   if (NS_FAILED(rv) || !entry)
     return PR_FALSE;

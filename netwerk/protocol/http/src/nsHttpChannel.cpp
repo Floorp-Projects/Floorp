@@ -1206,11 +1206,11 @@ nsHttpChannel::OpenCacheEntry(PRBool offline, PRBool *delayed)
     // we'll try to synchronously open the cache entry... however, it may be
     // in use and not yet validated, in which case we'll try asynchronously
     // opening the cache entry.
-    rv = session->OpenCacheEntry(cacheKey.get(), accessRequested, PR_FALSE,
+    rv = session->OpenCacheEntry(cacheKey, accessRequested, PR_FALSE,
                                  getter_AddRefs(mCacheEntry));
     if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
         // access to the cache entry has been denied
-        rv = session->AsyncOpenCacheEntry(cacheKey.get(), accessRequested, this);
+        rv = session->AsyncOpenCacheEntry(cacheKey, accessRequested, this);
         if (NS_FAILED(rv)) return rv;
         // we'll have to wait for the cache entry
         *delayed = PR_TRUE;

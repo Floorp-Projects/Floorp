@@ -83,7 +83,7 @@ public:
      * Methods called by nsCacheSession
      */
     static nsresult  OpenCacheEntry(nsCacheSession *           session,
-                                    const char *               key,
+                                    const nsACString &         key,
                                     nsCacheAccessMode          accessRequested,
                                     PRBool                     blockingMode,
                                     nsICacheListener *         listener,
@@ -159,7 +159,7 @@ private:
     nsresult         CreateMemoryDevice();
 
     nsresult         CreateRequest(nsCacheSession *   session,
-                                   const char *       clientKey,
+                                   const nsACString & clientKey,
                                    nsCacheAccessMode  accessRequested,
                                    PRBool             blockingMode,
                                    nsICacheListener * listener,

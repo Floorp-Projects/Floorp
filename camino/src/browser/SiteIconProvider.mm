@@ -116,7 +116,7 @@ nsresult NeckoCacheHelper::ExistsInCache(const nsACString& inURI, PRBool* outExi
   NS_ASSERTION(mCacheSession, "No cache session");
 
   nsCOMPtr<nsICacheEntryDescriptor> entryDesc;
-  nsresult rv = mCacheSession->OpenCacheEntry(PromiseFlatCString(inURI).get(), nsICache::ACCESS_READ, nsICache::NON_BLOCKING, getter_AddRefs(entryDesc));
+  nsresult rv = mCacheSession->OpenCacheEntry(inURI, nsICache::ACCESS_READ, nsICache::NON_BLOCKING, getter_AddRefs(entryDesc));
 
   *outExists = NS_SUCCEEDED(rv) && (entryDesc != NULL);
   return NS_OK;
@@ -127,7 +127,7 @@ nsresult NeckoCacheHelper::PutInCache(const nsACString& inURI, PRUint32 inExpira
   NS_ASSERTION(mCacheSession, "No cache session");
 
   nsCOMPtr<nsICacheEntryDescriptor> entryDesc;
-  nsresult rv = mCacheSession->OpenCacheEntry(PromiseFlatCString(inURI).get(), nsICache::ACCESS_WRITE, nsICache::NON_BLOCKING, getter_AddRefs(entryDesc));
+  nsresult rv = mCacheSession->OpenCacheEntry(inURI, nsICache::ACCESS_WRITE, nsICache::NON_BLOCKING, getter_AddRefs(entryDesc));
   if (NS_FAILED(rv) || !entryDesc) return rv;
   
   nsCacheAccessMode accessMode;

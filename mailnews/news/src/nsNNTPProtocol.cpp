@@ -920,7 +920,7 @@ nsresult nsNNTPProtocol::OpenCacheEntry()
   char * anchor = (char *)strrchr(urlSpec.BeginWriting(), '?');
   if (anchor)
     *anchor = '\0';
-  return cacheSession->AsyncOpenCacheEntry(urlSpec.get(), nsICache::ACCESS_READ_WRITE, this);
+  return cacheSession->AsyncOpenCacheEntry(urlSpec, nsICache::ACCESS_READ_WRITE, this);
 }
 
 NS_IMETHODIMP nsNNTPProtocol::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)

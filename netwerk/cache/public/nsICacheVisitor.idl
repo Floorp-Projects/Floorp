@@ -109,7 +109,7 @@ interface nsICacheDeviceInfo : nsISupports
 };
 
 
-[scriptable, uuid(72c64022-1dd2-11b2-b3a5-b8b859e0a1b2)]
+[scriptable, uuid(fab51c92-95c3-4468-b317-7de4d7588254)]
 interface nsICacheEntryInfo : nsISupports
 {
     /**
@@ -125,7 +125,7 @@ interface nsICacheEntryInfo : nsISupports
     /**
      * Get the key identifying the cache entry.
      */
-    readonly attribute string  key;
+    readonly attribute ACString key;
     
     /**
      * Get the number of times the cache entry has been opened.

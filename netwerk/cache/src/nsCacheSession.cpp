@@ -84,7 +84,7 @@ NS_IMETHODIMP nsCacheSession::SetDoomEntriesIfExpired(PRBool doomEntriesIfExpire
 
 
 NS_IMETHODIMP
-nsCacheSession::OpenCacheEntry(const char *               key, 
+nsCacheSession::OpenCacheEntry(const nsACString &         key, 
                                nsCacheAccessMode          accessRequested,
                                PRBool                     blockingMode,
                                nsICacheEntryDescriptor ** result)
@@ -100,7 +100,7 @@ nsCacheSession::OpenCacheEntry(const char *               key,
 }
 
 
-NS_IMETHODIMP nsCacheSession::AsyncOpenCacheEntry(const char *key,
+NS_IMETHODIMP nsCacheSession::AsyncOpenCacheEntry(const nsACString & key,
                                                   nsCacheAccessMode accessRequested,
                                                   nsICacheListener *listener)
 {

@@ -167,7 +167,7 @@ nsresult TestMCTransport(const char *filename)
                              &session);
     if (NS_FAILED(rv)) return rv;
 
-    rv = session->OpenCacheEntry(filename,
+    rv = session->OpenCacheEntry(nsDependentCString(filename),
                                  nsICache::ACCESS_READ_WRITE,
                                  nsICache::BLOCKING,
                                  &desc);

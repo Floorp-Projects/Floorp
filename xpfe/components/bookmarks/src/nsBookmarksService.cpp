@@ -4136,7 +4136,7 @@ nsBookmarksService::ProcessCachedBookmarkIcon(nsIRDFResource* aSource,
             return NS_RDF_NO_VALUE;
         }
         nsCOMPtr<nsICacheEntryDescriptor> entry;
-        rv = mCacheSession->OpenCacheEntry(path.get(), nsICache::ACCESS_READ,
+        rv = mCacheSession->OpenCacheEntry(path, nsICache::ACCESS_READ,
                                            nsICache::NON_BLOCKING, getter_AddRefs(entry));
         if (NS_FAILED(rv) || (!entry))
         {

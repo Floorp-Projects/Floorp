@@ -343,7 +343,7 @@ nsAboutCacheEntry::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     mListener = listener;
     mListenerContext = context;
 
-    return mCacheSession->AsyncOpenCacheEntry(key.get(), nsICache::ACCESS_READ, this);
+    return mCacheSession->AsyncOpenCacheEntry(key, nsICache::ACCESS_READ, this);
 }
 
 
@@ -384,9 +384,9 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     nsCString buffer;
     PRUint32 n;
 
-    nsXPIDLCString str;
+    nsCAutoString str;
 
-    rv = descriptor->GetKey(getter_Copies(str));
+    rv = descriptor->GetKey(str);
     if (NS_FAILED(rv)) return rv;
 
     buffer.SetCapacity(4096);
@@ -405,7 +405,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
         uri->SchemeIs("javascript", &isJS);
         uri->SchemeIs("data", &isData);
     }
-    char* escapedStr = nsEscapeHTML(str);
+    char* escapedStr = nsEscapeHTML(str.get());
     if (NS_SUCCEEDED(rv) && !(isJS || isData)) {
         buffer.AppendLiteral("<a href=\"");
         buffer.Append(escapedStr);
@@ -497,9 +497,9 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsIOutputStream *outputStream,
     // let's just look for some well known (HTTP) meta data tags, for now.
 
     // Client ID
-    str.Truncate();
-    descriptor->GetClientID(getter_Copies(str));
-    if (!str.IsEmpty())  APPEND_ROW("Client", str);
+    nsXPIDLCString str2;
+    descriptor->GetClientID(getter_Copies(str2));
+    if (!str2.IsEmpty())  APPEND_ROW("Client", str2);
 
 
     mBuffer = &buffer;  // make it available for VisitMetaDataElement()

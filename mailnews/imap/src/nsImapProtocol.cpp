@@ -7934,7 +7934,7 @@ nsresult nsImapMockChannel::OpenCacheEntry()
   nsCAutoString cacheKey;
   cacheKey.AppendInt(uidValidity, 16);
   cacheKey.Append(urlSpec);
-  return cacheSession->AsyncOpenCacheEntry(cacheKey.get(), nsICache::ACCESS_READ_WRITE, this);
+  return cacheSession->AsyncOpenCacheEntry(cacheKey, nsICache::ACCESS_READ_WRITE, this);
 }
 
 nsresult nsImapMockChannel::ReadFromMemCache(nsICacheEntryDescriptor *entry)
