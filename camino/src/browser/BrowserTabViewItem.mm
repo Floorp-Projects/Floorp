@@ -264,10 +264,12 @@ const int kMenuTruncationChars = 60;
     [[self nextResponder] mouseDragged:theEvent];
     return;
   }
+
   // only initiate the drag if the original mousedown was in the right place... implied by mSelectTabOnMouseUp
-  if (mSelectTabOnMouseUp) {
+  if (mSelectTabOnMouseUp)
+  {
     mSelectTabOnMouseUp = NO;
-    
+
     CHBrowserView* browserView = (CHBrowserView*)[mTabViewItem view];
     
     NSString     *url = [browserView getCurrentURLSpec];
@@ -282,7 +284,7 @@ const int kMenuTruncationChars = 60;
     dragOrigin.y += [self frame].size.height;
     
     [self dragImage: [MainController createImageForDragging:[mLabelCell image] title:title]
-                 at:localPoint offset:NSMakeSize(0, 0)
+                 at:iconRect.origin offset:NSMakeSize(0.0, 0.0)
               event:theEvent pasteboard:pboard source:self slideBack:YES];
   }
 }
