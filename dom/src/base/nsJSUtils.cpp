@@ -656,7 +656,7 @@ nsJSUtils::nsGetDynamicScriptContext(JSContext *aContext,
                                   (void**)aScriptContext);
 }
 
-NS_EXPORT JSBool 
+NS_EXPORT JSBool PR_CALLBACK
 nsJSUtils::nsCheckAccess(JSContext *cx, JSObject *obj, 
                          jsid id, JSAccessMode mode,
 	                     jsval *vp)
