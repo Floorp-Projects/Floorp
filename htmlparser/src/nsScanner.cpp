@@ -243,18 +243,27 @@ PRBool nsScanner::Append(nsString& aBuffer) {
  */
 PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
  
+  /*************************** SUBTLETY ALERT!! ************************
+    The following block of code converts aBuffer into unicode.
+    The subtlty is that we do it "in-place" on the underlying mBuffer.
+    This is so that we can avoid unnecessary copying of buffer data.
+   *********************************************************************/
+
   if(mUnicodeDecoder) {
     PRInt32 unicharBufLen = 0;
     mUnicodeDecoder->Length(aBuffer, 0, aLen, &unicharBufLen);
-    PRUnichar *unichars = new PRUnichar [ unicharBufLen ];
+    mBuffer.SetCapacity(mBuffer.mLength+unicharBufLen);
+    PRUnichar *unichars = (PRUnichar*)mBuffer.GetUnicode();
+    unichars+=mBuffer.mLength;
 	  nsresult res;
 	  do {
-	      PRInt32 srcLength = aLen;
+	    PRInt32 srcLength = aLen;
 		  PRInt32 unicharLength = unicharBufLen;
 		  res = mUnicodeDecoder->Convert(unichars, 0, &unicharLength,aBuffer, 0, &srcLength );
-      unichars[unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
+      unichars[mBuffer.mLength+unicharLength]=0;  //add this since the unicode converters can't be trusted to do so.
+      mBuffer.mLength+=unicharLength;
+		  // mBuffer.Append(unichars, unicharLength);
 
-		  mBuffer.Append(unichars, unicharLength);
 		  mTotalRead += unicharLength;
                   // if we failed, we consume one byte by replace it with U+FFFD
                   // and try conversion again.
@@ -273,7 +282,7 @@ PRBool nsScanner::Append(const char* aBuffer, PRUint32 aLen){
           // we continue convert the bytes data into Unicode 
           // if we have conversion error and we have more data.
 
-	  delete[] unichars;
+	  //delete[] unichars;
   }
   else {  
     mBuffer.Append(aBuffer,aLen);
@@ -459,7 +468,7 @@ nsresult nsScanner::SkipOver(nsString& aSkipSet){
   while(NS_OK==result) {
     result=GetChar(theChar);
     if(NS_OK == result) {
-      PRInt32 pos=aSkipSet.Find(theChar);
+      PRInt32 pos=aSkipSet.FindChar(theChar);
       if(kNotFound==pos) {
         PutBack(theChar);
         break;
@@ -486,7 +495,7 @@ nsresult nsScanner::SkipTo(nsString& aValidSet){
   while(NS_OK==result) {
     result=GetChar(ch);
     if(NS_OK == result) {
-      PRInt32 pos=aValidSet.Find(ch);
+      PRInt32 pos=aValidSet.FindChar(ch);
       if(kNotFound!=pos) {
         PutBack(ch);
         break;
@@ -535,7 +544,7 @@ nsresult nsScanner::ReadWhile(nsString& aString,
   while(NS_OK==result) {
     result=GetChar(theChar);
     if(NS_OK==result) {
-      PRInt32 pos=(anOrderedSet) ? aValidSet.BinarySearch(theChar) : aValidSet.Find(theChar);
+      PRInt32 pos=(anOrderedSet) ? aValidSet.BinarySearch(theChar) : aValidSet.FindChar(theChar);
       if(kNotFound==pos) {
         if(addTerminal)
           aString+=theChar;
@@ -571,7 +580,7 @@ nsresult nsScanner::ReadUntil(nsString& aString,
   while(NS_OK == result) {
     result=GetChar(theChar);
     if(NS_OK==result) {
-      PRInt32 pos=(anOrderedSet) ? aTerminalSet.BinarySearch(theChar) : aTerminalSet.Find(theChar);
+      PRInt32 pos=(anOrderedSet) ? aTerminalSet.BinarySearch(theChar) : aTerminalSet.FindChar(theChar);
       if(kNotFound!=pos) {
         if(addTerminal)
           aString+=theChar;

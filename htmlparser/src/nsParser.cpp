@@ -452,7 +452,7 @@ eParseMode DetermineParseMode(nsParser& aParser) {
 
     if(kNotFound<theIndex) {
       //good, we found "DOCTYPE" -- now go find it's end delimiter '>'
-      PRInt32 theSubIndex=theBufCopy.Find(kGreaterThan,theIndex+1);
+      PRInt32 theSubIndex=theBufCopy.FindChar(kGreaterThan,theIndex+1);
       theBufCopy.Truncate(theSubIndex);
       theSubIndex=theBufCopy.Find("HTML 4.0");
       if(kNotFound<theSubIndex) {
