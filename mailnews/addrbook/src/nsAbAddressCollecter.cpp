@@ -258,7 +258,7 @@ nsAbAddressCollecter::collectAddressBookPrefChanged(const char *aNewpref, void *
 
   nsXPIDLCString prefVal;
   rv = pPref->GetCharPref(PREF_MAIL_COLLECT_ADDRESSBOOK, getter_Copies(prefVal));
-  rv = adCol->SetAbURI((NS_FAILED(rv) || prefVal.IsEmpty()) ? kPersonalAddressbook : prefVal.get());
+  rv = adCol->SetAbURI((NS_FAILED(rv) || prefVal.IsEmpty()) ? kPersonalAddressbookUri : prefVal.get());
   NS_ASSERTION(NS_SUCCEEDED(rv),"failed to change collected ab");
   return 0;
 }
@@ -274,7 +274,7 @@ nsresult nsAbAddressCollecter::Init(void)
 
   nsXPIDLCString prefVal;
   rv = pPref->GetCharPref(PREF_MAIL_COLLECT_ADDRESSBOOK, getter_Copies(prefVal));
-  rv = SetAbURI((NS_FAILED(rv) || prefVal.IsEmpty()) ? kPersonalAddressbook : prefVal.get());
+  rv = SetAbURI((NS_FAILED(rv) || prefVal.IsEmpty()) ? kPersonalAddressbookUri : prefVal.get());
   NS_ENSURE_SUCCESS(rv,rv);
   return NS_OK;
 }
