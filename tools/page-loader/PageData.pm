@@ -66,10 +66,24 @@ sub _init {
             $self->{HTTPBase} = $1;
         } elsif (/^FILEBASE:\s+(.*)$/i) {
             $self->{FileBase} = $1;
-        } else {
+        } else { 
+            # 
+            # each of the remaining lines are: 
+            #   (1) the subdirectory containing the content for this URL,
+            #   (2) the name of the top-level document [optional, default='index.html']
+            #   (3) a character set for this document [optional, default is none]
+            # e.g., 
+            #  home.netscape.com
+            #  www.mozilla.org      index.html
+            #  www.aol.com          default.html
+            #  www.jp.aol.com       index.html       Shift_JIS
+            #
             my @ary = split(/\s+/, $_);
             $ary[1] ||= 'index.html';
-            push @{$self->{PageList}}, { Name => $ary[0], URL => join('/', @ary) };
+            push @{$self->{PageList}}, { Name    => $ary[0], 
+                                         URL     => $ary[0] . '/' . $ary[1],
+                                         CharSet => $ary[2] || ''
+                                         };
         }
     }
 
@@ -114,6 +128,18 @@ sub url {
         return $self->_checkIndex($arg) ? $self->{PageList}[$arg]{URL} : "";
     } else {
         return $self->{PageHash}{$arg}{URL};
+    }
+}
+
+
+sub charset {
+    # get the charset for this URL, by index
+    my $self = shift;
+    my $arg  = shift;
+    if ($arg =~ /^\d+$/) {
+        return $self->_checkIndex($arg) ? $self->{PageList}[$arg]{CharSet} : "";
+    } else {
+        die "$arg' is not a numeric index";
     }
 }
 

@@ -20,7 +20,6 @@
 # Contributor(s):
 #    John Morrison <jrgm@netscape.com>, original author
 #    
-#    
 
 use strict;
 use CGI::Request;
@@ -71,9 +70,9 @@ elsif (!isRequestStale()) {
 $req = undef;
 $dbh->disconnect() if $dbh; # not strictly required (ignored in some cases anyways)
 
-logMessage(sprintf("Page load server responded in %3d msec, total time %3d msec, pid: %d",
-                   1000*tv_interval($gStartNow, $gResponseNow), 1000*tv_interval($gStartNow), $$))
-     if $gResponseNow; # log only when a test page has been dished out
+#logMessage(sprintf("Page load server responded in %3d msec, total time %3d msec, pid: %d",
+#                   1000*tv_interval($gStartNow, $gResponseNow), 1000*tv_interval($gStartNow), $$))
+#     if $gResponseNow; # log only when a test page has been dished out
 
 exit 0;
 
@@ -109,10 +108,10 @@ sub initialize {
     # start the test by bouncing off of an echo page
     my $script = $cgi->var("SCRIPT_NAME");
     my $server = $cgi->var("SERVER_NAME");
-    my $prot   = "http://"; #XXX need a way to check/set 'https'
-    my $me     = $prot . $server . $script;
+    my $proto  = $ENV{SERVER_PORT} == 443 ? 'https://' : 'http://';
+    my $me     = $proto . $server . $script;
     $script    =~ /^(.*\/).*$/;
-    my $loc    = "Location: ". $prot . $server . $1 . "echo.pl?";
+    my $loc    = "Location: ". $proto . $server . $1 . "echo.pl?";
     for (qw(id index maxcyc delay replace nocache timeout)) {
         $loc .= "$_=$params{$_}\&";
     }
@@ -123,8 +122,8 @@ sub initialize {
 
 sub redirectToReport {
     # n.b., can also add '&sort=1' to get a time sorted list
-    my $prot   = "http://";
-    my $loc = "Location: " . $prot . $cgi->var("SERVER_NAME");
+    my $proto  = $ENV{SERVER_PORT} == 443 ? 'https://' : 'http://';
+    my $loc = "Location: " . $proto . $cgi->var("SERVER_NAME");
     $cgi->var("SCRIPT_NAME") =~ /^(.*\/).*$/;
     $loc  .= $1 . "report.pl?id=" . $params{id};
     print $loc, "\n\n";
@@ -173,6 +172,9 @@ sub outputPage {
     $hook .= "</script>\n";
 
     my $basepath = $pagedata->httpbase;
+    $basepath =~ s/^http:/https:/i
+	 if $ENV{SERVER_PORT} == 443;
+    warn "basepath: $basepath";
     $basepath =~ s#^(.*?)(/base/)$#$1/nocache$2# if ($params{nocache});
     $hook .= "<base href='". $basepath . $relpath . "'>";
 
@@ -183,6 +185,15 @@ sub outputPage {
         $content .= $_;
     }
 
+    my $contentTypeHeader;
+    my $charset = $pagedata->charset($params{curidx});
+    if ($charset) {
+	$contentTypeHeader = qq{Content-type: text/html; charset="$charset"\n\n};
+    } else {
+	$contentTypeHeader = qq{Content-type: text/html\n\n};
+    }
+    #warn $contentTypeHeader; #XXXjrgm testing...
+	
     # N.B., these two cookie headers are obsolete, since I pass server info in
     # JS now, to work around a bug in winEmbed with document.cookie. But
     # since I _was_ sending two cookies as part of the test, I have to keep
@@ -194,7 +205,7 @@ sub outputPage {
         local $| = 1; 
         print "Set-Cookie: moztest_SomeRandomCookie1=somerandomstring\n";
         print "Set-Cookie: moztest_SomeRandomCookie2=somerandomstring\n";
-        print "Content-type: text/html\n\n";
+        print $contentTypeHeader;
         print $content;
     }
 
@@ -334,7 +345,7 @@ sub updateMetaTable {
         SELECT INDEX, MAXCYC, MAXIDX, REPLACE, NOCACHE,
                DELAY, REMOTE_USER, HTTP_USER_AGENT, REMOTE_ADDR
           FROM $table
-          WHERE ID = "$params{id}"
+          WHERE ID = '$params{id}'
            };
     $sth = $dbh->prepare($sql);
     $sth->execute();
@@ -376,7 +387,7 @@ sub updateMetaTable {
               CUR_CYC  = ?,
               CUR_CONTENT = ?,
               STATE    = ?
-          WHERE ID = "$params{id}"
+          WHERE ID = '$params{id}'
         };
     $sth = $dbh->prepare($sql);
     $sth->execute($gStartNowStr,
@@ -400,7 +411,7 @@ sub markTestAsComplete {
     $sql = qq{
         UPDATE $table
           SET STATE = "COMPLETE"
-          WHERE ID = "$params{id}"
+          WHERE ID = '$params{id}'
         };
     $sth = $dbh->prepare($sql);
     $sth->execute();
@@ -507,19 +518,31 @@ sub updateDataSetTable {
 sub outputForm {
     my @prog = split('/', $0); my $prog = $prog[$#prog];
     print "Content-type: text/html\n\n";
+    my $bgcolor = $ENV{SERVER_PORT} == 443 ? '#eebb66' : '#ffffff';
     print <<"ENDOFHTML";
 <html>
 <head>
   <title>Page Loading Times Test</title>
 </head>
-<body>
+<body bgcolor="$bgcolor">
   <h3>Page Loading Times Test</h3>
 
-<p>
-  Last updated: Jan 03, 2001 Questions/Author:
-  <a href="mailto:jrgm\@netscape.com">John Morrison</a>
+<p>Questions: <a href="mailto:jrgm\@netscape.com">John Morrison</a>
 
-</p>
+ENDOFHTML
+    print "&nbsp;&nbsp;-&nbsp;&nbsp;";
+    my $script = $cgi->var("SCRIPT_NAME");
+    my $server = $cgi->var("SERVER_NAME");
+    # pick the "other" protocol (i.e., test is inverted)
+    my $proto  = $ENV{SERVER_PORT} == 443 ? 'http://' : 'https://';
+    my $other  = $proto . $server . $script;
+    if ($ENV{SERVER_PORT} == 443) {
+	print "[&nbsp;<a href='$other'>With no SSL</a>&nbsp;|&nbsp;<b>With SSL</b>&nbsp;]<br>";
+    } else {
+	print "[&nbsp;<b>With no SSL</b>&nbsp;|&nbsp;<a href='$other'>With SSL</a>&nbsp;]<br>";
+    }
+    print <<"ENDOFHTML";
+
   <form method="get" action="$prog" >
     <table border="1" cellpadding="5" cellspacing="2">
       <tr>
@@ -592,8 +615,11 @@ ENDOFHTML
 
     my $i;
     print "<tr>\n";
+    my $base = $pagedata->httpbase;
+    $base =~ s/^http:/https:/i 
+        if $ENV{SERVER_PORT} == 443;
     for ($i=0; $i<$pagedata->length; $i++) {
-        print "<td nowrap><a href='", $pagedata->httpbase, $pagedata->url($i), "'>";
+        print "<td nowrap><a href='", $base, $pagedata->url($i), "'>";
         print $pagedata->name($i);
         print "</a>\n";
         print "</tr><tr>\n" if (($i+1)%4 == 0);
