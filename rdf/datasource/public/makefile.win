@@ -22,8 +22,9 @@ DEPTH=..\..\..
 
 EXPORTS	= \
 	nsIRDFFileSystem.h      \
+	nsIRDFFind.h			\
 	nsIRDFHistory.h         \
-        nsIXULContentSink.h     \
+    nsIXULContentSink.h     \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
