@@ -820,6 +820,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   if (oldQuoting)
   {
   	printf("nsMsgCompose: using old quoting function!");
+	mQuotingToFollow = PR_FALSE;
     HackToGetBody(what);
     return NS_OK;
   }
@@ -941,6 +942,7 @@ void nsMsgCompose::HackToGetBody(PRInt32 what)
 		m_compFields->SetBody(nsAutoCString(msgBody));
         PR_Free(buffer);
     }
+	LoadBody();
 }
 
 //CleanUpRecipient will remove un-necesary "<>" when a recipient as an address without name
