@@ -19,7 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): Michael Lowe <michael.lowe@bigfoot.com>
- *                 Blake Ross   <blakeross@telocity.com>
+ *                 Blake Ross   <blaker@netscape.com>
  */
 
 var browser;
@@ -174,5 +174,7 @@ function useUBHistoryItem(aMenuItem)
 {
   var urlbar = document.getElementById("dialog.input");
   urlbar.value = aMenuItem.getAttribute("label");
+  urlbar.focus();
+  doEnabling();
 }
 
