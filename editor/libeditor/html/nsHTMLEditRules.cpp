@@ -47,7 +47,7 @@
 
 //const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 //const static char* kMOZEditorBogusNodeValue="TRUE";
-const unsigned char nbsp = 160;
+const static PRUnichar nbsp = 160;
 
 static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 static NS_DEFINE_IID(kContentIteratorCID, NS_CONTENTITERATOR_CID);
@@ -312,7 +312,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
   nsCOMPtr<nsIDOMNode> selNode;
   PRInt32 selOffset;
 
-  char specialChars[] = {'\t',' ',nbsp,'\n',0};
+  char specialChars[] = {'\t','\n',0};
   
   // if the selection isn't collapsed, delete it.
   PRBool bCollapsed;
@@ -397,7 +397,6 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     }
   }
   
-  char nbspStr[2] = {nbsp, 0};
   PRBool bCancel;  
   nsString theString(*inString);  // copy instring for now
   if(aAction == kInsertTextIME) 
@@ -420,30 +419,14 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
       if (pos == -1) pos = theString.Length();
       theString.Left(partialString, pos);
       theString.Cut(0, pos);
-      // is it a solo tab?
+      // is it a tab?
       if (partialString == "\t" )
       {
         res = InsertTab(aSelection,outString);
         if (NS_FAILED(res)) return res;
         res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
       }
-#if 0
-      // is it a solo space?
-      else if (partialString == " ")
-      {
-        res = InsertSpace(aSelection,outString);
-        if (NS_FAILED(res)) return res;
-        res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
-      }
-      // is it a solo nbsp?
-      else if (partialString == nbspStr)
-      {
-        res = InsertSpace(aSelection,outString);
-        if (NS_FAILED(res)) return res;
-        res = DoTextInsertion(aSelection, &bCancel, outString, typeInState);
-      }
-#endif
-      // is it a solo return?
+      // is it a return?
       else if (partialString == "\n")
       {
         res = mEditor->InsertBreak();
@@ -510,22 +493,11 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel, P
   // smart splitting rules
   nsCOMPtr<nsIDOMNode> node;
   PRInt32 offset;
-  PRBool isPRE;
   
   res = mEditor->GetStartNodeAndOffset(aSelection, &node, &offset);
   if (NS_FAILED(res)) return res;
   if (!node) return NS_ERROR_FAILURE;
     
-  res = mEditor->IsPreformatted(node,&isPRE);
-  if (NS_FAILED(res)) return res;
-    
-  if (isPRE)
-  {
-    nsString theString = "\n";
-    *aHandled = PR_TRUE;
-    return mEditor->InsertTextImpl(theString);
-  }
-
   // identify the block
   nsCOMPtr<nsIDOMNode> blockParent;
   
@@ -640,6 +612,8 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
             // delete the break, and join like nodes if appropriate
             res = mEditor->DeleteNode(priorNode);
             if (NS_FAILED(res)) return res;
+            // we did something, so lets say so.
+            *aHandled = PR_TRUE;
             // get new prior node
             res = GetPriorHTMLNode(node, &priorNode);
             if (NS_FAILED(res)) return res;
@@ -652,7 +626,6 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
                 // if so, join them!
                 nsCOMPtr<nsIDOMNode> topParent;
                 priorNode->GetParentNode(getter_AddRefs(topParent));
-                *aHandled = PR_TRUE;
                 res = JoinNodesSmart(priorNode,node,&selNode,&selOffset);
                 if (NS_FAILED(res)) return res;
                 // fix up selection
@@ -738,6 +711,8 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
             // delete the break, and join like nodes if appropriate
             res = mEditor->DeleteNode(nextNode);
             if (NS_FAILED(res)) return res;
+            // we did something, so lets say so.
+            *aHandled = PR_TRUE;
             // get new next node
             res = GetNextHTMLNode(node, &nextNode);
             if (NS_FAILED(res)) return res;
@@ -750,7 +725,6 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
                 // if so, join them!
                 nsCOMPtr<nsIDOMNode> topParent;
                 nextNode->GetParentNode(getter_AddRefs(topParent));
-                *aHandled = PR_TRUE;
                 res = JoinNodesSmart(node,nextNode,&selNode,&selOffset);
                 if (NS_FAILED(res)) return res;
                 // fix up selection
@@ -2092,32 +2066,6 @@ nsHTMLEditRules::CreateMozDiv(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<n
 #endif    
 
 ///////////////////////////////////////////////////////////////////////////
-// GetTabAsNBSPs: stuff the right number of nbsp's into outString
-//                       
-nsresult
-nsHTMLEditRules::GetTabAsNBSPs(nsString *outString)
-{
-  if (!outString) return NS_ERROR_NULL_POINTER;
-  // XXX - this should get the right number from prefs
-  *outString = (char)nbsp; *outString += nbsp; *outString += nbsp; *outString += nbsp; 
-  return NS_OK;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// GetTabAsNBSPsAndSpace: stuff the right number of nbsp's followed by a 
-//                        space into outString
-nsresult
-nsHTMLEditRules::GetTabAsNBSPsAndSpace(nsString *outString)
-{
-  if (!outString) return NS_ERROR_NULL_POINTER;
-  // XXX - this should get the right number from prefs
-  *outString = (char)nbsp; *outString += nbsp; *outString += nbsp; *outString += ' '; 
-  return NS_OK;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
 // IsFirstNode: Are we the first edittable node in our parent?
 //                  
 PRBool
@@ -2788,7 +2736,7 @@ nsHTMLEditRules::InsertTab(nsIDOMSelection *aSelection,
 {
   nsCOMPtr<nsIDOMNode> parentNode;
   PRInt32 offset;
-  PRBool isPRE, isNextWhiteSpace, isPrevWhiteSpace, isNextNBSP, isPrevNBSP;
+  PRBool isPRE;
   
   nsresult res = mEditor->GetStartNodeAndOffset(aSelection, &parentNode, &offset);
   if (NS_FAILED(res)) return res;
@@ -2801,99 +2749,14 @@ nsHTMLEditRules::InsertTab(nsIDOMSelection *aSelection,
   if (isPRE)
   {
     *outString = '\t';
-    return NS_OK;
   }
-
-  res = mEditor->IsNextCharWhitespace(parentNode, offset, &isNextWhiteSpace, &isNextNBSP);
-  if (NS_FAILED(res)) return res;
-  
-  res = mEditor->IsPrevCharWhitespace(parentNode, offset, &isPrevWhiteSpace, &isPrevNBSP);
-  if (NS_FAILED(res)) return res;
-
-  if (isPrevWhiteSpace)
+  else
   {
-    // prev character is a whitespace; Need to
-    // insert nbsp's BEFORE the space
-    
-    // XXX for now put tab in wrong place
-    if (isNextWhiteSpace)
-    {
-      GetTabAsNBSPs(outString);
-      return NS_OK;
-    }
-    GetTabAsNBSPsAndSpace(outString);
-    return NS_OK;
+    // number of spaces should be a pref?
+    // note that we dont play around with nbsps here anymore.  
+    // let the AfterEdit whitespace cleanup code handle it.
+    *outString = "    ";
   }
-  
-  if (isNextWhiteSpace)
-  {
-    // character after us is ws.  insert nbsps
-    GetTabAsNBSPs(outString);
-    return NS_OK;
-  }
-  
-  // else we are in middle of a word; use n-1 nbsp's plus a space
-  GetTabAsNBSPsAndSpace(outString);
-  
-  return NS_OK;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// InsertSpace: top level logic for determining how to insert a space
-//                       
-nsresult 
-nsHTMLEditRules::InsertSpace(nsIDOMSelection *aSelection, 
-                             nsString *outString)
-{
-  nsCOMPtr<nsIDOMNode> parentNode;
-  PRInt32 offset;
-  PRBool isPRE, isNextWhiteSpace, isPrevWhiteSpace, isNextNBSP, isPrevNBSP;
-  
-  nsresult res = mEditor->GetStartNodeAndOffset(aSelection, &parentNode, &offset);
-  if (NS_FAILED(res)) return res;
-
-  if (!parentNode) return NS_ERROR_FAILURE;
-  
-  res = mEditor->IsPreformatted(parentNode,&isPRE);
-  if (NS_FAILED(res)) return res;
-  
-  if (isPRE)
-  {
-    *outString = " ";
-    return NS_OK;
-  }
-  
-  res = mEditor->IsNextCharWhitespace(parentNode, offset, &isNextWhiteSpace, &isNextNBSP);
-  if (NS_FAILED(res)) return res;
-  
-  res = mEditor->IsPrevCharWhitespace(parentNode, offset, &isPrevWhiteSpace, &isPrevNBSP);
-  if (NS_FAILED(res)) return res;
-  
-  if (isPrevWhiteSpace)
-  {
-    // prev character is a whitespace; Need to
-    // insert nbsp BEFORE the space
-    
-    // XXX for now put in wrong place
-    if (isNextWhiteSpace)
-    {
-      *outString = (char)nbsp;
-      return NS_OK;
-    }
-    *outString = (char)nbsp;
-    return NS_OK;
-  }
-  
-  if (isNextWhiteSpace)
-  {
-    // character after us is ws.  insert nbsp
-    *outString = (char)nbsp;
-    return NS_OK;
-  }
-    
-  // else just a space
-  *outString = " ";
   
   return NS_OK;
 }
