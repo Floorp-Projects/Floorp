@@ -545,7 +545,7 @@ nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext& aPresContext,
   
        // Add in the absolute offset of the widget.
       nsRect absBounds;
-      widget->GetAbsoluteBounds(absBounds);
+ //XXX: Remove this     widget->GetAbsoluteBounds(absBounds);
 
       // Convert widget coordinates to twips   
       aAbsoluteTwipsRect.x += NSIntPixelsToTwips(absBounds.x, p2t);

@@ -313,7 +313,7 @@ class nsIWidget : public nsISupports {
      * @param aY the new y position expressed in the parent's coordinate system
      *
      **/
-    NS_IMETHOD Move(PRUint32 aX, PRUint32 aY) = 0;
+    NS_IMETHOD Move(PRInt32 aX, PRInt32 aY) = 0;
 
     /**
      * Resize this widget. 
@@ -323,9 +323,9 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted
      *
      */
-    NS_IMETHOD Resize(PRUint32 aWidth,
-                        PRUint32 aHeight,
-                        PRBool   aRepaint) = 0;
+    NS_IMETHOD Resize(PRInt32 aWidth,
+                      PRInt32 aHeight,
+                      PRBool   aRepaint) = 0;
 
     /**
      * Move or resize this widget.
@@ -337,11 +337,11 @@ class nsIWidget : public nsISupports {
      * @param aRepaint whether the widget should be repainted if the size changes
      *
      */
-    NS_IMETHOD Resize(PRUint32 aX,
-                        PRUint32 aY,
-                        PRUint32 aWidth,
-                        PRUint32 aHeight,
-                        PRBool   aRepaint) = 0;
+    NS_IMETHOD Resize(PRInt32 aX,
+                      PRInt32 aY,
+                      PRInt32 aWidth,
+                      PRInt32 aHeight,
+                      PRBool   aRepaint) = 0;
 
     /**
      * Enable or disable this Widget
@@ -364,14 +364,7 @@ class nsIWidget : public nsISupports {
      */
     NS_IMETHOD GetBounds(nsRect &aRect) = 0;
   
-    /**
-     * Get this widget's absolute outside dimensions, 
-     *
-     * @param aRect on return it holds the  x. y, width and height of this widget
-     *
-     */
-    NS_IMETHOD GetAbsoluteBounds(nsRect &aRect) = 0;
-
+    
     /**
      * Get this widget's client area dimensions, if the window has a 3D border appearance
      * this returns the area inside the border, The x and y are always zero

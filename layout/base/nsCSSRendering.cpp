@@ -203,165 +203,148 @@ PRIntn nsCSSRendering::MakeSide(nsPoint aPoints[],
                                 nsIRenderingContext& aContext,
                                 PRIntn whichSide,
                                 const nsRect& outside, const nsRect& inside,
+                                PRIntn aSkipSides,
                                 PRIntn borderPart, float borderFrac,
                                 nscoord twipsPerPixel)
 {
   float borderRest = 1.0f - borderFrac;
 
-  // XXX QQQ We really should decide to do a bevel based on whether there
-  // is a side adjacent or not. This could let you join borders across
-  // block elements (paragraphs).
-
   PRIntn np = 0;
-  nscoord thickness;
+  nscoord thickness, outsideEdge, insideEdge, outsideTL, insideTL, outsideBR,
+    insideBR;
+
+  // Initialize the following six nscoord's:
+  // outsideEdge, insideEdge, outsideTL, insideTL, outsideBR, insideBR
+  // so that outsideEdge is the x or y of the outside edge, etc., and
+  // outsideTR is the y or x at the top or right end, etc., e.g.:
+  //
+  // outsideEdge ---  ----------------------------------------
+  //                  \                                      /
+  //                   \                                    /
+  //                    \                                  /
+  // insideEdge -------  ----------------------------------
+  //                 |   |                                |   |
+  //         outsideTL   insideTL                  insideBR   outsideBR       
+  //
+  // if we don't want the bevel, we'll get rid of it later by setting
+  // outsideXX to insideXX
+
+  switch (whichSide) {
+  case NS_SIDE_TOP:
+    // the TL points are the left end; the BR points are the right end
+    outsideEdge = outside.y;
+    insideEdge = inside.y;
+    outsideTL = outside.x;
+    insideTL = inside.x;
+    insideBR = inside.XMost();
+    outsideBR = outside.XMost();
+    break;
+
+  case NS_SIDE_BOTTOM:
+    // the TL points are the left end; the BR points are the right end
+    outsideEdge = outside.YMost();
+    insideEdge = inside.YMost();
+    outsideTL = outside.x;
+    insideTL = inside.x;
+    insideBR = inside.XMost();
+    outsideBR = outside.XMost();
+    break;
+
+  case NS_SIDE_LEFT:
+    // the TL points are the top end; the BR points are the bottom end
+    outsideEdge = outside.x;
+    insideEdge = inside.x;
+    outsideTL = outside.y;
+    insideTL = inside.y;
+    insideBR = inside.YMost();
+    outsideBR = outside.YMost();
+    break;
+
+  case NS_SIDE_RIGHT:
+    // the TL points are the top end; the BR points are the bottom end
+    outsideEdge = outside.XMost();
+    insideEdge = inside.XMost();
+    outsideTL = outside.y;
+    insideTL = inside.y;
+    insideBR = inside.YMost();
+    outsideBR = outside.YMost();
+    break;
+  }
+
+  // Don't draw the bevels if an adjacent side is skipped
+
+  if ( (whichSide == NS_SIDE_TOP) || (whichSide == NS_SIDE_BOTTOM) ) {
+    // a top or bottom side
+    if ((1<<NS_SIDE_LEFT) & aSkipSides) {
+      insideTL = outsideTL;
+    }
+    if ((1<<NS_SIDE_RIGHT) & aSkipSides) {
+      insideBR = outsideBR;
+    }
+  } else {
+    // a right or left side
+    if ((1<<NS_SIDE_TOP) & aSkipSides) {
+      insideTL = outsideTL;
+    }
+    if ((1<<NS_SIDE_BOTTOM) & aSkipSides) {
+      insideBR = outsideBR;
+    }
+  }
+
+  // move things around when only drawing part of the border
+
+  if (borderPart == BORDER_INSIDE) {
+    outsideEdge = nscoord(outsideEdge * borderFrac + insideEdge * borderRest);
+    outsideTL = nscoord(outsideTL * borderFrac + insideTL * borderRest);
+    outsideBR = nscoord(outsideBR * borderFrac + insideBR * borderRest);
+  } else if (borderPart == BORDER_OUTSIDE ) {
+    insideEdge = nscoord(insideEdge * borderFrac + outsideEdge * borderRest);
+    insideTL = nscoord(insideTL * borderFrac + outsideTL * borderRest);
+    insideBR = nscoord(insideBR * borderFrac + outsideBR * borderRest);
+  }
 
   // Base our thickness check on the segment being less than a pixel and 1/2
   twipsPerPixel += twipsPerPixel >> 2;
 
-  switch (whichSide) {
-  case NS_SIDE_TOP:
-    if (borderPart == BORDER_FULL) {
-      thickness = inside.y - outside.y;
+  // find the thickness of the piece being drawn
+  if ((whichSide == NS_SIDE_TOP) || (whichSide == NS_SIDE_LEFT)) {
+    thickness = insideEdge - outsideEdge;
+  } else {
+    thickness = outsideEdge - insideEdge;
+  }
 
-      aPoints[np++].MoveTo(outside.x, outside.y);
-      aPoints[np++].MoveTo(outside.XMost(), outside.y);
-      if (thickness >= twipsPerPixel) {
-        aPoints[np++].MoveTo(inside.XMost(), inside.y);
-        aPoints[np++].MoveTo(inside.x, inside.y);
-      }
-    } else if (borderPart == BORDER_INSIDE) {
-      aPoints[np++].MoveTo(nscoord(outside.x * borderFrac +
-                                   inside.x * borderRest),
-                           nscoord(outside.y * borderFrac +
-                                   inside.y * borderRest));
-      aPoints[np++].MoveTo(nscoord(outside.XMost() * borderFrac +
-                                   inside.XMost() * borderRest),
-                           nscoord(outside.y * borderFrac +
-                                   inside.y * borderRest));
-      aPoints[np++].MoveTo(inside.XMost(), inside.y);
-      aPoints[np++].MoveTo(inside.x, inside.y);
-    } else {
-      aPoints[np++].MoveTo(outside.x, outside.y);
-      aPoints[np++].MoveTo(outside.XMost(), outside.y);
-      aPoints[np++].MoveTo(nscoord(inside.XMost() * borderFrac +
-                                   outside.XMost() * borderRest),
-                           nscoord(inside.y * borderFrac +
-                                   outside.y * borderRest));
-      aPoints[np++].MoveTo(nscoord(inside.x * borderFrac +
-                                   outside.x * borderRest),
-                           nscoord(inside.y * borderFrac +
-                                   outside.y * borderRest));
+  // if returning a line, do it along inside edge for bottom or right borders
+  // so that it's in the same place as it would be with polygons (why?)
+  // XXX The previous version of the code shortened the right border too.
+  if ( !((thickness >= twipsPerPixel) || (borderPart != BORDER_FULL)) &&
+       ((whichSide == NS_SIDE_BOTTOM) || (whichSide == NS_SIDE_RIGHT))) {
+    outsideEdge = insideEdge;
     }
-    break;
 
-  case NS_SIDE_LEFT:
-    if (borderPart == BORDER_FULL) {
-      thickness = inside.x - outside.x;
-
-      aPoints[np++].MoveTo(outside.x, outside.y);
-      if (thickness >= twipsPerPixel) {
-        aPoints[np++].MoveTo(inside.x, inside.y);
-        aPoints[np++].MoveTo(inside.x, inside.YMost());
-      }
-      aPoints[np++].MoveTo(outside.x, outside.YMost());
-    } else if (borderPart == BORDER_INSIDE) {
-      aPoints[np++].MoveTo(nscoord(outside.x * borderFrac +
-                                   inside.x * borderRest),
-                           nscoord(outside.y * borderFrac +
-                                   inside.y * borderRest));
-      aPoints[np++].MoveTo(inside.x,  inside.y);
-      aPoints[np++].MoveTo(inside.x,  inside.YMost());
-      aPoints[np++].MoveTo(nscoord(outside.x * borderFrac +
-                                   inside.x * borderRest),
-                           nscoord(outside.YMost() * borderFrac +
-                                   inside.YMost() * borderRest));
-    } else {
-      aPoints[np++].MoveTo(outside.x, outside.y);
-      aPoints[np++].MoveTo(nscoord(inside.x * borderFrac +
-                                   outside.x * borderRest),
-                           nscoord(inside.y * borderFrac +
-                                   outside.y * borderRest));
-      aPoints[np++].MoveTo(nscoord(inside.x * borderFrac +
-                                   outside.x * borderRest),
-                           nscoord(inside.YMost() * borderFrac +
-                                   outside.YMost() * borderRest));
-      aPoints[np++].MoveTo(outside.x, outside.YMost());
+  // return the appropriate line or trapezoid
+  if ((whichSide == NS_SIDE_TOP) || (whichSide == NS_SIDE_BOTTOM)) {
+    // top and bottom borders
+    aPoints[np++].MoveTo(outsideTL,outsideEdge);
+    aPoints[np++].MoveTo(outsideBR,outsideEdge);
+    // XXX Making this condition only (thickness >= twipsPerPixel) will
+    // improve double borders and some cases of groove/ridge,
+    //  but will cause problems with table borders.  See last and third
+    // from last tests in test4.htm
+    // Doing it this way emulates the old behavior.  It might be worth
+    // fixing.
+    if ((thickness >= twipsPerPixel) || (borderPart != BORDER_FULL) ) {
+      aPoints[np++].MoveTo(insideBR,insideEdge);
+      aPoints[np++].MoveTo(insideTL,insideEdge);
     }
-    break;
-
-  case NS_SIDE_BOTTOM:
-    if (borderPart == BORDER_FULL) {
-      thickness = outside.YMost() - inside.YMost();
-
-      if (thickness >= twipsPerPixel) {
-        aPoints[np++].MoveTo(outside.x, outside.YMost());
-        aPoints[np++].MoveTo(inside.x, inside.YMost());
-        aPoints[np++].MoveTo(inside.XMost(), inside.YMost());
-        aPoints[np++].MoveTo(outside.XMost(), outside.YMost());
-      } else {
-        aPoints[np++].MoveTo(outside.x, inside.YMost());
-        aPoints[np++].MoveTo(outside.XMost(), inside.YMost());
-      }
-
-    } else if (borderPart == BORDER_INSIDE) {
-      aPoints[np++].MoveTo(nscoord(outside.x * borderFrac +
-                                   inside.x * borderRest),
-                           nscoord(outside.YMost() * borderFrac +
-                                   inside.YMost() * borderRest));
-      aPoints[np++].MoveTo(inside.x, inside.YMost());
-      aPoints[np++].MoveTo(inside.XMost(), inside.YMost());
-      aPoints[np++].MoveTo(nscoord(outside.XMost() * borderFrac +
-                                   inside.XMost() * borderRest),
-                           nscoord(outside.YMost() * borderFrac +
-                                   inside.YMost() * borderRest));
-    } else {
-      aPoints[np++].MoveTo(outside.x, outside.YMost());
-      aPoints[np++].MoveTo(nscoord(inside.x * borderFrac +
-                                   outside.x * borderRest),
-                           nscoord(inside.YMost() * borderFrac +
-                                   outside.YMost() * borderRest));
-      aPoints[np++].MoveTo(nscoord(inside.XMost() * borderFrac +
-                                   outside.XMost() * borderRest),
-                           nscoord(inside.YMost() * borderFrac +
-                                   outside.YMost() * borderRest));
-      aPoints[np++].MoveTo(outside.XMost(), outside.YMost());
+  } else {
+    // right and left borders
+    // XXX Ditto above
+    if ((thickness >= twipsPerPixel) || (borderPart != BORDER_FULL) )  {
+      aPoints[np++].MoveTo(insideEdge,insideBR);
+      aPoints[np++].MoveTo(insideEdge,insideTL);
     }
-    break;
-
-  case NS_SIDE_RIGHT:
-    if (borderPart == BORDER_FULL) {
-      thickness = outside.XMost() - inside.XMost();
-
-      if (thickness >= twipsPerPixel) {
-        aPoints[np++].MoveTo(outside.XMost(), outside.YMost());
-        aPoints[np++].MoveTo(outside.XMost(), outside.y);
-      }
-      aPoints[np++].MoveTo(inside.XMost(), inside.y);
-      aPoints[np++].MoveTo(inside.XMost(), inside.YMost());
-    } else if (borderPart == BORDER_INSIDE) {
-      aPoints[np++].MoveTo(inside.XMost(), inside.y);
-      aPoints[np++].MoveTo(nscoord(outside.XMost() * borderFrac +
-                                   inside.XMost() * borderRest),
-                           nscoord(outside.y * borderFrac +
-                                   inside.y * borderRest));
-      aPoints[np++].MoveTo(nscoord(outside.XMost() * borderFrac +
-                                   inside.XMost() * borderRest),
-                           nscoord(outside.YMost() * borderFrac +
-                                   inside.YMost() * borderRest));
-      aPoints[np++].MoveTo(inside.XMost(),  inside.YMost());
-    } else {
-      aPoints[np++].MoveTo(nscoord(inside.XMost() * borderFrac +
-                                   outside.XMost() * borderRest),
-                           nscoord(inside.y * borderFrac +
-                                   outside.y * borderRest));
-      aPoints[np++].MoveTo(outside.XMost(), outside.y);
-      aPoints[np++].MoveTo(outside.XMost(), outside.YMost());
-      aPoints[np++].MoveTo(nscoord(inside.XMost() * borderFrac +
-                                   outside.XMost() * borderRest),
-                           nscoord(inside.YMost() * borderFrac +
-                                   outside.YMost() * borderRest));
-    }
-    break;
+    aPoints[np++].MoveTo(outsideEdge,outsideTL);
+    aPoints[np++].MoveTo(outsideEdge,outsideBR);
   }
   return np;
 }
@@ -373,6 +356,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                               const nscolor aBackgroundColor,
                               const nsRect& borderOutside,
                               const nsRect& borderInside,
+                              PRIntn aSkipSides,
                               nscoord twipsPerPixel,
                               nsRect* aGap)
 {
@@ -391,7 +375,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
 
   case NS_STYLE_BORDER_STYLE_GROOVE:
   case NS_STYLE_BORDER_STYLE_RIDGE:
-    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
+    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside, aSkipSides,
                    BORDER_INSIDE, 0.5f, twipsPerPixel);
     aContext.SetColor ( MakeBevelColor (whichSide, 
                                         ((theStyle == NS_STYLE_BORDER_STYLE_RIDGE) ?
@@ -406,7 +390,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
       //aContext.FillPolygon (theSide, np);
       FillPolygon (aContext, theSide, np, aGap);
     }
-    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
+    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,aSkipSides,
                    BORDER_OUTSIDE, 0.5f, twipsPerPixel);
     aContext.SetColor ( MakeBevelColor (whichSide, theStyle, aBackgroundColor, 
 		                                theColor, PR_TRUE));
@@ -420,7 +404,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
     break;
 
   case NS_STYLE_BORDER_STYLE_SOLID:
-    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
+    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,aSkipSides,
                    BORDER_FULL, 1.0f, twipsPerPixel);
     aContext.SetColor (borderColor);  
     if (2 == np) {
@@ -433,7 +417,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
     break;
 
   case NS_STYLE_BORDER_STYLE_DOUBLE:
-    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
+    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,aSkipSides,
                    BORDER_INSIDE, 0.333333f, twipsPerPixel);
     aContext.SetColor (borderColor);
     if (2 == np) {
@@ -443,7 +427,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
       //aContext.FillPolygon (theSide, np);
       FillPolygon (aContext, theSide, np, aGap);
    }
-    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
+    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,aSkipSides,
                    BORDER_OUTSIDE, 0.333333f, twipsPerPixel);
     if (2 == np) {
       //aContext.DrawLine (theSide[0].x, theSide[0].y, theSide[1].x, theSide[1].y);
@@ -456,7 +440,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
 
   case NS_STYLE_BORDER_STYLE_BG_OUTSET:
   case NS_STYLE_BORDER_STYLE_BG_INSET:
-    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
+    np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,aSkipSides,
                    BORDER_FULL, 1.0f, twipsPerPixel);
     aContext.SetColor ( MakeBevelColor (whichSide, theStyle, aBackgroundColor,
 		                                 theColor, PR_FALSE));
@@ -470,7 +454,7 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
     break;
   case NS_STYLE_BORDER_STYLE_OUTSET:
   case NS_STYLE_BORDER_STYLE_INSET:
-	np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,
+	np = MakeSide (theSide, aContext, whichSide, borderOutside, borderInside,aSkipSides,
                    BORDER_FULL, 1.0f, twipsPerPixel);
     aContext.SetColor ( MakeBevelColor (whichSide, theStyle, aBackgroundColor, 
 		                                theColor, PR_TRUE));
@@ -1444,7 +1428,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
       DrawSide(aRenderingContext, NS_SIDE_TOP,
                aBorderStyle.GetBorderStyle(NS_SIDE_TOP),
                sideColor,
-               bgColor->mBackgroundColor, inside,outside, 
+               bgColor->mBackgroundColor, inside,outside, aSkipSides,
                twipsPerPixel, aGap);
     }
   }
@@ -1453,7 +1437,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
       DrawSide(aRenderingContext, NS_SIDE_LEFT,
                aBorderStyle.GetBorderStyle(NS_SIDE_LEFT), 
                sideColor,
-               bgColor->mBackgroundColor,inside, outside,
+               bgColor->mBackgroundColor,inside, outside,aSkipSides,
                twipsPerPixel, aGap);
     }
   }
@@ -1462,7 +1446,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
       DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
                aBorderStyle.GetBorderStyle(NS_SIDE_BOTTOM),
                sideColor,
-			   bgColor->mBackgroundColor,inside, outside,
+			   bgColor->mBackgroundColor,inside, outside,aSkipSides,
 			   twipsPerPixel, aGap);
     }
   }
@@ -1471,7 +1455,7 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
       DrawSide(aRenderingContext, NS_SIDE_RIGHT,
                aBorderStyle.GetBorderStyle(NS_SIDE_RIGHT),
                sideColor,
-      			   bgColor->mBackgroundColor,inside, outside,
+      			   bgColor->mBackgroundColor,inside, outside,aSkipSides,
 			         twipsPerPixel, aGap);
     }
   }
@@ -1542,7 +1526,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
                borderEdge->mStyle,
                borderEdge->mColor,
                bgColor->mBackgroundColor,
-               inside, outside,
+               inside, outside,aSkipSides,
                twipsPerPixel, aGap);
     }
   }
@@ -1564,7 +1548,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
                borderEdge->mStyle,
                borderEdge->mColor,
                bgColor->mBackgroundColor,
-               inside, outside, 
+               inside, outside, aSkipSides,
                twipsPerPixel, aGap);
     }
   }
@@ -1589,7 +1573,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
                borderEdge->mStyle,
                borderEdge->mColor,
                bgColor->mBackgroundColor,
-               inside, outside,
+               inside, outside,aSkipSides,
                twipsPerPixel, aGap);
     }
   }
@@ -1621,7 +1605,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
                borderEdge->mStyle,
                borderEdge->mColor,
                bgColor->mBackgroundColor,
-               inside, outside,
+               inside, outside,aSkipSides,
                twipsPerPixel, aGap);
     }
   }

@@ -151,6 +151,7 @@ protected:
                          nsIRenderingContext& aContext,
                          PRIntn whichSide,
                          const nsRect& outside, const nsRect& inside,
+                         PRIntn aSkipSides,
                          PRIntn borderPart, float borderFrac,
                          nscoord twipsPerPixel);
 
@@ -161,6 +162,7 @@ protected:
                        const nscolor aBackgroundColor, 
                        const nsRect& borderOutside,
                        const nsRect& borderInside,
+                       PRIntn aSkipSides,
                        nscoord twipsPerPixel,
                        nsRect* aGap = 0);
 

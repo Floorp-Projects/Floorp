@@ -55,7 +55,6 @@ public:
     NS_IMETHOD              PreCreateWidget(nsWidgetInitData *aWidgetInitData) { return NS_OK;}
 
       // nsIWidget interface
-    NS_IMETHOD              GetAbsoluteBounds(nsRect &aRect);
     NS_IMETHOD              CaptureMouse(PRBool aCapture);
     NS_IMETHOD              GetClientData(void*& aClientData);
     NS_IMETHOD              SetClientData(void* aClientData);
