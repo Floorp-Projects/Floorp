@@ -1439,8 +1439,6 @@ NS_IMETHODIMP nsParser::ContinueInterruptedParsing()
   PRBool isFinalChunk = (mParserContext &&
                           mParserContext->mStreamListenerState==eOnStop) ?
                           PR_TRUE : PR_FALSE;
-  if (mParserContext && mParserContext->mScanner)
-    mParserContext->mScanner->SetIncremental(!isFinalChunk);
   
   result=ResumeParse(PR_TRUE,isFinalChunk); // Ref. bug 57999
   
@@ -2620,13 +2618,22 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     rv = ResumeParse(PR_TRUE, PR_TRUE);    
   }
 
-  mParserContext->mStreamListenerState = eOnStop;
+  CParserContext *pc = mParserContext;
+  while (pc) {
+    if (pc->mRequest == request) {
+      pc->mStreamListenerState = eOnStop;
+      pc->mScanner->SetIncremental(PR_FALSE);
+      break;
+    }
+
+    pc = pc->mPrevContext;
+  }
+
   mStreamStatus = status;
 
   if (mParserFilter)
     mParserFilter->Finish();
 
-  mParserContext->mScanner->SetIncremental(PR_FALSE);
   rv = ResumeParse(PR_TRUE, PR_TRUE);
 
   // If the parser isn't enabled, we don't finish parsing till
