@@ -153,6 +153,7 @@ nsITokenRecycler* nsXMLTokenizer::GetTokenRecycler(void) {
  *
  *  @update vidur 11/12/98
  */
+static
 nsresult ConsumeConditional(nsScanner& aScanner,const nsString& aMatchString,PRBool& aMatch) {
   nsresult result=NS_OK;
   PRUnichar matchChar;
