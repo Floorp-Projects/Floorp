@@ -286,6 +286,8 @@ alpha*-*-osf*)
 	*)
 	    DSO_CFLAGS=''
 	    DSO_LDOPTS='-r'
+	    _WARNINGS_CFLAGS="-Wall"
+	    _WARNINGS_CXXFLAGS="-Wall"
 	;;
     esac
     ;;
