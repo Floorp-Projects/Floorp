@@ -93,6 +93,7 @@
       <menuitem id="ShowExtraMarkup" value="&showExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayStyle(0)" hidden="true"/>
       <menuitem id="HideExtraMarkup" value="&hideExtraMarkup.label;" accesskey="&extraMarkup.accesskey;" oncommand="EditorSetDisplayStyle(1)"/>
       <menuitem id="viewSourceMenuitem"/>
+      <menuitem id="viewParagraphMarks"/>
       <menuseparator />
       <menu id="charsetMenu"/>
       <menu id="charsetMenu1"/>
@@ -136,11 +137,10 @@
     <button id="openButton"/>
     <button id="saveButton"/>
     <button id="previewButton"/>
- <!--     <toolbarseparator/>  -->
     <button id="printButton" />
     <button id="findButton"/>
     <button id="spellingButton"/>
-      <toolbarseparator/>
+    <spring class="separator_small"/>
     <button id="imageButton"/>
     <button id="hlineButton"/>
     <button id="tableButton"/>
@@ -168,13 +168,12 @@
     <titledbutton id="boldButton"/>
     <titledbutton id="italicButton"/>
     <titledbutton id="underlineButton"/>
-      <toolbarseparator/>
+    <spring class="separator_small"/>
     <titledbutton id="ulButton"/>
     <titledbutton id="olButton"/>
     <titledbutton id="outdentButton"/>
     <titledbutton id="indentButton"/>
-
-      <toolbarseparator/>
+    <spring class="separator_small"/>
     <menu>
       <titledbutton id="AlignPopupButton"/>
       <menupopup id="AlignmentPopup"/>
@@ -193,28 +192,26 @@
   <box id="appcontent" align="vertical" flex="100%">
     <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
-    <box align="horizontal" id="DisplayModeBar">
+    <box align="horizontal" id="EditModeToolbar">
       <spring class="spacer5"/>
       <box align="vertical">
         <spring style="height: 1px;"/>
         <html:div>&displayMode.label;</html:div>
       </box>
       <spring class="spacer3"/>
-      <titledbutton id="EditModeButton"    class="DisplayModeButton" selected="1" value="&showExtraMarkup.label;"    onclick="EditorSetDisplayStyle(0)"/>
       <titledbutton id="BrowserModeButton" class="DisplayModeButton" selected="0" value="&hideExtraMarkup.label;" onclick="EditorSetDisplayStyle(1)"/>
-      <spring flex="100%"/>
+      <titledbutton id="EditModeButton"    class="DisplayModeButton" selected="1" value="&showExtraMarkup.label;"    onclick="EditorSetDisplayStyle(0)"/>
 <!--
 Use this when implemented...
-      <html:div>View Mode:</html:div>
-      <spring class="spacer3"/>
-      <titledbutton id="HTMLModeButton"    class="DisplayModeButton" selected="0" value="HTML Source"  onclick="EditorSetDisplayStyle(1)"/>
-      <titledbutton id="TagModeButton"     class="DisplayModeButton" selected="0" value="Tag Tree"     onclick="EditorSetDisplayStyle(1)"/>
-      <titledbutton id="PreviewModeButton" class="DisplayModeButton" selected="0" value="Full Preview" onclick="EditorSetDisplayStyle(0)"/>
+      <titledbutton id="TagModeButton"     class="DisplayModeButton" selected="0" value="Show All Tags" onclick="EditorSetDisplayStyle(1)"/>
+      <titledbutton id="HTMLModeButton"    class="DisplayModeButton" selected="0" value="HTML Source"   onclick="EditorSetDisplayStyle(1)"/>
+      <spring flex="100%"/>
+      <titledbutton id="PreviewModeButton" class="DisplayModeButton" selected="0" value="Full Preview"  onclick="EditorSetDisplayStyle(0)"/>
 -->
     </box>
 
     <!-- status bar, from editorOverlay.xul -->
-    <box id="status-bar" />
+    <!-- box id="status-bar" / -->
   </box> <!-- appcontent -->
 </box><!-- sidebar-parent -->
 <toolbar id="taskbar" chromeclass="extrachrome" />

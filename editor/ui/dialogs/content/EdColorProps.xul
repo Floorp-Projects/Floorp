@@ -76,8 +76,10 @@
         <html:label class="margin-left-right"> &normalText.label; </html:label>
         <spring flex="1"/>
         <menu class="colorpicker">
-    	    <html:div id="textCW" class="color-well"/>
-    	    <titledbutton class="popup" align="right" flex="1" onclick="GetColorAndUpdate('textCP','textCW',this);"/>
+    	    <box>
+            <spring id="textCW" class="color-well"/>
+            <image class="popup-trigger"/>
+          </box>
     	    <menupopup id="normalMenuPopup">
             <colorpicker id="textCP" palettename="standard" onclick="GetColorAndUpdate('textCP','textCW',this);"/>
     	    </menupopup>
@@ -87,8 +89,10 @@
         <html:label class="margin-left-right"> &linkText.label; </html:label>
         <spring flex="1"/>
         <menu class="colorpicker">
-    	    <html:div id="linkCW" class="color-well"/>
-    	    <titledbutton class="popup" align="right" flex="1"/>
+    	    <box>
+            <spring id="linkCW" class="color-well"/>
+            <image class="popup-trigger"/>
+          </box>
     	    <menupopup>
             <colorpicker id="linkCP" palettename="standard" onclick="GetColorAndUpdate('linkCP','linkCW',this);"/>
     	    </menupopup>
@@ -98,8 +102,10 @@
         <html:label class="margin-left-right"> &activeLinkText.label; </html:label>
         <spring flex="1"/>
         <menu class="colorpicker">
-    	    <html:div id="activeCW" class="color-well"/>
-    	    <titledbutton class="popup" align="right" flex="1"/>
+    	    <box>
+            <spring id="activeCW" class="color-well"/>
+            <image class="popup-trigger"/>
+          </box>
     	    <menupopup>
             <colorpicker id="activeCP" palettename="standard" onclick="GetColorAndUpdate('activeCP','activeCW',this);"/>
     	    </menupopup>
@@ -109,8 +115,10 @@
         <html:label class="margin-left-right"> &visitedLinkText.label; </html:label>
         <spring flex="1"/>
         <menu class="colorpicker">
-    	    <html:div id="visitedCW" class="color-well"/>
-    	    <titledbutton class="popup" align="right" flex="1"/>
+    	    <box>
+            <spring id="visitedCW" class="color-well"/>
+            <image class="popup-trigger"/>
+          </box>
     	    <menupopup>
             <colorpicker id="visitedCP" palettename="standard" onclick="GetColorAndUpdate('visitedCP','visitedCW',this);"/>
     	    </menupopup>
@@ -120,8 +128,10 @@
         <html:label class="margin-left-right"> &background.label; </html:label>
         <spring flex="1"/>
         <menu class="colorpicker">
-    	    <html:div id="backgroundCW" class="color-well"/>
-    	    <titledbutton class="popup" align="right" flex="1"/>
+    	    <box>
+            <spring id="backgroundCW" class="color-well"/>
+            <image class="popup-trigger"/>
+          </box>
     	    <menupopup>
             <colorpicker id="backgroundCP" palettename="standard" onclick="GetColorAndUpdate('backgroundCP','backgroundCW',this);"/>
     	    </menupopup>

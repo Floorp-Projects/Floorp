@@ -117,7 +117,7 @@ dump("*** Found cell around selection\n");
 
   // If the count is 0, then we are inside the cell, so select it
   if (selectedCellCount == 0)
-    editorShell.SelectCell();
+    editorShell.SelectTableCell();
 
   if(!TableElement)
   {
@@ -427,7 +427,7 @@ function ValidateNumber(inputWidgetID, selectWidget, minVal, maxVal, element, at
       dump("Error returned from ValidateNumberString\n");
 
       // Switch to appropriate panel for error reporting
-      SwitchValidatePanel(validatePanel)
+      SwitchPanel(validatePanel);
 
       // Error - shift to offending input widget
       inputWidget.focus();
@@ -499,7 +499,7 @@ function ValidateTableData()
     {
       dialog.TableImageInput.focus();
       // Switch to appropriate panel for error reporting
-      SwitchValidatePanel(validatePanel)
+      SwitchPanel(validatePanel);
       ShowInputErrorMessage(GetString("MissingImageError"));
       return false;
     }
@@ -568,7 +568,7 @@ dump("Alignment char="+alignChar+" Align Value="+dialog.CellHAlignSelect.value+"
     {
       dialog.CellImageInput.focus();
       // Switch to appropriate panel for error reporting
-      SwitchValidatePanel(validatePanel)
+      SwitchPanel(validatePanel);
       ShowInputErrorMessage(GetString("MissingImageError"));
     }
   } else {

@@ -32,6 +32,7 @@ install::
 	$(MAKE_INSTALL) EditorInitPagePlain.html   $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorContent.css          $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) EditorOverride.css         $(DIST)\bin\chrome\editor\content\default
+	$(MAKE_INSTALL) EditorParagraphMarks.css   $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) sidebar-editor.rdf         $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) sidebar-editor.xul         $(DIST)\bin\chrome\editor\content\default
 	$(MAKE_INSTALL) sb-bookmarks-panel.xul     $(DIST)\bin\chrome\editor\content\default
@@ -52,6 +53,7 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorInitPagePlain.html	
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorContent.css
   rm -f $(DIST)\bin\chrome\editor\content\default\EditorOverride.css
+  rm -f $(DIST)\bin\chrome\editor\content\default\EditorParagraphMarks.css
   rm -f $(DIST)\bin\chrome\editor\content\default\sidebar-editor.rdf
   rm -f $(DIST)\bin\chrome\editor\content\default\sidebar-editor.xul
   rm -f $(DIST)\bin\chrome\editor\content\default\sb-bookmarks-panel.xul

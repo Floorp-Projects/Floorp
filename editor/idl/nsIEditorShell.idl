@@ -425,7 +425,7 @@ interface nsIEditorShell : nsISupports
   void ApplyStyleSheet(in wstring url);
 
   /** Set the display mode for editing
-    * @param displayMode
+    * displayMode
     *       0 (eDisplayModeEdit) Use extra CSS style 
     *           (from override styles in EditorContent.css) 
     *           to show named anchors, table borders, etc for editing
@@ -435,6 +435,11 @@ interface nsIEditorShell : nsISupports
     */
   void  SetDisplayMode(in PRInt32 displayMode);
     
+  /** Add/remove an overridestyle sheet to show paragraph marks
+    *
+    */
+  void DisplayParagraphMarks(in PRBool showMarks);
+
   /* Output.
    * format is mime type, e.g. text/html;
    * See nsIEditor.h for legal flag values.

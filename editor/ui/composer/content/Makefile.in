@@ -37,6 +37,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/EditorStyles1.css \
 		$(srcdir)/EditorContent.css \
 		$(srcdir)/EditorOverride.css \
+		$(srcdir)/EditorParagraphMarks.css \
 		$(srcdir)/sidebar-editor.rdf \
 		$(srcdir)/sidebar-editor.xul \
 		$(srcdir)/sb-bookmarks-panel.xul \

@@ -201,8 +201,6 @@ nsEditorShell::nsEditorShell()
 ,  mSuggestedWordIndex(0)
 ,  mDictionaryIndex(0)
 ,  mCloseWindowWhenLoaded(PR_FALSE)
-,  mStringBundle(0)
-,  mEditModeStyleSheet(0)
 ,  mParserObserver(nsnull)
 {
   NS_INIT_REFCNT();
@@ -446,7 +444,8 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
 
   // Load style sheet with settings that should never
   //  change, even in "Browser" mode
-  styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorOverride.css");
+  // We won't unload this, so we don't need to be returned the style sheet pointer
+  styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorOverride.css", nsnull);
 
   // Load the edit mode override style sheet
   // This will be remove for "Browser" mode
@@ -988,7 +987,7 @@ nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
 
   nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
   if (styleSheets)
-    result = styleSheets->ApplyStyleSheet(aURL);
+    result = styleSheets->ApplyStyleSheet(aURL, nsnull);
 
   return result;
 }
@@ -997,107 +996,67 @@ nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
 NS_IMETHODIMP 
 nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
 {
-  // We are already in EditMode
-  if (aDisplayMode == eDisplayModeEdit && mEditModeStyleSheet)
-    return NS_OK;
+  nsresult  res = NS_OK;
 
-  if (!mEditor)
-    return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
+  if (!styleSheets) return NS_NOINTERFACE;
 
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  
-  nsCOMPtr<nsIDOMDocument>  domDoc;
-  nsresult rv = editor->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDoc);
-  if(!document)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = editor->GetPresShell(getter_AddRefs(presShell));
-  if (!presShell)
-    return NS_ERROR_NULL_POINTER;
-
-  nsCOMPtr<nsIStyleSet> styleSet;
-  rv = presShell->GetStyleSet(getter_AddRefs(styleSet));
-  if (NS_SUCCEEDED(rv))
+  if (aDisplayMode == eDisplayModeEdit)
   {
-    if (!styleSet)
-      return NS_ERROR_NULL_POINTER;
-
-    nsCOMPtr<nsIStyleSheet> styleSheet;
-    if (aDisplayMode == 0)
-    {
-      // Create and load the style sheet for editor content
-      nsAutoString styleURL("chrome://editor/content/EditorContent.css");
-
-      nsCOMPtr<nsIURI>uaURL;
-      rv = NS_NewURI(getter_AddRefs(uaURL), styleURL);
-
-      if (NS_SUCCEEDED(rv))
-      {
-        nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
-        if (!container)
-          return NS_ERROR_NULL_POINTER;
-
-        nsCOMPtr<nsICSSLoader> cssLoader;
-        rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
-        if (NS_SUCCEEDED(rv))
-        {
-          if (!cssLoader)
-            return NS_ERROR_NULL_POINTER;
-
-          nsCOMPtr<nsICSSStyleSheet>cssStyleSheet;
-          PRBool complete;
-
-          // We use null for the callback and data pointer because
-          //  we MUST ONLY load synchronous local files (no @import)
-          rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete, nsnull);
-          if (NS_SUCCEEDED(rv))
-          {
-            // Synchronous loads should ALWAYS return completed
-            if (!complete || !cssStyleSheet)
-              return NS_ERROR_NULL_POINTER;
-
-            styleSheet = do_QueryInterface(cssStyleSheet);
-            if (!styleSheet)
-              return NS_ERROR_NULL_POINTER;
-          }
-        }
-      }
-    }
-    else if (aDisplayMode >= 1)
-    {
-      if (!mEditModeStyleSheet)
-      {
-        // The edit mode sheet was not previously loaded
-        return NS_OK;
-      }
-      styleSheet = mEditModeStyleSheet;
-    }
+    // We are already in EditMode
+    if (mEditModeStyleSheet) return NS_OK;
     
-    if (NS_SUCCEEDED(rv))
+    //Load the editmode style sheet
+    nsCOMPtr<nsICSSStyleSheet> styleSheet;
+    res = styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorContent.css",
+                                                getter_AddRefs(styleSheet));
+    
+    // Save the returned style sheet so we can remove it later
+    if (NS_SUCCEEDED(res))
+      mEditModeStyleSheet = styleSheet;
+    return res;
+  }
+  else if (aDisplayMode == eDisplayModeBrowserPreview)
+  {
+    // Remove all extra "edit mode" style sheets 
+    if (mEditModeStyleSheet)
     {
-      switch (aDisplayMode)
-      {
-        case eDisplayModeEdit:
-          styleSet->AppendOverrideStyleSheet(styleSheet);
-          mEditModeStyleSheet = styleSheet;
-          break;
-        case eDisplayModeBrowserPreview:
-          styleSet->RemoveOverrideStyleSheet(mEditModeStyleSheet);
-          mEditModeStyleSheet = 0;
-          break;
-        // Add more modes here, e.g., browser mode with JavaScript turned on?
-        default:
-          break;
-      }
-      // This notifies document observers to rebuild all frames
-      // (this doesn't affect style sheet because it is not a doc sheet)
-      document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
+      styleSheets->RemoveOverrideStyleSheet(mEditModeStyleSheet);
+      mEditModeStyleSheet = nsnull;
     }
   }
+  return NS_OK;
+}
 
-  return rv;
+NS_IMETHODIMP 
+nsEditorShell::DisplayParagraphMarks(PRBool aShowMarks)
+{
+  nsresult  res = NS_OK;
+
+  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
+  if (!styleSheets) return NS_NOINTERFACE;
+  
+  if (aShowMarks)
+  {
+    // Check if style sheet is already loaded
+    if (mParagraphMarksStyleSheet) return NS_OK;
+
+    //Load the style sheet
+    nsCOMPtr<nsICSSStyleSheet> styleSheet;
+    res = styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorParagraphMarks.css",
+                                                getter_AddRefs(styleSheet));
+    
+    // Save the returned style sheet so we can remove it later
+    if (NS_SUCCEEDED(res))
+      mParagraphMarksStyleSheet = styleSheet;
+  }
+  else if (mParagraphMarksStyleSheet)
+  {
+    res = styleSheets->RemoveOverrideStyleSheet(mParagraphMarksStyleSheet);
+    mParagraphMarksStyleSheet = nsnull;  
+  }
+  
+  return res;
 }
 
 NS_IMETHODIMP 
@@ -2877,7 +2836,7 @@ nsEditorShell::GetFirstSelectedCell(nsIDOMElement **aOutElement)
     {
       nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
       if (tableEditor)
-        result = tableEditor->GetFirstSelectedCell(aOutElement);
+        result = tableEditor->GetFirstSelectedCell(aOutElement, nsnull);
       break;
     }
 
@@ -2904,7 +2863,7 @@ nsEditorShell::GetNextSelectedCell(nsIDOMElement **aOutElement)
     {
       nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
       if (tableEditor)
-        result = tableEditor->GetNextSelectedCell(aOutElement);
+        result = tableEditor->GetNextSelectedCell(aOutElement, nsnull);
       break;
     }
     case ePlainTextEditorType:

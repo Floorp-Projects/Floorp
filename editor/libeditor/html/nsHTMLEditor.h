@@ -150,14 +150,15 @@ public:
 
   /* ------------ nsIEditorStyleSheets methods -------------- */
 
-  NS_IMETHOD ApplyStyleSheet(const nsString& aURL);
-  NS_IMETHOD ApplyOverrideStyleSheet(const nsString& aURL);
+  NS_IMETHOD ApplyStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyleSheet);
+  NS_IMETHOD ApplyOverrideStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyleSheet);
   /* Above 2 methods call this with appropriate aOverride value 
    * Not exposed to IDL interface 
   */
-  nsresult   ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOverride);
+  nsresult   ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOverride, nsICSSStyleSheet **aStyleSheet);
   NS_IMETHOD AddStyleSheet(nsICSSStyleSheet* aSheet);
   NS_IMETHOD RemoveStyleSheet(nsICSSStyleSheet* aSheet);
+  NS_IMETHOD RemoveOverrideStyleSheet(nsICSSStyleSheet* aSheet);
 
   /* ------------ nsIEditorMailSupport methods -------------- */
 
@@ -209,9 +210,11 @@ public:
   // This is in the *order of selection*, not order in the table
   // (i.e., each cell added to selection is added in another range 
   //  in the selection's rangelist, independent of location in table)
-  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell);
+  // aRange is optional: returns the range around the cell
+  NS_IMETHOD GetFirstSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange);
   // Get next cell until no more are found. Always use GetFirstSelected cell first
-  NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell);
+  // aRange is optional: returns the range around the cell
+  NS_IMETHOD GetNextSelectedCell(nsIDOMElement **aCell, nsIDOMRange **aRange);
 
     
 // Selection and navigation

@@ -3493,13 +3493,13 @@ nsHTMLEditor::SetBackgroundColor(const nsString& aColor)
     {
       // Traverse all selected cells
       nsCOMPtr<nsIDOMElement> cell;
-      res = GetFirstSelectedCell(getter_AddRefs(cell));
+      res = GetFirstSelectedCell(getter_AddRefs(cell), nsnull);
       if (NS_SUCCEEDED(res) && cell)
       {
         while(cell)
         {
           SetAttribute(cell, "bgcolor", aColor);
-          GetNextSelectedCell(getter_AddRefs(cell));
+          GetNextSelectedCell(getter_AddRefs(cell), nsnull);
         };
         return NS_OK;
       }
@@ -3709,21 +3709,50 @@ nsHTMLEditor::RemoveStyleSheet(nsICSSStyleSheet* aSheet)
   return rv;
 }
 
-NS_IMETHODIMP 
-nsHTMLEditor::ApplyOverrideStyleSheet(const nsString& aURL)
+// Do NOT use transaction system for override style sheets
+NS_IMETHODIMP
+nsHTMLEditor::RemoveOverrideStyleSheet(nsICSSStyleSheet* aSheet)
 {
-  return ApplyDocumentOrOverrideStyleSheet(aURL, PR_TRUE);
+  if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
+  if (!ps) return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIDocument> document;
+  nsresult rv = ps->GetDocument(getter_AddRefs(document));
+  if (NS_FAILED(rv)) return rv;
+  if (!document)     return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIStyleSet> styleSet;
+  rv = ps->GetStyleSet(getter_AddRefs(styleSet));
+
+  if (NS_FAILED(rv)) return rv;
+  if (!styleSet) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(aSheet);
+  if (!styleSheet) return NS_ERROR_NULL_POINTER;
+  styleSet->RemoveOverrideStyleSheet(styleSheet);
+
+  // This notifies document observers to rebuild all frames
+  // (this doesn't affect style sheet because it is not a doc sheet)
+  document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsHTMLEditor::ApplyStyleSheet(const nsString& aURL)
+nsHTMLEditor::ApplyOverrideStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyleSheet)
 {
-  return ApplyDocumentOrOverrideStyleSheet(aURL, PR_FALSE);
+  return ApplyDocumentOrOverrideStyleSheet(aURL, PR_TRUE, aStyleSheet);
+}
+
+NS_IMETHODIMP 
+nsHTMLEditor::ApplyStyleSheet(const nsString& aURL, nsICSSStyleSheet **aStyleSheet)
+{
+  return ApplyDocumentOrOverrideStyleSheet(aURL, PR_FALSE, aStyleSheet);
 }
 
 //Note: Loading a document style sheet is undoable, loading an override sheet is not
 nsresult 
-nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOverride)
+nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOverride, nsICSSStyleSheet **aStyleSheet)
 {
   nsresult rv   = NS_OK;
   nsCOMPtr<nsIURI> uaURL;
@@ -3737,72 +3766,64 @@ nsHTMLEditor::ApplyDocumentOrOverrideStyleSheet(const nsString& aURL, PRBool aOv
     nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
     if (!ps) return NS_ERROR_NOT_INITIALIZED;
     rv = ps->GetDocument(getter_AddRefs(document));
+    if (NS_FAILED(rv)) return rv;
+    if (!document)     return NS_ERROR_NULL_POINTER;
 
-    if (NS_SUCCEEDED(rv)) {
-      if (!document)
+    nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
+    if (!container) return NS_ERROR_NULL_POINTER;
+      
+    nsCOMPtr<nsICSSLoader> cssLoader;
+    nsCOMPtr<nsICSSStyleSheet> cssStyleSheet;
+
+    rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
+    if (NS_FAILED(rv)) return rv;
+    if (!cssLoader)    return NS_ERROR_NULL_POINTER;
+
+    PRBool complete;
+
+    if (aOverride)
+    {
+      // We use null for the callback and data pointer because
+      //  we MUST ONLY load synchronous local files (no @import)
+      rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete,
+                                     nsnull);
+
+      // Synchronous loads should ALWAYS return completed
+      if (!complete || !cssStyleSheet)
         return NS_ERROR_NULL_POINTER;
 
-      nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
-      if (!container)
-        return NS_ERROR_NULL_POINTER;
-        
-      nsCOMPtr<nsICSSLoader> cssLoader;
-      nsCOMPtr<nsICSSStyleSheet> cssStyleSheet;
+      nsCOMPtr<nsIStyleSheet> styleSheet;
+      styleSheet = do_QueryInterface(cssStyleSheet);
+      nsCOMPtr<nsIStyleSet> styleSet;
+      rv = ps->GetStyleSet(getter_AddRefs(styleSet));
+      if (NS_FAILED(rv)) return rv;
+      if (!styleSet)     return NS_ERROR_NULL_POINTER;
 
-      rv = container->GetCSSLoader(*getter_AddRefs(cssLoader));
+      // Add the override style sheet
+      // (This checks if already exists)
+      styleSet->AppendOverrideStyleSheet(styleSheet);
 
-      if (NS_SUCCEEDED(rv)) {
-        PRBool complete;
-        
-        if (!cssLoader)
-          return NS_ERROR_NULL_POINTER;
+      // This notifies document observers to rebuild all frames
+      // (this doesn't affect style sheet because it is not a doc sheet)
+      document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
+    }
+    else 
+    {
+      rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete,
+                                     this);
+      if (NS_FAILED(rv)) return rv;
+      if (complete)
+        ApplyStyleSheetToPresShellDocument(cssStyleSheet,this);
 
-        if (aOverride) {
-          // We use null for the callback and data pointer because
-          //  we MUST ONLY load synchronous local files (no @import)
-          rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete,
-                                         nsnull);
-
-          // Synchronous loads should ALWAYS return completed
-          if (!complete || !cssStyleSheet)
-            return NS_ERROR_NULL_POINTER;
-
-          nsCOMPtr<nsIStyleSheet> styleSheet = do_QueryInterface(cssStyleSheet);
-          nsCOMPtr<nsIStyleSet> styleSet;
-          rv = ps->GetStyleSet(getter_AddRefs(styleSet));
-          if (NS_SUCCEEDED(rv)) {
-            if (!styleSet)
-              return NS_ERROR_NULL_POINTER;
-
-            // Add the override style sheet
-            // (This checks if already exists
-            //  If yes, it and reads it does)
-            styleSet->AppendOverrideStyleSheet(styleSheet);
-
-            // This notifies document observers to rebuild all frames
-            // (this doesn't affect style sheet because it is not a doc sheet)
-            document->SetStyleSheetDisabledState(styleSheet, PR_FALSE);
-          }
-        }
-        else {
-          rv = cssLoader->LoadAgentSheet(uaURL, *getter_AddRefs(cssStyleSheet), complete,
-                                         this);
-
-          if (NS_SUCCEEDED(rv)) {
-            if (complete) {
-              if (cssStyleSheet) {
-                ApplyStyleSheetToPresShellDocument(cssStyleSheet,this);
-              }
-              else
-                rv = NS_ERROR_NULL_POINTER;
-            }
-            //
-            // If not complete, we will be notified later
-            // with a call to ApplyStyleSheetToPresShellDocument().
-            //
-          }
-        }
-      }
+      //
+      // If not complete, we will be notified later
+      // with a call to ApplyStyleSheetToPresShellDocument().
+      //
+    }
+    if (aStyleSheet)
+    {
+      *aStyleSheet = cssStyleSheet;
+      NS_ADDREF(*aStyleSheet);
     }
   }
   return rv;

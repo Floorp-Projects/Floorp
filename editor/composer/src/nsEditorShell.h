@@ -171,9 +171,12 @@ class nsEditorShell :   public nsIEditorShell,
 private:
     // Pointer to localized strings used for UI
     nsCOMPtr<nsIStringBundle> mStringBundle;
-    // Pointer to the EditorContent style sheet we load/unload
-    //   for "Edit Mode"/"Browser mode" display
-    nsCOMPtr<nsIStyleSheet> mEditModeStyleSheet;
+
+    // Pointer to extra style sheets we load/unload
+    //  for various Edit Modes or for Paragraph Marks
+    nsCOMPtr<nsICSSStyleSheet> mEditModeStyleSheet;
+    nsCOMPtr<nsICSSStyleSheet> mAllTagsModeStyleSheet;
+    nsCOMPtr<nsICSSStyleSheet> mParagraphMarksStyleSheet;
     
     nsEditorParserObserver *mParserObserver;
 };
