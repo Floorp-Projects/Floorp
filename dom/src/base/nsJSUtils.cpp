@@ -191,7 +191,7 @@ nsJSUtils::nsLookupGlobalName(nsISupports* aSupports,
 
   if (JSVAL_IS_STRING(aId)) {
     JSString* jsstring = JSVAL_TO_STRING(aId);
-    nsAutoString name(JS_GetStringChars(jsstring));
+    nsAutoString name(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)));
     nsIScriptNameSpaceManager* manager;
     nsIID classID;
     nsISupports* native;
@@ -311,7 +311,7 @@ nsJSUtils::nsConvertStringToJSVal(const nsString& aProp,
                                   JSContext* aContext,
                                   jsval* aReturn)
 {
-  JSString *jsstring = JS_NewUCStringCopyN(aContext, aProp.GetUnicode(), aProp.Length());
+  JSString *jsstring = JS_NewUCStringCopyN(aContext, NS_REINTERPRET_CAST(const jschar*, aProp.GetUnicode()), aProp.Length());
   // set the return value
   *aReturn = STRING_TO_JSVAL(jsstring);
 }
@@ -389,7 +389,7 @@ nsJSUtils::nsConvertJSValToString(nsString& aString,
 {
   JSString *jsstring;
   if ((jsstring = JS_ValueToString(aContext, aValue)) != nsnull) {
-    aString.Assign(JS_GetStringChars(jsstring));
+    aString.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)));
   }
   else {
     aString.Truncate();
@@ -493,7 +493,7 @@ nsJSUtils::nsGlobalResolve(JSContext* aContext,
 
   if (JSVAL_IS_STRING(aId)) {
     JSString* jsstring = JSVAL_TO_STRING(aId);
-    nsAutoString name(JS_GetStringChars(jsstring));
+    nsAutoString name(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)));
     nsIID classID;
     nsISupports* native;
 

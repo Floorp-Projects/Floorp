@@ -428,8 +428,8 @@ NS_IMETHODIMP nsCaseConversionImp2::ToTitle
 nsCaseConversionImp2::nsCaseConversionImp2()
 {
   if (gInit++ == 0) {
-    gUpperMap = new nsCompressedMap(&gToUpper[0], gToUpperItems);
-    gLowerMap = new nsCompressedMap(&gToLower[0], gToLowerItems);
+    gUpperMap = new nsCompressedMap(NS_REINTERPRET_CAST(PRUnichar*, &gToUpper[0]), gToUpperItems);
+    gLowerMap = new nsCompressedMap(NS_REINTERPRET_CAST(PRUnichar*, &gToLower[0]), gToLowerItems);
   }
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);

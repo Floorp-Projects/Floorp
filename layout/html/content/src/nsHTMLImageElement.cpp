@@ -680,7 +680,7 @@ nsHTMLImageElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, 
       // Get the parameter passed in
       JSString *jsstring;
       if ((jsstring = JS_ValueToString(aContext, *aVp)) != nsnull) {
-        src.Assign(JS_GetStringChars(jsstring));
+        src.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)));
       }
       else {
         src.Truncate();

@@ -686,7 +686,7 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
         return result;
       }
 
-      result = content->SetText(JS_GetStringChars(jsstr),
+      result = content->SetText(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstr)),
                                 JS_GetStringLength(jsstr),
                                 PR_FALSE);
       NS_RELEASE(content);
@@ -706,7 +706,7 @@ nsHTMLOptionElement::Initialize(JSContext* aContext,
       jsstr = JS_ValueToString(aContext, argv[1]);
       if (nsnull != jsstr) {
         // Set the value attribute for this element
-        nsAutoString value(JS_GetStringChars(jsstr));
+        nsAutoString value(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstr)));
 
         result = mInner.SetAttribute(kNameSpaceID_HTML,
                                      nsHTMLAtoms::value,

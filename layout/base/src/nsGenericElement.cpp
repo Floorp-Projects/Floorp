@@ -1673,7 +1673,7 @@ nsGenericElement::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, js
 
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
     nsAutoString propName, prefix;
-    propName.Assign(JS_GetStringChars(JS_ValueToString(aContext, aID)));
+    propName.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(JS_ValueToString(aContext, aID))));
     if (propName.Length() > 2) 
       prefix.Assign(propName.GetUnicode(), 2);
     if (prefix.EqualsWithConversion("on")) {

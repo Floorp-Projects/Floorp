@@ -123,8 +123,8 @@ NS_ScriptErrorReporter(JSContext *cx,
             fileUni.AssignWithConversion(report->filename);
             const PRUnichar *newFileUni = fileUni.ToNewUnicode();
             PRUint32 column = report->uctokenptr - report->uclinebuf;
-            rv = errorObject->Init(report->ucmessage, newFileUni,
-                                   report->uclinebuf, report->lineno,
+            rv = errorObject->Init(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage), newFileUni,
+                                   NS_REINTERPRET_CAST(const PRUnichar*, report->uclinebuf), report->lineno,
                                    column, report->flags, category);
             nsMemory::Free((void *)newFileUni);
           } else if (message) {
@@ -153,7 +153,7 @@ NS_ScriptErrorReporter(JSContext *cx,
   error.AppendWithConversion(" line ");
   error.AppendInt(report->lineno, 10);
   error.AppendWithConversion(": ");
-  error.Append(report->ucmessage);
+  error.Append(NS_REINTERPRET_CAST(const PRUnichar*, report->ucmessage));
   error.AppendWithConversion("\n");
   if (status != nsEventStatus_eIgnore)
     error.AppendWithConversion("Error was suppressed by event handler\n");
@@ -475,7 +475,7 @@ nsJSContext::EvaluateString(const nsString& aScript,
     if (aIsUndefined) *aIsUndefined = JSVAL_IS_VOID(val);
     JSString* jsstring = ::JS_ValueToString(mContext, val);
     if (jsstring)
-      aRetValue.Assign(::JS_GetStringChars(jsstring));
+      aRetValue.Assign(NS_REINTERPRET_CAST(const PRUnichar*, ::JS_GetStringChars(jsstring)));
     else
       rv = NS_ERROR_OUT_OF_MEMORY;
   }
@@ -610,7 +610,7 @@ nsJSContext::ExecuteScript(void* aScriptObject,
     if (aRetValue) {
       JSString* jsstring = ::JS_ValueToString(mContext, val);
       if (jsstring)
-        aRetValue->Assign(::JS_GetStringChars(jsstring));
+        aRetValue->Assign(NS_REINTERPRET_CAST(const PRUnichar*, ::JS_GetStringChars(jsstring)));
       else
         rv = NS_ERROR_OUT_OF_MEMORY;
     }

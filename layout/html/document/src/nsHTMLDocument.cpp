@@ -2145,7 +2145,7 @@ nsHTMLDocument::ScriptWriteCommon(JSContext *cx,
       JSString *jsstring = JS_ValueToString(cx, argv[index]);
       
       if (nsnull != jsstring) {
-        str.Append(JS_GetStringChars(jsstring), JS_GetStringLength(jsstring));
+        str.Append(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsstring)), JS_GetStringLength(jsstring));
       }
     }
 

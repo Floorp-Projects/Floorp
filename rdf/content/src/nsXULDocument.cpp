@@ -3739,7 +3739,7 @@ nsXULDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval
             JSString* jsString = JS_ValueToString(aContext, *aVp);
             if (!jsString)
                 return PR_FALSE;
-            nsAutoString title(JS_GetStringChars(jsString));
+            nsAutoString title(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsString)));
             for (PRInt32 i = mPresShells.Count() - 1; i >= 0; --i) {
                 nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[i]);
                 nsCOMPtr<nsIPresContext> context;

@@ -3046,7 +3046,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
 
   if (JS_TypeOfValue(aContext, *aVp) == JSTYPE_FUNCTION && JSVAL_IS_STRING(aID)) {
     nsAutoString mPropName, mPrefix;
-    mPropName.Assign(JS_GetStringChars(JS_ValueToString(aContext, aID)));
+    mPropName.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(JS_ValueToString(aContext, aID))));
     if (mPropName.Length() > 2)
       mPrefix.Assign(mPropName.GetUnicode(), 2);
     if (mPrefix.EqualsWithConversion("on")) {

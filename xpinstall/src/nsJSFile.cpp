@@ -161,7 +161,7 @@ InstallFileOpDirGetParent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   nativeRet->GetPath(&temp);
   nativeRetNSStr.AssignWithConversion(temp);
 
-  *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, nativeRetNSStr.GetUnicode(), nativeRetNSStr.Length()));
+  *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, nativeRetNSStr.GetUnicode()), nativeRetNSStr.Length()));
 
   return JS_TRUE;
 }
@@ -549,7 +549,7 @@ InstallFileOpFileGetNativeVersion(JSContext *cx, JSObject *obj, uintN argc, jsva
     return JS_TRUE;
   }
 
-  *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, nativeRet.GetUnicode(), nativeRet.Length()));
+  *rval = STRING_TO_JSVAL(JS_NewUCStringCopyN(cx, NS_REINTERPRET_CAST(const jschar*, nativeRet.GetUnicode()), nativeRet.Length()));
 
   return JS_TRUE;
 }

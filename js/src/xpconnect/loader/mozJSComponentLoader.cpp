@@ -242,7 +242,7 @@ Reporter(JSContext *cx, const char *message, JSErrorReport *rep)
         
         PRUint32 column = rep->uctokenptr - rep->uclinebuf;
 
-        rv = errorObject->Init(rep->ucmessage, newFileUni, rep->uclinebuf,
+        rv = errorObject->Init(NS_REINTERPRET_CAST(const PRUnichar*, rep->ucmessage), newFileUni, NS_REINTERPRET_CAST(const PRUnichar*, rep->uclinebuf),
                                rep->lineno, column, rep->flags,
                                "component javascript");
         nsMemory::Free((void *)newFileUni);

@@ -1231,7 +1231,7 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
                           initial.GetUnicode(), &uniResult, &b);
 
    if (NS_SUCCEEDED(ret) && uniResult && b) {
-      JSString *jsret = JS_NewUCStringCopyZ(cx, uniResult);
+      JSString *jsret = JS_NewUCStringCopyZ(cx, NS_REINTERPRET_CAST(const jschar*, uniResult));
       *aReturn = STRING_TO_JSVAL(jsret);
    }
    else
@@ -1909,7 +1909,7 @@ PRBool GlobalWindowImpl::AddProperty(JSContext* aContext, JSObject* aObj,
       {
       nsString mPropName;
       nsAutoString mPrefix;
-      mPropName.Assign(JS_GetStringChars(JS_ValueToString(aContext, aID)));
+      mPropName.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(JS_ValueToString(aContext, aID))));
       if(mPropName.Length() > 2)
          mPrefix.Assign(mPropName.GetUnicode(), 2);
       if(mPrefix.EqualsWithConversion("on"))
@@ -1974,7 +1974,7 @@ PRBool GlobalWindowImpl::GetProperty(JSContext* aContext, JSObject* aObj,
                   nsXPIDLString title;
                   docShellAsWin->GetTitle(getter_Copies(title));
 
-                  JSString* jsString = JS_NewUCStringCopyZ(aContext, (const jschar*)title);
+                  JSString* jsString = JS_NewUCStringCopyZ(aContext, NS_REINTERPRET_CAST(const jschar*, NS_STATIC_CAST(const PRUnichar*, title)));
                   if (!jsString)
                      return PR_FALSE;
               
@@ -2004,7 +2004,7 @@ PRBool GlobalWindowImpl::SetProperty(JSContext* aContext, JSObject* aObj,
       {
       nsAutoString propName;
       nsAutoString prefix;
-      propName.Assign(JS_GetStringChars(JS_ValueToString(aContext, aID)));
+      propName.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(JS_ValueToString(aContext, aID))));
       if(propName.Length() > 2)
          {
          prefix.Assign(propName.GetUnicode(), 2);
@@ -2051,7 +2051,7 @@ PRBool GlobalWindowImpl::SetProperty(JSContext* aContext, JSObject* aObj,
                      }
                   else
                      {
-                     const PRUnichar* uniTitle = JS_GetStringChars(jsString);
+                     const PRUnichar* uniTitle = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(jsString));
                      docShellAsWin->SetTitle(uniTitle);
                      }
                   }
@@ -2351,7 +2351,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetObjectProperty(const PRUnichar* aProperty,
       cx, (JSObject*)mScriptObject, &propertyVal);
    
    NS_ENSURE_TRUE(JS_FALSE != JS_SetUCProperty(cx, (JSObject*)mScriptObject,
-      aProperty, nsCRT::strlen(aProperty), &propertyVal), NS_ERROR_FAILURE);
+      NS_REINTERPRET_CAST(const jschar*, aProperty), nsCRT::strlen(aProperty), &propertyVal), NS_ERROR_FAILURE);
       
    return NS_OK;
 }
@@ -2374,7 +2374,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetObjectProperty(const PRUnichar* aProperty,
 
    jsval propertyVal;
 
-   if(JS_FALSE == JS_LookupUCProperty(cx, (JSObject*)mScriptObject, aProperty,
+   if(JS_FALSE == JS_LookupUCProperty(cx, (JSObject*)mScriptObject, NS_REINTERPRET_CAST(const jschar*, aProperty),
       nsCRT::strlen(aProperty), &propertyVal))
       return NS_ERROR_FAILURE;
 
@@ -2560,7 +2560,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       NS_ENSURE_TRUE(mJSStrURL, NS_ERROR_FAILURE);
 
       nsAutoString mURL;
-      mURL.Assign(JS_GetStringChars(mJSStrURL));
+      mURL.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(mJSStrURL)));
     
       if(!mURL.IsEmpty()) 
          {
@@ -2583,7 +2583,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
             {
             // No document.  Probably because this window's URL hasn't finished
             // loading.  All we can do is hope the URL we've been given is absolute.
-            mAbsURL.Assign(JS_GetStringChars(mJSStrURL));
+            mAbsURL.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(mJSStrURL)));
             // Make URI; if mAbsURL is relative (or otherwise bogus) this will fail.
             }
          NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(uriToLoad), mAbsURL),
@@ -2597,7 +2597,7 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       JSString *mJSStrName = JS_ValueToString(cx, argv[1]);
       NS_ENSURE_TRUE(mJSStrName, NS_ERROR_FAILURE);
 
-      name.Assign(JS_GetStringChars(mJSStrName));
+      name.Assign(NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(mJSStrName)));
       nameSpecified = PR_TRUE;
 
       // Check for an illegal name e.g. frame3.1
@@ -3323,7 +3323,7 @@ PRBool GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
       if(timeout->expr) {
         /* Evaluate the timeout expression. */
-        nsAutoString script = JS_GetStringChars(timeout->expr);
+        nsAutoString script = NS_REINTERPRET_CAST(const PRUnichar*, JS_GetStringChars(timeout->expr));
         nsAutoString blank;
         PRBool isUndefined;
         rv = mContext->EvaluateString(script,
