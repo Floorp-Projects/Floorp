@@ -26,6 +26,7 @@
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://bookmarks/locale/bookmarks.dtd">
+
 <window title="&bookmarksWindowTitle.label;" id="bookmark-window" onunload="doUnload()"
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"

@@ -25,6 +25,7 @@
 
 -->
 
+<?xml-stylesheet href="chrome://bookmarks/skin/bm-find.css" type="text/css"?>
 <?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://bookmarks/locale/bm-find.dtd">

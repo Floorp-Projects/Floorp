@@ -20,12 +20,6 @@
  * Contributor(s): 
  */
 
-/*
-
-  Style rules specific to the bookmarks panel & pane.
-
-*/
-
 @import url(chrome://global/skin/);
 
 treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > .tree-icon

@@ -41,6 +41,7 @@ CHROME_CONTENT = \
 	$(NULL)
 
 CHROME_SKIN = \
+	.\bm-find.css \
 	.\bm-panel.css \
 	.\bm-props.css \
 	.\bookmark-folder-closed.gif \
