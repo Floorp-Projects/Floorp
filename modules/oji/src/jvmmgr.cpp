@@ -41,31 +41,6 @@ PR_BEGIN_EXTERN_C
 extern nsPluginManager* thePluginManager;
 #endif
 
-PR_IMPLEMENT(nsJVMManager*)
-JVM_GetJVMMgr(void)
-{
-#ifdef PRE_SERVICE_MANAGER
-	nsresult result = NS_OK;
-    if (thePluginManager == NULL) {
-        result = nsPluginManager::Create(NULL, kIPluginManagerIID, (void**)&thePluginManager);
-		if (result != NS_OK)
-			return NULL;
-    }
-    nsJVMManager* mgr = NULL;
-    result = thePluginManager->QueryInterface(kIJVMManagerIID, (void**)&mgr);
-    if (result != NS_OK)
-        return NULL;
-    return mgr;
-#else
-    nsJVMManager* mgr = NULL;
-    nsresult err = nsServiceManager::GetService(kJVMManagerCID, kIJVMManagerIID, 
-                                                (nsISupports**)&mgr);
-    if (err != NS_OK)
-        return NULL;
-    return mgr;
-#endif
-}
-
 PR_IMPLEMENT(void)
 JVM_ReleaseJVMMgr(nsJVMManager* mgr)
 {
@@ -77,7 +52,10 @@ static nsIJVMPlugin*
 GetRunningJVM(void)
 {
     nsIJVMPlugin* jvm = NULL;
-    nsJVMManager* jvmMgr = JVM_GetJVMMgr();
+    nsresult rv;
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    if (NS_FAILED(rv)) return jvm;
+    nsJVMManager* jvmMgr = (nsJVMManager *)managerService.get();  
     if (jvmMgr) {
         nsJVMStatus status = jvmMgr->GetJVMStatus();
         if (status == nsJVMStatus_Enabled)
@@ -85,7 +63,6 @@ GetRunningJVM(void)
         if (status == nsJVMStatus_Running) {
             jvm = jvmMgr->GetJVMPlugin();
         }
-//        jvmMgr->Release();
     }
     return jvm;
 }
@@ -101,10 +78,12 @@ PR_IMPLEMENT(nsJVMStatus)
 JVM_ShutdownJVM(void)
 {
     nsJVMStatus status = nsJVMStatus_Failed;
-    nsJVMManager* mgr = JVM_GetJVMMgr();
+    nsresult rv;
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    if (NS_FAILED(rv)) return status;
+    nsJVMManager* mgr = (nsJVMManager *)managerService.get();  
     if (mgr) {
         status = mgr->ShutdownJVM();
-//        mgr->Release();
     }
     return status;
 }
@@ -113,11 +92,13 @@ JVM_ShutdownJVM(void)
 PR_IMPLEMENT(nsJVMStatus)
 JVM_GetJVMStatus(void)
 {
+    nsresult rv;
     nsJVMStatus status = nsJVMStatus_Disabled;
-    nsJVMManager* mgr = JVM_GetJVMMgr();
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    if (NS_FAILED(rv)) return status;
+    nsJVMManager* mgr = (nsJVMManager *)managerService.get();  
     if (mgr) {
         status = mgr->GetJVMStatus();
-//        mgr->Release();
     }
     return status;
 }
@@ -126,10 +107,11 @@ PR_IMPLEMENT(PRBool)
 JVM_AddToClassPath(const char* dirPath)
 {
     nsresult err = NS_ERROR_FAILURE;
-    nsJVMManager* mgr = JVM_GetJVMMgr();
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &err);
+    if (NS_FAILED(err)) return PR_FALSE;
+    nsJVMManager* mgr = (nsJVMManager *)managerService.get();
     if (mgr) {
         err = mgr->AddToClassPath(dirPath);
-//        mgr->Release();
     }
     return err == NS_OK;
 }
@@ -326,10 +308,12 @@ PR_IMPLEMENT(PRBool)
 JVM_MaybeStartupLiveConnect()
 {
     PRBool result = PR_FALSE;
-    nsJVMManager* mgr = JVM_GetJVMMgr();
+    nsresult rv;
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    if (NS_FAILED(rv)) return result;
+    nsJVMManager* mgr = (nsJVMManager *)managerService.get();  
     if (mgr) {
         result = mgr->MaybeStartupLiveConnect();
-//        mgr->Release();
     }
     return result;
 }
@@ -339,10 +323,12 @@ PR_IMPLEMENT(PRBool)
 JVM_MaybeShutdownLiveConnect(void)
 {
     PRBool result = PR_FALSE;
-    nsJVMManager* mgr = JVM_GetJVMMgr();
+    nsresult rv;
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    if (NS_FAILED(rv)) return result;
+    nsJVMManager* mgr = (nsJVMManager *)managerService.get(); 
     if (mgr) {
         result = mgr->MaybeShutdownLiveConnect();
-//        mgr->Release();
     }
     return result;
 }
@@ -351,10 +337,12 @@ PR_IMPLEMENT(PRBool)
 JVM_IsLiveConnectEnabled(void)
 {
     PRBool result = PR_FALSE;
-    nsJVMManager* mgr = JVM_GetJVMMgr();
+    nsresult rv;
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    if (NS_FAILED(rv)) return result;
+    nsJVMManager* mgr = (nsJVMManager *)managerService.get();
     if (mgr) {
         result = mgr->IsLiveConnectEnabled();
-//        mgr->Release();
     }
     return result;
 }

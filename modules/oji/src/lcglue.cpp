@@ -32,8 +32,11 @@
 #include "nsCRT.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
+#include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
+
+static NS_DEFINE_CID(kJVMManagerCID, NS_JVMMANAGER_CID);
 
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
@@ -175,10 +178,12 @@ map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 	}
 */
 	JSJavaVM* js_jvm = NULL;
-	nsJVMManager* pJVMMgr = JVM_GetJVMMgr();
+	nsresult rv;
+	nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+	if (NS_FAILED(rv)) return NULL;
+	nsJVMManager* pJVMMgr = (nsJVMManager *)managerService.get();  
 	if (pJVMMgr != NULL) {
 		js_jvm = pJVMMgr->GetJSJavaVM();
-		pJVMMgr->Release();
 		if (js_jvm == NULL) {
 			*errp = strdup("Failed to attach to a Java VM.");
 			return NULL;
@@ -194,6 +199,7 @@ map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 
 /*
 ** This callback is called in JSObject.getWindow implementation to get
+
 ** a java wrapper JSObject class for a applet only once.
 ** Note that once a mapping between applet -> javascript JSObject -> Java wrapper JSObject 
 ** is made, all subsequent method calls via JSObject use the internal field
@@ -265,7 +271,9 @@ ConvertNSIPrincipalArrayToObject(JNIEnv *pJNIEnv, JSContext *pJSContext, void  *
     nsIPrincipal  **ppNSIPrincipalArray = NS_REINTERPRET_CAST(nsIPrincipal**, ppNSIPrincipalArrayIN);
     PRInt32        length = numPrincipals;
     nsresult       err    = NS_OK;
-    nsJVMManager* pJVMMgr = JVM_GetJVMMgr();
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &err);
+    if (NS_FAILED(err)) return NULL;
+    nsJVMManager* pJVMMgr = (nsJVMManager *)managerService.get();  
     void          *pNSPrincipalArray = NULL;
     if (pJVMMgr != NULL) {
          if (ppNSIPrincipalArray != NULL) {
@@ -302,7 +310,6 @@ ConvertNSIPrincipalArrayToObject(JNIEnv *pJNIEnv, JSContext *pJSContext, void  *
                pNSIPluginManager->Release();
              }
          }
-      pJVMMgr->Release();
     }
     if (  (pNSPrincipalArray != NULL)
         &&(length != 0)
@@ -357,14 +364,14 @@ get_java_wrapper_impl(JNIEnv *pJNIEnv, jint a_jsobject)
 {
     nsresult       err    = NS_OK;
     jobject  pJSObjectWrapper = NULL;
-    nsJVMManager* pJVMMgr = JVM_GetJVMMgr();
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &err);
+    if (NS_FAILED(err)) return NULL;
+    nsJVMManager* pJVMMgr = (nsJVMManager *)managerService.get();  
     if (pJVMMgr != NULL) {
       nsIJVMPlugin* pJVMPI = pJVMMgr->GetJVMPlugin();
       if (pJVMPI != NULL) {
          err = pJVMPI->GetJavaWrapper(pJNIEnv, a_jsobject, &pJSObjectWrapper);
-         //pJVMPI->Release();
       }
-      pJVMMgr->Release();
     }
     if ( err != NS_OK )
     {
@@ -377,15 +384,15 @@ static jint PR_CALLBACK
 unwrap_java_wrapper_impl(JNIEnv *pJNIEnv, jobject java_wrapper)
 {
     jint obj = 0;
- 
     nsresult       err    = NS_OK;
-    nsJVMManager* pJVMMgr = JVM_GetJVMMgr();
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &err);
+    if (NS_FAILED(err)) return 0;
+    nsJVMManager* pJVMMgr = (nsJVMManager *)managerService.get();  
     if (pJVMMgr != NULL) {
       nsIJVMPlugin* pJVMPI = pJVMMgr->GetJVMPlugin();
       if (pJVMPI != NULL) {
          err = pJVMPI->UnwrapJavaWrapper(pJNIEnv, java_wrapper, &obj);
       }
-      pJVMMgr->Release();
     }
     if ( err != NS_OK )
     {
@@ -519,7 +526,10 @@ static PRBool PR_CALLBACK
 create_java_vm_impl(SystemJavaVM* *jvm, JNIEnv* *initialEnv, void* initargs)
 {
     // const char* classpath = (const char*)initargs;
-    *jvm = NS_REINTERPRET_CAST(SystemJavaVM*, JVM_GetJVMMgr());              // unused in the browser
+     nsresult rv;
+     nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+     if (NS_FAILED(rv)) return PR_FALSE;
+    *jvm = NS_REINTERPRET_CAST(SystemJavaVM*, managerService.get());  // unused in the browse
     *initialEnv = JVM_GetJNIEnv();
     return (*jvm != NULL && *initialEnv != NULL);
 }
@@ -549,7 +559,11 @@ static SystemJavaVM* PR_CALLBACK
 get_java_vm_impl(JNIEnv* env)
 {
     // only one SystemJavaVM for the whole browser, so it doesn't depend on env
-    return NS_REINTERPRET_CAST(SystemJavaVM*, JVM_GetJVMMgr());
+    nsresult rv;
+    nsCOMPtr<nsIJVMManager> managerService = do_GetService(kJVMManagerCID, &rv);
+    if (NS_FAILED(rv)) return NULL;
+    SystemJavaVM* jvm = NS_REINTERPRET_CAST(SystemJavaVM*, managerService.get());  
+    return jvm;
 }
 
 PR_END_EXTERN_C

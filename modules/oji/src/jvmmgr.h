@@ -46,11 +46,6 @@ typedef enum nsJVMStatus {
 
 PR_BEGIN_EXTERN_C
 
-/* Returns the JVM manager. You must do a Release on the pointer returned when
-   you're done with it. */
-PR_EXTERN(struct nsJVMManager*)
-JVM_GetJVMMgr(void);
-
 PR_EXTERN(void)
 JVM_ReleaseJVMMgr(struct nsJVMManager* mgr);
 
