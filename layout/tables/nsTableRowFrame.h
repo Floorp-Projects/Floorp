@@ -90,6 +90,7 @@ public:
 
   /** Initialization of data */
   NS_IMETHOD InitChildren();
+  NS_IMETHOD InitChildrenWithIndex(PRInt32 aRowIndex);
 
   void ResetInitChildren();
 

@@ -736,6 +736,15 @@ public:
   virtual void EnsureColumns (nsIPresContext& aPresContext,
                               PRBool&         aCreatedColFrames);
 
+  // These methods are used to incrementally insert and remove rows
+  // from the cell map without having to invalidate the entire map.
+  NS_IMETHOD InsertRowIntoMap(nsTableRowFrame* aRow, PRInt32 aRowIndex);
+  NS_IMETHOD RemoveRowFromMap(nsTableRowFrame* aRow, PRInt32 aRowIndex);
+
+  NS_IMETHOD AdjustRowIndices(nsIFrame* aRowGroup, 
+                                             PRInt32 aRowIndex,
+                                             PRInt32 anAdjustment);
+
 protected:
   /** iterates all child frames and creates a new cell map */
   NS_IMETHOD ReBuildCellMap();

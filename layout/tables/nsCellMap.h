@@ -56,6 +56,15 @@ public:
   CellData* GetCellAt(PRInt32 aRowIndex, 
                       PRInt32 aColIndex) const;
 
+  /** insert a new row into the map
+      makes a blank row and adjusts spans
+    */
+  void InsertRowIntoMap(PRInt32 aRowIndex);
+  
+  /** removes a row from the map and adjusts spans
+    */
+  void RemoveRowFromMap(PRInt32 aRowIndex);
+
   /** append the cellFrame at the end of the row at aRowIndex and return the col index
     */
   PRInt32 AppendCell(nsTableCellFrame* aCellFrame, 
