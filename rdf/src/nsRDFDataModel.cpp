@@ -26,6 +26,7 @@
 
 */
 
+#include "nsIDMWidget.h"
 #include "nsRDFDataModel.h"
 #include "nsRDFDataModelItem.h"
 #include "nsIRDFDataBase.h"
@@ -180,19 +181,19 @@ nsRDFDataModel::InitFromResource(nsIDMItem* pItem)
 NS_IMETHODIMP
 nsRDFDataModel::GetDMWidget(nsIDMWidget*& widget) const
 {
-    widget = GetWidget();
+	NS_IF_ADDREF(mWidget);
+    widget = mWidget;
     return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsRDFDataModel::SetDMWidget(nsIDMWidget* widget)
 {
-    SetWidget(widget);
-    return NS_OK;
+   NS_IF_ADDREF(widget);
+   NS_IF_RELEASE(mWidget);
+   mWidget = widget;
+   return NS_OK;
 }
-
-
 
 NS_IMETHODIMP
 nsRDFDataModel::GetStringPropertyValue(nsString& value, const nsString& property) const

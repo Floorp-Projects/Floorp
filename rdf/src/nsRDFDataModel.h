@@ -81,14 +81,6 @@ public:
         return mRoot;
     }
 
-    nsIDMWidget* GetWidget(void) const {
-        return mWidget;
-    }
-
-    void SetWidget(nsIDMWidget* widget) {
-        mWidget = widget;
-    }
-
     RDF_Resource GetArcProperty(void) const {
         return mArcProperty;
     }
@@ -96,6 +88,9 @@ public:
     nsRDFArcType GetArcType(void) const {
         return mArcType;
     }
+
+	// Internal accessor for the widget. Just wraps a member variable access.
+	nsIDMWidget* GetWidget() { return mWidget; }
 
     virtual NS_METHOD
     CreateItem(RDF_Resource r, nsRDFDataModelItem*& result) = 0;
