@@ -860,8 +860,19 @@ public:
          * @param funcdesc function description
          */
         void SetGetterFuncDesc(FUNCDESC* funcdesc);
+        /**
+         * Sets the member ID
+         * @param memID the IDispatch ID of the member
+         */
+        void SetMemID(DISPID memID);
+        /**
+         * Returns the IDispatch ID of the member
+         * @return the IDispatch ID of the member
+         */
+        DISPID GetMemID() const;
 
     private:
+       DISPID   mMemID;
         /**
          * Our internal flags identify the type of member
          * A member can be both getter/setter
@@ -878,9 +889,8 @@ public:
         jsval mVal;     // Mutable
         jsval mName;    // Mutable
         CComPtr<ITypeInfo> mTypeInfo;
-        FUNCDESC* mFuncDesc;         // We own this, and must release it
-        FUNCDESC* mGetterFuncDesc;   // We own this, and must release it
-                                     // This may be the same as mFuncDesc
+        FUNCDESC* mFuncDesc; // We own this
+        FUNCDESC* mGetterFuncDesc; // We own this
         /**
          * Helper function to return the parameter type
          * @param index index of the parameter to return the type of
@@ -982,6 +992,67 @@ private:
      */
     PRBool InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, 
                           PRUint32 members);
+
+    /**
+     * Small utility to count members needed for XPConnect
+     * XPConnect has one entry for a property while IDispatch can have two
+     * Generally interfaces are small enough, that linear searching should
+     * be ok
+     */
+    class Allocator
+    {
+    public:
+        /**
+         * Constructor, creates the initial buffer
+         * @param cx a JS context
+         * @param pTypeInfo pointer to IDispatch type info, our caller holds
+         * the reference we don't need to
+         */
+        Allocator(JSContext * cx, ITypeInfo * pTypeInfo);
+        /**
+         * Destructor, frees the buffer we allocated
+         */
+        inline
+        ~Allocator();
+        /**
+         * Returns the allocated XPCDispInterface object
+         * @return the allocated XPCDispInterface object
+         */
+        inline
+        XPCDispInterface* Allocate();
+    private:
+        DISPID * mMemIDs;
+        PRUint32 mCount;            // Total unique ID's found
+        PRUint32 mIDispatchMembers; // Total entries reported by ITypeInfo
+        JSContext* mCX;
+        ITypeInfo* mTypeInfo;
+
+        /**
+         * Returns the number of members found
+         * @return The number of members found
+         */
+        inline
+        PRUint32 Count() const;
+        /**
+         * Adds the member ID to the list
+         * @param memID The member ID to test
+         */
+        void Add(DISPID memID);
+        /**
+         * Allows our caller to handle unexpected problems like out of memory
+         * @return PR_TRUE if the buffer was allocated
+         */
+        inline
+        PRBool Valid() const;
+
+        // No copying or assigning allowed
+        Allocator(const Allocator&);
+        Allocator& operator =(const Allocator&);
+    };
+    /**
+     * Friendship need to gain access to private operator new
+     */
+    friend class Allocator;
 };
 
 /**
@@ -1125,12 +1196,6 @@ public:
      * setters.
      */
     void SetNamedPropID();
-    /**
-     * Returns a reference to a parameter
-     * @param index index of the parameter
-     * @return a reference to the parameter at index
-     */
-//    const VARIANT & GetParamRef(PRUint32 index) const;
     /**
      * Returns a reference to a parameter
      * @param index index of the parameter

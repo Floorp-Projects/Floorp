@@ -54,32 +54,61 @@ PRBool IsReflectable(FUNCDESC * pFuncDesc)
            pFuncDesc->funckind == FUNC_DISPATCH;
 }
 
-/**
- * Counts the reflectable methods
- */
-PRUint32 GetReflectableCount(ITypeInfo * pTypeInfo, PRUint32 members)
+XPCDispInterface::Allocator::Allocator(JSContext * cx, ITypeInfo * pTypeInfo) :
+    mMemIDs(nsnull), mCount(0), mIDispatchMembers(0), mCX(cx), 
+    mTypeInfo(pTypeInfo)
 {
-    DISPID lastDispID = 0;
-    PRUint32 result = 0;
-    for(UINT iMethod = 0; iMethod < members; iMethod++ )
+    TYPEATTR * attr;
+    HRESULT hr = pTypeInfo->GetTypeAttr(&attr);
+    if(SUCCEEDED(hr))
+    {
+        mIDispatchMembers = attr->cFuncs;
+        mMemIDs = new DISPID[mIDispatchMembers];
+        pTypeInfo->ReleaseTypeAttr(attr);
+        // Bail if we couldn't create the buffer
+        if(!mMemIDs)
+            return;
+    }
+    for(UINT iMethod = 0; iMethod < mIDispatchMembers; iMethod++ )
     {
         FUNCDESC* pFuncDesc;
         if(SUCCEEDED(pTypeInfo->GetFuncDesc(iMethod, &pFuncDesc)))
         {
             // Only add the function to our list if it is at least at nesting level
             // 2 (i.e. defined in an interface derived from IDispatch).
-            if(lastDispID != pFuncDesc->memid && IsReflectable(pFuncDesc))
-            {
-                ++result;
-                lastDispID = pFuncDesc->memid;
-            }
+            if(IsReflectable(pFuncDesc))
+                Add(pFuncDesc->memid);
             pTypeInfo->ReleaseFuncDesc(pFuncDesc);
         }
     }
-    return result;
 }
 
-XPCDispInterface* XPCDispInterface::NewInstance(JSContext* cx, nsISupports * pIface)
+void XPCDispInterface::Allocator::Add(DISPID memID)
+{
+    NS_ASSERTION(Valid(), "Add should never be called if out of memory");
+    // Start from the end and work backwards, the last item is the most
+    // likely to match
+    PRUint32 index = mCount;
+    while(index > 0)
+    {
+        if(mMemIDs[--index] == memID)
+            return;
+    };
+    NS_ASSERTION(Count() < mIDispatchMembers, "mCount should always be less "
+                                             "than the IDispatch member count "
+                                             "here");
+    mMemIDs[mCount++] = memID;
+    return;
+}
+
+inline
+PRUint32 XPCDispInterface::Allocator::Count() const 
+{
+    return mCount;
+}
+
+XPCDispInterface*
+XPCDispInterface::NewInstance(JSContext* cx, nsISupports * pIface)
 {
     CComQIPtr<IDispatch> pDispatch(NS_REINTERPRET_CAST(IUnknown*,pIface));
 
@@ -93,15 +122,8 @@ XPCDispInterface* XPCDispInterface::NewInstance(JSContext* cx, nsISupports * pIf
             hr = pDispatch->GetTypeInfo(0,LOCALE_SYSTEM_DEFAULT, &pTypeInfo);
             if(SUCCEEDED(hr))
             {
-                TYPEATTR * attr;
-                hr = pTypeInfo->GetTypeAttr(&attr);
-                if(SUCCEEDED(hr))
-                {
-                    UINT funcs = attr->cFuncs;
-                    pTypeInfo->ReleaseTypeAttr(attr);
-                    PRUint32 memberCount = GetReflectableCount(pTypeInfo, funcs);
-                    return new (memberCount) XPCDispInterface(cx, pTypeInfo, funcs);
-                }
+                Allocator allocator(cx, pTypeInfo);
+                return allocator.Allocate();
             }
         }
     }
@@ -140,10 +162,60 @@ void ConvertInvokeKind(INVOKEKIND invokeKind, XPCDispInterface::Member & member)
     }
 }
 
+static
+PRBool InitializeMember(JSContext * cx, ITypeInfo * pTypeInfo,
+                        FUNCDESC * pFuncDesc, 
+                        XPCDispInterface::Member * pInfo)
+{
+    pInfo->SetMemID(pFuncDesc->memid);
+    BSTR name;
+    UINT nameCount;
+    if(FAILED(pTypeInfo->GetNames(
+        pFuncDesc->memid,
+        &name,
+        1,
+        &nameCount)))
+        return PR_FALSE;
+    if(nameCount != 1)
+        return PR_FALSE;
+    JSString* str = JS_InternUCStringN(cx, name, ::SysStringLen(name));
+    ::SysFreeString(name);
+    if(!str)
+        return PR_FALSE;
+    // Initialize
+    pInfo = new (pInfo) XPCDispInterface::Member;
+    if(!pInfo)
+        return PR_FALSE;
+    pInfo->SetName(STRING_TO_JSVAL(str));
+    pInfo->ResetType();
+    ConvertInvokeKind(pFuncDesc->invkind, *pInfo);
+    pInfo->SetTypeInfo(pFuncDesc->memid, pTypeInfo, pFuncDesc);
+    return PR_TRUE;
+}
+
+static
+XPCDispInterface::Member * FindExistingMember(XPCDispInterface::Member * first,
+                                              XPCDispInterface::Member * last,
+                                              MEMBERID memberID)
+{
+    // Iterate backward since the last one in is the most likely match
+    XPCDispInterface::Member * cur = last;
+    if (cur != first)
+    {
+        do 
+        {
+            --cur;
+            if(cur->GetMemID() == memberID)
+                return cur;
+        } while(cur != first);
+    } 
+    // no existing property, return the new one
+    return last;
+}
+
 PRBool XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo, PRUint32 members)
 {
     HRESULT hResult;
-    DISPID lastDispID = 0;
 
     XPCDispInterface::Member * pInfo = mMembers;
     mMemberCount = 0;
@@ -151,54 +223,52 @@ PRBool XPCDispInterface::InspectIDispatch(JSContext * cx, ITypeInfo * pTypeInfo,
     {
         FUNCDESC* pFuncDesc;
         hResult = pTypeInfo->GetFuncDesc(index, &pFuncDesc );
-        if(SUCCEEDED(hResult))
+        if(FAILED(hResult))
+            continue;
+        if(IsReflectable(pFuncDesc))
         {
-            PRBool release = PR_TRUE;
-            if(IsReflectable(pFuncDesc))
+            switch(pFuncDesc->invkind)
             {
-                // Check and see if the previous dispid was the same
-                if(lastDispID != pFuncDesc->memid)
+                case INVOKE_PROPERTYPUT:
+                case INVOKE_PROPERTYPUTREF:
+                case INVOKE_PROPERTYGET:
                 {
-                    BSTR name;
-                    UINT nameCount;
-                    if(SUCCEEDED(pTypeInfo->GetNames(
-                        pFuncDesc->memid,
-                        &name,
-                        1,
-                        &nameCount)))
+                    XPCDispInterface::Member * pExisting = FindExistingMember(mMembers, pInfo, pFuncDesc->memid);
+                    if(pExisting == pInfo)
                     {
-                        JSString* str = JS_InternUCStringN(cx, name, ::SysStringLen(name));
-                        ::SysFreeString(name);
-                        if(!str)
-                            return PR_FALSE;
-                        // Initialize
-                        pInfo = new (pInfo) Member;
-                        if(!pInfo)
-                            return PR_FALSE;
-                        pInfo->SetName(STRING_TO_JSVAL(str));
-                        lastDispID = pFuncDesc->memid;
-                        pInfo->ResetType();
-                        ConvertInvokeKind(pFuncDesc->invkind, *pInfo);
-                        pInfo->SetTypeInfo(pFuncDesc->memid, pTypeInfo, pFuncDesc);
-                        release = PR_FALSE;
+                        if(InitializeMember(cx, pTypeInfo, pFuncDesc, pInfo))
+                        {
+                            ++pInfo;
+                            ++mMemberCount;
+                        }
+                    }
+                    else
+                    {
+                        ConvertInvokeKind(pFuncDesc->invkind, *pExisting);
+                    }
+                    if(pFuncDesc->invkind == INVOKE_PROPERTYGET)
+                    {
+                        pExisting->SetGetterFuncDesc(pFuncDesc);
+                    }
+                }
+                break;
+                case INVOKE_FUNC:
+                {
+                    if(InitializeMember(cx, pTypeInfo, pFuncDesc, pInfo))
+                    {
                         ++pInfo;
                         ++mMemberCount;
                     }
                 }
-                // if it was then we're on the second part of the
-                // property
-                else
-                {
-                    XPCDispInterface::Member * lastInfo = pInfo - 1;
-                    ConvertInvokeKind(pFuncDesc->invkind, *lastInfo);
-                    lastInfo->SetGetterFuncDesc(pFuncDesc);
-                    release = PR_FALSE;
-                }
+                break;
+                default:
+                    pTypeInfo->ReleaseFuncDesc(pFuncDesc);
+                break;
             }
-            if(release)
-            {
-                pTypeInfo->ReleaseFuncDesc(pFuncDesc);
-            }
+        }
+        else
+        {
+            pTypeInfo->ReleaseFuncDesc(pFuncDesc);
         }
     }
     return PR_TRUE;

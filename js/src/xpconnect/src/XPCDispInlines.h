@@ -108,8 +108,8 @@ VARTYPE XPCDispInterface::Member::ParamInfo::GetType() const
 
 inline
 XPCDispInterface::Member::Member() : 
-    mType(UNINITIALIZED), mFuncDesc(0), mGetterFuncDesc(0),
-    mTypeInfo(0) 
+    mType(UNINITIALIZED), mFuncDesc(nsnull), mGetterFuncDesc(nsnull),
+    mTypeInfo(nsnull)
 {
 }
 
@@ -118,9 +118,12 @@ XPCDispInterface::Member::~Member()
 {
     if(mTypeInfo)
     {
-        if (mFuncDesc) 
+        // Test to see if we have a separate getter. If we only have a getter they can
+        // be the same
+        PRBool releaseGetter = mGetterFuncDesc != nsnull && mFuncDesc != mGetterFuncDesc;
+        if(mFuncDesc) 
             mTypeInfo->ReleaseFuncDesc(mFuncDesc);
-        if (mGetterFuncDesc)
+        if(releaseGetter)
             mTypeInfo->ReleaseFuncDesc(mGetterFuncDesc);
     }
 }
@@ -198,7 +201,7 @@ inline
 PRBool XPCDispInterface::Member::IsParameterizedGetter() const
 {
     return IsGetter() && (GetParamCount(PR_TRUE) > 1 ||
-        (GetParamCount(PR_TRUE) == 1 && GetParamInfo(0, PR_TRUE).IsRetVal()));
+        (GetParamCount(PR_TRUE) == 1 && !GetParamInfo(0, PR_TRUE).IsRetVal()));
 }
 
 inline
@@ -257,6 +260,38 @@ inline
 PRUint16 XPCDispInterface::Member::GetParamType(PRUint32 index) const 
 {
     return mFuncDesc->lprgelemdescParam[index].paramdesc.wParamFlags; 
+}
+
+inline
+void XPCDispInterface::Member::SetMemID(DISPID memID)
+{
+    mMemID = memID;
+}
+
+inline
+DISPID XPCDispInterface::Member::GetMemID() const
+{
+    return mMemID;
+}
+
+//=============================================================================
+// XPCDispInterface::Allocator
+
+inline
+XPCDispInterface* XPCDispInterface::Allocator::Allocate()
+{
+    return Valid() ? new (Count()) XPCDispInterface(mCX, mTypeInfo, mIDispatchMembers) : nsnull;
+}
+
+inline
+XPCDispInterface::Allocator::~Allocator()
+{
+    delete [] mMemIDs;
+}
+
+PRBool XPCDispInterface::Allocator::Valid() const
+{
+    return mMemIDs ? PR_TRUE : PR_FALSE;
 }
 
 //=============================================================================
@@ -561,14 +596,6 @@ void XPCDispParams::SetNamedPropID()
     mDispParams.rgdispidNamedArgs = &mPropID; 
     mDispParams.cNamedArgs = 1; 
 }
-/*
-inline
-const VARIANT & XPCDispParams::GetParamRef(PRUint32 index) const
-{
-    NS_ASSERTION(index < mDispParams.cArgs, "XPCDispParams::GetParam bounds error");
-    return mDispParams.rgvarg[mDispParams.cArgs - index - 1];
-}
-*/
 
 inline
 VARIANT & XPCDispParams::GetParamRef(PRUint32 index)
