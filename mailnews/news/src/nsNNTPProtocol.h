@@ -50,6 +50,12 @@
 #define ARTICLE_PATH_URL "C|/temp/tempArticle.eml"
 #endif
 
+#ifdef XP_MAC
+#define ARTICLE_PATH "tempArticle.eml"
+// this isn't correct, but will do for now
+#define ARTICLE_PATH_URL ARTICLE_PATH		
+#endif
+
 // State Flags (Note, I use the word state in terms of storing 
 // state information about the connection (authentication, have we sent
 // commands, etc. I do not intend it to refer to protocol state)

@@ -72,6 +72,10 @@ char * NET_SACat (char **destination, const char *source);
 static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
 
+// quiet compiler warnings by defining these function prototypes
+char *NET_ExplainErrorDetails (int code, ...);
+char *MSG_UnEscapeSearchUrl (const char *commandSpecificData);
+
 /* Logging stuff */
 
 PRLogModuleInfo* NNTP = NULL;
@@ -1639,7 +1643,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
       } 
 	else if(m_typeWanted == NEW_GROUPS)
 	{
-        PRTime last_update;
+        PRUint32 last_update;
         nsresult rv;
 		
 		if (m_newsHost == nsnull) {
@@ -1659,7 +1663,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 	
 		/* subtract some hours just to be sure */
 		last_update -= NEWGROUPS_TIME_OFFSET;
-
+	
         {
            PRInt64  secToUSec, timeInSec, timeInUSec;
            LL_I2L(timeInSec, last_update);
@@ -1677,7 +1681,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
     {
 	
 		ClearFlag(NNTP_USE_FANCY_NEWSGROUP);
-        PRTime last_update;
+        PRUint32 last_update;
       	
 		if (m_newsHost == nsnull) {
 			printf("m_newsHost is null, panic!\n");

@@ -88,7 +88,7 @@ public:
     NS_IMPL_CLASS_GETTER(GetPushAuth, PRBool, m_pushAuth);
     NS_IMETHOD SetPushAuth(PRBool value);
     
-    NS_IMPL_CLASS_GETSET(LastUpdatedTime, PRTime, m_lastGroupUpdate);
+    NS_IMPL_CLASS_GETSET(LastUpdatedTime, PRUint32, m_lastGroupUpdate);
 
     NS_IMETHOD GetNewsgroupList(const char *name,nsINNTPNewsgroupList **retval);
 	
@@ -431,7 +431,7 @@ protected:
 	PRBool m_pushAuth; // PR_TRUE if we should volunteer authentication without a
 						// challenge
 
-	PRTime m_lastGroupUpdate;
+	PRUint32 m_lastGroupUpdate;
 	PRTime m_firstnewdate;
 
 
@@ -590,7 +590,11 @@ nsNNTPHost::OpenGroupFile(const PRIntn permissions)
 
 void nsNNTPHost::ClearNew()
 {
-	m_firstnewdate = PR_Now() + 1;
+	PRInt64 now = PR_Now();
+	PRInt64 increment;
+	
+	LL_I2L(increment,1);
+	LL_ADD(m_firstnewdate,now,increment);
 }
 
 
@@ -606,22 +610,6 @@ PRInt32 nsNNTPHost::getPort()
 	return m_port;
 }
 
-#if 0 
-NS_IMETHODIMP
-nsNNTPHost::GetLastUpdatedTime(PRTime* aLastUpdatedTime)
-{
-  
-  *aLastUpdatedTime = m_lastGroupUpdate;
-  return NS_MSG_SUCCESS;
-}
-
-NS_IMETHODIMP
-nsNNTPHost::setLastUpdate(PRTime aLastUpdatedTime)
-{
-	m_lastGroupUpdate = aLastUpdatedTime;
-    return NS_MSG_SUCCESS;
-}
-#endif 
 const char* nsNNTPHost::getNameAndPort()
 {
 	if (!m_nameAndPort) {
@@ -1597,6 +1585,10 @@ nsNNTPHost::ReadInitialPart()
 int
 nsNNTPHost::CreateFileHeader()
 {
+	PRInt32 firstnewdate;
+
+	LL_L2I(firstnewdate, m_firstnewdate);
+	
 	PR_snprintf(m_block, m_blockSize,
 				"# Netscape newshost information file." MSG_LINEBREAK
 				"# This is a generated file!  Do not edit." MSG_LINEBREAK
@@ -1615,7 +1607,7 @@ nsNNTPHost::CreateFileHeader()
 				"pushauth=%1x" MSG_LINEBREAK
 				"" MSG_LINEBREAK
 				"begingroups",
-				m_filename, (long) m_lastGroupUpdate, (long) m_firstnewdate, (long) m_uniqueId,
+				m_filename, m_lastGroupUpdate, firstnewdate, m_uniqueId,
 				m_pushAuth);
 	return PL_strlen(m_block);
 
@@ -2784,7 +2776,7 @@ PRTime
 nsNNTPHost::GetAddTime(char* name)
 {
 	nsMsgGroupRecord* group = FindOrCreateGroup(name);
-	if (!group) return 0;
+	if (!group) return LL_ZERO;
 	return group->GetAddTime();
 }
 
