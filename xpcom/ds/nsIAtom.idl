@@ -32,13 +32,13 @@ class nsString;
 %}
 
 
-[uuid(3d1b15b0-93b4-11d1-895b-006008911b81)]
+[scriptable, uuid(3d1b15b0-93b4-11d1-895b-006008911b81)]
 interface nsIAtom : nsISupports
 {
   /**
    * Translate the unicode string into the stringbuf.
    */
-  void ToString(in nsStringRef aString); 
+  [noscript] void ToString(in nsStringRef aString); 
 	
   /**
    * Return a pointer to a zero terminated unicode string.
