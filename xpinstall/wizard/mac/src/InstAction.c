@@ -228,7 +228,7 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 				  (gControls->cfg->comp[i].selected == true)) ||
 				 (instChoice < gControls->cfg->numSetupTypes-1) )
 			{
-			
+// XXX shouldn't this be #if MOZILLA == 1
 				// verify that file does not exist already
 				HLock(gControls->cfg->comp[i].archive);
 				pcurrArchive = CToPascal(*gControls->cfg->comp[i].archive);
@@ -238,6 +238,7 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 				// if file doesn't exist
 				if (err == fnfErr)
 				{
+// XXX shouldn't this be #endif /* MOZILLA == 1 */
 					// get file number from STR# resource
 					GetIndString(pfnum, rIndices, compsDone+1);
 					fnum = PascalToC(pfnum);
@@ -302,7 +303,9 @@ GenerateIDIFromOpt(Str255 idiName, long dirID, short vRefNum, FSSpec *idiSpec)
 					if (fnum)
 						DisposePtr(fnum);
 					compsDone++;
+// XXX shouldn't this be #if MOZILLA == 1
 				}
+// XXX shouldn't this be #endif /* MOZILLA == 1 */
 			}
 		}
 		else if (compsDone >= gControls->cfg->st[instChoice].numComps)

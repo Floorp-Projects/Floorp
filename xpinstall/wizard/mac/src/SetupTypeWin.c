@@ -383,9 +383,9 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 void
 DrawDiskSpaceMsgs(short vRefNum)
 {
-	HVolumeParam	pb;
+	XVolumeParam	pb;
 	OSErr			err, reserr;
-	long			freeSpace;
+	UnsignedWide	freeSpace;
 	short			msglen = 0;
 	TEHandle		dsAvailH, dsNeededH;
 	Rect			instDescBox, viewRect;
@@ -393,15 +393,19 @@ DrawDiskSpaceMsgs(short vRefNum)
 	Str255			msg;
 	Str15			kb;
 	char 			*cstr, *cmsg, *ckb, *cfreeSpace, *cSpaceNeeded;
+	double			dFree;
+	long 			lFree;
 	
 	pb.ioCompletion = NULL;
 	pb.ioVolIndex = 0;
 	pb.ioNamePtr = NULL;
 	pb.ioVRefNum = vRefNum;
 	
-	ERR_CHECK( PBHGetVInfoSync((HParmBlkPtr)&pb) );
-	freeSpace = pb.ioVFrBlk * pb.ioVAlBlkSiz;	// in bytes
-	freeSpace /= 1024;							// translate to kilobytes
+	ERR_CHECK( PBXGetVolInfoSync(&pb) );
+	freeSpace.hi = pb.ioVFreeBytes.hi;
+	freeSpace.lo = pb.ioVFreeBytes.lo;
+	dFree = (freeSpace.hi * 4294967296) + freeSpace.lo; // 2^32 = 4294967296
+	lFree = (long) (dFree/1024);
 
 	instDescRectH = NULL;
 	instDescRectH = Get1Resource('RECT', rCompListBox);
@@ -441,7 +445,7 @@ DrawDiskSpaceMsgs(short vRefNum)
 	cmsg[msglen] = '\0';
 	
 	/* tack on the actual disk space in KB */
-	cfreeSpace = ltoa(freeSpace);
+	cfreeSpace = ltoa(lFree);
 	msglen += strlen(cfreeSpace);
 	strcat( cmsg, cfreeSpace );
 	cmsg[msglen] = '\0';
@@ -626,7 +630,7 @@ ltoa(long n)
 	
 	return s;
 }
-	
+
 short
 pstrcmp(unsigned char* s1, unsigned char* s2)
 {
