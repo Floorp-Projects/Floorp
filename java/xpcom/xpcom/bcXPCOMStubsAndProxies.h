@@ -35,10 +35,15 @@ class bcXPCOMStubsAndProxies : public bcIXPCOMStubsAndProxies {
     NS_IMETHOD GetStub(nsISupports *obj, bcIStub **stub);
     NS_IMETHOD GetOID(nsISupports *obj, bcIORB *orb, bcOID *oid);
     NS_IMETHOD GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb, nsISupports **proxy);
+    NS_IMETHOD GetEventQueue(nsIEventQueue **eventQueue);
+    NS_IMETHOD PopEventQueue(nsIEventQueue **eventQueue);    
+    NS_IMETHOD PushEventQueue(nsIEventQueue *eventQueue);
     bcXPCOMStubsAndProxies();
     virtual ~bcXPCOMStubsAndProxies();
 private:
     nsSupportsHashtable * oid2objectMap;
+    
+    PRUintn threadPrivateIndex;
 };
 #endif /*  __bcXPCOMStubsAndProxies_h */
 

@@ -20,8 +20,13 @@
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
-#include "pratom.h"
+#include "prmem.h"
 #include "nsIInterfaceInfoManager.h"
+
+#include "nsCOMPtr.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsIThread.h"
 
 #include "bcXPCOMProxy.h"
 #include "bcXPCOMMarshalToolkit.h"
@@ -29,7 +34,12 @@
 //#include "signal.h"
 //NS_IMPL_ISUPPORTS(bcXPCOMProxy, NS_GET_IID(bcXPCOMProxy));
 #include "bcXPCOMLog.h"
+#include "bcIXPCOMStubsAndProxies.h"
+#include "bcXPCOMStubsAndProxiesCID.h"
 
+
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
 
 bcXPCOMProxy::bcXPCOMProxy(bcOID _oid, const nsIID &_iid, bcIORB *_orb) {
     PRLogModuleInfo *log = bcXPCOMLog::GetLog();
@@ -69,6 +79,20 @@ NS_IMETHODIMP bcXPCOMProxy::GetInterfaceInfo(nsIInterfaceInfo** info) {
     return NS_OK;
 }
 
+
+struct CallInfo {
+    CallInfo(nsIEventQueue *eq, bcIORB *o, bcICall *c ) {
+        callersEventQ = eq; call = c; orb = o; completed = PR_FALSE;
+    }
+    bcICall *call;
+    bcIORB *orb;
+    nsCOMPtr<nsIEventQueue> callersEventQ;
+    PRBool completed;
+};
+
+static void* EventHandler(PLEvent *self);
+static void  PR_CALLBACK DestroyHandler(PLEvent *self);
+
 NS_IMETHODIMP bcXPCOMProxy::CallMethod(PRUint16 methodIndex,
                                            const nsXPTMethodInfo* info,
                                            nsXPTCMiniVariant* params) {
@@ -78,7 +102,56 @@ NS_IMETHODIMP bcXPCOMProxy::CallMethod(PRUint16 methodIndex,
     bcIMarshaler *marshaler = call->GetMarshaler();
     bcXPCOMMarshalToolkit * mt = new bcXPCOMMarshalToolkit(methodIndex, interfaceInfo, params,orb);
     mt->Marshal(marshaler);
-    orb->SendReceive(call);
+    nsIEventQueue * eventQ;
+    nsCOMPtr<bcIXPCOMStubsAndProxies> stubsAndProxiesService;
+    stubsAndProxiesService = do_GetService(kStubsAndProxies);
+    stubsAndProxiesService->GetEventQueue(&eventQ);
+    if (eventQ == NULL) {
+        orb->SendReceive(call);
+    } else {
+        nsCOMPtr<nsIEventQueue> currentEventQ;
+        PRBool eventLoopCreated = PR_FALSE;
+        nsCOMPtr<nsIEventQueueService> eventQService = do_GetService(kEventQueueServiceCID);
+        nsresult rv = NS_OK;
+
+        rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(currentEventQ));
+        if (NS_FAILED(rv)) {
+            rv = eventQService->CreateMonitoredThreadEventQueue();
+            eventLoopCreated = PR_TRUE;
+            if (NS_FAILED(rv))
+                return rv;
+            rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(currentEventQ));
+        }
+        
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+        CallInfo * callInfo = new CallInfo(currentEventQ,orb,call);
+        PLEvent *event = PR_NEW(PLEvent);
+        PL_InitEvent(event, 
+                     callInfo,
+                     EventHandler,
+                     DestroyHandler);
+        eventQ->PostEvent(event);
+        while (1) {
+            PR_LOG(log, PR_LOG_DEBUG, ("--Dispatch we got new event\n"));
+            PLEvent *nextEvent;
+            rv = currentEventQ->WaitForEvent(&nextEvent);
+            if (callInfo->completed) {
+                PR_DELETE(nextEvent);
+                break; //we are done
+            }
+            if (NS_FAILED(rv)) {
+                break;
+            }
+            currentEventQ->HandleEvent(nextEvent);
+        }
+        if (eventLoopCreated) {
+            eventQService->DestroyThreadEventQueue();
+            eventQ = NULL;
+        }
+    }  
+    NS_IF_RELEASE(eventQ);
     bcIUnMarshaler * unmarshaler = call->GetUnMarshaler();
     mt->UnMarshal(unmarshaler);
     delete call; delete marshaler; delete unmarshaler; delete mt;
@@ -129,3 +202,18 @@ NS_IMETHODIMP bcXPCOMProxy::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
     return r;
 }
 
+
+static void* EventHandler(PLEvent *self) {
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--about to bcXPCOMProxy EventHandler\n"));
+    CallInfo *callInfo = (CallInfo*)PL_GetEventOwner(self);
+    callInfo->orb->SendReceive(callInfo->call);
+    callInfo->completed = PR_TRUE;
+    PR_LOG(log, PR_LOG_DEBUG, ("--about to callInfo->callersEventQ->PostEvent;\n"));
+    PLEvent *event = PR_NEW(PLEvent); //nb who is doing free ?
+    callInfo->callersEventQ->PostEvent(event);
+    return NULL;
+}
+
+static void  PR_CALLBACK DestroyHandler(PLEvent *self) {
+}

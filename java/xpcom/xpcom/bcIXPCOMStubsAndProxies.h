@@ -32,6 +32,7 @@
 
 class bcIStub;
 class bcIORB;
+class nsIEventQueue;
 
 class bcIXPCOMStubsAndProxies : public nsISupports {
 public:
@@ -39,6 +40,10 @@ public:
     NS_IMETHOD GetStub(nsISupports *obj, bcIStub **stub) = 0;
     NS_IMETHOD GetOID(nsISupports *obj, bcIORB *orb, bcOID *oid) = 0;
     NS_IMETHOD GetProxy(bcOID oid, const nsIID &iid, bcIORB *orb, nsISupports **proxy) = 0;
+    NS_IMETHOD GetEventQueue(nsIEventQueue **eventQueue) = 0;
+    NS_IMETHOD PopEventQueue(nsIEventQueue **eventQueue) = 0;    
+    NS_IMETHOD PushEventQueue(nsIEventQueue *eventQueue) = 0;
+
 };
 
 #endif

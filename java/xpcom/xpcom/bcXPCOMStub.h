@@ -32,11 +32,13 @@ public:
     bcXPCOMStub(nsISupports *obj);
     virtual ~bcXPCOMStub();
     virtual void Dispatch(bcICall *call) ;
+    void DispatchAndSaveThread(bcICall *call, nsIEventQueue *q = NULL);
 private:
     nsISupports *object;
     void* _mOwningThread;
     nsCOMPtr<nsIEventQueue> owningEventQ;
     nsCOMPtr<nsIEventQueueService>  eventQService;
+
 };
 
 #endif

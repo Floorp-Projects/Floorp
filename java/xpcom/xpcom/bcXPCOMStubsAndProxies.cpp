@@ -70,6 +70,7 @@ public:
 bcXPCOMStubsAndProxies::bcXPCOMStubsAndProxies() {
     NS_INIT_REFCNT();
     oid2objectMap = new nsSupportsHashtable(256, PR_TRUE);
+    threadPrivateIndex = 0;
 }
 
 bcXPCOMStubsAndProxies::~bcXPCOMStubsAndProxies() {
@@ -122,5 +123,79 @@ NS_IMETHODIMP bcXPCOMStubsAndProxies::GetProxy(bcOID oid, const nsIID &iid, bcIO
 }
 
 
+struct EventQueueStack {
+    PRUint32 stackPointer;
+    nsIEventQueue *stack[200];
+    EventQueueStack() {
+        stackPointer = 0;
+    }
+};
 
+NS_IMETHODIMP bcXPCOMStubsAndProxies::GetEventQueue(nsIEventQueue **eventQueue) {
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::GetEventQueue\n"));
+    EventQueueStack *stack;
+    if (threadPrivateIndex == 0) {
+        *eventQueue = NULL;
+    } else {
+        stack = (EventQueueStack*)PR_GetThreadPrivate(threadPrivateIndex);
+        if (stack !=0 
+            && stack->stackPointer != 0) {
+            *eventQueue = stack->stack[(stack->stackPointer)-1];
+            PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::GetEventQueue eventQueue=%p\n",*eventQueue));
+            NS_IF_ADDREF(*eventQueue);
+        } else {
+            *eventQueue = NULL;
+        }
+    }
+    return NS_OK;
+}
+NS_IMETHODIMP bcXPCOMStubsAndProxies::PopEventQueue(nsIEventQueue **_eventQueue) {
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::PopEventQueue\n"));
+    EventQueueStack *stack;
+    nsIEventQueue * eventQueue;
+    if (threadPrivateIndex == 0) {
+        *_eventQueue = NULL;
+        PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::PopEventQueue 1\n"));
+    } else {
+        stack = (EventQueueStack*)PR_GetThreadPrivate(threadPrivateIndex);
+        if (stack !=0 
+            && stack->stackPointer != 0) {
+            PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::PopEventQueue 2\n"));
+            eventQueue = stack->stack[--(stack->stackPointer)];
+        } else {
+            PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::PopEventQueue 3\n"));
+            eventQueue = NULL;
+        }
+        if (_eventQueue != NULL) {
+            PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::PopEventQueue 4\n"));
+            *_eventQueue = eventQueue;
+        } else {
+            PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::PopEventQueue eventQueue=%p\n",eventQueue));
+            NS_IF_RELEASE(eventQueue);
+        }
+    }
+    PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::PopEventQueue 6\n"));
+    return NS_OK;    
+}
+NS_IMETHODIMP bcXPCOMStubsAndProxies::PushEventQueue(nsIEventQueue *eventQueue) {
+    PRLogModuleInfo *log = bcXPCOMLog::GetLog();
+    PR_LOG(log, PR_LOG_DEBUG, ("--bcXPCOMStubsAndProxies::PushEventQueue eventQueue=%p\n",eventQueue));
+    nsresult r;
+    if (threadPrivateIndex == 0) {
+        r = PR_NewThreadPrivateIndex(&threadPrivateIndex,NULL);
+        PR_ASSERT(threadPrivateIndex != 0
+                  && NS_SUCCEEDED(r));
+    }
+    EventQueueStack *stack;
+    stack = (EventQueueStack*)PR_GetThreadPrivate(threadPrivateIndex);
+    if (stack == NULL) {
+        stack = new EventQueueStack();
+        PR_SetThreadPrivate(threadPrivateIndex, (void *)stack);
+    }
+    NS_IF_ADDREF(eventQueue);
+    stack->stack[(stack->stackPointer)++] = eventQueue;
+    return NS_OK;
+}
 
