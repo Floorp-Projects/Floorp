@@ -50,14 +50,8 @@
         <row align="center">
           <checkbox id="debugXULBoxes" label="&debugXULBox.label;"
                     prefstring="xul.debug.box"/>
-          <checkbox id="nglayoutUseNativePrintDialog" label="&useNativePrintDialog.label;"
-                    prefstring="print.use_native_print_dialog"/>
-        </row>
-        <row align="center">
           <checkbox id="nglayoutDebugWindow" label="&debugWindow.label;"
                     prefstring="nglayout.widget.debugWindow"/>
-          <checkbox id="printUseGlobalPrintSettings" label="&printUseGlobalPrintSettings.label;"
-                    prefstring="print.use_global_printsettings"/>
         </row>
       </rows>
     </grid>
@@ -75,6 +69,10 @@
               prefstring="javascript.options.showInConsole"/>
     <checkbox id="nglayoutDebugUseXBLForms" label="&debugUseXBLForms.label;"
               prefstring="nglayout.debug.enable_xbl_forms"/>
+    <checkbox id="nglayoutUseNativePrintDialog" label="&useNativePrintDialog.label;"
+              prefstring="print.use_native_print_dialog"/>
+    <checkbox id="printUseGlobalPrintSettings" label="&printUseGlobalPrintSettings.label;"
+              prefstring="print.use_global_printsettings"/>
   </groupbox>              
 
 
@@ -93,8 +91,6 @@
             <label value="&acceleratorKey.label;" for="acceleratorKeyValue"/>
             <textbox id="acceleratorKeyValue"  preftype="int"
               prefstring="ui.key.accelKey" size="5"/>
-          </row>
-          <row align="center">
             <label value="&menuAccessKey.label;" control="menuAccessKeyValue"/>
             <textbox id="menuAccessKeyValue"  preftype="int"
               prefstring="ui.key.menuAccessKey" size="5"/>
