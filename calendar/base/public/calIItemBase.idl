@@ -85,12 +85,15 @@ interface calIItemBase : nsISupports
   // the generation number of this item; 0 means
   // that it's never been stored in a store
   //
-  readonly attribute long generation;
+  readonly attribute PRUint32 generation;
 
   // methods
-  const long CAL_METHOD_NONE = 0;
-  const long CAL_METHOD_PUBLISH = 1;
-  const long CAL_METHOD_REQUEST = 2;
+  const PRUint32 METHOD_PUBLISH = 10012;
+  const PRUint32 METHOD_REQUEST = 10013;
+  const PRUint32 METHOD_REPLY = 10014;
+  const PRUint32 METHOD_ADD = 10015;
+  const PRUint32 METHOD_CANCEL = 10016;
+  const PRUint32 METHOD_NONE = 10027;
 
   // statuses, extended by each event/todo/journal subclass
   const long CAL_ITEM_STATUS_NONE = 0;

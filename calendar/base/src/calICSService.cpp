@@ -74,9 +74,9 @@ protected:
 NS_IMPL_ISUPPORTS1(calIcalProperty, calIIcalProperty)
 
 NS_IMETHODIMP
-calIcalProperty::GetIsA(PRUint32 *isa)
+calIcalProperty::GetIsA(PRInt32 *isa)
 {
-    *isa = (PRUint32)icalproperty_isa(mProperty);
+    *isa = (PRInt32)icalproperty_isa(mProperty);
     return NS_OK;
 }
 
@@ -130,19 +130,19 @@ calIcalProperty::RemoveXParameter(const nsACString &xparamname)
 }
 
 NS_IMETHODIMP
-calIcalProperty::GetParameter(PRUint32 kind, nsACString &value)
+calIcalProperty::GetParameter(PRInt32 kind, nsACString &value)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-calIcalProperty::SetParameter(PRUint32 kind, const nsACString &value)
+calIcalProperty::SetParameter(PRInt32 kind, const nsACString &value)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-calIcalProperty::RemoveParameter(PRUint32 kind)
+calIcalProperty::RemoveParameter(PRInt32 kind)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -170,10 +170,12 @@ protected:
     {
         icalproperty *prop =
             icalcomponent_get_first_property(mComponent, kind);
-        if (!prop)
+        if (!prop) {
             str.Truncate();
-        else
+            str.SetIsVoid(PR_TRUE);
+        } else {
             str.Assign(icalvalue_get_string(icalproperty_get_value(prop)));
+        }
         return NS_OK;
     }
 
@@ -185,18 +187,18 @@ protected:
         return SetPropertyValue(kind, val);
     }
 
-    nsresult GetIntProperty(icalproperty_kind kind, PRUint32 *valp)
+    nsresult GetIntProperty(icalproperty_kind kind, PRInt32 *valp)
     {
         icalproperty *prop =
             icalcomponent_get_first_property(mComponent, kind);
         if (!prop)
-            *valp = PR_UINT32_MAX;
+            *valp = calIIcalComponent::INVALID_VALUE;
         else
-            *valp = (PRUint32)icalvalue_get_integer(icalproperty_get_value(prop));
+            *valp = (PRInt32)icalvalue_get_integer(icalproperty_get_value(prop));
         return NS_OK;
     }
 
-    nsresult SetIntProperty(icalproperty_kind kind, PRUint32 i)
+    nsresult SetIntProperty(icalproperty_kind kind, PRInt32 i)
     {
         icalvalue *val = icalvalue_new_integer(i);
         if (!val)
@@ -266,26 +268,26 @@ calIcalComponent::Set##Attrname(const nsACString &str)          \
 
 #define COMP_GENERAL_INT_ATTRIBUTE(Attrname, ICALNAME)          \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Get##Attrname(PRUint32 *valp)                 \
+calIcalComponent::Get##Attrname(PRInt32 *valp)                 \
 {                                                               \
     return GetIntProperty(ICAL_##ICALNAME##_PROPERTY, valp);    \
 }                                                               \
                                                                 \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Set##Attrname(PRUint32 val)                   \
+calIcalComponent::Set##Attrname(PRInt32 val)                   \
 {                                                               \
     return SetIntProperty(ICAL_##ICALNAME##_PROPERTY, val);     \
 }                                                               \
 
 #define COMP_ENUM_ATTRIBUTE(Attrname, ICALNAME, lcname)         \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Get##Attrname(PRUint32 *valp)                 \
+calIcalComponent::Get##Attrname(PRInt32 *valp)                 \
 {                                                               \
     return GetIntProperty(ICAL_##ICALNAME##_PROPERTY, valp);    \
 }                                                               \
                                                                 \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Set##Attrname(PRUint32 val)                   \
+calIcalComponent::Set##Attrname(PRInt32 val)                   \
 {                                                               \
     icalproperty *prop =                                        \
       icalproperty_new_##lcname((icalproperty_##lcname)val);    \
@@ -294,13 +296,13 @@ calIcalComponent::Set##Attrname(PRUint32 val)                   \
 
 #define COMP_INT_ATTRIBUTE(Attrname, ICALNAME, lcname)          \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Get##Attrname(PRUint32 *valp)                 \
+calIcalComponent::Get##Attrname(PRInt32 *valp)                 \
 {                                                               \
     return GetIntProperty(ICAL_##ICALNAME##_PROPERTY, valp);    \
 }                                                               \
                                                                 \
 NS_IMETHODIMP                                                   \
-calIcalComponent::Set##Attrname(PRUint32 val)                   \
+calIcalComponent::Set##Attrname(PRInt32 val)                   \
 {                                                               \
     icalproperty *prop = icalproperty_new_##lcname(val);        \
     return SetProperty(ICAL_##ICALNAME##_PROPERTY, prop);       \
@@ -347,7 +349,7 @@ calIcalComponent::Set##Attrname(calIDateTime *dt)                       \
 NS_IMPL_ISUPPORTS1(calIcalComponent, calIIcalComponent)
 
 NS_IMETHODIMP
-calIcalComponent::GetFirstSubcomponent(PRUint32 componentType,
+calIcalComponent::GetFirstSubcomponent(PRInt32 componentType,
                                        calIIcalComponent **subcomp)
 {
     icalcomponent *ical =
@@ -366,7 +368,7 @@ calIcalComponent::GetFirstSubcomponent(PRUint32 componentType,
 }
 
 NS_IMETHODIMP
-calIcalComponent::GetNextSubcomponent(PRUint32 componentType,
+calIcalComponent::GetNextSubcomponent(PRInt32 componentType,
                                       calIIcalComponent **subcomp)
 {
     icalcomponent *ical =
@@ -385,7 +387,7 @@ calIcalComponent::GetNextSubcomponent(PRUint32 componentType,
 }
 
 NS_IMETHODIMP
-calIcalComponent::GetIsA(PRUint32 *isa)
+calIcalComponent::GetIsA(PRInt32 *isa)
 {
     *isa = icalcomponent_isa(mComponent);
     return NS_OK;
@@ -516,7 +518,7 @@ calIcalComponent::RemoveSubcomponent(calIIcalComponent *comp)
 }
 
 NS_IMETHODIMP
-calIcalComponent::GetFirstProperty(PRUint32 kind, calIIcalProperty **prop)
+calIcalComponent::GetFirstProperty(PRInt32 kind, calIIcalProperty **prop)
 {
     icalproperty *icalprop =
         icalcomponent_get_first_property(mComponent, (icalproperty_kind)kind);
@@ -533,7 +535,7 @@ calIcalComponent::GetFirstProperty(PRUint32 kind, calIIcalProperty **prop)
 }
 
 NS_IMETHODIMP
-calIcalComponent::GetNextProperty(PRUint32 kind, calIIcalProperty **prop)
+calIcalComponent::GetNextProperty(PRInt32 kind, calIIcalProperty **prop)
 {
     icalproperty *icalprop =
         icalcomponent_get_next_property(mComponent, (icalproperty_kind)kind);
@@ -550,7 +552,7 @@ calIcalComponent::GetNextProperty(PRUint32 kind, calIIcalProperty **prop)
 }
 
 NS_IMETHODIMP
-calIcalComponent::AddProperty(PRUint32 kind, calIIcalProperty **prop)
+calIcalComponent::AddProperty(PRInt32 kind, calIIcalProperty **prop)
 {
     icalproperty *icalprop = icalproperty_new((icalproperty_kind)kind);
     if (!icalprop)
@@ -664,7 +666,7 @@ calICSService::ParseICS(const nsACString& serialized,
 }
 
 NS_IMETHODIMP
-calICSService::CreateIcalComponent(PRUint32 kind, calIIcalComponent **comp)
+calICSService::CreateIcalComponent(PRInt32 kind, calIIcalComponent **comp)
 {
     icalcomponent *ical = icalcomponent_new((icalcomponent_kind)kind);
     if (!ical)

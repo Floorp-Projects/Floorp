@@ -138,8 +138,8 @@ calItemBase.prototype = {
     MEMBER_ATTR(mTitle, "", title),
     MEMBER_ATTR(mPriority, 0, priority),
     MEMBER_ATTR(mIsPrivate, 0, isPrivate),
-    MEMBER_ATTR(mMethod, 0, method),
-    MEMBER_ATTR(mStatus, 0, status),
+    MEMBER_ATTR(mMethod, ICAL.INVALID_VALUE, method),
+    MEMBER_ATTR(mStatus, ICAL.INVALID_VALUE, status),
     MEMBER_ATTR(mHasAlarm, false, hasAlarm),
     MEMBER_ATTR(mAlarmTime, null, alarmTime),
     MEMBER_ATTR(mRecurrenceInfo, null, recurrenceInfo),
@@ -212,23 +212,26 @@ calItemBase.prototype = {
     mapPropsFromICS: function(icalcomp, propmap) {
         for (var i = 0; i < propmap.length; i++) {
             var prop = propmap[i];
-            this[prop.cal] = icalcomp[prop.ics];
+            var val = icalcomp[prop.ics];
+            if (val != null && val != ICAL.INVALID_VALUE)
+                this[prop.cal] = val;
         }
     },
 
     mapPropsToICS: function(icalcomp, propmap) {
         for (var i = 0; i < propmap.length; i++) {
             var prop = propmap[i];
+            if (!(prop.cal in this))
+                continue;
             var val = this[prop.cal];
-            if (prop.force || val)
-                icalcomp[prop.ics] = this[prop.cal];
+            if (val != null && val != ICAL.INVALID_VALUE)
+                icalcomp[prop.ics] = val;
         }
     },
 
     icsBasePropMap: [
     { cal: "mCreationDate", ics: "createdTime" },
     { cal: "mLastModifiedTime", ics: "lastModified" },
-    { cal: "mGeneration", ics: "version" },
     { cal: "mId", ics: "uid" },
     { cal: "mTitle", ics: "summary" },
     { cal: "mPriority", ics: "priority" },

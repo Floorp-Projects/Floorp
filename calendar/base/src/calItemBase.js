@@ -96,8 +96,8 @@ calItemBase.prototype = {
     mTitle: "", get title() { return this.mTitle; }, set title(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mTitle = v; },
     mPriority: 0, get priority() { return this.mPriority; }, set priority(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mPriority = v; },
     mIsPrivate: 0, get isPrivate() { return this.mIsPrivate; }, set isPrivate(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mIsPrivate = v; },
-    mMethod: 0, get method() { return this.mMethod; }, set method(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mMethod = v; },
-    mStatus: 0, get status() { return this.mStatus; }, set status(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mStatus = v; },
+    mMethod: ICAL.INVALID_VALUE, get method() { return this.mMethod; }, set method(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mMethod = v; },
+    mStatus: ICAL.INVALID_VALUE, get status() { return this.mStatus; }, set status(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mStatus = v; },
     mHasAlarm: false, get hasAlarm() { return this.mHasAlarm; }, set hasAlarm(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mHasAlarm = v; },
     mAlarmTime: null, get alarmTime() { return this.mAlarmTime; }, set alarmTime(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mAlarmTime = v; },
     mRecurrenceInfo: null, get recurrenceInfo() { return this.mRecurrenceInfo; }, set recurrenceInfo(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.mRecurrenceInfo = v; },
@@ -170,23 +170,26 @@ calItemBase.prototype = {
     mapPropsFromICS: function(icalcomp, propmap) {
         for (var i = 0; i < propmap.length; i++) {
             var prop = propmap[i];
-            this[prop.cal] = icalcomp[prop.ics];
+            var val = icalcomp[prop.ics];
+            if (val != ICAL.INVALID_VALUE)
+                this[prop.cal] = val;
         }
     },
 
     mapPropsToICS: function(icalcomp, propmap) {
         for (var i = 0; i < propmap.length; i++) {
             var prop = propmap[i];
+            if (!(prop.cal in this))
+                continue;
             var val = this[prop.cal];
-            if (prop.force || val)
-                icalcomp[prop.ics] = this[prop.cal];
+            if (val != null && val != ICAL.INVALID_VALUE)
+                icalcomp[prop.ics] = val;
         }
     },
 
     icsBasePropMap: [
     { cal: "mCreationDate", ics: "createdTime" },
     { cal: "mLastModifiedTime", ics: "lastModified" },
-    { cal: "mGeneration", ics: "version" },
     { cal: "mId", ics: "uid" },
     { cal: "mTitle", ics: "summary" },
     { cal: "mPriority", ics: "priority" },

@@ -46,54 +46,60 @@ interface calIIcalProperty;
 [scriptable,uuid(4d7e456b-cfd0-4ebf-8794-c57789dafdc3)]
 interface calIIcalComponent : nsISupports
 {
-    calIIcalComponent getFirstSubcomponent(in PRUint32 componentType);
-    calIIcalComponent getNextSubcomponent(in PRUint32 componentType);
+    /**
+     * This is the value that an integer-valued getter will provide if
+     * there is no such property on the wrapped ical structure.
+     */
+    const PRInt32 INVALID_VALUE = -1;
 
-    const PRUint32 ANY_COMPONENT = 1;
-    const PRUint32 XROOT_COMPONENT = 2;
-    const PRUint32 VEVENT_COMPONENT = 4;
-    const PRUint32 VTODO_COMPONENT = 5;
-    const PRUint32 VJOURNAL_COMPONENT = 6;
-    const PRUint32 VCALENDAR_COMPONENT = 7;
-    const PRUint32 VFREEBUSY_COMPONENT = 8;
-    readonly attribute PRUint32 isA;
+    calIIcalComponent getFirstSubcomponent(in PRInt32 componentType);
+    calIIcalComponent getNextSubcomponent(in PRInt32 componentType);
+
+    const PRInt32 ANY_COMPONENT = 1;
+    const PRInt32 XROOT_COMPONENT = 2;
+    const PRInt32 VEVENT_COMPONENT = 4;
+    const PRInt32 VTODO_COMPONENT = 5;
+    const PRInt32 VJOURNAL_COMPONENT = 6;
+    const PRInt32 VCALENDAR_COMPONENT = 7;
+    const PRInt32 VFREEBUSY_COMPONENT = 8;
+    readonly attribute PRInt32 isA;
 
     attribute AUTF8String uid;
     attribute AUTF8String prodid;
     attribute AUTF8String version;
 
-    const PRUint32 METHOD_PUBLISH = 10012;
-    const PRUint32 METHOD_REQUEST = 10013;
-    const PRUint32 METHOD_REPLY = 10014;
-    const PRUint32 METHOD_ADD = 10015;
-    const PRUint32 METHOD_CANCEL = 10016;
-    const PRUint32 METHOD_REFRESH = 10017;
-    const PRUint32 METHOD_COUNTER = 10018;
-    const PRUint32 METHOD_DECLINECOUNTER = 10019;
-    const PRUint32 METHOD_CREATE = 10020;
-    const PRUint32 METHOD_READ = 10021;
-    const PRUint32 METHOD_RESPONSE = 10022;
-    const PRUint32 METHOD_MOVE = 10023;
-    const PRUint32 METHOD_MODIFY = 10024;
-    const PRUint32 METHOD_GENERATEUID = 10025;
-    const PRUint32 METHOD_DELETE = 10026;
-    const PRUint32 METHOD_NONE = 10027;
-    attribute PRUint32 method;
+    const PRInt32 METHOD_PUBLISH = 10012;
+    const PRInt32 METHOD_REQUEST = 10013;
+    const PRInt32 METHOD_REPLY = 10014;
+    const PRInt32 METHOD_ADD = 10015;
+    const PRInt32 METHOD_CANCEL = 10016;
+    const PRInt32 METHOD_REFRESH = 10017;
+    const PRInt32 METHOD_COUNTER = 10018;
+    const PRInt32 METHOD_DECLINECOUNTER = 10019;
+    const PRInt32 METHOD_CREATE = 10020;
+    const PRInt32 METHOD_READ = 10021;
+    const PRInt32 METHOD_RESPONSE = 10022;
+    const PRInt32 METHOD_MOVE = 10023;
+    const PRInt32 METHOD_MODIFY = 10024;
+    const PRInt32 METHOD_GENERATEUID = 10025;
+    const PRInt32 METHOD_DELETE = 10026;
+    const PRInt32 METHOD_NONE = 10027;
+    attribute PRInt32 method;
 
-    const PRUint32 STATUS_TENTATIVE = 10029;
-    const PRUint32 STATUS_CONFIRMED = 10030;
-    const PRUint32 STATUS_COMPLETED = 10031;
-    const PRUint32 STATUS_NEEDSACTION = 10032;
-    const PRUint32 STATUS_CANCELLED = 10033;
-    const PRUint32 STATUS_INPROCESS = 10034;
-    const PRUint32 STATUS_DRAFT = 10035;
-    const PRUint32 STATUS_FINAL = 10036;
-    const PRUint32 STATUS_NONE = 10037;
-    attribute PRUint32 status;
+    const PRInt32 STATUS_TENTATIVE = 10029;
+    const PRInt32 STATUS_CONFIRMED = 10030;
+    const PRInt32 STATUS_COMPLETED = 10031;
+    const PRInt32 STATUS_NEEDSACTION = 10032;
+    const PRInt32 STATUS_CANCELLED = 10033;
+    const PRInt32 STATUS_INPROCESS = 10034;
+    const PRInt32 STATUS_DRAFT = 10035;
+    const PRInt32 STATUS_FINAL = 10036;
+    const PRInt32 STATUS_NONE = 10037;
+    attribute PRInt32 status;
 
-    const PRUint32 TRANSP_OPAQUE = 10039;
-    const PRUint32 TRANSP_TRANSPARENT = 10040;
-    attribute PRUint32 transp;
+    const PRInt32 TRANSP_OPAQUE = 10039;
+    const PRInt32 TRANSP_TRANSPARENT = 10040;
+    attribute PRInt32 transp;
 
     attribute AUTF8String summary;
     attribute AUTF8String description;
@@ -101,13 +107,13 @@ interface calIIcalComponent : nsISupports
     attribute AUTF8String categories;
     attribute AUTF8String URL;
 
-    attribute PRUint32 priority;
+    attribute PRInt32 priority;
 
-    const PRUint32 VISIBILITY_PUBLIC = 10007;
-    const PRUint32 VISIBILITY_PRIVATE = 10008;
-    const PRUint32 VISIBILITY_CONFIDENTIAL = 10009;
-    const PRUint32 VISIBILITY_NONE = 10010;
-    attribute PRUint32 icalClass;
+    const PRInt32 VISIBILITY_PUBLIC = 10007;
+    const PRInt32 VISIBILITY_PRIVATE = 10008;
+    const PRInt32 VISIBILITY_CONFIDENTIAL = 10009;
+    const PRInt32 VISIBILITY_NONE = 10010;
+    attribute PRInt32 icalClass;
 
     attribute calIDateTime startTime;
     attribute calIDateTime endTime;
@@ -128,13 +134,13 @@ interface calIIcalComponent : nsISupports
     void addSubcomponent(in calIIcalComponent comp);
     void removeSubcomponent(in calIIcalComponent comp);
 
-    const PRUint32 ANY_PROPERTY = 0;
-    const PRUint32 ACTION_PROPERTY = 1;
-    const PRUint32 ATTACH_PROPERTY = 2;
-    const PRUint32 ATTENDEE_PROPERTY = 3;
-    calIIcalProperty getFirstProperty(in PRUint32 kind);
-    calIIcalProperty getNextProperty(in PRUint32 kind);
-    calIIcalProperty addProperty(in PRUint32 kind);
+    const PRInt32 ANY_PROPERTY = 0;
+    const PRInt32 ACTION_PROPERTY = 1;
+    const PRInt32 ATTACH_PROPERTY = 2;
+    const PRInt32 ATTENDEE_PROPERTY = 3;
+    calIIcalProperty getFirstProperty(in PRInt32 kind);
+    calIIcalProperty getNextProperty(in PRInt32 kind);
+    calIIcalProperty addProperty(in PRInt32 kind);
     void removeProperty(in calIIcalProperty prop);
 
     calIIcalProperty getFirstXProperty(in AUTF8String xpropname);
@@ -147,44 +153,44 @@ interface calIIcalComponent : nsISupports
 interface calIIcalProperty : nsISupports
 {
     attribute AUTF8String stringValue;
-    readonly attribute PRUint32 isA;
+    readonly attribute PRInt32 isA;
 
     AUTF8String getXParameter(in AUTF8String xparamname);
     void setXParameter(in AUTF8String xparamname, in AUTF8String xparamval);
     void removeXParameter(in AUTF8String xparamname);
 
-    const PRUint32 ALTREP_PARAMETER = 1;
-    const PRUint32 CN_PARAMETER = 2;
-    const PRUint32 CUTYPE_PARAMETER = 3;
-    const PRUint32 DELEGATEDFROM_PARAMETER = 4;
-    const PRUint32 DELEGATEDTO_PARAMETER = 5;
-    const PRUint32 DIR_PARAMETER = 6;
-    const PRUint32 ENCODING_PARAMETER = 7;
-    const PRUint32 FBTYPE_PARAMETER = 8;
-    const PRUint32 FMTTYPE_PARAMETER = 9;
-    const PRUint32 LANGUAGE_PARAMETER = 10;
-    const PRUint32 MEMBER_PARAMETER = 11;
-    const PRUint32 PARTSTAT_PARAMETER = 12;
-    const PRUint32 RANGE_PARAMETER = 13;
-    const PRUint32 RELATED_PARAMETER = 14;
-    const PRUint32 RELTYPE_PARAMETER = 15;
-    const PRUint32 ROLE_PARAMETER = 16;
-    const PRUint32 RSVP_PARAMETER = 17;
-    const PRUint32 SENTBY_PARAMETER = 18;
-    const PRUint32 TZID_PARAMETER = 19;
-    const PRUint32 VALUE_PARAMETER = 20;
+    const PRInt32 ALTREP_PARAMETER = 1;
+    const PRInt32 CN_PARAMETER = 2;
+    const PRInt32 CUTYPE_PARAMETER = 3;
+    const PRInt32 DELEGATEDFROM_PARAMETER = 4;
+    const PRInt32 DELEGATEDTO_PARAMETER = 5;
+    const PRInt32 DIR_PARAMETER = 6;
+    const PRInt32 ENCODING_PARAMETER = 7;
+    const PRInt32 FBTYPE_PARAMETER = 8;
+    const PRInt32 FMTTYPE_PARAMETER = 9;
+    const PRInt32 LANGUAGE_PARAMETER = 10;
+    const PRInt32 MEMBER_PARAMETER = 11;
+    const PRInt32 PARTSTAT_PARAMETER = 12;
+    const PRInt32 RANGE_PARAMETER = 13;
+    const PRInt32 RELATED_PARAMETER = 14;
+    const PRInt32 RELTYPE_PARAMETER = 15;
+    const PRInt32 ROLE_PARAMETER = 16;
+    const PRInt32 RSVP_PARAMETER = 17;
+    const PRInt32 SENTBY_PARAMETER = 18;
+    const PRInt32 TZID_PARAMETER = 19;
+    const PRInt32 VALUE_PARAMETER = 20;
     /* const PRUint32 X_PARAMETER = 21; */
-    const PRUint32 XLICCOMPARETYPE_PARAMETER = 22;
-    const PRUint32 XLICERRORTYPE_PARAMETER = 23;
+    const PRInt32 XLICCOMPARETYPE_PARAMETER = 22;
+    const PRInt32 XLICERRORTYPE_PARAMETER = 23;
 
-    AUTF8String getParameter(in PRUint32 kind);
-    void setParameter(in PRUint32 kind, in AUTF8String value);
-    void removeParameter(in PRUint32 kind);
+    AUTF8String getParameter(in PRInt32 kind);
+    void setParameter(in PRInt32 kind, in AUTF8String value);
+    void removeParameter(in PRInt32 kind);
 };
 
 [scriptable,uuid(c788a1dc-0929-4029-9a14-e1bc654eafad)]
 interface calIICSService : nsISupports
 {
     calIIcalComponent parseICS(in AUTF8String serialized);
-    calIIcalComponent createIcalComponent(in PRUint32 kind);
+    calIIcalComponent createIcalComponent(in PRInt32 kind);
 };
