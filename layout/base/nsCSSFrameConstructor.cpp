@@ -6690,10 +6690,9 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
               break;
             case NS_STYLE_HINT_REFLOW:
             case NS_STYLE_HINT_VISUAL:
-              break;
             case NS_STYLE_HINT_CONTENT:
               // let primary frame deal with it
-              result = primaryFrame1->ContentChanged(aPresContext, aContent1, nsnull);
+              result = primaryFrame1->ContentStateChanged(aPresContext, aContent1, frameChange1);
             default:
               break;
           }
@@ -6704,10 +6703,9 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
               break;
             case NS_STYLE_HINT_REFLOW:
             case NS_STYLE_HINT_VISUAL:
-              break;
             case NS_STYLE_HINT_CONTENT:
               // let primary frame deal with it
-              result = primaryFrame2->ContentChanged(aPresContext, aContent2, nsnull);
+              result = primaryFrame2->ContentStateChanged(aPresContext, aContent2, frameChange2);
               // then process any children that need it
             default:
               break;
@@ -6732,10 +6730,9 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
             break;
           case NS_STYLE_HINT_REFLOW:
           case NS_STYLE_HINT_VISUAL:
-            break;
           case NS_STYLE_HINT_CONTENT:
             // let primary frame deal with it
-            result = primaryFrame2->ContentChanged(aPresContext, aContent2, nsnull);
+            result = primaryFrame2->ContentStateChanged(aPresContext, aContent2, frameChange);
             // then process any children that need it
           default:
             break;
