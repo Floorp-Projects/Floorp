@@ -600,7 +600,7 @@ protected:
 
   nsCOMPtr<nsIArena> mArena;
   nsString mDocumentTitle;
-  nsString mLastModified;
+  nsCString mLastModified;
   nsCOMPtr<nsIURI> mDocumentURL;
   nsCOMPtr<nsIURI> mDocumentBaseURL;
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -666,8 +666,8 @@ protected:
 
   nsCOMPtr<nsICSSLoader> mCSSLoader;
 
-  nsString mContentLanguage;
-  nsString mContentType;
+  nsXPIDLCString mContentLanguage;
+  nsCString mContentType;
 
   nsCOMPtr<nsIScriptEventManager> mScriptEventManager;
 
