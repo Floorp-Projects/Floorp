@@ -40,17 +40,28 @@
 
 @implementation LocationBar
 
-- (void)drawRect:(NSRect)aRect
+- (id)initWithFrame:(NSRect)frameRect
 {
-  // Frame the border.
-  //NSDrawLightBezel([self bounds], aRect);
+  if ((self = [super initWithFrame:frameRect]))
+  {
+    mBorderCell = [[NSTextFieldCell alloc] initTextCell:@""];
+    [mBorderCell setBezeled:YES];
 
-  [[NSColor colorWithCalibratedWhite: 0.98 alpha: 1.0] set];
-  NSRectFill(aRect);
-
-  [[NSColor colorWithCalibratedWhite: 0.90 alpha: 1.0] set];
-  NSFrameRectWithWidth([self bounds], 2.0);
+    // For 10.2, we could do this, but we'd have to tweak the spacing for the proxy icon
+    //[mBorderCell setBezelStyle:NSTextFieldRoundedBezel];
+  }
+  return self;
 }
 
+- (void)dealloc
+{
+  [mBorderCell release];
+  [super dealloc];
+}
+
+- (void)drawRect:(NSRect)aRect
+{
+  [mBorderCell drawWithFrame:[self bounds] inView:self];
+}
 
 @end

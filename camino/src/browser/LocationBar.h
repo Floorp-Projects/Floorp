@@ -23,8 +23,11 @@
 
 #import <AppKit/AppKit.h>
 
-@interface LocationBar : NSView {
-
+@interface LocationBar : NSView
+{
+  // we'll use a cell to draw the border, since there isn't a method
+  // we can call to draw a nice bevel ourselves.
+  NSTextFieldCell*   mBorderCell;
 }
 
 @end
