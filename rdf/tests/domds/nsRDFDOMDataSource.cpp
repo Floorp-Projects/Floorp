@@ -190,6 +190,8 @@ nsRDFDOMDataSource::createFrameTarget(nsIFrame *frame,
     if (NS_SUCCEEDED(frame->QueryInterface(nsIFrameDebug::GetIID(), (void**)&frameDebug))) {
       frameDebug->GetFrameName(str);
     }
+#else
+  str = "";
 #endif
   }
   else if (aProperty == kNC_Type)
