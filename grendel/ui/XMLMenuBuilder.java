@@ -46,7 +46,7 @@ import org.w3c.dom.Node;
 import com.sun.xml.parser.Resolver;
 import com.sun.xml.parser.Parser;
 import com.sun.xml.tree.XmlDocument;
-import com.sun.xml.tree.XmlDocumentBuilder;
+// import com.sun.xml.tree.XmlDocumentBuilder;
 import com.sun.xml.tree.TreeWalker;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -118,7 +118,7 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
     Element current;
 
     try {
-      doc = XmlDocumentBuilder.createXmlDocument(stream, false);
+      doc = XmlDocument.createXmlDocument(stream, false);
       current = doc.getDocumentElement();
       tree = new TreeWalker(current);
 
@@ -223,7 +223,8 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
       UIAction action;
       
       // which type of menuitem?
-      if (type == null) { // no type ? it's a regular menuitem
+      if (type == null || type.equals("")) { 
+        // no type ? it's a regular menuitem
 	comp = buildMenuItem(current);
       } else if (type.equals(separator_attr)) { // separator
 	comp = buildSeparator(current);
@@ -233,21 +234,25 @@ public class XMLMenuBuilder extends XMLWidgetBuilder {
 	comp = buildRadioMenuItem(current);
       }
 
-      label = getReferencedLabel(current, label_attr);
-      if (label != null) {
-	((JMenuItem)comp).setText(label);
-      }
-      label = current.getAttribute("action");
-      if (label != null 
-	  && (action = (UIAction)actions.get(label)) != null) {
-	((JMenuItem)comp).addActionListener(action);
-      }
-    }
+      // do label magic for things that are not separators
+      if (!type.equals(separator_attr)) {
+        label = getReferencedLabel(current, label_attr);
+        if (label != null) {
+          ((JMenuItem)comp).setText(label);
+        }
 
-    // set the accelerator
-    label = getReferencedLabel(current, accel_attr);
-    if (label != null) {
-      ((JMenuItem)comp).setMnemonic(label.charAt(0));
+        label = current.getAttribute("action");
+        if (label != null 
+            && (action = (UIAction)actions.get(label)) != null) {
+          ((JMenuItem)comp).addActionListener(action);
+        }
+
+        // set the accelerator
+        label = getReferencedLabel(current, accel_attr);
+        if (label != null) {
+          ((JMenuItem)comp).setMnemonic(label.charAt(0));
+        }
+      }
     }
 
     return comp;

@@ -95,7 +95,8 @@ public abstract class XMLWidgetBuilder {
     if (properties == null) return label;
     
     // if it starts with a '$' we crossreference to properties
-    if (label != null && label.charAt(0) == '$') {
+    if (label != null && label.length() > 0 
+        && label.charAt(0) == '$') {
       String key = label.substring(1);
       label = properties.getProperty(key, label);
     }
