@@ -4581,8 +4581,7 @@ CEditTableCellElement::CEditTableCellElement()
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
-      m_bDeleted(FALSE),
-      m_bDeleteSingleSpace(FALSE)
+      m_bDeleted(FALSE)
 {
 }
 
@@ -4609,8 +4608,7 @@ CEditTableCellElement::CEditTableCellElement(XP_Bool bIsHeader)
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
-      m_bDeleted(FALSE),
-      m_bDeleteSingleSpace(FALSE)
+      m_bDeleted(FALSE)
 {
 }
 
@@ -4637,8 +4635,7 @@ CEditTableCellElement::CEditTableCellElement(CEditElement *pParent, PA_Tag *pTag
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
-      m_bDeleted(FALSE),
-      m_bDeleteSingleSpace(FALSE)
+      m_bDeleted(FALSE)
 {
     if( pTag ){
         char *locked_buff;
@@ -4674,8 +4671,7 @@ CEditTableCellElement::CEditTableCellElement(IStreamIn *pStreamIn, CEditBuffer *
       m_bSaveWidthDefined(FALSE),
       m_bSaveHeightDefined(FALSE),
       m_bSelected(FALSE),
-      m_bDeleted(FALSE),
-      m_bDeleteSingleSpace(FALSE)
+      m_bDeleted(FALSE)
 {
     // We need this so we can accurately determine number
     //  of columns in stream
@@ -6488,8 +6484,6 @@ void CEditContainerElement::FinishedLoad( CEditBuffer *pBuffer )
                 // We have a single space, so don't do special trimming below
                 bIsTableCellWithOneSpace = TRUE;
             }
-            // This triggers automatically deleting the space if user edits the cell
-            pParent->TableCell()->m_bDeleteSingleSpace = TRUE;
         }
         if( ! bIsTableCellWithOneSpace )
         {

@@ -2692,7 +2692,7 @@ EDT_ClipboardResult CEditBuffer::InsertChars( char* pNewChars, XP_Bool bTyping, 
             m_pCurrent->Text()->GetLen() == 1 )
         {
             char* pText = m_pCurrent->Text()->GetText();
-            if( pText[0] == ' ' )
+            if( pText[0] == ' ' && pNewChars && !(pNewChars[0] == ' ') )
             {
                 // We are in a table cell with just one space in it
                 // (probably there only to show cell borders)
@@ -2705,7 +2705,6 @@ EDT_ClipboardResult CEditBuffer::InsertChars( char* pNewChars, XP_Bool bTyping, 
                 //  or delete back if to the right.
                 DeleteChar(iOffset == 0, bTyping);
             }
-            pTableCell->m_bDeleteSingleSpace = FALSE;
         }
     }
     //ClearSelection();

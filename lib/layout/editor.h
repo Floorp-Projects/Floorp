@@ -1390,8 +1390,6 @@ private:
 
 public:
     intn    m_iBackgroundSaveIndex;
-    // For quickest access by edit buffer
-    XP_Bool m_bDeleteSingleSpace;
 };
 
 class CEditLayerElement: public CEditElement {
