@@ -46,14 +46,14 @@ End
 Directory "{{ResourceDir}}" # set to the correct folder
 perl resdef.pl Temp_XPStrings.r
 delete Temp_XPStrings.r
-Rez -t 'NSPL' -c MOZZ -i "{RIncludes}" ¶
+Rez -t 'NSPL' -c MOZZ -i "{IncludeFiles}" ¶
 	-o "{{TargetDir}}Essential Files:Mozilla Resources" ¶
 	xpstring.r
 delete xpstring.r
-Rez -append -i "{RIncludes}" -i "{{mozilla}}cmd:macfe:include:" ¶
+Rez -append -i "{IncludeFiles}" -i "{{mozilla}}cmd:macfe:include:" ¶
 	-o "{{TargetDir}}Essential Files:Mozilla Resources" ¶
 	MacSTR.r
-Rez -append -i "{RIncludes}" -i "{{mozilla}}cmd:macfe:include:" ¶
+Rez -append -i "{IncludeFiles}" -i "{{mozilla}}cmd:macfe:include:" ¶
 	-o "{{TargetDir}}Essential Files:Mozilla Resources" ¶
 	exception_str.r
 	
