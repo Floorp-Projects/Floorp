@@ -175,7 +175,6 @@ CNavDTD::CNavDTD() : nsIDTD(),
     mTempContext(0),
     mOpenHeadCount(0),
     mOpenMapCount(0),
-    mOpenFormCount(0),
     mParser(0),       
     mTokenizer(0),
     mDTDMode(eDTDMode_quirks),
@@ -3228,7 +3227,7 @@ nsresult CNavDTD::OpenForm(const nsIParserNode *aNode){
       mFlags |= NS_DTD_FLAG_HAS_OPEN_FORM;
     }
   }
-  mOpenFormCount++;
+
   return result;
 }
 
@@ -3244,20 +3243,17 @@ nsresult CNavDTD::CloseForm(const nsIParserNode *aNode){
 //  NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
   nsresult result=NS_OK;
   if(mFlags & NS_DTD_FLAG_HAS_OPEN_FORM) {
-    if (mOpenFormCount == 1) {
-      mFlags &= ~NS_DTD_FLAG_HAS_OPEN_FORM;
+    mFlags &= ~NS_DTD_FLAG_HAS_OPEN_FORM;
 
-      STOP_TIMER();
-      MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
+    STOP_TIMER();
+    MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
 
-      result=(mSink) ? mSink->CloseForm(*aNode) : NS_OK; 
+    result=(mSink) ? mSink->CloseForm(*aNode) : NS_OK; 
 
-      MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
-      START_TIMER();
-        
-      mFlags &= ~NS_DTD_FLAG_IS_FORM_CONTAINER;
-    }
-    --mOpenFormCount;
+    MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::CloseForm(), this=%p\n", this));
+    START_TIMER();
+      
+    mFlags &= ~NS_DTD_FLAG_IS_FORM_CONTAINER;
   }
   return result;
 }

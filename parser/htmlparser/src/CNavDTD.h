@@ -363,7 +363,6 @@ protected:
     PRInt32             mLineNumber;
     PRInt32             mOpenHeadCount;
     PRInt32             mOpenMapCount;
-    PRInt32             mOpenFormCount;
 
     PRUint16            mFlags;
 
