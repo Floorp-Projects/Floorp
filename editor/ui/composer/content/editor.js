@@ -1121,12 +1121,9 @@ function GetBackgroundElementWithColor()
   gColorObj.SelectedType = "";
 
   var tagNameObj = { value: "" };
-  var numSelected;
   var element;
   try {
-    var elt = { value: null };
-    numSelected = gEditor.getSelectedOrParentTableElement(elt, tagNameObj);
-    element = elt.value;
+    element = gEditor.getSelectedOrParentTableElement(tagNameObj, {value:0});
   }
   catch(e) {}
 
