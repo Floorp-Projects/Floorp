@@ -775,10 +775,10 @@ NS_IMETHODIMP	nsWindow::Update()
 		RgnHandle saveUpdateRgn = ::NewRgn();
 		if (!saveUpdateRgn)
 			return NS_ERROR_OUT_OF_MEMORY;
-#if TARGET_CARBON
-		::GetWindowRegion(mWindowPtr, kWindowUpdateRgn, saveUpdateRgn);
-#else
 		if(mWindowPtr)
+#if TARGET_CARBON
+			::GetWindowRegion(mWindowPtr, kWindowUpdateRgn, saveUpdateRgn);
+#else
 			::CopyRgn(((WindowRecord*)mWindowPtr)->updateRgn, saveUpdateRgn);
 #endif
 
@@ -913,7 +913,7 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 	EndDraw();
 
 	// recursively draw the children
-	nsCOMPtr<nsIEnumerator> children(dont_AddRef(GetChildren()));
+	nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
 	if (children)
 	{
 		children->First();
@@ -988,7 +988,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 
 	//--------
 	// Scroll the children
-	nsCOMPtr<nsIEnumerator> children(dont_AddRef(GetChildren()));
+	nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
 	if (children)
 	{
 		children->First();
@@ -1252,7 +1252,7 @@ void nsWindow::CalcWindowRegions()
 	RgnHandle childRgn = ::NewRgn();
 	if (!childRgn) return;
 
-	nsCOMPtr<nsIEnumerator> children(dont_AddRef(GetChildren()));
+	nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
 	if (children)
 	{
 		children->First();
@@ -1355,7 +1355,8 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 
 	nsWindow* widgetHit = this;
 
-	nsIBidirectionalEnumerator* children = static_cast<nsIBidirectionalEnumerator*>(GetChildren());
+	nsCOMPtr<nsIEnumerator> normalEnum ( getter_AddRefs(GetChildren()) );
+	nsCOMPtr<nsIBidirectionalEnumerator> children ( do_QueryInterface(normalEnum) );
 	if (children)
 	{
 		// traverse through all the nsWindows to find out who got hit, lowest level of course
@@ -1377,7 +1378,6 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
       }
 		}
     while (NS_SUCCEEDED(children->Prev()));
-		NS_RELEASE(children);
 	}
 
 	return widgetHit;
