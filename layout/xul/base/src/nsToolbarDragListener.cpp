@@ -246,7 +246,10 @@ nsToolbarDragListener :: ItemMouseIsOver ( nsIDOMEvent* aDragEvent, nscoord* out
 
   if (!found) {
     *outIndex = count;  // already incremented past last item
-    *outXLoc = prevRect.x - tbRect.x + rect.width + onePixel;
+    if ( count )
+      *outXLoc = prevRect.x - tbRect.x + rect.width + onePixel;
+    else
+      *outXLoc = onePixel;
   }
 
 }

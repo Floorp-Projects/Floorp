@@ -277,8 +277,7 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
     if (!mMarkerStyle) {
       nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
       aPresContext.ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
-										    PR_FALSE,
-										    getter_AddRefs(mMarkerStyle));
+                                                PR_FALSE, getter_AddRefs(mMarkerStyle));
     }
     nscolor color;
     if (mMarkerStyle) {
@@ -287,8 +286,16 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
     } else {
       color = NS_RGB(0,0,0);
     }
-    aRenderingContext.SetColor(color);
-    aRenderingContext.DrawLine(mXDropLoc, 0, mXDropLoc, mRect.height);
+
+    // draw different drop feedback depending on if we have subitems or not
+    int numChildren = 0;
+    mContent->ChildCount(numChildren);
+    if ( numChildren ) {
+      aRenderingContext.SetColor(color);
+      aRenderingContext.DrawLine(mXDropLoc, 0, mXDropLoc, mRect.height);
+    }
+    else
+      aRenderingContext.DrawRect ( mRect );
   }
 
   return res;
