@@ -355,18 +355,21 @@ nsFTPChannel::GetContentType(char* *aContentType) {
 
     if (!aContentType) return NS_ERROR_NULL_POINTER;
 
-    if (mContentType.Length()) {
-        *aContentType = mContentType.ToNewCString();
-    } else {
+    *aContentType = nsnull;
+    if (mContentType.IsEmpty()) {
         NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
         if (NS_FAILED(rv)) return rv;
         rv = MIMEService->GetTypeFromURI(mURL, aContentType);
         if (NS_SUCCEEDED(rv)) {
             mContentType = *aContentType;
         } else {
+            mContentType = UNKNOWN_MIME;
             rv = NS_OK;
-	        *aContentType = nsCRT::strdup(UNKNOWN_MIME);
         }
+    }
+
+    if (!*aContentType) {
+        *aContentType = mContentType.ToNewCString();
     }
 
     if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
@@ -374,6 +377,13 @@ nsFTPChannel::GetContentType(char* *aContentType) {
     return rv;
 }
 
+NS_IMETHODIMP
+nsFTPChannel::SetContentType(const char *aContentType)
+{
+    mContentType = aContentType;
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsFTPChannel::GetContentLength(PRInt32 *aContentLength)
@@ -445,12 +455,6 @@ nsFTPChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotificationCallb
 NS_IMETHODIMP
 nsFTPChannel::SetContentLength(PRInt32 aLength) {
     mContentLength = aLength;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsFTPChannel::SetContentType(const char *aContentType) {
-    mContentType = aContentType;
     return NS_OK;
 }
 

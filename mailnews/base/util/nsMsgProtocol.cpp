@@ -342,6 +342,12 @@ NS_IMETHODIMP nsMsgProtocol::GetContentType(char * *aContentType)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgProtocol::SetContentType(const char *aContentType)
+{
+    // XXX: Do not allow the content type to be changed (yet)
+    return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsMsgProtocol::GetContentLength(PRInt32 * aContentLength)
 {
   *aContentLength = -1;

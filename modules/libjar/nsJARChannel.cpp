@@ -419,6 +419,19 @@ nsJARChannel::GetContentType(char* *aContentType)
 }
 
 NS_IMETHODIMP
+nsJARChannel::SetContentType(const char *aContentType)
+{
+    if (mContentType) {
+        nsCRT::free(mContentType);
+    }
+
+    mContentType = nsCRT::strdup(aContentType);
+    if (!mContentType) return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsJARChannel::GetContentLength(PRInt32* aContentLength)
 {
     if (mContentLength == -1)

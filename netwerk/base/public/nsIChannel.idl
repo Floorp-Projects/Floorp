@@ -178,7 +178,7 @@ interface nsIChannel : nsIRequest
      * MIME type, wrong document type stored on a server, etc.) and the caller
      * most likely wants to verify with the actual data. 
      */
-    readonly attribute string contentType;
+    attribute string contentType;
 
     /**
      * Returns the length of the data assiciated with the channel if available.

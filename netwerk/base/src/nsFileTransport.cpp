@@ -1088,6 +1088,18 @@ nsFileTransport::GetContentType(char * *aContentType)
 }
 
 NS_IMETHODIMP
+nsFileTransport::SetContentType(const char *aContentType)
+{
+    if (mContentType) {
+      nsCRT::free(mContentType);
+    }
+    mContentType = nsCRT::strdup(aContentType);
+    if (!mContentType) return NS_ERROR_OUT_OF_MEMORY;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFileTransport::GetContentLength(PRInt32 *aContentLength)
 {
     *aContentLength = mTotalAmount;

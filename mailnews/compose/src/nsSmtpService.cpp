@@ -323,6 +323,12 @@ NS_IMETHODIMP nsMailtoChannel::GetContentType(char * *aContentType)
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsMailtoChannel::SetContentType(const char *aContentType)
+{
+    // Do not allow the content type to change...
+    return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsMailtoChannel::GetContentLength(PRInt32 * aContentLength)
 {
   *aContentLength = -1;

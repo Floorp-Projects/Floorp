@@ -374,24 +374,40 @@ nsFileChannel::GetContentType(char * *aContentType)
 {
     nsresult rv = NS_OK;
 
-    if (mSpec.IsDirectory()) {
-        *aContentType = nsCRT::strdup("application/http-index-format");
-        return *aContentType ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-    }
-    else {
-        NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
-        if (NS_FAILED(rv)) return rv;
+    *aContentType = nsnull;
+    if (mContentType.IsEmpty()) {
+        if (mSpec.IsDirectory()) {
+            mContentType = "application/http-index-format";
+        }
+        else {
+            NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+            if (NS_FAILED(rv)) return rv;
 
-        rv = MIMEService->GetTypeFromURI(mURI, aContentType);
-        if (NS_SUCCEEDED(rv)) return rv;
-    }
+            rv = MIMEService->GetTypeFromURI(mURI, aContentType);
+            if (NS_SUCCEEDED(rv)) {
+                mContentType = *aContentType;
+                return rv;
+            }
+        }
 
-    *aContentType = nsCRT::strdup(UNKNOWN_MIME);
+        if (mContentType.IsEmpty()) {
+            mContentType = UNKNOWN_MIME;
+        }
+    }
+    *aContentType = mContentType.ToNewCString();
+
     if (!*aContentType) {
         return NS_ERROR_OUT_OF_MEMORY;
     } else {
         return NS_OK;
     }
+}
+
+NS_IMETHODIMP
+nsFileChannel::SetContentType(const char *aContentType)
+{
+    mContentType = aContentType;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

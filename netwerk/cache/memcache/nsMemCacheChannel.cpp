@@ -456,6 +456,14 @@ nsMemCacheChannel::GetContentType(char* *aContentType)
 }
 
 NS_IMETHODIMP
+nsMemCacheChannel::SetContentType(const char *aContentType)
+{
+    // Not required to be implemented, since it is implemented by cache manager
+    NS_ASSERTION(0, "nsMemCacheChannel method unexpectedly called");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsMemCacheChannel::GetContentLength(PRInt32 *aContentLength)
 {
     // Not required to be implemented, since it is implemented by cache manager

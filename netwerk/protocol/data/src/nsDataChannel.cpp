@@ -367,6 +367,13 @@ nsDataChannel::GetContentType(char* *aContentType) {
 }
 
 NS_IMETHODIMP
+nsDataChannel::SetContentType(const char *aContentType)
+{
+    mContentType = aContentType;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDataChannel::GetContentLength(PRInt32 *aContentLength)
 {
     *aContentLength = mContentLength;

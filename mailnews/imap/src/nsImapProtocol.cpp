@@ -6399,6 +6399,12 @@ NS_IMETHODIMP nsImapMockChannel::GetContentType(char * *aContentType)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsImapMockChannel::SetContentType(const char *aContentType)
+{
+  // Do not allow the content-type to change.
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsImapMockChannel::GetContentLength(PRInt32 * aContentLength)
 {
   *aContentLength = -1;

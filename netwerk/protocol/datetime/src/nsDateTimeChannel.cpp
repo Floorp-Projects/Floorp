@@ -233,6 +233,14 @@ nsDateTimeChannel::GetContentType(char* *aContentType) {
 }
 
 NS_IMETHODIMP
+nsDateTimeChannel::SetContentType(const char *aContentType)
+{
+    //It doesn't make sense to set the content-type on this type
+    // of channel...
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsDateTimeChannel::GetContentLength(PRInt32 *aContentLength)
 {
     *aContentLength = mContentLength;
