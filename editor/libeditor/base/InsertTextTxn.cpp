@@ -44,8 +44,6 @@
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
 #endif
 
 nsIAtom *InsertTextTxn::gInsertTextTxnName;
@@ -97,7 +95,10 @@ NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
 
 NS_IMETHODIMP InsertTextTxn::DoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("Do Insert Text element = %p\n", mElement.get()); }
+#endif
+
   NS_ASSERTION(mElement && mEditor, "bad state");
   if (!mElement || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -126,7 +127,10 @@ NS_IMETHODIMP InsertTextTxn::DoTransaction(void)
 
 NS_IMETHODIMP InsertTextTxn::UndoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("Undo Insert Text element = %p\n", mElement.get()); }
+#endif
+
   NS_ASSERTION(mElement && mEditor, "bad state");
   if (!mElement || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -156,7 +160,9 @@ NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMer
         otherInsTxn->GetData(otherData);
         mStringToInsert += otherData;
         *aDidMerge = PR_TRUE;
+#ifdef NS_DEBUG
         if (gNoisy) { printf("InsertTextTxn assimilated %p\n", aTransaction); }
+#endif
       }
       NS_RELEASE(otherInsTxn);
     }
@@ -188,7 +194,9 @@ NS_IMETHODIMP InsertTextTxn::Merge(nsITransaction *aTransaction, PRBool *aDidMer
 	                otherInsertTxn->GetData(otherData);
 	                mStringToInsert += otherData;
 	                *aDidMerge = PR_TRUE;
+#ifdef NS_DEBUG
 	                if (gNoisy) { printf("InsertTextTxn assimilated %p\n", aTransaction); }
+#endif
 	              }
 	              NS_RELEASE(otherInsertTxn);
 	            }

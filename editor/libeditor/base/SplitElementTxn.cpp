@@ -44,8 +44,6 @@
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
 #endif
 
 
@@ -74,7 +72,10 @@ SplitElementTxn::~SplitElementTxn()
 
 NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("%p Do Split of node %p offset %d\n", this, mExistingRightNode.get(), mOffset); }
+#endif
+
   NS_ASSERTION(mExistingRightNode && mEditor, "bad state");
   if (!mExistingRightNode || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
 
@@ -85,8 +86,10 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
   if (!mNewLeftNode) return NS_ERROR_NULL_POINTER;
   mEditor->MarkNodeDirty(mExistingRightNode);
 
-
+#ifdef NS_DEBUG
   if (gNoisy) { printf("  created left node = %p\n", mNewLeftNode.get()); }
+#endif
+
   // get the parent node
   result = mExistingRightNode->GetParentNode(getter_AddRefs(mParent));
   if (NS_FAILED(result)) return result;
@@ -110,10 +113,13 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
 
 NS_IMETHODIMP SplitElementTxn::UndoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { 
     printf("%p Undo Split of existing node %p and new node %p offset %d\n", 
            this, mExistingRightNode.get(), mNewLeftNode.get(), mOffset); 
   }
+#endif
+
   NS_ASSERTION(mEditor && mExistingRightNode && mNewLeftNode && mParent, "bad state");
   if (!mEditor || !mExistingRightNode || !mNewLeftNode || !mParent) {
     return NS_ERROR_NOT_INITIALIZED;
@@ -121,6 +127,7 @@ NS_IMETHODIMP SplitElementTxn::UndoTransaction(void)
 
   // this assumes Do inserted the new node in front of the prior existing node
   nsresult result = mEditor->JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent, PR_FALSE);
+#ifdef NS_DEBUG
   if (gNoisy) 
   { 
     printf("** after join left child node %p into right node %p\n", mNewLeftNode.get(), mExistingRightNode.get());
@@ -130,6 +137,8 @@ NS_IMETHODIMP SplitElementTxn::UndoTransaction(void)
   {
     if (gNoisy) { printf("  left node = %p removed\n", mNewLeftNode.get()); }
   }
+#endif
+
   return result;
 }
 
@@ -142,11 +151,15 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
   if (!mEditor || !mExistingRightNode || !mNewLeftNode || !mParent) {
     return NS_ERROR_NOT_INITIALIZED;
   }
+
+#ifdef NS_DEBUG
   if (gNoisy) { 
     printf("%p Redo Split of existing node %p and new node %p offset %d\n", 
            this, mExistingRightNode.get(), mNewLeftNode.get(), mOffset); 
     if (gNoisy) {mEditor->DebugDumpContent(); } // DEBUG
   }
+#endif
+
   nsresult result;
   nsCOMPtr<nsIDOMNode>resultNode;
   // first, massage the existing node so it is in its post-split state
@@ -155,11 +168,13 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
   if (rightNodeAsText)
   {
     result = rightNodeAsText->DeleteData(0, mOffset);
+#ifdef NS_DEBUG
     if (gNoisy) 
     { 
       printf("** after delete of text in right text node %p offset %d\n", rightNodeAsText.get(), mOffset);
       mEditor->DebugDumpContent();  // DEBUG
     }
+#endif
   }
   else
   {
@@ -176,22 +191,26 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
       if (NS_SUCCEEDED(result)) 
       {
         result = mNewLeftNode->AppendChild(child, getter_AddRefs(resultNode));
+#ifdef NS_DEBUG
         if (gNoisy) 
         { 
           printf("** move child node %p from right node %p to left node %p\n", child.get(), mExistingRightNode.get(), mNewLeftNode.get());
           if (gNoisy) {mEditor->DebugDumpContent(); } // DEBUG
         }
+#endif
       }
       child = do_QueryInterface(nextSibling);
     }
   }
   // second, re-insert the left node into the tree 
   result = mParent->InsertBefore(mNewLeftNode, mExistingRightNode, getter_AddRefs(resultNode));
+#ifdef NS_DEBUG
   if (gNoisy) 
   { 
     printf("** reinsert left child node %p before right node %p\n", mNewLeftNode.get(), mExistingRightNode.get());
     if (gNoisy) {mEditor->DebugDumpContent(); } // DEBUG
   }
+#endif
   return result;
 }
 

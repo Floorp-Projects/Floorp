@@ -118,8 +118,6 @@ static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 
 #ifdef NS_DEBUG_EDITOR
 static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
 #endif
 
 
@@ -454,8 +452,10 @@ nsEditor::GetSelection(nsISelection **aSelection)
 NS_IMETHODIMP 
 nsEditor::DoTransaction(nsITransaction *aTxn)
 {
+#ifdef NS_DEBUG_EDITOR
   if (gNoisy) { printf("Editor::DoTransaction ----------\n"); }
-  
+#endif
+
   nsresult result = NS_OK;
   
   if (mPlaceHolderBatch && !mPlaceHolderTxn)
@@ -604,7 +604,10 @@ nsEditor::GetTransactionManager(nsITransactionManager* *aTxnManager)
 NS_IMETHODIMP 
 nsEditor::Undo(PRUint32 aCount)
 {
+#ifdef NS_DEBUG_EDITOR
   if (gNoisy) { printf("Editor::Undo ----------\n"); }
+#endif
+
   nsresult result = NS_OK;
   ForceCompositionEnd();
 
@@ -651,7 +654,10 @@ NS_IMETHODIMP nsEditor::CanUndo(PRBool *aIsEnabled, PRBool *aCanUndo)
 NS_IMETHODIMP 
 nsEditor::Redo(PRUint32 aCount)
 {
+#ifdef NS_DEBUG_EDITOR
   if (gNoisy) { printf("Editor::Redo ----------\n"); }
+#endif
+
   nsresult result = NS_OK;
 
   nsAutoRules beginRulesSniffing(this, kOpRedo, nsIEditor::eNone);
@@ -2821,8 +2827,9 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
                         nsIDOMNode*  aNewLeftNode,
                         nsIDOMNode*  aParent)
 {
-
+#ifdef NS_DEBUG_EDITOR
   if (gNoisy) { printf("SplitNodeImpl: left=%p, right=%p, offset=%d\n", (void*)aNewLeftNode, (void*)aExistingRightNode, aOffset); }
+#endif
   
   nsresult result;
   NS_ASSERTION(((nsnull!=aExistingRightNode) &&

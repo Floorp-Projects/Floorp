@@ -50,8 +50,6 @@
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
 #endif
 
 CreateElementTxn::CreateElementTxn()
@@ -89,6 +87,7 @@ CreateElementTxn::~CreateElementTxn()
 
 NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy)
   {
     char* nodename = ToNewCString(mTag);
@@ -96,6 +95,7 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
            mParent.get(), nodename, mOffsetInParent);
     nsMemory::Free(nodename);
   }
+#endif
 
   NS_ASSERTION(mEditor && mParent, "bad state");
   if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
@@ -136,7 +136,10 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
   NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewNode)), "could not create element.");
   if (!mNewNode) return NS_ERROR_NULL_POINTER;
 
+#ifdef NS_DEBUG
   if (gNoisy) { printf("  newNode = %p\n", mNewNode.get()); }
+#endif
+
   // insert the new node
   nsCOMPtr<nsIDOMNode> resultNode;
   if (CreateElementTxn::eAppend==(PRInt32)mOffsetInParent)
@@ -187,8 +190,11 @@ NS_IMETHODIMP CreateElementTxn::DoTransaction(void)
 
 NS_IMETHODIMP CreateElementTxn::UndoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("Undo Create Element, mParent = %p, node = %p\n",
                         mParent.get(), mNewNode.get()); }
+#endif
+
   NS_ASSERTION(mEditor && mParent, "bad state");
   if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
@@ -199,7 +205,10 @@ NS_IMETHODIMP CreateElementTxn::UndoTransaction(void)
 
 NS_IMETHODIMP CreateElementTxn::RedoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("Redo Create Element\n"); }
+#endif
+
   NS_ASSERTION(mEditor && mParent, "bad state");
   if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
 

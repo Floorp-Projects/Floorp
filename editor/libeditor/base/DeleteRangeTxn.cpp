@@ -55,8 +55,6 @@
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
 #endif
 
 // note that aEditor is not refcounted
@@ -122,11 +120,14 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor,
       children->GetLength(&count);
     }
     NS_ASSERTION(mEndOffset<=(PRInt32)count, "bad end offset");
+
+#ifdef NS_DEBUG
     if (gNoisy)
     {
       printf ("DeleteRange: %d of %p to %d of %p\n", 
                mStartOffset, (void *)mStartParent, mEndOffset, (void *)mEndParent);
     }         
+#endif
   }
 #endif
   return result;
@@ -139,7 +140,10 @@ DeleteRangeTxn::~DeleteRangeTxn()
 
 NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("Do Delete Range\n"); }
+#endif
+
   if (!mStartParent || !mEndParent || !mCommonParent || !mEditor) 
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -194,7 +198,10 @@ NS_IMETHODIMP DeleteRangeTxn::DoTransaction(void)
 
 NS_IMETHODIMP DeleteRangeTxn::UndoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("Undo Delete Range\n"); }
+#endif
+
   if (!mStartParent || !mEndParent || !mCommonParent || !mEditor) 
     return NS_ERROR_NOT_INITIALIZED;
 
@@ -204,7 +211,10 @@ NS_IMETHODIMP DeleteRangeTxn::UndoTransaction(void)
 
 NS_IMETHODIMP DeleteRangeTxn::RedoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("Redo Delete Range\n"); }
+#endif
+
   if (!mStartParent || !mEndParent || !mCommonParent || !mEditor) 
     return NS_ERROR_NOT_INITIALIZED;
 

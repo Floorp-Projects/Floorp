@@ -117,12 +117,6 @@ static NS_DEFINE_CID(kCDOMSelectionCID,      NS_DOMSELECTION_CID);
 static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
 
-#if defined(NS_DEBUG) && defined(DEBUG_buster)
-static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
-#endif
-
 // prototype for rules creation shortcut
 nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
 
@@ -2149,7 +2143,6 @@ nsPlaintextEditor::IsRootTag(nsString &aTag, PRBool &aIsTag)
 
 void nsPlaintextEditor::HandleEventListenerError()
 {
-  if (gNoisy) { printf("failed to add event listener\n"); }
   // null out the nsCOMPtrs
   mKeyListenerP = nsnull;
   mMouseListenerP = nsnull;

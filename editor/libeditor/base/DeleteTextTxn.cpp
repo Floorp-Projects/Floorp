@@ -43,8 +43,6 @@
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
 #endif
 
 DeleteTextTxn::DeleteTextTxn()
@@ -87,7 +85,10 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
 
 NS_IMETHODIMP DeleteTextTxn::DoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("Do Delete Text\n"); }
+#endif
+
   NS_ASSERTION(mEditor && mElement, "bad state");
   if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
   // get the text that we're about to delete
@@ -122,7 +123,10 @@ NS_IMETHODIMP DeleteTextTxn::DoTransaction(void)
 //     was it an insertion point or an extended selection?
 NS_IMETHODIMP DeleteTextTxn::UndoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("Undo Delete Text\n"); }
+#endif
+
   NS_ASSERTION(mEditor && mElement, "bad state");
   if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 

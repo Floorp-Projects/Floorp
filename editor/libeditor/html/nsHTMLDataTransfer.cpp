@@ -137,8 +137,6 @@ static PRInt32 FindPositiveIntegerAfterString(const char *aLeadingString, nsCStr
 static nsresult RemoveFragComments(nsCString &theStr);
 static void RemoveBodyAndHead(nsIDOMNode *aNode);
 
-static const PRBool gNoisy = PR_FALSE;
-
 static nsCOMPtr<nsIDOMNode> GetListParent(nsIDOMNode* aNode)
 {
   if (!aNode) return nsnull;

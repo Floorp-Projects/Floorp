@@ -47,8 +47,6 @@
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
 #endif
 
 
@@ -77,7 +75,10 @@ DeleteElementTxn::~DeleteElementTxn()
 
 NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("%p Do Delete Element element = %p\n", this, mElement.get()); }
+#endif
+
   if (!mElement) return NS_ERROR_NOT_INITIALIZED;
 
   nsresult result = mElement->GetParentNode(getter_AddRefs(mParent));
@@ -101,8 +102,11 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
   p = ToNewCString(parentElementTag);
   if (c&&p)
   {
+#ifdef NS_DEBUG
     if (gNoisy)
       printf("  DeleteElementTxn:  deleting child %s from parent %s\n", c, p); 
+#endif
+
     nsCRT::free(c);
     nsCRT::free(p);
   }
@@ -125,7 +129,10 @@ NS_IMETHODIMP DeleteElementTxn::DoTransaction(void)
 
 NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("%p Undo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get()); }
+#endif
+
   if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
   if (!mElement) { return NS_ERROR_NULL_POINTER; }
 
@@ -146,8 +153,11 @@ NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
   p = ToNewCString(parentElementTag);
   if (c&&p)
   {
+#ifdef NS_DEBUG
     if (gNoisy)
       printf("  DeleteElementTxn:  inserting child %s back into parent %s\n", c, p); 
+#endif
+
     nsCRT::free(c);
     nsCRT::free(p);
   }
@@ -161,7 +171,10 @@ NS_IMETHODIMP DeleteElementTxn::UndoTransaction(void)
 
 NS_IMETHODIMP DeleteElementTxn::RedoTransaction(void)
 {
+#ifdef NS_DEBUG
   if (gNoisy) { printf("%p Redo Delete Element element = %p, parent = %p\n", this, mElement.get(), mParent.get()); }
+#endif
+
   if (!mParent) { return NS_OK; } // this is a legal state, the txn is a no-op
   if (!mElement) { return NS_ERROR_NULL_POINTER; }
 
