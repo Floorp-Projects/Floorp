@@ -644,7 +644,7 @@ NS_IMETHODIMP nsPrefsCore::ShowWindow(nsIDOMWindow* /*aCurrentFrontWin*/)
                        newWindow,
                        nsnull,
                        cb,
-                       504, 346 );
+                       504, 436 );
     if (newWindow != nsnull)
         newWindow->ShowModal();
     return rv;
