@@ -218,6 +218,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
   nsGenericHTMLElement::MapImageBorderAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImagePositionAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
