@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
     exit(-1);
   }
 
-  if (strlen(argv[2]) > 0) {
+  if (*argv[2]) {
     /* Open TTY for echoing */
     if ( (echofd = open(argv[2], O_WRONLY)) == -1)
       perror("ptytest");

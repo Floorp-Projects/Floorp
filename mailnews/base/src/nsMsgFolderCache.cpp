@@ -350,7 +350,7 @@ NS_IMETHODIMP nsMsgFolderCache::GetCacheElement(const char *pathKey, PRBool crea
 	if (!result || !pathKey || !m_cacheElements)
 		return NS_ERROR_NULL_POINTER;
 		
-	if (strlen(pathKey) == 0) {
+	if (!*pathKey) {
 		return NS_ERROR_FAILURE;
 	}
 	

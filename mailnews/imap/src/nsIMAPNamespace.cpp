@@ -77,7 +77,7 @@ int nsIMAPNamespace::MailboxMatchesNamespace(const char *boxname)
 	if (!boxname) return -1;
 
 	// If the namespace is part of the boxname
-    if (PL_strlen(m_prefix) == 0)
+    if (!m_prefix || !*m_prefix)
         return 0;
 
 	if (PL_strstr(boxname, m_prefix) == boxname)

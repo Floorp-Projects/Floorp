@@ -1053,7 +1053,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             char *tPath = PR_GetEnv("MOZILLA_HOME");
             /* If MOZILLA_HOME is not set, use GetCurrentProcessDirectory */
             /* To ensure we get a long filename system */
-            if (!tPath || PL_strlen(tPath) == 0)
+            if (!tPath || !*tPath)
               GetCurrentProcessDirectory(*this);
             else
               *this = tPath;

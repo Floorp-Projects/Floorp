@@ -5057,7 +5057,7 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
           }
           nsXPIDLCString oldMsgId;
           rv = m_runningUrl->CreateListOfMessageIdsString(getter_Copies(oldMsgId));
-          if (NS_SUCCEEDED(rv) && strlen(oldMsgId) > 0)
+          if (NS_SUCCEEDED(rv) && !oldMsgId.IsEmpty())
           {
             PRBool idsAreUids = PR_TRUE;
             m_runningUrl->MessageIdsAreUids(&idsAreUids);

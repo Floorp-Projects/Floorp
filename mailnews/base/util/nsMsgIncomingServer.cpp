@@ -666,10 +666,10 @@ nsMsgIncomingServer::GetPrettyName(PRUnichar **retval) {
   if (NS_FAILED(rv)) return rv;
 
   // if there's no name, then just return the hostname
-  if (nsCRT::strlen(val) == 0) 
+  if (val.IsEmpty()) 
     return GetConstructedPrettyName(retval);
-  else
-    *retval = nsCRT::strdup(val);
+
+  *retval = nsCRT::strdup(val);
   return NS_OK;
 }
 
@@ -1242,7 +1242,7 @@ nsMsgIncomingServer::GetRealHostName(char **aResult)
   nsresult rv;
   rv = GetCharValue("realhostname", aResult);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!*aResult || (strlen(*aResult) == 0))
+  if (!*aResult || !**aResult)
     return(GetHostName(aResult));
 
   if (PL_strchr(*aResult, ':'))
@@ -1260,7 +1260,7 @@ nsMsgIncomingServer::GetRealUsername(char **aResult)
   nsresult rv;
   rv = GetCharValue("realuserName", aResult);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!*aResult || (strlen(*aResult) == 0))
+  if (!*aResult || !**aResult)
     return(GetUsername(aResult));
 
   return rv;

@@ -482,7 +482,7 @@ js_canonicalPath(JSContext *cx, char *oldpath)
                 }
                 strcpy(result, base);
                 c = strlen(result);
-                if (strlen(tmp)>0) {
+                if (*tmp) {
                     result[c] = FILESEPARATOR;
                     result[c+1] = '\0';
                     strcat(result, tmp);

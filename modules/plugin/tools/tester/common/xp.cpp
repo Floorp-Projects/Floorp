@@ -170,7 +170,7 @@ int XP_GetPrivateProfileInt(LPSTR szSection, LPSTR szKey, int iDefault, LPSTR sz
 #else
   static char szString[80];
   XP_GetPrivateProfileString(szSection, szKey, "", szString, sizeof(szString), szFileName);
-  if(strlen(szString) == 0)
+  if(!*szString)
     return iDefault;
   int iRet = atoi(szString);
   return iRet;

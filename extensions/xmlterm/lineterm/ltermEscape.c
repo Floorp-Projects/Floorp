@@ -1175,7 +1175,7 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
         return -1;
     }
 
-    if (strlen(lts->cookie) > 0) {
+    if (*lts->cookie) {
       if (ltermSendChar(lts, lts->cookie, strlen(lts->cookie)) != 0)
         return -1;
     }

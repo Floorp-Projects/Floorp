@@ -851,7 +851,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
   
   rv = smtpServer->GetUsername(getter_Copies(username));
 
-  if (!(const char*) username || strlen((const char*)username) == 0) {
+  if (username.IsEmpty()) {
       rv = GetUsernamePassword(getter_Copies(username), getter_Copies(origPassword));
       m_usernamePrompted = PR_TRUE;
       password.Assign(origPassword);
@@ -1521,7 +1521,7 @@ nsSmtpProtocol::GetPassword(char **aPassword)
     rv = smtpServer->GetPassword(aPassword);
     NS_ENSURE_SUCCESS(rv,rv); 
 
-    if (PL_strlen(*aPassword) > 0)
+    if (*aPassword && **aPassword)
         return rv;
     // empty password
 
@@ -1619,12 +1619,12 @@ nsSmtpProtocol::GetUsernamePassword(char **aUsername, char **aPassword)
     
     rv = smtpServer->GetPassword(aPassword);
     NS_ENSURE_SUCCESS(rv,rv);
-    
-    if (PL_strlen(*aPassword) > 0) {
+
+    if (*aPassword && **aPassword) {
         rv = smtpServer->GetUsername(aUsername);
         NS_ENSURE_SUCCESS(rv,rv);
-    
-        if (PL_strlen(*aUsername) > 0)
+
+        if (*aUsername && **aUsername)
             return rv;
         
         // empty username

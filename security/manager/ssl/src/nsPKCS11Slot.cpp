@@ -94,7 +94,7 @@ NS_IMETHODIMP
 nsPKCS11Slot::GetName(PRUnichar **aName)
 {
   char *csn = PK11_GetSlotName(mSlot);
-  if (strlen(csn) > 0) {
+  if (*csn) {
     *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(csn));
   } else if (PK11_HasRootCerts(mSlot)) {
     // This is a workaround to an NSS bug - the root certs module has

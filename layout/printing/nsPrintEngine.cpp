@@ -1405,7 +1405,7 @@ nsPrintEngine::EnumerateDocumentNames(PRUint32* aCount,
 
     // Use the URL if the doc is empty
     if (!docTitleStr || !*docTitleStr) {
-      if (docURLStr && nsCRT::strlen(docURLStr) > 0) {
+      if (docURLStr && *docURLStr) {
         nsMemory::Free(docTitleStr);
         docTitleStr = docURLStr;
       } else {
@@ -2179,11 +2179,11 @@ nsPrintEngine::GetDisplayTitleAndURL(nsPrintObject*      aPO,
     aPrintSettings->GetTitle(&docTitleStrPS);
     aPrintSettings->GetDocURL(&docURLStrPS);
 
-    if (docTitleStrPS && nsCRT::strlen(docTitleStrPS) > 0) {
+    if (docTitleStrPS && *docTitleStrPS) {
       *aTitle  = docTitleStrPS;
     }
 
-    if (docURLStrPS && nsCRT::strlen(docURLStrPS) > 0) {
+    if (docURLStrPS && *docURLStrPS) {
       *aURLStr  = docURLStrPS;
     }
 

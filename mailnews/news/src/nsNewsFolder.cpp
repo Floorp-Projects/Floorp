@@ -557,7 +557,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const PRUnichar *uninewsgroupname
   nsresult rv = NS_OK;
   
   NS_ENSURE_ARG_POINTER(uninewsgroupname);
-  if (nsCRT::strlen(uninewsgroupname) == 0) return NS_ERROR_FAILURE;
+  if (!*uninewsgroupname) return NS_ERROR_FAILURE;
   
   nsCAutoString newsgroupname; 
   newsgroupname.AssignWithConversion(uninewsgroupname);

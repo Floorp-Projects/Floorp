@@ -807,7 +807,7 @@ link_message_cb      (GtkMozEmbed *embed, TestGtkBrowser *browser)
   char *message;
   g_print("link_message_cb\n");
   message = gtk_moz_embed_get_link_message(embed);
-  if (message && (strlen(message) == 0))
+  if (!message || !*message)
     update_temp_message(browser, 0);
   else
     update_temp_message(browser, message);
@@ -821,7 +821,7 @@ js_status_cb (GtkMozEmbed *embed, TestGtkBrowser *browser)
  char *message;
   g_print("js_status_cb\n");
   message = gtk_moz_embed_get_js_status(embed);
-  if (message && (strlen(message) == 0))
+  if (!message || !*message)
     update_temp_message(browser, 0);
   else
     update_temp_message(browser, message);

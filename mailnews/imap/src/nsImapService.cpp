@@ -171,7 +171,7 @@ nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
     rv = aFolder->GetOnlineName(getter_Copies(onlineName));
 
     if (NS_FAILED(rv)) return rv;
-	if ((const char *)onlineName == nsnull || strlen((const char *) onlineName) == 0)
+	if (onlineName.IsEmpty())
 	{
 		char *uri = nsnull;
 		rv = aImapFolder->GetURI(&uri);
@@ -1790,7 +1790,7 @@ nsImapService::DiscoverChildren(nsIEventQueue* aClientEventQueue,
 
         if (NS_SUCCEEDED(rv))
         {
-            if (folderPath && (strlen(folderPath) > 0))
+            if (folderPath && *folderPath)
             {
                 nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
 
@@ -1829,7 +1829,7 @@ NS_IMETHODIMP
 nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
                                      nsIMsgFolder* aImapMailFolder,
                                      nsIUrlListener* aUrlListener,
-									 const char *folderPath,
+                                     const char *folderPath,
                                      PRInt32 level,
                                      nsIURI** aURL)
 {
@@ -1850,22 +1850,20 @@ nsImapService::DiscoverLevelChildren(nsIEventQueue* aClientEventQueue,
 
         if (NS_SUCCEEDED(rv))
         {
-            if (folderPath && (strlen(folderPath) > 0))
-            {
-                nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
-                urlSpec.Append("/discoverlevelchildren>");
-                urlSpec.AppendInt(level);
-                urlSpec.Append(char(hierarchySeparator)); // hierarchySeparator "/"
-                urlSpec.Append(folderPath);
+            if (!folderPath || !*folderPath)
+                return NS_ERROR_NULL_POINTER;
 
-				rv = uri->SetSpec(urlSpec);
-                if (NS_SUCCEEDED(rv))
-                    rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
-                                                     aImapUrl,
-                                                     nsnull, aURL);
-            }
-            else
-                rv = NS_ERROR_NULL_POINTER;
+            nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
+            urlSpec.Append("/discoverlevelchildren>");
+            urlSpec.AppendInt(level);
+            urlSpec.Append(char(hierarchySeparator)); // hierarchySeparator "/"
+            urlSpec.Append(folderPath);
+
+            rv = uri->SetSpec(urlSpec);
+            if (NS_SUCCEEDED(rv))
+                rv = GetImapConnectionAndLoadUrl(aClientEventQueue,
+                                                 aImapUrl,
+                                                 nsnull, aURL);
         }
     }
     return rv;
@@ -2329,7 +2327,7 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
             GetFolderName(parent, getter_Copies(folderName));
             urlSpec.Append("/create>");
             urlSpec.Append(char(hierarchySeparator));
-            if ((const char *) folderName && strlen(folderName) > 0)
+            if (!folderName.IsEmpty())
             {
               nsXPIDLCString canonicalName;
 
@@ -2380,7 +2378,7 @@ nsImapService::EnsureFolderExists(nsIEventQueue* eventQueue, nsIMsgFolder* paren
             GetFolderName(parent, getter_Copies(folderName));
             urlSpec.Append("/ensureExists>");
             urlSpec.Append(char(hierarchySeparator));
-            if ((const char *) folderName && strlen(folderName) > 0)
+            if (!folderName.IsEmpty())
             {
                 urlSpec.Append((const char *) folderName);
                 urlSpec.Append(char(hierarchySeparator));
@@ -2430,7 +2428,7 @@ nsImapService::ListFolder(nsIEventQueue* aClientEventQueue,
           GetFolderName(aImapMailFolder, getter_Copies(folderName));
           urlSpec.Append("/listfolder>");
           urlSpec.Append(char(hierarchySeparator));
-          if ((const char *) folderName && strlen(folderName) > 0)
+          if (!folderName.IsEmpty())
           {
             urlSpec.Append((const char *) folderName);
             rv = uri->SetSpec(urlSpec);

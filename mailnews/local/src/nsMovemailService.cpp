@@ -467,7 +467,7 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
                                 // then the file mysteriously ended) then abort
                                 // parsing.
                                 if (numlines == 0 &&
-                                    nsCRT::strlen(buffer) == 0 &&
+                                    !*buffer &&
                                     spoolfile->eof()) {
 #ifdef MOVEMAIL_DEBUG
                                     fprintf(stderr, "*** Utterly empty spool file\n");

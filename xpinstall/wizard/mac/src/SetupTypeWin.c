@@ -819,7 +819,7 @@ LegacyFileCheck(short vRefNum, long dirID)
 	{
 		/* construct legacy files' FSSpecs in program dir */
 		HLock(gControls->cfg->checks[i].filename);
-		if (0 == strlen(*gControls->cfg->checks[i].filename))
+		if (!**gControls->cfg->checks[i].filename)
 		{
 			HUnlock(gControls->cfg->checks[i].filename);
 			continue;

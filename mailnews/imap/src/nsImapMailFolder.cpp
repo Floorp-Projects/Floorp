@@ -1790,7 +1790,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
       nsXPIDLCString onlineName;
       if (NS_SUCCEEDED((*folderInfo)->GetCharPtrProperty("onlineName", getter_Copies(onlineName))))
       {
-        if ((const char*) onlineName && strlen((const char *) onlineName) > 0)
+        if (!onlineName.IsEmpty())
           m_onlineFolderName.Assign(onlineName);
         else
         {

@@ -536,7 +536,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
 
     PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("print to file '%s'\n", XPU_NULLXSTR(mPrintFile)));
     
-    if( (mPrintFile == nsnull) || (strlen(mPrintFile) == 0) )
+    if(!mPrintFile || !*mPrintFile)
       return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
   }
 

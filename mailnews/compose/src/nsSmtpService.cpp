@@ -861,7 +861,7 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
       rv = pref->CopyCharPref("mail.smtp.defaultserver",
                              getter_Copies(defaultServerKey));
       if (NS_SUCCEEDED(rv) &&
-          strlen(defaultServerKey) > 0) {
+          !defaultServerKey.IsEmpty()) {
 
           nsCOMPtr<nsISmtpServer> server;
           rv = GetServerByKey(defaultServerKey,

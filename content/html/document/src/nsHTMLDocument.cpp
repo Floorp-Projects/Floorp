@@ -184,7 +184,7 @@ MyPrefChangedCallback(const char*aPrefName, void* instance_data)
              rv = prefs->GetLocalizedUnicharPref("intl.charset.detector",
                                      &detector_name)))
         {
-			if(nsCRT::strlen(detector_name) > 0) {
+			if(detector_name && *detector_name) {
 				PL_strncpy(g_detector_contractid, NS_CHARSET_DETECTOR_CONTRACTID_BASE,DETECTOR_CONTRACTID_MAX);
 				PL_strncat(g_detector_contractid, NS_ConvertUCS2toUTF8(detector_name).get(),DETECTOR_CONTRACTID_MAX);
 				gPlugDetector = PR_TRUE;
@@ -581,7 +581,7 @@ nsHTMLDocument::TryCacheCharset(nsICacheEntryDescriptor* aCacheDescriptor,
   nsXPIDLCString cachedCharset;
   rv = aCacheDescriptor->GetMetaDataElement("charset",
                                            getter_Copies(cachedCharset));
-  if (NS_SUCCEEDED(rv) && PL_strlen(cachedCharset) > 0)
+  if (NS_SUCCEEDED(rv) && !cachedCharset.IsEmpty())
   {
     aCharset.Assign(NS_ConvertASCIItoUCS2(cachedCharset));
     aCharsetSource = kCharsetFromCache;

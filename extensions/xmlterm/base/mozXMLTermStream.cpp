@@ -107,7 +107,7 @@ NS_IMETHODIMP mozXMLTermStream::Open(nsIDOMWindowInternal* aDOMWindow,
 
   mMaxResizeHeight = maxResizeHeight;
 
-  if (frameName && (strlen(frameName) > 0)) {
+  if (frameName && *frameName) {
     // Open stream in named subframe of current frame
     XMLT_LOG(mozXMLTermStream::Open,22,("frameName=%s\n", frameName));
 

@@ -112,7 +112,7 @@ void nsFileSpecHelpers::UnixToNative(nsSimpleCharString& ioPath)
   // Strip initial slash for an absolute path
 	char* src = (char*)ioPath;
   if (*src == '/') {
-    if (PL_strlen(src+1)==0) {
+    if (!src[1]) {
       // allocate new string by copying from ioPath[1]
       nsSimpleCharString temp = src + 1;
       ioPath = temp;

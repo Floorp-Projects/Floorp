@@ -353,7 +353,7 @@ int XpuGetOneLongAttribute( Display *pdpy, XPContext pcontext, XPAttributes type
     return(0);
   s = XpGetOneAttribute(pdpy, pcontext, type, STRING_AS_WRITABLE(attribute_name));
   
-  if( (s != NULL) && (strlen(s) > 0) ) 
+  if(s && *s) 
   {
     long tmp;
     
@@ -965,7 +965,7 @@ XpuMediumSourceSizeList XpuGetMediumSourceSizeList( Display *pdpy, XPContext pco
     
     /* Default medium ? */
     if( (!strcmp(medium_name, default_medium)) && 
-        ((tray_name && (strlen(default_tray) > 0))?(!strcmp(tray_name, default_tray)):(True)) )
+        ((tray_name && (*default_tray))?(!strcmp(tray_name, default_tray)):(True)) )
     {
       default_medium_rec_index = rec_count-2;
     }

@@ -110,7 +110,7 @@ MimeTextBuildPrefixCSS(PRInt32    quotedSizeSetting,   // mail.quoted_size
     break;
   }
   
-  if (citationColor && strlen(citationColor) != 0)
+  if (citationColor && *citationColor)
   {
     formatString += "color: ";
     formatString += citationColor;

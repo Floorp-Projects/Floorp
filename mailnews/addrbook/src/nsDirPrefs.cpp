@@ -2156,7 +2156,7 @@ static char *DIR_GetStringPref(const char *prefRoot, const char *prefLeaf, char 
 			PR_FREEIF(value); /* free old value because we are going to give it a new value.... */
             value = defaultValue ? nsCRT::strdup(defaultValue) : nsnull;
 		}
-		if (PL_strlen(value) == 0)
+		if (!value || !*value)
 		{
 			PR_FREEIF(value);
 			pPref->CopyDefaultCharPref(scratch, &value);
@@ -3053,7 +3053,7 @@ void DIR_GetPrefsForOneServer (DIR_Server *server, PRBool reinitialize, PRBool o
 	if (server->dirType == PABDirectory)
 	{
 		/* make sure there is a PR_TRUE PAB */
-		if (PL_strlen (server->serverName) == 0)
+		if (!server->serverName || !*server->serverName)
 			server->isOffline = PR_FALSE;
 		server->saveResults = PR_TRUE; /* never let someone delete their PAB this way */
 	}

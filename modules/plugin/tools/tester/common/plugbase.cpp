@@ -123,7 +123,7 @@ void CPluginBase::getLogFileName(LPSTR szLogFileName, int iSize)
   getModulePath(szFileName, sizeof(szFileName));
   strcat(szFileName, szINIFile);
   XP_GetPrivateProfileString(SECTION_LOG, KEY_FILE_NAME, "", szLogFileName, (DWORD)iSize, szFileName);
-  if(strlen(szLogFileName) == 0)
+  if(!*szLogFileName)
   {
     strcpy(szLogFileName, m_szScriptCacheFile);
 

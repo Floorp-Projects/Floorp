@@ -497,7 +497,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
     {
       nsXPIDLCString arbitraryHeaderTerm;
       term->GetArbitraryHeader(getter_Copies(arbitraryHeaderTerm));
-      if (strlen((const char *) arbitraryHeaderTerm) > 0)
+      if (!arbitraryHeaderTerm.IsEmpty())
 		  {
 			  arbitraryHeader = new char [strlen((const char *)arbitraryHeaderTerm) + 6];  // 6 bytes for SPACE \" .... \" SPACE
 			  if (!arbitraryHeader)

@@ -56,7 +56,7 @@ NS_IMETHODIMP nsBidiKeyboard::SetLangFromBidiLevel(PRUint8 aLevel)
   strncpy(currentLocaleName, (aLevel & 1) ? mRTLKeyboard : mLTRKeyboard, KL_NAMELENGTH);
   currentLocaleName[KL_NAMELENGTH-1] = '\0'; // null terminate
 
-  NS_ASSERTION((strlen(currentLocaleName) > 0), 
+  NS_ASSERTION(*currentLocaleName, 
     "currentLocaleName has string length == 0");
 
   if (strcmp(mCurrentLocaleName, currentLocaleName)) {
@@ -80,7 +80,7 @@ NS_IMETHODIMP nsBidiKeyboard::IsLangRTL(PRBool *aIsRTL)
   if (!::GetKeyboardLayoutName(mCurrentLocaleName))
     return NS_ERROR_FAILURE;
 
-  NS_ASSERTION((strlen(mCurrentLocaleName) > 0), 
+  NS_ASSERTION(*mCurrentLocaleName, 
     "GetKeyboardLayoutName return string length == 0");
   NS_ASSERTION((strlen(mCurrentLocaleName) < KL_NAMELENGTH), 
     "GetKeyboardLayoutName return string length >= KL_NAMELENGTH");
@@ -157,7 +157,7 @@ nsresult nsBidiKeyboard::EnumerateKeyboards()
   if (!::GetKeyboardLayoutName(localeName))
     return NS_ERROR_FAILURE;
 
-  NS_ASSERTION((strlen(localeName) > 0), 
+  NS_ASSERTION(*localeName, 
     "GetKeyboardLayoutName return string length == 0");
   NS_ASSERTION((strlen(localeName) < KL_NAMELENGTH), 
     "GetKeyboardLayout return string length >= KL_NAMELENGTH");
@@ -179,9 +179,9 @@ nsresult nsBidiKeyboard::EnumerateKeyboards()
     }
   }
 
-  NS_ASSERTION((strlen(mRTLKeyboard) > 0), 
+  NS_ASSERTION(*mRTLKeyboard, 
     "mLTRKeyboard has string length == 0");
-  NS_ASSERTION((strlen(mLTRKeyboard) > 0), 
+  NS_ASSERTION(*mLTRKeyboard, 
     "mLTRKeyboard has string length == 0");
 
   return NS_OK;

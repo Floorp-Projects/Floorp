@@ -494,7 +494,7 @@ nsMessengerMigrator::ProceedWithMigration()
     // otherwise, they don't really have anything to migrate
     rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &prefvalue);
     if (NS_SUCCEEDED(rv)) {
-	    if (!prefvalue || (PL_strlen(prefvalue) == 0)) {
+	    if (!prefvalue || !*prefvalue) {
 	      rv = NS_ERROR_FAILURE;
 	    }
     }
@@ -504,7 +504,7 @@ nsMessengerMigrator::ProceedWithMigration()
     // otherwise, they don't really have anything to migrate
     rv = m_prefs->CopyCharPref(PREF_4X_NETWORK_HOSTS_IMAP_SERVER, &prefvalue);
     if (NS_SUCCEEDED(rv)) {
-	    if (!prefvalue || (PL_strlen(prefvalue) == 0)) {
+	    if (!prefvalue || !*prefvalue) {
 	      rv = NS_ERROR_FAILURE;
 	    }
     }
@@ -1023,7 +1023,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
   if (NS_SUCCEEDED(rv)) {
 	rv = mail_dir->GetUnixStyleFilePath(&mail_directory_value);
   }
-  if (NS_FAILED(rv) || !mail_directory_value || (PL_strlen(mail_directory_value) == 0)) {
+  if (NS_FAILED(rv) || !mail_directory_value || !*mail_directory_value) {
 #ifdef DEBUG_MIGRATOR
     printf("%s was not set, attempting to use %s instead.\n",PREF_PREMIGRATION_MAIL_DIRECTORY,PREF_MAIL_DIRECTORY);
 #endif
@@ -1034,7 +1034,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
 	rv = mail_dir->GetUnixStyleFilePath(&mail_directory_value);
     } 
 
-    if (NS_FAILED(rv) || !mail_directory_value || (PL_strlen(mail_directory_value) == 0)) {
+    if (NS_FAILED(rv) || !mail_directory_value || !*mail_directory_value) {
       NS_ASSERTION(0,"failed to get a base value for the mail.directory");
       return NS_ERROR_UNEXPECTED;
     }
@@ -1108,7 +1108,7 @@ nsMessengerMigrator::Convert4XUri(const char *old_uri, PRBool for_news, const ch
   // this meant it was reall <foobar>/<default folder name>
   // this insanity only happened on mac and windows.
   // Need to escape spaces in folder name (ie, "A Folder" --> "A%20Folder").
-  if (!folderPath || (PL_strlen(folderPath) == 0)) {
+  if (!folderPath || !*folderPath) {
     nsXPIDLCString escaped_default_folder;
     ESCAPE_FOLDER_NAME(escaped_default_folder, default_folder_name);
     *new_uri = PR_smprintf("%s/%s/%s",MAILBOX_SCHEMA,usernameAtHostname, escaped_default_folder.get());

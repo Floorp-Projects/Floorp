@@ -331,7 +331,7 @@ void Logger::setOnTop(BOOL ontop)
 
 void Logger::setToFile(BOOL tofile, char * filename)
 {
-  if(!filename || (strlen(filename) == 0) || (strlen(filename) > _MAX_PATH))
+  if(!filename || !*filename || (strlen(filename) > _MAX_PATH))
   {
     bToFile = FALSE;
     return;

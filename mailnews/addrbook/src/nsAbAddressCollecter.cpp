@@ -125,7 +125,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address, PRBool a
       if (NS_SUCCEEDED(rv) && senderCard)
       {
         PRBool modifiedCard;
-        if (curName && strlen(curName) > 0) {
+        if (curName && *curName) {
           rv = SetNamesForCard(senderCard, curName, &modifiedCard);
           NS_ASSERTION(NS_SUCCEEDED(rv), "failed to set names");
         }

@@ -670,7 +670,7 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
   PR_CEnterMonitor(this);
 
   GetRedirectorType(getter_Copies(redirectorType));
-  PRBool redirectLogon = ((const char *) redirectorType && strlen((const char *) redirectorType) > 0);
+  PRBool redirectLogon = !redirectorType.IsEmpty();
 
   PRInt32 maxConnections = 5; // default to be five
   rv = GetMaximumConnectionsNumber(&maxConnections);
@@ -922,8 +922,7 @@ nsImapIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
     
     rv = GetPassword(getter_Copies(password));
     if (NS_FAILED(rv)) return rv;
-    if (!(const char*) password || 
-        strlen((const char*) password) == 0)
+    if (password.IsEmpty())
         return NS_OK;
 
     rv = ResetFoldersToUnverified(nsnull);
@@ -1279,7 +1278,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       if (hierarchyDelimiter != '/')
         nsImapUrl::UnescapeSlashes(NS_CONST_CAST(char*, dupFolderPath.get()));
       
-      if (! (onlineName.get()) || strlen(onlineName.get()) == 0
+      if (onlineName.IsEmpty()
         || nsCRT::strcmp(onlineName.get(), dupFolderPath.get()))
         imapFolder->SetOnlineName(dupFolderPath.get());
       if (hierarchyDelimiter != '/')

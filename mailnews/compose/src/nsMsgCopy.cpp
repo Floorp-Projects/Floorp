@@ -436,7 +436,7 @@ LocateMessageFolder(nsIMsgIdentity   *userIdentity,
   if (!msgFolder) return NS_ERROR_NULL_POINTER;
   *msgFolder = nsnull;
 
-  if (!aFolderURI || (PL_strlen(aFolderURI) == 0)) {
+  if (!aFolderURI || !*aFolderURI) {
     return NS_ERROR_INVALID_ARG;
   }
   

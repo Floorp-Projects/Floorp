@@ -192,7 +192,7 @@ nsresult testURL(const char* i_pURL, PRInt32 urlFactory = URL_FACTORY_DEFAULT)
 
     while (testfile.getline(temp,512))
     {
-        if ((*temp == '#') || (PL_strlen(temp)==0))
+        if (*temp == '#' || !*temp)
             continue;
 
         if (0 == count%3)
