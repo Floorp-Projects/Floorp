@@ -525,13 +525,13 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
 
     // See if it's 'transparent' or set by us
     if (parentStyleColor->BackgroundIsTransparent() || 
-        (NS_STYLE_BG_PROPOGATED == (parentStyleColor->mBackgroundFlags & NS_STYLE_BG_PROPOGATED))) {
+        (NS_STYLE_BG_PROPAGATED_FROM_CHILD == (parentStyleColor->mBackgroundFlags & NS_STYLE_BG_PROPAGATED_FROM_CHILD))) {
       // Have the parent (initial containing block) use the BODY's background
       nsStyleColor* mutableStyleColor;
       mutableStyleColor = (nsStyleColor*)parentContext->GetMutableStyleData(eStyleStruct_Color);
 
       mutableStyleColor->mBackgroundAttachment = styleColor->mBackgroundAttachment;
-      mutableStyleColor->mBackgroundFlags = styleColor->mBackgroundFlags | NS_STYLE_BG_PROPOGATED;
+      mutableStyleColor->mBackgroundFlags = styleColor->mBackgroundFlags | NS_STYLE_BG_PROPAGATED_FROM_CHILD;
       mutableStyleColor->mBackgroundRepeat = styleColor->mBackgroundRepeat;
       mutableStyleColor->mBackgroundColor = styleColor->mBackgroundColor;
       mutableStyleColor->mBackgroundXPosition = styleColor->mBackgroundXPosition;
@@ -541,7 +541,8 @@ BodyFixupRule::MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aP
       // Reset the BODY's background to transparent
       mutableStyleColor = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
       mutableStyleColor->mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT |
-                                            NS_STYLE_BG_IMAGE_NONE;
+                                            NS_STYLE_BG_IMAGE_NONE |
+                                            NS_STYLE_BG_PROPAGATED_TO_PARENT;
       mutableStyleColor->mBackgroundImage.SetLength(0);
       mutableStyleColor->mBackgroundAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
     }
