@@ -357,7 +357,7 @@ void
 nsOutlinerRows::iterator::Push(Subtree *aParent, PRInt32 aChildIndex)
 {
     if (mTop < kMaxDepth - 1) {
-        for (PRInt32 i = mTop - 1; i >= 0; --i)
+        for (PRInt32 i = mTop; i >= 0; --i)
             mLink[i + 1] = mLink[i];
 
         mLink[0].mParent     = aParent;
