@@ -1177,14 +1177,15 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
   nsAutoString name, keyword, description;
   nsCAutoString url;
   PRBool onToolbar = PR_FALSE;
+  NS_NAMED_LITERAL_STRING(empty, "");
   do {
     rv = aStream->ReadLine(buffer, &moreData);
     if (NS_FAILED(rv)) return rv;
     
     if (!moreData) break;
 
-    PRUnichar* data = nsnull;
-    LineType type = GetLineType(buffer, &data);
+    nsXPIDLString data;
+    LineType type = GetLineType(buffer, getter_Copies(data));
     switch(type) {
     case LineType_FOLDER:
       entryType = EntryType_FOLDER;
@@ -1197,16 +1198,12 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       // essentially terminating this instance of ParseBookmarksFolder and return
       // to the calling function, which is either ParseBookmarksFolder for a parent
       // folder, or CopyBookmarks (which means we're done parsing all bookmarks).
-      if (data) {
-        nsCRT::free(data);
-	data = nsnull;
-      }
       goto done;
     case LineType_NAME:
       name = data;
       break;
     case LineType_URL:
-      url.AssignWithConversion(data);
+      url.Assign(NS_ConvertUCS2toUTF8(data));
       break;
     case LineType_KEYWORD:
       keyword = data;
@@ -1220,7 +1217,6 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
       break;
     case LineType_NL: {
       nsCOMPtr<nsIRDFResource> itemRes;
-      NS_NAMED_LITERAL_STRING(empty, "");
       if (entryType == EntryType_BOOKMARK) {
         if (!name.IsEmpty() && !url.IsEmpty()) {
 	  nsCAutoString temp; temp.AssignWithConversion(name);
@@ -1256,11 +1252,6 @@ nsOperaProfileMigrator::ParseBookmarksFolder(nsILineInputStream* aStream,
     }
     case LineType_OTHER:
       break;
-    }
-    
-    if (data) {
-      nsCRT::free(data);
-      data = nsnull;
     }
   }
   while (1);
