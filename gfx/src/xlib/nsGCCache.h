@@ -45,6 +45,11 @@
 #define DEBUG_METER(x)
 #endif
 
+#ifdef _IMPL_NS_XPRINT
+#define nsGCCache     nsGCCacheXlib
+#define GCCacheEntry  GCCacheEntryXlib
+#endif
+
 class nsGCCache;
 
 class xGC {
