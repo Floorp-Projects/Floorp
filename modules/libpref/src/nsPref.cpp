@@ -54,6 +54,7 @@
 #include "nsCOMPtr.h"
 #include "nsFileLocations.h"
 #include "nsFileStream.h"
+#include "nsSpecialSystemDirectory.h"
 #include "nsIProfile.h"
 #include "nsQuickSort.h"
 
@@ -70,7 +71,7 @@
 #include "nsQuickSort.h"
 #include "nsXPIDLString.h"
 #include "nsScriptSecurityManager.h"
-
+#include "nsISignatureVerifier.h"
 #include "nsIStringBundle.h"
 
 #ifdef _WIN32
@@ -125,6 +126,8 @@ protected:
     
     nsresult useDefaultPrefFile();
     nsresult useUserPrefFile();
+    nsresult useLockPrefFile();
+    nsresult getLockPrefFileInfo();
     nsresult SecurePrefCheck(const char* aPrefName);
 
     static nsPref *gInstance;
@@ -146,6 +149,9 @@ static PrefResult pref_OpenFileSpec(
     PRBool verifyHash,
     PRBool bGlobalContext,
     PRBool skipFirstLine);
+
+static PRBool pref_VerifyLockFileSpec(char* buf, long buflen);
+extern "C" void pref_Alert(char* msg);
 
 //----------------------------------------------------------------------------------------
 static nsresult _convertRes(int res)
@@ -255,6 +261,195 @@ nsresult nsPref::useUserPrefFile()
 } // nsPref::useUserPrefFile
 
 //----------------------------------------------------------------------------------------
+nsresult nsPref::getLockPrefFileInfo()
+//----------------------------------------------------------------------------------------
+{
+    nsresult rv = NS_OK;
+    PrefResult result = PREF_NOERROR;
+
+    gLockFileName = nsnull;
+    gLockVendor = nsnull;
+ 
+    if (gLockInfoRead)
+        return rv;
+    
+    gLockInfoRead = PR_TRUE;
+
+    if (NS_SUCCEEDED(rv = CopyCharPref("general.config.filename",
+			&gLockFileName)) && (gLockFileName)) 
+    {
+#ifdef NS_DEBUG
+        printf("\ngLockFileName %s \n", gLockFileName);
+#endif
+        if (NS_SUCCEEDED(rv = CopyCharPref("general.config.vendor",
+			&gLockVendor)) && (gLockVendor)) 
+        {
+#ifdef NS_DEBUG
+            printf("\ngLockVendor %s \n", gLockVendor);
+#endif
+        }
+        else
+        {
+            /* No vendor name specified, hence cannot verify it */
+            rv = NS_ERROR_FAILURE;
+            return rv;
+        }
+    }
+    else
+    {
+        /* config file is not specified, hence no need to read it.*/
+        rv =  NS_OK;
+        return rv;
+    }
+    return rv;
+} // nsPref::getLockPrefFileInfo
+
+
+//----------------------------------------------------------------------------------------
+nsresult nsPref::useLockPrefFile()
+//----------------------------------------------------------------------------------------
+{
+    nsresult rv = NS_OK;
+    PrefResult result = PREF_NOERROR;
+    nsCOMPtr<nsIFileSpec> lockPrefFile;
+    nsXPIDLCString prefVal;
+    nsXPIDLCString lockFileName;
+    nsXPIDLCString lockVendor;
+    char *return_error = nsnull;
+    PRUint32 fileNameLen = 0;
+    PRUint32 vendorLen = 0;
+    nsXPIDLCString configFile;
+    if (NS_SUCCEEDED(rv = CopyCharPref("browser.startup.homepage",
+			getter_Copies(prefVal)) && (prefVal))) 
+    {
+        printf("\nStartup homepage %s \n", (const char *)prefVal);
+    }
+
+    if (NS_SUCCEEDED(rv = CopyCharPref("general.config.filename",
+			getter_Copies(lockFileName)) && (lockFileName)))
+    {
+#ifdef NS_DEBUG
+        printf("\nlockFile %s \n", (const char *)lockFileName);
+#endif
+    }
+
+    if (NS_SUCCEEDED(rv = CopyCharPref("general.config.vendor",
+			getter_Copies(lockVendor)) && (lockVendor))) 
+    {
+#ifdef NS_DEBUG
+        printf("\nlockVendor %s \n", (const char *)lockVendor);
+#endif
+    }
+
+    if ((gLockFileName == nsnull) && (gLockVendor == nsnull))
+    {
+        if ((lockFileName == nsnull) && (lockVendor == nsnull)) 
+        {
+            return NS_OK;
+        }
+        if ((lockFileName == nsnull) || (lockVendor == nsnull))
+        {
+            return_error = PL_strdup("The required configuration filename or vendor name is incorrect.Please check your preferences.");
+            if (return_error) 
+            {
+                pref_Alert(return_error);
+                return NS_ERROR_FAILURE;
+            }
+        }
+
+        fileNameLen = PL_strlen(lockFileName);
+        vendorLen = PL_strlen(lockVendor);
+        if (PL_strncmp(lockFileName, lockVendor, fileNameLen -4) != 0)
+        {
+            return_error = PL_strdup("The required configuration filename and vendor name do not match.Please check your preferences.");
+            if (return_error) 
+            {
+                pref_Alert(return_error);
+                PR_FREEIF(return_error);
+                return NS_ERROR_FAILURE;
+            }            
+        }
+        else
+        {
+            configFile = nsXPIDLCString::Copy(lockFileName);
+            if(configFile == nsnull)
+                return NS_ERROR_FAILURE;
+        }
+    }
+    else if ((gLockFileName == nsnull) || (gLockVendor == nsnull))
+    {
+        return_error = PL_strdup("The required configuration filename or vendor name is incorrect.Please contact your administrator.");
+        if (return_error) 
+        {
+            pref_Alert(return_error);
+            PR_FREEIF(return_error);
+            return NS_ERROR_FAILURE;
+        }      
+    }
+    else
+    {
+        fileNameLen = PL_strlen(gLockFileName);
+        vendorLen = PL_strlen(gLockVendor);
+        if (PL_strncmp(gLockFileName, gLockVendor, fileNameLen -4) != 0)
+        {
+            return_error = PL_strdup("The required configuration filename and vendor name do not match.Please contact your administrator.");
+            if (return_error) 
+            {
+                pref_Alert(return_error);
+                PR_FREEIF(return_error);
+                return NS_ERROR_FAILURE;
+            }            
+        }
+        else
+        {
+            configFile = nsXPIDLCString::Copy(lockFileName);
+            if(configFile == nsnull)
+                return NS_ERROR_FAILURE;
+        }
+    }
+
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    if (NS_SUCCEEDED(rv) && locator)
+    {
+#ifndef XP_MAC
+        nsSpecialSystemDirectory dirSpec(nsSpecialSystemDirectory::Moz_BinDirectory);
+#else
+        nsSpecialSystemDirectory dirSpec(nsSpecialSystemDirectory::Moz_BinDirectory);
+        dirSpec += "Essential Files";
+#endif
+        rv = NS_NewFileSpecWithSpec(dirSpec, getter_AddRefs(lockPrefFile));
+        if (NS_SUCCEEDED(rv) && lockPrefFile) 
+        {
+            if (NS_SUCCEEDED(lockPrefFile->AppendRelativeUnixPath(configFile)))
+            {
+                if (NS_FAILED(StartUp()))
+    	            return NS_ERROR_FAILURE;
+
+	            JS_BeginRequest(gMochaContext);
+                result = pref_OpenFileSpec(lockPrefFile, PR_TRUE, PR_TRUE, PR_FALSE, PR_FALSE);
+                if (result != PREF_NOERROR)
+                {
+                    rv = NS_ERROR_FAILURE;
+                    if (result != PREF_BAD_LOCKFILE)
+                    {
+                        return_error = PL_strdup("The required configuration file netscape.cfg could not be found. Please reinstall the software or contact your administrator.");
+                        if (return_error) 
+                        {
+                            pref_Alert(return_error);
+                            PR_FREEIF(return_error);
+                        }
+                    }
+                }
+                JS_EndRequest(gMochaContext);
+            }
+        }
+    CopyCharPref("browser.startup.homepage",getter_Copies(prefVal));
+    printf("\nStartup homepage %s \n", (const char *)prefVal);
+    }
+    return rv;
+} // nsPref::useLockPrefFile
+
+//----------------------------------------------------------------------------------------
 nsPref* nsPref::GetInstance()
 //----------------------------------------------------------------------------------------
 {
@@ -304,10 +499,19 @@ NS_IMETHODIMP nsPref::ReadUserPrefs()
 //----------------------------------------------------------------------------------------
 {
     nsresult rv = StartUp(); // just to be sure
-	  if (NS_SUCCEEDED(rv))
-		  rv = useDefaultPrefFile();  // really should return a value...
+    if (NS_SUCCEEDED(rv)) {
+      rv = getLockPrefFileInfo();
+	  rv = useDefaultPrefFile();  // really should return a value...
+    }
     if (NS_SUCCEEDED(rv))
 		  useUserPrefFile(); 
+/*
+#ifndef NS_DEBUG
+#ifndef XP_MAC
+    rv = useLockPrefFile();
+#endif
+#endif
+*/
     return rv;
 }
 
@@ -1010,6 +1214,7 @@ PrefResult pref_OpenFileSpec(
 //----------------------------------------------------------------------------------------
 {
     PrefResult result = PREF_NOERROR;
+    char *return_error;
 
     if (NS_FAILED(fileSpec->ResolveSymlink()))
       return PREF_ERROR;
@@ -1021,11 +1226,34 @@ PrefResult pref_OpenFileSpec(
     if (NS_FAILED(fileSpec->GetFileContents(&readBuf)))
     	return PREF_ERROR;
     long fileLength = PL_strlen(readBuf);
-    if (verifyHash && !pref_VerifyLockFile(readBuf, fileLength))
+    if (verifyHash && !pref_VerifyLockFileSpec(readBuf, fileLength)) 
+    {
         result = PREF_BAD_LOCKFILE;
-    if (!PREF_EvaluateConfigScript(readBuf, fileLength,
-            nsnull, bGlobalContext, PR_TRUE, skipFirstLine))
-        result = PREF_ERROR;
+        if (is_error_fatal) 
+        {
+            return_error = PL_strdup("An error occurred reading the startup configuration file. Please contact your administrator.");
+            if (return_error) 
+            {
+                pref_Alert(return_error);
+                PR_Free(return_error);
+            }
+            PR_Free(readBuf);
+            return result;
+        }
+    }
+    if (result == PREF_NOERROR)
+    {
+        if (!PREF_EvaluateConfigScript(readBuf, fileLength,
+                nsnull, bGlobalContext, PR_TRUE, skipFirstLine))
+        {
+            result = PREF_ERROR;
+            if (verifyHash) 
+            {
+                PR_Free(readBuf);
+                return result;
+            }
+        }
+    }
     PR_Free(readBuf);
 
     // If the user prefs file exists but generates an error,
@@ -1040,6 +1268,79 @@ PrefResult pref_OpenFileSpec(
     JS_GC(gMochaContext);
     return result;
 } // pref_OpenFile
+
+//----------------------------------------------------------------------------------------
+// Computes the MD5 hash of the given buffer (not including the first line)
+//   and verifies the first line of the buffer expresses the correct hash in the form:
+//   // xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx xx
+//   where each 'xx' is a hex value. */
+//----------------------------------------------------------------------------------------
+PRBool pref_VerifyLockFileSpec(char* buf, long buflen)
+//----------------------------------------------------------------------------------------
+{
+
+    PRBool success = PR_FALSE;
+	const int obscure_value = 7;
+	const long hash_length = 51;		/* len = 48 chars of MD5 + // + EOL */
+    unsigned char *digest;
+    char szHash[64];
+   
+	/* Unobscure file by subtracting some value from every char. */
+	long i;
+	for (i = 0; i < buflen; i++)
+		buf[i] -= obscure_value;
+
+    if (buflen >= hash_length)
+    {
+        const unsigned char magic_key[] = "VonGloda5652TX75235ISBN";
+   	    unsigned char *pStart = (unsigned char*) buf + hash_length;
+	    unsigned int len;
+       
+        nsresult rv;
+
+        NS_WITH_SERVICE(nsISignatureVerifier, verifier, SIGNATURE_VERIFIER_PROGID, &rv);
+        if (NS_FAILED(rv)) return success; // No signature verifier available
+       
+        //-- Calculate the digest
+        PRUint32 id;
+        rv = verifier->HashBegin(nsISignatureVerifier::MD5, &id);
+        if (NS_FAILED(rv)) return success;
+
+        rv = verifier->HashUpdate(id, (const char*)magic_key, sizeof(magic_key));
+        if (NS_FAILED(rv)) return success;
+
+        rv = verifier->HashUpdate(id, (const char*)pStart, (unsigned int)(buflen - hash_length));
+        if (NS_FAILED(rv)) return success;
+  
+        digest = (unsigned char*)PR_MALLOC(nsISignatureVerifier::MD5_LENGTH);
+        if (digest == nsnull) return success;
+
+        rv = verifier->HashEnd(id,&digest, &len, nsISignatureVerifier::MD5_LENGTH);
+        if (NS_FAILED(rv)) { PR_FREEIF(digest); return success; }
+            
+	
+        
+	    PR_snprintf(szHash, 64, "%x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+	        (int)digest[0],(int)digest[1],(int)digest[2],(int)digest[3],
+	        (int)digest[4],(int)digest[5],(int)digest[6],(int)digest[7],
+	        (int)digest[8],(int)digest[9],(int)digest[10],(int)digest[11],
+	        (int)digest[12],(int)digest[13],(int)digest[14],(int)digest[15]);
+
+        printf("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+	        (int)digest[0],(int)digest[1],(int)digest[2],(int)digest[3],
+	        (int)digest[4],(int)digest[5],(int)digest[6],(int)digest[7],
+	        (int)digest[8],(int)digest[9],(int)digest[10],(int)digest[11],
+	        (int)digest[12],(int)digest[13],(int)digest[14],(int)digest[15]); 
+
+   
+		success = ( PL_strncmp((const char*) buf + 3, szHash, (PRUint32)(hash_length - 4)) == 0 );
+
+        PR_FREEIF(digest);
+ 
+	}
+    return success;
+
+}
 
 //----------------------------------------------------------------------------------------
 PrefResult PREF_SavePrefFileSpecWith(

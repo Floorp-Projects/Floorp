@@ -41,9 +41,13 @@ extern struct CallbackNode*	gCallbacks;
 extern PRBool				gErrorOpeningUserPrefs;
 extern PRBool				gCallbacksEnabled;
 extern PRBool				gIsAnyPrefLocked;
+extern PRBool               gLockInfoRead;
 extern PLHashTable*			gHashTable;
 extern char *               gSavedLine;       
 extern PLHashAllocOps       pref_HashAllocOps;
+extern char *               gLockFileName;
+extern char *               gLockVendor;
+
 
 JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
 PrefResult pref_savePref(PLHashEntry *he, int i, void *arg);

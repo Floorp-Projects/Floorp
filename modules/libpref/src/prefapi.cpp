@@ -187,8 +187,12 @@ struct CallbackNode*	gCallbacks = NULL;
 PRBool				gErrorOpeningUserPrefs = PR_FALSE;
 PRBool				gCallbacksEnabled = PR_FALSE;
 PRBool				gIsAnyPrefLocked = PR_FALSE;
+PRBool              gLockInfoRead = PR_FALSE;
 PLHashTable*		gHashTable = NULL;
-char *              gSavedLine = NULL;       
+char *              gSavedLine = NULL; 
+char *              gLockFileName = NULL;
+char *              gLockVendor = NULL;
+      
 PLHashAllocOps      pref_HashAllocOps = {
 						pref_AllocTable, pref_FreeTable,
 						pref_AllocEntry, pref_FreeEntry
