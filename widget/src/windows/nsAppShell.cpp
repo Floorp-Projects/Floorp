@@ -17,6 +17,7 @@
  */
 
 #include "nsAppShell.h"
+#include "nsIWidget.h"
 #include <windows.h>
 
 NS_IMPL_ISUPPORTS(nsAppShell, NS_IAPPSHELL_IID) 
@@ -64,13 +65,87 @@ nsresult nsAppShell::Run()
     // Process messages
   MSG msg;
   while (GetMessage(&msg, NULL, 0, 0)) {
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-      if (mDispatchListener)
-        mDispatchListener->AfterDispatch();
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+    if (mDispatchListener)
+      mDispatchListener->AfterDispatch();
   }
   Release();
   return msg.wParam;
+}
+
+nsresult nsAppShell::GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent)
+{
+  aIsInWindow = PR_TRUE;
+  static MSG msg;
+  BOOL isOK = GetMessage(&msg, NULL, 0, 0);
+  if (msg.message != 275) {
+    printf("-> %d\n", msg.message);
+  }
+
+  if (isOK) {
+    TranslateMessage(&msg);
+    /*if (msg.message == 275) {
+      aIsInWindow = 0;
+      aIsMouseEvent = 1;
+      return NS_ERROR_FAILURE;
+    } else {
+      printf("******** %d\n", msg.message);
+    }*/
+    switch (msg.message) {
+      case WM_MOUSEMOVE:
+      case WM_LBUTTONDOWN:
+      case WM_LBUTTONUP:
+      case WM_LBUTTONDBLCLK:
+      case WM_MBUTTONDOWN:
+      case WM_MBUTTONUP:
+      case WM_MBUTTONDBLCLK:
+      case WM_RBUTTONDOWN:
+      case WM_RBUTTONUP:
+      case WM_RBUTTONDBLCLK:
+        aIsMouseEvent = PR_TRUE;
+        break;
+      default:
+        aIsMouseEvent = PR_FALSE;
+    } // switch
+    aEvent = &msg;
+    if (nsnull != aWidget) {
+      // Get Native Window for dialog window
+      HWND win;
+      win = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
+
+      // Find top most window of event window
+      HWND eWin = msg.hwnd;
+      if (NULL != eWin) {
+        /*HWND parent = ::GetParent(eWin);
+        while (parent != NULL) {
+          eWin = parent;
+          parent = ::GetParent(eWin);
+        }
+        */
+        if (win == eWin) {
+          printf("Short circut\n");
+          aIsInWindow = PR_TRUE;
+        } else {
+          RECT r;
+          VERIFY(::GetWindowRect(win, &r));
+          if (msg.pt.x >= r.left && msg.pt.x <= r.right && msg.pt.y >= r.top && msg.pt.y <= r.bottom) {
+            aIsInWindow = PR_TRUE;
+          } else {
+            aIsInWindow = PR_FALSE;
+          }
+        }
+      }
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsAppShell::DispatchNativeEvent(void * aEvent)
+{
+  DispatchMessage((MSG *)aEvent);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
