@@ -23,7 +23,8 @@
 #include "nsISupports.idl"
 #include "nsIRDFResource.idl"
 #include "nsIEnumerator.idl"
-#include "nsIMsgWindow.idl"
+
+interface nsIMsgWindow;
 
 [scriptable, uuid(14495572-E945-11d2-8A52-0060B0FC04D2)]
 

@@ -29,7 +29,6 @@ interface nsITransactionManager;
 interface nsIDocShell;
 interface nsIDOMWindow;
 interface nsIMsgHeaderSink;
-interface nsIMessageView;
 /*
  *  This interface can be used to set data specific to a window.
  */
