@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.30 $ 
-# $Date: 2002/05/10 21:22:48 $ 
+# $Revision: 1.31 $ 
+# $Date: 2002/12/10 19:23:37 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -439,7 +439,7 @@ sub daemon_main {
 
     overwrite_file($outfile, @out);
 
-    $summary_data = Summaries::summary_pages($tree, $summary_data);
+    $summary_data = Summaries::summary_pages($tree, $summary_data, $REFRESH_TIME);
 
     # There are automated bots who need the header data, they extract
     # it from this file.
