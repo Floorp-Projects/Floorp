@@ -24,7 +24,7 @@
 
 static NS_DEFINE_IID(kIRuntime, JS_IRUNTIME_IID);
 
-static int jsRuntime::runtimeCount = 0;
+int jsRuntime::runtimeCount = 0;
 
 jsRuntime::jsRuntime(uint32 maxbytes)
 {

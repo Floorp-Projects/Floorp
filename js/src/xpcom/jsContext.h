@@ -3,7 +3,6 @@
 
 #include "jsIContext.h"
 #include "jsRuntime.h"
-#include "jsScriptable.h"
 
 static void ErrorReporterHandler(JSContext *cx, const char *message,
 				 JSErrorReport *report);
@@ -19,7 +18,7 @@ public:
     /**
      * We shouldn't need this, but for now...
      */
-    JSContext *getJSContext(void);
+    JSContext *GetJS(void);
     jsIFunction *compileFunction(jsIScriptable *scope,
 				 JSString *source,
 				 JSString *sourceName,
@@ -74,7 +73,6 @@ public:
     JSBool removeRoot(void *root);
 
     friend class jsRuntime;
-    friend class jsScriptable;
     friend void ErrorReporterHandler(JSContext *cx, const char *message,
 				     JSErrorReport *report);
     NS_DECL_ISUPPORTS
