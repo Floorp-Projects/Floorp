@@ -180,7 +180,8 @@ var dns = Components.classes[kDNS_CONTRACTID].getService(nsIDNSService);
 
 var pacUtils = 
 "function dnsDomainIs(host, domain) {\n" +
-"    return (host.replace(/\\w*/, '') == domain);\n" +
+"    return (host.length >= domain.length &&\n" +
+"            host.substring(host.length - domain.length) == domain);\n" +
 "}\n" +
 
 "function dnsDomainLevels(host) {\n" +
