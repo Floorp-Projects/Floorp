@@ -53,6 +53,11 @@ class nsIDOMNode;
 class nsICSSLoader;
 class nsIURI;
 
+#define XML_DECLARATION_BITS_DECLARATION_EXISTS   1
+#define XML_DECLARATION_BITS_ENCODING_EXISTS      2
+#define XML_DECLARATION_BITS_STANDALONE_EXISTS    4
+#define XML_DECLARATION_BITS_STANDALONE_YES       8
+
 class nsXMLDocument : public nsMarkupDocument,
                       public nsIXMLDocument,
                       public nsIHTMLContentContainer,
@@ -107,6 +112,12 @@ public:
 
   // nsIXMLDocument interface
   NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl);
+  NS_IMETHOD SetXMLDeclaration(const nsAString& aVersion,
+                               const nsAString& aEncoding,
+                               const nsAString& Standalone);
+  NS_IMETHOD GetXMLDeclaration(nsAString& aVersion,
+                               nsAString& aEncoding,
+                               nsAString& Standalone);
 
   // nsIHTMLContentContainer
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aResult);
@@ -142,7 +153,9 @@ protected:
   nsIParser *mParser;
 
   nsCOMPtr<nsIScriptContext> mScriptContext;
-  PRBool mCrossSiteAccessEnabled;
+  PRPackedBool mCrossSiteAccessEnabled;
+
+  PRUint8 mXMLDeclarationBits;
 };
 
 

@@ -221,7 +221,7 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult)
 nsXMLDocument::nsXMLDocument() 
   : mAttrStyleSheet(nsnull), mInlineStyleSheet(nsnull), 
     mCountCatalogSheets(0), mParser(nsnull),
-    mCrossSiteAccessEnabled(PR_FALSE)
+    mCrossSiteAccessEnabled(PR_FALSE), mXMLDeclarationBits(0)
 {
 }
 
@@ -422,8 +422,11 @@ nsXMLDocument::Load(const nsAString& aUrl)
 
   // Find out if UniversalBrowserRead privileges are enabled - we will need this
   // in case of a redirect
-  rv = secMan->IsCapabilityEnabled("UniversalBrowserRead", &mCrossSiteAccessEnabled);
+  PRBool crossSiteAccessEnabled;
+  rv = secMan->IsCapabilityEnabled("UniversalBrowserRead", &crossSiteAccessEnabled);
   if (NS_FAILED(rv)) return rv;
+
+  mCrossSiteAccessEnabled = crossSiteAccessEnabled;
 
   // Create a channel
   rv = NS_NewChannel(getter_AddRefs(channel), uri, nsnull, nsnull, this);
@@ -1093,6 +1096,63 @@ nsXMLDocument::SetDefaultStylesheets(nsIURI* aUrl)
 
   return result;
 }
+
+NS_IMETHODIMP 
+nsXMLDocument::SetXMLDeclaration(const nsAString& aVersion,
+                                 const nsAString& aEncoding,
+                                 const nsAString& aStandalone)
+{
+  if (aVersion.IsEmpty()) {
+    mXMLDeclarationBits = 0;
+    return NS_OK;
+  }
+
+  mXMLDeclarationBits = XML_DECLARATION_BITS_DECLARATION_EXISTS;
+
+  if (!aEncoding.IsEmpty()) {
+    mXMLDeclarationBits |= XML_DECLARATION_BITS_ENCODING_EXISTS;
+  }
+
+  if (aStandalone.Equals(NS_LITERAL_STRING("yes"))) {
+    mXMLDeclarationBits |= XML_DECLARATION_BITS_STANDALONE_EXISTS |
+                           XML_DECLARATION_BITS_STANDALONE_YES;
+  } else if (aStandalone.Equals(NS_LITERAL_STRING("no"))) {
+    mXMLDeclarationBits |= XML_DECLARATION_BITS_STANDALONE_EXISTS;
+  }
+
+  return NS_OK;
+}                               
+
+NS_IMETHODIMP 
+nsXMLDocument::GetXMLDeclaration(nsAString& aVersion,
+                                 nsAString& aEncoding,
+                                 nsAString& aStandalone)
+{
+  aVersion.Truncate();
+  aEncoding.Truncate();
+  aStandalone.Truncate();
+
+  if (!(mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS)) {
+    return NS_OK;
+  }
+
+  aVersion.Assign(NS_LITERAL_STRING("1.0")); // always until we start supporting 1.1 etc.
+
+  if (mXMLDeclarationBits & XML_DECLARATION_BITS_ENCODING_EXISTS) {
+    GetDocumentCharacterSet(aEncoding); // This is what we have stored, not necessarily what was written in the original
+  }
+
+  if (mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_EXISTS) {
+    if (mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_YES) {
+      aStandalone.Assign(NS_LITERAL_STRING("yes"));
+    } else {
+      aStandalone.Assign(NS_LITERAL_STRING("no"));
+    }
+  }
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP 
 nsXMLDocument::SetBaseTarget(const nsAString &aBaseTarget)

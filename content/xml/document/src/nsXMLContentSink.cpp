@@ -1832,6 +1832,8 @@ nsXMLContentSink::HandleDoctypeDecl(const nsAString & aSubset,
                                     const nsAString & aPublicId,
                                     nsISupports* aCatalogData)
 {
+  FlushText();
+
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIDOMDocument> doc(do_QueryInterface(mDocument));
@@ -1947,6 +1949,32 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
     }
   }
   return result;
+}
+
+NS_IMETHODIMP
+nsXMLContentSink::HandleXMLDeclaration(const PRUnichar *aData, 
+                                       PRUint32 aLength)
+{
+  NS_ENSURE_ARG_POINTER(aData);
+  // strlen("<?xml version='a'?>") == 19, shortest decl
+  NS_ENSURE_TRUE(aLength >= 19, NS_ERROR_INVALID_ARG);
+
+  nsCOMPtr<nsIXMLDocument> xml(do_QueryInterface(mDocument));
+  NS_WARN_IF_FALSE(xml, "why is XML sink building non-XML document?");
+  if (!xml)
+    return NS_OK;
+
+  // <?xml version="a" encoding="a" standalone="yes|no"?>
+  const nsAString& data = Substring(aData + 6, aData + aLength - 2); // strip out "<?xml " and "?>"
+
+  nsAutoString version, encoding, standalone;
+
+  // XXX If this is too slow we need to parse this here
+  nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("version"), version);
+  nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("encoding"), encoding);
+  nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("standalone"), standalone);
+
+  return xml->SetXMLDeclaration(version, encoding, standalone);
 }
 
 NS_IMETHODIMP

@@ -49,6 +49,7 @@ class nsIDOMProcessingInstruction; /* forward declaration */
 class nsIDOMComment; /* forward declaration */
 class nsIDOMDocumentType; /* forward declaration */
 class nsIDOMElement; /* forward declaration */
+class nsIDOMDocument; /* forward declaration */
 
 /* starting interface:    nsIContentSerializer */
 #define NS_ICONTENTSERIALIZER_IID_STR "61e9b9a3-d30c-429e-b0cf-ade73466df06"
@@ -91,6 +92,14 @@ class nsIContentSerializer : public nsISupports {
                               nsAString& aStr) = 0;
 
   NS_IMETHOD Flush(nsAString& aStr) = 0;
+
+  /**
+   * Append any items in the beginning of the document that won't be 
+   * serialized by other methods. XML declaration is the most likely 
+   * thing this method can produce.
+   */
+  NS_IMETHOD AppendDocumentStart(nsIDOMDocument *aDocument,
+                                 nsAString& aStr) = 0;
 };
 
 #define NS_CONTENTSERIALIZER_CONTRACTID_PREFIX \

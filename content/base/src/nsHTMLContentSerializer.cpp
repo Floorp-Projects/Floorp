@@ -206,6 +206,13 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
+                                             nsAString& aStr)
+{
+  return NS_OK;
+}
+
 PRBool
 nsHTMLContentSerializer::IsJavaScript(nsIAtom* aAttrNameAtom, const nsAString& aValueString)
 {

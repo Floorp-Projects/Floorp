@@ -59,6 +59,7 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
+#include "nsIDOMDocument.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsHTMLAtoms.h"
@@ -159,12 +160,12 @@ protected:
   PRUint32          mEndDepth;
   PRInt32           mStartRootIndex;
   PRInt32           mEndRootIndex;
-  PRBool            mHaltRangeHint;  
   nsAutoVoidArray   mCommonAncestors;
   nsAutoVoidArray   mStartNodes;
   nsAutoVoidArray   mStartOffsets;
   nsAutoVoidArray   mEndNodes;
   nsAutoVoidArray   mEndOffsets;
+  PRPackedBool      mHaltRangeHint;  
   PRPackedBool      mIsCopying;  // Set to PR_TRUE only while copying
 };
 
@@ -937,9 +938,14 @@ nsDocumentEncoder::EncodeToString(nsAString& aOutputString)
 
       mRange = nsnull;
   } else {
-    nsCOMPtr<nsIDOMNode> doc(do_QueryInterface(mDocument));
+    nsCOMPtr<nsIDOMDocument> domdoc(do_QueryInterface(mDocument));
+    rv = mSerializer->AppendDocumentStart(domdoc, aOutputString);
 
-    rv = SerializeToStringRecursive(doc, aOutputString);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIDOMNode> doc(do_QueryInterface(mDocument));
+
+      rv = SerializeToStringRecursive(doc, aOutputString);
+    }
   }
 
   NS_ENSURE_SUCCESS(rv, rv);

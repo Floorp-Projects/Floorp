@@ -402,6 +402,13 @@ nsPlainTextSerializer::Flush(nsAString& aStr)
 }
 
 NS_IMETHODIMP
+nsPlainTextSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
+                                             nsAString& aStr)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsPlainTextSerializer::OpenContainer(const nsIParserNode& aNode)
 {
   PRInt32 type = aNode.GetNodeType();

@@ -1106,6 +1106,15 @@ XULContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
     return NS_OK;
 }
 
+
+NS_IMETHODIMP
+XULContentSinkImpl::HandleXMLDeclaration(const PRUnichar *aData, 
+                                       const PRUint32 aLength)
+{
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
 XULContentSinkImpl::ReportError(const PRUnichar* aErrorText, 
                                 const PRUnichar* aSourceText)

@@ -43,6 +43,7 @@
 #include "nsIDOMCDATASection.h"
 #include "nsIDOMProcessingInstruction.h"
 #include "nsIDOMComment.h"
+#include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
@@ -54,6 +55,7 @@
 #include "prprf.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
+#include "nsIXMLDocument.h"
 
 typedef struct {
   nsString mPrefix;
@@ -753,4 +755,36 @@ nsXMLContentSerializer::IsShorthandAttr(const nsIAtom* aAttrName,
   }
 
   return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsXMLContentSerializer::AppendDocumentStart(nsIDOMDocument *aDocument,
+                                            nsAString& aStr)
+{
+  NS_ENSURE_ARG_POINTER(aDocument);
+
+  nsCOMPtr<nsIXMLDocument> xml(do_QueryInterface(aDocument));
+  NS_ENSURE_TRUE(xml, NS_ERROR_UNEXPECTED);
+
+  nsAutoString version, encoding, standalone;
+  xml->GetXMLDeclaration(version, encoding, standalone);
+
+  if (version.IsEmpty())
+    return NS_OK; // A declaration must have version, or there is no decl
+
+  NS_NAMED_LITERAL_STRING(endQuote, "\"");
+
+  aStr += NS_LITERAL_STRING("<?xml version=\"") + version + endQuote;
+  
+  if (!encoding.IsEmpty()) {
+    aStr += NS_LITERAL_STRING(" encoding=\"") + encoding + endQuote;
+  }
+
+  if (!standalone.IsEmpty()) {
+    aStr += NS_LITERAL_STRING(" standalone=\"") + standalone + endQuote;
+  }
+
+  aStr += NS_LITERAL_STRING("?>");
+
+  return NS_OK;
 }

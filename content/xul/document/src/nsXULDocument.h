@@ -351,6 +351,12 @@ public:
     // nsIXMLDocument interface
     NS_IMETHOD SetDefaultStylesheets(nsIURI* aUrl);
     NS_IMETHOD SetTitle(const PRUnichar *aTitle);
+    NS_IMETHOD SetXMLDeclaration(const nsAString& aVersion,
+                                 const nsAString& aEncoding,
+                                 const nsAString& Standalone);
+    NS_IMETHOD GetXMLDeclaration(nsAString& aVersion,
+                                 nsAString& aEncoding,
+                                 nsAString& Standalone);
 
     // nsIXULDocument interface
     NS_IMETHOD AddElementForID(const nsAString& aID, nsIContent* aElement);

@@ -625,6 +625,13 @@ RDFContentSinkImpl::HandleProcessingInstruction(const PRUnichar *aTarget,
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+RDFContentSinkImpl::HandleXMLDeclaration(const PRUnichar *aData, 
+                                         PRUint32 aLength)
+{
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 RDFContentSinkImpl::ReportError(const PRUnichar* aErrorText, 
                                 const PRUnichar* aSourceText)

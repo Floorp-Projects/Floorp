@@ -68,6 +68,7 @@ public:
   nsresult HandleCharacterData(const PRUnichar *aCData, const PRUint32 aLength);
   nsresult HandleComment(const PRUnichar *aName);
   nsresult HandleProcessingInstruction(const PRUnichar *aTarget, const PRUnichar *aData);
+  nsresult HandleXMLDeclaration(const PRUnichar *aData, const PRUint32 aLength);
   nsresult HandleDefault(const PRUnichar *aData, const PRUint32 aLength);
   nsresult HandleStartCdataSection();
   nsresult HandleEndCdataSection();
@@ -93,6 +94,7 @@ protected:
   nsString         mDoctypeText;
   PRPackedBool     mInCData;
   PRPackedBool     mInDoctype;
+  PRPackedBool     mHandledXMLDeclaration;
   PRInt32          mBytePosition;
   nsresult         mInternalState;
   PRUint32         mBytesParsed;
