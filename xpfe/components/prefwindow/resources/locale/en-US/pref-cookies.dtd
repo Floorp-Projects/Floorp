@@ -40,5 +40,5 @@
 <!ENTITY warnAboutImages.label          "Alert me before downloading an image">
 <!ENTITY warnAboutImages.accesskey      "e">
 <!ENTITY viewImagesExplanation.label    "View list of sites about which image acceptance information is stored">
-<!ENTITY viewImages.label               "View Sites...">
-<!ENTITY viewImages.accesskey           "s">
+<!ENTITY viewImages.label               "View Image Permissions">
+<!ENTITY viewImages.accesskey           "p">
