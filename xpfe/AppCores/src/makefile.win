@@ -67,6 +67,7 @@ OBJS = \
     .\$(OBJDIR)\nsDOMPropsCore.obj       \
     .\$(OBJDIR)\nsDOMPropsCoreFactory.obj       \
     .\$(OBJDIR)\nsPrefsCore.obj       \
+    .\$(OBJDIR)\nsProfileCore.obj       \
     .\$(OBJDIR)\nsRDFCore.obj       \
     .\$(OBJDIR)\nsRDFCoreFactory.obj       \
     .\$(OBJDIR)\nsAppCoresNameSet.obj       \
@@ -75,7 +76,8 @@ OBJS = \
     .\$(OBJDIR)\nsToolkitCoreFactory.obj \
     .\$(OBJDIR)\nsBrowserAppCore.obj       \
     .\$(OBJDIR)\nsPrefsCoreFactory.obj       \
-    .\$(OBJDIR)\nsToolbarCoreFactory.obj       \
+    .\$(OBJDIR)\nsPrefsCoreFactory.obj       \
+    .\$(OBJDIR)\nsProfileCoreFactory.obj       \
     .\$(OBJDIR)\nsBrowserAppCoreFactory.obj       \
     .\$(OBJDIR)\nsAppCoresManager.obj       \
     .\$(OBJDIR)\nsAppCoresManagerFactory.obj       \
@@ -83,6 +85,7 @@ OBJS = \
     .\$(OBJDIR)\nsJSAppCoresManager.obj       \
     .\$(OBJDIR)\nsJSDOMPropsCore.obj   \
     .\$(OBJDIR)\nsJSPrefsCore.obj   \
+    .\$(OBJDIR)\nsJSProfileCore.obj   \
     .\$(OBJDIR)\nsJSRDFCore.obj   \
     .\$(OBJDIR)\nsJSToolbarCore.obj   \
     .\$(OBJDIR)\nsJSToolkitCore.obj     \
