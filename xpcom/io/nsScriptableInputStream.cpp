@@ -64,20 +64,15 @@ nsScriptableInputStream::Available(PRUint32 *_retval) {
 NS_IMETHODIMP
 nsScriptableInputStream::Read(PRUint32 aCount, char **_retval) {
     nsresult rv = NS_OK;
-    PRUint32 count = 0;
     char *buffer = nsnull;
 
     if (!mInputStream) return NS_ERROR_NOT_INITIALIZED;
 
-    rv = mInputStream->Available(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    count = PR_MIN(count, aCount);
-    buffer = (char*)nsMemory::Alloc(count+1); // make room for '\0'
+    buffer = (char*)nsMemory::Alloc(aCount+1); // make room for '\0'
     if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
     PRUint32 amtRead = 0;
-    rv = mInputStream->Read(buffer, count, &amtRead);
+    rv = mInputStream->Read(buffer, aCount, &amtRead);
     if (NS_FAILED(rv)) {
         nsMemory::Free(buffer);
         return rv;
