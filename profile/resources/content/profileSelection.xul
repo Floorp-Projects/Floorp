@@ -27,6 +27,7 @@
   
 -->
 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -41,15 +42,17 @@
   onclose="onExit();"
   onload="StartUp();"> 
       
-	<html:script language="javascript" src="chrome://global/content/strres.js" />
-  <html:script language="javascript" src="chrome://communicator/content/profile/profileSelection.js"/>
-  <html:script language="javascript" src="chrome://communicator/content/profile/profileManager.js"/>
+  <!-- note: wtf is with the 'onclose' above. Is that a real, actual, valid event?! -->      
+      
+	<script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="javascript" src="chrome://communicator/content/profile/profileSelection.js"></script>
+  <script language="javascript" src="chrome://communicator/content/profile/profileManager.js"></script>
 
   <keyset id="keyset">
     <key id="fooKey" key="s" xulkey="true" shift="true" onkeydown="foo()"/>
   </keyset>
 
-  <box type="largeheader" id="header" value="&windowtitle.label;"/>
+  <box class="box-header" id="header" value="&windowtitle.label;"/>
   
   <box id="contentarea" flex="1">
 
@@ -78,7 +81,7 @@
       <treecol/>
       <treehead>
         <treerow>
-          <treecell value="&availprofiles.label;"/>
+          <treecell class="treecell-header outset" value="&availprofiles.label;"/>
         </treerow>
       </treehead>
       <treechildren id="profilekids"/>
@@ -95,6 +98,6 @@
   
   <separator class="thin" />
   
-  <box type="status" value="&profilemanager.label;" progress=""/>
+  <box class="box-status" value="&profilemanager.label;" progress=""/>
   
 </window>

@@ -20,6 +20,7 @@
 
 <!-- this is PAGE TWO of the Profile Creation Wizard -->
 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/profile.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/newProfile1_2.css" type="text/css"?>
 
@@ -28,23 +29,24 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog wizardPanel"
 	width="500" height="500"
-  align="vertical"
+  orient="vertical"
 	onload="initFields();parent.wizardManager.onPageLoad('newProfile1_2');"> 
 
-	<html:script language="javascript" src="chrome://global/content/strres.js" />
-  <html:script language="JavaScript" src="chrome://communicator/content/profile/newProfile1_2.js"/>
+	<script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script language="JavaScript" src="chrome://communicator/content/profile/newProfile1_2.js"></script>
 
   <html>&pnl2.intro.text;</html> 
   <html>&pnl2.pname.label;</html> 
   <!-- spank me -->
-  <html:input type="text" id="ProfileName" value="&pnl2.defaultPName.label;" onblur="updateProfileName();"/>
+  <textfield id="ProfileName" value="&pnl2.defaultPName.label;" onblur="updateProfileName();"/>
+  <separator/>
   <html>&pnl2.pdir.label;</html> 
   <box id="dirbox">
     <box orient="vertical" flex="1">
-      <html id="ProfileDir"/>
+      <html class="indent" id="ProfileDir"/>
       <spring flex="1"/>
     </box>
-    <box orient="vertical">
+    <box orient="vertical" valign="top">
       <button value="&button.choosefolder.label;" oncommand="chooseProfileFolder();"/>
       <button id="useDefault" value="&button.usedefault.label;" oncommand="setDisplayToDefaultFolder();" disabled="true"/>
     </box>
