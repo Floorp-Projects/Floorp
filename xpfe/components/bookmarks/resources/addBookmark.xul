@@ -107,6 +107,7 @@
     </hbox>
   </vbox>
 
-  <separator style="width: 36em"/>
+  <!-- Ensure a decent dialog width when the bookmarks-tree is hidden. -->
+  <spacer style="width: 36em;"/>
 
 </dialog>
