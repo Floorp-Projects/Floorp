@@ -41,7 +41,6 @@ LLIBS=							\
  $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\raptorwidget.lib	\
  $(DIST)\lib\netlib.lib			\
- $(DIST)\lib\plc3.lib		\
  $(DIST)\lib\msglocal.lib \
  $(DIST)\lib\msgcore.lib \
  $(DIST)\lib\rdf.lib		\

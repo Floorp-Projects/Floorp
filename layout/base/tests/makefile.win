@@ -27,28 +27,11 @@ LLIBS=				\
  $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\jsdom.lib	        \
- $(LIBNSPR)			\
- $(DIST)\lib\plc3.lib
+ $(LIBNSPR)
 
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAMS)
 	$(MAKE_INSTALL) $(PROG1) $(DIST)\bin
-
-# Move this into config/obj.inc when it's allowed
-.cpp{.\$(OBJDIR)\}.exe:
-    -$(CC) @<<$(CFGFILE)
-        $(CFLAGS)
-        $(LCFLAGS)
-        $(LINCS)
-        $(LINCS_1)
-        $(INCS)
-        $(LLIBS)
-        $(OS_LIBS)
-        -Fd.\$(OBJDIR)\$(*B)
-        -Fe.\$(OBJDIR)\
-        -Fo.\$(OBJDIR)\
-        $(CURDIR)$(*B).cpp
-<<KEEP
 
 $(PROG1): $(OBJDIR) TestSpaceManager.cpp

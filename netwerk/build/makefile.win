@@ -36,10 +36,7 @@ LLIBS=                              \
         $(DIST)\lib\neckobase_s.lib \
         $(DIST)\lib\neckodns_s.lib  \
         $(DIST)\lib\xpcom.lib       \
-        $(DIST)\lib\plc3.lib        \
         $(LIBNSPR)  
-
-MISCDEP=$(LLIBS)
 
 INCS = $(INCS)                      \
         -I$(DEPTH)\dist\include     \

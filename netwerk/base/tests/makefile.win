@@ -37,8 +37,7 @@ LLIBS=$(LLIBS)				\
 		$(LIBNSPR)              \
 		$(DIST)\lib\xpcom.lib	\
 		$(DIST)\lib\nunet.lib  \
-		$(DIST)\lib\netlib.lib  \
-		$(DIST)\lib\plc3.lib
+		$(DIST)\lib\netlib.lib
 
 LINCS=$(LINCS)  -I. \
 		-I$(PUBLIC)\raptor   \

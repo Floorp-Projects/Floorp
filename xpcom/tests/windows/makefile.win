@@ -30,7 +30,6 @@ LLIBS=					\
  uuid.lib				\
  $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)				\
- $(DIST)\lib\plc3.lib
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib
 !endif
@@ -42,22 +41,6 @@ install:: $(PROGRAMS)
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
-
-# Move this into config/obj.inc when it's allowed
-.cpp{.\$(OBJDIR)\}.exe:
-    $(CC) @<<$(CFGFILE)
-        $(CFLAGS)
-        $(LCFLAGS)
-        $(LINCS)
-        $(LINCS_1)
-        $(INCS)
-        $(LLIBS)
-        $(OS_LIBS)
-        -Fd$(PDBFILE)
-        -Fe.\$(OBJDIR)\
-        -Fo.\$(OBJDIR)\
-        $(CURDIR)$(*B).cpp
-<<KEEP
 
 $(PROG1): $(OBJDIR) TestCOM.cpp
 

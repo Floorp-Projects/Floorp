@@ -38,13 +38,10 @@ CPP_OBJS=\
 LLIBS=\
 	$(DIST)\lib\xpcom.lib			\
     $(LIBNSPR)						\
-    $(DIST)\lib\plc3.lib			\
     $(DIST)\lib\rdfutil_s.lib		\
 	$(DIST)\lib\msgbaseutil.lib		\
 	$(DIST)\lib\msglocal_s.lib		\
 	$(NULL)
-
-MISCDEP=$(LLIBS)
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -34,7 +34,6 @@ LLIBS=				\
  $(DIST)\lib\raptorweb.lib		\
  $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)			\
- $(DIST)\lib\plc3.lib		\
  $(DIST)\lib\img32$(VERSION_NUMBER).lib		\
  $(DIST)\lib\util.lib
 

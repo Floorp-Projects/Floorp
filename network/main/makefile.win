@@ -37,9 +37,7 @@ LCFLAGS     = $(LCFLAGS) -DMOZILLA_CLIENT
 !ifdef BUILD_DEBUG_GC
 LCFLAGS     = $(LCFLAGS) -DDEBUG_GC
 !endif
-LLIBS=  \
-    $(NULL)
-MISCDEP=$(LLIBS)
+
 OBJS=   \
 !ifdef MOZ_MAIL_NEWS
     .\$(OBJDIR)\mkabook.obj     \

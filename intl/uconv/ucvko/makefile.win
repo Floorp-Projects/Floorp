@@ -63,8 +63,6 @@ LLIBS=					\
  $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)
 
-MISCDEP = $(LLIBS)
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \

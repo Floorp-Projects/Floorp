@@ -31,11 +31,8 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LLIBS= $(LLIBS)                 \
 	$(LIBNSPR)              \
-	$(DIST)\lib\plc3.lib    \
 	$(DIST)\lib\xpcom.lib   \
 	$(NULL)
-
-MISCDEP=$(LLIBS)
 
 CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsFileChannel.obj          \

@@ -40,7 +40,6 @@ CPP_OBJS =                                        \
 LLIBS=                                \
         $(DIST)\lib\necko.lib       \
         $(DIST)\lib\xpcom.lib       \
-        $(DIST)\lib\plc3.lib          \
         $(LIBNSPR)  
 
 INCS = $(INCS)                  \

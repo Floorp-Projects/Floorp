@@ -31,8 +31,7 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\lwbrk -I$(PUBLIC)\raptor
 
 LLIBS= \
  $(DIST)\lib\xpcom.lib \
- $(LIBNSPR) \
- $(DIST)\lib\plc3.lib 
+ $(LIBNSPR)
  
 include <$(DEPTH)\config\rules.mak>
 
@@ -41,21 +40,5 @@ install:: $(PROGRAMS)
 
 clobber::
   -for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
-
-# Move this into config/obj.inc when it's allowed
-.cpp{.\$(OBJDIR)\}.exe:
-    $(CC) @<<$(CFGFILE)
-        $(CFLAGS)
-        $(LCFLAGS)
-        $(LINCS)
-        $(LINCS_1)
-        $(INCS)
-        $(LLIBS)
-        $(OS_LIBS)
-        -Fd$(PDBFILE)
-        -Fe.\$(OBJDIR)\
-        -Fo.\$(OBJDIR)\
-        $(CURDIR)$(*B).cpp
-<<KEEP
 
 $(PROG1): $(OBJDIR) TestLineBreak.cpp

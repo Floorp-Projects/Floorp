@@ -29,7 +29,6 @@ OBJS =  \
 LLIBS =                        \
     $(DIST)\lib\xpcom.lib    \
     $(LIBNSPR)		       \
-    $(DIST)\lib\plc3.lib       \
     $(NULL)
 
 LINCS =                        \

@@ -43,12 +43,9 @@ LLIBS=\
 !else
  $(DIST)\lib\netlib.lib          \
 !endif
- $(DIST)\lib\plc3.lib            \
  $(DIST)\lib\jsdom.lib           \
  $(DIST)\lib\js3250.lib          \
  $(LIBNSPR)  
-
-MISCDEP=$(LLIBS)
 
 # XXX Note dependencies on implementation dirs for factory methods.
 

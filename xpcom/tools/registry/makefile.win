@@ -30,7 +30,6 @@ PROGRAMS = $(PROG1)
 
 LLIBS =                         \
         $(LIBNSPR)              \
-        $(DIST)\lib\plc3.lib    \
         $(DIST)\lib\xpcom.lib   \
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
         $(GLOWDIR)\glowcode.lib \
@@ -46,22 +45,6 @@ install:: $(PROGRAMS)
 
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
-
-# Move this into config/obj.inc when it's allowed
-.cpp{.\$(OBJDIR)\}.exe:
-    $(CC) @<<$(CFGFILE)
-        $(CFLAGS)
-        $(LCFLAGS)
-        $(LINCS)
-        $(LINCS_1)
-        $(INCS)
-        $(LLIBS)
-        $(OS_LIBS)
-        -Fd$(PDBFILE)
-        -Fe.\$(OBJDIR)\
-        -Fo.\$(OBJDIR)\
-        $(CURDIR)$(*B).cpp
-<<KEEP
 
 $(PROG1): $(OBJDIR) regExport.cpp
 

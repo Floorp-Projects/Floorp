@@ -40,10 +40,7 @@ LLIBS=								\
 	$(DIST)\lib\xpcom.lib			\
 	$(DIST)\lib\msgmork_s.lib		\
     $(LIBNSPR)						\
-    $(DIST)\lib\plc3.lib			\
 	$(NULL)
-
-MISCDEP=$(LLIBS)
 
 include <$(DEPTH)\config\rules.mak>
 

@@ -36,22 +36,6 @@ include <$(DEPTH)\config\rules.mak>
 #clobber::
 #  -for %p in ($(PROGRAMS)) do $(RM) %p
 
-# Move this into config/obj.inc when it's allowed
-.c{.\$(OBJDIR)\}.exe:
-    $(CC) @<<$(CFGFILE)
-        $(CFLAGS)
-        $(LCFLAGS)
-        $(LINCS)
-        $(LINCS_1)
-        $(INCS)
-        $(LLIBS)
-        $(OS_LIBS)
-        -Fd$(PDBFILE)
-        -Fe.\$(OBJDIR)\
-        -Fo.\$(OBJDIR)\
-        $(CURDIR)$(*B).c
-<<KEEP
-
 $(PROG1): $(OBJDIR) ucgendat.c
 
 table:: $(TABLESRC)

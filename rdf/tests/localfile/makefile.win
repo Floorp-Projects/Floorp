@@ -41,7 +41,6 @@ LLIBS=				\
  $(DIST)\lib\rdf.lib            \
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\netlib.lib         \
- $(DIST)\lib\plc3.lib       \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>

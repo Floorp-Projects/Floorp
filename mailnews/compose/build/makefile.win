@@ -36,7 +36,6 @@ OBJS=										 \
 LLIBS=											\
 			$(LLIBS)							\
 			$(DIST)\lib\xpcom.lib				\
-			$(DIST)\lib\plc3.lib				\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\msgcompose_s.lib		\
 			$(DIST)\lib\appcores.lib			\
@@ -45,8 +44,6 @@ LLIBS=											\
 			$(DIST)\lib\raptorhtmlpars.lib			\
 			$(LIBNSPR)							\
 			$(NULL)
-
-MISCDEP=$(LLIBS)
 
 include <$(DEPTH)/config/rules.mak>
 

@@ -45,9 +45,6 @@ LCFLAGS		= $(LCFLAGS)  -DMOZILLA_CLIENT
 LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
 !endif
 
-LLIBS=  \
-	$(NULL)
-MISCDEP=$(LLIBS)
 OBJS=   \
 	.\$(OBJDIR)\extcache.obj		\
 	.\$(OBJDIR)\mkcache.obj		\

@@ -68,7 +68,6 @@ WIN_LIBS= ole32.lib
 
 LLIBS = \
 		$(LIBNSPR)\
- 		$(DIST)\lib\plc3.lib                   \
 		$(DIST)\lib\msgbaseutil.lib	\
 		$(DIST)\lib\msglocal_s.lib	\
  		$(DIST)\lib\xpcom.lib

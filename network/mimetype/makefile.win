@@ -35,9 +35,6 @@ LCFLAGS		= $(LCFLAGS)  -DMOZILLA_CLIENT
 LCFLAGS		= $(LCFLAGS) -DDEBUG_GC
 !endif
 
-LLIBS=  \
-	$(NULL)
-MISCDEP=$(LLIBS)
 OBJS=   \
 	.\$(OBJDIR)\mkformat.obj	\
 	$(NULL)

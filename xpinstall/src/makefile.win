@@ -73,7 +73,6 @@ LLIBS =                                \
         $(DIST)\lib\jsdombase_s.lib    \
         $(DIST)\lib\jsdomevents_s.lib  \
 		$(DIST)\lib\zlib.lib           \
-		$(DIST)\lib\plc3.lib           \
         $(DIST)\lib\strres.lib         \
         $(LIBNSPR)                     \
         $(NULL)

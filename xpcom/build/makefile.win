@@ -50,7 +50,7 @@ CPP_OBJS =                             \
 #CPP_OBJS = $(CPP_OBJS) .\$(OBJDIR)\nsConstructorPattern.obj
 !endif
 
-OURLIBS =                              \
+LLIBS =                                \
         $(LIBNSPR)                     \
         $(DIST)\lib\xpcombase_s.lib    \
         $(DIST)\lib\xpcomds_s.lib      \
@@ -65,21 +65,15 @@ OURLIBS =                              \
         $(DIST)\lib\libreg32.lib       \
         $(NULL)
 
-LLIBS =                                \
-        $(OURLIBS)                     \
-!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
-        $(GLOWDIR)\glowcode.lib        \
-!endif
-        $(NULL)
-
 WIN_LIBS =                             \
         shell32.lib                    \
 !if defined(MOZ_TRACE_XPCOM_REFCNT)
         imagehlp.lib                   \
 !endif
+!if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
+        $(GLOWDIR)\glowcode.lib        \
+!endif
         $(NULL)
-
-MISCDEP=$(OURLIBS)
 
 include <$(DEPTH)\config\rules.mak>
 

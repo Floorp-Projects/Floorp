@@ -42,8 +42,6 @@ LLIBS=								\
     $(DIST)\lib\rdfutil_s.lib		\
 	$(NULL)
 
-MISCDEP=$(LLIBS)
-
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
