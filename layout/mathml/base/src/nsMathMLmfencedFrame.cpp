@@ -449,6 +449,22 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
                                  nsHTMLReflowMetrics& aDesiredSize)
 {
   if (aMathMLChar && 0 < aMathMLChar->Length()) {
+    nsOperatorFlags aFlags;
+    float aLeftSpace = 0.0f;
+    float aRightSpace = 0.0f;
+ 
+    nsAutoString aData;
+    aMathMLChar->GetData(aData);
+    aMathMLChar->SetData(aPresContext, aData); // XXX hack to reset the enum, bug 45010
+    PRBool found = nsMathMLOperators::LookupOperator(aData, aForm,              
+                                           &aFlags, &aLeftSpace, &aRightSpace);
+
+    // If we don't want extra space when we are a script
+    if (found && aScriptLevel > 0) {
+      aLeftSpace /= 2.0f;
+      aRightSpace /= 2.0f;
+    }
+
     // stretch the char to the appropriate height if it is not big enough.
     nsBoundingMetrics charSize;
     charSize.Clear(); // this will tell stretch that we don't know the default size
@@ -472,21 +488,6 @@ nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
       aDesiredSize.ascent = charSize.ascent;
     if (aDesiredSize.descent < charSize.descent) 
       aDesiredSize.descent = charSize.descent;
-
-    nsOperatorFlags aFlags;
-    float aLeftSpace = 0.0f;
-    float aRightSpace = 0.0f;
- 
-    nsAutoString aData;
-    aMathMLChar->GetData(aData);
-    PRBool found = nsMathMLOperators::LookupOperator(aData, aForm,              
-                                           &aFlags, &aLeftSpace, &aRightSpace);
-
-    // If we don't want extra space when we are a script
-    if (found && aScriptLevel > 0) {
-      aLeftSpace /= 2.0f;
-      aRightSpace /= 2.0f;
-    }
 
     // account the spacing
     charSize.width += NSToCoordRound((aLeftSpace + aRightSpace) * em);

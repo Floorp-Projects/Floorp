@@ -303,7 +303,7 @@ nsGlyphTable::DrawGlyph(nsIRenderingContext& aRenderingContext,
   }
 }
 
-// Class used to walk/try all the the glyph tables that we have.
+// Class used to walk/try all the glyph tables that we have.
 // Glyph tables are singly linked together through their next-table pointer.
 // -----------------------------------------------------------------------------------
 
@@ -575,6 +575,7 @@ void InitGlobals(nsIPresContext* aPresContext)
 #endif
 }
 
+
 // -----------------------------------------------------------------------------------
 // And now the implementation of nsMathMLChar
 
@@ -621,27 +622,40 @@ nsMathMLChar::SetData(nsIPresContext* aPresContext,
   // lookup the enum ...
   if (1 == mData.Length()) {
     PRUnichar ch = mData[0];
-    for (PRInt32 i = 0; i < eMathMLChar_COUNT; i++) {
-      if (ch == gCharInfo[i].mUnicode) {
-        // found ...
-        mEnum = nsMathMLCharEnum(i);
-        mDirection = gCharInfo[i].mDirection;
-        if (mDirection != NS_STRETCH_DIRECTION_UNSUPPORTED) {
-          // ... now see if there is a glyph table for us
-          mGlyphTable = gGlyphTableList.FindTableFor(mEnum);
-          // don't bother with the stretching if there is no glyph table for us...
-          if (!mGlyphTable) {
-            gCharInfo[i].mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED; // update to never try again
-            mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
-            mEnum = eMathMLChar_DONT_STRETCH;
-          }
-#ifdef NS_DEBUG
-          // hitting this assertion? 
-          // check nsMathMLCharList to ensure that enum and Unicode (of size0) match in MATHML_CHAR(index, enum, ...)
-          else NS_ASSERTION(mGlyphTable->Has(nsGlyphCode(mData[0])), "Something is wrong somewhere");
-#endif
+    PRInt32 i = eMathMLChar_COUNT;
+    // binary search
+    PRInt32 low = 0;
+    PRInt32 high = eMathMLChar_COUNT-1;
+    while (low <= high) {
+      PRInt32 middle = (low + high) >> 1;
+      PRInt32 result = (PRInt32)ch - (PRInt32)gCharInfo[middle].mUnicode;
+      if (result == 0) {
+        i = middle;
+        break;
+      }
+      if (result > 0)
+        low = middle + 1;
+      else
+        high = middle - 1;
+    }
+    if (i != eMathMLChar_COUNT) {
+      // found ...
+      mEnum = nsMathMLCharEnum(i);
+      mDirection = gCharInfo[i].mDirection;
+      if (mDirection != NS_STRETCH_DIRECTION_UNSUPPORTED) {
+        // ... now see if there is a glyph table for us
+        mGlyphTable = gGlyphTableList.FindTableFor(mEnum);
+        // don't bother with the stretching if there is no glyph table for us...
+        if (!mGlyphTable) {
+          gCharInfo[i].mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED; // update to never try again
+          mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
+          mEnum = eMathMLChar_DONT_STRETCH;
         }
-        return;
+#ifdef NS_DEBUG
+        // hitting this assertion? 
+        // check nsMathMLCharList to ensure that enum and Unicode (of size0) match in MATHML_CHAR(index, enum, ...)
+        else NS_ASSERTION(mGlyphTable->Has(nsGlyphCode(mData[0])), "Something is wrong somewhere");
+#endif
       }
     }
   }

@@ -211,6 +211,7 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   // height(radical) should be >= height(base) + psi + ruleThickness
   // however, nsMathMLChar will only try to meet this condition
   // with no guarantee.
+  mSqrChar.SetEnum(aPresContext, eMathMLChar_Sqrt); // XXX hack to reset the enum, bug 45010
   mSqrChar.Stretch(aPresContext, renderingContext,
                    NS_STRETCH_DIRECTION_VERTICAL, 
                    contSize, radicalSize,

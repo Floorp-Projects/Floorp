@@ -388,6 +388,7 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   // Lookup the operator dictionary
   nsAutoString aData;
   mMathMLChar.GetData(aData);
+  mMathMLChar.SetData(aPresContext, aData); // XXX hack to reset the enum, bug 45010
   PRBool found = nsMathMLOperators::LookupOperator(aData, aForm,
                                                    &mFlags, &mLeftSpace, &mRightSpace);
   // All operators are symmetric. But this symmetric flag is *not* stored in
