@@ -244,19 +244,16 @@ function saveEngines( aSelectElement )
       return false;
     var checkedProperty = rdf.GetResource( "http://home.netscape.com/NC-rdf#checked", true );
     var categorySRC = rdf.GetResource( category, true );
-    var checkedFlag = false;
     for (var x = 0; x < treeChildrenNode.childNodes.length; x++)
     {
       var treeItem = treeChildrenNode.childNodes[x];
       if( !treeItem )
       	continue;
-      checkedFlag = false;
-      var checkbox = treeItem.firstChild.firstChild.firstChild;
-      if( checkbox.checked || checkbox.getAttribute("checked") == "1" ) 
-        checkedFlag = true;
       var engineURI = treeItem.getAttribute("id");
       var engineSRC = rdf.GetResource(engineURI, true);
-      if( checkedFlag )
+
+      var checkbox = treeItem.firstChild.firstChild.firstChild;
+      if( checkbox.checked )
         localStore.Assert( categorySRC, checkedProperty, engineSRC, true );
       else
         localStore.Unassert( categorySRC, checkedProperty, engineSRC, true );
@@ -304,7 +301,6 @@ function loadEngines( aCategory )
   				if ( hasAssertion )
   				{
   					checkbox.checked = true;
-  					checkbox.setAttribute("checked", "1");
   				}
   			}
   		}
@@ -488,10 +484,9 @@ function doSearch()
 		var treeItem = treeChildrenNode.childNodes[x];
 		if (!treeItem)
 			continue;
-		var checkedFlag = false;
-    var checkbox = treeItem.firstChild.firstChild.firstChild;
-		if ( checkbox.checked == true || checkbox.getAttribute("checked") == "1")
-			checkedFlag = true;
+
+		var checkbox = treeItem.firstChild.firstChild.firstChild;
+		var checkedFlag = checkbox.checked;
 		if ( checkedFlag )
 		{
 			var engineURI = treeItem.getAttribute("id");
@@ -533,11 +528,7 @@ function doSearch()
 // check an engine representation in the engine list
 function doCheck( aNode )
 {
-	if( aNode.checked )
-		aNode.setAttribute( "checked", "1" );
-	else
-		aNode.removeAttribute( "checked" );
-  saveEngines( document.getElementById("categoryList") )
+	saveEngines( document.getElementById("categoryList") )
 	return false;
 }
 
