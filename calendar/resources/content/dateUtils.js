@@ -167,15 +167,13 @@ function DateFormater( )
   this.twoDigitYear = false;
   this.alphaMonths = null;
   this.probeSucceeded = false;
-  
+
   // SHORT NUMERIC DATE, such as 2002-03-04, 4/3/2002, or CE2002Y03M04D.
-  // Made of digits & nonDigits.  [^\d\W]* is letters-only optional prefix 
-  // for era, as in CE2002Y03M04D, used in chinese short dates to distinguish 
-  // western Common-Era year from year in chinese calendar.
-  var parseShortDateRegex = /^\s*[^\d\W]*(\d+)\D(\d+)\D(\d+)\D?\s*$/;
+  // Made of digits & nonDigits.  (Nondigits may be unicode letters
+  // which do not match \w, esp. in CJK locales.)
+  var parseShortDateRegex = /^\D*(\d+)\D+(\d+)\D+(\d+)\D?$/;
   var probeDate = new Date(2002,3-1,4); // month is 0-based
   var probeString = this.getShortFormatedDate(probeDate);
-
   var probeArray = parseShortDateRegex.exec(probeString);
 
   if (probeArray != null) { 
@@ -195,6 +193,10 @@ function DateFormater( )
     // (\d+|[^\d\W]) is digits or letters, not both together.
     // Allows 31dec1999 (no delimiters between parts) if OS does (w2k does not).
     // Allows Dec 31, 1999 (comma and space between parts)
+    // (Only accepts ASCII month names; JavaScript RegExp does not have an
+    // easy way to describe unicode letters short of a HUGE character range
+    // regexp derived from the Alphabetic ranges in 
+    // http://www.unicode.org/Public/UNIDATA/DerivedCoreProperties.txt)
     parseShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\s*$/;
     probeArray = parseShortDateRegex.exec(probeString);
     if (probeArray != null) {
@@ -369,10 +371,10 @@ DateFormater.prototype.parseShortDate = function ( dateString )
   var year = Number.MIN_VALUE; var month = -1; var day = -1; var timeString = null;
   if (this.alphaMonths == null) {
     // SHORT NUMERIC DATE, such as 2002-03-04, 4/3/2002, or CE2002Y03M04D.
-    // Made of digits & nonDigits.  [^\d\W]* is letters-only optional prefix
-    // for era, as in CE2002Y03M04D, used in chinese short dates to distinguish
-    // western Common-Era year from year in chinese calendar.
-    var parseNumShortDateRegex = /^\s*[^\d\W]*(\d+)\D(\d+)\D(\d+)(.*)?$/;
+    // Made of digits & nonDigits.  (Nondigits may be unicode letters
+    // which do not match \w, esp. in CJK locales.)
+    // (.*)? binds to null if no suffix.
+    var parseNumShortDateRegex = /^\D*(\d+)\D+(\d+)\D+(\d+)(.*)?$/;
     var dateNumbersArray = parseNumShortDateRegex.exec(dateString);
     if (dateNumbersArray != null) {
       year = Number(dateNumbersArray[this.yearIndex]);
@@ -385,6 +387,11 @@ DateFormater.prototype.parseShortDate = function ( dateString )
     // (\d+|[^\d\W]) is digits or letters, not both together.
     // Allows 31dec1999 (no delimiters between parts) if OS does (w2k does not).
     // Allows Dec 31, 1999 (comma and space between parts)
+    // (Only accepts ASCII month names; JavaScript RegExp does not have an
+    // easy way to describe unicode letters short of a HUGE character range
+    // regexp derived from the Alphabetic ranges in 
+    // http://www.unicode.org/Public/UNIDATA/DerivedCoreProperties.txt)
+    // (.*)? binds to null if no suffix.
     var parseAlphShortDateRegex = /^\s*(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)\W{0,2}(\d+|[^\d\W]+)(.*)?$/;
     var datePartsArray = parseAlphShortDateRegex.exec(dateString);
     if (datePartsArray != null) {
