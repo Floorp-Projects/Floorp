@@ -496,7 +496,7 @@ nsSOAPCall::CreateParameterElements()
   encoderContractid.Assign(NS_SOAPENCODER_CONTRACTID_PREFIX);
   encoderContractid.Append(encodingStyle);
 
-  nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid);
+  nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid.get());
   if (!encoder) return NS_ERROR_INVALID_ARG;
 
   PRUint32 index, count;
@@ -521,7 +521,7 @@ nsSOAPCall::CreateParameterElements()
         paramEncoderContractid.Assign(NS_SOAPENCODER_CONTRACTID_PREFIX);
         paramEncoderContractid.Append(paramEncoding);
         
-        paramEncoder = do_CreateInstance(paramEncoderContractid);
+        paramEncoder = do_CreateInstance(paramEncoderContractid.get());
         if (!paramEncoder) return NS_ERROR_INVALID_ARG;
       }
 
@@ -701,7 +701,7 @@ nsSOAPCall::GetTransport(nsISOAPTransport** aTransport)
   transportContractid.Assign(NS_SOAPTRANSPORT_CONTRACTID_PREFIX);
   transportContractid.Append(protocol);
 
-  nsCOMPtr<nsISOAPTransport> transport = do_CreateInstance(transportContractid);
+  nsCOMPtr<nsISOAPTransport> transport = do_CreateInstance(transportContractid.get());
   if (!transport) return NS_ERROR_INVALID_ARG;
 
   *aTransport = transport.get();
@@ -732,8 +732,8 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse **_retval)
   }
 
   nsCOMPtr<nsIDOMDocument> responseDocument;
-  rv = transport->SyncCall(mDestinationURI,
-                           mActionURI,
+  rv = transport->SyncCall(mDestinationURI.get(),
+                           mActionURI.get(),
                            mEnvelopeDocument,
                            getter_AddRefs(responseDocument));
   if (NS_FAILED(rv)) return rv;
@@ -818,8 +818,8 @@ NS_IMETHODIMP nsSOAPCall::AsyncInvoke(nsISupports *listener)
     if (NS_FAILED(rv)) return rv;
   }
 
-  rv = transport->AsyncCall(mDestinationURI,
-                            mActionURI,
+  rv = transport->AsyncCall(mDestinationURI.get(),
+                            mActionURI.get(),
                             mEnvelopeDocument,
                             this);
   return rv;

@@ -243,7 +243,7 @@ NS_IMETHODIMP nsSOAPResponse::GetReturnValue(nsISOAPParameter * *aReturnValue)
     encoderContractid.Assign(NS_SOAPENCODER_CONTRACTID_PREFIX);
     encoderContractid.Append(encodingStyle);
 
-    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid);
+    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid.get());
     if (!encoder) {
       nsMemory::Free(encodingStyle);
       return NS_ERROR_NOT_IMPLEMENTED;

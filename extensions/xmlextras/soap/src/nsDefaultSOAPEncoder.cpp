@@ -305,7 +305,7 @@ nsDefaultSOAPEncoder::EncodeParameter(nsISOAPParameter* parameter,
     encoderContractid.Assign(NS_SOAPENCODER_CONTRACTID_PREFIX);
     encoderContractid.Append(encodingStyle);
 
-    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid);
+    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid.get());
     if (!encoder) return NS_ERROR_INVALID_ARG;
     
     return encoder->ParameterToElement(parameter, encodingStyle,
@@ -697,7 +697,7 @@ nsDefaultSOAPEncoder::DecodeParameter(nsIDOMElement* element,
     encoderContractid.Assign(NS_SOAPENCODER_CONTRACTID_PREFIX);
     encoderContractid.Append(NS_ConvertUCS2toUTF8(attrVal));
 
-    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid);
+    nsCOMPtr<nsISOAPEncoder> encoder = do_CreateInstance(encoderContractid.get());
     if (!encoder) return NS_ERROR_INVALID_ARG;
     
     return encoder->ElementToParameter(element, 
