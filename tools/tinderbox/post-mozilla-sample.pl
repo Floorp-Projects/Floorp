@@ -5,6 +5,7 @@
 # This script gets called after a full mozilla build & test.
 # Use this to build and test an embedded or commercial branding of Mozilla.
 #
+# Edit, and rename this file to post-mozilla.pl to activate.
 # ./build-seamonkey-utils.pl will call PostMozilla::main() after
 # a successful build and testing of mozilla.  This package can report
 # status via the $TinderUtils::build_status variable.  Yeah this is a hack,
