@@ -106,11 +106,7 @@ nsAString::GetBufferHandle() const
 PRUint32
 nsAString::GetImplementationFlags() const
   {
-    PRUint32 flags = 0;
-    const shared_buffer_handle_type* handle = GetSharedBufferHandle();
-    if ( handle )
-      flags = handle->GetImplementationFlags();
-    return flags;
+    return 0;
   }
 
 
@@ -605,11 +601,7 @@ nsACString::GetBufferHandle() const
 PRUint32
 nsACString::GetImplementationFlags() const
   {
-    PRUint32 flags = 0;
-    const shared_buffer_handle_type* handle = GetSharedBufferHandle();
-    if ( handle )
-      flags = handle->GetImplementationFlags();
-    return flags;
+    return 0;
   }
 
 
