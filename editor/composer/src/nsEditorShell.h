@@ -54,7 +54,6 @@ class nsIDOMWindow;
 class nsIDOMElement;
 class nsIDOMNode;
 class nsIURI;
-class nsIWebShellWindow;
 class nsIPresShell;
 class nsIOutputStream;
 class nsISupportsArray;
@@ -105,6 +104,9 @@ class nsEditorShell :   public nsIEditorShell,
   	} EEditorType;
   	
     nsresult   			DoEditorMode(nsIDocShell *aDocShell);
+    // nuke any existing editor in the editorShell, thus preparing it to edit
+    // a(nother) document.
+    nsresult        ResetEditingState();
     nsresult  			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
 		nsresult    	  PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl);
     nsresult  			ScrollSelectionIntoView();
