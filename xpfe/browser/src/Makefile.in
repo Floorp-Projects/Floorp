@@ -35,6 +35,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/navigator-test1.xul \
 	$(srcdir)/raindrops_light.gif \
 	$(srcdir)/skindemo.xul \
+	$(srcdir)/onerror.js \
 	$(srcdir)/DumpDOM.js \
 	$(srcdir)/lessCols.gif \
 	$(srcdir)/lessCols_mo.gif \
