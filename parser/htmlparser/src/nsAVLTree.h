@@ -54,37 +54,37 @@ struct nsAVLNode;
  * @param anObject2 is the second object to be compared
  * @return -1,0,1 if object1 is less, equal, greater than object2
  */
-class nsAVLNodeComparator {
+class nsAVLNodeComparitor {
 public:
-  virtual PRInt32 operator()(const void* anItem1,const void* anItem2)=0;
+  virtual PRInt32 operator()(void* anItem1,void* anItem2)=0;
 }; 
 
 class nsAVLNodeFunctor {
 public:
-  virtual const void* operator()(const void* anItem)=0;
+  virtual void* operator()(void* anItem)=0;
 };
 
 class nsAVLTree {
 public:
-              nsAVLTree(nsAVLNodeComparator& aComparator, nsAVLNodeFunctor* aDeallocator);
+              nsAVLTree(nsAVLNodeComparitor& aComparitor, nsAVLNodeFunctor* aDeallocator);
               ~nsAVLTree(void);
 
   PRBool      operator==(const nsAVLTree& aOther) const;
   PRInt32     GetCount(void) const {return mCount;}
 
               //main functions...
-  eAVLStatus  AddItem(const void* anItem);
+  eAVLStatus  AddItem(void* anItem);
   eAVLStatus  RemoveItem(void* anItem);
-  const void* FindItem(const void* anItem) const;
+  void*       FindItem(void* anItem) const;
   void        ForEach(nsAVLNodeFunctor& aFunctor) const;
   void        ForEachDepthFirst(nsAVLNodeFunctor& aFunctor) const;
-  const void* FirstThat(nsAVLNodeFunctor& aFunctor) const;
+  void*       FirstThat(nsAVLNodeFunctor& aFunctor) const;
 
 protected: 
 
   nsAVLNode*  mRoot;
   PRInt32     mCount;
-  nsAVLNodeComparator&  mComparator;
+  nsAVLNodeComparitor&  mComparitor;
   nsAVLNodeFunctor*     mDeallocator;
 };
 
