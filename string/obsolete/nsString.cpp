@@ -1013,16 +1013,18 @@ PRInt32 nsString::Insert(PRUnichar aChar,PRInt32 anOffset){
  *  @param  aCount -- number of chars to be cut
  *  @return *this
  *------------------------------------------------------*/
-nsString& nsString::Cut(PRInt32 anOffset,PRInt32 aCount) {
-  if((anOffset>=0) && (anOffset<mLength)) {
+nsString&
+nsString::Cut(PRInt32 anOffset, PRInt32 aCount)
+{
+  if (PRUint32(anOffset) < PRUint32(mLength)) {
     PRInt32 spos=anOffset+aCount;
     PRInt32 delcnt=(spos<mLength) ? aCount : mLength-anOffset;
-    if(spos<mLength) {
-      nsCRT::memmove(&mStr[anOffset],&mStr[spos],sizeof(chartype)*mLength-spos);
-      mStr[mLength-aCount]=0;
+    if (spos < mLength) {
+      nsCRT::memmove(&mStr[anOffset], &mStr[spos],
+                     sizeof(chartype) * (mLength - spos));
     }
-    else mStr[anOffset]=0;
-    mLength-=delcnt;
+    mLength -= delcnt;
+    mStr[mLength] = 0;          // restore zero terminator
   }
   return *this;
 }
