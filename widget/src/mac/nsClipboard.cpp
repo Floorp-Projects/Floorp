@@ -66,6 +66,7 @@
 #include "nsCRT.h"
 #include "nsStylClipboardUtils.h"
 #include "nsLinebreakConverter.h"
+#include "nsAutoPtr.h"
 
 #include <Scrap.h>
 #include <Script.h>
@@ -583,8 +584,8 @@ nsClipboard :: CheckIfFlavorPresent ( ResType inMacFlavor )
     // see the list of what could be there if we asked for it. This is really
     // fast. Iterate over the list, and if we find it, we're good to go.
     UInt32 flavorCount = 0;
-    ::GetScrapFlavorCount ( scrap, &flavorCount );    
-    ScrapFlavorInfo* flavorList = new ScrapFlavorInfo[flavorCount];
+    ::GetScrapFlavorCount ( scrap, &flavorCount );
+    nsAutoArrayPtr<ScrapFlavorInfo> flavorList(new ScrapFlavorInfo[flavorCount]);
     if ( flavorList ) {
       err = ::GetScrapFlavorInfoList ( scrap, &flavorCount, flavorList );
       if ( !err && flavorList ) {
@@ -592,7 +593,6 @@ nsClipboard :: CheckIfFlavorPresent ( ResType inMacFlavor )
           if ( flavorList[i].flavorType == inMacFlavor )
             retval = PR_TRUE;
         }
-        delete flavorList;
       }
     }
 
