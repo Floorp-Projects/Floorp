@@ -89,6 +89,13 @@ Contributor(s): Masaki Katakai <katakai@japan.sun.com>
         </radiogroup>
       </row>
       <row>
+        <text class="label" value="&orientationGroup.label;" flex ="1"/>
+        <radiogroup id="orientationGroup" orient="horizontal">
+          <radio group = "orientationGroup" id = "portraitRadio" label = "&portraitRadio.label;" />
+          <radio group = "orientationGroup" id = "landscapeRadio" label = "&landscapeRadio.label;"/>
+        </radiogroup>
+      </row>
+      <row>
         <text class="label" value="&printrangeGroup.label;" flex ="1"/>
         <radiogroup id="printrangeGroup" orient="vertical">
           <radio group = "printrangeGroup" id = "allpagesRadio" label = "&allpagesRadio.label;" onclick = "doPrintRange(0);"/>

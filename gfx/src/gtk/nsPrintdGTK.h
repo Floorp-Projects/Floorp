@@ -38,6 +38,9 @@ PR_BEGIN_EXTERN_C
 #define NS_EXECUTIVE_SIZE 2
 #define NS_A4_SIZE        3
 #define NS_A3_SIZE        4
+
+#define NS_PORTRAIT  0
+#define NS_LANDSCAPE 1
 #endif
 
 #ifndef PATH_MAX
@@ -53,6 +56,7 @@ typedef struct unixprdata {
         PRBool fpf;                /* If PR_TRUE, first page first */
         PRBool grayscale;          /* If PR_TRUE, print grayscale */
         int size;                   /* Paper size e.g., SizeLetter */
+        int orientation;            /* Orientation e.g. Portrait */
         char command[ PATH_MAX ];   /* Print command e.g., lpr */
         char path[ PATH_MAX ];      /* If toPrinter = PR_FALSE, dest file */
 	PRBool cancel;		    /* If PR_TRUE, user cancelled */

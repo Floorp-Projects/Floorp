@@ -217,6 +217,7 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   
   int    printSize;
   float  top, bottom, left, right;
+  int    landscape;
   char  *buf;
 
   // Get the Attributes
@@ -227,7 +228,8 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   aSpec->GetBottomMargin(bottom);
   aSpec->GetLeftMargin(left);
   aSpec->GetRightMargin(right);
-
+  aSpec->GetLandscape(landscape);
+  
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
          ("nsXPrintContext::SetupPrintContext: borders top=%f, bottom=%f, left=%f, right=%f\n", 
          top, bottom, left, right));
@@ -269,11 +271,28 @@ nsXPrintContext::SetupPrintContext(nsIDeviceContextSpecXp *aSpec)
   dumpXpAttributes(mPDisplay, mPContext);
 #endif /* DEBUG */
 
-  // Set the Document Attributes
-  // XpSetAttributes(mPDisplay,mPContext, XPDocAttr,(char *)"*content-orientation: landscape",XPAttrMerge);
-  // or
-  // XpuSetContentOrientation(mPDisplay,mPContext, XPDocAttr, "landscape");
-  
+  /* which orientation ? */
+  switch (landscape)
+  {
+    case 1 /* NS_LANDSCAPE */:
+      if (XpuSetContentOrientation(mPDisplay,mPContext, XPDocAttr, "landscape") != 1)
+      {
+        NS_WARNING("orientation 'landscape' not supported on this printer");
+        return NS_ERROR_FAILURE;
+      }
+      break;
+    case 0 /* NS_PORTRAIT */:
+      if (XpuSetContentOrientation(mPDisplay,mPContext, XPDocAttr, "portrait") != 1)
+      {
+        NS_WARNING("orientation 'portrait' not supported on this printer");
+        return NS_ERROR_FAILURE;
+      }
+      break;
+    default:  
+      NS_WARNING("unsupported orientation");
+      return NS_ERROR_FAILURE;
+  }    
+    
   /* set printer context
    * WARNING: after this point it is no longer allows to change job attributes
    * only after the XpSetContext() call the alllication is allowed to make 

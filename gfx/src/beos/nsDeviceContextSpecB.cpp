@@ -113,6 +113,7 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: Init(PRBool	aQuiet)
   PRBool reversed = PR_FALSE, color = PR_FALSE, landscape = PR_FALSE; 
   PRBool tofile = PR_FALSE; 
   PRInt32 paper_size = NS_LETTER_SIZE; 
+  PRInt32 orientation = NS_PORTRAIT;
   int ileft = 500, iright = 0, itop = 500, ibottom = 0; 
   char *command; 
   char *printfile = nsnull; 
@@ -155,6 +156,7 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: Init(PRBool	aQuiet)
 	(void) pPrefs->GetBoolPref("print.print_color", &color); 
 	(void) pPrefs->GetBoolPref("print.print_landscape", &landscape); 
 	(void) pPrefs->GetIntPref("print.print_paper_size", &paper_size); 
+	(void) pPrefs->GetIntPref("print.print_orientation", &orientation); 
 	(void) pPrefs->CopyCharPref("print.print_command", (char **) &command); 
 	(void) pPrefs->GetIntPref("print.print_margin_top", &itop); 
 	(void) pPrefs->GetIntPref("print.print_margin_left", &ileft); 
@@ -181,6 +183,7 @@ sprintf( mPrData.command, "lpr" );
       mPrData.fpf = !reversed; 
       mPrData.grayscale = !color; 
       mPrData.size = paper_size; 
+      mPrData.orientation = orientation;
       mPrData.toPrinter = !tofile; 
 
 // PWD, HOME, or fail 
@@ -246,7 +249,21 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetPageDimensions ( float &aWidth, floa
         aWidth = 11.69;
         aHeight = 16.53;
     } 
+
+    if (mPrData.orientation == NS_LANDSCAPE) {
+      float temp;
+      temp = aWidth;
+      aWidth = aHeight;
+      aHeight = temp;
+    }
+
     return NS_OK; 
+} 
+ 
+NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetLandscape ( PRBool &landscape )      
+{ 
+  landscape = (mPrData.orientation == NS_LANDSCAPE);
+  return NS_OK; 
 } 
  
 NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetTopMargin ( float &value )      

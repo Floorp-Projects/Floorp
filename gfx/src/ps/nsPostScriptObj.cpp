@@ -242,6 +242,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
 {
   PRBool  isGray, isAPrinter, isFirstPageFirst;
   int     printSize;
+  int     landscape;
   float   fwidth, fheight;
   char    *buf;
 
@@ -313,7 +314,11 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
     mPrintSetup->header = "header";
     mPrintSetup->footer = "footer";
     mPrintSetup->sizes = NULL;
-    mPrintSetup->landscape = PR_FALSE;            // Rotated output 
+
+    aSpec->GetLandscape( landscape );
+    mPrintSetup->landscape = (landscape) ? PR_TRUE : PR_FALSE; // Rotated output 
+    //mPrintSetup->landscape = PR_FALSE;
+
     mPrintSetup->underline = PR_TRUE;             // underline links 
     mPrintSetup->scale_images = PR_TRUE;          // Scale unsized images which are too big 
     mPrintSetup->scale_pre = PR_FALSE;		        // do the pre-scaling thing 
@@ -411,11 +416,15 @@ nsPostScriptObj::initialize_translation(PrintSetup* pi)
   dup->left = POINT_TO_PAGE(dup->left);
   dup->bottom = POINT_TO_PAGE(dup->bottom);
   dup->right = POINT_TO_PAGE(dup->right);
+/*
   if (pi->landscape){
     dup->height = POINT_TO_PAGE(pi->width);
     dup->width = POINT_TO_PAGE(pi->height);
     //XXX Should I swap the margins too ??? 
+    //XXX kaie: I don't think so... The user still sees the options
+    //          named left margin etc.
   }	
+*/
 }
 
 /** ---------------------------------------------------

@@ -49,6 +49,9 @@ class nsIImage;
 #define NS_A4_SIZE	  3
 #define NS_A3_SIZE	  4
 
+#define NS_PORTRAIT  0
+#define NS_LANDSCAPE 1
+
 #define N_FONTS 8
 #define INCH_TO_PAGE(f) ((int) (.5 + (f)*720))
 #define PAGE_TO_POINT_I(f) ((int) ((f) / 10.0))
@@ -140,7 +143,7 @@ struct PrintSetup_ {
 
   int width;                       /* Paper size, # of cols for text xlate */
   int height;
-
+  
   char* header;
   char* footer;
 

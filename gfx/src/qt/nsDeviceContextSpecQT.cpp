@@ -140,6 +140,7 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
   PRBool tofile = PR_FALSE;
   PRInt16 printRange = nsIPrintOptions::kRangeAllPages;
   PRInt32 paper_size = NS_LETTER_SIZE;
+  PRInt32 orientation    = NS_PORTRAIT;
   PRInt32 fromPage = 1;
   PRInt32 toPage = 1;
   PRUnichar *command = nsnull;
@@ -185,6 +186,7 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
 	printService->GetPrintReversed(&reversed);
 	printService->GetPrintInColor(&color);
 	printService->GetPaperSize(&paper_size);
+        printService->GetOrientation(&orientation);
 	printService->GetPrintCommand(&command);
 	printService->GetPrintRange(&printRange);
 	printService->GetToFileName(&printfile);
@@ -227,6 +229,7 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(PRBool aQuiet)
       mPrData.fpf = !reversed;
       mPrData.grayscale = !color;
       mPrData.size = paper_size;
+      mPrData.orientation = orientation;
       mPrData.toPrinter = !tofile;
 
       // PWD, HOME, or fail
@@ -301,6 +304,19 @@ NS_IMETHODIMP nsDeviceContextSpecQT::GetPageDimensions(float &aWidth,
         aHeight = 16.53;
     }
         
+    if (mPrData.orientation == NS_LANDSCAPE) {
+      float temp;
+      temp = aWidth;
+      aWidth = aHeight;
+      aHeight = temp;
+    }
+
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP nsDeviceContextSpecQT::GetLandscape(PRBool &landscape)
+{
+  landscape = (mPrData.orientation == NS_LANDSCAPE);
   return NS_OK;
 }
  

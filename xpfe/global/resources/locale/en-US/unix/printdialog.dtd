@@ -29,6 +29,10 @@
 <!ENTITY a4Radio.label "A4 (210 x 297 mm)">
 <!ENTITY a3Radio.label "A3 (297 x 420 mm)">
 
+<!ENTITY orientationGroup.label "Orientation:">
+<!ENTITY portraitRadio.label "Portrait">
+<!ENTITY landscapeRadio.label "Landscape">
+
 <!ENTITY printrangeGroup.label "Print Range:">
 <!ENTITY allpagesRadio.label "All Pages">
 <!ENTITY rangeRadio.label  "Pages">

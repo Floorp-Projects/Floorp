@@ -57,6 +57,9 @@ function initDialog()
   dialog.letterRadio     = document.getElementById("letterRadio");
   dialog.legalRadio      = document.getElementById("legalRadio");
   dialog.exectiveRadio   = document.getElementById("exectiveRadio");
+  
+  dialog.portraitRadio   = document.getElementById("portraitRadio");
+  dialog.landscapeRadio   = document.getElementById("landscapeRadio");
 
   dialog.allpagesRadio   = document.getElementById("allpagesRadio");
   dialog.rangeRadio      = document.getElementById("rangeRadio");
@@ -157,6 +160,7 @@ function loadDialog()
   var print_reversed      = false;
   var print_color         = true;
   var print_paper_size    = 0;
+  var print_orientation   = 0;
   var print_margin_top    = 0.5;
   var print_margin_left   = 0.5;
   var print_margin_bottom = 0.5;
@@ -181,6 +185,7 @@ function loadDialog()
     print_reversed   = printService.printReversed;
     print_color      = printService.printInColor;
     print_paper_size = printService.paperSize;
+    print_orientation = printService.orientation;
 
     print_margin_top    = printService.marginTop;
     print_margin_left   = printService.marginLeft;
@@ -199,6 +204,7 @@ function loadDialog()
     dump("printReversed "+print_reversed+"\n");
     dump("printInColor  "+print_color+"\n");
     dump("paperSize     "+print_paper_size+"\n");
+    dump("orientation   "+print_orientation+"\n");
     dump("printCommand  "+print_command+"\n");
     dump("toFileName    "+print_file+"\n");
     dump("printToFile   "+print_tofile+"\n");
@@ -252,6 +258,12 @@ function loadDialog()
     dialog.a4Radio.checked = true;
   } else if ( print_paper_size == gPrintOptInterface.kA3PaperSize ) {
     dialog.a3Radio.checked = true;  
+  }
+
+  if ( print_orientation == gPrintOptInterface.kPortraitOrientation ) {
+    dialog.portraitRadio.checked = true;
+  } else  if ( print_orientation == gPrintOptInterface.kLandscapeOrientation ) {
+    dialog.landscapeRadio.checked = true;
   }
 
   dialog.allpagesRadio.checked = true;
@@ -359,6 +371,13 @@ function onOK()
       print_paper_size = gPrintOptInterface.kA3PaperSize;
     }
     printService.paperSize = print_paper_size;
+    
+    if (dialog.portraitRadio.checked) {
+      print_orientation = gPrintOptInterface.kPortraitOrientation;
+    } else if (dialog.landscapeRadio.checked) {
+      print_orientation = gPrintOptInterface.kLandscapeOrientation;
+    }
+    printService.orientation = print_orientation;
 
     // save these out so they can be picked up by the device spec
     printService.marginTop    = dialog.topInput.value;
