@@ -665,6 +665,17 @@ alltags::
         @echo +++ Making emacs tags
 	c:\\mksnt\\find . -name dist -prune -o ( -name '*.[hc]' -o -name '*.cpp' -o -name '*.idl' ) -print | c:\\mksnt\\xargs etags -a
 
+echo-dirs:
+	@echo.$(DIRS)
+
+echo-module:
+	@echo.$(MODULE)
+
+echo-requires:
+	@echo.$(REQUIRES)
+
+echo-incs:
+	@echo.$(INCS)
 
 #//------------------------------------------------------------------------
 #//
