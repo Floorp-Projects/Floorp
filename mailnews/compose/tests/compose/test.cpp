@@ -195,12 +195,12 @@ int main(int argc, char *argv[])
   /*
    * Create the Application Shell instance...
    */
-  nsIWebShellWindow* newWindow;
+  nsCOMPtr<nsIWebShellWindow> newWindow;
   rv = nsServiceManager::GetService(kAppShellServiceCID,
                                     kIAppShellServiceIID,
                                    (nsISupports**)&appShell);
 	if (NS_SUCCEEDED(rv)) 
-    appShell->CreateTopLevelWindow(nsnull, nsnull, PR_TRUE, newWindow,
+    appShell->CreateTopLevelWindow(nsnull, nsnull, PR_TRUE, *getter_AddRefs(newWindow),
                 nsnull, nsnull, 200, 200);
 
   // Create the Event Queue for this thread...

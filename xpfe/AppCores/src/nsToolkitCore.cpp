@@ -185,9 +185,6 @@ NS_IMETHODIMP
 nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsresult           rv;
-  nsIWebShellWindow  *window;
-
-  window = nsnull;
 
   nsCOMPtr<nsIURL> urlObj;
 
@@ -214,10 +211,11 @@ nsToolkitCore::ShowWindow(const nsString& aUrl, nsIDOMWindow* aParent) {
 
   nsCOMPtr<nsIWebShellWindow> parent;
   DOMWindowToWebShellWindow(aParent, &parent);
-  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, window,
+  nsCOMPtr<nsIWebShellWindow> window;
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, *getter_AddRefs(window),
                                nsnull, nsnull, 615, 480);
 
-  if (window != nsnull)
+  if (window)
     window->Show(PR_TRUE);
 
   return rv;
@@ -310,9 +308,6 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
                                   const nsString& aArgs) {
 
   nsresult           rv;
-  nsIWebShellWindow  *window;
-
-  window = nsnull;
 
   nsCOMPtr<nsIURL> urlObj;
 #ifndef NECKO
@@ -340,10 +335,12 @@ nsToolkitCore::ShowWindowWithArgs(const nsString& aUrl,
   DOMWindowToWebShellWindow(aParent, &parent);
   nsCOMPtr<nsArgCallbacks> cb;
   cb = nsDontQueryInterface<nsArgCallbacks>( new nsArgCallbacks( aArgs ) );
-  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, window,
+
+  nsCOMPtr<nsIWebShellWindow>  window;
+  appShell->CreateTopLevelWindow(parent, urlObj, PR_TRUE, *getter_AddRefs(window),
                                nsnull, cb, 615, 650);
 
-  if (window != nsnull)
+  if (window)
     window->Show(PR_TRUE);
 
   return rv;

@@ -202,7 +202,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURL *aURL,
     // Make sure we've been initialized.
     if ( mAppShell ) {
         // Open "Unknown file type" dialog.
-        nsIWebShellWindow *newWindow;
+        nsCOMPtr<nsIWebShellWindow> newWindow;
     
         // Make url for dialog xul.
         nsIURL *url;
@@ -228,7 +228,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURL *aURL,
             rv = mAppShell->CreateTopLevelWindow( nsnull,
                                                   url,
                                                   PR_TRUE,
-                                                  newWindow,
+                                                  *getter_AddRefs(newWindow),
                                                   nsnull,
                                                   dialog,
                                                   0, 0 );
@@ -247,7 +247,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURL *aURL,
     return rv;
 }
 
-#ifdef NS_DEBUG
+#if defined( NS_DEBUG ) && !defined( XP_MAC )
     #define DEBUG_PRINTF PR_fprintf
 #else
     #define DEBUG_PRINTF (void)
