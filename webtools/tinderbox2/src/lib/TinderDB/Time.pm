@@ -29,6 +29,13 @@
 # Contributor(s): 
 
 
+
+# $Revision: 1.7 $ 
+# $Date: 2002/05/02 22:58:28 $ 
+# $Author: kestes%walrus.com $ 
+# $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Time.pm,v $ 
+# $Name:  $ 
+
 package TinderDB::Time;
 
 # Load standard perl libraries
@@ -41,7 +48,7 @@ use VCDisplay;
 
 
 
-$VERSION = ( qw $Revision: 1.6 $ )[1];
+$VERSION = ( qw $Revision: 1.7 $ )[1];
 
 
 sub new {
