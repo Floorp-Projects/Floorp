@@ -144,7 +144,6 @@ OBJS = \
     .\$(OBJDIR)\nsCMSSecureMessage.obj \
     .\$(OBJDIR)\nsCMS.obj \
     .\$(OBJDIR)\nsCertPicker.obj \
-    .\$(OBJDIR)\nsCipherInfo.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

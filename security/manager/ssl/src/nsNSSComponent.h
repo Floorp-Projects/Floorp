@@ -125,6 +125,7 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   NS_IMETHOD DefineNextTimer() = 0;
 
   NS_IMETHOD DownloadCRLDirectly(nsAutoString, nsAutoString) = 0;
+  
 };
 
 struct PRLock;
