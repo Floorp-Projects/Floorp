@@ -157,6 +157,7 @@ private:
     PRPackedBool                    mReceivedControlData;  
     PRPackedBool                    mTryingCachedControl;     // retrying the password
     PRPackedBool                    mWaitingForDConn;         // Are we wait for a data connection
+    PRPackedBool                    mRETRFailed;              // Did we already try a RETR and it failed?
     nsCOMPtr<nsITransport>          mDPipe;                   // the data transport
     nsCOMPtr<nsIRequest>            mDPipeRequest;
     DataRequestForwarder*           mDRequestForwarder;

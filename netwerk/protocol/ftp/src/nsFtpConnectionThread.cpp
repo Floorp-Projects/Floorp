@@ -313,6 +313,7 @@ nsFtpState::nsFtpState() {
 
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpState created", this));
     // bool init
+    mRETRFailed = PR_FALSE;
     mWaitingForDConn = mTryingCachedControl = mRetryPass = PR_FALSE;
     mFireCallbacks = mKeepRunning = mAnonymous = PR_TRUE;
 
@@ -1281,6 +1282,11 @@ nsFtpState::R_retr() {
     if (mResponseCode == 421 || mResponseCode == 425 || mResponseCode == 426)
         return FTP_ERROR;
 
+    if (mResponseCode/100 == 5) {
+        mRETRFailed = PR_TRUE;
+        return FTP_S_PASV;
+    }
+
     return FTP_S_CWD;
 }
 
@@ -1500,6 +1506,7 @@ nsFtpState::R_pasv() {
     }
 
     if (mAction == PUT) {
+        NS_ASSERTION(!mRETRFailed, "Failed before uploading");
         mDRequestForwarder->Uploading(PR_TRUE);
         return FTP_S_STOR;
     }
@@ -1510,9 +1517,10 @@ nsFtpState::R_pasv() {
         return FTP_ERROR;
     }
 
+    if (mRETRFailed)
+        return FTP_S_CWD;
 
     return FTP_S_SIZE;
-
 }
 
 
