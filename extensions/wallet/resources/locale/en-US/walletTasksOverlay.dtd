@@ -29,9 +29,9 @@
 <!ENTITY walletClearCmd.label "Reset Master Password">
 <!ENTITY walletClearCmd.accesskey "r">
 
-<!ENTITY PasswordNotChanged "Unable to change the password that protects your sensitive information.">
-<!ENTITY PasswordExpired "Your sensitive information is now locked.">
-<!ENTITY PasswordNotExpired "Unable to lock your sensitive information.">
+<!ENTITY PasswordNotChanged "Unable to change your master password.">
+<!ENTITY PasswordExpired "You are now logged out.">
+<!ENTITY PasswordNotExpired "Unable to log out.">
 <!ENTITY AllDataWillBeCleared "All stored data will be erased.">
 <!ENTITY UnableToCapture "Unable to capture data.">
 <!ENTITY Captured "Data has been captured.">
