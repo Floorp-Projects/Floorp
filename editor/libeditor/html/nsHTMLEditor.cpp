@@ -5128,66 +5128,68 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedText,
   if (!NS_SUCCEEDED(rv))
     return rv;
 
-  nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
-
+  nsCOMPtr<nsIDOMNode> preNode;
   // get selection
   nsCOMPtr<nsIDOMSelection> selection;
   rv = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
   if (!selection) return NS_ERROR_NULL_POINTER;
-
-  // give rules a chance to handle or cancel
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
-  PRBool cancel, handled;
-  rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  if (NS_FAILED(rv)) return rv;
-  if (cancel) return NS_OK; // rules canceled the operation
-  nsCOMPtr<nsIDOMNode> preNode;
-  if (!handled)
+  else
   {
-    // Wrap the inserted quote in a <pre> so it won't be wrapped:
-    nsAutoString tag; tag.AssignWithConversion("pre");
-    rv = DeleteSelectionAndCreateNode(tag, getter_AddRefs(preNode));
-    
-    // If this succeeded, then set selection inside the pre
-    // so the inserted text will end up there.
-    // If it failed, we don't care what the return value was,
-    // but we'll fall through and try to insert the text anyway.
-    if (NS_SUCCEEDED(rv) && preNode)
+    nsAutoEditBatch beginBatching(this);
+    nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
+
+    // give rules a chance to handle or cancel
+    nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
+    PRBool cancel, handled;
+    rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
+    if (NS_FAILED(rv)) return rv;
+    if (cancel) return NS_OK; // rules canceled the operation
+    if (!handled)
     {
-      // Add an attribute on the pre node so we'll know it's a quotation.
-      // Do this after the insertion, so that 
-      nsCOMPtr<nsIDOMElement> preElement (do_QueryInterface(preNode));
-      if (preElement)
+      // Wrap the inserted quote in a <pre> so it won't be wrapped:
+      nsAutoString tag; tag.AssignWithConversion("pre");
+      rv = DeleteSelectionAndCreateNode(tag, getter_AddRefs(preNode));
+      
+      // If this succeeded, then set selection inside the pre
+      // so the inserted text will end up there.
+      // If it failed, we don't care what the return value was,
+      // but we'll fall through and try to insert the text anyway.
+      if (NS_SUCCEEDED(rv) && preNode)
       {
-        preElement->SetAttribute(NS_ConvertASCIItoUCS2("_moz_quote"),
-                                 NS_ConvertASCIItoUCS2("true"));
-        // set style to not have unwanted vertical margins
-        preElement->SetAttribute(NS_ConvertASCIItoUCS2("style"),
-                                 NS_ConvertASCIItoUCS2("margin: 0 0 0 0px;"));
+        // Add an attribute on the pre node so we'll know it's a quotation.
+        // Do this after the insertion, so that 
+        nsCOMPtr<nsIDOMElement> preElement (do_QueryInterface(preNode));
+        if (preElement)
+        {
+          preElement->SetAttribute(NS_ConvertASCIItoUCS2("_moz_quote"),
+                                   NS_ConvertASCIItoUCS2("true"));
+          // set style to not have unwanted vertical margins
+          preElement->SetAttribute(NS_ConvertASCIItoUCS2("style"),
+                                   NS_ConvertASCIItoUCS2("margin: 0 0 0 0px;"));
+        }
+
+        // and set the selection inside it:
+        selection->Collapse(preNode, 0);
       }
 
-      // and set the selection inside it:
-      selection->Collapse(preNode, 0);
-    }
+      rv = InsertText(quotedStuff);
 
-    rv = InsertText(quotedStuff);
-
-    if (aNodeInserted && NS_SUCCEEDED(rv))
-    {
-      *aNodeInserted = preNode;
-      NS_IF_ADDREF(*aNodeInserted);
+      if (aNodeInserted && NS_SUCCEEDED(rv))
+      {
+        *aNodeInserted = preNode;
+        NS_IF_ADDREF(*aNodeInserted);
+      }
     }
-
-    // Set the selection to just after the inserted node:
-    if (NS_SUCCEEDED(rv) && preNode)
-    {
-      nsCOMPtr<nsIDOMNode> parent;
-      PRInt32 offset;
-      if (NS_SUCCEEDED(GetNodeLocation(preNode, &parent, &offset)) && parent)
-        selection->Collapse(parent, offset+1);
-    }
+  }
+    
+  // Set the selection to just after the inserted node:
+  if (NS_SUCCEEDED(rv) && preNode)
+  {
+    nsCOMPtr<nsIDOMNode> parent;
+    PRInt32 offset;
+    if (NS_SUCCEEDED(GetNodeLocation(preNode, &parent, &offset)) && parent)
+      selection->Collapse(parent, offset+1);
   }
   return rv;
 }
@@ -5199,67 +5201,71 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsString& aQuotedText,
                                      const nsString& aCharset,
                                      nsIDOMNode **aNodeInserted)
 {
-  nsAutoEditBatch beginBatching(this);
   nsCOMPtr<nsIDOMNode> newNode;
-  nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
+  nsresult res = NS_OK;
 
   // get selection
   nsCOMPtr<nsIDOMSelection> selection;
-  nsresult res = GetSelection(getter_AddRefs(selection));
+  res = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res)) return res;
   if (!selection) return NS_ERROR_NULL_POINTER;
-
-  // give rules a chance to handle or cancel
-  nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
-  PRBool cancel, handled;
-  res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
-  if (NS_FAILED(res)) return res;
-  if (cancel) return NS_OK; // rules canceled the operation
-  if (!handled)
+  else
   {
-    nsAutoString tag; tag.AssignWithConversion("blockquote");
-    res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+    nsAutoEditBatch beginBatching(this);
+    nsAutoRules beginRulesSniffing(this, kOpInsertQuotation, nsIEditor::eNext);
+
+    // give rules a chance to handle or cancel
+    nsTextRulesInfo ruleInfo(nsTextEditRules::kInsertElement);
+    PRBool cancel, handled;
+    res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
     if (NS_FAILED(res)) return res;
-    if (!newNode) return NS_ERROR_NULL_POINTER;
-
-    // Try to set type=cite.  Ignore it if this fails.
-    nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
-    if (newElement)
+    if (cancel) return NS_OK; // rules canceled the operation
+    if (!handled)
     {
-      nsAutoString type; type.AssignWithConversion("type");
-      nsAutoString cite; cite.AssignWithConversion("cite");
-      newElement->SetAttribute(type, cite);
+      nsAutoString tag; tag.AssignWithConversion("blockquote");
+      res = DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
+      if (NS_FAILED(res)) return res;
+      if (!newNode) return NS_ERROR_NULL_POINTER;
 
-      if (aCitation.Length() > 0)
-        newElement->SetAttribute(cite, aCitation);
-
-      // Set the selection inside the blockquote so aQuotedText will go there:
-      selection->Collapse(newNode, 0);
-    }
-
-    if (aInsertHTML)
-      res = InsertHTMLWithCharset(aQuotedText, aCharset);
-
-    else
-      res = InsertText(aQuotedText);  // XXX ignore charset
-
-    if (aNodeInserted)
-    {
-      if (NS_SUCCEEDED(res))
+      // Try to set type=cite.  Ignore it if this fails.
+      nsCOMPtr<nsIDOMElement> newElement (do_QueryInterface(newNode));
+      if (newElement)
       {
-        *aNodeInserted = newNode;
-        NS_IF_ADDREF(*aNodeInserted);
+        nsAutoString type; type.AssignWithConversion("type");
+        nsAutoString cite; cite.AssignWithConversion("cite");
+        newElement->SetAttribute(type, cite);
+
+        if (aCitation.Length() > 0)
+          newElement->SetAttribute(cite, aCitation);
+
+        // Set the selection inside the blockquote so aQuotedText will go there:
+        selection->Collapse(newNode, 0);
+      }
+
+      if (aInsertHTML)
+        res = InsertHTMLWithCharset(aQuotedText, aCharset);
+
+      else
+        res = InsertText(aQuotedText);  // XXX ignore charset
+
+      if (aNodeInserted)
+      {
+        if (NS_SUCCEEDED(res))
+        {
+          *aNodeInserted = newNode;
+          NS_IF_ADDREF(*aNodeInserted);
+        }
       }
     }
+  }
 
-    // Set the selection to just after the inserted node:
-    if (NS_SUCCEEDED(res) && newNode)
-    {
-      nsCOMPtr<nsIDOMNode> parent;
-      PRInt32 offset;
-      if (NS_SUCCEEDED(GetNodeLocation(newNode, &parent, &offset)) && parent)
-        selection->Collapse(parent, offset+1);
-    }
+  // Set the selection to just after the inserted node:
+  if (NS_SUCCEEDED(res) && newNode)
+  {
+    nsCOMPtr<nsIDOMNode> parent;
+    PRInt32 offset;
+    if (NS_SUCCEEDED(GetNodeLocation(newNode, &parent, &offset)) && parent)
+      selection->Collapse(parent, offset+1);
   }
   return res;
 }
