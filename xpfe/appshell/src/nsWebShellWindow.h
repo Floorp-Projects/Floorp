@@ -181,6 +181,8 @@ protected:
 
   nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
   void                     ExecuteStartupCode();
+  void                     SetSizeFromXUL();
+  void                     SetTitleFromXUL();
   
 
   virtual ~nsWebShellWindow();
