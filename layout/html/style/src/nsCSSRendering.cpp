@@ -915,6 +915,8 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       for (x = 0;  x <= xcount;  ++x, xpos += tileWidth) {
         aRenderingContext.DrawImage(image, xpos, ypos);
       }
+
+      xpos = aBounds.x;
     }
     aRenderingContext.PopState();
   } else {
