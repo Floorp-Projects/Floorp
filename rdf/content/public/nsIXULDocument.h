@@ -107,8 +107,7 @@ public:
    * Create a XUL document from a prototype
    */
   NS_IMETHOD CreateFromPrototype(const char* aCommand,
-                                 nsIXULPrototypeDocument* aPrototype,
-                                 nsISupports* aContainer) = 0;
+                                 nsIXULPrototypeDocument* aPrototype) = 0;
 };
 
 // factory functions

@@ -29,18 +29,20 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= rdf
 
 EXPORTS		= \
+		nsIDOMXULCommandDispatcher.h \
 		nsIDOMXULDocument.h \
+		nsIDOMXULEditorElement.h \
 		nsIDOMXULElement.h \
 		nsIDOMXULTreeElement.h \
-		nsIDOMXULEditorElement.h \
+		nsIStreamLoadableDocument.h \
+		nsIXULCommandDispatcher.h \
 		nsIXULContentSink.h \
+		nsIXULContentUtils.h \
+		nsIXULDocument.h \
+		nsIXULKeyListener.h \
 		nsIXULPopupListener.h \
 		nsIXULPrototypeCache.h \
-		nsIDOMXULCommandDispatcher.h \
-		nsIXULContentUtils.h \
-		nsIXULCommandDispatcher.h \
-		nsIStreamLoadableDocument.h \
-		nsIXULKeyListener.h \
+		nsIXULPrototypeDocument.h \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -25,18 +25,20 @@ MODULE=rdf
 DEPTH=..\..\..
 
 EXPORTS	= \
+	nsIDOMXULCommandDispatcher.h    \
+	nsIStreamLoadableDocument.h     \
+	nsIXULCommandDispatcher.h       \
+	nsIXULKeyListener.h             \
+	nsIXULPopupListener.h           \
         nsIDOMXULDocument.h             \
+        nsIDOMXULEditorElement.h        \
         nsIDOMXULElement.h              \
         nsIDOMXULTreeElement.h          \
-        nsIDOMXULEditorElement.h        \
         nsIXULContentSink.h             \
-	nsIXULPopupListener.h           \
-        nsIXULPrototypeCache.h          \
-	nsIDOMXULCommandDispatcher.h    \
-	nsIXULCommandDispatcher.h       \
         nsIXULContentUtils.h            \
-	nsIStreamLoadableDocument.h     \
-	nsIXULKeyListener.h             \
+        nsIXULDocument.h                \
+        nsIXULPrototypeCache.h          \
+        nsIXULPrototypeDocument.h       \
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>
