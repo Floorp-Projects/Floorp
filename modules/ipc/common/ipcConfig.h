@@ -39,6 +39,13 @@
 #define ipcProto_h__
 
 #if defined(XP_WIN)
+
+#define IPC_WINDOW_CLASS    "Mozilla:IPCWindowClass"
+#define IPC_WINDOW_NAME     "Mozilla:IPCWindow"
+#define IPC_DAEMON_APP_NAME "mozipcd.exe"
+#define IPC_PATH_SEP_CHAR   '\\'
+
+#if 0
 //
 // XXX since win9x/me doesn't support named pipes, we resort to using a
 // localhost TCP/IP socket (for now).  this is not a great solution for
@@ -59,6 +66,8 @@
 #else
 #define IPC_DAEMON_APP_NAME     "mozipcd.exe"
 #define IPC_PATH_SEP_CHAR       '\\'
+#endif
+
 #endif
 
 #else

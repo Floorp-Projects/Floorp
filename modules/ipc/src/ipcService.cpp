@@ -155,8 +155,10 @@ ipcService::Init()
 
     // get socket path from directory service
     nsCAutoString socketPath;
+#ifdef XP_UNIX 
     if (NS_FAILED(GetSocketPath(socketPath)))
         socketPath = NS_LITERAL_CSTRING(IPC_DEFAULT_SOCKET_PATH);
+#endif
 
     rv = mTransport->Init(appName, socketPath, this);
     if (NS_FAILED(rv)) return rv;
@@ -197,6 +199,7 @@ ipcService::HandleQueryResult(const ipcMessage *rawMsg, PRBool succeeded)
     mQueryQ.DeleteFirst();
 }
 
+#ifdef XP_UNIX
 nsresult
 ipcService::GetSocketPath(nsACString &socketPath)
 {
@@ -204,7 +207,6 @@ ipcService::GetSocketPath(nsACString &socketPath)
     NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(file));
     if (!file)
         return NS_ERROR_FAILURE;
-#ifdef XP_UNIX
     // XXX may want to use getpwuid_r when available
     struct passwd *pw = getpwuid(geteuid());
     if (!pw)
@@ -213,11 +215,11 @@ ipcService::GetSocketPath(nsACString &socketPath)
     leaf = NS_LITERAL_CSTRING(".mozilla-ipc-")
          + nsDependentCString(pw->pw_name);
     file->AppendNative(leaf);
-#endif
     file->AppendNative(NS_LITERAL_CSTRING("ipcd"));
     file->GetNativePath(socketPath);
     return NS_OK;
 }
+#endif
 
 //-----------------------------------------------------------------------------
 // interface impl
