@@ -22,8 +22,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-# Nuthin' to do yet...
-
 include $(topsrcdir)/config/rules.mk
 
+FILES = \
+	history.xul	\
+	history.css	\
+	$(NULL)
+
+FILES := $(addprefix $(srcdir)/, $(FILES))
+
+install::
+	$(INSTALL) $(FILES) $(DIST)/bin/res/samples
 
