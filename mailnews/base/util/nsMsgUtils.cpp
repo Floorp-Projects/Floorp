@@ -24,7 +24,7 @@
 #include "nsString.h"
 
 #if defined(DEBUG_sspitzer_) || defined(DEBUG_seth)
-#define NS_MsgHashIfNecessary 1
+#define DEBUG_NS_MsgHashIfNecessary 1
 #endif
 
 nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID)
