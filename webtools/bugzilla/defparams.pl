@@ -412,7 +412,11 @@ href=\"http://www.research.att.com/~north/cgi-bin/webdot.cgi\">webdot
 package</a> will generate the graphs remotely.</li>
 <li>A blank value will disable dependency graphing.</li>
 </ul>
-The default value is a publically-accessible webdot server.",
+The default value is a publically-accessible webdot server. If you change
+this value, make certain that the webdot server can read files from your
+data/webdot directory. On Apache you do this by editing the .htaccess file,
+for other systems the needed measures may vary. You can run checksetup.pl
+to recreate the .htaccess file if it has been lost.",
          "t",
          "http://www.research.att.com/~north/cgi-bin/webdot.cgi/%urlbase%",
          \&check_webdotbase);
