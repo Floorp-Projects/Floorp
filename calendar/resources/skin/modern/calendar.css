@@ -77,21 +77,21 @@
   {
     margin-left:	5px;
     padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/newitem_up.gif");
+    list-style-image        : url("chrome://calendar/skin/newitem_up.png");
   }
 #calendar-new-event-button[disabled="true"],
 #calendar-new-event-button[disabled="true"]:hover,
 #calendar-new-event-button[disabled="true"]:hover:active
   {
-   list-style-image         : url("chrome://calendar/skin/newitem_disabled.gif");
+   list-style-image         : url("chrome://calendar/skin/newitem_disabled.png");
   }
 #calendar-new-event-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/newitem_hover.gif");
+    list-style-image        : url("chrome://calendar/skin/newitem_hover.png");
   }
 #calendar-new-event-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/newitem_down.gif");
+    list-style-image        : url("chrome://calendar/skin/newitem_down.png");
   }
 
 /*--------------------------------------------------------------------
@@ -155,21 +155,21 @@
 #calendar-go-to-today-button 
   {
     padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/today_up.gif");
+    list-style-image        : url("chrome://calendar/skin/today_up.png");
   }
 #calendar-go-to-today-button[disabled="true"],
 #calendar-go-to-today-button[disabled="true"]:hover,
 #calendar-go-to-today-button[disabled="true"]:hover:active
   {
-   list-style-image         : url("chrome://calendar/skin/today_disabled.gif");
+   list-style-image         : url("chrome://calendar/skin/today_disabled.png");
   }
 #calendar-go-to-today-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/today_hover.gif");
+    list-style-image        : url("chrome://calendar/skin/today_hover.png");
   }
 #calendar-go-to-today-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/today_down.gif");
+    list-style-image        : url("chrome://calendar/skin/today_down.png");
   }
 
 
@@ -180,21 +180,21 @@
 #calendar-choose-date-button 
   {
     padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/goto_up.gif");
+    list-style-image        : url("chrome://calendar/skin/goto_up.png");
   }
 #calendar-choose-date-button[disabled="true"],
 #calendar-choose-date-button[disabled="true"]:hover,
 #calendar-choose-date-button[disabled="true"]:hover:active
   {
-   list-style-image         : url("chrome://calendar/skin/goto_disabled.gif");
+   list-style-image         : url("chrome://calendar/skin/goto_disabled.png");
   }
 #calendar-choose-date-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/goto_hover.gif");
+    list-style-image        : url("chrome://calendar/skin/goto_hover.png");
   }
 #calendar-choose-date-button:hover:active
   {
-    list-style-image        : url("chrome://calendar/skin/goto_down.gif");
+    list-style-image        : url("chrome://calendar/skin/goto_down.png");
   }
 
 
@@ -205,22 +205,18 @@
 #calendar-month-view-button 
   {
     padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/month_up.gif");
+    list-style-image        : url("chrome://calendar/skin/month_up.png");
   }
 #calendar-month-view-button[disabled="true"],
 #calendar-month-view-button[disabled="true"]:hover,
-#calendar-month-view-button[disabled="true"]:hover:active
+#calendar-month-view-button[disabled="true"]:hover:active,
+#calendar-month-view-button:hover:active
   {
-   /*list-style-image         : url("chrome://calendar/skin/month_disabled.gif");*/
-	list-style-image         : url("chrome://calendar/skin/month_down.gif");
+   list-style-image         : url("chrome://calendar/skin/month_down.png");
   }
 #calendar-month-view-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/month_hover.gif");
-  }
-#calendar-month-view-button:hover:active
-  {
-    list-style-image        : url("chrome://calendar/skin/month_down.gif");
+    list-style-image        : url("chrome://calendar/skin/month_hover.png");
   }
 
 /*--------------------------------------------------------------------
@@ -230,22 +226,18 @@
 #calendar-week-view-button 
   {
     padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/week_up.gif");
+    list-style-image        : url("chrome://calendar/skin/week_up.png");
   }
 #calendar-week-view-button[disabled="true"],
 #calendar-week-view-button[disabled="true"]:hover,
-#calendar-week-view-button[disabled="true"]:hover:active
+#calendar-week-view-button[disabled="true"]:hover:active,
+#calendar-week-view-button:hover:active
   {
-   /*list-style-image         : url("chrome://calendar/skin/week_disabled.gif");*/
-	list-style-image         : url("chrome://calendar/skin/week_down.gif");
+   list-style-image         : url("chrome://calendar/skin/week_down.png");
   }
 #calendar-week-view-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/week_hover.gif");
-  }
-#calendar-week-view-button:hover:active
-  {
-    list-style-image        : url("chrome://calendar/skin/week_down.gif");
+    list-style-image        : url("chrome://calendar/skin/week_hover.png");
   }
 
 /*--------------------------------------------------------------------
@@ -255,24 +247,19 @@
 #calendar-day-view-button 
   {
     padding-top:	1px;
-    list-style-image        : url("chrome://calendar/skin/day_up.gif");
+    list-style-image        : url("chrome://calendar/skin/day_up.png");
   }
 #calendar-day-view-button[disabled="true"],
 #calendar-day-view-button[disabled="true"]:hover,
-#calendar-day-view-button[disabled="true"]:hover:active
+#calendar-day-view-button[disabled="true"]:hover:active,
+#calendar-day-view-button:hover:active
   {
-   /*list-style-image         : url("chrome://calendar/skin/day_disabled.gif");*/
-	list-style-image         : url("chrome://calendar/skin/day_down.gif");
+   list-style-image         : url("chrome://calendar/skin/day_down.png");
   }
 #calendar-day-view-button:hover
   {
-    list-style-image        : url("chrome://calendar/skin/day_hover.gif");
+    list-style-image        : url("chrome://calendar/skin/day_hover.png");
   }
-#calendar-day-view-button:hover:active
-  {
-    list-style-image        : url("chrome://calendar/skin/day_down.gif");
-  }
-
 
 /*
 **  U N I F I N D E R  S T U F F
