@@ -44,7 +44,9 @@
 #include "nsIClassInfo.h"
 #include "nsIMozAxPlugin.h"
 
-#include "LegacyPlugin.h"
+#include "ControlEventSink.h"
+
+struct PluginInstanceData;
 
 template <class T> class nsIClassInfoImpl : public nsIClassInfo
 {
@@ -95,6 +97,14 @@ protected:
     nsresult HR2NS(HRESULT hr) const;
     NS_IMETHOD InternalInvoke(const char *aMethod, unsigned int aNumArgs, nsIVariant *aArgs[]);
 };
+
+class nsEventSink : public CControlEventSink
+{
+public:
+    virtual HRESULT InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
+};
+
+typedef CComObject<nsEventSink> nsEventSinkInstance;
 
 extern void xpc_AddRef();
 extern void xpc_Release();

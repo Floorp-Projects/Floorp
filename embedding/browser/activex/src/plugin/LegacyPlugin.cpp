@@ -43,13 +43,15 @@
 #include "npapi.h"
 #include "nsISupports.h"
 
-#include "LegacyPlugin.h"
 #ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 #include "XPConnect.h"
 #endif
+
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 #include "LiveConnect.h"
 #endif
+
+#include "LegacyPlugin.h"
 
 
 // NPP_Initialize
@@ -288,8 +290,8 @@ NPError NewControl(const char *pluginType,
         return NPERR_GENERIC_ERROR;
     }
 
-    CControlEventSinkInstance *pSink = NULL;
-    CControlEventSinkInstance::CreateInstance(&pSink);
+    nsEventSinkInstance *pSink = NULL;
+    nsEventSinkInstance::CreateInstance(&pSink);
     if (pSink)
     {
         pSink->AddRef();

@@ -563,6 +563,118 @@ nsScriptablePeer::SetProperty(const char *propertyName, nsIVariant *propertyValu
     return NS_OK;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+
+HRESULT
+nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
+{
+
+    FUNCDESC *pFuncDesc = NULL;
+    HRESULT hr = S_OK;
+
+    // Must search compare each member to the dispid...
+    if (m_spEventSinkTypeInfo)
+    {
+	    HRESULT hr = S_OK;
+	    TYPEATTR* pAttr;
+	    hr = m_spEventSinkTypeInfo->GetTypeAttr(&pAttr);
+        if (pAttr)
+        {
+	        int i;
+	        for (i=0; i < pAttr->cFuncs;i++)
+	        {
+		        hr = m_spEventSinkTypeInfo->GetFuncDesc(i, &pFuncDesc);
+		        if (FAILED(hr))
+			        return hr;
+		        if (pFuncDesc->memid == dispIdMember)
+			        break;
+		        m_spEventSinkTypeInfo->ReleaseFuncDesc(pFuncDesc);
+		        pFuncDesc = NULL;
+	        }
+	        m_spEventSinkTypeInfo->ReleaseTypeAttr(pAttr);
+        }
+    }
+
+#ifdef DEBUG
+    // Dump out some info to look at
+    ATLTRACE(_T("Invoke(%d)\n"), (int) dispIdMember);
+    if (pFuncDesc)
+    {
+        UINT cNames = 0;
+        CComBSTR bstrName;
+        HRESULT hr = m_spEventSinkTypeInfo->GetNames(dispIdMember, &bstrName, 1, &cNames);
+
+        ATLTRACE(_T("  "));
+
+        /* Return code */
+        switch (pFuncDesc->elemdescFunc.tdesc.vt)
+        {
+        case VT_HRESULT:     ATLTRACE(_T("HRESULT")); break;
+        case VT_VOID:        ATLTRACE(_T("void")); break;
+        default:             ATLTRACE(_T("void /* vt = %d */"), pFuncDesc->elemdescFunc.tdesc.vt); break;
+        }
+
+        /* Function name */
+        ATLTRACE(_T(" %S("), SUCCEEDED(hr) ? bstrName.m_str : L"?unknown?");
+
+        /* Parameters */
+        for (int i = 0; i < pFuncDesc->cParams; i++)
+        {
+            USHORT  paramFlags = pFuncDesc->lprgelemdescParam[i].paramdesc.wParamFlags;
+            ATLTRACE("[");
+            BOOL addComma = FALSE;
+            if (paramFlags & PARAMFLAG_FIN)
+            {
+                ATLTRACE(_T("in")); addComma = TRUE;
+            }
+            if (paramFlags & PARAMFLAG_FOUT)
+            {
+                ATLTRACE(addComma ? _T(",out") : _T("out")); addComma = TRUE;
+            }
+            if (paramFlags & PARAMFLAG_FRETVAL)
+            {
+                ATLTRACE(addComma ? _T(",retval") : _T("retval")); addComma = TRUE;
+            }
+            ATLTRACE("] ");
+
+            VARTYPE vt = pFuncDesc->lprgelemdescParam[i].tdesc.vt;
+            switch (vt)
+            {
+            case VT_HRESULT:     ATLTRACE(_T("HRESULT")); break;
+            case VT_VARIANT:     ATLTRACE(_T("VARIANT")); break;
+            case VT_I2:          ATLTRACE(_T("short")); break;
+            case VT_I4:          ATLTRACE(_T("long")); break;
+            case VT_R8:          ATLTRACE(_T("double")); break;
+            case VT_BOOL:        ATLTRACE(_T("VARIANT_BOOL")); break;
+            case VT_BSTR:        ATLTRACE(_T("BSTR")); break;
+            case VT_DISPATCH:    ATLTRACE(_T("IDispatch *")); break;
+            case VT_UNKNOWN:     ATLTRACE(_T("IUnknown *")); break;
+            case VT_USERDEFINED: ATLTRACE(_T("/* Userdefined */")); break;
+            case VT_PTR:         ATLTRACE(_T("void *")); break;
+            case VT_VOID:        ATLTRACE(_T("void")); break;
+            // More could be added...
+            default:             ATLTRACE(_T("/* vt = %d */"), vt); break;
+            }
+            if (i + 1 < pFuncDesc->cParams)
+            {
+                ATLTRACE(_T(", "));
+            }
+        }
+        ATLTRACE(_T(");\n"));
+    }
+#endif
+
+    // TODO fire an outgoing event with the types in the correct format
+
+    if (pFuncDesc)
+    {
+        m_spEventSinkTypeInfo->ReleaseFuncDesc(pFuncDesc);
+    }
+
+    return S_OK;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Some public methods
 
