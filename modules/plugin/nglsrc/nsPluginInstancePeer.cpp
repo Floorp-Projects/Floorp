@@ -895,3 +895,20 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::ForceRedraw(void)
 	return NS_OK;
 }
 
+/*void 
+nsPluginInstancePeerImpl::SetStopped()
+{
+  mStopped = PR_TRUE;
+}
+
+void
+nsPluginInstancePeerImpl::SetStarted()
+{
+  mStopped = PR_FALSE;
+}
+
+void
+nsPluginInstancePeerImpl::IsStopped(PRBool *result)
+{
+  *result = mStopped;
+}*/

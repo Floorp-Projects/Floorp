@@ -158,11 +158,17 @@ public:
 
   nsresult GetOwner(nsIPluginInstanceOwner *&aOwner);
 
+/*  void SetStopped();
+  void SetStarted();
+
+  void IsStopped(PRBool *result);*/
+
 private:
   nsIPluginInstance       *mInstance; //we don't add a ref to this
   nsIPluginInstanceOwner  *mOwner;    //we don't add a ref to this
   nsMIMEType              mMIMEType;
   PRUint32                mThreadID;
+  PRBool                  mStopped;
 };
 
 #endif
