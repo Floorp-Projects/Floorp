@@ -766,6 +766,11 @@ nsEditor::BeginTransaction()
   {
     mTxnMgr->BeginBatch();
   }
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(selectionResult) && selection) {
+    selection->StartBatchChanges();
+  }
   return NS_OK;
 }
 
@@ -782,6 +787,11 @@ nsEditor::EndTransaction()
   if ((nsITransactionManager *)nsnull!=mTxnMgr.get())
   {
     mTxnMgr->EndBatch();
+  }
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult selectionResult = GetSelection(getter_AddRefs(selection));
+  if (NS_SUCCEEDED(selectionResult) && selection) {
+    selection->EndBatchChanges();
   }
   return NS_OK;
 }
