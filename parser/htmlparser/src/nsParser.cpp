@@ -769,7 +769,6 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
          then we have to assume that the fragment is valid (at least in part)
    ************************************************************************************/
 
-/*------------------------ Comment out for now ----------------------------
   nsAutoString  theContext;
   PRUint32 theCount=aStack.GetSize();
   PRUint32 theIndex=0;
@@ -786,7 +785,7 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
   if(theBuffer.Length()){
     //now it's time to try to build the model from this fragment
 
-    nsString2 theOutput("",eOneByte);
+    nsString theOutput("");
     nsIHTMLContentSink*  theSink=0;
     nsresult theResult=NS_New_HTML_ContentSinkStream(&theSink,&theOutput,PR_FALSE,PR_FALSE);
     SetContentSink(theSink);
@@ -801,8 +800,6 @@ PRBool nsParser::IsValidFragment(const nsString& aSourceBuffer,nsITagStack& aSta
     }
   }
   return result;
-*--------------------------------------------------------------------------*/
-  return PR_FALSE;
 }
 
 
