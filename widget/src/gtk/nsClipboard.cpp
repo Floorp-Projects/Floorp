@@ -1260,7 +1260,7 @@ PRBool nsClipboard::FindSelectionNotifyEvent()
 
   XEvent xevent;
 
-  for (i = 0; i < 5; ++i) {
+  for (i = 0; i < 300; ++i) {
     XIfEvent(GDK_DISPLAY(), &xevent, find_clipboard_event, (XPointer)sWidget);
 
     if (xevent.type == SelectionNotify) {
