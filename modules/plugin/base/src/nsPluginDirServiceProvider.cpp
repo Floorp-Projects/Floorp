@@ -277,15 +277,20 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
     DWORD pathlen;
     verBlock maxVer;
     ClearVersion(&maxVer);
-    char curKey[_MAX_PATH] = "Software\\JavaSoft\\Java Plug-in";
+    char curKey[_MAX_PATH] = "Software\\JavaSoft\\Java Runtime Environment";
     char path[_MAX_PATH];
     char newestPath[_MAX_PATH + 4]; // to prevent buffer overrun when adding \bin
     const char mozPath[_MAX_PATH] = "Software\\mozilla.org\\Mozilla";
+    char browserJavaVersion[_MAX_PATH];
 
     newestPath[0] = 0;
     LONG result = ::RegOpenKeyEx(HKEY_LOCAL_MACHINE, curKey, 0, KEY_READ, &baseloc);
     if (ERROR_SUCCESS != result)
       return NS_ERROR_FAILURE;
+
+    // look for BrowserJavaVersion
+    if (ERROR_SUCCESS != ::RegQueryValueEx(baseloc, "BrowserJavaVersion", NULL, NULL, (LPBYTE)&browserJavaVersion, &numChars)) 
+      browserJavaVersion[0] = 0;
 
     // we must enumerate through the keys because what if there is more than one version?
     do {
@@ -294,21 +299,34 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
       pathlen = sizeof(path);
       result = ::RegEnumKeyEx(baseloc, index, curKey, &numChars, NULL, NULL, NULL, &modTime);
       index++;
+
+    // skip major.minor as it always points to latest in its family
+      numChars = 0;
+      for (char *p = curKey; *p; p++) {
+        if (*p == '.') {
+          numChars++;
+        }
+      }
+      if (numChars < 2) 
+        continue;
+
       if (ERROR_SUCCESS == result) {
         if (ERROR_SUCCESS == ::RegOpenKeyEx(baseloc, curKey, 0, KEY_QUERY_VALUE, &keyloc)) {
           // we have a sub key
           if (ERROR_SUCCESS == ::RegQueryValueEx(keyloc, "JavaHome", NULL, &type, (LPBYTE)&path, &pathlen)) {
             verBlock curVer;
-            TranslateVersionStr(curKey, &curVer);            
-            if (CompareVersion(curVer, maxVer) >= 0 && CompareVersion(curVer, minVer) >= 0) {
-              PL_strcpy(newestPath, path);
-              CopyVersion(&maxVer, &curVer);
-              if (ERROR_SUCCESS == ::RegCreateKeyEx(HKEY_LOCAL_MACHINE, mozPath, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE|KEY_QUERY_VALUE, NULL, &entryloc, NULL)) {
-              	if (ERROR_SUCCESS != ::RegQueryValueEx(entryloc, "CurrentVersion", 0, NULL, NULL, NULL)) {
-              	  ::RegSetValueEx(entryloc, "CurrentVersion", 0, REG_SZ, (const BYTE*)MOZILLA_VERSION, sizeof(MOZILLA_VERSION));
-                }
+            TranslateVersionStr(curKey, &curVer);
+            if (CompareVersion(curVer, minVer) >= 0) {
+              if (!strncmp(browserJavaVersion, curKey, _MAX_PATH)) {
+                PL_strcpy(newestPath, path);
+                ::RegCloseKey(keyloc);
+                break;
               }
-              ::RegCloseKey(entryloc);
+ 	    
+              if (CompareVersion(curVer, maxVer) >= 0) {
+                PL_strcpy(newestPath, path);
+                CopyVersion(&maxVer, &curVer);
+	      }
             }
           }
           ::RegCloseKey(keyloc);
@@ -318,8 +336,16 @@ nsPluginDirServiceProvider::GetFile(const char *prop, PRBool *persistant, nsIFil
 
     ::RegCloseKey(baseloc);
 
-    // if nothing is found, then don't add \bin dir
+    // if nothing is found, then don't add \bin dir and don't set CurrentVersion for Mozilla
     if (newestPath[0] != 0) {
+      if (ERROR_SUCCESS == ::RegCreateKeyEx(HKEY_LOCAL_MACHINE, mozPath, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE|KEY_QUERY_VALUE, NULL, &entryloc,
+NULL)) {
+        if (ERROR_SUCCESS != ::RegQueryValueEx(entryloc, "CurrentVersion", 0, NULL, NULL, NULL)) {
+          ::RegSetValueEx(entryloc, "CurrentVersion", 0, REG_SZ, (const BYTE*)MOZILLA_VERSION, sizeof(MOZILLA_VERSION));
+        }
+	::RegCloseKey(entryloc);
+      }
+
       PL_strcat(newestPath,"\\bin");
       rv = NS_NewNativeLocalFile(nsDependentCString(newestPath), PR_TRUE, getter_AddRefs(localFile));
     }
