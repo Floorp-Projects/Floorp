@@ -48,6 +48,7 @@
 #include <IOKit/IOMessage.h>
 
 #include <CoreFoundation/CoreFoundation.h>
+#include <Carbon/Carbon.h>
 
 #include "nsToolkitBase.h"
 #include "nsWidgetAtoms.h"
@@ -62,6 +63,7 @@
 static io_connect_t gRootPort = nsnull;
 
 static const char kQuartzRenderingPref[] = "browser.quartz.enable";
+static const char kAllFontSizesPref[] = "browser.quartz.enable.all_font_sizes";
 
 //
 // Static thread local storage index of the Toolkit 
@@ -100,9 +102,10 @@ nsToolkitBase::Init(PRThread * aThread)
   SetupQuartzRendering();
 
   nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (prefs)
-    prefs->RegisterCallback(kQuartzRenderingPref, QuartzChangedCallback, nsnull);
-  
+  if (prefs) {
+    prefs->RegisterCallback(kQuartzRenderingPref, QuartzChangedCallback, nsnull);  
+    prefs->RegisterCallback(kAllFontSizesPref, QuartzChangedCallback, nsnull);
+  }
   return NS_OK;
 }
 
@@ -182,8 +185,16 @@ void nsToolkitBase::SetupQuartzRendering()
     PRBool enableQuartz = PR_TRUE;
     nsresult rv = prefs->GetBoolPref(kQuartzRenderingPref, &enableQuartz);
     UInt32 oldFlags = SwapQDTextFlagsProc(kQDDontChangeFlags);
-    if (NS_FAILED(rv) || enableQuartz)
+    if (NS_FAILED(rv) || enableQuartz) {
       SwapQDTextFlagsProc(oldFlags | kFlagsWeUse);
+      
+      // the system defaults to not anti-aliasing small fonts, but some people
+      // think it looks better that way. If the pref is set, turn them on
+      PRBool antiAliasAllFontSizes = PR_FALSE;
+      rv = prefs->GetBoolPref(kAllFontSizesPref, &antiAliasAllFontSizes);
+      if (NS_SUCCEEDED(rv) && antiAliasAllFontSizes)
+        SetOutlinePreferred(true);
+    }
     else 
       SwapQDTextFlagsProc(oldFlags & !kFlagsWeUse);
   }
