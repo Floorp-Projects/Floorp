@@ -16,7 +16,7 @@
  * Reserved.
  */
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsIPresContext.h" 
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIDocumentObserver.h"
@@ -1451,7 +1451,7 @@ PresShell::GoToAnchor(const nsString& aAnchorName) const
     
     // Get the primary frame
     if (NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame))) {
-      rv = ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP, 0, NS_PRESSHELL_SCROLL_LEFT, 0);
+      rv = ScrollFrameIntoView(frame, 0, NS_PRESSHELL_SCROLL_TOP, 0, NS_PRESSHELL_SCROLL_LEFT);
     }
   } else {
     rv = NS_ERROR_FAILURE;
