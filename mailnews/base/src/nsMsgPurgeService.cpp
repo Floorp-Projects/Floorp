@@ -193,19 +193,10 @@ nsresult nsMsgPurgeService::PerformPurge()
           do_GetService(contractid.get(), &rv);
         NS_ENSURE_SUCCESS(rv, PR_FALSE);
         
-        PRBool canGetIncomingMessages = PR_FALSE;
-        protocolInfo->GetCanGetIncomingMessages(&canGetIncomingMessages);
 
         nsXPIDLCString realHostName;
         server->GetRealHostName(getter_Copies(realHostName));
         PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] %s (%s)", serverIndex, realHostName.get(), type.get()));
-        PR_LOG(MsgPurgeLogModule, PR_LOG_ALWAYS, ("[%d] canGetIncomingMessages=%s (if false, don't purge)", serverIndex, canGetIncomingMessages ? "true" : "false"));
-
-        // if this server can get incoming messages
-        // if not skip it.
-        // (as we don't do junk on it, see junkMail.xul)
-        if (!canGetIncomingMessages)
-          continue;
 
         nsCOMPtr <nsISpamSettings> spamSettings;
         rv = server->GetSpamSettings(getter_AddRefs(spamSettings));
