@@ -64,6 +64,12 @@ public:
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                            PRInt32& aRowSpan, PRInt32& aColSpan,
                            PRBool& aIsSelected)=0;
+
+  /** Get the number of rows and column for a table from the frame's cellmap 
+   *  Some rows may not have enough cells (the number returned is the maximum possible),
+   *  which displays as a ragged-right edge table
+   */
+  NS_IMETHOD GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)=0;
 };
 
 #endif

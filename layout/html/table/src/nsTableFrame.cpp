@@ -5347,6 +5347,7 @@ void nsTableFrame::GetCellInfoAt(PRInt32            aRowX,
   cellMap->GetCellInfoAt(aRowX, aColX, aCellFrame, aOriginates, aColSpan);
 }
 
+/*------------------ nsITableLayout methods ------------------------------*/
 NS_IMETHODIMP 
 nsTableFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
                             nsIDOMElement* &aCell,   //out params
@@ -5453,6 +5454,22 @@ TEST_IF_SELECTED:
                                          
   return result;
 }
+
+NS_IMETHODIMP nsTableFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)
+{
+  nsCellMap* cellMap = GetCellMap();
+  // Initialize out params
+  aRowCount = 0;
+  aColCount = 0;
+  if (!cellMap) { return NS_ERROR_NOT_INITIALIZED;}
+
+  aRowCount = cellMap->GetRowCount();
+  aColCount = cellMap->GetColCount();
+  return NS_OK;
+}
+
+/*---------------- end of nsITableLayout implementation ------------------*/
+
 
 PRInt32 nsTableFrame::GetNumCellsOriginatingIn(PRInt32 aColIndex)
 {

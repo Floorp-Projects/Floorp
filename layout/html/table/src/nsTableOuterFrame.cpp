@@ -1227,6 +1227,9 @@ nsTableOuterFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
+/* ----- global methods ----- */
+
+/*------------------ nsITableLayout methods ------------------------------*/
 NS_IMETHODIMP 
 nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex, 
                                  nsIDOMElement* &aCell,   //out params
@@ -1246,7 +1249,20 @@ nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex,
   return NS_ERROR_NULL_POINTER;
 }
 
-/* ----- global methods ----- */
+NS_IMETHODIMP nsTableOuterFrame::GetTableSize(PRInt32& aRowCount, PRInt32& aColCount)
+{
+  if (!mInnerTableFrame) { return NS_ERROR_NOT_INITIALIZED; }
+  nsITableLayout *inner;
+  nsresult result = mInnerTableFrame->QueryInterface(nsITableLayout::GetIID(), (void **)&inner);
+  if (NS_SUCCEEDED(result) && inner)
+  {
+    return (inner->GetTableSize(aRowCount, aColCount));
+  }
+  return NS_ERROR_NULL_POINTER;
+}
+
+/*---------------- end of nsITableLayout implementation ------------------*/
+
 
 nsresult 
 NS_NewTableOuterFrame(nsIFrame** aNewFrame)

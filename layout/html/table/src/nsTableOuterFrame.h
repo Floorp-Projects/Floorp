@@ -93,12 +93,16 @@ public:
   nscoord GetMinCaptionWidth();
 
   /*---------------- nsITableLayout methods ------------------------*/
+
+  /** @see nsITableFrame::GetCellDataAt */
   NS_IMETHOD GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex, 
                            nsIDOMElement* &aCell,   //out params
                            PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
                            PRInt32& aRowSpan, PRInt32& aColSpan,
                            PRBool& aIsSelected);
 
+  /** @see nsITableFrame::GetTableSize */
+  NS_IMETHOD GetTableSize(PRInt32& aRowCount, PRInt32& aColCount);
 
 protected:
 
