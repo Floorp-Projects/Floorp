@@ -1093,14 +1093,11 @@ nsresult
 FindUsernamePasswordFields(nsIDOMHTMLFormElement* inFormElement, nsIDOMHTMLInputElement** outUsername,
                             nsIDOMHTMLInputElement** outPassword, PRBool inStopWhenFound)
 {
-  PRBool autoCompleteOverride = PR_FALSE;
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-  if (pref)
-    pref->GetBoolPref("wallet.crypto.autocompleteoverride", &autoCompleteOverride);
-  
   if ( !outUsername || !outPassword )
     return NS_ERROR_FAILURE;
   *outUsername = *outPassword = nsnull;
+
+  PRBool autoCompleteOverride = [[PreferenceManager sharedInstance] getBooleanPref:"wallet.crypto.autocompleteoverride" withSuccess:NULL];
 
   // pages can specify that they don't want autofill by setting a
   // "autocomplete=off" attribute on the form. 

@@ -49,6 +49,7 @@
 #import "PageProxyIcon.h"
 #import "KeychainService.h"
 #import "AutoCompleteTextField.h"
+#include "CHBrowserService.h"
 
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
@@ -65,14 +66,7 @@
 #include "nsIChromeEventHandler.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIPrefBranch.h"
-#include "nsIPrefService.h"
-#include "CHBrowserService.h"
 #include "nsIWebProgressListener.h"
-
-#include <QuickDraw.h>
-
-static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
 static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
@@ -599,7 +593,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (void)updateOfflineStatus
 {
-  nsCOMPtr<nsIIOService> ioService(do_GetService(ioServiceContractID));
+  nsCOMPtr<nsIIOService> ioService(do_GetService("@mozilla.org/network/io-service;1"));
   if (!ioService)
       return;
   PRBool offline = PR_FALSE;
@@ -758,12 +752,7 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
 
 - (CHBrowserView*)createBrowserWindow:(unsigned int)aMask
 {
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-  if (!pref)
-    return NS_OK; // Something bad happened if we can't get prefs.
-
-  PRBool showBlocker;
-  pref->GetBoolPref("browser.popups.showPopupBlocker", &showBlocker);
+  BOOL showBlocker = [[PreferenceManager sharedInstance] getBooleanPref:"browser.popups.showPopupBlocker" withSuccess:NULL];
 
   if (showBlocker) {
     nsCOMPtr<nsIDOMWindow> domWindow = getter_AddRefs([mBrowserView getContentWindow]);
@@ -776,14 +765,13 @@ static NSString* const kOfflineNotificationName = @"offlineModeChanged";
                                 text: [NSString stringWithFormat: NSLocalizedString(@"PopupBlockMsg", @""), NSLocalizedStringFromTable(@"CFBundleName", @"InfoPlist", nil)]];
 
       // This is a one-time dialog.
-      pref->SetBoolPref("browser.popups.showPopupBlocker", PR_FALSE);
+      [[PreferenceManager sharedInstance] setPref:"browser.popups.showPopupBlocker" toBoolean:NO];
       
       if (confirm)
-        pref->SetBoolPref("dom.disable_open_during_load", PR_TRUE);
+        [[PreferenceManager sharedInstance] setPref:"dom.disable_open_during_load" toBoolean:YES];
 
-      nsCOMPtr<nsIPrefService> prefService(do_QueryInterface(pref));
-      prefService->SavePrefFile(nsnull);
-      
+      [[PreferenceManager sharedInstance] savePrefsFile];
+
       if (confirm)
         return nil;
     }

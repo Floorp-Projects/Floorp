@@ -73,7 +73,6 @@
 #include "nsIDOMLocation.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMEvent.h"
-#include "nsIPrefBranch.h"
 #include "nsIContextMenuListener.h"
 #include "nsIDOMWindow.h"
 #include "CHBrowserService.h"
@@ -90,7 +89,6 @@
 #include "nsIContentViewerEdit.h"
 #include "nsIWebBrowser.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIURI.h"
 #include "nsIURIFixup.h"
@@ -1584,9 +1582,7 @@ enum BWCOpenDest {
 - (void)loadSourceOfURL:(NSString*)urlStr
 {
   // first attempt to get the source that's already loaded
-  PRBool loadInBackground;
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-  pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
 
   nsCOMPtr<nsISupports> desc = [[mBrowserView getBrowserView] getPageDescriptor];
   if (desc) {
@@ -2272,9 +2268,8 @@ enum BWCOpenDest {
     BOOL loadHomepage = NO;
     if (contents == eNewTabHomepage)
     {
-      nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-      PRInt32 newTabPage = 0;		// 0=about:blank, 1=home page, 2=last page visited
-      pref->GetIntPref("browser.tabs.startPage", &newTabPage);
+      // 0 = about:blank, 1 = home page, 2 = last page visited
+      int newTabPage = [[PreferenceManager sharedInstance] getIntPref:"browser.tabs.startPage" withSuccess:NULL];
       loadHomepage = (newTabPage == 1);
     }
 
@@ -2392,11 +2387,7 @@ enum BWCOpenDest {
     if (tabViewItem)
     {
       NSString* url = [[tabViewItem view] getCurrentURLSpec];
-
-      PRBool backgroundLoad = PR_FALSE;
-      nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-      if (pref)
-        pref->GetBoolPref("browser.tabs.loadInBackground", &backgroundLoad);
+      BOOL backgroundLoad = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
 
       [self openNewWindowWithURL:url referrer:nil loadInBackground:backgroundLoad allowPopups:NO];
 
@@ -2846,12 +2837,7 @@ enum BWCOpenDest {
   if ([hrefStr length] == 0)
     return;
 
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-  if (!pref)
-    return; // Something bad happened if we can't get prefs.
-
-  PRBool loadInBackground;
-  pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+  BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
 
   NSString* referrer = [[mBrowserView getBrowserView] getFocusedURLString];
 
@@ -3253,20 +3239,15 @@ enum BWCOpenDest {
 //
 - (BOOL) handleCommandReturn
 {
-  BOOL handled = NO;
-  
   // determine whether to load in background
-  PRBool loadInBG;
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-  pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBG);
-    
+  BOOL loadInBG  = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
   // determine whether to load in tab or window
-  PRBool loadInTab;
-  pref->GetBoolPref("browser.tabs.opentabfor.middleclick",&loadInTab);
-  
+  BOOL loadInTab = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
+
   BWCOpenDest destination = loadInTab ? kDestinationNewTab : kDestinationNewWindow;
   
   // see if command-return came in the url bar
+  BOOL handled = NO;
   if ([mURLBar fieldEditor] && [[self window] firstResponder] == [mURLBar fieldEditor]) {
     handled = YES;
     [self goToLocationFromToolbarURLField:mURLBar inView:destination inBackground:loadInBG];

@@ -36,22 +36,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#import "NSString+Utils.h"
 
 #include "nsCOMPtr.h"
-#include "ContentClickListener.h"
-#include "nsIDOMElement.h"
+
+#include "nsEmbedAPI.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsIPrefBranch.h"
+
+#include "nsIDOMElement.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsEmbedAPI.h"
 #include "nsIDOMEventTarget.h"
 
 // Common helper routines (also used by the context menu code)
 #include "GeckoUtils.h"
 
+#import "NSString+Utils.h"
+#import "PreferenceManager.h"
 #import "CHBrowserView.h"
+
+#import "ContentClickListener.h"
 
 NS_IMPL_ISUPPORTS2(ContentClickListener, nsIDOMMouseListener, nsIDOMEventListener)
 
@@ -82,10 +85,6 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
   // really uses these anyway? :)
   if (!linkContent || href.IsEmpty())
     return NS_OK;
-
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService("@mozilla.org/preferences-service;1"));
-  if (!pref)
-    return NS_OK; // Something bad happened if we can't get prefs.
     
   PRUint16 button;
   nsCOMPtr<nsIDOMMouseEvent> mouseEvent(do_QueryInterface(aEvent));
@@ -100,10 +99,9 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
   
   if ((metaKey && button == 0) || button == 1) {
     // The command key is down or we got a middle click.  Open the link in a new window or tab.
-    PRBool useTab = FALSE;
-    pref->GetBoolPref("browser.tabs.opentabfor.middleclick", &useTab);
-    PRBool loadInBackground = FALSE;
-    pref->GetBoolPref("browser.tabs.loadInBackground", &loadInBackground);
+    BOOL useTab           = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL];
+    BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+
     NSString* referrer = [[[mBrowserController getBrowserWrapper] getBrowserView] getFocusedURLString];
     
     if (shiftKey)
