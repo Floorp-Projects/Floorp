@@ -21,8 +21,6 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include <StandardFile.h>
-
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
 #include "nsILocalFile.h"
