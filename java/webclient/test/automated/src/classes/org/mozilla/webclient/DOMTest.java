@@ -1,5 +1,5 @@
 /*
- * $Id: DOMTest.java,v 1.1 2005/02/04 15:43:47 edburns%acm.org Exp $
+ * $Id: DOMTest.java,v 1.2 2005/02/14 02:16:18 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -73,7 +73,7 @@ public class DOMTest extends WebclientTestCase {
     // Testcases
     // 
 
-    public void testHttpLoad() throws Exception {
+    public void testGetDOM() throws Exception {
 	BrowserControl firstBrowserControl = null;
 	DocumentLoadListenerImpl listener = null;
 	Selection selection = null;

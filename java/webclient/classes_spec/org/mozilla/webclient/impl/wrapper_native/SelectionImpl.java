@@ -51,6 +51,9 @@ public class SelectionImpl extends Object implements Selection {
    * Get the text representation of this Selection object.
    */
   public String toString() {
+      if (null == _selection) {
+          return "";
+      }
     return (_selection);
   }
 

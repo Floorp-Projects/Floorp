@@ -119,70 +119,77 @@ public Selection getSelection() {
 
 public void highlightSelection(Selection selection) {
     if (selection != null && selection.isValid()) {
-        Node startContainer = selection.getStartContainer();
-        Node endContainer = selection.getEndContainer();
-        int startOffset = selection.getStartOffset();
-        int endOffset = selection.getEndOffset();
+        final Node startContainer = selection.getStartContainer();
+        final Node endContainer = selection.getEndContainer();
+        final int startOffset = selection.getStartOffset();
+        final int endOffset = selection.getEndOffset();
 
-        getWrapperFactory().verifyInitialized();
-        Assert.assert_it(-1 != getNativeBrowserControl());
-        synchronized(getBrowserControl()) {
-            nativeHighlightSelection(getNativeBrowserControl(), startContainer, endContainer, startOffset, endOffset);
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    nativeHighlightSelection(CurrentPageImpl.this.getNativeBrowserControl(), 
+					     startContainer, endContainer, 
+					     startOffset, endOffset);
+		    return null;
+		}
+	    });
         }
     }
-}
 
 public void clearAllSelections() {
-    getWrapperFactory().verifyInitialized();
-    Assert.assert_it(-1 != getNativeBrowserControl());
-    synchronized(getBrowserControl()) {
-        nativeClearAllSelections(getNativeBrowserControl());
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeClearAllSelections(CurrentPageImpl.this.getNativeBrowserControl());
+		return null;
+	    }
+	});
     }
-}
-
 public void findInPage(String stringToFind, boolean forward, boolean matchCase)
 {
     find(stringToFind, forward, matchCase);
 }
 
-public boolean find(String stringToFind, boolean forward, boolean matchCase)
+public boolean find(String toFind, boolean dir, boolean doCase)
 {
+    final String stringToFind = toFind;
+    final boolean forward = dir;
+    final boolean matchCase = doCase;
     ParameterCheck.nonNull(stringToFind);
-    getWrapperFactory().verifyInitialized();
-    boolean result = false;
+    Boolean result = Boolean.FALSE;
 
-    synchronized(getBrowserControl()) {
-        result = nativeFind(getNativeBrowserControl(), stringToFind, forward, 
-			    matchCase);
-    }
-    return result;
+    result = (Boolean)
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+	    public Object run() {
+		boolean rc = nativeFind(CurrentPageImpl.this.getNativeBrowserControl(), 
+					stringToFind, forward, matchCase);
+		return rc ? Boolean.TRUE : Boolean.FALSE;
+	    }
+	});
+    return result.booleanValue();
 }
 
 public void findNextInPage()
 {
-    getWrapperFactory().verifyInitialized();
-
-    synchronized(getBrowserControl()) {
-        nativeFindNext(getNativeBrowserControl());
-    }
+    findNext();
 }
 
 public boolean findNext()
 {
-    getWrapperFactory().verifyInitialized();
-    boolean result = false;
-
-    synchronized(getBrowserControl()) {
-        result = nativeFindNext(getNativeBrowserControl());
-    }
-    return result;
+    Boolean result = Boolean.FALSE;
+    
+    result = (Boolean) 
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable(){
+	    public Object run() {
+		boolean rc = nativeFindNext(CurrentPageImpl.this.getNativeBrowserControl());
+		return rc ? Boolean.TRUE : Boolean.FALSE;
+	    }
+	});
+    return result.booleanValue();
 }
 
 
 public String getCurrentURL()
 {
     String result = null;
-    getWrapperFactory().verifyInitialized();
 
     synchronized(getBrowserControl()) {
         result = nativeGetCurrentURL(getNativeBrowserControl());
@@ -347,22 +354,5 @@ native public void nativeSelectAll(int webShellPtr);
 native public void nativePrint(int webShellPtr);
 
 native public void nativePrintPreview(int webShellPtr, boolean preview);
-
-// ----VERTIGO_TEST_START
-
-//
-// Test methods
-//
-
-public static void main(String [] args)
-{
-    Assert.setEnabled(true);
-    Log.setApplicationName("CurrentPageImpl");
-    Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.8 2005/02/10 04:20:50 edburns%acm.org Exp $");
-
-}
-
-// ----VERTIGO_TEST_END
 
 } // end of class CurrentPageImpl

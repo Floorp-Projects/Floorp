@@ -41,6 +41,9 @@
 #include "nsIWebBrowserFind.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMRange.h"
+#include "nsISelection.h"
+#include "nsIDOMDocumentRange.h"
 #include "nsIHistoryEntry.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -90,24 +93,104 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
     
 }
 
-#if 0 // convenience
-
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeHighlightSelection
 (JNIEnv *env, jobject obj, jint nativeBCPtr, jobject startContainer, jobject endContainer, jint startOffset, jint endOffset)
 {
     NativeBrowserControl *nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
-
+    
     if (nativeBrowserControl == nsnull) {
         ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeHighlightSelection");
         return;
     }
+    
+    if (env != nsnull && startContainer != nsnull && endContainer != nsnull &&
+        startOffset > -1 && endOffset > -1) {
+        nsresult rv = nsnull;
+        
+        // resolve ptrs to the nodes
+        jclass nodeClass = env->FindClass("org/mozilla/dom/NodeImpl");
+        if (!nodeClass) {
+            ::util_ThrowExceptionToJava(env, "Exception: nativeHighlightSelection");
+            return;
+        }
+        jfieldID nodePtrFID = env->GetFieldID(nodeClass, "p_nsIDOMNode", "J");
+        if (!nodePtrFID) {
+            ::util_ThrowExceptionToJava(env, "Exception: nativeHighlightSelection");
+            return;
+        }
+        
+        // get the nsIDOMNode representation of the start and end containers
+        nsIDOMNode* node1 = (nsIDOMNode*)
+            env->GetLongField(startContainer, nodePtrFID);
 
-    PR_ASSERT(nativeBrowserControl->initComplete);
+        nsIDOMNode* node2 = (nsIDOMNode*)
+            env->GetLongField(endContainer, nodePtrFID);
+        
+        if (!node1 || !node2) {
+            ::util_ThrowExceptionToJava(env, "Exception: nativeHighlightSelection");
+            return;
+        }
+        
+        // Get the DOM window and document
+        nsCOMPtr<nsIDOMWindow> domWindow;
+        nsCOMPtr<nsIWebBrowser> webBrowser;
+        nsCOMPtr<nsIDOMDocument> domDocument;
+        nativeBrowserControl->mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
 
-    wsHighlightSelectionEvent *actionEvent = new wsHighlightSelectionEvent(env, nativeBrowserControl, startContainer, endContainer, (PRInt32) startOffset, (PRInt32) endOffset);
-    PLEvent *event = (PLEvent *) *actionEvent;
-    ::util_PostSynchronousEvent(nativeBrowserControl, event);
-}
+        if (NS_FAILED(rv) || !webBrowser) {
+            ::util_ThrowExceptionToJava(env, "Exception: nativeHighlightSelection");
+            return;
+        }
+    
+        // get the content DOM window for that web browser
+        rv = webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+
+        if (NS_FAILED(rv) || !domWindow )  {
+            ::util_ThrowExceptionToJava(env, "Exception: nativeHighlightSelection");
+            return;
+        }
+
+        rv = domWindow->GetDocument(getter_AddRefs(domDocument));
+        if (NS_FAILED(rv) || !domDocument )  {
+            ::util_ThrowExceptionToJava(env, "Exception: nativeHighlightSelection");
+            return;
+        }
+
+        // Get the selection object of the DOM window
+        nsCOMPtr<nsISelection> selection;
+        rv = domWindow->GetSelection(getter_AddRefs(selection));
+        if (NS_FAILED(rv) || selection == nsnull) {
+            ::util_ThrowExceptionToJava(env, "Exception: nativeHighlightSelection");
+            return;
+        }
+        
+        nsCOMPtr<nsIDOMDocumentRange> docRange(do_QueryInterface(domDocument));
+        if (docRange) {
+            nsCOMPtr<nsIDOMRange> range;
+            rv = docRange->CreateRange(getter_AddRefs(range));
+
+            if (range) {
+                rv = range->SetStart(node1, startOffset);
+                if (NS_FAILED(rv))  {
+                    ::util_ThrowExceptionToJava(env, "Exception: nativeHighlightSelection");
+                    return;
+                }
+
+                rv = range->SetEnd(node2, endOffset);
+                if (NS_FAILED(rv))  {
+                    ::util_ThrowExceptionToJava(env, "Exception: nativeHighlightSelection");
+                    return;
+                }
+
+                rv = selection->AddRange(range);
+                if (NS_FAILED(rv))  {
+                    ::util_ThrowExceptionToJava(env, "Exception: nativeHighlightSelection");
+                    return;
+                }
+            }
+        }
+    }
+}    
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeClearAllSelections
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
@@ -118,16 +201,40 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
         ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeClearAllSelections");
         return;
     }
+    nsresult rv;
 
-    PR_ASSERT(nativeBrowserControl->initComplete);
+    // Get the DOM window and document
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    rv = nativeBrowserControl->mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
 
-    wsClearAllSelectionEvent *actionEvent = new wsClearAllSelectionEvent(nativeBrowserControl);
+    if (NS_FAILED(rv) || !webBrowser) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeClearAllSelections");
+        return;
+    }
 
-    PLEvent *event = (PLEvent *) *actionEvent;
-    ::util_PostSynchronousEvent(nativeBrowserControl, event);
+    // get the content DOM window for that web browser
+    rv = webBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    
+    if (NS_FAILED(rv) || !domWindow )  {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeClearAllSelections");
+        return;
+    }
+
+    nsCOMPtr<nsISelection> selection;
+    rv = domWindow->GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(rv) || !selection) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeClearAllSelections");
+        return;
+    }
+    
+    rv = selection->RemoveAllRanges();
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeClearAllSelections");
+        return;
+    }
+    
 }
-
-#endif
 
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl

@@ -1,5 +1,5 @@
 /*
- * $Id: CurrentPageTest.java,v 1.7 2005/02/12 21:29:47 edburns%acm.org Exp $
+ * $Id: CurrentPageTest.java,v 1.8 2005/02/14 02:16:18 edburns%acm.org Exp $
  */
 
 /* 
@@ -43,6 +43,9 @@ import java.awt.datatransfer.DataFlavor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.BufferedReader;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 
 // CurrentPageTest.java
 
@@ -301,5 +304,81 @@ public class CurrentPageTest extends WebclientTestCase implements ClipboardOwner
 	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
     }
 
+    public void testHighlightDomRegion() throws Exception {
+	BrowserControl firstBrowserControl = null;
+	DocumentLoadListenerImpl listener = null;
+	Selection selection = null;
+	firstBrowserControl = BrowserControlFactory.newBrowserControl();
+	assertNotNull(firstBrowserControl);
+	BrowserControlCanvas canvas = (BrowserControlCanvas)
+	    firstBrowserControl.queryInterface(BrowserControl.BROWSER_CONTROL_CANVAS_NAME);
+	eventRegistration = (EventRegistration2)
+	    firstBrowserControl.queryInterface(BrowserControl.EVENT_REGISTRATION_NAME);
+
+	assertNotNull(canvas);
+	Frame frame = new Frame();
+	frame.setUndecorated(true);
+	frame.setBounds(0, 0, 640, 480);
+	frame.add(canvas, BorderLayout.CENTER);
+	frame.setVisible(true);
+	canvas.setVisible(true);
+	
+	Navigation2 nav = (Navigation2) 
+	    firstBrowserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
+	assertNotNull(nav);
+	currentPage = (CurrentPage2) 
+	  firstBrowserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+	
+	assertNotNull(currentPage);
+
+	eventRegistration.addDocumentLoadListener(listener = new DocumentLoadListenerImpl() {
+		public void doEndCheck() {
+		    CurrentPageTest.keepWaiting = false;
+		}
+	    });
+	
+	Thread.currentThread().sleep(3000);
+	
+
+	CurrentPageTest.keepWaiting = true;
+
+	nav.loadURL("http://localhost:5243/DOMSelectionTest.html");
+	
+	// keep waiting until the previous load completes
+	while (CurrentPageTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+
+	Document dom = currentPage.getDOM();
+	assertNotNull(dom);
+
+	Node 
+	    start = dom.getElementById("p2"),
+	    end = dom.getElementById("p4");
+	assertNotNull(start);
+	assertNotNull(end);
+	
+	selection = currentPage.getSelection();
+	selection.init("", start, end, 0, 0);
+	// select Paragraphs 2 - 4 exclusive
+	currentPage.highlightSelection(selection);
+
+	Thread.currentThread().sleep(3000); // PENDING remove
+
+	selection = currentPage.getSelection();
+	assertTrue(-1 == selection.toString().indexOf("Paragraph 1"));
+	assertTrue(-1 != selection.toString().indexOf("Paragraph 2"));
+	assertTrue(-1 != selection.toString().indexOf("Paragraph 3"));
+	assertTrue(-1 == selection.toString().indexOf("Paragraph 4"));
+	assertTrue(-1 == selection.toString().indexOf("Paragraph 5"));	
+	
+	currentPage.clearAllSelections();
+	selection = currentPage.getSelection();
+	assertEquals(0, selection.toString().length());
+
+	
+	frame.setVisible(false);
+	BrowserControlFactory.deleteBrowserControl(firstBrowserControl);
+    }
 
 }
