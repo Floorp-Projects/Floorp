@@ -92,13 +92,18 @@ protected:
 
 inline PRInt32 nsHTMLValue::GetIntValue(void) const
 {
-  NS_ASSERTION((mUnit == eHTMLUnit_Integer) || 
+  NS_ASSERTION((mUnit == eHTMLUnit_String) ||
+               (mUnit == eHTMLUnit_Integer) || 
                (mUnit == eHTMLUnit_Enumerated) ||
                (mUnit == eHTMLUnit_Proportional), "not an int value");
   if ((mUnit == eHTMLUnit_Integer) || 
       (mUnit == eHTMLUnit_Enumerated) ||
       (mUnit == eHTMLUnit_Proportional)) {
     return mValue.mInt;
+  }
+  else if (mUnit == eHTMLUnit_String) {
+    PRInt32 err=0;
+    return (mValue.mString) ? mValue.mString->ToInteger(&err):0;
   }
   return 0;
 }
