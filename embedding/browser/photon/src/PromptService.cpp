@@ -74,7 +74,7 @@ public:
 private:
 	nsCOMPtr<nsIWindowWatcher> mWWatch;
 	PtWidget_t *GetWebBrowser(nsIDOMWindow *aWindow);
-	int InvokeDialogCallback(PtWidget_t *w, int type, char *title, char *text, char *msg, int *value);
+	int InvokeDialogCallback(PtWidget_t *w, int type, char *title, char *text, char *checkbox_msg, int *value);
 };
 
 //*****************************************************************************
@@ -83,7 +83,8 @@ private:
 NS_IMPL_ISUPPORTS2(CPromptService, nsIPromptService, nsPIPromptService)
 
 CPromptService::CPromptService() :
-	mWWatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID)) {
+	mWWatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1")) {
+	NS_INIT_ISUPPORTS();
 	}
 
 CPromptService::~CPromptService() {
@@ -94,7 +95,7 @@ PtWidget_t *CPromptService::GetWebBrowser(nsIDOMWindow *aWindow)
   nsCOMPtr<nsIWebBrowserChrome> chrome;
   PtWidget_t *val = 0;
 
-	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
 	if (!wwatch) return nsnull;
 
   if( wwatch ) {
@@ -117,12 +118,13 @@ PtWidget_t *CPromptService::GetWebBrowser(nsIDOMWindow *aWindow)
 }
 
 int 
-CPromptService::InvokeDialogCallback(PtWidget_t *w, int type, char *title, char *text, char *msg, int *value)
+CPromptService::InvokeDialogCallback(PtWidget_t *w, int type, char *title, char *text, char *checkbox_msg, int *value)
 {
     PtMozillaWidget_t   *moz = (PtMozillaWidget_t *) w;
     PtCallbackList_t    *cb;
     PtCallbackInfo_t    cbinfo;
     PtMozillaDialogCb_t dlg;
+		PtWidget_t *parent;
     int ret;
 
     if (!moz->dialog_cb)
@@ -137,8 +139,9 @@ CPromptService::InvokeDialogCallback(PtWidget_t *w, int type, char *title, char 
     dlg.type = type;
     dlg.title = title;
     dlg.text = text;
-    if ((type == Pt_MOZ_DIALOG_ALERT_CHECK) || (type == Pt_MOZ_DIALOG_CONFIRM_CHECK))
-        dlg.message = msg;
+   	dlg.checkbox_message = checkbox_msg;
+		parent = PtFindDisjoint( w );
+		dlg.parent = parent ? parent : w;	
 
     ret = PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo);
     if (value)
@@ -166,7 +169,7 @@ NS_IMETHODIMP CPromptService::AlertCheck(nsIDOMWindow *parent,
 	nsString 	mTitle(dialogTitle);
 	nsString 	mText(text);
 	nsString 	mMsg(checkboxMsg);
-	int 		ret;
+	int 		ret = 0;
 	PtWidget_t *w = GetWebBrowser( parent );
 
 	InvokeDialogCallback(w, Pt_MOZ_DIALOG_ALERT, ToNewCString(mTitle), ToNewCString(mText), \
@@ -201,8 +204,23 @@ NS_IMETHODIMP CPromptService::ConfirmCheck(nsIDOMWindow *parent,
                                            PRBool *checkValue,
                                            PRBool *_retval)
 {
-  // TODO implement proper confirmation checkbox dialog
-  return Confirm(parent, dialogTitle, text, _retval);
+  nsString  mTitle(dialogTitle);
+  nsString  mText(text);
+  nsString  mMsg(checkboxMsg);
+  int     ret = 0;
+  PtWidget_t *w = GetWebBrowser( parent );
+
+
+  if (InvokeDialogCallback(w, Pt_MOZ_DIALOG_CONFIRM_CHECK, ToNewCString(mTitle), ToNewCString(mText), \
+      ToNewCString(mMsg), &ret) == Pt_CONTINUE)
+    *_retval = PR_TRUE;
+  else
+    *_retval = PR_FALSE;
+  if (checkValue)
+    *checkValue = ret;
+
+  return NS_OK;
+
 }
 
 NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent,
@@ -216,7 +234,7 @@ NS_IMETHODIMP CPromptService::Prompt(nsIDOMWindow *parent,
 	nsString 	mTitle(dialogTitle);
 	nsString 	mText(text);
 	nsString 	mMsg(checkboxMsg);
-	int 		ret;
+	int				ret = 0;
 	PtWidget_t *w = GetWebBrowser( parent );
 
 
@@ -367,6 +385,8 @@ public:
 NS_IMPL_ISUPPORTS1(CPromptServiceFactory, nsIFactory)
 
 CPromptServiceFactory::CPromptServiceFactory() {
+
+  NS_INIT_ISUPPORTS();
 }
 
 CPromptServiceFactory::~CPromptServiceFactory() {

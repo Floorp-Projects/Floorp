@@ -100,7 +100,7 @@ public:
    NS_IMETHOD SetColor(nscolor aColor);
    NS_IMETHOD GetColor(nscolor &aColor) const;
    
-   NS_IMETHOD SetFont(const nsFont& aFont, nsIAtom* aLangGroup);
+	 NS_IMETHOD SetFont(const nsFont& aFont, nsIAtom* aLangGroup);
    NS_IMETHOD SetFont(nsIFontMetrics *aFontMetrics);
    
    NS_IMETHOD GetFontMetrics(nsIFontMetrics *&aFontMetrics);
@@ -109,7 +109,7 @@ public:
    NS_IMETHOD Scale(float aSx, float aSy);
    NS_IMETHOD GetCurrentTransform(nsTransform2D *&aTransform);
    
-   NS_IMETHOD CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface);
+   NS_IMETHOD CreateDrawingSurface(const nsRect &aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface);
    NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS);
    
    NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
@@ -167,6 +167,16 @@ public:
    NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
 								nsTextDimensions& aDimensions, PRInt32 *aFontID);
    
+   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
+   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,
+						nscoord aWidth, nscoord aHeight); 
+   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
+   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
+   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
+					   nscoord aWidth,nscoord aHeight);
+   NS_IMETHOD DrawTile(nsIImage *aImage, nscoord aSrcXOffset, nscoord aSrcYOffset,
+					   const nsRect &aTileRect);
+   
    NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
 								const nsRect &aDestBounds, PRUint32 aCopyFlags);
    NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
@@ -190,9 +200,6 @@ public:
 #endif /* MOZ_MATHML */
 
    
-   // nsIRenderingContextPh
-   // NS_IMETHOD CreateDrawingSurface(PhGC_t *aGC, nsDrawingSurface &aSurface);
-
 //   NS_IMETHOD SetClipRegion(PhTile_t *aTileList, nsClipCombine aCombine, PRBool &aClipState);
    NS_IMETHOD CommonInit();
    

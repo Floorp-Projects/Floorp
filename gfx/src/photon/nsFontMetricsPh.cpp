@@ -64,6 +64,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsFontMetricsPh::nsFontMetricsPh()
 {
+	NS_INIT_ISUPPORTS();
 	mDeviceContext = nsnull;
 	mFont = nsnull;
 
@@ -152,9 +153,6 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 	
 	mDeviceContext = aContext;
 	
-	float app2dev;
-	mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-
 	result = aContext->FirstExistingFont(aFont, firstFace);
 
 	str = ToNewCString(firstFace);
@@ -178,7 +176,6 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 		free (cstring);
 
 	char *font_default = NULL;
-	nsresult res = NS_ERROR_FAILURE;
 	nsIPref* prefs = nsnull;
 	nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**) &prefs);
 	if (prefs)
@@ -196,6 +193,7 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 
 	float scale = 1.0;
 
+	float app2dev;
 	mDeviceContext->GetAppUnitsToDevUnits(app2dev);
 	mDeviceContext->GetCanonicalPixelScale(scale);
 
@@ -244,14 +242,14 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 	  }
 
 	float dev2app;
-	int height;
+	double height;
 	nscoord onePixel;
 
 	mDeviceContext->GetDevUnitsToAppUnits(dev2app);
 	onePixel = NSToCoordRound(1 * dev2app);
 	height = node->descender - node->ascender + 1.0;
 	PfExtentText(&extent, NULL, NSFullFontName, " ", 1);
-	mSpaceWidth = (int) ((extent.lr.x - extent.ul.x + 1) * dev2app);
+	mSpaceWidth = NSToCoordRound((extent.lr.x - extent.ul.x + 1) * dev2app);
 
 	mLeading = NSToCoordRound(0);
 	mEmHeight = NSToCoordRound(height * dev2app);
@@ -261,9 +259,7 @@ NS_IMETHODIMP nsFontMetricsPh::Init ( const nsFont& aFont, nsIAtom* aLangGroup, 
 	mAscent = mMaxAscent = NSToCoordRound(node->ascender * dev2app * -1.0);
 	mDescent = mMaxDescent = NSToCoordRound(node->descender * dev2app);
 	mMaxAdvance = NSToCoordRound(node->width * dev2app);
-
-	PfExtentText(&extent, NULL, NSFullFontName, "x", 1);
-	mAveCharWidth = (int) ((extent.lr.x - extent.ul.x + 1) * dev2app);
+	mAveCharWidth = mSpaceWidth;
 
 	mXHeight = NSToCoordRound((float)node->ascender * dev2app * 0.56f * -1.0); // 56% of ascent, best guess for non-true type
 	mSuperscriptOffset = mXHeight;     // XXX temporary code!
@@ -410,8 +406,8 @@ NS_IMETHODIMP nsFontMetricsPh :: GetMaxAdvance( nscoord &aAdvance )
 
 NS_IMETHODIMP nsFontMetricsPh :: GetAveCharWidth( nscoord &aAveCharWidth)
 {
-	aAveCharWidth = mAveCharWidth;
-	return NS_OK;
+  aAveCharWidth = mAveCharWidth;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsFontMetricsPh :: GetFont(const nsFont *&aFont)
@@ -451,6 +447,7 @@ struct nsFontFamily
 // The Font Enumerator
 nsFontEnumeratorPh::nsFontEnumeratorPh()
 {
+	NS_INIT_ISUPPORTS();
 }
 
 NS_IMPL_ISUPPORTS1(nsFontEnumeratorPh, nsIFontEnumerator)

@@ -51,6 +51,7 @@ PtWidget_t *EmbedWindow::sTipWindow = nsnull;
 
 EmbedWindow::EmbedWindow(void)
 {
+	NS_INIT_ISUPPORTS();
   mOwner       = nsnull;
   mVisibility  = PR_FALSE;
   mIsModal     = PR_FALSE;
@@ -181,17 +182,28 @@ EmbedWindow::SetStatus(PRUint32 aStatusType, const PRUnichar *aStatus)
 }
 
 int
-EmbedWindow::SaveAs(char *fname)
+EmbedWindow::SaveAs(char *fname, char *dirname)
 {
-  nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
-  if (persist)
-  {
-    nsCOMPtr<nsILocalFile> file;
-    NS_NewNativeLocalFile(nsDependentCString(fname), PR_TRUE, getter_AddRefs(file));
-    persist->SaveDocument(nsnull, file, nsnull, nsnull, 0, 0);
-    return (0);
-  }
-  return 1;
+	nsresult rv;
+
+	nsCOMPtr<nsIWebBrowserPersist> persist(do_GetInterface(mWebBrowser, &rv));
+	if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsILocalFile> file;
+  NS_NewNativeLocalFile(nsDependentCString(fname), PR_TRUE, getter_AddRefs(file));
+
+	/* the nsIWebBrowserPersist wants a parent directory where to download images and other items related to the document */
+	/* we have to provide a directory, otherwise the current SaveDocument is marked as not finished and the next one is aborted */
+	nsCOMPtr<nsILocalFile> parentDirAsLocal;
+	rv = NS_NewNativeLocalFile(nsDependentCString( dirname ), PR_TRUE, getter_AddRefs(parentDirAsLocal));
+	if (NS_FAILED(rv)) return rv;
+
+	PRUint32 flags;
+	persist->GetPersistFlags( &flags );
+	if( !(flags & nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES ) ) persist->SetPersistFlags( nsIWebBrowserPersist::PERSIST_FLAGS_REPLACE_EXISTING_FILES );
+
+  persist->SaveDocument(nsnull, file, parentDirAsLocal, nsnull, 0, 0);
+  return 0;
 }
 
 int
@@ -213,7 +225,6 @@ EmbedWindow::SaveURI(nsIURI *uri, char *fname)
 void
 EmbedWindow::CancelSaveURI()
 {
-  PtMozillaWidget_t *w = (PtMozillaWidget_t *)(mOwner->mOwningWidget);
   nsCOMPtr<nsIWebBrowserPersist> persist(do_QueryInterface(mWebBrowser));
   persist->SetProgressListener(nsnull);
   persist->CancelSave();
@@ -262,7 +273,6 @@ EmbedWindow::DestroyBrowserWindow(void)
   cb = moz->destroy_cb;
   memset(&cbinfo, 0, sizeof(cbinfo));
   cbinfo.reason = Pt_CB_MOZ_DESTROY;
-
   PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo);
 
   return NS_OK;
@@ -271,7 +281,23 @@ EmbedWindow::DestroyBrowserWindow(void)
 NS_IMETHODIMP
 EmbedWindow::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-  return NS_ERROR_FAILURE;
+	PtMozillaWidget_t   *moz = (PtMozillaWidget_t *) mOwner->mOwningWidget;
+	PtCallbackList_t  *cb;
+	PtCallbackInfo_t  cbinfo;
+	PtMozillaNewAreaCb_t resize;
+
+	if (!moz->resize_cb)
+		return NS_OK;
+
+	cb = moz->resize_cb;
+	memset(&cbinfo, 0, sizeof(cbinfo));
+	cbinfo.reason = Pt_CB_MOZ_NEW_AREA;
+	resize.flags = Pt_MOZ_NEW_AREA_SET_SIZE;
+	resize.area.size.w = aCX;
+	resize.area.size.h = aCY;
+	cbinfo.cbdata = &resize;
+	PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -319,8 +345,8 @@ EmbedWindow::SetDimensions(PRUint32 aFlags, PRInt32 aX, PRInt32 aY,
   PtCallbackList_t  *cb;
   PtCallbackInfo_t  cbinfo;
   PtMozillaNewAreaCb_t  resize;
+
   nsresult  rv = NS_ERROR_INVALID_ARG;
-#if 0
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION &&
       (aFlags & (nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER |
      nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER))) {
@@ -333,7 +359,7 @@ EmbedWindow::SetDimensions(PRUint32 aFlags, PRInt32 aX, PRInt32 aY,
          nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_OUTER)) {
     rv =  mBaseWindow->SetSize(aCX, aCY, PR_TRUE);
   }
-#endif
+	return rv;
 
   if (!moz->resize_cb)
       return NS_OK;
@@ -415,7 +441,18 @@ EmbedWindow::SetTitle(const PRUnichar *aTitle)
 
   info.type = Pt_MOZ_INFO_TITLE;
   info.status = 0;
-  str = ToNewCString(mTitleString);
+
+	/* see if the title is empty */
+	if( mTitleString.Length() == 0 ) {
+		if( moz->EmbedRef->mURI.Length() > 0 )
+			str = ToNewCString( moz->EmbedRef->mURI );
+		else {
+			str = (char*) nsMemory::Alloc( 2 );
+			str[0] = ' '; str[1] = 0;
+			}
+		}
+  else str = ToNewCString(mTitleString);
+
   info.data = str;
   PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo);
 
@@ -442,10 +479,7 @@ EmbedWindow::GetVisibility(PRBool *aVisibility)
 NS_IMETHODIMP
 EmbedWindow::SetVisibility(PRBool aVisibility)
 {
-  // We always set the visibility so that if it's chrome and we finish
-  // the load we know that we have to show the window.
   mVisibility = aVisibility;
-
   return NS_OK;
 }
 
@@ -486,11 +520,11 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   pos.x = pos.y = 0;
   PtSetArg(&args[n++], Pt_ARG_POS, &pos, 0);
   PtSetArg(&args[n++], Pt_ARG_DIM, &dim, 0);
-  PtSetArg(&args[n++], Pt_ARG_FLAGS, Pt_HIGHLIGHTED, (int)(~0));
+  PtSetArg(&args[n++], Pt_ARG_FLAGS, Pt_HIGHLIGHTED, -1 );
   PtSetArg(&args[n++], Pt_ARG_FILL_COLOR, 0xfeffb1, 0);
   PtSetArg(&args[n++], Pt_ARG_TEXT_STRING, tipString, 0);
   PtSetArg(&args[n++], Pt_ARG_BASIC_FLAGS, Pt_STATIC_GRADIENT | Pt_TOP_OUTLINE | Pt_LEFT_OUTLINE |
-      Pt_RIGHT_OUTLINE | Pt_BOTTOM_OUTLINE, (int)(~0));
+      Pt_RIGHT_OUTLINE | Pt_BOTTOM_OUTLINE, -1 );
   PtCreateWidget(PtLabel, sTipWindow, n, args);
 
   // realize the widget

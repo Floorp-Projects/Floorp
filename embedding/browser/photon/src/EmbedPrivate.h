@@ -80,7 +80,7 @@ class EmbedPrivate {
   void        Paste  (void);
   void        SelectAll  (void);
   void        Clear  (void);
-  int    	  SaveAs(char *fname);
+  int    	  SaveAs(char *fname,char *dirname);
   int 		  SaveURI(char *uri, char *fname);
   void 		  CancelSaveURI();
   void 		  Print(PpPrintContext_t *pc);

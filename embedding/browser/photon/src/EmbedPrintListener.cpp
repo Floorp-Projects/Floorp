@@ -72,12 +72,12 @@ EmbedPrintListener::InvokePrintCallback(int status, unsigned int cur, unsigned i
 }
 
 /* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
-NS_IMETHODIMP EmbedPrintListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
+NS_IMETHODIMP EmbedPrintListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
-  if (aStatus == nsIWebProgressListener::STATE_START) {
+  if (aStateFlags & nsIWebProgressListener::STATE_START) {
 	  InvokePrintCallback(Pt_MOZ_PRINT_START, 0, 0);
 
-  } else if (aStatus == nsIWebProgressListener::STATE_STOP) {
+  } else if (aStateFlags & nsIWebProgressListener::STATE_STOP) {
 	  InvokePrintCallback(Pt_MOZ_PRINT_COMPLETE, 0, 0);
   }
   return NS_OK;

@@ -39,6 +39,7 @@ NS_IMPL_ISUPPORTS1(EmbedStream, nsIInputStream)
 
 EmbedStream::EmbedStream()
 {
+	NS_INIT_ISUPPORTS();
   mOwner       = nsnull;
   mOffset      = 0;
   mDoingStream = PR_FALSE;
@@ -117,8 +118,7 @@ EmbedStream::OpenStream(const char *aBaseURI, const char *aContentType)
   rv = NS_NewInputStreamChannel(getter_AddRefs(mChannel), uri,
 				NS_STATIC_CAST(nsIInputStream *, this),
 				nsDependentCString(aContentType),
-                NS_LITERAL_CSTRING(""),
-				1024); /* len */
+                NS_LITERAL_CSTRING("") );
   if (NS_FAILED(rv))
     return rv;
 
@@ -272,9 +272,6 @@ EmbedStream::ReadSegments(nsWriteSegmentFun aWriter, void * aClosure,
     // XXX writeCount may be less than nBytes!!  This is the wrong
     // way to synthesize ReadSegments.
     NS_ASSERTION(writeCount == nBytes, "data loss");
-
-    // errors returned from the writer end here!
-    rv = NS_OK;
   }
 
   nsMemory::Free(readBuf);

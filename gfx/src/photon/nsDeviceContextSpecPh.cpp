@@ -42,13 +42,26 @@
 #include "plstr.h"
 #include "nsPhGfxLog.h"
 
+#include "nsGfxCIID.h"
+#include "nsIPrintOptions.h"
+#include "nsIDOMWindow.h"
+#include "nsIDialogParamBlock.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIWindowWatcher.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsVoidArray.h"
+#include "nsSupportsArray.h"
+
 #include "nsString.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
 #include "nsIPref.h"
 
+static NS_DEFINE_CID( kPrintOptionsCID, NS_PRINTOPTIONS_CID );
+
 nsDeviceContextSpecPh :: nsDeviceContextSpecPh()
 {
+	NS_INIT_ISUPPORTS();
 	mPC = nsnull;
 }
 
@@ -81,8 +94,10 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 	}
 	else
 	{
-		PtSetParentWidget(parent);
-		action = PtPrintSelection(parent, NULL, NULL, mPC, Pt_PRINTSEL_DFLT_LOOK);
+		//PtSetParentWidget(parent);
+		//action = PtPrintSelection(parent, NULL, NULL, mPC, Pt_PRINTSEL_DFLT_LOOK);
+		PtSetParentWidget(NULL);
+		action = PtPrintSelection(NULL, NULL, NULL, mPC, Pt_PRINTSEL_DFLT_LOOK);
 		switch( action ) 
 		{
 			case Pt_PRINTSEL_PRINT:
@@ -90,6 +105,9 @@ NS_IMETHODIMP nsDeviceContextSpecPh :: Init(nsIWidget* aWidget,
 				rv = NS_OK;
 				break;
 			case Pt_PRINTSEL_CANCEL:
+				rv = NS_ERROR_ABORT;
+				break;
+			default:
 				rv = NS_ERROR_ABORT;
 				break;
 		}
@@ -117,6 +135,7 @@ void nsDeviceContextSpecPh :: SetPrintContext(PpPrintContext_t* pc)
 //***********************************************************
 nsPrinterEnumeratorPh::nsPrinterEnumeratorPh()
 {
+		NS_INIT_ISUPPORTS();
 }
 
 nsPrinterEnumeratorPh::~nsPrinterEnumeratorPh()
@@ -176,12 +195,18 @@ nsPrinterEnumeratorPh::DoEnumeratePrinters(PRBool aDoExtended, PRUint32* aCount,
   	NS_ENSURE_ARG_POINTER(aResult);
 
 	char 	**plist = NULL;
-	int		pcount = 0, count = 0;
+	int		pcount = 0, count = 0, preview = 0;
 
 	if (!(plist = PpLoadPrinterList()))
 		return NS_ERROR_FAILURE;
 
 	for (pcount = 0; plist[pcount] != NULL; pcount++);
+
+	/* allow at least one printer to be present, otherwise the "Preview" cannot be done in the PtPrintSelection() */
+	if( !pcount ) {
+		pcount = 1;
+		preview = 1;
+		}
 
 	PRUnichar** array = (PRUnichar**) nsMemory::Alloc(pcount * sizeof(PRUnichar*));
 	if (!array)
@@ -193,7 +218,11 @@ nsPrinterEnumeratorPh::DoEnumeratePrinters(PRBool aDoExtended, PRUint32* aCount,
 	while (count < pcount) 
 	{
 		nsString newName;
-		newName.AssignWithConversion(plist[count]);
+
+		if( !preview )
+			newName.AssignWithConversion(plist[count]);
+		else newName.AssignWithConversion( "Preview" );
+
 		PRUnichar *str = ToNewUnicode(newName);
 		if (!str) 
 		{
