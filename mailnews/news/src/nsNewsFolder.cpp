@@ -1678,12 +1678,49 @@ NS_IMETHODIMP nsMsgNewsFolder::SetSaveArticleOffline(PRBool aBool)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgNewsFolder::DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow)
+{
+  nsMsgKeyArray srcKeyArray;
+
+  SetSaveArticleOffline(PR_TRUE); 
+  nsresult rv;
+
+  // build up message keys.
+  if (mDatabase)
+  {
+    nsCOMPtr <nsISimpleEnumerator> enumerator;
+    rv = mDatabase->EnumerateMessages(getter_AddRefs(enumerator));
+    if (NS_SUCCEEDED(rv) && enumerator)
+    {
+      PRBool hasMore;
+
+      while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&hasMore)) && hasMore) 
+      {
+        nsCOMPtr <nsIMsgDBHdr> pHeader;
+        rv = enumerator->GetNext(getter_AddRefs(pHeader));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
+        if (pHeader && NS_SUCCEEDED(rv))
+        {
+          PRBool shouldStoreMsgOffline = PR_FALSE;
+          nsMsgKey msgKey;
+          pHeader->GetMessageKey(&msgKey);
+          MsgFitsDownloadCriteria(msgKey, &shouldStoreMsgOffline);
+          if (shouldStoreMsgOffline)
+            srcKeyArray.Add(msgKey);
+        }
+      }
+    }
+  }
+  DownloadNewsArticlesToOfflineStore *downloadState = new DownloadNewsArticlesToOfflineStore(msgWindow, mDatabase, nsnull);
+  if (downloadState)
+    return downloadState->DownloadArticles(msgWindow, this, &srcKeyArray);
+  else
+    return NS_ERROR_OUT_OF_MEMORY;
+}
+
 NS_IMETHODIMP nsMsgNewsFolder::DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *window)
 {
   nsMsgKeyArray srcKeyArray;
-#ifdef DEBUG_bienvenu
-//  return DownloadAllForOffline(nsnull, window);
-#endif
 
   SetSaveArticleOffline(PR_TRUE); // ### TODO need to clear this when we've finished
   PRUint32 count = 0;
@@ -1703,12 +1740,11 @@ NS_IMETHODIMP nsMsgNewsFolder::DownloadMessagesForOffline(nsISupportsArray *mess
     if (NS_SUCCEEDED(rv))
       srcKeyArray.Add(key);
   }
-	DownloadNewsArticlesToOfflineStore *downloadState = new DownloadNewsArticlesToOfflineStore(window, mDatabase, nsnull);
-	if (downloadState)
-		return downloadState->DownloadArticles(window, this, &srcKeyArray);
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
-  return rv;
+  DownloadNewsArticlesToOfflineStore *downloadState = new DownloadNewsArticlesToOfflineStore(window, mDatabase, nsnull);
+  if (downloadState)
+    return downloadState->DownloadArticles(window, this, &srcKeyArray);
+  else
+    return NS_ERROR_OUT_OF_MEMORY;
 }
 
 

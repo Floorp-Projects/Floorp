@@ -96,6 +96,7 @@ public:
 
   NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *window);
   NS_IMETHOD Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow);
+  NS_IMETHOD DownloadAllForOffline(nsIUrlListener *listener, nsIMsgWindow *msgWindow);
 	// for nsMsgLineBuffer
 	virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
 
