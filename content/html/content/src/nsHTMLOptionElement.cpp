@@ -55,7 +55,7 @@ class nsHTMLOptionElement : public nsIDOMHTMLOptionElement,
 {
 public:
   nsHTMLOptionElement(nsIAtom* aTag);
-  ~nsHTMLOptionElement();
+  virtual ~nsHTMLOptionElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -137,7 +137,6 @@ nsHTMLOptionElement::~nsHTMLOptionElement()
 NS_IMETHODIMP
 nsHTMLOptionElement::AddRef(void)
 {
-  PRInt32 refCnt = mRefCnt;  // debugging 
   return ++mRefCnt; 
 }
 
@@ -342,7 +341,7 @@ nsresult nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormContro
         nsIPresShell* presShell = doc->GetShellAt(0);
         if (nsnull != presShell) {
           nsIFrame *frame = nsnull;
-          presShell->GetPrimaryFrameFor(selectContent, frame);
+          presShell->GetPrimaryFrameFor(selectContent, &frame);
           if (nsnull != frame) {
             res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aIFormControlFrame);
           }

@@ -36,7 +36,7 @@ class nsHTMLParamElement : public nsIDOMHTMLParamElement,
 {
 public:
   nsHTMLParamElement(nsIAtom* aTag);
-  ~nsHTMLParamElement();
+  virtual ~nsHTMLParamElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

@@ -45,7 +45,7 @@ class nsHTMLButtonElement : public nsIDOMHTMLButtonElement,
 {
 public:
   nsHTMLButtonElement(nsIAtom* aTag);
-  ~nsHTMLButtonElement();
+  virtual ~nsHTMLButtonElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -143,7 +143,6 @@ nsHTMLButtonElement::~nsHTMLButtonElement()
 NS_IMETHODIMP_(nsrefcnt) 
 nsHTMLButtonElement::AddRef(void)
 {
-  PRInt32 refCnt = mRefCnt;  // debugging 
   return ++mRefCnt; 
 }
 

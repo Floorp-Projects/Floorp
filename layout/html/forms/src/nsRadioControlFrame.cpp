@@ -104,7 +104,7 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 {
 #ifndef NS_GFX_RENDER_FORM_ELEMENTS
   float p2t;
-  aPresContext->GetScaledPixelsToTwips(p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   aDesiredWidgetSize.width  = GetRadioboxSize(p2t);
   aDesiredWidgetSize.height = aDesiredWidgetSize.width;
 
@@ -352,10 +352,10 @@ nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
 	  // Have to do 180 degress at a time because FillArc will not correctly
 	  // go from 0-360
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(p2t);
+    aPresContext.GetScaledPixelsToTwips(&p2t);
 
     nscoord onePixel     = NSIntPixelsToTwips(1, p2t);
-    nscoord twelvePixels = NSIntPixelsToTwips(12, p2t);
+//XXX    nscoord twelvePixels = NSIntPixelsToTwips(12, p2t);
 
     nsRect outside;
     nsFormControlHelper::GetCircularRect(mRect.width, mRect.height, outside);

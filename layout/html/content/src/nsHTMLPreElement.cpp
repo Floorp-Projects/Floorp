@@ -39,7 +39,7 @@ class nsHTMLPreElement : public nsIDOMHTMLPreElement,
 {
 public:
   nsHTMLPreElement(nsIAtom* aTag);
-  ~nsHTMLPreElement();
+  virtual ~nsHTMLPreElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

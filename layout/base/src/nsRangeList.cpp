@@ -752,9 +752,9 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
         else if (frame){ //we need to check to see what the order is.
           nsCOMPtr<nsIContent>oldContent;
           if (NS_SUCCEEDED(frame->GetContent(getter_AddRefs(oldContent))) && oldContent){
-            nsCOMPtr<nsIDOMNode>oldDomNode(oldContent);
-            if (oldDomNode && oldDomNode == GetFocusNode()) {
-              nsCOMPtr<nsIContent>anchorContent;
+            nsCOMPtr<nsIDOMNode> oldDomNode(oldContent);
+            if ((nsnull != oldDomNode) && (oldDomNode == GetFocusNode())) {
+              nsCOMPtr<nsIContent> anchorContent;
               if (NS_SUCCEEDED(anchor->GetContent(getter_AddRefs(anchorContent))) && anchorContent){
                 nsCOMPtr<nsIDOMNode>anchorDomNode(anchorContent);
                 if (anchorDomNode && anchorDomNode == GetAnchorNode()) {

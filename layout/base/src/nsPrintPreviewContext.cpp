@@ -31,10 +31,10 @@ public:
   PrintPreviewContext();
   ~PrintPreviewContext();
 
-  NS_IMETHOD GetMedium(nsIAtom*& aMedium);
-  virtual PRBool IsPaginated();
-  virtual nscoord GetPageWidth();
-  virtual nscoord GetPageHeight();
+  NS_IMETHOD GetMedium(nsIAtom** aMedium);
+  NS_IMETHOD IsPaginated(PRBool* aResult);
+  NS_IMETHOD GetPageWidth(nscoord* aResult);
+  NS_IMETHOD GetPageHeight(nscoord* aResult);
 
 #ifdef NS_DEBUG
   static PRBool UseFakePageSize();
@@ -66,22 +66,36 @@ PrintPreviewContext::~PrintPreviewContext()
 }
 
 NS_IMETHODIMP
-PrintPreviewContext::GetMedium(nsIAtom*& aMedium)
+PrintPreviewContext::GetMedium(nsIAtom** aResult)
 {
-  aMedium = nsLayoutAtoms::print;
-  NS_ADDREF(aMedium);
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = nsLayoutAtoms::print;
+  NS_ADDREF(*aResult);
   return NS_OK;
 }
 
-PRBool
-PrintPreviewContext::IsPaginated()
+NS_IMETHODIMP
+PrintPreviewContext::IsPaginated(PRBool* aResult)
 {
-  return PR_TRUE;
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aResult = PR_TRUE;
+  return NS_OK;
 }
 
-nscoord
-PrintPreviewContext::GetPageWidth()
+NS_IMETHODIMP
+PrintPreviewContext::GetPageWidth(nscoord* aResult)
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
 #ifdef NS_DEBUG
   if (UseFakePageSize()) {
     // For testing purposes make the page width smaller than the visible
@@ -89,26 +103,35 @@ PrintPreviewContext::GetPageWidth()
     float sbWidth, sbHeight;
     mDeviceContext->GetScrollBarDimensions(sbWidth, sbHeight);
     nscoord sbar = NSToCoordRound(sbWidth);
-    return mVisibleArea.width - sbar - 2*100;
+    *aResult = mVisibleArea.width - sbar - 2*100;
+    return NS_OK;
   }
 #endif
 
   // XXX assumes a 1/2 margin around all sides
-  return (nscoord) NS_INCHES_TO_TWIPS(7.5);
+  *aResult = (nscoord) NS_INCHES_TO_TWIPS(7.5);
+  return NS_OK;
 }
 
-nscoord
-PrintPreviewContext::GetPageHeight()
+NS_IMETHODIMP
+PrintPreviewContext::GetPageHeight(nscoord* aResult)
 {
+  NS_PRECONDITION(nsnull != aResult, "null ptr");
+  if (nsnull == aResult) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
 #ifdef NS_DEBUG
   if (UseFakePageSize()) {
     // For testing purposes make the page height 60% of the visible area
-    return mVisibleArea.height * 60 / 100;
+    *aResult = mVisibleArea.height * 60 / 100;
+    return NS_OK;
   }
 #endif
 
   // XXX assumes a 1/2 margin around all sides
-  return (nscoord) NS_INCHES_TO_TWIPS(10);
+  *aResult = (nscoord) NS_INCHES_TO_TWIPS(10);
+  return NS_OK;
 }
 
 NS_LAYOUT nsresult

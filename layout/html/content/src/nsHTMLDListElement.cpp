@@ -37,7 +37,7 @@ class nsHTMLDListElement : public nsIDOMHTMLDListElement,
 {
 public:
   nsHTMLDListElement(nsIAtom* aTag);
-  ~nsHTMLDListElement();
+  virtual ~nsHTMLDListElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -152,9 +152,6 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 {
   if (nsnull != aAttributes) {
     nsHTMLValue value;
-    nsStyleList* list = (nsStyleList*)
-      aContext->GetMutableStyleData(eStyleStruct_List);
-
     // compact: empty
     aAttributes->GetAttribute(nsHTMLAtoms::compact, value);
     if (value.GetUnit() == eHTMLUnit_Empty) {

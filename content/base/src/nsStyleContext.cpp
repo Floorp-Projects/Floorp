@@ -61,8 +61,8 @@ void StyleFontImpl::ResetFrom(const nsStyleFont* aParent, nsIPresContext* aPresC
     mFlags = aParent->mFlags;
   }
   else {
-    mFont = aPresContext->GetDefaultFont();
-    mFixedFont = aPresContext->GetDefaultFixedFont();
+    aPresContext->GetDefaultFont(mFont);
+    aPresContext->GetDefaultFixedFont(mFixedFont);
     mFlags = NS_STYLE_FONT_DEFAULT;
   }
 }
@@ -90,7 +90,7 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
   }
   else {
     if (nsnull != aPresContext) {
-      aPresContext->GetDefaultColor(mColor);
+      aPresContext->GetDefaultColor(&mColor);
     }
     else {
       mColor = NS_RGB(0x00, 0x00, 0x00);
@@ -103,7 +103,7 @@ void StyleColorImpl::ResetFrom(const nsStyleColor* aParent, nsIPresContext* aPre
   mBackgroundFlags = NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE;
   mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
   if (nsnull != aPresContext) {
-    aPresContext->GetDefaultBackgroundColor(mBackgroundColor);
+    aPresContext->GetDefaultBackgroundColor(&mBackgroundColor);
   }
   else {
     mBackgroundColor = NS_RGB(192,192,192);
@@ -316,13 +316,13 @@ PRBool nsStyleSpacing::GetBorderPadding(nsMargin& aBorderPadding) const
 
 PRUint8 nsStyleSpacing::GetBorderStyle(PRUint8 aSide) const
 {
-  NS_ASSERTION((NS_SIDE_TOP <= aSide) && (aSide <= NS_SIDE_LEFT), "bad side"); 
+  NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
   return (mBorderStyle[aSide] & 0x7F); 
 }
 
 void nsStyleSpacing::SetBorderStyle(PRUint8 aSide, PRUint8 aStyle)
 {
-  NS_ASSERTION((NS_SIDE_TOP <= aSide) && (aSide <= NS_SIDE_LEFT), "bad side"); 
+  NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
   mBorderStyle[aSide] &= 0x80; 
   mBorderStyle[aSide] |= (aStyle & 0x7F);
 
@@ -330,20 +330,20 @@ void nsStyleSpacing::SetBorderStyle(PRUint8 aSide, PRUint8 aStyle)
 
 nscolor nsStyleSpacing::GetBorderColor(PRUint8 aSide) const
 {
-  NS_ASSERTION((NS_SIDE_TOP <= aSide) && (aSide <= NS_SIDE_LEFT), "bad side"); 
+  NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
   return mBorderColor[aSide]; 
 }
 
 void nsStyleSpacing::SetBorderColor(PRUint8 aSide, nscolor aColor) 
 {
-  NS_ASSERTION((NS_SIDE_TOP <= aSide) && (aSide <= NS_SIDE_LEFT), "bad side"); 
+  NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
   mBorderColor[aSide] = aColor; 
   mBorderStyle[aSide] |= 0x80; 
 }
 
 void nsStyleSpacing::ClearBorderStyleHighBit(PRUint8 aSide)
 {
-  NS_ASSERTION((NS_SIDE_TOP <= aSide) && (aSide <= NS_SIDE_LEFT), "bad side");
+  NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side"); 
   mBorderStyle[aSide] &= 0x7F;
 }
 
@@ -683,7 +683,7 @@ public:
   StyleContextImpl(nsIStyleContext* aParent, nsIAtom* aPseudoTag, 
                    nsISupportsArray* aRules, 
                    nsIPresContext* aPresContext);
-  ~StyleContextImpl();
+  virtual ~StyleContextImpl();
 
   void* operator new(size_t sz) {
     void* rv = new char[sz];
@@ -768,7 +768,7 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
     mPseudoTag(aPseudoTag),
     mRules(aRules),
     mDataCode(-1),
-    mFont(aPresContext->GetDefaultFont(), aPresContext->GetDefaultFixedFont()),
+    mFont(aPresContext->GetDefaultFontDeprecated(), aPresContext->GetDefaultFixedFontDeprecated()),
     mColor(),
     mSpacing(),
     mList(),
@@ -1173,7 +1173,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
   }
 
   nsCompatibility quirkMode = eCompatibility_Standard;
-  aPresContext->GetCompatibilityMode(quirkMode);
+  aPresContext->GetCompatibilityMode(&quirkMode);
   if (eCompatibility_NavQuirks == quirkMode) {
     if ((mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE) || 
         (mDisplay.mDisplay == NS_STYLE_DISPLAY_TABLE_CAPTION)) {

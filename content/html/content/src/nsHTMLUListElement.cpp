@@ -40,7 +40,7 @@ class nsHTMLUListElement : public nsIDOMHTMLUListElement,
 {
 public:
   nsHTMLUListElement(nsIAtom* aTag);
-  ~nsHTMLUListElement();
+  virtual ~nsHTMLUListElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

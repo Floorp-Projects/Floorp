@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsHTMLDocument.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
@@ -73,7 +74,7 @@ public:
 class ImageListener : public nsIStreamListener {
 public:
   ImageListener(nsImageDocument* aDoc);
-  ~ImageListener();
+  virtual ~ImageListener();
 
   NS_DECL_ISUPPORTS
   NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
@@ -218,15 +219,14 @@ nsImageDocument::StartImageLoad(nsIURL* aURL, nsIStreamListener*& aListener)
   // so that we can pass it back upwards.
   nsIPresShell* shell = GetShellAt(0);
   if (nsnull != shell) {
-    nsIPresContext* cx = nsnull;
-    cx = shell->GetPresContext();
+    nsCOMPtr<nsIPresContext> cx;
+    shell->GetPresContext(getter_AddRefs(cx));
     if (nsnull != cx) {
       nsIImageGroup* group = nsnull;
-      cx->GetImageGroup(group);
+      cx->GetImageGroup(&group);
       if (nsnull != group) {
         const char* spec;
         (void)aURL->GetSpec(&spec);
-        nscolor black = NS_RGB(0, 0, 0);
         nsIStreamListener* listener = nsnull;
         rv = group->GetImageFromStream(spec, nsnull, &mBlack,
                                        0, 0, 0,
@@ -234,7 +234,6 @@ nsImageDocument::StartImageLoad(nsIURL* aURL, nsIStreamListener*& aListener)
         aListener = listener;
         NS_RELEASE(group);
       }
-      NS_RELEASE(cx);
     }
     NS_RELEASE(shell);
   }
@@ -318,18 +317,18 @@ nsImageDocument::StartLayout()
       shell->BeginObservingDocument();
 
       // Resize-reflow this time
-      nsIPresContext* cx = shell->GetPresContext();
+      nsCOMPtr<nsIPresContext> cx;
+      shell->GetPresContext(getter_AddRefs(cx));
       nsRect r;
       cx->GetVisibleArea(r);
       shell->InitialReflow(r.width, r.height);
-      NS_RELEASE(cx);
 
       // Now trigger a refresh
       // XXX It's unfortunate that this has to be here
-      nsIViewManager* vm = shell->GetViewManager();
+      nsCOMPtr<nsIViewManager> vm;
+      shell->GetViewManager(getter_AddRefs(vm));
       if (nsnull != vm) {
         vm->EnableRefresh();
-        NS_RELEASE(vm);
       }
 
       NS_RELEASE(shell);

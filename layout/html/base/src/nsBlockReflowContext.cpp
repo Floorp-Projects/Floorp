@@ -26,6 +26,12 @@
 #include "nsIStyleContext.h"
 #include "nsHTMLContainerFrame.h"
 
+#ifdef NS_DEBUG
+#define NOISY_SPECULATIVE_TOP_MARGIN
+#else
+#undef NOISY_SPECULATIVE_TOP_MARGIN
+#endif
+
 nsBlockReflowContext::nsBlockReflowContext(nsIPresContext& aPresContext,
                                            nsLineLayout& aLineLayout,
                                            nsFrameReflowState& aParentRS)
@@ -55,8 +61,9 @@ nsBlockReflowContext::ComputeMarginsFor(nsIPresContext& aPresContext,
   nscoord fontHeight = 0;
   if ((eStyleUnit_Auto == topUnit) || (eStyleUnit_Auto == bottomUnit)) {
     // XXX Use the font for the frame, not the default font???
-    const nsFont& defaultFont = aPresContext.GetDefaultFont();
-    nsIFontMetrics* fm = aPresContext.GetMetricsFor(defaultFont);
+    const nsFont& defaultFont = aPresContext.GetDefaultFontDeprecated();
+    nsIFontMetrics* fm;
+    aPresContext.GetMetricsFor(defaultFont, &fm);
     fm->GetHeight(fontHeight);
     NS_RELEASE(fm);
   }
@@ -73,6 +80,10 @@ nsBlockReflowContext::ComputeMarginsFor(nsIPresContext& aPresContext,
 nsresult
 nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
                                   const nsRect& aSpace,
+#ifdef SPECULATIVE_TOP_MARGIN
+                                  PRBool aApplyTopMargin,
+                                  nscoord aPrevBottomMargin,
+#endif
                                   PRBool aIsAdjacentWithTop,
                                   nsMargin& aComputedOffsets,
                                   nsReflowStatus& aFrameReflowStatus)
@@ -81,16 +92,37 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   mFrame = aFrame;
   mSpace = aSpace;
 
-  // Compute the margins (including auto margins)
+  // Compute the raw margins (including auto margins)
   aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)mSpacing);
   ComputeMarginsFor(mPresContext, aFrame, mSpacing, mOuterReflowState,
                     mMargin);
+
+#ifdef SPECULATIVE_TOP_MARGIN
+#ifdef NOISY_SPECULATIVE_TOP_MARGIN
+  PRIntn pass = 0;
+#endif
+  mSpeculativeTopMargin = 0;
+  if (aApplyTopMargin) {
+    // Compute a "speculative" collapsed top-margin value. Its
+    // speculative because we don't yet have the
+    // carried-out-top-margin value so the final collapsed value isn't
+    // knowable yet. We want to pre-apply the collapsed top-margin
+    // value so that when a block is flowing around floaters that we
+    // don't have to reflow it twice (we can't just slide it down when
+    // its flowing around a floater after discovering the final top
+    // margin value).
+    mSpeculativeTopMargin = MaxMargin(mMargin.top, aPrevBottomMargin);
+  }
+ again:
+#else
+  mSpeculativeTopMargin = 0;
+#endif
 
   // Compute x/y coordinate where reflow will begin. Use the rules
   // from 10.3.3 to determine what to apply. At this point in the
   // reflow auto left/right margins will have a zero value.
   nscoord x = aSpace.x + mMargin.left;
-  nscoord y = aSpace.y;
+  nscoord y = aSpace.y + mSpeculativeTopMargin;
   mX = x;
   mY = y;
   nsSize availSize(aSpace.width, aSpace.height);
@@ -118,6 +150,11 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     // XXX caller should do this, yes?
     mOuterReflowState.mNextRCFrame = nsnull;
   }
+
+// XXX update to use the computedMargin information from the reflow-state
+
+// XXX eliminate circular dependency in reflow-state ctor - eliminate
+// availSize argument (since we need margins to compute it!)
 
   // Setup reflow state for reflowing the frame
   nsHTMLReflowState reflowState(mPresContext, aFrame, mOuterReflowState,
@@ -189,6 +226,31 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
         parent->DeleteChildsNextInFlow(mPresContext, aFrame);
       }
     }
+
+#ifdef SPECULATIVE_TOP_MARGIN
+    if (aApplyTopMargin) {
+      // Compute final collapsed margin value
+      CollapseMargins(mMargin, mMetrics.mCarriedOutTopMargin,
+                      mMetrics.mCarriedOutBottomMargin,
+                      mMetrics.height, aPrevBottomMargin,
+                      mTopMargin, mBottomMargin);
+
+      if (mSpeculativeTopMargin != mTopMargin) {
+        // We lost our speculative gamble. Use new computed margin
+        // value as the speculative value and try the reflow again.
+#ifdef NOISY_SPECULATIVE_TOP_MARGIN
+        nsFrame::ListTag(stdout, mOuterReflowState.frame);
+        printf(": reflowing again: ");
+        nsFrame::ListTag(stdout, aFrame);
+        printf(" guess=%d actual=%d [pass %d]\n",
+               mSpeculativeTopMargin, mTopMargin, pass);
+        pass++;
+#endif
+        mSpeculativeTopMargin = mTopMargin;
+        goto again;
+      }
+    }
+#endif
   }
 
   return rv;
@@ -247,17 +309,22 @@ nsBlockReflowContext::CollapseMargins(const nsMargin& aMargin,
  * margins (CSS2 8.3.1). Also apply relative positioning.
  */
 PRBool
-nsBlockReflowContext::PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
+nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
+#ifndef SPECULATIVE_TOP_MARGIN
+                                 PRBool aApplyTopMargin,
                                  nscoord aPrevBottomMargin,
+#endif
                                  const nsMargin& aComputedOffsets,
                                  nsRect& aInFlowBounds,
                                  nsRect& aCombinedRect)
 {
-  // Compute collapsed margin value
+#ifndef SPECULATIVE_TOP_MARGIN
+  // Compute final collapsed margin value
   CollapseMargins(mMargin, mMetrics.mCarriedOutTopMargin,
                   mMetrics.mCarriedOutBottomMargin,
                   mMetrics.height, aPrevBottomMargin,
                   mTopMargin, mBottomMargin);
+#endif
 
   // See if the block will fit in the available space
   PRBool fits;
@@ -275,9 +342,11 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit, PRBool aApplyTopMargin,
     nscoord y = mY;
 
     // Apply top margin unless it's going to be carried out.
+#ifndef SPECULATIVE_TOP_MARGIN
     if (aApplyTopMargin) {
       y += mTopMargin;
     }
+#endif
 
     // Position block horizontally according to CSS2 10.3.3
     if (NS_UNCONSTRAINEDSIZE != mSpace.width) {

@@ -246,7 +246,7 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   mDoc = aDoc;
   mPresShell = aPresShell;
   NS_ADDREF(mPresShell);
-  mViewManager = mPresShell->GetViewManager();
+  mPresShell->GetViewManager(&mViewManager);
   mUpdateCount=0;
 
   NS_POSTCONDITION(mDoc && mPresShell, "bad state");

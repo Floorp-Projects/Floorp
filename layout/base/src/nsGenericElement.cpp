@@ -85,6 +85,10 @@ nsChildContentList::nsChildContentList(nsIContent *aContent)
   mContent = aContent;
 }
 
+nsChildContentList::~nsChildContentList()
+{
+}
+
 NS_IMETHODIMP    
 nsChildContentList::GetLength(PRUint32* aLength)
 {
@@ -842,7 +846,7 @@ nsGenericElement::RenderFrame()
     nsIPresShell* shell;
     shell = mDocument->GetShellAt(i);
     nsIFrame* frame;
-    shell->GetPrimaryFrameFor(mContent, frame);
+    shell->GetPrimaryFrameFor(mContent, &frame);
     while (nsnull != frame) {
       nsIViewManager* vm;
       nsIView* view;
@@ -1976,7 +1980,7 @@ nsGenericContainerElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
   nsIContent* oldKid = (nsIContent *)mChildren.ElementAt(aIndex);
   if (nsnull != oldKid ) {
     nsIDocument* doc = mDocument;
-    PRBool rv = mChildren.RemoveElementAt(aIndex);
+    mChildren.RemoveElementAt(aIndex);
     nsRange::OwnerChildRemoved(mContent, aIndex, oldKid);
     if (aNotify) {
       if (nsnull != doc) {

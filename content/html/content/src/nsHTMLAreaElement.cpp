@@ -36,7 +36,7 @@ class nsHTMLAreaElement : public nsIDOMHTMLAreaElement,
 {
 public:
   nsHTMLAreaElement(nsIAtom* aTag);
-  ~nsHTMLAreaElement();
+  virtual ~nsHTMLAreaElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

@@ -60,6 +60,7 @@ public:
   static nsIAtom* background;
   static nsIAtom* below;
   static nsIAtom* bgcolor;
+  static nsIAtom* blockFrame;
   static nsIAtom* body;
   static nsIAtom* border;
   static nsIAtom* bordercolor;
@@ -163,6 +164,7 @@ public:
   static nsIAtom* iframe;
   static nsIAtom* img;
   static nsIAtom* index;
+  static nsIAtom* inlineFrame;
   static nsIAtom* input;
   static nsIAtom* ismap;
 

@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
 #include "nsIStyleRule.h"
@@ -177,8 +178,8 @@ StyleSetImpl::StyleSetImpl()
   : mOverrideSheets(nsnull),
     mDocSheets(nsnull),
     mBackstopSheets(nsnull),
-    mFrameConstructor(nsnull),
-    mRecycler(nsnull)
+    mRecycler(nsnull),
+    mFrameConstructor(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -519,8 +520,8 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
     }
 
     if (nsnull != rules) {
-      nsIAtom* medium = nsnull;
-      aPresContext->GetMedium(medium);
+      nsCOMPtr<nsIAtom> medium;
+      aPresContext->GetMedium(getter_AddRefs(medium));
       // XXX Stop-gap fix to prevent ua.css rules from being applied
       // to XML elements
       nsIHTMLContent *htmlContent;
@@ -533,7 +534,6 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
       PRInt32 backstopRules = ruleCount;
       ruleCount += RulesMatching(mDocSheets, aPresContext, medium, aContent, aParentContext, rules);
       ruleCount += RulesMatching(mOverrideSheets, aPresContext, medium, aContent, aParentContext, rules);
-      NS_IF_RELEASE(medium);
 
       PRBool usedRules = PR_FALSE;
       if (0 < ruleCount) {
@@ -620,8 +620,8 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
   }
 
   if (nsnull != rules) {
-    nsIAtom* medium = nsnull;
-    aPresContext->GetMedium(medium);
+    nsCOMPtr<nsIAtom> medium;
+    aPresContext->GetMedium(getter_AddRefs(medium));
     PRInt32 ruleCount = RulesMatching(mBackstopSheets, aPresContext, medium,
                                       aParentContent, aPseudoTag, 
                                       aParentContext, rules);
@@ -632,7 +632,6 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
     ruleCount += RulesMatching(mOverrideSheets, aPresContext, medium,
                                aParentContent, aPseudoTag, 
                                aParentContext, rules);
-    NS_IF_RELEASE(medium);
 
     PRBool usedRules = PR_FALSE;
     if (0 < ruleCount) {
@@ -676,8 +675,8 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
   }
 
   if (nsnull != rules) {
-    nsIAtom* medium = nsnull;
-    aPresContext->GetMedium(medium);
+    nsCOMPtr<nsIAtom> medium;
+    aPresContext->GetMedium(getter_AddRefs(medium));
     PRInt32 ruleCount = RulesMatching(mBackstopSheets, aPresContext, medium,
                                       aParentContent, aPseudoTag, 
                                       aParentContext, rules);
@@ -688,7 +687,6 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
     ruleCount += RulesMatching(mOverrideSheets, aPresContext, medium,
                                aParentContent, aPseudoTag, 
                                aParentContext, rules);
-    NS_IF_RELEASE(medium);
 
     PRBool usedRules = PR_FALSE;
     if (0 < ruleCount) {

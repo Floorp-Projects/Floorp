@@ -37,7 +37,7 @@ class nsHTMLTableColGroupElement : public nsIDOMHTMLTableColElement,
 {
 public:
   nsHTMLTableColGroupElement(nsIAtom* aTag);
-  ~nsHTMLTableColGroupElement();
+  virtual ~nsHTMLTableColGroupElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -232,12 +232,15 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 
       case eHTMLUnit_Pixel:
         float p2t;
-        aPresContext->GetScaledPixelsToTwips(p2t);
+        aPresContext->GetScaledPixelsToTwips(&p2t);
         position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
         break;
       
       case eHTMLUnit_Proportional:
         position->mWidth.SetIntValue(value.GetIntValue(), eStyleUnit_Proportional);
+        break;
+
+      default:
         break;
       }
     }

@@ -33,7 +33,7 @@ class nsDOMAttributeMap : public nsIDOMNamedNodeMap,
 {
 public:
   nsDOMAttributeMap(nsIContent* aContent);
-  ~nsDOMAttributeMap();
+  virtual ~nsDOMAttributeMap();
 
   NS_DECL_ISUPPORTS
 

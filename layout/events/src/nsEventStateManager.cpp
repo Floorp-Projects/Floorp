@@ -15,8 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
-#include "nsISupports.h"
+#include "nsCOMPtr.h"
 #include "nsIEventStateManager.h"
 #include "nsEventStateManager.h"
 #include "nsIContent.h"
@@ -427,10 +426,10 @@ nsEventStateManager::ShiftFocus()
 
   if (nsnull == mCurrentFocus) {
     if (nsnull == mDocument) {
-      nsIPresShell* presShell = mPresContext->GetShell();
+      nsCOMPtr<nsIPresShell> presShell;
+      mPresContext->GetShell(getter_AddRefs(presShell));
       if (nsnull != presShell) {
-        mDocument = presShell->GetDocument();
-        NS_RELEASE(presShell);
+        presShell->GetDocument(&mDocument);
         if (nsnull == mDocument) {
           return;
         }

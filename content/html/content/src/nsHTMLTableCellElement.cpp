@@ -43,7 +43,7 @@ class nsHTMLTableCellElement :  public nsIHTMLTableCellElement,
 {
 public:
   nsHTMLTableCellElement(nsIAtom* aTag);
-  ~nsHTMLTableCellElement();
+  virtual ~nsHTMLTableCellElement();
 
 // nsISupports
   NS_DECL_ISUPPORTS
@@ -424,7 +424,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 
     // width: pixel
     float p2t;
-    aPresContext->GetScaledPixelsToTwips(p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStylePosition* pos = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
     aAttributes->GetAttribute(nsHTMLAtoms::width, widthValue);

@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsTableRowGroupFrame.h"
 #include "nsTableRowFrame.h"
 #include "nsTableFrame.h"
@@ -1004,10 +1005,10 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
         if ((NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) ||
             (NS_STYLE_OVERFLOW_AUTO   == display->mOverflow)) {
           float sbWidth, sbHeight;
-          nsIDeviceContext* dc = aPresContext.GetDeviceContext();
+          nsCOMPtr<nsIDeviceContext> dc;
+          aPresContext.GetDeviceContext(getter_AddRefs(dc));
 
           dc->GetScrollBarDimensions(sbWidth, sbHeight);
-          NS_RELEASE(dc);
           aDesiredSize.maxElementSize->width += NSToCoordRound(sbWidth);
           // If scrollbars are always visible then add in the hor sb height 
           if (NS_STYLE_OVERFLOW_SCROLL == display->mOverflow) {

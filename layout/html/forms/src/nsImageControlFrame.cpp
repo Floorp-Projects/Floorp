@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsCOMPtr.h"
 #include "nsHTMLImage.h"
 #include "nsFormControlHelper.h"
 #include "nsIFormControlFrame.h"
@@ -184,9 +184,10 @@ nsImageControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   GetView(&view);
   if (!view) {
     nsresult result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
-	  nsIPresShell   *presShell = aPresContext.GetShell();     
-	  nsIViewManager *viewMan   = presShell->GetViewManager();  
-    NS_RELEASE(presShell);
+	  nsCOMPtr<nsIPresShell> presShell;
+    aPresContext.GetShell(getter_AddRefs(presShell));
+	  nsCOMPtr<nsIViewManager> viewMan;
+    presShell->GetViewManager(getter_AddRefs(viewMan));
 
     nsIFrame* parWithView;
 	  nsIView *parView;
@@ -201,8 +202,6 @@ nsImageControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
     const nsStyleColor* color = (const nsStyleColor*) mStyleContext->GetStyleData(eStyleStruct_Color);
     // set the opacity
     viewMan->SetViewOpacity(view, color->mOpacity);
-
-    NS_RELEASE(viewMan);
   }
   return NS_OK;
 }
@@ -217,13 +216,13 @@ nsImageControlFrame::HandleEvent(nsIPresContext& aPresContext,
   }
 
   aEventStatus = nsEventStatus_eIgnore;
-  nsresult result = NS_OK;
 
   switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
     {
       // Store click point for GetNamesValues
-      float t2p = aPresContext.GetTwipsToPixels();
+      float t2p;
+      aPresContext.GetTwipsToPixels(&t2p);
       mLastClickPoint.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
       mLastClickPoint.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
 

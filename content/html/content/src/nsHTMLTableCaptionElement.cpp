@@ -37,7 +37,7 @@ class nsHTMLTableCaptionElement :  public nsIDOMHTMLTableCaptionElement,
 {
 public:
   nsHTMLTableCaptionElement(nsIAtom* aTag);
-  ~nsHTMLTableCaptionElement();
+  virtual ~nsHTMLTableCaptionElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

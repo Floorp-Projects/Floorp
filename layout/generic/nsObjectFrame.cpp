@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsLeafFrame.h"
 #include "nsIPresContext.h"
@@ -55,7 +56,7 @@ class nsPluginInstanceOwner : public nsIPluginInstanceOwner,
 {
 public:
   nsPluginInstanceOwner();
-  ~nsPluginInstanceOwner();
+  virtual ~nsPluginInstanceOwner();
 
   NS_DECL_ISUPPORTS
 
@@ -311,7 +312,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
     else {
       float p2t;
-      aPresContext->GetScaledPixelsToTwips(p2t);
+      aPresContext->GetScaledPixelsToTwips(&p2t);
       aMetrics.width = NSIntPixelsToTwips(width, p2t);
     }
   }
@@ -321,7 +322,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
     else {
       float p2t;
-      aPresContext->GetScaledPixelsToTwips(p2t);
+      aPresContext->GetScaledPixelsToTwips(&p2t);
       aMetrics.height = NSIntPixelsToTwips(height, p2t);
     }
   }
@@ -402,7 +403,8 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 				GetOffsetFromView(origin, &parentWithView);
 				// Just make the frigging widget.
 
-				float           t2p = aPresContext.GetTwipsToPixels();
+				float           t2p;
+        aPresContext.GetTwipsToPixels(&t2p);
 
 				PRInt32 x = NSTwipsToIntPixels(origin.x, t2p);
 				PRInt32 y = NSTwipsToIntPixels(origin.y, t2p);
@@ -413,6 +415,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 				static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 				nsresult rv = nsRepository::CreateInstance(aWidgetCID, nsnull, kIWidgetIID,
 									   (void**)&mWidget);
+        // XXX use rv!
 				nsIWidget *parent;
 				parentWithView->GetOffsetFromWidget(nsnull, nsnull, parent);
 				mWidget->Create(parent, r, nsnull, nsnull);
@@ -466,7 +469,8 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
             char            *buf = nsnull;
             PRInt32         buflen;
             nsPluginWindow  *window;
-            float           t2p = aPresContext.GetTwipsToPixels();
+            float           t2p;
+            aPresContext.GetTwipsToPixels(&t2p);
             nsAutoString    src;
             nsIURL* fullURL = nsnull;
             nsIURL* baseURL = nsnull;
@@ -612,7 +616,8 @@ nsObjectFrame::DidReflow(nsIPresContext& aPresContext,
         nsIView           *parentWithView;
         nsPoint           origin;
         nsIPluginInstance *inst;
-        float             t2p = aPresContext.GetTwipsToPixels();
+        float             t2p;
+        aPresContext.GetTwipsToPixels(&t2p);
         nscoord           offx, offy;
 
         GetOffsetFromView(origin, &parentWithView);
@@ -669,7 +674,8 @@ nsObjectFrame::Paint(nsIPresContext& aPresContext,
     aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
-    float p2t = aPresContext.GetPixelsToTwips();
+    float p2t;
+    aPresContext.GetPixelsToTwips(&p2t);
     nscoord px3 = NSIntPixelsToTwips(3, p2t);
     nsAutoString tmp;
     nsIAtom* atom;
@@ -1323,15 +1329,15 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetDocumentBase(const char* *result)
 {
   if (nsnull != mContext)
   {
-    nsIPresShell  *shell = mContext->GetShell();
-    nsIDocument   *doc = shell->GetDocument();
-    nsIURL        *docURL = doc->GetDocumentURL();
+    nsCOMPtr<nsIPresShell> shell;
+    mContext->GetShell(getter_AddRefs(shell));
+
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
+
+    nsCOMPtr<nsIURL> docURL(doc->GetDocumentURL());
 
     nsresult rv = docURL->GetSpec(result);
-
-    NS_RELEASE(shell);
-    NS_RELEASE(docURL);
-    NS_RELEASE(doc);
 
     return rv;
   }

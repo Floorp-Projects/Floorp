@@ -131,7 +131,8 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
   nsIStyleContext* styleContext;
   aPresContext.ResolvePseudoStyleContextFor(mContent, 
                                             nsHTMLAtoms::fieldsetContentPseudo,
-                                            mStyleContext, &styleContext);
+                                            mStyleContext, PR_FALSE,
+                                            &styleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 
@@ -190,7 +191,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
       const nsStyleSpacing* spacing =
         (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
-      nsRect backgroundRect(0, 0, mRect.width, mRect.height);
+//XXX      nsRect backgroundRect(0, 0, mRect.width, mRect.height);
       // XXX our parent doesn't account for top and bottom margins yet, if we are inline
       if (mInline) {
         nsMargin margin;
@@ -246,7 +247,7 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
 {
   nsSize availSize(aReflowState.availableWidth, aReflowState.availableWidth);
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
   const PRInt32 minTopBorder = NSIntPixelsToTwips(MIN_TOP_BORDER, p2t);
 
   const nsStyleSpacing* spacing =
@@ -295,7 +296,6 @@ nsFieldSetFrame::Reflow(nsIPresContext& aPresContext,
     availSize.height = 1;
 
   nsSize maxElementSize(0,0);
-  nsIHTMLReflow* htmlReflow = nsnull;
 
   // Try to reflow the legend into the available space. It might not fit
   nsSize legendSize(0,0);

@@ -80,6 +80,7 @@ public:
                    nsFramePaintLayer    aWhichLayer);
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD VerifyTree() const;
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
 
@@ -176,15 +177,15 @@ protected:
 
   nsresult ReflowLine(nsBlockReflowState& aState,
                       nsLineBox* aLine,
-                      PRBool& aKeepGoing);
+                      PRBool* aKeepReflowGoing);
 
   virtual void DidReflowLine(nsBlockReflowState& aState,
                              nsLineBox* aLine,
-                             PRBool aKeepGoing);
+                             PRBool aKeepReflowGoing);
 
   nsresult PlaceLine(nsBlockReflowState& aState,
                      nsLineBox* aLine,
-                     PRBool& aKeepGoing);
+                     PRBool* aKeepReflowGoing);
 
   // XXX blech
   void PostPlaceLine(nsBlockReflowState& aState,
@@ -198,7 +199,7 @@ protected:
   virtual void DidPlaceLine(nsBlockReflowState& aState,
                             nsLineBox* aLine,
                             nscoord aTopMargin, nscoord aBottomMargin,
-                            PRBool aKeepGoing);
+                            PRBool aKeepReflowGoing);
 
   // XXX where to go
   PRBool ShouldJustifyLine(nsBlockReflowState& aState, nsLineBox* aLine);
@@ -216,18 +217,12 @@ protected:
 
   nsresult ReflowBlockFrame(nsBlockReflowState& aState,
                             nsLineBox* aLine,
-                            PRBool& aKeepGoing);
+                            PRBool* aKeepGoing);
 
   nsresult ReflowInlineFrame(nsBlockReflowState& aState,
                              nsLineBox* aLine,
                              nsIFrame* aFrame,
-                             PRBool& aKeepLineGoing,
-                             PRBool& aKeepReflowGoing);
-
-  virtual void DidReflowFrame(nsBlockReflowState& aState,
-                              nsLineBox* aLine,
-                              nsIFrame* aFrame,
-                              nsReflowStatus aStatus);
+                             PRBool* aKeepLineGoing);
 
   void ReflowFloater(nsIPresContext& aPresContext,
                      nsBlockReflowState& aState,

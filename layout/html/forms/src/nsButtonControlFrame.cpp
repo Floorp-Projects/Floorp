@@ -116,7 +116,7 @@ nsButtonControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     return PR_FALSE;
   } else {
     nsAutoString value;
-    nsresult valResult = GetValue(&value);
+    /*XXX nsresult valResult = */GetValue(&value);
     aValues[0] = value;
     aNames[0]  = name;
     aNumValues = 1;
@@ -174,7 +174,7 @@ nsButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
                                                  nscoord aCharWidth) const
 {
   nsCompatibility mode;
-  aPresContext.GetCompatibilityMode(mode);
+  aPresContext.GetCompatibilityMode(&mode);
 
   float   pad;
   PRInt32 padQuirks;
@@ -207,7 +207,7 @@ nsButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       result = mWidget->QueryInterface(kIButtonIID, (void**)&button);
       if ((NS_SUCCEEDED(result)) && (nsnull != button)) {
         nsString value;
-        nsresult result = GetValue(&value);
+        /*XXXnsresult result = */GetValue(&value);
         button->SetLabel(value);
         NS_RELEASE(button);
         nsFormFrame::StyleChangeReflow(aPresContext, this);
@@ -236,9 +236,9 @@ nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
 	  nsresult result = GetValue(&label);
 
 	  if (NS_CONTENT_ATTR_HAS_VALUE != result) {  
-		GetDefaultLabel(label);
+      GetDefaultLabel(label);
 	  }
-      PaintButton(aPresContext, aRenderingContext, aDirtyRect, label);
+    PaintButton(aPresContext, aRenderingContext, aDirtyRect, label);
   }
   return NS_OK;
 }
@@ -373,7 +373,7 @@ nsButtonControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aW
 {
  	nsIButton* button = nsnull;
   if (mWidget && (NS_OK == mWidget->QueryInterface(kIButtonIID,(void**)&button))) {
-    nsFont font(aPresContext->GetDefaultFixedFont()); 
+    nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
     GetFont(aPresContext, font);
     mWidget->SetFont(font);
     SetColors(*aPresContext);
@@ -418,36 +418,41 @@ nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
                                   const nsRect& aDirtyRect,
                                   nsString& aLabel)
 {
- PRBool disabled = nsFormFrame::GetDisabled(this);
+  PRBool disabled = nsFormFrame::GetDisabled(this);
   if ( disabled != mDisabled)
   {
-	 if (disabled)
-         mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "DISABLED", PR_TRUE);
-	 else 
-		 mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "", PR_TRUE);
+    if (disabled)
+      mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "DISABLED", PR_TRUE);
+    else 
+      mContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "", PR_TRUE);
 
-	 mDisabled = disabled;
+    mDisabled = disabled;
   }
 
   //nsIStyleContext* kidSC;
 
   nsCOMPtr<nsIStyleContext> outlineStyle(mStyleContext);
   nsCOMPtr<nsIAtom> outlineAtom (NS_NewAtom(":button-outline"));
-  outlineStyle = aPresContext.ProbePseudoStyleContextFor(mContent, outlineAtom, mStyleContext);
+  aPresContext.ProbePseudoStyleContextFor(mContent, outlineAtom, mStyleContext,
+                                          PR_FALSE,
+                                          getter_AddRefs(outlineStyle));
 
   nsCOMPtr<nsIStyleContext> focusStyle(mStyleContext);
   nsCOMPtr<nsIAtom> focusAtom (NS_NewAtom(":button-focus"));
-  focusStyle = aPresContext.ProbePseudoStyleContextFor(mContent, focusAtom, mStyleContext);
+  aPresContext.ProbePseudoStyleContextFor(mContent, focusAtom, mStyleContext,
+                                          PR_FALSE,
+                                          getter_AddRefs(focusStyle));
 
   nsFormControlHelper::PaintRectangularButton(aPresContext,
-                        aRenderingContext,
-                        aDirtyRect, mRect.width, 
-                        mRect.height,mPressed && mInside, mGotFocus, 
-						nsFormFrame::GetDisabled(this),
-                        mInside,
-						outlineStyle,
-						focusStyle,
-                        mStyleContext, aLabel, this);
+                                              aRenderingContext,
+                                              aDirtyRect, mRect.width, 
+                                              mRect.height,
+                                              mPressed && mInside, mGotFocus, 
+                                              nsFormFrame::GetDisabled(this),
+                                              mInside,
+                                              outlineStyle,
+                                              focusStyle,
+                                              mStyleContext, aLabel, this);
 				
 }
 

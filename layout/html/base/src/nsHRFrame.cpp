@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsIHTMLContent.h"
 #include "nsLeafFrame.h"
@@ -96,7 +97,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
   nscoord thickness = NSIntPixelsToTwips(GetThickness(), p2t);
 
   // Get style data
@@ -212,7 +213,7 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
   // otherwise tables behave badly. This makes sense they are springy.
   if (nsnull != aDesiredSize.maxElementSize) {
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(p2t);
+    aPresContext.GetScaledPixelsToTwips(&p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
     if (aReflowState.HaveFixedContentWidth()) {
       const nsStylePosition* pos;
@@ -243,7 +244,7 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            nsHTMLReflowMetrics& aDesiredSize)
 {
   float p2t;
-  aPresContext->GetScaledPixelsToTwips(p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
 
   if (aReflowState.HaveFixedContentWidth()) {
     aDesiredSize.width = aReflowState.computedWidth;
@@ -273,11 +274,11 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // Compute height of "line" that hrule will layout within. Use the
   // default font to do this.
   lineHeight = thickness + NSIntPixelsToTwips(2, p2t);
-  const nsFont& defaultFont = aPresContext->GetDefaultFont();
-  nsIFontMetrics* fm = aPresContext->GetMetricsFor(defaultFont);
+  const nsFont& defaultFont = aPresContext->GetDefaultFontDeprecated();
+  nsCOMPtr<nsIFontMetrics> fm;
+  aPresContext->GetMetricsFor(defaultFont, getter_AddRefs(fm));
   nscoord defaultLineHeight;
   fm->GetHeight(defaultLineHeight);
-  NS_RELEASE(fm);
   if (lineHeight < defaultLineHeight) {
     lineHeight = defaultLineHeight;
   }

@@ -34,7 +34,7 @@ class nsHTMLSpanElement : public nsIDOMHTMLElement,
 {
 public:
   nsHTMLSpanElement(nsIAtom* aTag);
-  ~nsHTMLSpanElement();
+  virtual ~nsHTMLSpanElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

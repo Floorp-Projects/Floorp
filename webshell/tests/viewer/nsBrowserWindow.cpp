@@ -180,12 +180,10 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 
-static const char* gsAOLFormat = "AOLMAIL";
-static const char* gsHTMLFormat = "text/html";
-
-
 // prototypes
+#if 0
 static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
+#endif
 static void* GetItemsNativeData(nsISupports* aObject);
 
 //----------------------------------------------------------------------
@@ -204,7 +202,7 @@ GetPresShellFor(nsIWebShell* aWebShell)
         nsIPresContext* cx;
         docv->GetPresContext(cx);
 	      if (nsnull != cx) {
-	        shell = cx->GetShell();
+	        cx->GetShell(&shell);
 	        NS_RELEASE(cx);
 	      }
         NS_RELEASE(docv);
@@ -605,6 +603,7 @@ nsBrowserWindow::DoFileOpen()
  * Main Handler
  *--------------------------------------------------------------------------------
  */
+#if 0
 nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 {
   //printf("HandleEvent aEvent->message %d\n", aEvent->message);
@@ -635,6 +634,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
   return result;
 }
+#endif
 
 static void* GetItemsNativeData(nsISupports* aObject)
 {
@@ -653,7 +653,8 @@ NS_IMETHODIMP nsBrowserWindow::FindNext(const nsString &aSearchStr, PRBool aMatc
 {
 	nsIPresShell* shell = GetPresShell();
 	if (nsnull != shell) {
-	  nsIDocument* doc = shell->GetDocument();
+	  nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
 	  if (nsnull != doc) {
 		  //PRBool foundIt = PR_FALSE;
 		  doc->FindNext(aSearchStr, aMatchCase, aSearchDown, aIsFound);
@@ -661,7 +662,6 @@ NS_IMETHODIMP nsBrowserWindow::FindNext(const nsString &aSearchStr, PRBool aMatc
 		    // Display Dialog here
 		  }
 		  ForceRefresh();
-		  NS_RELEASE(doc);
 	  }
 	  NS_RELEASE(shell);
 	}
@@ -673,14 +673,14 @@ NS_IMETHODIMP nsBrowserWindow::ForceRefresh()
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsIViewManager* vm = shell->GetViewManager();
+    nsCOMPtr<nsIViewManager> vm;
+    shell->GetViewManager(getter_AddRefs(vm));
     if (nsnull != vm) {
       nsIView* root;
       vm->GetRootView(root);
       if (nsnull != root) {
         vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE);
       }
-      NS_RELEASE(vm);
     }
     NS_RELEASE(shell);
   }
@@ -736,15 +736,15 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 
 	    nsIPresShell* shell = GetPresShell();
 	    if (nsnull != shell) {
-	      nsIDocument* doc = shell->GetDocument();
+	      nsCOMPtr<nsIDocument> doc;
+        shell->GetDocument(getter_AddRefs(doc));
 	      if (nsnull != doc) {
-		PRBool foundIt = PR_FALSE;
-		doc->FindNext(searchStr, matchCase, findDwn, foundIt);
-		if (!foundIt) {
-		  // Display Dialog here
-		}
-		ForceRefresh();
-		NS_RELEASE(doc);
+          PRBool foundIt = PR_FALSE;
+          doc->FindNext(searchStr, matchCase, findDwn, foundIt);
+          if (!foundIt) {
+            // Display Dialog here
+          }
+          ForceRefresh();
 	      }
 	      NS_RELEASE(shell);
 	    }
@@ -782,6 +782,7 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
     return result;
 }
 
+#if 0
 static nsEventStatus PR_CALLBACK
 HandleTreeWindowEvent(nsGUIEvent *aEvent)
 { 
@@ -815,6 +816,7 @@ HandleTreeWindowEvent(nsGUIEvent *aEvent)
   
   return result;
 }
+#endif
 
 
 static nsEventStatus PR_CALLBACK
@@ -1099,11 +1101,11 @@ nsBrowserWindow::DoSelectAll()
 
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
     if (nsnull != doc) {
       doc->SelectAll();
       ForceRefresh();
-      NS_RELEASE(doc);
     }
     NS_RELEASE(shell);
   }
@@ -2079,6 +2081,10 @@ nsBrowserWindow::GetPresShell()
 }
 
 #ifdef WIN32
+
+static const char* gsAOLFormat = "AOLMAIL";
+static const char* gsHTMLFormat = "text/html";
+
 void PlaceHTMLOnClipboard(PRUint32 aFormat, char* aData, int aLength)
 {
   HGLOBAL     hGlobalMemory;
@@ -2146,7 +2152,8 @@ nsBrowserWindow::DoCopy()
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
     if (nsnull != doc) {
       nsString buffer;
     
@@ -2163,14 +2170,14 @@ nsBrowserWindow::DoCopy()
       static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
       nsresult rv = nsRepository::CreateInstance(kCParserCID, 
-						 nsnull, 
-						 kCParserIID, 
-						 (void **)&parser);
+                                                 nsnull, 
+                                                 kCParserIID, 
+                                                 (void **)&parser);
 
       if (NS_OK == rv) {
-	nsIHTMLContentSink* sink = nsnull;
+        nsIHTMLContentSink* sink = nsnull;
 	
-	rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
+        rv = NS_New_HTML_ContentSinkStream(&sink,PR_FALSE,PR_FALSE);
 
 // ifdef hell: ostrstream doesn't seem to work on mac (it's 
 // been deprecated too), but stringstream doesn't seem to 
@@ -2182,7 +2189,7 @@ nsBrowserWindow::DoCopy()
 #define USE_STRSTREAM 1
 #endif
 #ifdef DEBUG_akkana
-  // Leave this commented out until we're sure it won't crash Linux
+        // Leave this commented out until we're sure it won't crash Linux
 #if defined(XP_UNIX)
 #define USE_OSTREAM 1
 #endif
@@ -2191,82 +2198,81 @@ nsBrowserWindow::DoCopy()
 #if defined(USE_STRINGSTREAM) || defined(USE_STRSTREAM) || defined(USE_OSTREAM)
 
 #if defined(USE_STRINGSTREAM)
-	stringstream  data;
+        stringstream  data;
 #else
 #if defined(USE_STRSTREAM)
-	ostrstream  data;
+        ostrstream  data;
 #else
 #if defined(USE_OSTREAM)
-  ostream data;
+        ostream data;
 #endif
 #endif
 #endif
-	((nsHTMLContentSinkStream*)sink)->SetOutputStream(data);
+        ((nsHTMLContentSinkStream*)sink)->SetOutputStream(data);
 
-	if (NS_OK == rv) {
-	  parser->SetContentSink(sink);
+        if (NS_OK == rv) {
+          parser->SetContentSink(sink);
 	  
-	  nsIDTD* dtd = nsnull;
-	  rv = NS_NewXIFDTD(&dtd);
-	  if (NS_OK == rv) 
-	  {
-	    parser->RegisterDTD(dtd);
-	    //dtd->SetContentSink(sink);
-	    //dtd->SetParser(parser);
-	    parser->Parse(buffer, 0, PR_FALSE,PR_FALSE,PR_TRUE);           
-	  }
-	  NS_IF_RELEASE(dtd);
-	  NS_IF_RELEASE(sink);
+          nsIDTD* dtd = nsnull;
+          rv = NS_NewXIFDTD(&dtd);
+          if (NS_OK == rv) 
+          {
+            parser->RegisterDTD(dtd);
+            //dtd->SetContentSink(sink);
+            //dtd->SetParser(parser);
+            parser->Parse(buffer, 0, PR_FALSE,PR_FALSE,PR_TRUE);           
+          }
+          NS_IF_RELEASE(dtd);
+          NS_IF_RELEASE(sink);
 #if defined(USE_STRINGSTREAM)
-	  string      theString = data.str();
-	  PRInt32     len = theString.length();
-	  const char* str = theString.data();
+          string      theString = data.str();
+          PRInt32     len = theString.length();
+          const char* str = theString.data();
 #else
 #if defined(USE_STRSTREAM)
-	  PRInt32 len = data.pcount();
-	  char* str = (char*)data.str();
+          PRInt32 len = data.pcount();
+          char* str = (char*)data.str();
 #endif
 #endif
 
 #if defined(WIN32)
-	  PRUint32 cf_aol = RegisterClipboardFormat(gsAOLFormat);
-	  PRUint32 cf_html = RegisterClipboardFormat(gsHTMLFormat);
+          PRUint32 cf_aol = RegisterClipboardFormat(gsAOLFormat);
+          PRUint32 cf_html = RegisterClipboardFormat(gsHTMLFormat);
 	 
-	  if (len)
-	  {   
-	    OpenClipboard(NULL);
-	    EmptyClipboard();
+          if (len)
+          {   
+            OpenClipboard(NULL);
+            EmptyClipboard();
 	
-	    PlaceHTMLOnClipboard(cf_aol,str,len);
-	    PlaceHTMLOnClipboard(cf_html,str,len);
-	    PlaceHTMLOnClipboard(CF_TEXT,str,len);            
+            PlaceHTMLOnClipboard(cf_aol,str,len);
+            PlaceHTMLOnClipboard(cf_html,str,len);
+            PlaceHTMLOnClipboard(CF_TEXT,str,len);            
 			
-	    CloseClipboard();
-	  }
-	  // in ostrstreams if you cal the str() function
-	  // then you are responsible for deleting the string
-	  if (str) delete str;
+            CloseClipboard();
+          }
+          // in ostrstreams if you cal the str() function
+          // then you are responsible for deleting the string
+          if (str) delete str;
 #endif
 
 #if defined(XP_MAC)
-      if (len)
-      {
-        char * ptr = NS_CONST_CAST(char*,str);
-        for (PRInt32 plen = len; plen > 0; plen --, ptr ++)
-          if (*ptr == '\n')
-            *ptr = '\r';
+          if (len)
+          {
+            char * ptr = NS_CONST_CAST(char*,str);
+            for (PRInt32 plen = len; plen > 0; plen --, ptr ++)
+              if (*ptr == '\n')
+                *ptr = '\r';
 
-        OSErr err = ::ZeroScrap();
-        err = ::PutScrap(len, 'TEXT', str);
-        ::TEFromScrap();
-	  }
+            OSErr err = ::ZeroScrap();
+            err = ::PutScrap(len, 'TEXT', str);
+            ::TEFromScrap();
+          }
 #endif
 
-	}
+        }
 #endif /* USE_STRINGSTREAM || USE_STRSTREAM || USE_OSTREAM */
-	NS_RELEASE(parser);
+        NS_RELEASE(parser);
       }
-      NS_RELEASE(doc);
     }
     NS_RELEASE(shell);
   }
@@ -2285,13 +2291,12 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
 	      nsIPresContext* printContext;
 	      if (NS_OK == NS_NewPrintPreviewContext(&printContext)) {
       	  // Prepare new printContext for print-preview
-      	  nsIDeviceContext* dc;
+      	  nsCOMPtr<nsIDeviceContext> dc;
       	  nsIPresContext* presContext;
       	  docv->GetPresContext(presContext);
-      	  dc = presContext->GetDeviceContext();
+      	  presContext->GetDeviceContext(getter_AddRefs(dc));
       	  printContext->Init(dc, mPrefs);
       	  NS_RELEASE(presContext);
-      	  NS_RELEASE(dc);
 
       	  // Make a window using that content viewer
           // XXX Some piece of code needs to properly hold the reference to this
@@ -2587,14 +2592,14 @@ DumpContentRecurse(nsIWebShell* aWebShell, FILE* out)
     fprintf(out, "webshell=%p \n", aWebShell);
     nsIPresShell* shell = GetPresShellFor(aWebShell);
     if (nsnull != shell) {
-      nsIDocument* doc = shell->GetDocument();
+      nsCOMPtr<nsIDocument> doc;
+      shell->GetDocument(getter_AddRefs(doc));
       if (nsnull != doc) {
         nsIContent* root = doc->GetRootContent();
         if (nsnull != root) {
 	        root->List(out);
 	        NS_RELEASE(root);
         }
-        NS_RELEASE(doc);
       }
       NS_RELEASE(shell);
     }
@@ -2629,7 +2634,7 @@ DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
     nsIPresShell* shell = GetPresShellFor(aWebShell);
     if (nsnull != shell) {
       nsIFrame* root;
-      shell->GetRootFrame(root);
+      shell->GetRootFrame(&root);
       if (nsnull != root) {
         root->List(out, 0);
       }
@@ -2665,14 +2670,14 @@ DumpViewsRecurse(nsIWebShell* aWebShell, FILE* out)
     fprintf(out, "webshell=%p \n", aWebShell);
     nsIPresShell* shell = GetPresShellFor(aWebShell);
     if (nsnull != shell) {
-      nsIViewManager* vm = shell->GetViewManager();
+      nsCOMPtr<nsIViewManager> vm;
+      shell->GetViewManager(getter_AddRefs(vm));
       if (nsnull != vm) {
 	      nsIView* root;
 	      vm->GetRootView(root);
 	      if (nsnull != root) {
 	        root->List(out);
 	      }
-	      NS_RELEASE(vm);
       }
       NS_RELEASE(shell);
     }
@@ -2704,12 +2709,12 @@ nsBrowserWindow::DumpStyleSheets(FILE* out)
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsIStyleSet* styleSet = shell->GetStyleSet();
+    nsCOMPtr<nsIStyleSet> styleSet;
+    shell->GetStyleSet(getter_AddRefs(styleSet));
     if (nsnull == styleSet) {
       fputs("null style set\n", out);
     } else {
       styleSet->List(out);
-      NS_RELEASE(styleSet);
     }
     NS_RELEASE(shell);
   }
@@ -2723,12 +2728,13 @@ nsBrowserWindow::DumpStyleContexts(FILE* out)
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsIStyleSet* styleSet = shell->GetStyleSet();
+    nsCOMPtr<nsIStyleSet> styleSet;
+    shell->GetStyleSet(getter_AddRefs(styleSet));
     if (nsnull == styleSet) {
       fputs("null style set\n", out);
     } else {
       nsIFrame* root;
-      shell->GetRootFrame(root);
+      shell->GetRootFrame(&root);
       if (nsnull == root) {
 	      fputs("null root frame\n", out);
             } else {
@@ -2742,7 +2748,6 @@ nsBrowserWindow::DumpStyleContexts(FILE* out)
 	        fputs("null root context", out);
 	      }
       }
-      NS_RELEASE(styleSet);
     }
     NS_RELEASE(shell);
   } else {
@@ -2843,7 +2848,8 @@ nsBrowserWindow::DoDebugSave()
 
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
     if (nsnull != doc) {
       nsString buffer;
 
@@ -2855,45 +2861,44 @@ nsBrowserWindow::DoDebugSave()
       static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
       nsresult rv = nsRepository::CreateInstance(kCParserCID, 
-						 nsnull, 
-						 kCParserIID, 
-						 (void **)&parser);
+                                                 nsnull, 
+                                                 kCParserIID, 
+                                                 (void **)&parser);
 
       if (NS_OK == rv) {
-	nsIHTMLContentSink* sink = nsnull;
+        nsIHTMLContentSink* sink = nsnull;
 
-	rv = NS_New_HTML_ContentSinkStream(&sink);
+        rv = NS_New_HTML_ContentSinkStream(&sink);
 	
 #ifdef WIN32
 #define   BUFFER_SIZE MAX_PATH
 #else
 #define   BUFFER_SIZE 1024
 #endif
-	char filename[BUFFER_SIZE];
-	path.ToCString(filename,BUFFER_SIZE);
-	ofstream    out(filename);
-	((nsHTMLContentSinkStream*)sink)->SetOutputStream(out);
+        char filename[BUFFER_SIZE];
+        path.ToCString(filename,BUFFER_SIZE);
+        ofstream    out(filename);
+        ((nsHTMLContentSinkStream*)sink)->SetOutputStream(out);
 
-	if (NS_OK == rv) {
-	  parser->SetContentSink(sink);
+        if (NS_OK == rv) {
+          parser->SetContentSink(sink);
 	  
-	  nsIDTD* dtd = nsnull;
-	  rv = NS_NewXIFDTD(&dtd);
-	  if (NS_OK == rv) 
-	  {
-	    parser->RegisterDTD(dtd);
-	    //dtd->SetContentSink(sink);
-	    //dtd->SetParser(parser);
-	    parser->Parse(buffer, 0, PR_FALSE,PR_FALSE,PR_TRUE);           
-	  }
-	  out.close();
+          nsIDTD* dtd = nsnull;
+          rv = NS_NewXIFDTD(&dtd);
+          if (NS_OK == rv) 
+          {
+            parser->RegisterDTD(dtd);
+            //dtd->SetContentSink(sink);
+            //dtd->SetParser(parser);
+            parser->Parse(buffer, 0, PR_FALSE,PR_FALSE,PR_TRUE);           
+          }
+          out.close();
 
-	  NS_IF_RELEASE(dtd);
-	  NS_IF_RELEASE(sink);
-	}
-	NS_RELEASE(parser);
+          NS_IF_RELEASE(dtd);
+          NS_IF_RELEASE(sink);
+        }
+        NS_RELEASE(parser);
       }
-      NS_RELEASE(doc);
     }
     NS_RELEASE(shell);
   }
@@ -2904,12 +2909,12 @@ nsBrowserWindow::DoToggleSelection()
 {
   nsIPresShell* shell = GetPresShell();
   if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
     if (nsnull != doc) {
       PRBool  current = doc->GetDisplaySelection();
       doc->SetDisplaySelection(!current);
       ForceRefresh();
-      NS_RELEASE(doc);
     }
     NS_RELEASE(shell);
   }
@@ -3039,12 +3044,12 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
       nsIPresShell* shell = GetPresShell();
       if (nsnull != shell) {
         nsAutoString  defaultStyle;
-        nsIDocument* doc = shell->GetDocument();
+        nsCOMPtr<nsIDocument> doc;
+        shell->GetDocument(getter_AddRefs(doc));
         if (nsnull != doc) {
           nsIAtom* defStyleAtom = NS_NewAtom("default-style");
           doc->GetHeaderData(defStyleAtom, defaultStyle);
           NS_RELEASE(defStyleAtom);
-          NS_RELEASE(doc);
         }
 
         nsStringArray titles;
@@ -3077,13 +3082,13 @@ nsBrowserWindow::DispatchStyleMenu(PRInt32 aID)
     {
       nsIPresShell* shell = GetPresShell();
       if (nsnull != shell) {
-        nsIDocument* doc = shell->GetDocument();
+        nsCOMPtr<nsIDocument> doc;
+        shell->GetDocument(getter_AddRefs(doc));
         if (nsnull != doc) {
           nsAutoString  defaultStyle;
           nsIAtom* defStyleAtom = NS_NewAtom("default-style");
           doc->GetHeaderData(defStyleAtom, defaultStyle);
           NS_RELEASE(defStyleAtom);
-          NS_RELEASE(doc);
           fputs("Selecting default style sheet \"", stdout);
           fputs(defaultStyle, stdout);
           fputs("\"\n", stdout);
@@ -3134,7 +3139,7 @@ class nsBrowserWindowFactory : public nsIFactory
 {
 public:
   nsBrowserWindowFactory();
-  ~nsBrowserWindowFactory();
+  virtual ~nsBrowserWindowFactory();
 
   // nsISupports methods
   NS_IMETHOD QueryInterface(const nsIID &aIID, void **aResult);

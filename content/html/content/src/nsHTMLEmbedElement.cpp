@@ -38,7 +38,7 @@ class nsHTMLEmbedElement : public nsIDOMHTMLElement,
 {
 public:
   nsHTMLEmbedElement(nsIAtom* aTag);
-  ~nsHTMLEmbedElement();
+  virtual ~nsHTMLEmbedElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

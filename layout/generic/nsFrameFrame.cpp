@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIHTMLContent.h"
@@ -61,7 +62,8 @@ class TempObserver : public nsIStreamObserver
 public:
   TempObserver() { NS_INIT_REFCNT(); }
 
-  ~TempObserver() {}
+  virtual ~TempObserver() {}
+
   // nsISupports
   NS_DECL_ISUPPORTS
 
@@ -241,7 +243,7 @@ nsHTMLFrameOuterFrame::GetDesiredSize(nsIPresContext* aPresContext,
 {
   // <frame> processing does not use this routine, only <iframe>
   float p2t;
-  aPresContext->GetScaledPixelsToTwips(p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
 
   // XXX this needs to be changed from (200,200) to a better default for inline frames
   if (aReflowState.HaveFixedContentWidth()) {
@@ -537,7 +539,7 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginWidth(nsIPresContext* aPresContext, nsIC
   nsIHTMLContent* content = nsnull;
   if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**) &content))) {
     float p2t;
-    aPresContext->GetScaledPixelsToTwips(p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsHTMLValue value;
     content->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
     if (eHTMLUnit_Pixel == value.GetUnit()) { 
@@ -557,7 +559,7 @@ PRInt32 nsHTMLFrameInnerFrame::GetMarginHeight(nsIPresContext* aPresContext, nsI
   nsIHTMLContent* content = nsnull;
   if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID, (void**) &content))) {
     float p2t;
-    aPresContext->GetScaledPixelsToTwips(p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsHTMLValue value;
     content->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
     if (eHTMLUnit_Pixel == value.GetUnit()) { 
@@ -629,7 +631,7 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
   }
 
   nsString empty;
-  nsresult rv = NS_MakeAbsoluteURL(baseURL, empty, aRelURL, aAbsURL);
+  NS_MakeAbsoluteURL(baseURL, empty, aRelURL, aAbsURL);
   NS_IF_RELEASE(baseURL);
 }
 
@@ -653,7 +655,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   mWebShell->SetMarginWidth(GetMarginWidth(&aPresContext, content));
   mWebShell->SetMarginHeight(GetMarginHeight(&aPresContext, content));
   nsCompatibility mode;
-  aPresContext.GetCompatibilityMode(mode);
+  aPresContext.GetCompatibilityMode(&mode);
   mWebShell->SetScrolling(GetScrolling(content, mode));
   mWebShell->SetIsFrame(PR_TRUE);
 
@@ -692,8 +694,10 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
     NS_RELEASE(container);
   }
 
-  float t2p = aPresContext.GetTwipsToPixels();
-  nsIPresShell *presShell = aPresContext.GetShell();     
+  float t2p;
+  aPresContext.GetTwipsToPixels(&t2p);
+  nsCOMPtr<nsIPresShell> presShell;
+  aPresContext.GetShell(getter_AddRefs(presShell));     
 
   // create, init, set the parent of the view
   nsIView* view;
@@ -709,12 +713,11 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   GetOffsetFromView(origin, &parView);  
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
 
-  nsIViewManager* viewMan = presShell->GetViewManager();  
-  NS_RELEASE(presShell);
+  nsCOMPtr<nsIViewManager> viewMan;
+  presShell->GetViewManager(getter_AddRefs(viewMan));  
   rv = view->Init(viewMan, viewBounds, parView);
   viewMan->InsertChild(parView, view, 0);
   rv = view->CreateWidget(kCChildCID);
-  NS_RELEASE(viewMan);
   SetView(view);
 
   nsIWidget* widget;
@@ -756,7 +759,6 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
 
     nsAutoString url;
     PRBool hasURL = GetURL(content, url);
-    nsSize size;
 
     // if the size is not 0 and there is a src, create the web shell
     if ((aReflowState.availableWidth >= 0) && (aReflowState.availableHeight >= 0) && hasURL) {
@@ -787,7 +789,8 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
 
   // resize the sub document
   if (mWebShell) {
-    float t2p = aPresContext.GetTwipsToPixels();
+    float t2p;
+    aPresContext.GetTwipsToPixels(&t2p);
     nsRect subBounds;
 
     mWebShell->GetBounds(subBounds.x, subBounds.y,

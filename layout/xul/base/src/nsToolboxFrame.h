@@ -71,7 +71,7 @@ protected:
   enum { kNoGrippyHilighted = -1 } ;
 
   struct TabInfo {
-    TabInfo ( ) : mCollapsed(PR_TRUE), mToolbar(nsnull) { };
+    TabInfo ( ) : mToolbar(nsnull), mCollapsed(PR_TRUE) { };
   
     void SetProperties ( const nsRect & inBounds, const nsCOMPtr<nsIContent> & inContent, 
                             PRBool inCollapsed )

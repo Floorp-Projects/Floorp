@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
@@ -51,7 +52,7 @@ class nsHTMLBodyElement;
 class BodyRule: public nsIStyleRule {
 public:
   BodyRule(nsHTMLBodyElement* aPart, nsIHTMLStyleSheet* aSheet);
-  ~BodyRule();
+  virtual ~BodyRule();
 
   NS_DECL_ISUPPORTS
 
@@ -76,7 +77,7 @@ public:
 class BodyFixupRule : public nsIStyleRule {
 public:
   BodyFixupRule(nsHTMLBodyElement* aPart, nsIHTMLCSSStyleSheet* aSheet);
-  ~BodyFixupRule();
+  virtual ~BodyFixupRule();
 
   NS_DECL_ISUPPORTS
 
@@ -102,7 +103,7 @@ class nsBodyInner: public nsGenericHTMLContainerElement
 {
 public:
   nsBodyInner();
-  ~nsBodyInner();
+  virtual ~nsBodyInner();
 
   nsresult SetDocument(nsIDocument* aDocument, PRBool aDeep);
 
@@ -155,7 +156,7 @@ class nsHTMLBodyElement : public nsIDOMHTMLBodyElement,
 {
 public:
   nsHTMLBodyElement(nsIAtom* aTag);
-  ~nsHTMLBodyElement();
+  virtual ~nsHTMLBodyElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -258,12 +259,11 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 
     if (nsnull != styleSpacing) {
       nsHTMLValue   value;
-      nsStyleCoord  zero(0);
       PRInt32       count = 0;
       PRInt32       attrCount;
       float         p2t;
       mPart->GetAttributeCount(attrCount);
-      aPresContext->GetScaledPixelsToTwips(p2t);
+      aPresContext->GetScaledPixelsToTwips(&p2t);
       nscoord bodyMarginWidth  = -1;
       nscoord bodyMarginHeight = -1;
 
@@ -310,7 +310,7 @@ BodyRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
         aPresContext->GetContainer(&container);
         if (nsnull != container) {
           nsCompatibility mode;
-          aPresContext->GetCompatibilityMode(mode);
+          aPresContext->GetCompatibilityMode(&mode);
           nsIWebShell* webShell = nsnull;
           container->QueryInterface(kIWebShellIID, (void**) &webShell);
           if (nsnull != webShell) {
@@ -651,9 +651,11 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       color->mColor = ColorNameToRGB(value);
     }
 
-    nsIPresShell* presShell = aPresContext->GetShell();
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
     if (nsnull != presShell) {
-      nsIDocument*  doc = presShell->GetDocument();
+      nsCOMPtr<nsIDocument> doc;
+      presShell->GetDocument(getter_AddRefs(doc));
       if (nsnull != doc) {
         nsIHTMLContentContainer*  htmlContainer;
         if (NS_OK == doc->QueryInterface(kIHTMLContentContainerIID,
@@ -687,15 +689,13 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
           }
           NS_RELEASE(htmlContainer);
         }
-        NS_RELEASE(doc);
       }
-      NS_RELEASE(presShell);
     }
 
     // marginwidth/marginheight
     // XXX: see ua.css for related code in the BODY rule
     float p2t;
-    aPresContext->GetScaledPixelsToTwips(p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStyleSpacing* spacing = (nsStyleSpacing*)
       aContext->GetMutableStyleData(eStyleStruct_Spacing);
     aAttributes->GetAttribute(nsHTMLAtoms::marginwidth, value);
@@ -715,10 +715,10 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 
     // set up the basefont (defaults to 3)
     nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
-    const nsFont& defaultFont = aPresContext->GetDefaultFont(); 
-    const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFont(); 
+    const nsFont& defaultFont = aPresContext->GetDefaultFontDeprecated(); 
+    const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFontDeprecated(); 
     PRInt32 scaler;
-    aPresContext->GetFontScaler(scaler);
+    aPresContext->GetFontScaler(&scaler);
     float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
     font->mFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFont.size, scaleFactor);
     font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFixedFont.size, scaleFactor);

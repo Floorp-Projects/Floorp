@@ -29,6 +29,7 @@
 
 struct nsCSSStruct {
   virtual const nsID& GetID(void) = 0;
+  virtual ~nsCSSStruct();
 };
 
 
@@ -88,6 +89,7 @@ struct nsCSSStruct {
 
 
 struct nsCSSFont : public nsCSSStruct {
+  virtual ~nsCSSFont();
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -110,7 +112,7 @@ struct nsCSSValueList {
 
 struct nsCSSColor : public nsCSSStruct  {
   nsCSSColor(void);
-  ~nsCSSColor(void);
+  virtual ~nsCSSColor(void);
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -139,7 +141,8 @@ struct nsCSSShadow {
 
 struct nsCSSText : public nsCSSStruct  {
   nsCSSText(void);
-  ~nsCSSText(void);
+  virtual ~nsCSSText();
+
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -168,7 +171,8 @@ struct nsCSSRect {
 
 struct nsCSSDisplay : public nsCSSStruct  {
   nsCSSDisplay(void);
-  ~nsCSSDisplay(void);
+  virtual ~nsCSSDisplay();
+
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -184,7 +188,8 @@ struct nsCSSDisplay : public nsCSSStruct  {
 
 struct nsCSSMargin : public nsCSSStruct  {
   nsCSSMargin(void);
-  ~nsCSSMargin(void);
+  virtual ~nsCSSMargin(void);
+
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -200,7 +205,8 @@ struct nsCSSMargin : public nsCSSStruct  {
 
 struct nsCSSPosition : public nsCSSStruct  {
   nsCSSPosition(void);
-  ~nsCSSPosition(void);
+  virtual ~nsCSSPosition();
+
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -216,6 +222,8 @@ struct nsCSSPosition : public nsCSSStruct  {
 };
 
 struct nsCSSList : public nsCSSStruct  {
+  virtual ~nsCSSList();
+
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -225,6 +233,8 @@ struct nsCSSList : public nsCSSStruct  {
 };
 
 struct nsCSSTable : public nsCSSStruct  { // NEW
+  virtual ~nsCSSTable();
+
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -237,6 +247,8 @@ struct nsCSSTable : public nsCSSStruct  { // NEW
 };
 
 struct nsCSSBreaks : public nsCSSStruct  { // NEW
+  virtual ~nsCSSBreaks();
+
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -249,6 +261,8 @@ struct nsCSSBreaks : public nsCSSStruct  { // NEW
 };
 
 struct nsCSSPage : public nsCSSStruct  { // NEW
+  virtual ~nsCSSPage();
+
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -277,7 +291,8 @@ struct nsCSSQuotes {
 
 struct nsCSSContent : public nsCSSStruct  { // NEW
   nsCSSContent(void);
-  ~nsCSSContent(void);
+  virtual ~nsCSSContent();
+
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -289,6 +304,8 @@ struct nsCSSContent : public nsCSSStruct  { // NEW
 };
 
 struct nsCSSAural : public nsCSSStruct  { // NEW
+  virtual ~nsCSSAural();
+
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 

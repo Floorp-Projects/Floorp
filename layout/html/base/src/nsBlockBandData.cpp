@@ -24,9 +24,9 @@
 
 nsBlockBandData::nsBlockBandData()
   : mSpaceManager(nsnull),
-    mSpace(0, 0),
     mSpaceManagerX(0),
-    mSpaceManagerY(0)
+    mSpaceManagerY(0),
+    mSpace(0, 0)
 {
   size = 12;
   trapezoids = mData;
@@ -269,7 +269,6 @@ nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 {
   for (;;) {
     // Update band information based on target Y before clearing.
-    nscoord oldY = aY;
     GetAvailableSpace(aY);
 
     // Compute aYS as aY in space-manager "root" coordinates.

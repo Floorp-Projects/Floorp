@@ -114,7 +114,7 @@ public:
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
 protected:
-  ~nsImageMap();
+  virtual ~nsImageMap();
 
   void FreeAreas();
 

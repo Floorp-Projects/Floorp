@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsInlineReflow.h"
 #include "nsLineLayout.h"
 #include "nsIFontMetrics.h"
@@ -46,15 +47,15 @@ nsInlineReflow::nsInlineReflow(nsLineLayout& aLineLayout,
                                nsFrameReflowState& aOuterReflowState,
                                nsHTMLContainerFrame* aOuterFrame,
                                PRBool aOuterIsBlock)
-  : mLineLayout(aLineLayout),
-    mPresContext(aOuterReflowState.mPresContext),
+  : mOuterFrame(aOuterFrame),
+    mSpaceManager(aLineLayout.mSpaceManager),
+    mLineLayout(aLineLayout),
     mOuterReflowState(aOuterReflowState),
-    mComputeMaxElementSize(aOuterReflowState.mComputeMaxElementSize),
-    mOuterIsBlock(aOuterIsBlock)
+    mPresContext(aOuterReflowState.mPresContext),
+    mOuterIsBlock(aOuterIsBlock),
+    mComputeMaxElementSize(aOuterReflowState.mComputeMaxElementSize)
 {
-  mSpaceManager = aLineLayout.mSpaceManager;
   NS_ASSERTION(nsnull != mSpaceManager, "caller must have space manager");
-  mOuterFrame = aOuterFrame;
   mFrameDataBase = mFrameDataBuf;
   mNumFrameData = sizeof(mFrameDataBuf) / sizeof(mFrameDataBuf[0]);
 }
@@ -682,7 +683,8 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
   const nsStyleFont* font;
   mOuterFrame->GetStyleData(eStyleStruct_Font,
                             (const nsStyleStruct*&)font);
-  nsIFontMetrics* fm = mPresContext.GetMetricsFor(font->mFont);
+  nsCOMPtr<nsIFontMetrics> fm;
+  mPresContext.GetMetricsFor(font->mFont, getter_AddRefs(fm));
 
 #ifdef NOISY_VERTICAL_ALIGN
   mOuterFrame->ListTag(stdout);
@@ -888,8 +890,6 @@ nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox,
   }
   aMaxAscent = maxAscent;
   aMaxDescent = lineHeight - maxAscent;
-
-  NS_RELEASE(fm);
 }
 
 void
@@ -989,21 +989,25 @@ nsInlineReflow::RelativePositionFrames(nsRect& aCombinedArea)
       nscoord dx = 0;
       switch (kidPosition->mOffset.GetLeftUnit()) {
       case eStyleUnit_Percent:
-        printf("XXX: not yet implemented: % relative position\n");
+        printf("XXX: not yet implemented: %% relative position\n");
       case eStyleUnit_Auto:
         break;
       case eStyleUnit_Coord:
         dx = kidPosition->mOffset.GetLeft(coord).GetCoordValue();
         break;
+      default:
+        break;
       }
       nscoord dy = 0;
       switch (kidPosition->mOffset.GetTopUnit()) {
       case eStyleUnit_Percent:
-        printf("XXX: not yet implemented: % relative position\n");
+        printf("XXX: not yet implemented: %% relative position\n");
       case eStyleUnit_Auto:
         break;
       case eStyleUnit_Coord:
         dy = kidPosition->mOffset.GetTop(coord).GetCoordValue();
+        break;
+      default:
         break;
       }
       kid->MoveTo(origin.x + dx, origin.y + dy);

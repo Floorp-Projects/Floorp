@@ -167,7 +167,7 @@ nsHTMLImageLoader::StartLoadImage(nsIPresContext* aPresContext,
     // Start image loading. Note that we don't specify a background color
     // so transparent images are always rendered using a transparency mask
     rv = aPresContext->StartLoadImage(src, nsnull, aForFrame, aCallBack,
-                                      aNeedSizeUpdate, PR_TRUE, mImageLoader);
+                                      aNeedSizeUpdate, PR_TRUE, &mImageLoader);
     if ((NS_OK != rv) || (nsnull == mImageLoader)) {
       return rv;
     }
@@ -238,7 +238,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
       }
       else {
         float p2t;
-        aPresContext->GetScaledPixelsToTwips(p2t);
+        aPresContext->GetScaledPixelsToTwips(&p2t);
         nsSize imageSize;
         mImageLoader->GetSize(imageSize);
         float imageWidth = imageSize.width * p2t;
@@ -277,7 +277,7 @@ nsHTMLImageLoader::GetDesiredSize(nsIPresContext* aPresContext,
       aDesiredSize.height = 1;
     } else {
       float p2t;
-      aPresContext->GetScaledPixelsToTwips(p2t);
+      aPresContext->GetScaledPixelsToTwips(&p2t);
       nsSize imageSize;
       mImageLoader->GetSize(imageSize);
       aDesiredSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
@@ -455,7 +455,7 @@ nsImageFrame::Reflow(nsIPresContext&          aPresContext,
 // The number of characters that fit within the maximum width are returned in
 // aMaxFit. NOTE: it is assumed that the fontmetrics have already been selected
 // into the rendering context before this is called (for performance). MMP
-nscoord
+void
 nsImageFrame::MeasureString(const PRUnichar*     aString,
                             PRInt32              aLength,
                             nscoord              aMaxWidth,
@@ -512,8 +512,6 @@ nsImageFrame::MeasureString(const PRUnichar*     aString,
       break;
     }
   }
-
-  return totalWidth;
 }
 
 // Formats the alt-text to fit within the specified rectangle. Breaks lines
@@ -550,7 +548,7 @@ nsImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
   while ((strLen > 0) && ((y + maxDescent) < aRect.YMost())) {
     // Determine how much of the text to display on this line
     PRUint32  maxFit;  // number of characters that fit
-    nscoord   width = MeasureString(str, strLen, aRect.width, maxFit, aRenderingContext);
+    MeasureString(str, strLen, aRect.width, maxFit, aRenderingContext);
     
     // Display the text
     aRenderingContext.DrawString(str, maxFit, aRect.x, y);
@@ -600,7 +598,7 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
   GetInnerArea(&aPresContext, inner);
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
   nsRecessedBorder recessedBorder(NSIntPixelsToTwips(1, p2t));
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this, inner,
                               inner, recessedBorder, mStyleContext, 0);
@@ -688,7 +686,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
       GetInnerArea(&aPresContext, inner);
       if (mImageLoader.GetLoadImageFailed()) {
         float p2t;
-        aPresContext.GetScaledPixelsToTwips(p2t);
+        aPresContext.GetScaledPixelsToTwips(&p2t);
         inner.width = NSIntPixelsToTwips(image->GetWidth(), p2t);
         inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
       }
@@ -807,7 +805,8 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
     map = GetImageMap();
     if ((nsnull != map) || IsServerImageMap()) {
       // Ask map if the x,y coordinates are in a clickable area
-      float t2p = aPresContext.GetTwipsToPixels();
+      float t2p;
+      aPresContext.GetTwipsToPixels(&t2p);
       nsAutoString absURL, target, altText;
       PRBool suppress;
       if (nsnull != map) {
@@ -913,7 +912,8 @@ nsImageFrame::GetCursor(nsIPresContext& aPresContext,
     nsRect inner;
     GetInnerArea(&aPresContext, inner);
     aCursor = NS_STYLE_CURSOR_DEFAULT;
-    float t2p = aPresContext.GetTwipsToPixels();
+    float t2p;
+    aPresContext.GetTwipsToPixels(&t2p);
 
     // XXX Event isn't in our local coordinate space like it should be...
     nsPoint   pt = aPoint;

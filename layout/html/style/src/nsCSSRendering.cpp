@@ -360,8 +360,8 @@ void nsCSSRendering::DrawSide(nsIRenderingContext& aContext,
                               PRIntn whichSide,
                               const PRUint8 borderStyle,  
                               const nscolor borderColor,
-							  const nscolor aBackgroundColor,
-							  const nsRect& borderOutside,
+                              const nscolor aBackgroundColor,
+                              const nsRect& borderOutside,
                               const nsRect& borderInside,
                               PRBool printing,
                               nscoord twipsPerPixel,
@@ -955,7 +955,7 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
                                         nsRect* aGap)
 {
   PRIntn dashLength;
-  nsRect dashRect, firstRect, currRect;
+  nsRect dashRect, currRect;
 
   PRBool bSolid = PR_TRUE;
   float over = 0.0f;
@@ -967,7 +967,6 @@ void nsCSSRendering::DrawDashedSegments(nsIRenderingContext& aContext,
   PRUint8 style = segment->mStyle;  
   for ( ; whichSide < 4; whichSide++) 
   {
-    PRUint8 prevStyle = style;
     if ((1<<whichSide) & aSkipSides) {
       // Skipped side
       skippedSide = PR_TRUE;
@@ -1399,20 +1398,26 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
   }
 
   // Draw all the other sides
-  nscoord twipsPerPixel = (nscoord)aPresContext.GetPixelsToTwips();
+
+  /* XXX something is misnamed here!!!! */
+  nscoord twipsPerPixel;/* XXX */
+  float p2t;/* XXX */
+  aPresContext.GetPixelsToTwips(&p2t);/* XXX */
+  twipsPerPixel = (nscoord) p2t;/* XXX */
+
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
     DrawSide(aRenderingContext, NS_SIDE_TOP,
              aBorderStyle.GetBorderStyle(NS_SIDE_TOP),
              aBorderStyle.GetBorderColor(NS_SIDE_TOP),
-			 bgColor->mBackgroundColor, inside,outside, 
-			 printing,twipsPerPixel, aGap);
+             bgColor->mBackgroundColor, inside,outside, 
+             printing,twipsPerPixel, aGap);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_LEFT))) {
     DrawSide(aRenderingContext, NS_SIDE_LEFT,
              aBorderStyle.GetBorderStyle(NS_SIDE_LEFT), 
              aBorderStyle.GetBorderColor(NS_SIDE_LEFT),
-			 bgColor->mBackgroundColor,inside, outside,
-			 printing,twipsPerPixel, aGap);
+             bgColor->mBackgroundColor,inside, outside,
+             printing,twipsPerPixel, aGap);
   }
   if (0 == (aSkipSides & (1<<NS_SIDE_BOTTOM))) {
     DrawSide(aRenderingContext, NS_SIDE_BOTTOM,
@@ -1471,7 +1476,11 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext& aPresContext,
   DrawDashedSegments(aRenderingContext, aBorderArea, aBorderEdges, aSkipSides, aGap);
 
   // Draw all the other sides
-  nscoord twipsPerPixel = (nscoord)aPresContext.GetPixelsToTwips();
+  nscoord twipsPerPixel;
+  float p2t;
+  aPresContext.GetPixelsToTwips(&p2t);
+  twipsPerPixel = (nscoord) p2t;/* XXX huh!*/
+
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
     PRInt32 segmentCount = aBorderEdges->mEdges[NS_SIDE_TOP].Count();
     PRInt32 i;
@@ -1682,7 +1691,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
                                               ? nsnull
                                               : &aColor.mBackgroundColor,
                                               aForFrame, nsnull,
-                                              PR_FALSE, PR_FALSE, loader);
+                                              PR_FALSE, PR_FALSE, &loader);
     if ((NS_OK != rv) || (nsnull == loader) ||
         (loader->GetImage(image), (nsnull == image))) {
       NS_IF_RELEASE(loader);
@@ -1706,7 +1715,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
 
     // Convert image dimensions into nscoord's
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(p2t);
+    aPresContext.GetScaledPixelsToTwips(&p2t);
     nscoord tileWidth = NSIntPixelsToTwips(imageSize.width, p2t);
     nscoord tileHeight = NSIntPixelsToTwips(imageSize.height, p2t);
     if ((tileWidth == 0) || (tileHeight == 0)) {

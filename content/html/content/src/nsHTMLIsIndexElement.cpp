@@ -36,7 +36,7 @@ class nsHTMLIsIndexElement : public nsIDOMHTMLIsIndexElement,
 {
 public:
   nsHTMLIsIndexElement(nsIAtom* aTag);
-  ~nsHTMLIsIndexElement();
+  virtual ~nsHTMLIsIndexElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

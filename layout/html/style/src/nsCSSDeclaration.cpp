@@ -45,7 +45,15 @@ static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
 
 #define CSS_IF_DELETE(ptr)  if (nsnull != ptr)  { delete ptr; ptr = nsnull; }
 
+nsCSSStruct::~nsCSSStruct()
+{
+}
+
 // --- nsCSSFont -----------------
+
+nsCSSFont::~nsCSSFont()
+{
+}
 
 const nsID& nsCSSFont::GetID(void)
 {
@@ -385,6 +393,10 @@ void nsCSSPosition::List(FILE* out, PRInt32 aIndent) const
 
 // --- nsCSSList -----------------
 
+nsCSSList::~nsCSSList()
+{
+}
+
 const nsID& nsCSSList::GetID(void)
 {
   return kCSSListSID;
@@ -403,6 +415,10 @@ void nsCSSList::List(FILE* out, PRInt32 aIndent) const
 }
 
 // --- nsCSSTable -----------------
+
+nsCSSTable::~nsCSSTable()
+{
+}
 
 const nsID& nsCSSTable::GetID(void)
 {
@@ -427,6 +443,10 @@ void nsCSSTable::List(FILE* out, PRInt32 aIndent) const
 
 // --- nsCSSBreaks -----------------
 
+nsCSSBreaks::~nsCSSBreaks()
+{
+}
+
 const nsID& nsCSSBreaks::GetID(void)
 {
   return kCSSBreaksSID;
@@ -449,6 +469,10 @@ void nsCSSBreaks::List(FILE* out, PRInt32 aIndent) const
 }
 
 // --- nsCSSPage -----------------
+
+nsCSSPage::~nsCSSPage()
+{
+}
 
 const nsID& nsCSSPage::GetID(void)
 {
@@ -549,6 +573,10 @@ void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
 
 // --- nsCSSAural -----------------
 
+nsCSSAural::~nsCSSAural()
+{
+}
+
 const nsID& nsCSSAural::GetID(void)
 {
   return kCSSAuralSID;
@@ -593,7 +621,7 @@ public:
   void* operator new(size_t size);
   
   CSSDeclarationImpl(void);
-  ~CSSDeclarationImpl(void);
+  virtual ~CSSDeclarationImpl(void);
 
   NS_DECL_ISUPPORTS
 

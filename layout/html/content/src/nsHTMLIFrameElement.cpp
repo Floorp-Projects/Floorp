@@ -44,7 +44,7 @@ class nsHTMLIFrameElement : public nsIDOMHTMLIFrameElement,
 {
 public:
   nsHTMLIFrameElement(nsIAtom* aTag);
-  ~nsHTMLIFrameElement();
+  virtual ~nsHTMLIFrameElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -233,11 +233,9 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     nsHTMLValue value;
 
     float p2t;
-    aPresContext->GetScaledPixelsToTwips(p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStylePosition* pos = (nsStylePosition*)
       aContext->GetMutableStyleData(eStyleStruct_Position);
-    nsStyleSpacing* spacing = (nsStyleSpacing*)
-      aContext->GetMutableStyleData(eStyleStruct_Spacing);
 
     // width: value
     aAttributes->GetAttribute(nsHTMLAtoms::width, value);

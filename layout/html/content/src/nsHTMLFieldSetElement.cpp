@@ -43,7 +43,7 @@ class nsHTMLFieldSetElement : public nsIDOMHTMLFieldSetElement,
 {
 public:
   nsHTMLFieldSetElement(nsIAtom* aTag);
-  ~nsHTMLFieldSetElement();
+  virtual ~nsHTMLFieldSetElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

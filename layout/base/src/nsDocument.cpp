@@ -17,6 +17,7 @@
  */
 #include "plstr.h"
 
+#include "nsCOMPtr.h"
 #include "nsDocument.h"
 #include "nsIArena.h"
 #include "nsIURL.h"
@@ -100,7 +101,7 @@ class nsDOMStyleSheetCollection : public nsIDOMStyleSheetCollection,
 {
 public:
   nsDOMStyleSheetCollection(nsIDocument *aDocument);
-  ~nsDOMStyleSheetCollection();
+  virtual ~nsDOMStyleSheetCollection();
 
   NS_DECL_ISUPPORTS
   NS_DECL_IDOMSTYLESHEETCOLLECTION
@@ -362,7 +363,7 @@ class nsDOMImplementation : public nsIDOMDOMImplementation,
 {
 public:
   nsDOMImplementation();
-  ~nsDOMImplementation();
+  virtual ~nsDOMImplementation();
 
   NS_DECL_ISUPPORTS
   
@@ -729,10 +730,11 @@ nsDocument::Reset(nsIURL *aURL)
     PRInt32 psindex;
     for (psindex = 0; psindex < pscount; psindex++) {
       nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(psindex);
-      nsIStyleSet* set = shell->GetStyleSet();
-      if (nsnull != set) {
-        set->RemoveDocStyleSheet(sheet);
-        NS_RELEASE(set);
+      nsCOMPtr<nsIStyleSet> set;
+      if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
+        if (nsnull != set) {
+          set->RemoveDocStyleSheet(sheet);
+        }
       }
     }
 
@@ -993,10 +995,11 @@ void nsDocument::AddStyleSheet(nsIStyleSheet* aSheet)
     PRInt32 index;
     for (index = 0; index < count; index++) {
       nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
-      nsIStyleSet* set = shell->GetStyleSet();
-      if (nsnull != set) {
-        set->AddDocStyleSheet(aSheet, this);
-        NS_RELEASE(set);
+      nsCOMPtr<nsIStyleSet> set;
+      if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
+        if (nsnull != set) {
+          set->AddDocStyleSheet(aSheet, this);
+        }
       }
     }
 
@@ -1020,15 +1023,16 @@ void nsDocument::SetStyleSheetDisabledState(nsIStyleSheet* aSheet,
     count = mPresShells.Count();
     for (index = 0; index < count; index++) {
       nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
-      nsIStyleSet* set = shell->GetStyleSet();
-      if (nsnull != set) {
-        if (aDisabled) {
-          set->RemoveDocStyleSheet(aSheet);
+      nsCOMPtr<nsIStyleSet> set;
+      if (NS_SUCCEEDED(shell->GetStyleSet(getter_AddRefs(set)))) {
+        if (nsnull != set) {
+          if (aDisabled) {
+            set->RemoveDocStyleSheet(aSheet);
+          }
+          else {
+            set->AddDocStyleSheet(aSheet, this);
+          }
         }
-        else {
-          set->AddDocStyleSheet(aSheet, this);
-        }
-        NS_RELEASE(set);
       }
     }
   }  

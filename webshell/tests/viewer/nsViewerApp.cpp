@@ -20,6 +20,7 @@
 #ifdef NGPREFS
 #define INITGUID
 #endif
+#include "nsCOMPtr.h"
 #include "nsXPBaseWindow.h"
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
@@ -110,7 +111,7 @@ nsViewerApp::nsViewerApp()
 
   mDelay = 1;
   mRepeatCount = 1;
-  mNumSamples = 10;
+  mNumSamples = 13;
   mAllowPlugins = PR_TRUE;
   mIsInitialized = PR_FALSE;
 }
@@ -577,6 +578,9 @@ nsViewerApp::OpenWindow()
   nsresult rv = nsRepository::CreateInstance(kBrowserWindowCID, nsnull,
                                              kIBrowserWindowIID,
                                              (void**) &bw);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   bw->SetApp(this);
   bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
   bw->Show();
@@ -621,6 +625,9 @@ nsViewerApp::ViewSource(nsString& aURL)
   nsresult rv = nsRepository::CreateInstance(kBrowserWindowCID, nsnull,
                                              kIBrowserWindowIID,
                                              (void**) &bw);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   bw->SetApp(this);
   bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), PRUint32(~0), mAllowPlugins);
   bw->Show();
@@ -638,6 +645,9 @@ nsViewerApp::OpenWindow(PRUint32 aNewChromeMask, nsIBrowserWindow*& aNewWindow)
   nsresult rv = nsRepository::CreateInstance(kBrowserWindowCID, nsnull,
                                              kIBrowserWindowIID,
                                              (void**) &bw);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   bw->SetApp(this);
   bw->Init(mAppShell, mPrefs, nsRect(0, 0, 620, 400), aNewChromeMask, mAllowPlugins);
 
@@ -862,7 +872,6 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   nscoord w  = 65;
   nscoord x  = 5;
   nscoord y  = 10;
-  nscoord h  = 19;
 
   // Create Update CheckButton
   rect.SetRect(x, y, 150, 24);  
@@ -956,10 +965,14 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
   {
     nsIPresShell* shell = aWindow->GetPresShell();
     if (nsnull != shell) {
-      nsIDocument* doc = shell->GetDocument();
+      nsCOMPtr<nsIDocument> doc;
+      shell->GetDocument(getter_AddRefs(doc));
       if (nsnull!=doc) {
         const char * str;
         nsresult rv = doc->GetDocumentURL()->GetSpec(&str);
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
         nsVoidArray * gWorkList = new nsVoidArray();
         gWorkList->AppendElement(new nsString(str));
 #if defined(XP_PC) && defined(NS_DEBUG)
@@ -1190,10 +1203,6 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
   PRBool result = TRUE;
 
   if (mSiteDialog == nsnull) {
-    nscoord txtHeight   = 24;
-    nscolor textBGColor = NS_RGB(0,0,0);
-    nscolor textFGColor = NS_RGB(255,255,255);
-
     nsILookAndFeel * lookAndFeel;
     if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
        //lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
@@ -1232,7 +1241,6 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     nscoord w  = 65;
     nscoord x  = 5;
     nscoord y  = 10;
-    nscoord h  = 19;
 
     // Create Label
     w = 50;

@@ -36,7 +36,7 @@ class nsHTMLOptGroupElement : public nsIDOMHTMLOptGroupElement,
 {
 public:
   nsHTMLOptGroupElement(nsIAtom* aTag);
-  ~nsHTMLOptGroupElement();
+  virtual ~nsHTMLOptGroupElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

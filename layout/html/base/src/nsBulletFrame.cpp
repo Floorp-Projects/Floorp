@@ -16,6 +16,7 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsBulletFrame.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
@@ -112,7 +113,8 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
       (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
     const nsStyleColor* myColor =
       (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
-    nsIFontMetrics* fm;
+
+    nsCOMPtr<nsIFontMetrics> fm;
     aRenderingContext.SetColor(myColor->mColor);
 
     nsAutoString text;
@@ -145,11 +147,10 @@ nsBulletFrame::Paint(nsIPresContext&      aCX,
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
     case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-      fm = aCX.GetMetricsFor(myFont->mFont);
+      aCX.GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
       GetListItemText(aCX, *myList, text);
       aRenderingContext.SetFont(fm);
       aRenderingContext.DrawString(text, mPadding.left, mPadding.top);
-      NS_RELEASE(fm);
       break;
     }
   }
@@ -204,101 +205,101 @@ nsBulletFrame::GetListItemText(nsIPresContext& aCX,
   PRInt32 ordinal = mOrdinal;
   char cbuf[40];
   switch (aListStyle.mListStyleType) {
-  case NS_STYLE_LIST_STYLE_DECIMAL:
-    PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
-    result.Append(cbuf);
+    case NS_STYLE_LIST_STYLE_DECIMAL:
+      PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
+      result.Append(cbuf);
+      break;
+
+    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+    {
+      if (ordinal <= 0) {
+        ordinal = 1;
+      }
+      nsAutoString addOn, decStr;
+      decStr.Append(ordinal, 10);
+      PRIntn len = decStr.Length();
+      const PRUnichar* dp = decStr.GetUnicode();
+      const PRUnichar* end = dp + len;
+      PRIntn romanPos = len;
+      PRIntn n;
+
+      const char* achars;
+      const char* bchars;
+      if (aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_LOWER_ROMAN) {
+        achars = gLowerRomanCharsA;
+        bchars = gLowerRomanCharsB;
+      }
+      else {
+        achars = gUpperRomanCharsA;
+        bchars = gUpperRomanCharsB;
+      }
+      for (; dp < end; dp++) {
+        romanPos--;
+        addOn.SetLength(0);
+        switch(*dp) {
+          case '3':  addOn.Append(achars[romanPos]);
+          case '2':  addOn.Append(achars[romanPos]);
+          case '1':  addOn.Append(achars[romanPos]);
+            break;
+          case '4':
+            addOn.Append(achars[romanPos]);
+            // FALLTHROUGH
+          case '5': case '6':
+          case '7': case  '8':
+            addOn.Append(bchars[romanPos]);
+            for(n=0;n<(*dp-'5');n++) {
+              addOn.Append(achars[romanPos]);
+            }
+            break;
+          case '9':
+            addOn.Append(achars[romanPos]);
+            addOn.Append(achars[romanPos+1]);
+            break;
+          default:
+            break;
+        }
+        result.Append(addOn);
+      }
+    }
     break;
 
-  case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-  case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-  {
-    if (ordinal <= 0) {
-      ordinal = 1;
-    }
-    nsAutoString addOn, decStr;
-    decStr.Append(ordinal, 10);
-    PRIntn len = decStr.Length();
-    const PRUnichar* dp = decStr.GetUnicode();
-    const PRUnichar* end = dp + len;
-    PRIntn romanPos = len;
-    PRIntn n;
+    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+    {
+      PRInt32 anOffset = -1;
+      PRInt32 aBase = 26;
+      PRInt32 ndex=0;
+      PRInt32 root=1;
+      PRInt32 next=aBase;
+      PRInt32 expn=1;
+      const char* chars =
+        (aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_LOWER_ALPHA)
+        ? gLowerAlphaChars : gUpperAlphaChars;
 
-    const char* achars;
-    const char* bchars;
-    if (aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_LOWER_ROMAN) {
-      achars = gLowerRomanCharsA;
-      bchars = gLowerRomanCharsB;
-    }
-    else {
-      achars = gUpperRomanCharsA;
-      bchars = gUpperRomanCharsB;
-    }
-    for (; dp < end; dp++) {
-      romanPos--;
-      addOn.SetLength(0);
-      switch(*dp) {
-      case '3':  addOn.Append(achars[romanPos]);
-      case '2':  addOn.Append(achars[romanPos]);
-      case '1':  addOn.Append(achars[romanPos]);
-        break;
-      case '4':
-        addOn.Append(achars[romanPos]);
-        // FALLTHROUGH
-      case '5': case '6':
-      case '7': case  '8':
-        addOn.Append(bchars[romanPos]);
-        for(n=0;n<(*dp-'5');n++) {
-          addOn.Append(achars[romanPos]);
-        }
-        break;
-      case '9':
-        addOn.Append(achars[romanPos]);
-        addOn.Append(achars[romanPos+1]);
-        break;
-      default:
-        break;
+      // must be positive here...
+      if (ordinal <= 0) {
+        ordinal = 1;
       }
-      result.Append(addOn);
-    }
-  }
-  break;
+      ordinal--;          // a == 0
 
-  case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-  case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-  {
-    PRInt32 anOffset = -1;
-    PRInt32 aBase = 26;
-    PRInt32 ndex=0;
-    PRInt32 root=1;
-    PRInt32 next=aBase;
-    PRInt32 expn=1;
-    const char* chars =
-      (aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_LOWER_ALPHA)
-      ? gLowerAlphaChars : gUpperAlphaChars;
-
-    // must be positive here...
-    if (ordinal <= 0) {
-      ordinal = 1;
+      // scale up in baseN; exceed current value.
+      while (next<=ordinal) {
+        root=next;
+        next*=aBase;
+        expn++;
+      }
+      while (0!=(expn--)) {
+        ndex = ((root<=ordinal) && (0!=root)) ? (ordinal/root): 0;
+        ordinal %= root;
+        if (root>1)
+          result.Append(chars[ndex+anOffset]);
+        else
+          result.Append(chars[ndex]);
+        root /= aBase;
+      }
     }
-    ordinal--;          // a == 0
-
-    // scale up in baseN; exceed current value.
-    while (next<=ordinal) {
-      root=next;
-      next*=aBase;
-      expn++;
-    }
-    while (0!=(expn--)) {
-      ndex = ((root<=ordinal) && (0!=root)) ? (ordinal/root): 0;
-      ordinal %= root;
-      if (root>1)
-        result.Append(chars[ndex+anOffset]);
-      else
-        result.Append(chars[ndex]);
-      root /= aBase;
-    }
-  }
-  break;
+    break;
   }
   result.Append(".");
 }
@@ -312,9 +313,9 @@ UpdateBulletCB(nsIPresContext& aPresContext, nsIFrame* aFrame, PRIntn aStatus)
   if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
     // Now that the size is available, trigger a reflow of the bullet
     // frame.
-    nsIPresShell* shell;
-    shell = aPresContext.GetShell();
-    if (nsnull != shell) {
+    nsCOMPtr<nsIPresShell> shell;
+    rv = aPresContext.GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
       nsIReflowCommand* cmd;
       rv = NS_NewHTMLReflowCommand(&cmd, aFrame,
                                    nsIReflowCommand::ContentChanged);
@@ -324,7 +325,6 @@ UpdateBulletCB(nsIPresContext& aPresContext, nsIFrame* aFrame, PRIntn aStatus)
         NS_RELEASE(cmd);
         shell->ExitReflowLock();
       }
-      NS_RELEASE(shell);
     }
   }
   return rv;
@@ -369,7 +369,8 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
 
   const nsStyleFont* myFont =
     (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  nsIFontMetrics* fm = aCX->GetMetricsFor(myFont->mFont);
+  nsCOMPtr<nsIFontMetrics> fm;
+  aCX->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
   nscoord bulletSize;
   float p2t;
   float t2p;
@@ -388,14 +389,14 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
   case NS_STYLE_LIST_STYLE_CIRCLE:
   case NS_STYLE_LIST_STYLE_BASIC:
   case NS_STYLE_LIST_STYLE_SQUARE:
-    t2p = aCX->GetTwipsToPixels();
+    aCX->GetTwipsToPixels(&t2p);
     fm->GetMaxAscent(ascent);
     bulletSize = NSTwipsToIntPixels(
       (nscoord)NSToIntRound(0.8f * (float(ascent) / 2.0f)), t2p);
     if (bulletSize < 1) {
       bulletSize = MIN_BULLET_SIZE;
     }
-    p2t = aCX->GetPixelsToTwips();
+    aCX->GetPixelsToTwips(&p2t);
     bulletSize = NSIntPixelsToTwips(bulletSize, p2t);
     mPadding.bottom = ascent / 8;
     aMetrics.width = mPadding.right + bulletSize;
@@ -418,7 +419,6 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
     fm->GetMaxDescent(aMetrics.descent);
     break;
   }
-  NS_RELEASE(fm);
 }
 
 NS_IMETHODIMP

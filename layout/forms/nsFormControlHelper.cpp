@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsCOMPtr.h"
 #include "nsFormControlHelper.h"
 #include "nsHTMLParts.h"
 #include "nsIHTMLContent.h"
@@ -113,7 +113,7 @@ nsCompatibility
 nsFormControlHelper::GetRepChars(nsIPresContext& aPresContext, char& char1, char& char2) 
 {
   nsCompatibility mode;
-  aPresContext.GetCompatibilityMode(mode);
+  aPresContext.GetCompatibilityMode(&mode);
   if (eCompatibility_Standard == mode) {
     char1 = 'm';
     char2 = 'a';
@@ -130,24 +130,23 @@ nsFormControlHelper::GetTextSize(nsIPresContext& aPresContext, nsIFormControlFra
                                 const nsString& aString, nsSize& aSize,
                                 nsIRenderingContext *aRendContext)
 {
-  nsFont font(aPresContext.GetDefaultFixedFont());
+  nsFont font(aPresContext.GetDefaultFixedFontDeprecated());
   aFrame->GetFont(&aPresContext, font);
-  nsIDeviceContext* deviceContext = aPresContext.GetDeviceContext();
+  nsCOMPtr<nsIDeviceContext> deviceContext;
+  aPresContext.GetDeviceContext(getter_AddRefs(deviceContext));
 
   nsIFontMetrics* fontMet;
   deviceContext->GetMetricsFor(font, fontMet);
   aRendContext->SetFont(fontMet);
   aRendContext->GetWidth(aString, aSize.width);
   fontMet->GetHeight(aSize.height);
+  NS_RELEASE(fontMet);
 
   char char1, char2;
   nsCompatibility mode = GetRepChars(aPresContext, char1, char2);
   nscoord char1Width, char2Width;
   aRendContext->GetWidth(char1, char1Width);
   aRendContext->GetWidth(char2, char2Width);
-
-  NS_RELEASE(fontMet);
-  NS_RELEASE(deviceContext);
 
   if (eCompatibility_Standard == mode) {
     return ((char1Width + char2Width) / 2) + 1;
@@ -212,7 +211,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext* aPresContext, nsIFormControl
     colStatus = hContent->GetHTMLAttribute(aSpec.mColSizeAttr, colAttr);
   }
   float p2t;
-  aPresContext->GetScaledPixelsToTwips(p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
 
   // determine the width
   nscoord adjSize;
@@ -321,7 +320,7 @@ nsFormControlHelper::GetFont(nsIFormControlFrame *   aFormFrame,
   const nsStyleFont* styleFont = (const nsStyleFont*)aStyleContext->GetStyleData(eStyleStruct_Font);
 
   nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(mode);
+  aPresContext->GetCompatibilityMode(&mode);
 
   if (eCompatibility_Standard == mode) {
     aFont = styleFont->mFont;
@@ -354,9 +353,9 @@ nsFormControlHelper::GetFont(nsIFormControlFrame *   aFormFrame,
         aFont = styleFont->mFont;
         aFont.name = "Arial";  // XXX windows specific font
         aFont.weight = NS_FONT_WEIGHT_NORMAL; 
-        const nsFont& normal = aPresContext->GetDefaultFont();
+        const nsFont& normal = aPresContext->GetDefaultFontDeprecated();
         PRInt32 scaler;
-        aPresContext->GetFontScaler(scaler);
+        aPresContext->GetFontScaler(&scaler);
         float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
         PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(aFont.size, (PRInt32)normal.size, scaleFactor);
         aFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor);
@@ -510,8 +509,6 @@ nsFormControlHelper::PaintScrollbar(nsIRenderingContext& aRenderingContext,
                                   nsRect& aFrameRect)
 {
   // Get the Scrollbar's Style structs
-  const nsStyleSpacing* scrollbarSpacing =
-    (const nsStyleSpacing*)aScrollbarStyleContext->GetStyleData(eStyleStruct_Spacing);
   const nsStyleColor* scrollbarColor =
     (const nsStyleColor*)aScrollbarStyleContext->GetStyleData(eStyleStruct_Color);
 
@@ -603,8 +600,6 @@ nsFormControlHelper::PaintFixedSizeCheckMarkBorder(nsIRenderingContext& aRenderi
   PRUint32 oy = 0;
 
   nscoord onePixel = NSIntPixelsToTwips(1, aPixelsToTwips);
-  nscoord twoPixels = NSIntPixelsToTwips(2, aPixelsToTwips);
-  nscoord ninePixels = NSIntPixelsToTwips(9, aPixelsToTwips);
   nscoord twelvePixels = NSIntPixelsToTwips(12, aPixelsToTwips);
 
     // Draw Background
@@ -786,7 +781,7 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
 
 
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(p2t);
+    aPresContext.GetScaledPixelsToTwips(&p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
     nsRect outside(0, 0, aWidth, aHeight);
@@ -815,7 +810,7 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
     context->GetAppUnitsToDevUnits(devUnits);
     context->GetDevUnitsToAppUnits(appUnits);
 
-    nsFont font(aPresContext.GetDefaultFixedFont()); 
+    nsFont font(aPresContext.GetDefaultFixedFontDeprecated()); 
     formFrame->GetFont(&aPresContext, font);
 
     aRenderingContext.SetFont(font);
@@ -873,7 +868,7 @@ nsFormControlHelper::PaintCircularBackground(nsIPresContext& aPresContext,
                          nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight)
 {
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
   nscoord onePixel     = NSIntPixelsToTwips(1, p2t);
 
   nsRect outside;
@@ -900,11 +895,8 @@ nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
 
   aRenderingContext.PushState();
 
-  const nsStyleColor* color = (const nsStyleColor*)
-     aStyleContext->GetStyleData(eStyleStruct_Color);
-
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
  
   const nsStyleSpacing* spacing = (const nsStyleSpacing*)aStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin border;

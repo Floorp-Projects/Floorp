@@ -52,7 +52,7 @@ class nsHTMLTableElement :  public nsIDOMHTMLTableElement,
 {
 public:
   nsHTMLTableElement(nsIAtom* aTag);
-  ~nsHTMLTableElement();
+  virtual ~nsHTMLTableElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -411,12 +411,14 @@ NS_IMETHODIMP
 nsHTMLTableElement::SetCaption(nsIDOMHTMLTableCaptionElement* aValue)
 {
   nsresult rv = DeleteCaption();
-  if (nsnull!=aValue)
-  {
-    nsIDOMNode* resultingChild;
-    mInner.AppendChild(aValue, &resultingChild);
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull!=aValue)
+    {
+      nsIDOMNode* resultingChild;
+      mInner.AppendChild(aValue, &resultingChild);
+    }
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -466,12 +468,14 @@ NS_IMETHODIMP
 nsHTMLTableElement::SetTHead(nsIDOMHTMLTableSectionElement* aValue)
 {
   nsresult rv = DeleteTHead();
-  if (nsnull!=aValue)
-  {
-    nsIDOMNode* resultingChild;
-    mInner.AppendChild(aValue, &resultingChild);
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull!=aValue)
+    {
+      nsIDOMNode* resultingChild;
+      mInner.AppendChild(aValue, &resultingChild);
+    }
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -505,12 +509,14 @@ NS_IMETHODIMP
 nsHTMLTableElement::SetTFoot(nsIDOMHTMLTableSectionElement* aValue)
 {
   nsresult rv = DeleteTFoot();
-  if (nsnull!=aValue)
-  {
-    nsIDOMNode* resultingChild;
-    mInner.AppendChild(aValue, &resultingChild);
+  if (NS_SUCCEEDED(rv)) {
+    if (nsnull!=aValue)
+    {
+      nsIDOMNode* resultingChild;
+      mInner.AppendChild(aValue, &resultingChild);
+    }
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1049,7 +1055,7 @@ MapTableBorderInto(nsIHTMLAttributes* aAttributes,
     nsStyleTable *tableStyle = (nsStyleTable*)
       aContext->GetMutableStyleData(eStyleStruct_Table);
     float p2t;
-    aPresContext->GetScaledPixelsToTwips(p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStyleCoord twips;
     if (borderValue.GetUnit() == eHTMLUnit_Empty) {
       tableStyle->mRules=NS_STYLE_TABLE_RULES_ALL;  // non-0 values of border imply default rules=all
@@ -1085,7 +1091,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
   if (nsnull!=aAttributes)
   {
     float p2t;
-    aPresContext->GetScaledPixelsToTwips(p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nsHTMLValue value;
 
     // width
@@ -1100,6 +1106,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 
       case eHTMLUnit_Pixel:
         position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+        break;
+      default:
         break;
       }
     }
@@ -1116,6 +1124,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
 
       case eHTMLUnit_Pixel:
         position->mHeight.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+        break;
+      default:
         break;
       }
     }

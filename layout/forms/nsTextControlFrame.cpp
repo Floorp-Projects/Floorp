@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
+#include "nsCOMPtr.h"
 #include "nsTextControlFrame.h"
 #include "nsIContent.h"
 #include "prtypes.h"
@@ -232,7 +232,7 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    nsSize& aDesiredWidgetSize)
 {
   nsCompatibility mode;
-  aPresContext->GetCompatibilityMode(mode);
+  aPresContext->GetCompatibilityMode(&mode);
 
   // get the css size and let the frame use or override it
   nsSize styleSize;
@@ -269,9 +269,10 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
     nscoord scrollbarWidth  = 0;
     nscoord scrollbarHeight = 0;
     float   scale;
-    float   p2t = aPresContext->GetPixelsToTwips();
-    nsIDeviceContext* dx = nsnull;
-    dx = aPresContext->GetDeviceContext();
+    float   p2t;
+    aPresContext->GetPixelsToTwips(&p2t);
+    nsCOMPtr<nsIDeviceContext> dx;
+    aPresContext->GetDeviceContext(getter_AddRefs(dx));
     if (nsnull != dx) { 
       float sbWidth;
       float sbHeight;
@@ -279,7 +280,6 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
       dx->GetScrollBarDimensions(sbWidth, sbHeight);
       scrollbarWidth  = PRInt32(sbWidth * scale);
       scrollbarHeight = PRInt32(sbHeight * scale);
-      NS_RELEASE(dx);
     } else {
       scrollbarWidth  = GetScrollbarWidth(p2t);
       scrollbarHeight = scrollbarWidth;
@@ -375,7 +375,7 @@ nsTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
     result = mWidget->QueryInterface(kITextWidgetIID, (void**)&text);
     if ((nsHTMLAtoms::value == aAttribute) && (nsnull != text)) {
         nsString value;
-        nsresult rv = GetText(&value, PR_TRUE);
+        /*XXXnsresult rv = */GetText(&value, PR_TRUE);
         PRUint32 ignore;
         text->SetText(value, ignore);
         nsFormFrame::StyleChangeReflow(aPresContext, this);
@@ -411,7 +411,7 @@ nsTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   PRInt32 type;
   GetType(&type);
 
-  nsFont font(aPresContext->GetDefaultFixedFont()); 
+  nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
   GetFont(aPresContext, font);
   mWidget->SetFont(font);
   SetColors(*aPresContext);
@@ -590,7 +590,7 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
     spacing->CalcBorderFor(this, border);
 
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(p2t);
+    aPresContext.GetScaledPixelsToTwips(&p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
     nsRect outside(0, 0, mRect.width, mRect.height);
@@ -619,7 +619,7 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
 
     aRenderingContext.SetColor(NS_RGB(0,0,0));
 
-    nsFont font(aPresContext.GetDefaultFixedFont()); 
+    nsFont font(aPresContext.GetDefaultFixedFontDeprecated()); 
     GetFont(&aPresContext, font);
 
     aRenderingContext.SetFont(font);
@@ -694,14 +694,14 @@ nsTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
       aRenderingContext.PopState(clipEmpty);
 
       // Scrollbars
-      const nsStyleColor* myColor = (const nsStyleColor*)aStyleContext->GetStyleData(eStyleStruct_Color);
       nsIAtom * sbAtom = NS_NewAtom(":scrollbar-look");
       nsIStyleContext* scrollbarStyle;
-      aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext, &scrollbarStyle);
+      aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext, PR_FALSE, &scrollbarStyle);
       NS_RELEASE(sbAtom);
+
       sbAtom = NS_NewAtom(":scrollbar-arrow-look");
       nsIStyleContext* arrowStyle;
-      aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext, &arrowStyle);
+      aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, aStyleContext, PR_FALSE, &arrowStyle);
       NS_RELEASE(sbAtom);
 
       nsRect srect(mRect.width-scrollbarScaledWidth-(2*onePixel), 2*onePixel, scrollbarScaledWidth, mRect.height-(onePixel*4)-scrollbarScaledWidth);

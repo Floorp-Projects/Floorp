@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsCOMPtr.h"
 #include "nsLeafFrame.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsCSSRendering.h"
@@ -108,16 +109,18 @@ nsLeafFrame::ContentChanged(nsIPresContext* aPresContext,
 {
   // Generate a reflow command with this frame as the target frame
   nsIReflowCommand* cmd;
-  nsresult          result;
+  nsresult          rv;
                                                 
-  result = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
-  if (NS_OK == result) {
-    nsIPresShell* shell = aPresContext->GetShell();
-    shell->AppendReflowCommand(cmd);
-    NS_RELEASE(shell);
+  rv = NS_NewHTMLReflowCommand(&cmd, this, nsIReflowCommand::ContentChanged);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPresShell> shell;
+    rv = aPresContext->GetShell(getter_AddRefs(shell));
+    if (NS_SUCCEEDED(rv) && (nsnull != shell)) {
+      shell->AppendReflowCommand(cmd);
+    }
     NS_RELEASE(cmd);
   }
 
-  return result;
+  return rv;
 }
 

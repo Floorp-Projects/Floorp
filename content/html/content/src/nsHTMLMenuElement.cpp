@@ -41,7 +41,7 @@ class nsHTMLMenuElement : public nsIDOMHTMLMenuElement,
 {
 public:
   nsHTMLMenuElement(nsIAtom* aTag);
-  ~nsHTMLMenuElement();
+  virtual ~nsHTMLMenuElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

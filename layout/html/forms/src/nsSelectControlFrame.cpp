@@ -17,7 +17,7 @@
  */
 
 // YY need to pass isMultiple before create called
-
+#include "nsCOMPtr.h"
 #include "nsFormControlFrame.h"
 #include "nsFormFrame.h"
 #include "nsIDOMNode.h"
@@ -328,7 +328,7 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
 
   PRInt32 rowHeight = 0;
-  nsSize calcSize, charSize;
+  nsSize calcSize;
   PRBool widthExplicit, heightExplicit;
   nsInputDimensionSpec textSpec(nsnull, PR_FALSE, nsnull, nsnull,
                                 maxWidth, PR_TRUE, nsHTMLAtoms::size, 1);
@@ -347,23 +347,22 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
 
   float sp2t;
-  float p2t = aPresContext->GetPixelsToTwips();
-
-  aPresContext->GetScaledPixelsToTwips(sp2t);
+  float p2t;
+  aPresContext->GetPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&sp2t);
 
   nscoord scrollbarWidth  = 0;
   nscoord scrollbarHeight = 0;
   float   scale;
-  nsIDeviceContext* dx = nsnull;
-  dx = aPresContext->GetDeviceContext();
-  if (nsnull != dx) { 
+  nsCOMPtr<nsIDeviceContext> dx;
+  aPresContext->GetDeviceContext(getter_AddRefs(dx));
+  if (nsnull != dx) {
     float sbWidth;
     float sbHeight;
     dx->GetCanonicalPixelScale(scale);
     dx->GetScrollBarDimensions(sbWidth, sbHeight);
     scrollbarWidth  = PRInt32(sbWidth * scale);
     scrollbarHeight = PRInt32(sbHeight * scale);
-    NS_RELEASE(dx);
   } else {
     scrollbarWidth  = GetScrollbarWidth(sp2t);
     scrollbarHeight = scrollbarWidth;
@@ -406,7 +405,8 @@ nsSelectControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
   if (mIsComboBox) {
     nsComboBoxInitData* initData = new nsComboBoxInitData();
     initData->clipChildren = PR_TRUE;
-    float twipToPix = aPresContext.GetTwipsToPixels();
+    float twipToPix;
+    aPresContext.GetTwipsToPixels(&twipToPix);
     initData->mDropDownHeight = NSTwipsToIntPixels(mWidgetSize.height, twipToPix);
     return initData;
   } else {
@@ -474,7 +474,8 @@ nsSelectControlFrame::GetWidgetSize(nsIPresContext& aPresContext, nscoord& aWidt
 {
   nsRect bounds;
   mWidget->GetBounds(bounds);
-  float p2t = aPresContext.GetPixelsToTwips();
+  float p2t;
+  aPresContext.GetPixelsToTwips(&p2t);
   aWidth  = NSIntPixelsToTwips(bounds.width, p2t);
   aHeight = NSTwipsToIntPixels(bounds.height, p2t);
 }
@@ -495,7 +496,7 @@ nsSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   }
 
   mWidget->Enable(!nsFormFrame::GetDisabled(this));
-  nsFont font(aPresContext->GetDefaultFixedFont()); 
+  nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
   GetFont(aPresContext, font);
   mWidget->SetFont(font);
   SetColors(*aPresContext);
@@ -699,10 +700,9 @@ nsIDOMHTMLOptionElement*
 nsSelectControlFrame::GetOption(nsIDOMHTMLCollection& aCollection, PRUint32 aIndex)
 {
   nsIDOMNode* node = nsnull;
-  PRBool status = PR_FALSE;
   if ((NS_OK == aCollection.Item(aIndex, &node)) && node) {
     nsIDOMHTMLOptionElement* option = nsnull;
-    nsresult result = node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
+    node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
     NS_RELEASE(node);
     return option;
   }
@@ -744,13 +744,13 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
   nsIAtom * sbAtom = NS_NewAtom(":scrollbar-look");
   nsIStyleContext* scrollbarStyle;
   aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext,
-                                            &scrollbarStyle);
+                                            PR_FALSE, &scrollbarStyle);
   NS_RELEASE(sbAtom);
 
   sbAtom = NS_NewAtom(":scrollbar-arrow-look");
   nsIStyleContext* arrowStyle;
   aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext,
-                                            &arrowStyle);
+                                            PR_FALSE, &arrowStyle);
   NS_RELEASE(sbAtom);
 
 
@@ -772,7 +772,7 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
   spacing->CalcBorderFor(this, border);
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(p2t);
+  aPresContext.GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
   nsRect outside(0, 0, mRect.width, mRect.height);
@@ -783,7 +783,7 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
 
   aRenderingContext.SetColor(NS_RGB(0,0,0));
 
-  nsFont font(aPresContext.GetDefaultFixedFont()); 
+  nsFont font(aPresContext.GetDefaultFixedFontDeprecated()); 
   GetFont(&aPresContext, font);
 
   aRenderingContext.SetFont(font);
@@ -826,7 +826,7 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
     y = inside.y;
   }
 
-  PRUint32 selectedIndex = -1;
+  PRUint32 selectedIndex;
   // XXX Get Selected index out of Content model
   selectedIndex = 1;
 
@@ -883,7 +883,7 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
     if (mIsComboBox) {
       // Get the Scrollbar's Arrow's Style structs
       const nsStyleSpacing* arrowSpacing = (const nsStyleSpacing*)arrowStyle->GetStyleData(eStyleStruct_Spacing);
-      const nsStyleColor*   arrowColor   = (const nsStyleColor*)arrowStyle->GetStyleData(eStyleStruct_Color);
+//XXX      const nsStyleColor*   arrowColor   = (const nsStyleColor*)arrowStyle->GetStyleData(eStyleStruct_Color);
 
       nsRect srect(mRect.width-scrollbarWidth-onePixel, onePixel, scrollbarWidth, mRect.height-(onePixel*2));
       nsFormControlHelper::PaintArrow(nsFormControlHelper::eArrowDirection_Down, aRenderingContext,aPresContext, 

@@ -92,8 +92,10 @@ nsHTMLContainerFrame::CreatePlaceholderFrame(nsIPresContext& aPresContext,
   nsIStyleContext*  kidSC;
   aFloatedFrame->GetStyleContext(&kidSC);
   nsIStyleContext*  placeholderPseudoStyle;
-  aPresContext.ResolvePseudoStyleContextFor(content, nsHTMLAtoms::placeholderPseudo,
-                                            kidSC, &placeholderPseudoStyle);
+  aPresContext.ResolvePseudoStyleContextFor(content,
+                                            nsHTMLAtoms::placeholderPseudo,
+                                            kidSC, PR_FALSE,
+                                            &placeholderPseudoStyle);
   NS_RELEASE(kidSC);
   placeholder->Init(aPresContext, content, this, placeholderPseudoStyle);
   NS_RELEASE(placeholderPseudoStyle);

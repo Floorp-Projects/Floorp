@@ -480,7 +480,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     if (eReflowReason_Initial == aReflowState.reason) 
     {
       float p2t;
-      aPresContext.GetScaledPixelsToTwips(p2t);
+      aPresContext.GetScaledPixelsToTwips(&p2t);
       kidSize.width=NSIntPixelsToTwips(4, p2t);
       if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
             pMaxElementSize->width=NSIntPixelsToTwips(4, p2t);
@@ -492,7 +492,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   if (0==kidSize.height)
   {
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(p2t);
+    aPresContext.GetScaledPixelsToTwips(&p2t);
     kidSize.height=NSIntPixelsToTwips(4, p2t);
     if (nsnull!=aDesiredSize.maxElementSize && 0==pMaxElementSize->width)
           pMaxElementSize->height=NSIntPixelsToTwips(4, p2t);
@@ -770,7 +770,7 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
     // XXX: need to get border width here
     // in HTML, cell borders are always 1 pixel by default
     float p2t;
-    aPresContext->GetScaledPixelsToTwips(p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     border = NSIntPixelsToTwips(1, p2t);
     MapHTMLBorderStyle(aPresContext, *spacingData, border, tableFrame);
   }

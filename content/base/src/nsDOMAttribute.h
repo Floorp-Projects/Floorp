@@ -45,7 +45,7 @@ class nsAttributeChildList : public nsGenericDOMNodeList
 {
 public:
   nsAttributeChildList(nsDOMAttribute* aAttribute);
-  ~nsAttributeChildList();
+  virtual ~nsAttributeChildList();
 
   // interface nsIDOMNodeList
   NS_IMETHOD    GetLength(PRUint32* aLength);
@@ -68,7 +68,7 @@ public:
   nsDOMAttribute(nsIContent* aContent, 
                  const nsString& aName, 
                  const nsString& aValue);
-  ~nsDOMAttribute();
+  virtual ~nsDOMAttribute();
 
   NS_DECL_ISUPPORTS
 

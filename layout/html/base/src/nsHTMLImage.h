@@ -137,11 +137,11 @@ protected:
 
   PRIntn GetSuppress();
 
-  nscoord MeasureString(const PRUnichar*     aString,
-                        PRInt32              aLength,
-                        nscoord              aMaxWidth,
-                        PRUint32&            aMaxFit,
-                        nsIRenderingContext& aContext);
+  void MeasureString(const PRUnichar*     aString,
+                     PRInt32              aLength,
+                     nscoord              aMaxWidth,
+                     PRUint32&            aMaxFit,
+                     nsIRenderingContext& aContext);
 
   void DisplayAltText(nsIPresContext&      aPresContext,
                       nsIRenderingContext& aRenderingContext,

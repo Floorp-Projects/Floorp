@@ -37,7 +37,7 @@ class nsHTMLHtmlElement : public nsIDOMHTMLHtmlElement,
 {
 public:
   nsHTMLHtmlElement();
-  ~nsHTMLHtmlElement();
+  virtual ~nsHTMLHtmlElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

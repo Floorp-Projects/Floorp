@@ -40,7 +40,7 @@ class nsHTMLLegendElement : public nsIDOMHTMLLegendElement,
 {
 public:
   nsHTMLLegendElement(nsIAtom* aTag);
-  ~nsHTMLLegendElement();
+  virtual ~nsHTMLLegendElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

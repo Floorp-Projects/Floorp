@@ -36,7 +36,7 @@ class nsHTMLScriptElement : public nsIDOMHTMLScriptElement,
 {
 public:
   nsHTMLScriptElement(nsIAtom* aTag);
-  ~nsHTMLScriptElement();
+  virtual ~nsHTMLScriptElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

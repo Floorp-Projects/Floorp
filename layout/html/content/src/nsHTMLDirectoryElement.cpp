@@ -41,7 +41,7 @@ class nsHTMLDirectoryElement : public nsIDOMHTMLDirectoryElement,
 {
 public:
   nsHTMLDirectoryElement(nsIAtom* aTag);
-  ~nsHTMLDirectoryElement();
+  virtual ~nsHTMLDirectoryElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

@@ -36,7 +36,7 @@ class nsHTMLBaseFontElement : public nsIDOMHTMLBaseFontElement,
 {
 public:
   nsHTMLBaseFontElement(nsIAtom* aTag);
-  ~nsHTMLBaseFontElement();
+  virtual ~nsHTMLBaseFontElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS

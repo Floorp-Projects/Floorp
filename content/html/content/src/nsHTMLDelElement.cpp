@@ -36,7 +36,7 @@ class nsHTMLDelElement : public nsIDOMHTMLModElement,
 {
 public:
   nsHTMLDelElement(nsIAtom* aTag);
-  ~nsHTMLDelElement();
+  virtual ~nsHTMLDelElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS
