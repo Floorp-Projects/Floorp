@@ -41,7 +41,8 @@ CPPSRCS =nsXULCommand.cpp     \
 
 MODULE=raptor 
 
-OBJS=.\$(OBJDIR)\nsBaseWidget.obj  \
+OBJS= .\$(OBJDIR)\nsXULCommand.obj \ 
+    .\$(OBJDIR)\nsBaseWidget.obj  \
 	.\$(OBJDIR)\nsMenuButton.obj  \
 	.\$(OBJDIR)\nsToolbarItemHolder.obj  \
 	.\$(OBJDIR)\nsToolbarManager.obj  \
