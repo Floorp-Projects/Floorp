@@ -200,6 +200,7 @@ NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifyS
     mLineNumber=0;
     result = mSink->WillBuildModel();
 
+#if 0
     /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
     {
       nsIHTMLContentSink* theSink=(nsIHTMLContentSink*)mSink;
@@ -215,6 +216,7 @@ NS_IMETHODIMP CWellFormedDTD::WillBuildModel(nsString& aFilename,PRBool aNotifyS
       theSink->OpenBody(theBodyNode);
     }
     /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
+#endif
   }
 
   return result;
@@ -232,7 +234,9 @@ NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySi
   //ADD CODE HERE TO CLOSE OPEN CONTAINERS...
 
   if((aNotifySink) && (mSink)) {
+      result = mSink->DidBuildModel(1);
 
+#if 0
     /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
     {
       nsIHTMLContentSink* theSink=(nsIHTMLContentSink*)mSink;
@@ -247,10 +251,9 @@ NS_IMETHODIMP CWellFormedDTD::DidBuildModel(PRInt32 anErrorCode,PRBool aNotifySi
       nsCParserNode theHTMLNode(&theBodyToken,0);
       theSink->CloseHTML(theBodyNode);
 
-      result = mSink->DidBuildModel(1);
     }
     /* COMMENT OUT THIS BLOCK IF: you aren't using an nsHTMLContentSink...*/
-
+#endif
   }
   return result;
 }

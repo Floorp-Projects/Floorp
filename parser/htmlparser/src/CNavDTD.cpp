@@ -93,7 +93,6 @@ static eHTMLTags gWhitespaceTags[]={
 
 static CTokenRecycler gTokenRecycler;
 
-
 /************************************************************************
   And now for the main class -- CNavDTD...
  ************************************************************************/
@@ -3200,7 +3199,9 @@ CNavDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
  *  @return new token or null 
  */
 nsresult
-CNavDTD::ConsumeWhitespace(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
+CNavDTD::ConsumeWhitespace(PRUnichar aChar,
+                           CScanner& aScanner,
+                           CToken*& aToken) {
   aToken = gTokenRecycler.CreateTokenOfType(eToken_whitespace,eHTMLTag_whitespace,gEmpty);
   nsresult result=kNoError;
   if(aToken) {

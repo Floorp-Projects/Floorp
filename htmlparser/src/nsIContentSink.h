@@ -122,6 +122,13 @@ public:
    */     
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode) = 0;
 
+  /**
+   * This gets called by the parser if it hits an unrecoverable
+   * error (in XML, if the document is not well-formed or valid).
+   *
+   * @param aErrorResult the error code
+   */
+  NS_IMETHOD NotifyError(nsresult aErrorResult)=0;
 };
 
 #endif /* nsIContentSink_h___ */
