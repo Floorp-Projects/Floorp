@@ -19,14 +19,14 @@ var nsBookmarkProtocolUtils = {
     
     var bookmark = new nsBookmark();
     
-    bookmark.url = unescape(rv[1]);
+    bookmark.url = decodeURI(rv[1]);
     if (bookmark.url == "") 
       return null;
       
     var propertyPairs = rv[2].split("&");
     for (var i = 0; i < propertyPairs.length; ++i) {
       var propertyData = propertyPairs[i].split("=");
-      bookmark[propertyData[0]] = unescape(propertyData[1]);
+      bookmark[propertyData[0]] = decodeURIComponent(propertyData[1]);
     }
     
     return bookmark;

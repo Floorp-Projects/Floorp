@@ -157,7 +157,7 @@ function Startup()
   } catch (e) {}
 
   gDialog.PageTitleInput.value = gPreviousTitle;
-  gDialog.FilenameInput.value = unescape(filename);
+  gDialog.FilenameInput.value = decodeURIComponent(filename);
   
   if (!addNewSite)
   {
