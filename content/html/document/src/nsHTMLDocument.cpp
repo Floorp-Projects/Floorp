@@ -1743,6 +1743,7 @@ nsHTMLDocument::IsSupported(const nsAReadableString& aFeature,
   return nsDocument::IsSupported(aFeature, aVersion, aReturn);
 }
 
+#if 0
 NS_IMETHODIMP
 nsHTMLDocument::GetBaseURI(nsAWritableString &aURI)
 {
@@ -1757,7 +1758,7 @@ nsHTMLDocument::GetBaseURI(nsAWritableString &aURI)
   }
   return NS_OK;
 }
-
+#endif
 
 //
 // nsIDOMHTMLDocument interface implementation
