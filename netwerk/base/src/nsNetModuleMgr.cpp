@@ -24,7 +24,7 @@
 #include "nsNetModuleMgr.h"
 #include "nsNetModRegEntry.h"
 #include "nsEnumeratorUtils.h" // for nsArrayEnumerator
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsIEventQueue.h"
 
