@@ -614,7 +614,8 @@ NS_IMETHODIMP nsRegistry::GetString(nsRegistryKey baseKey, const PRUnichar *valn
     rv = GetStringUTF8( baseKey, utf8name, &tmpstr );
     if (NS_SUCCEEDED(rv))
     {
-        *_retval = nsTextFormatter::smprintf( L"%s", tmpstr );
+        nsString tmpfmt("%s");
+        *_retval = nsTextFormatter::smprintf( tmpfmt.GetUnicode(), tmpstr );
         nsCRT::free(tmpstr);
         if ( *_retval == nsnull )
             rv = NS_ERROR_OUT_OF_MEMORY;
