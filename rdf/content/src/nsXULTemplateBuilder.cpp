@@ -2958,11 +2958,13 @@ RDFGenericBuilderImpl::AddDatabasePropertyToHTMLElement(nsIContent* aElement, ns
 
     nsCOMPtr<nsIScriptGlobalObject> global;
     doc->GetScriptGlobalObject(getter_AddRefs(global));
-    NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
+    if (! global)
+        return NS_ERROR_UNEXPECTED;
 
     nsCOMPtr<nsIScriptContext> context;
     global->GetContext(getter_AddRefs(context));
-    NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
+    if (! context)
+        return NS_ERROR_UNEXPECTED;
 
     JSContext* jscontext = NS_STATIC_CAST(JSContext*, context->GetNativeContext());
     NS_ASSERTION(context != nsnull, "no jscontext");
