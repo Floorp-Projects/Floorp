@@ -768,7 +768,7 @@ NPP_New(NPMIMEType pluginType,
 
     // Create a new plugin instance and start it.
     nsIPluginInstance* pluginInstance = NULL;
-    thePlugin->CreateInstance(thePluginManager, nsIPluginInstance::GetIID(), (void**)&pluginInstance);
+    thePlugin->CreatePluginInstance(thePluginManager, nsIPluginInstance::GetIID(), pluginType, (void**)&pluginInstance);
     if (pluginInstance == NULL) {
         return NPERR_OUT_OF_MEMORY_ERROR;
     }
