@@ -60,6 +60,7 @@
                 <tree id="modulesTree">
                     <treecolgroup>
                       <treecol flex="1"/>
+                      <splitter class="tree-splitter"/>
                       <treecol flex="1"/>
                     </treecolgroup>
                     <treehead>
