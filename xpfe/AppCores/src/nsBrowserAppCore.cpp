@@ -742,7 +742,9 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
     rv = mContentAreaWebShell->CanBack();
     setAttribute(mWebShell, "canGoBack", "disabled", (rv == NS_OK) ? "" : "true");
 
-    printf("Document %s loaded successfully\n", spec);
+    /* To satisfy a request from the QA group */
+    fprintf(stdout, "Document %s loaded successfully\n", spec);
+    fflush(stdout);
    return NS_OK;
 }
 
