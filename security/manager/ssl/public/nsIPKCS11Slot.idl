@@ -34,11 +34,65 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIEnumerator.idl"
+#include "nsIPK11TokenDB.idl"
+
+%{C++
+#define NS_PKCS11MODULEDB_CONTRACTID "@mozilla.org/security/pkcs11moduledb;1"
+%}
 
 [scriptable, uuid(c2d4f296-ee60-11d4-998b-00b0d02354a0)]
 interface nsIPKCS11Slot : nsISupports {
-  /*
-   * We'l add methods as we need them.
+
+  readonly attribute wstring name;
+  readonly attribute wstring desc;
+  readonly attribute wstring manID;
+  readonly attribute wstring HWVersion;
+  readonly attribute wstring FWVersion;
+
+  const unsigned long SLOT_DISABLED      = 0;
+  const unsigned long SLOT_NOT_PRESENT   = 1;
+  const unsigned long SLOT_UNINITIALIZED = 2;
+  const unsigned long SLOT_NOT_LOGGED_IN = 3;
+  const unsigned long SLOT_LOGGED_IN     = 4;
+  const unsigned long SLOT_READY         = 5;
+  readonly attribute unsigned long status;
+
+  /* This is really a workaround for now.  All of the "slot" functions
+   * (isTokenPresent(), etc.) are in nsIPK11Token.  For now, return the
+   * token and handle those things there.
    */
+  nsIPK11Token getToken();
+
+  /* more fun with workarounds - we're referring to everything by token name */
+  readonly attribute wstring tokenName;
+
+};
+
+[scriptable, uuid(8a44bdf9-d1a5-4734-bd5a-34ed7fe564c2)]
+interface nsIPKCS11Module : nsISupports
+{
+
+  readonly attribute wstring name;
+  readonly attribute wstring libName;
+
+  nsIPKCS11Slot findSlotByName(in wstring name);
+
+  nsIEnumerator listSlots();
+
+};
+
+[scriptable, uuid(ff9fbcd7-9517-4334-b97a-ceed78909974)]
+interface nsIPKCS11ModuleDB : nsISupports
+{
+
+  nsIPKCS11Module getInternal();
+
+  nsIPKCS11Module getInternalFIPS();
+
+  nsIPKCS11Module findModuleByName(in wstring name);
+
+  nsIEnumerator listModules();
+
 };
 

@@ -25,29 +25,9 @@
 
 #include "nsPK11TokenDB.h"
 
-#include "nsCOMPtr.h"
-#include "nsISupportsArray.h"
-#include "nsString.h"
-#include "nsNSSHelper.h"
-#include "pk11func.h"
-
-class nsPK11Token : public nsIPK11Token
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIPK11TOKEN
-
-  nsPK11Token(PK11SlotInfo *slot);
-  virtual ~nsPK11Token();
-  /* additional members */
-
-private:
-  friend class nsPK11TokenDB;
-
-  nsString mTokenName;
-  PK11SlotInfo *mSlot;
-  nsCOMPtr<nsIInterfaceRequestor> mUIContext;
-};
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gPIPNSSLog;
+#endif
 
 NS_IMPL_ISUPPORTS1(nsPK11Token, nsIPK11Token)
 
@@ -59,6 +39,33 @@ nsPK11Token::nsPK11Token(PK11SlotInfo *slot)
   mSlot = slot;
   
   mTokenName = NS_ConvertUTF8toUCS2(PK11_GetTokenName(slot));
+
+  SECStatus srv;
+
+  CK_TOKEN_INFO tok_info;
+  srv = PK11_GetTokenInfo(mSlot, &tok_info);
+  if (srv == SECSuccess) {
+    // Set the Label field
+    mTokenLabel.AssignWithConversion((char *)tok_info.label, 
+                                     sizeof(tok_info.label));
+    mTokenLabel.Trim(" ", PR_FALSE, PR_TRUE);
+    // Set the Manufacturer field
+    mTokenManID.AssignWithConversion((char *)tok_info.manufacturerID, 
+                                     sizeof(tok_info.manufacturerID));
+    mTokenManID.Trim(" ", PR_FALSE, PR_TRUE);
+    // Set the Hardware Version field
+    mTokenHWVersion.AppendInt(tok_info.hardwareVersion.major);
+    mTokenHWVersion.AppendWithConversion(".");
+    mTokenHWVersion.AppendInt(tok_info.hardwareVersion.minor);
+    // Set the Firmware Version field
+    mTokenFWVersion.AppendInt(tok_info.firmwareVersion.major);
+    mTokenFWVersion.AppendWithConversion(".");
+    mTokenFWVersion.AppendInt(tok_info.firmwareVersion.minor);
+    // Set the Serial Number field
+    mTokenSerialNum.AssignWithConversion((char *)tok_info.serialNumber, 
+                                         sizeof(tok_info.serialNumber));
+    mTokenSerialNum.Trim(" ", PR_FALSE, PR_TRUE);
+  }
 
   mUIContext = new PipUIContext();
 }
@@ -75,6 +82,46 @@ NS_IMETHODIMP nsPK11Token::GetTokenName(PRUnichar * *aTokenName)
   *aTokenName = mTokenName.ToNewUnicode();
   if (!*aTokenName) return NS_ERROR_OUT_OF_MEMORY;
 
+  return NS_OK;
+}
+
+/* readonly attribute wstring tokenDesc; */
+NS_IMETHODIMP nsPK11Token::GetTokenLabel(PRUnichar **aTokLabel)
+{
+  *aTokLabel = mTokenLabel.ToNewUnicode();
+  if (!*aTokLabel) return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
+/* readonly attribute wstring tokenManID; */
+NS_IMETHODIMP nsPK11Token::GetTokenManID(PRUnichar **aTokManID)
+{
+  *aTokManID = mTokenManID.ToNewUnicode();
+  if (!*aTokManID) return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
+/* readonly attribute wstring tokenHWVersion; */
+NS_IMETHODIMP nsPK11Token::GetTokenHWVersion(PRUnichar **aTokHWVersion)
+{
+  *aTokHWVersion = mTokenHWVersion.ToNewUnicode();
+  if (!*aTokHWVersion) return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
+/* readonly attribute wstring tokenFWVersion; */
+NS_IMETHODIMP nsPK11Token::GetTokenFWVersion(PRUnichar **aTokFWVersion)
+{
+  *aTokFWVersion = mTokenFWVersion.ToNewUnicode();
+  if (!*aTokFWVersion) return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
+}
+
+/* readonly attribute wstring tokenSerialNumber; */
+NS_IMETHODIMP nsPK11Token::GetTokenSerialNumber(PRUnichar **aTokSerialNum)
+{
+  *aTokSerialNum = mTokenSerialNum.ToNewUnicode();
+  if (!*aTokSerialNum) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
 
@@ -110,11 +157,10 @@ nsPK11Token::Login(PRBool force)
 /* void logout (); */
 NS_IMETHODIMP nsPK11Token::Logout()
 {
-  nsresult rv = NS_OK;
-
+  // PK11_MapError sets CKR_USER_NOT_LOGGED_IN to SEC_ERROR_LIBRARY_FAILURE,
+  // so not going to learn anything here by a failure.  Treat it like void.
   PK11_Logout(mSlot);
-
-  return rv;
+  return NS_OK;
 }
 
 /* readonly attribute long minimumPasswordLength; */
@@ -185,6 +231,7 @@ NS_IMETHODIMP nsPK11Token::IsFriendly(PRBool *_retval)
 
   return rv;
 }
+
 /*=========================================================*/
 
 NS_IMPL_ISUPPORTS1(nsPK11TokenDB, nsIPK11TokenDB)
@@ -269,3 +316,4 @@ done:
   if (list) PK11_FreeSlotList(list);
   return rv;
 }
+

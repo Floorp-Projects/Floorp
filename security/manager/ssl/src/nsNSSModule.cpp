@@ -37,6 +37,7 @@
 #include "nsSDR.h"
 
 #include "nsPK11TokenDB.h"
+#include "nsPKCS11Slot.h"
 #include "nsNSSCertificate.h"
 #include "nsCertOutliner.h"
 
@@ -46,6 +47,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSSLSocketProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTLSSocketProvider)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSecretDecoderRing)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPK11TokenDB)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPKCS11ModuleDB)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(CertContentListener, init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSCertificateDB)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCertOutliner)
@@ -134,6 +136,13 @@ static nsModuleComponentInfo components[] =
     NS_PK11TOKENDB_CID,
     NS_PK11TOKENDB_CONTRACTID,
     nsPK11TokenDBConstructor
+  },
+
+  {
+    "PKCS11 Module Database",
+    NS_PKCS11MODULEDB_CID,
+    NS_PKCS11MODULEDB_CONTRACTID,
+    nsPKCS11ModuleDBConstructor
   },
 
   {
