@@ -491,10 +491,10 @@ nsresult nsMapiRegistryUtils::setDefaultMailClient()
         nsXPIDLString defaultMailTitle;
         // Use vendorName instead of brandname since brandName is product name
         // and has more than just the name of the application
-        const PRUnichar *keyValuePrefixStr[] = { vendorName(), versionNo() };
+        const PRUnichar *keyValuePrefixStr[] = { vendorName() };
         NS_NAMED_LITERAL_STRING(defaultMailTitleTag, "defaultMailDisplayTitle");
         rv = bundle->FormatStringFromName(defaultMailTitleTag.get(),
-                                      keyValuePrefixStr, 2,
+                                      keyValuePrefixStr, 1,
                                       getter_Copies(defaultMailTitle));
         if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
