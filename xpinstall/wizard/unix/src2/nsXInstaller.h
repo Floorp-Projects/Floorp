@@ -60,7 +60,7 @@ int     ErrorHandler(int aErr);
 void    ErrDlgOK(GtkWidget *aWidget, gpointer aData);
 int     IsErrFatal(int aErr);
 
-#define CONFIG_INI "config.ini"
+#define CONFIG "config"
 
 #if defined(DUMP)
 #undef DUMP

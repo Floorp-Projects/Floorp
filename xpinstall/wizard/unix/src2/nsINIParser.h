@@ -28,6 +28,8 @@
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <locale.h>
 
 class nsINIParser
 {
@@ -89,6 +91,22 @@ public:
      * @return mError       last error on ops on this object
      */
     int GetError();
+
+    /**
+     * ResolveName
+     *
+     * Given a "root" name we append the runtime locale of the
+     * current system to the <root>.ini. If such a file exists we 
+     * return this as the name else simply return <root>.ini.
+     *
+     * NOTE: Returned string is allocated and caller is responsible
+     * ----  for its deallocation.
+     *
+     * @param   aINIRoot    the "root" of the INI file name
+     * @return  resolved    the resolved INI file name
+     *                      (NULL if neither exist)
+     */
+    static char     *ResolveName(char *aINIRoot);
 
 /*--------------------------------------------------------------------*
  *   Errors

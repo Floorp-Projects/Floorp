@@ -138,6 +138,40 @@ nsINIParser::GetError()
     return mError;
 }
 
+char *
+nsINIParser::ResolveName(char *aINIRoot)
+{
+    char *resolved = NULL;
+    char *locale = NULL;
+    struct stat st_exists;
+
+    /* param check */
+    if (!aINIRoot)
+        return NULL;
+
+    locale = setlocale(LC_CTYPE, NULL);
+    if (!locale) 
+        return NULL;
+
+    /* resolved string: "<root>.ini.<locale>\0" */
+    resolved = (char *) malloc(strlen(aINIRoot) + 5 + strlen(locale) + 1);
+    if (!resolved)
+        return NULL;
+
+    /* locale specific ini file name */
+    sprintf(resolved, "%s.ini.%s", aINIRoot, locale);
+    if (0 == stat(resolved, &st_exists))
+        return resolved;
+
+    /* fallback to general ini file name */
+    sprintf(resolved, "%s.ini", aINIRoot);
+    if (0 == stat(resolved, &st_exists))
+        return resolved;
+    
+    /* neither existed so error returned */
+    return NULL;
+}
+
 int
 nsINIParser::FindSection(char *aSection, char **aOutSecPtr)
 {
