@@ -30,6 +30,7 @@ include $(THEME_ROOT_DEPTH)/theme.mk
 
 EXPORT_RESOURCE = \
 		$(srcdir)/bookmarks.html \
+		$(srcdir)/mimeTypes.rdf \
 		$(srcdir)/panels.rdf \
 		$(srcdir)/search.rdf \
 		$(NULL)

@@ -30,5 +30,6 @@ clobber::
 
 install:: 
 	$(MAKE_INSTALL) bookmarks.html $(DIST)\bin\defaults\profile\$(THEME)
+	$(MAKE_INSTALL) mimeTypes.rdf  $(DIST)\bin\defaults\profile\$(THEME)
 	$(MAKE_INSTALL) panels.rdf     $(DIST)\bin\defaults\profile\$(THEME)
 	$(MAKE_INSTALL) search.rdf     $(DIST)\bin\defaults\profile\$(THEME)
