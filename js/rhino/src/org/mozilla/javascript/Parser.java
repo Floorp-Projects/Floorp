@@ -1146,7 +1146,7 @@ class Parser {
              */
             tt = ts.peekToken();
             if (tt == ts.LC) {
-            	nf.addChildToBack(pn, primaryExpr(ts, source));
+                nf.addChildToBack(pn, primaryExpr(ts, source));
             }
         } else {
             pn = primaryExpr(ts, source);
@@ -1273,7 +1273,7 @@ class Parser {
                         property = nf.createString(ts.getString());
                         break;
                     case TokenStream.NUMBER:
-                        Number n = ts.getNumber();
+                        double n = ts.getNumber();
                         source.addNumber(n);
                         property = nf.createNumber(n);
                         break;
@@ -1320,7 +1320,7 @@ class Parser {
             return nf.createName(name);
 
         case TokenStream.NUMBER:
-            Number n = ts.getNumber();
+            double n = ts.getNumber();
             source.addNumber(n);
             return nf.createNumber(n);
 
@@ -1432,7 +1432,7 @@ final class Source {
         buf.append(str);
     }
 
-    void addNumber(Number n) {
+    void addNumber(double n) {
         buf.append((char)TokenStream.NUMBER);
 
         /* encode the number in the source stream.
@@ -1451,19 +1451,19 @@ final class Source {
          * constant pool UTF-8 encoding, so a Double could take
          * up to 12 bytes.
          */
-
-        if (n instanceof Double || n instanceof Float) {
+        
+        long lbits = (long)n;
+        if (lbits != n) {
             // if it's floating point, save as a Double bit pattern.
             // (12/15/97 our scanner only returns Double for f.p.)
             buf.append('D');
-            long lbits = Double.doubleToLongBits(n.doubleValue());
+            lbits = Double.doubleToLongBits(n);
 
             buf.append((char)((lbits >> 48) & 0xFFFF));
             buf.append((char)((lbits >> 32) & 0xFFFF));
             buf.append((char)((lbits >> 16) & 0xFFFF));
             buf.append((char)(lbits & 0xFFFF));
         } else {
-            long lbits = n.longValue();
             // will it fit in a char?
             // (we can ignore negative values, bc they're already prefixed
             //  by UNARYOP SUB)

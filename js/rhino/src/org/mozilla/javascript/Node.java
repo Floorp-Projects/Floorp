@@ -80,12 +80,26 @@ public class Node implements Cloneable {
 
     public Node(int nodeType, double value) {
         type = nodeType;
-        this.datum = new Double(value);
+        int ivalue = (int)value;
+        if (ivalue == value) {
+            if ((byte)ivalue == ivalue) {
+                this.datum = new Byte((byte)ivalue);
+            }
+            else if ((short)ivalue == ivalue) {
+                this.datum = new Short((short)ivalue);
+            }
+            else {
+                this.datum = new Integer(ivalue);
+            }
+        }
+        else {
+            this.datum = new Double(value);
+        }
     }
 
-    public Node(int nodeType, Object datum) {
+    public Node(int nodeType, String str) {
         type = nodeType;
-        this.datum = datum;
+        this.datum = str;
     }
 
     public Node(int nodeType, Node child, int value) {

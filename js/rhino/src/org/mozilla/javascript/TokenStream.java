@@ -863,10 +863,6 @@ public class TokenStream {
             int base = 10;
             in.startString();
 
-            double dval = ScriptRuntime.NaN;
-            long longval = 0;
-            boolean isInteger = true;
-
             if (c == '0') {
                 c = in.read();
                 if (c == 'x' || c == 'X') {
@@ -902,6 +898,8 @@ public class TokenStream {
                 c = in.read();
             }
 
+            boolean isInteger = true;
+
             if (base == 10 && (c == '.' || c == 'e' || c == 'E')) {
                 isInteger = false;
                 if (c == '.') {
@@ -928,6 +926,7 @@ public class TokenStream {
             in.unread();
             String numString = in.getString();
 
+            double dval;
             if (base == 10 && !isInteger) {
                 try {
                     // Use Java conversion to number from string...
@@ -940,38 +939,9 @@ public class TokenStream {
                 }
             } else {
                 dval = ScriptRuntime.stringToNumber(numString, 0, base);
-                longval = (long) dval;
-
-                // is it an integral fits-in-a-long value?
-                if (longval != dval)
-                    isInteger = false;
             }
 
-            if (!isInteger) {
-                /* Can't handle floats right now, because postfix INC/DEC
-                   generate Doubles, but I would generate a Float through this
-                   path, and it causes a stack mismatch. FIXME (MS)
-                   if (Float.MIN_VALUE <= dval && dval <= Float.MAX_VALUE)
-                   this.number = new Xloat((float) dval);
-                   else
-                */
-                this.number = new Double(dval);
-            } else {
-                // We generate the smallest possible type here
-                if (Byte.MIN_VALUE <= longval && longval <= Byte.MAX_VALUE)
-                    this.number = new Byte((byte)longval);
-                else if (Short.MIN_VALUE <= longval &&
-                         longval <= Short.MAX_VALUE)
-                    this.number = new Short((short)longval);
-                else if (Integer.MIN_VALUE <= longval &&
-                         longval <= Integer.MAX_VALUE)
-                    this.number = new Integer((int)longval);
-                else {
-                    // May lose some precision here, but that's the 
-                    // appropriate semantics.
-                    this.number = new Double(longval);
-                }
-            }
+            this.number = dval;
             return NUMBER;
         }
 
@@ -1387,7 +1357,7 @@ public class TokenStream {
     public int getLineno() { return in.getLineno(); }
     public int getOp() { return op; }
     public String getString() { return string; }
-    public Number getNumber() { return number; }
+    public double getNumber() { return number; }
     public String getLine() { return in.getLine(); }
     public int getOffset() { return in.getOffset(); }
     public int getTokenno() { return tokenno; }
@@ -1417,5 +1387,5 @@ public class TokenStream {
     // string is found.  Fosters one class of error, but saves lots of
     // code.
     private String string = "";
-    private Number number;
+    private double number;
 }

@@ -115,7 +115,7 @@ public class IRFactory {
     /**
      * Number (for literals)
      */
-    public Object createNumber(Number number) {
+    public Object createNumber(double number) {
         return new Node(TokenStream.NUMBER, number);
     }
 
@@ -762,7 +762,7 @@ public class IRFactory {
             // we have to use Double for now, because
             // 0.0 and 1.0 are stored as dconst_[01],
             // and using a Float creates a stack mismatch.
-            Node rhs = (Node) createNumber(new Double(1.0));
+            Node rhs = (Node) createNumber(1.0);
 
             return createAssignment(nodeType == TokenStream.INC
                                         ? TokenStream.ADD
