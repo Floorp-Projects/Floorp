@@ -55,7 +55,8 @@ class nsINameSpaceManager;
 class nsIScriptSecurityManager;
 class nsIThreadJSContextStack;
 class nsIParserService;
-
+class nsIIOService;
+class nsIURI;
 
 class nsContentUtils
 {
@@ -241,13 +242,27 @@ public:
   
   static nsINameSpaceManager* GetNSManagerWeakRef()
   {
-      return sNameSpaceManager;
+    return sNameSpaceManager;
   };
 
+  static nsIIOService* GetIOServiceWeakRef()
+  {
+    return sIOService;
+  };
+  
   static nsresult GenerateStateKey(nsIContent* aContent,
                                    nsIStatefulFrame::SpecialStateID aID,
                                    nsACString& aKey);
 
+  /**
+   * Create a new URI object from aSpec, using aBaseURI as the base.
+   * The charset associated to the new nsIURI will be the document
+   * charset of aDocument.
+   */
+  static nsresult NewURIWithDocumentCharset(nsIURI** aResult,
+                                            const nsAString& aSpec,
+                                            nsIDocument* aDocument,
+                                            nsIURI* aBaseURI);
 private:
   static nsresult GetDocumentAndPrincipal(nsIDOMNode* aNode,
                                           nsIDocument** aDocument,
@@ -271,6 +286,8 @@ private:
   static nsIParserService *sParserService;
 
   static nsINameSpaceManager *sNameSpaceManager;
+
+  static nsIIOService *sIOService;
 };
 
 

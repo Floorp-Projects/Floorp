@@ -49,7 +49,6 @@
 #include "nsStyleLinkElement.h"
 #include "nsNetUtil.h"
 #include "nsIDocument.h"
-#include "nsHTMLUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsParserUtils.h"
 
@@ -204,12 +203,10 @@ NS_NewHTMLStyleElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLStyleElement::nsHTMLStyleElement()
 {
-  nsHTMLUtils::AddRef(); // for GetHrefURIForAnchors
 }
 
 nsHTMLStyleElement::~nsHTMLStyleElement()
 {
-  nsHTMLUtils::Release(); // for GetHrefURIForAnchors
 }
 
 

@@ -133,8 +133,6 @@
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
 
-#include "nsHTMLUtils.h"
-
 #include "nsIDOMText.h"
 #include "nsITextContent.h"
 
@@ -1613,8 +1611,10 @@ nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI)
     GetBaseURL(getter_AddRefs(baseURL));
 
     // Get absolute URL.
-    nsresult rv = NS_NewURIWithDocumentCharset(aURI, relURLSpec, mDocument,
-                                               baseURL);
+    nsresult rv = nsContentUtils::NewURIWithDocumentCharset(aURI,
+                                                            relURLSpec,
+                                                            mDocument,
+                                                            baseURL);
     if (NS_FAILED(rv)) {
       *aURI = nsnull;
     }
@@ -3086,6 +3086,46 @@ nsGenericHTMLElement::ScrollingValueToString(const nsHTMLValue& aValue,
                                              nsAString& aResult)
 {
   return aValue.EnumValueToString(kScrollingTable, aResult);
+}
+
+nsresult
+nsGenericHTMLElement::AttrToURI(nsIAtom* aAttrName, nsAString& aAbsoluteURI)
+{
+  nsAutoString attrValue;
+  nsresult rv = GetAttr(kNameSpaceID_None, aAttrName, attrValue);
+  if (rv == NS_CONTENT_ATTR_NOT_THERE) {
+    aAbsoluteURI.Truncate();
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIURI> baseURI;
+  GetBaseURL(getter_AddRefs(baseURI));
+
+  nsCOMPtr<nsIDocument> doc(mDocument);
+  if (!doc) {
+    mNodeInfo->GetDocument(getter_AddRefs(doc));
+  }
+
+  nsCOMPtr<nsIURI> attrURI;
+  rv = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(attrURI),
+                                                 attrValue, doc, baseURI);
+
+  if (NS_FAILED(rv)) {
+    if (rv != NS_ERROR_MALFORMED_URI) {
+      return rv;
+    }
+
+    // Just use the attr value as the result...
+    aAbsoluteURI = attrValue;
+    return NS_OK;
+  }
+
+  NS_ASSERTION(attrURI, "nsContentUtils::NewURIWithDocumentCharset return value lied");
+
+  nsCAutoString spec;
+  attrURI->GetSpec(spec);
+  CopyUTF8toUTF16(spec, aAbsoluteURI);
+  return NS_OK;
 }
 
 nsresult
@@ -4609,12 +4649,13 @@ nsGenericHTMLElement::GetProtocolFromHrefString(const nsAString& aHref,
 {
   aProtocol.Truncate();
 
-  NS_ENSURE_TRUE(nsHTMLUtils::IOService, NS_ERROR_FAILURE);
+  nsIIOService* ioService = nsContentUtils::GetIOServiceWeakRef();
+  NS_ENSURE_TRUE(ioService, NS_ERROR_FAILURE);
 
   nsCAutoString protocol;
 
   nsresult rv =
-    nsHTMLUtils::IOService->ExtractScheme(NS_ConvertUCS2toUTF8(aHref), protocol);
+    ioService->ExtractScheme(NS_ConvertUCS2toUTF8(aHref), protocol);
 
   if (NS_SUCCEEDED(rv)) {
     aProtocol.Assign(NS_ConvertASCIItoUCS2(protocol) + NS_LITERAL_STRING(":"));

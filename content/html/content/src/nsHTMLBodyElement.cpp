@@ -380,7 +380,7 @@ nsHTMLBodyElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLBodyElement, Background, background)
+NS_IMPL_URI_ATTR(nsHTMLBodyElement, Background, background)
 
 #define NS_IMPL_HTMLBODY_COLOR_ATTR(attr_, func_, default_)         \
 NS_IMETHODIMP                                                       \

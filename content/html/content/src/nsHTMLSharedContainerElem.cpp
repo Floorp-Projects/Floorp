@@ -196,7 +196,7 @@ nsHTMLSharedContainerElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLSharedContainerElement, Cite, cite)
+NS_IMPL_URI_ATTR(nsHTMLSharedContainerElement, Cite, cite)
 NS_IMPL_STRING_ATTR(nsHTMLSharedContainerElement, DateTime, datetime)
 
 // For nsIDOMHTMLDirectoryElement, nsIDOMHTMLMenuElement, and

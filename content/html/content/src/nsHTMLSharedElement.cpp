@@ -227,7 +227,7 @@ nsHTMLSharedLeafElement::IsContentOfType(PRUint32 aFlags)
 }
 
 // nsIDOMHTMLBaseElement
-NS_IMPL_STRING_ATTR(nsHTMLSharedLeafElement, Href, href)
+NS_IMPL_URI_ATTR(nsHTMLSharedLeafElement, Href, href)
 NS_IMPL_STRING_ATTR(nsHTMLSharedLeafElement, Target, target)
 
 // spacer element code

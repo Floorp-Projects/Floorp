@@ -40,7 +40,6 @@
 #include "nsXMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
-#include "nsHTMLUtils.h"
 #include "nsIDocument.h"
 #include "nsIAtom.h"
 #include "nsNetUtil.h"
@@ -99,12 +98,10 @@ NS_NewXMLElement(nsIContent** aInstancePtrResult, nsINodeInfo *aNodeInfo)
 
 nsXMLElement::nsXMLElement() : mIsLink(PR_FALSE)
 {
-  nsHTMLUtils::AddRef();  // for NS_NewURIWithDocumentCharset
 }
 
 nsXMLElement::~nsXMLElement()
 {
-  nsHTMLUtils::Release();  // for NS_NewURIWithDocumentCharset
 }
 
 
@@ -196,7 +193,8 @@ static nsresult CheckLoadURI(const nsString& aSpec, nsIURI *aBaseURI,
   *aAbsURI = nsnull;
 
   nsresult rv;
-  rv = NS_NewURIWithDocumentCharset(aAbsURI, aSpec, aDocument, aBaseURI);
+  rv = nsContentUtils::NewURIWithDocumentCharset(aAbsURI, aSpec, aDocument,
+                                                 aBaseURI);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
@@ -410,8 +408,10 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           nsCOMPtr<nsIURI> baseURL;
           GetBaseURL(getter_AddRefs(baseURL));
           nsCOMPtr<nsIURI> uri;
-          ret = NS_NewURIWithDocumentCharset(getter_AddRefs(uri), href,
-                                             mDocument, baseURL);
+          ret = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
+                                                          href,
+                                                          mDocument,
+                                                          baseURL);
           if (NS_SUCCEEDED(ret)) {
             ret = TriggerLink(aPresContext, verb, baseURL, uri, target,
                               PR_TRUE);
@@ -470,8 +470,10 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
         GetBaseURL(getter_AddRefs(baseURL));
 
         nsCOMPtr<nsIURI> uri;
-        ret = NS_NewURIWithDocumentCharset(getter_AddRefs(uri), href,
-                                           mDocument, baseURL);
+        ret = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
+                                                        href,
+                                                        mDocument,
+                                                        baseURL);
         if (NS_SUCCEEDED(ret)) {
           ret = TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, uri,
                             target, PR_FALSE);
