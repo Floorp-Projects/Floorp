@@ -44,8 +44,7 @@
 #include "nsMaiInterfaceEditableText.h"
 
 /* helpers */
-inline static
-MaiInterfaceEditableText *getEditableText(AtkEditableText *aIface);
+static MaiInterfaceEditableText *getEditableText(AtkEditableText *aIface);
 
 G_BEGIN_DECLS
 
@@ -201,12 +200,13 @@ getEditableText(AtkEditableText *aEditable)
 {
     g_return_val_if_fail(MAI_IS_ATK_WIDGET(aEditable), NULL);
     MaiWidget *maiWidget =
-        (MaiWidget*)(MAI_ATK_OBJECT(aEditable)->maiObject);
+        NS_STATIC_CAST(MaiWidget*, (MAI_ATK_OBJECT(aEditable)->maiObject));
     g_return_val_if_fail(maiWidget != NULL, NULL);
     g_return_val_if_fail(maiWidget->GetAtkObject() == (AtkObject*)aEditable,
                          NULL);
-    MaiInterfaceEditableText *ifaceEditableText = (MaiInterfaceEditableText*)
-        maiWidget->GetMaiInterface(MAI_INTERFACE_EDITABLE_TEXT);
+    MaiInterfaceEditableText *ifaceEditableText =
+        NS_STATIC_CAST(MaiInterfaceEditableText*,
+                       maiWidget->GetMaiInterface(MAI_INTERFACE_EDITABLE_TEXT));
     return ifaceEditableText;
 }
 

@@ -95,8 +95,7 @@ MaiInterface::GetAtkType()
 nsIAccessible *
 MaiInterface::GetNSAccessible(void)
 {
-    if (mMaiWidget)
-        return mMaiWidget->GetNSAccessible();
-    else
+    if (!mMaiWidget)
         return NULL;
+    return mMaiWidget->GetNSAccessible();
 }

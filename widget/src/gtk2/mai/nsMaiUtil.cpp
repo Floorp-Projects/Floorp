@@ -283,7 +283,6 @@ mai_init(void)
     maiHook.MaiStartup = mai_init;
     maiHook.AddTopLevelAccessible = mai_add_toplevel_accessible;
     maiHook.RemoveTopLevelAccessible = mai_remove_toplevel_accessible;
-    return TRUE;
 
     return TRUE;
 }
@@ -348,17 +347,15 @@ mai_add_toplevel_accessible(nsIAccessible *toplevel)
 
     MaiAppRoot *root;
     root = mai_get_root();
-    if (root) {
-        MaiTopLevel *mai_top_level = new MaiTopLevel(toplevel);
-        g_return_val_if_fail(mai_top_level != NULL, PR_FALSE);
-        gboolean res = root->AddMaiTopLevel(mai_top_level);
-
-        /* root will add ref for itself use */
-        g_object_unref(mai_top_level->GetAtkObject());
-        return res;
-    }
-    else
+    if (!root)
         return FALSE;
+    MaiTopLevel *mai_top_level = new MaiTopLevel(toplevel);
+    g_return_val_if_fail(mai_top_level != NULL, PR_FALSE);
+    gboolean res = root->AddMaiTopLevel(mai_top_level);
+
+    /* root will add ref for itself use */
+    g_object_unref(mai_top_level->GetAtkObject());
+    return res;
 }
 
 gboolean

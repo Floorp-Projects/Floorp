@@ -164,10 +164,10 @@ MaiAppRoot::FindMaiTopLevel(nsIAccessible *aTopLevel)
     g_return_val_if_fail(aTopLevel != NULL, NULL);
     TopLevelItem *item = FindTopLevelItem(aTopLevel);
 
-    if (item)
-        return item->maiTopLevel;
-    else
+    if (!item)
         return NULL;
+
+    return item->maiTopLevel;
 }
 
 TopLevelItem *
@@ -240,7 +240,7 @@ MaiAppRoot::GetName(void)
     }
 
 #ifdef MAI_LOGGING
-    DumpMaiObjectInfo(3);
+    //    DumpMaiObjectInfo(3);
 #endif
 
     return atkObject->name;
@@ -279,6 +279,6 @@ MaiAppRoot::RefChild(gint aChildIndex)
     else {
         TopLevelItem *item = (TopLevelItem *)
             g_list_nth_data(mTopLevelList, aChildIndex);
-        return (MaiObject*)item->maiTopLevel;
+        return item->maiTopLevel;
     }
 }

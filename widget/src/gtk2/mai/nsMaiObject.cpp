@@ -61,10 +61,10 @@ static AtkObject*          getParentCB(AtkObject *aObj);
 static gint                getChildCountCB(AtkObject *aObj);
 static AtkObject*          refChildCB(AtkObject *aObj, gint aChildIndex);
 static gint                getIndexInParentCB(AtkObject *aObj);
-static AtkRelationSet*     refRelationSetCB(AtkObject *aObj);
-static AtkRole             getRoleCB(AtkObject *aObj);
-static AtkLayer            getLayerCB(AtkObject *aObj);
-static gint                getMdiZorderCB(AtkObject *aObj);
+//static AtkRelationSet*     refRelationSetCB(AtkObject *aObj);
+//static AtkRole             getRoleCB(AtkObject *aObj);
+//static AtkLayer            getLayerCB(AtkObject *aObj);
+//static gint                getMdiZorderCB(AtkObject *aObj);
 
 /* the missing atkobject virtual functions */
 /*
@@ -331,8 +331,8 @@ initializeCB(AtkObject *aObj, gpointer aData)
         ATK_OBJECT_CLASS(parent_class)->initialize(aObj, aData);
 
     /* initialize object */
-    MAI_ATK_OBJECT(aObj)->maiObject = (MaiObject*)aData;
-    ((MaiObject*)aData)->Initialize();
+    MAI_ATK_OBJECT(aObj)->maiObject = NS_STATIC_CAST(MaiObject*, aData);
+    NS_STATIC_CAST(MaiObject*, aData)->Initialize();
 }
 
 void

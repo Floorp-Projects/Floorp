@@ -54,14 +54,12 @@ public:
     virtual const GInterfaceInfo *GetInterfaceInfo();
 
 public:
-
-    /* interface virtual functions */
-    virtual MaiObject *RefAccessibleAtPoint(gint aAccX, gint aAccY,
-                                            AtkCoordType aCoordType);
-    virtual void GetExtents(gint *aAccX, gint *aAccY,
-                            gint *aAccWidth, gint *accHeight,
-                            AtkCoordType aCoordType);
-    virtual gboolean GrabFocus();
+    MaiObject *RefAccessibleAtPoint(gint aAccX, gint aAccY,
+                                    AtkCoordType aCoordType);
+    void GetExtents(gint *aAccX, gint *aAccY,
+                    gint *aAccWidth, gint *accHeight,
+                    AtkCoordType aCoordType);
+    gboolean GrabFocus();
 };
 
 #endif /* __MAI_INTERFACE_COMPONENT_H__ */
