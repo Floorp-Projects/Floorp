@@ -103,9 +103,6 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsNativeScrollbarFrame.obj \
   $(NULL)
 
-XPIDLSRCS=      .\nsIScrollbarMediator.idl                  \
-                ($NULL)
-
 LINCS= \
   -I..\..\..\html\style\src -I..\..\..\html\base\src \
    -I..\..\content\src \
