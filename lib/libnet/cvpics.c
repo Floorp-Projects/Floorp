@@ -103,10 +103,11 @@ PRIVATE void net_EndPICSLabelFinderTag (DataObject *obj)
 	return;
 }
 
-PRIVATE int net_PICSLabelFinderWrite (DataObject *obj, CONST char *s, int32 l)
+PRIVATE int net_PICSLabelFinderWrite (NET_StreamClass *stream, CONST char *s, int32 l)
 {
 	int32 i;
 	CONST char *cp;
+	DataObject *obj = (DataObject *)stream->data_object;
     char  tiny_buf[8];
 
 	for(i = 0, cp = s; i < l; i++, cp++)
@@ -318,17 +319,17 @@ unquoted_attribute_jump_point:
 
 /* is the stream ready for writeing?
  */
-PRIVATE unsigned int net_PICSLabelFinderWriteReady (DataObject * obj)
+PRIVATE unsigned int net_PICSLabelFinderWriteReady (NET_StreamClass *stream)
 {
 	return(MAX_WRITE_READY);
 }
 
 
-PRIVATE void net_PICSLabelFinderComplete (DataObject * obj)
+PRIVATE void net_PICSLabelFinderComplete (NET_StreamClass *stream)
 {
 }
 
-PRIVATE void net_PICSLabelFinderAbort (DataObject * obj, int status)
+PRIVATE void net_PICSLabelFinderAbort (NET_StreamClass *stream, int status)
 {
 }
 
