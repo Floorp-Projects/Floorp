@@ -292,6 +292,11 @@ nsObjectFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 //~~~
+#define IMAGE_EXT_GIF "gif"
+#define IMAGE_EXT_JPG "jpg"
+#define IMAGE_EXT_PNG "png"
+#define IMAGE_EXT_XBM "xbm"
+
 void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
 {
   *aImage = PR_FALSE;
@@ -303,6 +308,7 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
   nsresult rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, type);
   if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (type.Length() > 0)) 
   {
+    // should be really call to imlib
     if(type.EqualsIgnoreCase(IMAGE_GIF) ||
        type.EqualsIgnoreCase(IMAGE_JPG) ||
        type.EqualsIgnoreCase(IMAGE_PJPG)||
@@ -321,6 +327,24 @@ void nsObjectFrame::IsSupportedImage(nsIContent* aContent, PRBool* aImage)
   rv = aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::data, data);
   if((rv == NS_CONTENT_ATTR_HAS_VALUE) && (data.Length() > 0)) 
   {
+    // should be really call to imlib
+    nsAutoString ext;
+    
+    PRInt32 iLastCharOffset = data.Length() - 1;
+    PRInt32 iPointOffset = data.RFind(".");
+
+    if(iPointOffset != -1)
+    {
+      data.Mid(ext, iPointOffset + 1, iLastCharOffset - iPointOffset);
+
+      if(ext.EqualsIgnoreCase(IMAGE_EXT_GIF) ||
+         ext.EqualsIgnoreCase(IMAGE_EXT_JPG) ||
+         ext.EqualsIgnoreCase(IMAGE_EXT_PNG) ||
+         ext.EqualsIgnoreCase(IMAGE_EXT_XBM))
+      {
+        *aImage = PR_TRUE;
+      }
+    }
     return;
   }
 }
