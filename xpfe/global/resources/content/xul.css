@@ -778,12 +778,12 @@ spinbuttons {
 
 stringbundleset {
   -moz-binding: url("chrome://global/content/bindings/stringbundle.xml#stringbundleset");
-  display: none;
+  visibility: collapse;
 }
 
 stringbundle {
   -moz-binding: url("chrome://global/content/bindings/stringbundle.xml#stringbundle");
-  display: none;
+  visibility: collapse;
 }
 
 /********** dialog **********/
