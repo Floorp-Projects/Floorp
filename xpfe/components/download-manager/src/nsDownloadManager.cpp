@@ -65,12 +65,13 @@ nsIRDFResource* gNC_File;
 nsIRDFResource* gNC_URL;
 nsIRDFResource* gNC_Name;
 nsIRDFResource* gNC_Progress;
+nsIRDFResource* gNC_ProgressPercent;
 
 nsIRDFService* gRDFService;
 
-NS_IMPL_ISUPPORTS2(nsDownloadManager, nsIDownloadManager, nsIRDFDataSource)
+NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIRDFDataSource, nsIRDFRemoteDataSource)
 
-nsDownloadManager::nsDownloadManager()
+nsDownloadManager::nsDownloadManager() : mDownloadItems(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -83,9 +84,14 @@ nsDownloadManager::~nsDownloadManager()
   NS_IF_RELEASE(gNC_File);
   NS_IF_RELEASE(gNC_URL);
   NS_IF_RELEASE(gNC_Name);
+  NS_IF_RELEASE(gNC_Progress);
+  NS_IF_RELEASE(gNC_ProgressPercent);
 
   nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
   gRDFService = nsnull;
+
+  delete mDownloadItems;
+  mDownloadItems = nsnull;
 }
 
 nsresult
@@ -105,6 +111,7 @@ nsDownloadManager::Init()
   gRDFService->GetResource(NC_NAMESPACE_URI "URL", &gNC_URL);
   gRDFService->GetResource(NC_NAMESPACE_URI "Name", &gNC_Name);
   gRDFService->GetResource(NC_NAMESPACE_URI "Progress", &gNC_Progress);
+  gRDFService->GetResource(NC_NAMESPACE_URI "ProgressPercent", &gNC_ProgressPercent);
 
 #if 0
   mInner = do_GetService(NS_RDF_DATASOURCE_CONTRACTID_PREFIX "in-memory-datasource", &rv);
@@ -145,6 +152,8 @@ NS_IMETHODIMP
 nsDownloadManager::AddItem(const PRUnichar* aDisplayName, nsIURI* aSourceURI,
                            nsILocalFile* aLocalFile, const char* aParentID, nsIWebProgress* aProgress)
 {
+  nsresult rv;
+
   nsCOMPtr<nsIRDFContainer> downloads;
   GetDownloadsContainer(getter_AddRefs(downloads));
 
@@ -189,7 +198,28 @@ nsDownloadManager::AddItem(const PRUnichar* aDisplayName, nsIURI* aSourceURI,
   Assert(downloadItem, gNC_File, fileResource, PR_TRUE);
 
   nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(mInner));
-  return remote->Flush();
+  rv = remote->Flush();
+  if (NS_FAILED(rv)) return rv;
+
+  DownloadItem* item = new DownloadItem();
+  if (!item) return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(item);
+
+  if (!mDownloadItems)
+    mDownloadItems = new nsHashtable();
+  
+  nsCStringKey key(filePath);
+  if (mDownloadItems->Exists(&key)) {
+    DownloadItem* download = (DownloadItem*)mDownloadItems->Get(&key);
+    if (download)
+      delete download;
+  }
+  mDownloadItems->Put(&key, item);
+
+  rv = item->Init(downloadItem, this, aSourceURI, nsnull, aLocalFile);
+  if (NS_FAILED(rv)) return rv;
+
+  return rv;
 }
 
 nsresult
@@ -392,6 +422,35 @@ nsDownloadManager::GetProfileDownloadsFileURL(char** aDownloadsFileURL)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// nsIRDFRemoteDataSource
+NS_IMETHODIMP
+nsDownloadManager::GetLoaded(PRBool* aResult)
+{
+  nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(mInner));
+  return remote->GetLoaded(aResult);
+}
+
+NS_IMETHODIMP
+nsDownloadManager::Init(const char* aURI)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownloadManager::Refresh(PRBool aBlocking)
+{
+  nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(mInner));
+  return remote->Refresh(aBlocking);
+}
+
+NS_IMETHODIMP
+nsDownloadManager::Flush()
+{
+  nsCOMPtr<nsIRDFRemoteDataSource> remote(do_QueryInterface(mInner));
+  return remote->Flush();
+}
+
+///////////////////////////////////////////////////////////////////////////////
 //
 DownloadItem::DownloadItem() 
 {
@@ -452,7 +511,8 @@ DownloadItem::Init(nsIRDFResource* aDownloadItem,
   // XXX using RDF here could really kill perf. Need to investigate timing. 
   //     RDF is probably not worthwhile if we're only looking at a single
   //     view
-  rv = mWebBrowserPersist->SetProgressListener(this);
+  nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(this));
+  rv = mWebBrowserPersist->SetProgressListener(listener);
   if (NS_FAILED(rv)) return rv;
 
   rv = mWebBrowserPersist->SaveURI(aURI, aPostData, aFile);
@@ -465,6 +525,8 @@ DownloadItem::Init(nsIRDFResource* aDownloadItem,
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
+NS_IMPL_ISUPPORTS1(DownloadItem, nsIWebProgressListener)
+
 NS_IMETHODIMP 
 DownloadItem::OnProgressChange(nsIWebProgress *aWebProgress, 
                                nsIRequest *aRequest, 
@@ -473,9 +535,15 @@ DownloadItem::OnProgressChange(nsIWebProgress *aWebProgress,
                                PRInt32 aCurTotalProgress, 
                                PRInt32 aMaxTotalProgress)
 {
-  mCurTotalProgress = aCurTotalProgress;
-  mMaxTotalProgress = aMaxTotalProgress;
-  
+  if (mCurTotalProgress != aCurTotalProgress) {
+    mCurTotalProgress = aCurTotalProgress;
+    mMaxTotalProgress = aMaxTotalProgress;
+
+    PRInt32 percent = (PRInt32)(mCurTotalProgress / mMaxTotalProgress) * 100;
+    nsCOMPtr<nsIRDFInt> percentInt;
+    gRDFService->GetIntLiteral(percent, getter_AddRefs(percentInt));
+    mDataSource->Assert(mDownloadItem, gNC_ProgressPercent, percentInt, PR_TRUE);
+  }  
   return NS_OK;  
 }
 
