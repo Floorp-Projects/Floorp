@@ -157,11 +157,11 @@ Rights Reserved.
     
 				<browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
 			</box>	
+		  </box>
 			<statusbar id="status-bar" class="mailwindow-statusbar">
 				<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
 				<statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
 			</statusbar>
-		  </box>
                 </box>
 
 	</box>
