@@ -64,10 +64,6 @@
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
 
-#ifdef ACCESSIBILITY
-#include "nsAccessibilityInterface.h"
-#endif
-
 /* utility functions */
 static PRBool     check_for_rollup(GdkWindow *aWindow,
                                    gdouble aMouseX, gdouble aMouseY,
@@ -432,8 +428,10 @@ nsWindow::Destroy(void)
     OnDestroy();
 
 #ifdef ACCESSIBILITY
-    if (mTopLevelAccessible)
+    if (mTopLevelAccessible) {
         nsAccessibilityInterface::RemoveTopLevel(mTopLevelAccessible);
+        mTopLevelAccessible = nsnull;
+    }
 #endif
 
     return NS_OK;
