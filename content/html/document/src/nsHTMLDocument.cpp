@@ -1857,6 +1857,44 @@ nsHTMLDocument::GetBaseURI(nsAString &aURI)
   return NS_OK;
 }
 
+// nsIDOM3Document interface implementation
+NS_IMETHODIMP
+nsHTMLDocument::GetXmlEncoding(nsAString& aXmlEncoding)
+{
+  SetDOMStringToNull(aXmlEncoding);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::GetXmlStandalone(PRBool *aXmlStandalone)
+{
+  *aXmlStandalone = PR_FALSE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::SetXmlStandalone(PRBool aXmlStandalone)
+{
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+}
+
+
+NS_IMETHODIMP
+nsHTMLDocument::GetXmlVersion(nsAString& aXmlVersion)
+{
+  SetDOMStringToNull(aXmlVersion);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::SetXmlVersion(const nsAString& aXmlVersion)
+{
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+}
+
 //
 // nsIDOMHTMLDocument interface implementation
 //

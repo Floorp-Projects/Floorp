@@ -158,6 +158,13 @@ public:
   // nsIDOMDocument interface
   NS_DECL_NSIDOMDOCUMENT
 
+  // nsIDOM3Document interface
+  NS_IMETHOD GetXmlEncoding(nsAString& aXmlVersion);
+  NS_IMETHOD GetXmlStandalone(PRBool *aXmlStandalone);
+  NS_IMETHOD SetXmlStandalone(PRBool aXmlStandalone);
+  NS_IMETHOD GetXmlVersion(nsAString& aXmlVersion);
+  NS_IMETHOD SetXmlVersion(const nsAString& aXmlVersion);
+
   // nsIDOMNode interface
   NS_DECL_NSIDOMNODE
 

@@ -50,7 +50,7 @@ interface nsIDOM3Document : nsIDOM3Node
   // Introduced in DOM Level 3:
   readonly attribute DOMString       actualEncoding;
   // Introduced in DOM Level 3:
-           attribute DOMString       xmlEncoding;
+  readonly attribute DOMString       xmlEncoding;
   // Introduced in DOM Level 3:
            attribute boolean         xmlStandalone;
                                         // raises(DOMException) on setting
