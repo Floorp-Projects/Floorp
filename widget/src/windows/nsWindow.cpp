@@ -1196,6 +1196,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
     switch(aDataType) {
         case NS_NATIVE_WIDGET:
         case NS_NATIVE_WINDOW:
+        case NS_NATIVE_PLUGIN_PORT:
             return (void*)mWnd;
         case NS_NATIVE_GRAPHIC:
             // XXX:  This is sleezy!!  Remember to Release the DC after using it!
