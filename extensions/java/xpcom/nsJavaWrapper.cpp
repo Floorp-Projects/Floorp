@@ -1004,8 +1004,8 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
   // exception and return so that we can clean up any parameters.
   if (NS_FAILED(invokeResult)) {
     nsCAutoString message("The function \"");
-    message.Append(methodInfo->GetName());
-    message.Append("\" returned an error condition");
+    message.AppendASCII(methodInfo->GetName());
+    message.AppendLiteral("\" returned an error condition");
     ThrowXPCOMException(env, invokeResult, message.get());
   }
 
@@ -1019,8 +1019,8 @@ CreateJavaWrapper(JNIEnv* env, const char* aClassName)
 
   // Create stub class name
   nsCAutoString class_name("org/mozilla/xpcom/stubs/");
-  class_name.Append(aClassName);
-  class_name.Append("_Stub");
+  class_name.AppendASCII(aClassName);
+  class_name.AppendLiteral("_Stub");
 
   // Create Java stub for XPCOM object
   jclass clazz;
