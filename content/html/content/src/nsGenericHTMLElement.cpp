@@ -3618,7 +3618,7 @@ nsGenericHTMLElement::Focus()
     }
   }
 
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 void
