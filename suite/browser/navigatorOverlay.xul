@@ -62,10 +62,10 @@ Contributor(s): ______________________________________. -->
   <broadcaster id="Browser:EditPage"  value="&editPageCmd.label;"      									 oncommand="BrowserEditPage(window.content.location.href);"/>
  	
   <broadcaster id="Browser:GoOffline"  value="&offlineGoOfflineCmd.label;"       disabled="true" 		 oncommand="BrowserReload();"/>
-  <broadcaster id="Browser:Synchronize"  value="&openFileCmd.label;"        	 disabled="true" 		 oncommand="BrowserReload();"/>
+  <broadcaster id="Browser:Synchronize"  value="&offlineSynchronizeCmd.label;"        	 disabled="true" 		 oncommand="BrowserReload();"/>
   
   <broadcaster id="Browser:PrintSetup"  value="&printSetupCmd.label;"        	disabled ="true" 		 oncommand="BrowserReload();"/>
-  <broadcaster id="Browser:PrintPreview"  value="&offlineSynchronizeCmd.label;" disabled="true"     	 oncommand="BrowserReload();"/>
+  <broadcaster id="Browser:PrintPreview"  value="&printPreviewCmd.label;" disabled="true"     	 oncommand="BrowserReload();"/>
   <broadcaster id="Browser:Print"  value="&printCmd.label;"        										 oncommand="BrowserPrint();"/>
   
  
@@ -101,7 +101,7 @@ Contributor(s): ______________________________________. -->
       <menuitem accesskey="&sendPageCmd.label;" observes="Browser:SendPage"/>
       <menuitem accesskey="&editPageCmd.label;" observes="Browser:EditPage" />
       <menuseparator />
-      <menu value="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
+      <menu value="&offlineMenu.label;" disabled ="true"  accesskey="&offlineMenu.accesskey;">
         <menupopup>
           <menuitem accesskey="&offlineGoOfflineCmd.accesskey;" observes="Browser:GoOffline"/>
           <menuseparator />
