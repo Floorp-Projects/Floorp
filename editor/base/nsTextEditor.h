@@ -322,7 +322,7 @@ protected:
   nsCOMPtr<nsIDOMEventListener> mFocusListenerP;
   PRBool 	mIsComposing;
   PRInt32 mMaxTextLength;
-  PRUint32 mWrapColumn;
+  PRInt32 mWrapColumn;
 
 // friends
 friend class nsTextEditRules;
