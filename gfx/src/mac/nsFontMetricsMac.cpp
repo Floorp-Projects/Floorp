@@ -81,8 +81,30 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
   mHeight = mAscent + mDescent + mLeading;
   mMaxAscent = mAscent;
   mMaxDescent = mDescent;
+
+	GrafPtr thePort;
+	::GetPort(&thePort);
+  NS_ASSERTION(thePort != nil, "GrafPort is nil in nsFontMetricsMac::Init");
+	if (thePort == nil)
+	{
+		mMaxAdvance = 0;
+		mSpaceWidth = 0;
+		return NS_ERROR_FAILURE;
+	}
+
+	short saveFont = thePort->txFont;
+	short saveSize = thePort->txSize;
+	short saveFace = thePort->txFace;
+	::TextFont(theStyle.tsFont);
+	::TextSize(theStyle.tsSize);
+	::TextFace(theStyle.tsFace);
+
   mMaxAdvance = NSToCoordRound(float(::CharWidth('M')) * dev2app);	// don't use fInfo.widMax here
   mSpaceWidth = NSToCoordRound(float(::CharWidth(' ')) * dev2app);
+
+	::TextFont(saveFont);
+	::TextSize(saveSize);
+	::TextFace(saveFace);
 
   return NS_OK;
 }
