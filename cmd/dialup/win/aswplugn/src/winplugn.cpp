@@ -351,35 +351,32 @@ int32 NP_LOADDS NPP_WriteReady(NPP instance,
 //
 // deliveries the data from a stream and return the number of bytes written
 //******************************************************************************
-int32 NP_LOADDS NPP_Write(NPP instance,
-                          NPStream *stream,
-                          int32 offset,
-                          int32 len,
-                          void *buffer)
+int32 NP_LOADDS NPP_Write(NPP instance, NPStream* stream, int32 offset, int32 len,
+	void* buffer)
 {
-        PluginInstance* This;
+	PluginInstance* This;
 
-        if (instance != NULL)
-        {
-                This = (PluginInstance*) instance->pdata;
-        }
+	if ( instance != NULL )
+		This = (PluginInstance*) instance->pdata;
 
-        if (!RegDataBuf) {
-                // assume it's the begining of the data stream
-                RegDataBuf = (void *)malloc((size_t)(sizeof(char) * len));
-        } else {
-                RegDataBuf = (void *)realloc(RegDataBuf, (size_t)(sizeof(char) * RegDataLength + len));
-        }
+	if ( !RegDataBuf )
+		/* assume it's the begining of the data stream */
+		RegDataBuf = (void*)malloc( (size_t)(sizeof( char ) * len ) );
+	else
+		RegDataBuf = (void*)realloc( RegDataBuf, (size_t)(sizeof( char ) * RegDataLength + len ) );
 
-        if (len) {
-                if (RegDataBuf) {
-                        // copy data to buffer
-                        memcpy(&((char *)RegDataBuf)[RegDataLength], buffer, (size_t) len);
-                        RegDataLength += (long) len;
-                }
-        }
 
-        return len;             /* The number of bytes accepted */
+	if ( len )
+	{
+		if ( RegDataBuf )
+		{
+			/* copy data to buffer */
+			memcpy( &((char*)RegDataBuf)[ RegDataLength ], buffer, (size_t)len );
+			RegDataLength += (long)len;
+		}
+	}
+
+	return len;             /* The number of bytes accepted */
 }
 
 
@@ -388,55 +385,58 @@ int32 NP_LOADDS NPP_Write(NPP instance,
 // NPP_DestroyStream
 //
 // indicates the closure and deletion of a stream
+//	additionally, in this routine, we create an array in Java-space to hold
+//	the Milan result the server sends back to us
 //*******************************************************************************
-NPError NP_LOADDS NPP_DestroyStream(NPP instance,
-									NPStream *stream,
-									NPError reason)
+NPError NP_LOADDS NPP_DestroyStream( NPP instance, NPStream* stream, NPError reason )
 {
-        PluginInstance* This;
-
-        if (instance == NULL)
-                return NPERR_INVALID_INSTANCE_ERROR;
-        This = (PluginInstance*) instance->pdata;
-
-        // if done passing data
-        if (reason == NPRES_DONE) {
-
-            JRIEnv* env = NPN_GetJavaEnv();
-
-            if (RegDataBuf && env) {
-
-				java_lang_String *Element;
-
-                // read and parse regi data here
-				long numItems = countRegItems(RegDataBuf, RegDataLength, RegExtendedDataFlag);				
-
-				RegDataArray = JRI_NewObjectArray(env, numItems, class_java_lang_String(env), NULL);
-				if (RegDataArray == NULL)
-					return NULL;
-
-				// lock the JRI array reference, dispose old reference if necessary
-				if (g_globalRefReg)
-					JRI_DisposeGlobalRef(env, g_globalRefReg); 
-				g_globalRefReg = JRI_NewGlobalRef(env, RegDataArray); 
-
-				for (long x=0; x<numItems; x++) {
-					Element =  getRegElement(env, RegDataBuf, x, RegExtendedDataFlag);
-					JRI_SetObjectArrayElement(env, RegDataArray, x, Element);
-				}
+	PluginInstance*		self;
+	
+	if ( instance == NULL )
+		return NPERR_INVALID_INSTANCE_ERROR;
+	
+	self = (PluginInstance*)instance->pdata;
+	
+	// if done passing data
+	if ( reason == NPRES_DONE )
+	{
+		JRIEnv* env = NPN_GetJavaEnv();
+		
+		if ( RegDataBuf && env )
+		{
+		
+			java_lang_String *Element;
+		
+			// read and parse regi data here
+			long numItems = countRegItems( RegDataBuf, RegDataLength, RegExtendedDataFlag );
+			RegDataArray = JRI_NewObjectArray( env, numItems, class_java_lang_String( env ), NULL );
+			if ( RegDataArray == NULL )
+				return NULL;
+		
+			// lock the JRI array reference, dispose old reference if necessary
+			if ( g_globalRefReg )
+				JRI_DisposeGlobalRef( env, g_globalRefReg ); 
+			g_globalRefReg = JRI_NewGlobalRef( env, RegDataArray ); 
+		
+			for ( long x = 0; x < numItems; x++ )
+			{
+				Element = getRegElement( env, RegDataBuf, x, RegExtendedDataFlag );
+				JRI_SetObjectArrayElement( env, RegDataArray, x, Element );
 			}
-
-            if (RegDataBuf) {
-                    // free regi data buffer
-                    free(RegDataBuf);
-                    RegDataBuf = NULL;
-                    // set data length to zero
-                    RegDataLength = 0;
-            }
-
-        }
-
-        return NPERR_NO_ERROR;
+		}
+		
+		if ( RegDataBuf )
+		{
+			// free regi data buffer
+			free( RegDataBuf );
+			RegDataBuf = NULL;
+			// set data length to zero
+			RegDataLength = 0;
+		}
+	
+	}
+	
+	return NPERR_NO_ERROR;
 }
 
 

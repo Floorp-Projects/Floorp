@@ -896,34 +896,34 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fDialerHangup(JRIEnv* env,
 //
 // search the javascript array for specific string value
 //********************************************************************************
-char *findDialerData(JRIEnv* env,
-                jstringArray dialerData,
-                char *name)
+char* findDialerData(JRIEnv* env, jstringArray dialerData, char* name )
 {
-   long   arraylen;
-   void   *jri_str;
-   const  char *arrayline;
-   char   *lineptr;
-   char   *key;
-   char   *value = NULL;
+	long	arraylen;
+	void*	jri_str;
+	const char*		arrayline;
+	char*	lineptr;
+	char*	key;
+	char*	value = NULL;
 
-   arraylen = JRI_GetObjectArrayLength(env, dialerData);
-   for (short i=0; i<arraylen; i++) {
-      /* get a string from the Javascript array */
-      jri_str = JRI_GetObjectArrayElement(env, dialerData, i);
-      arrayline = GetStringPlatformChars(env, (java_lang_String *)jri_str);
-      lineptr = (char *)arrayline;
-
-      /* parse the string into key and value */
-      key = strtok(lineptr, "=");
-      if (strcmp(key, name) == 0) {
-         // found the keyname we're looking for, get it's value
-         value = strtok(NULL, "");    // now should just be the result
-         break;
-      }
-   }
-
-   return (char *)value;
+	arraylen = JRI_GetObjectArrayLength( env, dialerData );
+	for ( short i = 0; i < arraylen; i++ )
+	{
+		/* get a string from the Javascript array */
+		jri_str = JRI_GetObjectArrayElement( env, dialerData, i );
+		arrayline = GetStringPlatformChars( env, ( java_lang_String*)jri_str );
+		lineptr = (char*)arrayline;
+		
+		/* parse the string into key and value */
+		key = strtok( lineptr, "=" );
+		if ( strcmp( key, name ) == 0 )
+		{
+			// found the keyname we're looking for, get it's value
+			value = strtok( NULL, "" );    // now should just be the result
+			break;
+		}
+	}
+	
+	return (char*)value;
 }
 
 
@@ -1822,38 +1822,37 @@ void SetAutoDisconnect(DWORD disconnectTime)
 //
 // Create a dial-up networking profile
 //********************************************************************************
-static BOOL
-CreateRNAEntry(ACCOUNTPARAMS account, const LOCATIONPARAMS& location)
+static BOOL CreateRNAEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& location )
 {
-	DWORD    dwRet;
-	BOOL     ret = 0;
-	RASENTRY rasEntry;
-
+	DWORD		dwRet;
+	BOOL		ret = FALSE;
+	RASENTRY	rasEntry;
+	
 	// abort if RAS API ptrs are invalid & mem alloc fails
-	assert(m_lpfnRasSetEntryProperties);
+	assert( m_lpfnRasSetEntryProperties );
+
 #ifdef WIN32
-	if (!m_lpfnRasSetEntryProperties)
+	if ( !m_lpfnRasSetEntryProperties )
 #else
-	assert(g_lpfnRasSetEntryDialParams && g_lpfnSetDialStringInfo);
-	if (!m_lpfnRasSetEntryProperties || 
+	assert( g_lpfnRasSetEntryDialParams && g_lpfnSetDialStringInfo );
+	if ( !m_lpfnRasSetEntryProperties || 
 		 !g_lpfnRasSetEntryDialParams || 
 		 !g_lpfnSetDialStringInfo)
 #endif // !WIN32
 		return FALSE;
 
 	// Initialize the RNA struct
-	memset(&rasEntry, 0, stRASENTRY);
+	memset( &rasEntry, 0, stRASENTRY );
 	rasEntry.dwSize = stRASENTRY;
-
 	rasEntry.dwfOptions = RASEO_ModemLights | RASEO_RemoteDefaultGateway;
 
 	// Only allow compression if reg server says its OK
-	if (account.VJCompressionEnabled)
+	if ( account.VJCompressionEnabled )
 		 rasEntry.dwfOptions |= RASEO_IpHeaderCompression | RASEO_SwCompression;
 
-	if (account.NeedsTTYWindow)
+	if ( account.NeedsTTYWindow )
 #ifdef WIN32	
-		if (platformOS == VER_PLATFORM_WIN32_WINDOWS)
+		if ( platformOS == VER_PLATFORM_WIN32_WINDOWS )
 			rasEntry.dwfOptions |= RASEO_TerminalBeforeDial;  //win95 bug! RASEO_TerminalBeforeDial means terminal after dial
 		else
 #endif
@@ -1863,58 +1862,64 @@ CreateRNAEntry(ACCOUNTPARAMS account, const LOCATIONPARAMS& location)
 	// visa-versa, then abandon using Location - NOTE: for Intl Number we
 	// should be able to use location, check it out!
 #ifdef WIN32		
-	if (account.IntlMode || OnlyOneSet(location)) {
+	if ( account.IntlMode || OnlyOneSet( location ) )
 #else
-	if (account.IntlMode || OnlyOneSet(location) || PrefixAvail(location)) {
+	if ( account.IntlMode || OnlyOneSet( location ) || PrefixAvail( location ) )
 #endif
-	   char szNumber[RAS_MaxPhoneNumber + 1];
-	   szNumber[0] = '\0';
+	{
+		char szNumber[ RAS_MaxPhoneNumber + 1 ];
+		szNumber[ 0 ] = '\0';
 
-	   ComposeNumber(account, location, szNumber);
-	   strcpy(rasEntry.szLocalPhoneNumber, szNumber);
+		ComposeNumber( account, location, szNumber );
+		strcpy( rasEntry.szLocalPhoneNumber, szNumber );
 	   
 #ifdef WIN32
-	   strcpy(rasEntry.szAreaCode, "415");  // hack around MS bug--ignored
-	   rasEntry.dwCountryCode = 1; // hack around MS bug -- ignored
+		strcpy( rasEntry.szAreaCode, "415" );  // hack around MS bug--ignored
+		rasEntry.dwCountryCode = 1; // hack around MS bug -- ignored
 #endif
-	} else {
+	}
+	else
+	{
 		// Let Win95 decide to dial the area code or not
 		rasEntry.dwfOptions |= RASEO_UseCountryAndAreaCodes;
 
 		// Configure the phone number
-		ParseNumber(account.ISPPhoneNum, &rasEntry.dwCountryCode, 
-						rasEntry.szAreaCode,	rasEntry.szLocalPhoneNumber);
+		ParseNumber( account.ISPPhoneNum, &rasEntry.dwCountryCode, 
+						rasEntry.szAreaCode, rasEntry.szLocalPhoneNumber );
 		  
-		if (!account.IntlMode) {
+		if ( !account.IntlMode )
+		{
 			// if not internationalize version, check the area code and make
 			// sure we got a valid area code, if not throw up a err msg
-			if (rasEntry.szAreaCode[0] == '\0') {
+			if ( rasEntry.szAreaCode[ 0 ] == '\0' )
+			{
 				// Err: The service provider's phone number is missing its area code
 				//    (or is not in TAPI cannonical form in the configuration file).
 				//    Account creation will fail until this is fixed.
-				char *buf = (char *)malloc(sizeof(char) * 255);
-				if (buf) {
-					if (getMsgString(buf, IDS_MISSING_AREA_CODE))
-						DisplayErrMsgWnd(buf, MB_OK | MB_ICONEXCLAMATION, hwndNavigator);
-					free(buf);
+				char*	buf = (char*)malloc( sizeof(char) * 255 );
+				if ( buf )
+				{
+					if ( getMsgString( buf, IDS_MISSING_AREA_CODE ) )
+						DisplayErrMsgWnd( buf, MB_OK | MB_ICONEXCLAMATION, hwndNavigator );
+					free( buf );
 				}
-				return (FALSE);
+				return FALSE;
 			}
 		}
 	}
 
 	// Now that we have the country code, we need to find the associated
 	// country ID
-	GetCountryID(rasEntry.dwCountryCode, rasEntry.dwCountryID);
+	GetCountryID( rasEntry.dwCountryCode, rasEntry.dwCountryID );
 
 	// Configure the IP data
 	rasEntry.dwfOptions |= RASEO_SpecificNameServers;
-	if (account.DNS[0])
-	  ToNumericAddress(account.DNS, *(LPDWORD)&rasEntry.ipaddrDns);
+	if ( account.DNS[ 0 ] )
+		ToNumericAddress( account.DNS, *(LPDWORD)&rasEntry.ipaddrDns );
 
-	if (account.DNS2[0])
-	  ToNumericAddress(account.DNS2, *(LPDWORD)&rasEntry.ipaddrDnsAlt);
-                                                               
+	if ( account.DNS2[ 0 ] )
+		ToNumericAddress( account.DNS2, *(LPDWORD)&rasEntry.ipaddrDnsAlt );
+
 	// Configure the protocol and device settings here:
 
 	// Negotiate TCP/IP
@@ -1924,152 +1929,160 @@ CreateRNAEntry(ACCOUNTPARAMS account, const LOCATIONPARAMS& location)
 	rasEntry.dwFramingProtocol = RASFP_Ppp;
 
 	// modem's information
-	strcpy(rasEntry.szDeviceName, location.ModemName);
-	strcpy(rasEntry.szDeviceType, location.ModemType);
+	strcpy( rasEntry.szDeviceName, location.ModemName );
+	strcpy( rasEntry.szDeviceType, location.ModemType );
 
 	// If we have a script, then store it too
-	if (account.ScriptEnabled) 
+	if ( account.ScriptEnabled ) 
 	{
 		BOOL rtnval = TRUE;
 		
 		// if there is script content, 'Translate' and store in file 
-	   if (ReggieScript)
-	   { 
-	   	// construct script filename if it does not exists
-	   	if (strlen(account.ScriptFileName) == 0)
-	   	{
-	   		GetProfileDirectory(account.ScriptFileName);
-	  			int nIndex = strlen(account.ScriptFileName);
-	   		strncat(account.ScriptFileName, account.ISPName, 8);
-	   		strcat(account.ScriptFileName, ".scp");
+		if ( ReggieScript )
+		{ 
+		   	// construct script filename if it does not exists
+		   	if ( strlen( account.ScriptFileName ) == 0 )
+		   	{
+				GetProfileDirectory( account.ScriptFileName );
+				int nIndex = strlen( account.ScriptFileName );
+				strncat( account.ScriptFileName, account.ISPName, 8 );
+				strcat( account.ScriptFileName, ".scp" );
 #ifndef WIN32
-				ParseWin16BadChar(account.ScriptFileName);
+				ParseWin16BadChar( account.ScriptFileName );
 #endif
-	   	} 
-		   rtnval = ProcessScriptedLogin((LPSTR)ReggieScript, account.ScriptFileName);
-		   free(ReggieScript);
-      }
+		   	} 
+			rtnval = ProcessScriptedLogin( (LPSTR)ReggieScript, account.ScriptFileName );
+			free( ReggieScript );
+		}
 
 		/* if there really is a script file (from ISP or Reggie) then use it */
-		if (rtnval && FileExists(account.ScriptFileName))
+		if ( rtnval && FileExists(account.ScriptFileName ) )
 		{
-			strcpy(rasEntry.szScript, account.ScriptFileName);
+			strcpy( rasEntry.szScript, account.ScriptFileName );
 
 			// convert forward slash to backward slash
-			int nLen = strlen(rasEntry.szScript);
-			for (int i=0; i < nLen; i++)
-				if (rasEntry.szScript[i] == '/')
-					rasEntry.szScript[i] = '\\';
+			int nLen = strlen( rasEntry.szScript );
+			for ( int i = 0; i < nLen; i++ )
+				if ( rasEntry.szScript[ i ] == '/' )
+					rasEntry.szScript[ i ] = '\\';
 		}
 	}
 
 	// dialing on demand is cool.  let's do that on win95 now
-#ifdef WIN32  // ************************ Win32 *************************
-    if ((account.DialOnDemand) && (platformOS == VER_PLATFORM_WIN32_WINDOWS) && (!RegiMode))
-		EnableDialOnDemand((LPSTR)(LPCSTR)account.ISPName);
-#endif       //WIN32
+#ifdef WIN32
+	// ************************ Win32 *************************
+    if ( ( account.DialOnDemand ) && ( platformOS == VER_PLATFORM_WIN32_WINDOWS ) && ( !RegiMode ) )
+		EnableDialOnDemand( (LPSTR)(LPCSTR)account.ISPName );
+#endif //WIN32
 
-	dwRet = (*m_lpfnRasSetEntryProperties)(NULL, (LPSTR)(LPCSTR)account.ISPName,
-										  (LPBYTE)&rasEntry, stRASENTRY, NULL, 0);
-	assert(dwRet == 0);
-	if (dwRet)
-	{
-		return -1;
-	}
+	dwRet = (*m_lpfnRasSetEntryProperties)( NULL, (LPSTR)(LPCSTR)account.ISPName,
+										  (LPBYTE)&rasEntry, stRASENTRY, NULL, 0 );
+	assert( dwRet == 0 );
+	if ( dwRet )
+		return -1;		// ??? this is going to return TRUE
 	
 	// We need to set the login name and password with a separate call
 	// why doesn't this work for winNT40??
-	memset(&dialParams, 0, sizeof(dialParams));
+	memset( &dialParams, 0, sizeof( dialParams ) );
 	dialParams.dwSize = stRASDIALPARAMS;
-	strcpy(dialParams.szEntryName, account.ISPName);
-	strcpy(dialParams.szUserName, account.LoginName);
-	strcpy(dialParams.szPassword, account.Password);
+	strcpy( dialParams.szEntryName, account.ISPName );
+	strcpy( dialParams.szUserName, account.LoginName );
+	strcpy( dialParams.szPassword, account.Password );
 
    // Creating connection entry!
-#ifdef WIN32 // *************** Win32 *****************
+#ifdef WIN32
+	// *************** Win32 *****************
 
 	// if win95, go ahead change connection info and return
-	if (platformOS == VER_PLATFORM_WIN32_WINDOWS) {
+	if ( platformOS == VER_PLATFORM_WIN32_WINDOWS )
+	{
+		dwRet = RasSetEntryDialParams( (LPSTR)(LPCSTR)account.ISPName, &dialParams, FALSE); //Returns 0 for okay
+		ret = ( dwRet == 0 );
+	}
+	else if ( platformOS == VER_PLATFORM_WIN32_NT )
+	{
+		// if winNT40, creates a connection info in phonebook and then enable
+		// Dial on Demand afterwords.
+		
+		// here we need to find system phonebook first!
+		// something like ... "c:\\winnt40\\system32\\ras\\rasphone.pbk"
+	
+		char*		sysDir;
+		char*		pbPath;
+		RASCREDENTIALS credentials;
+		sysDir = (char*)malloc( sizeof(char) * MAX_PATH );
+		if ( sysDir )
+		{
+			GetSystemDirectory( sysDir, MAX_PATH );
+			pbPath = (char*)malloc( sizeof(char) * strlen(sysDir) + 30 );
+			if ( pbPath )
+			{
+				strcpy( pbPath, sysDir );
+				strcat( pbPath, "\\ras\\rasphone.pbk" );
+				strcat( pbPath, "\0" );
+				
+				ret = ( RasSetEntryDialParams( pbPath, &dialParams, FALSE ) == 0 );
+				
+				// sets up user login info for new phonebook entry
+				memset( &credentials, 0, sizeof( RASCREDENTIALS ) );
+				credentials.dwSize = sizeof( RASCREDENTIALS );
+				credentials.dwMask = RASCM_UserName | RASCM_Password;
+				strcpy( credentials.szUserName, account.LoginName );
+				strcpy( credentials.szPassword, account.Password );
+				strcpy( credentials.szDomain, account.DomainName );
 
-	  ret = (RasSetEntryDialParams((LPSTR)(LPCSTR)account.ISPName,
-												&dialParams, FALSE)==0); //Returns 0 for okay
-
-	} else if (platformOS == VER_PLATFORM_WIN32_NT) {
-	  // if winNT40, creates a connection info in phonebook and then enable
-	  // Dial on Demand afterwords.
-
-	  // here we need to find system phonebook first!
-	  // something like ... "c:\\winnt40\\system32\\ras\\rasphone.pbk"
-
-	  char *sysDir;
-	  char *pbPath;
-	  RASCREDENTIALS credentials;
-	  sysDir = (char *)malloc(sizeof(char) * MAX_PATH);
-	  if (sysDir)  {
-		 GetSystemDirectory(sysDir, MAX_PATH);
-		 pbPath = (char *)malloc(sizeof(char) * strlen(sysDir) + 30);
-		 if (pbPath) {
-			strcpy(pbPath, sysDir);
-			strcat(pbPath, "\\ras\\rasphone.pbk");
-			strcat(pbPath, "\0");
-
-			ret = (RasSetEntryDialParams(pbPath, &dialParams, FALSE) == 0);
-        
-			// sets up user login info for new phonebook entry
-			memset(&credentials, 0, sizeof(RASCREDENTIALS));
-			credentials.dwSize = sizeof(RASCREDENTIALS);
-			credentials.dwMask = RASCM_UserName | RASCM_Password;
-			strcpy(credentials.szUserName, account.LoginName);
-			strcpy(credentials.szPassword, account.Password);
-			strcpy(credentials.szDomain, account.DomainName);
-
-			ret = (m_lpfnRasSetCredentials(pbPath, (LPSTR)(LPCSTR)account.ISPName,
-									&credentials, FALSE) == 0);
-
-			free(sysDir);
-			free(pbPath);
-     
-			// enable dial on demand for NT4, don't do it if it's regi
-            if ((ret == TRUE) && (account.DialOnDemand) && (!RegiMode))
-			   EnableDialOnDemandNT((LPSTR)(LPCSTR)account.ISPName);
-		 } else {
-			free(sysDir);
-			// Err: not enough memory for pbPath!
-			return -2;                                                   
-		 }
-	  } else {
-		 // Err: not enough memory for sysDir;
-		 return -3;
-	  } // if (sysDir)
+				dwRet = m_lpfnRasSetCredentials( pbPath, (LPSTR)(LPCSTR)account.ISPName, &credentials, FALSE );
+				ret = ( dwRet == 0 );
+				
+				free( sysDir );
+				free( pbPath );
+				
+				// enable dial on demand for NT4, don't do it if it's regi
+				if ( ( ret == TRUE ) && ( account.DialOnDemand ) && ( !RegiMode ) )
+				   EnableDialOnDemandNT( (LPSTR)(LPCSTR)account.ISPName );
+			}
+			else
+			{
+				free( sysDir );
+				// Err: not enough memory for pbPath!
+				return -2;	// ??? 
+			}
+		}
+		else
+		{
+			// Err: not enough memory for sysDir;
+			return -3;	// ???
+ 		} // if (sysDir)
 	} // else if (platformOS == VER_PLATFORM_WIN32_NT
 
-	SetAutoDisconnect(location.DisconnectTime);
+	SetAutoDisconnect( location.DisconnectTime );
 
-#else         // *************** Win16 *****************
-	strcpy(dialParams.szDomain, account.DomainName);
-
-	ret = (*g_lpfnRasSetEntryDialParams)(NULL, &dialParams, FALSE) == 0;
-
-	if (ret)		// RasSetEntryDialParams() succeeds
-   {
-   	// set dial on demand for non-reggie connections
-		if ((account.DialOnDemand) && (!RegiMode))
-			EnableDialOnDemand16(account.ISPName, TRUE);
+#else
+	// *************** Win16 *****************
+	strcpy( dialParams.szDomain, account.DomainName );
 	
+	dwRet = (*g_lpfnRasSetEntryDialParams)( NULL, &dialParams, FALSE );
+	ret = ( dwRet == 0 );
+	
+	if ( ret )		// RasSetEntryDialParams() succeeds
+	{
+		// set dial on demand for non-reggie connections
+		if ( ( account.DialOnDemand ) && ( !RegiMode ) )
+			EnableDialOnDemand16( account.ISPName, TRUE );
+		
 		// set tone or pulse dialing
-		if (g_lpfnSetDialStringInfo)			
-			(*g_lpfnSetDialStringInfo)(location.DialType, MODEMVOLUME_Low);
-
+		if ( g_lpfnSetDialStringInfo )			
+			(*g_lpfnSetDialStringInfo)( location.DialType, MODEMVOLUME_Low );
+		
 		// for Reggie connection: disable PPP compression to avoid connection drop w/ PortMasters for RPI modems
-		if (g_lpfnSetCompressionInfo)
-			(*g_lpfnSetCompressionInfo)(!RegiMode);
-			
+		if ( g_lpfnSetCompressionInfo )
+			(*g_lpfnSetCompressionInfo)( !RegiMode );
+		
 		// set connection info: autoreconnect, autodisconnect & idle period
 		// for Reggie: disable reconnect dialog to avoid 2 places for reconnect 
-		if (g_lpfnSetConnectionInfo)
-			(*g_lpfnSetConnectionInfo)(account.ISPName, !RegiMode, TRUE, location.DisconnectTime);
+		if ( g_lpfnSetConnectionInfo )
+			(*g_lpfnSetConnectionInfo)( account.ISPName, !RegiMode, TRUE, location.DisconnectTime );
 	}
-	
 #endif
 
 	return ret;
