@@ -1967,28 +1967,27 @@ NS_IMETHODIMP
 nsHTMLInputElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
                                              nsChangeHint& aHint) const
 {
-  if (aAttribute == nsHTMLAtoms::value) {
-    if (mType == NS_FORM_INPUT_BUTTON ||
-        mType == NS_FORM_INPUT_RESET ||
-        mType == NS_FORM_INPUT_SUBMIT) {
-      aHint = NS_STYLE_HINT_CONTENT;
-    }
-    else {
-      aHint = NS_STYLE_HINT_ATTRCHANGE;
-    }
-  }
-  else if ((aAttribute == nsHTMLAtoms::align) ||
-           (aAttribute == nsHTMLAtoms::type)) {
-    aHint = NS_STYLE_HINT_FRAMECHANGE;
-  }
-  else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-    if (!GetImageMappedAttributesImpact(aAttribute, aHint)) {
-      if (!GetImageBorderAttributeImpact(aAttribute, aHint)) {
-        aHint = NS_STYLE_HINT_CONTENT;
-      }
-    }
-  }
+  nsChangeHint valueHint = (mType == NS_FORM_INPUT_BUTTON ||
+                            mType == NS_FORM_INPUT_RESET ||
+                            mType == NS_FORM_INPUT_SUBMIT) ?
+    NS_STYLE_HINT_CONTENT : NS_STYLE_HINT_ATTRCHANGE;
 
+  const AttributeImpactEntry attributes[] = {
+    { &nsHTMLAtoms::value, valueHint },
+    { &nsHTMLAtoms::align, NS_STYLE_HINT_FRAMECHANGE },
+    { &nsHTMLAtoms::type, NS_STYLE_HINT_FRAMECHANGE },
+    { nsnull, NS_STYLE_HINT_NONE },
+  };
+
+  const AttributeImpactEntry* const map[] = {
+    attributes,
+    sCommonAttributeMap,
+    sImageAttributeMap,
+    sImageBorderAttributeMap,
+  };
+
+  FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
+  
   return NS_OK;
 }
 
@@ -2157,7 +2156,7 @@ nsHTMLInputElement::FireEventForAccessibility(nsIPresContext* aPresContext,
 {
   nsCOMPtr<nsIDOMEvent> event;
   nsCOMPtr<nsIEventListenerManager> manager;
-  nsresult rv = GetListenerManager(getter_AddRefs(manager));
+  GetListenerManager(getter_AddRefs(manager));
   if (manager &&
       NS_SUCCEEDED(manager->CreateEvent(aPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
     event->InitEvent(aEventType, PR_TRUE, PR_TRUE);

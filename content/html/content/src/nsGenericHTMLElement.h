@@ -71,7 +71,6 @@ class nsILayoutHistoryState;
 struct nsRect;
 struct nsSize;
 
-
 /**
  * A common superclass for HTML elements
  */
@@ -485,38 +484,32 @@ public:
    */
   static void MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAttributes, 
                                       nsRuleData* aRuleData);
-  /**
-   * Get the style impact of common attributes (dir, lang and _baseHref
-   * currently).  To be called from GetMappedAttributeImpact().
-   *
-   * @param aAttribute the attribute to test for impact
-   * @param aHint the impact (NS_STYLE_HINT_*)
-   * @return whether the impact was set
-   */
-  static PRBool GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
-                                                nsChangeHint& aHint);
+  struct AttributeImpactEntry {
+    nsIAtom** attribute;
+    nsChangeHint hint;
+  };
 
+  static const AttributeImpactEntry sCommonAttributeMap[];
+  static const AttributeImpactEntry sImageAttributeMap[];
+  static const AttributeImpactEntry sImageBorderAttributeMap[];
+  static const AttributeImpactEntry sImageAlignAttributeMap[];
+  static const AttributeImpactEntry sBackgroundAttributeMap[];
+  
   /**
-   * Get the style impact of image attributes (width, height, hspace and vspace
-   * currently).  To be called from GetMappedAttributeImpact().
+   * A common method where you can just pass in a list of maps to
+   * check for impact. Most implementations of GetMappedAttributeImpact
+   * should use this function as a default handler.
    *
-   * @param aAttribute the attribute to test for impact
-   * @param aHint the impact (NS_STYLE_HINT_*)
-   * @return whether the impact was set
+   * @param aAttribute   attribute that we care about
+   * @param aHint the    resulting hint
+   * @param aImpactFlags the types of attributes that we care about - see the
+   *                     NS_*_ATTRIBUTE_IMPACT flags
    */
-  static PRBool GetImageMappedAttributesImpact(const nsIAtom* aAttribute,
-                                               nsChangeHint& aHint);
-  /**
-   * Get the style impact of image align attributes (align currently).  To be
-   * called from GetMappedAttributeImpact().
-   *
-   * @param aAttribute the attribute to test for impact
-   * @param aHint the impact (NS_STYLE_HINT_*)
-   * @return whether the impact was set
-   */
-  static PRBool GetImageAlignAttributeImpact(const nsIAtom* aAttribute,
-                                             nsChangeHint& aHint);
 
+  static void
+  FindAttributeImpact(const nsIAtom* aAttribute, nsChangeHint& aHint,
+                      const AttributeImpactEntry* const aMaps[],
+                      PRUint32 aMapCount);
   /**
    * Helper to map the align attribute into a style struct.
    *
@@ -566,17 +559,6 @@ public:
   static void MapImagePositionAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
                                             nsRuleData* aData);
   /**
-   * Get the style impact of image border attributes (border currently).  To be
-   * called from GetMappedAttributeImpact().
-   *
-   * @param aAttribute the attribute to test for impact
-   * @param aHint the impact (NS_STYLE_HINT_*)
-   * @return whether the impact was set
-   */
-  static PRBool GetImageBorderAttributeImpact(const nsIAtom* aAttribute,
-                                              nsChangeHint& aHint);
-
-  /**
    * Helper to map the background attributes (currently background and bgcolor)
    * into a style struct.
    *
@@ -586,17 +568,6 @@ public:
    */
   static void MapBackgroundAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                                           nsRuleData* aData);
-  /**
-   * Get the style impact of background attributes (background and bgcolor
-   * currently).  To be called from GetMappedAttributeImpact().
-   *
-   * @param aAttribute the attribute to test for impact
-   * @param aHint the impact (NS_STYLE_HINT_*)
-   * @return whether the impact was set
-   */
-  static PRBool GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
-                                              nsChangeHint& aHint);
-
   /**
    * Get the primary frame for a piece of content.
    *

@@ -497,14 +497,21 @@ nsHTMLOptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32
   nsIFormControlFrame* fcFrame = GetSelectFrame();
   
   if (fcFrame) {    
-    if (aAttribute == nsHTMLAtoms::label) {
-      aHint = NS_STYLE_HINT_REFLOW; 
-    } else if (aAttribute == nsHTMLAtoms::text) {
-      aHint = NS_STYLE_HINT_REFLOW; 
-    } else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
-      aHint = NS_STYLE_HINT_CONTENT;
-    }
+    static const AttributeImpactEntry attributes[] = {
+      { &nsHTMLAtoms::label, NS_STYLE_HINT_REFLOW },
+      { &nsHTMLAtoms::text, NS_STYLE_HINT_REFLOW },
+      { nsnull, NS_STYLE_HINT_NONE }
+    };
+
+    static const AttributeImpactEntry* const map[] = {
+      attributes,
+      sCommonAttributeMap,
+    };
+
+    FindAttributeImpact(aAttribute, aHint, map, NS_ARRAY_LENGTH(map));
+    
   } else {
+    // XXX don't we want to try common attributes here?
     if (aAttribute == nsXULAtoms::menuactive) {
       aHint = NS_STYLE_HINT_CONTENT;
     } else {
