@@ -88,6 +88,8 @@ public:
   NS_IMETHOD GetSize(nsSize& aResult);
 
   NS_IMETHOD GetImageLoadStatus(PRUint32* aLoadStatus);
+  
+  NS_IMETHOD GetIntrinsicSize(nsSize& aResult);
 
 protected:
   nsFrameImageLoader();

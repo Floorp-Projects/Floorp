@@ -87,6 +87,10 @@ public:
     return mFlags.mHaveComputedSize;
   }
 
+  // Get the intrinsic (natural) size for the image. Returns 0,0 if
+  // the dimensions are not known
+  void GetIntrinsicSize(nsSize& aSize);
+
 #ifdef DEBUG
   void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif

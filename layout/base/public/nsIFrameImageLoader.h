@@ -91,6 +91,10 @@ public:
   NS_IMETHOD GetSize(nsSize& aResult) = 0;
 
   NS_IMETHOD GetImageLoadStatus(PRUint32* aLoadStatus) = 0;
+
+  // Return the intrinsic (or natural) size of the image, in twips.
+  // Returns 0,0 if the dimensions are unknown
+  NS_IMETHOD GetIntrinsicSize(nsSize& aResult) = 0;
 };
 
 // Image load status bit values
