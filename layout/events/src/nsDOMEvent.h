@@ -99,6 +99,7 @@ public:
   NS_IMETHOD    GetType(nsAWritableString& aType);
   NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget);
   NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget);
+  NS_IMETHOD    GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget);
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase);
   NS_IMETHOD    GetBubbles(PRBool* aBubbles);
   NS_IMETHOD    GetCancelable(PRBool* aCancelable);
@@ -147,6 +148,7 @@ public:
   NS_IMETHOD    DuplicatePrivateData();
   NS_IMETHOD    SetTarget(nsIDOMEventTarget* aTarget);
   NS_IMETHOD    SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget);
+  NS_IMETHOD    SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget);
   NS_IMETHOD    IsDispatchStopped(PRBool* aIsDispatchStopped);
   NS_IMETHOD    GetInternalNSEvent(nsEvent** aNSEvent);
   NS_IMETHOD    GetRealTarget(nsIDOMEventTarget** aTarget);
@@ -173,6 +175,7 @@ protected:
   nsIPresContext* mPresContext;
   nsIDOMEventTarget* mTarget;
   nsIDOMEventTarget* mCurrentTarget;
+  nsIDOMEventTarget* mOriginalTarget;
   nsString*	mText;
   nsIPrivateTextRangeList*	mTextRange;
   const char* GetEventName(PRUint32 aEventType);

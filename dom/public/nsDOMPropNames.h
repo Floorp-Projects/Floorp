@@ -293,6 +293,7 @@
     "event.currenttarget", \
     "event.eventphase", \
     "event.initevent", \
+    "event.originaltarget", \
     "event.preventbubble", \
     "event.preventcapture", \
     "event.preventdefault", \

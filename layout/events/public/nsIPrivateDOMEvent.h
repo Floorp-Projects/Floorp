@@ -47,6 +47,7 @@ public:
   NS_IMETHOD DuplicatePrivateData() = 0;
   NS_IMETHOD SetTarget(nsIDOMEventTarget* aTarget) = 0;
   NS_IMETHOD SetCurrentTarget(nsIDOMEventTarget* aTarget) = 0;
+  NS_IMETHOD SetOriginalTarget(nsIDOMEventTarget* aTarget) = 0;
   NS_IMETHOD IsDispatchStopped(PRBool* aIsDispatchPrevented) = 0;
   NS_IMETHOD GetInternalNSEvent(nsEvent** aNSEvent) = 0;
   NS_IMETHOD GetRealTarget(nsIDOMEventTarget** aRealTarget) = 0;
