@@ -898,7 +898,10 @@ sub MessageToMTA ($) {
         push @args, Server => Param("smtpserver");
     }
     my $mailer = new Mail::Mailer Param("maildeliverymethod"), @args;
-
+    if (Param("maildeliverymethod") eq "testfile") {
+        $Mail::Mailer::testfile::config{outfile} = "$datadir/mailer.testfile";
+    }
+    
     $msg =~ /(.*?)\n\n(.*)/ms;
     my @header_lines = split(/\n/, $1);
     my $body = $2;
