@@ -363,19 +363,22 @@ protected:
     static nsVoidArray sBrowserList;
 
     // Pointer to web shell manager
-    CWebBrowserContainer    *    mWebBrowserContainer;
+    CWebBrowserContainer    * mWebBrowserContainer;
     // CComObject to IHTMLDocument implementer
     CIEHtmlDocumentInstance * mIERootDocument;
 
     // Mozilla interfaces
-    nsCOMPtr<nsIWebBrowser>    mWebBrowser;
+    nsCOMPtr<nsIWebBrowser> mWebBrowser;
     nsCOMPtr<nsIBaseWindow> mWebBrowserAsWin;
 
     // Context menu
     nsCOMPtr<nsIDOMNode>    mContextNode;
     
-    nsIPref             *   mPrefs;
-    nsIEditor            *    mEditor;
+    // Prefs service
+    nsCOMPtr<nsIPref>       mPrefs;
+
+    // Editor associated with this browser instance.
+    nsCOMPtr<nsIEditor>     mEditor;
 
     // Flag to indicate if browser is created or not
     BOOL                    mValidBrowserFlag;
@@ -386,13 +389,13 @@ protected:
     // Flag to indicate if the browser has a drop target
     BOOL                    mHaveDropTargetFlag;
     // Contains an error message if startup went wrong
-    tstring                    mStartupErrorMessage;
+    tstring                 mStartupErrorMessage;
     // Property list
     PropertyList            mPropertyList;
     // Ready status of control
-    READYSTATE                mBrowserReadyState;
+    READYSTATE              mBrowserReadyState;
     // List of registered browser helper objects
-    CComUnkPtr               *mBrowserHelperList;
+    CComUnkPtr             *mBrowserHelperList;
     ULONG                   mBrowserHelperListCount;
     // Post data from last navigate operation
     CComVariant             mLastPostData;

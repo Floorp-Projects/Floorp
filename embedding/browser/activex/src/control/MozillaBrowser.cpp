@@ -147,7 +147,6 @@ CMozillaBrowser::CMozillaBrowser()
 
     // Initialize layout interfaces
     mWebBrowserAsWin = nsnull;
-    mPrefs = nsnull;
     mValidBrowserFlag = FALSE;
 
     // Ready state of control
@@ -155,7 +154,6 @@ CMozillaBrowser::CMozillaBrowser()
     
     // Create the container that handles some things for us
     mWebBrowserContainer = NULL;
-    mEditor = NULL;
 
     // Controls starts off unbusy
     mBusyFlag = FALSE;
@@ -982,9 +980,7 @@ HRESULT CMozillaBrowser::Initialize()
     rv = NS_InitEmbedding(binDir, provider);
 
     // Load preferences service
-    rv = nsServiceManager::GetService(kPrefCID, 
-                                    NS_GET_IID(nsIPref), 
-                                    (nsISupports **)&mPrefs);
+    mPrefs = do_GetService(kPrefCID, &rv);
     if (NS_FAILED(rv))
     {
         NG_ASSERT(0);
@@ -1050,7 +1046,7 @@ HRESULT CMozillaBrowser::Terminate()
     {
 #endif
 
-    NS_IF_RELEASE(mPrefs);
+    mPrefs = nsnull;
     NS_TermEmbedding();
 
 #ifdef HACK_NON_REENTRANCY
