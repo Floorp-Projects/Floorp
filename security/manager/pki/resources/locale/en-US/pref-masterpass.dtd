@@ -24,10 +24,10 @@
 <!ENTITY  lheader    "Master Passwords">
 <!ENTITY  managepassword.label    "Master Password Timeout">
 <!ENTITY  managepassword.text     "&brandShortName; will ask for your master password:">
-<!ENTITY  managepassword.askfirsttime "The first time your personal certificate is requested">
-<!ENTITY  managepassword.askeverytime "Every time your personal certificate is requested">
-<!ENTITY  managepassword.asktimeout   "After inactivity on an encrypted site for ">
-<!ENTITY  managepassword.timeout.unit   "minutes">
+<!ENTITY  managepassword.askfirsttime "The first time it is needed">
+<!ENTITY  managepassword.askeverytime "Every time it is needed">
+<!ENTITY  managepassword.asktimeout   "If it has not been used for ">
+<!ENTITY  managepassword.timeout.unit   "minutes or longer">
 
 <!ENTITY  changepassword.label    "Change Master Password">
 <!ENTITY  changepassword.text     "Your master password protects sensitive information such as web passwords and certificates.">
