@@ -667,7 +667,8 @@ RDFTreeBuilderImpl::Notify(nsITimer *timer)
         }
 #endif
 		nsIContent	*treeBody;
-		if (NS_SUCCEEDED(rv = nsRDFContentUtils::FindChildByTag(mRoot, kNameSpaceID_XUL, kTreeBodyAtom, &treeBody)))
+		if (NS_SUCCEEDED(rv = nsRDFContentUtils::FindChildByTag(mRoot, kNameSpaceID_XUL, kTreeBodyAtom, &treeBody)) &&
+			(rv != NS_RDF_NO_VALUE))
 		{
 			UpdateContainer(treeBody);
 			NS_RELEASE(treeBody);
