@@ -51,6 +51,19 @@ public:
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
+  NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aFrameList);
+  NS_IMETHOD  InsertFrames(nsIPresContext& aPresContext,
+                           nsIPresShell&   aPresShell,
+                           nsIAtom*        aListName,
+                           nsIFrame*       aPrevFrame,
+                           nsIFrame*       aFrameList);
+  NS_IMETHOD  RemoveFrame(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aOldFrame);
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
@@ -130,7 +143,7 @@ protected:
                            nsIFrame* aFrameList,
                            nsIFrame* aPrevSibling);
 
-  nsresult DoRemoveFrame(nsBlockReflowState& aState,
+  nsresult DoRemoveFrame(nsIPresContext& aPresContext,
                          nsIFrame* aDeletedFrame);
 
   virtual nsresult PrepareInitialReflow(nsBlockReflowState& aState);
@@ -440,11 +453,16 @@ public:
                         nsIAtom*        aListName,
                         nsIFrame*       aOldFrame);
 
-  // O(C)
-  void StealFirstFrame();
+  // Take the first frame away from the anonymous block frame. The
+  // caller is responsible for the first frames final disposition
+  // (e.g. deleting it if it wants to).
+  void RemoveFirstFrame();
 
-  // XXX slow O(N)
-  void StealLastFrame();
+  // Remove from the blocks list of children the frames starting at
+  // aFrame until the end of the child list. The caller is responsible
+  // for the first frames final disposition (e.g. deleting it if it
+  // wants to).
+  void RemoveFramesFrom(nsIFrame* aFrame);
 
 protected:
   nsAnonymousBlockFrame();
