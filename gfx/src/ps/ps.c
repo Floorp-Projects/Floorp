@@ -40,11 +40,11 @@ char* paper_string[]={ "Letter", "Legal", "Executive", "A4" };
 ** rotation.
 */
 
-void xl_initialize_translation(PSContext *cx, PrintSetup* pi)
+void xl_initialize_translation(PSContext *aCX, PrintSetup* pi)
 {
   PrintSetup *dup = XP_NEW(PrintSetup);
   *dup = *pi;
-  cx->prSetup = dup;
+  aCX->prSetup = dup;
   dup->width = POINT_TO_PAGE(dup->width);
   dup->height = POINT_TO_PAGE(dup->height);
   dup->top = POINT_TO_PAGE(dup->top);
@@ -59,48 +59,48 @@ void xl_initialize_translation(PSContext *cx, PrintSetup* pi)
   }	
 }
 
-void xl_finalize_translation(PSContext *cx)
+void xl_finalize_translation(PSContext *aCX)
 {
-    XP_DELETE(cx->prSetup);
-    cx->prSetup = NULL;
+    XP_DELETE(aCX->prSetup);
+    aCX->prSetup = NULL;
 }
 
-void xl_begin_document(PSContext *cx)
+void xl_begin_document(PSContext *aCX)
 {
     int i;
     XP_File f;
     char* charset_name = NULL;
 
-    f = cx->prSetup->out;
+    f = aCX->prSetup->out;
     XP_FilePrintf(f, "%%!PS-Adobe-3.0\n");
     XP_FilePrintf(f, "%%%%BoundingBox: %d %d %d %d\n",
-        PAGE_TO_POINT_I(cx->prSetup->left),
-	PAGE_TO_POINT_I(cx->prSetup->bottom),
-	PAGE_TO_POINT_I(cx->prSetup->width-cx->prSetup->right),
-	PAGE_TO_POINT_I(cx->prSetup->height-cx->prSetup->top));
+        PAGE_TO_POINT_I(aCX->prSetup->left),
+	PAGE_TO_POINT_I(aCX->prSetup->bottom),
+	PAGE_TO_POINT_I(aCX->prSetup->width-aCX->prSetup->right),
+	PAGE_TO_POINT_I(aCX->prSetup->height-aCX->prSetup->top));
     XP_FilePrintf(f, "%%%%Creator: Mozilla (NetScape) HTML->PS\n");
     XP_FilePrintf(f, "%%%%DocumentData: Clean8Bit\n");
     XP_FilePrintf(f, "%%%%DocumentPaperSizes: %s\n",
-	 paper_string[cx->prSetup->paper_size]);
+	 paper_string[aCX->prSetup->paper_size]);
     XP_FilePrintf(f, "%%%%Orientation: %s\n",
-        (cx->prSetup->width < cx->prSetup->height) ? "Portrait" : "Landscape");
-    XP_FilePrintf(f, "%%%%Pages: %d\n", (int) cx->prInfo->n_pages);
-    if (cx->prSetup->reverse)
+        (aCX->prSetup->width < aCX->prSetup->height) ? "Portrait" : "Landscape");
+    XP_FilePrintf(f, "%%%%Pages: %d\n", (int) aCX->prInfo->n_pages);
+    if (aCX->prSetup->reverse)
 	XP_FilePrintf(f, "%%%%PageOrder: Descend\n");
     else
 	XP_FilePrintf(f, "%%%%PageOrder: Ascend\n");
-    XP_FilePrintf(f, "%%%%Title: %s\n", cx->prInfo->doc_title);
+    XP_FilePrintf(f, "%%%%Title: %s\n", aCX->prInfo->doc_title);
 #ifdef NOTYET
     XP_FilePrintf(f, "%%%%For: %n", user_name_stuff);
 #endif
     XP_FilePrintf(f, "%%%%EndComments\n");
 
     /* general comments: Mozilla-specific */
-    XP_FilePrintf(f, "\n%% MozillaURL: %s\n", cx->prSetup->url->address);
+    XP_FilePrintf(f, "\n%% MozillaURL: %s\n", aCX->prSetup->url->address);
     /* get charset name of non-latin1 fonts */
     /* for external filters, supply information */
-    if (cx->prSetup->otherFontName[0] || cx->prSetup->otherFontInfo[0]){
-      INTL_CharSetIDToName(cx->prSetup->otherFontCharSetID, charset_name);
+    if (aCX->prSetup->otherFontName[0] || aCX->prSetup->otherFontInfo[0]){
+      INTL_CharSetIDToName(aCX->prSetup->otherFontCharSetID, charset_name);
       XP_FilePrintf(f, "%% MozillaCharsetName: %s\n\n", charset_name);
     }else
       /* default: iso-8859-1 */
@@ -133,11 +133,11 @@ void xl_begin_document(PSContext *cx)
 	    "/f%d { /F%d findfont exch scalefont setfont } bind def\n",
 		i, PSFE_MaskToFI[i]->name, i, i);
     for (i = 0; i < N_FONTS; i++)
-      if (cx->prSetup->otherFontName[i]) {
+      if (aCX->prSetup->otherFontName[i]) {
 	  XP_FilePrintf(f, 
 	    	"/of%d { /%s findfont exch scalefont setfont } bind def\n",
-		i, cx->prSetup->otherFontName[i]);
-/*          XP_FilePrintf(f, "/of /of1;\n", cx->prSetup->otherFontName); */
+		i, aCX->prSetup->otherFontName[i]);
+/*          XP_FilePrintf(f, "/of /of1;\n", aCX->prSetup->otherFontName); */
       }
     XP_FilePrintf(f, "/rhc {\n");
     XP_FilePrintf(f, "    {\n");
@@ -208,67 +208,67 @@ void xl_begin_document(PSContext *cx)
    XP_FilePrintf(f, "%%%%EndProlog\n");
 }
 
-void xl_begin_page(PSContext *cx, int pn)
+void xl_begin_page(PSContext *aCX, int pn)
 {
   XP_File f;
 
-  f = cx->prSetup->out;
-  pn++;
+  f = aCX->prSetup->out;
+  //pn++;
   XP_FilePrintf(f, "%%%%Page: %d %d\n", pn, pn);
   XP_FilePrintf(f, "%%%%BeginPageSetup\n/pagelevel save def\n");
-  if (cx->prSetup->landscape)
+  if (aCX->prSetup->landscape)
     XP_FilePrintf(f, "%d 0 translate 90 rotate\n",
-		  PAGE_TO_POINT_I(cx->prSetup->height));
-  XP_FilePrintf(f, "%d 0 translate\n", PAGE_TO_POINT_I(cx->prSetup->left));
+		  PAGE_TO_POINT_I(aCX->prSetup->height));
+  XP_FilePrintf(f, "%d 0 translate\n", PAGE_TO_POINT_I(aCX->prSetup->left));
   XP_FilePrintf(f, "%%%%EndPageSetup\n");
 #if 0
-  xl_annotate_page(cx, cx->prSetup->header, 0, -1, pn);
+  xl_annotate_page(aCX, aCX->prSetup->header, 0, -1, pn);
 #endif
-  XP_FilePrintf(f, "newpath 0 %d moveto ", PAGE_TO_POINT_I(cx->prSetup->bottom));
+  XP_FilePrintf(f, "newpath 0 %d moveto ", PAGE_TO_POINT_I(aCX->prSetup->bottom));
   XP_FilePrintf(f, "%d 0 rlineto 0 %d rlineto -%d 0 rlineto ",
-			PAGE_TO_POINT_I(cx->prInfo->page_width),
-			PAGE_TO_POINT_I(cx->prInfo->page_height),
-			PAGE_TO_POINT_I(cx->prInfo->page_width));
+			PAGE_TO_POINT_I(aCX->prInfo->page_width),
+			PAGE_TO_POINT_I(aCX->prInfo->page_height),
+			PAGE_TO_POINT_I(aCX->prInfo->page_width));
   XP_FilePrintf(f, " closepath clip newpath\n");
 }
 
-void xl_end_page(PSContext *cx, int pn)
+void xl_end_page(PSContext *aCX, int pn)
 {
 #if 0
-  xl_annotate_page(cx, cx->prSetup->footer,
-		   cx->prSetup->height-cx->prSetup->bottom-cx->prSetup->top,
+  xl_annotate_page(aCX, aCX->prSetup->footer,
+		   aCX->prSetup->height-aCX->prSetup->bottom-aCX->prSetup->top,
 		   1, pn);
-  XP_FilePrintf(cx->prSetup->out, "pagelevel restore\nshowpage\n");
+  XP_FilePrintf(aCX->prSetup->out, "pagelevel restore\nshowpage\n");
 #endif
 
-  XP_FilePrintf(cx->prSetup->out, "pagelevel restore\n");
-  xl_annotate_page(cx, cx->prSetup->header, cx->prSetup->top/2, -1, pn);
-  xl_annotate_page(cx, cx->prSetup->footer,
-				   cx->prSetup->height - cx->prSetup->bottom/2,
+  XP_FilePrintf(aCX->prSetup->out, "pagelevel restore\n");
+  xl_annotate_page(aCX, aCX->prSetup->header, aCX->prSetup->top/2, -1, pn);
+  xl_annotate_page(aCX, aCX->prSetup->footer,
+				   aCX->prSetup->height - aCX->prSetup->bottom/2,
 				   1, pn);
-  XP_FilePrintf(cx->prSetup->out, "showpage\n");
+  XP_FilePrintf(aCX->prSetup->out, "showpage\n");
 }
 
-void xl_end_document(PSContext *cx)
+void xl_end_document(PSContext *aCX)
 {
-    XP_FilePrintf(cx->prSetup->out, "%%%%EOF\n");
+    XP_FilePrintf(aCX->prSetup->out, "%%%%EOF\n");
 }
 
-void xl_moveto(PSContext* cx, int x, int y)
+void xl_moveto(PSContext* aCX, int x, int y)
 {
   XL_SET_NUMERIC_LOCALE();
-  y -= cx->prInfo->page_topy;
+  y -= aCX->prInfo->page_topy;
   /*
   ** Agh! Y inversion again !!
   */
-  y = (cx->prInfo->page_height - y - 1) + cx->prSetup->bottom;
+  y = (aCX->prInfo->page_height - y - 1) + aCX->prSetup->bottom;
 
-  XP_FilePrintf(cx->prSetup->out, "%g %g moveto\n",
+  XP_FilePrintf(aCX->prSetup->out, "%g %g moveto\n",
 		PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_moveto_loc(PSContext* cx, int x, int y)
+void xl_moveto_loc(PSContext* aCX, int x, int y)
 {
   /* This routine doesn't care about the clip region in the page */
 
@@ -277,44 +277,50 @@ void xl_moveto_loc(PSContext* cx, int x, int y)
   /*
   ** Agh! Y inversion again !!
   */
-  y = (cx->prSetup->height - y - 1);
+  y = (aCX->prSetup->height - y - 1);
 
-  XP_FilePrintf(cx->prSetup->out, "%g %g moveto\n",
+  XP_FilePrintf(aCX->prSetup->out, "%g %g moveto\n",
 		PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_lineto(PSContext* cx, int x1, int y1)
+void xl_lineto(PSContext* aCX, int x1, int y1)
 {
   XL_SET_NUMERIC_LOCALE();
 
-  y1 -= cx->prInfo->page_topy;
-  y1 = (cx->prInfo->page_height - y1 - 1) + cx->prSetup->bottom;
+  y1 -= aCX->prInfo->page_topy;
+  y1 = (aCX->prInfo->page_height - y1 - 1) + aCX->prSetup->bottom;
 
-  XP_FilePrintf(cx->prSetup->out, "%g %g lineto\n",
+  XP_FilePrintf(aCX->prSetup->out, "%g %g lineto\n",
 		PAGE_TO_POINT_F(x1), PAGE_TO_POINT_F(y1));
 
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_translate(PSContext* cx, int x, int y)
+void xl_closepath(PSContext* aCX)
+{
+  XP_FilePrintf(aCX->prSetup->out, "closepath ");
+}
+
+
+void xl_translate(PSContext* aCX, int x, int y)
 {
     XL_SET_NUMERIC_LOCALE();
-    y -= cx->prInfo->page_topy;
+    y -= aCX->prInfo->page_topy;
     /*
     ** Agh! Y inversion again !!
     */
-    y = (cx->prInfo->page_height - y - 1) + cx->prSetup->bottom;
+    y = (aCX->prInfo->page_height - y - 1) + aCX->prSetup->bottom;
 
-    XP_FilePrintf(cx->prSetup->out, "%g %g translate\n", PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
+    XP_FilePrintf(aCX->prSetup->out, "%g %g translate\n", PAGE_TO_POINT_F(x), PAGE_TO_POINT_F(y));
     XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_show(PSContext *cx, char* txt, int len, char *align)
+void xl_show(PSContext *aCX, char* txt, int len, char *align)
 {
     XP_File f;
 
-    f = cx->prSetup->out;
+    f = aCX->prSetup->out;
     XP_FilePrintf(f, "(");
     while (len-- > 0) {
 	switch (*txt) {
@@ -335,179 +341,179 @@ void xl_show(PSContext *cx, char* txt, int len, char *align)
     XP_FilePrintf(f, ") %sshow\n", align);
 }
 
-void xl_circle(PSContext* cx, int w, int h)
+void xl_circle(PSContext* aCX, int w, int h)
 {
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(cx->prSetup->out, "%g %g c ", PAGE_TO_POINT_F(w)/2.0, PAGE_TO_POINT_F(h)/2.0);
+  XP_FilePrintf(aCX->prSetup->out, "%g %g c ", PAGE_TO_POINT_F(w)/2.0, PAGE_TO_POINT_F(h)/2.0);
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_box(PSContext* cx, int w, int h)
+void xl_box(PSContext* aCX, int w, int h)
 {
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(cx->prSetup->out, "%g 0 rlineto 0 %g rlineto %g 0 rlineto closepath ",
+  XP_FilePrintf(aCX->prSetup->out, "%g 0 rlineto 0 %g rlineto %g 0 rlineto closepath ",
       PAGE_TO_POINT_F(w), -PAGE_TO_POINT_F(h), -PAGE_TO_POINT_F(w));
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
 MODULE_PRIVATE void
-xl_draw_border(PSContext *cx, int x, int y, int w, int h, int thick)
+xl_draw_border(PSContext *aCX, int x, int y, int w, int h, int thick)
 {
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(cx->prSetup->out, "gsave %g setlinewidth\n ",
+  XP_FilePrintf(aCX->prSetup->out, "gsave %g setlinewidth\n ",
 		  PAGE_TO_POINT_F(thick));
-  xl_moveto(cx, x, y);
-  xl_box(cx, w, h);
-  xl_stroke(cx);
-  XP_FilePrintf(cx->prSetup->out, "grestore\n");
+  xl_moveto(aCX, x, y);
+  xl_box(aCX, w, h);
+  xl_stroke(aCX);
+  XP_FilePrintf(aCX->prSetup->out, "grestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
 MODULE_PRIVATE void
-xl_draw_3d_border(PSContext *cx, int x, int y, int w, int h, int thick, int tl, int br)
+xl_draw_3d_border(PSContext *aCX, int x, int y, int w, int h, int thick, int tl, int br)
 {
   int llx, lly;
 
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(cx->prSetup->out, "gsave\n ");
+  XP_FilePrintf(aCX->prSetup->out, "gsave\n ");
 
   /* lower left */
   llx = x;
   lly = y + h;
 
   /* top left */
-  xl_moveto(cx, llx, lly);
-  XP_FilePrintf(cx->prSetup->out, 
+  xl_moveto(aCX, llx, lly);
+  XP_FilePrintf(aCX->prSetup->out, 
 				"%g %g rlineto 0 %g rlineto %g 0 rlineto %g %g rlineto %g 0 rlineto closepath\n",
 				PAGE_TO_POINT_F(thick), PAGE_TO_POINT_F(thick),
 				PAGE_TO_POINT_F(h-2*thick),
 				PAGE_TO_POINT_F(w-2*thick),
 				PAGE_TO_POINT_F(thick), PAGE_TO_POINT_F(thick),
 				-PAGE_TO_POINT_F(w));
-  XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", tl);
+  XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", tl);
 
   /* bottom right */
-  xl_moveto(cx, llx, lly);
-  XP_FilePrintf(cx->prSetup->out, 
+  xl_moveto(aCX, llx, lly);
+  XP_FilePrintf(aCX->prSetup->out, 
 				"%g %g rlineto %g 0 rlineto 0 %g rlineto %g %g rlineto 0 %g rlineto closepath\n",
 				PAGE_TO_POINT_F(thick),	PAGE_TO_POINT_F(thick),
 				PAGE_TO_POINT_F(w-2*thick),
 				PAGE_TO_POINT_F(h-2*thick),
 				PAGE_TO_POINT_F(thick), PAGE_TO_POINT_F(thick),
 				-PAGE_TO_POINT_F(h));
-  XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", br);
+  XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", br);
 
-  XP_FilePrintf(cx->prSetup->out, "grestore\n");
+  XP_FilePrintf(aCX->prSetup->out, "grestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
 MODULE_PRIVATE void
-xl_draw_3d_radiobox(PSContext *cx, int x, int y, int w, int h, int thick,
+xl_draw_3d_radiobox(PSContext *aCX, int x, int y, int w, int h, int thick,
 					int top, int bottom, int center)
 {
   int lx, ly;
 
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(cx->prSetup->out, "gsave\n ");
+  XP_FilePrintf(aCX->prSetup->out, "gsave\n ");
 
   /* left */
   lx = x;
   ly = y + h/2;
 
   /* bottom */
-  xl_moveto(cx, lx, ly);
-  XP_FilePrintf(cx->prSetup->out, 
+  xl_moveto(aCX, lx, ly);
+  XP_FilePrintf(aCX->prSetup->out, 
 				"%g %g rlineto %g %g rlineto %g 0 rlineto %g %g rlineto %g %g rlineto closepath\n",
 				PAGE_TO_POINT_F(w/2), -PAGE_TO_POINT_F(h/2),
 				PAGE_TO_POINT_F(w/2), PAGE_TO_POINT_F(h/2),
 				-PAGE_TO_POINT_F(thick),
 				-PAGE_TO_POINT_F(w/2-thick),-PAGE_TO_POINT_F(h/2-thick),
 	            -PAGE_TO_POINT_F(w/2-thick), PAGE_TO_POINT_F(h/2-thick));
-  XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", bottom);
+  XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", bottom);
 
   /* top  */
-  xl_moveto(cx, lx, ly);
-  XP_FilePrintf(cx->prSetup->out, 
+  xl_moveto(aCX, lx, ly);
+  XP_FilePrintf(aCX->prSetup->out, 
 				"%g %g rlineto %g %g rlineto %g 0 rlineto %g %g rlineto %g %g rlineto closepath\n",
 				PAGE_TO_POINT_F(w/2), PAGE_TO_POINT_F(h/2),
 				PAGE_TO_POINT_F(w/2), -PAGE_TO_POINT_F(h/2),
 				-PAGE_TO_POINT_F(thick),
 				-PAGE_TO_POINT_F(w/2-thick), PAGE_TO_POINT_F(h/2-thick),
 	            -PAGE_TO_POINT_F(w/2-thick), -PAGE_TO_POINT_F(h/2-thick));
-  XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", top);
+  XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", top);
 
   /* center */
   if (center != 10) {
-	  xl_moveto(cx, lx+thick, ly);
-	  XP_FilePrintf(cx->prSetup->out, 
+	  xl_moveto(aCX, lx+thick, ly);
+	  XP_FilePrintf(aCX->prSetup->out, 
 					"%g %g rlineto %g %g rlineto %g %g rlineto closepath\n",
 					PAGE_TO_POINT_F(w/2-thick), -PAGE_TO_POINT_F(h/2-thick),
 					PAGE_TO_POINT_F(w/2-thick), PAGE_TO_POINT_F(h/2-thick),
 					-PAGE_TO_POINT_F(w/2-thick), PAGE_TO_POINT_F(h/2-thick));
-	  XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", center);
+	  XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", center);
   }
 
-  XP_FilePrintf(cx->prSetup->out, "grestore\n");
+  XP_FilePrintf(aCX->prSetup->out, "grestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
 MODULE_PRIVATE void
-xl_draw_3d_checkbox(PSContext *cx, int x, int y, int w, int h, int thick,
+xl_draw_3d_checkbox(PSContext *aCX, int x, int y, int w, int h, int thick,
 					int tl, int br, int center)
 {
   int llx, lly;
 
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(cx->prSetup->out, "gsave\n ");
+  XP_FilePrintf(aCX->prSetup->out, "gsave\n ");
 
   /* lower left */
   llx = x;
   lly = y + h;
 
   /* top left */
-  xl_moveto(cx, llx, lly);
-  XP_FilePrintf(cx->prSetup->out, 
+  xl_moveto(aCX, llx, lly);
+  XP_FilePrintf(aCX->prSetup->out, 
 				"%g %g rlineto 0 %g rlineto %g 0 rlineto %g %g rlineto %g 0 rlineto closepath\n",
 				PAGE_TO_POINT_F(thick), PAGE_TO_POINT_F(thick),
 				PAGE_TO_POINT_F(h-2*thick),
 				PAGE_TO_POINT_F(w-2*thick),
 				PAGE_TO_POINT_F(thick), PAGE_TO_POINT_F(thick),
 				-PAGE_TO_POINT_F(w));
-  XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", tl);
+  XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", tl);
 
   /* bottom right */
-  xl_moveto(cx, llx, lly);
-  XP_FilePrintf(cx->prSetup->out, 
+  xl_moveto(aCX, llx, lly);
+  XP_FilePrintf(aCX->prSetup->out, 
 				"%g %g rlineto %g 0 rlineto 0 %g rlineto %g %g rlineto 0 %g rlineto closepath\n",
 				PAGE_TO_POINT_F(thick),	PAGE_TO_POINT_F(thick),
 				PAGE_TO_POINT_F(w-2*thick),
 				PAGE_TO_POINT_F(h-2*thick),
 				PAGE_TO_POINT_F(thick), PAGE_TO_POINT_F(thick),
 				-PAGE_TO_POINT_F(h));
-  XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", br);
+  XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", br);
 
   /* center */
   if (center != 10) {
-	  xl_moveto(cx, llx+thick, lly-thick);
-	  XP_FilePrintf(cx->prSetup->out, 
+	  xl_moveto(aCX, llx+thick, lly-thick);
+	  XP_FilePrintf(aCX->prSetup->out, 
 					"0 %g rlineto %g 0 rlineto 0 %g rlineto closepath\n",
 					PAGE_TO_POINT_F(h-2*thick),
 					PAGE_TO_POINT_F(w-2*thick),
 					-PAGE_TO_POINT_F(h-2*thick));
-	  XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", center);
+	  XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", center);
   }
 
-  XP_FilePrintf(cx->prSetup->out, "grestore\n");
+  XP_FilePrintf(aCX->prSetup->out, "grestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-extern void xl_draw_3d_arrow(PSContext *cx, int x , int y, int thick, int w,
+extern void xl_draw_3d_arrow(PSContext *aCX, int x , int y, int thick, int w,
 							 int h, XP_Bool up, int left, int right, int base)
 {
 	int tx, ty;
 
 	XL_SET_NUMERIC_LOCALE();
-	XP_FilePrintf(cx->prSetup->out, "gsave\n ");
+	XP_FilePrintf(aCX->prSetup->out, "gsave\n ");
 
 	if (up) {
 		tx = x + w/2;
@@ -515,33 +521,33 @@ extern void xl_draw_3d_arrow(PSContext *cx, int x , int y, int thick, int w,
 
 		/* left */
 
-		xl_moveto(cx, tx, ty);
-		XP_FilePrintf(cx->prSetup->out, 
+		xl_moveto(aCX, tx, ty);
+		XP_FilePrintf(aCX->prSetup->out, 
 					  "%g %g rlineto %g %g rlineto %g %g rlineto closepath\n",
 					  -PAGE_TO_POINT_F(w/2), -PAGE_TO_POINT_F(h),
 					  PAGE_TO_POINT_F(thick), PAGE_TO_POINT_F(thick),
 					  PAGE_TO_POINT_F(w/2-thick), PAGE_TO_POINT_F(h-2*thick));
-		XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", left);
+		XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", left);
 
 		/* right */
 
-		xl_moveto(cx, tx, ty);
-		XP_FilePrintf(cx->prSetup->out, 
+		xl_moveto(aCX, tx, ty);
+		XP_FilePrintf(aCX->prSetup->out, 
 					  "%g %g rlineto %g %g rlineto %g %g rlineto closepath\n",
 					  PAGE_TO_POINT_F(w/2), -PAGE_TO_POINT_F(h),
 					  -PAGE_TO_POINT_F(thick), PAGE_TO_POINT_F(thick),
 					  -PAGE_TO_POINT_F(w/2-thick), PAGE_TO_POINT_F(h-2*thick));
-		XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", right);
+		XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", right);
 
 		/* base */
 
-		xl_moveto(cx, tx-w/2, ty+h);
-		XP_FilePrintf(cx->prSetup->out, 
+		xl_moveto(aCX, tx-w/2, ty+h);
+		XP_FilePrintf(aCX->prSetup->out, 
 					  "%g %g rlineto %g 0 rlineto %g %g rlineto closepath\n",
 					  PAGE_TO_POINT_F(thick), PAGE_TO_POINT_F(thick),
 					  PAGE_TO_POINT_F(w-2*thick),
 					  PAGE_TO_POINT_F(thick), -PAGE_TO_POINT_F(thick));
-		XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", base);
+		XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", base);
 	}
 	else {
 		tx = x + w/2;
@@ -549,68 +555,81 @@ extern void xl_draw_3d_arrow(PSContext *cx, int x , int y, int thick, int w,
 
 		/* left */
 
-		xl_moveto(cx, tx, ty);
-		XP_FilePrintf(cx->prSetup->out, 
+		xl_moveto(aCX, tx, ty);
+		XP_FilePrintf(aCX->prSetup->out, 
 					  "%g %g rlineto %g %g rlineto %g %g rlineto closepath\n",
 					  -PAGE_TO_POINT_F(w/2), PAGE_TO_POINT_F(h),
 					  PAGE_TO_POINT_F(thick), -PAGE_TO_POINT_F(thick),
 					  PAGE_TO_POINT_F(w/2-thick), -PAGE_TO_POINT_F(h-2*thick));
-		XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", left);
+		XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", left);
 
 		/* right */
 
-		xl_moveto(cx, tx, ty);
-		XP_FilePrintf(cx->prSetup->out, 
+		xl_moveto(aCX, tx, ty);
+		XP_FilePrintf(aCX->prSetup->out, 
 					  "%g %g rlineto %g %g rlineto %g %g rlineto closepath\n",
 					  PAGE_TO_POINT_F(w/2), PAGE_TO_POINT_F(h),
 					  -PAGE_TO_POINT_F(thick), -PAGE_TO_POINT_F(thick),
 					  -PAGE_TO_POINT_F(w/2-thick), -PAGE_TO_POINT_F(h-2*thick));
-		XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", right);
+		XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", right);
 
 		/* base */
 
-		xl_moveto(cx, x, y);
-		XP_FilePrintf(cx->prSetup->out, 
+		xl_moveto(aCX, x, y);
+		XP_FilePrintf(aCX->prSetup->out, 
 					  "%g %g rlineto %g 0 rlineto %g %g rlineto closepath\n",
 					  PAGE_TO_POINT_F(thick), -PAGE_TO_POINT_F(thick),
 					  PAGE_TO_POINT_F(w-2*thick),
 					  PAGE_TO_POINT_F(thick), PAGE_TO_POINT_F(thick));
-		XP_FilePrintf(cx->prSetup->out, ".%d setgray fill\n", base);
+		XP_FilePrintf(aCX->prSetup->out, ".%d setgray fill\n", base);
 	}
 
-  XP_FilePrintf(cx->prSetup->out, "grestore\n");
+  XP_FilePrintf(aCX->prSetup->out, "grestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_line(PSContext* cx, int x1, int y1, int x2, int y2, int thick)
+void xl_line(PSContext* aCX, int x1, int y1, int x2, int y2, int thick)
 {
   XL_SET_NUMERIC_LOCALE();
-  XP_FilePrintf(cx->prSetup->out, "gsave %g setlinewidth\n ",
+  XP_FilePrintf(aCX->prSetup->out, "gsave %g setlinewidth\n ",
 				PAGE_TO_POINT_F(thick));
 
-  y1 -= cx->prInfo->page_topy;
-  y1 = (cx->prInfo->page_height - y1 - 1) + cx->prSetup->bottom;
-  y2 -= cx->prInfo->page_topy;
-  y2 = (cx->prInfo->page_height - y2 - 1) + cx->prSetup->bottom;
+  y1 -= aCX->prInfo->page_topy;
+  y1 = (aCX->prInfo->page_height - y1 - 1) + aCX->prSetup->bottom;
+  y2 -= aCX->prInfo->page_topy;
+  y2 = (aCX->prInfo->page_height - y2 - 1) + aCX->prSetup->bottom;
 
-  XP_FilePrintf(cx->prSetup->out, "%g %g moveto %g %g lineto\n",
+  XP_FilePrintf(aCX->prSetup->out, "%g %g moveto %g %g lineto\n",
 		PAGE_TO_POINT_F(x1), PAGE_TO_POINT_F(y1),
 		PAGE_TO_POINT_F(x2), PAGE_TO_POINT_F(y2));
-  xl_stroke(cx);
+  xl_stroke(aCX);
 
-  XP_FilePrintf(cx->prSetup->out, "grestore\n");
+  XP_FilePrintf(aCX->prSetup->out, "grestore\n");
   XL_RESTORE_NUMERIC_LOCALE();
 }
 
-void xl_stroke(PSContext *cx)
+void xl_stroke(PSContext *aCX)
 {
-    XP_FilePrintf(cx->prSetup->out, " stroke \n");
+    XP_FilePrintf(aCX->prSetup->out, " stroke \n");
 }
 
-void xl_fill(PSContext *cx)
+void xl_fill(PSContext *aCX)
 {
-    XP_FilePrintf(cx->prSetup->out, " fill \n");
+    XP_FilePrintf(aCX->prSetup->out, " fill \n");
 }
+
+
+void xl_graphics_save(PSContext *aCX)
+{
+    XP_FilePrintf(aCX->prSetup->out, " gsave \n");
+}
+
+
+void xl_graphics_restore(PSContext *aCX)
+{
+    XP_FilePrintf(aCX->prSetup->out, " grestore \n");
+}
+
 
 /*
 ** This function works, but is starting to show it's age, as the list
@@ -628,7 +647,7 @@ void xl_fill(PSContext *cx)
 ** +  It should squish the image if squishing is currently in effect.
 */
 
-void xl_colorimage(PSContext *cx, int x, int y, int w, int h, IL_Pixmap *image,
+void xl_colorimage(PSContext *aCX, int x, int y, int w, int h, IL_Pixmap *image,
                    IL_Pixmap *mask)
 {
     uint8 pixmap_depth;
@@ -643,7 +662,7 @@ void xl_colorimage(PSContext *cx, int x, int y, int w, int h, IL_Pixmap *image,
     NI_PixmapHeader *img_header = &image->header;
 
     XL_SET_NUMERIC_LOCALE();
-    f = cx->prSetup->out;
+    f = aCX->prSetup->out;
     pps = 1;
     row_ends_within_byte = 0;
     pixmap_depth = img_header->color_space->pixmap_depth;
@@ -656,7 +675,7 @@ void xl_colorimage(PSContext *cx, int x, int y, int w, int h, IL_Pixmap *image,
         pps = 8;
     }
     else if (pixmap_depth == 16) {
-        if (cx->prSetup->color) {
+        if (aCX->prSetup->color) {
             rowdata = (img_header->width*12)/8;
             row_ends_within_byte = (img_header->width*12)%8 ? 1 : 0;
             cbits = 4;
@@ -676,13 +695,13 @@ void xl_colorimage(PSContext *cx, int x, int y, int w, int h, IL_Pixmap *image,
     XP_FilePrintf(f, "gsave\n");
     XP_FilePrintf(f, "/rowdata %d string def\n",
                   rowdata + row_ends_within_byte);
-    xl_translate(cx, x, y + h);
+    xl_translate(aCX, x, y + h);
     XP_FilePrintf(f, "%g %g scale\n", PAGE_TO_POINT_F(w), PAGE_TO_POINT_F(h));
     XP_FilePrintf(f, "%d %d ", img_header->width, img_header->height);
     XP_FilePrintf(f, "%d ", cbits);
     XP_FilePrintf(f, "[%d 0 0 %d 0 %d]\n", img_header->width,
                   -img_header->height, img_header->height);
-    if (cx->prSetup->color && pixmap_depth == 16)
+    if (aCX->prSetup->color && pixmap_depth == 16)
         XP_FilePrintf(f, " smartimage12rgb\n");
     else if (pixmap_depth == 32) {
         XP_FilePrintf(f, " { currentfile rowdata readhexstring pop }\n");
@@ -700,7 +719,7 @@ void xl_colorimage(PSContext *cx, int x, int y, int w, int h, IL_Pixmap *image,
         for (col = 0; col < img_header->width; col += pps) {
             switch ( pixmap_depth ) {
             case 16:
-                if (cx->prSetup->color) {
+                if (aCX->prSetup->color) {
                     if (n > 76) {
                         XP_FilePrintf(f, "\n");
                         n = 0;
@@ -751,17 +770,17 @@ void xl_colorimage(PSContext *cx, int x, int y, int w, int h, IL_Pixmap *image,
 }
 
 MODULE_PRIVATE void
-xl_begin_squished_text(PSContext *cx, float scale)
+xl_begin_squished_text(PSContext *aCX, float scale)
 {
     XL_SET_NUMERIC_LOCALE();
-    XP_FilePrintf(cx->prSetup->out, "gsave %g 1 scale\n", scale);
+    XP_FilePrintf(aCX->prSetup->out, "gsave %g 1 scale\n", scale);
     XL_RESTORE_NUMERIC_LOCALE();
 }
 
 MODULE_PRIVATE void
-xl_end_squished_text(PSContext *cx)
+xl_end_squished_text(PSContext *aCX)
 {
-    XP_FilePrintf(cx->prSetup->out, "grestore\n");
+    XP_FilePrintf(aCX->prSetup->out, "grestore\n");
 }
 
 
