@@ -3367,24 +3367,15 @@ nsEditorShell::RemoveList(const PRUnichar *listType)
 {
   nsresult err = NS_NOINTERFACE;
 
-  nsAutoString aListType(listType);
   
   switch (mEditorType)
   {
     case eHTMLTextEditorType:
-      if (aListType.IsEmpty())
-      {
-        err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("ol"));
-        if(NS_SUCCEEDED(err))
-        {
-          err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("ul"));
-          if(NS_SUCCEEDED(err))
-            err = mEditor->RemoveList(NS_ConvertASCIItoUCS2("dl"));
-        }
-      }
-      else
-        err = mEditor->RemoveList(aListType);
+    {
+      nsAutoString aListType(listType);
+      err = mEditor->RemoveList(aListType);
       break;
+    }
 
     case ePlainTextEditorType:
     default:

@@ -324,10 +324,11 @@ nsresult nsComposerController::RegisterComposerCommands(nsIControllerCommandMana
   NS_REGISTER_STYLE_COMMAND(nsStyleUpdatingCommand, "cmd_var", "var");
   
   // lists
-  NS_REGISTER_STYLE_COMMAND(nsListCommand, "cmd_ol", "ol");
-  NS_REGISTER_STYLE_COMMAND(nsListCommand, "cmd_ul", "ul");
+  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ol", "ol");
+  NS_REGISTER_STYLE_COMMAND(nsListCommand,     "cmd_ul", "ul");
   NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dt", "dt");
   NS_REGISTER_STYLE_COMMAND(nsListItemCommand, "cmd_dd", "dd");
+  NS_REGISTER_ONE_COMMAND(nsRemoveListCommand, "cmd_removeList");
 
   // format stuff
   NS_REGISTER_ONE_COMMAND(nsParagraphStateCommand, "cmd_paragraphState");
