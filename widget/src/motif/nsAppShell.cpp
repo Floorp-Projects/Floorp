@@ -55,7 +55,15 @@ void nsAppShell::Create(int* argc, char ** argv)
 nsresult nsAppShell::Run()
 {
   XtRealizeWidget(mTopLevel);
-  XtAppMainLoop(mAppContext);
+
+//  XtAppMainLoop(mAppContext);
+  XEvent event;
+  for (;;) {
+    XtAppNextEvent(mAppContext, &event);
+    XtDispatchEvent(&event);
+    if (mDispatchListener)
+      mDispatchListener->AfterDispatch();
+  } 
 
   return NS_OK;
 }
