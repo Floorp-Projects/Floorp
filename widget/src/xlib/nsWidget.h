@@ -118,6 +118,8 @@ protected:
   Window        mBaseWindow;
   PRUint32      bg_rgb;
   unsigned long bg_pixel;
+  PRUint32      border_rgb;
+  unsigned long border_pixel;
   GC            mGC; // until we get gc pooling working...
   const char   *name;  // name of the type of widget
 };
