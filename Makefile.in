@@ -130,6 +130,10 @@ endif
 
 DIRS		+= xpinstall
 
+ifdef MOZ_PSM
+DIRS		+= security security/manager
+endif
+
 ifdef MOZ_EXTENSIONS
 DIRS		+= extensions
 endif

@@ -432,10 +432,6 @@ ifdef MOZ_DEBUG
 DEFINES		+= -DMOZ_REFLOW_PERF -DMOZ_REFLOW_PERF_DSP
 endif
 
-ifdef MOZ_SECURITY
-DEFINES		+= -DMOZ_SECURITY
-endif
-
 #
 # Platform dependent switching off of JAVA
 #
