@@ -101,6 +101,10 @@ components\myspell\*
 components\xpinstal.dll
 components\xpinstall.xpt
 
+; xmlextras (for RSS feeds and the like)
+components\xmlextras.dll
+components\xmlextras.xpt
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Base Package Files
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
