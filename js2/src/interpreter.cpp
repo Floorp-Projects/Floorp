@@ -14,25 +14,20 @@
 //
 // The Initial Developer of the Original Code is Netscape
 // Communications Corporation.  Portions created by Netscape are
-// Copyright (C) 1998 Netscape Communications Corporation. All
+// Copyright (C) 2000 Netscape Communications Corporation. All
 // Rights Reserved.
 
 #include "interpreter.h"
 #include "world.h"
 
 #include <map>
+#include <stack>
 
 namespace JavaScript {
 
 using std::map;
 using std::less;
 using std::pair;
-
-/**
- * Private representation of a JavaScript object.
- * This will change over time, so it is treated as an opaque
- * type everywhere else but here.
- */
 
 #if defined(XP_MAC)
     // copied from default template parameters in map.
@@ -47,57 +42,92 @@ using std::pair;
     typedef gc_allocator<JSValue> gc_map_allocator;
 #endif
 
-class JSObject : public map<String, JSValue, less<String>, gc_map_allocator> {
+class JSMap {
+    map<String, JSValue, less<String>, gc_map_allocator> properties;
 public:
-    void* operator new(size_t) { return alloc.allocate(1, 0); }
-    void operator delete(void* /* ptr */) {}
-private:
-    static gc_allocator<JSObject> alloc;
+     JSValue& operator[](const String& name)
+    {
+        return properties[name];
+    }
 };
+ 
+/**
+ * Private representation of a JavaScript object.
+ * This will change over time, so it is treated as an opaque
+ * type everywhere else but here.
+ */
+class JSObject : public JSMap, public gc_object<JSObject> {};
 
 /**
  * Private representation of a JavaScript array.
  */
-class JSArray : public JSObject {
+class JSArray : public JSMap, public gc_object<JSArray> {
+    JSValues elements;
 public:
-    void* operator new(size_t) { return alloc.allocate(1, 0); }
     JSArray() : elements(1) {}
     JSArray(uint32 size) : elements(size) {}
     JSArray(const JSValues &v) : elements(v) {}
-    uint32 length() { return elements.size(); }
+
+    uint32 length()
+    {
+        return elements.size();
+    }
+    
     JSValue& operator[](const JSValue& index)
     {
         // for now, we can only handle f64 index values.
         uint32 n = (uint32)index.f64;
         // obviously, a sparse representation might be better.
         uint32 size = elements.size();
-        if (n >= size) resize(n, size);
+        if (n >= size) expand(n, size);
         return elements[n];
     }
+    
     JSValue& operator[](uint32 n)
     {
         // obviously, a sparse representation might be better.
         uint32 size = elements.size();
-        if (n >= size) resize(n, size);
+        if (n >= size) expand(n, size);
         return elements[n];
     }
-    void resize(uint32 size) { elements.resize(size); }
+    
+    void resize(uint32 size)
+    {
+        elements.resize(size);
+    }
+
 private:
-    void resize(uint32 n, uint32 size)
+    void expand(uint32 n, uint32 size)
     {
         do {
             size *= 2;
         } while (n >= size);
         elements.resize(size);
     }
-private:
-    JSValues elements;
-    static gc_allocator<JSArray> alloc;
 };
 
-// static allocator (required when gc_allocator<T> is allocator<T>.
-gc_allocator<JSObject> JSObject::alloc;
-gc_allocator<JSArray> JSArray::alloc;
+/**
+ * Stores saved state from the *previous* activation, the current activation is alive
+ * and well in locals of the interpreter loop.
+ */
+struct JSFrame : public gc_object<JSFrame> {
+    JSFrame(InstructionIterator returnPC, InstructionIterator basePC, JSArray *registers, JSArray *variables, Register result) 
+            : itsReturnPC(returnPC), itsBasePC(basePC), itsRegisters(registers), itsVariables(variables), itsResult(result) { }
+
+    InstructionIterator itsReturnPC;
+    InstructionIterator itsBasePC;
+
+    JSArray *itsRegisters;             // rather not save these BUT:
+                                       // - switch temps (and others eventually?) are live across statments
+                                       // and need to be preserved.
+                                       // - better debugging if intermediate state can be recovered (?)
+    JSArray *itsVariables;            
+    Register itsResult;                // the desired target register for the return value
+
+};
+
+// a stack of JSFrames.
+typedef std::stack<JSFrame*, std::vector<JSFrame*, gc_allocator<JSFrame*> > > JSFrameStack;
 
 // operand access macros.
 #define op1(i) (i->itsOperand1)
@@ -109,57 +139,28 @@ gc_allocator<JSArray> JSArray::alloc;
 #define src1(i) op2(i)
 #define src2(i) op3(i)
 
-template <class T> class GCObject {
-public:
-    void* operator new(size_t) { return alloc.allocate(1, 0); }
-    void operator delete(void* /* ptr */) {}
-private:
-    static gc_allocator<T> alloc;
-};
-template <class T> gc_allocator<T> GCObject<T>::alloc;
-
-struct Frame : public GCObject<Frame> {
-
-    // Stores saved state from the *previous* activation, the current activation is alive
-    // and well in locals of the interpreter loop.
-    Frame(InstructionIterator returnPC, InstructionIterator basePC, JSArray *registers, JSArray *variables, Register result) 
-            : itsReturnPC(returnPC), itsBasePC(basePC), itsRegisters(registers), itsVariables(variables), itsResult(result) { }
-
-    InstructionIterator itsReturnPC;
-    InstructionIterator itsBasePC;
-
-    JSArray *itsRegisters;            // rather not save these BUT:
-                                       // - switch temps (and others eventually?) are live across statments
-                                       // and need to be preserved.
-                                       // - better debugging if intermediate state can be recovered (?)
-    JSArray *itsVariables;            
-    Register itsResult;                // the desired target register for the return value
-
-};
-
 static JSObject globals;
 
-void addGlobalProperty(String name,JSValue value)
+JSValue& defineGlobalProperty(const String& name, const JSValue& value)
 {
-    globals[name] = value;
+    return (globals[name] = value);
 }
-
 
 JSValue interpret(ICodeModule* iCode, const JSValues& args)
 {
-    std::vector<Frame *> stack;
+    // stack of JSFrames.
+    JSFrameStack frames;
 
     JSArray *locals = new JSArray(args);
-    // ensure that frame is large enough.
-    uint32 frameSize = iCode->itsMaxVariable + 1;
-    if (frameSize > locals->size())
-        locals->resize(frameSize);
+    // ensure that locals array is large enough.
+    uint32 localsSize = iCode->itsMaxVariable + 1;
+    if (localsSize > locals->length())
+        locals->resize(localsSize);
 
     JSArray *registers = new JSArray(iCode->itsMaxRegister + 1);
 
     InstructionIterator begin_pc = iCode->its_iCode->begin();
     InstructionIterator pc = begin_pc;
-
 
     while (true) {
         Instruction* instruction = *pc;
@@ -168,12 +169,12 @@ JSValue interpret(ICodeModule* iCode, const JSValues& args)
             {
                 Call* call = static_cast<Call*>(instruction);
                 JSArray *previousRegisters = registers;
-                stack.push_back(new Frame(++pc, begin_pc, registers, locals, op1(call)));
+                frames.push(new JSFrame(++pc, begin_pc, registers, locals, op1(call)));
                 ICodeModule *tgt = (*registers)[op2(call)].icm;
                 locals = new JSArray(tgt->itsMaxVariable + 1);
                 registers = new JSArray(tgt->itsMaxRegister + 1);
                 RegisterList args = op3(call);
-                for (RegisterList::iterator r = args.begin(); r != args.end(); r++)
+                for (RegisterList::iterator r = args.begin(); r != args.end(); ++r)
                     (*locals)[r - args.begin()] = (*previousRegisters)[(*r)];
                 begin_pc = pc = tgt->its_iCode->begin();
             }
@@ -184,10 +185,10 @@ JSValue interpret(ICodeModule* iCode, const JSValues& args)
                 JSValue result;
                 if (op1(ret) != NotARegister) 
                     result = (*registers)[op1(ret)];
-                if (stack.empty())
+                if (frames.empty())
                     return result;
-                Frame *fr = stack.back();
-                stack.pop_back();
+                JSFrame *fr = frames.top();
+                frames.pop();
                 registers = fr->itsRegisters;
                 locals = fr->itsVariables;
                 (*registers)[fr->itsResult] = result;
