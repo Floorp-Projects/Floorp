@@ -468,18 +468,6 @@ nsHashKey* FontAliasKey::Clone(void) const
 {
   return new FontAliasKey(mString);
 }
-
-static nsAutoString  gTimes("Times");
-static nsAutoString  gTimesNewRoman("Times New Roman");
-static nsAutoString  gTimesRoman("Times Roman");
-static nsAutoString  gArial("Arial");
-static nsAutoString  gHelvetica("Helvetica");
-static nsAutoString  gCourier("Courier");
-static nsAutoString  gCourierNew("Courier New");
-static nsAutoString  gUnicode("Unicode");
-static nsAutoString  gBitstreamCyberbit("Bitstream Cyberbit");
-static nsAutoString  gNullStr;
-
 nsresult DeviceContextImpl::CreateFontAliasTable()
 {
   nsresult result = NS_OK;
@@ -487,14 +475,26 @@ nsresult DeviceContextImpl::CreateFontAliasTable()
   if (nsnull == mFontAliasTable) {
     mFontAliasTable = new nsHashtable();
     if (nsnull != mFontAliasTable) {
-      AliasFont(gTimes, gTimesNewRoman, gTimesRoman, PR_FALSE);
-      AliasFont(gTimesRoman, gTimesNewRoman, gTimes, PR_FALSE);
-      AliasFont(gTimesNewRoman, gTimesRoman, gTimes, PR_FALSE);
-      AliasFont(gArial, gHelvetica, gNullStr, PR_FALSE);
-      AliasFont(gHelvetica, gArial, gNullStr, PR_FALSE);
-      AliasFont(gCourier, gCourierNew, gNullStr, PR_TRUE);
-      AliasFont(gCourierNew, gCourier, gNullStr, PR_FALSE);
-      AliasFont(gUnicode, gBitstreamCyberbit, gNullStr, PR_FALSE); // XXX ????
+
+      nsAutoString  times("Times");
+      nsAutoString  timesNewRoman("Times New Roman");
+      nsAutoString  timesRoman("Times Roman");
+      nsAutoString  arial("Arial");
+      nsAutoString  helvetica("Helvetica");
+      nsAutoString  courier("Courier");
+      nsAutoString  courierNew("Courier New");
+      nsAutoString  unicode("Unicode");
+      nsAutoString  bitstreamCyberbit("Bitstream Cyberbit");
+      nsAutoString  nullStr;
+
+      AliasFont(times, timesNewRoman, timesRoman, PR_FALSE);
+      AliasFont(timesRoman, timesNewRoman, times, PR_FALSE);
+      AliasFont(timesNewRoman, timesRoman, times, PR_FALSE);
+      AliasFont(arial, helvetica, nullStr, PR_FALSE);
+      AliasFont(helvetica, arial, nullStr, PR_FALSE);
+      AliasFont(courier, courierNew, nullStr, PR_TRUE);
+      AliasFont(courierNew, courier, nullStr, PR_FALSE);
+      AliasFont(unicode, bitstreamCyberbit, nullStr, PR_FALSE); // XXX ????
     }
     else {
       result = NS_ERROR_OUT_OF_MEMORY;
