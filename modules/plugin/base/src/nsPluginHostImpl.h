@@ -51,7 +51,6 @@
 #include "nsPluginsDir.h"
 #include "nsVoidArray.h"  // array for holding "active" streams
 #include "nsIDirectoryService.h"
-#include "nsWeakReference.h"
 #include "nsWeakPtr.h"
 
 class ns4xPlugin;
@@ -178,8 +177,7 @@ class nsPluginHostImpl : public nsIPluginManager2,
                          public nsIFileUtilities,
                          public nsICookieStorage,
                          public nsIObserver,
-                         public nsPIPluginHost,
-                         public nsSupportsWeakReference
+                         public nsPIPluginHost
 {
 public:
   nsPluginHostImpl();

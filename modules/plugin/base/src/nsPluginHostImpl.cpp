@@ -2604,8 +2604,8 @@ nsPluginHostImpl::nsPluginHostImpl()
   nsCOMPtr<nsIObserverService> obsService = do_GetService("@mozilla.org/observer-service;1");
   if (obsService)
   {
-    obsService->AddObserver(this, "quit-application", PR_TRUE);
-    obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+    obsService->AddObserver(this, "quit-application", PR_FALSE);
+    obsService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }
 
 #ifdef PLUGIN_LOGGING
@@ -2636,15 +2636,14 @@ nsPluginHostImpl::~nsPluginHostImpl()
 }
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS8(nsPluginHostImpl,
+NS_IMPL_ISUPPORTS7(nsPluginHostImpl,
                    nsIPluginManager,
                    nsIPluginManager2,
                    nsIPluginHost,
                    nsIFileUtilities,
                    nsICookieStorage,
                    nsIObserver,
-                   nsPIPluginHost,
-                   nsISupportsWeakReference);
+                   nsPIPluginHost);
 ////////////////////////////////////////////////////////////////////////
 NS_METHOD
 nsPluginHostImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
