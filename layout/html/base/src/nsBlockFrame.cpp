@@ -3766,6 +3766,13 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
                  "unconstrained height on totally empty line");
 
     aState.mY += aState.mAvailSpaceRect.height;
+
+    // We don't want to advance by the bottom margin anymore (we did it
+    // once at the beginning of this function, which will just be called
+    // again), and we certainly don't want to go back if it's negative
+    // (infinite loop, bug 153429).
+    aState.mPrevBottomMargin.Zero();
+
     // XXX: a small optimization can be done here when paginating:
     // if the new Y coordinate is past the end of the block then
     // push the line and return now instead of later on after we are
