@@ -35,7 +35,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.24 2002/02/22 04:23:26 wtc%netscape.com Exp $
+ * $Id: sslsock.c,v 1.25 2002/02/26 00:28:15 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -1288,14 +1288,15 @@ ssl_GetPeerInfo(sslSocket *ss)
 	return SECFailure;
     }
     ss->TCPconnected = 1;
-    /* we have to mask off the high byte because AIX is lame */
-    if ((sin.inet.family & 0xff) == PR_AF_INET) {
+    if (sin.inet.family == PR_AF_INET) {
         PR_ConvertIPv4AddrToIPv6(sin.inet.ip, &ci->peer);
 	ci->port = sin.inet.port;
-    } else {
-        PORT_Assert(sin.ipv6.family == PR_AF_INET6);
+    } else if (sin.ipv6.family == PR_AF_INET6) {
 	ci->peer = sin.ipv6.ip;
 	ci->port = sin.ipv6.port;
+    } else {
+	PORT_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR);
+    	return SECFailure;
     }
     return SECSuccess;
 }
