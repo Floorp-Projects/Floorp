@@ -474,19 +474,17 @@ Rights Reserved.
       </menu>
       <menuitem name="&editMsgAsNewCmd.label;" onclick="MsgEditMessageAsNew();"/>
       <separator/>
-      <menu name="&moveMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" 
-			onclick="MsgMoveMessage(event.target)">
+      <menu name="&moveMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
         <template> 
           <rule iscontainer="true" isempty="false">
             <menu uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </rule>
           <rule>
-           <menuitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" onclick="MsgCopyMessage(event.target)" />
+           <menuitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" onclick="MsgMoveMessage(event.target)" />
           </rule>
         </template>
       </menu>
-      <menu name="&copyMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" 
-			onclick="MsgCopyMessage(event.target)">
+      <menu name="&copyMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
         <template>
           <rule iscontainer="true" isempty="false">
             <menu uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name"/>
