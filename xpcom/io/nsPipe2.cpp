@@ -329,9 +329,12 @@ nsPipe::nsPipeInputStream::GetLength(PRUint32 *result)
             : pipe->mReadLimit;
         len -= pipe->mBuffer.GetSegmentSize() - (end - pipe->mReadCursor);
     }
-    if (pipe->mWriteCursor)
-        len -= pipe->mWriteLimit - pipe->mWriteCursor;
-    return len;
+//    if (pipe->mWriteCursor)
+        //len -= pipe->mWriteLimit - pipe->mWriteCursor;
+
+	if (result)
+		*result = len;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
