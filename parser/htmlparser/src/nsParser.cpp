@@ -444,23 +444,29 @@ eParseMode DetermineParseMode(nsParser& aParser) {
     nsAutoString theBufCopy;
     nsString& theBuffer=theScanner->GetBuffer();
     theBuffer.Left(theBufCopy,125);
-    theBufCopy.ToUpperCase();
-    PRInt32 theIndex=theBufCopy.Find("<!DOCTYPE");
-    if(kNotFound==theIndex){
-      theIndex=theBufCopy.Find("<DOCTYPE");
-    }
+    PRInt32 theIndex=theBufCopy.Find("<!");
+    if(theIndex!=kNotFound) 
+      theIndex=theBufCopy.Find("DOCTYPE",PR_TRUE,2);
 
     if(kNotFound<theIndex) {
       //good, we found "DOCTYPE" -- now go find it's end delimiter '>'
       PRInt32 theSubIndex=theBufCopy.FindChar(kGreaterThan,theIndex+1);
       theBufCopy.Truncate(theSubIndex);
-      theSubIndex=theBufCopy.Find("HTML 4.0");
+      theSubIndex=theBufCopy.Find("HTML 4.0",PR_TRUE,theIndex+8);
       if(kNotFound<theSubIndex) {
-        return eParseMode_raptor;
+        if(theBufCopy.Find("TRANSITIONAL",PR_TRUE,theSubIndex)>kNotFound)
+          return eParseMode_navigator;
+        else if((theBufCopy.Find("FRAMESET",PR_TRUE,theSubIndex)>kNotFound) ||
+                (theBufCopy.Find("LATIN1", PR_TRUE,theSubIndex) >kNotFound) ||
+                (theBufCopy.Find("SYMBOLS",PR_TRUE,theSubIndex) >kNotFound) ||
+                (theBufCopy.Find("SPECIAL",PR_TRUE,theSubIndex) >kNotFound))
+          return eParseMode_navigator; // XXX -HACK- Set the appropriate mode.
+        else
+          return eParseMode_noquirks;
       }
     }
 
-    theIndex=theBufCopy.Find("NOQUIRKS");
+    theIndex=theBufCopy.Find("NOQUIRKS",PR_TRUE);
     if(kNotFound<theIndex) {
       return eParseMode_noquirks;
     }

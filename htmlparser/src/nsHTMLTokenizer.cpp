@@ -339,7 +339,14 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
         break;
 
       case kExclamation:
-        result=ConsumeComment(aChar,aToken,aScanner);
+        PRUnichar theNextChar; 
+        result=aScanner.Peek(theNextChar);
+        if(NS_OK==result) {
+          if(theNextChar==kMinus)
+            result=ConsumeComment(aChar,aToken,aScanner);
+          else
+            result=ConsumeSpecialMarkup(aChar,aToken,aScanner); 
+        }
         break;
 
       case kQuestionMark: //it must be an XML processing instruction...
@@ -639,6 +646,38 @@ nsresult nsHTMLTokenizer::ConsumeText(const nsString& aString,CToken*& aToken,ns
       }
       else result=NS_OK;
     }
+    AddToken(aToken,result,mTokenDeque,theRecycler);
+  }
+  return result;
+}
+
+/**
+ *  This method is called just after a "<!" has been consumed.
+ *  NOTE: Here we might consume DOCTYPE and "special" markups. 
+ * 
+ *  
+ *  @update harishd 09/02/99
+ *  @param  aChar: last char read
+ *  @param  aScanner: see nsScanner.h
+ *  @param  anErrorCode: arg that will hold error condition
+ *  @return new token or null 
+ */
+nsresult nsHTMLTokenizer::ConsumeSpecialMarkup(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner){
+  nsresult result=NS_OK;
+  nsAutoString theBufCopy;
+  nsString& theBuffer=aScanner.GetBuffer();
+  theBuffer.Mid(theBufCopy,aScanner.GetOffset(),20);
+  theBufCopy.ToUpperCase();
+  PRInt32 theIndex=theBufCopy.Find("DOCTYPE");
+  CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
+  
+  if(theIndex==kNotFound)
+    aToken = theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment);
+  else
+    aToken = theRecycler->CreateTokenOfType(eToken_doctypeDecl,eHTMLTag_unknown);
+  
+  if(aToken) {
+    result=aToken->Consume(aChar,aScanner);
     AddToken(aToken,result,mTokenDeque,theRecycler);
   }
   return result;

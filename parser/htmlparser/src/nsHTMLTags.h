@@ -39,8 +39,9 @@ enum nsHTMLTag {
 #include "nsHTMLTagList.h"
 
   /* The remaining enums are not for tags */
-  eHTMLTag_text, eHTMLTag_whitespace, eHTMLTag_newline, 
-  eHTMLTag_comment, eHTMLTag_entity, eHTMLTag_userdefined
+  eHTMLTag_text,    eHTMLTag_whitespace, eHTMLTag_newline, 
+  eHTMLTag_comment, eHTMLTag_entity,     eHTMLTag_mdo,
+  eHTMLTag_userdefined
 };
 #undef HTML_TAG
 

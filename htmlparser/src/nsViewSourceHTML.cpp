@@ -889,6 +889,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       }
       break;
 
+    case eToken_doctypeDecl:
     case eToken_comment:
       {
         if(!mIsPlaintext){

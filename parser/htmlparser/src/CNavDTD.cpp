@@ -251,6 +251,8 @@ PRInt32 NavDispatchTokenHandler(CToken* aToken,nsIDTD* aDTD) {
         result=theDTD->HandleStyleToken(aToken); break;
       case eToken_instruction:
         result=theDTD->HandleProcessingInstructionToken(aToken); break;
+      case eToken_doctypeDecl:
+        result=theDTD->HandleDocTypeDeclToken(aToken); break;
       default:
         result=0;
     }//switch
@@ -303,6 +305,7 @@ void CNavDTD::InitializeDefaultTokenHandlers() {
   AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_style));
   AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_skippedcontent));
   AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_instruction));
+  AddTokenHandler(new CTokenHandler(NavDispatchTokenHandler,eToken_doctypeDecl));
 }
 
 /**
@@ -1614,7 +1617,8 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
 nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
   
-  mLineNumber += (aToken->GetStringValueXXX()).CountChar(kNewLine);
+  nsString& theComment=aToken->GetStringValueXXX();
+  mLineNumber += (theComment).CountChar(kNewLine);
   nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
 
   #ifdef  RICKG_DEBUG
@@ -1692,6 +1696,34 @@ nsresult CNavDTD::HandleProcessingInstructionToken(CToken* aToken){
   #endif
 
   nsresult result=(mSink) ? mSink->AddProcessingInstruction(aNode) : NS_OK; 
+  return result;
+}
+
+/**
+ *  This method gets called when a DOCTYPE token has been 
+ *  encountered in the parse process. 
+ *  
+ *  @update  harishd 09/02/99
+ *  @param   aToken -- The very first token to be handled
+ *  @return  PR_TRUE if all went well; PR_FALSE if error occured
+ */
+nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
+  NS_PRECONDITION(0!=aToken,kNullToken);
+
+  nsresult result=NS_OK;
+
+  #ifdef  RICKG_DEBUG
+    WriteTokenToLog(aToken);
+  #endif
+
+  CParserContext* pc=(mParser)? mParser->PeekContext():nsnull; 
+  if(pc) {
+    nsString& docTypeStr=aToken->GetStringValueXXX();
+    mLineNumber += (docTypeStr).CountChar(kNewLine);
+    docTypeStr.Trim("<!>");
+    nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenizer->GetTokenRecycler());
+    result = (mSink)? mSink->AddDocTypeDecl(theNode, pc->mParseMode):NS_OK;
+  }
   return result;
 }
 
@@ -1830,6 +1862,7 @@ NS_IMETHODIMP CNavDTD::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
 PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
   PRBool result=PR_FALSE;
   PRBool parentCanContain=CanContain(aParentTag,aChildTag);
+  eHTMLTags theTempTag=eHTMLTag_unknown;
 
   if(aParentTag==aChildTag) {
     return result;
@@ -1839,6 +1872,7 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
   if(nsHTMLElement::IsContainer(aChildTag)){
     if(!gHTMLElements[aChildTag].HasSpecialProperty(kNoPropagate)){
       if(nsHTMLElement::IsBlockParent(aParentTag) || (gHTMLElements[aParentTag].GetSpecialChildren())) {
+        theTempTag=aChildTag;
         while(eHTMLTag_unknown!=aChildTag) {
           if(parentCanContain){
             result=PR_TRUE;
@@ -1846,6 +1880,7 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
           }//if
           CTagList* theTagList=gHTMLElements[aChildTag].GetRootTags();
           aChildTag=theTagList->GetTagAt(0);
+          if(aChildTag==theTempTag) break;
           parentCanContain=CanContain(aParentTag,aChildTag);
           ++thePropLevel;
         }//while
