@@ -304,7 +304,7 @@ CrossCheck("profiles", "userid",
            ['profiles_activity', 'who'],
            ["bugs", "reporter", "bug_id"],
            ["bugs", "assigned_to", "bug_id"],
-           ["bugs", "qa_contact", "bug_id", ["0"]],
+           ["bugs", "qa_contact", "bug_id"],
            ["attachments", "submitter_id", "bug_id"],
            ['flags', 'setter_id', 'bug_id'],
            ['flags', 'requestee_id', 'bug_id'],
@@ -322,7 +322,7 @@ CrossCheck("profiles", "userid",
            ["tokens", "userid"],
            ["user_group_map", "user_id"],
            ["components", "initialowner", "name"],
-           ["components", "initialqacontact", "name", ["0"]]);
+           ["components", "initialqacontact", "name"]);
 
 CrossCheck("products", "id",
            ["bugs", "product_id", "bug_id"],

@@ -1854,12 +1854,12 @@ unless ($sth->rows) {
     # note: since admin user is not yet known, components gets a 0 for 
     # initialowner and this is fixed during final checks.
     $dbh->do("INSERT INTO components (name, product_id, description, " .
-                                     "initialowner, initialqacontact) " .
+                                     "initialowner) " .
              "VALUES (" .
              "'TestComponent', $product_id, " .
              "'This is a test component in the test product database.  " .
              "This ought to be blown away and replaced with real stuff in " .
-             "a finished installation of Bugzilla.', 0, 0)");
+             "a finished installation of Bugzilla.', 0)");
     $dbh->do(q{INSERT INTO milestones (product_id, value, sortkey) 
                VALUES (?,?,?)},
              undef, $product_id, '---', 0);
@@ -3856,6 +3856,13 @@ if(!$dbh->bz_get_field_def('bugs', 'lastdiffed')->[2]) {
 # 2005-03-03 travis@sedsystems.ca -- Bug 41972
 add_setting ("display_quips", {"on" => 1, "off" => 2 }, "on" );
 
+# 2005-03-09 qa_contact should be NULL instead of 0, bug 285534
+if (!$dbh->bz_get_field_def('bugs', 'qa_contact')->[2]) { # if it's NOT NULL
+    $dbh->bz_change_field_type('bugs', 'qa_contact', 'mediumint');
+    $dbh->do("UPDATE bugs SET qa_contact = NULL WHERE qa_contact = 0");
+    $dbh->do("UPDATE components SET initialqacontact = NULL
+               WHERE initialqacontact = 0");
+}
 
 } # END LEGACY CHECKS
 

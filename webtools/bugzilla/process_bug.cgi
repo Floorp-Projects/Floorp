@@ -349,6 +349,9 @@ sub CheckCanChangeField {
     # START DO_NOT_CHANGE
     my ($field, $bugid, $oldvalue, $newvalue) = (@_);
 
+    $oldvalue = defined($oldvalue) ? $oldvalue : '';
+    $newvalue = defined($newvalue) ? $newvalue : '';
+
     # Return true if they haven't changed this field at all.
     if ($oldvalue eq $newvalue) {
         return 1;
@@ -436,7 +439,7 @@ sub CheckCanChangeField {
     }
     
     # Allow the QA contact to change anything else.
-    if (Param('useqacontact') && ($qacontactid == $whoid)) {
+    if (Param('useqacontact') && $qacontactid && ($qacontactid == $whoid)) {
         return 1;
     }
     
@@ -877,13 +880,17 @@ my $qacontact;
 if (defined $::FORM{'qa_contact'}
     && $::FORM{'knob'} ne "reassignbycomponent")
 {
-    $qacontact = 0;
     my $name = trim($::FORM{'qa_contact'});
     # The QA contact cannot be deleted from show_bug.cgi for a single bug!
     if ($name ne $::FORM{'dontchange'}) {
         $qacontact = DBNameToIdAndCheck($name) if ($name ne "");
         DoComma();
-        $::query .= "qa_contact = $qacontact";
+        if($qacontact) {
+            $::query .= "qa_contact = $qacontact";
+        }
+        else {
+            $::query .= "qa_contact = NULL";
+        }
     }
 }
 
@@ -967,9 +974,14 @@ SWITCH: for ($::FORM{'knob'}) {
         if (Param("useqacontact")) {
             SendSQL("SELECT initialqacontact FROM components " .
                     "WHERE components.id = $comp_id");
-            $qacontact = FetchOneColumn() || 0;
+            $qacontact = FetchOneColumn();
             DoComma();
-            $::query .= "qa_contact = $qacontact";
+            if ($qacontact) {
+                $::query .= "qa_contact = $qacontact";
+            }
+            else {
+                $::query .= "qa_contact = NULL";
+            }
         }
         last SWITCH;
     };   

@@ -154,7 +154,7 @@ if (Param("useqacontact")) {
         $qa_contact = DBNameToIdAndCheck(trim($::FORM{'qa_contact'}));
     }
 
-    if (defined $qa_contact && $qa_contact != 0) {
+    if ($qa_contact) {
         $::FORM{'qa_contact'} = $qa_contact;
         push(@bug_fields, "qa_contact");
     }

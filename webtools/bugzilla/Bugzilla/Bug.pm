@@ -372,7 +372,7 @@ sub qa_contact () {
     my ($self) = @_;
     return $self->{'qa_contact'} if exists $self->{'qa_contact'};
 
-    if (Param('useqacontact') && $self->{'qa_contact_id'} > 0) {
+    if (Param('useqacontact') && $self->{'qa_contact_id'}) {
         $self->{'qa_contact'} = new Bugzilla::User($self->{'qa_contact_id'});
     } else {
         # XXX - This is somewhat inconsistent with the assignee/reporter 

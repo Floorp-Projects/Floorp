@@ -145,7 +145,7 @@ use constant ABSTRACT_SCHEMA => {
             resolution          => {TYPE => 'varchar(64)', NOTNULL => 1},
             target_milestone    => {TYPE => 'varchar(20)',
                                     NOTNULL => 1, DEFAULT => "'---'"},
-            qa_contact          => {TYPE => 'INT3', NOTNULL => 1},
+            qa_contact          => {TYPE => 'INT3'},
             status_whiteboard   => {TYPE => 'MEDIUMTEXT', NOTNULL => 1,
                                     DEFAULT => "''"},
             votes               => {TYPE => 'INT3', NOTNULL => 1,

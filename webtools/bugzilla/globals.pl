@@ -595,6 +595,7 @@ sub ValidatePassword {
 
 sub DBID_to_name {
     my ($id) = (@_);
+    return "__UNKNOWN__" if !defined $id;
     # $id should always be a positive integer
     if ($id =~ m/^([1-9][0-9]*)$/) {
         $id = $1;
