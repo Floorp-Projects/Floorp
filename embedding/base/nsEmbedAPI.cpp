@@ -97,7 +97,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
         nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(sServiceManager, &rv);
         if (NS_FAILED(rv))
         {
-            NS_ASSERTION(PR_FALSE, "Could not QI to registrar");
+            NS_WARNING("Could not QI to registrar");
             return rv;
         }
 #ifdef DEBUG
@@ -105,7 +105,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
 
         if (NS_FAILED(rv))
         {
-            NS_ASSERTION(PR_FALSE, "Could not AutoRegister");
+            NS_WARNING("Could not AutoRegister");
             return rv;
         }
 
@@ -126,11 +126,7 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
             if (mreDir)
             {
                 rv = registrar->AutoRegister(mreDir);
-                if (NS_FAILED(rv))
-                {
-                    NS_ASSERTION(PR_FALSE, "Could not AutoRegister MRE components");
-                    return rv;
-                }
+                NS_ASSERTION(NS_SUCCEEDED(rv), "Could not AutoRegister MRE components");
             }
         }
 #endif
