@@ -43,7 +43,7 @@ var progressListener = {
       if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_START)
       {
         // Put progress meter in undetermined mode.
-        dialog.progress.setAttribute( "value", 0 );
+        // dialog.progress.setAttribute( "value", 0 );
         dialog.progress.setAttribute( "mode", "undetermined" );
       }
       
@@ -61,9 +61,10 @@ var progressListener = {
         // Put progress meter at 100%.
         dialog.progress.setAttribute( "value", 100 );
         dialog.progress.setAttribute( "mode", "normal" );
-        var percentMsg = getString( "percentMsg" );
+        var percentMsg = getString( "progressText" );
         percentMsg = replaceInsert( percentMsg, 1, 100 );
         dialog.progressText.setAttribute("value", percentMsg);
+
         window.close();
       }
     },
@@ -81,6 +82,8 @@ var progressListener = {
         if ( percent > 100 )
           percent = 100;
         
+        dialog.progress.removeAttribute( "mode");
+        
         // Advance progress meter.
         dialog.progress.setAttribute( "value", percent );
       } 
@@ -92,11 +95,8 @@ var progressListener = {
         dialog.progress.setAttribute( "mode", "undetermined" );
       }
 
-      // Update status msg.
-      dialog.status.setAttribute("value", status);
-
       // Update percentage label on progress meter.
-      var percentMsg = getString( "percentMsg" );
+      var percentMsg = getString( "progressText" );
       percentMsg = replaceInsert( percentMsg, 1, percent );
       dialog.progressText.setAttribute("value", percentMsg);
     },
@@ -108,7 +108,8 @@ var progressListener = {
 
     onStatusChange: function(aWebProgress, aRequest, aStatus, aMessage)
     {
-      dialog.status.setAttribute("value", aMessage);
+      if (aMessage != "")
+        dialog.status.setAttribute("value", aMessage);
     },
 
     onSecurityChange: function(aWebProgress, aRequest, state)
@@ -195,7 +196,7 @@ function onLoad() {
 
     // set our web progress listener on the helper app launcher
     msgProgress.registerListener(progressListener);
-    window.moveTo(opener.screenX + 16, opener.screenY + 32);
+    moveToAlertPosition();
 
     //We need to delay the set title else dom will overwrite it
     return window.setTimeout(SetTitle, 0, subject);

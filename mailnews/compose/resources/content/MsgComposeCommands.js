@@ -118,14 +118,14 @@ var progressListener = {
     {
       if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_START)
       {
-        document.getElementById('progressmeter').setAttribute( "mode", "undetermined" );
+        document.getElementById('compose-progressmeter').setAttribute( "mode", "undetermined" );
       }
       
       if (aStateFlags & Components.interfaces.nsIWebProgressListener.STATE_STOP)
       {
         sendOrSaveOperationInProgress = false;
-        document.getElementById('progressmeter').setAttribute( "mode", "normal" );
-        document.getElementById('progressmeter').setAttribute( "value", 0 );
+        document.getElementById('compose-progressmeter').setAttribute( "mode", "normal" );
+        document.getElementById('compose-progressmeter').setAttribute( "value", 0 );
         setTimeout("document.getElementById('statusText').setAttribute('label', '')", 5000);
       }
     },

@@ -55,6 +55,7 @@ Contributor(s):
     <data id="dialog.strings.titlePrefixSave">&titlePrefixSave;</data>
     <data id="dialog.strings.messageSent">&messageSent;</data>
     <data id="dialog.strings.messageSaved">&messageSaved;</data>
+    <data id="dialog.strings.progressText">&percentMsg;</data>
 
     <grid flex="1">
       <columns>
@@ -75,7 +76,7 @@ Contributor(s):
           </box>
           <progressmeter id="dialog.progress" mode="normal" value="0"/>
           <box autostretch="never" halign="right">
-            <text class="label" id="dialog.progressText" value="&#160;"/>
+            <text class="label" id="dialog.progressText" value="&percentMsg;"/>
           </box>
         </row>
       </rows>
