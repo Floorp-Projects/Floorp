@@ -79,6 +79,7 @@ pref("browser.display.background_color",    "#FFFFFF");
 pref("browser.anchor_color",                "#0000EE");
 pref("browser.visited_color",               "#551A8B");
 pref("browser.underline_anchors",           true);
+pref("browser.blink_allowed",               true);
 
 pref("browser.display.use_focus_colors",    false);
 pref("browser.display.focus_background_color", "#117722");
