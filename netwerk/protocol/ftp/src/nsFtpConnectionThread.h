@@ -106,7 +106,7 @@ typedef enum _FTP_ACTION {
 	DEL
 } FTP_ACTION;
 
-class nsFtpConnectionThread : public nsIRunnable {
+class nsFtpConnectionThread : public nsIRunnable, nsICancelable {
 public:
     NS_DECL_ISUPPORTS
 
@@ -115,6 +115,11 @@ public:
 	
 	// nsIRunnable method
 	NS_IMETHOD Run();
+
+    // nsICancelable methods:
+    NS_IMETHOD Cancel(void);
+    NS_IMETHOD Suspend(void);
+    NS_IMETHOD Resume(void);
 
     nsresult Init(nsIThread* aThread,
                   nsIUrl* aUrl);
