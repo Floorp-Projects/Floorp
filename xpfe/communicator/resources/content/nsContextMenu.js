@@ -745,5 +745,22 @@ nsContextMenu.prototype = {
       } else  {
         return(node.localName.toUpperCase() == "TEXTAREA");
       }
+    },
+    
+    // Determines whether or not the separator with the specified ID should be 
+    // shown or not by determining if there are any non-hidden items between it
+    // and the previous separator. 
+    shouldShowSeparator : function ( aSeparatorID )
+    {
+      var separator = document.getElementById(aSeparatorID);
+      if (separator) {
+        var sibling = separator.previousSibling;
+        while (sibling && sibling.localName != "menuseparator") {
+          if (sibling.getAttribute("hidden") != "true")
+            return true;
+          sibling = sibling.previousSibling;
+        }
+      }
+      return false;  
     }
 };
