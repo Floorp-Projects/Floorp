@@ -61,4 +61,4 @@ Rights Reserved.
 <!ENTITY useMIME.label                        "Using the 'quoted printable' MIME encoding (does not work well with some mail or newsgroups readers)">
 <!ENTITY useMIME.accesskey                    "m">
 
-<!ENTITY sendDefaultCharset.label             "Send default charset coding:">
+<!ENTITY sendDefaultCharset.label             "Default Character Coding:">
