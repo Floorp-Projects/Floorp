@@ -37,7 +37,21 @@
 #define ns_globals_h
 
 #include "prlog.h"
-extern PRLogModuleInfo *prLogModuleInfo; // defined in WrapperFactory.cpp
+extern PRLogModuleInfo *prLogModuleInfo; // defined in WrapperFactoryImpl.cpp
+
+extern const char *gImplementedInterfaces[]; // defined in WrapperFactoryImpl.cpp
+
+typedef enum {
+    WINDOW_CONTROL_INDEX = 0,
+    NAVIGATION_INDEX,
+    CURRENT_PAGE_INDEX,
+    HISTORY_INDEX,
+    EVENT_REGISTRATION_INDEX,
+    BOOKMARKS_INDEX,
+    PREFERENCES_INDEX,
+    PROFILE_MANAGER_INDEX
+} WEBCLIENT_INTERFACES;
+
 
 /**
 

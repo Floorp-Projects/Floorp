@@ -50,7 +50,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_WindowCon
     // PENDING set this into the nativeBrowserControl for use later
 #endif
 
-    nativeBrowserControl->Realize((void *) windowPtr, &alreadyRealized,
+    nativeBrowserControl->Realize(aBrowserControlImpl,
+                                  (void *) windowPtr, &alreadyRealized,
                                   width, height);
 }
 

@@ -42,6 +42,7 @@ NativeBrowserControl::NativeBrowserControl(void)
     mNavigation = nsnull;
     mSessionHistory = nsnull;
     mWindow = nsnull;
+    mJavaBrowserControl = nsnull;
     mChromeMask       = 0;
     mIsChrome         = PR_FALSE;
     mChromeLoaded     = PR_FALSE;
@@ -54,6 +55,7 @@ NativeBrowserControl::~NativeBrowserControl()
     mChromeMask       = 0;
     mIsChrome         = PR_FALSE;
     mChromeLoaded     = PR_FALSE;
+    mJavaBrowserControl = nsnull;
 }
 
 nsresult
@@ -93,9 +95,12 @@ NativeBrowserControl::Init()
 }
 
 nsresult
-NativeBrowserControl::Realize(void *parentWinPtr, PRBool *aAlreadyRealized,
+NativeBrowserControl::Realize(jobject javaBrowserControl,
+                              void *parentWinPtr, PRBool *aAlreadyRealized,
                               PRUint32 width, PRUint32 height)
 {
+    mJavaBrowserControl = javaBrowserControl;
+
     // Create our session history object and tell the navigation object
     // to use it.  We need to do this before we create the web browser
     // window.
@@ -122,6 +127,18 @@ NativeBrowserControl::Realize(void *parentWinPtr, PRBool *aAlreadyRealized,
     supportsWeak->GetWeakReference(getter_AddRefs(weakRef));
     mWindow->AddWebBrowserListener(weakRef,
                                    nsIWebProgressListener::GetIID());
+
+    // set the eventRegistration into the progress listener
+    jobject eventRegistration = 
+        this->QueryInterfaceJava(EVENT_REGISTRATION_INDEX);
+    if (nsnull != eventRegistration) {
+        mProgress->SetEventRegistration(eventRegistration);
+    }
+    else {
+        JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+        ::util_ThrowExceptionToJava(env, "Can't get EventRegistration from BrowserControl");
+    }
+
 
     return NS_OK;
 }
@@ -204,4 +221,27 @@ NativeBrowserControl::Destroy(void)
     
     parentHWnd = nsnull;
 }
+
+jobject NativeBrowserControl::QueryInterfaceJava(WEBCLIENT_INTERFACES interface)
+{
+    PR_ASSERT(nsnull != mJavaBrowserControl);
+    JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION);
+
+    jobject result = nsnull;
+    jstring interfaceJStr = ::util_NewStringUTF(env, 
+                                                gImplementedInterfaces[interface]);
     
+    jclass clazz = env->GetObjectClass(mJavaBrowserControl);
+    jmethodID mid = env->GetMethodID(clazz, "queryInterface", 
+                                     "(Ljava/lang/String;)Ljava/lang/Object;");
+    if (nsnull != mid) {
+        result = env->CallObjectMethod(mJavaBrowserControl, mid,
+                                       interfaceJStr);
+    }
+    else {
+        ::util_ThrowExceptionToJava(env, "Can't QueryInterface BrowserControl");
+    }
+    ::util_DeleteStringUTF(env, interfaceJStr);
+    
+    return result;
+}    

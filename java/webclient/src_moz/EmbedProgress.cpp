@@ -50,7 +50,21 @@ nsresult
 EmbedProgress::Init(NativeBrowserControl *aOwner)
 {
   mOwner = aOwner;
+
+  if (-1 == DocumentLoader_maskValues[0]) {
+      util_InitializeEventMaskValuesFromClass("org/mozilla/webclient/DocumentLoadEvent",
+					      DocumentLoader_maskNames, 
+					      DocumentLoader_maskValues);
+  }
+
   return NS_OK;
+}
+
+nsresult
+EmbedProgress::SetEventRegistration(jobject yourEventRegistration)
+{
+    mEventRegistration = yourEventRegistration;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

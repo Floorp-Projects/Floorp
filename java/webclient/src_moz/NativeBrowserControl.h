@@ -61,7 +61,8 @@ public:
     // 
     
     nsresult    Init            ();
-    nsresult    Realize         (void* parentWinPtr, 
+    nsresult    Realize         (jobject javaBrowserControl,
+                                 void* parentWinPtr, 
                                  PRBool *aAlreadyRealized, 
                                  PRUint32 width, PRUint32 height);
     void        Unrealize       (void);
@@ -70,6 +71,9 @@ public:
     void        Resize          (PRUint32 x, PRUint32 y,
                                  PRUint32 aWidth, PRUint32 aHeight);
     void        Destroy         (void);
+
+    jobject     QueryInterfaceJava(WEBCLIENT_INTERFACES interface);
+
 
     //
     // Relationship ivars
@@ -98,6 +102,8 @@ public:
     PRBool                         mChromeLoaded;
     // has someone called Destroy() on us?
     PRBool                         mIsDestroyed;
+
+    jobject                        mJavaBrowserControl;
 
 };
 

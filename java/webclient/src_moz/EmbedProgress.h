@@ -25,6 +25,8 @@
 #include <nsIWebProgressListener.h>
 #include <nsWeakReference.h>
 
+#include "jni_util.h"
+
 class NativeBrowserControl;
 
 class EmbedProgress : public nsIWebProgressListener,
@@ -36,6 +38,8 @@ class EmbedProgress : public nsIWebProgressListener,
 
   nsresult Init(NativeBrowserControl *aOwner);
 
+  nsresult SetEventRegistration(jobject eventRegistration);
+
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIWEBPROGRESSLISTENER
@@ -45,7 +49,8 @@ class EmbedProgress : public nsIWebProgressListener,
   static void RequestToURIString (nsIRequest *aRequest, char **aString);
 
   NativeBrowserControl *mOwner;
-
+    
+  jobject mEventRegistration;
 };
 
 #endif /* __EmbedProgress_h */

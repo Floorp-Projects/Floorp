@@ -59,7 +59,7 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 PRLogModuleInfo *prLogModuleInfo = NULL; // declared in ns_globals.h
 
-const char *gImplementedInterfaces[] = {
+const char *gImplementedInterfaces[] = { // declared in ns_globals.h
         "webclient.WindowControl",
         "webclient.Navigation",
         "webclient.CurrentPage",
