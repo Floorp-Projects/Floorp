@@ -219,6 +219,28 @@
 
   </chrome> 
 
+  <chrome about="chrome://directory/">
+    <content>
+      <RDF:Description about="chrome://directory/content/">
+        <base>resource:/chrome/directory/content/default/</base>
+        <main>directory.xul</main>
+      </RDF:Description>
+    </content>
+
+    <skin>
+      <RDF:Description about="chrome://directory/skin/">
+        <base>resource:/chrome/directory/skin/default/</base>
+        <main>directory.css</main>
+      </RDF:Description>
+    </skin>
+
+    <locale>
+      <RDF:Description about="chrome://directory/locale/">
+        <name>en-US</name>
+      </RDF:Description>
+    </locale>
+  </chrome>
+
   <chrome about="chrome://history/"> 
 
     <content> 
