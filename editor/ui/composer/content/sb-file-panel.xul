@@ -1,0 +1,136 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+
+
+
+<!--
+
+   - The contents of this file are subject to the Netscape Public
+
+   - License Version 1.1 (the "License"); you may not use this file
+
+   - except in compliance with the License. You may obtain a copy of
+
+   - the License at http://www.mozilla.org/NPL/
+
+   -  
+
+   - Software distributed under the License is distributed on an "AS
+
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+
+   - implied. See the License for the specific language governing
+
+   - rights and limitations under the License.
+
+   -  
+
+   - The Original Code is Mozilla Communicator client code, released
+
+   - March 31, 1998.
+
+   - 
+
+   - The Initial Developer of the Original Code is Netscape
+
+   - Communications Corporation. Portions created by Netscape are
+
+   - Copyright (C) 1999 Netscape Communications Corporation. All
+
+   - Rights Reserved.
+
+   - 
+
+   - Contributor(s): 
+
+   -    Ben Goodger
+
+  -->
+
+
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
+
+<?xml-stylesheet href="chrome://bookmarks/skin/" type="text/css"?>
+
+
+
+<window
+
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+
+
+  <html:script src="chrome://global/content/tasksOverlay.js"/>
+
+  <html:script src="chrome://editor/content/sb-file-panel.js"/>
+
+  <html:script src="chrome://editor/content/sb-FileWidgetFileHandler.js"/>
+
+
+
+<popup id="contextual" oncreate="return fillContextMenu('contextual',event.target.parentNode.parentNode);" >
+
+	<menu />
+
+</popup>
+
+  
+
+<tree id="fileTree" context="contextual" ref="NC:FilesRoot"
+
+   flex="100%" style="height: 100%"
+
+   datasources="rdf:files"
+
+   ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
+
+
+
+  <!-- Commented out until new tree content model and template builder can play nice -->
+
+  <template>
+
+    <rule>
+
+      <treechildren>
+
+        <treeitem uri="...">
+
+          <treerow>
+
+            <treecell>
+
+              <treeindentation />
+
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
+
+                            align="left" />
+
+            </treecell>
+
+          </treerow>
+
+        </treeitem>
+
+      </treechildren>
+
+    </rule>
+
+  </template>
+
+  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+
+</tree>
+
+
+
+</window>
+
+
+

@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<!--
+   - The contents of this file are subject to the Netscape Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/NPL/
+   -  
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   -  
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corporation. Portions created by Netscape are
+   - Copyright (C) 1999 Netscape Communications Corporation. All
+   - Rights Reserved.
+   - 
+   - Contributor(s): 
+   -    Ben Goodger
+  -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://editor/locale/sidebar-editor.dtd" >
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="Init('chrome://editor/content/sidebar-editor.rdf',
+               'NC:EditorSidebarRoot');" align="vertical">
+
+<html:script src="chrome://sidebar/content/sidebar.js" />
+<box id="sidebox" align="vertical" flex="100%">
+ <box class="sidebartitle">
+  <spring flex="100%"/>
+  <titledbutton class="borderless paneltitle" 
+                value="&sidebar.reload.label;"
+                onclick="window.location.reload()" />
+  <titledbutton class="borderless paneltitle" 
+                value="&sidebar.customize.label;" 
+				onclick="var dialogWindow=customize();" />
+ </box>
+</box>
+</window>
