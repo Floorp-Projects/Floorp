@@ -215,8 +215,7 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString &nickname, nsAutoString &ni
     return NS_ERROR_FAILURE;
   }
   
-  NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
 
   if (NS_FAILED(rv) || !nssComponent) {
     return NS_ERROR_FAILURE;
@@ -408,29 +407,42 @@ nsNSSCertificate::GetWindowTitle(char * *aWindowTitle)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetNickname(nsAString &_nickname)
+nsNSSCertificate::GetNickname(nsAString &aNickname)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-// XXX kaie: this is bad. We return a non localizable hardcoded string.
-  const char *nickname = (mCert->nickname) ? mCert->nickname : "(no nickname)";
-  _nickname = NS_ConvertUTF8toUCS2(nickname);
+  if (mCert->nickname) {
+    CopyUTF8toUTF16(mCert->nickname, aNickname);
+  } else {
+    nsresult rv;
+    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+    if (NS_FAILED(rv) || !nssComponent) {
+      return NS_ERROR_FAILURE;
+    }
+    nssComponent->GetPIPNSSBundleString("CertNoNickname", aNickname);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetEmailAddress(nsAString &_emailAddress)
+nsNSSCertificate::GetEmailAddress(nsAString &aEmailAddress)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
 
-// XXX kaie: this is bad. We return a non localizable hardcoded string.
-//           And agents could be confused, assuming the email address == "(no nickname)"
-  const char *email = (mCert->emailAddr) ? mCert->emailAddr : "(no email address)";
-  _emailAddress = NS_ConvertUTF8toUCS2(email);
+  if (mCert->emailAddr) {
+    CopyUTF8toUTF16(mCert->emailAddr, aEmailAddress);
+  } else {
+    nsresult rv;
+    nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+    if (NS_FAILED(rv) || !nssComponent) {
+      return NS_ERROR_FAILURE;
+    }
+    nssComponent->GetPIPNSSBundleString("CertNoEmailAddress", aEmailAddress);
+  }
   return NS_OK;
 }
 
@@ -1214,15 +1226,14 @@ ProcessExtensions(CERTCertExtension **extensions,
   return NS_OK;
 }
 
-static nsresult
-ProcessName(CERTName *name, nsINSSComponent *nssComponent, PRUnichar **value)
+nsresult
+ProcessName(CERTName *name, nsAString &value, nsINSSComponent *nssComponent)
 {
   CERTRDN** rdns;
   CERTRDN** rdn;
   CERTAVA** avas;
   CERTAVA* ava;
   SECItem *decodeItem = nsnull;
-  nsString finalString;
 
   rdns = name->rdns;
 
@@ -1273,10 +1284,9 @@ ProcessName(CERTName *name, nsINSSComponent *nssComponent, PRUnichar **value)
       params[1] = avavalue.get();
       nssComponent->PIPBundleFormatStringFromName("AVATemplate",
                                                   params, 2, temp);
-      finalString += temp + NS_LITERAL_STRING("\n");
+      value += temp + NS_LITERAL_STRING("\n");
     }
   }
-  *value = ToNewUnicode(finalString);    
   return NS_OK;
 }
 
@@ -1312,7 +1322,7 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   if (sequence == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsString text;
+  nsAutoString text;
   nssComponent->GetPIPNSSBundleString("CertDumpCertificate", text);
   sequence->SetDisplayName(text);
   nsCOMPtr<nsIASN1PrintableItem> printableItem;
@@ -1344,8 +1354,8 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
   algID->SetDisplayName(text);
   asn1Objects->AppendElement(algID, PR_FALSE);
 
-  nsXPIDLString value;
-  ProcessName(&mCert->issuer, nssComponent, getter_Copies(value));
+  nsAutoString value;
+  ProcessName(&mCert->issuer, value, nssComponent);
 
   printableItem = new nsNSSASN1PrintableItem();
   if (printableItem == nsnull)
@@ -1384,7 +1394,8 @@ nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
     return NS_ERROR_OUT_OF_MEMORY;
 
   printableItem->SetDisplayName(text);
-  ProcessName(&mCert->subject, nssComponent,getter_Copies(value));
+  value.Truncate();
+  ProcessName(&mCert->subject, value, nssComponent);
   printableItem->SetDisplayValue(value);
   asn1Objects->AppendElement(printableItem, PR_FALSE);
 
