@@ -121,13 +121,44 @@ if [ ! -d ${CLIENTDIR} ]; then
    mkdir -p ${CLIENTDIR}
 fi
 cd ${CLIENTDIR}
-cp ${CADIR}/*.db .
-echo  "certutil -S -n \"TestUser\" -s \"CN=Test User, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -t \"u,u,u\" -c "TestCA" -m 3 -v 60 -d . -f ${PWFILE} -z ${NOISE_FILE}"
-certutil -S -n "TestUser" -s "CN=Test User, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -t "u,u,u" -c "TestCA" -m 3 -v 60 -d . -f ${PWFILE} -z ${NOISE_FILE}
+echo "   certutil -N -d . -f ${PWFILE}"
+certutil -N -d . -f ${PWFILE}
 if [ $? -ne 0 ]; then
-    echo "<TR><TD>Creating client Cert</TD><TD bgcolor=red>Failed</TD><TR>" >> ${RESULTS}
+   CERTFAILED=${CERTFAILED-"Init DB"}
+fi
+echo "Import the root CA"
+echo "   certutil -L -n \"TestCA\" -r -d ../CA > root.cert"
+certutil -L -n "TestCA" -r -d ../CA > root.cert
+if [ $? -ne 0 ]; then
+   CERTFAILED=${CERTFAILED-"Export Root"}
+fi
+echo "   certutil -A -n \"TestCA\" -t \"TC,TC,TC\" -f ${PWFILE} -d . -i root.cert"
+certutil -A -n "TestCA" -t "TC,TC,TC" -f ${PWFILE} -d . -i root.cert
+if [ $? -ne 0 ]; then
+   CERTFAILED=${CERTFAILED-"Import Root"}
+fi
+echo "Generate a Certificate request"
+echo  "  certutil -R -s \"CN=Test User, O=BOGUS Netscape, L=Mountain View, ST=California, C=US\" -d . -f ${PWFILE} -z ${NOISE_FILE} -o req"
+certutil -R -s "CN=Test User, O=BOGUS NSS, L=Mountain View, ST=California, C=US" -d . -f ${PWFILE} -z ${NOISE_FILE} -o req
+if [ $? -ne 0 ]; then
+   CERTFAILED=${CERTFAILED-"Generate Request"}
+fi
+echo "Sign the Certificate request"
+echo  "certutil -C -c "TestCA" -m 3 -v 60 -d ../CA -f ${PWFILE} -i req -o user.cert"
+certutil -C -c "TestCA" -m 3 -v 60 -d ../CA -i req -o user.cert -f ${PWFILE}
+if [ $? -ne 0 ]; then
+   CERTFAILED=${CERTFAILED-"Sign User Cert"}
+fi
+echo "Import the new Cert"
+echo "certutil -A -n \"TestUser\" -t \"u,u,u\" -d . -f {PWFILE} -i user.cert"
+certutil -A -n "TestUser" -t "u,u,u" -d . -f {PWFILE} -i user.cert
+if [ $? -ne 0 ]; then
+   CERTFAILED=${CERTFAILED-"Import User"}
+fi
+if [ -n "${CERTFAILED}" ]; then
+    echo "<TR><TD>Creating User Cert</TD><TD bgcolor=red>Failed ($CERTFAILED)</TD><TR>" >> ${RESULTS}
 else
-    echo "<TR><TD>Creating client Cert</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
+    echo "<TR><TD>Creating User Cert</TD><TD bgcolor=lightGreen>Passed</TD><TR>" >> ${RESULTS}
 fi
 
 echo "***** Creating Server CA Issued Certificate for ${HOST}.${DOMSUF} *****"
@@ -189,6 +220,7 @@ do
 	if [ ${fileout} -eq 1 ]; then
 	   cat ${SERVEROUTFILE}
 	fi
+	${SLEEP}
     fi
 done 
 
@@ -228,6 +260,7 @@ do
 	if [ ${fileout} -eq 1 ]; then
 	   cat ${SERVEROUTFILE}
 	fi
+	${SLEEP}
      fi
 done 
 
@@ -266,6 +299,7 @@ do
 	if [ ${fileout} -eq 1 ]; then
 	   cat ${SERVEROUTFILE}
 	fi
+	${SLEEP}
      fi
 done 
 

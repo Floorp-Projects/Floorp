@@ -12,7 +12,11 @@ SECURITY_ROOT=${SECURITY_ROOT-${MOZILLA_ROOT}/security/nss}
 TESTDIR=${TESTDIR-${MOZILLA_ROOT}/tests_results/security}
 . ../common/arch.sh
 OBJDIR=${OBJDIR_NAME}
+if [ ${OS_ARCH} == "WINNT" ]; then
+PATH=${DIST}/${OBJDIR}/bin\;${DIST}/${OBJDIR}/lib\;$PATH
+else
 PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
+fi
 export PATH
 LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
 export LD_LIBRARY_PATH
@@ -52,7 +56,7 @@ fi
 
 KILL="kill"
 if  [ ${OS_ARCH} = "Linux" ]; then
-        KILL="kill -kill"
+        SLEEP="sleep 30"
 fi
 
 export  KILL
