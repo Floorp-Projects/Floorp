@@ -34,13 +34,16 @@ CPPSRCS		= \
 		nsURLHelper.cpp \
 		nsFileStreams.cpp \
 		nsBufferedStreams.cpp \
-		nsAsyncStreamListener.cpp \
-		nsSyncStreamListener.cpp \
 		nsIOService.cpp \
 		nsSocketTransport.cpp \
 		nsSocketTransportService.cpp \
 		nsFileTransport.cpp \
 		nsFileTransportService.cpp \
+		nsSimpleStreamListener.cpp \
+		nsSimpleStreamProvider.cpp \
+		nsStreamObserverProxy.cpp \
+		nsStreamListenerProxy.cpp \
+		nsStreamProviderProxy.cpp \
 		nsStdURLParser.cpp \
 		nsAuthURLParser.cpp \
 		nsNoAuthURLParser.cpp \
@@ -55,6 +58,7 @@ CPPSRCS		= \
 		nsDownloader.cpp \
 		nsProtocolProxyService.cpp \
 		nsProxyAutoConfigUtils.cpp \
+		nsAsyncStreamListener.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

@@ -434,8 +434,7 @@ nsDiskCacheRecordChannel::AsyncRead(nsIStreamListener *aListener,
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::AsyncWrite(nsIInputStream *fromStream, 
-                                     nsIStreamObserver *observer, 
+nsDiskCacheRecordChannel::AsyncWrite(nsIStreamProvider *provider, 
                                      nsISupports *ctxt)
 
 {

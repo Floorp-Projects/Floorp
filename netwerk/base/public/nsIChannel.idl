@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -27,6 +27,7 @@ interface nsIInputStream;
 interface nsIOutputStream;
 interface nsIStreamObserver;
 interface nsIStreamListener;
+interface nsIStreamProvider;
 interface nsILoadGroup;
 interface nsIInterfaceRequestor;
 interface nsIFile;
@@ -43,7 +44,7 @@ typedef unsigned long nsLoadFlags;
  * request can be issued in one of several ways:
  *
  *      - AsyncRead and AsyncWrite allow for asynchronous requests, calling
- *        back the user's stream listener or observer,
+ *        back the user's stream listener or provider,
  *      - OpenInputStream and OpenOutputStream allow for synchronous reads
  *        and writes on the underlying channel.
  *
@@ -187,7 +188,7 @@ interface nsIChannel : nsIRequest
     readonly attribute nsIFile localFile;
 
     /**
-     * Setting pipeliningAllowed causes the load of a URL (issued via asyncOpen,
+     * Setting pipeliningAllowed causes the load of a URL (issued via
      * asyncRead or asyncWrite) to be deferred in order to allow the request to
      * be pipelined for greater throughput efficiency. Pipelined requests will
      * be forced to load when the first non-pipelined request is issued.
@@ -209,13 +210,16 @@ interface nsIChannel : nsIRequest
      */
     const unsigned long LOAD_NORMAL     = 0;
 
-
     /** 
      * Don't deliver status notifications to the nsIProgressEventSink, or keep 
      * this load from completing the nsILoadGroup it may belong to:
      */
     const unsigned long LOAD_BACKGROUND = 1 << 0; 
 
+    /**
+     * Used exclusively by the uriloader and docshell to indicate whether or
+     * not this channel corresponds to the toplevel document.
+     */
     const unsigned long LOAD_DOCUMENT_URI = 1 << 1;
 
     /** 
@@ -288,45 +292,35 @@ interface nsIChannel : nsIRequest
     ////////////////////////////////////////////////////////////////////////////
     
     /**
-     * Opens a blocking input stream to the URL's specified source.
-     * @param startPosition - The offset from the start of the data
-     *   from which to read.
-     * @param readCount - The number of bytes to read. If -1, everything
-     *   up to the end of the data is read. If greater than the end of 
-     *   the data, the amount available is returned in the stream.
+     * Opens a blocking input stream to the URI's specified source. This
+     * call may block until the input stream is available.
      */
     nsIInputStream openInputStream();
 
     /**
-     * Opens a blocking output stream to the URL's specified destination.
-     * @param startPosition - The offset from the start of the data
-     *   from which to begin writing.
+     * Opens a blocking output stream to the URI's specified destination. This
+     * call may block until the output stream is available.
      */
     nsIOutputStream openOutputStream();
 
     /**
-     * Reads asynchronously from the URL's specified source. Notifications
-     * are provided to the stream listener on the thread of the specified
-     * event queue.
-     * The startPosition argument designates the offset in the source where
-     * the data will be read.
-     * If the readCount == -1 then all the available data is delivered to
-     * the stream listener.
+     * Reads asynchronously from the URI's specified source. Notifications
+     * are provided to the stream listener on the calling thread.
+     *
+     * @param listener - notification handler.
+     * @param ctxt - application context passed to methods invoked on listener.
      */
     void asyncRead(in nsIStreamListener listener,
                    in nsISupports ctxt);
 
     /**
-     * Writes asynchronously to the URL's specified destination. Notifications
-     * are provided to the stream observer on the thread of the specified
-     * event queue.
-     * The startPosition argument designates the offset in the destination where
-     * the data will be written.
-     * If the writeCount == -1, then all the available data in the input
-     * stream is written.
+     * Writes asynchronously to the URI's specified destination. Notifications
+     * are provided to the stream provider on the calling thread.
+     *
+     * @param provider - notification handler.
+     * @param ctxt - application context passed to methods invoked on provider.
      */
-    void asyncWrite(in nsIInputStream fromStream,
-                    in nsIStreamObserver observer,
+    void asyncWrite(in nsIStreamProvider provider,
                     in nsISupports ctxt);
 };
 

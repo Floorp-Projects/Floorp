@@ -25,6 +25,7 @@
 #include "prlog.h"
 #include "nsIPipe.h"
 #include "nsIInputStream.h"
+#include "nsNetUtil.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gFTPLog;
@@ -102,7 +103,7 @@ nsFtpControlConnection::Connect()
     // to indicate between the read and the write transport.  We will be passing the a non-null
     // context for the write, and a null context for the read.  
 
-    rv = mCPipe->AsyncWrite(inStream, NS_STATIC_CAST(nsIStreamObserver*, this), NS_STATIC_CAST(nsISupports*, this));
+    rv = NS_AsyncWriteFromStream(mCPipe, inStream, NS_STATIC_CAST(nsIStreamObserver*, this), NS_STATIC_CAST(nsISupports*, this));
     if (NS_FAILED(rv)) return rv;
 
     // get the ball rolling by reading on the control socket.

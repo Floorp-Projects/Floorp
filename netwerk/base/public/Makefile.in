@@ -51,10 +51,11 @@ XPIDLSRCS	= \
 		nsISocketTransport.idl \
 		nsISocketTransportService.idl \
 		nsIStreamIO.idl \
+		nsIStreamObserver.idl \
 		nsIStreamListener.idl \
+		nsIStreamProvider.idl \
 		nsIStreamLoader.idl \
 		nsISocketTransport.idl \
-		nsIStreamObserver.idl \
 		nsIURI.idl \
 		nsIURL.idl \
 		nsIURLParser.idl \

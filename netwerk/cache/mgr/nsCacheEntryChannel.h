@@ -59,8 +59,7 @@ public:
     NS_IMETHOD OpenOutputStream(nsIOutputStream* *aOutputStream);
     NS_IMETHOD OpenInputStream(nsIInputStream* *aInputStream);
     NS_IMETHOD AsyncRead(nsIStreamListener *aListener, nsISupports *aContext);
-    NS_IMETHOD AsyncWrite(nsIInputStream *aFromStream,
-                          nsIStreamObserver *aObserver, nsISupports *aContext);
+    NS_IMETHOD AsyncWrite(nsIStreamProvider *aProvider, nsISupports *aContext);
     NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes);
     NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes);
     NS_IMETHOD GetLoadGroup(nsILoadGroup* *aLoadGroup);

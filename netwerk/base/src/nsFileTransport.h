@@ -32,6 +32,7 @@
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
+#include "nsIStreamProvider.h"
 #include "nsIProgressEventSink.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -41,19 +42,20 @@
 #include "prlog.h"
 #include "nsFileTransportService.h"
 
+//#define TIMING
+
 class nsIInterfaceRequestor;
 
+class nsFileTransportSourceWrapper;
+class nsFileTransportSinkWrapper;
+
 class nsFileTransport : public nsIChannel, 
-                        public nsIRunnable,
-                        public nsIInputStreamObserver,
-                        public nsIOutputStreamObserver
+                        public nsIRunnable
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
-    NS_DECL_NSIINPUTSTREAMOBSERVER
-    NS_DECL_NSIOUTPUTSTREAMOBSERVER
     NS_DECL_NSIRUNNABLE
 
     nsFileTransport();
@@ -99,7 +101,7 @@ protected:
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
     nsCOMPtr<nsIProgressEventSink>      mProgress;
     nsCOMPtr<nsIStreamIO>               mStreamIO;
-    char*                               mContentType;
+    char                               *mContentType;
     PRUint32                            mBufferSegmentSize;
     PRUint32                            mBufferMaxSize;
 
@@ -107,11 +109,16 @@ protected:
 
     // mXferState is only changed by the file transport thread:
     XferState                           mXferState;
+
     // mRunState is only changed by the user's thread, but looked at by the
     // file transport thread:
     RunState                            mRunState;
     nsresult                            mCancelStatus;
-    PRMonitor*                          mMonitor;
+    PRInt32                             mSuspendCount;
+    PRLock                             *mLock;
+
+    // The transport is active if it is currently being processed by a thread.
+    PRBool                              mActive;
 
     // state variables:
     nsresult                            mStatus;
@@ -120,18 +127,22 @@ protected:
     PRInt32                             mTransferAmount;
     nsLoadFlags                         mLoadAttributes;
 
-    // reading state varialbles:
+    // reading state variables:
     nsCOMPtr<nsIStreamListener>         mListener;
     nsCOMPtr<nsIInputStream>            mSource;
-    nsCOMPtr<nsIInputStream>            mInputStream;
-    nsCOMPtr<nsIOutputStream>           mOutputStream;
+    nsFileTransportSourceWrapper       *mSourceWrapper;
 
     // writing state variables:
-    nsCOMPtr<nsIStreamObserver>         mObserver;
+    nsCOMPtr<nsIStreamProvider>         mProvider;
     nsCOMPtr<nsIOutputStream>           mSink;
-    char*                               mBuffer;
+    nsFileTransportSinkWrapper         *mSinkWrapper;
+
     nsCString                           mStreamName;
-    nsFileTransportService*             mService;
+    nsFileTransportService             *mService;
+
+#ifdef TIMING
+    PRIntervalTime mStartTime;
+#endif
 };
 
 #define NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE   (2*1024)

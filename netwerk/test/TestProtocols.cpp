@@ -651,7 +651,7 @@ main(int argc, char* argv[])
     /* Mac stuff is missing here! */
 #else
     PLEvent *gEvent;
-    rv = gEventQ->GetEvent(&gEvent);
+    rv = gEventQ->WaitForEvent(&gEvent);
     rv = gEventQ->HandleEvent(gEvent);
 #endif /* XP_UNIX */
 #endif /* !WIN32 */

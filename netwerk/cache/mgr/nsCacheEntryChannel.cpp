@@ -203,8 +203,7 @@ nsCacheEntryChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *aConte
 
 // No async writes allowed to the cache yet
 NS_IMETHODIMP
-nsCacheEntryChannel::AsyncWrite(nsIInputStream *aFromStream, 
-                                nsIStreamObserver *aObserver,
+nsCacheEntryChannel::AsyncWrite(nsIStreamProvider *aProvider,
                                 nsISupports *aContext)
 {
     NS_NOTREACHED("nsCacheEntryChannel::AsyncWrite");

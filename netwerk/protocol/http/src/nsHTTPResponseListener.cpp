@@ -648,7 +648,8 @@ nsHTTPServerListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pContex
     mChunkHeaderCtx.SetEOF(PR_FALSE) ;
 
     nsHTTPRequest * req;
-    mPipelinedRequest->GetCurrentRequest(&req) ;
+    if (mPipelinedRequest)
+        mPipelinedRequest->GetCurrentRequest(&req) ;
     
     if (req) 
     {
@@ -851,6 +852,14 @@ nsresult nsHTTPServerListener::FireSingleOnData(nsIStreamListener *aListener,
     return rv;
 }
 
+struct nsWriteLineInfo
+{
+    nsCString &buf;
+    PRBool haveLF;
+
+    nsWriteLineInfo(nsCString &b) : buf(b), haveLF(0) {}
+};
+
 static NS_METHOD
 nsWriteLineToString(nsIInputStream* in,
                     void* closure,
@@ -859,29 +868,29 @@ nsWriteLineToString(nsIInputStream* in,
                     PRUint32 count,
                     PRUint32 *writeCount) 
 {
-  nsCString* str = (nsCString*)closure;
+    nsWriteLineInfo *info = (nsWriteLineInfo *) closure;
   *writeCount = 0;
 
+    if (info->haveLF)
+        // Stop reading
+        return NS_BASE_STREAM_WOULD_BLOCK;
+    else
+    {
   char c = 0;
-
-  const char *buf = fromRawSegment;
+        const char *p = fromRawSegment;
   for (; count>0; --count) {
-    c = *buf++;
+            c = *p++;
     (*writeCount)++;
     if (c == LF) {
+                info->haveLF = PR_TRUE;
       break;
     }
   }
-  str->Append(fromRawSegment, *writeCount);
-  //
-  // If the entire segment has been read, and no LF has been found,
-  // then return OK to continue reading the next segment (if there
-  // is one).  Else, return WOULD_BLOCK to cause ReadSegments to exit
-  // and allow us to parse this header.
-  //
-  return (c != LF) ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
+        info->buf.Append(fromRawSegment, *writeCount);
+        // Successfully read something
+        return NS_OK;
 }
-
+}
 
 nsresult nsHTTPServerListener::ParseStatusLine(nsIInputStream* in, 
                                                PRUint32 aLength,
@@ -901,8 +910,9 @@ nsresult nsHTTPServerListener::ParseStatusLine(nsIInputStream* in,
     return NS_ERROR_FAILURE;
   }
 
+  nsWriteLineInfo info(mHeaderBuffer);
   rv = in->ReadSegments(nsWriteLineToString, 
-                        (void*) &mHeaderBuffer, 
+                        (void*) &info,
                         aLength, 
                         &actualBytesRead) ;
   if (NS_FAILED(rv)) return rv;
@@ -987,8 +997,9 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIInputStream* in,
   PRInt32 newlineOffset = 0;
   do {
     // Append the buffer into the header string...
+    nsWriteLineInfo info(mHeaderBuffer);
     rv = in->ReadSegments(nsWriteLineToString, 
-                          (void*) &mHeaderBuffer, 
+                          (void*) &info,
                           totalBytesToRead, 
                           &actualBytesRead);
     if (NS_FAILED(rv)) return rv;

@@ -170,12 +170,18 @@ nsStreamIOChannel::Init(nsIURI* uri, nsIStreamIO* io)
     return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS5(nsStreamIOChannel, 
-                              nsIStreamIOChannel,
-                              nsIChannel,
-                              nsIRequest,
-                              nsIStreamObserver,
-                              nsIStreamListener);
+NS_IMPL_THREADSAFE_ADDREF(nsStreamIOChannel)
+NS_IMPL_THREADSAFE_RELEASE(nsStreamIOChannel)
+
+NS_INTERFACE_MAP_BEGIN(nsStreamIOChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamIOChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIRequest)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamProvider)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIStreamObserver, nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
+NS_INTERFACE_MAP_END_THREADSAFE
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -349,13 +355,12 @@ nsStreamIOChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsStreamIOChannel::AsyncWrite(nsIInputStream *fromStream, 
-                              nsIStreamObserver *observer, nsISupports *ctxt)
+nsStreamIOChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt)
 {
     nsresult rv;
 
-    NS_ASSERTION(observer, "no observer");
-    mUserObserver = observer;
+    NS_ASSERTION(provider, "no provider");
+    SetProvider(provider);
 
     if (mLoadGroup) {
         nsCOMPtr<nsILoadGroupListenerFactory> factory;
@@ -364,12 +369,15 @@ nsStreamIOChannel::AsyncWrite(nsIInputStream *fromStream,
         //
         rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
         if (factory) {
+            NS_WARNING("load group proxy listener not implemented for AsyncWrite");
+#if 0
             nsIStreamListener *newListener;
             rv = factory->CreateLoadGroupListener(GetListener(), &newListener);
             if (NS_SUCCEEDED(rv)) {
                 mUserObserver = newListener;
                 NS_RELEASE(newListener);
             }
+#endif
         }
 
         rv = mLoadGroup->AddChannel(this, nsnull);
@@ -398,7 +406,7 @@ nsStreamIOChannel::AsyncWrite(nsIInputStream *fromStream,
         if (NS_FAILED(rv)) goto done;
     }
 #endif
-    rv = mFileTransport->AsyncWrite(fromStream, this, ctxt);
+    rv = mFileTransport->AsyncWrite(this, ctxt);
 
   done:
     if (NS_FAILED(rv)) {
@@ -600,7 +608,7 @@ nsStreamIOChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIStreamListener methods:
+// nsIStreamObserver implementation:
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
@@ -635,6 +643,10 @@ nsStreamIOChannel::OnStopRequest(nsIChannel* transportChannel, nsISupports* cont
     return mStreamIO->Close(aStatus);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamListener implementation:
+////////////////////////////////////////////////////////////////////////////////
+
 NS_IMETHODIMP
 nsStreamIOChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* context,
                                    nsIInputStream *aIStream, PRUint32 aSourceOffset,
@@ -642,6 +654,19 @@ nsStreamIOChannel::OnDataAvailable(nsIChannel* transportChannel, nsISupports* co
 {
     return GetListener()->OnDataAvailable(this, context, aIStream,
                                           aSourceOffset, aLength);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIStreamProvider implementation:
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsStreamIOChannel::OnDataWritable(nsIChannel* transportChannel, nsISupports* context,
+                                  nsIOutputStream *aOStream, PRUint32 aOffset,
+                                  PRUint32 aLength)
+{
+    return GetProvider()->OnDataWritable(this, context, aOStream,
+                                         aOffset, aLength);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -32,6 +32,7 @@ IS_COMPONENT	= 1
 REQUIRES	= xpcom nkcache pref js mime dbm util jar locale intl
 
 CPPSRCS		= nsNetModule.cpp
+EXPORTS		= nsNetCID.h
 
 SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libneckobase_s.$(LIB_SUFFIX) \

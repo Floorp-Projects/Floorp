@@ -29,6 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= test_necko
 REQUIRES	= xpcom necko timer cookie layout widget dom
 
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX)
+
 CPPSRCS		= \
 		TestSocketIO.cpp \
 		TestSocketInput.cpp \
@@ -37,9 +39,11 @@ CPPSRCS		= \
 		TestProtocols.cpp \
 		urltest.cpp \
 		TestFileInput2.cpp \
+		TestFileTransport.cpp \
 		TestRes.cpp \
 		TestCallbacks.cpp \
         TestSyncHTTP.cpp \
+		TestDBMAccess.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
@@ -59,6 +63,7 @@ LIBS		= \
 		$(XPCOM_LIBS) \
 		$(LOST_SYM_LIBS) \
 		$(NSPR_LIBS) \
+		$(SHARED_LIBRARY_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

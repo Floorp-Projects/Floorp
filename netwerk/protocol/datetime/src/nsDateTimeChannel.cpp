@@ -202,8 +202,7 @@ nsDateTimeChannel::AsyncRead(nsIStreamListener *aListener,
 }
 
 NS_IMETHODIMP
-nsDateTimeChannel::AsyncWrite(nsIInputStream *fromStream,
-                              nsIStreamObserver *observer,
+nsDateTimeChannel::AsyncWrite(nsIStreamProvider *provider,
                               nsISupports *ctxt)
 {
     NS_NOTREACHED("nsDateTimeChannel::AsyncWrite");

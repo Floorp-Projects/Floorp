@@ -357,8 +357,7 @@ nsDataChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsDataChannel::AsyncWrite(nsIInputStream *fromStream,
-                          nsIStreamObserver *observer,
+nsDataChannel::AsyncWrite(nsIStreamProvider *provider,
                           nsISupports *ctxt)
 {
     // you can't write to a data url

@@ -32,6 +32,7 @@
 #include "nsMimeTypes.h"
 #include "nsIStreamConverterService.h"
 #include "nsITXTToHTMLConv.h"
+#include "nsNetUtil.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -250,8 +251,7 @@ nsFingerChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsFingerChannel::AsyncWrite(nsIInputStream *fromStream,
-                            nsIStreamObserver *observer,
+nsFingerChannel::AsyncWrite(nsIStreamProvider *provider,
                             nsISupports *ctxt)
 {
     NS_NOTREACHED("nsFingerChannel::AsyncWrite");
@@ -540,7 +540,7 @@ nsFingerChannel::SendRequest(nsIChannel* aChannel) {
 
   rv = aChannel->SetTransferCount(requestBuffer.Length());
   if (NS_FAILED(rv)) return rv;
-  rv = aChannel->AsyncWrite(charstream, this, 0);
+  rv = NS_AsyncWriteFromStream(aChannel, charstream, this, nsnull);
   return rv;
 }
 

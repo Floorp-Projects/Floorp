@@ -525,14 +525,15 @@ nsMemCacheChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *aContext
     mAsyncReadStream = asyncReadStreamAdaptor;
 
     rv = asyncReadStreamAdaptor->AsyncRead(aListener, aContext);
-    if (NS_FAILED(rv))
-        delete asyncReadStreamAdaptor;
+    if (NS_FAILED(rv)) {
+        mAsyncReadStream = nsnull;
+        NS_RELEASE(asyncReadStreamAdaptor);
+    }
     return rv;
 }
 
 NS_IMETHODIMP
-nsMemCacheChannel::AsyncWrite(nsIInputStream *fromStream, 
-                              nsIStreamObserver *observer, nsISupports *ctxt)
+nsMemCacheChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt)
 {
     // Not required to be implemented
     NS_NOTREACHED("nsMemCacheChannel::AsyncWrite");
