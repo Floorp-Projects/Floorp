@@ -556,6 +556,9 @@ mime_display_stream_complete (nsMIMESession *stream)
   // Release the prefs service
   if ( (obj) && (obj->options) && (obj->options->prefs) )
     nsServiceManager::ReleaseService(kPrefCID, obj->options->prefs);
+    
+  if (msd->headers)
+  	MimeHeaders_free (msd->headers);
 
   PR_FREEIF(msd);
 }
@@ -583,6 +586,9 @@ mime_display_stream_abort (nsMIMESession *stream, int status)
       msd->options = 0;
     }
   }
+
+  if (msd->headers)
+  	MimeHeaders_free (msd->headers);
 
   PR_FREEIF(msd);
 }

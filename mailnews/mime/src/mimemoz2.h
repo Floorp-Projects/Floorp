@@ -107,6 +107,7 @@ struct mime_stream_data {           /* This struct is the state we pass around
   nsMIMESession       *istream;     /* Holdover - new stream we're writing out image data-if any. */
   MimeObject          *obj;         /* The root parser object */
   MimeDisplayOptions  *options;     /* Data for communicating with libmime.a */
+  MimeHeaders         *headers;     /* Copy of outer most mime header */
 
   /* These are used by FO_QUOTE_HTML_MESSAGE stuff only: */
   PRInt16             lastcsid;     /* csid corresponding to above. */

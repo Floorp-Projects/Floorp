@@ -42,6 +42,7 @@ public:
   NS_IMETHOD SetMimeOutputType(nsMimeOutputType aType);
   NS_IMETHOD GetMimeOutputType(nsMimeOutputType *aOutFormat);
   NS_IMETHOD SetStreamURI(nsIURI *aURI);
+  NS_IMETHOD SetMimeHeadersListener(nsIMimeStreamConverterListener* listener);
 
   // nsIStreamConverter methods
   NS_DECL_NSISTREAMCONVERTER
@@ -81,6 +82,7 @@ private:
   PRBool                        mWrapperOutput;   // Should we output the frame split message display 
   PRBool                        mDoneParsing;     // If this is true, we've already been told by libmime to stop sending
                                                   // data so don't feed the parser any more!
+  nsIMimeStreamConverterListener*	mMimeStreamConverterListener;
 }; 
 
 // factory method

@@ -40,8 +40,53 @@
 #include "nsIChannel.h"
 #include "nsMsgMimeCID.h"
 #include "nsCOMPtr.h"
+#include "nsMsgCompose.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+
+
+NS_IMPL_ISUPPORTS(nsMsgQuoteListener, nsCOMTypeInfo<nsIMimeStreamConverterListener>::GetIID())
+
+nsMsgQuoteListener::nsMsgQuoteListener() :
+	mMsgQuote(nsnull)
+{
+  /* the following macro is used to initialize the ref counting data */
+  NS_INIT_REFCNT();
+}
+
+nsMsgQuoteListener::~nsMsgQuoteListener()
+{
+}
+
+void nsMsgQuoteListener::SetMsgQuote(nsMsgQuote * msgQuote)
+{
+	mMsgQuote = msgQuote;
+}
+
+nsresult nsMsgQuoteListener::OnHeadersReady(nsIMimeHeaders * headers)
+{
+
+	printf("RECEIVE CALLBACK: OnHeadersReady\n");
+	
+	if (mMsgQuote && mMsgQuote->mStreamListener)
+	{
+		QuotingOutputStreamListener * quoting;
+		if (NS_SUCCEEDED(mMsgQuote->mStreamListener->QueryInterface(QuotingOutputStreamListener::GetIID(), (void**)&quoting)) &&
+			quoting)
+		{
+  		  	quoting->SetMimeHeaders(headers);
+			NS_RELEASE(quoting);			
+		}
+		else
+			return NS_ERROR_FAILURE;
+/* ducarroz: Impossible to compile the COMPtr version of this code !!!!
+   		nsCOMPtr<QuotingOutputStreamListener> quoting (do_QueryInterface(streamListener));
+  		if (quoting)
+  		  	quoting->SetMimeHeaders(headers);
+*/
+	}
+	return NS_OK;
+}
 
 //
 // Implementation...
@@ -55,6 +100,7 @@ nsMsgQuote::nsMsgQuote()
   mURI = nsnull;
   mMessageService = nsnull;
   mQuoteHeaders = PR_FALSE;
+  mQuoteListener = nsnull;
 }
 
 nsMsgQuote::~nsMsgQuote()
@@ -66,6 +112,7 @@ nsMsgQuote::~nsMsgQuote()
   }
 
   PR_FREEIF(mURI);
+  NS_IF_RELEASE(mQuoteListener);
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
@@ -249,7 +296,17 @@ SaveQuoteMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData
 	  if (ptr->mQuoteHeaders)
 		mimeConverter->SetMimeOutputType(nsMimeOutput::nsMimeMessageQuoting);
 	  else
+	  {
 		mimeConverter->SetMimeOutputType(nsMimeOutput::nsMimeMessageBodyQuoting);
+		
+		ptr->mQuoteListener = new nsMsgQuoteListener();
+		if (ptr->mQuoteListener)
+		{
+			NS_ADDREF(ptr->mQuoteListener);
+			ptr->mQuoteListener->SetMsgQuote(ptr);
+			mimeConverter->SetMimeHeadersListener(ptr->mQuoteListener);
+		}
+	  }
   }
 
   nsCOMPtr<nsIChannel> dummyChannel;

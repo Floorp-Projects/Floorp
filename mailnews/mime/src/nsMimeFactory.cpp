@@ -49,6 +49,9 @@ static NS_DEFINE_CID(kCMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
 #include "nsMimeURLUtils.h"
 static NS_DEFINE_CID(kCIMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 
+#include "nsIMimeHeaders.h"
+static NS_DEFINE_CID(kCIMimeHeadersCID, NS_IMIMEHEADERS_CID);
+
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
@@ -157,6 +160,10 @@ nsresult nsMimeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
   {
     return res = NS_NewStreamConverter(aIID, aResult);
   }
+  else if (mClassID.Equals(kCIMimeHeadersCID))
+  {
+    return res = NS_NewMimeHeaders(aIID, aResult);
+  }
 
 	// End of checking the interface ID code....
 	if (inst)
@@ -249,6 +256,13 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                     path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
+  // The interface for URL utils
+  rv = compMgr->RegisterComponent(kCIMimeHeadersCID,
+  								  "Mime Headers",
+  								  nsnull, 
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
+
   return finalResult;
 }
 
@@ -269,6 +283,8 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   rv = compMgr->UnregisterComponent(kCIMimeURLUtilsCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
   rv = compMgr->UnregisterComponent(kCStreamConverterCID, path);
+  if (NS_FAILED(rv)) finalResult = rv;
+  rv = compMgr->UnregisterComponent(kCIMimeHeadersCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
 
   return finalResult;

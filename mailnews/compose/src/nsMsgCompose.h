@@ -29,6 +29,8 @@
 #include "nsIMsgSendListener.h"
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIMsgSend.h"
+#include "nsIStreamListener.h"
+#include "nsIMimeHeaders.h"
 
 // Forward declares
 class QuotingOutputStreamListener;
@@ -90,7 +92,9 @@ class nsMsgCompose : public nsIMsgCompose
 	NS_IMETHOD GetWrapLength(PRInt32 *aWrapLength);
 /******/
 
-  // Deal with quoting issues...
+   MSG_ComposeType				GetMessageType();
+
+ // Deal with quoting issues...
 	nsresult                      QuoteOriginalMessage(const PRUnichar * originalMsgURI, PRInt32 what); // New template
   PRBool                        QuotingToFollow(void);
   nsresult                      SetQuotingToFollow(PRBool aVal);
@@ -137,6 +141,7 @@ class nsMsgCompose : public nsIMsgCompose
 	nsCOMPtr<nsIMsgQuote>         mQuote;
 	PRBool						            mQuotingToFollow; // Quoting indicator
   nsMsgDocumentStateListener    *mDocumentListener;
+  MSG_ComposeType				mType;		//Message type
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -163,11 +168,13 @@ public:
 
 	NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);
 	NS_IMETHOD  ConvertToPlainText();
+	NS_IMETHOD	SetMimeHeaders(nsIMimeHeaders * headers);
 
 private:
-    nsMsgCompose    *mComposeObj;
-    nsString        mMsgBody;
-    PRBool			mQuoteHeaders;			
+    nsMsgCompose *				mComposeObj;
+    nsString       				mMsgBody;
+    PRBool						mQuoteHeaders;
+    nsCOMPtr<nsIMimeHeaders>	mHeaders;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

@@ -24,6 +24,7 @@
 
 #include "nsISupports.idl"
 #include "nsrootidl.idl"
+#include "nsIMimeHeaders.idl"
 
 interface nsIURI;
 
@@ -44,6 +45,11 @@ interface nsMimeOutput
 	const long nsMimeUnknown = 9;
 }; 
 
+[scriptable, uuid(FA81CAA0-6261-11d3-8311-00805F2A0107)] 
+interface nsIMimeStreamConverterListener : nsISupports{
+      void onHeadersReady(in nsIMimeHeaders headers);
+};
+
 [scriptable, uuid(E4ED8892-3F9E-11d3-9896-001083010E9B)]
 interface nsIMimeStreamConverter : nsISupports {
 
@@ -60,4 +66,9 @@ interface nsIMimeStreamConverter : nsISupports {
      * with this input stream
      */ 
     void SetStreamURI(in nsIURI aURI); 
+    
+    /*
+     * This is used to extract headers while parsing a message
+     */
+  	void SetMimeHeadersListener(in nsIMimeStreamConverterListener listener);
 };

@@ -23,10 +23,29 @@
 #include "nsIFileSpec.h"
 #include "nsIMsgMessageService.h"
 #include "nsIStreamListener.h"
+#include "nsIMimeStreamConverter.h"
 
 #define NS_MSGQUOTE_CID \
   {0x1C7ABF0C, 0x21E5, 0x11d3, \
     { 0x8E, 0xF1, 0x00, 0xA0, 0x24, 0xA7, 0xD1, 0x44 }}
+
+class nsMsgQuote;
+
+class nsMsgQuoteListener: public nsIMimeStreamConverterListener
+{
+public:
+	nsMsgQuoteListener();
+	virtual     ~nsMsgQuoteListener();
+
+	NS_DECL_ISUPPORTS
+
+	// nsIMimeStreamConverterListener support
+	NS_DECL_NSIMIMESTREAMCONVERTERLISTENER
+
+	void SetMsgQuote(nsMsgQuote * msgQuote);
+private:
+	nsMsgQuote * mMsgQuote;
+};
 
 class nsMsgQuote: public nsIMsgQuote {
 public: 
@@ -41,10 +60,12 @@ public:
   //
   nsFileSpec      *mTmpFileSpec;
   nsIFileSpec     *mTmpIFileSpec;
-  nsCOMPtr<nsIStreamListener> mStreamListener;
+//  nsCOMPtr<nsIStreamListener> mStreamListener;
+  nsIStreamListener* mStreamListener;
   char            *mURI;
   nsIMsgMessageService    *mMessageService;
   PRBool			mQuoteHeaders;
+  nsMsgQuoteListener *mQuoteListener;
 };
 
 // Will be used by factory to generate a nsMsgQuote class...

@@ -39,6 +39,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsMsgSend.h"
 #include "nsMsgCreate.h"
+#include "nsMailHeaders.h"
 
 // XXX temporary so we can use the current identity hack -alecf
 #include "nsIMsgMailSession.h"
@@ -77,14 +78,14 @@ nsMsgCompose::UsingOldQuotingHack(const char *compString)
 
 nsMsgCompose::nsMsgCompose()
 {
-  mTempComposeFileSpec = nsnull;
-  mQuotingToFollow = PR_FALSE;
-  mSigFileSpec = nsnull;
-  mUseOldQuotingHack = PR_FALSE;  // RICHIE - hack for old quoting
-  mWhatHolder = 1;                // RICHIE - hack for old quoting
-  mQuoteURI = "";
-  mDocumentListener = nsnull;
-  mMsgSend = nsnull;
+	mTempComposeFileSpec = nsnull;
+	mQuotingToFollow = PR_FALSE;
+	mSigFileSpec = nsnull;
+	mUseOldQuotingHack = PR_FALSE;  // RICHIE - hack for old quoting
+	mWhatHolder = 1;                // RICHIE - hack for old quoting
+	mQuoteURI = "";
+	mDocumentListener = nsnull;
+	mMsgSend = nsnull;
 	m_sendListener = nsnull;
 	m_window = nsnull;
 	m_webShell = nsnull;
@@ -93,6 +94,7 @@ nsMsgCompose::nsMsgCompose()
 	mQuoteStreamListener=nsnull;
 	m_compFields = new nsMsgCompFields;
 	NS_IF_ADDREF(m_compFields);
+	mType = MSGCOMP_TYPE_New;
 
 	// Get the default charset from pref, use this as a mail charset.
 	char * default_mail_charset = nsMsgI18NGetDefaultMailCharset();
@@ -122,9 +124,10 @@ nsMsgCompose::nsMsgCompose()
 
 nsMsgCompose::~nsMsgCompose()
 {
-  if (m_editor) 
-    m_editor->UnregisterDocumentStateListener(mDocumentListener);
-  NS_IF_RELEASE(mDocumentListener);
+	if (m_editor) 
+		m_editor->UnregisterDocumentStateListener(mDocumentListener);
+
+	NS_IF_RELEASE(mDocumentListener);
 	NS_IF_RELEASE(m_sendListener);
 	NS_IF_RELEASE(m_compFields);
 	NS_IF_RELEASE(mQuoteStreamListener);
@@ -609,6 +612,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI, MSG_Compo
     
       message->GetCharSet(&aCharset);
       message->GetSubject(&aString);
+      
+      mType = type;
       switch (type)
       {
       default: break;        
@@ -810,8 +815,70 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStartRequest(nsIChannel * /* aChann
 
 NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */, nsresult status, const PRUnichar * /* errorMsg */)
 {
+  nsresult rv = NS_OK;
+
   if (mComposeObj) 
   {
+  	MSG_ComposeType type = mComposeObj->GetMessageType();
+
+  	if (mHeaders && (type == MSGCOMP_TYPE_Reply || type == MSGCOMP_TYPE_ReplyAll))
+  	{
+		nsIMsgCompFields *compFields = nsnull;
+		mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
+		if (compFields)
+		{
+			nsString aCharset(msgCompHeaderInternalCharset());
+	      	nsString replyTo;
+			nsString newgroups;
+			nsString followUpTo;
+			char *outCString;
+			PRUnichar emptyUnichar = 0;
+
+			mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, &outCString);
+			if (outCString)
+			{
+				// Convert fields to UTF-8
+				ConvertToUnicode(aCharset, outCString, replyTo);
+				PR_Free(outCString);
+			}
+
+			mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, &outCString);
+			if (outCString)
+			{
+				// Convert fields to UTF-8
+				ConvertToUnicode(aCharset, outCString, newgroups);
+				PR_Free(outCString);
+			}
+
+			mHeaders->ExtractHeader(HEADER_FOLLOWUP_TO, PR_FALSE, &outCString);
+			if (outCString)
+			{
+				// Convert fields to UTF-8
+				ConvertToUnicode(aCharset, outCString, followUpTo);
+				PR_Free(outCString);
+			}
+			
+			if (! replyTo.IsEmpty())
+				compFields->SetTo(replyTo.GetUnicode());
+			
+			if (! newgroups.IsEmpty())
+			{
+				compFields->SetNewsgroups(newgroups.GetUnicode());
+				if (type == MSGCOMP_TYPE_Reply)
+					compFields->SetTo(&emptyUnichar);
+			}
+
+			if (! followUpTo.IsEmpty())
+			{
+				compFields->SetNewsgroups(followUpTo.GetUnicode());
+				if (type == MSGCOMP_TYPE_Reply)
+					compFields->SetTo(&emptyUnichar);
+			}
+			
+			NS_RELEASE(compFields);
+		}
+	}
+  
     mMsgBody += "</html></BLOCKQUOTE>";
 
     // Now we have an HTML representation of the quoted message.
@@ -834,11 +901,17 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
     mComposeObj->GetComposeHTML(&compHTML);
     mComposeObj->mTempComposeFileSpec = nsMsgCreateTempFileSpec(compHTML ? (char *)"nscomp.html" : (char *)"nscomp.txt");
     if (!mComposeObj->mTempComposeFileSpec)
-      return NS_MSG_ERROR_WRITING_FILE;
+    {
+      rv = NS_MSG_ERROR_WRITING_FILE;
+      goto done;
+    }
 
     nsOutputFileStream tempFile(*(mComposeObj->mTempComposeFileSpec));
     if (!tempFile.is_open())
-      return NS_MSG_ERROR_WRITING_FILE;        
+    {
+      rv = NS_MSG_ERROR_WRITING_FILE;
+      goto done;
+    }     
     tempFile.write(nsAutoCString(mMsgBody), mMsgBody.Length());
     mComposeObj->ProcessSignature(&tempFile);
     tempFile.close();
@@ -848,13 +921,16 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
     nsIEditorShell    *editor;
 
     mComposeObj->GetEditor(&editor);
+    
     if (editor)
       editor->LoadUrl(urlStr.GetUnicode());
     else
-      return NS_ERROR_FAILURE;
+      rv = NS_ERROR_FAILURE;
   }
-  
-  return NS_OK;
+
+done:
+  NS_IF_RELEASE(mComposeObj);	//We are done with it, therefore release it.
+  return rv;
 }
 
 NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChannel */, 
@@ -888,10 +964,23 @@ QuotingOutputStreamListener::SetComposeObj(nsMsgCompose *obj)
   return NS_OK;
 }
 
+nsresult
+QuotingOutputStreamListener::SetMimeHeaders(nsIMimeHeaders * headers)
+{
+  mHeaders = headers;
+  return NS_OK;
+}
+
+
 NS_IMPL_ISUPPORTS(QuotingOutputStreamListener, nsCOMTypeInfo<nsIStreamListener>::GetIID());
 ////////////////////////////////////////////////////////////////////////////////////
 // END OF QUOTING LISTENER
 ////////////////////////////////////////////////////////////////////////////////////
+
+MSG_ComposeType nsMsgCompose::GetMessageType()
+{
+	return mType;
+}
 
 nsresult
 nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what) // New template
@@ -934,7 +1023,8 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
   NS_ADDREF(this);
   mQuoteStreamListener->SetComposeObj(this);
 
-  return mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener);
+  rv = mQuote->QuoteMessage(originalMsgURI, what != 1, mQuoteStreamListener);
+  return rv;
 }
 
 void nsMsgCompose::HackToGetBody(PRInt32 what)
@@ -1332,10 +1422,14 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
     PRUnichar   *bod;
 
     nsIMsgCompFields *compFields;
-    mComposeObj->GetCompFields(&compFields);
-    compFields->GetBody(&bod);
-    mComposeObj->LoadAsQuote(nsString(bod));
-    PR_FREEIF(bod);
+    mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
+	if (compFields)
+	{
+    	compFields->GetBody(&bod);
+    	mComposeObj->LoadAsQuote(nsString(bod));
+    	PR_FREEIF(bod);
+    	NS_RELEASE(compFields);
+    }
   }
   // RICHIE - hack! This is only if we are using the old
   // quoting hack

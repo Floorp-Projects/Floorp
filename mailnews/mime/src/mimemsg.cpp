@@ -233,13 +233,14 @@ MimeMessage_close_headers (MimeObject *obj)
 #ifdef MIME_DRAFTS
 	  if (outer_p &&
 		  obj->options &&
-		  obj->options->decompose_file_p &&
+          (obj->options->decompose_file_p || obj->options->caller_need_root_headers) &&
 		  obj->options->decompose_headers_info_fn)
 		{
 #ifdef MOZ_SECURITY	
 HG09091
 #endif /* MOZ_SECURITY */			  
-		  status = obj->options->decompose_headers_info_fn (
+          if (!obj->options->caller_need_root_headers || (obj == obj->options->state->root))
+		  	status = obj->options->decompose_headers_info_fn (
 												 obj->options->stream_closure,
 															 msg->hdrs );
 		}

@@ -48,6 +48,9 @@ if (prefs) {
 
 var editorDocumentListener = {
 	NotifyDocumentCreated: function() {
+
+		CompFields2Recipients(msgCompose.compFields);
+
 		if (document.getElementById("msgRecipient#1").value == "")
 		{
 			dump("set focus on the recipient\n");
@@ -202,7 +205,6 @@ function ComposeStartup()
 	    		if (args.subject) 
 	    			msgCompFields.SetSubject(args.subject);
 			
-				CompFields2Recipients(msgCompFields);
 				var subjectValue = msgCompFields.GetSubject();
 				if (subjectValue != "") {
 					document.getElementById("msgSubject").value = subjectValue;

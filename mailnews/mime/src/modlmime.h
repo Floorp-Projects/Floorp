@@ -372,6 +372,10 @@ struct MimeDisplayOptions
   PRBool signed_p;					   /* to tell draft this is a signed
 										  message */
 
+  PRBool caller_need_root_headers;    /* set it to true to receive the message main
+                                         headers through the callback
+                                         decompose_headers_info_fn */
+
   /* Callback to gather the outer most headers so we could use the 
 	 information to initialize the addressing/subject/newsgroups fields
 	 for the composition window. */

@@ -119,6 +119,49 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI)
   return NS_OK;
 }
 
+static int
+mime_headers_callback ( void *closure, MimeHeaders *headers )
+{
+  struct mime_stream_data *msd = (struct mime_stream_data *)closure;
+
+  PR_ASSERT ( msd && headers );
+  
+  if ( !msd || ! headers ) 
+    return 0;
+
+  PR_ASSERT ( msd->headers == NULL );
+  msd->headers = MimeHeaders_copy ( headers );
+
+  return 0;
+}
+
+nsresult          
+bridge_set_mime_stream_converter_listener(void *bridgeStream, nsIMimeStreamConverterListener* listener)
+{
+  nsMIMESession *session = (nsMIMESession *)bridgeStream;
+
+  if (session)
+  {
+    struct mime_stream_data *msd = (struct mime_stream_data *)session->data_object;
+    if (msd)
+    {
+      if (listener)
+      {
+        msd->options->caller_need_root_headers = PR_TRUE;
+        msd->options->decompose_headers_info_fn = mime_headers_callback;
+      }
+      else
+      {
+        msd->options->caller_need_root_headers = PR_FALSE;
+        msd->options->decompose_headers_info_fn = nsnull;
+      }
+    }
+  }
+  return NS_OK;
+}
+
+
+
 //
 // Utility routines needed by this interface...
 //
@@ -283,6 +326,7 @@ nsStreamConverter::nsStreamConverter()
   mOutputFormat = PL_strdup("text/html");
   mDoneParsing = PR_FALSE;
   mAlreadyKnowOutputType = PR_FALSE;
+  mMimeStreamConverterListener = nsnull;
 }
 
 nsStreamConverter::~nsStreamConverter()
@@ -438,7 +482,12 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	if (!mBridgeStream)
 		return NS_ERROR_OUT_OF_MEMORY;
 	else
+	{
+		//Do we need to setup an Mime Stream Converter Listener?
+		if (mMimeStreamConverterListener)
+ 			bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, mMimeStreamConverterListener);
 		return rv;
+	}
 }
 
 NS_IMETHODIMP nsStreamConverter::GetContentType(char **aOutputContentType)
@@ -492,6 +541,14 @@ nsStreamConverter::SetStreamURI(nsIURI *aURI)
     return bridge_new_new_uri((nsMIMESession *)mBridgeStream, aURI);
   else
     return NS_OK;
+}
+
+nsresult
+nsStreamConverter::SetMimeHeadersListener(nsIMimeStreamConverterListener *listener)
+{
+   mMimeStreamConverterListener = listener;
+   bridge_set_mime_stream_converter_listener((nsMIMESession *)mBridgeStream, listener);
+   return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -596,6 +653,30 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
   if (mBridgeStream)
   {
     nsMIMESession   *tSession = (nsMIMESession *) mBridgeStream;
+    
+  	if (mMimeStreamConverterListener)
+	{
+    	struct mime_stream_data *msd = (struct mime_stream_data *)tSession->data_object;
+    	if (msd)
+    	{
+			static NS_DEFINE_CID(kCIMimeHeadersCID, NS_IMIMEHEADERS_CID);
+  			nsresult rv;
+  			nsCOMPtr<nsIMimeHeaders> mimeHeaders;
+ 
+  			rv = nsComponentManager::CreateInstance(kCIMimeHeadersCID, 
+                                          nsnull, nsCOMTypeInfo<nsIMimeHeaders>::GetIID(), 
+                                          (void **) getter_AddRefs(mimeHeaders)); 
+    		
+    		if (NS_SUCCEEDED(rv))
+    		{
+    			mimeHeaders->Initialize(msd->headers->all_headers);
+				mMimeStreamConverterListener->OnHeadersReady(mimeHeaders);
+			}
+			else
+				mMimeStreamConverterListener->OnHeadersReady(nsnull);
+		}
+	}
+    
     tSession->complete((nsMIMESession *)mBridgeStream);
   }
 
@@ -617,6 +698,7 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
   // forward on top request to any listeners
   if (mOutListener)
     mOutListener->OnStopRequest(mOutgoingChannel, ctxt, status, errorMsg);
+    
 
   mAlreadyKnowOutputType = PR_FALSE;
 
