@@ -207,8 +207,10 @@ JSJAVA_CFLAGS	= -I$(topsrcdir)/sun-java/md-include \
 DASH_R		= -r
 
 ifeq ($(OS_ARCH), IRIX)
+ifneq ($(basename $(OS_RELEASE)),5)
 LDFLAGS		+= -n32
 DASH_R		+= -n32
+endif
 endif
 ifeq ($(OS_ARCH), Linux)
 LDFLAGS		+= -ldl
