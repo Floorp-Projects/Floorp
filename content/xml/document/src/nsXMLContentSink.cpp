@@ -584,6 +584,21 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
     NS_RELEASE(nameAtom);
     NS_IF_RELEASE(nameSpacePrefix);
   }
+
+  // Give autoloading links a chance to fire
+  if (mWebShell) {
+    nsCOMPtr<nsIXMLContent> xmlcontent(do_QueryInterface(aContent));
+    if (xmlcontent) {
+      nsresult rv = xmlcontent->MaybeTriggerAutoLink(mWebShell);
+      if (rv == NS_XML_AUTOLINK_REPLACE ||
+          rv == NS_XML_AUTOLINK_UNDEFINED) {
+        // If we do not terminate the parse, we just keep generating link trigger
+        // events. We want to parse only up to the first replace link, and stop.
+        mParser->Terminate();
+      }
+    }
+  }
+
   return NS_OK;
 }
 
