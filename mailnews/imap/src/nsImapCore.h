@@ -105,15 +105,16 @@ typedef enum {
 	kIMAP4rev1Capability = 0x00000020,      /* RFC2060 */
 	kIMAP4other = 0x00000040,                       /* future rev?? */
 	kNoHierarchyRename = 0x00000080,                        /* no hierarchy rename */
-	kACLCapability = 0x00000100,    /* ACL extension */
-	kNamespaceCapability = 0x00000200,      /* IMAP4 Namespace Extension */
-	kMailboxDataCapability = 0x00000400,    /* MAILBOXDATA SMTP posting extension */
-	kXServerInfoCapability = 0x00000800,     /* XSERVERINFO extension for admin urls */
-	kHasAuthPlainCapability = 0x00001000, /* new form of auth plain base64
-											login */
-	kUidplusCapability = 0x00002000,	/* RFC 2359 UIDPLUS extension */
+	kACLCapability = 0x00000100,          /* ACL extension */
+	kNamespaceCapability = 0x00000200,    /* IMAP4 Namespace Extension */
+	kMailboxDataCapability = 0x00000400,  /* MAILBOXDATA SMTP posting extension */
+	kXServerInfoCapability = 0x00000800,  /* XSERVERINFO extension for admin urls */
+	kHasAuthPlainCapability = 0x00001000, /* new form of auth plain base64 login */
+	kUidplusCapability = 0x00002000,	   /* RFC 2359 UIDPLUS extension */
 	kLiteralPlusCapability = 0x00004000, /* RFC 2088 LITERAL+ extension */
-	kAOLImapCapability = 0x00008000 /* aol imap extensions */
+	kAOLImapCapability = 0x00008000,     /* aol imap extensions */
+  kHasLanguageCapability = 0x00010000, /* language extensions */
+  kHasCRAMCapability     = 0x00020000  /* CRAM auth extension */
 } eIMAPCapabilityFlag;
 
 // this used to be part of the connection object class - maybe we should move it into 
@@ -124,9 +125,9 @@ typedef enum {
     kHeadersRFC822andUid,
     kUid,
     kFlags,
-	kRFC822Size,
-	kRFC822HeadersOnly,
-	kMIMEPart,
+	  kRFC822Size,
+	  kRFC822HeadersOnly,
+	  kMIMEPart,
     kMIMEHeader
 } nsIMAPeFetchFields;
     
