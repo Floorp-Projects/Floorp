@@ -1186,6 +1186,9 @@ nscoord BasicTableLayoutStrategy::GetTableMinWidth() const
   for (PRInt32 colX = 0; colX < numCols; colX++) { 
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
     minWidth += PR_MAX(colFrame->GetMinWidth(), colFrame->GetWidth(MIN_ADJ));
+    if (mTableFrame->GetNumCellsOriginatingInCol(colX) > 0) {
+      minWidth += spacingX;
+    }
   }
   // if it is not a degenerate table, add the last spacing on the right
   if (minWidth > 0) {
@@ -1201,10 +1204,17 @@ nscoord BasicTableLayoutStrategy::GetTableMaxWidth() const
   nscoord maxWidth = 0;
   for (PRInt32 colX = 0; colX < numCols; colX++) { 
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-    nscoord max = PR_MAX(colFrame->GetDesWidth(), colFrame->GetFixWidth());
-    max = PR_MAX(max, colFrame->GetPctWidth());
-    max = PR_MAX(max, colFrame->GetWidth(MIN_PRO));
-    maxWidth += max;
+    nscoord width = colFrame->GetPctWidth();
+    if (width <= 0) {
+      width = colFrame->GetFixWidth();
+      if (width <= 0) {
+        width = colFrame->GetWidth(MIN_PRO);
+        if (width <= 0) {
+          width = colFrame->GetDesWidth();
+        }
+      }
+    }
+    maxWidth += width;
     if (mTableFrame->GetNumCellsOriginatingInCol(colX) > 0) {
       maxWidth += spacingX;
     }
