@@ -23,4 +23,5 @@
 #define _NO_FAST_STRING_INLINES_ 1
 #define FORCE_PR_LOG 1
 #define NSPR20 1
+#define NSPR_AS_SHARED_LIB
 
