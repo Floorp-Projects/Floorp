@@ -903,11 +903,6 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
     baseWindow->SetEnabled(aShow);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    // hide (show) the cached window
-    rv = webShellWindow->Show(aShow);
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    // remove (add) the window from the mediator, so that it will be removed (added) from the task list
     nsCOMPtr <nsIXULWindow> xulWindow = do_QueryInterface(webShellWindow, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
@@ -915,11 +910,22 @@ nsresult nsMsgComposeService::ShowCachedComposeWindow(nsIDOMWindowInternal *aCom
 	         do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    if (aShow)
+    // if showing, reinstate the window with the mediator
+    if (aShow) {
       rv = windowMediator->RegisterWindow(xulWindow);
-    else
-      rv = windowMediator->UnregisterWindow(xulWindow);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+
+    // hide (show) the cached window
+    rv = webShellWindow->Show(aShow);
     NS_ENSURE_SUCCESS(rv,rv);
+
+    // if hiding, remove the window from the mediator,
+    // so that it will be removed from the task list
+    if (!aShow) {
+      rv = windowMediator->UnregisterWindow(xulWindow);
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
   }
   else {
     rv = NS_ERROR_FAILURE;
