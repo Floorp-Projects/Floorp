@@ -696,7 +696,7 @@ nsIInputStream* URLImpl::Open(PRInt32* aErrorCode)
                                     (nsISupports **)&inet);
   if (NS_OK == rv) {
     rv = inet->OpenBlockingStream(this, NULL, &in);
-    NS_RELEASE(inet);
+    nsServiceManager::ReleaseService(kNetServiceCID, inet);
   }
 
   *aErrorCode = rv;
@@ -716,7 +716,7 @@ nsresult URLImpl::Open(nsIStreamListener *aListener)
                                       (nsISupports **)&inet);
     if (NS_OK == rv) {
       rv = inet->OpenStream(this, aListener);
-      NS_RELEASE(inet);
+      nsServiceManager::ReleaseService(kNetServiceCID, inet);
     }
   }
   return rv;

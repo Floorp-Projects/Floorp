@@ -74,6 +74,14 @@ struct nsINetService : public nsISupports
                                   nsIInputStream **aNewStream) = 0;
 
     /**
+     * Interrupt an asynchronous URL load.<BR><BR>
+     *
+     * @param aUrl  The URL to stop loading.
+     * @return Returns NS_OK if successful, or NS_ERROR_FAILURE if an error occurred.
+     */ 
+    NS_IMETHOD InterruptStream(nsIURL* aURL) = 0;
+
+    /**
      * Get the complete cookie string associated with the URL
      *
      * @param aURL The URL for which to get the cookie string

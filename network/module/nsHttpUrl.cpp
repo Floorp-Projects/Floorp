@@ -53,6 +53,7 @@ public:
 
     /* nsIProtocolConnection interface... */
     NS_IMETHOD InitializeURLInfo(URL_Struct_ *URL_s);
+    NS_IMETHOD GetURLInfo(URL_Struct_** aResult);
 
     /* nsIPostToServer interface... */
     NS_IMETHOD  SendFile(const char *aFile);
@@ -172,6 +173,22 @@ NS_METHOD nsHttpUrlImpl::InitializeURLInfo(URL_Struct *URL_s)
     }
 
     return result;
+}
+
+
+NS_METHOD nsHttpUrlImpl::GetURLInfo(URL_Struct_** aResult)
+{
+  nsresult rv;
+
+  if (nsnull == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+  } else {
+    /* XXX: Should the URL be reference counted here?? */
+    *aResult = m_URL_s;
+    rv = NS_OK;
+  }
+
+  return rv;
 }
 
 
