@@ -91,7 +91,6 @@ NS_NewXMLCDATASection(nsIContent** aInstancePtrResult)
 nsXMLCDATASection::nsXMLCDATASection()
 {
   NS_INIT_REFCNT();
-  mInner.Init(this);
   mContentID = 0;
 }
 

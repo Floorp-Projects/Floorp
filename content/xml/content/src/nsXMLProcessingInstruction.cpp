@@ -93,8 +93,7 @@ nsXMLProcessingInstruction::nsXMLProcessingInstruction(const nsString& aTarget,
   mTarget(aTarget)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this);
-  mInner.SetData(aData);
+  mInner.SetData(this, aData);
   mScriptObject = nsnull;
 }
 
@@ -172,7 +171,7 @@ nsXMLProcessingInstruction::SetData(const nsString& aData)
 {
   // XXX Check if this is a stylesheet PI. If so, we may need
   // to parse the contents and see if anything has changed.
-  return mInner.SetData(aData);
+  return mInner.SetData(this, aData);
 }
 
 NS_IMETHODIMP 

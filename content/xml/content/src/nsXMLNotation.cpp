@@ -99,7 +99,6 @@ nsXMLNotation::nsXMLNotation(const nsString& aName,
   mName(aName), mPublicId(aPublicId), mSystemId(aSystemId)
 {
   NS_INIT_REFCNT();
-  mInner.Init(this);
   mScriptObject = nsnull;
 }
 
