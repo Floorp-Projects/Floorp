@@ -287,7 +287,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, PRInt32 aWhichClipboard)
             GtkSelectionData *selectionData;
             selectionData = wait_for_contents(clipboard, atom);
             if (selectionData) {
-                length = selectionData->length * selectionData->format / 8;
+                length = selectionData->length;
                 // Special case text/html since we can convert into UCS2
                 if (!strcmp(flavorStr, kHTMLMime)) {
                     PRUnichar* htmlBody= nsnull;
