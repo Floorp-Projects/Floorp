@@ -53,7 +53,7 @@
    
    <script type="application/x-javascript">
       var _elementIDs = [
-         "alarmplaysound", "alarmshow", "alarmemailaddress"
+         "alarmplaysound", "alarmshow", "missedalarms", "alarmemailaddress"
       ];
    </script>
 
@@ -64,6 +64,8 @@
           label="&pref.playasound;" />
           
       <checkbox id="alarmshow" prefstring="calendar.alarms.show" label="&pref.showalarmbox;" />
+      
+      <checkbox id="missedalarms" prefstring="calendar.alarms.showmissed" label="&pref.missedalarms;" />
           
       <hbox>
          <description>&pref.defaultemail.label;</description>

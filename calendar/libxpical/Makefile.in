@@ -54,6 +54,7 @@ REQUIRES	= xpcom \
 		  msgcompose \
 		  addrbook \
                   dom \
+                  pref \
 		  ical \
 		  icalss \
 		  $(NULL)

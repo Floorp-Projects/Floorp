@@ -58,6 +58,8 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 
 extern "C" {
@@ -1739,6 +1741,8 @@ void oeICalImpl::SetupAlarmManager() {
         return;
     }
 
+    static icaltimetype lastcheck = icaltime_null_time();
+
     UpdateCalendarIcon( false );
 
     PRTime todayinms = PR_Now();
@@ -1750,6 +1754,9 @@ void oeICalImpl::SetupAlarmManager() {
 
     icaltimetype nextalarm = icaltime_null_time();
     EventList *tmplistptr = &m_eventlist;
+
+    int processmissed = -1; // -1 means the value has not been read from the preferences. 0 or 1 are valid values.
+
     while( tmplistptr ) {
         oeICalEventImpl *event = (oeICalEventImpl *)(tmplistptr->event);
         if( event ) {
@@ -1765,9 +1772,24 @@ void oeICalImpl::SetupAlarmManager() {
                     printf( "ALARM WENT OFF: %s\n", icaltime_as_ical_string( alarmtime ) );
                     #endif
                     
+                    nsresult rv;
+                    if( processmissed == -1 ) {
+                        nsCOMPtr<nsIPrefBranch> prefBranch = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+                        if ( NS_SUCCEEDED(rv) && prefBranch ) {
+                            rv = prefBranch->GetBoolPref("calendar.alarms.showmissed", &processmissed);
+                        } else {
+                            processmissed = true; //if anything goes wrong just consider the default setting
+                        }
+                    }
+
+                    if( !processmissed ) {
+                        time_t timediff = icaltime_as_timet( now ) - icaltime_as_timet( alarmtime );
+                        if( timediff > 30 ) //if alarmtime is older than 30 seconds it won't be processed.
+                            continue;
+                    }
+
                     UpdateCalendarIcon( true );
 
-                    nsresult rv;
                     oeIICalEventDisplay* eventDisplay;
                     rv = NS_NewICalEventDisplay( event, &eventDisplay );
                     #ifdef ICAL_DEBUG
@@ -1802,6 +1824,9 @@ void oeICalImpl::SetupAlarmManager() {
         }
         tmplistptr = tmplistptr->next;
     }
+
+    lastcheck = now;
+
     if( m_alarmtimer  ) {
         PRUint32 delay = 0;
         #ifdef NS_INIT_REFCNT //A temporary way of keeping backward compatibility with Mozilla 1.0 source compile

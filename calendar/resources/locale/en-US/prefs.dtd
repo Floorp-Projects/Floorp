@@ -53,6 +53,7 @@
 <!ENTITY pref.showalarmbox    "Show an alarm box" >
 <!ENTITY pref.defaultemail.label "Default address to send alarms to:">
 <!ENTITY pref.defaulttext.label "Default text for alarms:">
+<!ENTITY pref.missedalarms    "Show missed alarms" >
 
 <!ENTITY pref.dateformat.label      "Date Text Format:" >
 <!ENTITY pref.dateformat.long       "Long" >
