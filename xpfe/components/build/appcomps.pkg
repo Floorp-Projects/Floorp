@@ -32,7 +32,6 @@ dist/bin/components/nsDownloadProgressListener.js
 !xpt dist/bin/components/downloadmanager.xpt
 !xpt dist/bin/components/autocomplete.xpt
 !xpt dist/bin/components/history.xpt
-!xpt dist/bin/components/urlbarhistory.xpt
 !xpt dist/bin/components/sidebar.xpt
 !xpt dist/bin/components/progressDlg.xpt
 
