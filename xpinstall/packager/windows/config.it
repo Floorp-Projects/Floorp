@@ -377,6 +377,12 @@ $InstallSizeArchive$:$UninstallFile$
 Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
 Parameter=
 
+;Since the uninstaller program is going to be installed into the Windows folder,
+;Setup.exe need to know to calculate the disk space required for the Windows folder.
+;This section overrides the default user-chosen path for Component3 only.
+[Component3-Destination Path0]
+Path=[WINDIR]
+
 [Component4]
 Description Short=Chatzilla
 ;*** LOCALIZE ME BABY ***
