@@ -289,7 +289,7 @@ NS_IMETHODIMP WebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIReque
         if (NS_FAILED(status))
         {
           char buffer[100];
-          sprintf(buffer, "Error loading page (status=%d)", status);
+          sprintf(buffer, "Error loading page (status=%x)", status);
           MessageBox(0, buffer, "Error", 0);
         }
     }
