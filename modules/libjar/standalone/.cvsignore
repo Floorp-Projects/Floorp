@@ -1,14 +1,1 @@
 Makefile
-nsZipArchive.cpp
-nsZipArchive.h
-zipfile.h
-zipstruct.h
-zipstub.h
-nsJARInputStream.h
-nsWildCard.h
-nsJAR.h
-nsIJARFactory.h
-nsJARInputStream.cpp
-nsWildCard.cpp
-nsJARFactory.cpp
-nsJAR.cpp
