@@ -209,11 +209,11 @@ function UpdateHistory(event)
 
 	if (window.content.location.href && window.content.location.href != "")
 	{
-		var history = Components.classes["component://netscape/browser/global-history"].getService();
-		if (history) history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
 		try
 		{
-			if (history)	history.SetPageTitle(window.content.location.href, window.content.document.title);
+			var history = Components.classes["component://netscape/browser/global-history"].getService();
+			if (history) history = history.QueryInterface(Components.interfaces.nsIGlobalHistory);
+			if (history) history.SetPageTitle(window.content.location.href, window.content.document.title);
 		}
 		catch (ex)
 		{
