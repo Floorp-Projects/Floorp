@@ -100,13 +100,20 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
 
    nsAutoString   name(aName);
 
+   PRBool fIs_Content = PR_FALSE;
+
    /* Special Cases */
    if(name.Length() == 0)
       return NS_OK;
    if(name.EqualsIgnoreCase("_blank"))
       return NS_OK;
    if(name.EqualsIgnoreCase("_content"))
-      return mXULWindow->GetPrimaryContentShell(aFoundItem);
+      {
+      fIs_Content = PR_TRUE;
+      mXULWindow->GetPrimaryContentShell(aFoundItem);
+      if(*aFoundItem)
+         return NS_OK;
+      }
 
    nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
    NS_ENSURE_TRUE(windowMediator, NS_ERROR_FAILURE);
@@ -127,15 +134,21 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
 
       nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem;
       xulWindow->GetPrimaryContentShell(getter_AddRefs(shellAsTreeItem));
-      if(shellAsTreeItem && (aRequestor != shellAsTreeItem.get()))
-         {
-         // Do this so we can pass in the tree owner as the requestor so the child knows not
-         // to call back up.
-         nsCOMPtr<nsIDocShellTreeOwner> shellOwner;
-         shellAsTreeItem->GetTreeOwner(getter_AddRefs(shellOwner));
-         nsCOMPtr<nsISupports> shellOwnerSupports(do_QueryInterface(shellOwner));
 
-         shellAsTreeItem->FindItemWithName(aName, shellOwnerSupports, aFoundItem);
+      if(shellAsTreeItem)
+         {
+         if(fIs_Content)
+            *aFoundItem = shellAsTreeItem;
+         else if(aRequestor != shellAsTreeItem.get())
+            {
+            // Do this so we can pass in the tree owner as the requestor so the child knows not
+            // to call back up.
+            nsCOMPtr<nsIDocShellTreeOwner> shellOwner;
+            shellAsTreeItem->GetTreeOwner(getter_AddRefs(shellOwner));
+            nsCOMPtr<nsISupports> shellOwnerSupports(do_QueryInterface(shellOwner));
+
+            shellAsTreeItem->FindItemWithName(aName, shellOwnerSupports, aFoundItem);
+            }
          if(*aFoundItem)
             return NS_OK;   
          }
