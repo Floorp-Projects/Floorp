@@ -198,7 +198,10 @@ CFLAGS=$(CFLAGS) -DCookieManagement -DSingleSignon
 CFLAGS=$(CFLAGS) -DTRANSACTION_RECEIPTS
 !endif
 
-
+# TODO Cleanup later -Gagan
+!ifdef NU_CACHE 
+CFLAGS=$(CFLAGS) -DNU_CACHE
+!endif
 
 # always need these:
 CFLAGS = $(CFLAGS) -DNETSCAPE
