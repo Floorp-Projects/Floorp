@@ -235,11 +235,11 @@
 <!ENTITY calendar.context.newevent.accesskey          "n">
 <!ENTITY calendar.context.newtodo.label               "New Task">
 <!ENTITY calendar.context.newtodo.accesskey           "k">
-<!ENTITY calendar.context.modifyevent.label           "Edit Event">
+<!ENTITY calendar.context.modifyevent.label           "Edit Selected Event">
 <!ENTITY calendar.context.modifyevent.accesskey       "e">
 <!ENTITY calendar.context.modifytask.label            "Edit Task">
 <!ENTITY calendar.context.modifytask.accesskey        "e">
-<!ENTITY calendar.context.deleteevent.label           "Delete Event">
+<!ENTITY calendar.context.deleteevent.label           "Delete Selected Event">
 <!ENTITY calendar.context.deletetask.accesskey        "l">
 <!ENTITY calendar.context.deletetask.label            "Delete Task">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
@@ -261,7 +261,7 @@
 <!ENTITY calendar.context.monthview.accesskey         "m">
 <!ENTITY calendar.context.reload.label                "Reload">
 <!ENTITY calendar.context.reload.accesskey            "r">
-<!ENTITY calendar.context.emailevent.label            "Email Selected Event">
+<!ENTITY calendar.context.emailevent.label            "Email Selected Event(s)">
 <!ENTITY calendar.context.emailevent.accesskey        "i">
 <!ENTITY calendar.context.emailtask.label             "Email Task">
 <!ENTITY calendar.context.emailtask.accesskey         "i">
