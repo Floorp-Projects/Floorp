@@ -873,6 +873,14 @@ RDFGenericBuilderImpl::CloseContainer(nsIContent* aElement)
 NS_IMETHODIMP
 RDFGenericBuilderImpl::RebuildContainer(nsIContent* aElement)
 {
+    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
+
+    // First, make sure that the element is in the right widget -- ours.
+    if (!IsElementInWidget(aElement))
+        return NS_OK;
+
     nsresult rv;
 
     // Remove any generated children from this node
