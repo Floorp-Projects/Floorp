@@ -1,4 +1,4 @@
-# 
+#
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -30,15 +30,15 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-CORE_DEPTH = ../..
-DEPTH      = ../..
 
-DIRS = pkcs7 ssl nss crmf jar \
-    certhigh pk11wrap cryptohi \
-    softoken certdb crypto \
-    util freebl pkcs12 fortcrypt \
-    smime
 #
-# these dirs are not built at the moment
+#  Override TARGETS variable so that only static libraries
+#  are specifed as dependencies within rules.mk.
 #
-#NOBUILD_DIRS = jar
+
+TARGETS        = $(LIBRARY)
+SHARED_LIBRARY =
+IMPORT_LIBRARY =
+PURE_LIBRARY   =
+PROGRAM        =
+

@@ -1013,6 +1013,38 @@ loser:
     return NULL;
 }
 
+CERTCertificateList *
+CERT_CertListFromCert(CERTCertificate *cert)
+{
+    CERTCertificateList *chain = NULL;
+    int rv;
+    PRArenaPool *arena;
+
+    /* arena for SecCertificateList */
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) goto no_memory;
+
+    /* build the CERTCertificateList */
+    chain = (CERTCertificateList *)PORT_ArenaAlloc(arena, sizeof(CERTCertificateList));
+    if (chain == NULL) goto no_memory;
+    chain->certs = (SECItem*)PORT_ArenaAlloc(arena, 1 * sizeof(SECItem));
+    if (chain->certs == NULL) goto no_memory;
+    rv = SECITEM_CopyItem(arena, chain->certs, &(cert->derCert));
+    if (rv < 0) goto loser;
+    chain->len = 1;
+    chain->arena = arena;
+
+    return chain;
+
+no_memory:
+    PORT_SetError(SEC_ERROR_NO_MEMORY);
+loser:
+    if (arena != NULL) {
+	PORT_FreeArena(arena, PR_FALSE);
+    }
+    return NULL;
+}
+
 void
 CERT_DestroyCertificateList(CERTCertificateList *list)
 {

@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.1 2000/03/31 19:42:30 relyea%netscape.com Exp $
+ * $Id: cert.h,v 1.2 2000/06/13 21:56:19 chrisk%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -901,6 +901,9 @@ extern CERTDistNames *CERT_DistNamesFromNicknames
 extern CERTCertificateList *
 CERT_CertChainFromCert(CERTCertificate *cert, SECCertUsage usage,
 		       PRBool includeRoot);
+
+extern CERTCertificateList *
+CERT_CertListFromCert(CERTCertificate *cert);
 
 extern void CERT_DestroyCertificateList(CERTCertificateList *list);
 

@@ -60,6 +60,7 @@ DIRS = lib  \
  strsclnt \
  swfort  \
  tstclnt  \
+ smimetools  \
  $(NULL)
 
 TEMPORARILY_DONT_BUILD = \

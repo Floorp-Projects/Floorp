@@ -43,6 +43,7 @@ ifdef MOZILLA_BSAFE_BUILD
 endif
 
 EXTRA_LIBS += \
+	$(DIST)/lib/smime.lib \
 	$(DIST)/lib/ssl.lib \
 	$(DIST)/lib/jar.lib \
 	$(DIST)/lib/zlib.lib \
@@ -81,6 +82,7 @@ ifdef MOZILLA_BSAFE_BUILD
 	CRYPTOLIB=$(DIST)/lib/libbsafe.a
 endif
 EXTRA_LIBS += \
+	$(DIST)/lib/libsmime.a \
 	$(DIST)/lib/libssl.a \
 	$(DIST)/lib/libjar.a \
 	$(DIST)/lib/libzlib.a \

@@ -1,0 +1,416 @@
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Netscape security libraries.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are 
+ * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s):
+ * 
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License Version 2 or later (the
+ * "GPL"), in which case the provisions of the GPL are applicable 
+ * instead of those above.  If you wish to allow use of your 
+ * version of this file only under the terms of the GPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the GPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
+ */
+
+/*
+ * CMS envelopedData methods.
+ *
+ * $Id: cmsenvdata.c,v 1.2 2000/06/13 21:56:29 chrisk%netscape.com Exp $
+ */
+
+#include "cmslocal.h"
+
+#include "cert.h"
+#include "key.h"
+#include "secasn1.h"
+#include "secitem.h"
+#include "secoid.h"
+#include "pk11func.h"
+#include "secerr.h"
+
+/*
+ * NSS_CMSEnvelopedData_Create - create an enveloped data message
+ */
+NSSCMSEnvelopedData *
+NSS_CMSEnvelopedData_Create(NSSCMSMessage *cmsg, SECOidTag algorithm, int keysize)
+{
+    void *mark;
+    NSSCMSEnvelopedData *envd;
+    PLArenaPool *poolp;
+    SECStatus rv;
+
+    poolp = cmsg->poolp;
+
+    mark = PORT_ArenaMark(poolp);
+
+    envd = (NSSCMSEnvelopedData *)PORT_ArenaZAlloc(poolp, sizeof(NSSCMSEnvelopedData));
+    if (envd == NULL)
+	goto loser;
+
+    envd->cmsg = cmsg;
+
+    /* version is set in NSS_CMSEnvelopedData_Encode_BeforeStart() */
+
+    rv = NSS_CMSContentInfo_SetContentEncAlg(poolp, &(envd->contentInfo), algorithm, NULL, keysize);
+    if (rv != SECSuccess)
+	goto loser;
+
+    PORT_ArenaUnmark(poolp, mark);
+    return envd;
+
+loser:
+    PORT_ArenaRelease(poolp, mark);
+    return NULL;
+}
+
+/*
+ * NSS_CMSEnvelopedData_Destroy - destroy an enveloped data message
+ */
+void
+NSS_CMSEnvelopedData_Destroy(NSSCMSEnvelopedData *edp)
+{
+    NSSCMSRecipientInfo **recipientinfos;
+    NSSCMSRecipientInfo *ri;
+
+    if (edp == NULL)
+	return;
+
+    recipientinfos = edp->recipientInfos;
+    if (recipientinfos == NULL)
+	return;
+
+    while ((ri = *recipientinfos++) != NULL)
+	NSS_CMSRecipientInfo_Destroy(ri);
+
+    /* XXX storage ??? */
+}
+
+/*
+ * NSS_CMSEnvelopedData_GetContentInfo - return pointer to this envelopedData's contentinfo
+ */
+NSSCMSContentInfo *
+NSS_CMSEnvelopedData_GetContentInfo(NSSCMSEnvelopedData *envd)
+{
+    return &(envd->contentInfo);
+}
+
+/*
+ * NSS_CMSEnvelopedData_AddRecipient - add a recipientinfo to the enveloped data msg
+ *
+ * rip must be created on the same pool as edp - this is not enforced, though.
+ */
+SECStatus
+NSS_CMSEnvelopedData_AddRecipient(NSSCMSEnvelopedData *edp, NSSCMSRecipientInfo *rip)
+{
+    void *mark;
+    SECStatus rv;
+
+    /* XXX compare pools, if not same, copy rip into edp's pool */
+
+    PR_ASSERT(edp != NULL);
+    PR_ASSERT(rip != NULL);
+
+    mark = PORT_ArenaMark(edp->cmsg->poolp);
+
+    rv = NSS_CMSArray_Add(edp->cmsg->poolp, (void ***)&(edp->recipientInfos), (void *)rip);
+    if (rv != SECSuccess) {
+	PORT_ArenaRelease(edp->cmsg->poolp, mark);
+	return SECFailure;
+    }
+
+    PORT_ArenaUnmark (edp->cmsg->poolp, mark);
+    return SECSuccess;
+}
+
+/*
+ * NSS_CMSEnvelopedData_Encode_BeforeStart - prepare this envelopedData for encoding
+ *
+ * at this point, we need
+ * - recipientinfos set up with recipient's certificates
+ * - a content encryption algorithm (if none, 3DES will be used)
+ *
+ * this function will generate a random content encryption key (aka bulk key),
+ * initialize the recipientinfos with certificate identification and wrap the bulk key
+ * using the proper algorithm for every certificiate.
+ * it will finally set the bulk algorithm and key so that the encode step can find it.
+ */
+SECStatus
+NSS_CMSEnvelopedData_Encode_BeforeStart(NSSCMSEnvelopedData *envd)
+{
+    int version;
+    NSSCMSRecipientInfo **recipientinfos;
+    NSSCMSContentInfo *cinfo;
+    PK11SymKey *bulkkey = NULL;
+    SECOidTag bulkalgtag;
+    CK_MECHANISM_TYPE type;
+    PK11SlotInfo *slot;
+    SECStatus rv;
+    SECItem *dummy;
+    PLArenaPool *poolp;
+    extern const SEC_ASN1Template NSSCMSRecipientInfoTemplate[];
+    void *mark = NULL;
+    int i;
+
+    poolp = envd->cmsg->poolp;
+    cinfo = &(envd->contentInfo);
+
+    recipientinfos = envd->recipientInfos;
+    if (recipientinfos == NULL) {
+	PORT_SetError(SEC_ERROR_BAD_DATA);
+#if 0
+	PORT_SetErrorString("Cannot find recipientinfos to encode.");
+#endif
+	goto loser;
+    }
+
+    version = NSS_CMS_ENVELOPED_DATA_VERSION_REG;
+    if (envd->originatorInfo != NULL || envd->unprotectedAttr != NULL) {
+	version = NSS_CMS_ENVELOPED_DATA_VERSION_ADV;
+    } else {
+	for (i = 0; recipientinfos[i] != NULL; i++) {
+	    if (NSS_CMSRecipientInfo_GetVersion(recipientinfos[i]) != 0) {
+		version = NSS_CMS_ENVELOPED_DATA_VERSION_ADV;
+		break;
+	    }
+	}
+    }
+    dummy = SEC_ASN1EncodeInteger(poolp, &(envd->version), version);
+    if (dummy == NULL)
+	goto loser;
+
+    /* now we need to have a proper content encryption algorithm
+     * on the SMIME level, we would figure one out by looking at SMIME capabilities
+     * we cannot do that on our level, so if none is set already, we'll just go
+     * with one of the mandatory algorithms (3DES) */
+    if ((bulkalgtag = NSS_CMSContentInfo_GetContentEncAlgTag(cinfo)) == SEC_OID_UNKNOWN) {
+	rv = NSS_CMSContentInfo_SetContentEncAlg(poolp, cinfo, SEC_OID_DES_EDE3_CBC, NULL, 168);
+	if (rv != SECSuccess)
+	    goto loser;
+	bulkalgtag = SEC_OID_DES_EDE3_CBC;
+    } 
+
+    /* generate a random bulk key suitable for content encryption alg */
+    type = PK11_AlgtagToMechanism(bulkalgtag);
+    slot = PK11_GetBestSlot(type, envd->cmsg->pwfn_arg);
+    if (slot == NULL)
+	goto loser;	/* error has been set by PK11_GetBestSlot */
+
+    /* this is expensive... */
+    bulkkey = PK11_KeyGen(slot, type, NULL, NSS_CMSContentInfo_GetBulkKeySize(cinfo) / 8, envd->cmsg->pwfn_arg);
+    PK11_FreeSlot(slot);
+    if (bulkkey == NULL)
+	goto loser;	/* error has been set by PK11_KeyGen */
+
+    mark = PORT_ArenaMark(poolp);
+
+    /* Encrypt the bulk key with the public key of each recipient.  */
+    for (i = 0; recipientinfos[i] != NULL; i++) {
+	rv = NSS_CMSRecipientInfo_WrapBulkKey(recipientinfos[i], bulkkey, bulkalgtag);
+	if (rv != SECSuccess)
+	    goto loser;	/* error has been set by NSS_CMSRecipientInfo_EncryptBulkKey */
+	    		/* could be: alg not supported etc. */
+    }
+
+    /* the recipientinfos are all finished. now sort them by DER for SET OF encoding */
+    rv = NSS_CMSArray_SortByDER((void **)envd->recipientInfos, NSSCMSRecipientInfoTemplate, NULL);
+    if (rv != SECSuccess)
+	goto loser;	/* error has been set by NSS_CMSArray_SortByDER */
+
+    /* store the bulk key in the contentInfo so that the encoder can find it */
+    NSS_CMSContentInfo_SetBulkKey(cinfo, bulkkey);
+
+    PORT_ArenaUnmark(poolp, mark);
+
+    PK11_FreeSymKey(bulkkey);
+
+    return SECSuccess;
+
+loser:
+    if (mark != NULL)
+	PORT_ArenaRelease (poolp, mark);
+    if (bulkkey)
+	PK11_FreeSymKey(bulkkey);
+
+    return SECFailure;
+}
+
+/*
+ * NSS_CMSEnvelopedData_Encode_BeforeData - set up encryption
+ *
+ * it is essential that this is called before the contentEncAlg is encoded, because
+ * setting up the encryption may generate IVs and thus change it!
+ */
+SECStatus
+NSS_CMSEnvelopedData_Encode_BeforeData(NSSCMSEnvelopedData *envd)
+{
+    NSSCMSContentInfo *cinfo;
+    PK11SymKey *bulkkey;
+    SECAlgorithmID *algid;
+
+    cinfo = &(envd->contentInfo);
+
+    /* find bulkkey and algorithm - must have been set by NSS_CMSEnvelopedData_Encode_BeforeStart */
+    bulkkey = NSS_CMSContentInfo_GetBulkKey(cinfo);
+    if (bulkkey == NULL)
+	return SECFailure;
+    algid = NSS_CMSContentInfo_GetContentEncAlg(cinfo);
+    if (algid == NULL)
+	return SECFailure;
+
+    /* this may modify algid (with IVs generated in a token).
+     * it is essential that algid is a pointer to the contentEncAlg data, not a
+     * pointer to a copy! */
+    cinfo->ciphcx = NSS_CMSCipherContext_StartEncrypt(envd->cmsg->poolp, bulkkey, algid);
+    PK11_FreeSymKey(bulkkey);
+    if (cinfo->ciphcx == NULL)
+	return SECFailure;
+
+    return SECSuccess;
+}
+
+/*
+ * NSS_CMSEnvelopedData_Encode_AfterData - finalize this envelopedData for encoding
+ */
+SECStatus
+NSS_CMSEnvelopedData_Encode_AfterData(NSSCMSEnvelopedData *envd)
+{
+    if (envd->contentInfo.ciphcx) {
+	NSS_CMSCipherContext_Destroy(envd->contentInfo.ciphcx);
+	envd->contentInfo.ciphcx = NULL;
+    }
+
+    /* nothing else to do after data */
+    return SECSuccess;
+}
+
+/*
+ * NSS_CMSEnvelopedData_Decode_BeforeData - find our recipientinfo, 
+ * derive bulk key & set up our contentinfo
+ */
+SECStatus
+NSS_CMSEnvelopedData_Decode_BeforeData(NSSCMSEnvelopedData *envd)
+{
+    NSSCMSRecipientInfo *ri;
+    PK11SymKey *bulkkey = NULL;
+    SECOidTag bulkalgtag;
+    SECAlgorithmID *bulkalg;
+    SECStatus rv = SECFailure;
+    NSSCMSContentInfo *cinfo;
+    NSSCMSRecipient **recipient_list;
+    int rlIndex;
+
+    if (NSS_CMSArray_Count((void **)envd->recipientInfos) == 0) {
+	PORT_SetError(SEC_ERROR_BAD_DATA);
+#if 0
+	PORT_SetErrorString("No recipient data in envelope.");
+#endif
+	goto loser;
+    }
+
+    /* look if one of OUR cert's issuerSN is on the list of recipients, and if so,  */
+    /* get the cert and private key for it right away */
+    recipient_list = nss_cms_recipient_list_create(envd->recipientInfos);
+    if (recipient_list == NULL)
+	goto loser;
+
+    /* what about multiple recipientInfos that match?
+     * especially if, for some reason, we could not produce a bulk key with the first match?!
+     * we could loop & feed partial recipient_list to PK11_FindCertAndKeyByRecipientList...
+     * maybe later... */
+    rlIndex = PK11_FindCertAndKeyByRecipientListNew(recipient_list, envd->cmsg->pwfn_arg);
+
+    /* if that fails, then we're not an intended recipient and cannot decrypt */
+    if (rlIndex < 0) {
+	PORT_SetError(SEC_ERROR_NOT_A_RECIPIENT);
+#if 0
+	PORT_SetErrorString("Cannot decrypt data because proper key cannot be found.");
+#endif
+	goto loser;
+    }
+
+    /* get a pointer to "our" recipientinfo */
+    ri = envd->recipientInfos[recipient_list[rlIndex]->riIndex];
+
+    cinfo = &(envd->contentInfo);
+    bulkalgtag = NSS_CMSContentInfo_GetContentEncAlgTag(cinfo);
+    bulkkey = NSS_CMSRecipientInfo_UnwrapBulkKey(ri,recipient_list[rlIndex]->subIndex,
+						    recipient_list[rlIndex]->cert,
+						    recipient_list[rlIndex]->privkey,
+						    bulkalgtag);
+    if (bulkkey == NULL) {
+	/* no success finding a bulk key */
+	goto loser;
+    }
+
+    NSS_CMSContentInfo_SetBulkKey(cinfo, bulkkey);
+
+    bulkalg = NSS_CMSContentInfo_GetContentEncAlg(cinfo);
+
+    cinfo->ciphcx = NSS_CMSCipherContext_StartDecrypt(bulkkey, bulkalg);
+    if (cinfo->ciphcx == NULL)
+	goto loser;		/* error has been set by NSS_CMSCipherContext_StartDecrypt */
+
+    /* 
+     * HACK ALERT!!
+     * For PKCS5 Encryption Algorithms, the bulkkey is actually a different
+     * structure.  Therefore, we need to set the bulkkey to the actual key 
+     * prior to freeing it.
+     */
+    if (SEC_PKCS5IsAlgorithmPBEAlg(bulkalg)) {
+	SEC_PKCS5KeyAndPassword *keyPwd = (SEC_PKCS5KeyAndPassword *)bulkkey;
+	bulkkey = keyPwd->key;
+    }
+
+    rv = SECSuccess;
+
+loser:
+    if (bulkkey)
+	PK11_FreeSymKey(bulkkey);
+    if (recipient_list != NULL)
+	nss_cms_recipient_list_destroy(recipient_list);
+    return rv;
+}
+
+/*
+ * NSS_CMSEnvelopedData_Decode_AfterData - finish decrypting this envelopedData's content
+ */
+SECStatus
+NSS_CMSEnvelopedData_Decode_AfterData(NSSCMSEnvelopedData *envd)
+{
+    if (envd->contentInfo.ciphcx) {
+	NSS_CMSCipherContext_Destroy(envd->contentInfo.ciphcx);
+	envd->contentInfo.ciphcx = NULL;
+    }
+
+    return SECSuccess;
+}
+
+/*
+ * NSS_CMSEnvelopedData_Decode_AfterEnd - finish decoding this envelopedData
+ */
+SECStatus
+NSS_CMSEnvelopedData_Decode_AfterEnd(NSSCMSEnvelopedData *envd)
+{
+    /* apply final touches */
+    return SECSuccess;
+}
+

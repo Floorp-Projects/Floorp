@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.2 2000/05/22 15:24:20 chrisk%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.3 2000/06/13 21:56:36 chrisk%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -2121,6 +2121,9 @@ sec_asn1d_during_choice
   PORT_Assert((sec_asn1d_state *)NULL != child);
 
   if( child->missing ) {
+    unsigned char child_found_tag_modifiers = 0;
+    unsigned long child_found_tag_number = 0;
+
     child->theTemplate++;
 
     if( 0 == child->theTemplate->kind ) {
@@ -2149,14 +2152,24 @@ sec_asn1d_during_choice
 
     child->consumed = 0;
     sec_asn1d_scrub_state(child);
+
+    /* move it on top again */
+    state->top->current = child;
+
+    child_found_tag_modifiers = child->found_tag_modifiers;
+    child_found_tag_number = child->found_tag_number;
+
     child = sec_asn1d_init_state_based_on_template(child);
     if( (sec_asn1d_state *)NULL == child ) {
       return (sec_asn1d_state *)NULL;
     }
 
+    /* copy our findings to the new top */
+    child->found_tag_modifiers = child_found_tag_modifiers;
+    child->found_tag_number = child_found_tag_number;
+
     child->optional = PR_TRUE;
     child->place = afterIdentifier;
-    state->top->current = child;
 
     return child;
   } else {

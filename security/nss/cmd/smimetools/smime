@@ -1,0 +1,325 @@
+#!/usr/local/bin/perl
+
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is the Netscape security libraries.
+# 
+# The Initial Developer of the Original Code is Netscape
+# Communications Corporation.  Portions created by Netscape are 
+# Copyright (C) 1994-2000 Netscape Communications Corporation.  All
+# Rights Reserved.
+# 
+# Contributor(s):
+# 
+# Alternatively, the contents of this file may be used under the
+# terms of the GNU General Public License Version 2 or later (the
+# "GPL"), in which case the provisions of the GPL are applicable 
+# instead of those above.  If you wish to allow use of your 
+# version of this file only under the terms of the GPL and not to
+# allow others to use your version of this file under the MPL,
+# indicate your decision by deleting the provisions above and
+# replace them with the notice and other provisions required by
+# the GPL.  If you do not delete the provisions above, a recipient
+# may use your version of this file under either the MPL or the
+# GPL.
+
+#
+# smime.pl - frontend for S/MIME message generation
+#
+# $Id: smime,v 1.2 2000/06/13 21:56:15 chrisk%netscape.com Exp $
+#
+
+use Getopt::Std;
+
+@boundarychars = ( "0" .. "9", "A" .. "F" );
+
+# path to cmsutil
+$cmsutilpath = "cmsutil";
+
+#
+# Thanks to Gisle Aas <gisle@aas.no> for the encode_base64 function
+# originally taken from MIME-Base64-2.11 at www.cpan.org
+#
+sub encode_base64($)
+{
+    my $res = "";
+    pos($_[0]) = 0;                          # ensure start at the beginning
+    while ($_[0] =~ /(.{1,45})/gs) {
+	$res .= substr(pack('u', $1), 1);    # get rid of length byte after packing
+	chop($res);
+    }
+    $res =~ tr|` -_|AA-Za-z0-9+/|;
+    # fix padding at the end
+    my $padding = (3 - length($_[0]) % 3) % 3;
+    $res =~ s/.{$padding}$/'=' x $padding/e if $padding;
+    # break encoded string into lines of no more than 76 characters each
+    $res =~ s/(.{1,76})/$1\n/g;
+    $res;
+}
+
+#
+# encryptentity($entity, $options) - encrypt an S/MIME entity
+#
+# entity  - string containing entire S/MIME entity to encrypt
+# options - options for cmsutil
+#
+# this will generate and return a new multipart/signed entity consisting
+# of the canonicalized original content, plus a signature block.
+#
+sub encryptentity($$)
+{
+    my ($entity, $cmsutiloptions) = @_;
+    my $out = "";
+    my $boundary;
+
+    $tmpencfile = "/tmp/encryptentity.$$";
+
+    #
+    # generate a random boundary string
+    #
+    $boundary = "------------ms" . join("", @boundarychars[map{rand @boundarychars }( 1 .. 24 )]);
+
+    #
+    # tell cmsutil to generate a signed CMS message using the canonicalized data
+    # The signedData has detached content (-T) and includes a signing time attribute (-G)
+    #
+    # if we do not provide a password on the command line, here's where we would be asked for it
+    #
+    open(CMS, "|$cmsutilpath -E $cmsutiloptions -o $tmpencfile") or die "ERROR: cannot pipe to cmsutil";
+    print CMS $entity;
+    unless (close(CMS)) {
+	print STDERR "ERROR: encryption failed.\n";
+	unlink($tmpsigfile);
+	exit 1;
+    }
+
+    open (ENC, $tmpencfile) or die "ERROR: cannot find newly generated encrypted content";
+
+    #
+    # construct a new multipart/signed MIME entity consisting of the original content and
+    # the signature
+    #
+    # (we assume that cmsutil generates a SHA1 digest)
+    $out .= "Content-Type: application/pkcs7-mime; smime-type=enveloped-data; name=smime.p7m\n";
+    $out .= "Content-Transfer-Encoding: base64\n";
+    $out .= "Content-Disposition: attachment; filename=smime.p7m\n";
+    $out .= "\n";		# end of entity header
+
+    local($/) = undef;		# slurp whole file
+    $out .= encode_base64(<ENC>), "\n";	# append base64-encoded signature
+
+    close(ENC);
+    unlink($tmpencfile);
+
+    $out;
+}
+
+#
+# signentity($entity, $options) - sign an S/MIME entity
+#
+# entity  - string containing entire S/MIME entity to sign
+# options - options for cmsutil
+#
+# this will generate and return a new multipart/signed entity consisting
+# of the canonicalized original content, plus a signature block.
+#
+sub signentity($$)
+{
+    my ($entity, $cmsutiloptions) = @_;
+    my $out = "";
+    my $boundary;
+
+    $tmpsigfile = "/tmp/signentity.$$";
+
+    #
+    # generate a random boundary string
+    #
+    $boundary = "------------ms" . join("", @boundarychars[map{rand @boundarychars }( 1 .. 24 )]);
+
+    #
+    # tell cmsutil to generate a signed CMS message using the canonicalized data
+    # The signedData has detached content (-T) and includes a signing time attribute (-G)
+    #
+    # if we do not provide a password on the command line, here's where we would be asked for it
+    #
+    open(CMS, "|$cmsutilpath -S -T -G $cmsutiloptions -o $tmpsigfile") or die "ERROR: cannot pipe to cmsutil";
+    print CMS $entity;
+    unless (close(CMS)) {
+	print STDERR "ERROR: signature generation failed.\n";
+	unlink($tmpsigfile);
+	exit 1;
+    }
+
+    open (SIG, $tmpsigfile) or die "ERROR: cannot find newly generated signature";
+
+    #
+    # construct a new multipart/signed MIME entity consisting of the original content and
+    # the signature
+    #
+    # (we assume that cmsutil generates a SHA1 digest)
+    $out .= "Content-Type: multipart/signed; protocol=\"application/pkcs7-signature\"; micalg=sha1; boundary=\"${boundary}\"\n";
+    $out .= "\n";		# end of entity header
+    $out .= "This is a cryptographically signed message in MIME format.\n\n"; # explanatory comment
+    $out .= "--${boundary}\n";
+    $out .= "$entity\n";	# the trailing \n seems to be important
+    $out .= "--${boundary}\n";
+    $out .= "Content-Type: application/pkcs7-signature; name=smime.p7s\n";
+    $out .= "Content-Transfer-Encoding: base64\n";
+    $out .= "Content-Disposition: attachment; filename=smime.p7s\n";
+    $out .= "Content-Description: S/MIME Cryptographic Signature\n";
+    $out .= "\n";		# end of signature subentity header
+
+    local($/) = undef;		# slurp whole file
+    $out .= encode_base64(<SIG>), "\n";	# append base64-encoded signature
+    $out .= "--${boundary}--\n";
+
+    close(SIG);
+    unlink($tmpsigfile);
+
+    $out;
+}
+
+sub usage {
+    print STDERR "usage: smime [options]\n";
+    print STDERR " options:\n";
+    print STDERR " -S nick             generate signed message, use certificate named \"nick\"\n";
+    print STDERR "  -p passwd          use \"passwd\" as security module password\n";
+    print STDERR " -E rec1[,rec2...]   generate encrypted message for recipients\n";
+    print STDERR " -C pathname         set pathname of \"cmsutil\"\n";
+    print STDERR "\nWith -S or -E, smime will take a regular RFC822 message or MIME entity\n";
+    print STDERR "and generate a signed or encrypted S/MIME message with the same headers\n";
+    print STDERR "and content from it. The output can be used as input to a MTA.\n";
+}
+
+#
+# start of main procedures
+#
+
+#
+# process command line options
+#
+unless (getopts('S:E:p:C:D')) {
+    usage();
+    exit 1;
+}
+
+unless (defined($opt_S) or defined($opt_E)) {
+    print STDERR "ERROR: -S and/or -E must be specified.\n";
+    usage();
+    exit 1;
+}
+
+$signopts = "";
+$encryptopts = "";
+
+if (defined($opt_S)) {
+    $signopts .= "-N \"$opt_S\" ";
+}
+
+if (defined($opt_p)) {
+    $signopts .= "-p \"$opt_p\" ";
+}
+
+if (defined($opt_E)) {
+    @recipients = split(",", $opt_E);
+    $encryptopts .= "-r ";
+    $encryptopts .= join (" -r ", @recipients);
+}
+
+if (defined($opt_C)) {
+    $cmsutilpath = $opt_C;
+}
+
+#
+# split headers into mime entity headers and RFC822 headers
+# The RFC822 headers are preserved and stay on the outer layer of the message
+#
+$rfc822headers = "";
+$mimeentity = "";
+while (<STDIN>) {
+    last if (/^$/);
+    if (/^content-\S+: /i) {
+	$mimeentity .= $_;
+    } elsif (/^mime-version: /i) {
+	;			# skip it
+    } else {
+	$rfc822headers .= $_;
+    }
+}
+
+#
+# if there are no MIME entity headers, generate some default ones
+#
+if ($mimeentity eq "") {
+    $mimeentity .= "Content-Type: text/plain; charset=us-ascii\n";
+    $mimeentity .= "Content-Transfer-Encoding: 7bit\n";
+}
+
+#
+# generate end of header-LF/LF pair
+#
+$mimeentity .= "\n";
+
+#
+# slurp in the entity body
+#
+$saveRS = $/;
+$/ = undef;
+$mimeentity .= <STDIN>;
+$/ = $saveRS;
+
+if (defined $opt_D) {
+    #
+    # decode
+    #
+
+    
+
+} else {
+    #
+    # encode
+    #
+
+    #
+    # canonicalize inner entity (rudimentary yet)
+    # convert single LFs to CRLF
+    # if no Content-Transfer-Encoding header present:
+    #  if 8 bit chars present, use Content-Transfer-Encoding: quoted-printable
+    #  otherwise, use Content-Transfer-Encoding: 7bit
+    #
+    $mimeentity =~ s/\n/\r\n/mg;
+
+    #
+    # now do the wrapping
+    # we sign first, then encrypt because that's what Communicator needs
+    #
+    if (defined($opt_S)) {
+	$mimeentity = signentity($mimeentity, $signopts);
+    }
+
+    if (defined($opt_E)) {
+	$mimeentity = encryptentity($mimeentity, $encryptopts);	
+    }
+
+    #
+    # XXX sign again to do triple wrapping (RFC2634)
+    #
+
+    #
+    # now write out the RFC822 headers
+    # followed by the final $mimeentity
+    #
+    print $rfc822headers;
+    print "MIME-Version: 1.0 (NSS SMIME - http://www.mozilla.org/projects/security)\n";	# set up the flag
+    print $mimeentity;
+}
+
+exit 0;
