@@ -120,17 +120,17 @@
 
   </chrome> 
 
-  <chrome ID="chrome://pref/"> 
+  <chrome about="chrome://pref/"> 
 
     <skin> 
-      <RDF:Description ID="chrome://pref/skin/">
+      <RDF:Description about="chrome://pref/skin/">
 	    <base>resource:/chrome/pref/skin/default/</base>
         <main>pref.css</main> 
       </RDF:Description> 
     </skin> 
 
     <content> 
-      <RDF:Description ID="chrome://pref/content/">
+      <RDF:Description about="chrome://pref/content/">
 	    <base>resource:/chrome/pref/content/default/</base>
         <main>PrefsWindow.xul</main> 
       </RDF:Description> 
