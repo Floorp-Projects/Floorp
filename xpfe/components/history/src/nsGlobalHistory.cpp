@@ -1862,13 +1862,23 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
       // to handle whatever UI updating is necessary when we're finished.
       if (!mBatchesInProgress)
         NotifyUnassert(aSource, aProperty, aTarget);
+
       return NS_OK;
     }
 
     // ignore any error
     rv = RemovePage(targetUrl);
     if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED;
-    
+
+#ifdef MOZ_PHOENIX
+    if (!mBatchesInProgress && IsFindResource(aSource)) {
+      // if there are batches in progress, we don't want to notify
+      // observers that we're deleting items. the caller promises
+      // to handle whatever UI updating is necessary when we're finished.
+      NotifyUnassert(aSource, aProperty, aTarget);
+    }
+#endif
+
     return NS_OK;
   }
   
