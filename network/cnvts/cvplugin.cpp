@@ -19,7 +19,7 @@
 
 #include "xp.h"
 #include "np.h"
-#include "nspr.h"
+#include "prmem.h"
 #include "plstr.h"
 #include "nsINetPlugin.h"
 #include "nsINetPluginInstance.h"
