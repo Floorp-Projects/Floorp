@@ -76,7 +76,7 @@ static PRBool secmod_ModuleHasRoots(SECMODModule *module)
  */
 
 static char *dllnames[]= {
-#if defined(XP_WIN32)
+#if defined(XP_WIN32) || defined(XP_OS2)
 	"nssckbi.dll",
 	"roots.dll", 
 	"netckbi.dll",
