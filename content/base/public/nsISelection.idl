@@ -59,7 +59,7 @@ interface nsISelection : nsISupports
     readonly attribute long focusOffset;
 
     /**
-     * Indicates if the whole selection just one point, or unset.
+     * Indicates if the selection is collapsed or not.
      */
     readonly attribute boolean isCollapsed;
 
