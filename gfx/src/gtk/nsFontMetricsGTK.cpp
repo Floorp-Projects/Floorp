@@ -2907,60 +2907,60 @@ SetFontLangGroupInfo(nsFontCharSetMap* aCharSetMap)
   // get the atom for mFontLangGroup->mFontLangGroupName so we can
   // apply fontLangGroup operations to it
   // eg: search for related groups, check for scaling prefs
+  const char *langGroup = fontLangGroup->mFontLangGroupName;
+  if (!langGroup)
+    langGroup = "";
   if (!fontLangGroup->mFontLangGroupAtom) {
-    const char *langGroup = fontLangGroup->mFontLangGroupName;
-    if (!langGroup)
-      langGroup = "";
     fontLangGroup->mFontLangGroupAtom = NS_NewAtom(langGroup);
+  }
 
-    // get the font scaling controls
-    nsFontCharSetInfo *charSetInfo = aCharSetMap->mInfo;
-    if (!charSetInfo->mInitedSizeInfo) {
-      charSetInfo->mInitedSizeInfo = PR_TRUE;
+  // get the font scaling controls
+  nsFontCharSetInfo *charSetInfo = aCharSetMap->mInfo;
+  if (!charSetInfo->mInitedSizeInfo) {
+    charSetInfo->mInitedSizeInfo = PR_TRUE;
 
-      nsCAutoString name;
-      name.Assign("font.scale.outline.min.");
-      name.Append(langGroup);
-      gPref->GetIntPref(name.get(), &charSetInfo->mOutlineScaleMin);
-      if (charSetInfo->mOutlineScaleMin)
-        SIZE_FONT_PRINTF(("%s = %d", name.get(), 
-                                 charSetInfo->mOutlineScaleMin));
-      else
-        charSetInfo->mOutlineScaleMin = gOutlineScaleMinimum;
+    nsCAutoString name;
+    name.Assign("font.scale.outline.min.");
+    name.Append(langGroup);
+    gPref->GetIntPref(name.get(), &charSetInfo->mOutlineScaleMin);
+    if (charSetInfo->mOutlineScaleMin)
+      SIZE_FONT_PRINTF(("%s = %d", name.get(), 
+                               charSetInfo->mOutlineScaleMin));
+    else
+      charSetInfo->mOutlineScaleMin = gOutlineScaleMinimum;
 
-      name.Assign("font.scale.bitmap.min.");
-      name.Append(langGroup);
-      gPref->GetIntPref(name.get(), &charSetInfo->mBitmapScaleMin);
-      if (charSetInfo->mBitmapScaleMin)
-        SIZE_FONT_PRINTF(("%s = %d", name.get(), 
-                                 charSetInfo->mBitmapScaleMin));
-      else
-        charSetInfo->mBitmapScaleMin = gBitmapScaleMinimum;
+    name.Assign("font.scale.bitmap.min.");
+    name.Append(langGroup);
+    gPref->GetIntPref(name.get(), &charSetInfo->mBitmapScaleMin);
+    if (charSetInfo->mBitmapScaleMin)
+      SIZE_FONT_PRINTF(("%s = %d", name.get(), 
+                               charSetInfo->mBitmapScaleMin));
+    else
+      charSetInfo->mBitmapScaleMin = gBitmapScaleMinimum;
 
-      PRInt32 percent = 0;
-      name.Assign("font.scale.bitmap.oversize.");
-      name.Append(langGroup);
-      gPref->GetIntPref(name.get(), &percent);
-      if (percent) {
-        charSetInfo->mBitmapOversize = percent/100.0;
-        SIZE_FONT_PRINTF(("%s = %g", name.get(), 
-                                 charSetInfo->mBitmapOversize));
-      }
-      else
-        charSetInfo->mBitmapOversize = gBitmapOversize;
-
-      percent = 0;
-      name.Assign("font.scale.bitmap.undersize.");
-      name.Append(langGroup);
-      gPref->GetIntPref(name.get(), &percent);
-      if (percent) {
-        charSetInfo->mBitmapUndersize = percent/100.0;
-        SIZE_FONT_PRINTF(("%s = %g", name.get(), 
-                                 charSetInfo->mBitmapUndersize));
-      }
-      else
-        charSetInfo->mBitmapUndersize = gBitmapUndersize;
+    PRInt32 percent = 0;
+    name.Assign("font.scale.bitmap.oversize.");
+    name.Append(langGroup);
+    gPref->GetIntPref(name.get(), &percent);
+    if (percent) {
+      charSetInfo->mBitmapOversize = percent/100.0;
+      SIZE_FONT_PRINTF(("%s = %g", name.get(), 
+                               charSetInfo->mBitmapOversize));
     }
+    else
+      charSetInfo->mBitmapOversize = gBitmapOversize;
+
+    percent = 0;
+    name.Assign("font.scale.bitmap.undersize.");
+    name.Append(langGroup);
+    gPref->GetIntPref(name.get(), &percent);
+    if (percent) {
+      charSetInfo->mBitmapUndersize = percent/100.0;
+      SIZE_FONT_PRINTF(("%s = %g", name.get(), 
+                               charSetInfo->mBitmapUndersize));
+    }
+    else
+      charSetInfo->mBitmapUndersize = gBitmapUndersize;
   }
 }
 
@@ -3706,24 +3706,36 @@ if (gAllowDoubleByteSpecialChars) {
     }
     if (mDocConverterType == SingleByteConvert) {
       // before we put in the transliterator to disable double byte special chars
-      // make sure we search x-western to get the EURO sign
+      // add the x-western font before the early transliterator
+      // to get the EURO sign (hack)
+
       nsFontGTK* western_font = nsnull;
       if (mLangGroup != gWesternLocale)
         western_font = FindLangGroupPrefFont(gWesternLocale, aChar);
+
+      // add the symbol font before the early transliterator
+      // to get the bullet (hack)
+      nsCAutoString ffre("*-symbol-adobe-fontspecific");
+      nsFontGTK* symbol_font = TryNodes(ffre, 0x0030);
+
+      // add the early transliterator
+      // to avoid getting Japanese "special chars" such as smart
+      // since they are very oversized compared to western fonts
       nsFontGTK* sub_font = FindSubstituteFont(aChar);
       NS_ASSERTION(sub_font, "failed to get a special chars substitute font");
       if (sub_font) {
         sub_font->mMap = gDoubleByteSpecialCharsMap;
         AddToLoadedFontsList(sub_font);
       }
-      if (western_font) {
-        NS_ASSERTION(western_font->SupportsChar(aChar), "font supposed to support this char");
+      if (western_font && FONT_HAS_GLYPH(western_font->mMap, aChar)) {
         return western_font;
       }
-      else if (sub_font) {
+      else if (symbol_font && FONT_HAS_GLYPH(symbol_font->mMap, aChar)) {
+        return symbol_font;
+      }
+      else if (sub_font && FONT_HAS_GLYPH(sub_font->mMap, aChar)) {
         FIND_FONT_PRINTF(("      transliterate special chars for single byte docs"));
-        if (FONT_HAS_GLYPH(sub_font->mMap, aChar))
-          return sub_font;
+        return sub_font;
       }
     }
   }
