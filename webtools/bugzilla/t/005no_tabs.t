@@ -26,12 +26,17 @@
 
 BEGIN { use lib "t/"; }
 BEGIN { use Support::Files; }
+BEGIN { use Support::Templates; }
 BEGIN { $tests = @Support::Files::testitems; }
+BEGIN { $tests += @Support::Templates::testitems; }
 BEGIN { use Test::More tests => $tests; }
 
 use strict;
 
 my @testitems = @Support::Files::testitems;
+my @templates = map($Support::Templates::include_path . "/" . $_,
+                    @Support::Templates::testitems);
+push(@testitems, @templates);
 
 foreach my $file (@testitems) {
     open (FILE, "$file");
