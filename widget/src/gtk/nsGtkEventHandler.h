@@ -42,6 +42,7 @@ gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p);
 
 void handle_scrollbar_value_changed(GtkAdjustment *adjustment, gpointer p);
 
+void menu_item_activate_handler(GtkWidget *w, gpointer p);
 
 //----------------------------------------------------
 
@@ -63,6 +64,5 @@ gint nsGtkWidget_Expose_Callback(GtkWidget *w, gpointer p);
 
 gint nsGtkWidget_Refresh_Callback(gpointer call_data);
 
-gint nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p);
 
 #endif  // __nsGtkEventHandler.h

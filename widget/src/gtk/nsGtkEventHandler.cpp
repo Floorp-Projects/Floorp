@@ -555,6 +555,28 @@ gint handle_focus_out_event(GtkWidget *w, GdkEventFocus * event, gpointer p)
   return PR_TRUE;
 }
 
+//==============================================================
+void menu_item_activate_handler(GtkWidget *w, gpointer p)
+{
+  g_print("menu selected\n");
+  nsIMenuItem * menuItem = (nsIMenuItem *)p;
+  if (menuItem != NULL) {
+    nsMenuEvent mevent;
+    mevent.message = NS_MENU_SELECTED;
+    mevent.eventStructType = NS_MENU_EVENT;
+    mevent.point.x = 0;
+    mevent.point.y = 0;
+    menuItem->GetTarget(mevent.widget);
+    menuItem->GetCommand(mevent.mCommand);
+
+    mevent.mMenuItem = menuItem;
+    mevent.time = PR_IntervalNow();
+
+    nsEventStatus status;
+    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
+  }
+}
+
 #if 0
 //==============================================================
 gint nsGtkWidget_Focus_Callback(GtkWidget *w, gpointer p)
