@@ -188,7 +188,7 @@ UNZIP_PROG	= $(LOCAL_BIN)/unzip
 ZIP_PROG	= $(LOCAL_BIN)/zip
 ZIP_COMPR	= 9
 ZIP_FLAGS	= -$(ZIP_COMPR)r
-IDL_COMPILE = xpidl
+IDL_COMPILE 	= $(DIST)/bin/xpidl
 
 ifeq ($(OS_ARCH),OS2)
 EMPTY		:=
