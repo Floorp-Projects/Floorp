@@ -14,8 +14,10 @@
 
 #include "nsISupports.idl"
 
-interface nsIDOMNode;
-interface nsIDOMNodeList;
+#include "domstubs.idl"
+%{C++
+#include "nsString.h"
+%}
 
 /**
  * The nsIXPathNodeSelector can be used to query a DOM tree using XPath.
@@ -35,7 +37,7 @@ interface nsIXPathNodeSelector : nsISupports
    * @returns The result of the XPath query.
    */
     nsIDOMNodeList selectNodes(in nsIDOMNode aContextNode,
-	                         in string aPattern);						  
+	                             in DOMString aPattern);						  
 };
 
 

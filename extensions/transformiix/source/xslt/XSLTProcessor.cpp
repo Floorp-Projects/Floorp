@@ -38,7 +38,7 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.46 2001/05/15 06:13:02 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.47 2001/05/15 20:34:58 peterv%netscape.com Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -59,6 +59,7 @@
 #include "nsILoadGroup.h"
 #include "nsIChannel.h"
 #include "nsNetCID.h"
+#include "nsIDOMClassInfo.h"
 //#include "nslog.h"
 #else
 #include "printers.h"
@@ -72,7 +73,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.46 $ $Date: 2001/05/15 06:13:02 $
+ * @version $Revision: 1.47 $ $Date: 2001/05/15 20:34:58 $
 **/
 
 /**
@@ -138,7 +139,23 @@ XSLTProcessor::~XSLTProcessor() {
 } //-- ~XSLTProcessor
 
 #ifdef MOZ_XSL
-NS_IMPL_ISUPPORTS1(XSLTProcessor, nsIDocumentTransformer)
+
+// XPConnect interface list for XSLTProcessor
+NS_CLASSINFO_MAP_BEGIN(XSLTProcessor)
+  NS_CLASSINFO_MAP_ENTRY(nsIDocumentTransformer)
+NS_CLASSINFO_MAP_END
+
+
+// QueryInterface implementation for XSLTProcessor
+NS_INTERFACE_MAP_BEGIN(XSLTProcessor)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentTransformer)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(XSLTProcessor)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(XSLTProcessor)
+NS_IMPL_RELEASE(XSLTProcessor)
+
 #endif
 
 /**

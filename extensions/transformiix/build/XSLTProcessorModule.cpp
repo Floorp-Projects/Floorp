@@ -26,13 +26,11 @@
 #include "nsIGenericFactory.h"
 #include "nsICategoryManager.h"
 #include "nsIScriptNameSpaceManager.h"
-#include "prprf.h"
+#include "nsXPIDLString.h"
 
 #include "XSLTProcessor.h"
 #include "XPathProcessor.h"
 #include "nsSyncLoader.h"
-#include "nsIScriptNameSpaceManager.h"
-#include "nsXPIDLString.h"
 
 // Factory Constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR(XSLTProcessor)
@@ -41,9 +39,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsSyncLoader)
 
 static NS_METHOD 
 RegisterTransformiix(nsIComponentManager *aCompMgr,
-		     nsIFile *aPath,
-		     const char *registryLocation,
-		     const char *componentType,
+                     nsIFile *aPath,
+                     const char *registryLocation,
+                     const char *componentType,
                      const nsModuleComponentInfo *info)
 {
   nsresult rv = NS_OK;
