@@ -22,12 +22,14 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS = nsIStringBundle.h
-
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE=intl
 
 include $(topsrcdir)/config/config.mk
+
+XPIDLSRCS = \
+	nsIStringBundle.idl \
+	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
