@@ -165,7 +165,7 @@
 
                  <outlinercols>
                     <outlinercol id="ResultsColumn" flex="1"
-                       label="&name.label;" ignoreincolumnpicker="true"
+                       ignoreincolumnpicker="true"
                        primary="true"/>
                  </outlinercols>
           </outliner>
@@ -212,7 +212,7 @@
         </template>
             <outlinercols>
                <outlinercol id="NameColumn" flex="1"
-                  label="&name.label;" ignoreincolumnpicker="true"
+                  ignoreincolumnpicker="true"
                   primary="true"/>
             </outlinercols>
          </outliner>
@@ -259,7 +259,7 @@
         </template>
             <outlinercols>
                <outlinercol id="IndexNameColumn" flex="1"
-                  label="&name.label;" ignoreincolumnpicker="true"
+                  ignoreincolumnpicker="true"
                   primary="true"
                   sortActive="true"
                   sortDirection="ascending"
@@ -308,7 +308,7 @@
         </template>
             <outlinercols>
                <outlinercol id="GlossaryNameColumn" flex="1"
-                  label="&name.label;" ignoreincolumnpicker="true"
+                  ignoreincolumnpicker="true"
                   primary="true"
                   sortActive="true"
                   sortDirection="ascending"

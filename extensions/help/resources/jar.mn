@@ -11,6 +11,7 @@ en-US.jar:
         locale/en-US/help/testhelp.rdf                  (locale/en-US/testhelp.rdf)
         locale/en-US/help/help-glossary.rdf             (locale/en-US/help-glossary.rdf)
         locale/en-US/help/contents.rdf                  (locale/en-US/contents.rdf)
+        locale/en-US/help/glossary.html                 (locale/en-US/glossary.html)
         locale/en-US/help/welcome_help.html             (locale/en-US/welcome_help.html)
         locale/en-US/help/help-toc.rdf                  (locale/en-US/help-toc.rdf)
         locale/en-US/help/help-index1.rdf               (locale/en-US/help-index1.rdf)

@@ -2,142 +2,23 @@
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns:nc="http://home.netscape.com/NC-rdf#">
 
-<rdf:Description about="help-index0.rdf#a">
+<rdf:Description about="help-indexAZ.rdf#a">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Account_Settings"
          nc:name="Account Settings"
-	 nc:link="chrome://help/locale/mail_help.html#Account_SettingsIDX"/>
+	 nc:link="mail_help.html#Account_SettingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#a">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="add"
-         nc:name="add"
-	 nc:link="chrome://help/locale/im_help.html#add:hyperlinks_in_chat_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
 
-<rdf:Description about="#add">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="add:hyperlinks_in_chat_messages"
-         nc:name="hyperlinks in chat messages"
-	 nc:link="chrome://help/locale/im_help.html#add:hyperlinks_in_chat_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#add">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="add:hyperlinks_in_instant_messages"
-         nc:name="hyperlinks in instant messages"
-	 nc:link="chrome://help/locale/im_help.html#add:hyperlinks_in_instant_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#add">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="add:styles_to_chat_messages"
-         nc:name="styles to chat messages"
-	 nc:link="chrome://help/locale/im_help.html#add:styles_to_chat_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#add">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="add:styles_to_instant_messages"
-         nc:name="styles to instant messages"
-	 nc:link="chrome://help/locale/im_help.html#add:styles_to_instant_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#a">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="AOL_Mail"
-         nc:name="AOL Mail"
-	 nc:link="chrome://help/locale/mail_help.html#AOL_Mail:setting_upIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#AOL_Mail">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="AOL_Mail:setting_up"
-         nc:name="setting up"
-	 nc:link="chrome://help/locale/mail_help.html#AOL_Mail:setting_upIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#a">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="away_messages"
-         nc:name="away messages"
-	 nc:link="chrome://help/locale/im_help.html#away_messages:creatingIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#away_messages">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="away_messages:creating"
-         nc:name="creating"
-	 nc:link="chrome://help/locale/im_help.html#away_messages:creatingIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#away_messages">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="away_messages:deleting"
-         nc:name="deleting"
-	 nc:link="chrome://help/locale/im_help.html#away_messages:deletingIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#away_messages">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="away_messages:turning_on"
-         nc:name="turning on"
-	 nc:link="chrome://help/locale/im_help.html#away_messages:turning_onIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#b">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="blocking_Instant_Messenger_users"
-         nc:name="blocking Instant Messenger users"
-	 nc:link="chrome://help/locale/im_help.html#blocking_Instant_Messenger_usersIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#b">
+<rdf:Description about="help-indexAZ.rdf#b">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks"
          nc:name="bookmarks"
-	 nc:link="chrome://help/locale/nav_help.html#bookmarks:boomarking_search_resultsIDX"/>
+	 nc:link="nav_help.html#bookmarks:boomarking_search_resultsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -147,7 +28,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks:boomarking_search_results"
          nc:name="boomarking search results"
-	 nc:link="chrome://help/locale/nav_help.html#bookmarks:boomarking_search_resultsIDX"/>
+	 nc:link="nav_help.html#bookmarks:boomarking_search_resultsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -157,7 +38,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks:changing_bookmarks"
          nc:name="changing bookmarks"
-	 nc:link="chrome://help/locale/customize_help.html#bookmarks:changing_bookmarksIDX"/>
+	 nc:link="customize_help.html#bookmarks:changing_bookmarksIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -167,7 +48,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks:creating_bookmarks"
          nc:name="creating bookmarks"
-	 nc:link="chrome://help/locale/customize_help.html#bookmarks:creating_bookmarksIDX"/>
+	 nc:link="customize_help.html#bookmarks:creating_bookmarksIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -177,7 +58,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks:exporting_bookmarks"
          nc:name="exporting bookmarks"
-	 nc:link="chrome://help/locale/customize_help.html#bookmarks:exporting_bookmarksIDX"/>
+	 nc:link="customize_help.html#bookmarks:exporting_bookmarksIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -187,7 +68,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks:organizing_bookmarks"
          nc:name="organizing bookmarks"
-	 nc:link="chrome://help/locale/customize_help.html#bookmarks:organizing_bookmarksIDX"/>
+	 nc:link="customize_help.html#bookmarks:organizing_bookmarksIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -197,7 +78,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks:searching_bookmarks"
          nc:name="searching bookmarks"
-	 nc:link="chrome://help/locale/customize_help.html#bookmarks:searching_bookmarksIDX"/>
+	 nc:link="customize_help.html#bookmarks:searching_bookmarksIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -207,7 +88,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks:using_bookmarks"
          nc:name="using bookmarks"
-	 nc:link="chrome://help/locale/customize_help.html#bookmarks:using_bookmarksIDX"/>
+	 nc:link="customize_help.html#bookmarks:using_bookmarksIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -217,7 +98,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks:visiting"
          nc:name="visiting"
-	 nc:link="chrome://help/locale/nav_help.html#bookmarks:visitingIDX"/>
+	 nc:link="nav_help.html#bookmarks:visitingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -227,17 +108,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="bookmarks:what_are_bookmarks"
          nc:name="what are bookmarks"
-	 nc:link="chrome://help/locale/customize_help.html#bookmarks:what_are_bookmarksIDX"/>
+	 nc:link="customize_help.html#bookmarks:what_are_bookmarksIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#b">
+<rdf:Description about="help-indexAZ.rdf#b">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="browser"
          nc:name="browser"
-	 nc:link="chrome://help/locale/customize_help.html#browser:start_up_componentsIDX"/>
+	 nc:link="customize_help.html#browser:start_up_componentsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -247,87 +128,27 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="browser:start_up_components"
          nc:name="start up components"
-	 nc:link="chrome://help/locale/customize_help.html#browser:start_up_componentsIDX"/>
+	 nc:link="customize_help.html#browser:start_up_componentsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#b">
+<rdf:Description about="help-indexAZ.rdf#b">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="browsing_anonymously"
          nc:name="browsing anonymously"
-	 nc:link="chrome://help/locale/privacy_help.html#browsing_anonymouslyIDX"/>
+	 nc:link="privacy_help.html#browsing_anonymouslyIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#b">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="buddy_groups"
-         nc:name="buddy groups"
-	 nc:link="chrome://help/locale/im_help.html#buddy_groupsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#b">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Buddy_List"
-         nc:name="Buddy List"
-	 nc:link="chrome://help/locale/im_help.html#Buddy_List:aboutIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Buddy_List">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Buddy_List:about"
-         nc:name="about"
-	 nc:link="chrome://help/locale/im_help.html#Buddy_List:aboutIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Buddy_List">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Buddy_List:adding_buddies"
-         nc:name="adding buddies"
-	 nc:link="chrome://help/locale/im_help.html#Buddy_List:adding_buddiesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Buddy_List">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Buddy_List:importing"
-         nc:name="importing"
-	 nc:link="chrome://help/locale/im_help.html#Buddy_List:importingIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Buddy_List">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Buddy_List:in_My_Sidebar"
-         nc:name="in My Sidebar"
-	 nc:link="chrome://help/locale/im_help.html#Buddy_List:in_My_SidebarIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#c">
+<rdf:Description about="help-indexAZ.rdf#c">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="cache"
          nc:name="cache"
-	 nc:link="chrome://help/locale/nav_help.html#cache:changing_settingsIDX"/>
+	 nc:link="nav_help.html#cache:changing_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -337,27 +158,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="cache:changing_settings"
          nc:name="changing settings"
-	 nc:link="chrome://help/locale/nav_help.html#cache:changing_settingsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#c">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="colors"
-         nc:name="colors"
-	 nc:link="chrome://help/locale/im_help.html#colors:changing_in_instant_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#colors">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="colors:changing_in_instant_messages"
-         nc:name="changing in instant messages"
-	 nc:link="chrome://help/locale/im_help.html#colors:changing_in_instant_messagesIDX"/>
+	 nc:link="nav_help.html#cache:changing_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -367,17 +168,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="colors:customizing_web_page"
          nc:name="customizing web page"
-	 nc:link="chrome://help/locale/customize_help.html#colors:customizing_web_pageIDX"/>
+	 nc:link="customize_help.html#colors:customizing_web_pageIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#c">
+<rdf:Description about="help-indexAZ.rdf#c">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer"
          nc:name="Composer"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:adding_tablesIDX"/>
+	 nc:link="composer_help.html#Composer:adding_tablesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -387,7 +188,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:adding_tables"
          nc:name="adding tables"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:adding_tablesIDX"/>
+	 nc:link="composer_help.html#Composer:adding_tablesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -397,7 +198,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:Advanced_Property_Editor"
          nc:name="Advanced Property Editor"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:Advanced_Property_EditorIDX"/>
+	 nc:link="composer_help.html#Composer:Advanced_Property_EditorIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -407,7 +208,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:changing_text_color"
          nc:name="changing text color"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:changing_text_colorIDX"/>
+	 nc:link="composer_help.html#Composer:changing_text_colorIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -417,7 +218,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:changing_text_font"
          nc:name="changing text font"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:changing_text_fontIDX"/>
+	 nc:link="composer_help.html#Composer:changing_text_fontIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -427,7 +228,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:checking_html"
          nc:name="checking html"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:checking_htmlIDX"/>
+	 nc:link="composer_help.html#Composer:checking_htmlIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -437,7 +238,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:checking_spelling"
          nc:name="checking spelling"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:checking_spellingIDX"/>
+	 nc:link="composer_help.html#Composer:checking_spellingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -447,7 +248,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:creating_links"
          nc:name="creating links"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:creating_linksIDX"/>
+	 nc:link="composer_help.html#Composer:creating_linksIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -457,7 +258,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:creating_new_pages"
          nc:name="creating new pages"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:creating_new_pagesIDX"/>
+	 nc:link="composer_help.html#Composer:creating_new_pagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -467,7 +268,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:editing_image_properties"
          nc:name="editing image properties"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:editing_image_propertiesIDX"/>
+	 nc:link="composer_help.html#Composer:editing_image_propertiesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -477,7 +278,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:editing_modes"
          nc:name="editing modes"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:editing_modesIDX"/>
+	 nc:link="composer_help.html#Composer:editing_modesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -487,7 +288,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:finding_replacing_text"
          nc:name="finding replacing text"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:finding_replacing_textIDX"/>
+	 nc:link="composer_help.html#Composer:finding_replacing_textIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -497,7 +298,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:formatting_lists"
          nc:name="formatting lists"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:formatting_listsIDX"/>
+	 nc:link="composer_help.html#Composer:formatting_listsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -507,7 +308,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:formatting_paragraphs"
          nc:name="formatting paragraphs"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:formatting_paragraphsIDX"/>
+	 nc:link="composer_help.html#Composer:formatting_paragraphsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -517,7 +318,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:general_preferences"
          nc:name="general preferences"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:general_preferencesIDX"/>
+	 nc:link="composer_help.html#Composer:general_preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -527,7 +328,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:HTML_Element_and_Attributes"
          nc:name="HTML Element and Attributes"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:HTML_Element_and_AttributesIDX"/>
+	 nc:link="composer_help.html#Composer:HTML_Element_and_AttributesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -537,7 +338,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:inserting_horizontal_lines"
          nc:name="inserting horizontal lines"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:inserting_horizontal_linesIDX"/>
+	 nc:link="composer_help.html#Composer:inserting_horizontal_linesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -547,7 +348,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:inserting_images"
          nc:name="inserting images"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:inserting_imagesIDX"/>
+	 nc:link="composer_help.html#Composer:inserting_imagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -557,7 +358,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:removing_text_styles"
          nc:name="removing text styles"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:removing_text_stylesIDX"/>
+	 nc:link="composer_help.html#Composer:removing_text_stylesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -567,7 +368,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:saving_pages"
          nc:name="saving pages"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:saving_pagesIDX"/>
+	 nc:link="composer_help.html#Composer:saving_pagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -577,7 +378,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:setting_page_colors"
          nc:name="setting page colors"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:setting_page_colorsIDX"/>
+	 nc:link="composer_help.html#Composer:setting_page_colorsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -587,7 +388,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:setting_page_properties"
          nc:name="setting page properties"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:setting_page_propertiesIDX"/>
+	 nc:link="composer_help.html#Composer:setting_page_propertiesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -597,7 +398,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:special_characters"
          nc:name="special characters"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:special_charactersIDX"/>
+	 nc:link="composer_help.html#Composer:special_charactersIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -607,17 +408,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Composer:working_with_lists"
          nc:name="working with lists"
-	 nc:link="chrome://help/locale/composer_help.html#Composer:working_with_listsIDX"/>
+	 nc:link="composer_help.html#Composer:working_with_listsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#c">
+<rdf:Description about="help-indexAZ.rdf#c">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="cookies"
          nc:name="cookies"
-	 nc:link="chrome://help/locale/privacy_help.html#cookies:aboutIDX"/>
+	 nc:link="privacy_help.html#cookies:aboutIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -627,7 +428,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="cookies:about"
          nc:name="about"
-	 nc:link="chrome://help/locale/privacy_help.html#cookies:aboutIDX"/>
+	 nc:link="privacy_help.html#cookies:aboutIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -637,87 +438,27 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="cookies:foreign"
          nc:name="foreign"
-	 nc:link="chrome://help/locale/privacy_help.html#cookies:foreignIDX"/>
+	 nc:link="privacy_help.html#cookies:foreignIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#c">
+<rdf:Description about="help-indexAZ.rdf#c">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Customizing Fonts"
          nc:name="Customizing Fonts"
-	 nc:link="chrome://help/locale/customize_help.html#Customizing FontsIDX"/>
+	 nc:link="customize_help.html#Customizing FontsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#d">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="delete"
-         nc:name="delete"
-	 nc:link="chrome://help/locale/im_help.html#delete:groupsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#delete">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="delete:groups"
-         nc:name="groups"
-	 nc:link="chrome://help/locale/im_help.html#delete:groupsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#d">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="deleting_away_messages"
-         nc:name="deleting away messages"
-	 nc:link="chrome://help/locale/im_help.html#deleting_away_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#e">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="emoticons"
-         nc:name="emoticons"
-	 nc:link="chrome://help/locale/im_help.html#emoticons:in chat_messengesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#emoticons">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="emoticons:in chat_messenges"
-         nc:name="in chat messenges"
-	 nc:link="chrome://help/locale/im_help.html#emoticons:in chat_messengesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#e">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="exporting_Buddy_List"
-         nc:name="exporting Buddy List"
-	 nc:link="chrome://help/locale/im_help.html#exporting_Buddy_ListIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#f">
+<rdf:Description about="help-indexAZ.rdf#f">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="file_types"
          nc:name="file types"
-	 nc:link="chrome://help/locale/nav_help.html#file_types:managingIDX"/>
+	 nc:link="nav_help.html#file_types:managingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -727,7 +468,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="file_types:managing"
          nc:name="managing"
-	 nc:link="chrome://help/locale/nav_help.html#file_types:managingIDX"/>
+	 nc:link="nav_help.html#file_types:managingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -737,77 +478,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="file_types:opening"
          nc:name="opening"
-	 nc:link="chrome://help/locale/nav_help.html#file_types:openingIDX"/>
+	 nc:link="nav_help.html#file_types:openingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#f">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="fonts"
-         nc:name="fonts"
-	 nc:link="chrome://help/locale/im_help.html#fonts:changing_in_chat_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#fonts">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="fonts:changing_in_chat_messages"
-         nc:name="changing in chat messages"
-	 nc:link="chrome://help/locale/im_help.html#fonts:changing_in_chat_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#h">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="hyperlinks"
-         nc:name="hyperlinks"
-	 nc:link="chrome://help/locale/im_help.html#hyperlinks:chat_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#hyperlinks">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="hyperlinks:chat_messages"
-         nc:name="chat messages"
-	 nc:link="chrome://help/locale/im_help.html#hyperlinks:chat_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#hyperlinks">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="hyperlinks:instant_messages"
-         nc:name="instant messages"
-	 nc:link="chrome://help/locale/im_help.html#hyperlinks:instant_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#i">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="ignoring_instant_messages"
-         nc:name="ignoring instant messages"
-	 nc:link="chrome://help/locale/im_help.html#ignoring_instant_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#i">
+<rdf:Description about="help-indexAZ.rdf#i">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP"
          nc:name="IMAP"
-	 nc:link="chrome://help/locale/mail_help.html#IMAP:Mail_settingsIDX"/>
+	 nc:link="mail_help.html#IMAP:Mail_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -817,267 +498,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="IMAP:Mail_settings"
          nc:name="Mail settings"
-	 nc:link="chrome://help/locale/mail_help.html#IMAP:Mail_settingsIDX"/>
+	 nc:link="mail_help.html#IMAP:Mail_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#i">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger"
-         nc:name="Instant Messenger"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:adding_buddiesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:adding_buddies"
-         nc:name="adding buddies"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:adding_buddiesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:allowing_users_to_contact_you"
-         nc:name="allowing users to contact you"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:allowing_users_to_contact_youIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:away_messages"
-         nc:name="away messages"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:away_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:blocking_users"
-         nc:name="blocking users"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:blocking_usersIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:Buddy_List"
-         nc:name="Buddy List"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:Buddy_ListIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:changing_password"
-         nc:name="changing password"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:changing_passwordIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:chat_invitations"
-         nc:name="chat invitations"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:chat_invitationsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:connection_settings"
-         nc:name="connection settings"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:connection_settingsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:controlling_access"
-         nc:name="controlling access"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:controlling_accessIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:creating_buddy_groups"
-         nc:name="creating buddy groups"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:creating_buddy_groupsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:deleting_buddies"
-         nc:name="deleting buddies"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:deleting_buddiesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:deleting_groups"
-         nc:name="deleting groups"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:deleting_groupsIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:finding_buddies"
-         nc:name="finding buddies"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:finding_buddiesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:ignoring_messages"
-         nc:name="ignoring messages"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:ignoring_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:in_My_Sidebar"
-         nc:name="in My Sidebar"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:in_My_SidebarIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:multiple_screen_names"
-         nc:name="multiple screen names"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:multiple_screen_namesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:Netscape_Mail_presence"
-         nc:name="Netscape Mail presence"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:Netscape_Mail_presenceIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:privacy"
-         nc:name="privacy"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:privacyIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:registering_new_screen_names"
-         nc:name="registering new screen names"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:registering_new_screen_namesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:sending_a_message"
-         nc:name="sending a message"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:sending_a_messageIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:setting_up"
-         nc:name="setting up"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:setting_upIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:signing_off"
-         nc:name="signing off"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:signing_offIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:signing_on"
-         nc:name="signing on"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:signing_onIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Instant_Messenger">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Instant_Messenger:warning_users"
-         nc:name="warning users"
-	 nc:link="chrome://help/locale/im_help.html#Instant_Messenger:warning_usersIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#i">
+<rdf:Description about="help-indexAZ.rdf#i">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Internet_Keywords"
          nc:name="Internet Keywords"
-	 nc:link="chrome://help/locale/nav_help.html#Internet_Keywords:using_Internet_KeywordsIDX"/>
+	 nc:link="nav_help.html#Internet_Keywords:using_Internet_KeywordsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1087,27 +518,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Internet_Keywords:using_Internet_Keywords"
          nc:name="using Internet Keywords"
-	 nc:link="chrome://help/locale/nav_help.html#Internet_Keywords:using_Internet_KeywordsIDX"/>
+	 nc:link="nav_help.html#Internet_Keywords:using_Internet_KeywordsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#i">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="invite_buddies_to_chat"
-         nc:name="invite buddies to chat"
-	 nc:link="chrome://help/locale/im_help.html#invite_buddies_to_chatIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#j">
+<rdf:Description about="help-indexAZ.rdf#j">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Java_and_JavaScript"
          nc:name="Java and JavaScript"
-	 nc:link="chrome://help/locale/nav_help.html#Java_and_JavaScript:enablingIDX"/>
+	 nc:link="nav_help.html#Java_and_JavaScript:enablingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1117,17 +538,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Java_and_JavaScript:enabling"
          nc:name="enabling"
-	 nc:link="chrome://help/locale/nav_help.html#Java_and_JavaScript:enablingIDX"/>
+	 nc:link="nav_help.html#Java_and_JavaScript:enablingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#l">
+<rdf:Description about="help-indexAZ.rdf#l">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Labels"
          nc:name="Labels"
-	 nc:link="chrome://help/locale/mail_help.html#Labels:general_preferencesIDX"/>
+	 nc:link="mail_help.html#Labels:general_preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1137,17 +558,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Labels:general_preferences"
          nc:name="general preferences"
-	 nc:link="chrome://help/locale/mail_help.html#Labels:general_preferencesIDX"/>
+	 nc:link="mail_help.html#Labels:general_preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#l">
+<rdf:Description about="help-indexAZ.rdf#l">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="LDAP"
          nc:name="LDAP"
-	 nc:link="chrome://help/locale/mail_help.html#LDAP:global_settingsIDX"/>
+	 nc:link="mail_help.html#LDAP:global_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1157,37 +578,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="LDAP:global_settings"
          nc:name="global settings"
-	 nc:link="chrome://help/locale/mail_help.html#LDAP:global_settingsIDX"/>
+	 nc:link="mail_help.html#LDAP:global_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#m">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Mail"
-         nc:name="Mail"
-	 nc:link="chrome://help/locale/im_help.html#Mail:Instant_Messenger_andIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#Mail">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="Mail:Instant_Messenger_and"
-         nc:name="Instant Messenger and"
-	 nc:link="chrome://help/locale/im_help.html#Mail:Instant_Messenger_andIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#m">
+<rdf:Description about="help-indexAZ.rdf#m">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups"
          nc:name="Mail and Newsgroups"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:Account_Setup_WizardIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:Account_Setup_WizardIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1197,7 +598,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:Account_Setup_Wizard"
          nc:name="Account Setup Wizard"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:Account_Setup_WizardIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:Account_Setup_WizardIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1207,7 +608,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:adding_accounts"
          nc:name="adding accounts"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:adding_accountsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:adding_accountsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1217,7 +618,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:address_autocompletion"
          nc:name="address autocompletion"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:address_autocompletionIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:address_autocompletionIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1227,7 +628,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:addressing_messages"
          nc:name="addressing messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:addressing_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:addressing_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1237,7 +638,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:addressing_preferences"
          nc:name="addressing preferences"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:addressing_preferencesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:addressing_preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1247,7 +648,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:Advanced_IMAP_settings"
          nc:name="Advanced IMAP settings"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:Advanced_IMAP_settingsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:Advanced_IMAP_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1257,7 +658,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:AOL_Mail_and_Webmail_syncing"
          nc:name="AOL Mail and Webmail syncing"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:AOL_Mail_and_Webmail_syncingIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:AOL_Mail_and_Webmail_syncingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1267,7 +668,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:attaching_files"
          nc:name="attaching files"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:attaching_filesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:attaching_filesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1277,7 +678,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:changing_account_settings"
          nc:name="changing account settings"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:changing_account_settingsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:changing_account_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1287,7 +688,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:Compose_window"
          nc:name="Compose window"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:Compose_windowIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:Compose_windowIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1297,7 +698,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:composing_messages"
          nc:name="composing messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:composing_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:composing_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1307,7 +708,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:copies_and_folder_settings"
          nc:name="copies and folder settings"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:copies_and_folder_settingsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:copies_and_folder_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1317,7 +718,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:copying_folders"
          nc:name="copying folders"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:copying_foldersIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:copying_foldersIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1327,7 +728,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:creating_filters"
          nc:name="creating filters"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:creating_filtersIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:creating_filtersIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1337,7 +738,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:creating_folders"
          nc:name="creating folders"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:creating_foldersIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:creating_foldersIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1347,7 +748,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:creating_HTML_mail_messages"
          nc:name="creating HTML mail messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:creating_HTML_mail_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:creating_HTML_mail_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1357,7 +758,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:Disk_Space_settings"
          nc:name="Disk Space settings"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:Disk_Space_settingsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:Disk_Space_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1367,7 +768,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:filing_messages"
          nc:name="filing messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:filing_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:filing_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1377,7 +778,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:forwarding_messages"
          nc:name="forwarding messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:forwarding_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:forwarding_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1387,7 +788,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:general_preferences"
          nc:name="general preferences"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:general_preferencesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:general_preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1397,7 +798,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:getting_new_messages"
          nc:name="getting new messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:getting_new_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:getting_new_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1407,7 +808,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:HTML_mail_recipients"
          nc:name="HTML mail recipients"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:HTML_mail_recipientsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:HTML_mail_recipientsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1417,7 +818,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:HTML_mail_sending_options"
          nc:name="HTML mail sending options"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:HTML_mail_sending_optionsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:HTML_mail_sending_optionsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1427,7 +828,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:HTML_Message_Source"
          nc:name="HTML Message Source"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:HTML_Message_SourceIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:HTML_Message_SourceIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1437,7 +838,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:identity_settings"
          nc:name="identity settings"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:identity_settingsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:identity_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1447,7 +848,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:importing_address_books"
          nc:name="importing address books"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:importing_address_booksIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:importing_address_booksIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1457,7 +858,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:importing_mail_messages"
          nc:name="importing mail messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:importing_mail_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:importing_mail_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1467,7 +868,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:mail_window_layout"
          nc:name="mail window layout"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:mail_window_layoutIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:mail_window_layoutIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1477,7 +878,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:message_searching"
          nc:name="message searching"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:message_searchingIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:message_searchingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1487,7 +888,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:POP_settings"
          nc:name="POP settings"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:POP_settingsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:POP_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1497,7 +898,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:renaming_folders"
          nc:name="renaming folders"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:renaming_foldersIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:renaming_foldersIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1507,7 +908,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:replying_to_messages"
          nc:name="replying to messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:replying_to_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:replying_to_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1517,7 +918,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:saving_and_printing_messages"
          nc:name="saving and printing messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:saving_and_printing_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:saving_and_printing_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1527,7 +928,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:saving_attachments"
          nc:name="saving attachments"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:saving_attachmentsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:saving_attachmentsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1537,7 +938,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:saving_messages_drafts"
          nc:name="saving messages drafts"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:saving_messages_draftsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:saving_messages_draftsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1547,7 +948,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:sending_messages"
          nc:name="sending messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:sending_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:sending_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1557,7 +958,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:sending_options"
          nc:name="sending options"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:sending_optionsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:sending_optionsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1567,7 +968,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:SMTP_settings"
          nc:name="SMTP settings"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:SMTP_settingsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:SMTP_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1577,7 +978,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:sorting_and_threading_messages"
          nc:name="sorting and threading messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:sorting_and_threading_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:sorting_and_threading_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1587,7 +988,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:using_address_books"
          nc:name="using address books"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:using_address_booksIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:using_address_booksIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1597,7 +998,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:using_attachments"
          nc:name="using attachments"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:using_attachmentsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:using_attachmentsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1607,7 +1008,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:using_HTML_in_messages"
          nc:name="using HTML in messages"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:using_HTML_in_messagesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:using_HTML_in_messagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1617,7 +1018,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:using_mailing_addresses"
          nc:name="using mailing addresses"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:using_mailing_addressesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:using_mailing_addressesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1627,7 +1028,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:using_templates"
          nc:name="using templates"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:using_templatesIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:using_templatesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1637,7 +1038,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:viewing_attachments"
          nc:name="viewing attachments"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:viewing_attachmentsIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:viewing_attachmentsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1647,17 +1048,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Mail_and_Newsgroups:working_offline"
          nc:name="working offline"
-	 nc:link="chrome://help/locale/mail_help.html#Mail_and_Newsgroups:working_offlineIDX"/>
+	 nc:link="mail_help.html#Mail_and_Newsgroups:working_offlineIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#m">
+<rdf:Description about="help-indexAZ.rdf#m">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="mouse_wheel"
          nc:name="mouse wheel"
-	 nc:link="chrome://help/locale/nav_help.html#mouse_wheel:usingIDX"/>
+	 nc:link="nav_help.html#mouse_wheel:usingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1667,17 +1068,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="mouse_wheel:using"
          nc:name="using"
-	 nc:link="chrome://help/locale/nav_help.html#mouse_wheel:usingIDX"/>
+	 nc:link="nav_help.html#mouse_wheel:usingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#m">
+<rdf:Description about="help-indexAZ.rdf#m">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="My_Sidebar"
          nc:name="My Sidebar"
-	 nc:link="chrome://help/locale/customize_help.html#My_Sidebar:adding_tabsIDX"/>
+	 nc:link="customize_help.html#My_Sidebar:adding_tabsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1687,7 +1088,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="My_Sidebar:adding_tabs"
          nc:name="adding tabs"
-	 nc:link="chrome://help/locale/customize_help.html#My_Sidebar:adding_tabsIDX"/>
+	 nc:link="customize_help.html#My_Sidebar:adding_tabsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1697,7 +1098,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="My_Sidebar:customizing_tabs"
          nc:name="customizing tabs"
-	 nc:link="chrome://help/locale/customize_help.html#My_Sidebar:customizing_tabsIDX"/>
+	 nc:link="customize_help.html#My_Sidebar:customizing_tabsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1707,7 +1108,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="My_Sidebar:description"
          nc:name="description"
-	 nc:link="chrome://help/locale/customize_help.html#My_Sidebar:descriptionIDX"/>
+	 nc:link="customize_help.html#My_Sidebar:descriptionIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1717,7 +1118,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="My_Sidebar:removing_tabs"
          nc:name="removing tabs"
-	 nc:link="chrome://help/locale/customize_help.html#My_Sidebar:removing_tabsIDX"/>
+	 nc:link="customize_help.html#My_Sidebar:removing_tabsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1727,7 +1128,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="My_Sidebar:reorganizing_tabs"
          nc:name="reorganizing tabs"
-	 nc:link="chrome://help/locale/customize_help.html#My_Sidebar:reorganizing_tabsIDX"/>
+	 nc:link="customize_help.html#My_Sidebar:reorganizing_tabsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1737,7 +1138,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="My_Sidebar:search_categories"
          nc:name="search categories"
-	 nc:link="chrome://help/locale/nav_help.html#My_Sidebar:search_categoriesIDX"/>
+	 nc:link="nav_help.html#My_Sidebar:search_categoriesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1747,7 +1148,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="My_Sidebar:searching_from"
          nc:name="searching from"
-	 nc:link="chrome://help/locale/nav_help.html#My_Sidebar:searching_fromIDX"/>
+	 nc:link="nav_help.html#My_Sidebar:searching_fromIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1757,17 +1158,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="My_Sidebar:using"
          nc:name="using"
-	 nc:link="chrome://help/locale/customize_help.html#My_Sidebar:usingIDX"/>
+	 nc:link="customize_help.html#My_Sidebar:usingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#n">
+<rdf:Description about="help-indexAZ.rdf#n">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Navigator"
          nc:name="Navigator"
-	 nc:link="chrome://help/locale/customize_help.html#Navigator:changing_your_home_pageIDX"/>
+	 nc:link="customize_help.html#Navigator:changing_your_home_pageIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1777,7 +1178,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Navigator:changing_your_home_page"
          nc:name="changing your home page"
-	 nc:link="chrome://help/locale/customize_help.html#Navigator:changing_your_home_pageIDX"/>
+	 nc:link="customize_help.html#Navigator:changing_your_home_pageIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1787,17 +1188,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Navigator:start_page"
          nc:name="start page"
-	 nc:link="chrome://help/locale/customize_help.html#Navigator:start_pageIDX"/>
+	 nc:link="customize_help.html#Navigator:start_pageIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#n">
+<rdf:Description about="help-indexAZ.rdf#n">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Netscape_WebMail"
          nc:name="Netscape WebMail"
-	 nc:link="chrome://help/locale/mail_help.html#Netscape_WebMail:setting_upIDX"/>
+	 nc:link="mail_help.html#Netscape_WebMail:setting_upIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1807,17 +1208,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Netscape_WebMail:setting_up"
          nc:name="setting up"
-	 nc:link="chrome://help/locale/mail_help.html#Netscape_WebMail:setting_upIDX"/>
+	 nc:link="mail_help.html#Netscape_WebMail:setting_upIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#n">
+<rdf:Description about="help-indexAZ.rdf#n">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Newsgroups"
          nc:name="Newsgroups"
-	 nc:link="chrome://help/locale/mail_help.html#Newsgroups:getting_startedIDX"/>
+	 nc:link="mail_help.html#Newsgroups:getting_startedIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1827,7 +1228,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Newsgroups:getting_started"
          nc:name="getting started"
-	 nc:link="chrome://help/locale/mail_help.html#Newsgroups:getting_startedIDX"/>
+	 nc:link="mail_help.html#Newsgroups:getting_startedIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1837,17 +1238,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Newsgroups:server_settings"
          nc:name="server settings"
-	 nc:link="chrome://help/locale/mail_help.html#Newsgroups:server_settingsIDX"/>
+	 nc:link="mail_help.html#Newsgroups:server_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#o">
+<rdf:Description about="help-indexAZ.rdf#o">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Offline"
          nc:name="Offline"
-	 nc:link="chrome://help/locale/mail_help.html#Offline:general_preferencesIDX"/>
+	 nc:link="mail_help.html#Offline:general_preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1857,7 +1258,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Offline:general_preferences"
          nc:name="general preferences"
-	 nc:link="chrome://help/locale/mail_help.html#Offline:general_preferencesIDX"/>
+	 nc:link="mail_help.html#Offline:general_preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1867,7 +1268,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Offline:Mail_and_Newsgroups"
          nc:name="Mail and Newsgroups"
-	 nc:link="chrome://help/locale/mail_help.html#Offline:Mail_and_NewsgroupsIDX"/>
+	 nc:link="mail_help.html#Offline:Mail_and_NewsgroupsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1877,37 +1278,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Offline:Mail_settings"
          nc:name="Mail settings"
-	 nc:link="chrome://help/locale/mail_help.html#Offline:Mail_settingsIDX"/>
+	 nc:link="mail_help.html#Offline:Mail_settingsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#p">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="passwords"
-         nc:name="passwords"
-	 nc:link="chrome://help/locale/im_help.html#passwords:changing_Instant_MessengerIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#passwords">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="passwords:changing_Instant_Messenger"
-         nc:name="changing Instant Messenger"
-	 nc:link="chrome://help/locale/im_help.html#passwords:changing_Instant_MessengerIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#p">
+<rdf:Description about="help-indexAZ.rdf#p">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="print"
          nc:name="print"
-	 nc:link="chrome://help/locale/nav_help.html#print:web_pagesIDX"/>
+	 nc:link="nav_help.html#print:web_pagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1917,17 +1298,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="print:web_pages"
          nc:name="web pages"
-	 nc:link="chrome://help/locale/nav_help.html#print:web_pagesIDX"/>
+	 nc:link="nav_help.html#print:web_pagesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#p">
+<rdf:Description about="help-indexAZ.rdf#p">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="privacy"
          nc:name="privacy"
-	 nc:link="chrome://help/locale/privacy_help.html#privacy:aboutIDX"/>
+	 nc:link="privacy_help.html#privacy:aboutIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1937,7 +1318,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="privacy:about"
          nc:name="about"
-	 nc:link="chrome://help/locale/privacy_help.html#privacy:aboutIDX"/>
+	 nc:link="privacy_help.html#privacy:aboutIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1947,7 +1328,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="privacy:cookies_and"
          nc:name="cookies and"
-	 nc:link="chrome://help/locale/privacy_help.html#privacy:cookies_andIDX"/>
+	 nc:link="privacy_help.html#privacy:cookies_andIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1957,7 +1338,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="privacy:IP_address"
          nc:name="IP address"
-	 nc:link="chrome://help/locale/privacy_help.html#privacy:IP_addressIDX"/>
+	 nc:link="privacy_help.html#privacy:IP_addressIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1967,7 +1348,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="privacy:preferences"
          nc:name="preferences"
-	 nc:link="chrome://help/locale/privsec_help.html#privacy:preferencesIDX"/>
+	 nc:link="privsec_help.html#privacy:preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1977,17 +1358,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="privacy:protecting"
          nc:name="protecting"
-	 nc:link="chrome://help/locale/privacy_help.html#privacy:protectingIDX"/>
+	 nc:link="privacy_help.html#privacy:protectingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#p">
+<rdf:Description about="help-indexAZ.rdf#p">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="proxies"
          nc:name="proxies"
-	 nc:link="chrome://help/locale/nav_help.html#proxies:settingIDX"/>
+	 nc:link="nav_help.html#proxies:settingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1997,17 +1378,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="proxies:setting"
          nc:name="setting"
-	 nc:link="chrome://help/locale/nav_help.html#proxies:settingIDX"/>
+	 nc:link="nav_help.html#proxies:settingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#q">
+<rdf:Description about="help-indexAZ.rdf#q">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Quick_Launch"
          nc:name="Quick Launch"
-	 nc:link="chrome://help/locale/nav_help.html#Quick_Launch:usingIDX"/>
+	 nc:link="nav_help.html#Quick_Launch:usingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2017,47 +1398,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Quick_Launch:using"
          nc:name="using"
-	 nc:link="chrome://help/locale/nav_help.html#Quick_Launch:usingIDX"/>
+	 nc:link="nav_help.html#Quick_Launch:usingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#r">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="registering_new_IM_screen_names"
-         nc:name="registering new IM screen names"
-	 nc:link="chrome://help/locale/im_help.html#registering_new_IM_screen_namesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#s">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="screen_names"
-         nc:name="screen names"
-	 nc:link="chrome://help/locale/im_help.html#screen_names:using_multipleIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#screen_names">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="screen_names:using_multiple"
-         nc:name="using multiple"
-	 nc:link="chrome://help/locale/im_help.html#screen_names:using_multipleIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#s">
+<rdf:Description about="help-indexAZ.rdf#s">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="search"
          nc:name="search"
-	 nc:link="chrome://help/locale/nav_help.html#search:Advanced_modeIDX"/>
+	 nc:link="nav_help.html#search:Advanced_modeIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2067,7 +1418,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="search:Advanced_mode"
          nc:name="Advanced mode"
-	 nc:link="chrome://help/locale/nav_help.html#search:Advanced_modeIDX"/>
+	 nc:link="nav_help.html#search:Advanced_modeIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2077,7 +1428,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="search:bookmarks"
          nc:name="bookmarks"
-	 nc:link="chrome://help/locale/nav_help.html#search:bookmarksIDX"/>
+	 nc:link="nav_help.html#search:bookmarksIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2087,7 +1438,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="search:setting_preferences"
          nc:name="setting preferences"
-	 nc:link="chrome://help/locale/nav_help.html#search:setting_preferencesIDX"/>
+	 nc:link="nav_help.html#search:setting_preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2097,17 +1448,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="search:using_the_Search_button"
          nc:name="using the Search button"
-	 nc:link="chrome://help/locale/nav_help.html#search:using_the_Search_buttonIDX"/>
+	 nc:link="nav_help.html#search:using_the_Search_buttonIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#s">
+<rdf:Description about="help-indexAZ.rdf#s">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="security"
          nc:name="security"
-	 nc:link="chrome://help/locale/privsec_help.html#security:preferencesIDX"/>
+	 nc:link="privsec_help.html#security:preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2117,147 +1468,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="security:preferences"
          nc:name="preferences"
-	 nc:link="chrome://help/locale/privsec_help.html#security:preferencesIDX"/>
+	 nc:link="privsec_help.html#security:preferencesIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#s">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="send"
-         nc:name="send"
-	 nc:link="chrome://help/locale/im_help.html#send:chat_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#send">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="send:chat_messages"
-         nc:name="chat messages"
-	 nc:link="chrome://help/locale/im_help.html#send:chat_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#send">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="send:instant_message_from_chat"
-         nc:name="instant message from chat"
-	 nc:link="chrome://help/locale/im_help.html#send:instant_message_from_chatIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#send">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="send:instant_messages"
-         nc:name="instant messages"
-	 nc:link="chrome://help/locale/im_help.html#send:instant_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#s">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="setting_up"
-         nc:name="setting up"
-	 nc:link="chrome://help/locale/im_help.html#setting_up:Instant_MessengerIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#setting_up">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="setting_up:Instant_Messenger"
-         nc:name="Instant Messenger"
-	 nc:link="chrome://help/locale/im_help.html#setting_up:Instant_MessengerIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#s">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="signing_off_from_Instant_Messenger"
-         nc:name="signing off from Instant Messenger"
-	 nc:link="chrome://help/locale/im_help.html#signing_off_from_Instant_MessengerIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#s">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="signing_on_to_Instant_Messenger"
-         nc:name="signing on to Instant Messenger"
-	 nc:link="chrome://help/locale/im_help.html#signing_on_to_Instant_MessengerIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#s">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="smilies"
-         nc:name="smilies"
-	 nc:link="chrome://help/locale/im_help.html#smilies:in chat messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#smilies">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="smilies:in chat messages"
-         nc:name="in chat messages"
-	 nc:link="chrome://help/locale/im_help.html#smilies:in chat messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#smilies">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="smilies:in instant_messages"
-         nc:name="in instant messages"
-	 nc:link="chrome://help/locale/im_help.html#smilies:in instant_messagesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#s">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="status"
-         nc:name="status"
-	 nc:link="chrome://help/locale/im_help.html#status:buddiesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#status">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="status:buddies"
-         nc:name="buddies"
-	 nc:link="chrome://help/locale/im_help.html#status:buddiesIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#t">
+<rdf:Description about="help-indexAZ.rdf#t">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="themes"
          nc:name="themes"
-	 nc:link="chrome://help/locale/customize_help.html#themes:changingIDX"/>
+	 nc:link="customize_help.html#themes:changingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2267,17 +1488,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="themes:changing"
          nc:name="changing"
-	 nc:link="chrome://help/locale/customize_help.html#themes:changingIDX"/>
+	 nc:link="customize_help.html#themes:changingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#t">
+<rdf:Description about="help-indexAZ.rdf#t">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="toolbar"
          nc:name="toolbar"
-	 nc:link="chrome://help/locale/customize_help.html#toolbar:hiding_a_toolbarIDX"/>
+	 nc:link="customize_help.html#toolbar:hiding_a_toolbarIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2287,7 +1508,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="toolbar:hiding_a_toolbar"
          nc:name="hiding a toolbar"
-	 nc:link="chrome://help/locale/customize_help.html#toolbar:hiding_a_toolbarIDX"/>
+	 nc:link="customize_help.html#toolbar:hiding_a_toolbarIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2297,7 +1518,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="toolbar:navigation_toolbar"
          nc:name="navigation toolbar"
-	 nc:link="chrome://help/locale/customize_help.html#toolbar:navigation_toolbarIDX"/>
+	 nc:link="customize_help.html#toolbar:navigation_toolbarIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2307,47 +1528,17 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="toolbar:personal_toolbar"
          nc:name="personal toolbar"
-	 nc:link="chrome://help/locale/customize_help.html#toolbar:personal_toolbarIDX"/>
+	 nc:link="customize_help.html#toolbar:personal_toolbarIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
 
-<rdf:Description about="help-index0.rdf#t">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="troubleshooting"
-         nc:name="troubleshooting"
-	 nc:link="chrome://help/locale/im_help.html#troubleshooting:Instant_MessengerIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="#troubleshooting">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="troubleshooting:Instant_Messenger"
-         nc:name="Instant Messenger"
-	 nc:link="chrome://help/locale/im_help.html#troubleshooting:Instant_MessengerIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#w">
-   <nc:subheadings>
-     <rdf:Seq><rdf:li>
-       <rdf:Description ID="warning_users"
-         nc:name="warning users"
-	 nc:link="chrome://help/locale/im_help.html#warning_usersIDX"/>
-     </rdf:li></rdf:Seq>
-   </nc:subheadings>
-</rdf:Description>
-
-<rdf:Description about="help-index0.rdf#w">
+<rdf:Description about="help-indexAZ.rdf#w">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages"
          nc:name="web pages"
-	 nc:link="chrome://help/locale/nav_help.html#web_pages:copyingIDX"/>
+	 nc:link="nav_help.html#web_pages:copyingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2357,7 +1548,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages:copying"
          nc:name="copying"
-	 nc:link="chrome://help/locale/nav_help.html#web_pages:copyingIDX"/>
+	 nc:link="nav_help.html#web_pages:copyingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2367,7 +1558,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages:customizing_fonts"
          nc:name="customizing fonts"
-	 nc:link="chrome://help/locale/customize_help.html#web_pages:customizing_fontsIDX"/>
+	 nc:link="customize_help.html#web_pages:customizing_fontsIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2377,7 +1568,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages:finding_related"
          nc:name="finding related"
-	 nc:link="chrome://help/locale/nav_help.html#web_pages:finding_relatedIDX"/>
+	 nc:link="nav_help.html#web_pages:finding_relatedIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2387,7 +1578,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages:finding_within"
          nc:name="finding within"
-	 nc:link="chrome://help/locale/nav_help.html#web_pages:finding_withinIDX"/>
+	 nc:link="nav_help.html#web_pages:finding_withinIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2397,7 +1588,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages:history"
          nc:name="history"
-	 nc:link="chrome://help/locale/nav_help.html#web_pages:historyIDX"/>
+	 nc:link="nav_help.html#web_pages:historyIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2407,7 +1598,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages:navigating"
          nc:name="navigating"
-	 nc:link="chrome://help/locale/nav_help.html#web_pages:navigatingIDX"/>
+	 nc:link="nav_help.html#web_pages:navigatingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2417,7 +1608,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages:searching"
          nc:name="searching"
-	 nc:link="chrome://help/locale/nav_help.html#web_pages:searchingIDX"/>
+	 nc:link="nav_help.html#web_pages:searchingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2427,7 +1618,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages:stopping"
          nc:name="stopping"
-	 nc:link="chrome://help/locale/nav_help.html#web_pages:stoppingIDX"/>
+	 nc:link="nav_help.html#web_pages:stoppingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2437,7 +1628,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="web_pages:translating"
          nc:name="translating"
-	 nc:link="chrome://help/locale/nav_help.html#web_pages:translatingIDX"/>
+	 nc:link="nav_help.html#web_pages:translatingIDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
