@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 // Debug
-$config['debug'] = true;
+$config['debug'] = false;
 
 // Paths
 $config['app_url']                      = 'http://localhost/rmo/app';
