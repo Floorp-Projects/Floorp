@@ -20,13 +20,17 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
+use strict;
+
+my %FORM;
+my $buffer = "";
 if ($ENV{'REQUEST_METHOD'} eq "GET") { $buffer = $ENV{'QUERY_STRING'}; }
 else { read(STDIN, $buffer, $ENV{'CONTENT_LENGTH'}); }
 # Split the name-value pairs
-@pairs = split(/&/, $buffer);
-foreach $pair (@pairs)
+my @pairs = split(/&/, $buffer);
+foreach my $pair (@pairs)
 {
-    ($name, $value) = split(/=/, $pair);
+    my ($name, $value) = split(/=/, $pair);
 
     $value =~ tr/+/ /;
     $value =~ s/^(\s*)//s;
@@ -34,7 +38,7 @@ foreach $pair (@pairs)
     $value =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
     $FORM{$name} = $value;
 }
-$c=$FORM{"comment"};
+my $c = $FORM{"comment"};
 if ( (!defined $c) || ($c eq '') ) {
     print "Content-type: text/html\n\n";
     print "<TITLE>Nothing on your mind?</TITLE>";
