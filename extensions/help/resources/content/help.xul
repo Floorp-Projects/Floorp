@@ -124,9 +124,9 @@
                 <hbox>
                   <textbox id="findText" 
                      flex="1" 
-                     onkeydown="if (event.keyCode == KeyEvent.DOM_VK_ENTER || event.keyCode == KeyEvent.DOM_VK_RETURN) doFind();"/>
+                     onkeypress="if (event.keyCode == KeyEvent.DOM_VK_ENTER || event.keyCode == KeyEvent.DOM_VK_RETURN) doFind();"/>
 
-                  <button id="findButton" label="&gobtn.label;" oncommand="doFind()" flex="0"/>
+                  <button id="findButton" default="true" label="&gobtn.label;" oncommand="doFind()" flex="0"/>
                 </hbox>
                 <tree id="help-search-tree"
                       flex="1" hidecolumnpicker="true"
