@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.35 $ ';
+$Version = '$Revision: 1.36 $ ';
 
 
 sub PrintUsage {
@@ -506,14 +506,6 @@ sub BuildIt {
 	} else {
 	  $BuildStatusStr = 'busted';
 	}
-	print LOG "tinderbox: tree: $BuildTree\n";
-	print LOG "tinderbox: builddate: $StartTime\n";
-	print LOG "tinderbox: status: $BuildStatusStr\n";
-	print LOG "tinderbox: build: $BuildName\n";
-	print LOG "tinderbox: errorparser: unix\n";
-	print LOG "tinderbox: buildfamily: unix\n";
-	print LOG "tinderbox: version: $Version\n";
-	print LOG "tinderbox: END\n";            
     
     close LOG;
     chdir $StartDir;
@@ -530,9 +522,23 @@ sub BuildIt {
     # preed@netscape.com; good things: no need for system() call, and now it's
     # all in perl, so we don't have to do OS checking like before.
     #
+	
+	# Rewrite LOG to OUTLOG, shortening lines.
     open LOG, "$logfile" or die "Couldn't open logfile: $!\n";
     open OUTLOG, ">${logfile}.last" or die "Couldn't open logfile: $!\n";
     
+	# Stuff the status at the top of the new file, so
+	# we don't need to parse the whole file to get to the
+	# status part on the server-side.
+	print OUTLOG "tinderbox: tree: $BuildTree\n";
+	print OUTLOG "tinderbox: builddate: $StartTime\n";
+	print OUTLOG "tinderbox: status: $BuildStatusStr\n";
+	print OUTLOG "tinderbox: build: $BuildName\n";
+	print OUTLOG "tinderbox: errorparser: unix\n";
+	print OUTLOG "tinderbox: buildfamily: unix\n";
+	print OUTLOG "tinderbox: version: $Version\n";
+	print OUTLOG "tinderbox: END\n";            
+
     while (<LOG>) {
       for ($q = 0; ; $q++) {
         $val = $q * 1000;
