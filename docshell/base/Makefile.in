@@ -81,6 +81,7 @@ XPIDLSRCS	= \
 		nsIContentViewerFile.idl	\
 		nsIURIFixup.idl			\
 		nsIEditorDocShell.idl		\
+		nsIWebPageDescriptor.idl	\
 		$(NULL)
 
 CPPSRCS		= \

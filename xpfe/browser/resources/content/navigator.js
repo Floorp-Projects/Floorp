@@ -1001,7 +1001,7 @@ function BrowserLoadURL(aTriggeringEvent)
 {
   var url = gURLBar.value;
   if (url.match(/^view-source:/)) {
-    BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null);
+    BrowserViewSourceOfURL(url.replace(/^view-source:/, ""), null, null);
   } else {
     if (pref && pref.getBoolPref("browser.tabs.opentabfor.urlbar") &&
         getBrowser().localName == "tabbrowser" &&
@@ -1093,25 +1093,59 @@ function OpenAddressbook()
     "chrome,extrachrome,menubar,resizable,status,toolbar");
 }
 
-function BrowserViewSource()
+function BrowserViewSourceOfDocument(aDocument)
 {
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (focusedWindow == window)
-    focusedWindow = _content;
+  var docCharset;
+  var pageCookie;
+  var webNav;
 
-  if (focusedWindow)
-    var docCharset = "charset=" + focusedWindow.document.characterSet;
+  // Get the document charset
+  docCharset = "charset=" + aDocument.characterSet;
 
-  BrowserViewSourceOfURL(getWebNavigation().currentURI.spec, docCharset);
+  // Get the nsIWebNavigation associated with the document
+  try {
+      var win;
+      var ifRequestor;
+
+      // Get the DOMWindow for the requested document.  If the DOMWindow
+      // cannot be found, then just use the _content window...
+      //
+      // XXX:  This is a bit of a hack...
+      win = aDocument.defaultView;
+      if (win == window) {
+        win = _content;
+      }
+      ifRequestor = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+
+      webNav = ifRequestor.getInterface(Components.interfaces.nsIWebNavigation);
+  } catch(err) {
+      // If nsIWebNavigation cannot be found, just get the one for the whole
+      // window...
+      webNav = getWebNavigation();
+  }
+  //
+  // Get the 'PageDescriptor' for the current document. This allows the
+  // view-source to access the cached copy of the content rather than
+  // refetching it from the network...
+  //
+  try{
+    var PageLoader = webNav.QueryInterface(Components.interfaces.nsIWebPageDescriptor);
+
+    pageCookie = PageLoader.currentDescriptor;
+  } catch(err) {
+    // If no page descriptor is available, just use the view-source URL...
+  }
+
+  BrowserViewSourceOfURL(webNav.currentURI.spec, docCharset, pageCookie);
 }
 
-function BrowserViewSourceOfURL(url, charset)
+function BrowserViewSourceOfURL(url, charset, pageCookie)
 {
   // try to open a view-source window while inheriting the charset (if any)
   openDialog("chrome://navigator/content/viewSource.xul",
              "_blank",
              "scrollbars,resizable,chrome,dialog=no",
-             url, charset);
+             url, charset, pageCookie);
 }
 
 // doc=null for regular page info, doc=owner document for frame info.

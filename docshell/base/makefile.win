@@ -75,6 +75,7 @@ XPIDLSRCS=						\
 		.\nsIWebNavigation.idl		\
     .\nsIURIFixup.idl \
 		.\nsIEditorDocShell.idl		\
+		.\nsIWebPageDescriptor.idl	\
 		$(NULL)
 
 CPP_OBJS=											\

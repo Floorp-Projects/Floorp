@@ -71,6 +71,7 @@
 #include "nsISupportsArray.h"
 #include "nsITimerCallback.h"
 #include "nsIWebNavigation.h"
+#include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"
 #include "nsISHContainer.h"
 #include "nsIDocShellLoadInfo.h"
@@ -154,6 +155,7 @@ class nsDocShell : public nsIDocShell,
                    public nsIRefreshURI,
                    public nsIWebProgressListener,
                    public nsIEditorDocShell,
+                   public nsIWebPageDescriptor,
                    public nsSupportsWeakReference
 {
 friend class nsDSURIContentListener;
@@ -179,6 +181,7 @@ public:
     NS_DECL_NSIREFRESHURI
     NS_DECL_NSICONTENTVIEWERCONTAINER
     NS_DECL_NSIEDITORDOCSHELL
+    NS_DECL_NSIWEBPAGEDESCRIPTOR
 
     nsresult SetLoadCookie(nsISupports * aCookie);
     nsresult GetLoadCookie(nsISupports ** aResult);
