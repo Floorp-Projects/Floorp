@@ -45,6 +45,10 @@
 // Definitions
 #define MENU_TRUNCATION_CHARS 60
 
+// used to determine if we've already added "Open In Tabs" to a menu. This will be on
+// the "Open In Tabs" item, not the separator.
+const long kOpenInTabsTag = 0xBEEF;
+
 @interface BookmarkMenu(Private)
 - (NSMenu *)menu;
 - (BookmarkFolder *)rootBookmarkFolder;
@@ -129,23 +133,64 @@
     [menu removeItemAtIndex:firstItemIndex];
 }
 
+//
+// -addOpenInTabsToMenu:forBookmarkFolder:
+//
+// Adds the "Open In Tabs" option to open all items in the folder |inFolder| as a tabgroup.
+// The main bookmark menu folder doesn't get this item, nor does any container that doesn't
+// have any children. We use |kOpenInTabsTag| to determine if we've already added this
+// to the menu so we don't do it twice.
+//
+- (void)addOpenInTabsToMenu:(NSMenu*)inMenu forBookmarkFolder:(BookmarkFolder*)inFolder
+{
+  // first make sure it's not already present before we add it
+  if ([inMenu indexOfItemWithTag:kOpenInTabsTag] != -1)
+    return;
+  
+  // add the "Open In Tabs" option to open all items in this subfolder (not the main bookmark
+  // folder) as a tabgroup.
+  unsigned long childCount = [inFolder count];
+  if (inFolder != [[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder] && childCount > 0) {
+    [inMenu addItem:[NSMenuItem separatorItem]];
+
+    NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in Tabs", nil) action:nil keyEquivalent:@""] autorelease];
+    [inMenu addItem:menuItem];
+    [menuItem setTarget:[NSApp delegate]];
+    [menuItem setTag:kOpenInTabsTag];
+    [menuItem setAction:@selector(openMenuBookmark:)];
+    [menuItem setRepresentedObject:inFolder];
+  }
+}
+
+//
+// -removeOpenInTabsFromMenu:forBookmarkFolder:
+//
+// Removes the "Open In Tabs" menu item and separator from |inMenu|. This is used when |inFolder|
+// drops to zero children.
+//
+- (void)removeOpenInTabsFromMenu:(NSMenu*)inMenu forBookmarkFolder:(BookmarkFolder*)inFolder
+{
+  // first check if there are any children remaining. If so, bail. Then check if the
+  // menu is there at all by checking for our special tag. If not, bail.
+  unsigned long childCount = [inFolder count];
+  if (childCount)
+    return;
+  long location = [inMenu indexOfItemWithTag:kOpenInTabsTag];
+  if (location == -1)
+    return;
+
+  // remove the menu item and the seaparator before it
+  [inMenu removeItemAtIndex:location--];
+  [inMenu removeItemAtIndex:location];
+}
+
 - (void)constructMenu:(NSMenu *)menu forBookmarkFolder:(BookmarkFolder *)aFolder
 {
   unsigned long childCount = [aFolder count];
   for (unsigned long i = 0; i < childCount; i++)
     [self addItem:[aFolder objectAtIndex:i] toMenu:menu atIndex:i];
-  
-  // add the "Open In Tabs" option to open all items in this subfolder (not the main bookmark
-  // folder) as a tabgroup.
-  if (aFolder != [[BookmarkManager sharedBookmarkManager] bookmarkMenuFolder] && childCount > 0) {
-    [menu addItem:[NSMenuItem separatorItem]];
 
-    NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Open in Tabs", nil) action:nil keyEquivalent:@""] autorelease];
-    [menu addItem:menuItem];
-    [menuItem setTarget:[NSApp delegate]];
-    [menuItem setAction:@selector(openMenuBookmark:)];
-    [menuItem setRepresentedObject:aFolder];
-  }
+  [self addOpenInTabsToMenu:menu forBookmarkFolder:aFolder];
 }
 
 - (void)addItem:(BookmarkItem *)anItem toMenu:(NSMenu *)aMenu atIndex:(int)aIndex
@@ -223,8 +268,10 @@
   if (menu) {
       NSDictionary *dict = [note userInfo];
       [self addItem:[dict objectForKey:BookmarkFolderChildKey] toMenu:menu atIndex:[[dict objectForKey:BookmarkFolderChildIndexKey] unsignedIntValue]];
+      [self addOpenInTabsToMenu:menu forBookmarkFolder:aFolder];
   }
 }
+
 - (void)bookmarkRemoved:(NSNotification *)note
 {
   BookmarkFolder *aFolder = [note object];
@@ -236,6 +283,7 @@
   if (menu) {
     BookmarkItem *anItem = [[note userInfo] objectForKey:BookmarkFolderChildKey];
     [menu removeItemAtIndex:[menu indexOfItemWithRepresentedObject:anItem]];
+    [self removeOpenInTabsFromMenu:menu forBookmarkFolder:aFolder];
   }
 }
 
