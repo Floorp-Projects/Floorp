@@ -36,16 +36,17 @@ XPIDLSRCS =                      \
         nsIPrompt.idl            \
         nsIProtocolHandler.idl   \
         nsIProgressEventSink.idl \
-	nsINetModRegEntry.idl    \
-	nsINetModuleMgr.idl      \
-	nsINetNotify.idl         \
-	nsILoadGroup.idl	 \
+		nsINetModRegEntry.idl    \
+		nsINetModuleMgr.idl      \
+		nsINetNotify.idl         \
+		nsILoadGroup.idl	 \
+		nsIStreamConverter2.idl \
         $(NULL)
 
 EXPORTS =			    \
 	netCore.h		    \
-        nsIFileTransportService.h   \
-        nsISocketTransportService.h \
+    nsIFileTransportService.h   \
+    nsISocketTransportService.h \
 	nsIHeader.h		    \
 	nsIProxy.h		    \
 	$(NULL)
