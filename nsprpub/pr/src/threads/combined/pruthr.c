@@ -1509,6 +1509,18 @@ PR_IMPLEMENT(PRThread*) PR_AttachThread(PRThreadType type,
 
 PR_IMPLEMENT(void) PR_DetachThread(void)
 {
+    /*
+     * On IRIX and Windows, foreign threads are detached when
+     * they terminate.
+     */
+#if !defined(IRIX) && !defined(WIN32)
+    PRThread *me;
+    if (_pr_initialized) {
+        me = _MD_GET_ATTACHED_THREAD();
+        if ((me != NULL) && (me->flags & _PR_ATTACHED))
+            _PRI_DetachThread();
+    }
+#endif
 }
 
 void _PRI_DetachThread(void)
