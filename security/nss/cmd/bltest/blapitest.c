@@ -709,6 +709,7 @@ misalignBuffer(PRArenaPool *arena, bltestIO *io, int off)
     int length = io->buf.len;
     if (offset != off) {
 	SECITEM_ReallocItem(arena, &io->buf, length, length + 2*WORDSIZE);
+	io->buf.len = length + 2*WORDSIZE; /* why doesn't realloc do this? */
 	/* offset may have changed? */
 	offset = (ptrdiff_t)io->buf.data % WORDSIZE;
 	if (offset != off) {
@@ -957,7 +958,7 @@ bltest_aes_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     int i;
     /* XXX */ int keylen, blocklen;
     keylen = aesp->key.buf.len;
-    blocklen = cipherInfo->input.buf.len;
+    blocklen = cipherInfo->input.pBuf.len;
     switch (cipherInfo->mode) {
     case bltestAES_ECB:	    minorMode = NSS_AES;	  break;
     case bltestAES_CBC:	    minorMode = NSS_AES_CBC;	  break;
@@ -1718,7 +1719,7 @@ verify_self_test(bltestIO *result, bltestIO *cmp, bltestCipherMode mode,
 {
     int res;
     char *modestr = mode_strings[mode];
-    res = SECITEM_CompareItem(&result->buf, &cmp->buf);
+    res = SECITEM_CompareItem(&result->pBuf, &cmp->buf);
     if (is_sigCipher(mode)) {
 	if (forward) {
 	    if (res == 0) {
@@ -1893,7 +1894,7 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 		bltestCopyIO(arena, &cipherInfo.input, &ct);
 	    else
 		bltestCopyIO(arena, &cipherInfo.input, &pt);
-	    misalignBuffer(arena, &cipherInfo.input, outoff);
+	    misalignBuffer(arena, &cipherInfo.input, inoff);
 	    memset(&cipherInfo.output.buf, 0, sizeof cipherInfo.output.buf);
 	    rv |= cipherInit(&cipherInfo, PR_FALSE);
 	    misalignBuffer(arena, &cipherInfo.output, outoff);
