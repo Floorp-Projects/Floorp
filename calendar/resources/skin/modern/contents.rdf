@@ -21,6 +21,7 @@
    -
    - Contributor(s): Garth Smedley <garths@oeone.com> 
    -                 Colin Phillips <colinp@oeone.com>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -55,5 +56,16 @@
   
    <RDF:Description about="urn:mozilla:skin:modern/1.0:calendar"
       chrome:skinVersion="1.5"/>
+	<RDF:Seq about="urn:mozilla:stylesheets">
+		<RDF:li resource="chrome://browser/content/browser.xul"/>
+		<RDF:li resource="chrome://global/content/customizeToolbar.xul"/>
+	</RDF:Seq>
+	<RDF:Seq about="chrome://browser/content/browser.xul">
+		<RDF:li>chrome://calendar/skin/calendar-button.css</RDF:li>
+		<RDF:li>chrome://calendar/skin/calendar.css</RDF:li>
+	</RDF:Seq>
+	<RDF:Seq about="chrome://global/content/customizeToolbar.xul">
+		<RDF:li>chrome://calendar/skin/calendar-button.css</RDF:li>
+	</RDF:Seq>
 </RDF:RDF>
 

@@ -22,6 +22,7 @@
    -
    - Contributor(s): Karl Guertin <mysteryisman@yahoo.com>
    -                 Mike Potter  <mikep@oeone.com>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -65,13 +66,13 @@
         accesskey="&calendarCmd.accesskey;"
         key="key_calendar"
         command="Tasks:Calendar"
-        insertbefore="tasksMenuEditor"
+        position="6"
         class="menuitem-iconic icon-calendar16 menu-iconic"/>
 </menupopup>
 
 <statusbarpanel id="component-bar">
     <toolbarbutton class="taskbutton" id="mini-cal" oncommand="openCalendar();"
-    position="6" tooltiptext="&calendarCmd.label;"/>
+    position="7" tooltiptext="&calendarCmd.label;"/>
 </statusbarpanel>
 
 </overlay>

@@ -39,7 +39,8 @@
 
 
 <?xml-stylesheet href="chrome://calendar/skin/overlay.css" type="text/css"?> 
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+
+<!-- <?xul-overlay href="chrome://global/content/globalOverlay.xul"?> -->
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
@@ -293,11 +294,11 @@
                    observes="publish_events_command"/>
       </menupopup>
    </menu>
+   
 
    <menu id="menu_Help"
-         accesskey="&helpMenu.accesskey;"
-         >
-      <menupopup id="helpPopup">
+         accesskey="&helpMenu.accesskey;">
+      <menupopup id="menu_HelpPopup">
          <menuitem id="calendar-about-menu-item"
                    label="&calendar.about.label;"
                    accesskey="&calendar.about.accesskey;"

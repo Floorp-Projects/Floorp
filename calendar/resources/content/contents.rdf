@@ -50,15 +50,21 @@
         chrome:name="calendar"
 	chrome:description="Add extension calendar to Mozilla"
 	chrome:extension="true"
+	chrome:settingsURL="chrome://calendar/content/pref/prefBird.xul"
         chrome:skinVersion="1.5">
 </RDF:Description>
 
   <!-- overlay information -->
   <RDF:Seq about="urn:mozilla:overlays">
+    <!-- Firebird -->
+    <RDF:li resource="chrome://browser/content/browser.xul" />
     <!-- Mozilla -->
     <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/pref-appearance.xul"/>
+    <!-- Thunderbird -->
+    <RDF:li resource="chrome://messenger/content/mailWindowOverlay.xul"/>
+    <RDF:li resource="chrome://messenger/content/messengercompose/messengercompose.xul"/>
   </RDF:Seq>
 
   <!-- Mozilla Application Suite -->
@@ -75,5 +81,20 @@
   <!-- calendar startup pref -->
   <RDF:Seq about="chrome://communicator/content/pref/pref-appearance.xul">
     <RDF:li>chrome://calendar/content/pref/prefOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <!-- Firebird or Mozilla Browser 1.5 or later -->
+  <RDF:Seq about="chrome://browser/content/browser.xul">
+    <RDF:li>chrome://calendar/content/calExtOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+
+  <!-- Thunderbird or Mozilla Mail 1.5 or later -->
+  <RDF:Seq about="chrome://messenger/content/mailWindowOverlay.xul">
+    <RDF:li>chrome://calendar/content/calendarExtensionOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+   <RDF:Seq about="chrome://messenger/content/messengercompose/messengercompose.xul">
+    <RDF:li>chrome://calendar/content/calendarExtensionOverlay.xul</RDF:li>
   </RDF:Seq>
 </RDF:RDF>
