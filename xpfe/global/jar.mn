@@ -40,6 +40,7 @@ packages/widget-toolkit.jar:
 	global/content/nsUserSettings.js            (resources/content/nsUserSettings.js) 
 	global/content/xul.css                      (resources/content/xul.css) 
 	global/content/toolbarBindings.xml          (resources/content/toolbarBindings.xml) 
+        global/content/stringbundleBindings.xml     (resources/content/stringbundleBindings.xml)
 
 locales/en-US.jar:
     global/locale/intl.css                    (resources/locale/en-US/intl.css) 
