@@ -42,7 +42,7 @@ public:
         Send_None,
         Send_File,
         Send_Data,
-        Send_DataFromFile,
+        Send_DataFromFile
     } SendType;
 
 public:
