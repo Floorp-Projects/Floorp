@@ -132,7 +132,8 @@ LINCS=-I$(XPDIST)\public\zlib -I$(XPDIST)\public\nspr \
 !ifdef NU_CACHE
     -I$(XPDIST)\public\cache \
 !endif
-    -I$(XPDIST)\public\png -I$(XPDIST)\public\xpcom 
+    -I$(XPDIST)\public\png -I$(XPDIST)\public\xpcom \
+    -I$(XPDIST)\public\raptor
 !endif
 
 ### non-STANDALONE_IMAGE_LIB
@@ -161,7 +162,8 @@ LINCS=-I$(XPDIST)\public\jtools -I$(XPDIST)\public\java \
 !ifdef NU_CACHE
     -I$(XPDIST)\public\cache \
 !endif
-    -I$(XPDIST)\public\js -I$(XPDIST)\public\xpcom
+    -I$(XPDIST)\public\js -I$(XPDIST)\public\xpcom	\
+    -I$(XPDIST)\public\raptor
 !endif
 !endif
 
