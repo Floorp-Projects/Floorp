@@ -52,7 +52,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsString.h"
 #include "nsIURI.h"
-
+#include "nsIDialogParamBlock.h"
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
@@ -75,70 +75,58 @@ CMDLINEHANDLER3_IMPL(nsMessengerBootstrap,"-mail","general.startup.mail","Start 
 
 NS_IMETHODIMP nsMessengerBootstrap::GetChromeUrlForTask(char **aChromeUrlForTask) 
 { 
-    if (!aChromeUrlForTask) return NS_ERROR_FAILURE; 
-	nsresult rv;
-	nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
-	if (NS_SUCCEEDED(rv))
-	{
-		PRInt32 layout;
-		rv = prefService->GetIntPref("mail.pane_config", &layout);		
-		if(NS_SUCCEEDED(rv))
-		{
-			if(layout == 0)
-				*aChromeUrlForTask = PL_strdup("chrome://messenger/content/messenger.xul");
-			else
-				*aChromeUrlForTask = PL_strdup("chrome://messenger/content/mail3PaneWindowVertLayout.xul");
-
-			return NS_OK;
-
-		}	
-	}
-	*aChromeUrlForTask = PL_strdup("chrome://messenger/content/messenger.xul"); 
-    return NS_OK; 
+  if (!aChromeUrlForTask) return NS_ERROR_FAILURE; 
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
+  if (NS_SUCCEEDED(rv))
+  {
+    PRInt32 layout;
+    rv = prefService->GetIntPref("mail.pane_config", &layout);		
+    if(NS_SUCCEEDED(rv))
+    {
+      if(layout == 0)
+        *aChromeUrlForTask = PL_strdup("chrome://messenger/content/messenger.xul");
+      else
+        *aChromeUrlForTask = PL_strdup("chrome://messenger/content/mail3PaneWindowVertLayout.xul");
+      
+      return NS_OK;
+      
+    }	
+  }
+  *aChromeUrlForTask = PL_strdup("chrome://messenger/content/messenger.xul"); 
+  return NS_OK; 
 }
 
 // Utility function to open a messenger window and pass an argument string to it.
-static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
+static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *uri, nsMsgKey key ) {
 
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  nsCOMPtr<nsISupportsWString> sarg(do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID));
-
-  if (!wwatch || !sarg)
-    return NS_ERROR_FAILURE;
-
-  if (args)
-    sarg->SetData(args);
-
-  nsCOMPtr<nsIDOMWindow> newWindow;
   nsresult rv;
-  rv = wwatch->OpenWindow(0, NS_ConvertUCS2toUTF8(chrome).get(), "_blank",
-                 "chrome,dialog=no,all", sarg,
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1", &rv));
+  if (NS_FAILED(rv)) 
+    return rv;
+  ioParamBlock->SetString(0, uri);
+  ioParamBlock->SetInt(0, key);
+  nsCOMPtr <nsISupports> supports = do_QueryInterface(ioParamBlock);
+  nsCOMPtr<nsIDOMWindow> newWindow;
+  return wwatch->OpenWindow(0, NS_ConvertUCS2toUTF8(chrome).get(), "_blank",
+                 "chrome,dialog=no,all", supports,
                  getter_AddRefs(newWindow));
-
-  return rv;
 }
 
-NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(nsIURI *aURI)
+NS_IMETHODIMP nsMessengerBootstrap::OpenMessengerWindowWithUri(const char *windowType, const char *uri)
 {
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
+  
+  nsXPIDLCString chromeurl;
+ 
+  rv = GetChromeUrlForTask(getter_Copies(chromeurl));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // we need to use the "mailnews.reuse_thread_window2" pref
+  // to determine if we should open a new window, or use an existing one.
+  return openWindow(NS_ConvertASCIItoUCS2(chromeurl).get(), uri ? 
+                  NS_ConvertASCIItoUCS2(uri).get() : nsnull, nsMsgKey_None);
 
-	nsXPIDLCString args;
-	nsXPIDLCString chromeurl;
-
-  // aURI can be null. 
-  if (aURI)
-  {
-  	rv = aURI->GetSpec(getter_Copies(args));
-	  if (NS_FAILED(rv)) return rv;
-  }
-
-	rv = GetChromeUrlForTask(getter_Copies(chromeurl));
-	if (NS_FAILED(rv)) return rv;
-
-	// we need to use the "mailnews.reuse_thread_window2" pref
-	// to determine if we should open a new window, or use an existing one.
-  rv = openWindow(NS_ConvertASCIItoUCS2(chromeurl).get(), args ? NS_ConvertASCIItoUCS2(args).get() : nsnull);
-	if (NS_FAILED(rv)) return rv;
-
-	return NS_OK;
 }

@@ -118,7 +118,7 @@ NS_IMPL_QUERY_INTERFACE7(nsNntpService,
                          nsIMsgProtocolInfo,
                          nsICmdLineHandler,
                          nsIMsgMessageFetchPartService,
-						 nsIContentHandler)
+                         nsIContentHandler)
 
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsIMsgMessageService support
@@ -1121,6 +1121,24 @@ nsNntpService::GetProtocolForUri(nsIURI *aUri, nsIMsgWindow *aMsgWindow, nsINNTP
   if (!nntpServer || NS_FAILED(rv))
     return rv;
 
+  nsXPIDLCString spec;
+  rv = aUri->GetSpec(getter_Copies(spec));
+
+  // if this is a news-message:/ uri, decompose it and set hasMsgOffline on the uri
+  if (!PL_strncmp(spec.get(), kNewsMessageRootURI, kNewsMessageRootURILen)) {
+    nsCOMPtr <nsIMsgFolder> folder;
+    nsMsgKey key = nsMsgKey_None;
+    rv = DecomposeNewsMessageURI(spec.get(), getter_AddRefs(folder), &key);
+    if (NS_SUCCEEDED(rv) && folder)
+    {
+      PRBool hasMsgOffline = PR_FALSE;
+      folder->HasMsgOffline(key, &hasMsgOffline);
+      nsCOMPtr<nsIMsgMailNewsUrl> msgUrl (do_QueryInterface(aUri));
+      if (msgUrl)
+        msgUrl->SetMsgIsInLocalCache(hasMsgOffline);
+    }
+  }
+
   rv = nntpServer->GetNntpConnection(aUri, aMsgWindow, aProtocol);
   if (NS_FAILED(rv) || !*aProtocol) 
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1590,30 +1608,31 @@ nsNntpService::HandleContent(const char * aContentType, const char * aCommand, n
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (PL_strcasecmp(aContentType, "x-application-newsgroup") == 0)
+  // check for x-application-newsgroup or x-application-newsgroup-listids
+  if (PL_strncasecmp(aContentType, "x-application-newsgroup", 23) == 0)
   {
     nsCOMPtr<nsIURI> uri;
     rv = aChannel->GetURI(getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
-
     if (uri)
     {
+      nsXPIDLCString uriStr;
       nsCOMPtr<nsIWindowMediator> mediator(do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv));
       NS_ENSURE_SUCCESS(rv, rv);
       nsCOMPtr<nsIDOMWindowInternal> window;
+      nsCOMPtr <nsIMsgFolder> msgFolder;
+      nsCOMPtr <nsINNTPProtocol> protocol = do_QueryInterface(aChannel);
+      if (protocol)
+        protocol->GetCurrentFolder(getter_AddRefs(msgFolder));
+      if (msgFolder)
+        msgFolder->GetURI(getter_Copies(uriStr));
 
-      // If there already is a messenger window open, don't waste time opening
-      // a new one; focus it. Otherwise, create a new messenger window.
-      mediator->GetMostRecentWindow(NS_LITERAL_STRING("mail:3pane").get(), getter_AddRefs(window));
-
-      if (window)
-        window->Focus();
-      else
+      if (!uriStr.IsEmpty())
       {
         nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_CONTRACTID,&rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = messengerWindowService->OpenMessengerWindowWithUri(uri);
+        rv = messengerWindowService->OpenMessengerWindowWithUri("mail:3pane", uriStr.get());
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }

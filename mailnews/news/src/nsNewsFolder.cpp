@@ -510,23 +510,26 @@ nsMsgNewsFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *res
 
 NS_IMETHODIMP nsMsgNewsFolder::GetFolderURL(char **url)
 {
-  if(!url)
-    return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(url);
 
-  nsCOMPtr<nsIFileSpec> pathSpec;
-  nsresult rv = GetPath(getter_AddRefs(pathSpec));
-  if (NS_FAILED(rv)) return rv;
+  nsXPIDLCString hostName;
+  nsresult rv = GetHostname(getter_Copies(hostName));
+  nsXPIDLCString groupName;
+  rv = GetAsciiName(getter_Copies(groupName));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsFileSpec path;
-  rv = pathSpec->GetFileSpec(&path);
-  if (NS_FAILED(rv)) return rv;
-#if defined(XP_MAC)
-  nsCAutoString tmpPath((nsFilePath)path); //ducarroz: please don't cast a nsFilePath to char* on Mac
-  *url = PR_smprintf("%s%s", NEWS_SCHEME, tmpPath.get());
-#else
-  const char *pathName = path;
-  *url = PR_smprintf("%s%s", NEWS_SCHEME, pathName);
-#endif
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRInt32 port;
+  PRBool isSecure = PR_FALSE;
+  rv = server->GetIsSecure(&isSecure);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = server->GetPort(&port);
+  NS_ENSURE_SUCCESS(rv, rv);
+  const char *newsScheme = (isSecure) ? SNEWS_SCHEME : NEWS_SCHEME;
+  *url = PR_smprintf("%s//%s:%ld/%s", newsScheme, hostName.get(), port, groupName.get());
   return NS_OK;
 
 }
@@ -1801,3 +1804,5 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPersistElided(PRBool *aPersistElided)
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
+
+

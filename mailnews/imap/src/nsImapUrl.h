@@ -75,61 +75,62 @@ public:
   // nsIMsgMessageUrl
   NS_DECL_NSIMSGMESSAGEURL
   NS_DECL_NSIMSGI18NURL
-
-	// nsImapUrl
-	nsImapUrl();
-	virtual ~nsImapUrl();
-
+  
+  // nsImapUrl
+  nsImapUrl();
+  virtual ~nsImapUrl();
+  
   static nsresult ConvertToCanonicalFormat(const char *folderName, char onlineDelimiter, char **resultingCanonicalPath);
   static nsresult EscapeSlashes(const char *sourcePath, char **resultPath);
   static nsresult UnescapeSlashes(char *path);
   static char *	ReplaceCharsInCopiedString(const char *stringToCopy, char oldChar, char newChar);
-
+  
 protected:
-	virtual nsresult ParseUrl();
-	virtual const char * GetUserName() { return m_userName;}
-
-	char		*m_listOfMessageIds;
-
-	// handle the imap specific parsing
-	void		ParseImapPart(char *imapPartOfUrl);
-
-	void		ParseFolderPath(char **resultingCanonicalPath);
-	void		ParseSearchCriteriaString();
-	void		ParseChildDiscoveryDepth();
-	void		ParseUidChoice();
-	void		ParseMsgFlags();
-	void		ParseListOfMessageIds();
-
+  virtual nsresult ParseUrl();
+  virtual const char * GetUserName() { return m_userName;}
+  
+  char		*m_listOfMessageIds;
+  
+  // handle the imap specific parsing
+  void		ParseImapPart(char *imapPartOfUrl);
+  
+  void		ParseFolderPath(char **resultingCanonicalPath);
+  void		ParseSearchCriteriaString();
+  void		ParseChildDiscoveryDepth();
+  void		ParseUidChoice();
+  void		ParseMsgFlags();
+  void		ParseListOfMessageIds();
+  
   nsresult GetMsgFolder(nsIMsgFolder **msgFolder);
-
+  
   char        *m_sourceCanonicalFolderPathSubString;
   char        *m_destinationCanonicalFolderPathSubString;
   char		*m_tokenPlaceHolder;
-	char		*m_urlidSubString;
+  char		*m_urlidSubString;
   char		m_onlineSubDirSeparator;
-	char		*m_searchCriteriaString;	// should we use m_search, or is this special?
+  char		*m_searchCriteriaString;	// should we use m_search, or is this special?
+  
+  PRPackedBool m_validUrl;
+  PRPackedBool m_runningUrl;
+  PRPackedBool m_idsAreUids;
+  PRPackedBool m_mimePartSelectorDetected;
+  PRPackedBool m_allowContentChange;	// if PR_FALSE, we can't use Mime parts on demand
+  PRPackedBool m_fetchPartsOnDemand; // if PR_TRUE, we should fetch leave parts on server.
+  PRPackedBool m_msgLoadingFromCache; // if PR_TRUE, we might need to mark read on server
+  PRPackedBool m_externalLinkUrl; // if PR_TRUE, we're running this url because the user
+  nsImapContentModifiedType	m_contentModified;
+  PRInt32 m_discoveryDepth;
 
-	PRBool					m_validUrl;
-	PRBool					m_runningUrl;
-	PRBool					m_idsAreUids;
-	PRBool					m_mimePartSelectorDetected;
-	PRBool					m_allowContentChange;	// if PR_FALSE, we can't use Mime parts on demand
-  PRBool          m_fetchPartsOnDemand; // if PR_TRUE, we should fetch leave parts on server.
-  PRBool          m_msgLoadingFromCache; // if PR_TRUE, we might need to mark read on server
-	nsImapContentModifiedType	m_contentModified;
-	PRInt32					m_discoveryDepth;
+  nsXPIDLCString  m_userName;
 
-	nsXPIDLCString  m_userName;
-
-	// event sinks
-	imapMessageFlagsType	m_flags;
-	nsImapAction			m_imapAction;
+  // event sinks
+  imapMessageFlagsType	m_flags;
+  nsImapAction	m_imapAction;
 
   nsWeakPtr m_imapFolder;
   nsWeakPtr m_imapMailFolderSink;
-  nsWeakPtr	m_imapMessageSink;
-  nsWeakPtr	m_imapExtensionSink;
+  nsWeakPtr m_imapMessageSink;
+  nsWeakPtr m_imapExtensionSink;
   nsWeakPtr m_imapMiscellaneousSink;
 
   nsWeakPtr m_imapServerSink;
@@ -140,7 +141,7 @@ protected:
   nsCOMPtr<nsIImapMockChannel> m_mockChannel;
 
     // used by save message to disk
-	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
+  nsCOMPtr<nsIFileSpec> m_messageFileSpec;
   PRBool                m_addDummyEnvelope;
   PRBool                m_canonicalLineEnding; // CRLF
   

@@ -100,7 +100,7 @@ interface nsIImapProtocol : nsIStreamListener {
     // Get last active time stamp
     void GetLastActiveTimeStamp(out PRTime aTimeStamp);
 
-	void PseudoInterruptMsgLoad(in nsIImapUrl aImapUrl, out boolean interrupted);
+	void PseudoInterruptMsgLoad(in nsIMsgFolder imapFolder, out boolean interrupted);
     void GetSelectedMailboxName(out string folderName);
     // Reset folder connection to authenticated state
     void ResetToAuthenticatedState();

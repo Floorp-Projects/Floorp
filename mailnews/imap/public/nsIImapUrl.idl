@@ -104,6 +104,7 @@ interface nsIImapUrl : nsISupports
   attribute nsImapContentModifiedType contentModified;
   attribute boolean fetchPartsOnDemand;	// set to true if we're fetching a msg for display and want to not download parts
   attribute boolean msgLoadingFromCache; // true if this msg load is coming from a cache, so we can know to mark it read
+  attribute boolean externalLinkUrl; // true if we ran this url because the user clicked on a link.
   attribute nsISupports copyState;
   attribute nsIFileSpec msgFileSpec;
   attribute nsIImapMockChannel mockChannel;

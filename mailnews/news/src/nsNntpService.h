@@ -62,7 +62,7 @@ class nsNntpService : public nsINntpService,
                       public nsIProtocolHandler,
                       public nsIMsgProtocolInfo,
                       public nsICmdLineHandler,
-          					  public nsIContentHandler
+                      public nsIContentHandler
 {
 public:
 

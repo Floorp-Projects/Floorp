@@ -47,6 +47,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  msglocal \
 		  nkcache \
+      uriloader \
 		  $(NULL)
 
 ifeq ($(USE_SHORT_LIBNAME),1)

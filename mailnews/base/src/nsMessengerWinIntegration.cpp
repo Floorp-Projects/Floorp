@@ -227,7 +227,7 @@ struct MessageWindow
                 // if we want to preselect the first account with new mail, here is where we would try to generate
                 // a uri to pass in (and add code to the messenger window service to make that work)
                 if (messengerWindowService) 
-                  messengerWindowService->OpenMessengerWindowWithUri(nsnull);
+                  messengerWindowService->OpenMessengerWindowWithUri("mail:3pane", nsnull);
              }
            }
          }

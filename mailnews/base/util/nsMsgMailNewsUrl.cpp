@@ -199,6 +199,17 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetServer(nsIMsgIncomingServer ** aIncomingServe
                                         host,
                                         scheme,
                                         aIncomingServer);
+        if (!*aIncomingServer && scheme.Equals("imap"))
+        {
+          // look for any imap server with this host name so clicking on 
+          // other users folder urls will work. We could override this method
+          // for imap urls, or we could make caching of servers work and
+          // just set the server in the imap code for this case.
+          rv = accountManager->FindServer("",
+                                          host,
+                                          scheme,
+                                          aIncomingServer);
+        }
     }
 
     return rv;

@@ -5506,13 +5506,11 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
   // otherwise do what we did before...  
 
   if (m_typeWanted == GROUP_WANTED)  
-  {
     *aContentType = nsCRT::strdup("x-application-newsgroup");
-  }
+  else if (m_typeWanted == IDS_WANTED)
+    *aContentType = nsCRT::strdup("x-application-newsgroup-listids");
   else 
-  {
     *aContentType = nsCRT::strdup("message/rfc822");
-  }
   if (!*aContentType) return NS_ERROR_OUT_OF_MEMORY;
   return NS_OK;
 }
@@ -5544,5 +5542,14 @@ nsNNTPProtocol::AlertError(PRInt32 errorCode, const char *text)
     NS_ENSURE_SUCCESS(rv, rv);
   }
   
+  return rv;
+}
+
+NS_IMETHODIMP nsNNTPProtocol::GetCurrentFolder(nsIMsgFolder **aFolder)
+{
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aFolder);
+  if (m_newsFolder)
+    rv = m_newsFolder->QueryInterface(NS_GET_IID(nsIMsgFolder), (void **) aFolder);
   return rv;
 }

@@ -462,8 +462,12 @@ function OnLoadMessenger()
   //set up correctly.
   if ("arguments" in window && window.arguments[0])
   {
-    gStartFolderUri = window.arguments[0].uri;
-    gStartMsgKey = window.arguments[0].key;
+    param = window.arguments[0].QueryInterface( Components.interfaces.nsIDialogParamBlock  );
+    if( !param )
+      dump( " error getting param block interface\n" );
+
+    gStartFolderUri = param.GetString( 0 ) ;
+    gStartMsgKey = param.GetInt( 0 ); 
   }
   else
   {

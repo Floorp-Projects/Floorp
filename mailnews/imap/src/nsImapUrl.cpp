@@ -88,6 +88,7 @@ nsImapUrl::nsImapUrl()
   m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
   m_fetchPartsOnDemand = PR_FALSE; // but assume we're not doing it :-)
   m_msgLoadingFromCache = PR_FALSE;
+  m_externalLinkUrl = PR_TRUE; // we'll start this at true, and set it false in nsImapService::CreateStartOfImapUrl
   m_contentModified = IMAP_CONTENT_NOT_MODIFIED;
   m_validUrl = PR_TRUE;	// assume the best.
   m_flags = 0;
@@ -166,24 +167,24 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgMailNewsUrl)
 
 NS_IMETHODIMP nsImapUrl::GetRequiredImapState(nsImapState * aImapUrlState)
 {
-	if (aImapUrlState)
-	{
-		// the imap action determines the state we must be in...check the 
-		// the imap action.
-
-		if (m_imapAction & 0x10000000)
-			*aImapUrlState = nsImapSelectedState;
-		else
-			*aImapUrlState = nsImapAuthenticatedState;
-	}
-
-	return NS_OK;
+  if (aImapUrlState)
+  {
+    // the imap action determines the state we must be in...check the 
+    // the imap action.
+    
+    if (m_imapAction & 0x10000000)
+      *aImapUrlState = nsImapSelectedState;
+    else
+      *aImapUrlState = nsImapAuthenticatedState;
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::GetImapAction(nsImapAction * aImapAction)
 {
   *aImapAction = m_imapAction;
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::SetImapAction(nsImapAction aImapAction)
@@ -206,9 +207,8 @@ NS_IMETHODIMP nsImapUrl::GetImapFolder(nsIMsgFolder **aMsgFolder)
 NS_IMETHODIMP nsImapUrl::SetImapFolder(nsIMsgFolder  * aMsgFolder)
 {
   nsresult rv;
-  m_imapFolder =
-      getter_AddRefs(NS_GetWeakReference(aMsgFolder, &rv));
-	return rv;
+  m_imapFolder = getter_AddRefs(NS_GetWeakReference(aMsgFolder, &rv));
+  return rv;
 }
 
 NS_IMETHODIMP nsImapUrl::GetImapMailFolderSink(nsIImapMailFolderSink **
@@ -227,9 +227,8 @@ NS_IMETHODIMP nsImapUrl::GetImapMailFolderSink(nsIImapMailFolderSink **
 NS_IMETHODIMP nsImapUrl::SetImapMailFolderSink(nsIImapMailFolderSink  * aImapMailFolderSink)
 {
     nsresult rv;
-    m_imapMailFolderSink =
-        getter_AddRefs(NS_GetWeakReference(aImapMailFolderSink, &rv));
-	return rv;
+    m_imapMailFolderSink = getter_AddRefs(NS_GetWeakReference(aImapMailFolderSink, &rv));
+    return rv;
 }
  
 NS_IMETHODIMP nsImapUrl::GetImapMessageSink(nsIImapMessageSink ** aImapMessageSink)
@@ -245,10 +244,9 @@ NS_IMETHODIMP nsImapUrl::GetImapMessageSink(nsIImapMessageSink ** aImapMessageSi
 
 NS_IMETHODIMP nsImapUrl::SetImapMessageSink(nsIImapMessageSink  * aImapMessageSink)
 {
-    nsresult rv;
-    m_imapMessageSink = 
-        getter_AddRefs(NS_GetWeakReference(aImapMessageSink, &rv));
-	return rv;
+  nsresult rv;
+  m_imapMessageSink = getter_AddRefs(NS_GetWeakReference(aImapMessageSink, &rv));
+  return rv;
 }
 
 NS_IMETHODIMP nsImapUrl::GetImapServerSink(nsIImapServerSink ** aImapServerSink)
@@ -264,10 +262,9 @@ NS_IMETHODIMP nsImapUrl::GetImapServerSink(nsIImapServerSink ** aImapServerSink)
 
 NS_IMETHODIMP nsImapUrl::SetImapServerSink(nsIImapServerSink  * aImapServerSink)
 {
-    nsresult rv;
-    m_imapServerSink = 
-        getter_AddRefs(NS_GetWeakReference(aImapServerSink, &rv));
-	return rv;
+  nsresult rv;
+  m_imapServerSink = getter_AddRefs(NS_GetWeakReference(aImapServerSink, &rv));
+  return rv;
 }
 
 NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExtensionSink)
@@ -283,10 +280,9 @@ NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExten
 
 NS_IMETHODIMP nsImapUrl::SetImapExtensionSink(nsIImapExtensionSink  * aImapExtensionSink)
 {
-    nsresult rv;
-    m_imapExtensionSink =
-        getter_AddRefs(NS_GetWeakReference(aImapExtensionSink, &rv));
-	return rv;
+  nsresult rv;
+  m_imapExtensionSink = getter_AddRefs(NS_GetWeakReference(aImapExtensionSink, &rv));
+  return rv;
 }
 
 NS_IMETHODIMP nsImapUrl::GetImapMiscellaneousSink(nsIImapMiscellaneousSink **
@@ -304,10 +300,9 @@ NS_IMETHODIMP nsImapUrl::GetImapMiscellaneousSink(nsIImapMiscellaneousSink **
 NS_IMETHODIMP nsImapUrl::SetImapMiscellaneousSink(nsIImapMiscellaneousSink  *
                                               aImapMiscellaneousSink)
 {
-    nsresult rv;
-    m_imapMiscellaneousSink =
-        getter_AddRefs(NS_GetWeakReference(aImapMiscellaneousSink, &rv));
-	return rv;
+  nsresult rv;
+  m_imapMiscellaneousSink = getter_AddRefs(NS_GetWeakReference(aImapMiscellaneousSink, &rv));
+  return rv;
 }
 
         
@@ -333,19 +328,19 @@ NS_IMETHODIMP nsImapUrl::SetQuery(const char *aQuery)
 
 nsresult nsImapUrl::ParseUrl()
 {
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
   // extract the user name
   GetPreHost(getter_Copies(m_userName));
-
-	char * imapPartOfUrl = nsnull;
-	rv = GetPath(&imapPartOfUrl);
-    imapPartOfUrl = nsUnescape(imapPartOfUrl);
-	if (NS_SUCCEEDED(rv) && imapPartOfUrl && imapPartOfUrl+1)
-	{
-		ParseImapPart(imapPartOfUrl+1);  // GetPath leaves leading '/' in the path!!!
-		nsCRT::free(imapPartOfUrl);
-	}
-
+  
+  char * imapPartOfUrl = nsnull;
+  rv = GetPath(&imapPartOfUrl);
+  imapPartOfUrl = nsUnescape(imapPartOfUrl);
+  if (NS_SUCCEEDED(rv) && imapPartOfUrl && imapPartOfUrl+1)
+  {
+    ParseImapPart(imapPartOfUrl+1);  // GetPath leaves leading '/' in the path!!!
+    nsCRT::free(imapPartOfUrl);
+  }
+  
   return NS_OK;
 }
 
@@ -459,275 +454,275 @@ nsImapUrl::GetChildDiscoveryDepth(PRInt32* result)
 // this method is only called from the imap thread
 NS_IMETHODIMP nsImapUrl::GetMsgFlags(imapMessageFlagsType *result)	// kAddMsgFlags or kSubtractMsgFlags only
 {
-	*result = m_flags;
+  *result = m_flags;
   return NS_OK;
 }
 
 void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 {
-	m_tokenPlaceHolder = imapPartOfUrl;
-	m_urlidSubString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
-
-	if (!m_urlidSubString)
-	{
-		m_validUrl = PR_FALSE;
-		return;
-	}
-	
+  m_tokenPlaceHolder = imapPartOfUrl;
+  m_urlidSubString = m_tokenPlaceHolder ? nsIMAPGenericParser::Imapstrtok_r(nsnull, IMAP_URL_TOKEN_SEPARATOR, &m_tokenPlaceHolder) : (char *)NULL;
+  
+  if (!m_urlidSubString)
+  {
+    m_validUrl = PR_FALSE;
+    return;
+  }
+  
   if (!nsCRT::strcasecmp(m_urlidSubString, "fetch"))
-	{
-		m_imapAction   					 = nsImapMsgFetch;
-		ParseUidChoice();
-		PR_FREEIF(m_sourceCanonicalFolderPathSubString);
-		ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		ParseListOfMessageIds();
-	}
-	else /* if (fInternal) no concept of internal - not sure there will be one */
-	{
-		if (!nsCRT::strcasecmp(m_urlidSubString, "header"))
-		{
-			m_imapAction   					 = nsImapMsgHeader;
-			ParseUidChoice();
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListOfMessageIds();
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "deletemsg"))
-		{
-			m_imapAction   					 = nsImapDeleteMsg;
-			ParseUidChoice();
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListOfMessageIds();
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "uidexpunge"))
-		{
-			m_imapAction   					 = nsImapUidExpunge;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListOfMessageIds();
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "deleteallmsgs"))
-		{
-			m_imapAction   					 = nsImapDeleteAllMsgs;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "addmsgflags"))
-		{
-			m_imapAction   					 = nsImapAddMsgFlags;
-			ParseUidChoice();
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListOfMessageIds();
-			ParseMsgFlags();
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "subtractmsgflags"))
-		{
-			m_imapAction   					 = nsImapSubtractMsgFlags;
-			ParseUidChoice();
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListOfMessageIds();
-			ParseMsgFlags();
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "setmsgflags"))
-		{
-			m_imapAction   					 = nsImapSetMsgFlags;
-			ParseUidChoice();
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListOfMessageIds();
-			ParseMsgFlags();
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "onlinecopy"))
-		{
-			m_imapAction   					 = nsImapOnlineCopy;
-			ParseUidChoice();
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListOfMessageIds();
-			ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "onlinemove"))
-		{
-			m_imapAction   					 = nsImapOnlineMove;
-			ParseUidChoice();
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListOfMessageIds();
-			ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "onlinetoofflinecopy"))
-		{
-			m_imapAction   					 = nsImapOnlineToOfflineCopy;
-			ParseUidChoice();
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListOfMessageIds();
-			ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "onlinetoofflinemove"))
-		{
-			m_imapAction   					 = nsImapOnlineToOfflineMove;
-			ParseUidChoice();
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListOfMessageIds();
-			ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "offlinetoonlinecopy"))
-		{
-			m_imapAction   					 = nsImapOfflineToOnlineMove;
-			ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "search"))
-		{
-			m_imapAction   					 = nsImapSearch;
-			ParseUidChoice();
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseSearchCriteriaString();
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "test"))
-		{
-			m_imapAction   					 = nsImapTest;
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "select"))
-		{
-			m_imapAction   					 = nsImapSelectFolder;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			if (m_tokenPlaceHolder && *m_tokenPlaceHolder)
-				ParseListOfMessageIds();
-			else
-				m_listOfMessageIds = PL_strdup("");
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "liteselect"))
-		{
-			m_imapAction   					 = nsImapLiteSelectFolder;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "selectnoop"))
-		{
-			m_imapAction   					 = nsImapSelectNoopFolder;
-			m_listOfMessageIds = PL_strdup("");
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "expunge"))
-		{
-			m_imapAction   					 = nsImapExpungeFolder;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			m_listOfMessageIds = PL_strdup("");		// no ids to UNDO
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "create"))
-		{
-			m_imapAction   					 = nsImapCreateFolder;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "ensureExists"))
-		{
-			m_imapAction   					 = nsImapEnsureExistsFolder;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverchildren"))
-		{
-			m_imapAction   					 = nsImapDiscoverChildrenUrl;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverlevelchildren"))
-		{
-			m_imapAction   					 = nsImapDiscoverLevelChildrenUrl;
-			ParseChildDiscoveryDepth();
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverallboxes"))
-		{
-			m_imapAction   					 = nsImapDiscoverAllBoxesUrl;
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverallandsubscribedboxes"))
-		{
-			m_imapAction   					 = nsImapDiscoverAllAndSubscribedBoxesUrl;
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "delete"))
-		{
-			m_imapAction   					 = nsImapDeleteFolder;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "rename"))
-		{
-			m_imapAction   					 = nsImapRenameFolder;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "movefolderhierarchy"))
-		{
-			m_imapAction   					 = nsImapMoveFolderHierarchy;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			if (m_tokenPlaceHolder && *m_tokenPlaceHolder)	// handle promote to root
-				ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "list"))
-		{
-			m_imapAction   					 = nsImapLsubFolders;
-			ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "biff"))
-		{
-			m_imapAction   					 = nsImapBiff;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-			ParseListOfMessageIds();
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "netscape"))
-		{
-			m_imapAction   					 = nsImapGetMailAccountUrl;
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "appendmsgfromfile"))
-		{
-			m_imapAction					 = nsImapAppendMsgFromFile;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "appenddraftfromfile"))
-		{
-			m_imapAction					 = nsImapAppendDraftFromFile;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+  {
+    m_imapAction  = nsImapMsgFetch;
+    ParseUidChoice();
+    PR_FREEIF(m_sourceCanonicalFolderPathSubString);
+    ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    ParseListOfMessageIds();
+  }
+  else /* if (fInternal) no concept of internal - not sure there will be one */
+  {
+    if (!nsCRT::strcasecmp(m_urlidSubString, "header"))
+    {
+      m_imapAction = nsImapMsgHeader;
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "deletemsg"))
+    {
+      m_imapAction = nsImapDeleteMsg;
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "uidexpunge"))
+    {
+      m_imapAction = nsImapUidExpunge;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "deleteallmsgs"))
+    {
+      m_imapAction = nsImapDeleteAllMsgs;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "addmsgflags"))
+    {
+      m_imapAction = nsImapAddMsgFlags;
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+      ParseMsgFlags();
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "subtractmsgflags"))
+    {
+      m_imapAction = nsImapSubtractMsgFlags;
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+      ParseMsgFlags();
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "setmsgflags"))
+    {
+      m_imapAction = nsImapSetMsgFlags;
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+      ParseMsgFlags();
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "onlinecopy"))
+    {
+      m_imapAction = nsImapOnlineCopy;
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+      ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "onlinemove"))
+    {
+      m_imapAction = nsImapOnlineMove;
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+      ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "onlinetoofflinecopy"))
+    {
+      m_imapAction = nsImapOnlineToOfflineCopy;
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+      ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "onlinetoofflinemove"))
+    {
+      m_imapAction = nsImapOnlineToOfflineMove;
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+      ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "offlinetoonlinecopy"))
+    {
+      m_imapAction = nsImapOfflineToOnlineMove;
+      ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "search"))
+    {
+      m_imapAction = nsImapSearch;
+      ParseUidChoice();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseSearchCriteriaString();
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "test"))
+    {
+      m_imapAction = nsImapTest;
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "select"))
+    {
+      m_imapAction = nsImapSelectFolder;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      if (m_tokenPlaceHolder && *m_tokenPlaceHolder)
+        ParseListOfMessageIds();
+      else
+        m_listOfMessageIds = PL_strdup("");
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "liteselect"))
+    {
+      m_imapAction = nsImapLiteSelectFolder;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "selectnoop"))
+    {
+      m_imapAction = nsImapSelectNoopFolder;
+      m_listOfMessageIds = PL_strdup("");
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "expunge"))
+    {
+      m_imapAction = nsImapExpungeFolder;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      m_listOfMessageIds = PL_strdup("");		// no ids to UNDO
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "create"))
+    {
+      m_imapAction = nsImapCreateFolder;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "ensureExists"))
+    {
+      m_imapAction = nsImapEnsureExistsFolder;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverchildren"))
+    {
+      m_imapAction = nsImapDiscoverChildrenUrl;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverlevelchildren"))
+    {
+      m_imapAction = nsImapDiscoverLevelChildrenUrl;
+      ParseChildDiscoveryDepth();
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverallboxes"))
+    {
+      m_imapAction = nsImapDiscoverAllBoxesUrl;
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "discoverallandsubscribedboxes"))
+    {
+      m_imapAction = nsImapDiscoverAllAndSubscribedBoxesUrl;
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "delete"))
+    {
+      m_imapAction = nsImapDeleteFolder;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "rename"))
+    {
+      m_imapAction = nsImapRenameFolder;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "movefolderhierarchy"))
+    {
+      m_imapAction = nsImapMoveFolderHierarchy;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      if (m_tokenPlaceHolder && *m_tokenPlaceHolder)	// handle promote to root
+        ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "list"))
+    {
+      m_imapAction = nsImapLsubFolders;
+      ParseFolderPath(&m_destinationCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "biff"))
+    {
+      m_imapAction = nsImapBiff;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+      ParseListOfMessageIds();
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "netscape"))
+    {
+      m_imapAction = nsImapGetMailAccountUrl;
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "appendmsgfromfile"))
+    {
+      m_imapAction = nsImapAppendMsgFromFile;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "appenddraftfromfile"))
+    {
+      m_imapAction = nsImapAppendDraftFromFile;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
       ParseUidChoice();
       if (m_tokenPlaceHolder && *m_tokenPlaceHolder)
-          ParseListOfMessageIds();
+        ParseListOfMessageIds();
       else
         m_listOfMessageIds = nsCRT::strdup("");
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "subscribe"))
-		{
-			m_imapAction					 = nsImapSubscribe;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "unsubscribe"))
-		{
-			m_imapAction					 = nsImapUnsubscribe;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "refreshacl"))
-		{
-			m_imapAction					= nsImapRefreshACL;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "refreshfolderurls"))
-		{
-			m_imapAction					= nsImapRefreshFolderUrls;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "refreshallacls"))
-		{
-			m_imapAction					= nsImapRefreshAllACLs;
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "listfolder"))
-		{
-			m_imapAction					= nsImapListFolder;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "upgradetosubscription"))
-		{
-			m_imapAction					= nsImapUpgradeToSubscription;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else if (!nsCRT::strcasecmp(m_urlidSubString, "folderstatus"))
-		{
-			m_imapAction					= nsImapFolderStatus;
-			ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
-		}
-		else
-		{
-			m_validUrl = PR_FALSE;	
-		}
-	}
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "subscribe"))
+    {
+      m_imapAction = nsImapSubscribe;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "unsubscribe"))
+    {
+      m_imapAction = nsImapUnsubscribe;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "refreshacl"))
+    {
+      m_imapAction = nsImapRefreshACL;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "refreshfolderurls"))
+    {
+      m_imapAction = nsImapRefreshFolderUrls;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "refreshallacls"))
+    {
+      m_imapAction = nsImapRefreshAllACLs;
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "listfolder"))
+    {
+      m_imapAction = nsImapListFolder;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "upgradetosubscription"))
+    {
+      m_imapAction = nsImapUpgradeToSubscription;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "folderstatus"))
+    {
+      m_imapAction = nsImapFolderStatus;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
+    else
+    {
+      m_validUrl = PR_FALSE;	
+    }
+        }
 }
 
 
@@ -1245,6 +1240,7 @@ NS_IMETHODIMP nsImapUrl::GetUri(char** aURI)
 NS_IMPL_GETSET(nsImapUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
 NS_IMPL_GETSET(nsImapUrl, CanonicalLineEnding, PRBool, m_canonicalLineEnding);
 NS_IMPL_GETTER(nsImapUrl::GetMsgLoadingFromCache, PRBool, m_msgLoadingFromCache);
+NS_IMPL_GETSET(nsImapUrl, ExternalLinkUrl, PRBool, m_externalLinkUrl);
 
 NS_IMETHODIMP nsImapUrl::SetMsgLoadingFromCache(PRBool loadingFromCache)
 {

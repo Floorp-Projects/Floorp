@@ -347,31 +347,30 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
   /**
    * verbose description of the new messages in this folder
    */
-	readonly attribute wstring newMessagesNotificationDescription;
+  readonly attribute wstring newMessagesNotificationDescription;
 
-	// are we running a url as a result of the user clicking get msg?
-	attribute boolean gettingNewMessages;
+  // are we running a url as a result of the user clicking get msg?
+  attribute boolean gettingNewMessages;
   /**
    * local path of this folder
    */
-	attribute nsIFileSpec path;
+  attribute nsIFileSpec path;
 
-	readonly attribute string baseMessageURI;
+  readonly attribute string baseMessageURI;
+  string generateMessageURI(in nsMsgKey msgKey);
 
-	string generateMessageURI(in nsMsgKey msgKey);
+  const nsMsgDispositionState nsMsgDispositionState_Replied = 0;
+  const nsMsgDispositionState nsMsgDispositionState_Forwarded = 1;	
+  void addMessageDispositionState(in nsIMsgDBHdr aMessage, in nsMsgDispositionState aDispositionFlag);
 
-	const nsMsgDispositionState nsMsgDispositionState_Replied = 0;
-	const nsMsgDispositionState nsMsgDispositionState_Forwarded = 1;	
-	void addMessageDispositionState(in nsIMsgDBHdr aMessage, in nsMsgDispositionState aDispositionFlag);
-
-	void markMessagesRead(in nsISupportsArray messages, in boolean markRead);
-	void markAllMessagesRead();
-	void markMessagesFlagged(in nsISupportsArray messages, in boolean markFlagged);
-	void markThreadRead(in nsIMsgThread thread);
-	nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
-	void setMsgDatabase (in nsIMsgDatabase msgDatabase);
-	nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
-	nsIMsgDBHdr GetMessageHeader(in nsMsgKey msgKey);
+  void markMessagesRead(in nsISupportsArray messages, in boolean markRead);
+  void markAllMessagesRead();
+  void markMessagesFlagged(in nsISupportsArray messages, in boolean markFlagged);
+  void markThreadRead(in nsIMsgThread thread);
+  nsIMsgDatabase getMsgDatabase(in nsIMsgWindow msgWindow);
+  void setMsgDatabase (in nsIMsgDatabase msgDatabase);
+  nsIMsgDatabase getDBFolderInfoAndDB(out nsIDBFolderInfo folderInfo);
+  nsIMsgDBHdr GetMessageHeader(in nsMsgKey msgKey);
 
   readonly attribute boolean supportsOffline;
   boolean shouldStoreMsgOffline(in nsMsgKey msgKey);

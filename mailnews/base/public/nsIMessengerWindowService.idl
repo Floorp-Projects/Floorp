@@ -41,6 +41,6 @@ interface nsIURI;
 
 [scriptable, uuid(113a1a5a-1dd2-11b2-b1b7-a85ccc06c8ce)]
 interface nsIMessengerWindowService : nsISupports {
-	void OpenMessengerWindowWithUri(in nsIURI aURI);
+	void OpenMessengerWindowWithUri(in string windowType, in string uri);
 };
 

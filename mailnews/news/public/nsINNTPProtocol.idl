@@ -60,6 +60,7 @@ interface nsINNTPProtocol : nsISupports {
     void GetLastActiveTimeStamp(out PRTime aTimeStamp);
 
   attribute boolean isCachedConnection;
+  readonly attribute nsIMsgFolder currentFolder;
 
 	void CloseConnection();
 };

@@ -76,38 +76,38 @@ public:
   NS_IMETHOD AddUnique(nsISupports* element);
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
-	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
+  NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
 
-	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName,nsIMsgWindow *msgWindow);
+  NS_IMETHOD CreateSubfolder(const PRUnichar *folderName,nsIMsgWindow *msgWindow);
 
-	NS_IMETHOD Delete ();
-	NS_IMETHOD Rename (const PRUnichar *newName, nsIMsgWindow *msgWindow);
+  NS_IMETHOD Delete ();
+  NS_IMETHOD Rename (const PRUnichar *newName, nsIMsgWindow *msgWindow);
 
-	NS_IMETHOD GetAbbreviatedName(PRUnichar * *aAbbreviatedName);
+  NS_IMETHOD GetAbbreviatedName(PRUnichar * *aAbbreviatedName);
 
   NS_IMETHOD GetFolderURL(char **url);
 
-	NS_IMETHOD UpdateSummaryTotals(PRBool force) ;
+  NS_IMETHOD UpdateSummaryTotals(PRBool force) ;
 
-	NS_IMETHOD GetExpungedBytesCount(PRUint32 *count);
-	NS_IMETHOD GetDeletable (PRBool *deletable); 
-	NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
+  NS_IMETHOD GetExpungedBytesCount(PRUint32 *count);
+  NS_IMETHOD GetDeletable (PRBool *deletable); 
+  NS_IMETHOD GetRequiresCleanup(PRBool *requiresCleanup);
 
-	NS_IMETHOD GetSizeOnDisk(PRUint32 *size);
+  NS_IMETHOD GetSizeOnDisk(PRUint32 *size);
 
   NS_IMETHOD GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
- 	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
-                            nsIMsgWindow *msgWindow, PRBool deleteStorage, PRBool isMove,
-                            nsIMsgCopyServiceListener* listener, PRBool allowUndo);
+  NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
+                      nsIMsgWindow *msgWindow, PRBool deleteStorage, PRBool isMove,
+                      nsIMsgCopyServiceListener* listener, PRBool allowUndo);
   NS_IMETHOD GetNewMessages(nsIMsgWindow *aWindow, nsIUrlListener *aListener);
 
-	NS_IMETHOD GetCanSubscribe(PRBool *aResult);
-	NS_IMETHOD GetCanFileMessages(PRBool *aResult);
-	NS_IMETHOD GetCanCreateSubfolders(PRBool *aResult);
-	NS_IMETHOD GetCanRename(PRBool *aResult);
-    NS_IMETHOD GetCanCompact(PRBool *aResult);
-    NS_IMETHOD OnReadChanged(nsIDBChangeListener * aInstigator);
+  NS_IMETHOD GetCanSubscribe(PRBool *aResult);
+  NS_IMETHOD GetCanFileMessages(PRBool *aResult);
+  NS_IMETHOD GetCanCreateSubfolders(PRBool *aResult);
+  NS_IMETHOD GetCanRename(PRBool *aResult);
+  NS_IMETHOD GetCanCompact(PRBool *aResult);
+  NS_IMETHOD OnReadChanged(nsIDBChangeListener * aInstigator);
 
   NS_IMETHOD DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *window);
   NS_IMETHOD Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow);
@@ -117,15 +117,15 @@ public:
 
   NS_IMETHOD GetPersistElided(PRBool *aPersistElided);
 
-	// for nsMsgLineBuffer
-	virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
+  // for nsMsgLineBuffer
+  virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
 
 protected:
-	nsresult AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 fullwords);
-	nsresult ParseFolder(nsFileSpec& path);
-	nsresult CreateSubFolders(nsFileSpec &path);
-	nsresult AddDirectorySeparator(nsFileSpec &path);
-	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
+  nsresult AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 fullwords);
+  nsresult ParseFolder(nsFileSpec& path);
+  nsresult CreateSubFolders(nsFileSpec &path);
+  nsresult AddDirectorySeparator(nsFileSpec &path);
+  nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
 
   nsresult LoadNewsrcFileAndCreateNewsgroups();
   PRInt32 RememberLine(const char *line);

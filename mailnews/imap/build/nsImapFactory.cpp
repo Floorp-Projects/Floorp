@@ -48,6 +48,7 @@
 #include "nsImapUrl.h"
 #include "nsImapProtocol.h"
 #include "nsMsgImapCID.h"
+#include "nsCURILoader.h"
 
 // private factory declarations for each component we know how to produce
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsImapUrl, Initialize)
@@ -91,7 +92,11 @@ static const nsModuleComponentInfo gComponents[] = {
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "imap", nsImapServiceConstructor},
 
     { "IMAP Protocol Handler", NS_IMAPSERVICE_CID,
-      NS_IMAPPROTOCOLINFO_CONTRACTID, nsImapServiceConstructor }
+      NS_IMAPPROTOCOLINFO_CONTRACTID, nsImapServiceConstructor },
+  { "imap folder content handler",
+    NS_IMAPSERVICE_CID,
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"x-application-imapfolder",
+    nsImapServiceConstructor }
 };
 
 NS_IMPL_NSGETMODULE(IMAP_factory, gComponents);

@@ -90,11 +90,12 @@ interface nsIImapIncomingServer : nsISupports {
 
   void RemoveConnection(in nsIImapProtocol aImapConnection);
   void ResetNamespaceReferences();
-  void PseudoInterruptMsgLoad(in nsIImapUrl aImapUrl, out boolean interrupted);
+  void PseudoInterruptMsgLoad(in nsIMsgFolder aImapFolder, out boolean interrupted);
   void ResetConnection(in string folderName);
   void CloseConnectionForFolder(in nsIMsgFolder aMsgFolder);
   void CreatePRUnicharStringFromUTF7(in string aSourceString, out wstring aUnicodeStr);
   void reDiscoverAllFolders();
+  nsIURI subscribeToFolder(in wstring name, in boolean subscribe);
   nsIMsgFolder GetReadMailPFC(in boolean createIfMissing);
   nsIMsgFolder GetSentMailPFC(in boolean createIfMissing);
   void GetNewMessagesAllFolders(in nsIMsgFolder aRootFolder, in nsIMsgWindow aWindow); 
