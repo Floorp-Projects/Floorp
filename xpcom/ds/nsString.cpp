@@ -710,6 +710,8 @@ PRInt32 nsCString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
       } //switch
     }
 
+    theRadix = (kAutoDetect==aRadix) ? theRadix : aRadix;
+
       //if you don't have any valid chars, return 0, but set the error;
     if(cp<=endcp) {
 
