@@ -549,7 +549,6 @@ const gFormFillPrefListener =
       return;
       
     this.toggleFormFill();
-    this.toggleAutoCompleteInSearchBar();
   },
   
   toggleFormFill: function ()
@@ -563,15 +562,15 @@ const gFormFillPrefListener =
       gBrowser.attachFormFill();
     else
       gBrowser.detachFormFill();
-  },
-  
-  toggleAutoCompleteInSearchBar: function()
-  {
+    gBrowser.setAttribute("autocompleteenabled", gFormFillEnabled);
+
     var searchBar = document.getElementById("search-bar");
-    if (gFormFillEnabled)
-      searchBar.removeAttribute("disableautocomplete");
-    else
-      searchBar.setAttribute("disableautocomplete", "true");
+    if (searchBar) {
+      if (gFormFillEnabled)
+        searchBar.removeAttribute("disableautocomplete");
+      else
+        searchBar.setAttribute("disableautocomplete", "true");
+    }
   }
 }
  
