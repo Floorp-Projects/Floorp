@@ -104,13 +104,17 @@ void
 nsBlockBandData::ComputeAvailSpaceRect()
 {
   nsBandTrapezoid* trapezoid = mData;
+  nsBandTrapezoid* rightTrapezoid = nsnull;
 
+  PRInt32 leftFloaters = 0;
+  PRInt32 rightFloaters = 0;
   if (count > 1) {
     // If there's more than one trapezoid that means there are floaters
     PRInt32 i;
 
-    // Stop when we get to space occupied by a right floater, or when we've
-    // looked at every trapezoid and none are right floaters
+    // Examine each trapezoid in the band, counting up the number of
+    // left and right floaters. Use the right-most floater to
+    // determine where the right edge of the available space is.
     for (i = 0; i < count; i++) {
       trapezoid = &mData[i];
       if (trapezoid->state != nsBandTrapezoid::Available) {
@@ -119,40 +123,65 @@ nsBlockBandData::ComputeAvailSpaceRect()
           PRInt32 j, numFrames = trapezoid->frames->Count();
           NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
           for (j = 0; j < numFrames; j++) {
-            nsIFrame* f = (nsIFrame*)trapezoid->frames->ElementAt(j);
+            nsIFrame* f = (nsIFrame*) trapezoid->frames->ElementAt(j);
             f->GetStyleData(eStyleStruct_Display,
                             (const nsStyleStruct*&)display);
-            if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-              goto foundRightFloater;
+            if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
+              leftFloaters++;
+            }
+            else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
+              rightFloaters++;
+              if ((nsnull == rightTrapezoid) && (i > 0)) {
+                rightTrapezoid = &mData[i - 1];
+              }
             }
           }
         } else {
           trapezoid->frame->GetStyleData(eStyleStruct_Display,
-                                         (const nsStyleStruct*&)display);
-          if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-            break;
+                                    (const nsStyleStruct*&)display);
+          if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
+            leftFloaters++;
+          }
+          else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
+            rightFloaters++;
+            if ((nsnull == rightTrapezoid) && (i > 0)) {
+              rightTrapezoid = &mData[i - 1];
+            }
           }
         }
       }
     }
-  foundRightFloater:
-
-    if (i > 0) {
-      trapezoid = &mData[i - 1];
-    }
   }
+  mLeftFloaters = leftFloaters;
+  mRightFloaters = rightFloaters;
+  if (nsnull != rightTrapezoid) {
+    trapezoid = rightTrapezoid;
+  }
+  trapezoid->GetRect(mAvailSpace);
 
-  if (nsBandTrapezoid::Available == trapezoid->state) {
-    // The trapezoid is available
-    trapezoid->GetRect(mAvailSpace);
-  } else {
+  // When there is no available space, we still need a proper X
+  // coordinate to place objects that end up here anyway.
+  if (nsBandTrapezoid::Available != trapezoid->state) {
     const nsStyleDisplay* display;
-
-    // The trapezoid is occupied. That means there's no available space
-    trapezoid->GetRect(mAvailSpace);
-
-    // XXX Better handle the case of multiple frames
-    if (nsBandTrapezoid::Occupied == trapezoid->state) {
+    if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
+      // It's not clear what coordinate to use when there is no
+      // available space and the space is multiply occupied...So: If
+      // any of the floaters that are a part of the trapezoid are left
+      // floaters then we move over to the right edge of the
+      // unavaliable space.
+      PRInt32 j, numFrames = trapezoid->frames->Count();
+      NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
+      for (j = 0; j < numFrames; j++) {
+        nsIFrame* f = (nsIFrame*) trapezoid->frames->ElementAt(j);
+        f->GetStyleData(eStyleStruct_Display,
+                        (const nsStyleStruct*&)display);
+        if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
+          mAvailSpace.x = mAvailSpace.XMost();
+          break;
+        }
+      }
+    }
+    else {
       trapezoid->frame->GetStyleData(eStyleStruct_Display,
                                      (const nsStyleStruct*&)display);
       if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
@@ -233,6 +262,8 @@ nsBlockBandData::GetFrameYMost(nsIFrame* aFrame)
   return y + r.height;
 }
 
+// XXX optimization? use mLeftFloaters && mRightFloaters to avoid
+// doing anything
 nscoord
 nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 {
@@ -277,4 +308,39 @@ nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
     aY = aY + (yMost - aYS);
   }
   return aY;
+}
+
+void
+nsBlockBandData::GetMaxElementSize(nscoord* aWidthResult,
+                                   nscoord* aHeightResult) const
+{
+  nsRect r;
+  nscoord maxWidth = 0;
+  nscoord maxHeight = 0;
+  for (PRInt32 i = 0; i < count; i++) {
+    const nsBandTrapezoid* trap = &mData[i];
+    if (trap->state != nsBandTrapezoid::Available) {
+      // Get the width of the impacted area and update the maxWidth
+      trap->GetRect(r);
+      if (r.width > maxWidth) maxWidth = r.width;
+
+      // Get the total height of the frame to compute the maxHeight,
+      // not just the height that is part of this band.
+      // XXX vertical margins!
+      if (nsBandTrapezoid::OccupiedMultiple == trap->state) {
+        PRInt32 j, numFrames = trap->frames->Count();
+        NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
+        for (j = 0; j < numFrames; j++) {
+          nsIFrame* f = (nsIFrame*) trap->frames->ElementAt(j);
+          f->GetRect(r);
+          if (r.height > maxHeight) maxHeight = r.height;
+        }
+      } else {
+        trap->frame->GetRect(r);
+        if (r.height > maxHeight) maxHeight = r.height;
+      }
+    }
+  }
+  *aWidthResult = maxWidth;
+  *aHeightResult = maxHeight;
 }
