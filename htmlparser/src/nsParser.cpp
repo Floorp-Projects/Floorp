@@ -206,7 +206,8 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mDTDVerification=PR_FALSE;
   mCharsetSource=kCharsetUninitialized;
   mInternalState=NS_OK;
-  
+  mObserversEnabled=PR_TRUE;
+
   MOZ_TIMER_DEBUGLOG(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
   MOZ_TIMER_RESET(mParseTime);  
   MOZ_TIMER_RESET(mDTDTime);  
@@ -923,7 +924,10 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
   
   if(theBuffer.Length()){
     //now it's time to try to build the model from this fragment
+
+    mObserversEnabled=PR_FALSE; //disable observers for fragments
     result=Parse(theBuffer,(void*)&theBuffer,aContentType,PR_FALSE,PR_TRUE);
+    mObserversEnabled=PR_TRUE; //now reenable.
   }
 
   return result;
@@ -1499,3 +1503,18 @@ nsParser::GetDTD(nsIDTD** aDTD)
   
   return NS_OK;
 }
+
+
+/** 
+ * Get the observer service
+ *
+ * @update rickg 11/22/99
+ * @return ptr to server or NULL
+ */
+CObserverService* nsParser::GetObserverService(void) { 
+    //XXX Hack! this should be XPCOM based!
+  if(mObserversEnabled)
+    return &mObserverService; 
+  return 0;
+}
+

@@ -1062,11 +1062,13 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
 
   if(mParser) {
 
-    CObserverService& theService=mParser->GetObserverService();
-    CParserContext*   pc=mParser->PeekContext();
-    void*             theDocID=(pc)? pc->mKey:0;
+    CObserverService* theService=mParser->GetObserverService();
+    if(theService) {
+      CParserContext*   pc=mParser->PeekContext();
+      void*             theDocID=(pc)? pc->mKey:0;
     
-    result=theService.Notify(aTag,aNode,(PRUint32)theDocID,kHTMLTextContentType,mParser);                             
+      result=theService->Notify(aTag,aNode,(PRUint32)theDocID,kHTMLTextContentType,mParser);                            
+    }
   }
 
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::WillHandleStartTag(), this=%p\n", this));
