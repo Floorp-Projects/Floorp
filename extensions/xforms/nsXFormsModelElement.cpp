@@ -833,6 +833,7 @@ nsXFormsModelElement::FinishConstruction()
       if (namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
         if (!ProcessBind(xpath, firstInstanceRoot, 1, 1,
                          nsCOMPtr<nsIDOMElement>(do_QueryInterface(child)))) {
+          nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
           return NS_OK;
         }
       }
@@ -940,8 +941,10 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
   rv = aEvaluator->Evaluate(expr, aContextNode, resolver,
                             nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                             nsnull, getter_AddRefs(result));
-  if (NS_FAILED(rv))
-    return PR_FALSE; // dispatch a binding exception
+  if (NS_FAILED(rv)) {
+    nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
+    return PR_FALSE;
+  }
 
   NS_ENSURE_TRUE(result, PR_FALSE);
 
