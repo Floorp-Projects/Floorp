@@ -87,6 +87,8 @@ public:
     NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
     NS_IMETHOD IsSynthetic(PRBool& aResult);
     NS_IMETHOD GetTag(nsIAtom*& aResult) const;
+    NS_IMETHOD ParseAttributeString(const nsString& aStr, nsIAtom*& aName, PRInt32& aNameSpaceID);
+    NS_IMETHOD GetNameSpacePrefix(PRInt32 aNameSpaceID, nsIAtom*& aPrefix);
     NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, const nsString& aValue, PRBool aNotify);
     NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aResult) const;
     NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
@@ -108,6 +110,8 @@ public:
     NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
 
     // nsIXMLContent (from nsIRDFContent)
+    NS_IMETHOD SetContainingNameSpace(nsINameSpace* aNameSpace);
+    NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const;
     NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace);
     NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const;
     NS_IMETHOD SetNameSpaceID(PRInt32 aNameSpaceID);
