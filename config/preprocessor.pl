@@ -74,7 +74,7 @@ package main;
 
 sub include {
     my($stack, $filename) = @_;
-    my $fullFilename = $stack->{'variables'}->{'DIRECTORY'} . internalise($filename);
+    my $fullFilename = $stack->{'variables'}->{'DIRECTORY'} . $filename;
     $fullFilename =~ s|^.*//||os; # strip everything up to a double slash
     if ($fullFilename !~ m|^(.*/)?(.+)$|os) { # extract the directory and file portions
         die "Not a valid filename: $filename\n";
@@ -149,23 +149,6 @@ sub nativise {
     } elsif ($^O eq 'MSWin32') {
         $filename =~ s|^/(.)/|$1:/|gos;
         $filename =~ s|/|\\|gos;
-        return $filename;
-    } elsif ($^O eq 'MacOS') {
-        $filename =~ s|/|:|gos;
-        return $filename;
-    } else {
-        die("Platform '$^O' not recognised. Contact ian\@hixie.ch.\n");
-    }
-}
-
-sub internalise {
-    my $filename = shift;
-    if ($^O eq 'linux' or
-        $^O eq 'cygwin') {
-        return $filename;
-    } elsif ($^O eq 'MSWin32') {
-        $filename =~ s|\\|/|gos;
-        $filename =~ s|^(.):/|/$1/|gos;
         return $filename;
     } elsif ($^O eq 'MacOS') {
         $filename =~ s|/|:|gos;
