@@ -130,5 +130,5 @@ int sigtimedwait(const sigset_t *set, siginfo_t *info,
 
 #endif /* _PR_PTHREADS */
 
-/* rhapsody.c */
+/* darwin.c */
 
