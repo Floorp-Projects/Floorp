@@ -61,6 +61,7 @@ SHARED_LIBRARY_LIBS = \
 
 
 SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)xmlextrassecurity_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextrasschema_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextrassoap_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)xmlextrasinterfaceinfo_s.$(LIB_SUFFIX) \
@@ -73,6 +74,7 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 LOCAL_INCLUDES	+= \
+		-I$(srcdir)/../../security/src \
 		-I$(srcdir)/../../soap/src \
 		-I$(srcdir)/../../schema/src \
 		-I$(srcdir)/../../interfaceinfo/src \

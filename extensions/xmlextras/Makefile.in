@@ -26,7 +26,7 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = base schema soap interfaceinfo wsdl proxy build
+DIRS            = base security schema soap interfaceinfo wsdl proxy build
 
 ifdef ENABLE_TESTS
 DIRS += tests

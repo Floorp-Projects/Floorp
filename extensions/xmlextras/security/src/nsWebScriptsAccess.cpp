@@ -154,6 +154,52 @@ IsEqual(const nsAString& aLhs, const nsAString& aRhs)
   return PR_FALSE;
 }
 
+#ifdef DEBUG
+
+struct TestStruct {
+  const char* lhs; // string that contains the wild char(s).
+  const char* rhs; // string that is compared against lhs.
+  PRBool equal;    // set to true if lhs and rhs are expected 
+                   // to be equal else set false;
+};
+
+static 
+const TestStruct kStrings[] = {
+  { "f*o*bar", "foobar", PR_TRUE },
+  { "foo**bar", "foofbar", PR_TRUE },
+  { "*foo*bar", "ffoofoobbarbarbar", PR_TRUE },
+  { "*foo*bar*barbar", "ffoofoobbarbarbar", PR_TRUE },
+  { "http://*.*.*/*", "http://www.mozilla.org/", PR_TRUE},
+  { "http://*/*", "http://www.mozilla.org/", PR_TRUE},
+  { "http://*.mozilla.org/*/*", "http://www.mozilla.org/Projects/", PR_TRUE},
+  { "http://www.m*zi*la.org/*", "http://www.mozilla.org/", PR_TRUE },
+  { "http://www.mozilla.org/*.html", "http://www.mozilla.org/owners.html", PR_TRUE },
+  { "http://www.mozilla.org/*.htm*", "http://www.mozilla.org/owners.html", PR_TRUE },
+  { "http://www.mozilla.org/*rs.htm*", "http://www.mozilla.org/ownres.html", PR_FALSE },
+  { "http://www.mozilla.org/a*c.html", "http://www.mozilla.org/abcd.html", PR_FALSE },
+  { "https://www.mozilla.org/*", "http://www.mozilla.org/abcd.html", PR_FALSE },
+};
+
+static 
+void VerifyIsEqual()
+{
+  static size = sizeof(kStrings)/sizeof(kStrings[0]);
+  PRUint32 i;
+  for (i = 0; i < size; ++i) {
+    if (IsEqual(NS_ConvertUTF8toUCS2(kStrings[i].lhs), 
+                NS_ConvertUTF8toUCS2(kStrings[i].rhs)) 
+                != kStrings[i].equal) {
+      const char* equal = 
+        kStrings[i].equal ? "be equal but it is not!" : 
+                            "not be equal but it is!";
+      printf("\nTest Failed: %s and %s should %s.\n", 
+             kStrings[i].lhs, kStrings[i].rhs, equal);
+    }
+  }
+}
+
+#endif
+
 static PRBool PR_CALLBACK 
 FreeEntries(nsHashKey *aKey, void *aData, void* aClosure)
 {
@@ -403,7 +449,7 @@ nsWebScriptsAccess::CreateAccessInfoEntry(nsIDOMNodeList* aAllowList,
 {
   NS_ENSURE_ARG_POINTER(aAllowList);
   
-  nsAutoPtr<AccessInfoEntry> entry = new AccessInfoEntry();
+  nsAutoPtr<AccessInfoEntry> entry(new AccessInfoEntry());
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
   PRUint32 count;
@@ -431,8 +477,8 @@ nsWebScriptsAccess::CreateAccessInfoEntry(nsIDOMNodeList* aAllowList,
       entry->mFlags |= WSA_GRANT_ACCESS_TO_ALL;
       break;
     }
-      
-    nsAutoPtr<AccessInfo> access_info = new AccessInfo();
+
+    nsAutoPtr<AccessInfo> access_info(new AccessInfo());
     NS_ENSURE_TRUE(access_info, NS_ERROR_OUT_OF_MEMORY);
     
     if (found_type) {
@@ -461,6 +507,14 @@ nsWebScriptsAccess::CheckAccess(AccessInfoEntry* aEntry,
                                 const nsAString& aRequestType, 
                                 PRBool* aAccessGranted)
 {
+#ifdef DEBUG
+  static PRBool verified = PR_FALSE;
+  if (!verified) {
+    verified = PR_TRUE;
+    VerifyIsEqual();
+  }
+#endif
+
   *aAccessGranted = PR_FALSE;
   NS_ENSURE_ARG_POINTER(aEntry);
 

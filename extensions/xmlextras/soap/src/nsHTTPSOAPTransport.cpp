@@ -54,6 +54,7 @@
 #include "nsISOAPCallCompletion.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMSerializer.h"
+#include "nsIWebScriptsAccessService.h"
 #include "nsMemory.h"
 
 nsHTTPSOAPTransport::nsHTTPSOAPTransport()
@@ -102,24 +103,50 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
   // Create a new URI
   nsCOMPtr<nsIURI> uri;
   rc = NS_NewURI(getter_AddRefs(uri), aURI, nsnull);
-  if (NS_FAILED(rc)) return rc;
-
-  // Get security manager, check to see if we're allowed to call this URI.
-  nsCOMPtr<nsIScriptSecurityManager> secMan = 
-           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rc);
   if (NS_FAILED(rc)) 
     return rc;
+
+  nsCOMPtr<nsIWebScriptsAccessService> wsa_service = 
+      do_GetService(NS_WEBSCRIPTSACCESSSERVICE_CONTRACTID, &rc);
+  if (NS_FAILED(rc)) 
+    return rc;
+ 
   PRBool safe = PR_FALSE;
   rc = aCall->GetVerifySourceHeader(&safe);
   if (NS_FAILED(rc)) 
     return rc;
+
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  PRBool accessGranted;
   if (!safe) {
-    if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "SOAPCall", "invoke")))
-      return SOAP_EXCEPTION(NS_ERROR_FAILURE,"SOAP_INVOKE_DISABLED", "SOAPCall.invoke not enabled by client");
+    rc = wsa_service->CanAccess(uri, NS_LITERAL_STRING("soap"), &accessGranted);
+    if (NS_FAILED(rc))
+      return rc;
+    if (!accessGranted) {
+      // Get security manager, check to see if we're allowed to call this URI.
+      secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rc);
+      if (NS_FAILED(rc)) 
+        return rc;
+      if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "SOAPCall", "invoke")))
+        return SOAP_EXCEPTION(NS_ERROR_FAILURE,
+                              "SOAP_INVOKE_DISABLED", 
+                              "SOAPCall.invoke not enabled by client");
+    }
   }
   else {
-    if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "SOAPCall", "invokeVerifySourceHeader")))
-      return SOAP_EXCEPTION(NS_ERROR_FAILURE,"SOAP_INVOKE_VERIFY_DISABLED", "SOAPCall.invokeVerifySourceHeader not enabled by client");
+    // Get security manager, check to see if we're allowed to call this URI.
+    secMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rc);
+    if (NS_FAILED(rc))
+      return rc;
+    rc = wsa_service->CanAccess(uri, NS_LITERAL_STRING("soapv"), &accessGranted);
+    if (NS_FAILED(rc))
+      return rc;
+    if (!accessGranted) {
+      if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "SOAPCall", "invokeVerifySourceHeader")))
+        return SOAP_EXCEPTION(NS_ERROR_FAILURE,
+                              "SOAP_INVOKE_VERIFY_DISABLED", 
+                              "SOAPCall.invokeVerifySourceHeader not enabled by client");
+    }
 
     nsAutoString sourceURI;
 
@@ -130,14 +157,18 @@ static nsresult GetTransportURI(nsISOAPCall * aCall, nsAString & aURI)
       if (NS_FAILED(rc)) 
         return rc;
       if (!principal) {
-        return SOAP_EXCEPTION(NS_ERROR_FAILURE,"SOAP_INVOKE_VERIFY_PRINCIPAL", "Source-verified message cannot be sent without principal.");
+        return SOAP_EXCEPTION(NS_ERROR_FAILURE,
+                              "SOAP_INVOKE_VERIFY_PRINCIPAL", 
+                              "Source-verified message cannot be sent without principal.");
       }
       nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal,&rc);
       if (NS_FAILED(rc)) 
         return rc;
   
       if (!codebase) {
-        return SOAP_EXCEPTION(NS_ERROR_FAILURE,"SOAP_INVOKE_VERIFY_CODEBASE", "Source-verified message cannot be sent without codebase.");
+        return SOAP_EXCEPTION(NS_ERROR_FAILURE,
+                              "SOAP_INVOKE_VERIFY_CODEBASE", 
+                              "Source-verified message cannot be sent without codebase.");
       }
   
       char* str;

@@ -68,8 +68,9 @@
 #include "nsWSDLLoader.h"
 #include "nsWSDLPrivate.h"
 #include "wspprivate.h"
-
 #include "iixprivate.h"
+
+#include "nsWebScriptsAccess.h"
 
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
@@ -81,6 +82,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLHttpRequest)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMParser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGenericInterfaceInfoSet)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableInterfaceInfo)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebScriptsAccess)
 
 NS_DECL_DOM_CLASSINFO(XMLSerializer)
 NS_DECL_DOM_CLASSINFO(XMLHttpRequest)
@@ -181,6 +183,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSPInterfaceInfoService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(WSPFactory)
 NS_DECL_CLASSINFO(WSPFactory)
 
+NS_DECL_CLASSINFO(nsWebScriptsAccess)
+
 // {79998DE9-1E34-45e0-A587-F9CCC8DB00DD}
 #define NS_WSP_INTERFACE_INFO_SERVICE_CID           \
  {0x79998de9, 0x1e34, 0x45e0,                       \
@@ -253,7 +257,6 @@ NS_IMPL_RELEASE(nsXMLExtras)
 NS_INTERFACE_MAP_BEGIN(nsXMLExtras)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLExtras)
 
@@ -642,6 +645,11 @@ static const nsModuleComponentInfo components[] = {
     NS_SCRIPTABLE_INTERFACE_INFO_CID, 
     NS_SCRIPTABLE_INTERFACE_INFO_CONTRACTID, 
     nsScriptableInterfaceInfoConstructor
+  },
+  { "WebScriptsAccess",
+    NS_WEBSCRIPTSACCESSSERVICE_CID,
+    NS_WEBSCRIPTSACCESSSERVICE_CONTRACTID,
+    nsWebScriptsAccessConstructor
   }
 };
 
