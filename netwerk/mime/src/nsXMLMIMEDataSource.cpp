@@ -163,7 +163,7 @@ nsXMLMIMEDataSource::Add( nsIMIMEInfo* aMapper )
     if (NS_FAILED(rv)) return rv;
 
     // Next add the new root MIME mapping.
-    nsCStringKey key(mimeType);
+    nsCStringKey key(mimeType.get());
     nsMIMEInfoImpl* oldInfo = (nsMIMEInfoImpl*)mInfoObjects->Put(&key, aMapper);
     NS_ASSERTION(!oldInfo, "we just removed the entry, we shouldn't have one");
     NS_ADDREF(aMapper);
