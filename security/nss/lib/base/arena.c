@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: arena.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:49:48 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: arena.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:23:13 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -948,7 +948,7 @@ nss_ZFreeIf
   if( (NSSArena *)NULL == h->arena ) {
     /* Heap */
     (void)nsslibc_memset(pointer, 0, h->size);
-    PR_Free(pointer);
+    PR_Free(h);
     return PR_SUCCESS;
   } else {
     /* Arena */
