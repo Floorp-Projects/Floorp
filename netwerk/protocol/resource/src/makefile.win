@@ -30,7 +30,7 @@ LLIBS= $(LLIBS)                 \
 
 CPP_OBJS=                                          \
 	.\$(OBJDIR)\nsResourceProtocolHandler.obj  \
-	.\$(OBJDIR)\nsResourceProtocolFactory.obj  \
+	.\$(OBJDIR)\nsResourceProtocolModule.obj  \
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	

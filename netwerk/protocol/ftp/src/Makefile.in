@@ -31,7 +31,7 @@ CPPSRCS		= \
 		nsFTPChannel.cpp \
 		nsFtpStreamListenerEvent.cpp \
 		nsFtpConnectionThread.cpp \
-		nsFtpFactory.cpp \
+		nsFtpModule.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

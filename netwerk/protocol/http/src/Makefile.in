@@ -31,6 +31,7 @@ REQUIRES	= xpcom necko raptor
 CPPSRCS		= \
 		nsHTTPHandler.cpp \
 		nsHTTPHandlerFactory.cpp \
+		nsHTTPHandlerModule.cpp \
 		nsHTTPChannel.cpp \
 		nsHTTPRequest.cpp \
 		nsHTTPResponseListener.cpp \

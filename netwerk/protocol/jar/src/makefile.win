@@ -30,7 +30,7 @@ LLIBS= $(LLIBS)                 \
 
 CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsJARProtocolHandler.obj \
-	.\$(OBJDIR)\nsJARProtocolFactory.obj \
+	.\$(OBJDIR)\nsJARProtocolModule.obj  \
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	

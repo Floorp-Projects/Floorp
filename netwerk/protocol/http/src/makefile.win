@@ -42,18 +42,19 @@ EXPORTS= 	\
 	nsHTTPCID.h	\
 	$(NULL)
 
-CPP_OBJS=                                      \
-	.\$(OBJDIR)\nsHTTPHandler.obj          \
-	.\$(OBJDIR)\nsHTTPHandlerFactory.obj   \
-	.\$(OBJDIR)\nsHTTPChannel.obj          \
-	.\$(OBJDIR)\nsHTTPRequest.obj          \
-	.\$(OBJDIR)\nsHTTPResponseListener.obj \
-	.\$(OBJDIR)\nsHTTPResponse.obj         \
-	.\$(OBJDIR)\nsHTTPHeaderArray.obj      \
-    .\$(OBJDIR)\nsHTTPAtoms.obj            \
-	.\$(OBJDIR)\nsHTTPEncodeStream.obj     \
-	.\$(OBJDIR)\nsBasicAuth.obj     	   \
-	.\$(OBJDIR)\nsAuth.obj          	   \
+CPP_OBJS=		\
+	.\$(OBJDIR)\nsHTTPHandler.obj		\
+	.\$(OBJDIR)\nsHTTPHandlerFactory.obj	\
+	.\$(OBJDIR)\nsHTTPHandlerModule.obj	\
+	.\$(OBJDIR)\nsHTTPChannel.obj		\
+	.\$(OBJDIR)\nsHTTPRequest.obj		\
+	.\$(OBJDIR)\nsHTTPResponseListener.obj	\
+	.\$(OBJDIR)\nsHTTPResponse.obj		\
+	.\$(OBJDIR)\nsHTTPHeaderArray.obj	\
+	.\$(OBJDIR)\nsHTTPAtoms.obj		\
+	.\$(OBJDIR)\nsHTTPEncodeStream.obj	\
+	.\$(OBJDIR)\nsBasicAuth.obj		\
+	.\$(OBJDIR)\nsAuth.obj          	\
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	

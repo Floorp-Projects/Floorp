@@ -32,7 +32,7 @@ LLIBS= $(LLIBS)                 \
 CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsFileChannel.obj          \
 	.\$(OBJDIR)\nsFileProtocolHandler.obj  \
-	.\$(OBJDIR)\nsFileProtocolFactory.obj  \
+	.\$(OBJDIR)\nsFileProtocolModule.obj  \
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	

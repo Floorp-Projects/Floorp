@@ -29,7 +29,7 @@ IS_COMPONENT	= 1
 CPPSRCS		= \
 		nsDataHandler.cpp \
 		nsDataChannel.cpp \
-		nsDataFactory.cpp \
+		nsDataModule.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

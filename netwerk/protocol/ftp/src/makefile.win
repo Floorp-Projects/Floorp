@@ -28,7 +28,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsFTPChannel.obj              \
         .\$(OBJDIR)\nsFtpStreamListenerEvent.obj  \
         .\$(OBJDIR)\nsFtpConnectionThread.obj	  \
-        .\$(OBJDIR)\nsFtpFactory.obj              \
+        .\$(OBJDIR)\nsFtpModule.obj               \
         $(NULL)
 
 LLIBS=                                \

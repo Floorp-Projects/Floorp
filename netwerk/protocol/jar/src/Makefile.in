@@ -30,7 +30,7 @@ REQUIRES	= xpcom necko
 
 CPPSRCS		= \
 		nsJARProtocolHandler.cpp \
-		nsJARProtocolFactory.cpp \
+		nsJARProtocolModule.cpp  \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

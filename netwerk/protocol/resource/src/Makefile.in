@@ -30,7 +30,7 @@ REQUIRES	= xpcom necko
 
 CPPSRCS		= \
 		nsResourceProtocolHandler.cpp \
-		nsResourceProtocolFactory.cpp \
+		nsResourceProtocolModule.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
