@@ -93,9 +93,12 @@ $fileUninstall    = $ENV{WIZ_fileUninstall};
 $userAgentShort   = ParseUserAgentShort($userAgent);
 
 $inDomain;
+$inRedirDomain;
 $inServerPath;
+$inRedirServerPath;
 
-($inDomain, $inServerPath) = ParseDomainAndPath($inUrl);
+($inDomain,      $inServerPath)      = ParseDomainAndPath($inUrl);
+($inRedirDomain, $inRedirServerPath) = ParseDomainAndPath($inRedirIniUrl);
 
 # Get the name of the file replacing the .it extension with a .ini extension
 @inItFileSplit    = split(/\./,$inItFile);
@@ -180,6 +183,10 @@ while($line = <fpInIt>)
     $line =~ s/\$Domain\$/$inDomain/gi;
     $line =~ s/\$ServerPath\$/$inServerPath/gi;
     $line =~ s/\$RedirIniUrl\$/$inRedirIniUrl/gi;
+    $line =~ s/\$ArchiveServerPath\$/$inServerPath/gi;
+    $line =~ s/\$ArchiveUrl\$/$inUrl/gi;
+    $line =~ s/\$RedirectServerPath\$/$inRedirServerPath/gi;
+    $line =~ s/\$RedirectUrl\$/$inRedirUrl/gi;
     $line =~ s/\$UserAgent\$/$userAgent/gi;
     $line =~ s/\$UserAgentShort\$/$userAgentShort/gi;
     $line =~ s/\$CompanyName\$/$nameCompany/gi;
