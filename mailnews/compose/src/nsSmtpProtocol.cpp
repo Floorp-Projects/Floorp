@@ -1010,7 +1010,7 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 	if (filePath && *filePath)
 	{
 		nsInputFileStream * fileStream = new nsInputFileStream(nsFileSpec(*filePath), PR_RDONLY, 00700);
-		if (fileStream)
+		if (fileStream && fileStream->is_open())
 		{
 			PRInt32 amtInBuffer = 0; 
 			PRBool lastLineWasComplete = PR_TRUE;
