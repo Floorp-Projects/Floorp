@@ -114,7 +114,7 @@ NS_METHOD
 nsCLiveconnect::GetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
 {
-    if(jEnv == NULL || obj == NULL)
+    if(jEnv == NULL || obj == 0)
     {
        return NS_ERROR_FAILURE;
     }
@@ -169,7 +169,7 @@ NS_METHOD
 nsCLiveconnect::GetSlot(JNIEnv *jEnv, jsobject obj, jint slot, void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext,  jobject *pjobj)
 {
-    if(jEnv == NULL || obj == NULL)
+    if(jEnv == NULL || obj == 0)
     {
        return NS_ERROR_FAILURE;
     }
@@ -218,7 +218,7 @@ NS_METHOD
 nsCLiveconnect::SetMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobject java_obj, void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext)
 {
-    if(jEnv == NULL || obj == NULL)
+    if(jEnv == NULL || obj == 0)
     {
        return NS_ERROR_FAILURE;
     }
@@ -264,7 +264,7 @@ NS_METHOD
 nsCLiveconnect::SetSlot(JNIEnv *jEnv, jsobject obj, jint slot, jobject java_obj,  void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext)
 {
-    if(jEnv == NULL || obj == NULL)
+    if(jEnv == NULL || obj == 0)
     {
        return NS_ERROR_FAILURE;
     }
@@ -301,7 +301,7 @@ NS_METHOD
 nsCLiveconnect::RemoveMember(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length,  void* principalsArray[], 
                              int numPrincipals, void *pNSISecurityContext)
 {
-    if(jEnv == NULL || obj == NULL)
+    if(jEnv == NULL || obj == 0)
     {
        return NS_ERROR_FAILURE;
     }
@@ -342,7 +342,7 @@ NS_METHOD
 nsCLiveconnect::Call(JNIEnv *jEnv, jsobject obj, const jchar *name, jsize length, jobjectArray java_args, void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
 {
-    if(jEnv == NULL || obj == NULL)
+    if(jEnv == NULL || obj == 0)
     {
        return NS_ERROR_FAILURE;
     }
@@ -422,7 +422,7 @@ NS_METHOD
 nsCLiveconnect::Eval(JNIEnv *jEnv, jsobject obj, const jchar *script, jsize length, void* principalsArray[], 
                      int numPrincipals, void *pNSISecurityContext, jobject *pjobj)
 {
-    if(jEnv == NULL || obj == NULL)
+    if(jEnv == NULL || obj == 0)
     {
        return NS_ERROR_FAILURE;
     }
@@ -553,7 +553,7 @@ done:
 NS_METHOD	
 nsCLiveconnect::FinalizeJSObject(JNIEnv *jEnv, jsobject obj)
 {
-    if(jEnv == NULL || obj == NULL)
+    if(jEnv == NULL || obj == 0)
     {
        return NS_ERROR_FAILURE;
     }
@@ -571,7 +571,7 @@ nsCLiveconnect::FinalizeJSObject(JNIEnv *jEnv, jsobject obj)
 NS_METHOD	
 nsCLiveconnect::ToString(JNIEnv *jEnv, jsobject obj, jstring *pjstring)
 {
-    if(jEnv == NULL || obj == NULL)
+    if(jEnv == NULL || obj == 0)
     {
        return NS_ERROR_FAILURE;
     }

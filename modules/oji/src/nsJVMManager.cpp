@@ -563,7 +563,7 @@ nsJVMManager::StartupJVM(void)
         return fStatus;
     }
 
-    if (pluginHost == NULL) {
+    if (!pluginHost) {
         fStatus = nsJVMStatus_Failed;
         return fStatus;
     }
