@@ -3971,8 +3971,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
         {
           mWidget->Resize(mPluginWindow.width, mPluginWindow.height, PR_FALSE);
 
-          mPluginWindow.window = GetPluginPort();
+          
+          // mPluginWindow.type is used in |GetPluginPort| so it must be initilized first
           mPluginWindow.type = nsPluginWindowType_Window;
+          mPluginWindow.window = GetPluginPort();
 
 #if defined(XP_MAC)
           // Is this needed in the windowless case ???
