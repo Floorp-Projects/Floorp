@@ -462,7 +462,8 @@ main()
 
 			cout << "### Test 23: is |QueryInterface| called when assigning in a smart-pointer of a different type?" << endl;
 
-			if ( COM_auto_ptr<IFoo> fooP( barP ) )
+			COM_auto_ptr<IFoo> fooP( barP );
+			if ( fooP )
 				cout << "an IBar* is an IFoo*" << endl;
 		}
     cout << "### End Test 23" << endl;
