@@ -2605,12 +2605,40 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       default: {
         // Handle both flavors of mouse wheel events.
         if ( msg == WM_MOUSEWHEEL || msg == uMSH_MOUSEWHEEL ) {
-            // Get mouse wheel metrics (but only once).
+			// Get mouse wheel metrics (but only once).
             if (firstTime) {
                 firstTime = FALSE;
-                SystemParametersInfo (104, 0, &ulScrollLines, 0) ;
-    
-                // ulScrollLines usually equals 3 or 0 (for no scrolling)
+
+                // This needs to be done differently for Win95 than Win98/NT
+                // Taken from sample code in MS Intellimouse SDK
+                // (http://www.microsoft.com/Mouse/intellimouse/sdk/sdkmessaging.htm)
+
+                OSVERSIONINFO osversion;
+                memset(&osversion, 0, sizeof(OSVERSIONINFO));
+                osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+                GetVersionEx(&osversion);
+
+                if ((osversion.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) &&
+                    (osversion.dwMajorVersion == 4) &&
+                    (osversion.dwMinorVersion == 0))
+                {
+                    // This is the Windows 95 case
+                    HWND hdlMsWheel = FindWindow(MSH_WHEELMODULE_CLASS,
+                                                    MSH_WHEELMODULE_TITLE);
+                    if (hdlMsWheel) {
+                        UINT uiMsh_MsgScrollLines = RegisterWindowMessage(MSH_SCROLL_LINES);
+                        if (uiMsh_MsgScrollLines) {
+                            ulScrollLines = (int) SendMessage(hdlMsWheel,
+                                                uiMsh_MsgScrollLines, 0, 0);
+                        }
+                    }
+                }
+                else if (osversion.dwMajorVersion >= 4) {
+                    // This is the Win98/NT4/Win2K case
+                    SystemParametersInfo (104, 0, &ulScrollLines, 0);
+                }
+
+				// ulScrollLines usually equals 3 or 0 (for no scrolling)
                 // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
     
                 if (ulScrollLines)
@@ -2618,6 +2646,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                 else
                     iDeltaPerLine = 0 ;
             }
+
             if (iDeltaPerLine == 0)
                 return 0;
     
@@ -2634,17 +2663,22 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             // is another app's window or no window under the
             // pointer.
 
-            if (!destWnd)  // No window is under the pointer
+            if (!destWnd) {
+                // No window is under the pointer
                 break;
+            }
 
             LONG proc = ::GetWindowLong(destWnd, GWL_WNDPROC);
-            if (proc != (LONG)&nsWindow::WindowProc)  // Some other app
+            if (proc != (LONG)&nsWindow::WindowProc)  {
+				// Some other app
                 break;
+			}
 
             else if (destWnd != mWnd) {
                 nsWindow* destWindow = (nsWindow*) ::GetWindowLong(destWnd, GWL_USERDATA);
-                if (destWindow)
+                if (destWindow) {
                     return destWindow->ProcessMessage(msg, wParam, lParam, aRetValue);
+                }
                 #ifdef DEBUG
                 else
                     printf("WARNING: couldn't get child window for MW event\n");
@@ -2662,8 +2696,9 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             scrollEvent.isMeta    = PR_FALSE;
             scrollEvent.isAlt     = IS_VK_DOWN(NS_VK_ALT);
             InitEvent(scrollEvent, NS_MOUSE_SCROLL);
-            if (nsnull != mEventCallback)
+            if (nsnull != mEventCallback) {
                 result = DispatchWindowEvent(&scrollEvent);
+            }
             NS_RELEASE(scrollEvent.widget);
         } // WM_MOUSEWHEEL || uMSH_MOUSEWHEEL
       } break;
