@@ -146,7 +146,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #nav-bar-buttons
   {
-    behavior              : url("chrome://navigator/skin/navigatorBindings.xml#navigation-buttons");
+ /*   behavior              : url("chrome://navigator/skin/navigatorBindings.xml#navigation-buttons");*/
     vertical-align        : middle;
   }  
   
