@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: API.xs,v 1.8 1998/08/03 00:26:36 clayton Exp $
+ * $Id: API.xs,v 1.9 1998/08/03 02:35:23 clayton Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
