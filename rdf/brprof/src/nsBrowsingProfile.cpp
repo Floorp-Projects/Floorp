@@ -33,6 +33,10 @@
 #include "prprf.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
+static NS_DEFINE_IID(kIRDFServiceIID, NS_IRDFSERVICE_IID);
+static NS_DEFINE_IID(kIRDFObserverIID, NS_IRDFOBSERVER_IID);
+static NS_DEFINE_IID(kIRDFIntIID, NS_IRDFINT_IID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Page);
@@ -118,6 +122,7 @@ nsIRDFResource* nsBrowsingProfile::gCategoryIDProperty = nsnull;
 
 nsBrowsingProfile::nsBrowsingProfile()
 {
+	NS_INIT_REFCNT();
     nsCRT::zero(&mVector, sizeof(nsBrowsingProfileVector));
     mVector.mHeader.mInfo.mCheck = nsBrowsingProfile_Check;
     mVector.mHeader.mInfo.mMajorVersion = nsBrowsingProfile_CurrentMajorVersion;
@@ -137,7 +142,7 @@ nsBrowsingProfile::Init(const char* userProfileName)
         NS_ASSERTION(gPageProperty == nsnull, "out of sync");
 
         rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          nsIRDFService::GetIID(),
+                                          kIRDFServiceIID,
                                           (nsISupports**)&gRDFService);
         if (NS_FAILED(rv)) return rv;
 
@@ -200,7 +205,7 @@ nsBrowsingProfile::QueryInterface(REFNSIID aIID, void** aResult)
         NS_ADDREF(this);
         return NS_OK;
     }
-    if (aIID.Equals(nsIRDFObserver::GetIID())) {
+    if (aIID.Equals(kIRDFObserverIID)) {
         *aResult = NS_STATIC_CAST(nsIRDFObserver*, this);
         NS_ADDREF(this);
         return NS_OK;
@@ -355,7 +360,7 @@ nsBrowsingProfile::GetCategoryID(nsIRDFResource* category, PRUint16 *result)
         rv = category->GetValue(&catURI);
         if (NS_SUCCEEDED(rv)) {
             nsIRDFInt* catIDInt;
-            rv = catID->QueryInterface(nsIRDFInt::GetIID(), (void**)&catIDInt);
+            rv = catID->QueryInterface(kIRDFIntIID, (void**)&catIDInt);
             if (NS_SUCCEEDED(rv)) {
                 int32 id;
                 rv = catIDInt->GetValue(&id);
@@ -431,7 +436,7 @@ nsBrowsingProfile::OnAssert(nsIRDFResource* subject,
     nsresult rv = NS_OK;
     if (peq(predicate, gPageProperty)) {
         nsIRDFResource* objRes;
-        rv = object->QueryInterface(nsIRDFResource::GetIID(), (void**)&objRes);
+        rv = object->QueryInterface(kIRDFResourceIID, (void**)&objRes);
         if (NS_FAILED(rv)) return rv;
         const char* url;
         rv = objRes->GetValue(&url);
@@ -465,6 +470,7 @@ NS_NewBrowsingProfile(const char* userProfileName,
     rv = profile->Init(userProfileName);
     if (NS_FAILED(rv)) {
         delete profile;
+		return rv;
     }
     NS_ADDREF(profile);
     *result = profile;
