@@ -60,7 +60,7 @@ interface nsIExtensionItem : nsISupports
   void init(in string aID, in string aVersion, in wstring aName, 
             in long aRow, in wstring aXPIURL, in long aType);
 
-  nsIVariant toObject();
+  readonly attribute wstring objectSource;
 };
 
 [scriptable, uuid(c3515b0f-99f4-453b-805e-1fdf5724d6d9)]
@@ -86,5 +86,11 @@ interface nsIExtensionManager : nsISupports
                         in unsigned short aUpdateType);
 
   readonly attribute nsIRDFDataSource datasource;
+};
+
+[scriptable, uuid(c0b7517f-0b3a-41a2-bde8-ba3ac8a5af47)]
+interface nsIExtensionItemUpdater : nsISupports
+{
+  void checkForUpdates();
 };
 

@@ -2,20 +2,24 @@
 
 <!ENTITY  mismatch.title                  "Incompatible Extensions">
 <!ENTITY  mismatch.intro1.label           "The following extensions are not compatible with the new version
-                                           of &brandShortName; you have just installed.">
+                                           of &brandShortName; you have just installed:">
 <!ENTITY  mismatch.intro2.label           "They have been disabled until compatible versions are 
                                            installed.">
 <!ENTITY  mismatch.intro3.label           "&brandShortName; can check for and install newer, compatible 
                                            versions of these extensions.">
 
 <!ENTITY  checking.title                  "Checking for Updates">
-<!ENTITY  checking.intro.label            "&brandShortName; is now checking for updates to your extensions...">
+<!ENTITY  checking.intro.label            "&brandShortName; is now checking for available updates...">
 
-<!ENTITY  updatesNotFound.title           "No Updates Found">
+<!ENTITY  noupdates.title                 "No Updates Found">
 
-<!ENTITY  updatesFound.title              "Updates Found">
+<!ENTITY  found.title                     "Updates Found">
+<!ENTITY  found.intro.label               "&brandShortName; found the following available updates:">
+<!ENTITY  found.instructions.label        "Choose the ones you want to install and click Install Now to install them.">
+
 
 <!ENTITY  installing.title                "Installing Updates">
 
 <!ENTITY  finished.title                  "Done">
 
+<!ENTITY  from.label                      "from: ">

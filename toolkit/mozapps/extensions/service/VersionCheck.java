@@ -70,6 +70,7 @@ public class VersionCheck
         e.setName(getProperty(row, "name"));
         e.setVersion(getProperty(row, "version"));
         e.setXpiURL(getProperty(row, "xpiurl"));
+        e.setIconURL(getProperty(row, "iconurl"));
         results.add(e);
       }
     }
@@ -94,6 +95,7 @@ public class VersionCheck
       e.setName(getProperty(row, "name"));
       e.setVersion(getProperty(row, "version"));
       e.setXpiURL(getProperty(row, "xpiurl"));
+      e.setIconURL(getProperty(row, "iconurl"));
     }
     return e;
   }

@@ -57,7 +57,7 @@
   <vbox flex="1" id="dialogContentBox">
     <description id="itemWarningIntro"/>
     
-    <vbox id="itemList" flex="1" style="height: 16em; overflow: auto;"/>
+    <vbox id="itemList" class="listbox" flex="1" style="height: 16em; overflow: auto;"/>
     
     <description>&warningText2.label;</description> 
     <description class="warning">&warningText3.label;</description> 

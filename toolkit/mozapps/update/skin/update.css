@@ -1,20 +1,9 @@
-#xpinstallIcon {
-  list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallIcon.png");
-}
-
-.listbox {
+#foundList {
   -moz-appearance: listbox;
-}
-
-#itemList {
   margin: 10px 4px 10px 4px;
 }
 
-#dialogContentBox {
-  padding: 5px;
-}
-
-installitem {
+updateitem {
   padding: 5px 0px 5px 5px;
   border-bottom: 1px dotted #C0C0C0;
   margin-bottom: 5px;
@@ -24,7 +13,7 @@ installitem {
   font-weight: bold;
 }
 
-.xpinstallItemIcon {
+.updateItemIcon {
   width: 32px;
   height: 32px;
   max-width: 32px !important;
@@ -32,31 +21,21 @@ installitem {
   margin-right: 5px;
 }
 
-.xpinstallItemName {
+.updateItemName {
   font-weight: bold;
 }
 
-.xpinstallItemSigned {
-  font-style: italic;
-}
-
-.xpinstallItemSigned[signed=false] {
-  color: #ED1C24;
-  font-style: normal;
-  font-weight: bold;
-}
-
-.xpinstallItemNameRow {
+.updateItemNameRow {
   padding-bottom: 3px;
 }
 
-.xpinstallItemURL {
+.updateItemURL {
   -moz-appearance: none;
   border: none;
   background-color: Window;
 }
 
-.xpinstallItemIcon {
+.updateItemIcon {
   list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
 }
 

@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE bindings SYSTEM "chrome://mozapps/locale/update/update.dtd">
+
+<bindings id="updateItemBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+          xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="updateItem">
+    <resources>
+      <stylesheet src="chrome://mozapps/skin/update/update.css"/>
+    </resources>
+    <content>
+      <xul:hbox flex="1">
+        <xul:vbox align="center" pack="center">
+          <xul:image class="installItemIcon" xbl:inherits="src=icon"/>
+        </xul:vbox>
+        <xul:vbox flex="1">
+          <xul:hbox class="updateItemNameRow" align="center">
+            <xul:label class="updateItemName" xbl:inherits="value=name" flex="1" crop="right"/>
+          </xul:hbox>
+          <xul:hbox class="updateItemDetailsRow" align="center">
+            <xul:label class="updateItemFromLabel">&from.label;</xul:label>
+            <xul:textbox class="updateItemURL" xbl:inherits="value=url" flex="1" readonly="true" crop="right"/>
+          </xul:hbox>
+        </xul:vbox> 
+      </xul:hbox>
+    </content>
+    <implementation>
+      <property name="name"   onset="this.setAttribute('name', val); return val;"
+                              onget="return this.getAttribute('name');"/>
+      <property name="url"    onset="this.setAttribute('url', val); return val;"
+                              onget="return this.getAttribute('url');"/>
+      <property name="icon"   onset="this.setAttribute('icon', val); return val;"
+                              onget="return this.getAttribute('icon');"/>
+    </implementation>
+  </binding>
+         
+</bindings>
+
