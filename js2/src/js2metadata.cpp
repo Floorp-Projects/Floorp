@@ -1808,6 +1808,8 @@ doUnary:
         meta->reportError(Exception::referenceError, "{0} is undefined", meta->engine->errorPos(), multiname->name);
     }
 
+    // Delete the named property in the current environment, return true if the property
+    // can't be found, or the result of the deleteProperty call if it was found.
     bool Environment::lexicalDelete(JS2Metadata *meta, Multiname *multiname, Phase phase)
     {
         LookupKind lookup(true, findThis(false));

@@ -44,6 +44,20 @@
         }
         break;
 
+    case eDotDelete:
+        {
+            LookupKind lookup(false, NULL);
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            b = pop();
+            bool result;
+            if (!meta->deleteProperty(b, mn, &lookup, RunPhase, &result))
+                push(JS2VAL_FALSE);
+            else
+                push(BOOLEAN_TO_JS2VAL(result));
+        }
+        break;
+
     // Write the top value to a multiname property in a base object, leave
     // the value on the stack top
     case eDotWrite:
@@ -80,6 +94,14 @@
 	}
         break;
 
+    case eLexicalDelete: 
+        {
+            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
+            pc += sizeof(short);
+            push(BOOLEAN_TO_JS2VAL(meta->env.lexicalDelete(meta, mn, phase)));
+	}
+        break;
+
     // Write the top value to the multiname in the environment, leave
     // the value on the stack top.
     case eLexicalWrite: 
@@ -113,6 +135,22 @@
             if (!meta->readProperty(b, &mn, &lookup, RunPhase, &a))
                 meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
             push(a);
+            indexVal = JS2VAL_VOID;
+        }
+        break;
+
+    case eBracketDelete:
+        {
+            LookupKind lookup(false, NULL);
+            indexVal = pop();
+            b = pop();
+            const String *indexStr = toString(indexVal);
+            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
+            bool result;
+            if (!meta->deleteProperty(b, &mn, &lookup, RunPhase, &result))
+                push(JS2VAL_FALSE);
+            else
+                push(BOOLEAN_TO_JS2VAL(result));
             indexVal = JS2VAL_VOID;
         }
         break;

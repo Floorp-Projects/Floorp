@@ -534,26 +534,17 @@ namespace MetaData {
         case eLexicalPreDec:
             return 1;       // push the new/old value
 
-        case eLexicalAssignOp:  // pop value, push result
-            return 0;
-
         case eDotPostInc:
         case eDotPostDec:
         case eDotPreInc:
         case eDotPreDec:
             return 0;       // pop the base, push the new/old value
 
-        case eDotAssignOp:  // pop base, pop value, push result
-            return -1;
-
         case eBracketPostInc:
         case eBracketPostDec:
         case eBracketPreInc:
         case eBracketPreDec:
             return -1;       // pop the base, pop the index, push the new/old value
-
-        case eBracketAssignOp:  // pop base, pop index, push result
-            return 0;
 
         case eBracketReadForRef:    // leave base and index, push value
             return 1;

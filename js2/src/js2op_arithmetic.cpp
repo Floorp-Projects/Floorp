@@ -189,9 +189,65 @@
 	        push(STRING_TO_JS2VAL(c));
 	    }
 	    else {
-                float64 anum = toFloat64(a);
-                float64 bnum = toFloat64(b);
-                pushNumber(anum + bnum);
+                a = toGeneralNumber(a);
+                b = toGeneralNumber(b);
+                if (JS2VAL_IS_LONG(a)) {
+                    int64 x = *JS2VAL_TO_LONG(a);
+                    if (JS2VAL_IS_LONG(b)) {
+                        int64 z;
+                        int64 y = *JS2VAL_TO_LONG(b);
+                        JSLL_ADD(z, x, y);
+                        pushLong(z);   
+                    }
+                    else {
+                        if (JS2VAL_IS_ULONG(b)) {
+                            uint64 z;
+                            uint64 y = *JS2VAL_TO_ULONG(b);
+                            JSLL_MUL(z, x, y);
+                            pushULong(z);   
+                        }
+                        else {
+                            int64 y = checkInteger(b);
+                            int64 z;
+                            JSLL_ADD(z, x, y);
+                            pushLong(z);   
+                        }
+                    }
+                }
+                else {
+                    if (JS2VAL_IS_ULONG(a)) {
+                        uint64 x = *JS2VAL_TO_ULONG(a);
+                        if (JS2VAL_IS_LONG(b)) {
+                            uint64 z;
+                            int64 y = *JS2VAL_TO_LONG(b);
+                            JSLL_ADD(z, x, y);
+                            pushULong(z);   
+                        }
+                        else {
+                            if (JS2VAL_IS_ULONG(b)) {
+                                uint64 z;
+                                uint64 y = *JS2VAL_TO_ULONG(b);
+                                JSLL_ADD(z, x, y);
+                                pushULong(z);   
+                            }
+                            else {
+                                uint64 y = checkInteger(b);
+                                uint64 z;
+                                JSLL_ADD(z, x, y);
+                                pushULong(z);   
+                            }
+                        }
+                    }
+                    else {
+                        float64 x = toFloat64(a);
+                        float64 y = toFloat64(b);
+                        float64 z = x + y;
+                        if (JS2VAL_IS_FLOAT(a) || JS2VAL_IS_FLOAT(b))
+                            pushFloat(z);
+                        else
+                            pushNumber(z);
+                    }
+                }
 	    } 
         }
         break;
@@ -200,9 +256,65 @@
         {
 	    b = pop();
 	    a = pop();
-            float64 anum = toFloat64(a);
-            float64 bnum = toFloat64(b);
-            pushNumber(anum - bnum);
+            a = toGeneralNumber(a);
+            b = toGeneralNumber(b);
+            if (JS2VAL_IS_LONG(a)) {
+                int64 x = *JS2VAL_TO_LONG(a);
+                if (JS2VAL_IS_LONG(b)) {
+                    int64 z;
+                    int64 y = *JS2VAL_TO_LONG(b);
+                    JSLL_SUB(z, x, y);
+                    pushLong(z);   
+                }
+                else {
+                    if (JS2VAL_IS_ULONG(b)) {
+                        uint64 z;
+                        uint64 y = *JS2VAL_TO_ULONG(b);
+                        JSLL_SUB(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        int64 y = checkInteger(b);
+                        int64 z;
+                        JSLL_SUB(z, x, y);
+                        pushLong(z);   
+                    }
+                }
+            }
+            else {
+                if (JS2VAL_IS_ULONG(a)) {
+                    uint64 x = *JS2VAL_TO_ULONG(a);
+                    if (JS2VAL_IS_LONG(b)) {
+                        uint64 z;
+                        int64 y = *JS2VAL_TO_LONG(b);
+                        JSLL_SUB(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        if (JS2VAL_IS_ULONG(b)) {
+                            uint64 z;
+                            uint64 y = *JS2VAL_TO_ULONG(b);
+                            JSLL_SUB(z, x, y);
+                            pushULong(z);   
+                        }
+                        else {
+                            uint64 y = checkInteger(b);
+                            uint64 z;
+                            JSLL_SUB(z, x, y);
+                            pushULong(z);   
+                        }
+                    }
+                }
+                else {
+                    float64 x = toFloat64(a);
+                    float64 y = toFloat64(b);
+                    float64 z = x - y;
+                    if (JS2VAL_IS_FLOAT(a) || JS2VAL_IS_FLOAT(b))
+                        pushFloat(z);
+                    else
+                        pushNumber(z);
+                }
+            }
         }
         break;
 
@@ -276,9 +388,65 @@
         {
 	    b = pop();
 	    a = pop();
-            float64 anum = toFloat64(a);
-            float64 bnum = toFloat64(b);
-            pushNumber(anum / bnum);
+            a = toGeneralNumber(a);
+            b = toGeneralNumber(b);
+            if (JS2VAL_IS_LONG(a)) {
+                int64 x = *JS2VAL_TO_LONG(a);
+                if (JS2VAL_IS_LONG(b)) {
+                    int64 z;
+                    int64 y = *JS2VAL_TO_LONG(b);
+                    JSLL_DIV(z, x, y);
+                    pushLong(z);   
+                }
+                else {
+                    if (JS2VAL_IS_ULONG(b)) {
+                        uint64 z;
+                        uint64 y = *JS2VAL_TO_ULONG(b);
+                        JSLL_DIV(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        int64 y = checkInteger(b);
+                        int64 z;
+                        JSLL_DIV(z, x, y);
+                        pushLong(z);   
+                    }
+                }
+            }
+            else {
+                if (JS2VAL_IS_ULONG(a)) {
+                    uint64 x = *JS2VAL_TO_ULONG(a);
+                    if (JS2VAL_IS_LONG(b)) {
+                        uint64 z;
+                        int64 y = *JS2VAL_TO_LONG(b);
+                        JSLL_DIV(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        if (JS2VAL_IS_ULONG(b)) {
+                            uint64 z;
+                            uint64 y = *JS2VAL_TO_ULONG(b);
+                            JSLL_DIV(z, x, y);
+                            pushULong(z);   
+                        }
+                        else {
+                            uint64 y = checkInteger(b);
+                            uint64 z;
+                            JSLL_DIV(z, x, y);
+                            pushULong(z);   
+                        }
+                    }
+                }
+                else {
+                    float64 x = toFloat64(a);
+                    float64 y = toFloat64(b);
+                    float64 z = x / y;
+                    if (JS2VAL_IS_FLOAT(a) || JS2VAL_IS_FLOAT(b))
+                        pushFloat(z);
+                    else
+                        pushNumber(z);
+                }
+            }
         }
         break;
 
@@ -286,15 +454,72 @@
         {
 	    b = pop();
 	    a = pop();
-            float64 anum = toFloat64(a);
-            float64 bnum = toFloat64(b);
+            a = toGeneralNumber(a);
+            b = toGeneralNumber(b);
+            if (JS2VAL_IS_LONG(a)) {
+                int64 x = *JS2VAL_TO_LONG(a);
+                if (JS2VAL_IS_LONG(b)) {
+                    int64 z;
+                    int64 y = *JS2VAL_TO_LONG(b);
+                    JSLL_MOD(z, x, y);
+                    pushLong(z);   
+                }
+                else {
+                    if (JS2VAL_IS_ULONG(b)) {
+                        uint64 z;
+                        uint64 y = *JS2VAL_TO_ULONG(b);
+                        JSLL_MOD(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        int64 y = checkInteger(b);
+                        int64 z;
+                        JSLL_MOD(z, x, y);
+                        pushLong(z);   
+                    }
+                }
+            }
+            else {
+                if (JS2VAL_IS_ULONG(a)) {
+                    uint64 x = *JS2VAL_TO_ULONG(a);
+                    if (JS2VAL_IS_LONG(b)) {
+                        uint64 z;
+                        int64 y = *JS2VAL_TO_LONG(b);
+                        JSLL_MOD(z, x, y);
+                        pushULong(z);   
+                    }
+                    else {
+                        if (JS2VAL_IS_ULONG(b)) {
+                            uint64 z;
+                            uint64 y = *JS2VAL_TO_ULONG(b);
+                            JSLL_MOD(z, x, y);
+                            pushULong(z);   
+                        }
+                        else {
+                            uint64 y = checkInteger(b);
+                            uint64 z;
+                            JSLL_MOD(z, x, y);
+                            pushULong(z);   
+                        }
+                    }
+                }
+                else {
+                    float64 x = toFloat64(a);
+                    float64 y = toFloat64(b);
+                    float64 z;
 #ifdef XP_PC
     /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-            if (JSDOUBLE_IS_FINITE(anum) && JSDOUBLE_IS_INFINITE(bnum))
-                pushNumber(anum);
-            else
+                    if (JSDOUBLE_IS_FINITE(x) && JSDOUBLE_IS_INFINITE(y))
+                         z = x;
+                    else
 #endif
-            pushNumber(fd::fmod(anum, bnum));
+                        z = fd::fmod(x, y);
+                    if (JS2VAL_IS_FLOAT(a) || JS2VAL_IS_FLOAT(b))
+                        pushFloat(z);
+                    else
+                        pushNumber(z);
+                }
+            }
         }
         break;
 
@@ -448,121 +673,30 @@
         }
         break;
 
-    case eLexicalAssignOp:
-        {
-            op = (JS2Op)*pc++;
-            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
-            pc += sizeof(short);
-            a = meta->env.lexicalRead(meta, mn, phase);
-	    b = pop();
-            switch (op) {
-            case eAdd:
-                {
-	            a = toPrimitive(a);
-	            b = toPrimitive(b);
-	            if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
-	                const String *astr = toString(a);
-	                const String *bstr = toString(b);
-                        String *c = allocStringPtr(astr);
-                        *c += *bstr;
-	                a = STRING_TO_JS2VAL(c);
-	            }
-	            else {
-                        float64 anum = toFloat64(a);
-                        float64 bnum = toFloat64(b);
-                        a = allocNumber(anum + bnum);
-	            }
-                }
-                break;
-            case eSubtract:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-                    a = allocNumber(anum - bnum);
-                }
-                break;
-            case eMultiply:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-                    a = allocNumber(anum * bnum);
-                }
-                break;
-
-            case eDivide:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-                    a = allocNumber(anum / bnum);
-                }
-                break;
-
-            case eModulo:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-#ifdef XP_PC
-            /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-                    if (JSDOUBLE_IS_FINITE(anum) && JSDOUBLE_IS_INFINITE(bnum))
-                        a = allocNumber(anum);
-                    else
-#endif
-                    a = allocNumber(fd::fmod(anum, bnum));
-                }
-                break;
-
-            case eLeftShift:
-                {
-                    int32 count = toInteger(b) & 0x1F;
-                    a = allocNumber(toInteger(a) << count);
-                }
-                break;
-            case eRightShift:
-                {
-                    int32 count = toInteger(b) & 0x1F;
-                    a = allocNumber(toInteger(a) >> count);
-                }
-                break;
-            case eLogicalRightShift:
-                {
-                    int32 count = toInteger(b) & 0x1F;
-                    a = allocNumber(toUInt32(toInteger(a)) >> count);
-                }
-                break;
-            case eBitwiseAnd:
-                {
-                    a = allocNumber(toInteger(a) & toInteger(b));
-                }
-                break;
-            case eBitwiseXor:
-                {
-                    a = allocNumber(toInteger(a) ^ toInteger(b));
-                }
-                break;
-            case eBitwiseOr:
-                {
-                    a = allocNumber(toInteger(a) | toInteger(b));
-                }
-                break;
-            case eLogicalXor:
-                {
-                    a = allocNumber(toBoolean(a) ^ toBoolean(b));
-                }
-                break;
-            }
-            meta->env.lexicalWrite(meta, mn, a, true, phase);
-            push(a);
-        }
-        break;
-
     case eLexicalPostInc:
         {
             Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
             pc += sizeof(short);
             a = meta->env.lexicalRead(meta, mn, phase);
-            float64 num = toFloat64(a);
-            meta->env.lexicalWrite(meta, mn, allocNumber(num + 1.0), true, phase);
-            pushNumber(num);
+            if (JS2VAL_IS_LONG(a)) {
+                int64 i = *JS2VAL_TO_LONG(a);
+                JSLL_ADD(i, i, 1);
+                meta->env.lexicalWrite(meta, mn, allocLong(i), true, phase);
+                push(a);
+            }
+            else {
+                if (JS2VAL_IS_ULONG(a)) {
+                    uint64 i = *JS2VAL_TO_ULONG(a);
+                    JSLL_ADD(i, i, 1);
+                    meta->env.lexicalWrite(meta, mn, allocULong(i), true, phase);
+                    push(a);
+                }
+                else {
+                    float64 num = toFloat64(a);
+                    meta->env.lexicalWrite(meta, mn, allocNumber(num + 1.0), true, phase);
+                    pushNumber(num);
+                }
+            }
         }
         break;
     case eLexicalPostDec:
@@ -593,117 +727,6 @@
             float64 num = toFloat64(a);
             a = pushNumber(num - 1.0);
             meta->env.lexicalWrite(meta, mn, a, true, phase);
-        }
-        break;
-
-    case eDotAssignOp:
-        {
-            op = (JS2Op)*pc++;
-            LookupKind lookup(false, NULL);
-            Multiname *mn = bCon->mMultinameList[BytecodeContainer::getShort(pc)];
-            pc += sizeof(short);
-	    b = pop();
-            baseVal = pop();
-            if (!meta->readProperty(baseVal, mn, &lookup, RunPhase, &a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn->name);
-            switch (op) {
-            case eAdd:
-                {
-	            a = toPrimitive(a);
-	            b = toPrimitive(b);
-	            if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
-	                const String *astr = toString(a);
-	                const String *bstr = toString(b);
-                        String *c = allocStringPtr(astr);
-                        *c += *bstr;
-	                a = STRING_TO_JS2VAL(c);
-	            }
-	            else {
-                        float64 anum = toFloat64(a);
-                        float64 bnum = toFloat64(b);
-                        a = allocNumber(anum + bnum);
-	            }
-                }
-                break;
-            case eSubtract:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-                    a = allocNumber(anum - bnum);
-                }
-                break;
-            case eMultiply:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-                    a = allocNumber(anum * bnum);
-                }
-                break;
-
-            case eDivide:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-                    a = allocNumber(anum / bnum);
-                }
-                break;
-
-            case eModulo:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-#ifdef XP_PC
-            /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-                    if (JSDOUBLE_IS_FINITE(anum) && JSDOUBLE_IS_INFINITE(bnum))
-                        a = allocNumber(anum);
-                    else
-#endif
-                    a = allocNumber(fd::fmod(anum, bnum));
-                }
-                break;
-
-            case eLeftShift:
-                {
-                    int32 count = toInteger(b) & 0x1F;
-                    a = allocNumber(toInteger(a) << count);
-                }
-                break;
-            case eRightShift:
-                {
-                    int32 count = toInteger(b) & 0x1F;
-                    a = allocNumber(toInteger(a) >> count);
-                }
-                break;
-            case eLogicalRightShift:
-                {
-                    int32 count = toInteger(b) & 0x1F;
-                    a = allocNumber(toUInt32(toInteger(a)) >> count);
-                }
-                break;
-            case eBitwiseAnd:
-                {
-                    a = allocNumber(toInteger(a) & toInteger(b));
-                }
-                break;
-            case eBitwiseXor:
-                {
-                    a = allocNumber(toInteger(a) ^ toInteger(b));
-                }
-                break;
-            case eBitwiseOr:
-                {
-                    a = allocNumber(toInteger(a) | toInteger(b));
-                }
-                break;
-            case eLogicalXor:
-                {
-                    a = allocNumber(toBoolean(a) ^ toBoolean(b));
-                }
-                break;
-            }
-            meta->writeProperty(baseVal, mn, &lookup, true, a, RunPhase);
-            push(a);
-            baseVal = JS2VAL_VOID;
         }
         break;
 
@@ -764,120 +787,7 @@
         }
         break;
 
-    case eBracketAssignOp:
-        {
-            op = (JS2Op)*pc++;
-            LookupKind lookup(false, NULL);
-	    b = pop();
-            indexVal = pop();
-            baseVal = pop();
-            const String *indexStr = toString(indexVal);
-            Multiname mn(&meta->world.identifiers[*indexStr], meta->publicNamespace);
-            if (!meta->readProperty(baseVal, &mn, &lookup, RunPhase, &a))
-                meta->reportError(Exception::propertyAccessError, "No property named {0}", errorPos(), mn.name);
-            switch (op) {
-            case eAdd:
-                {
-	            a = toPrimitive(a);
-	            b = toPrimitive(b);
-	            if (JS2VAL_IS_STRING(a) || JS2VAL_IS_STRING(b)) {
-	                const String *astr = toString(a);
-	                const String *bstr = toString(b);
-                        String *c = allocStringPtr(astr);
-                        *c += *bstr;
-	                a = STRING_TO_JS2VAL(c);
-	            }
-	            else {
-                        float64 anum = toFloat64(a);
-                        float64 bnum = toFloat64(b);
-                        a = allocNumber(anum + bnum);
-	            }
-                }
-                break;
-            case eSubtract:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-                    a = allocNumber(anum - bnum);
-                }
-                break;
-            case eMultiply:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-                    a = allocNumber(anum * bnum);
-                }
-                break;
-
-            case eDivide:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-                    a = allocNumber(anum / bnum);
-                }
-                break;
-
-            case eModulo:
-                {
-                    float64 anum = toFloat64(a);
-                    float64 bnum = toFloat64(b);
-#ifdef XP_PC
-            /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
-                    if (JSDOUBLE_IS_FINITE(anum) && JSDOUBLE_IS_INFINITE(bnum))
-                        a = allocNumber(anum);
-                    else
-#endif
-                    a = allocNumber(fd::fmod(anum, bnum));
-                }
-                break;
-
-            case eLeftShift:
-                {
-                    int32 count = toInteger(b) & 0x1F;
-                    a = allocNumber(toInteger(a) << count);
-                }
-                break;
-            case eRightShift:
-                {
-                    int32 count = toInteger(b) & 0x1F;
-                    a = allocNumber(toInteger(a) >> count);
-                }
-                break;
-            case eLogicalRightShift:
-                {
-                    int32 count = toInteger(b) & 0x1F;
-                    a = allocNumber(toUInt32(toInteger(a)) >> count);
-                }
-                break;
-            case eBitwiseAnd:
-                {
-                    a = allocNumber(toInteger(a) & toInteger(b));
-                }
-                break;
-            case eBitwiseXor:
-                {
-                    a = allocNumber(toInteger(a) ^ toInteger(b));
-                }
-                break;
-            case eBitwiseOr:
-                {
-                    a = allocNumber(toInteger(a) | toInteger(b));
-                }
-                break;
-            case eLogicalXor:
-                {
-                    a = allocNumber(toBoolean(a) ^ toBoolean(b));
-                }
-                break;
-            }
-            meta->writeProperty(baseVal, &mn, &lookup, true, a, RunPhase);
-            push(a);
-            baseVal = JS2VAL_VOID;
-            indexVal = JS2VAL_VOID;
-        }
-        break;
-
-case eBracketPostInc:
+    case eBracketPostInc:
         {
             LookupKind lookup(false, NULL);
             indexVal = pop();

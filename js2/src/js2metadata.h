@@ -593,10 +593,7 @@ public:
     virtual void emitPreIncBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
 
-    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }
-
-    virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ ASSERT(false); }
-    
+    virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)            { ASSERT(false); }    
 };
 
 class LexicalReference : public Reference {
@@ -625,8 +622,6 @@ public:
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalPreDec, pos); bCon->addMultiname(variableMultiname); }
     
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eLexicalDelete, pos); bCon->addMultiname(variableMultiname); }
-
-    virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ bCon->emitOp(eLexicalAssignOp, pos); bCon->addByte((uint8)op); bCon->addMultiname(variableMultiname); }
 };
 
 class DotReference : public Reference {
@@ -658,8 +653,6 @@ public:
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotPreDec, pos); bCon->addMultiname(propertyMultiname); }
 
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eDotDelete, pos); bCon->addMultiname(propertyMultiname); }
-
-    virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ bCon->emitOp(eDotAssignOp, pos); bCon->addByte((uint8)op); bCon->addMultiname(propertyMultiname); }
 };
 
 
@@ -700,8 +693,6 @@ public:
     virtual void emitPreDecBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketPreDec, pos); }
 
     virtual void emitDeleteBytecode(BytecodeContainer *bCon, size_t pos)    { bCon->emitOp(eBracketDelete, pos); }
-
-    virtual void emitAssignOpBytecode(BytecodeContainer *bCon, JS2Op op, size_t pos){ bCon->emitOp(eBracketAssignOp, pos); bCon->addByte((uint8)op); }
 };
 
 

@@ -114,17 +114,14 @@ enum JS2Op {
     eLexicalPostDec,    // <multiname index:u16>
     eLexicalPreInc,     // <multiname index:u16>
     eLexicalPreDec,     // <multiname index:u16>
-    eLexicalAssignOp,   // <op:u8> <multiname index:u16>
     eDotPostInc,        // <multiname index:u16>
     eDotPostDec,        // <multiname index:u16>
     eDotPreInc,         // <multiname index:u16>
     eDotPreDec,         // <multiname index:u16>
-    eDotAssignOp,       // <op:u8> <multiname index:u16>
     eBracketPostInc,
     eBracketPostDec,
     eBracketPreInc,
     eBracketPreDec,
-    eBracketAssignOp,   // <op:u8>
 
 };
 
