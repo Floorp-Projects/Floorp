@@ -47,6 +47,7 @@ JSLIBFILES = \
 XULLIBFILES = \
     .\xul\lib\EntryHistory.js \
 	.\xul\lib\listbox.js \
+	.\xul\lib\munger.js \
     $(NULL)
 
 TESTFILES = \
@@ -68,15 +69,26 @@ TESTFILES = \
     .\xul\tests\test3-static.js \
     .\xul\tests\test3-handlers.js \
     .\xul\tests\test3-commands.js \
+    .\xul\tests\test3-readprefs.js \
     .\xul\tests\g_green.gif \
     .\xul\tests\g_green_on.gif \
     .\xul\tests\g_grey.gif \
     .\xul\tests\g_grey_on.gif \
     .\xul\tests\green-on.gif \
     .\xul\tests\green-off.gif \
+    .\xul\tests\green-blink-1.gif \
     .\xul\tests\yellow-on.gif \
     .\xul\tests\xtal.jpg \
     .\xul\tests\blue_rock.gif \
+	.\xul\tests\face-angry.gif \
+	.\xul\tests\face-cry.gif \
+	.\xul\tests\face-frown.gif \
+	.\xul\tests\face-smile.gif \
+	.\xul\tests\face-surprise.gif \
+	.\xul\tests\face-tongue.gif \
+	.\xul\tests\face-wink.gif \
+	.\xul\tests\face-screw.gif \
+	.\xul\tests\face-dunno.gif \
     $(NULL)
 
 

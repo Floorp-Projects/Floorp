@@ -33,6 +33,56 @@ body {
 
 }
 
+a {
+
+    color: cyan;
+
+}
+
+.bold {
+
+    font-weight: bold;
+
+}
+
+.italic {
+
+    font-style: italic;
+
+}
+
+.underline {
+
+    text-decoration: underline;
+
+}
+
+.strikethrough {
+
+    text-decoration: line-through;
+
+}
+
+.teletype {
+
+    font-family: monospace;
+
+}
+
+.smallcap {
+
+    font-variant: small-caps;
+
+}
+
+.rheet {
+
+    font-size: 14pt;
+    font-weight: bold;
+    color: magenta;
+
+}
+
 /* output from a chat session (contains msgs) */
 .chat-view {
 
@@ -58,7 +108,35 @@ body {
 /* message data in output window */
 .msg-data {
 
-    color: lightgrey;
+    padding: 2px;
+    color: white;
+
+}
+
+.msg-data[msgtype="311"] {
+
+    border: none;
+    border-top: 1 cyan solid;
+    border-right: 1 cyan solid;
+
+}
+
+.msg-data[msgtype="319"],
+.msg-data[msgtype="312"],
+.msg-data[msgtype="317"] {
+
+    margin-top: 0px;
+    border: none;
+    border-right: 1 cyan solid;
+
+}
+
+.msg-data[msgtype="318"] {
+
+    border: none;
+    border-right: 1 cyan solid;
+    border-bottom: 1 cyan solid;
+    margin-top: 0px;
 
 }
 
@@ -66,6 +144,18 @@ body {
 
 .msg-data[user="!ME"]{
 
+
+}
+
+.msg-data[directedToMe="true"] {
+
+    color: orange;
+
+}
+
+.msg-data[mark="odd"]{
+
+    color: lightgrey;
 
 }
 
@@ -113,11 +203,18 @@ body {
 
 .msg-data[msgtype="ACTION"] {
 
-    color: lightmagenta;
+    color: #6ac9ee;
 
 }
 
-.msg-data[msgtype="NOTICE"] {
+.msg-data[msgtype="NICK"] {
+
+    color: #96fa94;
+
+}
+
+.msg-data[msgtype="NOTICE"],
+.msg-data[msgtype="MODE"] {
 
     color: yellow;
 
@@ -148,11 +245,6 @@ body {
 
 }
 
-.msg-user[parity="odd"]{
-
-
-}
-
 .msg-user[user="!ME"] {
 
     color : yellow;
@@ -162,6 +254,17 @@ body {
 .msg-user[msgtype="ACTION"] {
 
     font-style: italic;
+
+}
+
+.msg-user[msgtype="PRIVMSG"],
+.msg-user[msgtype="ACTION"] {
+
+    border: none;
+    padding-right: 2px;
+    text-align: right;
+    vertical-align: middle;
+    font-weight: bold;
 
 }
 
@@ -176,8 +279,37 @@ body {
 
 }
 
+.msg-type[msgtype="311"] {
+
+    border: none;
+    border-top: 1 cyan solid;
+    border-left: 1 cyan solid;
+
+}
+
+.msg-type[msgtype="319"],
+.msg-type[msgtype="312"],
+.msg-type[msgtype="317"] {
+
+    margin-top: 0px;
+    border: none;
+    border-left: 1 cyan solid;
+
+}
+
+.msg-type[msgtype="318"] {
+
+    border: none;
+    border-left: 1 cyan solid;
+    border-bottom: 1 cyan solid;
+    margin-top: 0px;
+
+}
+
+
 .msg-type[user="!ME"] {
 
     background: slategrey;
 
 }
+

@@ -44,16 +44,18 @@ resource:///irc/tests/test3.xul
 <html:script src="resource:///irc/js/lib/irc.js"/>
 <html:script src="resource:///irc/js/lib/irc-debug.js"/>
 <html:script src="resource:///irc/xul/lib/listbox.js"/>
+<html:script src="resource:///irc/xul/lib/munger.js"/>
 
+<html:script src="resource:///irc/tests/test3-commands.js"/>
+<html:script src="resource:///irc/tests/test3-readprefs.js"/>
 <html:script src="resource:///irc/tests/test3-static.js"/>
 <html:script src="resource:///irc/tests/test3-handlers.js"/>
-<html:script src="resource:///irc/tests/test3-commands.js"/>
 
 <toolbox>
   <menubar>
     <menu value="Options">
       <menupopup>
-        <menuitem id="menu-dmessages" value="Debug Messages (OFF)"
+        <menuitem id="menu-dmessages" value="Debug Messages"
          oncommand="onToggleTraceHook()"/>
         <menuseparator/>
         <menu value="Style">
@@ -83,14 +85,20 @@ resource:///irc/tests/test3.xul
   <box id="inner-box" align="horizontal" flex="1">
     <html:div id="quickList" class="quick-list" flex="0" width="150px">
     </html:div>
-    <splitter id="main-splitter" align="vertical"/>
+    <splitter id="main-splitter" align="vertical" collapse="before"/>
     <box align="vertical" flex="1">
       <html:iframe id="it-doesnt-matter-anyway" class="output-container"
        src="about:blank" flex="1"/>
+    <!--
       <html:textarea id="input" class="input-window"/>
+    -->
+      <html:input type="text" id="input" class="input-window"/>
     </box>
   </box>
-  <html:div id="status-bar">
+</box>
+
+<toolbox>
+  <toolbar id="status-bar">
     <html:table class="status-table">
       <html:tr>
         <html:td class="status-label">Network</html:td>
@@ -147,7 +155,6 @@ resource:///irc/tests/test3.xul
         </html:td>
       </html:tr>
     </html:table>
-  </html:div>
-</box>
-
+  </toolbar>
+</toolbox>
 </window>

@@ -26,6 +26,19 @@
  *
  */
 
+window {
+
+    font-size: 12px;
+    background: url(xtal.jpg);
+
+}
+
+menubar, menu, menuitem, menupopup {
+
+    background: silver;
+
+}
+
 #outer-box {
 
     margin: 5px;
@@ -37,6 +50,7 @@
     border: thin silver outset;
     margin-left: 2px;
     margin-right: 2px;
+    background: silver;
 
 }
 
@@ -49,8 +63,49 @@
 
 #status-bar {
 
-    margin-top: 5px;
-    border: thin silver inset;
+    border: thin silver double;
+    background: #dddddd;
+
+}
+
+toolbar {
+
+    background: #dddddd;
+    border: silver double;
+
+}
+
+.activity-button {
+
+    background: #dddddd;
+    padding-top: 1px;
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-bottom: 0px;
+    margin: 1px;
+    border: groove 2px;
+
+}
+
+.activity-button:hover {
+
+    background: #eeeeee;
+    padding-top: 0px;
+    padding-left: 1px;
+    padding-right: 3px;
+    padding-bottom: 1px;
+    border: 2px grey outset;
+
+}
+
+.activity-button:active {
+
+    background: #cccccc;
+    padding-top: 1px;
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-bottom: 0px;
+    border: 2px grey inset;
 
 }
 
@@ -63,7 +118,7 @@
 .status-data {
 
     text-align: left;
-    color: brown;
+    color: darkslategrey;
 
 }
 
@@ -93,7 +148,7 @@
 
 	border: thin silver inset;
 	overflow: auto;
-	background: white;
+	background: #dddddd;
 
 }
 

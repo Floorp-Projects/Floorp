@@ -31,12 +31,14 @@ client.STEP_TIMEOUT = 500;
 client.UPDATE_DELAY = 500;
 client.EXPAND_HEIGHT = "200px";
 client.COLLAPSE_HEIGHT = "25px";
+client.MAX_MESSAGES = 200;
 client.TYPE = "IRCClient";
-client.OP1_IMG = "g_green_on.gif";    /* user is op image */
+client.OP1_IMG = "g_green_on.gif"; /* user is op image */
 client.OP0_IMG = "g_green.gif"; /* user isnt op image */
-client.V1_IMG = "g_grey_on.gif";    /* user is voice image */
-client.V0_IMG = "g_grey.gif"; /* user isnt voide image */
-client.ACT_IMG = "green-on.gif";   /* view has activity image */
+client.V1_IMG = "g_grey_on.gif"; /* user is voice image */
+client.V0_IMG = "g_grey.gif"; /* user isnt voice image */
+client.ACT_IMG = "green-on.gif"; /* view has activity image */
+client.HEY_YOU_IMG = "green-blink-1.gif"; /* view has activity image */
 client.NACT_IMG = "green-off.gif"; /* view has no activity image */
 client.CUR_IMG = "yellow-on.gif"; /* view is currently displayed */
 client.PRINT_DIRECTION = 1; /*1 => new messages at bottom, -1 => at top */
@@ -50,7 +52,7 @@ CIRCNetwork.prototype.INITIAL_NICK = "IRCMonkey";
 CIRCNetwork.prototype.INITIAL_NAME = "chatzilla";
 CIRCNetwork.prototype.INITIAL_DESC = "New Now Know How";
 CIRCNetwork.prototype.INITIAL_CHANNEL = "";
-CIRCNetwork.prototype.MAX_MESSAGES = 50;
+CIRCNetwork.prototype.MAX_MESSAGES = 100;
 CIRCNetwork.prototype.IGNORE_MOTD = false;
 
 CIRCServer.prototype.READ_TIMEOUT = 0;
@@ -107,8 +109,8 @@ function initHost(obj)
                                    {name: "irc.primenet.com", port: 6667},
                                    {name: "irc.cs.cmu.edu",   port: 6667}],
                          obj.eventPump);
-    obj.networks["linuxnet"] =
-	new CIRCNetwork ("linuxnet", [{name: "irc.mozilla.org", port: 6667}],
+    obj.networks["moznet"] =
+	new CIRCNetwork ("moznet", [{name: "irc.mozilla.org", port: 6667}],
                          obj.eventPump);
     obj.networks["hybridnet"] =
         new CIRCNetwork ("hybridnet", [{name: "irc.ssc.net", port: 6667}],
@@ -123,6 +125,89 @@ function initHost(obj)
                                {type: "event-end"}], event_tracer,
                                "event-tracer", true /* negate */,
                                false /* disable */);
+
+    obj.munger = new CMunger();
+    obj.munger.addRule ("you-talking-to-me?", matchMyNick, "");
+    obj.munger.addRule
+        ("link", /((http|mailto|ftp)\:\/\/[^\)\s]*|www\.\S+\.\S[^\)\s]*)/,
+         insertLink);
+    obj.munger.addRule
+        ("face", /([\<\>]?[\;\=\:\8]\~?[\-\^\v]?[\)\|\(pP\<\>oO0\[\]\/\\])/,
+         insertSmiley);
+    obj.munger.addRule ("rheet", /(rhe+t\!*)/i, "rheet");
+    obj.munger.addRule ("bold", /(\*.*\*)/, "bold");
+    obj.munger.addRule ("italic", /[^sS](\/.*\/)/, "italic");
+    obj.munger.addRule ("teletype", /(\|.*\|)/, "teletype");
+    obj.munger.addRule ("underline", /(\_.*\_)/, "underline");
+    //obj.munger.addRule ("strikethrough", /(\-.*\-)/, "strikethrough");
+    obj.munger.addRule ("smallcap", /(\#.*\#)/, "smallcap");
+
+}
+
+function matchMyNick (text, containerTag, eventDetails)
+{
+    if (eventDetails && eventDetails.server)
+    {
+        if ((stringTrim(text.toLowerCase()).indexOf
+            (eventDetails.server.me.nick) == 0) &&
+            text[eventDetails.server.me.nick.length + 1].match(/[\W\s]/))
+        {
+            containerTag.setAttribute ("directedToMe", "true");
+        }
+    }
+
+    return false;
+    
+}                                                    
+
+function insertLink (matchText, containerTag)
+{
+
+    var href;
+    
+    if (matchText.indexOf ("://") == -1)
+        href = "http://" + matchText;
+    else
+        href = matchText;
+    
+    var anchor = document.createElement ("html:a");
+    anchor.setAttribute ("href", href);
+    anchor.setAttribute ("target", "other_window");
+    anchor.appendChild (document.createTextNode (matchText));
+    containerTag.appendChild (anchor);
+    
+}
+
+function insertSmiley (emoticon, containerTag)
+{
+    var src = "";
+    
+    
+    if (emoticon.search (/\;[\-\^\v]?[\)\>\]]/) != -1)
+        src = "face-wink.gif";
+    else if (emoticon.search (/[\=\:\8][\-\^\v]?[\)\>\]]/) != -1)
+        src = "face-smile.gif";
+    else if (emoticon.search (/[\=\:\8][\-\^\v]?[\/\\]/) != -1)
+        src = "face-screw.gif";
+    else if (emoticon.search (/[\=\:\8]\~[\-\^\v]?\(/) != -1)
+        src = "face-cry.gif";
+    else if (emoticon.search (/[\=\:\8][\-\^\v]?[\(\<\[]/) != -1)
+        src = "face-frown.gif";
+    else if (emoticon.search (/\<?[\=\:\8][\-\^\v]?[0oO]/) != -1)
+        src = "face-surprise.gif";
+    else if (emoticon.search (/[\=\:\8][\-\^\v]?[pP]/) != -1)
+        src = "face-tongue.gif";
+    else if (emoticon.search (/\>?[\=\:\8][\-\^\v]?[\(\|]/) != -1)
+        src = "face-angry.gif";
+
+    containerTag.appendChild (document.createTextNode (emoticon));
+
+    if (src)
+    {
+        var img = document.createElement ("html:img");
+        img.setAttribute ("src", src);
+        containerTag.appendChild (img);
+    }
     
 }
 
@@ -137,6 +222,9 @@ function mainStep()
 
 function getObjectDetails (obj, rv)
 {
+    if (!rv)
+        rv = new Object();
+    
     switch (obj.TYPE)
     {
         case "IRCChannel":
@@ -177,6 +265,9 @@ function getObjectDetails (obj, rv)
             /* no setup for unknown object */
             break;
     }
+
+    return rv;
+    
 }
 
 function setOutputStyle (style)
@@ -268,7 +359,7 @@ function updateChannel (obj)
 function newInlineText (data, className, tagName)
 {
     if (typeof tagName == "undefined")
-        tagName = "html:a";
+        tagName = "html:span";
     
     var a = document.createElement (tagName);
     a.setAttribute ("class", className);
@@ -341,6 +432,8 @@ function addHistory (source, obj)
     {
         source.messages = document.createElement ("html:table");
         source.messages.setAttribute ("class", "chat-view");
+        source.messages.setAttribute ("cellpadding", "0");
+        source.messages.setAttribute ("cellspacing", "0");
         source.messages.setAttribute ("type", source.TYPE);
         source.messages.setAttribute ("width", "100%");
         
@@ -389,10 +482,21 @@ function addHistory (source, obj)
 
 function notifyActivity (source)
 {
+    
+    if (typeof source != "object")
+        source = client.viewsArray[source].source;
+    
     var tb = getTBForObject (source, true);
     
     if (client.currentObject != source)
-        tb.setAttribute ("src", client.ACT_IMG);
+        if (tb.getAttribute ("src") == client.NACT_IMG)
+            tb.setAttribute ("src", client.ACT_IMG);
+        else /* if act light is already lit, blink it real quick */
+        {
+            tb.setAttribute ("src", client.NACT_IMG);
+            setTimeout ("notifyActivity(" +
+                        Number(tb.getAttribute("viewKey")) + ");", 200);
+        }
     
 }
 
@@ -436,10 +540,10 @@ function getTBForObject (source, create)
     {
         var views = document.getElementById ("views-tbar");
         var tbi = document.createElement ("toolbaritem");
-        tbi.setAttribute ("class", "activity-button");
         tbi.setAttribute ("onclick", "onTBIClick('" + id + "')");
     
         tb = document.createElement ("titledbutton");
+        tb.setAttribute ("class", "activity-button");
         tb.setAttribute ("id", id);
         client.viewsArray.push ({source: source, tb: tb});
         tb.setAttribute ("viewKey", client.viewsArray.length - 1);
@@ -650,7 +754,7 @@ function user_display(message, msgtype, sourceNick)
                 break;
 
             case "PRIVMSG":
-                nickText = newInlineText ("<" + realNick + "> ",
+                nickText = newInlineText (/*"<" +*/ realNick /*+ ">"*/,
                                           "msg-user", "html:td");
                 break;
                 
@@ -658,19 +762,19 @@ function user_display(message, msgtype, sourceNick)
 
         if (nickText)
         {
-            this.parity = (typeof this.parity != "undefined") ? this.parity :
+            this.mark = (typeof this.mark != "undefined") ? this.mark :
                 false;
         
             if ((this.lastNickDisplayed) &&
                 (realNick != this.lastNickDisplayed))
             {
-                this.parity = !this.parity;
+                this.mark = !this.mark ;
                 this.lastNickDisplayed = realNick;
             }
             else
                 this.lastNickDisplayed = realNick;          
         
-            nickText.setAttribute ("parity", (this.parity) ? "even" : "odd");
+            nickText.setAttribute ("mark", (this.mark) ? "even" : "odd");
             nickText.setAttribute ("network", this.parent.parent.name);
             nickText.setAttribute ("user", this.nick);
             nickText.setAttribute ("msgtype", msgtype);
@@ -690,11 +794,18 @@ function user_display(message, msgtype, sourceNick)
             {network: this.parent.parent.name, msgtype: msgtype},
              "msg-data", "html:td");
 
-        msgData.setAttribute ("width", "100%");
-        
+        msgData.setAttribute ("mark", (this.mark) ? "even" : "odd");
+        msgData.setAttribute ("network", this.parent.parent.name);
+        msgData.setAttribute ("channel", this.name);
+        msgData.setAttribute ("user", nick);
+        msgData.setAttribute ("msgtype", msgtype);
+
         for (var l in ary)
         {
-            msgData.appendChild(newInlineText (ary[l]));
+            if (msgtype.search (/PRIVMSG|ACTION/) != -1)
+                client.munger.munge(ary[l], msgData, getObjectDetails (this));
+            else
+                msgData.appendChild(newInlineText (ary[l]));
             msgData.appendChild (document.createElement ("html:br"));
         }
 
@@ -747,7 +858,7 @@ function chan_display (message, msgtype, nick)
                 break;
 
             case "PRIVMSG":
-                nickText = newInlineText ("<" + realNick + "> ",
+                nickText = newInlineText (/*"<" + */ realNick /*+ "> "*/,
                                           "msg-user", "html:td");
                 break;
                 
@@ -756,18 +867,19 @@ function chan_display (message, msgtype, nick)
 
     if (nickText)
     {
-        this.parity = (typeof this.parity != "undefined") ? this.parity : false;
+        if (typeof this.mark == "undefined")
+            this.mark = "even";
         
         if ((this.lastNickDisplayed) &&
             (nick != this.lastNickDisplayed))
         {
-            this.parity = !this.parity;
+            this.mark = (this.mark == "odd") ? "even" : "odd";
             this.lastNickDisplayed = nick;
         }
         else
             this.lastNickDisplayed = nick;                
 
-        nickText.setAttribute ("parity", (this.parity) ? "even" : "odd");
+        nickText.setAttribute ("mark", this.mark);
         nickText.setAttribute ("network", this.parent.parent.name);
         nickText.setAttribute ("channel", this.name);
         nickText.setAttribute ("user", nick);
@@ -789,11 +901,18 @@ function chan_display (message, msgtype, nick)
              user: nick, msgtype: msgtype},
             "msg-data", "html:td");
     
-    msgData.setAttribute ("parity", (this.parity) ? "even" : "odd");
+    msgData.setAttribute ("mark", this.mark);
+    msgData.setAttribute ("network", this.parent.parent.name);
+    msgData.setAttribute ("channel", this.name);
+    msgData.setAttribute ("user", nick);
+    msgData.setAttribute ("msgtype", msgtype);
     
     for (var l in ary)
     {
-        msgData.appendChild (newInlineText (ary[l]));
+        if (msgtype.search (/PRIVMSG|ACTION/) != -1)
+            client.munger.munge(ary[l], msgData, getObjectDetails (this));
+        else
+            msgData.appendChild(newInlineText (ary[l]));
         msgData.appendChild (document.createElement ("html:br"));
     }
 

@@ -100,6 +100,12 @@ function addCommands(commandObject)
          "Shows only messages <nick> has sent to the channel, filtering out " +
          "all others, (including yours.)");
 
+    add ("whois", "onInputWhoIs",
+         "<nick>",
+         "Displays information about the user <nick>, including 'real name', " +
+         "server connected to, idle time, and signon time.  Note that some " +
+         "servers will lie about the idle time.");
+
     add ("topic", "onInputTopic",
          "[<new-topic>]",
          "If <new-topic> is specified and you are a chanop, or the channel " +

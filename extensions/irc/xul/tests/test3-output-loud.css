@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/*
  * The contents of this file are subject to the Mozilla Public 
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -19,7 +19,7 @@
  * Contributor(s):
  *  Robert Ginda, rginda@ndcico.com, original author
  * 
-/* Styles for output window, See test3.css for UI styles
+ * Styles for output window, See test3.css for UI styles
  *
  */
 
@@ -27,6 +27,50 @@ body {
 
     margin: 0px 0px 0px 0px;
     background: black;
+
+}
+
+.bold {
+
+    font-weight: bold;
+
+}
+
+.italic {
+
+    font-style: italic;
+
+}
+
+.underline {
+
+    text-decoration: underline;
+
+}
+
+.strikethrough {
+
+    text-decoration: line-through;
+
+}
+
+.teletype {
+
+    font-family: monospace;
+
+}
+
+.smallcap {
+
+    font-variant: small-caps;
+
+}
+
+.rheet {
+
+    font-size: 14pt;
+    font-weight: bold;
+    color: magenta;
 
 }
 

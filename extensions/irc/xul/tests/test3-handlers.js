@@ -26,10 +26,11 @@
 
 function onLoad()
 {
-
+    
     initHost(client);
     setOutputStyle ("default");
     initStatic();
+    readIRCPrefs();
     mainStep();
     
 }
@@ -37,7 +38,7 @@ function onLoad()
 function onUnload()
 {
 
-    client.quit ("re-load");
+    client.quit ("ChatZilla!");
     
 }
 
@@ -54,11 +55,10 @@ function onTBIClick (id)
 function onToggleTraceHook()
 {
     var h = client.eventPump.getHook ("event-tracer");
-    var caption;
     
     h.enabled = !h.enabled;
-    caption = h.enabled ? "Debug Messages (ON)" : "Debug Messages (OFF)";    
-    document.getElementById("menu-dmessages").setAttribute ("value", caption);
+    document.getElementById("menu-dmessages").setAttribute ("checked",
+                                                            h.enabled);
     
 }   
 
@@ -145,6 +145,7 @@ function onInputCompleteLine(e)
                 ev.target = client.currentObject;
                 getObjectDetails (ev.target, ev);
                 client.eventPump.addEvent (ev);
+                e.target.value = "";            
             }
         }
         else /* plain text */
@@ -170,6 +171,7 @@ function onInputCompleteLine(e)
             e.target.style.height = client.COLLAPSE_HEIGHT;
             e.target.value = "";
             client.sayToCurrentTarget (lines[i]);
+            e.target.value = "";            
         }
     }
     
@@ -453,13 +455,15 @@ function cli_ieval (e)
     {
         rv = String(eval (e.inputData));
         if (rv.indexOf ("\n") == -1)
-            client.display ("{" + e.inputData + "} " + rv, "EVAL");
+            client.currentObject.display ("{" + e.inputData + "} " + rv,
+                                          "EVAL");
         else
-            client.display ("{" + e.inputData + "}\n" + rv, "EVAL");
+            client.currentObject.display ("{" + e.inputData + "}\n" + rv,
+                                          "EVAL");
     }
     catch (ex)
     {
-        client.display (String(ex), "ERROR");
+        client.currentObject.display (String(ex), "ERROR");
     }
     
     return true;
@@ -483,10 +487,12 @@ function cli_ijoin (e)
     if (!name)
         return false;
 
+    name = String(name);
+    
     if ((name[0] != "#") && (name[0] != "&"))
         name = "#" + name;
 
-    e.channel = e.server.addChannel (String(name));
+    e.channel = e.server.addChannel (name);
     e.channel.join();
     e.channel.display ("Joining...", "INFO");
     setCurrentObject(e.channel);
@@ -542,6 +548,31 @@ function cli_izoom (e)
     
 }    
 
+client.onInputWhoIs =
+function cli_whois (e)
+{
+
+    if (!e.inputData)
+        return false;
+
+    if (!e.network || !e.network.isConnected())
+    {
+        if (!e.network)
+            client.currentObject.display ("No network selected.", "ERROR");
+        else
+            client.currentObject.display ("Network '" + e.network.name +
+                                          " is not connected.", "ERROR");        
+        return false;
+    }
+    
+    var nick = e.inputData.match(/\S+/);
+    
+    e.server.sendData ("whois " + nick + "\n");
+
+    return true;
+    
+}
+        
 client.onInputTopic =
 function cli_itopic (e)
 {
@@ -574,7 +605,37 @@ function cli_itopic (e)
     return true;
     
 }
-            
+
+/* 'private' function, should only be used from inside */
+CIRCChannel.prototype._addToUserList =
+function my_addtolist (user)
+{
+    var ary = new Array();
+    var u;
+    var i;
+
+    for (u in this.users)
+        ary.push (this.users[u].nick);
+    
+    ary.sort();
+
+    for (i = 0; i < ary.length; i++)
+        if (user.nick == ary[i])
+            break;
+    
+    if (!this.list)
+        this.list = new CListBox();
+    
+    if (i < ary.length - 1)
+    {
+        this.list.prepend (user.getDecoratedNick(),
+                           this.users[ary[i + 1]].getDecoratedNick());
+    }
+    else
+        this.list.add (user.getDecoratedNick());
+    
+}
+
 CIRCNetwork.prototype.onNotice = 
 CIRCNetwork.prototype.on001 = /* Welcome! */
 CIRCNetwork.prototype.on002 = /* your host is */
@@ -619,6 +680,47 @@ function my_showtonet (e)
     this.display (p + str, e.code.toUpperCase());
     
 }
+
+CIRCNetwork.prototype.on311 = /* whois name */
+CIRCNetwork.prototype.on319 = /* whois channels */
+CIRCNetwork.prototype.on312 = /* whois server */
+CIRCNetwork.prototype.on317 = /* whois idle time */
+CIRCNetwork.prototype.on318 = /* whois end of whois*/
+function my_whoisreply (e)
+{
+    var text = "egads!";
+    
+    switch (Number(e.code))
+    {
+        case 311:
+            text = e.params[2] + " (" + e.params[3] + "@" + e.params[4] +
+                ") is " + e.meat;
+            break;
+            
+        case 319:
+            text = e.params[2] + " is a member of " + e.meat;
+            break;
+            
+        case 312:
+            text = e.params[2] + " is attached to " + e.params[3]
+            break;
+            
+        case 317:
+            text = e.params[2] + " has been idle for " + e.params[3] +
+                " seconds (on since " + new Date(Number(e.params[4]) * 100) +
+                ")";
+            break;
+            
+        case 318:
+            text = "End of whois information for " + e.params[2];
+            break;
+            
+    }
+
+    e.server.parent.display(text, e.code);
+    
+}
+
 
 CIRCNetwork.prototype.onPing =
 function my_netping (e)
@@ -740,28 +842,8 @@ function my_cjoin (e)
                      e.user.host + ") has joined " + e.channel.name,
                      "JOIN", e.user.nick);
 
-    var ary = new Array();    
-
-    for (var u in this.users)
-        ary.push (this.users[u].nick);
+    this._addToUserList (e.user);
     
-    ary.sort();
-
-    for (u in ary)
-        if (ary[u] == e.user.nick)
-            break;
-    
-    if (!this.list)
-        this.list = new CListBox();
-
-    if (u < ary.length - 1)
-    {
-        this.list.prepend (e.user.getDecoratedNick(),
-                           e.channel.users[ary[u + 1]].getDecoratedNick());
-    }
-    else
-        this.list.add (e.user.getDecoratedNick());
-
     updateChannel (e.channel);
     
 }
@@ -845,7 +927,9 @@ function my_cnick (e)
         this.display (e.oldNick + " is now known as " + e.user.properNick,
                       "NICK");
 
+    this.list.remove (e.user.getDecoratedNick());
     e.user.updateDecoratedNick();
+    this._addToUserList(e.user);
     
 }
 

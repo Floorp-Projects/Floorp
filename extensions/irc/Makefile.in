@@ -50,6 +50,7 @@ JSLIBFILES	= \
 XULLIBFILES	= \
 		$(srcdir)/xul/lib/EntryHistory.js \
 		$(srcdir)/xul/lib/listbox.js \
+		$(srcdir)/xul/lib/munger.js \
 		$(NULL)
 
 TESTFILES	= \
@@ -71,15 +72,26 @@ TESTFILES	= \
 		$(srcdir)/xul/tests/test3-static.js \
 		$(srcdir)/xul/tests/test3-handlers.js \
 		$(srcdir)/xul/tests/test3-commands.js \
+		$(srcdir)/xul/tests/test3-readprefs.js \
 		$(srcdir)/xul/tests/g_green.gif \
 		$(srcdir)/xul/tests/g_green_on.gif \
 		$(srcdir)/xul/tests/g_grey.gif \
 		$(srcdir)/xul/tests/g_grey_on.gif \
 		$(srcdir)/xul/tests/green-on.gif \
 		$(srcdir)/xul/tests/green-off.gif \
+		$(srcdir)/xul/tests/green-blink-1.gif \
 		$(srcdir)/xul/tests/yellow-on.gif \
 		$(srcdir)/xul/tests/xtal.jpg \
 		$(srcdir)/xul/tests/blue_rock.gif \
+		$(srcdir)/xul/tests/face-angry.gif \
+		$(srcdir)/xul/tests/face-cry.gif \
+		$(srcdir)/xul/tests/face-frown.gif \
+		$(srcdir)/xul/tests/face-smile.gif \
+		$(srcdir)/xul/tests/face-surprise.gif \
+		$(srcdir)/xul/tests/face-tongue.gif \
+		$(srcdir)/xul/tests/face-wink.gif \
+		$(srcdir)/xul/tests/face-screw.gif \
+		$(srcdir)/xul/tests/face-dunno.gif \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -684,7 +684,7 @@ function serv_329 (e)
     return true;
     
 }
-
+    
 /* channel mode reply */
 CIRCServer.prototype.on324 = 
 function serv_324 (e)
@@ -1098,7 +1098,7 @@ function serv_privmsg (e)
         e.replyTo = e.user; /* send replys to the user who sent the message */
     }
 
-    if (e.meat.search (/\01.*\01/i) == 0)
+    if (e.meat.search (/\x01.*\x01/i) != -1)
     {
         e.type = "ctcp";
         e.destMethod = "onCTCP";
@@ -1115,7 +1115,7 @@ function serv_privmsg (e)
 CIRCServer.prototype.onCTCP = 
 function serv_ctcp (e)
 {
-    var ary = e.meat.match (/^\01(\S+)? ?(.*)\01$/i);
+    var ary = e.meat.match (/^\x01(\S+)? ?(.*)\x01$/i);
 
     if (ary == null)
         return false;

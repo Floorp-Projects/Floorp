@@ -33,6 +33,50 @@ body {
 
 }
 
+.bold {
+
+    font-weight: bold;
+
+}
+
+.italic {
+
+    font-style: italic;
+
+}
+
+.underline {
+
+    text-decoration: underline;
+
+}
+
+.strikethrough {
+
+    text-decoration: line-through;
+
+}
+
+.teletype {
+
+    font-family: monospace;
+
+}
+
+.smallcap {
+
+    font-variant: small-caps;
+
+}
+
+.rheet {
+
+    font-size: 14pt;
+    font-weight: bold;
+    color: magenta;
+
+}
+
 /* output from a chat session (contains msgs) */
 .chat-view {
 
