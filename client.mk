@@ -222,18 +222,22 @@ CVSCO_LDAPCSDK = cvs $(CVS_FLAGS) co $(LDAPCSDK_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $
 # CVS defines for standalone modules
 #
 ifneq ($(BUILD_MODULES),all)
-  MOZ_CO_MODULE := $(filter-out $(NSPRPUB_DIR) security directory/c-sdk, $(BUILD_MODULE_DIRS) $(BUILD_MODULE_DEP_DIRS))
+  MOZ_CO_MODULE := $(filter-out $(NSPRPUB_DIR) security directory/c-sdk, $(BUILD_MODULE_CVS))
   MOZ_CO_MODULE += allmakefiles.sh client.mk aclocal.m4 configure configure.in
   MOZ_CO_MODULE += Makefile.in
   MOZ_CO_MODULE := $(addprefix mozilla/, $(MOZ_CO_MODULE))
-ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_DIRS) $(BUILD_MODULE_DEP_DIRS)))
+
+  NOSUBDIRS_MODULE := $(addprefix mozilla/, $(BUILD_MODULE_CVS_NS))
+  CVSCO_NOSUBDIRS := $(CVSCO) -l $(CVS_CO_DATE_FLAGS) $(NOSUBDIRS_MODULE)
+
+ifeq (,$(filter $(NSPRPUB_DIR), $(BUILD_MODULE_CVS)))
   CVSCO_NSPR :=
 endif
-ifeq (,$(filter security, $(BUILD_MODULE_DIRS) $(BUILD_MODULE_DEP_DIRS)))
+ifeq (,$(filter security, $(BUILD_MODULE_CVS)))
   CVSCO_PSM :=
   CVSCO_NSS :=
 endif
-ifeq (,$(filter directory/c-sdk, $(BUILD_MODULE_DIRS) $(BUILD_MODULE_DEP_DIRS)))
+ifeq (,$(filter directory/c-sdk, $(BUILD_MODULE_CVS)))
   CVSCO_LDAPCSDK :=
 endif
 else
@@ -303,7 +307,8 @@ real_checkout:
 	cvs_co $(CVSCO_PSM) && \
 	cvs_co $(CVSCO_NSS) && \
         cvs_co $(CVSCO_LDAPCSDK) && \
-	cvs_co $(CVSCO_SEAMONKEY)
+	cvs_co $(CVSCO_SEAMONKEY) && \
+	cvs_co $(CVSCO_NOSUBDIRS)
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
 #	@: Check the log for conflicts. ;
 	@conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\

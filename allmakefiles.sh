@@ -297,6 +297,7 @@ modules/libimg/pngcom/Makefile
 
 MAKEFILES_libjar="
 modules/libjar/Makefile
+modules/libjar/standalone/Makefile
 "
 
 MAKEFILES_libreg="
@@ -387,6 +388,12 @@ netwerk/streamconv/src/Makefile
 netwerk/streamconv/test/Makefile
 netwerk/test/Makefile
 netwerk/testserver/Makefile
+
+uriloader/exthandler/Makefile
+intl/strres/public/Makefile
+intl/locale/idl/Makefile
+$MAKEFILES_js
+modules/libpref/public/Makefile
 "
 
 MAKEFILES_uriloader="
@@ -554,12 +561,20 @@ xpcom/proxy/public/Makefile
 xpcom/proxy/src/Makefile
 xpcom/proxy/tests/Makefile
 xpcom/sample/Makefile
-xpcom/tests/Makefile
-xpcom/tests/dynamic/Makefile
-xpcom/tests/services/Makefile
 xpcom/threads/Makefile
 xpcom/tools/Makefile
 xpcom/tools/registry/Makefile
+
+$MAKEFILES_libreg
+$MAKEFILES_libjar
+intl/unicharutil/public/Makefile
+intl/uconv/public/Makefile
+"
+
+MAKEFILES_xpcom_tests="
+xpcom/tests/Makefile
+xpcom/tests/dynamic/Makefile
+xpcom/tests/services/Makefile
 "
 
 MAKEFILES_xpinstall="
@@ -682,6 +697,10 @@ security/psm/Makefile
 security/psm/lib/Makefile
 security/psm/lib/client/Makefile
 security/psm/lib/protocol/Makefile
+
+intl/strres/public/Makefile
+intl/locale/idl/Makefile
+intl/locale/public/Makefile
 "
 
 MAKEFILES_psm_glue="
@@ -731,7 +750,9 @@ extensions/transformiix/Makefile
 "
 
 if [ "$MOZ_MAIL_NEWS" ]; then
-    MAKEFILES_mailnews=`cat ${srcdir}/mailnews/makefiles`
+    if [ -f ${srcdir}/mailnews/makefiles ]; then
+        MAKEFILES_mailnews=`cat ${srcdir}/mailnews/makefiles`
+    fi
 fi
 
 if [ ! "$SYSTEM_JPEG" ]; then
@@ -760,7 +781,9 @@ fi
 #
 # l10n/
 #
-MAKEFILES_langpacks=`cat ${srcdir}/l10n/makefiles.all`
+if [ -f ${srcdir}/l10n/makefiles.all ]; then
+    MAKEFILES_langpacks=`cat ${srcdir}/l10n/makefiles.all`
+fi
 
 if [ "$MOZ_L10N" ]; then
     MAKEFILES_l10n="l10n/Makefile"
@@ -958,6 +981,7 @@ $MAKEFILES_view
 $MAKEFILES_webshell
 $MAKEFILES_widget
 $MAKEFILES_xpcom
+$MAKEFILES_xpcom_tests
 $MAKEFILES_xpconnect
 $MAKEFILES_xpinstall
 $MAKEFILES_xpfe
@@ -974,17 +998,17 @@ else
 	    js) add_makefiles "$MAKEFILES_js"
 		;;
 	    necko) add_makefiles "
-                 $MAKEFILES_netwerk $MAKEFILES_xpcom $MAKEFILES_libreg"
+                 $MAKEFILES_netwerk $MAKEFILES_dbm $MAKEFILES_xpcom"
 		;;
-	    psm) add_makefiles "$MAKEFILES_dbm $MAKEFILES_xpcom $MAKEFILES_libreg $MAKEFILES_intl $MAKEFILES_libjar $MAKEFILES_security $MAKEFILES_js $MAKEFILES_psm_glue"
+	    psm) add_makefiles "$MAKEFILES_dbm $MAKEFILES_xpcom $MAKEFILES_security $MAKEFILES_js $MAKEFILES_psm_glue"
 		;;
 	    transformiix) add_makefiles "$MAKEFILES_transformiix"
 		;;
-	    xpcom) add_makefiles "$MAKEFILES_xpcom $MAKEFILES_libreg $MAKEFILES_intl $MAKEFILES_libjar"
+	    xpcom) add_makefiles "$MAKEFILES_xpcom" 
+
 		;;
 	    xpconnect) add_makefiles "
-		$MAKEFILES_xpconnect $MAKEFILES_js $MAKEFILES_xpcom
-		$MAKEFILES_libreg"
+		$MAKEFILES_xpconnect $MAKEFILES_js $MAKEFILES_xpcom"
 		;;
         esac
     done
