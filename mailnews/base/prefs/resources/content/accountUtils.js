@@ -101,11 +101,11 @@ function MsgAccountWizard()
 function msgOpenAccountWizard()
 {
     window.openDialog("chrome://messenger/content/AccountWizard.xul",
-                      "AccountWizard", "chrome,modal");
+                      "AccountWizard", "chrome,modal,resizable");
 }
 
 function MsgAccountManager()
 {
     window.openDialog("chrome://messenger/content/AccountManager.xul",
-                      "AccountManager", "chrome,modal");
+                      "AccountManager", "chrome,modal,resizable");
 }
