@@ -128,7 +128,7 @@ NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
   char *fn = aString.ToNewCString();
   g_print("%s\n",fn);
   gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget), fn);
-  delete fn;
+  delete[] fn;
   return NS_OK;
 }
 
@@ -171,6 +171,8 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
   char *title = mTitle.ToNewCString();
 
   mWidget = gtk_file_selection_new(title);
+
+  delete[] title;
 
   return NS_OK;
 }

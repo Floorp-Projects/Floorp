@@ -694,6 +694,7 @@ void menu_item_activate_handler(GtkWidget *w, gpointer p)
 
   nsIMenuListener *menuListener = nsnull;
   nsIMenuItem *menuItem = (nsIMenuItem *)p;
+  NS_ADDREF(menuItem);
   
   if (menuItem != NULL) {
     nsMenuEvent mevent;
@@ -701,7 +702,8 @@ void menu_item_activate_handler(GtkWidget *w, gpointer p)
     mevent.eventStructType = NS_MENU_EVENT;
     mevent.point.x = 0;
     mevent.point.y = 0;
-    menuItem->GetTarget(mevent.widget);
+//    mevent.widget = menuItem;
+    mevent.widget = nsnull;
     menuItem->GetCommand(mevent.mCommand);
 
     mevent.mMenuItem = menuItem;
@@ -932,25 +934,4 @@ gint nsGtkWidget_FSBOk_Callback(GtkWidget *w, gpointer p)
 #endif
 
   return PR_FALSE;
-}
-
-//==============================================================
-gint nsGtkWidget_Menu_Callback(GtkWidget *w, gpointer p)
-{
-  nsIMenuItem * menuItem = (nsIMenuItem *)p;
-  if (menuItem != NULL) {
-    nsMenuEvent mevent;
-    mevent.message = NS_MENU_SELECTED;
-    mevent.eventStructType = NS_MENU_EVENT;
-    mevent.point.x = 0;
-    mevent.point.y = 0;
-    menuItem->GetTarget(mevent.widget);
-    menuItem->GetCommand(mevent.mCommand);
-    mevent.mMenuItem = menuItem;
-    mevent.time = 0; //XXX: Implement this
-    nsEventStatus status;
-    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
-  }
-
-  return PR_TRUE;
 }
