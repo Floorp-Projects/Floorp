@@ -32,9 +32,12 @@
 #include <Xfe/BmCascade.h>
 #include <Xfe/Button.h>
 #include <Xfe/Cascade.h>
+#include <Xfe/Chrome.h>
 #include <Xfe/DashBoard.h>
+#include <Xfe/FrameShell.h>
 #include <Xfe/Label.h>
 #include <Xfe/Logo.h>
+#include <Xfe/Oriented.h>
 #include <Xfe/Pane.h>
 #include <Xfe/ProgressBar.h>
 #include <Xfe/Tab.h>
@@ -50,12 +53,9 @@
 
 #if defined(XFE_WIDGETS_BUILD_UNUSED)
 #include <Xfe/BypassShell.h>
-#include <Xfe/Chrome.h>
 #include <Xfe/ComboBox.h>
 #include <Xfe/FancyBox.h>
 #include <Xfe/FontChooser.h>
-#include <Xfe/FrameShell.h>
-#include <Xfe/Oriented.h>
 #endif /* XFE_WIDGETS_BUILD_UNUSED */
 
 #endif											/* end XfeAll.h			*/
