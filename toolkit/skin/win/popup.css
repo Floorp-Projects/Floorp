@@ -29,10 +29,6 @@
 
 /* ::::: menupopup ::::: */
 
-menupopup, popup {
-  -moz-appearance: menupopup !important;
-}
-
 menupopup,
 popup {
   border: 2px solid;
@@ -40,9 +36,7 @@ popup {
   -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
   -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
-#ifndef MOZ_WIDGET_GTK2
   padding: 1px;
-#endif
   min-width: 1px;
   background-color: Menu;
 }
