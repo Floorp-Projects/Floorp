@@ -225,12 +225,23 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasAliased)
             resolvedPath[charCount] = '\0';
         
         wasAliased = PR_TRUE;
-	/* if it's not an absolute path, replace the leaf with what got resolved */
-	if (resolvedPath[0] != '/') {
+
+	/* if it's not an absolute path,
+		replace the leaf with what got resolved */  
+        if (resolvedPath[0] != '/') {
 		SetLeafName(resolvedPath);
+        }
+        else {
+        	mPath = (char*)&resolvedPath;
+        }
+	
+	char* canonicalPath = realpath((const char *)mPath, resolvedPath);
+	NS_ASSERTION(canonicalPath, "realpath failed");
+	if (canonicalPath) {
+		mPath = (char*)&resolvedPath;
 	}
 	else {
-        	mPath = (char*)&resolvedPath;
+		return NS_ERROR_FAILURE;
 	}
     }
     
@@ -529,10 +540,11 @@ PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
 nsDirectoryIterator::nsDirectoryIterator(const nsFileSpec& inDirectory, PRBool resolveSymLinks)
 //----------------------------------------------------------------------------------------
     : mCurrent(inDirectory)
-    , mStarting(inDirectory)
     , mExists(PR_FALSE)
-    , mDir(nsnull)
     , mResoveSymLinks(resolveSymLinks)
+    , mStarting(inDirectory)
+    , mDir(nsnull)
+
 {
     mStarting += "sysygy"; // save off the starting directory 
     mCurrent += "sysygy"; // prepare the path for SetLeafName
