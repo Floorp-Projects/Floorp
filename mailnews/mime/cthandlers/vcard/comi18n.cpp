@@ -25,6 +25,7 @@
 #include "prlog.h"
 #include "plstr.h"
 #include "nsVCardTransition.h"
+#include "nsCRT.h"
 
 
 // BEGIN EXTERNAL DEPENDANCY
@@ -46,7 +47,7 @@
 #define CS_GB_8BIT 0
 #define STATEFUL 0
 #define MULTIBYTE 0
-#define TAB '\t'
+//#define TAB '\t'
 #define CR '\015'
 #define LF '\012'
 #define MAX_CSNAME      64
@@ -606,7 +607,7 @@ artifical terminator. So, restore the original character */
                                         PR_Free(retbuf);
                                         return NULL;
                                 }
-                                nsCRT:memcpy(buf1, begin, len);
+                                nsCRT::memcpy(buf1, begin, len);
                                 *(buf1 + len) = '\0';
                         }
 

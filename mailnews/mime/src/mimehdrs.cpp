@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "msgCore.h"
 #include "mimerosetta.h"
 #include "mimei.h"
 #include "libi18n.h"
@@ -494,9 +495,9 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 			   by seperating the old and new data with CR-LF-TAB.
 			 */
 			*s++ = ',';				/* #### only do this for addr headers? */
-			*s++ = LINEBREAK[0];
-# if (LINEBREAK_LEN == 2)
-			*s++ = LINEBREAK[1];
+			*s++ = MSG_LINEBREAK[0];
+# if (MSG_LINEBREAK_LEN == 2)
+			*s++ = MSG_LINEBREAK[1];
 # endif
 			*s++ = '\t';
 		  }
@@ -2285,7 +2286,7 @@ MimeHeaders_write_raw_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt,
 
   if (!dont_write_content_type)
 	{
-	  char nl[] = LINEBREAK;
+	  char nl[] = MSG_LINEBREAK;
 	  if (hdrs)
 		{
 		  status = MimeHeaders_write(opt, hdrs->all_headers,

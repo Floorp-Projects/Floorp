@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "msgCore.h"
 #include "prlog.h"
 #include "prtypes.h"
 #include "prmem.h"
@@ -1222,7 +1223,7 @@ static int EndVCard (MimeObject *obj)
 
 	/* Scribble HTML-ending stuff into the stream */
 	char htmlFooters[32];
-	PR_snprintf (htmlFooters, sizeof(htmlFooters), "</BODY>%s</HTML>%s", LINEBREAK, LINEBREAK);
+	PR_snprintf (htmlFooters, sizeof(htmlFooters), "</BODY>%s</HTML>%s", MSG_LINEBREAK, MSG_LINEBREAK);
 	status = COM_MimeObject_write(obj, htmlFooters, PL_strlen(htmlFooters), PR_FALSE);
 
 	if (status < 0) return status;

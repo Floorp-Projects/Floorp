@@ -37,10 +37,6 @@ typedef struct MimeDecoderData MimeDecoderData;
 typedef struct MimeEncoderData MimeEncoderData;
 
 
-#ifdef RICHIE
-XP_BEGIN_PROTOS
-#endif
-
 /* functions for creating that opaque data.
  */
 MimeDecoderData *MimeB64DecoderInit(int (*output_fn) (const char *buf,
@@ -81,9 +77,5 @@ int MimeEncoderWrite (MimeEncoderData *data, const char *buffer, PRInt32 size);
  */
 int MimeDecoderDestroy(MimeDecoderData *data, PRBool abort_p);
 int MimeEncoderDestroy(MimeEncoderData *data, PRBool abort_p);
-
-#ifdef RICHIE
-XP_END_PROTOS
-#endif
 
 #endif /* _MODMIMEE_H_ */

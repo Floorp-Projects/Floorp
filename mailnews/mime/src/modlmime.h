@@ -68,10 +68,6 @@ typedef struct MimeDisplayOptions MimeDisplayOptions;
 typedef struct MimeParseStateObject MimeParseStateObject;
 typedef struct MSG_AttachmentData MSG_AttachmentData;
 
-#ifdef RICHIE
-XP_BEGIN_PROTOS
-#endif
-
 /* Given the name of a header, returns the contents of that header as
    a newly-allocated string (which the caller must free.)  If the header
    is not present, or has no contents, NULL is returned.
@@ -398,9 +394,5 @@ struct MimeDisplayOptions
 							   missing parts (from IMAP Mime Parts On Demand) */
 
 };
-
-#ifdef RICHIE 
-XP_BEGIN_PROTOS
-#endif
 
 #endif /* _MODLMIME_H_ */

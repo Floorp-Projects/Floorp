@@ -273,13 +273,13 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
   if (obj->options && obj->options->charset_conversion_fn)
 	{
 	  PRInt32 converted_len = 0;
-	  const char *output_charset = (obj->options->override_charset
+    const char *input_charset = (obj->options->override_charset
 									? obj->options->override_charset
 									: obj->options->default_charset);
 
 	  status = obj->options->charset_conversion_fn(line, length,
-												   text->charset,
-												   output_charset,
+												   input_charset,
+												   "UTF-8",
 												   &converted,
 												   &converted_len,
 												 obj->options->stream_closure);

@@ -151,8 +151,8 @@ MimeMessage_parse_line (char *line, PRInt32 length, MimeObject *obj)
 													 obj->options->stream_closure);
 			  if (status < 0) return status;
 			  if (!nl) {
-				status = obj->options->decompose_file_output_fn (LINEBREAK,
-																 LINEBREAK_LEN,
+				status = obj->options->decompose_file_output_fn (MSG_LINEBREAK,
+																 MSG_LINEBREAK_LEN,
 													 obj->options->stream_closure);
 				if (status < 0) return status;
 			  }
@@ -167,11 +167,11 @@ MimeMessage_parse_line (char *line, PRInt32 length, MimeObject *obj)
 	  else
 		{
 		  /* Hack a newline onto the end. */
-		  char *s = (char *)PR_MALLOC(length + LINEBREAK_LEN + 1);
+		  char *s = (char *)PR_MALLOC(length + MSG_LINEBREAK_LEN + 1);
 		  if (!s) return MK_OUT_OF_MEMORY;
 		  nsCRT::memcpy(s, line, length);
-		  PL_strcpy(s + length, LINEBREAK);
-		  status = kid->clazz->parse_buffer (s, length + LINEBREAK_LEN, kid);
+		  PL_strcpy(s + length, MSG_LINEBREAK);
+		  status = kid->clazz->parse_buffer (s, length + MSG_LINEBREAK_LEN, kid);
 		  PR_Free(s);
 		  return status;
 		}

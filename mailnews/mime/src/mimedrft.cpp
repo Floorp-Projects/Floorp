@@ -272,11 +272,11 @@ static void mime_intl_insert_message_header_1(char **body, char **hdr_value,
 	if (htmlEdit)
 	{
 		mime_SACat(*body, HEADER_START_JUNK);
-		/* mime_SACat(*body, LINEBREAK "<BR><B>"); */
+		/* mime_SACat(*body, MSG_LINEBREAK "<BR><B>"); */
 	}
 	else
 	{
-		mime_SACat(*body, LINEBREAK);
+		mime_SACat(*body, MSG_LINEBREAK);
 	}
 	if (!html_hdr_str)
 		html_hdr_str = hdr_str;
@@ -341,7 +341,7 @@ static void mime_insert_all_headers(char **body,
 	else
 	{
 		mime_SACopy(&(newBody), 
-					 LINEBREAK LINEBREAK "-------- Original Message --------");
+					 MSG_LINEBREAK MSG_LINEBREAK "-------- Original Message --------");
 	}
 
 	for (i = 0; i < headers->heads_size; i++)
@@ -410,7 +410,7 @@ static void mime_insert_all_headers(char **body,
 	if (htmlEdit)
 	{
 		mime_SACat(newBody, "</TABLE>");
-		mime_SACat(newBody, LINEBREAK "<BR><BR>");
+		mime_SACat(newBody, MSG_LINEBREAK "<BR><BR>");
 		if (html_tag)
 			mime_SACat(newBody, html_tag+6);
 		else
@@ -418,7 +418,7 @@ static void mime_insert_all_headers(char **body,
 	}
 	else
 	{
-		mime_SACat(newBody, LINEBREAK LINEBREAK);
+		mime_SACat(newBody, MSG_LINEBREAK MSG_LINEBREAK);
 		mime_SACat(newBody, *body);
 	}
 
@@ -475,7 +475,7 @@ static void mime_insert_normal_headers(char **body,
 	else
 	{
 		mime_SACopy(&(newBody), 
-					 LINEBREAK LINEBREAK "-------- Original Message --------");
+					 MSG_LINEBREAK MSG_LINEBREAK "-------- Original Message --------");
 	}
 	if (subject)
 		mime_intl_insert_message_header(&newBody, &subject, HEADER_SUBJECT,
@@ -582,7 +582,7 @@ static void mime_insert_normal_headers(char **body,
 	if (htmlEdit)
 	{
 		mime_SACat(newBody, "</TABLE>");
-		mime_SACat(newBody, LINEBREAK "<BR><BR>");
+		mime_SACat(newBody, MSG_LINEBREAK "<BR><BR>");
 		if (html_tag)
 			mime_SACat(newBody, html_tag+6);
 		else
@@ -590,7 +590,7 @@ static void mime_insert_normal_headers(char **body,
 	}
 	else
 	{
-		mime_SACat(newBody, LINEBREAK LINEBREAK);
+		mime_SACat(newBody, MSG_LINEBREAK MSG_LINEBREAK);
 		mime_SACat(newBody, *body);
 	}
 	if (newBody)
@@ -652,7 +652,7 @@ static void mime_insert_micro_headers(char **body,
 	else
 	{
 		mime_SACopy(&(newBody), 
-					 LINEBREAK LINEBREAK "-------- Original Message --------");
+					 MSG_LINEBREAK MSG_LINEBREAK "-------- Original Message --------");
 	}
 	if (from)
 	{
@@ -707,7 +707,7 @@ static void mime_insert_micro_headers(char **body,
 	if (htmlEdit)
 	{
 		mime_SACat(newBody, "</TABLE>");
-		mime_SACat(newBody, LINEBREAK "<BR><BR>");
+		mime_SACat(newBody, MSG_LINEBREAK "<BR><BR>");
 		if (html_tag)
 			mime_SACat(newBody, html_tag+6);
 		else
@@ -715,7 +715,7 @@ static void mime_insert_micro_headers(char **body,
 	}
 	else
 	{
-		mime_SACat(newBody, LINEBREAK LINEBREAK);
+		mime_SACat(newBody, MSG_LINEBREAK MSG_LINEBREAK);
 		mime_SACat(newBody, *body);
 	}
 	if (newBody)

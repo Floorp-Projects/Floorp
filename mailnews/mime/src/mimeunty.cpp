@@ -273,7 +273,7 @@ MimeUntypedText_open_subpart (MimeObject *obj,
 
   PL_strcpy(h, HEADER_CONTENT_TYPE ": ");
   PL_strcat(h, type);
-  PL_strcat(h, LINEBREAK);
+  PL_strcat(h, MSG_LINEBREAK);
   status = MimeHeaders_parse_line(h, PL_strlen(h), uty->open_hdrs);
   if (status < 0) goto FAIL;
 
@@ -281,7 +281,7 @@ MimeUntypedText_open_subpart (MimeObject *obj,
 	{
 	  PL_strcpy(h, HEADER_CONTENT_TRANSFER_ENCODING ": ");
 	  PL_strcat(h, enc);
-	  PL_strcat(h, LINEBREAK);
+	  PL_strcat(h, MSG_LINEBREAK);
 	  status = MimeHeaders_parse_line(h, PL_strlen(h), uty->open_hdrs);
 	  if (status < 0) goto FAIL;
 	}
@@ -290,7 +290,7 @@ MimeUntypedText_open_subpart (MimeObject *obj,
 	{
 	  PL_strcpy(h, HEADER_CONTENT_DESCRIPTION ": ");
 	  PL_strcat(h, desc);
-	  PL_strcat(h, LINEBREAK);
+	  PL_strcat(h, MSG_LINEBREAK);
 	  status = MimeHeaders_parse_line(h, PL_strlen(h), uty->open_hdrs);
 	  if (status < 0) goto FAIL;
 	}
@@ -298,13 +298,13 @@ MimeUntypedText_open_subpart (MimeObject *obj,
 	{
 	  PL_strcpy(h, HEADER_CONTENT_DISPOSITION ": inline; filename=\"");
 	  PL_strcat(h, name);
-	  PL_strcat(h, "\"" LINEBREAK);
+	  PL_strcat(h, "\"" MSG_LINEBREAK);
 	  status = MimeHeaders_parse_line(h, PL_strlen(h), uty->open_hdrs);
 	  if (status < 0) goto FAIL;
 	}
 
   /* push out a blank line. */
-  PL_strcpy(h, LINEBREAK);
+  PL_strcpy(h, MSG_LINEBREAK);
   status = MimeHeaders_parse_line(h, PL_strlen(h), uty->open_hdrs);
   if (status < 0) goto FAIL;
 

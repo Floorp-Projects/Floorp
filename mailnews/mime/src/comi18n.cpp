@@ -34,7 +34,7 @@
 // BEGIN EXTERNAL DEPENDANCY
 
 extern "C"  char * MIME_StripContinuations(char *original);
-/* RICHIE - These are needed by other libmime functions */
+/* These are needed by other libmime functions */
 extern "C" PRInt16 INTL_DefaultWinCharSetID(char a) { return a; }
 extern "C" char   *INTL_CsidToCharsetNamePt(PRInt16 id) { return "iso-8859-1"; }
 extern "C" PRInt16 INTL_CharSetNameToID(char *charset) { return 0; }
@@ -1226,7 +1226,11 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
               dstPtr = (char *) PR_Malloc(dstLength + 1);
               if (dstPtr != nsnull) {
                 res = encoder->Convert(unichars, &unicharLength, dstPtr, &dstLength);
-                NS_ASSERTION(unicharLength == originalLength, "unicharLength != originalLength");
+                if (unicharLength < originalLength) {
+                  PR_FREEIF(dstPtr);
+                  dstPtr = PL_strdup(inBuffer);   // no conversion
+                  dstLength = PL_strlen(dstPtr);
+                }
               }
             }
             if (dstPtr != nsnull) {

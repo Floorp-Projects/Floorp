@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "msgCore.h"
 #include "mimemult.h"
 #include "modmime.h"
 
@@ -526,8 +527,8 @@ MimeMultipart_parse_child_line (MimeObject *obj, char *line, PRInt32 length,
   if (!first_line_p)
 	{
 	  /* Push out a preceeding newline... */
-	  char nl[] = LINEBREAK;
-	  status = kid->clazz->parse_buffer (nl, LINEBREAK_LEN, kid);
+	  char nl[] = MSG_LINEBREAK;
+	  status = kid->clazz->parse_buffer (nl, MSG_LINEBREAK_LEN, kid);
 	  if (status < 0) return status;
 	}
 

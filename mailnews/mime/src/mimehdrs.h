@@ -19,14 +19,10 @@
 #ifndef _MIMEHDRS_H_
 #define _MIMEHDRS_H_
 
-// RICHIE
 #include "modlmime.h"
 
 /* This file defines the interface to message-header parsing and formatting
-   code, including conversion to HTML.
- */
-
-
+   code, including conversion to HTML. */
 
 /* Other structs defined later in this file.
  */

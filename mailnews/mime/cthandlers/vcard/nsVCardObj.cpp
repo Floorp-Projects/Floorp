@@ -93,7 +93,7 @@ static PRBool needsQuotedPrintable (const char *s)
 {
     const unsigned char *p = (const unsigned char *)s;
 
-	if (PL_strstr (s, LINEBREAK))
+	if (PL_strstr (s, MSG_LINEBREAK))
 		return PR_TRUE;
 
 	while (*p) {
@@ -1093,8 +1093,8 @@ static void appendcOFile(OFile *fp, char c)
 /*  int i = 0; */
     if (c == '\n') {
 	/* write out as <CR><LF> */
-	/* for (i = 0; i < LINEBREAK_LEN; i++)
-		appendcOFile_(fp,LINEBREAK [ i ]); */
+	/* for (i = 0; i < MSG_LINEBREAK_LEN; i++)
+		appendcOFile_(fp,MSG_LINEBREAK [ i ]); */
 	appendcOFile_(fp,0xd); 
 	appendcOFile_(fp,0xa); 
 	}

@@ -268,7 +268,7 @@ MimeMultipartSigned_parse_line (char *line, PRInt32 length, MimeObject *obj)
 
 	  if (!sig->xlation_closure)
 		{
-		  /* RICHIE - Set error change */
+		  /* Set error change */
 		  PR_SetError(0, 0);
 		  /* Initialize the signature verification library. */
 		  sig->xlation_closure = (((MimeMultipartSignedClass *) obj->clazz)
@@ -529,8 +529,8 @@ MimeMultipartSigned_parse_child_line (MimeObject *obj,
 		if (!first_line_p)
 		  {
 			/* Push out a preceeding newline... */
-			char nl[] = LINEBREAK;
-			status = MimePartBufferWrite (sig->part_buffer, nl, LINEBREAK_LEN);
+			char nl[] = MSG_LINEBREAK;
+			status = MimePartBufferWrite (sig->part_buffer, nl, MSG_LINEBREAK_LEN);
 			if (status < 0) return status;
 		  }
 

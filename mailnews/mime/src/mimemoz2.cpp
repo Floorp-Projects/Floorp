@@ -248,8 +248,6 @@ compose_only_output_fn(char *buf, PRInt32 size, void *stream_closure)
     return 0;
 }
 
-extern PRBool msg_LoadingForComposeOnly(const MSG_Pane* pane); /* in msgmpane.cpp */
-
 static int
 mime_set_html_state_fn (void *stream_closure,
                         PRBool layer_encapsulate_p,
@@ -1272,7 +1270,7 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
   // 
   // Charset overrides takes place here
   //
-  // We have a bool pref (mail.override_charset) to deal with incorrectly labeled mails. 
+  // We have a bool pref (mail.force_charset) to deal with incorrectly labeled mails. 
   // 1) If false and the part header is specified then use the charset in the header. 
   // 2) If false and the part header has no charset the use the charset in the pref. 
   //    We may also apply the charset detection. 

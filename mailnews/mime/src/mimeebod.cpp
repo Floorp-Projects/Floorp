@@ -348,7 +348,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 		{ \
 		  PL_strcpy(h, STR ": "); \
 		  PL_strcat(h, VAR); \
-		  PL_strcat(h, LINEBREAK); \
+		  PL_strcat(h, MSG_LINEBREAK); \
 		  status = MimeHeaders_parse_line(h, PL_strlen(h), hdrs); \
 		  if (status < 0) goto FAIL; \
 		}
@@ -365,7 +365,7 @@ MimeExternalBody_parse_eof (MimeObject *obj, PRBool abort_p)
 	  FROB("Expiration",	exp);
 	  FROB("Subject",		subj);
 # undef FROB
-	  PL_strcpy(h, LINEBREAK);
+	  PL_strcpy(h, MSG_LINEBREAK);
 	  status = MimeHeaders_parse_line(h, PL_strlen(h), hdrs);
 	  if (status < 0) goto FAIL;
 
