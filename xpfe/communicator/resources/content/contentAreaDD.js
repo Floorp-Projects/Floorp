@@ -165,9 +165,7 @@ var contentAreaDNDObserver = {
         return true;
       switch (document.firstChild.getAttribute('windowtype')) {
         case "navigator:browser":
-          var urlBar = document.getElementById("urlbar");
-          urlBar.value = url;
-          BrowserLoadURL();
+          loadShortcutOrURI(url);
           break;
         case "navigator:view-source":
           viewSource(url);
