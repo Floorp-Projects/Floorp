@@ -270,7 +270,8 @@ nsFrameImageLoader::StopImageLoad(PRBool aStopChrome)
           return NS_ERROR_FAILURE;
   }
 
-  PRINTF("    %p: stopping %s\n", this, mURL);
+  nsCAutoString tmp; tmp.AssignWithConversion(mURL);
+  PRINTF("    %p: stopping %s\n", this, tmp.GetBuffer());
   if (nsnull != mImageRequest) {
     mImageRequest->RemoveObserver(this);
     NS_RELEASE(mImageRequest);
@@ -462,7 +463,8 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
 
   mNotifyLockCount++;
 
-  PRINTF("%p: loading %s", this, mURL);
+  nsCAutoString tmp; tmp.AssignWithConversion(mURL);
+  PRINTF("%p: loading %s", this, tmp.GetBuffer());
   PRINTF(" notification=%d params=%d,%d,%p\n", aNotificationType,
          aParam1, aParam2, aParam3);
   switch (aNotificationType) {

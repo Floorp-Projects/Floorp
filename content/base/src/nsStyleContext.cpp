@@ -2007,7 +2007,7 @@ private:  // all data and methods private: only friends have access
   PRUint32                mRefCnt;
   PRUint32                mCRC;
 
-#ifdef DEBUG
+#ifdef NS_ENABLE_LOGGING
   static PRUint32         gInstanceCount;
 #endif
 };
@@ -2038,7 +2038,7 @@ PRUint32 nsStyleContextData::Release(void)
   return mRefCnt;
 }
 
-#ifdef DEBUG
+#ifdef NS_ENABLE_LOGGING
 /*static*/ PRUint32 nsStyleContextData::gInstanceCount;
 #endif  // DEBUG
 
