@@ -37,6 +37,7 @@ import grendel.storage.MessageExtra;
 import grendel.ui.MessageDisplayManager;
 import grendel.ui.MultiMessageDisplayManager;
 import grendel.ui.UnifiedMessageDisplayManager;
+import grendel.ui.DialogAuthenticator;
 
 /**
  * This launches the Grendel GUI.
@@ -83,7 +84,11 @@ public class Main {
     props.put("mail.directory", prefs.getString("mail.directory", ""));
     System.out.println(props.get("mail.directory"));
     
-    Session session = Session.getDefaultInstance(props, null);
+    // JavaMail's smtp-transport needs to know where it has to deliver it's e-mails.
+    // I'm not sure this belongs here, but for now, it works.
+    props.put("mail.host", prefs.getString("mail.smtp.host", "localhost"));
+
+    Session session = Session.getDefaultInstance(props, new DialogAuthenticator());
     System.out.println(session);
     BerkeleyStore store = new BerkeleyStore(session);
     System.out.println(store);
