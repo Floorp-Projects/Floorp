@@ -37,9 +37,12 @@ CPPSRCS		= \
 		nsSampleWordBreaker.cpp \
 		$(NULL)
 
-EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
-
 include $(topsrcdir)/config/rules.mk
 
-CFLAGS		+= -DUSE_NSREG -D__STDC__
+CFLAGS		+= -DUSE_NSREG
+
+# Reserved name __STDC__ cannot be defined as a macro name on AIX or OpenVMS.
+ifeq (,$(filter AIX OpenVMS,$(OS_ARCH)))
+CFLAGS		+= -D__STDC__
+endif
 
