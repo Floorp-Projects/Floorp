@@ -97,15 +97,7 @@ GetNextChildFrame(nsIPresContext* aPresContext, nsIFrame* aFrame)
   NS_PRECONDITION(aFrame, "null pointer");
 
   // Get the last-in-flow
-  while (PR_TRUE) {
-    nsIFrame* nextInFlow;
-    aFrame->GetNextInFlow(&nextInFlow);
-    if (nextInFlow) {
-      aFrame = nextInFlow;
-    } else {
-      break;
-    }
-  }
+  aFrame = aFrame->GetLastInFlow();
 
   // Get its next sibling
   nsIFrame* nextSibling;

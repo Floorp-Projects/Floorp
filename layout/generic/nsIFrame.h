@@ -878,6 +878,20 @@ public:
   NS_IMETHOD  SetNextInFlow(nsIFrame*) = 0;
 
   /**
+   * Return the first frame in our current flow. 
+   */
+  virtual nsIFrame* GetFirstInFlow() const {
+    return NS_CONST_CAST(nsIFrame*, this);
+  }
+
+  /**
+   * Return the last frame in our current flow.
+   */
+  virtual nsIFrame* GetLastInFlow() const {
+    return NS_CONST_CAST(nsIFrame*, this);
+  }
+
+  /**
    * Pre-reflow hook. Before a frame is reflowed this method will be called.
    * This call will always be invoked at least once before a subsequent Reflow
    * and DidReflow call. It may be called more than once, In general you will

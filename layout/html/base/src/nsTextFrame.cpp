@@ -431,6 +431,7 @@ public:
     mNextInFlow = aNextInFlow;
     return NS_OK;
   }
+  virtual nsIFrame* GetLastInFlow() const;
   
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const {
     aIsSplittable = NS_FRAME_SPLITTABLE;
@@ -893,7 +894,8 @@ public:
     mPrevInFlow = aPrevInFlow;
     return NS_OK;
   }
-
+  virtual nsIFrame* GetFirstInFlow() const;
+  
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
@@ -959,6 +961,19 @@ nsContinuingTextFrame::Destroy(nsIPresContext* aPresContext)
   }
   // Let the base class destroy the frame
   return nsFrame::Destroy(aPresContext);
+}
+
+nsIFrame*
+nsContinuingTextFrame::GetFirstInFlow() const
+{
+  nsContinuingTextFrame* firstInFlow;
+  nsContinuingTextFrame* prevInFlow = (nsContinuingTextFrame*)this;
+  while (prevInFlow)  {
+    firstInFlow = prevInFlow;
+    prevInFlow = (nsContinuingTextFrame*)firstInFlow->mPrevInFlow;
+  }
+  NS_POSTCONDITION(firstInFlow, "illegal state in flow chain.");
+  return firstInFlow;
 }
 
 #ifdef DEBUG
@@ -1427,16 +1442,16 @@ nsTextFrame::GetCursor(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-static nsIFrame*
-GetLastInFlow(nsIFrame* aFrame)
+nsIFrame*
+nsTextFrame::GetLastInFlow() const
 {
-  nsIFrame* lastInFlow;
-  nsIFrame* nextInFlow = aFrame;
-  while (nsnull!=nextInFlow)  {
+  nsTextFrame* lastInFlow;
+  nsTextFrame* nextInFlow = (nsTextFrame*)this;
+  while (nextInFlow)  {
     lastInFlow = nextInFlow;
-    lastInFlow->GetNextInFlow(&nextInFlow);
+    nextInFlow = (nsTextFrame*)lastInFlow->mNextInFlow;
   }
-  NS_POSTCONDITION(nsnull!=lastInFlow, "illegal state in flow chain.");
+  NS_POSTCONDITION(lastInFlow, "illegal state in flow chain.");
   return lastInFlow;
 }
 
@@ -1455,7 +1470,7 @@ nsTextFrame::ContentChanged(nsIPresContext* aPresContext,
       tccd->GetChangeType(&type);
       if (nsITextContentChangeData::Append == type) {
         markAllDirty = PR_FALSE;
-        nsTextFrame* frame = (nsTextFrame*)::GetLastInFlow(this);
+        nsTextFrame* frame = (nsTextFrame*)GetLastInFlow();
         frame->mState |= NS_FRAME_IS_DIRTY;
         targetTextFrame = frame;
       }

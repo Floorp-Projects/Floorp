@@ -66,12 +66,12 @@ public:
   /**
    * Return the first frame in our current flow. 
    */
-  nsIFrame*   GetFirstInFlow() const;
+  virtual nsIFrame* GetFirstInFlow() const;
 
   /**
    * Return the last frame in our current flow.
    */
-  nsIFrame*   GetLastInFlow() const;
+  virtual nsIFrame* GetLastInFlow() const;
 
   // Remove the frame from the flow. Connects the frame's prev-in-flow
   // and its next-in-flow

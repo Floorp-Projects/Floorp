@@ -378,13 +378,7 @@ GetSpecialSibling(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame** a
 {
   // We only store the "special sibling" annotation with the first
   // frame in the flow. Walk back to find that frame now.
-  while (1) {
-    nsIFrame* prev = aFrame;
-    aFrame->GetPrevInFlow(&prev);
-    if (! prev)
-      break;
-    aFrame = prev;
-  }
+  aFrame = aFrame->GetFirstInFlow();
 
   void* value;
   aFrameManager->GetFrameProperty(aFrame, nsLayoutAtoms::IBSplitSpecialSibling, 0, &value);
@@ -7930,13 +7924,7 @@ FindPreviousAnonymousSibling(nsIPresShell* aPresShell,
     if (prevSibling) {
       // The frame may have a continuation. If so, we want the
       // last-in-flow as our previous sibling.
-      nsIFrame* nextInFlow;
-      while (1) {
-        prevSibling->GetNextInFlow(&nextInFlow);
-        if (! nextInFlow)
-          break;
-        prevSibling = nextInFlow;
-      }
+      prevSibling = prevSibling->GetLastInFlow();
 
       // If the frame is out-of-flow, GPFF() will have returned the
       // out-of-flow frame; we want the placeholder.
@@ -8134,13 +8122,7 @@ nsCSSFrameConstructor::FindPreviousSibling(nsIPresShell*     aPresShell,
 
     if (prevSibling) {
       // The frame may have a continuation. Get the last-in-flow
-      nsIFrame* nextInFlow;
-      while (1) {
-        prevSibling->GetNextInFlow(&nextInFlow);
-        if (! nextInFlow)
-          break;
-        prevSibling = nextInFlow;
-      }
+      prevSibling = prevSibling->GetLastInFlow();
 
       // If the frame is out-of-flow, GPFF() will have returned the
       // out-of-flow frame; we want the placeholder.
@@ -8501,13 +8483,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
   }
 
   // Get the parent frame's last-in-flow
-  nsIFrame* nextInFlow = parentFrame;
-  while (nsnull != nextInFlow) {
-    parentFrame->GetNextInFlow(&nextInFlow);
-    if (nsnull != nextInFlow) {
-      parentFrame = nextInFlow;
-    }
-  }
+  parentFrame = parentFrame->GetLastInFlow();
 
   // If we didn't process children when we originally created the frame,
   // then don't do any processing now
@@ -14113,13 +14089,7 @@ nsCSSFrameConstructor::SplitToContainingBlock(nsIPresContext* aPresContext,
   // newly created anonymous frames. We need to create the linkage
   // between the first in flow, so if we're a continuation frame, walk
   // back to find it.
-  nsIFrame* firstInFlow = aFrame;
-  while (1) {
-    nsIFrame* prevInFlow;
-    firstInFlow->GetPrevInFlow(&prevInFlow);
-    if (! prevInFlow) break;
-    firstInFlow = prevInFlow;
-  }
+  nsIFrame* firstInFlow = aFrame->GetFirstInFlow();
 
   SetFrameIsSpecial(aState.mFrameManager, firstInFlow, blockFrame);
   SetFrameIsSpecial(aState.mFrameManager, blockFrame, inlineFrame);

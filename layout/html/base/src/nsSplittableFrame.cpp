@@ -107,11 +107,11 @@ nsIFrame* nsSplittableFrame::GetFirstInFlow() const
 {
   nsSplittableFrame* firstInFlow;
   nsSplittableFrame* prevInFlow = (nsSplittableFrame*)this;
-  while (nsnull!=prevInFlow)  {
+  while (prevInFlow)  {
     firstInFlow = prevInFlow;
     prevInFlow = (nsSplittableFrame*)firstInFlow->mPrevInFlow;
   }
-  NS_POSTCONDITION(nsnull!=firstInFlow, "illegal state in flow chain.");
+  NS_POSTCONDITION(firstInFlow, "illegal state in flow chain.");
   return firstInFlow;
 }
 
@@ -119,11 +119,11 @@ nsIFrame* nsSplittableFrame::GetLastInFlow() const
 {
   nsSplittableFrame* lastInFlow;
   nsSplittableFrame* nextInFlow = (nsSplittableFrame*)this;
-  while (nsnull!=nextInFlow)  {
+  while (nextInFlow)  {
     lastInFlow = nextInFlow;
     nextInFlow = (nsSplittableFrame*)lastInFlow->mNextInFlow;
   }
-  NS_POSTCONDITION(nsnull!=lastInFlow, "illegal state in flow chain.");
+  NS_POSTCONDITION(lastInFlow, "illegal state in flow chain.");
   return lastInFlow;
 }
 

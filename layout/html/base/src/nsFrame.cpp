@@ -4432,13 +4432,7 @@ GetIBSpecialSibling(nsIPresContext* aPresContext,
   
   // Find the first-in-flow of the frame.  (Ugh.  This ends up
   // being O(N^2) when it is called O(N) times.)
-  for (;;) {
-    nsIFrame *prevInFlow;
-    aFrame->GetPrevInFlow(&prevInFlow);
-    if (!prevInFlow)
-      break;
-    aFrame = prevInFlow;
-  }
+  aFrame = aFrame->GetFirstInFlow();
 
   /*
    * Now look up the nsLayoutAtoms::IBSplitSpecialPrevSibling
