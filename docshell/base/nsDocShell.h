@@ -104,19 +104,12 @@ public:
    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
 protected:
+   // Object Management
    nsDocShell();
    virtual ~nsDocShell();
+   NS_IMETHOD DestroyChildren();
 
-   nsDocShellInitInfo* InitInfo();
-   NS_IMETHOD GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
-      PRInt32* aOffset);
-   NS_IMETHOD GetRootScrollableView(nsIScrollableView** aOutScrollView);
-   NS_IMETHOD EnsureContentListener();
-   NS_IMETHOD EnsureScriptEnvironment();
-   NS_IMETHOD GetTarget(const PRUnichar* aName, nsIDocShellTreeItem** aShell);
-   NS_IMETHOD CreateTargetLocation(const PRUnichar* aName, nsIDocShellTreeItem** aShell);
-
-   void SetCurrentURI(nsIURI* aUri);
+   // Content Viewer Management
    NS_IMETHOD EnsureContentViewer();
    NS_IMETHOD CreateAboutBlankContentViewer();
    NS_IMETHOD CreateContentViewer(const char* aContentType, nsURILoadCommand aCommand,
@@ -125,8 +118,46 @@ protected:
       nsIChannel* aOpenedChannel, nsIStreamListener** aContentHandler);
    NS_IMETHOD SetupNewViewer(nsIContentViewer* aNewViewer);
 
+   // Site Loading
+   typedef enum
+   {
+      loadNormal,
+      loadHistory,
+      loadReloadNormal,
+      loadReloadBypassCache,
+      loadReloadBypassProxy,
+      loadRelaodBypassProxyAndCache,
+      loadLink
+   } loadType;
+
+   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrer, 
+      nsIInputStream* aPostData=nsnull, loadType aLoadType=loadNormal);
+   NS_IMETHOD DoURILoad(nsIURI* aURI);
    NS_IMETHOD StopCurrentLoads();
-   NS_IMETHOD AddCurrentSiteToHistories();
+   NS_IMETHOD ScrollIfAnchor(nsIURI* aURI, PRBool* aWasAnchor);
+   NS_IMETHOD OnLoadingSite(nsIURI* aURI);
+   void SetCurrentURI(nsIURI* aURI);
+   void SetReferrerURI(nsIURI* aURI);
+
+   // Session History
+   NS_IMETHOD ShouldAddToSessionHistory(nsIURI* aURI, PRBool* aShouldAdd);
+   NS_IMETHOD AddToSessionHistory(nsIURI* aURI);
+   NS_IMETHOD UpdateCurrentSessionHistory();
+   NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry);
+
+   // Global History
+   NS_IMETHOD ShouldAddToGlobalHistory(nsIURI* aURI, PRBool* aShouldAdd);
+   NS_IMETHOD AddToGlobalHistory(nsIURI* aURI);
+   NS_IMETHOD UpdateCurrentGlobalHistory();
+
+   // Helper Routines
+   nsDocShellInitInfo* InitInfo();
+   NS_IMETHOD GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
+      PRInt32* aOffset);
+   NS_IMETHOD GetRootScrollableView(nsIScrollableView** aOutScrollView);
+   NS_IMETHOD EnsureContentListener();
+   NS_IMETHOD EnsureScriptEnvironment();
+
 
    NS_IMETHOD FireStartDocumentLoad(nsIDocumentLoader* aLoader,
                                     nsIURI* aURL,
@@ -137,9 +168,8 @@ protected:
                                   nsresult aStatus);
 
    NS_IMETHOD InsertDocumentInDocTree();
-   NS_IMETHOD DestroyChildren();
 
-   NS_IMETHOD GetPrimaryFrameFor(nsIContent* content, nsIFrame** frame);
+   PRBool IsFrame();
 
 protected:
    nsString                   mName;
@@ -153,12 +183,16 @@ protected:
    nsCOMPtr<nsIWidget>        mParentWidget;
    nsCOMPtr<nsIPref>          mPrefs;
    nsCOMPtr<nsIURI>           mCurrentURI;
+   nsCOMPtr<nsIURI>           mReferrerURI;
    nsCOMPtr<nsIScriptGlobalObject> mScriptGlobal;
    nsCOMPtr<nsIScriptContext> mScriptContext;
    nsCOMPtr<nsISHistory>      mSessionHistory;
+   nsCOMPtr<nsISupports>      mLoadCookie; // the load cookie associated with the window context.
    PRInt32                    mMarginWidth;
    PRInt32                    mMarginHeight;
    PRInt32                    mItemType;
+   PRBool                     mUpdateHistoryOnLoad;
+   PRBool                     mInitialPageLoad;
 
    /* WEAK REFERENCES BELOW HERE.
    Note these are intentionally not addrefd.  Doing so will create a cycle.
