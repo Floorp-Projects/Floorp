@@ -29,7 +29,7 @@
  *   -- 20000326
  *     -- added Mozilla integration code
  *
- * $Id: URIUtils.cpp,v 1.8 2001/03/06 00:12:40 Peter.VanderBeken%pandora.be Exp $
+ * $Id: URIUtils.cpp,v 1.9 2001/04/03 12:37:49 peterv%netscape.com Exp $
  */
 
 #include "URIUtils.h"
@@ -38,7 +38,7 @@
  * URIUtils
  * A set of utilities for handling URIs
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2001/03/06 00:12:40 $
+ * @version $Revision: 1.9 $ $Date: 2001/04/03 12:37:49 $
 **/
 
 #ifndef MOZ_XSL
@@ -249,6 +249,8 @@ istream* URIUtils::openStream(ParsedURI* uri) {
 URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
 
     ParsedURI* uriTokens = new ParsedURI;
+    if (!uriTokens)
+        return NULL;
     uriTokens->isMalformed = MB_FALSE;
 
     short mode = PROTOCOL_MODE;

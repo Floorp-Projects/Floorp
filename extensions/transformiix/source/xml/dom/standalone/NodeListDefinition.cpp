@@ -69,6 +69,8 @@ void NodeListDefinition::append(Node* newNode)
 void NodeListDefinition::append(Node& newNode)
 {
   ListItem* newListItem = new ListItem;
+  if (!newListItem)
+      return;
 
   // Setup the new list item
   newListItem->node = &newNode;
