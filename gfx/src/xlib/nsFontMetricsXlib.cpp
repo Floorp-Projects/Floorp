@@ -428,13 +428,13 @@ void nsFontMetricsXlib::RealizeFont()
     /* mHeight is already multipled by f */
     float height;
     height = mFontHandle->ascent + mFontHandle->descent;
-    mUnderlineOffset = -NSToIntRound(MAX (1, floor (0.1 * height + 0.5)) * f);
+    mUnderlineOffset = -NSToIntRound(PR_MAX (1, floor (0.1 * height + 0.5)) * f);
   }
 
   if (::XGetFontProperty(mFontHandle, XA_UNDERLINE_THICKNESS, &pr))
   {
     /* this will only be provided from adobe .afm fonts */
-    mUnderlineSize = nscoord(MAX(f, NSToIntRound(pr * f)));
+    mUnderlineSize = nscoord(PR_MAX(f, NSToIntRound(pr * f)));
     PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("underlineSize=%d\n", mUnderlineSize));
   }
   else
@@ -442,12 +442,12 @@ void nsFontMetricsXlib::RealizeFont()
     /* mHeight is already multipled by f */
     float height;
     height = mFontHandle->ascent + mFontHandle->descent;
-    mUnderlineSize = NSToIntRound(MAX(1, floor (0.05 * height + 0.5)) * f);
+    mUnderlineSize = NSToIntRound(PR_MAX(1, floor (0.05 * height + 0.5)) * f);
   }
 
   if (::XGetFontProperty(mFontHandle, XA_SUPERSCRIPT_Y, &pr))
   {
-    mSuperscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
+    mSuperscriptOffset = nscoord(PR_MAX(f, NSToIntRound(pr * f)));
     PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("superscriptOffset=%d\n", mSuperscriptOffset));
   }
   else
@@ -457,7 +457,7 @@ void nsFontMetricsXlib::RealizeFont()
 
   if (::XGetFontProperty(mFontHandle, XA_SUBSCRIPT_Y, &pr))
   {
-    mSubscriptOffset = nscoord(MAX(f, NSToIntRound(pr * f)));
+    mSubscriptOffset = nscoord(PR_MAX(f, NSToIntRound(pr * f)));
     PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("subscriptOffset=%d\n", mSubscriptOffset));
   }
   else
@@ -784,6 +784,12 @@ static PLHashTable* gFamilyNames = nsnull;
 
 static nsFontFamilyName gFamilyNameTable[] =
 {
+#ifdef MOZ_MATHML
+  { "cmex",             "cmex10" },
+  { "cmsy",             "cmsy10" },
+  { "-moz-math-text",   "times" },
+  { "-moz-math-symbol", "symbol" },
+#endif
   { "arial",           "helvetica" },
   { "courier new",     "courier" },
   { "times new roman", "times" },
@@ -831,7 +837,13 @@ static nsFontPropertyName gStretchNames[] =
 };
 
 static PLHashTable* gCharSets = nsnull;
+#ifdef MOZ_MATHML
+static PLHashTable* gSpecialCharSets = nsnull;
+#endif
 
+#ifdef MOZ_MATHML
+static nsFontCharSetInfo Special = { nsnull };
+#endif
 static nsFontCharSetInfo Ignore = { nsnull };
 
 static int
@@ -844,6 +856,32 @@ SingleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
     count = aDestLen;
   }
   return count;
+}
+
+static void 
+ReverseBuffer(char* aBuf, int count)
+{
+    char *head, *tail, *med;
+    head = aBuf;
+    tail = &aBuf[count-1];
+    med = &aBuf[count/2];
+
+    while(head < med)
+    {
+       char tmp = *head;
+       *head++ = *tail;
+       *tail-- = tmp;
+    }
+}
+
+static int
+SingleByteConvertReverse(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
+  PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen)
+{
+    int count = SingleByteConvert(aSelf, aSrcBuf,
+                       aSrcLen, aDestBuf,  aDestLen);
+    ReverseBuffer(aDestBuf, count);
+    return count;
 }
 
 static int
@@ -915,49 +953,72 @@ SetUpFontCharSetInfo(nsFontCharSetInfo* aSelf)
   }
 }
 
-
 static nsFontCharSetInfo CP1251 =
-{ "windows-1251", SingleByteConvert, 0 };
+  { "windows-1251", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88591 =
-{ "ISO-8859-1", SingleByteConvert, 0 };
+  { "ISO-8859-1", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88592 =
-{ "ISO-8859-2", SingleByteConvert, 0 };
+  { "ISO-8859-2", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88593 =
-{ "ISO-8859-3", SingleByteConvert, 0 };
+  { "ISO-8859-3", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88594 =
-{ "ISO-8859-4", SingleByteConvert, 0 };
+  { "ISO-8859-4", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88595 =
-{ "ISO-8859-5", SingleByteConvert, 0 };
+  { "ISO-8859-5", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88596 =
-{ "ISO-8859-6", SingleByteConvert, 0 };
+  { "ISO-8859-6", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88597 =
-{ "ISO-8859-7", SingleByteConvert, 0 };
+  { "ISO-8859-7", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88598 =
-{ "ISO-8859-8", SingleByteConvert, 0 };
+  { "ISO-8859-8", SingleByteConvertReverse, 0 };
 static nsFontCharSetInfo ISO88599 =
-{ "ISO-8859-9", SingleByteConvert, 0 };
+  { "ISO-8859-9", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO885915 =
-{ "ISO-8859-15", SingleByteConvert, 0 };
+  { "ISO-8859-15", SingleByteConvert, 0 };
 static nsFontCharSetInfo JISX0201 =
-{ "jis_0201", SingleByteConvert, 1 };
+  { "jis_0201", SingleByteConvert, 1 };
 static nsFontCharSetInfo KOI8R =
-{ "KOI8-R", SingleByteConvert, 0 };
+  { "KOI8-R", SingleByteConvert, 0 };
+static nsFontCharSetInfo TIS620 =
+  { "TIS-620", SingleByteConvert, 0 };
+
 static nsFontCharSetInfo Big5 =
-{ "x-x-big5", DoubleByteConvert, 1 };
+  { "x-x-big5", DoubleByteConvert, 1 };
 static nsFontCharSetInfo CNS116431 =
-{ "x-cns-11643-1", DoubleByteConvert, 1 };
+  { "x-cns-11643-1", DoubleByteConvert, 1 };
 static nsFontCharSetInfo CNS116432 =
-{ "x-cns-11643-2", DoubleByteConvert, 1 };
+  { "x-cns-11643-2", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116433 =
+  { "x-cns-11643-3", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116434 =
+  { "x-cns-11643-4", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116435 =
+  { "x-cns-11643-5", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116436 =
+  { "x-cns-11643-6", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116437 =
+  { "x-cns-11643-7", DoubleByteConvert, 1 };
 static nsFontCharSetInfo GB2312 =
-{ "gb_2312-80", DoubleByteConvert, 1 };
+  { "gb_2312-80", DoubleByteConvert, 1 };
 static nsFontCharSetInfo JISX0208 =
-{ "jis_0208-1983", DoubleByteConvert, 1 };
+  { "jis_0208-1983", DoubleByteConvert, 1 };
 static nsFontCharSetInfo JISX0212 =
-{ "jis_0212-1990", DoubleByteConvert, 1 };
+  { "jis_0212-1990", DoubleByteConvert, 1 };
 static nsFontCharSetInfo KSC5601 =
-{ "ks_c_5601-1987", DoubleByteConvert, 1 };
+  { "ks_c_5601-1987", DoubleByteConvert, 1 };
+static nsFontCharSetInfo X11Johab =
+  { "x-x11johab", DoubleByteConvert, 1 };
+
 static nsFontCharSetInfo ISO106461 =
-{ nsnull, ISO10646Convert, 1 };
+  { nsnull, ISO10646Convert, 1 };
+#ifdef MOZ_MATHML
+static nsFontCharSetInfo AdobeSymbol =
+   { "Adobe-Symbol-Encoding", SingleByteConvert, 0 };
+static nsFontCharSetInfo CMCMEX =
+   { "x-cm-cmex", SingleByteConvert, 0 };
+static nsFontCharSetInfo CMCMSY =
+   { "x-cm-cmsy", SingleByteConvert, 0 };
+#endif
 
 
 /*
@@ -990,14 +1051,26 @@ static nsFontCharSetMap gCharSetMap[] =
 {
   { "-ascii",             &Ignore        },
   { "-ibm pc",            &Ignore        },
-  { "adobe-fontspecific", &Ignore        },
+#ifdef MOZ_MATHML
+  { "adobe-fontspecific", &Special       },
+#endif
   { "cns11643.1986-1",    &CNS116431     },
   { "cns11643.1986-2",    &CNS116432     },
   { "cns11643.1992-1",    &CNS116431     },
+  { "cns11643.1992.1-0",  &CNS116431     },
   { "cns11643.1992-12",   &Ignore        },
+  { "cns11643.1992.2-0",  &CNS116432     },
   { "cns11643.1992-2",    &CNS116432     },
-  { "cns11643.1992-3",    &Ignore        },
-  { "cns11643.1992-4",    &Ignore        },
+  { "cns11643.1992-3",    &CNS116433     },
+  { "cns11643.1992.3-0",  &CNS116433     },
+  { "cns11643.1992.4-0",  &CNS116434     },
+  { "cns11643.1992-4",    &CNS116434     },
+  { "cns11643.1992.5-0",  &CNS116435     },
+  { "cns11643.1992-5",    &CNS116435     },
+  { "cns11643.1992.6-0",  &CNS116436     },
+  { "cns11643.1992-6",    &CNS116436     },
+  { "cns11643.1992.7-0",  &CNS116437     },
+  { "cns11643.1992-7",    &CNS116437     },
   { "cp1251-1",           &CP1251        },
   { "dec-dectech",        &Ignore        },
   { "dtsymbol-1",         &Ignore        },
@@ -1044,18 +1117,33 @@ static nsFontCharSetMap gCharSetMap[] =
   { "jisx0208.1990-0",    &JISX0208      },
   { "jisx0212.1990-0",    &JISX0212      },
   { "koi8-r",             &KOI8R         },
+  { "johab-1",            &X11Johab      },
+  { "johabs-1",           &X11Johab      },
+  { "johabsh-1",          &X11Johab      },
   { "ksc5601.1987-0",     &KSC5601       },
   { "misc-fontspecific",  &Ignore        },
   { "sgi-fontspecific",   &Ignore        },
   { "sun-fontspecific",   &Ignore        },
   { "sunolcursor-1",      &Ignore        },
   { "sunolglyph-1",       &Ignore        },
+  { "tis620.2529-1",      &TIS620        },
   { "ucs2.cjk-0",         &Ignore        },
   { "ucs2.cjk_japan-0",   &Ignore        },
   { "ucs2.cjk_taiwan-0",  &Ignore        },
 
   { nsnull,               nsnull         }
 };
+
+#ifdef MOZ_MATHML
+static nsFontCharSetMap gSpecialCharSetMap[] =
+{
+  { "symbol-adobe-fontspecific", &AdobeSymbol  },
+  { "cmex10-adobe-fontspecific", &CMCMEX  },
+  { "cmsy10-adobe-fontspecific", &CMCMSY  },
+
+  { nsnull,                      nsnull        }
+};
+#endif
 
 #undef DEBUG_DUMP_TREE
 #ifdef DEBUG_DUMP_TREE
@@ -1305,7 +1393,12 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
 
     if (aStretch->mScalable) {
       double ratio = (s->mActualSize / ((double) desiredSize));
-      if ((ratio > 1.2) || (ratio < 0.8)) {
+
+      /*
+       * XXX Maybe revisit this. Upper limit deliberately set high (1.8) in
+       * order to avoid scaling Japanese fonts (ugly).
+       */
+      if ((ratio > 1.8) || (ratio < 0.8)) {
         scalable = 1;
       }
     }
@@ -1372,6 +1465,58 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
     }
   }
 
+#ifdef MOZ_MATHML
+  // CSS font-family bug fix 
+  // CSS font-family order is not respected without the following fix.
+  // The idea is to ensure that even though the character being searched
+  // for may not have a glyph in the current font, we need to load it anyway
+  // if it was one of the fonts requested in the CSS font-family property.
+  // Otherwise, the FindFont ('a') hack in ::Init () can disrupt the order.
+  // The font has been requested if (m->mFontsIndex <= m->mFontsCount) is true.
+
+  // previously we tested for !IS_REPRESENTABLE only for those cases
+  // where aCharSet->mInfo->mCharSet was not set since otherwise
+  // it was caught in SearchCharSet (). 
+  // but now if the font requested is in CSS font-family we have disabled
+  // the test in SearchCharSet () and so need to test it here. 
+  // in effect we have to test for !IS_REPRESENTABLE always now.
+  PRBool fontHasGlyph = IS_REPRESENTABLE(s->mMap, aSearch->mChar);
+    
+  // if fontHasGlyph definitely load.
+  // else if font was requested in css font-family property list,
+  // also definitely load to repect the order in the list.
+  if (fontHasGlyph || (m->mFontsIndex <= m->mFontsCount)) {
+    if (m->mLoadedFontsCount == m->mLoadedFontsAlloc) {
+      int newSize;
+      if (m->mLoadedFontsAlloc) {
+        newSize = (2 * m->mLoadedFontsAlloc);
+      }
+      else {
+        newSize = 1;
+      }
+      nsFontXlib** newPointer = (nsFontXlib**) 
+        PR_Realloc(m->mLoadedFonts, newSize * sizeof(nsFontXlib*));
+      if (newPointer) {
+        m->mLoadedFonts = newPointer;
+        m->mLoadedFontsAlloc = newSize;
+      }
+      else {
+        return;
+      }
+    }
+    m->mLoadedFonts[m->mLoadedFontsCount++] = s;
+  }
+  // need to update mFontsIndex to function correctly next time around
+  if (m->mFontsIndex == m->mFontsCount) {
+    (m->mFontsIndex)++;
+  }
+
+  // finally, indicate that search for the char 
+  // has succeeded if fontHasGlyph
+  if (fontHasGlyph) {
+    aSearch->mFont = s;
+  }
+#else /* MOZ_MATHML */
   if (!aCharSet->mInfo->mCharSet) {
     if (!IS_REPRESENTABLE(s->mMap, aSearch->mChar)) {
       return;
@@ -1398,6 +1543,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   }
   m->mLoadedFonts[m->mLoadedFontsCount++] = s;
   aSearch->mFont = s;
+#endif /* !MOZ_MATHML */
 
 #if 0
   nsFontXlib* result = s;
@@ -1684,6 +1830,9 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
   nsFontCharSetInfo* charSetInfo = charSet->mInfo;
   PRUint32* map = charSetInfo->mMap;
   nsFontSearch* search = (nsFontSearch*) arg;
+#ifdef MOZ_MATHML
+  nsFontMetricsXlib* m = search->mMetrics;
+#endif
   PRUnichar c = search->mChar;
   if (charSetInfo->mCharSet) {
     if (!map) {
@@ -1694,9 +1843,25 @@ SearchCharSet(PLHashEntry* he, PRIntn i, void* arg)
       charSetInfo->mMap = map;
       SetUpFontCharSetInfo(charSetInfo);
     }
-    if (!IS_REPRESENTABLE(map, c)) {
-      return HT_ENUMERATE_NEXT;
+#ifdef MOZ_MATHML
+    // CSS font-family bug fix 
+    // Check if font has been requested from CSS font-family, 
+    // if so ignore IS_REPRESENTABLE. It gets tested again 
+    // in PickASizeAndLoad (), see comments there.
+    // if font has'nt been requested, we do a redundant test here for speed.
+    if (m->mFontsIndex >= m->mFontsCount) {
+       if (!IS_REPRESENTABLE(map, c)) {
+#ifdef REALLY_NOISY_FONTS
+         printf("  ==> character not representable, trying next character set\n");
+#endif
+         return HT_ENUMERATE_NEXT;
+       }
     }
+#else /* MOZ_MATHML */
+       if (!IS_REPRESENTABLE(map, c)) {
+         return HT_ENUMERATE_NEXT;
+       }
+#endif /* !MOZ_MATHML */
   }
 
   TryCharSet(search, charSet);
@@ -1781,6 +1946,9 @@ GetFontNames(Display * aDisplay,char* aPattern)
     SKIP_FIELD(foundry);
     // XXX What to do about the many Applix fonts that start with "ax"?
     FIND_FIELD(familyName);
+    if (!*familyName) {
+      continue;
+    }
     FIND_FIELD(weightName);
     FIND_FIELD(slant);
     FIND_FIELD(setWidth);
@@ -1789,17 +1957,38 @@ GetFontNames(Display * aDisplay,char* aPattern)
     if (pixelSize[0] == '0') {
       scalable = 1;
     }
-    SKIP_FIELD(pointSize);
-    SKIP_FIELD(resolutionX);
-    SKIP_FIELD(resolutionY);
+    FIND_FIELD(pointSize);
+    if (pointSize[0] == '0') {
+      scalable = 1;
+    }
+    FIND_FIELD(resolutionX);
+    if (resolutionX[0] == '0') {
+      scalable = 1;
+    }
+    FIND_FIELD(resolutionY);
+    if (resolutionY[0] == '0') {
+      scalable = 1;
+    }
     FIND_FIELD(spacing);
-    SKIP_FIELD(averageWidth);
+    FIND_FIELD(averageWidth);
+    if (averageWidth[0] == '0') {
+      scalable = 1;
+    }
     char* charSetName = p; // CHARSET_REGISTRY & CHARSET_ENCODING
     if (!*charSetName) {
       continue;
     }
     nsFontCharSetInfo* charSetInfo =
       (nsFontCharSetInfo*) PL_HashTableLookup(gCharSets, charSetName);
+#ifdef MOZ_MATHML
+    // indirection for font specific charset encoding 
+    if (charSetInfo == &Special) {
+      char *familyCharSetName = PR_smprintf ("%s-%s", familyName, charSetName);
+      charSetInfo = (nsFontCharSetInfo*) PL_HashTableLookup 
+        (gSpecialCharSets, familyCharSetName);
+      PR_smprintf_free (familyCharSetName);
+    }
+#endif
     if (!charSetInfo) {
       PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("cannot find charset %s\n", charSetName));
       continue;
@@ -2007,6 +2196,17 @@ nsFontMetricsXlib::FindFont(PRUnichar aChar)
       PL_HashTableAdd(gCharSets, charSetMap->mName, (void*) charSetMap->mInfo);
       charSetMap++;
     }
+#ifdef MOZ_MATHML
+    gSpecialCharSets = PL_NewHashTable
+      (0, PL_HashString, PL_CompareStrings, NULL, NULL, NULL);
+    nsFontCharSetMap* specialCharSetMap = gSpecialCharSetMap;
+    while (specialCharSetMap->mName) {
+      PL_HashTableAdd (gSpecialCharSets, 
+                       specialCharSetMap->mName, 
+                       (void*) specialCharSetMap->mInfo);
+      specialCharSetMap++;
+    }
+#endif
   }
 
   nsFontSearch search = { this, aChar, nsnull };
@@ -2067,6 +2267,51 @@ nsFontMetricsXlib::FindFont(PRUnichar aChar)
   // Need to draw boxes eventually. Or pop up dialog like plug-in dialog.
   return nsnull;
 }
+
+#ifdef MOZ_MATHML
+// bounding metrics for a string 
+// remember returned values are not in app units
+nsresult
+nsFontMetricsXlib::GetBoundingMetrics (nsFontXlib*         aFont, 
+                                       const PRUnichar*   aString,
+                                       PRUint32           aLength,
+                                       nsBoundingMetrics& aBoundingMetrics)
+{
+  aBoundingMetrics.Clear();               
+
+  if (0 < aLength) {
+    XChar2b buf[512]; // XXX watch buffer length !!!
+    int len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
+                                            (char*) buf, sizeof(buf));
+    XFontStruct *font_struct = aFont->mFont;
+    XCharStruct overall;
+    int direction, font_ascent, font_descent;
+
+    if ((font_struct->min_byte1 == 0) && (font_struct->max_byte1 == 0))
+      XTextExtents(font_struct, (char *)buf, len,
+                    &direction, &font_ascent, &font_descent,
+                    &overall);
+    else
+      XTextExtents16(font_struct, buf, len/2,
+                    &direction, &font_ascent, &font_descent,
+                    &overall);
+
+    aBoundingMetrics.leftBearing  = overall.lbearing;
+    aBoundingMetrics.rightBearing = overall.rbearing;
+    aBoundingMetrics.width        = overall.width;
+    aBoundingMetrics.ascent       = overall.ascent;
+    aBoundingMetrics.descent      = overall.descent;
+
+    unsigned long pr = 0;
+    if (::XGetFontProperty(font_struct, XA_ITALIC_ANGLE, &pr)) {
+      aBoundingMetrics.subItalicCorrection = (int) pr; 
+      aBoundingMetrics.supItalicCorrection = (int) pr;
+    }
+  }
+
+  return NS_OK;
+}
+#endif
 
 int
 nsFontMetricsXlib::GetWidth(nsFontXlib* aFont, const PRUnichar* aString,
