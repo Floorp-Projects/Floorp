@@ -92,6 +92,7 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
           dpi = nscoord(screenWidth / screenWidthIn);
         }
       }
+      nsServiceManager::ReleaseService(kPrefCID, prefs);
     }
   }
 
