@@ -645,15 +645,6 @@ Contributor(s):
               ondragexit="nsDragAndDrop.dragExit(event, personalToolbarDNDObserver); event.preventBubble()"
               ondragover="nsDragAndDrop.dragOver(event, personalToolbarDNDObserver); event.preventBubble()">
           <template xmlns:nc="http://home.netscape.com/NC-rdf#">
-            <rule nc:FolderGroup="true" iscontainer="true">
-              <menupopup>
-                <menuitem class="menuitem-iconic bookmark-group" 
-                          label="rdf:http://home.netscape.com/NC-rdf#Name"
-                          group="true"
-                          uri="rdf:*"
-                          xulcontentsgenerated="true"/>
-              </menupopup>
-            </rule>
             <rule iscontainer="true" isempty="true"
                   rdf:type="http://home.netscape.com/NC-rdf#Folder">
               <menupopup>

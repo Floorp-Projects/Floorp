@@ -148,20 +148,6 @@ menuitem.bookmark-item {
   -moz-image-region: rect(16px 48px 32px 32px);
 }
 
-.bookmark-group,
-.bookmark-group[container="true"] {
-  margin: 0px 2px;
-  list-style-image: url("chrome://browser/skin/bookmarks.png") !important;
-  -moz-image-region: rect(32px 16px 48px 0px);
-}
-.bookmark-group:hover {
-  -moz-image-region: rect(32px 32px 48px 16px);
-}
-.bookmark-group:hover:active {
-  -moz-image-region: rect(32px 48px 48px 32px);
-}
-
-
 /* ::::: primary toolbar buttons ::::: */
 
 .toolbarbutton-1 {
