@@ -76,6 +76,7 @@ public:
   static nsIAtom* colspan;
   static nsIAtom* columnPseudo;
   static nsIAtom* compact;
+  static nsIAtom* content;
   static nsIAtom* coords;
 
   static nsIAtom* data;

@@ -53,6 +53,7 @@ nsIAtom* nsHTMLAtoms::cols;
 nsIAtom* nsHTMLAtoms::colspan;
 nsIAtom* nsHTMLAtoms::columnPseudo;
 nsIAtom* nsHTMLAtoms::compact;
+nsIAtom* nsHTMLAtoms::content;
 nsIAtom* nsHTMLAtoms::coords;
 nsIAtom* nsHTMLAtoms::data;
 nsIAtom* nsHTMLAtoms::dir;
@@ -215,6 +216,7 @@ void nsHTMLAtoms::AddrefAtoms()
     colspan = NS_NewAtom("COLSPAN");
     columnPseudo = NS_NewAtom(":BODY-COLUMN");
     compact = NS_NewAtom("COMPACT");
+    content = NS_NewAtom("CONTENT");
     coords = NS_NewAtom("COORDS");
     dir = NS_NewAtom("DIR");
     div = NS_NewAtom("DIV");
@@ -374,6 +376,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(colspan);
     NS_RELEASE(columnPseudo);
     NS_RELEASE(compact);
+    NS_RELEASE(content);
     NS_RELEASE(coords);
     NS_RELEASE(dir);
     NS_RELEASE(disabled);
