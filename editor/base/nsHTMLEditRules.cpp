@@ -637,7 +637,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
   PRUint32 listCount;
   PRInt32 i;
   arrayOfNodes->Count(&listCount);
-  for (i=listCount-1; i>=0; i--)
+  for (i=(PRInt32)listCount-1; i>=0; i--)
   {
     nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(isupports ) );
@@ -696,7 +696,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
   nsCOMPtr<nsIDOMNode> curList;
   nsCOMPtr<nsIDOMNode> prevListItem;
     
-    for (i=0; i<listCount; i++)
+    for (i=0; i<(PRInt32)listCount; i++)
     {
       // here's where we actually figure out what to do
       nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
@@ -705,9 +705,9 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
       res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
       if (NS_FAILED(res)) return res;
     
-      if (transitionList[i] &&                             // transition node
-          ((((i+1)<listCount) && transitionList[i+1]) ||   // and next node is transistion node
-          ( i+1 >= listCount)))                            // or there is no next node
+      if (transitionList[i] &&                                      // transition node
+          ((((i+1)<(PRInt32)listCount) && transitionList[i+1]) ||   // and next node is transistion node
+          ( i+1 >= (PRInt32)listCount)))                            // or there is no next node
       {
         // the parent of this node has no other children on the 
         // list of nodes to make a list out of.  So if this node
@@ -863,7 +863,7 @@ nsHTMLEditRules::WillRemoveList(nsIDOMSelection *aSelection, PRBool aOrdered, PR
   
   // Only act on lists or list items in the array
   nsCOMPtr<nsIDOMNode> curParent;
-  for (i=0; i<listCount; i++)
+  for (i=0; i<(PRInt32)listCount; i++)
   {
     // here's where we actually figure out what to do
     nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
@@ -991,7 +991,7 @@ nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel)
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curQuote;
   nsCOMPtr<nsIDOMNode> curList;
-  for (i=0; i<listCount; i++)
+  for (i=0; i<(PRInt32)listCount; i++)
   {
     // here's where we actually figure out what to do
     nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
@@ -1093,7 +1093,7 @@ nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel)
   PRInt32 i;
   arrayOfNodes->Count(&listCount);
   nsCOMPtr<nsIDOMNode> curParent;
-  for (i=0; i<listCount; i++)
+  for (i=0; i<(PRInt32)listCount; i++)
   {
     // here's where we actually figure out what to do
     nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
@@ -1213,7 +1213,7 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection, const nsString *alignTyp
   arrayOfNodes->Count(&listCount);
   nsCOMPtr<nsIDOMNode> curParent;
   nsCOMPtr<nsIDOMNode> curDiv;
-  for (i=0; i<listCount; i++)
+  for (i=0; i<(PRInt32)listCount; i++)
   {
     // here's where we actually figure out what to do
     nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
@@ -1498,7 +1498,7 @@ nsHTMLEditRules::IsEmptyBlock(nsIDOMNode *aNode, PRBool *outIsEmptyBlock)
   if (!aNode || !outIsEmptyBlock) return NS_ERROR_NULL_POINTER;
   *outIsEmptyBlock = PR_TRUE;
   
-  nsresult res = NS_OK;
+//  nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> nodeToTest;
   if (nsEditor::IsBlockNode(aNode)) nodeToTest = do_QueryInterface(aNode);
   else nsCOMPtr<nsIDOMElement> block;
@@ -1643,7 +1643,7 @@ nsHTMLEditRules::IsLastNode(nsIDOMNode *aNode)
   PRUint32 numChildren;
   nsEditor::GetNodeLocation(aNode, &parent, &offset);
   nsEditor::GetLengthOfDOMNode(parent, numChildren); 
-  if (offset+1 == numChildren) // easy case, we are last dom child
+  if (offset+1 == (PRInt32)numChildren) // easy case, we are last dom child
     return PR_TRUE;
   
   // ok, so there are later children.  But are they editable???
@@ -1651,7 +1651,7 @@ nsHTMLEditRules::IsLastNode(nsIDOMNode *aNode)
   nsCOMPtr<nsIDOMNodeList>childList;
   nsCOMPtr<nsIDOMNode> child;
   parent->GetChildNodes(getter_AddRefs(childList));
-  while (j < numChildren)
+  while (j < (PRInt32)numChildren)
   {
     childList->Item(j, getter_AddRefs(child));
     if (mEditor->IsEditable(child)) 
@@ -1892,7 +1892,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
   nsCOMPtr<nsISupports> isupports;
   nsCOMPtr<nsIContentIterator> iter;
 
-  for (i = 0; i < rangeCount; i++)
+  for (i = 0; i < (PRInt32)rangeCount; i++)
   {
     isupports = (dont_AddRef)(inArrayOfRanges->ElementAt(i));
     opRange = do_QueryInterface(isupports);
@@ -1976,7 +1976,7 @@ nsHTMLEditRules::MakeTransitionList(nsISupportsArray *inArrayOfNodes,
   nsCOMPtr<nsIDOMNode> prevElementParent;
   nsCOMPtr<nsIDOMNode> curElementParent;
   
-  for (i=0; i<listCount; i++)
+  for (i=0; i<(PRInt32)listCount; i++)
   {
     nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(inArrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(isupports ) );
@@ -2571,7 +2571,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
   {
     // get the node to act on, and it's location
     nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
-    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
+    curNode = do_QueryInterface(isupports);
     res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
     if (NS_FAILED(res)) return res;
     nsAutoString curNodeTag;
@@ -2854,7 +2854,7 @@ nsHTMLEditRules::CleanUpSelection(nsIDOMSelection *aSelection)
   nsCOMPtr<nsISupports> isupports;
   nsCOMPtr<nsIContentIterator> iter;
 
-  for (i = 0; i < rangeCount; i++)
+  for (i = 0; i < (PRInt32)rangeCount; i++)
   {
     isupports = (dont_AddRef)(arrayOfRanges->ElementAt(i));
     opRange = do_QueryInterface(isupports);
@@ -2897,7 +2897,7 @@ nsHTMLEditRules::CleanUpSelection(nsIDOMSelection *aSelection)
       // now delete the empty nodes
       res = arrayOfNodes->Count(&nodeCount);
       if (NS_FAILED(res)) return res;
-      for (j = 0; j < nodeCount; j++)
+      for (j = 0; j < (PRInt32)nodeCount; j++)
       {
         isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
         nsCOMPtr<nsIDOMNode> delNode( do_QueryInterface(isupports ) );
