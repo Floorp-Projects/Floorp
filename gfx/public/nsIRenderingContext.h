@@ -608,7 +608,7 @@ public:
   NS_IMETHOD GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
                                nsTextDimensions& aDimensions, PRInt32* aFontID = nsnull) = 0;
 
-#if defined(_WIN32) || defined(XP_OS2)
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
   /**
    * Given an available width and an array of break points,
    * returns the dimensions (in app units) of the text that fit and
@@ -887,6 +887,11 @@ public:
  * Arabic shaping
  */
 #define NS_RENDERING_HINT_ARABIC_SHAPING 0x8
+
+/**
+ * This bit, when set, indicates that gfx supports GetTextDimensions()
+ */
+#define NS_RENDERING_HINT_FAST_MEASURE 0x10
 
 //flags for copy CopyOffScreenBits
 

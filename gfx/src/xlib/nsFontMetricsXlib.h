@@ -339,6 +339,18 @@ protected:
   PRPackedBool           mAlreadyCalledLoadFont;
 };
 
+struct nsFontSwitchXlib {
+  // Simple wrapper on top of nsFontXlib for the moment
+  // Could hold other attributes of the font
+  nsFontXlib *mFontXlib;
+};
+
+typedef PRBool (*PR_CALLBACK nsFontSwitchCallbackXlib)
+               (const nsFontSwitchXlib *aFontSwitch,
+                const PRUnichar*        aSubstring,
+                PRUint32                aSubstringLength,
+                void*                   aData);
+
 class nsFontMetricsXlib : public nsIFontMetrics
 {
 public:
@@ -376,12 +388,14 @@ public:
   NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
+  NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
   
   NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
-
+  NS_IMETHOD  ResolveForwards(const PRUnichar* aString, PRUint32 aLength,
+                              nsFontSwitchCallbackXlib aFunc, void* aData);
   nsFontXlib*  FindFont(PRUnichar aChar);
   nsFontXlib*  FindUserDefinedFont(PRUnichar aChar);
   nsFontXlib*  FindStyleSheetSpecificFont(PRUnichar aChar);
@@ -433,6 +447,7 @@ public:
 
 protected:
   void RealizeFont();
+  nsFontXlib *LocateFont(PRUint32 aChar, PRInt32 & aCount);
 
   nsIDeviceContext   *mDeviceContext;
   nsFont             *mFont;
@@ -454,6 +469,7 @@ protected:
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
   nscoord             mSpaceWidth;
+  nscoord             mAveCharWidth;
 
   PRUint16            mPixelSize;
   PRUint8             mStretchIndex;

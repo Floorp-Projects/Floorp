@@ -264,6 +264,18 @@ protected:
   PRBool                 mAlreadyCalledLoadFont;
 };
 
+struct nsFontSwitchGTK {
+  // Simple wrapper on top of nsFontGTK for the moment
+  // Could hold other attributes of the font
+  nsFontGTK* mFontGTK;
+};
+
+typedef PRBool (*PR_CALLBACK nsFontSwitchCallbackGTK)
+               (const nsFontSwitchGTK *aFontSwitch,
+                const PRUnichar       *aSubstring,
+                PRUint32               aSubstringLength,
+                void                  *aData);
+
 class nsFontMetricsGTK : public nsIFontMetrics
 {
 public:
@@ -294,11 +306,14 @@ public:
   NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
+  NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
   
   NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
+  NS_IMETHOD  ResolveForwards(const PRUnichar* aString, PRUint32 aLength,
+                              nsFontSwitchCallbackGTK aFunc, void* aData);
 
   nsFontGTK*  FindFont(PRUnichar aChar);
   nsFontGTK*  FindUserDefinedFont(PRUnichar aChar);
@@ -349,6 +364,7 @@ public:
 
 protected:
   void RealizeFont();
+  nsFontGTK* LocateFont(PRUint32 aChar, PRInt32 & aCount);
 
   nsIDeviceContext    *mDeviceContext;
   nsFont              *mFont;
@@ -370,6 +386,7 @@ protected:
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
   nscoord             mSpaceWidth;
+  nscoord             mAveCharWidth;
 
   PRUint16            mPixelSize;
   PRUint8             mStretchIndex;

@@ -167,7 +167,9 @@ float offset;
   mMaxDescent = mDescent;
   mMaxAdvance = mHeight;
 
-  GetStringWidth(" ", mSpaceWidth, 1);
+  GetStringWidth(" ", mSpaceWidth, 1); 
+  GetStringWidth("x", mAveCharWidth, 1); 
+
 }
 
 /** ---------------------------------------------------
@@ -329,6 +331,13 @@ NS_IMETHODIMP
 nsFontMetricsPS :: GetMaxAdvance(nscoord &aAdvance)
 {
   aAdvance = mMaxAdvance;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsPS :: GetAveCharWidth(nscoord &aAveCharWidth)
+{
+  aAveCharWidth = mAveCharWidth;
   return NS_OK;
 }
 

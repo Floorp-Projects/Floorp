@@ -639,6 +639,8 @@ NS_IMETHODIMP
 nsRenderingContextWin :: GetHints(PRUint32& aResult)
 {
   PRUint32 result = 0;
+  
+  result |= NS_RENDERING_HINT_FAST_MEASURE;
 
   if (gIsWIN95)
     result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
@@ -1704,7 +1706,7 @@ nsRenderingContextWin::GetTextDimensions(const char*       aString,
 
         // We can't just revert to the previous break state
         if (0 == breakIndex) {
-          // There's no place to back up to so even though the text doesn't fit
+          // There's no place to back up to, so even though the text doesn't fit
           // return it anyway
           aNumCharsFit += numChars;
           width += twWidth;
@@ -1788,8 +1790,8 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
     ::SelectObject(data->mDC, data->mFont);
   }
 
-  // Our current state relatively to the _full_ string...
-  // This allows emulating the previous code...
+  // Our current state relative to the _full_ string...
+  // This allows emulation of the previous code...
   const PRUnichar* pstr = (const PRUnichar*)data->mOffsets->ElementAt(0);
   PRInt32 numCharsFit = data->mNumCharsFit;
   nscoord width = data->mWidth;
@@ -1853,7 +1855,7 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
           // The text is all within the same segment
           numChars = i - start;
 
-          // Remember we're in the middle of a segment and not in between
+          // Remember we're in the middle of a segment and not between
           // two segments
           inMiddleOfSegment = PR_TRUE;
         }
@@ -1881,7 +1883,7 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
 
       // If we computed the break index and we're not in the middle
       // of a segment then this is a spot that we can back up to if
-      // we need to so remember this state
+      // we need to, so remember this state
       if ((breakIndex != -1) && !inMiddleOfSegment) {
         data->mPrevBreakState_BreakIndex = breakIndex;
         data->mPrevBreakState_Width = width;
@@ -1926,17 +1928,23 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
       }
 
       if ((0 == breakIndex) && (i <= data->mBreaks[0])) {
-        // There's no place to back up to so even though the text doesn't fit
+        // There's no place to back up to, so even though the text doesn't fit
         // return it anyway
         numCharsFit += numChars;
         width += twWidth;
 
         // Edge case of one word: it could be that we just measured a fragment of the
         // first word and its remainder involves other fonts, so we want to keep going
-        // until we at least measure the first word entirely
+        // until we at least measure the entire first word
         if (numCharsFit < data->mBreaks[0]) {
           allDone = PR_FALSE;
-          // from now on, the estimated number of characters is what we want to measure
+          // From now on we don't care anymore what is the _real_ estimated
+          // number of characters that fits. Rather, we have no where to break
+          // and have to measure one word fully, but the real estimate is less
+          // than that one word. However, since the other bits of code rely on
+          // what is in "data->mEstimatedNumChars", we want to override
+          // "data->mEstimatedNumChars" and pass in what _has_ to be measured
+          // so that it is transparent to the other bits that depend on it.
           data->mEstimatedNumChars = data->mBreaks[0] - numCharsFit;
           start += numChars;
         }
@@ -1972,7 +1980,7 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
 #ifdef DEBUG_rbs
   NS_ASSERTION(allDone || start == i, "internal error");
   NS_ASSERTION(allDone || data->mNumCharsFit != numCharsFit, "internal error");
-#endif
+#endif /* DEBUG_rbs */
 
   if (data->mNumCharsFit != numCharsFit) {
     // some text was actually retained
@@ -2108,7 +2116,7 @@ nsRenderingContextWin::GetTextDimensions(const PRUnichar*  aString,
     // If we don't do this, a 'tall' trailing whitespace, i.e., if the whitespace
     // happens to come from a font with a bigger ascent and/or descent than all
     // current fonts on the line, this can cause the next lines to be shifted
-    // down the window is slowly resized to fit that whitespace.
+    // down when the window is slowly resized to fit that whitespace.
     if (*pstr == ' ') {
       // skip pass the whitespace to ignore the height that it may contribute
       ++pstr;
@@ -2135,7 +2143,7 @@ nsRenderingContextWin::GetTextDimensions(const PRUnichar*  aString,
       }
     }
 
-    // see we have not reached the last word yet
+    // see if we have not reached the last word yet
     if (pstr < lastWord) {
       if (aDimensions.ascent < fontWin->mMaxAscent) {
         aDimensions.ascent = fontWin->mMaxAscent;

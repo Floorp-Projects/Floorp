@@ -1023,6 +1023,35 @@ nsRenderingContextPS :: GetWidth(const PRUnichar *aString,PRUint32 aLength,nscoo
 }
 
 /** --------------------------------------------------- */
+NS_IMETHODIMP
+nsRenderingContextPS::GetTextDimensions(const char*       aString,
+                                        PRInt32           aLength,
+                                        PRInt32           aAvailWidth,
+                                        PRInt32*          aBreaks,
+                                        PRInt32           aNumBreaks,
+                                        nsTextDimensions& aDimensions,
+                                        PRInt32&          aNumCharsFit,
+                                        nsTextDimensions& aLastWordDimensions,
+                                        PRInt32*          aFontID)
+{
+  NS_NOTYETIMPLEMENTED("nsRenderingContextPS::GetTextDimensions");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsRenderingContextPS::GetTextDimensions(const PRUnichar*  aString,
+                                        PRInt32           aLength,
+                                        PRInt32           aAvailWidth,
+                                        PRInt32*          aBreaks,
+                                        PRInt32           aNumBreaks,
+                                        nsTextDimensions& aDimensions,
+                                        PRInt32&          aNumCharsFit,
+                                        nsTextDimensions& aLastWordDimensions,
+                                        PRInt32*          aFontID)
+{
+  NS_NOTYETIMPLEMENTED("nsRenderingContextPS::GetTextDimensions");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 nsRenderingContextPS :: GetTextDimensions(const char* aString, PRUint32 aLength,

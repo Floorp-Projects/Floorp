@@ -81,6 +81,7 @@ public:
   NS_IMETHOD  GetMaxAscent(nscoord &aAscent);
   NS_IMETHOD  GetMaxDescent(nscoord &aDescent);
   NS_IMETHOD  GetMaxAdvance(nscoord &aAdvance);
+  NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
   NS_IMETHOD  GetSpaceWidth(nscoord& aAveCharWidth);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
@@ -128,6 +129,7 @@ protected:
   nscoord             mUnderlineSize;
   nscoord             mUnderlineOffset;
   nscoord             mSpaceWidth;
+  nscoord             mAveCharWidth;
   PRInt16             mFontIndex;
 
 public:

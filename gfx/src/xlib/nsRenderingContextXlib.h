@@ -173,6 +173,24 @@ public:
                                nsTextDimensions& aDimensions);
   NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
                                nsTextDimensions& aDimensions, PRInt32 *aFontID);
+  NS_IMETHOD GetTextDimensions(const char*       aString,
+                               PRInt32           aLength,
+                               PRInt32           aAvailWidth,
+                               PRInt32*          aBreaks,
+                               PRInt32           aNumBreaks,
+                               nsTextDimensions& aDimensions,
+                               PRInt32&          aNumCharsFit,
+                               nsTextDimensions& aLastWordDimensions,
+                               PRInt32*          aFontID = nsnull);
+  NS_IMETHOD GetTextDimensions(const PRUnichar*  aString,
+                               PRInt32           aLength,
+                               PRInt32           aAvailWidth,
+                               PRInt32*          aBreaks,
+                               PRInt32           aNumBreaks,
+                               nsTextDimensions& aDimensions,
+                               PRInt32&          aNumCharsFit,
+                               nsTextDimensions& aLastWordDimensions,
+                               PRInt32*          aFontID = nsnull);
 
   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY);
   NS_IMETHOD DrawImage(nsIImage *aImage, nscoord aX, nscoord aY,

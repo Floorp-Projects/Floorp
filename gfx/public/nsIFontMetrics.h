@@ -234,7 +234,7 @@ public:
    */
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle) = 0;
 
-#if defined(_WIN32) || defined(XP_OS2)
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
   /**
    * Returns the average character width
    */
