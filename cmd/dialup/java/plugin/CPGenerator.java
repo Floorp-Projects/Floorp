@@ -272,13 +272,13 @@ public class CPGenerator
 
 		if ( ispData == null )
 		{
-			Trace.TRACE( "isp not found: " + ispName );
+			//Trace.TRACE( "isp not found: " + ispName );
 			return null;
 		}
 			
 		int		size = ispData.getDynamicDataSize();
 			
-		Trace.TRACE( "size: " + size );
+		//Trace.TRACE( "size: " + size );
 			
 		if ( size < popIndex )
 			return null;
@@ -296,6 +296,18 @@ public class CPGenerator
 		String				phoneNum = nvSet.getValue( "phone" );
 		
 		return phoneNum;
+	}
+
+	public static String getISPLanguage( String ispName )
+	{
+		ISPDynamicData		ispData = getISPDynamicData( ispName );
+		
+		if ( ispData != null )
+		{
+			String		ispLanguage = new String( ispData.getLanguage() );
+			return ispLanguage;
+		}
+		return null;
 	}
 
 	/*

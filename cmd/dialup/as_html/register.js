@@ -23,7 +23,7 @@ var documentVars = globals.document.vars;
 
 function go( msg )
 {
-	if ( parent.parent.globals.document.vars.editMode.value == "yes" )
+	if ( documentVars.editMode.value == "yes" )
 		return true;
 	else
 		return checkData();
@@ -41,19 +41,20 @@ function loadData()
 	if ( parent.controls.generateControls )
 		parent.controls.generateControls();
 
-	if ( globals.document.vars.editMode.value != "yes" )
+	if ( documentVars.editMode.value != "yes" )
 	{		// only connect to reggie if editmode is off
 
-		var connectStatusFlag = globals.document.setupPlugin.IsDialerConnected();
+		var connectStatusFlag = plugin.IsDialerConnected();
 		if ( connectStatusFlag == true )
 		{
 			if ( confirm( "Account Setup can't connect until you close your current connection. Close the connection now?" ) == false )
 				return;
-			globals.document.setupPlugin.DialerHangup();
+			plugin.DialerHangup();
 		}
 
+		var language = plugin.GetISPLanguage( globals.selectedISP );
 		var acctSetupFile = globals.getAcctSetupFilename( self );
-		var regFile = globals.getFolder( self ) + "isp/en/" + globals.selectedISP + "/client_data/config/config.ias.r";
+		var regFile = globals.getFolder( self ) + "isp/" + language + "/" + globals.selectedISP + "/client_data/config/config.ias.r";
 		
 		// determine name of scripting file
 		var scriptEnabledFlag = "FALSE";
@@ -80,16 +81,16 @@ function loadData()
 			
 		// determine outside line access string	
 		var outsideLineAccessStr = "";
-		if ( globals.document.vars.prefixData.value != "" )
+		if ( documentVars.prefixData.value != "" )
 		{
-			outsideLineAccessStr = parent.parent.globals.document.vars.prefixData.value;
+			outsideLineAccessStr = documentVars.prefixData.value;
 			x = outsideLineAccessStr.indexOf( "," );
 			if ( x < 0 )
 				outsideLineAccessStr = outsideLineAccessStr + ",";
 		}
 	
 		// configure dialer for Registration Server	
-		dialerData = globals.document.setupPlugin.newStringArray( 28 );		// increment this # as new dialer strings are added
+		dialerData = plugin.newStringArray( 28 );		// increment this # as new dialer strings are added
 		dialerData[0]  = "FileName=" + regFile;
 		dialerData[1]  = "AccountName=" + globals.GetNameValuePair( regFile, "Dial-In Configuration", "SiteName" );
 		dialerData[2]  = "ISPPhoneNum=" + globals.GetNameValuePair( regFile, "Dial-In Configuration", "Phone" );
@@ -101,14 +102,14 @@ function loadData()
 		dialerData[8]  = "IPAddress=" + globals.GetNameValuePair( regFile, "IP", "IPAddress" );
 		dialerData[9]  = "IntlMode=" + ( ( intlFlag=="yes" ) ? "TRUE" : "FALSE" );
 		dialerData[10] = "DialOnDemand=TRUE";
-		dialerData[11] = "ModemName=" + globals.document.vars.modem.value;
-		dialerData[12] = "ModemType=" + globals.document.setupPlugin.GetModemType( parent.parent.globals.document.vars.modem.value );
-		dialerData[13] = "DialType=" + globals.document.vars.dialMethod.value;
+		dialerData[11] = "ModemName=" + documentVars.modem.value;
+		dialerData[12] = "ModemType=" + plugin.GetModemType( documentVars.modem.value );
+		dialerData[13] = "DialType=" + documentVars.dialMethod.value;
 		dialerData[14] = "OutsideLineAccess=" + outsideLineAccessStr; 
-		dialerData[15] = "DisableCallWaiting=" + ( ( globals.document.vars.cwData.value != "" ) ? "TRUE" : "FALSE" );
-		dialerData[16] = "DisableCallWaitingCode=" + globals.document.vars.cwData.value;
-		dialerData[17] = "UserAreaCode=" + globals.document.vars.modemAreaCode.value;				// XXX what to do if international mode?
-		dialerData[18] = "CountryCode=" + globals.document.vars.countryCode.value;
+		dialerData[15] = "DisableCallWaiting=" + ( ( documentVars.cwData.value != "" ) ? "TRUE" : "FALSE" );
+		dialerData[16] = "DisableCallWaitingCode=" + documentVars.cwData.value;
+		dialerData[17] = "UserAreaCode=" + documentVars.modemAreaCode.value;				// XXX what to do if international mode?
+		dialerData[18] = "CountryCode=" + documentVars.countryCode.value;
 		dialerData[19] = "LongDistanceAccess=1";									// XXX
 		dialerData[20] = "DialAsLongDistance=TRUE";									// XXX
 		dialerData[21] = "DialAreaCode=TRUE";										// XXX
@@ -120,7 +121,7 @@ function loadData()
 		dialerData[27] = "Path=Server";
 	
 		// write out dialer data to Java Console
-		if ( globals.document.vars.debugMode.value.toLowerCase() == "yes" )
+		if ( documentVars.debugMode.value.toLowerCase() == "yes" )
 		{
 			globals.debug( "\nDialer data (for Registration Server): " );
 			var numElements = dialerData.length;
@@ -128,19 +129,19 @@ function loadData()
 				globals.debug( "        " + x + ": " + dialerData[ x ] );
 		}
 	
-		globals.document.setupPlugin.DialerConfig( dialerData, true );
+		plugin.DialerConfig( dialerData, true );
 	
 		// check if we need to reboot
 		
-		if ( globals.document.setupPlugin.NeedReboot() == true )
+		if ( plugin.NeedReboot() == true )
 		{
 			globals.forceReboot( "2step.htm" );			// XXX hardcode in name of next screen???
 			return;
 		}
 	
-		if ( globals.document.setupPlugin.DialerConnect() == false )
+		if ( plugin.DialerConnect() == false )
 		{
-			globals.document.setupPlugin.DialerHangup();
+			plugin.DialerHangup();
 			window.location.replace( "error.htm" );		// XXX hardcode in name of next screen???
 			return;
 		}
@@ -186,26 +187,26 @@ function loadData()
 		intlFlag = intlFlag.toLowerCase();
 		if ( intlFlag == "yes" )
 		{
-			theHomePhone = globals.document.vars.phoneNumber.value;
-			thePhone = globals.document.vars.modemPhoneNumber.value;
-			theCountry = globals.document.vars.country.value;
+			theHomePhone = documentVars.phoneNumber.value;
+			thePhone = documentVars.modemPhoneNumber.value;
+			theCountry = documentVars.country.value;
 		}
 		else
 		{
-			theHomePhone = "(" + globals.document.vars.areaCode.value + ") " + globals.document.vars.phoneNumber.value;
-			thePhone = "(" + globals.document.vars.modemAreaCode.value + ") " + globals.document.vars.modemPhoneNumber.value;
+			theHomePhone = "(" + documentVars.areaCode.value + ") " + documentVars.phoneNumber.value;
+			thePhone = "(" + documentVars.modemAreaCode.value + ") " + documentVars.modemPhoneNumber.value;
 			theCountry = "USA";
 		}
 	
 		// mangle year and month for submission to registration server
 	
-		var year = parseInt( globals.document.vars.year.value );
+		var year = parseInt( documentVars.year.value );
 		while ( year >= 100 )
 			year -= 100;
 		if ( year < 10 )
 			year = "0" + year;
 	
-		var month = parseInt( globals.document.vars.month.value );
+		var month = parseInt( documentVars.month.value );
 		month += 1;
 	
 	// the following values are commented out as the values are set in HTML
@@ -223,23 +224,23 @@ function loadData()
 		document.forms[0].REG_PLATFORM.value			= platform;
 		document.forms[0].AS_INTLMODE.value				= intlFlag;
 	
-		document.forms[0].CST_LAST_NAME.value			= globals.document.vars.last.value;
-		document.forms[0].CST_FIRST_NAME.value			= globals.document.vars.first.value;
-		document.forms[0].CST_ORGANIZATION_NAME.value	= globals.document.vars.company.value;
-		document.forms[0].CST_STREET_1.value			= globals.document.vars.address1.value;
-		document.forms[0].CST_STREET_2.value			= globals.document.vars.address2.value;
-		document.forms[0].CST_STREET_3.value			= globals.document.vars.address3.value;
-		document.forms[0].CST_CITY.value				= globals.document.vars.city.value;
-		document.forms[0].CST_STATE_PROVINCE.value		= globals.document.vars.state.value;
-		document.forms[0].CST_POSTAL_CODE.value			= globals.document.vars.zip.value;
+		document.forms[0].CST_LAST_NAME.value			= documentVars.last.value;
+		document.forms[0].CST_FIRST_NAME.value			= documentVars.first.value;
+		document.forms[0].CST_ORGANIZATION_NAME.value	= documentVars.company.value;
+		document.forms[0].CST_STREET_1.value			= documentVars.address1.value;
+		document.forms[0].CST_STREET_2.value			= documentVars.address2.value;
+		document.forms[0].CST_STREET_3.value			= documentVars.address3.value;
+		document.forms[0].CST_CITY.value				= documentVars.city.value;
+		document.forms[0].CST_STATE_PROVINCE.value		= documentVars.state.value;
+		document.forms[0].CST_POSTAL_CODE.value			= documentVars.zip.value;
 		document.forms[0].CST_COUNTRY.value				= theCountry;
 		document.forms[0].CST_PHONE.value				= thePhone;
 		document.forms[0].CST_HOMEPHONE.value			= theHomePhone;		
-		document.forms[0].CST_CC_NO.value				= globals.document.vars.cardnumber.value;
-		document.forms[0].CST_CC_TYPE.value				= globals.document.vars.cardcode.value;
+		document.forms[0].CST_CC_NO.value				= documentVars.cardnumber.value;
+		document.forms[0].CST_CC_TYPE.value				= documentVars.cardcode.value;
 		document.forms[0].CST_CC_MTH_EXPIRE.value		= month;
 		document.forms[0].CST_CC_YEAR_EXPIRE.value		= year;
-		document.forms[0].CST_CC_CARDHOLDER.value		= globals.document.vars.cardname.value;
+		document.forms[0].CST_CC_CARDHOLDER.value		= documentVars.cardname.value;
 		document.forms[0].CST_JUNK_MAIL.value			= "";			// XXX
 	
 		document.forms[0].action = regServer;
@@ -262,7 +263,7 @@ function loadData()
 
 
 		// write out Milan data to Java Console
-		if ( globals.document.vars.debugMode.value.toLowerCase() == "yes" )
+		if ( documentVars.debugMode.value.toLowerCase() == "yes" )
 		{
 			globals.debug( "\nRegServer (Milan) data: " + document.forms[ 0 ].action );
 			var numElements = document.forms[ 0 ].length;

@@ -394,6 +394,14 @@ public class SetupPlugin extends Plugin
 			return null;
 	}
 	
+	final public String GetISPLanguage( String isp )
+	{
+		if ( privilegeCheck() == true )
+			return CPGenerator.getISPLanguage( isp );
+		else
+			return null;
+	}
+	
 	final public String GetCurrentProfileDirectory()
 	{
 		if ( privilegeCheck() == true )
