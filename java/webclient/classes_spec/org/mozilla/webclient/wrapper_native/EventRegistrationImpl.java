@@ -107,6 +107,14 @@ public void delete()
 // Methods from EventRegistration    
 //
 
+/**
+
+ * We create a WCEventListenerWrapper containing the user passed
+ * DocumentLoadListener, and the string obtained from
+ * DocumentLoadListener.class.getName();
+
+ */
+
 public void addDocumentLoadListener(DocumentLoadListener listener)
 {
     ParameterCheck.nonNull(listener);
@@ -114,9 +122,16 @@ public void addDocumentLoadListener(DocumentLoadListener listener)
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
+
+    WCEventListenerWrapper listenerWrapper = 
+        new WCEventListenerWrapper(listener,
+                                   DocumentLoadListener.class.getName());
+    if (null == listenerWrapper) {
+        throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
+    }
     
     synchronized(myBrowserControl) {
-        nativeEventThread.addListener(listener);
+        nativeEventThread.addListener(listenerWrapper);
     }
 }
 
@@ -128,8 +143,15 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
     Assert.assert(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
    
+    WCEventListenerWrapper listenerWrapper = 
+        new WCEventListenerWrapper(listener,
+                                   DocumentLoadListener.class.getName());
+    if (null == listenerWrapper) {
+        throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
+    }
+    
     synchronized(myBrowserControl) {
-        nativeEventThread.removeListener(listener);
+        nativeEventThread.removeListener(listenerWrapper);
     }
 }
 
@@ -149,8 +171,20 @@ public void addMouseListener(MouseListener listener)
     WCMouseListenerImpl mouseListenerWrapper = 
         new WCMouseListenerImpl(listener);
     
+    if (null == mouseListenerWrapper) {
+        throw new NullPointerException("Can't instantiate WCMouseListenerImpl, out of memory.");
+    }
+    
+    WCEventListenerWrapper listenerWrapper = 
+        new WCEventListenerWrapper(mouseListenerWrapper,
+                                   MouseListener.class.getName());
+    
+    if (null == listenerWrapper) {
+        throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
+    }
+    
     synchronized(myBrowserControl) {
-        nativeEventThread.addListener(mouseListenerWrapper);
+        nativeEventThread.addListener(listenerWrapper);
     }
 }
 
@@ -161,9 +195,24 @@ public void removeMouseListener(MouseListener listener)
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != nativeEventThread);
     ParameterCheck.nonNull(listener);
+
+    WCMouseListenerImpl mouseListenerWrapper = 
+        new WCMouseListenerImpl(listener);
+    
+    if (null == mouseListenerWrapper) {
+        throw new NullPointerException("Can't instantiate WCMouseListenerImpl, out of memory.");
+    }
+    
+    WCEventListenerWrapper listenerWrapper = 
+        new WCEventListenerWrapper(mouseListenerWrapper,
+                                   MouseListener.class.getName());
+    
+    if (null == listenerWrapper) {
+        throw new NullPointerException("Can't instantiate WCEventListenerWrapper, out of memory.");
+    }
     
     synchronized(myBrowserControl) {
-        nativeEventThread.removeListener((WebclientEventListener)listener);
+        nativeEventThread.removeListener(listenerWrapper);
     }
 }
 
@@ -179,7 +228,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("EventRegistrationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.8 2000/07/26 20:03:09 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.9 2000/08/09 21:47:37 edburns%acm.org Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

@@ -228,9 +228,10 @@ public void run()
                 tempEnum = listenersToAdd.elements();
 
                 while (tempEnum.hasMoreElements()) {
-                    WebclientEventListener tempListener = (WebclientEventListener)
-                                                             tempEnum.nextElement();
-                    nativeAddListener(nativeWebShell,tempListener);
+                    WCEventListenerWrapper tempListener = 
+                        (WCEventListenerWrapper) tempEnum.nextElement();
+                    nativeAddListener(nativeWebShell,tempListener.listener, 
+                                      tempListener.listenerClassName);
                 }
                 listenersToAdd.clear();
             }
@@ -269,11 +270,12 @@ private void doRemoveListeners()
                 }
             }
             else {
-                //                throw new UnimplementedException("Webclient nativeRemoveListener not yet implemented");
-
+                WCEventListenerWrapper tempListener = 
+                    (WCEventListenerWrapper) listenerObj;
                 nativeRemoveListener(nativeWebShell, 
-                                     (WebclientEventListener) listenerObj);
-
+                                     tempListener.listener,
+                                     tempListener.listenerClassName);
+                
             }
         }
         listenersToRemove.clear();
@@ -288,13 +290,18 @@ private void doRemoveListeners()
 
  * Takes the abstract WebclientEventListener instance and adds it to a
  * Vector of listeners to be added.  This vector is scanned each time
- * around the event loop in run().
+ * around the event loop in run(). <P>
+
+ * The vector is a vector of WCEventListenerWrapper instances.  In run()
+ * these are unpacked and sent to nativeAddListener like this:
+ * nativeAddListener(nativeWebShell,tempListener.listener, 
+ * tempListener.listenerClassName); <P>
 
  * @see run
 
  */
 
-void addListener(WebclientEventListener newListener)
+void addListener(WCEventListenerWrapper newListener)
 {
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != windowControl);
@@ -315,7 +322,7 @@ void addListener(WebclientEventListener newListener)
 
  */
 
-void removeListener(WebclientEventListener newListener)
+void removeListener(WCEventListenerWrapper newListener)
 {
     Assert.assert(-1 != nativeWebShell);
     Assert.assert(null != windowControl);
@@ -332,7 +339,7 @@ void removeListener(WebclientEventListener newListener)
             listenersToRemove.add(newListener);
         }
     }
-
+    
 }
 
 /**
@@ -425,7 +432,8 @@ public native void nativeProcessEvents(int webShellPtr);
  */
 
 public native void nativeAddListener(int webShellPtr,
-                                     WebclientEventListener typedListener);
+                                     WebclientEventListener typedListener,
+                                     String listenerName);
 
 /**
 
@@ -434,7 +442,8 @@ public native void nativeAddListener(int webShellPtr,
  */ 
 
 public native void nativeRemoveListener(int webShellPtr, 
-                                   WebclientEventListener typedListener);
+                                        WebclientEventListener typedListener,
+                                        String listenerName);
 
 /**
 

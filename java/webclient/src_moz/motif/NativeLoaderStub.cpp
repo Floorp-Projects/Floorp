@@ -103,7 +103,8 @@ jboolean (* nativeWebShellRefresh)(JNIEnv *, jobject, jint);
 jboolean (* nativeWebShellAddDocListener) (JNIEnv *, jobject, jint, jobject);
 */
 // from NativeEventThread.h
-void (* nativeAddListener) (JNIEnv *, jobject, jint, jobject);
+void (* nativeAddListener) (JNIEnv *, jobject, jint, jobject, jstring);
+void (* nativeRemoveListener) (JNIEnv *, jobject, jint, jobject, jstring);
 void (* nativeRemoveAllListeners) (JNIEnv *, jobject, jint);
 void (* nativeInitialize) (JNIEnv *, jobject, jint);
 void (* nativeProcessEvents) (JNIEnv *, jobject, jint);
@@ -379,8 +380,12 @@ void locateBrowserControlStubFunctions(void * dll) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  nativeAddListener = (void (*) (JNIEnv *, jobject, jint, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeAddListener");
+  nativeAddListener = (void (*) (JNIEnv *, jobject, jint, jobject, jstring)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeAddListener");
   if (!nativeAddListener) {
+    printf("got dlsym error %s\n", dlerror());
+  }
+  nativeRemoveListener = (void (*) (JNIEnv *, jobject, jint, jobject, jstring)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveListener");
+  if (!nativeRemoveListener) {
     printf("got dlsym error %s\n", dlerror());
   }
   nativeRemoveAllListeners = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveAllListeners");
@@ -416,8 +421,18 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
  * Signature: (ILorg/mozilla/webclient/WebclientEventListener;)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeAddListener
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener) {
-  (* nativeAddListener) (env, obj, webShellPtr, typedListener);
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener, jstring listenerString) {
+  (* nativeAddListener) (env, obj, webShellPtr, typedListener, listenerString);
+}
+
+/*
+ * Class:     org_mozilla_webclient_wrapper_0005fnative_NativeEventThread
+ * Method:    nativeRemoveListener
+ * Signature: (ILorg/mozilla/webclient/WebclientEventListener;)V
+ */
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveListener
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener, jstring listenerString) {
+  (* nativeRemoveListener) (env, obj, webShellPtr, typedListener, listenerString);
 }
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveAllListeners

@@ -167,8 +167,8 @@ char * errorMessages[] = {
  */
 
 const char *gSupportedListenerInterfaces[] = {
-    "org/mozilla/webclient/DocumentLoadListener",
-    "java/awt/event/MouseListener",
+    "org.mozilla.webclient.DocumentLoadListener",
+    "java.awt.event.MouseListener",
     nsnull
 };
 
@@ -251,14 +251,16 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
  */
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeAddListener
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener)
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener, 
+ jstring listenerString)
 {
     WebShellInitContext *initContext = (WebShellInitContext *)webShellPtr;
-
+        
     if (initContext == nsnull) {
         ::util_ThrowExceptionToJava(env, "Exception: null initContext passed tonativeAddListener");
         return;
     }
+
     if (nsnull == initContext->nativeEventThread) {
         // store the java EventRegistrationImpl class in the initContext
         initContext->nativeEventThread = 
@@ -269,20 +271,23 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
     
     jclass clazz = nsnull;
     int listenerType = 0;
-
+    const char *listenerStringChars = ::util_GetStringUTFChars(env, 
+                                                               listenerString);
+    if (listenerStringChars == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeAddListener: Can't get className for listener.");
+        return;
+    }
+        
     while (nsnull != gSupportedListenerInterfaces[listenerType]) {
-        if (nsnull == 
-            (clazz = 
-             ::util_FindClass(env, 
-                              gSupportedListenerInterfaces[listenerType]))) {
-            return;
-        }
-        if (::util_IsInstanceOf(env, typedListener, clazz)) {
+        if (0 == nsCRT::strcmp(gSupportedListenerInterfaces[listenerType], 
+                               listenerStringChars)) {
             // We've got a winner!
             break;
         }
         listenerType++;
     }
+    ::util_ReleaseStringUTFChars(env, listenerString, listenerStringChars);
+    listenerStringChars = nsnull;
     
     if (LISTENER_NOT_FOUND == (LISTENER_CLASSES) listenerType) {
         ::util_ThrowExceptionToJava(env, "Exception: NativeEventThread.nativeAddListener(): can't find listener \n\tclass for argument");
@@ -312,9 +317,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
 
 JNIEXPORT void JNICALL 
 Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveListener
-(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener)
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener,
+ jstring listenerString)
 {
     WebShellInitContext *initContext = (WebShellInitContext *)webShellPtr;
+
     if (initContext == nsnull) {
         ::util_ThrowExceptionToJava(env, "Exception: null initContext passed to nativeRemoveListener");
         return;
@@ -322,20 +329,23 @@ Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveListene
     
     jclass clazz = nsnull;
     int listenerType = 0;
-
+    const char *listenerStringChars = ::util_GetStringUTFChars(env, 
+                                                               listenerString);
+    if (listenerStringChars == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: nativeRemoveListener: Can't get className for listener.");
+        return;
+    }
+    
     while (nsnull != gSupportedListenerInterfaces[listenerType]) {
-        if (nsnull == 
-            (clazz = 
-             ::util_FindClass(env, 
-                              gSupportedListenerInterfaces[listenerType]))) {
-            return;
-        }
-        if (::util_IsInstanceOf(env, typedListener, clazz)) {
+        if (0 == nsCRT::strcmp(gSupportedListenerInterfaces[listenerType], 
+                               listenerStringChars)) {
             // We've got a winner!
             break;
         }
         listenerType++;
     }
+    ::util_ReleaseStringUTFChars(env, listenerString, listenerStringChars);
+    listenerStringChars = nsnull;
     
     if (LISTENER_NOT_FOUND == (LISTENER_CLASSES) listenerType) {
         ::util_ThrowExceptionToJava(env, "Exception: NativeEventThread.nativeRemoveListener(): can't find listener \n\tclass for argument");
