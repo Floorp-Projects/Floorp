@@ -153,6 +153,7 @@ typedef PRUint32 nsresult;
 
 /* Returned when an illegal value is passed */
 #define NS_ERROR_ILLEGAL_VALUE             ((nsresult) 0x80070057L)
+#define NS_ERROR_INVALID_ARG               NS_ERROR_ILLEGAL_VALUE
 
 /* Returned when a class doesn't allow aggregation */
 #define NS_ERROR_NO_AGGREGATION            ((nsresult) 0x80040110L)
