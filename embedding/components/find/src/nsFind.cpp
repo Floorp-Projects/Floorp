@@ -71,6 +71,7 @@ nsIAtom* nsFind::sImgAtom = nsnull;
 nsIAtom* nsFind::sHRAtom = nsnull;
 nsIAtom* nsFind::sCommentAtom = nsnull;
 nsIAtom* nsFind::sScriptAtom = nsnull;
+nsIAtom* nsFind::sNoframesAtom = nsnull;
 nsIAtom* nsFind::sSelectAtom = nsnull;
 nsIAtom* nsFind::sTextareaAtom = nsnull;
 
@@ -91,6 +92,7 @@ nsFind::nsFind()
     sHRAtom = NS_NewAtom("hr");
     sCommentAtom = NS_NewAtom("__moz_comment");
     sScriptAtom = NS_NewAtom("script");
+    sNoframesAtom = NS_NewAtom("noframes");
     sSelectAtom = NS_NewAtom("select");
     sTextareaAtom = NS_NewAtom("textarea");
   }
@@ -106,6 +108,7 @@ nsFind::~nsFind()
     NS_IF_RELEASE(sHRAtom);
     NS_IF_RELEASE(sCommentAtom);
     NS_IF_RELEASE(sScriptAtom);
+    NS_IF_RELEASE(sNoframesAtom);
     NS_IF_RELEASE(sSelectAtom);
     NS_IF_RELEASE(sTextareaAtom);
   }
@@ -455,6 +458,7 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
   // We may not need to skip comment nodes,
   // now that IsTextNode distinguishes them from real text nodes.
   return (sScriptAtom == atomPtr || sCommentAtom == atomPtr
+          || sNoframesAtom == atomPtr
           || sSelectAtom == atomPtr || sTextareaAtom == atomPtr)
 
 #else /* HAVE_BIDI_ITERATOR */
@@ -477,6 +481,7 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
     //       NS_LossyConvertUCS2toASCII(atomName).get());
     nsIAtom *atomPtr = atom.get();
     if (atomPtr == sScriptAtom || atomPtr == sCommentAtom
+        || sNoframesAtom == atomPtr
         || sSelectAtom == atomPtr || sTextareaAtom == atomPtr)
     {
 #ifdef DEBUG_FIND
