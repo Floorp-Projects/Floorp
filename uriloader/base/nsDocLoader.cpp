@@ -159,8 +159,8 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
 /*
  * Implementation of ISupports methods...
  */
-NS_IMPL_ADDREF(nsDocLoaderImpl);
-NS_IMPL_RELEASE(nsDocLoaderImpl);
+NS_IMPL_THREADSAFE_ADDREF(nsDocLoaderImpl)
+NS_IMPL_THREADSAFE_RELEASE(nsDocLoaderImpl)
 
 NS_INTERFACE_MAP_BEGIN(nsDocLoaderImpl)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamObserver)
