@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  dom \
 		  necko \
-		  rdf \
 		  widget \
 		  webbrwsr \
 		  uconv \

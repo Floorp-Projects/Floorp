@@ -33,7 +33,6 @@ REQUIRES	= xpcom \
 		  uconv \
 		  unicharutil \
 		  necko \
-		  intl \
 		  $(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)

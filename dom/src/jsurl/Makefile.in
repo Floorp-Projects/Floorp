@@ -39,7 +39,6 @@ REQUIRES	= xpcom \
 		  caps \
 		  widget \
 		  appshell \
-		  rdf \
 		  xpconnect \
 		  jsconsole \
 		  $(NULL)

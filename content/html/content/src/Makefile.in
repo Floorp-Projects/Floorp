@@ -32,7 +32,6 @@ REQUIRES	= xpcom \
 		  string \
 		  gfx \
 		  layout \
-		  uriloader \
 		  widget \
 		  dom \
 		  js \

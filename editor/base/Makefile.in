@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  view \
 		  appshell \
-		  rdf \
 		  webshell \
 		  timer \
 		  txtsvc \

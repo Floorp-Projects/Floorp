@@ -48,7 +48,6 @@ MODULE_NAME	= xpconnect
 REQUIRES	= xpcom \
 		  string \
 		  js \
-		  dom \
 		  caps \
 		  $(NULL)
 

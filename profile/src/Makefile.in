@@ -45,7 +45,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  prefmigr \
 		  appshell \
-		  rdf \
 		  uconv \
 		  appcomps \
 		  windowwatcher \

@@ -35,11 +35,8 @@ REQUIRES	= xpcom \
 		  view \
 		  dom \
 		  necko \
-		  rdf \
-		  appshell \
 		  uriloader \
 		  gfx \
-		  editor \
 		  intl \
 		  chrome \
 		  embedcomponents \

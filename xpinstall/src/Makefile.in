@@ -51,7 +51,6 @@ REQUIRES	= xpcom \
 		  libreg \
 		  js \
 		  pref \
-		  appshell \
 		  widget \
 		  layout \
 		  content \
@@ -59,7 +58,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  docshell \
 		  dom \
-		  mozcomps \
 		  windowwatcher \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
