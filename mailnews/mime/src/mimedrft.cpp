@@ -582,6 +582,20 @@ mime_intl_insert_message_header_1(char        **body,
 		mime_SACat(body, HEADER_END_JUNK);
 }
 
+char *
+MimeGetNamedString(PRInt32 id)
+{
+  static char   retString[256];
+
+  retString[0] = '\0';
+  char *tString = MimeGetStringByID(id);
+  if (tString)
+    PL_strncpy(retString, tString, sizeof(retString)); 
+
+  return retString;
+}
+
+
 static void 
 mime_insert_all_headers(char            **body,
 									      MimeHeaders     *headers,
@@ -606,21 +620,19 @@ mime_insert_all_headers(char            **body,
 			*html_tag = 0;
 			mime_SACopy(&(newBody), *body);
 			*html_tag = '<';
-			mime_SACat(&newBody, 
-					 "<HTML> <BR><BR>-------- Original Message --------");
+			mime_SACat(&newBody, "<HTML> <BR><BR>");
 		}
 		else
-		{
-			mime_SACopy(&(newBody), 
-					 "<HTML> <BR><BR>-------- Original Message --------");
-		}
+			mime_SACopy(&(newBody), "<HTML> <BR><BR>");
+
+    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
 		mime_SACat(&newBody, MIME_HEADER_TABLE);
 	}
 	else
-	{
-		mime_SACopy(&(newBody), 
-					 MSG_LINEBREAK MSG_LINEBREAK "-------- Original Message --------");
-	}
+  {
+		mime_SACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
+    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
+  }
 
 	for (i = 0; i < headers->heads_size; i++)
 	{
@@ -678,10 +690,16 @@ mime_insert_all_headers(char            **body,
 	  nsCRT::memcpy(c2, contents, end - contents);
 	  c2[end - contents] = 0;
 	  
-	  if (htmlEdit) mime_fix_up_html_address(&c2);
-		  
-	  mime_intl_insert_message_header_1(&newBody, &c2, name, name, mailcharset,
-										htmlEdit); 
+    /* Do not reveal bcc recipients when forwarding a message!
+       See http://bugzilla.mozilla.org/show_bug.cgi?id=41150
+    */
+    if (nsCRT::strcasecmp(name, "bcc") != 0)
+    {
+	    if (htmlEdit) mime_fix_up_html_address(&c2);
+		    
+	    mime_intl_insert_message_header_1(&newBody, &c2, name, name, mailcharset,
+										  htmlEdit);
+    }
 	  PR_Free(name);
 	  PR_Free(c2);
 	}
@@ -708,19 +726,6 @@ mime_insert_all_headers(char            **body,
 	}
 }
 
-char *
-MimeGetNamedString(PRInt32 id)
-{
-  static char   retString[256];
-
-  retString[0] = '\0';
-  char *tString = MimeGetStringByID(id);
-  if (tString)
-    PL_strncpy(retString, tString, sizeof(retString)); 
-
-  return retString;
-}
-
 static void 
 mime_insert_normal_headers(char             **body,
 									         MimeHeaders      *headers,
@@ -744,7 +749,6 @@ mime_insert_normal_headers(char             **body,
 										 PR_FALSE, PR_FALSE);
 	char *to = MimeHeaders_get(headers, HEADER_TO, PR_FALSE, PR_TRUE);
 	char *cc = MimeHeaders_get(headers, HEADER_CC, PR_FALSE, PR_TRUE);
-	char *bcc = MimeHeaders_get(headers, HEADER_BCC, PR_FALSE, PR_TRUE);
 	char *newsgroups = MimeHeaders_get(headers, HEADER_NEWSGROUPS, PR_FALSE,
 									   PR_TRUE);
 	char *followup_to = MimeHeaders_get(headers, HEADER_FOLLOWUP_TO, PR_FALSE,
@@ -761,14 +765,14 @@ mime_insert_normal_headers(char             **body,
 	
 	if (htmlEdit)
 	{
-		mime_SACopy(&(newBody), 
-					 "<HTML> <BR><BR>-------- Original Message --------");
+		mime_SACopy(&(newBody), "<HTML> <BR><BR>");
+    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
 		mime_SACat(&newBody, MIME_HEADER_TABLE);
 	}
 	else
 	{
-		mime_SACopy(&(newBody), 
-					 MSG_LINEBREAK MSG_LINEBREAK "-------- Original Message --------");
+		mime_SACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
+    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
 	}
 	if (subject)
 		mime_intl_insert_message_header_1(&newBody, &subject, HEADER_SUBJECT,
@@ -845,14 +849,11 @@ mime_insert_normal_headers(char             **body,
 										  MimeGetNamedString(MIME_MHTML_CC),
 										  mailcharset, htmlEdit);
 	}
-	if (bcc)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&bcc);
-		mime_intl_insert_message_header_1(&newBody, &bcc, HEADER_BCC,
-										  MimeGetNamedString(MIME_MHTML_BCC),
-										  mailcharset, htmlEdit);
-	}
-	if (newsgroups)
+  /*
+    Do not reveal bcc recipients when forwarding a message!
+    See http://bugzilla.mozilla.org/show_bug.cgi?id=41150
+  */
+  if (newsgroups)
 		mime_intl_insert_message_header_1(&newBody, &newsgroups, HEADER_NEWSGROUPS,
 										  MimeGetNamedString(MIME_MHTML_NEWSGROUPS),
 										  mailcharset, htmlEdit);
@@ -903,7 +904,6 @@ mime_insert_normal_headers(char             **body,
 	PR_FREEIF(organization);
 	PR_FREEIF(to);
 	PR_FREEIF(cc);
-	PR_FREEIF(bcc);
 	PR_FREEIF(newsgroups);
 	PR_FREEIF(followup_to);
 	PR_FREEIF(references);
@@ -923,7 +923,6 @@ mime_insert_micro_headers(char            **body,
 	char *date = MimeHeaders_get(headers, HEADER_DATE, PR_FALSE, PR_TRUE);
 	char *to = MimeHeaders_get(headers, HEADER_TO, PR_FALSE, PR_TRUE);
 	char *cc = MimeHeaders_get(headers, HEADER_CC, PR_FALSE, PR_TRUE);
-	char *bcc = MimeHeaders_get(headers, HEADER_BCC, PR_FALSE, PR_TRUE);
 	char *newsgroups = MimeHeaders_get(headers, HEADER_NEWSGROUPS, PR_FALSE,
 									   PR_TRUE);
 	const char *html_tag = PL_strcasestr(*body, "<HTML>");
@@ -939,16 +938,17 @@ mime_insert_micro_headers(char            **body,
 	
 	if (htmlEdit)
 	{
-		mime_SACopy(&(newBody), 
-					 "<HTML> <BR><BR>-------- Original Message --------");
-	    mime_SACat(&newBody, MIME_HEADER_TABLE);
+		mime_SACopy(&(newBody), "<HTML> <BR><BR>");
+    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
+    mime_SACat(&newBody, MIME_HEADER_TABLE);
 	}
 	else
-	{
-		mime_SACopy(&(newBody), 
-					 MSG_LINEBREAK MSG_LINEBREAK "-------- Original Message --------");
-	}
-	if (from)
+  {
+		mime_SACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
+    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
+  }
+
+  if (from)
 	{
 		if (htmlEdit) 
       mime_fix_up_html_address(&from);
@@ -988,13 +988,10 @@ mime_insert_micro_headers(char            **body,
 										MimeGetNamedString(MIME_MHTML_CC),
 										mailcharset, htmlEdit);
 	}
-	if (bcc)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&bcc);
-		mime_intl_insert_message_header_1(&newBody, &bcc, HEADER_BCC,
-										MimeGetNamedString(MIME_MHTML_BCC),
-										mailcharset, htmlEdit);
-	}
+  /*
+    Do not reveal bcc recipients when forwarding a message!
+    See http://bugzilla.mozilla.org/show_bug.cgi?id=41150
+  */
 	if (newsgroups)
 		mime_intl_insert_message_header_1(&newBody, &newsgroups, HEADER_NEWSGROUPS,
 										MimeGetNamedString(MIME_MHTML_NEWSGROUPS),
@@ -1024,7 +1021,6 @@ mime_insert_micro_headers(char            **body,
 	PR_FREEIF(date);
 	PR_FREEIF(to);
 	PR_FREEIF(cc);
-	PR_FREEIF(bcc);
 	PR_FREEIF(newsgroups);
 
 }
