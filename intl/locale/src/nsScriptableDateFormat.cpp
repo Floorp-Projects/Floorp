@@ -19,13 +19,13 @@
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
-#include "nsILocaleFactory.h"
+#include "nsILocaleService.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsIDateTimeFormat.h"
 #include "nsIScriptableDateFormat.h"
 #include "nsCRT.h"
 
-static NS_DEFINE_CID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 class nsScriptableDateFormat : public nsIScriptableDateFormat {
@@ -81,18 +81,22 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
                             PRInt32 second, 
                             PRUnichar **dateTimeString)
 {
-	nsILocaleFactory* localeFactory; 
-	nsILocale* aLocale; 
-	nsString localeName(locale);
+  nsILocaleService *localeService;
+  nsILocale* aLocale; 
+  nsString localeName(locale);
   nsresult rv;
 
   *dateTimeString = NULL;
 
-  // get a locale factory 
-	rv = nsComponentManager::FindFactory(kLocaleFactoryCID, (nsIFactory**)&localeFactory); 
-  if (NS_SUCCEEDED(rv) && localeFactory) {
-    rv = localeName.Length() ? localeFactory->NewLocale(&localeName, &aLocale) :
-                               localeFactory->GetApplicationLocale(&aLocale);
+
+  // get locale service 
+  rv = nsComponentManager::CreateInstance(kLocaleServiceCID, NULL, 
+                                           nsILocaleService::GetIID(), (void**)&localeService);
+  if (NS_SUCCEEDED(rv)) {
+    rv = localeName.Length() ? localeService->NewLocale(localeName.GetUnicode(), &aLocale) :
+                               localeService->GetApplicationLocale(&aLocale);
+    localeService->Release();
+
     if (NS_SUCCEEDED(rv) && aLocale) {
       nsIDateTimeFormat *aDateTimeFormat;
     	rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
@@ -138,7 +142,6 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
       }
       NS_RELEASE(aLocale);
     }
-    NS_RELEASE(localeFactory);
   }
 
   return rv;
