@@ -171,6 +171,14 @@ void
 CRDFToolbar :: LayoutButtons ( )
 {
 	Uint32 horiz = 20;
+
+	bool iconOnTop = false;
+	char* value = NULL;
+	PRBool success = HT_GetTemplateData ( TopNode(), gNavCenter->toolbarBitmapPosition, HT_COLUMN_STRING, &value );
+	if ( success && value ) {
+		if ( strcmp(value, "top") == 0 )
+			iconOnTop = true;
+	}
 	
 	HT_Cursor cursor = HT_NewCursor(TopNode());
 	if (cursor == NULL)
@@ -179,11 +187,20 @@ CRDFToolbar :: LayoutButtons ( )
 	HT_Resource item = NULL;
 	while (item = HT_GetNextItem(cursor)) {
 		CRDFToolbarItem* button = reinterpret_cast<CRDFToolbarItem*>(HT_GetNodeFEData(item));
+		Uint32 hDelta = 0;
 		if ( button ) {
-			button->ResizeFrameTo ( 50, 50, false );
-			button->PlaceInSuperFrameAt ( horiz, 5, false );
+			if ( iconOnTop ) {
+				button->ResizeFrameTo ( 50, 50, false );
+				button->PlaceInSuperFrameAt ( horiz, 5, false );
+				hDelta = 50;
+			}
+			else {
+				button->ResizeFrameTo ( 80, 20, false );
+				button->PlaceInSuperFrameAt ( horiz, 5, false );
+				hDelta = 80;
+			}			
 		}
-		horiz += 55;
+		horiz += hDelta;
 	}
 	Refresh();
 
