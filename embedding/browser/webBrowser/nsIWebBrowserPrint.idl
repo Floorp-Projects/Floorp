@@ -45,11 +45,13 @@ interface nsIWebBrowserPrint : nsISupports
    * Returns a new, unique PrintSettings object each time.
    *
    * For example, if each browser was to have its own unique
-   * PrintSettings, then each brower window would call this to
+   * PrintSettings, then each browser window would call this to
    * create its own unique PrintSettings object.
    *
    * If each browse window was to use the same PrintSettings object
    * then it should use "globalPrintSettings"
+   *
+   * Initializes the newPrintSettings from the default printer
    *
    */
   readonly attribute nsIPrintSettings newPrintSettings;
@@ -59,6 +61,8 @@ interface nsIWebBrowserPrint : nsISupports
    * Creates a new the first time, if one doesn't exist.
    *
    * Then returns the same object each time after that.
+   *
+   * Initializes the globalPrintSettings from the default printer
    */
   readonly attribute nsIPrintSettings globalPrintSettings;
 
@@ -75,6 +79,7 @@ interface nsIWebBrowserPrint : nsISupports
 
   /**
    * Initializes certain settings from the native printer into the PrintSettings
+   * if aPrinterName is null then it uses the default printer name if it can
    * These settings include, but are not limited to:
    *   Page Orientation
    *   Page Size
@@ -89,7 +94,7 @@ interface nsIWebBrowserPrint : nsISupports
    * 
    * It is the responsibilitity of those implementing page setup
    * to set their setting into the global settings if they want those new value
-   * to avilable to other callers of "globalPrintSettingsValues"
+   * to available to other callers of "globalPrintSettingsValues"
    */
   attribute nsIPrintSettings globalPrintSettingsValues;
 

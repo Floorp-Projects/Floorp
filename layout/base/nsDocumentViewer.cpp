@@ -7265,6 +7265,7 @@ DocumentViewerImpl::GetNewPrintSettings(nsIPrintSettings * *aNewPrintSettings)
   nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = printService->CreatePrintSettings(aNewPrintSettings);
+    InitPrintSettingsFromPrinter(nsnull, *aNewPrintSettings);
   }
   return rv;
 }
@@ -7287,13 +7288,20 @@ DocumentViewerImpl::GetDefaultPrinterName(PRUnichar * *aDefaultPrinterName)
 NS_IMETHODIMP 
 DocumentViewerImpl::InitPrintSettingsFromPrinter(const PRUnichar *aPrinterName, nsIPrintSettings *aPrintSettings)
 {
-  NS_ENSURE_ARG_POINTER(aPrinterName);
   NS_ENSURE_ARG_POINTER(aPrintSettings);
 
+  PRUnichar* printerName = nsnull;
+  if (!aPrinterName) {
+    GetDefaultPrinterName(&printerName);
+    if (!printerName || !*printerName) return NS_OK;
+  }
   nsresult rv;
   nsCOMPtr<nsIPrinterEnumerator> prtEnum = do_GetService(kPrinterEnumeratorCID, &rv);
   if (prtEnum) {
-    prtEnum->InitPrintSettingsFromPrinter(aPrinterName, aPrintSettings);
+    prtEnum->InitPrintSettingsFromPrinter(aPrinterName?aPrinterName:printerName, aPrintSettings);
+  }
+  if (printerName) {
+    nsMemory::Free(printerName);
   }
   return NS_OK;
 }
@@ -7308,6 +7316,7 @@ DocumentViewerImpl::GetGlobalPrintSettings(nsIPrintSettings * *aGlobalPrintSetti
   nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = printService->GetGlobalPrintSettings(aGlobalPrintSettings);
+    InitPrintSettingsFromPrinter(nsnull, *aGlobalPrintSettings);
   }
   return rv;
 }
