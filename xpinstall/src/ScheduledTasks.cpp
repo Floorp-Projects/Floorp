@@ -189,7 +189,7 @@ REGERR DeleteFileNowOrSchedule(nsFileSpec& filename)
 
     REGERR result = 0;
     
-    filename.Delete(false);
+    filename.Delete(PR_FALSE);
     
     if (filename.Exists())
     {
@@ -224,7 +224,7 @@ REGERR ReplaceFileNowOrSchedule(nsFileSpec& replacementFile, nsFileSpec& doomedF
         return result;
     }
 
-    doomedFile.Delete(false);
+    doomedFile.Delete(PR_FALSE);
 
     if ( !doomedFile.Exists() )
     {
