@@ -395,13 +395,7 @@ function SwitchView(command)
     break;
   }
 
-  // that should have initialized gDBView, now re-root the thread pane
-  var treeView = gDBView.QueryInterface(Components.interfaces.nsITreeView);
-  if (treeView)
-  {
-    var tree = GetThreadTree();
-    tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject).view = treeView;
-  }
+  RerootThreadPane();
 }
 
 function SetSentFolderColumns(isSentFolder)
