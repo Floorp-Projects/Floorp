@@ -91,7 +91,7 @@ nsCertificatePrincipal::GetPreferences(char** aPrefName, char** aID,
 {
     if (!mPrefName) {
         nsCAutoString s;
-        s.Assign("security.principal.certificate.p");
+        s.Assign("capability.principal.certificate.p");
         s.AppendInt(mCapabilitiesOrdinal++);
         s.Append(".id");
         mPrefName = s.ToNewCString();

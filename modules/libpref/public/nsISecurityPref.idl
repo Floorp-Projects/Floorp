@@ -20,26 +20,26 @@
  * Contributor(s): 
  */
 
-#include "nsIPref.idl"
+#include "nsISupports.idl"
 
 /*
  * Interface for accessing preferences, bypassing the ususl security check
- * on prefs starting with "security". This interface is used by caps and
- * psm-glue, which need unchecked access to security prefs. 
+ * on prefs starting with "capability". This interface is used by
+ * nsScriptSecurityManager which needs unchecked access to security prefs. 
  * *PLEASE* do not call this interface from any other file, as this 
  * would be insecure.
  *
  * THIS INTERFACE SHOULD NEVER BE MADE SCRIPTABLE 
  */
 [uuid(94afd973-8045-4c6c-89e6-75bdced4209e)]
-interface nsISecurityPref : nsIPref {
+interface nsISecurityPref : nsISupports {
 
-  boolean SecurityGetBoolPref(in string pref);
-  void SecuritySetBoolPref(in string pref, in boolean value);
-  string SecurityCopyCharPref(in string pref);
-  void SecuritySetCharPref(in string pref, in string value);
-  long SecurityGetIntPref(in string pref);
-  void SecuritySetIntPref(in string pref, in long value);
-  void SecurityClearUserPref(in string pref_name);
+  boolean securityGetBoolPref(in string pref);
+  void securitySetBoolPref(in string pref, in boolean value);
+  string securityGetCharPref(in string pref);
+  void securitySetCharPref(in string pref, in string value);
+  long securityGetIntPref(in string pref);
+  void securitySetIntPref(in string pref, in long value);
+  void securityClearUserPref(in string pref_name);
 
 };
