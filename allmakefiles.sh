@@ -58,7 +58,6 @@ config/Makefile
 config/autoconf.mk
 config/mkdepend/Makefile
 config/mkdetect/Makefile
-config/ports/Makefile
 dbm/Makefile
 dbm/include/Makefile
 dbm/src/Makefile
