@@ -74,7 +74,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 psm_RelEng_srvr_bld:
 	cd ../coreconf; gmake
-	cd ../../nsprpub; gmake
+	cd ../../nsprpub; $(MAKE) OBJDIR_NAME=$(OBJDIR_NAME)
 	cd ../nss; gmake import IMPORTS=dbm/DBM_1_54
 	cd ../nss; gmake 
 ifeq ($(OS_ARCH), WINNT)
