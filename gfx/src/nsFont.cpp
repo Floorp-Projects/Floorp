@@ -116,7 +116,7 @@ PRBool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
 
     if ((kSingleQuote == *start) || (kDoubleQuote == *start)) { // quoted string
       PRUnichar quote = *start++;
-
+      quoted = PR_TRUE;
       end = start;
       while (kNullCh != *end) {
         if (quote == *end) {  // found closing quote
