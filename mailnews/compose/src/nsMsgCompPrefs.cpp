@@ -42,8 +42,6 @@ nsMsgCompPrefs::nsMsgCompPrefs()
 		res = mailSession->GetCurrentIdentity(getter_AddRefs(identity));
 		if (NS_SUCCEEDED(res) && identity)
 		{
-			char * aString = nsnull;
-
 			identity->GetOrganization(&m_organization);
 
 			identity->GetFullName(&m_userFullName);

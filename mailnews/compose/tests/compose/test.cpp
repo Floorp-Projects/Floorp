@@ -61,6 +61,7 @@
 #define APPCORES_DLL  "libappcores"MOZ_DLL_SUFFIX
 #define APPSHELL_DLL "libnsappshell"MOZ_DLL_SUFFIX
 #define MIME_DLL "libmime"MOZ_DLL_SUFFIX
+#define UNICHAR_DLL  "libuconv"MOZ_DLL_SUFFIX
 #endif
 #endif
 

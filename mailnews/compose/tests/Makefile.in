@@ -22,7 +22,10 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = compose smtp
+DIRS=compose sendpage smtp
+
+#these aren't built on windows, so we won't build them on UNIX
+#DIRS+=compose2 geturl sendlater
 
 include $(topsrcdir)/config/config.mk
 
