@@ -248,6 +248,20 @@ void FE_FinishedSave( MWContext * /* pMWContext */, int /* status */, char * /* 
 {
 }
 
+ED_CharsetEncode FE_EncodingDialog( MWContext* pContext )
+{
+#if 0
+	switch (HandleModalDialog( EDITDLG_ENCODING, NULL, NULL ))
+	{
+		case ED_ENCODE_CANCEL:			return ED_ENCODE_CANCEL;
+		case ED_ENCODE_CHANGE_CHARSET:	return ED_ENCODE_CHANGE_CHARSET;
+		case ED_ENCODE_CHANGE_METATAG:	return ED_ENCODE_CHANGE_METATAG;
+	}
+#endif
+
+	return ED_ENCODE_CANCEL;    // shouldn't get here...
+}
+
 // in xp_file.h
 // Create a backup filename for renaming current file before saving data
 //    Input should be be URL file type "file:///..."
