@@ -296,6 +296,12 @@ nsXMLEntity::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_IMETHODIMP
+nsXMLEntity::DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXMLEntity::HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
