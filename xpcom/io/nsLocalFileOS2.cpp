@@ -463,7 +463,7 @@ NS_IMETHODIMP
 nsLocalFile::GetPath(char **_retval)
 {
     NS_ENSURE_ARG_POINTER(_retval);
-    *_retval = (char*)nsAllocator::Clone(mPath, strlen(mPath) + 1);
+    *_retval = (char*)nsAllocator::Clone((const char*)mPath, strlen(mPath) + 1);
     return NS_OK;
 }
 
