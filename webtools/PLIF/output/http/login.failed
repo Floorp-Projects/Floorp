@@ -17,6 +17,7 @@ TemplateToolkit
 
    <p>
     [%- INCLUDE template.html.login.form buttonLabel = 'Get Password' %]
+    <input type="hidden" name="loginPendingCommands" value="[% pendingCommands | html %]">
    </p>
   </form>
 

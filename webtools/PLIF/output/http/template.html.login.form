@@ -8,5 +8,4 @@ TemplateToolkit
      [%- END %]
     </select>
     <input type="text" name="address" value="">
-    <input type="hidden" name="loginPendingCommands" value="[% pendingCommands | html %]">
     <input type="submit" value="[% buttonLabel | html %]">
