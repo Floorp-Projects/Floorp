@@ -176,6 +176,13 @@ nsMsgFolder::GetSubFolders(nsIEnumerator* *result)
   return mSubFolders->Enumerate(result);
 }
 
+NS_IMETHODIMP
+nsMsgFolder::GetHasSubFolders(PRBool *_retval)
+{
+  *_retval = (mSubFolders->Count() > 0);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsMsgFolder::AddFolderListener(nsIFolderListener * listener)
 {
   if (! mListeners)
@@ -289,7 +296,7 @@ NS_IMETHODIMP nsMsgFolder::SetPrettyName(char *name)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRUint32) nsMsgFolder::Count(void) const
+NS_IMETHODIMP_(PRUint32) nsMsgFolder::Count(void)
 {
   return mSubFolders->Count();
 }

@@ -45,7 +45,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsICollection methods:
-  NS_IMETHOD_(PRUint32) Count(void) const;
+  NS_IMETHOD_(PRUint32) Count(void);
   NS_IMETHOD AppendElement(nsISupports *aElement);
   NS_IMETHOD RemoveElement(nsISupports *aElement);
   NS_IMETHOD Enumerate(nsIEnumerator* *result);
@@ -57,6 +57,7 @@ public:
   NS_IMETHOD SetName(char *name);
   NS_IMETHOD GetChildNamed(const char *name, nsISupports* *result);
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
+  NS_IMETHOD GetHasSubFolders(PRBool *_retval);
 	NS_IMETHOD AddFolderListener(nsIFolderListener * listener);
 	NS_IMETHOD RemoveFolderListener(nsIFolderListener * listener);
 	NS_IMETHOD GetParent(nsIFolder * *aParent);
