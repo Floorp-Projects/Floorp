@@ -1,5 +1,19 @@
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 !if !defined(MOZ_TOP)
 #enable builds from changed top level directories
@@ -22,7 +36,7 @@ HAVE_BRANCH=0
 #//
 
 
-LDAPSDK_BRANCH =-r Ldapsdk31_StableBuild
+LDAPSDK_BRANCH =-r DIRECTORY_C_SDK_30_BRANCH
 
 !if "$(MOZ_DATE)" != ""
 CVS_BRANCH=-D "$(MOZ_DATE)"
@@ -65,7 +79,7 @@ clobber_build_all:: 	clobber_all \
 pull_all:: 
 
 
-#    -cvs co $(LDAPSDK_BRANCH)  LDAPCClientLibrary
+#    -cvs co $(LDAPSDK_BRANCH) DirectorySDKSource
 
 
 
@@ -90,9 +104,8 @@ build_ldap:
 # remove all source files from the tree and print a report of what was missed
 #
 clobber_all:
-    cd $(MOZ_SRC)\directory\c-sdk\ldap\libraries\msdos\winsock
+    cd $(MOZ_SRC)\mozilla\directory\c-sdk\ldap\libraries\msdos\winsock
     $(NMAKE) -f nsldap.mak clobber_all
-
 
 depend:
     -del /s /q make.dep
