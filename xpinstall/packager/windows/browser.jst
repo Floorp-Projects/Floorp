@@ -188,7 +188,7 @@ function updateWinReg()
     subkey  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\$MainExeFile$";
     winreg.createKey(subkey,"");
     valname = "";
-    value   = fCommunicator + "\\$MainExeFile$";
+    value   = fCommunicator + "$MainExeFile$";
     err     = winreg.setValueString(subkey, valname, value);
 
     valname = "Path";
