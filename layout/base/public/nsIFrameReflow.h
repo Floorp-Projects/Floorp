@@ -94,46 +94,32 @@ enum nsReflowReason {
  * @see #Reflow()
  */
 struct nsReflowState {
-  const nsReflowState* parentReflowState; // pointer to parent's reflow state
-  nsIFrame*            frame;             // the frame being reflowed
-  nsReflowReason       reason;            // the reason for the reflow
-  nsIReflowCommand*    reflowCommand;     // the reflow command. only set for eReflowReason_Incremental
-  nscoord              availableWidth,
-                       availableHeight;   // the available space in which to reflow
-  nsIRenderingContext* rendContext;       // rendering context to use for measurement
-  PRPackedBool         isTopOfPage;       // is the current context at the top of a page?
+  // pointer to parent's reflow state
+  const nsReflowState* parentReflowState;
+
+  // the frame being reflowed
+  nsIFrame*            frame;
+
+  // the reason for the reflow
+  nsReflowReason       reason;
+
+  // the reflow command. only set for eReflowReason_Incremental
+  nsIReflowCommand*    reflowCommand;
+
+  // the available space in which to reflow
+  nscoord              availableWidth, availableHeight;
+
+  // rendering context to use for measurement
+  nsIRenderingContext* rendContext;
+
+  // is the current context at the top of a page?
+  PRPackedBool         isTopOfPage;
 
   // Note: there is no copy constructor, so the compiler can generate an
   // optimal one.
 
-  // Constructs an initial reflow state (no parent reflow state) for a
-  // non-incremental reflow command
-  nsReflowState(nsIFrame*            aFrame,
-                nsReflowReason       aReason, 
-                const nsSize&        aAvailableSpace,
-                nsIRenderingContext* aContext);
-
-  // Constructs an initial reflow state (no parent reflow state) for an
-  // incremental reflow command
-  nsReflowState(nsIFrame*            aFrame,
-                nsIReflowCommand&    aReflowCommand,
-                const nsSize&        aAvailableSpace,
-                nsIRenderingContext* aContext);
-
-  // Construct a reflow state for the given frame, parent reflow state, and
-  // available space. Uses the reflow reason, reflow command, and isTopOfPage value
-  // from the parent's reflow state
-  nsReflowState(nsIFrame*            aFrame,
-                const nsReflowState& aParentReflowState,
-                const nsSize&        aAvailableSpace);
-
-  // Constructs a reflow state that overrides the reflow reason of the parent
-  // reflow state. Uses the isTopOfPage value from the parent's reflow state, and
-  // sets the reflow command to NULL
-  nsReflowState(nsIFrame*            aFrame,
-                const nsReflowState& aParentReflowState,
-                const nsSize&        aAvailableSpace,
-                nsReflowReason       aReflowReason);
+protected:
+  nsReflowState() { }
 };
 
 //----------------------------------------------------------------------
@@ -268,80 +254,4 @@ private:
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
 };
 
-//----------------------------------------------------------------------
-
-// Constructs an initial reflow state (no parent reflow state) for a
-// non-incremental reflow command
-inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
-                                    nsReflowReason       aReason, 
-                                    const nsSize&        aAvailableSpace,
-                                    nsIRenderingContext* aContext)
-{
-  NS_PRECONDITION(aReason != eReflowReason_Incremental, "unexpected reflow reason");
-  NS_PRECONDITION(!(aContext == nsnull), "no rendering context");
-  reason = aReason;
-  reflowCommand = nsnull;
-  availableWidth = aAvailableSpace.width;
-  availableHeight = aAvailableSpace.height;
-  parentReflowState = nsnull;
-  frame = aFrame;
-  rendContext = aContext;
-  isTopOfPage = PR_FALSE;
-}
-
-// Constructs an initial reflow state (no parent reflow state) for an
-// incremental reflow command
-inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
-                                    nsIReflowCommand&    aReflowCommand,
-                                    const nsSize&        aAvailableSpace,
-                                    nsIRenderingContext* aContext)
-{
-  NS_PRECONDITION(!(aContext == nsnull), "no rendering context");
-  reason = eReflowReason_Incremental;
-  reflowCommand = &aReflowCommand;
-  availableWidth = aAvailableSpace.width;
-  availableHeight = aAvailableSpace.height;
-  parentReflowState = nsnull;
-  frame = aFrame;
-  rendContext = aContext;
-  isTopOfPage = PR_FALSE;
-}
-
-// Construct a reflow state for the given frame, parent reflow state, and
-// max size. Uses the reflow reason, reflow command, and isTopOfPage value
-// from the parent's reflow state
-inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
-                                    const nsReflowState& aParentReflowState,
-                                    const nsSize&        aAvailableSpace)
-{
-  reason = aParentReflowState.reason;
-  reflowCommand = aParentReflowState.reflowCommand;
-  availableWidth = aAvailableSpace.width;
-  availableHeight = aAvailableSpace.height;
-  parentReflowState = &aParentReflowState;
-  frame = aFrame;
-  rendContext = aParentReflowState.rendContext;
-  isTopOfPage = aParentReflowState.isTopOfPage;
-}
-
-// Constructs a reflow state that overrides the reflow reason of the parent
-// reflow state. Uses the isTopOfPage value from the parent's reflow state, and
-// sets the reflow command to NULL
-inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
-                                    const nsReflowState& aParentReflowState,
-                                    const nsSize&        aAvailableSpace,
-                                    nsReflowReason       aReflowReason)
-{
-  reason = aReflowReason;
-  reflowCommand = nsnull;
-  availableWidth = aAvailableSpace.width;
-  availableHeight = aAvailableSpace.height;
-  parentReflowState = &aParentReflowState;
-  frame = aFrame;
-  rendContext = aParentReflowState.rendContext;
-  isTopOfPage = aParentReflowState.isTopOfPage;
-}
-
 #endif /* nsIFrameReflow_h___ */
-
-
