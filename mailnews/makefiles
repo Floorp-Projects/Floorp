@@ -29,6 +29,7 @@ mailnews/news/Makefile
 mailnews/news/public/Makefile
 mailnews/news/src/Makefile
 mailnews/news/tests/Makefile
+mailnews/news/tests/nntp/Makefile
 mailnews/mime/Makefile
 mailnews/mime/public/Makefile
 mailnews/mime/src/Makefile
