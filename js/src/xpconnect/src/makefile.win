@@ -44,6 +44,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpcwrappedjsclass.obj	\
 	.\$(OBJDIR)\xpcwrappednative.obj	\
 	.\$(OBJDIR)\xpcwrappednativeclass.obj	\
+	.\$(OBJDIR)\xpcwrappednativejsops.obj	\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpconnect -I$(PUBLIC)\xpcom -I$(PUBLIC)\js \
