@@ -23,10 +23,15 @@ static jfieldID peerFID = NULL;
  * Signature: (I)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_getValue
-    (JNIEnv *env, jobject jthis, jint) {
+    (JNIEnv *env, jobject jthis, jint param) {
     nsIPluginManager * manager = (nsIPluginManager*)env->GetLongField(jthis, peerFID);
-    //nb
-    return NULL;
+    char *res = NULL;
+    if (NS_FAILED(manager->GetValue((nsPluginManagerVariable)param,&res))
+	|| !res) {
+        return NULL;
+    } else {
+        return env->NewStringUTF(res);
+    }
 }
 
 /*
@@ -35,9 +40,10 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_ge
  * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_reloadPluglets
-    (JNIEnv *env, jobject jthis, jboolean) {
+    (JNIEnv *env, jobject jthis, jboolean jparam) {
      nsIPluginManager * manager = (nsIPluginManager*)env->GetLongField(jthis, peerFID);
-    //nb
+     PRBool param = (jparam == JNI_TRUE) ? PR_TRUE : PR_FALSE;
+     manager->ReloadPlugins(param);
 }
 
 /*
@@ -48,7 +54,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_reloa
 JNIEXPORT jstring JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_userAgent
     (JNIEnv *env, jobject jthis) {
     nsIPluginManager * manager = (nsIPluginManager*)env->GetLongField(jthis, peerFID);
-    return NULL; //nb
+    const char * res = NULL;
+    if (NS_FAILED(manager->UserAgent(&res)) 
+	|| !res) {
+        return NULL;
+    } else {
+        return  env->NewStringUTF(res);
+    }
 }    
 
 /*
@@ -104,4 +116,9 @@ JNIEXPORT void JNICALL Java_org_mozilla_pluglet_mozilla_PlugletManagerImpl_nativ
 	manager->AddRef();
     }
 }
+
+
+
+
+
 
