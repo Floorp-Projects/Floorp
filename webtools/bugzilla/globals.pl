@@ -915,7 +915,7 @@ sub quoteUrls {
 
     $text =~ s~\b(attachment\s*\#?\s*(\d+))
               ~GetAttachmentLink($2, $1)
-              ~egmx;
+              ~egmxi;
 
     # This handles bug a, comment b type stuff. Because we're using /g
     # we have to do this in one pattern, and so this is semi-messy.
