@@ -61,7 +61,7 @@ sub objectProvides {
 sub filterOutput {
     my $self = shift;
     my($app, $session, $string) = @_;
-    $string =~ s/\n\n.*$/\n/gos; # strip out everything after the header
+    $string =~ s/\n\n.*$/\n\n/os; # strip out everything after the header
     return $string;
 }
 
