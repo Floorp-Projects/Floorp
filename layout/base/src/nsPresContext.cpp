@@ -1146,9 +1146,12 @@ nsPresContext::ThemeChanged()
   // Clear all cached nsILookAndFeel colors.
   if (mLookAndFeel)
     mLookAndFeel->LookAndFeelChanged();
-  
-  if (mShell)
-    mShell->ReconstructStyleData();
+
+  // We have to clear style data because the assumption of style rule
+  // immutability has been violated since any style rule that uses
+  // system colors or fonts (and probably -moz-appearance as well) has
+  // changed.
+  nsPresContext::ClearStyleDataAndReflow();
 }
 
 void

@@ -39,6 +39,7 @@
 #include "nsNativeThemeGTK.h"
 #include "nsThemeConstants.h"
 #include "nsDrawingSurfaceGTK.h"
+#include "nsDeviceContextGTK.h"
 #include "gtkdrawing.h"
 
 #include "nsIObserverService.h"
@@ -644,6 +645,8 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 NS_IMETHODIMP
 nsNativeThemeGTK::ThemeChanged()
 {
+  nsDeviceContextGTK::ClearCachedSystemFonts();
+
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
   return NS_OK;
 }

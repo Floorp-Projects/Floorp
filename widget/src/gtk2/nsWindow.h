@@ -246,6 +246,8 @@ public:
     void               SetNonXEmbedPluginFocus(void);
     void               LoseNonXEmbedPluginFocus(void);
 
+    void               ThemeChanged(void);
+
     Window             mOldFocusWindow;
 
     static guint32     mLastButtonPressTime;
