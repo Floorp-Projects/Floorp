@@ -223,65 +223,11 @@ TestChildEnumeration()
   f->SetFirstChild(c1, 3);
   f->SetLastContentOffset(2);
 
-  // Make sure the child count is correct
-  PRInt32 childCount;
-  f->ChildCount(childCount);
-  if (childCount != 3) {
-    printf("ChildEnumeration: wrong child count: %d\n", childCount);
-    return PR_FALSE;
-  }
-
-  // Test indexing of child frames. nsnull should be returned for index
-  // values that are out of range
+  // Test first member function
   nsIFrame* child;
-  f->ChildAt(-1, child);
-  if (nsnull != child) {
-    printf("ChildEnumeration: child index failed for index < 0\n");
-    return PR_FALSE;
-  }
-  f->ChildAt(0, child);
-  if (c1 != child) {
-    printf("ChildEnumeration: wrong child at index: %d\n", 0);
-    return PR_FALSE;
-  }
-  f->ChildAt(1, child);
-  if (c2 != child) {
-    printf("ChildEnumeration: wrong child at index: %d\n", 1);
-    return PR_FALSE;
-  }
-  f->ChildAt(2, child);
-  if (c3 != child) {
-    printf("ChildEnumeration: wrong child at index: %d\n", 2);
-    return PR_FALSE;
-  }
-  f->ChildAt(3, child);
-  if (nsnull != child) {
-    printf("ChildEnumeration: child index failed for index >= child countn");
-    return PR_FALSE;
-  }
-
-  // Test first and last child member functions
   f->FirstChild(child);
   if (child != c1) {
     printf("ChildEnumeration: wrong first child\n");
-    return PR_FALSE;
-  }
-
-  // Test IndexOf()
-  PRInt32 index;
-  f->IndexOf(c1, index);
-  if (index != 0) {
-    printf("ChildEnumeration: index of c1 failed\n");
-    return PR_FALSE;
-  }
-  f->IndexOf(c2, index);
-  if (index != 1) {
-    printf("ChildEnumeration: index of c2 failed\n");
-    return PR_FALSE;
-  }
-  f->IndexOf(c3, index);
-  if (index != 2) {
-    printf("ChildEnumeration: index of c3 failed\n");
     return PR_FALSE;
   }
 
@@ -377,14 +323,6 @@ TestPushChildren()
   // Push the last two children to the next-in-flow which is empty.
   f->PushChildren(c4, c3, PR_TRUE);
 
-  // Verify there are two children in f1
-  PRInt32 childCount;
-  f1->ChildCount(childCount);
-  if (childCount != 2) {
-    printf("PushChildren: continuing frame bad child count: %d\n", childCount);
-    return PR_FALSE;
-  }
-
   // Verify the content offsets are correct
   if (f1->GetFirstContentOffset() != 3) {
     printf("PushChildren: continuing frame bad first content offset\n");
@@ -434,13 +372,6 @@ TestPushChildren()
 
   // Test pushing two children to a next-in-flow that already has children
   f->PushChildren(c2, c1, PR_TRUE);
-
-  // Verify there are four children in f1
-  f1->ChildCount(childCount);
-  if (childCount != 4) {
-    printf("PushChildren: continuing frame bad child count: %d\n", childCount);
-    return PR_FALSE;
-  }
 
   // Verify the content offset/length are correct
   if (f1->GetFirstContentOffset() != 1) {
@@ -508,14 +439,6 @@ TestDeleteChildsNext()
   // Delete the next-in-flow
   f->DeleteChildsNextInFlow(*context, c1);
 
-  // Verify the child count
-  PRInt32 childCount;
-  f->ChildCount(childCount);
-  if (childCount != 1) {
-    printf("DeleteNextInFlow: bad child count (#1a): %d\n", childCount);
-    return PR_FALSE;
-  }
-
   // Verify the sibling pointer is null
   nsIFrame* nextSibling;
   c1->GetNextSibling(nextSibling);
@@ -562,10 +485,8 @@ TestDeleteChildsNext()
 
   // Verify that the second container frame is empty
   nsIFrame* firstChild;
-
-  f1->ChildCount(childCount);
   f1->FirstChild(firstChild);
-  if ((childCount != 0) || (firstChild != nsnull)) {
+  if (firstChild != nsnull) {
     printf("DeleteNextInFlow: continuing frame not empty (#2a)\n");
     return PR_FALSE;
   }
@@ -594,13 +515,6 @@ TestDeleteChildsNext()
 
   // Delete the next-in-flow
   f->DeleteChildsNextInFlow(*context, c1);
-
-  // Verify the child count
-  f->ChildCount(childCount);
-  if (childCount != 2) {
-    printf("DeleteNextInFlow: bad child count (#1b): %d\n", childCount);
-    return PR_FALSE;
-  }
 
   // Verify the sibling pointer is correct
   c1->GetNextSibling(nextSibling);
@@ -654,13 +568,6 @@ TestDeleteChildsNext()
     return PR_FALSE;
   }
 
-  // Verify that the second container frame has one child
-  f1->ChildCount(childCount);
-  if (childCount != 1) {
-    printf("DeleteNextInFlow: continuing frame bad child count (#2b): %d\n", childCount);
-    return PR_FALSE;
-  }
-
   // Verify that the second container's first child is correct
   f1->FirstChild(firstChild);
   if (firstChild != c2) {
@@ -701,13 +608,6 @@ TestDeleteChildsNext()
   c1->GetNextInFlow(nextInFlow);
   if (nsnull != nextInFlow) {
     printf("DeleteNextInFlow: bad next-in-flow (#3)\n");
-    return PR_FALSE;
-  }
-
-  // Verify the child count is correct
-  f->ChildCount(childCount);
-  if (childCount != 2) {
-    printf("DeleteNextInFlow: bad child count (#3): %d\n", childCount);
     return PR_FALSE;
   }
 
