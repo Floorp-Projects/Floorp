@@ -501,9 +501,7 @@ nsListControlFrame::Destroy(nsIPresContext *aPresContext)
                                                     mEventListener),
                                      NS_GET_IID(nsIDOMKeyListener));
 
-  if (IsInDropDownMode() == PR_FALSE) {
-    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
-  }
+  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   return nsGfxScrollFrame::Destroy(aPresContext);
 }
 
@@ -1058,9 +1056,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Add the list frame as a child of the form
   if (eReflowReason_Initial == aReflowState.reason) {
-    if (!IsInDropDownMode()) {
-      nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
-    }
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
   }
 
   //--Calculate a width just big enough for the scrollframe to shrink around the
