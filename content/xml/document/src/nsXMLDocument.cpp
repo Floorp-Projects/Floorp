@@ -636,23 +636,23 @@ void nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet, PRUint32 aFlags
 {
   if (aFlags & NS_STYLESHEET_FROM_CATALOG) {
     // always after other catalog sheets
-    mStyleSheets.InsertElementAt(aSheet, mCountCatalogSheets);
+    mStyleSheets.InsertObjectAt(aSheet, mCountCatalogSheets);
     ++mCountCatalogSheets;
   }
   else if (aSheet == mAttrStyleSheet) {  // always after catalog sheets
-    mStyleSheets.InsertElementAt(aSheet, mCountCatalogSheets);
+    mStyleSheets.InsertObjectAt(aSheet, mCountCatalogSheets);
   }
   else if (aSheet == mInlineStyleSheet) {  // always last
-    mStyleSheets.AppendElement(aSheet);
+    mStyleSheets.AppendObject(aSheet);
   }
   else {
     PRInt32 count = mStyleSheets.Count();
-    if (count != 0 && mInlineStyleSheet == mStyleSheets.ElementAt(count - 1)) {
+    if (count != 0 && mInlineStyleSheet == mStyleSheets.ObjectAt(count - 1)) {
       // keep attr sheet last
-      mStyleSheets.InsertElementAt(aSheet, count - 1);
+      mStyleSheets.InsertObjectAt(aSheet, count - 1);
     }
     else {
-      mStyleSheets.AppendElement(aSheet);
+      mStyleSheets.AppendObject(aSheet);
     }
   }
 }
@@ -661,7 +661,7 @@ void
 nsXMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
 {
   // offset w.r.t. catalog style sheets and the attr style sheet
-  mStyleSheets.InsertElementAt(aSheet, aIndex + mCountCatalogSheets + 1);
+  mStyleSheets.InsertObjectAt(aSheet, aIndex + mCountCatalogSheets + 1);
 }
 
 // nsIDOMDocument interface
