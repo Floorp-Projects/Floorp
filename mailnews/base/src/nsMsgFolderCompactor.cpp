@@ -303,7 +303,10 @@ NS_IMETHODIMP nsFolderCompactState::StartCompacting()
     if (m_compactAll)
       CompactNextFolder();
     else
+    {
+      CleanupTempFilesAfterError();
       return rv;
+    }
   }
   if (m_size > 0)
   {
@@ -481,6 +484,7 @@ nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     // because the compact did not successfully complete.
     if (NS_SUCCEEDED(status))
     {
+      m_folder->NotifyCompactCompleted();
       CleanupTempFilesAfterError();
       ReleaseFolderLock();
       Release();
@@ -491,6 +495,7 @@ done:
   if (NS_FAILED(rv)) {
     m_status = rv; // set the status to rv so the destructor can remove the
                    // temp folder and database
+    m_folder->NotifyCompactCompleted();
     ReleaseFolderLock();
     Release(); // kill self
     return rv;
@@ -518,6 +523,8 @@ nsFolderCompactState::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
       count -= readCount;
       NS_ASSERTION (writeCount == readCount, 
                     "Oops, write fail, folder can be corrupted!\n");
+      if (writeCount != readCount)
+        return NS_MSG_ERROR_WRITING_MAIL_FOLDER;
     }
   }
   return rv;
@@ -630,6 +637,11 @@ nsOfflineStoreCompactState::FinishCompact()
   m_fileStream = nsnull;
 
     // make sure the new database is valid
+  nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+  m_db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+  if (dbFolderInfo)
+    dbFolderInfo->SetExpungedBytes(0);
+  m_folder->UpdateSummaryTotals(PR_TRUE);
   m_db->SetSummaryValid(PR_TRUE);
   m_db->Commit(nsMsgDBCommitType::kLargeCommit);
 
