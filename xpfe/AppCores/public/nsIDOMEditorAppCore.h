@@ -45,6 +45,14 @@ public:
 
   NS_IMETHOD    Redo()=0;
 
+  NS_IMETHOD    Cut()=0;
+
+  NS_IMETHOD    Copy()=0;
+
+  NS_IMETHOD    Paste()=0;
+
+  NS_IMETHOD    InsertText(const nsString& aTextToInsert)=0;
+
   NS_IMETHOD    Exit()=0;
 
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin)=0;
@@ -61,6 +69,10 @@ public:
   NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue);  \
   NS_IMETHOD    Undo();  \
   NS_IMETHOD    Redo();  \
+  NS_IMETHOD    Cut();  \
+  NS_IMETHOD    Copy();  \
+  NS_IMETHOD    Paste();  \
+  NS_IMETHOD    InsertText(const nsString& aTextToInsert);  \
   NS_IMETHOD    Exit();  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
@@ -74,6 +86,10 @@ public:
   NS_IMETHOD    SetAttribute(const nsString& aAttr, const nsString& aValue) { return _to##SetAttribute(aAttr, aValue); }  \
   NS_IMETHOD    Undo() { return _to##Undo(); }  \
   NS_IMETHOD    Redo() { return _to##Redo(); }  \
+  NS_IMETHOD    Cut() { return _to##Cut(); }  \
+  NS_IMETHOD    Copy() { return _to##Copy(); }  \
+  NS_IMETHOD    Paste() { return _to##Paste(); }  \
+  NS_IMETHOD    InsertText(const nsString& aTextToInsert) { return _to##InsertText(aTextToInsert); }  \
   NS_IMETHOD    Exit() { return _to##Exit(); }  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to##SetToolbarWindow(aWin); }  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to##SetContentWindow(aWin); }  \

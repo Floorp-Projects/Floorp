@@ -428,6 +428,50 @@ nsEditorAppCore::Redo()
   return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsEditorAppCore::Cut()
+{  
+  if (mEditor) {
+    mEditor->Cut();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::Copy()
+{  
+  if (mEditor) {
+    mEditor->Copy();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::Paste()
+{  
+  if (mEditor) {
+    mEditor->Paste();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditorAppCore::InsertText(const nsString& textToInsert)
+{
+	 nsresult	err = NS_OK;
+	 
+  if (mEditor)
+  {
+   	err = mEditor->InsertText(textToInsert);
+  }
+
+  return err;
+}
+
+
 NS_IMETHODIMP
 nsEditorAppCore::GetContentsAsText(nsString& aContentsAsText)
 {
