@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.21 2000/12/21 22:14:02 mcgreer%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.22 2001/01/07 00:29:25 relyea%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -43,7 +43,6 @@
 #include "secpkcs7.h"
 #include "cert.h"
 #include "certdb.h"
-#include "cdbhdl.h"
 #include "secoid.h"
 #include "cms.h"
 #include "nss.h"
@@ -113,24 +112,6 @@ Usage(char *progName)
     fprintf(stderr, "%-25s 11 - certUsageAnyCA\n", " ");
 
     exit(-1);
-}
-
-static CERTCertDBHandle certHandleStatic;	/* avoid having to allocate */
-
-static CERTCertDBHandle *
-OpenCertDB(char *progName)
-{
-    CERTCertDBHandle *certHandle;
-    SECStatus rv;
-
-    certHandle = &certHandleStatic;
-    rv = CERT_OpenCertDB(certHandle, PR_FALSE, SECU_CertDBNameCallback, NULL);
-    if (rv != SECSuccess) {
-        SECU_PrintError(progName, "could not open cert database");
-	return NULL;
-    }
-
-    return certHandle;
 }
 
 char *
