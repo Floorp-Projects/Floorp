@@ -120,7 +120,7 @@ PRBool nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength) {
     result=EnsureCapacity(theTempStr,aNewLength);
     if(result) {
       if(aDest.mLength) {
-        Append(theTempStr,aDest,0,aDest.mLength);        
+        StrAppend(theTempStr,aDest,0,aDest.mLength);        
       } 
       Free(aDest);
       aDest.mStr = theTempStr.mStr;
@@ -140,10 +140,10 @@ PRBool nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength) {
  * @param   aSource is where chars are copied from
  * @param   aCount is the number of chars copied from aSource
  */
-void nsStr::Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount){
+void nsStr::StrAssign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount){
   if(&aDest!=&aSource){
     Truncate(aDest,0);
-    Append(aDest,aSource,anOffset,aCount);
+    StrAppend(aDest,aSource,anOffset,aCount);
   }
 }
 
@@ -155,7 +155,7 @@ void nsStr::Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 a
  * @param   aSource is where char are copied from
  * @aCount  is the number of bytes to be copied 
  */
-void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount){
+void nsStr::StrAppend(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount){
   if(anOffset<aSource.mLength){
     PRUint32 theRealLen=(aCount<0) ? aSource.mLength : MinInt(aCount,aSource.mLength);
     PRUint32 theLength=(anOffset+theRealLen<aSource.mLength) ? theRealLen : (aSource.mLength-anOffset);
@@ -188,7 +188,7 @@ void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 a
  * @param   aSrcOffset is where in aSource chars are copied from
  * @param   aCount is the number of chars from aSource to be inserted into aDest
  */
-void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
+void nsStr::StrInsert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount){
   //there are a few cases for insert:
   //  1. You're inserting chars into an empty string (assign)
   //  2. You're inserting onto the end of a string (append)
@@ -211,14 +211,14 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
 
             if(isBigEnough) {
               if(aDestOffset) {
-                Append(theTempStr,aDest,0,aDestOffset); //first copy leftmost data...
+                StrAppend(theTempStr,aDest,0,aDestOffset); //first copy leftmost data...
               } 
               
-              Append(theTempStr,aSource,0,aSource.mLength); //next copy inserted (new) data
+              StrAppend(theTempStr,aSource,0,aSource.mLength); //next copy inserted (new) data
             
               PRUint32 theRemains=aDest.mLength-aDestOffset;
               if(theRemains) {
-                Append(theTempStr,aDest,aDestOffset,theRemains); //next copy rightmost data
+                StrAppend(theTempStr,aDest,aDestOffset,theRemains); //next copy rightmost data
               }
 
               Free(aDest);
@@ -245,9 +245,9 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
         }//if
         //else nothing to do!
       }
-      else Append(aDest,aSource,0,aCount);
+      else StrAppend(aDest,aSource,0,aCount);
     }
-    else Append(aDest,aSource,0,aCount);
+    else StrAppend(aDest,aSource,0,aCount);
   }
 }
 
@@ -833,7 +833,7 @@ nsStringInfo::nsStringInfo(nsStr& str)
   : mCount(0)
 {
   nsStr::Initialize(mStr, str.mCharSize);
-  nsStr::Assign(mStr, str, 0, -1);
+  nsStr::StrAssign(mStr, str, 0, -1);
 //  nsStr::Print(mStr, stdout);
 //  fputc('\n', stdout);
 }

@@ -52,7 +52,7 @@ static void Subsume(nsStr& aDest,nsStr& aSource){
       aSource.mStr=0;
     }
     else{
-      nsStr::Assign(aDest,aSource,0,aSource.mLength);
+      nsStr::StrAssign(aDest,aSource,0,aSource.mLength);
     }
   } 
   else nsStr::Truncate(aDest,0);
@@ -63,9 +63,10 @@ static void Subsume(nsStr& aDest,nsStr& aSource){
  * Default constructor. 
  */
 nsString::nsString() {
-  nsStr::Initialize(*this,eTwoByte);
+  Initialize(*this,eTwoByte);
 }
 
+#ifndef NEW_STRING_APIS
 /**
  * This constructor accepts an ascii string
  * @update  gess 1/4/99
@@ -73,9 +74,17 @@ nsString::nsString() {
  * @param   aLength tells us how many chars to copy from given CString
  */
 nsString::nsString(const char* aCString,PRInt32 aCount){  
-  nsStr::Initialize(*this,eTwoByte);
+  Initialize(*this,eTwoByte);
   AssignWithConversion(aCString,aCount);
 }
+#endif
+
+#ifdef NEW_STRING_APIS
+nsString::nsString(const PRUnichar* aString) {
+  Initialize(*this,eTwoByte);
+  Assign(aString);
+}
+#endif
 
 /**
  * This constructor accepts a unicode string
@@ -84,19 +93,21 @@ nsString::nsString(const char* aCString,PRInt32 aCount){
  * @param   aLength tells us how many chars to copy from given aString
  */
 nsString::nsString(const PRUnichar* aString,PRInt32 aCount) {  
-  nsStr::Initialize(*this,eTwoByte);
+  Initialize(*this,eTwoByte);
   Assign(aString,aCount);
 }
 
+#ifndef NEW_STRING_APIS
 /**
  * This constructor works for all other nsSTr derivatives
  * @update  gess 1/4/99
  * @param   reference to another nsCString
  */
 nsString::nsString(const nsStr &aString)  {
-  nsStr::Initialize(*this,eTwoByte);
-  nsStr::Assign(*this,aString,0,aString.mLength);
+  Initialize(*this,eTwoByte);
+  StrAssign(*this,aString,0,aString.mLength);
 }
+#endif
 
 /**
  * This is our copy constructor 
@@ -104,8 +115,8 @@ nsString::nsString(const nsStr &aString)  {
  * @param   reference to another nsString
  */
 nsString::nsString(const nsString& aString) {
-  nsStr::Initialize(*this,eTwoByte);
-  nsStr::Assign(*this,aString,0,aString.mLength);
+  Initialize(*this,eTwoByte);
+  StrAssign(*this,aString,0,aString.mLength);
 }
 
 /**
@@ -115,13 +126,13 @@ nsString::nsString(const nsString& aString) {
  */
 #ifdef AIX
 nsString::nsString(const nsSubsumeStr& aSubsumeStr)  {
-  nsStr::Initialize(*this,eTwoByte);
+  Initialize(*this,eTwoByte);
 
   nsSubsumeStr temp(aSubsumeStr);  // a temp is needed for the AIX compiler
   Subsume(*this,temp);
 #else
 nsString::nsString(nsSubsumeStr& aSubsumeStr)  {
-  nsStr::Initialize(*this,eTwoByte);
+  Initialize(*this,eTwoByte);
 
   Subsume(*this,aSubsumeStr);
 #endif /* AIX */
@@ -167,14 +178,10 @@ PRUnichar* nsString::GetWritableFragment( nsWritableFragment<PRUnichar>& aFragme
 }
 
 nsString::nsString( const nsAReadableString& aReadable ) {
-  nsStr::Initialize(*this,eTwoByte);
+  Initialize(*this,eTwoByte);
   Assign(aReadable);
 }
 #endif
-
-void nsString::AppendChar( PRUnichar aChar ) {
-  Append(aChar);
-}
 
 void nsString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
   if (aResult) {
@@ -305,7 +312,7 @@ PRBool nsString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
  */
 nsSubsumeStr nsString::operator+(const nsStr& aString){
   nsString temp(*this); //make a temp string the same size as this...
-  nsStr::Append(temp,aString,0,aString.mLength);
+  nsStr::StrAppend(temp,aString,0,aString.mLength);
   return nsSubsumeStr(temp);
 }
 
@@ -317,7 +324,7 @@ nsSubsumeStr nsString::operator+(const nsStr& aString){
  */
 nsSubsumeStr nsString::operator+(const nsString& aString){
   nsString temp(*this); //make a temp string the same size as this...
-  nsStr::Append(temp,aString,0,aString.mLength);
+  nsStr::StrAppend(temp,aString,0,aString.mLength);
   return nsSubsumeStr(temp);
 }
 
@@ -584,7 +591,7 @@ nsString& nsString::ReplaceSubstring(const nsString& aTarget,const nsString& aNe
           //this is the worst case: the newvalue is larger than the substr it's replacing
           //so we have to insert some characters...
           PRInt32 theInsLen=aNewValue.mLength-aTarget.mLength;
-          nsStr::Insert(*this,theIndex,aNewValue,0,theInsLen);
+          StrInsert(*this,theIndex,aNewValue,0,theInsLen);
         }
         nsStr::Overwrite(*this,aNewValue,theIndex);
       }
@@ -833,7 +840,7 @@ char* nsString::ToCString(char* aBuf, PRUint32 aBufLength,PRUint32 anOffset) con
 
     CBufDescriptor theDescr(aBuf,PR_TRUE,aBufLength,0);
     nsCAutoString temp(theDescr);
-    nsStr::Assign(temp, *this, anOffset, aBufLength-1);
+    nsStr::StrAssign(temp, *this, anOffset, aBufLength-1);
     temp.mStr=0;
   }
   return aBuf;
@@ -977,13 +984,13 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
  *********************************************************************/
 
 
+#ifndef NEW_STRING_APIS
 /**
  * assign given nsStr (or derivative) to this one
  * @update  gess 01/04/99
  * @param   aString: nsStr to be appended
  * @return  this
  */
-#ifndef NEW_STRING_APIS
 nsString& nsString::Assign(const nsStr& aString,PRInt32 aCount) {
   if(this!=&aString){
     nsStr::Truncate(*this,0);
@@ -992,7 +999,7 @@ nsString& nsString::Assign(const nsStr& aString,PRInt32 aCount) {
       aCount=aString.mLength;
     else aCount=MinInt(aCount,aString.mLength);
 
-    nsStr::Assign(*this,aString,0,aCount);
+    StrAssign(*this,aString,0,aCount);
   }
   return *this;
 }
@@ -1010,10 +1017,20 @@ nsString& nsString::Assign(const nsStr& aString,PRInt32 aCount) {
 void nsString::AssignWithConversion(const char* aCString,PRInt32 aCount) {
   nsStr::Truncate(*this,0);
   if(aCString){
-    Append(aCString,aCount);
+    AppendWithConversion(aCString,aCount);
   }
 }
 
+#ifdef NEW_STRING_APIS
+void nsString::AssignWithConversion(const char* aCString) {
+  nsStr::Truncate(*this,0);
+  if(aCString){
+    AppendWithConversion(aCString);
+  }
+}
+#endif
+
+#ifndef NEW_STRING_APIS
 /**
  * assign given unichar* to this string
  * @update  gess 01/04/99
@@ -1030,6 +1047,7 @@ nsString& nsString::Assign(const PRUnichar* aString,PRInt32 aCount) {
   }
   return *this;
 }
+#endif
 
 /**
  * assign given char to this string
@@ -1039,9 +1057,10 @@ nsString& nsString::Assign(const PRUnichar* aString,PRInt32 aCount) {
  */
 void nsString::AssignWithConversion(char aChar) {
   nsStr::Truncate(*this,0);
-  Append(aChar);
+  AppendWithConversion(aChar);
 }
 
+#ifndef NEW_STRING_APIS
 /**
  * assign given unichar to this string
  * @update  gess 01/04/99
@@ -1052,7 +1071,9 @@ nsString& nsString::Assign(PRUnichar aChar) {
   nsStr::Truncate(*this,0);
   return Append(aChar);
 }
+#endif
 
+#ifndef NEW_STRING_APIS
 /**
  * WARNING! THIS IS A VERY SPECIAL METHOD. 
  * This method "steals" the contents of aSource and hands it to aDest.
@@ -1071,40 +1092,7 @@ nsString& nsString::operator=(const nsSubsumeStr& aSubsumeString) {
 #endif // AIX
   return *this;
 }
-
-/**
- * append given string to this string; 
- * @update  gess 01/04/99
- * @param   aString : string to be appended to this
- * @return  this
- */
-nsString& nsString::Append(const nsStr& aString,PRInt32 aCount) {
-
-  if(aCount<0)
-    aCount=aString.mLength;
-  else aCount=MinInt(aCount,aString.mLength);
-
-  if(0<aCount)
-    nsStr::Append(*this,aString,0,aCount);
-  return *this;
-}
-
-
-/**
- * append given string to this string
- * I don't think we need this method now that we have the previous one.
- * @update  gess 01/04/99
- * @param   aString : string to be appended to this
- * @return  this
- */
-nsString& nsString::Append(const nsString& aString,PRInt32 aCount) {
-  if(aCount<0)
-    aCount=aString.mLength;
-  else aCount=MinInt(aCount,aString.mLength);
-  if(0<aCount)
-    nsStr::Append(*this,aString,0,aCount);
-  return *this;
-}
+#endif
 
 /**
  * append given c-string to this string
@@ -1115,10 +1103,10 @@ nsString& nsString::Append(const nsString& aString,PRInt32 aCount) {
  *
  * @return  this
  */
-nsString& nsString::Append(const char* aCString,PRInt32 aCount) {
+void nsString::AppendWithConversion(const char* aCString,PRInt32 aCount) {
   if(aCString && aCount){  //if astring is null or count==0 there's nothing to do
     nsStr temp;
-    Initialize(temp,eOneByte);
+    nsStr::Initialize(temp,eOneByte);
     temp.mStr=(char*)aCString;
 
     if(0<aCount) {
@@ -1138,45 +1126,8 @@ nsString& nsString::Append(const char* aCString,PRInt32 aCount) {
     else aCount=temp.mLength=nsCRT::strlen(aCString);
       
     if(0<aCount)
-      nsStr::Append(*this,temp,0,aCount);
+      StrAppend(*this,temp,0,aCount);
   }
-  return *this;
-}
-
-/**
- * append given unicode string to this 
- * @update  gess 01/04/99
- * @param   aString : string to be appended to this
- * @param   aCount -- length of given buffer or -1 if you want me to compute length.
- * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
- *
- * @return  this
- */
-nsString& nsString::Append(const PRUnichar* aString,PRInt32 aCount) {
-  if(aString && aCount){  //if astring is null or count==0 there's nothing to do
-    nsStr temp;
-    Initialize(temp,eTwoByte);
-    temp.mUStr=(PRUnichar*)aString;
-
-    if(0<aCount) {
-      temp.mLength=aCount;
-
-      // If this assertion fires, the caller is probably lying about the length of
-      //   the passed-in string.  File a bug on the caller.
-#ifdef NS_DEBUG
-      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0,temp.mLength);
-      if(kNotFound<len) {
-        NS_WARNING(kPossibleNull);
-      }
-#endif
-
-    }
-    else aCount=temp.mLength=nsCRT::strlen(aString);
-      
-    if(0<aCount)
-      nsStr::Append(*this,temp,0,aCount);
-  }
-  return *this;
 }
 
 /**
@@ -1185,34 +1136,15 @@ nsString& nsString::Append(const PRUnichar* aString,PRInt32 aCount) {
  * @param   aChar: char to be appended 
  * @return  this
  */
-nsString& nsString::Append(char aChar) {
+void nsString::AppendWithConversion(char aChar) {
   char buf[2]={0,0};
   buf[0]=aChar;
 
   nsStr temp;
-  Initialize(temp,eOneByte);
+  nsStr::Initialize(temp,eOneByte);
   temp.mStr=buf;
   temp.mLength=1;
-  nsStr::Append(*this,temp,0,1);
-  return *this;
-}
-
-/**
- * append given unichar to this string
- * @update  gess 01/04/99
- * @param   aChar: char to be appended to this
- * @return  this
- */
-nsString& nsString::Append(PRUnichar aChar) {
-  PRUnichar buf[2]={0,0};
-  buf[0]=aChar;
-
-  nsStr temp;
-  Initialize(temp,eTwoByte);
-  temp.mUStr=buf;
-  temp.mLength=1;
-  nsStr::Append(*this,temp,0,1);
-  return *this;
+  StrAppend(*this,temp,0,1);
 }
 
 /**
@@ -1222,7 +1154,7 @@ nsString& nsString::Append(PRUnichar aChar) {
  * @param   aRadix:
  * @return
  */
-nsString& nsString::Append(PRInt32 anInteger,PRInt32 aRadix) {
+void nsString::AppendWithConversion(PRInt32 anInteger,PRInt32 aRadix) {
 
   PRUint32 theInt=(PRUint32)anInteger;
 
@@ -1250,7 +1182,7 @@ nsString& nsString::Append(PRInt32 anInteger,PRInt32 aRadix) {
     theInt-=theDiv*mask1;
     mask1/=aRadix;
   }
-  return Append(buf);
+  AppendWithConversion(buf);
 }
 
 
@@ -1260,15 +1192,104 @@ nsString& nsString::Append(PRInt32 anInteger,PRInt32 aRadix) {
  * @param   aFloat:
  * @return
  */
-nsString& nsString::Append(float aFloat){
+void nsString::AppendWithConversion(float aFloat){
   char buf[40];
   // *** XX UNCOMMENT THIS LINE
   //PR_snprintf(buf, sizeof(buf), "%g", aFloat);
   sprintf(buf,"%g",aFloat);
-  Append(buf);
+  AppendWithConversion(buf);
+}
+
+
+#ifndef NEW_STRING_APIS
+/**
+ * append given string to this string; 
+ * @update  gess 01/04/99
+ * @param   aString : string to be appended to this
+ * @return  this
+ */
+nsString& nsString::Append(const nsStr& aString,PRInt32 aCount) {
+
+  if(aCount<0)
+    aCount=aString.mLength;
+  else aCount=MinInt(aCount,aString.mLength);
+
+  if(0<aCount)
+    StrAppend(*this,aString,0,aCount);
   return *this;
 }
 
+
+/**
+ * append given string to this string
+ * I don't think we need this method now that we have the previous one.
+ * @update  gess 01/04/99
+ * @param   aString : string to be appended to this
+ * @return  this
+ */
+nsString& nsString::Append(const nsString& aString,PRInt32 aCount) {
+  if(aCount<0)
+    aCount=aString.mLength;
+  else aCount=MinInt(aCount,aString.mLength);
+  if(0<aCount)
+    StrAppend(*this,aString,0,aCount);
+  return *this;
+}
+
+/**
+ * append given unicode string to this 
+ * @update  gess 01/04/99
+ * @param   aString : string to be appended to this
+ * @param   aCount -- length of given buffer or -1 if you want me to compute length.
+ * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+ *
+ * @return  this
+ */
+nsString& nsString::Append(const PRUnichar* aString,PRInt32 aCount) {
+  if(aString && aCount){  //if astring is null or count==0 there's nothing to do
+    nsStr temp;
+    nsStr::Initialize(temp,eTwoByte);
+    temp.mUStr=(PRUnichar*)aString;
+
+    if(0<aCount) {
+      temp.mLength=aCount;
+
+      // If this assertion fires, the caller is probably lying about the length of
+      //   the passed-in string.  File a bug on the caller.
+#ifdef NS_DEBUG
+      PRInt32 len=nsStr::FindChar(temp,0,PR_FALSE,0,temp.mLength);
+      if(kNotFound<len) {
+        NS_WARNING(kPossibleNull);
+      }
+#endif
+
+    }
+    else aCount=temp.mLength=nsCRT::strlen(aString);
+      
+    if(0<aCount)
+      StrAppend(*this,temp,0,aCount);
+  }
+  return *this;
+}
+
+/**
+ * append given unichar to this string
+ * @update  gess 01/04/99
+ * @param   aChar: char to be appended to this
+ * @return  this
+ */
+nsString& nsString::Append(PRUnichar aChar) {
+  PRUnichar buf[2]={0,0};
+  buf[0]=aChar;
+
+  nsStr temp;
+  nsStr::Initialize(temp,eTwoByte);
+  temp.mUStr=buf;
+  temp.mLength=1;
+  StrAppend(*this,temp,0,1);
+  return *this;
+}
+#endif
 
 /*
  *  Copies n characters from this left of this string to given string,
@@ -1283,7 +1304,7 @@ PRUint32 nsString::Left(nsString& aDest,PRInt32 aCount) const{
   if(aCount<0)
     aCount=mLength;
   else aCount=MinInt(aCount,mLength);
-  nsStr::Assign(aDest,*this,0,aCount);
+  nsStr::StrAssign(aDest,*this,0,aCount);
 
   return aDest.mLength;
 }
@@ -1301,7 +1322,7 @@ PRUint32 nsString::Mid(nsString& aDest,PRUint32 anOffset,PRInt32 aCount) const{
   if(aCount<0)
     aCount=mLength;
   else aCount=MinInt(aCount,mLength);
-  nsStr::Assign(aDest,*this,anOffset,aCount);
+  nsStr::StrAssign(aDest,*this,anOffset,aCount);
 
   return aDest.mLength;
 }
@@ -1320,20 +1341,6 @@ PRUint32 nsString::Right(nsString& aDest,PRInt32 aCount) const{
 }
 
 
-/*
- *  This method inserts n chars from given string into this
- *  string at str[anOffset].
- *  
- *  @update gess 4/1/98
- *  @param  aString -- source String to be inserted into this
- *  @param  anOffset -- insertion position within this str
- *  @param  aCount -- number of chars to be copied from aCopy
- *  @return this
- */
-nsString& nsString::Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCount) {
-  nsStr::Insert(*this,anOffset,aCopy,0,aCount);
-  return *this;
-}
 
 /**
  * Insert a char* into this string at a specified offset.
@@ -1346,7 +1353,7 @@ nsString& nsString::Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCoun
  *
  * @return  this
  */
-nsString& nsString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount){
+void nsString::InsertWithConversion(const char* aCString,PRUint32 anOffset,PRInt32 aCount){
   if(aCString && aCount){
     nsStr temp;
     nsStr::Initialize(temp,eOneByte);
@@ -1368,10 +1375,25 @@ nsString& nsString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount
     else aCount=temp.mLength=nsCRT::strlen(aCString);
 
     if(0<aCount){
-      nsStr::Insert(*this,anOffset,temp,0,aCount);
+      StrInsert(*this,anOffset,temp,0,aCount);
     }
   }
-  return *this;  
+}
+
+#ifndef NEW_STRING_APIS
+/*
+ *  This method inserts n chars from given string into this
+ *  string at str[anOffset].
+ *  
+ *  @update gess 4/1/98
+ *  @param  aString -- source String to be inserted into this
+ *  @param  anOffset -- insertion position within this str
+ *  @param  aCount -- number of chars to be copied from aCopy
+ *  @return this
+ */
+nsString& nsString::Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCount) {
+  StrInsert(*this,anOffset,aCopy,0,aCount);
+  return *this;
 }
 
 
@@ -1408,7 +1430,7 @@ nsString& nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aC
     else aCount=temp.mLength=nsCRT::strlen(aString);
 
     if(0<aCount){
-      nsStr::Insert(*this,anOffset,temp,0,aCount);
+      StrInsert(*this,anOffset,temp,0,aCount);
     }
   }
   return *this;  
@@ -1431,9 +1453,10 @@ nsString& nsString::Insert(PRUnichar aChar,PRUint32 anOffset){
   nsStr::Initialize(temp,eTwoByte);
   temp.mUStr=theBuffer;
   temp.mLength=1;
-  nsStr::Insert(*this,anOffset,temp,0,1);
+  StrInsert(*this,anOffset,temp,0,1);
   return *this;
 }
+#endif
 
 /*
  *  This method is used to cut characters in this string
@@ -2224,7 +2247,7 @@ void nsString::DebugDump(void) const {
   nsCAutoString temp;
 
   if(eTwoByte==mCharSize) {  
-    nsStr::Assign(temp, *this, 0, mLength);  
+    nsStr::StrAssign(temp, *this, 0, mLength);  
     theBuffer=temp.GetBuffer();
   }
 
@@ -2245,19 +2268,8 @@ void nsString::DebugDump(void) const {
  *
  */
 nsAutoString::nsAutoString() : nsString() {
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
-}
-
-/**
- * Copy construct from ascii c-string
- * @param   aCString is a ptr to a 1-byte cstr
- * @param   aLength tells us how many chars to copy from aCString
- */
-nsAutoString::nsAutoString(const char* aCString,PRInt32 aLength) : nsString() {
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
-  AddNullTerminator(*this);
-  Append(aCString,aLength);
 }
 
 /**
@@ -2266,7 +2278,7 @@ nsAutoString::nsAutoString(const char* aCString,PRInt32 aLength) : nsString() {
  * @param   aLength tells us how many chars to copy from aString
  */
 nsAutoString::nsAutoString(const PRUnichar* aString,PRInt32 aLength) : nsString() {
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString,aLength);
 }
@@ -2277,31 +2289,44 @@ nsAutoString::nsAutoString(const PRUnichar* aString,PRInt32 aLength) : nsString(
  */
 nsAutoString::nsAutoString(const CBufDescriptor& aBuffer) : nsString() {
   if(!aBuffer.mBuffer) {
-    nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+    Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   }
   else {
-    nsStr::Initialize(*this,aBuffer.mBuffer,aBuffer.mCapacity,aBuffer.mLength,aBuffer.mCharSize,!aBuffer.mStackBased);
+    Initialize(*this,aBuffer.mBuffer,aBuffer.mCapacity,aBuffer.mLength,aBuffer.mCharSize,!aBuffer.mStackBased);
   }
   if(!aBuffer.mIsConst)
     AddNullTerminator(*this);
 }
 
 
+#ifndef NEW_STRING_APIS
+/**
+ * Copy construct from ascii c-string
+ * @param   aCString is a ptr to a 1-byte cstr
+ * @param   aLength tells us how many chars to copy from aCString
+ */
+nsAutoString::nsAutoString(const char* aCString,PRInt32 aLength) : nsString() {
+  Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  AddNullTerminator(*this);
+  Append(aCString,aLength);
+}
+
 /**
  * Copy construct from an nsStr
  * @param   
  */
 nsAutoString::nsAutoString(const nsStr& aString) : nsString() {
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
 }
+#endif
 
 /**
  * Default copy constructor
  */
 nsAutoString::nsAutoString(const nsAutoString& aString) : nsString() {
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aString);
 }
@@ -2312,7 +2337,7 @@ nsAutoString::nsAutoString(const nsAutoString& aString) : nsString() {
  * @param   
  */
 nsAutoString::nsAutoString(PRUnichar aChar) : nsString(){
-  nsStr::Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
+  Initialize(*this,mBuffer,(sizeof(mBuffer)>>eTwoByte)-1,0,eTwoByte,PR_FALSE);
   AddNullTerminator(*this);
   Append(aChar);
 }

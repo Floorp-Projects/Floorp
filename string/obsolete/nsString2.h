@@ -65,38 +65,36 @@ class NS_COM nsString :
 #endif
   public nsStr {
 
-#ifdef NEW_STRING_APIS
 protected:
+#ifdef NEW_STRING_APIS
   virtual const PRUnichar* GetReadableFragment( nsReadableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 ) const;
   virtual PRUnichar* GetWritableFragment( nsWritableFragment<PRUnichar>&, nsFragmentRequest, PRUint32 );
-
-public:
-  nsString( const nsAReadableString& );
-
-#ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
-  using nsAWritableString::Append;
-  using nsAWritableString::Insert;
-#else
-  virtual void Append( const nsAReadableString& aReadable ) {
-    nsAWritableString::Append(aReadable);
-  }
-
-  virtual void Insert( const nsAReadableString& aReadable, PRUint32 atPosition ) {
-    nsAWritableString::Insert(aReadable, atPosition);
-  }
-#endif
 #endif
 
+
 public:
-  void AppendChar( PRUnichar );
-
-public: 
-
   /**
    * Default constructor. 
    */
   nsString();
 
+  /**
+   * This is our copy constructor 
+   * @param   reference to another nsString
+   */
+  nsString(const nsString& aString);   
+
+#ifdef NEW_STRING_APIS
+  nsString(const nsAReadableString&);
+
+  nsString(const PRUnichar*);
+  nsString(const PRUnichar*, PRInt32);
+#else
+  /**
+   * This constructor accepts a unichar string
+   * @param   aCString is a ptr to a 2-byte cstr
+   */
+  nsString(const PRUnichar* aString,PRInt32 aCount=-1);
 
   /**
    * This constructor accepts an isolatin string
@@ -105,22 +103,12 @@ public:
   nsString(const char* aCString,PRInt32 aCount=-1);
 
   /**
-   * This constructor accepts a unichar string
-   * @param   aCString is a ptr to a 2-byte cstr
-   */
-  nsString(const PRUnichar* aString,PRInt32 aCount=-1);
-
-  /**
    * This is a copy constructor that accepts an nsStr
    * @param   reference to another nsString
    */
   nsString(const nsStr&);
+#endif
 
-  /**
-   * This is our copy constructor 
-   * @param   reference to another nsString
-   */
-  nsString(const nsString& aString);   
 
   /**
    * This constructor takes a subsumestr
@@ -440,94 +428,52 @@ public:
 
    * @return  this
    */
+
+  void AssignWithConversion(char);
 #ifdef NEW_STRING_APIS
-#ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
-  using nsAWritableString::Assign;
+  void AssignWithConversion(const char*);
+  void AssignWithConversion(const char*, PRInt32);
 #else
-  virtual void Assign( const nsAReadableString& aReadable ) {
-    nsAWritableString::Assign(aReadable);
-  }
-#endif
-#endif
+  void AssignWithConversion(const char*, PRInt32=-1);
+
   nsString& Assign(const PRUnichar* aString,PRInt32 aCount=-1);
   nsString& Assign(PRUnichar aChar);
 
-  void AssignWithConversion(const char*, PRInt32=-1);
-  void AssignWithConversion(char);
-
-#ifndef NEW_STRING_APIS
   nsString& Assign(const nsStr& aString,PRInt32 aCount=-1);
-  nsString& Assign(const char* aString,PRInt32 aCount=-1) { AssignWithConversion(aString, aCount); return *this; }
-  nsString& Assign(char aChar)                            { AssignWithConversion(aChar); return *this; }
-#endif
-
+  nsString& Assign(const char* aString,PRInt32 aCount=-1)       { AssignWithConversion(aString, aCount); return *this; }
+  nsString& Assign(char aChar)                                  { AssignWithConversion(aChar); return *this; }
 
   /**
    * Functionally equivalent to assign or operator=
    * 
    */
   nsString& SetString(const char* aString,PRInt32 aLength=-1)       {AssignWithConversion(aString, aLength); return *this;}
-#ifdef NEW_STRING_APIS
-  nsString& SetString(const nsString& aString,PRInt32 aLength=-1)   {Assign(aString); return *this;}
-  nsString& SetString(const PRUnichar* aString,PRInt32 aLength=-1)  {Assign(aString); return *this;}
-#else
   nsString& SetString(const nsString& aString,PRInt32 aLength=-1)   {return Assign(aString, aLength);}
   nsString& SetString(const PRUnichar* aString,PRInt32 aLength=-1)  {return Assign(aString, aLength);}
-#endif
-
-  
 
   /**
    * here come a bunch of assignment operators...
    * @param   aString: string to be added to this
    * @return  this
    */
-#ifdef NEW_STRING_APIS
-  #ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
-    using nsAWritableString::operator=;
-  #else
-    nsString& operator=( const nsAReadableString& aReadable ) { nsAWritableString::operator=(aReadable); return *this; }
-  #endif
-#endif
-  nsString& operator=(PRUnichar aChar)      {return Assign(aChar);}
-  nsString& operator=(char aChar)           {AssignWithConversion(aChar); return *this;}
-  nsString& operator=(const char* aCString) {AssignWithConversion(aCString); return *this;}
+  nsString& operator=(PRUnichar aChar)          {Assign(aChar); return *this;}
+  nsString& operator=(char aChar)               {AssignWithConversion(aChar); return *this;}
+  nsString& operator=(const char* aCString)     {AssignWithConversion(aCString); return *this;}
 
-#ifndef NEW_STRING_APIS
-  nsString& operator=(const nsString& aString) {return Assign(aString);}
-  nsString& operator=(const nsStr& aString) {return Assign(aString);}
+  nsString& operator=(const nsString& aString)  {return Assign(aString);}
+  nsString& operator=(const nsStr& aString)     {return Assign(aString);}
   nsString& operator=(const PRUnichar* aString) {return Assign(aString);}
-#endif
+
+    // Yes, I know this makes assignment from a |nsSubsumeString| not do the special thing
+    //  |nsSubsumeString| needs to go away
   #ifdef AIX
   nsString& operator=(const nsSubsumeStr& aSubsumeString);  // AIX requires a const here
   #else
   nsString& operator=(nsSubsumeStr& aSubsumeString);
   #endif
-
-  /**
-   * Here's a bunch of methods that append varying types...
-   * @param   various...
-   * @return  this
-   */
-#ifdef NEW_STRING_APIS
-  #ifdef HAVE_AMBIGUITY_RESOLVING_CPP_USING
-    using nsAWritableString::operator+=;
-  #else
-    nsString& operator+=( const nsAReadableString& aReadable ) { nsAWritableString::operator+=(aReadable); return *this; }
-  #endif
 #endif
-  nsString& operator+=(const char* aCString) {return Append(aCString);}
-  nsString& operator+=(const char aChar) {
-    return Append((PRUnichar) (unsigned char)aChar);    
-  }
-  nsString& operator+=(const PRUnichar aChar){return Append(aChar);}
-  nsString& operator+=(const int anInt){return Append(anInt,10);}
 
-#ifndef NEW_STRING_APIS
-  nsString& operator+=(const nsStr& aString){return Append(aString,(PRInt32)aString.mLength);}
-  nsString& operator+=(const nsString& aString){return Append(aString,(PRInt32)aString.mLength);}
-  nsString& operator+=(const PRUnichar* aUCString) {return Append(aUCString);}
-#endif
+
   /*
    *  Appends n characters from given string to this,
    *  This version computes the length of your given string
@@ -535,9 +481,16 @@ public:
    *  @param   aString is the source to be appended to this
    *  @return  number of chars copied
    */
-  nsString& Append(const nsStr& aString) {return Append(aString,(PRInt32)aString.mLength);}
-  nsString& Append(const nsString& aString) {return Append(aString,(PRInt32)aString.mLength);}
- 
+
+  void AppendWithConversion(PRInt32, PRInt32=10); //radix=8,10 or 16
+  void AppendWithConversion(float);
+  void AppendWithConversion(char);
+
+#ifdef NEW_STRING_APIS
+  void AppendWithConversion(const char*);
+  void AppendWithConversion(const char*, PRInt32);
+#else
+  void AppendWithConversion(const char*, PRInt32=-1);
 
   /*
    *  Appends n characters from given string to this,
@@ -548,13 +501,32 @@ public:
    *  @return  number of chars copied
    */
   nsString& Append(const nsStr& aString,PRInt32 aCount);
+  nsString& Append(const nsStr& aString)                    {return Append(aString,(PRInt32)aString.mLength);}
   nsString& Append(const nsString& aString,PRInt32 aCount);
-  nsString& Append(const char* aString,PRInt32 aCount=-1);
+  nsString& Append(const nsString& aString)                 {return Append(aString,(PRInt32)aString.mLength);}
+ 
   nsString& Append(const PRUnichar* aString,PRInt32 aCount=-1);
-  nsString& Append(char aChar);
   nsString& Append(PRUnichar aChar);
-  nsString& Append(PRInt32 aInteger,PRInt32 aRadix=10); //radix=8,10 or 16
-  nsString& Append(float aFloat);
+
+  nsString& Append(const char* aString,PRInt32 aCount=-1)   {AppendWithConversion(aString,aCount); return *this;}
+  nsString& Append(char aChar)                              {AppendWithConversion(aChar); return *this;}
+  nsString& Append(PRInt32 aInteger,PRInt32 aRadix=10)      {AppendWithConversion(aInteger,aRadix); return *this;}
+  nsString& Append(float aFloat)                            {AppendWithConversion(aFloat); return *this;}
+
+  /**
+   * Here's a bunch of methods that append varying types...
+   * @param   various...
+   * @return  this
+   */
+  nsString& operator+=(const char* aCString)        {return Append(aCString);}
+  nsString& operator+=(const char aChar)            {return Append((PRUnichar) (unsigned char)aChar);}
+  nsString& operator+=(const PRUnichar aChar)       {return Append(aChar);}
+  nsString& operator+=(const int anInt)             {return Append(anInt,10);}
+
+  nsString& operator+=(const nsStr& aString)        {return Append(aString,(PRInt32)aString.mLength);}
+  nsString& operator+=(const nsString& aString)     {return Append(aString,(PRInt32)aString.mLength);}
+  nsString& operator+=(const PRUnichar* aUCString)  {return Append(aUCString);}
+#endif
              
   /*
    *  Copies n characters from this string to given string,
@@ -590,6 +562,10 @@ public:
    */
   PRUint32 Right(nsString& aCopy,PRInt32 aCount) const;
 
+
+//void InsertWithConversion(char);
+  void InsertWithConversion(const char*, PRUint32, PRInt32=-1);
+#ifndef NEW_STRING_APIS
   /*
    *  This method inserts n chars from given string into this
    *  string at str[anOffset].
@@ -611,7 +587,7 @@ public:
    * @param   anOffset is insert pos in str 
    * @return  the number of chars inserted into this string
    */
-  nsString& Insert(const char* aChar,PRUint32 anOffset,PRInt32 aCount=-1);
+  nsString& Insert(const char* aChar,PRUint32 anOffset,PRInt32 aCount=-1) {InsertWithConversion(aChar, anOffset, aCount); return *this;}
   nsString& Insert(const PRUnichar* aChar,PRUint32 anOffset,PRInt32 aCount=-1);
 
   /**
@@ -622,9 +598,12 @@ public:
    * @param   anOffset is insert pos in str 
    * @return  the number of chars inserted into this string
    */
-  //nsString& Insert(char aChar,PRUint32 anOffset);
+//nsString& Insert(char aChar,PRUint32 anOffset)        {InsertWithConversion(aChar,anOffset); return *this;}
   nsString& Insert(PRUnichar aChar,PRUint32 anOffset);
+#endif
 
+
+#ifndef NEW_STRING_APIS
   /*
    *  This method is used to cut characters in this string
    *  starting at anOffset, continuing for aCount chars.
@@ -633,7 +612,6 @@ public:
    *  @param  aCount -- number of chars to be cut
    *  @return *this
    */
-#ifndef NEW_STRING_APIS
   nsString& Cut(PRUint32 anOffset,PRInt32 aCount);
 #endif
 
@@ -797,6 +775,7 @@ public:
   PRBool  operator>=(const char* aString) const;
   PRBool  operator>=(const PRUnichar* aString) const;
 #endif // !defined(NEW_STRING_APIS)
+
   /**
    * Compare this to given string; note that we compare full strings here.
    * The optional length argument just lets us know how long the given string is.
@@ -876,13 +855,17 @@ extern NS_COM int fputs(const nsString& aString, FILE* out);
 class NS_COM nsAutoString : public nsString {
 public: 
 
+    virtual ~nsAutoString();
     nsAutoString();
-    nsAutoString(const char* aCString,PRInt32 aLength=-1);
-    nsAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
-
-    nsAutoString(const CBufDescriptor& aBuffer);    
-    nsAutoString(const nsStr& aString);
     nsAutoString(const nsAutoString& aString);
+    nsAutoString(const PRUnichar* aString,PRInt32 aLength=-1);
+    nsAutoString(PRUnichar aChar);
+    nsAutoString(const CBufDescriptor& aBuffer);    
+
+#ifndef NEW_STRING_APIS
+    nsAutoString(const char* aCString,PRInt32 aLength=-1);
+    nsAutoString(const nsStr& aString);
+#endif
 
 #ifdef AIX
     nsAutoString(const nsSubsumeStr& aSubsumeStr);  // AIX requires a const
@@ -890,8 +873,6 @@ public:
     nsAutoString(nsSubsumeStr& aSubsumeStr);
 #endif // AIX
 
-    nsAutoString(PRUnichar aChar);
-    virtual ~nsAutoString();
 
 #ifndef NEW_STRING_APIS
     nsAutoString& operator=(const nsStr& aString) {nsString::Assign(aString); return *this;}

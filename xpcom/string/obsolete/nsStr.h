@@ -283,7 +283,7 @@ struct NS_COM nsStr {
   * @param  aCount tells us the (max) # of chars to copy
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount);
+  static void StrAppend(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount);
 
  /**
   * These methods are used to assign contents of a source string to dest string
@@ -295,7 +295,7 @@ struct NS_COM nsStr {
   * @param  aCount tells us the (max) # of chars to copy
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount);
+  static void StrAssign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount);
 
  /**
   * These methods are used to insert content from source string to the dest nsStr
@@ -308,7 +308,19 @@ struct NS_COM nsStr {
   * @param  aCount tells us the (max) # of chars to insert
   * @param  anAgent is the allocator to be used for alloc/free operations
   */
-  static void Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
+  static void StrInsert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount);
+
+#ifndef NEW_STRING_APIS
+  static void Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount) {
+    StrAppend(aDest, aSource, anOffset, aCount);
+  }
+  static void Assign(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 aCount) {
+    StrAssign(aDest, aSource, anOffset, aCount);
+  }
+  static void Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUint32 aSrcOffset,PRInt32 aCount) {
+    StrInsert(aDest, aDestOffset, aSource, aSrcOffset, aCount);
+  }
+#endif
 
  /**
   * This method deletes chars from the given str. 
