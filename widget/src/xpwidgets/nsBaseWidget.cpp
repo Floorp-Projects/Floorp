@@ -425,7 +425,7 @@ void nsBaseWidget::OnDestroy()
 //-------------------------------------------------------------------------
 
 nsBaseWidget::Enumerator::Enumerator(nsBaseWidget & inParent)
-  : mParent(inParent), mCurrentPosition(0)
+  : mCurrentPosition(0), mParent(inParent)
 {
   NS_INIT_REFCNT();
 }
@@ -761,7 +761,7 @@ NS_METHOD nsBaseWidget::SetVerticalScrollbar(nsIWidget * aWidget)
   return NS_OK;
 }
 
-NS_METHOD nsBaseWidget::EnableFileDrop(PRBool aEnable)
+NS_METHOD nsBaseWidget::EnableDragDrop(PRBool aEnable)
 {
   return NS_OK;
 }

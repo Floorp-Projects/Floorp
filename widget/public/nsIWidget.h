@@ -650,7 +650,7 @@ class nsIWidget : public nsISupports {
      * Enables the dropping of files to a widget (XXX this is temporary)
      *
      */
-    NS_IMETHOD EnableFileDrop(PRBool aEnable) = 0;
+    NS_IMETHOD EnableDragDrop(PRBool aEnable) = 0;
    
     virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) = 0;
 
