@@ -567,7 +567,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     }
     else {
 #ifdef NECKO
-      nsresult rv = NS_OpenURI(nsurl, ic);
+      nsresult rv = NS_OpenURI(ic, nsurl);
 #else
       nsresult rv = NS_OpenURL(nsurl, ic);
 #endif
