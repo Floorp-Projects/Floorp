@@ -66,7 +66,7 @@
     <separator class="thin"/>
     <hbox align="center" class="small-indent">
       <image id="contentTypeImage"/>
-      <textbox id="location" class="plain" readonly="true" flex="1"/>
+      <description id="location" class="plain" crop="start" flex="1"/>
     </hbox>
     <separator class="thin"/>
     <hbox align="center">
@@ -75,7 +75,7 @@
     </hbox>
     <hbox align="center">
       <label value="&from.label;" id="from"/>
-      <textbox id="source" class="plain" readonly="true" flex="1"/>
+      <description id="source" class="plain" crop="start" flex="1"/>
     </hbox>
     
     <separator class="thin"/>
