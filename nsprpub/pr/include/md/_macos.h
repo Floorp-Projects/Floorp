@@ -115,14 +115,17 @@ typedef struct _MDSocketCallerInfo {
 
 struct _MDFileDesc {
     PRInt32     osfd;
-	PRBool      orderlyDisconnect;
-	PRBool      readReady;
-	PRBool      writeReady;
-	PRBool      exceptReady;
+    PRPackedBool    orderlyDisconnect;
+    PRPackedBool    readReady;
+    PRPackedBool    writeReady;
+    PRPackedBool    exceptReady;
 	PRLock *    miscLock;
 	
 	/* Server sockets: listen bit tells the notifier func what to do */
 	PRBool		doListen;
+
+    /* stored error for non-blocking connects, as a Unix-style error code */
+    OTReason        disconnectError;
 
 	_MDSocketCallerInfo  misc;
 	_MDSocketCallerInfo  read;
@@ -647,7 +650,7 @@ extern PRStatus _MD_CloseFileMap(struct PRFileMap *fmap);
 #define _MD_CLOSE_FILE_MAP _MD_CloseFileMap
 
 extern void SetLogFileTypeCreator(const char *logFile);
-extern int _MD_mac_get_nonblocking_connect_error(PRInt32 osfd);
+extern int _MD_mac_get_nonblocking_connect_error(PRFileDesc* fd);
 
 
 /*

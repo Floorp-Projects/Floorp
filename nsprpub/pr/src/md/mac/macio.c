@@ -267,7 +267,7 @@ PRInt32 ReadWriteProc(PRFileDesc *fd, void *buf, PRUint32 bytes, IOOperation op)
 		   a 32 byte Ptr in the heap, so only do this once
 		*/
 		if (!sCompletionUPP)
-			sCompletionUPP = NewIOCompletionProc((IOCompletionProcPtr)&AsyncIOCompletion);
+			sCompletionUPP = NewIOCompletionUPP((IOCompletionProcPtr)&AsyncIOCompletion);
 			
 		/* grab the thread so we know which one to post to at completion */
 		pbAsync.thread	= me;
