@@ -197,6 +197,10 @@ js_ForceGC(JSContext *cx, uintN gcflags);
 extern void
 js_GC(JSContext *cx, uintN gcflags);
 
+#ifdef DEBUG_brendan
+#define JS_GCMETER 1
+#endif
+
 #ifdef JS_GCMETER
 
 typedef struct JSGCStats {
@@ -204,14 +208,23 @@ typedef struct JSGCStats {
     uint32  freelen;    /* gcFreeList length */
     uint32  recycle;    /* number of things recycled through gcFreeList */
     uint32  retry;      /* allocation attempt retries after running the GC */
+    uint32  retryhalt;  /* allocation retries halted by the branch callback */
     uint32  fail;       /* allocation failures */
     uint32  finalfail;  /* finalizer calls allocator failures */
+    uint32  lockborn;   /* things born locked */
     uint32  lock;       /* valid lock calls */
     uint32  unlock;     /* valid unlock calls */
     uint32  stuck;      /* stuck reference counts seen by lock calls */
     uint32  unstuck;    /* unlock calls that saw a stuck lock count */
-    uint32  depth;      /* mark recursion depth */
-    uint32  maxdepth;   /* maximum mark recursion depth */
+    uint32  depth;      /* mark tail recursion depth */
+    uint32  maxdepth;   /* maximum mark tail recursion depth */
+    uint32  cdepth;     /* mark recursion depth of C functions */
+    uint32  maxcdepth;  /* maximum mark recursion depth of C functions */
+    uint32  dswmark;    /* mark C stack overflows => Deutsch-Schorr-Waite */
+    uint32  dswdepth;   /* DSW mark depth */
+    uint32  maxdswdepth;/* maximum DSW mark depth */
+    uint32  dswup;      /* DSW moves up the mark spanning tree */
+    uint32  dswupstep;  /* steps in obj->slots to find DSW-reversed pointer */
     uint32  maxlevel;   /* maximum GC nesting (indirect recursion) level */
     uint32  poke;       /* number of potentially useful GC calls */
     uint32  nopoke;     /* useless GC calls where js_PokeGC was not set */

@@ -201,8 +201,9 @@
 struct JSScope {
     JSObjectMap     map;                /* base class state */
     JSObject        *object;            /* object that owns this scope */
-    uint16          flags;              /* flags, see below */
-    int16           hashShift;          /* multiplicative hash shift */
+    uint8           flags;              /* flags, see below */
+    int8            hashShift;          /* multiplicative hash shift */
+    uint16          dswIndex;           /* Deutsch-Schorr-Waite scaled index */
     uint32          entryCount;         /* number of entries in table */
     uint32          removedCount;       /* removed entry sentinels in table */
     JSScopeProperty **table;            /* table of ptrs to shared tree nodes */

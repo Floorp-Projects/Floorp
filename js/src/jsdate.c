@@ -1863,7 +1863,7 @@ date_constructor(JSContext *cx, JSObject* obj)
 {
     jsdouble *date;
 
-    date = js_NewDouble(cx, 0.0);
+    date = js_NewDouble(cx, 0.0, 0);
     if (!date)
 	return NULL;
     OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, DOUBLE_TO_JSVAL(date));
