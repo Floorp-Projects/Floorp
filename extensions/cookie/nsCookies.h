@@ -85,8 +85,8 @@ typedef struct _cookie_CookieStruct {
 
 extern void cookie_LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, const char *aReason);
 extern void cookie_LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const char *aCookieString, cookie_CookieStruct *aCookie);
-extern inline void cookie_LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, const char *aReason);
-extern inline void cookie_LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, cookie_CookieStruct *aCookie);
+extern void cookie_LogFailure(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, const char *aReason);
+extern void cookie_LogSuccess(PRBool aSetCookie, nsIURI *aHostURI, const nsAFlatCString &aCookieString, cookie_CookieStruct *aCookie);
 #else
 #define COOKIE_LOGFAILURE(a, b, c, d) /* nothing */
 #define COOKIE_LOGSUCCESS(a, b, c, d) /* nothing */
