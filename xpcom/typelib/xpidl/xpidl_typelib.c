@@ -990,7 +990,7 @@ typelib_attr_dcl(TreeState *state)
 {
     XPTInterfaceDescriptor *id = CURRENT(state);
     XPTMethodDescriptor *meth;
-    gboolean readonly = IDL_ATTR_DCL(state->tree).f_readonly;
+    gboolean read_only = IDL_ATTR_DCL(state->tree).f_readonly;
 
     /* XXX this only handles the first ident; elsewhere too... */
     IDL_tree ident =
@@ -1002,13 +1002,13 @@ typelib_attr_dcl(TreeState *state)
     if (!verify_attribute_declaration(state->tree))
         return FALSE;
 
-    if (!XPT_InterfaceDescriptorAddMethods(id, (PRUint16) (readonly ? 1 : 2)))
+    if (!XPT_InterfaceDescriptorAddMethods(id, (PRUint16) (read_only ? 1 : 2)))
         return FALSE;
 
     meth = &id->method_descriptors[NEXT_METH(state)];
 
     return typelib_attr_accessor(state, meth, TRUE, hidden) &&
-        (readonly || typelib_attr_accessor(state, meth + 1, FALSE, hidden));
+        (read_only || typelib_attr_accessor(state, meth + 1, FALSE, hidden));
 }
 
 static gboolean
