@@ -778,8 +778,42 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
           aStatus == NS_ERROR_NET_TIMEOUT ||
           aStatus == NS_ERROR_NET_RESET)
       {
-        mURIFixup->CreateFixupURI(oldSpecW.get(),
-            nsIURIFixup::FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP, getter_AddRefs(newURI));
+        PRBool keywordsEnabled = PR_FALSE;
+
+        if(mPrefs) {
+          rv = mPrefs->GetBoolPref("keyword.enabled", &keywordsEnabled);
+          if (NS_FAILED(rv)) return rv;
+        }
+
+        nsCAutoString host;
+        url->GetHost(host);
+
+        nsCAutoString scheme;
+        url->GetScheme(scheme);
+
+        PRInt32 dotLoc = host.FindChar('.');
+
+        // we should only perform a keyword search under the following conditions:
+        // (0) Pref keyword.enabled is true
+        // (1) the url scheme is http (or https)
+        // (2) the url does not have a protocol scheme
+        // If we don't enforce such a policy, then we end up doing keyword searchs on urls
+        // we don't intend like imap, file, mailbox, etc. This could lead to a security
+        // problem where we send data to the keyword server that we shouldn't be. 
+        // Someone needs to clean up keywords in general so we can determine on a per url basis
+        // if we want keywords enabled...this is just a bandaid...
+        if (keywordsEnabled && !scheme.IsEmpty() &&
+           (scheme.Find("http") != 0)) {
+            keywordsEnabled = PR_FALSE;
+        }
+
+        if(keywordsEnabled && (-1 == dotLoc)) {
+          // only send non-qualified hosts to the keyword server
+          nsAutoString keywordSpec; keywordSpec.AssignWithConversion("keyword:");
+          keywordSpec.Append(NS_ConvertUTF8toUCS2(host));
+
+          NS_NewURI(getter_AddRefs(newURI), keywordSpec, nsnull);
+        } // end keywordsEnabled
       }
 
       //
