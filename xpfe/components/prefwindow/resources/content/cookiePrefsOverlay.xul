@@ -21,7 +21,7 @@
    - Contributor(s):
    -->
 
-<!DOCTYPE window SYSTEM "chrome://cookie/locale/cookiePrefsOverlay.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://cookie/locale/cookiePrefsOverlay.dtd" >
 
 <overlay id="cookiePrefsOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

@@ -26,7 +26,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?> 
 
 <!-- CHANGE THIS WHEN MOVING FILES -->
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/wallet/CookieViewer.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/wallet/CookieViewer.dtd" >
 
 <dialog id="cookieviewer"
         buttons="accept,help"
