@@ -1746,10 +1746,6 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
       NS_ASSERTION(loadingData == aLoadData, "Broken loading table");
       aLoadData->mIsLoading = PR_FALSE;
     }
-    
-    if (aSucceeded) {
-      mCompleteSheets.Put(&key, aLoadData->mSheet);
-    }
   }
   
 
@@ -1800,24 +1796,32 @@ CSSLoaderImpl::SheetComplete(SheetLoadData* aLoadData, PRBool aSucceeded)
     data = data->mNext;
   }
 
-#ifdef INCLUDE_XUL
   // Now that it's marked complete, put the sheet in our cache
-  if (aSucceeded && aLoadData->mURI && IsChromeURI(aLoadData->mURI)) {
-    nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
-    if (cache) {
-      PRBool enabled;
-      cache->GetEnabled(&enabled);
-      if (enabled) {
-        nsCOMPtr<nsICSSStyleSheet> sheet;
-        cache->GetStyleSheet(aLoadData->mURI, getter_AddRefs(sheet));
-        if (!sheet) {
-          LOG(("  Putting sheet in XUL prototype cache"));
-          cache->PutStyleSheet(aLoadData->mSheet);
+  if (aSucceeded && aLoadData->mURI) {
+#ifdef INCLUDE_XUL
+    if (IsChromeURI(aLoadData->mURI)) {
+      nsCOMPtr<nsIXULPrototypeCache> cache(do_GetService("@mozilla.org/xul/xul-prototype-cache;1"));
+      if (cache) {
+        PRBool enabled;
+        cache->GetEnabled(&enabled);
+        if (enabled) {
+          nsCOMPtr<nsICSSStyleSheet> sheet;
+          cache->GetStyleSheet(aLoadData->mURI, getter_AddRefs(sheet));
+          if (!sheet) {
+            LOG(("  Putting sheet in XUL prototype cache"));
+            cache->PutStyleSheet(aLoadData->mSheet);
+          }
         }
       }
     }
-  }
+    else {
 #endif
+      URLKey key(aLoadData->mURI);
+      mCompleteSheets.Put(&key, aLoadData->mSheet);
+#ifdef INCLUDE_XUL
+    }
+#endif
+  }
 
   NS_RELEASE(aLoadData);  // this will release parents and siblings and all that
   if (mLoadingDatas.Count() == 0 && mPendingDatas.Count() > 0) {
