@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 var gDialog;
+var paramBlock;
 var gPrintSettings = null;
 var gStringBundle  = null;
 
@@ -344,9 +345,13 @@ function onLoad()
 
   if (window.arguments[0] != null) {
     gPrintSettings = window.arguments[0].QueryInterface(Components.interfaces.nsIPrintSettings);
+    paramBlock     = window.arguments[1].QueryInterface(Components.interfaces.nsIDialogParamBlock);
   } else if (gDoDebug) {
     alert("window.arguments[0] == null!");
   }
+
+  // default return value is "cancel"
+  paramBlock.SetInt(0, 0);
 
   if (gPrintSettings) {
     loadDialog();
@@ -404,5 +409,26 @@ function onAccept()
     }
   }
 
+  // set return value to "ok"
+  if (paramBlock) {
+    paramBlock.SetInt(0, 1);
+  } else {
+    dump("*** FATAL ERROR: No paramBlock\n");
+  }
+
   return true;
 }
+
+//---------------------------------------------------
+function onCancel()
+{
+  // set return value to "cancel"
+  if (paramBlock) {
+    paramBlock.SetInt(0, 0);
+  } else {
+    dump("*** FATAL ERROR: No paramBlock\n");
+  }
+
+  return true;
+}
+

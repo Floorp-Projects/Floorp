@@ -39,162 +39,16 @@
 // Local
 #include "CPrintAttachment.h"
 #include "CBrowserShell.h"
-#include "UMacUnicode.h"
-#include "ApplIDs.h"
 
 // Gecko
-#include "nsIPrintOptions.h"
+#include "nsIPrintingPromptService.h"
+#include "nsIDOMWindow.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgressListener.h"
-#include "nsIPrefService.h"
-#include "nsIPrefBranch.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIEmbeddingSiteWindow.h"
-
-// PowerPlant
-#include <LProgressBar.h>
-#include <LStaticText.h>
-
-// Std Lib
-#include <algorithm>
-using namespace std;
-
-// Constants
-enum {
-    paneID_ProgressBar      = 'Prog',
-    paneID_StatusText       = 'Stat'
-};
-
-//*****************************************************************************
-//***    CPrintProgressListener
-//*****************************************************************************
-
-class CPrintProgressListener : public nsIWebProgressListener,
-                               public LListener
-{
-public:
-                        CPrintProgressListener(nsIWebBrowserPrint *wbPrint,
-                                               const nsAString& jobTitle);
-    virtual             ~CPrintProgressListener();
-    
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIWEBPROGRESSLISTENER
-
-	void	            ListenToMessage(MessageT inMessage,
-                                        void* ioParam);
-    
-protected:
-    nsIWebBrowserPrint  *mWBPrint;
-    nsString            mJobTitle;
-    
-    LWindow             *mDialog;
-    LProgressBar        *mDialogProgressBar;
-    LStaticText         *mDialogStatusText;
-};
-
-CPrintProgressListener::CPrintProgressListener(nsIWebBrowserPrint* wbPrint,
-                                               const nsAString& jobTitle) :
-    mWBPrint(wbPrint), mJobTitle(jobTitle),
-    mDialog(nsnull), mDialogProgressBar(nsnull), mDialogStatusText(nsnull)
-{
-    NS_INIT_ISUPPORTS();
-    ThrowIfNil_(mWBPrint);
-}
-
-CPrintProgressListener::~CPrintProgressListener()
-{
-}
-
-NS_IMPL_ISUPPORTS1(CPrintProgressListener,
-                   nsIWebProgressListener);
-                   
-NS_IMETHODIMP CPrintProgressListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
-{    
-    if ((aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) &&
-        (aStateFlags & nsIWebProgressListener::STATE_START))
-    {
-        if (!mDialog) {
-            try {
-                mDialog = LWindow::CreateWindow(dlog_OS9PrintProgress, LCommander::GetTopCommander());
-        	    UReanimator::LinkListenerToBroadcasters(this, mDialog, dlog_OS9PrintProgress);
-        	    mDialogProgressBar = dynamic_cast<LProgressBar*>(mDialog->FindPaneByID(paneID_ProgressBar));
-        	    mDialogStatusText = dynamic_cast<LStaticText*>(mDialog->FindPaneByID(paneID_StatusText));
-        	    if (mDialogStatusText && mJobTitle.Length()) {
-                    // The status text in the resource is something like: "Document: ^0" or "Printing: ^0"
-                    // Get that text and replace "^0" with the job title. 
-                    char buf[256];
-                    Size bufLen;
-                    mDialogStatusText->GetText(buf, sizeof(buf) - 1, &bufLen);
-                    buf[bufLen] = '\0';
-                    
-                    nsCAutoString statusCString(buf);
-                    nsCAutoString jobTitleCString;
-                    CPlatformUCSConversion::GetInstance()->UCSToPlatform(mJobTitle, jobTitleCString);
-                    statusCString.ReplaceSubstring(nsCAutoString("^0"), jobTitleCString);
-                    
-                    mDialogStatusText->SetText(const_cast<char *>(statusCString.get()), statusCString.Length());        	    
-        	    }        	    
-        	    mDialog->Show();
-    	    }
-    	    catch (...) {
-    	        NS_ERROR("Failed to make print progress dialog - missing a resource?");
-    	    }
-        }
-    }
-    else if ((aStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) &&
-             (aStateFlags & nsIWebProgressListener::STATE_STOP))
-    {
-        delete mDialog;
-        mDialog = nsnull;
-    }
-    
-    return NS_OK;
-}
-
-NS_IMETHODIMP CPrintProgressListener::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
-{    
-    if (mDialogProgressBar) {
-        if (aMaxSelfProgress != -1 && mDialogProgressBar->IsIndeterminate())
-            mDialogProgressBar->SetIndeterminateFlag(false, false);
-        else if (aMaxSelfProgress == -1 && !mDialogProgressBar->IsIndeterminate())
-            mDialogProgressBar->SetIndeterminateFlag(true, true);
-
-        if (!mDialogProgressBar->IsIndeterminate()) {
-            PRInt32 aMax = max(0, aMaxSelfProgress);
-            PRInt32 aVal = min(aMax, max(0, aCurSelfProgress));
-            mDialogProgressBar->SetMaxValue(aMax);
-            mDialogProgressBar->SetValue(aVal);
-        }
-    }
-    
-    return NS_OK;
-}
-
-NS_IMETHODIMP CPrintProgressListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CPrintProgressListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
-{
-    nsCAutoString cString; cString.AssignWithConversion(aMessage);
-    printf("CPrintProgressListener::OnStatusChange: aStatus = %s\n", cString.get());
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CPrintProgressListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-void CPrintProgressListener::ListenToMessage(MessageT inMessage,
-                                             void* ioParam)
-{
-    if (inMessage == msg_Cancel)
-        mWBPrint->Cancel();
-}
 
 
 //*****************************************************************************
@@ -287,57 +141,32 @@ void CPrintAttachment::DoPrint()
     nsCOMPtr<nsIPrintSettings> settings;
     mBrowserShell->GetPrintSettings(getter_AddRefs(settings));
     ThrowIfNil_(settings);
-    
-    // The progress listener handles a print progress dialog. Don't do this on OS X because
-    // the OS puts up a perfectly lovely one automatically. We're not at the mercy of the
-    // printer driver for this as we are on Classic.
-    nsCOMPtr<nsIWebProgressListener> listener;
-
-    long version;
-    PRBool runningOSX = (::Gestalt(gestaltSystemVersion, &version) == noErr && version >= 0x00001000);
-    
-    if (!runningOSX) {    
-        // Get the title for the job and make a listener.
-        nsXPIDLString jobTitle;
-        nsCOMPtr<nsIWebBrowserChrome> chrome;
-        mBrowserShell->GetWebBrowserChrome(getter_AddRefs(chrome));
-        ThrowIfNil_(chrome);
-        nsCOMPtr<nsIEmbeddingSiteWindow> siteWindow(do_QueryInterface(chrome));
-        ThrowIfNil_(siteWindow);
-        siteWindow->GetTitle(getter_Copies(jobTitle));
-
-        // Don't AddRef the listener. The nsIWebBrowserPrint holds the only ref to it.
-        listener = new CPrintProgressListener(wbPrint, jobTitle);
-    }
-
-    // In any case, we don't want Gecko to display its XUL progress dialog.
-    // Unfortunately, there is nothing in the printing API to control this -
-    // it's done through a pref :-( If you are distributing your own default
-    // prefs, this could be done there instead of programatically.
-    nsCOMPtr<nsIPrefService> prefsService(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefsService) {
-        nsCOMPtr<nsIPrefBranch> printBranch;
-        prefsService->GetBranch("print.", getter_AddRefs(printBranch));
-        if (printBranch) {
-            printBranch->SetBoolPref("show_print_progress", PR_FALSE);
-        }
-    }
-   
-    nsresult rv = wbPrint->Print(settings, listener);
-    ThrowIfError_(rv);
+       
+    nsresult rv = wbPrint->Print(settings, nsnull);
+    if (rv != NS_ERROR_ABORT)
+        ThrowIfError_(rv);
 }
 
 
 void CPrintAttachment::DoPageSetup()
 {
-    nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1");
-    ThrowIfNil_(printOptionsService);
-    nsCOMPtr<nsIPrintSettings> printSettings;
-    mBrowserShell->GetPrintSettings(getter_AddRefs(printSettings));
-    ThrowIfNil_(printSettings);
+    nsCOMPtr<nsIWebBrowser> wb;
+    mBrowserShell->GetWebBrowser(getter_AddRefs(wb));
+    ThrowIfNil_(wb);
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    wb->GetContentDOMWindow(getter_AddRefs(domWindow));
+    ThrowIfNil_(domWindow);
+    nsCOMPtr<nsIPrintSettings> settings;
+    mBrowserShell->GetPrintSettings(getter_AddRefs(settings));
+    ThrowIfNil_(settings);
     
-    nsresult rv = printOptionsService->ShowPrintSetupDialog(printSettings);
-    ThrowIfError_(rv);
+    nsCOMPtr<nsIPrintingPromptService> printingPromptService =
+             do_GetService("@mozilla.org/embedcomp/printingprompt-service;1");
+    ThrowIfNil_(printingPromptService);
+
+    nsresult rv = printingPromptService->ShowPageSetup(domWindow, settings);
+    if (rv != NS_ERROR_ABORT)
+        ThrowIfError_(rv);
 }
 
 

@@ -381,7 +381,7 @@ NS_IMETHODIMP nsDeviceContextBeOS::GetDeviceContextFor(nsIDeviceContextSpec *aDe
 #endif /* USE_POSTSCRIPT */
 }
 
-NS_IMETHODIMP nsDeviceContextBeOS::BeginDocument(PRUnichar * aTitle)
+NS_IMETHODIMP nsDeviceContextBeOS::BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage)
 {
   return NS_OK;
 }

@@ -351,15 +351,11 @@ function onLoad()
   // Init dialog.
   initDialog();
 
-  // window.arguments[0]: container for return value (1 = ok, 0 = cancel)
-  var ps = window.arguments[0].QueryInterface(gPrintSetInterface);
-  if (ps != null) {
-    gPrintSettings = ps;
-    paramBlock = window.arguments[1].QueryInterface(Components.interfaces.nsIDialogParamBlock);
-  }
+  gPrintSettings = window.arguments[0].QueryInterface(gPrintSetInterface);
+  paramBlock = window.arguments[1].QueryInterface(Components.interfaces.nsIDialogParamBlock);
 
   if (doDebug) {
-    if (ps == null) alert("PrintSettings is null!");
+    if (gPrintSettings == null) alert("PrintSettings is null!");
     if (paramBlock == null) alert("nsIDialogParam is null!");
   }
 

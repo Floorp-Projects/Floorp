@@ -410,17 +410,13 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 
   NS_NAMED_LITERAL_STRING(kTitle, "&T");
   if (aStr.Find(kTitle) != kNotFound) {
-    nsXPIDLString uTitle;
-    mPD->mPrintOptions->GetTitle(getter_Copies(uTitle));
-    SubstValueForCode(aNewStr, kTitle.get(), uTitle.get());
+    SubstValueForCode(aNewStr, kTitle.get(), mPD->mDocTitle);
     return;
   }
 
   NS_NAMED_LITERAL_STRING(kDocURL, "&U");
   if (aStr.Find(kDocURL) != kNotFound) {
-    nsXPIDLString uDocURL;
-    mPD->mPrintOptions->GetDocURL(getter_Copies(uDocURL));
-    SubstValueForCode(aNewStr, kDocURL.get(), uDocURL.get());
+    SubstValueForCode(aNewStr, kDocURL.get(), mPD->mDocURL);
     return;
   }
 }

@@ -984,18 +984,15 @@ LRESULT CBrowserView::OnFindMsg(WPARAM wParam, LPARAM lParam)
 void CBrowserView::OnFilePrint()
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv)) 
-  {
-    prefs->SetBoolPref("print.use_native_print_dialog", PR_TRUE);
-    prefs->SetBoolPref("print.show_print_progress", PR_FALSE);
-  }
-  else
-	NS_ASSERTION(PR_FALSE, "Could not get preferences service");
-
   nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
 	if(print)
 	{
+    if (!m_PrintSettings) 
+    {
+      print->GetGlobalPrintSettings(getter_AddRefs(m_PrintSettings));
+    }
+
+    m_PrintSettings->SetShowPrintProgress(PR_FALSE);
     CPrintProgressDialog  dlg(mWebBrowser, m_PrintSettings);
 
 	  nsCOMPtr<nsIURI> currentURI;

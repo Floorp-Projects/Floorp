@@ -86,7 +86,9 @@ public:
   NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                  nsIDeviceContext *&aContext);
 
-  NS_IMETHOD BeginDocument(PRUnichar * aTitle);
+  NS_IMETHOD PrepareDocument(PRUnichar * aTitle, 
+                             PRUnichar*  aPrintToFileName);
+  NS_IMETHOD BeginDocument(PRUnichar * aTitle, PRUnichar* aPrintToFileName, PRInt32 aStartPage, PRInt32 aEndPage);
   NS_IMETHOD EndDocument(void);
   NS_IMETHOD AbortDocument(void);
 

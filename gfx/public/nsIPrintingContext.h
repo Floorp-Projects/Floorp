@@ -54,14 +54,10 @@ public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPRINTING_CONTEXT_IID)
     /**
      * Initialize the printing context for use.
-     * @param aQuiet if PR_TRUE, prevent the need for user intervention
-     *        in obtaining device context spec. if nsnull is passed in for
-     *        the aOldSpec, this will typically result in getting a device
-     *        context spec for the default output device (i.e. default
-     *        printer).
+     * @param aIsPrintPreview   TRUE if doing print preview, FALSE if normal printing.
      * @return error status
     */
-    NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aQuiet) = 0;
+    NS_IMETHOD Init(nsIPrintSettings* aPS, PRBool aIsPrintPreview) = 0;
 
     /**
      * This will tell if the printmanager is currently open
@@ -78,7 +74,8 @@ public:
      */
     NS_IMETHOD ClosePrintManager() = 0;
     
-    NS_IMETHOD BeginDocument() = 0;
+    NS_IMETHOD BeginDocument(PRInt32     aStartPage, 
+                             PRInt32     aEndPage) = 0;
     
     NS_IMETHOD EndDocument() = 0;
     

@@ -131,7 +131,9 @@ public:
    * @see     nsIPrintStatusCallback#OnProgress()
    */
   NS_IMETHOD StartPrint(nsIPresContext*  aPresContext,
-                        nsIPrintSettings* aPrintOptions) = 0;
+                        nsIPrintSettings* aPrintOptions,
+                        PRUnichar* aDocTitle,
+                        PRUnichar* aDocURL) = 0;
   NS_IMETHOD PrintNextPage(nsIPresContext*  aPresContext) = 0;
   NS_IMETHOD GetCurrentPageNum(PRInt32* aPageNum) = 0;
   NS_IMETHOD GetNumPages(PRInt32* aNumPages) = 0;

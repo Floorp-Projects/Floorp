@@ -196,8 +196,6 @@ function setPrinterDefaultsForSelectedPrinter()
   /* FixMe: We should save the old printer's values here... */
 
   gPrintSettings.printerName  = dialog.printerList.value;
-  var ifreq = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-  gWebBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);
  
   // First get any defaults from the printer 
   gWebBrowserPrint.initPrintSettingsFromPrinter(gPrintSettings.printerName, gPrintSettings);
@@ -215,19 +213,16 @@ function setPrinterDefaultsForSelectedPrinter()
 //---------------------------------------------------
 function displayPropertiesDialog()
 {
-  var displayed = new Object;
-  displayed.value = false;
   gPrintSettings.numCopies = dialog.numCopiesInput.value;
-   
-  printService.displayJobProperties(dialog.printerList.value, gPrintSettings, displayed);
-  dialog.numCopiesInput.value = gPrintSettings.numCopies;
-
-  if (doDebug) {
-    if (displayed.value)
-      dump("\nproperties dlg came up. displayed = "+displayed.value+"\n");
-    else
-      dump("\nproperties dlg didn't come up. displayed = "+displayed.value+"\n");
-  }    
+  try {
+    var printingPromptService = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
+                                                 .getService(Components.interfaces.nsIPrintingPromptService);
+    if (printingPromptService) {
+      printingPromptService.showPrinterProperties(null, dialog.printerList.value, gPrintSettings);
+    }
+  } catch(e) {
+    dump("problems getting printingPromptService\n");
+  }
 }
 
 //---------------------------------------------------
@@ -363,27 +358,9 @@ function onLoad()
   // param[0]: nsIPrintSettings object
   // param[1]: container for return value (1 = print, 0 = cancel)
 
-  var ps = window.arguments[0].QueryInterface(gPrintSetInterface);
-  if (ps != null) {
-    gPrintSettings = ps;
-    paramBlock = window.arguments[1].QueryInterface(Components.interfaces.nsIDialogParamBlock);
-  } else {
-    var suppsArray = window.arguments[0].QueryInterface(Components.interfaces.nsISupportsArray);
-    if (suppsArray) {
-      var supps = suppsArray.ElementAt(0);
-      gPrintSettings = supps.QueryInterface(gPrintSetInterface);
-      if(!gPrintSettings) {
-        return;
-      }
-      supps = suppsArray.ElementAt(1);
-      paramBlock = supps.QueryInterface(Components.interfaces.nsIDialogParamBlock);
-      if(!paramBlock) {
-        return;
-      }
-    } else {
-      return;
-    }
-  }
+  gPrintSettings   = window.arguments[0].QueryInterface(gPrintSetInterface);
+  gWebBrowserPrint = window.arguments[1].QueryInterface(Components.interfaces.nsIWebBrowserPrint);
+  paramBlock       = window.arguments[2].QueryInterface(Components.interfaces.nsIDialogParamBlock);
 
   // default return value is "cancel"
   paramBlock.SetInt(0, 0);
@@ -475,6 +452,19 @@ function onAccept()
 
   return true;
 
+}
+
+//---------------------------------------------------
+function onCancel()
+{
+  // set return value to "cancel"
+  if (paramBlock) {
+    paramBlock.SetInt(0, 0);
+  } else {
+    dump("*** FATAL ERROR: No paramBlock\n");
+  }
+
+  return true;
 }
 
 //---------------------------------------------------

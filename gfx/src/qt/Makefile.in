@@ -37,12 +37,9 @@ REQUIRES	= xpcom \
 		  gfx2 \
 		  uconv \
 		  pref \
-		  dom \
 		  util \
 		  js \
-		  appshell \
 		  mozcomps \
-		  windowwatcher \
 		  unicharutil \
 		  intl \
 		  locale \

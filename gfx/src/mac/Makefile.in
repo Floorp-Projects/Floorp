@@ -35,7 +35,6 @@ REQUIRES    = xpcom \
         widget \
         view \
         util \
-        dom \
         pref \
         js \
         uconv \
@@ -43,7 +42,6 @@ REQUIRES    = xpcom \
         unicharutil \
         gfx2 \
         mozcomps \
-        windowwatcher \
         content \
         layout \
         locale \
@@ -68,6 +66,7 @@ CPPSRCS = \
         nsScreenMac.cpp \
         nsScreenManagerMac.cpp \
         nsPrintOptionsX.cpp \
+        nsPrintSettingsX.cpp \
         nsFontUtils.cpp \
         nsNativeThemeMac.cpp \
         $(NULL)
@@ -85,6 +84,7 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES      += -DPM_USE_SESSION_APIS=0
         
 CXXFLAGS    += $(TK_CFLAGS)
 CFLAGS      += $(TK_CFLAGS)

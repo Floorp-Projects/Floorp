@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 ifneq (,$(filter gtk gtk2 xlib qt beos,$(MOZ_WIDGET_TOOLKIT)))
-DIRS	+= gtk
+DIRS	+= unixshared
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
