@@ -92,12 +92,14 @@ function initializeSearchWindowWidgets()
 
 function onSearchStop() 
 {
-  // ???
 }
 
 function onAbSearchReset(event) 
 {
+  gPropertiesButton.setAttribute("disabled","true");
+
   CloseAbView();
+
   onReset(event);
 }
 
