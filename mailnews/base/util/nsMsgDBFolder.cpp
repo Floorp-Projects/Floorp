@@ -259,7 +259,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags,
 {
 	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
 	nsresult rv = mDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
-	if(NS_SUCCEEDED(rv) && pMsgDBHdr)
+	if(NS_SUCCEEDED(rv))
 	{
 		nsCOMPtr<nsIMessage> message;
 		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, getter_AddRefs(message));
