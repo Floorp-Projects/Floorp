@@ -183,7 +183,7 @@ class PrefNameBuffer;
 #ifdef PR_ALIGN_OF_WORD
 #define ALIGN_OF_WORD PR_ALIGN_OF_WORD
 #else
-#define PR_ALIGN_OF_WORD sizeof(void*)
+#define ALIGN_OF_WORD sizeof(void*)
 #endif
 
 // making PrefNameBuffer exactly 8k for nice allocation
