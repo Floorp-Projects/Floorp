@@ -85,9 +85,38 @@ DOM_ElementOps lm_ElementOps = {
     DOM_SetAttributeStub, DOM_GetAttributeStub, DOM_GetNumAttrsStub
 };
 
+/*
+ * Handle text alterations.  Most of the time, we're just carving up
+ * new text blocks, but sometimes text inside stuff is magic, like
+ * <TITLE> and maybe <HREF>.
+ */
 static JSBool
 lm_CDataOp(JSContext *cx, DOM_CharacterData *cdata, DOM_CDataOperationCode op)
 {
+    DOM_Node *node;
+    MWContext *context;
+    MochaDecoder *decoder;
+    char *data;
+    int32 len;
+
+    node = cdata->node.parent;
+    data = cdata->data;
+
+    decoder = (MochaDecoder *)JS_GetPrivate(cx, JS_GetGlobalObject(cx));
+    context = decoder->window_context;
+    
+    if (node->type == NODE_TYPE_ELEMENT) {
+        switch(ELEMENT_PRIV(node)->tagtype) {
+          case P_TITLE:
+            /*
+             * XXX clean up the text, find the current charset, make
+             * sure we're not a subdoc, etc.  All this logic lives in
+             * lo_process_title_tag, and should be refactored.
+             */
+            FE_SetDocTitle(context, data);
+            return JS_TRUE;
+        }
+    }
     return JS_TRUE;
 }
 
@@ -140,10 +169,6 @@ lm_NodeForTag(PA_Tag *tag, DOM_Node *current, MWContext *context, int16 csid)
             return NULL;
         }
         elepriv->tagtype = tag->type;
-        elepriv->attrs.nattrs =
-            PA_FetchAllNameValues(tag, &elepriv->attrs.attr_names,
-                                  &elepriv->attrs.attr_values, csid);
-
         node = (DOM_Node *)element;
         node->type = NODE_TYPE_ELEMENT;
         node->data = elepriv;
