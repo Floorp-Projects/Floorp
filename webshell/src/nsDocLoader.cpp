@@ -41,7 +41,6 @@
 #include "nsILoadGroup.h"
 #include "nsNeckoUtil.h"
 #include "nsIURL.h"
-#include "nsIEventQueueService.h"
 #include "nsIIOService.h"
 #include "nsIChannel.h"
 #include "nsIProgressEventSink.h"
@@ -91,7 +90,6 @@ static NS_DEFINE_IID(kILoadGroupIID,               NS_ILOADGROUP_IID);
 static NS_DEFINE_IID(kINetServiceIID,              NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID,               NS_NETSERVICE_CID);
 #else
-static NS_DEFINE_CID(kEventQueueServiceCID,        NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIIOServiceIID,               NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID,                NS_IOSERVICE_CID);
 #endif // NECKO
