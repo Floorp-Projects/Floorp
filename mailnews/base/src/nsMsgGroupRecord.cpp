@@ -21,6 +21,8 @@
 
 #include "plstr.h"
 #include "prmem.h"
+#include "nsEscape.h"
+#include "nsCRT.h"
 
 /* for the XP_TO_UPPER stuff */
 #include "xp_mcom.h"
@@ -54,7 +56,7 @@ nsMsgGroupRecord::GroupNameCompare(const char* name1, const char* name2,
 {
 	if (caseInsensitive)
 	{
-		while (*name1 && XP_TO_UPPER(*name1) == XP_TO_UPPER(*name2)) {
+		while (*name1 && (nsCRT::ToUpper(*name1) == nsCRT::ToUpper(*name2))) {
 			name1++;
 			name2++;
 		}		
@@ -73,7 +75,7 @@ nsMsgGroupRecord::GroupNameCompare(const char* name1, const char* name2,
 	}
 
 	if (caseInsensitive)
-		return int(XP_TO_UPPER(*name1)) - int(XP_TO_UPPER(*name2));
+		return int(nsCRT::ToUpper(*name1)) - int(nsCRT::ToUpper(*name2));
 	else
 		return int(*name1) - int(*name2);
 }
@@ -469,7 +471,7 @@ nsMsgGroupRecord::GetSaveString()
 {
 	char* pretty = NULL;
 	if (m_prettyname) {
-		pretty = NET_Escape(m_prettyname, URL_XALPHAS);
+		pretty = nsEscape(m_prettyname, url_XAlphas);
 		if (!pretty) return NULL;
 	}
 	char* fullname = GetFullName();
@@ -525,7 +527,7 @@ nsMsgGroupRecord::Create(nsMsgGroupRecord* parent, const char* saveline,
 	if (savelinelength < 0) savelinelength = PL_strlen(saveline);
 	tmp = (char*) PR_Malloc(savelinelength + 1);
 	if (!tmp) return NULL;
-	XP_STRNCPY_SAFE(tmp, saveline, savelinelength);
+	PL_strncpy(tmp, saveline, savelinelength);
 	tmp[savelinelength] = '\0';
 	ptr = PL_strchr(tmp, ',');
 	PR_ASSERT(ptr);
@@ -553,7 +555,7 @@ nsMsgGroupRecord::Create(nsMsgGroupRecord* parent, const char* saveline,
 	PR_ASSERT(endptr);
 	if (!endptr) goto FAIL;
 	*endptr++ = '\0';
-	prettyname = NET_UnEscape(ptr);
+	prettyname = nsUnescape(ptr);
 
 	ptr = endptr;
 	endptr = PL_strchr(ptr, ',');
