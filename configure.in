@@ -3457,6 +3457,7 @@ MOZ_ARG_ENABLE_STRING(application,
 case "$MOZ_BUILD_APP" in
 suite)
   MOZ_APP_NAME=mozilla
+  MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_MAIL_NEWS=1
   MOZ_LDAP_XPCOM=1
   MOZ_COMPOSER=1
@@ -3467,6 +3468,7 @@ suite)
 
 browser)
   MOZ_APP_NAME=firefox
+  MOZ_APP_DISPLAYNAME=Firefox
   MOZ_XUL_APP=1
   MOZ_PHOENIX=1
   MOZ_APP_VERSION=`cat $topsrcdir/browser/config/version.txt`
@@ -3476,6 +3478,7 @@ browser)
 
 mail)
   MOZ_APP_NAME=thunderbird
+  MOZ_APP_DISPLAYNAME=Thunderbird
   MOZ_XUL_APP=1
   MOZ_THUNDERBIRD=1
   MOZ_MAIL_NEWS=1
@@ -3489,6 +3492,7 @@ mail)
 
 composer)
   MOZ_APP_NAME=nvu
+  MOZ_APP_DISPLAYNAME=NVU
   MOZ_XUL_APP=1
   MOZ_STANDALONE_COMPOSER=1
   MOZ_COMPOSER=1
@@ -3498,6 +3502,7 @@ composer)
 
 calendar)
   MOZ_APP_NAME=sunbird
+  MOZ_APP_DISPLAYNAME=Sunbird
   MOZ_XUL_APP=1
   MOZ_SUNBIRD=1
   MOZ_CALENDAR=1
@@ -3508,6 +3513,7 @@ calendar)
 
 xulrunner)
   MOZ_APP_NAME=xulrunner
+  MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_XUL_APP=1
   MOZ_XULRUNNER=1 
   MOZ_APP_VERSION=`cat $topsrcdir/xulrunner/config/version.txt`
@@ -3517,12 +3523,14 @@ xulrunner)
 
 macbrowser) 
   MOZ_APP_NAME=mozilla
+  MOZ_APP_DISPLAYNAME=Camino
   MOZ_APP_VERSION=$MOZILLA_VERSION
   MOZ_EXTENSIONS_DEFAULT=" cookie xmlextras universalchardet typeaheadfind transformiix"
   ;;
 
 standalone) 
   MOZ_APP_NAME=mozilla
+  MOZ_APP_DISPLAYNAME=Mozilla
   MOZ_APP_VERSION=$MOZILLA_VERSION
   ;;
 
@@ -5938,6 +5946,7 @@ AC_SUBST(MOZ_REORDER)
 AC_SUBST(MOZ_TIMELINE)
 
 AC_SUBST(MOZ_APP_NAME)
+AC_SUBST(MOZ_APP_DISPLAYNAME)
 AC_SUBST(MOZ_APP_VERSION)
 
 dnl win32 options
