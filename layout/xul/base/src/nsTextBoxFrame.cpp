@@ -60,6 +60,7 @@
 #include "nsIPref.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
+#include "nsUnicharUtils.h"
 
 #ifdef IBMBIDI
 #include "nsIUBidiUtils.h"
@@ -688,7 +689,7 @@ nsTextBoxFrame::UpdateAccessTitle()
             {
                 nsAutoString tmpstring(NS_LITERAL_STRING("("));
                 tmpstring += mAccessKey;
-                tmpstring.ToUpperCase();
+                ToUpperCase(tmpstring);
                 tmpstring.Append(NS_LITERAL_STRING(")"));
                 PRInt32 offset = mTitle.RFind("...");
                 if (offset != kNotFound)

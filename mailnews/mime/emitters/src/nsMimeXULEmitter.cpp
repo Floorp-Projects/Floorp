@@ -692,7 +692,7 @@ nsMimeXULEmitter::WriteXULTagPrefix(const char *tagName, const char *value)
   nsCAutoString  newTagName(tagName);
   newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
 
-  newTagName.ToUpperCase();
+  ToUpperCase(newTagName);
 
   UtilityWrite("<header field=\"");
   UtilityWrite(newTagName.get());
@@ -747,7 +747,7 @@ nsMimeXULEmitter::WriteEmailAddrXULTag(const char *tagName, const char *value)
 
   nsCAutoString  newTagName(tagName);
   newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
-  newTagName.ToUpperCase();
+  ToUpperCase(newTagName);
 
   WriteXULTagPrefix(tagName, value);
 

@@ -42,7 +42,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  webbrwsr \
 		  embedcomponents \
-		  xpconnect \
 		  $(NULL)
 
 CPPSRCS		= nsXMLExtrasModule.cpp

@@ -734,14 +734,14 @@ PRBool ImportModuleDesc::SupportsThings( const char *pThings)
 	while ((idx = thing.FindChar( ',')) != -1) {
 		thing.Left( item, idx);
 		item.Trim( kWhitespace);
-		item.ToLowerCase();
+		ToLowerCase(item);
 		if (item.Length() && (m_supports.Find( item) == -1))
 			return( PR_FALSE);
 		thing.Right( item, thing.Length() - idx - 1);
 		thing = item;
 	}
 	thing.Trim( kWhitespace);
-	thing.ToLowerCase();
+	ToLowerCase(thing);
 	if (thing.Length() && (m_supports.Find( thing) == -1))
 		return( PR_FALSE);
 	

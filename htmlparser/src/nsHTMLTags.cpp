@@ -352,7 +352,7 @@ nsHTMLTags::AddRefTable(void)
       for (i = 0; i < NS_HTML_TAG_MAX; ++i) {
         nsCAutoString temp1(kTagASCIIDebugTable[i]);
         nsCAutoString temp2(kTagASCIIDebugTable[i]);
-        temp1.ToLowerCase();
+        ToLowerCase(temp1);
         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
       }
 

@@ -44,6 +44,7 @@ REQUIRES        = xpcom \
                   lwbrk \
                   gfx \
                   widget \
+		  unicharutil \
                   $(NULL)
 
 CPPSRCS		=                           \

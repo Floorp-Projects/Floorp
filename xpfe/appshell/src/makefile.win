@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  content_xul \
 		  mozbrwsr \
 		  content \
+		  unicharutil \
 		  $(NULL)
 include <$(DEPTH)/config/config.mak>
 
@@ -78,6 +79,7 @@ LCFLAGS = \
 
 # These are the libraries we need to link with to create the DLL
 LLIBS=                          \
+ $(DIST)\lib\unicharutil_s.lib  \
  $(DIST)\lib\xpcom.lib        \
  $(DIST)\lib\gkgfx.lib   \
  $(DIST)\lib\js3250.lib        \

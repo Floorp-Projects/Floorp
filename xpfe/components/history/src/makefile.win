@@ -29,6 +29,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  intl \
 		  appcomps \
+		  unicharutil \
 		  $(NULL)
 
 CPP_OBJS=                               \

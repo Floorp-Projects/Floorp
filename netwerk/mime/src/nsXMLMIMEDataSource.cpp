@@ -542,7 +542,7 @@ nsXMLMIMEDataSource::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retva
     // for now we're assuming file extensions are case insensitive.
 
     nsCAutoString fileExt(aFileExt);
-    fileExt.ToLowerCase();
+    ToLowerCase(fileExt);
 
     nsCStringKey key(fileExt.get());
 
@@ -558,7 +558,7 @@ nsXMLMIMEDataSource::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retva
 NS_IMETHODIMP
 nsXMLMIMEDataSource::GetFromMIMEType(const char *aMIMEType, nsIMIMEInfo **_retval) {
     nsCAutoString MIMEType(aMIMEType);
-    MIMEType.ToLowerCase();
+    ToLowerCase(MIMEType);
 
     nsCStringKey key(MIMEType.get());
 

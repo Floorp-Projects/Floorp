@@ -30,6 +30,7 @@ ifndef TX_EXE
 MODULE = transformiix
 REQUIRES	= string \
 		  xpcom \
+		  unicharutil \
 		  $(NULL)
 endif
 

@@ -49,6 +49,7 @@ REQUIRES	= xpcom \
 		  lwbrk \
 		  exthandler \
 		  mimetype \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \

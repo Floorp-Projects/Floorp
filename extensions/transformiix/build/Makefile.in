@@ -43,6 +43,7 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  caps \
 		  locale \
+		  unicharutil \
 		  $(NULL)
 IS_COMPONENT	= 1
 MODULE_NAME	= TransformiixModule

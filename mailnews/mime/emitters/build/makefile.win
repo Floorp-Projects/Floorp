@@ -63,6 +63,7 @@ SUB_LIBRARIES=						\
 LLIBS=										\
 			$(LLIBS)						\
 			$(LIBNSPR)						\
+			$(DIST)\lib\unicharutil_s.lib	\
 			$(DIST)\lib\xpcom.lib       	\
 			$(NULL)
 

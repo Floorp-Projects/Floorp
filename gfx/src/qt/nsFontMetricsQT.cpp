@@ -734,7 +734,7 @@ FontEnumCallback(const nsString &aFamily,PRBool aGeneric,void *aData)
   nsFontMetricsQT *metrics = (nsFontMetricsQT*)aData;
 
   name.AssignWithConversion(aFamily.get());
-  name.ToLowerCase();
+  ToLowerCase(name);
   metrics->mFonts.AppendCString(name);
   metrics->mFontIsGeneric.AppendElement((void*)aGeneric);
   if (aGeneric) {

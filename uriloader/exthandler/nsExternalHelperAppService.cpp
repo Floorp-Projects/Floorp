@@ -1403,7 +1403,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromExtension(const char *aFileExt,
   nsCAutoString fileExt(aFileExt);
   if (fileExt.IsEmpty()) return NS_ERROR_FAILURE;
 
-  fileExt.ToLowerCase();
+  ToLowerCase(fileExt);
   // if the file extension contains a '.', our hash key doesn't include the '.'
   // so skip over it...
   if (fileExt.First() == '.') 
@@ -1432,7 +1432,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromMIMEType(const char *aMIMEType,
 {
   nsresult rv = NS_OK;
   nsCAutoString MIMEType(aMIMEType);
-  MIMEType.ToLowerCase();
+  ToLowerCase(MIMEType);
 
   nsCStringKey key(MIMEType.get());
 
@@ -1604,7 +1604,7 @@ nsresult nsExternalHelperAppService::GetMIMEInfoForMimeTypeFromExtras(const char
 
   // Look for default entry with matching mime type.
   nsCAutoString MIMEType(aContentType);
-  MIMEType.ToLowerCase();
+  ToLowerCase(MIMEType);
   PRInt32 numEntries = sizeof(extraMimeEntries) / sizeof(extraMimeEntries[0]);
   for (PRInt32 index = 0; !*aMIMEInfo && index < numEntries; index++)
   {

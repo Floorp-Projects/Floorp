@@ -34,6 +34,7 @@ REQUIRES	= xpcom \
 		  necko \
 		  docshell \
 		  uriloader \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= nsDebugRobot.cpp nsRobotSink.cpp

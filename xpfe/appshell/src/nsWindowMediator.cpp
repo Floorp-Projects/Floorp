@@ -40,6 +40,7 @@
 #include "nsAutoLock.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsVoidArray.h"
 #include "rdf.h"
 #include "nsIBaseWindow.h"
@@ -509,7 +510,7 @@ NS_IMETHODIMP  nsWindowMediator::UpdateWindowTitle( nsIXULWindow* inWindow, cons
     PRBool display = PR_TRUE;
     nsAutoString displayString;
     GetAttribute( inWindow, NS_LITERAL_STRING("intaskslist"), displayString );
-    displayString.ToLowerCase();
+    ToLowerCase(displayString);
 
     if ( displayString.Equals(NS_LITERAL_STRING("false")) )
       display=PR_FALSE;

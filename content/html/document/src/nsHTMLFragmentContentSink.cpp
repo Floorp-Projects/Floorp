@@ -58,6 +58,7 @@
 #include "nsINodeInfo.h"
 #include "prmem.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
 
 //
@@ -908,7 +909,7 @@ nsHTMLFragmentContentSink::AddAttributes(const nsIParserNode& aNode,
     // Get upper-cased key
     const nsAReadableString& key = aNode.GetKeyAt(i);
     k.Assign(key);
-    k.ToLowerCase();
+    ToLowerCase(k);
 
     nsIAtom*  keyAtom = NS_NewAtom(k);
     

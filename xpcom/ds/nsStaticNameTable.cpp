@@ -80,7 +80,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* Names[], PRInt32 Count)
        // verify invarients of contents
        nsCAutoString temp1(raw);
        nsDependentCString temp2(raw);
-       temp1.ToLowerCase();
+       ToLowerCase(temp1);
        NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
        }
 #endif

@@ -1304,7 +1304,7 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	  }
 	  else if ( -1 != colType.Find("xmozillausehtmlmail") )
 	  {
-		column.ToLowerCase();
+		ToLowerCase(column);
 		if (-1 != column.Find("true"))
 			m_database->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::html);
 		else

@@ -139,6 +139,7 @@ LINCS= -I$(PUBLIC)\xpcom -I..\source\xslt\functions \
 
 # These are the libraries we need to link with to create the dll
 LLIBS=$(LLIBS)  $(LIBNSPR)		\
+ $(DIST)\lib\unicharutil_s.lib	\
  $(DIST)\lib\xpcom.lib	\
  $(DIST)\lib\js3250.lib \
  $(DIST)\lib\expat.lib

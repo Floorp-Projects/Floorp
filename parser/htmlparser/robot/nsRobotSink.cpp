@@ -42,6 +42,7 @@
 #include "nsIParser.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsIURL.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
@@ -243,7 +244,7 @@ NS_IMETHODIMP RobotSink::CloseFrameset(const nsIParserNode& aNode)
 NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
 {
   nsAutoString tmp; tmp.Assign(aNode.GetText());
-  tmp.ToLowerCase();
+  ToLowerCase(tmp);
   if (tmp.Equals(NS_LITERAL_STRING("a"))) {
     nsAutoString k, v;
     PRInt32 ac = aNode.GetAttributeCount();
@@ -251,7 +252,7 @@ NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
       // Get upper-cased key
       const nsAReadableString& key = aNode.GetKeyAt(i);
       k.Assign(key);
-      k.ToLowerCase();
+      ToLowerCase(k);
       if (k.Equals(NS_LITERAL_STRING("href"))) {
         // Get value and remove mandatory quotes
         v.Truncate();

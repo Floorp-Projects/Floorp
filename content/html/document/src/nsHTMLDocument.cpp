@@ -44,6 +44,7 @@
 #include "nsIFileChannel.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsHTMLDocument.h"
 #include "nsIParser.h"
 #include "nsIParserFilter.h"
@@ -1360,7 +1361,7 @@ nsHTMLDocument::CreateElement(const nsAReadableString& aTagName,
 
   nsCOMPtr<nsINodeInfo> nodeInfo;
   nsAutoString tmp(aTagName);
-  tmp.ToLowerCase();
+  ToLowerCase(tmp);
 
   mNodeInfoManager->GetNodeInfo(tmp, nsnull, kNameSpaceID_None,
                                 *getter_AddRefs(nodeInfo));
@@ -1451,7 +1452,7 @@ NS_IMETHODIMP
 nsHTMLDocument::GetElementsByTagName(const nsAReadableString& aTagname, nsIDOMNodeList** aReturn)
 { 
   nsAutoString tmp(aTagname);
-  tmp.ToLowerCase(); // HTML elements are lower case internally.
+  ToLowerCase(tmp); // HTML elements are lower case internally.
   return nsDocument::GetElementsByTagName(tmp, aReturn); 
 }
 
@@ -2565,7 +2566,7 @@ nsHTMLDocument::GetElementsByTagNameNS(const nsAReadableString& aNamespaceURI,
                                        nsIDOMNodeList** aReturn)
 {
   nsAutoString tmp(aLocalName);
-  tmp.ToLowerCase(); // HTML elements are lower case internally.
+  ToLowerCase(tmp); // HTML elements are lower case internally.
   return nsDocument::GetElementsByTagNameNS(aNamespaceURI, tmp,
                                             aReturn); 
 }

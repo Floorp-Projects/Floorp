@@ -74,6 +74,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsUnicharUtils.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
@@ -1553,7 +1554,7 @@ nsHTMLCopyEncoder::IsMozBR(nsIDOMNode* aNode)
       nsAutoString typeAttrName(NS_LITERAL_STRING("type"));
       nsAutoString typeAttrVal;
       nsresult rv = elem->GetAttribute(typeAttrName, typeAttrVal);
-      typeAttrVal.ToLowerCase();
+      ToLowerCase(typeAttrVal);
       if (NS_SUCCEEDED(rv) && (typeAttrVal.Equals(NS_LITERAL_STRING("_moz"))))
         return PR_TRUE;
     }

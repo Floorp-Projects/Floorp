@@ -3219,7 +3219,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         if (optionElement) {
           nsAutoString text;
           if (NS_OK == optionElement->GetText(text)) {
-            text.ToLowerCase();
+            ToLowerCase(text);
             PRUnichar firstChar = text.CharAt(0);
             if (firstChar == (PRUnichar)code) {
               PerformSelection(selectedIndex, PR_FALSE, PR_FALSE);

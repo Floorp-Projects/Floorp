@@ -980,7 +980,7 @@ static void VerifyPublicIDs()
     }
     for (i = 0; i < ELEMENTS_OF(kPublicIDs); ++i) {
       nsCAutoString lcPubID(kPublicIDs[i].name);
-      lcPubID.ToLowerCase();
+      ToLowerCase(lcPubID);
       if (nsCRT::strcmp(kPublicIDs[i].name, lcPubID.get()) != 0) {
         NS_NOTREACHED("doctype not lower case");
         printf("Doctype %s not lower case.\n", kPublicIDs[i].name);
@@ -1029,7 +1029,7 @@ static void DetermineHTMLParseMode(nsString& aBuffer,
 
       // See comment above definition of kPublicIDs about case
       // sensitivity.
-      publicID.ToLowerCase();
+      ToLowerCase(publicID);
 
       // binary search to see if we can find the correct public ID
         // These must be signed since maximum can go below zero and we'll

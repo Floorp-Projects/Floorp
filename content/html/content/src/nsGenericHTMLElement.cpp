@@ -408,7 +408,7 @@ nsGenericHTMLElement::GetElementsByTagName(const nsAReadableString& aTagname,
   // Only lowercase the name if this element has no namespace (i.e.
   // it's a HTML element, not an XHTML element).
   if (mNodeInfo && mNodeInfo->NamespaceEquals(kNameSpaceID_None))
-    tagName.ToLowerCase();
+    ToLowerCase(tagName);
 
   return nsGenericElement::GetElementsByTagName(tagName, aReturn);
 }
@@ -1497,7 +1497,7 @@ nsGenericHTMLElement::NormalizeAttrString(const nsAReadableString& aStr,
 {
   // XXX need to validate/strip namespace prefix
   nsAutoString lower(aStr);
-  lower.ToLowerCase();
+  ToLowerCase(lower);
 
   nsCOMPtr<nsINodeInfoManager> nimgr;
   mNodeInfo->GetNodeInfoManager(*getter_AddRefs(nimgr));

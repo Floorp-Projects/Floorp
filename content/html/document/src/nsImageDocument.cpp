@@ -473,7 +473,7 @@ nsresult nsImageDocument::UpdateTitle( void )
     pURL->GetFileExtension(&pExtension);
     if(pExtension){
       nsString strExt; strExt.AssignWithConversion(pExtension);
-      strExt.ToUpperCase();
+      ToUpperCase(strExt);
       titleStr.Append(strExt);
       nsCRT::free(pExtension);
       pExtension=nsnull;

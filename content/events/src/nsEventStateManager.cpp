@@ -110,6 +110,7 @@
 #include "nsIFrameTraversal.h"
 #include "nsLayoutCID.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsUnicharUtils.h"
 
 #if defined(DEBUG_rods) || defined(DEBUG_bryner)
 //#define DEBUG_DOCSHELL_FOCUS
@@ -747,7 +748,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         if (mAccessKeys) {
           //Someone registered an accesskey.  Find and activate it.
           nsAutoString accKey((char)keyEvent->charCode);
-          accKey.ToLowerCase();
+          ToLowerCase(accKey);
 
           nsVoidKey key((void*)accKey.First());
           if (mAccessKeys->Exists(&key)) {
@@ -3726,7 +3727,7 @@ nsEventStateManager::RegisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, 
 
   if (content) {
     nsAutoString accKey((char)aKey);
-    accKey.ToLowerCase();
+    ToLowerCase(accKey);
 
     nsVoidKey key((void*)accKey.First());
 
@@ -3752,7 +3753,7 @@ nsEventStateManager::UnregisterAccessKey(nsIFrame * aFrame, nsIContent* aContent
   }
   if (content) {
     nsAutoString accKey((char)aKey);
-    accKey.ToLowerCase();
+    ToLowerCase(accKey);
 
     nsVoidKey key((void*)accKey.First());
 

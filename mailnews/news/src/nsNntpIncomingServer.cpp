@@ -1711,7 +1711,7 @@ nsNntpIncomingServer::AppendIfSearchMatch(const char *newsgroupName)
     // do the same to the newsgroup name before we do our strstr()
     // this way searches will be case independant
     nsCAutoString lowerCaseName(newsgroupName);
-    lowerCaseName.ToLowerCase();
+    ToLowerCase(lowerCaseName);
 
     if (PL_strstr(lowerCaseName.get(), mSearchValue.get())) {
         mSubscribeSearchResult.AppendCString(nsCAutoString(newsgroupName));
@@ -1725,7 +1725,7 @@ nsNntpIncomingServer::SetSearchValue(const char *searchValue)
     mSearchValue = searchValue;
     // force the search string to be lower case
     // so that we can do case insensitive searching
-    mSearchValue.ToLowerCase();
+    ToLowerCase(mSearchValue);
 
     mSubscribeSearchResult.Clear();
     mGroupsOnServer.EnumerateForwards((nsCStringArrayEnumFunc)buildSubscribeSearchResult, (void *)this);

@@ -52,6 +52,7 @@ LCFLAGS = \
 SUB_LIBRARIES	=  $(DIST)\lib\nslocale_s.lib
 
 LLIBS=					\
+ $(DIST)\lib\unicharutil_s.lib		\
  $(DIST)\lib\xpcom.lib			\
  $(LIBNSPR)  
 

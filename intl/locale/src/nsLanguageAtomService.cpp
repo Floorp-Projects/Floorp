@@ -43,6 +43,7 @@
 #include "nsICharsetConverterManager.h"
 #include "nsILocaleService.h"
 #include "nsXPIDLString.h"
+#include "nsUnicharUtils.h"
 
 class nsLanguageAtom : public nsILanguageAtom
 {
@@ -166,7 +167,7 @@ nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
     NS_ENSURE_SUCCESS(InitLangTable(), NS_ERROR_OUT_OF_MEMORY);
   }
   nsAutoString lowered(aLanguage);
-  lowered.ToLowerCase();
+  ToLowerCase(lowered);
   nsCOMPtr<nsILanguageAtom> lang;
   PRUint32 n;
   NS_ENSURE_SUCCESS(mLangs->Count(&n), NS_ERROR_FAILURE);

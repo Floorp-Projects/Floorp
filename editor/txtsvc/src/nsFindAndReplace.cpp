@@ -38,6 +38,7 @@
 
 #include "nsFindAndReplace.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsFindAndReplace, nsIFindAndReplace)
 
@@ -184,7 +185,7 @@ NS_IMETHODIMP nsFindAndReplace::Find(const PRUnichar *aFindText, PRBool *aDidFin
 
   nsAutoString findStr(aFindText);
   if (!mCaseSensitive)
-    findStr.ToLowerCase();
+    ToLowerCase(findStr);
 
   nsresult result = SetupDocForFind(mTsDoc, &mStartSelOffset);
   if (NS_FAILED(result))
@@ -232,7 +233,7 @@ nsFindAndReplace::Replace(const PRUnichar *aFindText, const PRUnichar *aReplaceT
   nsAutoString findStr(aFindText);
   PRUint32 findStrLength = findStr.Length();
   if (!mCaseSensitive)
-    findStr.ToLowerCase();
+    ToLowerCase(findStr);
 
   nsresult result = SetupDocForReplace(mTsDoc, findStr, &mStartSelOffset);
   if (NS_FAILED(result))
@@ -705,7 +706,7 @@ nsFindAndReplace::DoFind(nsITextServicesDocument *aTxtDoc, const nsString &aFind
         return rv;
   
       if (!mCaseSensitive)
-        str.ToLowerCase();
+        ToLowerCase(str);
       
       if (mWrapFind && mWrappedOnce &&
           mCurrentBlockIndex == mStartBlockIndex && mCurrentSelOffset != -1)

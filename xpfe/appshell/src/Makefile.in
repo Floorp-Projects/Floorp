@@ -55,6 +55,7 @@ REQUIRES	= xpcom \
 		  browser \
 		  caps \
 		  profile \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \

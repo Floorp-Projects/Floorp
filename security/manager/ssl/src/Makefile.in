@@ -86,7 +86,6 @@ REQUIRES	= nspr \
 		  profile \
 		  windowwatcher \
 		  js \
-		  docshell \
 		  widget \
 		  layout \
 		  content \
@@ -94,7 +93,7 @@ REQUIRES	= nspr \
 		  xpconnect \
 		  jar \
 		  unicharutil \
-                  pipboot \
+		  pipboot \
 		  $(NULL)
 
 EXTRA_LIBS = $(NSS_LIBS)

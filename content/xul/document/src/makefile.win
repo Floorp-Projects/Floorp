@@ -47,6 +47,7 @@ REQUIRES	= xpcom \
 		  layout_xul \
 		  content \
                   webshell \
+		  unicharutil \
 		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN

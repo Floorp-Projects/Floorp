@@ -947,7 +947,7 @@ wallet_WriteToList(
     return PR_FALSE;
   }
 
-  item1.ToLowerCase();
+  ToLowerCase(item1);
   if (obscure) {
     nsAutoString crypt;
     if (NS_FAILED(Wallet_Encrypt(item2, crypt))) {
@@ -1045,7 +1045,7 @@ wallet_ReadFromList(
 
   /* find item1 in the list */
   wallet_MapElement * mapElementPtr;
-  item1.ToLowerCase();
+  ToLowerCase(item1);
   PRInt32 count = LIST_COUNT(list);
   for (PRInt32 i=index; i<count; i++) {
     mapElementPtr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
@@ -1859,9 +1859,9 @@ wallet_GetSelectIndex(
           optionElement->GetValue(optionValue);
           optionElement->GetText(optionText);
           nsAutoString valueLC( value );
-          valueLC.ToLowerCase();
-          optionValue.ToLowerCase();
-          optionText.ToLowerCase();
+          ToLowerCase(valueLC);
+          ToLowerCase(optionValue);
+          ToLowerCase(optionText);
           optionText.Trim(" \n\t\r");
           if (valueLC==optionValue || valueLC==optionText) {
             index = optionX;

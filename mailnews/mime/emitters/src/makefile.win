@@ -35,6 +35,7 @@ REQUIRES	= xpcom \
 		  addrbook \
 		  mimetype \
 		  msgnews \
+		  unicharutil \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>

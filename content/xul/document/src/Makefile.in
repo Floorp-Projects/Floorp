@@ -53,6 +53,7 @@ REQUIRES	= xpcom \
 		  xul \
 		  xultmpl \
 		  webshell \
+		  unicharutil \
 		  $(NULL)
 
 CPPSRCS		= \

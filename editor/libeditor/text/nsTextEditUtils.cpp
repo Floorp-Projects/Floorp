@@ -42,6 +42,7 @@
 #include "nsPlaintextEditor.h"
 
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 
 /********************************************************
  *  helper methods from nsTextEditRules
@@ -55,7 +56,7 @@ nsTextEditUtils::NodeIsType(nsIDOMNode *aNode, const nsAReadableString& aTag)
   {
     nsAutoString tag;
     nsEditor::GetTagString(aNode,tag);
-    tag.ToLowerCase();
+    ToLowerCase(tag);
     if (tag.Equals(aTag))
       return PR_TRUE;
   }
@@ -113,7 +114,7 @@ nsTextEditUtils::HasMozAttr(nsIDOMNode *node)
     nsAutoString typeAttrName(NS_LITERAL_STRING("type"));
     nsAutoString typeAttrVal;
     nsresult res = elem->GetAttribute(typeAttrName, typeAttrVal);
-    typeAttrVal.ToLowerCase();
+    ToLowerCase(typeAttrVal);
     if (NS_SUCCEEDED(res) && (typeAttrVal.Equals(NS_LITERAL_STRING("_moz"))))
       return PR_TRUE;
   }

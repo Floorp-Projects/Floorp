@@ -43,6 +43,7 @@
 #include "nsILookAndFeel.h" // for system colors
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsStaticNameTable.h"
 
 // define an array of all CSS properties
@@ -69,7 +70,7 @@ nsCSSProps::AddRefTable(void)
       for (PRInt32 index = 0; index < eCSSProperty_COUNT; ++index) {
         nsCAutoString temp1(kCSSRawProperties[index]);
         nsCAutoString temp2(kCSSRawProperties[index]);
-        temp1.ToLowerCase();
+        ToLowerCase(temp1);
         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
         NS_ASSERTION(-1 == temp1.FindChar('_'), "underscore char in table");
       }

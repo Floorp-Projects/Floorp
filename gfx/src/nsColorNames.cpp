@@ -39,7 +39,7 @@
 #include "nsColorNames.h"
 #include "nsString.h"
 #include "nsStaticNameTable.h"
-
+#include "nsReadableUtils.h"
 
 // define an array of all color names
 #define GFX_COLOR(_name, _value) #_name,
@@ -71,7 +71,7 @@ nsColorNames::AddRefTable(void)
       for (PRInt32 index = 0; index < eColorName_COUNT; ++index) {
         nsCAutoString temp1(kColorNames[index]);
         nsCAutoString temp2(kColorNames[index]);
-        temp1.ToLowerCase();
+        ToLowerCase(temp1);
         NS_ASSERTION(temp1.Equals(temp2), "upper case char in table");
       }
     }

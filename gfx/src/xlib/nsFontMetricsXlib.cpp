@@ -1036,7 +1036,7 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
     
   nsCAutoString name;
   name.AssignWithConversion(aFamily.get());
-  name.ToLowerCase();
+  ToLowerCase(name);
   
   nsFontMetricsXlib* metrics = (nsFontMetricsXlib*) aData;
   metrics->mFonts.AppendCString(name);
@@ -3558,7 +3558,7 @@ nsFontMetricsXlib::FamilyExists(nsIDeviceContext *aDevice, const nsString& aName
 
   nsCAutoString name;
   name.AssignWithConversion(aName.get());
-  name.ToLowerCase();
+  ToLowerCase(name);
   
   nsFontFamilyXlib* family = FindFamily(&name);
   if (family && family->mNodes.Count())

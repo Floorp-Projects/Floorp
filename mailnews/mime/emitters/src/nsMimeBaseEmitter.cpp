@@ -682,7 +682,7 @@ nsMimeBaseEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
   //
   nsCAutoString  newTagName(field);
   newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
-  newTagName.ToUpperCase();
+  ToUpperCase(newTagName);
 
   char *l10nTagName = LocalizeHeaderName(newTagName.get(), field);
   if ( (!l10nTagName) || (!*l10nTagName) )

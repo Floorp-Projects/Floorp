@@ -1365,7 +1365,7 @@ BookmarkParser::ParseLiteral(nsIRDFResource *arc, nsString& aValue, nsIRDFNode**
     if (arc == kNC_ShortcutURL)
     {
 	    // lowercase the shortcut URL before storing internally
-    	aValue.ToLowerCase();
+    	ToLowerCase(aValue);
     }
     else if (arc == kWEB_LastCharset)
     {
@@ -2927,7 +2927,7 @@ nsBookmarksService::FindShortcut(const PRUnichar *aUserInput, char **aShortcutUR
 
 	// shortcuts are always lowercased internally
 	nsAutoString		shortcut(aUserInput);
-	shortcut.ToLowerCase();
+	ToLowerCase(shortcut);
 
 	nsCOMPtr<nsIRDFLiteral> literalTarget;
 	rv = gRDF->GetLiteral(shortcut.get(), getter_AddRefs(literalTarget));

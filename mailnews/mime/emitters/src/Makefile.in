@@ -43,6 +43,7 @@ REQUIRES	= xpcom \
 		  addrbook \
 		  mimetype \
 		  msgnews \
+		  unicharutil \
 		  $(NULL)
 
 EXPORTS		= \

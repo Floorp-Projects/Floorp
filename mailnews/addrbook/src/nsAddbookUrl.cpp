@@ -237,7 +237,7 @@ nsresult nsAddbookUrl::ParseUrl()
     nsUnescape(NS_CONST_CAST(char*, mOperationPart.get()));
   }
 
-  mOperationPart.ToLowerCase();
+  ToLowerCase(mOperationPart);
   // Now, figure out what we are supposed to be doing?
   if (!nsCRT::strcmp(mOperationPart.get(), "printone"))
   {

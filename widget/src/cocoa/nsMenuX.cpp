@@ -267,7 +267,7 @@ NS_METHOD nsMenuX::AddMenuItem(nsIMenuItem * aMenuItem)
   nsAutoString keyEquivalent(NS_LITERAL_STRING(" "));
   aMenuItem->GetShortcutChar(keyEquivalent);
   if (keyEquivalent != NS_LITERAL_STRING(" ")) {
-    keyEquivalent.ToUpperCase();
+    ToUpperCase(keyEquivalent);
     char keyStr[2];
     keyEquivalent.ToCString(keyStr, sizeof(keyStr));
     short inKey = keyStr[0];

@@ -60,7 +60,7 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  xpconnect \
 		  pipnss \
-		  windowwatcher
+		  $(NULL)
 
 ifdef BUILD_SMIME
 REQUIRES += \

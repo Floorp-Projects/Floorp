@@ -57,7 +57,7 @@ static nsCString thisApplication() {
         len = ::GetShortPathName( buffer, buffer, sizeof buffer );
     
         result = buffer;
-        result.ToUpperCase();
+        ToUpperCase(result);
     }
 
     return result;

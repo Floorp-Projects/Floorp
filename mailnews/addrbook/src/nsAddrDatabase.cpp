@@ -43,6 +43,7 @@
 #include "nsFileStream.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsAbBaseCID.h"
 #include "nsIAbCard.h"
 #include "nsIAbMDBCard.h"
@@ -1113,7 +1114,7 @@ nsresult nsAddrDatabase::AddUnicodeToColumn(nsIMdbRow * row, mdb_token colToken,
 	nsresult err = NS_OK;
 	nsAutoString displayString(pUnicodeStr);
 	NS_ConvertUCS2toUTF8 displayUTF8Str(displayString);
-	displayString.ToLowerCase();
+	ToLowerCase(displayString);
 	NS_ConvertUCS2toUTF8 UTF8Str(displayString);
 	if (colToken == m_PriEmailColumnToken)
 	{
@@ -3043,7 +3044,7 @@ nsresult nsAddrDatabase::AddLowercaseColumn
 		if (unicodeStr)
 		{
 			nsAutoString newUnicodeString(unicodeStr);
-			newUnicodeString.ToLowerCase();
+			ToLowerCase(newUnicodeString);
 			char * utf8Str = ToNewUTF8String(newUnicodeString);
 			if (utf8Str)
 			{
@@ -3900,7 +3901,7 @@ nsresult nsAddrDatabase::GetRowForEmailAddress(const char *emailAddress, nsIMdbR
 	if (unicodeStr)
 	{
 		nsAutoString newUnicodeString(unicodeStr);
-		newUnicodeString.ToLowerCase();
+		ToLowerCase(newUnicodeString);
 		char * pUTF8Str = ToNewUTF8String(newUnicodeString);
 		if (pUTF8Str)
 		{
@@ -4046,7 +4047,7 @@ NS_IMETHODIMP nsAddrDatabase::FindMailListbyUnicodeName(const PRUnichar *listNam
 {
 	nsresult rv = NS_ERROR_FAILURE;
 	nsAutoString unicodeString(listName);
-	unicodeString.ToLowerCase();
+	ToLowerCase(unicodeString);
 	char* pUTF8Str = ToNewUTF8String(unicodeString);
 	if (pUTF8Str)
 	{
@@ -4112,7 +4113,7 @@ nsresult nsAddrDatabase::GetRowForCharColumn
 {
 	nsresult rv = NS_ERROR_FAILURE;
 	nsAutoString unicodeString(unicodeStr);
-	unicodeString.ToLowerCase();
+	ToLowerCase(unicodeString);
 	char* pUTF8Str = ToNewUTF8String(unicodeString);
 	if (pUTF8Str)
 	{

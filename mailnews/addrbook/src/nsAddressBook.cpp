@@ -1458,7 +1458,7 @@ void AddressBookParser::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, 
 
 	  else if ( -1 != colType.Find("xmozillausehtmlmail") )
 	  {
-		column.ToLowerCase();
+		ToLowerCase(column);
 		if (-1 != column.Find("true"))
 			mDatabase->AddPreferMailFormat(newRow, nsIAbPreferMailFormat::html);
 		else

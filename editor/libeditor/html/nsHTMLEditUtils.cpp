@@ -40,6 +40,7 @@
 #include "nsTextEditUtils.h"
 
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 #include "nsEditor.h"
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
@@ -77,7 +78,7 @@ nsHTMLEditUtils::IsHeader(nsIDOMNode *node)
   NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsHeader");
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
+  ToLowerCase(tag);
   if ( (tag.Equals(NS_LITERAL_STRING("h1"))) ||
        (tag.Equals(NS_LITERAL_STRING("h2"))) ||
        (tag.Equals(NS_LITERAL_STRING("h3"))) ||
@@ -120,7 +121,7 @@ nsHTMLEditUtils::IsListItem(nsIDOMNode *node)
   NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsListItem");
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
+  ToLowerCase(tag);
   if (tag.Equals(NS_LITERAL_STRING("li")) ||
       tag.Equals(NS_LITERAL_STRING("dd")) ||
       tag.Equals(NS_LITERAL_STRING("dt")))
@@ -179,7 +180,7 @@ nsHTMLEditUtils::IsTableCell(nsIDOMNode *node)
   NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsTableCell");
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
+  ToLowerCase(tag);
   if (tag.Equals(NS_LITERAL_STRING("td")) || tag.Equals(NS_LITERAL_STRING("th")))
   {
     return PR_TRUE;
@@ -197,7 +198,7 @@ nsHTMLEditUtils::IsTableCellOrCaption(nsIDOMNode *node)
   NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsTableCell");
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
+  ToLowerCase(tag);
   if (tag.Equals(NS_LITERAL_STRING("td")) || 
       tag.Equals(NS_LITERAL_STRING("th")) ||
       tag.Equals(NS_LITERAL_STRING("caption")) )
@@ -217,7 +218,7 @@ nsHTMLEditUtils::IsList(nsIDOMNode *node)
   NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsList");
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
+  ToLowerCase(tag);
   if ( (tag.Equals(NS_LITERAL_STRING("dl"))) ||
        (tag.Equals(NS_LITERAL_STRING("ol"))) ||
        (tag.Equals(NS_LITERAL_STRING("ul"))) )
@@ -383,7 +384,7 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
   // don't ask me why, but our html mailcites are id'd by "type=cite"...
   nsAutoString attrVal;
   nsresult res = elem->GetAttribute(attrName, attrVal);
-  attrVal.ToLowerCase();
+  ToLowerCase(attrVal);
   if (NS_SUCCEEDED(res))
   {
     if (attrVal.Equals(NS_LITERAL_STRING("cite")))
@@ -395,7 +396,7 @@ nsHTMLEditUtils::IsMailCite(nsIDOMNode *node)
   res = elem->GetAttribute(attrName, attrVal);
   if (NS_SUCCEEDED(res))
   {
-    attrVal.ToLowerCase();
+    ToLowerCase(attrVal);
     if (attrVal.Equals(NS_LITERAL_STRING("true")))
       return PR_TRUE;
   }
@@ -433,7 +434,7 @@ nsHTMLEditUtils::IsFormWidget(nsIDOMNode *node)
   NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsFormWidget");
   nsAutoString tag;
   nsEditor::GetTagString(node,tag);
-  tag.ToLowerCase();
+  ToLowerCase(tag);
   if (tag.Equals(NS_LITERAL_STRING("textarea")) || 
       tag.Equals(NS_LITERAL_STRING("select")) ||
       tag.Equals(NS_LITERAL_STRING("button")) ||
@@ -492,7 +493,7 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode * aNode)
   NS_PRECONDITION(aNode, "null node passed to nsHTMLEditUtils::SupportsAlignAttr");
   nsAutoString tag;
   nsEditor::GetTagString(aNode, tag);
-  tag.ToLowerCase();
+  ToLowerCase(tag);
   if (tag.Equals(NS_LITERAL_STRING("hr")) ||
       tag.Equals(NS_LITERAL_STRING("table")) ||
       tag.Equals(NS_LITERAL_STRING("tbody")) ||

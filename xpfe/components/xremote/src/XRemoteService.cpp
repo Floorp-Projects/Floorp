@@ -137,7 +137,7 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   nsCString action;
   action.Append(tempString);
   action.Trim(" ", PR_TRUE, PR_TRUE);
-  action.ToLowerCase();
+  ToLowerCase(action);
 
   // pull off the noraise argument if it's there.
   PRUint32  index = 0;

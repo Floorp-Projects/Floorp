@@ -46,6 +46,7 @@
 #include "nsEmitterUtils.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 /*
  * nsMimeXmlEmitter definitions....
@@ -117,7 +118,7 @@ nsMimeXmlEmitter::WriteXMLTag(const char *tagName, const char *value)
   nsString  newTagName; newTagName.AssignWithConversion(tagName);
   newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
 
-  newTagName.ToUpperCase();
+  ToUpperCase(newTagName);
   upCaseTag = ToNewCString(newTagName);
 
   UtilityWrite("<header field=\"");

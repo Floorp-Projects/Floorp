@@ -275,7 +275,7 @@ nsresult nsEudoraWin32::IterateMailDir( nsIFileSpec *pFolder, nsISupportsArray *
 					ext.Truncate();
 					name = fName;
 				}
-				ext.ToLowerCase();
+				ToLowerCase(ext);
 				if (ext.Equals(NS_LITERAL_CSTRING(".fol"))) {
 					isFolder = PR_FALSE;
 					entry->IsDirectory( &isFolder);
@@ -981,7 +981,7 @@ PRBool nsEudoraWin32::FindMimeIniFile( nsIFileSpec *pSpec)
 					ext.Truncate();
 					name = fName;
 				}
-				ext.ToLowerCase();
+				ToLowerCase(ext);
 				if (ext.Equals(NS_LITERAL_CSTRING(".ini"))) {
 					isFile = PR_FALSE;
 					entry->IsFile( &isFile);
@@ -1340,7 +1340,7 @@ nsresult nsEudoraWin32::ScanAddressDir( nsIFileSpec *pDir, nsISupportsArray *pAr
 					ext.Truncate();
 					name = fName;
 				}
-				ext.ToLowerCase();
+				ToLowerCase(ext);
 				if (ext.Equals(NS_LITERAL_CSTRING(".txt"))) {
 					isFile = PR_FALSE;
 					entry->IsFile( &isFile);

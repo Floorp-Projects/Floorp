@@ -78,6 +78,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsWeakReference.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsICaret.h"
@@ -3869,7 +3870,7 @@ PresShell::GoToAnchor(const nsString& aAnchorName)
         nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
         nsAutoString tagName;
         if (element && NS_SUCCEEDED(element->GetTagName(tagName))) {
-          tagName.ToLowerCase();
+          ToLowerCase(tagName);
           if (tagName.Equals(NS_LITERAL_STRING("a"))) {
             content = do_QueryInterface(element);
             break;

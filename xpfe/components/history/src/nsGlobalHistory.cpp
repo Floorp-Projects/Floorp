@@ -61,6 +61,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 #include "nsXPIDLString.h"
 #include "plhash.h"
 #include "plstr.h"
@@ -3961,12 +3962,12 @@ nsGlobalHistory::AutoCompletePrefilter(const nsAReadableString& aSearchString)
     // then convert the host to lowercase
     nsAutoString host;
     url.Left(host, slash);
-    host.ToLowerCase();
+    ToLowerCase(host);
     url.Assign(host + Substring(url, slash, url.Length()-slash));
   } else {
     // otherwise, assume the user could still be typing the host, and
     // convert everything to lowercase
-    url.ToLowerCase();
+    ToLowerCase(url);
   }
   
   return nsSharableString(url);

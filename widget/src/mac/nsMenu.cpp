@@ -55,6 +55,7 @@
 
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 #include "nsINameSpaceManager.h"
 #include "nsWidgetAtoms.h"
@@ -347,7 +348,7 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
   nsAutoString keyEquivalent(NS_LITERAL_STRING(" "));
   aMenuItem->GetShortcutChar(keyEquivalent);
   if(keyEquivalent != NS_LITERAL_STRING(" ")) {
-    keyEquivalent.ToUpperCase();
+    ToUpperCase(keyEquivalent);
     char keyStr[2];
     keyEquivalent.ToCString(keyStr, sizeof(keyStr));
     short inKey = keyStr[0];

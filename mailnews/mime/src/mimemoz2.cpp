@@ -1984,7 +1984,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed, char *fontName, PRU
         aPrefStr.Append(".");
       }
 
-      aCharset.ToLowerCase();
+      ToLowerCase(aCharset);
 
       aCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
       if (!aCharSets)

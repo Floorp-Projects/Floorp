@@ -43,6 +43,7 @@ endif
 
 LIBS		= \
 		$(EXTRA_DSO_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
