@@ -261,8 +261,6 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 { 
-  nsWidgetAtoms::ReleaseAtoms();
-  
   /* Decrement our refcount on gEventQueueHandler; a prelude toward
      stopping event handling. This is not something you want to do unless you've
      bloody well started event handling and incremented the refcount. That's
@@ -286,7 +284,7 @@ NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
   
   [gEventQueueHandler retain];
 
-  nsWidgetAtoms::AddRefAtoms();
+  nsWidgetAtoms::RegisterAtoms();
 
   mInited = true;
 
