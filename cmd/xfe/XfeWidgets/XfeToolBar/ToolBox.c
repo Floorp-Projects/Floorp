@@ -2483,6 +2483,13 @@ XfeToolBoxItemSetOpen(Widget w,Widget item,Boolean open)
 #endif
 
 	XtVaSetValues(item,XmNopen,open,NULL);
+	
+	/*
+	 * This is a temprary hack to fix the "off by one" toolbar closed
+	 * problem that occurs when all toolbox items are closed.
+	 */
+	LayoutComponents(w);
+	LayoutDynamicChildren(w);
 }
 /*----------------------------------------------------------------------*/
 /* extern */ Boolean
