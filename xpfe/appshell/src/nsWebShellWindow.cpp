@@ -1644,73 +1644,17 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
                                                      nsIWebShell*& aResult)
 {
-  nsresult rv = NS_OK;
-  nsString nameStr(aName);
+   aResult = nsnull;
+   NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
+   
+   nsCOMPtr<nsIDocShellTreeItem> shellItem;
+   NS_ENSURE_SUCCESS(mContentTreeOwner->FindItemWithName(aName, nsnull, 
+      getter_AddRefs(shellItem)), NS_ERROR_FAILURE);
 
-  // Zero result (in case we fail).
-  aResult = nsnull;
+   if(shellItem)
+      NS_ENSURE_SUCCESS(CallQueryInterface(shellItem, &aResult), NS_ERROR_FAILURE);
 
-  // first, special cases
-  if (nameStr.Length() == 0)
-    return NS_OK;
-  if (nameStr.EqualsIgnoreCase("_blank"))
-    return NS_OK;
-  if (nameStr.EqualsIgnoreCase("_content"))
-    return GetContentWebShell(&aResult);
-
-  // look for open windows with the given name
-  /*   Note: this function arguably works as expected, but the end effect
-     is wrong.  The webshell that catches the name given from a JavaScript
-     window.open call is the content, not the chrome, so a window whose
-     location is redirected will have its content replaced, not its chrome.
-     That may be the right choice; maybe not.  Also, there's a visual problem
-     where the window position is reset.
-       So when two or three bad things get cleared up, this next bit will be
-     helpful.  As it is, it's not too. */
-
-  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-
-    if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator)))) {
-      PRBool more;
-
-      // get the (main) webshell for each window in the enumerator
-      windowEnumerator->HasMoreElements(&more);
-      while (more) {
-        nsCOMPtr<nsISupports> protoWindow;
-        rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
-        if (NS_SUCCEEDED(rv) && protoWindow) {
-          // it's supposed to be an nsIDOMWindow, so it's one of these, too
-          nsCOMPtr<nsIScriptGlobalObject> whatever(do_QueryInterface(protoWindow));
-          if (whatever) {
-            nsCOMPtr<nsIWebShell> webshell;
-            whatever->GetWebShell(getter_AddRefs(webshell));
-            if (webshell) {
-              // check the webshell, and then its children, for a name match
-              const PRUnichar *name;
-              if (NS_SUCCEEDED(webshell->GetName(&name)) && nameStr.Equals(name)) {
-                aResult = webshell;
-                NS_ADDREF(aResult);
-                break;
-              }
-              // Search for named frame within our root webshell.  This will
-              // bypass the .xul document (and rightfully so).  We need to be
-              // careful not to give that documents child frames names!
-              if (NS_SUCCEEDED(webshell->FindChildWithName(aName, aResult)) && aResult)
-                break;
-            }
-          }
-        }
-        windowEnumerator->HasMoreElements(&more);
-      }
-    }
-  } else
-    // should be redundant, but left in for now
-    if (mWebShell)
-      rv = mWebShell->FindChildWithName(aName, aResult);
-
-  return rv;
+   return NS_OK;
 }
 
 NS_IMETHODIMP 
