@@ -1,6 +1,6 @@
 #!/perl
 
-# make-jars [-d <destPath>] < <jar.mn>
+# make-jars [-c] [-v] [-d <destPath>] < <jar.mn>
 
 use Getopt::Std;
 use Cwd;
