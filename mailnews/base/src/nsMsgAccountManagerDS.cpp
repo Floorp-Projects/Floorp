@@ -1333,7 +1333,7 @@ nsMsgAccountManagerDataSource::IsIncomingServerForFakeAccount(nsIMsgIncomingServ
   rv = aServer->GetHostName(getter_Copies(hostname));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  *aResult = (strcmp(hostname.get(), fakeAccountHostName) == 0);
+  *aResult = (strcmp(hostname.get(), fakeAccountHostName.get()) == 0);
   return NS_OK;
 }
 
