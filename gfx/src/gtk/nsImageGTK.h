@@ -38,11 +38,12 @@ public:
   /**
   @see nsIImage.h
   */
-  virtual PRInt32     GetBytesPix();
+  virtual PRInt32     GetBytesPix()       { return mNumBytesPixel; }
   virtual PRInt32     GetHeight();
   virtual PRInt32     GetWidth();
   virtual PRUint8*    GetBits();
   virtual void*       GetBitInfo();
+  virtual PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
   virtual PRInt32     GetLineStride();
   virtual nsColorMap* GetColorMap();
   NS_IMETHOD Draw(nsIRenderingContext &aContext,
@@ -92,6 +93,7 @@ private:
   PRUint8    *mImageBits;
   PRUint8    *mConvertedBits;
   PRInt32    mSizeImage;
+  PRBool     mIsTopToBottom;
 
   PRInt8     mNumBytesPixel;
 
