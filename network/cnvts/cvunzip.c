@@ -27,9 +27,9 @@
 #include "cvunzip.h"
 
 /* BEGIN NEW_STRING_LIB */
-#ifdef XP_MAC
+/*#ifdef XP_MAC
 #include "allxpstr.h"
-#endif
+#endif*/
 /* END NEW_STRING_LIB */
 #ifdef MOZILLA_CLIENT
 

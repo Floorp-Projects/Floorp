@@ -572,12 +572,14 @@ LO_DocumentInfo(MWContext *context, NET_StreamClass *stream)
 /*
  *  determine what kind of image data we are dealing with
  */
+#ifndef XP_MAC
 int
 IL_Type(const char *buf, int32 len)
 {
     MOZ_FUNCTION_STUB;
     return 0; /* IL_NOTFOUND */
 }
+#endif /* XP_MAC */ 
 
 /*
  *---------------------------------------------------------------------------
@@ -598,21 +600,25 @@ IL_DisplayMemCacheInfoAsHTML(FO_Present_Types format_out, URL_Struct *urls,
 }
 
 
+#ifndef XP_MAC
 char *
 IL_HTMLImageInfo(char *url_address)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
 }
+#endif /* XP_MAC */ 
 
 
 /* Set limit on approximate size, in bytes, of all pixmap storage used
    by the imagelib.  */
+#ifndef XP_MAC
 void
 IL_SetCacheSize(uint32 new_size)
 {
     MOZ_FUNCTION_STUB;
 }
+#endif /* XP_MAC */ 
 
 
 
@@ -1727,13 +1733,14 @@ MWContext *FE_MakeNewWindow(MWContext *pOldContext, URL_Struct *pUrl, char *pCon
  * closure: Data to be passed as the only argument to "func"
  * msecs:   The number of milli-seconds in the interval
  */
+#ifndef XP_MAC
 PUBLIC void * 
 FE_SetTimeout(TimeoutCallbackFunction func, void * closure, uint32 msecs)
 {
     MOZ_FUNCTION_STUB;
     return NULL;
 }
-
+#endif /* XP_MAC */
 
 /*
  *---------------------------------------------------------------------------

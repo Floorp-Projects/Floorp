@@ -6,10 +6,10 @@ __copy
 __som_check_ev
 __som_check_new
 __vt__Q23std13bad_exception		# std::bad_exception::__vt
-__vt__Q23std9exception		# std::exception::__vt
-what__Q23std9exceptionCFv		# std::exception::what() const
+#__vt__Q23std9exception			# std::exception::__vt
+#what__Q23std9exceptionCFv		# std::exception::what() const
 #__ct__Q23std9exceptionFv		# std::exception::exception()
-__dt__Q23std9exceptionFv		# std::exception::~exception()
+#__dt__Q23std9exceptionFv		# std::exception::~exception()
 what__Q23std13bad_exceptionCFv		# std::bad_exception::what() const
 __end__catch
 __throw
@@ -31,12 +31,12 @@ unexpected__3stdFv		# std::unexpected()
 set_unexpected__3stdFPFv_v		# std::set_unexpected(void (*)(void))
 terminate__3stdFv		# std::terminate()
 set_terminate__3stdFPFv_v		# std::set_terminate(void (*)(void))
-__vt__Q23std8bad_cast		# std::bad_cast::__vt
+#__vt__Q23std8bad_cast		# std::bad_cast::__vt
 __vt__Q23std10bad_typeid		# std::bad_typeid::__vt
 what__Q23std10bad_typeidCFv		# std::bad_typeid::what() const
-what__Q23std8bad_castCFv		# std::bad_cast::what() const
+#what__Q23std8bad_castCFv		# std::bad_cast::what() const
 __dynamic_cast
-__dt__Q23std8bad_castFv		# std::bad_cast::~bad_cast()
+#__dt__Q23std8bad_castFv		# std::bad_cast::~bad_cast()
 __get_typeid
 __dt__Q23std10bad_typeidFv		# std::bad_typeid::~bad_typeid()
 nothrow__3std		# std::nothrow
@@ -50,14 +50,14 @@ __nw__FUl		# operator new(unsigned long)
 #_set_newnonptrmax__3stdFUl		# std::_set_newnonptrmax(unsigned long)
 #_set_newpoolsize__3stdFUl		# std::_set_newpoolsize(unsigned long)
 __throws_bad_alloc__3std		# std::__throws_bad_alloc
-__vt__Q23std9bad_alloc		# std::bad_alloc::__vt
+#__vt__Q23std9bad_alloc		# std::bad_alloc::__vt
 __new_handler__3std		# std::__new_handler
-what__Q23std9bad_allocCFv		# std::bad_alloc::what() const
+#what__Q23std9bad_allocCFv		# std::bad_alloc::what() const
 __del_hdl
 __new_hdl
 set_new_handler__3stdFPFv_v		# std::set_new_handler(void (*)(void))
 __throw_bad_alloc__3stdFv		# std::__throw_bad_alloc()
-__dt__Q23std9bad_allocFv		# std::bad_alloc::~bad_alloc()
+#__dt__Q23std9bad_allocFv		# std::bad_alloc::~bad_alloc()
 qd
 #__ptmf_null
 #longjmp
