@@ -157,7 +157,7 @@ ifeq ($(OS_ARCH),OpenVMS)
 	rm -f $(DIST)/include/$(MDCPUCFG_H)
 	if [ ! -L $(DIST)/include/prcpucfg.h ]; then \
 	  mv -f $(DIST)/include/prcpucfg.h $(MDCPUCFG_H); \
-	  ln -fs $(MOD_DEPTH)/nsprpub/pr/include/md/$(MDCPUCFG_H) \
+	  ln -fs ../../../nsprpub/pr/include/md/$(MDCPUCFG_H) \
 	    $(DIST)/include/prcpucfg.h; \
 	fi
 endif
