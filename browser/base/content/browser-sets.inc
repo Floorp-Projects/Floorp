@@ -89,7 +89,7 @@
 
     <command id="cmd_print" oncommand="PrintUtils.print();"/>
     <command id="cmd_close" oncommand="BrowserCloseTabOrWindow()"/>
-    <command id="cmd_closeWindow" oncommand="BrowserCloseWindow()"/>
+    <command id="cmd_closeWindow" oncommand="BrowserTryToCloseWindow()"/>
     <command id="cmd_CustomizeToolbars" oncommand="BrowserCustomizeToolbar()"/>
   
     <command id="cmd_copyLink"
