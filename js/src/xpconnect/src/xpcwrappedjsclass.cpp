@@ -802,8 +802,7 @@ nsXPCWrappedJSClass::CleanupPointerTypeObject(const nsXPTType& type,
 nsresult
 nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                        const char * aPropertyName,
-                                       const char * anInterfaceName,
-                                       nsresult aPendingResult)
+                                       const char * anInterfaceName)
 {
     XPCContext * xpcc = ccx.GetXPCContext();
     JSContext * cx = ccx.GetJSContext();
@@ -813,6 +812,10 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     xpcc->GetException(getter_AddRefs(xpc_exception));
     if(xpc_exception)
         xpcc->SetException(nsnull);
+
+    // get this right away in case we do something below to cause JS code
+    // to run on this JSContext
+    nsresult pending_result = xpcc->GetPendingResult();
 
     jsval js_exception;
     /* JS might throw an expection whether the reporter was called or not */
@@ -931,9 +934,9 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     else
     {
         // see if JS code signaled failure result without throwing exception
-        if(NS_FAILED(aPendingResult))
+        if(NS_FAILED(pending_result))
         {
-            return aPendingResult;
+            return pending_result;
         }
     }
     return NS_ERROR_FAILURE;
@@ -1003,6 +1006,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
 
     scriptEval.StartEvaluating(xpcWrappedJSErrorReporter);
 
+    xpcc->SetPendingResult(pending_result);
     xpcc->SetException(nsnull);
     ccx.GetThreadData()->SetException(nsnull);
 
@@ -1364,25 +1368,9 @@ pre_call_clean_up:
         }
     }
 
-    // Get this right away in case we do something below to cause JS code
-    // to run on this JSContext.  And get it whether success or not so that
-    // scriptable methods that must return NS_COMFALSE or another non-NS_OK
-    // success code can do so when implemented by JS.
-    //
-    // Reset the pending result in our context to NS_OK only if it is no
-    // longer NS_OK.  NB: don't use NS_FAILED here -- we must reset it even
-    // if pending_result is a success code such as NS_COMFALSE.
-
-    pending_result = xpcc->GetPendingResult();
-    if (pending_result != NS_OK)
-    {
-        xpcc->SetPendingResult(NS_OK);
-    }
-
     if (!success)
     {
-        retval = CheckForException(ccx, name, GetInterfaceName(),
-                                   pending_result);
+        retval = CheckForException(ccx, name, GetInterfaceName());
         goto done;
     }
 
