@@ -328,11 +328,11 @@ nsFindDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
         setAttribute( mWebShell,
                       "data.ignoreCase",
                       "value",
-                      mContext->mIgnoreCase ? "true" : "false" );
+                      mContext->mIgnoreCase.GetUnicode() ? "true" : "false" );
         setAttribute( mWebShell,
                       "data.searchBackward",
                       "value",
-                      mContext->mSearchBackward ? "true" : "false" );
+                      mContext->mSearchBackward.GetUnicode() ? "true" : "false" );
     }
 
     // Add as observer of the xul document.
