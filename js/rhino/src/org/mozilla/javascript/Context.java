@@ -160,24 +160,33 @@ public class Context {
                 cx = new Context();
             if (cx.enterCount != 0) Kit.codeBug();
 
-            Object[] array = contextListeners;
-            if (array != null) {
-                for (int i = array.length; i-- != 0;) {
-                    ((ContextListener)array[i]).contextCreated(cx);
+            if (!cx.hideFromContextListeners && !cx.creationEventWasSent) {
+                cx.creationEventWasSent = true;
+                Object listeners = contextListeners;
+                for (int i = 0; ; ++i) {
+                    Object l = Kit.getListener(listeners, i);
+                    if (l == null)
+                        break;
+                    ((ContextListener)l).contextCreated(cx);
                 }
             }
-
-            setThreadContext(cx);
         }
 
-        ++cx.enterCount;
-
-        Object[] listeners = contextListeners;
-        if (listeners != null) {
-            for (int i = listeners.length; i-- != 0;) {
-                ((ContextListener)listeners[i]).contextEntered(cx);
+        if (!cx.hideFromContextListeners) {
+            Object listeners = contextListeners;
+            for (int i = 0; ; ++i) {
+                Object l = Kit.getListener(listeners, i);
+                if (l == null)
+                    break;
+                ((ContextListener)l).contextEntered(cx);
             }
         }
+
+        if (old == null) {
+            setThreadContext(cx);
+        }
+        ++cx.enterCount;
+
         return cx;
      }
 
@@ -196,7 +205,6 @@ public class Context {
      */
     public static void exit()
     {
-        boolean released = false;
         Context cx = getCurrentContext();
         if (cx == null) {
             throw new IllegalStateException(
@@ -205,18 +213,23 @@ public class Context {
         if (Context.check && cx.enterCount < 1) Kit.codeBug();
         --cx.enterCount;
         if (cx.enterCount == 0) {
-            released = true;
             setThreadContext(null);
         }
 
-        Object[] listeners = contextListeners;
-        if (listeners != null) {
-            for (int i = listeners.length; i-- != 0;) {
-                ((ContextListener)listeners[i]).contextExited(cx);
+        if (!cx.hideFromContextListeners) {
+            Object listeners = contextListeners;
+            for (int i = 0; ; ++i) {
+                Object l = Kit.getListener(listeners, i);
+                if (l == null)
+                    break;
+                ((ContextListener)l).contextExited(cx);
             }
-            if (released) {
-                for (int i = listeners.length; i-- != 0;) {
-                    ((ContextListener)listeners[i]).contextReleased(cx);
+            if (cx.enterCount == 0) {
+                for (int i = 0; ; ++i) {
+                    Object l = Kit.getListener(listeners, i);
+                    if (l == null)
+                        break;
+                    ((ContextListener)l).contextReleased(cx);
                 }
             }
         }
@@ -225,9 +238,10 @@ public class Context {
     /**
      * Add a Context listener.
      */
-    public static void addContextListener(ContextListener listener) {
+    public static void addContextListener(ContextListener listener)
+    {
         synchronized (contextListenersLock) {
-            contextListeners = ListenerArray.add(contextListeners, listener);
+            contextListeners = Kit.addListener(contextListeners, listener);
         }
     }
 
@@ -235,10 +249,23 @@ public class Context {
      * Remove a Context listener.
      * @param listener the listener to remove.
      */
-    public static void removeContextListener(ContextListener listener) {
+    public static void removeContextListener(ContextListener listener)
+    {
         synchronized (contextListenersLock) {
-            contextListeners = ListenerArray.remove(contextListeners, listener);
+            contextListeners = Kit.removeListener(contextListeners, listener);
         }
+    }
+
+    /**
+     * Do not notify any listener registered with
+     * {@link #addContextListener(ContextListener)} about this Context instance.
+     * The function can only be called if this Context is not associated with
+     * any thread.
+     */
+    public final void hideFromContextListeners()
+    {
+        if (enterCount != 0) throw new IllegalStateException();
+        hideFromContextListeners = true;
     }
 
     /**
@@ -347,9 +374,9 @@ public class Context {
      * @param version the version as specified by VERSION_1_0, VERSION_1_1, etc.
      */
     public void setLanguageVersion(int version) {
-        Object[] array = listeners;
-        if (array != null && version != this.version) {
-            firePropertyChangeImpl(array, languageVersionProperty,
+        Object listeners = instanceListeners;
+        if (listeners != null && version != this.version) {
+            firePropertyChangeImpl(listeners, languageVersionProperty,
                                new Integer(this.version),
                                new Integer(version));
         }
@@ -396,9 +423,9 @@ public class Context {
      */
     public ErrorReporter setErrorReporter(ErrorReporter reporter) {
         ErrorReporter result = errorReporter;
-        Object[] array = listeners;
-        if (array != null && errorReporter != reporter) {
-            firePropertyChangeImpl(array, errorReporterProperty,
+        Object listeners = instanceListeners;
+        if (listeners != null && errorReporter != reporter) {
+            firePropertyChangeImpl(listeners, errorReporterProperty,
                                    errorReporter, reporter);
         }
         errorReporter = reporter;
@@ -436,8 +463,9 @@ public class Context {
      * @see #removePropertyChangeListener(java.beans.PropertyChangeListener)
      * @param  listener  the listener
      */
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        listeners = ListenerArray.add(listeners, listener);
+    public void addPropertyChangeListener(PropertyChangeListener listener)
+    {
+        instanceListeners = Kit.addListener(instanceListeners, listener);
     }
 
     /**
@@ -447,8 +475,9 @@ public class Context {
      * @see #addPropertyChangeListener(java.beans.PropertyChangeListener)
      * @param listener  the listener
      */
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        listeners = ListenerArray.remove(listeners, listener);
+    public void removePropertyChangeListener(PropertyChangeListener listener)
+    {
+        instanceListeners = Kit.removeListener(instanceListeners, listener);
     }
 
     /**
@@ -464,23 +493,25 @@ public class Context {
     void firePropertyChange(String property, Object oldValue,
                             Object newValue)
     {
-        Object[] array = listeners;
-        if (array != null) {
-            firePropertyChangeImpl(array, property, oldValue, newValue);
+        Object listeners = instanceListeners;
+        if (listeners != null) {
+            firePropertyChangeImpl(listeners, property, oldValue, newValue);
         }
     }
 
-    private void firePropertyChangeImpl(Object[] array, String property,
+    private void firePropertyChangeImpl(Object listeners, String property,
                                         Object oldValue, Object newValue)
     {
-        for (int i = array.length; i-- != 0;) {
-            Object obj = array[i];
-            if (obj instanceof PropertyChangeListener) {
-                PropertyChangeListener l = (PropertyChangeListener)obj;
-                l.propertyChange(new PropertyChangeEvent(
+        for (int i = 0; ; ++i) {
+            Object l = Kit.getListener(listeners, i);
+            if (l == null)
+                break;
+            if (l instanceof PropertyChangeListener) {
+                PropertyChangeListener pcl = (PropertyChangeListener)l;
+                pcl.propertyChange(new PropertyChangeEvent(
                     this, property, oldValue, newValue));
             }
-    }
+        }
     }
 
     /**
@@ -688,6 +719,10 @@ public class Context {
      *
      * This method does not affect the Context it is called upon.
      *
+     * If the explicit scope argument is not null and is not an instance of
+     * {@link GlobalScope} or its subclasses, parts of the standard library
+     * will be run slower.
+     *
      * @param scope the scope to initialize, or null, in which case a new
      *        object will be created to serve as the scope
      * @return the initialized scope
@@ -715,6 +750,10 @@ public class Context {
      * among several top-level objects. Note that sealing is not allowed in
      * the current ECMA/ISO language specification, but is likely for
      * the next version.
+     *
+     * If the explicit scope argument is not null and is not an instance of
+     * {@link GlobalScope} or its subclasses, parts of the standard library
+     * will be run slower.
      *
      * @param scope the scope to initialize, or null, in which case a new
      *        object will be created to serve as the scope
@@ -2138,7 +2177,7 @@ public class Context {
     }
 
     private static final Object contextListenersLock = new Object();
-    private static Object[] contextListeners;
+    private static volatile Object contextListeners;
 
     /**
      * The activation of the currently executing function or script.
@@ -2168,9 +2207,11 @@ public class Context {
     Debugger debugger;
     private Object debuggerData;
     private int enterCount;
-    private Object[] listeners;
+    private Object instanceListeners;
     private Hashtable hashtable;
     private ClassLoader applicationClassLoader;
+    private boolean hideFromContextListeners;
+    private boolean creationEventWasSent;
 
     /**
      * This is the list of names of objects forcing the creation of
