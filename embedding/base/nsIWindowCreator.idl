@@ -14,17 +14,20 @@
  
  * The Initial Developer of the Original Code is Netscape
  * Communications, Inc.  Portions created by Netscape are
- * Copyright (C) 2001, Mozilla.  All Rights Reserved.
+ * Copyright (C) 2001,2002 Mozilla.  All Rights Reserved.
  
  * Contributor(s):
  */
 
-/*
-nsIWindowCreator is a callback interface used by Gecko to create
-new browser windows. The application, which could be Mozilla or
-an embedding app, must provide an implementation to the Window Watcher
-component.
-*/
+/**
+ * nsIWindowCreator is a callback interface used by Gecko to create
+ * new browser windows. The application, either Mozilla or an embedding app,
+ * must provide an implementation of the Window Watcher component and
+ * notify the WindowWatcher during application initialization.
+ * @see nsIWindowWatcher
+ *
+ * @status FROZEN
+ */
 
 #include "nsISupports.idl"
 
