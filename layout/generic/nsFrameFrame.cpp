@@ -78,6 +78,11 @@ static NS_DEFINE_CID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_CID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_CID(kCChildCID, NS_CHILD_CID);
 
+// Bug 8065: Limit content frame depth to some reasonable level.
+//           This does not count chrome frames when determining depth,
+//           nor does it prevent chrome recursion.
+#define MAX_DEPTH_CONTENT_FRAMES 25
+
 /*******************************************************************************
  * FrameLoadingInfo 
  ******************************************************************************/
@@ -429,10 +434,10 @@ nsHTMLFrameOuterFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         PRInt32 aHint)
 {
   if (nsHTMLAtoms::src == aAttribute) {
-    printf("got a request\n");
-    nsIFrame* firstChild = mFrames.FirstChild();
-    if (nsnull != firstChild) {
-      return ((nsHTMLFrameInnerFrame*)firstChild)->ReloadURL(aPresContext);
+    nsHTMLFrameInnerFrame* firstChild = NS_STATIC_CAST(nsHTMLFrameInnerFrame*,
+                                        mFrames.FirstChild());
+    if (firstChild) {
+      firstChild->ReloadURL(aPresContext);
     }
   }
   return NS_OK;
@@ -709,6 +714,30 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
   nsCOMPtr<nsIContent> parentContent;
   GetParentContent(*getter_AddRefs(parentContent));
 
+  // Bug 8065: Don't exceed some maximum depth in content frames (MAX_DEPTH_CONTENT_FRAMES)
+  PRInt32 depth = 0;
+  nsCOMPtr<nsISupports> parentAsSupports;
+  aPresContext->GetContainer(getter_AddRefs(parentAsSupports));
+  if (parentAsSupports) {
+    nsCOMPtr<nsIDocShellTreeItem> parentAsItem(do_QueryInterface(parentAsSupports));
+    while (parentAsItem) {
+      depth++;
+      if (MAX_DEPTH_CONTENT_FRAMES < depth)
+        return NS_ERROR_UNEXPECTED; // Too deep, give up!  (silently?)
+
+      // Only count depth on content, not chrome.
+      // If we wanted to limit total depth, skip the following check:
+      PRInt32 parentType;
+      parentAsItem->GetItemType(&parentType);
+      if (nsIDocShellTreeItem::typeContent == parentType) {
+        nsIDocShellTreeItem* temp = parentAsItem;
+        temp->GetParent(getter_AddRefs(parentAsItem));
+      } else {
+        break; // we have exited content, stop counting, depth is OK!
+      }
+    }
+  }
+
   mSubShell = do_CreateInstance(kWebShellCID);
   NS_ENSURE_TRUE(mSubShell, NS_ERROR_FAILURE);
 
@@ -901,16 +930,16 @@ static PRBool CheckForBrowser(nsIContent* aContent, nsIBaseWindow* aShell)
 nsresult
 nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
 {
-  nsresult rv = NS_OK;
-
-  NS_ENSURE_TRUE (mSubShell, NS_ERROR_UNEXPECTED);
+  // Bug 8065: Preventing frame nesting recursion - if the frames are
+  //           too deep we don't create a mSubShell, so this isn't an assert:
+  if (!mSubShell) return NS_OK;
 
   // Prevent recursion
   mCreatingViewer=PR_TRUE;
 
   // Get the URL to load
   nsCOMPtr<nsIContent> parentContent;
-  rv = GetParentContent(*getter_AddRefs(parentContent));
+  nsresult rv = GetParentContent(*getter_AddRefs(parentContent));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && parentContent, rv);
 
   PRBool load = CheckForBrowser(parentContent, mSubShell);
@@ -1032,7 +1061,7 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
     }
     // Whether or not we had to create a webshell, load the document
     if (NS_SUCCEEDED(rv)) {
-      rv = DoLoadURL(aPresContext);
+      DoLoadURL(aPresContext);
     }
   }
 
