@@ -173,7 +173,7 @@ DropTarget.cpp: StdAfx.h DropTarget.h
 MozillaControl.cpp \
 MozillaBrowser.cpp \
 WebShellContainer.cpp \
-StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h
+StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h IOleCommandTargetImpl.h
 !endif
 
 guids.cpp: StdAfx.h guids.h
