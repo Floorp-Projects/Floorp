@@ -104,8 +104,8 @@ void nsCheckButton::InitCallbacks(char * aName)
                      GTK_SIGNAL_FUNC(DestroySignal),
                      this);
 
-  InstallSignal(mCheckButton,
-                "toggled",
+  InstallSignal((GtkWidget *)mCheckButton,
+                (gchar *)"toggled",
                 GTK_SIGNAL_FUNC(nsCheckButton::ToggledSignal));
 }
 
