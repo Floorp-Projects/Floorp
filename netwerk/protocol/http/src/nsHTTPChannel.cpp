@@ -1302,7 +1302,7 @@ nsHTTPChannel::ReadFromCache()
     // Pump the cache data downstream
     LOG(("\n>>>> Reading from Cache <<<<\n"));
     rv = mCacheTransport->AsyncRead(listener, mResponseContext,
-                                    0, ULONG_MAX, 0,
+                                    0, PRUint32(-1), 0,
                                     getter_AddRefs(mCacheReadRequest));
 
     NS_RELEASE(listener);
@@ -1429,7 +1429,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIOutputStream> out;
-    rv = mCacheTransport->OpenOutputStream(0, ULONG_MAX, 0, getter_AddRefs(out));
+    rv = mCacheTransport->OpenOutputStream(0, PRUint32(-1), 0, getter_AddRefs(out));
     if (NS_FAILED(rv)) return rv;
 
     // XXX disk cache does not support overlapped i/o yet
@@ -3082,7 +3082,7 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
 #ifdef MOZ_NEW_CACHE
     LOG((">>>> Reading from Cache <<<<\n"));
     rv = mCacheTransport->AsyncRead(cacheListener, mResponseContext,
-                                    0, ULONG_MAX, 0,
+                                    0, PRUint32(-1), 0,
                                     getter_AddRefs(mCacheReadRequest));
 #else
     rv = mCacheChannel->AsyncOpen(cacheListener, mResponseContext);

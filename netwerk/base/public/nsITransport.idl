@@ -48,7 +48,7 @@ interface nsITransport : nsISupports
      * Open an input stream on this transport.
      *
      * @param offset - read starting at this offset
-     * @param count  - read this many bytes (pass ULONG_MAX if unlimited)
+     * @param count  - read this many bytes (pass PRUint32(-1) if unlimited)
      * @param flags  - optional transport specific flags
      */
     nsIInputStream openInputStream(in unsigned long offset,
@@ -59,7 +59,7 @@ interface nsITransport : nsISupports
      * Open an output stream on this transport.
      *
      * @param offset - write starting at this offset
-     * @param count  - write no more than this many bytes (pass ULONG_MAX if unlimited)
+     * @param count  - write no more than this many bytes (pass PRUint32(-1) if unlimited)
      * @param flags  - optional transport specific flags
      */
     nsIOutputStream openOutputStream(in unsigned long offset,
@@ -72,7 +72,7 @@ interface nsITransport : nsISupports
      * @param listener - notify this listener when data is available
      * @param ctxt     - opaque parameter passed to listener methods
      * @param offset   - read starting at this offset
-     * @param count    - read this many bytes (pass ULONG_MAX if unlimited)
+     * @param count    - read this many bytes (pass PRUint32(-1) if unlimited)
      * @param flags    - optional transport specific flags
      */
     nsIRequest asyncRead(in nsIStreamListener listener,
@@ -87,7 +87,7 @@ interface nsITransport : nsISupports
      * @param provider - notify this provider when data can be written
      * @param ctxt     - opaque parameter passed to provider methods
      * @param offset   - write starting at this offset
-     * @param count    - write no more than this many bytes (pass ULONG_MAX if unlimited)
+     * @param count    - write no more than this many bytes (pass PRUint32(-1) if unlimited)
      * @param flags    - optional transport specific flags
      */
     nsIRequest asyncWrite(in nsIStreamProvider provider,
