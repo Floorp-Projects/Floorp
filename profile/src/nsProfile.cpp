@@ -460,16 +460,22 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
         
                if (listener) 
                    listener->OnProfileStartup(currentProfileStr);
-	   }
-	}
+           }
+        }
     }
 
-    nsCOMPtr <nsIPrefConverter> pPrefConverter = do_CreateInstance(kPrefConverterCID, &rv);
+    PRBool prefs_converted = PR_FALSE;
+    rv = prefs->GetBoolPref("prefs.converted-to-utf8",&prefs_converted);
+    if(NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv)) return rv;
-    if (!pPrefConverter) return NS_ERROR_FAILURE;
+    if (!prefs_converted) 
+    {
+        nsCOMPtr <nsIPrefConverter> pPrefConverter = do_CreateInstance(kPrefConverterCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        if (!pPrefConverter) return NS_ERROR_FAILURE;
 
-    rv = pPrefConverter->ConvertPrefsToUTF8IfNecessary();
+        rv = pPrefConverter->ConvertPrefsToUTF8();
+    }
     return rv;
 }
 
