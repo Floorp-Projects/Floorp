@@ -431,11 +431,19 @@ function updateToolbar()
       newSet += ",";
   }
 
-  var toolbar = window.opener.document.getElementById("nav-bar");
-  toolbar.setAttribute("currentset", newSet);
-  window.opener.document.persist("nav-bar", "currentset");
+  var newToolbar = window.opener.document.getElementById("nav-bar");
+  newToolbar.setAttribute("currentset", newSet);
+  
+  var icons = toolbar.getAttribute("iconsize");
+  if (icons)
+    newToolbar.setAttribute("iconsize", icons);
+  else
+    newToolbar.removeAttribute("iconsize");
 
-  toolbar.rebuild();
+  window.opener.document.persist("nav-bar", "currentset");
+  window.opener.document.persist("nav-bar", "iconsize");
+
+  newToolbar.rebuild();
 }
 
 // Revert back to the default set.
@@ -474,5 +482,16 @@ function resetToDefault()
     paletteBox.removeChild(paletteBox.firstChild);
   buildPalette(paletteBox, toolbar, items);
 
+  gToolbarChanged = true;
+}
+
+function updateIconSize(useSmallIcons)
+{
+  var toolbar = document.getElementById("cloneToolbar");
+  if (useSmallIcons)
+    toolbar.setAttribute("iconsize", "small");
+  else
+    toolbar.removeAttribute("iconsize");
+  toolbar.removeAttribute("minheight");
   gToolbarChanged = true;
 }

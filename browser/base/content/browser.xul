@@ -734,7 +734,7 @@ Contributor(s):
                          tooltiptext="&stopButton.tooltip;"/>
 
           <toolbarbutton id="home-button" class="toolbarbutton-1"
-                         label="&homeButton.label;" persist="hidden"
+                         label="&homeButton.label;"
                          ondragover="nsDragAndDrop.dragOver(event, homeButtonObserver);"
                          ondragdrop="nsDragAndDrop.drop(event, homeButtonObserver);"
                          ondragexit="nsDragAndDrop.dragExit(event, homeButtonObserver);"
@@ -778,7 +778,7 @@ Contributor(s):
 
         <toolbaritem id="go-container" align="center" class="chromeclass-location">
           <button id="go-button" class="button-toolbar"
-                  label="&goButton.label;" persist="hidden"
+                  label="&goButton.label;"
                   oncommand="addToUrlbarHistory(); BrowserLoadURL();"
                   ondragover="nsDragAndDrop.dragOver(event, goButtonObserver);"
                   ondragdrop="nsDragAndDrop.drop(event, goButtonObserver);"
@@ -787,7 +787,7 @@ Contributor(s):
         </toolbaritem>
 
         <toolbarbutton id="print-button" class="toolbarbutton-1"
-                       label="&printButton.label;" persist="hidden"
+                       label="&printButton.label;"
                        oncommand="BrowserPrint();"
                        tooltiptext="&printButton.tooltip;"/>
 
