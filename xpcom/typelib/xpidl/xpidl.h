@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <libIDL/IDL.h>
 #include <assert.h>
+#include <stdlib.h>
 
 /*
  * Internal operation flags.
