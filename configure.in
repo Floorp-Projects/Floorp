@@ -3041,6 +3041,6 @@ MAKEFILES=
 unset CONFIG_FILES
 
 if test "$MOZ_ENABLE_GTK_MOZILLA"; then
-  ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-mozilla=$MOZ_BUILD_ROOT"
+  ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --with-mozilla=$MOZ_BUILD_ROOT/dist"
   AC_OUTPUT_SUBDIRS(webshell/embed/gtk)
 fi
