@@ -85,6 +85,8 @@
 #include "nsGUIEvent.h"
 #include "nsHTMLReflowState.h"
 #include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLImageElement.h"
 
 #include "nsIChromeRegistry.h"
@@ -5145,16 +5147,6 @@ DocumentViewerImpl::GetPopupNode(nsIDOMNode** aNode)
   return rv;
 }
 
-/*
- * XXX dr
- * ------
- * Note: the args to these two methods are DOM nodes and not specifically
- * HTML anchor or image nodes because a link can also be an xlink, and an
- * image can also be an object... The impls are broken right now to just
- * think about HTML anchors and images but consumers of these methods should
- * do their own checking.
- */
-
 // GetPopupLinkNode: return popup link node or fail
 nsresult
 DocumentViewerImpl::GetPopupLinkNode(nsIDOMNode** aNode)
@@ -5169,13 +5161,30 @@ DocumentViewerImpl::GetPopupLinkNode(nsIDOMNode** aNode)
   nsresult rv = GetPopupNode(getter_AddRefs(node));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // find out if we have an anchor in our ancestry. this really ought
-  // to look for xlinks also, but this is good enough for now.
+  // find out if we have a link in our ancestry
   while (node) {
 
     // are we an anchor?
-    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(node, &rv));
-    if (NS_SUCCEEDED(rv) && anchor) {
+    nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(node));
+    nsCOMPtr<nsIDOMHTMLAreaElement> area;
+    nsCOMPtr<nsIDOMHTMLLinkElement> link;
+    nsAutoString xlinkType;
+    if (!anchor) {
+      // area?
+      area = do_QueryInterface(node);
+      if (!area) {
+        // link?
+        link = do_QueryInterface(node);
+        if (!link) {
+          // XLink?
+          nsCOMPtr<nsIDOMElement> element(do_QueryInterface(node));
+          if (element) {
+            element->GetAttributeNS(NS_LITERAL_STRING("http://www.w3.org/1999/xlink"),NS_LITERAL_STRING("type"),xlinkType);
+          }
+        }
+      }
+    }
+    if (anchor || area || link || xlinkType.EqualsWithConversion("simple")) {
       *aNode = node;
       NS_IF_ADDREF(*aNode); // addref
       return NS_OK;
@@ -5206,8 +5215,8 @@ DocumentViewerImpl::GetPopupImageNode(nsIDOMNode** aNode)
   nsresult rv = GetPopupNode(getter_AddRefs(node));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // find out if we're an image. this really ought to look for objects
-  // with type "image/...", but this is good enough for now.
+  // XXX find out if we're an image. this really ought to look for objects
+  // XXX with type "image/...", but this is good enough for now.
   nsCOMPtr<nsIDOMHTMLImageElement> img(do_QueryInterface(node, &rv));
   if (NS_FAILED(rv)) return rv;
   NS_ENSURE_TRUE(img, NS_ERROR_FAILURE);

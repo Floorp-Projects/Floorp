@@ -138,6 +138,8 @@
 #include "nsIDragService.h"
 #include "nsCopySupport.h"
 #include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMHTMLAreaElement.h"
+#include "nsIDOMHTMLLinkElement.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsITimer.h"
 
@@ -4139,21 +4141,69 @@ NS_IMETHODIMP PresShell::DoCopyLinkLocation(nsIDOMNode* aNode)
 
   NS_ENSURE_ARG_POINTER(aNode);
   nsresult rv;
+  nsAutoString anchorText;
 
   // are we an anchor?
-  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(aNode, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDOMHTMLAnchorElement> anchor(do_QueryInterface(aNode));
+  nsCOMPtr<nsIDOMHTMLAreaElement> area;
+  nsCOMPtr<nsIDOMHTMLLinkElement> link;
+  nsAutoString xlinkType;
   if (anchor) {
-    // if so, get the href
-    nsAutoString anchorText;
     rv = anchor->GetHref(anchorText);
     NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    // area?
+    area = do_QueryInterface(aNode);
+    if (area) {
+      rv = area->GetHref(anchorText);
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+      // link?
+      link = do_QueryInterface(aNode);
+      if (link) {
+        rv = link->GetHref(anchorText);
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        // Xlink?
+        nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aNode));
+        if (element) {
+          NS_NAMED_LITERAL_STRING(xlinkNS,"http://www.w3.org/1999/xlink");
+          element->GetAttributeNS(xlinkNS,NS_LITERAL_STRING("type"),xlinkType);
+          if (xlinkType.EqualsWithConversion("simple")) {
+            element->GetAttributeNS(xlinkNS,NS_LITERAL_STRING("href"),anchorText);
+            if (!anchorText.IsEmpty()) {
+              // Resolve the full URI using baseURI property
 
+              nsAutoString base;
+              nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(aNode,&rv));
+              NS_ENSURE_SUCCESS(rv, rv);
+              node->GetBaseURI(base);
+
+              nsCOMPtr<nsIIOService>
+                ios(do_GetService("@mozilla.org/network/io-service;1", &rv));
+              NS_ENSURE_SUCCESS(rv, rv);
+
+              nsCOMPtr<nsIURI> baseURI;
+              rv = ios->NewURI(NS_ConvertUCS2toUTF8(base).get(),nsnull,getter_AddRefs(baseURI));
+              NS_ENSURE_SUCCESS(rv, rv);
+      
+              nsXPIDLCString spec;
+              rv = baseURI->Resolve(NS_ConvertUCS2toUTF8(anchorText).get(),getter_Copies(spec));
+              NS_ENSURE_SUCCESS(rv, rv);
+
+              anchorText.AssignWithConversion(spec.get());
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (anchor || area || link || xlinkType.EqualsWithConversion("simple")) {
     // get the clipboard helper
     nsCOMPtr<nsIClipboardHelper>
       clipboard(do_GetService("@mozilla.org/widget/clipboardhelper;1", &rv));
     NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(clipboard, NS_ERROR_FAILURE);
 
     // copy the href onto the clipboard
     return clipboard->CopyString(anchorText);
