@@ -52,9 +52,12 @@ static int msg_unquote_phrase_or_addr(const char *line, char **lineout);
 static char *msg_extract_Header_address_mailboxes(const char *line);
 static char *msg_extract_Header_address_names(const char *line);
 static char *msg_extract_Header_address_name(const char *line);
+#if 0
 static char *msg_format_Header_addresses(const char *addrs, int count,
                                          PRBool wrap_lines_p);
+#endif
 static char *msg_reformat_Header_addresses(const char *line);
+
 static char *msg_remove_duplicate_addresses(const char *addrs, const char *other_addrs,
                                             PRBool removeAliasesToMe);
 static char *msg_make_full_address(const char* name, const char* addr);

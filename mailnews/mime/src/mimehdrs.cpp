@@ -2178,6 +2178,7 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   char *from = 0, *name = 0, *id = 0;
   char *converted = 0;
   PRInt32 converted_length = 0;
+  char  *tString=nsnull;
 
   PR_ASSERT(hdrs);
   if (!hdrs) return -1;
@@ -2208,7 +2209,6 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 	}
   PR_FREEIF(from);
 
-  char  *tString;
   if (id)
     tString = MimeGetStringByID(MIME_MSG_X_USER_WROTE);
   else

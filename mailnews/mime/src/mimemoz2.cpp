@@ -97,7 +97,7 @@ char  *retName;
 static char *
 mime_reformat_date(const char *date, void *stream_closure)
 {
-  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
+  /*  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure; */
   return PL_strdup(date);
 }
 
@@ -149,7 +149,7 @@ mime_convert_charset (const char *input_line, PRInt32 input_length,
                       char **output_ret, PRInt32 *output_size_ret,
                       void *stream_closure)
 {
-  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
+  /*  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure; */
 
   // Now do conversion to UTF-8 for output
   char  *convertedString = NULL;
@@ -177,7 +177,7 @@ mime_convert_rfc1522 (const char *input_line, PRInt32 input_length,
                       char **output_ret, PRInt32 *output_size_ret,
                       void *stream_closure)
 {
-  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
+  /*  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure; */
   char *converted;
   char *line;
   char charset[128];
@@ -245,11 +245,13 @@ mime_output_fn(char *buf, PRInt32 size, void *stream_closure)
   return written;
 }
 
+#if 0
 static int
 compose_only_output_fn(char *buf, PRInt32 size, void *stream_closure)
 {
     return 0;
 }
+#endif
 
 static int
 mime_set_html_state_fn (void *stream_closure,
@@ -259,7 +261,7 @@ mime_set_html_state_fn (void *stream_closure,
 {
   int status = 0;
 
-  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure;
+  /*  struct mime_stream_data *msd = (struct mime_stream_data *) stream_closure; */
   
   if (start_p) 
   {
@@ -419,6 +421,7 @@ mime_display_stream_abort (nsMIMESession *stream, int status)
   }
 }
 
+#if 0
 static int
 mime_insert_html_put_block(nsMIMESession *stream, const char* str, PRInt32 length)
 {
@@ -476,7 +479,7 @@ mime_insert_html_abort(nsMIMESession *stream, int status)
 {	
   mime_insert_html_complete(stream);
 }
-
+#endif
 
 static int
 mime_insert_html_convert_charset (const char *input_line, PRInt32 input_length,
@@ -1035,7 +1038,7 @@ GetPrefServiceManager(MimeDisplayOptions *opt)
 void
 mime_bridge_destroy_stream(void *newStream)
 {
-  mime_stream_data  *msd = (mime_stream_data *)((nsMIMESession *)newStream)->data_object;
+  /*  mime_stream_data  *msd = (mime_stream_data *)((nsMIMESession *)newStream)->data_object; */
   nsMIMESession     *stream = (nsMIMESession *)newStream;
   if (!stream)
     return;

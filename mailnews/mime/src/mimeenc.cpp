@@ -866,7 +866,6 @@ mime_encode_qp_buffer (MimeEncoderData *data, const char *buffer, PRInt32 size)
   const unsigned char *end = in + size;
   char out_buffer[80];
   char *out = out_buffer;
-  PRUint32 i = 0, n = 0;
   PRBool white = PR_FALSE;
   PRBool mb_p = PR_FALSE;
 

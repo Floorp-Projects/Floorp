@@ -608,7 +608,7 @@ MimeMultipartSigned_emit_child (MimeObject *obj)
 		  obj->options->generate_post_header_html_fn &&
 		  !obj->options->state->post_header_html_run_p)
 		{
-		  MimeHeaders *outer_headers;
+		  MimeHeaders *outer_headers=nsnull;
 		  MimeObject *p;
 		  for (p = obj; p->parent; p = p->parent)
 			outer_headers = p->headers;

@@ -586,7 +586,7 @@ MimeMultipart_parse_eof (MimeObject *obj, PRBool abort_p)
 static int
 MimeMultipart_debug_print (MimeObject *obj, PRFileDesc *stream, PRInt32 depth)
 {
-  MimeMultipart *mult = (MimeMultipart *) obj;
+  /*  MimeMultipart *mult = (MimeMultipart *) obj; */
   MimeContainer *cont = (MimeContainer *) obj;
   char *addr = mime_part_address(obj);
   int i;
