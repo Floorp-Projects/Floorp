@@ -1656,7 +1656,7 @@ INSTALL_RDF ?= $(srcdir)/install.rdf
 libs realchrome::
 	@if test -f $(INSTALL_RDF); then					\
 		echo "Packaging $(XPI_PKGNAME).xpi..."; 			\
-		$(INSTALL) $(IFLAGS1) $(INSTALL_RDF) $(FINAL_TARGET); 		\
+		$(INSTALL) $(IFLAGS1) $(XPI_INSTALL_EXTRAS) $(INSTALL_RDF) $(FINAL_TARGET);	\
 		cd $(FINAL_TARGET);						\
 		$(ZIP) -qr ../$(XPI_PKGNAME).xpi *;				\
 	else									\
