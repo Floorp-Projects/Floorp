@@ -68,6 +68,9 @@ nsWidget::nsWidget() : nsBaseWidget()
   mGC = 0;
   mParentWidget = nsnull;
   mName = "unnamed";
+  mScrollX = 0;
+  mScrollY = 0;
+  mIsShown = PR_FALSE;
 }
 
 nsWidget::~nsWidget()
@@ -182,8 +185,13 @@ NS_IMETHODIMP nsWidget::Move(PRUint32 aX, PRUint32 aY)
 #ifdef XLIB_WIDGET_NOISY
   printf("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY);
 #endif
-
-  XMoveWindow(mDisplay, mBaseWindow, aX, aY);
+  mBounds.x = aX;
+  mBounds.y = aY;
+  if (mParentWidget) {
+    ((nsWidget*)mParentWidget)->WidgetMove(this);
+  } else {
+    XMoveWindow(mDisplay, mBaseWindow, aX, aY);
+  }
   return NS_OK;
 }
 
@@ -212,10 +220,13 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aWidth,
 #ifdef XLIB_WIDGET_NOISY
   printf("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight);
 #endif
-
   mBounds.width = aWidth;
   mBounds.height = aHeight;
-  XResizeWindow(mDisplay, mBaseWindow, aWidth, aHeight);
+  if (mParentWidget) {
+    ((nsWidget *)mParentWidget)->WidgetResize(this);
+  } else {
+    XResizeWindow(mDisplay, mBaseWindow, aWidth, aHeight);
+  }
   return NS_OK;
 }
 
@@ -261,9 +272,15 @@ NS_IMETHODIMP nsWidget::Resize(PRUint32 aX,
   printf("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight);
   printf("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY);
 #endif
+  mBounds.x = aX;
+  mBounds.y = aY;
   mBounds.width = aWidth;
   mBounds.height = aHeight;
-  XMoveResizeWindow(mDisplay, mBaseWindow, aX, aY, aWidth, aHeight);
+  if (mParentWidget) {
+    ((nsWidget *)mParentWidget)->WidgetMoveResize(this);
+  } else {
+    XMoveResizeWindow(mDisplay, mBaseWindow, aX, aY, aWidth, aHeight);
+  }
   return NS_OK;
 }
 
@@ -388,6 +405,7 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
   if (mBaseWindow) {
     XMapWindow(mDisplay, mBaseWindow);
   }
+  mIsShown = PR_TRUE;
   return NS_OK;
 }
 
@@ -693,4 +711,28 @@ PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
 void nsWidget::CreateGC(void)
 {
   mGC = XCreateGC(mDisplay, mBaseWindow, 0, NULL);
+}
+
+void nsWidget::WidgetPut(nsWidget *aWidget)
+{
+  
+}
+
+void nsWidget::WidgetMove(nsWidget *aWidget)
+{
+  XMoveWindow(aWidget->mDisplay, aWidget->mBaseWindow,
+              aWidget->mBounds.x, aWidget->mBounds.y);
+}
+
+void nsWidget::WidgetResize(nsWidget *aWidget)
+{
+  XResizeWindow(aWidget->mDisplay, aWidget->mBaseWindow,
+                aWidget->mBounds.width, aWidget->mBounds.height);
+}
+
+void nsWidget::WidgetMoveResize(nsWidget *aWidget)
+{
+  XMoveResizeWindow(aWidget->mDisplay, aWidget->mBaseWindow,
+                    aWidget->mBounds.x, aWidget->mBounds.y,
+                    aWidget->mBounds.width, aWidget->mBounds.height);
 }
