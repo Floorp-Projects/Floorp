@@ -357,9 +357,11 @@ function LoadPreviewImage()
   gDialog.PreviewImage = document.createElementNS("http://www.w3.org/1999/xhtml", "html:img");
   if (gDialog.PreviewImage)
   {
-    gDialog.ImageHolder.appendChild(gDialog.PreviewImage);
+    // set the src before appending to the document -- see bug 198435 for why
+    // this is needed.
     gDialog.PreviewImage.addEventListener("load", PreviewImageLoaded, true);
     gDialog.PreviewImage.src = imageSrc;
+    gDialog.ImageHolder.appendChild(gDialog.PreviewImage);
   }
 }
 
