@@ -152,7 +152,7 @@ public:
                          nsString& aAlt, nsString& aAlignment);
   NS_IMETHOD InsertList(const nsString& aListType);
 
-  // This should replace InsertLink and InsertImage once it is working
+  NS_IMETHOD GetParentLinkElement(nsIDOMNode *aNode, nsIDOMElement** aReturn);
   NS_IMETHOD GetSelectedElement(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn);
   NS_IMETHOD InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection);
