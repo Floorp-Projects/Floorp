@@ -502,6 +502,8 @@ nsHTMLBodyElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
   nsGenericHTMLElement::WalkContentStyleRules(aRuleWalker);
 
   if (!mContentStyleRule && IsInDoc()) {
+    // XXXbz should this use GetOwnerDoc() or GetCurrentDoc()?
+    // sXBL/XBL2 issue!
     mContentStyleRule = new BodyRule(this,
                                      GetOwnerDoc()->GetAttributeStyleSheet());
     NS_IF_ADDREF(mContentStyleRule);

@@ -837,6 +837,9 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
 
   // Hold strong ref in case removing the binding tries to close the
   // window or something.
+  // XXXbz should that be ownerdoc?  Wouldn't we need a ref to the
+  // currentdoc too?  What's the one that should be passed to
+  // ChangeDocument?
   nsCOMPtr<nsIDocument> doc = aContent->GetOwnerDoc();
   NS_ASSERTION(doc, "No owner document?");
   
@@ -849,6 +852,7 @@ nsBindingManager::RemoveLayeredBinding(nsIContent* aContent, nsIURI* aURL)
   // ...and recreate it's frames. We need to do this since the frames may have
   // been removed and style may have changed due to the removal of the
   // anonymous children.
+  // XXXbz this should be using the current doc (if any), not the owner doc.
   nsIPresShell *presShell = doc->GetShellAt(0);
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 

@@ -169,7 +169,7 @@ nsXMLStylesheetPI::GetStyleSheetURL(PRBool* aIsInline,
 
   nsIURI *baseURL;
   nsCAutoString charset;
-  nsIDocument *document = GetCurrentDoc();
+  nsIDocument *document = GetOwnerDoc();
   if (document) {
     baseURL = document->GetBaseURI();
     charset = document->GetDocumentCharacterSet();

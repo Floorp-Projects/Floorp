@@ -894,8 +894,13 @@ nsHTMLInputElement::GetRadioGroupContainer()
   nsIRadioGroupContainer* retval = nsnull;
   if (mForm) {
     CallQueryInterface(mForm, &retval);
-  } else if (IsInDoc() && GetParent()) {
-    CallQueryInterface(GetOwnerDoc(), &retval);
+  } else if (GetParent()) {
+    // XXXbz the GetParent() check is needed because we sometimes have a doc
+    // when we're not really in one, I think...  Need BindToTree!
+    nsIDocument* currentDoc = GetCurrentDoc();
+    if (currentDoc) {
+      CallQueryInterface(currentDoc, &retval);
+    }
   }
   return retval;
 }
@@ -997,10 +1002,12 @@ nsHTMLInputElement::SetCheckedInternal(PRBool aChecked, PRBool aNotify)
 
   // Notify the document that the CSS :checked pseudoclass for this element
   // has changed state.
-  if (IsInDoc() && aNotify) {
-    nsIDocument* document = GetOwnerDoc();
-    mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, aNotify);
-    document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
+  if (aNotify) {
+    nsIDocument* document = GetCurrentDoc();
+    if (document) {
+      mozAutoDocUpdate(document, UPDATE_CONTENT_STATE, aNotify);
+      document->ContentStatesChanged(this, nsnull, NS_EVENT_STATE_CHECKED);
+    }
   }
 
   return NS_OK;
@@ -1041,8 +1048,9 @@ nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
   if (!aPresContext)
     return;
 
-  // We can't be focus'd if we don't have a document
-  if (!IsInDoc())
+  // We can't be focus'd if we aren't in a document
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc)
     return;
 
   // first see if we are disabled or not. If disabled then do nothing.
@@ -1056,7 +1064,7 @@ nsHTMLInputElement::SetFocus(nsPresContext* aPresContext)
   // window to the front.  We update the focus controller, but do
   // nothing else.
   nsCOMPtr<nsPIDOMWindow> win =
-    do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
+    do_QueryInterface(doc->GetScriptGlobalObject());
   nsIFocusController *focusController = win->GetRootFocusController();
   PRBool isActive = PR_FALSE;
   focusController->GetActive(&isActive);
@@ -1084,7 +1092,9 @@ NS_IMETHODIMP
 nsHTMLInputElement::Select()
 {
   nsresult rv = NS_OK;
-  if (!IsInDoc())
+
+  nsIDocument* doc = GetCurrentDoc();
+  if (!doc)
     return NS_OK;
 
   // first see if we are disabled or not. If disabled then do nothing.
@@ -1104,7 +1114,7 @@ nsHTMLInputElement::Select()
     // window to the front.  We update the focus controller, but do
     // nothing else.
     nsCOMPtr<nsPIDOMWindow> win =
-      do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
+      do_QueryInterface(doc->GetScriptGlobalObject());
     nsIFocusController *focusController = win->GetRootFocusController();
     PRBool isActive = PR_FALSE;
     focusController->GetActive(&isActive);
@@ -1186,17 +1196,19 @@ nsHTMLInputElement::Click()
 
   // see what type of input we are.  Only click button, checkbox, radio,
   // reset, submit, & image
-  if (IsInDoc() &&
-      (mType == NS_FORM_INPUT_BUTTON   ||
-       mType == NS_FORM_INPUT_CHECKBOX ||
-       mType == NS_FORM_INPUT_RADIO    ||
-       mType == NS_FORM_INPUT_RESET    ||
-       mType == NS_FORM_INPUT_SUBMIT   ||
-       mType == NS_FORM_INPUT_IMAGE)) {
+  if (mType == NS_FORM_INPUT_BUTTON   ||
+      mType == NS_FORM_INPUT_CHECKBOX ||
+      mType == NS_FORM_INPUT_RADIO    ||
+      mType == NS_FORM_INPUT_RESET    ||
+      mType == NS_FORM_INPUT_SUBMIT   ||
+      mType == NS_FORM_INPUT_IMAGE) {
 
     // Strong in case the event kills it
-    nsCOMPtr<nsIDocument> doc = GetOwnerDoc();
-
+    nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
+    if (!doc) {
+      return rv;
+    }
+    
     nsIPresShell *shell = doc->GetShellAt(0);
 
     if (shell) {

@@ -1860,10 +1860,10 @@ nsHTMLSelectElement::GetBoxObject(nsIBoxObject** aResult)
 {
   *aResult = nsnull;
 
-  if (!IsInDoc())
+  nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(GetCurrentDoc());
+  if (!nsDoc) {
     return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMNSDocument> nsDoc = do_QueryInterface(GetOwnerDoc());
+  }
 
   return nsDoc->GetBoxObjectFor(NS_STATIC_CAST(nsIDOMElement*, this), aResult);
 }
@@ -2030,7 +2030,7 @@ nsHTMLSelectElement::GetHasOptGroups(PRBool* aHasGroups)
 void
 nsHTMLSelectElement::DispatchDOMEvent(const nsAString& aName)
 {
-  nsCOMPtr<nsIDOMDocumentEvent> domDoc = do_QueryInterface(GetCurrentDoc());
+  nsCOMPtr<nsIDOMDocumentEvent> domDoc = do_QueryInterface(GetOwnerDoc());
   if (domDoc) {
     nsCOMPtr<nsIDOMEvent> selectEvent;
     domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(selectEvent));

@@ -180,6 +180,7 @@ public:
 
   nsIDocument *GetOwnerDoc() const
   {
+    // XXXbz sXBL/XBL2 issue!
     if (mDocument) {
       return mDocument;
     }

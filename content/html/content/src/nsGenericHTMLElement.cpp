@@ -539,11 +539,12 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 void
 nsGenericHTMLElement::RecreateFrames()
 {
-  if (!IsInDoc()) {
+  nsIDocument* document = GetCurrentDoc();
+  
+  if (!document) {
     return;
   }
 
-  nsIDocument *document = GetOwnerDoc();
   PRInt32 numShells = document->GetNumberOfShells();
   for (PRInt32 i = 0; i < numShells; ++i) {
     nsIPresShell *shell = document->GetShellAt(i);
@@ -1422,12 +1423,13 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
         {
           // don't make the link grab the focus if there is no link handler
           nsILinkHandler *handler = aPresContext->GetLinkHandler();
-          if (handler && IsInDoc()) {
+          nsIDocument *document = GetCurrentDoc();
+          if (handler && document) {
             // If the window is not active, do not allow the focus to bring the
             // window to the front.  We update the focus controller, but do
             // nothing else.
             nsCOMPtr<nsPIDOMWindow> win =
-              do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
+              do_QueryInterface(document->GetScriptGlobalObject());
             nsIFocusController *focusController =
               win->GetRootFocusController();
             PRBool isActive = PR_FALSE;
@@ -1560,7 +1562,7 @@ nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI)
     // Get absolute URI.
     nsresult rv = nsContentUtils::NewURIWithDocumentCharset(aURI,
                                                             relURISpec,
-                                                            GetCurrentDoc(),
+                                                            GetOwnerDoc(),
                                                             baseURI);
     if (NS_FAILED(rv)) {
       *aURI = nsnull;
@@ -2031,10 +2033,10 @@ nsGenericHTMLElement::GetBaseTarget(nsAString& aBaseTarget) const
     return;
   }
 
-  if (IsInDoc()) {
-    GetOwnerDoc()->GetBaseTarget(aBaseTarget);
-  }
-  else {
+  nsIDocument* ownerDoc = GetOwnerDoc();
+  if (ownerDoc) {
+    ownerDoc->GetBaseTarget(aBaseTarget);
+  } else {
     aBaseTarget.Truncate();
   }
 }
@@ -2484,7 +2486,7 @@ PRBool
 nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
                                             nsAttrValue& aResult) const
 {
-  if (InNavQuirksMode(GetCurrentDoc())) {
+  if (InNavQuirksMode(GetOwnerDoc())) {
     return aResult.ParseEnumValue(aString, kCompatTableHAlignTable);
   }
   return aResult.ParseEnumValue(aString, kTableHAlignTable);
@@ -2494,7 +2496,7 @@ PRBool
 nsGenericHTMLElement::TableHAlignValueToString(const nsHTMLValue& aValue,
                                                nsAString& aResult) const
 {
-  if (InNavQuirksMode(GetCurrentDoc())) {
+  if (InNavQuirksMode(GetOwnerDoc())) {
     return aValue.EnumValueToString(kCompatTableHAlignTable, aResult);
   }
   return aValue.EnumValueToString(kTableHAlignTable, aResult);
@@ -2533,7 +2535,7 @@ PRBool
 nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
                                                 nsAttrValue& aResult) const
 {
-  if (InNavQuirksMode(GetCurrentDoc())) {
+  if (InNavQuirksMode(GetOwnerDoc())) {
     return aResult.ParseEnumValue(aString, kCompatTableCellHAlignTable);
   }
   return aResult.ParseEnumValue(aString, kTableCellHAlignTable);
@@ -2543,7 +2545,7 @@ PRBool
 nsGenericHTMLElement::TableCellHAlignValueToString(const nsHTMLValue& aValue,
                                                    nsAString& aResult) const
 {
-  if (InNavQuirksMode(GetCurrentDoc())) {
+  if (InNavQuirksMode(GetOwnerDoc())) {
     return aValue.EnumValueToString(kCompatTableCellHAlignTable, aResult);
   }
   return aValue.EnumValueToString(kTableCellHAlignTable, aResult);
@@ -3291,8 +3293,11 @@ nsGenericHTMLFrameElement::IsFocusable(PRInt32 *aTabIndex)
 
   // If there is no subdocument, docshell or content viewer, it's not tabbable
   PRBool isFocusable = PR_FALSE;
-  if (IsInDoc()) {
-    nsIDocument *subDoc = GetOwnerDoc()->GetSubDocumentFor(this);
+  nsIDocument *doc = GetCurrentDoc();
+  if (doc) {
+    // XXXbz should this use GetOwnerDoc() for GetSubDocumentFor?
+    // sXBL/XBL2 issue!
+    nsIDocument *subDoc = doc->GetSubDocumentFor(this);
     if (subDoc) {
       nsCOMPtr<nsISupports> container = subDoc->GetContainer();
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));

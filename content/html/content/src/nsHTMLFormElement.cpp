@@ -769,8 +769,9 @@ nsHTMLFormElement::DoSubmitOrReset(nsPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(aPresContext);
 
   // Make sure the presentation is up-to-date
-  if (IsInDoc()) {
-    GetOwnerDoc()->FlushPendingNotifications(Flush_ContentAndNotify);
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
+    doc->FlushPendingNotifications(Flush_ContentAndNotify);
   }
 
   // JBK Don't get form frames anymore - bug 34297
@@ -830,6 +831,8 @@ nsHTMLFormElement::DoSubmit(nsPresContext* aPresContext, nsEvent* aEvent)
   //
   BuildSubmission(aPresContext, submission, aEvent); 
 
+  // XXXbz if the script global is that for an sXBL/XBL2 doc, it won't
+  // be a window...
   nsCOMPtr<nsPIDOMWindow> window =
     do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
 
@@ -1000,6 +1003,9 @@ nsHTMLFormElement::NotifySubmitObservers(nsIURI* aActionURL,
     nsCOMPtr<nsISupports> inst;
     *aCancelSubmit = PR_FALSE;
 
+    // XXXbz what do the submit observers actually want?  The window
+    // of the document this is shown in?  Or something else?
+    // sXBL/XBL2 issue
     nsCOMPtr<nsIDOMWindowInternal> window =
       do_QueryInterface(GetOwnerDoc()->GetScriptGlobalObject());
 

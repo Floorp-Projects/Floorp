@@ -259,11 +259,11 @@ nsHTMLImageElement::GetXY()
 {
   nsPoint point(0, 0);
 
-  if (!IsInDoc()) {
+  nsIDocument *document = GetCurrentDoc();
+
+  if (!document) {
     return point;
   }
-
-  nsIDocument *document = GetOwnerDoc();
 
   // Get Presentation shell 0
   nsIPresShell *presShell = document->GetShellAt(0);
@@ -327,11 +327,12 @@ nsHTMLImageElement::GetWidthHeight()
 {
   nsSize size(0,0);
 
-  if (IsInDoc()) {
+  nsIDocument* doc = GetCurrentDoc();
+  if (doc) {
     // Flush all pending notifications so that our frames are up to date.
     // If we're not in a document, we don't have a frame anyway, so we
     // don't care.
-    GetOwnerDoc()->FlushPendingNotifications(Flush_Layout);
+    doc->FlushPendingNotifications(Flush_Layout);
   }
 
   nsIImageFrame* imageFrame;
@@ -537,6 +538,9 @@ nsHTMLImageElement::IsFocusable(PRInt32 *aTabIndex)
   if (IsInDoc()) {
     nsAutoString usemap;
     GetUseMap(usemap);
+    // XXXbz which document should this be using?  sXBL/XBL2 issue!  I
+    // think that GetOwnerDoc() is right, since we don't want to
+    // assume stuff about the document we're bound to.
     nsCOMPtr<nsIDOMHTMLMapElement> imageMap =
       nsImageMapUtils::FindImageMap(GetOwnerDoc(), usemap);
     if (imageMap) {

@@ -229,8 +229,9 @@ nsSVGScriptElement::ScriptAvailable(nsresult aResult,
 {
   if (!aIsInline && NS_FAILED(aResult)) {
     nsCOMPtr<nsPresContext> presContext;
-    if (IsInDoc()) {
-      nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      nsIPresShell *presShell = doc->GetShellAt(0);
       if (presShell)
         presContext = presShell->GetPresContext();
     }
@@ -269,8 +270,9 @@ nsSVGScriptElement::ScriptEvaluated(nsresult aResult,
   nsresult rv = NS_OK;
   if (!aIsInline) {
     nsCOMPtr<nsPresContext> presContext;
-    if (IsInDoc()) {
-      nsIPresShell *presShell = GetOwnerDoc()->GetShellAt(0);
+    nsIDocument* doc = GetCurrentDoc();
+    if (doc) {
+      nsIPresShell *presShell = doc->GetShellAt(0);
       if (presShell)
         presContext = presShell->GetPresContext();
     }

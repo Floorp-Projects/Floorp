@@ -275,11 +275,12 @@ public:
    */
   nsIFormControlFrame* GetFormControlFrame(PRBool aFlushContent)
   {
-    if (!IsInDoc()) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (!doc) {
       return nsnull;
     }
 
-    return GetFormControlFrameFor(this, GetOwnerDoc(), aFlushContent);
+    return GetFormControlFrameFor(this, doc, aFlushContent);
   }
 
   /**
@@ -290,11 +291,12 @@ public:
    */
   nsIFrame* GetPrimaryFrame(PRBool aFlushContent)
   {
-    if (!IsInDoc()) {
+    nsIDocument* doc = GetCurrentDoc();
+    if (!doc) {
       return nsnull;
     }
 
-    return GetPrimaryFrameFor(this, GetOwnerDoc(), aFlushContent);
+    return GetPrimaryFrameFor(this, doc, aFlushContent);
   }
 
   //----------------------------------------
