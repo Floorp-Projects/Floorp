@@ -39,6 +39,13 @@
 #include "world.h"
 #include <vector>
 
+/* forward declare classes from JavaScript::ICG */
+namespace JavaScript {
+namespace ICG {
+    class ICodeModule;
+} /* namespace ICG */
+} /* namespace JavaScript */
+
 namespace JavaScript {
 namespace VM {
 
@@ -63,6 +70,7 @@ namespace VM {
         COMPARE_NE, /* dest, source1, source2 */
         DIVIDE, /* dest, source1, source2 */
         ELEM_XCR, /* dest, base, index, value */
+        FUNCTION, /* Defines a function */
         GET_ELEMENT, /* dest, base, index */
         GET_PROP, /* dest, object, prop name */
         INSTANCEOF, /* dest, source1, source2 */
@@ -126,6 +134,7 @@ namespace VM {
         "COMPARE_NE    ",
         "DIVIDE        ",
         "ELEM_XCR      ",
+        "FUNCTION      ",
         "GET_ELEMENT   ",
         "GET_PROP      ",
         "INSTANCEOF    ",
@@ -195,6 +204,23 @@ namespace VM {
     protected:
         ICodeOp mOpcode;
         
+    };
+
+
+    class FunctionDef : public Instruction
+    {
+    public:
+        const StringAtom &name;
+        ICG::ICodeModule *code;
+
+        virtual Formatter& print(Formatter& f)
+        {
+            f << opcodeNames[mOpcode] << "\t" << name;
+            return f;
+        }
+
+        FunctionDef(const StringAtom& name, ICG::ICodeModule *code) 
+            : Instruction(FUNCTION), name(name), code(code) { }
     };
 
     /********************************************************************/

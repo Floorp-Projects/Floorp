@@ -189,7 +189,7 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
         printFormat(f, "Function @ 0x%08X", value.object);
         break;
     case JSValue::string_tag:
-        f << *value.string;
+        f << "\"" << *value.string << "\"";
         break;
     case JSValue::boolean_tag:
         f << ((value.boolean) ? "true" : "false");

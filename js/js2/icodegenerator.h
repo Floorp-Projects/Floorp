@@ -153,6 +153,8 @@ namespace ICG {
         void endWith()
             { iCode->push_back(new Without()); }
         
+        void defFunction(const StringAtom& name, ICodeModule *code)
+            { iCode->push_back(new FunctionDef(name, code)); }
 
         void resetStatement() { resetTopRegister(); }
 
@@ -189,8 +191,10 @@ namespace ICG {
                     bool needBoolValueInBranch = false, 
                     Label *trueBranch = NULL, 
                     Label *falseBranch = NULL);
+        void preprocess(StmtNode *p);
         Register genStmt(StmtNode *p, LabelSet *currentLabelSet = NULL);
 
+        void isScript() { mWithinWith = true; }
 
         void returnStmt(Register r);
         void throwStmt(Register r)
@@ -226,7 +230,7 @@ namespace ICG {
         void saveName(const StringAtom &name, Register value);
         Register nameInc(const StringAtom &name);
         Register nameDec(const StringAtom &name);
-        
+       
         Register getProperty(Register base, const StringAtom &name);
         void setProperty(Register base, const StringAtom &name, Register value);
         Register propertyInc(Register base, const StringAtom &name);
@@ -236,7 +240,10 @@ namespace ICG {
         void setElement(Register base, Register index, Register value);
         Register elementInc(Register base, Register index);
         Register elementDec(Register base, Register index);
-       
+
+        Register varInc(Register var);
+        Register varDec(Register var);
+        
         Register getRegisterBase()                  { return topRegister; }
         InstructionStream *get_iCode()              { return iCode; }
         

@@ -458,6 +458,13 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
 
             Instruction* instruction = *mPC;
             switch (instruction->op()) {
+            case FUNCTION:
+                {
+                    FunctionDef* fnDef = static_cast<FunctionDef*>(instruction);
+                    mGlobal->defineFunction(fnDef->name, fnDef->code);
+                }
+                break;
+
             case CALL:
                 {
                     Call* call = static_cast<Call*>(instruction);
@@ -694,6 +701,17 @@ using JSString throughout.
                         mPC = mActivation->mICode->its_iCode->begin();
                         continue;
                     }
+                }
+                break;
+
+            case VAR_XCR:
+                {
+                    VarXcr *vx = static_cast<VarXcr*>(instruction);
+                    JSValue& dest = (*registers)[dst(vx)];
+                    JSValue r = (*registers)[src1(vx)].toNumber();
+                    dest = r;
+                    r.f64 += val3(vx);
+                    (*registers)[src1(vx)] = r;
                 }
                 break;
 
