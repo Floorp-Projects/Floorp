@@ -74,15 +74,17 @@ class Leak {
 	String mAddress;
 	Type mType;
 	Object[] mReferences;
-	Object[] mCrawl;
+	long mCrawlOffset;
+	int mCrawlCount;
 	int mRefCount;
 	Leak[] mParents;
 	int mTotalSize;
 
-	Leak(String addr, Type type, Object[] refs, Object[] crawl) {
+	Leak(String addr, Type type, Object[] refs, long crawlOffset, int crawlCount) {
 		mAddress = addr;
 		mReferences = refs;
-		mCrawl = crawl;
+		mCrawlOffset = crawlOffset;
+		mCrawlCount = crawlCount;
 		mRefCount = 0;
 		mType = type;
 		mTotalSize = 0;
@@ -153,17 +155,38 @@ class Leak {
 	}
 }
 
+final class LineReader {
+    BufferedReader reader;
+    long offset;
+    
+    LineReader(BufferedReader reader) {
+        this.reader = reader;
+        this.offset = 0;
+    }
+    
+    String readLine() throws IOException {
+        String line = reader.readLine();
+        if (line != null)
+            offset += 1 + line.length();
+        return line;
+    }
+    
+    void close() throws IOException {
+        reader.close();
+    }
+}
+
 public class leaksoup {
 	private static boolean ROOTS_ONLY = false;
 
 	public static void main(String[] args) {
 		if (args.length == 0) {
-			System.out.println("usage:  leaksoup [-blame] [-assign] [-roots] leaks");
+			System.out.println("usage:  leaksoup [-blame] [-lxr] [-assign] [-roots] leaks");
 			System.exit(1);
 		}
 		
-		// assume user want's lxr URLs. (why?)
-		FileLocator.USE_BLAME = false;
+		// assume user want's blame URLs.
+		FileLocator.USE_BLAME = true;
 		FileLocator.ASSIGN_BLAME = false;
 		ROOTS_ONLY = false;
 		
@@ -172,6 +195,8 @@ public class leaksoup {
 			if (arg.charAt(0) == '-') {
 				if (arg.equals("-blame"))
 					FileLocator.USE_BLAME = true;
+				else if (arg.equals("-lxr"))
+					FileLocator.USE_BLAME = false;
 				else if (arg.equals("-assign"))
 					FileLocator.ASSIGN_BLAME = true;
 				else if (arg.equals("-roots"))
@@ -193,12 +218,12 @@ public class leaksoup {
 			Hashtable leakTable = new Hashtable();
 			Hashtable types = new Hashtable();
 			Histogram hist = new Histogram();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputName)));
+			LineReader reader = new LineReader(new BufferedReader(new InputStreamReader(new FileInputStream(inputName))));
 			String line = reader.readLine();
 			while (line != null) {
 				if (line.startsWith("0x")) {
-					String addr = line.substring(0, 10);
-					String name = line.substring(line.indexOf('<') + 1, line.indexOf('>'));
+					String addr = line.substring(0, 10).intern();
+					String name = line.substring(line.indexOf('<') + 1, line.indexOf('>')).intern();
 					int size;
 					try {
 						String str = line.substring(line.indexOf('(') + 1, line.indexOf(')')).trim();
@@ -208,29 +233,29 @@ public class leaksoup {
 					}
 
 					// generate a unique type for this object.
-					String key = name + "_" + size;
+					String key = (name + "_" + size).intern();
 					Type type = (Type) types.get(key);
 					if (type == null) {
 						type = new Type(name, size);
 						types.put(key, type);
 					}
 					
-					// read in fields.
+					// read in fields. could compress these by converting to Integer objects.
 					vec.setSize(0);
 					for (line = reader.readLine(); line != null && line.charAt(0) == '\t'; line = reader.readLine())
-						vec.addElement(line.substring(1, 11));
+						vec.addElement(line.substring(1, 11).intern());
 					Object[] refs = new Object[vec.size()];
 					vec.copyInto(refs);
-					
-					// read in stack crawl.
 					vec.setSize(0);
-					for (line = reader.readLine(); line != null && !line.equals("Leaked composite object at:"); line = reader.readLine())
-						vec.addElement(line.intern());
-					Object[] crawl = new Object[vec.size()];
-					vec.copyInto(crawl);
 					
+				    // record the offset of the stack crawl, which will be read in and formatted at the end, to save memory.
+					long crawlOffset = reader.offset;
+					int crawlCount = 0;
+					for (line = reader.readLine(); line != null && !line.startsWith("Leaked "); line = reader.readLine())
+						++crawlCount;
+
 					// record the leak.
-					leakTable.put(addr, new Leak(addr, type, refs, crawl));
+					leakTable.put(addr, new Leak(addr, type, refs, crawlOffset, crawlCount));
 
 					// count the leak types in a histogram.
 					hist.record(type);
@@ -313,11 +338,14 @@ public class leaksoup {
 			// print the object histogram report.
 			printHistogram(out, hist);
 			
+			// open original file again, as a RandomAccessFile, to read in stack crawl information.
+			RandomAccessFile in = new RandomAccessFile(inputName, "r");
+			
 			// print the leak report.
 			if (ROOTS_ONLY)
-				printRootLeaks(out, leaks);
+				printRootLeaks(in, out, leaks);
 			else
-				printLeaks(out, leaks);
+				printLeaks(in, out, leaks);
 			
 			out.close();
 		} catch (Exception e) {
@@ -395,7 +423,7 @@ public class leaksoup {
 		out.println("\t" + value);
 	}
 
-	static void printLeaks(PrintWriter out, Leak[] leaks) throws IOException {
+	static void printLeaks(RandomAccessFile in, PrintWriter out, Leak[] leaks) throws IOException {
 		// sort the leaks by total size.
 		QuickSort bySize = new QuickSort(new Leak.ByTotalSize());
 		bySize.sort(leaks);
@@ -435,10 +463,11 @@ public class leaksoup {
 			for (int j = 0; j < count; j++)
 				printField(out, refs[j]);
 			// print object's stack crawl:
-			Object[] crawl = leak.mCrawl;
-			count = crawl.length;
-			for (int j = 0; j < count; j++) {
-				String location = FileLocator.getFileLocation((String) crawl[j]);
+			in.seek(leak.mCrawlOffset);
+			int crawlCount = leak.mCrawlCount;
+			while (crawlCount-- > 0) {
+			    String line = in.readLine();
+				String location = FileLocator.getFileLocation(line);
 				out.println(location);
 			}
 			// print object's parents.
@@ -455,7 +484,7 @@ public class leaksoup {
 		out.println("</PRE>");
 	}
 	
-	static void printRootLeaks(PrintWriter out, Leak[] leaks) throws IOException {
+	static void printRootLeaks(RandomAccessFile in, PrintWriter out, Leak[] leaks) throws IOException {
 		// sort the leaks by total size.
 		QuickSort bySize = new QuickSort(new Leak.ByTotalSize());
 		bySize.sort(leaks);
@@ -492,10 +521,11 @@ public class leaksoup {
 			for (int j = 0; j < count; j++)
 				printField(out, refs[j]);
 			// print object's stack crawl:
-			Object[] crawl = leak.mCrawl;
-			count = crawl.length;
-			for (int j = 0; j < count; j++) {
-				String location = FileLocator.getFileLocation((String) crawl[j]);
+			in.seek(leak.mCrawlOffset);
+			int crawlCount = leak.mCrawlCount;
+			while (crawlCount-- > 0) {
+			    String line = in.readLine();
+				String location = FileLocator.getFileLocation(line);
 				out.println(location);
 			}
 		}
