@@ -828,42 +828,42 @@ titledbutton.dialog[default] {
 	max-width: 5em;
 }
 
-titledbutton[class~=popup] {
+titledbutton.popup {
 	list-style-image:url(chrome://global/skin/taskbar-popup-arrow.gif);
 }
 
 /* special class for plain titledbuttons */
 
-titledbutton[class~="plain"] {
+titledbutton.plain {
 	border: 1px solid transparent;
 	padding: 2px;
 }
 
-titledbutton[class~="plain"]:hover {
+titledbutton.plain:hover {
 	border: 1px solid transparent;
 	padding: 2px;
 	text-decoration: none;
 	color: inherit;
 }
  
-titledbutton[class~="plain"]:active {
+titledbutton.plain:active {
 	border: 1px solid transparent;
 	padding: 2px;
 	text-decoration: none;
 	color: inherit;
 }
 
-titledbutton[class~="plain"][disabled] {
+titledbutton.plain[disabled] {
 	border: 1px solid transparent;
 	padding: 2px;
 }
 
-titledbutton[class~="plain"][disabled]:hover {
+titledbutton.plain[disabled]:hover {
 	border: 1px solid transparent;
 	padding: 2px;
 }
 
-titledbutton[class~="plain"][disabled]:active {
+titledbutton.plain[disabled]:active {
 	border: 1px solid transparent;
 	padding: 2px;
 }
@@ -872,38 +872,38 @@ titledbutton[class~="plain"][disabled]:active {
 /* special class for borderless buttons */
 /* titled button on toolbars are automatically set to be borderless (see below) */
 
-titledbutton[class~="borderless"] {
+titledbutton.borderless {
   border: 1px solid transparent;
 }
  
-titledbutton[class~="borderless"]:hover {
+titledbutton.borderless:hover {
   border: 1px outset white;
   color:#333366;
   text-decoration: underline;
 }
   
-titledbutton[class~="borderless"]:hover:-moz-outline {
+titledbutton.borderless:hover:-moz-outline {
   border : 1px solid black;
 }
 
-titledbutton[class~="borderless"]:active {
+titledbutton.borderless:active {
   text-decoration:none;
   border: 1px inset;
 }
  
-titledbutton[class~="borderless"]:active:-moz-outline {
+titledbutton.borderless:active:-moz-outline {
   border : 1px solid black;
 }
  
-titledbutton[class~="borderless"][disabled] {
+titledbutton.borderless[disabled] {
   border: 1px solid transparent;
 }
 
-titledbutton[class~="borderless"][disabled]:hover {
+titledbutton.borderless[disabled]:hover {
   border: 1px solid transparent;
 }
 
-titledbutton[class~="borderless"][disabled]:active {
+titledbutton.borderless[disabled]:active {
   border: 1px solid transparent;
   padding: 2px;
 }
