@@ -63,6 +63,7 @@ nsDeckFrame::Init(nsIPresContext&  aPresContext,
               nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  mSelectedChanged = PR_TRUE;
   return rv;
 }
 
@@ -76,11 +77,52 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
   nsresult rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild,
                                               aAttribute, aHint);
 
-  // redraw if the index changed.
+
+   // if the index changed hide the old element and make the now element visible
   if (aAttribute == nsHTMLAtoms::value) {
+      if (nsnull != mSelected) {
+        nsCOMPtr<nsIContent> content;
+        mSelected->GetContent(getter_AddRefs(content));
+         content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, "visibility: hidden ! important", PR_TRUE);
+      }
+
+      nsIFrame* frame = GetSelectedFrame();
+      if (nsnull != frame)
+      {
+         mSelected = frame;
+         nsCOMPtr<nsIContent> content;
+         mSelected->GetContent(getter_AddRefs(content));
+         content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, "visibility: visible ! important", PR_TRUE);
+      }
+
 	  nsRect rect(0, 0, mRect.width, mRect.height);
     Invalidate(rect, PR_TRUE);
   }
+
+  /*
+  // if the index changed hide the old element and make the now element visible
+  if (aAttribute == nsHTMLAtoms::value) {
+      if (nsnull != mSelected) {
+        nsCOMPtr<nsIContent> content;
+        mSelected->GetContent(getter_AddRefs(content));
+        content->UnsetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, PR_TRUE);
+      }
+
+      nsIFrame* frame = GetSelectedFrame();
+      if (nsnull != frame)
+      {
+         mSelected = frame;
+         nsCOMPtr<nsIContent> content;
+         mSelected->GetContent(getter_AddRefs(content));
+         content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, "visible", PR_TRUE);
+      }
+
+	  nsRect rect(0, 0, mRect.width, mRect.height);
+    Invalidate(rect, PR_TRUE);
+  }
+  */
+  
+  
 
   if (NS_OK != rv) {
     return rv;
@@ -133,7 +175,11 @@ nsDeckFrame::Paint(nsIPresContext& aPresContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {
+
+   
+  nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
  
+  /*
   nsIFrame* selectedFrame = GetSelectedFrame();
 
   // draw nothing if the index is out of bounds
@@ -142,6 +188,7 @@ nsDeckFrame::Paint(nsIPresContext& aPresContext,
 
   // paint the child
   selectedFrame->Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+*/
 
   return NS_OK;
 }
@@ -153,6 +200,12 @@ nsDeckFrame::Reflow(nsIPresContext&   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+
+   if (mSelectedChanged)
+    {
+    
+      mSelectedChanged = PR_FALSE;
+    }
 
   nsIFrame* incrementalChild = nsnull;
   if ( aReflowState.reason == eReflowReason_Incremental ) {
@@ -379,6 +432,25 @@ NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(const nsPoint& aPoint,
   }
     
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDeckFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                              nsIAtom*        aListName,
+                                              nsIFrame*       aChildList)
+{
+  nsresult r = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+
+  nsIFrame* frame = GetSelectedFrame();
+  if (nsnull != frame)
+  {
+     mSelected = frame;
+     nsCOMPtr<nsIContent> content;
+     mSelected->GetContent(getter_AddRefs(content));
+     content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::style, "visibility: visible ! important", PR_FALSE);
+  }
+
+  return r;
 }
 
 

@@ -382,9 +382,14 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {
+ 	const nsStyleDisplay* disp = (const nsStyleDisplay*)
+	mStyleContext->GetStyleData(eStyleStruct_Display);
+	if (disp->mVisible)
+  {
+    nsRect rect(0, 0, mRect.width, mRect.height);
+    mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
+  }
 
-  nsRect rect(0, 0, mRect.width, mRect.height);
-  mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
   return NS_OK;
