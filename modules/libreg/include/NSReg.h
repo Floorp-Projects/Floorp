@@ -128,6 +128,24 @@ PR_BEGIN_EXTERN_C
  * ---------------------------------------------------------------------
  */
 
+
+/* ---------------------------------------------------------------------
+ * NR_RegSetBufferSize - Sets the file buffer size
+ *
+ * Parameters:
+ *    hReg       - handle to opened registry
+ *    bufsize    - size of the new buffer
+ *
+ * Output:
+ * ---------------------------------------------------------------------
+ *    returns the size of the buffer or -1 for err
+ */
+VR_INTERFACE(int) NR_RegSetBufferSize(
+         HREG hReg,        /* handle to opened registry */
+         int  bufsize
+       );
+
+
 /* ---------------------------------------------------------------------
  * NR_RegOpen - Open a netscape XP registry
  *
