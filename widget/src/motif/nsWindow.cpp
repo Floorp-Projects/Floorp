@@ -46,8 +46,11 @@
 
 #define DBG 0
 
-#define SET_VALUES 0
+#define SET_VALUES 1
+
+#if defined(LINUX)
 #undef SET_VALUES
+#endif
 
 Widget gFirstTopLevelWindow = 0;
 
