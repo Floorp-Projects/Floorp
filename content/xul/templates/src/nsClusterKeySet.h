@@ -37,13 +37,13 @@ public:
 
 protected:
     class Entry {
+    private:
+        // Hide so that only Create() and Destroy() can be used to
+        // allocate and deallocate from the heap
+        static void* operator new(size_t) { return 0; }
+        static void operator delete(void*, size_t) {}
+
     public:
-        static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-            return aAllocator.Alloc(aSize); }
-
-        static void operator delete(void* aPtr, size_t aSize) {
-            nsFixedSizeAllocator::Free(aPtr, aSize); }
-
         Entry() { MOZ_COUNT_CTOR(nsClusterKeySet::Entry); }
 
         Entry(const nsClusterKey& aKey) : mKey(aKey) {
@@ -51,10 +51,20 @@ protected:
 
         ~Entry() { MOZ_COUNT_DTOR(nsClusterKeySet::Entry); }
 
-        PLHashEntry mHashEntry;
-        nsClusterKey  mKey;
-        Entry*      mPrev;
-        Entry*      mNext;
+        static Entry*
+        Create(nsFixedSizeAllocator& aPool, const nsClusterKey& aKey) {
+            void* place = aPool.Alloc(sizeof(Entry));
+            return place ? ::new (place) Entry(aKey) : nsnull; }
+
+        static void
+        Destroy(nsFixedSizeAllocator& aPool, Entry* aEntry) {
+            aEntry->~Entry();
+            aPool.Free(aEntry, sizeof(*aEntry)); }
+
+        PLHashEntry  mHashEntry;
+        nsClusterKey mKey;
+        Entry*       mPrev;
+        Entry*       mNext;
     };
 
     PLHashTable* mTable;
@@ -120,12 +130,13 @@ protected:
     static PLHashEntry* PR_CALLBACK AllocEntry(void* aPool, const void* aKey) {
         nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
         const nsClusterKey* key = NS_STATIC_CAST(const nsClusterKey*, aKey);
-        Entry* entry = new (*pool) Entry(*key);
+        Entry* entry = Entry::Create(*pool, *key);
         return NS_REINTERPRET_CAST(PLHashEntry*, entry); }
 
     static void PR_CALLBACK FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag) {
+        nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
         if (aFlag == HT_FREE_ENTRY)
-            delete NS_REINTERPRET_CAST(Entry*, aEntry); }
+            Entry::Destroy(*pool, NS_REINTERPRET_CAST(Entry*, aEntry)); }
 };
 
 #endif // nsClusterKeySet_h__

@@ -98,25 +98,34 @@ public:
 
   nsIContent* mElement;
 
+  static nsXBLAttributeEntry*
+  Create(nsIAtom* aSrcAtom, nsIAtom* aDstAtom, nsIContent* aContent) {
+    void* place = nsXBLPrototypeBinding::kAttrPool.Alloc(sizeof(nsXBLAttributeEntry));
+    return place ? ::new (place) nsXBLAttributeEntry(aSrcAtom, aDstAtom, aContent) : nsnull;
+  }
+
+  static void
+  Destroy(nsXBLAttributeEntry* aSelf) {
+    aSelf->~nsXBLAttributeEntry();
+    nsXBLPrototypeBinding::kAttrPool.Free(aSelf, sizeof(*aSelf));
+  }
+
   nsCOMPtr<nsIAtom> mSrcAttribute;
   nsCOMPtr<nsIAtom> mDstAttribute;
   nsCOMPtr<nsIXBLAttributeEntry> mNext;
 
-  static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-    return aAllocator.Alloc(aSize);
-  }
+  NS_DECL_ISUPPORTS
 
-  static void operator delete(void* aPtr, size_t aSize) {
-    nsFixedSizeAllocator::Free(aPtr, aSize);
-  }
-
+protected:
   nsXBLAttributeEntry(nsIAtom* aSrcAtom, nsIAtom* aDstAtom, nsIContent* aContent) {
     NS_INIT_REFCNT(); mSrcAttribute = aSrcAtom; mDstAttribute = aDstAtom; mElement = aContent;
-  };
+  }
 
-  virtual ~nsXBLAttributeEntry() {};
-
-  NS_DECL_ISUPPORTS
+private:
+  // Hide so that only Create() and Destroy() can be used to
+  // allocate and deallocate from the heap
+  static void* operator new(size_t) { return 0; }
+  static void operator delete(void*, size_t) {}
 };
 
 NS_IMPL_ISUPPORTS1(nsXBLAttributeEntry, nsIXBLAttributeEntry)
@@ -159,27 +168,38 @@ public:
   nsCOMPtr<nsIContent> mInsertionParent;
   nsCOMPtr<nsIContent> mDefaultContent;
   PRUint32 mInsertionIndex;
+
+  static nsXBLInsertionPointEntry*
+  Create(nsIContent* aParent) {
+    void* place = nsXBLPrototypeBinding::kInsPool.Alloc(sizeof(nsXBLInsertionPointEntry));
+    return place ? ::new (place) nsXBLInsertionPointEntry(aParent) : nsnull;
+  }
+
+  static void
+  Destroy(nsXBLInsertionPointEntry* aSelf) {
+    aSelf->~nsXBLInsertionPointEntry();
+    nsXBLPrototypeBinding::kInsPool.Free(aSelf, sizeof(*aSelf));
+  }
   
-  static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-    return aAllocator.Alloc(aSize);
-  }
+  NS_DECL_ISUPPORTS
 
-  static void operator delete(void* aPtr, size_t aSize) {
-    nsFixedSizeAllocator::Free(aPtr, aSize);
-  }
-
+protected:
   nsXBLInsertionPointEntry(nsIContent* aParent) {
     NS_INIT_REFCNT();
     mInsertionIndex = 0;
     mInsertionParent = aParent;
   };
 
-  virtual ~nsXBLInsertionPointEntry() {};
-
-  NS_DECL_ISUPPORTS
+private:
+  // Hide so that only Create() and Destroy() can be used to
+  // allocate and deallocate from the heap
+  static void* operator new(size_t) { return 0; }
+  static void operator delete(void*, size_t) {}
 };
 
-NS_IMPL_ISUPPORTS1(nsXBLInsertionPointEntry, nsIXBLInsertionPointEntry)
+NS_IMPL_ADDREF(nsXBLInsertionPointEntry)
+NS_IMPL_RELEASE_WITH_DESTROY(nsXBLInsertionPointEntry, Destroy(this))
+NS_IMPL_QUERY_INTERFACE1(nsXBLInsertionPointEntry, nsIXBLInsertionPointEntry)
 
 // =============================================================================
 
@@ -1107,7 +1127,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
       }
       
       // Create an XBL attribute entry.
-      nsXBLAttributeEntry* xblAttr = new (kAttrPool) nsXBLAttributeEntry(atom, attribute, aElement);
+      nsXBLAttributeEntry* xblAttr = nsXBLAttributeEntry::Create(atom, attribute, aElement);
 
       // Now we should see if some element within our anonymous
       // content is already observing this attribute.
@@ -1173,7 +1193,7 @@ nsXBLPrototypeBinding::ConstructInsertionTable(nsIContent* aContent)
       child->GetParent(*getter_AddRefs(parent));
 
       // Create an XBL insertion point entry.
-      nsXBLInsertionPointEntry* xblIns = new (kInsPool) nsXBLInsertionPointEntry(parent);
+      nsXBLInsertionPointEntry* xblIns = nsXBLInsertionPointEntry::Create(parent);
 
       nsAutoString includes;
       child->GetAttribute(kNameSpaceID_None, kIncludesAtom, includes);

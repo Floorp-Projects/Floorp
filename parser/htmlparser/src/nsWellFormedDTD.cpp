@@ -258,7 +258,7 @@ NS_IMETHODIMP CWellFormedDTD::BuildModel(nsIParser* aParser,nsITokenizer* aToken
         if(theToken) {
           result=HandleToken(theToken,aParser);
           if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
-            IF_FREE(theToken);
+            IF_FREE(theToken, mTokenizer->GetTokenAllocator());
           }
           else {
             // if(NS_ERROR_HTMLPARSER_BLOCK!=result){
@@ -362,7 +362,7 @@ nsresult  CWellFormedDTD::Terminate(nsIParser* aParser)
           if(theType==eToken_error) {
             result=HandleToken(theToken,aParser);
           }
-          IF_FREE(theToken);
+          IF_FREE(theToken, mTokenizer->GetTokenAllocator());
         }
         else break;
       }//while
@@ -717,7 +717,7 @@ nsresult CWellFormedDTD::HandleErrorToken(CToken* aToken) {
             // Do nothing
             break;
         }
-        IF_FREE(token);
+        IF_FREE(token, mTokenizer->GetTokenAllocator());
       }
       else 
         break;

@@ -65,7 +65,7 @@ class CToken;
  *  
  *  @update  gess 3/25/98
  */
-class nsIParserNode : public nsISupports {
+class nsIParserNode { // XXX Should be nsAParserNode
             
   public:
 

@@ -114,6 +114,8 @@ protected:
  *  @update  gess 3/25/98
  */
 class CStartToken: public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
   public:
                           CStartToken(eHTMLTags aTag=eHTMLTag_unknown);
                           CStartToken(const nsAReadableString& aString);
@@ -168,6 +170,8 @@ class CStartToken: public CHTMLToken {
  *  @update  gess 3/25/98
  */
 class CEndToken: public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
   public:
                         CEndToken(eHTMLTags aTag);
                         CEndToken(const nsAReadableString& aString);
@@ -195,6 +199,8 @@ class CEndToken: public CHTMLToken {
  *  @update  gess 3/25/98
  */
 class CCommentToken: public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
   public:
                         CCommentToken();
                         CCommentToken(const nsAReadableString& aString);
@@ -217,6 +223,8 @@ class CCommentToken: public CHTMLToken {
  *  @update  gess 3/25/98
  */
 class CEntityToken : public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
   public:
                         CEntityToken();
                         CEntityToken(const nsAReadableString& aString);
@@ -244,6 +252,8 @@ class CEntityToken : public CHTMLToken {
  *  @update  gess 3/25/98
  */
 class CWhitespaceToken: public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
   public:
                         CWhitespaceToken();
                         CWhitespaceToken(const nsAReadableString& aString);
@@ -264,6 +274,8 @@ class CWhitespaceToken: public CHTMLToken {
  *  @update  gess 3/25/98
  */
 class CTextToken: public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
   public:
                         CTextToken();
                         CTextToken(const nsAReadableString& aString);
@@ -291,6 +303,8 @@ class CTextToken: public CHTMLToken {
  *  @update  vidur 11/12/98
  */
 class CCDATASectionToken : public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
 public:
                         CCDATASectionToken();
                         CCDATASectionToken(const nsAReadableString& aString);
@@ -311,6 +325,8 @@ public:
  *  
  */
 class CMarkupDeclToken : public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
 public:
                         CMarkupDeclToken();
                         CMarkupDeclToken(const nsAReadableString& aString);
@@ -333,6 +349,8 @@ protected:
  *  @update  gess 3/25/98
  */
 class CAttributeToken: public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
   public:
                           CAttributeToken();
                           CAttributeToken(const nsAReadableString& aString);
@@ -367,6 +385,8 @@ class CAttributeToken: public CHTMLToken {
  *  @update  gess 3/25/98
  */
 class CNewlineToken: public CHTMLToken { 
+  CTOKEN_IMPL_SIZEOF
+
   public:
                         CNewlineToken();
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
@@ -389,6 +409,8 @@ class CNewlineToken: public CHTMLToken {
  *  @update  gess 3/25/98
  */
 class CScriptToken: public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
   public:
                         CScriptToken();
                         CScriptToken(const nsAReadableString& aString);
@@ -410,6 +432,8 @@ class CScriptToken: public CHTMLToken {
  *  @update  gess 3/25/98
  */
 class CStyleToken: public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
   public:
                          CStyleToken();
                          CStyleToken(const nsAReadableString& aString);
@@ -430,6 +454,8 @@ class CStyleToken: public CHTMLToken {
  *  @update  gess 3/25/98
  */
 class CInstructionToken: public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
   public:
                         CInstructionToken();
                         CInstructionToken(const nsAReadableString& aString);
@@ -443,6 +469,8 @@ class CInstructionToken: public CHTMLToken {
 };
 
 class CErrorToken : public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
 public:
   CErrorToken(nsParserError* aError=0);
   ~CErrorToken();
@@ -469,6 +497,8 @@ protected:
  */
 
 class CDoctypeDeclToken: public CHTMLToken {
+  CTOKEN_IMPL_SIZEOF
+
 public:
                         CDoctypeDeclToken(eHTMLTags aTag=eHTMLTag_unknown);
                         CDoctypeDeclToken(const nsAReadableString& aString,eHTMLTags aTag=eHTMLTag_unknown);

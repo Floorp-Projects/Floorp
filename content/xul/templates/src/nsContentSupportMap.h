@@ -24,7 +24,7 @@
 #ifndef nsContentSupportMap_h__
 #define nsContentSupportMap_h__
 
-#include "plhash.h"
+#include "pldhash.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsTemplateMatch.h"
 
@@ -43,57 +43,46 @@ public:
     nsContentSupportMap() { Init(); }
     ~nsContentSupportMap() { Finish(); }
 
-    nsresult Put(nsIContent* aElement, nsTemplateMatch* aMatch);
-    PRBool Get(nsIContent* aElement, nsTemplateMatch** aMatch);
+    nsresult Put(nsIContent* aElement, nsTemplateMatch* aMatch) {
+        PLDHashEntryHdr* hdr = PL_DHashTableOperate(&mMap, aElement, PL_DHASH_ADD);
+        if (!hdr)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        Entry* entry = NS_REINTERPRET_CAST(Entry*, hdr);
+        NS_ASSERTION(entry->mMatch == nsnull, "over-writing entry");
+        entry->mContent = aElement;
+        entry->mMatch   = aMatch;
+        return NS_OK; }
+
+    PRBool Get(nsIContent* aElement, nsTemplateMatch** aMatch) {
+        PLDHashEntryHdr* hdr = PL_DHashTableOperate(&mMap, aElement, PL_DHASH_LOOKUP);
+        if (PL_DHASH_ENTRY_IS_FREE(hdr))
+            return PR_FALSE;
+
+        Entry* entry = NS_REINTERPRET_CAST(Entry*, hdr);
+        *aMatch = entry->mMatch;
+        return PR_TRUE; }
+
     nsresult Remove(nsIContent* aElement);
+
     void Clear() { Finish(); Init(); }
 
 protected:
-    PLHashTable* mMap;
-    nsFixedSizeAllocator mPool;
+    PLDHashTable mMap;
 
     void Init();
     void Finish();
 
     struct Entry {
-        PLHashEntry mHashEntry;
+        PLDHashEntryHdr  mHdr;
+        nsIContent*      mContent;
         nsTemplateMatch* mMatch;
     };
 
-    static PLHashAllocOps gAllocOps;
-
-    static void* PR_CALLBACK
-    AllocTable(void* aPool, PRSize aSize) {
-        return new char[aSize]; };
+    static PLDHashTableOps gOps;
 
     static void PR_CALLBACK
-    FreeTable(void* aPool, void* aItem) {
-        delete[] NS_STATIC_CAST(char*, aItem); }
-
-    static PLHashEntry* PR_CALLBACK
-    AllocEntry(void* aPool, const void* aKey) {
-        nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
-
-        Entry* entry = NS_STATIC_CAST(Entry*, pool->Alloc(sizeof(Entry)));
-        if (! entry)
-            return nsnull;
-
-        return NS_REINTERPRET_CAST(PLHashEntry*, entry); }
-
-    static void PR_CALLBACK
-    FreeEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag) {
-        if (aFlag == HT_FREE_ENTRY) {
-            Entry* entry = NS_REINTERPRET_CAST(Entry*, aEntry);
-
-            if (entry->mMatch)
-                entry->mMatch->Release();
-
-            nsFixedSizeAllocator::Free(entry, sizeof(Entry));
-        } }
-
-    static PLHashNumber PR_CALLBACK
-    HashPointer(const void* aKey) {
-        return PLHashNumber(aKey) >> 3; }
+    ClearEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr);
 };
 
 #endif

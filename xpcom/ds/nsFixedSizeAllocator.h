@@ -111,7 +111,7 @@
 #include "nsError.h"
 #include "plarena.h"
 
-#define NS_SIZE_IN_HEAP(_size) ((_size) + sizeof(double))
+#define NS_SIZE_IN_HEAP(_size) (_size)
 
 class NS_COM nsFixedSizeAllocator
 {
@@ -125,7 +125,6 @@ protected:
     friend struct FreeEntry;
 
     struct FreeEntry {
-        Bucket*    mBucket;
         FreeEntry* mNext;
     };
 
@@ -137,15 +136,19 @@ protected:
 
     Bucket* mBuckets;
 
-    nsresult
+    Bucket *
     AddBucket(size_t aSize);
+
+    Bucket *
+    FindBucket(size_t aSize);
 
 public:
     nsFixedSizeAllocator() : mBuckets(nsnull) {}
 
     ~nsFixedSizeAllocator() {
         if (mBuckets)
-            PL_FinishArenaPool(&mPool); }
+            PL_FinishArenaPool(&mPool);
+    }
 
     /**
      * Initialize the fixed size allocator. 'aName' is used to tag
@@ -169,7 +172,7 @@ public:
     /**
      * Free a pointer allocated using a fixed-size allocator
      */
-    static void Free(void* aPtr, size_t aSize);
+    void Free(void* aPtr, size_t aSize);
 };
 
 

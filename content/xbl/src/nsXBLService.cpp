@@ -97,39 +97,22 @@ static PRBool IsResourceURI(nsIURI* aURI)
 }
 
 // Individual binding requests.
-struct nsXBLBindingRequest
+class nsXBLBindingRequest
 {
+public:
   nsCString mBindingURL;
   nsCOMPtr<nsIContent> mBoundElement;
 
-  nsXBLBindingRequest(const nsCString& aURL, nsIContent* aBoundElement)
-  {
-    mBindingURL = aURL;
-    mBoundElement = aBoundElement;
-
-    gRefCnt++;
-    if (gRefCnt == 1) {
-      nsServiceManager::GetService("@mozilla.org/xbl;1",
-                                   NS_GET_IID(nsIXBLService),
-                                   (nsISupports**) &gXBLService);
-    }
+  static nsXBLBindingRequest*
+  Create(nsFixedSizeAllocator& aPool, const nsCString& aURL, nsIContent* aBoundElement) {
+    void* place = aPool.Alloc(sizeof(nsXBLBindingRequest));
+    return place ? ::new (place) nsXBLBindingRequest(aURL, aBoundElement) : nsnull;
   }
 
-  ~nsXBLBindingRequest()
-  {
-    gRefCnt--;
-    if (gRefCnt == 0) {
-      nsServiceManager::ReleaseService("@mozilla.org/xbl;1", gXBLService);
-      gXBLService = nsnull;
-    }
-  }
-
-  static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-    return aAllocator.Alloc(aSize);
-  }
-
-  static void operator delete(void* aPtr, size_t aSize) {
-    nsFixedSizeAllocator::Free(aPtr, aSize);
+  static void
+  Destroy(nsFixedSizeAllocator& aPool, nsXBLBindingRequest* aRequest) {
+    aRequest->~nsXBLBindingRequest();
+    aPool.Free(aRequest, sizeof(*aRequest));
   }
 
   void DocumentLoaded(nsIDocument* aBindingDoc)
@@ -166,6 +149,35 @@ struct nsXBLBindingRequest
 
   static nsIXBLService* gXBLService;
   static int gRefCnt;
+
+protected:
+  nsXBLBindingRequest(const nsCString& aURL, nsIContent* aBoundElement)
+  {
+    mBindingURL = aURL;
+    mBoundElement = aBoundElement;
+
+    gRefCnt++;
+    if (gRefCnt == 1) {
+      nsServiceManager::GetService("@mozilla.org/xbl;1",
+                                   NS_GET_IID(nsIXBLService),
+                                   (nsISupports**) &gXBLService);
+    }
+  }
+
+  ~nsXBLBindingRequest()
+  {
+    gRefCnt--;
+    if (gRefCnt == 0) {
+      nsServiceManager::ReleaseService("@mozilla.org/xbl;1", gXBLService);
+      gXBLService = nsnull;
+    }
+  }
+
+private:
+  // Hide so that only Create() and Destroy() can be used to
+  // allocate and deallocate from the heap
+  static void* operator new(size_t) { return 0; }
+  static void operator delete(void*, size_t) {}
 };
 
 static const size_t kBucketSizes[] = {
@@ -198,13 +210,15 @@ public:
   static nsIXULPrototypeCache* gXULCache;
   static PRInt32 gRefCnt;
 
-  nsXBLStreamListener(nsIStreamListener* aInner, nsIDocument* aDocument, nsIDocument* aBindingDocument);
+  nsXBLStreamListener(nsXBLService* aXBLService, nsIStreamListener* aInner, nsIDocument* aDocument, nsIDocument* aBindingDocument);
   virtual ~nsXBLStreamListener();
   
   void AddRequest(nsXBLBindingRequest* aRequest) { mBindingRequests.AppendElement(aRequest); };
   PRBool HasRequest(const nsCString& aURI, nsIContent* aBoundElement);
 
 private:
+  nsXBLService* mXBLService; // [WEAK]
+
   nsCOMPtr<nsIStreamListener> mInner;
   nsVoidArray mBindingRequests;
   
@@ -218,11 +232,13 @@ PRInt32 nsXBLStreamListener::gRefCnt = 0;
 /* Implementation file */
 NS_IMPL_ISUPPORTS4(nsXBLStreamListener, nsIStreamListener, nsIStreamObserver, nsIDOMLoadListener, nsIDOMEventListener)
 
-nsXBLStreamListener::nsXBLStreamListener(nsIStreamListener* aInner, nsIDocument* aDocument,
+nsXBLStreamListener::nsXBLStreamListener(nsXBLService* aXBLService,
+                                         nsIStreamListener* aInner, nsIDocument* aDocument,
                                          nsIDocument* aBindingDocument)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
+  mXBLService = aXBLService;
   mInner = aInner;
   mDocument = getter_AddRefs(NS_GetWeakReference(aDocument));
   mBindingDocument = aBindingDocument;
@@ -290,7 +306,7 @@ nsXBLStreamListener::OnStopRequest(nsIRequest* request, nsISupports* aCtxt, nsre
     PRUint32 count = mBindingRequests.Count();
     for (PRUint32 i = 0; i < count; i++) {
       nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
-      delete req;
+      nsXBLBindingRequest::Destroy(mXBLService->mPool, req);
     }
 
     mDocument = nsnull;
@@ -404,7 +420,7 @@ nsXBLStreamListener::Load(nsIDOMEvent* aEvent)
   
   for (i = 0; i < count; i++) {
     nsXBLBindingRequest* req = (nsXBLBindingRequest*)mBindingRequests.ElementAt(i);
-    delete req;
+    nsXBLBindingRequest::Destroy(mXBLService->mPool, req);
   }
 
   nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(mBindingDocument));
@@ -1122,7 +1138,7 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
         bindingURI += "#";
         bindingURI += aRef;
         if (!xblListener->HasRequest(bindingURI, aBoundElement)) {
-          nsXBLBindingRequest* req = new (mPool) nsXBLBindingRequest(bindingURI, aBoundElement);
+          nsXBLBindingRequest* req = nsXBLBindingRequest::Create(mPool, bindingURI, aBoundElement);
           xblListener->AddRequest(req);
         }
         return NS_OK;
@@ -1225,7 +1241,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
 
   if (!aForceSyncLoad) {
     // We can be asynchronous
-    nsXBLStreamListener* xblListener = new nsXBLStreamListener(listener, aBoundDocument, doc);
+    nsXBLStreamListener* xblListener = new nsXBLStreamListener(this, listener, aBoundDocument, doc);
     
     nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(doc));
     rec->AddEventListener(NS_ConvertASCIItoUCS2("load"), (nsIDOMLoadListener*)xblListener, PR_FALSE);
@@ -1241,7 +1257,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
     nsCAutoString bindingURI(uri);
     bindingURI += "#";
     bindingURI += aRef;
-    nsXBLBindingRequest* req = new (mPool) nsXBLBindingRequest(bindingURI, aBoundElement);
+    nsXBLBindingRequest* req = nsXBLBindingRequest::Create(mPool, bindingURI, aBoundElement);
     xblListener->AddRequest(req);
 
     // Now kick off the async read.

@@ -41,7 +41,9 @@ nsClusterKeySet::nsClusterKeySet()
 
     mPool.Init("nsClusterKeySet", kBucketSizes, kNumBuckets, kInitialPoolSize);
 
-    mTable = PL_NewHashTable(kInitialEntries, nsClusterKey::HashClusterKey, nsClusterKey::CompareClusterKeys,
+    mTable = PL_NewHashTable(kInitialEntries,
+                             nsClusterKey::HashClusterKey,
+                             nsClusterKey::CompareClusterKeys,
                              PL_CompareValues, &gAllocOps, &mPool);
 
     MOZ_COUNT_CTOR(nsClusterKeySet);

@@ -211,19 +211,19 @@ public:
                                           nsDTDContext* aContext,
                                           nsIHTMLContentSink* aSink);
 
-  virtual nsresult  HandleStartToken(     nsIParserNode* aNode,
+  virtual nsresult  HandleStartToken(     nsCParserNode* aNode,
                                           eHTMLTags aTag,
                                           nsDTDContext* aContext,
                                           nsIHTMLContentSink* aSink);
 
-  virtual nsresult  HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink);
+  virtual nsresult  HandleEndToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink);
 
-  virtual nsresult  HandleMisplacedStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult  HandleMisplacedStartToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
     return result;
   }
 
-  virtual PRInt32 FindAutoCloseTargetForEndTag(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink, PRInt32& anIndex) {
+  virtual PRInt32 FindAutoCloseTargetForEndTag(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink, PRInt32& anIndex) {
     PRInt32 result=-1;
 
     if(mTag!=aTag) {
@@ -288,7 +288,7 @@ public:
   /**********************************************************
     this gets called after each tag is opened in the given context
    **********************************************************/
-  virtual nsresult  OpenContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+  virtual nsresult  OpenContext(nsCParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
     
     aContext->Push(aNode);
 
@@ -300,7 +300,7 @@ public:
   /**********************************************************
     this gets called after each tag is opened in the given context
    **********************************************************/
-  virtual nsresult OpenContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
+  virtual nsresult OpenContainerInContext(nsCParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
     OpenContext(aNode,aTag,aContext,aSink);
     return OpenContainer(aNode,aTag,aContext,aSink);
   }
@@ -315,22 +315,22 @@ public:
   /**********************************************************
     this gets called to close a tag in the given context
    **********************************************************/
-  virtual nsresult  CloseContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+  virtual nsresult  CloseContext(nsCParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
     nsresult result=NS_OK;
     nsEntryStack  *theStack=0;
-    nsIParserNode *theNode=aContext->Pop(theStack);
+    nsCParserNode *theNode=aContext->Pop(theStack);
 
     CElement *theElement=(aTag==mTag) ? this : GetElement(aTag);
     result=theElement->NotifyClose(theNode,aTag,aContext,aSink);
 
-    NS_IF_RELEASE(aNode);
+    IF_FREE(aNode, aContext->mNodeAllocator);
     return result;
   }
 
   /**********************************************************
     this gets called to close a tag in the sink and in the context
    **********************************************************/
-  virtual nsresult CloseContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
+  virtual nsresult CloseContainerInContext(nsCParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
     nsresult result=NS_OK;
     if(mTag!=aTag) {
       CElement *theElement=GetElement(aTag);
@@ -762,7 +762,7 @@ public:
   /**********************************************************
     Table handles the opening of it's own children
    **********************************************************/
-  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult HandleStartToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
     switch(aTag) {
@@ -808,7 +808,7 @@ public:
         if(aContext->mTableStates) {
           if(aContext->mTableStates->CanOpenTBody()) {
             CToken* theToken=(CStartToken*)aContext->mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_tbody);
-            nsIParserNode* theNode=aContext->mNodeAllocator->CreateNode(theToken,0,0);
+            nsCParserNode* theNode=aContext->mNodeAllocator->CreateNode(theToken,0,0);
 
             result=HandleStartToken(theNode,eHTMLTag_tbody,aContext,aSink);
           }
@@ -831,7 +831,7 @@ public:
   /**********************************************************
     Table handles the closing of it's own children
    **********************************************************/
-  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult HandleEndToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
     if(aContext->HasOpenContainer(aTag)) {
@@ -981,7 +981,7 @@ public:
   /**********************************************************
     handles the opening of it's own children
    **********************************************************/
-  virtual nsresult HandleStartToken(  nsIParserNode* aNode,
+  virtual nsresult HandleStartToken(  nsCParserNode* aNode,
                                       eHTMLTags aTag,
                                       nsDTDContext* aContext,
                                       nsIHTMLContentSink* aSink) {
@@ -992,7 +992,7 @@ public:
   /**********************************************************
     this gets called after each tag is opened in the given context
    **********************************************************/
-  virtual nsresult OpenContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
+  virtual nsresult OpenContext(nsCParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
     CElement::OpenContext(aNode,aTag,aContext,aSink);
     
     nsresult result=NS_OK;
@@ -1013,7 +1013,7 @@ public:
   /**********************************************************
     handles the opening of it's own children
    **********************************************************/
-  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult HandleEndToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     return CElement::HandleEndToken(aNode,aTag,aContext,aSink);
   }
 
@@ -1262,7 +1262,7 @@ public:
   /**********************************************************
     Call this for each element as it get's closed
    **********************************************************/
-  virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult  NotifyClose(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
     CElement* theHead=GetElement(eHTMLTag_head);
     if(theHead) {
@@ -1358,7 +1358,7 @@ public:
   /**********************************************************
     Call this for each element as it get's closed
    **********************************************************/
-  virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult  NotifyClose(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
     CElement* theHead=GetElement(eHTMLTag_head);
     if(theHead) {
@@ -1397,7 +1397,7 @@ public:
   /**********************************************************
     this gets called after each tag is opened in the given context
    **********************************************************/
-  virtual nsresult OpenContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
+  virtual nsresult OpenContainerInContext(nsCParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {    
     OpenContext(aNode,aTag,aContext,aSink);
     return NS_OK;
   }
@@ -1418,7 +1418,7 @@ public:
   /**********************************************************
     Call this for each element as it get's closed
    **********************************************************/
-  virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult  NotifyClose(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
     if(aContext->HasOpenContainer(eHTMLTag_body)) {
@@ -1464,7 +1464,7 @@ public:
   /**********************************************************
     Pre handles the opening of it's own children
    **********************************************************/
-  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult HandleStartToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=CElement::HandleStartToken(aNode,aTag,aContext,aSink);
     return result;
   }
@@ -1473,7 +1473,7 @@ public:
   /**********************************************************
     Pre handles the closing of it's own children
    **********************************************************/
-  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult HandleEndToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=CElement::HandleEndToken(aNode,aTag,aContext,aSink);
     return result;
   }
@@ -1512,7 +1512,7 @@ public:
   /**********************************************************
     handles the opening of it's own children
    **********************************************************/
-  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult HandleStartToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
     nsIParserNode *theNode=aContext->PeekNode();
     if(theNode) {
@@ -1569,7 +1569,7 @@ public:
   /**********************************************************
     fieldset  handles the opening of it's own children
    **********************************************************/
-  virtual nsresult HandleStartToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult HandleStartToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
     nsIParserNode *theNode=aContext->PeekNode();
     if(theNode) {
@@ -1624,7 +1624,7 @@ public:
   /**********************************************************
     Toplevel handles the opening of it's own children
    **********************************************************/
-  virtual nsresult HandleStartToken(  nsIParserNode* aNode,
+  virtual nsresult HandleStartToken(  nsCParserNode* aNode,
                                       eHTMLTags aTag,
                                       nsDTDContext* aContext,
                                       nsIHTMLContentSink* aSink) {
@@ -1643,7 +1643,7 @@ public:
   /**********************************************************
     TopLevel handles the opening of it's own children
    **********************************************************/
-  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult HandleEndToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
 
     nsresult      result=NS_OK;
 
@@ -1728,7 +1728,7 @@ public:
   /**********************************************************
     HTML handles the opening of it's own children
    **********************************************************/
-  virtual nsresult HandleStartToken(  nsIParserNode* aNode,
+  virtual nsresult HandleStartToken(  nsCParserNode* aNode,
                                       eHTMLTags aTag,
                                       nsDTDContext* aContext,
                                       nsIHTMLContentSink* aSink) {
@@ -1795,7 +1795,7 @@ public:
             //let's auto open the body            
             
             CToken* theToken=(CStartToken*)aContext->mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body);
-            nsIParserNode* theNode=aContext->mNodeAllocator->CreateNode(theToken,0,0);
+            nsCParserNode* theNode=aContext->mNodeAllocator->CreateNode(theToken,0,0);
 
             result=theBody->HandleStartToken(theNode,eHTMLTag_body,aContext,aSink);
 
@@ -1816,7 +1816,7 @@ public:
   /**********************************************************
     HTML handles the closing of it's own children
    **********************************************************/
-  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult HandleEndToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
 
     switch(aTag) {
@@ -1886,7 +1886,7 @@ public:
   }
 
    //this gets called after each tag is opened in the given context
-  virtual nsresult  OpenContainer(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+  virtual nsresult  OpenContainer(nsCParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
     nsresult result=NS_OK;
     if(mTag==aTag) {
       // Close the head before opening a body.
@@ -1903,7 +1903,7 @@ public:
   /**********************************************************
     this gets called after each tag is opened in the given context
    **********************************************************/
-  virtual nsresult OpenContainerInContext(nsIParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
+  virtual nsresult OpenContainerInContext(nsCParserNode *aNode,eHTMLTags aTag,nsDTDContext *aContext,nsIHTMLContentSink *aSink) {
     NS_ASSERTION(aContext!=nsnull,"need a valid context");
     nsresult result=NS_OK;
     // Since BODY is optional, we might come across more than one BODY!.
@@ -1922,7 +1922,7 @@ public:
   /**********************************************************
     Body handles the opening of it's own children
    **********************************************************/
-  virtual nsresult HandleStartToken(  nsIParserNode* aNode,
+  virtual nsresult HandleStartToken(  nsCParserNode* aNode,
                                       eHTMLTags aTag,
                                       nsDTDContext* aContext,
                                       nsIHTMLContentSink* aSink) {
@@ -1951,7 +1951,7 @@ public:
     Body doesnt really need to handle it's own kids, but it's
     a really convenient break point for debugging purposes.
    **********************************************************/
-  virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+  virtual nsresult HandleEndToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
     switch(aTag) {
       case eHTMLTag_script:
@@ -2645,7 +2645,7 @@ nsresult CElement::WillHandleStartToken(  CElement *anElement,
   return result;
 }
 
-nsresult CElement::HandleStartToken(  nsIParserNode* aNode,
+nsresult CElement::HandleStartToken(  nsCParserNode* aNode,
                                       eHTMLTags aTag,
                                       nsDTDContext* aContext,
                                       nsIHTMLContentSink* aSink) {
@@ -2700,7 +2700,7 @@ nsresult CElement::HandleStartToken(  nsIParserNode* aNode,
               theParentTag=aContext->Last();
               theParent=gElementTable->mElements[theParentTag];
 
-              nsIParserNode *theNode=aContext->PeekNode(); //this will get popped later...
+              nsCParserNode *theNode=aContext->PeekNode(); //this will get popped later...
               if(theParent->IsSinkContainer()) {
                 CloseContainerInContext(theNode,theParentTag,aContext,aSink);
               }
@@ -2755,7 +2755,7 @@ nsresult CElement::HandleStartToken(  nsIParserNode* aNode,
 }
 
 
-nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+nsresult CElement::HandleEndToken(nsCParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
   nsresult result=NS_OK;
 
   if(aContext->Last()==aTag) {

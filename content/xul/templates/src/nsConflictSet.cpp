@@ -22,6 +22,7 @@
  */
 
 #include "nsConflictSet.h"
+#include "nsTemplateRule.h"
 
 #ifdef PR_LOGGING
 PRLogModule* nsConflictSet::gLog;
@@ -52,8 +53,6 @@ nsConflictSet::Init()
         sizeof(ClusterEntry),
         sizeof(SupportEntry),
         sizeof(BindingEntry),
-        nsTemplateMatchSet::kEntrySize,
-        nsTemplateMatchSet::kIndexSize
     };
 
     static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
@@ -115,10 +114,10 @@ nsConflictSet::Add(nsTemplateMatch* aMatch)
         PLHashNumber hash = key.Hash();
         PLHashEntry** hep = PL_HashTableRawLookup(mClusters, hash, &key);
 
-        nsTemplateMatchSet* set;
+        MatchCluster* cluster;
 
         if (hep && *hep) {
-            set = NS_STATIC_CAST(nsTemplateMatchSet*, (*hep)->value);
+            cluster = NS_REINTERPRET_CAST(MatchCluster*, (*hep)->value);
         }
         else {
             PLHashEntry* he = PL_HashTableRawAdd(mClusters, hep, hash, &key, nsnull);
@@ -132,14 +131,12 @@ nsConflictSet::Add(nsTemplateMatch* aMatch)
             // than the value on the stack). Do the same for its
             // value.
             entry->mHashEntry.key   = &entry->mKey;
-            entry->mHashEntry.value = &entry->mMatchSet;
-
-            set = &entry->mMatchSet;
+            entry->mHashEntry.value = cluster = &entry->mCluster;
         }
 
-        if (! set->Contains(*aMatch)) {
-            set->Add(mPool, aMatch);
-        }
+        nsTemplateMatchRefSet& set = cluster->mMatches;
+        if (! set.Contains(aMatch))
+            set.Add(aMatch);
     }
 
 
@@ -150,10 +147,10 @@ nsConflictSet::Add(nsTemplateMatch* aMatch)
             PLHashNumber hash = element->Hash();
             PLHashEntry** hep = PL_HashTableRawLookup(mSupport, hash, element.operator->());
 
-            nsTemplateMatchSet* set;
+            nsTemplateMatchRefSet* set;
 
             if (hep && *hep) {
-                set = NS_STATIC_CAST(nsTemplateMatchSet*, (*hep)->value);
+                set = NS_STATIC_CAST(nsTemplateMatchRefSet*, (*hep)->value);
             }
             else {
                 PLHashEntry* he = PL_HashTableRawAdd(mSupport, hep, hash, element.operator->(), nsnull);
@@ -169,8 +166,9 @@ nsConflictSet::Add(nsTemplateMatch* aMatch)
                 set = &entry->mMatchSet;
             }
 
-            if (! set->Contains(*aMatch)) {
-                set->Add(mPool, aMatch);
+            if (! set->Contains(aMatch)) {
+                set->Add(aMatch);
+                aMatch->AddRef();
             }
         }
     }
@@ -184,26 +182,52 @@ nsConflictSet::Add(nsTemplateMatch* aMatch)
 }
 
 
-void
-nsConflictSet::GetMatchesForClusterKey(const nsClusterKey& aKey, const nsTemplateMatchSet** aMatchSet)
+nsConflictSet::MatchCluster*
+nsConflictSet::GetMatchesForClusterKey(const nsClusterKey& aKey)
 {
     // Retrieve all the matches in a cluster
-    *aMatchSet = NS_STATIC_CAST(nsTemplateMatchSet*, PL_HashTableLookup(mClusters, &aKey));
+    return NS_STATIC_CAST(MatchCluster*, PL_HashTableLookup(mClusters, &aKey));
 }
 
 
-void
-nsConflictSet::GetMatchesWithBindingDependency(nsIRDFResource* aResource, const nsTemplateMatchSet** aMatchSet)
+nsTemplateMatch*
+nsConflictSet::GetMatchWithHighestPriority(const MatchCluster* aMatchCluster) const
+{
+    // Find the rule with the "highest priority"; i.e., the rule with
+    // the lowest value for GetPriority().
+    //
+    // XXX if people start writing more than a few matches, we should
+    // rewrite this to maintain the matches in sorted order, and then
+    // just pluck the match off the top of the list.
+    nsTemplateMatch* result = nsnull;
+    PRInt32 max = PRInt32(PR_BIT(31) - 1);
+
+    const nsTemplateMatchRefSet& set = aMatchCluster->mMatches;
+    nsTemplateMatchRefSet::ConstIterator last = set.Last();
+
+    for (nsTemplateMatchRefSet::ConstIterator match = set.First(); match != last; ++match) {
+        PRInt32 priority = match->mRule->GetPriority();
+        if (priority < max) {
+            result = NS_CONST_CAST(nsTemplateMatch*, match.operator->());
+            max = priority;
+        }
+    }
+
+    return result;
+}
+
+const nsTemplateMatchRefSet*
+nsConflictSet::GetMatchesWithBindingDependency(nsIRDFResource* aResource)
 {
     // Retrieve all the matches whose bindings depend on the specified resource
-    *aMatchSet = NS_STATIC_CAST(nsTemplateMatchSet*, PL_HashTableLookup(mBindingDependencies, aResource));
+    return NS_STATIC_CAST(nsTemplateMatchRefSet*, PL_HashTableLookup(mBindingDependencies, aResource));
 }
 
 
 void
 nsConflictSet::Remove(const MemoryElement& aMemoryElement,
-                    nsTemplateMatchSet& aNewMatches,
-                    nsTemplateMatchSet& aRetractedMatches)
+                      nsTemplateMatchSet& aNewMatches,
+                      nsTemplateMatchSet& aRetractedMatches)
 {
     // Use the memory-element-to-match map to figure out what matches
     // will be affected.
@@ -213,14 +237,16 @@ nsConflictSet::Remove(const MemoryElement& aMemoryElement,
         return;
 
     // 'set' gets the set of all matches containing the first binding.
-    nsTemplateMatchSet* set = NS_STATIC_CAST(nsTemplateMatchSet*, (*hep)->value);
+    nsTemplateMatchRefSet* set =
+        NS_STATIC_CAST(nsTemplateMatchRefSet*, (*hep)->value);
 
     // We'll iterate through these matches, only paying attention to
     // matches that strictly contain the MemoryElement we're about to
     // remove.
-    for (nsTemplateMatchSet::Iterator match = set->First(); match != set->Last(); ++match) {
+    nsTemplateMatchRefSet::ConstIterator last = set->Last();
+    for (nsTemplateMatchRefSet::ConstIterator match = set->First(); match != last; ++match) {
         // Note the retraction, so we can compute new matches, later.
-        aRetractedMatches.Add(mPool, match.operator->());
+        aRetractedMatches.Add(match.operator->());
 
         // Keep the bindings table in sync, as well. Since this match
         // is getting nuked, we need to nuke its bindings as well.
@@ -244,10 +270,10 @@ nsConflictSet::AddBindingDependency(nsTemplateMatch* aMatch, nsIRDFResource* aRe
     PLHashNumber hash = HashBindingElement(aResource);
     PLHashEntry** hep = PL_HashTableRawLookup(mBindingDependencies, hash, aResource);
 
-    nsTemplateMatchSet* set;
+    nsTemplateMatchRefSet* set;
 
     if (hep && *hep) {
-        set = NS_STATIC_CAST(nsTemplateMatchSet*, (*hep)->value);
+        set = NS_STATIC_CAST(nsTemplateMatchRefSet*, (*hep)->value);
     }
     else {
         PLHashEntry* he = PL_HashTableRawAdd(mBindingDependencies, hep, hash, aResource, nsnull);
@@ -261,9 +287,8 @@ nsConflictSet::AddBindingDependency(nsTemplateMatch* aMatch, nsIRDFResource* aRe
         
     }
 
-    if (! set->Contains(*aMatch)) {
-        set->Add(mPool, aMatch);
-    }
+    if (! set->Contains(aMatch))
+        set->Add(aMatch);
 
     return NS_OK;
 }
@@ -276,26 +301,28 @@ nsConflictSet::RemoveBindingDependency(nsTemplateMatch* aMatch, nsIRDFResource* 
     PLHashEntry** hep = PL_HashTableRawLookup(mBindingDependencies, hash, aResource);
 
     if (hep && *hep) {
-        nsTemplateMatchSet* set = NS_STATIC_CAST(nsTemplateMatchSet*, (*hep)->value);
+        nsTemplateMatchRefSet* set = NS_STATIC_CAST(nsTemplateMatchRefSet*, (*hep)->value);
 
         set->Remove(aMatch);
 
-        if (set->Empty()) {
+        if (set->Empty())
             PL_HashTableRawRemove(mBindingDependencies, hep, *hep);
-        }
     }
 
     return NS_OK;
 }
 
 nsresult
-nsConflictSet::ComputeNewMatches(nsTemplateMatchSet& aNewMatches, nsTemplateMatchSet& aRetractedMatches)
+nsConflictSet::ComputeNewMatches(nsTemplateMatchSet& aNewMatches,
+                                 nsTemplateMatchSet& aRetractedMatches)
 {
     // Given a set of just-retracted matches, compute the set of new
     // matches that have been revealed, updating the key-to-match map
     // as we go.
     nsTemplateMatchSet::ConstIterator last = aRetractedMatches.Last();
-    for (nsTemplateMatchSet::ConstIterator retraction = aRetractedMatches.First(); retraction != last; ++retraction) {
+    for (nsTemplateMatchSet::ConstIterator retraction = aRetractedMatches.First();
+         retraction != last;
+         ++retraction) {
         nsClusterKey key(retraction->mInstantiation, retraction->mRule);
         PLHashEntry** hep = PL_HashTableRawLookup(mClusters, key.Hash(), &key);
 
@@ -305,26 +332,27 @@ nsConflictSet::ComputeNewMatches(nsTemplateMatchSet& aNewMatches, nsTemplateMatc
         if (!hep || !*hep)
             continue;
 
-        nsTemplateMatchSet* set = NS_STATIC_CAST(nsTemplateMatchSet*, (*hep)->value);
+        MatchCluster* cluster = NS_REINTERPRET_CAST(MatchCluster*, (*hep)->value);
+        nsTemplateMatchRefSet& set = cluster->mMatches;
 
-        for (nsTemplateMatchSet::Iterator match = set->First(); match != set->Last(); ++match) {
+        nsTemplateMatchRefSet::ConstIterator last = set.Last();
+        for (nsTemplateMatchRefSet::ConstIterator match = set.First(); match != last; ++match) {
             if (match->mRule == retraction->mRule) {
-                set->Erase(match--);
+                set.Remove(match.operator->()); // N.B., iterator no longer valid!
 
                 // See if we've revealed another rule that's applicable
                 nsTemplateMatch* newmatch =
-                    set->FindMatchWithHighestPriority();
+                    GetMatchWithHighestPriority(cluster);
 
                 if (newmatch)
-                    aNewMatches.Add(mPool, newmatch);
+                    aNewMatches.Add(newmatch);
 
                 break;
             }
         }
 
-        if (set->Empty()) {
+        if (set.Empty())
             PL_HashTableRawRemove(mClusters, hep, *hep);
-        }
     }
 
     return NS_OK;
@@ -357,4 +385,24 @@ nsConflictSet::CompareMemoryElements(const void* aLeft, const void* aRight)
         NS_STATIC_CAST(const MemoryElement*, aRight);
 
     return *left == *right;
+}
+
+//----------------------------------------------------------------------
+//
+
+void
+nsConflictSet::SupportEntry::Destroy(nsFixedSizeAllocator& aPool, SupportEntry* aEntry)
+{
+    // We need to Release() the matches here, because this is where
+    // we've got access to the pool from which they were
+    // allocated. Since SupportEntry's dtor is protected, nobody else
+    // can be creating SupportEntry objects (e.g., on the stack).
+    nsTemplateMatchRefSet::ConstIterator last = aEntry->mMatchSet.Last();
+    for (nsTemplateMatchRefSet::ConstIterator iter = aEntry->mMatchSet.First();
+         iter != last;
+         ++iter)
+        iter->Release(aPool);
+
+    aEntry->~SupportEntry();
+    aPool.Free(aEntry, sizeof(*aEntry));
 }

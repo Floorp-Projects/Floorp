@@ -463,7 +463,7 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
           while(theIndex>0) {             
             eHTMLTags theParent= mBodyContext->TagAt(--theIndex);
             CElement *theElement=gElementTable->mElements[theParent];
-            nsIParserNode *theNode=mBodyContext->PeekNode();
+            nsCParserNode *theNode=mBodyContext->PeekNode();
             theElement->HandleEndToken(theNode,theChild,mBodyContext,mSink);
             theChild=theParent;
           }
@@ -489,7 +489,7 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
               if(theChildStyles) {
                 delete theChildStyles;
               } 
-              NS_IF_RELEASE(theNode);
+              IF_FREE(theNode, mNodeAllocator);
             }
           }    
         }    
@@ -546,7 +546,7 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
 
 
     if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
-      IF_FREE(theToken);
+      IF_FREE(theToken, mTokenAllocator);
     }
     else if(result==NS_ERROR_HTMLPARSER_STOPPARSING)
       mDTDState=result; 
@@ -701,7 +701,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
   //Begin by gathering up attributes...  
  
   nsresult  result=NS_OK;
-  nsIParserNode* theNode=mNodeAllocator->CreateNode(aToken,mLineNumber,mTokenAllocator);
+  nsCParserNode* theNode=mNodeAllocator->CreateNode(aToken,mLineNumber,mTokenAllocator);
   if(theNode) {
    
     eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
@@ -743,7 +743,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
    
       } //if             
     }//if           
-    NS_IF_RELEASE(theNode);
+    IF_FREE(theNode, mNodeAllocator);
   }
   else result=NS_ERROR_OUT_OF_MEMORY;
           
@@ -788,10 +788,10 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
       }
       CElement* theElement=gElementTable->mElements[theParent];
       if(theElement) { 
-        nsIParserNode* theNode=mNodeAllocator->CreateNode(aToken,mLineNumber,mTokenAllocator);
+        nsCParserNode* theNode=mNodeAllocator->CreateNode(aToken,mLineNumber,mTokenAllocator);
         if(theNode) {
           result=theElement->HandleEndToken(theNode,theChildTag,mBodyContext,mSink);
-          NS_IF_RELEASE(theNode);
+          IF_FREE(theNode, mNodeAllocator);
         }
       }   
       break; 
