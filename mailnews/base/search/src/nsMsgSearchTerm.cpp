@@ -32,6 +32,7 @@
 #include "nsIMsgImapMailFolder.h"
 #include "nsMsgSearchImap.h"
 #include "nsMsgLocalSearch.h"
+#include "nsMsgSearchNews.h"
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
 //---------------------------------------------------------------------------
@@ -1262,13 +1263,15 @@ nsresult nsMsgSearchScopeTerm::InitializeAdapter (nsMsgSearchTermArray &termList
 				else
 				  m_adapter = new nsMsgSearchOfflineMail (this, termList);
 			break;
-#ifdef DOING_NEWS_YET
 		case nsMsgSearchScope::Newsgroup:
+#ifdef DOING_EXNEWSSEARCH
 			if (m_folder->KnowsSearchNntpExtension())
 				m_adapter = new nsMsgSearchNewsEx (this, termList);
 			else
+#endif
 				m_adapter = new nsMsgSearchNews (this, termList);
 			break;
+#ifdef DOING_EXNEWSSEARCH
 		case nsMsgSearchScope::AllSearchableGroups:
 				m_adapter = new msMsgSearchNewsEx (this, termList);
 			break;

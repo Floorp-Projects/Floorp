@@ -29,6 +29,7 @@
 #include "nsIUrlListener.h"
 #include "nsIMsgWindow.h"
 #include "nsITimer.h"
+#include "nsMsgSearchArray.h"
 
 class nsMsgSearchAdapter;
 

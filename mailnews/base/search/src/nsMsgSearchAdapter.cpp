@@ -118,10 +118,10 @@ NS_IMETHODIMP nsMsgSearchAdapter::GetEncoding (char **encoding)
 char *
 nsMsgSearchAdapter::TryToConvertCharset(char *sourceStr, const PRUnichar *srcCharset, const PRUnichar * destCharset, PRBool useMime2)
 {
-	char *result = NULL;
+	char *result = nsnull;
 
-	if (sourceStr == NULL) 
-		return NULL;
+	if (sourceStr == nsnull) 
+		return nsnull;
 #ifdef DO_I18N  // I have no idea what we should do here.
 	if ((src_csid != dest_csid) || (useMime2))
 	{
@@ -130,12 +130,12 @@ nsMsgSearchAdapter::TryToConvertCharset(char *sourceStr, const PRUnichar *srcCha
 		// ### mwelch Much of this code is lifted from 
 		//     lib/libi18n/mime2fun.c (in particular,
 		//     intl_EncodeMimePartIIStr).
-		CCCDataObject obj = NULL;
-		CCCFunc cvtfunc = NULL;
+		CCCDataObject obj = nsnull;
+		CCCFunc cvtfunc = nsnull;
 		int srcLen = XP_STRLEN(sourceStr);
 
 		obj = INTL_CreateCharCodeConverter();
-		if (obj == NULL)
+		if (obj == nsnull)
 			return 0;
 
 		/* setup converter from src_csid --> dest_csid */
@@ -187,7 +187,7 @@ nsMsgSearchAdapter::GetImapCharsetParam(const PRUnichar *destCharset)
 
 char *nsMsgSearchAdapter::EscapeSearchUrl (const char *nntpCommand)
 {
-	char *result = NULL;
+	char *result = nsnull;
 	// max escaped length is two extra characters for every character in the cmd.
   char *scratchBuf = (char*) PR_Malloc(3*nsCRT::strlen(nntpCommand) + 1);
 	if (scratchBuf)
@@ -766,6 +766,180 @@ char *nsMsgSearchAdapter::TransformSpacesToStars (const char *spaceString, msg_T
 	}
 
 	return starString;
+}
+
+//-----------------------------------------------------------------------------
+//------------------- Validity checking for menu items etc. -------------------
+//-----------------------------------------------------------------------------
+
+nsMsgSearchValidityTable::nsMsgSearchValidityTable ()
+{
+	// Set everything to be unavailable and disabled
+	for (int i = 0; i < nsMsgSearchAttrib::kNumMsgSearchAttributes; i++)
+    for (int j = 0; j < nsMsgSearchOp::kNumMsgSearchOperators; j++)
+		{
+			SetAvailable (i, j, FALSE);
+			SetEnabled (i, j, FALSE);
+			SetValidButNotShown (i,j, FALSE);
+		}
+	m_numAvailAttribs = 0;   // # of attributes marked with at least one available operator
+}
+
+int nsMsgSearchValidityTable::GetNumAvailAttribs()
+{
+	m_numAvailAttribs = 0;
+	for (int i = 0; i < nsMsgSearchAttrib::kNumMsgSearchAttributes; i++)
+		for (int j = 0; j < nsMsgSearchOp::kNumMsgSearchOperators; j++)
+			if (GetAvailable(i, j))
+			{
+				m_numAvailAttribs++;
+				break;
+			}
+	return m_numAvailAttribs;
+}
+
+nsresult nsMsgSearchValidityTable::ValidateTerms (nsMsgSearchTermArray &termList)
+{
+	nsresult err = NS_OK;
+
+	for (int i = 0; i < termList.Count(); i++)
+	{
+		nsMsgSearchTerm *term = termList.ElementAt(i);
+//		XP_ASSERT(term->IsValid());
+		if (!GetEnabled(term->m_attribute, term->m_operator) || 
+			!GetAvailable(term->m_attribute, term->m_operator))
+		{
+			if (!GetValidButNotShown(term->m_attribute, term->m_operator))
+				err = NS_MSG_ERROR_INVALID_SEARCH_SCOPE;
+		}
+	}
+
+	return err;
+}
+
+
+// global variable with destructor allows automatic cleanup
+nsMsgSearchValidityManager gValidityMgr; 
+
+
+nsMsgSearchValidityManager::nsMsgSearchValidityManager ()
+{
+	m_offlineMailTable = nsnull;
+	m_onlineMailTable = nsnull;
+	m_onlineMailFilterTable = nsnull;
+	m_newsTable = nsnull;
+	m_localNewsTable = nsnull;
+#ifdef DOING_EXNEWSSEARCH
+	m_newsExTable = nsnull;
+#endif
+#ifdef DOING_LDAP
+	m_ldapTable = nsnull;
+#endif
+}
+
+
+nsMsgSearchValidityManager::~nsMsgSearchValidityManager ()
+{
+	if (nsnull != m_offlineMailTable)
+		delete m_offlineMailTable;
+	if (nsnull != m_onlineMailTable)
+		delete m_onlineMailTable;
+	if (nsnull != m_onlineMailFilterTable)
+		delete m_onlineMailFilterTable;
+	if (nsnull != m_newsTable)
+		delete m_newsTable;
+	if (nsnull != m_localNewsTable)
+		delete m_localNewsTable;
+#ifdef DOING_EXNEWSSEARCH
+	if (nsnull != m_newsExTable)
+		delete m_newsExTable;
+#endif
+#ifdef DOING_LDAP
+	if (nsnull != m_ldapTable)
+		delete m_ldapTable;
+#endif
+}
+
+
+//-----------------------------------------------------------------------------
+// Bottleneck accesses to the objects so we can allocate and initialize them
+// lazily. This way, there's no heap overhead for the validity tables until the
+// user actually searches that scope.
+//-----------------------------------------------------------------------------
+
+nsresult nsMsgSearchValidityManager::GetTable (int whichTable, nsMsgSearchValidityTable **ppOutTable)
+{
+	NS_ENSURE_ARG(ppOutTable);
+
+	nsresult err = NS_OK;
+
+	// hack alert...currently FEs are setting scope to News even if it should be set to OfflineNewsgroups...
+	// i'm fixing this by checking if we are in offline mode...
+#ifdef DOING_OFFLINE
+	if (NET_IsOffline() && (whichTable == news || whichTable == newsEx))
+		whichTable = localNews;
+#endif
+
+	switch (whichTable)
+	{
+	case offlineMail:
+		if (!m_offlineMailTable)
+			err = InitOfflineMailTable ();
+		*ppOutTable = m_offlineMailTable;
+		break;
+	case onlineMail:
+		if (!m_onlineMailTable)
+			err = InitOnlineMailTable ();
+		*ppOutTable = m_onlineMailTable;
+		break;
+	case onlineMailFilter:
+		if (!m_onlineMailFilterTable)
+			err = InitOnlineMailFilterTable ();
+		*ppOutTable = m_onlineMailFilterTable;
+		break;
+	case news:
+		if (!m_newsTable)
+			err = InitNewsTable ();
+		*ppOutTable = m_newsTable;
+		break;
+#ifdef DOING_OFFLINE
+	case localNews:
+		if (!m_localNewsTable)
+			err = InitLocalNewsTable();
+		*ppOutTable = m_localNewsTable;
+		break;
+#endif
+#ifdef DOING_EXNEWSSEARCH
+	case newsEx:
+		if (!m_newsExTable)
+			err = InitNewsExTable ();
+		*ppOutTable = m_newsExTable;
+		break;
+#endif
+#ifdef DOING_LDAP
+	case Ldap:
+		if (!m_ldapTable)
+			err = InitLdapTable ();
+		*ppOutTable = m_ldapTable;
+		break;
+#endif
+	default:                 
+		NS_ASSERTION(PR_FALSE, "invalid table type");
+		err = NS_MSG_ERROR_INVALID_SEARCH_TERM;
+	}
+
+	return err;
+}
+
+
+
+nsresult nsMsgSearchValidityManager::NewTable(nsMsgSearchValidityTable **aTable)
+{
+	NS_ENSURE_ARG (aTable);
+	*aTable = new nsMsgSearchValidityTable;
+	if (nsnull == *aTable)
+		return NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 

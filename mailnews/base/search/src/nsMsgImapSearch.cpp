@@ -289,7 +289,6 @@ nsresult nsMsgSearchOnlineMail::Encode (nsCString *pEncoding, nsMsgSearchTermArr
 }
 
 
-#if 0
 nsresult nsMsgSearchValidityManager::InitOfflineMailTable ()
 {
     PR_ASSERT (nsnull == m_offlineMailTable);
@@ -596,4 +595,3 @@ nsresult nsMsgSearchValidityManager::InitOnlineMailFilterTable ()
     return err;
 }
 
-#endif
