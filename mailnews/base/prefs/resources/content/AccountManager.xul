@@ -34,7 +34,7 @@
                 IsDefaultServer="rdf:http://home.netscape.com/NC-rdf#IsDefaultServer"
                 PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
 		  		<treerow >
-					<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+					<treecell class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
 		  		</treerow>
 			</treeitem>
             </treechildren>
