@@ -1142,25 +1142,22 @@ void nsFontMetricsXlib::RealizeFont()
   float f;
   mDeviceContext->GetDevUnitsToAppUnits(f);
 
-  int lineSpacing = mFontHandle->ascent + mFontHandle->descent;
-  if (lineSpacing > mWesternFont->mSize)
-    mLeading = nscoord((lineSpacing - mWesternFont->mSize) * f);
+  nscoord lineSpacing = (mFontHandle->ascent + mFontHandle->descent) * f;
+  // XXXldb Shouldn't we get mEmHeight from the metrics?
+  mEmHeight = PR_MAX(1, nscoord(mWesternFont->mSize * f));
+  if (lineSpacing > mEmHeight)
+    mLeading = lineSpacing - mEmHeight;
   else
     mLeading = 0;
 
-  mEmHeight = PR_MAX(1, nscoord(mWesternFont->mSize * f));
-  mEmAscent = nscoord(mFontHandle->ascent * mWesternFont->mSize * f / lineSpacing);
+  mMaxHeight = nscoord((mFontHandle->ascent + mFontHandle->descent) * f);
+  mMaxAscent = nscoord(mFontHandle->ascent * f);
+  mMaxDescent = nscoord(mFontHandle->descent * f);
+
+  mEmAscent = nscoord(mMaxAscent * mEmHeight / lineSpacing);
   mEmDescent = mEmHeight - mEmAscent;
 
-  mMaxHeight = nscoord((mFontHandle->max_bounds.ascent +
-                        mFontHandle->max_bounds.descent) * f);
-  mMaxAscent = nscoord(mFontHandle->max_bounds.ascent * f) ;
-  mMaxDescent = nscoord(mFontHandle->max_bounds.descent * f);
-
   mMaxAdvance = nscoord(mFontHandle->max_bounds.width * f);
-
-  // 56% of ascent, best guess for non-true type
-  mXHeight = NSToCoordRound((float) mFontHandle->ascent* f * 0.56f);
 
   int rawWidth;
   if ((mFontHandle->min_byte1 == 0) && (mFontHandle->max_byte1 == 0)) {
@@ -1176,14 +1173,16 @@ void nsFontMetricsXlib::RealizeFont()
   mSpaceWidth = NSToCoordRound(rawWidth * f);
 
   unsigned long pr = 0;
-
-  if (::XGetFontProperty(mFontHandle, XA_X_HEIGHT, &pr))
+  if (::XGetFontProperty(mFontHandle, XA_X_HEIGHT, &pr) &&
+      pr < 0x00ffffff)  // Bug 43214: arbitrary to exclude garbage values
   {
-    if (pr < 0x00ffffff)  // Bug 43214: arbitrary to exclude garbage values
-    {
-      mXHeight = nscoord(pr * f);
-      PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("xHeight=%d\n", mXHeight));
-    }
+    mXHeight = nscoord(pr * f);
+    PR_LOG(FontMetricsXlibLM, PR_LOG_DEBUG, ("xHeight=%d\n", mXHeight));
+  }
+  else 
+  {
+    // 56% of ascent, best guess for non-true type
+    mXHeight = NSToCoordRound((float) mFontHandle->ascent* f * 0.56f);
   }
     
   if (::XGetFontProperty(mFontHandle, XA_UNDERLINE_POSITION, &pr))
