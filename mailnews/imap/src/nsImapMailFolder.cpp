@@ -644,7 +644,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
     // can't file to the sent folder, so we don't add the filter for those servers
     if (canFileMessagesOnServer) 
     {
-      rv = server->ConfigureTemporaryReturnReceiptsFilter(m_filterList);
+      rv = server->ConfigureTemporaryFilters(m_filterList);
       NS_ASSERTION(NS_SUCCEEDED(rv), "failed to add MDN filter");
     }
   }
@@ -3144,6 +3144,22 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWindo
           keysToFlag.Add(msgKey);
           StoreImapFlags((filterLabel << 9), PR_TRUE, keysToFlag.GetArray(), keysToFlag.GetSize());
         }
+        case nsMsgFilterAction::JunkScore:
+        {
+          nsCAutoString junkScoreStr;
+          PRInt32 junkScore;
+          filterAction->GetJunkScore(&junkScore);
+          junkScoreStr.AppendInt(junkScore);
+          mDatabase->SetStringProperty(msgKey, "junkscore", junkScoreStr.get());
+          mDatabase->SetStringProperty(msgKey, "junkscoreorigin", /* ### should this be plugin? */"plugin");
+          if (junkScore == 100 || !junkScore) // if score is 0 or 100, set up to store junk status on server.
+          {
+            nsMsgKeyArray *keysToClassify = m_moveCoalescer->GetKeyBucket((junkScore == 100) ? 0 : 1);
+            NS_ASSERTION(keysToClassify, "error getting key bucket");
+            if (keysToClassify)
+              keysToClassify->Add(msgKey);
+          }
+        }
         default:
           break;
       }
@@ -4938,12 +4954,7 @@ nsImapMailFolder::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
   if (m_performingBiff)
     GetNumNewMessages(PR_FALSE, &numNewBiffMsgs);
 
-  if (m_moveCoalescer)
-  {
-    m_moveCoalescer->PlaybackMoves ();
-    // we're not going to delete the move coalescer here. We're probably going to 
-    // keep it around forever, though I worry about cycles.
-  }
+  PlaybackCoalescedOperations();
   if (aProtocol)
   {
     // check if we should download message bodies because it's the inbox and 
@@ -7461,6 +7472,24 @@ nsImapMailFolder::StoreCustomKeywords(nsIMsgWindow *aMsgWindow, const char *aFla
   return imapService->StoreCustomKeywords(m_eventQueue, this, aMsgWindow, aFlagsToAdd, aFlagsToSubtract, msgIds.get(), _retval);
 }
 
+nsresult
+nsImapMailFolder::PlaybackCoalescedOperations()
+{
+  if (m_moveCoalescer)
+  {
+    nsMsgKeyArray *junkKeysToClassify = m_moveCoalescer->GetKeyBucket(0);
+    nsMsgKeyArray *nonJunkKeysToClassify = m_moveCoalescer->GetKeyBucket(1);
+
+    if (junkKeysToClassify && junkKeysToClassify->GetSize() > 0)
+      StoreCustomKeywords(m_moveCoalescer->GetMsgWindow(), "Junk", "", junkKeysToClassify->GetArray(), junkKeysToClassify->GetSize(), nsnull);
+    if (nonJunkKeysToClassify && nonJunkKeysToClassify->GetSize() > 0)
+      StoreCustomKeywords(m_moveCoalescer->GetMsgWindow(), "NonJunk", "", nonJunkKeysToClassify->GetArray(), nonJunkKeysToClassify->GetSize(), nsnull);
+    junkKeysToClassify->RemoveAll();
+    nonJunkKeysToClassify->RemoveAll();
+    return m_moveCoalescer->PlaybackMoves();
+  }
+  return NS_OK; // must not be any coalesced operations
+}
 
 NS_IMETHODIMP
 nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClassification)
@@ -7544,19 +7573,9 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
     rv = spamSettings->LogJunkHit(msgHdr, willMoveMessage);
     NS_ENSURE_SUCCESS(rv,rv);
   }
-  if (--m_numFilterClassifyRequests == 0 && m_moveCoalescer)
+  if (--m_numFilterClassifyRequests == 0)
   {
-    nsMsgKeyArray *junkKeysToClassify = m_moveCoalescer->GetKeyBucket(0);
-    nsMsgKeyArray *nonJunkKeysToClassify = m_moveCoalescer->GetKeyBucket(1);
-
-    nsCOMPtr<nsIImapService> imapService(do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv)); 
-    NS_ENSURE_SUCCESS(rv, rv); 
-
-    if (junkKeysToClassify && junkKeysToClassify->GetSize() > 0)
-      StoreCustomKeywords(m_moveCoalescer->GetMsgWindow(), "Junk", "", junkKeysToClassify->GetArray(), junkKeysToClassify->GetSize(), nsnull);
-    if (nonJunkKeysToClassify && nonJunkKeysToClassify->GetSize() > 0)
-      StoreCustomKeywords(m_moveCoalescer->GetMsgWindow(), "NonJunk", "", nonJunkKeysToClassify->GetArray(), nonJunkKeysToClassify->GetSize(), nsnull);
-    m_moveCoalescer->PlaybackMoves();
+    PlaybackCoalescedOperations();
     // If we are performing biff for this folder, tell the server object
     if (m_performingBiff)
     {
@@ -7568,8 +7587,6 @@ nsImapMailFolder::OnMessageClassified(const char *aMsgURI, nsMsgJunkStatus aClas
         server->SetPerformingBiff(PR_FALSE);
       m_performingBiff = PR_FALSE;
     }
-    junkKeysToClassify->RemoveAll();
-    nonJunkKeysToClassify->RemoveAll();
   }
   return NS_OK;
 }

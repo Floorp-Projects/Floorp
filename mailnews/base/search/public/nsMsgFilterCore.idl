@@ -77,5 +77,6 @@ interface nsMsgFilterAction {
     const long StopExecution=11;
     const long DeleteFromPop3Server=12;
     const long LeaveOnPop3Server=13;
+    const long JunkScore=14;
 };
 

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ * David Bienvenu (bienvenu@nventure.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -49,8 +50,8 @@ class nsMsgRuleAction : public nsIMsgRuleAction
 public:
   NS_DECL_ISUPPORTS
 
-	nsMsgRuleAction();
-	virtual ~nsMsgRuleAction();
+  nsMsgRuleAction();
+  virtual ~nsMsgRuleAction();
 
   NS_DECL_NSIMSGRULEACTION
 
@@ -59,7 +60,8 @@ private:
 		// this used to be a union - why bother?
     nsMsgPriorityValue	m_priority;  /* priority to set rule to */
     nsMsgLabelValue         m_label;  /* label to set rule to */
-    nsCString		m_folderUri;    /* Or some folder identifier, if such a thing is invented */
+    nsCString		m_folderUri; 
+    PRInt32             m_junkScore;  /* junk score (or arbitrary int value?) */
 } ;
 
 
@@ -69,55 +71,53 @@ public:
   NS_DECL_ISUPPORTS
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMSGFILTER_IID)
 
-	nsMsgFilter();
-	virtual ~nsMsgFilter ();
+  nsMsgFilter();
+  virtual ~nsMsgFilter ();
 
   NS_DECL_NSIMSGFILTER
 
-	nsMsgFilterTypeType	GetType() {return m_type;}
-	void			SetType(nsMsgFilterTypeType	type) {m_type = type;}
-	PRBool			GetEnabled() {return m_enabled;}
-	void			SetFilterScript(nsCString *filterName) ;
-    void            SetFilterList(nsIMsgFilterList* filterList);
-	PRBool			IsRule() 
-						{return (m_type & (nsMsgFilterType::InboxRule |
-                                           nsMsgFilterType::NewsRule)) != 0;}
-	PRBool			IsScript() {return (m_type &
-                                        (nsMsgFilterType::InboxJavaScript |
-                                         nsMsgFilterType::NewsJavaScript)) != 0;}
+  nsMsgFilterTypeType	GetType() {return m_type;}
+  void	  SetType(nsMsgFilterTypeType	type) {m_type = type;}
+  PRBool  GetEnabled() {return m_enabled;}
+  void    SetFilterScript(nsCString *filterName) ;
+  void    SetFilterList(nsIMsgFilterList* filterList);
+  PRBool  IsRule() {return (m_type & (nsMsgFilterType::InboxRule |
+                               nsMsgFilterType::NewsRule)) != 0;}
 
-	// filing routines.
-	nsresult		SaveToTextFile(nsIOFileStream *aStream);
-	nsresult		SaveRule(nsIOFileStream *aStream);
+  PRBool  IsScript() {return (m_type &
+                                  (nsMsgFilterType::InboxJavaScript |
+                                   nsMsgFilterType::NewsJavaScript)) != 0;}
 
-	PRInt16			GetVersion();
+  // filing routines.
+  nsresult  SaveToTextFile(nsIOFileStream *aStream);
+  nsresult  SaveRule(nsIOFileStream *aStream);
+
+  PRInt16   GetVersion();
 #ifdef DEBUG
-	void	Dump();
+  void	    Dump();
 #endif
 
-	nsresult		ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, nsCString &relativePath);
-static	const char *GetActionStr(nsMsgRuleActionType action);
-static	nsresult GetActionFilingStr(nsMsgRuleActionType action, nsCString &actionStr);
-static nsMsgRuleActionType GetActionForFilingStr(nsCString &actionStr);
-	nsMsgRuleAction      m_action;
+  nsresult  ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, nsCString &relativePath);
+  static const char *GetActionStr(nsMsgRuleActionType action);
+  static nsresult GetActionFilingStr(nsMsgRuleActionType action, nsCString &actionStr);
+  static nsMsgRuleActionType GetActionForFilingStr(nsCString &actionStr);
+  nsMsgRuleAction      m_action;
 protected:
-	nsMsgFilterTypeType m_type;
-	nsString		m_filterName;
-	nsCString		m_scriptFileName;	// iff this filter is a script.
-	nsCString		m_description;
+  nsMsgFilterTypeType m_type;
+  nsString    m_filterName;
+  nsCString   m_scriptFileName;	// iff this filter is a script.
+  nsCString   m_description;
   nsCString   m_unparsedBuffer;
 
-    PRPackedBool m_enabled;
-    PRPackedBool m_temporary;
-    PRPackedBool m_unparseable;
+  PRPackedBool m_enabled;
+  PRPackedBool m_temporary;
+  PRPackedBool m_unparseable;
 
-    nsIMsgFilterList *m_filterList;	/* owning filter list */
-    nsCOMPtr<nsISupportsArray> m_termList;       /* linked list of criteria terms */
-    nsCOMPtr<nsIMsgSearchScopeTerm> m_scope;         /* default for mail rules is inbox, but news rules could
-have a newsgroup - LDAP would be invalid */
-    nsCOMPtr<nsISupportsArray> m_actionList;
-    //nsCString		m_originalServerPath;  //used for 4.x filters
-
+  nsIMsgFilterList *m_filterList;	/* owning filter list */
+  nsCOMPtr<nsISupportsArray> m_termList;       /* linked list of criteria terms */
+  nsCOMPtr<nsIMsgSearchScopeTerm> m_scope;         /* default for mail rules is inbox, but news rules could
+                                                  have a newsgroup - LDAP would be invalid */
+  nsCOMPtr<nsISupportsArray> m_actionList;
 };
 
 #endif

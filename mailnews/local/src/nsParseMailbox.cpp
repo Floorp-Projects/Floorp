@@ -486,9 +486,9 @@ nsParseMailMessageState::~nsParseMailMessageState()
 
 void nsParseMailMessageState::Init(PRUint32 fileposition)
 {
-	m_state = nsIMsgParseMailMsgState::ParseBodyState;
-	m_position = fileposition;
-	m_newMsgHdr = nsnull;
+  m_state = nsIMsgParseMailMsgState::ParseBodyState;
+  m_position = fileposition;
+  m_newMsgHdr = nsnull;
 }
 
 NS_IMETHODIMP nsParseMailMessageState::Clear()
@@ -556,10 +556,8 @@ NS_IMETHODIMP nsParseMailMessageState::SetEnvelopePos(PRUint32 aEnvelopePos)
 NS_IMETHODIMP nsParseMailMessageState::GetNewMsgHdr(nsIMsgDBHdr ** aMsgHeader)
 {
   if (aMsgHeader)
-  {
-    *aMsgHeader = m_newMsgHdr;
-    NS_IF_ADDREF(*aMsgHeader);
-  }
+    NS_IF_ADDREF(*aMsgHeader = m_newMsgHdr);
+
   return NS_OK;
 }
 
@@ -591,8 +589,8 @@ PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 line
     }
     else
     {
-		  /* Otherwise, this line belongs to a header.  So append it to the
-                  header data, and stay in MBOX `MIME_PARSE_HEADERS' state.
+      /* Otherwise, this line belongs to a header.  So append it to the
+         header data, and stay in MBOX `MIME_PARSE_HEADERS' state.
       */
       m_headers.AppendBuffer(line, lineLength);
     }
@@ -1460,7 +1458,7 @@ nsParseNewMailState::Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder
     rv = server->GetFilterList(aMsgWindow, getter_AddRefs(m_filterList));
   
   if (m_filterList)
-    rv = server->ConfigureTemporaryReturnReceiptsFilter(m_filterList);
+    rv = server->ConfigureTemporaryFilters(m_filterList);
   
   m_disableFilters = PR_FALSE;
   return NS_OK; 
@@ -1685,6 +1683,15 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, nsIMsgWi
         msgHdr->GetMessageKey(&msgKey);
         m_mailDB->SetLabel(msgKey, filterLabel);
         break;
+      case nsMsgFilterAction::JunkScore:
+      {
+        nsCAutoString junkScoreStr;
+        PRInt32 junkScore;
+        filterAction->GetJunkScore(&junkScore);
+        junkScoreStr.AppendInt(junkScore);
+        m_mailDB->SetStringProperty(msgKey, "junkscore", junkScoreStr.get());
+        m_mailDB->SetStringProperty(msgKey, "junkscoreorigin", /* ### should this be plugin? */"plugin");
+      }
       case nsMsgFilterAction::DeleteFromPop3Server:
         {
           nsCOMPtr <nsIMsgFolder> downloadFolder;

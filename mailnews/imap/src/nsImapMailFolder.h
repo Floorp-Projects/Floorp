@@ -421,6 +421,7 @@ protected:
     nsCString& msgIds, nsMsgKeyArray& keyArray);
   
   nsresult GetMoveCoalescer();
+  nsresult PlaybackCoalescedOperations();
   virtual nsresult CreateBaseMessageURI(const char *aURI);
   // offline-ish methods
   nsresult GetClearedOriginalOp(nsIMsgOfflineImapOperation *op, nsIMsgOfflineImapOperation **originalOp, 

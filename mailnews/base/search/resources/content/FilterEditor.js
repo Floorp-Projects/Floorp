@@ -47,6 +47,7 @@ var gActionTargetElement;
 var gActionValueDeck;
 var gActionPriority;
 var gActionLabel;
+var gActionJunkScore;
 var gFilterBundle;
 var gPreFillName;
 var nsMsgSearchScope = Components.interfaces.nsMsgSearchScope;
@@ -55,6 +56,7 @@ var gMailSession = null;
 var gMoveToFolderCheckbox;
 var gChangePriorityCheckbox;
 var gLabelCheckbox;
+var gJunkScoreCheckbox;
 var gMarkReadCheckbox;
 var gMarkFlaggedCheckbox;
 var gDeleteCheckbox;
@@ -271,10 +273,13 @@ function initializeFilterWidgets()
     gActionTargetElement = document.getElementById("actionTargetFolder");
     gActionValueDeck = document.getElementById("actionValueDeck");
     gActionPriority = document.getElementById("actionValuePriority");
+    gActionJunkScore = document.getElementById("actionValueJunkScore");
     gActionLabel = document.getElementById("actionValueLabel");
     gMoveToFolderCheckbox = document.getElementById("moveToFolder");
     gChangePriorityCheckbox = document.getElementById("changePriority");
+    gChangeJunkScoreCheckbox = document.getElementById("setJunkScore");
     gLabelCheckbox = document.getElementById("label");
+    gJunkScoreCheckbox = document.getElementById("setJunkScore");
     gMarkReadCheckbox = document.getElementById("markRead");
     gMarkFlaggedCheckbox = document.getElementById("markFlagged");
     gDeleteCheckbox = document.getElementById("delete");
@@ -322,6 +327,18 @@ function initializeDialog(filter)
         {
           selectedLabel = selectedLabel[0];
           gActionLabel.selectedItem = selectedLabel;
+        }
+      }
+      else if (filterAction.type == nsMsgFilterAction.JunkScore) 
+      {
+        gChangeJunkScoreCheckbox.checked = true;
+        // initialize junk score
+        var selectedJunkScore = gActionJunkScore.getElementsByAttribute("value", filterAction.junkScore);
+
+        if (selectedJunkScore && selectedJunkScore.length > 0) 
+        {
+          selectedJunkScore = selectedJunkScore[0];
+          gActionJunkScore.selectedItem = selectedJunkScore;
         }
       }
       else if (filterAction.type == nsMsgFilterAction.MarkRead)
@@ -452,6 +469,14 @@ function saveFilter()
     filterAction = gFilter.createAction();
     filterAction.type = nsMsgFilterAction.Label;
     filterAction.label = gActionLabel.selectedItem.getAttribute("value");
+    gFilter.appendAction(filterAction);
+  }
+
+  if (gJunkScoreCheckbox.checked) 
+  {
+    filterAction = gFilter.createAction();
+    filterAction.type = nsMsgFilterAction.JunkScore;
+    filterAction.junkScore = gActionJunkScore.selectedItem.getAttribute("value");
     gFilter.appendAction(filterAction);
   }
 

@@ -59,6 +59,8 @@ interface nsIMsgRuleAction : nsISupports {
   // target label. throws an exception if the action is not label
   attribute nsMsgLabelValue label;
 
+  attribute long junkScore; 
+
 };
 
 [scriptable, uuid(605db0f8-04a1-11d3-a50a-0060b0fc04b7)]
