@@ -41,7 +41,7 @@ import java.awt.Canvas;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: BrowserControlImpl.java,v 1.6 1999/12/03 01:55:29 edburns%acm.org Exp $
+ * @version $Id: BrowserControlImpl.java,v 1.7 1999/12/23 04:09:27 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControl
  *
@@ -98,7 +98,7 @@ protected BrowserControlImpl(Canvas yourCanvas)
 
 public void createWindow(int windowPtr, Rectangle bounds) throws Exception 
 {
-	nativeWebShell = BrowserControlMozillaShim.webShellCreate(windowPtr, bounds);
+	nativeWebShell = BrowserControlNativeShim.webShellCreate(windowPtr, bounds);
 }
 
 public Canvas getCanvas()
@@ -108,32 +108,32 @@ public Canvas getCanvas()
 
 public void loadURL(String urlString) throws Exception 
 {
-    BrowserControlMozillaShim.webShellLoadURL(nativeWebShell, urlString);
+    BrowserControlNativeShim.webShellLoadURL(nativeWebShell, urlString);
 }
 
 public void stop() throws Exception 
 {
-    BrowserControlMozillaShim.webShellStop(nativeWebShell);
+    BrowserControlNativeShim.webShellStop(nativeWebShell);
 }
 
 public void show () throws Exception 
 {
-    BrowserControlMozillaShim.webShellShow(nativeWebShell);
+    BrowserControlNativeShim.webShellShow(nativeWebShell);
 }
 
 public void hide () throws Exception 
 {
-    BrowserControlMozillaShim.webShellHide(nativeWebShell);
+    BrowserControlNativeShim.webShellHide(nativeWebShell);
 }
 
 public void setBounds (Rectangle bounds) throws Exception 
 {
-    BrowserControlMozillaShim.webShellSetBounds(nativeWebShell, bounds);
+    BrowserControlNativeShim.webShellSetBounds(nativeWebShell, bounds);
 }
 
 public void moveTo (int x, int y) throws Exception 
 {
-    BrowserControlMozillaShim.webShellMoveTo(nativeWebShell, x, y);
+    BrowserControlNativeShim.webShellMoveTo(nativeWebShell, x, y);
 }
 
 /**
@@ -141,7 +141,7 @@ public void moveTo (int x, int y) throws Exception
  */
 public void setFocus () throws Exception 
 {
-    BrowserControlMozillaShim.webShellSetFocus(nativeWebShell);
+    BrowserControlNativeShim.webShellSetFocus(nativeWebShell);
 }
 
 /**
@@ -149,7 +149,7 @@ public void setFocus () throws Exception
  */
 public void removeFocus () throws Exception 
 {
-    BrowserControlMozillaShim.webShellRemoveFocus(nativeWebShell);
+    BrowserControlNativeShim.webShellRemoveFocus(nativeWebShell);
 }
 
 /**
@@ -157,7 +157,7 @@ public void removeFocus () throws Exception
  */
 public void repaint (boolean forceRepaint) throws Exception 
 {
-    BrowserControlMozillaShim.webShellRepaint(nativeWebShell, forceRepaint);
+    BrowserControlNativeShim.webShellRepaint(nativeWebShell, forceRepaint);
 }
 
 /**
@@ -165,7 +165,7 @@ public void repaint (boolean forceRepaint) throws Exception
  */
 public boolean canBack () throws Exception 
 {
-    return BrowserControlMozillaShim.webShellCanBack(nativeWebShell);
+    return BrowserControlNativeShim.webShellCanBack(nativeWebShell);
 }
 
 /**
@@ -173,7 +173,7 @@ public boolean canBack () throws Exception
  */
 public boolean canForward () throws Exception 
 {
-    return BrowserControlMozillaShim.webShellCanForward(nativeWebShell);
+    return BrowserControlNativeShim.webShellCanForward(nativeWebShell);
 }
 
 /**
@@ -181,7 +181,7 @@ public boolean canForward () throws Exception
  */
 public boolean back () throws Exception 
 {
-    return BrowserControlMozillaShim.webShellBack(nativeWebShell);
+    return BrowserControlNativeShim.webShellBack(nativeWebShell);
 }
 
 /**
@@ -189,7 +189,7 @@ public boolean back () throws Exception
  */
 public boolean forward () throws Exception 
 {
-    return BrowserControlMozillaShim.webShellForward(nativeWebShell);
+    return BrowserControlNativeShim.webShellForward(nativeWebShell);
 }
 
 /**
@@ -197,7 +197,7 @@ public boolean forward () throws Exception
  */
 public boolean goTo (int historyIndex) throws Exception 
 {
-    return BrowserControlMozillaShim.webShellGoTo(nativeWebShell, historyIndex);
+    return BrowserControlNativeShim.webShellGoTo(nativeWebShell, historyIndex);
 }
 
 /**
@@ -205,7 +205,7 @@ public boolean goTo (int historyIndex) throws Exception
  */
 public int getHistoryLength () throws Exception 
 {
-    return BrowserControlMozillaShim.webShellGetHistoryLength(nativeWebShell);
+    return BrowserControlNativeShim.webShellGetHistoryLength(nativeWebShell);
 }
 
 /**
@@ -213,7 +213,7 @@ public int getHistoryLength () throws Exception
  */
 public int getHistoryIndex () throws Exception 
 {
-    return BrowserControlMozillaShim.webShellGetHistoryIndex(nativeWebShell);
+    return BrowserControlNativeShim.webShellGetHistoryIndex(nativeWebShell);
 }
 
 /**
@@ -221,7 +221,7 @@ public int getHistoryIndex () throws Exception
  */
 public String getURL (int historyIndex) throws Exception 
 {
-    return BrowserControlMozillaShim.webShellGetURL(nativeWebShell, historyIndex);
+    return BrowserControlNativeShim.webShellGetURL(nativeWebShell, historyIndex);
 }
 
 /**
@@ -229,7 +229,7 @@ public String getURL (int historyIndex) throws Exception
  */
 public boolean refresh() throws Exception
 {
-    return BrowserControlMozillaShim.webShellRefresh(nativeWebShell);
+    return BrowserControlNativeShim.webShellRefresh(nativeWebShell);
 }
 
 /**
@@ -244,7 +244,7 @@ public EventRegistration getEventRegistration() {
  * add document load event listener
  */
 public boolean addDocumentLoadListener(DocumentLoadListener dll) throws Exception {
-    return BrowserControlMozillaShim.webShellAddDocListener(nativeWebShell, dll);
+    return BrowserControlNativeShim.webShellAddDocListener(nativeWebShell, dll);
 }
 
 /**
@@ -261,7 +261,7 @@ public int getNativeWebShell ()
 public void finalize () 
 {
     try {
-        BrowserControlMozillaShim.webShellDelete(nativeWebShell);
+        BrowserControlNativeShim.webShellDelete(nativeWebShell);
     }
     catch (Exception ex) {
         System.out.println(ex.toString());
@@ -281,7 +281,7 @@ public static void main(String [] args)
     //    BrowserControlImpl me = new BrowserControlImpl();
     Log.setApplicationName("BrowserControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.6 1999/12/03 01:55:29 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.7 1999/12/23 04:09:27 edburns%acm.org Exp $");
     
 }
 

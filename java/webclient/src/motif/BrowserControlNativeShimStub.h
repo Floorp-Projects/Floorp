@@ -21,7 +21,7 @@
  */
 
 /*
- * BrowserControlMozillaShimStub.h
+ * BrowserControlNativeShimStub.h
  */
 
 /*

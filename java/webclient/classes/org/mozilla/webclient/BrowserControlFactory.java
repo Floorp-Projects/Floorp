@@ -43,7 +43,7 @@ import java.io.FileNotFoundException;
  * This is a static class, it is neven instantiated.
 
  *
- * @version $Id: BrowserControlFactory.java,v 1.2 1999/12/06 23:31:04 edburns%acm.org Exp $
+ * @version $Id: BrowserControlFactory.java,v 1.3 1999/12/23 04:09:27 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.test.EmbeddedMozilla
 
@@ -153,7 +153,7 @@ public static void setAppData(String absolutePathToNativeBrowserBinDir) throws F
         }
         
         try {
-            BrowserControlMozillaShim.initialize(absolutePathToNativeBrowserBinDir);
+            BrowserControlNativeShim.initialize(absolutePathToNativeBrowserBinDir);
         }
         catch (Exception e) {
             throw new ClassNotFoundException("Can't initialize native browser: " + 
@@ -197,7 +197,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("BrowserControlFactory");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.2 1999/12/06 23:31:04 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlFactory.java,v 1.3 1999/12/23 04:09:27 edburns%acm.org Exp $");
 
     java.awt.Canvas canvas = null;
     BrowserControl control = null;

@@ -21,7 +21,7 @@
  */
 
 /*
- * BrowserControlMozillaShimStub.cpp
+ * BrowserControlNativeShimStub.cpp
  */
 
 // PENDING(mark): I suppose this is where I need to go into my explaination of why
@@ -32,12 +32,12 @@
 // JNI...yada, yada, yada
 #include <jni.h>
 // JNI Header
-#include "../BrowserControlMozillaShim.h"
+#include "../BrowserControlNativeShim.h"
 // JNI Header
-#include "MozillaEventThread.h"
+#include "NativeEventThread.h"
 
 // allow code in webclientstub.so to load us
-#include "BrowserControlMozillaShimStub.h"
+#include "BrowserControlNativeShimStub.h"
 
 // Global reference to webclient dll
 void * webClientDll;
@@ -85,167 +85,167 @@ void (* processNativeEventQueue) (JNIEnv *, jobject, jint);
 
 
 void locateBrowserControlStubFunctions(void * dll) {
-  nativeInitialize = (void (*) (JNIEnv *, jobject, jstring)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize");
+  nativeInitialize = (void (*) (JNIEnv *, jobject, jstring)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeInitialize");
   if (!nativeInitialize) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeTerminate = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeTerminate");
+  nativeTerminate = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeTerminate");
   if (!nativeTerminate) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeSendKeyDownEvent = (void (*) (JNIEnv *, jobject, jint, jchar, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyDownEvent");
+  nativeSendKeyDownEvent = (void (*) (JNIEnv *, jobject, jint, jchar, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeSendKeyDownEvent");
   if (!nativeSendKeyDownEvent) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeSendKeyUpEvent = (void (*) (JNIEnv *, jobject, jint, jchar, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyUpEvent");
+  nativeSendKeyUpEvent = (void (*) (JNIEnv *, jobject, jint, jchar, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeSendKeyUpEvent");
   if (!nativeSendKeyUpEvent) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeSendMouseEvent = (void (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint, jint, jint, jint,jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendMouseEvent");
+  nativeSendMouseEvent = (void (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint, jint, jint, jint,jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeSendMouseEvent");
   if (!nativeSendMouseEvent) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeIdleEvent = (void (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeIdleEvent");
+  nativeIdleEvent = (void (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeIdleEvent");
   if (!nativeIdleEvent) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeUpdateEvent = (void (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeUpdateEvent");
+  nativeUpdateEvent = (void (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeUpdateEvent");
   if (!nativeUpdateEvent) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetCreate = (jint (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetCreate");
+  nativeWidgetCreate = (jint (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetCreate");
   if (!nativeWidgetCreate) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetDelete = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetDelete");
+  nativeWidgetDelete = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetDelete");
   if (!nativeWidgetDelete) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetResize = (void (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetResize");
+  nativeWidgetResize = (void (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetResize");
   if (!nativeWidgetResize) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetEnable = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetEnable");
+  nativeWidgetEnable = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetEnable");
   if (!nativeWidgetEnable) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetShow = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetShow");
+  nativeWidgetShow = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetShow");
   if (!nativeWidgetShow) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetInvalidate = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetInvalidate");
+  nativeWidgetInvalidate = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetInvalidate");
   if (!nativeWidgetInvalidate) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWidgetUpdate = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetUpdate");
+  nativeWidgetUpdate = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetUpdate");
   if (!nativeWidgetUpdate) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeProcessEvents = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeProcessEvents");
+  nativeProcessEvents = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeProcessEvents");
   if (!nativeProcessEvents) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellCreate = (jint (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCreate");
+  nativeWebShellCreate = (jint (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCreate");
   if (!nativeWebShellCreate) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellDelete = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellDelete");
+  nativeWebShellDelete = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellDelete");
   if (!nativeWebShellDelete) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellLoadURL = (void (*) (JNIEnv *, jobject, jint, jstring)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellLoadURL");
+  nativeWebShellLoadURL = (void (*) (JNIEnv *, jobject, jint, jstring)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellLoadURL");
   if (!nativeWebShellLoadURL) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellStop = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellStop");
+  nativeWebShellStop = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellStop");
   if (!nativeWebShellStop) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellShow = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellShow");
+  nativeWebShellShow = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellShow");
   if (!nativeWebShellShow) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellHide = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellHide");
+  nativeWebShellHide = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellHide");
   if (!nativeWebShellHide) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellSetBounds = (void (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetBounds");
+  nativeWebShellSetBounds = (void (*) (JNIEnv *, jobject, jint, jint, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellSetBounds");
   if (!nativeWebShellSetBounds) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellMoveTo = (void (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellMoveTo");
+  nativeWebShellMoveTo = (void (*) (JNIEnv *, jobject, jint, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellMoveTo");
   if (!nativeWebShellMoveTo) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellSetFocus = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetFocus");
+  nativeWebShellSetFocus = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellSetFocus");
   if (!nativeWebShellSetFocus) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellRemoveFocus = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRemoveFocus");
+  nativeWebShellRemoveFocus = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellRemoveFocus");
   if (!nativeWebShellRemoveFocus) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellRepaint = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRepaint");
+  nativeWebShellRepaint = (void (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellRepaint");
   if (!nativeWebShellRepaint) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellCanBack = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanBack");
+  nativeWebShellCanBack = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCanBack");
   if (!nativeWebShellCanBack) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellCanForward = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanForward");
+  nativeWebShellCanForward = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCanForward");
   if (!nativeWebShellCanForward) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellBack = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellBack");
+  nativeWebShellBack = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellBack");
   if (!nativeWebShellBack) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellForward = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellForward");
+  nativeWebShellForward = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellForward");
   if (!nativeWebShellForward) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellGoTo = (jboolean (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGoTo");
+  nativeWebShellGoTo = (jboolean (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGoTo");
   if (!nativeWebShellGoTo) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellGetHistoryLength = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryLength");
+  nativeWebShellGetHistoryLength = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGetHistoryLength");
   if (!nativeWebShellGetHistoryLength) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellGetHistoryIndex = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryIndex");
+  nativeWebShellGetHistoryIndex = (jint (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGetHistoryIndex");
   if (!nativeWebShellGetHistoryIndex) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeWebShellGetURL = (jstring (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL");
+  nativeWebShellGetURL = (jstring (*) (JNIEnv *, jobject, jint, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGetURL");
   if (!nativeWebShellGetURL) {
     printf("got dlsym error %s\n", dlerror());
   }
   
   // added by Mark Goddard OTMP 9/2/1999
-  nativeWebShellRefresh = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRefresh");
+  nativeWebShellRefresh = (jboolean (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellRefresh");
   if (!nativeWebShellRefresh) {
     printf("got dlsym error %s\n", dlerror());
   }
 
-  nativeWebShellAddDocListener = (jboolean (*) (JNIEnv *, jobject, jint, jobject)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellAddDocListener");
+  nativeWebShellAddDocListener = (jboolean (*) (JNIEnv *, jobject, jint, jobject)) dlsym(dll, "Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellAddDocListener");
   if (!nativeWebShellAddDocListener) {
       printf("got dlsym error %s\n", dlerror());
   }
 
 
-  processNativeEventQueue = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_MozillaEventThread_processNativeEventQueue");
+  processNativeEventQueue = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_motif_NativeEventThread_processNativeEventQueue");
   if (!processNativeEventQueue) {
     printf("got dlsym error %s\n", dlerror());
   }
 }
 
 /*
- * Class:     org_mozilla_webclient_motif_MotifMozillaEventQueue
+ * Class:     org_mozilla_webclient_motif_MotifNativeEventQueue
  * Method:    processNativeEventQueue
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MozillaEventThread_processNativeEventQueue
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_NativeEventThread_processNativeEventQueue
     (JNIEnv * env, jobject obj, jint gtkWinPtr) {
     (* processNativeEventQueue) (env, obj, gtkWinPtr);
 }
@@ -265,41 +265,41 @@ void loadMainDll(void)
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorInitialize
  * Signature: ()V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeInitialize (
 	JNIEnv		*	env,
 	jobject			obj, jstring verifiedBinDirAbsolutePath)
 {
     (* nativeInitialize) (env, obj, verifiedBinDirAbsolutePath);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeInitialize()
 
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorTerminate
  * Signature: ()V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeTerminate (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeTerminate (
 	JNIEnv	*	env,
 	jobject		obj)
 {
   (* nativeTerminate) (env, obj);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeTerminate()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeTerminate()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorSendKeyDownEvent
  * Signature: (ICIII)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyDownEvent (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeSendKeyDownEvent (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		widgetPtr,
@@ -309,16 +309,16 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyDownEvent (
 	jint		eventTime)
 {
   (* nativeSendKeyDownEvent) (env, obj, widgetPtr, keyChar, keyCode, modifiers, eventTime);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyDownEvent()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeSendKeyDownEvent()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorSendKeyUpEvent
  * Signature: (ICIII)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyUpEvent (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeSendKeyUpEvent (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		widgetPtr,
@@ -328,16 +328,16 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyUpEvent (
 	jint		eventTime)
 {
   (* nativeSendKeyUpEvent) (env, obj, widgetPtr, keyChar, keyCode, modifiers, eventTime);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendKeyUpEvent()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeSendKeyUpEvent()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorSendMouseEvent
  * Signature: (IIIIIIIIIII)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendMouseEvent (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeSendMouseEvent (
 	JNIEnv	*		env,
 	jobject			obj,
 	jint			windowPtr,
@@ -352,49 +352,49 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendMouseEvent (
 	jint			eventTime)
 {
   (* nativeSendMouseEvent) (env, obj, windowPtr, widgetPtr, widgetX, widgetY, windowX, windowY, mouseMessage, numClicks, modifiers, eventTime);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeSendMouseEvent()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeSendMouseEvent()
 
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorIdleEvent
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeIdleEvent (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeIdleEvent (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		windowPtr,
 	jint		eventTime)
 {
   (* nativeIdleEvent) (env, obj, windowPtr, eventTime);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeIdleEvent()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeIdleEvent()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorUpdateEvent
  * Signature: (II)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeUpdateEvent (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeUpdateEvent (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		windowPtr,
 	jint		eventTime)
 {
   (* nativeUpdateEvent) (env, obj, windowPtr, eventTime);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeUpdateEvent()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeUpdateEvent()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWidgetCreate
  * Signature: (I)I
  */
 JNIEXPORT jint JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetCreate (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetCreate (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		windowPtr,
@@ -404,32 +404,32 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetCreate (
 	jint		height)
 {
   return (* nativeWidgetCreate) (env, obj, windowPtr, x, y, width, height);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetCreate()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetCreate()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWidgetDelete
  * Signature: (I)I
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetDelete (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetDelete (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		widgetPtr)
 {
   (* nativeWidgetDelete) (env, obj, widgetPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetDelete()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetDelete()
 
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWidgetResize
  * Signature: (IIIZ)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetResize (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetResize (
 	JNIEnv *	env,
 	jobject		obj,
 	jint		widgetPtr,
@@ -440,79 +440,79 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetResize (
 	jboolean	repaint)
 {
   (* nativeWidgetResize) (env, obj, widgetPtr, x, y, width, height, repaint);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetResize()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetResize()
 
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWidgetEnable
  * Signature: (IZ)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetEnable (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetEnable (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		widgetPtr,
 	jboolean	enable)
 {
   (* nativeWidgetEnable) (env, obj, widgetPtr, enable);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetEnable()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetEnable()
 
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWidgetShow
  * Signature: (IZ)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetShow (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetShow (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		widgetPtr,
 	jboolean	show)
 {
   (* nativeWidgetShow) (env, obj, widgetPtr, show);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetShow()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetShow()
 
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWidgetInvalidate
  * Signature: (IZ)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetInvalidate (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetInvalidate (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		widgetPtr,
 	jboolean	isSynchronous)
 {
   (* nativeWidgetInvalidate) (env, obj, widgetPtr, isSynchronous);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetInvalidate()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetInvalidate()
 
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWidgetUpdate
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetUpdate (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetUpdate (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		widgetPtr)
 {
   (* nativeWidgetUpdate) (env, obj, widgetPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWidgetUpdate()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWidgetUpdate()
 
 
 
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeProcessEvents (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeProcessEvents (
 	JNIEnv*	env,
 	jobject obj,
 	jint	theWebShell)
@@ -522,12 +522,12 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeProcessEvents (
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellCreate
  * Signature: (IIIIII)I
  */
 JNIEXPORT jint JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCreate (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCreate (
 	JNIEnv		*	env,
 	jobject			obj,
 	jint			windowPtr,
@@ -537,92 +537,92 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCreate (
 	jint			height)
 {
   return (* nativeWebShellCreate) (env, obj, windowPtr, x, y, width, height);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCreate()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCreate()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellDelete
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellDelete (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellDelete (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   (* nativeWebShellDelete) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellDelete()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellDelete()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellLoadURL
  * Signature: (ILjava/lang/String;)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellLoadURL (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellLoadURL (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr,
 	jstring		urlString)
 {
   (* nativeWebShellLoadURL) (env, obj, webShellPtr, urlString);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellLoadURL()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellLoadURL()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellStop
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellStop (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellStop (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   (* nativeWebShellStop) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellStop()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellStop()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellShow
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellShow (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellShow (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   (* nativeWebShellShow) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellShow()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellShow()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellHide
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellHide (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellHide (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   (* nativeWebShellHide) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellHide()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellHide()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellSetBounds
  * Signature: (IIIII)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetBounds (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellSetBounds (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr,
@@ -632,16 +632,16 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetBounds (
 	jint		height)
 {
   (* nativeWebShellSetBounds) (env, obj, webShellPtr, x, y, width, height);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetBounds()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellSetBounds()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellMoveTo
  * Signature: (III)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellMoveTo (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellMoveTo (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr,
@@ -649,206 +649,206 @@ Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellMoveTo (
 	jint		y)
 {
   (* nativeWebShellMoveTo) (env, obj, webShellPtr, x, y);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellMoveTo()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellMoveTo()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellSetFocus
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetFocus (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellSetFocus (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   (* nativeWebShellSetFocus) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellSetFocus()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellSetFocus()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellRemoveFocus
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRemoveFocus (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellRemoveFocus (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   (* nativeWebShellRemoveFocus) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRemoveFocus()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellRemoveFocus()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellRepaint
  * Signature: (IZ)V
  */
 JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRepaint (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellRepaint (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr,
 	jboolean	forceRepaint)
 {
   (* nativeWebShellRepaint) (env, obj, webShellPtr, forceRepaint);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRepaint()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellRepaint()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellCanBack
  * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanBack (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCanBack (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   return (* nativeWebShellCanBack) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanBack()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCanBack()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellCanForward
  * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanForward (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCanForward (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   return (* nativeWebShellCanForward) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellCanForward()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCanForward()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellBack
  * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellBack (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellBack (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   return (* nativeWebShellBack) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellBack()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellBack()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellForward
  * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellForward (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellForward (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   return (* nativeWebShellForward) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellForward()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellForward()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellGoTo
  * Signature: (II)Z
  */
 JNIEXPORT jboolean JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGoTo (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGoTo (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr,
 	jint		historyIndex)
 {
   return (* nativeWebShellGoTo) (env, obj, webShellPtr, historyIndex);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGoTo()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGoTo()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellGetHistoryLength
  * Signature: (I)I
  */
 JNIEXPORT jint JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryLength (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGetHistoryLength (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   return (* nativeWebShellGetHistoryLength) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryLength()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGetHistoryLength()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellGetHistoryIndex
  * Signature: (I)I
  */
 JNIEXPORT jint JNICALL 
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryIndex (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGetHistoryIndex (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   return (* nativeWebShellGetHistoryIndex) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetHistoryIndex()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGetHistoryIndex()
 
 
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellGetURL
  * Signature: (II)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGetURL (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr,
 	jint		historyIndex)
 {
   return (* nativeWebShellGetURL) (env, obj, webShellPtr, historyIndex);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellGetURL()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellGetURL()
 
 // added by Mark Goddard OTMP 9/2/1999
 /*
- * Class:     MozWebShellMozillaShim
+ * Class:     MozWebShellNativeShim
  * Method:    raptorWebShellRefresh
  * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRefresh (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellRefresh (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr)
 {
   return (* nativeWebShellRefresh) (env, obj, webShellPtr);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellRefresh()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellRefresh()
 
 
 /*
- * Class:     BrowserControlMozillaShimStub
+ * Class:     BrowserControlNativeShimStub
  * Method:    nativeWebShellAddDocListener
  * Signature: (I)Z
  */
 JNIEXPORT jboolean JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellAddDocListener (
+Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellAddDocListener (
 	JNIEnv	*	env,
 	jobject		obj,
 	jint		webShellPtr,
     jobject     listener)
 {
   return (* nativeWebShellAddDocListener) (env, obj, webShellPtr, listener);
-} // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeWebShellAddDocListener()
+} // Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellAddDocListener()
  
 
 // EOF

@@ -30,7 +30,7 @@ MODULE=webclient
 
 OBJS =                              \
     .\$(OBJDIR)\nsActions.obj  \
-    .\$(OBJDIR)\BrowserControlMozillaShim.obj  \
+    .\$(OBJDIR)\BrowserControlNativeShim.obj  \
     .\$(OBJDIR)\DocumentObserver.obj  \
     .\$(OBJDIR)\jni_util.obj  \
     $(NULL)
@@ -66,11 +66,11 @@ include <$(DEPTH)\java\config\localdefs.mak>
 !CMDSWITCHES -S
 
 # generate the jni header
-export:: BrowserControlMozillaShim.h
+export:: BrowserControlNativeShim.h
 
-BrowserControlMozillaShim.h:
-	@echo Assuming class org.mozilla.webclient.BrowserControlMozillaShim is in $(JAVAH_FLAGS)
-	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.BrowserControlMozillaShim
+BrowserControlNativeShim.h:
+	@echo Assuming class org.mozilla.webclient.BrowserControlNativeShim is in $(JAVAH_FLAGS)
+	$(JAVAH) $(JAVAH_FLAGS)  -o $@ org.mozilla.webclient.BrowserControlNativeShim
 
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
@@ -85,6 +85,6 @@ clobber_all:: clobber
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f BrowserControlMozillaShim.h
+	rm -f BrowserControlNativeShim.h
 	rm -f .\$(OBJDIR)\runem.bat
 	rm -f .\$(OBJDIR)\swingem.bat

@@ -48,7 +48,7 @@ import java.awt.*;
  * There is one instance of this class and all of the exposed methods
  * are static.
 
- * @version $Id: BrowserControlMozillaShim.java,v 1.6 1999/11/06 02:24:18 dmose%mozilla.org Exp $
+ * @version $Id: BrowserControlNativeShim.java,v 1.1 1999/12/23 04:09:29 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlImpl
 
@@ -56,7 +56,7 @@ import java.awt.*;
 
  */
 
-public class BrowserControlMozillaShim extends Object
+public class BrowserControlNativeShim extends Object
 {
 //
 // Protected Constants
@@ -68,7 +68,7 @@ public class BrowserControlMozillaShim extends Object
 
 private static boolean          initialized = false;
 
-private static BrowserControlMozillaShim	instance = null;
+private static BrowserControlNativeShim	instance = null;
 
 private static Object         	lock = null;
 
@@ -85,7 +85,7 @@ private static Object         	lock = null;
 // Constructors and Initializers    
 //
 
-public BrowserControlMozillaShim()
+public BrowserControlNativeShim()
 {
     super();
 	lock = new Object();
@@ -105,7 +105,7 @@ public BrowserControlMozillaShim()
 public static void initialize(String verifiedBinDirAbsolutePath) throws Exception 
 {
 	if (!initialized) {
-		instance = new BrowserControlMozillaShim();
+		instance = new BrowserControlNativeShim();
 
 		instance.nativeInitialize(verifiedBinDirAbsolutePath);
 		initialized = true;
@@ -118,164 +118,6 @@ public static void terminate () throws Exception
 		if (initialized) {
 			instance.nativeTerminate();
 			initialized = false;
-		}
-	}
-}
-
-public static void processEvents(int theWebShell) 
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeProcessEvents(theWebShell);
-		}
-	}
-}
-
-//
-// Window events
-//    
-
-public static void sendKeyDownEvent (int widgetPtr,
-									 char keyChar, int keyCode, 
-									 int modifiers, int eventTime)
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeSendKeyDownEvent(widgetPtr,
-											keyChar, keyCode, modifiers, 
-											eventTime);
-		}
-	}
-}
-
-public static void sendKeyUpEvent (int widgetPtr,
-								   char keyChar, int keyCode, 
-								   int modifiers, int eventTime)
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeSendKeyUpEvent(widgetPtr, keyChar, 
-										  keyCode, modifiers, eventTime);
-			
-		}
-	}
-}
-
-public static void sendMouseEvent (int windowPtr, int widgetPtr,
-								   int widgetX, int widgetY,
-								   int windowX, int windowY,
-								   int mouseMessage, int numClicks,
-								   int modifiers, int eventTime) 
-{
-	
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeSendMouseEvent(windowPtr, widgetPtr,
-										  widgetX, widgetY,
-										  windowX, windowY,
-										  mouseMessage, numClicks,
-										  modifiers, eventTime);
-		}
-	}
-}
-
-public static void idleEvent (int windowPtr) 
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeIdleEvent(windowPtr, 0);
-		}
-	}
-}
-
-public static void updateEvent (int windowPtr) 
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeUpdateEvent(windowPtr, 0);
-		}
-	}
-}
-
-//
-// Widget methods
-//
-
-public static int widgetCreate (int windowPtr, 
-								Rectangle bounds) throws Exception 
-{
-	synchronized(lock) {
-		if (initialized) {
-			return(instance.nativeWidgetCreate(windowPtr, 
-											   bounds.x, bounds.y,
-											   bounds.width + 1, bounds.height + 1));
-		} else {
-			return 0;
-		}
-	}
-}
-
-public static void widgetDelete (int widgetPtr) throws Exception 
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeWidgetDelete(widgetPtr);
-		}
-	}
-}
-
-public static void widgetResize (int widgetPtr, Rectangle bounds, 
-								 boolean repaint) 
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeWidgetResize(widgetPtr, bounds.x, bounds.y, bounds.width + 1, bounds.height + 1, repaint);
-		}
-	}
-}
-
-public static void widgetResize (int widgetPtr, int width, 
-								 int height, boolean repaint) 
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeWidgetResize(widgetPtr, 0, 0, width + 1, height + 1, repaint);
-		}
-	}
-}
-
-public static void widgetEnable (int widgetPtr, boolean enable) 
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeWidgetEnable(widgetPtr, enable);
-		}
-	}
-}
-
-public static void widgetShow (int widgetPtr, boolean show) 
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeWidgetShow(widgetPtr, show);
-		}
-	}
-}
-
-public static void widgetInvalidate (int widgetPtr, boolean isSynchronous) 
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeWidgetInvalidate(widgetPtr, isSynchronous);
-		}
-	}
-}
-
-public static void widgetUpdate (int widgetPtr) 
-{
-	synchronized(lock) {
-		if (initialized) {
-			instance.nativeWidgetUpdate(widgetPtr);
 		}
 	}
 }
@@ -525,43 +367,6 @@ public static boolean webShellRefresh(int webShellPtr) throws Exception
 private native void nativeInitialize (String verifiedBinDirAbsolutePath) throws Exception;
 private native void nativeTerminate () throws Exception;
     
-
-//
-// Event interfaces
-//
-  
-private native void nativeSendKeyDownEvent(int widgetPtr, char keyChar, int keyCode, int modifiers, int eventTime);
-private native void nativeSendKeyUpEvent(int widgetPtr, char keyChar, int keyCode, int modifiers, int eventTime);
-private native void nativeSendMouseEvent(int windowPtr, int widgetPtr,
-										 int widgetX, int widgetY,
-										 int windowX, int windowY,
-										 int mouseMessage, int numClicks,
-										 int modifiers, int eventTime);
-private native void nativeProcessEvents(int theWebShell);
-private native void nativeIdleEvent (int windowPtr, int eventTime);
-private native void nativeUpdateEvent (int windowPtr, int eventTime);
-
-
-//
-// Widget interfaces
-//
-
-private native int  nativeWidgetCreate (int windowPtr, int x, int y, int width, int height) throws Exception;
-private native void nativeWidgetDelete (int widgetPtr) throws Exception;
-private native boolean nativeWebShellAddDocListener(int windowPtr, DocumentLoadListener dl);
-private native void nativeWidgetResize (int widgetPtr, int x, int y, int width, int height, boolean repaint);
-
-/*
-  private native void nativeWidgetResize (int widgetPtr, int width, int height, boolean repaint);
-  */
-
-private native void nativeWidgetEnable (int widgetPtr, boolean enable);
-private native void nativeWidgetShow   (int widgetPtr, boolean show);
-private native void nativeWidgetInvalidate (int widgetPtr, boolean isSynchronous);
-private native void nativeWidgetUpdate (int widgetPtr);
-
-
-
 //
 // WebShell interface
 //
@@ -591,6 +396,7 @@ private native String	nativeWebShellGetURL			(int webShellPtr, int aHistoryIndex
  * Added by Mark Goddard OTMP 9/2/1999
  */
 private native boolean  nativeWebShellRefresh           (int webShellPtr) throws Exception;
+private native boolean nativeWebShellAddDocListener(int webShellPtr, DocumentLoadListener dl);
 
 public static native void nativeDebugBreak(String fileName, int lineNumber);
 
@@ -607,13 +413,13 @@ public static native void nativeDebugBreak(String fileName, int lineNumber);
 public static void main(String [] args)
 {
     Assert.setEnabled(true);
-    BrowserControlMozillaShim me = new BrowserControlMozillaShim();
-    Log.setApplicationName("BrowserControlMozillaShim");
+    BrowserControlNativeShim me = new BrowserControlNativeShim();
+    Log.setApplicationName("BrowserControlNativeShim");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlMozillaShim.java,v 1.6 1999/11/06 02:24:18 dmose%mozilla.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlNativeShim.java,v 1.1 1999/12/23 04:09:29 edburns%acm.org Exp $");
     
 }
 
 // ----UNIT_TEST_END
 
-} // end of class BrowserControlMozillaShim
+} // end of class BrowserControlNativeShim
