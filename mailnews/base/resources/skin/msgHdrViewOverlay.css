@@ -52,6 +52,14 @@ box.header-part3           { background-color: #CCCCCC; border: none; }
   margin: 0px;
 }
 
+titledbutton.emailDisplayButton {
+  align: right;
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+  max-height: 15px;
+}
+
 titledbutton.showMoreAddressesButton {
   list-style-image:url("chrome://messenger/skin/more.gif");
 }
@@ -60,6 +68,7 @@ titledbutton.showFewerAddressesButton {
   list-style-image:url("chrome://messenger/skin/less.gif");
 }
 
-html|div.headerdisplayname       { font-weight: bold; margin-right: .5em; margin-left: .5em; }
+html|div.subjectvalue {font-weight: bold;}
+html|div.headerdisplayname       { font-weight: bold; margin-right: .5em; margin-left: .5em; min-height: 18px }
 html|div.headerValue             { white-space: normal; min-width: 50px; }
 
