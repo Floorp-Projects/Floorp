@@ -2318,6 +2318,7 @@ nsWidget::InitMouseEvent(GdkEventButton * aGdkButtonEvent,
     anEvent.isShift = (aGdkButtonEvent->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGdkButtonEvent->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGdkButtonEvent->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
+    anEvent.isMeta = PR_FALSE;  // GTK+ doesn't support the meta key
     anEvent.time = aGdkButtonEvent->time;
 
     switch(aGdkButtonEvent->type)
