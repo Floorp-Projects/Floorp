@@ -791,10 +791,12 @@ CERT_DecodeAuthKeyID;
 CERT_DecodeCRLDistributionPoints;
 CERT_DecodeNameConstraintsExtension;
 CERT_DecodePrivKeyUsagePeriodExtension;
+CERT_GetCertificateNames;
 CERT_GetNextGeneralName;
 CERT_GetNextNameConstraint;
 CERT_GetPrevGeneralName;
 CERT_GetPrevNameConstraint;
+HASH_ResultLenByOidTag;
 SECOID_AddEntry;
 ;+    local:
 ;+       *;
