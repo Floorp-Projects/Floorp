@@ -37,14 +37,10 @@
  * int32 in the data.
  */
 
-#include <stdio.h> 
-
-#if defined(XP_UNIX) && defined(STDC_HEADERS)
-#define STDARG
-#endif
+#include <stdio.h>
 
 #include <stdlib.h>
-#ifdef STDARG
+#ifdef STDC_HEADERS
 #include <stdarg.h>
 #else
 #include <varargs.h>
@@ -68,7 +64,7 @@ int MsgPriority=5;
 #endif
 
 /* Hmm, everyone seems to be defining this. */
-#define STDARG
+#define STDC_HEADERS
 
 typedef enum {
 USE_LARGE_KEY,
@@ -88,7 +84,7 @@ ReportStatus(char *string, ...)
 {
     va_list args;
 
-#ifdef STDARG
+#ifdef STDC_HEADERS
     va_start(args, string);
 #else
     va_start(args);
@@ -106,7 +102,7 @@ ReportError(char *string, ...)
 {
     va_list args;
 
-#ifdef STDARG
+#ifdef STDC_HEADERS
     va_start(args, string);
 #else
     va_start(args);
