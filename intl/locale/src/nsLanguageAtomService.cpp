@@ -198,19 +198,21 @@ nsLanguageAtomService::LookupLanguage(const PRUnichar* aLanguage,
     } else if (lowered.Equals(NS_LITERAL_STRING("ja-jp"))) {
       langGroupStr.Assign(NS_LITERAL_STRING("ja"));
     } else {
-    if (!mLangGroups) {
-      NS_ENSURE_SUCCESS(InitLangGroupTable(), NS_ERROR_FAILURE);
-    }
-    res = mLangGroups->GetStringProperty(lowered, langGroupStr);
-    if (NS_FAILED(res)) {
-      PRInt32 hyphen = lowered.FindChar('-');
-      if (hyphen >= 0) {
-        nsAutoString truncated(lowered);
-        truncated.Truncate(hyphen);
-        res = mLangGroups->GetStringProperty(truncated, langGroupStr);
-        if (NS_FAILED(res)) {
-          langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
+      if (!mLangGroups) {
+        NS_ENSURE_SUCCESS(InitLangGroupTable(), NS_ERROR_FAILURE);
+      }
+      res = mLangGroups->GetStringProperty(lowered, langGroupStr);
+      if (NS_FAILED(res)) {
+        PRInt32 hyphen = lowered.FindChar('-');
+        if (hyphen >= 0) {
+          nsAutoString truncated(lowered);
+          truncated.Truncate(hyphen);
+          res = mLangGroups->GetStringProperty(truncated, langGroupStr);
+          if (NS_FAILED(res)) {
+            langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
           }
+        } else {
+          langGroupStr.Assign(NS_LITERAL_STRING("x-western"));
         }
       }
     }
