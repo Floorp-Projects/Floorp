@@ -15,21 +15,17 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsFrame.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLTagContent.h"
-#include "nsIAtom.h"
-#include "nsFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
-#include "nsIPresShell.h"
 #include "nsBlockFrame.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLAtoms.h"
-#include "nsIHTMLAttributes.h"
 #include "nsIStyleContext.h"
 #include "nsIFontMetrics.h"
 #include "nsIRenderingContext.h"
-
 
 class BRFrame : public nsFrame
 {
