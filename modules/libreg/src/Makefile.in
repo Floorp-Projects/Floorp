@@ -27,7 +27,7 @@ LIBRARY_NAME	= mozreg_s
 
 REQUIRES	= libreg pref js
 
-CSRCS		= reg.c VerReg.c vr_stubs.c
+CSRCS		= reg.c VerReg.c vr_stubs.c mmapio.c
 
 BIN_SRCS	= VerReg.c reg.c vr_stubs.c
 BIN_OBJS	= $(addprefix R_,$(BIN_SRCS:.c=.o))
