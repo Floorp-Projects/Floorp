@@ -70,7 +70,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
 
 
-static PRBool
+PRBool
 UseAFunctions()
 {
   static PRBool useAFunctions = PR_FALSE;

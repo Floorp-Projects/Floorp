@@ -60,7 +60,26 @@
 #include "nsReadableUtils.h"
 
 #define NOT_SETUP 0x33
-static PRBool gIsWIN95 = NOT_SETUP;
+static PRBool gIsWIN95OR98 = NOT_SETUP;
+
+inline PRBool IsWin95OrWin98()
+{
+  if (NOT_SETUP == gIsWIN95OR98) {
+    OSVERSIONINFO os;
+    os.dwOSVersionInfoSize = sizeof(os);
+    ::GetVersionEx(&os);
+    // XXX This may need tweaking for win98
+    if (VER_PLATFORM_WIN32_WINDOWS == os.dwPlatformId) {
+      gIsWIN95OR98 = PR_TRUE;
+    }
+    else {
+      gIsWIN95OR98 = PR_FALSE;
+    }
+  }
+  return gIsWIN95OR98;
+}
+
+extern PRBool UseAFunctions();
 
 #undef USER_DEFINED
 #define USER_DEFINED "x-user-def"
@@ -3427,20 +3446,7 @@ nsFontWinUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
      //It really should be moved to a common location that both
      //the rendering context and nsFontMetricsWin can access.
      // Determine if OS = WIN95
-    if (NOT_SETUP == gIsWIN95) {
-      OSVERSIONINFO os;
-      os.dwOSVersionInfoSize = sizeof(os);
-      ::GetVersionEx(&os);
-      // XXX This may need tweaking for win98
-      if (VER_PLATFORM_WIN32_NT == os.dwPlatformId) {
-        gIsWIN95 = PR_FALSE;
-      }
-      else {
-        gIsWIN95 = PR_TRUE;
-      }
-    }
-
-    if (gIsWIN95) {
+    if (IsWin95OrWin98()) {
       // Clip out the extra underline/strikethru caused by the
       // bug in WIN95.
       SIZE size;
@@ -3919,6 +3925,11 @@ GenerateSingleByte(nsCharsetInfo* aSelf)
   }
 #endif
   for (i = 0; i < 256; ++i) {
+    //win95/98 have problem in some raster fonts (MS Sans Serif and MS Serif) in
+    //rendering 0xb7. So let's skip this in charmap, that will let system resort 
+    //to other fonts.  
+    if ( i == 0x00b7 && IsWin95OrWin98() && !UseAFunctions())
+      continue;
     ADD_GLYPH(map, wc[i]);
   }
   return MapToCCMap(map);
