@@ -270,31 +270,25 @@ NS_METHOD nsMenu::GetItemCount(PRUint32 &aCount)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::GetItemAt(const PRUint32 aCount, nsISupports *& aMenuItem)
+NS_METHOD nsMenu::GetItemAt(const PRUint32 aPos, nsISupports *& aMenuItem)
 {
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, nsIMenuItem *& aMenuItem)
+NS_METHOD nsMenu::InsertItemAt(const PRUint32 aPos, nsISupports * aMenuItem)
 {
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::InsertItemAt(const PRUint32 aCount, const nsString & aMenuItemName)
+NS_METHOD nsMenu::InsertSeparator(const PRUint32 aPos)
 {
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::InsertSeparator(const PRUint32 aCount)
-{
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsMenu::RemoveItem(const PRUint32 aCount)
+NS_METHOD nsMenu::RemoveItem(const PRUint32 aPos)
 {
   return NS_OK;
 }

@@ -56,6 +56,18 @@ class nsIMenuItem : public nsISupports {
                       PRUint32        aCommand) = 0;
     
    /**
+    * Creates the MenuItem as a Separator
+    *
+    */
+    NS_IMETHOD Create(nsIMenu *aParent) = 0;
+    
+   /**
+    * Creates the MenuItem as a Separator
+    *
+    */
+    NS_IMETHOD Create(nsIPopUpMenu *aParent) = 0;
+    
+   /**
     * Get the MenuItem label
     *
     */
@@ -96,6 +108,12 @@ class nsIMenuItem : public nsISupports {
     *
     */
     NS_IMETHOD RemoveMenuListener(nsIMenuListener * aMenuListener) = 0;
+
+   /**
+    * Indicates whether it is a separator
+    *
+    */
+    NS_IMETHOD IsSeparator(PRBool & aIsSep) = 0;
 
 };
 

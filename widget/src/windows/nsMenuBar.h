@@ -52,9 +52,9 @@ public:
   NS_IMETHOD GetParent(nsIWidget *&aParent);
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
   NS_IMETHOD GetMenuCount(PRUint32 &aCount);
-  NS_IMETHOD GetMenuAt(const PRUint32 aCount, nsIMenu *& aMenu);
-  NS_IMETHOD InsertMenuAt(const PRUint32 aCount, nsIMenu *& aMenu);
-  NS_IMETHOD RemoveMenu(const PRUint32 aCount);
+  NS_IMETHOD GetMenuAt(const PRUint32 aPos, nsIMenu *& aMenu);
+  NS_IMETHOD InsertMenuAt(const PRUint32 aPos, nsIMenu *& aMenu);
+  NS_IMETHOD RemoveMenu(const PRUint32 aPos);
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void*& aData);
   NS_IMETHOD Paint();
