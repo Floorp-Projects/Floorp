@@ -133,6 +133,8 @@ struct WindowData {
 
 class nsViewer : public nsDispatchListener {
   public:
+    virtual char* GetBaseURL();
+    virtual char* GetDefaultStartURL();
     virtual void AddMenu(nsIWidget* aMainWindow);
     virtual void ShowConsole(WindowData* aWindata);
     virtual void CloseConsole();
