@@ -104,6 +104,9 @@
 <!-- NEEDED FOR CLIPBOARD SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarClipboard.js"/>
 
+<!-- NEEDED FOR IMPORT / EXPORT SUPPORT -->
+<script type="application/x-javascript" src="chrome://calendar/content/calendarImportExport.js"/>
+
 <!-- NEEDED FOR MAIL SUPPORT -->
 <script type="application/x-javascript" src="chrome://calendar/content/calendarMail.js"/>
 

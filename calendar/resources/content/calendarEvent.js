@@ -568,9 +568,38 @@ CalendarEventDataSource.prototype.orderEventsByDate = function( eventA, eventB )
 
 CalendarEventDataSource.prototype.orderRawEventsByDate = function( eventA, eventB )
 {
-    return( eventA.start.getTime() - eventB.start.getTime() );
+    return( getNextOrPreviousRecurrence( eventA ).getTime() - getNextOrPreviousRecurrence( eventB ).getTime() );
 }
 
+function getNextOrPreviousRecurrence( calendarEvent )
+{
+   if( calendarEvent.recur )
+   {
+      var now = new Date();
+
+      var result = new Object();
+
+      var isValid = calendarEvent.getNextRecurrence( now.getTime(), result );
+
+      if( isValid )
+      {
+         var eventStartDate = new Date( result.value );
+      }
+      else
+      {
+         isValid = calendarEvent.getPreviousOccurrence( now.getTime(), result );
+         
+         var eventStartDate = new Date( result.value );
+      }
+   }
+   
+   if( !isValid || !calendarEvent.recur )
+   {
+      var eventStartDate = new Date( calendarEvent.start.getTime() );
+   }
+      
+   return eventStartDate;
+}
 
 /******************************************************************************************************
 ******************************************************************************************************
