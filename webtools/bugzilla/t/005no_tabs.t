@@ -25,7 +25,6 @@
 #Bugzilla Test 5#
 #####no_tabs#####
 
-use diagnostics;
 use strict;
 
 use lib 't';
@@ -52,3 +51,4 @@ foreach my $file (@testitems) {
     close (FILE);
 }
 
+exit 0;

@@ -38,12 +38,13 @@
 #Bugzilla Test 2#
 ####GoodPerl#####
 
-BEGIN { use lib 't/'; }
-BEGIN { use Support::Files; }
-BEGIN { $tests = @Support::Files::testitems * 2; }
-BEGIN { use Test::More tests => $tests; }
-
 use strict;
+
+use lib 't';
+
+use Support::Files;
+
+use Test::More tests => (scalar(@Support::Files::testitems) * 2);
 
 my @testitems = @Support::Files::testitems; # get the files to test.
 

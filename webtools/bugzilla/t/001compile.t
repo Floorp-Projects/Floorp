@@ -32,57 +32,61 @@
 # GPL.
 # 
 
-
 #################
 #Bugzilla Test 1#
 ###Compilation###
-BEGIN { use lib 't/'; }
-BEGIN { use Support::Files; }
-BEGIN { $tests = @Support::Files::testitems; }
-BEGIN { use Test::More tests => $tests; }
 
 use strict;
 
-# First now we test the scripts                                                   
-my @testitems = @Support::Files::testitems; 
-# Capture the TESTERR from Test::More for printing errors.
-# This will handle verbosity for us automatically
-*TESTOUT = \*Test::More::TESTOUT;
+use lib 't';
+
+use Support::Files;
+
+use Test::More tests => scalar(@Support::Files::testitems);
+
+# Capture the TESTOUT from Test::More or Test::Builder for printing errors.
+# This will handle verbosity for us automatically.
+my $fh;
+{
+    local $^W = 0;  # Don't complain about non-existent filehandles
+    if (-e \*Test::More::TESTOUT) {
+        $fh = \*Test::More::TESTOUT;
+    } elsif (-e \*Test::Builder::TESTOUT) {
+        $fh = \*Test::Builder::TESTOUT;
+    } else {
+        $fh = \*STDOUT;
+    }
+}
+
+my @testitems = @Support::Files::testitems;
 my $perlapp = $^X;
 
+# Test the scripts by compiling them
+
 foreach my $file (@testitems) {
-        $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
-        next if (!$file); # skip null entries
-        open (FILE,$file);
-        my $bang = <FILE>;
-        close (FILE);
-        my $T = "";
-        if ($bang =~ m/#!\S*perl\s+-.*T/) {
-            $T = "T";
-        }
-        my $command = "$perlapp"." -c$T $file 2>&1";
-        my $loginfo=`$command`;
-        #print '@@'.$loginfo.'##';
-        if ($loginfo =~ /syntax ok$/im) {
-                if ($loginfo ne "$file syntax OK\n") {
-                        print TESTOUT $loginfo;
-                        ok(0,$file."--WARNING");
-                } else {
-                        ok(1,$file);
-                }
+    $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
+    next if (!$file); # skip null entries
+    open (FILE,$file);
+    my $bang = <FILE>;
+    close (FILE);
+    my $T = "";
+    if ($bang =~ m/#!\S*perl\s+-.*T/) {
+        $T = "T";
+    }
+    my $command = "$perlapp -c$T $file 2>&1";
+    my $loginfo=`$command`;
+    #print '@@'.$loginfo.'##';
+    if ($loginfo =~ /syntax ok$/im) {
+        if ($loginfo ne "$file syntax OK\n") {
+            ok(0,$file." --WARNING");
+            print $fh $loginfo;
         } else {
-                print TESTOUT $loginfo;
-                ok(0,$file."--ERROR");
+            ok(1,$file);
         }
+    } else {
+        ok(0,$file." --ERROR");
+        print $fh $loginfo;
+    }
 }      
 
-# Remove the lib testing from here since it is now done 
-# in Files.pm
-
-
-
-
-
-
-
-
+exit 0;

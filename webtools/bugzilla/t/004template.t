@@ -26,7 +26,6 @@
 #Bugzilla Test 4#
 ####Templates####
 
-use diagnostics;
 use strict;
 
 use lib 't';
@@ -41,10 +40,21 @@ use Template;
 use Test::More tests => (  scalar(@Support::Templates::referenced_files)
                          + scalar(@Support::Templates::actual_files) * 2);
 
+# Capture the TESTOUT from Test::More or Test::Builder for printing errors.
+# This will handle verbosity for us automatically.
+my $fh;
+{
+    local $^W = 0;  # Don't complain about non-existent filehandles
+    if (-e \*Test::More::TESTOUT) {
+        $fh = \*Test::More::TESTOUT;
+    } elsif (-e \*Test::Builder::TESTOUT) {
+        $fh = \*Test::Builder::TESTOUT;
+    } else {
+        $fh = \*STDOUT;
+    }
+}
+
 my $include_path = $Support::Templates::include_path;
-# Capture the TESTERR from Test::More for printing errors.
-# This will handle verbosity for us automatically
-*TESTOUT = \*Test::More::TESTOUT;
 
 # Check to make sure all templates that are referenced in
 # Bugzilla exist in the proper place.
@@ -86,8 +96,8 @@ foreach my $file(@Support::Templates::actual_files) {
             ok(1, "$file syntax ok");
         }
         else {
-            print TESTOUT $template->error() . "\n";
             ok(0, "$file has bad syntax --ERROR");
+            print $fh $template->error() . "\n";
         }
     }
     else {
@@ -112,3 +122,5 @@ foreach my $file(@Support::Templates::actual_files) {
     }
     close(TMPL);
 }
+
+exit 0;
