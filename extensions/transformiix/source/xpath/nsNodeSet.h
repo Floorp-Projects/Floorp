@@ -28,7 +28,6 @@
 
 #include "NodeSet.h"
 #include "nsIDOMNodeList.h"
-#include "nsIScriptObjectOwner.h"
 #include "nsSupportsArray.h"
 
 class nsNodeSet : public nsIDOMNodeList
