@@ -24,6 +24,9 @@
 #include <unistd.h>
 #include <string.h>
 
+#ifndef HAVE_USLEEP
+#include <sys/time.h>
+#endif
 //////////////////////////////////////////////////////////////////
 #if 0
 /* staitc */ gint
@@ -136,6 +139,9 @@ nsGtkUtils::gdk_window_flash(GdkWindow * window,
 	int          root_y;
 	unsigned int i;
 	XGCValues    gcv;
+#ifndef HAVE_USLEEP
+	struct timeval tv;
+#endif
 
   display = GDK_WINDOW_XDISPLAY(window);
 
@@ -188,7 +194,13 @@ nsGtkUtils::gdk_window_flash(GdkWindow * window,
 		
 		XSync(display, False);
 
+#ifdef HAVE_USLEEP
 		usleep(interval);
+#else
+		tv.tv_sec = interval / 100000;
+		tv.tv_usec = interval % 100000;
+		(void)select(0, NULL, NULL, NULL, &tv);
+#endif
 	}
 							
 		
