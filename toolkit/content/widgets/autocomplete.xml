@@ -347,7 +347,7 @@
           var cancel = false;
           const IController = Components.interfaces.nsIAutoCompleteController;
           
-          if (!this.disableKeyNavigation) {
+          if (!this.disableKeyNavigation && !aEvent.ctrlKey && !aEvent.altKey) {
             switch (aEvent.keyCode) {
               case KeyEvent.DOM_VK_TAB:
                 if (this.tabScrolling && this.popup.mPopupOpen)
