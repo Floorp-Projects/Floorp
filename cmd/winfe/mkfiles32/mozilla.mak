@@ -387,8 +387,10 @@ LINK_LIBS= \
     $(DIST)\lib\secfreenav32.lib \
 !endif
     $(DIST)\lib\htmldg32.lib \
-!ifdef MOZ_JAVA
+!ifdef JAVA_OR_OJI      
     $(DIST)\lib\libcaps.lib \
+!endif
+!ifdef MOZ_JAVA
     $(DIST)\lib\libnsc32.lib \
 !endif
     $(DIST)\lib\img32.lib \
@@ -2406,8 +2408,10 @@ BUILD_SOURCE: $(OBJ_FILES)
 !ifdef MOZ_LDAP
     $(DIST)\lib\nsldap.lib +
 !endif
-!if defined(MOZ_JAVA)
+!ifdef JAVA_OR_OJI
     $(DIST)\lib\libcaps.lib +
+!endif
+!if defined(MOZ_JAVA)
     $(DIST)\lib\jrt16$(VERSION_NUMBER).lib +
     $(DIST)\lib\libapp~1.lib +
     $(DIST)\lib\jsj16$(VERSION_NUMBER).lib +

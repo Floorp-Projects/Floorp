@@ -325,11 +325,12 @@ BASIC_LIBS += $(DIST)/lib/libxpcom.a
 
 ifdef JAVA_OR_OJI
 
+BASIC_LIBS	+= $(DIST)/lib/libcaps.a
+
 ifdef MOZ_JAVA
 
 # Monolithic Java
 BASIC_LIBS	+= \
-                  $(DIST)/lib/libcaps.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)applet.a \
 		  $(DIST)/lib/libjrt.a \
 		  $(DIST)/lib/libjmd.a \
