@@ -37,7 +37,7 @@
 #include "CRtfDTD.h"
 #endif
 
-
+ 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
 static NS_DEFINE_IID(kClassIID, NS_PARSER_IID); 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
@@ -51,7 +51,7 @@ static nsString    kEmptyString("unknown");
 
 static const int  gTransferBufferSize=4096;  //size of the buffer used in moving data from iistream
 
-
+ 
 class CTokenDeallocator: public nsDequeFunctor{
 public:
   virtual void* operator()(void* anObject) {
@@ -100,10 +100,10 @@ public:
     nsIDTD* theDTD;
 
     NS_NewNavHTMLDTD(&theDTD);    //do this as the default HTML DTD...
-    RegisterDTD(theDTD);
+    mDTDDeque.Push(theDTD);
 
     NS_NewViewSourceHTML(&theDTD);  //do this so all html files can be viewed...
-    RegisterDTD(theDTD);
+    mDTDDeque.Push(theDTD);
   }
 
   ~CSharedParserObjects() {
@@ -134,36 +134,32 @@ CSharedParserObjects gSharedParserObjects;
 
 //----------------------------------------
 
-/**
+/** 
  *  default constructor
- *  
- *  @update  vidur 12/11/98
+ *   
+ *  @update  gess 01/04/99
  *  @param   
- *  @return  
+ *  @return   
  */
-nsParser::nsParser() : mCommand("") {
+nsParser::nsParser(nsITokenObserver* anObserver) : mCommand("") {
   NS_INIT_REFCNT();
   mParserFilter = 0;
   mObserver = 0;
   mSink=0;
   mParserContext=0;
+  mTokenObserver=anObserver;
   mDTDVerification=PR_FALSE;
 }
 
-
+ 
 /**
  *  Default destructor
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 01/04/99
  *  @param   
  *  @return  
  */
 nsParser::~nsParser() {
-/* REMOVED until fix from rick -- gpk
-  if(eOnStop!=mParserContext->mStreamListenerState) {
-    NS_WARNING("OnStop may not have been called");
-  }
-*/
   NS_IF_RELEASE(mObserver);
   NS_IF_RELEASE(mSink);
 
@@ -183,7 +179,7 @@ NS_IMPL_RELEASE(nsParser)
  *  Its purpose is to create an interface to parser object
  *  of some type.
  *  
- *  @update   gess 3/25/98
+ *  @update   gess 01/04/99
  *  @param    nsIID  id of object to discover
  *  @param    aInstancePtr ptr to newly discovered interface
  *  @return   NS_xxx result code
@@ -217,7 +213,7 @@ nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 /**
  * 
- * @update	gess6/18/98
+ * @update	gess 01/04/99
  * @param 
  * @return
  */
@@ -238,7 +234,7 @@ nsIParserFilter * nsParser::SetParserFilter(nsIParserFilter * aFilter)
  *  about the command which caused the parser to be constructed. For example,
  *  this allows us to select a DTD which can do, say, view-source.
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 01/04/99
  *  @param   aContentSink -- ptr to content sink that will receive output
  *  @return	 ptr to previously set contentsink (usually null)  
  */
@@ -250,15 +246,15 @@ void nsParser::SetCommand(const char* aCommand){
  *  This method gets called in order to set the content
  *  sink for this parser to dump nodes to.
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 01/04/99
  *  @param   nsIContentSink interface for node receiver
  *  @return  
  */
 nsIContentSink* nsParser::SetContentSink(nsIContentSink* aSink) {
   NS_PRECONDITION(0!=aSink,"sink cannot be null!");
   nsIContentSink* old=mSink;
-  if(old)
-    NS_RELEASE(old);
+
+  NS_IF_RELEASE(old);
   if(aSink) {
     mSink=aSink;
     NS_ADDREF(aSink);
@@ -281,7 +277,7 @@ nsIContentSink* nsParser::GetContentSink(void){
  *  Call this static method when you want to
  *  register your dynamic DTD's with the parser.
  *  
- *  @update  gess 6/9/98
+ *  @update  gess 01/04/99
  *  @param   aDTD  is the object to be registered.
  *  @return  nothing.
  */
@@ -301,7 +297,7 @@ void nsParser::RegisterDTD(nsIDTD* aDTD){
 /**
  *  Retrieve scanner from topmost parsecontext
  *  
- *  @update  gess 6/9/98
+ *  @update  gess 01/04/99
  *  @return  ptr to internal scanner
  */
 nsScanner* nsParser::GetScanner(void){
@@ -314,7 +310,7 @@ nsScanner* nsParser::GetScanner(void){
 /**
  *  Retrieve parsemode from topmost parser context
  *  
- *  @update  gess 6/9/98
+ *  @update  gess 01/04/99
  *  @return  parsemode
  */
 eParseMode nsParser::GetParseMode(void){
@@ -459,7 +455,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename,nsIDTD* aDefaultDTD){
           if(PR_TRUE==FindSuitableDTD(*mParserContext,mCommand)) {
             //mParserContext->mDTD->SetContentSink(mSink);
             mParserContext->mStreamListenerState=eOnDataAvail;
-            mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext),this);
+            mParserContext->mDTD->WillBuildModel(aFilename,PRBool(0==mParserContext->mPrevContext),this,mSink);
           }
         }
         else result=kInvalidParserContext;    
@@ -483,7 +479,7 @@ nsresult nsParser::DidBuildModel(nsresult anErrorCode) {
 
   if(mParserContext->mParserEnabled) {
     if((!mParserContext->mPrevContext) && (mParserContext->mDTD)) {
-      result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this);
+      result=mParserContext->mDTD->DidBuildModel(anErrorCode,PRBool(0==mParserContext->mPrevContext),this,mSink);
     }
   }//if
 
@@ -557,7 +553,7 @@ PRBool nsParser::EnableParser(PRBool aState){
  *  not have been consumed by the scanner during a given invocation 
  *  of this method. 
  *
- *  @update  gess 3/25/98
+ *  @update  gess 01/04/99
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  error code -- 0 if ok, non-zero if error.
  */
@@ -574,6 +570,7 @@ nsresult nsParser::Parse(nsIURL* aURL,nsIStreamObserver* aListener,PRBool aVerif
     CParserContext* pc=new CParserContext(new nsScanner(theName,PR_FALSE),aURL,aListener);
     if(pc) {
       pc->mMultipart=PR_TRUE;
+      pc->mContextType=CParserContext::eCTURL;
       PushContext(*pc);
       result=NS_OK;
     }
@@ -600,6 +597,7 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
     pc->mSourceType="text/html";
     pc->mStreamListenerState=eOnStart;  
     pc->mMultipart=PR_FALSE;
+    pc->mContextType=CParserContext::eCTStream;
     mParserContext->mScanner->Eof();
     result=ResumeParse();
     pc=PopContext();
@@ -619,8 +617,8 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
  * @param   anHTMLString tells us whether we should assume the content is HTML (usually true)
  * @return  error code -- 0 if ok, non-zero if error.
  */
-nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVerifyEnabled){
-
+nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify,PRBool aLastCall){
+ 
 #ifdef _rickgdebug
   {
     fstream out("c:/temp/parseout.file",ios::trunc);
@@ -628,24 +626,34 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVer
   }
 #endif
 
-  mDTDVerification=aVerifyEnabled;
+  //NOTE: Make sure that updates to this method don't cause 
+  //      bug #2361 to break again!
+
+  mDTDVerification=aEnableVerify;
   nsresult result=NS_OK;
+  CParserContext* pc=0; 
 
-  if(0<aSourceBuffer.Length()){
-
-    CParserContext* pc=new CParserContext(new nsScanner(aSourceBuffer),&aSourceBuffer,0);
+  if((!mParserContext) || (mParserContext->mKey!=&aSourceBuffer))  {
+    //only make a new context if we dont have one, OR if we do, but has a different context key...
+    pc=new CParserContext(new nsScanner(aSourceBuffer),&aSourceBuffer,0);
     if(pc) {
       PushContext(*pc);
       pc->mStreamListenerState=eOnStart;  
-      pc->mMultipart=PR_FALSE;
+      pc->mContextType=CParserContext::eCTString;
       if(PR_TRUE==anHTMLString)
         pc->mSourceType="text/html";
-      result=ResumeParse();
-      // mParserContext->mDTD=0; 
-      pc=PopContext();
-      delete pc;
-    }
-    else result=NS_ERROR_OUT_OF_MEMORY;
+    } 
+    else return NS_ERROR_OUT_OF_MEMORY;
+  }
+  else {
+    pc=mParserContext;
+    pc->mScanner->Append(aSourceBuffer);
+  }
+  pc->mMultipart=!aLastCall;
+  result=ResumeParse();
+  if(aLastCall) {
+    pc=PopContext(); 
+    delete pc;
   }
   return result;
 }
@@ -657,7 +665,7 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aVer
  *  parse process to happen in chunks, such as when the
  *  content is push based, and we need to parse in pieces.
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 01/04/99
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
@@ -695,7 +703,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
  *  This is where we loop over the tokens created in the 
  *  tokenization phase, and try to make sense out of them. 
  *
- *  @update  gess 3/25/98
+ *  @update  gess 01/04/99
  *  @param   
  *  @return  error code -- 0 if ok, non-zero if error.
  */
@@ -716,12 +724,26 @@ nsresult nsParser::BuildModel() {
   nsIDTD* theRootDTD=theRootContext->mDTD;
   nsresult result=NS_OK;
   if(theRootDTD) {
-    result=theRootDTD->BuildModel(this,theTokenizer);
+    result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);
   }
 
   return result;
 }
 
+
+/**
+ * 
+ * @update	gess1/22/99
+ * @param 
+ * @return
+ */
+nsITokenizer* nsParser::GetTokenizer(void) {
+  nsITokenizer* theTokenizer=0;
+  if(mParserContext && mParserContext->mDTD) {
+    theTokenizer=mParserContext->mDTD->GetTokenizer();
+  }
+  return theTokenizer;
+}
 
 /*******************************************************************
   These methods are used to talk to the netlib system...
@@ -913,7 +935,7 @@ nsresult nsParser::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar*
  *  the tokenization process begins. The main reason for
  *  this call is to allow the delegate to do initialization.
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 01/04/99
  *  @param   
  *  @return  TRUE if it's ok to proceed
  */
@@ -928,7 +950,7 @@ PRBool nsParser::WillTokenize(){
  *	It iteratively consumes tokens until an error occurs or 
  *	you run out of data.
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 01/04/99
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::Tokenize(){
@@ -956,18 +978,25 @@ nsresult nsParser::Tokenize(){
  *  tokenization process. It gets called once tokenziation
  *  has completed.
  *  
- *  @update  gess 3/25/98
+ *  @update  gess 01/04/99
  *  @param   
  *  @return  TRUE if all went well
  */
 PRBool nsParser::DidTokenize(){
   PRBool result=PR_TRUE;
 
-  {
-    fstream out("c:/temp/tokens.out",ios::trunc);
-    DebugDumpSource(out);
-  }
-
+  if(mTokenObserver) {
+    nsITokenizer* theTokenizer=mParserContext->mDTD->GetTokenizer();
+    if(theTokenizer) {
+      PRInt32 theCount=theTokenizer->GetCount();
+      PRInt32 theIndex;
+      for(theIndex=0;theIndex<theCount;theIndex++){
+        if((*mTokenObserver)(theTokenizer->GetTokenAt(theIndex))){
+          //add code here to pull unwanted tokens out of the stack...
+        }
+      }//for
+    }//if
+  }//if
   return result;
 }
 

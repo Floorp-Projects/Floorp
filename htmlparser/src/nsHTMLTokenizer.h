@@ -49,10 +49,10 @@
 
 CLASS_EXPORT_HTMLPARS nsHTMLTokenizer : public nsITokenizer {
 public:
-            nsHTMLTokenizer();
-            ~nsHTMLTokenizer();
+          nsHTMLTokenizer();
+  virtual ~nsHTMLTokenizer();
 
-            NS_DECL_ISUPPORTS
+          NS_DECL_ISUPPORTS
 
   virtual nsresult          ConsumeToken(nsScanner& aScanner);
   virtual nsITokenRecycler* GetTokenRecycler(void);

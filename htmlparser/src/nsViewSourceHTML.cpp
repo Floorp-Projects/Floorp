@@ -268,7 +268,7 @@ eAutoDetectResult CViewSourceHTML::AutoDetectContentType(nsString& aBuffer,nsStr
  * @param 
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser){
+NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result=NS_OK;
   mFilename=aFilename;
 
@@ -306,7 +306,7 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
   * @param	aFilename is the name of the file being parsed.
   * @return	error code (almost always 0)
   */
-NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer) {
+NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
 
   if(aTokenizer) {
@@ -340,7 +340,7 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
  * @param 
  * @return
  */
-NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser){
+NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result= NS_OK;
 
   //ADD CODE HERE TO CLOSE OPEN CONTAINERS...

@@ -268,7 +268,7 @@ eAutoDetectResult CRtfDTD::AutoDetectContentType(nsString& aBuffer,nsString& aTy
  * @param 
  * @return
  */
-NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel,nsIParser* aParser){
+NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result=NS_OK;
   return result;
 }
@@ -281,7 +281,7 @@ NS_IMETHODIMP CRtfDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel,nsIPars
   * @param	aFilename is the name of the file being parsed.
   * @return	error code (almost always 0)
   */
-NS_IMETHODIMP CRtfDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer) {
+NS_IMETHODIMP CRtfDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
   return result;
 }
@@ -292,7 +292,7 @@ NS_IMETHODIMP CRtfDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer) {
  * @param 
  * @return
  */
-NS_IMETHODIMP CRtfDTD::DidBuildModel(nsresult anErrorCode,PRInt32 aLevel,nsIParser* aParser){
+NS_IMETHODIMP CRtfDTD::DidBuildModel(nsresult anErrorCode,PRInt32 aLevel,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result=NS_OK;
 
   return result;

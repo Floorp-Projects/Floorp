@@ -45,7 +45,7 @@ class nsIDTDDebug;
 class nsIURL;
 class nsString;
 class nsITagHandler;
-
+class nsIContentSink;
 
 enum eAutoDetectResult {eUnknownDetect, eValidDetect, eInvalidDetect};
 
@@ -99,7 +99,7 @@ class nsIDTD : public nsISupports {
      * @param	aFilename--string that contains name of file being parsed (if applicable)
      * @return  
      */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser)=0;
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink=0)=0;
 
     /**
      * Called by the parser after the parsing process has concluded
@@ -107,7 +107,7 @@ class nsIDTD : public nsISupports {
      * @param	anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser)=0;
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink=0)=0;
 
     /**
      * Called by the parser after the parsing process has concluded
@@ -115,7 +115,7 @@ class nsIDTD : public nsISupports {
      * @param	anErrorCode - contains error code resulting from parse process
      * @return
      */
-    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer)=0;
+    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver=0,nsIContentSink* aSink=0)=0;
     
     /**
      *	Called during model building phase of parse process. Each token created during

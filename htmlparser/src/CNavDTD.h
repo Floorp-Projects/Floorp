@@ -190,7 +190,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser);
+    NS_IMETHOD WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink=0);
 
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
@@ -200,7 +200,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer);
+    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver=0,nsIContentSink* aSink=0);
 
    /**
      * The parser uses a code sandwich to wrap the parsing process. Before
@@ -210,7 +210,7 @@ CLASS_EXPORT_HTMLPARS CNavDTD : public nsIDTD {
      * @param	anErrorCode contans the last error that occured
      * @return	error code
      */
-    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser);
+    NS_IMETHOD DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink=0);
 
     /**
      *  This method is called by the parser, once for each token
@@ -515,7 +515,8 @@ protected:
 
 		nsresult    CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
 		nsresult    CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
-    nsresult    DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag);    
+    nsresult    WillHandleStartTag(CToken* aToken,eHTMLTags aChildTag,nsCParserNode& aNode);
+    nsresult    DidHandleStartTag(CToken* aToken,eHTMLTags aChildTag);
 
 
     nsIHTMLContentSink* mSink;

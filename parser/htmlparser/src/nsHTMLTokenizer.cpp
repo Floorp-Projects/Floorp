@@ -27,6 +27,7 @@
 #include "nsParser.h"
 #include "nsScanner.h"
 #include "nsDTDUtils.h"
+#include "nsElementTable.h"
 
 /************************************************************************
   And now for the main class -- nsHTMLTokenizer...
@@ -117,7 +118,7 @@ nsHTMLTokenizer::nsHTMLTokenizer() : nsITokenizer(), mTokenDeque(gTokenKiller) {
  */
 nsHTMLTokenizer::~nsHTMLTokenizer(){
 }
-
+ 
 
 /*******************************************************************
   Here begins the real working methods for the tokenizer.
@@ -353,14 +354,22 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
           AddToken(theToken,result,mTokenDeque);
         }
       }
+      else if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result){
+        aToken->SetEmpty(PR_TRUE);
+        theRecycler->RecycleToken(theToken);
+        result=NS_OK;
+      }
     }//if
     
     if(NS_SUCCEEDED(result)){
-      result=aScanner.Peek(aChar);
-      if(aChar==kGreaterThan) { //you just ate the '>'
-        aScanner.GetChar(aChar); //skip the '>'
-        done=PR_TRUE;
-      }//if
+      result=aScanner.SkipWhitespace();
+      if(NS_SUCCEEDED(result)) {
+        result=aScanner.Peek(aChar);
+        if(NS_SUCCEEDED(result) && (aChar==kGreaterThan)) { //you just ate the '>'
+          aScanner.GetChar(aChar); //skip the '>'
+          done=PR_TRUE;
+        }//if
+      }
     }//if
   }//while
 
@@ -395,44 +404,21 @@ nsresult nsHTMLTokenizer::ConsumeContentToEndTag(PRUnichar aChar,
 }
 
 /**
- *  This method is called just after a "<" has been consumed 
- *  and we know we're at the start of a tag.  
- *  
- *  @update gess 3/25/98
- *  @param  aChar: last char read
- *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
- */
-
-static eHTMLTags gSkippedContentTags[]=
-  { eHTMLTag_noscript,
-    eHTMLTag_plaintext, eHTMLTag_script,   eHTMLTag_style, 
-    eHTMLTag_title,     eHTMLTag_textarea, eHTMLTag_xmp};
-
-static eHTMLTags gSkippedContentTargets[]=
-  { eHTMLTag_noscript,
-    eHTMLTag_html,      eHTMLTag_script,   eHTMLTag_style, 
-    eHTMLTag_title,     eHTMLTag_textarea, eHTMLTag_xmp};
-
-
-/**
  * 
  * @update	gess12/28/98
- * @param 
+ * @param  
  * @return
  */
 nsresult nsHTMLTokenizer::HandleSkippedContent(nsScanner& aScanner,CToken*& aToken) {
   nsresult result=NS_OK;
 
   eHTMLTags theTag=(eHTMLTags)aToken->GetTypeID();
-  PRInt32 theIndex=IndexOfTagInSet(theTag,gSkippedContentTags,sizeof(gSkippedContentTags)/sizeof(eHTMLTag_unknown));
-  if(-1<theIndex) {
+  if(eHTMLTag_unknown!=gHTMLElements[theTag].mSkipTarget) {
 
       //Do special case handling for <script>, <style>, <title> or <textarea>...
     CToken*   skippedToken=0;
-    PRUnichar theChar;
-    result=ConsumeContentToEndTag(theChar,gSkippedContentTargets[theIndex],aScanner,skippedToken);
+    PRUnichar theChar=0;
+    result=ConsumeContentToEndTag(theChar,gHTMLElements[theTag].mSkipTarget,aScanner,skippedToken);
 
     if((NS_OK==result) && skippedToken){
       AddToken(skippedToken,result,mTokenDeque);

@@ -27,6 +27,7 @@ CPPSRCS=					\
 	nsDTDUtils.cpp				\
 	nsHTMLTokenizer.cpp \
 	nsXMLTokenizer.cpp \
+  nsElementTable.cpp \
 	CNavDTD.cpp				\
 	COtherDTD.cpp				\
 	CRtfDTD.cpp				\
@@ -55,6 +56,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsDTDUtils.obj			\
 	.\$(OBJDIR)\nsHTMLTokenizer.obj \
 	.\$(OBJDIR)\nsXMLTokenizer.obj \
+	.\$(OBJDIR)\nsElementTable.obj \
 	.\$(OBJDIR)\CNavDTD.obj			\
 	.\$(OBJDIR)\COtherDTD.obj		\
 	.\$(OBJDIR)\CRtfDTD.obj			\
@@ -90,6 +92,7 @@ EXPORTS=					\
 	nsHTMLTokens.h				\
 	nsIParserNode.h				\
 	nsIParser.h				\
+	nsParser.h				\
 	nsToken.h				\
 	nsIDTDDebug.h				\
 	nsIParserFilter.h			\
