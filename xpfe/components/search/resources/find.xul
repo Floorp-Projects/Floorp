@@ -43,7 +43,7 @@
 						<html:option value="isnot">&isnot.label;</html:option>
 						<html:option value="doesntcontain">&doesntcontain.label;</html:option>
 					</html:select>
-					<html:input id="findtext" type="text" width="20" onkeyup="if (event.which == 13) { doFind(); }" />
+					<html:input id="findtext" type="text" width="20" onkeypress="if (event.which == 13) { doFind(); }" />
 				</html:td>
 			</html:tr>
 
