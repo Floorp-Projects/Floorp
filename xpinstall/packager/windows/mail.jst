@@ -181,9 +181,12 @@ function createShortcuts()
     /* create the shortcuts */
     File.windowsShortcut(fileExe, fFolderPath, scExeDesc, fProgram, scParam, fileExe, 0);
 
-    // create shortcut in the Quick Launch folder
-    if(folderQuickLaunchExists)
-      File.windowsShortcut(fileExe, fFolderQuickLaunch, scExeDesc, fProgram,  "", fileExe, 0);
+    //
+    // Disabled for now because mail does not have a different shortcut icon from Mozilla
+    //
+    //// create shortcut in the Quick Launch folder
+    //if(folderQuickLaunchExists)
+    //  File.windowsShortcut(fileExe, fFolderQuickLaunch, scExeDesc, fProgram,  "", fileExe, 0);
 
     if(!restrictedAccess)
     {
