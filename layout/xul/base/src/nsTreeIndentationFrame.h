@@ -32,6 +32,6 @@ public:
 protected:
   virtual ~nsTreeIndentationFrame();
 
-  nscoord width;
-  PRBool haveComputedWidth;
+  nscoord mWidth;
+  PRBool mHaveComputedWidth;
 };

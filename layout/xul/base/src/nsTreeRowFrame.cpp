@@ -342,7 +342,6 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext& aPresContext,
   for (colX = flexIndex+1; colX < columnCount; colX++) {
     // Retrieve the current widths for these columns and compute
     // the total amount of space they occupy.
-    nsTableColFrame* colFrame = tableFrame->GetColFrame(colX);
     propTotal += colWidths[colX];
   }
 
@@ -392,7 +391,7 @@ nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext& aPresContext,
     treeFrame->SetUseGeneration(PR_FALSE); // Cached rows have to reflow.
     treeFrame->UnsuppressReflow();
 
-    PRInt32 colWidth = flexWidth - delta;
+    colWidth = flexWidth - delta;
     sprintf(ch,"%d*", colWidth);
     nsAutoString propColWidth(ch);
     flexContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, propColWidth,

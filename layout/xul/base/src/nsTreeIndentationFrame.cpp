@@ -33,8 +33,8 @@
 
 nsTreeIndentationFrame::nsTreeIndentationFrame()
 {
-	width = 0;
-	haveComputedWidth = PR_FALSE;
+	mWidth = 0;
+	mHaveComputedWidth = PR_FALSE;
 }
 
 nsresult
@@ -70,11 +70,10 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
   aMetrics.ascent = 0;
   aMetrics.descent = 0;
 
-  nscoord width = 0;
-  
   // Compute our width based on the depth of our node within the content model
-  if (!haveComputedWidth)
+  if (!mHaveComputedWidth)
   {
+    mWidth = 0;
 	  nscoord level = 0;
 	  
 	  // First climb out to the tree item level.
@@ -109,15 +108,15 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
 		  level = (level/2) - 1;
       if (level < 0) level = 0;
 
-		  width = level*16; // Hardcode an indentation of 16 pixels for now. TODO: Make this a parameter or something
+		  mWidth = level*16; // Hardcode an indentation of 16 pixels for now. TODO: Make this a parameter or something
 	  }
   }
 
   float p2t;
   aPresContext.GetScaledPixelsToTwips(&p2t);
  
-  if (0 != width) {
-      aMetrics.width = NSIntPixelsToTwips(width, p2t);
+  if (0 != mWidth) {
+      aMetrics.width = NSIntPixelsToTwips(mWidth, p2t);
   }
   
   if (nsnull != aMetrics.maxElementSize) {

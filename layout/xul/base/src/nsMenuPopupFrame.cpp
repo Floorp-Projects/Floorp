@@ -300,7 +300,6 @@ nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
   }
   else currFrame = mFrames.FirstChild();
   
-  nsIFrame* start = currFrame;
   while (currFrame) {
     nsCOMPtr<nsIContent> current;
     currFrame->GetContent(getter_AddRefs(current));

@@ -647,7 +647,6 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
 {
   
    // get our current position and max position from our content node
-  PRInt32 curpos = GetCurrentPosition(scrollbar);
   PRInt32 maxpos = GetMaxPosition(scrollbar);
 
   // get the new position and make sure it is in bounds
