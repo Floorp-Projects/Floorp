@@ -181,9 +181,11 @@ nsresult
 nsDownloadManager::DownloadEnded(const nsACString& aTargetPath, const PRUnichar* aMessage)
 {
   nsCStringKey key(aTargetPath);
-  if (mCurrDownloads.Exists(&key)) {
+  nsIDownload* dl = NS_STATIC_CAST(nsIDownload*, mCurrDownloads.Get(&key));
+  if (dl) {
     AssertProgressInfoFor(aTargetPath);
     mCurrDownloads.Remove(&key);
+    NS_RELEASE(dl);
   }
 
   return NS_OK;
@@ -512,9 +514,13 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   }
 
   nsCStringKey key(utf8Path);
-  if (mCurrDownloads.Exists(&key))
+  nsIDownload* dl = NS_STATIC_CAST(nsIDownload*, mCurrDownloads.Get(&key));
+  if (dl) {
     mCurrDownloads.Remove(&key);
+    NS_RELEASE(dl);
+  }
 
+  NS_ADDREF(*aDownload);
   mCurrDownloads.Put(&key, *aDownload);
 
   return rv;
