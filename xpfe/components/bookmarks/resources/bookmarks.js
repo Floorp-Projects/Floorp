@@ -302,7 +302,7 @@ var BookmarksCommand = {
                   "bm_properties"];
       break;
     case "FolderGroup":
-      commands = ["bm_open", "bm_expandfolder", "bm_separator",
+      commands = ["bm_open", "bm_openinnewwindow", "bm_expandfolder", "bm_separator",
                   "bm_newfolder", "bm_sortfolder", "bm_sortfolderbyname", "bm_separator",
                   "bm_cut", "bm_copy", "bm_paste", "bm_movebookmark", "bm_separator",
                   "bm_rename", "bm_delete", "bm_separator",
@@ -571,30 +571,33 @@ var BookmarksCommand = {
 
   openGroupBookmark: function (aURI, aTargetBrowser)
   {
-    if (aTargetBrowser == "current" || aTargetBrowser == "tab") {
-      var w        = getTopWin();
-      var browser  = w.document.getElementById("content");
-      var resource = RDF.GetResource(aURI);
-      var urlArc   = RDF.GetResource(NC_NS+"URL");
-      RDFC.Init(BMDS, resource);
-      var containerChildren = RDFC.GetElements();
-      var tabPanels = browser.mPanelContainer.childNodes;
-      var tabCount  = tabPanels.length;
-      var index = 0;
-      var URIs = [];
-      while (containerChildren.hasMoreElements()) {
-        var res = containerChildren.getNext().QueryInterface(kRDFRSCIID);
-        var target = BMDS.GetTarget(res, urlArc, true);
-        if (target) {
-          URIs.push({ URI: target.QueryInterface(kRDFLITIID).Value });
-          ++index;
-        }
+    var w = getTopWin();
+    if (!w) // no browser window open, so we have to open in new window
+      aTargetBrowser="window";
+
+    var resource = RDF.GetResource(aURI);
+    var urlArc   = RDF.GetResource(NC_NS+"URL");
+    RDFC.Init(BMDS, resource);
+    var containerChildren = RDFC.GetElements();
+    var URIs = [];
+    while (containerChildren.hasMoreElements()) {
+      var res = containerChildren.getNext().QueryInterface(kRDFRSCIID);
+      var target = BMDS.GetTarget(res, urlArc, true);
+      if (target) {
+        if (aTargetBrowser == "window")
+          URIs.push(target.QueryInterface(kRDFLITIID).Value);
+        else
+          URIs.push({ URI: target.QueryInterface(kRDFLITIID).Value });        
       }
+    }
+    if (aTargetBrowser == "window") {
+      // This opens the URIs in separate tabs of a new window
+      openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", URIs.join("\n"));
+    } else {
+      var browser = w.getBrowser();
       var tab = browser.loadGroup(URIs);
       if (!PREF.getBoolPref("browser.tabs.loadInBackground"))
         browser.selectedTab = tab;
-    } else {
-      dump("Open Group in new window: not implemented...\n");
     }
   },
 
