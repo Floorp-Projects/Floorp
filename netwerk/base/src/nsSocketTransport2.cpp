@@ -670,7 +670,7 @@ nsSocketTransport::Init(const char **types, PRUint32 typeCount,
     // include proxy type as a socket type if proxy type is not "http"
     mTypeCount = typeCount + (proxyType != nsnull);
     if (mTypeCount) {
-        mTypes = (char **) PR_Malloc(mTypeCount + sizeof(char *));
+        mTypes = (char **) PR_Malloc(mTypeCount * sizeof(char *));
         if (!mTypes)
             return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1428,7 +1428,7 @@ nsSocketTransport::OpenOutputStream(PRUint32 flags,
         *result = &mOutput;
 
     // flag output stream as open
-    mInputClosed = PR_FALSE;
+    mOutputClosed = PR_FALSE;
 
     rv = gSocketTransportService->PostEvent(this, MSG_ENSURE_CONNECT,
                                             0, nsnull);
