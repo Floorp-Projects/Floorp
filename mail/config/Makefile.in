@@ -54,14 +54,14 @@ ifeq ($(OS_ARCH),WINNT)
 	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/US
 	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/US $(DIST)/bin/chrome/US.jar
 
-########################################################################################################
-#       We should wrap these in a security ifdef so we don't try to do this if we aren't building crypto
-#########################################################################################################
+ifdef MOZ_PSM
 	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/pipnss
 	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/pipnss $(DIST)/bin/chrome/pipnss.jar
 
 	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/pippki
 	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/pippki $(DIST)/bin/chrome/pippki.jar
+endif
+
 endif
 
 	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/mail/config/mail-jar.mn -mozpath $(MOZILLA_DIR) -jarfile mail.jar -chrome $(DIST)/$(APP_NAME)/tmpchrome > $(MOZILLA_DIR)/mail/config/mail-tmp.mn
