@@ -232,21 +232,25 @@ function doSecurityButton()
 function setNoSignatureUI()
 {
   top.document.getElementById("securityStatus").removeAttribute("signing");
+  top.document.getElementById("signing-status").collapsed = true;
 }
 
 function setSignatureUI()
 {
   top.document.getElementById("securityStatus").setAttribute("signing", "ok");
+  top.document.getElementById("signing-status").collapsed = false;
 }
 
 function setNoEncryptionUI()
 {
   top.document.getElementById("securityStatus").removeAttribute("crypto");
+  top.document.getElementById("encryption-status").collapsed = true;
 }
 
 function setEncryptionUI()
 {
   top.document.getElementById("securityStatus").setAttribute("crypto", "ok");
+  top.document.getElementById("encryption-status").collapsed = false;
 }
 
 function showMessageComposeSecurityStatus()

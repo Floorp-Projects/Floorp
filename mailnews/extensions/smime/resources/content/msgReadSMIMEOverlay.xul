@@ -54,9 +54,9 @@
 
   <hbox id="status-bar-end-box">
     <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic"
-      id="signed-status" oncommand="showMessageReadSecurityInfo();"/>
+      id="signed-status" collapsed="true" oncommand="showMessageReadSecurityInfo();"/>
     <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic"
-      id="encrypted-status" oncommand="showMessageReadSecurityInfo();"/>
+      id="encrypted-status" collapsed="true" oncommand="showMessageReadSecurityInfo();"/>
   </hbox>
 
 </overlay>

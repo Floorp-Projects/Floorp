@@ -23,6 +23,8 @@ var gSignedUINode = null;
 var gEncryptedUINode = null;
 var gSMIMEContainer = null;
 var gStatusBar = null;
+var gSignedStatusPanel = null;
+var gEncryptedStatusPanel = null;
 
 // manipulates some globals from msgReadSMIMEOverlay.js
 
@@ -47,11 +49,12 @@ var smimeHeaderSink =
 
     gSMIMEContainer.collapsed = false;
     gSignedUINode.collapsed = false;
-
+    gSignedStatusPanel.collapsed = false;
+  
     if (nsICMSMessageErrors.SUCCESS == aSignatureStatus)
     {
       gSignedUINode.setAttribute("signed", "ok");
-      gStatusBar.setAttribute("signed", "ok");
+      gStatusBar.setAttribute("signed", "ok");      
     }
     else if(nsICMSMessageErrors.VERIFY_NOT_YET_ATTEMPTED == aSignatureStatus)
     {
@@ -77,6 +80,7 @@ var smimeHeaderSink =
 
     gSMIMEContainer.collapsed = false; 
     gEncryptedUINode.collapsed = false;
+    gEncryptedStatusPanel.collapsed = false; 
 
     if (nsICMSMessageErrors.SUCCESS == aEncryptionStatus)
     {
@@ -110,6 +114,10 @@ function onSMIMEStartHeaders()
   gSignedUINode.collapsed = true;
   gSignedUINode.removeAttribute("signed");
   gStatusBar.removeAttribute("signed");
+
+  gSignedStatusPanel.collapsed = true;
+  gEncryptedStatusPanel.collapsed = true; 
+
   gEncryptedUINode.collapsed = true;
   gEncryptedUINode.removeAttribute("encrypted");
   gStatusBar.removeAttribute("encrypted");
@@ -128,6 +136,8 @@ function msgHdrViewSMIMEOnLoad(event)
   gEncryptedUINode = document.getElementById('encryptedHdrIcon');
   gSMIMEContainer = document.getElementById('smimeBox');
   gStatusBar = document.getElementById('status-bar');
+  gSignedStatusPanel = document.getElementById('signed-status');
+  gEncryptedStatusPanel = document.getElementById('encrypted-status');
 
   // add ourself to the list of message display listeners so we get notified when we are about to display a
   // message.

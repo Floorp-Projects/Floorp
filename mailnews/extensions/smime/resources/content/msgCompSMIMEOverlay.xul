@@ -76,9 +76,9 @@
   </hbox>
 
   <statusbar id="status-bar">
-    <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic"
+    <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic" collapsed="true"
       id="signing-status" oncommand="showMessageComposeSecurityStatus();"/>
-    <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic"
+    <statusbarpanel insertbefore="offline-status" class="statusbarpanel-iconic" collapsed="true"
       id="encryption-status" oncommand="showMessageComposeSecurityStatus();"/>
   </statusbar>
 
