@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgdb
 LIBRARY_NAME	= msgdb_s
-REQUIRES	= xpcom mailnews mork msgbase msgbaseutil locale mime necko pref js
+REQUIRES	= xpcom mailnews mork msgbase msgbaseutil locale mime necko pref js msgimap
 
 CPPSRCS		= \
 		nsMsgDatabase.cpp \
