@@ -269,6 +269,9 @@ class nsStrPrivate {
    */
   static PRUint32 HashCode(const nsStr& aDest);
 
+  // A copy of PR_cnvtf with a bug fixed.
+  static void cnvtf(char *buf, int bufsz, int prcsn, double fval);
+
 #ifdef NS_STR_STATS
   /**
    * Prints an nsStr. If truncate is true, the string is only printed up to 

@@ -773,9 +773,9 @@ void nsString::AppendInt(PRInt32 anInteger,PRInt32 aRadix) {
  */
 void nsString::AppendFloat(double aFloat){
   char buf[40];
-  // *** XX UNCOMMENT THIS LINE
-  //PR_snprintf(buf, sizeof(buf), "%g", aFloat);
-  sprintf(buf,"%g",aFloat);
+  // Use nsStrPrivate::cnvtf, which is locale-insensitive, instead of the
+  // locale-sensitive PR_snprintf or sprintf(3)
+  nsStrPrivate::cnvtf(buf, sizeof(buf), 6, aFloat);
   AppendWithConversion(buf);
 }
 
