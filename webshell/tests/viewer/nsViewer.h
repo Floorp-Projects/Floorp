@@ -231,7 +231,6 @@ class nsViewer : public nsINetContainerApplication, public nsDispatchListener {
   void DestroyThrobberImages();
 
   // Debug methods
-  nsIPresShell* GetPresShell(nsIWebWidget* aWebWidget);
   void ToggleFrameBorders(nsIWebWidget* aWebWidget);
   void DumpContent(nsIWebWidget* aWebWidget);
   void DumpFrames(nsIWebWidget* aWebWidget);
