@@ -108,6 +108,9 @@ jclass exceptionClass = nsnull;
 class JavaXPCOMBindingEntry : public PLDHashEntryHdr
 {
 public:
+  // mKey will either be a Java hash of the Java object, or the address of
+  // the XPCOM object, depending on which hash table this entry is used in.
+  const void*   mKey;
   jobject mJavaObject;
   void*   mXPCOMInstance;
 };
@@ -123,6 +126,7 @@ InitJAVAtoXPCOMBindingEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
     NS_CONST_CAST(JavaXPCOMBindingEntry *,
                   NS_STATIC_CAST(const JavaXPCOMBindingEntry *, entry));
 
+  e->mKey = key;
   e->mJavaObject = NS_CONST_CAST(jobject,
                                     NS_STATIC_CAST(const __jobject*, key));
   e->mXPCOMInstance = nsnull;
@@ -138,6 +142,7 @@ InitXPCOMtoJAVABindingEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
     NS_CONST_CAST(JavaXPCOMBindingEntry *,
                   NS_STATIC_CAST(const JavaXPCOMBindingEntry *, entry));
 
+  e->mKey = key;
   e->mXPCOMInstance = NS_CONST_CAST(void*, key);
   e->mJavaObject = nsnull;
 
@@ -147,6 +152,9 @@ InitXPCOMtoJAVABindingEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
 void
 AddJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject, void* aXPCOMObject)
 {
+  // We use a Java hash of the Java object as a key since the JVM can return
+  // different "addresses" for the same Java object, but the hash code (the
+  // result of calling |hashCode()| on the Java object) will always be the same.
   jint hash = env->CallIntMethod(aJavaObject, hashCodeMID);
 
   JavaXPCOMBindingEntry *entry =
