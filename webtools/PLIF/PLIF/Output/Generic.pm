@@ -175,7 +175,7 @@ sub getString {
     my $self = shift;
     my($app, $session, $protocol, $name) = @_;
     my @string = $app->getSelectingServiceList('dataSource.strings.customised')->getCustomisedString($app, $session, $protocol, $name);
-    if (not scalar(@string)) {
+    if (not @string) {
         @string = $app->getSelectingServiceList('dataSource.strings.default')->getDefaultString($app, $protocol, $name);
         $self->assert(scalar(@string), 1, "No suitable '$name' string available for the '$protocol' protocol");
     }
