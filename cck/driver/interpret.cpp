@@ -604,6 +604,57 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (!IterateListBox(parms))
 						return FALSE;
 				}
+				else if(strcmp(pcmd, "IsMailfieldempty") ==0)
+				{
+					CString ispDomainName = GetGlobal("DomainName");
+					CString ispPrettyName = GetGlobal("PrettyName");
+					CString ispLongName = GetGlobal("LongName");
+					CString ispInServer = GetGlobal("IncomingServer");
+					CString ispOutServer = GetGlobal("OutgoingServer");
+					CString ispPortNumber = GetGlobal("PortNumber");
+					if ((ispDomainName.IsEmpty()) || 
+						(ispPrettyName.IsEmpty()) || 
+						(ispLongName.IsEmpty()) || 
+						(ispInServer.IsEmpty())	|| 
+						(ispOutServer.IsEmpty()) || 
+						(ispPortNumber.IsEmpty()))
+					{
+						if (!((ispDomainName.IsEmpty()) && 
+							(ispPrettyName.IsEmpty()) && 
+							(ispLongName.IsEmpty()) && 
+							(ispInServer.IsEmpty())	&& 
+							(ispOutServer.IsEmpty()) && 
+							(ispPortNumber.IsEmpty())))
+						{
+							AfxMessageBox("All fields must be filled to create a customized mail account", MB_OK);
+							return FALSE;
+						}
+					}
+				}
+				else if(strcmp(pcmd, "IsNewsfieldempty") ==0)
+				{
+					CString newsDomainName = GetGlobal("nDomainName");
+					CString newsPrettyName = GetGlobal("nPrettyName");
+					CString newsLongName = GetGlobal("nLongName");
+					CString newsServer = GetGlobal("nServer");
+					CString newsPortNumber = GetGlobal("nPortNumber");
+					if ((newsDomainName.IsEmpty()) || 
+						(newsPrettyName.IsEmpty()) || 
+						(newsLongName.IsEmpty()) || 
+						(newsServer.IsEmpty()) || 
+						(newsPortNumber.IsEmpty()))
+					{
+						if (!((newsDomainName.IsEmpty()) && 
+							(newsPrettyName.IsEmpty()) && 
+							(newsLongName.IsEmpty()) && 
+							(newsServer.IsEmpty())	&& 
+							(newsPortNumber.IsEmpty())))
+						{
+							AfxMessageBox("All fields must be filled to create a customized news account", MB_OK);
+							return FALSE;
+						}
+					}
+				}
 				else if(strcmp(pcmd, "IsNumeric") ==0)
 				{
 					WIDGET *wid;
