@@ -81,7 +81,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetWidth(&prop)) {
+        if (NS_SUCCEEDED(a->GetWidth(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -97,7 +97,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetHeight(&prop)) {
+        if (NS_SUCCEEDED(a->GetHeight(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -113,7 +113,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetPixelDepth(&prop)) {
+        if (NS_SUCCEEDED(a->GetPixelDepth(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -129,7 +129,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetColorDepth(&prop)) {
+        if (NS_SUCCEEDED(a->GetColorDepth(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -145,7 +145,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetAvailWidth(&prop)) {
+        if (NS_SUCCEEDED(a->GetAvailWidth(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -161,7 +161,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetAvailHeight(&prop)) {
+        if (NS_SUCCEEDED(a->GetAvailHeight(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -177,7 +177,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetAvailLeft(&prop)) {
+        if (NS_SUCCEEDED(a->GetAvailLeft(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -193,7 +193,7 @@ GetScreenProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetAvailTop(&prop)) {
+        if (NS_SUCCEEDED(a->GetAvailTop(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {

@@ -80,7 +80,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetDescription(prop)) {
+        if (NS_SUCCEEDED(a->GetDescription(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -96,7 +96,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMPlugin* prop;
-        if (NS_OK == a->GetEnabledPlugin(&prop)) {
+        if (NS_SUCCEEDED(a->GetEnabledPlugin(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -113,7 +113,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetSuffixes(prop)) {
+        if (NS_SUCCEEDED(a->GetSuffixes(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -129,7 +129,7 @@ GetMimeTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetType(prop)) {
+        if (NS_SUCCEEDED(a->GetType(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

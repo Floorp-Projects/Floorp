@@ -74,7 +74,7 @@ GetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAlign(prop)) {
+        if (NS_SUCCEEDED(a->GetAlign(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

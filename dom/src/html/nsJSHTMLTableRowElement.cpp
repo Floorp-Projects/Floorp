@@ -87,7 +87,7 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetRowIndex(&prop)) {
+        if (NS_SUCCEEDED(a->GetRowIndex(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -103,7 +103,7 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetSectionRowIndex(&prop)) {
+        if (NS_SUCCEEDED(a->GetSectionRowIndex(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -119,7 +119,7 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_OK == a->GetCells(&prop)) {
+        if (NS_SUCCEEDED(a->GetCells(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -136,7 +136,7 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAlign(prop)) {
+        if (NS_SUCCEEDED(a->GetAlign(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -152,7 +152,7 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetBgColor(prop)) {
+        if (NS_SUCCEEDED(a->GetBgColor(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -168,7 +168,7 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetCh(prop)) {
+        if (NS_SUCCEEDED(a->GetCh(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -184,7 +184,7 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetChOff(prop)) {
+        if (NS_SUCCEEDED(a->GetChOff(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -200,7 +200,7 @@ GetHTMLTableRowElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetVAlign(prop)) {
+        if (NS_SUCCEEDED(a->GetVAlign(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

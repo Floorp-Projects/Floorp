@@ -88,7 +88,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetStartParent(&prop)) {
+        if (NS_SUCCEEDED(a->GetStartParent(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -105,7 +105,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetStartOffset(&prop)) {
+        if (NS_SUCCEEDED(a->GetStartOffset(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -121,7 +121,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetEndParent(&prop)) {
+        if (NS_SUCCEEDED(a->GetEndParent(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -138,7 +138,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetEndOffset(&prop)) {
+        if (NS_SUCCEEDED(a->GetEndOffset(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -154,7 +154,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetIsCollapsed(&prop)) {
+        if (NS_SUCCEEDED(a->GetIsCollapsed(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -170,7 +170,7 @@ GetRangeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetCommonParent(&prop)) {
+        if (NS_SUCCEEDED(a->GetCommonParent(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }

@@ -75,7 +75,7 @@ GetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetDisabled(&prop)) {
+        if (NS_SUCCEEDED(a->GetDisabled(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -91,7 +91,7 @@ GetHTMLOptGroupElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetLabel(prop)) {
+        if (NS_SUCCEEDED(a->GetLabel(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

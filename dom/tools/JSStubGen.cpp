@@ -611,7 +611,7 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
 
 static const char *kGetCaseStr = 
 "        %s prop;\n"
-"        if (NS_OK == a->Get%s(%sprop)) {\n"
+"        if (NS_SUCCEEDED(a->Get%s(%sprop))) {\n"
 "%s"
 "        }\n"
 "        else {\n"
@@ -622,7 +622,7 @@ static const char *kGetCaseNonPrimaryStr =
 "        %s prop;\n"
 "        nsIDOM%s* b;\n"
 "        if (NS_OK == a->QueryInterface(kI%sIID, (void **)&b)) {\n"
-"          if(NS_OK == b->Get%s(%sprop)) {\n"
+"          if(NS_SUCCEEDED(b->Get%s(%sprop))) {\n"
 "%s"
 "            NS_RELEASE(b);\n"
 "          }\n"

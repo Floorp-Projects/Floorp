@@ -82,7 +82,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetDescription(prop)) {
+        if (NS_SUCCEEDED(a->GetDescription(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -98,7 +98,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetFilename(prop)) {
+        if (NS_SUCCEEDED(a->GetFilename(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -114,7 +114,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetName(prop)) {
+        if (NS_SUCCEEDED(a->GetName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -130,7 +130,7 @@ GetPluginProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint32 prop;
-        if (NS_OK == a->GetLength(&prop)) {
+        if (NS_SUCCEEDED(a->GetLength(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {

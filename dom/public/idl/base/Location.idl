@@ -12,7 +12,7 @@
         attribute wstring search;
 
 	noscript void reload(in boolean forceget);
-        void replace(in wstring url);
+        noscript void replace(in wstring url);
 
 	wstring toString();
       };

@@ -74,7 +74,7 @@ GetHTMLPreElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetWidth(&prop)) {
+        if (NS_SUCCEEDED(a->GetWidth(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {

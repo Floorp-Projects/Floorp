@@ -88,7 +88,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNode* prop;
-        if (NS_OK == a->GetOwningNode(&prop)) {
+        if (NS_SUCCEEDED(a->GetOwningNode(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -105,7 +105,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMStyleSheet* prop;
-        if (NS_OK == a->GetParentStyleSheet(&prop)) {
+        if (NS_SUCCEEDED(a->GetParentStyleSheet(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -122,7 +122,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetHref(prop)) {
+        if (NS_SUCCEEDED(a->GetHref(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -138,7 +138,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetTitle(prop)) {
+        if (NS_SUCCEEDED(a->GetTitle(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -154,7 +154,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetMedia(prop)) {
+        if (NS_SUCCEEDED(a->GetMedia(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -170,7 +170,7 @@ GetCSSStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMCSSStyleRuleCollection* prop;
-        if (NS_OK == a->GetCssRules(&prop)) {
+        if (NS_SUCCEEDED(a->GetCssRules(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }

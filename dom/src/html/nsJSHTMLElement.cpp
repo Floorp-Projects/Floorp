@@ -82,7 +82,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetId(prop)) {
+        if (NS_SUCCEEDED(a->GetId(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -98,7 +98,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetTitle(prop)) {
+        if (NS_SUCCEEDED(a->GetTitle(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -114,7 +114,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetLang(prop)) {
+        if (NS_SUCCEEDED(a->GetLang(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -130,7 +130,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetDir(prop)) {
+        if (NS_SUCCEEDED(a->GetDir(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -146,7 +146,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetClassName(prop)) {
+        if (NS_SUCCEEDED(a->GetClassName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -162,7 +162,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMCSSStyleDeclaration* prop;
-        if (NS_OK == a->GetStyle(&prop)) {
+        if (NS_SUCCEEDED(a->GetStyle(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }

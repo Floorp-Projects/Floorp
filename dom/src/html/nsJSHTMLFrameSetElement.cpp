@@ -75,7 +75,7 @@ GetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetCols(prop)) {
+        if (NS_SUCCEEDED(a->GetCols(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -91,7 +91,7 @@ GetHTMLFrameSetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetRows(prop)) {
+        if (NS_SUCCEEDED(a->GetRows(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

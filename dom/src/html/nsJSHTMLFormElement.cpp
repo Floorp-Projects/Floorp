@@ -93,7 +93,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_OK == a->GetElements(&prop)) {
+        if (NS_SUCCEEDED(a->GetElements(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -110,7 +110,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint32 prop;
-        if (NS_OK == a->GetLength(&prop)) {
+        if (NS_SUCCEEDED(a->GetLength(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -126,7 +126,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetName(prop)) {
+        if (NS_SUCCEEDED(a->GetName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -142,7 +142,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAcceptCharset(prop)) {
+        if (NS_SUCCEEDED(a->GetAcceptCharset(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -158,7 +158,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAction(prop)) {
+        if (NS_SUCCEEDED(a->GetAction(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -174,7 +174,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetEnctype(prop)) {
+        if (NS_SUCCEEDED(a->GetEnctype(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -190,7 +190,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetMethod(prop)) {
+        if (NS_SUCCEEDED(a->GetMethod(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -206,7 +206,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetTarget(prop)) {
+        if (NS_SUCCEEDED(a->GetTarget(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -224,7 +224,7 @@ GetHTMLFormElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         nsIDOMNSHTMLFormElement* b;
         if (NS_OK == a->QueryInterface(kINSHTMLFormElementIID, (void **)&b)) {
-          if(NS_OK == b->GetEncoding(prop)) {
+          if(NS_SUCCEEDED(b->GetEncoding(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }

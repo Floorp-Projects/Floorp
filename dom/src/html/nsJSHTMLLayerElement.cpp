@@ -84,7 +84,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetTop(&prop)) {
+        if (NS_SUCCEEDED(a->GetTop(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -100,7 +100,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetLeft(&prop)) {
+        if (NS_SUCCEEDED(a->GetLeft(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -116,7 +116,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetVisibility(prop)) {
+        if (NS_SUCCEEDED(a->GetVisibility(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -132,7 +132,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetBackground(prop)) {
+        if (NS_SUCCEEDED(a->GetBackground(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -148,7 +148,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetBgColor(prop)) {
+        if (NS_SUCCEEDED(a->GetBgColor(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -164,7 +164,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetName(prop)) {
+        if (NS_SUCCEEDED(a->GetName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -180,7 +180,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetZIndex(&prop)) {
+        if (NS_SUCCEEDED(a->GetZIndex(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -196,7 +196,7 @@ GetHTMLLayerElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMDocument* prop;
-        if (NS_OK == a->GetDocument(&prop)) {
+        if (NS_SUCCEEDED(a->GetDocument(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }

@@ -122,7 +122,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMDocumentType* prop;
-        if (NS_OK == a->GetDoctype(&prop)) {
+        if (NS_SUCCEEDED(a->GetDoctype(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -139,7 +139,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMDOMImplementation* prop;
-        if (NS_OK == a->GetImplementation(&prop)) {
+        if (NS_SUCCEEDED(a->GetImplementation(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -156,7 +156,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMElement* prop;
-        if (NS_OK == a->GetDocumentElement(&prop)) {
+        if (NS_SUCCEEDED(a->GetDocumentElement(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -175,7 +175,7 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMStyleSheetCollection* prop;
         nsIDOMNSDocument* b;
         if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
-          if(NS_OK == b->GetStyleSheets(&prop)) {
+          if(NS_SUCCEEDED(b->GetStyleSheets(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);

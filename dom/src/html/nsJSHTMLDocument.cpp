@@ -110,7 +110,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetTitle(prop)) {
+        if (NS_SUCCEEDED(a->GetTitle(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -126,7 +126,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetReferrer(prop)) {
+        if (NS_SUCCEEDED(a->GetReferrer(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -142,7 +142,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetDomain(prop)) {
+        if (NS_SUCCEEDED(a->GetDomain(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -158,7 +158,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetURL(prop)) {
+        if (NS_SUCCEEDED(a->GetURL(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -174,7 +174,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHTMLElement* prop;
-        if (NS_OK == a->GetBody(&prop)) {
+        if (NS_SUCCEEDED(a->GetBody(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -191,7 +191,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_OK == a->GetImages(&prop)) {
+        if (NS_SUCCEEDED(a->GetImages(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -208,7 +208,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_OK == a->GetApplets(&prop)) {
+        if (NS_SUCCEEDED(a->GetApplets(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -225,7 +225,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_OK == a->GetLinks(&prop)) {
+        if (NS_SUCCEEDED(a->GetLinks(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -242,7 +242,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_OK == a->GetForms(&prop)) {
+        if (NS_SUCCEEDED(a->GetForms(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -259,7 +259,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMHTMLCollection* prop;
-        if (NS_OK == a->GetAnchors(&prop)) {
+        if (NS_SUCCEEDED(a->GetAnchors(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -276,7 +276,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetCookie(prop)) {
+        if (NS_SUCCEEDED(a->GetCookie(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -294,7 +294,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_OK == b->GetAlinkColor(prop)) {
+          if(NS_SUCCEEDED(b->GetAlinkColor(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
@@ -319,7 +319,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_OK == b->GetLinkColor(prop)) {
+          if(NS_SUCCEEDED(b->GetLinkColor(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
@@ -344,7 +344,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_OK == b->GetVlinkColor(prop)) {
+          if(NS_SUCCEEDED(b->GetVlinkColor(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
@@ -369,7 +369,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_OK == b->GetBgColor(prop)) {
+          if(NS_SUCCEEDED(b->GetBgColor(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
@@ -394,7 +394,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_OK == b->GetFgColor(prop)) {
+          if(NS_SUCCEEDED(b->GetFgColor(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
@@ -419,7 +419,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_OK == b->GetLastModified(prop)) {
+          if(NS_SUCCEEDED(b->GetLastModified(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
             NS_RELEASE(b);
           }
@@ -444,7 +444,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLCollection* prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_OK == b->GetEmbeds(&prop)) {
+          if(NS_SUCCEEDED(b->GetEmbeds(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
@@ -470,7 +470,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLCollection* prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_OK == b->GetLayers(&prop)) {
+          if(NS_SUCCEEDED(b->GetLayers(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
@@ -496,7 +496,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMHTMLCollection* prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
-          if(NS_OK == b->GetPlugins(&prop)) {
+          if(NS_SUCCEEDED(b->GetPlugins(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);

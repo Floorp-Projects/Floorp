@@ -75,7 +75,7 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetTarget(prop)) {
+        if (NS_SUCCEEDED(a->GetTarget(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -91,7 +91,7 @@ GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetData(prop)) {
+        if (NS_SUCCEEDED(a->GetData(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

@@ -77,7 +77,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetLength(&prop)) {
+        if (NS_SUCCEEDED(a->GetLength(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -93,7 +93,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetCurrent(prop)) {
+        if (NS_SUCCEEDED(a->GetCurrent(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -109,7 +109,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetPrevious(prop)) {
+        if (NS_SUCCEEDED(a->GetPrevious(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -125,7 +125,7 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetNext(prop)) {
+        if (NS_SUCCEEDED(a->GetNext(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

@@ -74,7 +74,7 @@ GetHTMLQuoteElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetCite(prop)) {
+        if (NS_SUCCEEDED(a->GetCite(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

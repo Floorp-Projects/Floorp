@@ -76,7 +76,7 @@ GetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetPublicId(prop)) {
+        if (NS_SUCCEEDED(a->GetPublicId(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -92,7 +92,7 @@ GetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetSystemId(prop)) {
+        if (NS_SUCCEEDED(a->GetSystemId(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -108,7 +108,7 @@ GetEntityProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetNotationName(prop)) {
+        if (NS_SUCCEEDED(a->GetNotationName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

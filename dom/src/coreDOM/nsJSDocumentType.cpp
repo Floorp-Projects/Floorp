@@ -79,7 +79,7 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetName(prop)) {
+        if (NS_SUCCEEDED(a->GetName(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -95,7 +95,7 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNamedNodeMap* prop;
-        if (NS_OK == a->GetEntities(&prop)) {
+        if (NS_SUCCEEDED(a->GetEntities(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }
@@ -112,7 +112,7 @@ GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         nsIDOMNamedNodeMap* prop;
-        if (NS_OK == a->GetNotations(&prop)) {
+        if (NS_SUCCEEDED(a->GetNotations(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
         }

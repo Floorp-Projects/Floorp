@@ -79,7 +79,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetAlign(prop)) {
+        if (NS_SUCCEEDED(a->GetAlign(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -95,7 +95,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetCh(prop)) {
+        if (NS_SUCCEEDED(a->GetCh(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -111,7 +111,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetChOff(prop)) {
+        if (NS_SUCCEEDED(a->GetChOff(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -127,7 +127,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetSpan(&prop)) {
+        if (NS_SUCCEEDED(a->GetSpan(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -143,7 +143,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetVAlign(prop)) {
+        if (NS_SUCCEEDED(a->GetVAlign(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {
@@ -159,7 +159,7 @@ GetHTMLTableColElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
           return JS_FALSE;
         }
         nsAutoString prop;
-        if (NS_OK == a->GetWidth(prop)) {
+        if (NS_SUCCEEDED(a->GetWidth(prop))) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
         else {

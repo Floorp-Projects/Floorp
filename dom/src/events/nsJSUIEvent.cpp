@@ -102,7 +102,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetScreenX(&prop)) {
+        if (NS_SUCCEEDED(a->GetScreenX(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -118,7 +118,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetScreenY(&prop)) {
+        if (NS_SUCCEEDED(a->GetScreenY(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -134,7 +134,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetClientX(&prop)) {
+        if (NS_SUCCEEDED(a->GetClientX(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -150,7 +150,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRInt32 prop;
-        if (NS_OK == a->GetClientY(&prop)) {
+        if (NS_SUCCEEDED(a->GetClientY(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -166,7 +166,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetAltKey(&prop)) {
+        if (NS_SUCCEEDED(a->GetAltKey(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -182,7 +182,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetCtrlKey(&prop)) {
+        if (NS_SUCCEEDED(a->GetCtrlKey(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -198,7 +198,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetShiftKey(&prop)) {
+        if (NS_SUCCEEDED(a->GetShiftKey(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -214,7 +214,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRBool prop;
-        if (NS_OK == a->GetMetaKey(&prop)) {
+        if (NS_SUCCEEDED(a->GetMetaKey(&prop))) {
           *vp = BOOLEAN_TO_JSVAL(prop);
         }
         else {
@@ -230,7 +230,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint32 prop;
-        if (NS_OK == a->GetCharCode(&prop)) {
+        if (NS_SUCCEEDED(a->GetCharCode(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -246,7 +246,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint32 prop;
-        if (NS_OK == a->GetKeyCode(&prop)) {
+        if (NS_SUCCEEDED(a->GetKeyCode(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -262,7 +262,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint16 prop;
-        if (NS_OK == a->GetButton(&prop)) {
+        if (NS_SUCCEEDED(a->GetButton(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -278,7 +278,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           return JS_FALSE;
         }
         PRUint16 prop;
-        if (NS_OK == a->GetClickcount(&prop)) {
+        if (NS_SUCCEEDED(a->GetClickcount(&prop))) {
           *vp = INT_TO_JSVAL(prop);
         }
         else {
@@ -296,7 +296,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRInt32 prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          if(NS_OK == b->GetLayerX(&prop)) {
+          if(NS_SUCCEEDED(b->GetLayerX(&prop))) {
           *vp = INT_TO_JSVAL(prop);
             NS_RELEASE(b);
           }
@@ -321,7 +321,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRInt32 prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          if(NS_OK == b->GetLayerY(&prop)) {
+          if(NS_SUCCEEDED(b->GetLayerY(&prop))) {
           *vp = INT_TO_JSVAL(prop);
             NS_RELEASE(b);
           }
@@ -346,7 +346,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRInt32 prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          if(NS_OK == b->GetPageX(&prop)) {
+          if(NS_SUCCEEDED(b->GetPageX(&prop))) {
           *vp = INT_TO_JSVAL(prop);
             NS_RELEASE(b);
           }
@@ -371,7 +371,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRInt32 prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          if(NS_OK == b->GetPageY(&prop)) {
+          if(NS_SUCCEEDED(b->GetPageY(&prop))) {
           *vp = INT_TO_JSVAL(prop);
             NS_RELEASE(b);
           }
@@ -396,7 +396,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRUint32 prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          if(NS_OK == b->GetWhich(&prop)) {
+          if(NS_SUCCEEDED(b->GetWhich(&prop))) {
           *vp = INT_TO_JSVAL(prop);
             NS_RELEASE(b);
           }
@@ -421,7 +421,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNode* prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          if(NS_OK == b->GetRangeParent(&prop)) {
+          if(NS_SUCCEEDED(b->GetRangeParent(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
@@ -447,7 +447,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         PRInt32 prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          if(NS_OK == b->GetRangeOffset(&prop)) {
+          if(NS_SUCCEEDED(b->GetRangeOffset(&prop))) {
           *vp = INT_TO_JSVAL(prop);
             NS_RELEASE(b);
           }
@@ -472,7 +472,7 @@ GetUIEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMRenderingContext* prop;
         nsIDOMNSUIEvent* b;
         if (NS_OK == a->QueryInterface(kINSUIEventIID, (void **)&b)) {
-          if(NS_OK == b->GetRc(&prop)) {
+          if(NS_SUCCEEDED(b->GetRc(&prop))) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, vp);
             NS_RELEASE(b);
