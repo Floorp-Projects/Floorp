@@ -2755,16 +2755,6 @@ function OpenBrowserWindow()
   }
 }
 
-function openAboutDialog()
-{
-#ifdef XP_MACOSX
-  // XXXmano: define minimizable=no although it does nothing on OS X (see Bug 287162); remove this comment once Bug 287162 is fixed...
-  window.open("chrome://browser/content/aboutDialog.xul", "About", "centerscreen,chrome,resizable=no, minimizable=no");
-#else
-  window.openDialog("chrome://browser/content/aboutDialog.xul", "About", "modal,centerscreen,chrome,resizable=no");
-#endif
-}
-
 function BrowserCustomizeToolbar()
 {
   // Disable the toolbar context menu items
@@ -5064,44 +5054,6 @@ function charsetLoadListener (event)
     }
 }
 
-#ifdef XP_MACOSX
-const nsIWindowDataSource = Components.interfaces.nsIWindowDataSource;
-
-function checkFocusedWindow()
-{
-  var windowManagerDS = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService(nsIWindowDataSource);
-
-  var sep = document.getElementById("sep-window-list");
-  // Using double parens to avoid warning
-  while ((sep = sep.nextSibling)) {
-    var url = sep.getAttribute('id');
-    var win = windowManagerDS.getWindowForResource(url);
-    if (win == window) {
-      sep.setAttribute("checked", "true");
-      break;
-    }
-  }
-}
-
-function toOpenWindow( aWindow )
-{
-  aWindow.document.commandDispatcher.focusedWindow.focus();
-}
-
-function ShowWindowFromResource( node )
-{
-    var windowManagerDS = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService(nsIWindowDataSource);
-    
-    var desiredWindow = null;
-    var url = node.getAttribute('id');
-	desiredWindow = windowManagerDS.getWindowForResource( url );
-	if ( desiredWindow )
-	{
-            toOpenWindow(desiredWindow);
-	}
-}
-#endif
-
 /* Begin Page Style Functions */
 function getStyleSheetArray(frame)
 {
@@ -5745,16 +5697,6 @@ function GetFrameDocumentsFromWindow(aWindow){
 function SwitchDocumentDirection(){
   GetFrameDocumentsFromWindow(window.content);
 }
-
-#ifdef XP_MACOSX
-function zoomWindow()
-{
-  if (window.windowState == STATE_NORMAL)
-    window.maximize();
-  else
-    window.restore();
-}
-#endif
 
 function missingPluginInstaller(){
   this.missingPlugins = new Object();

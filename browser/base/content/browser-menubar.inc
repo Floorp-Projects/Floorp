@@ -420,56 +420,14 @@
                         label="&preferencesCmd.label;"
                         accesskey="&preferencesCmd.accesskey;"
                         oncommand="openPreferences();"/>
-#else
-#ifdef XP_MACOSX
-              <menuitem id="menu_preferences" oncommand="openPreferences();"/>
-#endif
 #endif
             </menupopup>
           </menu>
     
 #ifdef XP_MACOSX
-        <menu id="windowMenu" label="&windowMenu.label;"
-            datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
-            onpopupshowing="checkFocusedWindow();">
-            <template>
-            <rule>
-                <menupopup>
-                <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" type="radio"
-                            name="windowList" oncommand="ShowWindowFromResource(event.target)"/>
-                </menupopup>
-            </rule>
-            </template>
-            <menupopup id="windowPopup">
-              <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
-              <menuitem command="zoomWindow"/>
-              <menuseparator/>
-              <menuitem label="&bringAllToFront.label;" disabled="true"/>
-              <menuseparator id="sep-window-list"/>
-            </menupopup>
-        </menu>
+          <menu id="windowMenu" />
 #endif
-
-#ifdef XP_WIN
-          <menu label="&helpMenuWin.label;"
-                accesskey="&helpMenuWin.accesskey;">
-#else
-          <menu label="&helpMenu.label;"
-                accesskey="&helpMenu.accesskey;">
-#endif
-            <menupopup id="menu_HelpPopup">
-              <menuseparator/>
-              <menuitem accesskey="&promote.accesskey;"
-                        label="&promote.label;"
-                        oncommand="openUILink(getUILink('promote'), event, false, true);"
-                        onclick="checkForMiddleClick(this, event);"/>
-              <menuseparator/>
-              <menuitem id="aboutName"
-                        accesskey="&aboutCmd.accesskey;"
-                        label="&aboutCmd.label;"
-                        oncommand="openAboutDialog();"/>
-            </menupopup>
-          </menu>
+          <menu id="helpMenu" />
         </menubar>
 
 

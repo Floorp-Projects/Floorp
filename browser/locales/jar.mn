@@ -5,6 +5,7 @@
     locale/browser/aboutDialog.dtd                 (%chrome/browser/aboutDialog.dtd)
     locale/browser/credits.dtd                     (%chrome/browser/credits.dtd)
 *   locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
+    locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
     locale/browser/metaData.dtd                    (%chrome/browser/metaData.dtd)
     locale/browser/metaData.properties             (%chrome/browser/metaData.properties)
