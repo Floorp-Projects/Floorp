@@ -454,7 +454,7 @@ SetupParams(JNIEnv *env, const jobject aParam,
       {
         if (env->IsInstanceOf(aParam, intArrayClass))
         {
-          LOG("int[] (void)");
+          LOG("int[] (void*)");
           jboolean isCopy = JNI_FALSE;
           jint* buf = nsnull;
           if (aParam) {
@@ -467,7 +467,7 @@ SetupParams(JNIEnv *env, const jobject aParam,
             aVariant.flags |= nsXPTCVariant::VAL_IS_ALLOCD;
           }
         } else {
-          LOG("int (void)");
+          LOG("int (void*)");
           NS_ASSERTION(type.IsPointer(), "T_VOID 'int' handler received non-pointer type");
           aVariant.val.p = (void*) env->CallIntMethod(aParam, intValueMID);
         }
@@ -880,16 +880,16 @@ SetRetval(JNIEnv *env,
     }
     break;
 
-    // XXX not sure about this one
     case nsXPTType::T_VOID:
-      aResult.l = (jobject) aVariant.ptr;
+      // handle "void *" as an "int" in Java
+      LOG(" returns int (void*)");
+      aResult.i = (jint) aVariant.val.p;
+      break;
 
     case nsXPTType::T_ARRAY:
       NS_WARNING("array types are not yet supported");
       return NS_ERROR_NOT_IMPLEMENTED;
 
-    case nsXPTType::T_PSTRING_SIZE_IS:
-    case nsXPTType::T_PWSTRING_SIZE_IS:
     default:
       NS_WARNING("unexpected parameter type");
       return NS_ERROR_UNEXPECTED;
