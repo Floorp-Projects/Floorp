@@ -15,6 +15,7 @@ START /cookie
 INCLUDE generic.res
 Content-Type: text/html
 Set-Cookie: foo=bar
+Date: Wed, 28 Jul 1999 17:00:01 GMT
 CRLF
 A test with Set-Cookie header foo=bar
 END
