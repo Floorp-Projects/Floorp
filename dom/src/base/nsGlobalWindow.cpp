@@ -1100,6 +1100,12 @@ GlobalWindowImpl::EnumerateProperty(JSContext *aContext)
 PRBool    
 GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
 {
+  if (JSVAL_IS_STRING(aID) && 
+      PL_strcmp("location", JS_GetStringBytes(JS_ValueToString(aContext, aID))) == 0) {
+    ::JS_DefineProperty(aContext, (JSObject *)mScriptObject, "location",
+                        JSVAL_NULL, nsnull, nsnull, 0);
+  }
+
   return PR_TRUE;
 }
 
