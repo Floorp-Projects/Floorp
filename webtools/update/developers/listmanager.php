@@ -66,6 +66,7 @@ $sql .=" ORDER  BY  `Type` , `Name`  ASC ";
 </table>
 <div style="width: 580px; border: 1px dotted #AAA; margin-top: 2px; margin-left: 50px; padding: 5px; font-size: 10pt; font-weight: bold">
 <form name="addapplication" method="post" ACTION="?function=additem2" enctype="multipart/form-data">
+<?writeFormKey();?>
 <a href="additem.php?function=additem">New <?php $typename = $typearray[$_GET[type]]; echo"$typename"; ?></A>
   Input File: <input name="file" size=30 type="file">
 <input name="type" type="hidden" value="<?php echo"$_GET[type]"; ?>">
@@ -84,11 +85,13 @@ if ($_POST["name"] && $_POST["authors"] && $_POST["categories"] && $_POST["descr
 //Everything We *must* have is present... Begin....
 
 //Phase One, update t_main values...
+if (checkFormKey()) {
   $sql = "UPDATE `t_main` SET `Name`= '$_POST[name]', `Homepage`='$_POST[homepage]', `Description`='$_POST[description]', `DateUpdated`=NOW(NULL) WHERE `ID`='$_POST[id]' LIMIT 1";
    //echo"$sql<br>\n"; //Debug
    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
 if ($sql_result) {
    echo"Your update to $_POST[name] has been submitted successfully...<br>\n";
+}
 }
 echo"<SPAN style=\"font-size 10pt;\">";
 
@@ -122,14 +125,18 @@ unset($a,$r);
 //Commit Updates to AuthorXref tables.. with the ID and UserID.
 if ($updateauthors != "false") {
  //Remove Current Authors
- $sql = "DELETE FROM `t_authorxref` WHERE `ID` = '$_POST[id]'";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+ if (checkFormKey()) {
+  $sql = "DELETE FROM `t_authorxref` WHERE `ID` = '$_POST[id]'";
+  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+ }
 
  //Add New Authors based on $authorids
  sort($authorids);
   foreach ($authorids as $authorid) {
-   	$sql = "INSERT INTO `t_authorxref` (`ID`, `UserID`) VALUES ('$_POST[id]', '$authorid');";
-    $result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+    if (checkFormKey()) {
+      $sql = "INSERT INTO `t_authorxref` (`ID`, `UserID`) VALUES ('$_POST[id]', '$authorid');";
+      $result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+    }
   }
    echo"Authors for $_POST[name]'s updated...<br>\n";
 } else {
@@ -141,17 +148,19 @@ unset($authors); //Clear from Post..
 //Phase Three, Category List, update linkages.
 //print_r($_POST["categories"]);
  //Delete Current Category Linkages...
+  if (checkFormKey()) {
    $sql = "DELETE FROM `t_categoryxref` WHERE `ID` = '$_POST[id]'";
    //echo"$sql<br>\n"; //Debug
    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  
  //Add New Categories from $_POST["categories"]
    foreach ($_POST["categories"] as $categoryid) {
    	$sql = "INSERT INTO `t_categoryxref` (`ID`, `CategoryID`) VALUES ('$_POST[id]', '$categoryid');";
      //echo"$sql<br>\n"; //Debug
     $result = mysql_query($sql) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
-  }
+   }
    echo"Categories for $_POST[name]'s updated...<br>\n";
-
+  }
 //End _POST if.
 
 } else {
@@ -211,7 +220,8 @@ echo"<h1>Deleting $name, please wait...</h1>\n";
     }
     }
 
-  $sql = "DELETE FROM `t_main` WHERE `ID`='$id'";
+  if (checkFormKey()) {
+   $sql = "DELETE FROM `t_main` WHERE `ID`='$id'";
    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     if ($sql_result) {
     echo"$name has been deleted...<br>\n";
@@ -220,6 +230,7 @@ echo"<h1>Deleting $name, please wait...</h1>\n";
     echo"</body>\n</html>\n";
     exit;
     }
+   }
 }
 
 
@@ -266,6 +277,7 @@ unset($v);
 <h1><?php echo"Edit $name"; ?></h1>
 <TABLE CELLPADDING=1 CELLSPACING=1 STYLE="border: solid 0px #000000;">
 <FORM NAME="editmain" METHOD="POST" ACTION="?function=editmain&<?php echo"id=$id"; ?>">
+<?writeFormKey();?>
 <INPUT NAME="id" TYPE="HIDDEN" VALUE="<?php echo"$id"; ?>">
 <TR><TD>GUID:</TD><TD><?php echo"$guid"; ?></TD>
 
@@ -366,11 +378,12 @@ $notes = $_POST["notes"];
 $id = $_POST["id"];
 $uri = $_POST["uri"];
 $osid = $_POST["osid"];
+ if (checkFormKey()) {
   $sql = "UPDATE `t_version` SET `OSID`='$osid', `Notes`='$notes', `DateUpdated`=NOW(NULL) WHERE `ID`='$id' AND `URI`='$uri'";
   //echo"$sql<br>\n";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
    echo"Version Notes and OS for $_POST[name] $_POST[version] updated...<br>\n";
-
+ }
 //Phase Two -- Update Min/Max Versions
 
 //Construct Internal App_Version Arrays
@@ -400,10 +413,12 @@ if (!$minappver_int) {$minappver_int = $minappver;}
 if (!$maxappver_int) {$maxappver_int = $maxappver;}
 
 if ($minappver && $maxappver) {
+ if (checkFormKey()) {
   $sql = "UPDATE `t_version` SET `MinAppVer`='$minappver', `MinAppVer_int`='$minappver_int', `MaxAppVer`='$maxappver', `MaxAppVer_int`='$maxappver_int' WHERE `vID`='$vid'";
   //echo"$sql<br>\n";
   $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
     echo"Updated Target Application Values for Application $i...<br>\n";
+ }
 } else {
 if (!$minappver) { echo"<SPAN class=\"error\">Error: Minimum Version is not specified or invalid</SPAN><BR>\n"; }
 if (!$maxappver) { echo"<SPAN class=\"error\">Error: Maximum Version is not specified or invalid</SPAN><BR>\n"; }
@@ -424,8 +439,11 @@ $sql = "SELECT `Name` FROM `t_main` WHERE `ID` = '$id'";
   $row = mysql_fetch_array($sql_result);
     $name = $row["Name"];
 
-  $sql = "DELETE FROM `t_version` WHERE `ID`='$id' AND `URI`='$uri'";
+  $sql_result = false;
+  if (checkFormKey()) {
+   $sql = "DELETE FROM `t_version` WHERE `ID`='$id' AND `URI`='$uri'";
    $sql_result = mysql_query($sql, $connection) or trigger_error("<FONT COLOR=\"#FF0000\"><B>MySQL Error ".mysql_errno().": ".mysql_error()."</B></FONT>", E_USER_NOTICE);
+  }
     if ($sql_result) {
     //Delete File from server
     if (strpos("$uri","approvalfile.php/")) {
@@ -492,6 +510,7 @@ if (!$vid) {$vid = $_POST["vid"]; }
 <h1><?php echo"Edit $name Version $version"; ?></h1>
 <TABLE CELLPADDING=1 CELLSPACING=1 STYLE="border: solid 0px #000000;">
 <FORM NAME="editversion" METHOD="POST" ACTION="?function=editversion&<?php echo"id=$id&vid=$vid"; ?>">
+<?writeFormKey();?>
 <?php
     echo"<INPUT NAME=\"id\" TYPE=\"HIDDEN\" VALUE=\"$id\">\n";
     echo"<INPUT NAME=\"uri\" TYPE=\"HIDDEN\" VALUE=\"$uri\">\n";

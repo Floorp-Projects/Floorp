@@ -113,4 +113,26 @@ echo"</SPAN></DIV>\n";
 include"$page_footer";
 exit;
 }
+
+function writeFormKey()
+{
+	$sql = "SELECT UserPass FROM t_userprofiles WHERE UserID = '".$_SESSION["uid"]."'";
+	$res = mysql_query($sql) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+	$row = mysql_fetch_array($res);
+	echo "<input type=\"hidden\" name=\"formkey\" value=\"".md5($row["UserPass"])."\">\n";
+}
+
+function checkFormKey()
+{
+	$key = $_POST["formkey"];
+	$sql = "SELECT UserPass FROM t_userprofiles WHERE UserID = '".$_SESSION["uid"]."'";
+	$res = mysql_query($sql) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+	$row = mysql_fetch_array($res);
+	if ($key != md5($row["UserPass"]))
+	{
+		echo "<br><font size=+2 color='red'>WARNING: FORMKEY MISMATCH!</font><br>\n";
+		return false;
+	}
+	return true;
+}
 ?>

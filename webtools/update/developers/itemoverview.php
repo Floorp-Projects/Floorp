@@ -109,11 +109,13 @@ $sql2 = "SELECT TV.Version, AppName, MinAppVer, MaxAppVer FROM `t_version` TV
     <h2>Developer Comments</h2>
 <?php
 if ($_POST["submit"]=="Post Comments") {
-$id = $_POST["id"];
-$comments = $_POST["comments"];
-$sql = "UPDATE `t_main` SET `devcomments`='$comments' WHERE `id`='$id'";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
- if ($sql_result) { echo"Developer Comments Updated...<br>\n"; }
+  $id = $_POST["id"];
+  $comments = $_POST["comments"];
+  if (checkFormKey()) {
+    $sql = "UPDATE `t_main` SET `devcomments`='$comments' WHERE `id`='$id'";
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+    if ($sql_result) { echo"Developer Comments Updated...<br>\n"; }
+  }
 }
 
 $sql = "SELECT `devcomments` FROM `t_main` WHERE `id`='$id' LIMIT 1";
@@ -123,6 +125,7 @@ $sql = "SELECT `devcomments` FROM `t_main` WHERE `id`='$id' LIMIT 1";
  
 ?>
 <form name="devcomments" method="post" action="itemoverview.php?id=<?php echo"$id"; ?>">
+<?writeFormKey();?>
 <input name="id" type="hidden" value="<?php echo"$id"; ?>">
 <textarea name="comments" rows=10 cols=26><?php echo"$devcomments"; ?></textarea><br>
 <input name="submit" type="submit" value="Post Comments">&nbsp;<input name="reset" type="reset" value="Reset">

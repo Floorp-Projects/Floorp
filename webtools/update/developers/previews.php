@@ -60,7 +60,9 @@ $sql = "DELETE FROM `t_previews` WHERE `PreviewID`='$previewid'";
 } else {
 $sql = "UPDATE `t_previews` SET `caption`='$caption', `preview`='$preview' WHERE `PreviewID`='$previewid'";
 }
-  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  if (checkFormKey()) {
+    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  }
 }
 
 echo"Previews successfully updated. The new values for the preview records should be shown below.<br>\n";
@@ -76,6 +78,7 @@ $sql = "SELECT * FROM `t_previews` TP WHERE `ID`='$id' ORDER BY `PreviewID`";
 if ($num_results>"0") {
 ?>
 <form name="updatepreviews" method="post" action="?id=<?php echo"$id"; ?>&function=updatepreviews">
+<?writeFormKey();?>
 <?php
 }
 
@@ -218,11 +221,13 @@ imagedestroy($dst_img);
 
 if ($status=="1") {
 //Lets attempt to add the record to the DB.
-$sql = "INSERT INTO `t_previews` (`PreviewURI`,`ID`,`caption`,`preview`) VALUES ('/$previewpath','$id','$caption','$preview');";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+ if (checkFormKey()) {
+  $sql = "INSERT INTO `t_previews` (`PreviewURI`,`ID`,`caption`,`preview`) VALUES ('/$previewpath','$id','$caption','$preview');";
+  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
-if ($sql_result=="1") {
-echo"Your File $filename ($filesize bytes) has been successfully uploaded and added to the database. <a href=\"?id=$id\">Click here</a> to refresh this page to show the added entry for editing.<BR><BR>";
+  if ($sql_result=="1") {
+   echo"Your File $filename ($filesize bytes) has been successfully uploaded and added to the database. <a href=\"?id=$id\">Click here</a> to refresh this page to show the added entry for editing.<BR><BR>";
+ }
 }
 
 }
@@ -236,6 +241,7 @@ echo"<span class=error>The image you uploaded has errors and could not be proces
 ?>
 
 <form name="addpreview" method="post" action="?id=<?php echo"$id"; ?>&function=addpreview" enctype="multipart/form-data">
+<?writeFormKey();?>
 Only PNG or JPG images are supported for addition to the preview screenshots page for your item. Check the "List Page Preview" box
 if you'd like the image to be featured on the list and the top of the item details pages. To just have it added to your screenshots
 page, leave the box unchecked<br>
