@@ -20,10 +20,21 @@
 */
 
 #include "prlog.h"
+#include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMDocument.h"
+
+// for bug <http://bugzilla.mozilla.org/show_bug.cgi?id=79427>
+// edburns
+#include "nsIDOMHTMLInputElement.h"
+#include "nsIDOMHTMLButtonElement.h"
+#include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMHTMLOptionElement.h"
+#include "nsIDOMHTMLParamElement.h"
+#include "nsIDOMHTMLTextAreaElement.h"
+
 #include "nsDOMError.h"
 #include "javaDOMGlobals.h"
 #include "org_mozilla_dom_NodeImpl.h"
@@ -33,6 +44,89 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDOMEventTargetIID, NS_IDOMEVENTTARGET_IID);
+
+//
+// Local macros
+//
+
+/**
+
+ * Assumptions:
+
+ * This macro assumes the hard coded set of interfaces below all have a
+ * method in common, the name of which is specified by the _funcName
+ * param.  Furthermore, it assumes the _funcName method takes a single
+ * argument, specified by the _funcArg param.  
+
+ * Algorithm:
+
+ * This macro goes through the list of hard coded interfaces below and
+ * does a qi on each one with the _qiArg param.  If it finds a match, it
+ * calls qiMatchVar->_funcName(_funcArg).  If it doesn't find a match,
+ * it sets the var OMDNI_didCall to false.
+
+ * Rationale:
+
+ * This macro allows the expedient measure of giving access to the
+ * {get,set}Value() methods for a special set of Node subclasses that
+ * all happen to implement the following methods:
+
+ *  NS_IMETHOD GetValue(nsAWritableString & aValue) = 0;
+ *  NS_IMETHOD SetValue(const nsAReadableString & aValue) = 0;
+
+ * The special set is currently:
+
+ * nsIDOMHTMLButtonElement
+ * nsIDOMHTMLInputElement
+ * nsIDOMHTMLOptionElement
+ * nsIDOMHTMLParamElement
+ * nsIDOMHTMLSelectElement
+ * nsIDOMHTMLTextAreaElement
+
+ * This was done as a macro to allow the special set to be easily
+ * extended.
+
+ * Usage:
+
+ *  OMDNI_QUERY_AND_CALL(node, GetValue, ret)
+    
+ *  if (!OMDNI_didCall) {
+ *    rv = node->GetNodeValue(ret);
+ *  }
+
+ * OMDNI means org.mozilla.dom.NodeImpl
+
+ * @param _qiArg, the argument to do_QueryInterface
+
+ * @param _funcName, the function to call
+
+ * @param a boolean local varaible name
+
+ */
+
+#define OMDNI_QUERY_AND_CALL(_qiArg, _funcName, _funcArg) \
+  PRBool OMDNI_didCall = PR_TRUE; \
+  nsCOMPtr<nsIDOMHTMLButtonElement> button; \
+  nsCOMPtr<nsIDOMHTMLInputElement> input; \
+  nsCOMPtr<nsIDOMHTMLOptionElement> option; \
+  nsCOMPtr<nsIDOMHTMLParamElement> param; \
+  nsCOMPtr<nsIDOMHTMLSelectElement> select; \
+  nsCOMPtr<nsIDOMHTMLTextAreaElement> textarea; \
+  if (button = do_QueryInterface(_qiArg)) { \
+    button->_funcName(_funcArg); \
+  } else if (input = do_QueryInterface(_qiArg)) { \
+    input->_funcName(_funcArg); \
+  } else if (option = do_QueryInterface(_qiArg)) { \
+    option->_funcName(_funcArg); \
+  } else if (param = do_QueryInterface(_qiArg)) { \
+    param->_funcName(_funcArg); \
+  } else if (select = do_QueryInterface(_qiArg)) { \
+    select->_funcName(_funcArg); \
+  } else if (textarea = do_QueryInterface(_qiArg)) { \
+    textarea->_funcName(_funcArg); \
+  } else { \
+    OMDNI_didCall = PR_FALSE; \
+  } 
 
 JNIEXPORT jboolean JNICALL Java_org_mozilla_dom_NodeImpl_XPCOM_1equals
   (JNIEnv *env, jobject jthis, jobject nodeArg)
@@ -589,7 +683,13 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeValue
     return NULL;
 
   nsString ret;
-  nsresult rv = node->GetNodeValue(ret);
+  nsresult rv;
+
+  OMDNI_QUERY_AND_CALL(node, GetValue, ret)
+    
+  if (!OMDNI_didCall) {
+    rv = node->GetNodeValue(ret);
+  }
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (rv == NS_ERROR_DOM_DOMSTRING_SIZE_ERR) {
@@ -899,7 +999,13 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
   if (!value)
     return;
 
-  nsresult rv = node->SetNodeValue(*value);
+  nsresult rv;
+
+  OMDNI_QUERY_AND_CALL(node, SetValue, *value)
+  
+  if (!OMDNI_didCall) {
+    rv = node->SetNodeValue(*value);
+  }
   nsMemory::Free(value);
 
   if (NS_FAILED(rv)) {
