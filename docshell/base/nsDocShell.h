@@ -70,6 +70,7 @@
 #include "nsCOMPtr.h"
 #include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
 #include "nsString.h"
+#include "nsAutoPtr.h"
 
 // Threshold value in ms for META refresh based redirects
 #define REFRESH_REDIRECT_TIMER 15000
@@ -319,7 +320,6 @@ protected:
     NS_IMETHOD GetChildOffset(nsIDOMNode * aChild, nsIDOMNode * aParent,
         PRInt32 * aOffset);
     NS_IMETHOD GetRootScrollableView(nsIScrollableView ** aOutScrollView);
-    NS_IMETHOD EnsureContentListener();
     NS_IMETHOD EnsureScriptEnvironment();
     NS_IMETHOD EnsureEditorData();
     nsresult   EnsureTransferableHookData();
@@ -425,7 +425,7 @@ protected:
      */
     nsCString                  mContentTypeHint;
     nsCOMPtr<nsISupportsArray> mRefreshURIList;
-    nsDSURIContentListener *   mContentListener;
+    nsRefPtr<nsDSURIContentListener> mContentListener;
     nsRect                     mBounds; // Dimensions of the docshell
     nsCOMPtr<nsIContentViewer> mContentViewer;
     nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
