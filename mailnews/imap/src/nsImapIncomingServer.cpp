@@ -469,6 +469,33 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
   return rv;
 }
 
+NS_IMETHODIMP
+nsImapIncomingServer::RetryUrl(nsIImapUrl *aImapUrl)
+{
+  nsresult rv;
+  nsCOMPtr <nsIEventQueue> aEventQueue;
+  // Get current thread envent queue
+  nsCOMPtr<nsIEventQueueService> pEventQService = 
+    do_GetService(kEventQueueServiceCID, &rv); 
+  if (NS_SUCCEEDED(rv) && pEventQService)
+    pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+    getter_AddRefs(aEventQueue));
+  nsCOMPtr <nsIImapProtocol> protocolInstance;
+  nsImapProtocol::LogImapUrl("creating protocol instance to retry queued url", aImapUrl);
+  rv = GetImapConnection(aEventQueue, aImapUrl, getter_AddRefs(protocolInstance));
+  if (NS_SUCCEEDED(rv) && protocolInstance)
+  {
+    nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
+    if (NS_SUCCEEDED(rv) && url)
+    {
+      nsImapProtocol::LogImapUrl("retrying  url", aImapUrl);
+      rv = protocolInstance->LoadImapUrl(url, nsnull); // ### need to save the display consumer.
+      NS_ASSERTION(NS_SUCCEEDED(rv), "failed running queued url");
+    }
+  }
+  return rv;
+}
+
 // checks to see if there are any queued urls on this incoming server,
 // and if so, tries to run the oldest one. Returns true if the url is run
 // on the passed in protocol connection.

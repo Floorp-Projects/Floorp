@@ -115,6 +115,7 @@ interface nsIImapUrl : nsISupports
   attribute nsIImapMockChannel mockChannel;
   attribute boolean shouldStoreMsgOffline; // set to true if we should store the msg for offline use if we can,
                                            // i.e., we're not doing mime parts on demand.
+  attribute boolean rerunningUrl; // server disconnected first time so we're retrying
   void addChannelToLoadGroup();
   void removeChannel(in nsresult aStatus);
   

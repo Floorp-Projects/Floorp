@@ -690,7 +690,7 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
         // I'd like to get rid of this code as I believe that we always get a docshell
         // or stream listener passed into us in this method but i'm not sure yet...
         // I'm going to use an assert for now to figure out if this is ever getting called
-#ifdef DEBUG_mscott
+#if defined(DEBUG_mscott) || defined(DEBUG_bienvenu)
         NS_ASSERTION(0, "oops...someone still is reaching this part of the code");
 #endif
         nsCOMPtr<nsIEventQueue> queue;	

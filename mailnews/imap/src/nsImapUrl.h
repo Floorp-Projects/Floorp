@@ -126,6 +126,7 @@ protected:
   PRPackedBool m_msgLoadingFromCache; // if PR_TRUE, we might need to mark read on server
   PRPackedBool m_externalLinkUrl; // if PR_TRUE, we're running this url because the user
   PRPackedBool m_shouldStoreMsgOffline;
+  PRPackedBool m_rerunningUrl; // first attempt running this failed with connection error; retrying
   nsImapContentModifiedType	m_contentModified;
   PRInt32 m_discoveryDepth;
 

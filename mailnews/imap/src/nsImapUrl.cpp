@@ -89,6 +89,7 @@ nsImapUrl::nsImapUrl()
   m_fetchPartsOnDemand = PR_FALSE; // but assume we're not doing it :-)
   m_msgLoadingFromCache = PR_FALSE;
   m_shouldStoreMsgOffline = PR_FALSE;
+  m_rerunningUrl = PR_FALSE;
   m_externalLinkUrl = PR_TRUE; // we'll start this at true, and set it false in nsImapService::CreateStartOfImapUrl
   m_contentModified = IMAP_CONTENT_NOT_MODIFIED;
   m_validUrl = PR_TRUE;	// assume the best.
@@ -1340,6 +1341,7 @@ NS_IMPL_GETSET(nsImapUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope)
 NS_IMPL_GETSET(nsImapUrl, CanonicalLineEnding, PRBool, m_canonicalLineEnding)
 NS_IMPL_GETTER(nsImapUrl::GetMsgLoadingFromCache, PRBool, m_msgLoadingFromCache)
 NS_IMPL_GETSET(nsImapUrl, ExternalLinkUrl, PRBool, m_externalLinkUrl)
+NS_IMPL_GETSET(nsImapUrl, RerunningUrl, PRBool, m_rerunningUrl);
 
 NS_IMETHODIMP nsImapUrl::SetMsgLoadingFromCache(PRBool loadingFromCache)
 {

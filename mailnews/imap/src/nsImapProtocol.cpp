@@ -351,6 +351,7 @@ nsImapProtocol::nsImapProtocol() : nsMsgProtocol(nsnull),
 {
   m_urlInProgress = PR_FALSE;
   m_idle = PR_FALSE;
+  m_retryUrlOnError = PR_FALSE;
   m_useIdle = PR_TRUE; // by default, use it
   m_ignoreExpunges = PR_FALSE;
   m_gotFEEventCompletion = PR_FALSE;
@@ -859,7 +860,7 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
 
 
 // when the connection is done processing the current state, free any per url state data...
-void nsImapProtocol::ReleaseUrlState()
+void nsImapProtocol::ReleaseUrlState(PRBool rerunning)
 {
   // clear out the socket's reference to the notification callbacks for this transaction
   if (m_transport)
@@ -868,7 +869,7 @@ void nsImapProtocol::ReleaseUrlState()
     m_transport->SetEventSink(nsnull, nsnull);
   }
 
-  if (m_mockChannel)
+  if (m_mockChannel && !rerunning)
   {
     if (m_imapMailFolderSink)
       m_imapMailFolderSink->CloseMockChannel(m_mockChannel);
@@ -887,7 +888,7 @@ void nsImapProtocol::ReleaseUrlState()
   if (m_runningUrl)
   {
     nsCOMPtr<nsIMsgMailNewsUrl>  mailnewsurl = do_QueryInterface(m_runningUrl);
-    if (m_imapServerSink)  
+    if (m_imapServerSink && !rerunning)  
       m_imapServerSink->RemoveChannelFromUrl(mailnewsurl, NS_OK);
 
     {
@@ -1271,24 +1272,27 @@ void nsImapProtocol::EstablishServerConnection()
 // returns PR_TRUE if another url was run, PR_FALSE otherwise.
 PRBool nsImapProtocol::ProcessCurrentURL()
 {
+  nsresult rv = NS_OK;
   if (m_idle)
     EndIdle();
 
+  if (m_retryUrlOnError)
+    return RetryUrl();
   Log("ProcessCurrentURL", nsnull, "entering");
   (void) GetImapHostName(); // force m_hostName to get set.
 
 
   PRBool  logonFailed = PR_FALSE;
   PRBool anotherUrlRun = PR_FALSE;
-
+  PRBool rerunningUrl = PR_FALSE;
   PRBool isExternalUrl;
 
-  nsresult rv = NS_OK;
 
   PseudoInterrupt(PR_FALSE);  // clear this if left over from previous url.
 
   if (m_runningUrl)
   {
+    m_runningUrl->GetRerunningUrl(&rerunningUrl);
     m_runningUrl->GetExternalLinkUrl(&isExternalUrl);
     if (isExternalUrl)
     {
@@ -1324,13 +1328,13 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   nsCAutoString urlSpec;
   mailnewsurl->GetSpec(urlSpec);
   Log("ProcessCurrentURL", urlSpec.get(), " = currentUrl");
-  if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMailFolderSink)
+  if (NS_SUCCEEDED(rv) && mailnewsurl && m_imapMailFolderSink && !rerunningUrl)
     m_imapMailFolderSink->SetUrlState(this, mailnewsurl, PR_TRUE, NS_OK);
 
   // if we are set up as a channel, we should notify our channel listener that we are starting...
   // so pass in ourself as the channel and not the underlying socket or file channel the protocol
   // happens to be using
-  if (m_channelListener) 
+  if (m_channelListener) // ### not sure we want to do this if rerunning url...
   {
     nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
     m_channelListener->OnStartRequest(request, m_channelContext);
@@ -1382,6 +1386,9 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     else   // must be a url that requires us to be in the selected stae 
       ProcessSelectedStateURL();
 
+    if (m_retryUrlOnError)
+      return RetryUrl();
+
   // The URL has now been processed
     if ((!logonFailed && GetConnectionStatus() < 0) || DeathSignalReceived())
          HandleCurrentUrlError();
@@ -1426,7 +1433,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   // save the imap folder sink since we need it to do the CopyNextStreamMessage
   nsCOMPtr<nsIImapMailFolderSink> imapMailFolderSink = m_imapMailFolderSink;
   // release the url as we are done with it...
-  ReleaseUrlState();
+  ReleaseUrlState(PR_FALSE);
   ResetProgressInfo();
 
   ClearFlag(IMAP_CLEAN_UP_URL_STATE);
@@ -1474,6 +1481,22 @@ PRBool nsImapProtocol::ProcessCurrentURL()
     }
   }
   return anotherUrlRun;
+}
+
+PRBool nsImapProtocol::RetryUrl()
+{
+  nsCOMPtr <nsIImapUrl> kungFuGripImapUrl = m_runningUrl;
+  nsCOMPtr <nsIImapMockChannel> saveMockChannel;
+  m_runningUrl->GetMockChannel(getter_AddRefs(saveMockChannel));
+  ReleaseUrlState(PR_TRUE);
+  nsresult rv;
+  nsCOMPtr<nsIImapIncomingServer> imapServer  = do_QueryReferent(m_server, &rv);
+  kungFuGripImapUrl->SetMockChannel(saveMockChannel);
+  if (NS_SUCCEEDED(rv))
+    imapServer->RemoveConnection(this);
+  if (m_imapServerSink)
+    m_imapServerSink->RetryUrl(kungFuGripImapUrl);
+  return (m_imapServerSink != nsnull); // we're running a url (the same url)
 }
 
 // ignoreBadAndNOResponses --> don't throw a error dialog if this command results in a NO or Bad response
@@ -4224,7 +4247,13 @@ char* nsImapProtocol::CreateNewLineFromSocket()
             break;
         case NS_ERROR_NET_RESET:
         case NS_ERROR_NET_INTERRUPT:
-          AlertUserEventUsingId(TestFlag(IMAP_RECEIVED_GREETING) 
+          if (TestFlag(IMAP_RECEIVED_GREETING) && m_runningUrl && !m_retryUrlOnError)
+          {
+            m_runningUrl->SetRerunningUrl(PR_TRUE);
+            m_retryUrlOnError = PR_TRUE;
+          }
+          else
+            AlertUserEventUsingId(TestFlag(IMAP_RECEIVED_GREETING) 
             ? IMAP_SERVER_DISCONNECTED : IMAP_SERVER_DROPPED_CONNECTION);
             break;
         default:
