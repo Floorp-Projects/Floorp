@@ -425,6 +425,9 @@ typedef enum {
     bltestMD2,		  /* Hash algorithms	   */
     bltestMD5,		  /* .			   */
     bltestSHA1,           /* .			   */
+    bltestSHA256,         /* .			   */
+    bltestSHA384,         /* .			   */
+    bltestSHA512,         /* .			   */
     NUMMODES
 } bltestCipherMode;
 
@@ -447,6 +450,9 @@ static char *mode_strings[] =
     "md2",
     "md5",
     "sha1",
+    "sha256",
+    "sha384",
+    "sha512",
 };
 
 typedef struct
@@ -545,7 +551,7 @@ PRBool
 is_hashCipher(bltestCipherMode mode)
 {
     /* change as needed! */
-    if (mode >= bltestMD2 && mode <= bltestSHA1)
+    if (mode >= bltestMD2 && mode <= bltestSHA512)
 	return PR_TRUE;
     return PR_FALSE;
 }
@@ -1142,9 +1148,10 @@ md2_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
     unsigned int i, quarter;
     SECStatus rv = SECSuccess;
     cx = MD2_NewContext();
+    MD2_Begin(cx);
     /* divide message by 4, restarting 3 times */
-    quarter = src_length / 4;
-    for (i=0; i<4; i++) {
+    quarter = (src_length + 3)/ 4;
+    for (i=0; i < 4 && src_length > 0; i++) {
 	MD2_Update(cx, src + i*quarter, PR_MIN(quarter, src_length));
 	len = MD2_FlattenSize(cx);
 	cxbytes = PORT_Alloc(len);
@@ -1157,7 +1164,7 @@ md2_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
 	rv = PORT_Memcmp(cx, cx_cpy, len);
 	if (rv) {
 	    MD2_DestroyContext(cx_cpy, PR_TRUE);
-	    PR_fprintf(PR_STDERR, "%s: MD2_Resurrect failed!\n", progName);
+	    PR_fprintf(PR_STDERR, "%s: MD2_restart failed!\n", progName);
 	    goto finish;
 	}
 	MD2_DestroyContext(cx_cpy, PR_TRUE);
@@ -1179,9 +1186,10 @@ md5_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
     unsigned int len;
     unsigned int i, quarter;
     cx = MD5_NewContext();
+    MD5_Begin(cx);
     /* divide message by 4, restarting 3 times */
-    quarter = src_length / 4;
-    for (i=0; i<4; i++) {
+    quarter = (src_length + 3)/ 4;
+    for (i=0; i < 4 && src_length > 0; i++) {
 	MD5_Update(cx, src + i*quarter, PR_MIN(quarter, src_length));
 	len = MD5_FlattenSize(cx);
 	cxbytes = PORT_Alloc(len);
@@ -1195,7 +1203,7 @@ md5_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
 	rv = PORT_Memcmp(cx, cx_cpy, len);
 	if (rv) {
 	    MD5_DestroyContext(cx_cpy, PR_TRUE);
-	    PR_fprintf(PR_STDERR, "%s: MD5_Resurrect failed!\n", progName);
+	    PR_fprintf(PR_STDERR, "%s: MD5_restart failed!\n", progName);
 	    goto finish;
 	}
 	MD5_DestroyContext(cx_cpy, PR_TRUE);
@@ -1217,9 +1225,10 @@ sha1_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
     unsigned int len;
     unsigned int i, quarter;
     cx = SHA1_NewContext();
+    SHA1_Begin(cx);
     /* divide message by 4, restarting 3 times */
-    quarter = src_length / 4;
-    for (i=0; i<4; i++) {
+    quarter = (src_length + 3)/ 4;
+    for (i=0; i < 4 && src_length > 0; i++) {
 	SHA1_Update(cx, src + i*quarter, PR_MIN(quarter, src_length));
 	len = SHA1_FlattenSize(cx);
 	cxbytes = PORT_Alloc(len);
@@ -1233,7 +1242,7 @@ sha1_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
 	rv = PORT_Memcmp(cx, cx_cpy, len);
 	if (rv) {
 	    SHA1_DestroyContext(cx_cpy, PR_TRUE);
-	    PR_fprintf(PR_STDERR, "%s: SHA1_Resurrect failed!\n", progName);
+	    PR_fprintf(PR_STDERR, "%s: SHA1_restart failed!\n", progName);
 	    goto finish;
 	}
 	SHA1_DestroyContext(cx_cpy, PR_TRUE);
@@ -1243,6 +1252,123 @@ sha1_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
     SHA1_End(cx, dest, &len, MD5_LENGTH);
 finish:
     SHA1_DestroyContext(cx, PR_TRUE);
+    return rv;
+}
+
+SECStatus
+SHA256_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
+{
+    SECStatus rv = SECSuccess;
+    SHA256Context *cx, *cx_cpy;
+    unsigned char *cxbytes;
+    unsigned int len;
+    unsigned int i, quarter;
+    cx = SHA256_NewContext();
+    SHA256_Begin(cx);
+    /* divide message by 4, restarting 3 times */
+    quarter = (src_length + 3)/ 4;
+    for (i=0; i < 4 && src_length > 0; i++) {
+	SHA256_Update(cx, src + i*quarter, PR_MIN(quarter, src_length));
+	len = SHA256_FlattenSize(cx);
+	cxbytes = PORT_Alloc(len);
+	SHA256_Flatten(cx, cxbytes);
+	cx_cpy = SHA256_Resurrect(cxbytes, NULL);
+	if (!cx_cpy) {
+	    PR_fprintf(PR_STDERR, "%s: SHA256_Resurrect failed!\n", progName);
+	    rv = SECFailure;
+	    goto finish;
+	}
+	rv = PORT_Memcmp(cx, cx_cpy, len);
+	if (rv) {
+	    SHA256_DestroyContext(cx_cpy, PR_TRUE);
+	    PR_fprintf(PR_STDERR, "%s: SHA256_restart failed!\n", progName);
+	    goto finish;
+	}
+	SHA256_DestroyContext(cx_cpy, PR_TRUE);
+	PORT_Free(cxbytes);
+	src_length -= quarter;
+    }
+    SHA256_End(cx, dest, &len, MD5_LENGTH);
+finish:
+    SHA256_DestroyContext(cx, PR_TRUE);
+    return rv;
+}
+
+SECStatus
+SHA384_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
+{
+    SECStatus rv = SECSuccess;
+    SHA384Context *cx, *cx_cpy;
+    unsigned char *cxbytes;
+    unsigned int len;
+    unsigned int i, quarter;
+    cx = SHA384_NewContext();
+    SHA384_Begin(cx);
+    /* divide message by 4, restarting 3 times */
+    quarter = (src_length + 3)/ 4;
+    for (i=0; i < 4 && src_length > 0; i++) {
+	SHA384_Update(cx, src + i*quarter, PR_MIN(quarter, src_length));
+	len = SHA384_FlattenSize(cx);
+	cxbytes = PORT_Alloc(len);
+	SHA384_Flatten(cx, cxbytes);
+	cx_cpy = SHA384_Resurrect(cxbytes, NULL);
+	if (!cx_cpy) {
+	    PR_fprintf(PR_STDERR, "%s: SHA384_Resurrect failed!\n", progName);
+	    rv = SECFailure;
+	    goto finish;
+	}
+	rv = PORT_Memcmp(cx, cx_cpy, len);
+	if (rv) {
+	    SHA384_DestroyContext(cx_cpy, PR_TRUE);
+	    PR_fprintf(PR_STDERR, "%s: SHA384_restart failed!\n", progName);
+	    goto finish;
+	}
+	SHA384_DestroyContext(cx_cpy, PR_TRUE);
+	PORT_Free(cxbytes);
+	src_length -= quarter;
+    }
+    SHA384_End(cx, dest, &len, MD5_LENGTH);
+finish:
+    SHA384_DestroyContext(cx, PR_TRUE);
+    return rv;
+}
+
+SECStatus
+SHA512_restart(unsigned char *dest, const unsigned char *src, uint32 src_length)
+{
+    SECStatus rv = SECSuccess;
+    SHA512Context *cx, *cx_cpy;
+    unsigned char *cxbytes;
+    unsigned int len;
+    unsigned int i, quarter;
+    cx = SHA512_NewContext();
+    SHA512_Begin(cx);
+    /* divide message by 4, restarting 3 times */
+    quarter = (src_length + 3)/ 4;
+    for (i=0; i < 4 && src_length > 0; i++) {
+	SHA512_Update(cx, src + i*quarter, PR_MIN(quarter, src_length));
+	len = SHA512_FlattenSize(cx);
+	cxbytes = PORT_Alloc(len);
+	SHA512_Flatten(cx, cxbytes);
+	cx_cpy = SHA512_Resurrect(cxbytes, NULL);
+	if (!cx_cpy) {
+	    PR_fprintf(PR_STDERR, "%s: SHA512_Resurrect failed!\n", progName);
+	    rv = SECFailure;
+	    goto finish;
+	}
+	rv = PORT_Memcmp(cx, cx_cpy, len);
+	if (rv) {
+	    SHA512_DestroyContext(cx_cpy, PR_TRUE);
+	    PR_fprintf(PR_STDERR, "%s: SHA512_restart failed!\n", progName);
+	    goto finish;
+	}
+	SHA512_DestroyContext(cx_cpy, PR_TRUE);
+	PORT_Free(cxbytes);
+	src_length -= quarter;
+    }
+    SHA512_End(cx, dest, &len, MD5_LENGTH);
+finish:
+    SHA512_DestroyContext(cx, PR_TRUE);
     return rv;
 }
 
@@ -1359,6 +1485,30 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
 	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
 			  SHA1_LENGTH);
 	cipherInfo->cipher.hashCipher = (restart) ? sha1_restart : SHA1_HashBuf;
+	return SECSuccess;
+	break;
+    case bltestSHA256:
+	restart = cipherInfo->params.hash.restart;
+	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+			  SHA256_LENGTH);
+	cipherInfo->cipher.hashCipher = (restart) ? SHA256_restart 
+	                                          : SHA256_HashBuf;
+	return SECSuccess;
+	break;
+    case bltestSHA384:
+	restart = cipherInfo->params.hash.restart;
+	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+			  SHA384_LENGTH);
+	cipherInfo->cipher.hashCipher = (restart) ? SHA384_restart 
+	                                          : SHA384_HashBuf;
+	return SECSuccess;
+	break;
+    case bltestSHA512:
+	restart = cipherInfo->params.hash.restart;
+	SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+			  SHA512_LENGTH);
+	cipherInfo->cipher.hashCipher = (restart) ? SHA512_restart 
+	                                          : SHA512_HashBuf;
 	return SECSuccess;
 	break;
     default:
@@ -1510,6 +1660,9 @@ cipherFinish(bltestCipherInfo *cipherInfo)
     case bltestMD2: /* hash contexts are ephemeral */
     case bltestMD5:
     case bltestSHA1:
+    case bltestSHA256:
+    case bltestSHA384:
+    case bltestSHA512:
 	return SECSuccess;
 	break;
     default:
@@ -1583,6 +1736,9 @@ print_td:
     case bltestMD2:
     case bltestMD5:
     case bltestSHA1:
+    case bltestSHA256:
+    case bltestSHA384:
+    case bltestSHA512:
     default:
 	break;
     }
@@ -1724,6 +1880,9 @@ get_params(PRArenaPool *arena, bltestParams *params,
     case bltestMD2:
     case bltestMD5:
     case bltestSHA1:
+    case bltestSHA256:
+    case bltestSHA384:
+    case bltestSHA512:
 	/*params->hash.restart = PR_TRUE;*/
 	params->hash.restart = PR_FALSE;
 	break;
@@ -1842,10 +2001,8 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
 #endif
 	    sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr,
 			      "plaintext", j);
-	    if (mode == bltestDSA)
-	    load_file_data(arena, &pt, filename, bltestBase64Encoded);
-	    else
-	    load_file_data(arena, &pt, filename, bltestBinary);
+	    load_file_data(arena, &pt, filename, (mode == bltestDSA) ? 
+	                   bltestBase64Encoded : bltestBinary);
 	    sprintf(filename, "%s/tests/%s/%s%d", testdir, modestr,
 			      "ciphertext", j);
 	    load_file_data(arena, &ct, filename, bltestBase64Encoded);
@@ -2328,7 +2485,13 @@ int main(int argc, char **argv)
 	    instr = bltest.options[opt_Input].arg;
 	    infile = NULL;
 	} else {
-	    infile = PR_Open(bltest.options[opt_Input].arg, PR_RDONLY, 00660);
+	    /* form file name from testdir and input arg. */
+	    char * filename = bltest.options[opt_Input].arg;
+	    if (bltest.options[opt_SelfTestDir].activated && 
+		testdir && filename && filename[0] != '/') 
+		filename = PR_smprintf("%s/tests/%s/%s", testdir, 
+		               mode_strings[cipherInfo.mode], filename);
+	    infile = PR_Open(filename, PR_RDONLY, 00660);
 	}
     } else if (bltest.options[opt_BufSize].activated) {
 	/* save the random plaintext for reference */
@@ -2336,16 +2499,31 @@ int main(int argc, char **argv)
     } else {
 	infile = PR_STDIN;
     }
+    if (!infile) {
+        fprintf(stderr, "%s: Failed to open input file.\n", progName);
+	    exit(-1);
+    }
     cipherInfo.input.mode = ioMode;
 
     /* Set up the output stream */
     if (bltest.options[opt_Output].activated) {
-	outfile = PR_Open(bltest.options[opt_Output].arg,
-			  PR_WRONLY|PR_CREATE_FILE, 00660);
+        /* form file name from testdir and input arg. */
+	char * filename = bltest.options[opt_Output].arg;
+	if (bltest.options[opt_SelfTestDir].activated && 
+	    testdir && filename && filename[0] != '/') 
+	    filename = PR_smprintf("%s/tests/%s/%s", testdir, 
+	               mode_strings[cipherInfo.mode], filename);
+	outfile = PR_Open(filename, PR_WRONLY|PR_CREATE_FILE, 00660);
     } else {
 	outfile = PR_STDOUT;
     }
+    if (!outfile) {
+        fprintf(stderr, "%s: Failed to open output file.\n", progName);
+	    exit(-1);
+    }
     cipherInfo.output.mode = ioMode;
+    if (bltest.options[opt_SelfTestDir].activated && ioMode == bltestBinary)
+	cipherInfo.output.mode = bltestBase64Encoded;
 
     if (is_hashCipher(cipherInfo.mode))
 	cipherInfo.params.hash.restart = bltest.options[opt_Restart].activated;
