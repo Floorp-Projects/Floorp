@@ -50,13 +50,9 @@ XPIDLSRCS =					\
 	.\nsIDOMLSProgressEvent.idl		\
 	.\nsIDOMDOMEntityResolver.idl		\
 	.\nsIDOMDOMBuilderFilter.idl		\
-	.\nsIDOMParseErrorEvent.idl		\
 	.\nsIDOMDOMBuilder.idl			\
 	.\nsIDOMDOMWriterFilter.idl		\
 	.\nsIDOMDOMWriter.idl			\
-	.\nsIDOMDOMInputStream.idl		\
-	.\nsIDOMDOMReader.idl			\
-	.\nsIDOMDOMOutputStream.idl		\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
