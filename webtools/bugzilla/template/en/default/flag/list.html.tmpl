@@ -33,8 +33,11 @@
     
     // Enable or disable the requestee field based on the value
     // of the flag field.
-    if (flagField.value == "?") requesteeField.disabled = false;
-    else                        requesteeField.disabled = true;
+    if (flagField.value == "?") {
+        requesteeField.disabled = false;
+        requesteeField.focus();
+    } else                         
+        requesteeField.disabled = true;
   }
   
   // Disables requestee fields when the window is loaded since they shouldn't
