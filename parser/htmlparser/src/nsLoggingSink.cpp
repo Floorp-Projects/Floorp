@@ -560,7 +560,7 @@ nsLoggingSink::OpenNode(const char* aKind, const nsIParserNode& aNode) {
     PR_fprintf(mOutput, "\"%s\"", NS_ConvertUCS2toUTF8(tag).get());
   }
   else {
-    char* text;
+    char* text = nsnull;
     GetNewCString(aNode.GetText(), &text);
     if(text) {
       PR_fprintf(mOutput, "\"%s\"", text);
@@ -701,7 +701,7 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
   else {
     PRInt32 pos;
     nsAutoString tmp;
-    char* str;
+    char* str = nsnull;
     switch (nodeType) {
 			case eHTMLTag_whitespace:
 			case eHTMLTag_text:
@@ -777,9 +777,7 @@ nsLoggingSink::GetNewCString(const nsAString& aValue, char** aResult)
   nsAutoString temp;
   result=QuoteText(aValue,temp);
   if(NS_SUCCEEDED(result)) {
-    if(!temp.IsEmpty()) {
-      *aResult = ToNewCString(temp);
-    }
+    *aResult = temp.IsEmpty() ? nsnull : ToNewCString(temp);
   }
   return result;
 }
