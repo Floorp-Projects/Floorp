@@ -690,8 +690,8 @@ case "$target" in
 	   AR_DELETE="$AR d"
 	   AR='$(CXX) -ar'
 	   AR_FLAGS='-o $@'
-       CFLAGS="$CFLAGS -woff 3262"
-       CXXFLAGS="$CXXFLAGS -woff 3262"
+       CFLAGS="$CFLAGS -woff 3262 -G 4"
+       CXXFLAGS="$CXXFLAGS -woff 3262 -G 4"
        if test -n "$USE_N32"; then
 	   ASFLAGS="$ASFLAGS -n32"
 	   CFLAGS="$CFLAGS -n32"
