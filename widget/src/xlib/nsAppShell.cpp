@@ -86,6 +86,17 @@ static char *event_names[] = {
   "MappingNotify"
 };
 
+#define ALL_EVENTS ( KeyPressMask | KeyReleaseMask | ButtonPressMask | \
+                     ButtonReleaseMask | EnterWindowMask | LeaveWindowMask | \
+                     PointerMotionMask | PointerMotionHintMask | Button1MotionMask | \
+                     Button2MotionMask | Button3MotionMask | \
+                     Button4MotionMask | Button5MotionMask | ButtonMotionMask | \
+                     KeymapStateMask | ExposureMask | VisibilityChangeMask | \
+                     StructureNotifyMask | ResizeRedirectMask | \
+                     SubstructureNotifyMask | SubstructureRedirectMask | \
+                     FocusChangeMask | PropertyChangeMask | \
+                     ColormapChangeMask | OwnerGrabButtonMask )
+
 NS_IMPL_ADDREF(nsAppShell)
 NS_IMPL_RELEASE(nsAppShell)
 
@@ -252,13 +263,17 @@ nsresult nsAppShell::Run()
     // xlib
     if (FD_ISSET(xlib_fd, &select_set)) {
       //printf("xlib data available.\n");
-      XNextEvent(gDisplay, &event);
-      DispatchEvent(&event);
+      //XNextEvent(gDisplay, &event);
+      while (XCheckMaskEvent(gDisplay, ALL_EVENTS, &event)) {
+        DispatchEvent(&event);
+      }
     }
     if (please_run_timer_queue) {
       //printf("Running timer queue...\n");
       NS_ProcessTimeouts();
     }
+    // make sure that any pending X requests are flushed.
+    XFlush(gDisplay);
   }
 
 	NS_IF_RELEASE(EQueue);
