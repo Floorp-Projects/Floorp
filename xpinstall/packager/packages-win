@@ -315,6 +315,9 @@ bin\components\impEudra.dll
 bin\components\impText.dll
 bin\components\absyncsv.dll
 bin\components\absync.xpt
+bin\components\mozldap.dll
+bin\components\mozldap.xpt
+bin\nsldap32v40.dll
 bin\chrome\messenger.jar
 bin\chrome\messenger\*
 
