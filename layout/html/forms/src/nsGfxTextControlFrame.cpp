@@ -533,6 +533,7 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
 void nsGfxTextControlFrame::GetTextControlFrameState(nsString& aValue)
 {
   aValue = "";  // initialize out param
+  
   if (PR_TRUE==IsInitialized()) {
     nsString format ("text/html");
     mEditor->OutputToString(aValue, format, 0);
@@ -628,6 +629,8 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
   mWebShell->SetMarginHeight(0);
   nsCompatibility mode;
   aPresContext.GetCompatibilityMode(&mode);
+ 
+#if 0
   mWebShell->SetIsFrame(PR_TRUE);
   
   /* XXX
@@ -657,27 +660,6 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
         NS_RELEASE(outerContainer);
       }
 
-#ifdef INCLUDE_XUL
-      nsWebShellType parentType;
-      outerShell->GetWebShellType(parentType);
-      nsIAtom* typeAtom = NS_NewAtom("type");
-	    nsAutoString value;
-	    content->GetAttribute(kNameSpaceID_None, typeAtom, value);
-	    if (value.EqualsIgnoreCase("content")) {
-		    // The web shell's type is content.
-		    mWebShell->SetWebShellType(nsWebShellContent);
-        nsCOMPtr<nsIWebShellContainer> shellAsContainer;
-				shellAsContainer = do_QueryInterface(mWebShell);
-				shellAsContainer->ContentShellAdded(mWebShell, content);
-      }
-      else {
-        // Inherit our type from our parent webshell.  If it is
-		    // chrome, we'll be chrome.  If it is content, we'll be
-		    // content.
-		    mWebShell->SetWebShellType(parentType);
-      }
-#endif // INCLUDE_XUL 
-
       nsIPref*  outerPrefs = nsnull;  // connect the prefs
       outerShell->GetPrefs(outerPrefs);
       if (nsnull != outerPrefs) 
@@ -689,6 +671,7 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
     }
     NS_RELEASE(container);
   }
+#endif
 
   float t2p;
   aPresContext.GetTwipsToPixels(&t2p);
