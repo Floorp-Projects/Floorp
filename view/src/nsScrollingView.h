@@ -68,7 +68,7 @@ public:
   NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
 
-  NS_IMETHOD  SetZIndex(PRBool aAuto, PRInt32 aZIndex);
+  NS_IMETHOD  SetZIndex(PRInt32 aZIndex);
 
   //nsIScrollableView interface
   NS_IMETHOD  CreateScrollControls(nsNativeWidget aNative = nsnull);
@@ -98,7 +98,6 @@ public:
   NS_IMETHOD  ScrollByWhole(PRBool aTop);
   
   NS_IMETHOD  GetClipView(const nsIView** aClipView) const;
-  nsView*     GetClipView() const { return mClipView; }
 
   NS_IMETHOD  AddScrollPositionListener(nsIScrollPositionListener* aListener);
   NS_IMETHOD  RemoveScrollPositionListener(nsIScrollPositionListener* aListener);
@@ -114,7 +113,8 @@ public:
 
    // Update the visibility of the nsScrollingView's components (ClipView, CornerView, ScrollBarView's)
    // @param aScrollingViewVisibility Visibility setting of the ScrollingView to consider when
-   // setting the visibility of the components.
+   // setting the visibility of the components. If aScrollingViewVisibility == nsViewVisibility_kInherit then 
+   // UpdateComponent has no effect.
    // @returns the result of calling SetComponentVisibility for each component.
   nsresult UpdateComponentVisibility(nsViewVisibility aScrollingViewVisibility);
 

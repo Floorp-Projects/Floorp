@@ -272,22 +272,17 @@ nsScrollBoxFrame::CreateScrollingView(nsIPresContext* aPresContext)
 
     // Get the z-index
     PRInt32 zIndex = 0;
-    PRBool autoZIndex = PR_FALSE;
+
     if (eStyleUnit_Integer == position->mZIndex.GetUnit()) {
       zIndex = position->mZIndex.GetIntValue();
-    } else if (eStyleUnit_Auto == position->mZIndex.GetUnit()) {
-      autoZIndex = PR_TRUE;
     }
 
     // Initialize the scrolling view
     view->Init(viewManager, mRect, parentView, vis->IsVisibleOrCollapsed() ?
                nsViewVisibility_kShow : nsViewVisibility_kHide);
 
-    viewManager->SetViewZIndex(view, autoZIndex, zIndex);
-
     // Insert the view into the view hierarchy
-    // XXX Put view last in document order until we know how to do better
-    viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
+    viewManager->InsertChild(parentView, view, zIndex);
 
     // Set the view's opacity
     viewManager->SetViewOpacity(view, vis->mOpacity);
@@ -430,8 +425,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
      frame->GetView(presContext, &view);
      nsCOMPtr<nsIViewManager> vm;
      view->GetViewManager(*getter_AddRefs(vm));
-     nsRect r(0, 0, childRect.width, childRect.height);
-     vm->ResizeView(view, r);
+     vm->ResizeView(view, childRect.width, childRect.height);
   }
 
   nsIScrollableView* scrollingView;

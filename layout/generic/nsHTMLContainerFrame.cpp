@@ -190,9 +190,6 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
 {
   nsIView*  view;
 
-  // XXX What to do about placeholder views for "position: fixed" elements?
-  // They should be reparented too.
-
   // Does aFrame have a view?
   aFrame->GetView(aPresContext, &view);
   if (view) {
@@ -200,11 +197,19 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
     //nsIView*  parentView;
     //NS_ASSERTION(parentView == aOldParentView, "unexpected parent view");
 
-    aViewManager->RemoveChild(view);
+    // Change the parent view.
+    PRInt32 zIndex;
+    view->GetZIndex(zIndex);
+    // Remove the view using it's parent instead
+    // of aOldParentView which is wrong.
+    nsIView* vp = nsnull;
+    view->GetParent(vp);
+    aViewManager->RemoveChild(vp, view);
     
-    // The view will remember the Z-order and other attributes that have been set on it.
-    // XXX Pretend this view is last of the parent's views in document order
-    aViewManager->InsertChild(aNewParentView, view, nsnull, PR_TRUE);
+    // XXX We need to insert this view in the correct place within its z-order...
+    // XXX What should we do about the Z-placeholder-child if this frame is position:fixed?
+    aViewManager->InsertChild(aNewParentView, view, zIndex);
+
   } else {
     // Iterate the child frames, and check each child frame to see if it has
     // a view
@@ -565,7 +570,9 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
         // If the frame has a fixed background attachment, then indicate that the
         // view's contents should be repainted and not bitblt'd
         if (fixedBackgroundAttachment) {
-          viewManager->SetViewBitBltEnabled(view, PR_FALSE);
+          PRUint32  viewFlags;
+          view->GetViewFlags(&viewFlags);
+          view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
         }
         
         // Insert the view into the view hierarchy. If the parent view is a
@@ -583,10 +590,12 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
           } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
             autoZIndex = PR_TRUE;
           }
-          
-          viewManager->SetViewZIndex(view, autoZIndex, zIndex);
-          // XXX Drop it at the end of the document order until we can do better
-          viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
+
+          viewManager->InsertChild(parentView, view, zIndex);
+
+          if (autoZIndex) {
+            viewManager->SetViewAutoZIndex(view, PR_TRUE);
+          }
 
           if (nsnull != aContentParentFrame) {
             // If, for some reason, GetView below fails to initialize zParentView,
@@ -607,7 +616,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
             }
             
             if (zParentView != parentView) {
-              viewManager->InsertZPlaceholder(zParentView, view, nsnull, PR_TRUE);
+              viewManager->InsertZPlaceholder(zParentView, view, zIndex);
             }
           }
         }
@@ -654,7 +663,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext* aPresContext,
           }
 
         } else {
-          viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+          view->SetVisibility(nsViewVisibility_kHide);
         }
 
         // XXX If it's fixed positioned, then create a widget so it floats

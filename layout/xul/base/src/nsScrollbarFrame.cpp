@@ -45,7 +45,6 @@
 #include "nsScrollbarFrame.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsIView.h"
-#include "nsIViewManager.h"
 
 
 //
@@ -88,9 +87,7 @@ nsScrollbarFrame::Init(nsIPresContext*  aPresContext,
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
   GetView(aPresContext, &view);
-  nsCOMPtr<nsIViewManager> vm;
-  view->GetViewManager(*getter_AddRefs(vm));
-  vm->SetViewContentTransparency(view, PR_TRUE);
+  view->SetContentTransparency(PR_TRUE);
   return rv;
 }
 

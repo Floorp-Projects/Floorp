@@ -44,52 +44,13 @@
 #include "nsIWidget.h"
 #include "nsIFactory.h"
 #include "nsIViewObserver.h"
-#include "nsEvent.h"
-#include <stdio.h>
 
 //mmptemp
 
-struct nsViewClip {
-  nscoord mLeft;
-  nscoord mRight;
-  nscoord mTop;
-  nscoord mBottom;
-};
-
-class nsIRegion;
-class nsIRenderingContext;
+class nsIPresContext;
 class nsIViewManager;
 class nsViewManager;
 class nsZPlaceholderView;
-
-// IID for the nsIClipView interface
-#define NS_ICLIPVIEW_IID    \
-{ 0x4cc36160, 0xd282, 0x11d2, \
-{ 0x90, 0x67, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 } }
-
-class nsIClipView : public nsISupports
-{
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICLIPVIEW_IID)
-};
-
-//the view is transparent
-#define NS_VIEW_FLAG_TRANSPARENT          0x0004
-// indicates that the view is using auto z-indexing
-#define NS_VIEW_FLAG_AUTO_ZINDEX          0x0020
-// indicates that the view is a floating view.
-#define NS_VIEW_FLAG_FLOATING             0x0040
-// set if our widget resized. 
-#define NS_VIEW_FLAG_WIDGET_RESIZED       0x0080
-// set if our widget moved. 
-#define NS_VIEW_FLAG_WIDGET_MOVED         0x0100
-#define NS_VIEW_FLAG_CLIPCHILDREN         0x0200
-//indicates that the view should not be bitblt'd when moved
-//or scrolled and instead must be repainted
-#define NS_VIEW_FLAG_DONT_BITBLT          0x0010
-//Flag to determine whether the view will check if events can be handled
-//by its children or just handle the events itself
-#define NS_VIEW_FLAG_DONT_CHECK_CHILDREN  0x0001
 
 class nsView : public nsIView
 {
@@ -106,210 +67,65 @@ public:
       						 const nsRect &aBounds,
                    const nsIView *aParent,
       						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
-  NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr) const;
-  NS_IMETHOD  GetPosition(nscoord *x, nscoord *y) const;
-  NS_IMETHOD  GetBounds(nsRect &aBounds) const;
-  NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const;
-  NS_IMETHOD  GetZIndex(PRBool &aAuto, PRInt32 &aZIndex) const;
-  PRInt32     GetZIndex() const { return mZIndex; }
-  PRBool      GetZIndexIsAuto() const { return (mVFlags & NS_VIEW_FLAG_AUTO_ZINDEX) != 0; }
-  NS_IMETHOD  GetFloating(PRBool &aFloatingView) const;
-  NS_IMETHOD  GetParent(nsIView *&aParent) const;
-  NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const;
-  NS_IMETHOD  GetOpacity(float &aOpacity) const;
-  NS_IMETHOD  HasTransparency(PRBool &aTransparent) const;
-  NS_IMETHOD  SetClientData(void *aData);
-  NS_IMETHOD  GetClientData(void *&aData) const;
-  NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget);
-  NS_IMETHOD  CreateWidget(const nsIID &aWindowIID,
-                           nsWidgetInitData *aWidgetInitData = nsnull,
-                           nsNativeWidget aNative = nsnull,
-                           PRBool aEnableDragDrop = PR_TRUE,
-                           PRBool aResetVisibility = PR_TRUE);
-  NS_IMETHOD  GetWidget(nsIWidget *&aWidget) const;
-  NS_IMETHOD  HasWidget(PRBool *aHasWidget) const;
-  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   NS_IMETHOD  Destroy();
-  /**
-   * Called to indicate that the specified rect of the view
-   * needs to be drawn via the rendering context. The rect
-   * is specified in view coordinates.
-   * @param rc rendering context to paint into
-   * @param rect damage area
-   * @param aPaintFlags see nsIView.h for flag definitions
-   * @return PR_TRUE if the entire clip region has been eliminated, else PR_FALSE
-   */
+  NS_IMETHOD  GetViewManager(nsIViewManager *&aViewMgr) const;
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsRect& rect,
                     PRUint32 aPaintFlags, PRBool &aResult);
-  /**
-   * Called to indicate that the specified region of the view
-   * needs to be drawn via the rendering context. The region
-   * is specified in view coordinates.
-   * @param rc rendering context to paint into
-   * @param region damage area
-   * @param aPaintFlags see nsIView.h for flag definitions
-   * @return PR_TRUE if the entire clip region has been eliminated, else PR_FALSE
-   */
   NS_IMETHOD  Paint(nsIRenderingContext& rc, const nsIRegion& region,
                     PRUint32 aPaintFlags, PRBool &aResult);
-  /**
-   * Called to indicate that the specified event should be handled
-   * by the view. This method should return nsEventStatus_eConsumeDoDefault
-   * or nsEventStatus_eConsumeNoDefault if the event has been handled.
-   * @param event event to process
-   * @param aEventFlags see nsIView.h for flag definitions
-   * @result processing status
-   */
   NS_IMETHOD  HandleEvent(nsGUIEvent *event, 
                           PRUint32 aEventFlags,
                           nsEventStatus* aStatus,
                           PRBool aForceHandle,
                           PRBool& aHandled);
-  /**
-   * Called to indicate that the position of the view has been changed.
-   * The specified coordinates are in the parent view's coordinate space.
-   * @param x new x position
-   * @param y new y position
-   */
   NS_IMETHOD  SetPosition(nscoord x, nscoord y);
-  /**
-   * Called to indicate that the dimensions of the view (actually the
-   * width and height of the clip) have been changed. 
-   * @param width new width
-   * @param height new height
-   */
+  NS_IMETHOD  GetPosition(nscoord *x, nscoord *y) const;
   NS_IMETHOD  SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
   NS_IMETHOD  GetDimensions(nscoord *width, nscoord *height) const;
-  /**
-   * Called to indicate that the dimensions and position of the view have
-   * been changed.
-   * @param aBounds new bounds
-   */
   NS_IMETHOD  SetBounds(const nsRect &aBounds, PRBool aPaint = PR_TRUE);
-  /**
-   * Called to indicate that the dimensions and position of the view have
-   * been changed.
-   * @param aX new x position
-   * @param aY new y position
-   * @param aWidth new width
-   * @param aHeight new height
-   */
   NS_IMETHOD  SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aPaint = PR_TRUE);
-  /**
-   * Called to set the clip of the children of this view.
-   * The clip is relative to the origin of the view.
-   * All of the children of this view will be clipped using
-   * the specified rectangle
-   * @param aLeft new left position
-   * @param aTop new top position
-   * @param aRight new right position
-   * @param aBottom new bottom position
-   */
+  NS_IMETHOD  GetBounds(nsRect &aBounds) const;
   NS_IMETHOD  SetChildClip(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-  /**
-   * Called to get the dimensions and position of the clip for the view.
-   * @param aLeft left position
-   * @param aTop top position
-   * @param aRight right position
-   * @param aBottom bottom position
-   */
   NS_IMETHOD  GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) const;
-  /**
-   * Called to indicate that the visibility of a view has been
-   * changed.
-   * @param visibility new visibility state
-   */
   NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
-
-  /**
-   * Called to indicate that the z-index of a view has been changed.
-   * The z-index is relative to all siblings of the view.
-   * @param aAuto Indicate that the z-index of a view is "auto". An "auto" z-index
-   * means that the view does not define a new stacking context,
-   * which means that the z-indicies of the view's children are
-   * relative to the view's siblings.
-   * @param zindex new z depth
-   */
-  void SetZIndex(PRBool aAuto, PRInt32 aZIndex);
-
-  /**
-   * Set/Get whether the view "floats" above all other views,
-   * which tells the compositor not to consider higher views in
-   * the view hierarchy that would geometrically intersect with
-   * this view. This is a hack, but it fixes some problems with
-   * views that need to be drawn in front of all other views.
-   * @result PR_TRUE if the view floats, PR_FALSE otherwise.
-   */
+  NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const;
+  NS_IMETHOD  SetZIndex(PRInt32 aZIndex);
+  NS_IMETHOD  GetZIndex(PRInt32 &aZIndex) const;
+  NS_IMETHOD  SetAutoZIndex(PRBool aAutoZIndex);
+  NS_IMETHOD  GetAutoZIndex(PRBool &aAutoZIndex) const;
   NS_IMETHOD  SetFloating(PRBool aFloatingView);
-  /**
-   * Note: This didn't exist in 4.0. Called to set the opacity of a view. 
-   * A value of 0.0 means completely transparent. A value of 1.0 means
-   * completely opaque.
-   * @param opacity new opacity value
-   */
+  NS_IMETHOD  GetFloating(PRBool &aFloatingView) const;
+  NS_IMETHOD  GetParent(nsIView *&aParent) const;
+  NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const;
   NS_IMETHOD  SetOpacity(float opacity);
-  /**
-   * Used set the transparency status of the content in a view. see
-   * HasTransparency().
-   * @param aTransparent PR_TRUE if there are transparent areas, PR_FALSE otherwise.
-   */
+  NS_IMETHOD  GetOpacity(float &aOpacity) const;
+  NS_IMETHOD  HasTransparency(PRBool &aTransparent) const;
   NS_IMETHOD  SetContentTransparency(PRBool aTransparent);
-  /**
-   * Gets the dirty region associated with this view. Used by the view
-   * manager.
-   */
+  NS_IMETHOD  SetClientData(void *aData);
+  NS_IMETHOD  GetClientData(void *&aData) const;
+  NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget);
   NS_IMETHOD  GetDirtyRegion(nsIRegion*& aRegion) const;
-  /**
-   * Set the widget associated with this view.
-   * @param aWidget widget to associate with view. It is an error
-   *        to associate a widget with more than one view. To disassociate
-   *        a widget from a view, use nsnull. If there are no more references
-   *        to the widget that may have been associated with the view, it will
-   *        be destroyed.
-   * @return error status
-   */
+  NS_IMETHOD  CreateWidget(const nsIID &aWindowIID,
+                           nsWidgetInitData *aWidgetInitData = nsnull,
+                           nsNativeWidget aNative = nsnull,
+                           PRBool aEnableDragDrop = PR_TRUE,
+                           PRBool aResetVisibility = PR_TRUE);
   NS_IMETHOD  SetWidget(nsIWidget *aWidget);
-  /**
-   * Set flags on view to allow customization of view behavior during
-   * event handling
-   * @param aFlags flags to be added to view
-   */
+  NS_IMETHOD  GetWidget(nsIWidget *&aWidget) const;
+  NS_IMETHOD  HasWidget(PRBool *aHasWidget) const;
+  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   NS_IMETHOD  SetViewFlags(PRUint32 aFlags);
-  /**
-   * Remove flags from view to allow customization of view behavior during
-   * event handling
-   * @param aFlags flags to be removed from view
-   */
   NS_IMETHOD  ClearViewFlags(PRUint32 aFlags);
-  /**
-   * Get flags on view to allow customization of view behavior during
-   * event handling
-   * @param aFlags out parameter for view flags
-   */
   NS_IMETHOD  GetViewFlags(PRUint32 *aFlags) const;
-  /**
-   * Used by the compositor for temporary marking of a view during
-   * compositing. This will eventually replace GetScratchPoint above.
-   */
   NS_IMETHOD  SetCompositorFlags(PRUint32 aFlags);
   NS_IMETHOD  GetCompositorFlags(PRUint32 *aFlags);
-  /**
-   * Return a rectangle containing the view's bounds adjusted for it's ancestors clipping
-   * @param aClippedRect views bounds adjusted for ancestors clipping. If aEmpty is TRUE it
-   * aClippedRect is set to an empty rect.
-   * @param aIsClipped returns with PR_TRUE if view's rectangle is clipped by an ancestor
-   * @param aEmpty returns with PR_TRUE if view's rectangle is 'clipped out'
-   */
   NS_IMETHOD  GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, PRBool& aEmpty) const;
 
 
   // XXX Temporary for Bug #19416
   NS_IMETHOD IgnoreSetPosition(PRBool aShouldIgnore);
 
-  /**
-   * Sync your widget size and position with the view
-   */
   NS_IMETHOD SynchWidgetSizePosition();
 
 
@@ -339,8 +155,6 @@ public: // NOT in nsIView, so only available in view module
   void SetZParent(nsZPlaceholderView *aZParent) { mZParent = aZParent; }
   void SetNextSibling(nsView *aSibling) { mNextSibling = aSibling; }
 
-  PRUint32 GetViewFlags() const { return mVFlags; }
-
 protected:
   virtual ~nsView();
   //
@@ -357,7 +171,7 @@ protected:
   nsView            *mNextSibling;
   nsView            *mFirstChild;
   void              *mClientData;
-  PRInt32           mZIndex;
+  PRInt32           mZindex;
   nsViewVisibility  mVis;
   PRInt32           mNumKids;
   nsRect            mBounds;

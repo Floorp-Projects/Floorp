@@ -3394,11 +3394,9 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 
       // Not all shells have scroll frames, even in scrollable presContext (bug 30317)
       if (view) {
-        nsCOMPtr<nsIViewManager> vm;
-        view->GetViewManager(*getter_AddRefs(vm));
-        if (vm) {
-          vm->SetViewBitBltEnabled(view, PR_FALSE);
-        }
+        PRUint32  viewFlags;
+        view->GetViewFlags(&viewFlags);
+        view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
       }
     }
 

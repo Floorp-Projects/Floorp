@@ -7,6 +7,7 @@ nsIViewManager.h
 nsIScrollableView.h
 nsViewsCID.h
 nsIViewObserver.h
+nsIClipView.h
 nsIScrollPositionListener.h
 nsICompositeListener.h
 nsIEventProcessor.h

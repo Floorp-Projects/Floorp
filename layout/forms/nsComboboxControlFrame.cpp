@@ -555,8 +555,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
   if (aShowPopup) {
     nsRect rect;
     mDropdownFrame->GetRect(rect);
-    rect.x = rect.y = 0;
-    viewManager->ResizeView(view, rect);
+    viewManager->ResizeView(view, rect.width, rect.height);
     nsIScrollableView* scrollingView;
     if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
       scrollingView->ComputeScrollOffsets(PR_TRUE);
@@ -564,8 +563,7 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
   } else {
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-    nsRect emptyRect(0, 0, 0, 0);
-    viewManager->ResizeView(view, emptyRect);
+    viewManager->ResizeView(view, 0, 0);
   }
 
   // fire a popup dom event
@@ -661,8 +659,7 @@ nsComboboxControlFrame::ReflowComboChildFrame(nsIFrame* aFrame,
     nsCOMPtr<nsIViewManager> viewManager;
     view->GetViewManager(*getter_AddRefs(viewManager));
     viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
-    nsRect emptyRect(0, 0, 0, 0);
-    viewManager->ResizeView(view, emptyRect);
+    viewManager->ResizeView(view, 0, 0);
   }
   
    // Reflow child

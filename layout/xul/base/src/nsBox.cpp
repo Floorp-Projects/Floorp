@@ -802,22 +802,20 @@ nsBox::CollapseChild(nsBoxLayoutState& aState, nsIFrame* aFrame, PRBool aHide)
       // will be clipped.
       if (view) {
          // already hidden? We are done.
-         //nsViewVisibility v;
-         //view->GetVisibility(v);
+         nsViewVisibility v;
+         view->GetVisibility(v);
          //if (v == nsViewVisibility_kHide)
            //return NS_OK;
 
-         nsCOMPtr<nsIViewManager> vm;
-         view->GetViewManager(*getter_AddRefs(vm));
-         if (aHide) {
-           vm->SetViewVisibility(view, nsViewVisibility_kHide);
-         } else {
-           vm->SetViewVisibility(view, nsViewVisibility_kShow);
-         }
-
          nsCOMPtr<nsIWidget> widget;
          view->GetWidget(*getter_AddRefs(widget));
+         if (aHide) {
+             view->SetVisibility(nsViewVisibility_kHide);
+         } else {
+             view->SetVisibility(nsViewVisibility_kShow);
+         }
          if (widget) {
+
            return NS_OK;
          }
       }
