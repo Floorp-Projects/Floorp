@@ -463,7 +463,6 @@ nsHTMLEditor::SetFlags(PRUint32 aFlags)
   return mRules->SetFlags(aFlags);
 }
 
-
 NS_IMETHODIMP nsHTMLEditor::InitRules()
 {
   // instantiate the rules for the html editor
@@ -1145,6 +1144,18 @@ PRBool nsHTMLEditor::IsVisBreak(nsIDOMNode *aNode)
   return PR_TRUE;
 }
 
+
+NS_IMETHODIMP
+nsHTMLEditor::GetIsDocumentEditable(PRBool *aIsDocumentEditable)
+{
+  NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
+
+  nsCOMPtr<nsIDOMDocument> doc;
+  GetDocument(getter_AddRefs(doc));
+  *aIsDocumentEditable = doc? IsModifiable() : PR_FALSE;
+
+  return NS_OK;
+}
 
 PRBool nsHTMLEditor::IsModifiable()
 {

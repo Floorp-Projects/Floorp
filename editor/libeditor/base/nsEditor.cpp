@@ -42,6 +42,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIPref.h"
 #include "nsUnicharUtils.h"
+#include "nsReadableUtils.h"
 
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
@@ -170,6 +171,7 @@ nsEditor::nsEditor()
 ,  mActionListeners(nsnull)
 ,  mEditorObservers(nsnull)
 ,  mDocDirtyState(-1)
+,  mContentMIMEType(nsnull)
 ,  mDocWeak(nsnull)
 {
   //initialize member variables here
@@ -365,6 +367,17 @@ nsEditor::SetFlags(PRUint32 aFlags)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEditor::GetIsDocumentEditable(PRBool *aIsDocumentEditable)
+{
+  NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
+  nsCOMPtr<nsIDOMDocument> doc;
+  GetDocument(getter_AddRefs(doc));
+  *aIsDocumentEditable = doc ? PR_TRUE : PR_FALSE;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP 
 nsEditor::GetDocument(nsIDOMDocument **aDoc)
 {
@@ -394,6 +407,22 @@ nsEditor::GetPresShell(nsIPresShell **aPS)
   return NS_OK;
 }
 
+
+/* attribute string contentsMIMEType; */
+NS_IMETHODIMP
+nsEditor::GetContentsMIMEType(char * *aContentsMIMEType)
+{
+  NS_ENSURE_ARG_POINTER(aContentsMIMEType);
+  *aContentsMIMEType = ToNewCString(mContentMIMEType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEditor::SetContentsMIMEType(const char * aContentsMIMEType)
+{
+  mContentMIMEType.Assign(aContentsMIMEType ? aContentsMIMEType : "");
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsEditor::GetSelectionController(nsISelectionController **aSel)

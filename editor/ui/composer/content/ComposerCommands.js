@@ -45,101 +45,100 @@
 //-----------------------------------------------------------------------------------
 function SetupHTMLEditorCommands()
 {
-  var controller = GetEditorController();
-  if (!controller)
+  var commandManager = GetComposerCommandManager();
+  if (!commandManager)
     return;
   
-
   // Include everthing a text editor does
   SetupTextEditorCommands();
 
   //dump("Registering HTML editor commands\n");
 
-  controller.registerCommand("cmd_renderedHTMLEnabler",           nsDummyHTMLCommand);
+  commandManager.registerCommand("cmd_renderedHTMLEnabler",           nsDummyHTMLCommand);
 
-  controller.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
-  controller.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
-  controller.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
-  controller.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
-  controller.registerCommand("cmd_objectProperties",   nsObjectPropertiesCommand);
-  controller.registerCommand("cmd_removeLinks",        nsRemoveLinksCommand);
-  controller.registerCommand("cmd_removeNamedAnchors", nsRemoveNamedAnchorsCommand);
-  controller.registerCommand("cmd_editLink",        nsEditLinkCommand);
+  commandManager.registerCommand("cmd_listProperties",  nsListPropertiesCommand);
+  commandManager.registerCommand("cmd_pageProperties",  nsPagePropertiesCommand);
+  commandManager.registerCommand("cmd_colorProperties", nsColorPropertiesCommand);
+  commandManager.registerCommand("cmd_advancedProperties", nsAdvancedPropertiesCommand);
+  commandManager.registerCommand("cmd_objectProperties",   nsObjectPropertiesCommand);
+  commandManager.registerCommand("cmd_removeLinks",        nsRemoveLinksCommand);
+  commandManager.registerCommand("cmd_removeNamedAnchors", nsRemoveNamedAnchorsCommand);
+  commandManager.registerCommand("cmd_editLink",        nsEditLinkCommand);
   
-  controller.registerCommand("cmd_form",          nsFormCommand);
-  controller.registerCommand("cmd_inputtag",      nsInputTagCommand);
-  controller.registerCommand("cmd_inputimage",    nsInputImageCommand);
-  controller.registerCommand("cmd_textarea",      nsTextAreaCommand);
-  controller.registerCommand("cmd_select",        nsSelectCommand);
-  controller.registerCommand("cmd_button",        nsButtonCommand);
-  controller.registerCommand("cmd_label",         nsLabelCommand);
-  controller.registerCommand("cmd_fieldset",      nsFieldSetCommand);
-  controller.registerCommand("cmd_isindex",       nsIsIndexCommand);
-  controller.registerCommand("cmd_image",         nsImageCommand);
-  controller.registerCommand("cmd_hline",         nsHLineCommand);
-  controller.registerCommand("cmd_link",          nsLinkCommand);
-  controller.registerCommand("cmd_anchor",        nsAnchorCommand);
-  controller.registerCommand("cmd_insertHTML",    nsInsertHTMLCommand);
-  controller.registerCommand("cmd_insertBreak",   nsInsertBreakCommand);
-  controller.registerCommand("cmd_insertBreakAll",nsInsertBreakAllCommand);
+  commandManager.registerCommand("cmd_form",          nsFormCommand);
+  commandManager.registerCommand("cmd_inputtag",      nsInputTagCommand);
+  commandManager.registerCommand("cmd_inputimage",    nsInputImageCommand);
+  commandManager.registerCommand("cmd_textarea",      nsTextAreaCommand);
+  commandManager.registerCommand("cmd_select",        nsSelectCommand);
+  commandManager.registerCommand("cmd_button",        nsButtonCommand);
+  commandManager.registerCommand("cmd_label",         nsLabelCommand);
+  commandManager.registerCommand("cmd_fieldset",      nsFieldSetCommand);
+  commandManager.registerCommand("cmd_isindex",       nsIsIndexCommand);
+  commandManager.registerCommand("cmd_image",         nsImageCommand);
+  commandManager.registerCommand("cmd_hline",         nsHLineCommand);
+  commandManager.registerCommand("cmd_link",          nsLinkCommand);
+  commandManager.registerCommand("cmd_anchor",        nsAnchorCommand);
+  commandManager.registerCommand("cmd_insertHTML",    nsInsertHTMLCommand);
+  commandManager.registerCommand("cmd_insertBreak",   nsInsertBreakCommand);
+  commandManager.registerCommand("cmd_insertBreakAll",nsInsertBreakAllCommand);
 
-  controller.registerCommand("cmd_table",              nsInsertOrEditTableCommand);
-  controller.registerCommand("cmd_editTable",          nsEditTableCommand);
-  controller.registerCommand("cmd_SelectTable",        nsSelectTableCommand);
-  controller.registerCommand("cmd_SelectRow",          nsSelectTableRowCommand);
-  controller.registerCommand("cmd_SelectColumn",       nsSelectTableColumnCommand);
-  controller.registerCommand("cmd_SelectCell",         nsSelectTableCellCommand);
-  controller.registerCommand("cmd_SelectAllCells",     nsSelectAllTableCellsCommand);
-  controller.registerCommand("cmd_InsertTable",        nsInsertTableCommand);
-  controller.registerCommand("cmd_InsertRowAbove",     nsInsertTableRowAboveCommand);
-  controller.registerCommand("cmd_InsertRowBelow",     nsInsertTableRowBelowCommand);
-  controller.registerCommand("cmd_InsertColumnBefore", nsInsertTableColumnBeforeCommand);
-  controller.registerCommand("cmd_InsertColumnAfter",  nsInsertTableColumnAfterCommand);
-  controller.registerCommand("cmd_InsertCellBefore",   nsInsertTableCellBeforeCommand);
-  controller.registerCommand("cmd_InsertCellAfter",    nsInsertTableCellAfterCommand);
-  controller.registerCommand("cmd_DeleteTable",        nsDeleteTableCommand);
-  controller.registerCommand("cmd_DeleteRow",          nsDeleteTableRowCommand);
-  controller.registerCommand("cmd_DeleteColumn",       nsDeleteTableColumnCommand);
-  controller.registerCommand("cmd_DeleteCell",         nsDeleteTableCellCommand);
-  controller.registerCommand("cmd_DeleteCellContents", nsDeleteTableCellContentsCommand);
-  controller.registerCommand("cmd_JoinTableCells",     nsJoinTableCellsCommand);
-  controller.registerCommand("cmd_SplitTableCell",     nsSplitTableCellCommand);
-  controller.registerCommand("cmd_TableOrCellColor",   nsTableOrCellColorCommand);
-  controller.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
-  controller.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
-  controller.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
-  controller.registerCommand("cmd_smiley",             nsSetSmiley);
-  controller.registerCommand("cmd_buildRecentPagesMenu", nsBuildRecentPagesMenu);
-  controller.registerCommand("cmd_ConvertToTable",     nsConvertToTable);
+  commandManager.registerCommand("cmd_table",              nsInsertOrEditTableCommand);
+  commandManager.registerCommand("cmd_editTable",          nsEditTableCommand);
+  commandManager.registerCommand("cmd_SelectTable",        nsSelectTableCommand);
+  commandManager.registerCommand("cmd_SelectRow",          nsSelectTableRowCommand);
+  commandManager.registerCommand("cmd_SelectColumn",       nsSelectTableColumnCommand);
+  commandManager.registerCommand("cmd_SelectCell",         nsSelectTableCellCommand);
+  commandManager.registerCommand("cmd_SelectAllCells",     nsSelectAllTableCellsCommand);
+  commandManager.registerCommand("cmd_InsertTable",        nsInsertTableCommand);
+  commandManager.registerCommand("cmd_InsertRowAbove",     nsInsertTableRowAboveCommand);
+  commandManager.registerCommand("cmd_InsertRowBelow",     nsInsertTableRowBelowCommand);
+  commandManager.registerCommand("cmd_InsertColumnBefore", nsInsertTableColumnBeforeCommand);
+  commandManager.registerCommand("cmd_InsertColumnAfter",  nsInsertTableColumnAfterCommand);
+  commandManager.registerCommand("cmd_InsertCellBefore",   nsInsertTableCellBeforeCommand);
+  commandManager.registerCommand("cmd_InsertCellAfter",    nsInsertTableCellAfterCommand);
+  commandManager.registerCommand("cmd_DeleteTable",        nsDeleteTableCommand);
+  commandManager.registerCommand("cmd_DeleteRow",          nsDeleteTableRowCommand);
+  commandManager.registerCommand("cmd_DeleteColumn",       nsDeleteTableColumnCommand);
+  commandManager.registerCommand("cmd_DeleteCell",         nsDeleteTableCellCommand);
+  commandManager.registerCommand("cmd_DeleteCellContents", nsDeleteTableCellContentsCommand);
+  commandManager.registerCommand("cmd_JoinTableCells",     nsJoinTableCellsCommand);
+  commandManager.registerCommand("cmd_SplitTableCell",     nsSplitTableCellCommand);
+  commandManager.registerCommand("cmd_TableOrCellColor",   nsTableOrCellColorCommand);
+  commandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
+  commandManager.registerCommand("cmd_smiley",             nsSetSmiley);
+  commandManager.registerCommand("cmd_buildRecentPagesMenu", nsBuildRecentPagesMenu);
+  commandManager.registerCommand("cmd_ConvertToTable",     nsConvertToTable);
 }
 
 function SetupTextEditorCommands()
 {
-  var controller = GetEditorController();
-  if (!controller)
+  var commandManager = GetComposerCommandManager();
+  if (!commandManager)
     return;
   
   //dump("Registering plain text editor commands\n");
   
-  controller.registerCommand("cmd_find",       nsFindCommand);
-  controller.registerCommand("cmd_findNext",   nsFindNextCommand);
-  controller.registerCommand("cmd_spelling",   nsSpellingCommand);
-  controller.registerCommand("cmd_validate",   nsValidateCommand);
-  controller.registerCommand("cmd_checkLinks", nsCheckLinksCommand);
-  controller.registerCommand("cmd_insertChars", nsInsertCharsCommand);
+  commandManager.registerCommand("cmd_find",       nsFindCommand);
+  commandManager.registerCommand("cmd_findNext",   nsFindNextCommand);
+  commandManager.registerCommand("cmd_spelling",   nsSpellingCommand);
+  commandManager.registerCommand("cmd_validate",   nsValidateCommand);
+  commandManager.registerCommand("cmd_checkLinks", nsCheckLinksCommand);
+  commandManager.registerCommand("cmd_insertChars", nsInsertCharsCommand);
 }
 
 function SetupComposerWindowCommands()
 {
   // Create a command controller and register commands
   //   specific to Web Composer window (file-related commands, HTML Source...)
+  //   We can't use the composer controller created on the content window else
+  //     we can't process commands when in HTMLSource editor
   // IMPORTANT: For each of these commands, the doCommand method 
   //            must first call FinishHTMLSource() 
   //            to go from HTML Source mode to any other edit mode
 
-  var windowCommandManager = window.controllers;
+  var windowControllers = window.controllers;
 
-  if (!windowCommandManager) return;
+  if (!windowControllers) return;
 
   var composerController = Components.classes["@mozilla.org/editor/composercontroller;1"].createInstance();
   if (!composerController)
@@ -157,20 +156,21 @@ function SetupComposerWindowCommands()
     return;
   }
 
-  editorController.Init(gEditor); // gEditor may be null at this point
+  // gEditor is null at this point, but init also creates the commandManager
+  editorController.Init(gEditor);
 
   var interfaceRequestor;
+  var commandManager;
   try {
     interfaceRequestor = composerController.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+    // Get the nsIControllerCommandManager interface we need to register commands
+    commandManager = interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
   }
   catch (e) {
     dump("Failed to get iterfaceRequestor for composerController\n");
     return;
   }
-    
 
-  // Get the nsIControllerCommandManager interface we need to register more commands
-  var commandManager = interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
   if (!commandManager)
   {
     dump("Failed to get interface for nsIControllerCommandManager\n");
@@ -207,38 +207,76 @@ function SetupComposerWindowCommands()
     commandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
   }
 
-  windowCommandManager.insertControllerAt(0, editorController);
+  windowControllers.insertControllerAt(0, editorController);
+
+  // Store the controller ID so we can be sure to get the right one later
+  gComposerWindowControllerID = windowControllers.getControllerId(editorController);
+
+
+  //XXX Creation of nsComposerController class automatically re-registers all these commands.
+  //  This is a kludge to avoid all the exception errors incurred during startup
+  //  because "oncreate" command enabling fails since the refCon isn't set in 
+  //  DoWindowCommandControllerSetting() in editor.js until after XUL window is created
+  //  What we really need is a controller class that doesn't automatically
+  //  register these commands as nsComposerCommands does
+  //  Suggestion: Add a new param to nsIEditorController::Init(), a bool to "bRegisterDefaultCommands"
+  unregisterCommand(commandManager, "cmd_indent");
+  unregisterCommand(commandManager, "cmd_outdent");
+  unregisterCommand(commandManager, "cmd_bold");
+  unregisterCommand(commandManager, "cmd_italic");
+  unregisterCommand(commandManager, "cmd_underline");
+  unregisterCommand(commandManager, "cmd_tt");
+  unregisterCommand(commandManager, "cmd_strikethrough");
+  unregisterCommand(commandManager, "cmd_superscript");
+  unregisterCommand(commandManager, "cmd_subscript");
+  unregisterCommand(commandManager, "cmd_nobreak");
+  unregisterCommand(commandManager, "cmd_em");
+  unregisterCommand(commandManager, "cmd_strong");
+  unregisterCommand(commandManager, "cmd_cite");
+  unregisterCommand(commandManager, "cmd_abbr");
+  unregisterCommand(commandManager, "cmd_acronym");
+  unregisterCommand(commandManager, "cmd_code");
+  unregisterCommand(commandManager, "cmd_samp");
+  unregisterCommand(commandManager, "cmd_var");
+  unregisterCommand(commandManager, "cmd_ol");
+  unregisterCommand(commandManager, "cmd_ul");
+  unregisterCommand(commandManager, "cmd_dt");
+  unregisterCommand(commandManager, "cmd_dd");
+  unregisterCommand(commandManager, "cmd_removeList");
+  unregisterCommand(commandManager, "cmd_paragraphState");
+  unregisterCommand(commandManager, "cmd_fontFace");
+  unregisterCommand(commandManager, "cmd_fontColor");
+  unregisterCommand(commandManager, "cmd_backgroundColor");
+  unregisterCommand(commandManager, "cmd_highlight");
+  unregisterCommand(commandManager, "cmd_align");
+  unregisterCommand(commandManager, "cmd_removeStyles");
+  unregisterCommand(commandManager, "cmd_increaseFont");
+  unregisterCommand(commandManager, "cmd_decreaseFont");
+}
+
+function unregisterCommand(commandManager, cmd)
+{
+  try {
+    commandManager.unregisterCommand(cmd, commandManager.findCommandHandler(cmd));
+  } catch (e) { dump( "XXXXX FAILED TO UNREGISTERCOMMAND: "+cmd+"\n"); }
 }
 
 //-----------------------------------------------------------------------------------
-function GetEditorController()
+function GetComposerCommandManager()
 {
-  var numControllers = window._content.controllers.getControllerCount();
-    
-  // count down to find a controller that supplies a nsIControllerCommandManager interface
-  for (var i = numControllers-1; i >= 0 ; i --)
-  {
-    var commandManager = null;
-    
-    try { 
-      var controller = window._content.controllers.getControllerAt(i);
-      
-      var interfaceRequestor = controller.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-      commandManager = interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
-    }
-    catch(ex)
-    {
-        //dump(ex + "\n");
-    }
+  try {
+    // Get the composer controller directly using ID
+    // We store the controller IDs in nsIEditingSession when they are created, 
+    // (XXX We should add an nsIEditorSession methods to get them via nsIController::GetControllerByID()
+    //  For now, we will get controller by index, which is "1", eComposerController in nsEditorShell.)
+    var controller = window._content.controllers.getControllerAt(1);
+    var interfaceRequestor = controller.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
 
-    if (commandManager)
-      return commandManager;
-  }
-
-  dump("Failed to find a controller to register commands with\n");
+    // return the command manager interface for the controller
+    return interfaceRequestor.getInterface(Components.interfaces.nsIControllerCommandManager);
+  } catch (e) {}
   return null;
 }
-
 
 //-----------------------------------------------------------------------------------
 
@@ -1480,7 +1518,7 @@ var gEditorOutputProgressListener =
   },
   promptUsernameAndPassword : function(dlgTitle, text, userObj, pwObj, checkBoxLabel, savePWObj)
   {
-    var ret = PromptUsernameAndPassword(dlgTitle, text, savePWObj, userObj, pwObj);
+    var ret = PromptUsernameAndPassword(dlgTitle, text, savePWObj.value, userObj, pwObj);
     if (!ret)
       setTimeout(CancelPublishing,0);
 
@@ -2186,7 +2224,7 @@ var nsPreviewCommand =
   isCommandEnabled: function(aCommand, dummy)
   {
     return (window.editorShell && window.editorShell.documentEditable && 
-            gIsHTMLEditor && 
+            isHTMLEditor() && 
             (DocumentHasBeenSaved() || window.editorShell.documentModified));
   },
 
@@ -2911,9 +2949,7 @@ var nsObjectPropertiesCommand =
   doCommand: function(aCommand)
   {
     // Launch Object properties for appropriate selected element 
-    dump("********** get object for props\n");
     var element = GetObjectForProperties();
-    dump("********** get object for props"+element+"\n");
     if (element)
     {
       var name = element.nodeName.toLowerCase();
@@ -3186,7 +3222,7 @@ var nsNormalModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return gIsHTMLEditor && window.editorShell.documentEditable;
+    return isHTMLEditor() && window.editorShell.documentEditable;
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3195,8 +3231,8 @@ var nsNormalModeCommand =
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
-    if (gEditorDisplayMode != gDisplayModeNormal)
-      SetEditMode(gDisplayModeNormal);
+    if (gEditorDisplayMode != kDisplayModeNormal)
+      SetEditMode(kDisplayModeNormal);
   }
 };
 
@@ -3204,7 +3240,7 @@ var nsAllTagsModeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable && gIsHTMLEditor);
+    return (window.editorShell && window.editorShell.documentEditable && isHTMLEditor());
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -3213,6 +3249,8 @@ var nsAllTagsModeCommand =
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
+    if (gEditorDisplayMode != kDisplayModeAllTags)
+      SetEditMode(kDisplayModeAllTags);
     if (gEditorDisplayMode != gDisplayModeAllTags)
       SetEditMode(gDisplayModeAllTags);
   }
@@ -3230,8 +3268,8 @@ var nsHTMLSourceModeCommand =
 
   doCommand: function(aCommand)
   {
-    if (gEditorDisplayMode != gDisplayModeSource)
-      SetEditMode(gDisplayModeSource);
+    if (gEditorDisplayMode != kDisplayModeSource)
+      SetEditMode(kDisplayModeSource);
   }
 };
 
@@ -3248,8 +3286,8 @@ var nsPreviewModeCommand =
   doCommand: function(aCommand)
   {
     FinishHTMLSource();
-    if (gEditorDisplayMode != gDisplayModePreview)
-      SetEditMode(gDisplayModePreview);
+    if (gEditorDisplayMode != kDisplayModePreview)
+      SetEditMode(kDisplayModePreview);
   }
 };
 

@@ -110,6 +110,14 @@ interface nsIEditor  : nsISupports
   attribute unsigned long flags;
 
   /**
+   * the MimeType of the document
+   */
+  attribute string contentsMIMEType;
+
+  /** Returns true if we have a document that is not marked read-only */
+  readonly attribute boolean isDocumentEditable;
+
+  /**
    * the DOM Document this editor is associated with, refcounted.
    */
   readonly attribute nsIDOMDocument document;
@@ -128,8 +136,8 @@ interface nsIEditor  : nsISupports
 
   /** 
    * DeleteSelection removes all nodes in the current selection.
-   * @param aDir  if eLTR, delete to the right (for example, the DEL key)
-   *              if eRTL, delete to the left (for example, the BACKSPACE key)
+   * @param aDir  if eNext, delete to the right (for example, the DEL key)
+   *              if ePrevious, delete to the left (for example, the BACKSPACE key)
    */
   void deleteSelection(in short action);
 

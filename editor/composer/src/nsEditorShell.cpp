@@ -237,7 +237,6 @@ GetTreeOwner(nsIDocShell* aDocShell, nsIBaseWindow** aBaseWindow)
 
 nsEditorShell::nsEditorShell()
 :  mMailCompose(PR_FALSE)
-,  mHTMLSourceMode(PR_FALSE)
 ,  mWebShellWindow(nsnull)
 ,  mContentWindow(nsnull)
 ,  mParserObserver(nsnull)
@@ -630,9 +629,9 @@ nsEditorShell::SetContentWindow(nsIDOMWindowInternal* aWin)
   nsCOMPtr<nsIDOMWindowInternal> cwP = do_QueryReferent(mContentWindow);
   if (!cwP) return NS_ERROR_NOT_INITIALIZED;
     cwP->GetControllers(getter_AddRefs(controllers));
-  //rv = mContentWindow->GetControllers(getter_AddRefs(controllers));
+
   if (NS_FAILED(rv)) return rv;
-  
+
   {
     // the first is an editor controller, and takes an nsIEditor as the refCon
     nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/editorcontroller;1", &rv);
@@ -646,9 +645,9 @@ nsEditorShell::SetContentWindow(nsIDOMWindowInternal* aWin)
     rv = controllers->InsertControllerAt(eEditorController, controller);
     if (NS_FAILED(rv)) return rv;  
   }
-  
+
   {
-    // the second is a composer controller
+    // the second is a composer controller (now also takes nsIEditor as refCon)
     nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/composercontroller;1", &rv);
     if (NS_FAILED(rv)) return rv;  
     nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller);
@@ -659,7 +658,7 @@ nsEditorShell::SetContentWindow(nsIDOMWindowInternal* aWin)
     mComposerController = editorController;   // temp weak link, so we can get it and set the editor later
 
     rv = controllers->InsertControllerAt(eComposerController, controller);
-    if (NS_FAILED(rv)) return rv;  
+    if (NS_FAILED(rv)) return rv;
   }
 
   return NS_OK;
@@ -1263,22 +1262,6 @@ nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
 }
 
   
-NS_IMETHODIMP 
-nsEditorShell::GetHTMLSourceMode(PRBool *_retval)
-{
-  *_retval = mHTMLSourceMode;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP 
-nsEditorShell::SetHTMLSourceMode(PRBool aSourceMode)
-{
-  mHTMLSourceMode = aSourceMode;
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsEditorShell::SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value)
 {

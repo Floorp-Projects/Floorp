@@ -483,6 +483,18 @@ NS_IMETHODIMP nsPlaintextEditor::InitRules()
 }
 
 
+NS_IMETHODIMP
+nsPlaintextEditor::GetIsDocumentEditable(PRBool *aIsDocumentEditable)
+{
+  NS_ENSURE_ARG_POINTER(aIsDocumentEditable);
+
+  nsCOMPtr<nsIDOMDocument> doc;
+  GetDocument(getter_AddRefs(doc));
+  *aIsDocumentEditable = doc ? IsModifiable() : PR_FALSE;
+
+  return NS_OK;
+}
+
 PRBool nsPlaintextEditor::IsModifiable()
 {
   PRUint32 flags;

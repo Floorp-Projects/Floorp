@@ -119,9 +119,9 @@ public:
   /* ------------ nsPlaintextEditor overrides -------------- */
   NS_IMETHODIMP HandleKeyPress(nsIDOMKeyEvent* aKeyEvent);
   NS_IMETHODIMP CollapseSelectionToStart();
+  NS_IMETHOD GetIsDocumentEditable(PRBool *aIsDocumentEditable);
 
   /* ------------ nsIHTMLEditor methods -------------- */
-
   NS_IMETHOD CopyLastEditableChildStyles(nsIDOMNode *aPreviousBlock, nsIDOMNode *aNewBlock,
                                          nsIDOMNode **aOutBrNode);
 
