@@ -63,6 +63,7 @@ EXES =			\
 	dnstest$(EXE)	\
 	ftp$(EXE)	\
 	grab$(EXE)	\
+	httpd$(EXE)	\
 	link$(EXE)	\
 	pop$(EXE)	\
 	proxy$(EXE)	\
@@ -73,6 +74,7 @@ EXES =			\
 #all: dnstest$(EXE)
 #all: ftp$(EXE)
 #all: grab$(EXE)
+#all: httpd$(EXE)
 #all: link$(EXE)
 #all: pop$(EXE)
 #all: proxy$(EXE)
@@ -89,6 +91,9 @@ ftp$(EXE): ftp.c $(OBJS)
 
 grab$(EXE): grab.c $(OBJS)
 	$(PURIFY) $(CC) $(CFLAGS) grab.c $(OBJS) $(LIBS) -o $@
+
+httpd$(EXE): httpd.c $(OBJS)
+	$(PURIFY) $(CC) $(CFLAGS) httpd.c $(OBJS) $(LIBS) -o $@
 
 link$(EXE): link.c $(OBJS)
 	$(PURIFY) $(CC) $(CFLAGS) link.c $(OBJS) $(LIBS) -o $@
