@@ -88,10 +88,14 @@ SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)autocomplete_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)history_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)urlbarhistory_s.$(LIB_SUFFIX) \
-ifeq ($(OS_ARCH),WINNT)
-	$(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
-endif
   $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+SHARED_LIBRARY_LIBS += \
+	$(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
+	$(NULL)
+endif
+
 endif
 
 LOCAL_INCLUDES	= \
@@ -109,10 +113,14 @@ LOCAL_INCLUDES += \
   -I$(srcdir)/../history/src       \
 	-I$(srcdir)/../urlbarhistory/src \
   -I$(srcdir)/../download-manager/src \
-ifeq ($(OS_ARCH),WINNT)
-	-I$(srcdir)/../alerts/src \
-endif
   $(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES += \
+	-I$(srcdir)/../alerts/src \
+  $(NULL)
+endif
+
 endif
 
 ifeq ($(OS_ARCH),WINNT)
