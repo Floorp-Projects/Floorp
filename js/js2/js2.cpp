@@ -438,8 +438,8 @@ static void testInterpreter(float64 n)
 	    icg.beginWhileStatement(position);
 		Register r0 = icg.loadVariable(0);
 		Register r1 = icg.loadImmediate(1.0);
-		Register r2 = icg.op(COMPARE, r0, r1);
-	    icg.endWhileExpression(r2, BRANCH_GT);
+		Register r2 = icg.op(COMPARE_GT, r0, r1);
+	    icg.endWhileExpression(r2);
 	    r0 = icg.loadVariable(0);
 	    r1 = icg.loadVariable(1);
 	    r2 = icg.op(MULTIPLY, r1, r0);
@@ -453,8 +453,8 @@ static void testInterpreter(float64 n)
 	}
 	
 	// return result;
-    icg.beginStatement(position);
-    InstructionStream *iCode = icg.complete(icg.loadVariable(1));
+    icg.returnStatement(icg.loadVariable(1));
+    InstructionStream *iCode = icg.complete();
     // std::cout << icg;
 
     // test the iCode interpreter.
