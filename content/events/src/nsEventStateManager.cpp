@@ -5005,15 +5005,15 @@ NS_IMETHODIMP nsEventStateManager::MoveCaretToFocus()
       nsCOMPtr<nsIFrameSelection> frameSelection;
       shell->GetFrameSelection(getter_AddRefs(frameSelection));
 
-      if (currentFocusNode && frameSelection && rangeDoc) {
+      if (frameSelection && rangeDoc) {
         nsCOMPtr<nsISelection> domSelection;
         frameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL, 
           getter_AddRefs(domSelection));
         if (domSelection) {
           // First clear the selection
           domSelection->RemoveAllRanges();
-          nsCOMPtr<nsIDOMRange> newRange;
           if (currentFocusNode) {
+            nsCOMPtr<nsIDOMRange> newRange;
             nsresult rv = rangeDoc->CreateRange(getter_AddRefs(newRange));
             if (NS_SUCCEEDED(rv)) {
               // Set the range to the start of the currently focused node
