@@ -139,9 +139,8 @@ getLinkCB(AtkHypertext *aText, gint aLinkIndex)
     // we take hyperlink->get() as Id for the MaiHyperlink.
     // release our ref to the previous one
 
-    nsCOMPtr<nsIAccessibleDocument> accessibleDoc;
-    nsAccessNode::GetDocAccessibleFor(weakShell,
-                                      getter_AddRefs(accessibleDoc));
+    nsCOMPtr<nsIAccessibleDocument> accessibleDoc =
+        nsAccessNode::GetDocAccessibleFor(weakShell);
     if (!accessibleDoc) {
         NS_WARNING("No accessible document for this presshell");
         return nsnull;
