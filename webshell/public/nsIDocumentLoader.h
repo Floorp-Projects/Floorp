@@ -97,6 +97,16 @@ class nsIDocumentLoader : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTLOADER_IID)
 
+    // url dispatching shortcut method....we return the
+    // doc bind info in the form of a stream listener
+    // which we'll use to feed data into the content viewer
+    NS_IMETHOD LoadOpenedDocument(nsIChannel * aOpenedChannel, 
+                                  const char * aCommand,
+                                  nsIContentViewerContainer *aContainer,
+                                  nsIInputStream * aPostDataStream,
+                                  nsIURI * aReffererUrl,
+                                  nsIStreamListener ** aContentHandler) = 0;
+
     NS_IMETHOD LoadDocument(nsIURI * aUri, 
                             const char* aCommand,
                             nsISupports* aContainer,
