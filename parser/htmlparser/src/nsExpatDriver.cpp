@@ -302,6 +302,7 @@ nsExpatDriver::nsExpatDriver()
   :mExpatParser(0), 
    mInCData(PR_FALSE),
    mInDoctype(PR_FALSE),
+   mInExternalDTD(PR_FALSE),
    mHandledXMLDeclaration(PR_FALSE),
    mBytePosition(0),
    mInternalState(NS_OK),
@@ -373,7 +374,9 @@ nsExpatDriver::HandleComment(const PRUnichar *aValue)
   NS_ASSERTION(mSink, "content sink not found!");
 
   if (mInDoctype) {
-    mDoctypeText.Append(aValue);
+    if (!mInExternalDTD) {
+      mDoctypeText.Append(aValue);
+    }
   }
   else if (mSink){
     mInternalState = mSink->HandleComment(aValue);
@@ -430,7 +433,9 @@ nsExpatDriver::HandleDefault(const PRUnichar *aValue,
   NS_ASSERTION(mSink, "content sink not found!");
 
   if (mInDoctype) {
-    mDoctypeText.Append(aValue, aLength);
+    if (!mInExternalDTD) {
+      mDoctypeText.Append(aValue, aLength);
+    }
   }
   else if (mSink) {
     if (!mHandledXMLDeclaration && !mBytesParsed) {
@@ -508,8 +513,8 @@ nsExpatDriver::HandleStartDoctypeDecl()
   mInDoctype = PR_TRUE;
   // Consuming a huge DOCTYPE translates to numerous
   // allocations. In an effort to avoid too many allocations
-  // setting mDoctypeText's capacity to be 20K ( just a guesstimate! ).
-  mDoctypeText.SetCapacity(20480);
+  // setting mDoctypeText's capacity to be 1K ( just a guesstimate! ).
+  mDoctypeText.SetCapacity(1024);
   return NS_OK;
 }
 
@@ -570,7 +575,11 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
   nsCOMPtr<nsIInputStream> in;
   nsAutoString absURL;
 
-  nsresult rv = OpenInputStream(publicId, systemId, base, getter_AddRefs(in), absURL);
+  nsresult rv = OpenInputStreamFromExternalDTD(publicId, 
+                                               systemId, 
+                                               base, 
+                                               getter_AddRefs(in), 
+                                               absURL);
 
   if (NS_FAILED(rv)) {
     return result;
@@ -578,23 +587,31 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
 
   nsCOMPtr<nsIUnicharInputStream> uniIn;
 
-  NS_NewUTF8ConverterStream(getter_AddRefs(uniIn), in, 1024);
+  rv = NS_NewUTF8ConverterStream(getter_AddRefs(uniIn), in, 1024);
+
+  if (NS_FAILED(rv)) {
+    return result;
+  }
   
   if (uniIn) {
     XML_Parser entParser = 
-      XML_ExternalEntityParserCreate(mExpatParser, 0, (const XML_Char*) NS_LITERAL_STRING("UTF-16").get());
+      XML_ExternalEntityParserCreate(
+        mExpatParser, 
+        0, 
+        (const XML_Char*) NS_LITERAL_STRING("UTF-16").get());
 
     if (entParser) {
       PRUint32 readCount = 0;
-      PRUnichar tmpBuff[1024] = {0};
-      PRUnichar *uniBuf = tmpBuff;
+      PRUnichar uniBuff[1024] = {0};
 
       XML_SetBase(entParser, (const XML_Char*) absURL.get());
 
-      while (NS_SUCCEEDED(uniIn->Read(uniBuf, 0, 1024, &readCount)) && result) {
+      mInExternalDTD = PR_TRUE;
+
+      while (NS_SUCCEEDED(uniIn->Read(uniBuff, 0, 1024, &readCount)) && result) {
         if (readCount) {
           // Pass the buffer to expat for parsing
-          result = XML_Parse(entParser, (char *)uniBuf,  readCount * sizeof(PRUnichar), 0);
+          result = XML_Parse(entParser, (char *)uniBuff,  readCount * sizeof(PRUnichar), 0);
         }
         else {
           // done reading
@@ -602,6 +619,9 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
           break;
         }
       }
+
+      mInExternalDTD = PR_FALSE;
+
       XML_ParserFree(entParser);
     }
   }
@@ -610,11 +630,11 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
 }
 
 nsresult
-nsExpatDriver::OpenInputStream(const PRUnichar* aFPIStr,
-                               const PRUnichar* aURLStr, 
-                               const PRUnichar* aBaseURL, 
-                               nsIInputStream** in, 
-                               nsAString& aAbsURL) 
+nsExpatDriver::OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
+                                              const PRUnichar* aURLStr, 
+                                              const PRUnichar* aBaseURL, 
+                                              nsIInputStream** in, 
+                                              nsAString& aAbsURL) 
 {
   nsresult rv;
   nsCOMPtr<nsIURI> baseURI;  

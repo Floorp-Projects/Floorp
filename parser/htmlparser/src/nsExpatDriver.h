@@ -78,11 +78,11 @@ public:
 protected:
 
   // Load up an external stream to get external entity information
-  nsresult OpenInputStream(const PRUnichar* aFPIStr,
-                           const PRUnichar* aURLStr, 
-                           const PRUnichar* aBaseURL,
-                           nsIInputStream** in, 
-                           nsAString& aAbsURL);
+  nsresult OpenInputStreamFromExternalDTD(const PRUnichar* aFPIStr,
+                                          const PRUnichar* aURLStr, 
+                                          const PRUnichar* aBaseURL,
+                                          nsIInputStream** in, 
+                                          nsAString& aAbsURL);
 
   nsresult ParseBuffer(const char* aBuffer, PRUint32 aLength, PRBool aIsFinal);
   nsresult HandleError(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal);
@@ -94,6 +94,7 @@ protected:
   nsString         mDoctypeText;
   PRPackedBool     mInCData;
   PRPackedBool     mInDoctype;
+  PRPackedBool     mInExternalDTD;
   PRPackedBool     mHandledXMLDeclaration;
   PRInt32          mBytePosition;
   nsresult         mInternalState;
