@@ -234,7 +234,7 @@ nsImapMoveCopyMsgTxn::UndoMailboxDelete()
     rv = m_srcFolder->GetURI(&uri);
     nsString2 protocolType(uri, eOneByte);
     PR_FREEIF(uri);
-    protocolType.SetLength(protocolType.Find(':'));
+    protocolType.SetLength(protocolType.FindChar(':'));
     // ** jt -- only do this for mailbox protocol
     if (protocolType.EqualsIgnoreCase("mailbox"))
     {
@@ -283,7 +283,7 @@ nsImapMoveCopyMsgTxn::RedoMailboxDelete()
     rv = m_srcFolder->GetURI(&uri);
     nsString2 protocolType(uri, eOneByte);
     PR_FREEIF(uri);
-    protocolType.SetLength(protocolType.Find(':'));
+    protocolType.SetLength(protocolType.FindChar(':'));
     // ** jt -- only do this for mailbox protocol
     if (protocolType.EqualsIgnoreCase("mailbox"))
     {

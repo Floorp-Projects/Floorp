@@ -939,7 +939,7 @@ void nsMsgCompose::HackToGetBody(PRInt32 what)
         offset = lowerMsgBody.Find("<body");
         if (offset != -1)
         {
-          offset = lowerMsgBody.Find('>', offset);
+          offset = lowerMsgBody.FindChar('>', PR_FALSE,offset);
           if (offset != -1)
           {
             startBodyOffset = offset + 1;

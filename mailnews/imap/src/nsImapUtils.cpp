@@ -84,7 +84,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 	// the server name is the first component of the path, so extract it out
 	PRInt32 hostStart;
 
-	hostStart = uri.Find('/');
+	hostStart = uri.FindChar('/');
 	if (hostStart <= 0) return NS_ERROR_FAILURE;
 
 	// skip past all //
@@ -96,7 +96,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
   nsAutoString username("");
 
-  PRInt32 atPos = hostname.Find('@');
+  PRInt32 atPos = hostname.FindChar('@');
   if (atPos != -1) {
     hostname.Left(username, atPos);
     hostname.Cut(0, atPos+1);
@@ -108,7 +108,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 
 	// cut off first '/' and everything following it
 	// hostname/folder -> hostname
-	PRInt32 hostEnd = hostname.Find('/');
+	PRInt32 hostEnd = hostname.FindChar('/');
 	if (hostEnd > 0) 
 	{
 		hostname.Right(folder, hostname.Length() - hostEnd - 1);
@@ -150,7 +150,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   {
       nsAutoString parentName = folder;
       nsAutoString leafName = folder;
-      PRInt32 dirEnd = parentName.Find('/');
+      PRInt32 dirEnd = parentName.FindChar('/');
 
       while(dirEnd > 0)
       {
@@ -160,7 +160,7 @@ nsImapURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
           parentName += sbdSep;
           pathResult += parentName;
           parentName = leafName;
-          dirEnd = parentName.Find('/');
+          dirEnd = parentName.FindChar('/');
       }
       if (leafName != "") {
         NS_MsgHashIfNecessary(leafName);
@@ -194,7 +194,7 @@ nsImapURI2FullName(const char* rootURI, const char* hostname, char* uriStr,
     if (hostStart <= 0) return NS_ERROR_FAILURE;
     uri.Right(fullName, uri.Length() - hostStart);
     uri = fullName;
-    PRInt32 hostEnd = uri.Find('/');
+    PRInt32 hostEnd = uri.FindChar('/');
     if (hostEnd <= 0) return NS_ERROR_FAILURE;
     uri.Right(fullName, uri.Length() - hostEnd - 1);
     if (fullName == "") return NS_ERROR_FAILURE;
@@ -211,7 +211,7 @@ nsImapURI2UserName(const char* rootURI, const char* uriStr,
     PRInt32 userStart = PL_strlen(rootURI);
     while (uri[userStart] == '/') userStart++;
     uri.Cut(0, userStart);
-    PRInt32 userEnd = uri.Find('@');
+    PRInt32 userEnd = uri.FindChar('@');
     if (userEnd < 1)
         return NS_ERROR_FAILURE;
     uri.SetLength(userEnd);
@@ -228,10 +228,10 @@ nsImapURI2HostName(const char* rootURI, const char* uriStr,
     PRInt32 hostStart = PL_strlen(rootURI);
     while (uri[hostStart] == '/') hostStart++;
     uri.Cut(0, hostStart);
-    hostStart = uri.Find('@'); // skip username
+    hostStart = uri.FindChar('@'); // skip username
     if (hostStart > 0)
         uri.Cut(0, hostStart+1);
-    PRInt32 hostEnd = uri.Find('/');
+    PRInt32 hostEnd = uri.FindChar('/');
     if (hostEnd > 0)
         uri.SetLength(hostEnd);
     hostname = uri;
@@ -242,7 +242,7 @@ nsresult
 nsURI2ProtocolType(const char* uriStr, nsString& type)
 {
     nsAutoString uri = uriStr;
-    PRInt32 typeEnd = uri.Find(':');
+    PRInt32 typeEnd = uri.FindChar(':');
     if (typeEnd < 1)
         return NS_ERROR_FAILURE;
     uri.SetLength(typeEnd);
@@ -257,7 +257,7 @@ nsresult nsParseImapMessageURI(const char* uri, nsString& folderURI, PRUint32 *k
 		return NS_ERROR_NULL_POINTER;
 
 	nsAutoString uriStr = uri;
-	PRInt32 keySeparator = uriStr.Find('#');
+	PRInt32 keySeparator = uriStr.FindChar('#');
 	if(keySeparator != -1)
 	{
 		nsAutoString folderPath;

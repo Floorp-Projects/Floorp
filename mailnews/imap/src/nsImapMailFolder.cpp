@@ -508,7 +508,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateSubfolder(const char *folderName)
     nsAutoString leafName (folderName, eOneByte);
     nsString folderNameStr;
     nsString parentName = leafName;
-    PRInt32 folderStart = leafName.Find('/');
+    PRInt32 folderStart = leafName.FindChar('/');
     if (folderStart > 0)
     {
         NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
@@ -775,7 +775,7 @@ NS_IMETHODIMP nsImapMailFolder::GetUsername(char** userName)
     aName.Cut(0, PL_strlen(kImapRootURI));
     while (aName[0] == '/')
         aName.Cut(0, 1);
-    PRInt32 userEnd = aName.Find('@');
+    PRInt32 userEnd = aName.FindChar('@');
     if (userEnd < 1)
         return NS_ERROR_NULL_POINTER;
 
@@ -814,11 +814,11 @@ NS_IMETHODIMP nsImapMailFolder::GetHostname(char** hostName)
     while (aName[0] == '/')
         aName.Cut(0, 1);
 	// cut out user name ### alec, when you clean up url parsing, please get this too!
-	PRInt32 userNameEnd = aName.Find('@');
+	PRInt32 userNameEnd = aName.FindChar('@');
 	if (userNameEnd > 0)
 		aName.Cut(0, userNameEnd + 1);
 
-    PRInt32 hostEnd = aName.Find('/');
+    PRInt32 hostEnd = aName.FindChar('/');
     if (hostEnd > 0) // must have at least one valid charater
         aName.SetLength(hostEnd);
     char *tmpCString = aName.ToNewCString();
