@@ -1843,7 +1843,7 @@ void nsWebShellWindow::SetTitleFromXUL()
     webshellElement = do_QueryInterface(webshellNode);
   if (webshellElement && windowWidget &&
       NS_SUCCEEDED(webshellElement->GetAttribute("title", windowTitle)))
-  SetTitle(windowTitle);
+  SetTitle(windowTitle.GetUnicode());
 } // SetTitleFromXUL
 
 

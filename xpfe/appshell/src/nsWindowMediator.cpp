@@ -489,7 +489,7 @@ NS_IMETHODIMP  nsWindowMediator::UpdateWindowTitle( nsIWebShellWindow* inWindow,
             
             // Add new title             
 			nsCOMPtr<nsIRDFLiteral> newTitle;
-			if (NS_FAILED(rv = gRDFService->GetLiteral( inTitle, getter_AddRefs(newTitle))))
+			if (NS_FAILED(rv = gRDFService->GetLiteral( inTitle.GetUnicode(), getter_AddRefs(newTitle))))
 			{
 				NS_ERROR("unable to create literal for window name");
 				return rv;
@@ -660,7 +660,7 @@ nsresult nsWindowMediator::AddWindowToRDF( nsWindowInfo* ioWindowInfo )
 		
 	// Get the RDF literal and add it to our node 
 	nsCOMPtr<nsIRDFLiteral> windowTitleLiteral;
-	if (NS_FAILED(rv = gRDFService->GetLiteral( windowTitle, getter_AddRefs(windowTitleLiteral))))
+	if (NS_FAILED(rv = gRDFService->GetLiteral( windowTitle.GetUnicode(), getter_AddRefs(windowTitleLiteral))))
 	{
 		NS_ERROR("unable to create literal for window name");
 		return rv;
