@@ -132,7 +132,7 @@ nsNetDiskCache::~nsNetDiskCache()
     		return;
     	
 
-      if( trash.Compare( filename, PR_FALSE, 5 ) == 0)
+      if( trash.CompareWithConversion( filename, PR_FALSE, 5 ) == 0)
         file->Delete( PR_TRUE );
       
       nsCRT::free(filename) ;  
@@ -324,7 +324,9 @@ NS_IMPL_ISUPPORTS3(nsNetDiskCache,
 NS_IMETHODIMP
 nsNetDiskCache::GetDescription(PRUnichar* *aDescription) 
 {
-  nsAutoString description("Disk Cache") ;
+  nsAutoString description ;
+  description.AssignWithConversion("Disk Cache") ;
+
   *aDescription = description.ToNewUnicode() ;
   if(!*aDescription)
     return NS_ERROR_OUT_OF_MEMORY ;

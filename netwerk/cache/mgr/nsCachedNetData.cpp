@@ -450,7 +450,7 @@ nsCachedNetData::Deserialize(PRBool aDeserializeFlags)
         nsAllocator::Free(metaData);
 
     nsCOMPtr<nsISupports> stringStreamSupports;
-    rv = NS_NewStringInputStream(getter_AddRefs(stringStreamSupports), metaDataCStr);
+    rv = NS_NewCStringInputStream(getter_AddRefs(stringStreamSupports), metaDataCStr);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStream> inputStream = do_QueryInterface(stringStreamSupports);
