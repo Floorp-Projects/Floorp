@@ -24,7 +24,7 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-
+#if 0
 static void
 msg_delete_attached_files(struct nsMsgAttachedFile *attachments)
 {
@@ -43,6 +43,7 @@ msg_delete_attached_files(struct nsMsgAttachedFile *attachments)
 	}
 	PR_FREEIF(attachments);
 }
+#endif /* 0 */
 
 /**************
 

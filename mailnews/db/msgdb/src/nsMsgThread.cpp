@@ -271,8 +271,9 @@ PRBool nsMsgThread::TryReferenceThreading(nsIMsgDBHdr *newHeader)
 {
 	// start at end of references to find immediate parent in thread
 	PRBool addedChild = PR_FALSE;
-	PRBool done = PR_FALSE;
 #if 0
+	PRBool done = PR_FALSE;
+
 	for (int32 refIndex = newHeader->GetNumReferences() - 1; !done && refIndex >= 0; refIndex--)
 	{
 		nsCOMPtr <nsIMsgDBHdr>  refHdr;
