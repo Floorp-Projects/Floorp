@@ -47,6 +47,6 @@ close(FILE);
 chmod(0666, $filename);
 system("./addcheckin.pl",  $filename);
 
-# unlink($filename);
+unlink($filename);
 
 exit;
