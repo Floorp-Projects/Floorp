@@ -54,6 +54,8 @@ calendarPrefObserver.prototype =
       // when calendar pref was changed, we reinitialize 
       switch( prefName )
       {
+      case "calendar.event.defaultstarthour":
+      case "calendar.event.defaultendhour":
          case "calendar.week.start" :
             this.CalendarPreferences.calendarWindow.currentView.refresh();
             break;
