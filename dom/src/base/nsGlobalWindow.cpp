@@ -883,7 +883,7 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
    if(!docShellParent) 
       {
       nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-      docShellParent->GetTreeOwner(getter_AddRefs(treeOwner));
+      docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
       NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
 
       nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(mDocShell));
