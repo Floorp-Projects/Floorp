@@ -147,6 +147,7 @@
             </vbox>
             <menulist id="PreferMailFormatPopup" disableforreadonly="true">
               <menupopup>
+                <!-- 0,1,2 come from nsIAbPreferMailFormat in nsIAbCard.idl -->
                 <menuitem value="0" label="&Unknown.label;"/>
                 <menuitem value="1" label="&PlainText.label;"/>
                 <menuitem value="2" label="&HTML.label;"/>
