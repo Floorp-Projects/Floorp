@@ -43,8 +43,12 @@ public:
 
     enum state_flags 
     {
-        INIT=0x000000,
-        PARTIAL=0x000001
+        INIT=0,
+        PARTIAL=1,
+        COMPLETE=2,
+        ABORTED=3,
+        EXPIRED=4,
+        CORRUPT=5
     };
 
     nsCacheObject();
@@ -125,6 +129,12 @@ public:
     PRUint32        Size(void) const;
     void            Size(PRUint32 i_Size);
 
+    /* Accessor functions for the state of the cache object.
+     * Some states are changed internally.
+     */
+    PRUint32        State(void) const;
+    void            State(PRUint32 i_State);
+
     nsStream*       Stream(void) const;
 
     const char*     Trace() const;
@@ -141,7 +151,6 @@ protected:
     char*           m_ContentType;
     char*           m_Etag;
     PRIntervalTime  m_Expires;
-    int             m_Flags;
     char*           m_Filename;
     PRUint16        m_Hits;
     PRUint32        m_info_size;
@@ -153,6 +162,7 @@ protected:
     PRUint32        m_PostDataLen;
     PRInt16         m_Module;
     PRUint32        m_Size;
+    PRUint32        m_State;
     nsStream*       m_pStream;
     char*           m_URL;
 
@@ -241,14 +251,17 @@ void nsCacheObject::IsCompleted(PRBool bComplete)
 inline 
 PRBool nsCacheObject::IsExpired(void) const
 {
-    PRIntervalTime now = PR_IntervalNow();
-    return (m_Expires <= now);
+    if (nsCacheObject::EXPIRED==m_State)
+        return PR_TRUE;
+    if (m_Expires <= PR_IntervalNow())
+        ((nsCacheObject*)this)->m_State = nsCacheObject::EXPIRED;
+    return (nsCacheObject::EXPIRED==m_State);
 };
 
 inline 
 PRBool nsCacheObject::IsPartial(void) const
 {
-    return (m_Flags & nsCacheObject::PARTIAL);
+    return (nsCacheObject::PARTIAL==m_State);
 };
 
 inline 
@@ -309,6 +322,18 @@ inline
 void nsCacheObject::Size(PRUint32 i_Size)
 {
     m_Size = i_Size;
+};
+
+inline 
+PRUint32 nsCacheObject::State(void) const
+{
+    return m_State;
+};
+
+inline 
+void nsCacheObject::State(PRUint32 i_State)
+{
+    m_State = i_State;
 };
 
 inline
