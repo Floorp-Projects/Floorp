@@ -21,8 +21,13 @@
 function view_init()
 {
 	var message_menuitem=document.getElementById('menu_showMessage');
-	if (message_menuitem){
-		message_menuitem.setAttribute('checked',!IsThreadAndMessagePaneSplitterCollapsed());
+
+	if (message_menuitem)
+	{
+		var message_menuitem_hidden = message_menuitem.getAttribute("hidden");
+		if(message_menuitem_hidden != "true"){
+			message_menuitem.setAttribute('checked',!IsThreadAndMessagePaneSplitterCollapsed());
+		}
 	}
 	var threadColumn = document.getElementById('ThreadColumnHeader');
 	var thread_menuitem=document.getElementById('menu_showThreads');

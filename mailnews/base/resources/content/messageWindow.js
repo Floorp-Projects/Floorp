@@ -32,6 +32,7 @@ var gCurrentMessageIsDeleted = false;
 
 function OnLoadMessageWindow()
 {
+	HideMenus();
 	CreateMailWindowGlobals();
 	CreateMessageWindowGlobals();
 	verifyAccounts();
@@ -65,6 +66,14 @@ function OnLoadMessageWindow()
 	}	
 
   setTimeout("OpenURL(gCurrentMessageUri);", 0);
+
+}
+
+function HideMenus()
+{
+	var message_menuitem=document.getElementById('menu_showMessage');
+	if(message_menuitem)
+		message_menuitem.setAttribute("hidden", "true");
 
 }
 

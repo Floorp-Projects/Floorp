@@ -46,6 +46,7 @@ Rights Reserved.
 
 
 	<script src="chrome://global/content/strres.js"/>
+  <script src="chrome://messenger/content/shareglue.js"/>
 	<script src="chrome://messenger/content/commandglue.js"/>
 	<script src="chrome://messenger/content/mailWindow.js"/>
 	<script src="chrome://messenger/content/messageWindow.js"/>
