@@ -100,6 +100,7 @@ protected:
   virtual void Create4BytesEncoder();
   NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
+  NS_IMETHOD FillInfo(PRUint32 *aInfo);
 };
 class nsUnicodeToGB18030Font1 : public nsTableEncoderSupport
 {
