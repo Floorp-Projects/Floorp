@@ -37,7 +37,7 @@ var index = 0;
 
 function slideShow()
 {
-  image.setDOMAttribute("SRC", images[index]);
+  image.setAttribute("SRC", images[index]);
   index++;
   if (index >= 10) {
     index = 0;
