@@ -78,23 +78,27 @@ nsBaseWidget::Enumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // nsBaseWidget constructor
 //
 //-------------------------------------------------------------------------
-nsBaseWidget::nsBaseWidget() :
-  mBounds(0,0,0,0)
+nsBaseWidget::nsBaseWidget()
+:	mClientData(nsnull)
+,	mEventCallback(nsnull)
+,	mContext(nsnull)
+,	mAppShell(nsnull)
+,	mToolkit(nsnull)
+,	mMouseListener(nsnull)
+,	mEventListener(nsnull)
+,	mMenuListener(nsnull)
+,	mCursor(eCursor_standard)
+,	mBorderStyle(eBorderStyle_none)
+,	mIsShiftDown(PR_FALSE)
+,	mIsControlDown(PR_FALSE)
+,	mIsAltDown(PR_FALSE)
+,	mIsDestroying(PR_FALSE)
+,	mOnDestroyCalled(PR_FALSE)
+,	mBounds(0,0,0,0)
+,	mVScrollbar(nsnull)
 {
     NS_NewISupportsArray(getter_AddRefs(mChildren));
     
-    mEventCallback = nsnull;
-    mToolkit       = nsnull;
-    mAppShell      = nsnull;
-    mMouseListener = nsnull;
-    mEventListener = nsnull;
-    mMenuListener  = nsnull;
-    mClientData    = nsnull;
-    mContext       = nsnull;
-    mCursor        = eCursor_standard;
-    mBorderStyle   = eBorderStyle_none;
-    mVScrollbar    = nsnull;
-
     NS_INIT_REFCNT();
 }
 
