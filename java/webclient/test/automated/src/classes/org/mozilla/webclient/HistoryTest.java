@@ -1,5 +1,5 @@
 /*
- * $Id: HistoryTest.java,v 1.1 2004/06/23 19:21:06 edburns%acm.org Exp $
+ * $Id: HistoryTest.java,v 1.2 2004/06/23 19:58:12 edburns%acm.org Exp $
  */
 
 /* 
@@ -135,6 +135,9 @@ public class HistoryTest extends WebclientTestCase {
 	// load four files.
 	//
 	HistoryTest.keepWaiting = true;
+
+	assertTrue(!history.canBack());
+	assertTrue(!history.canForward());
 	nav.loadURL("http://localhost:5243/HistoryTest0.html");
 	
 	// keep waiting until the previous load completes
@@ -143,6 +146,8 @@ public class HistoryTest extends WebclientTestCase {
 	}
 
 	HistoryTest.keepWaiting = true;
+	assertTrue(!history.canBack());
+	assertTrue(!history.canForward());
 	nav.loadURL("http://localhost:5243/HistoryTest1.html");
 	
 	// keep waiting until the previous load completes
@@ -151,6 +156,8 @@ public class HistoryTest extends WebclientTestCase {
 	}
 
 	HistoryTest.keepWaiting = true;
+	assertTrue(history.canBack());
+	assertTrue(!history.canForward());
 	nav.loadURL("http://localhost:5243/HistoryTest2.html");
 	
 	// keep waiting until the previous load completes
@@ -159,6 +166,8 @@ public class HistoryTest extends WebclientTestCase {
 	}
 
 	HistoryTest.keepWaiting = true;
+	assertTrue(history.canBack());
+	assertTrue(!history.canForward());
 	nav.loadURL("http://localhost:5243/HistoryTest3.html");
 	
 	// keep waiting until the previous load completes
@@ -180,6 +189,8 @@ public class HistoryTest extends WebclientTestCase {
 	
 	HistoryTest.keepWaiting = true;
 	historyListener.setStringToVerify("This is page 2 of the history test.");
+	assertTrue(history.canBack());
+	assertTrue(!history.canForward());
 	history.back();
 
 	// keep waiting until the previous load completes
@@ -189,6 +200,8 @@ public class HistoryTest extends WebclientTestCase {
 
 	HistoryTest.keepWaiting = true;
 	historyListener.setStringToVerify("This is page 1 of the history test.");
+	assertTrue(history.canBack());
+	assertTrue(history.canForward());
 	history.back();
 
 	// keep waiting until the previous load completes
@@ -198,6 +211,8 @@ public class HistoryTest extends WebclientTestCase {
 
 	HistoryTest.keepWaiting = true;
 	historyListener.setStringToVerify("This is page 0 of the history test.");
+	assertTrue(history.canBack());
+	assertTrue(history.canForward());
 	history.back();
 
 	// keep waiting until the previous load completes

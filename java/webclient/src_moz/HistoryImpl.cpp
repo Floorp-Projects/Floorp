@@ -55,37 +55,79 @@ Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeBack
     return;
 }
 
-/*******************
-
 JNIEXPORT jboolean 
 JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanBack
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
     jboolean result = JNI_FALSE;
-    JNIEnv	*	pEnv = env;
-    jobject		jobj = obj;
-        void        *       voidResult;
-    //    PRBool voidResult;
+	JNIEnv	*	pEnv = env;
+	jobject		jobj = obj;
     
-    NativeBrowserControl* initContext = (NativeBrowserControl *) nativeBCPtr;
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
     
-    if (initContext == nsnull) {
-      ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to raptorWebShellCanBack");
-      return result;
-    }
+	if (nativeBrowserControl == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeCanBack");
+		return result;
+	}
     
-    if (initContext->initComplete) {
-                wsCanBackEvent	* actionEvent = 
-            new wsCanBackEvent(initContext->webNavigation);
-      PLEvent			* event       = (PLEvent*) *actionEvent;
-      
-      voidResult = ::util_PostSynchronousEvent(initContext, event);
-        
-      result =  (PR_FALSE == ((PRBool) voidResult)) ? JNI_FALSE : JNI_TRUE;
+    nsresult rv = 
+        nativeBrowserControl->mNavigation->GetCanGoBack((PRBool *) &result);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't GetCanGoBack");
     }
 
     return result;
 }
+
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeForward
+(JNIEnv *env, jobject obj, jint nativeBCPtr)
+{
+	JNIEnv	*	pEnv = env;
+	jobject		jobj = obj;
+
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+
+	if (nativeBrowserControl == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeForward");
+		return;
+	}
+
+    nsresult rv = 
+        nativeBrowserControl->mNavigation->GoForward();
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't GoForward");
+    }
+
+    return;
+}
+
+JNIEXPORT jboolean 
+JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanForward
+(JNIEnv *env, jobject obj, jint nativeBCPtr)
+{
+    jboolean result = JNI_FALSE;
+	JNIEnv	*	pEnv = env;
+	jobject		jobj = obj;
+    
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    
+	if (nativeBrowserControl == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to nativeCanForward");
+		return result;
+	}
+    
+    nsresult rv = 
+        nativeBrowserControl->mNavigation->GetCanGoForward((PRBool *) &result);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't GetCanGoForward");
+    }
+
+    return result;
+}
+
+
+/*******************
 
 JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeGetBackList
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
@@ -100,58 +142,6 @@ Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeClearHistory
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
     
-}
-
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeForward
-(JNIEnv *env, jobject obj, jint nativeBCPtr)
-{
-    JNIEnv	*	pEnv = env;
-    jobject		jobj = obj;
-
-    NativeBrowserControl* initContext = (NativeBrowserControl *) nativeBCPtr;
-
-    if (initContext == nsnull) {
-      ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to raptorWebShellForward");
-      return;
-    }
-    
-    if (initContext->initComplete) {
-      wsForwardEvent	* actionEvent = 
-          new wsForwardEvent(initContext->webNavigation);
-      PLEvent	   	* event       = (PLEvent*) *actionEvent;
-      
-      ::util_PostEvent(initContext, event);
-    }
-
-    return;
-}
-
-JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeCanForward
-(JNIEnv *env, jobject obj, jint nativeBCPtr)
-{
-    jboolean result = JNI_FALSE;
-    JNIEnv	*	pEnv = env;
-    jobject		jobj = obj;
-    void        *       voidResult;
-    
-    NativeBrowserControl* initContext = (NativeBrowserControl *) nativeBCPtr;
-    
-    if (initContext == nsnull) {
-      ::util_ThrowExceptionToJava(env, "Exception: null nativeBCPtr passed to raptorWebShellCanForward");
-      return result;
-    }
-    
-    if (initContext->initComplete) {
-      wsCanForwardEvent	* actionEvent = 
-          new wsCanForwardEvent(initContext->webNavigation);
-      PLEvent			* event       = (PLEvent*) *actionEvent;
-      
-      voidResult = ::util_PostSynchronousEvent(initContext, event);
-      
-      result =  (PR_FALSE == ((PRBool) voidResult)) ? JNI_FALSE : JNI_TRUE;
-    }
-
-    return result;
 }
 
 JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_HistoryImpl_nativeGetForwardList

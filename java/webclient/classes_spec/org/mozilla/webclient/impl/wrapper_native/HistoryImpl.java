@@ -91,12 +91,16 @@ public boolean canBack()
 {
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
-    boolean result = false;
 
-    synchronized(getBrowserControl()) {
-        result = nativeCanBack(getNativeBrowserControl());
-    }
-    return result;
+    Boolean result = (Boolean)
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    boolean canBack = nativeCanBack(getNativeBrowserControl());
+		    return new Boolean(canBack);
+		}
+	    });
+    
+    return result.booleanValue();
 }
             
 public HistoryEntry [] getBackList()
@@ -127,30 +131,38 @@ public void clearHistory()
     throw new UnimplementedException("\nUnimplementedException -----\n API Function History::clearHistory has not yet been implemented.\n");
 }
             
-
-            
 public void forward()
 {
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
 
-    synchronized(getBrowserControl()) {
-        nativeForward(getNativeBrowserControl());
-    }
+    NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+	    public Object run() {
+		nativeForward(getNativeBrowserControl());
+		return null;
+	    }
+	});
 }
- 
+            
 public boolean canForward()
 {
     getWrapperFactory().verifyInitialized();
     Assert.assert_it(-1 != getNativeBrowserControl());
-    boolean result = false;
 
-    synchronized(getBrowserControl()) {
-        result = nativeCanForward(getNativeBrowserControl());
-    }
-    return result;
+    Boolean result = (Boolean)
+	NativeEventThread.instance.pushBlockingWCRunnable(new WCRunnable() {
+		public Object run() {
+		    boolean canForward = nativeCanForward(getNativeBrowserControl());
+		    return new Boolean(canForward);
+		}
+	    });
+    
+    return result.booleanValue();
 }
 
+            
+
+            
 public HistoryEntry [] getForwardList()
 {
     HistoryEntry [] result = null;
@@ -274,22 +286,5 @@ public native void nativeSetCurrentHistoryIndex(int webShellPtr, int historyInde
 public native int nativeGetHistoryLength(int webShellPtr);
 
 public native String nativeGetURLForIndex(int webShellPtr, int historyIndex);
-
-// ----VERTIGO_TEST_START
-
-//
-// Test methods
-//
-
-public static void main(String [] args)
-{
-    Assert.setEnabled(true);
-    Log.setApplicationName("HistoryImpl");
-    Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: HistoryImpl.java,v 1.4 2004/06/23 19:21:05 edburns%acm.org Exp $");
-    
-}
-
-// ----VERTIGO_TEST_END
 
 } // end of class HistoryImpl
