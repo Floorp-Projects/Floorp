@@ -1207,7 +1207,7 @@ nsObjectFrame::Paint(nsIPresContext* aPresContext,
                      nsFramePaintLayer aWhichLayer)
 {
   const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if ((disp != nsnull) && !disp->mVisible) 
+  if ((disp != nsnull) && !disp->IsVisibleOrCollapsed()) 
   {
     return NS_OK;
   }

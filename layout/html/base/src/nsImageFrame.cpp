@@ -468,7 +468,7 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
 {
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (disp->mVisible && mRect.width && mRect.height) {
+  if (disp->IsVisible() && mRect.width && mRect.height) {
     if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
       aRenderingContext.PushState();
       SetClipRect(aRenderingContext);

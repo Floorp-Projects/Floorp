@@ -1272,7 +1272,7 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext* aPresContext,
   mDebugPaintsSinceLastReflow++;
 #endif
   const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (disp->mVisible == NS_STYLE_VISIBILITY_VISIBLE) 
+  if (disp->IsVisible()) 
   {
     nsCompatibility mode;
     aPresContext->GetCompatibilityMode(&mode);
@@ -1596,7 +1596,7 @@ nsGfxTextControlFrame::CreateDocShell(nsIPresContext* aPresContext,
   // if the visibility is hidden, reflect that in the view
   const nsStyleDisplay* display;
   GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-  if (NS_STYLE_VISIBILITY_VISIBLE != display->mVisible) {
+  if (!display->IsVisible()) {
     view->SetVisibility(nsViewVisibility_kHide);
   }
 

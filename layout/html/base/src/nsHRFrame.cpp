@@ -99,7 +99,7 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
 
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (!disp->mVisible) {
+  if (!disp->IsVisible()) {
     return NS_OK;
   }
 

@@ -154,7 +154,7 @@ nsColorPickerFrame::Paint(nsIPresContext* aPresContext,
   mStyleContext->GetStyleData(eStyleStruct_Display);
 
   // if we aren't visible then we are done.
-  if (!disp->mVisible) 
+  if (!disp->IsVisibleOrCollapsed()) 
 	   return NS_OK;  
 
   // if we are visible then tell our superclass to paint

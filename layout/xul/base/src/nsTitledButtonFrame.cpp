@@ -480,7 +480,7 @@ nsTitledButtonFrame::Paint(nsIPresContext* aPresContext,
 #endif
 	const nsStyleDisplay* disp = (const nsStyleDisplay*)
 	mStyleContext->GetStyleData(eStyleStruct_Display);
-	if (!disp->mVisible)
+	if (!disp->IsVisibleOrCollapsed())
 		return NS_OK;
 
    	nsRect rect (0,0, mRect.width, mRect.height);

@@ -432,7 +432,7 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext* aPresContext,
 {
  	const nsStyleDisplay* disp = (const nsStyleDisplay*)
 	mStyleContext->GetStyleData(eStyleStruct_Display);
-	if (disp->mVisible == NS_STYLE_VISIBILITY_VISIBLE)
+	if (disp->IsVisible())
   {
     nsRect rect(0, 0, mRect.width, mRect.height);
     mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);

@@ -116,7 +116,7 @@ NS_METHOD nsTableColFrame::Paint(nsIPresContext* aPresContext,
     if (eCompatibility_Standard == mode) {
       const nsStyleDisplay* disp =
         (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-      if (disp->mVisible) {
+      if (disp->IsVisibleOrCollapsed()) {
         const nsStyleSpacing* spacing =
           (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
         const nsStyleColor* color =

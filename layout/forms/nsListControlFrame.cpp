@@ -2666,7 +2666,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
   }
 
   const nsStyleDisplay* disp = (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
-  if (disp->mVisible != NS_STYLE_VISIBILITY_VISIBLE) {
+  if (!disp->IsVisible()) {
     return NS_OK;
   }
 

@@ -120,7 +120,7 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
   const nsStyleDisplay* disp =
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
-  if (disp->mVisible) {
+  if (disp->IsVisible()) {
     const nsStyleList* myList =
       (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
     PRUint8 listStyleType = myList->mListStyleType;

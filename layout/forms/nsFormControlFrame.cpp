@@ -344,7 +344,7 @@ nsFormControlFrame::DidReflow(nsIPresContext* aPresContext,
     if (view) {
       const nsStyleDisplay* display;
       GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-      nsViewVisibility newVis = NS_STYLE_VISIBILITY_VISIBLE == display->mVisible ? nsViewVisibility_kShow : nsViewVisibility_kHide;
+      nsViewVisibility newVis = display->IsVisible() ? nsViewVisibility_kShow : nsViewVisibility_kHide;
       nsViewVisibility oldVis;
       // only change if different.
       view->GetVisibility(oldVis);

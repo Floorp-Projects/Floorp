@@ -245,7 +245,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
     (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
 
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    if (disp->mVisible) {
+    if (disp->IsVisibleOrCollapsed()) {
       const nsStyleColor* myColor =
         (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
       const nsStyleSpacing* mySpacing =
