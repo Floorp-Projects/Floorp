@@ -3624,7 +3624,7 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 
     m_numArticlesLoaded++;
     PR_FREEIF(line);
-    return status; /* keep going */
+    return NS_SUCCEEDED(rv) ? status : -1; /* keep going if no error */
 }
 
 
