@@ -113,10 +113,10 @@ var gVAlignTable =
 
 var gTarget =
 [
-  "blank",
-  "self",
-  "parent",
-  "top"
+  "_blank",
+  "_self",
+  "_parent",
+  "_top"
 ];
 
 // ================ HTML Attributes ================ //

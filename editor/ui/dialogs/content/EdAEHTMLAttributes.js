@@ -77,8 +77,8 @@ function BuildHTMLAttributeNameList()
         limitFirstChar = name.indexOf("\^") >= 0;
         //var required = name.indexOf("$") >= 0;
 
-        // Strip flag characters ("_" is used when attribute name is reserved JS word)
-        name = name.replace(/[!^#%$_+]/g, "");
+        // Strip flag characters
+        name = name.replace(/[!^#%$+]/g, "");
 
         menuitem = AppendStringToMenulist(dialog.AddHTMLAttributeNameInput, name);
         if (menuitem)
@@ -161,7 +161,6 @@ function ClearHTMLInputWidgets()
 
 function onSelectHTMLTreeItem()
 {
-dump(" ** Calling onSelectHTMLTreeItem gDoOnSelectTree="+gDoOnSelectTree+"\n");
   if (!gDoOnSelectTree)
     return;
 
@@ -188,7 +187,6 @@ dump(" ** Calling onSelectHTMLTreeItem gDoOnSelectTree="+gDoOnSelectTree+"\n");
 
 function onInputHTMLAttributeName()
 {
-dump(" ** Calling onInputHTMLAttributeName\n");
   var attName = TrimString(dialog.AddHTMLAttributeNameInput.value).toLowerCase();
 
   // Clear value widget, but prevent triggering update in tree
@@ -291,8 +289,6 @@ function onInputHTMLAttributeValue()
     // (Do not use "LimitStringLength()" and "forceInteger()"
     //  to avoid multiple reseting of input's value and flickering)
     var selectedItem = dialog.AddHTMLAttributeNameInput.selectedItem;
-
-dump("*** onInputHTMLAttributeValue: selectedItem="+selectedItem+"\n");
 
     if (selectedItem)
     {
