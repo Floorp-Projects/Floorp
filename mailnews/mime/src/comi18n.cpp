@@ -1203,7 +1203,15 @@ char *intl_decode_mime_part2_str(const char *header,
     for (r = q + 2; *r != '?'; r++) {
       if (*r < ' ') goto badsyntax;
     }
-    if (r == q + 2 || r[1] != '=') goto badsyntax;
+    if (r[1] != '=')
+	    goto badsyntax;
+    else if (r == q + 2) {
+	    // it's empty, skip
+	    begin = r + 2;
+	    last_saw_encoded_word = 1;
+	    continue;
+    }
+
 
     if(*q == 'Q' || *q == 'q')
       decoded_text = intlmime_decode_q(q+2, r - (q+2));
