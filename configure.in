@@ -1851,6 +1851,43 @@ if test "$result" = "yes"; then
     AC_DEFINE(HAVE_64BIT_OS)
 fi
 
+dnl Check for short-wchar
+dnl ========================================================
+
+if test "$MOZ_ENABLE_SHORTWCHAR"
+then 
+
+AC_MSG_CHECKING(for size of wchar_t == 2)
+AC_TRY_RUN([ int main () {
+    if (sizeof(wchar_t) == 2) { return 0; } return 1; } ],
+        result="yes", result="no", result="maybe" )
+AC_MSG_RESULT("$result")
+if test "$result" = "yes"; then
+    AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
+    HAVE_CPP_2BYTE_WCHAR_T=1
+fi
+
+if test ! "$HAVE_CPP_2BYTE_WCHAR_T"
+then
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS -fshort-wchar"
+
+    AC_CACHE_CHECK(for compiler short-wchar option, 
+               ac_cv_have_short_wchar,
+               [AC_TRY_COMPILE(char *x;,
+                               char y,
+                               ac_cv_have_short_wchar=yes,
+                               ac_cv_have_short_wchar=no)])
+
+    if test "$ac_cv_have_short_wchar" = "yes"; then
+        AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
+        HAVE_CPP_2BYTE_WCHAR_T=1
+    else    
+        CFLAGS=$_SAVE_CFLAGS
+    fi
+fi
+
+fi
 dnl Checks for header files.
 dnl ========================================================
 AC_HEADER_DIRENT
