@@ -40,6 +40,8 @@
 #include "nsMsgQuickSearchDBView.h"
 #include "nsIMsgHdr.h"
 #include "nsMsgBaseCID.h"
+#include "nsIMsgImapMailFolder.h"
+#include "nsImapCore.h"
 
 nsMsgQuickSearchDBView::nsMsgQuickSearchDBView()
 {
@@ -51,6 +53,34 @@ nsMsgQuickSearchDBView::~nsMsgQuickSearchDBView()
 }
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsMsgQuickSearchDBView, nsMsgDBView, nsIMsgDBView, nsIMsgSearchNotify)
+
+NS_IMETHODIMP nsMsgQuickSearchDBView::DoCommand(nsMsgViewCommandTypeValue aCommand)
+{
+  if (aCommand == nsMsgViewCommandType::markAllRead)
+  {
+    nsresult rv = NS_OK;
+    m_folder->EnableNotifications(nsIMsgFolder::allMessageCountNotifications, PR_FALSE, PR_TRUE /*dbBatching*/);
+
+    for (PRUint32 i=0;NS_SUCCEEDED(rv) && i < GetSize();i++)
+    {
+      nsCOMPtr<nsIMsgDBHdr> msgHdr;
+      m_db->GetMsgHdrForKey(m_keys[i],getter_AddRefs(msgHdr)); 
+      rv = m_db->MarkHdrRead(msgHdr, PR_TRUE, nsnull);
+    }
+
+    m_folder->EnableNotifications(nsIMsgFolder::allMessageCountNotifications, PR_TRUE, PR_TRUE /*dbBatching*/);
+
+    nsCOMPtr<nsIMsgImapMailFolder> imapFolder = do_QueryInterface(m_folder);
+    if (NS_SUCCEEDED(rv) && imapFolder)
+      rv = imapFolder->StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, m_keys.GetArray(), m_keys.GetSize());
+
+    m_db->SetSummaryValid(PR_TRUE);
+    m_db->Commit(nsMsgDBCommitType::kLargeCommit);
+    return rv;
+  }
+  else
+    return nsMsgDBView::DoCommand(aCommand);
+}
 
 NS_IMETHODIMP nsMsgQuickSearchDBView::GetViewType(nsMsgViewTypeValue *aViewType)
 {

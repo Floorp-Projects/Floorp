@@ -53,6 +53,7 @@ public:
   NS_DECL_NSIMSGSEARCHNOTIFY
 
   virtual const char * GetViewName(void) {return "QuickSearchView"; }
+  NS_IMETHOD DoCommand(nsMsgViewCommandTypeValue aCommand);
   NS_IMETHOD GetViewType(nsMsgViewTypeValue *aViewType);
   NS_IMETHOD SetSearchSession(nsIMsgSearchSession *aSearchSession);
   NS_IMETHOD GetSearchSession(nsIMsgSearchSession* *aSearchSession);
