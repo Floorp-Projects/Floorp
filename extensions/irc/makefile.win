@@ -36,3 +36,8 @@ include <$(DEPTH)\config\rules.mak>
 install::
     $(MAKE_INSTALL) .\js\lib\chatzilla-service.js $(DIST)\bin\components
 
+chrome::
+        $(REGCHROME) content chatzilla chatzilla.jar
+        $(REGCHROME) skin modern/chatzilla chatzilla.jar
+        $(REGCHROME) locale en-US/chatzilla chatzilla.jar
+        $(REGCHROME) content communicator comm.jar
