@@ -164,7 +164,7 @@ nsMsgIncomingServer::GetServerURI(char **aResult)
         nsXPIDLCString escapedUsername;
         *((char **)getter_Copies(escapedUsername)) =
             nsEscape(username, url_Path);
-        // not all servers have hostnames
+        // not all servers have a username 
         uri += escapedUsername;
         uri += '@';
     }
@@ -176,7 +176,7 @@ nsMsgIncomingServer::GetServerURI(char **aResult)
         nsXPIDLCString escapedHostname;
         *((char **)getter_Copies(escapedHostname)) =
             nsEscape(hostname, url_Path);
-        // not all servers have hostnames
+        // not all servers have a hostname
         uri += escapedHostname;
     }
 
