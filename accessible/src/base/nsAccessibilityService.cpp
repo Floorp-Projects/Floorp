@@ -79,7 +79,7 @@
 #include "nsXULAlertAccessible.h"
 #include "nsXULColorPickerAccessible.h"
 #include "nsXULFormControlAccessible.h"
-#include "nsXULMenuAccessible.h"
+#include "nsXULMenuAccessibleWrap.h"
 #include "nsXULSelectAccessible.h"
 #include "nsXULTabAccessibleWrap.h"
 #include "nsXULTextAccessible.h"
@@ -1178,7 +1178,7 @@ nsAccessibilityService::CreateXULMenuitemAccessible(nsIDOMNode *aNode, nsIAccess
   nsCOMPtr<nsIWeakReference> weakShell;
   GetShellFromNode(aNode, getter_AddRefs(weakShell));
 
-  *_retval = new nsXULMenuitemAccessible(aNode, weakShell);
+  *_retval = new nsXULMenuitemAccessibleWrap(aNode, weakShell);
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
 
