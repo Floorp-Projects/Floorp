@@ -259,6 +259,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsAReadableCString& aID, nsIC
   mInheritStyle(PR_TRUE), 
   mHasBaseProto(PR_TRUE),
   mLoadingResources(PR_FALSE),
+  mInLoadResourcesFunc(PR_FALSE),
   mPendingSheets(0),
   mAttributeTable(nsnull), 
   mInsertionPointTable(nsnull),
@@ -444,8 +445,11 @@ nsXBLPrototypeBinding::GetAllowScripts(PRBool* aResult)
 NS_IMETHODIMP
 nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
 {
+  mInLoadResourcesFunc = PR_TRUE;
+
   if (mLoadingResources) {
     *aResult = (mPendingSheets == 0);
+    mInLoadResourcesFunc = PR_FALSE;
     return NS_OK;
   }
 
@@ -467,8 +471,10 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
 
     nsCOMPtr<nsIXBLDocumentInfo> info;
     GetXBLDocumentInfo(nsnull, getter_AddRefs(info));
-    if (!info)
+    if (!info) {
+      mInLoadResourcesFunc = PR_FALSE;
       return NS_ERROR_FAILURE;
+    }
 
     nsCOMPtr<nsIDocument> doc;
     info->GetDocument(getter_AddRefs(doc));
@@ -522,12 +528,35 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
         PRBool doneLoading;
         nsAutoString empty, media;
         resource->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::media, media);
+        PRInt32 numSheets = doc->GetNumberOfStyleSheets();
         rv = cssLoader->LoadStyleLink(nsnull, url, empty, media, kNameSpaceID_Unknown,
                                       doc->GetNumberOfStyleSheets(),
                                       nsnull,
                                       doneLoading, this);
-        if (NS_SUCCEEDED(rv))
+        PRInt32 newNumSheets = doc->GetNumberOfStyleSheets();
+        if (!doneLoading)
           mPendingSheets++;
+        else if (doneLoading && (newNumSheets == numSheets)) {
+          // XXX In this case the loader observer gets no notifications.
+          // When this happens, we have to manually ensure that
+          // the stylesheet gets into the array.
+          // This seems to be a bug in the CSS loader, but fixing it
+          // there looks problematic and risky.
+          for (PRInt32 i = 0; i < numSheets; i++) {
+            nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(doc->GetStyleSheetAt(i));
+            nsCOMPtr<nsIURI> uri;
+            sheet->GetURL(*getter_AddRefs(uri));
+            PRBool equals;
+            url->Equals(uri, &equals);
+            if (equals) {
+              nsCOMPtr<nsICSSStyleSheet> cssSheet(do_QueryInterface(sheet));
+              if (cssSheet)
+                StyleSheetLoaded(cssSheet, PR_TRUE);
+              break;
+            }
+          }
+
+        }
       }
     }
 
@@ -539,6 +568,7 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
   }
 
   *aResult = (mPendingSheets == 0);
+  mInLoadResourcesFunc = PR_FALSE;
   return NS_OK;
 }
 
@@ -1351,7 +1381,10 @@ nsXBLPrototypeBinding::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify
     NS_NewISupportsArray(getter_AddRefs(mStyleSheetList));
 
   mStyleSheetList->AppendElement(aSheet);
-  mPendingSheets--;
+
+  if (!mInLoadResourcesFunc)
+    mPendingSheets--;
+  
   if (mPendingSheets == 0) {
     // All stylesheets are loaded.  
     nsCOMPtr<nsIStyleRuleProcessor> prevProcessor;
@@ -1371,7 +1404,8 @@ nsXBLPrototypeBinding::StyleSheetLoaded(nsICSSStyleSheet* aSheet, PRBool aNotify
     }
 
     // XXX Check for mPendingScripts when scripts also come online.
-    NotifyBoundElements();
+    if (!mInLoadResourcesFunc)
+      NotifyBoundElements();
   }
   return NS_OK;
 }

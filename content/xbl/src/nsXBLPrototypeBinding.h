@@ -186,6 +186,7 @@ protected:
   PRPackedBool mInheritStyle;
   PRPackedBool mHasBaseProto;
   PRPackedBool mLoadingResources;
+  PRPackedBool mInLoadResourcesFunc;
 
   PRInt32 mPendingSheets; // The number of stylesheets that have yet to load.
   nsCOMPtr<nsISupportsArray> mBoundElements; // Bound elements that are waiting on the stylesheets and scripts.
