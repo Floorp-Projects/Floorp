@@ -1,23 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -31,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
+#include "nsDOMPropEnums.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMLocation.h"
@@ -83,7 +80,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HASH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.hash", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_HASH, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -101,7 +98,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HOST:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.host", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_HOST, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -119,7 +116,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HOSTNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.hostname", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_HOSTNAME, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -137,7 +134,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PATHNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.pathname", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_PATHNAME, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -155,7 +152,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PORT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.port", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_PORT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -173,7 +170,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PROTOCOL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.protocol", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_PROTOCOL, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -191,7 +188,7 @@ GetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_SEARCH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.search", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_SEARCH, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -241,7 +238,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HASH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.hash", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_HASH, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -255,7 +252,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HOST:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.host", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_HOST, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -269,7 +266,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_HOSTNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.hostname", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_HOSTNAME, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -283,7 +280,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PATHNAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.pathname", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_PATHNAME, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -297,7 +294,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PORT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.port", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_PORT, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -311,7 +308,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_PROTOCOL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.protocol", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_PROTOCOL, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -325,7 +322,7 @@ SetLocationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case LOCATION_SEARCH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "location.search", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_SEARCH, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -397,7 +394,7 @@ LocationToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "location.tostring",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_LOCATION_TOSTRING,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -445,7 +442,7 @@ NSLocationReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nslocation.reload",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSLOCATION_RELOAD,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -493,7 +490,7 @@ NSLocationReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nslocation.replace",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSLOCATION_REPLACE,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }

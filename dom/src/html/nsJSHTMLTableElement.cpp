@@ -1,23 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -31,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
+#include "nsDOMPropEnums.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHTMLElement.h"
@@ -99,7 +96,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CAPTION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.caption", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_CAPTION, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -118,7 +115,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_THEAD:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.thead", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_THEAD, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -137,7 +134,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_TFOOT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.tfoot", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_TFOOT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -156,7 +153,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_ROWS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.rows", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_ROWS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -175,7 +172,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_TBODIES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.tbodies", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_TBODIES, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -194,7 +191,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.align", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_ALIGN, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -212,7 +209,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.bgcolor", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_BGCOLOR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -230,7 +227,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_BORDER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.border", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_BORDER, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -248,7 +245,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CELLPADDING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellpadding", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_CELLPADDING, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -266,7 +263,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CELLSPACING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellspacing", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_CELLSPACING, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -284,7 +281,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_FRAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.frame", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_FRAME, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -302,7 +299,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_RULES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.rules", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_RULES, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -320,7 +317,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_SUMMARY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.summary", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_SUMMARY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -338,7 +335,7 @@ GetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.width", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_WIDTH, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -388,7 +385,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CAPTION:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.caption", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_CAPTION, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -406,7 +403,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_THEAD:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.thead", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_THEAD, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -424,7 +421,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_TFOOT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.tfoot", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_TFOOT, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -442,7 +439,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.align", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_ALIGN, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -456,7 +453,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.bgcolor", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_BGCOLOR, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -470,7 +467,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_BORDER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.border", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_BORDER, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -484,7 +481,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CELLPADDING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellpadding", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_CELLPADDING, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -498,7 +495,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_CELLSPACING:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.cellspacing", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_CELLSPACING, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -512,7 +509,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_FRAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.frame", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_FRAME, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -526,7 +523,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_RULES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.rules", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_RULES, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -540,7 +537,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_SUMMARY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.summary", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_SUMMARY, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -554,7 +551,7 @@ SetHTMLTableElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLTABLEELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.width", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_WIDTH, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -626,7 +623,7 @@ HTMLTableElementCreateTHead(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.createthead",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_CREATETHEAD,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -669,7 +666,7 @@ HTMLTableElementDeleteTHead(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deletethead",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_DELETETHEAD,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -713,7 +710,7 @@ HTMLTableElementCreateTFoot(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.createtfoot",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_CREATETFOOT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -756,7 +753,7 @@ HTMLTableElementDeleteTFoot(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deletetfoot",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_DELETETFOOT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -800,7 +797,7 @@ HTMLTableElementCreateCaption(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.createcaption",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_CREATECAPTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -843,7 +840,7 @@ HTMLTableElementDeleteCaption(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deletecaption",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_DELETECAPTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -888,7 +885,7 @@ HTMLTableElementInsertRow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.insertrow",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_INSERTROW,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -939,7 +936,7 @@ HTMLTableElementDeleteRow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltableelement.deleterow",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTABLEELEMENT_DELETEROW,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }

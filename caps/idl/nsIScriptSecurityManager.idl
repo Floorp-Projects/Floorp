@@ -35,12 +35,12 @@ interface nsIScriptSecurityManager : nsISupports
      *
      * @param cx The current active script context
      * @param obj The object that is being accessed
-     * @param prop The property being accessed
+     * @param prop The ordinal of the property being accessed (see nsDOMPropEnums.h)
      * @param isWrite True if write access is being attempted
      * @return True if access is granted
      */
 	boolean CheckScriptAccess(in nsIScriptContext cx, in voidStar obj, 
-	                          [const] in string prop, in boolean isWrite);
+	                          in long prop, in boolean isWrite);
 
 	/**
 	 * Check that the script with context "cx" can load "uri".

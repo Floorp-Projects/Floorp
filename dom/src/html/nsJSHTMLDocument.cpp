@@ -1,23 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -31,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
+#include "nsDOMPropEnums.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
@@ -113,7 +110,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_TITLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.title", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_TITLE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -131,7 +128,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_REFERRER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.referrer", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_REFERRER, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -149,7 +146,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_DOMAIN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.domain", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_DOMAIN, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -167,7 +164,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_URL:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.url", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_URL, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -185,7 +182,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_BODY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.body", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_BODY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -204,7 +201,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_IMAGES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.images", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_IMAGES, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -223,7 +220,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_APPLETS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.applets", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_APPLETS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -242,7 +239,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_LINKS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.links", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_LINKS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -261,7 +258,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_FORMS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.forms", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_FORMS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -280,7 +277,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_ANCHORS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.anchors", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_ANCHORS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -299,7 +296,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_COOKIE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.cookie", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_COOKIE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -317,7 +314,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_ALINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.alinkcolor", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ALINKCOLOR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -343,7 +340,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_LINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.linkcolor", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LINKCOLOR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -369,7 +366,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_VLINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.vlinkcolor", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_VLINKCOLOR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -395,7 +392,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.bgcolor", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_BGCOLOR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -421,7 +418,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_FGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.fgcolor", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_FGCOLOR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -447,7 +444,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_LASTMODIFIED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.lastmodified", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LASTMODIFIED, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -473,7 +470,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_EMBEDS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.embeds", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_EMBEDS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -500,7 +497,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_LAYERS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.layers", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LAYERS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -527,7 +524,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_PLUGINS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.plugins", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_PLUGINS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -624,7 +621,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_TITLE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.title", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_TITLE, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -638,7 +635,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_DOMAIN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.domain", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_DOMAIN, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -652,7 +649,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_BODY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.body", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_BODY, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -670,7 +667,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLDOCUMENT_COOKIE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.cookie", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_COOKIE, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -684,7 +681,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_ALINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.alinkcolor", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ALINKCOLOR, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -706,7 +703,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_LINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.linkcolor", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_LINKCOLOR, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -728,7 +725,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_VLINKCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.vlinkcolor", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_VLINKCOLOR, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -750,7 +747,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_BGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.bgcolor", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_BGCOLOR, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -772,7 +769,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case NSHTMLDOCUMENT_FGCOLOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.fgcolor", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_FGCOLOR, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -851,7 +848,7 @@ HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.close",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_CLOSE,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -896,7 +893,7 @@ HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementbyid",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_GETELEMENTBYID,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -946,7 +943,7 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementsbyname",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLDOCUMENT_GETELEMENTSBYNAME,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1000,7 +997,7 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.getselection",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_GETSELECTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1050,7 +1047,7 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.nameditem",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_NAMEDITEM,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1103,7 +1100,7 @@ NSHTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.open",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_OPEN,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1151,7 +1148,7 @@ NSHTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.write",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_WRITE,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1199,7 +1196,7 @@ NSHTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.writeln",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_WRITELN,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1248,7 +1245,7 @@ NSHTMLDocumentCaptureEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.captureevents",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_CAPTUREEVENTS,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1304,7 +1301,7 @@ NSHTMLDocumentReleaseEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.releaseevents",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_RELEASEEVENTS,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1360,7 +1357,7 @@ NSHTMLDocumentRouteEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.routeevent",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_NSHTMLDOCUMENT_ROUTEEVENT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }

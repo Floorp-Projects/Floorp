@@ -76,6 +76,7 @@
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"
 #include "nsRDFCID.h"
+#include "nsDOMPropEnums.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #if defined(OJI)
@@ -2213,7 +2214,6 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
         nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
         nsCOMPtr<nsIURI> newUrl;
         nsCOMPtr<nsIScriptSecurityManager> secMan;
-        PRBool ok = PR_FALSE;
         if (NS_FAILED(scriptCX->GetSecurityManager(getter_AddRefs(secMan))) ||
             NS_FAILED(NS_NewURI(getter_AddRefs(newUrl), mAbsURL)) ||
             NS_FAILED(secMan->CheckLoadURIFromScript(scriptCX, newUrl))) 
@@ -3365,7 +3365,7 @@ NavigatorImpl::Preference(JSContext* cx,
     return result;
   }  
   PRBool ok;
-  secMan->CheckScriptAccess(scriptCX, self, "navigator.preference", 
+  secMan->CheckScriptAccess(scriptCX, self, NS_DOM_PROP_NAVIGATOR_PREFERENCE, 
                             (argc == 1 ? PR_FALSE : PR_TRUE), &ok);
   if (!ok) {
     //Need to throw error here

@@ -1,23 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -31,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
+#include "nsDOMPropEnums.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHTMLAreaElement.h"
@@ -81,7 +78,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.accesskey", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_ACCESSKEY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -99,7 +96,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.alt", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_ALT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -117,7 +114,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_COORDS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.coords", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_COORDS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -135,7 +132,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.href", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_HREF, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -153,7 +150,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_NOHREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.nohref", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_NOHREF, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -171,7 +168,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_SHAPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.shape", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_SHAPE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -189,7 +186,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.tabindex", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_TABINDEX, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -207,7 +204,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.target", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_TARGET, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -257,7 +254,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.accesskey", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_ACCESSKEY, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -271,7 +268,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.alt", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_ALT, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -285,7 +282,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_COORDS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.coords", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_COORDS, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -299,7 +296,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_HREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.href", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_HREF, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -313,7 +310,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_NOHREF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.nohref", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_NOHREF, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -329,7 +326,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_SHAPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.shape", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_SHAPE, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -343,7 +340,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.tabindex", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_TABINDEX, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -363,7 +360,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAREAELEMENT_TARGET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.target", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAREAELEMENT_TARGET, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }

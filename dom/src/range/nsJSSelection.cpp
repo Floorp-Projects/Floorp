@@ -1,23 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -31,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
+#include "nsDOMPropEnums.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMSelection.h"
@@ -91,7 +88,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_ANCHORNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.anchornode", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_ANCHORNODE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -110,7 +107,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_ANCHOROFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.anchoroffset", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_ANCHOROFFSET, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -128,7 +125,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_FOCUSNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.focusnode", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_FOCUSNODE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -147,7 +144,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_FOCUSOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.focusoffset", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_FOCUSOFFSET, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -165,7 +162,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_ISCOLLAPSED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.iscollapsed", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_ISCOLLAPSED, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -183,7 +180,7 @@ GetSelectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case SELECTION_RANGECOUNT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "selection.rangecount", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_RANGECOUNT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -293,7 +290,7 @@ SelectionGetRangeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.getrangeat",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_GETRANGEAT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -343,7 +340,7 @@ SelectionClearSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.clearselection",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_CLEARSELECTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -388,7 +385,7 @@ SelectionCollapse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.collapse",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_COLLAPSE,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -447,7 +444,7 @@ SelectionExtend(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.extend",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_EXTEND,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -504,7 +501,7 @@ SelectionCollapseToStart(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.collapsetostart",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_COLLAPSETOSTART,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -547,7 +544,7 @@ SelectionCollapseToEnd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.collapsetoend",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_COLLAPSETOEND,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -593,7 +590,7 @@ SelectionContainsNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.containsnode",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_CONTAINSNODE,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -650,7 +647,7 @@ SelectionDeleteFromDocument(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.deletefromdocument",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_DELETEFROMDOCUMENT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -694,7 +691,7 @@ SelectionAddRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.addrange",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_ADDRANGE,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -748,7 +745,7 @@ SelectionStartBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.startbatchchanges",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_STARTBATCHCHANGES,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -791,7 +788,7 @@ SelectionEndBatchChanges(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.endbatchchanges",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_ENDBATCHCHANGES,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -835,7 +832,7 @@ SelectionAddSelectionListener(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.addselectionlistener",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_ADDSELECTIONLISTENER,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -890,7 +887,7 @@ SelectionRemoveSelectionListener(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.removeselectionlistener",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_REMOVESELECTIONLISTENER,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -945,7 +942,7 @@ SelectionToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "selection.tostring",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_SELECTION_TOSTRING,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }

@@ -1,23 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -31,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
+#include "nsDOMPropEnums.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHTMLAppletElement.h"
@@ -84,7 +81,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.align", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ALIGN, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -102,7 +99,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.alt", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ALT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -120,7 +117,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ARCHIVE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.archive", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ARCHIVE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -138,7 +135,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_CODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.code", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_CODE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -156,7 +153,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_CODEBASE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.codebase", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_CODEBASE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -174,7 +171,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_HEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.height", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_HEIGHT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -192,7 +189,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_HSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.hspace", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_HSPACE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -210,7 +207,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.name", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_NAME, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -228,7 +225,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_OBJECT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.object", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_OBJECT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -246,7 +243,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_VSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.vspace", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_VSPACE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -264,7 +261,7 @@ GetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.width", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_WIDTH, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -314,7 +311,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ALIGN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.align", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ALIGN, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -328,7 +325,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ALT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.alt", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ALT, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -342,7 +339,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_ARCHIVE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.archive", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_ARCHIVE, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -356,7 +353,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_CODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.code", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_CODE, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -370,7 +367,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_CODEBASE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.codebase", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_CODEBASE, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -384,7 +381,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_HEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.height", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_HEIGHT, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -398,7 +395,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_HSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.hspace", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_HSPACE, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -412,7 +409,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.name", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_NAME, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -426,7 +423,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_OBJECT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.object", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_OBJECT, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -440,7 +437,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_VSPACE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.vspace", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_VSPACE, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -454,7 +451,7 @@ SetHTMLAppletElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case HTMLAPPLETELEMENT_WIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmlappletelement.width", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLAPPLETELEMENT_WIDTH, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }

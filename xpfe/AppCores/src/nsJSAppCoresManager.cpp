@@ -1,28 +1,25 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
+#include "nsDOMError.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptSecurityManager.h"
@@ -30,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
+#include "nsDOMPropEnums.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMAppCoresManager.h"
@@ -64,7 +62,7 @@ GetAppCoresManagerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case 0:
@@ -97,7 +95,7 @@ SetAppCoresManagerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
     nsCOMPtr<nsIScriptSecurityManager> secMan;
     if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
     }
     switch(JSVAL_TO_INT(id)) {
       case 0:
@@ -150,20 +148,20 @@ PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerStartup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "appcoresmanager.startup",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_APPCORESMANAGER_STARTUP,PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -174,8 +172,9 @@ AppCoresManagerStartup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
   {
 
-    if (NS_OK != nativeThis->Startup()) {
-      return JS_FALSE;
+    result = nativeThis->Startup();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -192,20 +191,20 @@ PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerShutdown(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
 
   *rval = JSVAL_NULL;
 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "appcoresmanager.shutdown",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_APPCORESMANAGER_SHUTDOWN,PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -216,8 +215,9 @@ AppCoresManagerShutdown(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
   {
 
-    if (NS_OK != nativeThis->Shutdown()) {
-      return JS_FALSE;
+    result = nativeThis->Shutdown();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -234,6 +234,7 @@ PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMBaseAppCorePtr b0;
 
   *rval = JSVAL_NULL;
@@ -241,14 +242,13 @@ AppCoresManagerAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "appcoresmanager.add",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_APPCORESMANAGER_ADD,PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -259,8 +259,7 @@ AppCoresManagerAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function Add requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -268,11 +267,12 @@ AppCoresManagerAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
                                            "BaseAppCore",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->Add(b0)) {
-      return JS_FALSE;
+    result = nativeThis->Add(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -289,6 +289,7 @@ PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMBaseAppCorePtr b0;
 
   *rval = JSVAL_NULL;
@@ -296,14 +297,13 @@ AppCoresManagerRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "appcoresmanager.remove",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_APPCORESMANAGER_REMOVE,PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -314,8 +314,7 @@ AppCoresManagerRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function Remove requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
@@ -323,11 +322,12 @@ AppCoresManagerRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
                                            "BaseAppCore",
                                            cx,
                                            argv[0])) {
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_NOT_OBJECT_ERR);
     }
 
-    if (NS_OK != nativeThis->Remove(b0)) {
-      return JS_FALSE;
+    result = nativeThis->Remove(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     *rval = JSVAL_VOID;
@@ -344,6 +344,7 @@ PR_STATIC_CALLBACK(JSBool)
 AppCoresManagerFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
   nsIDOMBaseAppCore* nativeRet;
   nsAutoString b0;
 
@@ -352,14 +353,13 @@ AppCoresManagerFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
   nsCOMPtr<nsIScriptSecurityManager> secMan;
   if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
-    return JS_FALSE;
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "appcoresmanager.find",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_APPCORESMANAGER_FIND,PR_FALSE , &ok);
     if (!ok) {
-      //Need to throw error here
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
   }
 
@@ -370,14 +370,14 @@ AppCoresManagerFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
   {
     if (argc < 1) {
-      JS_ReportError(cx, "Function Find requires 1 parameter");
-      return JS_FALSE;
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
     }
 
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
-    if (NS_OK != nativeThis->Find(b0, &nativeRet)) {
-      return JS_FALSE;
+    result = nativeThis->Find(b0, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
     }
 
     nsJSUtils::nsConvertObjectToJSVal(nativeRet, cx, rval);

@@ -1,23 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -31,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
+#include "nsDOMPropEnums.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMXULElement.h"
@@ -81,7 +78,7 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULTREEELEMENT_SELECTEDITEMS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selecteditems", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_SELECTEDITEMS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -100,7 +97,7 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case XULTREEELEMENT_SELECTEDCELLS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectedcells", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_SELECTEDCELLS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -210,7 +207,7 @@ XULTreeElementSelectItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectitem",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_SELECTITEM,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -265,7 +262,7 @@ XULTreeElementSelectCell(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectcell",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_SELECTCELL,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -319,7 +316,7 @@ XULTreeElementClearItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.clearitemselection",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_CLEARITEMSELECTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -362,7 +359,7 @@ XULTreeElementClearCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.clearcellselection",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_CLEARCELLSELECTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -406,7 +403,7 @@ XULTreeElementAddItemToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.additemtoselection",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_ADDITEMTOSELECTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -461,7 +458,7 @@ XULTreeElementRemoveItemFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.removeitemfromselection",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_REMOVEITEMFROMSELECTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -516,7 +513,7 @@ XULTreeElementAddCellToSelection(JSContext *cx, JSObject *obj, uintN argc, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.addcelltoselection",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_ADDCELLTOSELECTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -571,7 +568,7 @@ XULTreeElementRemoveCellFromSelection(JSContext *cx, JSObject *obj, uintN argc, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.removecellfromselection",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_REMOVECELLFROMSELECTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -626,7 +623,7 @@ XULTreeElementToggleItemSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.toggleitemselection",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_TOGGLEITEMSELECTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -681,7 +678,7 @@ XULTreeElementToggleCellSelection(JSContext *cx, JSObject *obj, uintN argc, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.togglecellselection",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_TOGGLECELLSELECTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -737,7 +734,7 @@ XULTreeElementSelectItemRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectitemrange",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_SELECTITEMRANGE,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -800,7 +797,7 @@ XULTreeElementSelectCellRange(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectcellrange",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_SELECTCELLRANGE,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -861,7 +858,7 @@ XULTreeElementSelectAll(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.selectall",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_SELECTALL,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -904,7 +901,7 @@ XULTreeElementInvertSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "xultreeelement.invertselection",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_XULTREEELEMENT_INVERTSELECTION,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }

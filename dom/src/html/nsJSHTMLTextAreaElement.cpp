@@ -1,23 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -31,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
+#include "nsDOMPropEnums.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMHTMLFormElement.h"
@@ -94,7 +91,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_DEFAULTVALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.defaultvalue", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_DEFAULTVALUE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -112,7 +109,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_FORM:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.form", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_FORM, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -131,7 +128,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.accesskey", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_ACCESSKEY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -149,7 +146,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_COLS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.cols", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_COLS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -167,7 +164,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.disabled", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_DISABLED, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -185,7 +182,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.name", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_NAME, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -203,7 +200,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_READONLY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.readonly", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_READONLY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -221,7 +218,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_ROWS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.rows", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_ROWS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -239,7 +236,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.tabindex", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_TABINDEX, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -257,7 +254,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_TYPE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.type", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_TYPE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -275,7 +272,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.value", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_VALUE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -293,7 +290,7 @@ GetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case NSHTMLTEXTAREAELEMENT_CONTROLLERS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "nshtmltextareaelement.controllers", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_CONTROLLERS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -352,7 +349,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_DEFAULTVALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.defaultvalue", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_DEFAULTVALUE, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -366,7 +363,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_ACCESSKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.accesskey", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_ACCESSKEY, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -380,7 +377,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_COLS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.cols", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_COLS, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -400,7 +397,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_DISABLED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.disabled", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_DISABLED, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -416,7 +413,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.name", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_NAME, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -430,7 +427,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_READONLY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.readonly", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_READONLY, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -446,7 +443,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_ROWS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.rows", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_ROWS, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -466,7 +463,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_TABINDEX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.tabindex", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_TABINDEX, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -486,7 +483,7 @@ SetHTMLTextAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp
       case HTMLTEXTAREAELEMENT_VALUE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.value", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_VALUE, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -557,7 +554,7 @@ HTMLTextAreaElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.blur",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_BLUR,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -600,7 +597,7 @@ HTMLTextAreaElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.focus",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_FOCUS,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -643,7 +640,7 @@ HTMLTextAreaElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "htmltextareaelement.select",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLTEXTAREAELEMENT_SELECT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }

@@ -1,23 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -31,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
+#include "nsDOMPropEnums.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMNavigator.h"
@@ -142,7 +139,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_WINDOW:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.window", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_WINDOW, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -161,7 +158,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SELF:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.self", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SELF, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -180,7 +177,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_DOCUMENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.document", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_DOCUMENT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -199,7 +196,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_NAVIGATOR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.navigator", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_NAVIGATOR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -218,7 +215,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCREEN:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.screen", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SCREEN, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -237,7 +234,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_HISTORY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.history", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_HISTORY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -256,7 +253,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PARENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.parent", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_PARENT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -275,7 +272,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_TOP:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.top", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_TOP, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -294,7 +291,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_CONTENT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.content", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_CONTENT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -313,7 +310,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_MENUBAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.menubar", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_MENUBAR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -332,7 +329,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_TOOLBAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.toolbar", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_TOOLBAR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -351,7 +348,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_LOCATIONBAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.locationbar", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_LOCATIONBAR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -370,7 +367,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PERSONALBAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.personalbar", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_PERSONALBAR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -389,7 +386,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_STATUSBAR:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.statusbar", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_STATUSBAR, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -408,7 +405,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCROLLBARS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.scrollbars", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SCROLLBARS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -427,7 +424,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_DIRECTORIES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.directories", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_DIRECTORIES, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -446,7 +443,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_CLOSED:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.closed", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_CLOSED, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -464,7 +461,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_FRAMES:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.frames", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_FRAMES, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -483,7 +480,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_CONTROLLERS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.controllers", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_CONTROLLERS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -502,7 +499,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OPENER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.opener", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_OPENER, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -521,7 +518,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_STATUS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.status", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_STATUS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -539,7 +536,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_DEFAULTSTATUS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.defaultstatus", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_DEFAULTSTATUS, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -557,7 +554,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.name", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_NAME, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -575,7 +572,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_INNERWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.innerwidth", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_INNERWIDTH, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -593,7 +590,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_INNERHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.innerheight", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_INNERHEIGHT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -611,7 +608,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OUTERWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.outerwidth", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_OUTERWIDTH, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -629,7 +626,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OUTERHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.outerheight", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_OUTERHEIGHT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -647,7 +644,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCREENX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.screenx", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SCREENX, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -665,7 +662,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCREENY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.screeny", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SCREENY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -683,7 +680,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PAGEXOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.pagexoffset", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_PAGEXOFFSET, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -701,7 +698,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PAGEYOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.pageyoffset", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_PAGEYOFFSET, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -719,7 +716,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCROLLX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.scrollx", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SCROLLX, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -737,7 +734,7 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCROLLY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.scrolly", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SCROLLY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -787,7 +784,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OPENER:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.opener", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_OPENER, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -805,7 +802,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_STATUS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.status", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_STATUS, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -819,7 +816,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_DEFAULTSTATUS:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.defaultstatus", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_DEFAULTSTATUS, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -833,7 +830,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_NAME:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.name", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_NAME, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -847,7 +844,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_INNERWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.innerwidth", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_INNERWIDTH, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -867,7 +864,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_INNERHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.innerheight", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_INNERHEIGHT, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -887,7 +884,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OUTERWIDTH:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.outerwidth", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_OUTERWIDTH, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -907,7 +904,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_OUTERHEIGHT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.outerheight", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_OUTERHEIGHT, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -927,7 +924,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCREENX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.screenx", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SCREENX, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -947,7 +944,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_SCREENY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.screeny", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SCREENY, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -967,7 +964,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PAGEXOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.pagexoffset", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_PAGEXOFFSET, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -987,7 +984,7 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case WINDOW_PAGEYOFFSET:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "window.pageyoffset", PR_TRUE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_PAGEYOFFSET, PR_TRUE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -1065,7 +1062,7 @@ WindowDump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.dump",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_DUMP,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1113,7 +1110,7 @@ WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.alert",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_ALERT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1157,7 +1154,7 @@ WindowConfirm(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.confirm",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_CONFIRM,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1201,7 +1198,7 @@ WindowPrompt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.prompt",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_PROMPT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1244,7 +1241,7 @@ WindowFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.focus",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_FOCUS,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1287,7 +1284,7 @@ WindowBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.blur",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_BLUR,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1330,7 +1327,7 @@ WindowBack(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.back",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_BACK,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1373,7 +1370,7 @@ WindowForward(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.forward",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_FORWARD,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1416,7 +1413,7 @@ WindowHome(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.home",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_HOME,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1459,7 +1456,7 @@ WindowStop(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.stop",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_STOP,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1502,7 +1499,7 @@ WindowPrint(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.print",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_PRINT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1547,7 +1544,7 @@ WindowMoveTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.moveto",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_MOVETO,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1602,7 +1599,7 @@ WindowMoveBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.moveby",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_MOVEBY,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1657,7 +1654,7 @@ WindowResizeTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.resizeto",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_RESIZETO,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1712,7 +1709,7 @@ WindowResizeBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.resizeby",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_RESIZEBY,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1765,7 +1762,7 @@ WindowSizeToContent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.sizetocontent",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SIZETOCONTENT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1810,7 +1807,7 @@ WindowScrollTo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.scrollto",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SCROLLTO,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1865,7 +1862,7 @@ WindowScrollBy(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.scrollby",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SCROLLBY,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1919,7 +1916,7 @@ WindowClearTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.cleartimeout",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_CLEARTIMEOUT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -1970,7 +1967,7 @@ WindowClearInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.clearinterval",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_CLEARINTERVAL,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2021,7 +2018,7 @@ WindowSetTimeout(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.settimeout",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SETTIMEOUT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2065,7 +2062,7 @@ WindowSetInterval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.setinterval",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_SETINTERVAL,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2109,7 +2106,7 @@ WindowCaptureEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.captureevents",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_CAPTUREEVENTS,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2160,7 +2157,7 @@ WindowReleaseEvents(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.releaseevents",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_RELEASEEVENTS,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2211,7 +2208,7 @@ WindowRouteEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.routeevent",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_ROUTEEVENT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2265,7 +2262,7 @@ WindowEnableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.enableexternalcapture",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_ENABLEEXTERNALCAPTURE,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2308,7 +2305,7 @@ WindowDisableExternalCapture(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.disableexternalcapture",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_DISABLEEXTERNALCAPTURE,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2359,7 +2356,7 @@ WindowCreatePopup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.createpopup",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_CREATEPOPUP,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2430,7 +2427,7 @@ WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.open",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_OPEN,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2474,7 +2471,7 @@ WindowOpenDialog(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.opendialog",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_OPENDIALOG,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2517,7 +2514,7 @@ WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "window.close",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_WINDOW_CLOSE,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2568,7 +2565,7 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.addeventlistener",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_EVENTTARGET_ADDEVENTLISTENER,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -2633,7 +2630,7 @@ EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "eventtarget.removeeventlistener",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_EVENTTARGET_REMOVEEVENTLISTENER,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }

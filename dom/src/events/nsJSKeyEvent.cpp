@@ -1,23 +1,19 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
  *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is Netscape
+ * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
- *
- * Contributor(s): 
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -31,6 +27,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsCOMPtr.h"
+#include "nsDOMPropEnums.h"
 #include "nsIPtr.h"
 #include "nsString.h"
 #include "nsIDOMMouseEvent.h"
@@ -95,7 +92,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case KEYEVENT_CHARCODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "keyevent.charcode", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_KEYEVENT_CHARCODE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -113,7 +110,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case KEYEVENT_KEYCODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "keyevent.keycode", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_KEYEVENT_KEYCODE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -131,7 +128,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case KEYEVENT_ALTKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "keyevent.altkey", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_KEYEVENT_ALTKEY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -149,7 +146,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case KEYEVENT_CTRLKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "keyevent.ctrlkey", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_KEYEVENT_CTRLKEY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -167,7 +164,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case KEYEVENT_SHIFTKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "keyevent.shiftkey", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_KEYEVENT_SHIFTKEY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -185,7 +182,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case KEYEVENT_METAKEY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "keyevent.metakey", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_KEYEVENT_METAKEY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -203,7 +200,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MOUSEEVENT_SCREENX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mouseevent.screenx", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_MOUSEEVENT_SCREENX, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -229,7 +226,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MOUSEEVENT_SCREENY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mouseevent.screeny", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_MOUSEEVENT_SCREENY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -255,7 +252,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MOUSEEVENT_CLIENTX:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mouseevent.clientx", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_MOUSEEVENT_CLIENTX, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -281,7 +278,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MOUSEEVENT_CLIENTY:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mouseevent.clienty", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_MOUSEEVENT_CLIENTY, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -307,7 +304,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MOUSEEVENT_BUTTON:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mouseevent.button", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_MOUSEEVENT_BUTTON, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -333,7 +330,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MOUSEEVENT_CLICKCOUNT:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mouseevent.clickcount", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_MOUSEEVENT_CLICKCOUNT, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -359,7 +356,7 @@ GetKeyEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       case MOUSEEVENT_RELATEDNODE:
       {
         PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, "mouseevent.relatednode", PR_FALSE, &ok);
+        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_MOUSEEVENT_RELATEDNODE, PR_FALSE, &ok);
         if (!ok) {
           return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
         }
@@ -486,7 +483,7 @@ KeyEventInitKeyEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "keyevent.initkeyevent",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_KEYEVENT_INITKEYEVENT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
@@ -581,7 +578,7 @@ MouseEventInitMouseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
   }
   {
     PRBool ok;
-    secMan->CheckScriptAccess(scriptCX, obj, "mouseevent.initmouseevent",PR_FALSE , &ok);
+    secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_MOUSEEVENT_INITMOUSEEVENT,PR_FALSE , &ok);
     if (!ok) {
       return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
     }
