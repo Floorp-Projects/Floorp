@@ -34,11 +34,13 @@ DrawString();  DrawText for cstrings
 #include <math.h>
 #include "nspr.h"
 #include <QDOffscreen.h>
+#include <windows.h>
 #include "nsRegionMac.h"
 #include "nsGfxCIID.h"
 #include <Fonts.h>
 
 //#define NO_CLIP
+
 
 /*
   Some Implementation Notes
@@ -111,8 +113,11 @@ nsRenderingContextMac :: nsRenderingContextMac()
 nsRenderingContextMac :: ~nsRenderingContextMac()
 {
 
-  ::SetPort(mRenderingSurface);
-  ::SetOrigin(0,0);
+	if(mRenderingSurface)
+		{
+  	::SetPort(mRenderingSurface);
+  	::SetOrigin(0,0);
+  	}
 
   if (mClipRegion) 
   	{
@@ -177,18 +182,16 @@ PRInt32					offx,offy;
 
 //------------------------------------------------------------------------
 
+
+// this drawing surface init should only be called for an offscreen drawing surface, without and offset or clip region
 nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,
 					nsDrawingSurface aSurface)
 {
-//PRInt32					offx,offy;
 
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
   mRenderingSurface = (nsDrawingSurfaceMac) aSurface;
-
-	//offx = (PRInt32)aSurface->GetNativeData(NS_NATIVE_OFFSETX);
-	//offy = (PRInt32)aSurface->GetNativeData(NS_NATIVE_OFFSETY);
   
   return (CommonInit());
 }
@@ -593,14 +596,20 @@ void nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aDS)
 {
 GWorldPtr	theoff;
 
-	theoff = (GWorldPtr)aDS;
-	DisposeGWorld(theoff);
+	if(aDS)
+		{
+		theoff = (GWorldPtr)aDS;
+		DisposeGWorld(theoff);
+		}
 	
-  if (mRenderingSurface == (GrafPtr)theoff)
-    mRenderingSurface = nsnull;
+	theoff = nsnull;
+	mRenderingSurface = mFrontBuffer;		// point back at the front surface
+		
+  //if (mRenderingSurface == (GrafPtr)theoff)
+    //mRenderingSurface = nsnull;
 
-  DisposeRgn(mMainRegion);
-  mMainRegion = nsnull;
+  //DisposeRgn(mMainRegion);
+  //mMainRegion = nsnull;
 }
 
 //------------------------------------------------------------------------
@@ -986,24 +995,30 @@ nsRect	tr;
 
 nsresult nsRenderingContextMac :: CopyOffScreenBits(nsRect &aBounds)
 {
-/*
+PixMapHandle	offscreenPM;
+PixMapPtr			srcpix;
+PixMapPtr			destpix;
+RGBColor			rgbblack = {0x0000,0x0000,0x0000};
+RGBColor			rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
+Rect					srcrect,dstrect;
 
-  ::XSetClipMask(mFrontBuffer->display,
-		 mFrontBuffer->gc,
-		 None);
-  
-  
-  ::XCopyArea(mRenderingSurface->display, 
-	      mRenderingSurface->drawable,
-	      mFrontBuffer->drawable,
-	      mFrontBuffer->gc,
-	      aBounds.x, aBounds.y, aBounds.width, aBounds.height, 0, 0);
-  
-  if (nsnull != mRegion)
-    ::XSetRegion(mRenderingSurface->display,
-		 mRenderingSurface->gc,
-		 mRegion);
-*/
+
+	::SetRect(&srcrect,0,0,aBounds.width,aBounds.height);
+	::SetRect(&dstrect,0,0,aBounds.width,aBounds.height);
+
+	destpix = *((CGrafPtr)mFrontBuffer)->portPixMap;
+
+	offscreenPM = ::GetGWorldPixMap((GWorldPtr)mRenderingSurface);
+	LockPixels(offscreenPM);
+	//srcpix = *offscreenPM;
+	srcpix = (PixMapPtr)*offscreenPM;
+	::RGBForeColor(&rgbblack);
+	::RGBBackColor(&rgbwhite);
+	
+	::CopyBits((BitMap*)srcpix,(BitMap*)destpix,&srcrect,&dstrect,ditherCopy,0L);
+	UnlockPixels(offscreenPM);
+	
+
   return NS_OK;
 }
 
