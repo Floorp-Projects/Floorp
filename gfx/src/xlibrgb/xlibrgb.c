@@ -200,7 +200,7 @@ static unsigned long
 xlib_get_prec_from_mask(unsigned long val)
 {
   unsigned long retval = 0;
-  int cur_bit = 0;
+  unsigned int cur_bit = 0;
   /* walk through the number, incrementing the value if
      the bit in question is set. */
   while (cur_bit < (sizeof(unsigned long) * 8)) {
