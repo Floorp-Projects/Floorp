@@ -2207,9 +2207,6 @@ nsHTMLEditor::CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement*
     newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),NS_LITERAL_STRING("2"));
     newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),NS_LITERAL_STRING("2"));
     newElement->SetAttribute(NS_LITERAL_STRING("border"),NS_LITERAL_STRING("1"));
-  } else if (TagName.EqualsWithConversion("tr"))
-  {
-    newElement->SetAttribute(NS_LITERAL_STRING("valign"),NS_LITERAL_STRING("top"));
   } else if (TagName.EqualsWithConversion("td"))
   {
     newElement->SetAttribute(NS_LITERAL_STRING("valign"),NS_LITERAL_STRING("top"));
