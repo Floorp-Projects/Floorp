@@ -42,6 +42,7 @@ function OnLoadImportDialog()
   progressInfo.intervalState = 0;
   progressInfo.importSuccess = false;
   progressInfo.importType = null;
+  progressInfo.localFolderExists = false;
 
   // look in arguments[0] for parameters
   if (window.arguments && window.arguments.length >= 1 &&
@@ -98,6 +99,19 @@ function SetDivText(id, text)
   }
 }
 
+function CheckIfLocalFolderExists()
+{
+  var acctMgr = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+  if (acctMgr) {
+    try {
+      if (acctMgr.localFoldersServer)
+        progressInfo.localFolderExists = true; 
+    }
+    catch (ex) {
+      progressInfo.localFolderExists = false;
+    }
+  }
+}
 
 function ImportDialogOKButton()
 {
@@ -124,10 +138,20 @@ function ImportDialogOKButton()
     selectedModuleName = name;
     if (module)
     {
+      // Fix for Bug 57839 & 85219
+      // We use localFoldersServer(in nsIMsgAccountManager) to check if Local Folder exists.
+      // We need to check localFoldersServer before importing "mail" or "settings".
+      // Reason: We will create an account with an incoming server of type "none" after 
+      // importing "mail", so the localFoldersServer is valid even though the Local Folder 
+      // is not created.
+      if (importType == "mail" || importType == "settings")
+        CheckIfLocalFolderExists();
+
       var meterText = "";
       switch(importType)
       {
         case "mail":
+
           top.successStr = Components.classes["@mozilla.org/supports-wstring;1"].createInstance();
           if (top.successStr) {
             top.successStr = top.successStr.QueryInterface( Components.interfaces.nsISupportsWString);
@@ -156,7 +180,6 @@ function ImportDialogOKButton()
               deck.setAttribute("index", "2");
               progressInfo.progressWindow = top.window;
               progressInfo.intervalState = setInterval("ContinueImportCallback()", 100);
-
               return( true);
             }
           }
@@ -212,13 +235,13 @@ function ImportDialogOKButton()
           if (!ImportSettings( module, newAccount, error))
           {
             if (error.value)
-              ShowImportResultsRaw(gImportMsgsBundle.getString('ImportSettingsFailed'), null);
+              ShowImportResultsRaw(gImportMsgsBundle.getString('ImportSettingsFailed'), null, false);
             // the user canceled the operation, shoud we dismiss
             // this dialog or not?
             return false;
           }
           else
-            ShowImportResultsRaw(gImportMsgsBundle.getFormattedString('ImportSettingsSuccess', [ name ]), null);
+            ShowImportResultsRaw(gImportMsgsBundle.getFormattedString('ImportSettingsSuccess', [ name ]), null, true);
           break;
       }
     }
@@ -356,10 +379,10 @@ function ShowImportResults(good, module)
   }
 
   if (results && title)
-    ShowImportResultsRaw(title, results)
+    ShowImportResultsRaw(title, results, good);
 }
 
-function ShowImportResultsRaw(title, results)
+function ShowImportResultsRaw(title, results, good)
 {
   SetDivText("status", title);
   var header = document.getElementById("header");
@@ -373,6 +396,15 @@ function ShowImportResultsRaw(title, results)
   nextButton.removeAttribute("disabled");
   var cancelButton = document.getElementById("cancel");
   cancelButton.setAttribute("disabled", "true");
+
+  // If the Local Folder is not existed, create it after successfully 
+  // import "mail" and "settings"
+  var checkLocalFolder = (top.progressInfo.importType == 'mail' || top.progressInfo.importType == 'settings') ? true : false;
+  if (good && checkLocalFolder && !top.progressInfo.localFolderExists) {
+    var messengerMigrator = Components.classes["@mozilla.org/messenger/migrator;1"].getService(Components.interfaces.nsIMessengerMigrator);
+    if (messengerMigrator)
+      messengerMigrator.createLocalMailAccount(false);
+  }
 }
 
 function attachStrings(aNode, aString)

@@ -1955,6 +1955,10 @@ NS_IMETHODIMP nsMsgAccountManager::GetLocalFoldersServer(nsIMsgIncomingServer **
 
 	if (!aServer) return NS_ERROR_NULL_POINTER;
 
+  if (!m_prefs) {
+    rv = getPrefService();
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
 	rv = m_prefs->CopyCharPref(PREF_MAIL_ACCOUNTMANAGER_LOCALFOLDERSSERVER,
                                getter_Copies(serverKey));
 
