@@ -121,7 +121,9 @@ nsInputFrame::MoveTo(nscoord aX, nscoord aY)
       nsIView* parentWithView;
       nsPoint origin;
       GetOffsetFromView(origin, parentWithView);
-      view->SetPosition(origin.x, origin.y);
+      nsIViewManager *vm = view->GetViewManager();
+      vm->MoveViewTo(view, origin.x, origin.y);
+      NS_RELEASE(vm);
       NS_IF_RELEASE(parentWithView);
       NS_RELEASE(view);
     }
@@ -141,7 +143,9 @@ nsInputFrame::SizeTo(nscoord aWidth, nscoord aHeight)
   GetView(view);
   if (nsnull != view) {
     // XXX combo boxes need revision, they cannot have their height altered
-    view->SetDimensions(aWidth, aHeight);
+    nsIViewManager *vm = view->GetViewManager();
+    vm->ResizeView(view, aWidth, aHeight);
+    NS_RELEASE(vm);
     NS_RELEASE(view);
   }
   return NS_OK;
