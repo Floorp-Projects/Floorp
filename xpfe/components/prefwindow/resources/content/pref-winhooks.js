@@ -77,7 +77,7 @@ function Startup() {
  
 
     // Get globals.
-    var settings = parent.winHooks.settings;
+    var settings = "settings" in parent.winHooks ? parent.winHooks.settings : null;
     var winhooks = parent.winHooks.winhooks;
     var prefs    = parent.winHooks.prefs;
     if ( !winhooks ) {
