@@ -84,38 +84,29 @@ function getReferrer(doc)
 function openNewWindowWith(url) 
 {
   urlSecurityCheck(url, document);
-  var newWin;
-  var wintype = document.firstChild.getAttribute('windowtype');
-  var referrer = getReferrer(document);
 
   // if and only if the current window is a browser window and it has a document with a character
   // set, then extract the current charset menu setting from the current document and use it to
   // initialize the new browser window...
-  if (window && (wintype == "navigator:browser") &&
-    window._content && window._content.document) {
-    var DocCharset = window._content.document.characterSet;
-    var charsetArg = "charset="+DocCharset;
+  var charsetArg = null;
+  var wintype = document.firstChild.getAttribute('windowtype');
+  if (wintype == "navigator:browser")
+    charsetArg = "charset=" + window._content.document.characterSet;
 
-    //we should "inherit" the charset menu setting in a new window
-    newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg, true, referrer );
-  }
-  else { // forget about the charset information.
-    newWin = window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", url, null, true, referrer );
-  }
+  var referrer = getReferrer(document);
+  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url, charsetArg, referrer);
 }
 
 function openNewTabWith(url) 
 {
   urlSecurityCheck(url, document);
-  var wintype = document.firstChild.getAttribute('windowtype');
-  var referrer = getReferrer(document);
+  var browser = getBrowser();
 
-  if (window && (wintype == "navigator:browser")) {
-    var browser = getBrowser();
-    var t = browser.addTab(url, referrer); // open link in new tab
-    if (pref && !pref.getBoolPref("browser.tabs.loadInBackground"))
-      browser.selectedTab = t;
-  }
+  var referrer = getReferrer(document);
+  var tab = browser.addTab(url, referrer); // open link in new tab
+
+  if (pref && !pref.getBoolPref("browser.tabs.loadInBackground"))
+    browser.selectedTab = tab;
 }
 
 function findParentNode(node, parentNode)
