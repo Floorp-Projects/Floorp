@@ -20,6 +20,9 @@
 
 #include "nscore.h"
 
+// Enumerator callback function. Return PR_FALSE to stop
+typedef PRBool (*nsVoidArrayEnumFunc)(void* aElement, void *aData);
+
 /// A basic zero-based array of void*'s that manages its own memory
 class NS_BASE nsVoidArray {
 public:
@@ -50,6 +53,9 @@ public:
   void   Clear();
 
   void Compact();
+
+  PRBool EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData);
+  PRBool EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData);
 
 protected:
   void** mArray;

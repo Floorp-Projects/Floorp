@@ -170,3 +170,26 @@ void nsVoidArray::Compact()
     mArraySize = count;
   }
 }
+
+PRBool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
+{
+  PRInt32 index = -1;
+  PRBool  running = PR_TRUE;
+
+  while (running && (++index < mCount)) {
+    running = (*aFunc)(mArray[index], aData);
+  }
+  return running;
+}
+
+PRBool nsVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
+{
+  PRInt32 index = mCount;
+  PRBool  running = PR_TRUE;
+
+  while (running && (0 <= --index)) {
+    running = (*aFunc)(mArray[index], aData);
+  }
+  return running;
+}
+
