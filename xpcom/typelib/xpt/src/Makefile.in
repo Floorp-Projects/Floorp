@@ -26,6 +26,7 @@ MODULE		= xpcom
 LIBRARY_NAME	= xpt
 
 LIB_IS_C_ONLY	= 1
+INTERNAL_TOOLS	= 1
 
 CSRCS		= xpt_struct.c 	\
 		  xpt_xdr.c	\
