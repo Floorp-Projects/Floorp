@@ -306,13 +306,12 @@ struct nsHTMLReflowState : nsReflowState {
                                 nsIFrame* aFrame);
 
 protected:
-  // This method initializes the widthConstraint, heightConstraint and
-  // minSize values appropriately. It also initializes the frameType
-  // value as well. This method is automatically called by the various
-  // constructors.
+  // This method initializes various data members. It is automatically
+  // called by the various constructors
   void Init(nsIPresContext& aPresContext) {
     mRunInFrame = nsnull;
     mCompactMarginWidth = 0;
+    computedWidth = computedHeight = 0;
     DetermineFrameType(aPresContext);
     InitConstraints(aPresContext);
   }

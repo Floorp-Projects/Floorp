@@ -167,27 +167,21 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   // Reflow our one and only child frame
   if (nsnull != mFirstChild) {
     // Note: the root frame does not have border or padding...
-
-    // Compute the margins around the child frame
-    nsMargin childMargin;
-    nsHTMLReflowState::ComputeMarginFor(mFirstChild, &aReflowState, childMargin);
-
-    // Compute the child frame's available space
-    nsSize  kidMaxSize(aReflowState.maxSize.width - childMargin.left - childMargin.right,
-                       aReflowState.maxSize.height - childMargin.top - childMargin.bottom);
     nsHTMLReflowMetrics desiredSize(nsnull);
     // We must pass in that the available height is unconstrained, because
     // constrained is only for when we're paginated...
     nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
-                                     nsSize(kidMaxSize.width, NS_UNCONSTRAINEDSIZE));
+                                     nsSize(aReflowState.maxSize.width, NS_UNCONSTRAINEDSIZE));
     if (isChildInitialReflow) {
       kidReflowState.reason = eReflowReason_Initial;
       kidReflowState.reflowCommand = nsnull;
     }
 
     // For a height that's 'auto', make the frame as big as the available space
-    if (!kidReflowState.HaveFixedContentHeight()) {
-      kidReflowState.computedHeight = kidMaxSize.height;
+    // minus and top and bottom margins
+    if (NS_AUTOHEIGHT == kidReflowState.computedHeight) {
+      kidReflowState.computedHeight = aReflowState.maxSize.height -
+        kidReflowState.computedTopMargin - kidReflowState.computedTopMargin;
 
       // Computed height is for the content area so reduce it by the amount of
       // space taken up by border and padding
@@ -201,7 +195,8 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       ReflowChild(mFirstChild, aPresContext, desiredSize, kidReflowState, aStatus);
     
-      nsRect  rect(childMargin.left, childMargin.top, desiredSize.width, desiredSize.height);
+      nsRect  rect(kidReflowState.computedLeftMargin, kidReflowState.computedTopMargin,
+                   desiredSize.width, desiredSize.height);
       mFirstChild->SetRect(rect);
 
       // XXX We should resolve the details of who/when DidReflow()
