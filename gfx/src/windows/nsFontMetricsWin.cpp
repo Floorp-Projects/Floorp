@@ -3070,6 +3070,11 @@ nsFontMetricsWin::RealizeFont()
   }
 
   nsFontWin* font = FindFont(dc1, 'a');
+  NS_ASSERTION(font, "missing font");
+  if (!font) {
+    ::ReleaseDC(win, mDeviceContext->mDC ? dc1 : dc);
+    return NS_ERROR_FAILURE;
+  }
   mFontHandle = font->mFont;
 
   HFONT oldfont = (HFONT)::SelectObject(dc, (HGDIOBJ) mFontHandle);
