@@ -83,8 +83,10 @@
 #include "nsIWindowWatcher.h"
 #include "nsProcess.h"
 
+#ifdef MOZ_XPINSTALL
 #include "InstallCleanupDefines.h"
 #include "nsISoftwareUpdate.h"
+#endif
 
 // Interfaces Needed
 #include "nsIXULWindow.h"
@@ -960,6 +962,7 @@ static void ShowOSAlertFromFile(int argc, char **argv, const char *alert_filenam
 
 static nsresult VerifyInstallation(int argc, char **argv)
 {
+#ifdef MOZ_XPINSTALL
   nsresult rv;
   nsCOMPtr<nsILocalFile> registryFile;
 
@@ -997,6 +1000,7 @@ static nsresult VerifyInstallation(int argc, char **argv)
     //We must exit because all open files must be released by the system
     return NS_ERROR_FAILURE;
   }
+#endif
   return NS_OK;
 }
 
