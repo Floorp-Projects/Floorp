@@ -27,6 +27,7 @@
 
 class nsIFrame;
 class nsIPresContext;
+struct PRLogModuleInfo;
 
 // IID for the nsIFrameDebug interface {a6cf9069-15b3-11d2-932e-00805f8add32}
 #define NS_IFRAMEDEBUG_IID         \

@@ -35,6 +35,7 @@
 #include "nsIReflowCommand.h"
 #include "nsIFrameSelection.h"
 #include "nsHTMLReflowState.h"
+#include "nsHTMLReflowMetrics.h"
 
 /**
  * nsFrame logging constants. We redefine the nspr

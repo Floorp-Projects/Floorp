@@ -3,6 +3,7 @@
 #
 nsFrameList.h
 nsFrameTraversal.h
+nsHTMLReflowMetrics.h
 nsHTMLReflowState.h
 nsIAutoCopy.h
 nsICaret.h
