@@ -1725,7 +1725,7 @@ public class Interpreter
             if (!(start <= pc && pc < end)) {
                 continue;
             }
-            if (onlyFinally && exceptionTable[i + EXCEPTION_TYPE_SLOT] == 1) {
+            if (onlyFinally && exceptionTable[i + EXCEPTION_TYPE_SLOT] != 1) {
                 continue;
             }
             if (best >= 0) {
