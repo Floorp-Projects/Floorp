@@ -34,6 +34,9 @@ clip-left
 clip-right
 clip-top
 color
+cursor
+cursor-image
+direction
 display
 filter
 float
