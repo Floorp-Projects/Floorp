@@ -79,6 +79,8 @@ TestSegmentedBuffer();
 void XXXNeverCalled()
 {
     nsTextFormatter::snprintf(nsnull,0,nsnull);
+	nsTextFormatter::smprintf(nsnull, nsnull);
+	nsTextFormatter::smprintf_free(nsnull);
     dummyComparitor dummy;
     nsVoidArray();
     nsAVLTree(dummy, nsnull);
