@@ -307,7 +307,7 @@ morkThumb::Make_CompressCommit(morkEnv* ev,
           outThumb->mThumb_DoCollect = inDoCollect;
           morkStore::SlotStrongStore(ioStore, ev, &outThumb->mThumb_Store);
           nsIMdbFile_SlotStrongFile(file, ev, &outThumb->mThumb_File);
-          morkWriter::SlotStrongWriter(writer, ev, &outThumb->mThumb_Writer);
+          outThumb->mThumb_Writer = writer; // pass writer ownership to thumb
           
           // cope with fact that parsed transaction groups are going away:
           ioStore->mStore_FirstCommitGroupPos = 0;
