@@ -254,7 +254,8 @@ function backupCerts()
   fp.init(window,
           bundle.GetStringFromName("chooseP12BackupFileDialog"),
           nsIFilePicker.modeSave);
-  fp.appendFilter("PKCS12 Files", "*.p12");
+  fp.appendFilter(bundle.GetStringFromName("file_browse_PKCS12_spec"),
+                  "*.p12");
   fp.appendFilters(nsIFilePicker.filterAll);
   var rv = fp.show();
   if (rv == nsIFilePicker.returnOK || rv == nsIFilePicker.returnReplace) {
@@ -301,7 +302,8 @@ function restoreCerts()
   fp.init(window,
           bundle.GetStringFromName("chooseP12RestoreFileDialog"),
           nsIFilePicker.modeOpen);
-  fp.appendFilter("PKCS12 Files", "*.p12; *.pfx");
+  fp.appendFilter(bundle.GetStringFromName("file_browse_PKCS12_spec"),
+                  "*.p12; *.pfx");
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
     certdb.importPKCS12File(null, fp.file);
@@ -420,7 +422,8 @@ function addCACerts()
   fp.init(window,
           bundle.GetStringFromName("importCACertsPrompt"),
           nsIFilePicker.modeOpen);
-  fp.appendFilter("Certificate Files", "*.crt; *.cert; *.cer; *.pem; *.der");
+  fp.appendFilter(bundle.GetStringFromName("file_browse_Certificate_spec"),
+                  "*.crt; *.cert; *.cer; *.pem; *.der");
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
     certdb.importCertsFromFile(null, fp.file, nsIX509Cert.CA_CERT);
@@ -436,7 +439,8 @@ function addEmailCert()
   fp.init(window,
           bundle.GetStringFromName("importEmailCertPrompt"),
           nsIFilePicker.modeOpen);
-  fp.appendFilter("Certificate Files", "*.crt; *.cert; *.cer; *.pem; *.der");
+  fp.appendFilter(bundle.GetStringFromName("file_browse_Certificate_spec"),
+                  "*.crt; *.cert; *.cer; *.pem; *.der");
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
     certdb.importCertsFromFile(null, fp.file, nsIX509Cert.EMAIL_CERT);
@@ -456,7 +460,8 @@ function addWebSiteCert()
   fp.init(window,
           bundle.GetStringFromName("importWebSiteCertPrompt"),
           nsIFilePicker.modeOpen);
-  fp.appendFilter("Certificate Files", "*.crt; *.cert; *.cer; *.pem; *.der");
+  fp.appendFilter(bundle.GetStringFromName("file_browse_Certificate_spec"),
+                  "*.crt; *.cert; *.cer; *.pem; *.der");
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
     certdb.importCertsFromFile(null, fp.file, nsIX509Cert.SERVER_CERT);
