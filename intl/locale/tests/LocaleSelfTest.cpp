@@ -440,6 +440,17 @@ static int compare1( const void *arg1, const void *arg2 )
   res = g_collationInst->CreateSortKey(g_CollationStrength, string2, key2);
   NS_ASSERTION(NS_SUCCEEDED(res), "CreateSortKey");
 
+  // dump collation keys
+  if (g_verbose) {
+    int i;
+    for (i = 0; i < key1.Length(); i++) 
+      printf("%.2x", key1[i]);
+    printf(" ");
+    for (i = 0; i < key2.Length(); i++) 
+      printf("%.2x", key2[i]);
+    printf("\n");
+  }
+
   res = g_collationInst->CompareSortKey(key1, key2, &result);
   NS_ASSERTION(NS_SUCCEEDED(res), "CreateSortKey");
   NS_ASSERTION(NS_SUCCEEDED((PRBool)(result == result2)), "result unmatch");
@@ -1014,7 +1025,6 @@ int main(int argc, char** argv) {
 
   res = localeFactory->GetApplicationLocale(&locale);
   if (NS_FAILED(res) || locale == nsnull) cout << "GetApplicationLocale failed\n";
-
 	localeFactory->Release();
   
   // --------------------------------------------
@@ -1057,6 +1067,19 @@ int main(int argc, char** argv) {
       NS_IF_RELEASE(locale);
       res = NewLocale(&localeName, &locale);  // reset the locale
     }
+
+    // print locale string
+    const PRUnichar *localeUnichar;
+    nsString aLocaleString, aCategory("NSILOCALE_COLLATE");
+    locale->GetCategory(aCategory.GetUnicode(), &localeUnichar);
+    aLocaleString.SetString(localeUnichar);
+    cout << "locale setting for collation is ";
+    DebugDump(aLocaleString, cout);
+    aCategory.SetString("NSILOCALE_TIME");
+    locale->GetCategory(aCategory.GetUnicode(), &localeUnichar);
+    aLocaleString.SetString(localeUnichar);
+    cout << "locale setting for time is ";
+    DebugDump(aLocaleString, cout);
 
     while (argc--) {
       if (!strcmp(argv[argc], "-col"))
