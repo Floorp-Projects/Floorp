@@ -71,7 +71,7 @@
 
 #include "nsIPrintPreviewContext.h"
 #include "nsIURI.h"
-#include "nsGUIEvent.h"
+
 //----------------------------------------------------------------------
 
 class nsGfxScrollFrameInner : public nsIDocumentObserver, 
@@ -890,8 +890,6 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
      hframe->GetContent(getter_AddRefs(hcontent));
      vframe->GetContent(getter_AddRefs(vcontent));
 
-     nsIFrame  * targetFrame = nsnull;
-     nsCOMPtr<nsIContent> targetContent;
      if (hcontent.get() == aContent  || vcontent.get() == aContent)
      {
         nscoord x = 0;
@@ -904,8 +902,6 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
 
            // convert it to an integer
            x = value.ToInteger(&error);
-           targetFrame = hframe;
-           targetContent = hcontent;
         }
 
         if (NS_CONTENT_ATTR_HAS_VALUE == vcontent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos, value))
@@ -914,22 +910,7 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
 
            // convert it to an integer
            y = value.ToInteger(&error);
-           targetFrame = vframe;
-           targetContent = vcontent;
         }
-
-        nsScrollbarEvent  event;
-        event.eventStructType = NS_SCROLLBAR_EVENT;
-        event.message = NS_SCROLL_EVENT;
-        event.flags = 0;        
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsCOMPtr<nsIPresShell> presShell;
-        mOuter->mPresContext->GetShell(getter_AddRefs(presShell));
-        
-        // Fire the onScroll event.
-        if (presShell && targetFrame && targetContent)
-          presShell->HandleEventWithTarget(&event, targetFrame, targetContent,
-                                            NS_EVENT_FLAG_INIT, &status);
 
         nsIScrollableView* s = GetScrollableView(mOuter->mPresContext);
         s->RemoveScrollPositionListener(this);
