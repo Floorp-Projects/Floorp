@@ -24,6 +24,7 @@
 // the dll that are located in the .lib files we link with
 
 #include "nsVoidArray.h"
+#include "nsVoidBTree.h"
 #include "nsIAtom.h"
 #include "nsFileSpec.h"
 //#include "nsIBuffer.h"
@@ -54,6 +55,7 @@
 #include "nsWeakReference.h"
 #include "nsISizeOfHandler.h"
 #include "nsTextFormatter.h"
+#include "nsStatistics.h"
 #include "nsStorageStream.h"
 #include "nsLinebreakConverter.h"
 #include "nsIBinaryInputStream.h"
@@ -83,6 +85,7 @@ void XXXNeverCalled()
     nsTextFormatter::smprintf_free(nsnull);
     dummyComparitor dummy;
     nsVoidArray();
+    nsVoidBTree();
     nsAVLTree(dummy, nsnull);
     nsSupportsArray();
     NS_GetNumberOfAtoms();
@@ -103,6 +106,7 @@ void XXXNeverCalled()
     nsArrayEnumerator(NULL);
     NS_NewIntersectionEnumerator(NULL, NULL, NULL);
     NS_QuickSort(NULL, 0, 0, NULL, NULL);
+    nsStatistics("dummy");
     nsString();
     nsProxyObject(NULL, 0, NULL);
     XPT_DoString(NULL, NULL, NULL);
