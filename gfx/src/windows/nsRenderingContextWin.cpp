@@ -471,7 +471,7 @@ nsresult nsRenderingContextWin :: CommonInit(void)
                           DEFAULT_QUALITY, FF_ROMAN | VARIABLE_PITCH, "Times New Roman");
   mBlackPen = ::CreatePen(PS_SOLID, 0, RGB(0, 0, 0));
 
-  mGammaTable = mContext->GetGammaTable();
+  mContext->GetGammaTable(mGammaTable);
 
   return SetupDC(nsnull, mDC);
 }

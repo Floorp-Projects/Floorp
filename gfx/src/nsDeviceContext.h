@@ -51,13 +51,13 @@ public:
 
   virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
 
-  virtual void SetZoom(float aZoom);
-  virtual float GetZoom() const;
+  NS_IMETHOD  SetZoom(float aZoom);
+  NS_IMETHOD  GetZoom(float &aZoom) const;
 
-  virtual float GetGamma(void);
-  virtual void SetGamma(float aGamma);
+  NS_IMETHOD  GetGamma(float &aGamma);
+  NS_IMETHOD  SetGamma(float aGamma);
 
-  virtual PRUint8 * GetGammaTable(void);
+  NS_IMETHOD  GetGammaTable(PRUint8 *&aGammaTable);
 
   virtual nsNativeWidget GetNativeWidget(void);
 
