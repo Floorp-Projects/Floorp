@@ -48,6 +48,13 @@ public:
 
   typedef enum { eDSNormal=0, eDSUndlerline } TSDDisplayStyle;
 
+  typedef enum { eBlockNotFound=0, // There is no text block (TB) in or before the selection (S).
+                 eBlockOutside,    // No TB in S, but found one before/after S.
+                 eBlockInside,     // S extends beyond the start and end of TB.
+                 eBlockContains,   // TB contains entire S.
+                 eBlockPartial     // S begins or ends in TB but extends outside of TB.
+  } TSDBlockSelectionStatus;
+
   /**
    * Initailizes the text services document to use a particular
    * DOM document.
@@ -101,6 +108,7 @@ public:
   /**
    * Tells the document to point to the first text block that
    * contains the current selection or caret.
+   * @param aSelectionStatus will contain the text block selection status
    * @param aSelectionOffset will contain the offset into the
    * string returned by GetCurrentTextBlock() where the selection
    * begins.
@@ -108,11 +116,12 @@ public:
    * selected in the string.
    */
 
-  NS_IMETHOD FirstSelectedBlock(PRInt32 *aSelectionOffset, PRInt32 *aSelectionLength) = 0;
+  NS_IMETHOD FirstSelectedBlock(TSDBlockSelectionStatus *aSelectionStatus, PRInt32 *aSelectionOffset, PRInt32 *aSelectionLength) = 0;
 
   /**
    * Tells the document to point to the last text block that
    * contains the current selection or caret.
+   * @param aSelectionStatus will contain the text block selection status
    * @param aSelectionOffset will contain the offset into the
    * string returned by GetCurrentTextBlock() where the selection
    * begins.
@@ -120,7 +129,7 @@ public:
    * selected in the string.
    */
 
-  NS_IMETHOD LastSelectedBlock(PRInt32 *aSelectionOffset, PRInt32 *aSelectionLength) = 0;
+  NS_IMETHOD LastSelectedBlock(TSDBlockSelectionStatus *aSelectionStatus, PRInt32 *aSelectionOffset, PRInt32 *aSelectionLength) = 0;
 
   /**
    * Tells the document to point to the text block before
