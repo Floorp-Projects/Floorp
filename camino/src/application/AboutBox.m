@@ -138,6 +138,7 @@ static AboutBox *sharedInstance = nil;
                     withRTF:[creditsString RTFFromRange:
                       NSMakeRange( 0, [creditsString length] )
                           documentAttributes:nil]];
+  [creditsString release];
 
   fieldHeight = [creditsField frame].size.height;
   
