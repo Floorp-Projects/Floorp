@@ -494,9 +494,14 @@ nsStorageTransport::nsReadRequest::Process()
 
         // first let the transport know that we are done
         mTransport->ReadRequestCompleted(this);
-
+        
         // no need to proxy this callback
         (void) mListener->OnStopRequest(this, mListenerContext, mStatus);
+
+        //OnStopRequest completed and listeners no longer needed. 
+        mListener=nsnull;
+        mListenerContext=nsnull;
+        mListenerProxy=nsnull;
     }
     else
         mWaitingForWrite = PR_TRUE;
