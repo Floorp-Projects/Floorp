@@ -668,26 +668,55 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
 
 NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                              const nsPoint& aPoint, 
+                                             nsFramePaintLayer aWhichLayer,
                                              nsIFrame**     aFrame)
 {   
   if (isDraggingThumb(aPresContext))
   {
+    // XXX I assume it's better not to test for visibility here.
     *aFrame = this;
     return NS_OK;
   }
 
+  if ((! mRect.Contains(aPoint)) ||
+      (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND)) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsIFrame* thumbFrame = mFrames.FirstChild();
+  // XXX If thumbFrame always considers itself FOREGROUND, then it
+  // would be better to just call thumbFrame->GetFrameForPoint and
+  // return if it returns NS_OK.
   nsRect thumbRect;
   thumbFrame->GetRect(thumbRect);
 
-  if (thumbRect.Contains(aPoint)) {
-     *aFrame = thumbFrame;
-  } else {
-  // always return us
-     *aFrame = this;
+  nsPoint tmp;
+  tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
+
+  if (thumbRect.Contains(tmp)) {
+    nsIStyleContext *tsc;
+    thumbFrame->GetStyleContext(&tsc);
+    if (tsc) {
+      const nsStyleDisplay* disp = (const nsStyleDisplay*)
+        tsc->GetStyleData(eStyleStruct_Display);
+      if (disp->IsVisible()) {
+        *aFrame = thumbFrame;
+        NS_RELEASE(tsc);
+        return NS_OK;
+      }
+      NS_RELEASE(tsc);
+    }
   }
 
-  return NS_OK;
+  // always return us (if visible)
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (disp->IsVisible()) {
+    *aFrame = this;
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 
   //return nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
 }

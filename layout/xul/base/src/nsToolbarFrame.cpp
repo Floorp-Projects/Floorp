@@ -284,6 +284,7 @@ nsToolbarFrame :: Paint ( nsIPresContext* aPresContext,
 } // Paint
 
 
+#if 0
 //
 // GetFrameForPoint
 //
@@ -292,9 +293,14 @@ nsToolbarFrame :: Paint ( nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsToolbarFrame :: GetFrameForPoint ( nsIPresContext* aPresContext,
                                      const nsPoint& aPoint,
+                                     nsFramePaintLayer aWhichLayer,
                                      nsIFrame** aFrame)
 {
-  nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
+  nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+
+  if (! mRect.Contains(aPoint)) {
+    return retVal;
+  }
 
   // returning NS_OK means that we tell the frame finding code that we have something
   // and to stop looking elsewhere for a frame.
@@ -308,6 +314,7 @@ nsToolbarFrame :: GetFrameForPoint ( nsIPresContext* aPresContext,
   return retVal;
   
 } // GetFrameForPoint
+#endif
 
 
 // 

@@ -88,6 +88,7 @@ public:
   // Overridden to prevent events from ever going to children of the menu.
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, 
+                              nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 

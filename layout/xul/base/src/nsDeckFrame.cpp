@@ -186,29 +186,39 @@ nsDeckFrame::Paint(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                              const nsPoint& aPoint, 
+                                             nsFramePaintLayer aWhichLayer,
                                              nsIFrame**     aFrame)
 {
-  // if its not in our child just return us.
-  *aFrame = this;
+
+  // If it's not in this frame, then it's not going to be in any
+  // children (since there cannot be overflowing children).
+  if (!mRect.Contains(aPoint)) {
+    return NS_ERROR_FAILURE;
+  }
 
   // get the selected frame and see if the point is in it.
   nsIFrame* selectedFrame = GetSelectedFrame();
 
   if (nsnull != selectedFrame)
   {
-    nsRect childRect;
-    selectedFrame->GetRect(childRect);
+    // adjust the point
+    nsPoint p = aPoint;
+    p.x -= mRect.x;
+    p.y -= mRect.y;
+    return selectedFrame->GetFrameForPoint(aPresContext, p, aWhichLayer, aFrame);
+  }
 
-    if (childRect.Contains(aPoint)) {
-      // adjust the point
-      nsPoint p = aPoint;
-      p.x -= childRect.x;
-      p.y -= childRect.y;
-      return selectedFrame->GetFrameForPoint(aPresContext, p, aFrame);
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND) {
+    // if its not in our child just return us.
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->IsVisible()) {
+      *aFrame = this;
+      return NS_OK;
     }
   }
     
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

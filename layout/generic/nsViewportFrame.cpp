@@ -55,6 +55,10 @@ public:
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
+                              nsFramePaintLayer aWhichLayer,
+                              nsIFrame**     aFrame);
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
@@ -159,6 +163,16 @@ ViewportFrame::SetInitialChildList(nsIPresContext* aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+ViewportFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                   const nsPoint& aPoint, 
+                                   nsFramePaintLayer aWhichLayer,
+                                   nsIFrame**     aFrame)
+{
+  // this should act like a block, so we need to override
+  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
 }
 
 NS_IMETHODIMP

@@ -440,13 +440,18 @@ nsFileControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                      const nsPoint& aPoint,
+                                     nsFramePaintLayer aWhichLayer,
                                      nsIFrame** aFrame)
 {
-  if (nsFormFrame::GetDisabled(this)) {
-    *aFrame = this;
-    return NS_OK;
+  if ( nsFormFrame::GetDisabled(this) && mRect.Contains(aPoint) ) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->IsVisible()) {
+      *aFrame = this;
+      return NS_OK;
+    }
   } else {
-    return nsAreaFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
+    return nsAreaFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
   }
   return NS_OK;
 }

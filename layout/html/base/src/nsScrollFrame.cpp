@@ -844,6 +844,16 @@ nsScrollFrame::Paint(nsIPresContext*      aPresContext,
                                  aWhichLayer);
 }
 
+NS_IMETHODIMP
+nsScrollFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                   const nsPoint& aPoint, 
+                                   nsFramePaintLayer aWhichLayer,
+                                   nsIFrame**     aFrame)
+{
+  // this should act like a block, so we need to override
+  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
+}
+
 PRIntn
 nsScrollFrame::GetSkipSides() const
 {

@@ -270,41 +270,14 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext*      aPresContext,
   }
 }
 
-/* we overload this here because rows have children that can span outside of themselves.
- * so the default "get the child rect, see if it contains the event point" action isn't
- * sufficient.  We have to ask the row if it has a child that contains the point.
- */
 NS_IMETHODIMP
 nsTableRowGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
-                                       const nsPoint& aPoint,
-                                       nsIFrame** aFrame)
+                                   const nsPoint& aPoint, 
+                                   nsFramePaintLayer aWhichLayer,
+                                   nsIFrame**     aFrame)
 {
-  nsIFrame* kid;
-  nsRect kidRect;
-  nsPoint tmp;
-  *aFrame = this;
-
-  FirstChild(aPresContext, nsnull, &kid);
-  while (nsnull != kid) {
-    kid->GetRect(kidRect);
-    const nsStyleDisplay *childDisplay;
-    kid->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
-    if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay) {
-      if (((nsTableRowFrame*)(kid))->Contains(aPresContext, aPoint)) {
-        tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-        return kid->GetFrameForPoint(aPresContext, tmp, aFrame);
-      }
-    }
-    else {
-      if (kidRect.Contains(aPoint)) {
-        tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-        return kid->GetFrameForPoint(aPresContext, tmp, aFrame);
-      }
-    }
-
-    GetNextFrame(kid, &kid);
-  }
-  return NS_ERROR_FAILURE;
+  // this should act like a block, so we need to override
+  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
 }
 
 // Position and size aKidFrame and update our reflow state. The origin of

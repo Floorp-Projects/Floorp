@@ -117,6 +117,7 @@ public:
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, 
+                              nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
   NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
@@ -630,6 +631,7 @@ nsHTMLFramesetFrame::GetCursor(nsIPresContext* aPresContext,
 NS_IMETHODIMP 
 nsHTMLFramesetFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                       const nsPoint& aPoint, 
+                                      nsFramePaintLayer aWhichLayer,
                                       nsIFrame**     aFrame)
 {
   //XXX Temporary to deal with event handling in both this and FramsetBorderFrame
@@ -637,7 +639,7 @@ nsHTMLFramesetFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     *aFrame = this;
     return NS_OK;
   } else {
-    return nsContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
+    return nsContainerFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
   }
 }
 
@@ -1711,8 +1713,15 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP 
 nsHTMLFramesetBorderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                             const nsPoint& aPoint, 
+                                            nsFramePaintLayer aWhichLayer,
                                             nsIFrame**     aFrame)
 {
+  if ( (aWhichLayer != NS_FRAME_PAINT_LAYER_FOREGROUND) ||
+       (!((mState & NS_FRAME_OUTSIDE_CHILDREN) || mRect.Contains(aPoint) )))
+  {
+    return NS_ERROR_FAILURE;
+  }
+
   *aFrame = this;
   return NS_OK;
 }

@@ -58,10 +58,11 @@ nsXULButtonFrame::nsXULButtonFrame(nsIPresShell* aPresShell)
 
 NS_IMETHODIMP nsXULButtonFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                     const nsPoint& aPoint, 
+                                    nsFramePaintLayer aWhichLayer,
                                     nsIFrame**     aFrame)
 {
-  *aFrame = this;
-  return NS_OK;
+  // override, since we don't want children to get events
+  return nsFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
 }
 
 NS_IMETHODIMP

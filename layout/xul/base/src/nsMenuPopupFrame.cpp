@@ -1229,16 +1229,10 @@ nsMenuPopupFrame::Destroy(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsMenuPopupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                    const nsPoint& aPoint,
+                                   nsFramePaintLayer aWhichLayer,
                                    nsIFrame** aFrame)
 {
-  nsRect rect;
-  GetRect(rect);
-  if (rect.Contains(aPoint)) {
-    return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
-  }
-  
-  *aFrame = this;
-  return NS_OK;
+  return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
 }
 
 NS_IMETHODIMP_(void)
@@ -1295,4 +1289,3 @@ nsMenuPopupFrame::KillCloseTimer()
   }
   return NS_OK;
 }
-

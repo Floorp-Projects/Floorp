@@ -697,8 +697,16 @@ public:
                         nsPoint&        aPoint,
                         PRInt32&        aCursor) = 0;
 
+  /**
+   * Get the frame that should receive events for a given point in the
+   * coordinate space of this frame's parent, if the frame is painted in
+   * the given paint layer.  A frame should return itself if it should
+   * recieve the events.  A successful return value indicates that a
+   * point was found.
+   */
   NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
                                const nsPoint& aPoint, 
+                               nsFramePaintLayer aWhichLayer,
                                nsIFrame**     aFrame) = 0;
   
   

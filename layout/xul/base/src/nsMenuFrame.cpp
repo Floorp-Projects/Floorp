@@ -217,22 +217,32 @@ nsMenuFrame::Destroy(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, 
+                              nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame)
 {
-  nsresult result = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
-  nsCOMPtr<nsIContent> content;
-  if (*aFrame) {
-    (*aFrame)->GetContent(getter_AddRefs(content));
-    if (content) {
-      // This allows selective overriding for subcontent.
-      nsAutoString value;
-      content->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, value);
-      if (value == "true")
-        return result;
-    }
+  if (!mRect.Contains(aPoint)) {
+    return NS_ERROR_FAILURE;
   }
-  *aFrame = this; // Capture all events so that we can perform selection
-  return NS_OK;
+  nsresult result = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  if ((result != NS_OK) || (*aFrame == this)) {
+    return result;
+  }
+  nsCOMPtr<nsIContent> content;
+  (*aFrame)->GetContent(getter_AddRefs(content));
+  if (content) {
+    // This allows selective overriding for subcontent.
+    nsAutoString value;
+    content->GetAttribute(kNameSpaceID_None, nsXULAtoms::allowevents, value);
+    if (value == "true")
+      return result;
+  }
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (disp->IsVisible()) {
+    *aFrame = this; // Capture all events so that we can perform selection
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP 

@@ -78,6 +78,10 @@ public:
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
+                              nsFramePaintLayer aWhichLayer,
+                              nsIFrame**     aFrame);
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const {
     aBase = PR_TRUE;
     return NS_OK;
@@ -418,6 +422,16 @@ RootFrame::HandleEvent(nsIPresContext* aPresContext,
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+RootFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                   const nsPoint& aPoint, 
+                                   nsFramePaintLayer aWhichLayer,
+                                   nsIFrame**     aFrame)
+{
+  // this should act like a block, so we need to override
+  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
 }
 
 NS_IMETHODIMP

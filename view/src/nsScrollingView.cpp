@@ -787,7 +787,8 @@ NS_IMETHODIMP_(void) nsScrollingView::Notify(nsITimer * aTimer)
 
   if (NS_OK == mViewManager->GetViewObserver(obs))
   {
-    obs->HandleEvent((nsIView *)this, &event, &retval);
+    PRBool handled;
+    obs->HandleEvent((nsIView *)this, &event, &retval, handled);
     NS_RELEASE(obs);
   }
 

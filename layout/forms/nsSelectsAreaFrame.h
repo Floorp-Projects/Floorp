@@ -39,7 +39,7 @@ public:
   // nsISupports
   //NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
 
 protected:
   PRBool IsOptionElement(nsIContent* aContent);

@@ -6129,27 +6129,57 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsBlockFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                const nsPoint& aPoint,
+                               nsFramePaintLayer aWhichLayer,
                                nsIFrame** aFrame)
 {
   nsresult rv;
 
-  if (mFloaters.NotEmpty()) {
-    rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::floaterList, aFrame);
-    if (NS_OK == rv) {
-      return NS_OK;
-    }
+  switch (aWhichLayer) {
+    case NS_FRAME_PAINT_LAYER_FOREGROUND:
+      rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE, aFrame);
+      if (NS_OK == rv) {
+        return NS_OK;
+      }
+      if (nsnull != mBullet) {
+        rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::bulletList, NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE, aFrame);
+      }
+      return rv;
+      break;
+
+    case NS_FRAME_PAINT_LAYER_FLOATERS:
+      // we painted our floaters before our children, and thus
+      // we should check floaters within children first
+      rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_FLOATERS, PR_FALSE, aFrame);
+      if (NS_OK == rv) {
+        return NS_OK;
+      }
+      if (mFloaters.NotEmpty()) {
+
+        rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::floaterList, NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE, aFrame);
+        if (NS_OK == rv) {
+          return NS_OK;
+        }
+
+        rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::floaterList, NS_FRAME_PAINT_LAYER_FLOATERS, PR_FALSE, aFrame);
+        if (NS_OK == rv) {
+          return NS_OK;
+        }
+
+        return GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::floaterList, NS_FRAME_PAINT_LAYER_BACKGROUND, PR_FALSE, aFrame);
+
+      } else {
+        return NS_ERROR_FAILURE;
+      }
+      break;
+
+    case NS_FRAME_PAINT_LAYER_BACKGROUND:
+      // we're a block, so PR_TRUE for consider self
+      return GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_BACKGROUND, PR_TRUE, aFrame);
+      break;
   }
-  rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, aFrame);
-  if (NS_OK == rv) {
-    return NS_OK;
-  }
-  if (nsnull != mBullet) {
-    rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::bulletList, aFrame);
-    if (NS_OK == rv) {
-      return NS_OK;
-    }
-  }
-  return rv;
+  // we shouldn't get here
+  NS_ASSERTION(PR_FALSE, "aWhichLayer was not understood");
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

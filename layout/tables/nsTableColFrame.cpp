@@ -130,6 +130,24 @@ NS_METHOD nsTableColFrame::Paint(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+// override, since we want to act like a block
+NS_IMETHODIMP
+nsTableColFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                          const nsPoint& aPoint,
+                          nsFramePaintLayer aWhichLayer,
+                          nsIFrame** aFrame)
+{
+  if ((aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND) &&
+      (mRect.Contains(aPoint))) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->IsVisible()) {
+      *aFrame = this;
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
 
 NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
                                   nsHTMLReflowMetrics& aDesiredSize,

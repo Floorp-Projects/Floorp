@@ -52,6 +52,7 @@ public:
                    nsFramePaintLayer    aWhichLayer);
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, 
+                              nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
   NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
@@ -156,6 +157,8 @@ protected:
   nsresult GetFrameForPointUsing(nsIPresContext* aPresContext,
                                  const nsPoint& aPoint,
                                  nsIAtom*       aList,
+                                 nsFramePaintLayer aWhichLayer,
+                                 PRBool         aConsiderSelf,
                                  nsIFrame**     aFrame);
 
   virtual void PaintChildren(nsIPresContext*      aPresContext,

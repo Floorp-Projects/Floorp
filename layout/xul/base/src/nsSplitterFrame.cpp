@@ -419,15 +419,17 @@ nsSplitterFrame::HandleRelease(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                              const nsPoint& aPoint, 
+                                             nsFramePaintLayer aWhichLayer,
                                              nsIFrame**     aFrame)
 {   
   // if the mouse is captured always return us as the frame.
   if (mInner->IsMouseCaptured(aPresContext))
   {
+    // XXX It's probably better not to check visibility here, right?
     *aFrame = this;
     return NS_OK;
   } else 
-    return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
+    return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
 }
 
 NS_IMETHODIMP
