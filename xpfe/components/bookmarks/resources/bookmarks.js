@@ -734,6 +734,10 @@ function fillContextMenu(name)
 
 
 
+const nsIFilePicker = Components.interfaces.nsIFilePicker;
+
+
+
 function doContextCmd(cmdName)
 {
 	debug("doContextCmd start: cmd='" + cmdName + "'");
@@ -775,6 +779,54 @@ function doContextCmd(cmdName)
 	{
 		var promptStr = bundle.GetStringFromName("DeleteItems");
 		if (!confirm(promptStr))	return(false);
+	}
+	else if (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=import")
+	{
+		try
+		{
+			var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
+	                if (filePicker)	filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
+	                if (!filePicker)	return(false);
+
+			var promptStr = bundle.GetStringFromName("SelectImport");
+
+			filePicker.chooseInputFile(promptStr, 2, "", "");		// 2 = html filter
+			var filespec = filePicker.QueryInterface(Components.interfaces.nsIFileSpec);
+			if (!filespec)		return(false);
+			var filename = filespec.URLString;
+			if ((!filename) || (filename == ""))	return(false);
+
+			debug("Import: '" + filename + "'\n");
+			urlVal = filename;
+		}
+		catch(ex)
+		{
+			return(false);
+		}
+	}
+	else if (cmdName == "http://home.netscape.com/NC-rdf#command?cmd=export")
+	{
+		try
+		{
+			var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
+	                if (filePicker)	filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
+	                if (!filePicker)	return(false);
+
+			var promptStr = bundle.GetStringFromName("EnterExport");
+
+			filePicker.chooseOutputFile(promptStr, "bookmarks.html", 2);	// 2 = html filter
+			var filespec = filePicker.QueryInterface(Components.interfaces.nsIFileSpec);
+			if (!filespec)		return(false);
+			var filename = filespec.URLString;
+			if ((!filename) || (filename == ""))	return(false);
+
+			debug("Export: '" + filename + "'\n");
+			urlVal = filename;
+		}
+		catch(ex)
+		{
+			return(false);
+		}
 	}
 
 	var treeNode = document.getElementById("bookmarksTree");

@@ -26,7 +26,10 @@
 <!ENTITY menuitem.newBookmark.label     "New Bookmark">
 <!ENTITY menuitem.newFolder.label       "New Folder">
 <!ENTITY menuitem.newSeparator.label    "New Separator">
+<!ENTITY menuitem.import.label          "Import...">
+<!ENTITY menuitem.export.label          "Export...">
 <!ENTITY menuitem.close.label           "Close">
+
 <!ENTITY menu.edit.label                "Edit">
 <!ENTITY menuitem.undo.label            "Undo">
 <!ENTITY menuitem.redo.label            "Redo">
@@ -37,6 +40,12 @@
 <!ENTITY menuitem.selectAll.label       "Select All">
 <!ENTITY menuitem.find.label            "Search in Bookmarks...">
 <!ENTITY menuitem.properties.label      "Properties...">
+
+<!ENTITY menu.view.label                "View">
+<!ENTITY menuitem.newbookmarkfolder.label         "Set as New Bookmark Folder">
+<!ENTITY menuitem.newinternetsearchfolder.label   "Set as New Internet Search Folder">
+<!ENTITY menuitem.personaltoolbarfolder.label     "Set as Personal Toolbar Folder">
+
 <!ENTITY tree.header.name.label         "Name">
 <!-- LOCALIZATION NOTE (tree.header.url.label) : DONT_TRANSLATE -->
 <!ENTITY tree.header.url.label          "URL">
