@@ -185,6 +185,15 @@ function setPasswordStrength()
 
   var pwstrength=((pwlength*10)-20) + (numeric*10) + (numsymbols*15) + (upper*10);
 
+  // make sure we're give a value between 0 and 100
+  if ( pwstrength < 0 ) {
+    pwstrength = 0;
+  }
+  
+  if ( pwstrength > 100 ) {
+    pwstrength = 100;
+  }
+
   var mymeter=document.getElementById('pwmeter');
   mymeter.setAttribute("value",pwstrength);
 
