@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.8 2000/09/12 20:15:41 jgmyers%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.9 2000/09/14 20:25:26 nelsonb%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -3031,7 +3031,6 @@ sendRSAClientKeyExchange(sslSocket * ss, SECKEYPublicKey * svrPubKey)
     /* wrap pre-master secret in server's public key. */
     rv = PK11_PubWrapSymKey(CKM_RSA_PKCS, svrPubKey, pms, &enc_pms);
     if (rv != SECSuccess) {
-	PORT_Free(enc_pms.data);
 	ssl_MapLowLevelError(SSL_ERROR_CLIENT_KEY_EXCHANGE_FAILURE);
 	goto loser;
     }
