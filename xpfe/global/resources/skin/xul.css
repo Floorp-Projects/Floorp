@@ -66,6 +66,7 @@ spring {
 
 toolbox { 
   display: block;
+  user-focus: ignore;
 }
 
 toolbar, menubar {

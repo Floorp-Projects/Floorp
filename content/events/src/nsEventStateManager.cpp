@@ -45,6 +45,8 @@
 #include "nsIDOMSelection.h"
 #include "nsIFrameSelection.h"
 #include "nsIDeviceContext.h"
+#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObject.h"
 
 
 static NS_DEFINE_IID(kIEventStateManagerIID, NS_IEVENTSTATEMANAGER_IID);
@@ -114,6 +116,9 @@ NS_IMPL_ADDREF(nsEventStateManager)
 NS_IMPL_RELEASE(nsEventStateManager)
 NS_IMPL_QUERY_INTERFACE(nsEventStateManager, kIEventStateManagerIID);
 
+// This must be the same across instances
+static nsCOMPtr<nsIContent> mLastFocusedContent;
+
 NS_IMETHODIMP
 nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext, 
                                  nsGUIEvent *aEvent,
@@ -178,6 +183,112 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
     break;
   case NS_GOTFOCUS:
     {
+      nsCOMPtr<nsIContent> oldFocusedContent;
+      mCurrentTarget->GetContent(getter_AddRefs(oldFocusedContent));
+      if(mLastFocusedContent == oldFocusedContent)
+        break;     
+    
+      // ask focus target about its CSS user-focus style
+      PRBool surpressBlurAndFocus = PR_FALSE;
+      nsCOMPtr<nsIStyleContext> context;
+      mCurrentTarget->GetStyleContext(getter_AddRefs(context));
+      
+      const nsStyleUserInterface* styleStruct = (const nsStyleUserInterface*)context->GetStyleData(eStyleStruct_UserInterface);
+      if (NS_STYLE_USER_FOCUS_IGNORE == styleStruct->mUserFocus) {
+        // we want to surpress the blur and the following focus based on user-focus: ignore;
+        surpressBlurAndFocus = PR_TRUE;
+      }
+          
+          if(!surpressBlurAndFocus) {
+              // TODO: fire blur only if the focus target is not a child of the currently focused node 
+              // (it would just get focus again a second later)
+              PRBool isChild = PR_FALSE;
+              
+              if(!isChild){
+                // Ask if the last focused content can accept blur
+                nsCOMPtr<nsIContent> oldFocus = mLastFocusedContent;
+                if (oldFocus) {
+                  nsIFocusableContent *focusChange;
+                  if (NS_SUCCEEDED(oldFocus->QueryInterface(kIFocusableContentIID, (void **)&focusChange))) {
+                    NS_RELEASE(focusChange);
+                                       
+                      //fire blur only if target can accept focus
+                      nsEventStatus status = nsEventStatus_eIgnore;
+                      nsEvent event;
+                      event.eventStructType = NS_EVENT;
+                      event.message = NS_BLUR_CONTENT;
+
+                      if (!mDocument) {
+                        nsCOMPtr<nsIPresShell> presShell;
+                        aPresContext.GetShell(getter_AddRefs(presShell));
+                        if (presShell) {
+                          presShell->GetDocument(&mDocument);
+                        }
+                      }
+
+                      if (mDocument) {
+                        mCurrentTarget = nsnull;
+                        
+                        nsCOMPtr<nsIScriptContextOwner> contextOwner = dont_QueryInterface(mDocument->GetScriptContextOwner());
+                        if(!contextOwner) break;
+
+                        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+                        contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+                        if(!globalObject) break;
+                    
+                        globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+                      }   
+                  }
+                }
+              }
+      
+              // Ask if target can accept focus
+              mCurrentTarget = aTargetFrame;
+      
+              //fire focus
+              nsEventStatus status = nsEventStatus_eIgnore;
+              nsEvent focusevent;
+              focusevent.eventStructType = NS_EVENT;
+              focusevent.message = NS_FOCUS_CONTENT;
+
+              if (!mDocument) {
+                nsCOMPtr<nsIPresShell> presShell;
+                aPresContext.GetShell(getter_AddRefs(presShell));
+                if (presShell) {
+                  presShell->GetDocument(&mDocument);
+                }
+              }
+
+              if (mDocument) {
+                nsCOMPtr<nsIContent> newFoo;
+                mCurrentTarget->GetContent(getter_AddRefs(newFoo));
+                mLastFocusedContent = newFoo;
+                
+                mCurrentTarget = nsnull;
+                // fire focus on window, not document
+                nsCOMPtr<nsIScriptContextOwner> contextOwner = dont_QueryInterface(mDocument->GetScriptContextOwner());
+                if(!contextOwner) break;
+
+                nsCOMPtr<nsIScriptGlobalObject> globalObject;
+                contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+                if(!globalObject) break;
+                     
+                globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, status); 
+              }
+      }
+    }
+    break;
+    
+  case NS_LOSTFOCUS:
+    {
+      // Hold the blur, wait for the focus so we can query the style of the focus
+      // target as to what to do with the event. If appropriate we fire the blur
+      // at that time.
+    }
+    break;
+    
+ case NS_ACTIVATE:
+    {
       nsIContent* newFocus;
       mCurrentTarget->GetContent(&newFocus);
       if (newFocus) {
@@ -190,12 +301,12 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
         }
         NS_RELEASE(newFocus);
       }
-
+      
       //fire focus
       nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_FOCUS_CONTENT;
+      nsEvent focusevent;
+      focusevent.eventStructType = NS_EVENT;
+      focusevent.message = NS_FOCUS_CONTENT;
 
       if (!mDocument) {
         nsCOMPtr<nsIPresShell> presShell;
@@ -206,46 +317,70 @@ nsEventStateManager::PreHandleEvent(nsIPresContext& aPresContext,
       }
 
       if (mDocument) {
+        mCurrentTarget->GetContent(getter_AddRefs(mLastFocusedContent));
+                
         mCurrentTarget = nsnull;
-        mDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+
+        // fire focus on window, not document
+        nsCOMPtr<nsIScriptContextOwner> contextOwner = dont_QueryInterface(mDocument->GetScriptContextOwner());
+        if(!contextOwner) break;
+
+        nsCOMPtr<nsIScriptGlobalObject> globalObject;
+        contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+        if(!globalObject) break;
+                     
+        globalObject->HandleDOMEvent(aPresContext, &focusevent, nsnull, NS_EVENT_FLAG_INIT, status); 
       }
+          
     }
     break;
-  case NS_LOSTFOCUS:
+    
+ case NS_DEACTIVATE:
     {
-      nsIContent* oldFocus;
-      mCurrentTarget->GetContent(&oldFocus);
-      if (oldFocus) {
+      nsIContent* newFocus;
+      mCurrentTarget->GetContent(&newFocus);
+      if (newFocus) {
         nsIFocusableContent *focusChange;
-        if (NS_SUCCEEDED(oldFocus->QueryInterface(kIFocusableContentIID,
+        if (NS_SUCCEEDED(newFocus->QueryInterface(kIFocusableContentIID,
                                                   (void **)&focusChange))) {
           NS_RELEASE(focusChange);
-          NS_RELEASE(oldFocus);
+          NS_RELEASE(newFocus);
           break;
         }
-        NS_RELEASE(oldFocus);
+        NS_RELEASE(newFocus);
       }
+          
+              //fire blur
+              nsEventStatus status = nsEventStatus_eIgnore;
+              nsEvent event;
+              event.eventStructType = NS_EVENT;
+              event.message = NS_BLUR_CONTENT;
 
-      //fire blur
-      nsEventStatus status = nsEventStatus_eIgnore;
-      nsEvent event;
-      event.eventStructType = NS_EVENT;
-      event.message = NS_BLUR_CONTENT;
+              if (!mDocument) {
+                nsCOMPtr<nsIPresShell> presShell;
+                aPresContext.GetShell(getter_AddRefs(presShell));
+                if (presShell) {
+                  presShell->GetDocument(&mDocument);
+                }
+              }
+                          
+              if (mDocument) {
+                mCurrentTarget = nsnull;
 
-      if (!mDocument) {
-        nsCOMPtr<nsIPresShell> presShell;
-        aPresContext.GetShell(getter_AddRefs(presShell));
-        if (presShell) {
-          presShell->GetDocument(&mDocument);
-        }
-      }
+                // fire focus on window, not document
+                nsCOMPtr<nsIScriptContextOwner> contextOwner = dont_QueryInterface(mDocument->GetScriptContextOwner());
+                if(!contextOwner) break;
 
-      if (mDocument) {
-        mCurrentTarget = nsnull;
-        mDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
-      }
-    }
+                nsCOMPtr<nsIScriptGlobalObject> globalObject;
+                contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+                if(!globalObject) break;
+                     
+                globalObject->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+              }
+                          
+    } 
     break;
+    
   case NS_KEY_PRESS:
   case NS_KEY_DOWN:
   case NS_KEY_UP:
@@ -444,25 +579,40 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
           if (focusable) {
             if (current.get() != mCurrentFocus) {
               nsCOMPtr<nsIContent> content = do_QueryInterface(focusable);
-              if (ChangeFocus(content, PR_TRUE))
+              if (ChangeFocus(content, mCurrentTarget, PR_TRUE))
                 focusChangeFailed = PR_FALSE;
             } else {
               focusChangeFailed = PR_FALSE;
             }
           }
 
-          if (focusChangeFailed) {
+          // ask focus target the magic question
+          PRBool surpressBlurAndFocus = PR_FALSE;
+          nsCOMPtr<nsIStyleContext> context;
+            
+          if(!mCurrentTarget) break;
+          mCurrentTarget->GetStyleContext(getter_AddRefs(context));
+          if(!context) break;
+            
+          const nsStyleUserInterface* styleStruct = (const nsStyleUserInterface*)context->GetStyleData(eStyleStruct_UserInterface);
+          if(!styleStruct) break;
+            
+          if (NS_STYLE_USER_FOCUS_IGNORE == styleStruct->mUserFocus) {
+            // we want to surpress the blur and the following focus
+            surpressBlurAndFocus = PR_TRUE;
+          }  
+          
+          if(!surpressBlurAndFocus) {
             if (nsnull != aEvent->widget) {
               aEvent->widget->SetFocus();
             }
-            SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+            if (focusChangeFailed) {
+              SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
+            }
           }
         }
-
         SetContentState(newFocus, NS_EVENT_STATE_ACTIVE);
-
       }
-
     }
     break;
   case NS_MOUSE_LEFT_BUTTON_UP:
@@ -1093,16 +1243,33 @@ nsEventStateManager::DispatchKeyPressEvent(nsIPresContext& aPresContext,
 }
 
 PRBool
-nsEventStateManager::ChangeFocus(nsIContent* aFocus, PRBool aSetFocus)
+nsEventStateManager::ChangeFocus(nsIContent* aFocusContent, nsIFrame* aFocusFrame, PRBool aSetFocus)
 {
-  nsCOMPtr<nsIFocusableContent> focusChange = do_QueryInterface(aFocus);
+  nsCOMPtr<nsIFocusableContent> focusChange = do_QueryInterface(aFocusContent);
   
   if (focusChange) {
-    if (aSetFocus) {
-      focusChange->SetFocus(mPresContext);
+ 
+    PRBool surpressBlurAndFocus = PR_FALSE;
+    nsCOMPtr<nsIStyleContext> context;
+    aFocusFrame->GetStyleContext(getter_AddRefs(context));
+  
+    const nsStyleUserInterface* styleStruct = (const nsStyleUserInterface*)context->GetStyleData(eStyleStruct_UserInterface);
+    if (NS_STYLE_USER_FOCUS_IGNORE == styleStruct->mUserFocus) {
+      // we want to surpress the blur and the following focus
+      surpressBlurAndFocus = PR_TRUE;
     }
-    else {
+  
+    if(!surpressBlurAndFocus) {
+    if (aSetFocus) {
+
+          mLastFocusedContent = nsnull;     
+      focusChange->SetFocus(mPresContext);
+                mLastFocusedContent = aFocusContent;
+
+
+          } else {
       focusChange->RemoveFocus(mPresContext);
+    }
     }
     return PR_TRUE;
   }
@@ -1168,7 +1335,7 @@ nsEventStateManager::ShiftFocus(PRBool forward)
     return;
   }
 
-  ChangeFocus(next, PR_TRUE);
+  ChangeFocus(next, mCurrentTarget, PR_TRUE);
 
   NS_IF_RELEASE(mCurrentFocus);
   mCurrentFocus = next;
@@ -1550,6 +1717,28 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     return NS_OK;
   }
 
+
+
+  PRBool surpressBlurAndFocus = PR_FALSE;
+
+
+
+  if(mCurrentTarget) {
+    nsCOMPtr<nsIStyleContext> context;
+    mCurrentTarget->GetStyleContext(getter_AddRefs(context));
+    if(!context) return NS_OK;
+
+ 
+    const nsStyleUserInterface* styleStruct = (const nsStyleUserInterface*)context->GetStyleData(eStyleStruct_UserInterface);
+    if (NS_STYLE_USER_FOCUS_IGNORE == styleStruct->mUserFocus) {
+      // we want to surpress the blur and the following focus
+      surpressBlurAndFocus = PR_TRUE;
+	}
+
+      }
+      
+  if(!surpressBlurAndFocus) {
+  
   nsIContent* targetBeforeEvent = mCurrentTargetContent;
 
   if (mCurrentFocus) {
@@ -1560,7 +1749,7 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     // not receive the event.
     nsresult result = mCurrentFocus->GetDocument(*getter_AddRefs(doc));
     if (NS_SUCCEEDED(result) && doc) {
-      ChangeFocus(mCurrentFocus, PR_FALSE);
+      ChangeFocus(mCurrentFocus, mCurrentTarget, PR_FALSE);
       
       //fire blur
       nsEventStatus status = nsEventStatus_eIgnore;
@@ -1667,6 +1856,8 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
 
   }
 
+  }
+  
   return NS_OK;
 }
 
