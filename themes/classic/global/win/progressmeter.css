@@ -76,6 +76,7 @@ progressmeter[mode="undetermined"] {
 
 .progressmeter-statusbar {
   margin: 0;
+  border: 0px;
   -moz-border-top-colors: ThreeDHighlight -moz-Dialog;
   -moz-border-right-colors: ThreeDShadow -moz-Dialog;
   -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;

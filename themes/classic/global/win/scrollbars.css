@@ -87,6 +87,8 @@ thumb[orient="horizontal"] > gripper {
 
 scrollbarbutton {
   background: -moz-Dialog no-repeat 0px 1px;
+  min-width: 16px;
+  min-height: 16px;
 }
 
 scrollbarbutton:hover:active {
