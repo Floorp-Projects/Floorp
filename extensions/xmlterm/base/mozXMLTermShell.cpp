@@ -67,6 +67,7 @@
 #include "mozLineTerm.h"
 #include "mozXMLTermUtils.h"
 #include "mozXMLTermShell.h"
+#include "nsAppShellCID.h"
 
 /////////////////////////////////////////////////////////////////////////
 // mozXMLTermShell implementation
