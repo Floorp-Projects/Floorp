@@ -37,18 +37,18 @@
                (:line-terminator (#?000A #?000D #?2028 #?2029) () t)
                (:decimal-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
                                (($default-action $default-action)
-                                (digit-value digit-value)))
+                                (decimal-value $digit-value)))
                (:octal-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7)
                              (($default-action $default-action)
-                              (digit-value digit-value)))
+                              (octal-value $digit-value)))
                (:zero-to-three (#\0 #\1 #\2 #\3)
-                               ((digit-value digit-value)))
+                               ((octal-value $digit-value)))
                (:four-to-nine (#\4 #\5 #\6 #\7 #\8 #\9)
-                              ((digit-value digit-value)))
+                              ((decimal-value $digit-value)))
                (:eight-or-nine (#\8 #\9)
-                               ((digit-value digit-value)))
+                               ((decimal-value $digit-value)))
                (:hex-digit (#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9 #\A #\B #\C #\D #\E #\F #\a #\b #\c #\d #\e #\f)
-                           ((hex-value digit-value)))
+                           ((hex-value $digit-value)))
                (:control-letter (++ (#\A #\B #\C #\D #\E #\F #\G #\H #\I #\J #\K #\L #\M #\N #\O #\P #\Q #\R #\S #\T #\U #\V #\W #\X #\Y #\Z)
                                     (#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z))
                                 (($default-action $default-action)))
@@ -60,8 +60,8 @@
                 (($default-action $default-action)))
                (:identity-escape (- :unicode-character :unicode-alphanumeric)
                                  (($default-action $default-action))))
-              (($default-action character identity (*))
-               (digit-value integer digit-char-16 ((:global-variable "digitValue") "(" * ")"))))
+              (($default-action character nil identity)
+               ($digit-value integer digit-value digit-char-36)))
        
        (%section "Unicode Character Classes")
        (%charclass :unicode-character)
@@ -118,7 +118,7 @@
        (deftype matcher-generator (-> (integer) matcher))
        (%text :semantics
          "A " (:type matcher-generator)
-         " is a function executed at the time the regular expression is compiled that returns a matcher for a part "
+         " is a function executed at the time the regular expression is compiled that returns a " (:type matcher) " for a part "
          "of the pattern. The " (:type integer) " parameter contains the number of capturing left parentheses seen so far in the "
          "pattern and is used to assign static, consecutive numbers to capturing parentheses.")
        
@@ -278,9 +278,9 @@
        
        (rule :decimal-digits ((integer-value integer))
          (production :decimal-digits (:decimal-digit) decimal-digits-first
-           (integer-value (digit-value :decimal-digit)))
+           (integer-value (decimal-value :decimal-digit)))
          (production :decimal-digits (:decimal-digits :decimal-digit) decimal-digits-rest
-           (integer-value (+ (* 10 (integer-value :decimal-digits)) (digit-value :decimal-digit)))))
+           (integer-value (+ (* 10 (integer-value :decimal-digits)) (decimal-value :decimal-digit)))))
        (%charclass :decimal-digit)
        
        
@@ -301,8 +301,7 @@
              (c x)
              (let ((d continuation (function ((y r-e-match))
                                      (if (and (= min 0)
-                                              (and (is infinite max)
-                                                   (= (& end-index y) (& end-index x))))
+                                              (= (& end-index y) (& end-index x)))
                                        (oneof failure)
                                        (let ((new-min integer (if (= min 0) 0 (- min 1)))
                                              (new-max limit (case max
@@ -394,10 +393,14 @@
            ((gen-matcher (paren-index integer))
             (let ((match matcher ((gen-matcher :disjunction) paren-index)))
               (function ((t r-e-input) (x r-e-match) (c continuation))
-                (let ((d continuation
-                         (function ((y r-e-match))
-                           (c (tuple r-e-match (& end-index x) (& captures y))))))
-                  (match t x d)))))
+                ;(let ((d continuation
+                ;         (function ((y r-e-match))
+                ;           (c (tuple r-e-match (& end-index x) (& captures y))))))
+                ;  (match t x d)))))
+                (case (match t x success-continuation)
+                  ((success y r-e-match)
+                   (c (tuple r-e-match (& end-index x) (& captures y))))
+                  (failure (oneof failure))))))
            (count-parens (count-parens :disjunction)))
          (production :atom (#\( #\? #\! :disjunction #\)) atom-negative-lookahead
            ((gen-matcher (paren-index integer))
@@ -485,7 +488,7 @@
        (rule :decimal-or-octal-escape ((escape-value (-> (integer) escape-value)))
          (production :decimal-or-octal-escape (:decimal-digit (:- :decimal-digit)) decimal-or-octal-escape-one-digit
            ((escape-value (paren-index integer))
-            (let ((n integer (digit-value :decimal-digit)))
+            (let ((n integer (decimal-value :decimal-digit)))
               (if (= n 0)
                 (oneof octal-character #?0000)
                 (if (> n paren-index)
@@ -493,18 +496,18 @@
                   (oneof backreference n))))))
          (production :decimal-or-octal-escape (:zero-to-three :octal-digit (:- :octal-digit)) decimal-or-octal-escape-short-octal-escape
            ((escape-value (paren-index integer))
-            (two-digit-escape-value paren-index (digit-value :zero-to-three) (digit-value :octal-digit))))
+            (two-digit-escape-value paren-index (octal-value :zero-to-three) (octal-value :octal-digit))))
          (production :decimal-or-octal-escape (:zero-to-three :eight-or-nine) decimal-or-octal-escape-two-digit-under-40
            ((escape-value (paren-index integer))
-            (two-digit-escape-value paren-index (digit-value :zero-to-three) (digit-value :eight-or-nine))))
+            (two-digit-escape-value paren-index (octal-value :zero-to-three) (decimal-value :eight-or-nine))))
          (production :decimal-or-octal-escape (:four-to-nine :decimal-digit) decimal-or-octal-escape-two-digit-over-40
            ((escape-value (paren-index integer))
-            (two-digit-escape-value paren-index (digit-value :four-to-nine) (digit-value :decimal-digit))))
+            (two-digit-escape-value paren-index (decimal-value :four-to-nine) (decimal-value :decimal-digit))))
          (production :decimal-or-octal-escape (:zero-to-three :octal-digit :octal-digit) decimal-or-octal-escape-three-digit
            ((escape-value (paren-index integer :unused))
-            (oneof octal-character (code-to-character (+ (+ (* 64 (digit-value :zero-to-three))
-                                                            (* 8 (digit-value :octal-digit 1)))
-                                                         (digit-value :octal-digit 2)))))))
+            (oneof octal-character (code-to-character (+ (+ (* 64 (octal-value :zero-to-three))
+                                                            (* 8 (octal-value :octal-digit 1)))
+                                                         (octal-value :octal-digit 2)))))))
        
        (%charclass :zero-to-three)
        (%charclass :four-to-nine)
@@ -659,13 +662,15 @@
    "Regular Expression Grammar"
    t
    #'(lambda (html-stream)
-       (depict-world-commands html-stream *rw* :visible-semantics nil)))
+       (depict-world-commands html-stream *rw* :visible-semantics nil))
+   :external-link-base "notation-semantic.html")
   (depict-html-to-local-file
    ";JS20;RegExpSemantics.html"
    "Regular Expression Semantics"
    t
    #'(lambda (html-stream)
-       (depict-world-commands html-stream *rw*))))
+       (depict-world-commands html-stream *rw*))
+   :external-link-base "notation-semantic.html"))
 
 (with-local-output (s ";JS20;RegExpGrammar.txt") (print-lexer *rl* s) (print-grammar *rg* s))
 
@@ -683,9 +688,10 @@
 (run-regexp "[\\181A-ae-]+" "93ABC-@ezy43abc")
 (run-regexp "b[ace]+" "baaaacecfe")
 (run-regexp "b[^a]+" "baaaabc")
-(run-regexp "(?=(a+))a*b\\1" "baaabaac")
+(run-regexp "(?=(a+))a*b\\1" "baaabac")
 (run-regexp "(?=(a+))" "baaabac")
 (run-regexp "(.*?)a(?!(a+)b\\2c)\\2(.*)" "baaabaac")
+(run-regexp "(aa|aabaac|ba|b|c)*" "aabaac")
 |#
 
 (length (grammar-states *rg*))
