@@ -64,18 +64,4 @@
 using std::string;
 using std::auto_ptr;
 
-#ifdef __GNUC__ // why doesn't g++ support iterator?
-namespace std {
-    template<class Category, class T, class Distance = ptrdiff_t,
-        class Pointer = T*, class Reference = T&>
-    struct iterator {
-        typedef T value_type;
-        typedef Distance difference_type;
-        typedef Pointer pointer;
-        typedef Reference reference;
-        typedef Category iterator_category;
-    };
-};
-#endif
-
 #endif /* stlcfg_h___ */
