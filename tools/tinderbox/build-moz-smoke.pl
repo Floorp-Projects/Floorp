@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.17 $';
+$Version = '$Revision: 1.18 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -51,8 +51,8 @@ sub InitVars {
     $TopLevel = '.';
     $Topsrcdir = 'mozilla';
     $ClobberStr = 'realclean';
-    $ConfigureEnvArgs = 'CFLAGS=-pipe CXXFLAGS=-pipe';
-    $ConfigureArgs = '--with-nspr=/builds/tinderbox/SeaMonkey/nspr --cache-file=/dev/null --enable-editor ';
+    $ConfigureEnvArgs = '';
+    $ConfigureArgs = '--with-nspr=/builds/tinderbox/SeaMonkey/nspr --cache-file=/dev/null ';
     $ConfigGuess = './build/autoconf/config.guess';
     $Logfile = '${BuildDir}.log';
     $NSPRArgs = 'DIST=/builds/tinderbox/SeaMonkey/nspr MOZILLA_CLIENT=1 NSDISTMODE=copy NO_MDUPDATE=1 ';
@@ -146,6 +146,7 @@ sub SetupPath {
     if ( $OS eq 'OSF1' ) {
 	$ENV{'PATH'} = '/usr/gnu/bin:' . $ENV{'PATH'};
 	$ENV{'LD_LIBRARY_PATH'} .= ':/usr/gnu/lib';
+	$ConfigureArgs .= '--with-pthreads';
 	$ConfigureEnvArgs = 'CC="cc -readonly_strings" CXX="cxx"';
 	$Compiler = 'cc/cxx';
 	$MakeOverrides = 'SHELL=/usr/bin/ksh';
@@ -343,7 +344,7 @@ sub GetSystemInfo {
 }
 
 sub BuildIt {
-    my($fe, @felist, $EarlyExit, $LastTime, $StartTimeStr, $comptmp, $jflag);
+    my($fe, @felist, $EarlyExit, $LastTime, $SaveCVSCO, $StartTimeStr, $comptmp, $jflag);
     $comptmp = '';
     $jflag = '';
 
@@ -353,6 +354,7 @@ sub BuildIt {
     $StartDir = getcwd();
     $LastTime = 0;
     $EarlyExit = 0;
+    $SaveCVSCO = $CVSCO;
 
     # With only one it makes no sense to use this.
     $jflag = "-j $cpus" if ( $cpus > 1 );
@@ -369,6 +371,7 @@ sub BuildIt {
 
 	$LastTime = time;
 
+	$CVSCO = $SaveCVSCO if ( $UseTimeStamp );
 	$StartTime = time - 60 * 10;
 	$StartTimeStr = &CVSTime($StartTime);
 
