@@ -1474,7 +1474,7 @@ nsComponentManagerImpl::RegisterComponentWithType(const nsCID &aClass,
                                                   const char *aType)
 {
     return RegisterComponentCommon(aClass, aClassName, aProgID, 
-                                   nsCRT::strdup(aLocation),
+                                   aLocation,
                                    aReplace, aPersist,
                                    aType);
 }
@@ -1490,8 +1490,8 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
                                               PRBool aReplace,
                                               PRBool aPersist)
 {
-    char *registryName;
-    nsresult rv = RegistryLocationForSpec(aLibrarySpec, &registryName);
+    nsXPIDLCString registryName;
+    nsresult rv = RegistryLocationForSpec(aLibrarySpec, getter_Copies(registryName));
     if (NS_FAILED(rv))
         return rv;
 
@@ -1499,7 +1499,6 @@ nsComponentManagerImpl::RegisterComponentSpec(const nsCID &aClass,
                                    registryName,
                                    aReplace, aPersist,
                                    nativeComponentType);
-    nsAllocator::Free(registryName);
     return rv;
 }
 
@@ -1518,8 +1517,8 @@ nsComponentManagerImpl::RegisterComponentLib(const nsCID &aClass,
                                              PRBool aReplace,
                                              PRBool aPersist)
 {
-    char *registryName;
-    nsresult rv = RegistryNameForLib(aDllName, &registryName);
+    nsXPIDLCString registryName;
+    nsresult rv = RegistryNameForLib(aDllName, getter_Copies(registryName));
     if (NS_FAILED(rv))
         return rv;
     return RegisterComponentCommon(aClass, aClassName, aProgID, registryName,
@@ -1537,7 +1536,7 @@ nsresult
 nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
                                                 const char *aClassName,
                                                 const char *aProgID,
-                                                char *aRegistryName,
+                                                const char *aRegistryName,
                                                 PRBool aReplace,
                                                 PRBool aPersist,
                                                 const char *aType)
@@ -1639,8 +1638,6 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
 
  out:
     if (NS_FAILED(rv)) {
-        if (aRegistryName)
-            nsAllocator::Free(aRegistryName);
         if (newEntry)
             delete newEntry;
     }
