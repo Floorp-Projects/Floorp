@@ -37,6 +37,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManagerUtils.h"
 #include "plhash.h"
+#include "prenv.h"
 
 #include <gtk/gtkmain.h>
 
@@ -86,6 +87,10 @@ nsAppShell::Create(int *argc, char **argv)
   // XXX add all of the command line handling
 
   gtk_init(argc, &argv);
+  
+  if (PR_GetEnv("MOZ_DEBUG_PAINTS")) {
+    gdk_window_set_debug_updates(TRUE);
+  }
 
   return NS_OK;
 }

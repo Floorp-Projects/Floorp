@@ -820,18 +820,41 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 void
 nsWindow::OnMotionNotifyEvent(GtkWidget *aWidget, GdkEventMotion *aEvent)
 {
+
+  // see if we can compress this event
+  XEvent xevent;
+  PRPackedBool synthEvent = PR_FALSE;
+  while (XCheckWindowEvent(GDK_WINDOW_XDISPLAY(aEvent->window),
+			   GDK_WINDOW_XWINDOW(aEvent->window),
+			   ButtonMotionMask, &xevent)) {
+    synthEvent = PR_TRUE;
+  }
+
   nsMouseEvent event;
   InitMouseEvent(event, NS_MOUSE_MOVE);
+ 
+  if (synthEvent) {
+    event.point.x = nscoord(xevent.xmotion.x);
+    event.point.y = nscoord(xevent.xmotion.y);
 
-  event.point.x = nscoord(aEvent->x);
-  event.point.y = nscoord(aEvent->y);
+    event.isShift   = (xevent.xmotion.state & GDK_SHIFT_MASK)
+      ? PR_TRUE : PR_FALSE;
+    event.isControl = (xevent.xmotion.state & GDK_CONTROL_MASK)
+      ? PR_TRUE : PR_FALSE;
+    event.isAlt     = (xevent.xmotion.state & GDK_MOD1_MASK)
+      ? PR_TRUE : PR_FALSE;
+  }
+  else {
+    event.point.x = nscoord(aEvent->x);
+    event.point.y = nscoord(aEvent->y);
 
-  event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
-    ? PR_TRUE : PR_FALSE;
-  event.isControl = (aEvent->state & GDK_CONTROL_MASK)
-    ? PR_TRUE : PR_FALSE;
-  event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
-    ? PR_TRUE : PR_FALSE;
+    event.isShift   = (aEvent->state & GDK_SHIFT_MASK)
+      ? PR_TRUE : PR_FALSE;
+    event.isControl = (aEvent->state & GDK_CONTROL_MASK)
+      ? PR_TRUE : PR_FALSE;
+    event.isAlt     = (aEvent->state & GDK_MOD1_MASK)
+      ? PR_TRUE : PR_FALSE;
+  }
 
   nsEventStatus status;
   DispatchEvent(&event, status);
