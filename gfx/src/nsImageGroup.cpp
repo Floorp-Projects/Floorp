@@ -33,10 +33,6 @@
 
 static NS_DEFINE_IID(kIImageGroupIID, NS_IIMAGEGROUP_IID);
 
-static void ns_observer_proc (XP_Observable aSource,
-                              XP_ObservableMsg	aMsg, 
-                              void* aMsgData, 
-                              void* aClosure);
 
 class ImageGroupImpl : public nsIImageGroup
 {
@@ -115,6 +111,43 @@ ImageGroupImpl::~ImageGroupImpl()
 }
 
 NS_IMPL_ISUPPORTS(ImageGroupImpl, kIImageGroupIID)
+
+static void ns_observer_proc (XP_Observable aSource,
+                              XP_ObservableMsg	aMsg, 
+                              void* aMsgData, 
+                              void* aClosure)
+{
+  ImageGroupImpl *image_group = (ImageGroupImpl *)aClosure;
+  nsVoidArray *observer_list = image_group->GetObservers();
+
+  if (observer_list != nsnull) {
+    PRInt32 i, count = observer_list->Count();
+    nsIImageGroupObserver *observer;
+    for (i = 0; i < count; i++) {
+      observer = (nsIImageGroupObserver *)observer_list->ElementAt(i);
+      if (observer != nsnull) {
+        switch (aMsg) {
+          case IL_STARTED_LOADING:
+            observer->Notify(image_group,  
+                             nsImageGroupNotification_kStartedLoading);
+            break;
+          case IL_ABORTED_LOADING:
+            observer->Notify(image_group, 
+                             nsImageGroupNotification_kAbortedLoading);
+          case IL_FINISHED_LOADING:
+            observer->Notify(image_group, 
+                             nsImageGroupNotification_kFinishedLoading);
+          case IL_STARTED_LOOPING:
+            observer->Notify(image_group, 
+                             nsImageGroupNotification_kStartedLooping);
+          case IL_FINISHED_LOOPING:
+            observer->Notify(image_group, 
+                             nsImageGroupNotification_kFinishedLooping);
+        }
+      }
+    }
+  }
+}
 
 static PRBool
 ReconnectHack(void* arg, nsIStreamListener* aListener)
@@ -310,42 +343,3 @@ NS_NewImageGroup(nsIImageGroup **aInstancePtrResult)
 
   return group->QueryInterface(kIImageGroupIID, (void **) aInstancePtrResult);
 }
-
-
-static void ns_observer_proc (XP_Observable aSource,
-                              XP_ObservableMsg	aMsg, 
-                              void* aMsgData, 
-                              void* aClosure)
-{
-  ImageGroupImpl *image_group = (ImageGroupImpl *)aClosure;
-  nsVoidArray *observer_list = image_group->GetObservers();
-
-  if (observer_list != nsnull) {
-    PRInt32 i, count = observer_list->Count();
-    nsIImageGroupObserver *observer;
-    for (i = 0; i < count; i++) {
-      observer = (nsIImageGroupObserver *)observer_list->ElementAt(i);
-      if (observer != nsnull) {
-        switch (aMsg) {
-          case IL_STARTED_LOADING:
-            observer->Notify(image_group,  
-                             nsImageGroupNotification_kStartedLoading);
-            break;
-          case IL_ABORTED_LOADING:
-            observer->Notify(image_group, 
-                             nsImageGroupNotification_kAbortedLoading);
-          case IL_FINISHED_LOADING:
-            observer->Notify(image_group, 
-                             nsImageGroupNotification_kFinishedLoading);
-          case IL_STARTED_LOOPING:
-            observer->Notify(image_group, 
-                             nsImageGroupNotification_kStartedLooping);
-          case IL_FINISHED_LOOPING:
-            observer->Notify(image_group, 
-                             nsImageGroupNotification_kFinishedLooping);
-        }
-      }
-    }
-  }
-}
-
