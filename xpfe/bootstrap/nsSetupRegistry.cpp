@@ -32,9 +32,6 @@
 #include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
 
-#include "nsAppCoresCIDs.h"
-#include "nsIDOMAppCoresManager.h"
-#include "nsIDOMBrowserAppCore.h"
 #include "nsISessionHistory.h"
 #include "rdf.h"
 #include "nsIWindowMediator.h"
@@ -42,18 +39,12 @@
 #include "nsIDialogParamBlock.h"
 // #include "nsAbout.h"
 #include "nsIAboutModule.h"
-static NS_DEFINE_CID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
-static NS_DEFINE_CID(kToolkitCoreCID,      NS_TOOLKITCORE_CID);
-static NS_DEFINE_CID(kDOMPropsCoreCID,     NS_DOMPROPSCORE_CID);
-static NS_DEFINE_CID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
-static NS_DEFINE_CID(kRDFCoreCID,          NS_RDFCORE_CID);
 static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSIONHISTORY_CID);
 static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 #ifdef XP_PC
 
 #define APPSHELL_DLL "appshell.dll"
 #define BROWSER_DLL  "nsbrowser.dll"
-#define APPCORES_DLL  "appcores.dll"
 #define EDITOR_DLL "ender.dll"
 
 #else
@@ -61,7 +52,6 @@ static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 #ifdef XP_MAC
 
 #define APPSHELL_DLL "APPSHELL_DLL"
-#define APPCORES_DLL  "APPCORES_DLL"
 #define EDITOR_DLL	"ENDER_DLL"
 
 #else
@@ -133,12 +123,6 @@ NS_SetupRegistry_1()
    nsComponentManager::RegisterComponentLib(kCommonDialogsCID,   NULL, "component://netscape/appshell/commonDialogs", APPSHELL_DLL, PR_FALSE, PR_FALSE);
  nsComponentManager::RegisterComponentLib(kDialogParamBlockCID,   NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
      nsComponentManager::RegisterComponentLib(kAboutModuleCID,  "about:", NS_ABOUT_MODULE_PROGID_PREFIX, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  // APPCORES_DLL
-  nsComponentManager::RegisterComponentLib(kAppCoresManagerCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kToolkitCoreCID,     NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kDOMPropsCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kBrowserAppCoreCID,  NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kRDFCoreCID,         NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
 
   //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
 

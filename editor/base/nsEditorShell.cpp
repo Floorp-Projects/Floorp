@@ -25,8 +25,6 @@
 #include "pratom.h"
 #include "prprf.h"
 #include "nsIComponentManager.h"
-#include "nsAppCoresCIDs.h"
-#include "nsIDOMAppCoresManager.h"
 
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
