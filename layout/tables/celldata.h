@@ -394,6 +394,7 @@ inline BCData::BCData()
   mLeftOwner = mTopOwner = eCellOwner;
   mLeftStart = mTopStart = 1;
   mLeftSize = mCornerSide = mCornerSubSize = mTopSize = 0;
+  mCornerBevel = PR_FALSE;
 }
 
 inline BCData::~BCData()
