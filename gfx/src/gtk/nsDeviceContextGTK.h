@@ -27,6 +27,7 @@
 
 #include "X11/Xlib.h"
 #include "X11/Intrinsic.h"
+#include <gtk/gtk.h>
 
 #ifdef MITSHM
 #include <sys/ipc.h>
@@ -65,12 +66,8 @@ public:
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
   NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
-
   NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
-
-
   NS_IMETHOD CheckFontExistence(const nsString& aFontName);
-
 
 protected:
   ~nsDeviceContextGTK();

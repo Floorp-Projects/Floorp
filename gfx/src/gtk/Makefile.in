@@ -36,7 +36,7 @@ CFLAGS	+= $(shell gtk-config --cflags)
 LLIBS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorbase.a $(DIST)/lib/libraptorgfx.a
 
 CPPSRCS=nsDeviceContextGTK.cpp nsFontMetricsGTK.cpp nsGfxFactoryGTK.cpp \
-	nsRenderingContextGTK.cpp nsImageGTK.cpp
+	nsRenderingContextGTK.cpp nsImageGTK.cpp nsRegionGTK.cpp
 
 include $(topsrcdir)/config/rules.mk
 
