@@ -24,15 +24,19 @@
 
 var NC_NAMESPACE_URI = "http://home.netscape.com/NC-rdf#";
 
+// XXX MAKE SURE that the "url" field is LAST!
+// This is important for what happens if/when the URL itself is changed.
+// Ask rjc@netscape.com if you want to know why exactly this is.
+
 // This is the set of fields that are visible in the window.
-var Fields     = ["name", "url", "shortcut", "description"];
+var Fields     = ["name", "shortcut", "description", "url"];
 
 // ...and this is a parallel array that contains the RDF properties
 // that they are associated with.
 var Properties = [NC_NAMESPACE_URI + "Name",
-                  NC_NAMESPACE_URI + "URL",
                   NC_NAMESPACE_URI + "ShortcutURL",
-                  NC_NAMESPACE_URI + "Description"];
+                  NC_NAMESPACE_URI + "Description",
+                  NC_NAMESPACE_URI + "URL"];
 
 var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
