@@ -208,6 +208,7 @@ nsImapProtocol::nsImapProtocol() :
 	m_flags = 0;
 	m_urlInProgress = PR_FALSE;
 	m_socketIsOpen = PR_FALSE;
+	m_gotFEEventCompletion = PR_FALSE;
     m_connectionStatus = 0;
 	m_hostSessionList = nsnull;
     
@@ -713,6 +714,7 @@ nsImapProtocol::NotifyFEEventCompletion()
 {
     PR_EnterMonitor(m_eventCompletionMonitor);
     PR_Notify(m_eventCompletionMonitor);
+	m_gotFEEventCompletion = PR_TRUE;
     PR_ExitMonitor(m_eventCompletionMonitor);
     return NS_OK;
 }
@@ -721,7 +723,9 @@ void
 nsImapProtocol::WaitForFEEventCompletion()
 {
     PR_EnterMonitor(m_eventCompletionMonitor);
-    PR_Wait(m_eventCompletionMonitor, PR_INTERVAL_NO_TIMEOUT);
+	if (!m_gotFEEventCompletion)
+		PR_Wait(m_eventCompletionMonitor, PR_INTERVAL_NO_TIMEOUT);
+	m_gotFEEventCompletion = PR_FALSE;
     PR_ExitMonitor(m_eventCompletionMonitor);
 }
 

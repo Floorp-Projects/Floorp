@@ -275,6 +275,7 @@ private:
 	// to ::StopBinding and it is set whenever we call Load on a url
 	PRBool			m_urlInProgress;	
 	PRBool			m_socketIsOpen;
+	PRBool			m_gotFEEventCompletion;
 	PRUint32		m_flags;	   // used to store flag information
 	nsCOMPtr<nsIImapUrl>		m_runningUrl; // the nsIImapURL that is currently running
 	nsIImapUrl::nsImapAction	m_imapAction;  // current imap action associated with this connnection...
