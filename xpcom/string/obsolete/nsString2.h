@@ -466,6 +466,13 @@ public:
    * @param   aString: string to be added to this
    * @return  this
    */
+#ifdef NEW_STRING_APIS
+  #ifdef HAVE_CPP_USING
+    using nsAWritableString::operator=;
+  #else
+    nsString& operator=( const nsAReadableString& aReadable ) { nsAWritableString::operator=(aReadable); return *this; }
+  #endif
+#endif
   nsString& operator=(char aChar) {return Assign(aChar);}
   nsString& operator=(PRUnichar aChar) {return Assign(aChar);}
   nsString& operator=(const char* aCString) {return Assign(aCString);}
@@ -486,6 +493,13 @@ public:
    * @param   various...
    * @return  this
    */
+#ifdef NEW_STRING_APIS
+  #ifdef HAVE_CPP_USING
+    using nsAWritableString::operator+=;
+  #else
+    nsString& operator+=( const nsAReadableString& aReadable ) { nsAWritableString::operator+=(aReadable); return *this; }
+  #endif
+#endif
   nsString& operator+=(const char* aCString) {return Append(aCString);}
   nsString& operator+=(const char aChar) {
     return Append((PRUnichar) (unsigned char)aChar);    
