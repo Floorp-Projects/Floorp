@@ -137,6 +137,9 @@ department
 $email
 email
 
+$email
+emailaddress
+
 $uri
 webaddress
 
