@@ -46,16 +46,6 @@
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 
-#ifdef SingleSignon
-#include "nsIDocument.h"
-#include "prmem.h"
-#include "nsIURL.h"
-#include "nsIWalletService.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-#endif
-
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kTextAreaCID, NS_TEXTAREA_CID);

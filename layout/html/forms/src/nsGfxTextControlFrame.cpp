@@ -65,15 +65,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h"
-
-#ifdef SingleSignon
-#include "prmem.h"
-#include "nsIURL.h"
-#include "nsIWalletService.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-#endif
+#include "nsIPresShell.h"
 
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
@@ -1111,69 +1103,7 @@ nsGfxTextControlFrame::InitializeTextControl(nsIPresShell *aPresShell, nsIDOMDoc
 
     // now that the style context is initialized, initialize the content
     nsAutoString value;
-    if (PR_TRUE == IsSingleLineTextControl()) 
-    {
-#ifdef SingleSignon
-      // get name of text 
-      PRBool failed = PR_TRUE;
-      nsAutoString name;
-      GetName(&name);
-
-      // get url name 
-      char *URLName = nsnull;
-      nsIURI* docURL = nsnull;
-      nsIDocument* doc = nsnull;
-      mContent->GetDocument(doc);
-      if (nsnull != doc) {
-        docURL = doc->GetDocumentURL();
-        NS_RELEASE(doc);
-        if (nsnull != docURL) {
-#ifdef NECKO
-          char* spec;
-#else
-          const char* spec;
-#endif
-          (void)docURL->GetSpec(&spec);
-          if (nsnull != spec) {
-            URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
-            PL_strcpy(URLName, spec);
-          }
-#ifdef NECKO
-          nsCRT::free(spec);
-#endif
-          NS_RELEASE(docURL);
-        }
-      }
-
-      if (nsnull != URLName) {
-        // invoke single-signon to get previously-used value of text 
-        nsIWalletService *service;
-        nsresult res = nsServiceManager::GetService(kWalletServiceCID,
-                                                    kIWalletServiceIID,
-                                                    (nsISupports **)&service);
-        if ((NS_OK == res) && (nsnull != service)) {
-          char* valueString = NULL;
-          char* nameString = name.ToNewCString();
-          res = service->SI_RestoreSignonData(URLName, nameString, &valueString);
-          delete[] nameString;
-          nsServiceManager::ReleaseService(kWalletServiceCID, service);
-          PR_FREEIF(URLName);
-          if (valueString && *valueString) {
-            value = valueString;
-            failed = PR_FALSE;
-          }
-        }
-      }
-      if (failed) {
-        GetText(&value, PR_TRUE);
-      }
-#else
-      GetText(&value, PR_TRUE);
-#endif
-    }
-    else {
-      GetText(&value, PR_TRUE);
-    }
+    GetText(&value, PR_TRUE);
     mEditor->EnableUndo(PR_FALSE);
 
     PRInt32 maxLength;

@@ -87,40 +87,12 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #define SPECIFY_CHARSET_IN_CONTENT_TYPE
 #define FIX_NON_ASCII_MULTIPART
 
-#if defined(ClientWallet) || defined(SingleSignon) || defined(CookieManagement)
-#include "nsIServiceManager.h"
-#endif
-
 // GetParentHTMLFrameDocument
 static NS_DEFINE_IID(kIWebshellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-
-#ifdef SingleSignon
-#define FORM_TYPE_TEXT          1
-#define FORM_TYPE_PASSWORD      7
-#endif
-
-#if defined(ClientWallet) || defined(SingleSignon)
-#include "nsIWalletService.h"
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-#endif
-
-#if defined(CookieManagement)
-
-#ifndef NECKO
-#include "nsINetService.h"
-static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-#else
-#include "nsIURL.h"
-#endif // NECKO
-
-
-#endif
 
 //----------------------------------------------------------------------
 
@@ -708,109 +680,12 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   return NS_OK;
 }
 
-#ifdef ClientWallet
-void
-GetVcardName(nsIFormControlFrame& aFormControlFrame, nsString& aVCardName) 
-{
-  aVCardName = "";
-  nsIFrame* frame = nsnull;
-  nsresult rv = aFormControlFrame.QueryInterface(kIFrameIID, (void**)&frame);
-  if (NS_SUCCEEDED(rv) && frame) {
-    nsIContent* content = nsnull;
-    rv = frame->GetContent(&content);
-    if (NS_SUCCEEDED(rv) && content) {
-      nsIHTMLContent* htmlContent = nsnull;
-      rv = content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
-      if (NS_SUCCEEDED(rv) && htmlContent) {
-        nsHTMLValue value;
-        if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::vcard_name, value)) {
-          if (eHTMLUnit_String == value.GetUnit()) {
-            value.GetStringValue(aVCardName);
-          }
-        }
-        NS_RELEASE(htmlContent);
-      }
-      NS_RELEASE(content);
-    }
-  }
-}
-#endif
-
 #define CRLF "\015\012"   
 void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormControlFrame* aFrame)
 {
   nsString buf;
   PRBool firstTime = PR_TRUE;
   PRUint32 numChildren = mFormControls.Count();
-
-
-#if defined(ClientWallet) || defined(SingleSignon)
-  /* get url name as ascii string */
-  char *URLName = nsnull;
-  nsIURI* docURL = nsnull;
-  nsIDocument* doc = nsnull;
-  mContent->GetDocument(doc);
-
-#ifdef NECKO
-  char* spec;
-#else
-  const char* spec;
-#endif
-  while (doc) {
-    docURL = doc->GetDocumentURL();
-    if (nsnull != docURL) {
-      (void)docURL->GetSpec(&spec);
-      if (PL_strcmp(spec, "about:blank")) {
-        break;
-      }
-#ifdef NECKO
-      nsCRT::free(spec);
-#endif
-    }
-    doc = GetParentHTMLFrameDocument(doc);
-  }
-  if (nsnull != docURL) {
-    URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
-    PL_strcpy(URLName, spec);
-    NS_IF_RELEASE(docURL);
-  }
-#ifdef NECKO
-  nsCRT::free(spec);
-#endif
-#endif
-
-#ifdef SingleSignon
-#define MAX_ARRAY_SIZE 500
-  char* name_array[MAX_ARRAY_SIZE];
-  char* value_array[MAX_ARRAY_SIZE];
-  uint8 type_array[MAX_ARRAY_SIZE];
-  PRInt32 value_cnt = 0;
-#endif
-
-#ifdef ClientWallet
-  /* determine if form is significant enough to capture data for */
-  PRBool OKToCapture = FALSE;
-  PRInt32 count = 0;
-  PRUint32 numChildren2 = mFormControls.Count();
-  for (PRUint32 childX2 = 0; childX2 < numChildren2; childX2++) {
-    nsIFormControlFrame* child = (nsIFormControlFrame*) mFormControls.ElementAt(childX2);
-    if (child && child->IsSuccessful(aFrame)) {
-      PRInt32 type;
-      child->GetType(&type);
-      if (type == NS_FORM_INPUT_TEXT) {
-        count++;
-      }
-    }
-  }
-  nsIWalletService *service2;
-  nsresult res2 = nsServiceManager::GetService(kWalletServiceCID,
-    kIWalletServiceIID,
-    (nsISupports **)&service2);
-  if ((NS_OK == res2) && (nsnull != service2)) {
-    service2->WALLET_OKToCapture(&OKToCapture, count, URLName);
-    nsServiceManager::ReleaseService(kWalletServiceCID, service2);
-  }
-#endif
 
   nsIUnicodeEncoder *encoder = nsnull;
   if(NS_FAILED( GetEncoder(&encoder) ) )
@@ -828,40 +703,6 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 		  nsString* names = new nsString[maxNumValues];
 		  nsString* values = new nsString[maxNumValues];
 			if (PR_TRUE == child->GetNamesValues(maxNumValues, numValues, values, names)) {
-#if defined(ClientWallet) || defined(SingleSignon)
-				PRInt32 type;
-				child->GetType(&type);
-#endif
-#ifdef ClientWallet
-        if (OKToCapture && (NS_FORM_INPUT_TEXT == type)) {
-          nsString vcard("");
-          GetVcardName(*child, vcard);
-          nsIWalletService *service;
-          nsresult res = nsServiceManager::GetService(kWalletServiceCID,
-                                                      kIWalletServiceIID,
-                                                      (nsISupports **)&service);
-          if ((NS_OK == res) && (nsnull != service)) {
-            res = service->WALLET_Capture(doc, *names, *values, vcard);
-            nsServiceManager::ReleaseService(kWalletServiceCID, service);
-          }
-        }
-#endif
-#ifdef SingleSignon
-				if ((type == NS_FORM_INPUT_PASSWORD) || (type == NS_FORM_INPUT_TEXT)) {
-					if (value_cnt < MAX_ARRAY_SIZE) {
-						if (type == NS_FORM_INPUT_PASSWORD) {
-							type_array[value_cnt] = FORM_TYPE_PASSWORD;
-						} else {
-							type_array[value_cnt] = FORM_TYPE_TEXT;
-						}
-						value_array[value_cnt] =
-							values[0].ToNewCString();
-						name_array[value_cnt] =
-							names[0].ToNewCString();
-						value_cnt++;
-					}
-				}
-#endif
 				for (int valueX = 0; valueX < numValues; valueX++) {
 				  if (PR_TRUE == firstTime) {
 					  firstTime = PR_FALSE;
@@ -882,30 +723,6 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 		}
 	}
   NS_IF_RELEASE(encoder);
-
-#ifdef SingleSignon
-  nsIWalletService *service;
-  nsresult res = nsServiceManager::GetService(kWalletServiceCID,
-                                          kIWalletServiceIID,
-                                          (nsISupports **)&service);
-  if ((NS_OK == res) && (nsnull != service)) {
-	  res = service->SI_RememberSignonData
-		(URLName, (char**)name_array, (char**)value_array, (char**)type_array, value_cnt);
-	  nsServiceManager::ReleaseService(kWalletServiceCID, service);
-  }
-  while (value_cnt--) {
-	PR_FREEIF(name_array[value_cnt]);
-	PR_FREEIF(value_array[value_cnt]);
-  }
-#endif
-#if defined(ClientWallet) || defined(SingleSignon)
-  if (nsnull != doc) {
-        NS_RELEASE(doc);
-  }
-  if (nsnull != URLName) {
-        PR_FREEIF(URLName);
-  }
-#endif
 
   aData.SetLength(0);
   if (isPost) {

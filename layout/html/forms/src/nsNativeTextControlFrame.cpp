@@ -46,16 +46,6 @@
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 
-#ifdef SingleSignon
-#include "nsIDocument.h"
-#include "prmem.h"
-#include "nsIURL.h"
-#include "nsIWalletService.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
-static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-#endif
-
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kTextCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kTextAreaCID, NS_TEXTAREA_CID);
@@ -252,62 +242,7 @@ nsNativeTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   nsITextAreaWidget* textArea = nsnull;
   nsITextWidget* text = nsnull;
   if (NS_OK == mWidget->QueryInterface(kITextWidgetIID,(void**)&text)) {
-
-#ifdef SingleSignon
-    /* get name of text */
-    PRBool failed = PR_TRUE;
-    nsAutoString name;
-    GetName(&name);
-
-    /* get url name */
-    char *URLName = nsnull;
-    nsIURI* docURL = nsnull;
-    nsIDocument* doc = nsnull;
-    mContent->GetDocument(doc);
-    if (nsnull != doc) {
-      docURL = doc->GetDocumentURL();
-      NS_RELEASE(doc);
-      if (nsnull != docURL) {
-#ifdef NECKO
-        char* spec;
-#else
-        const char* spec;
-#endif
-        (void)docURL->GetSpec(&spec);
-        if (nsnull != spec) {
-          URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
-          PL_strcpy(URLName, spec);
-        }
-        NS_RELEASE(docURL);
-      }
-    }
-
-    if (nsnull != URLName) {
-      /* invoke single-signon to get previously-used value of text */
-      nsIWalletService *service;
-      nsresult res = nsServiceManager::GetService(kWalletServiceCID,
-                                            kIWalletServiceIID,
-                                            (nsISupports **)&service);
-      if ((NS_OK == res) && (nsnull != service)) {
-        char* valueString = NULL;
-        char* nameString = name.ToNewCString();
-        res = service->SI_RestoreSignonData(URLName, nameString, &valueString);
-        delete[] nameString;
-        nsServiceManager::ReleaseService(kWalletServiceCID, service);
-        PR_FREEIF(URLName);
-        if (valueString && *valueString) {
-          value = valueString;
-          failed = PR_FALSE;
-        }
-      }
-    }
-    if (failed) {
-      GetText(&value, PR_TRUE);
-    }
-#else
-  GetText(&value, PR_TRUE);
-#endif
-
+    GetText(&value, PR_TRUE);
     text->SetText(value, ignore);
     PRInt32 maxLength;
     nsresult result = GetMaxLength(&maxLength);
