@@ -436,7 +436,7 @@ nsContextMenu.prototype = {
         return false;
       }
       // test for a form with at least one text element that has a value
-      var formsArray = window._content.document.forms;
+      var formsArray = this.target.ownerDocument.forms;
       if (!formsArray) {
         return false;
       }
@@ -471,7 +471,7 @@ nsContextMenu.prototype = {
       if (!window._content.document) {
         return false;
       }
-      var formsArray = window._content.document.forms;
+      var formsArray = this.target.ownerDocument.forms;
       if (!formsArray) {
         return false;
       }
