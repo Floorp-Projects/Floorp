@@ -263,6 +263,33 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  Str255 tmp = "\pa";
 	  ::InsertMenuItem(mMacMenuHandle, tmp, mNumMenuItems);
 	  NSStringSetMenuItemText(mMacMenuHandle, mNumMenuItems,label);
+	  
+	  // I want to be internationalized too!
+	  nsString keyEquivalent = " ";
+	  aMenuItem->GetShortcutChar(keyEquivalent);
+	  if(keyEquivalent != " ") {
+	    char* foo = keyEquivalent.ToNewCString();
+	    short inKey = foo[0];
+	    ::SetItemCmd(mMacMenuHandle, mNumMenuItems, inKey);
+	    //::SetMenuItemKeyGlyph(mMacMenuHandle, mNumMenuItems, 0x61);
+	  }
+	  
+	  PRUint8 modifiers;
+	  aMenuItem->GetModifiers(&modifiers);
+	  PRUint8 macModifiers = kMenuNoModifiers;
+      if(knsMenuItemShiftModifier & modifiers)
+        macModifiers |= kMenuShiftModifier;
+        
+      if(knsMenuItemAltModifier & modifiers)
+        macModifiers |= kMenuOptionModifier;
+    
+      if(knsMenuItemControlModifier & modifiers)
+        macModifiers |= kMenuControlModifier;
+    
+      if((knsMenuItemCommandModifier & modifiers))
+        macModifiers |= kMenuNoCommandModifier;
+	  
+	  ::SetMenuItemModifiers(mMacMenuHandle, mNumMenuItems, macModifiers);
 	}
   }
   return NS_OK;
