@@ -772,17 +772,34 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 {
   nsIBrowserWindow *mBrowser;
-
-  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    nsRect r;
-    mBrowser->GetContentBounds(r);
-    *aInnerWidth = r.width;
-    NS_RELEASE(mBrowser);
+  nsIDOMWindow* parent = nsnull;
+  
+  GetParent(&parent);
+  if (parent == this) {
+    // We are in a top level window.  Use browser window's bounds.
+    if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+      nsRect r;
+      mBrowser->GetContentBounds(r);
+      *aInnerWidth = r.width;
+      NS_RELEASE(mBrowser);
+    }
+    else {
+      *aInnerWidth = 0;
+    }
   }
   else {
-    *aInnerWidth = 0;
+    // We are in an (i)frame.  Use webshell bounds.    
+    if (mWebShell) {
+      PRInt32 x,y,w,h;
+      mWebShell->GetBounds(x, y, w, h);
+      *aInnerWidth = w;
+    }
+    else {
+      *aInnerWidth = 0;
+    }    
   }
-
+  
+  NS_RELEASE(parent);
   return NS_OK;
 }
 
@@ -805,17 +822,34 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 {
   nsIBrowserWindow *mBrowser;
-
-  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    nsRect r;
-    mBrowser->GetContentBounds(r);
-    *aInnerHeight = r.height;
-    NS_RELEASE(mBrowser);
+  nsIDOMWindow* parent = nsnull;
+  
+  GetParent(&parent);
+  if (parent == this) {
+    // We are in a top level window.  Use browser window's bounds.    
+    if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+      nsRect r;
+      mBrowser->GetContentBounds(r);
+      *aInnerHeight = r.height;
+      NS_RELEASE(mBrowser);
+    }
+    else {
+      *aInnerHeight = 0;
+    }
   }
   else {
-    *aInnerHeight = 0;
+    // We are in an (i)frame.  Use webshell bounds.    
+    if (mWebShell) {
+      PRInt32 x,y,w,h;
+      mWebShell->GetBounds(x, y, w, h);
+      *aInnerHeight = h;
+    }
+    else {
+      *aInnerHeight = 0;
+    }    
   }
 
+  NS_RELEASE(parent);
   return NS_OK;
 }
 
@@ -838,17 +872,34 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
 {
   nsIBrowserWindow *mBrowser;
-
-  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    nsRect r;
-    mBrowser->GetWindowBounds(r);
-    *aOuterWidth = r.width;
-    NS_RELEASE(mBrowser);
+  nsIDOMWindow* parent = nsnull;
+  
+  GetParent(&parent);
+  if (parent == this) {
+    // We are in a top level window.  Use browser window's bounds.    
+    if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+      nsRect r;
+      mBrowser->GetWindowBounds(r);
+      *aOuterWidth = r.width;
+      NS_RELEASE(mBrowser);
+    }
+    else {
+      *aOuterWidth = 0;
+    }
   }
   else {
-    *aOuterWidth = 0;
+    // We are in an (i)frame.  Use webshell bounds.    
+    if (mWebShell) {
+      PRInt32 x,y,w,h;
+      mWebShell->GetBounds(x, y, w, h);
+      *aOuterWidth = w;
+    }
+    else {
+      *aOuterWidth = 0;
+    }    
   }
-
+  
+  NS_RELEASE(parent);
   return NS_OK;
 }
 
@@ -871,17 +922,34 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
 {
   nsIBrowserWindow *mBrowser;
-
-  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-    nsRect r;
-    mBrowser->GetWindowBounds(r);
-    *aOuterHeight = r.height;
-    NS_RELEASE(mBrowser);
+  nsIDOMWindow* parent = nsnull;
+  
+  GetParent(&parent);
+  if (parent == this) {
+    // We are in a top level window.  Use browser window's bounds.    
+    if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+      nsRect r;
+      mBrowser->GetWindowBounds(r);
+      *aOuterHeight = r.height;
+      NS_RELEASE(mBrowser);
+    }
+    else {
+      *aOuterHeight = 0;
+    }
   }
   else {
-    *aOuterHeight = 0;
+    // We are in an (i)frame.  Use webshell bounds.    
+    if (mWebShell) {
+      PRInt32 x,y,w,h;
+      mWebShell->GetBounds(x, y, w, h);
+      *aOuterHeight = h;
+    }
+    else {
+      *aOuterHeight = 0;
+    }    
   }
 
+  NS_RELEASE(parent);
   return NS_OK;
 }
 
