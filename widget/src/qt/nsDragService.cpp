@@ -251,11 +251,11 @@ NS_IMETHODIMP nsDragService::GetData(nsITransferable *aTransferable,
         nsCOMPtr<nsISupports> genericDataWrapper;
 	PRUint32 len = (PRUint32)ba.count();
 
-        nsPrimitiveHelpers::CreatePrimitiveForData(foundFlavor, 
+        nsPrimitiveHelpers::CreatePrimitiveForData(foundFlavor.get(), 
  						   (void*)ba.data(),len, 
                                                    getter_AddRefs(genericDataWrapper));
 
-        aTransferable->SetTransferData(foundFlavor,genericDataWrapper,len);
+        aTransferable->SetTransferData(foundFlavor.get(),genericDataWrapper,len);
       }
     }
   }
