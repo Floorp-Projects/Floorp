@@ -205,6 +205,7 @@ function DoEnabling()
   } else {
     SetElementEnabledById("MisspelledWordLabel", true);
     SetElementEnabledById("ReplaceWordLabel", true);
+    SetElementEnabledById("ReplaceWord", true);
     SetElementEnabledById("CheckWord", true);
     SetElementEnabledById("SuggestedListLabel", true);
     SetElementEnabledById("SuggestedList", true);
