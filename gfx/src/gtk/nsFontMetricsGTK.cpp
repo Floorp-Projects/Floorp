@@ -286,19 +286,19 @@ void nsFontMetricsGTK::RealizeFont()
   else
   {
     // TODO do some gdk magic and get a '_' and figure it out...
+    mUnderlineOffset = nscoord(mUnderlineOffset * f);
   }
   if (::XGetFontProperty(fontInfo, XA_UNDERLINE_THICKNESS, &pr))
   {
     g_print("XA_UNDERLINE_THICKNESS = %i\nIf you see the above message, please
     email pavlov@pavlov.net with the URL that you were on when you got it.", pr);
-    mUnderlineSize = nscoord(pr * f);
+    mUnderlineSize = nscoord(-2 * f);
   }
   else
   {
     // TODO do some gdk magic and get a '_' and figure it out...
+    mUnderlineSize = nscoord(1 * f);
   }
-
-
 
   PRUint32 i;
 

@@ -70,15 +70,6 @@ private:
   PRUint32      mDepth;
   PRBool        mWriteable;
   nsPaletteInfo mPaletteInfo;
-  PRUint32 mRedMask;
-  PRUint32 mGreenMask;
-  PRUint32 mBlueMask;
-  PRUint32 mRedBits;
-  PRUint32 mGreenBits;
-  PRUint32 mBlueBits;
-  PRUint32 mRedOffset;
-  PRUint32 mGreenOffset;
-  PRUint32 mBlueOffset;
   GdkColormap *mColormap;
   PRUint32 mNumCells;
 };

@@ -37,15 +37,6 @@ nsDeviceContextGTK::nsDeviceContextGTK()
   NS_INIT_REFCNT();
   mTwipsToPixels = 1.0;
   mPixelsToTwips = 1.0;
-  mRedMask = 0;
-  mGreenMask = 0;
-  mBlueMask = 0;
-  mRedBits = 0;
-  mGreenBits = 0;
-  mBlueBits = 0;
-  mRedOffset = 0;
-  mGreenOffset = 0;
-  mBlueOffset = 0;
   mDepth = 0 ;
   mPaletteInfo.isPaletteDevice = PR_FALSE;
   mPaletteInfo.sizePalette = 0;
@@ -85,15 +76,6 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
   vis = gdk_rgb_get_visual();
-  mRedMask = vis->red_mask;
-  mGreenMask = vis->green_mask;
-  mBlueMask = vis->blue_mask;
-  mRedBits = vis->bits_per_rgb;
-  mGreenBits = vis->bits_per_rgb;
-  mBlueBits = vis->bits_per_rgb;
-  mRedOffset = vis->red_shift;
-  mGreenOffset = vis->green_shift;
-  mBlueOffset = vis->blue_shift;
   mDepth = vis->depth;
 
   return NS_OK;
