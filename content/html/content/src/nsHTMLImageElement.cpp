@@ -27,6 +27,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIHTMLAttributes.h"
+#include "nsIJSScriptObject.h"
 
 // XXX nav attrs: suppress
 
@@ -35,7 +36,8 @@ static NS_DEFINE_IID(kIDOMHTMLImageElementIID, NS_IDOMHTMLIMAGEELEMENT_IID);
 class nsHTMLImageElement : public nsIDOMHTMLImageElement,
                             public nsIScriptObjectOwner,
                             public nsIDOMEventReceiver,
-                            public nsIHTMLContent
+                            public nsIHTMLContent,
+                           public nsIJSScriptObject
 {
 public:
   nsHTMLImageElement(nsIAtom* aTag);
@@ -93,6 +95,16 @@ public:
   // nsIHTMLContent
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
+  // nsIJSScriptObject
+  virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    GetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    SetProperty(JSContext *aContext, jsval aID, jsval *aVp);
+  virtual PRBool    EnumerateProperty(JSContext *aContext);
+  virtual PRBool    Resolve(JSContext *aContext, jsval aID);
+  virtual PRBool    Convert(JSContext *aContext, jsval aID);
+  virtual void      Finalize(JSContext *aContext);
+
 protected:
   nsGenericHTMLLeafElement mInner;
 };
@@ -128,6 +140,12 @@ NS_IMPL_RELEASE(nsHTMLImageElement)
 nsresult
 nsHTMLImageElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
+  if (aIID.Equals(kIJSScriptObjectIID)) {
+    nsIJSScriptObject* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    AddRef();
+    return NS_OK;
+  }                                                             
   NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
   if (aIID.Equals(kIDOMHTMLImageElementIID)) {
     nsIDOMHTMLImageElement* tmp = this;
@@ -158,7 +176,7 @@ NS_IMPL_STRING_ATTR(nsHTMLImageElement, Height, height, eSetAttrNotify_Reflow)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Hspace, hspace, eSetAttrNotify_Reflow)
 NS_IMPL_BOOL_ATTR(nsHTMLImageElement, IsMap, ismap, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, LongDesc, longdesc, eSetAttrNotify_None)
-NS_IMPL_STRING_ATTR(nsHTMLImageElement, Src, src, eSetAttrNotify_Render)
+NS_IMPL_STRING_ATTR(nsHTMLImageElement, Src, src, eSetAttrNotify_Reflow)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, UseMap, usemap, eSetAttrNotify_None)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Vspace, vspace, eSetAttrNotify_Reflow)
 NS_IMPL_STRING_ATTR(nsHTMLImageElement, Width, width, eSetAttrNotify_Reflow)
@@ -268,3 +286,52 @@ nsHTMLImageElement::HandleDOMEvent(nsIPresContext& aPresContext,
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
+
+PRBool    
+nsHTMLImageElement::AddProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return mInner.AddProperty(aContext, aID, aVp);
+}
+
+PRBool    
+nsHTMLImageElement::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return mInner.DeleteProperty(aContext, aID, aVp);
+}
+
+PRBool    
+nsHTMLImageElement::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return mInner.GetProperty(aContext, aID, aVp);
+}
+
+PRBool    
+nsHTMLImageElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
+{
+  return mInner.SetProperty(aContext, aID, aVp);
+}
+
+PRBool    
+nsHTMLImageElement::EnumerateProperty(JSContext *aContext)
+{
+  return mInner.EnumerateProperty(aContext);
+}
+
+PRBool    
+nsHTMLImageElement::Resolve(JSContext *aContext, jsval aID)
+{
+  return mInner.Resolve(aContext, aID);
+}
+
+PRBool    
+nsHTMLImageElement::Convert(JSContext *aContext, jsval aID)
+{
+  return mInner.Convert(aContext, aID);
+}
+
+void      
+nsHTMLImageElement::Finalize(JSContext *aContext)
+{
+  mInner.Finalize(aContext);
+}
+

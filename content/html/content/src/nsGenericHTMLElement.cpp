@@ -1712,6 +1712,9 @@ nsGenericHTMLElement::SetAttr(nsIAtom* aAttribute,
   case eSetAttrNotify_None:
     break;
   case eSetAttrNotify_Reflow:
+    if (nsnull != mDocument) {
+      mDocument->ContentChanged(mContent, nsnull);
+    }
     break;
   case eSetAttrNotify_Render:
     RenderFrame();
@@ -2115,13 +2118,6 @@ nsGenericHTMLElement::Finalize(JSContext *aContext)
 {
 }
  
-PRBool    
-nsGenericHTMLElement::Construct(JSContext *cx, JSObject *obj, 
-                                uintN argc, jsval *argv, jsval *rval)
-{
-  return PR_TRUE;
-}
-
 //----------------------------------------------------------------------
 
 // nsISupports implementation

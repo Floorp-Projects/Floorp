@@ -1111,13 +1111,6 @@ void      nsDocument::Finalize(JSContext *aContext)
 {
 }
 
-PRBool    
-nsDocument::Construct(JSContext *cx, JSObject *obj,  uintN argc, 
-                      jsval *argv, jsval *rval)
-{
-  return PR_FALSE;
-}
-
 /**
   * Returns the Selection Object
  */
