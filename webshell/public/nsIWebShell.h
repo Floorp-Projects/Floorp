@@ -263,6 +263,11 @@ public:
   NS_IMETHOD AddChild(nsIWebShell* aChild) = 0;
 
   /**
+   * Remove a child WebShell.
+   */
+  NS_IMETHOD RemoveChild(nsIWebShell* aChild) = 0;
+
+  /**
    * Return the child WebShell at the requested index.
    */
   NS_IMETHOD ChildAt(PRInt32 aIndex, nsIWebShell*& aResult) = 0;
