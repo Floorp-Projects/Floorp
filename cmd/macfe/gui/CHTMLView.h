@@ -314,22 +314,13 @@ class CHTMLView :
 									Boolean inDelay = false,
 									Boolean	inForceCreate = false,
 									FO_Present_Types inOutputFormat = FO_CACHE_AND_PRESENT
-									);
-	
+									);	
 		virtual void			DispatchURL(CURLDispatchInfo* inDispatchInfo);
+		virtual URL_Struct*		CreateURLStructOfCurrent ( Boolean inCopyFormData ) ;
 
 		Boolean					CanPrint() const;
 		void					DoPrintCommand(CommandT);
 		
-#if 0
-			// CONTEXTUAL POPUP
-// CContextMenuAttachment will make this obsolete when you decide to use it.
-		virtual short			DoPopup(const SMouseDownEvent& event, CHTMLClickRecord& cr);
-// CContextMenuAttachment will make this obsolete when you decide to use it.
-		virtual void			HandlePopupResult(const SMouseDownEvent& where,
-													CHTMLClickRecord& cr,
-													short result);
-#endif				
 			// MOUSING AND KEYING
 			
 		virtual void			Click(SMouseDownEvent &inMouseDown);

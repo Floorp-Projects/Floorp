@@ -2360,7 +2360,6 @@ void CHTMLView::GetDefaultFileNameForSaveAs(URL_Struct* url, CStr31& defaultName
 Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 {
 	Boolean cmdHandled = false;
-//	CURLDispatcher*	theDispatcher = CURLDispatcher::GetURLDispatcher();
 	CHTMLClickRecord* cr = mCurrentClickRecord; // for brevity.
 		// cr will be non-null when handling a context menu command.
 	mCurrentClickRecord = nil; // set it back.
@@ -2368,19 +2367,14 @@ Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 	switch (inCommand)
 	{			
 		case cmd_NEW_WINDOW_WITH_FRAME:
-			History_entry* history = mContext->GetCurrentHistoryEntry();
-			if (!history)
-				break;
-			URL_Struct* url = SHIST_CreateURLStructFromHistoryEntry(*mContext, history);			
-			if (url)
-			{
-				url->history_num    = 0;
-				XP_MEMSET(&url->savedData, 0, sizeof(SHIST_SavedData));
+			URL_Struct*	url = CreateURLStructOfCurrent(false);
+			if (url) {
+				url->history_num = 0;
+				DispatchURL(url, mContext, false, true);
 			}
-			
-			DispatchURL(url, mContext, false, true);
 			cmdHandled = true;
 			break;
+
 		case cmd_OPEN_LINK:
 			if (cr)
 			{
@@ -2517,25 +2511,13 @@ Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 			break;
 
 		case cmd_ViewSource:
-			{
-				MWContext* mwcontext = *GetContext();
-				if (!mwcontext) break;
-				URL_Struct* url = SHIST_CreateURLStructFromHistoryEntry(
-							mwcontext,
-							GetContext()->GetCurrentHistoryEntry()
-							);
-				
-				if (!url) break;
-
-				SHIST_SavedData 	savedData;
-				XP_MEMCPY(&savedData, &url->savedData, sizeof(SHIST_SavedData));
-				XP_MEMSET( &url->savedData, 0, sizeof( SHIST_SavedData ) );
-				LO_CloneFormData(&savedData, mwcontext, url);
-
+		{
+			URL_Struct* url = CreateURLStructOfCurrent(true);
+			if (url)
 				mContext->ImmediateLoadURL(url, FO_VIEW_SOURCE);
-				cmdHandled = true;
-			}
+			cmdHandled = true;
 			break;
+		}
 
 		case cmd_AddToBookmarks:
 		{
@@ -2566,26 +2548,21 @@ Boolean	CHTMLView::ObeyCommand(CommandT inCommand, void* ioParam)
 			if (cr && cr->IsAnchor() && inCommand == cmd_SAVE_LINK_AS )
 				url = NET_CreateURLStruct(cr->mClickURL, NET_DONT_RELOAD);
 			else
-				url = NET_CreateURLStruct(mContext->GetCurrentURL(), NET_DONT_RELOAD);
+				url = CreateURLStructOfCurrent(true);
+
 			CStr31 fileName;
 			Boolean isMailAttachment = false;
-			#ifdef MOZ_MAIL_NEWS
+#ifdef MOZ_MAIL_NEWS
 			isMailAttachment = XP_STRSTR( url->address, "?part=") || XP_STRSTR(url->address, "&part=");
 			if( isMailAttachment ) 
-			{
 				CHTMLView::GetDefaultFileNameForSaveAs(url, fileName);
-			}
 			else
-			#endif // MOZ_MAIL_NEWS
+#endif // MOZ_MAIL_NEWS
 			{
 				if (inCommand == cmd_SAVE_LINK_AS)
-				{
 					fileName = CFileMgr::FileNameFromURL( url->address );
-				}
 				else
-				{
 					GetDefaultFileNameForSaveAs(url, fileName);
-				}
 			}
 			
 			StandardFileReply reply;
@@ -4852,6 +4829,34 @@ void CHTMLView::ClearDeferredImageQueue(void)
 #pragma mark --- URL DISPATCHING ---
 //
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
+
+//
+// CreateURLStructOfCurrent
+//
+// Get a URL struct for the URL that's being displayed, say for
+// printing, or saving to a file.
+//
+URL_Struct* 
+CHTMLView :: CreateURLStructOfCurrent ( Boolean inCopyFormData )
+{
+	MWContext* mwcontext = *GetContext();
+	if (!mwcontext) return NULL;
+	
+	URL_Struct* url = SHIST_CreateURLStructFromHistoryEntry(mwcontext,
+									mContext->GetCurrentHistoryEntry());
+	if (!url) return NULL;
+
+	SHIST_SavedData savedData;
+	XP_MEMCPY(&savedData, &url->savedData, sizeof(SHIST_SavedData));
+	XP_MEMSET( &url->savedData, 0, sizeof( SHIST_SavedData ) );
+	
+	if (inCopyFormData)
+		LO_CloneFormData(&savedData, mwcontext, url);
+		
+	return url;
+}
+
 
 // 97-05-30 pkc -- These methods are here so that subclasses can alter the
 // CURLDispatchInfo struct as necessary before we call CURLDispatcher::DispatchURL
