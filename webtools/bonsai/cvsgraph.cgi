@@ -103,9 +103,11 @@ foreach (@src_roots) {
 }
 
 unless ($found_rcs_file) {
+    my $escaped_filename = html_quote($filename);
+    my $shell_filename = shell_escape($filename);
     &print_top;
-    print "Rcs file, $filename, does not exist.\n";
-    print "<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre>\n";
+    print STDERR "cvsgraph.cgi: Rcs file, $shell_filename, does not exist.\n";
+    print "Invalid filename: $escaped_filename.\n";
     &print_bottom;
     exit;
 }

@@ -140,8 +140,9 @@ unless ($found_rcs_file) {
   print "\n";
   &print_top;
   my $escaped_filename = html_quote($filename);
-  print "Rcs file, $escaped_filename, does not exist.<pre>rcs_filename => '$rcs_filename'\nroot => '$root'</pre><BR><BR>\n";
-print "</BODY></HTML>\n";
+  my $shell_filename = shell_escape($filename);
+  print STDERR "cvsblame.cgi: Rcs file, $shell_filename, does not exist.\n";
+  print "Invalid filename: $escaped_filename.\n";
   &print_bottom;
   exit;
 }

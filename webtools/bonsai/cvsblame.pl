@@ -547,10 +547,13 @@ sub parse_cvs_file {
     if (!open(RCSFILE, $rcs_pathname)) {
         my ($name, $path, $suffix) = fileparse($rcs_pathname);
         my $deleted_pathname = "${path}Attic/$name$suffix";
-        die "$::progname: error: This file appeared to be under CVS control, " .
-            "but the RCS file is inaccessible.\n" .
-            "(Couldn't open '$rcs_pathname' or '$deleted_pathname').\n"
-          if !open(RCSFILE, $deleted_pathname);
+        if (!open(RCSFILE, $deleted_pathname)) {
+            print STDERR "$::progname: This file appeared to be " .
+                "under CVS control, but the RCS file is inaccessible.\n";
+            print STDERR "(Couldn't open '" . shell_escape($rcs_pathname) . 
+                "' or '" . shell_escape($deleted_pathname) . "').\n";
+            die "CVS file is inaccessible.\n";
+        }
     }
     &parse_rcs_file();
     close(RCSFILE);

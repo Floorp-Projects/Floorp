@@ -107,24 +107,27 @@ if (defined $root && $root ne '') {
 # Find the rcs file
 #
 my $rcs_filename;
+my $found_rcs_file = 0;
 foreach (@src_roots) {
     $root = $_;
     $rcs_filename = "$root/$filename,v";
     $rcs_filename = Fix_BonsaiLink($rcs_filename);
-    goto found_file if -r $rcs_filename;
+    $found_rcs_file = 1, last if -r $rcs_filename;
     $rcs_filename = "$root/${file_head}Attic/$file_tail,v";
-    goto found_file if -r $rcs_filename;
+    $found_rcs_file = 1, last if -r $rcs_filename;
 }
-# File not found
-print "Content-Type:text/html\n\n";
-&print_top;
-my $escaped_filename = html_quote($filename);
-print "Rcs file, $escaped_filename, does not exist.<BR><BR>\n";
-print "</BODY></HTML>\n";
-&print_bottom;
-exit;
 
-found_file:
+# File not found
+unless ($found_rcs_file) {
+    print "Content-Type:text/html\n\n";
+    &print_top;
+    my $escaped_filename = html_quote($filename);
+    print "Rcs file, $escaped_filename, does not exist.<BR><BR>\n";
+    print "</BODY></HTML>\n";
+    &print_bottom;
+    exit;
+}
+
 
 my $rcs_path;
 ($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
