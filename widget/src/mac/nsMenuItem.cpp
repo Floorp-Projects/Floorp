@@ -267,6 +267,18 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::AddMenuListener(nsIMenuListener * aMenuListener)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::RemoveMenuListener(nsIMenuListener * aMenuListener)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 // nsIMenuListener interface
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)

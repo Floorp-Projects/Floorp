@@ -221,7 +221,7 @@ NS_METHOD nsMenu::GetItemCount(PRUint32 &aCount)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::GetItemAt(const PRUint32 aCount, nsIMenuItem *& aMenuItem)
+NS_METHOD nsMenu::GetItemAt(const PRUint32 aCount, nsISupports *& aMenuItem)
 {
   return NS_OK;
 }
