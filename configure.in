@@ -3774,6 +3774,24 @@ AC_ARG_ENABLE(verbose-config-defs,
 	VERBOSE_CONFIG_DEFS=
     fi])
 
+dnl New cache is not yet enabled by default.  This is a temporary
+dnl option for testing
+MOZ_ARG_ENABLE_BOOL(new-cache,
+[  --enable-new-cache      Enable new cache],
+  MOZ_NEW_CACHE=1
+  AC_DEFINE(MOZ_NEW_CACHE))
+
+AC_SUBST(MOZ_NEW_CACHE)
+
+dnl New image library is not yet enabled by default.  This is a temporary
+dnl option for testing
+MOZ_ARG_ENABLE_BOOL(libpr0n,
+[  --enable-libpr0n        Enable new image library],
+  USE_IMG2=1
+  AC_DEFINE(USE_IMG2))
+
+AC_SUBST(USE_IMG2)
+
 dnl ========================================================
 dnl =
 dnl = --diable-dtd-debug
