@@ -25,6 +25,8 @@
   == Styles for the body of a mail message.
   ======================================================================= */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /* 
  * These are the style attributes for the XUL display.
  */

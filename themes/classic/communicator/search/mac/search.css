@@ -1,3 +1,5 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 box.sidebartitle {
   background-color: #505888;
   padding: 2px 3px 3px 3px;

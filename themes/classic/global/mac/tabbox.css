@@ -5,6 +5,8 @@
  * found in EditorToolbar.css in classic/editor/.
  *******************************/
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /*** TAB: TOP <tab> ***/
 
 tab { 

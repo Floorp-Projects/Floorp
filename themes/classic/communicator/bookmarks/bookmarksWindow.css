@@ -40,6 +40,8 @@
 @import url(chrome://communicator/skin/bookmarks/bookmarks.css);
 @import url(chrome://communicator/skin/bookmarks/platformBookmarks.css);
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /** 
  * XXX - disable print plus. This needs to go into ns/!!!
  */    

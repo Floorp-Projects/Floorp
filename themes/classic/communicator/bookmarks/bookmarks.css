@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /** 
  * Style rules for generic bookmarks items. 
  */    

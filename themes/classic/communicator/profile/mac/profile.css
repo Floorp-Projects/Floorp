@@ -23,6 +23,8 @@
  *
  */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 #header
   {
     list-style-image       : url("chrome://communicator/skin/profile/mac-users.gif");

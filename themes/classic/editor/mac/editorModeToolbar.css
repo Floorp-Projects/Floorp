@@ -24,6 +24,8 @@
 
 @import url("chrome://editor/skin/EditModeTabs.css");
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 #EditModeToolbar 
   {
     padding               : 0px;

@@ -4,6 +4,7 @@
  * both active and disabled states, which includes 3 sets of sliced images.
  ********************************/
 @namespace html url("http://www.w3.org/1999/xhtml"); /* namespace for HTML elements */
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
   menulist {
     -moz-binding		  : url(chrome://global/skin/menulistBindings.xml#nine-slice-menulist);

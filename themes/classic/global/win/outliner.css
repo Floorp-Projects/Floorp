@@ -1,3 +1,5 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 
 /******** Outliner widget **********/
 
@@ -9,7 +11,7 @@
 outliner {
   border-spacing        : 0px;     
   border-top            : 1px solid ThreeDShadow;                             
-  border-right          : 1px solid ThreeDHighlight;                          
+  border-right          : 1px solid ThreeDHighlight;
   border-bottom         : 1px solid ThreeDShadow;                          
   border-left           : 1px solid ThreeDShadow; 
   background-color      : -moz-Field;

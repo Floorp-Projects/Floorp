@@ -1,4 +1,7 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /* inset areas */
+
 .inset
   {
     border-left           : 1px solid ThreeDShadow;
@@ -41,7 +44,9 @@
   {
     border-top            : 1px solid ThreeDHighlight;
     border-bottom         : 1px solid ThreeDShadow;
-  }    
+  }   
+
+
   
 /** separator rules **/
 /* standard separators */

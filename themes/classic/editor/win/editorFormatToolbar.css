@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 #FormatToolbar > toolbarbutton {
   min-width: 3em;
 }

@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 #newButton
   {
     list-style-image      : url("chrome://editor/skin/images/newfile.gif");

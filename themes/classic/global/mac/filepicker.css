@@ -1,5 +1,7 @@
 @import url(chrome://global/skin/global.css);
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 treecell.directory {
   list-style-image: url("chrome://global/skin/dir-closed.gif");
 }

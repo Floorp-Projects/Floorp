@@ -39,6 +39,8 @@
 
 @import url("chrome://communicator/skin/bookmarks/bookmarks.css");
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /**
  * Personal toolbar items
  **/

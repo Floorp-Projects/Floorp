@@ -1,3 +1,5 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 #wiz-back-button {
   list-style-image            : url("chrome://global/skin/flat-left-arrow.gif");
 }

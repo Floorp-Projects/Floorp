@@ -1,3 +1,5 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 #security-button2 
   {
     list-style-image:url("chrome://navigator/skin/unlock.gif");

@@ -27,6 +27,7 @@
 
 @import url("chrome://messenger/skin/");
 @import url("chrome://communicator/skin/dialogOverlay.css");
+@import url("chrome://communicator/skin/prefpanels.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 

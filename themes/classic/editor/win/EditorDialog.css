@@ -26,6 +26,8 @@
    CHANGES REVIEWED BY cmanske@netscape.com.
 */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /* The defaults are WAY to big! */
 groupbox {
   margin:         2px 5px /* 4px 5px */;

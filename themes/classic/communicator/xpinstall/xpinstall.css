@@ -39,6 +39,7 @@
 
 @import url(chrome://global/skin);
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 div.label {
   margin                    : 3px;

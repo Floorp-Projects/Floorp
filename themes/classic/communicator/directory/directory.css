@@ -43,10 +43,13 @@
 
 @import url(chrome://communicator/skin/);
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 #tree {
   margin: 0px !important;
   border: none;
 }
+
 
 /* Hide twisty for files */
 .treecell-indent[type="FILE"] > .tree-cell-twisty 

@@ -22,6 +22,8 @@
  *   Brian King
  */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 toolbar#toolbox {
   margin :0px;
   padding: 4px; 0px; 0px; 0px;

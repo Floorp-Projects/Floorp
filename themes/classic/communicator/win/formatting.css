@@ -1,4 +1,6 @@
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 /* class for text with a 'link' appearance */
 .text-link
   {

@@ -26,6 +26,8 @@
    in order to share with all users of editor
 */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 #content-frame { 
   min-width: 10px; 
   min-height: 10px;
