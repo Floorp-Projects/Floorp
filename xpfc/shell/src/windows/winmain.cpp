@@ -28,6 +28,7 @@
 #include "nsIAppShell.h"
 #include "nspr.h"
 #include "plevent.h"
+#include "nsINetService.h"
 
 #define XPFC_DLL "xpfc10.dll"
 
@@ -148,6 +149,7 @@ int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCm
     NS_RELEASE(pApplicationShell);
     NS_RELEASE(pShellInstance);
 
+    NS_ShutdownINetService();
     PR_Cleanup();
 
     // book out of here

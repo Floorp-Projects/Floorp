@@ -23,6 +23,7 @@
 #include "nsxpfcCIID.h"
 #include "nsIAppShell.h"
 #include "nspr.h"
+#include "nsINetService.h"
 
 #include "Xm/Xm.h"
 #include "Xm/MainW.h"
@@ -156,6 +157,7 @@ void main(int argc, char **argv)
 
     // We're done, clean up
   nsApplicationManager::DeleteShellAssociation(pApplicationShell, pShellInstance);
+  NS_ShutdownINetService();
   PR_Cleanup();
 
   // book out of here

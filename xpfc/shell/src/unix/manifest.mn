@@ -21,5 +21,5 @@ CPPSRCS = \
 	main.cpp \
 	$(NULL)
 
-REQUIRES = xpcom raptor
+REQUIRES = xpcom raptor netlib
 
