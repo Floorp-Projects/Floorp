@@ -4,7 +4,7 @@
   CREATOR: eric 20 March 1999
 
 
-  $Id: icalderivedparameter.h.in,v 1.2 2001/12/21 18:56:15 mikep%oeone.com Exp $
+  $Id: icalderivedparameter.h.in,v 1.3 2004/03/12 21:26:47 mostafah%oeone.com Exp $
   $Locker:  $
 
   
@@ -35,3 +35,4 @@ typedef void icalparameter;
 const char* icalparameter_enum_to_string(int e);
 int icalparameter_string_to_enum(const char* str); 
 
+<insert_code_here>

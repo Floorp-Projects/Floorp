@@ -23,17 +23,14 @@ if ($opt_i) {
 
   while(<IN>){
 
-    if (/Do not edit/){
-      last;
-    }
-
-    print;
-
+    if (/<insert_code_here>/){
+      insert_code();
+    } else {
+      print;
+   }
+ 
   }    
-
-    print "/* Everything below this line is machine generated. Do not edit. */\n";
-
-
+ 
 }
 
 sub fudge_data {
@@ -57,6 +54,8 @@ sub fudge_data {
   return ($uc,$lc,$lcvalue,$ucvalue,$type);
 
 }  
+
+sub insert_code {
 
 # Create the property map data
 if($opt_c){
@@ -245,3 +244,4 @@ if ($opt_h){
 print "\n\n#endif /*ICALPROPERTY_H*/\n"
 }
 
+}

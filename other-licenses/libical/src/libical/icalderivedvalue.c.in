@@ -3,7 +3,7 @@
   FILE: icalvalue.c
   CREATOR: eric 02 May 1999
   
-  $Id: icalderivedvalue.c.in,v 1.2 2001/12/21 18:56:18 mikep%oeone.com Exp $
+  $Id: icalderivedvalue.c.in,v 1.3 2004/03/12 21:26:47 mostafah%oeone.com Exp $
 
 
  (C) COPYRIGHT 2000, Eric Busboom, http://www.softwarestudio.org
@@ -47,8 +47,6 @@
 #include <stdlib.h> /* for atoi and atof */
 #include <limits.h> /* for SHRT_MAX */         
 
-
-
 #define TMP_BUF_SIZE 1024
 
 struct icalvalue_impl*  icalvalue_new_impl(icalvalue_kind kind);
@@ -60,7 +58,19 @@ struct icalvalue_kind_map {
 	char name[20];
 };
 
-extern struct icalvalue_kind_map value_map[]; 
+<insert_code_here>
+
+
+int icalvalue_kind_is_valid(const icalvalue_kind kind)
+{
+    int i = 0;
+    do {
+      if (value_map[i].kind == kind)
+	return 1;
+    } while (value_map[i++].kind != ICAL_NO_VALUE);
+
+    return 0;
+}  
 
 const char* icalvalue_kind_to_string(icalvalue_kind kind)
 {

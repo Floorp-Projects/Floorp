@@ -3,7 +3,7 @@
   FILE: icalderivedparameters.{c,h}
   CREATOR: eric 09 May 1999
   
-  $Id: icalderivedparameter.c.in,v 1.2 2001/12/21 18:56:15 mikep%oeone.com Exp $
+  $Id: icalderivedparameter.c.in,v 1.3 2004/03/12 21:26:47 mostafah%oeone.com Exp $
   $Locker:  $
     
 
@@ -55,8 +55,25 @@ struct icalparameter_kind_map {
     
 };
 
-extern  struct icalparameter_kind_map parameter_map[];
+/* This map associates the enumerations for the VALUE parameter with
+   the kinds of VALUEs. */
 
+struct icalparameter_value_kind_map {
+    icalparameter_value value; 
+    icalvalue_kind kind; 
+};
+
+/* This map associates the parameter enumerations with a specific parameter and the string representation of the enumeration */
+
+struct icalparameter_map {
+    icalparameter_kind kind;
+    int enumeration;
+    const char* str;
+};
+
+
+
+<insert_code_here>
 
 const char* icalparameter_kind_to_string(icalparameter_kind kind)
 {
@@ -94,16 +111,6 @@ icalparameter_kind icalparameter_string_to_kind(const char* string)
     return ICAL_NO_PARAMETER;
 }
 
-/* This map associates the enumerations for the VALUE parameter with
-   the kinds of VALUEs. */
-
-struct icalparameter_value_kind_map {
-    icalparameter_value value; 
-    icalvalue_kind kind; 
-};
-
-extern struct icalparameter_value_kind_map value_kind_map[];
-
 
 icalvalue_kind icalparameter_value_to_value_kind(icalparameter_value value)
 {
@@ -118,18 +125,6 @@ icalvalue_kind icalparameter_value_to_value_kind(icalparameter_value value)
 
     return ICAL_NO_VALUE;
 }
-
-
-/* This map associates the parameter enumerations with a specific parameter and the string representation of the enumeration */
-
-struct icalparameter_map {
-    icalparameter_kind kind;
-    int enumeration;
-    const char* str;
-};
-
-
-extern struct icalparameter_map icalparameter_map[];
 
 
 const char* icalparameter_enum_to_string(int e) 
@@ -208,4 +203,3 @@ icalparameter* icalparameter_new_from_value_string(icalparameter_kind kind,const
 
 
 
-/* Everything below this line is machine generated. Do not edit. */

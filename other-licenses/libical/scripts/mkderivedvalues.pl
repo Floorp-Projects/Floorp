@@ -24,11 +24,18 @@ if ($opt_i) {
   open(IN,$opt_i) || die "Can't open input file $opt_i";
   
   while(<IN>){
-    print;
-  }    
+    if (/<insert_code_here>/){
+      insert_code();
+    } else {
+      print;
+   }
+
+
+  }
 }
 
-
+sub insert_code
+{
  # Map type names to the value in the icalvalue_impl data union */
 
 %union_map = (
@@ -220,6 +227,5 @@ if ($opt_h){
     print "#endif /*ICALVALUE_H*/\n";
   }
   
-  
-  __END__
-  
+
+}

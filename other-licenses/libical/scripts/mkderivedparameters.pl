@@ -18,23 +18,24 @@ if ($opt_i) {
   open(IN,$opt_i) || die "Can't open input file $opt_i";
 
   while(<IN>){
-
-    if (/Do not edit/){
-      last;
-    }
-
-    print;
+    if (/<insert_code_here>/){
+      insert_code();
+    } else {
+      print;
+   }
 
   }    
 
   if($opt_p){
-    print "# Everything below this line is machine generated. Do not edit. \n";
+     print "# Everything below this line is machine generated. Do not edit. \n";
   } else {
     print "/* Everything below this line is machine generated. Do not edit. */\n";
   }
 
 }
 
+sub insert_code
+{
 
 # Write parameter string map
 if ($opt_c){
@@ -318,4 +319,6 @@ print <<EOM;
 #endif /*ICALPARAMETER_H*/
 
 EOM
+}
+
 }
