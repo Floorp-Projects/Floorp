@@ -61,6 +61,7 @@ CPPSRCS =				\
 	nsMenuPopupFrame.cpp \
 	nsMenuFrame.cpp \
 	nsMenuBarFrame.cpp \
+	nsMenuBarListener.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
