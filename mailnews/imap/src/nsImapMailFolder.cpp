@@ -41,6 +41,7 @@
 #include "nsMsgLocalCID.h"
 #include "nsImapUndoTxn.h"
 #include "nsIIMAPHostSessionList.h"
+#include "nsIMsgCopyService.h"
 
 #ifdef DOING_FILTERS
 #include "nsIMsgFilter.h"
@@ -63,6 +64,7 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kParseMailMsgStateCID, NS_PARSEMAILMSGSTATE_CID);
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
+static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 // for temp message hack
@@ -2336,8 +2338,41 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
             case nsIImapUrl::nsImapDeleteMsg:
             case nsIImapUrl::nsImapOnlineMove:
             case nsIImapUrl::nsImapOnlineCopy:
-                if (m_transactionManager)
-                    m_transactionManager->Do(m_pendingUndoTxn);
+                if (m_copyState)
+                {
+                    if (NS_SUCCEEDED(aExitCode))
+                    {
+                        if (m_copyState->isMoveOrDraft)
+                        {
+                            nsCOMPtr<nsIMsgFolder> srcFolder;
+                            srcFolder =
+                                do_QueryInterface(m_copyState->srcSupport,
+                                                  &rv);
+                            nsCOMPtr<nsIMsgDatabase> srcDB;
+                            if (NS_SUCCEEDED(rv))
+                                rv = srcFolder->GetMsgDatabase(
+                                    getter_AddRefs(srcDB));
+                            if (NS_SUCCEEDED(rv) && srcDB)
+                            {
+                                nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
+                                nsMsgKeyArray srcKeyArray;
+                                msgTxn =
+                                    do_QueryInterface(m_copyState->undoMsgTxn); 
+                                if (msgTxn)
+                                    msgTxn->GetSrcKeyArray(srcKeyArray);
+                                srcDB->DeleteMessages(&srcKeyArray, nsnull);
+                            }
+                        }
+                        if (m_transactionManager)
+                            m_transactionManager->Do(m_copyState->undoMsgTxn);
+                    }
+                    ClearCopyState(aExitCode);
+                }
+                else if (m_pendingUndoTxn && NS_SUCCEEDED(aExitCode))
+                {
+                    if (m_transactionManager)
+                        m_transactionManager->Do(m_pendingUndoTxn);
+                }
                 m_pendingUndoTxn = null_nsCOMPtr();
                 break;
             default:
@@ -2415,14 +2450,20 @@ nsImapMailFolder::SetCopyResponseUid(nsIImapProtocol* aProtocol,
                                      nsMsgKeyArray* aKeyArray,
                                      const char* msgIdString)
 {
-    if (m_pendingUndoTxn)
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn;
+
+    if (m_copyState)
     {
-        nsresult rv = NS_OK;
-        nsCOMPtr<nsImapMoveCopyMsgTxn> msgTxn =
-            do_QueryInterface(m_pendingUndoTxn, &rv);
-        if (msgTxn)
-            msgTxn->SetCopyResponseUid(aKeyArray, msgIdString);
+        msgTxn = do_QueryInterface(m_copyState->undoMsgTxn, &rv);
     }
+    else if (m_pendingUndoTxn)
+    {
+        msgTxn = do_QueryInterface(m_pendingUndoTxn, &rv);
+    }
+    if (msgTxn)
+        msgTxn->SetCopyResponseUid(aKeyArray, msgIdString);
+    
     return NS_OK;
 }    
     // nsIImapMiscellaneousSink methods
@@ -2648,6 +2689,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     nsString2 messageIds("", eOneByte);
     nsMsgKeyArray srcKeyArray;
     nsCOMPtr<nsIUrlListener> urlListener;
+    nsCOMPtr<nsISupports> srcSupport;
 
     NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
 
@@ -2663,7 +2705,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     }
     rv = srcFolder->GetHostname(&hostname1);
     if (NS_FAILED(rv)) goto done;
-    rv = srcFolder->GetUsername(&username2);
+    rv = srcFolder->GetUsername(&username1);
     if (NS_FAILED(rv)) goto done;
     rv = GetHostname(&hostname2);
     if(NS_FAILED(rv)) goto done;
@@ -2680,7 +2722,11 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
     rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
     if(NS_FAILED(rv)) goto done;
 
+    srcSupport = do_QueryInterface(srcFolder);
     urlListener = do_QueryInterface(srcFolder);
+
+    rv = InitCopyState(srcSupport, messages, isMove);
+    if (NS_FAILED(rv)) goto done;
 
     if (imapService)
         rv = imapService->OnlineMessageCopy(m_eventQueue,
@@ -2693,14 +2739,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
             srcFolder, &srcKeyArray, messageIds.GetBuffer(), this,
             PR_TRUE, isMove, m_eventQueue, urlListener);
         m_pendingUndoTxn = null_nsCOMPtr();
-        m_pendingUndoTxn = do_QueryInterface(undoMsgTxn, &rv);
-        if (isMove)
-        {
-            nsCOMPtr<nsIMsgDatabase> srcDB;
-            rv = srcFolder->GetMsgDatabase(getter_AddRefs(srcDB));
-            if (NS_SUCCEEDED(rv) && srcDB)
-                srcDB->DeleteMessages(&srcKeyArray, nsnull);
-        }
+        m_copyState->undoMsgTxn = do_QueryInterface(undoMsgTxn, &rv);
     }
 
 done:
@@ -2782,10 +2821,16 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
 }
 
 void
-nsImapMailFolder::ClearCopyState()
+nsImapMailFolder::ClearCopyState(nsresult rv)
 {
     if (m_copyState)
     {
+        nsresult result;
+        NS_WITH_SERVICE(nsIMsgCopyService, copyService, 
+                        kMsgCopyServiceCID, &result); 
+        if (NS_SUCCEEDED(result))
+            copyService->NotifyCompletion(m_copyState->srcSupport, this, rv);
+      
         delete m_copyState;
         m_copyState = nsnull;
     }

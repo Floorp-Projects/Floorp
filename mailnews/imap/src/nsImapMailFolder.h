@@ -317,7 +317,7 @@ protected:
     nsresult InitCopyState(nsISupports* srcSupport, 
                            nsISupportsArray* messages,
                            PRBool isMoveOrDraft);
-    void ClearCopyState();
+    void ClearCopyState(nsresult exitCode);
     nsresult SetTransactionManager(nsITransactionManager* txnMgr);
     nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
                                  nsString2& msgIds, nsMsgKeyArray& keyArray);
