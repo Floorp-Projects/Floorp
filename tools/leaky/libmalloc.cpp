@@ -90,7 +90,7 @@ static void DumpAddressMap()
   int mfd = open("malloc-map", O_CREAT|O_WRONLY|O_TRUNC, 0666);
   if (mfd >= 0) {
     malloc_map_entry mme;
-    link_map* map = _dl_loaded;
+    link_map* map = _r_debug.r_map;
     while (NULL != map) {
       if (0 != map->l_addr) {
 	mme.nameLen = strlen(map->l_name);
