@@ -617,17 +617,20 @@ complete()
             f << "ICG! " << (uint32)iCode->size() << "\n";
             for (InstructionIterator i = iCode->begin(); 
                  i != iCode->end(); i++) {
+                bool isLabel = false;
 
-                f << **i << "\n";
-                /*
                 for (LabelList::iterator k = labels.begin(); 
                      k != labels.end(); k++)
-                    if ((ptrdiff_t)(*k)->itsOffset == (i - iCode->begin())) {
-                        //s << "label #" << (k - labels.begin()) << ":\n";
-                        s << "#" << (i - iCode->begin());
+                    if ((ptrdiff_t)(*k)->offset == (i - iCode->begin())) {
+                        f << "#" << (uint32)(i - iCode->begin()) << "\t";
+                        isLabel = true;
                         break;
                     }
-                */
+
+                if (!isLabel)
+                    f << "\t";
+                
+                f << **i << "\n";
             }
 
             return f;
