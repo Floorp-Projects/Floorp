@@ -22,10 +22,10 @@
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/addressbook/sidebarPanel.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressPanes.css" type="text/css"?>
 
 <?xul-overlay href="chrome://messenger/content/addressbook/abDirTreeOverlay.xul"?>
-<?xul-overlay href="chrome://messenger/content/addressbook/abResultsTreeOverlay.xul"?>
-
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abResultsTreeOverlay.dtd" >
 <window id="addressbook-panel"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="InitCommonJS(); abPanelStartup();"
@@ -38,33 +38,52 @@
     <![CDATA[
       function abPanelStartup() {
         var abList = document.getElementById('addressbookList');
-        abList.selectedIndex = 1;
+        if (!abList.selectedIndex)
+          abList.selectedIndex = 1;
         ChangeDirectoryByDOMNode(abList.selectedItem);
       }
     ]]>
   </script>
+  <popup id="composeMail">
+    <menuitem label="&composeEmail.label;" accesskey="&composeEmail.accesskey;" oncommand="AbNewMessage();" default="true"/>
+  </popup>
   <vbox id="results_box" flex="1">
     <hbox id="panel-bar" class="toolbar">
       <menulist id="addressbookList" oncommand="ChangeDirectoryByDOMNode(event.target);" flex="1">
         <menupopup id="addressbookPopup" datasources="rdf:addressdirectory" ref="moz-abdirectory://">
           <template>
             <rule nc:IsMailList="false">
-              <menuitem label="rdf:http://home.netscape.com/NC-rdf#DirName" uri="..."/>
+              <menuitem label="rdf:http://home.netscape.com/NC-rdf#DirName" persist="selected" uri="..."/>
             </rule>
           </template>
         </menupopup>
       </menulist>
     </hbox>
-    <tree id="resultsTree" flex="1" style="height:0px" ondblclick="AbNewMessage();">
+    <tree id="resultsTree" flex="1" datasources="rdf:addressdirectory rdf:addresscard"
+          style="height:0px" ondblclick="if (event.button == 0) AbNewMessage();" class="abResults"
+          containment="http://home.netscape.com/NC-rdf#CardChild"
+          allownegativeassertions="false" context="composeMail"
+          coalesceduplicatearcs="false"
+          onselect="window.updateCommands('tree-select'); window.updateCommands('select');">
+      <template>
+        <rule>
+          <treechildren flex="1">
+            <treeitem uri="...">
+              <treerow id="AbRows">
+                  <treecell class="treecell-iconic cardicon" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+              </treerow>
+            </treeitem>
+          </treechildren>
+        </rule>
+      </template>
       <treecolgroup id="theColumns">
         <treecol persist="hidden width" flex="2" id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name"/>
-        <splitter class="tree-splitter" hidden="true"/>
-        <treecol persist="hidden width" hidden="true" flex="3" id="EmailColumn" resource="http://home.netscape.com/NC-rdf#PrimaryEmail"/>
-        <splitter class="tree-splitter" hidden="true"/>
-        <treecol persist="hidden width" hidden="true" flex="2" id="WorkPhoneColumn" resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
-        <splitter class="tree-splitter" hidden="true"/>
-        <treecol persist="hidden width" hidden="true" flex="2" id="OrganizationColumn" resource="http://home.netscape.com/NC-rdf#Company"/>
       </treecolgroup>
+      <treehead>
+        <treerow id="headRow">
+          <treecell id="NameColumnHeader" label="&nameColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#Name');"/>
+       </treerow>
+      </treehead>
     </tree>
   </vbox>
 </window>
