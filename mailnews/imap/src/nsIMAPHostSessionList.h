@@ -40,6 +40,8 @@
 
 #include "nsImapCore.h"
 #include "nsIIMAPHostSessionList.h"
+#include "nsIObserver.h"
+#include "nsWeakReference.h"
 #include "nspr.h"
 
 class nsIMAPNamespaceList;
@@ -75,14 +77,16 @@ protected:
 };
 
 // this is an interface to a linked list of host info's    
-class nsIMAPHostSessionList : public nsIImapHostSessionList
+class nsIMAPHostSessionList : public nsIImapHostSessionList, public nsIObserver, public nsSupportsWeakReference
 {
 public:
 
 	NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER  
 
 	nsIMAPHostSessionList();
 	virtual ~nsIMAPHostSessionList();
+  nsresult Init();
 	// Host List
 	 NS_IMETHOD	AddHostToList(const char *serverKey, 
                               nsIImapIncomingServer *server);

@@ -44,6 +44,7 @@
 #include "nsIImapIncomingServer.h"
 #include "nsCOMPtr.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsIObserverService.h"
 
 nsIMAPHostInfo::nsIMAPHostInfo(const char *serverKey, 
                                nsIImapIncomingServer *server)
@@ -85,39 +86,10 @@ nsIMAPHostInfo::~nsIMAPHostInfo()
 	delete fShellCache;
 }
 
-/* the following macros actually implement addref, release and query interface for our component. */
-NS_IMPL_THREADSAFE_ADDREF(nsIMAPHostSessionList)
-NS_IMPL_THREADSAFE_RELEASE(nsIMAPHostSessionList)
-
-NS_IMETHODIMP nsIMAPHostSessionList::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{                                                                        
-  if (NULL == aInstancePtr)
-    return NS_ERROR_NULL_POINTER;
-        
-  *aInstancePtr = NULL;
-                                                                         
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID); 
-  static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID); 
-
-  if (aIID.Equals(NS_GET_IID(nsIImapHostSessionList)))
-  {
-	  *aInstancePtr = (nsIImapHostSessionList *) this;
-	  NS_ADDREF_THIS();
-	  return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) 
-  {
-	  *aInstancePtr = (void*) ((nsISupports*)this);
-	  NS_ADDREF_THIS();
-    return NS_OK;                                                        
-  }                                                                      
-  
-  if (aIID.Equals(kIsThreadsafeIID)) 
-  {
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsIMAPHostSessionList,
+                              nsIImapHostSessionList,
+                              nsIObserver,
+                              nsISupportsWeakReference)
 
 
 nsIMAPHostSessionList::nsIMAPHostSessionList()
@@ -131,6 +103,36 @@ nsIMAPHostSessionList::~nsIMAPHostSessionList()
 {
 	ResetAll();
 	PR_DestroyMonitor(gCachedHostInfoMonitor);
+}
+
+nsresult nsIMAPHostSessionList::Init()
+{
+  nsresult rv;
+  nsCOMPtr<nsIObserverService> observerService = do_GetService("@mozilla.org/observer-service;1", &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    observerService->AddObserver(this, "profile-before-change", PR_TRUE);
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_TRUE);
+  }
+  return rv;
+}
+
+
+NS_IMETHODIMP nsIMAPHostSessionList::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData)
+{
+  nsresult rv;  
+  if (!strcmp(aTopic, "profile-before-change")) 
+    ResetAll();
+  else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID))
+  {
+    nsCOMPtr<nsIObserverService> observerService =  do_GetService("@mozilla.org/observer-service;1", &rv);
+    if (NS_SUCCEEDED(rv))
+    {    
+      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+      observerService->RemoveObserver(this, "profile-before-change");
+    }
+  }
+  return NS_OK;
 }
 
 nsIMAPHostInfo *nsIMAPHostSessionList::FindHost(const char *serverKey)

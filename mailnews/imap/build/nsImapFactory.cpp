@@ -53,7 +53,7 @@
 // private factory declarations for each component we know how to produce
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsImapUrl, Initialize)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapProtocol)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsIMAPHostSessionList)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsIMAPHostSessionList, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapIncomingServer)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsImapMailFolder)
