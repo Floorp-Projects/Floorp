@@ -96,14 +96,15 @@ nsFtpProtocolHandler::NewUrl(const char* aSpec,
 
 NS_IMETHODIMP
 nsFtpProtocolHandler::NewConnection(nsIUrl* url,
-                                     nsISupports* eventSink,
-                                     nsIProtocolConnection* *result)
+                                    nsISupports* eventSink,
+                                    PLEventQueue* eventQueue,
+                                    nsIProtocolConnection* *result)
 {
     nsresult rv;
     nsFtpProtocolConnection* connection = new nsFtpProtocolConnection();
     if (connection == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    rv = connection->Init(url, eventSink);
+    rv = connection->Init(url, eventSink, eventQueue);
     if (NS_FAILED(rv)) {
         delete connection;
         return rv;
