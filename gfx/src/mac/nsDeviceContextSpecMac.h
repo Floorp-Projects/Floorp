@@ -104,7 +104,8 @@ protected:
 protected:
 	THPrint						mPrtRec;									// the print record
 	PRBool						mPrintManagerOpen;				// tells if the print manager is open
-	nsIPrintSettings	*mPrintSettings;
+
+	nsCOMPtr<nsIPrintSettings> mPrintSettings;
 	
 	
 #if !TARGET_CARBON
