@@ -63,6 +63,9 @@ WLLT_GetNocaptureListForViewer (nsString& aNocaptureList);
 extern void
 WLLT_GetPrefillListForViewer (nsString& aPrefillList);
 
+extern void
+WLLT_OnSubmit (nsIContent* formNode);
+
 XP_END_PROTOS
 
 #endif /* !_WALLET_H */

@@ -54,6 +54,7 @@
 #include "prmem.h"
 #include "prprf.h"  
 #include "nsIProfile.h"
+#include "nsIContent.h"
 
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -1523,7 +1524,7 @@ wallet_GetPrefills(
         }
 
         /*
-         * if schema name was specified in vcard attribute the get value from schema name,
+         * if schema name was specified in vcard attribute then get value from schema name,
          * otherwise get value from field name by using mapping tables to get schema name
          */
         if (FieldToValue(field, schema, value, itemList, resume) == 0) {
@@ -1899,6 +1900,112 @@ Wallet_SignonViewerReturn (nsAutoString results) {
         wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
     }
     delete[] gone;
+}
+
+/*
+ * see if user wants to capture data on current page
+ */
+
+PRIVATE PRBool
+wallet_OKToCapture(char* urlName) {
+  nsAutoString * url = new nsAutoString(urlName);
+
+  /* see if this url is already on list of url's for which we don't want to capture */
+  wallet_InitializeURLList();
+  XP_List* URL_list = wallet_URL_list;
+  XP_List* dummy;
+  nsAutoString * value = new nsAutoString("nn");
+  if (!url || !value) {
+    return PR_FALSE;
+  }
+  if (wallet_ReadFromList(*url, *value, dummy, URL_list)) {
+    if (value->CharAt(NO_CAPTURE) == 'y') {
+      return PR_FALSE;
+    }
+  }
+
+  /* ask user if we should capture the values on this form */
+  char * message = Wallet_Localize("WantToCaptureForm?");
+  char * checkMessage = Wallet_Localize("NeverSave");
+  PRBool checkValue;
+  PRBool result = Wallet_CheckConfirm(message, checkMessage, &checkValue);
+  if (!result) {
+    if (checkValue) {
+      /* add URL to list with NO_CAPTURE indicator set */
+      value->SetCharAt('y', NO_CAPTURE);
+      wallet_WriteToList(*url, *value, dummy, wallet_URL_list, DUP_OVERWRITE);
+      wallet_WriteToFile("URL.tbl", wallet_URL_list, PR_FALSE);
+    } else {
+      delete url;
+    }
+  }
+  PR_FREEIF(checkMessage);
+  PR_FREEIF(message);
+  return result;
+}
+
+/*
+ * capture the value of a form element
+ */
+PRIVATE void
+wallet_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard) {
+
+  /* do nothing if there is no value */
+  if (!value.Length()) {
+    return;
+  }
+
+  /* read in the mappings if they are not already present */
+  if (!vcard.Length()) {
+    wallet_Initialize();
+    wallet_InitializeCurrentURL(doc);
+    if (Wallet_BadKey()) {
+      return;
+    }
+  }
+
+  nsAutoString oldValue;
+
+  /* is there a mapping from this field name to a schema name */
+  nsAutoString schema(vcard);
+  XP_List* FieldToSchema_list = wallet_FieldToSchema_list;
+  XP_List* URLFieldToSchema_list = wallet_specificURLFieldToSchema_list;
+  XP_List* SchemaToValue_list = wallet_SchemaToValue_list;
+  XP_List* dummy;
+
+  if (schema.Length() ||
+      (wallet_ReadFromList(field, schema, dummy, URLFieldToSchema_list)) ||
+      (wallet_ReadFromList(field, schema, dummy, FieldToSchema_list))) {
+
+    /* field to schema mapping already exists */
+
+    /* is this a new value for the schema */
+    if (!(wallet_ReadFromList(schema, oldValue, dummy, SchemaToValue_list)) || 
+        (oldValue != value)) {
+
+      /* this is a new value so store it */
+      nsAutoString * aValue = new nsAutoString(value);
+      nsAutoString * aSchema = new nsAutoString(schema);
+      dummy = 0;
+      wallet_WriteToList(*aSchema, *aValue, dummy, wallet_SchemaToValue_list);
+      wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+    }
+  } else {
+
+    /* no field to schema mapping so assume schema name is same as field name */
+
+    /* is this a new value for the schema */
+    if (!(wallet_ReadFromList(field, oldValue, dummy, SchemaToValue_list)) ||
+        (oldValue != value)) {
+
+      /* this is a new value so store it */
+      nsAutoString * aField = new nsAutoString(field);
+      nsAutoString * aValue = new nsAutoString(value);
+      dummy = 0;
+      wallet_WriteToList(*aField, *aValue, dummy, wallet_SchemaToValue_list);
+      wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+    }
+  }
 }
 
 /***************************************************************/
@@ -2342,6 +2449,8 @@ wallet_ClearStopwatch();
 
 PUBLIC void
 WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
+*result = PR_FALSE;
+return;
   nsAutoString * url = new nsAutoString(urlName);
 //  static int level = 0;
 
@@ -2398,7 +2507,7 @@ WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
  */
 PUBLIC void
 WLLT_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard) {
-
+return;
   /* do nothing if there is no value */
   if (!value.Length()) {
     return;
@@ -2454,5 +2563,143 @@ WLLT_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard) {
       wallet_WriteToList(*aField, *aValue, dummy, wallet_SchemaToValue_list);
       wallet_WriteToFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
     }
+  }
+}
+
+PUBLIC void
+WLLT_OnSubmit(nsIContent* formNode) {
+
+  /* get url name as ascii string */
+  char *URLName = nsnull;
+  nsIURI* docURL = nsnull;
+  nsIDocument* doc = nsnull;
+  formNode->GetDocument(doc);
+#ifdef NECKO
+  char* spec;
+#else
+  const char* spec;
+#endif
+  while (doc) {
+    docURL = doc->GetDocumentURL();
+    if (nsnull != docURL) {
+      (void)docURL->GetSpec(&spec);
+      if (PL_strcmp(spec, "about:blank")) {
+        break;
+      }
+#ifdef NECKO
+      nsCRT::free(spec);
+#endif
+    }
+//??    doc = nsFormFrame::GetParentHTMLFrameDocument(doc);
+  }
+  if (nsnull != docURL) {
+    URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
+    PL_strcpy(URLName, spec);
+    NS_IF_RELEASE(docURL);
+  }
+#ifdef NECKO
+  nsCRT::free(spec);
+#endif
+
+  /* determine if form is significant enough to capture data for */
+  PRInt32 count = 0;
+  nsIDOMHTMLFormElement* formElement = nsnull;
+  nsresult result = formNode->QueryInterface(kIDOMHTMLFormElementIID, (void**)&formElement);
+  if ((NS_SUCCEEDED(result)) && (nsnull != formElement)) {
+    nsIDOMHTMLCollection* elements = nsnull;
+    result = formElement->GetElements(&elements);
+    if ((NS_SUCCEEDED(result)) && (nsnull != elements)) {
+
+      /* got to the form elements at long last */
+      /* now find out how many text fields are on the form */
+      PRUint32 numElements;
+      elements->GetLength(&numElements);
+      for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
+        nsIDOMNode* elementNode = nsnull;
+        elements->Item(elementX, &elementNode);
+        if (nsnull != elementNode) {
+          nsIDOMHTMLInputElement* inputElement;  
+          result =
+            elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
+          if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
+            nsAutoString type;
+            result = inputElement->GetType(type);
+            if ((NS_SUCCEEDED(result)) &&
+                ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
+              count++;
+            }
+            NS_RELEASE(inputElement);
+          }
+          NS_RELEASE(elementNode);
+        }
+      }
+
+      /* save form if it meets all necessary conditions */
+      if (wallet_GetFormsCapturingPref() && (count>=3) &&
+          wallet_OKToCapture(URLName)) {
+
+        /* conditions all met, now save it */
+        for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
+          nsIDOMNode* elementNode = nsnull;
+          elements->Item(elementX, &elementNode);
+          if (nsnull != elementNode) {
+            nsIDOMHTMLInputElement* inputElement;  
+            result =
+              elementNode->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement);
+            if ((NS_SUCCEEDED(result)) && (nsnull != inputElement)) {
+
+              /* it's an input element */
+              nsAutoString type;
+              result = inputElement->GetType(type);
+              if ((NS_SUCCEEDED(result)) &&
+                  ((type =="") || (type.Compare("text", PR_TRUE) == 0))) {
+                nsAutoString field;
+                result = inputElement->GetName(field);
+                if (NS_SUCCEEDED(result)) {
+                  nsAutoString value;
+                  result = inputElement->GetValue(value);
+                  if (NS_SUCCEEDED(result)) {
+
+                    /* get schema name from vcard attribute if it exists */
+                    nsAutoString vcardValue("");
+                    nsIDOMElement * element;
+                    result = elementNode->QueryInterface(kIDOMElementIID, (void**)&element);
+                    if ((NS_SUCCEEDED(result)) && (nsnull != element)) {
+                      nsAutoString vcardName("VCARD_NAME");
+                      result = element->GetAttribute(vcardName, vcardValue);
+                      NS_RELEASE(element);
+                    }
+                    wallet_Capture(doc, field, value, vcardValue);
+                  }
+                }
+              }
+              NS_RELEASE(inputElement);
+#ifdef xxx
+            } else {
+              nsIDOMHTMLSelectElement* selectElement;  
+              result =
+                elementNode->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&selectElement);
+              if ((NS_SUCCEEDED(result)) && (nsnull != selectElement)) {
+                /* it's a select element */
+                nsAutoString field;
+                result = selectElement->GetName(field);
+                if (NS_SUCCEEDED(result)) {
+                  nsAutoString value;
+                  result = selectElement->GetValue(value);
+                  if (NS_SUCCEEDED(result)) {
+                    wallet_Capture(doc, field, value, "");
+                  }
+                }
+                NS_RELEASE(selectElement);
+              }
+#endif
+            }
+            NS_RELEASE(elementNode);
+          }
+        }
+      }
+      NS_RELEASE(elements);
+    }
+    NS_RELEASE(formElement);
   }
 }

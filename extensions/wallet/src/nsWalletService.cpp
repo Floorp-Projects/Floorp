@@ -203,7 +203,11 @@ NS_IMETHODIMP nsWalletlibService::Observe(nsISupports*, const PRUnichar*, const 
 #define CRLF "\015\012"   
 NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode) 
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (!formNode) {
+    return NS_ERROR_FAILURE;
+  }
+  ::WLLT_OnSubmit(formNode);
+  return NS_OK;
 }
 
 void nsWalletlibService::Init() 
