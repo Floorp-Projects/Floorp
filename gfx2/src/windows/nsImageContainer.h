@@ -50,7 +50,7 @@ class nsImageContainer : public gfxIImageContainer,
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIIMAGECONTAINER
+  NS_DECL_GFXIIMAGECONTAINER
   NS_DECL_NSPIIMAGECONTAINERWIN
 
   NS_IMETHOD_(void) Notify(nsITimer *timer);
