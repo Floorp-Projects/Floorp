@@ -47,7 +47,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
         aColor = NS_RGB(0x00,0x00,0x00);        
         break;
     case eColor_WidgetBackground:
-        aColor = NS_RGB(0x80,0x80,0x80);
+        aColor = NS_RGB(192, 192, 192);
         break;
     case eColor_WidgetForeground:
         aColor = NS_RGB(0x00,0x00,0x00);        
