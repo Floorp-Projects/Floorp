@@ -55,15 +55,15 @@ nsDateTimeChannel::Init(const char* verb,
 {
     nsresult rv;
 
+    mOriginalURI = originalURI ? originalURI : uri;
+    mUrl = uri;
+
     rv = SetLoadAttributes(loadAttributes);
     if (NS_FAILED(rv)) return rv;
     rv = SetLoadGroup(aLoadGroup);
     if (NS_FAILED(rv)) return rv;
     rv = SetNotificationCallbacks(notificationCallbacks);
     if (NS_FAILED(rv)) return rv;
-
-    mOriginalURI = originalURI ? originalURI : uri;
-    mUrl = uri;
 
     rv = mUrl->GetPort(&mPort);
     if (NS_FAILED(rv) || mPort < 1)
@@ -145,6 +145,9 @@ nsDateTimeChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     rv = socketService->CreateTransport(mHost, mPort, mHost, 32, 32, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 
+    rv = channel->SetNotificationCallbacks(mCallbacks);
+    if (NS_FAILED(rv)) return rv;
+
     return channel->OpenInputStream(startPosition, readCount, _retval);
 }
 
@@ -166,6 +169,9 @@ nsDateTimeChannel::AsyncOpen(nsIStreamObserver *observer, nsISupports* ctxt)
     rv = socketService->CreateTransport(mHost, mPort, mHost, 32, 32, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 
+    rv = channel->SetNotificationCallbacks(mCallbacks);
+    if (NS_FAILED(rv)) return rv;
+
     return channel->AsyncOpen(observer, ctxt);
 }
 
@@ -181,6 +187,9 @@ nsDateTimeChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
 
     nsCOMPtr<nsIChannel> channel;
     rv = socketService->CreateTransport(mHost, mPort, mHost, 32, 32, getter_AddRefs(channel));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = channel->SetNotificationCallbacks(mCallbacks);
     if (NS_FAILED(rv)) return rv;
 
     mListener = aListener;
@@ -241,7 +250,13 @@ nsDateTimeChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 NS_IMETHODIMP
 nsDateTimeChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
+    if (mLoadGroup) // if we already had a load group remove ourselves...
+      (void)mLoadGroup->RemoveChannel(this, nsnull, nsnull, nsnull);
+
     mLoadGroup = aLoadGroup;
+    if (mLoadGroup) {
+        return mLoadGroup->AddChannel(this, nsnull);
+    }
     return NS_OK;
 }
 
@@ -286,6 +301,10 @@ nsDateTimeChannel::OnStartRequest(nsIChannel *aChannel, nsISupports *aContext) {
 NS_IMETHODIMP
 nsDateTimeChannel::OnStopRequest(nsIChannel* aChannel, nsISupports* aContext,
                                       nsresult aStatus, const PRUnichar* aMsg) {
+    if (mLoadGroup) {
+        nsresult rv = mLoadGroup->RemoveChannel(this, nsnull, aStatus, aMsg);
+        if (NS_FAILED(rv)) return rv;
+    }
     return mListener->OnStopRequest(this, aContext, aStatus, aMsg);
 }
 
