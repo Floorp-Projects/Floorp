@@ -2067,6 +2067,8 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
     if (NS_FAILED(aStatus)) {
 
 #ifdef NECKO
+#if 0 // XXX can only turn this on once we can identify dns failures.
+
         // We need to check for a dns failure in aStatus, but dns failure codes
         // aren't proliferated yet. This checks for failure for a host lacking
         // "www." and/or ".com" and munges the url acordingly, then fires off
@@ -2115,7 +2117,7 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
                                   nsIChannel::LOAD_NORMAL,
                                   0);
         }
-
+#endif // 0
       char *url;
       if (NS_SUCCEEDED(rv)) 
         aURL->GetSpec(&url);
