@@ -294,6 +294,9 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
   CreateDBView(newFolder, viewType, viewFlags, sortType, sortOrder);
   if (oldFolder)
   {
+     /*we don't null out the db reference for inbox because inbox is like the "main" folder
+       and performance outweighs footprint */
+
     if (!IsSpecialFolder(oldFolder, MSG_FOLDER_FLAG_INBOX))
       if (oldFolder.URI != newFolder.URI)
         oldFolder.setMsgDatabase(null);
