@@ -516,8 +516,8 @@ nsDOMAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
     // then based upon order between the root container of each node that
     // is in no container. In this case, the result is disconnected
     // and implementation-dependent.
-    mask |= (nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED |
-             nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+    mask |= (nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
+             nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
 
     *aReturn = mask;
 
@@ -539,7 +539,7 @@ nsDOMAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
         // nodeType is the same for both determining nodes, then an
         // implementation-dependent order between the determining nodes
         // is returned.
-        mask |= nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
+        mask |= nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC;
       }
 
       // If the two nodes being compared are the same node,
@@ -580,8 +580,8 @@ nsDOMAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
       // Throw a party!  Celebrate by returning that it is contained
       // and following this node.
 
-      mask |= (nsIDOMNode::DOCUMENT_POSITION_IS_CONTAINED |
-               nsIDOMNode::DOCUMENT_POSITION_FOLLOWING);
+      mask |= (nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY |
+               nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING);
 
       *aReturn = mask;
       return NS_OK;
@@ -599,8 +599,8 @@ nsDOMAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
   parent->IsSameNode(aOther, &sameNode);
   if (sameNode) {
     // If the other node contains us, then it precedes us.
-    mask |= (nsIDOMNode::DOCUMENT_POSITION_CONTAINS |
-             nsIDOMNode::DOCUMENT_POSITION_PRECEDING);
+    mask |= (nsIDOM3Node::DOCUMENT_POSITION_CONTAINS |
+             nsIDOM3Node::DOCUMENT_POSITION_PRECEDING);
 
     *aReturn = mask;
     return NS_OK;
@@ -612,7 +612,7 @@ nsDOMAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
   // We already established earlier that the node is not contained
   // by this attribute.  So if it is contained by our owner element,
   // unset the flag.
-  mask |= parentMask & ~nsIDOMNode::DOCUMENT_POSITION_IS_CONTAINED;
+  mask |= parentMask & ~nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY;
 
   *aReturn = mask;
   return NS_OK;

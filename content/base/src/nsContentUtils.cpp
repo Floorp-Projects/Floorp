@@ -1153,8 +1153,8 @@ nsContentUtils::ComparePositionWithAncestors(nsIDOMNode *aNode,
     // If there is no common container node, then the order is based upon
     // order between the root container of each node that is in no container.
     // In this case, the result is disconnected and implementation-dependent.
-    mask = (nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED |
-            nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+    mask = (nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
+            nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
 
     return mask;
   }
@@ -1162,15 +1162,15 @@ nsContentUtils::ComparePositionWithAncestors(nsIDOMNode *aNode,
   nsIDOMNode* commonAncestor = nodeAncestors[0];
 
   if (commonAncestor == aNode) {
-    mask = (nsIDOMNode::DOCUMENT_POSITION_IS_CONTAINED |
-            nsIDOMNode::DOCUMENT_POSITION_FOLLOWING);
+    mask = (nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY |
+            nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING);
 
     return mask;
   }
 
   if (commonAncestor == aOther) {
-    mask |= (nsIDOMNode::DOCUMENT_POSITION_CONTAINS |
-             nsIDOMNode::DOCUMENT_POSITION_PRECEDING);
+    mask |= (nsIDOM3Node::DOCUMENT_POSITION_CONTAINS |
+             nsIDOM3Node::DOCUMENT_POSITION_PRECEDING);
 
     return mask;
   }
@@ -1198,12 +1198,12 @@ nsContentUtils::ComparePositionWithAncestors(nsIDOMNode *aNode,
       nsCOMPtr<nsIDOMNode> childNode;
       children->Item(i, getter_AddRefs(childNode));
       if (childNode == nodeAncestor) {
-        mask |= nsIDOMNode::DOCUMENT_POSITION_FOLLOWING;
+        mask |= nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING;
         break;
       }
 
       if (childNode == otherAncestor) {
-        mask |= nsIDOMNode::DOCUMENT_POSITION_PRECEDING;
+        mask |= nsIDOM3Node::DOCUMENT_POSITION_PRECEDING;
         break;
       }
     }
@@ -1218,23 +1218,23 @@ nsContentUtils::ReverseDocumentPosition(PRUint16 aDocumentPosition)
   // Disconnected and implementation-specific flags cannot be reversed.
   // Keep them.
   PRUint16 reversedPosition =
-    aDocumentPosition & (nsIDOMNode::DOCUMENT_POSITION_DISCONNECTED |
-                         nsIDOMNode::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
+    aDocumentPosition & (nsIDOM3Node::DOCUMENT_POSITION_DISCONNECTED |
+                         nsIDOM3Node::DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC);
 
   // Following/preceding
-  if (aDocumentPosition & nsIDOMNode::DOCUMENT_POSITION_FOLLOWING) {
-    reversedPosition |= nsIDOMNode::DOCUMENT_POSITION_PRECEDING;
+  if (aDocumentPosition & nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING) {
+    reversedPosition |= nsIDOM3Node::DOCUMENT_POSITION_PRECEDING;
   }
-  else if (aDocumentPosition & nsIDOMNode::DOCUMENT_POSITION_PRECEDING) {
-    reversedPosition |= nsIDOMNode::DOCUMENT_POSITION_FOLLOWING;
+  else if (aDocumentPosition & nsIDOM3Node::DOCUMENT_POSITION_PRECEDING) {
+    reversedPosition |= nsIDOM3Node::DOCUMENT_POSITION_FOLLOWING;
   }
 
   // Is contained/contains.
-  if (aDocumentPosition & nsIDOMNode::DOCUMENT_POSITION_CONTAINS) {
-    reversedPosition |= nsIDOMNode::DOCUMENT_POSITION_IS_CONTAINED;
+  if (aDocumentPosition & nsIDOM3Node::DOCUMENT_POSITION_CONTAINS) {
+    reversedPosition |= nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY;
   }
-  else if (aDocumentPosition & nsIDOMNode::DOCUMENT_POSITION_IS_CONTAINED) {
-    reversedPosition |= nsIDOMNode::DOCUMENT_POSITION_CONTAINS;
+  else if (aDocumentPosition & nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY) {
+    reversedPosition |= nsIDOM3Node::DOCUMENT_POSITION_CONTAINS;
   }
 
   return reversedPosition;

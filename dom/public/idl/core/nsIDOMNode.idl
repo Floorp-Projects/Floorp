@@ -109,14 +109,4 @@ interface nsIDOMNode : nsISupports
   readonly attribute DOMString        localName;
   // Introduced in DOM Level 2:
   boolean            hasAttributes();
-
-  // Introduced in DOM Level 3:
-  // DocumentPosition
-  // XXX actual constant values await w3c feedback
-  const unsigned short      DOCUMENT_POSITION_DISCONNECTED = 0x20;
-  const unsigned short      DOCUMENT_POSITION_PRECEDING    = 0x01;
-  const unsigned short      DOCUMENT_POSITION_FOLLOWING    = 0x02;
-  const unsigned short      DOCUMENT_POSITION_CONTAINS     = 0x04;
-  const unsigned short      DOCUMENT_POSITION_IS_CONTAINED = 0x08;
-  const unsigned short      DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 0x10;
 };
