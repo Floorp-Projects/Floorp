@@ -1372,6 +1372,12 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, con
       break;
     }
 
+    // Add in the margins of the cell image.
+    const nsStyleMargin* imageMarginData = (const nsStyleMargin*) imageContext->GetStyleData(eStyleStruct_Margin);
+    nsMargin imageMargin;
+    imageMarginData->GetMargin(imageMargin);
+    imageSize.Inflate(imageMargin);
+
     // Increment cellX by the image width
     cellX += imageSize.width;
     
@@ -1562,6 +1568,9 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, const nsAString& aColID,
   if (currCol) {
     // The rect for the current cell.
     nsRect cellRect(0, 0, currCol->GetWidth(), mRowHeight);
+    PRInt32 overflow = cellRect.x+cellRect.width-(mInnerBox.x+mInnerBox.width);
+    if (overflow > 0)
+      cellRect.width -= overflow;
 
     // Adjust borders and padding for the cell.
     nsStyleContext* cellContext = GetPseudoStyleContext(nsCSSAnonBoxes::moztreecell);
@@ -1600,6 +1609,12 @@ nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, const nsAString& aColID,
 
     // Account for the width of the cell image.
     nsRect imageSize = GetImageSize(aRow, currCol->GetID().get(), PR_FALSE, imageContext);
+    // Add in the margins of the cell image.
+    const nsStyleMargin* imageMarginData = (const nsStyleMargin*) imageContext->GetStyleData(eStyleStruct_Margin);
+    nsMargin imageMargin;
+    imageMarginData->GetMargin(imageMargin);
+    imageSize.Inflate(imageMargin);
+
     aDesiredSize += imageSize.width;
     
     // Get the cell text.

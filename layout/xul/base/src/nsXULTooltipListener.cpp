@@ -117,8 +117,10 @@ nsXULTooltipListener::MouseOut(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   }
 
+#ifdef DEBUG_crap
   if (mNeedTitletip)
     return NS_OK;
+#endif
 
   // check to see if the mouse left the targetNode, and if so,
   // hide the tooltip
@@ -343,7 +345,6 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
     // determine if we are going to need a titletip
     // XXX check the disabletitletips attribute on the tree content
     mNeedTitletip = PR_FALSE;
-#ifdef DEBUG_crap
     if (row >= 0 && obj.Equals(NS_LITERAL_STRING("text"))) {
       nsCOMPtr<nsITreeView> view;
       obx->GetView(getter_AddRefs(view));
@@ -351,7 +352,6 @@ nsXULTooltipListener::CheckTreeBodyMove(nsIDOMMouseEvent* aMouseEvent)
       obx->IsCellCropped(row, colId, &isCropped);
       mNeedTitletip = isCropped;
     }
-#endif
 
     if (mCurrentTooltip && 
         (row != mLastTreeRow || !mLastTreeCol.Equals(colId))) {
@@ -453,7 +453,7 @@ SetTitletipLabel(nsITreeBoxObject* aTreeBox, nsIContent* aTooltip,
   nsAutoString label;
   view->GetCellText(aRow, aCol.get(), label);
   
-  aTooltip->SetAttr(nsnull, nsXULAtoms::label, label, PR_FALSE);
+  aTooltip->SetAttr(nsnull, nsXULAtoms::label, label, PR_TRUE);
 }
 
 nsresult
@@ -477,13 +477,15 @@ nsXULTooltipListener::LaunchTooltip(nsIContent* aTarget, PRInt32 aX, PRInt32 aY)
     if (mNeedTitletip) {
       nsCOMPtr<nsITreeBoxObject> obx;
       GetSourceTreeBoxObject(getter_AddRefs(obx));
+#ifdef DEBUG_crap
       GetTreeCellCoords(obx, mSourceNode,
                             mLastTreeRow, mLastTreeCol, &x, &y);
+#endif
 
       SetTitletipLabel(obx, mCurrentTooltip, mLastTreeRow, mLastTreeCol);
-      mCurrentTooltip->SetAttr(nsnull, nsXULAtoms::titletip, NS_LITERAL_STRING("true"), PR_FALSE);
+      mCurrentTooltip->SetAttr(nsnull, nsXULAtoms::titletip, NS_LITERAL_STRING("true"), PR_TRUE);
     } else
-      mCurrentTooltip->UnsetAttr(nsnull, nsXULAtoms::titletip, PR_FALSE);
+      mCurrentTooltip->UnsetAttr(nsnull, nsXULAtoms::titletip, PR_TRUE);
 
     nsCOMPtr<nsIDOMElement> targetEl(do_QueryInterface(aTarget));
     popupBoxObject->ShowPopup(targetEl, xulTooltipEl, x, y,
