@@ -29,24 +29,33 @@ Message0=Please select the setup type you wish to install.
 
 [Setup Type0]
 Description Short=Typical
-Description Long=Most common options, without Java
+Description Long=Navigator and Mail & News
 C0=Component0
 C1=Component1
 C2=Component2
+C3=Component4
+C4=Component5
+C5=Component6
 
 [Setup Type1]
 Description Short=Complete
-Description Long=Most common options, with Java
+Description Long=Navigator, Mail & News, and Chatzilla
 C0=Component0
 C1=Component1
 C2=Component2
 C3=Component3
+C4=Component4
+C5=Component5
+C6=Component6
 
 [Setup Type2]
 Description Short=Navigator
-Description Long=Navigator client only
+Description Long=Navigator only
 C0=Component0
 C1=Component1 
+C2=Component4
+C3=COmponent5
+C4=Component6
 
 [Setup Type3]
 Description Short=Custom
@@ -55,6 +64,9 @@ C0=Component0
 C1=Component1
 C2=Component2
 C3=Component3
+C4=Component4
+C5=Component5
+C6=Component6
 
 
 ;-------------------------------------------------------------------------
@@ -95,6 +107,31 @@ Archive=chatzilla.xpi
 $InstallSize$:chatzilla
 Attributes=SELECTED
 URL0=$URLPath$
+
+[Component4]
+Description Short=Quality Feedback Agent
+Description Long=Tool for reporting software crashes to Netscape
+Archive=talkback.xpi
+$InstallSize$:talkback
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component5]
+Description Short=English US Language Pack
+Description Long=English US Language Pack
+Archive=deflenus.xpi
+$InstallSize$:deflenus
+Attributes=SELECTED|INVISIBLE
+URL0=$URLPath$
+
+[Component6]
+Description Short=English GB Language Pack
+Description Long=English GB Language Pack
+Archive=langengb.xpi
+$InstallSize$:langengb
+Attributes=SELECTED|INVISIBLE
+URL0=$URLPath$
+
 
 ;-------------------------------------------------------------------------
 [Dialog Start Install]

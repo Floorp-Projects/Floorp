@@ -20,6 +20,8 @@ C0=Component0
 C1=Component1
 C2=Component2
 C3=Component3
+C4=Component4
+C5=Component5
 
 [Setup Type1]
 Description Short=Custom Install
@@ -28,6 +30,8 @@ C0=Component0
 C1=Component1
 C2=Component2
 C3=Component3
+C4=Component4
+C5=Component5
 
 [Dialog Select Components]
 Message0=Please select the components you wish to install:
@@ -68,9 +72,29 @@ Domain0=http://sweetlou.mcom.com/
 Server Path0=products/client/seamonkey/macos/8.x/ppc/(#buildID)/
 Attributes=SELECTED
 
+[Component4]
+Description Short=English US Language Pack
+Description Long=English US Language Pack
+Archive=deflenus.xpi
+Install Size=(#deflenus_size)
+Domain0=http://sweetlou.mcom.com/
+Server Path0=products/client/seamonkey/macos/8.x/ppc/(#buildID)/
+Attributes=SELECTED|INVISIBLE
+
+[Component5]
+Description Short=English GB Language Pack
+Description Long=English GB Language Pack
+Archive=langengb.xpi
+Install Size=(#langengb_size)
+Domain0=http://sweetlou.mcom.com/
+Server Path0=products/client/seamonkey/macos/8.x/ppc/(#buildID)/
+Attributes=SELECTED|INVISIBLE
+
+
 [Dialog Start Install]
 Message0=Click the Install button to download and install the selected components.  
 Message1=Save installer modules upon download
+
 
 [SmartDownload-Netscape Install]
 core_file=xpcom.xpi
