@@ -2365,9 +2365,14 @@ sub DropIndexes ($)
       # 
       next if exists $SEEN{$$ref[2]};
 
-      my $dropSth = $dbh->prepare("ALTER TABLE $table DROP INDEX $$ref[2]");
-      $dropSth->execute;
-      $dropSth->finish;
+      if ($$ref[2] eq 'PRIMARY') {
+          # The syntax for dropping a PRIMARY KEY is different
+          # from the normal DROP INDEX syntax.
+          $dbh->do("ALTER TABLE $table DROP PRIMARY KEY"); 
+      }
+      else {
+          $dbh->do("ALTER TABLE $table DROP INDEX $$ref[2]");
+      }
       $SEEN{$$ref[2]} = 1;
 
     }
