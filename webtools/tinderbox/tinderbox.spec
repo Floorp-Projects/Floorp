@@ -1,4 +1,20 @@
-%define ver 19980831
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License
+# at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See 
+# the License for the specific language governing rights and 
+# limitations under the License.
+# 
+# The Original Code is the Tinderbox CVS Tool rpm spec file.
+#
+# The Initial Developer of this code under the MPL is Christopher
+# Seawood, <cls@seawood.org>.  Portions created by Christopher Seawood 
+# are Copyright (C) 1998 Christopher Seawood.  All Rights Reserved.
+
+%define ver SNAP
 %define perl /usr/bin/perl
 %define cvsroot /cvsroot
 %define gzip /usr/bin/gzip
@@ -13,11 +29,16 @@ Release: 1
 Copyright: NPL
 Group: Networking/Admin
 Source: %{name}-%{ver}.tar.gz
-BuildRoot: /tmp/build-%{name}
+BuildRoot: /var/tmp/build-%{name}
 Requires: bonsai
 Packager: Christopher Seawood <cls@seawood.org>
 
 %changelog
+* Thu Nov 12 1998 Christopher Seawood <cls@seawood.org>
+- Replaced ver with SNAP
+
+* Mon Oct 26 1998 Christopher Seawood <cls@seawood.org>
+- Added MPL header
 
 * Sun Aug 31 1998 Christopher Seawood <cls@seawood.org>
 - Made rpm from cvs snapshot
