@@ -52,6 +52,9 @@ int operator ==(const Property&, const Property&);
 
 class CWebShellContainer;
 
+// Commands sent via WM_COMMAND
+#define ID_PRINT 1
+
 // Some definitions which are used to make firing events easier
 #define CDWebBrowserEvents1 CProxyDWebBrowserEvents<CMozillaBrowser>
 #define CDWebBrowserEvents2 CProxyDWebBrowserEvents2<CMozillaBrowser>
@@ -135,12 +138,15 @@ BEGIN_MSG_MAP(CMozillaBrowser)
 	MESSAGE_HANDLER(WM_PAINT, OnPaint)
 	MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
 	MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
+
+	COMMAND_ID_HANDLER(ID_PRINT, OnPrint)
 END_MSG_MAP()
 
 // Windows message handlers
 	LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+	LRESULT OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 // ISupportsErrorInfo
 	STDMETHOD(InterfaceSupportsErrorInfo)(REFIID riid);
