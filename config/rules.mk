@@ -292,7 +292,6 @@ endif
 #
 ifdef IS_COMPONENT
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS)
-EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 endif # IS_COMPONENT
 
 #
@@ -304,18 +303,6 @@ BEOS_LIB_LIST		= $(shell cat $(topsrcdir)/dependencies.beos/$(LIBRARY_NAME).depe
 BEOS_LINK_LIBS		= $(foreach lib,$(BEOS_LIB_LIST),$(shell $(topsrcdir)/config/beos/checklib.sh $(DIST)/bin $(lib)))
 LDFLAGS			+= -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
 EXTRA_DSO_LDOPTS	+= -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
-endif
-endif
-
-#
-# AIX & OpenVMS specific section: link against dependent shared libs
-#
-ifdef SHARED_LIBRARY
-ifeq ($(OS_ARCH),AIX)
-EXTRA_DSO_LDOPTS	+= -L$(DIST)/bin $(NSPR_LIBS)
-endif
-ifeq ($(OS_ARCH),OpenVMS)
-EXTRA_DSO_LDOPTS	+= -L$(DIST)/bin $(NSPR_LIBS)
 endif
 endif
 
