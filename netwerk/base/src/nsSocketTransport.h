@@ -52,8 +52,7 @@ enum nsSocketOperation {
 
 class nsSocketTransportService;
 
-class nsSocketTransport : public PRCList,
-                          public nsITransport
+class nsSocketTransport : public nsITransport
 {
 public:
   // nsISupports methods:
@@ -95,7 +94,18 @@ public:
   PRFileDesc* GetSocket(void)      { return mSocketFD;    }
   PRInt16     GetSelectFlags(void) { return mSelectFlags; }
 
+  PRCList*    GetListNode(void) { return &mListLink; }
+  static nsSocketTransport* GetInstance(PRCList* qp) { return (nsSocketTransport*)((char*)qp - offsetof(nsSocketTransport, mListLink)); }
+
 protected:
+  // Inline helpers...
+  void Lock  (void) { NS_ASSERTION(mLock, "Lock null."); PR_Lock(mLock);   }
+  void Unlock(void) { NS_ASSERTION(mLock, "Lock null."); PR_Unlock(mLock); }
+
+protected:
+  PRCList           mListLink;
+
+  PRLock*           mLock;
   nsSocketState     mCurrentState;
   nsSocketOperation mOperation;
 

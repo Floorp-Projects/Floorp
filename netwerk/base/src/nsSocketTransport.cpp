@@ -103,11 +103,12 @@ nsSocketTransport::nsSocketTransport()
 {
   NS_INIT_REFCNT();
 
-  PR_INIT_CLIST(this);
+  PR_INIT_CLIST(&mListLink);
 
   mHostName     = nsnull;
   mPort         = 0;
   mSocketFD     = nsnull;
+  mLock         = nsnull;
 
   mCurrentState = eSocketState_Created;
   mOperation    = eSocketOperation_None;
@@ -160,6 +161,11 @@ nsSocketTransport::~nsSocketTransport()
     PR_Close(mSocketFD);
     mSocketFD = nsnull;
   }
+
+  if (mLock) {
+    PR_DestroyLock(mLock);
+    mLock = nsnull;
+  }
 }
 
 
@@ -184,6 +190,16 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
     rv = NS_ERROR_NULL_POINTER;
   }
 
+  //
+  // Create the lock used for synchronizing access to the transport instance.
+  //
+  if (NS_SUCCEEDED(rv)) {
+    mLock = PR_NewLock();
+    if (!mLock) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
   return rv;
 }
 
@@ -192,6 +208,12 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 {
   nsresult rv = NS_OK;
   PRBool done = PR_FALSE;
+
+  //
+  // Enter the socket transport lock...  
+  // This lock protects access to socket transport member data...
+  //
+  Lock();
 
   while (!done)
   {
@@ -300,16 +322,22 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
     // 
     aSelectFlags = 0;
   }
-  
+
+  // Leave the socket transport lock...
+  Unlock();
+
   return rv;
 }
 
 
 //-----
 //
-// doResolveHost:
+//  doResolveHost:
 //
-// Return Codes:
+//  This method is called while holding the SocketTransport lock.  It is
+//  always called on the socket transport thread...
+//
+//  Return Codes:
 //    NS_OK
 //    NS_ERROR_HOST_NOT_FOUND
 //    NS_ERROR_FAILURE
@@ -355,9 +383,12 @@ nsresult nsSocketTransport::doResolveHost(void)
 
 //-----
 //
-// doConnection:
+//  doConnection:
 //
-// Return values:
+//  This method is called while holding the SocketTransport lock.  It is
+//  always called on the socket transport thread...
+//
+//  Return values:
 //    NS_OK
 //    NS_BASE_STREAM_WOULD_BLOCK
 //
@@ -448,7 +479,10 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
       rv = NS_ERROR_CONNECTION_REFUSED;
     }
     //
-    // The connection was successful...
+    // The connection was successful...  
+    //
+    // PR_Poll(...) returns PR_POLL_WRITE to indicate that the connection is
+    // established...
     //
     else if (PR_POLL_WRITE & aSelectFlags) {
       rv = NS_OK;
@@ -461,9 +495,12 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
 
 //-----
 //
-// doRead:
+//  doRead:
 //
-// Return values:
+//  This method is called while holding the SocketTransport lock.  It is
+//  always called on the socket transport thread...
+//
+//  Return values:
 //    NS_OK
 //    NS_BASE_STREAM_WOULD_BLOCK
 //
@@ -564,9 +601,12 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
 
 //-----
 //
-// doWrite:
+//  doWrite:
 //
-// Return values:
+//  This method is called while holding the SocketTransport lock.  It is
+//  always called on the socket transport thread...
+//
+//  Return values:
 //    NS_OK
 //    NS_BASE_STREAM_WOULD_BLOCK
 //
@@ -696,20 +736,27 @@ nsSocketTransport::AsyncRead(nsISupports* aContext,
 {
   nsresult rv = NS_OK;
 
+  // Enter the socket transport lock...
+  Lock();
+
+  // If a read is already in progress then fail...
   if (mReadListener) {
     rv = NS_ERROR_IN_PROGRESS;
   }
 
+  // Create a new input stream for reading data into...
   if (NS_SUCCEEDED(rv) && !mReadStream) {
     rv = NS_NewByteBufferInputStream(&mReadStream, PR_FALSE, 
                                      MAX_IO_BUFFER_SIZE);
   }
 
   if (NS_SUCCEEDED(rv)) {
+    // Store the context used for this read...
     NS_IF_RELEASE(mReadContext);
     mReadContext = aContext;
     NS_IF_ADDREF(mReadContext);
 
+    // Create a marshalling stream listener to receive notifications...
     rv = NS_NewAsyncStreamListener(&mReadListener, aAppEventQueue, aListener);
   }
 
@@ -718,6 +765,9 @@ nsSocketTransport::AsyncRead(nsISupports* aContext,
 
     rv = mService->AddToWorkQ(this);
   }
+
+  // Leave the socket transport lock...
+  Unlock();
 
   return rv;
 }
@@ -731,6 +781,10 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
 {
   nsresult rv = NS_OK;
 
+  // Enter the socket transport lock...
+  Lock();
+
+  // If a write is already in progress then fail...
   if (mWriteStream) {
     rv = NS_ERROR_IN_PROGRESS;
   }
@@ -743,14 +797,20 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
     mWriteContext = aContext;
     NS_IF_ADDREF(mWriteContext);
 
+    // Create a marshalling stream observer to receive notifications...
     NS_IF_RELEASE(mWriteObserver);
-    rv = NS_NewAsyncStreamObserver(&mWriteObserver, aAppEventQueue, aObserver);
+    if (aObserver) {
+      rv = NS_NewAsyncStreamObserver(&mWriteObserver, aAppEventQueue, aObserver);
+    }
   }
 
   if (NS_SUCCEEDED(rv)) {
     mOperation = eSocketOperation_ReadWrite;
     rv = mService->AddToWorkQ(this);
   }
+
+  // Leave the socket transport lock...
+  Unlock();
 
   return rv;
 }
