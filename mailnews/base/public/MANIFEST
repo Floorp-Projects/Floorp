@@ -44,3 +44,4 @@ nsIMsgAccountManager.h
 nsIMsgIdentity.h
 nsIMsgIncomingServer.h
 nsIMsgThread.h
+nsIMsgMessageService.h
