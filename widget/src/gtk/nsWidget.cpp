@@ -3010,7 +3010,7 @@ nsWidget::SetXICSpotLocation(nsPoint aPoint)
   {
     return;
   }
-  NS_ASSERTION( (aPoint.y >0), "strange position for XIC");
+  // NS_ASSERTION( (aPoint.y >0), "strange position for XIC");
   if(aPoint.y <= 0)
     return;
 
