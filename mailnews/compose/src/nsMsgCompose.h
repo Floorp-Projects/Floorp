@@ -145,7 +145,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
 
     NS_IMETHOD  SetComposeObj(nsMsgCompose *obj);
-	  NS_IMETHOD  ConvertToPlainText();
+	  NS_IMETHOD  ConvertToPlainText(PRBool formatflowed = PR_FALSE);
 	  NS_IMETHOD	SetMimeHeaders(nsIMimeHeaders * headers);
 
 private:

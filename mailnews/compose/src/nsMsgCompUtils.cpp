@@ -828,12 +828,10 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
   // Only do this if we are in the body of a message
   if (aBodyDocument)
   {
-    // Add format=flowed as in RFC 2646 unless asked to not do that.
-    PRBool sendFlowed = PR_TRUE;   /* rhp - add this  */
-    if(type && !PL_strcasecmp(type, "text/plain") && prefs)
+    // Add format=flowed as in RFC 2646 if we are using that
+    if(type && !PL_strcasecmp(type, "text/plain"))
     {
-      prefs->GetBoolPref("mailnews.send_plaintext_flowed", &sendFlowed);
-      if (sendFlowed)
+      if(UseFormatFlowed(charset))
 			  PUSH_STRING ("; format=flowed");
 		  // else
       // {
@@ -1962,8 +1960,14 @@ ERROR_OUT:
 #include "CNavDTD.h"
 #include "nsICharsetConverterManager.h"
 
+/**
+ * Converts a buffer to plain text. Some conversions may
+ * or may not work with certain end charsets which is why we
+ * need that as an argument to the function. If charset is
+ * unknown or deemed of no importance NULL could be passed.
+ */
 nsresult
-ConvertBufToPlainText(nsString &aConBuf)
+ConvertBufToPlainText(nsString &aConBuf, PRBool formatflowed /* = PR_FALSE */)
 {
   nsresult    rv;
   nsString    convertedText;
@@ -1985,16 +1989,11 @@ ConvertBufToPlainText(nsString &aConBuf)
     
     converterFlags |= nsIDocumentEncoder::OutputFormatted;
 
-    nsresult rv2;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv2);
-    if (NS_SUCCEEDED(rv2))
-    {
-      PRBool sendflowed = PR_TRUE;
-      rv2=prefs->GetBoolPref("mailnews.send_plaintext_flowed", &sendflowed);
-      if(NS_FAILED(rv2) || sendflowed) // Unless explicitly forbidden...
-        converterFlags |= nsIDocumentEncoder::OutputFormatFlowed;
-    }    
-
+    /*
+    */
+    if(formatflowed)
+      converterFlags |= nsIDocumentEncoder::OutputFormatFlowed;
+    
     rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, wrapWidth, converterFlags);
     if (sink && NS_SUCCEEDED(rv)) 
     {  
@@ -2117,3 +2116,59 @@ nsMsgParseSubjectFromFile(nsFileSpec* fileSpec)
   tmpFileSpec->CloseStream();
   return subject; 
 }
+
+/**
+ * Check if we should use format=flowed (RFC 2646) for a mail.
+ *
+ * We will use format=flowed unless prefs tells us not to do
+ * or if a charset which are known to have problems with
+ * format=flowed is specifed. (See bug 26734 in Bugzilla)
+ */
+PRBool UseFormatFlowed(const char *charset)
+{
+  // Add format=flowed as in RFC 2646 unless asked to not do that.
+  PRBool sendFlowed = PR_TRUE;
+  PRBool disableForCertainCharsets = PR_TRUE;
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  if(prefs)
+  {
+    
+    rv = prefs->GetBoolPref("mailnews.send_plaintext_flowed", &sendFlowed);
+    if (NS_SUCCEEDED(rv) && !sendFlowed)
+      return PR_FALSE;
+
+    // If we shouldn't care about charset, then we are finished
+    // checking and can go on using format=flowed
+    if(!charset)
+      return PR_TRUE;
+    rv = prefs->GetBoolPref("mailnews.disable_format_flowed_for_cjk",
+                            &disableForCertainCharsets);
+    if (NS_SUCCEEDED(rv) && !disableForCertainCharsets)
+      return PR_TRUE;
+  }
+  else
+  {
+    // No prefs service. Be careful. Don't use format=flowed.
+    return PR_FALSE;
+  }
+
+  // Just the check for charset left.
+
+  // This is a raw check and might include charsets which could
+  // use format=flowed and might exclude charsets which couldn't
+  // use format=flowed.
+  //
+  // The problem is the SPACE format=flowed inserts at the end of
+  // the line. Not all charsets like that.
+  if( nsMsgI18Nmultibyte_charset(charset))
+    return PR_FALSE;
+
+  return PR_TRUE;
+  
+}
+

@@ -766,7 +766,7 @@ nsresult nsMsgCompFields::ConvertBodyToPlainText()
 		{
 			nsString body(ubody);
 			PR_Free(ubody);
-			rv = ConvertBufToPlainText(body);
+			rv = ConvertBufToPlainText(body, UseFormatFlowed(GetCharacterSet()));
 			if (NS_SUCCEEDED(rv))
 				rv = SetBody(body.GetUnicode());
 		}

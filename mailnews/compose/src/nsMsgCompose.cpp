@@ -642,21 +642,16 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
 
 	if (m_editor && m_compFields && !m_composeHTML)
 	{
+    // The plain text compose window was used
     const char contentType[] = "text/plain";
 		nsAutoString msgBody;
 		PRUnichar *bodyText = NULL;
     nsAutoString format; format.AssignWithConversion(contentType);
     PRUint32 flags = nsIDocumentEncoder::OutputFormatted;
 
-    nsresult rv2;
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv2);
-    if (NS_SUCCEEDED(rv2)) {
-      PRBool sendflowed;
-      rv2=prefs->GetBoolPref("mailnews.send_plaintext_flowed", &sendflowed);
-      if(!(NS_SUCCEEDED(rv2) && !sendflowed))
-        // Unless explicitly forbidden...
+    const char *charset = m_compFields->GetCharacterSet();
+    if(UseFormatFlowed(charset))
         flags |= nsIDocumentEncoder::OutputFormatFlowed;
-    }
     
     if (!mEntityConversionDone)
     {
@@ -1230,14 +1225,19 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
   NS_INIT_REFCNT(); 
 }
 
+/**
+ * The formatflowed parameter directs if formatflowed should be used in the conversion.
+ * format=flowed (RFC 2646) is a way to represent flow in a plain text mail, without
+ * disturbing the plain text.
+ */
 nsresult
-QuotingOutputStreamListener::ConvertToPlainText()
+QuotingOutputStreamListener::ConvertToPlainText(PRBool formatflowed /* = PR_FALSE */)
 {
-nsresult  rv = NS_OK;
+  nsresult  rv = NS_OK;
 
-  rv += ConvertBufToPlainText(mCitePrefix);
-  rv += ConvertBufToPlainText(mMsgBody);
-  rv += ConvertBufToPlainText(mSignature);
+  rv += ConvertBufToPlainText(mCitePrefix, formatflowed);
+  rv += ConvertBufToPlainText(mMsgBody, formatflowed);
+  rv += ConvertBufToPlainText(mSignature, formatflowed);
   return rv;
 }
 
@@ -1249,6 +1249,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStartRequest(nsIChannel * /* aChann
 NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */, nsresult status, const PRUnichar * /* errorMsg */)
 {
   nsresult rv = NS_OK;
+  nsAutoString aCharset;
   
   if (mComposeObj) 
   {
@@ -1265,7 +1266,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
       mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
       if (compFields)
       {
-        nsAutoString aCharset; aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
+        aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
         nsAutoString replyTo;
         nsAutoString newgroups;
         nsAutoString followUpTo;
@@ -1434,7 +1435,13 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
     PRBool composeHTML = PR_TRUE;
     mComposeObj->GetComposeHTML(&composeHTML);
     if (!composeHTML)
-      ConvertToPlainText();
+    {
+      // Downsampling. The charset should only consist of ascii.
+      char *target_charset = aCharset.ToNewCString();
+      PRBool formatflowed = UseFormatFlowed(target_charset);
+      ConvertToPlainText(formatflowed);
+      Recycle(target_charset);
+    }
     
     //
     // Ok, now we have finished quoting so we should load this into the editor
@@ -1846,7 +1853,7 @@ nsMsgCompose::ConvertHTMLToText(nsFileSpec& aSigFile, nsString &aSigData)
   if (NS_FAILED(rv))
     return rv;
 
-  ConvertBufToPlainText(origBuf);
+  ConvertBufToPlainText(origBuf,PR_FALSE);
   aSigData = origBuf;
   return NS_OK;
 }
