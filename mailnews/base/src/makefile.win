@@ -73,6 +73,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsCopyMessageStreamListener.obj	\
 	.\$(OBJDIR)\nsMsgAccountManager.obj		\
 	.\$(OBJDIR)\nsMsgAccount.obj			\
+	.\$(OBJDIR)\nsMsgFolderCompactor.obj			\
 	.\$(OBJDIR)\nsMsgFolderDataSource.obj	\
 	.\$(OBJDIR)\nsMsgFolderCache.obj		\
 	.\$(OBJDIR)\nsMsgFolderCacheElement.obj		\
