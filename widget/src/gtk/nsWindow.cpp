@@ -142,7 +142,7 @@ nsWindow::nsWindow()
   mBlockFocusEvents = PR_FALSE;
   // init the hash table if it hasn't happened already
   if (mWindowLookupTable == NULL) {
-    mWindowLookupTable = g_hash_table_new(g_int_hash, g_int_equal);
+    mWindowLookupTable = g_hash_table_new(g_direct_hash, g_direct_equal);
   }
   if (mLastLeaveWindow == this)
     mLastLeaveWindow = NULL;
