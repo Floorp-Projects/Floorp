@@ -80,21 +80,21 @@
   {
     margin-left:	5px;
     padding-top:	1px;
-    -moz-image-region: rect(170px 45px 204px 0px);
+    -moz-image-region: rect(204px 45px 238px 0px);
   }
 #calendar-new-event-button[disabled="true"],
 #calendar-new-event-button[disabled="true"]:hover,
 #calendar-new-event-button[disabled="true"]:hover:active
   {
-    -moz-image-region: rect(170px 180px 204px 135px);
+    -moz-image-region: rect(204px 180px 238px 135px);
   }
 #calendar-new-event-button:hover
   {
-    -moz-image-region: rect(170px 90px 204px 45px);
+    -moz-image-region: rect(204px 90px 238px 45px);
   }
 #calendar-new-event-button:hover:active
   {
-    -moz-image-region: rect(170px 135px 204px 90px);
+    -moz-image-region: rect(204px 135px 238px 90px);
   }
 
 /*--------------------------------------------------------------------
@@ -104,24 +104,24 @@
 #calendar-edit-event-button 
 {
     padding-top:	1px;
-    -moz-image-region: rect(204px 45px 238px 0px);
+    -moz-image-region: rect(238px 45px 272px 0px);
 }
 
 #calendar-edit-event-button[disabled="true"],
 #calendar-edit-event-button[disabled="true"]:hover,
 #calendar-edit-event-button[disabled="true"]:hover:active
 {
-    -moz-image-region: rect(204px 180px 238px 135px);
+    -moz-image-region: rect(238px 180px 272px 135px);
 }
 
 #calendar-edit-event-button:hover
 {
-    -moz-image-region: rect(204px 90px 238px 45px);
+    -moz-image-region: rect(238px 90px 272px 45px);
 }
 
 #calendar-edit-event-button:hover:active
 {
-    -moz-image-region: rect(204px 135px 238px 90px);
+    -moz-image-region: rect(238px 135px 272px 90px);
 }
 
 /*--------------------------------------------------------------------
@@ -131,24 +131,24 @@
 #calendar-delete-event-button
 {
     padding-top:	1px;
-    -moz-image-region: rect(238px 45px 272px 0px);
+    -moz-image-region: rect(272px 45px 306px 0px);
 }
   
 #calendar-delete-event-button[disabled="true"],
 #calendar-delete-event-button[disabled="true"]:hover,
 #calendar-delete-event-button[disabled="true"]:hover:active
 {
-    -moz-image-region: rect(238px 180px 272px 135px);
+    -moz-image-region: rect(272px 180px 306px 135px);
 }
 
 #calendar-delete-event-button:hover
 {
-    -moz-image-region: rect(238px 90px 272px 45px);
+    -moz-image-region: rect(272px 90px 306px 45px);
 }
 
 #calendar-delete-event-button:hover:active
 {
-    -moz-image-region: rect(238px 135px 272px 90px);
+    -moz-image-region: rect(272px 135px 306px 90px);
 }
 
 /*--------------------------------------------------------------------
@@ -158,21 +158,21 @@
 #calendar-go-to-today-button 
   {
     padding-top:	1px;
-    -moz-image-region: rect(136px 45px 170px 0px);
+    -moz-image-region: rect(170px 45px 204px 0px);
   }
 #calendar-go-to-today-button[disabled="true"],
 #calendar-go-to-today-button[disabled="true"]:hover,
 #calendar-go-to-today-button[disabled="true"]:hover:active
   {
-    -moz-image-region: rect(136px 180px 170px 135px);
+    -moz-image-region: rect(170px 180px 204px 135px);
   }
 #calendar-go-to-today-button:hover
   {
-    -moz-image-region: rect(136px 90px 170px 45px);
+    -moz-image-region: rect(170px 90px 204px 45px);
   }
 #calendar-go-to-today-button:hover:active
   {
-    -moz-image-region: rect(136px 135px 170px 90px);
+    -moz-image-region: rect(170px 135px 204px 90px);
   }
 
 
@@ -183,46 +183,42 @@
 #calendar-choose-date-button 
   {
     padding-top:	1px;
-    -moz-image-region: rect(102px 45px 136px 0px);
+    -moz-image-region: rect(136px 45px 170px 0px);
   }
 #calendar-choose-date-button[disabled="true"],
 #calendar-choose-date-button[disabled="true"]:hover,
 #calendar-choose-date-button[disabled="true"]:hover:active
   {
-    -moz-image-region: rect(102px 180px 136px 135px);
+    -moz-image-region: rect(136px 180px 170px 135px);
   }
 #calendar-choose-date-button:hover
   {
-    -moz-image-region: rect(102px 90px 136px 45px);
+    -moz-image-region: rect(136px 90px 170px 45px);
   }
 #calendar-choose-date-button:hover:active
   {
-    -moz-image-region: rect(102px 135px 136px 90px);
+    -moz-image-region: rect(136px 135px 170px 90px);
   }
 
 
 /*--------------------------------------------------------------------
  *   Change to multiweek view button
  *-------------------------------------------------------------------*/
-.toolbarbutton-1#calendar-multiweek-view-button {
-  list-style-image: url("chrome://calendar/skin/btnwm1.gif");
-}
-
 #calendar-multiweek-view-button 
   {
     padding-top:	1px;
-    -moz-image-region: rect(1px 45px 35px 0px);
+    -moz-image-region: rect(68px 45px 102px 0px);
   }
 #calendar-multiweek-view-button[disabled="true"],
 #calendar-multiweek-view-button[disabled="true"]:hover,
 #calendar-multiweek-view-button[disabled="true"]:hover:active,
 #calendar-multiweek-view-button:hover:active
   {
-    -moz-image-region: rect(1px 135px 35px 90px);
+    -moz-image-region: rect(68px 135px 102px 90px);
   }
 #calendar-multiweek-view-button:hover
   {
-    -moz-image-region: rect(1px 90px 35px 45px);
+    -moz-image-region: rect(68px 90px 102px 45px);
   }
 
 /*--------------------------------------------------------------------
@@ -232,18 +228,18 @@
 #calendar-month-view-button 
   {
     padding-top:	1px;
-    -moz-image-region: rect(68px 45px 102px 0px);
+    -moz-image-region: rect(102px 45px 136px 0px);
   }
 #calendar-month-view-button[disabled="true"],
 #calendar-month-view-button[disabled="true"]:hover,
 #calendar-month-view-button[disabled="true"]:hover:active,
 #calendar-month-view-button:hover:active
   {
-    -moz-image-region: rect(68px 135px 102px 90px);
+    -moz-image-region: rect(102px 135px 136px 90px);
   }
 #calendar-month-view-button:hover
   {
-    -moz-image-region: rect(68px 90px 102px 45px);
+    -moz-image-region: rect(102px 90px 136px 45px);
   }
 
 /*--------------------------------------------------------------------
