@@ -31,6 +31,6 @@ while (my $row = $sth->fetchrow_arrayref) {
                                    $row->[1], $row->[2], $row->[3], $row->[4],
                                    $row->[5], $row->[6], $row->[7]);
 }
-$dbh->commit();
+Tinderbox3::DB::maybe_commit($dbh);
 $dbh->disconnect();
 

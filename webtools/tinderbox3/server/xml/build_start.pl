@@ -101,7 +101,7 @@ if ($commands) {
   $dbh->do("UPDATE tbox_machine SET commands = '' WHERE machine_id = $machine_id");
 }
 
-$dbh->commit;
+Tinderbox3::DB::maybe_commit($dbh);
 
 #
 # Print response

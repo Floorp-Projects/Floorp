@@ -42,7 +42,7 @@ foreach my $other_machine_id ($p->param('other_machine_id')) {
   }
 }
 
-$dbh->commit();
+Tinderbox3::DB::maybe_commit($dbh);
 
 print "<p>Comments added.  Thank you for playing.  <a href='showbuilds.pl?tree=$tree'>View Tree</a></p>\n";
 

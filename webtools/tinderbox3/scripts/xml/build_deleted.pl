@@ -18,7 +18,7 @@ if (!$url) {
 }
 
 my $rows = $dbh->do("DELETE FROM tbox_build_field WHERE name = ? AND value = ?", undef, "build_zip", $url);
-$dbh->commit;
+Tinderbox3::DB::maybe_commit($dbh);
 
 if ($rows eq "0E0") {
   die_xml_error($p, $dbh, "No rows deleted!");
