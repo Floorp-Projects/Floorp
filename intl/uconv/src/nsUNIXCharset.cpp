@@ -17,9 +17,11 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#include <locale.h>
 #include "nsIPlatformCharset.h"
 #include "nsPlatformCharsetFactory.h"
 #include "pratom.h"
+#include "nsURLProperties.h"
 
 #include "nsUConvDll.h"
 
@@ -36,6 +38,8 @@ public:
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
 
+private:
+  nsString mCharset;
 };
 
 NS_IMPL_ISUPPORTS(nsUNIXCharset, kIPlatformCharsetIID);
@@ -44,6 +48,34 @@ nsUNIXCharset::nsUNIXCharset()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(&g_InstanceCount);
+
+  char* locale = setlocale(LC_ALL, "");
+  if(locale) 
+  {
+      nsAutoString propertyURL("resource://res/unixcharset.properties");
+  
+      nsURLProperties *info = new nsURLProperties( propertyURL );
+      if( info )
+      {
+          nsAutoString platformLocaleKey("locale." OSTYPE ".");
+          platformLocaleKey.Append(locale);
+
+          nsresult res = info->Get(platformLocaleKey, mCharset);
+          if(NS_FAILED(res)) {
+              nsAutoString localeKey("locale.");
+              localeKey.Append(locale);
+              nsresult res = info->Get(localeKey, mCharset);
+              if(NS_SUCCEEDED(res))  {
+                  delete info;
+                  return; // succeeded
+              }
+          }
+
+          delete info;
+      } 
+   }
+   mCharset = "ISO-8859-1";
+   return; // failed
 }
 nsUNIXCharset::~nsUNIXCharset()
 {
@@ -53,7 +85,7 @@ nsUNIXCharset::~nsUNIXCharset()
 NS_IMETHODIMP 
 nsUNIXCharset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
 {
-   oResult = "ISO-8859-1"; // XXX- hack to be implement
+   oResult = mCharset; 
    return NS_OK;
 }
 
