@@ -3,12 +3,16 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-       onload="onUpdate()" >
+       >
        <data>
        	<broadcaster id="NetDialog:Message"/>
        	<broadcaster id="NetDialog:CheckMessage"/>
        </data>
-        
+        <dialog>
+      		<observes element="NetDialog:Message"   attribute="text" onchange="onUpdate()"/>
+      		<observes element="NetDialog:CheckMessage"   attribute="text" onchange="onUpdate()"/>
+    	</dialog>
+
   <html:script>
 	function onUpdate()
 	{
@@ -72,8 +76,8 @@
   	<html:td>
   	</html:td>
   	<html:td html:align="justify">
-  		<html:button id ="CancelButton"> Cancel </html:button>
-  		<html:button id="OKButton">  OK </html:button> </html:td>
- 	</html:tr>
+  	<html:button id ="CancelButton"> Cancel </html:button>
+  	<html:button id="OKButton">  OK </html:button> </html:td>
+ </html:tr>
  </html:table>
 </window> 
