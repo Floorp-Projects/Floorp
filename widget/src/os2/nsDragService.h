@@ -57,6 +57,8 @@ public:
   NS_IMETHOD GetData(nsITransferable *aTransferable, PRUint32 aItemIndex);
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
 
+  BOOL WriteData(PSZ szDest, PSZ szURL);
+
   HWND mDragWnd;
 
   // our source data items

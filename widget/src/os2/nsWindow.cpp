@@ -44,6 +44,7 @@
 //#include "nsMenu.h"
 #include "nsDragService.h"
 #include "nsILocalFile.h"
+#include "nsNetUtil.h"
 
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
@@ -60,6 +61,8 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
 #include "nsIFile.h"
+
+#include "nsISupportsPrimitives.h"
 
 #include "nsOS2Uni.h"
 #include "nsPaletteOS2.h"
@@ -159,7 +162,7 @@ nsWindow::nsWindow() : nsBaseWidget()
     mFrameIcon          = 0;
     mPS                 = 0;
     mPSRefs             = 0;
-    mDragInside         = FALSE;
+    mNativeDrag         = FALSE;
     mDeadKey            = 0;
     mHaveDeadKey        = FALSE;
     // This is so that frame windows can be destroyed from their destructors.
@@ -372,13 +375,16 @@ void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
 {
     event.widget = this;
     NS_ADDREF(event.widget);
-    event.nativeMsg = nsnull;
+    event.nativeMsg = 0;
 
     if (nsnull == aPoint) {     // use the point from the event
       // get the message position in client coordinates and in twips
       POINTL ptl;
       WinQueryMsgPos( 0/*hab*/, &ptl);
       WinMapWindowPoints( HWND_DESKTOP, mWnd, &ptl, 1);
+      if ((aEventType == NS_DRAGDROP_DROP) && (mNativeDrag)) {
+        ptl.x = ptl.y = 1;
+      }
 
 #if 0
       printf("++++++++++nsWindow::InitEvent (!pt) mapped point = %ld, %ld\n", ptl.x, ptl.y);
@@ -945,6 +951,11 @@ void nsWindow::RealDoCreate( HWND              hwndP,
 
    if( mParent)
       mParent->AddChild( this);
+
+   mContentType = aInitData? aInitData->mContentType : eContentTypeInherit;
+   if (mContentType == eContentTypeInherit && aParent) {
+      mContentType = aParent->mContentType;
+   }
 
    // call the event callback to notify about creation
 
@@ -1887,7 +1898,7 @@ void* nsWindow::GetNativeData(PRUint32 aDataType)
         case NS_NATIVE_GRAPHIC:
             if( !mPS)
             {
-              if( mDragInside) { 
+              if( mNativeDrag) { 
                 mPS = DrgGetPS(mWnd);
               } else {
                 mPS = WinGetPS(mWnd);
@@ -1924,7 +1935,7 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
       if( !mPSRefs)
       {
         BOOL rc;
-        if( mDragInside) rc = DrgReleasePS( mPS);
+        if( mNativeDrag) rc = DrgReleasePS( mPS);
         else rc = WinReleasePS( mPS);
 #ifdef DEBUG
         if( !rc)
@@ -2595,7 +2606,7 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
         // is a drag inside the window; we need to do *this* so that we can
         // generate DRAGENTER messages [which os/2 doesn't provide].
         case DM_DROPHELP:
-          mDragInside = FALSE;
+          mNativeDrag = FALSE;
           break;
     }
     
@@ -3389,11 +3400,25 @@ PRBool nsWindow::OnDragOver(MPARAM mp1, MPARAM mp2, MRESULT &mr)
   USHORT usDrop = DOR_DROP;
   USHORT usDefaultOp = DO_MOVE;
   PDRAGINFO pdraginfo = (PDRAGINFO)mp1;
+  DRAGITEM dragitem;
   
   nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
   nsCOMPtr<nsIDragSession> dragSession;
   dragService->GetCurrentSession(getter_AddRefs(dragSession));
-  if (dragSession) {
+  DrgAccessDraginfo(pdraginfo);
+  if (!dragSession) {
+    /* Check to see if we can handle it. If we can, create a drag session */
+    DrgQueryDragitem(pdraginfo, sizeof(DRAGITEM), &dragitem, 0);
+    if (DrgVerifyRMF(&dragitem, "DRM_OS2FILE","DRF_TEXT") ||
+         DrgVerifyRMF(&dragitem, "DRM_OS2FILE","DRF_UNKNOWN")) {
+      dragService->StartDragSession();
+      dragService->GetCurrentSession(getter_AddRefs(dragSession));
+      mNativeDrag = TRUE;
+    } else {
+      usDrop = DOR_NEVERDROP;
+    }
+  }
+  if ((dragSession) && (!mNativeDrag)) {
     PRBool canDrop;
     dragSession->GetCanDrop(&canDrop);
     if (!canDrop)
@@ -3412,9 +3437,12 @@ PRBool nsWindow::OnDragOver(MPARAM mp1, MPARAM mp2, MRESULT &mr)
        dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
        break;
     }
+  } else if (mNativeDrag && (mContentType == eContentTypeContent)) {
+    usDefaultOp = DO_MOVE;
   } else {
     usDrop = DOR_NEVERDROP;
   }
+  DrgFreeDraginfo(pdraginfo);
 
   mr = MRFROM2SHORT(usDrop, usDefaultOp);
 
@@ -3425,24 +3453,35 @@ PRBool nsWindow::OnDragOver(MPARAM mp1, MPARAM mp2, MRESULT &mr)
 
 PRBool nsWindow::OnDragLeave( MPARAM mp1, MPARAM mp2)
 {
-  //   gWidgetModuleData->dragService->InitDragExit( (PDRAGINFO) mp1);
-  //   DispatchDragDropEvent( NS_DRAGDROP_EXIT);
-  //   gWidgetModuleData->dragService->TermDragExit();
+  if (mNativeDrag) {
+    nsresult rv;
+    nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
+    nsCOMPtr<nsIDragSession> dragSession;
+    dragService->GetCurrentSession(getter_AddRefs(dragSession));
+    if (dragSession) {
+      dragService->EndDragSession();
+      mNativeDrag = FALSE;
+    }
+  }
 
-  //   mDragInside = FALSE;
+  DispatchDragDropEvent(NS_DRAGDROP_EXIT);
 
-   return PR_TRUE;
+  return PR_TRUE;
 }
+
+extern BOOL GetURLObjectContents(PDRAGITEM pDragItem);
 
 PRBool nsWindow::OnDrop(MPARAM mp1, MPARAM mp2)
 {
   nsresult rv;
   PDRAGINFO pdraginfo = (PDRAGINFO)mp1;
+  DRAGITEM dragitem;
   
   nsCOMPtr<nsIDragService> dragService = do_GetService("@mozilla.org/widget/dragservice;1", &rv);
   nsCOMPtr<nsIDragSession> dragSession;
   dragService->GetCurrentSession(getter_AddRefs(dragSession));
 
+  DrgAccessDraginfo(pdraginfo);
   switch (pdraginfo->usOperation) {
   case DO_COPY:
      dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_COPY);
@@ -3455,7 +3494,78 @@ PRBool nsWindow::OnDrop(MPARAM mp1, MPARAM mp2)
      break;
   }
 
-  DispatchDragDropEvent( NS_DRAGDROP_DROP);
+  if (mNativeDrag) {
+     dragSession->SetDragAction(nsIDragService::DRAGDROP_ACTION_MOVE);
+    // now create the transferable and stuff data into it.
+    nsCOMPtr<nsITransferable> trans(do_CreateInstance("@mozilla.org/widget/transferable;1"));
+  
+    DrgQueryDragitem(pdraginfo, sizeof(DRAGITEM), &dragitem, 0);
+    if (DrgVerifyType(&dragitem, "UniformResourceLocator"))
+    {
+      GetURLObjectContents(&dragitem);
+    }
+  
+    PSZ pszURL;
+    PSZ pszProtocol;
+    PSZ pszTargetName;
+    ULONG ulLength;
+    ulLength = DrgQueryStrNameLen(dragitem.hstrSourceName);
+    pszURL = (PSZ)nsMemory::Alloc(ulLength+1);
+    DrgQueryStrName(dragitem.hstrSourceName, ulLength+1, pszURL);
+    ulLength = DrgQueryStrNameLen(dragitem.hstrContainerName);
+    pszProtocol = (PSZ)nsMemory::Alloc(ulLength+1);
+    DrgQueryStrName(dragitem.hstrContainerName, ulLength+1, pszProtocol);
+    ulLength = DrgQueryStrNameLen(dragitem.hstrTargetName);
+    pszTargetName = (PSZ)nsMemory::Alloc(ulLength+1);
+    DrgQueryStrName(dragitem.hstrTargetName, ulLength+1, pszTargetName);
+
+
+    // add a special flavor if we're an anchor to indicate that we have a URL
+    // in the drag data
+    nsCAutoString dragData;
+    if (DrgVerifyType(&dragitem, "UniformResourceLocator"))
+    {
+      dragData += pszProtocol;
+      dragData += pszURL;
+    } else {
+      nsCOMPtr<nsILocalFile> file;
+      char filepath[CCHMAXPATH];
+      strcpy(filepath, pszProtocol);
+      strcat(filepath, pszURL);
+      if ( NS_SUCCEEDED(NS_NewNativeLocalFile(nsDependentCString(filepath), PR_TRUE, getter_AddRefs(file))) ) {
+        nsCAutoString urlSpec;
+        NS_GetURLSpecFromFile(file, urlSpec);
+        dragData += urlSpec;
+
+      }
+    }
+    dragData += NS_LITERAL_CSTRING("\n");
+    dragData += pszTargetName;
+    nsMemory::Free(pszURL);
+    nsMemory::Free(pszProtocol);
+    nsMemory::Free(pszTargetName);
+    DrgFreeDraginfo(pdraginfo);
+    
+    nsCOMPtr<nsISupportsString> urlPrimitive(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+    if ( !urlPrimitive )
+      return NS_ERROR_FAILURE;
+    urlPrimitive->SetData(NS_ConvertASCIItoUCS2(dragData));
+    trans->SetTransferData(kURLMime, urlPrimitive, dragData.Length() * 2);
+
+    nsCOMPtr<nsISupportsArray> transArray(do_CreateInstance("@mozilla.org/supports-array;1"));
+    if ( !transArray )
+      return NS_ERROR_FAILURE;
+    transArray->InsertElementAt(trans, 0);
+  
+    dragService->InvokeDragSession(0, transArray, 0, 0);
+  }
+
+  DispatchDragDropEvent(NS_DRAGDROP_DROP);
+
+  if (mNativeDrag && dragSession) {
+    dragService->EndDragSession();
+    mNativeDrag = PR_FALSE;
+  }
 
   return PR_TRUE;
 }
