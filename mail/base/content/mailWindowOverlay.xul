@@ -1693,7 +1693,7 @@
       <toolbarbutton class="toolbarbutton-1" id="button-next"     label="&nextButton.label;" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
 
       <toolbaritem id="button-junk">       
-        <deck id="junk-deck">
+        <deck id="junk-deck" observes="button_junk">
           <toolbarbutton class="toolbarbutton-1"
                    label="&junkButton.label;"
                    tooltiptext="&junkButton.tooltip;" 
