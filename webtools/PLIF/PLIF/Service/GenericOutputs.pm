@@ -43,6 +43,13 @@ sub provides {
 }
 
 # dispatcher.output.generic
+sub outputAcknowledge {
+    my $self = shift;
+    my($app, $output) = @_;
+    $output->output('acknowledge', {});
+}
+
+# dispatcher.output.generic
 # this is typically used by input devices
 sub outputRequest {
     my $self = shift;
@@ -66,6 +73,7 @@ sub outputReportFatalError {
 # dispatcher.output
 sub strings {
     return (
+            'acknowledge' => 'A blank output merely acknowledging that something happened',
             'request' => 'A prompt for user input (only required for interactive protocols, namely stdout)',
             'error' => 'The message given to the user when something goes horribly wrong',
             );
@@ -79,13 +87,17 @@ sub getDefaultString {
         $self->dump(9, 'Looks like an error occured, because the string \'error\' is being requested');
     }
     if ($protocol eq 'stdout') {
-        if ($string eq 'request') {
+        if ($string eq 'acknowledge') {
+            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Acknowledged.<br/></text>');
+        } elsif ($string eq 'request') {
             return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">\'<text value="(argument)"/>\'<if lvalue="(defaults.length)" condition=">" rvalue="0"> (default: \'<set variable="default" value="(defaults)" source="keys" order="default"><text value="(defaults.(default))"/><if lvalue="(default)" condition="!=" rvalue="0">\', \'</if></set>\')</if>? </text>');
         } elsif ($string eq 'error') {
             return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">Error:<br/><text value="(error)"/><br/></text>');
-        }
+        } 
     } elsif ($protocol eq 'http') {
-        if ($string eq 'error') {
+        if ($string eq 'acknowledge') {
+            return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>Acknowledged.</text>');
+        } elsif ($string eq 'error') {
             return ('COSES', '1', '<text xmlns="http://bugzilla.mozilla.org/coses">HTTP/1.1 500 Internal Error<br/>Content-Type: text/plain<br/><br/>Error:<br/><text value="(error)"/></text>');
         }
     }
