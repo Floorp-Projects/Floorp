@@ -1325,10 +1325,8 @@ case "$target" in
 	if test "$with_x" != "yes"
 	then
 		_PLATFORM_DEFAULT_TOOLKIT="photon"
-    	AC_DEFINE(NO_X11)
 	    TK_CFLAGS='-I/usr/include/photon'
 		TK_LIBS='-lph'
-		no_x="yes"
 	fi
 	case "${target_cpu}" in
 	ppc*)
@@ -1505,7 +1503,6 @@ alpha*-*-osf*)
 	    _PLATFORM_DEFAULT_TOOLKIT='photon'
 	    TK_CFLAGS='-I/usr/nto/include/photon'
 	    TK_LIBS='-lphoton -lphrender'
-	    AC_DEFINE(NO_X11)
     fi
     ;;
 
@@ -2072,7 +2069,6 @@ else
         ;;
     esac
 
-    AC_SUBST(XT_LIBS)
     dnl ========================================================
     dnl = Check for Xinerama
     dnl ========================================================
@@ -2113,25 +2109,6 @@ else
 
 	LDFLAGS="$_SAVE_LDFLAGS"
 
-    dnl ====================================================
-    dnl = Check if X headers exist
-    dnl ====================================================
-    _SAVE_CFLAGS=$CFLAGS
-    CFLAGS="$CFLAGS $XCFLAGS"
-    AC_TRY_COMPILE([
-        #include <stdio.h>
-        #include <X11/Xlib.h>
-    ],
-    [
-        Display *dpy = 0;
-        if ((dpy = XOpenDisplay(NULL)) == NULL) {
-            fprintf(stderr, ": can't open %s\n", XDisplayName(NULL));
-            exit(1);
-        }
-    ], [], 
-    [ AC_MSG_ERROR([Could not compile basic X program.]) ])
-    CFLAGS="$_SAVE_CFLAGS"
-
     AC_CHECK_FT2(6.1.0, [_HAVE_FREETYPE2=1], [_HAVE_FREETYPE2=])
 
 fi # $no_x
@@ -2139,6 +2116,7 @@ fi # $no_x
 AC_SUBST(XCFLAGS)
 AC_SUBST(XLDFLAGS)
 AC_SUBST(XLIBS)
+AC_SUBST(XT_LIBS)
 
 dnl ========================================================
 dnl = pthread support
@@ -3292,9 +3270,9 @@ if test "$MOZ_ENABLE_GTK" \
 || test "$MOZ_ENABLE_GTK2"
 then
     AC_DEFINE(MOZ_X11)
-    _X11_TOOLKIT=1
+    MOZ_X11=1
 fi
-
+AC_SUBST(MOZ_X11)
 
 dnl ========================================================
 dnl =
@@ -3410,11 +3388,11 @@ MOZ_ARG_DISABLE_BOOL(freetype2,
 [  --disable-freetype2     Disable FreeType2 support ],
     MOZ_ENABLE_FREETYPE2=,
     MOZ_ENABLE_FREETYPE2=1,
-    [if test "$_X11_TOOLKIT" -a "$_HAVE_FREETYPE2"; then 
+    [if test "$MOZ_X11" -a "$_HAVE_FREETYPE2"; then 
          MOZ_ENABLE_FREETYPE2=1
      fi])
 
-if test "$MOZ_ENABLE_FREETYPE2" && test -z "$_X11_TOOLKIT" -o -z "$_HAVE_FREETYPE2"; then
+if test "$MOZ_ENABLE_FREETYPE2" && test -z "$MOZ_X11" -o -z "$_HAVE_FREETYPE2"; then
     AC_MSG_ERROR([Cannot enable FreeType2 support for non-X11 toolkits or if FreeType2 is not detected.])
 fi
 
@@ -3467,7 +3445,7 @@ MOZ_ARG_DISABLE_BOOL(postscript,
 dnl ========================================================
 dnl = Xprint print module
 dnl ========================================================
-if test "$_X11_TOOLKIT"
+if test "$MOZ_X11"
 then
     MOZ_ENABLE_XPRINT=1
 
@@ -3491,7 +3469,7 @@ dnl ========================================================
 dnl = GnomeVFS support module
 dnl ========================================================
 
-if test "$_X11_TOOLKIT"
+if test "$MOZ_X11"
 then
     dnl build the gnomevfs extension by default only when the
     dnl GTK2 toolkit is in use.
@@ -3749,7 +3727,7 @@ fi
 
 if test -z "$MOZ_ENABLE_GNOMEVFS" && test `echo "$MOZ_EXTENSIONS" | grep -c gnomevfs` -ne 0; then
     # Suppress warning on non-X11 platforms
-    if test "$_X11_TOOLKIT"; then
+    if test -n "$MOZ_X11"; then
         AC_MSG_WARN([Cannot build gnomevfs without required libraries. Removing gnomevfs from MOZ_EXTENSIONS.])
     fi
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|gnomevfs||'`
@@ -5591,12 +5569,31 @@ if test "$USING_HCC"; then
 fi
 
 dnl Check for missing components
-if test "$no_x" != "yes"; then
-if test ! -z "$MISSING_X"; then
-   AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
-fi
+if test -n "$MOZ_X11"; then
+    dnl ====================================================
+    dnl = Check if X headers exist
+    dnl ====================================================
+    _SAVE_CFLAGS=$CFLAGS
+    CFLAGS="$CFLAGS $XCFLAGS"
+    AC_TRY_COMPILE([
+        #include <stdio.h>
+        #include <X11/Xlib.h>
+    ],
+    [
+        Display *dpy = 0;
+        if ((dpy = XOpenDisplay(NULL)) == NULL) {
+            fprintf(stderr, ": can't open %s\n", XDisplayName(NULL));
+            exit(1);
+        }
+    ], [], 
+    [ AC_MSG_ERROR([Could not compile basic X program.]) ])
+    CFLAGS="$_SAVE_CFLAGS"
 
-fi # $no_x
+    if test ! -z "$MISSING_X"; then
+        AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
+    fi
+
+fi # MOZ_X11
 
 dnl Set various defines and substitutions
 dnl ========================================================
