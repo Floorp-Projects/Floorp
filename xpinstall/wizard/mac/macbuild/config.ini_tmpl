@@ -68,9 +68,9 @@ confirm_install=true
 
 [RunApp0]
 Target App Creator Type=MOZZ
-Target Document=Mozilla Installer
+Target Document=:Mozilla Folder:Mozilla Installer
 
 [LegacyCheck0]
-Filename=Mozilla
+Filename=:Mozilla Folder:Mozilla
 Version=5.0.0b.14
 Message=An older installation of Mozilla has been detected in the folder selected. You may select another folder or continue.
