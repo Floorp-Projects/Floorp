@@ -121,7 +121,7 @@ nsProxyObjectManager::~nsProxyObjectManager()
 nsProxyObjectManager *
 nsProxyObjectManager::GetInstance()
 {
-    if (mInstance == nsnull) 
+    if (! mInstance) 
     {
         mInstance = new nsProxyObjectManager();
     }
@@ -163,7 +163,7 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
     
     // check to see if the eventQ is on our thread.  If so, just return the real object.
     
-    if (postQ != nsnull && !(proxyType & PROXY_ASYNC) && !(proxyType & PROXY_ALWAYS))
+    if (postQ && !(proxyType & PROXY_ASYNC) && !(proxyType & PROXY_ALWAYS))
     {
         PRBool aResult;
         postQ->IsQueueOnCurrentThread(&aResult);
