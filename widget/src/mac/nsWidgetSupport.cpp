@@ -29,7 +29,6 @@
 #include "nsIButton.h"
 #include "nsIEventListener.h"
 #include "nsILabel.h"
-#include "nsIListBox.h"
 #include "nsIListWidget.h"
 #include "nsILookAndFeel.h"
 #include "nsIMouseListener.h"
@@ -195,36 +194,6 @@ NS_CreateScrollBar(nsISupports* aParent,
 	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
 	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
 	  widget->Show(PR_TRUE);
-    NS_IF_RELEASE(widget);
-	}
-  else
-  {
-    NS_ERROR("Called QueryInterface on a non nsIWidget supported object");
-  }
-
-	if (aParent)
-	  NS_IF_RELEASE(parent);
-
-  return NS_OK;
-}
-
-NS_WIDGET nsresult 
-NS_CreateListBox(nsISupports* aParent, 
-									nsIListBox* aWidget, 
-									const nsRect& aRect, 
-                  EVENT_CALLBACK aHandleEventFunction,
-                  const nsFont* aFont)
-{
-	nsIWidget* parent = nsnull;
-	if (aParent != nsnull)
-    aParent->QueryInterface(NS_GET_IID(nsIWidget),(void**)&parent);
-
-  nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(NS_GET_IID(nsIWidget),(void**)&widget)) {
-	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
-	  widget->Show(PR_TRUE);
-    if (aFont != nsnull)
-	  	widget->SetFont(*aFont);
     NS_IF_RELEASE(widget);
 	}
   else
