@@ -371,7 +371,7 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
     return true;
   
   var title = window.editorShell.editorDocument.title;
-  if (title.length == 0)
+  if (!title)
     var title = GetString("untitled");
       
   var dialogTitle = window.editorShell.GetString("SaveDocument");
@@ -637,37 +637,34 @@ function EditorSetFontSize(size)
 function onFontColorChange()
 {
   var commandNode = document.getElementById("cmd_fontColor");
-  SetTextColorButton(commandNode.getAttribute("state"));
+  if (commandNode)
+  {
+    var color = commandNode.getAttribute("state");
+    var button = document.getElementById("TextColorButton");
+    if (button)
+    {
+      // No color set - get color set on page or other defaults
+      if (!color)
+        color = gDefaultTextColor;
+
+      button.setAttribute("style", "background-color:"+color); 
+    }
+  }
 }
 
 function onBackgroundColorChange()
 {
   var commandNode = document.getElementById("cmd_backgroundColor");
-  SetBackgroundColorButton(commandNode.getAttribute("state"));
-}
-
-function SetTextColorButton(color)
-{
-  var button = document.getElementById("TextColorButton");
-  if (button)
+  if (commandNode)
   {
-    // No color set - get color set on page or other defaults
-    if (!color || color.length == 0)
-      color = gDefaultTextColor;
-
-    button.setAttribute("style", "background-color:"+color); 
-  }
-}
-
-function SetBackgroundColorButton(color)
-{
-  var button = document.getElementById("BackgroundColorButton");
-  if (button)
-  {
-    if (!color || color.length == 0)
-      color = gDefaultBackgroundColor;
-
-    button.setAttribute("style", "background-color:"+color); 
+    var color = commandNode.getAttribute("state");
+    var button = document.getElementById("BackgroundColorButton");
+    if (button)
+    {
+      if (!color)
+        color = gDefaultBackgroundColor;
+      button.setAttribute("style", "background-color:"+color); 
+    }
   }
 }
 
@@ -780,19 +777,15 @@ function EditorSelectColor(colorType)
   if (gColorObj.Cancel)
     return;
 
-  var broadcaster;
+  var commandNode;
   
   if (colorType == "Text")
   {
     if (currentColor != gColorObj.TextColor)
       window.editorShell.SetTextProperty("font", "color", gColorObj.TextColor);
   
-    // Update the broadcaster state (this will trigger color button update)
-    broadcaster = document.getElementById("cmd_fontColor");
-    if (broadcaster)
-      broadcaster.setAttribute("state",gColorObj.TextColor);
-
-    //SetTextColorButton(gColorObj.TextColor);
+    // Update the command state (this will trigger color button update)
+    goUpdateCommand("cmd_fontColor");
   }
   else if (element)
   {
@@ -805,7 +798,7 @@ function EditorSelectColor(colorType)
         var bgcolor = table.getAttribute("bgcolor");
         if (bgcolor != gColorObj.BackgroundColor)
         {
-          if (gColorObj.BackgroundColor.length > 0)
+          if (gColorObj.BackgroundColor)
             window.editorShell.SetAttribute(table, "bgcolor", gColorObj.BackgroundColor);
           else
             window.editorShell.RemoveAttribute(table, "bgcolor");
@@ -815,9 +808,7 @@ function EditorSelectColor(colorType)
     else if (currentColor != gColorObj.BackgroundColor)
       window.editorShell.SetBackgroundColor(gColorObj.BackgroundColor);
     
-    broadcaster = document.getElementById("cmd_backgroundColor");
-    if (broadcaster)
-      broadcaster.setAttribute("state",gColorObj.BackgroundColor);
+    goUpdateCommand("cmd_backgroundColor");
   }
   window._content.focus();
 }
@@ -1039,7 +1030,7 @@ function SetDisplayMode(mode)
         menuID = "viewSourceMode";
         break;
     }
-    if (menuID.length > 0)
+    if (menuID)
       document.getElementById(menuID).setAttribute("checked","true");
     
     return true;
@@ -1126,7 +1117,7 @@ function EditorInitEditMenu()
 
 function EditorOpenUrl(url)
 {
-  if (!url || url.length == 0)
+  if (!url)
     return; 
 
   // if the existing window is untouched, just load there
@@ -1194,7 +1185,7 @@ function ShuffleRecentMenu(curUrl)
 
 function SaveRecentFilesPrefs(title, url, i)
 {
-  if (!url || url.length == 0) {
+  if (!url) {
     return;
   }
     
@@ -1225,7 +1216,7 @@ function BuildRecentMenu()
     var title = getUnicharPref("editor.history_title_"+i);
     var url = getUnicharPref("editor.history_url_"+i);
 
-    if (!url || url.length == 0)
+    if (!url)
       break;
 
     // If the current url is already opened, don't put useless entries into the menu
@@ -1363,7 +1354,7 @@ function InitParagraphMenu()
   // We need a separate method to get blockquote state  
 
   // We use "x" as uninitialized paragraph state
-  if (state.length == 0 || state == "x")
+  if (!state || state == "x")
     IDSuffix = "bodyText" // No paragraph container
   else
     IDSuffix = state;
@@ -1377,12 +1368,12 @@ function InitListMenu()
   var state = editorShell.GetListState(mixedObj);
   var IDSuffix = "noList";
   
-  if (state.length > 0)
+  if (state)
   {
     if (state == "dl")
       state = editorShell.GetListItemState(mixedObj);
 
-    if (state.length > 0)
+    if (state)
       IDSuffix = state;
   }
 
