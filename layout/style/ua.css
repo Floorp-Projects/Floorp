@@ -736,6 +736,12 @@ label {
 }
 
 /* Combo box style */
+select:-moz-dummy-option { 
+  visibility: hidden; 
+  content: "X"; 
+  display: block;
+}
+
 select, select[size="1"] {
   vertical-align: bottom;
   border: none;
