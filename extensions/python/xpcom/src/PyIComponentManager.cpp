@@ -28,16 +28,16 @@
 // (c) 2000, ActiveState corp.
 
 #include "PyXPCOM_std.h"
-#include <nsIComponentManager.h>
+#include <nsIComponentManagerObsolete.h>
 
-static nsIComponentManager *GetI(PyObject *self) {
-	nsIID iid = NS_GET_IID(nsIComponentManager);
+static nsIComponentManagerObsolete *GetI(PyObject *self) {
+	static const nsIID iid = NS_GET_IID(nsIComponentManagerObsolete);
 
 	if (!Py_nsISupports::Check(self, iid)) {
 		PyErr_SetString(PyExc_TypeError, "This object is not the correct interface");
 		return NULL;
 	}
-	return (nsIComponentManager *)Py_nsISupports::GetI(self);
+	return (nsIComponentManagerObsolete *)Py_nsISupports::GetI(self);
 }
 
 static PyObject *PyCreateInstanceByContractID(PyObject *self, PyObject *args)
@@ -50,7 +50,7 @@ static PyObject *PyCreateInstanceByContractID(PyObject *self, PyObject *args)
 		PyErr_SetString(PyExc_ValueError, "2nd arg must be none");
 		return NULL;
 	}
-	nsIComponentManager *pI = GetI(self);
+	nsIComponentManagerObsolete *pI = GetI(self);
 	if (pI==NULL)
 		return NULL;
 
@@ -78,7 +78,7 @@ static PyObject *PyContractIDToClassID(PyObject *self, PyObject *args)
 	char *pid;
 	if (!PyArg_ParseTuple(args, "s", &pid))
 		return NULL;
-	nsIComponentManager *pI = GetI(self);
+	nsIComponentManagerObsolete *pI = GetI(self);
 	if (pI==NULL)
 		return NULL;
 
@@ -104,7 +104,7 @@ static PyObject *PyCLSIDToContractID(PyObject *self, PyObject *args)
 		return NULL;
 	char *ret_pid = nsnull;
 	char *ret_class = nsnull;
-	nsIComponentManager *pI = GetI(self);
+	nsIComponentManagerObsolete *pI = GetI(self);
 	if (pI==NULL)
 		return NULL;
 
@@ -130,7 +130,7 @@ static PyObject *PyEnumerateCLSIDs(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 
-	nsIComponentManager *pI = GetI(self);
+	nsIComponentManagerObsolete *pI = GetI(self);
 	if (pI==NULL)
 		return NULL;
 
@@ -150,7 +150,7 @@ static PyObject *PyEnumerateContractIDs(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, ""))
 		return NULL;
 
-	nsIComponentManager *pI = GetI(self);
+	nsIComponentManagerObsolete *pI = GetI(self);
 	if (pI==NULL)
 		return NULL;
 

@@ -225,7 +225,7 @@ static void LogError(const char *fmt, ...)
 			else {
 				streamout << "Traceback (most recent call last):\n";
 				streamout << szTraceback;
-				PyMem_Free((ANY *)szTraceback);
+				PyMem_Free((void *)szTraceback);
 			}
 		}
 		PyObject *temp = PyObject_Str(exc_typ);

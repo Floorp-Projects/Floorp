@@ -56,7 +56,7 @@ extern void PyXPCOM_InterpreterState_Ensure();
 
 #endif // XP_WIN
 
-PyXPCOM_INTERFACE_DEFINE(Py_nsIComponentManager, nsIComponentManager, PyMethods_IComponentManager)
+PyXPCOM_INTERFACE_DEFINE(Py_nsIComponentManager, nsIComponentManagerObsolete, PyMethods_IComponentManager)
 PyXPCOM_INTERFACE_DEFINE(Py_nsIInterfaceInfoManager, nsIInterfaceInfoManager, PyMethods_IInterfaceInfoManager)
 PyXPCOM_INTERFACE_DEFINE(Py_nsIEnumerator, nsIEnumerator, PyMethods_IEnumerator)
 PyXPCOM_INTERFACE_DEFINE(Py_nsISimpleEnumerator, nsISimpleEnumerator, PyMethods_ISimpleEnumerator)
@@ -170,7 +170,7 @@ PyXPCOMMethod_NS_GetGlobalComponentManager(PyObject *self, PyObject *args)
 	// Return a type based on the IID
 	// Can not auto-wrap the interface info manager as it is critical to
 	// building the support we need for autowrap.
-	return Py_nsISupports::PyObjectFromInterface(cm, NS_GET_IID(nsIComponentManager), PR_TRUE, PR_FALSE);
+	return Py_nsISupports::PyObjectFromInterface(cm, NS_GET_IID(nsIComponentManagerObsolete), PR_TRUE, PR_FALSE);
 }
 
 static PyObject *
@@ -594,7 +594,14 @@ init_xpcom() {
 	Py_nsIInterfaceInfo::InitType(dict);
 	Py_nsIInputStream::InitType(dict);
 	Py_nsIClassInfo::InitType(dict);
-    
+
+	// yet another 
+	{ // temp scope nsIComponentManagerObsolete hack :(
+	PyObject *iid_ob = Py_nsIID::PyObjectFromIID(NS_GET_IID(nsIComponentManagerObsolete));
+	PyDict_SetItemString(dict, "IID_nsIComponentManager", iid_ob);
+	Py_DECREF(iid_ob);
+	} // end temp scope
+
     // We have special support for proxies - may as well add their constants!
     REGISTER_INT(PROXY_SYNC);
     REGISTER_INT(PROXY_ASYNC);

@@ -19,6 +19,12 @@
 from xpcom import components, _xpcom
 import xpcom.server, xpcom.client
 
+try:
+    from sys import gettotalrefcount
+except ImportError:
+    # Not a Debug build - assume no references (can't be leaks then :-)
+    gettotalrefcount = lambda: 0
+
 num_alive = 0
 
 class koTestSimple:
@@ -61,6 +67,30 @@ def test():
     if num_alive != 0: raise RuntimeError, "Eeek - there are %d objects alive" % (num_alive,)
     if wr() is not None: raise RuntimeError, "Our weak-reference is not returning None when it should!"
 
+def test_refcount(num_loops=-1):
+    # Do the test lots of times - can help shake-out ref-count bugs.
+    if num_loops == -1: num_loops = 10
+    for i in xrange(num_loops):
+        test()
+
+        if i==0:
+            # First loop is likely to "leak" as we cache things.
+            # Leaking after that is a problem.
+            num_refs = gettotalrefcount()
+
+    lost = gettotalrefcount() - num_refs
+    # Sometimes we get spurious counts off by 1 or 2.
+    # This can't indicate a real leak, as we have looped
+    # more than twice!
+    if abs(lost)>2:
+        print "*** Lost %d references" % (lost,)
     
-test()
+test_refcount()
+
 print "Weak-reference tests appear to have worked!"
+if __name__=='__main__':
+    _xpcom.NS_ShutdownXPCOM()
+    ni = xpcom._xpcom._GetInterfaceCount()
+    ng = xpcom._xpcom._GetGatewayCount()
+    if ni or ng:
+        print "********* WARNING - Leaving with %d/%d objects alive" % (ni,ng)

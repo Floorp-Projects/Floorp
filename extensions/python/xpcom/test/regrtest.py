@@ -29,4 +29,10 @@ for arg in sys.argv[1:]:
     if arg[0] not in "-/":
         tests.append(arg)
 tests = tests or test.regrtest.findtests(path, [])
-test.regrtest.main(tests, path)
+try:
+    test.regrtest.main(tests, path)
+finally:
+    from xpcom import _xpcom
+    _xpcom.NS_ShutdownXPCOM() # To get leak stats and otherwise ensure life is good.
+
+

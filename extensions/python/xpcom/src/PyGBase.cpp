@@ -44,7 +44,7 @@ extern PyG_Base *MakePyG_nsIComponentLoader(PyObject *instance);
 extern PyG_Base *MakePyG_nsIInputStream(PyObject *instance);
 
 static char *PyXPCOM_szDefaultGatewayAttributeName = "_com_instance_default_gateway_";
-nsresult GetDefaultGateway(PyObject *instance, REFNSIID iid, void **ret);
+PyG_Base *GetDefaultGateway(PyObject *instance);
 void AddDefaultGateway(PyObject *instance, nsISupports *gateway);
 PRBool CheckDefaultGateway(PyObject *real_inst, REFNSIID iid, nsISupports **ret_gateway);
 
@@ -78,11 +78,33 @@ PyG_Base::PyG_Base(PyObject *instance, const nsIID &iid)
 	// Note that "instance" is the _policy_ instance!!
 	NS_INIT_REFCNT();
 	PR_AtomicIncrement(&cGateways);
-	m_pBaseObject = NULL;
+	m_pBaseObject = GetDefaultGateway(instance);
 	// m_pWeakRef is an nsCOMPtr and needs no init.
+
+	NS_ABORT_IF_FALSE(!(iid.Equals(NS_GET_IID(nsISupportsWeakReference)) || iid.Equals(NS_GET_IID(nsIWeakReference))),"Should not be creating gateways with weak-ref interfaces");
 	m_iid = iid;
 	m_pPyObject = instance;
 	NS_PRECONDITION(instance, "NULL PyObject for PyXPCOM_XPTStub!");
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+	// If XPCOM reference count logging is enabled, then allow us to give the Python class.
+	PyObject *realInstance = PyObject_GetAttrString(instance, "_obj_");
+	PyObject *r = PyObject_Repr(realInstance);
+	const char *szRepr = PyString_AsString(r);
+	if (szRepr==NULL) szRepr = "";
+	int reprOffset = *szRepr=='<' ? 1 : 0;
+	static const char *reprPrefix = "component:";
+	if (strncmp(reprPrefix, szRepr+reprOffset, strlen(reprPrefix)) == 0)
+		reprOffset += strlen(reprPrefix);
+	strncpy(refcntLogRepr, szRepr + reprOffset, sizeof(refcntLogRepr)-1);
+	refcntLogRepr[sizeof(refcntLogRepr)-1] = '\0';
+	// See if we should get rid of the " at 0x12345" portion.
+	char *lastPos = strstr(refcntLogRepr, " at ");
+	if (lastPos) *lastPos = '\0';
+	Py_XDECREF(realInstance);
+	Py_XDECREF(r);
+#endif // NS_BUILD_REFCNT_LOGGING
+
 #ifdef DEBUG_LIFETIMES
 	{
 		char *iid_repr;
@@ -293,8 +315,8 @@ PyG_Base::QueryInterface(REFNSIID iid, void** ppv)
 	}
 	// If we have a "base object", then we need to delegate _every_ remaining 
 	// QI to it.
-	if (m_pBaseObject != NULL && (m_pBaseObject->QueryInterface(iid, ppv)==NS_OK))
-		return NS_OK;
+	if (m_pBaseObject != NULL)
+		return m_pBaseObject->QueryInterface(iid, ppv);
 
 	// Call the Python policy to see if it (says it) supports the interface
 	PRBool supports = PR_FALSE;
@@ -341,28 +363,6 @@ PyG_Base::QueryInterface(REFNSIID iid, void** ppv)
 	} // end of temp scope for Python lock - lock released here!
 	if ( !supports )
 		return NS_ERROR_NO_INTERFACE;
-
-	// Now setup the base object pointer back to me.
-	// We do a QI on our internal one to ensure we can safely cast
-	// the result to a PyG_Base (both from the POV that is may not
-	// be a Python object, and that the vtables offsets may screw 
-	// us even if it is!)
-	nsISupports *pLook = (nsISupports *)(*ppv);
-	nsIInternalPython *pTemp;
-	if (pLook->QueryInterface(NS_GET_IID(nsIInternalPython), (void **)&pTemp)==NS_OK) {
-		// One of our objects, so set the base object if it doesnt already have one
-		PyG_Base *pG = (PyG_Base *)pTemp;
-		// Eeek - just these few next lines need to be thread-safe :-(
-		CEnterLeaveXPCOMFramework _celf;
-		if (pG->m_pBaseObject==NULL && pG != (PyG_Base *)this) {
-			pG->m_pBaseObject = this;
-			pG->m_pBaseObject->AddRef();
-#ifdef DEBUG_LIFETIMES
-			PYXPCOM_LOG_DEBUG("PyG_Base setting BaseObject of %p to %p\n", pG, this);
-#endif
-		}
-		pTemp->Release();
-	}
 	return NS_OK;
 }
 
@@ -370,7 +370,11 @@ nsrefcnt
 PyG_Base::AddRef(void)
 {
 	nsrefcnt cnt = (nsrefcnt) PR_AtomicIncrement((PRInt32*)&mRefCnt);
-	NS_LOG_ADDREF(this, cnt, "PyG_Base", sizeof(*this));
+#ifdef NS_BUILD_REFCNT_LOGGING
+	// If we have no pBaseObject, then we need to ignore them
+	if (m_pBaseObject == NULL)
+		NS_LOG_ADDREF(this, cnt, refcntLogRepr, sizeof(*this));
+#endif
 	return cnt;
 }
 
@@ -378,7 +382,10 @@ nsrefcnt
 PyG_Base::Release(void)
 {
 	nsrefcnt cnt = (nsrefcnt) PR_AtomicDecrement((PRInt32*)&mRefCnt);
-	NS_LOG_RELEASE(this, cnt, "PyG_Base");
+#ifdef NS_BUILD_REFCNT_LOGGING
+	if (m_pBaseObject == NULL)
+		NS_LOG_RELEASE(this, cnt, refcntLogRepr);
+#endif
 	if ( cnt == 0 )
 		delete this;
 	return cnt;
@@ -701,10 +708,14 @@ PyObject *PyG_Base::UnwrapPythonObject(void)
 
 *********************************************************************/
 
-nsresult GetDefaultGateway(PyObject *instance, REFNSIID iid, void **ret)
+PyG_Base *GetDefaultGateway(PyObject *policy)
 {
-	// NOTE: Instance is the real instance, _not_ the policy.
+	// NOTE: Instance is the policy, not the real instance
+	PyObject *instance = PyObject_GetAttrString(policy, "_obj_");
+	if (instance == nsnull)
+		return nsnull;
 	PyObject *ob_existing_weak = PyObject_GetAttrString(instance, PyXPCOM_szDefaultGatewayAttributeName);
+	Py_DECREF(instance);
 	if (ob_existing_weak != NULL) {
 		PRBool ok = PR_TRUE;
 		nsCOMPtr<nsIWeakReference> pWeakRef;
@@ -713,11 +724,16 @@ nsresult GetDefaultGateway(PyObject *instance, REFNSIID iid, void **ret)
 		                                       getter_AddRefs(pWeakRef),
 		                                       PR_FALSE));
 		Py_DECREF(ob_existing_weak);
-		if (ok)
-			return pWeakRef->QueryReferent( iid, ret);
+		nsISupports *pip;
+		if (ok) {
+			nsresult nr = pWeakRef->QueryReferent( NS_GET_IID(nsIInternalPython), (void **)&pip);
+			if (NS_FAILED(nr))
+				return nsnull;
+			return (PyG_Base *)(nsIInternalPython *)pip;
+		}
 	} else
 		PyErr_Clear();
-	return NS_ERROR_FAILURE;
+	return nsnull;
 }
 
 PRBool CheckDefaultGateway(PyObject *real_inst, REFNSIID iid, nsISupports **ret_gateway)

@@ -26,7 +26,10 @@ from xpcom import _xpcom
 # of the real xpcom object.  Presumably this "trace" object will delegate
 # to the real object, but presumably also taking some other action, such
 # as calling a profiler or debugger.
-tracer = None
+# tracer_unwrap is a function used to "unwrap" the tracer object.
+# If is expected that tracer_unwrap will be called with an object
+# previously returned by "tracer()".
+tracer = tracer_unwrap = None
 
 # Wrap an instance in an interface (via a policy)
 def WrapObject(ob, iid, policy = None, bWrapClient = 1):
@@ -42,7 +45,12 @@ def WrapObject(ob, iid, policy = None, bWrapClient = 1):
 
 # Unwrap a Python object back into the Python object
 def UnwrapObject(ob):
-    return _xpcom.UnwrapObject(ob)._obj_
+    if ob is None:
+        return None
+    ret = _xpcom.UnwrapObject(ob)._obj_
+    if tracer_unwrap is not None:
+        ret = tracer_unwrap(ret)
+    return ret
 
 # Create the main module for the Python loader.
 # This is a once only init process, and the returned object
@@ -54,3 +62,7 @@ def NS_GetModule( serviceManager, nsIFile ):
     import loader
     iid = _xpcom.IID_nsIModule
     return WrapObject(loader.MakePythonComponentLoaderModule(serviceManager, nsIFile), iid, bWrapClient = 0)
+
+def _shutdown():
+    from policy import _shutdown
+    _shutdown()
