@@ -19,13 +19,16 @@
 
 #include "nsMsgAccount.h"
 #include "nsIMsgAccount.h"
-#include "nsIPref.h"
 
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "prprf.h"
+#include "plstr.h"
+#include "prmem.h"
 #include "nsMsgBaseCID.h"
 
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 class nsMsgAccount : public nsIMsgAccount {
   
@@ -35,6 +38,9 @@ public:
   
   NS_DECL_ISUPPORTS
 
+  NS_IMETHOD GetKey(char ** aKey);
+  NS_IMETHOD SetKey(char * aKey);
+  
   NS_IMETHOD GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer);
   NS_IMETHOD SetIncomingServer(nsIMsgIncomingServer * aIncomingServer);
 
@@ -51,10 +57,9 @@ public:
   /* void removeIdentity (in nsIMsgIdentity identity); */
   NS_IMETHOD removeIdentity(nsIMsgIdentity *identity);
 
-  NS_IMETHOD LoadPreferences(nsIPref *prefs, const char *accountKey);
-  
 private:
-
+  char *m_accountKey;
+  nsIPref *m_prefs;
   nsIMsgIncomingServer *m_incomingServer;
 
   nsIMsgIdentity *m_defaultIdentity;
@@ -65,6 +70,8 @@ private:
 NS_IMPL_ISUPPORTS(nsMsgAccount, GetIID())
 
 nsMsgAccount::nsMsgAccount():
+  m_accountKey(0),
+  m_prefs(0),
   m_incomingServer(0),
   m_defaultIdentity(0)
 {
@@ -74,7 +81,11 @@ nsMsgAccount::nsMsgAccount():
 
 nsMsgAccount::~nsMsgAccount()
 {
-
+  PR_FREEIF(m_accountKey);
+  NS_RELEASE(m_incomingServer);
+  
+  // in the future, the default identity should not be refcounted
+  NS_RELEASE(m_defaultIdentity);
 }
 
 
@@ -82,8 +93,68 @@ NS_IMETHODIMP
 nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
 {
   if (!aIncomingServer) return NS_ERROR_NULL_POINTER;
-  if (!m_incomingServer) return NS_ERROR_NULL_POINTER;
+  nsresult rv;
+  
+  // create the incoming server lazily
+  if (!m_incomingServer) {
+    // from here, load mail.account.myaccount.server
+    // and             mail.account.myaccount.identities
+    // to load and create the appropriate objects
+    
+    //
+    // Load the incoming server
+    //
+    // ex) mail.account.myaccount.server = "myserver"
+    char *serverKeyPref = PR_smprintf("mail.account.%s.server", m_accountKey);
+    char *serverKey;
+    rv = m_prefs->CopyCharPref(serverKeyPref, &serverKey);
+    
+#ifdef DEBUG_alecf
+    printf("\t%s's server: %s\n", m_accountKey, serverKey);
+#endif
+    
+    // ask the prefs what kind of server this is and use it to
+    // create a ProgID for it
+    // ex) mail.server.myserver.type = imap
+    char *serverTypePref = PR_smprintf("mail.server.%s.type", serverKey);
+    char *serverType;
+    rv = m_prefs->CopyCharPref(serverTypePref, &serverType);
+    
+#ifdef DEBUG_alecf
+    if (NS_FAILED(rv)) {
+      printf("\tCould not read pref %s\n", serverTypePref);
+    } else {
+      printf("\t%s's   type: %s\n", m_accountKey, serverType);
+    }
+#endif
+    
+    char *serverTypeProgID =
+      PR_smprintf("component://netscape/messenger/server&type=%s", serverType);
+    
+    nsIMsgIncomingServer *server;
+    rv = nsComponentManager::CreateInstance(serverTypeProgID,
+                                            nsnull,
+                                            nsIMsgIncomingServer::GetIID(),
+                                            (void **)&server);
+    
+#ifdef DEBUG_alecf
+    if (NS_SUCCEEDED(rv)) {
+      printf("Created a %s server\n", serverType);
+    } else {
+      printf("Could not create a %s server\n", serverType);
+    }
+#endif
+    
+    if (NS_SUCCEEDED(rv))
+      rv = server->SetKey(serverKey);
+    
+    if (NS_SUCCEEDED(rv))
+      rv = SetIncomingServer(server);
+  }
+  
   *aIncomingServer = m_incomingServer;
+
+  // addref for the caller
   NS_ADDREF(m_incomingServer);
   return NS_OK;
 }
@@ -149,66 +220,25 @@ nsMsgAccount::removeIdentity(nsIMsgIdentity *identity)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMPL_GETTER_STR(nsMsgAccount::GetKey, m_accountKey);
+
 nsresult
-nsMsgAccount::LoadPreferences(nsIPref *prefs, const char *accountKey)
+nsMsgAccount::SetKey(char *accountKey)
 {
   if (!accountKey) return NS_ERROR_NULL_POINTER;
+  nsresult rv=NS_OK;
 
-  nsresult rv;
-  // from here, load mail.account.myaccount.server
-  // and             mail.account.myaccount.identities
-  // to load and create the appropriate objects
+  // need the prefs service to do anything
+  if (!m_prefs)
+    rv = nsServiceManager::GetService(kPrefServiceCID,
+                                      nsIPref::GetIID(),
+                                      (nsISupports**)&m_prefs);
+  if (NS_FAILED(rv)) return rv;
 
-  //
-  // Load the incoming server
-  //
-  // ex) mail.account.myaccount.server = "myserver"
-  char *serverKeyPref = PR_smprintf("mail.account.%s.server", accountKey);
-  char *serverKey;
-  rv = prefs->CopyCharPref(serverKeyPref, &serverKey);
+  m_accountKey = PL_strdup(accountKey);
 
-#ifdef DEBUG_alecf
-  printf("\t%s's server: %s\n", accountKey, serverKey);
-#endif
-  
-  // ask the prefs what kind of server this is and use it to
-  // create a ProgID for it
-  // ex) mail.server.myserver.type = imap
-  char *serverTypePref = PR_smprintf("mail.server.%s.type", serverKey);
-  char *serverType;
-  rv = prefs->CopyCharPref(serverTypePref, &serverType);
 
-#ifdef DEBUG_alecf
-  if (NS_FAILED(rv)) {
-    printf("\tCould not read pref %s\n", serverTypePref);
-  } else {
-    printf("\t%s's   type: %s\n", accountKey, serverType);
-  }
-#endif
-  
-  char *serverTypeProgID =
-    PR_smprintf("component://netscape/messenger/server&type=%s", serverType);
-
-  nsIMsgIncomingServer *server;
-  rv = nsComponentManager::CreateInstance(serverTypeProgID,
-                                          nsnull,
-                                          nsIMsgIncomingServer::GetIID(),
-                                          (void **)&server);
-
-#ifdef DEBUG_alecf
-  if (NS_SUCCEEDED(rv)) {
-    printf("Created a %s server\n", serverType);
-  } else {
-    printf("Could not create a %s server\n", serverType);
-  }
-#endif
-  
-  if (NS_SUCCEEDED(rv))
-    rv = server->LoadPreferences(prefs, serverKey);
-
-  if (NS_SUCCEEDED(rv))
-    SetIncomingServer(server);
-
+  // we should make this be created lazily like incoming servers are
   //
   // Load Identities
   //
@@ -216,7 +246,7 @@ nsMsgAccount::LoadPreferences(nsIPref *prefs, const char *accountKey)
   char *identitiesKeyPref = PR_smprintf("mail.account.%s.identities",
                                         accountKey);
   char *identityKey;
-  rv = prefs->CopyCharPref(identitiesKeyPref, &identityKey);
+  rv = m_prefs->CopyCharPref(identitiesKeyPref, &identityKey);
 
 #ifdef DEBUG_alecf
   printf("%s's identities: %s\n", accountKey, identityKey);
@@ -231,7 +261,7 @@ nsMsgAccount::LoadPreferences(nsIPref *prefs, const char *accountKey)
                                           (void **)&identity);
 
   if (NS_SUCCEEDED(rv))
-    rv = identity->LoadPreferences(prefs,identityKey);
+    rv = identity->SetKey(identityKey);
 #ifdef DEBUG_alecf
   else
     printf("\tcouldn't create %s's identity\n",identityKey);

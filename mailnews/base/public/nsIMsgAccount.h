@@ -33,6 +33,10 @@ class nsIMsgAccount : public nsISupports {
     return iid;
   }
 
+  /* attribute string key; */
+  NS_IMETHOD GetKey(char * *aKey) = 0;
+  NS_IMETHOD SetKey(char * aKey) = 0;
+
   /* attribute nsIMsgIncomingServer incomingServer; */
   NS_IMETHOD GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer) = 0;
   NS_IMETHOD SetIncomingServer(nsIMsgIncomingServer * aIncomingServer) = 0;
@@ -49,9 +53,6 @@ class nsIMsgAccount : public nsISupports {
 
   /* void removeIdentity (in nsIMsgIdentity identity); */
   NS_IMETHOD removeIdentity(nsIMsgIdentity *identity) = 0;
-
-  /* void LoadPreferences (in nsIPref prefs, in string accountKey); */
-  NS_IMETHOD LoadPreferences(nsIPref *prefs, const char *accountKey) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

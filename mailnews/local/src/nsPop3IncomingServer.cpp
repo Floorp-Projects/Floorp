@@ -37,13 +37,15 @@ public:
     nsPop3IncomingServer();
     virtual ~nsPop3IncomingServer();
     
-    NS_IMPL_CLASS_GETSET_STR(RootFolderPath, m_rootFolderPath);
-    NS_IMPL_CLASS_GETSET(LeaveMessagesOnServer, PRBool, m_leaveOnServer);
-    NS_IMPL_CLASS_GETSET(DeleteMailLeftOnServer,
-                         PRBool, m_deleteMailLeftOnServer);
+    NS_IMETHOD GetRootFolderPath(char **);
+    NS_IMETHOD SetRootFolderPath(char *);
 
-    NS_IMETHOD LoadPreferences(nsIPref *prefs, const char *serverKey);
+    NS_IMETHOD GetLeaveMessagesOnServer(PRBool *);
+    NS_IMETHOD SetLeaveMessagesOnServer(PRBool);
 
+    NS_IMETHOD GetDeleteMailLeftOnServer(PRBool *);
+    NS_IMETHOD SetDeleteMailLeftOnServer(PRBool);
+    
 private:
     char *m_rootFolderPath;
     PRBool m_leaveOnServer;
@@ -67,26 +69,19 @@ nsPop3IncomingServer::nsPop3IncomingServer() :
 nsPop3IncomingServer::~nsPop3IncomingServer()
 {
     PR_FREEIF(m_rootFolderPath);
-
 }
 
-nsresult
-nsPop3IncomingServer::LoadPreferences(nsIPref *prefs,
-                                      const char *serverKey)
-{
-#ifdef DEBUG_alecf
-    printf("Loading pop prefs for %s..\n",serverKey);
-#endif
-    
-    nsMsgIncomingServer::LoadPreferences(prefs, serverKey);
-    
-    m_rootFolderPath = getCharPref(prefs, serverKey, "directory");
-    m_leaveOnServer = getBoolPref(prefs, serverKey, "leave_on_server");
-    m_deleteMailLeftOnServer =
-        getBoolPref(prefs, serverKey, "delete_mail_left_on_server");
+NS_IMPL_SERVERPREF_STR(nsPop3IncomingServer,
+                       RootFolderPath,
+                       "directory")
 
-    return NS_OK;
-}
+NS_IMPL_SERVERPREF_BOOL(nsPop3IncomingServer,
+                        LeaveMessagesOnServer,
+                        "leave_on_server")
+
+NS_IMPL_SERVERPREF_INT(nsPop3IncomingServer,
+                       DeleteMailLeftOnServer,
+                       "delete_mail_left_on_server")
 
 nsresult NS_NewPop3IncomingServer(const nsIID& iid,
                                   void **result)

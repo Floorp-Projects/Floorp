@@ -40,8 +40,8 @@ class nsIMsgAccountManager : public nsISupports {
   /* nsIMsgAccount createAccountWithKey (in nsIMsgIncomingServer server, in nsIMsgIdentity identity, in string accountKey); */
   NS_IMETHOD createAccountWithKey(nsIMsgIncomingServer *server, nsIMsgIdentity *identity, const char *accountKey, nsIMsgAccount **_retval) = 0;
 
-  /* void addAccount (in nsIMsgAccount account, in string accountKey); */
-  NS_IMETHOD addAccount(nsIMsgAccount *account, const char *accountKey) = 0;
+  /* void addAccount (in nsIMsgAccount account); */
+  NS_IMETHOD addAccount(nsIMsgAccount *account) = 0;
 
   /* attribute nsIMsgAccount defaultAccount; */
   NS_IMETHOD GetDefaultAccount(nsIMsgAccount * *aDefaultAccount) = 0;

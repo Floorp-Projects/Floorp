@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -28,7 +28,10 @@
 
 [object, uuid(da368bd0-e624-11d2-b7fc-00805f05ffa5)]
 interface nsIMsgAccount : nsISupports {
-
+  
+  /* internal key identifying itself */
+  attribute string key;
+  
   /* incoming server stuff */
   attribute nsIMsgIncomingServer incomingServer;
 
@@ -40,5 +43,4 @@ interface nsIMsgAccount : nsISupports {
   void addIdentity(in nsIMsgIdentity identity);
   void removeIdentity(in nsIMsgIdentity identity);
 
-  void LoadPreferences(in nsIPref prefs, in string accountKey);
 };

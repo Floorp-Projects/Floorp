@@ -33,7 +33,7 @@ interface nsIMsgAccountManager : nsISupports {
                                      in nsIMsgIdentity identity,
                                      in string accountKey);
 
-  void addAccount(in nsIMsgAccount account, in string accountKey);
+  void addAccount(in nsIMsgAccount account);
 
   /* account list stuff */
 

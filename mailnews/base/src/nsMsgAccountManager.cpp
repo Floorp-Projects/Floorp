@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -25,7 +25,11 @@
 #include "nsIPref.h"
 #include "prmem.h"
 
+// this should eventually be moved to the pop3 server for upgrading
+#include "nsIPop3IncomingServer.h"
+
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
+static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 
@@ -57,8 +61,7 @@ public:
                                   const char *accountKey,
                                   nsIMsgAccount **_retval) ;
 
-  NS_IMETHOD addAccount(nsIMsgAccount *account,
-                        const char *accountKey);
+  NS_IMETHOD addAccount(nsIMsgAccount *account);
   
   /* attribute nsIMsgAccount defaultAccount; */
   NS_IMETHOD GetDefaultAccount(nsIMsgAccount * *aDefaultAccount) ;
@@ -87,8 +90,8 @@ private:
   static PRBool hashTableFindFirst(nsHashKey *aKey, void *aData,
                                    void *closure);
 
-
-  nsIMsgAccount *LoadPreferences(char *accountKey);
+  nsresult upgradePrefs();
+  nsIMsgAccount *LoadAccount(char *accountKey);
   
   nsIPref *m_prefs;
 };
@@ -145,16 +148,18 @@ nsMsgAccountManager::createAccountWithKey(nsIMsgIncomingServer *server,
     rv = account->addIdentity(identity);
   }
 
-  return addAccount(account, accountKey);
+  account->SetKey((char *)accountKey);
+  return addAccount(account);
 }
 
 NS_IMETHODIMP
-nsMsgAccountManager::addAccount(nsIMsgAccount *account,
-                                const char *accountKey)
+nsMsgAccountManager::addAccount(nsIMsgAccount *account)
 {
 #ifdef DEBUG_alecf
     printf("Adding account %p\n", account);
 #endif
+    char *accountKey=nsnull;
+    account->GetKey(&accountKey);
     
     nsCStringKey key(accountKey);
     
@@ -315,8 +320,8 @@ nsMsgAccountManager::LoadAccounts()
 
   if (NS_FAILED(rv) || !accountList || !accountList[0]) {
     // create default bogus accounts
-    printf("No accounts. creating default\n");
-    accountList = PL_strdup("default");
+    printf("No accounts. I'll try to migrate 4.x prefs..\n");
+    upgradePrefs();
   }
 
   char *accountKey;
@@ -324,8 +329,8 @@ nsMsgAccountManager::LoadAccounts()
   /* XXX todo: parse accountList and run loadAccount on each string,
    * probably comma-separated */
   accountKey = PL_strdup(accountList);
-  nsIMsgAccount *account = LoadPreferences(accountKey);
-  if (account) addAccount(account, accountKey);
+  nsIMsgAccount *account = LoadAccount(accountKey);
+  if (account) addAccount(account);
   PR_Free(accountKey);
 
   /* finished loading accounts */
@@ -335,7 +340,7 @@ nsMsgAccountManager::LoadAccounts()
 }
 
 nsIMsgAccount *
-nsMsgAccountManager::LoadPreferences(char *accountKey)
+nsMsgAccountManager::LoadAccount(char *accountKey)
 {
 
   printf("Loading preferences for account: %s\n", accountKey);
@@ -352,9 +357,163 @@ nsMsgAccountManager::LoadPreferences(char *accountKey)
   
   if (NS_FAILED(rv)) return nsnull;
 
-  account->LoadPreferences(m_prefs, accountKey);
+  account->SetKey(accountKey);
   
   return account;
+}
+
+nsresult
+nsMsgAccountManager::upgradePrefs()
+{
+    nsresult rv;
+    nsIMsgAccount *account;
+    nsIMsgIdentity *identity;
+    nsIMsgIncomingServer *server;
+
+    rv = nsComponentManager::CreateInstance(kMsgAccountCID,
+                                            nsnull,
+                                            nsIMsgAccount::GetIID(),
+                                            (void **)&account);
+    
+    rv = nsComponentManager::CreateInstance(kMsgIdentityCID,
+                                            nsnull,
+                                            nsIMsgIdentity::GetIID(),
+                                            (void **)&identity);
+
+    const char* serverProgID;
+    PRInt32 oldMailType;
+
+    rv = m_prefs->GetIntPref("mail.server_type", &oldMailType);
+    if (NS_FAILED(rv)) {
+        printf("Tried to upgrade old prefs, but couldn't find server type!\n");
+        return rv;
+    }
+
+    if ( oldMailType == 0)       // POP
+        serverProgID="component://netscape/messenger/server&type=pop3";
+    else if (oldMailType == 1)
+        serverProgID="component://netscape/messenger/server&type=imap";
+    else {
+        printf("Unrecognized server type %d\n", oldMailType);
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    rv = nsComponentManager::CreateInstance(serverProgID,
+                                            nsnull,
+                                            nsIMsgIncomingServer::GetIID(),
+                                            (void **)&server);
+    account->SetKey("account1");
+    server->SetKey("server1");
+    identity->SetKey("identity1");
+    
+    account->SetIncomingServer(server);
+    account->addIdentity(identity);
+    addAccount(account);
+
+    // now upgrade all the prefs
+    char *oldstr;
+    PRInt32 oldint;
+    PRBool oldbool;
+
+    // identity stuff
+    rv = m_prefs->CopyCharPref("mail.identity.useremail", &oldstr);
+    if (NS_SUCCEEDED(rv)) {
+        identity->SetEmail(oldstr);
+        PR_Free(oldstr);
+    }
+
+    rv = m_prefs->CopyCharPref("mail.identity.vcard.fn", &oldstr);
+    if (NS_SUCCEEDED(rv)) {
+        identity->SetFullName(oldstr);
+        PR_Free(oldstr);
+    }
+    
+    rv = m_prefs->CopyCharPref("mail.identity.reply_to", &oldstr);
+    if (NS_SUCCEEDED(rv)) {
+        identity->SetReplyTo(oldstr);
+        PR_Free(oldstr);
+    }
+
+    rv = m_prefs->CopyCharPref("mail.identity.organization", &oldstr);
+    if (NS_SUCCEEDED(rv)) {
+        identity->SetOrganization(oldstr);
+        PR_Free(oldstr);
+    }
+    
+    rv = m_prefs->GetBoolPref("mail.send_html", &oldbool);
+    if (NS_SUCCEEDED(rv)) {
+        identity->SetUseHtml(oldbool);
+    }
+
+    rv = m_prefs->CopyCharPref("mail.smtp_server", &oldstr);
+    if (NS_SUCCEEDED(rv)) {
+        identity->SetSmtpHostname(oldstr);
+        PR_Free(oldstr);
+    }
+    
+    rv = m_prefs->CopyCharPref("mail.smtp_name", &oldstr);
+    if (NS_SUCCEEDED(rv)) {
+        identity->SetSmtpUsername(oldstr);
+        PR_Free(oldstr);
+    }
+    
+    // generic server stuff
+
+    // pop stuff
+    // some of this ought to be moved out into the POP implementation
+    nsIPop3IncomingServer *popServer;
+    rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
+                                (void **)&popServer);
+    if (NS_SUCCEEDED(rv)) {
+
+      rv = m_prefs->CopyCharPref("mail.pop_name", &oldstr);
+      if (NS_SUCCEEDED(rv)) {
+        server->SetUserName(oldstr);
+        PR_Free(oldstr);
+      }
+
+      rv = m_prefs->CopyCharPref("mail.pop_password", &oldstr);
+      if (NS_SUCCEEDED(rv)) {
+        server->SetPassword(oldstr);
+        PR_Free(oldstr);
+      }
+
+      rv = m_prefs->CopyCharPref("network.hosts.pop_server", &oldstr);
+      if (NS_SUCCEEDED(rv)) {
+        server->SetHostName(oldstr);
+        PR_Free(oldstr);
+      }
+
+      rv = m_prefs->GetBoolPref("mail.check_new_mail", &oldbool);
+      if (NS_SUCCEEDED(rv)) {
+        server->SetDoBiff(oldbool);
+      }
+      
+      rv = m_prefs->GetIntPref("mail.check_time", &oldint);
+      if (NS_SUCCEEDED(rv)) {
+        server->SetBiffMinutes(oldint);
+      }
+
+      rv = m_prefs->CopyCharPref("mail.directory", &oldstr);
+      if (NS_SUCCEEDED(rv)) {
+        popServer->SetRootFolderPath(oldstr);
+        PR_Free(oldstr);
+      }
+
+      rv = m_prefs->GetBoolPref("mail.leave_on_server", &oldbool);
+      if (NS_SUCCEEDED(rv)) {
+        popServer->SetLeaveMessagesOnServer(oldbool);
+      }
+      
+      rv = m_prefs->GetBoolPref("mail.delete_mail_left_on_server", &oldbool);
+      if (NS_SUCCEEDED(rv)) {
+        popServer->SetDeleteMailLeftOnServer(oldbool);
+      }
+      
+      
+    }
+
+    return NS_OK;
 }
 
 nsresult
