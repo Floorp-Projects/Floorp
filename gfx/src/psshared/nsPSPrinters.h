@@ -81,7 +81,7 @@ class nsPSPrinterList {
         enum PrinterType {
             kTypeUnknown,         // Not actually handled by the PS module
             kTypePS,              // Generic postscript module printer
-            kTypeCUPS,            // CUPS printer
+            kTypeCUPS             // CUPS printer
         };
 
         /**
