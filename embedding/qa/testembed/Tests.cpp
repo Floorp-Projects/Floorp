@@ -73,6 +73,7 @@
 #include "QaUtils.h"
 #include "nsIIOService.h"
 #include "nsIChannelTests.h"
+#include "nsIHttpChannelTests.h"
 #include <stdio.h>
 
 #ifdef _DEBUG
@@ -294,6 +295,14 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_INTERFACES_NSICOMMANDPARAMS_HASMOREELEMENTS, OnInterfacesNsicmdparams)
 	ON_COMMAND(ID_INTERFACES_NSICOMMANDPARAMS_FIRST, OnInterfacesNsicmdparams)
 	ON_COMMAND(ID_INTERFACES_NSICOMMANDPARAMS_GETNEXT, OnInterfacesNsicmdparams)
+	ON_COMMAND(ID_INTERFACES_NSIHTTPCHANNEL_RUNALLTESTS ,OnInterfacesNsihttpchannel)
+	ON_COMMAND(ID_INTERFACES_NSIHTTPCHANNEL_SETREQUESTMETHOD, OnInterfacesNsihttpchannel)
+	ON_COMMAND(ID_INTERFACES_NSIHTTPCHANNEL_GETREQUESTMETHOD, OnInterfacesNsihttpchannel)
+	ON_COMMAND(ID_INTERFACES_NSIHTTPCHANNEL_SETREFERRER, OnInterfacesNsihttpchannel)
+	ON_COMMAND(ID_INTERFACES_NSIHTTPCHANNEL_GETREFERRER, OnInterfacesNsihttpchannel)
+	ON_COMMAND(ID_INTERFACES_NSIHTTPCHANNEL_SETREQUESTHEADER, OnInterfacesNsihttpchannel)
+	ON_COMMAND(ID_INTERFACES_NSIHTTPCHANNEL_GETREQUESTHEADER, OnInterfacesNsihttpchannel)
+	ON_COMMAND(ID_INTERFACES_NSIHTTPCHANNEL_VISITREQUESTHEADERS, OnInterfacesNsihttpchannel)
 	ON_COMMAND(ID_INTERFACES_RUNALLTESTCASES, OnInterfacesRunalltestcases)
 	//}}AFX_MSG_MAP
 
@@ -754,12 +763,6 @@ void CTests::OnToolsRemoveAllGH()
 void CTests::OnToolsTestYourMethod()
 {
 	// place your test code here
-
-	if (myDialog.DoModal() == IDOK)
-	{
-		rv = qaWebNav->GetCurrentURI(getter_AddRefs(theURI));
-		GetTheUri(theURI, 1);		
-	}		
 }
 
 // ***********************************************************************
@@ -954,6 +957,12 @@ void CTests::OnInterfacesNsichannel()
 	oChannelTests.OnStartTests(nCommandID);
 }
 
+void CTests::OnInterfacesNsihttpchannel()
+{
+	CnsIHttpChannelTests oHttpChannelTests(qaWebBrowser, qaBrowserImpl);
+	oHttpChannelTests.OnStartTests(nCommandID);
+}
+
 
 //Run all interface test cases in automation
 
@@ -1026,4 +1035,7 @@ void CTests::OnInterfacesRunalltestcases()
 
 	CnsIChannelTests oChannelTests(qaWebBrowser, qaBrowserImpl);
 	oChannelTests.OnStartTests(ID_INTERFACES_NSICHANNEL_RUNALLTESTS);
+
+	CnsIHttpChannelTests oHttpChannelTests(qaWebBrowser, qaBrowserImpl);
+	oHttpChannelTests.OnStartTests(ID_INTERFACES_NSIHTTPCHANNEL_RUNALLTESTS);
 }

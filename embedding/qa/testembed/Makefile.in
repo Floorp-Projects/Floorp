@@ -71,7 +71,8 @@ REQUIRES = \
 	$(NULL)
 
 CPPSRCS		= \
-		nsIChannelTests.cpp \
+	    nsIHttpChannelTests.cpp \
+	    nsIChannelTests.cpp \
 	    TestEmbed.cpp     \
 	    BrowserFrm.cpp   \
 	    BrowserFrameGlue.cpp   \

@@ -640,6 +640,26 @@ BEGIN
             MENUITEM "GetNext",                     ID_INTERFACES_NSICOMMANDPARAMS_GETNEXT
 
         END
+        POPUP "nsIHttpChannel"
+        BEGIN
+            MENUITEM "Run All Tests",               ID_INTERFACES_NSIHTTPCHANNEL_RUNALLTESTS
+
+            MENUITEM SEPARATOR
+            MENUITEM "SetRequestMethod",            ID_INTERFACES_NSIHTTPCHANNEL_SETREQUESTMETHOD
+
+            MENUITEM "GetRequestMethod",            ID_INTERFACES_NSIHTTPCHANNEL_GETREQUESTMETHOD
+
+            MENUITEM "SetReferrer",                 ID_INTERFACES_NSIHTTPCHANNEL_SETREFERRER
+
+            MENUITEM "GetReferrer",                 ID_INTERFACES_NSIHTTPCHANNEL_GETREFERRER
+
+            MENUITEM "SetRequestHeader",            ID_INTERFACES_NSIHTTPCHANNEL_SETREQUESTHEADER
+
+            MENUITEM "GetRequestHeader",            ID_INTERFACES_NSIHTTPCHANNEL_GETREQUESTHEADER
+
+            MENUITEM "VisitRequestHeaders",         ID_INTERFACES_NSIHTTPCHANNEL_VISITREQUESTHEADERS
+
+        END
     END
     POPUP "T&ools"
     BEGIN

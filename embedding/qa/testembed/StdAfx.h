@@ -130,7 +130,7 @@
 #include "nsCRT.h"
 #include "nsIURILoader.h"
 #include "nsCURILoader.h"
-
+#include "nsIHttpHeaderVisitor.h"
 #include "nsIEditingSession.h"
 #include "nsICommandManager.h"
 #include "nsICommandParams.h"
