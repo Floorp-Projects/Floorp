@@ -76,8 +76,6 @@ MAKE_CTOR(Sample)
 
 //----------------------------------------------------------------------
 
-static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
-
 nsSampleModule::nsSampleModule()
     : mInitialized(PR_FALSE)
 {
@@ -89,7 +87,7 @@ nsSampleModule::~nsSampleModule()
     Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsSampleModule, kIModuleIID)
+NS_IMPL_ISUPPORTS(nsSampleModule, NS_GET_IID(nsIModule))
 
 // Perform our one-time intialization for this module
 nsresult
@@ -254,8 +252,8 @@ extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
 {
     nsresult rv = NS_OK;
 
-    NS_ASSERTION(return_cobj, "Null argument");
-    NS_ASSERTION(gModule == NULL, "nsSampleModule: Module already created.");
+    NS_ENSURE_ARG_POINTER(return_cobj);
+    NS_ENSURE_NOT(gModule, NS_ERROR_FAILURE);
 
     // Create and initialize the module instance
     nsSampleModule *m = new nsSampleModule();
