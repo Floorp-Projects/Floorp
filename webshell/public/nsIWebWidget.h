@@ -20,6 +20,7 @@
 
 #include "nsweb.h"
 #include "nsIDocumentWidget.h"
+#include "nsIScrollableView.h"
 class nsIDOMDocument;
 class nsILinkHandler;
 class nsIPresContext;
@@ -44,7 +45,8 @@ public:
 
   // Create a native window for this web widget; may be called once
   virtual nsresult Init(nsNativeWindow aNativeParent,
-                        const nsRect& aBounds) = 0;
+                        const nsRect& aBounds,
+                        nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
 
   // Create a native window for this web widget; may be called once.
   // Use the given presentation context and document for the widget
@@ -53,14 +55,25 @@ public:
   virtual nsresult Init(nsNativeWindow aNativeParent,
                         const nsRect& aBounds,
                         nsIDocument* aDocument,
-                        nsIPresContext* aPresContext) = 0;
+                        nsIPresContext* aPresContext,
+                        nsScrollPreference aScrolling = nsScrollPreference_kAuto) = 0;
 
-  NS_IMETHOD SetContainer(nsISupports* aContainer) = 0;
+  // XXX instead of nsISupports for aContainer, something like nsIContainer would be better
+  NS_IMETHOD SetContainer(nsISupports* aContainer, PRBool aRelationship = PR_TRUE) = 0;
 
   NS_IMETHOD GetContainer(nsISupports** aResult) = 0;
 
-  // XXX temp hack
-  virtual void          SetRootWebWidget(nsIWebWidget* aWebWidget) = 0;
+  virtual PRInt32 GetNumChildren() = 0;
+
+  NS_IMETHOD AddChild(nsIWebWidget* aChild, PRBool aRelationship = PR_TRUE) = 0;
+
+  NS_IMETHOD GetChildAt(PRInt32 aIndex, nsIWebWidget** aChild) = 0;
+
+  virtual PRBool GetName(nsString& aName) = 0;
+  virtual void SetName(const nsString& aName) = 0;
+  virtual nsIWebWidget* GetWebWidgetWithName(const nsString& aName) = 0;
+  virtual nsIWebWidget* GetTarget(const nsString& aName) = 0;
+
   virtual nsIWebWidget* GetRootWebWidget() = 0;
 
   NS_IMETHOD SetLinkHandler(nsILinkHandler* aHandler) = 0;

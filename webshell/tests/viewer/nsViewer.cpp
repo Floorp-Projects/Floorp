@@ -458,7 +458,9 @@ DocObserver::HandleLinkClickEvent(const nsString& aURLSpec,
                                   nsIPostData* aPostData)
 {
   if (nsnull != mWebWidget) {
-    mWebWidget->LoadURL(aURLSpec, (nsIStreamListener*)this, aPostData);
+    nsIWebWidget* targetWidget = mWebWidget->GetTarget(aTargetSpec);
+    targetWidget->LoadURL(aURLSpec, (nsIStreamListener*)this, aPostData);
+    NS_RELEASE(targetWidget);
   }
 }
 
@@ -512,9 +514,6 @@ static DocObserver* NewObserver(nsIWebWidget* ww)
       ww->SetLinkHandler((nsILinkHandler*) it);
       ww->SetContainer((nsIDocumentObserver*) it);
       return it;
-    }
-    else {
-      NS_RELEASE(oldContainer);
     }
   }
   return nsnull;

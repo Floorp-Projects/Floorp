@@ -40,9 +40,10 @@
 #include "nsIImageMap.h"
 
 #include "nsRepository.h"
+#include "nsIWebWidget.h"
 
 extern nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
-                                 nsIAtom* aTag);  // XXX move
+                                 nsIAtom* aTag, nsIWebWidget* aWebWidget);  // XXX move
 // XXX attribute values have entities in them - use the parsers expander!
 
 // XXX Go through a factory for this one
@@ -96,7 +97,7 @@ public:
     return (void*) rv;
   }
 
-  nsresult Init(nsIDocument* aDoc, nsIURL* aURL);
+  nsresult Init(nsIDocument* aDoc, nsIURL* aURL, nsIWebWidget* aWebWidget);
   nsIHTMLContent* GetCurrentContainer(eHTMLTags* aType);
 
   virtual PRBool SetTitle(const nsString& aValue);
@@ -217,6 +218,7 @@ protected:
   PRTime mUpdateDelta;
   PRBool mLayoutStarted;
   PRInt32 mInMonolithicContainer;
+  nsIWebWidget* mWebWidget;
 };
 
 // Note: operator new zeros our memory
@@ -244,13 +246,14 @@ HTMLContentSink::~HTMLContentSink()
   NS_IF_RELEASE(mCurrentMap);
   NS_IF_RELEASE(mCurrentSelect);
   NS_IF_RELEASE(mCurrentOption);
+  NS_IF_RELEASE(mWebWidget);
 
   if (nsnull != mTitle) {
     delete mTitle;
   }
 }
 
-nsresult HTMLContentSink::Init(nsIDocument* aDoc, nsIURL* aDocURL)
+nsresult HTMLContentSink::Init(nsIDocument* aDoc, nsIURL* aDocURL, nsIWebWidget* aWebWidget)
 {
   NS_IF_RELEASE(mDocument);
   mDocument = aDoc;
@@ -259,6 +262,10 @@ nsresult HTMLContentSink::Init(nsIDocument* aDoc, nsIURL* aDocURL)
   NS_IF_RELEASE(mDocumentURL);
   mDocumentURL = aDocURL;
   NS_IF_ADDREF(mDocumentURL);
+
+  NS_IF_RELEASE(mWebWidget);
+  mWebWidget = aWebWidget;
+  NS_IF_ADDREF(mWebWidget);
 
   // Make root part
   NS_IF_RELEASE(mRoot);
@@ -1323,7 +1330,7 @@ HTMLContentSink::ProcessIFRAMETag(nsIHTMLContent** aInstancePtrResult,
   tmp.ToUpperCase();
   nsIAtom* atom = NS_NewAtom(tmp);
 
-  nsresult rv = NS_NewHTMLIFrame(aInstancePtrResult, atom);
+  nsresult rv = NS_NewHTMLIFrame(aInstancePtrResult, atom, mWebWidget);
 
   NS_RELEASE(atom);
   return rv;
@@ -1425,7 +1432,8 @@ HTMLContentSink::WillResume(void)
 
 nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
                                nsIDocument* aDoc,
-                               nsIURL* aURL)
+                               nsIURL* aURL,
+                               nsIWebWidget* aWebWidget)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
@@ -1435,7 +1443,7 @@ nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  nsresult rv = it->Init(aDoc, aURL);
+  nsresult rv = it->Init(aDoc, aURL, aWebWidget);
   if (NS_OK != rv) {
     delete it;
     return rv;

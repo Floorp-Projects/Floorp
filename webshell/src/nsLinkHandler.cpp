@@ -196,7 +196,9 @@ LinkHandlerImpl::HandleLinkClickEvent(const nsString& aURLSpec,
                                       nsIPostData* aPostData)
 {
   if (nsnull != mWidget) {
-    mWidget->LoadURL(aURLSpec, nsnull, aPostData);
+    nsIWebWidget* targetWidget = mWidget->GetTarget(aTargetSpec);
+    targetWidget->LoadURL(aURLSpec, nsnull, aPostData);
+    NS_RELEASE(targetWidget);
   }
 }
 

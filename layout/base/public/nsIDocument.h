@@ -35,6 +35,7 @@ class nsIStyleSheet;
 class nsIURL;
 class nsIViewManager;
 class nsString;
+class nsIWebWidget;
 class nsIDOMEvent;
 
 // IID for the nsIDocument interface
@@ -61,6 +62,7 @@ public:
 
   NS_IMETHOD LoadURL(nsIURL* aURL,
                      nsIStreamListener* aListener,
+                     nsIWebWidget* aWebWidget,
                      nsIPostData* aPostData = 0) = 0;
 
   /**

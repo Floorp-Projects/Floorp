@@ -32,6 +32,7 @@
 #include "nsIDOMText.h"
 #include "nsIPostToServer.h"  
 #include "nsIURL.h"
+#include "nsIWebWidget.h"
 
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -75,7 +76,7 @@ NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
 
 NS_IMETHODIMP
 nsHTMLDocument::LoadURL(nsIURL* aURL, nsIStreamListener* aListener,
-                        nsIPostData* aPostData)
+                        nsIWebWidget* aWebWidget, nsIPostData* aPostData)
 {
   // Delete references to style sheets - this should be done in superclass...
   PRInt32 index = mStyleSheets.Count();
@@ -114,7 +115,7 @@ nsHTMLDocument::LoadURL(nsIURL* aURL, nsIStreamListener* aListener,
   nsresult rv = NS_NewParser(&parser);
   if (NS_OK == rv) {
     nsIHTMLContentSink* sink;
-    rv = NS_NewHTMLContentSink(&sink, this, aURL);
+    rv = NS_NewHTMLContentSink(&sink, this, aURL, aWebWidget);
     if (NS_OK == rv) {
       nsIHTMLCSSStyleSheet* styleAttrSheet;
       if (NS_OK == NS_NewHTMLCSSStyleSheet(&styleAttrSheet, aURL)) {

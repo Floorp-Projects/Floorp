@@ -24,7 +24,6 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
-#include "nsIWebFrame.h"
 #include "nsIWidget.h"
 #include "nsIScrollbar.h"
 #include "nsUnitConversion.h"
@@ -43,7 +42,7 @@
 #include "nsIDOMDocument.h"
 #include "prprf.h"
 #include "prtime.h"
-
+#include "nsVoidArray.h"
 #include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
@@ -68,11 +67,13 @@ public:
   NS_DECL_ISUPPORTS
 
   virtual nsresult Init(nsNativeWindow aParent,
-                        const nsRect& aBounds);
+                        const nsRect& aBounds,
+                        nsScrollPreference aScrolling = nsScrollPreference_kAuto);
   virtual nsresult Init(nsNativeWindow aParent,
                         const nsRect& aBounds,
                         nsIDocument* aDocument,
-                        nsIPresContext* aPresContext);
+                        nsIPresContext* aPresContext,
+                        nsScrollPreference aScrolling = nsScrollPreference_kAuto);
 
   virtual nsRect GetBounds();
   virtual void SetBounds(const nsRect& aBounds);
@@ -80,14 +81,20 @@ public:
   virtual void Show();
   virtual void Hide();
 
-  NS_IMETHOD SetContainer(nsISupports* aContainer);
+  NS_IMETHOD SetContainer(nsISupports* aContainer, PRBool aRelationship = PR_TRUE);
 
   NS_IMETHOD GetContainer(nsISupports** aResult);
 
-  // XXX temp hack
-  virtual void SetRootWebWidget(nsIWebWidget* aWebWidget);
+  virtual PRInt32 GetNumChildren();
+  NS_IMETHOD AddChild(nsIWebWidget* aChild, PRBool aRelationship = PR_TRUE);
+  NS_IMETHOD GetChildAt(PRInt32 aIndex, nsIWebWidget** aChild);
+
   virtual nsIWebWidget* GetRootWebWidget();
-  nsIPresContext* GetPresContext();
+  virtual nsIPresContext* GetPresContext();
+  virtual PRBool GetName(nsString& aName);
+  virtual void SetName(const nsString& aName);
+  virtual nsIWebWidget* GetWebWidgetWithName(const nsString& aName);
+  virtual nsIWebWidget* GetTarget(const nsString& aName);
 
   NS_IMETHOD SetLinkHandler(nsILinkHandler* aHandler);
 
@@ -112,9 +119,11 @@ public:
 private:
   nsresult ProvideDefaultHandlers();
   void ForceRefresh();
-  nsresult MakeWindow(nsNativeWindow aParent, const nsRect& aBounds);
+  nsresult MakeWindow(nsNativeWindow aParent, const nsRect& aBounds,
+                      nsScrollPreference aScrolling);
   nsresult InitUAStyleSheet(void);
   nsresult CreateStyleSet(nsIDocument* aDocument, nsIStyleSet** aStyleSet);
+  void ReleaseChildren();
 
   nsIWidget* mWindow;
   nsIView *mView;
@@ -127,14 +136,19 @@ private:
   nsIScriptGlobalObject *mScriptGlobal;
   nsIScriptContext* mScriptContext;
 
-  static nsIWebWidget* gRootWebWidget;
+  nsVoidArray mChildren;
+  //static nsIWebWidget* gRootWebWidget;
+  nsString* mName;
+
+  friend class WebWidgetImpl;
 };
 
 //----------------------------------------------------------------------
 
 static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-nsIWebWidget* WebWidgetImpl::gRootWebWidget = nsnull;
+//nsIWebWidget* WebWidgetImpl::gRootWebWidget = nsnull;
 
 // Note: operator new zeros our memory
 WebWidgetImpl::WebWidgetImpl()
@@ -146,7 +160,6 @@ nsresult WebWidgetImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
   static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
   if (aIID.Equals(kIWebWidgetIID)) {
     *aInstancePtr = (void*)(nsIWebWidget*)this;
@@ -166,6 +179,10 @@ NS_IMPL_RELEASE(WebWidgetImpl)
 
 WebWidgetImpl::~WebWidgetImpl()
 {
+printf("del %d ", this);
+  ReleaseChildren();
+  mContainer = nsnull;
+
   // Release windows and views
   if (nsnull != mViewManager)
   {
@@ -177,7 +194,6 @@ WebWidgetImpl::~WebWidgetImpl()
   NS_IF_RELEASE(mWindow);
   NS_IF_RELEASE(mView);
 
-  NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mLinkHandler);
 
   // Note: release context then shell
@@ -189,8 +205,131 @@ WebWidgetImpl::~WebWidgetImpl()
   NS_IF_RELEASE(mScriptGlobal);
 }
 
+void Check(WebWidgetImpl* ww) 
+{
+  PRInt32 foo = ww->GetNumChildren();
+  for (int i = 0; i < foo; i++) {
+    nsIWebWidget* child;
+    ww->GetChildAt(i, &child);
+    if (child == 0) {
+      printf("hello");
+    }
+  }
+}
+
+
+
+void WebWidgetImpl::ReleaseChildren()
+{
+  PRInt32 numChildren = GetNumChildren();
+  for (PRInt32 i = 0; i < numChildren; i++) {
+    nsIWebWidget* child;
+    GetChildAt(i, &child);
+    child->SetContainer(nsnull, PR_FALSE);  
+    PRInt32 refCnt = child->Release();  // XXX can't use macro, need ref count
+    // XXX add this back and find out why the ref count is 1
+    // NS_ASSERTION(0 == refCnt, "reference to a web widget that will have no parent");
+  }
+  mChildren.Clear();
+}
+
+PRBool WebWidgetImpl::GetName(nsString& aName)
+{
+  if (mName) {
+    aName = *mName;
+    return PR_TRUE;
+  } else {
+    return PR_FALSE;
+  }
+}
+
+void WebWidgetImpl::SetName(const nsString& aName)
+{
+  if (!mName) {
+    mName = new nsString(aName);
+  }
+}
+
+nsIWebWidget* WebWidgetImpl::GetWebWidgetWithName(const nsString& aName)
+{
+  nsIWebWidget* ww = this;
+  if (mName && (mName->EqualsIgnoreCase(aName))) {
+    NS_ADDREF(this);
+    return this;
+  }
+
+  PRInt32 numChildren = GetNumChildren();
+  for (PRInt32 i = 0; i < numChildren; i++) {
+    nsIWebWidget* child;
+    GetChildAt(i, &child);
+if ((numChildren == 3) && (i == 0)) {
+  printf("hello ");
+}
+    nsIWebWidget* result = child->GetWebWidgetWithName(aName);
+    if (result) {
+      return result;
+    }
+    NS_RELEASE(child);
+  }
+
+  return nsnull;
+}
+
+nsIWebWidget* WebWidgetImpl::GetTarget(const nsString& aName)
+{
+  nsIWebWidget* target = nsnull;
+
+  if (aName.EqualsIgnoreCase("_blank")) {
+    NS_ASSERTION(0, "not implemented yet");
+    target = this;
+  } 
+  else if (aName.EqualsIgnoreCase("_self")) {
+    target = this;
+  } 
+  else if (aName.EqualsIgnoreCase("_parent")) {
+    nsIWebWidget* top = GetRootWebWidget();
+    if (top == this) {
+      target = this;
+      NS_RELEASE(top);
+    }
+    else {
+      nsISupports* container;
+      nsresult result = GetContainer(&container);
+      if (NS_OK == result) {
+        result = container->QueryInterface(kIWebWidgetIID, (void**)&target);
+        if (NS_OK != result) {
+          NS_ASSERTION(0, "invalid container");
+          target = this;
+        }
+      }
+      else {
+        NS_ASSERTION(0, "invalid container for sub document - not a web widget");
+      }
+    }
+  }
+  else if (aName.EqualsIgnoreCase("_top")) {
+    target = GetRootWebWidget();
+  }
+  else {
+    nsIWebWidget* top = GetRootWebWidget();
+    target = top->GetWebWidgetWithName(aName);
+    NS_RELEASE(top);
+    if (!target) {
+      target = this;
+    }
+  }
+
+  if (target == this) {
+    NS_ADDREF(this);
+  }
+
+  return target;
+}
+
+
 nsresult WebWidgetImpl::MakeWindow(nsNativeWindow aNativeParent,
-                                   const nsRect& aBounds)
+                                   const nsRect& aBounds,
+                                   nsScrollPreference aScrolling)
 {
   nsresult rv;
   static NS_DEFINE_IID(kViewManagerCID, NS_VIEW_MANAGER_CID);
@@ -227,13 +366,23 @@ nsresult WebWidgetImpl::MakeWindow(nsNativeWindow aNativeParent,
     return rv;
   }
 
+  static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
+  nsIScrollableView* scrollView;
+  rv = mView->QueryInterface(kScrollViewIID, (void**)&scrollView);
+  if (NS_OK == rv) {
+    scrollView->SetScrollPreference(aScrolling);
+  }
+  else {
+    NS_ASSERTION(0, "invalid scrolling view");
+    return rv;
+  }
+
   // Setup hierarchical relationship in view manager
   mViewManager->SetRootView(mView);
   mWindow = mView->GetWidget();
   if (mWindow) {
     mViewManager->SetRootWindow(mWindow);
   }
-printf("webwidget.mView=%d widget=%d parent=%d \n", mView, mWindow, aNativeParent); 
 
   //set frame rate to 25 fps
   mViewManager->SetFrameRate(25);
@@ -242,14 +391,15 @@ printf("webwidget.mView=%d widget=%d parent=%d \n", mView, mWindow, aNativeParen
 }
 
 nsresult WebWidgetImpl::Init(nsNativeWindow aNativeParent,
-                             const nsRect& aBounds)
+                             const nsRect& aBounds,
+                             nsScrollPreference aScrolling)
 {
   // Create presentation context
   nsresult rv = NS_NewGalleyContext(&mPresContext);
   if (NS_OK != rv) {
     return rv;
   }
-  return MakeWindow(aNativeParent, aBounds);
+  return MakeWindow(aNativeParent, aBounds, aScrolling);
 }
 
 nsresult WebWidgetImpl::InitUAStyleSheet(void)
@@ -296,7 +446,8 @@ nsresult WebWidgetImpl::InitUAStyleSheet(void)
 nsresult WebWidgetImpl::Init(nsNativeWindow aNativeParent,
                              const nsRect& aBounds,
                              nsIDocument* aDocument,
-                             nsIPresContext* aPresContext)
+                             nsIPresContext* aPresContext,
+                             nsScrollPreference aScrolling)
 {
   NS_PRECONDITION(nsnull != aPresContext, "null ptr");
   NS_PRECONDITION(nsnull != aDocument, "null ptr");
@@ -307,7 +458,7 @@ nsresult WebWidgetImpl::Init(nsNativeWindow aNativeParent,
   mPresContext = aPresContext;
   NS_ADDREF(aPresContext);
 
-  nsresult rv = MakeWindow(aNativeParent, aBounds);
+  nsresult rv = MakeWindow(aNativeParent, aBounds, aScrolling);
   if (NS_OK != rv) {
     return rv;
   }
@@ -412,8 +563,6 @@ nsresult WebWidgetImpl::ProvideDefaultHandlers()
 
 // XXX need to save old document in case of failure? Does caller do that?
 
-static NS_DEFINE_IID(kIWebFrameIID, NS_IWEBFRAME_IID);
-
 NS_IMETHODIMP
 WebWidgetImpl::LoadURL(const nsString& aURLSpec,
                        nsIStreamListener* aListener,
@@ -456,15 +605,19 @@ WebWidgetImpl::LoadURL(const nsString& aURLSpec,
 
   // set the root web widget to this if its container is not
   // an embedded web webwidget
-  nsISupports* parent;
-  rv = GetContainer(&parent);
-  if ((rv == NS_OK) && (nsnull != parent)) {
-    nsISupports* webFrame;
-    rv = parent->QueryInterface(kIWebFrameIID, (void**)&webFrame);
-    if (rv != NS_OK) {
-      SetRootWebWidget(this);
-    }
-  }
+  //nsISupports* parent;
+  //rv = GetContainer(&parent);
+  //if ((rv == NS_OK) && (nsnull != parent)) {
+  //  nsISupports* webFrame;
+  //  rv = parent->QueryInterface(kIWebWidgetIID, (void**)&webFrame);
+  //  if (rv == NS_OK) {
+  //    NS_RELEASE(webFrame);
+  //  } else {
+  //    SetRootWebWidget(this);
+  //  }
+  //}
+
+  ReleaseChildren();
 
   // Create style set
   nsIStyleSet* styleSet = nsnull;
@@ -507,7 +660,7 @@ WebWidgetImpl::LoadURL(const nsString& aURLSpec,
 
   // Now load the document
   mPresShell->EnterReflowLock();
-  doc->LoadURL(url, aListener, aPostData);
+  doc->LoadURL(url, aListener, this, aPostData);
   mPresShell->ExitReflowLock();
 
   PRTime end = PR_Now();
@@ -558,11 +711,32 @@ NS_IMETHODIMP WebWidgetImpl::GetLinkHandler(nsILinkHandler** aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP WebWidgetImpl::SetContainer(nsISupports* aContainer)
-{ // XXX this should most likely be a WEAK reference
-  NS_IF_RELEASE(mContainer);
+NS_IMETHODIMP WebWidgetImpl::SetContainer(nsISupports* aContainer, PRBool aRelationship)
+{ 
   mContainer = aContainer;
-  NS_IF_ADDREF(aContainer);
+
+  if (nsnull == aContainer) {
+    return NS_OK;
+  }
+
+  if (aRelationship) {
+    // if aContainer is a web widget add this as a child
+    nsIWebWidget* ww;
+    nsresult result = aContainer->QueryInterface(kIWebWidgetIID, (void**)&ww);
+    if (NS_OK == result) {
+      nsIWebWidget* thisWW;
+      result = QueryInterface(kIWebWidgetIID, (void**)&thisWW);
+      if (NS_OK == result) {
+        ww->AddChild(thisWW, PR_FALSE);
+        NS_RELEASE(thisWW);
+      } else {
+        NS_ASSERTION(0, "invalid nsISupports");
+        return result;
+      }
+      NS_RELEASE(ww);
+    } 
+  }
+    
   if (nsnull != mPresContext) {
     mPresContext->SetContainer(aContainer);
   }
@@ -576,21 +750,70 @@ NS_IMETHODIMP WebWidgetImpl::GetContainer(nsISupports** aResult)
     return NS_ERROR_NULL_POINTER;
   }
   *aResult = mContainer;
-  NS_IF_ADDREF(mContainer);
   return NS_OK;
 }
 
-void WebWidgetImpl::SetRootWebWidget(nsIWebWidget* aWebWidget)
+PRInt32 WebWidgetImpl::GetNumChildren() 
 {
-  NS_IF_RELEASE(gRootWebWidget);
-  gRootWebWidget = aWebWidget;
-  NS_IF_ADDREF(gRootWebWidget);
+  return mChildren.Count();
 }
+
+NS_IMETHODIMP WebWidgetImpl::AddChild(nsIWebWidget* aChild, PRBool aRelationship)
+{
+  NS_ASSERTION(nsnull != aChild, "null child");
+
+  mChildren.AppendElement(aChild);
+
+  if (aRelationship) {
+    nsISupports* thisSupports;
+    nsresult result = QueryInterface(kISupportsIID, (void**)&thisSupports);
+    if (NS_OK == result) {
+      aChild->SetContainer(thisSupports, PR_FALSE);
+      NS_RELEASE(thisSupports);
+    } else {
+      NS_ASSERTION(0, "invalid nsISupports");
+      return result;
+    }
+  }
+
+  NS_ADDREF(aChild);
+  return NS_OK;
+}
+
+NS_IMETHODIMP WebWidgetImpl::GetChildAt(PRInt32 aIndex, nsIWebWidget** aChild)
+{
+  NS_ASSERTION(nsnull != aChild, "null child address");
+  *aChild = (nsIWebWidget*)mChildren.ElementAt(aIndex);
+  NS_ADDREF(*aChild);
+  return NS_OK;
+}
+
+//void WebWidgetImpl::SetRootWebWidget(nsIWebWidget* aWebWidget)
+//{
+//  if (aWebWidget != gRootWebWidget) {
+//    NS_IF_RELEASE(gRootWebWidget);
+//    gRootWebWidget = aWebWidget;
+//    NS_IF_ADDREF(gRootWebWidget);
+//  }
+//}
 
 nsIWebWidget* WebWidgetImpl::GetRootWebWidget()
 {
-  NS_IF_ADDREF(gRootWebWidget);
-  return gRootWebWidget;
+  nsIWebWidget* childWW = this;
+  nsISupports* parSup;
+  childWW->GetContainer(&parSup);
+  if (parSup) {
+    nsIWebWidget* parWW;
+    nsresult result = parSup->QueryInterface(kIWebWidgetIID, (void**)&parWW);
+    if (NS_OK == result) {
+      nsIWebWidget* root = parWW->GetRootWebWidget();
+      NS_RELEASE(parWW);
+      return root;
+    }
+  }
+
+  NS_ADDREF(this);
+  return this;
 }
 
 //----------------------------------------------------------------------
@@ -809,7 +1032,7 @@ nsresult WebWidgetImpl::ReleaseScriptContext()
 /*  nsWebWidgetFactory
 /*******************************************/
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+//static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kCWebWidget, NS_WEBWIDGET_CID);
 
