@@ -166,7 +166,21 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
 
         // no need to forward this state change
         return NS_OK;
+    } else {
+        // no need to forward this state change
+        return NS_OK;
     }
+
+    // If we're here, we have either STATE_START or STATE_STOP.  The
+    // listener only cares about these in certain conditions.
+    PRBool isLoadingDocument = PR_FALSE;
+    if (! (aStateFlags & nsIWebProgressListener::STATE_IS_NETWORK ||
+           (aStateFlags & nsIWebProgressListener::STATE_IS_REQUEST &&
+            mTotalRequests == mFinishedRequests &&
+            (aWebProgress->GetIsLoadingDocument(&isLoadingDocument),
+             !isLoadingDocument))))
+        return NS_OK;
+
 
     return mListener->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
 }
