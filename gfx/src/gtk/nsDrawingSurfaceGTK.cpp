@@ -16,11 +16,12 @@
  * Reserved.
  */
 
-#include "nspr.h"
+#include <gtk/gtk.h>
+
 #include "nsDrawingSurfaceGTK.h"
 
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
-//static NS_DEFINE_IID(kIDrawingSurfaceGTKIID, NS_IDRAWING_SURFACE_GTK_IID);
+static NS_DEFINE_IID(kIDrawingSurfaceGTKIID, NS_IDRAWING_SURFACE_GTK_IID);
 
 nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
 {
@@ -58,7 +59,9 @@ nsDrawingSurfaceGTK :: nsDrawingSurfaceGTK()
 nsDrawingSurfaceGTK :: ~nsDrawingSurfaceGTK()
 {
   if (mPixmap)
+#ifdef NS_GTK_REF
     ::gdk_pixmap_unref(mPixmap);
+#endif
   if (mImage)
     ::gdk_image_destroy(mImage);
 }
@@ -75,7 +78,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: QueryInterface(REFNSIID aIID, void** aInsta
     NS_ADDREF_THIS();
     return NS_OK;
   }
-/*
+
   if (aIID.Equals(kIDrawingSurfaceGTKIID))
   {
     nsDrawingSurfaceGTK* tmp = this;
@@ -83,7 +86,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: QueryInterface(REFNSIID aIID, void** aInsta
     NS_ADDREF_THIS();
     return NS_OK;
   }
-*/
+
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
   if (aIID.Equals(kISupportsIID))
@@ -98,8 +101,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: QueryInterface(REFNSIID aIID, void** aInsta
   return NS_NOINTERFACE;
 }
 
-NS_IMPL_ADDREF(nsDrawingSurfaceGTK)
-NS_IMPL_RELEASE(nsDrawingSurfaceGTK)
+NS_IMPL_ADDREF(nsDrawingSurfaceGTK);
+NS_IMPL_RELEASE(nsDrawingSurfaceGTK);
 
 NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
                                           PRUint32 aWidth, PRUint32 aHeight,
@@ -107,6 +110,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
   if (mLocked)
+  {
     NS_ASSERTION(0, "nested lock attempt");
     return NS_ERROR_FAILURE;
   }
@@ -126,7 +130,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
  and shared pixmaps are supported, you don't need to do that.
 */
 
-  mImage = ::gdk_image_get(mPixmap, aX, aY, mLockWidth, mLockHeight);
+  mImage = ::gdk_image_get(mPixmap, mLockX, mLockY, mLockWidth, mLockHeight);
  
  // aBits = &mImage->mem;
  // FIXME
@@ -137,18 +141,23 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
 NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
 {
   if (!mLocked)
+  {
     NS_ASSERTION(0, "attempting to unlock an DS that isn't locked");
     return NS_ERROR_FAILURE;
   }
 /*
  //if it is writeable, we are going to want to redraw the pixmap from the image.
+// my bit looking/mangling skills are asleep.. someone do this the right way
+  if (!(mFlags & NS_LOCK_SURFACE_READ_ONLY))
+  {
+    gdk_draw_image(mPixmap,
+		   mGC,
+		   mImage,
+		   0, 0,
+		   mLockX, mLockY,
+		   mLockWidth, mLockHeight);
 
- gdk_draw_image(GdkDrawable  *drawable,
-		mGC,
-		mImage,
-		0, 0,
-		mLockX, mLockY,
-		mLockWidth, mLockHeight);
+  }
 */
   ::gdk_image_destroy(mImage);
   mImage = nsnull;
@@ -183,11 +192,10 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: GetPixelFormat(nsPixelFormat *aFormat)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC)
+NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkDrawable *aDrawable, GdkGC *aGC)
 {
   mGC = aGC;
-
-  mPixmap = ::gdk_pixmap_new(nsnull, 1, 1, mDepth);
+  mPixmap = aDrawable;
 
   return NS_OK;
 }
@@ -195,8 +203,8 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC)
 NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
                                           PRUint32 aHeight, PRUint32 aFlags)
 {
-  ::g_return_val_if_fail (aGC != NULL, NS_ERROR_FAILURE);
-  ::g_return_val_if_fail ((aWidth > 0) && (aHeight > 0), NS_ERROR_FAILURE);
+//  ::g_return_val_if_fail (aGC != nsnull, NS_ERROR_FAILURE);
+//  ::g_return_val_if_fail ((aWidth > 0) && (aHeight > 0), NS_ERROR_FAILURE);
 
   mGC = aGC;
   mWidth = aWidth;
@@ -210,7 +218,7 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Init(GdkGC *aGC, PRUint32 aWidth,
 
 NS_IMETHODIMP nsDrawingSurfaceGTK :: GetGC(GdkGC *aGC)
 {
-  *aGC = ::gdk_gc_ref(mGC);
+  aGC = ::gdk_gc_ref(mGC);
   return NS_OK;
 }
 
@@ -218,4 +226,14 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: ReleaseGC(void)
 {
   ::gdk_gc_unref(mGC);
   return NS_OK;
+}
+
+GdkGC *nsDrawingSurfaceGTK::GetGC(void)
+{
+  return mGC;
+}
+
+GdkDrawable *nsDrawingSurfaceGTK::GetDrawable(void)
+{
+  return mPixmap;
 }

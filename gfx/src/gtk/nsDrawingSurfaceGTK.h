@@ -19,16 +19,13 @@
 #ifndef nsDrawingSurfaceGTK_h___
 #define nsDrawingSurfaceGTK_h___
 
-#include "nspr.h"
-#include "nscore.h"
-#include "prtypes.h"
-#include "nsISupports.h"
 #include "nsIDrawingSurface.h"
+#include "nsIDrawingSurfaceGTK.h"
 
 #include <gtk/gtk.h>
 
 class nsDrawingSurfaceGTK : public nsIDrawingSurface,
-                            nsISupports
+                            nsIDrawingSurfaceGTK
 {
 public:
   nsDrawingSurfaceGTK();
@@ -49,10 +46,14 @@ public:
 
   //nsIDrawingSurfaceGTK interface
 
-  NS_IMETHOD Init(GdkGC *aGC);
+  NS_IMETHOD Init(GdkDrawable *aDrawable, GdkGC *aGC);
   NS_IMETHOD Init(GdkGC *aGC, PRUint32 aWidth, PRUint32 aHeight, PRUint32 aFlags);
   NS_IMETHOD GetGC(GdkGC *aGC);
   NS_IMETHOD ReleaseGC(void);
+
+  // things that are useful to me.
+  GdkGC *GetGC(void);
+  GdkDrawable *GetDrawable(void);
 
 private:
   /* general */
@@ -66,8 +67,8 @@ private:
 
   /* for locks */
   GdkImage	*mImage;
-  PRint32	mLockX;
-  PRint32	mLockY;
+  PRInt32	mLockX;
+  PRInt32	mLockY;
   PRUint32	mLockWidth;
   PRUint32	mLockHeight;
   PRUint32	mLockFlags;

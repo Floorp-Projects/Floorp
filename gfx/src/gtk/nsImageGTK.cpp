@@ -440,8 +440,8 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
   nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
 
-  moz_gdk_draw_bgr_image (drawing->drawable,
-                          drawing->gc,
+  moz_gdk_draw_bgr_image (drawing->GetDrawable(),
+                          drawing->GetGC(),
                           aDX, aDY, aDWidth, aDHeight,
                           GDK_RGB_DITHER_MAX,
                           mImageBits + mRowBytes * aSY + 3 * aDX,
@@ -545,12 +545,12 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   if (nsnull != mAlphaPixmap)
   {
     // Setup gc to use the given alpha-pixmap for clipping
-    gdk_gc_set_clip_mask(drawing->gc, mAlphaPixmap);
-    gdk_gc_set_clip_origin(drawing->gc, aX, aY);
+    gdk_gc_set_clip_mask(drawing->GetGC(), mAlphaPixmap);
+    gdk_gc_set_clip_origin(drawing->GetGC(), aX, aY);
   }
 
-  moz_gdk_draw_bgr_image (drawing->drawable,
-                          drawing->gc,
+  moz_gdk_draw_bgr_image (drawing->GetDrawable(),
+                          drawing->GetGC(),
                           aX, aY, aWidth, aHeight,
                           GDK_RGB_DITHER_MAX,
                           mImageBits, mRowBytes);
@@ -558,8 +558,8 @@ nsImageGTK::Draw(nsIRenderingContext &aContext,
   if (mAlphaPixmap != nsnull)
   {
     // Revert gc to its old clip-mask and origin
-    gdk_gc_set_clip_origin(drawing->gc, 0, 0);
-    gdk_gc_set_clip_mask(drawing->gc, nsnull);
+    gdk_gc_set_clip_origin(drawing->GetGC(), 0, 0);
+    gdk_gc_set_clip_mask(drawing->GetGC(), nsnull);
   }
 
 #ifdef CHEAP_PERFORMANCE_MEASUREMENT
