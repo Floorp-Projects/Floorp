@@ -583,9 +583,8 @@ function analyze(aMsgHdr, aNextFunction)
     {
       var whiteListDirectory = RDF.GetResource(spamSettings.whiteListAbURI).QueryInterface(Components.interfaces.nsIAbMDBDirectory);
       var headerParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
-      var authorEmailAddress = new Object;
-      headerParser.extractHeaderAddressMailboxes(null, aMsgHdr.author, authorEmailAddress);
-      if (whiteListDirectory.hasCardForEmailAddress(authorEmailAddress.value))
+      var authorEmailAddress = headerParser.extractHeaderAddressMailboxes(null, aMsgHdr.author);
+      if (whiteListDirectory.hasCardForEmailAddress(authorEmailAddress))
       {
         // skip over this message, like we do on incoming mail
         // the difference is it could be marked as junk from previous analysis
