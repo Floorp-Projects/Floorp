@@ -56,6 +56,9 @@ CPPSRCS		= \
 		nsJSMimeType.cpp \
 		nsMimeTypeArray.cpp \
 		nsPluginArray.cpp \
+		nsJSCRMFObject.cpp \
+		nsJSCrypto.cpp \
+		nsJSPkcs11.cpp \
 		$(NULL)
 
 EXPORTS		= nsJSUtils.h
