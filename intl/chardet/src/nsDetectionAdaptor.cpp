@@ -146,10 +146,10 @@ NS_IMETHODIMP nsDetectionAdaptor::Init(
          if(NS_SUCCEEDED(rv)) {
             aDetector->Init(aObserver);
 
-            NS_ADDREF(aWebShellSvc);
+            NS_IF_ADDREF(aWebShellSvc);
             mWebShellSvc = aWebShellSvc;
 
-            NS_ADDREF(aDetector);
+            NS_IF_ADDREF(aDetector);
             mDetector = aDetector;
 
             mDontFeedToDetector = PR_FALSE;
