@@ -1065,3 +1065,4 @@ pageInfoTreeView.prototype = {
   performAction: function(action) { },
   performActionOnCell: function(action, row, column) { }
 };
+
