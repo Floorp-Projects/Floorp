@@ -105,16 +105,9 @@ NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 // nsAppShell constructor
 nsAppShell::nsAppShell()
 { 
-   mDispatchListener = 0;
    mHab = 0; mHmq = 0;
    mQuitNow = FALSE;
    memset( &mQmsg, 0, sizeof mQmsg);
-}
-
-nsresult nsAppShell::SetDispatchListener( nsDispatchListener *aDispatchListener) 
-{
-   mDispatchListener = aDispatchListener;
-   return NS_OK;
 }
 
 // Create the application shell
@@ -160,8 +153,6 @@ nsresult nsAppShell::Run()
 
          if (mQmsg.msg != WM_QUIT) {
             WinDispatchMsg((HAB)0, &mQmsg);
-            if (mDispatchListener)
-               mDispatchListener->AfterDispatch();
          } else {
             if ((mQmsg.hwnd) && (mQmsg.mp1 || mQmsg.mp2)) {
                // send WM_SYSCOMMAND, SC_CLOSE to window (tasklist close)

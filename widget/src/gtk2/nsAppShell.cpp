@@ -267,12 +267,6 @@ nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 }
 
 NS_IMETHODIMP
-nsAppShell::SetDispatchListener(nsDispatchListener *aDispatchListener)
-{
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsAppShell::Exit(void)
 {
     gtk_main_quit();

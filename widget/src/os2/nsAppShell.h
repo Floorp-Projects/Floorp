@@ -37,7 +37,6 @@ class nsAppShell : public nsIAppShell
 
    // nsIAppShell
    NS_IMETHOD Create( int *argc, char **argv);
-   NS_IMETHOD SetDispatchListener( nsDispatchListener *aDispatchListener);
    NS_IMETHOD Spinup() { return NS_OK; }
    NS_IMETHOD Run(); 
    NS_IMETHOD Spindown() { return NS_OK; }
@@ -52,7 +51,6 @@ class nsAppShell : public nsIAppShell
    virtual void    *GetNativeData( PRUint32 aDataType);
 
   private:
-   nsDispatchListener *mDispatchListener;
    HAB                 mHab;
    HMQ                 mHmq;
    BOOL                mQuitNow;

@@ -61,7 +61,6 @@ static int gKeepGoing = 1;
 //-------------------------------------------------------------------------
 nsAppShell::nsAppShell()  
 { 
-  mDispatchListener = 0;
 }
 
 
@@ -74,13 +73,6 @@ nsAppShell::nsAppShell()
 
 NS_METHOD nsAppShell::Create(int* argc, char ** argv)
 {
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener) 
-{
-  mDispatchListener = aDispatchListener;
   return NS_OK;
 }
 
@@ -140,8 +132,6 @@ NS_METHOD nsAppShell::Run(void)
       if (keepGoing != 0) {
         TranslateMessage(&msg);
         nsToolkit::mDispatchMessage(&msg);
-        if (mDispatchListener)
-          mDispatchListener->AfterDispatch();
       }
     } else {
 

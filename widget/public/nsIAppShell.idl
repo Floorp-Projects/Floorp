@@ -25,7 +25,6 @@
 #include "nsISupports.idl"
 
 native int(int);
-[ptr] native nsDispatchListener(nsDispatchListener);
 [ptr] native nsIEventQueue(nsIEventQueue);
 [ptr] native UndefinednsIWidget(nsIWidget);
 [ref] native PRBoolRef(PRBool);
@@ -39,16 +38,6 @@ class nsIEventQueue;
  * See GetNativeData()
  */
 #define NS_NATIVE_SHELL   0
-
-/**
- * During the nsIAppShell Run method notify this listener 
- * after each message dispatch.
- * @see SetDispatchListener member function of nsIAppShell 
- */
-class nsDispatchListener {
-public:
-  virtual void AfterDispatch() = 0;
-};
 
 class nsIWidget;
 %}
@@ -104,14 +93,8 @@ interface nsIAppShell : nsISupports
   void DispatchNativeEvent(in PRBool aRealEvent, in voidPtr aEvent);
 
  /**
-  * After event dispatch execute app specific code
+  * Exit the handle event loop
   */
-  
-  void SetDispatchListener(in nsDispatchListener aDispatchListener);
-
-  /**
-   * Exit the handle event loop
-   */
 
   void Exit();
 
