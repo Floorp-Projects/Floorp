@@ -5042,6 +5042,7 @@ Bool lo_ProcessClick(MWContext *context, lo_TopState *top_state, lo_DocState *st
     {
     case LO_HIT_TABLE_LINE:
         {
+#ifdef EDITOR
             if( result->lo_hitLine.region == LO_HIT_LINE_REGION_BEFORE )
             {
                 /* Click before a table
@@ -5049,11 +5050,14 @@ Bool lo_ProcessClick(MWContext *context, lo_TopState *top_state, lo_DocState *st
                  *  clicking before a table selects the entire table
                 */
                 LO_TableStruct *table = lo_GetParentTable(context, result->lo_hitLine.selection.end.element);
+
                 if( table )
                 {
                     edt_ForceTableSelection(context, table);
                 }
             }
+#endif /* EDITOR */
+
             /* Set insert point to the the supplied element 
                (we trust it was already set to an editable element) */
             lo_SetInsertPoint(context, top_state, result->lo_hitLine.selection.begin.element, 
