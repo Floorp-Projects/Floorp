@@ -85,7 +85,6 @@ public:
 protected:
    virtual ~nsWebBrowser();
 
-   void UpdateListeners();
    NS_IMETHOD SetDocShell(nsIDocShell* aDocShell);
    NS_IMETHOD EnsureDocShellTreeOwner();
 

@@ -45,15 +45,11 @@ interface nsIWebBrowser : nsISupports
 	@param listener - The listener interface to be called when a specific 
 		listener interface is needed.
 
-	@param cookie - This is an optional parameter to receieve a cookie to use
-			to unregister rather than the original interface pointer.  This may
-			be nsnull.
-
 	@return	NS_OK - Listener was registered successfully.
 				NS_ERROR_INVALID_ARG - The listener passed in was either nsnull, 
 						or was already registered with this listener interface.
 	 */
-	void addWebBrowserListener(in nsIInterfaceRequestor listener, out long cookie);
+	void addWebBrowserListener(in nsIInterfaceRequestor listener);
 
 	/* 
 	Removes a previously registered webBrowserListener.
@@ -61,15 +57,11 @@ interface nsIWebBrowser : nsISupports
 	@param listener - The listener interface previously registered with 
 			addListener() this may be nsnull if a valid cookie is provided.
 
-	@param cookie - A cookie that was returned from a previously called
-		addListener() call.  This may be nsnull if a valid listener interface
-		is passed in.
-
 	@return	NS_OK - Listener was successfully unregistered.
 				NS_ERROR_INVALID_ARG - Neither the cookie nor the listener point
 					to a previously registered listener.
 	*/
-	void removeWebBrowserListener(in nsIInterfaceRequestor listener, in long cookie);
+	void removeWebBrowserListener(in nsIInterfaceRequestor listener);
 
 	/*
 	This is the top level window embedding the browser.  The object passed in
