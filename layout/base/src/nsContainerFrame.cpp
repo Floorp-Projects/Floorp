@@ -80,7 +80,7 @@ void nsContainerFrame::PrepareContinuingFrame(nsIPresContext* aPresContext,
   // XXX presumptive
   nsIStyleContext* styleContext =
     aPresContext->ResolveStyleContextFor(mContent, aParent);
-  aContFrame->SetStyleContext(aPresContext,styleContext);
+  aContFrame->SetStyleContext(aPresContext, styleContext);
   NS_RELEASE(styleContext);
 }
 
@@ -502,48 +502,31 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
     availBand.width = 0;
   }
 
-  // Does the child frame want to do continuation-based runaround?
-  SplittableType  isSplittable;
-
-  aKidFrame->IsSplittable(isSplittable);
-  if (isSplittable == frSplittableNonRectangular) {
-    // Reduce the max height to the band height.
-    availSize.height = availBand.height;
-  }
-
   nsStyleSpacing* spacing;
-
   aKidFrame->GetStyleData(kIStyleSpacingSID, (nsStyleStruct*&)spacing);
-
   if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
-    if ((availBand.x > 0) || (availBand.XMost() < aMaxSize.width)) {
-      // There are left/right floaters.
-      availSize.width = availBand.width;
-    }
-  
     // Reduce the available width by the kid's left/right margin
     availSize.width -= spacing->mMargin.left + spacing->mMargin.right;
   }
 
   // Does the child frame support interface nsIRunaround?
-  if (NS_OK == aKidFrame->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround)) {
-    // Yes, the child frame wants to interact directly with the space manager.
-    nscoord tx = availBand.x + spacing->mMargin.left;
-
-    // Translate the local coordinate space to the current left edge plus any
-    // left margin the child wants
-    aSpaceManager->Translate(tx, 0);
-
+  if (NS_OK == aKidFrame->QueryInterface(kIRunaroundIID,
+                                         (void**)&reflowRunaround)) {
+    // Yes, the child frame wants to interact directly with the space
+    // manager.
     reflowRunaround->ResizeReflow(aPresContext, aSpaceManager, availSize,
                                   aDesiredRect, aMaxElementSize, status);
-    aDesiredRect.x += availBand.x;
-
-    // Translate back
-    aSpaceManager->Translate(-tx, 0);
-
   } else {
     // No, use interface nsIFrame instead.
     nsReflowMetrics desiredSize;
+
+    // Hide the floaters from the child frame
+    if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
+      if ((availBand.x > 0) || (availBand.XMost() < aMaxSize.width)) {
+        // There are left/right floaters.
+        availSize.width = availBand.width;
+      }
+    }
 
     aKidFrame->ResizeReflow(aPresContext, desiredSize, availSize,
                             aMaxElementSize, status);
@@ -610,9 +593,20 @@ PRBool nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
   nextInFlow->ChildCount(childCount);
   nextInFlow->FirstChild(firstChild);
 
-  NS_ASSERTION(childCount == 0, "deleting !empty next-in-flow");
-
-  NS_ASSERTION((0 == childCount) && (nsnull == firstChild), "deleting !empty next-in-flow");
+  if ((0 != childCount) || (nsnull != firstChild)) {
+    nsIFrame* top = nextInFlow;
+    for (;;) {
+      nsIFrame* parent;
+      top->GetGeometricParent(parent);
+      if (nsnull == parent) {
+        break;
+      }
+      top = parent;
+    }
+    top->List();
+  }
+  NS_ASSERTION((0 == childCount) && (nsnull == firstChild),
+               "deleting !empty next-in-flow");
 #endif
 
   // Disconnect the next-in-flow from the flow list
@@ -652,19 +646,26 @@ PRBool nsContainerFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
     aChild->SetNextSibling(nextSibling);
   }
 
-  // Delete the next-in-flow frame and adjust it's parent's child count
+  // Delete the next-in-flow frame and adjust its parents child count
+  WillDeleteNextInFlowFrame(nextInFlow);
   nextInFlow->DeleteFrame();
   parent->mChildCount--;
 #ifdef NS_DEBUG
+#if XXX_new_block_doesn_t_work_with_this_check
   if (0 != parent->mChildCount) {
     parent->CheckContentOffsets();
   }
+#endif
 
   aChild->GetNextInFlow(nextInFlow);
   NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
 #endif
 
   return PR_TRUE;
+}
+
+void nsContainerFrame::WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow)
+{
 }
 
 void nsContainerFrame::PropagateContentOffsets()
