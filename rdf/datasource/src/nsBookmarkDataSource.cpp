@@ -1053,9 +1053,11 @@ BookmarkDataSourceImpl::ReadBookmarks(void)
 
 #ifdef	XP_WIN
 	nsCOMPtr<nsIRDFResource>	ieFolder;
-	// XXX This usually works for Win95/98... need to be smarter (check registry?)
-	// XXX and do the right thing (whatever that is) for WinNT
-	if (NS_SUCCEEDED(rv = gRDFService->GetResource("file:///C|/WINDOWS/Favorites/", getter_AddRefs(ieFolder))))
+	nsSpecialSystemDirectory	ieFavoritesFile(nsSpecialSystemDirectory::Win_Favorites);
+	nsFileURL			ieFavoritesURLSpec(ieFavoritesFile);
+	const char			*ieFavoritesURL = ieFavoritesURLSpec.GetAsString();
+	
+	if (NS_SUCCEEDED(rv = gRDFService->GetResource(ieFavoritesURL, getter_AddRefs(ieFolder))))
 	{
 		nsCOMPtr<nsIRDFLiteral>	ieTitleLiteral;
 		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(ieTitle.GetUnicode(), getter_AddRefs(ieTitleLiteral))))
