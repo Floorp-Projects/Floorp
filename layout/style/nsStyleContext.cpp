@@ -226,6 +226,7 @@ struct StylePositionImpl: public nsStylePosition {
     mWidth = 0;
     mHeightFlags = NS_STYLE_POSITION_VALUE_AUTO;
     mHeight = 0;
+    mZIndex = 0;
   }
 
   ~StylePositionImpl(void)

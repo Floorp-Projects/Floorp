@@ -29,6 +29,7 @@
 #include "nsViewsCID.h"
 
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
+static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 NS_DEF_PTR(nsIStyleContext);
@@ -63,7 +64,9 @@ AbsoluteFrame::~AbsoluteFrame()
 {
 }
 
-nsIView* AbsoluteFrame::CreateView(nsIFrame* aContainingBlock, const nsRect& aRect)
+nsIView* AbsoluteFrame::CreateView(nsIFrame*     aContainingBlock,
+                                   const nsRect& aRect,
+                                   PRInt32       aZIndex)
 {
   nsIView*  containingView;
   nsIView*  view;
@@ -91,12 +94,12 @@ nsIView* AbsoluteFrame::CreateView(nsIFrame* aContainingBlock, const nsRect& aRe
     if (NS_OK == result) {
       nsIView* scrolledView = scrollView->GetScrolledView();
 
-      view->Init(viewManager, aRect, scrolledView);
+      view->Init(viewManager, aRect, scrolledView, nsnull, nsnull, aZIndex);
       viewManager->InsertChild(scrolledView, view, 0);
       NS_RELEASE(scrolledView);
       NS_RELEASE(scrollView);
     } else {
-      view->Init(viewManager, aRect, containingView);
+      view->Init(viewManager, aRect, containingView, nsnull, nsnull, aZIndex);
       viewManager->InsertChild(containingView, view, 0);
     }
   
@@ -128,18 +131,24 @@ void AbsoluteFrame::ComputeViewsRect(nsIFrame* aContainingBlock, nsRect& aRect)
       // the containing block
       aRect.width = containingRect.width;
       aRect.x = 0;
-
-    } else {
+    } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mWidthFlags) {
       aRect.width = position->mWidth;
       aRect.x = containingRect.width - aRect.width;
+    } else {
+      NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mWidthFlags, "unexpected width");
+      aRect.width = containingRect.width * position->mWidth / 100;
+      aRect.x = 0;
     }
   } else {
     aRect.x = position->mLeftOffset;
 
     if (NS_STYLE_POSITION_VALUE_AUTO == position->mWidthFlags) {
       aRect.width = containingRect.width - aRect.x;
-    } else {
+    } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mWidthFlags) {
       aRect.width = position->mWidth;
+    } else {
+      NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mWidthFlags, "unexpected width");
+      aRect.width = containingRect.width * position->mWidth / 100;
     }
   }
 
@@ -150,18 +159,24 @@ void AbsoluteFrame::ComputeViewsRect(nsIFrame* aContainingBlock, nsRect& aRect)
       // the containing block
       aRect.height = containingRect.height;
       aRect.y = 0;
-
-    } else {
+    } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mHeightFlags) {
       aRect.height = position->mHeight;
       aRect.y = containingRect.height - aRect.height;
+    } else {
+      NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mHeightFlags, "unexpected height");
+      aRect.height = containingRect.height * position->mHeight / 100;
+      aRect.y = 0;
     }
   } else {
     aRect.y = position->mTopOffset;
 
     if (NS_STYLE_POSITION_VALUE_AUTO == position->mHeightFlags) {
       aRect.height = containingRect.height - aRect.y;
-    } else {
+    } else if (NS_STYLE_POSITION_VALUE_LENGTH == position->mHeightFlags) {
       aRect.height = position->mHeight;
+    } else {
+      NS_ASSERTION(NS_STYLE_POSITION_VALUE_PCT == position->mHeightFlags, "unexpected height");
+      aRect.height = containingRect.height * position->mHeight / 100;
     }
   }
 }
@@ -233,7 +248,9 @@ NS_METHOD AbsoluteFrame::ResizeReflow(nsIPresContext*  aPresContext,
     ComputeViewsRect(containingBlock, rect);
 
     // Create a view for the frame
-    nsIView*  view = CreateView(containingBlock, rect);
+    nsStylePosition* position = (nsStylePosition*)mStyleContext->GetData(kStylePositionSID);
+    nsIView*         view = CreateView(containingBlock, rect, position->mZIndex);
+
     mFrame->SetView(view);  
     NS_RELEASE(view);
 

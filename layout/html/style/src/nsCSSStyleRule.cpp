@@ -697,6 +697,13 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
           position->mHeight = (nscoord)(100 * ourPosition->mHeight.GetFloatValue());
           position->mHeightFlags = NS_STYLE_POSITION_VALUE_PCT;
         }
+
+        // z-index
+        if (ourPosition->mZIndex.GetUnit() == eCSSUnit_Enumerated) {
+          position->mPosition = ourPosition->mPosition.GetIntValue();
+        } else if (ourPosition->mZIndex.GetUnit() == eCSSUnit_Absolute) {
+          position->mZIndex = ourPosition->mZIndex.GetIntValue();
+        }
       }
     }
 

@@ -126,6 +126,8 @@ struct nsStylePosition : public nsStyleStruct {
   nscoord mWidth;
   PRUint8 mHeightFlags;                 // see nsStyleConsts.h
   nscoord mHeight;
+
+  PRInt32 mZIndex;
 };
 
 //----------------------------------------------------------------------
