@@ -23,10 +23,9 @@ DEPTH=..\..\..\..
 
 EXPORTS =				\
 	nsIMenuFrame.h      \
-	nsIMenuParent.h	\
 	nsIPopupSetFrame.h	\
 	nsITreeFrame.h	\
-	nsPIBoxObject.h \
+  nsPIBoxObject.h \
     $(NULL)
 
 XPIDLSRCS=      .\nsIBoxObject.idl                  \

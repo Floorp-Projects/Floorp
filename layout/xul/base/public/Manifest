@@ -1,6 +1,5 @@
 nsPIBoxObject.h
 nsIMenuFrame.h
-nsIMenuParent.h
 nsIPopupSetFrame.h
 nsITreeFrame.h
 

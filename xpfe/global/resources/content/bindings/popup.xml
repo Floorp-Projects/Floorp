@@ -18,6 +18,7 @@
     </content>
 
     <implementation implements="nsIDOMXULPopupElement, nsIAccessibleProvider">
+      <field name="activeItem"/>
       <property name="accessible">
         <getter>
           <![CDATA[
