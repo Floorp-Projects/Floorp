@@ -51,7 +51,8 @@
 #   include "jshash.h"
 
 #ifdef XP_MAC
-#include "macstdlibextras.h"  /* for strdup() */
+/* #include "macstdlibextras.h"  /* for strdup() */
+extern char* strdup(const char* str);
 #endif
 
 #include "jsj_hash.h"        /* Hash tables */
