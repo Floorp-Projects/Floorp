@@ -18,7 +18,7 @@
 
 SRCS=					\
 	MailServerPrefs.java		\
-	MailServerPrefsEditor.java	\
+	# MailServerPrefsEditor.java	\
 	Prefs.java			\
 	PrefsBeanInfo.java		\
 	UIPrefs.java			\
