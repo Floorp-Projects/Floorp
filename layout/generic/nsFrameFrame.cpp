@@ -675,8 +675,17 @@ nsSubDocumentFrame::ShowDocShell()
   if (treeItem) {
     treeItem->GetItemType(&itemType);
   }
-  rv = CreateViewAndWidget(itemType == nsIDocShellTreeItem::typeChrome ?
-                                       eContentTypeUI : eContentTypeContent);
+
+  nsContentType contentType;
+  if (itemType == nsIDocShellTreeItem::typeChrome) {
+    contentType = eContentTypeUI;
+  }
+  else {
+    nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
+    treeItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
+    contentType = sameTypeParent ? eContentTypeContentFrame : eContentTypeContent;
+  }
+  rv = CreateViewAndWidget(contentType);
   if (NS_FAILED(rv)) {
     return rv;
   }
