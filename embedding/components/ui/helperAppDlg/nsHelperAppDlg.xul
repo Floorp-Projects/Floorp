@@ -64,10 +64,12 @@
                             accesskey="&default.set.accesskey;"
                             oncommand="dialog.setDefault()"/>
                 </hbox>
+                <!-- Make user go to Set Default... for this (for now)
                 <checkbox id="alwaysAsk"
                           label="&alwaysAsk.label;"
                           accesskey="&alwaysAsk.accesskey;"
                           checked="true"/>
+                -->
             </vbox>
             <radio id="different"
                    group="option"

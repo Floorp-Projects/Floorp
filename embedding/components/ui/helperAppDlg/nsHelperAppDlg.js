@@ -192,7 +192,7 @@ nsHelperAppDialog.prototype = {
              prompt.setAttribute( "onclick", "dialog.doDebug()" );
          }
 
-         // Put explanation into text box.
+         // Put explanation of default action into text box.
          this.initExplanation();
 
          // Set default selection (always the "default").
@@ -209,7 +209,7 @@ nsHelperAppDialog.prototype = {
          this.option();
 
          // Set up dialog button callbacks.
-         var object = this; // "this.onOK()" doesn't work ?!
+         var object = this; // "this.onOK()" doesn't work!
          this.mDialog.doSetOKCancel( function () { return object.onOK(); },
                                      function () { return object.onCancel(); } );
 
@@ -243,19 +243,21 @@ nsHelperAppDialog.prototype = {
         if ( this.mLauncher.MIMEInfo.preferredAction == Components.interfaces.nsIMIMEInfo.saveToDisk ) {
             expl.value = this.getString( "explanation.saveToDisk" );
         } else {
-            // Default is to open with application.
-            var appDesc = this.mLauncher.MIMEInfo.applicationDescription;
-            if ( appDesc != "" ) {
-                // Use application description.
-                expl.value= this.replaceInsert( this.getString( "explanation.openUsing" ), 1, appDesc );
-            } else {
-                var app = this.mLauncher.MIMEInfo.preferredApplicationHandler;
-                if ( app ) {
-                    // Use application path.
-                    expl.value = this.replaceInsert( this.getString( "explanation.openUsing" ), 1, app.unicodePath );
+            // Default is to "open with system default."
+            var appDesc = this.getString( "explanation.defaultApp" );
+            if ( this.mLauncher.MIMEInfo.preferredAction != Components.interfaces.nsIMIMEInfo.useSystemDefault ) {
+                // If opening using the app, we prefer to use the app description.
+                appDesc = this.mLauncher.MIMEInfo.applicationDescription;
+                if ( appDesc != "" ) {
+                    // Use application description.
+                    expl.value= this.replaceInsert( this.getString( "explanation.openUsing" ), 1, appDesc );
                 } else {
-                    // Use vague "default app for this type"
-                    expl.value = this.getString( "explanation.defaultApp" );
+                    // If no description, use the app executable name.
+                    var app = this.mLauncher.MIMEInfo.preferredApplicationHandler;
+                    if ( app ) {
+                        // Use application path.
+                        expl.value = this.replaceInsert( this.getString( "explanation.openUsing" ), 1, app.unicodePath );
+                    }
                 }
             }
         }
