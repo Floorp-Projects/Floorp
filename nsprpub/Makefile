@@ -44,6 +44,10 @@ ifdef PR_CLIENT_BUILD_UNIX
 endif
 endif
 
+distclean realclean clobber_all::
+	@echo "cd pr/tests; $(MAKE) $@"
+	@$(MAKE) -C pr/tests $@
+
 release::
 	echo $(BUILD_NUMBER) > $(RELEASE_DIR)/$(BUILD_NUMBER)/version.df
 	@if test -f imports.df; then \

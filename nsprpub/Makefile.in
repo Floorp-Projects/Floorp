@@ -31,6 +31,8 @@ PR_CLIENT_BUILD = 1
 PR_CLIENT_BUILD_UNIX = 1
 endif
 
+DIST_GARBAGE = config.cache config.log config.status dist
+
 include $(topsrcdir)/config/rules.mk
 
 #
@@ -48,6 +50,12 @@ ifdef PR_CLIENT_BUILD_UNIX
 	rm -f $(DIST)/bin/libnspr.$(DLL_SUFFIX)
 endif
 endif
+
+# Delete config/autoconf.mk last because it is included by every makefile.
+distclean realclean clobber_all::
+	@echo "cd pr/tests; $(MAKE) $@"
+	@$(MAKE) -C pr/tests $@
+	rm -f config/autoconf.mk
 
 release::
 	echo $(BUILD_NUMBER) > $(RELEASE_DIR)/$(BUILD_NUMBER)/version.df

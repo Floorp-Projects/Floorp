@@ -1077,7 +1077,7 @@ AC_SUBST(ULTRASPARC_FILTER_LIBRARY)
 dnl ========================================================
 dnl Generate output files.
 dnl ========================================================
-AC_OUTPUT([
+MAKEFILES="
 Makefile 
 config/Makefile
 config/autoconf.mk
@@ -1088,39 +1088,37 @@ lib/ds/Makefile
 lib/libc/Makefile 
 lib/libc/include/Makefile 
 lib/libc/src/Makefile 
-lib/msgc/Makefile 
-lib/msgc/include/Makefile 
-lib/msgc/src/Makefile 
-lib/msgc/tests/Makefile
-lib/prstreams/Makefile 
-lib/tests/Makefile 
 pr/Makefile 
 pr/include/Makefile 
 pr/include/md/Makefile 
 pr/include/obsolete/Makefile 
 pr/include/private/Makefile 
 pr/src/Makefile 
-pr/src/bthreads/Makefile 
-pr/src/cplus/Makefile 
-pr/src/cplus/tests/Makefile 
 pr/src/io/Makefile 
 pr/src/linking/Makefile 
 pr/src/malloc/Makefile 
 pr/src/md/Makefile 
-pr/src/md/beos/Makefile 
-pr/src/md/os2/Makefile 
-pr/src/md/unix/Makefile 
-pr/src/md/windows/Makefile 
+pr/src/md/${PR_MD_ARCH_DIR}/Makefile
 pr/src/memory/Makefile 
 pr/src/misc/Makefile 
-pr/src/pthreads/Makefile 
 pr/src/threads/Makefile 
-pr/src/threads/combined/Makefile 
 pr/tests/Makefile 
 pr/tests/dll/Makefile 
-pr/tests/w16gui/Makefile 
-tools/Makefile 
-])
+"
+dnl lib/tests/Makefile 
+dnl pr/tests/w16gui/Makefile 
+dnl tools/Makefile 
 
-dnl lib/prstreams/tests/testprstrm/Makefile 
-dnl lib/tests/windows/makefile 
+if test -z "$USE_PTHREADS" && test -z "$USE_BTHREADS"; then 
+    MAKEFILES="$MAKEFILES pr/src/threads/combined/Makefile"
+elif test -n "$USE_PTHREADS"; then
+    MAKEFILES="$MAKEFILES pr/src/pthreads/Makefile"
+elif test -n "$USE_BTHREADS"; then
+    MAKEFILES="$MAKEFILES pr/src/bthreads/Makefile"
+fi
+
+if test -n "$USE_CPLUS"; then
+    MAKEFILES="$MAKEFILES pr/src/cplus/Makefile pr/src/cplus/tests/Makefile"
+fi
+
+AC_OUTPUT([$MAKEFILES])

@@ -3916,6 +3916,47 @@ fi
 
 
 
+MAKEFILES="
+Makefile 
+config/Makefile
+config/autoconf.mk
+config/nsprincl.mk
+config/nsprincl.sh
+lib/Makefile 
+lib/ds/Makefile 
+lib/libc/Makefile 
+lib/libc/include/Makefile 
+lib/libc/src/Makefile 
+pr/Makefile 
+pr/include/Makefile 
+pr/include/md/Makefile 
+pr/include/obsolete/Makefile 
+pr/include/private/Makefile 
+pr/src/Makefile 
+pr/src/io/Makefile 
+pr/src/linking/Makefile 
+pr/src/malloc/Makefile 
+pr/src/md/Makefile 
+pr/src/md/${PR_MD_ARCH_DIR}/Makefile
+pr/src/memory/Makefile 
+pr/src/misc/Makefile 
+pr/src/threads/Makefile 
+pr/tests/Makefile 
+pr/tests/dll/Makefile 
+"
+
+if test -z "$USE_PTHREADS" && test -z "$USE_BTHREADS"; then 
+    MAKEFILES="$MAKEFILES pr/src/threads/combined/Makefile"
+elif test -n "$USE_PTHREADS"; then
+    MAKEFILES="$MAKEFILES pr/src/pthreads/Makefile"
+elif test -n "$USE_BTHREADS"; then
+    MAKEFILES="$MAKEFILES pr/src/bthreads/Makefile"
+fi
+
+if test -n "$USE_CPLUS"; then
+    MAKEFILES="$MAKEFILES pr/src/cplus/Makefile pr/src/cplus/tests/Makefile"
+fi
+
 trap '' 1 2 15
 cat > confcache <<\EOF
 # This file is a shell script that caches the results of configure
@@ -4029,50 +4070,7 @@ done
 ac_given_srcdir=$srcdir
 ac_given_INSTALL="$INSTALL"
 
-trap 'rm -fr `echo "
-Makefile 
-config/Makefile
-config/autoconf.mk
-config/nsprincl.mk
-config/nsprincl.sh
-lib/Makefile 
-lib/ds/Makefile 
-lib/libc/Makefile 
-lib/libc/include/Makefile 
-lib/libc/src/Makefile 
-lib/msgc/Makefile 
-lib/msgc/include/Makefile 
-lib/msgc/src/Makefile 
-lib/msgc/tests/Makefile
-lib/prstreams/Makefile 
-lib/tests/Makefile 
-pr/Makefile 
-pr/include/Makefile 
-pr/include/md/Makefile 
-pr/include/obsolete/Makefile 
-pr/include/private/Makefile 
-pr/src/Makefile 
-pr/src/bthreads/Makefile 
-pr/src/cplus/Makefile 
-pr/src/cplus/tests/Makefile 
-pr/src/io/Makefile 
-pr/src/linking/Makefile 
-pr/src/malloc/Makefile 
-pr/src/md/Makefile 
-pr/src/md/beos/Makefile 
-pr/src/md/os2/Makefile 
-pr/src/md/unix/Makefile 
-pr/src/md/windows/Makefile 
-pr/src/memory/Makefile 
-pr/src/misc/Makefile 
-pr/src/pthreads/Makefile 
-pr/src/threads/Makefile 
-pr/src/threads/combined/Makefile 
-pr/tests/Makefile 
-pr/tests/dll/Makefile 
-pr/tests/w16gui/Makefile 
-tools/Makefile 
-" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
+trap 'rm -fr `echo "$MAKEFILES" | sed "s/:[^ ]*//g"` conftest*; exit 1' 1 2 15
 EOF
 cat >> $CONFIG_STATUS <<EOF
 
@@ -4215,49 +4213,7 @@ EOF
 
 cat >> $CONFIG_STATUS <<EOF
 
-CONFIG_FILES=\${CONFIG_FILES-"Makefile 
-config/Makefile
-config/autoconf.mk
-config/nsprincl.mk
-config/nsprincl.sh
-lib/Makefile 
-lib/ds/Makefile 
-lib/libc/Makefile 
-lib/libc/include/Makefile 
-lib/libc/src/Makefile 
-lib/msgc/Makefile 
-lib/msgc/include/Makefile 
-lib/msgc/src/Makefile 
-lib/msgc/tests/Makefile
-lib/prstreams/Makefile 
-lib/tests/Makefile 
-pr/Makefile 
-pr/include/Makefile 
-pr/include/md/Makefile 
-pr/include/obsolete/Makefile 
-pr/include/private/Makefile 
-pr/src/Makefile 
-pr/src/bthreads/Makefile 
-pr/src/cplus/Makefile 
-pr/src/cplus/tests/Makefile 
-pr/src/io/Makefile 
-pr/src/linking/Makefile 
-pr/src/malloc/Makefile 
-pr/src/md/Makefile 
-pr/src/md/beos/Makefile 
-pr/src/md/os2/Makefile 
-pr/src/md/unix/Makefile 
-pr/src/md/windows/Makefile 
-pr/src/memory/Makefile 
-pr/src/misc/Makefile 
-pr/src/pthreads/Makefile 
-pr/src/threads/Makefile 
-pr/src/threads/combined/Makefile 
-pr/tests/Makefile 
-pr/tests/dll/Makefile 
-pr/tests/w16gui/Makefile 
-tools/Makefile 
-"}
+CONFIG_FILES=\${CONFIG_FILES-"$MAKEFILES"}
 EOF
 cat >> $CONFIG_STATUS <<\EOF
 for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
@@ -4327,5 +4283,4 @@ EOF
 chmod +x $CONFIG_STATUS
 rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
-
 
