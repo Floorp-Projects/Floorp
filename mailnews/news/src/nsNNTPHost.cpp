@@ -3345,11 +3345,10 @@ nsNNTPHost::GroupNotFound(const char *name, PRBool opening)
                 nsIMsgFolder *catFolder = getFolderFor(catCont);
                 if (catFolder) {
 
-                    nsIMsgFolder* parentCategory;
-                    rv = catFolder->FindParentOf(newsFolder,&parentCategory);
+                    nsCOMPtr<nsIFolder> parentCategory;
+					rv = newsFolder->GetParent(getter_AddRefs(parentCategory));
                     if (NS_SUCCEEDED(rv)) {
                         parentCategory->RemoveElement(newsFolder);
-                        NS_RELEASE(parentCategory);
                     }
                     NS_RELEASE(catFolder);
                 }
