@@ -60,6 +60,5 @@ $vars->{'subst'} = { 'userid' => $vars->{'username'} };
 print "Content-Type: text/html\n\n";
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("index.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("index.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

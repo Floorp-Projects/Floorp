@@ -69,7 +69,7 @@ ConnectToDatabase();
 # Determine the format in which the user would like to receive the output.
 # Uses the default format if the user did not specify an output format;
 # otherwise validates the user's choice against the list of available formats.
-my $format = ValidateOutputFormat($::FORM{'format'});
+my $format = ValidateOutputFormat($::FORM{'format'}, "list");
 
 # Whether or not the user wants to change multiple bugs.
 my $dotweak = $::FORM{'tweak'} ? 1 : 0;
@@ -117,7 +117,7 @@ if ($::buffer =~ /&cmd-/) {
     $vars->{'url'} = $url;
     $vars->{'link'} = "Click here if the page does not redisplay automatically.";
     $template->process("global/message.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error());
+      || ThrowTemplateError($template->error());
     exit;
 }
 
@@ -1053,7 +1053,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $vars->{'url'} = $url;
         $vars->{'link'} = "Click here if the page does not redisplay automatically.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 
@@ -1069,7 +1069,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $vars->{'url'} = "query.cgi";
         $vars->{'link'} = "Go back to the query page.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 
@@ -1088,7 +1088,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $vars->{'url'} = "query.cgi";
         $vars->{'link'} = "Go back to the query page, using the new default.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 
@@ -1128,7 +1128,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         $vars->{'url'} = "query.cgi";
         $vars->{'link'} = "Go back to the query page.";
         $template->process("global/message.html.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+          || ThrowTemplateError($template->error());
         exit;
     };
 }
@@ -1361,9 +1361,8 @@ if ($serverpush) {
     print "Content-Type: text/html\n\n";
 
     # Generate and return the UI (HTML page) from the appropriate template.
-    $template->process("buglist/server-push.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+    $template->process("list/server-push.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
 }
 
 # Connect to the shadow database if this installation is using one to improve
@@ -1565,9 +1564,8 @@ print "\n"; # end HTTP headers
 ################################################################################
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("buglist/$format->{'template'}", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("list/$format->{'template'}", $vars)
+  || ThrowTemplateError($template->error());
 
 
 ################################################################################

@@ -108,7 +108,7 @@ print "Content-type: text/html\n\n";
 
 # Start displaying the response page.
 $vars->{'title'} = "Bug processed";
-$template->process("global/header", $vars)
+$template->process("global/header.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
 
 $vars->{'header_done'} = 1;
@@ -210,7 +210,7 @@ if ((($::FORM{'id'} && $::FORM{'product'} ne $::oldproduct)
         $vars->{'verify_bug_group'} = (Param('usebuggroups') 
                                        && !defined($::FORM{'addtonewgroup'}));
         
-        $template->process("process/verify-new-product.html.tmpl", $vars)
+        $template->process("bug/process/verify-new-product.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;
     }
@@ -332,7 +332,7 @@ sub DuplicateUserConfirm {
     # Confirm whether or not to add the reporter to the cc: list
     # of the original bug (the one this bug is being duped against).
     print "Content-type: text/html\n\n";
-    $template->process("process/confirm-dupe.html.tmpl", $vars)
+    $template->process("bug/process/confirm-duplicate.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
 } # end DuplicateUserConfirm()
@@ -873,7 +873,7 @@ foreach my $id (@idlist) {
         SendSQL("UNLOCK TABLES");
         
         # Warn the user about the mid-air collision and ask them what to do.
-        $template->process("process/mid-air.html.tmpl", $vars)
+        $template->process("bug/process/midair.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
         exit;
     }
@@ -1251,7 +1251,7 @@ foreach my $id (@idlist) {
     
     # Let the user know the bug was changed and who did and didn't
     # receive email about the change.
-    $template->process("process/results.html.tmpl", $vars)
+    $template->process("bug/process/results.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     
     if ($duplicate) {
@@ -1281,7 +1281,7 @@ foreach my $id (@idlist) {
         $vars->{'type'} = "dupe";
         
         # Let the user know a duplication notation was added to the original bug.
-        $template->process("process/results.html.tmpl", $vars)
+        $template->process("bug/process/results.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
     }
 
@@ -1297,7 +1297,7 @@ foreach my $id (@idlist) {
         # Let the user know we checked to see if we should email notice
         # of this change to users with a relationship to the dependent
         # bug and who did and didn't receive email about it.
-        $template->process("process/results.html.tmpl", $vars)
+        $template->process("bug/process/results.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
     }
 
@@ -1316,7 +1316,7 @@ if ($::COOKIE{"BUGLIST"} && $::FORM{'id'}) {
             $vars->{'next_id'} = $next_bug;
             
             # Let the user know we are about to display the next bug in their list.
-            $template->process("process/next-bug.html.tmpl", $vars)
+            $template->process("bug/process/next.html.tmpl", $vars)
               || ThrowTemplateError($template->error());
 
             show_bug("header is already done");
@@ -1327,7 +1327,7 @@ if ($::COOKIE{"BUGLIST"} && $::FORM{'id'}) {
 }
 
 # End the response page.
-$template->process("show/navigate.html.tmpl", $vars)
+$template->process("bug/navigate.html.tmpl", $vars)
   || ThrowTemplateError($template->error());
-$template->process("global/footer", $vars)
+$template->process("global/footer.html.tmpl", $vars)
   || ThrowTemplateError($template->error());

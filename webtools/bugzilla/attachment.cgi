@@ -416,9 +416,8 @@ sub viewall
   print "Content-Type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachment/viewall.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("attachment/show-multiple.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -459,9 +458,8 @@ sub enter
   print "Content-Type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachment/enter.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("attachment/create.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -527,9 +525,8 @@ sub insert
   print "Content-Type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachment/created.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("attachment/created.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -603,9 +600,8 @@ sub edit
   print "Content-Type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachment/edit.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("attachment/edit.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -787,8 +783,6 @@ sub update
   print "Content-Type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachment/updated.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
-
+  $template->process("attachment/updated.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }

@@ -73,9 +73,8 @@ my $useragent = $ENV{HTTP_USER_AGENT};
 if ($useragent =~ m:Mozilla/([1-9][0-9]*):i && $1 >= 5 && $useragent !~ m/compatible/i) {
     print "Content-type: application/vnd.mozilla.xul+xml\n\n";
     # Generate and return the XUL from the appropriate template.
-    $template->process("sidebar/xul.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+    $template->process("sidebar.xul.tmpl", $vars)
+      || ThrowTemplateError($template->error());
 } else {
     DisplayError("sidebar.cgi currently only supports Mozilla based web browsers");
     exit;

@@ -68,8 +68,8 @@ if (defined($login)) {
     
     if (!ValidateNewUser($login)) {
         # Account already exists        
-        $template->process("admin/account_exists.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+        $template->process("account/exists.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
         exit;
     }
     
@@ -77,12 +77,11 @@ if (defined($login)) {
     my $password = InsertNewUser($login, $realname);
     MailPassword($login, $password);
     
-    $template->process("admin/account_created.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error());
+    $template->process("account/created.html.tmpl", $vars)
+      || DisplayError($template->error());
     exit;
 }
 
 # Show the standard "would you like to create an account?" form.
-$template->process("admin/create_account.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("account/create.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

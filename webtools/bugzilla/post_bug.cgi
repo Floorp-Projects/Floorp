@@ -57,7 +57,8 @@ confirm_login();
 my $comment;
 
 $vars->{'form'} = \%::FORM;
-$template->process("entry/comment.txt.tmpl", $vars, \$comment)
+
+$template->process("bug/create/initial-comment.txt.tmpl", $vars, \$comment)
   || ThrowTemplateError($template->error());
 
 ValidateComment($comment);
@@ -80,8 +81,8 @@ if (defined $::FORM{'maketemplate'}) {
     $vars->{'url'} = $::buffer;
     
     print "Content-type: text/html\n\n";
-    $template->process("entry/create-template.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error());
+    $template->process("bug/create/make-template.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
     exit;
 }
 
@@ -301,5 +302,5 @@ $vars->{'bug_id'} = $id;
 $vars->{'mailresults'} = $mailresults;
 
 print "Content-type: text/html\n\n";
-$template->process("entry/post-bug.html.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error());
+$template->process("bug/create/created.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

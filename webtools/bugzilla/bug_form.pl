@@ -67,8 +67,8 @@ sub show_bug {
     my $id = $::FORM{'id'};
     
     if (!defined($id)) {
-      $template->process("show/choose_bug.html.tmpl", $vars)
-        || DisplayError("Template process failed: " . $template->error());
+      $template->process("bug/choose.html.tmpl", $vars)
+        || ThrowTemplateError($template->error());
       exit;
     }
     
@@ -312,9 +312,8 @@ sub show_bug {
     $vars->{'user'} = \%user;
 
     # Generate and return the UI (HTML page) from the appropriate template.
-    $template->process("show/show_bug.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+    $template->process("bug/edit.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
 }
  
 1;

@@ -71,9 +71,8 @@ sub IssueEmailChangeToken {
     $vars->{'emailaddress'} = $old_email . &::Param('emailsuffix');
 
     my $message;
-    $template->process("token/emailchangeold.txt.tmpl", $vars, \$message)
-      || &::DisplayError("Template process failed: " . $template->error())
-      && exit;
+    $template->process("account/email/change-old.txt.tmpl", $vars, \$message)
+      || &::ThrowTemplateError($template->error());
 
     open SENDMAIL, "|/usr/lib/sendmail -t -i";
     print SENDMAIL $message;
@@ -83,9 +82,8 @@ sub IssueEmailChangeToken {
     $vars->{'emailaddress'} = $new_email . &::Param('emailsuffix');
 
     $message = "";
-    $template->process("token/emailchangenew.txt.tmpl", $vars, \$message)
-      || &::DisplayError("Template process failed: " . $template->error())
-      && exit;
+    $template->process("account/email/change-new.txt.tmpl", $vars, \$message)
+      || &::ThrowTemplateError($template->error());
 
     open SENDMAIL, "|/usr/lib/sendmail -t -i";
     print SENDMAIL $message;
@@ -222,9 +220,8 @@ sub Cancel {
     # Notify the user via email about the cancellation.
 
     my $message;
-    $template->process("token/tokencancel.txt.tmpl", $vars, \$message)
-      || &::DisplayError("Template process failed: " . $template->error())
-      && exit;
+    $template->process("account/cancel-token.txt.tmpl", $vars, \$message)
+      || &::ThrowTemplateError($template->error());
 
     open SENDMAIL, "|/usr/lib/sendmail -t -i";
     print SENDMAIL $message;

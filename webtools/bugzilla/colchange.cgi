@@ -119,7 +119,6 @@ $vars->{buffer} = $::buffer;
 
 # Generate and return the UI (HTML page) from the appropriate template.
 print "Content-type: text/html\n\n";
-$template->process("buglist/colchange.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("list/change-columns.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());
 

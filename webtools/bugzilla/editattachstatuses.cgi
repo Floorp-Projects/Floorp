@@ -201,9 +201,8 @@ sub list
   print "Content-type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachstatus/list.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("admin/attachstatus/list.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -223,9 +222,8 @@ sub create
   print "Content-type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachstatus/create.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("admin/attachstatus/create.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -272,9 +270,8 @@ sub edit
   print "Content-type: text/html\n\n";
 
   # Generate and return the UI (HTML page) from the appropriate template.
-  $template->process("attachstatus/edit.atml", $vars)
-    || DisplayError("Template process failed: " . $template->error())
-    && exit;
+  $template->process("admin/attachstatus/edit.html.tmpl", $vars)
+    || ThrowTemplateError($template->error());
 }
 
 
@@ -322,9 +319,8 @@ sub confirmDelete
 
     print "Content-type: text/html\n\n";
     
-    $template->process("attachstatus/delete.atml", $vars)
-      || DisplayError("Template process failed: " . & $template->error())
-      && exit;
+    $template->process("admin/attachstatus/delete.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
   } 
   else {
     deleteStatus();

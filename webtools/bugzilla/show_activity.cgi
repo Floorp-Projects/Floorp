@@ -57,7 +57,6 @@ $vars->{'bug_id'} = $::FORM{'id'};
 
 print "Content-type: text/html\n\n";
 
-$template->process("show/bug-activity.html.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("bug/activity/show.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());
 

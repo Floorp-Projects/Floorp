@@ -69,7 +69,7 @@ if (Param("shutdownhtml") && $0 !~ m:[\\/](do)?editparams.cgi$:) {
     
     # Generate and return an HTML message about the downtime.
     $::template->process("global/message.html.tmpl", $::vars)
-      || DisplayError("Template process failed: " . $::template->error());
+      || ThrowTemplateError($::template->error());
     exit;
 }
 

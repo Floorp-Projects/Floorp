@@ -197,9 +197,8 @@ $vars->{'products'} = \@::legal_product;
 print "Content-type: text/html\n\n";
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("report/duplicates.html.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("reports/duplicates.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());
 
 
 sub days_ago {

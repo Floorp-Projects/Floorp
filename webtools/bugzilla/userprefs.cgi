@@ -409,7 +409,6 @@ SWITCH: for ($current_tab_name) {
 
 # Generate and return the UI (HTML page) from the appropriate template.
 print "Content-type: text/html\n\n";
-$template->process("prefs/userprefs.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("account/prefs/prefs.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());
 

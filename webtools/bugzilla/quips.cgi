@@ -70,6 +70,5 @@ if ($action eq "add") {
 }
 
 print "Content-type: text/html\n\n";
-$template->process("info/quips.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("list/quips.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

@@ -94,9 +94,8 @@ $vars->{'hide_resolved'}  = $hide_resolved;
 $vars->{'canedit'}        = UserInGroup("editbugs");
 
 print "Content-Type: text/html\n\n";
-$template->process("show/dependency-tree.html.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("bug/dependency-tree.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());
 
 ################################################################################
 # Recursive Tree Generation Function                                           #

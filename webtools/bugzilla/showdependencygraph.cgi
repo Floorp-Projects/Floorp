@@ -190,6 +190,5 @@ $vars->{'showsummary'} = $::FORM{'showsummary'};
 
 # Generate and return the UI (HTML page) from the appropriate template.
 print "Content-type: text/html\n\n";
-$template->process("show/dependency-graph.html.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("bug/dependency-graph.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

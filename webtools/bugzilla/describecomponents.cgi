@@ -67,8 +67,8 @@ if (!defined $::FORM{'product'}) {
           "Please specify the product whose components you want described.";
 
         print "Content-type: text/html\n\n";
-        $::template->process("global/choose_product.tmpl", $::vars)
-          || DisplayError("Template process failed: " . $::template->error());
+        $::template->process("global/choose-product.html.tmpl", $::vars)
+          || ThrowTemplateError($::template->error());
         exit;
     }
 
@@ -123,6 +123,6 @@ $::vars->{'product'} = $product;
 $::vars->{'components'} = \@components;
 
 print "Content-type: text/html\n\n";
-$::template->process("info/describe-components.tmpl", $::vars)
-  || DisplayError("Template process failed: " . $::template->error());
+$::template->process("reports/components.html.tmpl", $::vars)
+  || ThrowTemplateError($::template->error());
 

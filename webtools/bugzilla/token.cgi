@@ -178,8 +178,7 @@ sub requestChangePassword {
 
     print "Content-Type: text/html\n\n";
     $template->process("global/message.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+      || ThrowTemplateError($template->error());
 }
 
 sub confirmChangePassword {
@@ -187,9 +186,8 @@ sub confirmChangePassword {
     $vars->{'token'} = $::token;
     
     print "Content-Type: text/html\n\n";
-    $template->process("admin/change-password.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+    $template->process("account/password/set-forgotten-password.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
 }
 
 sub cancelChangePassword {    
@@ -200,8 +198,7 @@ sub cancelChangePassword {
 
     print "Content-Type: text/html\n\n";
     $template->process("global/message.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+      || ThrowTemplateError($template->error());
 }
 
 sub changePassword {
@@ -229,8 +226,7 @@ sub changePassword {
 
     print "Content-Type: text/html\n\n";
     $template->process("global/message.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+      || ThrowTemplateError($template->error());
 }
 
 sub confirmChangeEmail {
@@ -240,9 +236,8 @@ sub confirmChangeEmail {
     $vars->{'title'} = "Confirm Change Email";
     $vars->{'token'} = $::token;
 
-    $template->process("token/confirmemail.html.tmpl", $vars)
-      || &::DisplayError("Template process failed: " . $template->error())
-      && exit;
+    $template->process("account/email/confirm.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
 }
 
 sub changeEmail {
@@ -287,8 +282,7 @@ sub changeEmail {
     $vars->{'message'} = "Your Bugzilla login has been changed.";
 
     $template->process("global/message.html.tmpl", $vars)
-      || &::DisplayError("Template process failed: " . $template->error())
-      && exit;
+      || ThrowTemplateError($template->error());
 }
 
 sub cancelChangeEmail {
@@ -336,7 +330,6 @@ sub cancelChangeEmail {
     $vars->{'title'} = "Cancel Request to Change Email Address";
 
     $template->process("global/message.html.tmpl", $vars)
-      || &::DisplayError("Template process failed: " . $template->error())
-      && exit;
+      || ThrowTemplateError($template->error());
 }
 

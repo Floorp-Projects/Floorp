@@ -54,6 +54,5 @@ $vars->{'keywords'} = \@keywords;
 $vars->{'caneditkeywords'} = UserInGroup("editkeywords");
 
 print "Content-type: text/html\n\n";
-$template->process("info/describe-keywords.html.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("reports/keywords.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

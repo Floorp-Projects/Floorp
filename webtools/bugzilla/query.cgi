@@ -381,6 +381,5 @@ $vars->{'default'} = \%default;
 
 # Generate and return the UI (HTML page) from the appropriate template.
 print "Content-type: text/html\n\n";
-$template->process("query/query.atml", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("search/search.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

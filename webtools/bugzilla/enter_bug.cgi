@@ -86,8 +86,8 @@ if (!defined $::FORM{'product'}) {
                     "First, you must pick a product on which to enter a bug.";
         
         print "Content-type: text/html\n\n";
-        $template->process("global/choose_product.tmpl", $vars)
-          || DisplayError("Template process failed: " . $template->error());
+        $template->process("global/choose-product.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
         exit;        
     }
 
@@ -355,6 +355,6 @@ if ($::usergroupset ne '0') {
 $vars->{'default'} = \%default;
 
 print "Content-type: text/html\n\n";
-$template->process("entry/enter_bug.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error());          
+$template->process("bug/create/create.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());          
 exit;

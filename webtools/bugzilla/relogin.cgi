@@ -69,8 +69,7 @@ delete $::COOKIE{"Bugzilla_login"};
     
     print "Content-Type: text/html\n\n";
     $template->process("global/message.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
+      || ThrowTemplateError($template->error());
 
 exit;
 

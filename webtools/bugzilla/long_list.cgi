@@ -112,6 +112,5 @@ print "Content-Type: text/html\n";
 print "Content-Disposition: inline; filename=$filename\n\n";
 
 # Generate and return the UI (HTML page) from the appropriate template.
-$template->process("show/multiple.tmpl", $vars)
-  || DisplayError("Template process failed: " . $template->error())
-  && exit;
+$template->process("bug/show-multiple.html.tmpl", $vars)
+  || ThrowTemplateError($template->error());

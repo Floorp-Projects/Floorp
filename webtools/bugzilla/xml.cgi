@@ -34,10 +34,9 @@ use vars qw($template $vars);
 
 if (!defined $::FORM{'id'} || !$::FORM{'id'}) {
     print "Content-Type: text/html\n\n";
-    $template->process("show/choose_xml.html.tmpl", $vars)
-      || DisplayError("Template process failed: " . $template->error())
-      && exit;
-  exit;
+    $template->process("bug/choose-xml.html.tmpl", $vars)
+      || ThrowTemplateError($template->error());
+    exit;
 }
 
 quietly_check_login();
