@@ -122,7 +122,8 @@ class nsIDOMNode;
   BOOL mInitialized;
   NSString* mPendingURL;
   NSString* mPendingReferrer;
-
+  BOOL mPendingActivate;
+  
   CHBrowserWrapper* mBrowserView;
 
   BOOL mMoveReentrant;
@@ -156,7 +157,7 @@ class nsIDOMNode;
 -(id)getTabBrowser;
 -(CHBrowserWrapper*)getBrowserWrapper;
 
-- (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer;
+- (void)loadURL:(NSString*)aURLSpec referrer:(NSString*)aReferrer activate:(BOOL)activate;
 - (void)updateLocationFields:(NSString *)locationString;
 - (void)updateToolbarItems;
 - (void)focusURLBar;

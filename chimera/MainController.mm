@@ -178,7 +178,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 {
   BrowserWindowController* browserController = [self getMainWindowBrowserController];
   if (browserController)
-    [browserController newTab:YES];
+    [browserController newTab:NO];
 }
 
 -(IBAction)closeTab:(id)aSender
@@ -224,10 +224,7 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
 
         BrowserWindowController* browserController = [self getMainWindowBrowserController];
         if (browserController)
-        {
-          [browserController loadURL:[url absoluteString] referrer:nil];
-          [[[browserController getBrowserWrapper] getBrowserView] setActive: YES];
-        }
+          [browserController loadURL:[url absoluteString] referrer:nil activate:YES];
         else
           [self openBrowserWindowWithURL:[url absoluteString] andReferrer:nil];
     }
@@ -417,8 +414,8 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
   // side effect of calling GetDocument(). We don't need to do it again.
   if ( [aURL isEqualToString:@"about:blank"] )
     [browser disableLoadPage];
-
-  [browser loadURL: aURL referrer:aReferrer];
+  else
+    [browser loadURL: aURL referrer:aReferrer activate:YES];
   [browser showWindow: self];
   return browser;
 }
