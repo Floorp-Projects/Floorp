@@ -32,7 +32,7 @@ GARBAGE += scrollbars.css
 _DEP_CSS = nativescrollbars.css
 
 export:: $(_DEP_CSS)
-	cp $^ scrollbars.css
+	cp $^ $(srcdir)/scrollbars.css
   
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
