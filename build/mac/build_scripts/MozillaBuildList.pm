@@ -591,7 +591,7 @@ sub BuildClientDist()
 
     #CONTENT
     
-    open(OUTPUT, ">:mozilla:layout:build:gbdate.h") || die "could not open gbdate.h";
+    open(OUTPUT, ">:mozilla:content:build:gbdate.h") || die "could not open gbdate.h";
     my($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime;
     # localtime returns year minus 1900
     $year = $year + 1900;
