@@ -25,7 +25,7 @@ import mozLock;
 
 my $objdir = getcwd;
 
-getopts("d:s:f:avlD:p:");
+getopts("d:s:f:avlD:p:x");
 
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
@@ -79,6 +79,11 @@ if (defined($::opt_p)) {
     $preprocessor = $::opt_p;
 }
 
+my $force_x11 = 0;
+if (defined($::opt_x)) {
+    $force_x11 = 1;
+}
+
 my $defines = "";
 while (@ARGV) {
     $defines = "$defines ".shift(@ARGV);
@@ -97,6 +102,12 @@ my $win32 = ($^O =~ /((MS)?win32)|cygwin|os2/i) ? 1 : 0;
 my $macos = ($^O =~ /MacOS|darwin/i) ? 1 : 0;
 my $unix  = !($win32 || $macos) ? 1 : 0;
 my $vms   = ($^O =~ /VMS/i) ? 1 : 0;
+
+if ($force_x11) {
+    $win32 = 0;
+    $macos = 0;
+    $unix = 1;
+}
 
 sub foreignPlatformFile
 {
