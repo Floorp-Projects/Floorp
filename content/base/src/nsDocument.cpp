@@ -687,8 +687,6 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
     mPrincipal = do_QueryInterface(owner);
   }
 
-  mXMLDeclarationBits = 0;
-
   return rv;
 }
 
@@ -753,6 +751,12 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
     // load group, and it works just fine.
   }
 
+  mLastModified.Truncate();
+  mContentType.Truncate();
+  mContentLanguage.Truncate();
+
+  mXMLDeclarationBits = 0;
+
   return NS_OK;
 }
 
@@ -784,7 +788,7 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     contentType.EndReading(end);
     semicolon = start;
     FindCharInReadable(';', semicolon, end);
-    CopyASCIItoUCS2(Substring(start, semicolon), mContentType);
+    mContentType = Substring(start, semicolon);
   }
 
   RetrieveRelevantHeaders(aChannel);
@@ -819,9 +823,11 @@ NS_IMETHODIMP
 nsDocument::GetLastModified(nsAString& aLastModified)
 {
   if (!mLastModified.IsEmpty()) {
-    aLastModified.Assign(mLastModified);
+    CopyASCIItoUCS2(mLastModified, aLastModified);
   } else {
-    aLastModified.Assign(NS_LITERAL_STRING("January 1, 1970 GMT"));
+    // If we for whatever reason failed to find the last modified time
+    // (or even the current time), fall back to what NS4.x returned.
+    CopyASCIItoUCS2(NS_LITERAL_CSTRING("January 1, 1970 GMT"), aLastModified);
   }
 
   return NS_OK;
@@ -876,7 +882,7 @@ nsDocument::AddPrincipal(nsIPrincipal *aNewPrincipal)
 NS_IMETHODIMP
 nsDocument::GetContentType(nsAString& aContentType)
 {
-  aContentType = mContentType;
+  aContentType = NS_ConvertUTF8toUCS2(mContentType);
 
   return NS_OK;
 }
@@ -884,9 +890,11 @@ nsDocument::GetContentType(nsAString& aContentType)
 NS_IMETHODIMP
 nsDocument::SetContentType(const nsAString& aContentType)
 {
-  NS_ASSERTION(mContentType.IsEmpty() || mContentType.Equals(aContentType),
+  NS_ASSERTION(mContentType.IsEmpty() ||
+               mContentType.Equals(NS_ConvertUCS2toUTF8(aContentType)),
                "Do you really want to change the content-type?");
-  mContentType = aContentType;
+
+  mContentType = NS_ConvertUCS2toUTF8(aContentType);
 
   return NS_OK;
 }
@@ -894,7 +902,7 @@ nsDocument::SetContentType(const nsAString& aContentType)
 NS_IMETHODIMP
 nsDocument::GetContentLanguage(nsAString& aContentLanguage) const
 {
-  aContentLanguage = mContentLanguage;
+  CopyASCIItoUCS2(mContentLanguage, aContentLanguage);
 
   return NS_OK;
 }
@@ -4126,74 +4134,72 @@ void
 nsDocument::RetrieveRelevantHeaders(nsIChannel *aChannel)
 {
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  nsresult rv;
   PRBool have_contentLanguage = PR_FALSE;
+  PRTime modDate = LL_ZERO;
+  nsresult rv;
 
   if (httpChannel) {
-    nsCAutoString header;
-    
     rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("last-modified"),
-                                        header);
- 
-    if (NS_SUCCEEDED(rv)) {
-      CopyASCIItoUCS2(header, mLastModified);
+                                        mLastModified);
+
+    if (NS_FAILED(rv)) {
+      mLastModified.Truncate();
     }
 
     rv = httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Content-Language"),
-                                        header);
+                                        mContentLanguage);
 
     if (NS_SUCCEEDED(rv)) {
-      // XXX what's wrong w/ ASCII?
-      CopyASCIItoUCS2(header, mContentLanguage);
-      
       have_contentLanguage = PR_TRUE;
     }
+  } else {
+    nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aChannel);
+    if (fileChannel) {
+      nsCOMPtr<nsIFile> file;
+      fileChannel->GetFile(getter_AddRefs(file));
+      if (file) {
+        PRTime msecs;
+        rv = file->GetLastModifiedTime(&msecs);
+
+        if (NS_SUCCEEDED(rv)) {
+          PRInt64 intermediateValue;
+          LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
+          LL_MUL(modDate, msecs, intermediateValue);
+        }
+      }
+    }
   }
-  
+
+  if (mLastModified.IsEmpty()) {
+    modDate = PR_Now();
+  }
+
+  if (LL_NE(modDate, LL_ZERO)) {
+    PRExplodedTime prtime;
+    char buf[100];
+
+    PR_ExplodeTime(modDate, PR_LocalTimeParameters, &prtime);
+
+    // Use '%#c' for windows, because '%c' is backward-compatible and
+    // non-y2k with msvc; '%#c' requests that a full year be used in the
+    // result string.  Other OSes just use "%c".
+    PR_FormatTime(buf, sizeof buf,
+#ifdef XP_WIN
+                  "%#c",
+#else
+                  "%c",
+#endif
+                  &prtime);
+    mLastModified.Assign(buf);
+  }
+
   if (!have_contentLanguage) {
     nsCOMPtr<nsIPrefBranch> prefBranch =
       do_GetService(NS_PREFSERVICE_CONTRACTID);
 
     if (prefBranch) {
-      nsXPIDLCString prefLanguage;
-
-      rv = prefBranch->GetCharPref("intl.accept_languages",
-                                   getter_Copies(prefLanguage));
-
-      if (NS_SUCCEEDED(rv)) {
-        CopyASCIItoUCS2(prefLanguage, mContentLanguage);
-      }
-    } 
-  }
-
-  nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aChannel);
-  if (fileChannel) {
-    PRTime modDate, usecs;
-    nsCOMPtr<nsIFile> file;
-    nsresult rv = fileChannel->GetFile(getter_AddRefs(file));
-    if (NS_SUCCEEDED(rv)) {
-      rv = file->GetLastModifiedTime(&modDate);
-      if (NS_SUCCEEDED(rv)) {
-        PRExplodedTime prtime;
-        char buf[100];
-        PRInt64 intermediateValue;
-
-        LL_I2L(intermediateValue, PR_USEC_PER_MSEC);
-        LL_MUL(usecs, modDate, intermediateValue);
-        PR_ExplodeTime(usecs, PR_LocalTimeParameters, &prtime);
-
-        // Use '%#c' for windows, because '%c' is backward-compatible and
-        // non-y2k with msvc; '%#c' requests that a full year be used in the
-        // result string.  Other OSes just use "%c".
-        PR_FormatTime(buf, sizeof buf,
-#ifdef XP_WIN
-                      "%#c",
-#else
-                      "%c",
-#endif
-                      &prtime);
-        mLastModified.AssignWithConversion(buf);
-      }
+      prefBranch->GetCharPref("intl.accept_languages",
+                              getter_Copies(mContentLanguage));
     }
   }
 }
