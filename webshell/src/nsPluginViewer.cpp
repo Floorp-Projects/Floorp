@@ -27,6 +27,8 @@
 #include "nsRepository.h"
 #include "nsWidgetsCID.h"
 #include "nsILinkHandler.h"
+#include "nsIWebShell.h"
+#include "nsIBrowserWindow.h"
 
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
@@ -39,6 +41,8 @@ static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIPluginInstanceOwnerIID, NS_IPLUGININSTANCEOWNER_IID);
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
+static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 
 
 class PluginViewerImpl;
@@ -82,14 +86,11 @@ public:
 
   NS_IMETHOD GetMode(nsPluginMode *aMode);
 
-  NS_IMETHOD GetAttributes(PRUint16& n, const char*const*& names,
-                           const char*const*& values);
-
-  NS_IMETHOD GetAttribute(const char* name, const char* *result);
-
   NS_IMETHOD CreateWidget(void);
 
   NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData);
+
+  NS_IMETHOD ShowStatus(const char *aStatusMsg);
 
   //locals
 
@@ -570,24 +571,6 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetMode(nsPluginMode *aMode)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetAttributes(PRUint16& n, const char*const*& names,
-                                                     const char*const*& values)
-{
-  n = 0;
-  names = nsnull;
-  values = nsnull;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsPluginInstanceOwner :: GetAttribute(const char* name, const char* *result)
-{
-  name = nsnull;
-  result = nsnull;
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsPluginInstanceOwner :: CreateWidget(void)
 {
   PRBool    windowless;
@@ -661,6 +644,62 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTar
   }
   else
     rv = NS_ERROR_FAILURE;
+
+  return rv;
+}
+
+NS_IMETHODIMP nsPluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
+{
+  nsresult  rv = NS_ERROR_FAILURE;
+
+  if (nsnull != mViewer)
+  {
+    nsIContentViewerContainer *cont;
+
+    rv = mViewer->GetContainer(cont);
+
+    if ((NS_OK == rv) && (nsnull != cont))
+    {
+      nsIWebShell *ws;
+
+      rv = cont->QueryInterface(kIWebShellIID, (void **)&ws);
+
+      if (NS_OK == rv)
+      {
+        nsIWebShell *rootWebShell;
+
+        ws->GetRootWebShell(rootWebShell);
+
+        if (nsnull != rootWebShell)
+        {
+          nsIWebShellContainer *rootContainer;
+
+          rv = rootWebShell->GetContainer(rootContainer);
+
+          if (nsnull != rootContainer)
+          {
+            nsIBrowserWindow *browserWindow;
+
+            if (NS_OK == rootContainer->QueryInterface(kIBrowserWindowIID, (void**)&browserWindow))
+            {
+              nsAutoString  msg = nsAutoString(aStatusMsg);
+
+              rv = browserWindow->SetStatus(msg.GetUnicode());
+              NS_RELEASE(browserWindow);
+            }
+
+            NS_RELEASE(rootContainer);
+          }
+
+          NS_RELEASE(rootWebShell);
+        }
+
+        NS_RELEASE(ws);
+      }
+
+      NS_RELEASE(cont);
+    }
+  }
 
   return rv;
 }
