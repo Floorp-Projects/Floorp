@@ -72,7 +72,7 @@ function Startup()
   var tab = window.arguments[0];
   if (tab == "S") {
     element = document.getElementById("signonTab");
-    element.setAttribute("hidden", "true");
+    element.setAttribute("selected", "true");
     element = document.getElementById("panel");
     element.setAttribute("index","0" );
 
