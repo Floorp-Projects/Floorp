@@ -46,7 +46,7 @@
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
-#include "nsISupportsArray.h"
+#include "nsCOMArray.h"
 #include "nsWeakReference.h"
 
 class nsExternalAppHandler;
@@ -147,7 +147,7 @@ protected:
 protected:
   // functions related to the tempory file cleanup service provided by nsExternalHelperAppService
   nsresult ExpungeTemporaryFiles();
-  nsCOMPtr<nsISupportsArray> mTemporaryFilesList;
+  nsCOMArray<nsILocalFile> mTemporaryFilesList;
 };
 
 // this is a small private struct used to help us initialize some

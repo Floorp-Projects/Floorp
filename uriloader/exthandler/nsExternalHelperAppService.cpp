@@ -815,36 +815,23 @@ NS_IMETHODIMP nsExternalHelperAppService::DeleteTemporaryFileOnExit(nsIFile * aT
   localFile->IsFile(&isFile);
   if (!isFile) return NS_OK;
 
-  if (!mTemporaryFilesList)
-    rv = NS_NewISupportsArray(getter_AddRefs(mTemporaryFilesList));
-
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mTemporaryFilesList->AppendElement(localFile);
+  mTemporaryFilesList.AppendObject(localFile);
 
   return NS_OK;
 }
 
 nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
 {
-  if (!mTemporaryFilesList) return NS_OK;
-
-  PRUint32 numEntries = 0;
-  mTemporaryFilesList->Count(&numEntries);
-  nsCOMPtr<nsISupports> element;
-  nsCOMPtr<nsILocalFile> localFile;
-  for (PRUint32 index = 0; index < numEntries; index ++)
+  PRInt32 numEntries = mTemporaryFilesList.Count();
+  nsILocalFile* localFile;
+  for (PRInt32 index = 0; index < numEntries; index++)
   {
-    element = getter_AddRefs(mTemporaryFilesList->ElementAt(index));
-    if (element)
-    {
-      localFile = do_QueryInterface(element);
-      if (localFile)
-        localFile->Remove(PR_FALSE);
-    }
+    localFile = mTemporaryFilesList[index];
+    if (localFile)
+      localFile->Remove(PR_FALSE);
   }
 
-  mTemporaryFilesList->Clear();
+  mTemporaryFilesList.Clear();
 
   return NS_OK;
 }
