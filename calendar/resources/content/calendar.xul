@@ -194,6 +194,11 @@
 </popup>
 
 <popup id="taskitem-context-menu">
+<!--
+   <menuitem label="&calendar.context.modifytask.label;" accesskey="&calendar.context.modifytask.accesskey;" observes="modify_command"/>
+   <menuitem label="&calendar.context.emailtask.label;" accesskey="&calendar.context.emailtask.accesskey;" observes="send_event_command"/>
+   <menuseparator/>
+ -->
    <menuitem label="&calendar.context.deletetask.label;" accesskey="&calendar.context.deletetask.accesskey;" observes="delete_todo_command"/>
 </popup>
 
@@ -286,6 +291,7 @@
 	             <splitter class="tree-splitter"/>
 	             <treecol id="unifinder-todo-tree-col-duedate"
 	                persist="hidden ordinal width" 
+	                hidden="true"
 	                flex="1" label="&calendar.unifinder.tree.duedate.label;"/>
 	             <splitter class="tree-splitter"/>
 	             <treecol id="unifinder-todo-tree-col-completeddate"
@@ -307,6 +313,7 @@
                     <treechildren onmousemove="changeToolTipTextForToDo( event )" 
                        onclick="unifinderClickToDo( event )" 
                        ondblclick="unifinderDoubleClickToDo( event )"
+                       onmousedown="unifinderMouseDownToDo( event )"
                        context="taskitem-context-menu">
                     </treechildren>
 	       </tree>
