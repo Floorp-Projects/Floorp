@@ -20,11 +20,8 @@
 #define nsFileTransportService_h___
 
 #include "nsIFileTransportService.h"
-
-class nsISupportsArray;
-class nsIRunnable;
-class nsFileChannel;
-class nsIThreadPool;
+#include "nsIThreadPool.h"
+#include "nsISupportsArray.h"
 
 #define NS_FILE_TRANSPORT_WORKER_COUNT  1//4
 
