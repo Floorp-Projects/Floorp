@@ -59,7 +59,7 @@ LLIBS =                      \
 OBJS = \
     .\$(OBJDIR)\nsprefmigration.obj        \
     .\$(OBJDIR)\nsprefmigrationfactory.obj \
-	.\$(OBJDIR)\nsPrefMigrationProgressDialog.obj \
+	  .\$(OBJDIR)\nsPMProgressDlg.obj \
     $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
