@@ -331,7 +331,8 @@
           <!-- type attribute is used by frame construction to locate iframes
                intended to hold (html) content -->
           <browser context="helpContextMenu" type="content-primary" id="help-content"
-              src="about:blank" flex="1"/>
+              src="about:blank" flex="1" onclick="return contentClick(event);"/>
+          <browser type="content" id="help-external" collapsed="true"/>
         </hbox>
       </vbox>
     </hbox>

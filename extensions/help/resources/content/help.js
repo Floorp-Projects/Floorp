@@ -41,6 +41,7 @@
 
 //-------- global variables
 var helpBrowser;
+var helpExternal;
 var helpSearchPanel;
 var emptySearch;
 var emptySearchText
@@ -107,6 +108,31 @@ function displayTopic(topic) {
   loadURI(uri);
 }
 
+var helpContentListener = {
+  onStartURIOpen: function(aURI) {
+    return false;
+  },
+  doContent: function(aContentType, aIsContentPreferred, aRequest, aContentHandler) {
+    throw Components.results.NS_ERROR_UNEXPECTED;
+  },
+  isPreferred: function(aContentType, aDesiredContentType) {
+    return false;
+  },
+  canHandleContent: function(aContentType, aIsContentPreferred, aDesiredContentType) {
+    return false;
+  },
+  loadCookie: null,
+  parentContentListener: null,
+  QueryInterface: function (aIID) {
+    if (aIID.equals(Components.interfaces.nsIURIContentListener) ||
+        aIID.equals(Components.interfaces.nsISupportsWeakReference) ||
+        aIID.equals(Components.interfaces.nsISupports))
+      return this;
+    Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
+  }
+};
+
 // Initialize the Help window
 function init() {
   //cache panel references.
@@ -115,6 +141,8 @@ function init() {
   helpIndexPanel = document.getElementById("help-index-panel");
   helpGlossaryPanel = document.getElementById("help-glossary-panel");
   helpBrowser = document.getElementById("help-content");
+  helpExternal = document.getElementById("help-external");
+  helpExternal.docShell.parentURIContentListener = helpContentListener;
 
   // Get the help content pack, base URL, and help topic
   var helpTopic = defaultTopic;
@@ -128,22 +156,35 @@ function init() {
 
   displayTopic(helpTopic);
 
-  // Initalize History.
-  var sessionHistory =  Components.classes["@mozilla.org/browser/shistory;1"]
-                                  .createInstance(Components.interfaces.nsISHistory);
-
   window.XULBrowserWindow = new nsHelpStatusHandler();
 
   //Start the status handler.
   window.XULBrowserWindow.init();
 
   // Hook up UI through Progress Listener
-  const interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-  const webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
-  webProgress.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  helpBrowser.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
+  helpExternal.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
   //Always show the Table of Contents sidebar at startup.
   showPanel('help-toc');
+}
+
+function contentClick(event) {
+  // is this a left click on a link?
+  if (event.shiftKey || event.ctrlKey || event.altKey || event.metaKey ||
+      event.button != 0 || !(event.target instanceof HTMLAnchorElement))
+    return true;
+
+  // is this an internal link?
+  var href = event.target.href;
+  if (href.lastIndexOf("chrome:", 0) == 0)
+    return true;
+
+  const loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_IS_LINK;
+  try {
+    helpExternal.webNavigation.loadURI(href, loadFlags, null, null, null);
+  } catch (e) {}
+  return false;
 }
 
 function loadHelpRDF() {
