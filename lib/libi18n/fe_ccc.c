@@ -352,6 +352,7 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
                 {CS_VIET_VISCII, CS_VIET_VISCII, 0, (CCCFunc)0, 0},
                 {CS_VIET_VPS,    CS_VIET_VPS,    0, (CCCFunc)0, 0},
                 {CS_VIET_TCVN,   CS_VIET_TCVN,   0, (CCCFunc)0, 0},
+                {CS_VIET_VNI,   CS_VIET_VNI,   0, (CCCFunc)0, 0},
  
                 {CS_VIET_VPS,    CS_VIET_VISCII, 0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
                 {CS_VIET_TCVN,   CS_VIET_VISCII, 0, (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
@@ -371,6 +372,11 @@ MODULE_PRIVATE cscvt_t		cscvt_tbl[] = {
                 {CS_VIET_TCVN,   CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_viqr,        INTL_CHARLEN_SINGLEBYTE},
                 {CS_VIET_VPS,    CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_viqr,        INTL_CHARLEN_SINGLEBYTE},
                 {CS_VIET_VNI,    CS_VIET_VIQR,   0, (CCCFunc)viet_any_2_viqr,        INTL_CHARLEN_SINGLEBYTE},
+ 
+                {CS_VIET_VISCII, CS_VIET_VNI,    0, (CCCFunc)viet_any_2_vni,        INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_TCVN,   CS_VIET_VNI,    0, (CCCFunc)viet_any_2_vni,        INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VPS,    CS_VIET_VNI,    0, (CCCFunc)viet_any_2_vni,        INTL_CHARLEN_SINGLEBYTE},
+                {CS_VIET_VNI,    CS_VIET_VNI,    0, (CCCFunc)viet_any_2_vni,        INTL_CHARLEN_SINGLEBYTE},
  
                 {CS_VIET_VIQR,   CS_UTF8,   0,      (CCCFunc)viet_viqr_2_any,        INTL_CHARLEN_SINGLEBYTE},
                 {CS_VIET_VISCII, CS_UTF8,   0,      (CCCFunc)mz_AnyToAnyThroughUCS2, INTL_CHARLEN_SINGLEBYTE},
@@ -972,6 +978,7 @@ PUBLIC int16 INTL_DocToWinCharSetID(int16 csid)
         if (! ((def_doccsid == CS_VIET_VISCII) ||
                (def_doccsid == CS_VIET_VPS) ||
                (def_doccsid == CS_VIET_TCVN) ||
+               (def_doccsid == CS_VIET_VNI) ||
                (def_doccsid == CS_VIET_VIQR)
            )) {
                 def_doccsid = 0;
