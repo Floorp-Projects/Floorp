@@ -294,7 +294,7 @@ nsXMLContentSerializer::AppendDoctype(nsIDOMDocumentType *aDoctype,
   return NS_OK;
 }
 
-#define kXMLNS NS_LITERAL_STRING("xmlns")
+#define kXMLNS "xmlns"
 
 nsresult
 nsXMLContentSerializer::PushNameSpaceDecl(const nsAString& aPrefix,
@@ -337,7 +337,7 @@ PRBool
 nsXMLContentSerializer::ConfirmPrefix(nsAString& aPrefix,
                                       const nsAString& aURI)
 {
-  if (aPrefix.Equals(kXMLNS)) {
+  if (aPrefix.EqualsLiteral(kXMLNS)) {
     return PR_FALSE;
   }
   if (aURI.IsEmpty()) {
@@ -480,7 +480,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
 
   nsAutoString tagPrefix, tagLocalName, tagNamespaceURI;
   nsAutoString xmlnsStr;
-  xmlnsStr.Assign(kXMLNS);
+  xmlnsStr.AssignLiteral(kXMLNS);
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(aElement));
   if (!content) return NS_ERROR_FAILURE;

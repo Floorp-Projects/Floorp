@@ -384,13 +384,13 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
     {
         // Going back. XXX Get string from a resource file
         uriAStr.AppendLiteral("Going back to url:");
-        uriAStr.Append(NS_ConvertUTF8toUCS2(uriCStr));
+        AppendUTF8toUTF16(uriCStr, uriAStr);
     }
     else if (!(nsCRT::strcmp(operation, "forward")))
     {
         // Going forward. XXX Get string from a resource file
         uriAStr.AppendLiteral("Going forward to url:");
-        uriAStr.Append(NS_ConvertUTF8toUCS2(uriCStr));
+        AppendUTF8toUTF16(uriCStr, uriAStr);
     }
     else if (!(nsCRT::strcmp(operation, "reload")))
     {
@@ -412,12 +412,12 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
         {
             uriAStr.Append(NS_LITERAL_STRING("Reloading url, (normal):"));
         }
-        uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+        AppendUTF8toUTF16(uriCStr, uriAStr);
     }
     else if (!(nsCRT::strcmp(operation, "add")))
     {
         // Adding new entry. XXX Get string from a resource file
-        uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+        AppendUTF8toUTF16(uriCStr, uriAStr);
         uriAStr.AppendLiteral(" added to session History");
     }
     else if (!(nsCRT::strcmp(operation, "goto")))
@@ -426,7 +426,7 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
         uriAStr.AppendLiteral("Going to HistoryIndex:");
         uriAStr.AppendInt(info1);
         uriAStr.AppendLiteral(" Url:");
-        uriAStr.Append(NS_ConvertASCIItoUCS2(uriCStr));
+        AppendUTF8toUTF16(uriCStr, uriAStr);
     }
     else if (!(nsCRT::strcmp(operation, "purge")))
     {

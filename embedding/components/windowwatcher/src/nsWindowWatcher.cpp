@@ -502,7 +502,7 @@ nsWindowWatcher::OpenWindowJS(nsIDOMWindow *aParent,
 
   nameSpecified = PR_FALSE;
   if (aName) {
-    name.Assign(NS_ConvertUTF8toUCS2(aName));
+    CopyUTF8toUTF16(aName, name);
     CheckWindowName(name);
     nameSpecified = PR_TRUE;
   }

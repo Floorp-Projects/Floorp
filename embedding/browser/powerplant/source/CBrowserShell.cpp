@@ -564,13 +564,13 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
                 nsAutoString temp;
                 rv = mContextMenuInfo->GetAssociatedLink(temp);
                 ThrowIfError_(rv);
-                nsCAutoString urlSpec = NS_ConvertUCS2toUTF8(temp);
+                NS_ConvertUTF16toUTF8 urlSpec(temp);
 
                 if (inCommand == cmd_OpenLinkInNewWindow) {
                     nsCAutoString referrer;
                     rv = GetFocusedWindowURL(temp);
                     if (NS_SUCCEEDED(rv))
-                        referrer = NS_ConvertUCS2toUTF8(temp);
+                        AppendUTF16toUTF8(temp, referrer);
                     PostOpenURLEvent(urlSpec, referrer);
                 }
                 else

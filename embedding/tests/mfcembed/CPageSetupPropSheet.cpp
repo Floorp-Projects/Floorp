@@ -144,30 +144,24 @@ void CPageSetupPropSheet::SetPrintSettingsValues(nsIPrintSettings* aPrintSetting
     aPrintSettings->GetPrintBGImages(&boolVal);
     m_FormatOptionTab.m_BGImages = boolVal == PR_TRUE;
 
-    PRUnichar* uStr;
-    aPrintSettings->GetHeaderStrLeft(&uStr);
-		m_MarginHeaderFooterTab.m_HeaderLeftText = NS_LossyConvertUCS2toASCII(uStr).get();
-    if (uStr != nsnull) nsMemory::Free(uStr);
+    nsXPIDLString uStr;
+    aPrintSettings->GetHeaderStrLeft(getter_Copies(uStr));
+    LossyCopyUTF16toASCII(uStr, m_MarginHeaderFooterTab.m_HeaderLeftText);
 
-    aPrintSettings->GetHeaderStrCenter(&uStr);
-		m_MarginHeaderFooterTab.m_HeaderCenterText = NS_LossyConvertUCS2toASCII(uStr).get();
-    if (uStr != nsnull) nsMemory::Free(uStr);
+    aPrintSettings->GetHeaderStrCenter(getter_Copies(uStr));
+    LossyCopyUTF16toASCII(uStr, m_MarginHeaderFooterTab.m_HeaderCenterText);
 
-    aPrintSettings->GetHeaderStrRight(&uStr);
-		m_MarginHeaderFooterTab.m_HeaderRightText = NS_LossyConvertUCS2toASCII(uStr).get();
-    if (uStr != nsnull) nsMemory::Free(uStr);
+    aPrintSettings->GetHeaderStrRight(getter_Copies(uStr));
+    LossyCopyUTF16toASCII(uStr, m_MarginHeaderFooterTab.m_HeaderRightText);
 
-    aPrintSettings->GetFooterStrLeft(&uStr);
-		m_MarginHeaderFooterTab.m_FooterLeftText = NS_LossyConvertUCS2toASCII(uStr).get();
-    if (uStr != nsnull) nsMemory::Free(uStr);
+    aPrintSettings->GetFooterStrLeft(getter_Copies(uStr));
+    LossyCopyUTF16toASCII(uStr, m_MarginHeaderFooterTab.m_FooterLeftText);
 
-    aPrintSettings->GetFooterStrCenter(&uStr);
-		m_MarginHeaderFooterTab.m_FooterCenterText = NS_LossyConvertUCS2toASCII(uStr).get();
-    if (uStr != nsnull) nsMemory::Free(uStr);
+    aPrintSettings->GetFooterStrCenter(getter_Copies(uStr));
+    LossyCopyUTF16toASCII(uStr, m_MarginHeaderFooterTab.m_FooterCenterText);
 
-    aPrintSettings->GetFooterStrRight(&uStr);
-		m_MarginHeaderFooterTab.m_FooterRightText = NS_LossyConvertUCS2toASCII(uStr).get();
-    if (uStr != nsnull) nsMemory::Free(uStr);
+    aPrintSettings->GetFooterStrRight(getter_Copies(uStr));
+    LossyCopyUTF16toASCII(uStr, m_MarginHeaderFooterTab.m_FooterRightText);
   }
 }
 

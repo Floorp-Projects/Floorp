@@ -787,9 +787,8 @@ LRESULT CMozillaBrowser::OnViewSource(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
     nsCAutoString aURI;
     uri->GetSpec(aURI);
 
-    nsAutoString strURI;
-    strURI.AssignLiteral("view-source:");
-    strURI.Append(NS_ConvertUTF8toUCS2(aURI));
+    nsAutoString strURI(NS_LITERAL_STRING("view-source:"));
+    AppendUTF8toUTF16(aURI, strURI);
 
     // Ask the client to create a window to view the source in
     CIPtr(IDispatch) spDispNew;

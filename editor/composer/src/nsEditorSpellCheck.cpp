@@ -180,7 +180,7 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, PRBool aEnableSelection
       nsCAutoString utf8DictName;
       rv = packageRegistry->GetSelectedLocale(NS_LITERAL_CSTRING("editor"),
                                               utf8DictName);
-      CopyUTF8toUTF16(utf8DictName, dictName);
+      AppendUTF8toUTF16(utf8DictName, dictName);
     }
   }
 
