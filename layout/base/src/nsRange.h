@@ -164,9 +164,16 @@ PRBool IsNodeIntersectsRange(nsIContent* aNode, nsIDOMRange* aRange);
 
 
 /*************************************************************************************
- *  Utility routine to detect if a content node is completely contained in a range
+ *  Utility routine to detect if a content node starts before a range and/or 
+ *  ends after a range.  If neither it is contained inside the range.
+ *  
+ *  XXX - callers responsibility to ensure node in same doc as range!
+ *
  ************************************************************************************/
-PRBool IsNodeInsideRange(nsIContent* aNode, nsIDOMRange* aRange);
+nsresult CompareNodeToRange(nsIContent* aNode, 
+                        nsIDOMRange* aRange,
+                        PRBool *outNodeBefore,
+                        PRBool *outNodeAfter);
 
 
 /*************************************************************************************
