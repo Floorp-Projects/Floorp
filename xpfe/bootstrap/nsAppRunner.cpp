@@ -338,14 +338,17 @@ static void DumpArbitraryHelp()
 }
 
 static
-nsresult LaunchApplication(const char *contractID, PRInt32 height, PRInt32 width)
+nsresult LaunchApplication(const char *aParam, PRInt32 height, PRInt32 width)
 {
   nsresult rv = NS_OK;
 
-  nsCOMPtr <nsICmdLineHandler> handler(do_GetService(contractID, &rv));
+  nsCOMPtr <nsICmdLineService> cmdLine =
+    do_GetService("@mozilla.org/appshell/commandLineService;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
-  if (!handler) return NS_ERROR_FAILURE;
+  nsCOMPtr <nsICmdLineHandler> handler;
+  rv = cmdLine->GetHandlerForParam(aParam, getter_AddRefs(handler));
+  if (NS_FAILED(rv)) return rv;
 
   nsXPIDLCString chromeUrlForTask;
   rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
@@ -369,15 +372,21 @@ nsresult LaunchApplication(const char *contractID, PRInt32 height, PRInt32 width
 static nsresult
 LaunchApplicationWithArgs(const char *commandLineArg,
                           nsICmdLineService *cmdLineArgs,
-                          const char *contractID,
+                          const char *aParam,
                           PRInt32 height, PRInt32 width)
 {
-  if (!contractID || !commandLineArg || !cmdLineArgs)
-    return NS_ERROR_FAILURE;
+  NS_ENSURE_ARG(commandLineArg);
+  NS_ENSURE_ARG(cmdLineArgs);
+  NS_ENSURE_ARG(aParam);
 
   nsresult rv;
+  
+  nsCOMPtr<nsICmdLineService> cmdLine =
+    do_GetService("@mozilla.org/appshell/commandLineService;1",&rv);
+  if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr <nsICmdLineHandler> handler(do_GetService(contractID, &rv));
+  nsCOMPtr <nsICmdLineHandler> handler;
+  rv = cmdLine->GetHandlerForParam(aParam, getter_AddRefs(handler));
   if (NS_FAILED(rv)) return rv;
 
   if (!handler) return NS_ERROR_FAILURE;
@@ -481,14 +490,13 @@ void startupPrefEnumerationFunction(const char *prefName, void *data)
   if (PL_strlen(prefName) <= prefixLen) return;
 
   if (prefValue) {
-    // this is the contractid prefix that all the command line handlers register
-    nsCAutoString contractID("@mozilla.org/commandlinehandler/general-startup;1?type=");
-    contractID += (prefName + prefixLen);
+    // skip past the "general.startup." part of the string
+    const char *param = prefName + prefixLen;
 
 #ifdef DEBUG_CMD_LINE
-    printf("contractid = %s\n", contractID.get());
+    printf("cmd line parameter = %s\n", param);
 #endif /* DEBUG_CMD_LINE */
-    rv = LaunchApplication(contractID.get(), closure->height, closure->width);
+    rv = LaunchApplication(param, closure->height, closure->width);
   }
   return;
 }
@@ -560,7 +568,6 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
       printf("XXX argv[%d] = %s\n",i,argv[i]);
 #endif /* DEBUG_CMD_LINE */
       if (IsStartupCommand(argv[i])) {
-        nsCAutoString contractID("@mozilla.org/commandlinehandler/general-startup;1?type=");
 
         // skip over the - (or / on windows)
         char *command = argv[i] + 1;
@@ -570,9 +577,11 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
           command = argv[i] + 2;
         }
 #endif /* XP_UNIX */
-        contractID += (const char *)command;
+
         // this can fail, as someone could do -foo, where -foo is not handled
-        rv = LaunchApplicationWithArgs((const char *)(argv[i]), cmdLineArgs, contractID.get(), height, width);
+        rv = LaunchApplicationWithArgs((const char *)(argv[i]),
+                                       cmdLineArgs, command,
+                                       height, width);
       }
     }
   }
