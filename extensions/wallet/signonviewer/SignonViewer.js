@@ -149,15 +149,27 @@ var signonReloadDisplay = {
     if (topic == "signonChanged") {
       if (state == "signons") {
         signons.length = 0;
+        if (lastSignonSortColumn == "host") {
+          lastSignonSortAscending = !lastSignonSortAscending; // prevents sort from being reversed
+        }
         LoadSignons();
       } else if (state == "rejects") {
         rejects.length = 0;
+        if (lastRejectSortColumn == "host") {
+          lastRejectSortAscending = !lastRejectSortAscending; // prevents sort from being reversed
+        }
         LoadRejects();
       } else if (state == "nocaptures") {
         nocaptures.length = 0;
+        if (lastNocaptureSortColumn == "host") {
+          lastNocaptureSortAscending = !lastNocaptureSortAscending; // prevents sort from being reversed
+        }
         LoadNocapture();
       } else if (state == "nopreviews") {
         nopreviews.length = 0;
+        if (lastNopreviewSortColumn == "host") {
+          lastNopreviewSortAscending = !lastNopreviewSortAscending; // prevents sort from being reversed
+        }
         LoadNopreview();
       }
     } else if (topic == "signonSelectUser") {

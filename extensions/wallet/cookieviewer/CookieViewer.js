@@ -133,9 +133,15 @@ var cookieReloadDisplay = {
     if (topic == "cookieChanged") {
       if (state == "cookies") {
         cookies.length = 0;
+        if (lastCookieSortColumn == "rawHost") {
+          lastCookieSortAscending = !lastCookieSortAscending; // prevents sort from being reversed
+        }
         loadCookies();
       } else if (state == "permissions") {
         permissions.length = 0;
+        if (lastPermissionSortColumn == "rawHost") {
+          lastPermissionSortAscending = !lastPermissionSortAscending; // prevents sort from being reversed
+        }
         loadPermissions();
       }
     }
