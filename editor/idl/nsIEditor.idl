@@ -155,6 +155,20 @@ interface nsIEditor  : nsISupports
   /** Sets the current 'Save' document character set */
   void SetDocumentCharacterSet(in DOMString characterSet);
 
+  /** to be used ONLY when we need to override the doc's modification state (such as when it's saved)
+    */
+  void ResetModificationCount();
+
+  /** Gets the modification count of the document we are editing. Zero means unchanged.
+    * @return the modification count of the document being edited. Zero means unchanged.
+    */
+  long GetModificationCount();
+
+  /** called each time we modify the document. Increments the modification count of the document.
+    * @param  aModCount  the number of modifications to increase or decrease count by
+    */
+  void IncrementModificationCount(in long aModCount);
+  
   /** Save document to a file
    *       Note: No UI is used
    *  @param aFileSpec

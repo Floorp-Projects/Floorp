@@ -39,17 +39,13 @@
 
 #include "pratom.h"
 
-#include "nsVoidArray.h"
-
 #include "nsIDOMDocument.h"
 #include "nsIPref.h"
-#include "nsILocale.h"
 
 #include "nsIDOMText.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMAttr.h"
 #include "nsIDOMNode.h"
-#include "nsIDOMComment.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
@@ -67,34 +63,25 @@
 #include "nsISelectionController.h"
 #include "nsIEnumerator.h"
 #include "nsIAtom.h"
-#include "nsISupportsArray.h"
 #include "nsICaret.h"
 #include "nsIStyleContext.h"
 #include "nsIEditActionListener.h"
 #include "nsIEditorObserver.h"
 #include "nsIKBStateControl.h"
 #include "nsIWidget.h"
-#include "nsIScrollbar.h"
 #include "nsIPlaintextEditor.h"
 #include "nsGUIEvent.h"
 
 #include "nsIFrame.h"  // Needed by IME code
 
-#include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
-#include "nsIHTMLContentContainer.h"
-#include "nsIStyleSet.h"
-#include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
-#include "nsIStringStream.h"
 #include "nsITextContent.h"
 
-#include "nsNetUtil.h"
-
 #include "nsIContent.h"
-#include "nsIContentIterator.h"
 #include "nsIDocumentEncoder.h"
 #include "nsLayoutCID.h"
+#include "nsIServiceManagerUtils.h"
 
 // transactions the editor knows how to build
 #include "TransactionFactory.h"
@@ -119,7 +106,6 @@
 
 // #define HACK_FORCE_REDRAW 1
 
-#include "nsEditorCID.h"
 #include "nsEditor.h"
 #include "nsEditorUtils.h"
 
@@ -353,7 +339,7 @@ nsEditor::PostCreate()
 {
   // nuke the modification count, so the doc appears unmodified
   // do this before we notify listeners
-  ResetDocModCount();
+  ResetModificationCount();
   
   // update the UI with our state
   NotifyDocumentListeners(eDocumentCreated);
@@ -821,7 +807,7 @@ NS_IMETHODIMP nsEditor::BeginningOfDocument()
   if (NS_SUCCEEDED(result) && selection)
   {
     nsCOMPtr<nsIDOMNodeList> nodeList;
-    nsAutoString bodyTag; bodyTag.AssignWithConversion("body");
+    nsAutoString bodyTag(NS_LITERAL_STRING("body"));
     nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
     if (!doc) return NS_ERROR_NOT_INITIALIZED;
     result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
@@ -902,16 +888,9 @@ nsEditor::GetDocumentModified(PRBool *outDocModified)
 {
   if (!outDocModified)
     return NS_ERROR_NULL_POINTER;
-  
-  nsCOMPtr<nsIDOMDocument>  theDoc;
-  nsresult  rv = GetDocument(getter_AddRefs(theDoc));
-  if (NS_FAILED(rv)) return rv;
-  
-  nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(theDoc, &rv);
-  if (NS_FAILED(rv)) return rv;
 
   PRInt32  modCount = 0;
-  diskDoc->GetModificationCount(&modCount);
+  GetModificationCount(&modCount);
 
   *outDocModified = (modCount != 0);
   return NS_OK;
@@ -1819,7 +1798,7 @@ nsEditor::DebugDumpContent()
 #ifdef DEBUG
   nsCOMPtr<nsIContent>content;
   nsCOMPtr<nsIDOMNodeList>nodeList;
-  nsAutoString bodyTag; bodyTag.AssignWithConversion("body");
+  nsAutoString bodyTag(NS_LITERAL_STRING("body"));
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
   doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
@@ -2126,7 +2105,7 @@ nsEditor::GetRootElement(nsIDOMElement **aBodyElement)
     return NS_ERROR_NOT_INITIALIZED;
 
   nsCOMPtr<nsIDOMNodeList>nodeList; 
-  nsAutoString bodyTag; bodyTag.AssignWithConversion("body"); 
+  nsAutoString bodyTag(NS_LITERAL_STRING("body")); 
 
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;
@@ -2312,7 +2291,7 @@ nsresult nsEditor::GetTextNodeTag(nsAWritableString& aOutString)
   {
     if ( (gTextNodeTag = new nsString) == 0 )
       return NS_ERROR_OUT_OF_MEMORY;
-    gTextNodeTag->AssignWithConversion("special text node tag");
+    gTextNodeTag->Assign(NS_LITERAL_STRING("special text node tag"));
   }
   aOutString = *gTextNodeTag;
   return NS_OK;
@@ -3559,7 +3538,7 @@ nsEditor::TagCanContain(const nsAReadableString &aParentTag, nsIDOMNode* aChild)
   
   if (IsTextNode(aChild)) 
   {
-    childStringTag.AssignWithConversion("__moz_text");
+    childStringTag.Assign(NS_LITERAL_STRING("__moz_text"));
   }
   else
   {
@@ -3746,48 +3725,35 @@ nsEditor::CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount)
 //END nsEditor static utility methods
 
 
-NS_IMETHODIMP nsEditor::IncDocModCount(PRInt32 inNumMods)
+NS_IMETHODIMP nsEditor::IncrementModificationCount(PRInt32 inNumMods)
 {
-  if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
-  
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
-  if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
-  if (diskDoc)
-    diskDoc->IncrementModificationCount(inNumMods);
+  PRUint32 oldModCount = mModCount;
 
-  NotifyDocumentListeners(eDocumentStateChanged);
+  mModCount += inNumMods;
+
+  if ((oldModCount == 0 && mModCount != 0)
+   || (oldModCount != 0 && mModCount == 0))
+    NotifyDocumentListeners(eDocumentStateChanged);
   return NS_OK;
 }
 
 
-NS_IMETHODIMP nsEditor::GetDocModCount(PRInt32 &outModCount)
+NS_IMETHODIMP nsEditor::GetModificationCount(PRInt32 *outModCount)
 {
-  if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
-
-  outModCount = 0;
-  
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
-  if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
-  if (diskDoc)
-    diskDoc->GetModificationCount(&outModCount);
-
+  NS_ENSURE_ARG_POINTER(outModCount);
+  *outModCount = mModCount;
   return NS_OK;
 }
 
 
-NS_IMETHODIMP nsEditor::ResetDocModCount()
+NS_IMETHODIMP nsEditor::ResetModificationCount()
 {
-  if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
-  
-  nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
-  if (!doc) return NS_ERROR_NOT_INITIALIZED;
-  nsCOMPtr<nsIDiskDocument>  diskDoc = do_QueryInterface(doc);
-  if (diskDoc)
-    diskDoc->ResetModificationCount();
+  PRBool doNotify = (mModCount != 0);
 
-  NotifyDocumentListeners(eDocumentStateChanged);
+  mModCount = 0;
+
+  if (doNotify)
+    NotifyDocumentListeners(eDocumentStateChanged);
   return NS_OK;
 }
 
@@ -4656,11 +4622,11 @@ nsEditor::DoAfterDoTransaction(nsITransaction *aTxn)
     // but we can't let a do take it back to zero. So we flip it up to
     // a +ve number.
     PRInt32 modCount;
-    GetDocModCount(modCount);
+    GetModificationCount(&modCount);
     if (modCount < 0)
       modCount = -modCount;
         
-    rv = IncDocModCount(1);    // don't count transient transactions
+    rv = IncrementModificationCount(1);    // don't count transient transactions
   }
   
   return rv;
@@ -4672,7 +4638,7 @@ nsEditor::DoAfterUndoTransaction()
 {
   nsresult rv = NS_OK;
 
-  rv = IncDocModCount(-1);    // all undoable transactions are non-transient
+  rv = IncrementModificationCount(-1);    // all undoable transactions are non-transient
 
   return rv;
 }
@@ -4680,11 +4646,7 @@ nsEditor::DoAfterUndoTransaction()
 NS_IMETHODIMP 
 nsEditor::DoAfterRedoTransaction()
 {
-  nsresult rv = NS_OK;
-
-  rv = IncDocModCount(1);    // all redoable transactions are non-transient
-
-  return rv;
+  return IncrementModificationCount(1);    // all redoable transactions are non-transient
 }
 
 NS_IMETHODIMP 
