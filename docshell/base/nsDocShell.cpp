@@ -359,16 +359,6 @@ NS_IMETHODIMP nsDocShell::StopLoad()
 }
 
 
-NS_IMETHODIMP nsDocShell::GetCurrentURI(nsIURI** aURI)
-{
-   NS_ENSURE_ARG_POINTER(aURI);
-   
-   *aURI = mCurrentURI;
-   NS_IF_ADDREF(*aURI);
-
-   return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsDocShell::GetDocLoaderObserver(nsIDocumentLoaderObserver * *aDocLoaderObserver)
 {
@@ -1468,24 +1458,13 @@ NS_IMETHODIMP nsDocShell::GetDocument(nsIDOMDocument** aDocument)
 
   return mContentViewer->GetDOMDocument(aDocument);
 }
-	
-NS_IMETHODIMP nsDocShell::GetCurrentURI(PRUnichar** aCurrentURI)
+
+NS_IMETHODIMP nsDocShell::GetCurrentURI(nsIURI** aURI)
 {
-   NS_ENSURE_ARG_POINTER(aCurrentURI);
+   NS_ENSURE_ARG_POINTER(aURI);
    
-   if(!mCurrentURI)
-      {
-      *aCurrentURI = nsnull;
-      return NS_OK;
-      }
-
-   char* spec;
-   NS_ENSURE_SUCCESS(mCurrentURI->GetSpec(&spec), NS_ERROR_FAILURE);
-
-   *aCurrentURI = NS_ConvertASCIItoUCS2(spec).ToNewUnicode();
-
-   if(spec)
-      nsCRT::free(spec);
+   *aURI = mCurrentURI;
+   NS_IF_ADDREF(*aURI);
 
    return NS_OK;
 }
