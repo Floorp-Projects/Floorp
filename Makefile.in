@@ -233,7 +233,7 @@ endif
 tier_9_dirs	+= l10n
 
 ifdef MOZ_PHOENIX
-tier_9_dirs	+= toolkit browser
+tier_9_dirs	+= toolkit
 endif
 
 #
@@ -264,7 +264,11 @@ ifneq (,$(MOZ_STATIC_COMPONENTS)$(MOZ_META_COMPONENTS))
 tier_99_dirs   += modules/staticmod
 endif
 
+ifdef MOZ_PHOENIX
+tier_99_dirs	+= browser
+else
 tier_99_dirs	+= xpfe/bootstrap
+endif
 
 ifdef MOZ_ENABLE_GTK
 tier_99_dirs	+= embedding/browser/gtk/tests
