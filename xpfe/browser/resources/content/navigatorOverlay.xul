@@ -297,7 +297,7 @@
     <menu id="BookmarksMenu" label="&bookmarksMenu.label;" accesskey="&bookmarksMenu.accesskey;" 
           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
           ref="NC:BookmarksRoot" flags="dont-test-empty" template="bookmarksMenuTemplate"
-          oncommand="OpenBookmarkURL(event.target, document.getElementById('BookmarksMenu').database)">
+          oncommand="OpenBookmarkURL(event.target, this.database)">
       <template id="bookmarksMenuTemplate" xmlns:nc="http://home.netscape.com/NC-rdf#">
         <rule nc:FolderGroup="true" iscontainer="true">
           <menupopup>

@@ -120,9 +120,7 @@ BookmarksToolbar.prototype = {
     // needs to be modified in the datasource.
     postModifyCallback: function (aParams)
     {
-      var aShell = aParams[0];
-      var selItemURI = NODE_ID(aParams[1]);
-      aShell.propertySet(selItemURI, aParams[2], aParams[3]);
+      aParams[0].propertySet(aParams[1].id, aParams[2], aParams[3]);
     },
 
     ///////////////////////////////////////////////////////////////////////////
@@ -151,12 +149,12 @@ BookmarksToolbar.prototype = {
         var parentNode = relativeNode ? gBookmarksShell.findRDFNode(relativeNode, false) : gBookmarksShell.element;
 
         var args = [{ property: NC_NS + "parent",
-                      resource: NODE_ID(parentNode) },
+                      resource: parentNode.id },
                     { property: NC_NS + "Name",
                       literal:  stringValue.value }];
         
         const kBMDS = gBookmarksShell.RDF.GetDataSource("rdf:bookmarks");
-        var relId = relativeNode ? NODE_ID(relativeNode) : "NC:PersonalToolbarFolder";
+        var relId = relativeNode ? relativeNode.id : "NC:PersonalToolbarFolder";
         BookmarksUtils.doBookmarksCommand(relId, NC_NS_CMD + "newfolder", args);
       }
       
@@ -213,12 +211,11 @@ BookmarksToolbar.prototype = {
       }
 
       var args = [{ property: NC_NS + "parent",
-                    resource: NODE_ID(parentNode) },
+                    resource: parentNode.id },
                   { property: NC_NS + "Name",
                     literal:  name }];
 
-      BookmarksUtils.doBookmarksCommand(NODE_ID(relativeNode),
-                                        NC_NS_CMD + "newfolder", args);
+      BookmarksUtils.doBookmarksCommand(relativeNode.id, NC_NS_CMD + "newfolder", args);
       // We need to do this because somehow focus shifts and no commands 
       // operate any more. 
       //gBookmarksShell._focusElt.focus();
@@ -388,7 +385,7 @@ BookmarksToolbar.prototype = {
       case "cmd_bm_cut":
       case "cmd_bm_copy":
       case "cmd_bm_delete":
-        return (document.popupNode != null) && (NODE_ID(document.popupNode) != "NC:PersonalToolbarFolder");
+        return document.popupNode && document.popupNode.id != "NC:PersonalToolbarFolder";
       case "cmd_bm_selectAll":
         return false;
       case "cmd_bm_open":
@@ -413,17 +410,17 @@ BookmarksToolbar.prototype = {
         seln = gBookmarksShell.getSelection();
         if (!seln.length) return false;
         var folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
-        return document.popupNode != null && !(NODE_ID(seln[0]) == "NC:NewBookmarkFolder") && folderType;
+        return document.popupNode && seln[0].id != "NC:NewBookmarkFolder" && folderType;
       case "cmd_bm_setpersonaltoolbarfolder":
         seln = gBookmarksShell.getSelection();
         if (!seln.length) return false;
         folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
-        return document.popupNode != null && !(NODE_ID(seln[0]) == "NC:PersonalToolbarFolder") && folderType;
+        return document.popupNode && seln[0].id != "NC:PersonalToolbarFolder" && folderType;
       case "cmd_bm_setnewsearchfolder":
         seln = gBookmarksShell.getSelection();
         if (!seln.length) return false;
         folderType = seln[0].getAttributeNS(RDF_NS, "type") == (NC_NS + "Folder");
-        return document.popupNode != null && !(NODE_ID(seln[0]) == "NC:NewSearchFolder") && folderType;
+        return document.popupNode && seln[0].id != "NC:NewSearchFolder" && folderType;
       case "cmd_bm_fileBookmark":
         seln = gBookmarksShell.getSelection();
         return seln.length > 0;
@@ -477,7 +474,7 @@ BookmarksToolbar.prototype = {
 function BM_navigatorLoad(aEvent)
 {
   if (!gBookmarksShell) {
-    gBookmarksShell = new BookmarksToolbar("innermostBox");
+    gBookmarksShell = new BookmarksToolbar("NC:PersonalToolbarFolder");
     controllers.appendController(gBookmarksShell.controller);
     removeEventListener("load", BM_navigatorLoad, false);
   }
