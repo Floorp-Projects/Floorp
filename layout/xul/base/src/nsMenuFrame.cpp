@@ -971,9 +971,16 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 void
 nsMenuFrame::Execute()
 {
+  // Temporarily disable rollup events on this menu.  This is
+  // to suppress this menu getting removed in the case where
+  // the oncommand handler opens a dialog, etc.
+  if ( nsMenuFrame::mDismissalListener ) {
+    nsMenuFrame::mDismissalListener->EnableListener(PR_FALSE);
+  }
+
   // Get our own content node and hold on to it to keep it from going away.
   nsCOMPtr<nsIContent> content = dont_QueryInterface(mContent);
-  
+
   // First hide all of the open menus.
   if (mMenuParent)
     mMenuParent->HideChain();
@@ -992,6 +999,11 @@ nsMenuFrame::Execute()
   // Now properly close them all up.
   if (doc && mMenuParent)
     mMenuParent->DismissChain();
+
+  // Re-enable rollup events on this menu.
+  if ( nsMenuFrame::mDismissalListener ) {
+	nsMenuFrame::mDismissalListener->EnableListener(PR_TRUE);
+  }
 }
 
 PRBool

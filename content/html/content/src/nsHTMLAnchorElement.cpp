@@ -32,6 +32,7 @@
 
 #include "nsIEventStateManager.h"
 #include "nsDOMEvent.h"
+#include "nsNeckoUtil.h"
 
 // XXX suppress
 
@@ -171,7 +172,6 @@ nsHTMLAnchorElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Charset, charset)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Coords, coords)
-NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Href, href)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Hreflang, hreflang)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Name, name)
 NS_IMPL_STRING_ATTR(nsHTMLAnchorElement, Rel, rel)
@@ -390,3 +390,39 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
   return ret;
 }
 
+NS_IMETHODIMP
+nsHTMLAnchorElement::GetHref(nsString& aValue)
+{
+  // Resolve url to an absolute url
+  nsresult rv = NS_OK;
+  nsAutoString relURLSpec;
+  nsIURI* baseURL = nsnull;
+
+  // Get base URL.
+  mInner.GetBaseURL(baseURL);
+
+  // Get href= attribute (relative URL).
+  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec);
+
+  // If there is no href=, then use base target.
+  if (relURLSpec.Length() == 0) {
+    mInner.GetBaseTarget(relURLSpec);
+  }
+
+  if (nsnull != baseURL) {
+    // Get absolute URL.
+    rv = NS_MakeAbsoluteURI(relURLSpec, baseURL, aValue);
+  }
+  else {
+    // Absolute URL is same as relative URL.
+    aValue = relURLSpec;
+  }
+  NS_IF_RELEASE(baseURL);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLAnchorElement::SetHref(const nsString& aValue)
+{
+  return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, aValue, PR_TRUE);
+}

@@ -701,6 +701,21 @@ function OpenSearch(tabName, searchStr)
       return Components.classes[ progid ].createInstance( iid );
   }
 
+  function createInstanceById( cid, iidName ) {
+      var iid = eval( "Components.interfaces." + iidName );
+      return Components.classesByID[ cid ].createInstance( iid );
+  }
+
+  function getService( progid, iidName ) {
+      var iid = eval( "Components.interfaces." + iidName );
+      return Components.classes[ progid ].getService( iid );
+  }
+
+  function getServiceById( cid, iidName ) {
+      var iid = eval( "Components.interfaces." + iidName );
+      return Components.classesByID[ cid ].getService( iid );
+  }
+
   function openNewWindowWith( url ) {
     var newWin = window.openDialog( "chrome://navigator/content/navigator.xul", "_blank", "chrome,all,dialog=no", url );
 
@@ -952,11 +967,15 @@ function OpenSearch(tabName, searchStr)
             if ( status ) {
                 var text = status.getAttribute("value");
                 if ( text == "" ) {
+//dump( "Setting default status text\n" );                    
                     text = defaultStatus;
                 }
                 var statusText = document.getElementById("statusText");
                 if ( statusText ) {
+//dump( "Setting status text: " + text + "\n" );
                     statusText.setAttribute( "value", text );
+                } else {
+//dump( "Missing statusText when setting status text: " + text + "\n" );
                 }
             } else {
                 dump("Can't find status broadcaster!\n");
@@ -1148,278 +1167,17 @@ function FitToScreen()
 	}
 }
 
-// Set given attribute of specified context-menu item.  If the
-// value is null, then it removes the attribute (which works
-// nicely for the disabled attribute).
-function setContextMenuItemAttr( id, attr, val ) {
-    var elem = document.getElementById( id );
-    if ( elem ) {
-        if ( val == null ) {
-            // null indicates attr should be removed.
-            elem.removeAttribute( attr );
-        } else {
-            // Set attr=val.
-            elem.setAttribute( attr, val );
-        }
+// Dumps all properties of anObject.
+function dumpObject( anObject, prefix ) {
+    if ( prefix == null ) {
+        prefix = anObject;
     }
-}
-
-// Set context menu attribute according to like attribute of another node
-// (such as a broadcaster).
-function setContextMenuItemAttrFromNode( item_id, attr, other_id ) {
-    var elem = document.getElementById( other_id );
-    if ( elem && elem.getAttribute( attr ) == "true" ) {
-        setContextMenuItemAttr( item_id, attr, "true" );
-    } else {
-        setContextMenuItemAttr( item_id, attr, null );
+    for ( prop in anObject ) {
+        dump( prefix + "." + prop + " = " + anObject[prop] + "\n" );
     }
-}
-
-// Return "true" if we're not on a link, null otherwise (seems odd, but it gives
-// us the proper value to which to set a disabled attribute to).
-function isNotOnLink( event ) {
-    // Not implemented so all link-based options are disabled.
-    return "true";
-}
-
-// Returns "true" if we're not in a frame, null otherwise (see above).
-function isNotInFrame( event ) {
-    // Not implemented so all frame-based options are disabled.
-    return "true";
-}
-
-// Returns "true" if we're not on an image, null otherwise (see above).
-function isNotOnImage( event ) {
-    // Not implemented so all image-based options are disabled.
-    return "true";
-}
-
-// Returns "true" if we're not on a background image, null otherwise (see above).
-function isNotOnBGImage( event ) {
-    // Not implemented so all background-image-based options are disabled.
-    return "true";
-}
-
-// Returns "true" if there's no text selected, null otherwise (see above).
-function isNoTextSelected( event ) {
-    // Not implemented so all text-selected-based options are disabled.
-    return "true";
 }
 
 // Takes JS expression and dumps "expr="+expr+"\n"
 function dumpExpr( expr ) {
     dump( expr+"="+eval(expr)+"\n" );
-}
-
-// Function to display contextual info.
-function dumpContext() {
-    dumpExpr( "        contextTarget.element" );
-    dumpExpr( "contextTarget.element.tagName" );
-    dumpExpr( "        contextTarget.onImage" );
-    dumpExpr( "       contextTarget.imageSrc" );
-    dumpExpr( "         contextTarget.onLink" );
-    dumpExpr( "       contextTarget.linkHref" );
-    dumpExpr( "        contextTarget.inFrame" );
-    dumpExpr( "      contextTarget.frameHref" );
-    dumpExpr( "     contextTarget.hasBGImage" );
-    dumpExpr( "     contextTarget.bgImageSrc" );
-}
-
-// Remember what was clicked on and gather info about it.
-var contextTarget;
-function BrowserSetContextTarget( node ) {
-    // Initialize contextual info.
-    contextTarget = new Object;
-    contextTarget.onImage    = false;
-    contextTarget.onLink     = false;
-    contextTarget.inFrame    = false;
-    contextTarget.hasBGImage = false;
-
-    // Remember the element that was clicked.
-    contextTarget.element = node;
-
-    // See if the user clicked on an image.
-    if ( contextTarget.element.nodeType == 1
-         &&
-         contextTarget.element.tagName.toUpperCase() == "IMG" ) {
-        // Record that.
-        contextTarget.onImage = true;
-        contextTarget.imageSrc  = contextTarget.element.getAttribute( "SRC" );
-    }
-
-    // See if the user clicked in a frame.
-    if ( contextTarget.element.ownerDocument != window.content.document ) {
-        contextTarget.inFrame = true;
-        contextTarget.frameHref = contextTarget.element.ownerDocument.location.href;
-    }
-
-    // Bubble out, looking for link.
-    var elem = contextTarget.element;
-    while ( elem ) {
-        // Test for element types of interest.
-        if ( elem.nodeType == 1 && elem.tagName.toUpperCase() == "A" ) {
-            // Clicked on a link.
-            contextTarget.onLink = true;
-            contextTarget.linkHref = elem.getAttribute( "HREF" );
-            break;
-        }
-        elem = elem.parentNode;
-    }
-dumpContext();    
-}
-
-// Set various context menu attributes based on the state of the world.
-function BrowserSetupContextMenu( menu, event ) {
-    // Get context.
-    BrowserSetContextTarget(document.popupNode);
-
-    //-------------------------------------------------------------------------
-
-    var needSep = false;
-
-    // Remove open/edit link if not applicable.
-    if ( !contextTarget.onLink ) {
-        menu.removeChild( document.getElementById( "context-openlink" ) );
-        menu.removeChild( document.getElementById( "context-editlink" ) );
-    } else {
-        needSep = true;
-    }
-
-    // Remove open frame if not applicable.
-    if ( !contextTarget.inFrame ) {
-        menu.removeChild( document.getElementById( "context-openframe" ) );
-    } else {
-        needSep = true;
-    }
-
-    if ( !needSep ) {
-        // Remove separator.
-        menu.removeChild( document.getElementById( "context-sep-open" ) );
-    }
-
-    //-------------------------------------------------------------------------
-
-    // Back determined by canGoBack broadcaster.
-    setContextMenuItemAttrFromNode( "context-back", "disabled", "canGoBack" );
-
-    // Forward determined by canGoForward broadcaster.
-    setContextMenuItemAttrFromNode( "context-forward", "disabled", "canGoForward" );
-
-    // Reload is always OK.
-
-    // Stop determined by canStop broadcaster.
-    setContextMenuItemAttrFromNode( "context-stop", "disabled", "canStop" );
-
-    //-------------------------------------------------------------------------
-
-    // View source is always OK.
-
-    // View frame source depends on whether we're in a frame.
-    if ( !contextTarget.inFrame ) {
-        menu.removeChild( document.getElementById( "context-viewframesource" ) );
-    }
-
-    // View Info don't work no way no how.
-    menu.removeChild( document.getElementById( "context-viewinfo" ) );
-
-    // View Frame Info isn't working, either.
-    menu.removeChild( document.getElementById( "context-viewframeinfo" ) );
-
-    // View Image depends on whether an image was clicked on.
-    if ( !contextTarget.onImage ) {
-        menu.removeChild( document.getElementById( "context-viewimage" ) );
-    }
-
-    //-------------------------------------------------------------------------
-
-    // Add bookmark always OK.
-
-    // Send Page not working yet.
-    menu.removeChild( document.getElementById( "context-sendpage" ) );
-
-    //-------------------------------------------------------------------------
-
-    // Save page is always OK.
-
-    // Save frame as depends on whether we're in a frame.
-    if ( !contextTarget.inFrame ) {
-        menu.removeChild( document.getElementById( "context-saveframe" ) );
-    }
-
-    // Save link depends on whether we're in a link.
-    if ( !contextTarget.onLink ) {
-        menu.removeChild( document.getElementById( "context-savelink" ) );
-    }
-
-    // Save background image depends on whether there is one.
-    if ( !contextTarget.hasBGImage ) {
-        menu.removeChild( document.getElementById( "context-savebgimage" ) );
-    }
-
-    // Save image depends on whether there is one.
-    if ( !contextTarget.onImage ) {
-        menu.removeChild( document.getElementById( "context-saveimage" ) );
-    }
-
-    //-------------------------------------------------------------------------
-
-    // Select All is always OK.
-
-    // Copy depends on whether there is selected text.
-    setContextMenuItemAttr( "context-copy", "disabled", isNoTextSelected() );
-
-    // Copy link location depends on whether we're on a link.
-    if ( !contextTarget.onLink ) {
-        menu.removeChild( document.getElementById( "context-copylink" ) );
-    }
-
-    // Copy image location depends on whether we're on an image.
-    if ( !contextTarget.onImage ) {
-        menu.removeChild( document.getElementById( "context-copyimage" ) );
-    }
-}
-
-// Temporary workaround for DOM api not yet implemented.
-function cloneNode( item ) {
-    // Create another element like the one we're cloning.
-    var node = document.createElement( item.tagName );
-
-    // Copy attributes from argument item to the new one.
-    var attrs = item.attributes;
-    for ( var i = 0; i < attrs.length; i++ ) {
-        var attr = attrs.item( i );
-        node.setAttribute( attr.nodeName, attr.nodeValue );
-    }
-
-    // Voila!
-    return node;
-}
-
-// "create" the context menu by cloning the template.
-function BrowserCreateContextMenu( menu, event ) {
-    var template = document.getElementById( "context-template" );
-    var items = template.childNodes;
-    for ( var i = 0; i < items.length; i++ ) {
-        // Replicate item.
-        //var item = items.item(i).cloneNode( false );
-
-        // cloneNode not implemented, fake it.
-        var item = cloneNode( items.item(i) );
-
-        // Change id.
-        item.setAttribute( "id", item.getAttribute( "id" ).replace( "template-", "context-" ) );
-
-        // Add it to popup menu.
-        menu.appendChild( item );
-    }
-    // Tweak the menu.
-    BrowserSetupContextMenu( menu, event );
-}
-
-// Remove all the children which we added at oncreate.
-function BrowserDestroyContextMenu( menu ) {
-    var items = menu.childNodes;
-    for ( var i = 0; i < items.length; i++ ) {
-        menu.removeChild( items.item(i) );
-    }
 }
