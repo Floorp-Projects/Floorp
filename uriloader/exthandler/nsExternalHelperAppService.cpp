@@ -96,8 +96,7 @@
 #include "nsEscape.h"
 
 #include "nsIStringBundle.h" // XXX needed to localize error msgs
-#include "nsIPromptService.h"
-#include "nsIDOMWindow.h" // XXX needed to get parent for error dlg
+#include "nsIPrompt.h"
 
 #include "nsITextToSubURI.h" // to unescape the filename
 #include "nsIMIMEHeaderParam.h"
@@ -1633,7 +1632,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
               else
               {
                 // We don't have a listener.  Simply show the alert ourselves.
-                nsCOMPtr<nsIPromptService> prompter(do_GetService("@mozilla.org/embedcomp/prompt-service;1"));
+                nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mWindowContext));
                 nsXPIDLString title;
                 bundle->FormatStringFromName(NS_LITERAL_STRING("title").get(),
                                              strings,
@@ -1641,9 +1640,7 @@ void nsExternalAppHandler::SendStatusChange(ErrorType type, nsresult rv, nsIRequ
                                              getter_Copies(title));
                 if (prompter)
                 {
-                  // Extract parent window from context.
-                  nsCOMPtr<nsIDOMWindow> parent(do_GetInterface(mWindowContext));
-                  prompter->Alert(parent, title, msgText);
+                  prompter->Alert(title, msgText);
                 }
               }
             }
@@ -2228,8 +2225,8 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel()
   // Delete the file in this case.
   nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
   mMimeInfo->GetPreferredAction(&action);
-  if (!mReceivedDispositionInfo ||
-      (mTempFile && action != nsIMIMEInfo::saveToDisk))
+  if (mTempFile &&
+      (!mReceivedDispositionInfo || action != nsIMIMEInfo::saveToDisk))
   {
     mTempFile->Remove(PR_FALSE);
     mTempFile = nsnull;
