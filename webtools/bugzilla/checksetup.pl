@@ -379,17 +379,23 @@ checksetup.pl, and re-enter your answers.
 EOT
     die "Syntax error in localconfig";
 }
+
+sub LocalVarExists ($)
+{
+    my ($name) = @_;
+    return $main::{$name}; # if localconfig declared it, we're done.
+}
+
 my $newstuff = "";
 sub LocalVar ($$)
 {
     my ($name, $definition) = @_;
-    return if ($main::{$name}); # if localconfig declared it, we're done.
+    return if LocalVarExists($name); # if localconfig declared it, we're done.
     $newstuff .= " " . $name;
     open FILE, '>>localconfig';
     print FILE ($answer{$name} or $definition), "\n\n";
     close FILE;
 }
-
 
 
 #
@@ -411,15 +417,16 @@ LocalVar('index_html', <<'END');
 $index_html = 0;
 END
 
-my $mysql_binaries = `which mysql`;
-if ($mysql_binaries =~ /no mysql/) {
-    # If which didn't find it, just provide a reasonable default
-    $mysql_binaries = "/usr/bin";
-} else {
-    $mysql_binaries =~ s:/mysql\n$::;
-}
+if (!LocalVarExists('mysqlpath')) {
+    my $mysql_binaries = `which mysql`;
+    if ($mysql_binaries =~ /no mysql/ || $mysql_binaries eq '') {
+        # If which didn't find it, just provide a reasonable default
+        $mysql_binaries = "/usr/bin";
+    } else {
+        $mysql_binaries =~ s:/mysql\n$::;
+    }
 
-LocalVar('mysqlpath', <<"END");
+    LocalVar('mysqlpath', <<"END");
 #
 # In order to do certain functions in Bugzilla (such as sync the shadow
 # database), we require the MySQL Binaries (mysql, mysqldump, and mysqladmin).
@@ -428,17 +435,19 @@ LocalVar('mysqlpath', <<"END");
 # Please specify only the directory name, with no trailing slash.
 \$mysqlpath = "$mysql_binaries";
 END
-
-
-my $cvs_executable = `which cvs`;
-if ($cvs_executable =~ /no cvs/) {
-    # If which didn't find it, just set to blank
-    $cvs_executable = "";
-} else {
-    chomp $cvs_executable;
 }
 
-LocalVar('cvsbin', <<"END");
+
+if (!LocalVarExists('cvsbin')) {
+    my $cvs_executable = `which cvs`;
+    if ($cvs_executable =~ /no cvs/ || $cvs_executable eq '') {
+        # If which didn't find it, just set to blank
+        $cvs_executable = "";
+    } else {
+        chomp $cvs_executable;
+    }
+
+    LocalVar('cvsbin', <<"END");
 #
 # For some optional functions of Bugzilla (such as the pretty-print patch
 # viewer), we need the cvs binary to access files and revisions.
@@ -446,17 +455,19 @@ LocalVar('cvsbin', <<"END");
 # its location here.  Please specify the full path to the executable.
 \$cvsbin = "$cvs_executable";
 END
-
-
-my $interdiff_executable = `which interdiff`;
-if ($interdiff_executable =~ /no interdiff/) {
-    # If which didn't find it, set to blank
-    $interdiff_executable = "";
-} else {
-    chomp $interdiff_executable;
 }
 
-LocalVar('interdiffbin', <<"END");
+
+if (!LocalVarExists('interdiffbin')) {
+    my $interdiff_executable = `which interdiff`;
+    if ($interdiff_executable =~ /no interdiff/ || $interdiff_executable eq '') {
+        # If which didn't find it, set to blank
+        $interdiff_executable = "";
+    } else {
+        chomp $interdiff_executable;
+    }
+
+    LocalVar('interdiffbin', <<"END");
 
 #
 # For some optional functions of Bugzilla (such as the pretty-print patch
@@ -465,23 +476,26 @@ LocalVar('interdiffbin', <<"END");
 # its location here.  Please specify the full path to the executable.
 \$interdiffbin = "$interdiff_executable";
 END
-
-
-my $diff_binaries = `which diff`;
-if ($diff_binaries =~ /no diff/) {
-    # If which didn't find it, set to blank
-    $diff_binaries = "";
-} else {
-    $diff_binaries =~ s:/diff\n$::;
 }
 
-LocalVar('diffpath', <<"END");
+
+if (!LocalVarExists('diffpath')) {
+    my $diff_binaries = `which diff`;
+    if ($diff_binaries =~ /no diff/ || $diff_binaries eq '') {
+        # If which didn't find it, set to blank
+        $diff_binaries = "";
+    } else {
+        $diff_binaries =~ s:/diff\n$::;
+    }
+
+    LocalVar('diffpath', <<"END");
 
 #
 # The interdiff feature needs diff, so we have to have that path.
 # Please specify only the directory name, with no trailing slash.
 \$diffpath = "$diff_binaries";
 END
+}
 
 
 LocalVar('create_htaccess', <<'END');
