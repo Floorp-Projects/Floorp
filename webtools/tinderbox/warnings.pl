@@ -32,6 +32,7 @@ $lxr_data_root = '/export2/lxr-data';
   'long long',
   '__cmsg_data',
   'location of the previous definition',
+  '^by \`'
 );
 $ignore_pat = "(?:".join('|',@ignore).")";
 
@@ -138,7 +139,7 @@ sub gcc_parser {
     chomp; # Yum, yum
 
     my ($filename, $line, $warning_text);
-    ($filename, $line, undef, $warning_text) = split /:\s*/;
+    ($filename, $line, undef, $warning_text) = split /:\s*/, $_, 4;
     $filename =~ s/.*\///;
     
     # Special case for Makefiles
