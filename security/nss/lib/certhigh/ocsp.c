@@ -38,7 +38,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.19 2004/04/25 15:03:03 gerv%gerv.net Exp $
+ * $Id: ocsp.c,v 1.20 2004/05/22 01:03:26 nelsonb%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -2992,8 +2992,9 @@ ocsp_VerifySingleResponse(CERTOCSPSingleResponse *single,
     /* allow slop time for future response */
     LL_UI2L(tmstamp, ocspsloptime); /* get slop time in seconds */
     LL_UI2L(tmp, PR_USEC_PER_SEC);
-    LL_MUL(tmstamp, tmstamp, tmp); /* convert the slop time to PRTime */
-    LL_ADD(tmstamp, tmstamp, now); /* add current time to it */
+    LL_MUL(tmp, tmstamp, tmp); /* convert the slop time to PRTime */
+    LL_ADD(tmstamp, tmp, now); /* add current time to it */
+
     if (LL_CMP(thisUpdate, >, tmstamp) || LL_CMP(producedAt, <, thisUpdate)) {
 	PORT_SetError(SEC_ERROR_OCSP_FUTURE_RESPONSE);
 	return SECFailure;
@@ -3003,7 +3004,8 @@ ocsp_VerifySingleResponse(CERTOCSPSingleResponse *single,
 	if (rv != SECSuccess)
 	    return rv;
 
-	if (LL_CMP(nextUpdate, <, now) || LL_CMP(producedAt, >, nextUpdate)) {
+	LL_ADD(tmp, tmp, nextUpdate);
+	if (LL_CMP(tmp, <, now) || LL_CMP(producedAt, >, nextUpdate)) {
 	    PORT_SetError(SEC_ERROR_OCSP_OLD_RESPONSE);
 	    return SECFailure;
 	}
