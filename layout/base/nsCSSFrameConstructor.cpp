@@ -7892,9 +7892,7 @@ ReparentFrame(nsIPresContext* aPresContext,
               nsIStyleContext* aParentStyleContext,
               nsIFrame* aFrame)
 {
-  aFrame->ReResolveStyleContext(aPresContext, aParentStyleContext, 
-                               NS_STYLE_HINT_REFLOW,
-                               nsnull, nsnull);
+  aPresContext->ReParentStyleContext(aFrame, aParentStyleContext);
   aFrame->SetParent(aNewParentFrame);
 }
 
