@@ -375,6 +375,9 @@ TestConnection::Run(void)
            do_GetService(kEventQueueServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
+  rv = eventQService->CreateMonitoredThreadEventQueue();
+  if (NS_FAILED(rv)) return rv;
+
   //
   // Make sure that all resources were allocated in the constructor...
   //
