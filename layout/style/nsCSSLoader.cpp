@@ -99,9 +99,9 @@ public:
   {
     URLKey* key = (URLKey*)aKey;
 #ifdef NECKO
-    PRBool eq;
-    nsresult rv = mURL->Equals(key->mURL, &eq);
-    return NS_SUCCEEDED(rv) && eq;
+    PRBool equals = PR_FALSE;
+    nsresult result = mURL->Equals(key->mURL, &equals);
+    return (NS_SUCCEEDED(result) && equals);
 #else
     return mURL->Equals(key->mURL);
 #endif
@@ -226,6 +226,7 @@ public:
   NS_IMETHOD DropDocumentReference(void);
 
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive);
+  NS_IMETHOD SetQuirkMode(PRBool aQuirkMode);
   NS_IMETHOD SetPreferredSheet(const nsString& aTitle);
 
   NS_IMETHOD GetParserFor(nsICSSStyleSheet* aSheet,
@@ -295,6 +296,7 @@ public:
   nsIDocument*  mDocument;  // the document we live for
 
   PRBool        mCaseSensitive; // is document CSS case sensitive
+  PRBool        mNavQuirkMode;  // should CSS be in quirk mode
   nsString      mPreferredSheet;    // title of preferred sheet
 
   nsISupportsArray* mParsers;     // array of CSS parsers
@@ -408,6 +410,7 @@ CSSLoaderImpl::CSSLoaderImpl(void)
   NS_INIT_REFCNT();
   mDocument = nsnull;
   mCaseSensitive = PR_FALSE;
+  mNavQuirkMode = PR_FALSE;
   mParsers = nsnull;
 }
 
@@ -485,6 +488,13 @@ CSSLoaderImpl::SetCaseSensitive(PRBool aCaseSensitive)
 }
 
 NS_IMETHODIMP
+CSSLoaderImpl::SetQuirkMode(PRBool aQuirkMode)
+{
+  mNavQuirkMode = aQuirkMode;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CSSLoaderImpl::SetPreferredSheet(const nsString& aTitle)
 {
   mPreferredSheet = aTitle;
@@ -531,6 +541,7 @@ CSSLoaderImpl::GetParserFor(nsICSSStyleSheet* aSheet,
   }
   if (*aParser) {
     (*aParser)->SetCaseSensitive(mCaseSensitive);
+    (*aParser)->SetQuirkMode(mNavQuirkMode);
     if (aSheet) {
       (*aParser)->SetStyleSheet(aSheet);
     }
@@ -1050,12 +1061,11 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
 #ifdef NECKO
     nsIURI* urlClone;
     result = aKey.mURL->Clone(&urlClone); // dont give key URL to netlib, it gets munged
-    if (NS_SUCCEEDED(result))
+    if (NS_SUCCEEDED(result)) {
 #else
     nsIURI* urlClone = CloneURL(aKey.mURL); // don't give the key to netlib, it munges it
-    if (urlClone)
+    if (urlClone) {
 #endif
-    {
       result = NS_NewUnicharStreamLoader(&loader, urlClone, DoneLoadingStyle, aData);
       NS_RELEASE(urlClone);
       if (NS_SUCCEEDED(result)) {
@@ -1066,9 +1076,9 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
         while (index < mPendingAlternateSheets.Count()) {
           SheetLoadData* data = (SheetLoadData*)mPendingAlternateSheets.ElementAt(index);
 #ifdef NECKO
-          PRBool eq;
-          result = aKey.mURL->Equals(data->mURL, &eq);
-          if (NS_SUCCEEDED(result) && eq)
+          PRBool equals = PR_FALSE;
+          result = aKey.mURL->Equals(data->mURL, &equals);
+          if (NS_SUCCEEDED(result) && equals)
 #else
           if (aKey.mURL->Equals(data->mURL))
 #endif
@@ -1225,13 +1235,12 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
         // verify that sheet doesn't have new child as a parent 
         do {
 #ifdef NECKO
-          PRBool eq;
-          result = parentData->mURL->Equals(aURL, &eq);
-          if (NS_SUCCEEDED(result) && eq)
+          PRBool equals;
+          result = parentData->mURL->Equals(aURL, &equals);
+          if (NS_SUCCEEDED(result) && equals) { // houston, we have a loop, blow off this child
 #else
-          if (parentData->mURL->Equals(aURL))
+          if (parentData->mURL->Equals(aURL)) { // houston, we have a loop, blow off this child
 #endif
-          {  // houston, we have a loop, blow off this child
             data->mParentData = nsnull;
             delete data;
             return NS_OK;
@@ -1261,12 +1270,11 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
 #ifdef NECKO
     nsIURI* urlClone;
     result = aURL->Clone(&urlClone); // dont give key URL to netlib, it gets munged
-    if (NS_SUCCEEDED(result))
+    if (NS_SUCCEEDED(result)) {
 #else
     nsIURI* urlClone = CloneURL(aURL);  // dont give key URL to netlib, it gets munged
-    if (urlClone)
+    if (urlClone) {
 #endif
-    {
 #ifdef NECKO
       result = NS_OpenURI(&in, urlClone);
 #else
