@@ -532,11 +532,7 @@ nsDocument::~nsDocument()
   }
 
   if (mRootContent) {
-    nsCOMPtr<nsIDocument> doc;
-
-    mRootContent->GetDocument(getter_AddRefs(doc));
-
-    if (doc) {
+    if (mRootContent->GetDocument()) {
       // The root content still has a pointer back to the document,
       // clear the document pointer in all children.
 
@@ -2649,11 +2645,8 @@ nsDocument::GetBindingParent(nsIDOMNode* aNode, nsIDOMElement** aResult)
   if (!content)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIContent> result;
-  content->GetBindingParent(getter_AddRefs(result));
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(result));
-  *aResult = elt;
-  NS_IF_ADDREF(*aResult);
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(content->GetBindingParent()));
+  NS_IF_ADDREF(*aResult = elt);
   return NS_OK;
 }
 
@@ -3476,9 +3469,7 @@ nsDocument::CompareDocumentPosition(nsIDOMNode* aOther, PRUint16* aReturn)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> otherDoc;
-  otherContent->GetDocument(getter_AddRefs(otherDoc));
-  if (this == otherDoc) {
+  if (this == otherContent->GetDocument()) {
     // If the node being compared is contained by our node,
     // then it follows it.
     mask |= (nsIDOM3Node::DOCUMENT_POSITION_CONTAINED_BY |

@@ -134,13 +134,12 @@ ContentToParentOffset(nsIContent *aContent, nsIDOMNode **aParent, PRInt32 *aOffs
   if (!aContent)
     return;
 
-  nsCOMPtr<nsIContent> parent;
-  nsresult rv = aContent->GetParent(getter_AddRefs(parent));
+  nsIContent* parent = aContent->GetParent();
 
-  if (NS_FAILED(rv) || !parent)
+  if (!parent)
     return;
 
-  rv = parent->IndexOf(aContent, *aOffset);
+  nsresult rv = parent->IndexOf(aContent, *aOffset);
 
   if (NS_FAILED(rv))
     return;
@@ -601,16 +600,20 @@ nsresult nsContentIterator::RebuildIndexStack()
   // Make sure we start at the right indexes on the stack!  Build array up
   // to common parent of start and end.  Perhaps it's too many entries, but
   // thats far better than too few.
-  nsCOMPtr<nsIContent> parent;
-  nsCOMPtr<nsIContent> current;
-  PRInt32              indx;
+  nsIContent* parent;
+  nsIContent* current;
+  PRInt32     indx;
 
   mIndexes.Clear();
   current = mCurNode;
-  while (current && current != mCommonParent)
+  if (!current) {
+    return NS_OK;
+  }
+
+  while (current != mCommonParent)
   {
-    if (NS_FAILED(current->GetParent(getter_AddRefs(parent))))
-      return NS_ERROR_FAILURE;
+    parent = current->GetParent();
+    
     if (!parent || NS_FAILED(parent->IndexOf(current, indx)))
       return NS_ERROR_FAILURE;
   
@@ -706,8 +709,9 @@ nsresult nsContentIterator::GetNextSibling(nsCOMPtr<nsIContent> aNode,
   nsCOMPtr<nsIContent> sib;
   nsCOMPtr<nsIContent> parent;
   PRInt32              indx;
-  
-  if (NS_FAILED(aNode->GetParent(getter_AddRefs(parent))) || !parent)
+
+  parent = aNode->GetParent();
+  if (!parent)
     return NS_ERROR_FAILURE;
 
   if (aIndexes)
@@ -774,8 +778,9 @@ nsresult nsContentIterator::GetPrevSibling(nsCOMPtr<nsIContent> aNode,
   nsCOMPtr<nsIContent> sib;
   nsCOMPtr<nsIContent> parent;
   PRInt32              indx;
-  
-  if (NS_FAILED(aNode->GetParent(getter_AddRefs(parent))) || !parent)
+
+  parent = aNode->GetParent();
+  if (!parent)
     return NS_ERROR_FAILURE;
 
   if (aIndexes)
@@ -868,10 +873,8 @@ nsresult nsContentIterator::NextNode(nsCOMPtr<nsIContent> *ioNextNode, nsVoidArr
     nsCOMPtr<nsIContent> cSibling;
     nsCOMPtr<nsIContent> parent;
     PRInt32              indx;
-  
-    // get next sibling if there is one
-    if (NS_FAILED(cN->GetParent(getter_AddRefs(parent))))
-      return NS_ERROR_FAILURE;
+
+    parent = cN->GetParent();
       
     // get the cached index
     if (aIndexes)
@@ -938,10 +941,8 @@ nsresult nsContentIterator::PrevNode(nsCOMPtr<nsIContent> *ioNextNode, nsVoidArr
     nsCOMPtr<nsIContent> cSibling;
     nsCOMPtr<nsIContent> parent;
     PRInt32              indx;
-  
-    // get prev sibling if there is one
-    if (NS_FAILED(cN->GetParent(getter_AddRefs(parent))))
-      return NS_ERROR_FAILURE;
+
+    parent = cN->GetParent();
 
     // get the cached index
     if (aIndexes)
@@ -1173,8 +1174,7 @@ nsresult nsContentIterator::PositionAt(nsIContent* aCurNode)
     // Insert at head since we're walking up
     oldParentStack.InsertElementAt(tempNode,0);
 
-    if (NS_FAILED(tempNode->GetParent(getter_AddRefs(parent))))
-      return NS_ERROR_FAILURE;
+    parent = tempNode->GetParent();
 
     if (!parent)  // this node has no parent, and thus no index
       break;
@@ -1196,9 +1196,8 @@ nsresult nsContentIterator::PositionAt(nsIContent* aCurNode)
   {
     PRInt32 indx;
 
-    if (NS_FAILED(newCurNode->GetParent(getter_AddRefs(parent))))
-      return NS_ERROR_FAILURE;
-
+    parent = newCurNode->GetParent();
+    
     if (!parent)  // this node has no parent, and thus no index
       break;
 
@@ -1649,8 +1648,7 @@ nsresult nsContentSubtreeIterator::GetTopAncestorInRange(
   nsCOMPtr<nsIContent> parent, tmp;
   while (aNode)
   {
-    if (NS_FAILED(aNode->GetParent(getter_AddRefs(parent))))
-      return NS_ERROR_FAILURE;
+    parent = aNode->GetParent();
     if (!parent)
     {
       if (tmp)

@@ -1117,8 +1117,9 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
     return NS_ERROR_NULL_POINTER;
   range->GetCommonAncestorContainer(getter_AddRefs(commonParent));
 
-  nsCOMPtr<nsIContent> tmp, selContent( do_QueryInterface(commonParent) );
-  while (selContent)
+  for (nsCOMPtr<nsIContent> selContent(do_QueryInterface(commonParent));
+       selContent;
+       selContent = selContent->GetParent())
   {
     // checking for selection inside a plaintext form widget
     nsCOMPtr<nsIAtom> atom;
@@ -1143,8 +1144,6 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
         break;
       }
     }
-    selContent->GetParent(getter_AddRefs(tmp));
-    selContent = tmp;
   }
   
   // also consider ourselves in a text widget if we can't find an html document

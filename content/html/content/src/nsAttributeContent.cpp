@@ -83,9 +83,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // Implementation for nsIContent
-  NS_IMETHOD GetDocument(nsIDocument** aResult) const;
+  NS_IMETHOD_(nsIDocument*) GetDocument() const;
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
-  NS_IMETHOD GetParent(nsIContent** aResult) const;
+  NS_IMETHOD_(nsIContent*) GetParent() const;
   NS_IMETHOD SetParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsNativeAnonymous() const { return PR_TRUE; }
   NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous) { }
@@ -119,9 +119,8 @@ public:
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext) { return NS_OK; }
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) { return NS_OK; }
 
-  NS_IMETHOD GetBindingParent(nsIContent** aContent) const {
-    *aContent = nsnull;
-    return NS_OK;
+  NS_IMETHOD_(nsIContent*) GetBindingParent() const {
+    return nsnull;
   }
 
   NS_IMETHOD SetBindingParent(nsIContent* aParent) {
@@ -312,12 +311,10 @@ nsAttributeContent::ToCString(nsAString& aBuf, PRInt32 aOffset,
 {
 }
 
-nsresult
-nsAttributeContent::GetDocument(nsIDocument** aResult) const
+NS_IMETHODIMP_(nsIDocument*)
+nsAttributeContent::GetDocument() const
 {
-  *aResult = mDocument;
-  NS_IF_ADDREF(mDocument);
-  return NS_OK;
+  return mDocument;
 }
 
 
@@ -329,12 +326,10 @@ nsAttributeContent::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCo
   return NS_OK;
 }
 
-nsresult
-nsAttributeContent::GetParent(nsIContent** aResult) const
+NS_IMETHODIMP_(nsIContent*)
+nsAttributeContent::GetParent() const
 {
-  NS_IF_ADDREF(mParent);
-  *aResult = mParent;
-  return NS_OK;;
+  return mParent;
 }
 
 nsresult

@@ -619,8 +619,7 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
         // but that gets more complicated since we have to
         // search the tag list for CODEBASE as well.
         // For now, just leave them relative.
-        nsCOMPtr<nsIDocument> document;
-        aContent->GetDocument(getter_AddRefs(document));
+        nsIDocument* document = aContent->GetDocument();
         if (document) {
           nsCOMPtr<nsIURI> uri;
           document->GetBaseURL(getter_AddRefs(uri));

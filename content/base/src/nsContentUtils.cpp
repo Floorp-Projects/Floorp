@@ -938,16 +938,10 @@ nsContentUtils::InSameDoc(nsIDOMNode* aNode, nsIDOMNode* aOther)
   nsCOMPtr<nsIContent> other(do_QueryInterface(aOther));
 
   if (content && other) {
-    nsCOMPtr<nsIDocument> contentDoc;
-    nsCOMPtr<nsIDocument> otherDoc;
-    content->GetDocument(getter_AddRefs(contentDoc));
-    other->GetDocument(getter_AddRefs(otherDoc));
     // XXXcaa Don't bother to check that either node is in a
     // document.  Editor relies on us returning true if neither
     // node is in a document.  See bug 154401.
-    if (contentDoc == otherDoc) {
-      return PR_TRUE;
-    }
+    return content->GetDocument() == other->GetDocument();
   }
 
   return PR_FALSE;
@@ -961,12 +955,10 @@ nsContentUtils::ContentIsDescendantOf(nsIContent* aPossibleDescendant,
   NS_PRECONDITION(aPossibleDescendant, "The possible descendant is null!");
   NS_PRECONDITION(aPossibleAncestor, "The possible ancestor is null!");
 
-  nsCOMPtr<nsIContent> parent;
   do {
     if (aPossibleDescendant == aPossibleAncestor)
       return PR_TRUE;
-    aPossibleDescendant->GetParent(getter_AddRefs(parent));
-    aPossibleDescendant = parent;
+    aPossibleDescendant = aPossibleDescendant->GetParent();
   } while (aPossibleDescendant);
 
   return PR_FALSE;
@@ -1002,7 +994,6 @@ nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
   NS_ENSURE_ARG_POINTER(aNode);
 
   PRInt32 offset = 0;
-  nsCOMPtr<nsIContent> ancestor;
   nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
   if (!content) {
@@ -1024,13 +1015,12 @@ nsContentUtils::GetAncestorsAndOffsets(nsIDOMNode* aNode,
   aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(aOffset));
 
   // insert all the ancestors
-  content->GetParent(getter_AddRefs(ancestor));
+  nsIContent* ancestor = content->GetParent();
   while (ancestor) {
     ancestor->IndexOf(content, offset);
-    aAncestorNodes->AppendElement(ancestor.get());
+    aAncestorNodes->AppendElement(ancestor);
     aAncestorOffsets->AppendElement(NS_INT32_TO_PTR(offset));
-    content.swap(ancestor);
-    content->GetParent(getter_AddRefs(ancestor));
+    ancestor = ancestor->GetParent();
   }
 
   return NS_OK;
@@ -1422,9 +1412,7 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(getter_AddRefs(doc));
-  nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(doc));
+  nsCOMPtr<nsIHTMLDocument> htmlDocument(do_QueryInterface(aContent->GetDocument()));
 
   PRBool generatedUniqueKey = PR_FALSE;
 
@@ -1578,9 +1566,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsIContent> content;
-
-  aContent->GetParent(getter_AddRefs(content));
+  nsIContent* content = aContent->GetParent();
 
   while (content) {
     if (content == form) {
@@ -1600,9 +1586,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
       return PR_FALSE;
     }
 
-    nsIContent *tmp = content;
-
-    tmp->GetParent(getter_AddRefs(content));
+    content = content->GetParent();
   }
 
   PRInt32 count = 0;
@@ -1652,7 +1636,7 @@ nsCxPusher::Push(nsISupports *aCurrentTarget)
   nsCOMPtr<nsIDocument> document;
 
   if (content) {
-    content->GetDocument(getter_AddRefs(document));
+    document = content->GetDocument();
   }
 
   if (!document) {

@@ -144,8 +144,7 @@ nsFrameLoader::LoadFrame()
   nsresult rv = EnsureDocShell();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDocument> doc;
-  mOwnerContent->GetDocument(getter_AddRefs(doc));
+  nsIDocument* doc = mOwnerContent->GetDocument();
   if (!doc) {
     return NS_OK;
   }
@@ -247,9 +246,7 @@ NS_IMETHODIMP
 nsFrameLoader::Destroy()
 {
   if (mOwnerContent) {
-    nsCOMPtr<nsIDocument> doc;
-
-    mOwnerContent->GetDocument(getter_AddRefs(doc));
+    nsCOMPtr<nsIDocument> doc = mOwnerContent->GetDocument();
 
     if (doc) {
       doc->SetSubDocumentFor(mOwnerContent, nsnull);
@@ -296,8 +293,7 @@ nsFrameLoader::GetPresContext(nsIPresContext **aPresContext)
 {
   *aPresContext = nsnull;
 
-  nsCOMPtr<nsIDocument> doc;
-  mOwnerContent->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = mOwnerContent->GetDocument();
 
   while (doc) {
     nsCOMPtr<nsIPresShell> presShell;

@@ -79,8 +79,8 @@ struct RuleProcessorData {
   const nsString* GetLang();
 
   nsIPresContext*   mPresContext;
-  nsIContent*       mContent;
-  nsIContent*       mParentContent; // if content, content->GetParent()
+  nsIContent*       mContent;       // weak ref
+  nsIContent*       mParentContent; // if content, content->GetParent(); weak ref
   nsRuleWalker*     mRuleWalker; // Used to add rules to our results.
   nsIContent*       mScopedRoot;    // Root of scoped stylesheet (set and unset by the supplier of the scoped stylesheet
   

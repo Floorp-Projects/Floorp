@@ -628,12 +628,10 @@ nsGenericDOMDataNode::ToCString(nsAString& aBuf, PRInt32 aOffset,
 }
 #endif
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::GetDocument(nsIDocument** aResult) const
+NS_IMETHODIMP_(nsIDocument*)
+nsGenericDOMDataNode::GetDocument() const
 {
-  *aResult = mDocument;
-  NS_IF_ADDREF(mDocument);
-  return NS_OK;
+  return mDocument;
 }
 
 
@@ -650,12 +648,10 @@ nsGenericDOMDataNode::SetDocument(nsIDocument* aDocument, PRBool aDeep,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::GetParent(nsIContent** aResult) const
+NS_IMETHODIMP_(nsIContent*)
+nsGenericDOMDataNode::GetParent() const
 {
-  NS_IF_ADDREF(*aResult = GetParentWeak());
-
-  return NS_OK;;
+  return GetParentWeak();
 }
 
 NS_IMETHODIMP
@@ -1027,11 +1023,10 @@ nsGenericDOMDataNode::RemoveFocus(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericDOMDataNode::GetBindingParent(nsIContent** aContent) const
+NS_IMETHODIMP_(nsIContent*)
+nsGenericDOMDataNode::GetBindingParent() const
 {
-  *aContent = nsnull;
-  return NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP
@@ -1126,8 +1121,7 @@ nsGenericDOMDataNode::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
     return rv;
   }
 
-  nsCOMPtr<nsIContent> parentNode;
-  GetParent(getter_AddRefs(parentNode));
+  nsIContent* parentNode = GetParentWeak();
 
   if (parentNode) {
     PRInt32 index;

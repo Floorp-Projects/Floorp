@@ -194,8 +194,7 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
 
   NS_ENSURE_TRUE(thisContent, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDocument> doc;
-  thisContent->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = thisContent->GetDocument();
 
   if (!doc) {
     return NS_OK;

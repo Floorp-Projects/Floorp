@@ -284,10 +284,11 @@ nsHTMLButtonElement::Click()
     return NS_OK;
 
   mHandlingClick = PR_TRUE;
-  nsCOMPtr<nsIDocument> doc; 
-  GetDocument(getter_AddRefs(doc));
+  // Hold on to the document in case one of the events makes it die or
+  // something...
+  nsCOMPtr<nsIDocument> doc = mDocument; 
 
-  if (doc) {
+  if (mDocument) {
     PRInt32 numShells = doc->GetNumberOfShells();
     nsCOMPtr<nsIPresContext> context;
     for (PRInt32 count=0; count < numShells; count++) {
@@ -360,13 +361,11 @@ nsHTMLButtonElement::RemoveFocus(nsIPresContext* aPresContext)
   nsCOMPtr<nsIEventStateManager> esm;
   if (NS_OK == aPresContext->GetEventStateManager(getter_AddRefs(esm))) {
 
-    nsCOMPtr<nsIDocument> doc;
-    GetDocument(getter_AddRefs(doc));
-    if (!doc)
+    if (!mDocument)
       return NS_ERROR_NULL_POINTER;
 
     nsCOMPtr<nsIContent> rootContent;
-    doc->GetRootContent(getter_AddRefs(rootContent));
+    mDocument->GetRootContent(getter_AddRefs(rootContent));
     rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
   }
 

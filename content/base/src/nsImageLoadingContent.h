@@ -135,7 +135,7 @@ private:
    *
    * @return the document we belong to
    */
-  nsresult GetOurDocument(nsIDocument** aDocument);
+  nsIDocument* GetOurDocument();
 
   /**
    * Method to create an nsIURI object from the given string (will

@@ -768,11 +768,7 @@ IsValidSelectionPoint(nsSelection *aFrameSel, nsIContent *aContent)
       return PR_FALSE;
     if (tLimiter && tLimiter != aContent)
     {
-      nsCOMPtr<nsIContent> parent;
-      result = aContent->GetParent(getter_AddRefs(parent));
-      if (NS_FAILED(result))
-        return PR_FALSE;
-      if (tLimiter != parent) //if newfocus == the limiter. thats ok. but if not there and not parent bad
+      if (tLimiter != aContent->GetParent()) //if newfocus == the limiter. thats ok. but if not there and not parent bad
         return PR_FALSE; //not in the right content. tLimiter said so
     }
   }
@@ -1115,15 +1111,11 @@ nsSelection::GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent
 
   *aParent = 0;
 
-  nsCOMPtr<nsIContent> parent = do_QueryInterface(aContent);
-  nsCOMPtr<nsIContent> child = parent;
+  nsIContent* child = aContent;
 
   while (child)
   {
-    result = child->GetParent(getter_AddRefs(parent));
-
-    if (NS_FAILED(result))
-      return result;
+    nsIContent* parent = child->GetParent();
 
     if (!parent)
       break;
@@ -1150,9 +1142,7 @@ nsSelection::GetRootForContentSubtree(nsIContent *aContent, nsIContent **aParent
     child = parent;
   }
 
-  *aParent = child;
-
-  NS_IF_ADDREF(*aParent);
+  NS_IF_ADDREF(*aParent = child);
 
   return result;
 }
@@ -1396,9 +1386,8 @@ ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *aChildOffset)
   nsCOMPtr<nsIContent> content = do_QueryInterface(aNode, &result);
   if (NS_SUCCEEDED(result) && content)
   {
-    nsCOMPtr<nsIContent> parent;
-    result = content->GetParent(getter_AddRefs(parent));
-    if (NS_SUCCEEDED(result) && parent)
+    nsIContent* parent = content->GetParent();
+    if (parent)
     {
       result = parent->IndexOf(content, *aChildOffset);
       if (NS_SUCCEEDED(result)) {
@@ -2775,16 +2764,12 @@ nsSelection::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset,
   mAppendStartSelectedCell = nsnull;
 
   //HACKHACKHACK
-  nsCOMPtr<nsIContent> content;
-  nsCOMPtr<nsIDOMNode> domNode;
-  nsCOMPtr<nsIContent> parent;
-  nsCOMPtr<nsIContent> parent2;
-  if (NS_FAILED(aNewFocus->GetParent(getter_AddRefs(parent))) || !parent)
+  if (!aNewFocus->GetParent())
     return NS_ERROR_FAILURE;
   //END HACKHACKHACK /checking for root frames/content
 
   PRInt8 index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
-  domNode = do_QueryInterface(aNewFocus);
+  nsCOMPtr<nsIDOMNode> domNode = do_QueryInterface(aNewFocus);
   //traverse through document and unselect crap here
   if (!aContinueSelection){ //single click? setting cursor down
     PRUint32 batching = mBatching;//hack to use the collapse code.
@@ -4143,11 +4128,9 @@ nsSelection::GetParentTable(nsIContent *aCell, nsIContent **aTable)
     return NS_ERROR_NULL_POINTER;
   }
 
-  nsCOMPtr<nsIContent> parent;
-  aCell->GetParent(getter_AddRefs(parent));
-
   nsCOMPtr<nsIAtom> tag;
-  while (parent) {
+  for (nsIContent* parent = aCell->GetParent(); parent;
+       parent = parent->GetParent()) {
     parent->GetTag(getter_AddRefs(tag));
     if (tag == nsHTMLAtoms::table) {
       *aTable = parent;
@@ -4155,10 +4138,6 @@ nsSelection::GetParentTable(nsIContent *aCell, nsIContent **aTable)
 
       return NS_OK;
     }
-
-    nsCOMPtr<nsIContent> temp;
-    parent->GetParent(getter_AddRefs(temp));
-    parent = temp;
   }
 
   return NS_OK;
@@ -4414,8 +4393,7 @@ nsSelection::AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
   selectAllFrame->GetContent(getter_AddRefs(selectAllContent));
   if (selectAllContent)
   {
-    nsCOMPtr<nsIContent>  parentContent;
-    rv = selectAllContent->GetParent(getter_AddRefs(parentContent));
+    nsCOMPtr<nsIContent> parentContent = selectAllContent->GetParent();
     if (parentContent)
     {
       PRInt32 startOffset;
@@ -4425,8 +4403,7 @@ nsSelection::AdjustOffsetsFromStyle(nsIFrame *aFrame, PRBool *changeSelection,
       {
         // hrmm, this is probably anonymous content. Let's go up another level
         // do we need to do this if we get the right frameSelection to start with?
-        nsCOMPtr<nsIContent> superParent;
-        parentContent->GetParent(getter_AddRefs(superParent));
+        nsCOMPtr<nsIContent> superParent = parentContent->GetParent();
         if (superParent)
         {
           PRInt32 superStartOffset;
@@ -5500,9 +5477,8 @@ nsTypedSelection::GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, 
   *aXOffset = 0;
   *aYOffset = 0;
 
-  nsIView *view = aView;
-
-  while (view && view != aAncestorView)
+  for (nsIView* view = aView; view && view != aAncestorView;
+       view = view->GetParent())
   {
     nscoord x = 0, y = 0;
     nsresult result = view->GetPosition(&x, &y);
@@ -5512,11 +5488,6 @@ nsTypedSelection::GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, 
 
     *aXOffset += x;
     *aYOffset += y;
-
-    result = view->GetParent(view);
-
-    if (NS_FAILED(result))
-      return result;
   }
 
   return NS_OK;

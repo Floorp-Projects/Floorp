@@ -1960,8 +1960,7 @@ nsPrintEngine::MapContentForPO(nsPrintObject*   aRootObject,
   NS_ASSERTION(aPresShell, "Pointer is null!");
   NS_ASSERTION(aContent, "Pointer is null!");
 
-  nsCOMPtr<nsIDocument> doc;
-  aContent->GetDocument(getter_AddRefs(doc));
+  nsIDocument* doc = aContent->GetDocument();
 
   if (!doc) {
     NS_ERROR("No document!");

@@ -277,7 +277,7 @@ protected:
    * our content has been added to a document. If so, we'll become an
    * observer of the document.
    */
-  nsresult CheckDocumentExistence();
+  void CheckDocumentExistence();
   void RemoveFromHashtable();
   inline void BringSelfUpToDate(PRBool aDoFlush);
 

@@ -921,14 +921,12 @@ nsHTMLSelectElement::WillRemoveOptions(nsIContent* aParent,
 PRInt32
 nsHTMLSelectElement::GetContentDepth(nsIContent* aContent)
 {
-  nsCOMPtr<nsIContent> content = aContent;
-  nsCOMPtr<nsIContent> prevContent;
+  nsIContent* content = aContent;
 
   PRInt32 retval = 0;
   while (content != this) {
     retval++;
-    prevContent = content;
-    prevContent->GetParent(getter_AddRefs(content));
+    content = content->GetParent();
     if (!content) {
       retval = -1;
       break;
@@ -966,8 +964,7 @@ nsHTMLSelectElement::GetOptionIndexAfter(nsIContent* aOptions)
 
   PRInt32 retval = -1;
 
-  nsCOMPtr<nsIContent> parent;
-  aOptions->GetParent(getter_AddRefs(parent));
+  nsCOMPtr<nsIContent> parent = aOptions->GetParent();
 
   if (parent) {
     PRInt32 index;
@@ -1735,16 +1732,12 @@ nsHTMLSelectElement::RemoveFocus(nsIPresContext* aPresContext)
   aPresContext->GetEventStateManager(getter_AddRefs(esm));
 
   if (esm) {
-    nsCOMPtr<nsIDocument> doc;
-
-    GetDocument(getter_AddRefs(doc));
-
-    if (!doc) {
+    if (!mDocument) {
       return NS_ERROR_NULL_POINTER;
     }
 
     nsCOMPtr<nsIContent> rootContent;
-    doc->GetRootContent(getter_AddRefs(rootContent));
+    mDocument->GetRootContent(getter_AddRefs(rootContent));
 
     rv = esm->SetContentState(rootContent, NS_EVENT_STATE_FOCUS);
   }
@@ -2198,9 +2191,7 @@ nsHTMLSelectElement::GetHasOptGroups(PRBool* aHasGroups)
 void
 nsHTMLSelectElement::DispatchDOMEvent(const nsAString& aName)
 {
-  nsCOMPtr<nsIDocument> document;
-  GetDocument(getter_AddRefs(document));
-  nsCOMPtr<nsIDOMDocumentEvent> domDoc = do_QueryInterface(document);
+  nsCOMPtr<nsIDOMDocumentEvent> domDoc = do_QueryInterface(mDocument);
   if (domDoc) {
     nsCOMPtr<nsIDOMEvent> selectEvent;
     domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(selectEvent));

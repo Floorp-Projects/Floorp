@@ -355,10 +355,12 @@ nsImageLoadingContent::LoadImageWithChannel(nsIChannel* aChannel,
   // XXX what should we do with content policies here, if anything?
   // Shouldn't that be done before the start of the load?
   
-  nsCOMPtr<nsIDocument> doc;
-  nsresult rv = GetOurDocument(getter_AddRefs(doc));
-  NS_ENSURE_TRUE(doc, rv);
-
+  nsCOMPtr<nsIDocument> doc = GetOurDocument();
+  if (!doc) {
+    // Don't bother
+    return NS_OK;
+  }
+  
   CancelImageRequests(NS_ERROR_IMAGE_SRC_CHANGED);
 
   nsCOMPtr<imgIRequest> & req = mCurrentRequest ? mPendingRequest : mCurrentRequest;
@@ -382,15 +384,14 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
     return NS_OK;
   }
 
-  nsresult rv;   // XXXbz Should failures in this method fire onerror?
-
   // First, get a document (needed for security checks and the like)
-  nsCOMPtr<nsIDocument> doc;
-  rv = GetOurDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsIDocument> doc = GetOurDocument();
   if (!doc) {
     // No reason to bother, I think...
-    return rv;
+    return NS_OK;
   }
+
+  nsresult rv;   // XXXbz Should failures in this method fire onerror?
 
   nsCOMPtr<nsIURI> imageURI;
   rv = StringToURI(aNewURI, doc, getter_AddRefs(imageURI));
@@ -460,15 +461,7 @@ nsImageLoadingContent::ImageURIChanged(const nsACString& aNewURI)
   nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this, &rv);
   NS_ENSURE_TRUE(thisContent, rv);
 
-  nsCOMPtr<nsIDocument> tempDoc;
-  thisContent->GetDocument(getter_AddRefs(tempDoc));
-  if (!doc) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContent> parent;
-  thisContent->GetParent(getter_AddRefs(parent));
-  if (!parent) {
+  if (!thisContent->GetDocument() || !thisContent->GetParent()) {
     return NS_OK;
   }
 
@@ -553,27 +546,24 @@ nsImageLoadingContent::CanLoadImage(nsIURI* aURI, nsIDocument* aDocument)
 }
 
 
-nsresult
-nsImageLoadingContent::GetOurDocument(nsIDocument** aDocument)
+nsIDocument*
+nsImageLoadingContent::GetOurDocument()
 {
-  NS_PRECONDITION(aDocument, "Null out param");
+  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this);
+  NS_ENSURE_TRUE(thisContent, nsnull);
 
-  nsresult rv;
-
-  nsCOMPtr<nsIContent> thisContent = do_QueryInterface(this, &rv);
-  NS_ENSURE_TRUE(thisContent, rv);
-
-  rv = thisContent->GetDocument(aDocument);
-  if (!*aDocument) {  // nodeinfo time
+  nsIDocument* doc = thisContent->GetDocument();
+  
+  if (!doc) {  // nodeinfo time
     // XXXbz GetOwnerDocument
     nsCOMPtr<nsINodeInfo> nodeInfo;
-    rv = thisContent->GetNodeInfo(getter_AddRefs(nodeInfo));
+    thisContent->GetNodeInfo(getter_AddRefs(nodeInfo));
     if (nodeInfo) {
-      NS_IF_ADDREF(*aDocument = nodeInfo->GetDocument());
+      doc = nodeInfo->GetDocument();
     }
   }
 
-  return rv;
+  return doc;
 }
 
 nsresult
@@ -677,12 +667,12 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
   // loops in cases when onLoad handlers reset the src and the new src is in
   // cache.
 
-  nsCOMPtr<nsIDocument> document;
-  nsresult rv = GetOurDocument(getter_AddRefs(document));
+  nsCOMPtr<nsIDocument> document = GetOurDocument();
   if (!document) {
     // no use to fire events if there is no document....
-    return rv;
+    return NS_OK;
   }                                                                             
+  nsresult rv;
   nsCOMPtr<nsIEventQueueService> eventQService =
     do_GetService("@mozilla.org/event-queue-service;1", &rv);
   NS_ENSURE_TRUE(eventQService, rv);

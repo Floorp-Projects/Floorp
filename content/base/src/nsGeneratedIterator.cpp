@@ -554,8 +554,9 @@ nsresult nsGeneratedContentIterator::GetNextSibling(nsCOMPtr<nsIContent> aNode, 
   nsCOMPtr<nsIContent> sib;
   nsCOMPtr<nsIContent> parent;
   PRInt32              indx;
-  
-  if (NS_FAILED(aNode->GetParent(getter_AddRefs(parent))) || !parent)
+
+  parent = aNode->GetParent();
+  if (!parent)
     return NS_ERROR_FAILURE;
 
   if (NS_FAILED(parent->IndexOf(aNode, indx)))
@@ -604,8 +605,9 @@ nsresult nsGeneratedContentIterator::GetPrevSibling(nsCOMPtr<nsIContent> aNode, 
   nsCOMPtr<nsIContent> sib;
   nsCOMPtr<nsIContent> parent;
   PRInt32              indx;
-  
-  if (NS_FAILED(aNode->GetParent(getter_AddRefs(parent))) || !parent)
+
+  parent = aNode->GetParent();
+  if (!parent)
     return NS_ERROR_FAILURE;
 
   if (NS_FAILED(parent->IndexOf(aNode, indx)))
@@ -675,8 +677,7 @@ nsresult nsGeneratedContentIterator::NextNode(nsCOMPtr<nsIContent> *ioNextNode)
     PRInt32              indx;
   
     // get next sibling if there is one
-    if (NS_FAILED(cN->GetParent(getter_AddRefs(parent))))
-      return NS_ERROR_FAILURE;
+    parent = cN->GetParent();
     if (!parent || NS_FAILED(parent->IndexOf(cN, indx)))
     {
       // a little noise to catch some iterator usage bugs.
@@ -1246,7 +1247,8 @@ nsresult nsGeneratedSubtreeIterator::GetTopAncestorInRange(
   nsCOMPtr<nsIContent> parent;
   while (aNode)
   {
-    if (NS_FAILED(aNode->GetParent(getter_AddRefs(parent))) || !parent)
+    parent = aNode->GetParent();
+    if (!parent)
       return NS_ERROR_FAILURE;
     if (NS_FAILED(nsRange::CompareNodeToRange(parent, mRange, &nodeBefore,
                                               &nodeAfter)))

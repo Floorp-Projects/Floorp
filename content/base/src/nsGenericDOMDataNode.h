@@ -169,10 +169,10 @@ public:
                        const nsAString& aArg);
 
   // Implementation for nsIContent
-  NS_IMETHOD GetDocument(nsIDocument** aResult) const;
+  NS_IMETHOD_(nsIDocument*) GetDocument() const;
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
                          PRBool aCompileEventHandlers);
-  NS_IMETHOD GetParent(nsIContent** aResult) const;
+  NS_IMETHOD_(nsIContent*) GetParent() const;
   NS_IMETHOD SetParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsNativeAnonymous() const;
   NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
@@ -208,7 +208,7 @@ public:
   NS_IMETHOD SetFocus(nsIPresContext *aPresContext);
   NS_IMETHOD RemoveFocus(nsIPresContext *aPresContext);
 
-  NS_IMETHOD GetBindingParent(nsIContent** aContent) const;
+  NS_IMETHOD_(nsIContent*) GetBindingParent() const;
   NS_IMETHOD SetBindingParent(nsIContent* aParent);
   NS_IMETHOD_(PRBool) IsContentOfType(PRUint32 aFlags);
 
