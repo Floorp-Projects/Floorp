@@ -77,8 +77,7 @@
 *  G L O B A L     V A R I A B L E S
 */
 
-//the next line needs XX-DATE-XY but last X instead of Y
-var gDateMade = 20020411;
+var gDateMade = "2002043018-cal"
 
 // turn on debuging
 
@@ -547,7 +546,7 @@ function getPreviewText( calendarEventDisplay )
 
 function alertCalendarVersion()
 {
-   alert( "This calendar was made on "+gDateMade+". Please include this in your bug report." );
+   alert( "The build id for this calendar is "+gDateMade+". Please include this in your bug report." );
 }
 
 function playSound( ThisURL )

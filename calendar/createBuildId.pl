@@ -49,11 +49,13 @@ foreach $file (@ARGV)
     print "Working on " . $file . "\n";
 
     # look for XX_DATE_XX and replace with $buildid
+    # look for gDateMade=* and replace * with $buildid
     open(IN, $file) or die "cannot open $file for read\n";
     open(OUT,">" . $file . "-temp") or die "cannot open " . $file . "-temp for write\n";
     while(<IN>)
     {
         $line = $_;
+        $line =~ s/gDateMade =.+/gDateMade = "$buildid"/;
         $line =~ s/XX_DATE_XX/$buildid/;
         print OUT $line;
     }
