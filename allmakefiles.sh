@@ -302,6 +302,8 @@ netwerk/protocol/about/src/Makefile
 netwerk/protocol/data/Makefile
 netwerk/protocol/data/public/Makefile
 netwerk/protocol/data/src/Makefile
+netwerk/protocol/datetime/src/Makefile
+netwerk/protocol/datetime/Makefile
 netwerk/protocol/file/Makefile
 netwerk/protocol/file/public/Makefile
 netwerk/protocol/file/src/Makefile
