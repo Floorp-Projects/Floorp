@@ -34,13 +34,16 @@
   **/
 
 #include "prefapi.h"
-
 #include "jsapi.h"
+
 #define PREF_SUPPORT_OLD_PATH_STRINGS 1
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
 	#if defined(XP_MAC)
 		#include <stat.h>
 	#else
+    #ifdef XP_OS2_EMX
+        #include <sys/types.h>
+    #endif
 		#include <sys/stat.h>
 	#endif
 	#include <errno.h>
@@ -65,6 +68,11 @@
 #include "xpassert.h"
 #include "xp_str.h"
 #include "nsQuickSort.h"
+
+#ifdef XP_OS2
+#define INCL_DOS
+#include <os2.h>
+#endif
 
 #define BOGUS_DEFAULT_INT_PREF_VALUE (-5632)
 #define BOGUS_DEFAULT_BOOL_PREF_VALUE (-2)
@@ -249,6 +257,7 @@ void pref_Alert(char* msg);
 PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
 
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
+
 PrefResult pref_OpenFile(
     const char* filename,
     PRBool is_error_fatal,
@@ -294,7 +303,7 @@ PrefResult pref_OpenFile(
 		   don't clobber the file when we try to save it. */
 		if ((!readBuf || ok != PREF_NOERROR) && is_error_fatal)
 			gErrorOpeningUserPrefs = PR_TRUE;
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 		if (gErrorOpeningUserPrefs && is_error_fatal)
 			MessageBox(NULL,"Error in preference file (prefs.js).  Default preferences will be used.","Netscape - Warning", MB_OK);
 #endif
@@ -1021,6 +1030,9 @@ pref_savePref(PLHashEntry *he, int i, void *arg)
 }
 
 PR_IMPLEMENT(int)
+#ifdef XP_OS2_VACPP
+_Optlink
+#endif
 pref_CompareStrings(const void *v1, const void *v2, void *unused)
 {
 	char *s1 = *(char**) v1;
@@ -1148,7 +1160,6 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFile()
  *  We need to flag a bunch of prefs as local that aren't initialized via all.js.
  *  This seems the safest way to do this.
  */
-
 PR_IMPLEMENT(PrefResult)
 PREF_SetSpecialPrefsLocal(void)
 {
@@ -2253,7 +2264,6 @@ PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot)
 	return pref_copyTree(srcRoot, destRoot, srcRoot);
 }
 
-
 /* Adds a node to the beginning of the callback list. */
 PR_IMPLEMENT(void)
 PREF_RegisterCallback(const char *pref_node,
@@ -2563,7 +2573,7 @@ void pref_Alert(char* msg)
 void pref_Alert(char* msg)
 {
 #if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_BEOS)
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_OS2)
     if ( getenv("NO_PREF_SPAM") == NULL )
 #endif
       /* FE_Alert will eventually become something else */
@@ -2573,7 +2583,9 @@ void pref_Alert(char* msg)
     fputs(msg, stderr);
 #endif
 #endif
-#if defined (XP_PC)
+#if defined(XP_OS2)
+      WinMessageBox (HWND_DESKTOP, 0, msg, "Netscape -- JS Preference Warning", 0, MB_WARNING | MB_OK | MB_APPLMODAL | MB_MOVEABLE);
+#elif defined(XP_PC)
 		MessageBox (NULL, msg, "Netscape -- JS Preference Warning", MB_OK);
 #endif
 }
@@ -2754,6 +2766,7 @@ PR_IMPLEMENT(PrefResult) PREF_GetListPref(const char* pref, char*** list)
 	return PREF_OK;
 }
 
+
 /*--------------------------------------------------------------------------------------*/
 PR_IMPLEMENT(PrefResult) PREF_SetListPref(const char* pref, char** list)
 /* TODO: Call Javascript callback to make sure user is allowed to make this
@@ -2786,6 +2799,7 @@ PR_IMPLEMENT(PrefResult) PREF_SetListPref(const char* pref, char** list)
 
 	return status;	
 }
+
 
 /*--------------------------------------------------------------------------------------*/
 PR_IMPLEMENT(PrefResult)
