@@ -28,11 +28,11 @@ if (verifyDiskSpace(fProgram, srDest))
 
     // register chrome
     var cf = getFolder("Chrome");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "global-region/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "communicator-region/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "editor-region/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "messenger-region/");
-    registerChrome(LOCALE | DELAYED_CHROME, getFolder(cf, chromeName), localeName + "navigator-region/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "global-region/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "communicator-region/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "editor-region/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "messenger-region/");
+    registerChrome(LOCALE, getFolder(cf, chromeName), localeName + "navigator-region/");
 
     if (err == SUCCESS)
     {
