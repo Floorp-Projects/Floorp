@@ -46,6 +46,21 @@ if (prefs) {
 	}
 }
 
+var editorDocumentListener = {
+	NotifyDocumentCreated: function() {
+		if (document.getElementById("msgRecipient#1").value == "")
+		{
+			dump("set focus on the recipient\n");
+			document.getElementById("msgRecipient#1").focus();
+		}
+		else
+		{
+			dump("set focus on the body\n");
+			contentWindow.focus();
+		}
+	}
+};
+
 function GetArgs()
 {
 	var args = new Object();
@@ -158,10 +173,10 @@ function ComposeStartup()
 			window.editorShell.SetContentWindow(contentWindow);
 			window.editorShell.SetWebShellWindow(window);
 			window.editorShell.SetToolbarWindow(window);
+			window.editorShell.RegisterDocumentStateListener(editorDocumentListener);
 
 			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
-			msgCompose.editor = window.editorShell;
-			
+			msgCompose.editor = window.editorShell;			
 			
 	    	var msgCompFields = msgCompose.compFields;
 	    	if (msgCompFields)
