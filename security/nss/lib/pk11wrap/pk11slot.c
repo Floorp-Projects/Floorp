@@ -597,12 +597,10 @@ PK11_FindSlotsByAliases(const char *dllName, const char* slotName,
         PORT_Assert(mlp->module);
         if (!mlp->module) {
             rv = SECFailure;
-        }
-        if (SECFailure == rv) {
             break;
         }
-        if (mlp->module && ((!dllName) || (mlp->module->dllName &&
-            (0 == PORT_Strcmp(mlp->module->dllName, dllName))))) {
+        if ((!dllName) || (mlp->module->dllName &&
+            (0 == PORT_Strcmp(mlp->module->dllName, dllName)))) {
             for (i=0; i < mlp->module->slotCount; i++) {
                 PK11SlotInfo *tmpSlot = (mlp->module->slots?mlp->module->slots[i]:NULL);
                 PORT_Assert(tmpSlot);
@@ -610,7 +608,7 @@ PK11_FindSlotsByAliases(const char *dllName, const char* slotName,
                     rv = SECFailure;
                     break;
                 }
-                if (tmpSlot && (PR_FALSE == presentOnly || PK11_IsPresent(tmpSlot)) &&
+                if ((PR_FALSE == presentOnly || PK11_IsPresent(tmpSlot)) &&
                     ( (!tokenName) || (tmpSlot->token_name &&
                     (0==PORT_Strcmp(tmpSlot->token_name, tokenName)))) &&
                     ( (!slotName) || (tmpSlot->slot_name &&
@@ -633,7 +631,7 @@ PK11_FindSlotsByAliases(const char *dllName, const char* slotName,
     }
 
     if (SECFailure == rv) {
-        PORT_SetError(SEC_ERROR_BAD_DATA);
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
     }
 
     return slotList;
