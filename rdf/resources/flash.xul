@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0"?> <!-- -*- Mode: SGML -->
 <?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
 <?xml-stylesheet href="resource:/res/rdf/flash.css" type="text/css"?>
 
@@ -20,6 +20,8 @@
         flex="100%"
         datasources="rdf:bookmarks"
         onclick="OpenURL(event.target.parentNode);">
+
+    <!-- XXX Write a template rule for this -->
 
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#source" />
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#description" />
