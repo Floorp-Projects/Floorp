@@ -62,7 +62,7 @@ class CWebShellContainer;
 /////////////////////////////////////////////////////////////////////////////
 // CMozillaBrowser
 class ATL_NO_VTABLE CMozillaBrowser : 
-	public CComObjectRootEx<CComSingleThreadModel>,
+	public CComObjectRootEx<CComMultiThreadModel>,
 	public CComCoClass<CMozillaBrowser, &CLSID_MozillaBrowser>,
 	public CComControl<CMozillaBrowser>,
 	public CDWebBrowserEvents1,
