@@ -1235,7 +1235,7 @@ nsFlavorDataProvider.prototype =
       // call our code for saving attachments
       if (attachment)
       {
-        var destFilePath = messenger.saveAttachmentToFolder(attachment.contentType, attachment.url, attachment.displayName, attachment.uri, destDirectory);
+        var destFilePath = messenger.saveAttachmentToFolder(attachment.contentType, attachment.url, encodeURIComponent(attachment.displayName), attachment.uri, destDirectory);
         aData.value = destFilePath.QueryInterface(Components.interfaces.nsISupports);
         aDataLen.value = 4;
       }
