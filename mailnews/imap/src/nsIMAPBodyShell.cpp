@@ -1455,10 +1455,10 @@ PRBool	nsIMAPBodypartMultipart::ShouldFetchInline()
 		if (!PL_strcasecmp(GetBodySubType(), "appledouble"))
 		{
 			PRBool partInline = TRUE;
-			NS_ASSERTION(m_partList->GetSize() == 2, "invalid apple double part");	// 2 == resource fork + data fork
-			for (int i = 0; partInline && (i < m_partList->GetSize()); i++)
+			NS_ASSERTION(m_partList->Count() == 2, "invalid apple double part");	// 2 == resource fork + data fork
+			for (int i = 0; partInline && (i < m_partList->Count()); i++)
 			{
-				nsIMAPBodypart *child = (nsIMAPBodypart *)(m_partList->GetAt(i));
+				nsIMAPBodypart *child = (nsIMAPBodypart *)(m_partList->ElementAt(i));
 
 				// If this isn't the resource fork
 				if (!(!PL_strcasecmp(child->GetBodyType(), "application") &&
