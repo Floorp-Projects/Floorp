@@ -54,19 +54,19 @@
 
 #define STACK_CHUNK_SIZE 8192
 /* Platform-dependent stuff */
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
 #   define ENVIRON _environ
 #   define PUTENV  _putenv
 #   define POPEN   _popen
 #   define PCLOSE  _pclose
 #   define PLATFORM "PC"
-#elif  XP_UNIX
+#elif defined(XP_UNIX)
 #   define ENVIRON environ
 #   define PUTENV  putenv
 #   define POPEN   popen
 #   define PCLOSE  pclose
 #   define PLATFORM "UNIX"
-#elif  XP_BEOS
+#elif defined(XP_BEOS)
 #   define ENVIRON environ
 #   define PUTENV  putenv
 #   define POPEN   popen
