@@ -35,6 +35,8 @@
 #include <FixMath.h>
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsQuickSort.h"
+#include "nsUnicodeMappingUtil.h"
 
 
 PRUint32 nsDeviceContextMac::mPixelsPerInch = 96;
@@ -463,7 +465,7 @@ public:
 
 FontNameKey::FontNameKey(const nsString& aString)
 {
-	aString.ToUpperCase(mString);
+	mString = aString;
 }
 
 PRUint32 FontNameKey::HashValue(void) const
@@ -473,7 +475,7 @@ PRUint32 FontNameKey::HashValue(void) const
 
 PRBool FontNameKey::Equals(const nsHashKey *aKey) const
 {
-  return mString.Equals(((FontNameKey*)aKey)->mString);
+  return mString.EqualsIgnoreCase(((FontNameKey*)aKey)->mString);
 }
 
 nsHashKey* FontNameKey::Clone(void) const
@@ -666,3 +668,236 @@ PRBool nsDeviceContextMac::DisplayVerySmallFonts()
 
 	return mDisplayVerySmallFonts;
 }
+
+
+#pragma mark -
+//------------------------------------------------------------------------
+nsFontEnumeratorMac::nsFontEnumeratorMac()
+{
+  NS_INIT_REFCNT();
+}
+
+NS_IMPL_ISUPPORTS(nsFontEnumeratorMac,
+                  nsCOMTypeInfo<nsIFontEnumerator>::GetIID());
+typedef struct EnumerateFamilyInfo
+{
+  PRUnichar** mArray;
+  int         mIndex;
+} EnumerateFamilyInfo;
+
+typedef struct EnumerateFontInfo
+{
+  PRUnichar** mArray;
+  int         mIndex;
+  int         mCount;
+  ScriptCode	mScript;
+  nsGenericFontNameType mType;
+} EnumerateFontInfo;
+
+
+
+static ScriptCode MapLangGroupToScriptCode(const char* aLangGroup)
+{
+	if(0==nsCRT::strcmp(aLangGroup,  "x-western")) {
+		return smRoman;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "x-central-euro")) {
+		return smCentralEuroRoman;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "x-cyrillic")) {
+		return smCyrillic;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "el")) {
+		return smGreek;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "tr")) {
+		return smRoman;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "he")) {
+		return smHebrew;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "ar")) {
+		return smArabic;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "x-baltic")) {
+		return smRoman;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "th")) {
+		return smThai;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "ja")) {
+		return smJapanese;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "zh-CN")) {
+		return smSimpChinese;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "ko")) {
+		return smKorean;
+	} else 
+	if(0==nsCRT::strcmp(aLangGroup,  "zh-TW")) {
+		return smTradChinese;
+	} else 
+	{
+		return smRoman;
+	}
+}
+static int
+CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
+{
+  const PRUnichar* str1 = *((const PRUnichar**) aArg1);
+  const PRUnichar* str2 = *((const PRUnichar**) aArg2);
+
+  // XXX add nsICollation stuff
+
+  return nsCRT::strcmp(str1, str2);
+}
+static PRBool
+EnumerateFamily(nsHashKey *aKey, void *aData, void* closure)
+
+{
+  EnumerateFamilyInfo* info = (EnumerateFamilyInfo*) closure;
+  PRUnichar** array = info->mArray;
+  int j = info->mIndex;
+  
+  
+  PRUnichar* str = (((FontNameKey*)aKey)->mString).ToNewUnicode();
+  if (!str) {
+    for (j = j - 1; j >= 0; j--) {
+      nsAllocator::Free(array[j]);
+    }
+    info->mIndex = 0;
+    return PR_FALSE;
+  }
+  array[j] = str;
+  info->mIndex++;
+
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorMac::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
+{
+  if (aCount) {
+    *aCount = 0;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aResult) {
+    *aResult = nsnull;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+	nsDeviceContextMac::InitFontInfoList();
+	nsHashtable* list = nsDeviceContextMac::gFontInfoList;
+	if(!list) {
+		return NS_ERROR_FAILURE;
+	}
+	PRInt32 items = list->Count();
+  PRUnichar** array = (PRUnichar**)
+    nsAllocator::Alloc(items * sizeof(PRUnichar*));
+  if (!array) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  EnumerateFamilyInfo info = { array, 0 };
+  list->Enumerate ( EnumerateFamily, &info);
+  NS_ASSERTION( items == info.mIndex, "didn't get all the fonts");
+  if (!info.mIndex) {
+    nsAllocator::Free(array);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_QuickSort(array, info.mIndex, sizeof(PRUnichar*),
+    CompareFontNames, nsnull);
+
+  *aCount = info.mIndex;
+  *aResult = array;
+
+  return NS_OK;
+}
+
+static PRBool
+EnumerateFont(nsHashKey *aKey, void *aData, void* closure)
+
+{
+  EnumerateFontInfo* info = (EnumerateFontInfo*) closure;
+  PRUnichar** array = info->mArray;
+  int j = info->mCount;
+  
+  short	fondID = (short) aData;
+  ScriptCode script = ::FontToScript(fondID);
+	if(script == info->mScript) {
+	  PRUnichar* str = (((FontNameKey*)aKey)->mString).ToNewUnicode();
+	  if (!str) {
+	    for (j = j - 1; j >= 0; j--) {
+	      nsAllocator::Free(array[j]);
+	    }
+	    info->mIndex = 0;
+	    return PR_FALSE;
+	  }
+	  array[j] = str;
+	  info->mCount++;
+	}
+	info->mIndex++;
+  return PR_TRUE;
+}
+NS_IMETHODIMP
+nsFontEnumeratorMac::EnumerateFonts(const char* aLangGroup,
+  const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
+{
+  if ((! aLangGroup) ||( !aGeneric ))
+  	return NS_ERROR_NULL_POINTER;
+  	
+  if (aCount) {
+    *aCount = 0;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aResult) {
+    *aResult = nsnull;
+  }
+  else {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if ((!strcmp(aLangGroup, "x-unicode")) ||
+      (!strcmp(aLangGroup, "x-user-def"))) {
+    return EnumerateAllFonts(aCount, aResult);
+  }
+
+	nsDeviceContextMac::InitFontInfoList();
+	nsHashtable* list = nsDeviceContextMac::gFontInfoList;
+	if(!list) {
+		return NS_ERROR_FAILURE;
+	}
+	PRInt32 items = list->Count();
+  PRUnichar** array = (PRUnichar**)
+    nsAllocator::Alloc(items * sizeof(PRUnichar*));
+  if (!array) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nsUnicodeMappingUtil* gUtil = nsUnicodeMappingUtil::GetSingleton();
+	if(!gUtil) {
+		return NS_ERROR_FAILURE;
+	}
+  
+  nsAutoString GenName(aGeneric);
+  EnumerateFontInfo info = { array, 0 , 0, MapLangGroupToScriptCode(aLangGroup) ,gUtil->MapGenericFontNameType(GenName) };
+  list->Enumerate ( EnumerateFont, &info);
+  if (!info.mIndex) {
+    nsAllocator::Free(array);
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  NS_QuickSort(array, info.mCount, sizeof(PRUnichar*),
+    CompareFontNames, nsnull);
+
+  *aCount = info.mCount;
+  *aResult = array;
+
+  return NS_OK;
+}
+

@@ -28,6 +28,7 @@
 #include "nsIWidget.h"
 #include "nsIView.h"
 #include "nsIRenderingContext.h"
+#include "nsIFontEnumerator.h"
 
 class nsDeviceContextMac : public DeviceContextImpl
 {
@@ -77,7 +78,7 @@ protected:
   Rect									mPageRect;
   nsIDeviceContextSpec  *mSpec;
   GrafPtr								mOldPort;
-
+public:
   // InitFontInfoList and nsHashTable are static because GetMacFontNumber is static
   static void InitFontInfoList();
   static nsHashtable* gFontInfoList;
@@ -90,6 +91,15 @@ private:
 public:
 	static PRUint32		GetScreenResolution();
 	static PRBool			DisplayVerySmallFonts();
+};
+
+
+class nsFontEnumeratorMac : public nsIFontEnumerator
+{
+public:
+  nsFontEnumeratorMac();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIFONTENUMERATOR
 };
 
 #endif /* nsDeviceContextMac_h___ */
