@@ -1627,14 +1627,6 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
                                       aContainingBlockHeight);
     }
 
-    // See if the element is relatively positioned
-    if (NS_STYLE_POSITION_RELATIVE == mStyleDisplay->mPosition) {
-      ComputeRelativeOffsets(cbrs, aContainingBlockWidth, aContainingBlockHeight);
-    } else {
-      // Initialize offsets to 0
-      mComputedOffsets.SizeTo(0, 0, 0, 0);
-    }
-
 #if 0
     nsFrame::ListTag(stdout, frame); printf(": cb=");
     nsFrame::ListTag(stdout, cbrs->frame); printf(" size=%d,%d\n", aContainingBlockWidth, aContainingBlockHeight);
@@ -1744,6 +1736,16 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
           heightUnit = eStyleUnit_Auto;
         }
       }
+    }
+
+    // Compute our offsets if the element is relatively positioned.  We need
+    // the correct containing block width and height here, which is why we need
+    // to do it after all the quirks-n-such above.
+    if (NS_STYLE_POSITION_RELATIVE == mStyleDisplay->mPosition) {
+      ComputeRelativeOffsets(cbrs, aContainingBlockWidth, aContainingBlockHeight);
+    } else {
+      // Initialize offsets to 0
+      mComputedOffsets.SizeTo(0, 0, 0, 0);
     }
 
     // Calculate the computed values for min and max properties
