@@ -491,7 +491,7 @@ nsUpdateService.prototype = {
     var d = new Date();
     return Date.UTC(d.getUTCFullYear(), 
                     d.getUTCMonth(),
-                    d.getUTCDay(),
+                    d.getUTCDate(),
                     d.getUTCHours(),
                     d.getUTCMinutes(),
                     d.getUTCSeconds(),
