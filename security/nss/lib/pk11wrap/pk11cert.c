@@ -852,6 +852,9 @@ pk11_CollectCrls(PK11SlotInfo *slot, CK_OBJECT_HANDLE crlID, void *arg)
     derCrl.data = (unsigned char *)fetchCrl[0].pValue;
     derCrl.len = fetchCrl[0].ulValueLen;
     new_node->crl=CERT_DecodeDERCrl(head->arena,&derCrl,new_node->type);
+    if (new_node->crl == NULL) {
+	goto loser;
+    }
 
     if (fetchCrl[2].pValue) {
         int nnlen = fetchCrl[2].ulValueLen;
