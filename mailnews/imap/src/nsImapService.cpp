@@ -2924,11 +2924,21 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
       rv = aRootFolder->FindSubFolder(folderName, getter_AddRefs(aFolder));
       if (NS_SUCCEEDED(rv))
       {
-          nsCOMPtr<nsIImapMessageSink> msgSink = do_QueryInterface(aFolder);
-          rv = aImapUrl->SetImapMessageSink(msgSink);
+        nsCOMPtr<nsIImapMessageSink> msgSink = do_QueryInterface(aFolder);
+        rv = aImapUrl->SetImapMessageSink(msgSink);
 
-          nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(aFolder);
-          rv = SetImapUrlSink(msgFolder, aImapUrl);	
+        nsCOMPtr<nsIMsgFolder> msgFolder = do_QueryInterface(aFolder);
+        rv = SetImapUrlSink(msgFolder, aImapUrl);	
+        nsXPIDLCString msgKey;
+
+         nsXPIDLCString messageIdString;
+         aImapUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
+         if (messageIdString.get())
+        {
+          PRBool useLocalCache = PR_FALSE;
+          msgFolder->HasMsgOffline(atoi(messageIdString), &useLocalCache);  
+          mailnewsUrl->SetMsgIsInLocalCache(useLocalCache);
+        }
       }
     }
 
