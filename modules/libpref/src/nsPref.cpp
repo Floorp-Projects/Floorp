@@ -72,7 +72,7 @@ public:
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
     NS_IMETHOD ReadUserJSFile(const char *filename); // deprecated
     NS_IMETHOD ReadLIJSFile(const char *filename); // deprecated
-    NS_IMETHOD EvaluateConfigScript(const char * js_buffer, size_t length,
+    NS_IMETHOD EvaluateConfigScript(const char * js_buffer, PRUint32 length,
                     const char* filename, 
                     PRBool bGlobalContext, 
                     PRBool bCallbacks); // deprecated
@@ -489,7 +489,7 @@ NS_IMETHODIMP nsPref::ReadLIJSFile(const char *filename)
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::EvaluateConfigScript(const char * js_buffer,
-                         size_t length,
+                         PRUint32 length,
                          const char* filename, 
                          PRBool bGlobalContext, 
                          PRBool bCallbacks)
@@ -550,7 +550,7 @@ NS_IMETHODIMP nsPref::ReadLIJSFile(nsFileSpec* fileSpec)
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::EvaluateConfigScript(const char * js_buffer,
-                         size_t length,
+                         PRUint32 length,
                          PRBool bGlobalContext, 
                          PRBool bCallbacks)
 //----------------------------------------------------------------------------------------
@@ -565,7 +565,7 @@ NS_IMETHODIMP nsPref::EvaluateConfigScript(const char * js_buffer,
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsPref::EvaluateConfigScriptFile(const char * js_buffer,
-                         size_t length,
+                         PRUint32 length,
                          nsFileSpec* fileSpec, 
                          PRBool bGlobalContext, 
                          PRBool bCallbacks)
