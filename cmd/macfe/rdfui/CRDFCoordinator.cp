@@ -238,6 +238,13 @@ void CRDFCoordinator::HandleNotification(
 
 				mTitleStrip->Refresh();
 				mTreePane->Refresh();
+				
+				// make sure the tree knows the right number of clicks to open up a row. It may
+				// have changed with the mode switch
+				Uint8 clicksToOpen = 2;
+				if ( URDFUtilities::PropertyValueBool(node, gNavCenter->useSingleClick, false) == true )
+					clicksToOpen = 1;
+				mTreePane->ClickCountToOpen(clicksToOpen);
 			}
 			
 			break;
