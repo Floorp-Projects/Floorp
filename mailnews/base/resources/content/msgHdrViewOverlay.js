@@ -134,7 +134,10 @@ function createHeaderEntry(prefix, headerListInfo)
    this.useToggle = false;
 
   if ("useShortView" in headerListInfo)
+  {
     this.useShortView = headerListInfo.useShortView;
+    this.enclosingBox.emailAddressNode = this.textNode;
+  }
   else
     this.useShortView = false;
 
@@ -583,30 +586,26 @@ function OutputEmailAddresses(headerEntry, emailAddresses)
         // if we want to include short/long toggle views and we have a long view, always add it.
         // if we aren't including a short/long view OR if we are and we haven't parsed enough
         // addresses to reach the cutoff valve yet then add it to the default (short) div.
-        if (headerEntry.useToggle && headerEntry.longTextNode)
+        if (headerEntry.useToggle)
         {
-          InsertEmailAddressUnderEnclosingBox(headerEntry, headerEntry.longTextNode, emailAddress, fullAddress, name);
+          var addresses = {};
+          addresses.emailAddress = emailAddress;
+          addresses.fullAddress = fullAddress;
+          addresses.displayName = name;
+
+          headerEntry.enclosingBox.addAddressView(addresses);
         }
-        if (!headerEntry.useToggle && !headerEntry.useShortView)
+        else
         {
           updateEmailAddressNode(headerEntry.enclosingBox.emailAddressNode, emailAddress, fullAddress, name, headerEntry.useShortView);
-        }
-        else if (!headerEntry.useToggle || (numAddressesParsed < gNumAddressesToShow))
-        {
-          InsertEmailAddressUnderEnclosingBox(headerEntry, headerEntry.textNode, emailAddress, fullAddress, name);
         }
         
         numAddressesParsed++;
       } 
     } // if enumerator
-
-    if (headerEntry.useToggle && headerEntry.toggleIcon)
-    {
-      if (numAddressesParsed > gNumAddressesToShow) // make sure the icon is always visible if we have more than the # of addresses to show
-        headerEntry.toggleIcon.removeAttribute('collapsed');
-      else
-       headerEntry.toggleIcon.setAttribute('collapsed', true);
-    }
+    
+    if (headerEntry.useToggle)
+      headerEntry.enclosingBox.buildViews(gNumAddressesToShow);
   } // if msgheader parser
 }
 
@@ -622,39 +621,6 @@ function updateEmailAddressNode(emailAddressNode, emailAddress, fullAddress, dis
   
   if (this.AddExtraAddressProcessing != undefined)
     AddExtraAddressProcessing(emailAddress, emailAddressNode);
-}
-
-/* InsertEmailAddressUnderEnclosingBox --> right now all email addresses are borderless titled buttons
-   with formatting to make them look like html anchors. When you click on the button,
-   you are prompted with a popup asking you what you want to do with the email address
-   useShortView --> only show the name (if present) instead of the name + email address
-*/
-   
-function InsertEmailAddressUnderEnclosingBox(headerEntry, parentNode,
-                                             emailAddress, fullAddress, displayName) 
-{
-  var itemInDocument = parentNode;
-  // if this header uses a toggle then it can contain multiple email addresses. In this case,
-  // parentNode is really an HTML div. we need to create an emailaddress element and insert it into
-  // the html div.
-  if ( headerEntry.useToggle)
-  {
-    var item = document.createElement("mail-emailaddress");
-    if (item && parentNode) 
-    { 
-      if (parentNode.childNodes.length >= 1)
-      {
-        var textNode = document.createElement("text");
-        textNode.setAttribute("value", ", ");
-        textNode.setAttribute("class", "emailSeparator");
-        parentNode.appendChild(textNode);
-      }
-  
-      itemInDocument = parentNode.appendChild(item);
-    }
-  } 
-
-  updateEmailAddressNode(itemInDocument, emailAddress, fullAddress, displayName, headerEntry.useShortView);
 }
 
 function AddNodeToAddressBook (emailAddressNode)

@@ -83,12 +83,115 @@
     </content>
 
     <implementation>
+      <constructor>
+        <![CDATA[
+          this.mLongViewCreated = false;
+          this.mAddresses = new Array;
+        ]]>
+      </constructor>
+
+      <field name="mLongViewCreated"/>
+      <field name="mAddresses"/>
+      
+      <!-- addAddressView: a public method used to add an address to this widget. 
+           aAddresses is an object with 3 properties: displayName, emailAddress and fullAddress
+      -->
+      <method name="addAddressView">
+        <parameter name="aAddress"/>
+        <body>
+          <![CDATA[
+            this.mAddresses.push(aAddress);
+          ]]>
+        </body>
+      </method>
+      
+      <!-- updateEmailAddressNode: private method used to set properties on an address node -->
+      <method name="updateEmailAddressNode">
+        <parameter name="aEmailNode"/>
+        <parameter name="aAddress"/>
+        <body>
+          <![CDATA[
+            aEmailNode.setAttribute("label", aAddress.fullAddress);    
+            aEmailNode.setTextAttribute("emailAddress", aAddress.emailAddress);
+            aEmailNode.setTextAttribute("fullAddress", aAddress.fullAddress);  
+            aEmailNode.setTextAttribute("displayName", aAddress.displayName);
+          ]]>
+        </body>
+      </method>
+
+      <!-- fillAddressesNode: private method used to create email address nodes for either our short
+           or long view. aAddressesNode: the div we want to add addresses too. 
+          aNumAddressesToShow: number of addresses to put into the list -->
+      <method name="fillAddressesNode">
+        <parameter name="aAddressesNode"/>
+        <parameter name="aNumAddressesToShow"/>
+        <body>
+          <![CDATA[
+            var numAddresses = this.mAddresses.length;
+            if (aNumAddressesToShow <= 0)  // then show all
+              aNumAddressesToShow = numAddresses;
+
+            var index = 0; 
+            while (index < numAddresses && index < aNumAddressesToShow)
+            {
+              var newAddressNode= document.createElement("mail-emailaddress");
+              if (index)
+              {
+                var textNode = document.createElement("text");
+                textNode.setAttribute("value", ", ");
+                textNode.setAttribute("class", "emailSeparator");
+                aAddressesNode.appendChild(textNode);
+              }
+              
+              var itemInDocument = aAddressesNode.appendChild(newAddressNode);
+              this.updateEmailAddressNode(itemInDocument, this.mAddresses[index]);
+              index++;
+            }
+          ]]>
+        </body>
+      </method>
+
       <property name="emailAddresses" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailAddresses');"
         readonly="true"/>
       <property name="longEmailAddresses" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'longEmailAddresses');"
         readonly="true"/> 
       <property name="toggleIcon" onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'toggleIcon');"
-        readonly="true"/>        
+        readonly="true"/>
+
+      <!-- buildView: public method used by callers when they are done adding all the email addresses to the widget
+           aNumAddressesToShow: total # of addresses to show in the short view -->
+      <method name="buildViews">
+        <parameter name="aNumAddressesToShow"/>
+        <body>
+          <![CDATA[
+            // always build the short view...its cheap...
+            this.fillAddressesNode(this.emailAddresses, aNumAddressesToShow);
+            // if we are currently toggled to show all the email addresses, build the long one too...
+            if (this.emailAddresses.getAttribute("collapsed") == "true")
+              this.buildLongView();
+
+            // make sure the icon is always visible if we have more than the # of addresses to show     
+            if (this.mAddresses.length > aNumAddressesToShow) 
+              this.toggleIcon.removeAttribute('collapsed');
+            else
+              this.toggleIcon.setAttribute('collapsed', true);
+          ]]> 
+        </body>
+      </method>
+            
+      <!-- buildLongView: private method used for delayed construction of the long view -->
+      <method name="buildLongView">
+        <body>
+          <![CDATA[
+            if (!this.mLongViewCreated)
+            {
+              this.fillAddressesNode(this.longEmailAddresses, -1);
+              this.mLongViewCreated = true;
+            }
+          ]]> 
+        </body>
+      </method>
+
       <method name="toggleAddressView">
         <body>
           <![CDATA[
@@ -104,6 +207,7 @@
           }
           else
           {
+            this.buildLongView();
             shortNode.setAttribute("collapsed", true);
             longNode.removeAttribute("collapsed"); 
             imageNode.setAttribute("class", "showFewerAddressesButton");
@@ -126,6 +230,10 @@
       <method name="clearEmailAddresses">
         <body>
           <![CDATA[
+            // clear out our local state
+            this.mAddresses = new Array; 
+            this.mLongViewCreated = false;
+
             // remove anything inside of each of our labels....
             var parentLabel = this.emailAddresses;
             if (parentLabel)
