@@ -22,6 +22,7 @@
 #define IDS_MB_WARNING_STR              14
 #define IDS_ERROR_UNINSTALL_LOG_FOLDER  15
 #define IDS_MB_MESSAGE_STR              16
+#define IDS_DLG_REMOVE_FILE_TITLE       17
 #define IDI_SETUP                       105
 #define IDI_UNINSTALL                   105
 #define DLG_MESSAGE                     110
@@ -34,8 +35,10 @@
 #define IDC_STATUS3                     1005
 #define ID_YES_TO_ALL                   1005
 #define IDC_GAUGE_ARCHIVE               1006
+#define IDC_STATIC_SHARED_FILENAME      1006
 #define IDC_EDIT_CURRENT_SETTINGS       1026
 #define IDC_MESSAGE0                    1042
+#define IDC_MESSAGE1                    1043
 #define IDC_MESSAGE                     1049
 #define DLG_UNINSTALL                   2008
 #define DLG_EXTRACTING                  2009
@@ -52,7 +55,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1002
+#define _APS_NEXT_CONTROL_VALUE         1007
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
