@@ -29,7 +29,6 @@ MOZ_DECL_CTOR_COUNTER(nsXIFConverter);
 
 NS_IMPL_ISUPPORTS(nsXIFConverter, NS_GET_IID(nsIXIFConverter))
 
-
 nsresult
 NS_NewXIFConverter(nsIXIFConverter **aResult)
 {
@@ -159,6 +158,9 @@ nsXIFConverter::BeginStartTag(nsIAtom* aTag)
   return NS_OK;
 }
 
+//
+// The AddAttribute methods will do entity conversion on their arguments.
+//
 NS_IMETHODIMP
 nsXIFConverter::AddAttribute(const nsAReadableString& aName, const nsAReadableString& aValue)
 {
@@ -168,11 +170,11 @@ nsXIFConverter::AddAttribute(const nsAReadableString& aName, const nsAReadableSt
   name.ToLowerCase();
 
   mBuffer->Append(mSpace);
-  mBuffer->Append(name);
+  AppendWithEntityConversion(name, *mBuffer);
 
   mBuffer->Append(mEqual);
   mBuffer->Append(mQuote);    // XML requires quoted attributes
-  mBuffer->Append(aValue);
+  AppendWithEntityConversion(aValue, *mBuffer);
   mBuffer->Append(mQuote);
   return NS_OK;
 }
@@ -187,7 +189,6 @@ nsXIFConverter::AddHTMLAttribute(const nsAReadableString& aName, const nsAReadab
   FinishStartTag(mAttr,PR_TRUE,PR_TRUE);
   return NS_OK;
 }
-
 
 NS_IMETHODIMP
 nsXIFConverter::AddAttribute(const nsAReadableString& aName, nsIAtom* aValue)
@@ -212,7 +213,7 @@ nsXIFConverter::AddAttribute(const nsAReadableString& aName)
   name.ToLowerCase();
 
   mBuffer->Append(mSpace);
-  mBuffer->Append(name);
+  AppendWithEntityConversion(name, *mBuffer);
   return NS_OK;
 }
 
@@ -316,51 +317,75 @@ nsXIFConverter::AddEndTag(nsIAtom* aTag, PRBool aDoIndent, PRBool aDoReturn)
   return NS_OK;
 }
 
-
-
+//
+// Append a string to another string, doing entity conversion along the way
+//
 NS_IMETHODIMP
-nsXIFConverter::IsMarkupEntity(const PRUnichar aChar, PRBool *aReturn)
+nsXIFConverter::AppendWithEntityConversion(const nsAReadableString& aName,
+                                           nsAWritableString& aOutStr)
 {
-  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
-  NS_ENSURE_ARG_POINTER(aReturn);
-  // If we're in a script, pass entities straight through without conversion:
-  if (mInScript)
-    return PR_FALSE;
+  nsAutoString ret;
 
-  *aReturn = PR_FALSE;
+  for (PRUint32 i = 0; i < aName.Length(); i++)
+  {
+    PRUnichar ch = aName[i];
+    if (NS_FAILED(AppendEntity(ch, &aOutStr, PR_FALSE)))
+      aOutStr.Append(ch);
+  }
+  return NS_OK;
+}
+
+//
+// Append the entity encoding (e.g. &amp;) of the unicode char
+// to the string passed in, or closes tag aInsertIntoTag and
+// inserts into mBuffer if aInsertIntoTag is nonzero.
+// Returns NS_OK if it appended an entity,
+// NS_ERROR_BASE if the character was not an entity.
+//
+NS_IMETHODIMP
+nsXIFConverter::AppendEntity(const PRUnichar aChar, nsAWritableString* aStr,
+                             nsAReadableString* aInsertIntoTag)
+{
+  nsAutoString str;
   switch (aChar)
   {
     case '<':
+      str = NS_LITERAL_STRING("lt");
+      break;
     case '>':
+      str = NS_LITERAL_STRING("gt");
+      break;
     case '&':
-      *aReturn = PR_TRUE;
-    break;
-  }
-  return NS_OK;
-
-}
-
-NS_IMETHODIMP
-nsXIFConverter::AddMarkupEntity(const PRUnichar aChar, PRBool *aReturn)
-{
-  NS_ENSURE_TRUE(mBuffer,NS_ERROR_NOT_INITIALIZED);
-  NS_ENSURE_ARG_POINTER(aReturn);
-  nsAutoString data;
-
-  switch (aChar)
-  {
-    case '<': data.AssignWithConversion("lt"); break;
-    case '>': data.AssignWithConversion("gt"); break;
-    case '&': data.AssignWithConversion("amp"); break;
+      str = NS_LITERAL_STRING("amp");
+      break;
     default:
-      *aReturn = PR_FALSE;
-    break;
+      return NS_ERROR_BASE;
   }
-  if (*aReturn == PR_TRUE)
+  if (str.IsEmpty())
+    return NS_ERROR_BASE;
+
+  // Now we know we have an entity -- do our thing.
+  if (aInsertIntoTag)
   {
+    AddEndTag(*aInsertIntoTag);
     BeginStartTag(mEntity);
-    AddAttribute(mValue,data);
-    FinishStartTag(mEntity,PR_TRUE,PR_FALSE);
+
+    // Can't call AddAttribute directly -- it does entityizing
+    // and will call us back.  So just do what it does:
+    mBuffer->Append(mSpace);
+    mBuffer->Append(mValue);
+    mBuffer->Append(mEqual);
+    mBuffer->Append(mQuote);    // XML requires quoted attributes
+    mBuffer->Append(str);
+    mBuffer->Append(mQuote);
+
+    FinishStartTag(mEntity, PR_TRUE, PR_FALSE);
+  }
+  else if (aStr)
+  {
+    aStr->Append(NS_LITERAL_STRING("&"));
+    aStr->Append(str);
+    aStr->Append(NS_LITERAL_STRING(";"));
   }
   return NS_OK;
 }
@@ -377,25 +402,18 @@ nsXIFConverter::AddContent(const nsAReadableString& aContent)
   PRBool  startTagAdded = PR_TRUE;
   PRInt32   length = aContent.Length();
   PRUnichar ch;
-  PRBool boolVal(PR_FALSE);
   for (PRInt32 i = 0; i < length; i++)
   {
     ch = aContent[i];
-    IsMarkupEntity(ch, &boolVal);
-    if (boolVal)
-    {
-      if (startTagAdded == PR_TRUE)
-      {
-        AddEndTag(tag,PR_FALSE);
-        startTagAdded = PR_FALSE;
-      }
-      AddMarkupEntity(ch, &boolVal);
-    }
+    // First, try to add it as an entity
+    if (NS_SUCCEEDED(AppendEntity(ch, 0, &tag)))
+      startTagAdded = PR_FALSE;
+    // and if that failed, just add the character
     else
     {
-      if (startTagAdded == PR_FALSE)
+      if (!startTagAdded)
       {
-        AddStartTag(tag,PR_FALSE);
+        AddStartTag(tag, PR_FALSE);
         startTagAdded = PR_TRUE;
       }
       mBuffer->Append(ch);
@@ -651,11 +669,14 @@ NS_IMETHODIMP nsXIFConverter::EndCSSDeclaration()
   return NS_OK;
 }
 
-#ifdef DEBUG_XIF
 //
 // Leave a temp file for debugging purposes
 //
-NS_IMETHODIMP nsXIFConverter::WriteDebugFile() {
+NS_IMETHODIMP nsXIFConverter::WriteDebugFile()
+{
+#ifndef DEBUG_XIF
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
 
 #if defined(WIN32)
   const char* filename="c:\\temp\\xif.xif";
@@ -672,18 +693,14 @@ NS_IMETHODIMP nsXIFConverter::WriteDebugFile() {
 #endif
 
   ofstream out(filename);
-  char* s = ToNewUTF8String(mBuffer);
-  if (s) {
-    out << s;
-    Recycle(s);
-  }
+  // Good grief -- there doesn't seem to be any direct way to send
+  // an nsAWritableString to a stream.
+  nsAutoString stupid(*mBuffer);
+  char* utf8 = stupid.ToNewUTF8String();
+  out << utf8;
+  Recycle(utf8);
   out.close();
   return NS_OK;
-}
-#else
-NS_IMETHODIMP nsXIFConverter::WriteDebugFile()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
+#endif /* DEBUG_XIF */
 }
 
-#endif /* DEBUG */

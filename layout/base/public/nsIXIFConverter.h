@@ -105,8 +105,10 @@ public:
   NS_IMETHOD EndCSSDeclaration() = 0;
   NS_IMETHOD EndCSSDeclarationList() = 0;
 
-  NS_IMETHOD IsMarkupEntity(const PRUnichar aChar, PRBool *aReturnVal) = 0;
-  NS_IMETHOD AddMarkupEntity(const PRUnichar aChar, PRBool *aReturnVal) = 0;
+  NS_IMETHOD AppendEntity(const PRUnichar aChar, nsAWritableString* aStr,
+                          nsAReadableString* aInsertIntoTag) = 0;
+  NS_IMETHOD AppendWithEntityConversion(const nsAReadableString& aName,
+                                        nsAWritableString& aOutStr) = 0;
 
   //NS_IMETHOD WriteDebugFile();        // saves to a temp file
 
