@@ -90,6 +90,16 @@ nsSmtpServer::GetUsername(char * *aUsername)
     getPrefString("username", pref);
     rv = prefs->CopyCharPref(pref, aUsername);
     if (NS_FAILED(rv)) *aUsername = nsnull;
+
+    /* if the user has foo@bar.com as there smtp user name
+     * (either from migration or from the account wizard)
+     * send only foo as the username to the smtp server
+     */
+    char *atSignMarker = nsnull;
+    atSignMarker = PL_strchr(*aUsername, '@');
+    if (atSignMarker) {
+	*atSignMarker = '\0';
+    }
     return NS_OK;
 }
 
