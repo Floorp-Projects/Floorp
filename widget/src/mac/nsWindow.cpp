@@ -52,6 +52,10 @@
 #include "nsCarbonHelpers.h"
 #include "nsGfxUtils.h"
 
+#if PINK_PROFILING
+#include "profilerutils.h"
+#endif
+
 
 ////////////////////////////////////////////////////
 nsIRollupListener * gRollupListener = nsnull;
@@ -66,6 +70,7 @@ static Boolean	gNotificationInstalled = false;
 // do this differently so provide a way to do both.
 #if TARGET_CARBON
 static RegionToRectsUPP sUpdateRectProc = nsnull;
+static RegionToRectsUPP sAddRectToArrayProc = nsnull;
 static RegionToRectsUPP sCountRectProc = nsnull;
 #else
 void EachRegionRect (RgnHandle r, void (* proc)(Rect *, void *), void* data) ;
@@ -125,7 +130,8 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this), nsIKBStateContro
 #if TARGET_CARBON
   if ( !sUpdateRectProc ) {
     sUpdateRectProc = NewRegionToRectsUPP ( PaintUpdateRectProc );
-    sCountRectProc = NewRegionToRectsUPP ( CountUpdateRectProc );
+    sAddRectToArrayProc = NewRegionToRectsUPP ( AddRectToArrayProc );
+    sCountRectProc = NewRegionToRectsUPP ( CountRectProc );
   }
 #endif
 
@@ -1166,6 +1172,10 @@ NS_IMETHODIMP	nsWindow::Update()
 	return NS_OK;
 }
 
+
+#pragma mark -
+
+
 static Boolean control_key_down()
 {
 	EventRecord event;
@@ -1217,6 +1227,25 @@ nsWindow :: PaintUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *inDi
 
 
 //
+// AddRectToArrayProc
+//
+// Add each rect to an array so we can post-process them. |inArray| is a
+// pointer to the TRectArray we're adding to.
+//
+OSStatus
+nsWindow :: AddRectToArrayProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *inArray)
+{
+  NS_ASSERTION ( inArray, "You better pass an array!" );
+  TRectArray* rectArray = NS_REINTERPRET_CAST(TRectArray*, inArray);
+  
+  rectArray->mRectList[rectArray->Count()] = *inDirtyRect;
+  ++rectArray->mNumRects;
+  
+  return noErr;
+}
+
+
+//
 // CountUpdateRectProc
 // 
 // Used to count the number of rects in a region. |refCon| is a pointer to a
@@ -1227,11 +1256,24 @@ OSStatus
 nsWindow :: CountUpdateRectProc (UInt16 message, RgnHandle rgn, const Rect *inDirtyRect, void *refCon)
 {
   NS_ASSERTION ( refCon, "You better pass a counter!" );
-  (*NS_REINTERPRET_CAST(long*, refCon))++;  // increment
+  (*NS_REINTERPRET_CAST(long*, refCon))++;                  // increment
   return noErr;
 }
 
+
 #endif
+
+
+#if PINK_PROFILING
+static Boolean KeyDown(const UInt8 theKey);
+static Boolean KeyDown(const UInt8 theKey)
+{
+	KeyMap map;
+	GetKeys(map);
+	return ((*((UInt8 *)map + (theKey >> 3)) >> (theKey & 7)) & 1) != 0;
+}
+#endif
+
 
 //
 // UpdateRect
@@ -1244,7 +1286,7 @@ nsWindow :: PaintUpdateRect (Rect *inDirtyRect, void* inData)
 {
   nsWindow* self = NS_REINTERPRET_CAST(nsWindow*, inData);
   Rect dirtyRect = *inDirtyRect;
-  
+   
 	nsCOMPtr<nsIRenderingContext> renderingContext ( dont_AddRef(self->GetRenderingContext()) );
 	if (renderingContext)
 	{
@@ -1264,20 +1306,37 @@ nsWindow :: PaintUpdateRect (Rect *inDirtyRect, void* inData)
 
 
 //
-// CountUpdateRects
-// 
-// Used to count the number of rects in a region. |inData| is a pointer to a
+// CountRect
+//
+// Used to count the number of rects in a region. |refCon| is a pointer to a
 // counter. We just increment it every time we're called and by the end we'll have
 // the number of rects.
 //
 void
-nsWindow :: CountUpdateRect (Rect *inDirtyRect, void* inData)
+nsWindow :: CountRect ( Rect *inDirtyRect, void *refCon )
 {
-  NS_ASSERTION ( inData, "You better pass a counter!" );
+  NS_ASSERTION ( refCon, "You better pass a counter!" );
+  (*NS_REINTERPRET_CAST(long*, refCon))++;                  // increment
+}
+
+
+//
+// AddRectToArray
+//
+// Add each rect to an array so we can post-process them. |inArray| is a
+// pointer to the TRectArray we're adding to.
+//
+void
+nsWindow :: AddRectToArray ( Rect* inDirtyRect, void* inArray )
+{
+  NS_ASSERTION ( inArray, "You better pass an array!" );
+  TRectArray* rectArray = NS_REINTERPRET_CAST(TRectArray*, inArray);
   
-  (*NS_REINTERPRET_CAST(long*, inData))++;  // increment
+  rectArray->mRectList[rectArray->Count()] = *inDirtyRect;
+  ++rectArray->mNumRects;
   
-} // CountUpdateRects
+} // AddRectToArray
+
 
 //-------------------------------------------------------------------------
 //	HandleUpdateEvent
@@ -1288,6 +1347,13 @@ nsWindow :: CountUpdateRect (Rect *inDirtyRect, void* inData)
 //-------------------------------------------------------------------------
 nsresult nsWindow::HandleUpdateEvent(RgnHandle regionToValidate)
 {
+#if PINK_PROFILING
+if (KeyDown(0x39))	// press [caps lock] to start the profile
+	ProfileStart();
+else
+	ProfileStop(); 
+#endif
+
 	if (! mVisible)
 		return NS_OK;
 
@@ -1335,28 +1401,77 @@ nsresult nsWindow::HandleUpdateEvent(RgnHandle regionToValidate)
 
 	  // Iterate over each rect in the region, sending a paint event for each. Carbon
 	  // has a routine for this, pre-carbon doesn't so we roll our own. If the region
-	  // is very complicated (more than 10 pieces), just use a bounding box.
+	  // is very complicated (more than 15 pieces), just use a bounding box.
+    const int kMaxUpdateRects = 15;           // the most rects we'll try to deal with
+    const int kRectsBeforeBoundingBox = 10;   // if we have more than this, just do bounding box
+
+    int numRects = 0;
+
 #if TARGET_CARBON
-        long count = 0;
-        QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sCountRectProc, &count );
-        if ( count > 0 && count < 10 )
-            QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sUpdateRectProc, this );
-        else {
-            Rect boundingBox;
-            ::GetRegionBounds(updateRgn, &boundingBox);
-            PaintUpdateRect ( &boundingBox, this );
-        }
+    QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sCountRectProc, &numRects );
+    if ( numRects <= kMaxUpdateRects ) {
+      Rect rectList[kMaxUpdateRects];
+      TRectArray rectWrapper ( rectList );
+       
+      // compile a list of rectangles 
+      QDRegionToRects ( updateRgn, kQDParseRegionFromTop, sAddRectToArrayProc, &rectWrapper );
+    
+      // amalgamate adjoining rects into a single rect. This 
+      // may over-draw a little, but will prevent us from going down into
+      // the layout engine for lots of little 1-pixel wide rects.
+      if ( numRects > 1 )
+        CombineRects ( rectWrapper );
+    
+      // now paint 'em! (|numRects| may be invalid now, so check count again). If
+      // we're above a certain threshold, just bail and do bounding box
+      if ( rectWrapper.Count() < kRectsBeforeBoundingBox ) {
+        for ( int i = 0; i < rectWrapper.Count(); ++i )
+          PaintUpdateRectProc ( &rectList[i], this );
+      }
+      else {
+        Rect boundingBox;
+        ::GetRegionBounds(updateRgn, &boundingBox);
+        PaintUpdateRectProc ( &boundingBox, this );
+      }
+    }
+    else {
+      Rect boundingBox;
+      ::GetRegionBounds(updateRgn, &boundingBox);
+      PaintUpdateRect ( &boundingBox, this );
+    }
 #else
-	    long count = 0;
-	    EachRegionRect ( updateRgn, CountUpdateRect, &count );
-	    if ( count < 10 )
-	      EachRegionRect ( updateRgn, PaintUpdateRect, this );
-	    else {
-	      Rect boundingBox;
+    EachRegionRect ( updateRgn, CountRect, &numRects );
+    if ( numRects <= kMaxUpdateRects ) {
+      Rect rectList[kMaxUpdateRects];
+      TRectArray rectWrapper ( rectList );
+       
+      // compile a list of rectangles 
+      EachRegionRect ( updateRgn, AddRectToArray, &rectWrapper );
+    
+      // amalgamate adjoining rects into a single rect. This 
+      // may over-draw a little, but will prevent us from going down into
+      // the layout engine for lots of little 1-pixel wide rects.
+      if ( numRects > 1 )
+        CombineRects ( rectWrapper );
+    
+      // now paint 'em! (|numRects| may be invalid now, so check count again). If
+      // we're above a certain threshold, just bail and do bounding box
+      if ( rectWrapper.Count() < kRectsBeforeBoundingBox ) {
+        for ( int i = 0; i < rectWrapper.Count(); ++i )
+          PaintUpdateRect ( &rectList[i], this );
+      }
+      else {
+        Rect boundingBox;
         ::GetRegionBounds(updateRgn, &boundingBox);
         PaintUpdateRect ( &boundingBox, this );
-	    }
-	  #endif
+      }
+    }
+    else {
+      Rect boundingBox;
+      ::GetRegionBounds(updateRgn, &boundingBox);
+      PaintUpdateRect ( &boundingBox, this );
+    }
+#endif
 
 #if DEBUG
     if (measure_duration) {
@@ -1369,8 +1484,108 @@ nsresult nsWindow::HandleUpdateEvent(RgnHandle regionToValidate)
     if (regionToValidate)
       ::CopyRgn(updateRgn, regionToValidate);
 	}
+
+#if PINK_PROFILING
+	ProfileSuspend();
+	ProfileStop();
+#endif
+
 	return NS_OK;
 }
+
+
+//
+// SortRectsLeftToRight
+//
+// |inRectArray| is an array of mac |Rect|s, sort them by increasing |left|
+// values (so they are sorted left to right). I feel so dirty for using a
+// bubble sort, but darn if it isn't simple and we're only going to have 
+// about 10 of these rects at maximum (that's a fairly compilicated update
+// region).
+//
+void
+nsWindow :: SortRectsLeftToRight ( TRectArray & inRectArray )
+{
+  PRInt32 numRects = inRectArray.Count();
+  
+  for ( int i = 0; i < numRects - 1; ++i ) {
+    for ( int j = i+1; j < numRects; ++j ) {
+      if ( inRectArray.mRectList[j].left < inRectArray.mRectList[i].left ) {
+        Rect temp = inRectArray.mRectList[i];
+        inRectArray.mRectList[i] = inRectArray.mRectList[j];
+        inRectArray.mRectList[j] = temp;
+      }
+    }
+  }
+
+} // SortRectsLeftToRight
+
+
+//
+// CombineRects
+//
+// When breaking up our update region into rects, invariably we end up with lots
+// of tall, thin rectangles that are right next to each other (the drop
+// shadow of windows are an extreme case). Combine adjacent rectangles if the 
+// wasted area (the difference between area of the two rects and the bounding
+// box of the two joined rects) is small enough.
+//
+// As a side effect, the rects will be sorted left->right.
+//
+void
+nsWindow :: CombineRects ( TRectArray & rectArray )
+{
+  const float kCombineThresholdRatio = 0.50;      // 50%
+  
+  // We assume the rects are sorted left to right below, so sort 'em.
+  SortRectsLeftToRight ( rectArray );
+  
+  // Here's basically what we're doing:
+  //
+  // compute the area of X and X+1
+  // compute area of the bounding rect (topLeft of X and bottomRight of X+1)
+  // if ( ratio of combined areas to bounding box is > 50% )
+  //   make bottomRight of X be bottomRight of X+1
+  //   delete X+1 from array and don't advance X, 
+  //    otherwise move along to X+1
+  
+  int i = 0;
+  while ( i < rectArray.Count()-1) {
+    Rect* curr = &rectArray.mRectList[i];
+    Rect* next = &rectArray.mRectList[i+1];
+  
+    // compute areas of current and next rects
+    int currArea = (curr->right - curr->left) * (curr->bottom - curr->top);
+    int nextArea = (next->right - next->left) * (next->bottom - next->top);
+
+    // compute the bounding box and its area
+    Rect boundingBox;
+    ::UnionRect ( curr, next, &boundingBox );
+    int boundingRectArea = (boundingBox.right - boundingBox.left) * 
+                              (boundingBox.bottom - boundingBox.top);
+    
+    // determine if we should combine the rects, based on if the ratio of the
+    // combined areas to the bounding rect's area is above some threshold.
+    if ( (currArea + nextArea) / (float)boundingRectArea > kCombineThresholdRatio ) {
+      // we're combining, so combine the rects, delete the next rect (i+1), remove it from
+      // the array, and _don't_ advance to the next rect.
+      
+      // make the current rectangle the bounding box and shift everything from 
+      // i+2 over.
+      *curr = boundingBox;
+      for ( int j = i+1; j < rectArray.Count()-1; ++j )
+        rectArray.mRectList[j] = rectArray.mRectList[j+1];
+      --rectArray.mNumRects;
+      
+    } // if we should combine
+    else
+      ++i;
+  } // foreach rect
+  
+} // CombineRects
+
+
+#pragma mark -
 
 
 //-------------------------------------------------------------------------
@@ -1571,6 +1786,8 @@ nsWindow :: ScrollBits ( Rect & inRectToScroll, PRInt32 inLeftDelta, PRInt32 inT
 #if TARGET_CARBON
   ::DisposeRgn(visRgn);
 #endif
+//printf("*******scrolling invalidating %ld %ld %ld %ld\n", (**updateRgn).rgnBBox.top, (**updateRgn).rgnBBox.left, (**updateRgn).rgnBBox.bottom,
+//        (**updateRgn).rgnBBox.right);
 	::InvalWindowRgn(mWindowPtr, updateRgn);
 }
 
