@@ -1,0 +1,111 @@
+# Microsoft Developer Studio Generated Dependency File, included by WizardMachine.mak
+
+.\ImageDialog.cpp : \
+	".\ImageDialog.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+.\NavText.cpp : \
+	".\NavText.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+.\NewConfigDialog.cpp : \
+	".\NewConfigDialog.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+.\NewDialog.cpp : \
+	".\NewDialog.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+.\ProgDlgThread.cpp : \
+	".\ProgDlgThread.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+.\ProgressDialog.cpp : \
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+.\PropSheet.cpp : \
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+.\StdAfx.cpp : \
+	".\StdAfx.h"\
+	
+
+.\WizardMachine.cpp : \
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+.\WizardMachine.rc : \
+	".\res\WizardMachine.ico"\
+	".\res\WizardMachine.rc2"\
+	
+
+.\WizardMachineDlg.cpp : \
+	".\ImageDialog.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
+
+.\WizardUI.cpp : \
+	".\ImageDialog.h"\
+	".\NavText.h"\
+	".\NewConfigDialog.h"\
+	".\NewDialog.h"\
+	".\ProgDlgThread.h"\
+	".\ProgressDialog.h"\
+	".\PropSheet.h"\
+	".\StdAfx.h"\
+	".\WizardMachine.h"\
+	".\WizardMachineDlg.h"\
+	".\WizardUI.h"\
+	
