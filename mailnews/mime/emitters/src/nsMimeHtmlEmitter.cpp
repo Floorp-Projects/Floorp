@@ -207,7 +207,7 @@ NS_IMETHODIMP nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
       headerNames[numHeadersAdded] = headerInfo->name;
 
       if (nsCRT::strcasecmp("Date", headerInfo->name) == 0)
-        nsresult rv = GenerateDateString(headerInfo->value, &headerValues[numHeadersAdded]);
+        rv = GenerateDateString(headerInfo->value, &headerValues[numHeadersAdded]);
       else
       {
         // optimization: if we aren't in view all header view mode, we only show a small set of the total # of headers.

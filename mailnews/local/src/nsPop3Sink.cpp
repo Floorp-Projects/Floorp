@@ -476,7 +476,7 @@ nsPop3Sink::IncorporateComplete(nsIMsgWindow *msgWindow)
 {
   if (m_buildMessageUri && m_baseMessageUri)
   {
-      PRUint32 msgKey = -1;
+      PRUint32 msgKey;
       m_newMailParser->GetEnvelopePos(&msgKey);
       m_messageUri.SetLength(0);
       nsBuildLocalMessageURI(m_baseMessageUri, msgKey, m_messageUri);

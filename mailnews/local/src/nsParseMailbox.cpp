@@ -779,7 +779,7 @@ NS_IMETHODIMP nsParseMailMessageState::GetHeaders(char ** pHeaders)
   NS_ENSURE_ARG_POINTER(pHeaders);
   nsCString crlfHeaders;
   char *curHeader = m_headers.GetBuffer();
-  for (PRInt32 headerPos = 0; headerPos < m_headers.GetBufferPos();)
+  for (PRUint32 headerPos = 0; headerPos < m_headers.GetBufferPos();)
   {
     crlfHeaders.Append(curHeader);
     crlfHeaders.Append(CRLF);
