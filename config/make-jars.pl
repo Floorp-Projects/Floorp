@@ -470,6 +470,12 @@ while (<STDIN>) {
 		my $srcPath = defined($2) ? substr($2, 1, -1) : $2;
 		EnsureFileInDir("$chromeDir/$jarfile", $baseFilesDir, $dest, $srcPath, 0, 1);
 		$args = "$args$dest ";
+		if (!foreignPlatformFile($jarfile)  && $autoreg && $dest =~ /([\w\d.\-\_\+]+)\/([\w\d.\-\_\\\/]+)contents.rdf/)
+		{
+		    my $chrome_type = $1;
+		    my $pkg_name = $2;
+		    RegIt($chromeDir, $jarfile, $chrome_type, $pkg_name);
+		}
 	    } elsif (/^\*\+\s+([\w\d.\-\_\\\/\+]+)\s*(\([\w\d.\-\_\\\/]+\))?$\s*/) {
 		# preprocessed, override
 		my $dest = $1;
