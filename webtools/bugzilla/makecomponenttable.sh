@@ -133,7 +133,6 @@ insert into components (value, program, initialowner, initialqacontact, descript
 
 
 insert into components (value, program, initialowner, initialqacontact) values ("Platform: Lesstif on Linux", "Mozilla", "ramiro@netscape.com", "");
-insert into components (value, program, initialowner, initialqacontact) values ("Platform: MacOS/PPC", "Mozilla", "sdagley@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Platform: Rhapsody", "Mozilla", "mcafee@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("Platform: MFC/Win32 on Windows", "Mozilla", "blythe@netscape.com", "");
 
