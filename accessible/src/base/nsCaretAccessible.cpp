@@ -39,6 +39,7 @@
 #include "nsCaretAccessible.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsICaret.h"
@@ -50,6 +51,7 @@
 #include "nsIWidget.h"
 #include "nsIPresShell.h"
 #include "nsTextAccessible.h"
+#include "nsRootAccessible.h"
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsCaretAccessible, nsLeafAccessible, nsIAccessibleCaret, nsISelectionListener)
 
@@ -119,6 +121,11 @@ NS_IMETHODIMP nsCaretAccessible::AttachNewSelectionListener(nsIDOMNode *aCurrent
 
 NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason)
 {
+#ifdef MOZ_ACCESSIBILITY_ATK
+  if (nsAccessibleText::gSuppressedNotifySelectionChanged)
+    return NS_OK;
+#endif    
+
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(aDoc));
   if (!doc)
     return NS_OK;
@@ -137,6 +144,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   nsRect caretRect;
   PRBool isCollapsed;
   caret->GetCaretCoordinates(nsICaret::eTopLevelWindowCoordinates, domSel, &caretRect, &isCollapsed, nsnull);
+#ifndef MOZ_ACCESSIBILITY_ATK
   PRBool visible = (caretRect.x >= 0 && caretRect.y >= 0 && caretRect.width >= 0 && caretRect.height >= 0);
   if (visible)  // Make sure it's visible both by looking at coordinates and visible flag
     caret->GetCaretVisible(&visible);
@@ -171,6 +179,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
 
   nsRect caretScreenRect;
   widget->WidgetToScreen(caretRect, mCaretRect);
+#endif
 
 #ifndef MOZ_ACCESSIBILITY_ATK
   if (visible)
@@ -179,10 +188,27 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   nsCOMPtr<nsIDOMNode> focusNode;
   nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(mCurrentDOMNode));
   nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea(do_QueryInterface(mCurrentDOMNode));
-  if (inputElement || textArea)
+  if (inputElement || textArea) {
     focusNode = mCurrentDOMNode;
-  else
+  }
+  else {
     domSel->GetFocusNode(getter_AddRefs(focusNode));
+    nsCOMPtr<nsIDOMNode> blockNode;
+    nsAccessible::GetParentBlockNode(focusNode, getter_AddRefs(blockNode));
+    nsCOMPtr<nsIDOMHTMLBodyElement> body(do_QueryInterface(blockNode));
+    if (body) {
+      nsCOMPtr<nsIDocument> parentDoc;
+      doc->GetParentDocument(getter_AddRefs(parentDoc));
+      nsCOMPtr<nsIDOMDocument> xulDoc(do_QueryInterface(parentDoc));
+      nsCOMPtr<nsIDOMElement> domElement;
+      xulDoc->GetElementById(NS_LITERAL_STRING("content-frame"), getter_AddRefs(domElement));
+      focusNode = do_QueryInterface(domElement);
+    }
+    else {
+      focusNode = blockNode;
+    }
+  }
+
   if (!focusNode)
     return NS_OK;
   
@@ -195,8 +221,10 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
       domSel->GetFocusOffset(&caretOffset);
       mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CARET_MOVE, accessible, &caretOffset);
     }
-    else
-      mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
+    else {
+      //Current text interface doesn't support this event yet
+      //mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
+    }
   }
 #endif
 

@@ -33,6 +33,7 @@ REQUIRES = \
   content \
   docshell \
   dom \
+  editor \
   gfx \
   htmlparser \
   intl \
