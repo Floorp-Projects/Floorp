@@ -84,6 +84,9 @@ protected:
 private:
     nsLocalFile(const nsLocalFile& srcFile);
     nsLocalFile(const FSSpec& aSpec, const nsACString& aAppendedPath);
+    
+    // Copies all members except mRefCnt, copies mCachedCatInfo only if it's valid.
+    nsLocalFile& operator=(const nsLocalFile& rhs);
 
     PRPackedBool    mFollowLinks;
     PRPackedBool    mFollowLinksDirty;
