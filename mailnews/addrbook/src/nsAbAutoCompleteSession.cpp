@@ -613,7 +613,7 @@ nsAbAutoCompleteSearchString::nsAbAutoCompleteSearchString(const PRUnichar *uSea
   mFullString = nsCRT::strdup(uSearchString);
   mFullStringLen = nsCRT::strlen(mFullString);
   
-  PRInt32 i;
+  PRUint32 i;
   PRUnichar * aPtr;
   for (i = 0, aPtr = (PRUnichar*)mFullString; i < mFullStringLen; i ++, aPtr ++)
   {
@@ -636,7 +636,10 @@ nsAbAutoCompleteSearchString::nsAbAutoCompleteSearchString(const PRUnichar *uSea
 
 nsAbAutoCompleteSearchString::~nsAbAutoCompleteSearchString()
 {
-  CRTFREEIF((PRUnichar *)mFullString);
-  CRTFREEIF((PRUnichar *)mFirstPart);
-  CRTFREEIF((PRUnichar *)mSecondPart);
+  if (mFullString)
+     nsCRT::free((PRUnichar*)mFullString);
+  if (mFirstPart)
+     nsCRT::free((PRUnichar*)mFirstPart);
+  if (mSecondPart)
+     nsCRT::free((PRUnichar*)mSecondPart);
 }
