@@ -188,9 +188,9 @@ class NS_COM nsXPIDLString
         // overridden to make getter_Copies mechanism work
       virtual const char_type* get() const
         {
-          return (mBuffer.get() != GetSharedEmptyBufferHandle())
-                    ? mBuffer->DataStart()
-                    : 0;
+          return (mBuffer->GetImplementationFlags() & shared_buffer_handle_type::kIsNULL)
+                   ? 0
+                   : mBuffer->DataStart();
         }
 
         // deprecated, to be eliminated
@@ -300,9 +300,9 @@ class NS_COM nsXPIDLCString
         // overridden to make getter_Copies mechanism work
       virtual const char_type* get() const
         {
-          return (mBuffer.get() != GetSharedEmptyBufferHandle())
-                    ? mBuffer->DataStart()
-                    : 0;
+          return (mBuffer->GetImplementationFlags() & shared_buffer_handle_type::kIsNULL)
+                   ? 0
+                   : mBuffer->DataStart();
         }
 
         // deprecated, to be eliminated

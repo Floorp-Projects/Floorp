@@ -180,11 +180,6 @@ struct nsStringAllocatorTraits<PRUnichar>
 // end of string allocator stuff that needs to move
 
 
-
-  /**
-   *
-   * @status FROZEN
-   */
 template <class CharT>
 class nsSharedBufferHandle
     : public nsBufferHandle<CharT>
@@ -192,7 +187,6 @@ class nsSharedBufferHandle
     public:
       typedef PRUint32                          size_type;
 
-    protected:
       enum
         {
           kIsImmutable                    = 0x01000000, // if this is set, the buffer cannot be modified even if its refcount is 1
