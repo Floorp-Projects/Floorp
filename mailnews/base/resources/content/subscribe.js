@@ -358,11 +358,9 @@ function SetSubscribeState(state)
       var start = {}, end = {};
       sel.getRangeAt(i, start, end);
       for (var k = start.value; k <= end.value; ++k) {
-        var name = view.getCellText(k, colId);
-        // we need to escape the name because
-        // some news servers have newsgroups with non ASCII names
-        // we need to escape those name before calling SetState()
-        SetState(escape(name), state);
+        var rowRes = gSubscribeTree.builderView.getResourceAtIndex(k);
+        var name = GetRDFProperty(rowRes, "Name");
+        SetState(name, state);
       }
     }
   }
