@@ -83,7 +83,7 @@ NS_IMETHODIMP nsBasicDecoderSupport::Convert(PRUnichar * aDest,
                                             PRInt32 * aSrcLength)
 {
   // XXX deprecated
-  return Convert(aSrc + aSrcOffset, aSrcLength, aDest + aDestOffset, 
+  return ((nsIUnicodeDecoder *)this)->Convert(aSrc + aSrcOffset, aSrcLength, aDest + aDestOffset, 
     aDestLength);
 }
 

@@ -98,29 +98,26 @@ public:
    * worry about managing incomplete input data by mergeing it with the next 
    * buffer.
    *
-   * Error conditions. If the readed value does not belong to this character 
-   * set, one should replace it with the Unicode special 0xFFFD. When an actual
-   * input error is encountered, like a format error, there are two possible 
-   * behaviours: "recover & continue" (default) and "return error code". 
-   * Actually, most of the converters will just signal error, as the recovery 
-   * code can get very complicated and error prone. So, all converters are 
-   * required to support the second mode. The first one is up to you. But if 
-   * you support it, you have to make it default!If someone wants strict 
-   * checking all the time, a setter method is available for the input error
-   * behavior.
+   * Error conditions: 
+   * If the read value does not belong to this character set, one should 
+   * replace it with the Unicode special 0xFFFD. When an actual input error is 
+   * encountered, like a format error, the converter stop and return error.
+   * Hoever, we should keep in mind that we need to be lax in decoding.
    *
-   * XXX Change this method's signature to:
-   * Convert(aSrc, aSrcLen, aDest, aDestLen)
+   * Converter required behavior:
+   * In this order: when output space is full - return right away. When input
+   * data is wrong, return input pointer right after the wrong byte. When 
+   * partial input, it will be consumed and cached. All the time input pointer
+   * will show how much was actually consumed and how much was actually 
+   * written.
    *
+   * @param aSrc        [IN] the source data buffer
+   * @param aSrcLength  [IN/OUT] the length of source data buffer; after
+   *                    conversion will contain the number of bytes read
    * @param aDest       [OUT] the destination data buffer
-   * @param aDestOffset [IN] the offset in the destination data buffer
    * @param aDestLength [IN/OUT] the length of the destination data buffer;
    *                    after conversion will contain the number of Unicode
    *                    characters written
-   * @param aSrc        [IN] the source data buffer
-   * @param aSrcOffset  [IN] the offset in the source data buffer
-   * @param aSrcLength  [IN/OUT] the length of source data buffer; after
-   *                    conversion will contain the number of bytes read
    * @return            NS_PARTIAL_MORE_INPUT if only a partial conversion was
    *                    done; more input is needed to continue
    *                    NS_PARTIAL_MORE_OUTPUT if only  a partial conversion
@@ -128,44 +125,22 @@ public:
    *                    NS_ERROR_ILLEGAL_INPUT if an illegal input sequence
    *                    was encountered and the behavior was set to "signal"
    */
-  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength, const char * aSrc, PRInt32 aSrcOffset, 
-      PRInt32 * aSrcLength) = 0;
-
-  /**
-   * Finishes the conversion. The converter has the possibility to write some 
-   * extra data and flush its final state.
-   *
-   * XXX Deprecated.
-   *
-   * @param aDest       [OUT] the destination data buffer
-   * @param aDestOffset [IN] the offset in the destination data buffer
-   * @param aDestLength [IN/OUT] the length of destination data buffer; after
-   *                    conversion it will contain the number of Unicode 
-   *                    characters written
-   * @return            NS_PARTIAL_MORE_OUTPUT if only a partial finish was
-   *                    done; more output space is needed to continue
-   */
-  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, PRInt32 * aDestLength)
-      = 0;
+  NS_IMETHOD Convert(const char * aSrc, PRInt32 * aSrcLength, 
+      PRUnichar * aDest, PRInt32 * aDestLength) = 0;
 
   /**
    * Returns a quick estimation of the size of the buffer needed to hold the
    * converted data. Remember: this estimation is >= with the actual size of 
    * the buffer needed. It will be computed for the "worst case"
    *
-   * XXX Change this method's signature to:
-   * GetMaxLength(aSrc, aSrcLen, aDestLen)
-   *
    * @param aSrc        [IN] the source data buffer
-   * @param aSrcOffset  [IN] the offset in the source data buffer
    * @param aSrcLength  [IN] the length of source data buffer
    * @param aDestLength [OUT] the needed size of the destination buffer
    * @return            NS_EXACT_LENGTH if an exact length was computed
    *                    NS_OK is all we have is an approximation
    */
-  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, 
-      PRInt32 aSrcLength, PRInt32 * aDestLength) = 0;
+  NS_IMETHOD GetMaxLength(const char * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength) = 0;
 
   /**
    * Resets the charset converter so it may be recycled for a completely 
@@ -173,16 +148,20 @@ public:
    */
   NS_IMETHOD Reset() = 0;
 
-  /**
-   * Specify what to do when an illegal input sequence is encountered.
-   * - stop and signal error
-   * - recover and continue (default)
-   *
-   * XXX Deprecated
-   *
-   * @param aOrder      [IN] the behavior; taken from the enum
-   */
+  // XXX deprecated
+  /*---------- BEGIN DEPRECATED */ 
+  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
+      PRInt32 * aDestLength, const char * aSrc, PRInt32 aSrcOffset, 
+      PRInt32 * aSrcLength) = 0;
+
+  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, PRInt32 * aDestLength)
+      = 0;
+
+  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, 
+      PRInt32 aSrcLength, PRInt32 * aDestLength) = 0;
+
   NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior) = 0;
+  /*---------- END DEPRECATED */ 
 };
 
 #endif /* nsIUnicodeDecoder_h___ */
