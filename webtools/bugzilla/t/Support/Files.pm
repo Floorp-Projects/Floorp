@@ -41,16 +41,17 @@ $file = '*';
 
 sub isTestingFile {
   my ($file) = @_;
+  my $exclude;
+  foreach $exclude (@exclude_files) {
+  	if ($file eq $exclude) { return undef; } # get rid of excluded files.
+  }
+
   if ($file =~ /\.cgi$|\.pl$/) {
     return 1;
   }
   my $additional;
   foreach $additional (@additional_files) {
     if ($file eq $additional) { return 1; }
-  }
-  my $exclude;
-  foreach $exclude (@exclude_files) {
-  	if ($file eq $exclude) { return undef; } # get rid of excluded files.
   }
   return undef;
 }
