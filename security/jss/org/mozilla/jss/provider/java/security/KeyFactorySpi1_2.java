@@ -183,8 +183,8 @@ public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
     /**
      * Translates key by calling getEncoded() to get its encoded form,
      * then importing the key from its encoding. Two formats are supported:
-     * "SubjectPublicKeyInfo", which is decoded with an X509EncodedKeySpec;
-     * and "PrivateKeyInfo", which is decoded with a PKCS8EncodedKeySpec.
+     * "X.509", which is decoded with an X509EncodedKeySpec;
+     * and "PKCS#8", which is decoded with a PKCS8EncodedKeySpec.
      *
      * <p>This method is not well standardized: the documentation is very vague
      * about how the key is supposed to be translated. It is better
@@ -198,10 +198,14 @@ public class KeyFactorySpi1_2 extends java.security.KeyFactorySpi
         String format = key.getFormat();
 
           try {
-            if( format.equals("SubjectPublicKeyInfo") ) {
+            if( format.equals("SubjectPublicKeyInfo") ||
+                format.equalsIgnoreCase("X.509"))
+            {
                 X509EncodedKeySpec spec = new X509EncodedKeySpec(encoded);
                 return engineGeneratePublic(spec);
-            } else if( format.equals("PrivateKeyInfo") ) {
+            } else if( format.equals("PrivateKeyInfo") ||
+                format.equalsIgnoreCase("PKCS#8"))
+            {
                 PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(encoded);
                 return engineGeneratePrivate(spec);
             }
