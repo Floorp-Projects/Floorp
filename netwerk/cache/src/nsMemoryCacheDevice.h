@@ -70,9 +70,17 @@ private:
     void      AdjustMemoryLimits( PRUint32  softLimit, PRUint32  hardLimit);
     void      EvictEntry( nsCacheEntry * entry );
     void      EvictEntriesIfNecessary();
+    int       EvictionList(nsCacheEntry * entry, PRUint32  deltaSize);
 
+    /*
+     *  Data members
+     */
+    
     nsCacheEntryHashTable   mMemCacheEntries;
-    PRCList                 mEvictionList;
+    
+    enum { mostLikelyToEvict = 0, leastLikelyToEvict = 1 };   // constants to differentiate eviction lists
+    PRCList                 mEvictionList[2];
+    PRUint32                mEvictionThreshold;
 
     PRUint32                mHardLimit;
     PRUint32                mSoftLimit;

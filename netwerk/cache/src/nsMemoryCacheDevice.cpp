@@ -41,14 +41,16 @@ const char *gMemoryCacheSizePref = "browser.cache.memory_cache_size";
 
 
 nsMemoryCacheDevice::nsMemoryCacheDevice()
-    : mHardLimit(0),
+    : mEvictionThreshold(40 * 1024),
+      mHardLimit(0),
       mSoftLimit(0),
       mTotalSize(0),
       mInactiveSize(0),
       mEntryCount(0),
       mMaxEntryCount(0)
 {
-    PR_INIT_CLIST(&mEvictionList);
+    PR_INIT_CLIST(&mEvictionList[mostLikelyToEvict]);
+    PR_INIT_CLIST(&mEvictionList[leastLikelyToEvict]);
 }
 
 
@@ -130,20 +132,22 @@ nsMemoryCacheDevice::Shutdown()
     // evict all entries
     nsCacheEntry * entry, * next;
 
-    entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList);
-    while (entry != &mEvictionList) {
-        NS_ASSERTION(entry->IsInUse() == PR_FALSE, "### shutting down with active entries.\n");
-        next = (nsCacheEntry *)PR_NEXT_LINK(entry);
-        PR_REMOVE_AND_INIT_LINK(entry);
-    
-        // update statistics
-        PRUint32 memoryRecovered = entry->Size();
-        mTotalSize    -= memoryRecovered;
-        mInactiveSize -= memoryRecovered;
-        --mEntryCount;
+    for (int i=mostLikelyToEvict; i <= leastLikelyToEvict; ++i) {
+        entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList[i]);
+        while (entry != &mEvictionList[i]) {
+            NS_ASSERTION(entry->IsInUse() == PR_FALSE, "### shutting down with active entries.\n");
+            next = (nsCacheEntry *)PR_NEXT_LINK(entry);
+            PR_REMOVE_AND_INIT_LINK(entry);
+        
+            // update statistics
+            PRUint32 memoryRecovered = entry->Size();
+            mTotalSize    -= memoryRecovered;
+            mInactiveSize -= memoryRecovered;
+            --mEntryCount;
 
-        delete entry;
-        entry = next;
+            delete entry;
+            entry = next;
+        }
     }
 
 /*
@@ -169,9 +173,9 @@ nsMemoryCacheDevice::FindEntry(nsCString * key)
     nsCacheEntry * entry = mMemCacheEntries.GetEntry(key);
     if (!entry)  return nsnull;
 
-    // move entry to the tail of the eviction list
+    // move entry to the tail of an eviction list
     PR_REMOVE_AND_INIT_LINK(entry);
-    PR_APPEND_LINK(entry, &mEvictionList);
+    PR_APPEND_LINK(entry, &mEvictionList[EvictionList(entry, 0)]);
     
     mInactiveSize -= entry->Size();
 
@@ -214,7 +218,7 @@ nsMemoryCacheDevice::BindEntry(nsCacheEntry * entry)
 
 	if (!entry->IsDoomed()) {
         // append entry to the eviction list
-	    PR_APPEND_LINK(entry, &mEvictionList);
+        PR_APPEND_LINK(entry, &mEvictionList[EvictionList(entry, 0)]);
 
         // add entry to hashtable of mem cache entries
         nsresult  rv = mMemCacheEntries.AddEntry(entry);
@@ -293,6 +297,12 @@ nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
 
     // adjust our totals
     mTotalSize    += deltaSize;
+    
+    if (!entry->IsDoomed()) {
+        // move entry to the tail of the appropriate eviction list
+        PR_REMOVE_AND_INIT_LINK(entry);
+        PR_APPEND_LINK(entry, &mEvictionList[EvictionList(entry, deltaSize)]);
+    }
 
     EvictEntriesIfNecessary();
 
@@ -336,22 +346,33 @@ nsMemoryCacheDevice::EvictEntriesIfNecessary(void)
     if ((mTotalSize < mHardLimit) && (mInactiveSize < mSoftLimit))
         return;
 
-    // XXX implement more sophisticated eviction ordering
+    for (int i=mostLikelyToEvict; i<=leastLikelyToEvict; ++i) {
+        entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList[i]);
+        while (entry != &mEvictionList[i]) {
+            if (entry->IsInUse()) {
+                entry = (nsCacheEntry *)PR_NEXT_LINK(entry);
+                continue;
+            }
 
-    entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList);
-    while (entry != &mEvictionList) {
-        if (entry->IsInUse()) {
-            entry = (nsCacheEntry *)PR_NEXT_LINK(entry);
-            continue;
+            next = (nsCacheEntry *)PR_NEXT_LINK(entry);
+            EvictEntry(entry);
+            entry = next;
+
+            if ((mTotalSize < mHardLimit) && (mInactiveSize < mSoftLimit))
+                return;
         }
-
-        next = (nsCacheEntry *)PR_NEXT_LINK(entry);
-        EvictEntry(entry);
-        entry = next;
-
-        if ((mTotalSize < mHardLimit) && (mInactiveSize < mSoftLimit))
-            break;
     }
+}
+
+
+int
+nsMemoryCacheDevice::EvictionList(nsCacheEntry * entry, PRUint32  deltaSize)
+{
+    PRUint32  size = entry->Size() + deltaSize;
+    if ((size > mEvictionThreshold) || (entry->ExpirationTime() != 0))
+        return mostLikelyToEvict;
+    
+    return leastLikelyToEvict;
 }
 
 
@@ -372,20 +393,21 @@ nsMemoryCacheDevice::Visit(nsICacheVisitor * visitor)
     nsCacheEntry *              entry;
     nsCOMPtr<nsICacheEntryInfo> entryRef;
 
-    entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList);
-    while (entry != &mEvictionList) {
-        nsCacheEntryInfo * entryInfo = new nsCacheEntryInfo(entry);
-        if (!entryInfo) return NS_ERROR_OUT_OF_MEMORY;
-        entryRef = entryInfo;
+    for (int i=mostLikelyToEvict; i <= leastLikelyToEvict; ++i) {
+        entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList[i]);
+        while (entry != &mEvictionList[i]) {
+            nsCacheEntryInfo * entryInfo = new nsCacheEntryInfo(entry);
+            if (!entryInfo) return NS_ERROR_OUT_OF_MEMORY;
+            entryRef = entryInfo;
 
-        rv = visitor->VisitEntry(gMemoryDeviceID, entryInfo, &keepGoing);
-        entryInfo->DetachEntry();
-        if (NS_FAILED(rv)) return rv;
-        if (!keepGoing) break;
+            rv = visitor->VisitEntry(gMemoryDeviceID, entryInfo, &keepGoing);
+            entryInfo->DetachEntry();
+            if (NS_FAILED(rv)) return rv;
+            if (!keepGoing) break;
 
-        entry = (nsCacheEntry *)PR_NEXT_LINK(entry);
+            entry = (nsCacheEntry *)PR_NEXT_LINK(entry);
+        }
     }
-
     return NS_OK;
 }
 
@@ -396,20 +418,22 @@ nsMemoryCacheDevice::EvictEntries(const char * clientID)
     nsCacheEntry * entry;
     PRUint32 prefixLength = (clientID ? nsCRT::strlen(clientID) : 0);
 
-    PRCList * elem = PR_LIST_HEAD(&mEvictionList);
-    while (elem != &mEvictionList) {
-        entry = (nsCacheEntry *)elem;
-        elem = PR_NEXT_LINK(elem);
-        
-        const char * key = entry->Key()->get();
-        if (clientID && nsCRT::strncmp(clientID, key, prefixLength) != 0)
-            continue;
-        
-        if (entry->IsInUse()) {
-            nsresult rv = nsCacheService::GlobalInstance()->DoomEntry_Locked(entry);
-            if (NS_FAILED(rv)) return rv;
-        } else {
-            EvictEntry(entry);
+    for (int i=mostLikelyToEvict; i<=leastLikelyToEvict; ++i) {
+        PRCList * elem = PR_LIST_HEAD(&mEvictionList[i]);
+        while (elem != &mEvictionList[i]) {
+            entry = (nsCacheEntry *)elem;
+            elem = PR_NEXT_LINK(elem);
+            
+            const char * key = entry->Key()->get();
+            if (clientID && nsCRT::strncmp(clientID, key, prefixLength) != 0)
+                continue;
+            
+            if (entry->IsInUse()) {
+                nsresult rv = nsCacheService::GlobalInstance()->DoomEntry_Locked(entry);
+                if (NS_FAILED(rv)) return rv;
+            } else {
+                EvictEntry(entry);
+            }
         }
     }
     return NS_OK;
