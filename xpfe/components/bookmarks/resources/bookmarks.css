@@ -7,3 +7,8 @@ bookmarks-outliner.single-name
   {
     -moz-binding          : url("chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner-name");
   }
+
+bookmarks-outliner.folders
+  {
+    -moz-binding          : url("chrome://communicator/content/bookmarks/bookmarks.xml#bookmarks-outliner-folders");
+  }
