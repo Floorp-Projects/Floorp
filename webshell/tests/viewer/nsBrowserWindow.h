@@ -204,7 +204,7 @@ public:
   void DumpStyleContexts(FILE *out = stdout);
   void ToggleFrameBorders();
   void ToggleBoolPrefAndRefresh(const char * aPrefName);
-  void ShowContentSize();
+  void ShowContentSize(FILE* out = stdout);
   void ShowFrameSize(FILE* out = stdout);
   void ShowStyleSize();
   void DoDebugSave();
