@@ -78,14 +78,16 @@ NS_WIDGET nsMacMessagePump::nsWindowlessMenuEventHandler nsMacMessagePump::gWind
 // Important Notes:
 // ----------------
 //
-//  - To turn the profiler on, you must define "#pragma profile on"
-//    in IDE_Options.h and recompile everything.
+//  - To turn the profiler on, define "#pragma profile on" in IDE_Options.h
+//    then set $PROFILE to 1 in BuildNGLayoutDebug.pl and recompile everything.
 //
 //  - You may need to turn the profiler off ("#pragma profile off")
 //	  in NSPR.Debug.Prefix because of incompatiblity with NSPR threads.
+//    It usually isn't a problem but it may be one when profiling things like
+//    imap or network i/o.
 //
 //	- The profiler utilities (ProfilerUtils.c) and the profiler
-//	  shared library (ProfilerLib) sit in NSStdLib.mcp and NSRuntime.mcp.
+//	  shared library (ProfilerLib) sit in NSRuntime.mcp.
 //
 
 		// Define this if you want to start profiling when the Caps Lock
