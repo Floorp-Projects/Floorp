@@ -207,6 +207,7 @@ function searchOnLoad()
 {
   initializeSearchWidgets();
   initializeSearchWindowWidgets();
+  CreateMessenger();
 
   gSearchBundle = document.getElementById("bundle_search");
   setupDatasource();

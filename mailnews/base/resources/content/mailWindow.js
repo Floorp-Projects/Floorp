@@ -113,11 +113,16 @@ function OnMailWindowUnload()
 
 }
 
+function CreateMessenger()
+{
+  messenger = Components.classes[messengerContractID].createInstance();
+  messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
+}
+
 function CreateMailWindowGlobals()
 {
   // get the messenger instance
-  messenger = Components.classes[messengerContractID].createInstance();
-  messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
+  CreateMessenger();
 
   prefServices = Components.classes[prefContractID].getService(Components.interfaces.nsIPrefService);
   pref = prefServices.getBranch(null);
