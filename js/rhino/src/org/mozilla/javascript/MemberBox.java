@@ -50,15 +50,13 @@ import java.io.*;
 final class MemberBox implements Serializable
 {
 
-    MemberBox(Method method, ClassCache cache)
+    MemberBox(Method method)
     {
-        this.cache = cache;
         init(method);
     }
 
-    MemberBox(Constructor constructor, ClassCache cache)
+    MemberBox(Constructor constructor)
     {
-        this.cache = cache;
         init(constructor);
     }
 
@@ -66,28 +64,6 @@ final class MemberBox implements Serializable
     {
         this.memberObject = method;
         this.argTypes = method.getParameterTypes();
-    }
-
-    void prepareInvokerOptimization()
-    {
-        if (cache.invokerOptimization) {
-            Invoker master = (Invoker)cache.invokerMaster;
-            if (master == null) {
-                master = Invoker.makeMaster();
-                if (master == null) {
-                    cache.invokerOptimization = false;
-                } else {
-                    cache.invokerMaster = master;
-                }
-            }
-            if (master != null) {
-                try {
-                    invoker = master.createInvoker(cache, method(), argTypes);
-                } catch (RuntimeException ex) {
-                    cache.invokerOptimization = false;
-                }
-            }
-        }
     }
 
     private void init(Constructor constructor)
@@ -159,15 +135,6 @@ final class MemberBox implements Serializable
 
     Object invoke(Object target, Object[] args)
     {
-        if (invoker != null) {
-            try {
-                return invoker.invoke(target, args);
-            } catch (Exception ex) {
-                throw Context.throwAsScriptRuntimeEx(ex);
-            } catch (LinkageError ex) {
-                invoker = null;
-            }
-        }
         Method method = method();
         try {
             try {
@@ -398,10 +365,8 @@ final class MemberBox implements Serializable
         return result;
     }
 
-    private ClassCache cache;
     private transient Member memberObject;
     transient Class[] argTypes;
-    transient Invoker invoker;
 
     private static Method method_setAccessible;
 

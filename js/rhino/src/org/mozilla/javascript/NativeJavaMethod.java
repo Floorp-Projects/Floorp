@@ -67,7 +67,7 @@ public class NativeJavaMethod extends BaseFunction
 
     public NativeJavaMethod(Method method, String name)
     {
-        this(new MemberBox(method, null), name);
+        this(new MemberBox(method), name);
     }
 
     public String getFunctionName()

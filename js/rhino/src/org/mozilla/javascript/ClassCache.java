@@ -54,9 +54,6 @@ public class ClassCache
 
     Hashtable classTable = new Hashtable();
 
-    boolean invokerOptimization = false;
-    Invoker invokerMaster;
-
     Hashtable javaAdapterGeneratedClasses = new Hashtable();
 
     private Hashtable interfaceAdapterCache;
@@ -114,10 +111,6 @@ public class ClassCache
     {
         classTable = new Hashtable();
         javaAdapterGeneratedClasses = new Hashtable();
-        Invoker im = invokerMaster;
-        if (im != null) {
-            im.clearMasterCaches();
-        }
         interfaceAdapterCache = null;
     }
 
@@ -158,44 +151,24 @@ public class ClassCache
     }
 
     /**
+     * @deperecated The method always returns false.
      * @see #setInvokerOptimizationEnabled(boolean enabled)
      */
     public boolean isInvokerOptimizationEnabled()
     {
-        return invokerOptimization;
+        return false;
     }
 
     /**
-     * Control if invocation of Java methods in subclasses of
-     * {@link ScriptableObject} through reflection should be
-     * replaced by direct calls to invoker code generated at runtime.
-     * On many JVMs cost of calling Java method through reflection can be
-     * reduced significantly if a special invoker classes are generated at
-     * runtime to call the Java methods directly. For example, under JDK 1.3.1
-     * on Linux the reflection calls can be speedup by 10-15 times. On JDK
-     * 1.4.2 the the speedup can reach the factor of 1.5-2.
-     * <p>
-     * The drawback of the optimization is increased memory consumption and
-     * longer runtime initialization since class generating and loading is
-     * slow. In addition the current implementation assumes that the
-     * classes under optimization are reachable through
-     * {@link Context#getApplicationClassLoader()} which may not be feasible
-     * to implement.
-     * <p>
-     * By default the optimization is disabled.
-     *
-     * @param enabled if true enable invoker optimization or if false disable
-     *        it and clear all cached generated classes.
-     *
-     * @see #isInvokerOptimizationEnabled()
+     * @deperecated The method does nothing.
+     * Invoker optimization is no longer used by Rhino.
+     * On modern JDK like 1.4 or 1.5 the disadvatages of the optimization
+     * like incresed memory usage or longer initialization time overweight
+     * small speed increase that can be gained using generated proxy class
+     * to replace reflection.
      */
     public synchronized void setInvokerOptimizationEnabled(boolean enabled)
     {
-        if (invokerOptimization == enabled)
-            return;
-        if (!enabled)
-            invokerMaster = null;
-        invokerOptimization = enabled;
     }
 
     /**

@@ -1152,14 +1152,11 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
         }
 
-        ClassCache cache = ClassCache.get(this);
         GetterSlot gslot = new GetterSlot();
         gslot.delegateTo = delegateTo;
-        gslot.getter = new MemberBox(getter, cache);
-        gslot.getter.prepareInvokerOptimization();
+        gslot.getter = new MemberBox(getter);
         if (setter != null) {
-            gslot.setter = new MemberBox(setter, cache);
-            gslot.setter.prepareInvokerOptimization();
+            gslot.setter = new MemberBox(setter);
         }
         gslot.attributes = (short) attributes;
         Slot inserted = addSlot(propertyName, propertyName.hashCode(), gslot);

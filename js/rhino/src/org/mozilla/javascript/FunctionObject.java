@@ -113,12 +113,11 @@ public class FunctionObject extends BaseFunction
     public FunctionObject(String name, Member methodOrConstructor,
                           Scriptable scope)
     {
-        ClassCache cache = ClassCache.get(scope);
         if (methodOrConstructor instanceof Constructor) {
-            member = new MemberBox((Constructor) methodOrConstructor, cache);
+            member = new MemberBox((Constructor) methodOrConstructor);
             isStatic = true; // well, doesn't take a 'this'
         } else {
-            member = new MemberBox((Method) methodOrConstructor, cache);
+            member = new MemberBox((Method) methodOrConstructor);
             isStatic = member.isStatic();
         }
         String methodName = member.getName();
@@ -173,7 +172,6 @@ public class FunctionObject extends BaseFunction
             } else {
                 returnTypeTag = getTypeTag(returnType);
             }
-            member.prepareInvokerOptimization();
         } else {
             Class ctorType = member.getDeclaringClass();
             if (!ScriptRuntime.ScriptableClass.isAssignableFrom(ctorType)) {

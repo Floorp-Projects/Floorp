@@ -294,8 +294,6 @@ class JavaMembers
 
     private void reflect(Scriptable scope)
     {
-        ClassCache cache = ClassCache.get(scope);
-
         // We reflect methods first, because we want overloaded field/method
         // names to be allocated to the NativeJavaMethod before the field
         // gets in the way.
@@ -341,7 +339,7 @@ class JavaMembers
                 Object value = ht.get(name);
                 if (value instanceof Method) {
                     methodBoxes = new MemberBox[1];
-                    methodBoxes[0] = new MemberBox((Method)value, cache);
+                    methodBoxes[0] = new MemberBox((Method)value);
                 } else {
                     ObjArray overloadedMethods = (ObjArray)value;
                     int N = overloadedMethods.size();
@@ -349,7 +347,7 @@ class JavaMembers
                     methodBoxes = new MemberBox[N];
                     for (int i = 0; i != N; ++i) {
                         Method method = (Method)overloadedMethods.get(i);
-                        methodBoxes[i] = new MemberBox(method, cache);
+                        methodBoxes[i] = new MemberBox(method);
                     }
                 }
                 NativeJavaMethod fun = new NativeJavaMethod(methodBoxes);
@@ -492,7 +490,7 @@ class JavaMembers
         Constructor[] constructors = cl.getConstructors();
         ctors = new MemberBox[constructors.length];
         for (int i = 0; i != constructors.length; ++i) {
-            ctors[i] = new MemberBox(constructors[i], cache);
+            ctors[i] = new MemberBox(constructors[i]);
         }
     }
 
