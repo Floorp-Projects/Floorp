@@ -64,76 +64,84 @@ TOOLKIT_CPPSRCS_motif := \
 TOOLKIT_CPPSRCS := $(TOOLKIT_CPPSRCS_$(MOZ_TOOLKIT))
 
 
-CPPSRCS = \
-	$(TOOLKIT_CPPSRCS)      \
-	nsBaseDialog.cpp        \
-	nsFindDialog.cpp        \
-	nsXPBaseWindow.cpp      \
-	nsTableInspectorDialog.cpp  \
-	nsImageInspectorDialog.cpp  \
-	nsPrintSetupDialog.cpp  \
-	nsBrowserWindow.cpp     \
-	nsEditorMode.cpp        \
-	nsSetupRegistry.cpp     \
-	nsViewerApp.cpp         \
-	nsWebCrawler.cpp        \
-	nsStubs.cpp             \
+CPPSRCS =			   \
+	$(TOOLKIT_CPPSRCS)	   \
+	nsBaseDialog.cpp	   \
+	nsFindDialog.cpp	   \
+	nsXPBaseWindow.cpp	   \
+	nsTableInspectorDialog.cpp \
+	nsImageInspectorDialog.cpp \
+	nsPrintSetupDialog.cpp	   \
+	nsBrowserWindow.cpp	   \
+	nsEditorMode.cpp	   \
+	nsSetupRegistry.cpp	   \
+	nsViewerApp.cpp		   \
+	nsWebCrawler.cpp	   \
+	nsStubs.cpp		   \
 	$(NULL)
 
 ifdef MOZ_OJI
 	JSJ_LIB = -ljsj
 endif
 
-LIBS = \
+BASE_LIBS =	     \
 	-lraptorbase \
-	-lpref \
-	-lraptorbase \
-	$(TOOLKIT_WIDGET_LIB) \
-	-lraptorgfx \
-	$(TOOLKIT_GFX_LIB) \
-	-lraptorhtml \
-	$(TOOLKIT_BASE_LIB) \
-	-lraptorhtmlpars \
-	-lraptorview \
-	-lreg \
-	-labouturl \
-	-lfileurl \
-	-lftpurl \
-	-lgophurl \
-	-lhttpurl \
-	-lsockstuburl \
-	-limg \
-	$(JPEG_LIBS) \
-	$(PNG_LIBS) \
-	-ljs \
-	-ljsdom \
-	-ljsurl \
-	$(JSJ_LIB) \
-	-lmimetype \
-	-lnetcache \
-	-lnetcnvts \
-	-lnetlib \
-	-lnetutil \
-	-lnetwork \
-	$(NSPR_LIBS) \
-	-lpwcac \
-	-lraptorwebwidget \
-	-lreg \
-	-lremoturl \
-	-lsecfree \
-	-lstubnj \
-	-lstubsj \
-	-ltestdynamic \
-	-lmozutil \
-	-lxp \
-	-lxpcom \
-	-lmozutil \
-	-lxp \
-	-lxpcom \
+	-lpref	     \
 	$(ZLIB_LIBS) \
-	-lraptorplugin \
-	-lmozdbm \
-	$(TK_LIBS) \
+	-lreg	     \
+	-ljs	     \
+	-lxpcom	     \
+	-lsecfree    \
+	-lmozutil    \
+	$(NULL)
+
+GECKO_LIBS =		      \
+	-lraptorwebwidget     \
+	$(TOOLKIT_WIDGET_LIB) \
+	-lraptorgfx	      \
+	$(TOOLKIT_GFX_LIB)    \
+	-lraptorhtml	      \
+	$(TOOLKIT_BASE_LIB)   \
+	-lraptorhtmlpars      \
+	-lraptorview	      \
+	-ljsdom		      \
+	-lraptorplugin	      \
+	$(NULL)
+
+IMGLIB_LIBS =	     \
+	-limg	     \
+	$(JPEG_LIBS) \
+	$(PNG_LIBS)  \
+	$(NULL)
+
+NETLIB_LIBS =	      \
+	-labouturl    \
+	-lfileurl     \
+	-lftpurl      \
+	-lgophurl     \
+	-lhttpurl     \
+	-lremoturl    \
+	-lsockstuburl \
+	-lmimetype    \
+	-lnetcache    \
+	-lnetcnvts    \
+	-lnetlib      \
+	-lnetutil     \
+	-lnetwork     \
+	-lxp	      \
+	-ljsurl	      \
+	-lmozdbm      \
+	-lpwcac	      \
+	$(NULL)
+
+LIBS =		       \
+	$(GECKO_LIBS)  \
+	$(NETLIB_LIBS) \
+	$(IMGLIB_LIBS) \
+	$(BASE_LIBS)   \
+	$(JSJ_LIB)     \
+	$(NSPR_LIBS)   \
+	$(TK_LIBS)     \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
@@ -142,6 +150,6 @@ CFLAGS += $(TOOLKIT_CFLAGS)
 
 include $(topsrcdir)/config/rules.mk
 
-install::
+install:: $(PROGRAM)
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
 	$(INSTALL) $(EXPORT_RESOURCE_THROBBER) $(DIST)/bin/res/throbber
