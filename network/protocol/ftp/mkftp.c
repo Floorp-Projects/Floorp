@@ -3681,7 +3681,7 @@ net_get_ftp_password(ActiveEntry *ce)
 
 	if(!cd->password)
 	  {
-        char * host_string = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
+        char * host_string = NET_ParseURL(ce->URL_s->address, (GET_USERNAME_PART | GET_HOST_PART) );
 
 #ifndef MCC_PROXY
 		if(ftp_last_password 
