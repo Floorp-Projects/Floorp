@@ -22,6 +22,7 @@
 #include "nsIMenu.h"
 #include "nsVoidArray.h"
 #include "nsIMenuListener.h"
+#include "nsIDocumentObserver.h"
 
 #include <Menus.h>
 #include <UnicodeConverter.h>
@@ -41,7 +42,7 @@ extern const PRInt16 kAppleMenuID;
 //static PRInt16      mMacMenuIDCount;		// use GetUniqueMenuID()
  extern PRInt16 mMacMenuIDCount;// = kMacMenuID;
 
-class nsMenu : public nsIMenu, public nsIMenuListener
+class nsMenu : public nsIMenu, public nsIMenuListener, public nsIDocumentObserver
 {
 
 public:
@@ -82,11 +83,63 @@ public:
   NS_IMETHOD SetDOMNode(nsIDOMNode * aMenuNode);
   NS_IMETHOD SetDOMElement(nsIDOMElement * aMenuElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
+  NS_IMETHOD SetEnabled(PRBool aIsEnabled);
   
   // 
   NS_IMETHOD AddMenuItem(nsIMenuItem * aMenuItem);
   NS_IMETHOD AddMenu(nsIMenu * aMenu);
 
+  // nsIDocumentObserver
+  NS_IMETHOD BeginUpdate(nsIDocument *aDocument);
+  NS_IMETHOD EndUpdate(nsIDocument *aDocument);
+  NS_IMETHOD BeginLoad(nsIDocument *aDocument);
+  NS_IMETHOD EndLoad(nsIDocument *aDocument);
+  NS_IMETHOD BeginReflow(nsIDocument *aDocument, nsIPresShell* aShell);
+  NS_IMETHOD EndReflow(nsIDocument *aDocument, nsIPresShell* aShell);
+  NS_IMETHOD ContentChanged(nsIDocument *aDocument,
+                            nsIContent* aContent,
+                            nsISupports* aSubContent);
+  NS_IMETHOD ContentStatesChanged(nsIDocument *aDocument,
+                                  nsIContent* aContent1,
+                                  nsIContent* aContent2);
+  NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
+                              nsIContent*  aContent,
+                              nsIAtom*     aAttribute,
+                              PRInt32      aHint);
+  NS_IMETHOD ContentAppended(nsIDocument *aDocument,
+                             nsIContent* aContainer,
+                             PRInt32     aNewIndexInContainer);
+  NS_IMETHOD ContentInserted(nsIDocument *aDocument,
+                             nsIContent* aContainer,
+                             nsIContent* aChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentReplaced(nsIDocument *aDocument,
+                             nsIContent* aContainer,
+                             nsIContent* aOldChild,
+                             nsIContent* aNewChild,
+                             PRInt32 aIndexInContainer);
+  NS_IMETHOD ContentRemoved(nsIDocument *aDocument,
+                            nsIContent* aContainer,
+                            nsIContent* aChild,
+                            PRInt32 aIndexInContainer);
+  NS_IMETHOD StyleSheetAdded(nsIDocument *aDocument,
+                             nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD StyleSheetRemoved(nsIDocument *aDocument,
+                               nsIStyleSheet* aStyleSheet);
+  NS_IMETHOD StyleSheetDisabledStateChanged(nsIDocument *aDocument,
+                                            nsIStyleSheet* aStyleSheet,
+                                            PRBool aDisabled);
+  NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule,
+                              PRInt32 aHint);
+  NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
+                            nsIStyleSheet* aStyleSheet,
+                            nsIStyleRule* aStyleRule);
+  NS_IMETHOD StyleRuleRemoved(nsIDocument *aDocument,
+                              nsIStyleSheet* aStyleSheet,
+                              nsIStyleRule* aStyleRule);
+  NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
   // MacSpecific
   static PRInt16	GetUniqueMenuID() {
   						if (mMacMenuIDCount == 32767)

@@ -198,6 +198,16 @@ NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
 }
 
 //-------------------------------------------------------------------------
+/**
+* Set enabled state
+*
+*/
+NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenu::AddItem(nsISupports * aItem)
 
 {
