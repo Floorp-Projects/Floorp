@@ -15,10 +15,6 @@ err = addDirectory("Program",
 
 logComment("addDirectory() returned: " + err);
 
-// delete the component registry
-var ignoreErr = fileDelete(communicatorFolder + subFolder + ":Component Registry"); 
-logComment("fileDelete() returned: " + ignoreErr);
-
 if (err==SUCCESS || err==REBOOT_NEEDED)
 {
 	err = finalizeInstall(); 

@@ -15,7 +15,8 @@ err = addDirectory("Program",
 logComment("addDirectory() returned: " + err);
 
 // create the plugins folder next to mozilla 
-var pluginsFolder = getFolder("Plugins");
+var pluginsParentFolder = getFolder(communicatorFolder, subFolder);
+var pluginsFolder = getFolder(pluginsParentFolder, "Plugins");
 var ignoreErr = dirCreate(pluginsFolder);
 logComment("dirCreate() returned: " + ignoreErr);
 
