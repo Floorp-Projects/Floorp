@@ -64,6 +64,8 @@
           src="chrome://sroaming/content/transfer/transfer.js" />
   <script type="application/x-javascript"
           src="chrome://sroaming/content/transfer/utility.js" />
+  <script type="application/x-javascript"
+          src="chrome://sroaming/content/transfer/filesList.js" />
 
   <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
@@ -81,10 +83,15 @@
     <caption><label value="&fileList.label;"/></caption>
     <vbox align="center" style="max-width:30em">
       <hbox>
-        <progressmeter id="ListingProgress"
-                       mode="undetermined" value="0"
-                       hidden="true" />
-        <text id="StatusMessage" class="bold" value="&status.label;" />
+        <vbox>
+          <progressmeter id="ListingProgress"
+                         mode="undetermined" value="0"
+                         hidden="true" />
+          <spacer flex="1" />
+        </vbox>
+        <description id="StatusMessage" flex="1">
+          &status.label;
+        </description>
       </hbox>
     </vbox>
     <spacer class="bigspacer"/>

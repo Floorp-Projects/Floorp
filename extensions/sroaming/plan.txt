@@ -1,5 +1,7 @@
 todo:
 - firefox: doesn't start up after the roaming dialog closed - bug 209880
+- don't show conflict again during download, if user already chose
+  server version during upload
 
 don't care (for now):
 - conflict

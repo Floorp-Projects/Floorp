@@ -439,7 +439,7 @@ function ddumpCont(text)
   if (debugOutput)
     dump(text);
 }
-function dumpObject(obj, name, maxDepth, curDepth)
+function ddumpObject(obj, name, maxDepth, curDepth)
 {
   if (!debugOutput)
     return;
@@ -459,7 +459,7 @@ function dumpObject(obj, name, maxDepth, curDepth)
               + obj[prop].length + "]");
       else
         ddump(name + "." + prop + "=[" + typeof(obj[prop]) + "]");
-      dumpObject(obj[prop], name + "." + prop, maxDepth, curDepth+1);
+      ddumpObject(obj[prop], name + "." + prop, maxDepth, curDepth+1);
     }
     else if (typeof(obj[prop]) == "function")
       ddump(name + "." + prop + "=[function]");

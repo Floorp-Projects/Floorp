@@ -626,8 +626,8 @@ Transfer.prototype =
     }
     //ddump(" finished callbacks: " + this.finishedCallbacks.length);
     //ddump(" progress callbacks: " + this.progressCallbacks.length);
-    for (var i = 0, l = this.finishedCallbacks.length; i < l; i++)
-      ddump(this.finishedCallbacks[i]);
+    //for (var i = 0, l = this.finishedCallbacks.length; i < l; i++)
+      //dump(this.finishedCallbacks[i]);
   }
 }
 
@@ -949,8 +949,6 @@ TransferProgressListener.prototype =
 
   onProgress : function(aRequest, aContext, aProgress, aProgressMax)
   {
-    // ddumpCont("onProgress: " + aRequest.name + ", ");
-    // ddump(aProgress + "/" + aProgressMax);
     //ddump("onProgress: " + aProgress + "/" + aProgressMax);
 
     if (aProgressMax > 0 && aProgress > 0)

@@ -264,7 +264,7 @@ function SetProgressStatus(filenr)
 function SetProgressFinishedAll()
 {
   SetStatusMessage(GetString(gTransferFailed
-                             ? "UnknownTransferError"
+                             ? "TransferFailed"
                              : "TransferCompleted"));
 
   for (var i = 0, l = gTransfer.files.length; i < l; i++)
@@ -285,7 +285,7 @@ function SetProgressFinishedAll()
 }
 
 /*
-  checks, if all fines finished (failed or success) and change dialog, if so
+  checks, if all files finished (failed or success) and change dialog, if so
   @param close  bool  If all files finished successfully, also close dialog
  */
 function CheckDone(close)
@@ -370,8 +370,9 @@ function SetStatusMessage(message)
 {
   if (!message)
     message = "";
-  if (!gTransferFailed)
-    gDialog.StatusMessage.value = message;
+  if (gTransferFailed)
+  	return;
+  gDialog.StatusMessage.firstChild.nodeValue = message;
 }
 
 // For fatal errors like unexpected exceptions. Bail and go home.

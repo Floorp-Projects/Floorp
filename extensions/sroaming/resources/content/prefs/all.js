@@ -144,10 +144,8 @@ RoamingPrefs.prototype =
          In case roaming was never set up, we will fail below at reg reading
          and use the defaults in this. Set the default files list to some
          sensible values, which we will get from the default prefs. */
-      var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                 .getService()
-                 .QueryInterface(Components.interfaces.nsIPrefService)
-                 .getDefaultBranch(null);
+      var pref = Components.classes["@mozilla.org/preferences;1"]
+                 .getService(Components.interfaces.nsIPrefBranch);
       var value = pref.getCharPref("roaming.default.files");
       this.Files = value.split(",");
     } catch (e) {}
