@@ -68,6 +68,7 @@ class nsIFormSubmission;
 #define NS_FORM_LEGEND         18
 #define NS_FORM_SELECT         19
 #define NS_FORM_TEXTAREA       20
+#define NS_FORM_OBJECT         21
 
 #define NS_FORM_NOTOK          0xFFFFFFF7
 #define NS_FORM_NOTSET         0xFFFFFFF7
