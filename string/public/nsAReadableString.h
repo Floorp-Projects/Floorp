@@ -952,7 +952,7 @@ Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStrin
 
     for (;;)
       {
-        basic_nsAReadableString<CharT>::ConstIterator::difference_type lengthAvailable = std::min(leftIter.size_forward(), rightIter.size_forward());
+        PRUint32 lengthAvailable = PRUint32( std::min(leftIter.size_forward(), rightIter.size_forward()) );
         // assert( lengthAvailable >= 0 );
 
         if ( lengthAvailable > lengthToCompare )
@@ -964,8 +964,8 @@ Compare( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStrin
         if ( !(lengthToCompare -= lengthAvailable) )
           break;
 
-        leftIter += lengthAvailable;
-        rightIter += lengthAvailable;
+        leftIter += PRInt32(lengthAvailable);
+        rightIter += PRInt32(lengthAvailable);
       }
 
     if ( lLength < rLength )
