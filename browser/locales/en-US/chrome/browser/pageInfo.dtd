@@ -44,8 +44,10 @@
 
 <!ENTITY  copy.key              "C">
 <!ENTITY  copy.label            "Copy">
+<!ENTITY  copy.accesskey        "C">
 <!ENTITY  selectall.key         "A">
 <!ENTITY  selectall.label       "Select All">
+<!ENTITY  selectall.accesskey   "A">
 <!ENTITY  closeWindow.key       "w">
 
 <!ENTITY  generalTab            "General">
