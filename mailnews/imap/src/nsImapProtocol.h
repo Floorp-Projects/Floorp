@@ -459,6 +459,7 @@ private:
 	void OnAppendMsgFromFile();
 	char * OnCreateServerSourceFolderPathString();
   char * OnCreateServerDestinationFolderPathString();
+  nsresult CreateServerSourceFolderPathString(char **result);
 	void OnCreateFolder(const char * aSourceMailbox);
 	void OnEnsureExistsFolder(const char * aSourceMailbox);
 	void OnSubscribe(const char * aSourceMailbox);

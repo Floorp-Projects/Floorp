@@ -93,8 +93,9 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
-//#define IMAP_DB_HEADERS "From To Cc Subject Date Priority X-Priority Message-ID References Newsgroups"
+#define IMAP_ENV_HEADERS "From To Cc Subject Date Message-ID"
 #define IMAP_DB_HEADERS "Priority X-Priority References Newsgroups"
+#define IMAP_ENV_AND_DB_HEADERS IMAP_ENV_HEADERS IMAP_DB_HEADERS
 static const PRInt32 kImapSleepTime = 1000000;
 static PRInt32 gPromoteNoopToCheckCount = 0;
 
@@ -171,6 +172,7 @@ static PRInt32 gMaxChunkSize = 40960;
 static PRBool gInitialized = PR_FALSE;
 static PRBool gHideUnusedNamespaces = PR_TRUE;
 static PRBool gHideOtherUsersFromList = PR_FALSE;
+static PRBool gUseEnvelopeCmd = PR_FALSE;
 
 nsresult nsImapProtocol::GlobalInitialization()
 {
@@ -189,6 +191,8 @@ nsresult nsImapProtocol::GlobalInitialization()
     prefs->GetBoolPref("mail.imap.hide_unused_namespaces",
                        &gHideUnusedNamespaces);
     prefs->GetIntPref("mail.imap.noop_check_count", &gPromoteNoopToCheckCount);
+    prefs->GetBoolPref("mail.imap.use_envelope_cmd",
+                       &gUseEnvelopeCmd);
   }
   gInitialized = PR_TRUE;
   return rv;
@@ -1622,7 +1626,7 @@ char *nsImapProtocol::GetServerCommandTag()
 
 void nsImapProtocol::ProcessSelectedStateURL()
 {
-  char *mailboxName = nsnull;
+  nsXPIDLCString mailboxName;
   PRBool          bMessageIdsAreUids = PR_TRUE;
   imapMessageFlagsType  msgFlags = 0;
   const char          *hostName = GetImapHostName();
@@ -1634,9 +1638,9 @@ void nsImapProtocol::ProcessSelectedStateURL()
   m_runningUrl->MessageIdsAreUids(&bMessageIdsAreUids);
   m_runningUrl->GetMsgFlags(&msgFlags);
 
-  mailboxName = OnCreateServerSourceFolderPathString();
+  res = CreateServerSourceFolderPathString(getter_Copies(mailboxName));
 
-    if (mailboxName && !DeathSignalReceived())
+    if (NS_SUCCEEDED(res) && !DeathSignalReceived())
     {
     // OK, code here used to check explicitly for multiple connections to the inbox,
     // but the connection pool stuff should handle this now.
@@ -1721,6 +1725,12 @@ void nsImapProtocol::ProcessSelectedStateURL()
             
     if (GetServerStateParser().LastCommandSuccessful() && !DeathSignalReceived() && (uidValidityOk || m_imapAction == nsIImapUrl::nsImapDeleteAllMsgs))
     {
+
+      if (GetServerStateParser().CurrentFolderReadOnly() && 
+        (m_imapAction == nsIImapUrl::nsImapExpungeFolder || m_imapAction == nsIImapUrl::nsImapDeleteMsg ||
+         m_imapAction == nsIImapUrl::nsImapDeleteAllMsgs || m_imapAction == nsIImapUrl::nsImapAddMsgFlags ||
+         m_imapAction == nsIImapUrl::nsImapSubtractMsgFlags))
+        return;
 
       switch (m_imapAction)
       {
@@ -2110,7 +2120,6 @@ void nsImapProtocol::ProcessSelectedStateURL()
         break;
     }
    }
-        PR_FREEIF( mailboxName);
   }
   else if (!DeathSignalReceived())
     HandleMemoryFailure();
@@ -2528,41 +2537,37 @@ nsImapProtocol::FetchMessage(const char * messageIds,
         if (/***** Fix me *** gOptimizedHeaders &&  */// preference -- able to turn it off
           useArbitraryHeaders)  // if it's ok -- no filters on any header, etc.
         {
-          char *headersToDL = NULL;
+          char *headersToDL = nsnull;
+          char *what = nsnull;
+          const char *dbHeaders = (gUseEnvelopeCmd) ? IMAP_DB_HEADERS : IMAP_ENV_AND_DB_HEADERS;
           char *arbitraryHeaders = GetArbitraryHeadersToDownload();
           if (arbitraryHeaders)
           {
-            headersToDL = PR_smprintf("%s %s",IMAP_DB_HEADERS,arbitraryHeaders);
+            headersToDL = PR_smprintf("%s %s",dbHeaders, arbitraryHeaders);
             PR_Free(arbitraryHeaders);
           }
           else
-          {
-			if (aolImapServer)
-				headersToDL = nsCRT::strdup(" XAOL-ENVELOPE INTERNALDATE)");
-			else
-				headersToDL = PR_smprintf("%s",IMAP_DB_HEADERS);
-          }
-          if (headersToDL)
-          {
-			  char *what = (!aolImapServer) ? PR_smprintf(" ENVELOPE BODY.PEEK[HEADER.FIELDS (%s)])", headersToDL) : nsCRT::strdup(headersToDL);
-            if (what)
-            {
-              commandString.Append(" %s (UID ");
-			  if (aolImapServer)
-				  commandString.Append(" XAOL.SIZE") ;
-			  else
-				      commandString.Append("RFC822.SIZE");
-			        commandString.Append(" FLAGS");
-              commandString.Append(what);
-              PR_Free(what);
-            }
-            else
-            {
-              commandString.Append(" %s (UID RFC822.SIZE BODY.PEEK[HEADER] FLAGS)");
-            }
-            PR_Free(headersToDL);
-          }
+            headersToDL = nsCRT::strdup(dbHeaders);
+
+          if (aolImapServer)
+            what = nsCRT::strdup(" XAOL-ENVELOPE INTERNALDATE)");
+          else if (gUseEnvelopeCmd)
+            what = PR_smprintf(" ENVELOPE BODY.PEEK[HEADER.FIELDS (%s)])", headersToDL);
           else
+            what = PR_smprintf(" BODY.PEEK[HEADER.FIELDS (%s)])",headersToDL);
+          nsCRT::free(headersToDL);
+          if (what)
+          {
+            commandString.Append(" %s (UID ");
+            if (aolImapServer)
+              commandString.Append(" XAOL.SIZE") ;
+            else
+              commandString.Append("RFC822.SIZE");
+            commandString.Append(" FLAGS");
+            commandString.Append(what);
+            PR_Free(what);
+          }
+          else 
           {
             commandString.Append(" %s (UID RFC822.SIZE BODY.PEEK[HEADER] FLAGS)");
           }
@@ -4833,6 +4838,13 @@ char * nsImapProtocol::OnCreateServerSourceFolderPathString()
   m_runningUrl->CreateServerSourceFolderPathString(&sourceMailbox);
 
   return sourceMailbox;
+}
+
+nsresult nsImapProtocol::CreateServerSourceFolderPathString(char **result)
+{
+  NS_ENSURE_ARG(result);
+  *result = OnCreateServerSourceFolderPathString();
+  return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 //caller must free using PR_Free

@@ -1053,6 +1053,7 @@ void nsImapServerResponseParser::msg_fetch()
 			else if (!PL_strncasecmp(fNextToken, "BODY[HEADER.FIELDS",19))
 			{
 				fDownloadingHeaders = PR_TRUE;
+        BeginMessageDownload(MESSAGE_RFC822); // initialize header parser
 				// specific message header fields
 				while (ContinueParse() && fNextToken[nsCRT::strlen(fNextToken)-1] != ']')
 					fNextToken = GetNextToken();
