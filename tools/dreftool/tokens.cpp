@@ -137,8 +137,10 @@ int CCommentToken::consume(char aChar, CScanner& aScanner) {
   else {
     bool done=false;
     nsCAutoString temp("/");
-    while((0==result) && (false==done)){
-      aScanner.readUntil(mTextValue,temp,true);
+    while(!done){
+      result = aScanner.readUntil(mTextValue,temp,true);
+      if (kNoError!=result)
+        break;
       char theChar=mTextValue[mTextValue.Length()-2];
       done=('*'==theChar);
     }
