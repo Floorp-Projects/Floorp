@@ -45,9 +45,10 @@
 #include "jstypes.h"
 #include "jsbit.h"
 #include "jscntxt.h"
-#include "jsscope.h"
-#include "jspubtd.h"
 #include "jslock.h"
+#include "jsgc.h"
+#include "jsscope.h"
+#include "jsstr.h"
 
 #define ReadWord(W) (W)
 
@@ -317,6 +318,51 @@ ShareScope(JSRuntime *rt, JSScope *scope)
     } else {
         scope->u.count = 0;
     }
+    js_FinishSharingScope(rt, scope);
+}
+
+/*
+ * js_FinishSharingScope is the tail part of ShareScope, split out to become a
+ * subroutine of JS_EndRequest too.  The bulk of the work here involves making
+ * mutable strings in the scope's object's slots be immutable.  We have to do
+ * this because such strings will soon be available to multiple threads, so
+ * their buffers can't be realloc'd any longer in js_ConcatStrings, and their
+ * members can't be modified by js_ConcatStrings, js_MinimizeDependentStrings,
+ * or js_UndependString.
+ *
+ * The last bit of work done by js_FinishSharingScope nulls scope->ownercx and
+ * updates rt->sharedScopes.
+ */
+#define MAKE_STRING_IMMUTABLE(rt, v, vp)                                      \
+    JS_BEGIN_MACRO                                                            \
+        JSString *str_ = JSVAL_TO_STRING(v);                                  \
+        uint8 *flagp_ = js_GetGCThingFlags(str_);                             \
+        if (*flagp_ & GCF_MUTABLE) {                                          \
+            if (JSSTRING_IS_DEPENDENT(str_) &&                                \
+                !js_UndependString(NULL, str_)) {                             \
+                JS_RUNTIME_METER(rt, badUndependStrings);                     \
+                *vp = JSVAL_VOID;                                             \
+            } else {                                                          \
+                *flagp_ &= ~GCF_MUTABLE;                                      \
+            }                                                                 \
+        }                                                                     \
+    JS_END_MACRO
+
+void
+js_FinishSharingScope(JSRuntime *rt, JSScope *scope)
+{
+    JSObject *obj;
+    uint32 nslots;
+    jsval v, *vp, *end;
+
+    obj = scope->object;
+    nslots = JS_MIN(obj->map->freeslot, obj->map->nslots);
+    for (vp = obj->slots, end = vp + nslots; vp < end; vp++) {
+        v = *vp;
+        if (JSVAL_IS_STRING(v))
+            MAKE_STRING_IMMUTABLE(rt, v, vp);
+    }
+
     scope->ownercx = NULL;  /* NB: set last, after lock init */
     JS_RUNTIME_METER(rt, sharedScopes);
 }
@@ -567,6 +613,10 @@ js_SetSlotThreadSafe(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
     JSThinLock *tl;
     jsword me;
 #endif
+
+    /* Any string stored in a thread-safe object must be immutable. */
+    if (JSVAL_IS_STRING(v))
+        MAKE_STRING_IMMUTABLE(cx->runtime, v, &v);
 
     /*
      * We handle non-native objects via JSObjectOps.setRequiredSlot, as above

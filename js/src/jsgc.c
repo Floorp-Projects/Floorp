@@ -268,6 +268,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
 #ifdef DEBUG
 	gc_finalizers[GCX_DOUBLE] = (GCFinalizeOp)js_FinalizeDouble;
 #endif
+	gc_finalizers[GCX_MUTABLE_STRING] = (GCFinalizeOp)js_FinalizeString;
     }
 
     JS_InitArenaPool(&rt->gcArenaPool, "gc-arena", GC_ARENA_SIZE,
@@ -728,13 +729,11 @@ gc_dump_thing(JSGCThing *thing, uint8 flags, GCMarkNode *prev, FILE *fp)
         fprintf(fp, "object %08p %s", privateThing, className);
         break;
       }
-      case GCX_STRING:
-      case GCX_EXTERNAL_STRING:
-      default:
-        fprintf(fp, "string %s", JS_GetStringBytes((JSString *)thing));
-        break;
       case GCX_DOUBLE:
         fprintf(fp, "double %g", *(jsdouble *)thing);
+        break;
+      default:
+        fprintf(fp, "string %s", JS_GetStringBytes((JSString *)thing));
         break;
     }
     fprintf(fp, " via %s\n", path);
@@ -783,6 +782,7 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
     JSObject *obj;
     uint32 nslots;
     jsval v, *vp, *end;
+    JSString *str;
 #ifdef GC_MARK_DEBUG
     JSScope *scope;
     JSScopeProperty *sprop;
@@ -812,7 +812,8 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
         gc_dump_thing(thing, flags, arg, js_DumpGCHeap);
 #endif
 
-    if ((flags & GCF_TYPEMASK) == GCX_OBJECT) {
+    switch (flags & GCF_TYPEMASK) {
+      case GCX_OBJECT:
 	obj = (JSObject *) thing;
 	vp = obj->slots;
         if (!vp) {
@@ -880,6 +881,14 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
                 GC_MARK(cx, JSVAL_TO_GCTHING(v), name, arg);
             }
         }
+        break;
+
+      case GCX_STRING:
+      case GCX_MUTABLE_STRING:
+        str = (JSString *)thing;
+        if (JSSTRING_IS_DEPENDENT(str))
+            js_MarkGCThing(cx, JSSTRDEP_BASE(str), arg);
+        break;
     }
 
 out:
@@ -1180,6 +1189,8 @@ restart:
 	GC_MARK(cx, acx->newborn[GCX_OBJECT], "newborn object", NULL);
 	GC_MARK(cx, acx->newborn[GCX_STRING], "newborn string", NULL);
 	GC_MARK(cx, acx->newborn[GCX_DOUBLE], "newborn double", NULL);
+        GC_MARK(cx, acx->newborn[GCX_MUTABLE_STRING], "newborn mutable string",
+                NULL);
 	for (i = GCX_EXTERNAL_STRING; i < GCX_NTYPES; i++)
             GC_MARK(cx, acx->newborn[i], "newborn external string", NULL);
 #if JS_HAS_EXCEPTIONS

@@ -1206,9 +1206,7 @@ js_Interpret(JSContext *cx, jsval *result)
     jsval iter_state;
     JSProperty *prop;
     JSScopeProperty *sprop;
-    JSString *str, *str2, *str3;
-    size_t length, length2, length3;
-    jschar *chars;
+    JSString *str, *str2;
     jsint i, j;
     jsdouble d, d2;
     JSClass *clasp, *funclasp;
@@ -2221,29 +2219,13 @@ js_Interpret(JSContext *cx, jsval *result)
                 }
                 if (!ok)
                     goto out;
-                if ((length = str->length) == 0) {
-                    str3 = str2;
-                } else if ((length2 = str2->length) == 0) {
-                    str3 = str;
-                } else {
-                    length3 = length + length2;
-                    chars = JS_malloc(cx, (length3 + 1) * sizeof(jschar));
-                    if (!chars) {
-                        ok = JS_FALSE;
-                        goto out;
-                    }
-                    js_strncpy(chars, str->chars, length);
-                    js_strncpy(chars + length, str2->chars, length2);
-                    chars[length3] = 0;
-                    str3 = js_NewString(cx, chars, length3, 0);
-                    if (!str3) {
-                        JS_free(cx, chars);
-                        ok = JS_FALSE;
-                        goto out;
-                    }
+                str = js_ConcatStrings(cx, str, str2);
+                if (!str) {
+                    ok = JS_FALSE;
+                    goto out;
                 }
                 sp--;
-                STORE_OPND(-1, STRING_TO_JSVAL(str3));
+                STORE_OPND(-1, STRING_TO_JSVAL(str));
             } else {
                 VALUE_TO_NUMBER(cx, lval, d);
                 VALUE_TO_NUMBER(cx, rval, d2);

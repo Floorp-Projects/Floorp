@@ -61,10 +61,9 @@ JS_BEGIN_EXTERN_C
 
 #if __GNUC__ >= 2
 /*
- * This version of the macros is safe for the alias optimizations
- * that gcc does, but uses gcc-specific extensions.
+ * This version of the macros is safe for the alias optimizations that gcc
+ * does, but uses gcc-specific extensions.
  */
-
 typedef union {
     jsdouble value;
     struct {

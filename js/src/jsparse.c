@@ -3065,7 +3065,7 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
                 pn2 = pn3;
             break;
           case TOK_STRING:
-            if (ATOM_TO_STRING(pn1->pn_atom)->length == 0)
+            if (JSSTRING_LENGTH(ATOM_TO_STRING(pn1->pn_atom)) == 0)
                 pn2 = pn3;
             break;
           case TOK_PRIMARY:
@@ -3097,29 +3097,14 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc)
 
       case TOK_PLUS:
         if (pn1->pn_type == TOK_STRING && pn2->pn_type == TOK_STRING) {
-            JSString *str1, *str2;
-            size_t length, length1, length2, nbytes;
-            void *mark;
-            jschar *chars;
+            JSString *left, *right, *str;
 
-            /* Concatenate string constants. */
-            str1 = ATOM_TO_STRING(pn1->pn_atom);
-            str2 = ATOM_TO_STRING(pn2->pn_atom);
-            length1 = str1->length;
-            length2 = str2->length;
-            length = length1 + length2;
-            nbytes = (length + 1) * sizeof(jschar);
-            mark = JS_ARENA_MARK(&cx->tempPool);
-            JS_ARENA_ALLOCATE_CAST(chars, jschar *, &cx->tempPool, nbytes);
-            if (!chars) {
-                JS_ReportOutOfMemory(cx);
+            left = ATOM_TO_STRING(pn1->pn_atom);
+            right = ATOM_TO_STRING(pn2->pn_atom);
+            str = js_ConcatStrings(cx, left, right);
+            if (!str)
                 return JS_FALSE;
-            }
-            js_strncpy(chars, str1->chars, length1);
-            js_strncpy(chars + length1, str2->chars, length2);
-            chars[length] = 0;
-            pn->pn_atom = js_AtomizeChars(cx, chars, length, 0);
-            JS_ARENA_RELEASE(&cx->tempPool, mark);
+            pn->pn_atom = js_AtomizeString(cx, str, 0);
             if (!pn->pn_atom)
                 return JS_FALSE;
             pn->pn_type = TOK_STRING;
