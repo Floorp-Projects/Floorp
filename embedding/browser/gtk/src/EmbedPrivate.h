@@ -46,6 +46,7 @@ class EmbedStream;
 
 class nsPIDOMWindow;
 class nsIDirectoryServiceProvider;
+class nsProfileDirServiceProvider;
 
 class EmbedPrivate {
 
@@ -134,6 +135,7 @@ class EmbedPrivate {
   static char                   *sProfileDir;
   static char                   *sProfileName;
   // for profiles
+  static nsProfileDirServiceProvider *sProfileDirServiceProvider;
   static nsIPref                *sPrefs;
 
   static nsIDirectoryServiceProvider * sAppFileLocProvider;

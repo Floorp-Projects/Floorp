@@ -78,6 +78,7 @@ nsIPref     *EmbedPrivate::sPrefs       = nsnull;
 GtkWidget   *EmbedPrivate::sOffscreenWindow = 0;
 GtkWidget   *EmbedPrivate::sOffscreenFixed  = 0;
 nsIDirectoryServiceProvider *EmbedPrivate::sAppFileLocProvider = nsnull;
+nsProfileDirServiceProvider *EmbedPrivate::sProfileDirServiceProvider = nsnull;
 
 EmbedPrivate::EmbedPrivate(void)
 {
@@ -796,16 +797,14 @@ EmbedPrivate::StartupProfile(void)
     NS_NewProfileDirServiceProvider(PR_TRUE, getter_AddRefs(locProvider));
     if (!locProvider)
       return NS_ERROR_FAILURE;
-    
-    // Directory service holds an strong reference to any
-    // provider that is registered with it. Let it hold the
-    // only ref. locProvider won't die when we leave this scope.
     rv = locProvider->Register();
     if (NS_FAILED(rv))
       return rv;
     rv = locProvider->SetProfileDir(profileDir);
     if (NS_FAILED(rv))
       return rv;
+    // Keep a ref so we can shut it down.
+    NS_ADDREF(sProfileDirServiceProvider = locProvider);
 
     // get prefs
     nsCOMPtr<nsIPref> pref;
@@ -822,6 +821,11 @@ EmbedPrivate::StartupProfile(void)
 void
 EmbedPrivate::ShutdownProfile(void)
 {
+  if (sProfileDirServiceProvider) {
+    sProfileDirServiceProvider->Shutdown();
+    NS_RELEASE(sProfileDirServiceProvider);
+    sProfileDirServiceProvider = 0;
+  }
   if (sPrefs) {
     NS_RELEASE(sPrefs);
     sPrefs = 0;

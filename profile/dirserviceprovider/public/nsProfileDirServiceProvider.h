@@ -79,6 +79,16 @@ public:
 
   virtual nsresult         Register();
 
+  /**
+   * Shutdown
+   *
+   * This method must be called before shutting down XPCOM if this object
+   * was created with aNotifyObservers == PR_TRUE. If this object was
+   * created with aNotifyObservers == PR_FALSE, this method is a no-op.
+   */
+
+  virtual nsresult         Shutdown();
+
 protected:
                            nsProfileDirServiceProvider(PRBool aNotifyObservers = PR_TRUE);
    virtual                 ~nsProfileDirServiceProvider();
