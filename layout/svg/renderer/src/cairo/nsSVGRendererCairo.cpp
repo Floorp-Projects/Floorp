@@ -44,10 +44,10 @@
 #include "nsCOMPtr.h"
 #include "nsISVGRenderer.h"
 #include "nsSVGCairoPathGeometry.h"
-//#include "nsSVGCairoGlyphGeometry.h"
-//#include "nsSVGCairoGlyphMetrics.h"
+#include "nsSVGCairoGlyphGeometry.h"
+#include "nsSVGCairoGlyphMetrics.h"
 #include "nsSVGCairoCanvas.h"
-//#include "nsSVGCairoRegion.h"
+#include "nsSVGCairoRegion.h"
 
 void NS_InitSVGCairoGlyphMetricsGlobals();
 void NS_FreeSVGCairoGlyphMetricsGlobals();
@@ -115,7 +115,7 @@ void NS_FreeSVGRendererCairoGlobals()
 //----------------------------------------------------------------------
 // nsISupports methods
 
-NS_IMPL_ISUPPORTS1(nsSVGRendererCairo, nsISVGRenderer);
+NS_IMPL_ISUPPORTS1(nsSVGRendererCairo, nsISVGRenderer)
 
 //----------------------------------------------------------------------
 // nsISVGRenderer methods
@@ -133,9 +133,7 @@ NS_IMETHODIMP
 nsSVGRendererCairo::CreateGlyphMetrics(nsISVGGlyphMetricsSource *src,
                                        nsISVGRendererGlyphMetrics **_retval)
 {
-  fprintf(stderr, "CreateGlyphMetric (unimplemented)\n");
-//  return NS_NewSVGCairoGlyphMetrics(_retval, src);
-  return NS_OK;
+  return NS_NewSVGCairoGlyphMetrics(_retval, src);
 }
 
 /** Implements nsISVGRendererGlyphGeometry createGlyphGeometry(in nsISVGGlyphGeometrySource src); */
@@ -143,9 +141,7 @@ NS_IMETHODIMP
 nsSVGRendererCairo::CreateGlyphGeometry(nsISVGGlyphGeometrySource *src,
                                         nsISVGRendererGlyphGeometry **_retval)
 {
-  fprintf(stderr, "CreateGlyphGeometry (unimplemented)\n");
-//  return NS_NewSVGCairoGlyphGeometry(_retval, src);
-  return NS_OK;
+  return NS_NewSVGCairoGlyphGeometry(_retval, src);
 }
 
 /** Implements [noscript] nsISVGRendererCanvas createCanvas(in nsIRenderingContext ctx,
@@ -164,7 +160,5 @@ NS_IMETHODIMP
 nsSVGRendererCairo::CreateRectRegion(float x, float y, float width, float height,
                                      nsISVGRendererRegion **_retval)
 {
-  fprintf(stderr, "CreateRectRegion (unimplemented)\n");
-//  return NS_NewSVGCairoRectRegion(_retval, x, y, width, height);
-  return NS_OK;
+  return NS_NewSVGCairoRectRegion(_retval, x, y, width, height);
 }

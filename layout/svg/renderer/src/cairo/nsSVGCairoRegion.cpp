@@ -43,9 +43,9 @@ class nsSVGCairoRectRegion : public nsISVGRendererRegion
 {
 protected:
   friend nsresult NS_NewSVGCairoRectRegion(nsISVGRendererRegion** result,
-                                           int x, int y,
-                                           int width, int height);
-  nsSVGCairoRectRegion(int x, int y, int w, int h);
+                                           float x, float y,
+                                           float width, float height);
+  nsSVGCairoRectRegion(float x, float y, float w, float h);
   
 public:
   // nsISupports interface:
@@ -55,15 +55,15 @@ public:
   NS_DECL_NSISVGRENDERERREGION
 
 private:
-  int mX, mY, mWidth, mHeight;
+  float mX, mY, mWidth, mHeight;
 };
 
 //----------------------------------------------------------------------
 // implementation:
 
 nsresult
-NS_NewSVGCairoRectRegion(nsISVGRendererRegion** result, int x, int y,
-                         int width, int height)
+NS_NewSVGCairoRectRegion(nsISVGRendererRegion** result, float x, float y,
+                         float width, float height)
 {
   *result = new nsSVGCairoRectRegion(x, y, width, height);
   
@@ -73,7 +73,7 @@ NS_NewSVGCairoRectRegion(nsISVGRendererRegion** result, int x, int y,
   return NS_OK;
 }
 
-nsSVGCairoRectRegion::nsSVGCairoRectRegion(int x, int y, int w, int h) :
+nsSVGCairoRectRegion::nsSVGCairoRectRegion(float x, float y, float w, float h) :
     mX(x), mY(y), mWidth(w), mHeight(h)
 {
 }
@@ -99,10 +99,10 @@ nsSVGCairoRectRegion::Combine(nsISVGRendererRegion *other,
 {
   nsSVGCairoRectRegion *_other = static_cast<nsSVGCairoRectRegion*>(other); // ok, i know i'm being bad
 
-  int x1 = PR_MIN(mX, _other->mX);
-  int y1 = PR_MIN(mY, _other->mY);
-  int x2 = PR_MAX(mX+mWidth, _other->mX+_other->mWidth);
-  int y2 = PR_MAX(mY+mHeight, _other->mHeight+_other->mHeight);
+  float x1 = PR_MIN(mX, _other->mX);
+  float y1 = PR_MIN(mY, _other->mY);
+  float x2 = PR_MAX(mX+mWidth, _other->mX+_other->mWidth);
+  float y2 = PR_MAX(mY+mHeight, _other->mHeight+_other->mHeight);
   
   return NS_NewSVGCairoRectRegion(_retval, x1, y1, x2-x1, y2-y1);
 }
