@@ -2101,7 +2101,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	sprop = NULL;
     }
 
-    if (!sprop || scope->object != obj) {
+    if (!sprop || (proto = scope->object) != obj) {
 	/* Find a prototype property with the same id. */
         if (sprop) {
             /* Already found, check for a readonly prototype property. */
@@ -2112,8 +2112,6 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             /* Don't clone a setter or shared prototype property. */
             if (attrs & (JSPROP_SETTER | JSPROP_SHARED)) {
                 JS_ATOMIC_ADDREF(&sprop->nrefs, 1);
-                proto = scope->object;
-                scope = OBJ_SCOPE(proto);
                 JS_UNLOCK_SCOPE(cx, scope);
 
                 ok = SPROP_SET(cx, sprop, obj, obj, vp);
@@ -2154,8 +2152,10 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
                              * obj and proto are not sharing a scope).
                              */
                             attrs = sprop->attrs;
-                            if (attrs & JSPROP_READONLY)
-                                goto read_only;
+                            if (attrs & JSPROP_READONLY) {
+                                JS_UNLOCK_OBJ(cx, proto);
+                                goto unlocked_read_only;
+                            }
                             if (attrs & (JSPROP_SETTER | JSPROP_SHARED)) {
                                 JS_ATOMIC_ADDREF(&sprop->nrefs, 1);
                                 JS_UNLOCK_SCOPE(cx, scope);
@@ -2242,6 +2242,8 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (sprop->attrs & JSPROP_READONLY) {
 read_only:
 	JS_UNLOCK_OBJ(cx, obj);
+
+unlocked_read_only:
 	if (JSVERSION_IS_ECMA(cx->version))
 	    return JS_TRUE;
 	str = js_DecompileValueGenerator(cx, JS_FALSE, js_IdToValue(id), NULL);
