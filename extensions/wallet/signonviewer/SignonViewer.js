@@ -129,7 +129,7 @@ var signonsOutlinerView = {
   rowCount : 0,
   setOutliner : function(outliner){},
   getCellText : function(row,column){
-    var rv;
+    var rv="";
     if (column=="siteCol") {
       rv = signons[row].host;
     } else if (column=="userCol") {
@@ -251,7 +251,7 @@ var rejectsOutlinerView = {
   rowCount : 0,
   setOutliner : function(outliner){},
   getCellText : function(row,column){
-    var rv;
+    var rv="";
     if (column=="rejectCol") {
       rv = rejects[row].host;
     }
@@ -332,7 +332,7 @@ var nopreviewsOutlinerView = {
   rowCount : 0,
   setOutliner : function(outliner){},
   getCellText : function(row,column){
-    var rv;
+    var rv="";
     if (column=="nopreviewCol") {
       rv = nopreviews[row].host;
     }
@@ -416,7 +416,7 @@ var nocapturesOutlinerView = {
   rowCount : 0,
   setOutliner : function(outliner){},
   getCellText : function(row,column){
-    var rv;
+    var rv="";
     if (column=="nocaptureCol") {
       rv = nocaptures[row].host;
     }

@@ -94,7 +94,7 @@ var cookiesOutlinerView = {
   rowCount : 0,
   setOutliner : function(outliner){},
   getCellText : function(row,column){
-    var rv;
+    var rv="";
     if (column=="domainCol") {
       rv = cookies[row].rawHost;
     } else if (column=="nameCol") {
@@ -244,7 +244,7 @@ var permissionsOutlinerView = {
   rowCount : 0,
   setOutliner : function(outliner){},
   getCellText : function(row,column){
-    var rv;
+    var rv="";
     if (column=="siteCol") {
       rv = permissions[row].rawHost;
     } else if (column=="statusCol") {
