@@ -942,7 +942,8 @@ nsInstall::ResetError()
 
 PRInt32    
 nsInstall::SetPackageFolder(const nsString& aFolder)
-{//fix
+{
+    mPackageFolder = aFolder;
     return NS_OK;
 }
 
