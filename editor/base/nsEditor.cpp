@@ -4917,26 +4917,22 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
   nsCOMPtr<nsIDOMCharacterData> nodeAsText;
   nodeAsText = do_QueryInterface(node);
 
+  PRUint32 count=0;
+
   if (nodeAsText)
-  {
-    PRUint32 count;
     nodeAsText->GetLength(&count);
-    isFirst = PRBool(0==offset);
-    isLast  = PRBool(count==(PRUint32)offset);
-  }
   else
   { 
     // get the child list and count
     nsCOMPtr<nsIDOMNodeList>childList;
-    PRUint32 count=0;
     result = node->GetChildNodes(getter_AddRefs(childList));
     if ((NS_SUCCEEDED(result)) && childList)
-    {
       childList->GetLength(&count);
-    }
-    isFirst = PRBool(0==offset);
-    isLast  = PRBool((count-1)==(PRUint32)offset);
   }
+
+  isFirst = (0==offset);
+  isLast  = (count==(PRUint32)offset);
+
 // XXX: if isFirst && isLast, then we'll need to delete the node 
   //    as well as the 1 child
 
