@@ -43,7 +43,7 @@
 <h2 id="advanced">Advanced Preferences - Advanced</h2>
 
 <p>This section describes how to use the main Advanced preferences panel. If
-you&apos;re not already viewing it, follow these steps:</p>
+  you&apos;re not already viewing it, follow these steps:</p>
 
 <ol>
   <li>Open the <span class="mac">&brandShortName;</span>
@@ -63,6 +63,13 @@ you&apos;re not already viewing it, follow these steps:</p>
     to start &brandShortName;. See
     <q><a href="nav_help.xhtml#using_quick_launch">Using Quick
     Launch</a></q> for more information about using Quick Launch.</li>
+  <li class="unix"><strong>Use Preferences from System</strong>: Select this to
+    use the already set system preferences, overriding &brandShortName;&apos;
+    ones.
+
+    <p><strong>Note</strong>: This option is available only in XFT/GTK2
+      builds.</p>
+  </li>
 </ul>
 
 <p>[<a href="#advanced_preferences">Return to beginning of section</a>]</p>
@@ -202,7 +209,7 @@ you&apos;re not already viewing it, follow these steps:</p>
         it.</li>
       <li><strong>When the page is out of date</strong>: Select this if you
         want &brandShortName; to compare a web page to the cache when the page
-	is determined by the server to have expired.</li>
+        is determined by the server to have expired.</li>
       <li><strong>Once per session</strong>: Select this if you want
         &brandShortName; to compare a web page to the cache once for each time
         you start &brandShortName;.</li>
@@ -234,7 +241,7 @@ you&apos;re not already viewing it, follow these steps:</p>
 </ol>
 
 <p>The Proxies preferences panel allows you to set up &brandShortName; to use a
-  proxy:</p>
+  <a href="glossary.xhtml#proxy">proxy</a>:</p>
 
 <p><strong>Before you start:</strong> Ask your network administrator if you
   have a proxy configuration file or for the names and port numbers of the
@@ -243,43 +250,64 @@ you&apos;re not already viewing it, follow these steps:</p>
 <ul>
   <li><strong>Direct connection to the Internet</strong>: Choose this if you
     don&apos;t want to use a proxy.</li>
-  <li><strong>Manual proxy configuration</strong>: Choose this if you
-    don&apos;t have a proxy location (URL).
+  <li><strong>Automatically discover the proxy configuration</strong>: Choose
+    this if you want &brandShortName; to automatically detect and configure the
+    proxy settings, using the <a href="glossary.xhtml#wpad">WPAD protocol</a>.</li>
+  <li><strong>Automatic proxy configuration URL</strong>: Choose this if you
+    have a proxy configuration file or URL, then enter the configuration
+    URL.
     <ul>
-      <li><strong>HTTP Proxy</strong>, <strong>SSL Proxy</strong>, <strong>FTP
-        Proxy, Gopher Proxy</strong>: Type the name or numeric IP address of
-        the proxy server. Type the port in the Ports field.
+      <li><strong>Reload</strong>: Click this to reload the configuration file.
 
-	  <p><strong>Note</strong>: If you&apos;re using the same settings for
-	    all types of proxies, click on <q>Use these settings for SSL,
-	    FTP and Gopher</q> when you&apos;ve filled in the fields for HTTP
-	    Proxy.</p>
-
+        <p>For more information about Automatic Proxy Configuration, see the
+          online
+          <a href="http://www.mozilla.org/catalog/end-user/customizing/enduserPAC.html">End
+          User Guide to Proxy AutoConfiguration</a>.</p>
       </li>
-      <li><strong>SOCKS Host</strong>: Type the name or numeric IP address of
-        the proxy server. Type the port in the Ports field. 
-        <ul>
-          <li><strong>SOCKS v4, SOCKS v5</strong>: When entering a SOCK Host,
-            select <q>SOCKS v4</q> or <q>SOCKS v5</q>, depending on
-	    what version of SOCKS is used for the proxy.</li>
-        </ul>
-      </li>
-      <li><strong>No Proxy for</strong>: Type the domains and/or IP address
-        that you do not want to use a proxy for. Separate each entry with a
-        comma. (Example: <kbd>.yourcompany.com, .yourcompany.co.nz,
-        192.168.1.0/24</kbd>.)</li>
     </ul>
   </li>
-  <li><strong>Automatic proxy configuration URL</strong>: Choose this if you
-    have a proxy configuration file or URL, then type the configuration
-    URL.</li>
-  <li><strong>Reload</strong>: Click this to reload the configuration file.
-  
-    <p>For more information about Automatic Proxy Configuration, see the online
-      <a href=
-      "http://www.mozilla.org/catalog/end-user/customizing/enduserPAC.html">End
-      User Guide to Proxy AutoConfiguration</a>.</p>
+  <li><strong>Manual proxy configuration</strong>: Choose this if you
+    don&apos;t have a proxy location (URL), or the automatic proxy discovery
+    was unable to setup the proxy settings correctly.
+    <ul>
+      <li><strong>Proxy</strong>: Enter the name or numeric IP address of
+        the proxy server.</li>
+      <li><strong>Port</strong>: Enter the port number in the Port field. Click
+        on <q>Advanced</q> to set
+        <a href="#advanced_proxy_preferences">Advanced Proxy Preferences</a></li>
+      <li><strong>No Proxy for</strong>: Type the domains and/or IP addresses
+        that you do not want to use a proxy for. Separate each entry with a
+        comma. (Example: <kbd>.mozilla.org, .net.nz, 192.168.1.0/24</kbd>.)
+      </li>
+    </ul>
+  </li>
+</ul>
 
+<h3 id="advanced_proxy_preferences">Advanced Proxy Preferences</h3>
+
+<p>If you want to use different proxies for different protocols or need to use
+  a SOCKS proxy:</p>
+
+<ul>
+  <li><strong>HTTP Proxy</strong>, <strong>SSL Proxy</strong>,
+    <strong>FTP Proxy</strong>, <strong>Gopher Proxy</strong>: Enter the name
+    or numeric IP address of the proxy server. Type the port in the Port fields.
+
+    <p><strong>Note</strong>: If you&apos;re using the same settings
+      for all types of proxies, click on <q>Use HTTP Proxy settings
+      for all protocols</q>.</p>
+
+  </li>
+  <li><strong>SOCKS Host</strong>: Enter the name or numeric IP address
+    of the proxy server. Enter the port number in the Port field. 
+    <ul>
+      <li><strong>SOCKS v4, SOCKS v5</strong>: When entering a SOCKS Host,
+        select <q>SOCKS v4</q> or <q>SOCKS v5</q>, depending on what version
+        of <a href="glossary.xhtml#socks">SOCKS</a> is used for the proxy.</li>
+      <li><strong>Use for resolving hostnames</strong>: Select this to
+        use the SOCKS Host for resolving hostnames. This is
+        recommended for SOCKS v5 hosts.</li>
+    </ul>
   </li>
 </ul>
 
@@ -308,17 +336,17 @@ you&apos;re not already viewing it, follow these steps:</p>
         version of HTTP, standardized in 1996.</li>
       <li><strong>Use HTTP 1.1</strong>: Choose this to use the new version of
         HTTP, which offers performance enhancements, including more efficient
-	use of HTTP connections, better support for client-side caching,
-	multiple HTTP requests (pipelining), and more refined control over
-	cache expiration and replacement policies.</li>
+        use of HTTP connections, better support for client-side caching,
+        multiple HTTP requests (pipelining), and more refined control over
+        cache expiration and replacement policies.</li>
       <li><strong>Enable Keep-Alive</strong>: Select this to keep a connection
         open to make additional HTTP requests, increasing speed.</li>
       <li><strong>Enable Pipelining</strong>: Select this to
         enable pipelining, which allows for more than one HTTP request to be
-	sent to the server at once, reducing delays loading web
-	pages.
+        sent to the server at once, reducing delays loading web pages.
+
         <p><strong>Note</strong>: Pipelining is only available with 
-	HTTP 1.1.</p></li>
+          HTTP 1.1.</p></li>
     </ul>
   </li>
 </ul>
@@ -403,7 +431,7 @@ you&apos;re not already viewing it, follow these steps:</p>
         wheel.</li>
       <li><strong>Move back and forward in the browsing history</strong>:
         Choose this to use the mouse wheel to navigate back or forward to
-	previous pages you&apos;ve visited.</li>
+        previous pages you&apos;ve visited.</li>
       <li><strong>Make the text larger or smaller</strong>: Choose this to use
         the mouse wheel to increase or decrease the size of text on a web page.
         This setting can help you better read a page, or make text fit on the
@@ -451,7 +479,7 @@ you&apos;re not already viewing it, follow these steps:</p>
         (in milliseconds) between the flashes.</li>
       <li><strong>Invert Color</strong>: Check this option to paint the
         selected element with the inverted border color. This will cause the
-	whole element&mdash;including its border&mdash;to flash.</li>
+        whole element&mdash;including its border&mdash;to flash.</li>
     </ul>
   </li>
 </ul>
@@ -499,7 +527,7 @@ you&apos;re not already viewing it, follow these steps:</p>
 
 <p>[<a href="#advanced_preferences">Return to beginning of section</a>]</p>
 
-<p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
+<p>Copyright &copy; 2003-2005 The Mozilla Foundation.</p>
 
 </body>
 </html>

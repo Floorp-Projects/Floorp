@@ -97,9 +97,10 @@
         <rdf:li> <rdf:Description nc:name="server SSL certificate" nc:link="glossary.xhtml#server_ssl_certificate"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="signing certificate" nc:link="glossary.xhtml#signing_certificate"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="signing key" nc:link="glossary.xhtml#signing_key"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="SMTP" nc:link="glossary.xhtml#smtp"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="slot" nc:link="glossary.xhtml#slot"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="smart card" nc:link="glossary.xhtml#smart_card"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="SMTP" nc:link="glossary.xhtml#smtp"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="SOCKS" nc:link="glossary.xhtml#socks"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="software security device" nc:link="glossary.xhtml#software_security_device"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="spoofing" nc:link="glossary.xhtml#spoofing"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="SSL" nc:link="glossary.xhtml#ssl"/> </rdf:li>
@@ -118,8 +119,9 @@
         <rdf:li> <rdf:Description nc:name="URL" nc:link="glossary.xhtml#url"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="web page" nc:link="glossary.xhtml#web_page"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="website" nc:link="glossary.xhtml#web_site"/> </rdf:li>
-        <rdf:li> <rdf:Description nc:name="XML" nc:link="glossary.xhtml#xml"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="World Wide Web (WWW)" nc:link="glossary.xhtml#world_wide_web"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="WPAD" nc:link="glossary.xhtml#wpad"/> </rdf:li>
+        <rdf:li> <rdf:Description nc:name="XML" nc:link="glossary.xhtml#xml"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="XSLT" nc:link="glossary.xhtml#xslt"/> </rdf:li>
         <rdf:li> <rdf:Description nc:name="XUL" nc:link="glossary.xhtml#xul"/> </rdf:li>
       </rdf:Seq>
