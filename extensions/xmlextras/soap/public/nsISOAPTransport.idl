@@ -35,6 +35,7 @@ interface nsISOAPTransport : nsISupports {
                  in string action,
                  in nsIDOMDocument messageDocument,
                  in nsISOAPTransportListener listener);
+  readonly attribute unsigned long status;
 };
 
 %{ C++

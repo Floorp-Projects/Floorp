@@ -32,6 +32,7 @@
 nsSOAPResponse::nsSOAPResponse(nsIDOMDocument* aEnvelopeDocument)
 {
   NS_INIT_ISUPPORTS();
+  mStatus = 0;
   mEnvelopeDocument = aEnvelopeDocument;
   if (mEnvelopeDocument) {
     nsCOMPtr<nsIDOMElement> element;
@@ -123,9 +124,20 @@ NS_IMETHODIMP nsSOAPResponse::GetBody(nsIDOMElement * *aBody)
 }
 
 /* readonly attribute unsigned long status; */
-NS_IMETHODIMP nsSOAPResponse::GetStatus(PRUint32 *aStatus)
+NS_IMETHODIMP
+nsSOAPResponse::GetStatus(PRUint32 *aStatus)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  NS_ENSURE_ARG_POINTER(aStatus);
+
+  *aStatus = mStatus;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSOAPResponse::SetStatus(PRUint32 aStatus)
+{
+  mStatus = aStatus;
+  return NS_OK;
 }
 
 /* readonly attribute string targetObjectURI; */

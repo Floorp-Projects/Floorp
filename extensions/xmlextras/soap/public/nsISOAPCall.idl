@@ -162,6 +162,12 @@ interface nsISOAPCall : nsISupports {
    *                 is expected to be a Function object.
    */
   void asyncInvoke(in nsISupports listener);
+
+  /**
+   * The protocol status returned by the underlying protocol
+   * after an invocation.
+   */
+  readonly attribute unsigned long status;
 };
 
 %{ C++

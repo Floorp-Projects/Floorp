@@ -27,6 +27,7 @@
 nsHTTPSOAPTransport::nsHTTPSOAPTransport()
 {
   NS_INIT_ISUPPORTS();
+  mStatus = 0;
 }
 
 nsHTTPSOAPTransport::~nsHTTPSOAPTransport()
@@ -71,6 +72,8 @@ nsHTTPSOAPTransport::SyncCall(const char *url,
   rv = request->Send(messageDocument);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
+  request->GetStatus(&mStatus);
+
   rv = request->GetResponseXML(_retval);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
@@ -109,6 +112,15 @@ nsHTTPSOAPTransport::AsyncCall(const char *url,
   rv = mRequest->Send(messageDocument);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPSOAPTransport::GetStatus(PRUint32 *aStatus)
+{
+  NS_ENSURE_ARG_POINTER(aStatus);
+
+  *aStatus = mStatus;
   return NS_OK;
 }
 

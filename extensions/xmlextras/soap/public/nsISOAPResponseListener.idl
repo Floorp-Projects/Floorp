@@ -34,9 +34,9 @@ interface nsISOAPResponseListener : nsISupports {
    *
    * @param response The decoded version of the response
    * @param call The SOAPCall object that triggered the response
-   * @param result The result code from the call
+   * @param status The protcol status from the call
    */ 
   void handleResponse(in nsISOAPResponse response, 
                       in nsISOAPCall call,
-                      in nsresult result);
+                      in unsigned long status);
 };

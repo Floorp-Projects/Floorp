@@ -74,6 +74,7 @@ protected:
   nsString mMethodName;
   nsCOMPtr<nsISupportsArray> mParameters;
   nsCOMPtr<nsISOAPResponseListener> mListener;
+  PRUint32 mStatus;
 };
 
 #endif

@@ -44,6 +44,8 @@ public:
   // nsISecurityCheckedComponent
   NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
+  NS_IMETHOD SetStatus(PRUint32 aStatus);
+
 protected:
   nsCOMPtr<nsIDOMDocument> mEnvelopeDocument;
   nsCOMPtr<nsIDOMElement> mEnvelopeElement;
@@ -51,6 +53,7 @@ protected:
   nsCOMPtr<nsIDOMElement> mBodyElement;
   nsCOMPtr<nsIDOMElement> mResultElement;
   nsCOMPtr<nsIDOMElement> mFaultElement;
+  PRUint32 mStatus;
 };
 
 #endif

@@ -91,6 +91,7 @@ interface nsISOAPResponse : nsISupports {
    * The result from the first body entry in the response SOAP message.
    */
   readonly attribute nsISOAPParameter returnValue;
+
 };
 
 %{ C++

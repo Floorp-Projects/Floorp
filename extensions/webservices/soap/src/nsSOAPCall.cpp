@@ -90,7 +90,7 @@ NS_IMPL_ISUPPORTS1(nsScriptResponseListener,
 NS_IMETHODIMP
 nsScriptResponseListener::HandleResponse(nsISOAPResponse* aResponse,
                                          nsISOAPCall* aCall,
-                                         nsresult aResult)
+                                         PRUint32 status)
 {
   nsresult rv;
   JSContext* cx;
@@ -129,7 +129,7 @@ nsScriptResponseListener::HandleResponse(nsISOAPResponse* aResponse,
 
     params[1] = OBJECT_TO_JSVAL(obj);
 
-    params[2] = INT_TO_JSVAL(aResult);
+    params[2] = INT_TO_JSVAL(status);
 
     jsval val;
     JS_CallFunctionValue(cx, mScopeObj, OBJECT_TO_JSVAL(mFunctionObj),
@@ -147,6 +147,7 @@ nsScriptResponseListener::HandleResponse(nsISOAPResponse* aResponse,
 nsSOAPCall::nsSOAPCall()
 {
   NS_INIT_ISUPPORTS();
+  mStatus = 0;
 }
 
 nsSOAPCall::~nsSOAPCall()
@@ -720,9 +721,13 @@ NS_IMETHODIMP nsSOAPCall::Invoke(nsISOAPResponse **_retval)
                            getter_AddRefs(responseDocument));
   if (NS_FAILED(rv)) return rv;
 
+  transport->GetStatus(&mStatus);
+
   nsSOAPResponse* response;
   response = new nsSOAPResponse(responseDocument);
   if (!response) return NS_ERROR_OUT_OF_MEMORY;
+
+  response->SetStatus(mStatus);
 
   return response->QueryInterface(NS_GET_IID(nsISOAPResponse), (void**)_retval);
 }
@@ -803,9 +808,19 @@ NS_IMETHODIMP nsSOAPCall::AsyncInvoke(nsISupports *listener)
   return rv;
 }
 
+NS_IMETHODIMP
+nsSOAPCall::GetStatus(PRUint32 *aStatus)
+{
+  NS_ENSURE_ARG_POINTER(aStatus);
+
+  *aStatus = mStatus;
+  return NS_OK;
+}
+
 /* void handleResponse (in nsIDOMDocument document, in unsigned long status); */
 NS_IMETHODIMP nsSOAPCall::HandleResponse(nsIDOMDocument *document, PRUint32 status, nsresult result)
 {
+  mStatus = status;
   if (mListener) {
     nsCOMPtr<nsISOAPResponse> response;
     if (NS_SUCCEEDED(result)) {
@@ -813,12 +828,14 @@ NS_IMETHODIMP nsSOAPCall::HandleResponse(nsIDOMDocument *document, PRUint32 stat
       respobj = new nsSOAPResponse(document);
       if (!respobj) result = NS_ERROR_OUT_OF_MEMORY;
 
-      response = (nsISOAPResponse*)respobj;
+      respobj->SetStatus(status);
+
+      response = NS_STATIC_CAST(nsISOAPResponse*, respobj);
     }
 
     mListener->HandleResponse(response,
                               this,
-                              result);
+                              status);
   }
   
   return NS_OK;

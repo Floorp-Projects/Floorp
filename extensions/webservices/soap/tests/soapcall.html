@@ -6,7 +6,7 @@
 <SCRIPT>
 
 // Passed in as the response handler in the asynchronous case
-// and called directly below in the synchronous case
+// and called directly (see below) in the synchronous case
 function onresponse(resp, call) { 
   if (resp == null) {
     return;
@@ -68,7 +68,7 @@ function makeCall(syncCall, faultCall) {
   }
 
   // Set the parameters on the call object. Note that in this case,
-  // the last parameter is an object that will be translated into
+  // the last parameter is an object that will be serialized into
   // a struct parameter. It does not have a parameter wrapper because 
   // we don't need it to be named
   s.setParameters(p1, p2, p3, p4, new Dog("Fido", "Lab", "Black"));

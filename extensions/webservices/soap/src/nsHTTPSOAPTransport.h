@@ -45,6 +45,7 @@ public:
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
 
 protected:
+  PRUint32 mStatus;
   nsCOMPtr<nsIXMLHttpRequest> mRequest;
   nsCOMPtr<nsISOAPTransportListener> mListener;
 };
