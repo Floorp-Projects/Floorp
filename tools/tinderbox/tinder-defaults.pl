@@ -86,6 +86,10 @@ $use_blat       = 0;
 # Set moz_cvsroot to something like:
 # :pserver:$ENV{USER}%netscape.com\@cvs.mozilla.org:/cvsroot
 # :pserver:anonymous\@cvs-mirror.mozilla.org:/cvsroot
+#
+# Note that win32 may not need \@, depends on ' or ".
+# :pserver:$ENV{USER}%netscape.com@cvs.mozilla.org:/cvsroot
+
 $moz_cvsroot   = $ENV{CVSROOT};
 
 #- Set these proper values for your tinderbox server
