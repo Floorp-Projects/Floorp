@@ -47,8 +47,10 @@ nsToolkit::nsToolkit()
 //-------------------------------------------------------------------------
 nsToolkit::~nsToolkit()
 {
-  if (mSharedGC)
+  if (mSharedGC) {
     gdk_gc_unref(mSharedGC);
+    gdk_gc_destroy(mSharedGC);
+  }
 
     // Remove the TLS reference to the toolkit...
     PR_SetThreadPrivate(gToolkitTLSIndex, nsnull);
