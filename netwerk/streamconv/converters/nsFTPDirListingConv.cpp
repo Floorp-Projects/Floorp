@@ -559,7 +559,7 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRExplodedTime& outDate) {
     bcol[3] = '\0';
 
     if ((curTime.tm_month = MonthNumber(bcol)) < 0)
-    	return PR_FALSE;
+        return PR_FALSE;
     bcol[3] = tmpChar;
 
     // DAY
@@ -580,11 +580,11 @@ nsFTPDirListingConv::ConvertUNIXDate(char *aCStr, PRExplodedTime& outDate) {
         curTime.tm_year = intStr.ToInteger(&error, 10);
     } else { 
         // TIME
-    	/* If the time is given as hh:mm, then the file is less than 1 year
-         *	old, but we might shift calandar year. This is avoided by checking
-         *	if the date parsed is future or not. 
-		 */
-    	*ecol = '\0';
+        /* If the time is given as hh:mm, then the file is less than 1 year
+         *  old, but we might shift calandar year. This is avoided by checking
+         *  if the date parsed is future or not. 
+         */
+        *ecol = '\0';
         nsCAutoString intStr(++ecol);
         curTime.tm_min = intStr.ToInteger(&error, 10);   // Right side of ':' 
 
@@ -635,7 +635,7 @@ nsFTPDirListingConv::ConvertDOSDate(char *aCStr, PRExplodedTime& outDate) {
     curTime.tm_year     = century + (((aCStr[6]-'0')*10) + aCStr[7]-'0'); 
     curTime.tm_hour     = (((aCStr[10]-'0')*10) + aCStr[11]-'0'); 
 
-	if(aCStr[15] == 'P')
+    if (aCStr[15] == 'P')
         curTime.tm_hour += 12;
 
     curTime.tm_min = (((aCStr[13]-'0')*10) + aCStr[14]-'0');
@@ -665,33 +665,31 @@ nsFTPDirListingConv::ParseLSLine(char *aLine, indexEntry *aEntry) {
     for (ptr = &aLine[PL_strlen(aLine) - 1];
             (ptr > aLine+13) && (!nsCRT::IsAsciiSpace(*ptr) || !IsLSDate(ptr-12)); ptr--)
                 ; /* null body */
-	save_char = *ptr;
+    save_char = *ptr;
     *ptr = '\0';
     if (ptr > aLine+13) {
         ConvertUNIXDate(ptr-12, aEntry->mMDTM);
     } else {
-	    // must be a dl listing
-		// unterminate the line
-		*ptr = save_char;
-		// find the first whitespace and  terminate
-		for(ptr=aLine; *ptr != '\0'; ptr++)
-			if(nsCRT::IsAsciiSpace(*ptr)) {
-				*ptr = '\0';
-				break;
+        // must be a dl listing
+        // unterminate the line
+        *ptr = save_char;
+        // find the first whitespace and  terminate
+        for(ptr=aLine; *ptr != '\0'; ptr++)
+            if (nsCRT::IsAsciiSpace(*ptr)) {
+                *ptr = '\0';
+                break;
             }
         escName = nsEscape(aLine, url_Path);
-        aEntry->mName = escName;
-        nsMemory::Free(escName);
-	
-		return NS_OK;
+        aEntry->mName.Adopt(escName);
+    
+        return NS_OK;
     }
 
     escName = nsEscape(ptr+1, url_Path);
-    aEntry->mName = escName;
-    nsMemory::Free(escName);
+    aEntry->mName.Adopt(escName);
 
-	// parse size
-	if(ptr > aLine+15) {
+    // parse size
+    if (ptr > aLine+15) {
         ptr -= 14;
         while (nsCRT::IsAsciiDigit(*ptr)) {
             size_num += ((PRInt32) (*ptr - '0')) * base;
@@ -806,9 +804,9 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         case MACHTEN:
         {
             // don't bother w/ these lines.
-            if(!PL_strncmp(line, "total ", 6)
+            if (!PL_strncmp(line, "total ", 6)
                 || !PL_strncmp(line, "ls: total", 9)
-				|| (PL_strstr(line, "Permission denied") != NULL)
+                || (PL_strstr(line, "Permission denied") != NULL)
                 || (PL_strstr(line, "not available") != NULL)) {
                 NS_DELETEXPCOM(thisEntry);
                 if (cr)
@@ -865,8 +863,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         case TCPC:
         {
             escName = nsEscape(line, url_Path);
-            thisEntry->mName = escName;
-            nsMemory::Free(escName);
+            thisEntry->mName.Adopt(escName);
 
             if (thisEntry->mName.Last() == '/') {
                 thisEntry->mType = Dir;
@@ -879,16 +876,15 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         case CMS:
         {
             escName = nsEscape(line, url_Path);
-            thisEntry->mName = escName;
-            nsMemory::Free(escName);
+            thisEntry->mName.Adopt(escName);
             break; // END CMS
         }
         case NT:
         {
-		    // don't bother w/ these lines.
-            if(!PL_strncmp(line, "total ", 6)
+            // don't bother w/ these lines.
+            if (!PL_strncmp(line, "total ", 6)
                 || !PL_strncmp(line, "ls: total", 9)
-				|| (PL_strstr(line, "Permission denied") != NULL)
+                || (PL_strstr(line, "Permission denied") != NULL)
                 || (PL_strstr(line, "not available") != NULL)) {
                 NS_DELETEXPCOM(thisEntry);
                 if (cr)
@@ -900,14 +896,14 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
     
             char *date, *size_s, *name;
 
-			if(PL_strlen(line) > 37) {
-				date = line;
-				line[17] = '\0';
-				size_s = &line[18];
-				line[38] = '\0';
-				name = &line[39];
+            if (PL_strlen(line) > 37) {
+                date = line;
+                line[17] = '\0';
+                size_s = &line[18];
+                line[38] = '\0';
+                name = &line[39];
 
-                if(PL_strstr(size_s, "<DIR>")) {
+                if (PL_strstr(size_s, "<DIR>")) {
                     thisEntry->mType = Dir;
                 } else {
                     nsCAutoString size(size_s);
@@ -918,12 +914,11 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
                 ConvertDOSDate(date, thisEntry->mMDTM);
 
                 escName = nsEscape(name, url_Path);
-                thisEntry->mName = escName;
+                thisEntry->mName.Adopt(escName);
             } else {
                 escName = nsEscape(line, url_Path);
-                thisEntry->mName = escName;
-			}
-            nsMemory::Free(escName);
+                thisEntry->mName.Adopt(escName);
+            }
             break; // END NT
         }
         case EPLF:
@@ -947,7 +942,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
                       }
 
                       escName = nsEscape(line+1, url_Path);
-                      thisEntry->mName = escName;
+                      thisEntry->mName.Adopt(escName);
                       thisEntry->mSupressSize = !flagsize;
 
                       // Mutiply what the last modification date to get usecs.
@@ -982,7 +977,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
 
         case OS_2:
         {
-            if(!PL_strncmp(line, "total ", 6)
+            if (!PL_strncmp(line, "total ", 6)
                || (PL_strstr(line, "not authorized") != NULL)
                || (PL_strstr(line, "Path not found") != NULL)
                || (PL_strstr(line, "No Files") != NULL)) {
@@ -997,7 +992,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
             char *name;
             nsCAutoString str;
 
-            if(PL_strstr(line, "DIR")) {
+            if (PL_strstr(line, "DIR")) {
                 thisEntry->mType = Dir;
                 thisEntry->mSupressSize = PR_TRUE;
             }
@@ -1033,17 +1028,15 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
 
             name = &line[53];
             escName = nsEscape(name, url_Path);
-            thisEntry->mName = escName;
+            thisEntry->mName.Adopt(escName);
 
-            nsMemory::Free(escName);
             break;
-        }	
+        }   
 
         default:
         {
             escName = nsEscape(line, url_Path);
-            thisEntry->mName = escName;
-            nsMemory::Free(escName);
+            thisEntry->mName.Adopt(escName);
             break; // END default (catches GENERIC, DCTS)
         }
 
@@ -1083,7 +1076,6 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         char *escapedDate = nsEscape(buffer, url_Path);
 
         aString.Append(escapedDate);
-        nsMemory::Free(escapedDate);
         aString.Append(' ');
 
 
