@@ -732,7 +732,7 @@ function my_cquit (e)
                       " (" + e.reason + ")", "QUIT", "!ME");
     else
         this.display (e.user.properNick + " has left " + e.server.parent.name +
-                      " (" + e.reason + ")", "QUIT", e.user.nick);
+                      " (" + e.reason + ")", "QUIT");
 
     this.list.remove (e.user.getDecoratedNick());
     
