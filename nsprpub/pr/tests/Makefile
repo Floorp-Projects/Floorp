@@ -362,7 +362,11 @@ else
     ifeq ($(OS_ARCH)$(basename $(OS_RELEASE)),HP-UXB.10)
     LIBPTHREAD = -ldce
     else
-    LIBPTHREAD = -lpthread
+      ifeq ($(OS_ARCH),BSD_OS)
+      LIBPTHREAD =
+      else
+      LIBPTHREAD = -lpthread
+      endif
     endif
   endif
 endif
@@ -410,7 +414,7 @@ else
 ifeq ($(USE_PTHREADS), 1)
 $(OBJDIR)/attach: $(OBJDIR)/attach.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
-	$(CC) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) -o $@
+	$(CC) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 endif
 
 
@@ -452,9 +456,9 @@ clean::
 
 ifeq ($(USE_PTHREADS), 1)
 $(OBJDIR)/foreign: $(OBJDIR)/foreign.o
-	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) $(LIBPTHREAD) -o $@
+	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 $(OBJDIR)/provider: $(OBJDIR)/provider.o
-	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) $(LIBPTHREAD) -o $@
+	$(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 endif
 
 #
