@@ -168,9 +168,9 @@ GetScheme(const char* inURI, char* *scheme)
     return NS_ERROR_MALFORMED_URI;
 }
 
-NS_IMETHODIMP
+nsresult
 nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
-                    nsIURI* *result)
+                    nsIURI* *result, nsIProtocolHandler* *hdlrResult)
 {
     nsresult rv;
     nsIURI* base;
@@ -195,7 +195,18 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
     nsCRT::free(scheme);
     if (NS_FAILED(rv)) return rv;
 
+    if (hdlrResult) {
+        *hdlrResult = handler;
+        NS_ADDREF(*hdlrResult);
+    }
     return handler->NewURI(aSpec, base, result);
+}
+
+NS_IMETHODIMP
+nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
+                    nsIURI* *result)
+{
+    return NewURI(aSpec, aBaseURI, result, nsnull);
 }
 
 NS_IMETHODIMP
@@ -230,11 +241,11 @@ nsIOService::NewChannel(const char* verb, const char *aSpec,
                         nsIChannel **result)
 {
     nsresult rv;
-    nsIURI* uri;
-    rv = NewURI(aSpec, aBaseURI, &uri);
+    nsCOMPtr<nsIURI> uri;
+    nsCOMPtr<nsIProtocolHandler> handler;
+    rv = NewURI(aSpec, aBaseURI, getter_AddRefs(uri), getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
-    rv = NewChannelFromURI(verb, uri, aGroup, eventSinkGetter, result);
-    NS_RELEASE(uri);
+    rv = handler->NewChannel(verb, uri, aGroup, eventSinkGetter, result);
     return rv;
 }
 

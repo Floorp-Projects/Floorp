@@ -38,6 +38,8 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
     nsresult Init();
+    nsresult NewURI(const char* aSpec, nsIURI* aBaseURI,
+                    nsIURI* *result, nsIProtocolHandler* *hdlrResult);
 
 protected:
     nsresult BuildAppVersion();
