@@ -1432,10 +1432,13 @@ nsNntpService::UpdateCounts(nsINntpIncomingServer *aNntpServer, nsIMsgWindow *aM
 	if (NS_FAILED(rv)) return rv;
 
 	// run the url to update the counts
-    rv = RunNewsUrl(url, aMsgWindow, nsnull);  
-	if (NS_FAILED(rv)) return rv;
+    rv = RunNewsUrl(url, aMsgWindow, nsnull);
 
-	return NS_OK;
+    // being offline is not an error.
+    if (NS_SUCCEEDED(rv) || (rv == NS_MSG_ERROR_OFFLINE)) {
+      return NS_OK;
+    }
+    return rv;
 }
 
 NS_IMETHODIMP 
