@@ -21,21 +21,19 @@ function MsgFolderPickerOnLoad(pickerID)
 		
 		var verifyFunction = null;
 
-		if (pickerID == "msgSubscribeFolderPicker") {
-			verifyFunction = msgfolder.canSubscribe;
-		}
-		else if (pickerID == "msgNewFolderPicker") {
-			verifyFunction = msgfolder.canCreateSubfolders;
-		}
-		else if (pickerID == "msgRenameFolderPicker") {
-			verifyFunction = msgfolder.canRename;
-		}
-		else if ((pickerID == "msgFccFolderPicker") || (pickerID == "msgDraftsFolderPicker") || (pickerID == "msgStationeryFolderPicker") || (pickerID == "msgJunkMailFolderPicker")) {
-			verifyFunction = msgfolder.canFileMessages;
-		}
-		else {
-			dump("this should never happen\n");
-			return;
+		switch (pickerID) {
+			case "msgSubscribeFolderPicker":
+				verifyFunction = msgfolder.canSubscribe;
+				break;
+			case "msgNewFolderPicker":
+				verifyFunction = msgfolder.canCreateSubfolders;
+				break;
+			case "msgRenameFolderPicker":
+				verifyFunction = msgfolder.canRename;
+				break;
+			default:
+				verifyFunction = msgfolder.canFileMessages;
+				break;
 		}
 
 		if (verifyFunction) {

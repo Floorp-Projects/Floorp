@@ -46,21 +46,4 @@
 		
 		&reuseExp.label;
 	</html:fieldset>
-
-	<html:fieldset>
-		<html:legend align="left">
-			<html:div>&newsOpt.label;</html:div>
-		</html:legend>
-		
-		<html:div>
-			<html:input id="pref:0:int:news.use_message_center" name="opennews" type="radio" checked="true"/>
-			<html:label for="pref:0:int:news.use_message_center">&openMessenger.label;</html:label>
-		</html:div>
-
-		<html:div>
-			<html:input id="pref:1:int:news.use_message_center" name="opennews" type="radio"/>
-			<html:label for="pref:1:int:news.use_message_center">&openCenter.label;</html:label>
-		</html:div>
-	</html:fieldset>
-
 </window>

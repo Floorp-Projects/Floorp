@@ -25,7 +25,6 @@ function onInit() {
     initFolderDisplay("identity.fccFolder", "msgFccFolderPicker");
     initFolderDisplay("identity.draftFolder", "msgDraftsFolderPicker");
     initFolderDisplay("identity.stationeryFolder", "msgStationeryFolderPicker");
-    initFolderDisplay("identity.junkMailFolder", "msgJunkMailFolderPicker");
     initBccSelf();
     //dump("document is " + document + "\n");
 
@@ -57,7 +56,6 @@ function onSave()
     SaveUriFromPicker("identity.fccFolder", "msgFccFolderPicker");
     SaveUriFromPicker("identity.draftFolder", "msgDraftsFolderPicker");
     SaveUriFromPicker("identity.stationeryFolder", "msgStationeryFolderPicker");
-    SaveUriFromPicker("identity.junkMailFolder", "msgJunkMailFolderPicker");
 }
 
 function SaveUriFromPicker(fieldName, pickerID)

@@ -28,7 +28,3 @@ Rights Reserved.
 <!ENTITY reuseThread.label "Double-clicking a folder opens it in a new window">
 <!ENTITY reuseMessage.label "Double-clicking a message opens it in a new window">
 <!ENTITY reuseExp.label "If you prefer fewer windows, unselect these options, and Mail will open items into existing windows.">
-<!ENTITY newsOpt.label "The Newsgroups menu item or button:">
-<!-- LOCALIZATION NOTE openMessenger.label Never translate the product name "Messenger" -->
-<!ENTITY openMessenger.label "Opens newsgroups in a Mail window">
-<!ENTITY openCenter.label "Opens the Message Center">

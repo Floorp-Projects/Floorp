@@ -15,7 +15,6 @@
 <html:input type="hidden" name="identity.fccFolder" id="identity.fccFolder"/>
 <html:input type="hidden" name="identity.draftFolder" id="identity.draftFolder"/>
 <html:input type="hidden" name="identity.stationeryFolder" id="identity.stationeryFolder"/>
-<html:input type="hidden" name="identity.junkMailFolder" id="identity.junkMailFolder"/>
 <html:input type="hidden" name="identity.email" id="identity.email"/>
 
 <html:div>&copyAndFolderTitle.label;</html:div>
@@ -61,14 +60,6 @@
     <box align="horizontal">
 	<menu id="msgStationeryFolderPicker"/>
 	<spring flex="100%"/>
-    </box>
-  </box>
-  <box align="horizontal">
-    <html:div flex="34%">&junkMailFolder.label;</html:div>
-    <!-- name="identity.junkMailFolder" -->
-    <box align="horizontal">
-        <menu id="msgJunkMailFolderPicker"/>
-        <spring flex="100%"/>
     </box>
   </box>
 </box>
