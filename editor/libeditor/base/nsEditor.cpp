@@ -780,7 +780,7 @@ NS_IMETHODIMP nsEditor::SelectAll()
 
 NS_IMETHODIMP nsEditor::Cut()
 {
-  printf("nsEditor::Cut\n");
+  //printf("nsEditor::Cut\n");
   nsresult res = Copy();
   if (NS_SUCCEEDED(res))
     res = DeleteSelection(eLTR);
@@ -789,7 +789,7 @@ NS_IMETHODIMP nsEditor::Cut()
 
 NS_IMETHODIMP nsEditor::Copy()
 {
-  printf("nsEditor::Copy\n");
+  //printf("nsEditor::Copy\n");
 
   // Get the nsSelectionMgr:
   // XXX BWEEP BWEEP TEMPORARY!
@@ -816,7 +816,7 @@ NS_IMETHODIMP nsEditor::Copy()
 
 NS_IMETHODIMP nsEditor::Paste()
 {
-  printf("nsEditor::Paste\n");
+  //printf("nsEditor::Paste\n");
 
   // Get the nsSelectionMgr:
   // XXX BWEEP BWEEP TEMPORARY!
@@ -841,7 +841,7 @@ NS_IMETHODIMP nsEditor::Paste()
   // Now we have the selection mgr.  Get its contents as text (for now):
   selectionMgr->PasteTextBlocking(&stuffToPaste);
 
-  printf("Trying to insert '%s'\n", stuffToPaste.ToNewCString());
+  //printf("Trying to insert '%s'\n", stuffToPaste.ToNewCString());
 
   // Now let InsertText handle the hard stuff:
   return InsertText(stuffToPaste);
