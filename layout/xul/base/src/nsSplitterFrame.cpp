@@ -345,6 +345,7 @@ nsSplitterFrame::Init(nsIPresContext&  aPresContext,
   GetView(&view);
   view->SetContentTransparency(PR_TRUE);
   view->SetZIndex(kMaxZ);
+/*
   nsWidgetInitData widgetData;
   widgetData.mWindowType = eWindowType_child;
   widgetData.mBorderStyle = eBorderStyle_default;
@@ -352,6 +353,7 @@ nsSplitterFrame::Init(nsIPresContext&  aPresContext,
   view->CreateWidget(kCChildCID,
                      &widgetData,
                      nsnull);
+*/
 
   mImpl->AddListener();
 
@@ -610,10 +612,12 @@ nsSplitterFrameImpl :: CaptureMouse(PRBool aGrabMouseEvents)
     if (viewMan) {
       if (aGrabMouseEvents) {
         viewMan->GrabMouseEvents(view,result);
-        widget->CaptureMouse(PR_TRUE);
+        if (widget)
+           widget->CaptureMouse(PR_TRUE);
       } else {
         viewMan->GrabMouseEvents(nsnull,result);
-        widget->CaptureMouse(PR_FALSE);
+        if (widget)
+           widget->CaptureMouse(PR_FALSE);
       }
     }
   }
