@@ -62,9 +62,5 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES		+= -D_XOPEN_SOURCE=500
 endif
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 CXXFLAGS	+= $(MOZ_QT_CFLAGS)
-else
-CXXFLAGS	+= $(TK_CFLAGS)
-endif
 

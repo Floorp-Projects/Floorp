@@ -71,11 +71,7 @@ EXTRA_DSO_LDOPTS = \
 		-lgtksuperwin \
 		$(NULL)
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
-else
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -28,6 +28,10 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= xpwidgets support
 
+ifneq (,$(filter beos os2 mac,$(MOZ_WIDGET_TOOLKIT)))
+DIRS		+= $(MOZ_WIDGET_TOOLKIT)
+endif
+
 #
 # Dont build the DSO under the 'build' directory as windows does.
 #
@@ -35,8 +39,6 @@ DIRS		= xpwidgets support
 # multiple implementations of widget can be built on the same
 # source tree.
 #
-ifndef MOZ_MONOLITHIC_TOOLKIT
-
 ifdef MOZ_ENABLE_GTK
 DIRS		+= gtksuperwin
 DIRS            += gtkxtbin
@@ -62,14 +64,6 @@ endif
 
 ifdef MOZ_ENABLE_XREMOTE
 DIRS		+= xremoteclient
-endif
-
-else
-ifdef MOZ_ENABLE_GTK
-DIRS            += gtkxtbin
-DIRS		+= gtksuperwin
-endif
-DIRS		+= $(MOZ_WIDGET_TOOLKIT)
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -77,21 +77,12 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_JS_LIBS) \
                 $(NULL)
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += -L$(DIST)/lib $(MOZ_QT_LDFLAGS) $(MOZ_XLIB_LDFLAGS)
-else
-EXTRA_DSO_LDOPTS += -L$(DIST)/lib $(TK_LIBS)
-endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 CXXFLAGS	+= $(MOZ_QT_CFLAGS)
 CFLAGS		+= $(MOZ_QT_CFLAGS)
-else
-CXXFLAGS	+= $(TK_CFLAGS)
-CFLAGS		+= $(TK_CFLAGS)
-endif
 
 DEFINES		+= -D_IMPL_NS_WIDGET
 

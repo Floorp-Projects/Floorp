@@ -78,13 +78,8 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_XLIB_LDFLAGS)
 CXXFLAGS	+= $(MOZ_XLIB_CFLAGS)
-else
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-CXXFLAGS	+= $(TK_CFLAGS)
-endif
 
 ifdef HAVE_XIE
 DEFINES         += -DHAVE_XIE

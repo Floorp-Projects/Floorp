@@ -35,24 +35,14 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= nsTimerXlib.cpp
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 EXPORT_LIBRARY = 1
 TIMER_SUFFIX	= xlib
 IS_COMPONENT	= 1
 MODULE_NAME	= nsXlibTimerModule
 CPPSRCS		+= nsTimerXlibFactory.cpp
 EXTRA_DSO_LDOPTS = $(MOZ_XLIB_LDFLAGS) $(MOZ_COMPONENT_LIBS)
-else
-TIMER_SUFFIX	= s
-FORCE_STATIC_LIB = 1
-endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 INCLUDES	+= $(MOZ_XLIB_CFLAGS) -I$(srcdir)/..
-else
-CXXFLAGS	+= $(TK_CFLAGS)
-INCLUDES	+= $(TK_CFLAGS) -I$(srcdir)/..
-endif
 

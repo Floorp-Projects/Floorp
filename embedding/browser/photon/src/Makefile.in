@@ -79,11 +79,7 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += $(MOZ_PH_LDFLAGS)
-else
-EXTRA_DSO_LDOPTS += $(TK_LIBS)
-endif
 
 include $(topsrcdir)/config/rules.mk
 

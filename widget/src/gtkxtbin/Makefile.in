@@ -33,21 +33,13 @@ EXPORT_LIBRARY = 1
 CSRCS           = \
                 gtkxtbin.c \
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS) -lXt
-else
-EXTRA_DSO_LDOPTS += $(TK_LIBS) -lXt
-endif
 
 EXPORTS         = gtkxtbin.h 
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef MOZ_MONOLITHIC_TOOLKIT
 CFLAGS		+= $(MOZ_GTK_CFLAGS)
-else
-CFLAGS		+= $(TK_CFLAGS)
-endif
 
 DEFINES		+= -D_IMPL_NS_WIDGET -DUSE_XIM
 
