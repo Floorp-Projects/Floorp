@@ -128,6 +128,8 @@ private:
   void UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) const;
   void UpdateTransCnt(nsIView *oldview, nsIView *newview);
 
+  void ProcessPendingUpdates(nsIView *aView);
+
   void Refresh(nsIView *aView, nsIRenderingContext *aContext,
                nsIRegion *region, PRUint32 aUpdateFlags);
   void Refresh(nsIView* aView, nsIRenderingContext *aContext,

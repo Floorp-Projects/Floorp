@@ -893,6 +893,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
   nsIView       *scrolledView;
   GetScrolledView(scrolledView);
   nsIScrollbar  *scrollv = nsnull, *scrollh = nsnull;
+  PRBool		hasVertical = PR_TRUE, hasHorizontal = PR_FALSE;
   nsIWidget     *win;
 
   if (nsnull != scrolledView)
@@ -902,7 +903,6 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
     nscoord           hwidth, hheight;
     nscoord           vwidth, vheight;
     PRUint32          oldsizey = mSizeY, oldsizex = mSizeX;
-    // nsRect            area(0, 0, 0, 0);
     nscoord           offx, offy;
     float             scale;
     nsRect            controlRect(0, 0, mBounds.width, mBounds.height);
@@ -914,36 +914,31 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
 
     scrolledView->GetDimensions(&mSizeX, &mSizeY);
 
-    if (nsnull != mHScrollBarView)
-    {
+    if (nsnull != mHScrollBarView) {
       mHScrollBarView->GetDimensions(&hwidth, &hheight);
       mHScrollBarView->GetWidget(win);
-
+      
       if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh)) {
         if (((mSizeX > controlRect.width) &&
             (mScrollPref != nsScrollPreference_kNeverScroll)) ||
             (mScrollPref == nsScrollPreference_kAlwaysScroll))
         {
-          scrollh->Release(); //DO NOT USE NS_RELEASE()! MMP
+          hasHorizontal = PR_TRUE;
         }
-        else
-        {
-          NS_RELEASE(scrollh); //MUST USE NS_RELEASE()! MMP
-        }
+        NS_RELEASE(scrollh);
       }
 
       NS_RELEASE(win);
     }
 
-    if (nsnull != mVScrollBarView)
-    {
+    if (nsnull != mVScrollBarView) {
       mVScrollBarView->GetDimensions(&vwidth, &vheight);
       offy = mOffsetY;
 
       mVScrollBarView->GetWidget(win);
 
       if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollv)) {
-        if ((mSizeY > (controlRect.height - ((nsnull != scrollh) ? hheight : 0)))) {
+        if ((mSizeY > (controlRect.height - (hasHorizontal ? hheight : 0)))) {
           // if we are scrollable
           if (mScrollPref != nsScrollPreference_kNeverScroll) {
             //we need to be able to scroll
@@ -960,7 +955,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
             scrollv->GetPosition(oldpos);
             px->GetDevUnitsToAppUnits(p2t);
 
-            availheight = controlRect.height - ((nsnull != scrollh) ? hheight : 0);
+            availheight = controlRect.height - (hasHorizontal ? hheight : 0);
 
             // XXX Check for 0 initial size. This is really indicative
             // of a problem. 
@@ -984,8 +979,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
             scrollv->SetParameters(mSizeY, availheight,
                                    mOffsetY, mLineHeight);
           }
-        } else
-        {
+        } else {
           // The scrolled view is entirely visible vertically. Either hide the
           // vertical scrollbar or disable it
           mOffsetY = 0;
@@ -1002,13 +996,11 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
           {
             ((ScrollBarView *)mVScrollBarView)->SetEnabled(PR_FALSE);
             win->Enable(PR_TRUE);
-            NS_RELEASE(scrollv);
+            hasVertical = PR_FALSE;
           }
         }
 
-        //don't release the vertical scroller here because if we need to
-        //create a horizontal one, it will need to know that there is a vertical one
-//        //create a horizontal one, it will need to tweak the vertical one
+        NS_RELEASE(scrollv);
       }
 
       NS_RELEASE(win);
@@ -1016,11 +1008,10 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
 
     if (nsnull != mHScrollBarView) {
       offx = mOffsetX;
-
       mHScrollBarView->GetWidget(win);
-
+      
       if (NS_OK == win->QueryInterface(kIScrollbarIID, (void **)&scrollh)) {
-        if ((mSizeX > (controlRect.width - ((nsnull != scrollv) ? vwidth : 0)))) {
+        if ((mSizeX > (controlRect.width - (hasVertical ? vwidth : 0)))) {
           if (mScrollPref != nsScrollPreference_kNeverScroll) {
             //we need to be able to scroll
 
@@ -1036,7 +1027,7 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
             scrollh->GetPosition(oldpos);
             px->GetDevUnitsToAppUnits(p2t);
 
-            availwidth = controlRect.width - ((nsnull != scrollv) ? vwidth : 0);
+            availwidth = controlRect.width - (hasVertical ? vwidth : 0);
 
             // XXX Check for 0 initial size. This is really indicative
             // of a problem. 
@@ -1111,10 +1102,6 @@ NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
       else
         ((CornerView *)mCornerView)->Show(PR_FALSE, PR_FALSE);
     }
-
-    // now we can release the vertical scroller if there was one...
-
-    NS_IF_RELEASE(scrollv);
 
     if ((dx != 0) || (dy != 0) && aAdjustWidgets)
       AdjustChildWidgets(this, scrolledView, 0, 0, scale);

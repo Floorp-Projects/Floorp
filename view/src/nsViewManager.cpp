@@ -529,6 +529,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   if (localcx != aContext)
     NS_RELEASE(localcx);
 
+#if 0
   // Subtract the area we just painted from the dirty region
   nsIRegion *dirtyRegion;
   aView->GetDirtyRegion(dirtyRegion);
@@ -544,6 +545,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
     dirtyRegion->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
     NS_RELEASE(dirtyRegion);
   }
+#endif
 
   mLastRefresh = PR_IntervalNow();
 
@@ -1278,6 +1280,25 @@ void nsViewManager :: UpdateDirtyViews(nsIView *aView, nsRect *aParentRect) cons
   }
 }
 
+void nsViewManager::ProcessPendingUpdates(nsIView* aView)
+{
+	nsIRegion* dirtyRegion = nsnull;
+	aView->GetDirtyRegion(dirtyRegion);
+	if (dirtyRegion != nsnull && !dirtyRegion->IsEmpty()) {
+		UpdateView(aView, dirtyRegion, 0);
+		dirtyRegion->Init();
+		NS_RELEASE(dirtyRegion);
+	}
+
+	// process pending updates in child view.
+	nsIView* childView = nsnull;
+	aView->GetChild(0, childView);
+	while (nsnull != childView)	{
+		ProcessPendingUpdates(childView);
+		childView->GetNextSibling(childView);
+	}
+}
+
 NS_IMETHODIMP nsViewManager :: Composite()
 {
   if (mUpdateCnt > 0)
@@ -1292,8 +1313,19 @@ NS_IMETHODIMP nsViewManager :: Composite()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aUpdateFlags)
+NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aUpdateFlags)
 {
+	// TODO:  should ads nsIWidget::Invalidate(nsIRegion*).
+	nsRect dirtyRect;
+	if (aRegion != nsnull) {
+		aRegion->GetBoundingBox(&dirtyRect.x, &dirtyRect.y, &dirtyRect.width, &dirtyRect.height);
+	} else {
+		aView->GetBounds(dirtyRect);
+		dirtyRect.x = dirtyRect.y = 0;
+	}
+	UpdateView(aView, dirtyRect, aUpdateFlags);
+
+#if 0
   // XXX Huh. What about the case where aRegion isn't nsull?
   // XXX yeah? what about it?
   if (aRegion == nsnull)
@@ -1305,14 +1337,18 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PR
     trect.x = trect.y = 0;
     UpdateView(aView, trect, aUpdateFlags);
   }
+#endif
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
 {
   NS_PRECONDITION(nsnull != aView, "null view");
   if (!mRefreshEnabled && 0 == mUpdateBatchCnt) {
+    // accumulate this rectangle in the view's dirty region, so we can process it later.
+    AddRectToDirtyRegion(aView, aRect);
+    ++mUpdateCnt;
     return NS_OK;
   }
 
@@ -2136,26 +2172,30 @@ nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
   return cx;
 }
 
-void nsViewManager :: AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const
+void nsViewManager::AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) const
 {
-  // Get the dirty region associated with the view
-  nsIRegion *dirtyRegion;
+	// Get the dirty region associated with the view
+	nsIRegion *dirtyRegion;
 
-  aView->GetDirtyRegion(dirtyRegion);
+	aView->GetDirtyRegion(dirtyRegion);
 
-  if (nsnull == dirtyRegion)
-  {
-    // The view doesn't have a dirty region so create one
-    nsresult rv = nsComponentManager::CreateInstance(kRegionCID, 
-                                       nsnull, 
-                                       kIRegionIID, 
-                                       (void **)&dirtyRegion);
+	if (nsnull == dirtyRegion) {
+		// The view doesn't have a dirty region so create one
+		nsresult rv = nsComponentManager::CreateInstance(kRegionCID, 
+		                               nsnull, 
+		                               kIRegionIID, 
+		                               (void **)&dirtyRegion);
 
-    if (NS_FAILED(rv)) return;
-    dirtyRegion->Init();
-    aView->SetDirtyRegion(dirtyRegion);
-  }
+		if (NS_FAILED(rv)) return;
+		dirtyRegion->Init();
+		aView->SetDirtyRegion(dirtyRegion);
+	}
 
+	// since this is only used to buffer update requests, keep them in app units.
+	dirtyRegion->Union(aRect.x, aRect.y, aRect.width, aRect.height);
+	NS_RELEASE(dirtyRegion);
+
+#if 0
   // Dirty regions are in device units, and aRect is in app units so
   // we need to convert to device units
   nsRect  trect = aRect;
@@ -2166,6 +2206,7 @@ void nsViewManager :: AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) 
   trect.ScaleRoundOut(t2p);
   dirtyRegion->Union(trect.x, trect.y, trect.width, trect.height);
   NS_IF_RELEASE(dirtyRegion);
+#endif
 }
 
 void nsViewManager :: UpdateTransCnt(nsIView *oldview, nsIView *newview)
@@ -2204,6 +2245,9 @@ NS_IMETHODIMP nsViewManager :: DisableRefresh(void)
 NS_IMETHODIMP nsViewManager :: EnableRefresh(void)
 {
   mRefreshEnabled = PR_TRUE;
+
+  if (mUpdateCnt > 0)
+    ProcessPendingUpdates(mRootView);
 
   if (mTrueFrameRate > 0)
   {
