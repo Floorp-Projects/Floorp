@@ -32,12 +32,16 @@
 #include "nsEscape.h"
 #include "nsCRT.h"
 #include "nsLocalUtils.h"
+#include "nsIMsgDatabase.h"
+#include "nsMsgDBCID.h"
+#include "nsIMsgHdr.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
+static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 // this is totally lame and MUST be removed by M6
 // the real fix is to attach the URI to the URL as it runs through netlib
@@ -358,8 +362,7 @@ nsresult nsMailboxUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 }
 
 // from nsIMsgUriUrl
-NS_IMETHODIMP
-nsMailboxUrl::GetURI(char ** aURI)
+NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
 {
 	// function not implemented yet....
 	// when I get scott's function to take a path and a message id and turn it into
@@ -384,6 +387,27 @@ nsMailboxUrl::GetURI(char ** aURI)
 	}
 
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
+{
+	nsresult rv = NS_OK;
+	if (aMsgHdr)
+	{
+		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+		nsCOMPtr<nsIMsgDatabase> mailDB;
+
+		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), 
+														 (void **) getter_AddRefs(mailDBFactory));
+		if (NS_SUCCEEDED(rv) && mailDBFactory)
+			rv = mailDBFactory->Open((nsFileSpec&) *m_filePath, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mailDB), PR_FALSE);
+		if (NS_SUCCEEDED(rv) && mailDB) // did we get a db back?
+			rv = mailDB->GetMsgHdrForKey(m_messageKey, aMsgHdr);
+	}
+	else
+		rv = NS_ERROR_NULL_POINTER;
+
+	return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

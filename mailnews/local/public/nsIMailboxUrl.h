@@ -48,6 +48,8 @@ typedef enum {
 	nsMailboxActionMoveMessage
 } nsMailboxAction;
 
+class nsIMsgDBHdr;
+
 class nsIMailboxUrl : public nsIMsgMailNewsUrl
 {
 public:
@@ -84,7 +86,10 @@ public:
 	// Getters and Setters for the mailbox url state
 	///////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD GetFilePath(const nsFileSpec ** aFilePath) = 0;
-  //	NS_IMETHOD SetFilePath(const nsFileSpec& aFilePath) = 0;
+
+	// if the mailbox url represents a single message, than this interface will 
+	// return a message db header for that message.
+	NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr) = 0;
 
 	// Some mailbox urls include a message key for the message in question. 
 	NS_IMETHOD GetMessageKey(nsMsgKey& aMessageID) = 0;

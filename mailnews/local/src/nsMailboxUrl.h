@@ -65,6 +65,7 @@ public:
     NS_IMETHOD SetURLInfo(URL_Struct_ *URL_s);
 	
 	// from nsIMailboxUrl:
+	NS_IMETHOD GetMessageHeader(nsIMsgDBHdr ** aMsgHdr);
 	NS_IMETHOD SetMailboxParser(nsIStreamListener * aConsumer);
 	NS_IMETHOD GetMailboxParser(nsIStreamListener ** aConsumer);
 	NS_IMETHOD SetMailboxCopyHandler(nsIStreamListener *  aConsumer);
