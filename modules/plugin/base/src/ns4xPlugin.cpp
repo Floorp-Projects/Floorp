@@ -96,6 +96,7 @@ NS_IMPL_RELEASE(ns4xPlugin);
 
 static NS_DEFINE_IID(kILiveConnectPluginIID, NS_ILIVECONNECTPLUGIN_IID); 
 static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID); 
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
 static NS_DEFINE_IID(kISeekablePluginStreamPeerIID, NS_ISEEKABLEPLUGINSTREAMPEER_IID);
@@ -121,6 +122,13 @@ ns4xPlugin::QueryInterface(const nsIID& iid, void** instance)
             return NS_NOINTERFACE;
 
         *instance = (void *)(nsILiveConnectPlugin *)this;
+        AddRef();
+        return NS_OK;
+    }
+
+    if (iid.Equals(kIFactoryIID))
+    {
+        *instance = (void *)(nsIFactory *)this;
         AddRef();
         return NS_OK;
     }
