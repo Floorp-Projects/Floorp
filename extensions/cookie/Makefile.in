@@ -66,7 +66,6 @@ REQUIRES	= xpcom \
 CPPSRCS		= \
 		nsModuleFactory.cpp \
 		nsPermission.cpp \
-		nsImgManager.cpp \
 		nsPermissionManager.cpp \
 		nsPopupWindowManager.cpp \
 		nsCookiePromptService.cpp \
@@ -74,7 +73,6 @@ CPPSRCS		= \
 		$(NULL)
 
 XPIDLSRCS	= \
-		nsIImgManager.idl \
 		nsIPermission.idl \
 		nsICookieAcceptDialog.idl \
 		nsICookiePromptService.idl \
