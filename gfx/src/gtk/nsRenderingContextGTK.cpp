@@ -45,7 +45,7 @@ static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
   gdk.height = ns.height; \
   PR_END_MACRO
 
-static nsGCCache *gcCache = new nsGCCache();
+static nsGCCache *gcCache = nsnull;
 
 nsRenderingContextGTK::nsRenderingContextGTK()
 {
@@ -102,6 +102,12 @@ nsRenderingContextGTK::~nsRenderingContextGTK()
   }
 }
 
+/*static*/ nsresult
+nsRenderingContextGTK::Shutdown()
+{
+  delete gcCache;
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
                                           nsIWidget *aWindow)
@@ -519,6 +525,10 @@ void nsRenderingContextGTK::UpdateGC()
     mClipRegion->GetNativeRegion((void*&)rgn);
   }
 
+  if (!gcCache) {
+    gcCache = new nsGCCache();
+    if (!gcCache) return;
+  }
   mGC = gcCache->GetGC(mSurface->GetDrawable(), 
                        &values,
                        valuesMask,

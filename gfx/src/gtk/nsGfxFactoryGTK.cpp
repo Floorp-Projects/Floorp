@@ -180,5 +180,11 @@ static nsModuleComponentInfo components[] =
     nsScreenManagerGtkConstructor }
 };
 
-NS_IMPL_NSGETMODULE("nsGfxGTKModule", components)
+PR_STATIC_CALLBACK(void)
+nsGfxGTKModuleDtor(nsIModule *self)
+{
+  nsRenderingContextGTK::Shutdown();
+}
+
+NS_IMPL_NSGETMODULE_WITH_DTOR("nsGfxGTKModule", components, nsGfxGTKModuleDtor)
 
