@@ -417,9 +417,10 @@ class func_AddRefs_t
 					new_owner_ = dont_AddRef(ptr_);
 				}
 
-			operator void**()
+			T*&
+			operator*()
 				{
-					return REINTERPRET_CAST(void**, &ptr_);
+					return ptr_;
 				}
 
 			operator T**()
@@ -464,9 +465,10 @@ class func_doesnt_AddRef_t
 					new_owner_ = ptr_;
 				}
 
-			operator void**()
+			T*&
+			operator*()
 				{
-					return REINTERPRET_CAST(void**, &ptr_);
+					return ptr_;
 				}
 
 			operator T**()
