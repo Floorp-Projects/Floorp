@@ -58,6 +58,8 @@
 
 #define PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST "mail.addr_book.lastnamefirst"
 
+const char sAddrbookProperties[] = "chrome://messenger/locale/addressbook/addressBook.properties";
+
 struct AppendItem;
 
 typedef nsresult (AppendCallback) (nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLConv *aConv, nsString &aResult);
@@ -1012,7 +1014,25 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToBase64EncodedXML(char **result)
 
   xmlStr.Append(NS_LITERAL_STRING("<?xml version=\"1.0\"?>\n").get());
   xmlStr.Append(NS_LITERAL_STRING("<?xml-stylesheet type=\"text/css\" href=\"chrome://messenger/content/addressbook/print.css\"?>\n").get());
+
   xmlStr.Append(NS_LITERAL_STRING("<directory>\n").get());
+
+  // Get Address Book string and set it as title of XML document
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
+  if (NS_SUCCEEDED(rv)) {
+    rv = stringBundleService->CreateBundle(sAddrbookProperties, getter_AddRefs(bundle));
+    if (NS_SUCCEEDED(rv)) {
+      nsXPIDLString addrBook;
+      rv = bundle->GetStringFromName(NS_LITERAL_STRING("addressBook").get(), getter_Copies(addrBook));
+      if (NS_SUCCEEDED(rv)) {
+        xmlStr.Append(NS_LITERAL_STRING("<title xmlns=\"http://www.w3.org/1999/xhtml\">").get());
+        xmlStr.Append(addrBook);
+        xmlStr.Append(NS_LITERAL_STRING("</title>\n").get());
+      }
+    }
+  }
+
 
   nsXPIDLString xmlSubstr;
   rv = ConvertToXMLPrintData(getter_Copies(xmlSubstr));
@@ -1063,7 +1083,7 @@ NS_IMETHODIMP nsAbCardProperty::ConvertToXMLPrintData(PRUnichar **aXMLSubstr)
   nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = stringBundleService->CreateBundle("chrome://messenger/locale/addressbook/addressBook.properties", getter_AddRefs(bundle));
+  rv = stringBundleService->CreateBundle(sAddrbookProperties, getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv,rv); 
   
   nsXPIDLString heading;
@@ -1240,7 +1260,7 @@ nsresult nsAbCardProperty::AppendSection(AppendItem *aArray, PRInt16 aCount, con
     nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = stringBundleService->CreateBundle("chrome://messenger/locale/addressbook/addressBook.properties", getter_AddRefs(bundle));
+    rv = stringBundleService->CreateBundle(sAddrbookProperties, getter_AddRefs(bundle));
     NS_ENSURE_SUCCESS(rv,rv); 
   
     nsXPIDLString heading;
@@ -1300,7 +1320,7 @@ nsresult AppendLabel(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTToHTMLCo
   nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = stringBundleService->CreateBundle("chrome://messenger/locale/addressbook/addressBook.properties", getter_AddRefs(bundle));
+  rv = stringBundleService->CreateBundle(sAddrbookProperties, getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv,rv); 
   
   nsXPIDLString label;
@@ -1373,7 +1393,7 @@ nsresult AppendCityStateZip(nsAbCardProperty *aCard, AppendItem *aItem, mozITXTT
   nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = stringBundleService->CreateBundle("chrome://messenger/locale/addressbook/addressBook.properties", getter_AddRefs(bundle));
+  rv = stringBundleService->CreateBundle(sAddrbookProperties, getter_AddRefs(bundle));
   NS_ENSURE_SUCCESS(rv,rv); 
 
   if (!cityResult.IsEmpty() && !stateResult.IsEmpty() && !zipResult.IsEmpty()) {

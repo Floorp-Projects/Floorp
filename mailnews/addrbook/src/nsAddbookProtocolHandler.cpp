@@ -63,6 +63,9 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
+#include "nsIStringBundle.h"
+#include "nsIServiceManager.h"
+
 nsAddbookProtocolHandler::nsAddbookProtocolHandler()
 {
   NS_INIT_ISUPPORTS();
@@ -256,6 +259,23 @@ nsAddbookProtocolHandler::BuildDirectoryXML(nsIAbDirectory *aDirectory,
   aOutput.Append(NS_LITERAL_STRING("<?xml version=\"1.0\"?>\n").get());
   aOutput.Append(NS_LITERAL_STRING("<?xml-stylesheet type=\"text/css\" href=\"chrome://messenger/content/addressbook/print.css\"?>\n").get());
   aOutput.Append(NS_LITERAL_STRING("<directory>\n").get());
+
+  // Get Address Book string and set it as title of XML document
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsCOMPtr<nsIStringBundleService> stringBundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv); 
+  if (NS_SUCCEEDED(rv)) {
+    rv = stringBundleService->CreateBundle("chrome://messenger/locale/addressbook/addressBook.properties", getter_AddRefs(bundle));
+    if (NS_SUCCEEDED(rv)) {
+      nsXPIDLString addrBook;
+      rv = bundle->GetStringFromName(NS_LITERAL_STRING("addressBook").get(), getter_Copies(addrBook));
+      if (NS_SUCCEEDED(rv)) {
+        aOutput.Append(NS_LITERAL_STRING("<title xmlns=\"http://www.w3.org/1999/xhtml\">").get());
+        aOutput.Append(addrBook);
+        aOutput.Append(NS_LITERAL_STRING("</title>\n").get());
+      }
+    }
+  }
+
  
   rv = aDirectory->GetChildCards(getter_AddRefs(cardsEnumerator));
   if (NS_SUCCEEDED(rv) && cardsEnumerator)
