@@ -76,13 +76,19 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
+#include "nsIDataFlavor.h"
+#include "nsIFormatConverter.h"
 
 // Drag & Drop, Clipboard Support
-static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
-static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
+static NS_DEFINE_IID(kIClipboardIID,       NS_ICLIPBOARD_IID);
+static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
 
-static NS_DEFINE_IID(kITransferableIID, NS_ITRANSFERABLE_IID);
-static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kITransferableIID,    NS_ITRANSFERABLE_IID);
+static NS_DEFINE_CID(kCTransferableCID,    NS_TRANSFERABLE_CID);
+static NS_DEFINE_IID(kIDataFlavorIID,      NS_IDATAFLAVOR_IID);
+static NS_DEFINE_IID(kCDataFlavorCID,      NS_DATAFLAVOR_CID);
+static NS_DEFINE_IID(kCXIFConverterCID,    NS_XIFFORMATCONVERTER_CID);
+static NS_DEFINE_IID(kIFormatConverterIID, NS_IFORMATCONVERTER_IID);
 #endif
 
 static PRBool gsNoisyRefs = PR_FALSE;
@@ -1563,20 +1569,54 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
 
 #else  /////////////////////////// New Way
     // Put XIF into transferable
+
+    // Get the Clipboard
     nsIClipboard* clipboard;
     nsresult rv = nsServiceManager::GetService(kCClipboardCID,
                                                kIClipboardIID,
                                                (nsISupports **)&clipboard);
-    nsITransferable * trans;
-    rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
 
-    trans->SetTransferString(buffer);
-    clipboard->SetData(trans, nsnull);
+    if (NS_OK == rv) {
 
-    NS_IF_RELEASE(clipboard);
-    NS_IF_RELEASE(trans);
+      // Create a data flavor to tell the transferable 
+      // that it is about to receive XIF
+      nsIDataFlavor * flavor;
+      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) &flavor);
+      if (NS_OK == rv) {
+        // Initialize data flavor to XIF
+        flavor->Init(kXIFMime, "XIF");
 
+        // Create a transferable for putting data on the Clipboard
+        nsITransferable * trans;
+        rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, kITransferableIID, (void**) &trans);
+        if (NS_OK == rv) {
+          // The data on the clipboard will be in "XIF" format
+          // so give the clipboard transferable a "XIFConverter" for 
+          // converting from XIF to other formats
+          nsIFormatConverter * xifConverter;
+          rv = nsComponentManager::CreateInstance(kCXIFConverterCID, nsnull, kIFormatConverterIID, (void**) &xifConverter);
+          if (NS_OK == rv) {
+            // Add the XIF DataFlavor to the transferable
+            // this tells the transferable that it can handle receiving the XIF format
+            trans->AddDataFlavor(flavor);
 
+            // Add the converter for going from XIF to other formats
+            trans->SetConverter(xifConverter);
+
+            // Now add the XIF data to the transferable
+            trans->SetTransferData(flavor, buffer.ToNewCString(), buffer.Length());
+
+            // put the transferable on the clipboard
+            clipboard->SetData(trans, nsnull);
+
+            NS_IF_RELEASE(xifConverter);
+          }
+          NS_IF_RELEASE(trans);
+        }
+        NS_IF_RELEASE(flavor);
+      }
+      NS_IF_RELEASE(clipboard);
+    }
 #endif
   }
   return NS_OK;
