@@ -112,6 +112,7 @@ NS_IMETHODIMP IMETextTxn::Undo(void)
 
 NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
+	nsresult	result;
 #ifdef DEBUG_TAGUE
   printf("Merge IME Text element = %p\n", mElement.get());
 #endif
@@ -135,8 +136,9 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 	//
 	// if aTransaction is another IMETextTxn then absorbe it
 	//
-	nsCOMPtr<IMETextTxn> otherTxn(do_QueryInterface(aTransaction));
-	if (otherTxn)
+	IMETextTxn*	otherTxn = nsnull;
+	result = aTransaction->QueryInterface(IMETextTxn::GetCID(),(void**)&otherTxn);
+	if (otherTxn && result==NS_OK)
 	{
 		//
 		//  we absorbe the next IME transaction by adopting it's insert string as our own
@@ -148,14 +150,16 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 #ifdef DEBUG_TAGUE
 		printf("IMETextTxn assimilated IMETextTxn:%p\n", aTransaction);
 #endif
+		NS_RELEASE(otherTxn);
 		return NS_OK;
 	}
 
 	//
 	// second possible case is that we have a commit transaction
 	//
-	nsCOMPtr<IMECommitTxn> commitTxn(do_QueryInterface(aTransaction));
-	if (commitTxn)
+	IMECommitTxn* commitTxn = nsnull;
+	result = aTransaction->QueryInterface(IMECommitTxn::GetCID(),(void**)&commitTxn);
+	if (commitTxn && result==NS_OK)
 	{
 		(void)CollapseTextSelectionOnCommit();
 		mFixed = PR_TRUE;
@@ -163,6 +167,7 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 #ifdef DEBUG_TAGUE
 		printf("IMETextTxn assimilated IMECommitTxn%p\n", aTransaction);
 #endif
+		NS_RELEASE(commitTxn);
 		return NS_OK;
 	}
 
