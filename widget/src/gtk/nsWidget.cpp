@@ -1166,7 +1166,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
     InstallButtonPressSignal(mWidget);
     InstallButtonReleaseSignal(mWidget);
     
-    InstallMotionNotifySignal(mWidget);
+    // InstallMotionNotifySignal(mWidget);
     
     InstallEnterNotifySignal(mWidget);
     InstallLeaveNotifySignal(mWidget);
